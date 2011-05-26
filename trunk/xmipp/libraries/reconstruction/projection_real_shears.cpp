@@ -184,10 +184,6 @@ void Compute_projection(const VolumeStruct &Data,
 {
     int     Status=!ERROR, arr[3];
     double  scale, scale_x, scale_y, scale_z, m_x, m_y, m_z, minm;
-    double  *hlp, *R, *At;
-    double  *Help1, *Help2, *Help3, *Help4, *Binv;
-    double  *C1, *BinvC, *BinvCscaled;
-    double  *Coef_xyz;
 
     double  psi, theta, phi, Sinphi, Cosphi, Sinpsi, Cospsi, Sintheta, Costheta;
     psi   = VEC_ELEM(angles,0);
@@ -197,32 +193,19 @@ void Compute_projection(const VolumeStruct &Data,
     sincos(theta,&Sintheta,&Costheta);
     sincos(psi,&Sinpsi,&Cospsi);
 
-    At = (double *)malloc((size_t) 16L * sizeof(double));
-    if (At == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
-                     "ERROR - Not enough memory for At");
+    Matrix2D<double> At;
+    translation3DMatrix(shifts,At);
 
-    if (GetIdentitySquareMatrix(At, 4L) == ERROR)
-        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
-                     "Error returned by GetIdentitySquareMatrix");
-
-    hlp = At + (ptrdiff_t)3L;
-    *hlp = VEC_ELEM(shifts,0);
-    hlp += (ptrdiff_t)4L;
-    *hlp = VEC_ELEM(shifts,1);
-    hlp += (ptrdiff_t)4L;
-    *hlp = 0;
-
-    Help1 = (double *)malloc((size_t) 16L * sizeof(double));
+    double *Help1 = (double *)malloc((size_t) 16L * sizeof(double));
     if (Help1 == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help1");
 
-    if (MatrixMultiply(At, MATRIX2D_ARRAY(LeftOperHlp), Help1, 4L, 4L, 4L) == ERROR)
+    if (MatrixMultiply(MATRIX2D_ARRAY(At), MATRIX2D_ARRAY(LeftOperHlp), Help1, 4L, 4L, 4L) == ERROR)
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply");
 
-    R = (double *)malloc((size_t) 16L * sizeof(double));
+    double *R = (double *)malloc((size_t) 16L * sizeof(double));
     if (R == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Rx");
@@ -231,7 +214,7 @@ void Compute_projection(const VolumeStruct &Data,
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by GetIdentitySquareMatrix");
 
-    hlp = R;
+    double *hlp = R;
     hlp += (ptrdiff_t)5L;
     *hlp++ = Cosphi;
     *hlp = - Sinphi;
@@ -239,7 +222,7 @@ void Compute_projection(const VolumeStruct &Data,
     *hlp++ = Sinphi;
     *hlp = Cosphi;
 
-    Help2 = (double *)malloc((size_t) 16L * sizeof(double));
+    double *Help2 = (double *)malloc((size_t) 16L * sizeof(double));
     if (Help2 == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help2");
@@ -261,7 +244,7 @@ void Compute_projection(const VolumeStruct &Data,
     hlp += (ptrdiff_t)2L;
     *hlp = Costheta;
 
-    Help3 = (double *)malloc((size_t) 16L * sizeof(double));
+    double *Help3 = (double *)malloc((size_t) 16L * sizeof(double));
     if (Help3 == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help3");
@@ -281,7 +264,7 @@ void Compute_projection(const VolumeStruct &Data,
     *hlp++ = Sinpsi;
     *hlp = Cospsi;
 
-    Help4 = (double *)malloc((size_t) 16L * sizeof(double));
+    double *Help4 = (double *)malloc((size_t) 16L * sizeof(double));
     if (Help4 == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help4");
@@ -297,7 +280,7 @@ void Compute_projection(const VolumeStruct &Data,
                      "Error returned by MatrixMultiply");
     free(Help4);
 
-    Binv = (double *)malloc((size_t) 16L * sizeof(double));
+    double *Binv = (double *)malloc((size_t) 16L * sizeof(double));
     if (Binv == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Binv");
@@ -306,9 +289,8 @@ void Compute_projection(const VolumeStruct &Data,
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by SquareMatrixInvertGauss");
     free(R);
-    free(At);
 
-    C1 = (double *)malloc((size_t) 4L * sizeof(double));
+    double *C1 = (double *)malloc((size_t) 4L * sizeof(double));
     if (C1 == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for C1");
@@ -319,7 +301,7 @@ void Compute_projection(const VolumeStruct &Data,
     *hlp++ = 1.0;
     *hlp = 0.0;
 
-    BinvC = (double *)malloc((size_t) 4L * sizeof(double));
+    double *BinvC = (double *)malloc((size_t) 4L * sizeof(double));
     if (BinvC == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for BinvC");
@@ -347,7 +329,7 @@ void Compute_projection(const VolumeStruct &Data,
     m_y = fabs(scale_y);
     m_z = fabs(scale_z);
 
-    BinvCscaled = (double *)malloc((size_t) 4L * sizeof(double));
+    double *BinvCscaled = (double *)malloc((size_t) 4L * sizeof(double));
     if (BinvCscaled == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for BinvCscaled");
@@ -361,7 +343,7 @@ void Compute_projection(const VolumeStruct &Data,
     arr[0] = 0;
     arr[1] = 1;
     arr[2] = 2;
-    Coef_xyz = Coef_x;
+    double *Coef_xyz = Coef_x;
     if (m_y < minm)
     {
         minm = m_y;
