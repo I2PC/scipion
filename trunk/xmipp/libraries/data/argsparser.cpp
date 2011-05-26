@@ -1136,7 +1136,7 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
             *pOut << "   OR" << std::endl;
 
         *pOut << "   ";
-        int pColor = CYAN;
+        int pColor = BLUE;
         if (!param.notOptional)
         {
             *pOut << "[";
