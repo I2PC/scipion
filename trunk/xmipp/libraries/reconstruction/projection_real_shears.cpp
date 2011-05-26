@@ -32,8 +32,7 @@
 
 ///Returns a pointer of the multiplication of the 5 matrices built with identity matrices and the parameters.\n
 ///It returns NULL if there is an error.
-double *MatrixBem(double phi, double theta, double psi,
-		          double scale_x, double scale_y, double scale_z)
+double *MatrixBem(double phi, double theta, double psi)
 {
     double *pointer;
     double ss, cc;
@@ -113,57 +112,29 @@ double *MatrixBem(double phi, double theta, double psi,
     pointer += (ptrdiff_t)1L;
     *pointer = cc;
 
-    //(Identity Matrix)
-    //------------------------------------------------
-    /*As [4][4] = {{scale_x,      0.,      0., 0.},
-               {     0., scale_y,      0., 0.},
-               {     0.,      0., scale_z, 0.},
-               {     0.,      0.,      0., 1.}};*/
-    //------------------------------------------------
-
-    double *As = (double *)malloc((size_t) 16L * sizeof(double));
-    if (As == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::MatrixBem: "
-                     "ERROR - Not enough memory for As");
-
-    if (GetIdentitySquareMatrix(As, 4L) == ERROR)
-        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::MatrixBem: "
-                     "Error returned by GetIdentitySquareMatrix");
-
-    pointer = As;
-    *pointer = scale_x;
-    pointer += (ptrdiff_t)5L;
-    *pointer = scale_y;
-    pointer += (ptrdiff_t)5L;
-    *pointer = scale_z;
-
     //------------------------------------------------
     double *matrB = (double *)malloc((size_t) 16L * sizeof(double));
     if (matrB == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::MatrixBem: "
                      "ERROR - Not enough memory for matrB");
 
-    multiply_4Matrices(As, Rz2, Ry, Rz1, matrB, 4L, 4L, 4L, 4L, 4L);
+    multiply_3Matrices(Rz2, Ry, Rz1, matrB, 4L, 4L, 4L, 4L);
 
     free(Rz1);
     free(Ry);
     free(Rz2);
-    free(As);
 
     return matrB;
 }
 
 /// Transforms angles from (Ry, Rz, Ry) to (Rx, Ry, Rz) system. Returns possible error.
-void angles_transcription(double *angles, double *Lambda123)
+void angles_transcription(double *angles)
 {
     double phi = angles[0];
     double theta = angles[1];
     double psi = angles[2];
-    double scale_x = Lambda123[0];
-    double scale_y = Lambda123[1];
-    double scale_z = Lambda123[2];
 
-    double *Bem_1D = MatrixBem(phi, theta, psi, scale_x, scale_y, scale_z);
+    double *Bem_1D = MatrixBem(phi, theta, psi);
     if(Bem_1D==NULL)
         return;
 
@@ -619,7 +590,7 @@ int do_one_projection(VolumeStruct &Data2)
     double    *VolumeCoef, *InputVolume, *InputVolumePlane;
     double    *InputVolumeRow, *Coef_x, *Coef_y, *Coef_z;
 
-    angles_transcription(Data2.InitPsiThetaPhi, Data2.Lambda123);
+    angles_transcription(Data2.InitPsiThetaPhi);
 
     Nx = Data2.nx_Volume;
     Ny = Data2.ny_Volume;
@@ -804,11 +775,11 @@ int do_one_projection(VolumeStruct &Data2)
                      "Error returned by GetIdentitySquareMatrix");
 
     hlp = As;
-    *hlp = (double) Data2.Lambda123[0];
+    *hlp = 1.0;
     hlp += (ptrdiff_t)5L;
-    *hlp = (double) Data2.Lambda123[1];
+    *hlp = 1.0;
     hlp += (ptrdiff_t)5L;
-    *hlp = (double) Data2.Lambda123[2];
+    *hlp = 1.0;
 
     Ac = (double *)malloc((size_t) 16L * sizeof(double));
     if (Ac == (double *)NULL)
@@ -988,7 +959,6 @@ void del_VolumeStruct(VolumeStruct &Data2)
     free(Data2.Identity_orientV);
     free(Data2.Identity_orientW);
     free(Data2.K123);
-    free(Data2.Lambda123);
     free(Data2.Gama123);
     free(Data2.InitDelta123);
     free(Data2.InitPsiThetaPhi);
@@ -1101,11 +1071,6 @@ void allocAndInit_VolumeStruct(VolumeStruct &Data2)
     Data2.K123[0] = 0.;
     Data2.K123[1] = 0.;
     Data2.K123[2] = 0.;
-
-    Data2.Lambda123 = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.Lambda123[0] = 1.;
-    Data2.Lambda123[1] = 1.;
-    Data2.Lambda123[2] = 1.;
 
     Data2.Gama123 = (double*) malloc((size_t)3L * sizeof(double));
     Data2.Gama123[0] = Data2.nx_Volume/2.;

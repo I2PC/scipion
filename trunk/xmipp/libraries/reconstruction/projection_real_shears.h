@@ -81,7 +81,6 @@ typedef struct
     double *Identity_orientV;
     double *Identity_orientW;
     double *K123;
-    double *Lambda123;
     double *Gama123;
     double *InitPsiThetaPhi; // Angles
     double *InitDelta123; //Shifts
