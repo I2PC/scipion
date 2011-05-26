@@ -77,6 +77,8 @@ class VolumeStruct
 public:
     const MultidimArray<double> *volume;
     int Xdim;
+    Matrix2D<double> Ac, Acinv;
+    MultidimArray<double> Coef_x, Coef_y, Coef_z;
 
     // Constructor
     VolumeStruct(const MultidimArray<double> &V);

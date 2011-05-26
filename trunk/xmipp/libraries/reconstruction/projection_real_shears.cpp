@@ -220,7 +220,7 @@ void projectionRealShears2(double phi, double theta, double psi,
     arr[0] = 0;
     arr[1] = 1;
     arr[2] = 2;
-    MultidimArray<double> &Coef_xyz = Coef_x;
+    MultidimArray<double> *Coef_xyz = &Coef_x;
     if (m_y < minm)
     {
         minm = m_y;
@@ -228,7 +228,7 @@ void projectionRealShears2(double phi, double theta, double psi,
         arr[0] = 1;
         arr[1] = 0;
         arr[2] = 2;
-        Coef_xyz = Coef_y;
+        Coef_xyz = &Coef_y;
     }
     if (m_z < minm)
     {
@@ -237,12 +237,12 @@ void projectionRealShears2(double phi, double theta, double psi,
         arr[0] = 2;
         arr[1] = 0;
         arr[2] = 1;
-        Coef_xyz = Coef_z;
+        Coef_xyz = &Coef_z;
     }
     Matrix1D<double> BinvCscaled=BinvC;
     BinvCscaled*=scale;
 
-    projectionRealShears3(Coef_xyz, minm, MATRIX2D_ARRAY(Binv),
+    projectionRealShears3(*Coef_xyz, minm, MATRIX2D_ARRAY(Binv),
                           MATRIX1D_ARRAY(BinvCscaled), arr, projection);
 }
 
@@ -250,89 +250,11 @@ void projectionRealShears2(double phi, double theta, double psi,
 void projectionRealShears1(VolumeStruct &Data2, double phi, double theta, double psi,
                            double shiftX, double shiftY, Projection &P)
 {
-    int    Status = !ERROR;
-
     convertAngles(phi, theta, psi);
-    int Xdim = Data2.Xdim;
-
-    MultidimArray<double> Coef_x, Coef_y, Coef_z, planeCoef, inputPlane, inputRow;
-    Coef_x.resizeNoCopy(Xdim,Xdim,Xdim);
-    Coef_y.resizeNoCopy(Xdim,Xdim,Xdim);
-    Coef_z.resizeNoCopy(Xdim,Xdim,Xdim);
-    planeCoef.resizeNoCopy(Xdim,Xdim);
-    inputPlane.resizeNoCopy(Xdim,Xdim);
-    inputRow.resizeNoCopy(Xdim);
-
-    for (long l = 0; l<Xdim; l++)
-    {
-        for (long m = 0; m < Xdim; m++)
-        {
-            CopyDoubleToDouble(MULTIDIM_ARRAY(*Data2.volume), Xdim, Xdim, Xdim,  l, 0L,  m,
-                               MULTIDIM_ARRAY(inputRow),        1L, Xdim,   1L, 0L, 0L, 0L,
-                               1L, Xdim, 1L);
-            memcpy(&DIRECT_A2D_ELEM(inputPlane,m,0),
-                   MULTIDIM_ARRAY(inputRow),Xdim*sizeof(double));
-        }
-
-        ChangeBasisVolume(MULTIDIM_ARRAY(inputPlane), MULTIDIM_ARRAY(planeCoef),
-                          Xdim, Xdim, 1L, CardinalSpline,
-                          BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status);
-
-        CopyDoubleToDouble(MULTIDIM_ARRAY(planeCoef), Xdim, Xdim,   1L, 0L, 0L, 0L,
-                           MULTIDIM_ARRAY(Coef_x),    Xdim, Xdim, Xdim, 0L, 0L,  l,
-                           Xdim, Xdim, 1L);
-    }
-
-    for (long l = 0; l < Xdim; l++)
-    {
-        for (long m = 0; m < Xdim; m++)
-        {
-            CopyDoubleToDouble(MULTIDIM_ARRAY(*Data2.volume), Xdim, Xdim, Xdim, 0L,  l,  m,
-                               MULTIDIM_ARRAY(inputRow),      Xdim,   1L,   1L, 0L, 0L, 0L,
-                               Xdim, 1L, 1L);
-            CopyDoubleToDouble(MULTIDIM_ARRAY(inputRow),   Xdim,   1L, 1L, 0L, 0L, 0L,
-                               MULTIDIM_ARRAY(inputPlane), Xdim, Xdim, 1L, 0L,  m, 0L,
-                               Xdim, 1L, 1L);
-        }
-
-        ChangeBasisVolume(MULTIDIM_ARRAY(inputPlane), MULTIDIM_ARRAY(planeCoef),
-                          Xdim, Xdim, 1L, CardinalSpline,
-                          BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status);
-        CopyDoubleToDouble(MULTIDIM_ARRAY(planeCoef), Xdim, Xdim,   1L, 0L, 0L, 0L,
-                           MULTIDIM_ARRAY(Coef_y),    Xdim, Xdim, Xdim, 0L, 0L,  l,
-                           Xdim, Xdim, 1L);
-    }
-
-    for (long l = 0L; l < Xdim; l++)
-    {
-        for (long m = 0L; m < Xdim; m++)
-        {
-            CopyDoubleToDouble(MULTIDIM_ARRAY(*Data2.volume), Xdim, Xdim, Xdim, 0L, m, l,
-                               MULTIDIM_ARRAY(inputRow),      Xdim,   1L,   1L, 0L, 0L, 0L,
-                               Xdim, 1L, 1L);
-            CopyDoubleToDouble(MULTIDIM_ARRAY(inputRow),   Xdim,   1L, 1L, 0L, 0L, 0L,
-                               MULTIDIM_ARRAY(inputPlane), Xdim, Xdim, 1L, 0L,  m, 0L,
-                               Xdim, 1L, 1L);
-        }
-
-        ChangeBasisVolume(MULTIDIM_ARRAY(inputPlane), MULTIDIM_ARRAY(planeCoef),
-                          Xdim, Xdim, 1L, CardinalSpline,
-                          BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status);
-        CopyDoubleToDouble(MULTIDIM_ARRAY(planeCoef), Xdim, Xdim,   1L, 0L, 0L, 0L,
-                           MULTIDIM_ARRAY(Coef_z),    Xdim, Xdim, Xdim, 0L, 0L,  l,
-                           Xdim, Xdim, 1L);
-    }
-
-    Matrix2D<double> Ac, Acinv;
-    Ac.initIdentity(4);
-    Acinv.initIdentity(4);
-    double halfSize=XSIZE(*Data2.volume)/2;
-    MAT_ELEM(Ac,0,3)=MAT_ELEM(Ac,1,3)=MAT_ELEM(Ac,2,3)=halfSize;
-    MAT_ELEM(Acinv,0,3)=MAT_ELEM(Acinv,1,3)=MAT_ELEM(Acinv,2,3)=-halfSize;
-
     P.reset(Data2.Xdim,Data2.Xdim);
-    projectionRealShears2(phi, theta, psi, shiftX, shiftY, Coef_x, Coef_y, Coef_z,
-                          Ac, Acinv, P());
+    projectionRealShears2(phi, theta, psi, shiftX, shiftY,
+    					  Data2.Coef_x, Data2.Coef_y, Data2.Coef_z,
+    					  Data2.Ac, Data2.Acinv, P());
 }
 
 ///Parameters reading. Note that all parameters are required.
@@ -449,6 +371,81 @@ VolumeStruct::VolumeStruct(const MultidimArray<double> &V)
     if (XSIZE(V)!=XSIZE(V) || XSIZE(V)!=ZSIZE(V))
         REPORT_ERROR(ERR_MULTIDIM_DIM, "The volume must be cubic");
     Xdim=XSIZE(*volume);
+
+    int    Status = !ERROR;
+    MultidimArray<double> planeCoef, inputPlane, inputRow;
+    Coef_x.resizeNoCopy(Xdim,Xdim,Xdim);
+    Coef_y.resizeNoCopy(Xdim,Xdim,Xdim);
+    Coef_z.resizeNoCopy(Xdim,Xdim,Xdim);
+    planeCoef.resizeNoCopy(Xdim,Xdim);
+    inputPlane.resizeNoCopy(Xdim,Xdim);
+    inputRow.resizeNoCopy(Xdim);
+
+    for (long l = 0; l<Xdim; l++)
+    {
+        for (long m = 0; m < Xdim; m++)
+        {
+            CopyDoubleToDouble(MULTIDIM_ARRAY(V),             Xdim, Xdim, Xdim,  l, 0L,  m,
+                               MULTIDIM_ARRAY(inputRow),        1L, Xdim,   1L, 0L, 0L, 0L,
+                               1L, Xdim, 1L);
+            memcpy(&DIRECT_A2D_ELEM(inputPlane,m,0),
+                   MULTIDIM_ARRAY(inputRow),Xdim*sizeof(double));
+        }
+
+        ChangeBasisVolume(MULTIDIM_ARRAY(inputPlane), MULTIDIM_ARRAY(planeCoef),
+                          Xdim, Xdim, 1L, CardinalSpline,
+                          BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status);
+
+        CopyDoubleToDouble(MULTIDIM_ARRAY(planeCoef), Xdim, Xdim,   1L, 0L, 0L, 0L,
+                           MULTIDIM_ARRAY(Coef_x),    Xdim, Xdim, Xdim, 0L, 0L,  l,
+                           Xdim, Xdim, 1L);
+    }
+
+    for (long l = 0; l < Xdim; l++)
+    {
+        for (long m = 0; m < Xdim; m++)
+        {
+            CopyDoubleToDouble(MULTIDIM_ARRAY(V),             Xdim, Xdim, Xdim, 0L,  l,  m,
+                               MULTIDIM_ARRAY(inputRow),      Xdim,   1L,   1L, 0L, 0L, 0L,
+                               Xdim, 1L, 1L);
+            CopyDoubleToDouble(MULTIDIM_ARRAY(inputRow),   Xdim,   1L, 1L, 0L, 0L, 0L,
+                               MULTIDIM_ARRAY(inputPlane), Xdim, Xdim, 1L, 0L,  m, 0L,
+                               Xdim, 1L, 1L);
+        }
+
+        ChangeBasisVolume(MULTIDIM_ARRAY(inputPlane), MULTIDIM_ARRAY(planeCoef),
+                          Xdim, Xdim, 1L, CardinalSpline,
+                          BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status);
+        CopyDoubleToDouble(MULTIDIM_ARRAY(planeCoef), Xdim, Xdim,   1L, 0L, 0L, 0L,
+                           MULTIDIM_ARRAY(Coef_y),    Xdim, Xdim, Xdim, 0L, 0L,  l,
+                           Xdim, Xdim, 1L);
+    }
+
+    for (long l = 0L; l < Xdim; l++)
+    {
+        for (long m = 0L; m < Xdim; m++)
+        {
+            CopyDoubleToDouble(MULTIDIM_ARRAY(V),             Xdim, Xdim, Xdim, 0L, m, l,
+                               MULTIDIM_ARRAY(inputRow),      Xdim,   1L,   1L, 0L, 0L, 0L,
+                               Xdim, 1L, 1L);
+            CopyDoubleToDouble(MULTIDIM_ARRAY(inputRow),   Xdim,   1L, 1L, 0L, 0L, 0L,
+                               MULTIDIM_ARRAY(inputPlane), Xdim, Xdim, 1L, 0L,  m, 0L,
+                               Xdim, 1L, 1L);
+        }
+
+        ChangeBasisVolume(MULTIDIM_ARRAY(inputPlane), MULTIDIM_ARRAY(planeCoef),
+                          Xdim, Xdim, 1L, CardinalSpline,
+                          BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status);
+        CopyDoubleToDouble(MULTIDIM_ARRAY(planeCoef), Xdim, Xdim,   1L, 0L, 0L, 0L,
+                           MULTIDIM_ARRAY(Coef_z),    Xdim, Xdim, Xdim, 0L, 0L,  l,
+                           Xdim, Xdim, 1L);
+    }
+
+    Ac.initIdentity(4);
+    Acinv.initIdentity(4);
+    double halfSize=Xdim/2;
+    MAT_ELEM(Ac,0,3)=MAT_ELEM(Ac,1,3)=MAT_ELEM(Ac,2,3)=halfSize;
+    MAT_ELEM(Acinv,0,3)=MAT_ELEM(Acinv,1,3)=MAT_ELEM(Acinv,2,3)=-halfSize;
 }
 
 ///Does start instructions. Returns possibles errors.
