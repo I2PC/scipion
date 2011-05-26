@@ -40,7 +40,7 @@
 struct Recons_info;
 
 /**@defgroup BasicART Basic and common ART
-   @ingroup ReconsLibrary 
+   @ingroup ReconsLibrary
     The main difference between ART applied to different cases (single
     particles, crystals, ...) is the single step applied to each case.
     Most of the tasks in the ART are common to all ART processes. All
@@ -57,7 +57,7 @@ struct Recons_info;
 /** ART basic parameters.
     This class contains all information needed about the ART process.
     See the user guide for more information about the ART parameters. */
-class Basic_ART_Parameters
+class GlobalARTParameters
 {
 public:
     // Type of the parallel processing
@@ -72,20 +72,20 @@ public:
     int no_it;
 
     /// Relaxation parameter
-    MultidimArray<double> lambda_list;
+    Matrix1D<double> lambda_list;
 
     /** Valid methods are ART, pCAV, pAVSP, pSART, pBiCAV, pSIRT and pfSIRT
         for parallel computation. This variable establish the way that particles are
         divided into blocks for parallel processing. If sequential
         processing is wanted, set it to ART or SIRT. This is the default.
 
-        \\Ex: parallel_mode=Basic_ART_Parameters::ART*/
+        \\Ex: parallel_mode=GlobalARTParameters::ART*/
     t_parallel_mode parallel_mode;
 
     /// Number of projections for each parallel block
     int block_size;
 
-    /** Valid mdoes are ARTK, CAVK and CAV.
+    /** Valid modes are ARTK, CAVK and CAV.
         This is the mode of updating a single projection, it has nothing
         to do with the global ART or SIRT mode */
     int eq_mode;
@@ -103,7 +103,7 @@ public:
     bool WLS;
 
     /** Relaxation parameter for WLS residual volume */
-    MultidimArray<double> kappa_list;
+    Matrix1D<double> kappa_list;
 
     /** Vector containing all residual images for wlsART */
     std::vector<Projection> residual_imgs;
@@ -227,16 +227,16 @@ public:
 
     /// Variability analysis
     bool variability_analysis;
-    
+
     /// Refine experimental projection before backprojecting
     bool refine;
 
     /// Noisy reconstruction
     bool noisy_reconstruction;
-	
+
 	/// Only for internal purposes, MUST be set when running MPI.
 	bool using_MPI;
-	
+
 	/// Number of threads to use. Can not be different than 1 when using MPI.
 	int threads;
 
@@ -357,6 +357,12 @@ public:
         See Manual help (ART) to see which ones are compulsory. */
     void default_values();
 
+    /** Define command line parameters
+     */
+    static void defineParams(XmippProgram * program, const char* prefix=NULL, const char* comment=NULL);
+
+    void readParams(XmippProgram * program);
+
     /** Read parameters from a command line.
         This function reads the parameters from a command line
         defined by argc and argv. An exception might be thrown by any
@@ -411,7 +417,7 @@ public:
         is thrown if there are no lambdas in the list. */
     double lambda(int n)
     {
-        int imax = XSIZE(lambda_list);
+        int imax = VEC_XSIZE(lambda_list);
         if (imax == 0)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "Basic_art: There are no lambdas\n");
         if (n >= imax) return lambda_list(imax -1);
@@ -424,7 +430,7 @@ public:
         is thrown if there are no lambdas in the list. */
     double kappa(int n)
     {
-        int imax = XSIZE(kappa_list);
+        int imax = VEC_XSIZE(kappa_list);
         if (imax == 0)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "Basic_art: There are no kappas\n");
         if (n >= imax) return kappa_list(imax -1);
@@ -471,10 +477,10 @@ void sort_randomly(int numIMG, MultidimArray<int> &ordered_list);
     operator << of the Extra_ART_Parameters to show the specific part
     of the History.
 
-    Basic_ART_Parameters is not constant since things are written in
-    \ref Basic_ART_Parameters::fh_hist.*/
+    GlobalARTParameters is not constant since things are written in
+    \ref GlobalARTParameters::fh_hist.*/
 template <class Extra_ART_Parameters>
-void Basic_ART_Init_history(Basic_ART_Parameters &prm,
+void Basic_ART_Init_history(GlobalARTParameters &prm,
                             const Extra_ART_Parameters &eprm, const GridVolume &vol_basis0);
 
 /** Perform all ART iterations.
@@ -491,13 +497,13 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
     If it is -1, the function is run in seuqential mode. If it is 0, then
     it is the root process.
 
-    See the \ref Basic_ART_Parameters for more information
+    See the \ref GlobalARTParameters for more information
     about how to generate the iterations.
 */
 
 
 template <class Extra_ART_Parameters>
-void Basic_ART_iterations(Basic_ART_Parameters &prm,
+void Basic_ART_iterations(GlobalARTParameters &prm,
                           Extra_ART_Parameters &eprm, GridVolume &vol_basis, int rank = -1);
 
 /** Main Routine for ART.
@@ -507,7 +513,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
     to have the same size as the input projections. All output files
     are generated as if the ART program had been called. */
 template <class Extra_ART_Parameters>
-void Basic_ROUT_Art(Basic_ART_Parameters &prm,
+void Basic_ROUT_Art(GlobalARTParameters &prm,
                     Extra_ART_Parameters &eprm, Image<double> &vol_voxels,
                     GridVolume &vol_basis);
 
@@ -565,7 +571,7 @@ public:
     int Zoutput_volume_size;
     int Youtput_volume_size;
     int Xoutput_volume_size;
-    Basic_ART_Parameters *prm;
+    GlobalARTParameters *prm;
 
     /// Vector of training vectors
     std::vector < MultidimArray<double> > VA;
@@ -574,7 +580,7 @@ public:
     int N;
 
     /// Constructor
-    VariabilityClass(Basic_ART_Parameters *_prm,
+    VariabilityClass(GlobalARTParameters *_prm,
                      int _Zoutput_volume_size, int _Youtput_volume_size,
                      int _Xoutput_volume_size);
 
@@ -614,10 +620,10 @@ public:
     int Xoutput_volume_size;
     bool apply_POCS;
     MultidimArray<double> POCS_errors;
-    Basic_ART_Parameters *prm;
+    GlobalARTParameters *prm;
 
     /// Constructor
-    POCSClass(Basic_ART_Parameters *_prm,
+    POCSClass(GlobalARTParameters *_prm,
               int _Zoutput_volume_size, int _Youtput_volume_size,
               int _Xoutput_volume_size);
 

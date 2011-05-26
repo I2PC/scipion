@@ -126,7 +126,7 @@ void build_recons_info(MetaData &selfile,
 }
 
 /* ------------------------------------------------------------------------- */
-VariabilityClass::VariabilityClass(Basic_ART_Parameters *_prm,
+VariabilityClass::VariabilityClass(GlobalARTParameters *_prm,
                                    int _Zoutput_volume_size, int _Youtput_volume_size,
                                    int _Xoutput_volume_size)
 {
@@ -430,7 +430,7 @@ void VariabilityClass::finishAnalysis()
 #define POCS_N_measure  8
 #define POCS_N_use      2
 /* Constructor ............................................................. */
-POCSClass::POCSClass(Basic_ART_Parameters *_prm,
+POCSClass::POCSClass(GlobalARTParameters *_prm,
                      int _Zoutput_volume_size, int _Youtput_volume_size,
                      int _Xoutput_volume_size)
 {

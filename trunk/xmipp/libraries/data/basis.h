@@ -29,6 +29,7 @@
 #include "blobs.h"
 #include "splines.h"
 #include "imageover.h"
+#include "program.h"
 
 const int BLOB_SUBSAMPLING = 10;
 const int PIXEL_SUBSAMPLING = 1;
@@ -56,8 +57,11 @@ public:
     /// Blob parameters
     struct blobtype blob;
 
+    /// Relative size for the grid
+    double grid_relative_size;
+
     /** Volume deformation matrix.
-        See the documentation of Basic_ART_Parameters for further explanation. */
+        See the documentation of GlobalARTParameters for further explanation. */
     Matrix2D<double> *D;
 public:
     /// Empty constructor. By default, blobs
@@ -82,6 +86,12 @@ public:
     /** Read parameters from a file.
         An exception is thrown if the file cannot be open */
     void read(const FileName &fn);
+
+
+    static void defineParams(XmippProgram * program, const char* prefix=NULL, const char* comment=NULL);
+    void readParams(XmippProgram * program);
+
+
 
     /** Produce side information.
         You must provide the grid in which this basis function will live */
@@ -147,21 +157,24 @@ public:
         switch (type)
         {
         case (blobs):
-            module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
+                        module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
             return blob_val(module_r, blob);
             break;
         case (voxels):
-            if (-0.5 <= XX(r) && XX(r) < 0.5 &&
-                -0.5 <= YY(r) && YY(r) < 0.5 &&
-                -0.5 <= ZZ(r) && ZZ(r) < 0.5) return 1.0;
-            else return 0.0;
+                        if (-0.5 <= XX(r) && XX(r) < 0.5 &&
+                            -0.5 <= YY(r) && YY(r) < 0.5 &&
+                            -0.5 <= ZZ(r) && ZZ(r) < 0.5)
+                            return 1.0;
+                else
+                    return 0.0;
             break;
         case (splines):
-            if (-2 <= XX(r) && XX(r) < 2 &&
-                -2 <= YY(r) && YY(r) < 2 &&
-                -2 <= ZZ(r) && ZZ(r) < 2)
-                return spatial_Bspline03LUT(r);
-            else return 0.0;
+                        if (-2 <= XX(r) && XX(r) < 2 &&
+                            -2 <= YY(r) && YY(r) < 2 &&
+                            -2 <= ZZ(r) && ZZ(r) < 2)
+                            return spatial_Bspline03LUT(r);
+                else
+                    return 0.0;
             break;
         }
         return 0.0;
@@ -179,11 +192,11 @@ public:
         int i, j;
         switch (type)
         {
-            case (blobs):
-                module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
-                return blob_proj(module_r, blob);
-                break;
-            case (voxels):
+        case (blobs):
+                        module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
+            return blob_proj(module_r, blob);
+            break;
+        case (voxels):
             {
                 double retval = 0;
                 ZZ(aux) = ZZ(r);
@@ -199,9 +212,9 @@ public:
                 return retval*pAvg;
                 break;
             }
-            case (splines):
-                return spatial_Bspline03_proj(r, u);
-                break;
+        case (splines):
+                        return spatial_Bspline03_proj(r, u);
+            break;
         }
         return 0.0;
     }

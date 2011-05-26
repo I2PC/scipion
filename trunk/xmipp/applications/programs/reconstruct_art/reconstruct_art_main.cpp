@@ -26,56 +26,63 @@
 #include <reconstruction/reconstruct_art.h>
 //#include <reconstruction/art_crystal.h>
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
-// Variables
-    Basic_ART_Parameters   art_prm;
-    Plain_ART_Parameters   dummy;
-//    Crystal_ART_Parameters crystal_art_prm;
-    Image<double>        vol_voxels;
-    GridVolume             vol_blobs;
-    GridVolume             *vol_blobs_var = NULL;
-    int                    crystal_mode;
-
-// Read Art Parameters
-    try
-    {
-        art_prm.read(argc, argv);
-        // Crystal
-        crystal_mode = checkParameter(argc, argv, "-crystal");
-        if (crystal_mode)
-        	REPORT_ERROR(ERR_NOT_IMPLEMENTED,"crystal art temporarily deactivated.");
-//        	crystal_art_prm.read(argc, argv, art_prm);
-    }
-    catch (XmippError &XE)
-    {
-        std::cout << XE;
-        bool usage_more = checkParameter(argc, argv, "-more_help");
-        if (usage_more)
-        {
-            art_prm.usage_more();
-            //crystal_art_prm.usage_more();
-        }
-        else
-            art_prm.usage();
-        exit(1);
-    }
-
-// Call main ART routine
-    try
-    {
-        if (!crystal_mode)
-            Basic_ROUT_Art(art_prm, dummy, vol_voxels, vol_blobs);
-        else
-        	std::cerr << "never get here..." <<std::endl;
-
-            //Basic_ROUT_Art(art_prm, crystal_art_prm, vol_voxels, vol_blobs);
-        std::cerr.flush();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        exit(1);
-    }
-    exit(0);
+    ProgReconsART program;
+    program.read(argc, argv);
+    return program.tryRun();
 }
+
+//int main(int argc, char *argv[])
+//{
+//// Variables
+//    GlobalARTParameters   art_prm;
+//    Plain_ART_Parameters   dummy;
+////    Crystal_ART_Parameters crystal_art_prm;
+//    Image<double>        vol_voxels;
+//    GridVolume             vol_blobs;
+//    GridVolume             *vol_blobs_var = NULL;
+//    int                    crystal_mode;
+//
+//// Read Art Parameters
+//    try
+//    {
+//        art_prm.read(argc, argv);
+//        // Crystal
+//        crystal_mode = checkParameter(argc, argv, "-crystal");
+//        if (crystal_mode)
+//         REPORT_ERROR(ERR_NOT_IMPLEMENTED,"crystal art temporarily deactivated.");
+////         crystal_art_prm.read(argc, argv, art_prm);
+//    }
+//    catch (XmippError &XE)
+//    {
+//        std::cout << XE;
+//        bool usage_more = checkParameter(argc, argv, "-more_help");
+//        if (usage_more)
+//        {
+//            art_prm.usage_more();
+//            //crystal_art_prm.usage_more();
+//        }
+//        else
+//            art_prm.usage();
+//        exit(1);
+//    }
+//
+//// Call main ART routine
+//    try
+//    {
+//        if (!crystal_mode)
+//            Basic_ROUT_Art(art_prm, dummy, vol_voxels, vol_blobs);
+//        else
+//         std::cerr << "never get here..." <<std::endl;
+//
+//            //Basic_ROUT_Art(art_prm, crystal_art_prm, vol_voxels, vol_blobs);
+//        std::cerr.flush();
+//    }
+//    catch (XmippError XE)
+//    {
+//        std::cout << XE;
+//        exit(1);
+//    }
+//    exit(0);
+//}

@@ -33,7 +33,7 @@
 #include "recons_misc.h"
 
 /* Default values ========================================================== */
-void Basic_ART_Parameters::default_values()
+void GlobalARTParameters::default_values()
 {
     fh_hist            = NULL;
     fn_start           = "";
@@ -50,7 +50,7 @@ void Basic_ART_Parameters::default_values()
     sort_last_N        = 2;
     WLS                = false;
     no_it              = 1;
-    kappa_list.resize(1);
+    kappa_list.resizeNoCopy(1);
     kappa_list.initConstant(0.5);
     lambda_list.resize(1);
     lambda_list.initConstant(0.01);
@@ -98,125 +98,487 @@ void Basic_ART_Parameters::default_values()
     threads            = 1;
 }
 
+void GlobalARTParameters::defineParams(XmippProgram * program, const char* prefix, const char* comment)
+{
+    //  char tempLine[256];
+    //
+    //    if(prefix == NULL)
+    //        sprintf(tempLine, "  [--basis <basis_type=blobs>] ");
+    //    else
+    //        sprintf(tempLine,"%s --basis <basis_type=blobs> ", prefix);
+    //    if (comment != NULL)
+    //        sprintf(tempLine, "%s : %s", tempLine, comment);
+    //
+    //    program->addParamsLine(tempLine);
+
+    program->addParamsLine("   -i <md_file>                : Metadata file with input projections");
+    program->addParamsLine("   [--oroot <rootname>]        : Output rootname. If not supplied, input name is taken without extension.");
+    program->addParamsLine("                               :+++The created files are as follows: %BR%");
+    program->addParamsLine("                               :+++  =outputname.vol= 3D reconstruction in voxels %BR%");
+    program->addParamsLine("                               :+++  =outputname.basis= 3D reconstruction in basis if the =--save_basis= option is enabled). The grid parameters are also stored in the same file %BR%");
+    program->addParamsLine("                               :+++  =outputname.hist= History and information about the 3D reconstruction process %BR%");
+    program->addParamsLine("   alias -o;");
+    program->addParamsLine("   [--ctf <ctf_file=\"\">]     : Metadata file with CTFs");
+    program->addParamsLine("   [--unmatched]               : apply unmatched forward/backward projectors");
+    program->addParamsLine("   [--start <basisvolume_file=\"\">]  : Start from basisvolume. The reconstruction is performed in the same grid as the one ");
+    program->addParamsLine("                               : in which the basis volume was stored (any -FCC or -CC or grid size value are useless)");
+    program->addParamsLine("  [--max_tilt <alpha=10.e+6>]  : Skip projection with absolute tilt angle greater than alpha");
+    program->addParamsLine("  [--ref_trans_after <n=-1>]   : Refine the translation alignment after n projections");
+    program->addParamsLine("  [--ref_trans_step <n=-1>]    : Max displacement in translation alignment. This is a double");
+    program->addParamsLine("  [--sparse <eps=-1>]          : Sparsity threshold");
+    program->addParamsLine("  [--diffusion <eps=-1>]       : Diffusion weight");
+    program->addParamsLine("  [--surface <surf_mask_file=\"\">] : Use this file as a surface mask");
+    program->addParamsLine("  [--POCS_freq <f=1>]          : Impose POCS conditions every f projections");
+    program->addParamsLine("  [--known_volume <vol=-1>]    : The volume is cut down to this mass, ie, the highest [mass] voxels are kept while ");
+    program->addParamsLine("                               : the rest are set to 0");
+    program->addParamsLine("  [--POCS_positivity]          : Apply positivity constraint");
+    program->addParamsLine("  [--goldmask <value=1.e+6>]   : Pixels below this value are not considered for reconstruction");
+    program->addParamsLine("  [--shiftedTomograms]         : Remove border pixels created by alignment of tomograms");
+    program->addParamsLine("  [--dont_apply_shifts]        : Do not apply shifts as stored in the 2D-image headers");
+    program->addParamsLine("  [--variability]              : Perform variability analysis");
+    program->addParamsLine("  [--refine]                   : Refine input projection before backprojecting");
+    program->addParamsLine("  [--noisy_reconstruction]     : Perform a companion noisy reconstruction. ");
+    program->addParamsLine("                               :+ If given, the algorithm will perform two reconstructions. One with the input ");
+    program->addParamsLine("                               :+ data, and another one with pure noise images applying exactly the same procedure ");
+    program->addParamsLine("                               :+ as to the signal projections. This reconstruction is further used by ");
+    program->addParamsLine("                               :+ the SSNR program in order to calculate the VSSNR or the SSNR itself.");
+    program->addParamsLine("                               :+++ The created files are as follows: %BR%");
+    program->addParamsLine("                               :+++  =[fn_root]_noise.vol= Reconstruction of the pure noise %BR%");
+    program->addParamsLine("                               :+++  =[fn_root]_noise_proj.sel= Selection file with the pure noise images %BR%");
+    program->addParamsLine("                               :+++  =[fn_root]_signal_proj.sel= Selection file with the signal images (a reordered version of the input (-i) selfile) %BR%");
+    program->addParamsLine("                               :+++  =[fn_root]_noise_proj?????.xmp= Pure noise images used for the reconstruction %BR%");
+    program->addParamsLine("  [--ray_length <r=-1>]        : Length of the ray in basis units that will be projected onto the image plane");
+
+    program->addParamsLine(" == Symmetry parameters == ");
+    program->addParamsLine("  [--sym <sym_file=\"\">]      : Use a symmetry file. It should give symmetry elements, ie, rotational axis, ");
+    program->addParamsLine("                               : symmetry planes or whatever such that new points of view can be obtained");
+    program->addParamsLine("  [--sym_each <n=0>]           : Force the reconstruction to be symmetric each n projections");
+    program->addParamsLine("  [--force_sym <n=0>]          : Force the reconstruction to be symmetric n times at each projection");
+    program->addParamsLine("  [--no_group]                 : Do not generate symmetry subgroup");
+    program->addParamsLine("  [--no_symproj]               : Do not use symmetrized projections");
+
+    program->addParamsLine(" == Iteration parameters == ");
+    program->addParamsLine("  [-l <...>]                   : Relaxation factor, by default 0.01 (recommended range 0.0 - 0.1). ");
+    program->addParamsLine("                               : A list of lambda values is also accepted as \"-l lambda0 lambda1 ...\"");
+    program->addParamsLine("  [-n <noit=1>]                : Number of iterations");
+    program->addParamsLine("  [--stop_at <it_stop=0>]      : Total number of iterated projections before algorithm stops. ");
+    program->addParamsLine("                               :+ For instance, if there are 100 images, with two iterations and we ");
+    program->addParamsLine("                               :+ want to stop at the half of the second iteration, then you must set it to 150");
+    program->addParamsLine("  [--equation_mode <mode=ARTK> ]: Equation to project onto the hyperplane");
+    program->addParamsLine("              where <mode> ");
+    program->addParamsLine("        ARTK                   : Block ART");
+    program->addParamsLine("        CAV                    : Component Averaging");
+    program->addParamsLine("        CAVK                   : Block Component Averaging");
+    program->addParamsLine("        CAVARTK                : Component Averaging Variant of Block ART");
+
+    program->addParamsLine("  [--sort_last <N=2>]          : By default the algorithm sorts projections in the most orthogonally possible way. ");
+    program->addParamsLine("                               : The most orthogonal way is defined as choosing the projection which maximizes the ");
+    program->addParamsLine("                               : dot product with the N previous inserted projections. Use -1 to sort with all ");
+    program->addParamsLine("                               : previous projections");
+    program->addParamsLine(" or --random_sort              : Instead of orthogonal sort, projections are presented randomly to the algorithm");
+    program->addParamsLine(" or --no_sort                  : No sort must be applied");
+    program->addParamsLine("  [--WLS]                      : Perform weighted least squares ART");
+    program->addParamsLine("  [-k <...> ]                  : Relaxation factor for WLS residual, by default 0.5. ");
+    program->addParamsLine("                               : A list of kappa values is also accepted as \"-k kappa0 kappa1 ...\"");
+
+    program->addParamsLine(" == Basis Parameters ==");
+    Basis::defineParams(program);
+
+    program->addParamsLine(" == Grid parameters == ");
+    program->addParamsLine("   [-g <gridsz=1.41>]          : Relative size of the measuring unit in the grid lattice. By default, a unit in ");
+    program->addParamsLine("                               : the grid system equals 1.41 units in the Universal System. This value is optimized ");
+    program->addParamsLine("                               : for a BCC structure");
+    program->addParamsLine("                               :+++ %BR% <verbatim>");
+    program->addParamsLine("                               : if gridsz =  -1 => gridsz=2^(1/2)");
+    program->addParamsLine("                               :+++ </verbatim> <verbatim> ");
+    program->addParamsLine("                               :              -2 => gridsz=2^(1/3)");
+    program->addParamsLine("                               :+++ </verbatim> ");
+    program->addParamsLine("   [--grid_type <type=BCC>]    : Shape of the grid structure");
+    program->addParamsLine("                where <type>");
+    program->addParamsLine("            BCC                : Body Centered Cubic");
+    program->addParamsLine("            FCC                : Face Centered  Cubic");
+    program->addParamsLine("            SC                 : Simple Cubic");
+    program->addParamsLine("   [-R <interest_sphere=-1>]   : Radius of the interest sphere. If provided, ART runs twice faster since only the ");
+    program->addParamsLine("                               : sphere with this radius (in pixel units) is reconstructed");
+    program->addParamsLine("   [--ext <proj_ext=0>]        : Projection extension. In order to avoid the box effect (those voxels near the volume ");
+    program->addParamsLine("                               : borders are brighter than the rest), you can extent your projections resulting in ");
+    program->addParamsLine("                               : a slower reconstruction but more accurate. Recommended values to avoid the box ");
+    program->addParamsLine("                               : effect go from 5 to 10");
+    program->addParamsLine("   [--output_size <Xsize=0> <Ysize=0> <Zsize=0>] : Output volume size in Pixels. Reconstruction size is taken from ");
+    program->addParamsLine("                               : the projection size. However, the output size can be different, if the output volume ");
+    program->addParamsLine("                               : is bigger, then the volume is zero padded.");
+    program->addParamsLine("   [--sampling_rate <Ts=1>]    : Pixel size (Angstrom),  affects to -r, -g, -R and --ref_trans_step");
+
+    program->addParamsLine(" ==+ Parallel parameters == ");
+    program->addParamsLine(" : by default, sequential ART is applied");
+    program->addParamsLine("   [--thr <N=1>]               : Number of threads to use. NOTE: Not available when using MPI.");
+    program->addParamsLine("   [--parallel_mode <mode=ART>]: Parallel mode");
+    program->addParamsLine("        where <mode>");
+    program->addParamsLine("               ART             : Default");
+    program->addParamsLine("               SIRT            : Simultaneous Iterative Reconstruction Technique");
+    program->addParamsLine("   pSIRT                       : Parallel (MPI) Simultaneous Iterative Reconstruction Technique");
+    program->addParamsLine("   pfSIRT                      : Parallel (MPI) False Simultaneous Iterative Reconstruction Technique (Faster convergence than pSIRT)");
+    program->addParamsLine("   pSART                       : Parallel (MPI) Simultaneous ART");
+    program->addParamsLine("   pAVSP                       : Parallel (MPI) Average Strings");
+    program->addParamsLine("   pBiCAV                      : Parallel (MPI) Block Iterative CAV");
+    program->addParamsLine("   pCAV                        : Parallel (MPI) CAV");
+    program->addParamsLine("   [--block_size <n=1>]        : Number of projections to each block (SART and BiCAV)");
+
+    program->addParamsLine("==+ Debugging options ==");
+    program->addParamsLine("  [--print_system_matrix]      : Print the matrix of the system Ax=b. The format is:");
+    program->addParamsLine("                               :+++ %BR% <verbatim>");
+    program->addParamsLine("                               : Equation system (Ax=b) ---------------------- ");
+    program->addParamsLine("                               :+++ </verbatim> <verbatim> ");
+    program->addParamsLine("                               : pixel=<p> --> <b> = <a1> <a2> ... ");
+    program->addParamsLine("                               :+++ </verbatim> ");
+    program->addParamsLine("                               : I.e., for the pixel p (pixels are numbered lexicographically) with experimental ");
+    program->addParamsLine("                               : value b, the equation ax=b is set. a is the corresponding row of matrix A. The ");
+    program->addParamsLine("                               : coefficient a_i is equal to the contribution of the basis i to pixel p. x is the ");
+    program->addParamsLine("                               : number of basis");
+    program->addParamsLine("  [--show_iv <n=10>]           : Show volumes/images as the reconstruction goes. The volume is update every n projections");
+    program->addParamsLine("  [--show_error]               : Show error for each projection");
+    program->addParamsLine("  [--show_stats]               : Give some statistical information during the process,  they might be useful to see how the process is ");
+    program->addParamsLine("                               : going. The mean squared error for each projection is shown by default");
+    program->addParamsLine("  [--save_at_each_step]        : Save intermediate projections. This option allows deep debugging as it save all projections and volumes ");
+    program->addParamsLine("                               : involved in the reconstruction process. After each step you are asked to press a key, so that you could ");
+    program->addParamsLine("                               : inspect carefully the results. The names for these files are:");
+    program->addParamsLine("                               : PPPtheo, PPPread, PPPcorr, PPPdiff");
+    program->addParamsLine("                               : PPPbasis.basis, PPPvol.vol");
+    program->addParamsLine("                               : PPPvolPOCS1, PPPvolPOCS2, PPPvolPOCS3");
+    program->addParamsLine("  [--save_intermediate <n=0>]    : Save intermediate volumes (every <n> projections). If not provided, volumes are stored at each iteration ");
+    program->addParamsLine("                               : and this parameter must be used at the end of the command to prevent errors. The names for these volumes are:");
+    program->addParamsLine("                               :+++ %BR%");
+    program->addParamsLine("                               : [filename root]it[it_no].vol Ex: art0001it0.vol ");
+    program->addParamsLine("                               :+++ %BR%");
+    program->addParamsLine("                               : [filename root]it]it_no].basis If the --save_basis option is enabled");
+    program->addParamsLine("                               :+++ %BR%");
+    program->addParamsLine("  [--save_basis]               : Save also the 3D reconstruction in basis each time that you have to save the reconstructed volume");
+    program->addParamsLine("  [--manual_order]             : You are prompted to give the number of the following projection to be presented to the algorithm");
+    program->addParamsLine("  [--only_sym]                 : Skip all those projections generated by symmetry (symmetries different from -1)");
+
+}
+
+void GlobalARTParameters::readParams(XmippProgram * program)
+{
+    default_values();
+
+    fn_sel = program->getParam("-i");
+
+    if (program->checkParam("-o"))
+        fn_root = program->getParam("-o");
+    else
+        fn_root = fn_sel.withoutExtension();
+
+    fn_ctf = program->getParam("--ctf");
+    unmatched = program->checkParam("--unmatched");
+    fn_start = program->getParam("--start");
+    max_tilt = program->getDoubleParam("--max_tilt");
+    ref_trans_after = program->getIntParam("--ref_trans_after");
+    ref_trans_step  = program->getIntParam("--ref_trans_step");
+    sparseEps = program->getDoubleParam("--sparse");
+    diffusionWeight = program->getDoubleParam("--diffusion");
+    fn_surface_mask = program->getParam("--surface");
+    POCS_freq = program->getIntParam("--POCS_freq");
+    known_volume = program->getDoubleParam("--known_volume");
+    positivity = program->checkParam("--POCS_positivity");
+    goldmask = program->getDoubleParam("--goldmask");
+    shiftedTomograms = program->checkParam("--shiftedTomograms");
+    apply_shifts = !program->checkParam("--dont_apply_shifts");
+
+
+    ray_length = program->getDoubleParam("--ray_length");
+
+    // Symmetry parameters
+    fn_sym = program->getParam("--sym");
+    sym_each = program->getIntParam("--sym_each");
+    force_sym = program->getIntParam("--force_sym");
+    do_not_generate_subgroup = program->checkParam("--no_group");
+    do_not_use_symproj = program->checkParam("--no_symproj");
+
+    // Iteration parameters
+    StringVector list;
+    program->getListParam("-l", list);
+    size_t listSize = list.size();
+
+    if (listSize != 0)
+    {
+        lambda_list.resizeNoCopy(listSize);
+
+        for (size_t k = 0; k < listSize; k++)
+            VEC_ELEM(lambda_list, k) = textToFloat(list[k]);
+    }
+
+    no_it = program->getIntParam("-n");
+    stop_at = program->getIntParam("--stop_at");
+
+    String tempString = program->getParam("--equation_mode");
+    if (tempString == "CAVK")
+        eq_mode = CAVK;
+    else if (tempString == "CAV")
+        eq_mode = CAV;
+    else if (tempString == "CAVARTK")
+        eq_mode = CAVARTK;
+    else
+        eq_mode = ARTK;
+
+    sort_last_N = program->getIntParam("--sort_last");
+    random_sort = program->checkParam("--random_sort");
+    dont_sort   = program->checkParam("--no_sort");
+    WLS         = program->checkParam("--WLS");
+
+    list.clear();
+    program->getListParam("-k", list);
+    listSize = list.size();
+    if (listSize != 0)
+    {
+        kappa_list.resizeNoCopy(listSize);
+
+        for (size_t k = 0; k < listSize; k++)
+            VEC_ELEM(kappa_list, k) = textToFloat(list[k]);
+    }
+
+    // Basis parameters
+    basis.readParams(program);
+
+    // Grid parameters
+
+    if (basis.type == Basis::voxels || basis.type == Basis::splines)
+        grid_type = CC;
+
+    if (program->checkParam("-g"))
+    {
+        grid_relative_size = program->getDoubleParam("-g");
+        if (grid_relative_size == -1)
+            grid_relative_size = sqrt (2.0);
+        else if (grid_relative_size == -2)
+            grid_relative_size = pow (2.0,1.0/3.0);
+    }
+    else
+        grid_relative_size = basis.grid_relative_size;
+
+    tempString = program->getParam("--grid_type");
+
+    if (tempString == "BCC")
+        grid_type = BCC;
+    if (tempString == "FCC")
+        grid_type = FCC;
+    else if (tempString == "SC")
+        grid_type = CC;
+    else
+        grid_type = BCC;
+
+    R = program->getDoubleParam("-R");
+    proj_ext = program->getIntParam("--ext");
+    Xoutput_volume_size = program->getDoubleParam("--output_size", 0);
+    Youtput_volume_size = program->getDoubleParam("--output_size", 1);
+    Zoutput_volume_size = program->getDoubleParam("--output_size", 2);
+    sampling = program->getDoubleParam("--sampling_rate");
+
+    // Parallel parameters
+    threads = program->getIntParam("--thr");
+
+    tempString = program->getParam("--parallel_mode");
+
+    if (tempString == "pSART")
+        parallel_mode=pSART;
+    else if (tempString == "pSIRT")
+        parallel_mode=pSIRT;
+    else if (tempString == "SIRT")
+        parallel_mode=SIRT;
+    else if (tempString == "pfSIRT")
+        parallel_mode=pfSIRT;
+    else if (tempString == "pBiCAV")
+        parallel_mode=pBiCAV;
+    else if (tempString == "pAVSP")
+        parallel_mode=pAVSP;
+    else if (tempString == "pCAV")
+        parallel_mode=pCAV;
+    else
+        parallel_mode=ART;
+
+    block_size = program->getIntParam("--block_size");
+    //    fn_control = program->getParam("--control");
+
+
+    // Debugging parameters
+
+    print_system_matrix = program->checkParam("--print_system_matrix");
+    if (program->checkParam("--show_error"))
+        tell |= TELL_SHOW_ERROR;
+    if (program->checkParam("--manual_order"))
+        tell |= TELL_MANUAL_ORDER;
+    if (program->checkParam("--only_sym"))
+        tell |= TELL_ONLY_SYM;
+    if (program->checkParam("--save_at_each_step"))
+        tell |= TELL_SAVE_AT_EACH_STEP;
+    if (program->checkParam("--save_basis"))
+        tell |= TELL_SAVE_BASIS;
+    if (program->checkParam("--show_stats"))
+        tell |= TELL_STATS;
+    if (program->checkParam("--save_intermediate"))
+    {
+        tell |= TELL_SAVE_INTERMIDIATE;
+        save_intermidiate_every = program->getIntParam("save_intermediate");
+    }
+    if (program->checkParam("--show_iv"))
+    {
+        tell |= TELL_IV;
+        save_intermidiate_every = program->getIntParam("save_intermediate");
+    }
+
+
+
+    if (program->checkParam("--variability"))
+    {
+        variability_analysis = true;
+        parallel_mode = SIRT;
+        no_it = 1;
+    }
+
+    refine = program->checkParam("--refine");
+
+    if (program->checkParam("--noisy_reconstruction"))
+    {
+        if (parallel_mode != ART)
+            REPORT_ERROR(ERR_ARG_INCORRECT,"GlobalARTParameters::read: Noisy reconstructions" \
+                         " can only be done for ART");
+        else
+            noisy_reconstruction = true;
+    }
+
+
+    //divide by the sampling rate
+    if (sampling != 1.)
+    {
+        basis.set_sampling_rate(sampling);
+        grid_relative_size /= sampling;
+        if (R != -1.)
+            R /= sampling;
+        ref_trans_step /= sampling;
+    }
+
+}
+
+
 /* Read ART parameters ===================================================== */
 #define GET_PARAM_WITH_DEF(flag,default_value) \
-    getParameter(argc,argv,"-"flag,default_value)
+getParameter(argc,argv,"-"flag,default_value)
 #define GET_PARAM(flag) \
-    getParameter(argc,argv,"-"flag)
+getParameter(argc,argv,"-"flag)
 #define CHECK_PARAM(flag) \
-    checkParameter(argc,argv,"-"flag)
+checkParameter(argc,argv,"-"flag)
 #define GET_VECTOR_PARAM(flag,length) \
-    getVectorParameter(argc, argv, "-"flag,length)
+getVectorParameter(argc, argv, "-"flag,length)
 
 #define GET_ART_PARAMS \
-    default_values(); \
-    fn_sel             =      GET_PARAM(         "i"                    ); \
-    fn_ctf             =      GET_PARAM_WITH_DEF("CTF",     ""          ); \
-    unmatched          =      CHECK_PARAM(       "unmatched"            );  \
-    if (CHECK_PARAM("o")) \
-        fn_root        =      GET_PARAM(         "o"                    );  \
-    else fn_root       =      fn_sel.withoutExtension();                   \
-    fn_start           =      GET_PARAM_WITH_DEF("start",     ""        );  \
-    if      (CHECK_PARAM("pSART"))  parallel_mode=pSART;\
-    else if (CHECK_PARAM("pSIRT"))  parallel_mode=pSIRT; \
-    else if (CHECK_PARAM("SIRT"))   parallel_mode=SIRT; \
-    else if (CHECK_PARAM("pfSIRT")) parallel_mode=pfSIRT; \
-    else if (CHECK_PARAM("pBiCAV")) parallel_mode=pBiCAV; \
-    else if (CHECK_PARAM("pAVSP"))  parallel_mode=pAVSP; \
-    else if (CHECK_PARAM("pCAV"))   parallel_mode=pCAV; \
-    else                            parallel_mode=ART; \
-    ray_length         = textToInteger(GET_PARAM_WITH_DEF("ray_length","-1"      )); \
-    block_size         = textToInteger(GET_PARAM_WITH_DEF("block_size","1" )); \
-    fn_sym             =      GET_PARAM_WITH_DEF("sym",       ""        );  \
-    fn_control         =      GET_PARAM_WITH_DEF("control",       ""        );  \
-    force_sym          = textToInteger(GET_PARAM_WITH_DEF("force_sym","0"        )); \
-    do_not_generate_subgroup= CHECK_PARAM(       "no_group"             );  \
-    do_not_use_symproj = CHECK_PARAM(       "no_symproj"             );  \
-    shiftedTomograms   =      CHECK_PARAM(       "shiftedTomograms"     ); \
-    goldmask    = textToFloat(GET_PARAM_WITH_DEF("goldmask","1e6")); \
-    fn_surface_mask    =      GET_PARAM_WITH_DEF("surface",   ""        );  \
-    random_sort        =      CHECK_PARAM(       "random_sort"          );  \
-    dont_sort          =      CHECK_PARAM(       "no_sort"          );  \
-    sort_last_N        = textToInteger(GET_PARAM_WITH_DEF("sort_last", "2"       )); \
-    WLS                = CHECK_PARAM("WLS"); \
-    kappa_list  =  GET_VECTOR_PARAM("k",-1); \
-    if (XSIZE(kappa_list)==0)                                              \
-    {kappa_list.resize(1); kappa_list.initConstant(0.5);}               \
-    no_it              = textToInteger(GET_PARAM_WITH_DEF("n",         "1"       )); \
-    stop_at            = textToInteger(GET_PARAM_WITH_DEF("stop_at",   "0"       )); \
-    lambda_list        =        GET_VECTOR_PARAM("l",         -1);          \
-    if (XSIZE(lambda_list)==0)                                              \
-    {lambda_list.resize(1); lambda_list.initConstant(0.01);}               \
-    sampling           = textToFloat(GET_PARAM_WITH_DEF("sampling",  "1."        )); \
-    sym_each           = textToInteger(GET_PARAM_WITH_DEF("sym_each",  "0"         )); \
-    max_tilt           = textToFloat(GET_PARAM_WITH_DEF("max_tilt",  "10E6"      )); \
-    ref_trans_after    = textToInteger(GET_PARAM_WITH_DEF("ref_trans_after", "-1"  )); \
-    ref_trans_step     = textToFloat(GET_PARAM_WITH_DEF("ref_trans_step", "-1"    )); \
-    sparseEps          = textToFloat(GET_PARAM_WITH_DEF("sparse", "-1"  )); \
-    diffusionWeight    = textToFloat(GET_PARAM_WITH_DEF("diffusion", "-1"  )); \
-    grid_relative_size = textToFloat(GET_PARAM_WITH_DEF("g",         "1.41"      )); \
-    R                  = textToFloat(GET_PARAM_WITH_DEF("R",         "-1"        )); \
-    POCS_freq          = textToInteger(GET_PARAM_WITH_DEF("POCS_freq", "1"         )); \
-    known_volume       = textToFloat(GET_PARAM_WITH_DEF("known_volume","-1"      )); \
-    positivity         = CHECK_PARAM("POCS_positivity"); \
-    apply_shifts       = !CHECK_PARAM("dont_apply_shifts"); \
-    threads            = textToInteger(GET_PARAM_WITH_DEF("thr", "1"         )); \
-    if      (grid_relative_size == -1)  grid_relative_size = sqrt (2.0); \
-    else if (grid_relative_size == -2)  grid_relative_size = pow (2.0,1.0/3.0); \
-    \
-    if      (CHECK_PARAM("CAVK"))    eq_mode=CAVK; \
-    else if (CHECK_PARAM("CAV"))     eq_mode=CAV; \
-    else if (CHECK_PARAM("CAVARTK")) eq_mode=CAVARTK; \
-    else                             eq_mode=ARTK; \
-    \
-    if      (CHECK_PARAM("FCC")) grid_type=FCC; \
-    else if (CHECK_PARAM("CC"))  grid_type=CC; \
-    else                         grid_type=BCC; \
-    proj_ext           = textToInteger(GET_PARAM_WITH_DEF("ext",       "0"    )); \
-    \
-    if (CHECK_PARAM("small_blobs"))  grid_relative_size=1.41; \
-    if (CHECK_PARAM("big_blobs"))    grid_relative_size=2.26; \
-    if (CHECK_PARAM("visual_blobs")) grid_relative_size=1.41; \
-    if (CHECK_PARAM("voxels")) { \
-        grid_relative_size=1; \
-        grid_type=CC; \
-    } \
-    if (CHECK_PARAM("splines")) { \
-        grid_relative_size=1; \
-        grid_type=CC; \
-    } \
-    \
-    print_system_matrix=CHECK_PARAM("print_system_matrix"); \
-    if (CHECK_PARAM("show_error"))        tell |= TELL_SHOW_ERROR; \
-    if (CHECK_PARAM("manual_order"))      tell |= TELL_MANUAL_ORDER; \
-    if (CHECK_PARAM("only_sym"))          tell |= TELL_ONLY_SYM; \
-    if (CHECK_PARAM("save_at_each_step")) tell |= TELL_SAVE_AT_EACH_STEP; \
-    if (CHECK_PARAM("save_basis"))        tell |= TELL_SAVE_BASIS; \
-    if (CHECK_PARAM("show_stats"))        tell |= TELL_STATS; \
-    if (CHECK_PARAM("save_intermidiate")) {\
-        tell |= TELL_SAVE_INTERMIDIATE; \
-        save_intermidiate_every=textToInteger(GET_PARAM_WITH_DEF("save_intermidiate","0")); \
-    } \
-    if (CHECK_PARAM("show_iv")) {\
-        tell |= TELL_IV; \
-        save_intermidiate_every=textToInteger(GET_PARAM_WITH_DEF("show_iv","10")); \
-    } \
-    if (CHECK_PARAM("variability")) {\
-        variability_analysis=true; \
-        parallel_mode=SIRT; \
-        no_it=1; \
-    } \
-    refine         = CHECK_PARAM("refine"); \
-    if (CHECK_PARAM("noisy_reconstruction")) { \
-        if (parallel_mode!=ART) \
-            REPORT_ERROR(ERR_ARG_INCORRECT,"Basic_ART_Parameters::read: Noisy reconstructions" \
+default_values(); \
+fn_sel             =      GET_PARAM(         "i"                    ); \
+fn_ctf             =      GET_PARAM_WITH_DEF("CTF",     ""          ); \
+unmatched          =      CHECK_PARAM(       "unmatched"            );  \
+if (CHECK_PARAM("o")) \
+fn_root        =      GET_PARAM(         "o"                    );  \
+else fn_root       =      fn_sel.withoutExtension();                   \
+fn_start           =      GET_PARAM_WITH_DEF("start",     ""        );  \
+if      (CHECK_PARAM("pSART"))  parallel_mode=pSART;\
+else if (CHECK_PARAM("pSIRT"))  parallel_mode=pSIRT; \
+else if (CHECK_PARAM("SIRT"))   parallel_mode=SIRT; \
+else if (CHECK_PARAM("pfSIRT")) parallel_mode=pfSIRT; \
+else if (CHECK_PARAM("pBiCAV")) parallel_mode=pBiCAV; \
+else if (CHECK_PARAM("pAVSP"))  parallel_mode=pAVSP; \
+else if (CHECK_PARAM("pCAV"))   parallel_mode=pCAV; \
+else                            parallel_mode=ART; \
+ray_length         = textToInteger(GET_PARAM_WITH_DEF("ray_length","-1"      )); \
+block_size         = textToInteger(GET_PARAM_WITH_DEF("block_size","1" )); \
+fn_sym             =      GET_PARAM_WITH_DEF("sym",       ""        );  \
+fn_control         =      GET_PARAM_WITH_DEF("control",       ""        );  \
+force_sym          = textToInteger(GET_PARAM_WITH_DEF("force_sym","0"        )); \
+do_not_generate_subgroup= CHECK_PARAM(       "no_group"             );  \
+do_not_use_symproj = CHECK_PARAM(       "no_symproj"             );  \
+shiftedTomograms   =      CHECK_PARAM(       "shiftedTomograms"     ); \
+goldmask    = textToFloat(GET_PARAM_WITH_DEF("goldmask","1e6")); \
+fn_surface_mask    =      GET_PARAM_WITH_DEF("surface",   ""        );  \
+random_sort        =      CHECK_PARAM(       "random_sort"          );  \
+dont_sort          =      CHECK_PARAM(       "no_sort"          );  \
+sort_last_N        = textToInteger(GET_PARAM_WITH_DEF("sort_last", "2"       )); \
+WLS                = CHECK_PARAM("WLS"); \
+kappa_list  =  GET_VECTOR_PARAM("k",-1); \
+if (XSIZE(kappa_list)==0)                                              \
+{kappa_list.resize(1); kappa_list.initConstant(0.5);}               \
+no_it              = textToInteger(GET_PARAM_WITH_DEF("n",         "1"       )); \
+stop_at            = textToInteger(GET_PARAM_WITH_DEF("stop_at",   "0"       )); \
+lambda_list        =        GET_VECTOR_PARAM("l",         -1);          \
+if (XSIZE(lambda_list)==0)                                              \
+{lambda_list.resize(1); lambda_list.initConstant(0.01);}               \
+sampling           = textToFloat(GET_PARAM_WITH_DEF("sampling",  "1."        )); \
+sym_each           = textToInteger(GET_PARAM_WITH_DEF("sym_each",  "0"         )); \
+max_tilt           = textToFloat(GET_PARAM_WITH_DEF("max_tilt",  "10E6"      )); \
+ref_trans_after    = textToInteger(GET_PARAM_WITH_DEF("ref_trans_after", "-1"  )); \
+ref_trans_step     = textToFloat(GET_PARAM_WITH_DEF("ref_trans_step", "-1"    )); \
+sparseEps          = textToFloat(GET_PARAM_WITH_DEF("sparse", "-1"  )); \
+diffusionWeight    = textToFloat(GET_PARAM_WITH_DEF("diffusion", "-1"  )); \
+grid_relative_size = textToFloat(GET_PARAM_WITH_DEF("g",         "1.41"      )); \
+R                  = textToFloat(GET_PARAM_WITH_DEF("R",         "-1"        )); \
+POCS_freq          = textToInteger(GET_PARAM_WITH_DEF("POCS_freq", "1"         )); \
+known_volume       = textToFloat(GET_PARAM_WITH_DEF("known_volume","-1"      )); \
+positivity         = CHECK_PARAM("POCS_positivity"); \
+apply_shifts       = !CHECK_PARAM("dont_apply_shifts"); \
+threads            = textToInteger(GET_PARAM_WITH_DEF("thr", "1"         )); \
+if      (grid_relative_size == -1)  grid_relative_size = sqrt (2.0); \
+else if (grid_relative_size == -2)  grid_relative_size = pow (2.0,1.0/3.0); \
+\
+if      (CHECK_PARAM("CAVK"))    eq_mode=CAVK; \
+else if (CHECK_PARAM("CAV"))     eq_mode=CAV; \
+else if (CHECK_PARAM("CAVARTK")) eq_mode=CAVARTK; \
+else                             eq_mode=ARTK; \
+\
+if      (CHECK_PARAM("FCC")) grid_type=FCC; \
+else if (CHECK_PARAM("CC"))  grid_type=CC; \
+else                         grid_type=BCC; \
+proj_ext           = textToInteger(GET_PARAM_WITH_DEF("ext",       "0"    )); \
+\
+if (CHECK_PARAM("small_blobs"))  grid_relative_size=1.41; \
+if (CHECK_PARAM("big_blobs"))    grid_relative_size=2.26; \
+if (CHECK_PARAM("visual_blobs")) grid_relative_size=1.41; \
+if (CHECK_PARAM("voxels")) { \
+grid_relative_size=1; \
+grid_type=CC; \
+} \
+if (CHECK_PARAM("splines")) { \
+grid_relative_size=1; \
+grid_type=CC; \
+} \
+\
+print_system_matrix=CHECK_PARAM("print_system_matrix"); \
+if (CHECK_PARAM("show_error"))        tell |= TELL_SHOW_ERROR; \
+if (CHECK_PARAM("manual_order"))      tell |= TELL_MANUAL_ORDER; \
+if (CHECK_PARAM("only_sym"))          tell |= TELL_ONLY_SYM; \
+if (CHECK_PARAM("save_at_each_step")) tell |= TELL_SAVE_AT_EACH_STEP; \
+if (CHECK_PARAM("save_basis"))        tell |= TELL_SAVE_BASIS; \
+if (CHECK_PARAM("show_stats"))        tell |= TELL_STATS; \
+if (CHECK_PARAM("save_intermidiate")) {\
+tell |= TELL_SAVE_INTERMIDIATE; \
+save_intermidiate_every=textToInteger(GET_PARAM_WITH_DEF("save_intermidiate","0")); \
+} \
+if (CHECK_PARAM("show_iv")) {\
+tell |= TELL_IV; \
+save_intermidiate_every=textToInteger(GET_PARAM_WITH_DEF("show_iv","10")); \
+} \
+if (CHECK_PARAM("variability")) {\
+variability_analysis=true; \
+parallel_mode=SIRT; \
+no_it=1; \
+} \
+refine         = CHECK_PARAM("refine"); \
+if (CHECK_PARAM("noisy_reconstruction")) { \
+if (parallel_mode!=ART) \
+            REPORT_ERROR(ERR_ARG_INCORRECT,"GlobalARTParameters::read: Noisy reconstructions" \
                          " can only be done for ART"); \
         else noisy_reconstruction=true; \
     }
 
-void Basic_ART_Parameters::read(int argc, char **argv)
+void GlobalARTParameters::read(int argc, char **argv)
 {
-    GET_ART_PARAMS;
+    //    GET_ART_PARAMS;
     basis.read(argc, argv);
     //divide by the sampling rate
     if (sampling != 1.)
@@ -251,13 +613,13 @@ void Basic_ART_Parameters::read(int argc, char **argv)
 #define GET_VECTOR_PARAM(flag,length) \
     getVectorParameter(fh,flag,length)
 // Read from file
-void Basic_ART_Parameters::read(const FileName &fn)
+void GlobalARTParameters::read(const FileName &fn)
 {
     FILE *fh;
     if ((fh = fopen(fn.c_str(), "r")) == NULL)
         REPORT_ERROR(ERR_IO_NOTEXIST,fn);
 
-    GET_ART_PARAMS;
+    //    GET_ART_PARAMS;
     if (CHECK_PARAM("output_size"))
     {
         int argcp;
@@ -275,7 +637,7 @@ void Basic_ART_Parameters::read(const FileName &fn)
 }
 
 /* Usage =================================================================== */
-void Basic_ART_Parameters::usage()
+void GlobalARTParameters::usage()
 {
     std::cerr
     << "Usage: art [Options and Parameters]"
@@ -291,7 +653,7 @@ void Basic_ART_Parameters::usage()
     ;
 }
 
-void Basic_ART_Parameters::usage_more()
+void GlobalARTParameters::usage_more()
 {
     std::cerr
     << "Usage: art [Options and Parameters]"
@@ -377,11 +739,11 @@ void Basic_ART_Parameters::usage_more()
     << "\n                         the volume is update every <n> projections\n"
     << "\n   [-show_error]         show error for each projection"
     << "\n   [-show_stats]         give some statistical information during the process"
-    << "\n   [-save_at_each_step]  save intermidiate projections"
+    << "\n   [-save_at_each_step]  save intermediate projections"
     << "\n                             PPPtheo, PPPread, PPPcorr, PPPdiff"
     << "\n                             PPPbasis.basis, PPPvol.vol"
     << "\n                             PPPvolPOCS1, PPPvolPOCS2, PPPvolPOCS3"
-    << "\n   [-save_intermidiate <n>] save intermidiate volumes (every <n> projections)"
+    << "\n   [-save_intermediate <n>] save intermediate volumes (every <n> projections)"
     << "\n                             <fnroot>it<no_it>proj<no_projs>.vol"
     << "\n   [-save_basis]         every time you have to save a volume, save it"
     << "\n                         also in basis"
@@ -529,7 +891,7 @@ void sort_randomly(int numIMG, MultidimArray<int> &ordered_list)
 /* Produce Side Information                                                  */
 /* ------------------------------------------------------------------------- */
 //#define DEBUG
-void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
+void GlobalARTParameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         int rank)
 {
     MetaData     selfile;
@@ -641,7 +1003,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
             weight = read_proj.weight();
             if (weight < 0)
                 REPORT_ERROR(ERR_VALUE_INCORRECT,
-                		     "BASIC_ART: negative weight not set correctly!");
+                             "BASIC_ART: negative weight not set correctly!");
             sum_weight += weight;
             /*
             read_proj().initZeros();
@@ -689,8 +1051,8 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
                                           -(double)FIRST_XMIPP_INDEX(Zoutput_volume_size));
                 }
                 /* If you substract half the basis radius, you are forcing that the
-                   last basis touches slightly the volume border. By not substracting
-                   it there is a basis center as near the border as possible. */
+                last basis touches slightly the volume border. By not substracting
+                it there is a basis center as near the border as possible. */
                 corner = corner + proj_ext/*CO: -blob.radius/2*/;
                 switch (grid_type)
                 {
@@ -738,7 +1100,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 #undef DEBUG
 
 /* Count number of equations for CAV --------------------------------------- */
-void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
+void GlobalARTParameters::compute_CAV_weights(GridVolume &vol_basis0,
         int numProjs_node, int debug_level)
 {
     if (GVNeq == NULL)
@@ -786,12 +1148,12 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
     }
 }
 
-int Basic_ART_Parameters::ProjXdim()
+int GlobalARTParameters::ProjXdim()
 {
     return projXdim;
 }
 
-int Basic_ART_Parameters::ProjYdim()
+int GlobalARTParameters::ProjYdim()
 {
     return projYdim;
 }

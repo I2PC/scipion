@@ -36,14 +36,14 @@
 
 class POCSClass;
 class VariabilityClass;
-void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
+void update_residual_vector(GlobalARTParameters &prm, GridVolume &vol_basis,
                             double &kappa, double &pow_residual_vol, double &pow_residual_imgs);
 
 /* ------------------------------------------------------------------------- */
 /* Init history                                                              */
 /* ------------------------------------------------------------------------- */
 template <class Extra_ART_Parameters>
-void Basic_ART_Init_history(Basic_ART_Parameters &prm,
+void Basic_ART_Init_history(GlobalARTParameters &prm,
                             const Extra_ART_Parameters &eprm, const GridVolume &vol_basis0)
 {
 
@@ -96,28 +96,28 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
     *prm.fh_hist << " Parallel mode: ";
     switch (prm.parallel_mode)
     {
-    case Basic_ART_Parameters::ART:
+    case GlobalARTParameters::ART:
         *prm.fh_hist << "ART\n";
         break;
-    case Basic_ART_Parameters::SIRT:
+    case GlobalARTParameters::SIRT:
         *prm.fh_hist << "SIRT\n";
         break;
-    case Basic_ART_Parameters::pSIRT:
+    case GlobalARTParameters::pSIRT:
         *prm.fh_hist << "Parallel SIRT\n";
         break;
-    case Basic_ART_Parameters::pfSIRT:
+    case GlobalARTParameters::pfSIRT:
         *prm.fh_hist << "Parallel False SIRT\n";
         break;
-    case Basic_ART_Parameters::pSART:
+    case GlobalARTParameters::pSART:
         *prm.fh_hist << "SART, block size=" << prm.block_size << std::endl;
         break;
-    case Basic_ART_Parameters::pAVSP:
+    case GlobalARTParameters::pAVSP:
         *prm.fh_hist << "AVSP\n";
         break;
-    case Basic_ART_Parameters::pBiCAV:
+    case GlobalARTParameters::pBiCAV:
         *prm.fh_hist << "BiCAV, block size=" << prm.block_size << std::endl;
         break;
-    case Basic_ART_Parameters::pCAV:
+    case GlobalARTParameters::pCAV:
         *prm.fh_hist << "CAV (global algorithm)\n";
         break;
     }
@@ -222,7 +222,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
 /* ------------------------------------------------------------------------- */
 //#define DEBUG_POCS
 template <class Extra_ART_Parameters>
-void Basic_ART_iterations(Basic_ART_Parameters &prm,
+void Basic_ART_iterations(GlobalARTParameters &prm,
                           Extra_ART_Parameters &eprm, GridVolume &vol_basis, int rank)
 {
     // Some variables .......................................................
@@ -317,7 +317,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
     }
 
     // If SIRT set normalizing factor and create output volume ..............
-    if (prm.parallel_mode==Basic_ART_Parameters::SIRT )
+    if (prm.parallel_mode==GlobalARTParameters::SIRT )
     {
         ART_numIMG=prm.numIMG;
         vol_basis_out=vol_basis;         // Copy the structure of vol_basis
@@ -325,10 +325,10 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
         if (prm.variability_analysis)
             ptr_vol_out->initZeros();
     }
-    else if ( prm.parallel_mode==Basic_ART_Parameters::pfSIRT ||
-              prm.parallel_mode==Basic_ART_Parameters::pSIRT ||
-              prm.parallel_mode==Basic_ART_Parameters::pSART ||
-              prm.parallel_mode==Basic_ART_Parameters::pCAV )
+    else if ( prm.parallel_mode==GlobalARTParameters::pfSIRT ||
+              prm.parallel_mode==GlobalARTParameters::pSIRT ||
+              prm.parallel_mode==GlobalARTParameters::pSART ||
+              prm.parallel_mode==GlobalARTParameters::pCAV )
     {
         // In those cases, normalization must be done at the top level program once we
         // have the reconstruction values. Have a look ar /Applications/Src/MPIArt/mpi_art.cc for
@@ -557,9 +557,9 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 
             // Apply sparsity constraint .....................................
             if (it>=1 && prm.sparseEps>0 &&
-                prm.parallel_mode!=Basic_ART_Parameters::SIRT &&
-                prm.parallel_mode!=Basic_ART_Parameters::pSIRT &&
-                prm.parallel_mode!=Basic_ART_Parameters::pfSIRT)
+                prm.parallel_mode!=GlobalARTParameters::SIRT &&
+                prm.parallel_mode!=GlobalARTParameters::pSIRT &&
+                prm.parallel_mode!=GlobalARTParameters::pfSIRT)
             {
                 prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
                                          Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
@@ -736,12 +736,12 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 
         // Convert volume and write if not last iteration
         // If in SIRT mode move the volume to the reference one
-        if ((prm.parallel_mode==Basic_ART_Parameters::SIRT
+        if ((prm.parallel_mode==GlobalARTParameters::SIRT
              && !prm.variability_analysis)||
-            prm.parallel_mode==Basic_ART_Parameters::pSIRT ||
-            prm.parallel_mode==Basic_ART_Parameters::pfSIRT ||
-            prm.parallel_mode==Basic_ART_Parameters::pSART ||
-            prm.parallel_mode==Basic_ART_Parameters::pCAV ||
+            prm.parallel_mode==GlobalARTParameters::pSIRT ||
+            prm.parallel_mode==GlobalARTParameters::pfSIRT ||
+            prm.parallel_mode==GlobalARTParameters::pSART ||
+            prm.parallel_mode==GlobalARTParameters::pCAV ||
             prm.eq_mode==CAV )
           {
               vol_basis=vol_basis_out;
@@ -847,7 +847,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 /* ROUTINE ART                                                               */
 /* ------------------------------------------------------------------------- */
 template <class Extra_ART_Parameters>
-void Basic_ROUT_Art(Basic_ART_Parameters &prm,
+void Basic_ROUT_Art(GlobalARTParameters &prm,
                     Extra_ART_Parameters &eprm, Image<double> &vol_voxels,
                     GridVolume &vol_basis)
 {

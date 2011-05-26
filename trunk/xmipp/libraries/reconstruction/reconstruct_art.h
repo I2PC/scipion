@@ -28,14 +28,33 @@
 #include <iostream>
 
 #include "basic_art.h"
+#include "recons.h"
+
 
 /**@defgroup PlainART Basic ART stuff
-   @ingroup ReconsLibrary 
-   This module provides the Extra paramter structure (empty in fact)
+   @ingroup ReconsLibrary
+   This module provides the Extra parameter structure (empty in fact)
    to run the ART process with single particles. The main function of this
    module is the single step ART process.
 */
 //@{
+
+class ProgReconsART: public ProgReconsBase
+{
+    GlobalARTParameters artPrm;
+
+public:
+
+    ProgReconsART();
+    ~ProgReconsART();
+
+    void setIO(const FileName &fn_in, const FileName &fn_out);
+    void defineParams();
+    void readParams();
+    void run();
+}
+;
+
 /* ART parameters ---------------------------------------------------------- */
 /** Plain ART parameters.
     This class contains extra information for: Plain ART.
@@ -48,10 +67,10 @@ class Plain_ART_Parameters
 public:
     /// std::cout << eprm;
     friend std::ostream & operator << (std::ostream &o,
-                                  const Plain_ART_Parameters &eprm);
+                                       const Plain_ART_Parameters &eprm);
 
     /// Produce Plain side information from the Extra parameters
-    void produce_Side_Info(const Basic_ART_Parameters &prm,
+    void produce_Side_Info(const GlobalARTParameters &prm,
                            GridVolume &vol_basis0);
 };
 
@@ -69,7 +88,7 @@ public:
     sym_no. In fact, it is not used in this version of ART, but it is
     needed for the crystal counterpart. */
 void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
-                     Basic_ART_Parameters &prm, Plain_ART_Parameters &eprm,
+                     GlobalARTParameters &prm, Plain_ART_Parameters &eprm,
                      Projection &theo_proj, Projection &read_proj,
                      int sym_no,
                      Projection &diff_proj, Projection &corr_proj, Projection &alig_proj,
@@ -78,13 +97,13 @@ void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
                      bool refine);
 
 /** Update residual vector for WLS ART */
-void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
+void update_residual_vector(GlobalARTParameters &prm, GridVolume &vol_basis,
                             double &kappa, double &pow_residual_vol, double &pow_residual_imgs);
 
 /** Finish iterations.
     For WLS: delete residual images
     Else: do nothing. */
-void finish_ART_iterations(const Basic_ART_Parameters &prm,
+void finish_ART_iterations(const GlobalARTParameters &prm,
                            const Plain_ART_Parameters &eprm, GridVolume &vol_basis);
 
 /** Force the trial volume to be symmetric. So far only implemented

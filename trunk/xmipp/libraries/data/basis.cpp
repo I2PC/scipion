@@ -99,6 +99,71 @@ void Basis::read(const FileName &fn)
     fclose(fh);
 }
 
+
+
+void Basis::defineParams(XmippProgram * program, const char* prefix, const char* comment)
+{
+    char tempLine[256];
+
+    if(prefix == NULL)
+        sprintf(tempLine, "  [--basis <basis_type=blobs>] ");
+    else
+        sprintf(tempLine,"%s --basis <basis_type=blobs> ", prefix);
+    if (comment != NULL)
+        sprintf(tempLine, "%s : %s", tempLine, comment);
+
+    program->addParamsLine(tempLine);
+    program->addParamsLine("    where <basis_type> ");
+    program->addParamsLine("      blobs <radius=2> <Bessel_order=2> <alpha_param=10.4> : Default blob parameters and grid relative size adjusted to use small blobs");
+    program->addParamsLine("     voxels");
+    program->addParamsLine("     splines");
+    program->addParamsLine(" or   --big_blobs    : blob parameters and grid relative size adjusted to use big blobs");
+    program->addParamsLine(" or   --visual_blobs : blobs optimal for direct visualization");
+}
+
+void Basis::readParams(XmippProgram * program)
+{
+    String basisType = program->getParam("--basis");
+
+    blob.radius = program->getDoubleParam("--basis", "blobs", 0);
+    blob.order  = program->getDoubleParam("--basis", "blobs", 1);
+    blob.alpha  = program->getDoubleParam("--basis", "blobs", 2);
+
+    if (!program->checkParam("--basis")) // Default is for small blobs
+        grid_relative_size = 1.41;
+
+    if (program->checkParam("--big_blobs"))
+    {
+        blob.radius = 2;
+        blob.order  = 2;
+        blob.alpha  = 3.6;
+
+        grid_relative_size = 2.26;
+    }
+    else if (program->checkParam("--visual_blobs"))
+    {
+        blob.radius = 2.4;
+        blob.order  = 2;
+        blob.alpha  = 13.3633;
+
+        grid_relative_size = 1.41;
+    }
+    else
+    {
+        if (basisType == "voxels")
+        {
+            type = voxels;
+            grid_relative_size = 1;
+        }
+        else if (basisType == "splines")
+        {
+            type = splines;
+            grid_relative_size = 1;
+        }
+    }
+}
+
+
 // Usage -------------------------------------------------------------------
 void Basis::usage() const
 {

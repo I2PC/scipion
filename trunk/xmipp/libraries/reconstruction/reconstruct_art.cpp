@@ -29,11 +29,99 @@
 
 #include <data/wavelet.h>
 
+ProgReconsART::ProgReconsART()
+{}
+ProgReconsART::~ProgReconsART()
+{}
+
+void ProgReconsART::setIO(const FileName &fn_in, const FileName &fn_out)
+{}
+
+void ProgReconsART::defineParams()
+{
+    artPrm.defineParams(this);
+}
+
+void ProgReconsART::readParams()
+{
+    artPrm.readParams(this);
+}
+
+void ProgReconsART::ProgReconsART::run()
+{
+//    Extra_ART_Parameters &eprm;
+//
+//
+//    Image<double> &vol_voxels;
+//    GridVolume &vol_basis;
+//    // Configure time clock
+//    time_config();
+//
+//    struct timeval start_time, end_time;
+//    long int init_usecs, process_usecs, finish_usecs;
+//
+//    gettimeofday(&start_time, NULL);
+//
+//    // Produce side information and initial volume
+//    artPrm.produce_Side_Info(vol_basis);
+//    //calculate symmetry in produce_Side_Info and exit if wrong sampling
+//    //printting the right sampling
+//    eprm.produce_Side_Info(artPrm,vol_basis);
+//
+//    // Show parameters and initiate history
+//    Basic_ART_Init_history(artPrm, eprm, vol_basis);
+//
+//    gettimeofday(&end_time, NULL);
+//
+//    init_usecs = (end_time.tv_sec-start_time.tv_sec)*1000000+(end_time.tv_usec-start_time.tv_usec);
+//
+//    gettimeofday(&start_time,NULL);
+//
+//    // Iterations
+//    Basic_ART_iterations(artPrm, eprm, vol_basis);
+//
+//    gettimeofday(&end_time,NULL);
+//
+//    process_usecs = (end_time.tv_sec-start_time.tv_sec)*1000000+(end_time.tv_usec-start_time.tv_usec);
+//
+//    gettimeofday(&start_time,NULL);
+//
+//    // Finish iterations
+//    finish_ART_iterations(artPrm, eprm, vol_basis);
+//
+//    // Write final volume
+//    int Xoutput_volume_size=(artPrm.Xoutput_volume_size==0) ?
+//                            artPrm.projXdim:artPrm.Xoutput_volume_size;
+//    int Youtput_volume_size=(artPrm.Youtput_volume_size==0) ?
+//                            artPrm.projYdim:artPrm.Youtput_volume_size;
+//    int Zoutput_volume_size=(artPrm.Zoutput_volume_size==0) ?
+//                            artPrm.projXdim:artPrm.Zoutput_volume_size;
+//
+//    //   int min_distance = ceil( ( 2 * artPrm.grid_relative_size ) / artPrm.basis.blob.radius) + 1;
+//
+//    artPrm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
+//                                Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size,artPrm.threads);
+//
+//    vol_voxels.write(artPrm.fn_root+".vol");
+//    if (artPrm.tell&TELL_SAVE_BASIS)
+//        vol_basis.write(artPrm.fn_root+".basis");
+//    artPrm.fh_hist->close();
+//
+//    gettimeofday(&end_time,NULL);
+//
+//    finish_usecs = (end_time.tv_sec-start_time.tv_sec)*1000000+(end_time.tv_usec-start_time.tv_usec);
+//
+//    std::cout << "INIT_TIME: " << (double)init_usecs/(double)1000000 << std::endl;
+//    std::cout << "PROCESS_TIME: " << (double)process_usecs/(double)1000000 << std::endl;
+//    std::cout << "FINISH_TIME: " << (double)finish_usecs/(double)1000000 << std::endl;
+
+}
+
 /* ------------------------------------------------------------------------- */
 /* Plain ART Parameters                                                      */
 /* ------------------------------------------------------------------------- */
 /* Produce Side information ------------------------------------------------ */
-void Plain_ART_Parameters::produce_Side_Info(const Basic_ART_Parameters &prm,
+void Plain_ART_Parameters::produce_Side_Info(const GlobalARTParameters &prm,
         GridVolume &vol_basis0)
 {}
 
@@ -46,7 +134,7 @@ std::ostream & operator << (std::ostream &o, const Plain_ART_Parameters &eprm)
 /* ------------------------------------------------------------------------- */
 /* Update residual vector for WLS                                            */
 /* ------------------------------------------------------------------------- */
-void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
+void update_residual_vector(GlobalARTParameters &prm, GridVolume &vol_basis,
                             double &kappa, double &pow_residual_vol, double &pow_residual_imgs)
 {
     GridVolume       residual_vol;
@@ -80,11 +168,11 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
                               prm.IMG_Inf[iact_proj].psi);
 
         project_GridVolume(residual_vol, prm.basis, dummy_proj,
-                       read_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-                       prm.IMG_Inf[iact_proj].rot,
-                       prm.IMG_Inf[iact_proj].tilt,
-                       prm.IMG_Inf[iact_proj].psi, BACKWARD, prm.eq_mode,
-                       prm.GVNeq, NULL, NULL, prm.ray_length, prm.threads);
+                           read_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+                           prm.IMG_Inf[iact_proj].rot,
+                           prm.IMG_Inf[iact_proj].tilt,
+                           prm.IMG_Inf[iact_proj].psi, BACKWARD, prm.eq_mode,
+                           prm.GVNeq, NULL, NULL, prm.ray_length, prm.threads);
 
         if (!(prm.tell&TELL_SHOW_ERROR))
             if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0)
@@ -120,11 +208,11 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
     for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
     {
         project_GridVolume(residual_vol, prm.basis, new_proj,
-                       dummy_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-                       prm.IMG_Inf[iact_proj].rot,
-                       prm.IMG_Inf[iact_proj].tilt,
-                       prm.IMG_Inf[iact_proj].psi, FORWARD, prm.eq_mode,
-                       prm.GVNeq, A, NULL, prm.ray_length, prm.threads);
+                           dummy_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+                           prm.IMG_Inf[iact_proj].rot,
+                           prm.IMG_Inf[iact_proj].tilt,
+                           prm.IMG_Inf[iact_proj].psi, FORWARD, prm.eq_mode,
+                           prm.GVNeq, A, NULL, prm.ray_length, prm.threads);
 
         sqrtweight = sqrt(prm.residual_imgs[iact_proj].weight() / prm.sum_weight);
 
@@ -174,7 +262,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
 void ART_single_step(
     GridVolume              &vol_in,         // Input Reconstructed volume
     GridVolume              *vol_out,        // Output Reconstructed volume
-    Basic_ART_Parameters    &prm,            // blob, lambda
+    GlobalARTParameters    &prm,            // blob, lambda
     Plain_ART_Parameters    &eprm,           // In this case, nothing
     Projection              &theo_proj,      // Projection of the reconstruction
     // It is outside to make it visible
@@ -261,9 +349,9 @@ void ART_single_step(
         A = new Matrix2D<double>;
     corr_proj().initZeros();
     project_GridVolume(vol_in, prm.basis, theo_proj,
-                   corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-                   read_proj.rot(), read_proj.tilt(), read_proj.psi(), FORWARD, prm.eq_mode,
-                   prm.GVNeq, A, maskPtr, prm.ray_length, prm.threads);
+                       corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+                       read_proj.rot(), read_proj.tilt(), read_proj.psi(), FORWARD, prm.eq_mode,
+                       prm.GVNeq, A, maskPtr, prm.ray_length, prm.threads);
 
     if (fn_ctf != "" && prm.unmatched)
     {
@@ -371,9 +459,9 @@ void ART_single_step(
 
     // Backprojection of correction plane ......................................
     project_GridVolume(*vol_out, prm.basis, theo_proj,
-                   corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-                   read_proj.rot(), read_proj.tilt(), read_proj.psi(), BACKWARD, prm.eq_mode,
-                   prm.GVNeq, NULL, maskPtr, prm.ray_length, prm.threads);
+                       corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+                       read_proj.rot(), read_proj.tilt(), read_proj.psi(), BACKWARD, prm.eq_mode,
+                       prm.GVNeq, NULL, maskPtr, prm.ray_length, prm.threads);
 
     // Remove footprints if necessary
     if (remove_footprints)
@@ -385,7 +473,7 @@ void ART_single_step(
 #undef blob
 
 /* Finish iterations ------------------------------------------------------- */
-void finish_ART_iterations(const Basic_ART_Parameters &prm,
+void finish_ART_iterations(const GlobalARTParameters &prm,
                            const Plain_ART_Parameters &eprm, GridVolume &vol_blobs)
 { }
 

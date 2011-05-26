@@ -61,7 +61,7 @@ void uswtime(USWtime_t *tm)
 
 int main(int argc, char *argv[])
 {
-    Basic_ART_Parameters   art_prm;
+    GlobalARTParameters   art_prm;
     Plain_ART_Parameters   eprm;
     Crystal_ART_Parameters crystal_art_prm;
     VolumeXmipp            vol_voxels, vol_voxels_aux; // Volume to reconstruct
@@ -183,23 +183,23 @@ int main(int argc, char *argv[])
     // Print some data
     if (rank == 0)
     {
-        if (art_prm.parallel_mode == Basic_ART_Parameters::pSART)
+        if (art_prm.parallel_mode == GlobalARTParameters::pSART)
         {
             if (art_prm.block_size < size) art_prm.block_size = size;  // Each processor will have at least one projection
             if (art_prm.block_size > num_img_tot) art_prm.block_size = num_img_tot;  // block_size is as much equal to num_img_tot
             std::cout << "pSART " << "TB = " << art_prm.block_size << std::endl;
         }
-        else if (art_prm.parallel_mode == Basic_ART_Parameters::pCAV)
+        else if (art_prm.parallel_mode == GlobalARTParameters::pCAV)
             std::cout << "pCAV" << std::endl;
-        else if (art_prm.parallel_mode == Basic_ART_Parameters::pBiCAV)
+        else if (art_prm.parallel_mode == GlobalARTParameters::pBiCAV)
         {
             if (art_prm.block_size < size) art_prm.block_size = size;  // Each processor will have at least one projection
             if (art_prm.block_size > num_img_tot) art_prm.block_size = num_img_tot;  // block_size is as much equal to num_img_tot
             std::cout << "pBiCAV " << "TB = " << art_prm.block_size << std::endl;
         }
-        else if (art_prm.parallel_mode == Basic_ART_Parameters::pSIRT)
+        else if (art_prm.parallel_mode == GlobalARTParameters::pSIRT)
             std::cout << "pSIRT" << std::endl;
-        else if (art_prm.parallel_mode == Basic_ART_Parameters::pfSIRT)
+        else if (art_prm.parallel_mode == GlobalARTParameters::pfSIRT)
             std::cout << "pfSIRT" << std::endl;
         else std::cout << "pAVSP" << std::endl;
 
@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
     art_prm.block_size /= size; // Now this variable stores how many projs. from each block belong to each node.
 
     /*************************** CAV weights precalculation *************************/
-    if (art_prm.parallel_mode == Basic_ART_Parameters::pCAV)
+    if (art_prm.parallel_mode == GlobalARTParameters::pCAV)
     {
 
         // Creates and initializes special variables needed to CAV weights computation.
@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
 
         art_prm.lambda_list(0) = art_prm.lambda(i);
 
-        if (art_prm.parallel_mode == Basic_ART_Parameters::pSART)
+        if (art_prm.parallel_mode == GlobalARTParameters::pSART)
         {
 
             int numsteps = Npart / art_prm.block_size;
@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        else if (art_prm.parallel_mode == Basic_ART_Parameters::pBiCAV)
+        else if (art_prm.parallel_mode == GlobalARTParameters::pBiCAV)
         {
             // Creates and initializes special variables needed to BICAV weights computation.
             GridVolumeT<int> GVNeq_aux; // This is a buffer for communications
@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
 
             art_prm.numIMG = art_prm.block_size;
 
-            art_prm.parallel_mode = Basic_ART_Parameters::pCAV; // Another trick
+            art_prm.parallel_mode = GlobalARTParameters::pCAV; // Another trick
 
             STARTINGX(art_prm.ordered_list) = -myFirst;
 
@@ -404,9 +404,9 @@ int main(int argc, char *argv[])
                         }
                 }
             }
-            art_prm.parallel_mode = Basic_ART_Parameters::pBiCAV; // trick undone
+            art_prm.parallel_mode = GlobalARTParameters::pBiCAV; // trick undone
         }
-        else if (art_prm.parallel_mode == Basic_ART_Parameters::pCAV)
+        else if (art_prm.parallel_mode == GlobalARTParameters::pCAV)
         {
 
             // CAV weights calculations have been done before iterations begin in order to avoid recalculate them
@@ -466,8 +466,8 @@ int main(int argc, char *argv[])
 
             STARTINGX(art_prm.ordered_list) = -myFirst;
 
-            if (art_prm.parallel_mode == Basic_ART_Parameters::pSIRT ||
-                art_prm.parallel_mode == Basic_ART_Parameters::pfSIRT)
+            if (art_prm.parallel_mode == GlobalARTParameters::pSIRT ||
+                art_prm.parallel_mode == GlobalARTParameters::pfSIRT)
             {
                 for (int jj = 0 ; jj < vol_basis.VolumesNo() ; jj++)
                     vol_aux2(jj)() = vol_basis(jj)();
@@ -480,8 +480,8 @@ int main(int argc, char *argv[])
             for (int jj = 0 ; jj < vol_basis.VolumesNo() ; jj++)
             {
                 // SIRT Alg. needs to store previous results but AVSP doesn't
-                if (art_prm.parallel_mode == Basic_ART_Parameters::pSIRT ||
-                    art_prm.parallel_mode == Basic_ART_Parameters::pfSIRT)
+                if (art_prm.parallel_mode == GlobalARTParameters::pSIRT ||
+                    art_prm.parallel_mode == GlobalARTParameters::pfSIRT)
                 {
                     vol_basis(jj)() = vol_basis(jj)() - vol_aux2(jj)(); // Adapt result to parallel ennvironment from sequential routine
                 }
@@ -498,12 +498,12 @@ int main(int argc, char *argv[])
                 comms_t += aux_t;
                 comms_t_it += aux_t;
 
-                if (art_prm.parallel_mode == Basic_ART_Parameters::pfSIRT)
+                if (art_prm.parallel_mode == GlobalARTParameters::pfSIRT)
                 {
                     double norm_value = (double) num_img_tot;
                     vol_basis(jj)() = vol_aux2(jj)() + (vol_basis_aux(jj)() / norm_value);
                 }
-                else if (art_prm.parallel_mode == Basic_ART_Parameters::pSIRT)
+                else if (art_prm.parallel_mode == GlobalARTParameters::pSIRT)
                 {
                     double norm_value = (double) num_img_tot * (double)(art_prm.ProjXdim() * art_prm.ProjYdim());
                     vol_basis(jj)() = vol_aux2(jj)() + (vol_basis_aux(jj)() / norm_value);
@@ -523,7 +523,7 @@ int main(int argc, char *argv[])
             std::cout << "\nIteration " << i << std::endl;
             std::cout << "Time: " << MPI_Wtime() - it_t << " secs." << std::endl;
             std::cout << "Comms. time: " << comms_t_it << " secs." << std::endl;
-            if (art_prm.parallel_mode == Basic_ART_Parameters::pBiCAV)
+            if (art_prm.parallel_mode == GlobalARTParameters::pBiCAV)
                 std::cout << "BiCAV weighting time: " << cavk_it_t << std::endl;
 
             if (i < num_iter - 1)
@@ -563,7 +563,7 @@ int main(int argc, char *argv[])
     std::cout << "Communications time: " << comms_t << " secs." << std::endl;
     std::cout << "CPU time: " << recons_t.user + recons_t.sys << " secs." << std::endl;
     std::cout << "USER: " << recons_t.user << " SYSTEM: " << recons_t.sys << "\n\n" << std::endl;
-    if (art_prm.parallel_mode == Basic_ART_Parameters::pBiCAV)
+    if (art_prm.parallel_mode == GlobalARTParameters::pBiCAV)
         std::cout << "total pBiCAV Weighting time: " << cavk_total_t << std::endl;
     MPI_Finalize();
     return 0 ;

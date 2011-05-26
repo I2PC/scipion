@@ -32,7 +32,7 @@
 /* ------------------------------------------------------------------------- */
 /* Read ART parameters ===================================================== */
 void Crystal_ART_Parameters::read(int argc, char **argv,
-                                  Basic_ART_Parameters &prm)
+                                  GlobalARTParameters &prm)
 {
     try
     {
@@ -203,7 +203,7 @@ void compute_integer_lattice(const Matrix1D<double> &a,
 //#define DEBUG
 //#define DEBUG_A_LOT
 void Crystal_ART_Parameters::produce_Side_Info(
-    Basic_ART_Parameters &prm, GridVolume &vol_basis0)
+    GlobalARTParameters &prm, GridVolume &vol_basis0)
 {
 
     // Lattice vectors in BCC units
@@ -357,7 +357,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
 void ART_single_step(
     GridVolume              &vol_in,          // Input Reconstructed volume
     GridVolume              *vol_out,         // Output Reconstructed volume
-    Basic_ART_Parameters    &prm,             // blob, lambda
+    GlobalARTParameters    &prm,             // blob, lambda
     Crystal_ART_Parameters  &eprm,            // lattice vectors, ...
     Projection              &theo_proj,       // Projection of the reconstruction
     // It is outside to make it visible
@@ -479,7 +479,7 @@ void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
 }
 
 /* Finish iterations ------------------------------------------------------- */
-void finish_ART_iterations(const Basic_ART_Parameters &prm,
+void finish_ART_iterations(const GlobalARTParameters &prm,
                            const Crystal_ART_Parameters &eprm, GridVolume &vol_basis)
 {
     if (eprm.fill_space)
@@ -489,7 +489,7 @@ void finish_ART_iterations(const Basic_ART_Parameters &prm,
 /* Expansion to fill space ------------------------------------------------- */
 //#define DEBUG
 //#define DEBUG2
-void expand_to_fill_space(const Basic_ART_Parameters &prm,
+void expand_to_fill_space(const GlobalARTParameters &prm,
                           const Crystal_ART_Parameters &eprm, GridVolume &vol)
 {
     std::cerr << "Replicating unit cell ...\n";
