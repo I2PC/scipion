@@ -72,27 +72,21 @@
 /**@name ProjRealShears Projection library program using Real-Shears */
 //@{
 /// Structure for holding a volume
-typedef struct
+class VolumeStruct
 {
-    double *Volume;
-    long   nx_Volume, ny_Volume, nz_Volume;
-    double *InitPsiThetaPhi; // Angles
-    double *InitDelta123; //Shifts
-    double *Projection;
-} VolumeStruct;
+public:
+    const MultidimArray<double> *volume;
+    Projection projection;
+    Matrix1D<double> InitPsiThetaPhi; // Angles
+    Matrix1D<double> InitDelta123; //Shifts
 
-/// Prepare a volume to be projected
-void prepareStructVolume(const MultidimArray<double> &V, VolumeStruct &Data);
+    // Constructor
+    VolumeStruct(const MultidimArray<double> &V);
+};
 
 /// Make projection
 void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
     double rot, double tilt, double psi);
-
-/// Allocates and fixes some VolumeStruct fields
-void allocAndInit_VolumeStruct(VolumeStruct &Data2);
-
-/// Deallocate VolumeStruct
-void del_VolumeStruct(VolumeStruct &Data2);
 
 ///Main class of this program
 class Projection_real_shears
@@ -133,14 +127,12 @@ class Projection_real_shears
 
         // Volume to project
         Image<double> V;
-        ///Projection to save
-        Projection proj;
         ///Selection file to fill and save
         MetaData SF;
         ///Content of the angle file
         MetaData DF;
         ///Basics Data for projections
-        VolumeStruct Data;
+        VolumeStruct *Data;
 
     //------------------ Functions -------------------
     public :
