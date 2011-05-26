@@ -196,46 +196,24 @@ void Compute_projection(const VolumeStruct &Data,
     Matrix2D<double> At;
     translation3DMatrix(shifts,At);
 
-    double *Help1 = (double *)malloc((size_t) 16L * sizeof(double));
-    if (Help1 == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
-                     "ERROR - Not enough memory for Help1");
-
-    if (MatrixMultiply(MATRIX2D_ARRAY(At), MATRIX2D_ARRAY(LeftOperHlp), Help1, 4L, 4L, 4L) == ERROR)
-        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
-                     "Error returned by MatrixMultiply");
-
-    double *R = (double *)malloc((size_t) 16L * sizeof(double));
-    if (R == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
-                     "ERROR - Not enough memory for Rx");
-
-    if (GetIdentitySquareMatrix(R, 4L) == ERROR)
-        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
-                     "Error returned by GetIdentitySquareMatrix");
-
-    double *hlp = R;
-    hlp += (ptrdiff_t)5L;
-    *hlp++ = Cosphi;
-    *hlp = - Sinphi;
-    hlp += (ptrdiff_t)3L;
-    *hlp++ = Sinphi;
-    *hlp = Cosphi;
+    Matrix2D<double> Help1=At*LeftOperHlp;
+    Matrix2D<double> R;
+    rotation3DMatrix(RAD2DEG(phi),'X',R,true);
 
     double *Help2 = (double *)malloc((size_t) 16L * sizeof(double));
     if (Help2 == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help2");
 
-    if (MatrixMultiply(Help1, R, Help2, 4L, 4L, 4L) == ERROR)
+    if (MatrixMultiply(MATRIX2D_ARRAY(Help1), MATRIX2D_ARRAY(R), Help2, 4L, 4L, 4L) == ERROR)
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply");
 
-    if (GetIdentitySquareMatrix(R, 4L) == ERROR)
+    if (GetIdentitySquareMatrix(MATRIX2D_ARRAY(R), 4L) == ERROR)
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by GetIdentitySquareMatrix");
 
-    hlp = R;
+    double *hlp = MATRIX2D_ARRAY(R);
     *hlp = Costheta;
     hlp += (ptrdiff_t)2L;
     *hlp = Sintheta;
@@ -249,15 +227,15 @@ void Compute_projection(const VolumeStruct &Data,
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help3");
 
-    if (MatrixMultiply(Help2, R, Help3, 4L, 4L, 4L) == ERROR)
+    if (MatrixMultiply(Help2, MATRIX2D_ARRAY(R), Help3, 4L, 4L, 4L) == ERROR)
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply");
 
-    if (GetIdentitySquareMatrix(R, 4L) == ERROR)
+    if (GetIdentitySquareMatrix(MATRIX2D_ARRAY(R), 4L) == ERROR)
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by GetIdentitySquareMatrix");
 
-    hlp = R;
+    hlp = MATRIX2D_ARRAY(R);
     *hlp++ = Cospsi;
     *hlp = - Sinpsi;
     hlp += (ptrdiff_t)3L;
@@ -269,7 +247,7 @@ void Compute_projection(const VolumeStruct &Data,
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help4");
 
-    if (MatrixMultiply(Help3, R, Help4, 4L, 4L, 4L) == ERROR)
+    if (MatrixMultiply(Help3, MATRIX2D_ARRAY(R), Help4, 4L, 4L, 4L) == ERROR)
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply");
 
@@ -288,7 +266,6 @@ void Compute_projection(const VolumeStruct &Data,
     if (SquareMatrixInvertGauss(MATRIX2D_ARRAY(B), Binv, 4L, DBL_EPSILON, &Status) == ERROR)
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by SquareMatrixInvertGauss");
-    free(R);
 
     double *C1 = (double *)malloc((size_t) 4L * sizeof(double));
     if (C1 == (double *)NULL)
@@ -374,7 +351,6 @@ void Compute_projection(const VolumeStruct &Data,
 
     free(BinvCscaled);
     free(Binv);
-    free(Help1);
     free(Help2);
     free(Help3);
 }/* End of Compute_projection */
@@ -383,7 +359,6 @@ void Compute_projection(const VolumeStruct &Data,
 void do_one_projection(VolumeStruct &Data2)
 {
     int    Status = !ERROR;
-    long    DesProjSize;
     long    i, m, n, l;
     double    lambda;
     double    *VolumeCoef, *InputVolume, *InputVolumePlane;
