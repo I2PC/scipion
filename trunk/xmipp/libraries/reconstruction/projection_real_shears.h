@@ -140,16 +140,7 @@ class Projection_real_shears
         void ROUT_project_real_shears();
 
         ///Does starting instructions
-        void start_to_process();
-
-        ///Reads a DocLine and fills Data fields
-        void read_a_DocLine(size_t objId);
-
-        ///Writes the projection file obtained
-        void write_projection_file(int numFile);
-
-        ///Does finish instructions
-        void finish_to_process();
+        void produceSideInfo();
 
         ///Read input and output file parameters only
         void read(int argc, char **argv);
