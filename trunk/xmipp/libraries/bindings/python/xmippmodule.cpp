@@ -309,15 +309,12 @@ Image_repr(PyObject * obj) {
 static int
 Image_compare(PyObject * obj, PyObject * obj2)
 {
-    ImageObject *self = (ImageObject*) obj;
-    ImageObject *img2 = (ImageObject*) obj2;
     int result = -1;
-
-    if (self != NULL and img2 != NULL)
+    if (obj != NULL && obj2 != NULL)
     {
       try
       {
-        if (*(self->image) == *(img2->image))
+        if (Image_Value(obj) == Image_Value(obj2))
                 result = 0;
       }
       catch (XmippError xe)
@@ -477,24 +474,31 @@ Image_getEulerAngles(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//Image_getDimensions
 
 
-
+static PyObject *
+Image_add(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
+Image_minus(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* Image methods */
 static PyMethodDef Image_methods[] =
 {
-                { "read", (PyCFunction) Image_read, METH_VARARGS,
-                  "Read image from disk" },
-                { "write", (PyCFunction) Image_write, METH_VARARGS,
-                  "Write image to disk" },
-                { "getPixel", (PyCFunction) Image_getPixel, METH_VARARGS,
-                  "Return a pixel value" },
-                { "setPixel", (PyCFunction) Image_setPixel, METH_VARARGS,
-                  "Set the value of some pixel" },
-                { "getDimensions", (PyCFunction) Image_getDimensions, METH_VARARGS,
-                  "Return image dimensions as a tuple" },
-                { "getEulerAngles", (PyCFunction) Image_getEulerAngles, METH_VARARGS,
-                  "Return euler angles as a tuple" },
-                  { NULL } /* Sentinel */
+      { "read", (PyCFunction) Image_read, METH_VARARGS,
+        "Read image from disk" },
+      { "write", (PyCFunction) Image_write, METH_VARARGS,
+        "Write image to disk" },
+      { "getPixel", (PyCFunction) Image_getPixel, METH_VARARGS,
+        "Return a pixel value" },
+      { "setPixel", (PyCFunction) Image_setPixel, METH_VARARGS,
+        "Set the value of some pixel" },
+      { "getDimensions", (PyCFunction) Image_getDimensions, METH_VARARGS,
+        "Return image dimensions as a tuple" },
+      { "getEulerAngles", (PyCFunction) Image_getEulerAngles, METH_VARARGS,
+        "Return euler angles as a tuple" },
+      { "add", (PyCFunction) Image_add, METH_VARARGS,
+        "Add two images" },
+      { "minus", (PyCFunction) Image_minus, METH_VARARGS,
+        "Subtract two images" },
+      { NULL } /* Sentinel */
 };
 
 /*Image Type */
@@ -539,6 +543,68 @@ static PyTypeObject ImageType = {
     0, /* tp_alloc */
     Image_new, /* tp_new */
 };
+
+/* Return image dimensions as a tuple */
+static PyObject *
+Image_add(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  ImageObject *self = (ImageObject*) obj;
+  if (self != NULL)
+  {
+    PyObject * img2 = NULL;
+    if (PyArg_ParseTuple(args, "O", &img2))
+    {
+        try
+        {
+            if (!Image_Check(img2))
+            {
+                PyErr_SetString(PyExc_TypeError,
+                        "Image::add: Expecting image as first argument");
+                return NULL;
+            }
+            self->image->add(Image_Value(img2));
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+
+  }
+  return NULL;
+}//Image_getDimensions
+
+/* Return image dimensions as a tuple */
+static PyObject *
+Image_minus(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  ImageObject *self = (ImageObject*) obj;
+  if (self != NULL)
+  {
+    PyObject * img2 = NULL;
+    if (PyArg_ParseTuple(args, "O", &img2))
+    {
+        try
+        {
+            if (!Image_Check(img2))
+            {
+                PyErr_SetString(PyExc_TypeError,
+                        "Image::add: Expecting image as first argument");
+                return NULL;
+            }
+            self->image->minus(Image_Value(img2));
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+
+  }
+  return NULL;
+}//Image_getDimensions
 
 /***************************************************************/
 /*                            MDQuery                          */
@@ -655,7 +721,8 @@ MetaData_setComment(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs);
 
-static int MetaData_print(PyObject *obj, FILE *fp, int flags) {
+static int MetaData_print(PyObject *obj, FILE *fp, int flags)
+{
 	try {
 		MetaDataObject *self = (MetaDataObject*) obj;
 		std::stringstream ss;
@@ -670,15 +737,40 @@ static int MetaData_print(PyObject *obj, FILE *fp, int flags) {
 
 /* String representation */
 static PyObject *
-MetaData_repr(PyObject * obj) {
+MetaData_repr(PyObject * obj)
+{
 	MetaDataObject *self = (MetaDataObject*) obj;
 	return PyString_FromString(
 			(self->metadata->getFilename() + "(MetaData)").c_str());
 }
 
+/* MetaData compare function */
+static int
+MetaData_compare(PyObject * obj, PyObject * obj2)
+{
+    MetaDataObject *self = (MetaDataObject*) obj;
+    MetaDataObject *md2 = (MetaDataObject*) obj2;
+    int result = -1;
+
+    if (self != NULL && md2 != NULL)
+    {
+      try
+      {
+        if (*(self->metadata) == *(md2->metadata))
+                result = 0;
+      }
+      catch (XmippError xe)
+      {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+      }
+    }
+    return result;
+}
+
 /* read */
 static PyObject *
-MetaData_read(PyObject *obj, PyObject *args, PyObject *kwargs) {
+MetaData_read(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
 	MetaDataObject *self = (MetaDataObject*) obj;
 
 	if (self != NULL) {
@@ -1332,7 +1424,7 @@ static PyTypeObject MetaDataType = {
 	MetaData_print, /*tp_print*/
 	0, /*tp_getattr*/
 	0, /*tp_setattr*/
-	0, /*tp_compare*/
+	MetaData_compare, /*tp_compare*/
 	MetaData_repr, /*tp_repr*/
 	0, /*tp_as_number*/
 	0, /*tp_as_sequence*/
@@ -1548,14 +1640,18 @@ MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs) {
 	PyObject *pyQuery = NULL;
 	JoinType jt;
 
-	if (PyArg_ParseTuple(args, "OOii", &pyMdLeft, &pyMdright, &label, &jt)) {
-		try {
-			if (!MetaData_Check(pyMdLeft)) {
+	if (PyArg_ParseTuple(args, "OOii", &pyMdLeft, &pyMdright, &label, &jt))
+	{
+		try
+		{
+			if (!MetaData_Check(pyMdLeft))
+			{
 				PyErr_SetString(PyExc_TypeError,
 						"MetaData::join: Expecting MetaData as first argument");
 				return NULL;
 			}
-			if (!MetaData_Check(pyMdright)) {
+			if (!MetaData_Check(pyMdright))
+			{
 				PyErr_SetString(PyExc_TypeError,
 						"MetaData::join: Expecting MetaData as second argument");
 				return NULL;
@@ -1564,7 +1660,8 @@ MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs) {
 			self->metadata->join(MetaData_Value(pyMdLeft),
 					MetaData_Value(pyMdright), (MDLabel) label, (JoinType) jt);
 			Py_RETURN_NONE;
-		} catch (XmippError xe) {
+		} catch (XmippError xe)
+		{
 			PyErr_SetString(PyXmippError, xe.msg.c_str());
 		}
 	}
@@ -1596,39 +1693,53 @@ MetaData_intersection(PyObject *obj, PyObject *args, PyObject *kwargs) {
 
 MDObject *
 createMDObject(int label, PyObject *pyValue) {
-	try {
-		if (PyInt_Check(pyValue)) {
+	try
+	{
+		if (PyInt_Check(pyValue))
+		{
 			int iValue = PyInt_AS_LONG(pyValue);
 			RETURN_MDOBJECT(iValue);
 		}
-		if (PyString_Check(pyValue)) {
+		if (PyLong_Check(pyValue))
+		{
+		    size_t value = PyLong_AsUnsignedLong(pyValue);
+		    RETURN_MDOBJECT(value);
+		}
+		if (PyString_Check(pyValue))
+		{
 			RETURN_MDOBJECT(std::string(PyString_AsString(pyValue)));
 		}
-		if (FileName_Check(pyValue)) {
+		if (FileName_Check(pyValue))
+		{
 			RETURN_MDOBJECT(*((FileNameObject*)pyValue)->filename);
 		}
-		if (PyFloat_Check(pyValue)) {
+		if (PyFloat_Check(pyValue))
+		{
 			double dValue = PyFloat_AS_DOUBLE(pyValue);
 			RETURN_MDOBJECT(double(dValue));
 		}
-		if (PyBool_Check(pyValue)) {
+		if (PyBool_Check(pyValue))
+		{
 			bool bValue = (pyValue == Py_True);
 			RETURN_MDOBJECT(bValue);
 		}
-		if (PyList_Check(pyValue)) {
+		if (PyList_Check(pyValue))
+		{
 			size_t size = PyList_Size(pyValue);
 			PyObject * item = NULL;
 			double dValue = 0.;
-			std::vector<double> vValue((size_t) size);
-			for (size_t i = 0; i < size; ++i) {
-				item = PyList_GET_ITEM(pyValue, i);
-				if (!PyFloat_Check(pyValue)) {
+			std::vector<double> vValue(size);
+			for (size_t i = 0; i < size; ++i)
+			{
+				item = PyList_GetItem(pyValue, i);
+				if (!PyFloat_Check(item))
+				{
 					PyErr_SetString(PyExc_TypeError,
 							"Vectors are only supported for double");
 					return NULL;
 				}
 				dValue = PyFloat_AS_DOUBLE(item);
-				vValue.push_back(dValue);
+				vValue[i] = dValue;
 			}
 			RETURN_MDOBJECT(vValue);
 		}
@@ -1658,7 +1769,12 @@ getMDObjectValue(MDObject * obj) {
 	case LABEL_STRING:
 		return PyString_FromString(obj->data.stringValue->c_str());
 	case LABEL_VECTOR:
-		return NULL;//FIXME: Not implemented now
+	  std::vector<double> & vector = *(obj->data.vectorValue);
+      int size = vector.size();
+      PyObject * list = PyList_New(size);
+      for (int i = 0; i < size; ++i)
+          PyList_SetItem(list, i, PyFloat_FromDouble(vector[i]));
+      return list;
 	}//close switch
 	return NULL;
 }
@@ -2088,7 +2204,9 @@ PyMODINIT_FUNC initxmipp(void) {
 	addIntConstant(dict, "MD_APPEND", (long) MD_APPEND);
 	addIntConstant(dict, "MDL_UNDEFINED", (long) MDL_UNDEFINED);
 	addIntConstant(dict, "MDL_FIRST_LABEL", (long) MDL_FIRST_LABEL);
+	//Metadata Labels
 	addIntConstant(dict, "MDL_OBJID", (size_t) MDL_OBJID);
+	addIntConstant(dict, "MDL_ANGLE_COMPARISON", (long) MDL_ANGLE_COMPARISON);
 	addIntConstant(dict, "MDL_ANGLEPSI2", (long) MDL_ANGLEPSI2);
 	addIntConstant(dict, "MDL_ANGLEPSI", (long) MDL_ANGLEPSI);
 	addIntConstant(dict, "MDL_ANGLEROT2", (long) MDL_ANGLEROT2);

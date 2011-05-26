@@ -287,6 +287,8 @@ public:
         o << I.image;
     }
 
+    void add(const ImageGeneric &img);
+    void minus(const ImageGeneric &img);
 
 private:
     /* Return the datatype of the image file.

@@ -215,9 +215,9 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply
 }
 
 bool ImageGeneric::operator==(const ImageGeneric &i1) const
-    {
-        return(*(this->data) == *(i1.data));
-    }
+{
+    return(*(this->data) == *(i1.data));
+}
 
 void ImageGeneric::print() const
 {
@@ -226,9 +226,37 @@ void ImageGeneric::print() const
 
 void ImageGeneric::toString(String &s) const
 {
-  std::stringstream ss;
-  ss << *image;
-  s = ss.str();
+    std::stringstream ss;
+    ss << *image;
+    s = ss.str();
+}
+
+void ImageGeneric::add(const ImageGeneric &img)
+{
+    if (datatype != img.datatype)
+        REPORT_ERROR(ERR_TYPE_INCORRECT, "Images have different datatypes");
+
+#define ADD(type) MultidimArray<type> & kk = *((MultidimArray<type>*) data->im);\
+                     MultidimArray<type> & pp = *((MultidimArray<type>*) img.data->im);\
+                     kk += pp;
+
+    SWITCHDATATYPE(datatype, ADD);
+#undef ADD
+
+}
+
+void ImageGeneric::minus(const ImageGeneric &img)
+{
+    if (datatype != img.datatype)
+        REPORT_ERROR(ERR_TYPE_INCORRECT, "Images have different datatypes");
+
+#define MINUS(type) MultidimArray<type> & kk = *((MultidimArray<type>*) data->im);\
+                     MultidimArray<type> & pp = *((MultidimArray<type>*) img.data->im);\
+                     kk -= pp;
+
+    SWITCHDATATYPE(datatype, MINUS);
+#undef MINUS
+
 }
 
 
