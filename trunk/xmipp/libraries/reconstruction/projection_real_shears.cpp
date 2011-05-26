@@ -101,10 +101,7 @@ void do_compute_projection   (int Xdim,
                               double absscale,
                               double *Binv,
                               double *BinvCscaled,
-                              long ksimax,
                               int *arr,
-                              long lmax,
-                              long mmax,
                               double *Projection)
 {
     long    i, n, l, l1, l2, m, m1, m2, ksi, CC1, CC2, CC3, row, column, index;
@@ -124,7 +121,7 @@ void do_compute_projection   (int Xdim,
             X[0]=n;
             MatrixTimesVector(Binv, X, K, 4L, 4L);
             Proj = 0.0;
-            for (ksi = 0L; ksi < ksimax; ksi++)
+            for (ksi = 0L; ksi < Xdim; ksi++)
             {
                 CC2 = CC1 * ksi;
                 sc = (double) ksi - K[arr[0]];
@@ -142,13 +139,13 @@ void do_compute_projection   (int Xdim,
                 columns = 0.0;
                 for (m = m1; m <= m2; m++)
                 {
-                    if (m < mmax && m > -1L)
+                    if (m < Xdim && m > -1L)
                     {
                         CC3 = CC2 + Xdim * m;
                         rows = 0.0;
                         for (l = l1; l <= l2; l++)
                         {
-                            if ((l < lmax && l > -1L))
+                            if ((l < Xdim && l > -1L))
                             {
                                 gminusl = g - (double) l;
                                 double aux;
@@ -188,7 +185,6 @@ void Compute_projection(const VolumeStruct &Data,
 {
 
     int     Status=!ERROR, arr[3];
-    long    lmax, mmax, ksimax;
     double  scale, scale_x, scale_y, scale_z, m_x, m_y, m_z, minm;
     double  *hlp, *R, *At;
     double  *Help1, *Help2, *Help3, *Help4, *Binv;
@@ -362,12 +358,9 @@ void Compute_projection(const VolumeStruct &Data,
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by VectorScale");
     int Xdim=XSIZE(*Data.volume);
-    ksimax = Xdim;
     arr[0] = 0;
     arr[1] = 1;
     arr[2] = 2;
-    lmax = Xdim;
-    mmax = Xdim;
     Coef_xyz = Coef_x;
     if (m_y < minm)
     {
@@ -376,34 +369,26 @@ void Compute_projection(const VolumeStruct &Data,
         if (VectorScale(BinvC, BinvCscaled, scale_y, 4L) == ERROR)
             REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                          "Error returned by VectorScale");
-        ksimax = Xdim;
         arr[0] = 1;
         arr[1] = 0;
         arr[2] = 2;
-        lmax = Xdim;
-        mmax = Xdim;
         Coef_xyz = Coef_y;
     }
     if (m_z < minm)
     {
         minm = m_z;
         scale = scale_z;
-        if (VectorScale(BinvC, BinvCscaled, scale_z, 4L) == ERROR)
-            ksimax = Xdim;
+        VectorScale(BinvC, BinvCscaled, scale_z, 4L);
         arr[0] = 2;
         arr[1] = 0;
         arr[2] = 1;
-        lmax = Xdim;
-        mmax = Xdim;
         Coef_xyz = Coef_z;
     }
 
     free(BinvC);
     free(C1);
 
-    do_compute_projection(Xdim,
-                          Coef_xyz, minm, Binv, BinvCscaled, ksimax, arr,
-                          lmax, mmax, projection);
+    do_compute_projection(Xdim, Coef_xyz, minm, Binv, BinvCscaled, arr, projection);
 
     free(BinvCscaled);
     free(Binv);
