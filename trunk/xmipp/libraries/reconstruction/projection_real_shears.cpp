@@ -658,7 +658,7 @@ void do_one_projection(VolumeStruct &Data2)
                      "ERROR - Not enough memory for B");
 
     Compute_projection(Parameters, Coef_x, Coef_y, Coef_z, Nx, Ny, Nz,
-    		           Data2.nx_Volume, Data2.ny_Volume,
+                       Data2.nx_Volume, Data2.ny_Volume,
                        RightOperHlp, Ac, Data2.Projection, B);
 
     free(Parameters);
@@ -913,31 +913,15 @@ void Projection_real_shears::start_to_process()
 ///Does finish instructions. Returns possibles errors.
 void Projection_real_shears::finish_to_process()
 {
-    //Destruction of the dynamics allocations of Data
-    del_VolumeStruct(Data);
-
-    //SelFile save
     if(display)
-    {
         progress_bar(DF.size());
-
-        if (fn_sel_file == "") //If the name of the output file is not specified
-        {
-            fn_sel_file = "sel"+fnProjectionSeed+".sel";
-            std::cout<<"Output file : "+fn_sel_file<<std::endl;
-        }
-    }
-    else
-    {
-        if (fn_sel_file == "") //If the name of the output file is not specified
-            fn_sel_file = "sel"+fnProjectionSeed+".sel";
-    }
-
+    del_VolumeStruct(Data);
+    if (fn_sel_file == "") //If the name of the output file is not specified
+        fn_sel_file = "sel"+fnProjectionSeed+".sel";
     SF.write(fn_sel_file);
 }
 
 //-------------------------------------- Main function ----------------------------------------
-///Main function of the projection_real_shears program.
 void Projection_real_shears::ROUT_project_real_shears()
 {
     start_to_process();
