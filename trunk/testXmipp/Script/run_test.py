@@ -8,7 +8,7 @@ from  config import XMIPP_LOGS
 import datetime, os,shutil
 #create log file
 d= datetime.datetime.today()
-filename = XMIPP_LOGS + '/' + d.strftime("%Y_%m_%d_%H_%M_%S.log") 
+filename = XMIPP_LOGS + '/' + d.strftime("%d_%H.log") 
 print "Logging file:", filename
 #run svn
 
