@@ -176,6 +176,7 @@ def AddXmippTest(name, testprog, command):
     env.Depends(testcase, testprog)
     test = env.Alias('run_tests', testcase)
     AlwaysBuild(testcase)
+    return testcase
     
 
 def AddXmippCTest(name):
@@ -185,7 +186,9 @@ def AddXmippCTest(name):
 def AddXmippPythonTest(name):
     print "Adding python test: ", name
     testprog = AddBatch(name, 'applications/tests/test_pythoninterface', '.py')
-    AddXmippTest(name, testprog, "$SOURCE $TARGET")
+    test = AddXmippTest(name, testprog, "$SOURCE $TARGET")
+    return test
+    
     
 def AddXmippJavaTest(name):
     pass
@@ -479,7 +482,7 @@ AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],
 #Xmipp Python Extension
 PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
 import distutils.sysconfig
-AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources,
+pythonbinding = AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources,
            ['#libraries', "#", distutils.sysconfig.get_python_inc()],
            ['lib'], ['XmippData'], '')
 
@@ -781,7 +784,8 @@ if int(env['gtest']):
      AddXmippCTest('test_transformation')
      env.Depends('run_tests', [fftw, tiff, sqlite])
      #python interface tests
-     AddXmippPythonTest('test_pythoninterface')
+     test = AddXmippPythonTest('test_pythoninterface')
+     env.Depends(test, pythonbinding)
      #env.Default('run_tests'     )
 
 # --- Scripts
