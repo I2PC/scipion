@@ -19,7 +19,7 @@ protected:
         if(bytes >= 0)
             pBuf[bytes] = '\0';
         //remove last token
-        FileName filename(pBuf);
+        filename=pBuf;
         filename = filename.removeFilename();
         //get example images/staks
         imageName = filename + "/../applications/tests/test_image/singleImage.spi";
@@ -34,6 +34,7 @@ protected:
     Image<float> myImageFloat;
     FileName imageName;
     FileName stackName;
+    FileName filename;
 
 };
 
@@ -58,6 +59,33 @@ TEST_F( ImageGenericTest, readMapSwapFile)
 
     auxImageGeneric.readMapped(auxFilename);
     EXPECT_EQ(myImageGeneric,auxImageGeneric);
+}
+
+TEST_F( ImageGenericTest, add)
+{
+    FileName auxFilename1((String)"1@"+stackName);
+    FileName auxFilename2((String)"2@"+stackName);
+    ImageGeneric auxImageGeneric1(auxFilename1);
+    ImageGeneric auxImageGeneric2(auxFilename2);
+    auxImageGeneric1.add(auxImageGeneric2);
+    auxFilename2 = filename + "/../applications/tests/test_image_generic/add.spi";
+    auxImageGeneric2.read(auxFilename2);
+    EXPECT_TRUE(auxImageGeneric1==auxImageGeneric2);
+    auxImageGeneric1.add(auxImageGeneric2);
+    EXPECT_FALSE(auxImageGeneric1==auxImageGeneric2);
+}
+
+TEST_F( ImageGenericTest, minus)
+{
+  FileName sumFn = filename + "/../applications/tests/test_image_generic/add.spi";
+  ImageGeneric sumImg(sumFn);
+  FileName fn1((String)"1@"+stackName);
+  ImageGeneric img1(fn1);
+  sumImg.minus(img1);
+  FileName fn2((String)"2@"+stackName);
+  ImageGeneric img2(fn2);
+
+  EXPECT_TRUE(sumImg == fn2);
 }
 
 GTEST_API_ int main(int argc, char **argv)
