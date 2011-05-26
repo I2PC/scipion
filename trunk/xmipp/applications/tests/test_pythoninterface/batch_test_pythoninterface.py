@@ -3,8 +3,12 @@ import unittest, os, sys
 """
 @summary: This pyUnit test module defines the unit tests for the Xmipp Python Interface
 """
-from xmipp import *
 from unittest import TestResult, _TextTestResult, _WritelnDecorator
+scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/lib'
+sys.path.append(scriptdir) # add default search path
+scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
+sys.path.append(scriptdir)
+from xmipp import *
 #from test.test_array import NumberTest
 #from json.tests.test_fail import TestFail
 
