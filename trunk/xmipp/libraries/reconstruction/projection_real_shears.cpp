@@ -96,8 +96,7 @@ void angles_transcription(double *angles)
 //-----------------------------------------------------------------------------------------------
 ///Computes one iteration of the projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
-void do_compute_projection    (double *VWOrigin,
-                              long   Ndv,
+void do_compute_projection   (long Ndv,
                               long Ndw,
                               double *Identity_orientV,
                               double *Identity_orientW,
@@ -123,8 +122,9 @@ void do_compute_projection    (double *VWOrigin,
     for (i = 0L; i < Ndw; i++)
     {
         idw = (double) i;
-        for (int ii=0; ii<4; ++ii)
-            Operhlp[ii]=Identity_orientW[ii]*idw+VWOrigin[ii];
+        for (int ii=0; ii<3; ++ii)
+            Operhlp[ii]=Identity_orientW[ii]*idw;
+        Operhlp[3]=Identity_orientW[3]*idw+1;
         for (n = 0L; n < Ndv; n++)
         {
             ndv = (double) n;
@@ -207,7 +207,7 @@ int Compute_projection(double *Parameters,
     double  scale, scale_x, scale_y, scale_z, m_x, m_y, m_z, minm;
     double  *hlp, *R, *At;
     double  *Help1, *Help2, *Help3, *Help4, *Binv;
-    double  *C1, *C2, *C3, *VWOrigin, *BinvC, *BinvCscaled;
+    double  *C1, *C2, *C3, *BinvC, *BinvCscaled;
     double  *Coef_xyz, *Pr;
 
     Pr = Projection;
@@ -439,11 +439,6 @@ int Compute_projection(double *Parameters,
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for C3");
 
-    VWOrigin = (double *)malloc((size_t) 4L * sizeof(double));
-    if (VWOrigin == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
-                     "ERROR - Not enough memory for VWOrigin");
-
     hlp = C2;
     *hlp++ = (double) Identity_orientV[0];
     *hlp++ = (double) Identity_orientV[1];
@@ -456,20 +451,13 @@ int Compute_projection(double *Parameters,
     *hlp++ = (double) Identity_orientW[2];
     *hlp = 0.0;
 
-    hlp = VWOrigin;
-    *hlp++ = 0.0;
-    *hlp++ = 0.0;
-    *hlp++ = 0.0;
-    *hlp = 1.0;
-
-    do_compute_projection(VWOrigin, Ndv, Ndw, C2, C3,
+    do_compute_projection(Ndv, Ndw, C2, C3,
                           Coef_xyz, minm, Binv, BinvCscaled, ksimax, arr, CoefVolumeNx,
                           CoefVolumeNy, lmax, mmax, Pr);
 
     free(BinvCscaled);
     free(C2);
     free(C3);
-    free(VWOrigin);
     free(Binv);
     free(Help1);
     free(Help2);
