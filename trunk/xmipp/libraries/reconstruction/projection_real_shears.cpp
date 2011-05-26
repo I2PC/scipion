@@ -179,7 +179,7 @@ void Compute_projection(const VolumeStruct &Data,
                        double *Coef_y,
                        double *Coef_z,
                        const Matrix2D<double> &RightOperHlp,
-                       const Matrix2D<double> &Ac,
+                       const Matrix2D<double> &LeftOperHlp,
                        double *projection)
 {
     int     Status=!ERROR, arr[3];
@@ -218,7 +218,7 @@ void Compute_projection(const VolumeStruct &Data,
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help1");
 
-    if (MatrixMultiply(At, MATRIX2D_ARRAY(Ac), Help1, 4L, 4L, 4L) == ERROR)
+    if (MatrixMultiply(At, MATRIX2D_ARRAY(LeftOperHlp), Help1, 4L, 4L, 4L) == ERROR)
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply");
 
