@@ -31,12 +31,8 @@
 #include "projection_real_shears.h"
 
 /// Transforms angles from (Ry, Rz, Ry) to (Rx, Ry, Rz) system. Returns possible error.
-void angles_transcription(Matrix1D<double> &angles)
+void convertAngles(double &phi, double &theta, double &psi)
 {
-    double phi = VEC_ELEM(angles,0);
-    double theta = VEC_ELEM(angles,1);
-    double psi = VEC_ELEM(angles,2);
-
     Matrix2D<double> E;
     Euler_angles2matrix(phi,theta,psi,E,false);
     double A00=MAT_ELEM(E,0,0);
@@ -88,20 +84,20 @@ void angles_transcription(Matrix1D<double> &angles)
         }
     }
 
-    VEC_ELEM(angles,0) = ax;
-    VEC_ELEM(angles,1) = ay;
-    VEC_ELEM(angles,2) = az;
+    phi   = ax;
+    theta = ay;
+    psi   = az;
 }
 
 //-----------------------------------------------------------------------------------------------
 ///Computes one iteration of the projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
-void projectionRealShears3   (MultidimArray<double> &CoefVolume,
-                              double absscale,
-                              double *Binv,
-                              double *BinvCscaled,
-                              int *arr,
-                              MultidimArray<double> &projection)
+void projectionRealShears3(MultidimArray<double> &CoefVolume,
+                           double absscale,
+                           double *Binv,
+                           double *BinvCscaled,
+                           int *arr,
+                           MultidimArray<double> &projection)
 {
     long    i, n, l, l1, l2, m, m1, m2, ksi, row, column, index;
     double  X[4], K[4], Arg[4];
@@ -173,8 +169,8 @@ void projectionRealShears3   (MultidimArray<double> &CoefVolume,
 //-----------------------------------------------------------------------------------------------
 ///Computes projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
-void projectionRealShears2(const Matrix1D<double> &angles,
-                           const Matrix1D<double> &shifts,
+void projectionRealShears2(double phi, double theta, double psi,
+                           double shiftX, double shiftY,
                            MultidimArray<double> &Coef_x,
                            MultidimArray<double> &Coef_y,
                            MultidimArray<double> &Coef_z,
@@ -182,12 +178,10 @@ void projectionRealShears2(const Matrix1D<double> &angles,
                            const Matrix2D<double> &RightOperHlp,
                            MultidimArray<double> &projection)
 {
-    double phi   = VEC_ELEM(angles,0);
-    double theta = VEC_ELEM(angles,1);
-    double psi   = VEC_ELEM(angles,2);
-
     Matrix2D<double> R;
-    translation3DMatrix(shifts,R);
+    R.initIdentity(4);
+    MAT_ELEM(R,0,3)=shiftX;
+    MAT_ELEM(R,1,3)=shiftY;
     Matrix2D<double> B=LeftOperHlp*R;
     rotation3DMatrix(-RAD2DEG(phi),'X',R,true);
     B=B*R;
@@ -253,11 +247,12 @@ void projectionRealShears2(const Matrix1D<double> &angles,
 }
 
 ///Main compute function. Returns possible error.
-void projectionRealShears1(VolumeStruct &Data2, Projection &P)
+void projectionRealShears1(VolumeStruct &Data2, double phi, double theta, double psi,
+                           double shiftX, double shiftY, Projection &P)
 {
     int    Status = !ERROR;
 
-    angles_transcription(Data2.angles);
+    convertAngles(phi, theta, psi);
     int Xdim = Data2.Xdim;
 
     MultidimArray<double> Coef_x, Coef_y, Coef_z, planeCoef, inputPlane, inputRow;
@@ -336,7 +331,7 @@ void projectionRealShears1(VolumeStruct &Data2, Projection &P)
     MAT_ELEM(Acinv,0,3)=MAT_ELEM(Acinv,1,3)=MAT_ELEM(Acinv,2,3)=-halfSize;
 
     P.reset(Data2.Xdim,Data2.Xdim);
-    projectionRealShears2(Data2.angles, Data2.shifts, Coef_x, Coef_y, Coef_z,
+    projectionRealShears2(phi, theta, psi, shiftX, shiftY, Coef_x, Coef_y, Coef_z,
                           Ac, Acinv, P());
 }
 
@@ -441,10 +436,8 @@ void Projection_real_shears::read(const FileName &fn_proj_param)
 void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi)
 {
-    VECTOR_R3(Data.angles,-psi,-tilt,-rot);
-    Data.shifts.initZeros();
     P.reset(Data.Xdim,Data.Xdim);
-    projectionRealShears1(Data,P);
+    projectionRealShears1(Data,-psi,-tilt,-rot,0,0,P);
     if (Ydim!=Data.Xdim || Xdim!=Data.Xdim)
         P().selfWindow(FIRST_XMIPP_INDEX(Ydim),FIRST_XMIPP_INDEX(Xdim),
                        LAST_XMIPP_INDEX(Ydim),LAST_XMIPP_INDEX(Xdim));
@@ -456,8 +449,6 @@ VolumeStruct::VolumeStruct(const MultidimArray<double> &V)
     if (XSIZE(V)!=XSIZE(V) || XSIZE(V)!=ZSIZE(V))
         REPORT_ERROR(ERR_MULTIDIM_DIM, "The volume must be cubic");
     Xdim=XSIZE(*volume);
-    shifts.initZeros(3);
-    angles.initZeros(3);
 }
 
 ///Does start instructions. Returns possibles errors.
@@ -488,11 +479,9 @@ void Projection_real_shears::ROUT_project_real_shears()
         DF.getValue(MDL_ANGLEROT,rot,__iter.objId);
         DF.getValue(MDL_ANGLETILT,tilt,__iter.objId);
         DF.getValue(MDL_ANGLEPSI,psi,__iter.objId);
-        VECTOR_R3(Data->angles,-psi,-tilt,-rot);
-        VECTOR_R2(Data->shifts,shiftX,shiftY);
 
         // Project
-        projectionRealShears1(*Data,P);
+        projectionRealShears1(*Data,-psi,-tilt,-rot,shiftX,shiftY,P);
 
         // Write projection
         fn_proj.compose(fnProjectionSeed, num_file, fn_projection_extension);

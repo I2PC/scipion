@@ -77,8 +77,6 @@ class VolumeStruct
 public:
     const MultidimArray<double> *volume;
     int Xdim;
-    Matrix1D<double> angles; // Angles
-    Matrix1D<double> shifts; //Shifts
 
     // Constructor
     VolumeStruct(const MultidimArray<double> &V);
