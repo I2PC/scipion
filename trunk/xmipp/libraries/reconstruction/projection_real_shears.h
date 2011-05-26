@@ -78,7 +78,6 @@ typedef struct
     long   nx_Volume, ny_Volume, nz_Volume;
     short  *Proj_dims;
     double *Identity_orientN;
-    double *Identity_orientV;
     double *Identity_orientW;
     double *Gama123;
     double *InitPsiThetaPhi; // Angles

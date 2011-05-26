@@ -98,7 +98,6 @@ void angles_transcription(double *angles)
 ///Returns possible error.
 void do_compute_projection   (long Ndv,
                               long Ndw,
-                              double *Identity_orientV,
                               double *Identity_orientW,
                               double *CoefVolume,
                               double absscale,
@@ -128,8 +127,8 @@ void do_compute_projection   (long Ndv,
         for (n = 0L; n < Ndv; n++)
         {
             ndv = (double) n;
-            for (int ii=0; ii<4; ++ii)
-                X[ii]=Identity_orientV[ii]*ndv+Operhlp[ii];
+            memcpy(X,Operhlp,sizeof(double)*4);
+            X[0]+=ndv;
             MatrixTimesVector(Binv, X, K, 4L, 4L);
             Proj = 0.0;
             for (ksi = 0L; ksi < ksimax; ksi++)
@@ -192,7 +191,6 @@ int Compute_projection(double *Parameters,
                        long Nz,
                        short *Proj_dims,
                        double *Identity_orientN,
-                       double *Identity_orientV,
                        double *Identity_orientW,
                        double *RightOperHlp,
                        double *Ac,
@@ -207,7 +205,7 @@ int Compute_projection(double *Parameters,
     double  scale, scale_x, scale_y, scale_z, m_x, m_y, m_z, minm;
     double  *hlp, *R, *At;
     double  *Help1, *Help2, *Help3, *Help4, *Binv;
-    double  *C1, *C2, *C3, *BinvC, *BinvCscaled;
+    double  *C1, *C3, *BinvC, *BinvCscaled;
     double  *Coef_xyz, *Pr;
 
     Pr = Projection;
@@ -429,21 +427,10 @@ int Compute_projection(double *Parameters,
     free(BinvC);
     free(C1);
 
-    C2 = (double *)malloc((size_t) 4L * sizeof(double));
-    if (C2 == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
-                     "ERROR - Not enough memory for C2");
-
     C3 = (double *)malloc((size_t) 4L * sizeof(double));
     if (C3 == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for C3");
-
-    hlp = C2;
-    *hlp++ = (double) Identity_orientV[0];
-    *hlp++ = (double) Identity_orientV[1];
-    *hlp++ = (double) Identity_orientV[2];
-    *hlp = 0.0;
 
     hlp = C3;
     *hlp++ = (double) Identity_orientW[0];
@@ -451,12 +438,11 @@ int Compute_projection(double *Parameters,
     *hlp++ = (double) Identity_orientW[2];
     *hlp = 0.0;
 
-    do_compute_projection(Ndv, Ndw, C2, C3,
+    do_compute_projection(Ndv, Ndw, C3,
                           Coef_xyz, minm, Binv, BinvCscaled, ksimax, arr, CoefVolumeNx,
                           CoefVolumeNy, lmax, mmax, Pr);
 
     free(BinvCscaled);
-    free(C2);
     free(C3);
     free(Binv);
     free(Help1);
@@ -708,7 +694,7 @@ int do_one_projection(VolumeStruct &Data2)
                      "ERROR - Not enough memory for B");
 
     Compute_projection(Parameters, Coef_x, Coef_y, Coef_z, Nx, Ny, Nz, Data2.Proj_dims,
-                       Data2.Identity_orientN, Data2.Identity_orientV, Data2.Identity_orientW,
+                       Data2.Identity_orientN, Data2.Identity_orientW,
                        RightOperHlp, Ac, Data2.Projection, B);
 
     free(Parameters);
@@ -827,7 +813,6 @@ void del_VolumeStruct(VolumeStruct &Data2)
     free(Data2.Projection);
     free(Data2.Proj_dims);
     free(Data2.Identity_orientN);
-    free(Data2.Identity_orientV);
     free(Data2.Identity_orientW);
     free(Data2.Gama123);
     free(Data2.InitDelta123);
@@ -925,11 +910,6 @@ void allocAndInit_VolumeStruct(VolumeStruct &Data2)
     Data2.Identity_orientN[0] = 0.;
     Data2.Identity_orientN[1] = 0.;
     Data2.Identity_orientN[2] = 1.;
-
-    Data2.Identity_orientV = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.Identity_orientV[0] = 1.;
-    Data2.Identity_orientV[1] = 0.;
-    Data2.Identity_orientV[2] = 0.;
 
     Data2.Identity_orientW = (double*) malloc((size_t)3L * sizeof(double));
     Data2.Identity_orientW[0] = 0.;
