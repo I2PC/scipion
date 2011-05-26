@@ -96,16 +96,13 @@ void angles_transcription(Matrix1D<double> &angles)
 //-----------------------------------------------------------------------------------------------
 ///Computes one iteration of the projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
-void do_compute_projection   (long Ndv,
-                              long Ndw,
+void do_compute_projection   (int Xdim,
                               double *CoefVolume,
                               double absscale,
                               double *Binv,
                               double *BinvCscaled,
                               long ksimax,
                               int *arr,
-                              long CoefVolumeNx,
-                              long CoefVolumeNy,
                               long lmax,
                               long mmax,
                               double *Projection)
@@ -115,14 +112,14 @@ void do_compute_projection   (long Ndv,
     double  Proj, sc, g, h, rows, columns, Coeff, Difference;
     double  gminusl, hminusm;
 
-    CC1 = CoefVolumeNx * CoefVolumeNy;
+    CC1 = Xdim * Xdim;
 
     X[2]=0.0;
     X[3]=1.0;
-    for (i = 0L; i < Ndw; i++)
+    for (i = 0L; i < Xdim; i++)
     {
         X[1]=i;
-        for (n = 0L; n < Ndv; n++)
+        for (n = 0L; n < Xdim; n++)
         {
             X[0]=n;
             MatrixTimesVector(Binv, X, K, 4L, 4L);
@@ -147,7 +144,7 @@ void do_compute_projection   (long Ndv,
                 {
                     if (m < mmax && m > -1L)
                     {
-                        CC3 = CC2 + CoefVolumeNx * m;
+                        CC3 = CC2 + Xdim * m;
                         rows = 0.0;
                         for (l = l1; l <= l2; l++)
                         {
@@ -178,40 +175,30 @@ void do_compute_projection   (long Ndv,
 //-----------------------------------------------------------------------------------------------
 ///Computes projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
-int Compute_projection(double *Parameters,
+void Compute_projection(const VolumeStruct &Data,
+						const Matrix1D<double> &angles,
+						const Matrix1D<double> &shifts,
                        double *Coef_x,
                        double *Coef_y,
                        double *Coef_z,
-                       long Nx,
-                       long Ny,
-                       long Nz,
-                       int projXdim,
-                       int projYdim,
                        double *RightOperHlp,
                        double *Ac,
-                       double *Projection,
+                       double *projection,
                        double *B                )
 {
 
     int     Status=!ERROR, arr[3];
-    long    Ndv, Ndw;
-    long    CoefVolumeNx, CoefVolumeNy, lmax, mmax, ksimax;
-    double  psi, theta, phi, Sinphi, Cosphi, Sinpsi, Cospsi, Sintheta, Costheta;
+    long    lmax, mmax, ksimax;
     double  scale, scale_x, scale_y, scale_z, m_x, m_y, m_z, minm;
     double  *hlp, *R, *At;
     double  *Help1, *Help2, *Help3, *Help4, *Binv;
     double  *C1, *BinvC, *BinvCscaled;
-    double  *Coef_xyz, *Pr;
+    double  *Coef_xyz;
 
-    Pr = Projection;
-
-    Ndv = projXdim;
-    Ndw = projYdim;
-
-    psi   = Parameters[0];
-    theta = Parameters[1];
-    phi   = Parameters[2];
-
+    double  psi, theta, phi, Sinphi, Cosphi, Sinpsi, Cospsi, Sintheta, Costheta;
+    psi   = VEC_ELEM(angles,0);
+    theta = VEC_ELEM(angles,1);
+    phi   = VEC_ELEM(angles,2);
     sincos(phi,&Sinphi,&Cosphi);
     sincos(theta,&Sintheta,&Costheta);
     sincos(psi,&Sinpsi,&Cospsi);
@@ -226,11 +213,11 @@ int Compute_projection(double *Parameters,
                      "Error returned by GetIdentitySquareMatrix");
 
     hlp = At + (ptrdiff_t)3L;
-    *hlp = Parameters[3];
+    *hlp = VEC_ELEM(shifts,0);
     hlp += (ptrdiff_t)4L;
-    *hlp = Parameters[4];
+    *hlp = VEC_ELEM(shifts,1);
     hlp += (ptrdiff_t)4L;
-    *hlp = Parameters[5];
+    *hlp = 0;
 
     Help1 = (double *)malloc((size_t) 16L * sizeof(double));
     if (Help1 == (double *)NULL)
@@ -374,14 +361,13 @@ int Compute_projection(double *Parameters,
     if (VectorScale(BinvC, BinvCscaled, scale_x, 4L) == ERROR)
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by VectorScale");
-    ksimax = Nx;
+    int Xdim=XSIZE(*Data.volume);
+    ksimax = Xdim;
     arr[0] = 0;
     arr[1] = 1;
     arr[2] = 2;
-    CoefVolumeNx = Ny;
-    CoefVolumeNy = Nz;
-    lmax = Ny;
-    mmax = Nz;
+    lmax = Xdim;
+    mmax = Xdim;
     Coef_xyz = Coef_x;
     if (m_y < minm)
     {
@@ -390,14 +376,12 @@ int Compute_projection(double *Parameters,
         if (VectorScale(BinvC, BinvCscaled, scale_y, 4L) == ERROR)
             REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                          "Error returned by VectorScale");
-        ksimax = Ny;
+        ksimax = Xdim;
         arr[0] = 1;
         arr[1] = 0;
         arr[2] = 2;
-        CoefVolumeNx = Nx;
-        CoefVolumeNy = Nz;
-        lmax = Nx;
-        mmax = Nz;
+        lmax = Xdim;
+        mmax = Xdim;
         Coef_xyz = Coef_y;
     }
     if (m_z < minm)
@@ -405,31 +389,27 @@ int Compute_projection(double *Parameters,
         minm = m_z;
         scale = scale_z;
         if (VectorScale(BinvC, BinvCscaled, scale_z, 4L) == ERROR)
-            ksimax = Nz;
+            ksimax = Xdim;
         arr[0] = 2;
         arr[1] = 0;
         arr[2] = 1;
-        CoefVolumeNx = Nx;
-        CoefVolumeNy = Ny;
-        lmax = Nx;
-        mmax = Ny;
+        lmax = Xdim;
+        mmax = Xdim;
         Coef_xyz = Coef_z;
     }
 
     free(BinvC);
     free(C1);
 
-    do_compute_projection(Ndv, Ndw,
-                          Coef_xyz, minm, Binv, BinvCscaled, ksimax, arr, CoefVolumeNx,
-                          CoefVolumeNy, lmax, mmax, Pr);
+    do_compute_projection(Xdim,
+                          Coef_xyz, minm, Binv, BinvCscaled, ksimax, arr,
+                          lmax, mmax, projection);
 
     free(BinvCscaled);
     free(Binv);
     free(Help1);
     free(Help2);
     free(Help3);
-
-    return(!ERROR);
 }/* End of Compute_projection */
 
 ///Main compute function. Returns possible error.
@@ -439,12 +419,11 @@ void do_one_projection(VolumeStruct &Data2)
     long    DesProjSize;
     long    i, m, n, l;
     double    lambda;
-    double    *Parameters;
     double    *hlp, *Ac, *Acinv, *RightOperHlp, *B;
     double    *VolumeCoef, *InputVolume, *InputVolumePlane;
     double    *InputVolumeRow, *Coef_x, *Coef_y, *Coef_z;
 
-    angles_transcription(Data2.InitPsiThetaPhi);
+    angles_transcription(Data2.angles);
 
     int Xdim = XSIZE(*Data2.volume);
 
@@ -487,7 +466,7 @@ void do_one_projection(VolumeStruct &Data2)
         for (m = 0L; m < Xdim; m++)
         {
             if (CopyDoubleToDouble(InputVolume, Xdim, Xdim, Xdim, l,    0L,    m,
-            		InputVolumeRow, 1L, Xdim, 1L, 0L, 0L, 0L, 1L, Xdim, 1L) == ERROR)
+                                   InputVolumeRow, 1L, Xdim, 1L, 0L, 0L, 0L, 1L, Xdim, 1L) == ERROR)
                 REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
                              "Error returned by CopyDoubleToDouble");
             for (i = 0L; i < Xdim; i++)
@@ -596,7 +575,7 @@ void do_one_projection(VolumeStruct &Data2)
                          "ERROR");
 
         if (CopyDoubleToDouble(VolumeCoef, Xdim, Xdim, 1L, 0L,    0L,    0L,
-        		Coef_z, Xdim, Xdim, Xdim, 0L, 0L, l, Xdim, Xdim, 1L) == ERROR)
+                               Coef_z, Xdim, Xdim, Xdim, 0L, 0L, l, Xdim, Xdim, 1L) == ERROR)
             REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
                          "Error returned by CopyDoubleToDouble");
     }
@@ -646,28 +625,15 @@ void do_one_projection(VolumeStruct &Data2)
     memcpy(RightOperHlp,Acinv,16*sizeof(double));
     free(Acinv);
 
-    Parameters = (double *)malloc((size_t) 6L * sizeof(double));
-    if (Parameters == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
-                     "ERROR - Not enough memory for Parameters");
-
-    Parameters[2] = VEC_ELEM(Data2.InitPsiThetaPhi,0);
-    Parameters[1] = VEC_ELEM(Data2.InitPsiThetaPhi,1);
-    Parameters[0] = VEC_ELEM(Data2.InitPsiThetaPhi,2);
-    Parameters[3] = VEC_ELEM(Data2.InitDelta123,0);
-    Parameters[4] = VEC_ELEM(Data2.InitDelta123,1);
-    Parameters[5] = VEC_ELEM(Data2.InitDelta123,2);
-
     B = (double *)malloc((size_t) 16L * sizeof(double));
     if (B == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for B");
 
-    Compute_projection(Parameters, Coef_x, Coef_y, Coef_z, Xdim, Xdim, Xdim,
-                       Xdim,Xdim,
-                       RightOperHlp, Ac, MULTIDIM_ARRAY(Data2.projection()), B);
+    Compute_projection(Data2, Data2.angles, Data2.shifts,
+    			       Coef_x, Coef_y, Coef_z, RightOperHlp, Ac,
+                       MULTIDIM_ARRAY(Data2.projection()), B);
 
-    free(Parameters);
     free(Ac);
     free(RightOperHlp);
     free(B);
@@ -800,8 +766,8 @@ void Projection_real_shears::read_a_DocLine(size_t objId)
     DF.getValue(MDL_ANGLETILT,tilt,objId);
     DF.getValue(MDL_ANGLEPSI,psi,objId);
 
-    VECTOR_R3(Data->InitPsiThetaPhi,-DEG2RAD(psi),-DEG2RAD(tilt),-DEG2RAD(rot));
-    VECTOR_R2(Data->InitDelta123,shiftX,shiftY);
+    VECTOR_R3(Data->angles,-DEG2RAD(psi),-DEG2RAD(tilt),-DEG2RAD(rot));
+    VECTOR_R2(Data->shifts,shiftX,shiftY);
 }
 
 ///////////////////////// MAIN INSTRUCTION FOR MPI ////////////////////////////////
@@ -809,8 +775,8 @@ void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi)
 {
     // Prepare Data Structure
-    VECTOR_R3(Data.InitPsiThetaPhi,-DEG2RAD(psi),-DEG2RAD(tilt),-DEG2RAD(rot));
-    Data.InitDelta123.initZeros();
+    VECTOR_R3(Data.angles,-DEG2RAD(psi),-DEG2RAD(tilt),-DEG2RAD(rot));
+    Data.shifts.initZeros();
     do_one_projection(Data);
     P=Data.projection;
     P().selfWindow(FIRST_XMIPP_INDEX(Ydim),FIRST_XMIPP_INDEX(Xdim),
@@ -824,8 +790,8 @@ VolumeStruct::VolumeStruct(const MultidimArray<double> &V)
         REPORT_ERROR(ERR_MULTIDIM_DIM, "The volume must be cubic");
     projection.reset(YSIZE(V),XSIZE(V));
     projection().setXmippOrigin();
-    InitDelta123.initZeros(3);
-    InitPsiThetaPhi.initZeros(3);
+    shifts.initZeros(3);
+    angles.initZeros(3);
 }
 
 ///Does start instructions. Returns possibles errors.
