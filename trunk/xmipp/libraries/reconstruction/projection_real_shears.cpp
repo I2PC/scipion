@@ -169,27 +169,23 @@ void projectionRealShears3(MultidimArray<double> &CoefVolume,
 //-----------------------------------------------------------------------------------------------
 ///Computes projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
-void projectionRealShears2(double phi, double theta, double psi,
+void projectionRealShears2(VolumeStruct &Data,
+                           double phi, double theta, double psi,
                            double shiftX, double shiftY,
-                           MultidimArray<double> &Coef_x,
-                           MultidimArray<double> &Coef_y,
-                           MultidimArray<double> &Coef_z,
-                           const Matrix2D<double> &LeftOperHlp,
-                           const Matrix2D<double> &RightOperHlp,
                            MultidimArray<double> &projection)
 {
     Matrix2D<double> R;
     R.initIdentity(4);
     MAT_ELEM(R,0,3)=shiftX;
     MAT_ELEM(R,1,3)=shiftY;
-    Matrix2D<double> B=LeftOperHlp*R;
+    Matrix2D<double> B=Data.Ac*R;
     rotation3DMatrix(-RAD2DEG(phi),'X',R,true);
     B=B*R;
     rotation3DMatrix(RAD2DEG(theta),'Y',R,true);
     B=B*R;
     rotation3DMatrix(-RAD2DEG(psi),'Z',R,true);
     B=B*R;
-    B=B*RightOperHlp;
+    B=B*Data.Acinv;
     Matrix2D<double> Binv;
     B.inv(Binv);
     Matrix1D<double> BinvC;
@@ -220,7 +216,7 @@ void projectionRealShears2(double phi, double theta, double psi,
     arr[0] = 0;
     arr[1] = 1;
     arr[2] = 2;
-    MultidimArray<double> *Coef_xyz = &Coef_x;
+    MultidimArray<double> *Coef_xyz = &Data.Coef_x;
     if (m_y < minm)
     {
         minm = m_y;
@@ -228,7 +224,7 @@ void projectionRealShears2(double phi, double theta, double psi,
         arr[0] = 1;
         arr[1] = 0;
         arr[2] = 2;
-        Coef_xyz = &Coef_y;
+        Coef_xyz = &Data.Coef_y;
     }
     if (m_z < minm)
     {
@@ -237,7 +233,7 @@ void projectionRealShears2(double phi, double theta, double psi,
         arr[0] = 2;
         arr[1] = 0;
         arr[2] = 1;
-        Coef_xyz = &Coef_z;
+        Coef_xyz = &Data.Coef_z;
     }
     Matrix1D<double> BinvCscaled=BinvC;
     BinvCscaled*=scale;
@@ -252,9 +248,7 @@ void projectionRealShears1(VolumeStruct &Data2, double phi, double theta, double
 {
     convertAngles(phi, theta, psi);
     P.reset(Data2.Xdim,Data2.Xdim);
-    projectionRealShears2(phi, theta, psi, shiftX, shiftY,
-    					  Data2.Coef_x, Data2.Coef_y, Data2.Coef_z,
-    					  Data2.Ac, Data2.Acinv, P());
+    projectionRealShears2(Data2, phi, theta, psi, shiftX, shiftY, P());
 }
 
 ///Parameters reading. Note that all parameters are required.
