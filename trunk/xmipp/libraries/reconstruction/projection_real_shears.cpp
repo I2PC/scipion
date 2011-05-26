@@ -659,7 +659,7 @@ int Compute_projection(double *Parameters,
 }/* End of Compute_projection */
 
 ///Main compute function. Returns possible error.
-int ROUT_project_execute(VolumeStruct &Data2)
+int do_one_projection(VolumeStruct &Data2)
 {
     int    Status = !ERROR;
     long    DesProjSize;
@@ -669,6 +669,8 @@ int ROUT_project_execute(VolumeStruct &Data2)
     double    *hlp, *Av, *As, *Ac, *Acinv, *RightOperHlp, *B;
     double    *VolumeCoef, *InputVolume, *InputVolumePlane;
     double    *InputVolumeRow, *Coef_x, *Coef_y, *Coef_z;
+
+    angles_transcription(Data2.InitPsiThetaPhi, Data2.Lambda123);
 
     Nx = Data2.nx_Volume;
     Ny = Data2.ny_Volume;
@@ -1104,13 +1106,6 @@ void Projection_real_shears::read_a_DocLine(size_t objId)
 }
 
 ///////////////////////// MAIN INSTRUCTION FOR MPI ////////////////////////////////
-///Execute instructions for one projection
-void do_oneProjection(VolumeStruct &Data2)
-{
-    angles_transcription(Data2.InitPsiThetaPhi, Data2.Lambda123);
-    ROUT_project_execute(Data2);
-}
-
 void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi)
 {
@@ -1122,7 +1117,7 @@ void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
     Data.InitDelta123[0] = 0;
     Data.InitDelta123[1] = 0;
 
-    do_oneProjection(Data);
+    do_one_projection(Data);
     extractProjection(Data, P);
     P().setXmippOrigin();
     P().selfWindow(FIRST_XMIPP_INDEX(Ydim),FIRST_XMIPP_INDEX(Xdim),
@@ -1267,7 +1262,7 @@ void Projection_real_shears::ROUT_project_real_shears()
     FOR_ALL_OBJECTS_IN_METADATA(DF)
     {
         read_a_DocLine(__iter.objId);
-        do_oneProjection(Data);
+        do_one_projection(Data);
         write_projection_file(num_file);
         num_file++;
     }

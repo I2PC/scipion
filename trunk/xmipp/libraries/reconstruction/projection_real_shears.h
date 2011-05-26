@@ -104,9 +104,6 @@ void allocAndInit_VolumeStruct(VolumeStruct &Data2);
 /// Deallocate VolumeStruct
 void del_VolumeStruct(VolumeStruct &Data2);
 
-///Executes instructions for one projection
-void do_oneProjection(VolumeStruct &Data2);
-
 ///Main class of this program
 class Projection_real_shears
 {
