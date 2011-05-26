@@ -92,67 +92,60 @@ void convertAngles(double &phi, double &theta, double &psi)
 //-----------------------------------------------------------------------------------------------
 ///Computes one iteration of the projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
-void projectionRealShears3(MultidimArray<double> &CoefVolume,
+void projectionRealShears2(MultidimArray<double> &CoefVolume,
                            double absscale,
-                           double *Binv,
-                           double *BinvCscaled,
+                           Matrix2D<double> &Binv,
+                           Matrix1D<double> &BinvCscaled,
                            int *arr,
                            MultidimArray<double> &projection)
 {
-    long    i, n, l, l1, l2, m, m1, m2, ksi, row, column, index;
     double  X[4], K[4], Arg[4];
-    double  Proj, sc, g, h, rows, columns, Coeff;
-    double  gminusl, hminusm;
-
     int Xdim=XSIZE(projection);
     double *ptrProjection=MULTIDIM_ARRAY(projection);
     size_t CC1 = Xdim * Xdim;
 
     X[2]=0.0;
     X[3]=1.0;
-    for (i = 0L; i < Xdim; i++)
+    for (int i = 0; i < Xdim; i++)
     {
         X[1]=i;
-        for (n = 0L; n < Xdim; n++)
+        for (int n = 0; n < Xdim; n++)
         {
             X[0]=n;
-            MatrixTimesVector(Binv, X, K, 4L, 4L);
-            Proj = 0.0;
-            for (ksi = 0L; ksi < Xdim; ksi++)
+            MatrixTimesVector(MATRIX2D_ARRAY(Binv), X, K, 4L, 4L);
+            double Proj = 0.0;
+            for (int ksi = 0; ksi < Xdim; ksi++)
             {
                 size_t CC2 = CC1 * ksi;
-                sc = (double) ksi - K[arr[0]];
+                double sc = (double) ksi - K[arr[0]];
                 for (int ii=0; ii<4; ++ii)
-                    Arg[ii]=BinvCscaled[ii]*sc+K[ii];
-                g = Arg[arr[1]];
-                h = Arg[arr[2]];
+                    Arg[ii]=VEC_ELEM(BinvCscaled,ii)*sc+K[ii];
+                double g = Arg[arr[1]];
+                double h = Arg[arr[2]];
 
-                double aux=g-2.0;
-                l1 = CEIL(aux);
-                l2 = l1 + 3L;
-                aux=h-2.0;
-                m1 = CEIL(aux);
-                m2 = m1 + 3L;
-                columns = 0.0;
-                for (m = m1; m <= m2; m++)
+                int l1 = ceil(g-2.0);
+                int l2 = l1 + 3;
+                int m1 = ceil(h-2.0);
+                int m2 = m1 + 3;
+                double columns = 0.0;
+                double aux;
+                for (int m = m1; m <= m2; m++)
                 {
-                    if (m < Xdim && m > -1L)
+                    if (m < Xdim && m > -1)
                     {
                         size_t CC3 = CC2 + Xdim * m;
-                        rows = 0.0;
-                        for (l = l1; l <= l2; l++)
+                        double rows = 0.0;
+                        for (int l = l1; l <= l2; l++)
                         {
-                            if ((l < Xdim && l > -1L))
+                            if ((l < Xdim && l > -1))
                             {
-                                gminusl = g - (double) l;
-                                double aux;
+                                double gminusl = g - (double) l;
                                 BSPLINE03(aux,gminusl);
-                                Coeff = DIRECT_A1D_ELEM(CoefVolume,CC3 + l);
+                                double Coeff = DIRECT_A1D_ELEM(CoefVolume,CC3 + l);
                                 rows += Coeff * aux;
                             }
                         }
-                        hminusm = h - (double) m;
-                        double aux;
+                        double hminusm = h - (double) m;
                         BSPLINE03(aux,hminusm);
                         columns +=  rows * aux;
                     }
@@ -169,7 +162,7 @@ void projectionRealShears3(MultidimArray<double> &CoefVolume,
 //-----------------------------------------------------------------------------------------------
 ///Computes projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
-void projectionRealShears2(VolumeStruct &Data,
+void projectionRealShears1(VolumeStruct &Data,
                            double phi, double theta, double psi,
                            double shiftX, double shiftY,
                            MultidimArray<double> &projection)
@@ -238,8 +231,7 @@ void projectionRealShears2(VolumeStruct &Data,
     Matrix1D<double> BinvCscaled=BinvC;
     BinvCscaled*=scale;
 
-    projectionRealShears3(*Coef_xyz, minm, MATRIX2D_ARRAY(Binv),
-                          MATRIX1D_ARRAY(BinvCscaled), arr, projection);
+    projectionRealShears2(*Coef_xyz, minm, Binv, BinvCscaled, arr, projection);
 }
 
 ///Parameters reading. Note that all parameters are required.
@@ -440,7 +432,7 @@ void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
     double Theta=-tilt;
     double Psi=-rot;
     convertAngles(Phi, Theta, Psi);
-    projectionRealShears2(Data, Phi, Theta, Psi, shiftX, shiftY, P());
+    projectionRealShears1(Data, Phi, Theta, Psi, shiftX, shiftY, P());
     if (Ydim!=Data.Xdim || Xdim!=Data.Xdim)
         P().selfWindow(FIRST_XMIPP_INDEX(Ydim),FIRST_XMIPP_INDEX(Xdim),
                        LAST_XMIPP_INDEX(Ydim),LAST_XMIPP_INDEX(Xdim));

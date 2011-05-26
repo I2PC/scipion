@@ -178,7 +178,7 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
             rot=       XX(mysampling.no_redundant_sampling_points_angles[i]);
 
             if (shears)
-                project_Volume(*VShears, P, Ydim, Xdim, rot,tilt,psi,0,0);
+                project_Volume(*VShears, P, Ydim, Xdim, rot,tilt,psi);
             else
                 projectVolume(inputVol(), P, Ydim, Xdim, rot,tilt,psi);
 
