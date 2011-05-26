@@ -486,7 +486,7 @@ int do_one_projection(VolumeStruct &Data2)
     long    i, m, n, l, Nx, Ny, Nz;
     double    lambda;
     double    *Parameters;
-    double    *hlp, *Av, *As, *Ac, *Acinv, *RightOperHlp, *B;
+    double    *hlp, *As, *Ac, *Acinv, *RightOperHlp, *B;
     double    *VolumeCoef, *InputVolume, *InputVolumePlane;
     double    *InputVolumeRow, *Coef_x, *Coef_y, *Coef_z;
 
@@ -649,22 +649,6 @@ int do_one_projection(VolumeStruct &Data2)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for Projection");
 
-    Av = (double *)malloc((size_t) 16L * sizeof(double));
-    if (Av == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
-                     "ERROR - Not enough memory for Av");
-
-    if (GetIdentitySquareMatrix(Av, 4L) == ERROR)
-        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "Error returned by GetIdentitySquareMatrix");
-
-    hlp = Av + (ptrdiff_t)3L;
-    *hlp = (double) Data2.K123[0];
-    hlp += (ptrdiff_t)4L;
-    *hlp = (double) Data2.K123[1];
-    hlp += (ptrdiff_t)4L;
-    *hlp = (double) Data2.K123[2];
-
     As = (double *)malloc((size_t) 16L * sizeof(double));
     if (As == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
@@ -711,11 +695,10 @@ int do_one_projection(VolumeStruct &Data2)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for RightOperHlp");
 
-    if (multiply_3Matrices(Acinv, As, Av, RightOperHlp, 4L, 4L, 4L, 4L) == ERROR)
+    if (MatrixMultiply(Acinv, As, RightOperHlp, 4L, 4L, 4L) == ERROR)
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by multiply_3Matrices");
 
-    free(Av);
     free(As);
     free(Acinv);
 
@@ -858,7 +841,6 @@ void del_VolumeStruct(VolumeStruct &Data2)
     free(Data2.Identity_orientN);
     free(Data2.Identity_orientV);
     free(Data2.Identity_orientW);
-    free(Data2.K123);
     free(Data2.Gama123);
     free(Data2.InitDelta123);
     free(Data2.InitPsiThetaPhi);
@@ -908,7 +890,6 @@ void Projection_real_shears::read_a_DocLine(size_t objId)
 
     DF.getValue(MDL_SHIFTX,shiftX,objId);
     DF.getValue(MDL_SHIFTY,shiftY,objId);
-
     DF.getValue(MDL_ANGLEROT,rot,objId);
     DF.getValue(MDL_ANGLETILT,tilt,objId);
     DF.getValue(MDL_ANGLEPSI,psi,objId);
@@ -966,11 +947,6 @@ void allocAndInit_VolumeStruct(VolumeStruct &Data2)
     Data2.Identity_orientW[0] = 0.;
     Data2.Identity_orientW[1] = 1.;
     Data2.Identity_orientW[2] = 0.;
-
-    Data2.K123 = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.K123[0] = 0.;
-    Data2.K123[1] = 0.;
-    Data2.K123[2] = 0.;
 
     Data2.Gama123 = (double*) malloc((size_t)3L * sizeof(double));
     Data2.Gama123[0] = Data2.nx_Volume/2.;
