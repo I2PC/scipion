@@ -631,20 +631,28 @@ int do_one_projection(VolumeStruct &Data2)
                      "Error returned by GetIdentitySquareMatrix");
 
     hlp = Ac + (ptrdiff_t)3L;
-    *hlp = (double) Data2.Gama123[0];
+    double halfSize=Data2.nx_Volume/2;
+    *hlp = halfSize;
     hlp += (ptrdiff_t)4L;
-    *hlp = (double) Data2.Gama123[1];
+    *hlp = halfSize;
     hlp += (ptrdiff_t)4L;
-    *hlp = (double) Data2.Gama123[2];
+    *hlp = halfSize;
 
     Acinv = (double *)malloc((size_t) 16L * sizeof(double));
     if (Acinv == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
-                     "ERROR - Not enough memory for Acinv");
+                     "ERROR - Not enough memory for Ac");
 
-    if (SquareMatrixInvertGauss(Ac, Acinv, 4L, DBL_EPSILON, &Status) == ERROR)
+    if (GetIdentitySquareMatrix(Acinv, 4L) == ERROR)
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "Error returned by SquareMatrixInvertGauss");
+                     "Error returned by GetIdentitySquareMatrix");
+
+    hlp = Acinv + (ptrdiff_t)3L;
+    *hlp = -halfSize;
+    hlp += (ptrdiff_t)4L;
+    *hlp = -halfSize;
+    hlp += (ptrdiff_t)4L;
+    *hlp = -halfSize;
 
     RightOperHlp = (double *)malloc((size_t) 16L * sizeof(double));
     if (RightOperHlp == (double *)NULL)
@@ -793,7 +801,6 @@ void del_VolumeStruct(VolumeStruct &Data2)
     free(Data2.Volume);
     free(Data2.Projection);
     free(Data2.Proj_dims);
-    free(Data2.Gama123);
     free(Data2.InitDelta123);
     free(Data2.InitPsiThetaPhi);
 }
@@ -884,11 +891,6 @@ void allocAndInit_VolumeStruct(VolumeStruct &Data2)
     Data2.Proj_dims = (short*) malloc((size_t)2L * sizeof(short));
     Data2.Proj_dims[0] = Data2.nx_Volume;
     Data2.Proj_dims[1] = Data2.ny_Volume;
-
-    Data2.Gama123 = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.Gama123[0] = Data2.nx_Volume/2.;
-    Data2.Gama123[1] = Data2.Gama123[0];
-    Data2.Gama123[2] = Data2.Gama123[0];
 
     Data2.InitDelta123 = (double*) malloc((size_t)3L * sizeof(double));
     Data2.InitDelta123[2] = 0.;
