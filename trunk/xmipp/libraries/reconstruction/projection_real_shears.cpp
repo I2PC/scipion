@@ -104,10 +104,10 @@ void projectionRealShears2(MultidimArray<double> &CoefVolume,
     double *ptrProjection=MULTIDIM_ARRAY(projection);
     size_t CC1 = Xdim * Xdim;
 
-    Ki[0]=MAT_ELEM(Binv,0,3);
-    Ki[1]=MAT_ELEM(Binv,1,3);
-    Ki[2]=MAT_ELEM(Binv,2,3);
-    Ki[3]=MAT_ELEM(Binv,3,3);
+    Ki[0]=dMn(Binv,3);
+    Ki[1]=dMn(Binv,7);
+    Ki[2]=dMn(Binv,11);
+    Ki[3]=dMn(Binv,15);
     for (int i = 0; i < Xdim; i++)
     {
         K[0]=Ki[0];
@@ -121,8 +121,10 @@ void projectionRealShears2(MultidimArray<double> &CoefVolume,
             {
                 size_t CC2 = CC1 * ksi;
                 double sc = (double) ksi - K[arr[0]];
-                for (int ii=0; ii<4; ++ii)
-                    Arg[ii]=VEC_ELEM(BinvCscaled,ii)*sc+K[ii];
+                Arg[0]=VEC_ELEM(BinvCscaled,0)*sc+K[0];
+                Arg[1]=VEC_ELEM(BinvCscaled,1)*sc+K[1];
+                Arg[2]=VEC_ELEM(BinvCscaled,2)*sc+K[2];
+                Arg[3]=VEC_ELEM(BinvCscaled,3)*sc+K[3];
                 double g = Arg[arr[1]];
                 double h = Arg[arr[2]];
 
@@ -157,15 +159,15 @@ void projectionRealShears2(MultidimArray<double> &CoefVolume,
             }
             Proj *= absscale;
             *ptrProjection++ = Proj;
-            K[0]+=MAT_ELEM(Binv,0,0);
-            K[1]+=MAT_ELEM(Binv,1,0);
-            K[2]+=MAT_ELEM(Binv,2,0);
-            K[3]+=MAT_ELEM(Binv,3,0);
+            K[0]+=dMn(Binv,0);
+            K[1]+=dMn(Binv,4);
+            K[2]+=dMn(Binv,8);
+            K[3]+=dMn(Binv,12);
         }
-        Ki[0]+=MAT_ELEM(Binv,0,1);
-        Ki[1]+=MAT_ELEM(Binv,1,1);
-        Ki[2]+=MAT_ELEM(Binv,2,1);
-        Ki[3]+=MAT_ELEM(Binv,3,1);
+        Ki[0]+=dMn(Binv,1);
+        Ki[1]+=dMn(Binv,5);
+        Ki[2]+=dMn(Binv,9);
+        Ki[3]+=dMn(Binv,13);
     }
 }
 
