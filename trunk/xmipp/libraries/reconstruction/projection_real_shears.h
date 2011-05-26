@@ -76,7 +76,6 @@ typedef struct
 {
     double *Volume;
     long   nx_Volume, ny_Volume, nz_Volume;
-    short  *Proj_dims;
     double *InitPsiThetaPhi; // Angles
     double *InitDelta123; //Shifts
     double *Projection;

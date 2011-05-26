@@ -185,7 +185,8 @@ int Compute_projection(double *Parameters,
                        long Nx,
                        long Ny,
                        long Nz,
-                       short *Proj_dims,
+                       int projXdim,
+                       int projYdim,
                        double *RightOperHlp,
                        double *Ac,
                        double *Projection,
@@ -204,19 +205,16 @@ int Compute_projection(double *Parameters,
 
     Pr = Projection;
 
-    Ndv = (long) *Proj_dims++;
-    Ndw = (long) *Proj_dims;
+    Ndv = projXdim;
+    Ndw = projYdim;
 
-    psi = Parameters[0];
-    theta =    Parameters[1];
-    phi = Parameters[2];
+    psi   = Parameters[0];
+    theta = Parameters[1];
+    phi   = Parameters[2];
 
-    Sinphi = sin(phi);
-    Cosphi = cos(phi);
-    Sinpsi = sin(psi);
-    Cospsi = cos(psi);
-    Sintheta = sin(theta);
-    Costheta = cos(theta);
+    sincos(phi,&Sinphi,&Cosphi);
+    sincos(theta,&Sintheta,&Costheta);
+    sincos(psi,&Sinpsi,&Cospsi);
 
     At = (double *)malloc((size_t) 16L * sizeof(double));
     if (At == (double *)NULL)
@@ -435,7 +433,7 @@ int Compute_projection(double *Parameters,
 }/* End of Compute_projection */
 
 ///Main compute function. Returns possible error.
-int do_one_projection(VolumeStruct &Data2)
+void do_one_projection(VolumeStruct &Data2)
 {
     int    Status = !ERROR;
     long    DesProjSize;
@@ -659,7 +657,8 @@ int do_one_projection(VolumeStruct &Data2)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for B");
 
-    Compute_projection(Parameters, Coef_x, Coef_y, Coef_z, Nx, Ny, Nz, Data2.Proj_dims,
+    Compute_projection(Parameters, Coef_x, Coef_y, Coef_z, Nx, Ny, Nz,
+    		           Data2.nx_Volume, Data2.ny_Volume,
                        RightOperHlp, Ac, Data2.Projection, B);
 
     free(Parameters);
@@ -669,8 +668,6 @@ int do_one_projection(VolumeStruct &Data2)
     FreeVolumeDouble(&Coef_x);
     FreeVolumeDouble(&Coef_y);
     FreeVolumeDouble(&Coef_z);
-
-    return(!ERROR);
 }
 
 ///Parameters reading. Note that all parameters are required.
@@ -776,7 +773,6 @@ void del_VolumeStruct(VolumeStruct &Data2)
 {
     free(Data2.Volume);
     free(Data2.Projection);
-    free(Data2.Proj_dims);
     free(Data2.InitDelta123);
     free(Data2.InitPsiThetaPhi);
 }
@@ -863,10 +859,6 @@ void allocAndInit_VolumeStruct(VolumeStruct &Data2)
     Data2.Volume = (double*) malloc((size_t)(Data2.nx_Volume * Data2.ny_Volume * Data2.nz_Volume) * sizeof(double));
 
     Data2.Projection = (double*) malloc((size_t) Data2.nx_Volume * Data2.ny_Volume * sizeof(double));
-
-    Data2.Proj_dims = (short*) malloc((size_t)2L * sizeof(short));
-    Data2.Proj_dims[0] = Data2.nx_Volume;
-    Data2.Proj_dims[1] = Data2.ny_Volume;
 
     Data2.InitDelta123 = (double*) malloc((size_t)3L * sizeof(double));
     Data2.InitDelta123[2] = 0.;
