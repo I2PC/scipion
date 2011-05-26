@@ -762,7 +762,7 @@ void Projection_real_shears::read(const FileName &fn_proj_param)
             break;
         case 2: //***** Line 3 *****
             proj_Xdim = textToInteger(firstToken(line));
-            proj_Zdim = proj_Ydim = proj_Xdim ;
+            proj_Ydim = proj_Xdim ;
 
             lineNo = 3;
             break;
@@ -930,11 +930,10 @@ void Projection_real_shears::start_to_process()
     }
 
     //Reads the reference volume
-    Image<double> V;
     V.read(fnPhantom);
     prepareStructVolume(V(),Data);
 
-    if(Data.nx_Volume!=proj_Xdim || Data.ny_Volume!=proj_Ydim || Data.nz_Volume!=proj_Zdim)
+    if(Data.nx_Volume!=proj_Xdim || Data.ny_Volume!=proj_Ydim)
     {
         std::cout<<"\n\tWarning : the dimension specified in the input file is different to the volume dimension.";
         std::cout<<"\n\tThe program will only keep the volume dimensions.\n"<<std::endl;

@@ -119,8 +119,6 @@ class Projection_real_shears
         int proj_Xdim;
         ///Projection Ydim
         int proj_Ydim;
-        ///Projection Zdim
-        int proj_Zdim;
 
         ///Volume file
         FileName fnPhantom;
@@ -135,6 +133,8 @@ class Projection_real_shears
         ///Angular file
         FileName fn_angle;
 
+        // Volume to project
+        Image<double> V;
         ///Projection to save
         Projection proj;
         ///Selection file to fill and save
