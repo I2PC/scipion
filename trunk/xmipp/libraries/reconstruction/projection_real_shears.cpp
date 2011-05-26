@@ -32,12 +32,11 @@
 
 ///Returns a pointer of the multiplication of the 5 matrices built with identity matrices and the parameters.\n
 ///It returns NULL if there is an error.
-double *MatrixBem(double phi, double theta, double psi, double x0, double y0, double scale_x, double scale_y, double scale_z)
+double *MatrixBem(double phi, double theta, double psi,
+		          double scale_x, double scale_y, double scale_z)
 {
     double *pointer;
-
-    double ss = sin(phi);
-    double cc = cos(phi);
+    double ss, cc;
 
     //------------------------------------------------
     /*Rz1 [4][4] = {{ cc,  ss, 0.0, 0.0},
@@ -45,7 +44,7 @@ double *MatrixBem(double phi, double theta, double psi, double x0, double y0, do
             {0.0, 0.0, 1.0, 0.0},
             {0.0, 0.0, 0.0, 1.0}};*/
     //------------------------------------------------
-
+    sincos(phi,&ss,&cc);
     double *Rz1 = (double *)malloc((size_t) 16L * sizeof(double));
     if (Rz1 == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::MatrixBem: "
@@ -64,16 +63,13 @@ double *MatrixBem(double phi, double theta, double psi, double x0, double y0, do
     pointer += (ptrdiff_t)1L;
     *pointer = cc;
 
-    ss = sin(theta);
-    cc = cos(theta);
-
     //------------------------------------------------
     /*Ry [4][4] = {{ cc, 0.0, -ss, 0.0},
                {0.0, 1.0, 0.0, 0.0},
                { ss, 0.0,  cc, 0.0},
                {0.0, 0.0, 0.0, 1.0}};*/
     //------------------------------------------------
-
+    sincos(theta,&ss,&cc);
     double *Ry = (double *)malloc((size_t) 16L * sizeof(double));
     if (Ry == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::MatrixBem: "
@@ -92,16 +88,13 @@ double *MatrixBem(double phi, double theta, double psi, double x0, double y0, do
     pointer += (ptrdiff_t)2L;
     *pointer = cc;
 
-    ss = sin(psi);
-    cc = cos(psi);
-
     //------------------------------------------------
     /*Rz2 [4][4] = {{ cc,  ss, 0.0, 0.0},
             {-ss,  cc, 0.0, 0.0},
             {0.0, 0.0, 1.0, 0.0},
             {0.0, 0.0, 0.0, 1.0}};*/
     //------------------------------------------------
-
+    sincos(psi,&ss,&cc);
     double *Rz2 = (double *)malloc((size_t) 16L * sizeof(double));
     if (Rz2 == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::MatrixBem: "
@@ -119,29 +112,6 @@ double *MatrixBem(double phi, double theta, double psi, double x0, double y0, do
     *pointer = -ss;
     pointer += (ptrdiff_t)1L;
     *pointer = cc;
-
-    //(Identity Matrix)
-    //------------------------------------------------
-    /*At [4][4] = {{1., 0., 0., 0.},
-               {0., 1., 0., 0.},
-               {0., 0., 1., 0.},
-               {x0, y0, 0., 1.}};*/
-    //------------------------------------------------
-
-    double *At = (double *)malloc((size_t) 16L * sizeof(double));
-    if (At == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::MatrixBem: "
-                     "ERROR - Not enough memory for At");
-
-    if (GetIdentitySquareMatrix(At, 4L) == ERROR)
-        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::MatrixBem: "
-                     "Error returned by GetIdentitySquareMatrix");
-
-    pointer = At;
-    pointer += (ptrdiff_t)8L;
-    *pointer = x0;
-    pointer += (ptrdiff_t)1L;
-    *pointer = y0;
 
     //(Identity Matrix)
     //------------------------------------------------
@@ -173,47 +143,38 @@ double *MatrixBem(double phi, double theta, double psi, double x0, double y0, do
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::MatrixBem: "
                      "ERROR - Not enough memory for matrB");
 
-    multiply_5Matrices(At, As, Rz2, Ry, Rz1, matrB, 4L, 4L, 4L, 4L, 4L, 4L);
+    multiply_4Matrices(As, Rz2, Ry, Rz1, matrB, 4L, 4L, 4L, 4L, 4L);
 
     free(Rz1);
     free(Ry);
     free(Rz2);
-    free(At);
     free(As);
 
     return matrB;
 }
 
 /// Transforms angles from (Ry, Rz, Ry) to (Rx, Ry, Rz) system. Returns possible error.
-int angles_transcription(double *angles, double *Lambda123)
+void angles_transcription(double *angles, double *Lambda123)
 {
     double phi = angles[0];
     double theta = angles[1];
     double psi = angles[2];
-    double x0 = 0.;
-    double y0 = 0.;
     double scale_x = Lambda123[0];
     double scale_y = Lambda123[1];
     double scale_z = Lambda123[2];
 
-    double *Bem_1D = MatrixBem(phi, theta, psi, x0, y0, scale_x, scale_y, scale_z);
+    double *Bem_1D = MatrixBem(phi, theta, psi, scale_x, scale_y, scale_z);
     if(Bem_1D==NULL)
-        return (ERROR);
+        return;
 
-    double Bem [4][4];
-    for(int i=0; i<4; i++)
-        for(int j=0; j<4; j++)
-            Bem[i][j] = Bem_1D[i*4+j];
-
+    double A00 = Bem_1D[0];
+    double A02 = Bem_1D[2];
+    double A10 = Bem_1D[4];
+    double A12 = Bem_1D[6];
+    double A20 = Bem_1D[8];
+    double A21 = Bem_1D[9];
+    double A22 = Bem_1D[10];
     free(Bem_1D);
-
-    double A00 = Bem[0][0];
-    double A10 = Bem[1][0];
-    double A20 = Bem[2][0];
-    double A21 = Bem[2][1];
-    double A22 = Bem[2][2];
-    double A12 = Bem[1][2];
-    double A02 = Bem[0][2];
 
     double abs_cosay = sqrt(A22*A22+A21*A21);
 
@@ -259,14 +220,12 @@ int angles_transcription(double *angles, double *Lambda123)
     angles[0] = ax;
     angles[1] = ay;
     angles[2] = az;
-
-    return (!ERROR);
 }
 
 //-----------------------------------------------------------------------------------------------
 ///Computes one iteration of the projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
-int do_compute_projection    (double *VWOrigin,
+void do_compute_projection    (double *VWOrigin,
                               long   Ndv,
                               long Ndw,
                               double *Identity_orientV,
@@ -348,8 +307,6 @@ int do_compute_projection    (double *VWOrigin,
             *Projection++ = Proj;
         }
     }
-
-    return(!ERROR);
 }/* End of do_compute_projection */
 
 //-----------------------------------------------------------------------------------------------
