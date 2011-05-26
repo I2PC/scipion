@@ -442,7 +442,7 @@ int do_one_projection(VolumeStruct &Data2)
     long    i, m, n, l, Nx, Ny, Nz;
     double    lambda;
     double    *Parameters;
-    double    *hlp, *As, *Ac, *Acinv, *RightOperHlp, *B;
+    double    *hlp, *Ac, *Acinv, *RightOperHlp, *B;
     double    *VolumeCoef, *InputVolume, *InputVolumePlane;
     double    *InputVolumeRow, *Coef_x, *Coef_y, *Coef_z;
 
@@ -605,22 +605,6 @@ int do_one_projection(VolumeStruct &Data2)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for Projection");
 
-    As = (double *)malloc((size_t) 16L * sizeof(double));
-    if (As == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
-                     "ERROR - Not enough memory for As");
-
-    if (GetIdentitySquareMatrix(As, 4L) == ERROR)
-        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "Error returned by GetIdentitySquareMatrix");
-
-    hlp = As;
-    *hlp = 1.0;
-    hlp += (ptrdiff_t)5L;
-    *hlp = 1.0;
-    hlp += (ptrdiff_t)5L;
-    *hlp = 1.0;
-
     Ac = (double *)malloc((size_t) 16L * sizeof(double));
     if (Ac == (double *)NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
@@ -655,15 +639,7 @@ int do_one_projection(VolumeStruct &Data2)
     *hlp = -halfSize;
 
     RightOperHlp = (double *)malloc((size_t) 16L * sizeof(double));
-    if (RightOperHlp == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
-                     "ERROR - Not enough memory for RightOperHlp");
-
-    if (MatrixMultiply(Acinv, As, RightOperHlp, 4L, 4L, 4L) == ERROR)
-        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "Error returned by multiply_3Matrices");
-
-    free(As);
+    memcpy(RightOperHlp,Acinv,16*sizeof(double));
     free(Acinv);
 
     Parameters = (double *)malloc((size_t) 6L * sizeof(double));
