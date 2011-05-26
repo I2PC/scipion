@@ -96,38 +96,32 @@ void angles_transcription(Matrix1D<double> &angles)
 //-----------------------------------------------------------------------------------------------
 ///Computes one iteration of the projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
-void do_compute_projection   (long Ndv,
-                              long Ndw,
+void do_compute_projection   (int Xdim,
                               double *CoefVolume,
                               double absscale,
                               double *Binv,
                               double *BinvCscaled,
-                              long ksimax,
                               int *arr,
-                              long CoefVolumeNx,
-                              long CoefVolumeNy,
-                              long lmax,
-                              long mmax,
-                              double *Projection)
+                              double *projection)
 {
     long    i, n, l, l1, l2, m, m1, m2, ksi, CC1, CC2, CC3, row, column, index;
     double  X[4], K[4], Arg[4];
     double  Proj, sc, g, h, rows, columns, Coeff, Difference;
     double  gminusl, hminusm;
 
-    CC1 = CoefVolumeNx * CoefVolumeNy;
+    CC1 = Xdim * Xdim;
 
     X[2]=0.0;
     X[3]=1.0;
-    for (i = 0L; i < Ndw; i++)
+    for (i = 0L; i < Xdim; i++)
     {
         X[1]=i;
-        for (n = 0L; n < Ndv; n++)
+        for (n = 0L; n < Xdim; n++)
         {
             X[0]=n;
             MatrixTimesVector(Binv, X, K, 4L, 4L);
             Proj = 0.0;
-            for (ksi = 0L; ksi < ksimax; ksi++)
+            for (ksi = 0L; ksi < Xdim; ksi++)
             {
                 CC2 = CC1 * ksi;
                 sc = (double) ksi - K[arr[0]];
@@ -145,13 +139,13 @@ void do_compute_projection   (long Ndv,
                 columns = 0.0;
                 for (m = m1; m <= m2; m++)
                 {
-                    if (m < mmax && m > -1L)
+                    if (m < Xdim && m > -1L)
                     {
-                        CC3 = CC2 + CoefVolumeNx * m;
+                        CC3 = CC2 + Xdim * m;
                         rows = 0.0;
                         for (l = l1; l <= l2; l++)
                         {
-                            if ((l < lmax && l > -1L))
+                            if ((l < Xdim && l > -1L))
                             {
                                 gminusl = g - (double) l;
                                 double aux;
@@ -170,7 +164,7 @@ void do_compute_projection   (long Ndv,
             }
             Proj *= absscale;
 
-            *Projection++ = Proj;
+            *projection++ = Proj;
         }
     }
 }/* End of do_compute_projection */
@@ -182,32 +176,21 @@ int Compute_projection(double *Parameters,
                        double *Coef_x,
                        double *Coef_y,
                        double *Coef_z,
-                       long Nx,
-                       long Ny,
-                       long Nz,
-                       int projXdim,
-                       int projYdim,
+                       int Xdim,
                        double *RightOperHlp,
                        double *Ac,
-                       double *Projection,
+                       double *projection,
                        double *B                )
 {
 
     int     Status=!ERROR, arr[3];
-    long    Ndv, Ndw;
-    long    CoefVolumeNx, CoefVolumeNy, lmax, mmax, ksimax;
-    double  psi, theta, phi, Sinphi, Cosphi, Sinpsi, Cospsi, Sintheta, Costheta;
     double  scale, scale_x, scale_y, scale_z, m_x, m_y, m_z, minm;
     double  *hlp, *R, *At;
     double  *Help1, *Help2, *Help3, *Help4, *Binv;
     double  *C1, *BinvC, *BinvCscaled;
-    double  *Coef_xyz, *Pr;
+    double  *Coef_xyz;
 
-    Pr = Projection;
-
-    Ndv = projXdim;
-    Ndw = projYdim;
-
+    double  psi, theta, phi, Sinphi, Cosphi, Sinpsi, Cospsi, Sintheta, Costheta;
     psi   = Parameters[0];
     theta = Parameters[1];
     phi   = Parameters[2];
@@ -374,14 +357,9 @@ int Compute_projection(double *Parameters,
     if (VectorScale(BinvC, BinvCscaled, scale_x, 4L) == ERROR)
         REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by VectorScale");
-    ksimax = Nx;
     arr[0] = 0;
     arr[1] = 1;
     arr[2] = 2;
-    CoefVolumeNx = Ny;
-    CoefVolumeNy = Nz;
-    lmax = Ny;
-    mmax = Nz;
     Coef_xyz = Coef_x;
     if (m_y < minm)
     {
@@ -390,38 +368,26 @@ int Compute_projection(double *Parameters,
         if (VectorScale(BinvC, BinvCscaled, scale_y, 4L) == ERROR)
             REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                          "Error returned by VectorScale");
-        ksimax = Ny;
         arr[0] = 1;
         arr[1] = 0;
         arr[2] = 2;
-        CoefVolumeNx = Nx;
-        CoefVolumeNy = Nz;
-        lmax = Nx;
-        mmax = Nz;
         Coef_xyz = Coef_y;
     }
     if (m_z < minm)
     {
         minm = m_z;
         scale = scale_z;
-        if (VectorScale(BinvC, BinvCscaled, scale_z, 4L) == ERROR)
-            ksimax = Nz;
+        VectorScale(BinvC, BinvCscaled, scale_z, 4L);
         arr[0] = 2;
         arr[1] = 0;
         arr[2] = 1;
-        CoefVolumeNx = Nx;
-        CoefVolumeNy = Ny;
-        lmax = Nx;
-        mmax = Ny;
         Coef_xyz = Coef_z;
     }
 
     free(BinvC);
     free(C1);
 
-    do_compute_projection(Ndv, Ndw,
-                          Coef_xyz, minm, Binv, BinvCscaled, ksimax, arr, CoefVolumeNx,
-                          CoefVolumeNy, lmax, mmax, Pr);
+    do_compute_projection(Xdim, Coef_xyz, minm, Binv, BinvCscaled, arr, projection);
 
     free(BinvCscaled);
     free(Binv);
@@ -663,8 +629,7 @@ void do_one_projection(VolumeStruct &Data2)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for B");
 
-    Compute_projection(Parameters, Coef_x, Coef_y, Coef_z, Xdim, Xdim, Xdim,
-                       Xdim,Xdim,
+    Compute_projection(Parameters, Coef_x, Coef_y, Coef_z, Xdim,
                        RightOperHlp, Ac, MULTIDIM_ARRAY(Data2.projection()), B);
 
     free(Parameters);
