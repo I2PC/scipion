@@ -174,13 +174,13 @@ void projectionRealShears3   (MultidimArray<double> &CoefVolume,
 ///Computes projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
 void projectionRealShears2(const Matrix1D<double> &angles,
-                        const Matrix1D<double> &shifts,
-                        MultidimArray<double> &Coef_x,
-                        MultidimArray<double> &Coef_y,
-                        MultidimArray<double> &Coef_z,
-                        const Matrix2D<double> &LeftOperHlp,
-                        const Matrix2D<double> &RightOperHlp,
-                        MultidimArray<double> &projection)
+                           const Matrix1D<double> &shifts,
+                           MultidimArray<double> &Coef_x,
+                           MultidimArray<double> &Coef_y,
+                           MultidimArray<double> &Coef_z,
+                           const Matrix2D<double> &LeftOperHlp,
+                           const Matrix2D<double> &RightOperHlp,
+                           MultidimArray<double> &projection)
 {
     double phi   = VEC_ELEM(angles,0);
     double theta = VEC_ELEM(angles,1);
@@ -253,12 +253,12 @@ void projectionRealShears2(const Matrix1D<double> &angles,
 }
 
 ///Main compute function. Returns possible error.
-void projectionRealShears1(VolumeStruct &Data2)
+void projectionRealShears1(VolumeStruct &Data2, Projection &P)
 {
     int    Status = !ERROR;
 
     angles_transcription(Data2.angles);
-    int Xdim = XSIZE(*Data2.volume);
+    int Xdim = Data2.Xdim;
 
     MultidimArray<double> Coef_x, Coef_y, Coef_z, planeCoef, inputPlane, inputRow;
     Coef_x.resizeNoCopy(Xdim,Xdim,Xdim);
@@ -335,8 +335,9 @@ void projectionRealShears1(VolumeStruct &Data2)
     MAT_ELEM(Ac,0,3)=MAT_ELEM(Ac,1,3)=MAT_ELEM(Ac,2,3)=halfSize;
     MAT_ELEM(Acinv,0,3)=MAT_ELEM(Acinv,1,3)=MAT_ELEM(Acinv,2,3)=-halfSize;
 
+    P.reset(Data2.Xdim,Data2.Xdim);
     projectionRealShears2(Data2.angles, Data2.shifts, Coef_x, Coef_y, Coef_z,
-                       Ac, Acinv, Data2.projection());
+                          Ac, Acinv, P());
 }
 
 ///Parameters reading. Note that all parameters are required.
@@ -440,13 +441,13 @@ void Projection_real_shears::read(const FileName &fn_proj_param)
 void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi)
 {
-    // Prepare Data Structure
     VECTOR_R3(Data.angles,-psi,-tilt,-rot);
     Data.shifts.initZeros();
-    projectionRealShears1(Data);
-    P=Data.projection;
-    P().selfWindow(FIRST_XMIPP_INDEX(Ydim),FIRST_XMIPP_INDEX(Xdim),
-                   LAST_XMIPP_INDEX(Ydim),LAST_XMIPP_INDEX(Xdim));
+    P.reset(Data.Xdim,Data.Xdim);
+    projectionRealShears1(Data,P);
+    if (Ydim!=Data.Xdim || Xdim!=Data.Xdim)
+        P().selfWindow(FIRST_XMIPP_INDEX(Ydim),FIRST_XMIPP_INDEX(Xdim),
+                       LAST_XMIPP_INDEX(Ydim),LAST_XMIPP_INDEX(Xdim));
 }
 
 VolumeStruct::VolumeStruct(const MultidimArray<double> &V)
@@ -454,8 +455,7 @@ VolumeStruct::VolumeStruct(const MultidimArray<double> &V)
     volume=&V;
     if (XSIZE(V)!=XSIZE(V) || XSIZE(V)!=ZSIZE(V))
         REPORT_ERROR(ERR_MULTIDIM_DIM, "The volume must be cubic");
-    projection.reset(YSIZE(V),XSIZE(V));
-    projection().setXmippOrigin();
+    Xdim=XSIZE(*volume);
     shifts.initZeros(3);
     angles.initZeros(3);
 }
@@ -476,9 +476,12 @@ void Projection_real_shears::ROUT_project_real_shears()
     if(display)
         init_progress_bar(DF.size());
     int num_file = starting;
+    Projection P;
+    MetaData SFout;
+    FileName fn_proj;
     FOR_ALL_OBJECTS_IN_METADATA(DF)
     {
-    	// Get parameters
+        // Get parameters
         double rot, tilt, psi, shiftX=0, shiftY=0;
         DF.getValue(MDL_SHIFTX,shiftX,__iter.objId);
         DF.getValue(MDL_SHIFTY,shiftY,__iter.objId);
@@ -489,13 +492,12 @@ void Projection_real_shears::ROUT_project_real_shears()
         VECTOR_R2(Data->shifts,shiftX,shiftY);
 
         // Project
-        projectionRealShears1(*Data);
+        projectionRealShears1(*Data,P);
 
         // Write projection
-        FileName fn_proj;
         fn_proj.compose(fnProjectionSeed, num_file, fn_projection_extension);
-        SF.setValue(MDL_IMAGE,fn_proj,SF.addObject());
-        Data->projection.write(fn_proj);
+        SFout.setValue(MDL_IMAGE,fn_proj,SFout.addObject());
+        P.write(fn_proj);
         if(display)
             progress_bar(num_file);
         num_file++;
@@ -505,6 +507,6 @@ void Projection_real_shears::ROUT_project_real_shears()
         progress_bar(DF.size());
     if (fn_sel_file == "") //If the name of the output file is not specified
         fn_sel_file = "sel"+fnProjectionSeed+".sel";
-    SF.write(fn_sel_file);
+    SFout.write(fn_sel_file);
     delete Data;
 }

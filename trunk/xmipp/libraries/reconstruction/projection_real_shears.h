@@ -76,7 +76,7 @@ class VolumeStruct
 {
 public:
     const MultidimArray<double> *volume;
-    Projection projection;
+    int Xdim;
     Matrix1D<double> angles; // Angles
     Matrix1D<double> shifts; //Shifts
 
@@ -127,8 +127,6 @@ class Projection_real_shears
 
         // Volume to project
         Image<double> V;
-        ///Selection file to fill and save
-        MetaData SF;
         ///Content of the angle file
         MetaData DF;
         ///Basics Data for projections
