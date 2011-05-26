@@ -77,8 +77,8 @@ class VolumeStruct
 public:
     const MultidimArray<double> *volume;
     Projection projection;
-    Matrix1D<double> angles; // Angles
-    Matrix1D<double> shifts; //Shifts
+    Matrix1D<double> InitPsiThetaPhi; // Angles
+    Matrix1D<double> InitDelta123; //Shifts
 
     // Constructor
     VolumeStruct(const MultidimArray<double> &V);
