@@ -918,7 +918,7 @@ int ROUT_project_execute(VolumeStruct &Data2)
                        Data2.Identity_orientN, Data2.Identity_orientV, Data2.Identity_orientW,
                        Data2.IdentityOrigin, &Data2.PeriodOfSamplingInVDirection,
                        &Data2.PeriodOfSamplingInWDirection, RightOperHlp, Ac,
-                       Data2.Output, B);
+                       Data2.Projection, B);
 
     free(Parameters);
     free(Ac);
@@ -1033,7 +1033,7 @@ void Projection_real_shears::read(const FileName &fn_proj_param)
 void del_VolumeStruct(VolumeStruct &Data2)
 {
     free(Data2.Volume);
-    free(Data2.Output);
+    free(Data2.Projection);
     free(Data2.Proj_dims);
     free(Data2.Identity_orientN);
     free(Data2.Identity_orientV);
@@ -1056,11 +1056,11 @@ void extractProjection(const VolumeStruct &Data, Projection &P)
     int indexY_start = -Data.ny_Volume / 2L;
 
     //Projection object filling
-    memcpy(MULTIDIM_ARRAY(P()),Data.Output,MULTIDIM_SIZE(P())*sizeof(double));
+    memcpy(MULTIDIM_ARRAY(P()),Data.Projection,MULTIDIM_SIZE(P())*sizeof(double));
 }
 
 ///Writes the projection file obtained. Returns possibles errors.
-int Projection_real_shears::write_projection_file(int numFile)
+void Projection_real_shears::write_projection_file(int numFile)
 {
     extractProjection(Data, proj);
 
@@ -1077,12 +1077,10 @@ int Projection_real_shears::write_projection_file(int numFile)
 
     if(display)
         progress_bar(numFile);
-
-    return(!ERROR);
 }
 
 ///Reads a DocLine and fills Data fields. Returns possibles errors.
-int Projection_real_shears::read_a_DocLine(size_t objId)
+void Projection_real_shears::read_a_DocLine(size_t objId)
 {
     double rot     ;
     double tilt    ;
@@ -1103,23 +1101,14 @@ int Projection_real_shears::read_a_DocLine(size_t objId)
 
     Data.InitDelta123[0] = shiftX;
     Data.InitDelta123[1] = shiftY;
-
-    return(!ERROR);
 }
 
 ///////////////////////// MAIN INSTRUCTION FOR MPI ////////////////////////////////
 ///Execute instructions for one projection
-int do_oneProjection(VolumeStruct &Data2)
+void do_oneProjection(VolumeStruct &Data2)
 {
-    //Transcription of the angles
-    if (angles_transcription(Data2.InitPsiThetaPhi, Data2.Lambda123)==ERROR)
-        return (ERROR);
-
-    //Calls the compute function
-    if (ROUT_project_execute(Data2) == ERROR)
-        return(ERROR);
-
-    return (!ERROR);
+    angles_transcription(Data2.InitPsiThetaPhi, Data2.Lambda123);
+    ROUT_project_execute(Data2);
 }
 
 void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
@@ -1146,7 +1135,7 @@ void allocAndInit_VolumeStruct(VolumeStruct &Data2)
 {
     Data2.Volume = (double*) malloc((size_t)(Data2.nx_Volume * Data2.ny_Volume * Data2.nz_Volume) * sizeof(double));
 
-    Data2.Output = (double*) malloc((size_t) Data2.nx_Volume * Data2.ny_Volume * sizeof(double));
+    Data2.Projection = (double*) malloc((size_t) Data2.nx_Volume * Data2.ny_Volume * sizeof(double));
 
     Data2.Proj_dims = (short*) malloc((size_t)2L * sizeof(short));
     Data2.Proj_dims[0] = Data2.nx_Volume;
@@ -1217,7 +1206,7 @@ void prepareStructVolume(const MultidimArray<double> &V, VolumeStruct &Data)
 }
 
 ///Does start instructions. Returns possibles errors.
-int Projection_real_shears::start_to_process()
+void Projection_real_shears::start_to_process()
 {
     read(fn_proj_param);
     DF.read(fn_angle);
@@ -1241,12 +1230,10 @@ int Projection_real_shears::start_to_process()
     }
 
     num_file = starting;
-
-    return (!ERROR);
 }
 
 ///Does finish instructions. Returns possibles errors.
-int Projection_real_shears::finish_to_process()
+void Projection_real_shears::finish_to_process()
 {
     //Destruction of the dynamics allocations of Data
     del_VolumeStruct(Data);
@@ -1269,33 +1256,20 @@ int Projection_real_shears::finish_to_process()
     }
 
     SF.write(fn_sel_file);
-
-    return (!ERROR);
 }
 
 //-------------------------------------- Main function ----------------------------------------
 ///Main function of the projection_real_shears program.
-int Projection_real_shears::ROUT_project_real_shears()
+void Projection_real_shears::ROUT_project_real_shears()
 {
-    if(start_to_process() == ERROR)
-        return (ERROR);
+    start_to_process();
 
     FOR_ALL_OBJECTS_IN_METADATA(DF)
     {
-        if(read_a_DocLine(__iter.objId) == ERROR)
-            return (ERROR);
-
-        if(do_oneProjection(Data) == ERROR)
-            return (ERROR);
-
-        if(write_projection_file(num_file) == ERROR)
-            return (ERROR);
-
+        read_a_DocLine(__iter.objId);
+        do_oneProjection(Data);
+        write_projection_file(num_file);
         num_file++;
     }
-
-    if(finish_to_process() == ERROR)
-        return (ERROR);
-
-    return(!ERROR);
+    finish_to_process();
 }

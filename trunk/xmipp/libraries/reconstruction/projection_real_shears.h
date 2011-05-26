@@ -86,7 +86,7 @@ typedef struct
     double *Gama123;
     double *InitPsiThetaPhi; // Angles
     double *InitDelta123; //Shifts
-    double *Output;
+    double *Projection;
     double PeriodOfSamplingInVDirection;
     double PeriodOfSamplingInWDirection;
 } VolumeStruct;
@@ -105,7 +105,7 @@ void allocAndInit_VolumeStruct(VolumeStruct &Data2);
 void del_VolumeStruct(VolumeStruct &Data2);
 
 ///Executes instructions for one projection
-int do_oneProjection(VolumeStruct &Data2);
+void do_oneProjection(VolumeStruct &Data2);
 
 ///Main class of this program
 class Projection_real_shears
@@ -160,19 +160,19 @@ class Projection_real_shears
     //------------------ Functions -------------------
     public :
         ///Main function
-        int ROUT_project_real_shears();
+        void ROUT_project_real_shears();
 
         ///Does starting instructions
-        int start_to_process();
+        void start_to_process();
 
         ///Reads a DocLine and fills Data fields
-        int read_a_DocLine(size_t objId);
+        void read_a_DocLine(size_t objId);
 
         ///Writes the projection file obtained
-        int write_projection_file(int numFile);
+        void write_projection_file(int numFile);
 
         ///Does finish instructions
-        int finish_to_process();
+        void finish_to_process();
 
         ///Read input and output file parameters only
         void read(int argc, char **argv);
