@@ -80,15 +80,12 @@ typedef struct
     double *Identity_orientN;
     double *Identity_orientV;
     double *Identity_orientW;
-    double *IdentityOrigin;
     double *K123;
     double *Lambda123;
     double *Gama123;
     double *InitPsiThetaPhi; // Angles
     double *InitDelta123; //Shifts
     double *Projection;
-    double PeriodOfSamplingInVDirection;
-    double PeriodOfSamplingInWDirection;
 } VolumeStruct;
 
 /// Prepare a volume to be projected

@@ -271,8 +271,6 @@ int do_compute_projection    (double *VWOrigin,
                               long Ndw,
                               double *Identity_orientV,
                               double *Identity_orientW,
-                              double dv,
-                              double dw,
                               double *CoefVolume,
                               double absscale,
                               double *Binv,
@@ -294,12 +292,12 @@ int do_compute_projection    (double *VWOrigin,
 
     for (i = 0L; i < Ndw; i++)
     {
-        idw = (double) i * dw;
+        idw = (double) i;
         for (int ii=0; ii<4; ++ii)
             Operhlp[ii]=Identity_orientW[ii]*idw+VWOrigin[ii];
         for (n = 0L; n < Ndv; n++)
         {
-            ndv = (double) n * dv;
+            ndv = (double) n;
             for (int ii=0; ii<4; ++ii)
                 X[ii]=Identity_orientV[ii]*ndv+Operhlp[ii];
             MatrixTimesVector(Binv, X, K, 4L, 4L);
@@ -368,9 +366,6 @@ int Compute_projection(double *Parameters,
                        double *Identity_orientN,
                        double *Identity_orientV,
                        double *Identity_orientW,
-                       double *IdentityOrigin,
-                       double *PeriodOfSamplingInVDirection,
-                       double *PeriodOfSamplingInWDirection,
                        double *RightOperHlp,
                        double *Ac,
                        double *Projection,
@@ -380,7 +375,7 @@ int Compute_projection(double *Parameters,
     int     Status=!ERROR, arr[3];
     long    Ndv, Ndw;
     long    CoefVolumeNx, CoefVolumeNy, lmax, mmax, ksimax;
-    double  dv, dw, psi, theta, phi, Sinphi, Cosphi, Sinpsi, Cospsi, Sintheta, Costheta;
+    double  psi, theta, phi, Sinphi, Cosphi, Sinpsi, Cospsi, Sintheta, Costheta;
     double  scale, scale_x, scale_y, scale_z, m_x, m_y, m_z, minm;
     double  *hlp, *R, *At;
     double  *Help1, *Help2, *Help3, *Help4, *Binv;
@@ -391,9 +386,6 @@ int Compute_projection(double *Parameters,
 
     Ndv = (long) *Proj_dims++;
     Ndw = (long) *Proj_dims;
-
-    dv = *PeriodOfSamplingInVDirection;
-    dw = *PeriodOfSamplingInWDirection;
 
     psi = Parameters[0];
     theta =    Parameters[1];
@@ -637,13 +629,13 @@ int Compute_projection(double *Parameters,
     *hlp = 0.0;
 
     hlp = VWOrigin;
-    *hlp++ = (double) IdentityOrigin[0];
-    *hlp++ = (double) IdentityOrigin[1];
-    *hlp++ = (double) IdentityOrigin[2];
+    *hlp++ = 0.0;
+    *hlp++ = 0.0;
+    *hlp++ = 0.0;
     *hlp = 1.0;
 
     do_compute_projection(VWOrigin, Ndv, Ndw, C2, C3,
-                          dv, dw, Coef_xyz, minm, Binv, BinvCscaled, ksimax, arr, CoefVolumeNx,
+                          Coef_xyz, minm, Binv, BinvCscaled, ksimax, arr, CoefVolumeNx,
                           CoefVolumeNy, lmax, mmax, Pr);
 
     free(BinvCscaled);
@@ -918,9 +910,7 @@ int do_one_projection(VolumeStruct &Data2)
 
     Compute_projection(Parameters, Coef_x, Coef_y, Coef_z, Nx, Ny, Nz, Data2.Proj_dims,
                        Data2.Identity_orientN, Data2.Identity_orientV, Data2.Identity_orientW,
-                       Data2.IdentityOrigin, &Data2.PeriodOfSamplingInVDirection,
-                       &Data2.PeriodOfSamplingInWDirection, RightOperHlp, Ac,
-                       Data2.Projection, B);
+                       RightOperHlp, Ac, Data2.Projection, B);
 
     free(Parameters);
     free(Ac);
@@ -1040,7 +1030,6 @@ void del_VolumeStruct(VolumeStruct &Data2)
     free(Data2.Identity_orientN);
     free(Data2.Identity_orientV);
     free(Data2.Identity_orientW);
-    free(Data2.IdentityOrigin);
     free(Data2.K123);
     free(Data2.Lambda123);
     free(Data2.Gama123);
@@ -1151,11 +1140,6 @@ void allocAndInit_VolumeStruct(VolumeStruct &Data2)
     Data2.Identity_orientW[1] = 1.;
     Data2.Identity_orientW[2] = 0.;
 
-    Data2.IdentityOrigin = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.IdentityOrigin[0] = 0.;
-    Data2.IdentityOrigin[1] = 0.;
-    Data2.IdentityOrigin[2] = 0.;
-
     Data2.K123 = (double*) malloc((size_t)3L * sizeof(double));
     Data2.K123[0] = 0.;
     Data2.K123[1] = 0.;
@@ -1175,9 +1159,6 @@ void allocAndInit_VolumeStruct(VolumeStruct &Data2)
     Data2.InitDelta123[2] = 0.;
 
     Data2.InitPsiThetaPhi = (double*) malloc((size_t)3L * sizeof(double));
-
-    Data2.PeriodOfSamplingInVDirection = 1.;
-    Data2.PeriodOfSamplingInWDirection = 1.;
 }
 
 /// Prepare a volume to be projected
