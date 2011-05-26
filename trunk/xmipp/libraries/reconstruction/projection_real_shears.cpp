@@ -30,103 +30,6 @@
 
 #include "projection_real_shears.h"
 
-///Returns a pointer of the multiplication of the 5 matrices built with identity matrices and the parameters.\n
-///It returns NULL if there is an error.
-double *MatrixBem(double phi, double theta, double psi)
-{
-    double *pointer;
-    double ss, cc;
-
-    //------------------------------------------------
-    /*Rz1 [4][4] = {{ cc,  ss, 0.0, 0.0},
-            {-ss,  cc, 0.0, 0.0},
-            {0.0, 0.0, 1.0, 0.0},
-            {0.0, 0.0, 0.0, 1.0}};*/
-    //------------------------------------------------
-    sincos(phi,&ss,&cc);
-    double *Rz1 = (double *)malloc((size_t) 16L * sizeof(double));
-    if (Rz1 == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::MatrixBem: "
-                     "ERROR - Not enough memory for Rz1");
-
-    if (GetIdentitySquareMatrix(Rz1, 4L) == ERROR)
-        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::MatrixBem: "
-                     "Error returned by GetIdentitySquareMatrix");
-
-    pointer = Rz1;
-    *pointer = cc;
-    pointer += (ptrdiff_t)1L;
-    *pointer = ss;
-    pointer += (ptrdiff_t)3L;
-    *pointer = - ss;
-    pointer += (ptrdiff_t)1L;
-    *pointer = cc;
-
-    //------------------------------------------------
-    /*Ry [4][4] = {{ cc, 0.0, -ss, 0.0},
-               {0.0, 1.0, 0.0, 0.0},
-               { ss, 0.0,  cc, 0.0},
-               {0.0, 0.0, 0.0, 1.0}};*/
-    //------------------------------------------------
-    sincos(theta,&ss,&cc);
-    double *Ry = (double *)malloc((size_t) 16L * sizeof(double));
-    if (Ry == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::MatrixBem: "
-                     "ERROR - Not enough memory for Ry");
-
-    if (GetIdentitySquareMatrix(Ry, 4L) == ERROR)
-        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::MatrixBem: "
-                     "Error returned by GetIdentitySquareMatrix");
-
-    pointer = Ry;
-    *pointer = cc;
-    pointer += (ptrdiff_t)2L;
-    *pointer = -ss;
-    pointer += (ptrdiff_t)6L;
-    *pointer = ss;
-    pointer += (ptrdiff_t)2L;
-    *pointer = cc;
-
-    //------------------------------------------------
-    /*Rz2 [4][4] = {{ cc,  ss, 0.0, 0.0},
-            {-ss,  cc, 0.0, 0.0},
-            {0.0, 0.0, 1.0, 0.0},
-            {0.0, 0.0, 0.0, 1.0}};*/
-    //------------------------------------------------
-    sincos(psi,&ss,&cc);
-    double *Rz2 = (double *)malloc((size_t) 16L * sizeof(double));
-    if (Rz2 == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::MatrixBem: "
-                     "ERROR - Not enough memory for Rz2");
-
-    if (GetIdentitySquareMatrix(Rz2, 4L) == ERROR)
-        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::MatrixBem: "
-                     "Error returned by GetIdentitySquareMatrix");
-
-    pointer = Rz2;
-    *pointer = cc;
-    pointer += (ptrdiff_t)1L;
-    *pointer = ss;
-    pointer += (ptrdiff_t)3L;
-    *pointer = -ss;
-    pointer += (ptrdiff_t)1L;
-    *pointer = cc;
-
-    //------------------------------------------------
-    double *matrB = (double *)malloc((size_t) 16L * sizeof(double));
-    if (matrB == (double *)NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::MatrixBem: "
-                     "ERROR - Not enough memory for matrB");
-
-    multiply_3Matrices(Rz2, Ry, Rz1, matrB, 4L, 4L, 4L, 4L);
-
-    free(Rz1);
-    free(Ry);
-    free(Rz2);
-
-    return matrB;
-}
-
 /// Transforms angles from (Ry, Rz, Ry) to (Rx, Ry, Rz) system. Returns possible error.
 void angles_transcription(double *angles)
 {
@@ -134,18 +37,15 @@ void angles_transcription(double *angles)
     double theta = angles[1];
     double psi = angles[2];
 
-    double *Bem_1D = MatrixBem(phi, theta, psi);
-    if(Bem_1D==NULL)
-        return;
-
-    double A00 = Bem_1D[0];
-    double A02 = Bem_1D[2];
-    double A10 = Bem_1D[4];
-    double A12 = Bem_1D[6];
-    double A20 = Bem_1D[8];
-    double A21 = Bem_1D[9];
-    double A22 = Bem_1D[10];
-    free(Bem_1D);
+    Matrix2D<double> E;
+    Euler_angles2matrix(-RAD2DEG(phi),RAD2DEG(theta),-RAD2DEG(psi),E,false);
+    double A00=MAT_ELEM(E,0,0);
+    double A02=MAT_ELEM(E,0,2);
+    double A10=MAT_ELEM(E,1,0);
+    double A12=MAT_ELEM(E,1,2);
+    double A20=MAT_ELEM(E,2,0);
+    double A21=MAT_ELEM(E,2,1);
+    double A22=MAT_ELEM(E,2,2);
 
     double abs_cosay = sqrt(A22*A22+A21*A21);
 
