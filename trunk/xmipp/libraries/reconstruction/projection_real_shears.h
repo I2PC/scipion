@@ -86,7 +86,8 @@ public:
 
 /// Make projection
 void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
-    double rot, double tilt, double psi);
+                    double rot, double tilt, double psi,
+                    double shiftX=0, double shiftY=0);
 
 ///Main class of this program
 class Projection_real_shears

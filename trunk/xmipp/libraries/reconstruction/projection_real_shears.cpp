@@ -242,15 +242,6 @@ void projectionRealShears2(VolumeStruct &Data,
                           MATRIX1D_ARRAY(BinvCscaled), arr, projection);
 }
 
-///Main compute function. Returns possible error.
-void projectionRealShears1(VolumeStruct &Data2, double phi, double theta, double psi,
-                           double shiftX, double shiftY, Projection &P)
-{
-    convertAngles(phi, theta, psi);
-    P.reset(Data2.Xdim,Data2.Xdim);
-    projectionRealShears2(Data2, phi, theta, psi, shiftX, shiftY, P());
-}
-
 ///Parameters reading. Note that all parameters are required.
 void Projection_real_shears::read(int argc, char **argv)
 {
@@ -349,16 +340,6 @@ void Projection_real_shears::read(const FileName &fn_proj_param)
     fclose(fh_param);
 }
 
-void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
-                    double rot, double tilt, double psi)
-{
-    P.reset(Data.Xdim,Data.Xdim);
-    projectionRealShears1(Data,-psi,-tilt,-rot,0,0,P);
-    if (Ydim!=Data.Xdim || Xdim!=Data.Xdim)
-        P().selfWindow(FIRST_XMIPP_INDEX(Ydim),FIRST_XMIPP_INDEX(Xdim),
-                       LAST_XMIPP_INDEX(Ydim),LAST_XMIPP_INDEX(Xdim));
-}
-
 VolumeStruct::VolumeStruct(const MultidimArray<double> &V)
 {
     volume=&V;
@@ -451,6 +432,20 @@ void Projection_real_shears::produceSideInfo()
     Data=new VolumeStruct(V());
 }
 
+void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
+                    double rot, double tilt, double psi, double shiftX, double shiftY)
+{
+    P.reset(Data.Xdim,Data.Xdim);
+    double Phi=-psi;
+    double Theta=-tilt;
+    double Psi=-rot;
+    convertAngles(Phi, Theta, Psi);
+    projectionRealShears2(Data, Phi, Theta, Psi, shiftX, shiftY, P());
+    if (Ydim!=Data.Xdim || Xdim!=Data.Xdim)
+        P().selfWindow(FIRST_XMIPP_INDEX(Ydim),FIRST_XMIPP_INDEX(Xdim),
+                       LAST_XMIPP_INDEX(Ydim),LAST_XMIPP_INDEX(Xdim));
+}
+
 //-------------------------------------- Main function ----------------------------------------
 void Projection_real_shears::ROUT_project_real_shears()
 {
@@ -472,7 +467,7 @@ void Projection_real_shears::ROUT_project_real_shears()
         DF.getValue(MDL_ANGLEPSI,psi,__iter.objId);
 
         // Project
-        projectionRealShears1(*Data,-psi,-tilt,-rot,shiftX,shiftY,P);
+        project_Volume(*Data,P,proj_Xdim,proj_Xdim,rot,tilt,psi,shiftX,shiftY);
 
         // Write projection
         fn_proj.compose(fnProjectionSeed, num_file, fn_projection_extension);
