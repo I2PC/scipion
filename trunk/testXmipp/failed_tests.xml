@@ -1,57 +1,7 @@
 ##DO NOT WORK
-    <PROGRAM name="xmipp_angular_discrete_assign" mpi="FALSE">
-        <CASE arguments="-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.doc" changeDir="FALSE">
-            <PRERUN command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol -o %o/reference.stk --sampling_rate 10"/>
-        </CASE>
-    </PROGRAM>
-
-    <PROGRAM name="xmipp_mpi_angular_class_average" mpi="TRUE">
-        <CASE arguments="-i %o/proj_match.doc --lib %o/ref.doc -o %o/proj_match --split" changeDir="FALSE">
-            <PRERUN command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/ref.stk --sampling_rate 10 --compute_neighbors --angular_distance -1 "/>
-            <PRERUN command=" xmipp_angular_projection_matching -i input/aFewProjections.sel -o %o/proj_match.doc --ref %o/ref.stk"/>
-            <FILE filename="proj_match_class.xmp"/>
-            <FILE filename="proj_match_classes.doc"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_mpi_angular_continuous_assign" mpi="TRUE">
-        <CASE arguments="-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles" changeDir="FALSE">
-              <FILE filename="assigned_angles.sel"/>
-        </CASE>
-     </PROGRAM>
     <PROGRAM name="xmipp_ctf_group" mpi="FALSE">
         <CASE arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6" changeDir="FALSE"/>
         <CASE arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc" changeDir="FALSE"/>
-    </PROGRAM>
-    <PROGRAM name="xmipp_phantom_project" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/image.xmp --angles 0 0 0" changeDir="FALSE">
-            <FILE filename="image.xmp"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_range_adjust" mpi="FALSE">
-        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --range -100 100 --noise 10 --mask circular -16" changeDir="FALSE">
-            <FILE filename="image.xmp"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_volume_from_pdb" mpi="FALSE">
-        <CASE arguments="-i input/1o7d.pdb -o %o/1o7d" changeDir="FALSE">
-            <FILE filename="1o7d.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_volume_segment" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskOtsu.vol --method otsu" changeDir="FALSE">
-            <FILE filename="maskOtsu.vol"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskVoxelMass.vol --method voxel_mass 54000" changeDir="FALSE">
-            <FILE filename="maskVoxelMass.vol"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskProb.vol --method prob 1" changeDir="FALSE">
-            <FILE filename="maskProb.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_xray_psf_create" mpi="FALSE">
-        <CASE arguments="-i input/xray_psf.xmd -o %o/psf.vol" changeDir="FALSE">
-            <FILE filename="psf.vol"/>
-        </CASE>
     </PROGRAM>
 
 ##TAKE TOO LONG
@@ -66,12 +16,6 @@
 -    </PROGRAM>
 
 #TEST NOT PROPERLY SETUP
-    <PROGRAM name="xmipp_ctf_sort_psds" mpi="FALSE">
-        <CASE arguments="-i all_micrographs.sel" changeDir="TRUE">
-            <PRERUN command="cp -r input/Protocol_Preprocess_Micrographs/Preprocessing/* %o"/>
-        </CASE>
-    </PROGRAM>
-
     <PROGRAM name="xmipp_phantom_simulate_microscope" mpi="FALSE">
         <CASE arguments="-i input/smallStack.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam" changeDir="FALSE"/>
     </PROGRAM>
