@@ -25,6 +25,7 @@
 
 #include "project.h"
 #include "directions.h"
+#include "project_real_shears.h"
 
 #include <data/args.h>
 
@@ -35,6 +36,7 @@ void ProgProject::readParams()
     fnOut = getParam("-o");
     samplingRate  = getDoubleParam("--sampling_rate");
     singleProjection = false;
+    shears  = checkParam("--shears");
 
     bool doParams = checkParam("--params");
     bool doAngles = checkParam("--angles");
@@ -92,7 +94,10 @@ void ProgProject::defineParams()
     addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/cylinder_with_axis.descr",false);
     addParamsLine("   -i <volume_file>                           : Voxel volume, PDB or description file");
     addParamsLine("   -o <image_file>                            : Output stack or image");
-    addParamsLine("  [--sampling_rate <Ts=1>]               : It is only used for PDB phantoms");
+    addParamsLine("  [--sampling_rate <Ts=1>]                    : It is only used for PDB phantoms");
+    addParamsLine("  [--shears]                                  : Use real-shears algorithm");
+    addParamsLine("                                              :+This algorithm is slower but more accurate. For a full description see");
+    addParamsLine("                                              :+this Ph.D. [[http://biblion.epfl.ch/EPFL/theses/2003/2901/EPFL_TH2901.pdf][thesis]] (Chapter 3).");
     addParamsLine("== Generating a set of projections == ");
     addParamsLine("  [--params <parameters_file>]           : File containing projection parameters");
     addParamsLine("                                         : Check the manual for a description of the parameters");
@@ -663,6 +668,7 @@ void PROJECT_Side_Info::produce_Side_Info(Projection_Parameters &prm,
 /* Effectively project ===================================================== */
 int PROJECT_Effectively_project(const std::string &fnOut,
                                 bool singleProjection,
+                                bool shears,
                                 const Projection_Parameters &prm,
                                 PROJECT_Side_Info &side,
                                 const Crystal_Projection_Parameters &prm_crystal,
@@ -671,13 +677,16 @@ int PROJECT_Effectively_project(const std::string &fnOut,
     int NumProjs = 0;
     SF.clear();
     if (exists(fnOut))
-    	unlink(fnOut.c_str());
+        unlink(fnOut.c_str());
     std::cerr << "Projecting ...\n";
     init_progress_bar(side.DF.size());
     SF.setComment("First set of angles=actual angles; Second set of angles=noisy angles");
 
     int projIdx=FIRST_IMAGE;
     FileName fn_proj;              // Projection name
+    RealShearsInfo *Vshears=NULL;
+    if (shears && side.phantomMode==PROJECT_Side_Info::VOXEL)
+    	Vshears=new RealShearsInfo(side.phantomVol());
     FOR_ALL_OBJECTS_IN_METADATA(side.DF)
     {
         size_t DFmov_objId=SF.addObject();
@@ -708,8 +717,12 @@ int PROJECT_Effectively_project(const std::string &fnOut,
         // Really project ....................................................
         if (side.phantomMode==PROJECT_Side_Info::VOXEL)
         {
-            projectVolume(side.phantomVol(), proj, prm.proj_Ydim, prm.proj_Xdim,
-                          rot, tilt, psi);
+            if (shears)
+                projectVolume(*Vshears, proj, prm.proj_Ydim, prm.proj_Xdim,
+                              rot, tilt, psi);
+            else
+                projectVolume(side.phantomVol(), proj, prm.proj_Ydim, prm.proj_Xdim,
+                              rot, tilt, psi);
             Matrix1D<double> shifts(2);
             XX(shifts) = shiftX;
             YY(shifts) = shiftY;
@@ -828,13 +841,13 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
     {
         // Really project
         if (prm.singleProjection)
-            ProjNo = PROJECT_Effectively_project(prm.fnOut, prm.singleProjection,
+            ProjNo = PROJECT_Effectively_project(prm.fnOut, prm.singleProjection, prm.shears,
                                                  proj_prm, side, crystal_proj_prm, proj, SF);
         else
         {
             FileName stackName = prm.fnOut.removeAllExtensions() + ".stk";
             FileName mdName = prm.fnOut.removeAllExtensions() + ".sel";
-            ProjNo = PROJECT_Effectively_project(stackName, prm.singleProjection,
+            ProjNo = PROJECT_Effectively_project(stackName, prm.singleProjection, prm.shears,
                                                  proj_prm, side, crystal_proj_prm, proj, SF);
             SF.setComment("Angles rot,tilt and psi contain noisy projection angles and rot2,tilt2 and psi2 contain actual projection angles");
             SF.write(mdName);

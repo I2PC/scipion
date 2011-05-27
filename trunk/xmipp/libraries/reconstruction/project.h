@@ -68,6 +68,8 @@ public:
     double tiltSingle;
     /// Psi angle of a single projection
     double psiSingle;
+    /// Use real-shears algorithm
+    bool shears;
 public:
     /** Read parameters. */
     void readParams();
@@ -241,6 +243,7 @@ int PROJECT_Assign_angles(MetaData &DF, const Projection_Parameters &prm);
     A selection file with all images is also returned.*/
 int PROJECT_Effectively_project(const std::string &fnOut,
 								bool singleProjection,
+								bool shears,
 								const Projection_Parameters &prm,
                                 PROJECT_Side_Info &side,
                                 const Crystal_Projection_Parameters &prm_crystal,
