@@ -100,6 +100,7 @@ void ProgAngularProjectLibrary::defineParams()
     addParamsLine("  [--compute_neighbors]         : create doc file with sampling point neighbors");
     addParamsLine("  requires --angular_distance;");
     addParamsLine("  [--shears]                    : use projection shears to generate projections");
+    addParamsLine("                                :+this method is more accurate but slower");
     addParamsLine("  [--perturb <sigma=0.0>]       : gaussian noise projection unit vectors ");
     addParamsLine("                                : a value=sin(sampling_rate)/4  ");
     addParamsLine("                                : may be a good starting point ");
@@ -165,7 +166,7 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
             myCounter++;
 
     if (shears && XSIZE(inputVol())!=0 && VShears==NULL)
-    	VShears=new VolumeStruct(inputVol());
+    	VShears=new RealShearsInfo(inputVol());
 
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
     {

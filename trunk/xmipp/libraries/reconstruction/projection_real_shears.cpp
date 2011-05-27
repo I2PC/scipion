@@ -157,8 +157,7 @@ void projectionRealShears2(MultidimArray<double> &CoefVolume,
                 }
                 Proj += columns;
             }
-            Proj *= absscale;
-            *ptrProjection++ = Proj;
+            *ptrProjection++ = Proj*absscale;
             K[0]+=dMn(Binv,0);
             K[1]+=dMn(Binv,4);
             K[2]+=dMn(Binv,8);
@@ -174,7 +173,7 @@ void projectionRealShears2(MultidimArray<double> &CoefVolume,
 //-----------------------------------------------------------------------------------------------
 ///Computes projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
-void projectionRealShears1(VolumeStruct &Data,
+void projectionRealShears1(RealShearsInfo &Data,
                            double phi, double theta, double psi,
                            double shiftX, double shiftY,
                            MultidimArray<double> &projection)
@@ -344,7 +343,7 @@ void Projection_real_shears::read(const FileName &fn_proj_param)
     fclose(fh_param);
 }
 
-VolumeStruct::VolumeStruct(const MultidimArray<double> &V)
+RealShearsInfo::RealShearsInfo(const MultidimArray<double> &V)
 {
     volume=&V;
     if (XSIZE(V)!=XSIZE(V) || XSIZE(V)!=ZSIZE(V))
@@ -427,16 +426,15 @@ VolumeStruct::VolumeStruct(const MultidimArray<double> &V)
     MAT_ELEM(Acinv,0,3)=MAT_ELEM(Acinv,1,3)=MAT_ELEM(Acinv,2,3)=-halfSize;
 }
 
-///Does start instructions. Returns possibles errors.
 void Projection_real_shears::produceSideInfo()
 {
     read(fn_proj_param);
     DF.read(fn_angle);
     V.read(fnPhantom);
-    Data=new VolumeStruct(V());
+    Data=new RealShearsInfo(V());
 }
 
-void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
+void projectVolume(RealShearsInfo &Data, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi, double shiftX, double shiftY)
 {
     P.reset(Data.Xdim,Data.Xdim);

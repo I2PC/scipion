@@ -72,7 +72,7 @@
 /**@name ProjRealShears Projection library program using Real-Shears */
 //@{
 /// Structure for holding a volume
-class VolumeStruct
+class RealShearsInfo
 {
 public:
     const MultidimArray<double> *volume;
@@ -81,11 +81,11 @@ public:
     MultidimArray<double> Coef_x, Coef_y, Coef_z;
 
     // Constructor
-    VolumeStruct(const MultidimArray<double> &V);
+    RealShearsInfo(const MultidimArray<double> &V);
 };
 
 /// Make projection
-void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
+void projectVolume(RealShearsInfo &Data, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi,
                     double shiftX=0, double shiftY=0);
 
@@ -131,7 +131,7 @@ class Projection_real_shears
         ///Content of the angle file
         MetaData DF;
         ///Basics Data for projections
-        VolumeStruct *Data;
+        RealShearsInfo *Data;
 
     //------------------ Functions -------------------
     public :

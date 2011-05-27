@@ -131,7 +131,7 @@ public:
     bool only_winner;
 
     /* Volume for shear projection */
-    VolumeStruct* VShears;
+    RealShearsInfo* VShears;
 
     /** fil vector with symmetry axis */
     // std::vector <Matrix1D<double> > symmetry_vectors;
