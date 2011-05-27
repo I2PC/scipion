@@ -33,7 +33,7 @@ class Tester(ContentHandler):
 
         elif (name == "CASE") :
             self.arguments = attrs.get("arguments")
-            self.changeDirectory = (attrs.get("changeDir") == "TRUE ")
+            self.changeDirectory = (attrs.get("changeDir") == "TRUE")
             self.prerun = []
             self.testfile = []
             if(attrs.has_key("random")):
@@ -212,6 +212,6 @@ if __name__ == '__main__':
     if  tester.warningFlag:
        globalMessage +="WARNINGS:\n" + tester.warning
     globalMessage += "\nProgram tested:\n" + programs
-    mail.mail(config.toaddrs,config.fromaddr,summaryMessage,globalMessage)
+    #mail.mail(config.toaddrs,config.fromaddr,summaryMessage,globalMessage)
 
  
