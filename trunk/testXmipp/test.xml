@@ -270,6 +270,15 @@
              <FILE filename="output.txt"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_mpi_run" mpi="TRUE">
+        <CASE arguments="-i commands.cmd" changeDir="TRUE">
+             <PRERUN command="cp input/commands.cmd %o"/>
+             <FILE filename="file1.txt"/>
+             <FILE filename="file2.txt"/>
+             <FILE filename="file3.txt"/>
+             <FILE filename="file4.txt"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_pdb_nma_deform" mpi="FALSE">
         <CASE arguments="--pdb input/2tbv.pdb -o %o/deformed.pdb --nma input/modelist.xmd --deformations 1000" changeDir="FALSE">
             <FILE filename="deformed.pdb"/>
