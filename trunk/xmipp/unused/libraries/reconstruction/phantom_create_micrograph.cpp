@@ -31,13 +31,13 @@
 #include <data/micrograph.h>
 
 /* Empty constructor ------------------------------------------------------- */
-Prog_Phantom_Create_Micrograph_Parameters::Prog_Phantom_Create_Micrograph_Parameters()
+ProgPhantomCreateMicrograph::ProgPhantomCreateMicrograph()
 {
     microscope.command_line=false;
 }
 
 /* Read parameters --------------------------------------------------------- */
-void Prog_Phantom_Create_Micrograph_Parameters::read(int argc, char **argv)
+void ProgPhantomCreateMicrograph::read(int argc, char **argv)
 {
     fn_vol=getParameter(argc,argv,"-vol");
     fn_root=getParameter(argc,argv,"-o","micrograph");
@@ -48,7 +48,7 @@ void Prog_Phantom_Create_Micrograph_Parameters::read(int argc, char **argv)
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Prog_Phantom_Create_Micrograph_Parameters::usage()
+void ProgPhantomCreateMicrograph::usage()
 {
     std::cerr << "Usage: xmipp_phantom_create_micrograph\n"
               << "   -vol <Volume>            : Volume for the micrographs\n"
@@ -61,7 +61,7 @@ void Prog_Phantom_Create_Micrograph_Parameters::usage()
 }
 
 /* Show -------------------------------------------------------------------- */
-void Prog_Phantom_Create_Micrograph_Parameters::show()
+void ProgPhantomCreateMicrograph::show()
 {
     std::cout
         << "Volume:       " << fn_vol       << std::endl
@@ -74,7 +74,7 @@ void Prog_Phantom_Create_Micrograph_Parameters::show()
 }
 
 /* Produce side information ------------------------------------------------ */
-void Prog_Phantom_Create_Micrograph_Parameters::produce_side_info()
+void ProgPhantomCreateMicrograph::produce_side_info()
 {
     V.read(fn_vol);
     V().setXmippOrigin();
@@ -85,7 +85,7 @@ void Prog_Phantom_Create_Micrograph_Parameters::produce_side_info()
 }
 
 /* Run -------------------------------------------------------------------.. */
-void Prog_Phantom_Create_Micrograph_Parameters::run()
+void ProgPhantomCreateMicrograph::run()
 {
     for (int n=0; n<Nmicrographs; n++)
     {
@@ -152,11 +152,12 @@ void Prog_Phantom_Create_Micrograph_Parameters::run()
         MetaData DF_out=DF_out_clean;
         DF_out.firstObject();
         STARTINGY(Md())=STARTINGX(Md())=0;
+        Image<double> I;
+        FileName fn_image;
         for (int l=0; l<Nproj; l++)
         {
-            FileName fn_image; fn_image.compose(fn_proj, l, "xmp");
+            fn_image.compose(fn_proj, l, "xmp");
             Particle_coords particle=M.coord(l);
-            Image<double> I;
             I().resize(Xproj,Xproj);
             I().setXmippOrigin();
             FOR_ALL_ELEMENTS_IN_ARRAY2D(I())

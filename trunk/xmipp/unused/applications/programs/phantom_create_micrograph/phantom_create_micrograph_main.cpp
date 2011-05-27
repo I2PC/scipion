@@ -27,7 +27,7 @@
 
 int main(int argc, char **argv)
 {
-    Prog_Phantom_Create_Micrograph_Parameters prm;
+    ProgPhantomCreateMicrograph prm;
     
     try {
         prm.read(argc,argv);

@@ -34,7 +34,7 @@
 //@{
 /* Create micrograph Program Parameters ------------------------------------ */
 /** Parameter class for the create micrograph program */
-class Prog_Phantom_Create_Micrograph_Parameters
+class ProgPhantomCreateMicrograph: public XmippProgram
 {
 public:
     /// Volume
@@ -62,7 +62,7 @@ public:
     int Nproj;
 public:
     /** Empty constructor */
-    Prog_Phantom_Create_Micrograph_Parameters();
+    ProgPhantomCreateMicrograph();
 
     /** Read from a command line.
         An exception might be thrown by any of the internal conversions,
