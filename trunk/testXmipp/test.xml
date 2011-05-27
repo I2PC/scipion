@@ -40,6 +40,10 @@
              <FILE filename="output_projections.doc"/>
              <FILE filename="output_projections.stk"/>
         </CASE>
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --shears" changeDir="FALSE">
+             <FILE filename="output_projections.doc"/>
+             <FILE filename="output_projections.stk"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_angular_project_library" mpi="FALSE">
         <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5" changeDir="FALSE">
@@ -240,6 +244,11 @@
              <FILE filename="output.txt"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_mpi_nma_alignment" mpi="TRUE">
+        <CASE arguments="-i input/2tbv_prj00001.xmp  --pdb input/2tbv.pdb --modes input/modelist.xmd  --deformation_scale 1000 --sampling_rate 6.4 -o %o/output.txt --resume" changeDir="FALSE">
+             <FILE filename="output.txt"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_transform_mirror" mpi="FALSE">
         <CASE arguments="-i input/singleImage.spi -o %o/singleImage_X.xmp --flipX" changeDir="FALSE">
             <FILE filename="singleImage_X.xmp"/>
@@ -256,6 +265,10 @@
             <FILE filename="projections.sel"/>
         </CASE>
         <CASE arguments="-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/uniformProjection.param" changeDir="FALSE">
+            <FILE filename="projections.stk"/>
+            <FILE filename="projections.sel"/>
+        </CASE>
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/uniformProjection.param --shears" changeDir="FALSE">
             <FILE filename="projections.stk"/>
             <FILE filename="projections.sel"/>
         </CASE>
