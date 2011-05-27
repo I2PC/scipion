@@ -1930,10 +1930,11 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
             Global_Feature_Read = 1;
             stat = sscanf(line, "%d %d %d %lf %lf", &xdim, &ydim, &zdim,
                           &Background_Density, &scale);
-            if (stat < 4)
+            if (stat < 3)
                 REPORT_ERROR(ERR_IO_NOREAD, "Phantom::read: check the volume"
                              " dimensions and global density in volume description file");
-            if (stat == 4) scale = 1;
+            if (stat <= 3) Background_Density = 0;
+            if (stat <= 4) scale = 1;
             if (apply_scale)
             {
                 xdim = (int) CEIL(scale * xdim);
