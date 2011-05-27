@@ -284,6 +284,11 @@
             <FILE filename="deformed.pdb"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_phantom_create" mpi="FALSE">
+        <CASE arguments="-i input/rings.descr -o %o/rings.vol" changeDir="FALSE">
+            <FILE filename="rings.vol"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_phantom_project" mpi="FALSE"><!-- one case in extra -->
         <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/image.xmp --angles 0 0 0" changeDir="FALSE">
             <FILE filename="image.xmp"/>
