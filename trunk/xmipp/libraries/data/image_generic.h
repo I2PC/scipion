@@ -70,6 +70,9 @@ public:
      */
     ImageGeneric(const FileName &filename);
 
+    /** Copy Constructor */
+    ImageGeneric(const ImageGeneric &img);
+
     /** Destructor.
      */
     ~ImageGeneric();
@@ -81,6 +84,9 @@ public:
     /** Clear the parameters and initialize them.
      */
     void clear();
+
+    /** Copy data from other ImageGeneric */
+    void copy(const ImageGeneric &img);
 
     /** Clear the image header
      */
@@ -235,6 +241,12 @@ public:
     {
         return *data;
     }
+
+    /**
+     * assign operator
+     */
+    ImageGeneric& operator=(const ImageGeneric &img);
+
     /**
      * equal operator
      */
@@ -288,7 +300,7 @@ public:
     }
 
     void add(const ImageGeneric &img);
-    void minus(const ImageGeneric &img);
+    void subtract(const ImageGeneric &img);
 
 private:
     /* Return the datatype of the image file.

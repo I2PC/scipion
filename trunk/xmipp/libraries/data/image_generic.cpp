@@ -40,6 +40,12 @@ ImageGeneric::ImageGeneric(const FileName &filename)
     read(filename);
 }
 
+ImageGeneric::ImageGeneric(const ImageGeneric &img)
+{
+    init();
+    copy(img);
+}
+
 ImageGeneric::~ImageGeneric()
 {
     delete image;
@@ -62,6 +68,16 @@ void ImageGeneric::clear()
         delete data;
         init();
     }
+}
+
+void  ImageGeneric::copy(const ImageGeneric &img)
+{
+    setDatatype(img.datatype);
+#define COPY(type) (*(Image<type>*)image) = (*(Image<type>*)img.image);
+
+    SWITCHDATATYPE(datatype, COPY);
+#undef COPY
+
 }
 
 void ImageGeneric::getImageType(const FileName &imgName, DataType &datatype)
@@ -214,6 +230,12 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply
     image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img);
 }
 
+ImageGeneric& ImageGeneric::operator=(const ImageGeneric &img)
+{
+    copy(img);
+    return *this;
+}
+
 bool ImageGeneric::operator==(const ImageGeneric &i1) const
 {
     return(*(this->data) == *(i1.data));
@@ -245,7 +267,7 @@ void ImageGeneric::add(const ImageGeneric &img)
 
 }
 
-void ImageGeneric::minus(const ImageGeneric &img)
+void ImageGeneric::subtract(const ImageGeneric &img)
 {
     if (datatype != img.datatype)
         REPORT_ERROR(ERR_TYPE_INCORRECT, "Images have different datatypes");
