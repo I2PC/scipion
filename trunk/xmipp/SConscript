@@ -185,7 +185,8 @@ def AddXmippCTest(name):
     
 def AddXmippPythonTest(name):
     print "Adding python test: ", name
-    testprog = AddBatch(name, 'applications/tests/test_pythoninterface', '.py')
+    #FIXME ROB 
+    testprog = AddBatch(name, 'applications/tests/'+name, '.py')
     test = AddXmippTest(name, testprog, "$SOURCE $TARGET")
     return test
     
@@ -783,8 +784,13 @@ if int(env['gtest']):
      AddXmippCTest('test_polar')
      AddXmippCTest('test_transformation')
      env.Depends('run_tests', [fftw, tiff, sqlite])
-     #python interface tests
-     test = AddXmippPythonTest('test_pythoninterface')
+     #python modules
+     #FIXME ROB -how to install dependences?????
+     AddProtocol('XmippPythonTestResult.py', 'applications/tests/pythonlib')
+     AddProtocol('bcolors.py', 'applications/tests/pythonlib')
+     #python tests
+     test=AddXmippPythonTest('test_pythoninterface')
+     AddXmippPythonTest('test_projectionmatching')
      env.Depends(test, pythonbinding)
      #env.Default('run_tests'     )
 
