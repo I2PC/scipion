@@ -39,7 +39,7 @@ protected:
 };
 
 
-TEST_F( ImageGenericTest, similarTo)
+TEST_F( ImageGenericTest, equals)
 {
     ImageGeneric auxImageG;
     auxImageG.readMapped(imageName);
@@ -47,6 +47,16 @@ TEST_F( ImageGenericTest, similarTo)
     ASSERT_TRUE(myImageGeneric==auxImageG);
     ASSERT_FALSE(myImageGeneric==myImageGeneric2);
 }
+
+TEST_F( ImageGenericTest, copy)
+{
+    ImageGeneric img1(myImageGeneric);
+    ASSERT_TRUE(img1 == myImageGeneric);
+    ImageGeneric img2;
+    img2 = img1;
+    ASSERT_TRUE(img2 == myImageGeneric);
+}
+
 // Check if swapped images are read correctly, mapped and unmapped.
 TEST_F( ImageGenericTest, readMapSwapFile)
 {
@@ -68,25 +78,27 @@ TEST_F( ImageGenericTest, add)
     ImageGeneric auxImageGeneric1(auxFilename1);
     ImageGeneric auxImageGeneric2(auxFilename2);
     auxImageGeneric1.add(auxImageGeneric2);
-    auxFilename2 = filename + "/../applications/tests/test_image_generic/add.spi";
+    auxFilename2 = filename + "/../applications/tests/test_image_generic/sum.spi";
     auxImageGeneric2.read(auxFilename2);
     EXPECT_TRUE(auxImageGeneric1==auxImageGeneric2);
     auxImageGeneric1.add(auxImageGeneric2);
     EXPECT_FALSE(auxImageGeneric1==auxImageGeneric2);
 }
 
-TEST_F( ImageGenericTest, minus)
+TEST_F( ImageGenericTest, subtract)
 {
-  FileName sumFn = filename + "/../applications/tests/test_image_generic/add.spi";
+  FileName sumFn = filename + "/../applications/tests/test_image_generic/sum.spi";
   ImageGeneric sumImg(sumFn);
   FileName fn1((String)"1@"+stackName);
   ImageGeneric img1(fn1);
-  sumImg.minus(img1);
+  sumImg.subtract(img1);
   FileName fn2((String)"2@"+stackName);
   ImageGeneric img2(fn2);
 
   EXPECT_TRUE(sumImg == fn2);
 }
+
+
 
 GTEST_API_ int main(int argc, char **argv)
 {

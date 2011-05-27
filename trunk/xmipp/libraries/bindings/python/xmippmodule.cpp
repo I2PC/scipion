@@ -187,23 +187,25 @@ FileName_decompose(PyObject *obj, PyObject *args, PyObject *kwargs) {
 }
 
 /* FileName methods */
-static PyMethodDef FileName_methods[] = { { "compose",
-		(PyCFunction) FileName_compose, METH_VARARGS,
-		"Compose from root, number and extension OR prefix with number @" }, {
-		"isInStack", (PyCFunction) FileName_isInStack, METH_NOARGS,
-		"True if filename has stack format" },
+static PyMethodDef FileName_methods[] =
+{
+        { "compose", (PyCFunction) FileName_compose, METH_VARARGS,
+		  "Compose from root, number and extension OR prefix with number @" },
+		{ "isInStack", (PyCFunction) FileName_isInStack, METH_NOARGS,
+		  "True if filename has stack format" },
 		{ "isMetaData", (PyCFunction) FileName_isMetaData, METH_NOARGS,
-				"True if is a MetaData" }, { "isStar1",
-				(PyCFunction) FileName_isStar1, METH_NOARGS,
-				"True if is a Star1" }, { "getExtension",
-				(PyCFunction) FileName_getExtension, METH_NOARGS,
-				"Get the last extension from a FileName" }, { "getNumber",
-				(PyCFunction) FileName_getNumber, METH_NOARGS,
-				"Get the number from a FileName" }, { "getBaseName",
-				(PyCFunction) FileName_getBaseName, METH_NOARGS,
-				"Get the base name from a FileName" }, { "decompose",
-				(PyCFunction) FileName_decompose, METH_NOARGS,
-				"Decompose filenames with @. Mainly from selfiles" }, { NULL } /* Sentinel */
+          "True if is a MetaData" },
+        { "isStar1", (PyCFunction) FileName_isStar1, METH_NOARGS,
+          "True if is a Star1" },
+        { "getExtension", (PyCFunction) FileName_getExtension, METH_NOARGS,
+          "Get the last extension from a FileName" },
+        { "getNumber", (PyCFunction) FileName_getNumber, METH_NOARGS,
+          "Get the number from a FileName" },
+        { "getBaseName", (PyCFunction) FileName_getBaseName, METH_NOARGS,
+          "Get the base name from a FileName" },
+        { "decompose", (PyCFunction) FileName_decompose, METH_NOARGS,
+          "Decompose filenames with @. Mainly from selfiles" },
+        { NULL } /* Sentinel */
 };
 
 /*FileName Type */
@@ -259,6 +261,8 @@ typedef struct {
     ImageGeneric * image;
 } ImageObject;
 
+#define ImageObject_New() (ImageObject*)malloc(sizeof(ImageObject))
+
 /* Destructor */
 static void Image_dealloc(ImageObject* self) {
     delete self->image;
@@ -282,6 +286,7 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
                   self->image = new ImageGeneric(PyString_AsString(input));
               else if (FileName_Check(input))
                   self->image = new ImageGeneric(FileName_Value(input));
+              //todo: add copy constructor
               else
                   return NULL;
             }
@@ -475,9 +480,64 @@ Image_getEulerAngles(PyObject *obj, PyObject *args, PyObject *kwargs)
 
 
 static PyObject *
-Image_add(PyObject *obj, PyObject *args, PyObject *kwargs);
+Image_add(PyObject *obj1, PyObject *obj2);
 static PyObject *
-Image_minus(PyObject *obj, PyObject *args, PyObject *kwargs);
+Image_subtract(PyObject *obj1, PyObject *obj2);
+
+static PyObject *
+Image_iadd(PyObject *obj1, PyObject *obj2);
+static PyObject *
+Image_isubtract(PyObject *obj1, PyObject *obj2);
+
+
+/* Image methods that behave like numbers */
+static PyNumberMethods Image_NumberMethods = {
+    Image_add, //binaryfunc  nb_add;
+    Image_subtract, //binaryfunc  nb_subtract;
+    0, //binaryfunc  nb_multiply;
+    0, //binaryfunc  nb_divide;
+    0, //binaryfunc  nb_remainder;
+    0, //binaryfunc  nb_divmod;
+    0, //ternaryfunc nb_power;
+    0, //unaryfunc nb_negative;
+    0, //unaryfunc nb_positive;
+    0, //unaryfunc nb_absolute;
+    0, //inquiry nb_nonzero;       /* Used by PyObject_IsTrue */
+    0, //unaryfunc nb_invert;
+    0, //binaryfunc  nb_lshift;
+    0, //binaryfunc  nb_rshift;
+    0, //binaryfunc  nb_and;
+    0, //binaryfunc  nb_xor;
+    0, //binaryfunc  nb_or;
+    0, //coercion nb_coerce;       /* Used by the coerce() function */
+    0, //unaryfunc nb_int;
+    0, //unaryfunc nb_long;
+    0, //unaryfunc nb_float;
+    0, //unaryfunc nb_oct;
+    0, //unaryfunc nb_hex;
+
+    /* Added in release 2.0 */
+    Image_iadd, //binaryfunc  nb_inplace_add;
+    Image_isubtract, //binaryfunc  nb_inplace_subtract;
+    0, //binaryfunc  nb_inplace_multiply;
+    0, //binaryfunc  nb_inplace_divide;
+    0, //binaryfunc  nb_inplace_remainder;
+    0, //ternaryfunc nb_inplace_power;
+    0, //binaryfunc  nb_inplace_lshift;
+    0, //binaryfunc  nb_inplace_rshift;
+    0, //binaryfunc  nb_inplace_and;
+    0, //binaryfunc  nb_inplace_xor;
+    0, //binaryfunc  nb_inplace_or;
+
+    /* Added in release 2.2 */
+    0, //binaryfunc  nb_floor_divide;
+    0, //binaryfunc  nb_true_divide;
+    0, //binaryfunc  nb_inplace_floor_divide;
+    0, //binaryfunc  nb_inplace_true_divide;
+
+    /* Added in release 2.5 */
+    0 //unaryfunc nb_index;
+};
 
 /* Image methods */
 static PyMethodDef Image_methods[] =
@@ -494,9 +554,9 @@ static PyMethodDef Image_methods[] =
         "Return image dimensions as a tuple" },
       { "getEulerAngles", (PyCFunction) Image_getEulerAngles, METH_VARARGS,
         "Return euler angles as a tuple" },
-      { "add", (PyCFunction) Image_add, METH_VARARGS,
-        "Add two images" },
-      { "minus", (PyCFunction) Image_minus, METH_VARARGS,
+      //{ "add", (PyCFunction) Image_add, METH_VARARGS,
+      //  "Add two images" },
+      { "subtract", (PyCFunction) Image_subtract, METH_VARARGS,
         "Subtract two images" },
       { NULL } /* Sentinel */
 };
@@ -514,7 +574,7 @@ static PyTypeObject ImageType = {
     0, /*tp_setattr*/
     Image_compare, /*tp_compare*/
     Image_repr, /*tp_repr*/
-    0, /*tp_as_number*/
+    &Image_NumberMethods, /*tp_as_number*/
     0, /*tp_as_sequence*/
     0, /*tp_as_mapping*/
     0, /*tp_hash */
@@ -544,67 +604,81 @@ static PyTypeObject ImageType = {
     Image_new, /* tp_new */
 };
 
-/* Return image dimensions as a tuple */
+/* Add two images, operator + */
 static PyObject *
-Image_add(PyObject *obj, PyObject *args, PyObject *kwargs)
+Image_add(PyObject *obj1, PyObject *obj2)
 {
-  ImageObject *self = (ImageObject*) obj;
-  if (self != NULL)
+  ImageObject * result = PyObject_New(ImageObject, &ImageType);
+  if (result != NULL)
   {
-    PyObject * img2 = NULL;
-    if (PyArg_ParseTuple(args, "O", &img2))
+    try
     {
-        try
-        {
-            if (!Image_Check(img2))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                        "Image::add: Expecting image as first argument");
-                return NULL;
-            }
-            self->image->add(Image_Value(img2));
-            Py_RETURN_NONE;
-        }
-        catch (XmippError xe)
-        {
-            PyErr_SetString(PyXmippError, xe.msg.c_str());
-        }
+      result->image = new ImageGeneric(Image_Value(obj1));
+      Image_Value(result).add(Image_Value(obj2));
     }
-
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
   }
-  return NULL;
-}//Image_getDimensions
+  return (PyObject *)result;
+}//operator +
 
-/* Return image dimensions as a tuple */
+/** Image inplace add, equivalent to += operator */
 static PyObject *
-Image_minus(PyObject *obj, PyObject *args, PyObject *kwargs)
+Image_iadd(PyObject *obj1, PyObject *obj2)
 {
-  ImageObject *self = (ImageObject*) obj;
-  if (self != NULL)
+  ImageObject * result = NULL;
+  try
   {
-    PyObject * img2 = NULL;
-    if (PyArg_ParseTuple(args, "O", &img2))
-    {
-        try
-        {
-            if (!Image_Check(img2))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                        "Image::add: Expecting image as first argument");
-                return NULL;
-            }
-            self->image->minus(Image_Value(img2));
-            Py_RETURN_NONE;
-        }
-        catch (XmippError xe)
-        {
-            PyErr_SetString(PyXmippError, xe.msg.c_str());
-        }
-    }
-
+      Image_Value(obj1).add(Image_Value(obj2));
+      if (result = PyObject_New(ImageObject, &ImageType))
+        result->image = new ImageGeneric(Image_Value(obj1));
   }
-  return NULL;
-}//Image_getDimensions
+  catch (XmippError xe)
+  {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+  }
+  return (PyObject *)result;
+}//operator +=
+
+/* Subtract two images, operator - */
+static PyObject *
+Image_subtract(PyObject *obj1, PyObject *obj2)
+{
+  ImageObject * result = PyObject_New(ImageObject, &ImageType);
+  if (result != NULL)
+  {
+    try
+    {
+      result->image = new ImageGeneric(Image_Value(obj1));
+      Image_Value(result).subtract(Image_Value(obj2));
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  }
+  return (PyObject *)result;
+}//operator +
+
+/** Image inplace subtraction, equivalent to -= operator */
+static PyObject *
+Image_isubtract(PyObject *obj1, PyObject *obj2)
+{
+  ImageObject * result = NULL;
+  try
+  {
+      Image_Value(obj1).subtract(Image_Value(obj2));
+      if (result = PyObject_New(ImageObject, &ImageType))
+        result->image = new ImageGeneric(Image_Value(obj1));
+  }
+  catch (XmippError xe)
+  {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+  }
+  return (PyObject *)result;
+}//operator +=
 
 /***************************************************************/
 /*                            MDQuery                          */
@@ -1116,7 +1190,6 @@ MetaData_getActiveLabels(PyObject *obj, PyObject *args, PyObject *kwargs) {
 /* containsLabel */
 static PyObject *
 xmipp_getBlocksInMetaDataFile(PyObject *obj, PyObject *args) {
-	std::cerr << "xmipp_getBlocksInMetaDataFile" << std::endl;
 	int label;
 	PyObject *input;
 	FileName fn;
@@ -1140,8 +1213,9 @@ xmipp_getBlocksInMetaDataFile(PyObject *obj, PyObject *args) {
 			}
 			return list;
 		}
-	} catch (XmippError xe) {
-		std::cerr << "exception" << std::endl;
+	}
+	catch (XmippError xe)
+	{
 		PyErr_SetString(PyXmippError, xe.msg.c_str());
 	}
 	return NULL;

@@ -32,26 +32,26 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertNotEqual(img1, img2)
         
     def test_Image_add(self):
-        path1 = "1@" + os.path.join(self.testsPath, "test_image", "smallStack.stk")
-        img1 = Image(path1)
-        path2 = "2@" + os.path.join(self.testsPath, "test_image", "smallStack.stk")
-        img2 = Image(path2)
-        img1.add(img2)
-        path2 = os.path.join(self.testsPath, "test_image_generic", "add.spi")
-        img2.read(path2)
-        self.assertEqual(img1, img2)
-        img1.add(img2)        
-        self.assertNotEqual(img1, img2)   
+        stackPath = os.path.join(self.testsPath, "test_image", "smallStack.stk")
+        img1 = Image("1@" + stackPath)
+        img2 = Image("2@" + stackPath)
+        sum = img1 + img2
+        sumRef = Image(os.path.join(self.testsPath, "test_image_generic", "sum.spi"))
+        self.assertEqual(sum, sumRef)
+        img1 += img2        
+        self.assertEqual(sum, img1)
+        img1 += img2
+        self.assertNotEqual(sum, img1)   
              
     def test_Image_minus(self):
-        pathSum = os.path.join(self.testsPath, "test_image_generic", "add.spi")
-        imgAdd =Image(pathSum)
+        pathSum = os.path.join(self.testsPath, "test_image_generic", "sum.spi")
+        imgAdd = Image(pathSum)
         path1 = "1@" + os.path.join(self.testsPath, "test_image", "smallStack.stk")
         img1 = Image(path1)
         path2 = "2@" + os.path.join(self.testsPath, "test_image", "smallStack.stk")
         img2 = Image(path2)
         
-        imgAdd.minus(img2)
+        imgAdd -= img2
         self.assertEqual(img1, imgAdd)   
              
     def test_FileName_compose(self):
