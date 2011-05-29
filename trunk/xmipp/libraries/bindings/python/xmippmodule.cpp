@@ -2054,7 +2054,7 @@ xmipp_ImgCompare(PyObject *obj, PyObject *args, PyObject *kwargs) {
 static PyObject *
 xmipp_compareTwoFiles(PyObject *obj, PyObject *args, PyObject *kwargs) {
 	PyObject *filename1, *filename2;
-	int offset;
+	size_t offset=0;
 	if (PyArg_ParseTuple(args, "OO|i", &filename1, &filename2, &offset)) {
 		try {
 			PyObject * pyStr1 = PyObject_Str(filename1);
