@@ -31,7 +31,7 @@ class TestProjMatching(unittest.TestCase):
                                 '/tmp',
                                 sys.argv[0],
                                 self.WorkingDir)
-        
+                
     def test_execute_ctf_groups(self):
         CtfGroupDirectory = os.path.join(self.path,'CtfGroup')
         CtfGroupRootName  = 'ctf'
@@ -50,17 +50,47 @@ class TestProjMatching(unittest.TestCase):
                 ,'WienerConstant': -1
            }
         execute_ctf_groups(self.log,dict)
+
         testName = CtfGroupDirectory+"/"+CtfGroupRootName+'Info.xmd'
         goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
-        print goldName,testName
         self.assertTrue(compareTwoFiles(goldName,testName))
+        #check two file compare works
         self.assertFalse(compareTwoFiles(goldName,'/etc/passwd'))
-#        self.assertTrue(xmipp_ImgCompare(1,2))
-#        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'Info.xmd')
-#        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_ctf.stk')
-#        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_wien.stk')
-#        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_split.doc')
-#        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_images.sel')
+
+        testName1 = CtfGroupDirectory+"/"+CtfGroupRootName+'_ctf.stk'
+        goldName = testName1.replace(self.WorkingDir,self.goldWorkingDir)
+        self.assertTrue(compareTwoFiles(goldName,testName1))
+
+        testName = CtfGroupDirectory+"/"+CtfGroupRootName+'_wien.stk'
+        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
+        self.assertTrue(compareTwoFiles(goldName,testName))
+        #test Imgcompare works
+        self.assertFalse(ImgCompare(testName,testName1))
+
+        testName = CtfGroupDirectory+"/"+CtfGroupRootName+'_split.doc'
+        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
+        self.assertTrue(compareTwoFiles(goldName,testName))
+
+        testName = CtfGroupDirectory+"/"+CtfGroupRootName+'_images.sel'
+        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
+        self.assertTrue(compareTwoFiles(goldName,testName))
+
+    def test_execute_mask(self):
+        maskedFileNamesIter='ProjMatch/new20/Iter_01/masked_reference_ref_01.vol'
+        dict = {
+                'DoMask': True,
+                'DoSphericalMask': True,
+                'maskRadius': 64,
+                'maskedFileName': maskedFileNamesIter ,
+                'reconstructedFileName': 'ico.vol',
+                'userSuppliedMask': 'mask.vol'
+        }
+
+        execute_mask(self.log,dict)
+        testName = maskedFileNamesIter
+        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
+        self.assertTrue(ImgCompare(goldName,testName))
+
 from  XmippPythonTestResult import XmippPythonTestResult
 
                                         
