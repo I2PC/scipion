@@ -400,6 +400,14 @@ FileName FileName::removeBlockName() const
     return *this;
 }
 
+FileName FileName::removeSliceNumber() const
+{
+    size_t first = rfind("@");
+    if ( first != npos && isdigit(this->at(0)))
+        return substr(first + 1);
+    return *this;
+}
+
 bool FileName::isMetaData(bool failIfNotExists) const
 {
     //file names containing @, : or % are not metadatas
@@ -510,7 +518,6 @@ void FileName::copyFile(const FileName & target) const
     std::ofstream f2 (target.c_str(),std::fstream::trunc|std::fstream::binary);
     f2<<f1.rdbuf();
 }
-
 
 
 typedef struct stat Stat;
