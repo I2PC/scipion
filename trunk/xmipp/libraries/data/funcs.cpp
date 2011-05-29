@@ -1118,20 +1118,18 @@ bool compareTwoFiles(const FileName &fn1, const FileName &fn2, size_t offset)
     struct stat file_status;
 
     if(stat(fn1.c_str(), &file_status) != 0)
-        REPORT_ERROR(ERR_IO_NOPATH,"Metadata:write can not get filesize for file "+fn1);
+        REPORT_ERROR(ERR_IO_NOPATH,"compareTwoFiles:write can not get filesize for file "+fn1);
     size_t size1 = file_status.st_size;
 
     if(stat(fn2.c_str(), &file_status) != 0)
-        REPORT_ERROR(ERR_IO_NOPATH,"Metadata:write can not get filesize for file "+fn2);
+        REPORT_ERROR(ERR_IO_NOPATH,"compareTwoFiles:write can not get filesize for file "+fn2);
     size_t size2 = file_status.st_size;
-
     if(size1!=size2)
     	return false;
     size = size1;
     int fd1 = open(fn1.c_str(),  O_RDWR, S_IREAD | S_IWRITE);
     if (fd1 == -1)
         REPORT_ERROR(ERR_IO_NOTEXIST,"Can not read file named "+fn1);
-
     int fd2 = open(fn2.c_str(),  O_RDWR, S_IREAD | S_IWRITE);
     if (fd2 == -1)
         REPORT_ERROR(ERR_IO_NOTEXIST,"Can not read file named "+fn1);
@@ -1156,5 +1154,6 @@ bool compareTwoFiles(const FileName &fn1, const FileName &fn2, size_t offset)
         REPORT_ERROR(ERR_MEM_NOTDEALLOC,"metadata:write, Can not unmap memory");
     }
     close(fd2);
+
     return (result==0);
 }
