@@ -49,6 +49,7 @@
 #include "macros.h"
 #include "error.h"
 #include "strings.h"
+
 #define FILENAMENUMBERLENGTH 6
 
 //@{
@@ -254,7 +255,17 @@ public:
      * @endcode
      */
 
-    FileName removeBlockName() const;
+    String getBlockName() const;
+
+    /** Remove leading number from filename
+     * @code
+     * fn_meta="1@md1.doc"
+     * String blockName;
+     * filename=fn_meta.removeSliceNumber();//filename="md1.doc"
+     * @endcode
+     */
+
+    FileName removeSliceNumber() const;
 
     /** Remove blockName from filename
      * @code
@@ -264,7 +275,7 @@ public:
      * @endcode
      */
 
-    String getBlockName() const;
+    FileName removeBlockName() const;
 
     /** Random name
      *
@@ -513,6 +524,14 @@ public:
      * s
      */
     void copyFile(const FileName & target) const;
+
+// This funtion is in funcs, cannot be here because need metadata_generic and metadata_generic
+// need filename
+//    /* Copy one image
+//     *
+//     */
+//    void copyImage(const FileName & target) const;
+
     //@}
 };
 
