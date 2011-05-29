@@ -1,0 +1,26 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ proj_ctf_1.stk          1 
+ proj_ctf_1.stk          1 
+ proj_ctf_1.stk          1 
+ proj_ctf_1.stk          1 
+ proj_ctf_1.stk          1 
+ proj_ctf_1.stk          1 
+ proj_ctf_1.stk          1 
+ proj_ctf_1.stk          1 
+ proj_ctf_1.stk          1 
+ proj_ctf_1.stk          1 
+ proj_ctf_2.stk          1 
+ proj_ctf_2.stk          1 
+ proj_ctf_2.stk          1 
+ proj_ctf_2.stk          1 
+ proj_ctf_2.stk          1 
+ proj_ctf_2.stk          1 
+ proj_ctf_2.stk          1 
+ proj_ctf_2.stk          1 
+ proj_ctf_2.stk          1 
+ proj_ctf_2.stk          1 
