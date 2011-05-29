@@ -8,28 +8,59 @@ sys.path.append(scriptdir) # add default search path
 scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
 sys.path.append(scriptdir)
 from xmipp import *
-#from test.test_array import NumberTest
-#from json.tests.test_fail import TestFail
+from ProjMatchActionsToBePerformedBeforeLoop import *;\
+from ProjMatchActionsToBePerformedInLoop import *
+import log, logging
+from distutils.dir_util import mkpath
 
 class TestProjMatching(unittest.TestCase):
     testsPath = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/applications/tests'
     def setUp(self):
         """This function performs all the setup stuff.      
         """
-        pass
+        #run this at xmipp level
+        curdir = os.path.abspath(os.path.dirname(os.popen('which xmipp_protocols', 'r').read())+ '/../../')
+        self.ProjectDir = os.path.join(curdir,'testXmipp/input/Protocol_Projection_Matching')
+        self.WorkingDir = 'ProjMatch/new20'
+        self.goldWorkingDir = 'ProjMatch/goldStandard'
+        self.path = os.path.join(self.ProjectDir,self.WorkingDir)
+        mkpath(self.path, 0777, True)
+        os.chdir(self.ProjectDir)
+        print "Changed directory to", self.ProjectDir
+        self.log = log.init_log_system(self.ProjectDir,
+                                '/tmp',
+                                sys.argv[0],
+                                self.WorkingDir)
         
-    def test_Image_compare(self):
-        imgPath = os.path.join(self.testsPath, "test_image", "singleImage.spi")
-        img1 = Image()
-        img1.read(imgPath)
-        img2 = Image(imgPath)
-        # Test that image is equal to itself
-        self.assertEqual(img1, img2)
-        # Test different images
-        imgPath = "1@" + os.path.join(self.testsPath, "test_image", "smallStack.stk")
-        img2.read(imgPath)
-        self.assertNotEqual(img1, img2)
-           
+    def test_execute_ctf_groups(self):
+        CtfGroupDirectory = os.path.join(self.path,'CtfGroup')
+        CtfGroupRootName  = 'ctf'
+        dict = {
+                'CTFDatName': 'new_ctf.ctfdat'
+                ,'CtfGroupDirectory': CtfGroupDirectory
+                ,'CtfGroupMaxDiff': 0.10000000000000001
+                ,'CtfGroupMaxResol': 5.5999999999999996
+                ,'CtfGroupRootName': CtfGroupRootName
+                ,'DataArePhaseFlipped': True
+                ,'DoAutoCtfGroup': True
+                ,'DoCtfCorrection': True
+                ,'PaddingFactor': 2
+                ,'SelFileName': 'new20.sel'
+                ,'SplitDefocusDocFile': ''
+                ,'WienerConstant': -1
+           }
+        execute_ctf_groups(self.log,dict)
+        testName = CtfGroupDirectory+"/"+CtfGroupRootName+'Info.xmd'
+        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
+        print goldName,testName
+        self.assertTrue(compareTwoFiles(goldName,testName))
+        self.assertFalse(compareTwoFiles(goldName,'/etc/passwd'))
+#        self.assertTrue(xmipp_ImgCompare(1,2))
+#        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'Info.xmd')
+#        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_ctf.stk')
+#        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_wien.stk')
+#        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_split.doc')
+#        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_images.sel')
 from  XmippPythonTestResult import XmippPythonTestResult
 
                                         
