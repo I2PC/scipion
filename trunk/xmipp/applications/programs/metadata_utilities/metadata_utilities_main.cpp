@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <iostream>
 #include <fstream>
+#include <data/funcs.h>
 
 class ProgMetadataUtilities: public XmippProgram
 {
@@ -166,7 +167,7 @@ protected:
     {
         fn_in = getParam("-i");
         if (!checkParam("--file") || getParam("--file") != "import_txt")
-          mdIn.read(fn_in);
+            mdIn.read(fn_in);
         doWrite = true;
         fn_out = checkParam("-o") ? getParam("-o") : fn_in;
     }
@@ -180,7 +181,7 @@ protected:
         if (operation == "union")
             mdIn.unionDistinct(md2, label);
         else if (operation == "union_all")
-          mdIn.unionAll(md2);
+            mdIn.unionAll(md2);
         else if (operation == "intersection")
             mdIn.intersection(md2, label);
         else if (operation == "subtraction")
@@ -315,13 +316,12 @@ protected:
         }
         else if (operation == "import_txt")
         {
-          mdIn.readPlain(fn_in, getParam("--file", 1));
+            mdIn.readPlain(fn_in, getParam("--file", 1));
         }
         else
         {
             bool doDelete;
-            FileName path, inFnImg, outFnImg;
-
+            FileName path, inFnImg, outFnImg, oldOutFnImg="";
             if (!(doDelete = operation == "delete"))//copy or move
             {
                 path = getParam("--file", 1);
@@ -332,23 +332,54 @@ protected:
             label = MDL::str2Label(getParam("--file", doDelete ? 1 : 2));
             doWrite = !doDelete;
 
+            int counter=FIRST_IMAGE;
             FOR_ALL_OBJECTS_IN_METADATA(mdIn)
             {
 
                 mdIn.getValue(label, inFnImg, __iter.objId);
-
+                bool isStack=inFnImg.isInStack();
                 if (doDelete)
-                    remove(inFnImg.c_str());
+                {
+                    if(isStack)
+                        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Cannot delete files from a stack");
+                    else
+                        remove(inFnImg.c_str());
+                }
                 else
                 {
                     outFnImg = inFnImg.removeDirectories();
+                    //outfilename for output sel
+                    if (operation == "copy" && isStack)
+                    {
+                        if(oldOutFnImg != outFnImg && oldOutFnImg !="")
+                        {
+                            counter = FIRST_IMAGE;
+                        }
+                        oldOutFnImg = outFnImg;
+                        outFnImg.compose(counter, outFnImg);
+                    }
                     mdIn.setValue(label, outFnImg, __iter.objId);
-                    outFnImg = path + "/" + outFnImg;
-
+                    //output file name for copy
+                    if (operation == "copy" && isStack)
+                    {
+                        outFnImg=outFnImg.removeSliceNumber();
+                        outFnImg = path + "/" + outFnImg;
+                        outFnImg = integerToString(counter)+'@'+outFnImg;
+                    }
+                    else
+                        outFnImg = path + "/" + outFnImg;
                     if (operation == "copy")
-                        inFnImg.copyFile(outFnImg);
+                    {
+                        copyImage( inFnImg, outFnImg);
+                        ++counter;
+                    }
                     else if (operation == "move")
-                        rename(inFnImg.c_str(), outFnImg.c_str());
+                    {
+                        if(isStack)
+                            REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Cannot move files from a stack");
+                        else
+                            rename(inFnImg.c_str(), outFnImg.c_str());
+                    }
                 }
             }
             fn_out = path + "/" + fn_out.removeDirectories();
