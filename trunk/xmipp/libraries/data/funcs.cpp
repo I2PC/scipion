@@ -727,8 +727,13 @@ FileName xmippBaseDir()
     else
         REPORT_ERROR(ERR_IO_NOPATH, "xmippBaseDir::Cannot find Xmipp Base directory");
 }
+#include "image_generic.h"
 
-
+void copyImage(const FileName & source, const FileName & target)
+{
+	ImageGeneric img(source);
+	img.write(target);
+}
 
 /* Time managing ----------------------------------------------------------- */
 #ifdef _NO_TIME
