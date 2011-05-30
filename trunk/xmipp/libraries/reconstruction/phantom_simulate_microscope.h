@@ -48,6 +48,10 @@ public:
     bool     after_ctf_noise;
     /// Defocus change (%)
     double   defocus_change;
+    /// Target SNR
+    double targetSNR;
+    /// Estimate SNR
+    bool estimateSNR;
     /// CTF
     FourierFilter ctf;
     /// Low pass filter, if it is 0 no lowpass filter is applied
@@ -76,6 +80,9 @@ public:
 
     /** Show parameters. */
     void show();
+
+    /** Estimate sigma for a given SNR */
+    void estimateSigma();
 
     /** Prepare fourier filter */
     void setupFourierFilter(FourierFilter &filter, bool isBackground, double &power);

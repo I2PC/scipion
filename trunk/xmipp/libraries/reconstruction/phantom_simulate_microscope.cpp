@@ -52,10 +52,26 @@ void ProgSimulateMicroscope::readParams()
         else
             REPORT_ERROR(ERR_ARG_MISSING, "You should provide param --ctf or it should be present on input metadata");
     }
-    sigma = getDoubleParam("--noise");
-    low_pass_before_CTF = getDoubleParam("--low_pass");
     after_ctf_noise = checkParam("--after_ctf_noise");
     defocus_change = getDoubleParam("--defocus_change");
+    if (checkParam("--noise"))
+    {
+        sigma = getDoubleParam("--noise");
+        low_pass_before_CTF = getDoubleParam("--noise",1);
+        estimateSNR=false;
+    }
+    else if (checkParam("--noNoise"))
+    {
+    	estimateSNR=0;
+    	sigma=0;
+    	low_pass_before_CTF=0.5;
+    }
+    else
+    {
+        targetSNR = getDoubleParam("--targetSNR");
+    	low_pass_before_CTF=0.5;
+        estimateSNR=true;
+    }
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -64,39 +80,102 @@ void ProgSimulateMicroscope::defineParams()
     each_image_produces_an_output = true;
     save_metadata_stack = true;
     XmippMetadataProgram::defineParams();
-
     addUsageLine("Simulate the effect of the microscope on ideal projections.");
-    addExampleLine("Example of use: Generate a set of images with the CTF applied without any noise", false);
-    addExampleLine("   xmipp_phantom_simulate_microscope -i g0ta.sel --oroot g1ta --ctf untilt_ARMAavg.ctfparam");
-    addExampleLine("Example of use: Generate a set of images with the CTF applied and noise before and after CTF", false);
-    addExampleLine("   xmipp_phantom_simulate_microscope -i g0ta.sel --oroot g2ta --ctf untilt_ARMAavg.ctfparam --noise 4.15773 --after_ctf_noise");
-
+    addParamsLine("==CTF options==");
     addParamsLine(" [--ctf <CTFdescr>]       : a CTF description, if this param is not supplied it should come in metadata");
     addParamsLine(" [--after_ctf_noise]      : apply noise after CTF");
     addParamsLine(" [--defocus_change <v=0>] : change in the defocus value (percentage)");
-    addParamsLine(" [--low_pass <w=0>]       : low pass filter for noise before CTF");
-    addParamsLine(" [--noise <stddev=0>]     : noise to be added");
-
-
-
+    addParamsLine("==Noise options==");
+    addParamsLine(" --noise <stddev> <w=0.5> : noise to be added, this noise is filtered at the frequency specified (<0.5).");
+    addParamsLine("or --targetSNR <snr>      : the necessary noise power for a specified SNR is estimated");
+    addParamsLine("or --noNoise              : do not add any noise, only simulate the CTF");
+    addExampleLine("Generate a set of images with the CTF applied without any noise", false);
+    addExampleLine("   xmipp_phantom_simulate_microscope -i g0ta.sel --oroot g1ta --ctf untilt_ARMAavg.ctfparam");
+    addExampleLine("Generate a set of images with the CTF applied and noise before and after CTF", false);
+    addExampleLine("   xmipp_phantom_simulate_microscope -i g0ta.sel --oroot g2ta --ctf untilt_ARMAavg.ctfparam --noise 4.15773 --after_ctf_noise");
 }
 
 /* Show -------------------------------------------------------------------- */
 void ProgSimulateMicroscope::show()
 {
+    if (!verbose)
+        return;
     XmippMetadataProgram::show();
-    if (verbose)
-        std::cout << "CTF file: " << fn_ctf << std::endl
-        << "Noise: " << sigma << std::endl
-        << "Noise before: " << sigma_before_CTF << std::endl
-        << "Noise after: " << sigma_after_CTF << std::endl
-        << "Low pass freq: " << low_pass_before_CTF << std::endl
-        << "After CTF noise: " << after_ctf_noise << std::endl
-        << "Defocus change: " << defocus_change << std::endl
-        ;
+    std::cout
+    << "CTF file: " << fn_ctf << std::endl
+    << "Noise: " << sigma << std::endl
+    << "Low pass freq: " << low_pass_before_CTF << std::endl
+    << "After CTF noise: " << after_ctf_noise << std::endl
+    << "Defocus change: " << defocus_change << std::endl
+    ;
+    if (estimateSNR)
+        std::cout
+        << "Target SNR: " << targetSNR << std::endl;
 }
 
-void ProgSimulateMicroscope::setupFourierFilter(FourierFilter &filter, bool isBackground, double &power)
+void ProgSimulateMicroscope::estimateSigma()
+{
+    ctf.FilterBand = CTF;
+    ctf.ctf.enable_CTFnoise = false;
+    ctf.ctf.read(getParam("--ctf"));
+    ctf.ctf.Produce_Side_Info();
+
+    size_t N_stats=mdIn.size();
+
+    MultidimArray<double> proj_power(N_stats);
+    MultidimArray<double> proj_area(N_stats);
+    double power_avg, power_stddev, area_avg, area_stddev, avg, stddev, dummy;
+    if (verbose!=0)
+    {
+        std::cerr << "Estimating noise power for target SNR=" << targetSNR << std::endl;
+        init_progress_bar(N_stats);
+    }
+    FileName fnImg;
+    Image<double> proj;
+    size_t nImg=0;
+    FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+    {
+        mdIn.getValue(MDL_IMAGE,fnImg,__iter.objId);
+        proj.read(fnImg);
+        MultidimArray<double> mProj=proj();
+
+        if (nImg == 0)
+            ctf.generateMask(mProj);
+        ctf.applyMaskSpace(mProj);
+
+        // Compute projection area
+        DIRECT_A1D_ELEM(proj_area,nImg) = 0;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mProj)
+        if (fabs(DIRECT_MULTIDIM_ELEM(mProj,n)) > 1e-6)
+            DIRECT_A1D_ELEM(proj_area,nImg)++;
+
+        // Compute projection power
+        mProj.computeStats(avg, DIRECT_A1D_ELEM(proj_power,nImg), dummy, dummy);
+
+        if (nImg++ % 30 == 0 && verbose!=0)
+            progress_bar(nImg);
+    }
+    progress_bar(N_stats);
+    Histogram1D hist_proj, hist_area;
+    compute_hist(proj_power, hist_proj, 300);
+    compute_hist(proj_area, hist_area, 300);
+    proj_power.computeStats(power_avg, power_stddev, dummy, dummy);
+    std::cout << "# Projection power average: " << power_avg << std::endl
+    << "# Projection power stddev:  " << power_stddev << std::endl
+    << "# Projection percentil  2.5%: " << hist_proj.percentil(2.5) << std::endl
+    << "# Projection percentil 97.5%: " << hist_proj.percentil(97.5) << std::endl;
+    proj_area.computeStats(area_avg, area_stddev, dummy, dummy);
+    std::cout << "# Projection area average: " << area_avg << std::endl
+    << "# Projection area stddev:  " << area_stddev << std::endl
+    << "# Area percentil  2.5%:    " << hist_area.percentil(2.5) << std::endl
+    << "# Area percentil 97.5%:    " << hist_area.percentil(97.5) << std::endl;
+
+    sigma=sqrt(power_avg*power_avg*Xdim*Ydim / (targetSNR*area_avg));
+    std::cout << "Estimated sigma=" << sigma << std::endl;
+}
+
+void ProgSimulateMicroscope::setupFourierFilter(FourierFilter &filter, bool isBackground,
+        double &power)
 {
     static int dXdim = 2 * Xdim, dYdim = 2 * Ydim;
     static MultidimArray<double> aux;
@@ -106,10 +185,9 @@ void ProgSimulateMicroscope::setupFourierFilter(FourierFilter &filter, bool isBa
     filter.ctf.enable_CTF = !isBackground;
     filter.ctf.enable_CTFnoise = isBackground;
     filter.ctf.Produce_Side_Info();
-    aux.resize(dYdim, dXdim);
+    aux.resizeNoCopy(dYdim, dXdim);
     aux.setXmippOrigin();
-    //filter.do_generate_3dmask=true;
-    filter.do_generate_3dmask = isBackground;
+    filter.do_generate_3dmask=true;
     filter.generateMask(aux);
     power = filter.maskPower();
 }
@@ -125,7 +203,7 @@ void ProgSimulateMicroscope::updateCtfs()
         setupFourierFilter(after_ctf, true, after_power);
 
     // Compute noise balance
-    if (after_power != 0 || before_power != 0)
+    if ((after_power != 0 || before_power != 0) && sigma!=0)
     {
         double p = after_power / (after_power + before_power);
         double K = 1 / sqrt(p * after_power + (1 - p) * before_power);
@@ -137,6 +215,10 @@ void ProgSimulateMicroscope::updateCtfs()
         sigma_before_CTF = sigma;
         sigma_after_CTF = 0;
     }
+    else
+    {
+    	sigma_before_CTF=sigma_after_CTF=0;
+    }
 }
 
 /* Produce side information ------------------------------------------------ */
@@ -144,19 +226,21 @@ void ProgSimulateMicroscope::preProcess()
 {
     int dum;
     size_t dum2;
-
-    //if (command_line) get_input_size(Zdim, Ydim, Xdim);
     ImgSize(mdIn, Xdim, Ydim, dum, dum2);
 
-    if (low_pass_before_CTF != 0)
+    if (low_pass_before_CTF < 0.5)
     {
         lowpass.FilterBand = LOWPASS;
         lowpass.FilterShape = RAISED_COSINE;
         lowpass.w1 = low_pass_before_CTF;
     }
+
+    if (estimateSNR)
+        estimateSigma();
 }
 
-void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName &fnImgOut,
+        size_t objId)
 {
     static Image<double> img;
     static FileName last_ctf;
@@ -175,7 +259,6 @@ void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName 
     img.write(fnImgOut);
 }
 
-
 /* Apply ------------------------------------------------------------------- */
 void ProgSimulateMicroscope::apply(MultidimArray<double> &I)
 {
@@ -187,7 +270,7 @@ void ProgSimulateMicroscope::apply(MultidimArray<double> &I)
     MultidimArray<double> noisy;
     noisy.resize(I);
     noisy.initRandom(0, sigma_before_CTF, "gaussian");
-    if (low_pass_before_CTF != 0)
+    if (low_pass_before_CTF < 0.5)
         lowpass.applyMaskSpace(noisy);
     I += noisy;
 
@@ -217,4 +300,3 @@ void ProgSimulateMicroscope::apply(MultidimArray<double> &I)
     I.selfWindow(FIRST_XMIPP_INDEX(Ydim), FIRST_XMIPP_INDEX(Xdim),
                  LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));
 }
-
