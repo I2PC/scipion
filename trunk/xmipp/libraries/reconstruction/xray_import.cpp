@@ -298,13 +298,13 @@ void runThread(ThreadArgument &thArg)
             if (ptrProg->logFilt)
                 Iaux().selfLog10();
 
-            fnImg.compose(i, ptrProg->fnRoot);
+            fnImg.compose(i+1, ptrProg->fnRoot);
             fnImg = fnImg.addExtension("mrcs");
 
             size_t objId = localMD.addObject();
             localMD.setValue(MDL_IMAGE,fnImg,objId);
             localMD.setValue(MDL_ANGLETILT,Iaux.tilt(),objId);
-            Iaux.write(fnImg,i,true,WRITE_APPEND);
+            Iaux.write(fnImg,i+1,true,WRITE_APPEND);
             if (thread_id==0)
                 progress_bar(i);
         }
