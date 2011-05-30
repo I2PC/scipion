@@ -255,7 +255,7 @@ public class TomoData{
 		getMetadata().setValueInt(MDLabel.MDL_ENABLED, enabled, id);
 	}
 	
-	// TODO: use ids
+	// TODO: use ids&Metadata
 	public void setTiltAnglesStep(double start, double step){
 		double t=start;
 		for(int i=1;i<=getNumberOfProjections();i++){

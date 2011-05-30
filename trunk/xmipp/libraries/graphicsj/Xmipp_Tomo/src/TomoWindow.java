@@ -175,8 +175,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(Command.BANDPASS);
 			add(Command.HISTOGRAM_EQUALIZATION);
 			add(Command.CROP);
-			add(Command.HOTSPOT_REMOVAL);
-			// disabled until native writing (using Xmipp library) is implemented
+			//add(Command.HOTSPOT_REMOVAL);
 			add(Command.APPLY);
 			add(Command.CONVERT);
 			add(Command.PRINT_WORKFLOW);

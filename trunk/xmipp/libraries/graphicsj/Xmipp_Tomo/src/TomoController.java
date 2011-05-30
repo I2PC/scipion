@@ -56,8 +56,26 @@ import xmipp.ImageWriteMode;
 public class TomoController implements AdjustmentListener{
 	private TomoWindow window;
 	// modelToLoad: to avoid passing parameters in load BackgroundMethods
-	private TomoData modelToLoad,model;
+	private TomoData modelToLoad,model,modelToSave;
 	
+	public TomoData getModelToSave() {
+		return modelToSave;
+	}
+
+	public void setModelToSave(TomoData modelToSave) {
+		this.modelToSave = modelToSave;
+	}
+
+	private String destinationPath;
+	
+	public String getDestinationPath() {
+		return destinationPath;
+	}
+
+	public void setDestinationPath(String destinationPath) {
+		this.destinationPath = destinationPath;
+	}
+
 	// @see TomoController.playPause
 	private boolean projectionsPlaying = false;
 	// true if play follows a loop pattern (after last image, play first), false if pattern is ping-pong (after last, play last-1 and so on)
@@ -186,6 +204,7 @@ public class TomoController implements AdjustmentListener{
 		Xmipp_Tomo.printWorkflow();
 	}
 
+	// TODO: reset workflow after loading a stack
 	public void loadEM() {
 		if (window.getLastCommandState() == Command.State.LOADING) {
 			// if the button was pressed while loading, it means user wants to
@@ -224,6 +243,10 @@ public class TomoController implements AdjustmentListener{
 		}
 	}
 	
+	/** TODO: new approach: load only single projections on demand and
+	 * store them in a cache (with prefetch)
+	 */
+	
 	public void loadEMBackground(){
 		// setModel(getModelToLoad());
 		window.getButton(Command.LOAD.getId()).setText("Cancel " + Command.LOAD.getLabel());
@@ -233,8 +256,9 @@ public class TomoController implements AdjustmentListener{
 		try {
 			String absolutePath = getModelToLoad().getFilePath();
 
+			// return if user canceled open dialog
 			if ((absolutePath == null) || (absolutePath.equals("")))
-				throw new IOException("Empty path");
+				return;
 			
 			getModelToLoad().readMetadata(absolutePath);
 			
@@ -316,13 +340,43 @@ public class TomoController implements AdjustmentListener{
 	 * TODO: apply the selected "workflow path" in the workflow view
 	 */
 	// TODO: - CURRENT - in write actions, handle writeSel
+	// TODO: in write actions, if the file exists delete it first (to avoid overwrite problems)
+	// TODO: progress bar while applying filters
+	// TODO: update file name (model) in window title (once saved)
+	// TODO: enhance contrast seems to not be applied...
 	public void apply() {
 
-		String destinationPath = FileDialog.saveDialog("Save...", window);
+		String destinationPath = FileDialog.saveDialog("Save stack...", window);
 		if (destinationPath == null) {
 			return;
 		}
+		setDestinationPath(destinationPath);
+		try {
+			new BackgroundMethod(this, getClass().getMethod("applyBackground"), null).execute();
+		} catch (Exception ex) {
+			Xmipp_Tomo.debug("TomoController.apply() ", ex);
+		}
 		
+
+	}
+	
+	// TODO: if the view was scaled, then the parameters applied to the
+	// original image must be scaled too
+	private ImagePlus applyWorkflowTo(ImagePlus image){
+		// iterate through the user actions that make sense
+		Enumeration e = Xmipp_Tomo.getWorkflow().breadthFirstEnumeration();
+		while(e.hasMoreElements()){
+			UserAction currentAction=(UserAction) (((DefaultMutableTreeNode)e.nextElement()).getUserObject());
+			if (currentAction.isNeededForFile()) {
+				// Xmipp_Tomo.debug("Applying " + currentAction.toString());
+				// window.setStatus("Applying " + currentAction.getCommand());
+				currentAction.getPlugin().run(image);
+			}
+		}	
+		return image;
+	}
+	
+	public void applyBackground(){
 		// TODO: bug - modelToSave has wrong properties: path(not updated), width&height =  0, always resized
 		String sourcePath = getModel().getFilePath();
 		try{
@@ -334,6 +388,7 @@ public class TomoController implements AdjustmentListener{
 			
 			long ids[]=modelToSave.getStackIds();
 			for(long projectionId:ids) {
+				window.setStatus("Applying workflow and saving..." + projectionId +"/"+getModel().getNumberOfProjections());
 				String sourceProjectionPath=modelToSave.getFilePath(projectionId);
 				if(sourceProjectionPath != null){
 					ImageDouble image = new ImageDouble();
@@ -343,8 +398,8 @@ public class TomoController implements AdjustmentListener{
 					image=Converter.convertToImageDouble(ip);
 					// the recommended way is using the @ notation,
 					// TODO: get the @ path with the help of the Filename xmipp class
-					String sliceDestPath = String.valueOf(projectionId) +"@"+ destinationPath;
-					Xmipp_Tomo.debug(sliceDestPath);
+					String sliceDestPath = String.valueOf(projectionId) +"@"+ getDestinationPath();
+					// Xmipp_Tomo.debug(sliceDestPath);
 					image.write(sliceDestPath);
 					// image.write(destinationPath, (int)projectionId, false, ImageWriteMode.WRITE_APPEND, CastWriteMode.CW_CAST);
 				}
@@ -354,20 +409,7 @@ public class TomoController implements AdjustmentListener{
 		}catch (Exception ex) {
 			Xmipp_Tomo.debug("apply ",	ex);
 		} 
-	}
-	
-	private ImagePlus applyWorkflowTo(ImagePlus image){
-		// iterate through the user actions that make sense
-		Enumeration e = Xmipp_Tomo.getWorkflow().breadthFirstEnumeration();
-		while(e.hasMoreElements()){
-			UserAction currentAction=(UserAction) (((DefaultMutableTreeNode)e.nextElement()).getUserObject());
-			if (currentAction.isNeededForFile()) {
-				Xmipp_Tomo.debug("Applying " + currentAction.toString());
-				window.setStatus("Applying " + currentAction.getCommand());
-				currentAction.getPlugin().run(image);
-			}
-		}	
-		return image;
+		window.setStatus("Done");
 	}
 	
 	private TomoData reOpenIfResized(TomoData originalModel){
@@ -431,13 +473,14 @@ public class TomoController implements AdjustmentListener{
 		runIjCmd(Command.BANDPASS, plugin);
 	}
 	
+	// TODO: image viewer pops out
 	public void histogramEqualization() {
 		// convert to 8 bit
 		getModel().convertTo(8);
 		window.addUserAction(new UserAction(window.getWindowId(), "convertToByte"));
 		
 		// histogram equalization is an option of enhance contrast
-		// @todo: it may be better to use a custom dialog, so user does not need to check "Histogram Equalization" and "Normalize all"
+		// TODO: it may be better to use a custom dialog, so user does not need to check "Histogram Equalization" and "Normalize all"
 		Plugin plugin = new ContrastEnhancePlugin();
 		window.setPlugin(plugin);
 		runIjCmd(Command.ENHANCE_CONTRAST, plugin);
@@ -516,14 +559,22 @@ public class TomoController implements AdjustmentListener{
 		if (destinationPath == null) {
 			return;
 		}
-		
+		setDestinationPath(destinationPath);
 		/* TomoData originalModel = getModel();
 		TomoData modelToSave=reOpenIfResized(originalModel);
 		// write
 		saveFile(window, modelToSave, path); */
 		
-		TomoData modelToSave=getModel();
+		setModelToSave(getModel());
 		
+		try {
+			new BackgroundMethod(this, getClass().getMethod("convertBackground"), null).execute();
+		} catch (Exception ex) {
+			Xmipp_Tomo.debug("TomoController.convert() ", ex);
+		}
+	}
+
+	public void convertBackground(){
 		try{
 			if(getModel().isResized()){
 				String sourcePath = getModel().getFilePath();
@@ -531,11 +582,12 @@ public class TomoController implements AdjustmentListener{
 				if ((sourcePath == null) || (sourcePath.equals("")))
 					throw new IOException("Empty path");
 				
-				modelToSave.readMetadata(sourcePath);
+				getModelToSave().readMetadata(sourcePath);
 				
-				long ids[]=modelToSave.getStackIds();
+				long ids[]=getModelToSave().getStackIds();
 				for(long projectionId:ids) {
-					String sourceProjectionPath=modelToSave.getFilePath(projectionId);
+					window.setStatus("Converting..." + projectionId +"/"+getModel().getNumberOfProjections());
+					String sourceProjectionPath=getModelToSave().getFilePath(projectionId);
 					if(sourceProjectionPath != null){
 						ImageDouble image = new ImageDouble();
 						image.readSlice(sourceProjectionPath);
@@ -549,17 +601,18 @@ public class TomoController implements AdjustmentListener{
 				}
 			}else{
 				ImageDouble img = Converter.convertToImageDouble(getModel().getImage());
-				img.setFilename(destinationPath);
+				img.setFilename(getDestinationPath());
 				// @see rwSpider.cpp -- WRITE_OVERWRITE required for maxim to be updated (readSpider gets nDim from maxim)
-				img.write(destinationPath, 0, true, ImageWriteMode.WRITE_OVERWRITE, CastWriteMode.CW_CAST);
+				img.write(getDestinationPath(), 0, true, ImageWriteMode.WRITE_OVERWRITE, CastWriteMode.CW_CAST);
 			}
 		}catch (IOException ex) {
 			Xmipp_Tomo.debug("convert - Error opening file ",	ex);
 		}catch (Exception ex) {
 			Xmipp_Tomo.debug("convert ",	ex);
 		}  
-	}
 
+	}
+	
 	public void setTilt() {
 		GenericDialog gd = new GenericDialog("Tilt angles");
 		gd.addMessage("Please fill either start and end angles, or start and step");
@@ -582,6 +635,7 @@ public class TomoController implements AdjustmentListener{
 	 * Ask user parameters for xmipp_xray_import and run it (by now, the program
 	 * must be on $PATH)
 	 */
+	// TODO: progress bar while running xmipp_xray_import
 	public void loadXray() {
 		XrayImportDialog d = new XrayImportDialog("X-Ray import", window);
 		// d.setup();

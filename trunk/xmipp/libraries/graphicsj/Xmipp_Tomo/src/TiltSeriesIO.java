@@ -84,7 +84,7 @@ public class TiltSeriesIO {
 		return path.endsWith(".tlt");
 	}
 	
-	// TODO: fails with mrcs due to memory leak (bad alloc: coreAllocateReuse tries to alloc X*Y*Z*N bytes,
+	// fixed: fails with mrcs due to memory leak (bad alloc: coreAllocateReuse tries to alloc X*Y*Z*N bytes,
 	// with N being the number of slices, even though we are requesting to read only 1)
 	public static void read(TomoData model) throws java.io.IOException,
 			InterruptedException {
@@ -129,14 +129,14 @@ public class TiltSeriesIO {
 		
 	}
 
-	// TODO: if the file exists, remove it before calling native code - as an extra caution	(overwrite semantics vary
-	// across layers...)
-	// TODO: bug - write fails? spider and derivatives fixed, test with other formats (MRC / MRCS)
+	// fixed: bug - write fails? spider and derivatives fixed, test with other formats (MRC / MRCS)
 	// TODO: write details (below)
 	// First show dialog to choose file type to save (primarily sel vs stack)
-	// Sel: check with users. One option would be to ask for sel and stack file paths (defaults to same paths, 
+	// Sel: One option would be to ask for sel and stack file paths (defaults to same paths, 
 	//      ask if user wants to reuse the image file, or overwrite it, or use a different name...)
 	//      right now we reuse the image file
+	//      Other option is use same name and offer only to choose
+	//      the stack type (stk or mrc)
 	// Stack: ask only for stack file path (same overwrite warning), then save both stack and tlt [OK]
 	public static void write(TomoData model) {
 		String path = model.getFilePath();
@@ -321,7 +321,8 @@ private static String buildAbsolutePath(String selFilePath, String path){
 				md.setValueDouble(MDLabel.MDL_ANGLETILT, new Double(line), i++);
 			}
 		}catch (IOException ex){
-			Xmipp_Tomo.debug("readTiltAngles", ex);
+			// tilt file missing - do nothing
+			// Xmipp_Tomo.debug("readTiltAngles", ex);
 		}
 	}
 

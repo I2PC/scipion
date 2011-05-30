@@ -37,21 +37,31 @@
 // TODO: Project management. Nodes of graph are the results (Series, alignment Parameters, Landmarks, Volumes...)
 // Transitions are actions (crop, align...)
 // Now all the results are in disk, so it goes like this:
-// - open the first image of the series
+// - open the first (or current) image of the series
 // - apply the action to this first image and show the result (like a preview)
 // - if the user agrees, then apply the action to all the series in disk
 // - show the results in the canvas as each image is saved
 // TODO: organize a directory tree that replicates the graph structure (each subdirectory stores the results of 1 action)
 // TODO: visualization - add a "Thumbnail" checkbox. When enabled, display the scaled series from memory (faster).
 // When disabled, display the original from disk (slower)
-// TODO: Project management - save the workflow to disk
+// TODO: Project management - workflow import/export to disk (SQLite format?)
 // TODO: Project management - action to delete the results file of a node (to save disk space)
 // Objects of same type (for example, Landmarks) share the same Color.
 // Compact view: display nodes as Type-Sequence # (action). For example:
 // - S0
 // - S1 (crop S0)
-// TODO: memory management - for storing slices, use a cache (Juanjo). This way, when the user disables Thumbnails and the memory
-// fills up after loading a few slices, the oldest are removed from the cache (to provide memory for the newest)
+// TODO: load ImageDoubles into a cache on demand (cache miss)
+/**
+ * TODO: changes in MVC design
+ * - WindowModel: not needed (no relevant window data other than menus)
+ * - StackModel: knows how to get the current projection to display,
+ * metadata (tilt), # of projections... No need to store data in the model
+ * - StackView: display projection image, tilt, and player controls
+ * - WorkflowModel: stores all the user operations
+ * - WorkflowOperation: input and output files, command, parameters, status (progress)...
+ * - WorkflowView: displays the workflow + buttons (load,save,discard)
+ * - ImageDoubleCache: get("003@F2")
+ */
 
 import ij.*;
 import java.io.*;

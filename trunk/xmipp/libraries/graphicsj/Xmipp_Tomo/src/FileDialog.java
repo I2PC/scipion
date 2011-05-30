@@ -40,12 +40,13 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class FileDialog {
 	private JFileChooser fileChooser;
 	private static File lastChosenDirectory;
+	private static String prefsPrefix="xmipptomo.";
 
 	private void setupDialog(String title, String path, final String fileName,int type) {
 		fileChooser = new JFileChooser();
 		fileChooser.setDialogTitle(title);
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-		fileChooser.setCurrentDirectory(getLastChosenDirectory());
+		fileChooser.setCurrentDirectory(getLastChosenDirectory(title));
 		fileChooser.setDialogType(type);
 
 		File fdir = null;
@@ -64,7 +65,9 @@ public class FileDialog {
 		int status = fd.showOpenDialog(parent);
 		if (status != JFileChooser.APPROVE_OPTION)
 			return "";
-		return fd.getPath();
+		String path=fd.getPath();
+		setLastChosenDirectory(title, path);
+		return path;
 	}
 	
 	public static String saveDialog(String title, Component parent) {
@@ -74,7 +77,9 @@ public class FileDialog {
 		int status = fd.showSaveDialog(parent);
 		if (status != JFileChooser.APPROVE_OPTION)
 			return "";
-		return fd.getPath();
+		String path=fd.getPath();
+		setLastChosenDirectory(title, path);
+		return path;
 	}
 	
 	public void addTomoImagesFileExtensionFilters(){
@@ -102,6 +107,7 @@ public class FileDialog {
 	}
 
 	public String getPath() {
+		boolean removeFile=false;
 		File selectedFile = fileChooser.getSelectedFile();
 		if (selectedFile == null)
 			return null;
@@ -112,6 +118,8 @@ public class FileDialog {
 						"Ovewrite file", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 				if (response != JOptionPane.YES_OPTION)
 					return null;
+				// remove file to prevent overwriting problems
+				removeFile=true;
 			}
 
 
@@ -119,8 +127,11 @@ public class FileDialog {
 		String dir = fileChooser.getCurrentDirectory().getPath() + File.separator;
 
 		String returnPath = "";
-		if (name != null)
+		if (name != null){
 			returnPath = dir + name;
+			if(removeFile)
+				new File(returnPath).delete();
+		}
 		return returnPath;
 	}
 
@@ -133,11 +144,16 @@ public class FileDialog {
 	 * @return path, which may be null.
 	 * This path always ends with the separator character ("/" or "\").
 	 */
-	private static File getLastChosenDirectory() {
-		// TODO: getLastChosenDirectory - save a different path for each browse call (so each file dialog remembers its last directory)
-		if (lastChosenDirectory == null)
-			lastChosenDirectory = new File(Prefs.getString(Prefs.DIR_IMAGE));
+	private static File getLastChosenDirectory(String title) {
+		if (lastChosenDirectory == null){
+			String dirImage = Prefs.get(prefsPrefix+title,".");
+			lastChosenDirectory = new File(dirImage);
+		}
 		return lastChosenDirectory;
 	}
 
+	private static void setLastChosenDirectory(String title,String filePath){
+		String directory=new File(filePath).getParent();
+		Prefs.set(prefsPrefix+title,directory);
+	}
 }

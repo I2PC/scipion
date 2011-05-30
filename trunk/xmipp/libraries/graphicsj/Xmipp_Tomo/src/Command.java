@@ -56,7 +56,7 @@ public class Command {
 	CROP = new Command("proc.crop","Crop","crop",false,null),
 	BANDPASS = new Command("proc.bandpass","Bandpass Filter","bandpass",false,null),
 	MEASURE = new Command("controls.measure","Measure","measure",false,null),
-	APPLY = new Command("proc.apply","Apply","apply",false,null),
+	APPLY = new Command("proc.apply","Apply&Save","apply",false,null),
 	ALIGN_AUTO = new Command("align.auto","Auto","alignAuto",false,null),
 	ALIGN_MANUAL = new Command("align.manual","Manual","alignManual",false,null),
 	ALIGN_CORRELATION = new Command("align.correlation","Quick","alignCorrelation",false,null),
