@@ -311,7 +311,10 @@
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_phantom_simulate_microscope" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam" changeDir="FALSE" random="FALSE">
+        <CASE arguments="-i input/projectionsBacteriorhodopsin.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam --noNoise" changeDir="FALSE" random="FALSE">
+            <FILE filename="smallStackPlusCtf.stk"/>
+        </CASE>
+        <CASE arguments="-i input/projectionsBacteriorhodopsin.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam --targetSNR 0.3" changeDir="FALSE" random="FALSE">
             <FILE filename="smallStackPlusCtf.stk"/>
         </CASE>
     </PROGRAM>
