@@ -1,0 +1,17 @@
+# Projection power average: 0.728373
+# Projection power stddev:  0.0677934
+# Projection percentil  2.5%: 0.621641
+# Projection percentil 97.5%: 0.855931
+# Projection area average: 4095.91
+# Projection area stddev:  0.30271
+# Area percentil  2.5%:    4095
+# Area percentil 97.5%:    4095.99
+Estimated sigma=1.32984
+Input File: input/projectionsBacteriorhodopsin.stk
+Output File: tmpLink/xmipp_phantom_simulate_microscope_02/smallStackPlusCtf.stk
+CTF file: 
+Noise: 1.32984
+Low pass freq: 0.5
+After CTF noise: 0
+Defocus change: 0
+Target SNR: 0.3
