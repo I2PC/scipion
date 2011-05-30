@@ -334,6 +334,7 @@ class automated_gui_class:
                     self.variables[args[0]].append(newvar)
                 else:
                     # string
+                    value=value.strip()
                     value = value.strip('\'')
                     value = value.strip('\"')
                     self.variables[args[0]] = [value, ]
