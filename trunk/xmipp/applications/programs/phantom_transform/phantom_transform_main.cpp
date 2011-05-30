@@ -46,6 +46,7 @@ public:
     void defineParams()
     {
         addUsageLine("Apply a geometrical transformation to a phantom description or PDB.");
+        addSeeAlsoLine("phantom_create, volume_from_pdb");
         addParamsLine(" -i <file>       : Phantom description file (.descr) or PDB (.pdb)");
         addParamsLine("[-o <file=\"\">] : Phantom description file (.descr) or PDB (.pdb)");
         addParamsLine(" --operation <op>: Operation to perform");
