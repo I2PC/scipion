@@ -63,7 +63,7 @@ void computePDBgeometry(const std::string &fnPDB,
     The result is written in the output PDB. Set centerPDB if you
     want to compute the center of mass first and apply the transformation
     after centering the PDB. */
-void applyGeometry(const std::string &fn_in, const std::string &fn_out,
+void applyGeometryToPDBFile(const std::string &fn_in, const std::string &fn_out,
                    const Matrix2D<double> &A, bool centerPDB=true,
                    const std::string &intensityColumn="occupancy");
 

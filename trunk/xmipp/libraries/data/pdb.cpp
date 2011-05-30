@@ -178,7 +178,7 @@ void computePDBgeometry(const std::string &fnPDB,
 }
 
 /* Apply geometry ---------------------------------------------------------- */
-void applyGeometry(const std::string &fn_in, const std::string &fn_out,
+void applyGeometryToPDBFile(const std::string &fn_in, const std::string &fn_out,
                    const Matrix2D<double> &A, bool centerPDB,
                    const std::string &intensityColumn)
 {
