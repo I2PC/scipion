@@ -343,11 +343,11 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
         transformer.setReal(v);
         MultidimArray< std::complex<double> > Fourier;
         transformer.getFourierAlias(Fourier);
-        maskFourier.initZeros(Fourier);
-        maskFourier.setXmippOrigin();
 
         if (FilterShape==WEDGE || FilterShape==CONE)
         {
+            maskFourier.initZeros(Fourier);
+            maskFourier.setXmippOrigin();
             switch (FilterShape)
             {
             case WEDGE:
@@ -360,6 +360,26 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
             case CONE:
                 BinaryConeMask(maskFourier, 90. - w1);
                 break;
+            }
+        }
+        else
+        {
+            maskFourierd.initZeros(Fourier);
+            maskFourierd.setXmippOrigin();
+
+            w.resizeNoCopy(3);
+            for (int k=0; k<ZSIZE(Fourier); k++)
+            {
+                FFT_IDX2DIGFREQ(k,ZSIZE(v),ZZ(w));
+                for (int i=0; i<YSIZE(Fourier); i++)
+                {
+                    FFT_IDX2DIGFREQ(i,YSIZE(v),YY(w));
+                    for (int j=0; j<XSIZE(Fourier); j++)
+                    {
+                        FFT_IDX2DIGFREQ(j,XSIZE(v),XX(w));
+                        DIRECT_A3D_ELEM(maskFourierd,k,i,j)=maskValue(w);
+                    }
+                }
             }
         }
     }
@@ -428,7 +448,7 @@ double FourierFilter::maskPower()
     if (XSIZE(maskFourier) != 0)
         return maskFourier.sum2()/MULTIDIM_SIZE(maskFourier);
     else if (XSIZE(maskFourierd) != 0)
-        return maskFourier.sum2()/MULTIDIM_SIZE(maskFourierd);
+        return maskFourierd.sum2()/MULTIDIM_SIZE(maskFourierd);
 }
 
 // Correct phase -----------------------------------------------------------
