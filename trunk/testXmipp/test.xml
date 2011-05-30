@@ -318,6 +318,11 @@
             <FILE filename="smallStackPlusCtf.stk"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_phantom_transform" mpi="FALSE">
+        <CASE arguments="-i input/1o7d.pdb -o %o/shifted.pdb --operation shift 1 2 3" changeDir="FALSE" random="FALSE">
+            <FILE filename="shifted.pdb"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_reconstruct_art_pseudo" mpi="FALSE">
         <CASE arguments="-i input/projectionsBacteriorhodopsin.xmd --pseudo input/pseudoBacteriorhodopsin.pdb  -l 1 -n 5 -o  %o/rec_art_pseudo" changeDir="FALSE">
             <FILE filename="rec_art_pseudo.vol"/>
