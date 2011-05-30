@@ -23,13 +23,12 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/progs.h>
-#include <data/args.h>
+#include <data/program.h>
 #include <data/geometry.h>
 #include <data/phantom.h>
 #include <data/pdb.h>
 
-class Phantom_transform_parameters
+class Phantom_transform_parameters: public XmippProgram
 {
 public:
     FileName fn_in, fn_out;
@@ -44,49 +43,78 @@ public:
 
     Matrix2D<double> A3D;
 
-    void read(int argc, char **argv)
+    void defineParams()
     {
-        fn_in = getParameter(argc, argv, "-i");
-        fn_out = getParameter(argc, argv, "-o");
-        PDBmode=checkParameter(argc, argv, "-pdb");
-        centerPDB=checkParameter(argc,argv, "-center_pdb");
+        addUsageLine("Apply a geometrical transformation to a phantom description or PDB.");
+        addParamsLine(" -i <file>       : Phantom description file (.descr) or PDB (.pdb)");
+        addParamsLine("[-o <file=\"\">] : Phantom description file (.descr) or PDB (.pdb)");
+        addParamsLine(" --operation <op>: Operation to perform");
+        addParamsLine("      where <op>");
+        addParamsLine("            shift <x> <y> <z> : Shift vector");
+        addParamsLine("            scale <x> <y> <z> : Scale vector");
+        addParamsLine("            rotate_euler <rot> <tilt> <psi> :Rotate with these Euler angles ");
+        addParamsLine("            rotate_align_with_z <x> <y> <z> : Align (x,y,z) with Z");
+        addParamsLine("            rotate_axis <x> <y> <z> <ang>: Rotate <ang> degrees around (x,y,z)");
+        addParamsLine(" [--center_pdb]  : Substract the center of mass from coordinates.");
+        addParamsLine("                 :+Only valid for PDB files");
+        addExampleLine("xmipp_phantom_transform -i model.pdb -o shifted.pdb --operation shift 1 2 3");
+    }
+
+    void readParams()
+    {
+        fn_in = getParam("-i");
+        fn_out = getParam("-o");
+        if (fn_out=="")
+        	fn_out=fn_in;
+        PDBmode=fn_in.contains(".pdb");
+        String operation;
+        shift.initZeros(3);
+        scale.resize(3);
+        scale.initConstant(1);
+        A3D.initIdentity(4);
         Euler_mode = Align_mode = Axis_mode = false;
-        if (checkParameter(argc, argv, "-euler"))
+        centerPDB = checkParam("--center_pdb");
+        operation=getParam("--operation");
+        if (operation=="shift")
+        {
+            double x=getDoubleParam("--operation",1);
+            double y=getDoubleParam("--operation",2);
+            double z=getDoubleParam("--operation",3);
+            shift=vectorR3(x,y,z);
+        }
+        else if (operation=="scale")
+        {
+            double x=getDoubleParam("--operation",1);
+            double y=getDoubleParam("--operation",2);
+            double z=getDoubleParam("--operation",3);
+            scale=vectorR3(x,y,z);
+        }
+        else if (operation=="rotate_euler")
         {
             Euler_mode = true;
-            int i = paremeterPosition(argc, argv, "-euler");
-            if (i + 3 >= argc)
-                REPORT_ERROR(ERR_ARG_MISSING, "Not enough parameters after -euler");
-            rot  = textToFloat(argv[i+1]);
-            tilt = textToFloat(argv[i+2]);
-            psi  = textToFloat(argv[i+3]);
+            rot  = getDoubleParam("--operation",1);
+            tilt = getDoubleParam("--operation",2);
+            psi  = getDoubleParam("--operation",3);
             Euler_angles2matrix(rot, tilt, psi, A3D, true);
         }
-        else if (checkParameter(argc, argv, "-alignWithZ"))
+        else if (operation=="rotate_align_with_z")
         {
             Align_mode = true;
-            axis = getVectorParameter(argc, argv, "-alignWithZ", 3);
+            double x=getDoubleParam("--operation",1);
+            double y=getDoubleParam("--operation",2);
+            double z=getDoubleParam("--operation",3);
+            axis=vectorR3(x,y,z);
             alignWithZ(axis, A3D);
         }
-        else if (checkParameter(argc, argv, "-axis"))
+        else if (operation=="rotate_axis")
         {
             Axis_mode = true;
-            axis = getVectorParameter(argc, argv, "-axis", 3);
-            ang = textToFloat(getParameter(argc, argv, "-ang"));
+            double x=getDoubleParam("--operation",1);
+            double y=getDoubleParam("--operation",2);
+            double z=getDoubleParam("--operation",3);
+            double ang=getDoubleParam("--operation",4);
+            axis=vectorR3(x,y,z);
             rotation3DMatrix(ang, axis, A3D);
-        }
-        else
-            A3D.initIdentity(4);
-        if (checkParameter(argc, argv, "-shift"))
-            shift = getVectorParameter(argc, argv, "-shift", 3);
-        else
-            shift.initZeros(3);
-        if (checkParameter(argc, argv, "-scale"))
-            scale = getVectorParameter(argc, argv, "-scale", 3);
-        else
-        {
-            scale.resize(3);
-            scale.initConstant(1);
         }
 
         // Apply shift
@@ -108,6 +136,8 @@ public:
 
     void show()
     {
+        if (verbose==0)
+            return;
         std::cout << "Input file : " << fn_in  << std::endl
         << "Output file: " << fn_out << std::endl;
         if (PDBmode)
@@ -124,60 +154,24 @@ public:
             << axis.transpose() << std::endl;
     }
 
-    void usage()
+    void run()
     {
-        std::cerr << "Usage: phantom_transform [Options]\n"
-        << "   -i <input filename>              : Phantom description file\n"
-        << "   -o <output filename>             : Phantom description file\n"
-        << "  [-pdb]                            : Use PDBs instead of phantom descriptions\n"
-        << "  [-center_pdb]                     : Substract the center of mass from coordinates\n"
-        << "  [-euler <rot> <tilt> <psi>        : Rotate with these Euler angles\n"
-        << "  [-alignWithZ [<x>,<y>,<z>]]     : Align (x,y,z) with Z\n"
-        << "                                      Notice that brackets for the\n"
-        << "                                      vector must be written and do not\n"
-        << "                                      represent optional parameters\n"
-        << "  [-axis [<x>,<y>,<z>] -ang <ang>]  : Rotate <ang> degrees around (x,y,z),\n"
-        << "                                      by default (0,0,1)\n"
-        << "  [-shift [<x>,<y>,<z>]             : Shift vector\n"
-        << "  [-scale [<x>,<y>,<z>]             : Scale vector\n"
-        ;
+        show();
+        if (PDBmode)
+            applyGeometryToPDBFile(fn_in, fn_out, A3D, centerPDB);
+        else
+        {
+            Phantom P;
+            P.read(fn_in, false); // Read phantom without applying scale
+            P.selfApplyGeometry(A3D, IS_NOT_INV);
+            P.write(fn_out);
+        }
     }
 };
-
-bool process_phantom(const FileName &fn_in, const FileName &fn_out,
-                     const Phantom_transform_parameters *prm)
-{
-    Phantom P;
-    P.read(fn_in, false); // Read phantom without applying scale
-    P.selfApplyGeometry(prm->A3D, IS_NOT_INV);
-    P.write(fn_out);
-    return true;
-}
 
 int main(int argc, char **argv)
 {
     Phantom_transform_parameters prm;
-    try
-    {
-        prm.read(argc, argv);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(1);
-    }
-    try
-    {
-        prm.show();
-        if (prm.PDBmode)
-            applyGeometry(prm.fn_in, prm.fn_out, prm.A3D, prm.centerPDB);
-        else
-            process_phantom(prm.fn_in, prm.fn_out, &prm);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE << std::endl;
-    }
-    return 0;
+    prm.read(argc, argv);
+    return prm.tryRun();
 }
