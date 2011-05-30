@@ -31,5 +31,5 @@ int main(int argc, char **argv)
 {
     ProgXrayImport prm;
     prm.read(argc, argv);
-    prm.tryRun();
+    return prm.tryRun();
 }
