@@ -1,4 +1,5 @@
 #include "threads.h"
+#include "error.h"
 #include <stdio.h>
 #include <iostream>
 
@@ -82,8 +83,15 @@ void * _threadMain(void * data)
         //After awaked check what to do
         if (thMgr->workFunction != NULL)
         {
+        	try {
             thMgr->workFunction(*thArg);
             thMgr->wait(); //wait for finish together
+        	} catch (XmippError XE)
+        	{
+        		std::cerr << XE << std::endl
+        		          << "In thread " << thArg->thread_id << std::endl;
+        		pthread_exit(&XE.__errno);
+        	}
         }
         else //exit thread
         {
