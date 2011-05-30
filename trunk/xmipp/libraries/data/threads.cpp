@@ -90,7 +90,7 @@ void * _threadMain(void * data)
         	{
         		std::cerr << XE << std::endl
         		          << "In thread " << thArg->thread_id << std::endl;
-        		pthread_exit(&XE.__errno);
+        		pthread_exit(NULL);
         	}
         }
         else //exit thread
