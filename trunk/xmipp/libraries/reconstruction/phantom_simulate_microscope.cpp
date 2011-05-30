@@ -91,6 +91,8 @@ void ProgSimulateMicroscope::defineParams()
     addParamsLine("or --noNoise              : do not add any noise, only simulate the CTF");
     addExampleLine("Generate a set of images with the CTF applied without any noise", false);
     addExampleLine("   xmipp_phantom_simulate_microscope -i g0ta.sel --oroot g1ta --ctf untilt_ARMAavg.ctfparam");
+    addExampleLine("Generate a set of images with a target SNR", false);
+    addExampleLine("   xmipp_phantom_simulate_microscope -i g0ta.sel --oroot g2ta --ctf untilt_ARMAavg.ctfparam --targetSNR 0.2 --after_ctf_noise");
     addExampleLine("Generate a set of images with the CTF applied and noise before and after CTF", false);
     addExampleLine("   xmipp_phantom_simulate_microscope -i g0ta.sel --oroot g2ta --ctf untilt_ARMAavg.ctfparam --noise 4.15773 --after_ctf_noise");
 }
