@@ -45,8 +45,6 @@ ContinueAtIteration =1
     NOTE:If you do not know what are you doing make it equal to False
 """
 IsIter =False
-#{expert} Out files Root name
-projOutRootName='out'
 
 #{expert}{file} Select the input volume
 """Name of the reference volume by default Iter_X_reconstruction.vol
@@ -60,17 +58,13 @@ szInputVolumeName=''
 szDocFileRef=''
 
 # {expert} Mask reference volume?
-doMask =False
+doMask =True
 
 #Crown Mask radius (inner)
 dRradiusMin=39
 
 #{expert}  iCrown mask radius center (outter)
 dRradiusMax=64
-
-
-# {expert} Create Reference Library
-doRefDirName =True
 
 # {expert} Backup Experimental Proj. angles
 doBackupProjectionAngles =True
@@ -115,10 +109,13 @@ DoParallel=True
 """ This option provides shared-memory parallelization on multi-core machines. 
     It does not require any additional software, other than xmipp
 """
-NumberOfThreads=1
+NumberOfThreads=2
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses=7
+NumberOfMpiProcesses=2
+
+# minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
+MpiJobSize ='3'
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -156,8 +153,11 @@ AnalysisScript='visualize_partial_projection_subtraction.py'
 myName='partial_projection_subtraction'
 run_file1='./readDocfileAndPairExperimentalAndReferenceImages_v3.sh'
 subtractionDir ='Subtraction'
-volsDir='vols'
+referenceDir   ='Refs'
+referenceStack   ='ref'
+volsDir='Vols'
 tempFileName=''
+current_angles='current_angles.doc'
 import os,sys,shutil,time
 scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/lib'
 sys.path.append(scriptdir) # add default search path
@@ -174,7 +174,9 @@ from xmipp import *
 import glob
 
 def actionsToBePerformedInsideLoop(_log):
+    a=0
     for iterN in range(1, defocusGroupNo):
+        #Create auxiliary metadata with image names , angles and CTF
         _Parameters = {
                        'CTFgroupName': defGroups[iterN]
                       ,'DocFileRef':DocFileRef[iterN]
@@ -182,59 +184,160 @@ def actionsToBePerformedInsideLoop(_log):
                       }
         command = "joinImageCTF"
         _VerifyFiles = []
-        _VerifyFiles.append(DocFileRef[iterN])
+        auxFilename = FileName(DocFileRef[iterN])
+        _VerifyFiles.append(auxFilename.removeBlockName())
         _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
         
         
-        #reconstruct
-        #project
-        #apply transform
-        #resta
+        #reconstruct each CTF group
+        _Parameters = {
+                       'DocFileRef': DocFileRef[iterN]
+                      , 'DoParallel' : DoParallel
+                      , 'MpiJobSize':MpiJobSize
+                      , 'NumberOfMpiProcesses':NumberOfMpiProcesses
+                      , 'NumberOfThreads':NumberOfThreads
+                      , 'reconstructedVolume':reconstructedVolume[iterN]
+                      , 'SymmetryGroup': SymmetryGroup
+                      , 'SystemFlavour':SystemFlavour
+                      }
+        command = "reconstructVolume"
+        _VerifyFiles = []
+        _VerifyFiles.append(reconstructedVolume[iterN])
+        _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+        #mask volume before projection
+        
+        _Parameters = {
+                       'dRradiusMax':dRradiusMax
+                      ,'dRradiusMin':dRradiusMin
+                      ,'maskReconstructedVolume':maskReconstructedVolume[iterN]
+                      ,'reconstructedVolume':reconstructedVolume[iterN]
+                      }
+        command = "maskVolume"
+        _VerifyFiles = []
+        auxFilename = FileName(DocFileRef[iterN])
+        _VerifyFiles.append(maskReconstructedVolume[iterN])
+        _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+
+        #project reconstructe4d volumes
+        _Parameters = {
+                      'AngSamplingRateDeg':AngSamplingRateDeg
+                      ,'DocFileRef':DocFileRef[iterN]
+                      ,'DoParallel' : DoParallel
+                      ,'maskReconstructedVolume':maskReconstructedVolume[iterN]
+                      ,'MaxChangeInAngles':MaxChangeInAngles
+                      , 'MpiJobSize':MpiJobSize
+                      ,'NumberOfMpiProcesses':NumberOfMpiProcesses
+                      ,'NumberOfThreads':NumberOfThreads
+                      ,'referenceStack':referenceStack[iterN]
+                      ,'SymmetryGroup': SymmetryGroup
+                      ,'SystemFlavour':SystemFlavour
+                      }
+        command = "createProjections"
+        _VerifyFiles = []
+        _VerifyFiles.append(referenceStack[iterN])
+        tmp = referenceStack[iterN]
+        _VerifyFiles.append(tmp.replace('.stk','.doc'))
+        _VerifyFiles.append(tmp.replace('.stk','_sampling.txt'))
+        
+        _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+                 
+#        #apply transform
+#        #resta
+#    _CTFDatName=CTFDatName
+#    if(len(CTFDatName)<1 and doCTFCorrection):
+#        if(len(partial_protocol.CTFDatName)>1):
+#            _CTFDatName= '../' + partial_protocol.CTFDatName
+#    
+#    # revisar si realmente hay que pasarle _szDocFileRef a la siguiente funcion     
+#    self.readDocfileAndPairExperimentalAndReferenceImages(_szDocFileRef)
+#    
+#    # Al finalizar cada iteracion borramos el volumen reconstruido
+#    os.rm(reconstructedVolume)
+         
         
 def otherActionsToBePerformedBeforeLoop():
     #Create directories
-    tmpFileName = os.path.join(Iteration_Working_Directory,subtractionDir)
-    tmpFileName = os.path.join(ProjectDir,tmpFileName)
     _Parameters = {
-          'path':tmpFileName
+          'path':subtractionDir
         }
     command = 'createDir2'
     _dataBase.insertCommand(command, _Parameters, 1)
     
-    tmpFileName = os.path.join(subtractionDir,volsDir)
-    tmpFileName = os.path.join(Iteration_Working_Directory,tmpFileName)
-    tmpFileName = os.path.join(ProjectDir,tmpFileName)
     _Parameters = {
-          'path':tmpFileName
+          'path':volsDir
         }
     command = 'createDir2'
     _dataBase.insertCommand(command, _Parameters, 1)
+    
+    _Parameters = {
+          'path':referenceDir
+        }
+    command = 'createDir2'
+    _dataBase.insertCommand(command, _Parameters, 1)
+
+def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
+
+    global Iteration_Working_Directory
+    Iteration_Working_Directory=os.path.join(WorkingDir,'Iter_'+ str(iterationNo))
+    
+    global subtractionDir  
+    subtractionDir = os.path.join(Iteration_Working_Directory,subtractionDir)
+    
+    global volsDir
+    volsDir = os.path.join(subtractionDir,volsDir)
+
+    global referenceDir
+    referenceDir = os.path.join(subtractionDir,referenceDir)
+    
+
+    
+    
+    global szInputVolumeName
+    if ( len(szInputVolumeName) < 1 ):
+        szInputVolumeName = 'Iter_'+str(iterationNo)+'_reconstruction.vol'
+
+    global MaxChangeInAngles
+    if(MaxChangeInAngles > 100):
+        MaxChangeInAngles=-1
+
+    global filename_currentAngles
+    tmpFilename = 'Iter_'+ str(iterationNo) + '_' + current_angles
+    filename_currentAngles = os.path.join(Iteration_Working_Directory,tmpFilename)
+    
     tmpFileName = os.path.join(WorkingDir,'CtfGroups/ctf_group??????.sel')
     global defGroups
     defGroups=['']
     defGroups +=glob.glob(tmpFileName)
+    
     global defocusGroupNo
     defocusGroupNo = len(defGroups)
+    
     global DocFileRef
     DocFileRef=['']
-    tmpFileName = FileName()
+    tmpFileName = FileName(filename_currentAngles)
+    tmpFileName = tmpFileName.withoutExtension()
     for iterN in range(1, defocusGroupNo ):
-        tmpFileName.
-        tmpDocFileRef = 'ctfgroup_' + str(iterN).zfill(6) + '@' + filename_currentAngles ctfgroups_' + 
-        DocFileRef.append(tmpDocFileRef)
-    
-def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
-    global Iteration_Working_Directory
-    Iteration_Working_Directory=os.path.join(WorkingDir,'Iter_'+ str(iterationNo))
-    global szInputVolumeName
-    if ( len(szInputVolumeName) < 1 ):
-        szInputVolumeName = 'Iter_'+str(iterationNo)+'_reconstruction.vol'
-    global MaxChangeInAngles
-    if(MaxChangeInAngles > 100):
-        MaxChangeInAngles=-1
-    global filename_currentAngles
-    tmpFilename = 'Iter_'+ str(iterationNo) + '_current_angles.doc'
-    filename_currentAngles = os.path.join(Iteration_Working_Directory,tmpFilename)
+        tmpDocFileRef = 'ctfgroup_' + str(iterN).zfill(6) + '@' + tmpFileName + '_ctfgroups.doc'
+        DocFileRef.append(tmpDocFileRef
+                          )
+    global reconstructedVolume
+    reconstructedVolume = [""]
+    for iterN in range(1, defocusGroupNo ):
+        tmpReconstruct = os.path.join(volsDir, 'rec_ctfg' + str(iterN).zfill(6) + '.vol')
+        reconstructedVolume.append(tmpReconstruct)
+        
+    global maskReconstructedVolume
+    maskReconstructedVolume = [""]
+    for iterN in range(1, defocusGroupNo ):
+        tmpReconstruct = os.path.join(volsDir, 'rec_ctfg' + str(iterN).zfill(6) + '_mask.vol')
+        maskReconstructedVolume.append(tmpReconstruct)
+
+    global referenceStack
+    tmp = referenceStack
+    referenceStack = [""]
+    for iterN in range(1, defocusGroupNo ):
+        tmpReconstruct = os.path.join(referenceDir, tmp + '_' + str(iterN).zfill(6) + '.stk')
+        referenceStack.append(tmpReconstruct)
 
 
 def ImportProtocol():
@@ -261,13 +364,6 @@ def ImportProtocol():
         MaxChangeInAngles=arg.getComponentFromVector(eval(fn +'.MaxChangeInAngles'),iterationNo)
     global refDirName
     refDirName=  eval(fn +'.LibraryDir')
-    global ProjOutRootName
-    if(doRefDirName):
-        ProjOutRootName=projOutRootName
-    else:
-        #Uncomment when new projectin matching versin is ready
-        #ProjOutRootName=eval(fn +'.ProjectLibraryBasename')
-        ProjOutRootName='ref'
         
 def mainLoop(_log, iter):
     global ContinueAtIteration
