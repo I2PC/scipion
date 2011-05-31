@@ -2250,6 +2250,8 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
             MDref.write(fn_tmp + "_refs.xmd");
         else
             MDref.append(fn_tmp + "_refs.xmd");
+        if (outputType == OUT_REFS)
+            outRefsMd = fn_tmp + "_refs.xmd";
         // Write out log-file
         MetaData mdLog;
         objId = mdLog.addObject();

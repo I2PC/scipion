@@ -231,6 +231,15 @@ public:
     /** Number of threads */
     int threads;
 
+    /** This will be used for comunication from 2d and 3d.
+     * in the mlf_align2d case, also will be produced
+     * cref and noise references
+     */
+    String outRefsMd;
+
+    /** This is only for MLF case */
+    MultidimArray<double>  spectral_signal;
+
     /** Set sampling stuff; flipping matrices, psi_step etc.
      * Also create 0, 90, 180 & 270 degree flipping, as well as mirror
      */

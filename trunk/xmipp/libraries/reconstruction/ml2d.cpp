@@ -35,6 +35,7 @@ ML2DBaseProgram::ML2DBaseProgram()
     defaultNiter = 100;
     blocks = 1;
     factor_nref = 1;
+    outRefsMd = "";
 }
 
 void ML2DBaseProgram::initSamplingStuff()
