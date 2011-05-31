@@ -196,16 +196,17 @@ public:
 
     /** Read image from file with a header applied.
      */
-    int readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts = false, DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
+    int readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts = false,
+        DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
 
     /** Read image from file.
      */
     int readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts = false,
-                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
 
     /** Read an image from metadata, filename is taken from MDL_IMAGE */
     int readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false,
-                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES );
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
 
     /** Read image mapped from file.
      */

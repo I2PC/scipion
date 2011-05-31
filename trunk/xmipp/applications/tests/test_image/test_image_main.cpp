@@ -1,6 +1,7 @@
 #include <data/image.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
+#include <data/metadata.h>
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
 // This test is named "Size", and belongs to the "MetadataTest"
 // test case.
@@ -22,6 +23,7 @@ protected:
         FileName filename(pBuf);
         filename = filename.removeFilename();
         //get example images/staks
+        baseName = filename;
         imageName = filename + "/../applications/tests/test_image/singleImage.spi";
         stackName = filename + "/../applications/tests/test_image/smallStack.stk";
         myImage.read(imageName);
@@ -33,6 +35,7 @@ protected:
     Image<double> myStack;
     FileName imageName;
     FileName stackName;
+    FileName baseName;
 
 };
 
@@ -52,6 +55,22 @@ TEST_F( ImageTest, getEulerAngles)
     EXPECT_DOUBLE_EQ(rot, 10.);
     EXPECT_DOUBLE_EQ(tilt, 20.);
     EXPECT_DOUBLE_EQ(psi, 30.);
+}
+
+TEST_F( ImageTest, readApplyGeo)
+{
+    FileName auxFilename(baseName + "/../applications/tests/test_image/test2.spi");
+    MetaData MD;
+    size_t id = MD.addObject();
+    MD.setValue(MDL_IMAGE, auxFilename, id);
+    MD.setValue(MDL_ANGLEPSI, 45., id);
+    Image<double> auxImage, auxImage2;
+    auxImage.readApplyGeo(MD,id, false, DATA, ALL_IMAGES, false);
+    auxImage2.read(auxFilename.removeAllExtensions()+"_wrap_false.spi");
+    EXPECT_TRUE(auxImage == auxImage2);
+    auxImage.readApplyGeo(MD,id, false, DATA, ALL_IMAGES, true);
+    auxImage2.read(auxFilename.removeAllExtensions()+"_wrap_true.spi");
+    EXPECT_TRUE(auxImage == auxImage2);
 }
 
 TEST_F( ImageTest, writeIMAGICimage)

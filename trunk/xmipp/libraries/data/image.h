@@ -803,7 +803,7 @@ public:
 #include "rwTIFF.h"
 
 protected:
-    void applyGeo(const MDRow &row, bool only_apply_shifts = false)
+    void applyGeo(const MDRow &row, bool only_apply_shifts = false, bool wrap = WRAP)
     {
         //This implementation does not handle stacks,
         //read in a block
@@ -855,7 +855,7 @@ protected:
             {
                 MultidimArray<T> tmp=MULTIDIM_ARRAY(*this);
                 applyGeometry(BSPLINE3, MULTIDIM_ARRAY(*this), tmp,
-                              A, IS_NOT_INV, WRAP);
+                              A, IS_NOT_INV, wrap);
             }
         }
     }

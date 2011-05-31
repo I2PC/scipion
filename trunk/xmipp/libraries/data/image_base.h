@@ -332,15 +332,15 @@ public:
      * This function can apply geometrical transformations, but cannot map the image in disk
      */
     int readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts = false,
-                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
 
     /** Read an image from metadata, filename is provided*/
     int readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts = false,
-                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
 
     /** Read an image from metadata, filename is taken from MDL_IMAGE */
     int readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false,
-                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
 
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
@@ -652,7 +652,7 @@ protected:
     void closeFile(ImageFHandler* hFile = NULL) const;
 
     /* Internal apply geometrical transformations */
-    virtual void applyGeo(const MDRow &row, bool only_apply_shifts = false) = 0;
+    virtual void applyGeo(const MDRow &row, bool only_apply_shifts = false, bool wrap = WRAP) = 0;
 
     /* Internal read image file method.
      */
