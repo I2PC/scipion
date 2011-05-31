@@ -35,11 +35,10 @@ bool directions_are_unique(double rot,  double tilt,
     bool are_unique = true;
     double rot2p, tilt2p, psi2p, psi2 = 0.;
     double diff_rot, diff_tilt;
-    Matrix2D<double>  L(4, 4), R(4, 4);
+    Matrix2D<double>  L(3, 3), R(3, 3);
 
     for (int isym = 0; isym <= SL.SymsNo(); isym++)
     {
-
         if (isym == 0)
         {
             rot2p = rot2;
@@ -48,35 +47,39 @@ bool directions_are_unique(double rot,  double tilt,
         }
         else
         {
-            SL.get_matrices(isym - 1, L, R);
-            L.resize(3, 3); // Erase last row and column
-            R.resize(3, 3); // as only the relative orientation
-            // is useful and not the translation
+            SL.get_matrices(isym - 1, L, R,false);
             Euler_apply_transf(L, R, rot2, tilt2, psi2, rot2p, tilt2p, psi2p);
         }
 
-        diff_rot = ABS(realWRAP(rot - rot2p, -180, 180));
-        diff_tilt = ABS(realWRAP(tilt - tilt2p, -180, 180));
+        double aux=rot - rot2p;
+        diff_rot = fabs(realWRAP(aux, -180, 180));
+        aux=tilt - tilt2p;
+        diff_tilt = fabs(realWRAP(aux, -180, 180));
         if ((rot_limit - diff_rot) > 1e-3 && (tilt_limit - diff_tilt) > 1e-3) are_unique = false;
         Euler_another_set(rot2p, tilt2p, psi2p, rot2p, tilt2p, psi2p);
-        diff_rot = ABS(realWRAP(rot - rot2p, -180, 180));
-        diff_tilt = ABS(realWRAP(tilt - tilt2p, -180, 180));
+        aux=rot - rot2p;
+        diff_rot = fabs(realWRAP(aux, -180, 180));
+        aux=tilt - tilt2p;
+        diff_tilt = fabs(realWRAP(aux, -180, 180));
         if ((rot_limit - diff_rot) > 1e-3 && (tilt_limit - diff_tilt) > 1e-3) are_unique = false;
         if (!include_mirrors)
         {
             Euler_up_down(rot2p, tilt2p, psi2p, rot2p, tilt2p, psi2p);
-            diff_rot = ABS(realWRAP(rot - rot2p, -180, 180));
-            diff_tilt = ABS(realWRAP(tilt - tilt2p, -180, 180));
+            aux=rot - rot2p;
+            diff_rot = fabs(realWRAP(aux, -180, 180));
+            aux=tilt - tilt2p;
+            diff_tilt = fabs(realWRAP(aux, -180, 180));
             if ((rot_limit - diff_rot) > 1e-3 && (tilt_limit - diff_tilt) > 1e-3) are_unique = false;
             Euler_another_set(rot2p, tilt2p, psi2p, rot2p, tilt2p, psi2p);
-            diff_rot = ABS(realWRAP(rot - rot2p, -180, 180));
-            diff_tilt = ABS(realWRAP(tilt - tilt2p, -180, 180));
+            aux=rot - rot2p;
+            diff_rot = fabs(realWRAP(aux, -180, 180));
+            aux=tilt - tilt2p;
+            diff_tilt = fabs(realWRAP(aux, -180, 180));
             if ((rot_limit - diff_rot) > 1e-3 && (tilt_limit - diff_tilt) > 1e-3) are_unique = false;
         }
     }
 
     return are_unique;
-
 }
 
 double distance_directions(double rot1, double tilt1,

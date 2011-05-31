@@ -394,15 +394,16 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                 // Divide by Zdim because of the
                 // the extra dimension added
                 // and padding differences
-
-                for (size_t k=threadParams->myThreadID; k<=FINISHINGZ(parent->FourierWeights); k+=parent->numThreads)
-                    for (size_t i=STARTINGY(parent->FourierWeights); i<=FINISHINGY(parent->FourierWeights); i++)
-                        for (size_t j=STARTINGX(parent->FourierWeights); j<=FINISHINGX(parent->FourierWeights); j++)
+                MultidimArray<double> &mFourierWeights=parent->FourierWeights;
+                for (size_t k=threadParams->myThreadID; k<=FINISHINGZ(mFourierWeights); k+=parent->numThreads)
+                    for (size_t i=STARTINGY(mFourierWeights); i<=FINISHINGY(mFourierWeights); i++)
+                        for (size_t j=STARTINGX(mFourierWeights); j<=FINISHINGX(mFourierWeights); j++)
                         {
-                            if (parent->FourierWeights(k,i,j)>ACCURACY)
+                        	double weight_kij=A3D_ELEM(mFourierWeights,k,i,j);
+                            if (weight_kij>ACCURACY)
                             {
-                                parent->FourierWeights(k,i,j)=1/parent->FourierWeights(k,i,j);
-                                A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*A3D_ELEM(parent->FourierWeights,k,i,j);
+                            	A3D_ELEM(mFourierWeights,k,i,j)=1/weight_kij;
+                                A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*A3D_ELEM(mFourierWeights,k,i,j);
                             }
                             else
                                 A3D_ELEM(parent->VoutFourier,k,i,j)=0;
@@ -556,14 +557,16 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                     double z = intz - ZZ(real_position);
                                     double z2 = z * z;
                                     int iz = intWRAP(intz, 0, zsize_1);
-                                    int izneg = intWRAP(-iz,0,zsize_1);
+                                    int miz=-iz;
+                                    int izneg = intWRAP(miz,0,zsize_1);
 
                                     for (int inty = YY(corner1); inty <= YY(corner2); inty++)
                                     {
                                         double y = inty - YY(real_position);
                                         double y2z2 = y * y + z2;
                                         int iy = intWRAP(inty, 0, zsize_1);
-                                        int iyneg = intWRAP(-iy, 0, zsize_1);
+                                        int miy=-iy;
+                                        int iyneg = intWRAP(miy, 0, zsize_1);
 
                                         for (int intx = XX(corner1); intx <= XX(corner2); intx++)
                                         {
@@ -600,7 +603,8 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             {
                                                 izp = izneg;
                                                 iyp = iyneg;
-                                                ixp = intWRAP(-ix,0,zsize_1);
+                                                int mix=-ix;
+                                                ixp = intWRAP(mix,0,zsize_1);
                                                 conjugate=true;
                                             }
                                             else
@@ -970,14 +974,16 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
     double pad_relation= ((double)padding_factor_proj/padding_factor_vol);
     pad_relation = (pad_relation * pad_relation * pad_relation);
 
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(MULTIDIM_ARRAY(Vout))
+    MultidimArray<double> &mVout=Vout();
+    double ipad_relation=1.0/pad_relation;
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(mVout)
     {
-        // COSS: *** Avoid the square root
-        double factor = Fourier_blob_table(ROUND(sqrt((double)(k*k+i*i+j*j))
-                                           *iDeltaFourier));
+			// COSS: *** Avoid the square root
+    	double aux=sqrt((double)(k*k+i*i+j*j))*iDeltaFourier;
+        double factor = Fourier_blob_table(ROUND(aux));
         //if(k==0 && i==0 && j > 0)
         // std::cerr << j<<" "<<factor << std::endl;
-        Vout(k,i,j) /= (factor/pad_relation);
+        A3D_ELEM(mVout,k,i,j) /= factor*ipad_relation;
     }
 
     Vout.write(out_name);
