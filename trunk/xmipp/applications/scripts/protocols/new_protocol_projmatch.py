@@ -61,7 +61,7 @@ IsIter =False
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =22
+ContinueAtIteration =1
 
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, 
@@ -71,8 +71,9 @@ CleanUpFiles =False
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
-"""
 ProjectDir='/gpfs/fs1/home/bioinfo/roberto/PhantomIco'
+"""
+ProjectDir='/home/roberto/PhantomIco'
 
 # {expert} Directory name for logfiles:
 LogDir ='Logs'
@@ -1016,6 +1017,7 @@ def actionsToBePerformedInsideLoop(_log):
             command = "execute_mask"
             _VerifyFiles = []
             _VerifyFiles.append(maskedFileNamesIter[iterN][refN])
+            _VerifyFiles.append(maskedFileNamesIter[iterN][refN])
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
 
             # angular_project_library
@@ -1056,6 +1058,7 @@ def actionsToBePerformedInsideLoop(_log):
             for i in range (1,NumberOfCtfGroups+1):
                 _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.txt")
                         
+            _VerifyFiles.append("potito")
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             # projectionMatching    
             _Parameters = {

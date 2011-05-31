@@ -230,6 +230,8 @@ class dataBase:
     def commit(self):
         self.connection.commit()
     def mainLoop(self, _log, stepNumber, _import):
+        from  bcolors import *
+        #print "kk", bcolors.OKBLUE,"kk"
         import pprint
         exec(_import)
         #check if tableName and tablename_aux are identical if not abort
@@ -252,7 +254,12 @@ class dataBase:
             command=row['command']
             dict = pickle.loads(str(row["parameters"]))
             if(self.PrintWrapperCommand):
-                print "--------\nExecution of wrapper: %d (iter=%d)"%(id,iter), (command.split())[-1]
+                if iter == 99999:
+                    siter='N/A'
+                else:
+                    siter=str(iter)
+                print bcolors.OKBLUE,"--------\nExecution of wrapper: %d (iter=%s)"%(id,siter),
+                print bcolors.HEADER,(command.split())[-1],bcolors.ENDC
             #print in column format rather tahn in raw, easier to read 
             if(self.PrintWrapperParameters):
                 pp = pprint.PrettyPrinter(indent=4,width=20)
@@ -263,7 +270,7 @@ class dataBase:
 
             sqlCommand = "update " + self.tableInsertOriginal + " set init   = CURRENT_TIMESTAMP where id=%d" % id
             self.connection.execute(sqlCommand)
-            print 'command',row["command"]
+            print 'command: ', row["command"]
             exec (row["command"] + '(_log, dict)')
             if(self.verify and row["fileNameList"]):
                 _list =pickle.loads(str(row["fileNameList"]))

@@ -175,7 +175,7 @@ def assign_images_to_references(_log,dict):
     MDout.setComment("metadata with  images, the winner reference as well as the ctf group")
 
     print "INSIDE11 assign_images_to_references"
-    mycounter=0L
+    mycounter=0
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         auxInputdocfile = 'ctfGroup' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
@@ -188,7 +188,7 @@ def assign_images_to_references(_log,dict):
                 MDSort.setValue(MDL_REF,t,i)
     MDSort.removeDuplicates()
     for id in MDSort:
-        MDSort.setValue(MDL_ORIGINX,mycounter,id)
+        MDSort.setValue(MDL_ORDER,mycounter,id)
         mycounter += 1
     #print "bbb",ProjMatchRootName[1], DocFileInputAngles
     print "INSIDE22 assign_images_to_references"
