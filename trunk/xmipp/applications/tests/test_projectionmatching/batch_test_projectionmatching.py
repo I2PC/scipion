@@ -8,7 +8,7 @@ sys.path.append(scriptdir) # add default search path
 scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
 sys.path.append(scriptdir)
 from xmipp import *
-from ProjMatchActionsToBePerformedBeforeLoop import *;\
+from ProjMatchActionsToBePerformedBeforeLoop import *
 from ProjMatchActionsToBePerformedInLoop import *
 import log, logging
 from distutils.dir_util import mkpath
@@ -32,7 +32,7 @@ class TestProjMatching(unittest.TestCase):
                                 sys.argv[0],
                                 self.WorkingDir)
                 
-    def test_execute_ctf_groups(self):
+    def test_00execute_ctf_groups(self):
         CtfGroupDirectory = os.path.join(self.path,'CtfGroup')
         CtfGroupRootName  = 'ctf'
         dict = {
@@ -75,7 +75,7 @@ class TestProjMatching(unittest.TestCase):
         goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(compareTwoFiles(goldName,testName))
 
-    def test_execute_mask(self):
+    def test_10execute_mask(self):
         maskedFileNamesIter='ProjMatch/new20/Iter_01/masked_reference_ref_01.vol'
         dict = {
                 'DoMask': True,
@@ -85,12 +85,62 @@ class TestProjMatching(unittest.TestCase):
                 'reconstructedFileName': 'ico.vol',
                 'userSuppliedMask': 'mask.vol'
         }
-
+        tmpDirName=os.path.dirname(maskedFileNamesIter)
+        if not os.path.exists(tmpDirName):
+            os.mkdir(tmpDirName)
         execute_mask(self.log,dict)
-        testName = maskedFileNamesIter
-        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(ImgCompare(goldName,testName))
+        testFileName = maskedFileNamesIter
+        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        self.assertTrue(ImgCompare(goldFileName,testFileName))
+        angular_project_library(self.log,dict)
 
+    def test_20angular_project_library(self):
+        dict = {'AngSamplingRateDeg': '1',
+                'CtfGroupSubsetFileName': 'ProjMatch/new20/CtfGroups/ctf_images.sel',
+                'DoCtfCorrection': True,
+                'DoParallel': True,
+                'DoRestricSearchbyTiltAngle': False,
+                'DocFileInputAngles': 'ProjMatch/new20/original_angles.doc',
+                'MaxChangeInAngles': '1000',
+                'MpiJobSize': '1',
+                'NumberOfMpiProcesses': 10,
+                'NumberOfThreads': 1,
+                'OnlyWinner': False,
+                'PerturbProjectionDirections': False,
+                'ProjectLibraryRootName': 'ProjMatch/new20/Iter_01/ReferenceLibrary/gallery_ref_01.stk',
+                'SymmetryGroup': 'i3',
+                'SymmetryGroupNeighbourhood': '',
+                'SystemFlavour': 'TORQUE-OPENMPI',
+                'Tilt0': 40,
+                'TiltF': 90,
+                'maskedFileNamesIter': 'ProjMatch/new20/Iter_01/masked_reference_ref_01.vol'
+        }
+        tmpDirName ='ProjMatch/new20/Iter_01/ReferenceLibrary'
+        if not os.path.exists(tmpDirName):
+            os.mkdir(tmpDirName)
+        angular_project_library(self.log,dict)
+        tmpDirName = os.path.join(tmpDirName,'gallery_ref_01')
+        
+        testFileName = os.path.join(tmpDirName,'.stk')
+        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        self.assertTrue(ImgCompare(goldFileName,testFileName))
+        
+        testFileName = os.path.join(tmpDirName,'.doc')
+        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+        
+        testFileName = os.path.join(tmpDirName,'_sampling.txt')
+        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+        
+        testFileName = os.path.join(tmpDirName,'_group000001_sampling.txt')
+        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+        
+        testFileName = os.path.join(tmpDirName,'_group000002_sampling.txt')
+        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+        
 from  XmippPythonTestResult import XmippPythonTestResult
 
                                         
