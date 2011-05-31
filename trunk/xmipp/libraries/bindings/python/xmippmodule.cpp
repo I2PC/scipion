@@ -431,42 +431,12 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 }
 
 /* readApplyGeo */
-//int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts, DataMode datamode, size_t select_img)
-/*
+//int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId,
+//bool only_apply_shifts, DataMode datamode, size_t select_img)
 static PyObject *
-Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
-{
-    ImageObject *self = (ImageObject*) obj;
+Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs);
 
-    if (self != NULL)
-    {
-        PyObject *md = NULL;
-        PyObject *only_apply_shifts = NULL;
-        size_t objectId = BAD_OBJID;
-        bool boolOnly_apply_shifts;
-        int datamode;
-        size_t select_img;
-        select_img=FIRST_IMAGE;
-        if (PyArg_ParseTuple(args, "OkOi|k", &md,&objectId,&only_apply_shifts,&datamode,&select_img))
-        {
-            try
-            {
-                if (PyBool_Check(only_apply_shifts))
-                    boolOnly_apply_shifts = (only_apply_shifts == Py_True);
-                else
-                    PyErr_SetString(PyExc_TypeError,
-                                    "ImageGeneric::readApplyGeo: Expecting boolean value");
-                self->image->readApplyGeo(md,objectId,boolOnly_apply_shifts,datamode,select_img);
-            }
-            catch (XmippError xe)
-            {
-                PyErr_SetString(PyXmippError, xe.msg.c_str());
-            }
-        }
-    }
-    return NULL;
-}
-*/
+
 /* getPixel */
 static PyObject *
 Image_getPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -548,6 +518,7 @@ Image_getEulerAngles(PyObject *obj, PyObject *args, PyObject *kwargs)
             double rot, tilt, psi;
             self->image->getEulerAngles(rot, tilt, psi);
             return Py_BuildValue("fff", rot, tilt, psi);
+
         }
         catch (XmippError xe)
         {
@@ -623,6 +594,8 @@ static PyMethodDef Image_methods[] =
     {
         { "read", (PyCFunction) Image_read, METH_VARARGS,
           "Read image from disk" },
+        { "readApplyGeo", (PyCFunction) Image_readApplyGeo, METH_VARARGS,
+          "Read image from disk applying geometry in refering metadata" },
         { "write", (PyCFunction) Image_write, METH_VARARGS,
           "Write image to disk" },
         { "getPixel", (PyCFunction) Image_getPixel, METH_VARARGS,
@@ -633,10 +606,6 @@ static PyMethodDef Image_methods[] =
           "Return image dimensions as a tuple" },
         { "getEulerAngles", (PyCFunction) Image_getEulerAngles, METH_VARARGS,
           "Return euler angles as a tuple" },
-        //{ "add", (PyCFunction) Image_add, METH_VARARGS,
-        //  "Add two images" },
-        { "subtract", (PyCFunction) Image_subtract, METH_VARARGS,
-          "Subtract two images" },
         { NULL } /* Sentinel */
     };
 
@@ -2136,6 +2105,39 @@ getMDObjectValue(MDObject * obj)
     return NULL;
 }
 
+static PyObject *
+Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+
+    if (self != NULL)
+    {
+        PyObject *md = NULL;
+        PyObject *only_apply_shifts = Py_False;
+        size_t objectId = BAD_OBJID;
+        bool boolOnly_apply_shifts = false;
+        int datamode = DATA;
+        size_t select_img = ALL_IMAGES;
+
+        if (PyArg_ParseTuple(args, "Ok|Oik", &md, &objectId, &only_apply_shifts, &datamode, &select_img))
+        {
+            try
+            {
+                if (PyBool_Check(only_apply_shifts))
+                    boolOnly_apply_shifts = (only_apply_shifts == Py_True);
+                else
+                    PyErr_SetString(PyExc_TypeError, "ImageGeneric::readApplyGeo: Expecting boolean value");
+                self->image->readApplyGeo(MetaData_Value(md), objectId, boolOnly_apply_shifts, (DataMode)datamode, select_img);
+                Py_RETURN_NONE;
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
+        }
+    }
+    return NULL;
+}
 /***************************************************************/
 /*                            Global methods                   */
 /***************************************************************/
@@ -2811,10 +2813,10 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "LABEL_STRING", (long) LABEL_STRING);
     addIntConstant(dict, "LABEL_VECTOR", (long) LABEL_VECTOR);
     addIntConstant(dict, "LABEL_LONG", (long) LABEL_LONG);
-    addIntConstant(dict, "DATAMODE__NONE", (long) _NONE);
-    addIntConstant(dict, "DATAMODE_HEADER", (long) HEADER);
-    addIntConstant(dict, "DATAMODE__HEADER_ALL", (long) _HEADER_ALL);
-    addIntConstant(dict, "DATAMODE_DATA", (long) DATA);
-    addIntConstant(dict, "DATAMODE__DATA_ALL", (long) _DATA_ALL);
+    addIntConstant(dict, "_NONE", (long) _NONE);
+    addIntConstant(dict, "HEADER", (long) HEADER);
+    addIntConstant(dict, "_HEADER_ALL", (long) _HEADER_ALL);
+    addIntConstant(dict, "DATA", (long) DATA);
+    addIntConstant(dict, "_DATA_ALL", (long) _DATA_ALL);
 
 }

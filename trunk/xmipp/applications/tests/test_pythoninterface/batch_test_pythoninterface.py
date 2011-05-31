@@ -53,6 +53,29 @@ class TestXmippPythonInterface(unittest.TestCase):
         
         imgAdd -= img2
         self.assertEqual(img1, imgAdd)   
+        
+    def test_Image_read(self):
+        imgPath = os.path.join(self.testsPath, "test_pythoninterface", "tinyImage.spi")
+        img = Image(imgPath)        
+        count = 0.
+        for i in range(0, 3):
+            for j in range (0, 3):
+                p = img.getPixel(i, j)
+                self.assertAlmostEquals(p, count)
+                count += 1.
+                
+    def test_Image_readApplyGeo(self):
+        imgPath = os.path.join(self.testsPath, "test_pythoninterface", "tinyRotated.spi")
+        img = Image(imgPath)  
+        imgPath = os.path.join(self.testsPath, "test_pythoninterface", "tinyImage.spi")
+        md = MetaData()
+        id = md.addObject()
+        md.setValue(MDL_IMAGE, imgPath, id)
+        md.setValue(MDL_ANGLEPSI, 90., id)
+        img2 = Image()
+        img2.readApplyGeo(md, id)
+        self.assertEquals(img, img2)
+        
              
     def test_FileName_compose(self):
          fn1 = FileName("kk000001.xmp")
