@@ -72,7 +72,7 @@ class dataBase:
         except sqlite.Error, e:
             print "kk",e
             if(e.args[0].find('database is locked')!= -1):
-                print 'consider deleting the database (placed at Log directory and having extension sqlite'
+                print 'consider deleting the database (',LogName,')'
             sys.exit(1)
 
 
