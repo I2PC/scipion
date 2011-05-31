@@ -79,7 +79,7 @@ void MetaData::copyInfo(const MetaData &md)
 
 
 
-void MetaData::copyMetadata(const MetaData &md)
+void MetaData::copyMetadata(const MetaData &md, bool copyObjects)
 {
     if (this == &md) //not sense to copy same metadata
         return;
@@ -87,8 +87,8 @@ void MetaData::copyMetadata(const MetaData &md)
     copyInfo(md);
     if (!md.activeLabels.empty())
     {
+      if (copyObjects)
         md.myMDSql->copyObjects(this);
-        firstObject(); //set first object as active
     }
     else
     {
@@ -150,6 +150,19 @@ void MetaData::setRow(const MDRow &row, size_t id)
         if (row.containsLabel(label))
             setValue(*(row.getObject(label)), id);
     }
+}
+
+size_t MetaData::addRow(const MDRow &row)
+{
+    size_t id = addObject();
+    //todo: could be improve in a query for insert the entire row
+    FOR_ALL_LABELS()
+    {
+        MDLabel label = (MDLabel)_label;
+        if (row.containsLabel(label))
+            setValue(*(row.getObject(label)), id);
+    }
+    return id;
 }
 
 MetaData::MetaData()

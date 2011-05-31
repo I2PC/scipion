@@ -173,7 +173,7 @@ protected:
     /** Copy all data from another metadata
      * @ingroup MetaDataConstructors
      */
-    void copyMetadata(const MetaData &md);
+    void copyMetadata(const MetaData &md, bool copyObjects = true);
 
     /** This have the same logic of the public one,
      * but doesn't perform any range(wich implies do a size()) checks.
@@ -428,6 +428,9 @@ public:
 
     /** Copy all the values in the input row in the current metadata*/
     void setRow(const MDRow &row, size_t id);
+
+    /** Add a new Row and set values, return the objId of newly added object */
+    size_t addRow(const MDRow &row);
 
     /** Set label values from string representation.
      */
