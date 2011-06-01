@@ -112,7 +112,7 @@ public:
                                int diameter) ;
 
     // Calculate the filter and apply it to a projection
-    void filter_one_image(Projection &proj);
+    void filter_one_image(Projection &proj, Tabsinc &TSINC);
 
     // Calculate the filter for arbitrary tilt geometry in 2D and apply
     void apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<double> &vol) ;

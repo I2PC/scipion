@@ -311,19 +311,28 @@ void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &v
     radius2 = diameter / 2.;
     radius2 = radius2 * radius2;
     dim2 = dim / 2;
+    double a00=MAT_ELEM(A,0,0);
+    double a01=MAT_ELEM(A,0,1);
+    double a10=MAT_ELEM(A,1,0);
+    double a11=MAT_ELEM(A,1,1);
+    double a20=MAT_ELEM(A,2,0);
+    double a21=MAT_ELEM(A,2,1);
 
+    const MultidimArray<double> mImg=img();
     for (i = 0; i < dim; i++)
     {
         z = -i + dim2;   /*** Z points upwards ***/
         z2 = z * z;
+        double xpz=z * a20 + dim2;
+        double ypz=z * a21 + dim2;
         for (j = 0; j < dim; j++)
         {
             y = j - dim2;
             y2 = y * y;
             z2_plus_y2 = z2 + y2;
             x = 0 - dim2;   /***** X for k == 0 *****/
-            xp = x * A(0, 0) + y * A(1, 0) + z * A(2, 0) + dim2;
-            yp = x * A(0, 1) + y * A(1, 1) + z * A(2, 1) + dim2;
+            xp = x * a00 + y * a10 + xpz;
+            yp = x * a01 + y * a11 + ypz;
             for (k = 0; k < dim; k++, xp += A(0, 0), yp += A(0, 1), x++)
             {
                 x2 = x * x;
@@ -338,8 +347,8 @@ void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &v
                 scalex = xp - m;
                 scaley = yp - l;
                 scale1 = 1. - scalex;
-                value1 = scalex * dAij(img(), l, m + 1) + scale1 * dAij(img(), l, m);
-                value2 = scalex * dAij(img(), l + 1, m + 1) + scale1 * dAij(img(), l + 1, m);
+                value1 = scalex * dAij(mImg, l, m + 1) + scale1 * dAij(mImg, l, m);
+                value2 = scalex * dAij(mImg, l + 1, m + 1) + scale1 * dAij(mImg, l + 1, m);
                 value  = scaley * value2 + (1. - scaley) * value1;
                 dAkij(vol, i, j, k) += value;
             }
@@ -348,16 +357,13 @@ void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &v
 }
 
 // Calculate the filter in 2D and apply ======================================
-void ProgRecWbp::filter_one_image(Projection &proj)
+void ProgRecWbp::filter_one_image(Projection &proj, Tabsinc &TSINC)
 {
     MultidimArray< std::complex<double> > IMG;
     Matrix2D<double>  A(3, 3);
     float             factor, argum, weight, x, y;
 
     factor = (float)diameter;
-
-    // Tabulated sinc
-    Tabsinc TSINC(0.001, dim);
 
     Euler_angles2matrix(proj.rot(), -proj.tilt(), proj.psi(), A);
     A = A.inv();
@@ -429,6 +435,7 @@ void ProgRecWbp::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<d
     c = XMIPP_MAX(1, nn / 60);
 
     mat_f = (WBPInfo*)malloc(no_mats * sizeof(WBPInfo));
+    Tabsinc TSINC(0.001, dim);
 
     imgno = 0;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
@@ -450,7 +457,7 @@ void ProgRecWbp::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<d
         if (do_weights)
             proj() *= proj.weight();
         proj().setXmippOrigin();
-        filter_one_image(proj);
+        filter_one_image(proj,TSINC);
         simple_backprojection(proj, vol, diameter);
 
         if (verbose > 0)
