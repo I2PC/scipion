@@ -586,7 +586,7 @@ void XmippMetadataProgram::showProgress()
         progress_bar(time_bar_done);
 }
 
-size_t XmippMetadataProgram::getImageToProcess()
+bool XmippMetadataProgram::getImageToProcess(size_t &objId, size_t &objIndex)
 {
     if (time_bar_done == 0)
         iter = new MDIterator(mdIn);
@@ -594,7 +594,8 @@ size_t XmippMetadataProgram::getImageToProcess()
         iter->moveNext();
 
     ++time_bar_done;
-    return iter->objId;
+    objIndex = iter->objIndex;
+    return ((objId = iter->objId) != BAD_OBJID);
 }
 
 void XmippMetadataProgram::run()
@@ -606,7 +607,7 @@ void XmippMetadataProgram::run()
 
     startProcessing();
 
-    size_t kk = 0;
+    size_t objIndex = 0;
 
     if (!oroot.empty())
     {
@@ -619,8 +620,9 @@ void XmippMetadataProgram::run()
     }
 
     //FOR_ALL_OBJECTS_IN_METADATA(mdIn)
-    while ((objId = getImageToProcess()) != BAD_OBJID)
+    while (getImageToProcess(objId, objIndex))
     {
+      ++objIndex; //increment for composing starting at 1
         mdIn.getValue(MDL_IMAGE, fnImg, objId);
 
         if (fnImg.empty())
@@ -636,9 +638,9 @@ void XmippMetadataProgram::run()
                     oextBaseName = fnImg.getFileFormat();
 
                 if (!baseName.empty() )
-                    fnImgOut.compose(fullBaseName, ++kk, oextBaseName);
+                    fnImgOut.compose(fullBaseName, objIndex, oextBaseName);
                 else if (fnImg.isInStack())
-                    fnImgOut.compose(pathBaseName + (fnImg.withoutExtension()).getDecomposedFileName(), ++kk, oextBaseName);
+                    fnImgOut.compose(pathBaseName + (fnImg.withoutExtension()).getDecomposedFileName(), objIndex, oextBaseName);
                 else
                     fnImgOut = pathBaseName + fnImg.withoutExtension()+ "." + oextBaseName;
             }
@@ -647,7 +649,7 @@ void XmippMetadataProgram::run()
                 if (single_image)
                     fnImgOut = fn_out;
                 else
-                    fnImgOut.compose(++kk, fn_out); // Compose out name to save as stacks
+                    fnImgOut.compose(objIndex, fn_out); // Compose out name to save as stacks
             }
             else
                 fnImgOut = fnImg;

@@ -160,7 +160,7 @@ public:
     /** Create task distributor */
     void createTaskDistributor(const MetaData &mdIn);
     /** Get task to process */
-    size_t getTaskToProcess();
+    bool getTaskToProcess(size_t &objId, size_t &objIndex);
 };
 /** @} */
 #endif /* XMIPP_MPI_H_ */

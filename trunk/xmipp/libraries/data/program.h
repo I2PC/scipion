@@ -284,11 +284,11 @@ protected:
     virtual void finishProcessing();
     virtual void showProgress();
     /** This method will be used to distribute the images to process
-     * it will return the objectId to read from input metadata
+     * it will set the objectId and objectIndexto read from input metadata
      * or -1 if there are no more images to process.
      * This method will be useful for parallel task distribution
      */
-    virtual size_t getImageToProcess();
+    virtual bool getImageToProcess(size_t &objId, size_t &objIndex);
 
 public:
     XmippMetadataProgram();

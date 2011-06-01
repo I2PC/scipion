@@ -65,9 +65,9 @@ public:
     }
 
     //Now use the distributor to grasp images
-    size_t getImageToProcess()
+    bool getImageToProcess(size_t &objId, size_t &objIndex)
     {
-        return getTaskToProcess();
+        return getTaskToProcess(objId, objIndex);
     }
 
     void finishProcessing()

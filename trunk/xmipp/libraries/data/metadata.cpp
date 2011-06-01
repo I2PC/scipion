@@ -87,8 +87,8 @@ void MetaData::copyMetadata(const MetaData &md, bool copyObjects)
     copyInfo(md);
     if (!md.activeLabels.empty())
     {
-      if (copyObjects)
-        md.myMDSql->copyObjects(this);
+        if (copyObjects)
+            md.myMDSql->copyObjects(this);
     }
     else
     {
@@ -1424,16 +1424,25 @@ std::ostream& operator<<(std::ostream& o, const MetaData & mD)
 
 void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
 {
-    objects = new std::vector<size_t>();
-    md.myMDSql->selectObjects(*objects, pQuery);
-    iter = objects->begin();
-    objId = iter < objects->end() ? *iter : BAD_OBJID;
+    std::vector<size_t> objectsVector;
+    md.myMDSql->selectObjects(objectsVector, pQuery);
+    size = objectsVector.size();
+
+    if (size > 0)
+    {
+        objects = new size_t[size];
+        size_t * objPtr = &(objectsVector[0]);
+        memcpy(objects, objPtr, sizeof(size_t) * size);//copy objects id's
+        objIndex = 0;
+        objId = objects[0];
+    }
 }
 
 MDIterator::MDIterator()
 {
     objects = NULL;
     objId = BAD_OBJID;
+    objIndex = BAD_INDEX;
 }
 
 MDIterator::MDIterator(const MetaData &md)
@@ -1450,26 +1459,25 @@ MDIterator::~MDIterator()
 {
     delete objects;
 }
+
 bool MDIterator::moveNext()
 {
     if (objects == NULL)
         return false;
-    iter++;
 
-    if (iter < objects->end())
+    if (++objIndex < size)
     {
-        objId = *iter;
+        objId = objects[objIndex];
         return true;
     }
     objId = BAD_OBJID;
+    objIndex = BAD_INDEX;
     return false;
 
 }
 bool MDIterator::hasNext()
 {
-    if (objects == NULL)
-        return false;
-    return (iter < objects->end());
+    return (objects != NULL && objIndex < size - 1);
 }
 
 //////////// Generators implementations

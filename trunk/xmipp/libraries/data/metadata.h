@@ -50,6 +50,7 @@ static double oneD=1.;
 static bool  falseb=false;
 
 #define BAD_OBJID 0
+#define BAD_INDEX -1
 
 /** Write mode
  */
@@ -769,8 +770,8 @@ std::ostream& operator<<(std::ostream& o, const MetaData & mD);
 class MDIterator
 {
 protected:
-    std::vector<size_t> * objects;
-    std::vector<size_t>::const_iterator iter;
+    size_t * objects;
+    size_t size;
 
     /** Internal function to initialize the iterator */
     void init(const MetaData &md, const MDQuery * pQuery=NULL);
@@ -785,7 +786,10 @@ public:
     /** Destructor */
     ~MDIterator();
 
+    /** This is the object ID in the metadata, usually starts at 1 */
     size_t objId;
+    /** This is the index of the object, starts at 0 */
+    size_t objIndex;
     /** Function to move to next element.
      * return false if there aren't more elements to iterate.
      */

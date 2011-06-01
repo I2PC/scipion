@@ -250,9 +250,9 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
                               MDLabel sortLabel)
 {
     if (size==1)
-    	return;
+        return;
 
-	FileName fn;
+    FileName fn;
 
     if (!isMaster())//workers just write down partial results
     {
@@ -304,8 +304,8 @@ void MpiMetadataProgram::read(int argc, char **argv)
 {
     node = new MpiNode(argc, argv);
     fileMutex = new MpiFileMutex(node);
-    last=0;
-    first=1;
+    last = 0;
+    first = 1;
 }
 
 void MpiMetadataProgram::createTaskDistributor(const MetaData &mdIn)
@@ -318,14 +318,18 @@ void MpiMetadataProgram::createTaskDistributor(const MetaData &mdIn)
 }
 
 //Now use the distributor to grasp images
-size_t MpiMetadataProgram::getTaskToProcess()
+bool MpiMetadataProgram::getTaskToProcess(size_t &objId, size_t &objIndex)
 {
     bool moreTasks=true;
     if (first>last)
         moreTasks = distributor->getTasks(first, last);
     if (moreTasks)
-        return imgsId[first++];
+    {
+        objIndex = first;
+        objId = imgsId[first++];
+        return true;
+    }
     first = distributor->numberOfTasks-1;
-    return BAD_OBJID;
+    return false;
 }
 

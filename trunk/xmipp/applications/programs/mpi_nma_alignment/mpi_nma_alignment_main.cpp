@@ -82,7 +82,7 @@ public:
             ProgNmaAlignment::showProgress();
     }
     //Now use the distributor to grasp images
-    size_t getImageToProcess()
+    bool getImageToProcess(size_t &objId, size_t &objIndex)
     {
         size_t first, last;
         bool moreTasks = distributor->getTasks(first, last);
@@ -90,10 +90,14 @@ public:
         if (moreTasks)
         {
             time_bar_done = first + 1;
-            return imgsId[first];
+            objIndex = first;
+            objId = imgsId[first];
+            return true;
         }
         time_bar_done = mdIn.size();
-        return BAD_OBJID;
+        objId = BAD_OBJID;
+        objIndex = BAD_INDEX;
+        return false;
     }
 
     void finishProcessing()
