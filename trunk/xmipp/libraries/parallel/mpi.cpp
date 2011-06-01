@@ -249,7 +249,10 @@ void MpiNode::barrierWait()
 void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
                               MDLabel sortLabel)
 {
-    FileName fn;
+    if (size==1)
+    	return;
+
+	FileName fn;
 
     if (!isMaster())//workers just write down partial results
     {
@@ -279,7 +282,6 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
         fn=fn.removeBlockName();
         remove(fn.c_str());
         MD.sort(mdAll, MDL_IMAGE);
-
     }
 }
 
