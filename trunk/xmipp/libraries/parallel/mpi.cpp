@@ -284,6 +284,13 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
 }
 
 /* -------------------- MpiMetadataProgram ------------------- */
+MpiMetadataProgram::MpiMetadataProgram()
+{
+    node=NULL;
+    fileMutex=NULL;
+    distributor=NULL;
+}
+
 MpiMetadataProgram::~MpiMetadataProgram()
 {
     delete node;

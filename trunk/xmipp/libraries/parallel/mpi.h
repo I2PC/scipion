@@ -151,6 +151,8 @@ protected:
     MpiFileMutex *fileMutex;
     size_t first, last;
 public:
+    /** Constructor */
+    MpiMetadataProgram();
     /** Destructor */
     ~MpiMetadataProgram();
     /** Read arguments */
