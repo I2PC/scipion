@@ -177,7 +177,6 @@ def execute_ctf_groups (_log, dict):
     MDctfdata.intersection(MDsel,MDL_IMAGE)
     tmpCtfdat = utils_xmipp.unique_filename(dict['CTFDatName' ])
     MDctfdata.write(tmpCtfdat)
-    print "aaaaaaaaaaaaaaaaa",tmpCtfdat
     command = \
               ' --ctfdat ' + tmpCtfdat + \
               ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + \

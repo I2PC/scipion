@@ -33,7 +33,7 @@ class TestProjMatching(unittest.TestCase):
                                 self.WorkingDir)
                 
     def test_00execute_ctf_groups(self):
-        CtfGroupDirectory = os.path.join(self.path,'CtfGroup')
+        CtfGroupDirectory = os.path.join(self.path,'CtfGroups')
         CtfGroupRootName  = 'ctf'
         dict = {
                 'CTFDatName': 'new_ctf.ctfdat'
@@ -92,18 +92,17 @@ class TestProjMatching(unittest.TestCase):
         testFileName = maskedFileNamesIter
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(ImgCompare(goldFileName,testFileName))
-        angular_project_library(self.log,dict)
 
     def test_20angular_project_library(self):
         dict = {'AngSamplingRateDeg': '1',
-                'CtfGroupSubsetFileName': 'ProjMatch/new20/CtfGroups/ctf_images.sel',
+                'CtfGroupSubsetFileName': 'ProjMatch/new20/CtfGroup/ctf_images.sel',
                 'DoCtfCorrection': True,
                 'DoParallel': True,
                 'DoRestricSearchbyTiltAngle': False,
                 'DocFileInputAngles': 'ProjMatch/new20/original_angles.doc',
                 'MaxChangeInAngles': '1000',
                 'MpiJobSize': '1',
-                'NumberOfMpiProcesses': 10,
+                'NumberOfMpiProcesses': 3,
                 'NumberOfThreads': 1,
                 'OnlyWinner': False,
                 'PerturbProjectionDirections': False,
@@ -121,25 +120,63 @@ class TestProjMatching(unittest.TestCase):
         angular_project_library(self.log,dict)
         tmpDirName = os.path.join(tmpDirName,'gallery_ref_01')
         
-        testFileName = os.path.join(tmpDirName,'.stk')
+        #do not use os.path.join because adds an extra /
+        testFileName = tmpDirName +'.stk'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(ImgCompare(goldFileName,testFileName))
         
-        testFileName = os.path.join(tmpDirName,'.doc')
+        testFileName = tmpDirName +'.doc'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
-        testFileName = os.path.join(tmpDirName,'_sampling.txt')
+        testFileName = tmpDirName +'_sampling.txt'
+        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        print "aaa",goldFileName,testFileName,"aaa"
+        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+        
+        testFileName = tmpDirName +'_group000001_sampling.txt'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
-        testFileName = os.path.join(tmpDirName,'_group000001_sampling.txt')
+        testFileName = tmpDirName +'_group000002_sampling.txt'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
-        testFileName = os.path.join(tmpDirName,'_group000002_sampling.txt')
+    def test_30projection_matching(self):
+        tmpDirName ='ProjMatch/new20/Iter_01/ProjMatchClasses'
+        dict = {    'AvailableMemory': 2,
+                    'CtfGroupDirectory': 'ProjMatch/new20/CtfGroups',
+                    'CtfGroupRootName': 'ctf',
+                    'DoComputeResolution': True,
+                    'DoCtfCorrection': True,
+                    'DoParallel': True,
+                    'DoScale': False,
+                    'InnerRadius': '0',
+                    'MaxChangeOffset': '1000',
+                    'MpiJobSize': '1',
+                    'NumberOfCtfGroups': 2L,
+                    'NumberOfMpiProcesses': 3,
+                    'NumberOfThreads': 1,
+                    'OuterRadius': '64',
+                    'PaddingFactor': 2,
+                    'ProjMatchRootName': 'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_01.doc',
+                    'ProjectLibraryRootName': 'ProjMatch/new20/Iter_01/ReferenceLibrary/gallery_ref_01.stk',
+                    'ReferenceIsCtfCorrected': '1',
+                    'ScaleNumberOfSteps': '3',
+                    'ScaleStep': '1',
+                    'Search5DShift': '5',
+                    'Search5DStep': '2',
+                    'SystemFlavour': 'TORQUE-OPENMPI'
+        }
+
+        if not os.path.exists(tmpDirName):
+            os.mkdir(tmpDirName)
+        projection_matching(self.log,dict)
+        testFileName = dict['ProjMatchRootName']
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+        print "aaaa",testFileName,goldFileName, "aaaa"
+        self.assertTrue(ImgCompare(goldFileName,testFileName))
+
         
 from  XmippPythonTestResult import XmippPythonTestResult
 
