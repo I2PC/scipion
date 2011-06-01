@@ -1,4 +1,9 @@
-from unittest import TestResult, _TextTestResult, _WritelnDecorator
+from unittest import TestResult, _TextTestResult
+try:
+   from unittest.runner import _WritelnDecorator # Python 2.7+
+except ImportError:
+   from unittest import _WritelnDecorator # Python <2.6
+
 import sys
 from bcolors import *
 class XmippPythonTestResult(TestResult):
