@@ -174,9 +174,25 @@ class TestProjMatching(unittest.TestCase):
         projection_matching(self.log,dict)
         testFileName = dict['ProjMatchRootName']
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print "aaaa",testFileName,goldFileName, "aaaa"
         self.assertTrue(ImgCompare(goldFileName,testFileName))
 
+    def test_040execute_mask(self):
+        maskedFileNamesIter='ProjMatch/new20/Iter_01/masked_reference_ref_01.vol'
+        dict = {
+                'DoMask': True,
+                'DoSphericalMask': True,
+                'maskRadius': 64,
+                'maskedFileName': maskedFileNamesIter ,
+                'reconstructedFileName': 'ico.vol',
+                'userSuppliedMask': 'mask.vol'
+        }
+        tmpDirName=os.path.dirname(maskedFileNamesIter)
+        if not os.path.exists(tmpDirName):
+            os.mkdir(tmpDirName)
+        assign_images_to_references(self.log,dict)
+        testFileName = maskedFileNamesIter
+        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        self.assertTrue(ImgCompare(goldFileName,testFileName))
         
 from  XmippPythonTestResult import XmippPythonTestResult
 
