@@ -300,9 +300,9 @@ void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &v
 {
     int i, j, k, l, m;
     Matrix2D<double> A(3, 3);
-    float dim2, x, y, z, xp, yp;
-    float value1, value2, scalex, scaley, scale1, value;
-    float radius2, x2, y2, z2, z2_plus_y2;
+    double dim2, x, y, z, xp, yp;
+    double value1, value2, scalex, scaley, value;
+    double radius2, x2, y2, z2, z2_plus_y2;
 
     // Use minus-tilt, because code copied from OldXmipp
     Euler_angles2matrix(img.rot(), -img.tilt(), img.psi(), A);
@@ -318,6 +318,7 @@ void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &v
     double a20=MAT_ELEM(A,2,0);
     double a21=MAT_ELEM(A,2,1);
 
+    double dim1=dim+1;
     const MultidimArray<double> mImg=img();
     for (i = 0; i < dim; i++)
     {
@@ -333,23 +334,24 @@ void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &v
             x = 0 - dim2;   /***** X for k == 0 *****/
             xp = x * a00 + y * a10 + xpz;
             yp = x * a01 + y * a11 + ypz;
+            l = (int)yp;
+            scaley = yp - l;
+            double scale1y = 1.-scaley;
             for (k = 0; k < dim; k++, xp += a00, yp += a01, x++)
             {
                 x2 = x * x;
                 if (x2 + z2_plus_y2 > radius2)
                     continue;
-                if ((xp >= (dim - 1) || xp < 0) || (yp >= (dim - 1) || yp < 0))
+                if ((xp >= dim1 || xp < 0.0) || (yp >= dim1 || yp < 0.0))
                     continue;
 
                 /**** interpolation ****/
-                l = (int)yp;
                 m = (int)xp;
                 scalex = xp - m;
-                scaley = yp - l;
-                scale1 = 1. - scalex;
-                value1 = scalex * dAij(mImg, l, m + 1) + scale1 * dAij(mImg, l, m);
-                value2 = scalex * dAij(mImg, l + 1, m + 1) + scale1 * dAij(mImg, l + 1, m);
-                value  = scaley * value2 + (1. - scaley) * value1;
+                double scale1x = 1. - scalex;
+                value1 = scalex * dAij(mImg, l, m + 1) + scale1x * dAij(mImg, l, m);
+                value2 = scalex * dAij(mImg, l + 1, m + 1) + scale1x * dAij(mImg, l + 1, m);
+                value  = scaley * value2 + scale1y * value1;
                 dAkij(vol, i, j, k) += value;
             }
         }
