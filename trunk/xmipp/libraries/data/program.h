@@ -300,6 +300,14 @@ public:
 }
 ;// end of class XmippMetadataProgram
 
+/** This macro will be useful for define the main and run
+ * an XmippProgram
+ */
+#define RUN_XMIPP_PROGRAM(progName) \
+  int main(int argc, char** argv) { \
+      progName program; program.read(argc, argv);\
+      return program.tryRun();}
+
 
 ///Declare all programs
 /** @} */
