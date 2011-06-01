@@ -2114,12 +2114,18 @@ Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         PyObject *md = NULL;
         PyObject *only_apply_shifts = Py_False;
+        PyObject *wrap ;
+        if (WRAP)
+        	wrap = Py_True;
+        else
+        	wrap = Py_False;
         size_t objectId = BAD_OBJID;
         bool boolOnly_apply_shifts = false;
+        bool boolWrap = WRAP;
         int datamode = DATA;
         size_t select_img = ALL_IMAGES;
 
-        if (PyArg_ParseTuple(args, "Ok|Oik", &md, &objectId, &only_apply_shifts, &datamode, &select_img))
+        if (PyArg_ParseTuple(args, "Ok|OikO", &md, &objectId, &only_apply_shifts, &datamode, &select_img, &wrap))
         {
             try
             {
@@ -2127,7 +2133,12 @@ Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
                     boolOnly_apply_shifts = (only_apply_shifts == Py_True);
                 else
                     PyErr_SetString(PyExc_TypeError, "ImageGeneric::readApplyGeo: Expecting boolean value");
-                self->image->readApplyGeo(MetaData_Value(md), objectId, boolOnly_apply_shifts, (DataMode)datamode, select_img);
+                if (PyBool_Check(wrap))
+                    boolWrap = (wrap == Py_True);
+                else
+                    PyErr_SetString(PyExc_TypeError, "ImageGeneric::readApplyGeo: Expecting boolean value");
+                self->image->readApplyGeo(MetaData_Value(md), objectId, boolOnly_apply_shifts,
+                		(DataMode)datamode, select_img,boolWrap);
                 Py_RETURN_NONE;
             }
             catch (XmippError xe)
@@ -2818,5 +2829,7 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "_HEADER_ALL", (long) _HEADER_ALL);
     addIntConstant(dict, "DATA", (long) DATA);
     addIntConstant(dict, "_DATA_ALL", (long) _DATA_ALL);
+    addIntConstant(dict, "WRAP", (long) WRAP);
+    addIntConstant(dict, "ALL_IMAGES", (long) ALL_IMAGES);
 
 }
