@@ -324,6 +324,8 @@ void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &v
     {
         z = -i + dim2;   /*** Z points upwards ***/
         z2 = z * z;
+        if (z2 > radius2)
+            continue;
         double xpz=z * a20 + dim2;
         double ypz=z * a21 + dim2;
         for (j = 0; j < dim; j++)
@@ -331,9 +333,13 @@ void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &v
             y = j - dim2;
             y2 = y * y;
             z2_plus_y2 = z2 + y2;
+            if (z2_plus_y2 > radius2)
+                continue;
             x = 0 - dim2;   /***** X for k == 0 *****/
             xp = x * a00 + y * a10 + xpz;
             yp = x * a01 + y * a11 + ypz;
+            if (yp >= dim1 || yp < 0.0)
+                continue;
             l = (int)yp;
             scaley = yp - l;
             double scale1y = 1.-scaley;
@@ -342,7 +348,7 @@ void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &v
                 x2 = x * x;
                 if (x2 + z2_plus_y2 > radius2)
                     continue;
-                if ((xp >= dim1 || xp < 0.0) || (yp >= dim1 || yp < 0.0))
+                if (xp >= dim1 || xp < 0.0)
                     continue;
 
                 /**** interpolation ****/
@@ -367,20 +373,27 @@ void ProgRecWbp::filter_one_image(Projection &proj, Tabsinc &TSINC)
 
     factor = diameter;
 
-    Euler_angles2matrix(proj.rot(), -proj.tilt(), proj.psi(), A);
-    A = A.inv();
+    //Euler_angles2matrix(proj.rot(), -proj.tilt(), proj.psi(), A);
+    //A = A.inv();
+    Euler_angles2matrix(-proj.rot(), proj.tilt(), -proj.psi(), A);
     FourierTransform(proj(), IMG);
     CenterFFT(IMG, true);
 
     // loop over all transformation matrices
+    double a00=MAT_ELEM(A,0,0);
+    double a01=MAT_ELEM(A,0,1);
+    double a10=MAT_ELEM(A,1,0);
+    double a11=MAT_ELEM(A,1,1);
+    double a20=MAT_ELEM(A,2,0);
+    double a21=MAT_ELEM(A,2,1);
     for (int k = 0; k < no_mats; k++)
     {
-        mat_f[k].x = MAT_ELEM(A, 0, 0) * mat_g[k].x +
-                     MAT_ELEM(A, 1, 0) * mat_g[k].y +
-                     MAT_ELEM(A, 2, 0) * mat_g[k].z;
-        mat_f[k].y = MAT_ELEM(A, 0, 1) * mat_g[k].x +
-                     MAT_ELEM(A, 1, 1) * mat_g[k].y +
-                     MAT_ELEM(A, 2, 1) * mat_g[k].z;
+        mat_f[k].x = a00 * mat_g[k].x +
+                     a10 * mat_g[k].y +
+                     a20 * mat_g[k].z;
+        mat_f[k].y = a01 * mat_g[k].x +
+                     a11 * mat_g[k].y +
+                     a21 * mat_g[k].z;
     }
 
     double K=((double)diameter)/dim;
