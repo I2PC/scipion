@@ -25,12 +25,7 @@
 
 #include <reconstruction/mlf_align2d.h>
 
-int main(int argc, char **argv)
-{
-    ProgMLF2D prm;
-    prm.read(argc, argv);
-    return prm.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgMLF2D);
 
 
 
