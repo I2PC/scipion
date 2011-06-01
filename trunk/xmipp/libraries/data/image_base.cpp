@@ -39,7 +39,7 @@ void ImageBase::init()
 
     filename = "";
     offset = 0;
-    swap = 0;
+    swap = swapWrite = 0;
     replaceNsize=0;
     mmapOnRead = mmapOnWrite = false;
     mappedSize = 0;
@@ -670,6 +670,7 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         auxI.getDimensions(_Xdim, _Ydim, _Zdim, _Ndim);
 
         replaceNsize = _Ndim;
+        swapWrite = auxI.swap;
 
         if(Xdim != _Xdim ||
            Ydim != _Ydim ||

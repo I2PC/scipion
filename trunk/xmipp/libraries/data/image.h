@@ -998,6 +998,10 @@ private:
             }
         }
 
+        //swap per page
+        if (swapWrite)
+            swapPage(fdata, datasize, wDType);
+
         fwrite( fdata, datasize, 1, fimg );
         freeMemory(fdata, datasize);
     }

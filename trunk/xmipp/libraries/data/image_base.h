@@ -222,6 +222,7 @@ protected:
     bool                stayOpen;    // To maintain the image file open after read/write
     size_t              offset;      // Data offset
     int                 swap;        // Perform byte swapping upon reading
+    int                 swapWrite;   // Perform byte swapping upon writing
     TransformType       transform;   // Transform type
     size_t              replaceNsize;// Stack size in the replace case
     bool                _exists;     // does target file exists?
