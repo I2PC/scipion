@@ -176,7 +176,7 @@ class TestProjMatching(unittest.TestCase):
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(ImgCompare(goldFileName,testFileName))
 
-    def test_040execute_mask(self):
+    def test_040assign_images_to_references(self):
         dict = {   
                 'DocFileInputAngles': 'ProjMatch/new20/Iter_01/current_angles.doc',
                 'NumberOfCtfGroups': 2L,
