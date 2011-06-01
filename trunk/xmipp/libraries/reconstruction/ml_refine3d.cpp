@@ -46,10 +46,6 @@
 //Macro to obtain the iteration base name
 #define FN_ITER_BASE(iter) formatString("%s_iter%06d_vols.stk", fn_root.c_str(), (iter))
 #define FN_INITIAL_BASE (fn_root + "_iter000000_vols.stk")
-#define FN_NOISE_MD (fn_root + "_noise.xmd")
-#define FN_NOISE (fn_root + "_noise.stk")
-#define FN_CREF_MD (fn_root + "_cref.xmd")
-#define FN_CREF (fn_root + "_cref.stk")
 #define FN_PROJECTIONS_MD (fn_root + "_projections.xmd")
 #define FN_PROJECTIONS (fn_root + "_projections.stk")
 
@@ -206,6 +202,7 @@ void ProgMLRefine3D::readParams()
     fn_sel = getParam( "-i");
     fn_root = getParam("--oroot");
 
+
     //    if (fourier_mode)
     //        fn_root = getParam( "-o", "mlf3d");
     //    else
@@ -263,8 +260,27 @@ void ProgMLRefine3D::readParams()
     if (!checkParam("--psi_step"))
         ml2d->psi_step = angular;
     ml2d->fn_img = fn_sel;
-    ml2d->fn_root = fn_root + "_ml2d";
+    ml2d->fn_root = fn_root + "_" + ml2d->defaultRoot;
     ml2d->fn_ref = FN_PROJECTIONS_MD;
+    ml2d->do_mirror = true;
+
+    //add empty string string now, this will be later
+    //overwrite with the iteration base name
+    reconsOutFnBase.push_back("");
+    reconsMdFn.push_back("");
+
+    if (fourier_mode)
+    {
+        //For fourier case add also the _noise and _cref
+        reconsOutFnBase.push_back(FN_CREF_VOL);
+        reconsOutFnBase.push_back(FN_NOISE_VOL);
+        {//make fn_root local scope
+            String fn_root = this->fn_root + "_" + ml2d->defaultRoot; // this is need for the following macron
+            reconsMdFn.push_back(FN_CREF_IMG_MD);
+        }
+        reconsMdFn.push_back(FN_NOISE_IMG_MD);
+
+    }
 }
 
 void ProgMLRefine3D::show()
@@ -381,7 +397,8 @@ void ProgMLRefine3D::run()
                 img.read(fn);
                 img().setXmippOrigin();
                 ml2d->model.Iref[refno]() = img();
-                ++refno;
+                if (++refno == ml2d->model.n_ref) //avoid reading noise and c_ref projections
+                    break;
             }
         }
         for (ml2d->current_block = 0; ml2d->current_block < ml2d->blocks; ml2d->current_block++)
@@ -402,13 +419,21 @@ void ProgMLRefine3D::run()
         if (skip_reconstruction)
             exit(1);
 
+        if (fourier_mode)
+            makeNoiseImages();
         // Reconstruct new volumes from the reference images
-        reconstructVolumes(ml2d->MDref, FN_ITER_BASE(iter));
+        //update the base name for current iteration
+        reconsOutFnBase[0] = FN_ITER_BASE(iter);
+        reconsMdFn[0] = ml2d->outRefsMd;
+        reconstructVolumes();
         // Update the reference volume selection file
-        //remakeSFvol(ml2d->iter, false, false);
         updateVolumesMetadata();
         // post-process the volumes
         postProcessVolumes();
+
+        if (fourier_mode)
+            calculate3DSSNR(ml2d->spectral_signal);
+
         // Check convergence
         converged = checkConvergence();
 
@@ -475,8 +500,7 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
             tilt = YY(mysampling.no_redundant_sampling_points_angles[ilib]);
 
             // Parallelization: each rank projects and writes a different direction
-            my_rank = ilib % size;
-            if (rank == my_rank)
+            if (nr_dir % size == rank)
             {
                 projectVolume(vol(), proj, vol().rowNumber(), vol().colNumber(), rot, tilt, psi);
                 //proj.setEulerAngles(rot, tilt, psi);
@@ -513,40 +537,32 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
 }
 
 // Make noise images for 3D SSNR calculation ===================================
-void ProgMLRefine3D::makeNoiseImages(std::vector<Image<double> > &Iref)
+void ProgMLRefine3D::makeNoiseImages()
 {
 
     Image<double> img;
-    FileName   fn_noise(FN_NOISE), fn_img;
-    MetaData    mdNoise;
-    size_t volno, id;
+    std::vector<Image<double> > & Iref = ml2d->model.Iref;
+    FileName   fn_noise(FN_NOISE_IMG), fn_img;
+    MetaData    mdNoise(ml2d->MDref);
+    int refno = 0;
+    MDRow row;
 
-
-    for (int i = 0; i < Iref.size(); i++)
+    FOR_ALL_OBJECTS_IN_METADATA(mdNoise)
     {
-        volno = i / nr_projections + 1;
-        img = Iref[i];
+        img = Iref[refno];
         img().initZeros();
         img().addNoise(0, 1, "gaussian");
 
-        if (Iref[i].weight() > 1.)
-            img() /= sqrt(Iref[i].weight());
-
-        fn_img.compose(volno, fn_noise);
+        if (Iref[refno].weight() > 1.)
+            img() /= sqrt(Iref[refno].weight());
+        fn_img.compose(++refno, fn_noise);
         img.write(fn_img);
-
-        id = mdNoise.addObject();
-        mdNoise.setValue(MDL_IMAGE, fn_img, id);
-        mdNoise.setValue(MDL_ENABLED, 1, id);
-        //New for metadata: store angles and weights in metadata
-        mdNoise.setValue(MDL_ANGLEROT, Iref[i].rot(), id);
-        mdNoise.setValue(MDL_ANGLETILT, Iref[i].tilt(), id);
-        mdNoise.setValue(MDL_ANGLEPSI, Iref[i].psi(), id);
-        mdNoise.setValue(MDL_WEIGHT, Iref[i].weight(), id);
-        mdNoise.setValue(MDL_REF3D, volno, id);
+        mdNoise.setValue(MDL_IMAGE, fn_img, __iter.objId);
+        if (refno == ml2d->model.n_ref)
+            break;
     }
-    mdNoise.write(FN_NOISE_MD);
-
+    fn_noise = FN_NOISE_IMG_MD;
+    mdNoise.write(fn_noise);
 }
 
 ProgReconsBase * ProgMLRefine3D::createReconsProgram()
@@ -609,33 +625,39 @@ ProgReconsBase * ProgMLRefine3D::createReconsProgram()
 }
 
 // Reconstruction using the ML-weights ==========================================
-void ProgMLRefine3D::reconstructVolumes(const MetaData &mdProj, const FileName &outBase)
+void ProgMLRefine3D::reconstructVolumes()
 {
     FileName               fn_vol, fn_one;
     MetaData               mdOne;
+    MetaData               mdProj;
 
     ProgReconsBase * reconsProgram;// = createReconsProgram();
+    int volno_index  = 0;
 
-    for (int volno = 1; volno <= Nvols; ++volno)
+    for (int i = 0; i < reconsOutFnBase.size(); ++i)
     {
-        reconsProgram = createReconsProgram();
-        //for now each node reconstruct one volume
-        if ((volno - 1) % size == rank)
+        mdProj.read(reconsMdFn[i]);
+        String &fn_base = reconsOutFnBase[i];
+        for (int volno = 1; volno <= Nvols; ++volno)
         {
-            fn_vol.compose(volno, outBase);
-            fn_one.compose(outBase, volno, "projections.xmd");
-            // Select only relevant projections to reconstruct
-            mdOne.importObjects(mdProj, MDValueEQ(MDL_REF3D, volno));
-            mdOne.write(fn_one);
-            // Set input/output for the reconstruction algorithm
-            reconsProgram->setIO(fn_one, fn_vol);
-            //std::cerr << "DEBUG_JM: Reconstructing volume " << fn_vol << " from " << fn_one <<std::endl;
-            reconsProgram->tryRun();
+            volno_index = Nvols * i + volno - 1;
+            reconsProgram = createReconsProgram();
+            //for now each node reconstruct one volume
+            if (volno_index % size == rank)
+            {
+                fn_vol.compose(volno, fn_base);
+                fn_one.compose(fn_base, volno, "projections.xmd");
+                // Select only relevant projections to reconstruct
+                mdOne.importObjects(mdProj, MDValueEQ(MDL_REF3D, volno));
+                mdOne.write(fn_one);
+                // Set input/output for the reconstruction algorithm
+                reconsProgram->setIO(fn_one, fn_vol);
+                reconsProgram->run();
+            }
+            // Free reconsProgram
+            delete reconsProgram;
         }
-        // Free reconsProgram
-        delete reconsProgram;
     }
-
     // Free reconsProgram
     //delete reconsProgram;
 }
@@ -657,7 +679,7 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
     MultidimArray<int>          radial_count;
 
     // Read in noise reconstruction and calculate alpha's
-    mdNoiseAll.read(fn_root + "_noise.xmd");
+    mdNoiseAll.read(FN_NOISE_IMG_MD);
     ImgSize(mdNoiseAll, dim, idum, idum, idumLong);
 
     center.initZeros();
@@ -673,30 +695,25 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
         init_progress_bar(mdNoiseAll.size());
     }
 
-    for (int volno = 0; volno < Nvols; volno++)
-    {
+    FileName fn_noise_base = FN_NOISE_VOL;
+    FileName fn_cref_base = FN_CREF_VOL;
+    double inv_dim2 = 1. / (double)(dim * dim);
 
-        fn_tmp = fn_root + "_noise";
-        fn_tmp2 = fn_root + "_cref";
-        if (Nvols > 1)
-        {
-            fn_tmp += "_vol";
-            fn_tmp.compose(fn_tmp, volno + 1, "");
-            fn_tmp2 += "_vol";
-            fn_tmp2.compose(fn_tmp2, volno + 1, "");
-        }
-        fn_tmp += ".vol";
-        fn_tmp2 += ".vol";
+    for (int volno = 1; volno <= Nvols; ++volno)
+    {
+        fn_tmp.compose(volno, fn_noise_base);
+        fn_tmp2.compose(volno, fn_cref_base);
+
         nvol.read(fn_tmp);
         vol.read(fn_tmp2);
         nvol().setXmippOrigin();
         vol().setXmippOrigin();
         Mone.resize(dim, dim);
-        Mone.initConstant(1. / (double)(dim*dim));
+        Mone.initConstant(inv_dim2);
         Mone.setXmippOrigin();
 
         mdNoiseOne.clear();
-        mdNoiseOne.importObjects(mdNoiseAll, MDValueEQ(MDL_REF3D, volno + 1));
+        mdNoiseOne.importObjects(mdNoiseAll, MDValueEQ(MDL_REF3D, volno));
         c = 0;
         volweight = 0.;
         FOR_ALL_OBJECTS_IN_METADATA(mdNoiseOne)
@@ -704,6 +721,7 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
             mdNoiseOne.getValue(MDL_WEIGHT, weight, __iter.objId);
             mdNoiseOne.getValue(MDL_ANGLEROT, rot, __iter.objId);
             mdNoiseOne.getValue(MDL_ANGLETILT, tilt, __iter.objId);
+
             // alpha denominator
             if (c == 0)
                 alpha_N = Mone * weight;
@@ -748,7 +766,8 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
         radialAverage(alpha_T, center, alpha_signal, radial_count, true);
         radialAverage(alpha_N, center, alpha_noise, radial_count, true);
         radialAverage(Msignal, center, input_signal, radial_count, true);
-        input_signal /= volweight;
+
+        input_signal *= 1./volweight;
 
         // Calculate spectral_signal =input_signal/alpha!!
         // Also store averages of alphaN and alphaS for output
@@ -756,7 +775,8 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
         {
             dAi(input_signal, i) = dAi(input_signal, i) * dAi(alpha_noise, i) / dAi(alpha_signal, i);
         }
-        if (volno == 0)
+
+        if (volno == 1)
         {
             spectral_signal = input_signal;
             avg_alphaN = alpha_noise;
@@ -771,9 +791,10 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
     }
     if (verbose)
         progress_bar(mdNoiseAll.size());
-    spectral_signal /= (double)Nvols;
-    avg_alphaN /= (double)Nvols;
-    avg_alphaS /= (double)Nvols;
+    double inv_Nvols = 1. / (double)Nvols;
+    spectral_signal *= inv_Nvols;
+    avg_alphaN *= inv_Nvols;
+    avg_alphaS *= inv_Nvols;
 
     if (verbose)
     {
@@ -800,7 +821,6 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
         }
         out.close();
     }
-
 }
 
 void ProgMLRefine3D::copyVolumes()
@@ -822,15 +842,18 @@ void ProgMLRefine3D::copyVolumes()
 
 void ProgMLRefine3D::updateVolumesMetadata()
 {
-    FileName fn, fn_base = FN_ITER_BASE(iter);
-
+    FileName fn, fn_base;
     mdVol.clear();
 
-    for (size_t volno = 1; volno <= Nvols; ++volno)
+    for (size_t i = 0; i < reconsOutFnBase.size(); ++i)
     {
-        fn.compose(volno, fn_base);
-        mdVol.setValue(MDL_IMAGE, fn, mdVol.addObject());
-        mdVol.setValue(MDL_ENABLED, 1);
+        fn_base = reconsOutFnBase[i];
+        for (size_t volno = 1; volno <= Nvols; ++volno)
+        {
+            fn.compose(volno, fn_base);
+            mdVol.setValue(MDL_IMAGE, fn, mdVol.addObject());
+            mdVol.setValue(MDL_ENABLED, 1);
+        }
     }
 }
 

@@ -24,16 +24,10 @@
  ***************************************************************************/
 #include "mlf_align2d.h"
 
-//Macro to obtain the iteration image name and metadata
-#define FN_ITER_BASE(iter) formatString("%s_iter%06d", fn_root.c_str(), (iter))
-#define FN_REFMD(base) ((base) + "_ref.xmd")
-#define FN_IMGMD(base) ((base) + "_img.xmd")
-#define FN_LOGMD(base) ((base) + "_log.xmd")
-#define FN_REF(base, refno) formatString("%06d@%s_refs.stk", (refno), (base).c_str())
-#define FN_VSIG(base, ifocus, ext) ((nr_focus > 1) ? formatString("%s_ctf%06d%s", (base).c_str(), ((ifocus) + 1), (ext)) : ((base) + "_ctf" + (ext)))
 // Constructor ===============================================
 ProgMLF2D::ProgMLF2D(int nr_vols, int rank, int size)
 {
+    defaultRoot = "mlf2d";
     if (nr_vols == 0)
     {
         do_ML3D = false;
@@ -394,7 +388,7 @@ void ProgMLF2D::produceSideInfo()
         MetaData mdCTF(MDimg);
         //number of different CTFs
         if (!mdCTF.containsLabel(MDL_CTFMODEL))
-          REPORT_ERROR(ERR_ARG_MISSING, "Missing MDL_CTFMODEL in input images metadata");
+            REPORT_ERROR(ERR_ARG_MISSING, "Missing MDL_CTFMODEL in input images metadata");
         mdCTF.aggregate(MDimg, AGGR_COUNT, MDL_CTFMODEL, MDL_CTFMODEL, MDL_COUNT);
         nr_focus = mdCTF.size();
 
@@ -515,7 +509,7 @@ void ProgMLF2D::produceSideInfo2()
 {
 
     int                       c, idum, refno = 0;
-    double                    aux;
+    double                    aux = 0.;
     FileName                  fn_tmp;
     Image<double>                img;
     std::vector<double>       Vdum, sumw_defocus;
@@ -652,6 +646,8 @@ void ProgMLF2D::produceSideInfo2()
     MultidimArray<int>           radial_count;
     std::ifstream                fh;
 
+
+
     center.initZeros();
     // Calculate average spectral signal
     c = 0;
@@ -681,12 +677,14 @@ void ProgMLF2D::produceSideInfo2()
         // Introduce a fudge-factor of 2 to prevent over-estimation ...
         // I think this is irrelevant, as the spectral_signal is
         // re-calculated in ml_refine3d.cpp
-        spectral_signal /= (double)nr_vols * 2.;
+        double inv_2_nr_vol = 1. / (double)(nr_vols * 2);
+        spectral_signal *= inv_2_nr_vol;
     }
     else
     {
         // Divide by the number of reference images
-        spectral_signal /= (double)model.n_ref;
+        double inv_n_ref = 1. / (double) model.n_ref;
+        spectral_signal *= inv_n_ref;
     }
 
     // Read in Vsig-vectors with fixed file names
@@ -834,7 +832,7 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
 
 }
 
-void ProgMLF2D::updateWienerFilters(MultidimArray<double> &spectral_signal,
+void ProgMLF2D::updateWienerFilters(const MultidimArray<double> &spectral_signal,
                                     std::vector<double> &sumw_defocus,
                                     int iter)
 {
@@ -928,7 +926,7 @@ void ProgMLF2D::updateWienerFilters(MultidimArray<double> &spectral_signal,
 
     // Check that at least some frequencies have non-zero SSNR...
     if (maxres == 0)
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "Prog_MLFalign2D_prm: All frequencies have zero spectral SNRs... (increase -reduce_snr) ");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "ProgMLF2D: All frequencies have zero spectral SNRs... (increase -reduce_snr) ");
 
     if (do_ctf_correction)
     {
@@ -2703,14 +2701,28 @@ void ProgMLF2D::maximization()
             c++;
         }
     }
-    spectral_signal /= (double)model.n_ref;
-
+    double inv_nref = 1./(double)model.n_ref;
+    spectral_signal *= inv_nref;
 }
 
 void ProgMLF2D::endIteration()
 {
     ML2DBaseProgram::endIteration();
     updateWienerFilters(spectral_signal, sumw_defocus, iter);
+}
+
+void writeImage(Image<double> &img, const FileName &fn, MDRow &row)
+{
+    img.write(fn);
+    row.setValue(MDL_IMAGE, fn);
+    row.setValue(MDL_ENABLED, 1);
+    double weight = img.weight();
+    double rot = 0., tilt = 0., psi = 0.;
+    img.getEulerAngles(rot, tilt, psi);
+    row.setValue(MDL_WEIGHT, weight);
+//    row.setValue(MDL_ANGLEROT, rot);
+//    row.setValue(MDL_ANGLETILT, tilt);
+//    row.setValue(MDL_ANGLEPSI, psi);
 }
 
 void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
@@ -2728,9 +2740,11 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         write_conv = false;
 
     fn_base = fn_root;
+
     if (outputType == OUT_ITER || outputType == OUT_REFS)
     {
         fn_base = FN_ITER_BASE(iter);
+
     }
 
     // Write out optimal image orientations
@@ -2752,48 +2766,40 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 
     // Write out current reference images and fill sel & log-file
     // First time for _ref, second time for _cref
-    FileName fn_base_tmp = fn_base;
-    for (int i = 0;  i < 2;  i++, fn_base_tmp += "_C")
+    FileName fn_base_cref = FN_CREF_IMG;
+    MDRow row;
+    MDIterator mdIter(MDref);
+    MDo = MDref;
+
+    int ref3d;
+
+    for (int refno = 0; refno < model.n_ref; ++refno, mdIter.moveNext())
     {
-        MDo.clear();
-        int refno = 0;
-        int ref3d = -1;
-        FOR_ALL_OBJECTS_IN_METADATA(MDref)
-        {
-            //write reference
-            Itmp = model.Iref[refno];
-            fn_tmp = FN_REF(fn_base_tmp, refno + 1);
-            Itmp.write(fn_tmp);
-            //write metadata entry
-            id = MDo.addObject();
-            MDo.setValue(MDL_IMAGE, fn_tmp, id);
-            MDo.setValue(MDL_ENABLED, 1, id);
-            MDo.setValue(MDL_WEIGHT, Itmp.weight(), id);
+        if (do_mirror)
+            row.setValue(MDL_MIRRORFRAC, mirror_fraction[refno]);
 
-            if (do_mirror)
-                MDo.setValue(MDL_MIRRORFRAC, mirror_fraction[refno], id);
+        if (write_conv)
+            row.setValue(MDL_SIGNALCHANGE, conv[refno]*1000);
 
-            if (write_conv)
-                MDo.setValue(MDL_SIGNALCHANGE, conv[refno]*1000, id);
+        if (do_norm)
+            row.setValue(MDL_INTSCALE, refs_avgscale[refno]);
 
-            if (do_norm)
-                MDo.setValue(MDL_INTSCALE, refs_avgscale[refno], id);
+        //write ctf
+        fn_tmp.compose(refno + 1, fn_base_cref);
+        writeImage(Ictf[refno], fn_tmp, row);
+        MDo.setRow(row, mdIter.objId);
 
-            if (do_ML3D)
-            {
-                MDo.setValue(MDL_ANGLEROT, Itmp.rot(),id);
-                MDo.setValue(MDL_ANGLETILT, Itmp.tilt(),id);
-                MDref.getValue(MDL_REF3D, ref3d, __iter.objId);
-                MDo.setValue(MDL_REF3D, ref3d, id);
-            }
-            ++refno;
-        }
-        // Write out reference md file
-        fn_tmp = FN_REFMD(fn_base_tmp);
-        MDo.write(fn_tmp);
-        if (i == 0)
-            MDref = MDo;//update MDref metadata
+        //write image
+        fn_tmp = FN_REF(fn_base, refno + 1);
+        Itmp = model.Iref[refno];
+        writeImage(Itmp, fn_tmp, row);
+        MDref.setRow(row, mdIter.objId);
     }
+
+    // Write out reference md file
+    MDo.write(FN_CREF_IMG_MD);
+    outRefsMd = FN_REFMD(fn_base);
+    MDref.write(outRefsMd);
 
     // Write out log-file
     MDo.clear();
@@ -2805,14 +2811,11 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     MDo.setValue(MDL_SIGMAOFFSET, sigma_offset,id);
     MDo.setValue(MDL_RANDOMSEED, seed,id);
     if (do_norm)
-    {
         MDo.setValue(MDL_INTSCALE, average_scale,id);
-    }
     MDo.setValue(MDL_ITER, iter, id);
     fn_tmp = FN_IMGMD(fn_base);
     MDo.setValue(MDL_IMGMD, fn_tmp, id);
-    fn_tmp = FN_REFMD(fn_base);
-    MDo.setValue(MDL_REFMD, fn_tmp, id);
+    MDo.setValue(MDL_REFMD, outRefsMd, id);
     fn_tmp = FN_LOGMD(fn_base);
     MDo.write(fn_tmp);
 

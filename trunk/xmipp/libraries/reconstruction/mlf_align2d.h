@@ -45,6 +45,21 @@
 #define HISTSTEPS 120
 #define DATALINELENGTH 11
 
+/** Some filename convetions for output files */
+#define FN_NOISE_IMG_MD (fn_root + "_noise_imgs.xmd")
+#define FN_NOISE_VOL (fn_root + "_noise_vols.stk")
+#define FN_NOISE_IMG (fn_root + "_noise_imgs.stk")
+#define FN_CREF_IMG (fn_root + "_cref_imgs.stk")
+#define FN_CREF_IMG_MD (fn_root + "_cref_imgs.xmd")
+#define FN_CREF_VOL (fn_root + "_cref_vols.stk")
+
+#define FN_ITER_BASE(iter) formatString("%s_iter%06d", fn_root.c_str(), (iter))
+#define FN_REFMD(base) ((base) + "_refs.xmd")
+#define FN_IMGMD(base) ((base) + "_imgs.xmd")
+#define FN_LOGMD(base) ((base) + "_logs.xmd")
+#define FN_REF(base, refno) formatString("%06d@%s_refs.stk", (refno), (base).c_str())
+#define FN_VSIG(base, ifocus, ext) ((nr_focus > 1) ? formatString("%s_ctf%06d%s", (base).c_str(), ((ifocus) + 1), (ext)) : ((base) + "_ctf" + (ext)))
+
 
 /** MLFalign2D parameters. */
 class ProgMLF2D: public ML2DBaseProgram
@@ -136,7 +151,6 @@ public:
     std::vector<MultidimArray<double> > wsum_Mref, wsum_ctfMref;
     std::vector< std::vector<double> > Mwsum_sigma2;
     std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus;
-    MultidimArray<double> spectral_signal;
 
     /** Constructor
      * nr_vols: Used for 3D case, if 0, then doML3D = false
@@ -172,7 +186,7 @@ public:
 
     /// Calculate Wiener filter for defocus series as defined by Frank
     /// (2nd ed. formula 2.32b on p.60)
-    void updateWienerFilters(MultidimArray<double> &spectral_signal,
+    void updateWienerFilters(const MultidimArray<double> &spectral_signal,
                              std::vector<double> &sumw_defocus, int iter);
 
     /// Vary in-plane and translational sampling rates with resolution

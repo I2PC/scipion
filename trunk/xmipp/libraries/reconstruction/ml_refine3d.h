@@ -93,6 +93,9 @@ public:
     //MPI related stuff
     int rank, size;
 
+    //This is the list of output filename base for
+    //reconstruction of volumes
+    StringVector reconsOutFnBase, reconsMdFn;
     // A pointer to the 2D alignment and classification program
     ML2DBaseProgram * ml2d;
 
@@ -128,7 +131,7 @@ public:
     virtual void projectVolumes(MetaData &mdProj) ;
 
     /// (For mpi-version only:) calculate noise averages and write to disc
-    void makeNoiseImages(std::vector<Image<double>  > &Iref) ;
+    void makeNoiseImages() ;
 
     /// Create the program to be used for reconstruction of the volumes
     virtual ProgReconsBase * createReconsProgram();
@@ -136,7 +139,7 @@ public:
     /// reconstruction by (weighted ART) or Fourier interpolation
     /// the metadata filename with volumes to reconstruct should be passed
     /// along with the base filename for reconstructed volumes
-    void reconstructVolumes(const MetaData &mdProj, const FileName &outBase);
+    void reconstructVolumes();
 
     /// Calculate 3D SSNR according to Unser ea. (2005)
     void calculate3DSSNR(MultidimArray<double> &spectral_signal);
