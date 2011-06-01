@@ -39,21 +39,21 @@
 /**@defgroup WBP reconstruct_wbp (Weighted Back Projection)
    @ingroup ReconsLibrary */
 //@{
-typedef struct Column
+typedef struct
 {
-    double zero;
-    double one;
-    double two;
+    double x; // Projection direction (x,y,z)
+    double y;
+    double z;
     double count;
 }
-column;
+WBPInfo;
 
 /** WBP parameters. */
 class ProgRecWbp: public XmippProgram
 {
 public:
     /** Filenames */
-    FileName fn_out, fn_sym, fn_sel, fn_doc, fn_control;
+    FileName fn_out, fn_sym, fn_sel;
     /** SelFile containing all projections and angles */
     MetaData SF;
     /** Lower threshold for the filter */
@@ -69,7 +69,7 @@ public:
     /** Number of elements in matrix array */
     int no_mats;
     /** columns of matrices*/
-    column * mat_g, * mat_f;
+    WBPInfo * mat_g, * mat_f;
     /** Angular sampling for projection directions of arbitrary geometry filter */
     double sampling;
     /** Flag whether to use all experimental projection directions instead of
@@ -97,7 +97,7 @@ public:
     void produceSideInfo() ;
 
     /// Get angles (either from reading the header or from a docfile)
-    void get_angles_for_image(const FileName &fn, double &rot, double &tilt, double &psi,
+    void get_angles_for_image(size_t id, double &rot, double &tilt, double &psi,
                               double &xoff, double &yoff, double &flip, double &weight);
 
     /// Fill array with transformation matrices needed for arbitrary geometry filter
