@@ -30,7 +30,5 @@ int main(int argc, char *argv[])
 {
     ProgNormalize program;
     program.read(argc, argv);
-    program.tryRun();
-
-    return 0;
+    return program.tryRun();
 }
