@@ -24,18 +24,23 @@
  ***************************************************************************/
 
 #include "data/program.h"
+#include "data/filters.h"
 
 /** Apply some filter operation on images, or selfiles */
 class ProgFilter: public XmippMetadataProgram
 {
 private:
-    ///Functions pointers to selected operation
+    ///Pointers to selected operation
     XmippFilter * filter;
 
 protected:
     void defineParams();
     void readParams();
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+
+public:
+    ProgFilter();
+    ~ProgFilter();
 }
 ;//end of class ProgFilter
 
