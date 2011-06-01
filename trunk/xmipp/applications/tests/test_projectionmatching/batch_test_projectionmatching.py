@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import unittest, os, sys
+import unittest, os, sys,shutil
 """
 @summary: This pyUnit test module defines the unit tests for the Xmipp Python Interface
 """
@@ -177,22 +177,24 @@ class TestProjMatching(unittest.TestCase):
         self.assertTrue(ImgCompare(goldFileName,testFileName))
 
     def test_040execute_mask(self):
-        maskedFileNamesIter='ProjMatch/new20/Iter_01/masked_reference_ref_01.vol'
-        dict = {
-                'DoMask': True,
-                'DoSphericalMask': True,
-                'maskRadius': 64,
-                'maskedFileName': maskedFileNamesIter ,
-                'reconstructedFileName': 'ico.vol',
-                'userSuppliedMask': 'mask.vol'
-        }
-        tmpDirName=os.path.dirname(maskedFileNamesIter)
-        if not os.path.exists(tmpDirName):
-            os.mkdir(tmpDirName)
+        dict = {   
+                'DocFileInputAngles': 'ProjMatch/new20/Iter_01/current_angles.doc',
+                'NumberOfCtfGroups': 2L,
+                'NumberOfReferences': 3,
+                'ProjMatchRootName': [   None,
+                    'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_01.doc',
+                    'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_02.doc',
+                    'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_03.doc']}
+        #cp from goldstandard
+        src = 'new20/Iter_01/ProjMatchClasses/'
+        dst = 'ProjMatch/new20/Iter_01/ProjMatchClasses'
+        shutil.copy(src+'roj_match_ref_01.doc', dst)
+        shutil.copy(src+'roj_match_ref_02.doc', dst)
+        shutil.copy(src+'roj_match_ref_03.doc', dst)
         assign_images_to_references(self.log,dict)
-        testFileName = maskedFileNamesIter
+        testFileName = dict[DocFileInputAngles]
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(ImgCompare(goldFileName,testFileName))
+        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
 from  XmippPythonTestResult import XmippPythonTestResult
 
