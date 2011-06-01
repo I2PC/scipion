@@ -36,7 +36,7 @@ iterationNo=2
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =1
+ContinueAtIteration =9
 
 # {expert} Resume at Iter (vs Step)
 """This option control how to resume a previously performed run.
@@ -154,8 +154,10 @@ myName='partial_projection_subtraction'
 run_file1='./readDocfileAndPairExperimentalAndReferenceImages_v3.sh'
 subtractionDir ='Subtraction'
 referenceDir   ='Refs'
-referenceStack   ='ref'
-volsDir='Vols'
+referenceStack ='ref'
+subImgsDir  = 'SubImgs'
+subtractedStack ='subtracted'
+volsDir ='Vols'
 tempFileName=''
 current_angles='current_angles.doc'
 import os,sys,shutil,time
@@ -221,7 +223,7 @@ def actionsToBePerformedInsideLoop(_log):
         #project reconstructe4d volumes
         _Parameters = {
                       'AngSamplingRateDeg':AngSamplingRateDeg
-                      ,'DocFileRef':DocFileRef[iterN]
+                      ,'DocFileRef':DocFileRef[iterN]#################docfile with ALL experimental images
                       ,'DoParallel' : DoParallel
                       ,'maskReconstructedVolume':maskReconstructedVolume[iterN]
                       ,'MaxChangeInAngles':MaxChangeInAngles
@@ -241,19 +243,24 @@ def actionsToBePerformedInsideLoop(_log):
         
         _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
                  
-#        #apply transform
-#        #resta
-#    _CTFDatName=CTFDatName
-#    if(len(CTFDatName)<1 and doCTFCorrection):
-#        if(len(partial_protocol.CTFDatName)>1):
-#            _CTFDatName= '../' + partial_protocol.CTFDatName
-#    
-#    # revisar si realmente hay que pasarle _szDocFileRef a la siguiente funcion     
-#    self.readDocfileAndPairExperimentalAndReferenceImages(_szDocFileRef)
-#    
-#    # Al finalizar cada iteracion borramos el volumen reconstruido
-#    os.rm(reconstructedVolume)
-         
+                 
+#project reconstructe4d volumes
+        _Parameters = {
+                      'DocFileRef':DocFileRef[iterN]
+                      ,'referenceStackDoc':referenceStackDoc[iterN]
+                      ,'subtractedStack':subtractedStack[iterN]
+                      }
+        command = "subtractionScript"
+        _VerifyFiles = []
+        _VerifyFiles.append('asdasdasda')
+        #_VerifyFiles.append(referenceStack[iterN])
+        #tmp = referenceStack[iterN]
+
+        #_VerifyFiles.append(tmp.replace('.stk','.doc'))
+        #_VerifyFiles.append(tmp.replace('.stk','_sampling.txt'))
+        
+        _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+        
         
 def otherActionsToBePerformedBeforeLoop():
     #Create directories
@@ -275,6 +282,12 @@ def otherActionsToBePerformedBeforeLoop():
     command = 'createDir2'
     _dataBase.insertCommand(command, _Parameters, 1)
 
+    _Parameters = {
+          'path':subImgsDir
+        }
+    command = 'createDir2'
+    _dataBase.insertCommand(command, _Parameters, 1)
+
 def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
 
     global Iteration_Working_Directory
@@ -289,8 +302,8 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     global referenceDir
     referenceDir = os.path.join(subtractionDir,referenceDir)
     
-
-    
+    global subImgsDir
+    subImgsDir = os.path.join(subtractionDir,subImgsDir)
     
     global szInputVolumeName
     if ( len(szInputVolumeName) < 1 ):
@@ -333,11 +346,25 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
         maskReconstructedVolume.append(tmpReconstruct)
 
     global referenceStack
+    global referenceStackDoc
+    tmp = referenceStack  #'ref'
+    referenceStackDoc = [""]
+    for iterN in range(1, defocusGroupNo ):
+        tmpReference = os.path.join(referenceDir, tmp + '_' + str(iterN).zfill(6) + '.doc')
+        referenceStackDoc.append(tmpReference)
+
     tmp = referenceStack
     referenceStack = [""]
     for iterN in range(1, defocusGroupNo ):
-        tmpReconstruct = os.path.join(referenceDir, tmp + '_' + str(iterN).zfill(6) + '.stk')
-        referenceStack.append(tmpReconstruct)
+        tmpReference = os.path.join(referenceDir, tmp + '_' + str(iterN).zfill(6) + '.stk')
+        referenceStack.append(tmpReference)
+
+    global subtractedStack
+    tmp = subtractedStack
+    subtractedStack = [""]
+    for iterN in range(1, defocusGroupNo ):
+        tmpSubtract = os.path.join(subImgsDir, tmp + '_' + str(iterN).zfill(6) + '.stk')
+        subtractedStack.append(tmpSubtract)
 
 
 def ImportProtocol():
