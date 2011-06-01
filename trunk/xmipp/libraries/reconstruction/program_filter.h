@@ -23,8 +23,22 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "reconstruction/program_filter.h"
+#include "data/program.h"
 
-RUN_XMIPP_PROGRAM(ProgFilter);
+/** Apply some filter operation on images, or selfiles */
+class ProgFilter: public XmippMetadataProgram
+{
+private:
+    ///Functions pointers to selected operation
+    XmippFilter * filter;
+
+protected:
+    void defineParams();
+    void readParams();
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+}
+;//end of class ProgFilter
+
+
 
 
