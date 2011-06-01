@@ -333,7 +333,7 @@ void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &v
             x = 0 - dim2;   /***** X for k == 0 *****/
             xp = x * a00 + y * a10 + xpz;
             yp = x * a01 + y * a11 + ypz;
-            for (k = 0; k < dim; k++, xp += A(0, 0), yp += A(0, 1), x++)
+            for (k = 0; k < dim; k++, xp += a00, yp += a01, x++)
             {
                 x2 = x * x;
                 if (x2 + z2_plus_y2 > radius2)
