@@ -1426,6 +1426,9 @@ void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
 {
     std::vector<size_t> objectsVector;
     md.myMDSql->selectObjects(objectsVector, pQuery);
+    objects = NULL;
+    objId = BAD_OBJID;
+    objIndex = BAD_INDEX;
     size = objectsVector.size();
 
     if (size > 0)
@@ -1443,6 +1446,7 @@ MDIterator::MDIterator()
     objects = NULL;
     objId = BAD_OBJID;
     objIndex = BAD_INDEX;
+    size = 0;
 }
 
 MDIterator::MDIterator(const MetaData &md)
@@ -1457,7 +1461,7 @@ MDIterator::MDIterator(const MetaData &md, const MDQuery &query)
 
 MDIterator::~MDIterator()
 {
-    delete objects;
+    delete [] objects;
 }
 
 bool MDIterator::moveNext()
@@ -1477,7 +1481,7 @@ bool MDIterator::moveNext()
 }
 bool MDIterator::hasNext()
 {
-    return (objects != NULL && objIndex < size - 1);
+    return (objects != NULL && objIndex < size);
 }
 
 //////////// Generators implementations
