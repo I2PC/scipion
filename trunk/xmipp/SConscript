@@ -527,6 +527,7 @@ ReconsSources = [
     'phantom_simulate_microscope.cpp',
     'precompute_sampling.cpp',
     'program_extension.cpp',
+    'program_filter.cpp',
     'project.cpp',
     'project_crystal.cpp',
     'project_real_shears.cpp',
@@ -880,6 +881,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
     AddXmippMPIProgram('mpi_run', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_transform_filter', ['XmippRecons'])
     AddXmippMPIProgram('mpi_transform_normalize', ['XmippRecons'])
 #    AddXmippMPIProgram('template_threads', ['XmippRecons'])
 #    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
