@@ -384,12 +384,12 @@ void ProgRecWbp::filter_one_image(Projection &proj, Tabsinc &TSINC)
     double K=((double)diameter)/dim;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(IMG)
     {
-        y = i;
-        x = j;
+        y = K*i;
+        x = K*j;
         weight = 0.;
         for (int k = 0; k < no_mats; k++)
         {
-            argum = K * (x * mat_f[k].x + y * mat_f[k].y);
+            argum = x * mat_f[k].x + y * mat_f[k].y;
             double daux;
             TSINCVALUE(TSINC,argum,daux);
             weight += mat_g[k].count * daux;
