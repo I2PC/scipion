@@ -23,10 +23,15 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "data/filters.h"
+
+#include "program_filter.h"
 #include "reconstruction/fourier_filter.h"
 #include "reconstruction/denoise.h"
 #include "reconstruction/mean_shift.h"
+
+ProgFilter::ProgFilter(){}
+
+ProgFilter::~ProgFilter(){}
 
 void ProgFilter::defineParams()
 {
