@@ -361,9 +361,9 @@ void ProgRecWbp::filter_one_image(Projection &proj, Tabsinc &TSINC)
 {
     MultidimArray< std::complex<double> > IMG;
     Matrix2D<double>  A(3, 3);
-    float             factor, argum, weight, x, y;
+    double factor, argum, weight, x, y;
 
-    factor = (float)diameter;
+    factor = diameter;
 
     Euler_angles2matrix(proj.rot(), -proj.tilt(), proj.psi(), A);
     A = A.inv();
@@ -390,8 +390,9 @@ void ProgRecWbp::filter_one_image(Projection &proj, Tabsinc &TSINC)
         for (int k = 0; k < no_mats; k++)
         {
             argum = K * (x * mat_f[k].x + y * mat_f[k].y);
-            // The following line is the most expensive of all...
-            weight += mat_g[k].count * TSINC(argum);
+            double daux;
+            TSINCVALUE(TSINC,argum,daux);
+            weight += mat_g[k].count * daux;
         }
 
         if (weight < threshold)
