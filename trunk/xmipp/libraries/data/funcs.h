@@ -77,7 +77,7 @@
  */
 class Tabsinc
 {
-private:
+public:
 
     double sampl;
     int xmax;
@@ -99,10 +99,18 @@ public:
         delete tabulatedsinc;
     }
 
+#define TSINCVALUE(Tsinc, x,y) \
+     { \
+      int TSINCVALUEaux=(int)(x / Tsinc.sampl); \
+         y=Tsinc.tabulatedsinc[ABS(TSINCVALUEaux)]; \
+     }
+
+
     /** Value access. Tabulated sine in radians */
     double operator()(double val) const
     {
-        return tabulatedsinc[ABS((int)(val / sampl))];
+        int aux=(int)(val / sampl);
+        return tabulatedsinc[ABS(aux)];
     }
 
     /** Actually fill the table */
@@ -308,9 +316,10 @@ size_t divide_equally_group(size_t N, size_t size, size_t myself);
  */
 template <class T>
 void computeStats(const std::vector<T> &V, double& avg, double& stddev,
-	T& minval, T& maxval)
+                  T& minval, T& maxval)
 {
-    if (V.size()<= 0) return;
+    if (V.size()<= 0)
+        return;
 
     avg = 0;
     stddev = 0;
@@ -321,7 +330,7 @@ void computeStats(const std::vector<T> &V, double& avg, double& stddev,
     const T* ptr=&V[0];
     for(size_t n=0; n<nmax; ++n, ++ptr)
     {
-    	double val=*ptr;
+        double val=*ptr;
         avg += val;
         stddev += val * val;
 
@@ -349,7 +358,8 @@ void computeStats(const std::vector<T> &V, double& avg, double& stddev,
 template <class T>
 void computeAvgStddev(const std::vector<T> &V, double& avg, double& stddev)
 {
-    if (V.size()<= 0) return;
+    if (V.size()<= 0)
+        return;
 
     avg = 0;
     stddev = 0;
@@ -358,7 +368,7 @@ void computeAvgStddev(const std::vector<T> &V, double& avg, double& stddev)
     const T* ptr=&V[0];
     for(size_t n=0; n<nmax; ++n, ++ptr)
     {
-    	double val=*ptr;
+        double val=*ptr;
         avg += val;
         stddev += val * val;
     }
@@ -1066,7 +1076,7 @@ void TimeMessage(const std::string &message);
  * This function is not ported to Python.
  */
 size_t xmippFREAD(void* dest, size_t size, size_t nitems, FILE*& fp,
-             bool reverse = false);
+                  bool reverse = false);
 
 /** Write to file
  *
@@ -1076,10 +1086,10 @@ size_t xmippFREAD(void* dest, size_t size, size_t nitems, FILE*& fp,
  * This function is not ported to Python.
  */
 size_t xmippFWRITE(const void* src,
-              size_t size,
-              size_t nitems,
-              FILE*& fp,
-              bool reverse = false);
+                   size_t size,
+                   size_t nitems,
+                   FILE*& fp,
+                   bool reverse = false);
 
 /** Conversion little-big endian
  *
