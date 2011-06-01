@@ -1058,7 +1058,6 @@ def actionsToBePerformedInsideLoop(_log):
             for i in range (1,NumberOfCtfGroups+1):
                 _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.txt")
                         
-            _VerifyFiles.append("potito")
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             # projectionMatching    
             _Parameters = {
@@ -1091,6 +1090,8 @@ def actionsToBePerformedInsideLoop(_log):
             _VerifyFiles = []
             #File with list of images and references
             _VerifyFiles.append(ProjMatchRootName[iterN][refN] )
+            _VerifyFiles.append("potito")
+###CHECK THIS
 #            for i in range (1,NumberOfCtfGroups+1):
 #                _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.txt")
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
