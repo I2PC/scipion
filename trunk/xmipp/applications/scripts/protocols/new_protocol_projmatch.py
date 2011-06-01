@@ -1090,7 +1090,6 @@ def actionsToBePerformedInsideLoop(_log):
             _VerifyFiles = []
             #File with list of images and references
             _VerifyFiles.append(ProjMatchRootName[iterN][refN] )
-            _VerifyFiles.append("potito")
 ###CHECK THIS
 #            for i in range (1,NumberOfCtfGroups+1):
 #                _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.txt")
@@ -1108,6 +1107,7 @@ def actionsToBePerformedInsideLoop(_log):
                       }
         _VerifyFiles = []
         _VerifyFiles.append(DocFileInputAngles[iterN])
+        _VerifyFiles.append("potito")
         command = "assign_images_to_references"
         _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
 
