@@ -24,63 +24,10 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-//#include <mpi.h>
+
 #include <reconstruction/angular_continuous_assign.h>
 #include <parallel/mpi.h>
 
-/** Class to perfom the NMA Alignment with  MPI parallelization */
-class MpiProgAngularContinuousAssign: public ProgAngularContinuousAssign,
-            public MpiMetadataProgram
-{
-public:
-    /** Redefine read to initialize MPI environment */
-    void read(int argc, char **argv)
-    {
-        ProgAngularContinuousAssign::read(argc, argv);
-        MpiMetadataProgram::read(argc,argv);
-    }
+CREATE_MPI_METADATA_PROGRAM(ProgAngularContinuousAssign, MpiProgAngularContinuousAssign);
 
-    /** Preprocess */
-    void preProcess()
-    {
-        ProgAngularContinuousAssign::preProcess();
-        createTaskDistributor(mdIn);
-    }
-
-    //Only master do starting progress bar stuff
-    void startProcessing()
-    {
-        if (node->isMaster())
-            ProgAngularContinuousAssign::startProcessing();
-    }
-    //Only master show progress
-    void showProgress()
-    {
-        if (node->isMaster())
-        {
-        	time_bar_done=first+1;
-            ProgAngularContinuousAssign::showProgress();
-        }
-    }
-
-    //Now use the distributor to grasp images
-    bool getImageToProcess(size_t &objId, size_t &objIndex)
-    {
-        return getTaskToProcess(objId, objIndex);
-    }
-
-    void finishProcessing()
-    {
-        node->gatherMetadatas(mdOut, fn_out);
-        if (node->isMaster())
-            ProgAngularContinuousAssign::finishProcessing();
-    }
-}
-;
-
-int main(int argc, char **argv)
-{
-    MpiProgAngularContinuousAssign program;
-    program.read(argc, argv);
-    return program.tryRun();
-}
+RUN_XMIPP_PROGRAM(MpiProgAngularContinuousAssign);

@@ -27,61 +27,6 @@
 #include <data/normalize.h>
 #include <parallel/mpi.h>
 
-/** Class to normalize with  MPI parallelization */
-class MpiProgTransformNormalize: public ProgNormalize,
-            public MpiMetadataProgram
-{
-public:
-    /** Redefine read to initialize MPI environment */
-    void read(int argc, char **argv)
-    {
-    	MpiMetadataProgram::read(argc,argv);
-    	if (!node->isMaster())
-    		verbose=0;
-        ProgNormalize::read(argc, argv);
-    }
+CREATE_MPI_METADATA_PROGRAM(ProgNormalize, MpiProgNormalize);
 
-    /** Preprocess */
-    void preProcess()
-    {
-    	ProgNormalize::preProcess();
-        createTaskDistributor(mdIn);
-    }
-
-    //Only master do starting progress bar stuff
-    void startProcessing()
-    {
-        if (node->isMaster())
-        	ProgNormalize::startProcessing();
-    }
-    //Only master show progress
-    void showProgress()
-    {
-        if (node->isMaster())
-        {
-        	time_bar_done=first+1;
-        	ProgNormalize::showProgress();
-        }
-    }
-
-    //Now use the distributor to grasp images
-    bool getImageToProcess(size_t &objId, size_t &objIndex)
-    {
-        return getTaskToProcess(objId, objIndex);
-    }
-
-    void finishProcessing()
-    {
-        node->gatherMetadatas(mdOut, fn_out);
-        if (node->isMaster())
-        	ProgNormalize::finishProcessing();
-    }
-}
-;
-
-int main(int argc, char **argv)
-{
-	MpiProgTransformNormalize program;
-    program.read(argc, argv);
-    return program.tryRun();
-}
+RUN_XMIPP_PROGRAM(MpiProgNormalize);
