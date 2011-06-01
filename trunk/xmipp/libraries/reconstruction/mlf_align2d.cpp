@@ -1594,7 +1594,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
 
 
     std::vector<double> refw(model.n_ref), refw2(model.n_ref), refw_mirror(model.n_ref), Pmax_refmir(2*model.n_ref);
-    std::vector<double> sigma2, ctf, decctf;
+
     double aux, fracpdf, pdf, weight, weight2;
     double tmpr, tmpi, sum_refw = 0.;
     double diff, maxweight = -99.e99, mindiff2 = 99.e99;
@@ -1621,19 +1621,21 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
         df2 = - ( df +  ldim ) / 2. ;
 
     sum_refw2 = 0.;
-    sigma2.clear();
-    ctf.clear();
-    decctf.clear();
-    for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
+    //change std::vectors by arrays
+    double sigma2[nr_points_2d], inv_sigma2[nr_points_2d];
+    double ctf[nr_points_2d], decctf[nr_points_2d];
+
+    for (int ipoint = 0; ipoint < nr_points_2d; ++ipoint)
     {
         int ires = DIRECT_MULTIDIM_ELEM(Mresol_int,pointer_2d[ipoint]);
-        sigma2.push_back(2.* DIRECT_MULTIDIM_ELEM(Vsig[focus],ires));
-        decctf.push_back(DIRECT_MULTIDIM_ELEM(Vdec[focus],ires));
-        ctf.push_back(DIRECT_MULTIDIM_ELEM(Vctf[focus],ires));
+        sigma2[ipoint] = 2.* DIRECT_MULTIDIM_ELEM(Vsig[focus],ires);
+        inv_sigma2[ipoint] = 1./ sigma2[ipoint];
+        decctf[ipoint] = DIRECT_MULTIDIM_ELEM(Vdec[focus],ires);
+        ctf[ipoint] = DIRECT_MULTIDIM_ELEM(Vctf[focus],ires);
     }
     if (!apply_ctf)
     {
-        for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
+        for (int ipoint = 0; ipoint < nr_points_2d; ++ipoint)
         {
             ctf[ipoint] = 1.;
         }
@@ -1707,42 +1709,19 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                     {
                         for (int ii = 0; ii < nr_points_prob; ii++)
                         {
-                            //                            std::cerr << "DEBUG_JM: img_start: " << img_start << std::endl;
-                            //                            std::cerr << "DEBUG_JM: ref_start: " << ref_start << std::endl;
-                            //                            std::cerr << "DEBUG_JM: ref_scale: " << ref_scale << std::endl;
-                            //                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii]: " << Fimg_trans[img_start + 2*ii] << std::endl;
-                            //                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii + 1]: " << Fimg_trans[img_start + 2*ii] << std::endl;
-                            //                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii]: " << Fref[ref_start + 2*ii] << std::endl;
-                            //                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii + 1]: " << Fref[ref_start + 2*ii] << std::endl;
-
                             tmpr = Fimg_trans[img_start + 2*ii] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii];
                             tmpi = Fimg_trans[img_start + 2*ii+1] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1];
-                            tmpr = (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
+                            tmpr = (tmpr * tmpr + tmpi * tmpi) * inv_sigma2[ii];
                             diff += tmpr;
-
-                            // std::cerr << "DEBUG_JM: ii = "<< ii <<" --> diff(" << diff << ") = tmpr2("<< tmpr * tmpr
-                            // << ") + tmpi2(" << tmpi * tmpi << " / sigma2[ii](" << sigma2[ii] << ")\n";
-                            // exit(1);
-
                         }
                     }
                     else
                     {
                         for (int ii = 0; ii < nr_points_prob; ii++)
                         {
-                            //                            std::cerr << "DEBUG_JM: img_start: " << img_start << std::endl;
-                            //                            std::cerr << "DEBUG_JM: ref_start: " << ref_start << std::endl;
-                            //                            std::cerr << "DEBUG_JM: ref_scale: " << ref_scale << std::endl;
-                            //                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii]: " << Fimg_trans[img_start + 2*ii] << std::endl;
-                            //                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii + 1]: " << Fimg_trans[img_start + 2*ii] << std::endl;
-                            //                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii]: " << Fref[ref_start + 2*ii] << std::endl;
-                            //                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii + 1]: " << Fref[ref_start + 2*ii] << std::endl;
                             tmpr = Fimg_trans[img_start + 2*ii] - ref_scale * Fref[ref_start + 2*ii];
                             tmpi = Fimg_trans[img_start + 2*ii+1] - ref_scale * Fref[ref_start + 2*ii+1];
-                            diff += (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
-                            //                            std::cerr << "ii = "<< ii <<" --> diff(" << diff << ") = tmpr2("<< tmpr * tmpr
-                            //                            << ") + tmpi2(" << tmpi * tmpi << " / sigma2[ii](" << sigma2[ii] << ")\n";
-
+                            diff += (tmpr * tmpr + tmpi * tmpi) * inv_sigma2[ii];
                         }
 
                     }
@@ -1948,7 +1927,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                                         {
                                             tmpr = Fimg_trans[img_start + 2*ii] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii];
                                             tmpi = Fimg_trans[img_start + 2*ii+1] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1];
-                                            diff += (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
+                                            diff += (tmpr * tmpr + tmpi * tmpi) * inv_sigma2[ii];
                                         }
                                     }
                                     else
@@ -1957,7 +1936,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                                         {
                                             tmpr = Fimg_trans[img_start + 2*ii] - ref_scale * Fref[ref_start + 2*ii];
                                             tmpi = Fimg_trans[img_start + 2*ii+1] - ref_scale * Fref[ref_start + 2*ii+1];
-                                            diff += (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
+                                            diff += (tmpr * tmpr + tmpi * tmpi) * inv_sigma2[ii];
                                         }
                                     }
                                     if (!do_student)
@@ -2082,19 +2061,20 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
             ref_scale = opt_scale / refs_avgscale[opt_refno];
         for (int ii = 0; ii < nr_points_prob; ii++)
         {
+            double inv_sqrt_sigma2 = 1. / sqrt(0.5*sigma2[ii]);
             if (do_ctf_correction)
             {
                 dAi(diff,2*ii) = (Fimg_trans[img_start + 2*ii] -
-                                  ctf[ii] * ref_scale * Fref[ref_start + 2*ii]) / sqrt(0.5*sigma2[ii]);
+                                  ctf[ii] * ref_scale * Fref[ref_start + 2*ii]) * inv_sqrt_sigma2;
                 dAi(diff,2*ii+1) = (Fimg_trans[img_start + 2*ii+1] -
-                                    ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1]) / sqrt(0.5*sigma2[ii]);
+                                    ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1]) * inv_sqrt_sigma2;
             }
             else
             {
                 dAi(diff,2*ii) = (Fimg_trans[img_start + 2*ii] -
-                                  ref_scale * Fref[ref_start + 2*ii]) / sqrt(0.5*sigma2[ii]);
+                                  ref_scale * Fref[ref_start + 2*ii])*  inv_sqrt_sigma2;
                 dAi(diff,2*ii+1) = (Fimg_trans[img_start + 2*ii+1] -
-                                    ref_scale * Fref[ref_start + 2*ii+1]) / sqrt(0.5*sigma2[ii]);
+                                    ref_scale * Fref[ref_start + 2*ii+1]) *  inv_sqrt_sigma2;
             }
             // Fill vectors for resolution-depedent histograms
             int ires = DIRECT_MULTIDIM_ELEM(Mresol_int, pointer_2d[ii]);
@@ -2720,9 +2700,9 @@ void writeImage(Image<double> &img, const FileName &fn, MDRow &row)
     double rot = 0., tilt = 0., psi = 0.;
     img.getEulerAngles(rot, tilt, psi);
     row.setValue(MDL_WEIGHT, weight);
-//    row.setValue(MDL_ANGLEROT, rot);
-//    row.setValue(MDL_ANGLETILT, tilt);
-//    row.setValue(MDL_ANGLEPSI, psi);
+    //    row.setValue(MDL_ANGLEROT, rot);
+    //    row.setValue(MDL_ANGLETILT, tilt);
+    //    row.setValue(MDL_ANGLEPSI, psi);
 }
 
 void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
