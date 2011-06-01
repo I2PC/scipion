@@ -80,6 +80,7 @@ class Tabsinc
 public:
 
     double sampl;
+    double isampl;
     int xmax;
     int no_elem;
     double* tabulatedsinc;
@@ -89,6 +90,7 @@ public:
     Tabsinc(const double dd, const int xx)
     {
         sampl = dd;
+        isampl = 1.0/sampl;
         xmax = xx;
         filltable();
     }
@@ -101,7 +103,7 @@ public:
 
 #define TSINCVALUE(Tsinc, x,y) \
      { \
-      int TSINCVALUEaux=(int)(x / Tsinc.sampl); \
+      int TSINCVALUEaux=(int)(x * Tsinc.isampl); \
          y=Tsinc.tabulatedsinc[ABS(TSINCVALUEaux)]; \
      }
 
@@ -109,7 +111,7 @@ public:
     /** Value access. Tabulated sine in radians */
     double operator()(double val) const
     {
-        int aux=(int)(val / sampl);
+        int aux=(int)(val * isampl);
         return tabulatedsinc[ABS(aux)];
     }
 
