@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 {
     Image<double>   I, Vdist, Vlabel;
     FileName        fn_in, fn_out, fn_dist, fn_label;
-    double          th_below, th_above, th;
+    double          th_below, th_above, th,replace_by;
     double          dmin, dmax;
     int             enable_th_below, enable_th_above, enable_th_abs_below;
     int             enable_dmin, enable_dmax;
@@ -60,24 +60,27 @@ int main(int argc, char **argv)
         fn_dist    = getParameter(argc, argv, "-dist", "");
         fn_label   = getParameter(argc, argv, "-label", "");
         if ((enable_th_abs_below = checkParameter(argc, argv, "-abs_below")))
-            th_below = textToFloat(getParameter(argc, argv, "-abs_below"));
+            replace_by = th_below = textToFloat(getParameter(argc, argv, "-abs_below"));
         if ((enable_th_below = checkParameter(argc, argv, "-below")))
-            th_below = textToFloat(getParameter(argc, argv, "-below"));
+            replace_by = th_below = textToFloat(getParameter(argc, argv, "-below"));
         if ((enable_th_above = checkParameter(argc, argv, "-above")))
-            th_above = textToFloat(getParameter(argc, argv, "-above"));
+            replace_by = th_above = textToFloat(getParameter(argc, argv, "-above"));
         if ((enable_dmin = checkParameter(argc, argv, "-dmin")))
             dmin = textToFloat(getParameter(argc, argv, "-dmin"));
         if ((enable_dmax = checkParameter(argc, argv, "-dmax")))
             dmax = textToFloat(getParameter(argc, argv, "-dmax"));
+        if ( checkParameter(argc, argv, "-replace_by"))
+            replace_by = textToFloat(getParameter(argc, argv, "-replace_by"));
+
         binarize = checkParameter(argc, argv, "-binarize");
         if (binarize)
         {
             if (enable_th_above)
-                th = th_above;
+                th = replace_by;
             else if (enable_th_below)
-                th = th_below;
+                th = replace_by;
             else if (enable_th_abs_below)
-                th = th_below;
+                th = replace_by;
             else
                 th = 0;
         }
@@ -135,9 +138,9 @@ int main(int argc, char **argv)
 
         // Apply density restrictions -------------------------------------------
         if (enable_th_below)
-            I().threshold("below", th_below, th_below, mask);
+            I().threshold("below", th_below, replace_by, mask);
         if (enable_th_above)
-            I().threshold("above", th_above, th_above, mask);
+            I().threshold("above", th_above, replace_by, mask);
         if (enable_th_abs_below)
             I().threshold("abs_below", th_below, 0, mask);
 
@@ -197,6 +200,7 @@ void Usage()
     << "  [-dmax <dmax>]]                 : remove voxels whose distance is greater\n"
     << "  [-below <th>]                   : remove voxels below this threshold\n"
     << "  [-above <th>]                   : remove voxels above this threshold\n"
+    << "  [-replace_by <th>]              : set pixels about/bellow threshold to this value\n"
     << "  [-abs_below <th>]               : remove voxels below this threshold\n"
     << "                                  : they will be set to 0\n"
     << "  [-binarize]]                    : binarize output\n"
