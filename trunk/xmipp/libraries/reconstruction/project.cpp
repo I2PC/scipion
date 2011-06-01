@@ -590,20 +590,17 @@ int Assign_angles(MetaData &DF, const Projection_Parameters &prm,
                 SymList SL;
                 if (fn_sym != "")
                     SL.read_sym_file(fn_sym);
-                MetaData DF_aux;
+                std::vector<double> rotList, tiltList;
                 double rot_step_at_equator = (prm.rot_range.angF - prm.rot_range.ang0) /
                                              (double)(Nrot - 1);
-                make_even_distribution(DF_aux, rot_step_at_equator, SL, true);
-                FOR_ALL_OBJECTS_IN_METADATA(DF_aux)
+                make_even_distribution(rotList, tiltList, rot_step_at_equator, SL, true);
+                size_t NN=rotList.size();
+                for (size_t n=0; n<NN; ++n)
                 {
-                    double rot,tilt,psi;
-                    DF_aux.getValue(MDL_ANGLEROT,rot,__iter.objId);
-                    DF_aux.getValue(MDL_ANGLETILT,tilt,__iter.objId);
-                    DF_aux.getValue(MDL_ANGLEPSI,psi,__iter.objId);
                     size_t DFid=DF.addObject();
-                    DF.setValue(MDL_ANGLEROT,rot,DFid);
-                    DF.setValue(MDL_ANGLETILT,tilt,DFid);
-                    DF.setValue(MDL_ANGLEPSI,psi,DFid);
+                    DF.setValue(MDL_ANGLEROT,rotList[n],DFid);
+                    DF.setValue(MDL_ANGLETILT,tiltList[n],DFid);
+                    DF.setValue(MDL_ANGLEPSI,0.0,DFid);
                 }
             }
         }
