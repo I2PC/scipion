@@ -162,5 +162,49 @@ public:
     /** Get task to process */
     bool getTaskToProcess(size_t &objId, size_t &objIndex);
 };
+
+/** Macro to define a simple MPI paralelization
+ * of a program based on XmippMetaDataProgram */
+#define CREATE_MPI_METADATA_PROGRAM(baseClassName, mpiClassName) \
+class mpiClassName: public baseClassName, public MpiMetadataProgram\
+{\
+public:\
+    void read(int argc, char **argv)\
+    {\
+        MpiMetadataProgram::read(argc,argv);\
+        if (!node->isMaster())\
+            verbose=0;\
+        baseClassName::read(argc, argv);\
+    }\
+    void preProcess()\
+    {\
+        baseClassName::preProcess();\
+        createTaskDistributor(mdIn);\
+    }\
+    void startProcessing()\
+    {\
+        if (node->isMaster())\
+            baseClassName::startProcessing();\
+    }\
+    void showProgress()\
+    {\
+        if (node->isMaster())\
+        {\
+            time_bar_done=first+1;\
+            baseClassName::showProgress();\
+        }\
+    }\
+    bool getImageToProcess(size_t &objId, size_t &objIndex)\
+    {\
+        return getTaskToProcess(objId, objIndex);\
+    }\
+    void finishProcessing()\
+    {\
+        node->gatherMetadatas(mdOut, fn_out);\
+        if (node->isMaster())\
+            baseClassName::finishProcessing();\
+    }\
+}\
+
 /** @} */
 #endif /* XMIPP_MPI_H_ */
