@@ -38,7 +38,8 @@
 bool directions_are_unique(double rot,  double tilt,
                            double rot2, double tilt2,
                            double rot_limit, double tilt_limit,
-                           SymList &SL, bool include_mirrors);
+                           SymList &SL, bool include_mirrors,
+                           Matrix2D<double> &Laux, Matrix2D<double> &Raux);
 
 /// Calculate angular distance between two directions
 double distance_directions(double rot1, double tilt1,
@@ -46,14 +47,15 @@ double distance_directions(double rot1, double tilt1,
                            bool include_mirrors);
 
 /// Make even distribution, taking symmetry into account
-void make_even_distribution(MetaData &DF, double sampling,
-                            SymList &SL, bool include_mirror);
+void make_even_distribution(std::vector<double> &rotList, std::vector<double> &tiltList,
+							double sampling, SymList &SL, bool include_mirror);
 
 /// Select a user-provided tilt range
 void limit_tilt_range(MetaData &DF, double tilt_range0, double tilt_rangeF);
 
 /// Determine which of the entries in DFlib is closest to [rot1,tilt1]
 int find_nearest_direction(double rot1, double tilt1,
-                           MetaData &DFlib, SymList &SL);
+                           std::vector<double> &rotList, std::vector<double> &tiltList,
+                           SymList &SL, Matrix2D<double> &Laux, Matrix2D<double> &Raux);
 //@}
 #endif
