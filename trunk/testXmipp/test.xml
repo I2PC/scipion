@@ -80,6 +80,12 @@
         </CASE>
     </PROGRAM>
     
+     <PROGRAM name="xmipp_ctf_correct_idr" mpi="FALSE">
+        <CASE arguments="-i input/projectionsBacteriorhodopsinWithCTF.sel --vol input/phantomBacteriorhodopsin.vol -o %o/idr.stk" changeDir="FALSE">
+            <FILE filename="idr.stk"/>
+        </CASE>
+     </PROGRAM>
+     
      <PROGRAM name="xmipp_ctf_create_ctfdat" mpi="FALSE">
         <CASE arguments="-i input/micrographs.xmd --ctfs input/ctfs.xmd --oroot %o/output" changeDir="FALSE">
             <FILE filename="output.ctfdat"/>
@@ -329,6 +335,11 @@
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_reconstruct_fourier" mpi="FALSE">
+        <CASE arguments="-i input/aFewProjections.sel -o  %o/recon.vol " changeDir="FALSE">
+            <FILE filename="recon.vol"/>
+        </CASE>
+    </PROGRAM>
+    <PROGRAM name="xmipp_reconstruct_wbp" mpi="FALSE">
         <CASE arguments="-i input/aFewProjections.sel -o  %o/recon.vol " changeDir="FALSE">
             <FILE filename="recon.vol"/>
         </CASE>
