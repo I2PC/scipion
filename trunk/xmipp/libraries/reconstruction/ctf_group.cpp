@@ -504,7 +504,7 @@ void ProgCtfGroup::manualRun()
     int counter=0;
     DF.setValueCol(MDL_DEFGROUP,-2);
     sortedCtfMD.setValueCol(MDL_DEFGROUP,-1);
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
     sortedCtfMD.write("sortedCtfMD1.xmd");
@@ -530,7 +530,7 @@ void ProgCtfGroup::manualRun()
             progress_bar(counter);
     }
     progress_bar(n);
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
     unionMD.write("unionMD.xmd");
@@ -538,7 +538,7 @@ void ProgCtfGroup::manualRun()
 #undef DEBUG
 
     sortedCtfMD.importObjects(unionMD, MDValueNE(MDL_DEFGROUP, -2));
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
     sortedCtfMD.write("sortedCtfMD3.xmd");
