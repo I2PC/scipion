@@ -454,7 +454,7 @@ double FourierFilter::maskPower()
 // Correct phase -----------------------------------------------------------
 void FourierFilter::correctPhase()
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(maskFourier)
-    if (DIRECT_MULTIDIM_ELEM(maskFourier,n)< 0)
-        DIRECT_MULTIDIM_ELEM(maskFourier,n)*= -1;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(maskFourierd)
+    if (DIRECT_MULTIDIM_ELEM(maskFourierd,n)< 0)
+        DIRECT_MULTIDIM_ELEM(maskFourierd,n)*= -1;
 }
