@@ -23,26 +23,58 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <mpi.h>
+#include <data/mpi.h>
 
 #include <reconstruction/reconstruct_wbp.h>
 
-class ProgMPIRecWbp: public ProgRecWbp
+class ProgMPIRecWbp: public ProgRecWbp, public MpiMetadataProgram
 {
-
 public:
-
-    /** computing node number. Master=0 */
-    int rank;
-    int size, num_img_tot;
-
+    void read(int argc, char **argv)
+    {
+        MpiMetadataProgram::read(argc,argv);
+        if (!node->isMaster())
+            verbose=0;
+        ProgRecWbp::read(argc, argv);
+    }
+    void preProcess()
+    {
+        ProgRecWbp::preProcess();
+        createTaskDistributor(mdIn);
+    }
+    void startProcessing()
+    {
+        if (node->isMaster())
+            ProgRecWbp::startProcessing();
+    }
+    void showProgress()
+    {
+        if (node->isMaster())
+        {
+            time_bar_done=first+1;
+            ProgRecWbp::showProgress();
+        }
+    }
+    bool getImageToProcess(size_t &objId, size_t &objIndex)
+    {
+        return getTaskToProcess(objId, objIndex);
+    }
+    void finishProcessing()
+    {
+        node->gatherMetadatas(mdOut, fn_out);
+        if (node->isMaster())
+            ProgRecWbp::finishProcessing();
+    }
+}
+#ifdef NEVER
+{
+public:
     Image<double> vol, aux;
     int iaux;
 
 public:
-
     /*  constructor ------------------------------------------------------- */
-    ProgMPIRecWbp()
+    ProgMPIRecWbp(int argc, char **argv)
     {
         //parent class constructor will be called by deault without parameters
         MPI_Comm_size(MPI_COMM_WORLD, &(size));
@@ -92,7 +124,7 @@ int main(int argc, char **argv)
 
     if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
     {
-        fprintf(stderr, "MPI initialization error\n");
+        fprintf(stderr, "MPI initialization errorn");
         exit(EXIT_FAILURE);
     }
 
@@ -142,4 +174,4 @@ int main(int argc, char **argv)
     exit(0);
 
 }
-
+#endif
