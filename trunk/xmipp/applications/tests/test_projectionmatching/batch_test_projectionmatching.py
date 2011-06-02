@@ -32,7 +32,7 @@ class TestProjMatching(unittest.TestCase):
                                 sys.argv[0],
                                 self.WorkingDir)
                 
-    def test_00execute_ctf_groups(self):
+    def test_000execute_ctf_groups(self):
         CtfGroupDirectory = os.path.join(self.path,'CtfGroups')
         CtfGroupRootName  = 'ctf'
         dict = {
@@ -75,7 +75,7 @@ class TestProjMatching(unittest.TestCase):
         goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(compareTwoFiles(goldName,testName))
 
-    def test_10execute_mask(self):
+    def test_010execute_mask(self):
         maskedFileNamesIter='ProjMatch/new20/Iter_01/masked_reference_ref_01.vol'
         dict = {
                 'DoMask': True,
@@ -93,7 +93,7 @@ class TestProjMatching(unittest.TestCase):
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(ImgCompare(goldFileName,testFileName))
 
-    def test_20angular_project_library(self):
+    def test_020angular_project_library(self):
         dict = {'AngSamplingRateDeg': '1',
                 'CtfGroupSubsetFileName': 'ProjMatch/new20/CtfGroup/ctf_images.sel',
                 'DoCtfCorrection': True,
@@ -142,7 +142,7 @@ class TestProjMatching(unittest.TestCase):
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
-    def test_30projection_matching(self):
+    def test_030projection_matching(self):
         tmpDirName ='ProjMatch/new20/Iter_01/ProjMatchClasses'
         dict = {    'AvailableMemory': 2,
                     'CtfGroupDirectory': 'ProjMatch/new20/CtfGroups',
@@ -176,7 +176,7 @@ class TestProjMatching(unittest.TestCase):
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(ImgCompare(goldFileName,testFileName))
 
-    def test_000040assign_images_to_references(self):
+    def test_040assign_images_to_references(self):
         dict = {   
                 'DocFileInputAngles': 'ProjMatch/new20/Iter_01/current_angles.doc',
                 'NumberOfCtfGroups': 2L,
