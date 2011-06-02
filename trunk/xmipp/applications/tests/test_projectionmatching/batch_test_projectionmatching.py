@@ -194,7 +194,7 @@ class TestProjMatching(unittest.TestCase):
         assign_images_to_references(self.log,dict)
         testFileName = dict[DocFileInputAngles]
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print "aaa",goldFileName,testFileName,"aaa"
+        print "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",goldFileName,testFileName,"aaa"
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
 from  XmippPythonTestResult import XmippPythonTestResult
