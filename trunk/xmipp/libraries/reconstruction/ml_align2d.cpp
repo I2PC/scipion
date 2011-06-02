@@ -2254,7 +2254,6 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         if (!fn_prefix.contains("block"))
             fn_ref = formatString("iter%06d@%s", iter, fn_ref.c_str());
 
-        std::cerr << "DEBUG_JM: fn_ref: " << fn_ref << std::endl;
         MDref.write(fn_ref, mode);
         if (outputType == OUT_REFS)
             outRefsMd = fn_ref;
