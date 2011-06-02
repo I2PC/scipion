@@ -67,6 +67,7 @@ void ProgCtfCorrectIdr::defineParams()
     XmippMetadataProgram::defineParams();
     addParamsLine("   --vol <volume>  : Volume with the current reconstruction");
     addParamsLine("  [--mu <s=1.8>]   : Relaxation factor");
+    addExampleLine("xmipp_ctf_correct_idr -i images.sel --vol currentGuess.vol -o idrCorrectedImages.stk");
 }
 
 /* IDR correction ---------------------------------------------------------- */
