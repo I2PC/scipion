@@ -2199,17 +2199,20 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 
     if (write_img_xmd)
     {
+        static WriteModeMetaData mode = MD_OVERWRITE;
         //Write image metadata, for each iteration a new block will be written
-        if (fn_prefix == "iter")
+        if (fn_prefix == ITER_PREFIX)
             fn_tmp = formatString("iter%06d@%s_iter_images.xmd", iter, rootStr);
         else
             fn_tmp = formatString("%s_%s_images.xmd", rootStr, prefixStr);
-        MDimg.write(fn_tmp, MD_APPEND);
+        MDimg.write(fn_tmp, mode);
+        mode = MD_APPEND;
     }
 
 
     if (write_refs_log)
     {
+        static WriteModeMetaData mode = MD_OVERWRITE;
         // Write out current reference images and fill sel & log-file
         // Re-use the MDref metadata that was read in produceSideInfo2
         // This way. MDL_ANGLEROT, MDL_ANGLETILT, MDL_REF etc are treated ok for do_ML3D
@@ -2217,7 +2220,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         size_t objId;
         int select_img;
 
-        if (fn_prefix == "iter")
+        if (fn_prefix == ITER_PREFIX)
             fn_tmp = formatString("%s_iter%06d_refs.stk", rootStr, iter);
         else
             fn_tmp = formatString("%s_%s_refs.stk", rootStr, prefixStr);
@@ -2229,7 +2232,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
             Itmp = (*ptrImages)[refno];
             //Itmp = model.Iref[refno];
             Itmp.write(fn_tmp, select_img, true, WRITE_REPLACE);
-            MDref.setValue(MDL_ITER, iter, objId);//write out iteration number
+            //MDref.setValue(MDL_ITER, iter, objId);//write out iteration number
             MDref.setValue(MDL_REF, select_img, objId); //Also write reference number
             MDref.setValue(MDL_IMAGE, formatString("%06d@%s", select_img, fn_tmp.c_str()), objId);
             MDref.setValue(MDL_ENABLED, 1, objId);
@@ -2246,12 +2249,15 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         //fn_tmp.copyFile(formatString("%s_output_block%d.stk", fn_tmp.c_str(), current_block));
 
         fn_tmp = formatString("%s_%s", rootStr, prefixStr);
-        if (fn_prefix.contains("block"))
-            MDref.write(fn_tmp + "_refs.xmd");
-        else
-            MDref.append(fn_tmp + "_refs.xmd");
+        FileName fn_ref = fn_tmp + "_refs.xmd";
+
+        if (!fn_prefix.contains("block"))
+            fn_ref = formatString("iter%06d@%s", iter, fn_ref.c_str());
+
+        std::cerr << "DEBUG_JM: fn_ref: " << fn_ref << std::endl;
+        MDref.write(fn_ref, mode);
         if (outputType == OUT_REFS)
-            outRefsMd = fn_tmp + "_refs.xmd";
+            outRefsMd = fn_ref;
         // Write out log-file
         MetaData mdLog;
         objId = mdLog.addObject();
@@ -2263,10 +2269,11 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         mdLog.setValue(MDL_RANDOMSEED, seed, objId);
         if (write_norm)
             mdLog.setValue(MDL_INTSCALE, average_scale, objId);
-        if (fn_prefix.contains("block"))
+        if (fn_prefix.contains("block") || mode == MD_OVERWRITE)
             mdLog.write(fn_tmp + "_logs.xmd");
         else
             mdLog.append(fn_tmp + "_logs.xmd");
+        mode = MD_APPEND;
     }
 
 }//close function writeModel
