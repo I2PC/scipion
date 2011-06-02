@@ -30,7 +30,7 @@
 ProgAngularProjectLibrary::ProgAngularProjectLibrary()
 {
     /** sampling object 1 by default*/
-    mysampling.SetSampling(1);
+    mysampling.setSampling(1);
     VShears=NULL;
 }
 
@@ -201,7 +201,7 @@ void ProgAngularProjectLibrary::run()
 
     show();
     //all ranks
-    mysampling.SetSampling(sampling);
+    mysampling.setSampling(sampling);
     srand ( time(NULL) );
     //process the symmetry file
     //only checks symmetry and set pg_order and pg_group, no memory allocation
@@ -213,18 +213,18 @@ void ProgAngularProjectLibrary::run()
         int my_seed;
         my_seed=rand();
         // set noise deviation and seed
-        mysampling.SetNoise(perturb_projection_vector,my_seed);
+        mysampling.setNoise(perturb_projection_vector,my_seed);
     }
     if(angular_distance_bool!=0)
-        mysampling.SetNeighborhoodRadius(angular_distance);//irrelevant
+        mysampling.setNeighborhoodRadius(angular_distance);//irrelevant
     //true -> half_sphere
-    mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
+    mysampling.computeSamplingPoints(false,max_tilt_angle,min_tilt_angle);
     //only rank 0
-    //mysampling.create_sym_file(fn_sym,symmetry, sym_order);
+    //mysampling.createSymFile(fn_sym,symmetry, sym_order);
     //all nodes
     mysampling.SL.read_sym_file(fn_sym);
     //store symmetry matrices, this is faster than computing them each time
-    mysampling.fill_L_R_repository();
+    mysampling.fillLRRepository();
     //mpi_barrier here
     //all working nodes must read symmetry file
     //and experimental docfile if apropiate
@@ -233,7 +233,7 @@ void ProgAngularProjectLibrary::run()
     // We first sample The  whole sphere
     // Then we remove point redundant due to sampling symmetry
     // use old symmetry, this is geometric does not use L_R
-    mysampling.remove_redundant_points(symmetry, sym_order);
+    mysampling.removeRedundantPoints(symmetry, sym_order);
 
     //=========================
     //======================
@@ -243,28 +243,28 @@ void ProgAngularProjectLibrary::run()
     //        REPORT_ERROR(ERR_VALUE_INCORRECT,
     //                     (std::string)"Invalid neig symmetry" +  fn_sym_neigh);
     //    mysampling.SL.read_sym_file(fn_sym_neigh);
-    //    mysampling.fill_L_R_repository();
+    //    mysampling.fillLRRepository();
     //precompute product between symmetry matrices and experimental data
     if (FnexperimentalImages.size() > 0)
-        mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
+        mysampling.fillExpDataProjectionDirectionByLR(FnexperimentalImages);
 
     //remove points not close to experimental points, only for no symmetric cases
     if (FnexperimentalImages.size() > 0 &&
         remove_points_far_away_from_experimental_data_bool)
     {
         // here we remove points no close to experimental data, neight symmetry must be use
-        mysampling.remove_points_far_away_from_experimental_data();
+        mysampling.removePointsFarAwayFromExperimentalData();
     }
     if(compute_closer_sampling_point_bool)
     {
         //find sampling point closer to experimental point (only 0) and bool
         //and save docfile with this information
         // use neight symmetry
-        mysampling.find_closest_sampling_point(FnexperimentalImages,output_file_root);
+        mysampling.findClosestSamplingPoint(FnexperimentalImages,output_file_root);
     }
     //only rank 0
     //write docfile with vectors and angles
-    mysampling.create_asym_unit_file(output_file_root);
+    mysampling.createAsymUnitFile(output_file_root);
     //all nodes
     //If there is no reference available exit
     try
@@ -283,8 +283,8 @@ void ProgAngularProjectLibrary::run()
     if (compute_neighbors_bool)
     {
         // new symmetry
-        mysampling.compute_neighbors(only_winner);
-        mysampling.save_sampling_file(output_file_root,false);
+        mysampling.computeNeighbors(only_winner);
+        mysampling.saveSamplingFile(output_file_root,false);
     }
     //release some memory
     mysampling.exp_data_projection_direction_by_L_R.clear();
@@ -348,7 +348,7 @@ void ProgAngularProjectLibrary::createGroupSamplingFiles(void)
 #endif
 
     //load txt file
-    mysampling.read_sampling_file(output_file_root,false);
+    mysampling.readSamplingFile(output_file_root,false);
 #ifdef  DEBUGTIME
 
     time (&end);
@@ -377,19 +377,19 @@ void ProgAngularProjectLibrary::createGroupSamplingFiles(void)
             //I guess so since user may have supplied a particular
             //defocus classification. ROB
         {
-            mysampling.fill_exp_data_projection_direction_by_L_R(fn_temp);//SFBlock@fn_groups
+            mysampling.fillExpDataProjectionDirectionByLR(fn_temp);//SFBlock@fn_groups
             if(compute_closer_sampling_point_bool)
             {
                 //find sampling point closer to experimental point (only 0) and bool
                 //and save docfile with this information
-                mysampling.find_closest_sampling_point(fn_temp,my_output_file_root);
+                mysampling.findClosestSamplingPoint(fn_temp,my_output_file_root);
             }
 
-            //save save_sampling_file
+            //save saveSamplingFile
             if (compute_neighbors_bool)
             {
-                mysampling.compute_neighbors(only_winner);
-                mysampling.save_sampling_file(my_output_file_root,false);
+                mysampling.computeNeighbors(only_winner);
+                mysampling.saveSamplingFile(my_output_file_root,false);
             }
         }
     }

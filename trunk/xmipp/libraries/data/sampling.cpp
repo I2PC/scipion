@@ -96,7 +96,7 @@ Sampling::Sampling()
 #undef DEBUG1
 }
 
-void Sampling::SetSampling(double sampling)
+void Sampling::setSampling(double sampling)
 {
     sampling_rate_rad = DEG2RAD(sampling);
     number_of_samples = ROUND(cte_w / sampling_rate_rad)+1;
@@ -109,13 +109,13 @@ void Sampling::SetSampling(double sampling)
     }
 }
 
-void Sampling::SetNoise(double noise_deviation, int my_seed)
+void Sampling::setNoise(double noise_deviation, int my_seed)
 {
     sampling_noise = noise_deviation;
     init_random_generator(my_seed);
 }
 
-void Sampling::SetNeighborhoodRadius(double neighborhood)
+void Sampling::setNeighborhoodRadius(double neighborhood)
 {
     if(neighborhood<0)
         cos_neighborhood_radius=-1.01;
@@ -133,7 +133,7 @@ void Sampling::SetNeighborhoodRadius(double neighborhood)
 }
 
 /* Compute edge sampling points using Baumgardner  1995 */
-void Sampling::Compute_sampling_points(bool only_half_sphere,
+void Sampling::computeSamplingPoints(bool only_half_sphere,
                                        double max_tilt,
                                        double min_tilt)
 {
@@ -161,151 +161,151 @@ void Sampling::Compute_sampling_points(bool only_half_sphere,
     //01a
     starting_point = vertices_vectors[0];
     ending_point = vertices_vectors[1];
-    fill_edge(starting_point, ending_point, edge_vector_start, false);
+    fillEdge(starting_point, ending_point, edge_vector_start, false);
     starting_point = vertices_vectors[6];
     ending_point = vertices_vectors[1];
-    fill_edge(starting_point, ending_point, edge_vector_start, true);
+    fillEdge(starting_point, ending_point, edge_vector_start, true);
     //01b
     starting_point = vertices_vectors[0];
     ending_point = vertices_vectors[2];
-    fill_edge(starting_point, ending_point, edge_vector_end, false);
+    fillEdge(starting_point, ending_point, edge_vector_end, false);
     starting_point = vertices_vectors[6];
     ending_point = vertices_vectors[2];
-    fill_edge(starting_point, ending_point, edge_vector_end, true);
+    fillEdge(starting_point, ending_point, edge_vector_end, true);
     //02a
     starting_point = vertices_vectors[0];
     ending_point = vertices_vectors[2];
-    fill_edge(starting_point, ending_point, edge_vector_start, false);
+    fillEdge(starting_point, ending_point, edge_vector_start, false);
     starting_point = vertices_vectors[7];
     ending_point = vertices_vectors[2];
-    fill_edge(starting_point, ending_point, edge_vector_start, true);
+    fillEdge(starting_point, ending_point, edge_vector_start, true);
     //02b
     starting_point = vertices_vectors[0];
     ending_point = vertices_vectors[3];
-    fill_edge(starting_point, ending_point, edge_vector_end, false);
+    fillEdge(starting_point, ending_point, edge_vector_end, false);
     starting_point = vertices_vectors[7];
     ending_point = vertices_vectors[3];
-    fill_edge(starting_point, ending_point, edge_vector_end, true);
+    fillEdge(starting_point, ending_point, edge_vector_end, true);
 
     //03a
     starting_point = vertices_vectors[0];
     ending_point = vertices_vectors[3];
-    fill_edge(starting_point, ending_point, edge_vector_start, false);
+    fillEdge(starting_point, ending_point, edge_vector_start, false);
     starting_point = vertices_vectors[8];
     ending_point = vertices_vectors[3];
-    fill_edge(starting_point, ending_point, edge_vector_start, true);
+    fillEdge(starting_point, ending_point, edge_vector_start, true);
     //03b
     starting_point = vertices_vectors[0];
     ending_point = vertices_vectors[4];
-    fill_edge(starting_point, ending_point, edge_vector_end, false);
+    fillEdge(starting_point, ending_point, edge_vector_end, false);
     starting_point = vertices_vectors[8];
     ending_point = vertices_vectors[4];
-    fill_edge(starting_point, ending_point, edge_vector_end, true);
+    fillEdge(starting_point, ending_point, edge_vector_end, true);
 
     //04a
     starting_point = vertices_vectors[0];
     ending_point = vertices_vectors[4];
-    fill_edge(starting_point, ending_point, edge_vector_start, false);
+    fillEdge(starting_point, ending_point, edge_vector_start, false);
     starting_point = vertices_vectors[9];
     ending_point = vertices_vectors[4];
-    fill_edge(starting_point, ending_point, edge_vector_start, true);
+    fillEdge(starting_point, ending_point, edge_vector_start, true);
     //04b
     starting_point = vertices_vectors[0];
     ending_point = vertices_vectors[5];
-    fill_edge(starting_point, ending_point, edge_vector_end, false);
+    fillEdge(starting_point, ending_point, edge_vector_end, false);
     starting_point = vertices_vectors[9];
     ending_point = vertices_vectors[5];
-    fill_edge(starting_point, ending_point, edge_vector_end, true);
+    fillEdge(starting_point, ending_point, edge_vector_end, true);
 
     //05a
     starting_point = vertices_vectors[0];
     ending_point = vertices_vectors[5];
-    fill_edge(starting_point, ending_point, edge_vector_start, false);
+    fillEdge(starting_point, ending_point, edge_vector_start, false);
     starting_point = vertices_vectors[10];
     ending_point = vertices_vectors[5];
-    fill_edge(starting_point, ending_point, edge_vector_start, true);
+    fillEdge(starting_point, ending_point, edge_vector_start, true);
     //05b
     starting_point = vertices_vectors[0];
     ending_point = vertices_vectors[1];
-    fill_edge(starting_point, ending_point, edge_vector_end, false);
+    fillEdge(starting_point, ending_point, edge_vector_end, false);
     starting_point = vertices_vectors[10];
     ending_point = vertices_vectors[1];
-    fill_edge(starting_point, ending_point, edge_vector_end, true);
+    fillEdge(starting_point, ending_point, edge_vector_end, true);
 
     //06a
     starting_point = vertices_vectors[11];
     ending_point = vertices_vectors[10];
-    fill_edge(starting_point, ending_point, edge_vector_start, false);
+    fillEdge(starting_point, ending_point, edge_vector_start, false);
     starting_point = vertices_vectors[5];
     ending_point = vertices_vectors[10];
-    fill_edge(starting_point, ending_point, edge_vector_start, true);
+    fillEdge(starting_point, ending_point, edge_vector_start, true);
     //06b
     starting_point = vertices_vectors[11];
     ending_point = vertices_vectors[9];
-    fill_edge(starting_point, ending_point, edge_vector_end, false);
+    fillEdge(starting_point, ending_point, edge_vector_end, false);
     starting_point = vertices_vectors[5];
     ending_point = vertices_vectors[9];
-    fill_edge(starting_point, ending_point, edge_vector_end, true);
+    fillEdge(starting_point, ending_point, edge_vector_end, true);
 
     //07a
     starting_point = vertices_vectors[11];
     ending_point = vertices_vectors[9];
-    fill_edge(starting_point, ending_point, edge_vector_start, false);
+    fillEdge(starting_point, ending_point, edge_vector_start, false);
     starting_point = vertices_vectors[4];
     ending_point = vertices_vectors[9];
-    fill_edge(starting_point, ending_point, edge_vector_start, true);
+    fillEdge(starting_point, ending_point, edge_vector_start, true);
     //07b
     starting_point = vertices_vectors[11];
     ending_point = vertices_vectors[8];
-    fill_edge(starting_point, ending_point, edge_vector_end, false);
+    fillEdge(starting_point, ending_point, edge_vector_end, false);
     starting_point = vertices_vectors[4];
     ending_point = vertices_vectors[8];
-    fill_edge(starting_point, ending_point, edge_vector_end, true);
+    fillEdge(starting_point, ending_point, edge_vector_end, true);
 
     //08a
     starting_point = vertices_vectors[11];
     ending_point = vertices_vectors[8];
-    fill_edge(starting_point, ending_point, edge_vector_start, false);
+    fillEdge(starting_point, ending_point, edge_vector_start, false);
     starting_point = vertices_vectors[3];
     ending_point = vertices_vectors[8];
-    fill_edge(starting_point, ending_point, edge_vector_start, true);
+    fillEdge(starting_point, ending_point, edge_vector_start, true);
     //08b
     starting_point = vertices_vectors[11];
     ending_point = vertices_vectors[7];
-    fill_edge(starting_point, ending_point, edge_vector_end, false);
+    fillEdge(starting_point, ending_point, edge_vector_end, false);
     starting_point = vertices_vectors[3];
     ending_point = vertices_vectors[7];
-    fill_edge(starting_point, ending_point, edge_vector_end, true);
+    fillEdge(starting_point, ending_point, edge_vector_end, true);
 
     //09a
     starting_point = vertices_vectors[11];
     ending_point = vertices_vectors[7];
-    fill_edge(starting_point, ending_point, edge_vector_start, false);
+    fillEdge(starting_point, ending_point, edge_vector_start, false);
     starting_point = vertices_vectors[2];
     ending_point = vertices_vectors[7];
-    fill_edge(starting_point, ending_point, edge_vector_start, true);
+    fillEdge(starting_point, ending_point, edge_vector_start, true);
     //09b
     starting_point = vertices_vectors[11];
     ending_point = vertices_vectors[6];
-    fill_edge(starting_point, ending_point, edge_vector_end, false);
+    fillEdge(starting_point, ending_point, edge_vector_end, false);
     starting_point = vertices_vectors[2];
     ending_point = vertices_vectors[6];
-    fill_edge(starting_point, ending_point, edge_vector_end, true);
+    fillEdge(starting_point, ending_point, edge_vector_end, true);
 
     //10a
     starting_point = vertices_vectors[11];
     ending_point = vertices_vectors[6];
-    fill_edge(starting_point, ending_point, edge_vector_start, false);
+    fillEdge(starting_point, ending_point, edge_vector_start, false);
     starting_point = vertices_vectors[1];
     ending_point = vertices_vectors[6];
-    fill_edge(starting_point, ending_point, edge_vector_start, true);
+    fillEdge(starting_point, ending_point, edge_vector_start, true);
     //10b
     starting_point = vertices_vectors[11];
     ending_point = vertices_vectors[10];
-    fill_edge(starting_point, ending_point, edge_vector_end, false);
+    fillEdge(starting_point, ending_point, edge_vector_end, false);
     starting_point = vertices_vectors[1];
     ending_point = vertices_vectors[10];
-    fill_edge(starting_point, ending_point, edge_vector_end, true);
+    fillEdge(starting_point, ending_point, edge_vector_end, true);
 
     //#define DEBUG2
 #ifdef  DEBUG2
@@ -372,7 +372,7 @@ void Sampling::Compute_sampling_points(bool only_half_sphere,
                 sampling_points_vector.push_back(edge_vector_end[i]);
         }
     }
-//#define DEBUG3
+    //#define DEBUG3
 #ifdef  DEBUG3
     std::ofstream filestr;
     filestr.open ("debug3_1.bild");
@@ -411,7 +411,7 @@ void Sampling::Compute_sampling_points(bool only_half_sphere,
             j = 0;
             j_flag = false;
         }
-        fill_distance(edge_vector_start[i],
+        fillDistance(edge_vector_start[i],
                       edge_vector_end[i],
                       sampling_points_vector,
                       (j + 1) % number_of_samples,
@@ -487,7 +487,7 @@ void Sampling::Compute_sampling_points(bool only_half_sphere,
         {
             aux = sampling_points_angles[k]; /* aux is a maximum of A[0]..A[k] */
             aux1 = sampling_points_vector[k]; /* aux is a maximum of A[0]..A[k] */
-            if (sort_func(aux, sampling_points_angles[k+1]))
+            if (sortFunc(aux, sampling_points_angles[k+1]))
             {
                 sampling_points_angles[k] = sampling_points_angles[k+1];
                 //                sampling_points_angles[k] = sampling_points_angles[k+1];
@@ -503,7 +503,7 @@ void Sampling::Compute_sampling_points(bool only_half_sphere,
 
 
 #endif
-//#define DEBUG3
+    //#define DEBUG3
 #ifdef  DEBUG3
     std::ofstream filestr;
     filestr.open ("sampling_file.bild");
@@ -524,7 +524,7 @@ void Sampling::Compute_sampling_points(bool only_half_sphere,
 }
 
 // return 1 if a should go first 0 is equal -1 if before
-int Sampling::sort_func(Matrix1D<double> &t, Matrix1D<double> &a)
+int Sampling::sortFunc(Matrix1D<double> &t, Matrix1D<double> &a)
 {
     if (YY(t) - 0.000001 > YY(a))
     {
@@ -544,7 +544,7 @@ int Sampling::sort_func(Matrix1D<double> &t, Matrix1D<double> &a)
     };
 }
 
-void Sampling::fill_edge(Matrix1D<double> starting_point,
+void Sampling::fillEdge(Matrix1D<double> starting_point,
                          Matrix1D<double> ending_point,
                          std::vector <Matrix1D<double> > & edge_vector,
                          bool END_FLAG
@@ -569,7 +569,7 @@ void Sampling::fill_edge(Matrix1D<double> starting_point,
         edge_vector.push_back(v_aux);
     }
 }
-void Sampling::fill_distance(Matrix1D<double> starting_point,
+void Sampling::fillDistance(Matrix1D<double> starting_point,
                              Matrix1D<double> ending_point,
                              std::vector <Matrix1D<double> > &
                              sampling_points_vector,
@@ -617,8 +617,19 @@ void Sampling::fill_distance(Matrix1D<double> starting_point,
     */
 }
 
-void Sampling::remove_redundant_points(const int symmetry,
-                                       int sym_order)
+#define CLEAR_VECTORS() \
+no_redundant_sampling_points_vector.clear();\
+no_redundant_sampling_points_angles.clear();\
+no_redundant_sampling_points_index.clear()
+
+#define CREATE_INDEXES() \
+    size_t __size = no_redundant_sampling_points_angles.size();\
+    no_redundant_sampling_points_index.resize(__size, 0);\
+    size_t * __ptrIndex = &(no_redundant_sampling_points_index[0]);\
+    for (size_t i = 1; i < __size; ++i)\
+      __ptrIndex[i] = i
+
+void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
 {
     Matrix2D<double>  L(4, 4), R(4, 4);
     Matrix2D<double>  aux(3, 3);
@@ -632,8 +643,8 @@ void Sampling::remove_redundant_points(const int symmetry,
     //int j_end=0;
     Matrix1D<double>  row(3);
 
-    no_redundant_sampling_points_vector.clear();
-    no_redundant_sampling_points_angles.clear();
+    CLEAR_VECTORS();
+
     double my_dotProduct;
     if (symmetry == pg_CN)
     {//OK
@@ -1161,9 +1172,11 @@ void Sampling::remove_redundant_points(const int symmetry,
         exit(0);
     }
 
+    CREATE_INDEXES();
+
 }
 
-void Sampling::remove_redundant_points_exhaustive(const int symmetry,
+void Sampling::removeRedundantPointsExhaustive(const int symmetry,
         int sym_order,
         bool only_half_sphere,
         double max_ang)
@@ -1174,17 +1187,15 @@ void Sampling::remove_redundant_points_exhaustive(const int symmetry,
     //int j_end=0;
     Matrix1D<double>  direction(3), direction1(3);
 
-    // First call to conventional remove_redundant_points
-    remove_redundant_points(symmetry, sym_order);
+    // First call to conventional removeRedundantPoints
+    removeRedundantPoints(symmetry, sym_order);
     std::vector <Matrix1D<double> > old_vector = no_redundant_sampling_points_vector;
     std::vector <Matrix1D<double> > old_angles = no_redundant_sampling_points_angles;
 
-    // Reset no_redundant vectors
-    no_redundant_sampling_points_vector.clear();
-    no_redundant_sampling_points_angles.clear();
+    CLEAR_VECTORS();
 
     // Precalculate symmetry matrices
-    fill_L_R_repository();
+    fillLRRepository();
 
     // Then check all points versus each other
     for (int i = 0; i < old_angles.size(); i++)
@@ -1220,6 +1231,8 @@ void Sampling::remove_redundant_points_exhaustive(const int symmetry,
         }
     } // for i
 
+    CREATE_INDEXES();
+
 }
 
 
@@ -1227,7 +1240,7 @@ void Sampling::remove_redundant_points_exhaustive(const int symmetry,
 //SINCE read_sym_file does not longer need a file
 //use symmetry functions instead
 /* Create symmetry file----------------------------------------------------- */
-void Sampling::create_sym_file(FileName simFp,int symmetry, int sym_order)
+void Sampling::createSymFile(FileName simFp,int symmetry, int sym_order)
 {
     symmetry_file = simFp + ".sym";
     std::ofstream SymFile;
@@ -1348,7 +1361,7 @@ void Sampling::create_sym_file(FileName simFp,int symmetry, int sym_order)
     SL.read_sym_file(symmetry_file);
 
 }
-void Sampling::create_asym_unit_file(const FileName &docfilename)
+void Sampling::createAsymUnitFile(const FileName &docfilename)
 {
     MetaData DF;
     FileName tmp_filename;
@@ -1367,7 +1380,7 @@ void Sampling::create_asym_unit_file(const FileName &docfilename)
     ;
 #endif
 
-    size_t id;
+    MDRow row;
     for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
     {
 #ifdef CHIMERA
@@ -1377,14 +1390,14 @@ void Sampling::create_asym_unit_file(const FileName &docfilename)
         << std::endl
         ;
 #endif
-
-        id=DF.addObject();
-        DF.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[i]),id);
-        DF.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[i]),id);
-        DF.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[i]),id);
-        DF.setValue(MDL_X,XX(no_redundant_sampling_points_vector[i]),id);
-        DF.setValue(MDL_Y,YY(no_redundant_sampling_points_vector[i]),id);
-        DF.setValue(MDL_Z,ZZ(no_redundant_sampling_points_vector[i]),id);
+        row.setValue(MDL_ORDER, no_redundant_sampling_points_index[i]);
+        row.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[i]));
+        row.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[i]));
+        row.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[i]));
+        row.setValue(MDL_X,XX(no_redundant_sampling_points_vector[i]));
+        row.setValue(MDL_Y,YY(no_redundant_sampling_points_vector[i]));
+        row.setValue(MDL_Z,ZZ(no_redundant_sampling_points_vector[i]));
+        DF.addRow(row);
     }
 #ifdef CHIMERA
     filestr.close();
@@ -1395,66 +1408,76 @@ void Sampling::create_asym_unit_file(const FileName &docfilename)
     DF.write(tmp_filename);
 }
 
-void Sampling::save_sampling_file(FileName outfilename,bool write_vectors)
+void Sampling::saveSamplingFile(FileName outfilename, bool write_vectors)
 {
-    FileName tmp_filename;
-    tmp_filename = outfilename + "_sampling.txt";
-    std::ofstream outfile;
-    outfile.open(tmp_filename.c_str());
-    if (outfile.fail())
+  std::cerr << "DEBUG_JM: entering Sampling::saveSamplingFile " <<std::endl;
+    FileName fn_tmp = outfilename + "_sampling.xmd";
+
+    MetaData md;
+
+
+    size_t size = my_neighbors.size();
+
+    //Write first block with experimental images order and
+    //its neighbors
+    size_t id;
+    for(size_t i = 0; i < size; ++i)
     {
-        std::cerr << "Can not open file" << tmp_filename << std::endl ;
-        exit(0);
+      id = md.addObject();
+      md.setValue(MDL_ORDER, i+1, id);
+      md.setValue(MDL_NEIGHBORS, my_neighbors[i], id);
     }
 
-    //total number of vectors
-    int num_elem;
-    num_elem = my_neighbors.size();
-    int num_elem2=0;
-    outfile << num_elem<< std::endl;
-    for(int i =0; i<num_elem;i++)
+    md.setComment("List with order of each experimental images and its neighbors");
+    md.write((String)"neighbors@" + fn_tmp);
+
+    md.clear();
+    size = no_redundant_sampling_points_index.size();
+    for (size_t i = 0; i < size; ++i)
     {
-        //total number of elements in a particular vector
-        num_elem2 = my_neighbors[i].size();
-        outfile  << num_elem2 << std::endl;
-        //outfile.write(reinterpret_cast<char*>(&num_elem2), sizeof(num_elem2));
-        //write vector[i] of neighbors, psi, distances
-        std::copy(my_neighbors[i].begin(),
-                  my_neighbors[i].end(),
-                  std::ostream_iterator<int>(outfile," "));
-        outfile << std::endl;
-#ifdef MYPSI
+      Matrix1D<double> &angles = no_redundant_sampling_points_angles[i];
+      id = md.addObject();
+      md.setValue(MDL_ORDER, no_redundant_sampling_points_index[i], id);
+      md.setValue(MDL_ANGLEROT, XX(angles), id);
+      md.setValue(MDL_ANGLEPSI, YY(angles), id);
+      md.setValue(MDL_ANGLETILT, ZZ(angles), id);
 
-        std::copy(my_neighbors_psi[i].begin(),
-                  my_neighbors_psi[i].end(),
-                  std::ostream_iterator<double>(outfile," "));
-        outfile << std::endl;
-#endif
-
+      if (write_vectors)
+      {
+        Matrix1D<double> &vectors = no_redundant_sampling_points_vector[i];
+        md.setValue(MDL_X, XX(vectors), id);
+        md.setValue(MDL_Y, YY(vectors), id);
+        md.setValue(MDL_Z, ZZ(vectors), id);
+      }
     }
+
+    md.write((String)"projectionDirections@" + fn_tmp, MD_APPEND);
+
+    std::cerr << "DEBUG_JM: leaving Sampling::saveSamplingFile " <<std::endl;
+    exit(1);
+
     //lenght is 3 for the next
     //save sampling points
-    outfile << no_redundant_sampling_points_angles.size()<< std::endl;
-    for (int i = 0; i < no_redundant_sampling_points_angles.size(); i++)
-    {
-        if (write_vectors)
-        {
-            outfile << XX(no_redundant_sampling_points_vector[i]) << " ";
-            outfile << YY(no_redundant_sampling_points_vector[i]) << " ";
-            outfile << ZZ(no_redundant_sampling_points_vector[i]) << std::endl;
-        }
-        outfile << XX(no_redundant_sampling_points_angles[i]) << " ";
-        outfile << YY(no_redundant_sampling_points_angles[i]) << " ";
-        outfile << ZZ(no_redundant_sampling_points_angles[i]) << std::endl;
-    }
-    //save_sampling_rate in radiands
-    outfile <<  sampling_rate_rad  << std::endl;
-    outfile <<  cos_neighborhood_radius << std::endl;
-    outfile.close();
+//    for (int i = 0; i < no_redundant_sampling_points_angles.size(); i++)
+//    {
+//        if (write_vectors)
+//        {
+//            outfile << XX(no_redundant_sampling_points_vector[i]) << " ";
+//            outfile << YY(no_redundant_sampling_points_vector[i]) << " ";
+//            outfile << ZZ(no_redundant_sampling_points_vector[i]) << std::endl;
+//        }
+//        outfile << XX(no_redundant_sampling_points_angles[i]) << " ";
+//        outfile << YY(no_redundant_sampling_points_angles[i]) << " ";
+//        outfile << ZZ(no_redundant_sampling_points_angles[i]) << std::endl;
+//    }
+//    //save_sampling_rate in radiands
+//    outfile <<  sampling_rate_rad  << std::endl;
+//    outfile <<  cos_neighborhood_radius << std::endl;
+//    outfile.close();
 }
 
 
-void Sampling::read_sampling_file(const FileName &infilename, bool read_vectors)
+void Sampling::readSamplingFile(const FileName &infilename, bool read_vectors)
 {
     FileName tmp_filename;
     tmp_filename = infilename.withoutExtension() + "_sampling.txt";
@@ -1514,7 +1537,7 @@ void Sampling::read_sampling_file(const FileName &infilename, bool read_vectors)
     infile.close();
 }
 
-void Sampling::compute_neighbors(bool only_winner)
+void Sampling::computeNeighbors(bool only_winner)
 {
     double rot,  tilt,  psi;
     double rotp, tiltp, psip;
@@ -1522,7 +1545,7 @@ void Sampling::compute_neighbors(bool only_winner)
     double winner_dotProduct;
     Matrix1D<double>  row(3);
     Matrix2D<double>  L(4, 4), R(4, 4);
-    std::vector<int>  aux_neighbors;
+    std::vector<size_t>  aux_neighbors;
     std::vector<double> aux_neighbors_psi;
     std::vector <Matrix1D<double> > exp_data_projection_direction;
     Matrix1D<double>  direction(3);
@@ -1533,17 +1556,22 @@ void Sampling::compute_neighbors(bool only_winner)
     my_neighbors_psi.clear();
 #endif
 
-    for(int j=0;j< exp_data_projection_direction_by_L_R.size();)
+    // calculate some sizes only once
+    size_t exp_data_projection_direction_by_L_R_size = exp_data_projection_direction_by_L_R.size();
+    size_t no_redundant_sampling_points_vector_size = no_redundant_sampling_points_vector.size();
+
+
+    for(size_t j = 0; j < exp_data_projection_direction_by_L_R_size;)
     {
 #ifdef MYPSI
         aux_neighbors_psi.clear();
 #endif
 
         aux_neighbors.clear();
-        for (int k = 0; k < R_repository.size(); k++,j++)
+        for (size_t k = 0; k < R_repository.size(); k++,j++)
         {
-            winner_dotProduct=-1.;
-            for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
+            winner_dotProduct = -1.;
+            for (size_t i = 0; i < no_redundant_sampling_points_vector_size; ++i)
             {
                 my_dotProduct = dotProduct(no_redundant_sampling_points_vector[i],
                                            exp_data_projection_direction_by_L_R[j]);
@@ -1552,7 +1580,7 @@ void Sampling::compute_neighbors(bool only_winner)
                 {
                     if(aux_neighbors.size()==0)
                     {
-                        aux_neighbors.push_back(i);
+                        aux_neighbors.push_back(no_redundant_sampling_points_index[i]);
                         winner_dotProduct=my_dotProduct;
 
 #ifdef MYPSI
@@ -1594,9 +1622,9 @@ void Sampling::compute_neighbors(bool only_winner)
                                 }
                             }
                         }
-                        if(new_reference)
+                        if (new_reference)
                         {
-                            aux_neighbors.push_back(i);
+                            aux_neighbors.push_back(no_redundant_sampling_points_index[i]);
 #ifdef MYPSI
 
                             aux_neighbors_psi.push_back(exp_data_projection_direction_by_L_R_psi[j]);
@@ -1666,47 +1694,36 @@ void Sampling::compute_neighbors(bool only_winner)
 }
 /** Remove all those points no closer than neighborhood_radius_rad
     */
-void Sampling::remove_points_far_away_from_experimental_data()
+#define REMOVE_LAST(vector) vector[i] = vector[my_end]; vector.pop_back();
+
+void Sampling::removePointsFarAwayFromExperimentalData()
 {
     double my_dotProduct;
     Matrix1D<double>  row(3),direction(3);
     Matrix2D<double>  L(4, 4), R(4, 4);
     double img_tilt,img_rot,img_psi;
 
-    for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
+    int my_end = no_redundant_sampling_points_vector.size() - 1;
+
+    for (int i = 0; i <= my_end; i++)
     {
         bool my_delete=true;
-        for(int j=0;j< exp_data_projection_direction_by_L_R.size();j++)
+        for (int j=0; my_delete && j< exp_data_projection_direction_by_L_R.size();j++)
         {
             my_dotProduct = dotProduct(no_redundant_sampling_points_vector[i],
                                        exp_data_projection_direction_by_L_R[j]);
 
             if (my_dotProduct > cos_neighborhood_radius)
-            {
                 my_delete=false;
-                break;//we want to keep this sampling point
-            }
         }//for j
         if(my_delete)
         {
+            REMOVE_LAST(no_redundant_sampling_points_vector);
+            REMOVE_LAST(no_redundant_sampling_points_angles);
+            REMOVE_LAST(no_redundant_sampling_points_index);
 
-
-            Matrix1D<double> aux(3);
-            int my_end;
-            my_end = no_redundant_sampling_points_vector.size()-1;
-            aux = no_redundant_sampling_points_vector[my_end];
-            no_redundant_sampling_points_vector[my_end] =
-                no_redundant_sampling_points_vector[i];
-            no_redundant_sampling_points_vector[i]=aux;
-            no_redundant_sampling_points_vector.pop_back();
-
-            aux = no_redundant_sampling_points_angles[my_end];
-            no_redundant_sampling_points_angles[my_end] =
-                no_redundant_sampling_points_angles[i];
-            no_redundant_sampling_points_angles[i]=aux;
-            no_redundant_sampling_points_angles.pop_back();
-
-            i--;//since a point has been swaped we should repeat the same index
+            --my_end;
+            --i;//since a point has been swaped we should repeat the same index
         }// if(my_delete)
     }//for i end
     //#define CHIMERA
@@ -1735,16 +1752,16 @@ void Sampling::remove_points_far_away_from_experimental_data()
 #endif
     #undef CHIMERA
 }
-void Sampling::find_closest_sampling_point(const FileName &FnexperimentalImages,
+void Sampling::findClosestSamplingPoint(const FileName &FnexperimentalImages,
         const FileName &output_file_root)
 {
     //read input files
     MetaData DFi;
     DFi.read(FnexperimentalImages);//experimental points
-    find_closest_sampling_point(DFi,output_file_root);
+    findClosestSamplingPoint(DFi,output_file_root);
 
 }
-void Sampling::find_closest_sampling_point(MetaData &DFi,
+void Sampling::findClosestSamplingPoint(MetaData &DFi,
         const FileName &output_file_root)
 {
     double my_dotProduct,my_dotProduct_aux;
@@ -1831,6 +1848,7 @@ void Sampling::find_closest_sampling_point(MetaData &DFi,
         DFo.set(6, exp_data_projection_direction_by_L_R_psi[winner_exp_L_R]);
 #endif
 
+        DFo.setValue(MDL_ORDER, no_redundant_sampling_points_index[winner_sampling], id);
         DFo.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[winner_sampling]), id);
         DFo.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[winner_sampling]), id);
         DFo.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[winner_sampling]), id);
@@ -1846,7 +1864,7 @@ void Sampling::find_closest_sampling_point(MetaData &DFi,
 #undef DEBUG3
 }
 
-void Sampling::find_closest_experimental_point()
+void Sampling::findClosestExperimentalPoint()
 {
     double my_dotProduct,my_dotProduct_aux;
     Matrix1D<double>  row(3),direction(3);
@@ -1861,7 +1879,7 @@ void Sampling::find_closest_experimental_point()
     aux_vec.resize(no_redundant_sampling_points_vector.size());
 #endif
 
-    std::vector<std::vector<int> >  aux_my_exp_img_per_sampling_point;
+    std::vector<std::vector<size_t> >  aux_my_exp_img_per_sampling_point;
 
     //resize vector
     aux_my_exp_img_per_sampling_point.resize(
@@ -1964,7 +1982,7 @@ void Sampling::find_closest_experimental_point()
     #undef DEBUG4
 }
 
-void Sampling::fill_L_R_repository(void)
+void Sampling::fillLRRepository(void)
 {
     Matrix2D<double>  L(4, 4), R(4, 4);
     Matrix2D<double>  Identity(3,3);
@@ -1993,16 +2011,16 @@ void Sampling::fill_L_R_repository(void)
 #undef DEBUG3
 }
 
-void Sampling::fill_exp_data_projection_direction_by_L_R(
+void Sampling::fillExpDataProjectionDirectionByLR(
     const FileName &FnexperimentalImages)
 {
     //read input files
     MetaData DFi;
     DFi.read(FnexperimentalImages);//experimental points
-    fill_exp_data_projection_direction_by_L_R(DFi);
+    fillExpDataProjectionDirectionByLR(DFi);
 }
 
-void Sampling::fill_exp_data_projection_direction_by_L_R(MetaData &DFi)
+void Sampling::fillExpDataProjectionDirectionByLR(MetaData &DFi)
 {
     std::vector <Matrix1D<double> > exp_data_projection_direction;
     Matrix1D<double>  direction(3);

@@ -141,11 +141,11 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
     //precompute product between symmetry matrices and experimental data
     mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
 
-    mysampling.remove_redundant_points(symmetry, sym_order);
+    mysampling.removeRedundantPoints(symmetry, sym_order);
     if (FnexperimentalImages.size() > 0 &&
         remove_points_far_away_from_experimental_data_bool)
         {
-        mysampling.remove_points_far_away_from_experimental_data(FnexperimentalImages);
+        mysampling.removePointsFarAwayFromExperimentalData(FnexperimentalImages);
         }
 
 	/* save files */
@@ -157,7 +157,7 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
 	           //and save docfile with this information
 	           mysampling.find_closest_sampling_point(FnexperimentalImages,output_file_root);
                }
-            //mysampling.create_sym_file(symmetry, sym_order);
+            //mysampling.createSymFile(symmetry, sym_order);
             mysampling.create_asym_unit_file(output_file_root);
         }
 
@@ -172,7 +172,7 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
         {
             if (compute_neighbors_bool)
                 {
-	            mysampling.compute_neighbors(FnexperimentalImages);
+	            mysampling.computeNeighbors(FnexperimentalImages);
 	            mysampling.save_sampling_file(output_file_root,false);
                 }
 	    }

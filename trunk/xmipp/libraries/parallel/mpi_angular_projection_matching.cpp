@@ -238,20 +238,20 @@ void MpiProgAngularProjectionMatching::computeChunks()
         computeChunkAngularDistance(symmetry, sym_order);
     //store symmetry matrices, this is faster than computing them
     //each time we need them
-    chunk_mysampling.fill_L_R_repository();
+    chunk_mysampling.fillLRRepository();
     int remaining_points = 0;
 
     while (remaining_points == 0)
     {
         //first set sampling rate
-        chunk_mysampling.SetSampling(chunk_angular_distance);
+        chunk_mysampling.setSampling(chunk_angular_distance);
         //create sampling points in the whole sphere
-        chunk_mysampling.Compute_sampling_points(false,91.,-91.);
+        chunk_mysampling.computeSamplingPoints(false,91.,-91.);
         //precompute product between symmetry matrices
         //and experimental data
-        chunk_mysampling.fill_exp_data_projection_direction_by_L_R(fn_exp);
+        chunk_mysampling.fillExpDataProjectionDirectionByLR(fn_exp);
         //remove redundant sampling points: symmetry
-        chunk_mysampling.remove_redundant_points(symmetry, sym_order);
+        chunk_mysampling.removeRedundantPoints(symmetry, sym_order);
         remaining_points = chunk_mysampling.no_redundant_sampling_points_angles.size();
         if (chunk_angular_distance > 2)
             chunk_angular_distance -= 1;
@@ -264,10 +264,10 @@ void MpiProgAngularProjectionMatching::computeChunks()
             REPORT_ERROR(ERR_VALUE_INCORRECT, "Can't compute chunk_angular_distance");
     }
     //remove sampling points too far away from experimental data
-    chunk_mysampling.remove_points_far_away_from_experimental_data();
+    chunk_mysampling.removePointsFarAwayFromExperimentalData();
     //for each sampling point find the experimental images
     //closer to that point than to any other
-    chunk_mysampling.find_closest_experimental_point();
+    chunk_mysampling.findClosestExperimentalPoint();
     //print number of points per node
     chunk_number = chunk_mysampling.my_exp_img_per_sampling_point.size();
     for (int j = 0; j < chunk_number; j++)

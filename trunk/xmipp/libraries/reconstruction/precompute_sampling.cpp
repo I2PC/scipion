@@ -30,7 +30,7 @@
 Prog_Sampling_Parameters::Prog_Sampling_Parameters()
 {
     /** sampling object 1 by default*/
-    mysampling.SetSampling(1);
+    mysampling.setSampling(1);
 }
 
 
@@ -89,14 +89,14 @@ void Prog_Sampling_Parameters::show()
 void Prog_Sampling_Parameters::run()
 {
     show();
-    mysampling.SetSampling(sampling);
-    mysampling.SetNeighborhoodRadius(neighborhood);
-    mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
-    //mysampling.Compute_sampling_points(false);
+    mysampling.setSampling(sampling);
+    mysampling.setNeighborhoodRadius(neighborhood);
+    mysampling.computeSamplingPoints(false,max_tilt_angle,min_tilt_angle);
+    //mysampling.computeSamplingPoints(false);
     mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order);
-    mysampling.remove_redundant_points(symmetry, sym_order);
-    mysampling.create_asym_unit_file(sampling_file_root);
-    //mysampling.compute_neighbors();
+    mysampling.removeRedundantPoints(symmetry, sym_order);
+    mysampling.createAsymUnitFile(sampling_file_root);
+    //mysampling.computeNeighbors();
     //#define DEBUG6
 #ifdef DEBUG6
     for (int i = 0; i < mysampling.no_redundant_sampling_points_vector.size(); i++)

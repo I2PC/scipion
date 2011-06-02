@@ -39,7 +39,8 @@ void ProgMLTomo::defineParams()
     addParamsLine("   -i <metadata>               : MetaData file with input images (and angles) ");
     addParamsLine("   --nref <int=0>               : Number of references to generate automatically (recommended)");
     addParamsLine("   OR --ref <file=\"\">         : or metadatafile with initial references/single reference image ");
-    addParamsLine(" [ -o <rootname=mltomo> ]       : Output rootname ");
+    addParamsLine(" [ --oroot <rootname=mltomo> ]       : Output rootname ");
+    addParamsLine("        alias -o;");
     //docfile not implemented, it can go in the -i option
     //addParamsLine(" [ --doc <metadata=\"\"> ]      : MetaData with orientations  for all particles ");
     addParamsLine(" [ --sym <symgroup=c1> ]        : Symmetry group ");
@@ -181,7 +182,7 @@ void ProgMLTomo::readParams()
     fn_ref = getParam("--ref");
     //fn_doc = getParam("--doc");
     fn_sel = getParam("-i");
-    fn_root = getParam("-o");
+    fn_root = getParam("--oroot");
     fn_sym = getParam("--sym", "c1");
     Niter = getIntParam("--iter");
     Niter2 = getIntParam("--impute_iter");
@@ -548,7 +549,7 @@ void ProgMLTomo::produceSideInfo()
     }
     else
     {
-        mysampling.SetSampling(angular_sampling);
+        mysampling.setSampling(angular_sampling);
         if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
             REPORT_ERROR(ERR_VALUE_INCORRECT, (std::string)"Invalid symmetry" +  fn_sym);
         mysampling.SL.read_sym_file(fn_sym);
@@ -567,12 +568,12 @@ void ProgMLTomo::produceSideInfo()
             if (!do_limit_psirange && ang_search > 0.)
                 REPORT_ERROR(ERR_ARG_INCORRECT,"exhaustive psi-angle search only allowed for C1 symmetry");
         }
-        mysampling.fill_L_R_repository();
+        mysampling.fillLRRepository();
         // by default max_tilt= +91., min_tilt= -91.
-        mysampling.Compute_sampling_points(false, // half sphere?
+        mysampling.computeSamplingPoints(false, // half sphere?
                                            tilt_rangeF,
                                            tilt_range0);
-        mysampling.remove_redundant_points_exhaustive(symmetry,
+        mysampling.removeRedundantPointsExhaustive(symmetry,
                 sym_order,
                 false, // half sphere?
                 0.75 * angular_sampling);
@@ -943,10 +944,10 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
         // Set up local searches
         if (ang_search > 0.)
         {
-            mysampling.SetNeighborhoodRadius(ang_search);
-            mysampling.fill_exp_data_projection_direction_by_L_R(MDsub);
-            mysampling.remove_points_far_away_from_experimental_data();
-            mysampling.compute_neighbors();
+            mysampling.setNeighborhoodRadius(ang_search);
+            mysampling.fillExpDataProjectionDirectionByLR(MDsub);
+            mysampling.removePointsFarAwayFromExperimentalData();
+            mysampling.computeNeighbors();
         }
     }
 

@@ -83,10 +83,10 @@ public:
     double cos_neighborhood_radius;
 
     /** vector with neighbors */
-    std::vector<std::vector<int> >  my_neighbors;
+    std::vector<std::vector<size_t> >  my_neighbors;
 
     /** vector with experimental images per sampling point */
-    std::vector<std::vector<int> >  my_exp_img_per_sampling_point;
+    std::vector<std::vector<size_t> >  my_exp_img_per_sampling_point;
 
 #ifdef MYPSI
     /** vector with neighbors psi*/
@@ -116,6 +116,8 @@ public:
     /** vector with sampling points described by angles, only store
         the non redundant part */
     std::vector <Matrix1D<double> > no_redundant_sampling_points_angles;
+    /** vector with the indexes of each sampling point */
+    std::vector <size_t> no_redundant_sampling_points_index;
 
     /** Default constructor. sampling in degrees*/
     Sampling();
@@ -129,17 +131,17 @@ public:
     /** Compute edge sampling points
         if you are looking only for directtions set only_half_sphere = true
     */
-    void Compute_sampling_points(bool only_half_sphere = true,
+    void computeSamplingPoints(bool only_half_sphere = true,
                                  double max_tilt= +91.,
                                  double min_tilt= -91.);
     /** fill edge */
-    void fill_edge(Matrix1D<double> starting_point,
+    void fillEdge(Matrix1D<double> starting_point,
                    Matrix1D<double> ending_point,
                    std::vector <Matrix1D<double> > &edge_vector,
                    bool FLAG_END
                   );
     /** fill distance */
-    void fill_distance(Matrix1D<double> starting_point,
+    void fillDistance(Matrix1D<double> starting_point,
                        Matrix1D<double> ending_point,
                        std::vector <Matrix1D<double> > &edge_vector,
                        int number,
@@ -148,48 +150,48 @@ public:
                        double max_z= +10.
                       );
     /** fill R and L Repository (vector with symmetry matrices) */
-    void fill_L_R_repository(void);
+    void fillLRRepository(void);
 
     /** set sampling rate */
-    void SetSampling(double sampling);
+    void setSampling(double sampling);
 
     /** set sampling noise for projection vectors create in the unit
         sphere */
-    void SetNoise(double deviation, int my_seed=-1);
+    void setNoise(double deviation, int my_seed=-1);
 
     /** set neighborhood distance */
-    void SetNeighborhoodRadius(double neighborhood);
+    void setNeighborhoodRadius(double neighborhood);
 
     /* eliminate redundant points,
         symmetry group, symmetry order */
-    void remove_redundant_points(const int symmetry, int sym_order);
+    void removeRedundantPoints(const int symmetry, int sym_order);
 
     /* eliminate redundant points,
         symmetry group, symmetry order 
-        This function first calls remove_redundant_points,
+        This function first calls removeRedundantPoints,
         and then checks each point versus all others to calculate an angular distance
         If this distance is less than 0.8 times the angular sampling, the point is deleted
     */
-    void remove_redundant_points_exhaustive(const int symmetry,
+    void removeRedundantPointsExhaustive(const int symmetry,
                                             int sym_order,
                                             bool only_half_sphere,
                                             double max_ang);
 
     /* sorting criteria for euler angles */
-    int sort_func(Matrix1D<double> & a, Matrix1D<double> & b);
+    int sortFunc(Matrix1D<double> & a, Matrix1D<double> & b);
 
     /** create symmetry file from introduced symmetry
         see  SymList class */
-    void create_sym_file(FileName simFp,int  symmetry, int sym_order);
+    void createSymFile(FileName simFp,int  symmetry, int sym_order);
 
     /** save assymetric unit sampling in a doc file */
-    void create_asym_unit_file(const FileName& docfilename);
+    void createAsymUnitFile(const FileName& docfilename);
 
     /** for each point i in the assymetric sampling unit cell
     compute the neighbors inside the assymetric unit cell,
     save not only the neighbors but the angle psi
     */
-    void compute_neighbors(bool only_winner=false);
+    void computeNeighbors(bool only_winner=false);
 
     /** Save neighbors in a propietary ascii file. The structure is as
         follows
@@ -230,7 +232,7 @@ public:
        that vector and vecn is the elements.
 
     */
-    void save_sampling_file(FileName outfilename,bool write_vectors=true);
+    void saveSamplingFile(FileName outfilename,bool write_vectors=true);
 
     /** Read neighbors in a propietary ascii file. The structure is as
         follows
@@ -254,29 +256,29 @@ public:
       that vector and vecn is the elements. 
 
     */
-    void read_sampling_file(const FileName &infilename,bool read_vectors=true);
+    void readSamplingFile(const FileName &infilename,bool read_vectors=true);
 
     /** remove all those points that are further away from experimental data
         than neighborhood_radius_rad */
-    void remove_points_far_away_from_experimental_data();
+    void removePointsFarAwayFromExperimentalData();
 
     /** Find the closest sampling point for a docfile of experimental projections*/
-    void find_closest_sampling_point(MetaData &DFi,
+    void findClosestSamplingPoint(MetaData &DFi,
                                      const FileName &output_file_root);
 
     /** Find the closest sampling point for a docfile of experimental projections*/
-    void find_closest_sampling_point(const FileName &FnexperimentalImages,
+    void findClosestSamplingPoint(const FileName &FnexperimentalImages,
                                      const FileName &output_file_root);
 
     /**for each sampling point find the experimental images
        closer to that point than to any other */
-    void find_closest_experimental_point();
+    void findClosestExperimentalPoint();
 
     /** Precalculate exp_data by symmetry matrices (speeds up calculations)*/
-    void fill_exp_data_projection_direction_by_L_R(MetaData &DFi);
+    void fillExpDataProjectionDirectionByLR(MetaData &DFi);
 
     /** Precalculate exp_data by symmetry matrices (speeds up calculations)*/
-    void fill_exp_data_projection_direction_by_L_R(const FileName &FnexperimentalImages);
+    void fillExpDataProjectionDirectionByLR(const FileName &FnexperimentalImages);
 };
 //@}
 #endif

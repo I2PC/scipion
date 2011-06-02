@@ -149,7 +149,7 @@ public:
         if(perturb_projection_vector!=0)
         {
             MPI_Bcast (&my_seed, 1, MPI_INT, 0, MPI_COMM_WORLD);
-            mysampling.SetNoise(perturb_projection_vector,my_seed);
+            mysampling.setNoise(perturb_projection_vector,my_seed);
 #ifdef  DEBUGTIME
 
             time (&end);
@@ -160,12 +160,12 @@ public:
 
         }
         //all ranks
-        mysampling.SetSampling(sampling);
+        mysampling.setSampling(sampling);
         //symmetry for sampling may be different from neighbourhs
         if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
             REPORT_ERROR(ERR_NUMERICAL, (std::string)"angular_project_library::run Invalid symmetry" +  fn_sym);//set sampling must go before set noise
         if(angular_distance_bool!=0)
-            mysampling.SetNeighborhoodRadius(angular_distance);//irelevant
+            mysampling.setNeighborhoodRadius(angular_distance);//irelevant
 
 #ifdef  DEBUGTIME
 
@@ -175,10 +175,10 @@ public:
         std::cerr<<" setsampling rank= "<<rank<<std::endl;
 #endif
         //true -> half_sphere
-        mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
+        mysampling.computeSamplingPoints(false,max_tilt_angle,min_tilt_angle);
         mysampling.SL.read_sym_file(fn_sym);
         //store symmetry matrices, this is faster than computing them each time
-        mysampling.fill_L_R_repository();
+        mysampling.fillLRRepository();
 
 #ifdef  DEBUGTIME
 
@@ -191,7 +191,7 @@ public:
         // We first sample The  whole sphere
         // Then we remove point redundant due to sampling symmetry
         // use old symmetry, this is geometric does not use L_R
-        mysampling.remove_redundant_points(symmetry, sym_order);
+        mysampling.removeRedundantPoints(symmetry, sym_order);
 
         //=========================
         //======================
@@ -199,10 +199,10 @@ public:
         if (!mysampling.SL.isSymmetryGroup(fn_sym_neigh, symmetry, sym_order))
             REPORT_ERROR(ERR_NUMERICAL, (std::string)"angular_project_library::run Invalid neig symmetry" +  fn_sym_neigh);
         mysampling.SL.read_sym_file(fn_sym_neigh);
-        mysampling.fill_L_R_repository();
+        mysampling.fillLRRepository();
         //precompute product between symmetry matrices and experimental data
         if (FnexperimentalImages.size() > 0)
-            mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
+            mysampling.fillExpDataProjectionDirectionByLR(FnexperimentalImages);
 #ifdef  DEBUGTIME
 
         time (&end);
@@ -214,7 +214,7 @@ public:
         if (FnexperimentalImages.size() > 0 &&
             remove_points_far_away_from_experimental_data_bool)
         {
-            mysampling.remove_points_far_away_from_experimental_data();
+            mysampling.removePointsFarAwayFromExperimentalData();
 #ifdef  DEBUGTIME
 
             time (&end);
@@ -232,10 +232,10 @@ public:
             {
                 //find sampling point closer to experimental point (only 0) and bool
                 //and save docfile with this information
-                mysampling.find_closest_sampling_point(FnexperimentalImages,output_file_root);
+                mysampling.findClosestSamplingPoint(FnexperimentalImages,output_file_root);
             }
-            //mysampling.create_sym_file(symmetry, sym_order);
-            mysampling.create_asym_unit_file(output_file_root);
+            //mysampling.createSymFile(symmetry, sym_order);
+            mysampling.createAsymUnitFile(output_file_root);
         }
 
         if (rank != 0)
@@ -257,8 +257,8 @@ public:
         {
             if (compute_neighbors_bool)
             {
-                mysampling.compute_neighbors(only_winner);
-                mysampling.save_sampling_file(output_file_root,false);
+                mysampling.computeNeighbors(only_winner);
+                mysampling.saveSamplingFile(output_file_root,false);
             }
         }
         //release some memory
