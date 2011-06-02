@@ -260,6 +260,12 @@
             <FILE filename="class.sel"/>
         </CASE>
     </PROGRAM>
+     <PROGRAM name="xmipp_mpi_ctf_correct_idr" mpi="TRUE">
+        <CASE arguments="-i input/projectionsBacteriorhodopsinWithCTF.sel --vol input/phantomBacteriorhodopsin.vol -o %o/idr.stk" changeDir="FALSE">
+            <FILE filename="idr.stk"/>
+        </CASE>
+     </PROGRAM>
+     
     <PROGRAM name="xmipp_mpi_image_sort" mpi="TRUE">
         <CASE arguments="-i input/aFewProjections.sel --oroot %o/sorted" changeDir="FALSE">
              <FILE filename="sorted.stk"/>
