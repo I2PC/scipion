@@ -23,56 +23,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <mpi.h>
+#include <parallel/mpi.h>
 #include <reconstruction/ctf_correct_idr.h>
 
-/* ------------------------------------------------------------------------- */
-/* Main                                                                      */
-/* ------------------------------------------------------------------------- */
-int main(int argc, char *argv[])
-{
-    // Initialize MPI
-    int rank, NProcessors;
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &NProcessors);
+CREATE_MPI_METADATA_PROGRAM(ProgCtfCorrectIdr, MpiProgCtfCorrectIdr);
 
-    // Variables
-    Prog_IDR_ART_Parameters   idr_art_prm;
-    VolumeXmipp               vol_recons;
-
-    // Read Parameters
-    try
-    {
-	idr_art_prm.MPIversion=true;
-        idr_art_prm.numberOfProcessors=NProcessors;
-        idr_art_prm.MPIrank=rank;
-        idr_art_prm.read(argc, argv);
-    }
-    catch (XmippError &XE)
-    {
-        if (rank == 0)
-        {
-            idr_art_prm.Usage();
-        }
-        MPI_Finalize();
-        exit(1);
-    }
-
-    // Call main routine
-    try
-    {
-        if (rank==0) idr_art_prm.show();
-        idr_art_prm.produce_side_info();
-        idr_art_prm.IDR_correction();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        MPI_Finalize();
-        exit(1);
-    }
-    MPI_Finalize();
-    return 0;
-}
-
+RUN_XMIPP_PROGRAM(MpiProgCtfCorrectIdr);
