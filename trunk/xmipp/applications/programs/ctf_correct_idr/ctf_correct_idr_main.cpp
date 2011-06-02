@@ -25,37 +25,4 @@
 
 #include <reconstruction/ctf_correct_idr.h>
 
-/* ------------------------------------------------------------------------- */
-/* Main                                                                      */
-/* ------------------------------------------------------------------------- */
-int main(int argc, char *argv[])
-{
-    // Variables
-    Prog_IDR_ART_Parameters   idr_art_prm;
-    Image<double>             vol_recons;
-
-    // Read Art Parameters
-    try
-    {
-        idr_art_prm.read(argc, argv);
-    }
-    catch (XmippError &XE)
-    {
-        idr_art_prm.Usage();
-        exit(1);
-    }
-
-    // Call main ART routine
-    try
-    {
-        idr_art_prm.produce_side_info();
-        idr_art_prm.IDR_correction();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        exit(1);
-    }
-    return 0;
-}
-
+RUN_XMIPP_PROGRAM(ProgCtfCorrectIdr);

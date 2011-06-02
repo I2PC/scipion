@@ -24,135 +24,117 @@
  ***************************************************************************/
 
 #include "ctf_correct_idr.h"
-#include <data/projection.h>
 
-Prog_IDR_ART_Parameters::Prog_IDR_ART_Parameters()
+void ProgCtfCorrectIdr::readParams()
 {
-    fn_vol=fn_ctfdat=fnRoot="";
-    mu=1.8;
-    MPIversion=false;
-    numberOfProcessors=1;
-    MPIrank=0;
+    XmippMetadataProgram::readParams();
+    fn_vol = getParam("--vol");
+    mu = getDoubleParam("--mu");
 }
 
-void Prog_IDR_ART_Parameters::read(int argc, char **argv)
-{
-    fn_vol = getParameter(argc, argv, "-vol");
-    fn_ctfdat = getParameter(argc, argv, "-ctfdat");
-    fnRoot = getParameter(argc, argv, "-oroot");
-    mu = textToFloat(getParameter(argc, argv, "-mu", "1.8"));
-}
-
-void Prog_IDR_ART_Parameters::produce_side_info()
+void ProgCtfCorrectIdr::preProcess()
 {
     V.read(fn_vol);
     V().setXmippOrigin();
-    ctfdat.read(fn_ctfdat);
 }
 
-void Prog_IDR_ART_Parameters::show()
+void ProgCtfCorrectIdr::show()
 {
+    if (!verbose)
+        return;
+    XmippMetadataProgram::show();
     std::cout << "Input volume: " << fn_vol << std::endl
-    << "CTFDat: " << fn_ctfdat << std::endl
-    << "Oroot: " << fnRoot << std::endl
-    << "Relaxation factor: " << mu << std::endl
-    ;
+    << "Relaxation factor: " << mu << std::endl;
 }
 
-void Prog_IDR_ART_Parameters::Usage()
+void ProgCtfCorrectIdr::defineParams()
 {
-    std::cerr << "Usage: IDR\n"
-    << "   -vol <volume>        : Voxel volume with the current reconstruction\n"
-    << "   -ctfdat <ctfdat>     : List of projections and CTFs\n"
-    << "   -oroot <root>        : Rootname of the output files\n"
-    << "  [-mu <mu=1.8>]        : Relaxation factor\n"
-    ;
+    each_image_produces_an_output = true;
+    addUsageLine("Correct CTF by using IDR");
+    addUsageLine("+This utility allows you to make reconstructions removing the effect ");
+    addUsageLine("+of the CTF. The projection images are modified according to a current ");
+    addUsageLine("+guess of the reconstruction and the CTF definition. The modified images ");
+    addUsageLine("+should be used for reconstruction which now serves as a new current guess ");
+    addUsageLine("+for a new IDR iteration.");
+    addUsageLine("+The method is fully described at http://www.ncbi.nlm.nih.gov/pubmed/15005161");
+    addUsageLine("+");
+    addUsageLine("+The program will assume that the image phase have already been corrected");
+    addUsageLine("+(otherwise the initial solution is too far from the true solution and the ");
+    addUsageLine("+algorithm does not converge).");
+    addSeeAlsoLine("ctf_phase_flip");
+    defaultComments["-i"].clear();
+    defaultComments["-i"].addComment("Metadata with images and corresponding CTFs (ctfdat)");
+    XmippMetadataProgram::defineParams();
+    addParamsLine("   --vol <volume>  : Volume with the current reconstruction");
+    addParamsLine("  [--mu <s=1.8>]   : Relaxation factor");
 }
 
 /* IDR correction ---------------------------------------------------------- */
 //#define DEBUG
-void Prog_IDR_ART_Parameters::IDR_correction()
+void ProgCtfCorrectIdr::processImage(const FileName &fnImg,
+                                     const FileName &fnImgOut, size_t objId)
 {
-    Projection Ireal, Inorm, Itheo, Itheo_CTF;
+    FileName fn_ctf;
+    mdIn.getValue(MDL_CTFMODEL,fn_ctf, objId);
 
-    if (MPIrank==0)
+    // Read current input image
+    Ireal.readApplyGeo(mdIn,objId);
+    int Ydim = YSIZE(Ireal());
+    int Xdim = XSIZE(Ireal());
+
+    // Project the volume in the same direction
+    projectVolume(V(), Itheo, Ydim, Xdim, Ireal.rot(), Ireal.tilt(), Ireal.psi());
+
+    // Copy to theo_CTF and resize
+    Itheo_CTF = Itheo();
+    Itheo_CTF.setXmippOrigin();
+    Itheo_CTF.selfWindow(FIRST_XMIPP_INDEX(2*Ydim), FIRST_XMIPP_INDEX(2*Xdim),
+                         LAST_XMIPP_INDEX(2*Ydim), LAST_XMIPP_INDEX(2*Xdim));
+
+    // Read CTF file
+    if (last_fn_ctf!=fn_ctf)
     {
-        std::cerr << "Modifying input data ...\n";
-        init_progress_bar(ctfdat.size());
+        ctf.FilterBand = CTF;
+        ctf.ctf.read(fn_ctf);
+        ctf.ctf.enable_CTFnoise = false;
+        ctf.ctf.Produce_Side_Info();
+        ctf.generateMask(Itheo_CTF);
+        ctf.correctPhase();
+        last_fn_ctf=fn_ctf;
     }
-    int istep = CEIL((double)ctfdat.size() / 60.0);
-    int imgs = 0;
-    FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
-    {
-        FileName fn_img, fn_ctf;
-        ctfdat.getValue(MDL_IMAGE,fn_img, __iter.objId);
-        ctfdat.getValue(MDL_CTFMODEL,fn_ctf, __iter.objId);
-        if (fn_img!="" && (imgs%numberOfProcessors==MPIrank))
-        {
-            // Read current input image
-            Ireal.read(fn_img);
-            selfTranslate(BSPLINE3,Ireal(),vectorR2(Ireal.Xoff(),Ireal.Yoff()));
 
-            // Project the volume in the same direction
-            projectVolume(V(), Itheo, YSIZE(Ireal()), XSIZE(Ireal()),
-                           Ireal.rot(), Ireal.tilt(), Ireal.psi());
-
-            // Copy to theo_CTF and resize
-            Itheo_CTF() = Itheo();
-            int Ydim = YSIZE(Itheo());
-            int Xdim = XSIZE(Itheo());
-            Itheo_CTF().setXmippOrigin();
-            Itheo_CTF().selfWindow(FIRST_XMIPP_INDEX(2*Ydim), FIRST_XMIPP_INDEX(2*Xdim),
-                                   LAST_XMIPP_INDEX(2*Ydim), LAST_XMIPP_INDEX(2*Xdim));
-
-            // Read CTF file
-            FourierFilter ctf;
-            ctf.FilterBand = CTF;
-            ctf.ctf.read(fn_ctf);
-            ctf.ctf.enable_CTFnoise = false;
-            ctf.ctf.Produce_Side_Info();
-            ctf.generateMask(Itheo_CTF());
-            ctf.correctPhase();
-
-            // Apply CTF
-            ctf.applyMaskSpace(Itheo_CTF());
-            Itheo_CTF().selfWindow(FIRST_XMIPP_INDEX(Ydim), FIRST_XMIPP_INDEX(Xdim),
-                                   LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));
-
-            // Center the all images
-            Ireal().setXmippOrigin();
-            Itheo().setXmippOrigin();
-#ifdef DEBUG
-
-            Itheo.write("PPPtheo.xmp");
-            Itheo_CTF.write("PPPtheo_CTF.xmp");
-            Ireal.write("PPPreal.xmp");
-#endif
-
-            // Apply IDR process
-            FOR_ALL_ELEMENTS_IN_ARRAY2D(Ireal())
-            IMGPIXEL(Itheo, i, j) = mu * IMGPIXEL(Ireal, i, j) +
-                                    (IMGPIXEL(Itheo, i, j) - mu * IMGPIXEL(Itheo_CTF, i, j));
-
-            // Save output image
-            Itheo.write(fnRoot+integerToString(imgs,6)+".xmp");
+    // Apply CTF
+    ctf.applyMaskSpace(Itheo_CTF);
+    Itheo_CTF.selfWindow(FIRST_XMIPP_INDEX(Ydim), FIRST_XMIPP_INDEX(Xdim),
+                         LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));
 
 #ifdef DEBUG
 
-            ImageXmipp save;
-            save() = Itheo() - mu * Itheo_CTF();
-            save.write("PPPdiff.xmp");
-            Itheo.write("PPPidr.xmp");
-            std::cout << "Press any key to continue\n";
-            char c;
-            std::cin >> c;
+    Itheo.write("PPPtheo.xmp");
+    Ireal.write("PPPreal.xmp");
 #endif
 
-        }
+    // Apply IDR process
+    MultidimArray<double> &mItheo=Itheo();
+    const MultidimArray<double> &mIreal=Ireal();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mItheo)
+    DIRECT_MULTIDIM_ELEM(mItheo, n) = mu * DIRECT_MULTIDIM_ELEM(mIreal, n) +
+                                      (DIRECT_MULTIDIM_ELEM(mItheo, n) -
+                                       mu * DIRECT_MULTIDIM_ELEM(Itheo_CTF, n));
 
-        if (imgs++ % istep == 0 && MPIrank==0)
-            progress_bar(imgs);
-    }
-    if (MPIrank==0)
-        progress_bar(ctfdat.size());
+    // Save output image
+    Itheo.write(fnImgOut);
+
+#ifdef DEBUG
+
+    Image<double> save;
+    save()=Itheo_CTF;
+    save.write("PPPtheo_CTF.xmp");
+    save() = Itheo() - mu * Itheo_CTF;
+    save.write("PPPdiff.xmp");
+    Itheo.write("PPPidr.xmp");
+    std::cout << "Press any key to continue\n";
+    char c;
+    std::cin >> c;
+#endif
 }
