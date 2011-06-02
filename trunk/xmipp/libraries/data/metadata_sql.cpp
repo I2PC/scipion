@@ -765,6 +765,7 @@ int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDObject &val
     case LABEL_STRING:
         return sqlite3_bind_text(stmt, position, valueIn.data.stringValue->c_str(), -1, SQLITE_TRANSIENT);
     case LABEL_VECTOR:
+    case LABEL_VECTOR_LONG:
         return sqlite3_bind_text(stmt, position, valueIn.toString().c_str(), -1, SQLITE_TRANSIENT);
     }
 }
@@ -791,7 +792,7 @@ int MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueO
         valueOut.data.stringValue->assign(ss.str());
         break;
     case LABEL_VECTOR:
-        //FIXME: Now are stored as string in DB
+    case LABEL_VECTOR_LONG:
         ss << sqlite3_column_text(stmt, position);
         valueOut.fromStream(ss);
         break;

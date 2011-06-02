@@ -175,6 +175,7 @@ enum MDLabel
     MDL_MISSINGREGION_THX0, ///< Initial tilt angle in X for missing region in subtomogram
     MDL_MISSINGREGION_THXF, ///< Final tilt angle in X for missing region in subtomogram
     MDL_MODELFRAC, ///< Model fraction (alpha_k) for a Maximum Likelihood model
+    MDL_NEIGHBORS, ///< Vector of indexes to points some "neighbors"
     MDL_NMA, ///< Normal mode displacements (vector double)
     MDL_NMA_MODEFILE, ///< File with an NMA mode
     MDL_NOISE_ANGLES, ///< Noise description for projected angles
@@ -248,7 +249,7 @@ enum MDLabel
 /** Possible types of the values of labels */
 enum MDLabelType
 {
-    LABEL_NOTYPE = -1, LABEL_INT, LABEL_BOOL, LABEL_DOUBLE, LABEL_FLOAT, LABEL_STRING, LABEL_VECTOR, LABEL_LONG
+    LABEL_NOTYPE = -1, LABEL_INT, LABEL_BOOL, LABEL_DOUBLE, LABEL_FLOAT, LABEL_STRING, LABEL_VECTOR, LABEL_LONG, LABEL_VECTOR_LONG
 };
 
 
@@ -285,6 +286,7 @@ typedef union
     double doubleValue;
     String * stringValue;
     std::vector<double> * vectorValue;
+    std::vector<size_t> * vectorValueLong;
 } ObjectData;
 
 /** Class to hold the labels values and type
@@ -314,6 +316,7 @@ public:
     MDObject(MDLabel label, const bool &boolValue);
     MDObject(MDLabel label, const String &stringValue);
     MDObject(MDLabel label, const std::vector<double> &vectorValue);
+    MDObject(MDLabel label, const std::vector<size_t> &vectorValueLong);
     MDObject(MDLabel label, const size_t &longintValue);
     MDObject(MDLabel label, const float &floatValue);
     MDObject(MDLabel label, const char * &charValue);
@@ -330,6 +333,7 @@ public:
     void  getValue(bool &bv) const;
     void  getValue(String &sv) const;
     void  getValue(std::vector<double> &vv) const;
+    void  getValue(std::vector<size_t> &vv) const;
     void  getValue(size_t &lv) const;
     void  getValue(float &floatvalue) const;
     void  getValue(char*  &charvalue) const;
@@ -339,6 +343,7 @@ public:
     void  setValue(const bool &bv);
     void  setValue(const String &sv);
     void  setValue(const std::vector<double> &vv);
+    void  setValue(const std::vector<size_t> &vv);
     void  setValue(const size_t &lv);
     void  setValue(const float &floatvalue);
     void  setValue(const char*  &charvalue);
@@ -469,6 +474,7 @@ public:
     static bool isString(const MDLabel label);
     static bool isDouble(const MDLabel label);
     static bool isVector(const MDLabel label);
+    static bool isVectorLong(const MDLabel label);
     static bool isValidLabel(const MDLabel label);
     static bool isValidLabel(const String &labelName);
     static MDLabelType labelType(const MDLabel label);
@@ -629,6 +635,7 @@ private:
         MDL::addLabel(MDL_MISSINGREGION_THY0, LABEL_DOUBLE, "missingRegionThetaY0");
         MDL::addLabel(MDL_MISSINGREGION_THYF, LABEL_DOUBLE, "missingRegionThetaYF");
         MDL::addLabel(MDL_MODELFRAC, LABEL_DOUBLE, "modelFraction");
+        MDL::addLabel(MDL_NEIGHBORS, LABEL_VECTOR_LONG, "neighbors");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR, "NMADisplacements");
         MDL::addLabel(MDL_NMA_MODEFILE, LABEL_STRING, "NMAModefile");
         MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR, "noiseAngles");

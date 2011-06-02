@@ -1246,7 +1246,8 @@ void MetaData::sort(MetaData &MDin, const std::string &sortLabel,bool asc)
 {
     // Check if the label has semicolon
     int ipos=sortLabel.find(':');
-    if (ipos!=std::string::npos || MDL::labelType(sortLabel)==LABEL_VECTOR)
+    MDLabelType type = MDL::labelType(sortLabel);
+    if (ipos!=std::string::npos || type == LABEL_VECTOR || type == LABEL_VECTOR_LONG)
     {
         MDLabel label;
         int column;
@@ -1256,14 +1257,15 @@ void MetaData::sort(MetaData &MDin, const std::string &sortLabel,bool asc)
             std::vector< std::string > results;
             splitString(sortLabel,":",results);
             column=textToInteger(results[1]);
-            if (MDL::labelType(results[0])!=LABEL_VECTOR)
+            MDLabelType type = MDL::labelType(results[0]);
+            if (type != LABEL_VECTOR || type != LABEL_VECTOR_LONG)
                 REPORT_ERROR(ERR_ARG_INCORRECT,"Column specifications cannot be used with non-vector labels");
-            label=MDL::str2Label(results[0]);
+            label = MDL::str2Label(results[0]);
         }
         else
         {
-            label=MDL::str2Label(sortLabel);
-            column=0;
+            label = MDL::str2Label(sortLabel);
+            column = 0;
         }
 
         // Get the column values

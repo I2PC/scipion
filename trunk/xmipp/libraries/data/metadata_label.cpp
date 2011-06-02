@@ -84,7 +84,8 @@ String MDL::label2SqlColumn(const MDLabel label)
         ss << "TEXT";
         break;
     case LABEL_VECTOR:
-        ss << "TEXT"; //FIXME: This is provisional
+    case LABEL_VECTOR_LONG:
+        ss << "TEXT";
         break;
     }
     return ss.str();
@@ -110,7 +111,10 @@ bool MDL::isVector(const MDLabel label)
 {
     return (data[(int)label]->type == LABEL_VECTOR);
 }
-
+bool MDL::isVectorLong(const MDLabel label)
+{
+    return (data[(int)label]->type == LABEL_VECTOR_LONG);
+}
 bool MDL::isValidLabel(const MDLabel label)
 {
     return (label > MDL_UNDEFINED && label < MDL_LAST_LABEL);
@@ -159,6 +163,11 @@ void MDObject::copy(const MDObject &obj)
         delete data.vectorValue;
         data.vectorValue = new std::vector<double>(*(obj.data.vectorValue));
     }
+    else if (type == LABEL_VECTOR_LONG)
+    {
+        delete data.vectorValueLong;
+        data.vectorValueLong = new std::vector<size_t>(*(obj.data.vectorValueLong));
+    }
     else
         data = obj.data;
 }
@@ -199,6 +208,9 @@ inline void MDObject::labelTypeCheck(MDLabelType checkingType) const
         case LABEL_VECTOR:
             ss << "vector";
             break;
+        case LABEL_VECTOR_LONG:
+            ss << "vector size_t";
+            break;
         case LABEL_DOUBLE:
             ss << "double";
             break;
@@ -222,6 +234,8 @@ MDObject::MDObject(MDLabel label)
             data.stringValue = new String;
         else if (type == LABEL_VECTOR)
             data.vectorValue = new std::vector<double>;
+        else if (type == LABEL_VECTOR_LONG)
+            data.vectorValueLong = new std::vector<size_t>;
     }
     else
         type = LABEL_NOTYPE;
@@ -263,6 +277,13 @@ MDObject::MDObject(MDLabel label, const std::vector<double> &vectorValue)
     labelTypeCheck(LABEL_VECTOR);
     this->data.vectorValue = new std::vector<double>(vectorValue);
 }
+MDObject::MDObject(MDLabel label, const std::vector<size_t> &vectorValueLong)
+{
+    this->label = label;
+    this->type = MDL::labelType(label);
+    labelTypeCheck(LABEL_VECTOR_LONG);
+    this->data.vectorValueLong = new std::vector<size_t>(vectorValueLong);
+}
 MDObject::MDObject(MDLabel label, const size_t &longintValue)
 {
     this->label = label;
@@ -290,6 +311,8 @@ MDObject::~MDObject()
         delete data.stringValue;
     else if (type == LABEL_VECTOR)
         delete data.vectorValue;
+    else if (type == LABEL_VECTOR_LONG)
+        delete data.vectorValueLong;
 }
 
 //These getValue also do a compilation type checking
@@ -320,6 +343,11 @@ void  MDObject::getValue(std::vector<double> &vv) const
 {
     labelTypeCheck(LABEL_VECTOR);
     vv = *(this->data.vectorValue);
+}
+void  MDObject::getValue(std::vector<size_t> &vv) const
+{
+    labelTypeCheck(LABEL_VECTOR_LONG);
+    vv = *(this->data.vectorValueLong);
 }
 void MDObject::getValue(size_t &lv) const
 {
@@ -359,18 +387,17 @@ void MDObject::setValue(const bool &bv)
 void MDObject::setValue(const String &sv)
 {
     labelTypeCheck(LABEL_STRING);
-    //if (this->data.stringValue == NULL)
-    //  this->data.stringValue = new String(sv);
-    //else
     *(this->data.stringValue) = sv;
 }
 void  MDObject::setValue(const std::vector<double> &vv)
 {
     labelTypeCheck(LABEL_VECTOR);
-    //if (this->data.vectorValue == NULL)
-    //  this->data.vectorValue = new std::vector<double>(vv);
-    //else
     *(this->data.vectorValue) = vv;
+}
+void  MDObject::setValue(const std::vector<size_t> &vv)
+{
+    labelTypeCheck(LABEL_VECTOR_LONG);
+    *(this->data.vectorValueLong) = vv;
 }
 void MDObject::setValue(const size_t &lv)
 {
@@ -402,6 +429,7 @@ void MDObject::setValue(const char*  &charvalue)
 void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
 {
     String c = (isSql) ? "'" : "";
+    size_t size;
 
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
         os << data.stringValue;
@@ -425,7 +453,7 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
             break;
         case LABEL_VECTOR:
             os << "[ ";
-            int size = data.vectorValue->size();
+            size = data.vectorValue->size();
             for (int i = 0; i < size; i++)
             {
                 DOUBLE2STREAM(data.vectorValue->at(i));
@@ -433,6 +461,17 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
             }
             os << "]";
             break;
+        case LABEL_VECTOR_LONG:
+            os << "[ ";
+            size = data.vectorValueLong->size();
+            for (int i = 0; i < size; i++)
+            {
+                INT2STREAM(data.vectorValueLong->at(i));
+                os << " ";
+            }
+            os << "]";
+            break;
+
         }//close switch
 }//close function toStream
 
@@ -468,6 +507,7 @@ bool MDObject::fromStream(std::istream &is)
     {
         // int,bool and long are read as double for compatibility with old doc files
         double d;
+        size_t value;
         switch (type)
         {
         case LABEL_BOOL: //bools are int in sqlite3
@@ -497,6 +537,16 @@ bool MDObject::fromStream(std::istream &is)
             data.vectorValue->clear();
             while (is >> d) //This will stop at ending "]"
                 data.vectorValue->push_back(d);
+            is.clear(); //this is for clear the fail state after found ']'
+            is.ignore(256, ']'); //ignore the ending ']'
+            break;
+        case LABEL_VECTOR_LONG:
+            is.ignore(256, '[');
+            //if (data.vectorValue == NULL)
+            //  data.vectorValue = new std::vector<double>;
+            data.vectorValueLong->clear();
+            while (is >> value) //This will stop at ending "]"
+                data.vectorValueLong->push_back(value);
             is.clear(); //this is for clear the fail state after found ']'
             is.ignore(256, ']'); //ignore the ending ']'
             break;
@@ -595,10 +645,10 @@ MDRow::~MDRow()
 {
     FOR_ALL_LABELS()
     {
-      if (objects[_label] != NULL)
-      {
-        delete objects[_label];
-      }
+        if (objects[_label] != NULL)
+        {
+            delete objects[_label];
+        }
 
     }
 }
