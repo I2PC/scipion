@@ -225,7 +225,7 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply
     DataMode datamode, size_t select_img, bool wrap)
 {
     FileName name;
-    md.getValue(MDL_IMAGE, name, md.firstObject());
+    md.getValue(MDL_IMAGE, name, objId/*md.firstObject()*/);
     DataType datatype;
     getImageType(name, datatype);
     setDatatype(datatype);
