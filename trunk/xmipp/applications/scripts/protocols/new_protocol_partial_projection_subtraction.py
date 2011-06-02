@@ -27,7 +27,7 @@ ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy/xmipp_protocol_projmatch_b
 #Show results for iteration
 """ Use data coming from iteration
 """
-iterationNo=2
+iterationNo=6
 
 # Resume at iteration
 """ Set to 1 to start a new run, set to -1 to continue the process (where you left it),
@@ -36,7 +36,7 @@ iterationNo=2
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =9
+ContinueAtIteration =1
 
 # {expert} Resume at Iter (vs Step)
 """This option control how to resume a previously performed run.
@@ -252,12 +252,9 @@ def actionsToBePerformedInsideLoop(_log):
                       }
         command = "subtractionScript"
         _VerifyFiles = []
-        _VerifyFiles.append('asdasdasda')
-        #_VerifyFiles.append(referenceStack[iterN])
-        #tmp = referenceStack[iterN]
-
-        #_VerifyFiles.append(tmp.replace('.stk','.doc'))
-        #_VerifyFiles.append(tmp.replace('.stk','_sampling.txt'))
+        _VerifyFiles.append(subtractedStack[iterN])
+        _VerifyFiles.append(subtractedStack[iterN]+'ref')
+        _VerifyFiles.append(subtractedStack[iterN]+'exp')
         
         _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
         

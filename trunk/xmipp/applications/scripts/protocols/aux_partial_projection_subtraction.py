@@ -41,8 +41,6 @@ def maskVolume(_log, dict):
                              _log,
                              False,1,1,'')
     
-
-
     #project
 def createProjections(_log, dict):
     #dirname = 'ReferenceLibrary'
@@ -84,18 +82,16 @@ def subtractionScript(_log, dict):
     for id in md:
         #refNum = md.getValue(MDL_REF, id)
         angRot = md.getValue(MDL_ANGLEROT, id)
-        print 'angRot:',angRot
         angTilt = md.getValue(MDL_ANGLETILT, id)
-        print 'angTilt:',angTilt
+        psi = md.getValue(MDL_ANGLEPSI, id)
+        md.setValue(MDL_ANGLEPSI, psi * -1.,id)
         
-        #Ahora buscamos el idRef de mas cercano a esos dos valores
+        # Search for the closest idRef
         dist = -1.
         distMin = 999.
         for idRef in mdRef:
             angRotRef  = mdRef.getValue(MDL_ANGLEROT, idRef)
-            print 'angRotRef:',angRotRef
             angTiltRef = mdRef.getValue(MDL_ANGLETILT, idRef)
-            print 'angTiltRef:',angTiltRef
             
             dist = abs(float(angRotRef) - float(angRot)) +  abs(float(angTiltRef) - float(angTilt))
             if(dist < distMin or dist == -1):
