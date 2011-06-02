@@ -176,7 +176,7 @@ class TestProjMatching(unittest.TestCase):
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(ImgCompare(goldFileName,testFileName))
 
-    def test_040assign_images_to_references(self):
+    def test_000040assign_images_to_references(self):
         dict = {   
                 'DocFileInputAngles': 'ProjMatch/new20/Iter_01/current_angles.doc',
                 'NumberOfCtfGroups': 2L,
@@ -194,6 +194,7 @@ class TestProjMatching(unittest.TestCase):
         assign_images_to_references(self.log,dict)
         testFileName = dict[DocFileInputAngles]
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        print "aaa",goldFileName,testFileName,"aaa"
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
 from  XmippPythonTestResult import XmippPythonTestResult
