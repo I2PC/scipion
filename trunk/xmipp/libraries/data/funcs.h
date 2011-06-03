@@ -1329,7 +1329,7 @@ private:
 //@}
 //@}
 /// binary comparison of two files skipping first "offset" bytes
-bool compareTwoFiles(const FileName &fn1, const FileName &fn2, size_t offset);
+bool compareTwoFiles(const FileName &fn1, const FileName &fn2, size_t offset = 0);
 /* Copy one image
  *
  */
