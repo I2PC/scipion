@@ -346,7 +346,7 @@
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_reconstruct_wbp" mpi="FALSE">
-        <CASE arguments="-i input/aFewProjections.sel -o  %o/recon.vol " changeDir="FALSE">
+        <CASE arguments="-i input/projectionsBacteriorhodopsin.xmd --use_each_image -o  %o/recon.vol " changeDir="FALSE">
             <FILE filename="recon.vol"/>
         </CASE>
     </PROGRAM>
