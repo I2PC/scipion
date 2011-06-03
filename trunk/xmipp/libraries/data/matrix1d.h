@@ -356,8 +356,13 @@ public:
      */
     bool operator==(const Matrix1D<T>& op1) const
     {
-      return ((row == op1.row) &&
-          (memcmp(vdata, op1.vdata, vdim*sizeof(T)) == 0));
+        if (row != op1.row)
+            return false;
+
+        for (size_t i = 0; i < vdim; ++i)
+            if (!XMIPP_EQUAL_REAL(vdata[i], op1.vdata[i]))
+                return false;
+        return true;
     }
     /** Assignment.
      *
@@ -1116,7 +1121,7 @@ public:
         double *ptr=vdata;
         for (int j = 0; j < vdim; ++j, ++ptr)
         {
-        	double val=*ptr;
+            double val=*ptr;
             sum += val*val;
         }
         return sum;
