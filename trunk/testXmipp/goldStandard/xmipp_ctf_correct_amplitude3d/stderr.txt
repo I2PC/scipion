@@ -1,0 +1,7 @@
+ ---------------------------------------------------
+ + Number of defocus groups      = 1
+ + Total number of images        = 181
+ + Normalized Wiener constant    = 9.05
+ + Minimum Wiener filter value   = 1e+38
+ + Maximum Wiener filter value   = 0
+ ---------------------------------------------------

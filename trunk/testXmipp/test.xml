@@ -79,13 +79,17 @@
              <FILE filename="kerdensom.xmd"/>
         </CASE>
     </PROGRAM>
-    
+     <PROGRAM name="xmipp_ctf_correct_amplitude3d" mpi="FALSE">
+        <CASE arguments="-i input/ctf_correct3d.xmd --oroot %o/wiener" changeDir="FALSE">
+            <FILE filename="wiener_deconvolved.vol"/>
+            <FILE filename="wiener_ctffiltered_group000001.vol"/>
+        </CASE>
+     </PROGRAM>
      <PROGRAM name="xmipp_ctf_correct_idr" mpi="FALSE">
         <CASE arguments="-i input/projectionsBacteriorhodopsinWithCTF.sel --vol input/phantomBacteriorhodopsin.vol -o %o/idr.stk" changeDir="FALSE">
             <FILE filename="idr.stk"/>
         </CASE>
-     </PROGRAM>
-     
+     </PROGRAM>     
      <PROGRAM name="xmipp_ctf_create_ctfdat" mpi="FALSE">
         <CASE arguments="-i input/micrographs.xmd --ctfs input/ctfs.xmd --oroot %o/output" changeDir="FALSE">
             <FILE filename="output.ctfdat"/>
