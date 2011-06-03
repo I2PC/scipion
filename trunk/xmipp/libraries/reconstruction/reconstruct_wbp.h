@@ -83,6 +83,8 @@ public:
     size_t time_bar_step, time_bar_size, time_bar_done;
     /// Iterator over input metadata
     MDIterator * iter;
+    /// Reconstructed volume
+    Image<double> reconstructedVolume;
 public:
     /// Read arguments from command line
     void readParams();
@@ -96,14 +98,20 @@ public:
     /** Do the job */
     void run();
 
+    /** Show progress */
+    virtual void showProgress();
+
+    /** Finish processing */
+    virtual void finishProcessing();
+
     /** Set IO for a new reconstruction*/
     void setIO(const FileName &fn_in, const FileName &fn_out);
 
     /// Fill arrays with relevant transformation matrices
-    void produceSideInfo() ;
+    virtual void produceSideInfo() ;
 
     /// Get 1 image to process
-    bool getImageToProcess(size_t &objId, size_t &objIndex);
+    virtual bool getImageToProcess(size_t &objId, size_t &objIndex);
 
     /// Get angles (either from reading the header or from a docfile)
     void getAnglesForImage(size_t id, double &rot, double &tilt, double &psi,
@@ -124,6 +132,6 @@ public:
     void filterOneImage(Projection &proj, Tabsinc &TSINC);
 
     // Calculate the filter for arbitrary tilt geometry in 2D and apply
-    void apply2DFilterArbitraryGeometry(MetaData &SF, MultidimArray<double> &vol) ;
+    void apply2DFilterArbitraryGeometry() ;
 };
 //@}

@@ -109,16 +109,20 @@ void ProgRecWbp::defineParams()
 
 void ProgRecWbp::run()
 {
-    Image<double> vol;
     show();
     produceSideInfo();
-    apply2DFilterArbitraryGeometry(SF, vol());
+    apply2DFilterArbitraryGeometry();
+    finishProcessing();
+}
 
+void ProgRecWbp::finishProcessing()
+{
+    free(mat_g);
+    free(mat_f);
     if (verbose > 0)
         std::cerr << "Fourier pixels for which the threshold was not reached: "
         << (float)(count_thr*100.) / (SF.size()*dim*dim) << " %" << std::endl;
-
-    vol.write(fn_out);
+    reconstructedVolume.write(fn_out);
 }
 
 void ProgRecWbp::setIO(const FileName &fnIn, const FileName &fnOut)
@@ -444,16 +448,23 @@ bool ProgRecWbp::getImageToProcess(size_t &objId, size_t &objIndex)
     return ((objId = iter->objId) != BAD_OBJID);
 }
 
+void ProgRecWbp::showProgress()
+{
+    if (verbose > 0 && time_bar_done % time_bar_step == 0)
+        progress_bar(time_bar_done);
+}
+
 // Calculate the filter in 2D and apply ======================================
-void ProgRecWbp::apply2DFilterArbitraryGeometry(MetaData &SF, MultidimArray<double> &vol)
+void ProgRecWbp::apply2DFilterArbitraryGeometry()
 {
     double            rot, tilt, psi, newrot, newtilt, newpsi, xoff, yoff, flip, weight;
     Projection        proj;
     Matrix2D<double>  L(4, 4), R(4, 4), A;
     FileName          fn_img;
 
-    vol.initZeros(dim, dim, dim);
-    vol.setXmippOrigin();
+    MultidimArray<double> &mReconstructedVolume=reconstructedVolume();
+    mReconstructedVolume.initZeros(dim, dim, dim);
+    mReconstructedVolume.setXmippOrigin();
     count_thr = 0;
 
     // Initialize time bar
@@ -469,8 +480,6 @@ void ProgRecWbp::apply2DFilterArbitraryGeometry(MetaData &SF, MultidimArray<doub
     size_t objId, objIndex;
     while (getImageToProcess(objId, objIndex))
     {
-        // Check whether to kill job
-        //exit_if_not_exists(fn_control);
         SF.getValue(MDL_IMAGE,fn_img,objId);
         proj.read(fn_img, false);
         getAnglesForImage(objId, rot, tilt, psi, xoff, yoff, flip, weight);
@@ -487,10 +496,9 @@ void ProgRecWbp::apply2DFilterArbitraryGeometry(MetaData &SF, MultidimArray<doub
             proj() *= proj.weight();
         proj().setXmippOrigin();
         filterOneImage(proj,TSINC);
-        simpleBackprojection(proj, vol, diameter);
+        simpleBackprojection(proj, mReconstructedVolume, diameter);
 
-        if (verbose > 0 && time_bar_done % time_bar_step == 0)
-            progress_bar(time_bar_done);
+        showProgress();
     }
     if (verbose > 0)
         progress_bar(time_bar_size);
@@ -499,20 +507,15 @@ void ProgRecWbp::apply2DFilterArbitraryGeometry(MetaData &SF, MultidimArray<doub
     if (fn_sym != "")
     {
         MultidimArray<double> Vaux;
-        Vaux.resize(vol);
-        symmetrizeVolume(SL, vol, Vaux);
-        vol = Vaux;
-        vol *= (SL.SymsNo() + 1);
+        Vaux.resize(mReconstructedVolume);
+        symmetrizeVolume(SL, mReconstructedVolume, Vaux);
+        mReconstructedVolume = Vaux;
         Mask mask_prm;
         mask_prm.mode = INNER_MASK;
         mask_prm.R1 = diameter / 2.;
         mask_prm.type = BINARY_CIRCULAR_MASK;
-        mask_prm.generate_mask(vol);
-        mask_prm.apply_mask(vol, vol, 0.);
+        mask_prm.generate_mask(mReconstructedVolume);
+        mask_prm.apply_mask(mReconstructedVolume, mReconstructedVolume, 0.);
     }
-
-    // free memory
-    free(mat_g);
-    free(mat_f);
 }
 
