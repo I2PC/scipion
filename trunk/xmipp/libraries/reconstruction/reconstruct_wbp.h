@@ -31,7 +31,7 @@
 #include <data/projection.h>
 #include <data/filters.h>
 
-#include <data/program.h>
+#include <reconstruction/recons.h>
 
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
@@ -49,7 +49,7 @@ typedef struct
 WBPInfo;
 
 /** WBP parameters. */
-class ProgRecWbp: public XmippProgram
+class ProgRecWbp: public ProgReconsBase
 {
 public:
     /** Filenames */
@@ -79,7 +79,10 @@ public:
     bool do_weights;
     /** Symmetry list for symmetric volumes */
     SymList SL;
-
+    /// Time bar variables
+    size_t time_bar_step, time_bar_size, time_bar_done;
+    /// Iterator over input metadata
+    MDIterator * iter;
 public:
     /// Read arguments from command line
     void readParams();
@@ -93,28 +96,34 @@ public:
     /** Do the job */
     void run();
 
-    /// Produce side info: fill arrays with relevant transformation matrices
+    /** Set IO for a new reconstruction*/
+    void setIO(const FileName &fn_in, const FileName &fn_out);
+
+    /// Fill arrays with relevant transformation matrices
     void produceSideInfo() ;
 
+    /// Get 1 image to process
+    bool getImageToProcess(size_t &objId, size_t &objIndex);
+
     /// Get angles (either from reading the header or from a docfile)
-    void get_angles_for_image(size_t id, double &rot, double &tilt, double &psi,
+    void getAnglesForImage(size_t id, double &rot, double &tilt, double &psi,
                               double &xoff, double &yoff, double &flip, double &weight);
 
     /// Fill array with transformation matrices needed for arbitrary geometry filter
-    void get_all_matrices(MetaData &SF) ;
+    void getAllMatrices(MetaData &SF) ;
 
     /// Fill array with transformation matrices for representative
     /// evenly sampled projection directions
-    void get_sampled_matrices(MetaData &SF) ;
+    void getSampledMatrices(MetaData &SF) ;
 
     // Simple (i.e. unfiltered) backprojection of a single image
-    void simple_backprojection(Projection &img, MultidimArray<double> &vol,
+    void simpleBackprojection(Projection &img, MultidimArray<double> &vol,
                                int diameter) ;
 
     // Calculate the filter and apply it to a projection
-    void filter_one_image(Projection &proj, Tabsinc &TSINC);
+    void filterOneImage(Projection &proj, Tabsinc &TSINC);
 
     // Calculate the filter for arbitrary tilt geometry in 2D and apply
-    void apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<double> &vol) ;
+    void apply2DFilterArbitraryGeometry(MetaData &SF, MultidimArray<double> &vol) ;
 };
 //@}

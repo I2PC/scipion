@@ -110,9 +110,9 @@ void ProgRecWbp::defineParams()
 void ProgRecWbp::run()
 {
     Image<double> vol;
-
+    show();
     produceSideInfo();
-    apply_2Dfilter_arbitrary_geometry(SF, vol());
+    apply2DFilterArbitraryGeometry(SF, vol());
 
     if (verbose > 0)
         std::cerr << "Fourier pixels for which the threshold was not reached: "
@@ -121,13 +121,15 @@ void ProgRecWbp::run()
     vol.write(fn_out);
 }
 
+void ProgRecWbp::setIO(const FileName &fnIn, const FileName &fnOut)
+{
+    fn_sel = fnIn;
+    fn_out = fnOut;
+}
+
 void ProgRecWbp::produceSideInfo()
 {
     // Read-in stuff
-    //remove images with weight=0
-    double dum, weight;
-
-    //remove images with weight=0
     SF.read(fn_sel);
     if (do_weights)
     {
@@ -146,13 +148,17 @@ void ProgRecWbp::produceSideInfo()
 
     // Fill arrays of transformation matrices
     if (do_all_matrices)
-        get_all_matrices(SF);
+        getAllMatrices(SF);
     else
-        get_sampled_matrices(SF);
+        getSampledMatrices(SF);
+
+    time_bar_size = SF.size();
+    time_bar_step = CEIL((double)time_bar_size / 60.0);
+    time_bar_done = 0;
 }
 
-void ProgRecWbp::get_angles_for_image(size_t id, double &rot, double &tilt, double &psi,
-                                      double &xoff, double &yoff, double &flip, double &weight)
+void ProgRecWbp::getAnglesForImage(size_t id, double &rot, double &tilt, double &psi,
+                                   double &xoff, double &yoff, double &flip, double &weight)
 {
     if (id!=BAD_OBJID)
     {
@@ -168,7 +174,7 @@ void ProgRecWbp::get_angles_for_image(size_t id, double &rot, double &tilt, doub
     }
 }
 
-void ProgRecWbp::get_sampled_matrices(MetaData &SF)
+void ProgRecWbp::getSampledMatrices(MetaData &SF)
 {
     FileName          fn_tmp;
     Matrix2D<double>  A(3, 3);
@@ -190,7 +196,7 @@ void ProgRecWbp::get_sampled_matrices(MetaData &SF)
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         SF.getValue(MDL_IMAGE,fn_img,__iter.objId);
-        get_angles_for_image(__iter.objId, rot, tilt, dum, dum, dum, dum, weight);
+        getAnglesForImage(__iter.objId, rot, tilt, dum, dum, dum, dum, weight);
         int idx=find_nearest_direction(rot,tilt,rotList, tiltList,SL,L,R);
         if (do_weights)
             count_imgs[idx] += weight;
@@ -242,7 +248,7 @@ void ProgRecWbp::get_sampled_matrices(MetaData &SF)
 }
 
 // Fill array with transformation matrices needed for arbitrary geometry filter
-void ProgRecWbp::get_all_matrices(MetaData &SF)
+void ProgRecWbp::getAllMatrices(MetaData &SF)
 {
     Matrix2D<double> A(3, 3);
     Matrix2D<double> L(4, 4), R(4, 4);
@@ -259,7 +265,7 @@ void ProgRecWbp::get_all_matrices(MetaData &SF)
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         SF.getValue(MDL_IMAGE,fn_img,__iter.objId);
-        get_angles_for_image(__iter.objId, rot, tilt, psi, dum, dum, dum, weight);
+        getAnglesForImage(__iter.objId, rot, tilt, psi, dum, dum, dum, weight);
         Euler_angles2matrix(rot, -tilt, psi, A);
         mat_g[no_mats].x = MAT_ELEM(A, 2, 0);
         mat_g[no_mats].y = MAT_ELEM(A, 2, 1);
@@ -295,8 +301,8 @@ void ProgRecWbp::get_all_matrices(MetaData &SF)
 }
 
 // Simple backprojection of a single image
-void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &vol,
-                                       int diameter)
+void ProgRecWbp::simpleBackprojection(Projection &img, MultidimArray<double> &vol,
+                                      int diameter)
 {
     int i, j, k, l, m;
     Matrix2D<double> A(3, 3);
@@ -365,7 +371,7 @@ void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &v
 }
 
 // Calculate the filter in 2D and apply ======================================
-void ProgRecWbp::filter_one_image(Projection &proj, Tabsinc &TSINC)
+void ProgRecWbp::filterOneImage(Projection &proj, Tabsinc &TSINC)
 {
     MultidimArray< std::complex<double> > IMG;
     Matrix2D<double>  A(3, 3);
@@ -426,41 +432,48 @@ void ProgRecWbp::filter_one_image(Projection &proj, Tabsinc &TSINC)
     InverseFourierTransform(IMG, proj());
 }
 
-// Calculate the filter in 2D and apply ======================================
-void ProgRecWbp::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<double> &vol)
+bool ProgRecWbp::getImageToProcess(size_t &objId, size_t &objIndex)
 {
+    if (time_bar_done == 0)
+        iter = new MDIterator(SF);
+    else
+        iter->moveNext();
 
-    int               c, nn, imgno;
+    ++time_bar_done;
+    objIndex = iter->objIndex;
+    return ((objId = iter->objId) != BAD_OBJID);
+}
+
+// Calculate the filter in 2D and apply ======================================
+void ProgRecWbp::apply2DFilterArbitraryGeometry(MetaData &SF, MultidimArray<double> &vol)
+{
     double            rot, tilt, psi, newrot, newtilt, newpsi, xoff, yoff, flip, weight;
     Projection        proj;
     Matrix2D<double>  L(4, 4), R(4, 4), A;
-    Mask       mask_prm;
     FileName          fn_img;
 
-    vol.resize(dim, dim, dim);
+    vol.initZeros(dim, dim, dim);
     vol.setXmippOrigin();
-    vol.initZeros();
     count_thr = 0;
 
     // Initialize time bar
     if (verbose > 0)
+    {
         std::cerr << "--> Back-projecting ..." << std::endl;
-    nn = SF.size();
-    if (verbose > 0)
-        init_progress_bar(nn);
-    c = XMIPP_MAX(1, nn / 60);
+        init_progress_bar(time_bar_size);
+    }
 
     mat_f = (WBPInfo*)malloc(no_mats * sizeof(WBPInfo));
-    Tabsinc TSINC(0.001, dim);
+    Tabsinc TSINC(0.0001, dim);
 
-    imgno = 0;
-    FOR_ALL_OBJECTS_IN_METADATA(SF)
+    size_t objId, objIndex;
+    while (getImageToProcess(objId, objIndex))
     {
         // Check whether to kill job
         //exit_if_not_exists(fn_control);
-        SF.getValue(MDL_IMAGE,fn_img,__iter.objId);
+        SF.getValue(MDL_IMAGE,fn_img,objId);
         proj.read(fn_img, false);
-        get_angles_for_image(__iter.objId, rot, tilt, psi, xoff, yoff, flip, weight);
+        getAnglesForImage(objId, rot, tilt, psi, xoff, yoff, flip, weight);
         proj.setRot(rot);
         proj.setTilt(tilt);
         proj.setPsi(psi);
@@ -473,17 +486,14 @@ void ProgRecWbp::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<d
         if (do_weights)
             proj() *= proj.weight();
         proj().setXmippOrigin();
-        filter_one_image(proj,TSINC);
-        simple_backprojection(proj, vol, diameter);
+        filterOneImage(proj,TSINC);
+        simpleBackprojection(proj, vol, diameter);
 
-        if (verbose > 0)
-            if (imgno % c == 0)
-                progress_bar(imgno);
-        imgno++;
-
+        if (verbose > 0 && time_bar_done % time_bar_step == 0)
+            progress_bar(time_bar_done);
     }
     if (verbose > 0)
-        progress_bar(nn);
+        progress_bar(time_bar_size);
 
     // Symmetrize if necessary
     if (fn_sym != "")
@@ -493,6 +503,7 @@ void ProgRecWbp::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<d
         symmetrizeVolume(SL, vol, Vaux);
         vol = Vaux;
         vol *= (SL.SymsNo() + 1);
+        Mask mask_prm;
         mask_prm.mode = INNER_MASK;
         mask_prm.R1 = diameter / 2.;
         mask_prm.type = BINARY_CIRCULAR_MASK;
