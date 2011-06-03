@@ -89,7 +89,7 @@ public:
         // Get angles ==============================================================
         MetaData angles;
         angles.read(fnIn);
-        int AngleNo = angles.size();
+        size_t AngleNo = angles.size();
         if (AngleNo == 0 || !angles.containsLabel(MDL_ANGLEROT))
             REPORT_ERROR(ERR_MD_BADLABEL, "Input file doesn't contain angular information");
 
