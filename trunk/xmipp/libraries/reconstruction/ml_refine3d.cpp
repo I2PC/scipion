@@ -329,16 +329,15 @@ void ProgMLRefine3D::createSampling()
 {
     FileName fn_sym_loc;
     // Precalculate sampling
-    mysampling.SetSampling(angular);
+    mysampling.setSampling(angular);
     fn_sym_loc = fn_symmask.empty() ? fn_sym : "c1";
 
     if (!mysampling.SL.isSymmetryGroup(fn_sym_loc, symmetry, sym_order))
         REPORT_ERROR(ERR_NUMERICAL, (String)"ml_refine3d::run Invalid symmetry" +  fn_sym_loc);
     mysampling.SL.read_sym_file(fn_sym_loc);
-    mysampling.Compute_sampling_points(true, tilt_rangeF, tilt_range0);
-    mysampling.remove_redundant_points_exhaustive(symmetry, sym_order, true, 0.75 * angular);
+    mysampling.computeSamplingPoints(true, tilt_rangeF, tilt_range0);
+    mysampling.removeRedundantPointsExhaustive(symmetry, sym_order, true, 0.75 * angular);
     nr_projections = mysampling.no_redundant_sampling_points_angles.size();
-
 }
 
 // Fill sampling and create DFlib
