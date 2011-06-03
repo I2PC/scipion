@@ -23,5 +23,5 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/ctf_correct_amplitude3d.h>
+#include <reconstruction/ctf_correct_wiener3d.h>
 RUN_XMIPP_PROGRAM(ProgCtfCorrectAmplitude3D)

@@ -502,7 +502,7 @@ ReconsSources = [
     'angular_project_library.cpp',
     'art_crystal.cpp',
     'basic_art.cpp',
-    'ctf_correct_amplitude3d.cpp',
+    'ctf_correct_wiener3d.cpp',
     'ctf_correct_idr.cpp',
     'ctf_enhance_psd.cpp',
     'ctf_estimate_from_micrograph.cpp',
@@ -684,7 +684,7 @@ AddXmippProgram('angular_rotate')
 AddXmippProgram('apropos', ['XmippInterface'])
 AddXmippProgram('classify_analyze_cluster', ['XmippClassif'])
 AddXmippProgram('classify_kerdensom', ['XmippClassif'])
-AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
+AddXmippProgram('ctf_correct_wiener3d', ['XmippRecons'])
 AddXmippProgram('ctf_correct_idr', ['XmippRecons'])
 AddXmippProgram('ctf_create_ctfdat', ['XmippRecons'])
 AddXmippProgram('ctf_enhance_psd', ['XmippRecons'])

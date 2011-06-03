@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "ctf_correct_amplitude3d.h"
+#include "ctf_correct_wiener3d.h"
 
 #include <data/fft.h>
 
@@ -57,8 +57,19 @@ void ProgCtfCorrectAmplitude3D::show()
 /* Usage ------------------------------------------------------------------- */
 void ProgCtfCorrectAmplitude3D::defineParams()
 {
-    addParamsLine("  -i <metadataFile>           : Metadata with the volumes, ctfs, number of images in that group,");
-    addParamsLine("                              : and optionally the envelopes");
+	addUsageLine("Wiener filtering of volumes");
+	addUsageLine("+The program combines a set of volumes, each one with its one CTF and produces a deconvolved Wiener volume");
+	addUsageLine("+An example input file is");
+	addUsageLine("+# XMIPP_STAR_1 * ",true);
+	addUsageLine("+#  ",true);
+	addUsageLine("+data_ ",true);
+	addUsageLine("+loop_ ",true);
+	addUsageLine("+ _image ",true);
+	addUsageLine("+ _CTFModel ",true);
+	addUsageLine("+ _class_count ",true);
+	addUsageLine("+ input/phantomBacteriorhodopsinWithCTF.vol input/input.ctfparam 181",true);
+	addParamsLine("  -i <metadataFile>           : Metadata with the volumes, ctfs, number of images in that group");
+    addParamsLine("                              :+The metadata labels are _image, _CTFModel, _class_count");
     addParamsLine("  --oroot <file>              : Output rootname ");
     addParamsLine("                              :+oroot+_deconvolved.vol contains the combination of all volumes");
     addParamsLine("                              :+oroot+_ctffiltered_group01.vol contains each volume obtained after filtering the deconvolved one");
@@ -66,6 +77,7 @@ void ProgCtfCorrectAmplitude3D::defineParams()
     addParamsLine("  [--minFreq <Ang=-1>]        : Apply Wiener filter only beyond this resolution (in Angstrom)");
     addParamsLine("  [--phase_flipped]           : Use this if the maps were reconstructed from phase corrected images ");
     addParamsLine("  [--wienerConstant <K=0.05>] : Wiener constant (to be multiplied by the total number of images) ");
+    addExampleLine("xmipp_ctf_correct_wiener3d -i ctf_correct3d.xmd --oroot volumeCorrected");
 }
 
 /* Produce Side information ------------------------------------------------ */
