@@ -59,13 +59,11 @@ class TestProjMatching(unittest.TestCase):
 
         testName1 = CtfGroupDirectory+"/"+CtfGroupRootName+'_ctf.stk'
         goldName = testName1.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldName,testName1))
+        self.assertTrue(ImgCompare(goldName,testName1))
 
         testName = CtfGroupDirectory+"/"+CtfGroupRootName+'_wien.stk'
         goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldName,testName))
-        #test Imgcompare works
-        self.assertFalse(ImgCompare(testName,testName1))
+        self.assertTrue(ImgCompare(goldName,testName))
 
         testName = CtfGroupDirectory+"/"+CtfGroupRootName+'_split.doc'
         goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
@@ -95,7 +93,7 @@ class TestProjMatching(unittest.TestCase):
 
     def test_020angular_project_library(self):
         dict = {'AngSamplingRateDeg': '1',
-                'CtfGroupSubsetFileName': 'ProjMatch/new20/CtfGroup/ctf_images.sel',
+                'CtfGroupSubsetFileName': 'ProjMatch/new20/CtfGroups/ctf_images.sel',
                 'DoCtfCorrection': True,
                 'DoParallel': True,
                 'DoRestricSearchbyTiltAngle': False,
@@ -174,8 +172,9 @@ class TestProjMatching(unittest.TestCase):
         projection_matching(self.log,dict)
         testFileName = dict['ProjMatchRootName']
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(ImgCompare(goldFileName,testFileName))
-
+        print "aaaa", 
+        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+#
     def test_040assign_images_to_references(self):
         dict = {   
                 'DocFileInputAngles': 'ProjMatch/new20/Iter_01/current_angles.doc',
