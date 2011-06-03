@@ -352,6 +352,13 @@ public:
         return *this;
     }
 
+    /** Equals.
+     */
+    bool operator==(const Matrix1D<T>& op1) const
+    {
+      return ((row == op1.row) &&
+          (memcmp(vdata, op1.vdata, vdim*sizeof(T)) == 0));
+    }
     /** Assignment.
      *
      * You can build as complex assignment expressions as you like. Multiple
