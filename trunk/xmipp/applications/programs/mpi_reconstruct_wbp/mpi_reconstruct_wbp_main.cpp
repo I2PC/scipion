@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Jose Roman Bilbao Castro (jrbcast@cnb.csic.es)
+ * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -23,8 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/mpi.h>
-
+#include <parallel/mpi.h>
 #include <reconstruction/reconstruct_wbp.h>
 
 class ProgMPIRecWbp: public ProgRecWbp, public MpiMetadataProgram
@@ -37,22 +36,17 @@ public:
             verbose=0;
         ProgRecWbp::read(argc, argv);
     }
-    void preProcess()
+    void produceSideInfo()
     {
-        ProgRecWbp::preProcess();
-        createTaskDistributor(mdIn);
-    }
-    void startProcessing()
-    {
-        if (node->isMaster())
-            ProgRecWbp::startProcessing();
+        ProgRecWbp::produceSideInfo();
+        createTaskDistributor(SF);
     }
     void showProgress()
     {
-        if (node->isMaster())
+        if (node->isMaster() && verbose>0)
         {
             time_bar_done=first+1;
-            ProgRecWbp::showProgress();
+            progress_bar(time_bar_done);
         }
     }
     bool getImageToProcess(size_t &objId, size_t &objIndex)
@@ -61,117 +55,25 @@ public:
     }
     void finishProcessing()
     {
-        node->gatherMetadatas(mdOut, fn_out);
-        if (node->isMaster())
-            ProgRecWbp::finishProcessing();
-    }
-}
-#ifdef NEVER
-{
-public:
-    Image<double> vol, aux;
-    int iaux;
-
-public:
-    /*  constructor ------------------------------------------------------- */
-    ProgMPIRecWbp(int argc, char **argv)
-    {
-        //parent class constructor will be called by deault without parameters
-        MPI_Comm_size(MPI_COMM_WORLD, &(size));
-        MPI_Comm_rank(MPI_COMM_WORLD, &(rank));
-        if (size < 2)
-            error_exit("This program cannot be executed in a single working node");
-
-        MPI_Barrier(MPI_COMM_WORLD);
-    }
-
-    /* a short function to print a message and exit */
-    void error_exit(char * msg)
-    {
-        fprintf(stderr, "%s", msg);
-        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-    }
-
-    void run()
-    {
-        // First produce the filter and then cut selfile in smaller parts
-        produceSideInfo();
-
-        // Select only relevant part of selfile for this rank
-        mpiSelectPart(SF, rank, size, num_img_tot);
-
-        // Actual backprojection
-        apply_2Dfilter_arbitrary_geometry(SF, vol());
-
-        aux().resize(vol());
-        MPI_Allreduce(MULTIDIM_ARRAY(vol()), MULTIDIM_ARRAY(aux()),
-                      MULTIDIM_SIZE(vol()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        vol = aux;
+    	MultidimArray<double> aux;
+        aux.resizeNoCopy(reconstructedVolume());
+        MPI_Allreduce(MULTIDIM_ARRAY(reconstructedVolume()), MULTIDIM_ARRAY(aux),
+                      MULTIDIM_SIZE(aux), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        int iaux;
         MPI_Allreduce(&count_thr, &iaux, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
-        if (rank == 0)
+        if (node->isMaster())
         {
-            std::cerr << "Fourier pixels for which the threshold was not reached: "
-            << (float)(iaux*100.) / (num_img_tot*dim*dim) << " %" << std::endl;
-            vol.write(fn_out);
+            reconstructedVolume()=aux;
+            count_thr=iaux;
+            ProgRecWbp::finishProcessing();
         }
     }
 };
 
-
 int main(int argc, char **argv)
 {
-
-    if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
-    {
-        fprintf(stderr, "MPI initialization errorn");
-        exit(EXIT_FAILURE);
-    }
-
-    ProgMPIRecWbp program;
-
-    if (program.rank == 0)
-    {
-        try
-        {
-            program.read(argc, argv);
-        }
-        catch (XmippError XE)
-        {
-            std::cerr << XE;
-            MPI_Finalize();
-            exit(1);
-        }
-    }
-
-    MPI_Barrier(MPI_COMM_WORLD);
-
-    if (program.rank != 0)
-    {
-        try
-        {
-            program.read(argc, argv);
-        }
-        catch (XmippError XE)
-        {
-            std::cerr << XE;
-            MPI_Finalize();
-            exit(1);
-        }
-    }
-
-    try
-    {
-        program.run();
-        MPI_Finalize();
-    }
-    catch (XmippError XE)
-    {
-        std::cerr << XE;
-        exit(1);
-    }
-
-    exit(0);
-
+	ProgMPIRecWbp program;
+	program.read(argc,argv);
+	return program.tryRun();
 }
-#endif
