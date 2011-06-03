@@ -176,6 +176,7 @@ enum MDLabel
     MDL_MISSINGREGION_THXF, ///< Final tilt angle in X for missing region in subtomogram
     MDL_MODELFRAC, ///< Model fraction (alpha_k) for a Maximum Likelihood model
     MDL_NEIGHBORS, ///< Vector of indexes to points some "neighbors"
+    MDL_NEIGHBORHOOD_RADIUS, ///< Radius of the neigborhood (radians)
     MDL_NMA, ///< Normal mode displacements (vector double)
     MDL_NMA_MODEFILE, ///< File with an NMA mode
     MDL_NOISE_ANGLES, ///< Noise description for projected angles
@@ -638,6 +639,7 @@ private:
         MDL::addLabel(MDL_MISSINGREGION_THYF, LABEL_DOUBLE, "missingRegionThetaYF");
         MDL::addLabel(MDL_MODELFRAC, LABEL_DOUBLE, "modelFraction");
         MDL::addLabel(MDL_NEIGHBORS, LABEL_VECTOR_LONG, "neighbors");
+        MDL::addLabel(MDL_NEIGHBORHOOD_RADIUS, LABEL_DOUBLE, "neighborhoodRadius");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR, "NMADisplacements");
         MDL::addLabel(MDL_NMA_MODEFILE, LABEL_STRING, "NMAModefile");
         MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR, "noiseAngles");
