@@ -83,7 +83,7 @@ TEST_F( MetadataTest, similarToOperator)
  */
 
 
-TEST_F( MetadataTest, Addlabel)
+TEST_F( MetadataTest, AddLabel)
 {
     MetaData auxMetadata = mDunion;
     auxMetadata.addLabel(MDL_Z);
@@ -93,6 +93,21 @@ TEST_F( MetadataTest, Addlabel)
     v1.push_back(MDL_Z);
     v2 = auxMetadata.getActiveLabels();
     EXPECT_EQ(v2,v1);
+}
+
+TEST_F( MetadataTest, AddRow)
+{
+    MetaData md;
+
+    MDRow row;
+    row.setValue(MDL_X, 1.);
+    row.setValue(MDL_Y, 2.);
+    md.addRow(row);
+    row.setValue(MDL_X, 3.);
+    row.setValue(MDL_Y, 4.);
+    md.addRow(row);
+
+    EXPECT_EQ(md, mDsource);
 }
 
 TEST_F( MetadataTest, Clear)
