@@ -23,6 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "sampling.h"
+#include "macros.h"
 
 /* Default Constructor */
 Sampling::Sampling()
@@ -96,6 +97,16 @@ Sampling::Sampling()
 #undef DEBUG1
 }
 
+bool Sampling::operator==(const Sampling& op) const
+{
+
+    return (XMIPP_EQUAL_REAL(sampling_rate_rad, op.sampling_rate_rad) &&
+            XMIPP_EQUAL_REAL(cos_neighborhood_radius, op.cos_neighborhood_radius) &&
+            no_redundant_sampling_points_angles == op.no_redundant_sampling_points_angles &&
+            no_redundant_sampling_points_vector == op.no_redundant_sampling_points_vector &&
+            no_redundant_sampling_points_index == op.no_redundant_sampling_points_index);
+}
+
 void Sampling::setSampling(double sampling)
 {
     sampling_rate_rad = DEG2RAD(sampling);
@@ -120,11 +131,8 @@ void Sampling::setNeighborhoodRadius(double neighborhood)
     if(neighborhood<0)
         cos_neighborhood_radius=-1.01;
     else if(neighborhood>180.001)
-    {
-        std::cerr << "neighborhood can not be greater than 180 " << std::endl;
-        std::cerr << "use any negative value to cover the whole space " << std::endl;
-        exit(0);
-    }
+      REPORT_ERROR(ERR_ARG_INCORRECT,"Neighborhood can not be greater than 180. \n \
+          Use any negative value to cover the whole space ");
     else
     {
         neighborhood_radius_rad = DEG2RAD(neighborhood);
@@ -134,8 +142,8 @@ void Sampling::setNeighborhoodRadius(double neighborhood)
 
 /* Compute edge sampling points using Baumgardner  1995 */
 void Sampling::computeSamplingPoints(bool only_half_sphere,
-                                       double max_tilt,
-                                       double min_tilt)
+                                     double max_tilt,
+                                     double min_tilt)
 {
     /** vector to decimate the triangles */
     std::vector <Matrix1D<double> > edge_vector_start;
@@ -412,10 +420,10 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
             j_flag = false;
         }
         fillDistance(edge_vector_start[i],
-                      edge_vector_end[i],
-                      sampling_points_vector,
-                      (j + 1) % number_of_samples,
-                      only_half_sphere,min_z,max_z);
+                     edge_vector_end[i],
+                     sampling_points_vector,
+                     (j + 1) % number_of_samples,
+                     only_half_sphere,min_z,max_z);
         j++;
     }
     //#define DEBUG3
@@ -545,10 +553,10 @@ int Sampling::sortFunc(Matrix1D<double> &t, Matrix1D<double> &a)
 }
 
 void Sampling::fillEdge(Matrix1D<double> starting_point,
-                         Matrix1D<double> ending_point,
-                         std::vector <Matrix1D<double> > & edge_vector,
-                         bool END_FLAG
-                        )
+                        Matrix1D<double> ending_point,
+                        std::vector <Matrix1D<double> > & edge_vector,
+                        bool END_FLAG
+                       )
 {
     Matrix1D<double> v_aux(3);
 
@@ -570,14 +578,14 @@ void Sampling::fillEdge(Matrix1D<double> starting_point,
     }
 }
 void Sampling::fillDistance(Matrix1D<double> starting_point,
-                             Matrix1D<double> ending_point,
-                             std::vector <Matrix1D<double> > &
-                             sampling_points_vector,
-                             int my_number_of_samples,
-                             bool only_half_sphere,
-                             double min_z,
-                             double max_z
-                            )
+                            Matrix1D<double> ending_point,
+                            std::vector <Matrix1D<double> > &
+                            sampling_points_vector,
+                            int my_number_of_samples,
+                            bool only_half_sphere,
+                            double min_z,
+                            double max_z
+                           )
 {
     Matrix1D<double> v_aux(3);
 
@@ -1390,6 +1398,7 @@ void Sampling::createAsymUnitFile(const FileName &docfilename)
         << std::endl
         ;
 #endif
+
         row.setValue(MDL_ORDER, no_redundant_sampling_points_index[i]);
         row.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[i]));
         row.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[i]));
@@ -1408,133 +1417,167 @@ void Sampling::createAsymUnitFile(const FileName &docfilename)
     DF.write(tmp_filename);
 }
 
-void Sampling::saveSamplingFile(FileName outfilename, bool write_vectors)
+#define FN_SAMPLING_NEI(base) formatString("neighbors@%s_sampling.xmd", base.c_str())
+#define FN_SAMPLING_PROJ(base) formatString("projectionDirections@%s_sampling.xmd", base.c_str())
+#define FN_SAMPLING_EXTRA(base) formatString("extra@%s_sampling.xmd", base.c_str())
+#define FN_SAMPLING_SPHERE(base) formatString("projectionDirectionsSphere@%s_sampling.xmd", base.c_str())
+
+void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, bool write_sampling_sphere)
 {
-  std::cerr << "DEBUG_JM: entering Sampling::saveSamplingFile " <<std::endl;
-    FileName fn_tmp = outfilename + "_sampling.xmd";
-
     MetaData md;
+    MDRow row;
 
+    row.setValue(MDL_SAMPLINGRATE, sampling_rate_rad);
+    row.setValue(MDL_NEIGHBORHOOD_RADIUS, cos_neighborhood_radius);
+    md.setColumnFormat(false);
+    md.addRow(row);
+    md.write(FN_SAMPLING_EXTRA(fn_base), MD_OVERWRITE);
 
+    md.clear();
+    md.setColumnFormat(true);
+    row.clear();
     size_t size = my_neighbors.size();
-
-    //Write first block with experimental images order and
-    //its neighbors
-    size_t id;
+    //Write first block with experimental images order and its neighbors
     for(size_t i = 0; i < size; ++i)
     {
-      id = md.addObject();
-      md.setValue(MDL_ORDER, i+1, id);
-      md.setValue(MDL_NEIGHBORS, my_neighbors[i], id);
+        row.setValue(MDL_ORDER, i + 1);
+        row.setValue(MDL_NEIGHBORS, my_neighbors[i]);
+        md.addRow(row);
     }
 
     md.setComment("List with order of each experimental images and its neighbors");
-    md.write((String)"neighbors@" + fn_tmp);
+    md.write(FN_SAMPLING_NEI(fn_base), MD_APPEND);
 
+    //Write projection directions
     md.clear();
+    row.clear();
     size = no_redundant_sampling_points_index.size();
+
     for (size_t i = 0; i < size; ++i)
     {
-      Matrix1D<double> &angles = no_redundant_sampling_points_angles[i];
-      id = md.addObject();
-      md.setValue(MDL_ORDER, no_redundant_sampling_points_index[i], id);
-      md.setValue(MDL_ANGLEROT, XX(angles), id);
-      md.setValue(MDL_ANGLEPSI, YY(angles), id);
-      md.setValue(MDL_ANGLETILT, ZZ(angles), id);
+        Matrix1D<double> &angles = no_redundant_sampling_points_angles[i];
+        row.setValue(MDL_ORDER, no_redundant_sampling_points_index[i]);
+        row.setValue(MDL_ANGLEROT, XX(angles));
+        row.setValue(MDL_ANGLETILT, YY(angles));
+        row.setValue(MDL_ANGLEPSI, ZZ(angles));
 
-      if (write_vectors)
-      {
-        Matrix1D<double> &vectors = no_redundant_sampling_points_vector[i];
-        md.setValue(MDL_X, XX(vectors), id);
-        md.setValue(MDL_Y, YY(vectors), id);
-        md.setValue(MDL_Z, ZZ(vectors), id);
-      }
+        if (write_vectors)
+        {
+            Matrix1D<double> &vectors = no_redundant_sampling_points_vector[i];
+            row.setValue(MDL_X, XX(vectors));
+            row.setValue(MDL_Y, YY(vectors));
+            row.setValue(MDL_Z, ZZ(vectors));
+        }
+        md.addRow(row);
+    }
+    md.write(FN_SAMPLING_PROJ(fn_base), MD_APPEND);
+
+    if (write_sampling_sphere)
+    {
+        md.clear();
+        row.clear();
+        size = sampling_points_angles.size();
+
+        for (size_t i = 0; i < size; ++i)
+        {
+            Matrix1D<double> &angles = sampling_points_angles[i];
+            row.setValue(MDL_ANGLEROT, XX(angles));
+            row.setValue(MDL_ANGLETILT, YY(angles));
+            row.setValue(MDL_ANGLEPSI, ZZ(angles));
+
+            if (write_vectors)
+            {
+                Matrix1D<double> &vectors = sampling_points_vector[i];
+                row.setValue(MDL_X, XX(vectors));
+                row.setValue(MDL_Y, YY(vectors));
+                row.setValue(MDL_Z, ZZ(vectors));
+            }
+            md.addRow(row);
+        }
+        md.write(FN_SAMPLING_SPHERE(fn_base), MD_APPEND);
+
     }
 
-    md.write((String)"projectionDirections@" + fn_tmp, MD_APPEND);
-
-    std::cerr << "DEBUG_JM: leaving Sampling::saveSamplingFile " <<std::endl;
-    exit(1);
-
-    //lenght is 3 for the next
-    //save sampling points
-//    for (int i = 0; i < no_redundant_sampling_points_angles.size(); i++)
-//    {
-//        if (write_vectors)
-//        {
-//            outfile << XX(no_redundant_sampling_points_vector[i]) << " ";
-//            outfile << YY(no_redundant_sampling_points_vector[i]) << " ";
-//            outfile << ZZ(no_redundant_sampling_points_vector[i]) << std::endl;
-//        }
-//        outfile << XX(no_redundant_sampling_points_angles[i]) << " ";
-//        outfile << YY(no_redundant_sampling_points_angles[i]) << " ";
-//        outfile << ZZ(no_redundant_sampling_points_angles[i]) << std::endl;
-//    }
-//    //save_sampling_rate in radiands
-//    outfile <<  sampling_rate_rad  << std::endl;
-//    outfile <<  cos_neighborhood_radius << std::endl;
-//    outfile.close();
 }
 
 
-void Sampling::readSamplingFile(const FileName &infilename, bool read_vectors)
+void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool write_sampling_sphere)
 {
-    FileName tmp_filename;
-    tmp_filename = infilename.withoutExtension() + "_sampling.txt";
-    std::ifstream infile;
-    int num_elem = 0;
-    int num_elem2 = 0;
-    infile.open(tmp_filename.c_str(), std::ios::binary);
-    if (infile.fail())
-        REPORT_ERROR(ERR_IO_NOTOPEN,tmp_filename);
-    //total number of vectors
-    infile >> num_elem;
-    my_neighbors.resize(num_elem);
-#ifdef MYPSI
+    //Read extra info
+    MetaData md(FN_SAMPLING_EXTRA(fn_base));
+    size_t id = md.firstObject();
+    md.getValue(MDL_SAMPLINGRATE, sampling_rate_rad, id);
+    md.getValue(MDL_NEIGHBORHOOD_RADIUS, cos_neighborhood_radius, id);
 
-    my_neighbors_psi.resize(num_elem);
-#endif
-    //    my_cross_correlation.resize(num_elem);
-    for(int i =0; i<num_elem;i++)
+    //Read neighbors
+    md.read(FN_SAMPLING_NEI(fn_base));
+    my_neighbors.resize(md.size());
+
+    FOR_ALL_OBJECTS_IN_METADATA(md)
     {
-        infile >> num_elem2;
-        my_neighbors[i].resize(num_elem2);
-#ifdef MYPSI
-
-        my_neighbors_psi[i].resize(num_elem2);
-#endif
-        //my_cross_correlation[i].resize(num_elem2);
-        for (int j = 0; j < my_neighbors[i].size();j++)
-            infile >> my_neighbors[i][j];
-#ifdef MYPSI
-
-        for (int j = 0; j < my_neighbors_psi[i].size();j++)
-            infile >> my_neighbors_psi[i][j];
-#endif
-
+        md.getValue(MDL_NEIGHBORS, my_neighbors[__iter.objIndex], __iter.objId);
     }
-    infile >> num_elem;
-    if(read_vectors)
-        no_redundant_sampling_points_vector.resize(num_elem);
-    no_redundant_sampling_points_angles.resize(num_elem);
-    for (int i = 0; i < num_elem; i++)
+    //Read projection directions
+    md.read(FN_SAMPLING_PROJ(fn_base));
+    size_t size = md.size();
+    no_redundant_sampling_points_index.resize(size);
+    no_redundant_sampling_points_angles.resize(size);
+    if (read_vectors)
+        no_redundant_sampling_points_vector.resize(size);
+
+    FOR_ALL_OBJECTS_IN_METADATA(md)
     {
-        if(read_vectors)
+        size_t &i = __iter.objIndex;
+        size_t &id = __iter.objId;
+
+        Matrix1D<double> &angles = no_redundant_sampling_points_angles[i];
+        angles.resizeNoCopy(3);
+        md.getValue(MDL_ORDER, no_redundant_sampling_points_index[i], id);
+        md.getValue(MDL_ANGLEROT, XX(angles), id);
+        md.getValue(MDL_ANGLETILT, YY(angles), id);
+        md.getValue(MDL_ANGLEPSI, ZZ(angles), id);
+
+        if (read_vectors)
         {
-            no_redundant_sampling_points_vector[i].resize(3);
-            infile >> XX(no_redundant_sampling_points_vector[i]);
-            infile >> YY(no_redundant_sampling_points_vector[i]);
-            infile >> ZZ(no_redundant_sampling_points_vector[i]);
+            Matrix1D<double> &vectors = no_redundant_sampling_points_vector[i];
+            vectors.resizeNoCopy(3);
+            md.getValue(MDL_X, XX(vectors), id);
+            md.getValue(MDL_Y, YY(vectors), id);
+            md.getValue(MDL_Z, ZZ(vectors), id);
         }
-        no_redundant_sampling_points_angles[i].resize(3);
-        infile >> XX(no_redundant_sampling_points_angles[i]);
-        infile >> YY(no_redundant_sampling_points_angles[i]);
-        infile >> ZZ(no_redundant_sampling_points_angles[i]);
     }
-    //read sampling_rate in radiands
-    infile >>  sampling_rate_rad;
-    infile >>  cos_neighborhood_radius;
-    infile.close();
+
+    if (write_sampling_sphere)
+    {
+      //Read projection directions
+      md.read(FN_SAMPLING_SPHERE(fn_base));
+      size_t size = md.size();
+      sampling_points_angles.resize(size);
+      if (read_vectors)
+          sampling_points_vector.resize(size);
+
+      FOR_ALL_OBJECTS_IN_METADATA(md)
+      {
+          size_t &i = __iter.objIndex;
+          size_t &id = __iter.objId;
+
+          Matrix1D<double> &angles = sampling_points_angles[i];
+          angles.resizeNoCopy(3);
+          md.getValue(MDL_ANGLEROT, XX(angles), id);
+          md.getValue(MDL_ANGLETILT, YY(angles), id);
+          md.getValue(MDL_ANGLEPSI, ZZ(angles), id);
+
+          if (read_vectors)
+          {
+              Matrix1D<double> &vectors = sampling_points_vector[i];
+              vectors.resizeNoCopy(3);
+              md.getValue(MDL_X, XX(vectors), id);
+              md.getValue(MDL_Y, YY(vectors), id);
+              md.getValue(MDL_Z, ZZ(vectors), id);
+          }
+      }
+
+    }
 }
 
 void Sampling::computeNeighbors(bool only_winner)
@@ -1707,12 +1750,11 @@ void Sampling::removePointsFarAwayFromExperimentalData()
 
     for (int i = 0; i <= my_end; i++)
     {
-        bool my_delete=true;
+      bool my_delete=true;
         for (int j=0; my_delete && j< exp_data_projection_direction_by_L_R.size();j++)
         {
             my_dotProduct = dotProduct(no_redundant_sampling_points_vector[i],
                                        exp_data_projection_direction_by_L_R[j]);
-
             if (my_dotProduct > cos_neighborhood_radius)
                 my_delete=false;
         }//for j
@@ -1753,7 +1795,7 @@ void Sampling::removePointsFarAwayFromExperimentalData()
     #undef CHIMERA
 }
 void Sampling::findClosestSamplingPoint(const FileName &FnexperimentalImages,
-        const FileName &output_file_root)
+                                        const FileName &output_file_root)
 {
     //read input files
     MetaData DFi;
@@ -1762,7 +1804,7 @@ void Sampling::findClosestSamplingPoint(const FileName &FnexperimentalImages,
 
 }
 void Sampling::findClosestSamplingPoint(MetaData &DFi,
-        const FileName &output_file_root)
+                                        const FileName &output_file_root)
 {
     double my_dotProduct,my_dotProduct_aux;
     Matrix1D<double>  row(3),direction(3);

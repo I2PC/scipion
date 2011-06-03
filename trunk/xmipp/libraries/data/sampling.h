@@ -122,6 +122,9 @@ public:
     /** Default constructor. sampling in degrees*/
     Sampling();
 
+    /** 'is equal to' (equality).*/
+    bool operator==(const Sampling& op) const;
+
     /** symmetry file */
     FileName symmetry_file;
 
@@ -193,70 +196,16 @@ public:
     */
     void computeNeighbors(bool only_winner=false);
 
-    /** Save neighbors in a propietary ascii file. The structure is as
-        follows
-        @code
-       [vnum]
-       [size1]
-       [vec1_neighbors]
-       #ifdef MYPSI
-          [vec1_psi]
-       #endif
-       [vec1_crosscorrelation]
-       [size2]
-       [vec2_neighbors]
-       #ifdef MYPSI
-          [vec2_psi]
-       #endif
-       [vec2_crosscorrelation]
-       ...
-       [sizen]
-       [vecn_neighbors]
-       #ifdef MYPSI
-          [vecn_psi]
-       #endif
-       [vecn_crosscorrelation]
-       @endcode
-       for the neighbors and
-       @code
-       X1_angle  Y1_angle  Z1_angle
-       X1_vector Y1_vector Z1_vector
-       X2_angle  Y2_angle  Z2_angle
-       X2_vector Y2_vector Z2_vector
-       ...
-       Xn_angle  Yn_angle  Zn_angle
-       Xn_vector Yn_vector Zn_vector
-       @endcode
-       for the sampling points.
-       vnum is the number of vectors, sizen is the number of elements in
-       that vector and vecn is the elements.
-
+    /** Save neighbors as threee metadtada blocks
+     * 1) header with sampling rate and angular distance
+     * 2) one row for ach experimentald data with neighbours
+     * 3) sampling points
     */
-    void saveSamplingFile(FileName outfilename,bool write_vectors=true);
+    void saveSamplingFile(const FileName &fn_base, bool write_vectors = true, bool write_sampling_sphere = false);
 
-    /** Read neighbors in a propietary ascii file. The structure is as
-        follows
-       [vnum]
-       [size1]
-       [vec1]
-       [size2]
-       [vec2]
-       ...
-       [sizen]
-       [vecn]
-
-       for the neighbors and
-       X1 Y1 Z1
-       X2 Y2 Z2
-       ...
-       Xn Yn Zn
-       for the sampling points
-
-       where vnum is the number of vectors, sizen is the number of elements in
-      that vector and vecn is the elements. 
-
+    /** Read neighbors i
     */
-    void readSamplingFile(const FileName &infilename,bool read_vectors=true);
+    void readSamplingFile(const FileName &infilename,bool read_vectors=true, bool write_sampling_sphere = false);
 
     /** remove all those points that are further away from experimental data
         than neighborhood_radius_rad */
