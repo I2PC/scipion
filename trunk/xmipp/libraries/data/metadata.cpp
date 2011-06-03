@@ -141,27 +141,23 @@ bool MetaData::getRow(MDRow &row, size_t id) const
     return true;
 }
 
+//TODO: could be improve in a query for update the entire row
+#define SET_ROW_VALUES(row) \
+    for (int i = 0; i < row._size; ++i){\
+        const MDLabel &label = row.order[i];\
+        if (row.containsLabel(label))\
+            setValue(*(row.getObject(label)), id);}
+
 void MetaData::setRow(const MDRow &row, size_t id)
 {
-    //todo: could be improve in a query for update the entire row
-    FOR_ALL_LABELS()
-    {
-        MDLabel label = (MDLabel)_label;
-        if (row.containsLabel(label))
-            setValue(*(row.getObject(label)), id);
-    }
+    SET_ROW_VALUES(row);
 }
 
 size_t MetaData::addRow(const MDRow &row)
 {
     size_t id = addObject();
-    //todo: could be improve in a query for insert the entire row
-    FOR_ALL_LABELS()
-    {
-        MDLabel label = (MDLabel)_label;
-        if (row.containsLabel(label))
-            setValue(*(row.getObject(label)), id);
-    }
+    SET_ROW_VALUES(row);
+
     return id;
 }
 

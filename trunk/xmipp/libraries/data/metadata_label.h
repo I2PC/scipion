@@ -379,10 +379,11 @@ template class std::vector<MDObject *>
 /** Class for holding an entire row of posible MDObject */
 class MDRow
 {
-private:
+public:
     //Reserve space for the maximum different labels
     //this will allows constant access to each object indexing by labels
     MDObject * objects[MDL_LAST_LABEL];
+    MDLabel order[MDL_LAST_LABEL];
     int _size; //Number of active labels
 
 public:
@@ -431,6 +432,7 @@ public:
       if (objects[label] == NULL)
       {
         objects[label] = new MDObject(label, d);
+        order[_size] = label;
         ++_size;
       }
       else

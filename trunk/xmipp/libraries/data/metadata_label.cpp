@@ -401,7 +401,7 @@ void  MDObject::setValue(const std::vector<size_t> &vv)
 }
 void MDObject::setValue(const size_t &lv)
 {
-    labelTypeCheck(LABEL_INT);
+    labelTypeCheck(LABEL_LONG);
     this->data.longintValue = lv;
 }
 void MDObject::setValue(const float &floatvalue)
@@ -603,11 +603,13 @@ bool MDRow::containsLabel(MDLabel label) const
     return objects[label] != NULL;
 }
 
+
 bool MDRow::addLabel(MDLabel label)
 {
     if (objects[label] == NULL)
     {
         objects[label] = new MDObject(label);
+        order[_size] = label;
         ++_size;
     }
 }
@@ -635,6 +637,7 @@ void MDRow::setValue(const MDObject &object)
     if (objects[_label] == NULL)
     {
         objects[_label] = new MDObject(object);
+        order[_size] = object.label;
         ++_size;
     }
     else
@@ -657,10 +660,11 @@ MDRow::MDRow(const MDRow & row)
 {
     _size = 0;
     //Just initialize all pointers with NULL value
-    FOR_ALL_LABELS()
-    {
-        objects[_label] = NULL;
-    }
+    memset(objects, NULL, MDL_LAST_LABEL * sizeof(size_t));
+    //    FOR_ALL_LABELS()
+    //    {
+    //        objects[_label] = NULL;
+    //    }
     copy(row);
 }
 
@@ -668,10 +672,12 @@ MDRow::MDRow()
 {
     _size = 0;
     //Just initialize all pointers with NULL value
-    FOR_ALL_LABELS()
-    {
-        objects[_label] = NULL;
-    }
+    memset(objects, NULL, MDL_LAST_LABEL * sizeof(size_t));
+    //    FOR_ALL_LABELS()
+    //    {
+    //        objects[_label] = NULL;
+    //    }
+
 }
 
 MDRow& MDRow::operator = (const MDRow &row)
@@ -700,13 +706,15 @@ void MDRow::copy(const MDRow &row)
                 objects[_label]->copy(*(row.objects[_label]));
         }
     }
+    //copy the order of labels
+    memcpy(order, row.order, sizeof(short int)*_size);
 }
 
 std::ostream& operator << (std::ostream &out, const MDRow &row)
 {
-    FOR_ALL_LABELS()
+    for (int i = 0; i < row._size; ++i)
     {
-        row.objects[_label]->toStream(out);
+        row.objects[row.order[i]]->toStream(out);
         out << " ";
     }
     return out;
