@@ -779,7 +779,8 @@ if int(env['gtest']):
      AddXmippCTest('test_metadata')
      AddXmippCTest('test_multidim')
      AddXmippCTest('test_polar')
-     AddXmippCTest('test_transformation')
+     AddXmippCTest('test_sampling')
+     AddXmippCTest('test_transformation')     
      env.Depends('run_tests', [fftw, tiff, sqlite])
      #python modules
      #FIXME ROB -how to install dependences?????
