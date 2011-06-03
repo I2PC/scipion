@@ -25,36 +25,31 @@
 
 #include "fourier_filter.h"
 
-#include <data/metadata.h>
 #include <data/image.h>
-
-#define OVERSAMPLE 8
+#include <data/metadata.h>
+#include <data/program.h>
 
 /**@defgroup CorrectAmplitude3D ctf_correct_amplitude3D (3D Wiener filtering)
    @ingroup ReconsLibrary */
 //@{
 /// Correct Amplitude3D parameters
-class CorrectAmplitude3DParams
+class ProgCtfCorrectAmplitude3D: public XmippProgram
 {
 public:
-
-    /// Filename for CTF datfile: a 2-column ASCII file with name of
-    /// the volume and CTF parameter file for each defocus group
-    FileName fnCtfdat;
+    /// Metadata with volume, ctf and number of images in that volume
+    FileName fnIn;
     /// Rootname for output files
-    FileName fnOut;
-    /// Filename for docfile with number of images per defocus group
-    FileName fnNrImgs;
+    FileName fnRoot;
 
     /// Wiener filter constant
-    double wienConst;
+    double wienerConstant;
 
     /// Low resolution cutoff to apply Wiener filter
-    double minResol;
+    double minFreq;
 
     /// Flag for phase flipped images
     bool isFlipped;
-
+public:
     /// Dimensions of the volumes
     int Zdim, Ydim, Xdim;
 	
@@ -68,18 +63,14 @@ public:
     std::vector< MultidimArray<double> > Vctfs1D, Vwien1D;
 
 public:
-    /** Empty constructor */
-    CorrectAmplitude3DParams(): wienConst(0)
-    {}
-
-    /** Read parameters from command line. */
-    void read(int argc, char **argv);
+    /** Read parameters */
+    void readParams();
 
     /** Show. */
     void show();
 
-    /** Usage. */
-    void usage();
+    /** Define Parameters*/
+    void defineParams();
 
     /** Produce side information.
         The CTFdat, nr_imgs docfile and selection file with envelopes are read. */

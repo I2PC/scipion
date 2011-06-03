@@ -23,34 +23,5 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/progs.h>
-#include <data/args.h>
 #include <reconstruction/ctf_correct_amplitude3d.h>
-
-int main(int argc, char **argv)
-{
-    CorrectAmplitude3DParams prm;
-    try
-    {
-       prm.read(argc,argv);
-    }
-    catch (XmippError XE)
-    {
-       std::cerr << XE << std::endl;
-       prm.usage();
-       exit(1);
-    }
-    
-    try
-    {
-       prm.show();
-       prm.produceSideInfo();
-       prm.run();
-    }
-    catch (XmippError XE)
-    {
-       std::cerr << XE << std::endl;
-       return 1;
-    }
-    return 0;
-}
+RUN_XMIPP_PROGRAM(ProgCtfCorrectAmplitude3D)
