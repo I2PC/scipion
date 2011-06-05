@@ -59,7 +59,7 @@ void MpiML2DBase::readMpi(int argc, char** argv)
     //The following makes the asumption that 'this' also
     //inherits from an XmippProgram
     if (!node->isMaster())
-            program->verbose = 0;
+        program->verbose = 0;
     // Read subsequently to avoid problems in restart procedure
     for (int proc = 0; proc < node->size; ++proc)
     {
@@ -191,6 +191,8 @@ void MpiProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType
     //Only master write files
     if (node->isMaster())
         ProgML2D::writeOutputFiles(model, outputType);
+    else if (outputType == OUT_REFS)
+        outRefsMd = formatString("iter%06d@%s_iter_refs.xmd", iter, fn_root.c_str());
     //All nodes wait until files are written
     node->barrierWait();
 }
@@ -240,6 +242,36 @@ void MpiProgMLRefine3D::postProcessVolumes()
         ProgMLRefine3D::postProcessVolumes();
     //all nodes waiting until volumes are copied
     node->barrierWait();
+}
+
+void MpiProgMLRefine3D::makeNoiseImages()
+{
+    //only master post process
+    if (node->isMaster())
+        ProgMLRefine3D::makeNoiseImages();
+    //all nodes waiting until volumes are copied
+    node->barrierWait();
+}
+
+/// Calculate 3D SSNR, only master and broadcast result
+void MpiProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
+{
+    //only master calculate
+    if (node->isMaster())
+        ProgMLRefine3D::calculate3DSSNR(spectral_signal);
+    MPI_Bcast(MULTIDIM_ARRAY(spectral_signal), MULTIDIM_SIZE(spectral_signal), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+}
+
+/// Convergency check, only master and broadcast result
+bool MpiProgMLRefine3D::checkConvergence()
+{
+    int result = -1;
+    //only master check
+    if (node->isMaster())
+        result = ProgMLRefine3D::checkConvergence() ? 1 : 0;
+    MPI_Bcast(&result, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    return result == 1;
+
 }
 
 void MpiProgMLRefine3D::projectVolumes(MetaData &mdProj)
@@ -357,6 +389,8 @@ void MpiProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputTyp
     //Only master write files
     if (node->isMaster())
         ProgMLF2D::writeOutputFiles(model, outputType);
+    else if (outputType == OUT_REFS)
+            outRefsMd = formatString("%s_iter%06d_refs.xmd", fn_root.c_str(), iter);
     //All nodes wait until files are written
     node->barrierWait();
 }

@@ -97,10 +97,17 @@ public:
     virtual ~MpiProgMLRefine3D();
     /** Only master copy reference volumes before start processing */
     void copyVolumes();
-    /** Only master postprocess volumnes */
+    /** Only master postprocess volumes */
     void postProcessVolumes();
     /** Project volumes, sync after projection */
     void projectVolumes(MetaData &mdProj);
+    /** Make noise images, only master */
+    void makeNoiseImages();
+    /// Calculate 3D SSNR, only master and broadcast result
+    void calculate3DSSNR(MultidimArray<double> &spectral_signal);
+    /// Convergency check, only master and broadcast result
+    bool checkConvergence() ;
+
 
 }
 ;//end of class  MpiProgMLRefine3D

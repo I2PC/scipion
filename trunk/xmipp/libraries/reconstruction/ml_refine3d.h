@@ -131,7 +131,7 @@ public:
     virtual void projectVolumes(MetaData &mdProj) ;
 
     /// (For mpi-version only:) calculate noise averages and write to disc
-    void makeNoiseImages() ;
+    virtual void makeNoiseImages() ;
 
     /// Create the program to be used for reconstruction of the volumes
     virtual ProgReconsBase * createReconsProgram();
@@ -142,7 +142,7 @@ public:
     void reconstructVolumes();
 
     /// Calculate 3D SSNR according to Unser ea. (2005)
-    void calculate3DSSNR(MultidimArray<double> &spectral_signal);
+    virtual void calculate3DSSNR(MultidimArray<double> &spectral_signal);
 
     /** Copy reference volumes before start processing */
     virtual void copyVolumes();
@@ -155,7 +155,7 @@ public:
     virtual void postProcessVolumes();
 
     /// Convergency check
-    bool checkConvergence() ;
+    virtual bool checkConvergence() ;
 
 
 

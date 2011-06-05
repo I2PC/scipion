@@ -255,6 +255,7 @@ void ProgMLRefine3D::readParams()
 
     //Read ml2d params
     ml2d->do_ML3D = true;
+    ml2d->verbose = verbose; // 2d inherits verbosity from 3d
     ml2d->read(argc, argv, false);
 
     if (!checkParam("--psi_step"))

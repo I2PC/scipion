@@ -2779,6 +2779,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     // Write out reference md file
     MDo.write(FN_CREF_IMG_MD);
     outRefsMd = FN_REFMD(fn_base);
+//    std::cerr << "DEBUG_JM: outRefsMd: " << outRefsMd << std::endl;
     MDref.write(outRefsMd);
 
     // Write out log-file
