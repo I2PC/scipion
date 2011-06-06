@@ -1056,7 +1056,7 @@ def actionsToBePerformedInsideLoop(_log):
             #file with sampling point neighbourhood for each ctf group, this is reduntant but useful
             
             for i in range (1,NumberOfCtfGroups+1):
-                _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.txt")
+                _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.xmd")
                         
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             # projectionMatching    
