@@ -24,12 +24,12 @@ DirMicrographs='Micrographs'
     (see the expert options)
     Note that any wildcard is possible, e.g. *3[1,2].tif
 """
-ExtMicrographs='*.ser'
+ExtMicrographs='*.mrc'
 # Rootname for these micrographs
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir ='/gpfs/fs1/home/bioinfo/coss/Polimerasa_CCD'
+ProjectDir ='/media/usbdisk/Experiments/TestProtocols/MicrographPreprocessing'
 #------------------------------------------------------------------------------------------------
 # {section} Preprocess
 #------------------------------------------------------------------------------------------------
@@ -107,7 +107,7 @@ StepFocus=500
 DoParallel=True
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses=36
+NumberOfMpiProcesses=3
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -322,7 +322,7 @@ class preprocess_A_class:
 
         # Stop here until preprocessing is done
         if self._DoParallel:
-            os.write(fh_mpi, "MPI_Barrier\n");
+            os.write(fh_mpi, "MPI_BARRIER\n");
 
         # Estimate CTF
         idx=0;
@@ -336,7 +336,7 @@ class preprocess_A_class:
 
         # Stop here until CTFs have been estimated
         if self._DoParallel:
-            os.write(fh_mpi, "MPI_Barrier\n");
+            os.write(fh_mpi, "MPI_BARRIER\n");
 
         # Launch Preprocessing and calculation of the CTF
         os.close(fh_mpi)
@@ -403,10 +403,7 @@ class preprocess_A_class:
         (filepath, micrographName)=os.path.split(relpath(filename))
         (shortname2, extension)=os.path.splitext(micrographName)        
         if not self.Stddev == -1 or not self.Crop == -1 or not self.Down == 1:
-            if not self.Down == 1:
-                finalname += ".spi"
-            else:
-                finalname += ".raw"
+            finalname += ".mrc"
         else:
             finalname += extension
             if not os.path.exists(finalname):
@@ -443,9 +440,9 @@ class preprocess_A_class:
         
         # Downsample
         if not self.Down == 1:
-            command += "xmipp_transform_downsample -i " + iname + " -o " + micrographDir + "/tmp.spi " + \
+            command += "xmipp_transform_downsample -i " + iname + " -o " + micrographDir + "/tmp.mrc " + \
                     "--step "+ str(self.Down)+' --method fourier ' 
-            command += " ; rm -f " + finalname + " ; mv -i " + micrographDir + "/tmp.spi " + finalname + " ; "
+            command += " ; rm -f " + finalname + " ; mv -i " + micrographDir + "/tmp.mrc " + finalname + " ; "
         
         # Postprocessing
         command += "if [ -e " + finalname + ' ]; then ' + \
@@ -504,7 +501,11 @@ class preprocess_A_class:
         # Convert image to MRC
         command='if grep -q "Step 1" ' + micrographDir + '/status.txt' + theNewLine + \
             'then' + theNewLine + '(' + theNewLine
-        command += 'xmipp_image_convert -i ' + filename + ' -o ' + micrographDir + '/tmp.mrc -v 0; '
+        if not filename.endswith('.mrc'):
+            mrcMicrograph= micrographDir + '/tmp.mrc'
+            command += 'xmipp_image_convert -i ' + filename + ' -o ' + mrcMicrograph + ' -v 0; '
+        else:
+            mrcMicrograph = filename;
 
         # Prepare parameters for CTFTILT
         AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
@@ -512,7 +513,7 @@ class preprocess_A_class:
         (fnRoot, extension)=os.path.splitext(micrographName)
         command += "export NATIVEMTZ=kk" + theNewLine
         command += self.CtffindExec + '  << eof > ' + micrographDir + '/ctffind.log' + theNewLine
-        command += micrographDir + '/tmp.mrc' + theNewLine
+        command += mrcMicrograph + theNewLine
         command += micrographDir + '/ctffind_spectrum.mrc' + theNewLine
         command += str(self.SphericalAberration) + ',' + \
                   str(self.Voltage) + ',' + \
