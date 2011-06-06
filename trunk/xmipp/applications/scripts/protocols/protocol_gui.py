@@ -536,8 +536,10 @@ class automated_gui_class:
         label = Label(self.frame, text=section, fg=TextSectionColour, width=30, bg=LabelBackgroundColour)
         column = setup.LaunchSections.index(section)
         label.grid(row=row, column=column, columnspan=1, sticky=E)
-        
-        for button in setup.LaunchButtons.values():
+        keys=setup.LaunchButtons.keys()
+        keys.sort()
+        for key in keys:
+            button=setup.LaunchButtons[key]
             if 'section' in button and button['section'] == section:
                 row = row + 1
                 self.GuiAddLaunchButton(button, column, row, setup)
