@@ -857,7 +857,8 @@ void MetaData::read(const FileName &_filename,
     //filename is global, so we can write the filename when reporting errors
     filename  = _filename.removeBlockName();
     _read(filename,desiredLabels,BlockName,decomposeStack);
-
+    //_read llama a clean so I cannot use eFilename as filename ROB
+    eFilename = filename;
 }
 
 #define LINE_LENGHT 1024
