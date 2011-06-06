@@ -80,8 +80,8 @@ def angular_project_library(_log,dict):
                          1,
                          dict['SystemFlavour'])
     if (not dict['DoCtfCorrection']):
-        src=dict['ProjectLibraryRootName'].replace(".stk",'_sampling.txt')
-        dst = src.replace('sampling.txt','group'+
+        src=dict['ProjectLibraryRootName'].replace(".stk",'_sampling.xmd')
+        dst = src.replace('sampling.xmd','group'+
                               str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+
                               '_sampling.txt')
         print "aaa", src,dst
@@ -113,12 +113,12 @@ def projection_matching(_log,dict):
         outputname   = 'ctfGroups'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
         #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
         baseTxtFile  = refname[:-len('.stk')] 
-        txtfile      = baseTxtFile + '_sampling.txt'
-        if (os.path.exists(txtfile)):
-            os.remove(txtfile)
-        txtfileb     = utils_xmipp.composeFileName(baseTxtFile + '_group',ictf,'')
-        txtfileb     += '_sampling.txt'
-        shutil.copy(txtfileb, txtfile)
+        neighbFile      = baseTxtFile + '_sampling.xmd'
+        if (os.path.exists(neighbFile)):
+            os.remove(neighbFile)
+        neighbFileb     = utils_xmipp.composeFileName(baseTxtFile + '_group',ictf,'')
+        neighbFileb     += '_sampling.xmd'
+        shutil.copy(neighbFileb, neighbFile)
 #        else:
 #            inputdocfile    = 'ctfGroup'+str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
 #            outputname   = 'ctfGroup'+str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
