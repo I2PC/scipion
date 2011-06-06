@@ -74,8 +74,9 @@ void applyTransformation(const MultidimArray<double> &V2,
     A = A * Aaux;
 
     applyGeometry(LINEAR, Vaux, V2, A, IS_NOT_INV, WRAP);
-    Vaux*=greyScale;
-    Vaux+=greyShift;
+    if (greyScale!=1 || greyShift!=0)
+    	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
+    	DIRECT_MULTIDIM_ELEM(Vaux,n)=DIRECT_MULTIDIM_ELEM(Vaux,n)*greyScale+greyShift;
 }
 
 

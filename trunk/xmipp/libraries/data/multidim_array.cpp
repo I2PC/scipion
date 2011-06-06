@@ -77,6 +77,39 @@ double MultidimArray< std::complex< double > >::computeAvg() const
 {
     REPORT_ERROR(ERR_NOT_IMPLEMENTED,"MultidimArray::computeAvg not implemented for complex.");
 }
+
+template<>
+void MultidimArray<double>::computeAvgStdev(double& avg, double& stddev) const
+{
+    if (NZYXSIZE(*this) <= 0)
+        return;
+
+    avg = 0;
+    stddev = 0;
+
+    double* ptr=NULL;
+    size_t n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+    {
+        double val=*ptr;
+        avg += val;
+        stddev += val * val;
+    }
+
+    avg /= NZYXSIZE(*this);
+
+    if (NZYXSIZE(*this) > 1)
+    {
+        stddev = stddev / NZYXSIZE(*this) - avg * avg;
+        stddev *= NZYXSIZE(*this) / (NZYXSIZE(*this) - 1);
+
+        // Foreseeing numerical instabilities
+        stddev = sqrt(fabs(stddev));
+    }
+    else
+        stddev = 0;
+}
+
 template<>
 bool operator==(const MultidimArray< std::complex< double > >& op1, const MultidimArray< std::complex< double > >& op2)
 {

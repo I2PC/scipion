@@ -3057,7 +3057,7 @@ public:
             stddev *= NZYXSIZE(*this) / (NZYXSIZE(*this) - 1);
 
             // Foreseeing numerical instabilities
-            stddev = sqrt(static_cast< double >(ABS(stddev)));
+            stddev = sqrt(fabs(stddev));
         }
         else
             stddev = 0;
@@ -4937,6 +4937,8 @@ template<>
 void MultidimArray< std::complex< double > >::rangeAdjust(std::complex< double > minF, std::complex< double > maxF);
 template<>
 double MultidimArray< std::complex< double > >::computeAvg() const;
+template<>
+void MultidimArray<double>::computeAvgStdev(double& avg, double& stddev) const;
 template<>
 bool operator==(const MultidimArray< std::complex< double > >& op1,
                 const MultidimArray< std::complex< double > >& op2);
