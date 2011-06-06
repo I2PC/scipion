@@ -1052,7 +1052,7 @@ def actionsToBePerformedInsideLoop(_log):
             #file with projection angles angles 
             _VerifyFiles.append(auxFn + ".doc")
             #file with sampling point neighbourhood 
-            _VerifyFiles.append(auxFn + "_sampling.txt")
+            _VerifyFiles.append(auxFn + "_sampling.xmd")
             #file with sampling point neighbourhood for each ctf group, this is reduntant but useful
             
             for i in range (1,NumberOfCtfGroups+1):
