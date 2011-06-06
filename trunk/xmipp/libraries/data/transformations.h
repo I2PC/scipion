@@ -316,7 +316,7 @@ void applyGeometry(int SplineDegree,
         int m1, n1, m2, n2;
         double x, y, xp, yp;
         double minxp, minyp, maxxp, maxyp;
-        int cen_x, cen_y, cen_xp, cen_yp;
+        double cen_x, cen_y, cen_xp, cen_yp;
         double wx, wy;
         int Xdim, Ydim;
         double Aref00=MAT_ELEM(Aref,0,0);
@@ -500,7 +500,7 @@ void applyGeometry(int SplineDegree,
         int m1, n1, o1, m2, n2, o2;
         double x, y, z, xp, yp, zp;
         double minxp, minyp, maxxp, maxyp, minzp, maxzp;
-        int cen_x, cen_y, cen_z, cen_xp, cen_yp, cen_zp;
+        double cen_x, cen_y, cen_z, cen_xp, cen_yp, cen_zp;
         double wx, wy, wz;
         double Aref00=MAT_ELEM(Aref,0,0);
         double Aref10=MAT_ELEM(Aref,1,0);

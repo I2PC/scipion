@@ -106,7 +106,8 @@ void project_Pseudo(const std::vector< Matrix1D<double> > &atomPosition,
                     double x_diff2=x-XX(actprj);
                     x_diff2=x_diff2*x_diff2;
                     double r=sqrt(x_diff2+y_diff2);
-                    int idx=round(r*1000);
+                    double didx=r*1000;
+                    int idx=ROUND(didx);
                     double a  = VEC_ELEM(gaussianProjectionTable,idx);
                     double a2 = VEC_ELEM(gaussianProjectionTable2,idx);
 #ifdef DEBUG
