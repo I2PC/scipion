@@ -83,7 +83,7 @@ def angular_project_library(_log,dict):
         src=dict['ProjectLibraryRootName'].replace(".stk",'_sampling.xmd')
         dst = src.replace('sampling.xmd','group'+
                               str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+
-                              '_sampling.txt')
+                              '_sampling.xmd')
         print "aaa", src,dst
         shutil.copy(src, dst)
 
