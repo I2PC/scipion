@@ -15,8 +15,8 @@ PYSQliteDir = "external/pysqlite-2.6.3"
 
 PluginLibs = {}
 PluginResources = {}
-javaEnumDict = {'ImageWriteMode': ['libraries/data/image_base.h', 'WRITE_'], 
-            'CastWriteMode': ['libraries/data/image_base.h', 'CW_'], 
+javaEnumDict = {'ImageWriteMode': ['libraries/data/image_base.h', 'WRITE_'],
+            'CastWriteMode': ['libraries/data/image_base.h', 'CW_'],
             'MDLabel': ['libraries/data/metadata_label.h', 'MDL_']}
 javaEnumFiles = []
 headerEnumFiles = []
@@ -177,23 +177,23 @@ def AddXmippTest(name, testprog, command):
     test = env.Alias('run_tests', testcase)
     AlwaysBuild(testcase)
     return testcase
-    
+
 
 def AddXmippCTest(name):
     testprog = AddXmippProgram(name, ['gtest'], 'tests')
     AddXmippTest(name, testprog, "$SOURCE --gtest_output=xml:$TARGET")
-    
+
 def AddXmippPythonTest(name):
     print "Adding python test: ", name
-    #FIXME ROB 
+    #FIXME ROB
     testprog = AddBatch(name, 'applications/tests/'+name, '.py')
     test = AddXmippTest(name, testprog, "$SOURCE $TARGET")
     return test
-    
-    
+
+
 def AddXmippJavaTest(name):
     pass
-    
+
     #env.Default(test)
 
 def AddXmippMPIProgram(name, libs=[]):
@@ -300,7 +300,7 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
 def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], libs=[]):
     buildDir = os.path.join(basedir, 'classes')
     if not os.path.exists(buildDir): # create classes dir if not exists
-        Execute(Mkdir(buildDir))    
+        Execute(Mkdir(buildDir))
     if env['debug'] == True:
     	env['JAVAC'] = 'javac -g'
     buildClasses = env.Java(buildDir, basedir, JAVAVERSION='1.6')
@@ -336,7 +336,7 @@ def AddJavaApp(name, appDir, outDir):
     # Copies MANIFEST
     copyMetainf = env.Install(buildMetainf, Glob(metainfDir, "MANIFEST.MF", []))
     buildJar = env.Jar(os.path.join(outDir, name + '.jar'), buildDir, JARCHDIR=buildDir)
-    
+
     appLibs = {}
     jarList = Glob(libsDir, "*.jar", [])
     for l in jarList:
@@ -345,12 +345,12 @@ def AddJavaApp(name, appDir, outDir):
             install = env.Install(outLibsDir, l)
             appLibs[lname] = install
         env.Depends(buildClasses, appLibs[lname])
-        
+
     copyPluginResources = env.Install(buildResourcesDir, Glob(resourcesDir, "*?.???", []))
     env.Depends(buildJar, [copyMetainf, copyPluginResources, buildClasses])
     pluginAlias = env.Alias(name, buildJar)
     env.Depends(buildClasses, copyJar)
-    
+
     return pluginAlias
 
 def AddImageJPlugin(name, pluginDir, outDir):
@@ -365,11 +365,11 @@ def AddImageJPlugin(name, pluginDir, outDir):
     if not os.path.exists(buildDir):
         os.mkdir(buildDir)
         os.mkdir(buildResourcesDir)
-    # Copies 'plugins.config' to build dir...    
+    # Copies 'plugins.config' to build dir...
     buildClasses = env.Java(buildDir, sourceDir, JAVAVERSION='1.6')
     copyPluginConfig = env.Install(buildDir, os.path.join(sourceDir, 'plugins.config'))#Glob(sourceDir, 'plugins.config', []))
     buildJar = env.Jar(os.path.join(outDir, name + '.jar'), buildDir, JARCHDIR=buildDir)
-    
+
     jarList = Glob(libsDir, "*.jar", [])
     for l in jarList:
         lname = os.path.basename(l)
@@ -377,22 +377,22 @@ def AddImageJPlugin(name, pluginDir, outDir):
             install = env.Install(outDir, l)
             PluginLibs[lname] = install
         env.Depends(buildClasses, PluginLibs[lname])
-        
-    copyPluginResources = env.Install(buildResourcesDir, Glob(resourcesDir, "*?.???", []))          
-    env.Depends(buildJar, [copyPluginConfig, copyPluginResources, buildClasses])  
+
+    copyPluginResources = env.Install(buildResourcesDir, Glob(resourcesDir, "*?.???", []))
+    env.Depends(buildJar, [copyPluginConfig, copyPluginResources, buildClasses])
     pluginAlias = env.Alias(name, buildJar)
     env.Depends(buildClasses, copyJar)
-    
+
     outMacrosDir = os.path.join(outDir, "..", "macros")
-    env.Alias('copyMacros', env.Install(outMacrosDir, Glob(macrosDir, "*?.???", [])))  
+    env.Alias('copyMacros', env.Install(outMacrosDir, Glob(macrosDir, "*?.???", [])))
     return pluginAlias
 
 def AddExternalLibrary(libname, libs, libpath, suffix):
     libprefix = os.path.join(env['prefix'], 'lib')
     numJobs = env.GetOption('num_jobs')
-    
+
     target_libs = []
-    
+
     if int(env['static']):
         lib_ext = ".a"
     else:
@@ -400,23 +400,23 @@ def AddExternalLibrary(libname, libs, libpath, suffix):
             lib_ext = ".dylib"
         else:
             lib_ext = ".so"
-    
+
     for lib in libs:
         lib_name = lib + lib_ext
         target_libs.append(os.path.join(libpath, lib_name))
         target_libs.append(os.path.join(libpath, lib + '.la'))
         if not int(env['static']) and env['PLATFORM'] != 'darwin':
             target_libs.append(os.path.join(libpath, lib_name + suffix))
-            
+
     logFile = os.path.join("..", "..", "build", libname + "_make.log")
     env.Command(target_libs, Glob(libpath, "*/*.c", []),
-                         'cd %s; make clean > /dev/null; make > %s;' 
+                         'cd %s; make clean > /dev/null; make > %s;'
                          % (libpath, logFile))
     libInstall = env.Install(libprefix, target_libs)
     libAlias = env.Alias(libname, libInstall)
     env.Default(libAlias)
     return libInstall
-    
+
 def AddSQLiteLibrary():
     libInstall = AddExternalLibrary('sqlite', ['.libs/libsqlite3'], SQliteDir, '.0')
     progName = os.path.join(SQliteDir, 'sqlite3')
@@ -501,6 +501,7 @@ ReconsSources = [
     'angular_class_average.cpp',
     'angular_project_library.cpp',
     'art_crystal.cpp',
+    'base_art_recons.cpp',
     'basic_art.cpp',
     'ctf_correct_wiener3d.cpp',
     'ctf_correct_idr.cpp',
@@ -584,57 +585,57 @@ AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
 def WriteJavaEnum(class_name, header_file, pattern, log):
     java_file = "libraries/bindings/java/xmipp/%s.java" % class_name
     env.Depends(java_file, header_file)
-    f = open(header_file) 
-    fOut = open(java_file, 'w+')    
-    counter = 0;    
+    f = open(header_file)
+    fOut = open(java_file, 'w+')
+    counter = 0;
     last_label_pattern = pattern + "LAST_LABEL"
     fOut.write("package xmipp; \n")
     fOut.write("public class " + class_name + " {\n")
-    
+
     for line in f:
         l = line.strip();
         if l.startswith(pattern):
-            
+
             if l.startswith(last_label_pattern):
-                l = l.replace(last_label_pattern, last_label_pattern + " = " + str(counter) + ";")   
+                l = l.replace(last_label_pattern, last_label_pattern + " = " + str(counter) + ";")
             if (l.find("=") == -1):
-                l = l.replace(",", " = " + str(counter) + "; ")   
+                l = l.replace(",", " = " + str(counter) + "; ")
                 counter = counter + 1;
             else:
-                l = l.replace(",", ";")                                       
-                
-            fOut.write("   public static final int %s\n" % l)    
+                l = l.replace(",", ";")
+
+            fOut.write("   public static final int %s\n" % l)
 
     fOut.write("}\n")
     fOut.close()
     f.close()
     # Write log file
     if log:
-        from datetime import datetime 
+        from datetime import datetime
         d = str(datetime.now())
         #d = date.today();
         log.write("Java file '%s' successful generated at %s\n" % (java_file, d))
-    
+
 def ExtractEnumFromHeader(source, target, env):
     # this is very ugly, we still need more scons knowledge
 
     log = open(str(target[0]), 'w+')
     for (class_name, list) in javaEnumDict.iteritems():
         WriteJavaEnum(class_name, list[0], list[1], log)
-    
+
     log.close()
     return None
 
 # ImageJ plugins.
 # Installs jvm
 if int(env['java']):
-    # Update enums from c++ headers, if not exist, generate it 
+    # Update enums from c++ headers, if not exist, generate it
     for (class_name, list) in javaEnumDict.iteritems():
        java_file = "libraries/bindings/java/xmipp/%s.java" % class_name
        if not os.path.exists(java_file):
-          WriteJavaEnum(class_name, list[0], list[1], None) 
-    
-    env.Alias('javaEnums', env.Command("libraries/bindings/java/xmipp/enums.changelog", 
+          WriteJavaEnum(class_name, list[0], list[1], None)
+
+    env.Alias('javaEnums', env.Command("libraries/bindings/java/xmipp/enums.changelog",
                             ["libraries/data/image_base.h","libraries/data/metadata_label.h" ], ExtractEnumFromHeader))
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
     javaJni = AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,
@@ -650,8 +651,8 @@ if int(env['java']):
     # Copies jar file to ImageJ plugins folder (plugins below will look for it there).
     copyJar = env.InstallAs(target='external/imagej/plugins/XmippJavaInterface.jar',
               source='libraries/bindings/java/XmippJavaInterface.jar')
-    # ImageJ plugins. 
-    javaPlugins = []   
+    # ImageJ plugins.
+    javaPlugins = []
     javaPlugins.append(AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins'))
@@ -664,7 +665,7 @@ if int(env['java']):
     import install
     install.TOOL_INSTALL(env)
     javaExtPlugins = env.InstallFiles('external/imagej/plugins', 'libraries/graphicsj/plugins', exclude='.svn')
-    javaAlias = env.Alias('java', [javaJni, javaLib, copyJar, javaExtPlugins, env.Alias('copyMacros')] + javaPlugins) 
+    javaAlias = env.Alias('java', [javaJni, javaLib, copyJar, javaExtPlugins, env.Alias('copyMacros')] + javaPlugins)
     env.Default(javaAlias)
 
 # --- Programs

@@ -1034,7 +1034,7 @@ void project_GridVolume(
     int               threads)
 {
 
-    // If projecting forward initialise projections
+    // If projecting forward initialize projections
     if (FORW)
     {
         proj.reset(Ydim, Xdim);

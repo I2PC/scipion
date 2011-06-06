@@ -31,9 +31,9 @@
 #include <data/wavelet.h>
 
 /* Fill Reconstruction info structure -------------------------------------- */
-void build_recons_info(MetaData &selfile,
+void buildReconsInfo(MetaData &selfile,
                        const FileName &fn_ctf, const SymList &SL,
-                       Recons_info * &IMG_Inf, bool do_not_use_symproj)
+                       ReconsInfo * &IMG_Inf, bool do_not_use_symproj)
 {
     Matrix2D<double>  L(4, 4), R(4, 4);  // A matrix from the list
     FileName          fn_proj;
@@ -65,7 +65,7 @@ void build_recons_info(MetaData &selfile,
 
     if (IMG_Inf != NULL)
         delete [] IMG_Inf;
-    if ((IMG_Inf = new Recons_info[numIMG]) == NULL)
+    if ((IMG_Inf = new ReconsInfo[numIMG]) == NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Build_Recons_Info: No memory for the sorting");
 
     int i = 0; // It will account for the number of valid projections processed
@@ -73,22 +73,29 @@ void build_recons_info(MetaData &selfile,
     init_progress_bar(trueIMG);
     FOR_ALL_OBJECTS_IN_METADATA(selfile)
     {
+      ReconsInfo &imgInfo = IMG_Inf[i];
         selfile.getValue(MDL_IMAGE,fn_proj,__iter.objId);
         if (is_there_ctf && !is_ctf_unique)
-        	selfile.getValue(MDL_CTFMODEL,fn_ctf1,__iter.objId);
+            selfile.getValue(MDL_CTFMODEL,fn_ctf1,__iter.objId);
         if (fn_proj != "")
         {
-        	read_proj.read(fn_proj, false, HEADER);
+            //            read_proj.read(fn_proj, false, HEADER);
             // Filling structure
-            IMG_Inf[i].fn_proj = fn_proj;
+            imgInfo.fn_proj = fn_proj;
             if (is_ctf_unique)
-                IMG_Inf[i].fn_ctf = fn_ctf;
+                imgInfo.fn_ctf = fn_ctf;
             else if (is_there_ctf)
-                IMG_Inf[i].fn_ctf = fn_ctf1;
-            IMG_Inf[i].sym     = -1;
-            IMG_Inf[i].seed    = ROUND(65535 * rnd_unif());
-            read_proj.getEulerAngles(IMG_Inf[i].rot, IMG_Inf[i].tilt, IMG_Inf[i].psi);
-            EULER_CLIPPING(IMG_Inf[i].rot, IMG_Inf[i].tilt, IMG_Inf[i].psi);
+                imgInfo.fn_ctf = fn_ctf1;
+            imgInfo.sym     = -1;
+            imgInfo.seed    = ROUND(65535 * rnd_unif());
+
+            imgInfo.rot = imgInfo.tilt = imgInfo.psi = 0;
+
+            selfile.getValue(MDL_ANGLEROT, imgInfo.rot,__iter.objId);
+            selfile.getValue(MDL_ANGLETILT, imgInfo.tilt,__iter.objId);
+            selfile.getValue(MDL_ANGLEPSI, imgInfo.psi,__iter.objId);
+            //            read_proj.getEulerAngles(imgInfo.rot, imgInfo.tilt, imgInfo.psi);
+            EULER_CLIPPING(imgInfo.rot, imgInfo.tilt, imgInfo.psi);
 
             // Any symmetry?
             if (SL.SymsNo() > 0 && !do_not_use_symproj)
@@ -96,12 +103,12 @@ void build_recons_info(MetaData &selfile,
                 for (int j = 0; j < SL.SymsNo(); j++)
                 {
                     int sym_index = SYMINDEX(SL, j, i, trueIMG);
-                    IMG_Inf[sym_index].fn_proj = IMG_Inf[i].fn_proj;
-                    IMG_Inf[sym_index].seed   = IMG_Inf[i].seed;
+                    IMG_Inf[sym_index].fn_proj = imgInfo.fn_proj;
+                    IMG_Inf[sym_index].seed   = imgInfo.seed;
                     if (is_ctf_unique)
                         IMG_Inf[sym_index].fn_ctf = fn_ctf;
                     else if (is_there_ctf)
-                        IMG_Inf[sym_index].fn_ctf = IMG_Inf[i].fn_ctf;
+                        IMG_Inf[sym_index].fn_ctf = imgInfo.fn_ctf;
                     IMG_Inf[sym_index].sym = j;
                     SL.get_matrices(j, L, R);
                     L.resize(3, 3); // Erase last row and column
@@ -109,7 +116,7 @@ void build_recons_info(MetaData &selfile,
                     // is useful and not the translation
                     double drot, dtilt, dpsi;
                     Euler_apply_transf(L, R,
-                                       IMG_Inf[i].rot, IMG_Inf[i].tilt, IMG_Inf[i].psi,
+                                       imgInfo.rot, imgInfo.tilt, imgInfo.psi,
                                        drot, dtilt, dpsi);
                     IMG_Inf[sym_index].rot = (float)drot;
                     IMG_Inf[sym_index].tilt = (float)dtilt;

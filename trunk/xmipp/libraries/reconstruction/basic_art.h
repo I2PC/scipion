@@ -23,34 +23,22 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #ifndef _BASIC_ART_HH
-#  define _BASIC_ART_HH
+#define _BASIC_ART_HH
 
-#include <fstream>
-
-#include <data/image.h>
-#include <data/metadata_extension.h>
-
-#include "refinement.h"
-#include <data/grids.h>
-#include <data/symmetries.h>
-#include <data/basis.h>
 #include <data/projection.h>
-#include "fourier_filter.h"
+#include <data/symmetries.h>
 
-struct Recons_info;
+struct ReconsInfo;
 
-/**@defgroup BasicART Basic and common ART
+/**@defgroup BasicART Parameters and common ART Reconstruction stuff
    @ingroup ReconsLibrary
     The main difference between ART applied to different cases (single
     particles, crystals, ...) is the single step applied to each case.
     Most of the tasks in the ART are common to all ART processes. All
     these common tasks as well as the common parameters are comprised
-    in the Basic_art module. These common tasks are based on the existence
-    of an extra_parameter structure containing all the specific information
+    in the ARTReconsBase class. These common tasks are based on the existence
+    of a BasicARTParameters class containing all the specific information
     for the ART process.
-
-    The user interface program should make a call to the \ref Basic_ROUT_Art
-    routine with the corresponding extra_parameter structure.
 */
 //@{
 /* ART parameters ---------------------------------------------------------- */
@@ -234,11 +222,11 @@ public:
     /// Noisy reconstruction
     bool noisy_reconstruction;
 
-	/// Only for internal purposes, MUST be set when running MPI.
-	bool using_MPI;
+    /// Only for internal purposes, MUST be set when running MPI.
+    bool using_MPI;
 
-	/// Number of threads to use. Can not be different than 1 when using MPI.
-	int threads;
+    /// Number of threads to use. Can not be different than 1 when using MPI.
+    int threads;
 
 #define TELL_IV                    0x100
 #define TELL_ONLY_SYM              0x80
@@ -310,7 +298,7 @@ public:
     std::ofstream        *fh_hist;
 
     /// Array with all the sorting information for each projection
-    Recons_info     *IMG_Inf;
+    ReconsInfo     *IMG_Inf;
 
     /// Order in which projections will be presented to algorithm
     MultidimArray<int>   ordered_list;
@@ -400,7 +388,7 @@ public:
         The rank is a number idetifying the parallel process. If -1 then
         the algorithm is sequential. If 0 then it is the root process.
         */
-    void produce_Side_Info(GridVolume &vol_basis0, int level = FULL, int rank = -1);
+    void produceSideInfo(GridVolume &vol_basis0, int level = FULL, int rank = -1);
 
     /** Compute CAV weights.
         The weights are stored in the GVNeq within this object. If the
@@ -420,8 +408,10 @@ public:
         int imax = VEC_XSIZE(lambda_list);
         if (imax == 0)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "Basic_art: There are no lambdas\n");
-        if (n >= imax) return lambda_list(imax -1);
-        else         return lambda_list(n);
+        if (n >= imax)
+            return lambda_list(imax -1);
+        else
+            return lambda_list(n);
     }
 
     /** Kappa (WLS) for iteration n (first one is iteration 0).
@@ -433,8 +423,10 @@ public:
         int imax = VEC_XSIZE(kappa_list);
         if (imax == 0)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "Basic_art: There are no kappas\n");
-        if (n >= imax) return kappa_list(imax -1);
-        else         return kappa_list(n);
+        if (n >= imax)
+            return kappa_list(imax -1);
+        else
+            return kappa_list(n);
     }
 
     /** Returns X dimension for projections under use. */
@@ -444,6 +436,13 @@ public:
     int ProjYdim();
 
 };
+
+/** Build from a Selection File and a Symmetry List.
+    The result is stored in the Recons_info array which should point
+    to NULL when it is not initialized. */
+void buildReconsInfo(MetaData &selfile,
+                     const FileName &fn_ctf, const SymList &SL, ReconsInfo * &IMG_Inf,
+                     bool do_not_use_symproj);
 
 /** Sort projections orthogonally.
    This function sorts a number of images given by numIMG, whose information
@@ -459,63 +458,20 @@ public:
 
    If N!=-1 then the product is done only with the last N images. A very
    useful value is N=2*/
-void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
-                        MultidimArray<int> &ordered_list, int N = 2);
+void sortPerpendicular(int numIMG, ReconsInfo *IMG_Inf,
+                       MultidimArray<int> &ordered_list, int N = 2);
 
 /** No projection sorting at all.
     This function directly returns the same order as in the selection file */
-void no_sort(int numIMG, MultidimArray<int> &ordered_list);
+void noSort(int numIMG, MultidimArray<int> &ordered_list);
 
 /** Randomize the projections.
    This function sorts randomly a number of images given by numIMG. */
-void sort_randomly(int numIMG, MultidimArray<int> &ordered_list);
+void sortRandomly(int numIMG, MultidimArray<int> &ordered_list);
 
-/** Write first part of ART history.
-    This function writes all ART parameters, projection angles, symmetry
-    matrices, and grid structure in the history handler provided by
-    the side information. At the end the routine makes a call to the
-    operator << of the Extra_ART_Parameters to show the specific part
-    of the History.
-
-    BasicARTParameters is not constant since things are written in
-    \ref BasicARTParameters::fh_hist.*/
-template <class Extra_ART_Parameters>
-void Basic_ART_Init_history(BasicARTParameters &prm,
-                            const Extra_ART_Parameters &eprm, const GridVolume &vol_basis0);
-
-/** Perform all ART iterations.
-    This function performs the iterations according to the ART parameters,
-    it needs the side information to be fully computed. It throws
-    a lot of information to the screen and to the history file (side.fh_hist),
-    specially this one must exist.
-
-    The GridVolume must have as input an initial guess for the solution,
-    and when this function finishes, it contains the final solution volume
-    in basis.
-
-    The rank is the identification number of the process running this function.
-    If it is -1, the function is run in seuqential mode. If it is 0, then
-    it is the root process.
-
-    See the \ref BasicARTParameters for more information
-    about how to generate the iterations.
-*/
-
-
-template <class Extra_ART_Parameters>
-void Basic_ART_iterations(BasicARTParameters &prm,
-                          Extra_ART_Parameters &eprm, GridVolume &vol_basis, int rank = -1);
-
-/** Main Routine for ART.
-    Given any set of Art parameters, this function returns the voxel
-    volume which is the solution for this set of projections.
-    No initialisation is needed on vol_voxels and vol_basis, they are resized
-    to have the same size as the input projections. All output files
-    are generated as if the ART program had been called. */
-template <class Extra_ART_Parameters>
-void Basic_ROUT_Art(BasicARTParameters &prm,
-                    Extra_ART_Parameters &eprm, Image<double> &vol_voxels,
-                    GridVolume &vol_basis);
+/** Update residual vector for WLS ART */
+void updateResidualVector(BasicARTParameters &prm, GridVolume &vol_basis,
+                          double &kappa, double &pow_residual_vol, double &pow_residual_imgs);
 
 /** Reconstruction information.
    This structure contains information for all projections which are
@@ -530,7 +486,7 @@ void Basic_ROUT_Art(BasicARTParameters &prm,
    structure is only used to keep some track of what matrix was used to
    symmetrize.
 */
-struct Recons_info
+struct ReconsInfo
 {
     /// Projection filename
     FileName fn_proj;
@@ -553,13 +509,6 @@ struct Recons_info
         have the same random seed. */
     int    seed;
 };
-
-/** Build from a Selection File and a Symmetry List.
-    The result is stored in the Recons_info array which should point
-    to NULL when it is not initialized. */
-void build_recons_info(MetaData &selfile,
-    const FileName &fn_ctf, const SymList &SL, Recons_info * &IMG_Inf,
-    bool do_not_use_symproj);
 
 /* ------------------------------------------------------------------------- */
 /** Variability structure */
@@ -637,7 +586,5 @@ public:
     void apply(GridVolume &vol_basis, int it, int images);
 };
 //@}
-
-#include "basic_art.inc"
 
 #endif

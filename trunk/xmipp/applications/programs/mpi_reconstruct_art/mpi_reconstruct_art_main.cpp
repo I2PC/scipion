@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     {
         comms_t = 0.0; // Initializes time
 
-        art_prm.produce_Side_Info(vol_basis, FULL, rank);
+        art_prm.produceSideInfo(vol_basis, FULL, rank);
         eprm.produce_Side_Info(art_prm, vol_basis);
 
         Basic_ART_Init_history(art_prm, eprm, vol_basis);
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
         FileName aux = art_prm.fn_root;
 
         art_prm.fn_root = art_prm.fn_root + integerToString(rank);
-        art_prm.produce_Side_Info(vol_basis, FULL, rank);
+        art_prm.produceSideInfo(vol_basis, FULL, rank);
 
         // Restore original filename.
         art_prm.fn_root = aux;

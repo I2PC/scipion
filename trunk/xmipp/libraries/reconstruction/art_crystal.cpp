@@ -26,6 +26,7 @@
 #include <data/projection.h>
 #include "art_crystal.h"
 #include "project_crystal.h"
+#include "refinement.h"
 
 /* ------------------------------------------------------------------------- */
 /* Crystal ART Parameters                                                    */

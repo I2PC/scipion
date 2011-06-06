@@ -26,8 +26,9 @@
 #include "reconstruct_art.h"
 #include "denoise.h"
 #include "fourier_filter.h"
-
 #include <data/wavelet.h>
+#include <sys/time.h>
+
 
 ProgReconsART::ProgReconsART()
 {}
@@ -39,447 +40,91 @@ void ProgReconsART::setIO(const FileName &fn_in, const FileName &fn_out)
 
 void ProgReconsART::defineParams()
 {
-    artPrm.defineParams(this);
+    addParamsLine(" == Reconstruction type == ");
+    addParamsLine(" [--crystal] ");
+
+    ARTReconsBase::defineParams(this);
+
 }
 
 void ProgReconsART::readParams()
 {
-    artPrm.readParams(this);
-}
-
-void ProgReconsART::ProgReconsART::run()
-{
-//    Extra_ART_Parameters &eprm;
-//
-//
-//    Image<double> &vol_voxels;
-//    GridVolume &vol_basis;
-//    // Configure time clock
-//    time_config();
-//
-//    struct timeval start_time, end_time;
-//    long int init_usecs, process_usecs, finish_usecs;
-//
-//    gettimeofday(&start_time, NULL);
-//
-//    // Produce side information and initial volume
-//    artPrm.produce_Side_Info(vol_basis);
-//    //calculate symmetry in produce_Side_Info and exit if wrong sampling
-//    //printting the right sampling
-//    eprm.produce_Side_Info(artPrm,vol_basis);
-//
-//    // Show parameters and initiate history
-//    Basic_ART_Init_history(artPrm, eprm, vol_basis);
-//
-//    gettimeofday(&end_time, NULL);
-//
-//    init_usecs = (end_time.tv_sec-start_time.tv_sec)*1000000+(end_time.tv_usec-start_time.tv_usec);
-//
-//    gettimeofday(&start_time,NULL);
-//
-//    // Iterations
-//    Basic_ART_iterations(artPrm, eprm, vol_basis);
-//
-//    gettimeofday(&end_time,NULL);
-//
-//    process_usecs = (end_time.tv_sec-start_time.tv_sec)*1000000+(end_time.tv_usec-start_time.tv_usec);
-//
-//    gettimeofday(&start_time,NULL);
-//
-//    // Finish iterations
-//    finish_ART_iterations(artPrm, eprm, vol_basis);
-//
-//    // Write final volume
-//    int Xoutput_volume_size=(artPrm.Xoutput_volume_size==0) ?
-//                            artPrm.projXdim:artPrm.Xoutput_volume_size;
-//    int Youtput_volume_size=(artPrm.Youtput_volume_size==0) ?
-//                            artPrm.projYdim:artPrm.Youtput_volume_size;
-//    int Zoutput_volume_size=(artPrm.Zoutput_volume_size==0) ?
-//                            artPrm.projXdim:artPrm.Zoutput_volume_size;
-//
-//    //   int min_distance = ceil( ( 2 * artPrm.grid_relative_size ) / artPrm.basis.blob.radius) + 1;
-//
-//    artPrm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
-//                                Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size,artPrm.threads);
-//
-//    vol_voxels.write(artPrm.fn_root+".vol");
-//    if (artPrm.tell&TELL_SAVE_BASIS)
-//        vol_basis.write(artPrm.fn_root+".basis");
-//    artPrm.fh_hist->close();
-//
-//    gettimeofday(&end_time,NULL);
-//
-//    finish_usecs = (end_time.tv_sec-start_time.tv_sec)*1000000+(end_time.tv_usec-start_time.tv_usec);
-//
-//    std::cout << "INIT_TIME: " << (double)init_usecs/(double)1000000 << std::endl;
-//    std::cout << "PROCESS_TIME: " << (double)process_usecs/(double)1000000 << std::endl;
-//    std::cout << "FINISH_TIME: " << (double)finish_usecs/(double)1000000 << std::endl;
-
-}
-
-/* ------------------------------------------------------------------------- */
-/* Plain ART Parameters                                                      */
-/* ------------------------------------------------------------------------- */
-/* Produce Side information ------------------------------------------------ */
-void Plain_ART_Parameters::produce_Side_Info(const BasicARTParameters &prm,
-        GridVolume &vol_basis0)
-{}
-
-/* std::cout -------------------------------------------------------------------- */
-std::ostream & operator << (std::ostream &o, const Plain_ART_Parameters &eprm)
-{
-    return o;
-}
-
-/* ------------------------------------------------------------------------- */
-/* Update residual vector for WLS                                            */
-/* ------------------------------------------------------------------------- */
-void update_residual_vector(BasicARTParameters &prm, GridVolume &vol_basis,
-                            double &kappa, double &pow_residual_vol, double &pow_residual_imgs)
-{
-    GridVolume       residual_vol;
-    Projection       read_proj, dummy_proj, new_proj;
-    FileName         fn_resi, fn_tmp;
-    double           sqrtweight, dim2, norma, normb, apply_kappa;
-    ImageOver        *footprint = (ImageOver *) & prm.basis.blobprint;
-    ImageOver        *footprint2 = (ImageOver *) & prm.basis.blobprint2;
-    Matrix2D<double> *A = NULL;
-    std::vector<MultidimArray<double> > newres_imgs;
-    MultidimArray<int>    mask;
-
-    residual_vol.resize(vol_basis);
-    residual_vol.initZeros();
-
-    // Calculate volume from all backprojected residual images
-    std::cerr << "Backprojection of residual images " << std::endl;
-    if (!(prm.tell&TELL_SHOW_ERROR))
-        init_progress_bar(prm.numIMG);
-
-    for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
-    {
-        // backprojection of the weighted residual image
-        sqrtweight = sqrt(prm.residual_imgs[iact_proj].weight() / prm.sum_weight);
-        read_proj = prm.residual_imgs[iact_proj];
-        read_proj() *= sqrtweight;
-        dummy_proj().resize(read_proj());
-
-        dummy_proj.set_angles(prm.IMG_Inf[iact_proj].rot,
-                              prm.IMG_Inf[iact_proj].tilt,
-                              prm.IMG_Inf[iact_proj].psi);
-
-        project_GridVolume(residual_vol, prm.basis, dummy_proj,
-                           read_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-                           prm.IMG_Inf[iact_proj].rot,
-                           prm.IMG_Inf[iact_proj].tilt,
-                           prm.IMG_Inf[iact_proj].psi, BACKWARD, prm.eq_mode,
-                           prm.GVNeq, NULL, NULL, prm.ray_length, prm.threads);
-
-        if (!(prm.tell&TELL_SHOW_ERROR))
-            if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0)
-                progress_bar(iact_proj);
-    }
-    if (!(prm.tell&TELL_SHOW_ERROR))
-        progress_bar(prm.numIMG);
-
-    // Convert to voxels: solely for output of power of residual volume
-    Image<double>      residual_vox;
-    int Xoutput_volume_size = (prm.Xoutput_volume_size == 0) ?
-                              prm.projXdim : prm.Xoutput_volume_size;
-    int Youtput_volume_size = (prm.Youtput_volume_size == 0) ?
-                              prm.projYdim : prm.Youtput_volume_size;
-    int Zoutput_volume_size = (prm.Zoutput_volume_size == 0) ?
-                              prm.projXdim : prm.Zoutput_volume_size;
-    prm.basis.changeToVoxels(residual_vol, &(residual_vox()),
-                             Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-    pow_residual_vol = residual_vox().sum2() / MULTIDIM_SIZE(residual_vox());
-    residual_vox.clear();
-
-    std::cerr << "Projection of residual volume; kappa = " << kappa << std::endl;
-    if (!(prm.tell&TELL_SHOW_ERROR))
-        init_progress_bar(prm.numIMG);
-
-    // Now that we have the residual volume: project in all directions
-    pow_residual_imgs = 0.;
-    new_proj().resize(read_proj());
-    mask.resize(read_proj());
-    BinaryCircularMask(mask, YSIZE(read_proj()) / 2, INNER_MASK);
-
-    dim2 = (double)YSIZE(read_proj()) * XSIZE(read_proj());
-    for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
-    {
-        project_GridVolume(residual_vol, prm.basis, new_proj,
-                           dummy_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-                           prm.IMG_Inf[iact_proj].rot,
-                           prm.IMG_Inf[iact_proj].tilt,
-                           prm.IMG_Inf[iact_proj].psi, FORWARD, prm.eq_mode,
-                           prm.GVNeq, A, NULL, prm.ray_length, prm.threads);
-
-        sqrtweight = sqrt(prm.residual_imgs[iact_proj].weight() / prm.sum_weight);
-
-        // Next lines like normalization in [EHL] (2.18)?
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(new_proj())
-        {
-            dAij(dummy_proj(), i, j) = XMIPP_MAX(1., dAij(dummy_proj(), i, j)); // to avoid division by zero
-            dAij(new_proj(), i, j) /= dAij(dummy_proj(), i, j);
-        }
-        new_proj() *= sqrtweight * kappa;
-
-        /*
-        fn_tmp="residual_"+integerToString(iact_proj);
-        dummy_proj()=1000*prm.residual_imgs[iact_proj]();
-        dummy_proj.write(fn_tmp+".old");
-        */
-
-        prm.residual_imgs[iact_proj]() -= new_proj();
-        pow_residual_imgs += prm.residual_imgs[iact_proj]().sum2();
-
-        // Mask out edges of the images
-        apply_binary_mask(mask, prm.residual_imgs[iact_proj](), prm.residual_imgs[iact_proj](), 0.);
-
-        /*
-        dummy_proj()=1000*new_proj();
-        dummy_proj.write(fn_tmp+".change");
-        dummy_proj()=1000*prm.residual_imgs[iact_proj]();
-        dummy_proj.write(fn_tmp+".new");
-        */
-
-        if (!(prm.tell&TELL_SHOW_ERROR))
-            if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0)
-                progress_bar(iact_proj);
-    }
-
-    pow_residual_imgs /= dim2;
-    newres_imgs.clear();
-
-    if (!(prm.tell&TELL_SHOW_ERROR))
-        progress_bar(prm.numIMG);
-
-}
-
-/* ------------------------------------------------------------------------- */
-/* ART Single step                                                           */
-/* ------------------------------------------------------------------------- */
-void ART_single_step(
-    GridVolume              &vol_in,         // Input Reconstructed volume
-    GridVolume              *vol_out,        // Output Reconstructed volume
-    BasicARTParameters    &prm,            // blob, lambda
-    Plain_ART_Parameters    &eprm,           // In this case, nothing
-    Projection              &theo_proj,      // Projection of the reconstruction
-    // It is outside to make it visible
-    // just if it needed for any
-    // other purpose
-    Projection             &read_proj,       // Real projection
-    int sym_no,                              // Symmetry matrix index
-    Projection             &diff_proj,       // Difference between read and
-    // theoretical projection
-    Projection             &corr_proj,       // Correcting projection
-    Projection             &alig_proj,       // Translation alignement aux proj
-    double                 &mean_error,      // Mean error over the pixels
-    int                     numIMG,          // number of images in the set
-    // in SIRT the correction must
-    // be divided by this number
-    double                  lambda,          // Lambda to be used
-    int                     act_proj,        // Projection number
-    const FileName         &fn_ctf,          // CTF to apply
-    const MultidimArray<int> *maskPtr,       // Mask to apply
-    bool                    refine)          // Refine experimental projection before correcting
-{
-    // Prepare to work with CTF ................................................
-    FourierFilter ctf;
-    ImageOver *footprint = (ImageOver *) & prm.basis.blobprint;
-    ImageOver *footprint2 = (ImageOver *) & prm.basis.blobprint2;
-    bool remove_footprints = false;
-    double weight, sqrtweight;
-
-    if (fn_ctf != "" && !prm.unmatched)
-    {
-        if (prm.basis.type != Basis::blobs)
-            REPORT_ERROR(ERR_VALUE_INCORRECT, "ART_single_step: This way of correcting for the CTF "
-                         "only works with blobs");
-        // It is a description of the CTF
-        ctf.FilterShape = ctf.FilterBand = CTF;
-        ctf.ctf.enable_CTFnoise = false;
-        ctf.ctf.read(fn_ctf);
-        ctf.ctf.Tm /= BLOB_SUBSAMPLING;
-        ctf.ctf.Produce_Side_Info();
-
-        // Create new footprints
-        footprint = new ImageOver;
-        footprint2 = new ImageOver;
-        remove_footprints = true;
-
-        // Enlarge footprint, bigger than necessary to avoid
-        // aliasing
-        *footprint = prm.basis.blobprint;
-        (*footprint)().setXmippOrigin();
-        double blob_radius = prm.basis.blob.radius;
-        int finalsize = 2 * CEIL(30 + blob_radius) + 1;
-        footprint->window(
-            FIRST_XMIPP_INDEX(finalsize), FIRST_XMIPP_INDEX(finalsize),
-            LAST_XMIPP_INDEX(finalsize), LAST_XMIPP_INDEX(finalsize));
-
-        // Generate mask to the size of the footprint, correct phase
-        // and apply CTF
-        ctf.generateMask((*footprint)());
-        ctf.correctPhase();
-        ctf.applyMaskSpace((*footprint)());
-
-        // Remove unnecessary regions
-        finalsize = 2 * CEIL(15 + blob_radius) + 1;
-        footprint->window(
-            FIRST_XMIPP_INDEX(finalsize), FIRST_XMIPP_INDEX(finalsize),
-            LAST_XMIPP_INDEX(finalsize), LAST_XMIPP_INDEX(finalsize));
-#ifdef DEBUG
-
-        Image<double> save;
-        save() = (*footprint)();
-        save.write("PPPfootprint.xmp");
-#endif
-
-        // Create footprint2
-        *footprint2 = *footprint;
-        (*footprint2)() *= (*footprint2)();
-    }
-
-    // Project structure .......................................................
-    // The correction image is reused in this call to store the normalising
-    // projection, ie, the projection of an all-1 volume
-    Matrix2D<double> *A = NULL;
-    if (prm.print_system_matrix)
-        A = new Matrix2D<double>;
-    corr_proj().initZeros();
-    project_GridVolume(vol_in, prm.basis, theo_proj,
-                       corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-                       read_proj.rot(), read_proj.tilt(), read_proj.psi(), FORWARD, prm.eq_mode,
-                       prm.GVNeq, A, maskPtr, prm.ray_length, prm.threads);
-
-    if (fn_ctf != "" && prm.unmatched)
-    {
-        ctf.generateMask(theo_proj());
-        ctf.applyMaskSpace(theo_proj());
-    }
-
-    // Print system matrix
-    if (prm.print_system_matrix)
-    {
-        std::cout << "Equation system (Ax=b) ----------------------\n";
-        std::cout << "Size: "<< (*A).mdimx <<"x"<<(*A).mdimy<< std::endl;
-        for (int i = 0; i < (*A).mdimy; i++)
-        {
-            bool null_row = true;
-            for (int j = 0; j < (*A).mdimy; j++)
-                if (MAT_ELEM(*A, i, j) != 0)
-                {
-                    null_row = false;
-                    break;
-                }
-            if (!null_row)
-            {
-                std::cout << "pixel=" << integerToString(i, 3) << " --> "
-                << DIRECT_MULTIDIM_ELEM(read_proj(), i) << " = ";
-                for (int j = 0; j < (*A).mdimx; j++)
-                    std::cout << MAT_ELEM(*A, i, j) << " ";
-                std::cout << std::endl;
-            }
-        }
-        std::cout << "---------------------------------------------\n";
-        delete A;
-    }
-
-    // Refine ..............................................................
-    if (refine)
-    {
-        Matrix2D<double> M;
-        /*
-        Image<double> save;
-        save()=theo_proj(); save.write("PPPtheo.xmp");
-        save()=read_proj(); save.write("PPPread.xmp");
-        */
-        alignImages(theo_proj(),read_proj(),M);
-        //save()=read_proj(); save.write("PPPread_aligned.xmp");
-        std::cout << M << std::endl;
-        read_proj().rangeAdjust(theo_proj());
-        //save()=read_proj(); save.write("PPPread_aligned_grey.xmp");
-        //std::cout << "Press any key\n";
-        //char c; std::cin >> c;
-    }
-
-    // Now compute differences .................................................
-    double applied_lambda = lambda / numIMG; // In ART mode, numIMG=1
-
-    mean_error = 0;
-    diff_proj().resize(read_proj());
-
-    // Weighted least-squares ART for Maximum-Likelihood refinement
-    if (prm.WLS)
-    {
-        weight = read_proj.weight() / prm.sum_weight;
-        sqrtweight = sqrt(weight);
-
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
-        {
-            // Compute difference image and error
-            IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
-            mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
-
-            // Subtract the residual image (stored in alig_proj!)
-            IMGPIXEL(diff_proj, i, j) = sqrtweight * IMGPIXEL(diff_proj, i, j) - IMGPIXEL(alig_proj, i, j);
-
-            // Calculate the correction and the updated residual images
-            IMGPIXEL(corr_proj, i, j) =
-                applied_lambda * IMGPIXEL(diff_proj, i, j) / (weight * IMGPIXEL(corr_proj, i, j) + 1.);
-            IMGPIXEL(alig_proj, i, j) += IMGPIXEL(corr_proj, i, j);
-            IMGPIXEL(corr_proj, i, j) *= sqrtweight;
-
-        }
-        mean_error /= XSIZE(diff_proj()) * YSIZE(diff_proj());
-        mean_error *= weight;
-
-    }
+    if (checkParam("--crystal"))
+        ;
     else
-    {
-        long int Nmean=0;
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
-        {
-            if (maskPtr!=NULL)
-                if ((*maskPtr)(i,j)<0.5)
-                    continue;
-            // Compute difference image and error
-            IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
-            mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
-            Nmean++;
+        artRecons = new ARTReconsBase;
 
-            // Compute the correction image
-            IMGPIXEL(corr_proj, i, j) = XMIPP_MAX(IMGPIXEL(corr_proj, i, j), 1);
-            IMGPIXEL(corr_proj, i, j) =
-                applied_lambda * IMGPIXEL(diff_proj, i, j) / IMGPIXEL(corr_proj, i, j);
-        }
-        mean_error /= Nmean;
-    }
-
-    // Backprojection of correction plane ......................................
-    project_GridVolume(*vol_out, prm.basis, theo_proj,
-                       corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-                       read_proj.rot(), read_proj.tilt(), read_proj.psi(), BACKWARD, prm.eq_mode,
-                       prm.GVNeq, NULL, maskPtr, prm.ray_length, prm.threads);
-
-    // Remove footprints if necessary
-    if (remove_footprints)
-    {
-        delete footprint;
-        delete footprint2;
-    }
+    artRecons->readParams(this);
+    //    artPrm.readParams(this);
 }
-#undef blob
 
-/* Finish iterations ------------------------------------------------------- */
-void finish_ART_iterations(const BasicARTParameters &prm,
-                           const Plain_ART_Parameters &eprm, GridVolume &vol_blobs)
-{ }
-
-/* Apply_symmetry ------------------------------------------------------- */
-void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
-                    const Plain_ART_Parameters &eprm, int grid_type)
+void ProgReconsART::run()
 {
-    REPORT_ERROR(ERR_NOT_IMPLEMENTED, "apply_symmetry: Function not implemented for single particles");
+    BasicARTParameters &artPrm = artRecons->artPrm;
+
+    Image<double> vol_voxels;
+    GridVolume vol_basis;
+    // Configure time clock
+    time_config();
+
+    struct timeval start_time, end_time;
+    long int init_usecs, process_usecs, finish_usecs;
+
+    gettimeofday(&start_time, NULL);
+
+    // Produce side information and initial volume
+    artPrm.produceSideInfo(vol_basis);
+    //calculate symmetry in produceSideInfo and exit if wrong sampling
+    //printing the right sampling
+    artRecons->produceSideInfo(vol_basis);
+
+    // Show parameters and initiate history
+    artRecons->initHistory(vol_basis);
+
+    gettimeofday(&end_time, NULL);
+
+    init_usecs = (end_time.tv_sec-start_time.tv_sec)*1000000+(end_time.tv_usec-start_time.tv_usec);
+
+    gettimeofday(&start_time,NULL);
+
+    // Iterations
+    artRecons->iterations(vol_basis);
+
+    gettimeofday(&end_time,NULL);
+
+    process_usecs = (end_time.tv_sec-start_time.tv_sec)*1000000+(end_time.tv_usec-start_time.tv_usec);
+
+    gettimeofday(&start_time,NULL);
+
+    // Finish iterations
+    artRecons->finishIterations(vol_basis);
+
+    // Write final volume
+    int Xoutput_volume_size=(artPrm.Xoutput_volume_size==0) ?
+                            artPrm.projXdim:artPrm.Xoutput_volume_size;
+    int Youtput_volume_size=(artPrm.Youtput_volume_size==0) ?
+                            artPrm.projYdim:artPrm.Youtput_volume_size;
+    int Zoutput_volume_size=(artPrm.Zoutput_volume_size==0) ?
+                            artPrm.projXdim:artPrm.Zoutput_volume_size;
+
+    //   int min_distance = ceil( ( 2 * artPrm.grid_relative_size ) / artPrm.basis.blob.radius) + 1;
+
+    artPrm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
+                                Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size,artPrm.threads);
+
+    vol_voxels.write(artPrm.fn_root+".vol");
+
+    if (artPrm.tell&TELL_SAVE_BASIS)
+        vol_basis.write(artPrm.fn_root+".basis");
+    artPrm.fh_hist->close();
+
+    gettimeofday(&end_time,NULL);
+
+    finish_usecs = (end_time.tv_sec-start_time.tv_sec)*1000000+(end_time.tv_usec-start_time.tv_usec);
+
+    std::cout << "INIT_TIME: " << (double)init_usecs/(double)1000000 << std::endl;
+    std::cout << "PROCESS_TIME: " << (double)process_usecs/(double)1000000 << std::endl;
+    std::cout << "FINISH_TIME: " << (double)finish_usecs/(double)1000000 << std::endl;
+
 }
+

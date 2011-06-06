@@ -30,6 +30,7 @@
    implementation (single particles, crystals, ...) */
 
 #include "basic_art.h"
+#include "fourier_filter.h"
 #include "recons_misc.h"
 
 /* Default values ========================================================== */
@@ -110,7 +111,7 @@ void BasicARTParameters::defineParams(XmippProgram * program, const char* prefix
     //        sprintf(tempLine, "%s : %s", tempLine, comment);
     //
     //    program->addParamsLine(tempLine);
-
+    program->addParamsLine(" == I/O Parameters == ");
     program->addParamsLine("   -i <md_file>                : Metadata file with input projections");
     program->addParamsLine("   [--oroot <rootname>]        : Output rootname. If not supplied, input name is taken without extension.");
     program->addParamsLine("                               :+++The created files are as follows: %BR%");
@@ -756,7 +757,7 @@ void BasicARTParameters::usage_more()
 /* ------------------------------------------------------------------------- */
 /* Sort_perpendicular                                                        */
 /* ------------------------------------------------------------------------- */
-void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
+void sortPerpendicular(int numIMG, ReconsInfo *IMG_Inf,
                         MultidimArray<int> &ordered_list, int N)
 {
     int   i, j, k;
@@ -768,7 +769,7 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
     Matrix2D<double> euler;
     MultidimArray<double> product(numIMG);
 
-    // Initialisation
+    // Initialization
     ordered_list.resize(numIMG);
     for (i = 0; i < numIMG; i++)
     {
@@ -836,7 +837,7 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
 /* ------------------------------------------------------------------------- */
 /* No Sort                                                                   */
 /* ------------------------------------------------------------------------- */
-void no_sort(int numIMG, MultidimArray<int> &ordered_list)
+void noSort(int numIMG, MultidimArray<int> &ordered_list)
 {
     ordered_list.initLinear(0, numIMG - 1);
 }
@@ -844,7 +845,7 @@ void no_sort(int numIMG, MultidimArray<int> &ordered_list)
 /* ------------------------------------------------------------------------- */
 /* Random Sort                                                               */
 /* ------------------------------------------------------------------------- */
-void sort_randomly(int numIMG, MultidimArray<int> &ordered_list)
+void sortRandomly(int numIMG, MultidimArray<int> &ordered_list)
 {
     int i;
     MultidimArray<int> chosen;
@@ -891,7 +892,7 @@ void sort_randomly(int numIMG, MultidimArray<int> &ordered_list)
 /* Produce Side Information                                                  */
 /* ------------------------------------------------------------------------- */
 //#define DEBUG
-void BasicARTParameters::produce_Side_Info(GridVolume &vol_basis0, int level,
+void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
         int rank)
 {
     MetaData     selfile;
@@ -966,7 +967,7 @@ void BasicARTParameters::produce_Side_Info(GridVolume &vol_basis0, int level,
     /* Fill ART_sort_info structure and Sort ------------------------------- */
     if (level >= FULL)
     {
-        build_recons_info(selfile, fn_ctf, SL, IMG_Inf,
+        buildReconsInfo(selfile, fn_ctf, SL, IMG_Inf,
                           do_not_use_symproj);
 
         if (!(tell&TELL_MANUAL_ORDER))
@@ -976,14 +977,14 @@ void BasicARTParameters::produce_Side_Info(GridVolume &vol_basis0, int level,
                 parallel_mode == pCAV ||
                 eq_mode == CAV ||
                 rank > 0 || dont_sort)
-                no_sort(numIMG, ordered_list);
+                noSort(numIMG, ordered_list);
             else if (random_sort)
-                sort_randomly(numIMG, ordered_list);
+                sortRandomly(numIMG, ordered_list);
             else if (sort_last_N != -1)
-                sort_perpendicular(numIMG, IMG_Inf, ordered_list,
+                sortPerpendicular(numIMG, IMG_Inf, ordered_list,
                                    sort_last_N);
             else
-                no_sort(numIMG, ordered_list);
+                noSort(numIMG, ordered_list);
     }
 
     /* In case of weighted least-squares, find average weight & write residual images ------ */
@@ -1157,3 +1158,130 @@ int BasicARTParameters::ProjYdim()
 {
     return projYdim;
 }
+
+/* ------------------------------------------------------------------------- */
+/* Update residual vector for WLS                                            */
+/* ------------------------------------------------------------------------- */
+void updateResidualVector(BasicARTParameters &prm, GridVolume &vol_basis,
+                          double &kappa, double &pow_residual_vol, double &pow_residual_imgs)
+{
+    GridVolume       residual_vol;
+    Projection       read_proj, dummy_proj, new_proj;
+    FileName         fn_resi, fn_tmp;
+    double           sqrtweight, dim2, norma, normb, apply_kappa;
+    ImageOver        *footprint = (ImageOver *) & prm.basis.blobprint;
+    ImageOver        *footprint2 = (ImageOver *) & prm.basis.blobprint2;
+    Matrix2D<double> *A = NULL;
+    std::vector<MultidimArray<double> > newres_imgs;
+    MultidimArray<int>    mask;
+
+    residual_vol.resize(vol_basis);
+    residual_vol.initZeros();
+
+    // Calculate volume from all backprojected residual images
+    std::cerr << "Backprojection of residual images " << std::endl;
+    if (!(prm.tell&TELL_SHOW_ERROR))
+        init_progress_bar(prm.numIMG);
+
+    for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
+    {
+        // backprojection of the weighted residual image
+        sqrtweight = sqrt(prm.residual_imgs[iact_proj].weight() / prm.sum_weight);
+        read_proj = prm.residual_imgs[iact_proj];
+        read_proj() *= sqrtweight;
+        dummy_proj().resize(read_proj());
+
+        dummy_proj.set_angles(prm.IMG_Inf[iact_proj].rot,
+                              prm.IMG_Inf[iact_proj].tilt,
+                              prm.IMG_Inf[iact_proj].psi);
+
+        project_GridVolume(residual_vol, prm.basis, dummy_proj,
+                           read_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+                           prm.IMG_Inf[iact_proj].rot,
+                           prm.IMG_Inf[iact_proj].tilt,
+                           prm.IMG_Inf[iact_proj].psi, BACKWARD, prm.eq_mode,
+                           prm.GVNeq, NULL, NULL, prm.ray_length, prm.threads);
+
+        if (!(prm.tell&TELL_SHOW_ERROR))
+            if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0)
+                progress_bar(iact_proj);
+    }
+    if (!(prm.tell&TELL_SHOW_ERROR))
+        progress_bar(prm.numIMG);
+
+    // Convert to voxels: solely for output of power of residual volume
+    Image<double>      residual_vox;
+    int Xoutput_volume_size = (prm.Xoutput_volume_size == 0) ?
+                              prm.projXdim : prm.Xoutput_volume_size;
+    int Youtput_volume_size = (prm.Youtput_volume_size == 0) ?
+                              prm.projYdim : prm.Youtput_volume_size;
+    int Zoutput_volume_size = (prm.Zoutput_volume_size == 0) ?
+                              prm.projXdim : prm.Zoutput_volume_size;
+    prm.basis.changeToVoxels(residual_vol, &(residual_vox()),
+                             Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+    pow_residual_vol = residual_vox().sum2() / MULTIDIM_SIZE(residual_vox());
+    residual_vox.clear();
+
+    std::cerr << "Projection of residual volume; kappa = " << kappa << std::endl;
+    if (!(prm.tell&TELL_SHOW_ERROR))
+        init_progress_bar(prm.numIMG);
+
+    // Now that we have the residual volume: project in all directions
+    pow_residual_imgs = 0.;
+    new_proj().resize(read_proj());
+    mask.resize(read_proj());
+    BinaryCircularMask(mask, YSIZE(read_proj()) / 2, INNER_MASK);
+
+    dim2 = (double)YSIZE(read_proj()) * XSIZE(read_proj());
+    for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
+    {
+        project_GridVolume(residual_vol, prm.basis, new_proj,
+                           dummy_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+                           prm.IMG_Inf[iact_proj].rot,
+                           prm.IMG_Inf[iact_proj].tilt,
+                           prm.IMG_Inf[iact_proj].psi, FORWARD, prm.eq_mode,
+                           prm.GVNeq, A, NULL, prm.ray_length, prm.threads);
+
+        sqrtweight = sqrt(prm.residual_imgs[iact_proj].weight() / prm.sum_weight);
+
+        // Next lines like normalization in [EHL] (2.18)?
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(new_proj())
+        {
+            dAij(dummy_proj(), i, j) = XMIPP_MAX(1., dAij(dummy_proj(), i, j)); // to avoid division by zero
+            dAij(new_proj(), i, j) /= dAij(dummy_proj(), i, j);
+        }
+        new_proj() *= sqrtweight * kappa;
+
+        /*
+        fn_tmp="residual_"+integerToString(iact_proj);
+        dummy_proj()=1000*prm.residual_imgs[iact_proj]();
+        dummy_proj.write(fn_tmp+".old");
+        */
+
+        prm.residual_imgs[iact_proj]() -= new_proj();
+        pow_residual_imgs += prm.residual_imgs[iact_proj]().sum2();
+
+        // Mask out edges of the images
+        apply_binary_mask(mask, prm.residual_imgs[iact_proj](), prm.residual_imgs[iact_proj](), 0.);
+
+        /*
+        dummy_proj()=1000*new_proj();
+        dummy_proj.write(fn_tmp+".change");
+        dummy_proj()=1000*prm.residual_imgs[iact_proj]();
+        dummy_proj.write(fn_tmp+".new");
+        */
+
+        if (!(prm.tell&TELL_SHOW_ERROR))
+            if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0)
+                progress_bar(iact_proj);
+    }
+
+    pow_residual_imgs /= dim2;
+    newres_imgs.clear();
+
+    if (!(prm.tell&TELL_SHOW_ERROR))
+        progress_bar(prm.numIMG);
+
+}
+
+

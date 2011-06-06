@@ -125,10 +125,12 @@ void Basis::readParams(XmippProgram * program)
 {
     String basisType = program->getParam("--basis");
 
-    blob.radius = program->getDoubleParam("--basis", "blobs", 0);
-    blob.order  = program->getDoubleParam("--basis", "blobs", 1);
-    blob.alpha  = program->getDoubleParam("--basis", "blobs", 2);
-
+    if (basisType == "blobs")
+    {
+        blob.radius = program->getDoubleParam("--basis", "blobs", 0);
+        blob.order  = program->getDoubleParam("--basis", "blobs", 1);
+        blob.alpha  = program->getDoubleParam("--basis", "blobs", 2);
+    }
     if (!program->checkParam("--basis")) // Default is for small blobs
         grid_relative_size = 1.41;
 
