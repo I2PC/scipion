@@ -46,6 +46,7 @@ void MetaData::_clear(bool onlyData)
         inFile = FileName();
         myMDSql->clearMd();
     }
+    filename="";
 }//close clear
 
 void MetaData::clear()
@@ -851,8 +852,9 @@ void MetaData::read(const FileName &_filename,
                     bool decomposeStack)
 {
     String BlockName;
-    FileName filename;
+    //FileName filename;
     BlockName = _filename.getBlockName();
+    //filename is global, so we can write the filename when reporting errors
     filename  = _filename.removeBlockName();
     _read(filename,desiredLabels,BlockName,decomposeStack);
 
@@ -1088,7 +1090,12 @@ bool MetaData::isColumnFormatFile(char * map, size_t mapSize,
     //std::string _szBlockName = (std::string)("data_") + blockName;
     *firstData  = (char *)  _memmem(map,  mapSize, szBlockName, blockNameSize);
     if(*firstData==NULL)
-        REPORT_ERROR(ERR_MD_WRONGDATABLOCK,(std::string) "Block Named: " + szBlockName + " does not exist");
+        if(filename!="")
+            REPORT_ERROR(ERR_MD_WRONGDATABLOCK,(std::string) "Block Named: " +\
+                         szBlockName + " does not exist in file, " );
+        else
+            REPORT_ERROR(ERR_MD_WRONGDATABLOCK,(std::string) "Block Named: " +\
+            		szBlockName + " does not exist ");
     size_t size = mapSize - (*firstData - map) - 1;
     *secondData = (char *)  _memmem((*firstData+1), size,"data_", 5);
     *firstloop  = (char *)  _memmem((*firstData), size, "loop_", 5);

@@ -378,6 +378,11 @@ public:
      */
     bool setValue(const MDObject &mdValueIn, size_t id);
     bool getValue(MDObject &mdValueOut, size_t id) const;
+    /** Filename used in the read command, useful to write Error messages
+     *
+     */
+    FileName filename;
+
     //public:
 
     /** Get the value of some label.
