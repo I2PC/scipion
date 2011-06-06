@@ -72,12 +72,12 @@ class setup_protocols_class:
                                        'section': 'Preprocessing'}           
             
             ######## 2D Analysis
-            self.LaunchButtons['K200_SetupAlign'] = {'title': 'Align',
+            self.LaunchButtons['K200_SetupAlignClassify'] = {'title': 'Align + Classify',
                                        'section': '2D Analysis',
-                                       'childs': 'K230_SetupML2D, K240_SetupCL2D'}
-            self.LaunchButtons['K210_SetupAlignClassify'] = {'title': 'Align + Classify',
+                                       'childs': 'K240_SetupML2D, K230_SetupCL2D'}
+            self.LaunchButtons['K210_SetupAlign'] = {'title': 'Align',
                                        'section': '2D Analysis',
-                                       'childs': 'K230_SetupML2D, K240_SetupCL2D'}
+                                       'childs': 'K240_SetupML2D, K230_SetupCL2D'}
             self.LaunchButtons['K220_SetupClassify'] = {'title': 'Classify',
                                        'section': '2D Analysis',
                                        'childs': 'K250_SetupKerDenSOM, K260_SetupRotSpectra'} 
