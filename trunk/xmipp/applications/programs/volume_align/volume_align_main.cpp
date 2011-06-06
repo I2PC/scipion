@@ -131,9 +131,6 @@ public:
     {
 
         addUsageLine("Align two volumes varying orientation, position and scale");
-        addUsageLine("Example of use: Align volume1 and volume2 with default options");
-        addUsageLine("   xmipp_align_volumes --i1 volume1.vol --i2 volume2.vol");
-
         addParamsLine("   --i1 <volume1>        : the first volume to align");
         addParamsLine("   --i2 <volume2>        : the second one");
         addParamsLine("  [--rot   <rot0=0>  <rotF=0>  <step_rot=1>]  : in degrees");
@@ -141,9 +138,9 @@ public:
         addParamsLine("  [--psi   <psi0=0>  <psiF=0>  <step_psi=1>]  : in degrees");
         addParamsLine("  [--scale <sc0=1>   <scF=1>   <step_sc=1>]   : size scale margin");
         addParamsLine("  [--grey_scale <sc0=1> <scF=1> <step_sc=1>]  : grey scale margin");
-        addParamsLine("    requires --least_squares");
+        addParamsLine("    requires --least_squares;");
         addParamsLine("  [--grey_shift <sh0=0> <shF=0> <step_sh=1>]  : grey shift margin");
-        addParamsLine("    requires --least_squares");
+        addParamsLine("    requires --least_squares;");
         addParamsLine("  [-z <z0=0> <zF=0> <step_z=1>] : Z position in pixels");
         addParamsLine("  [-y <y0=0> <yF=0> <step_y=1>] : Y position in pixels");
         addParamsLine("  [-x <x0=0> <xF=0> <step_x=1>] : X position in pixels");
@@ -156,6 +153,11 @@ public:
         addParamsLine("  [--onlyShift]     : Only shift");
         addParamsLine(" == Mask Options == ");
         mask.defineParams(this);
+        addExampleLine("Typically you first look for a rough approximation of the alignment using exhaustive search. For instance, for a global rotational alignment use",false);
+        addExampleLine("xmipp_volume_align --i1 volume1.vol --i2 volume2.vol --rot 0 360 15 --tilt 0 180 15 --psi 0 360 15");
+        addExampleLine("Then, assume the best alignment is obtained for rot=45, tilt=60, psi=90",false);
+        addExampleLine("Now you perform a local search to refine the estimation and apply",false);
+        addExampleLine("xmipp_volume_align --i1 volume1.vol --i2 volume2.vol --rot 45 --tilt 60 --psi 90 --local --apply volume2aligned.vol");
     }
 
     void readParams()
