@@ -1090,7 +1090,7 @@ bool MetaData::isColumnFormatFile(char * map, size_t mapSize,
     //std::string _szBlockName = (std::string)("data_") + blockName;
     *firstData  = (char *)  _memmem(map,  mapSize, szBlockName, blockNameSize);
     if(*firstData==NULL)
-        if(filename!="")
+        if(eFilename!="")
             REPORT_ERROR(ERR_MD_WRONGDATABLOCK,(std::string) "Block Named: " +\
                          szBlockName + " does not exist in file, " );
         else
