@@ -121,6 +121,7 @@ public:
     double   grey_shift0, grey_shiftF, step_grey_shift;
     int      tell;
     bool     apply;
+    FileName fnOut;
     bool     mask_enabled, mean_in_mask;
     bool     usePowell, onlyShift;
 
@@ -140,12 +141,14 @@ public:
         addParamsLine("  [--psi   <psi0=0>  <psiF=0>  <step_psi=1>]  : in degrees");
         addParamsLine("  [--scale <sc0=1>   <scF=1>   <step_sc=1>]   : size scale margin");
         addParamsLine("  [--grey_scale <sc0=1> <scF=1> <step_sc=1>]  : grey scale margin");
+        addParamsLine("    requires --least_squares");
         addParamsLine("  [--grey_shift <sh0=0> <shF=0> <step_sh=1>]  : grey shift margin");
+        addParamsLine("    requires --least_squares");
         addParamsLine("  [-z <z0=0> <zF=0> <step_z=1>] : Z position in pixels");
         addParamsLine("  [-y <y0=0> <yF=0> <step_y=1>] : Y position in pixels");
         addParamsLine("  [-x <x0=0> <xF=0> <step_x=1>] : X position in pixels");
         addParamsLine("  [--show_fit]      : Show fitness values");
-        addParamsLine("  [--apply]         : Apply best movement to --i2");
+        addParamsLine("  [--apply <file=\"\">] : Apply best movement to --i2 and store results in this file");
         addParamsLine("  [--mean_in_mask]  : Use the means within the mask");
         addParamsLine("  [--covariance]    : Covariance fitness criterion");
         addParamsLine("  [--least_squares] : LS fitness criterion");
@@ -226,6 +229,7 @@ public:
 
         tell = checkParam("--show_fit");
         apply = checkParam("--apply");
+        fnOut = getParam("--apply");
 
         if (checkParam("--covariance"))
         {
@@ -353,15 +357,17 @@ public:
             steps.initConstant(1);
             if (onlyShift)
                 steps(0)=steps(1)=steps(2)=steps(3)=steps(4)=steps(5)=0;
-            x(0)=(grey_scale0+grey_scaleF)/2;
-            x(1)=(grey_shift0+grey_shiftF)/2;
-            x(2)=(rot0+rotF)/2;
-            x(3)=(tilt0+tiltF)/2;
-            x(4)=(psi0+psiF)/2;
-            x(5)=(scale0+scaleF)/2;
-            x(6)=(z0+zF)/2;
-            x(7)=(y0+yF)/2;
-            x(8)=(x0+xF)/2;
+            if (params.alignment_method == COVARIANCE)
+            	steps(0)=steps(1)=0;
+            x(0)=grey_scale0;
+            x(1)=grey_shift0;
+            x(2)=rot0;
+            x(3)=tilt0;
+            x(4)=psi0;
+            x(5)=scale0;
+            x(6)=z0;
+            x(7)=y0;
+            x(8)=x0;
 
             powellOptimizer(x,1,9,&wrapperFitness,NULL,0.01,fitness,iter,steps,true);
             best_align=x;
@@ -385,28 +391,14 @@ public:
         {
             applyTransformation(params.V2(),params.Vaux(),MATRIX1D_ARRAY(best_align));
             params.V2()=params.Vaux();
-            params.V2.write();
+            params.V2.write(fnOut);
         }
-
     }
-
 };
-
 
 int main(int argc, char **argv)
 {
     ProgAlignVolumes program;
-    try
-    {
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-        return 1;
-    }
-    return 0;
+    program.read(argc, argv);
+    return program.tryRun();
 }
-
-
