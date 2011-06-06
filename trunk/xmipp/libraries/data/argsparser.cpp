@@ -1098,7 +1098,7 @@ void ConsolePrinter::printProgram(const ProgramDef &program, int v)
             if (program.examples.visibility[i] <= v)
             {
                 if (program.examples.wikiVerbatim[i])
-                    *pOut << "      " << COLOR(program.examples.comments[i].c_str(), RED) << std::endl;
+                    *pOut << "      " << COLOR(program.examples.comments[i].c_str(), BLUE) << std::endl;
                 else
                     *pOut << "   " << program.examples.comments[i] << std::endl;
             }
