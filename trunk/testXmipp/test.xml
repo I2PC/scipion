@@ -487,6 +487,14 @@
             <FILE filename="image.xmp"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_volume_align" mpi="FALSE">
+        <CASE arguments="--i1 input/phantomBacteriorhodopsin.vol --i2 input/phantomBacteriorhodopsinRotated30.vol --rot 0 120 5 --apply %o/i2aligned.vol" changeDir="FALSE">
+            <FILE filename="i2aligned.vol"/>
+        </CASE>
+        <CASE arguments="--i1 input/phantomBacteriorhodopsin.vol --i2 input/phantomBacteriorhodopsinRotated30.vol --rot 90 --local --apply %o/i2aligned.vol" changeDir="FALSE">
+            <FILE filename="i2aligned.vol"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_volume_center" mpi="FALSE">
         <CASE arguments="-i input/1FFKfull_reconstructed.vol -o %o/centered.vol" changeDir="FALSE">
             <FILE filename="centered.vol"/>
