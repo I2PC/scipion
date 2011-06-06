@@ -108,8 +108,8 @@ public:
     /* Pre Run PreRun for all nodes but not for all works */
     void preRun()
     {
-
-        if (rank == 0)
+        //do not use rank 0 here, since rank 1 will manipulate this file later
+        if (rank == 1)
         {
             unlink(output_file.c_str());
         }
@@ -287,6 +287,25 @@ public:
 #endif
         #undef DEBUG
 
+        //create blanck outfile so main header does not need to be re-writen
+        //rank 1 has already xdim and ydim.
+        if (rank == 1)
+        {
+            int  numberProjections=0;
+            for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
+            {
+                    ++numberProjections;
+            }
+            numberProjections *= mysampling.no_redundant_sampling_points_angles.size();
+            std::cerr   << "creating Blank file: "
+            << output_file << " for "
+            << numberProjections << "  projections."
+            << std::endl;
+            Image<double> Iaux(Xdim,Ydim);
+            Iaux.write(output_file,numberProjections,true,WRITE_REPLACE);
+        }
+
+        MPI_Barrier(MPI_COMM_WORLD);
     }
     /* Run --------------------------------------------------------------------- */
     void run()
@@ -299,7 +318,7 @@ public:
             for (int i=0;i<numberOfJobs;)
             {
                 //collect data if available
-                //be aware that mpi_Probe will block the program untill a message is received
+                //be aware that mpi_Probe will block the program until a message is received
                 MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 // worker is free
                 if (status.MPI_TAG == TAG_FREEWORKER)
@@ -397,7 +416,6 @@ public:
 
                 unlink((output_file_root+"_angles.doc").c_str());
             }
-
         }
         else
         {
