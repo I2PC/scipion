@@ -852,11 +852,11 @@ void MetaData::read(const FileName &_filename,
                     bool decomposeStack)
 {
     String BlockName;
-    //FileName filename;
+    FileName filename;
     BlockName = _filename.getBlockName();
     //filename is global, so we can write the filename when reporting errors
-    eFilename  = _filename.removeBlockName();
-    _read(eFilename,desiredLabels,BlockName,decomposeStack);
+    filename  = _filename.removeBlockName();
+    _read(filename,desiredLabels,BlockName,decomposeStack);
 
 }
 
