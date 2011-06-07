@@ -81,9 +81,9 @@ class setup_protocols_class:
             self.LaunchButtons['K220_SetupClassify'] = {'title': 'Classify',
                                        'section': '2D Analysis',
                                        'childs': 'K250_SetupKerDenSOM, K260_SetupRotSpectra'} 
-            self.LaunchButtons['K230_SetupML2D'] = {'title': 'ML2D',
+            self.LaunchButtons['K240_SetupML2D'] = {'title': 'ML2D',
                                                'script': 'xmipp_protocol_ml2d.py'}     
-            self.LaunchButtons['K240_SetupCL2D'] = {'title': 'CL2D',
+            self.LaunchButtons['K230_SetupCL2D'] = {'title': 'CL2D',
                                                'script': 'xmipp_protocol_cl2d.py'}
             self.LaunchButtons['K250_SetupKerDenSOM'] = {'title': 'KerDenSOM',
                                                'script': 'xmipp_protocol_kerdensom.py'}     
