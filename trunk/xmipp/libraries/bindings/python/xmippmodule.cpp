@@ -2309,6 +2309,7 @@ xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
+
             PyObject * pyStr = PyObject_Str(pyValue);
             char * str = PyString_AsString(pyStr);
             int xdim, ydim, zdim;
@@ -2334,12 +2335,28 @@ xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
-            PyObject * pyStr = PyObject_Str(pyValue);
-            char * str = PyString_AsString(pyStr);
+        	MetaData md;
+        	if (PyString_Check(pyValue))
+        	{
+        		char * str = PyString_AsString(pyValue);
+        		md.read(str);
+        	}
+			else if (FileName_Check(pyValue))
+			{
+				md.read(FileName_Value(pyValue));
+			}
+			else if (MetaData_Check(pyValue))
+			{
+				md = MetaData_Value(pyValue);
+			}
+			else
+			{
+				 PyErr_SetString(PyXmippError, "Invalid argument: expected String, FileName or MetaData");
+				return NULL;
+			}
             int xdim, ydim, zdim;
             size_t ndim;
-            ImgSize(str, xdim, ydim, zdim, ndim);
-            Py_DECREF(pyStr);
+            ImgSize(md, xdim, ydim, zdim, ndim);
             return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
         }
         catch (XmippError xe)
