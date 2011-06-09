@@ -194,16 +194,12 @@ class TestProjMatching(unittest.TestCase):
         #cp from goldstandard
         src = self.src + 'Iter_01/ProjMatchClasses/'
         dst = self.dst + 'Iter_01/ProjMatchClasses'
-        print "sss",os.getcwd()
-        print "bbb",src+'proj_match_ref_01.doc', dst
         shutil.copy(src+'proj_match_ref_01.doc', dst)
-        print "ccc"
         shutil.copy(src+'proj_match_ref_02.doc', dst)
         shutil.copy(src+'proj_match_ref_03.doc', dst)
         assign_images_to_references(self.log,dict)
         testFileName = dict['DocFileInputAngles']
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print 'ddd',testFileName,goldFileName
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
 from  XmippPythonTestResult import XmippPythonTestResult
