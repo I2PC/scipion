@@ -148,64 +148,62 @@ class TestProjMatching(unittest.TestCase):
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
-    @unittest.skip("skipped test_030projection_matching")
-    def test_030projection_matching(self):
-        tmpDirName ='ProjMatch/new20/Iter_01/ProjMatchClasses'
-        dict = {    'AvailableMemory': 2,
-                    'CtfGroupDirectory': 'ProjMatch/new20/CtfGroups',
-                    'CtfGroupRootName': 'ctf',
-                    'DoComputeResolution': True,
-                    'DoCtfCorrection': True,
-                    'DoParallel': True,
-                    'DoScale': False,
-                    'InnerRadius': '0',
-                    'MaxChangeOffset': '1000',
-                    'MpiJobSize': '1',
-                    'NumberOfCtfGroups': 2L,
-                    'NumberOfMpiProcesses': 3,
-                    'NumberOfThreads': 1,
-                    'OuterRadius': '64',
-                    'PaddingFactor': 2,
-                    'ProjMatchRootName': 'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_01.doc',
-                    'ProjectLibraryRootName': 'ProjMatch/new20/Iter_01/ReferenceLibrary/gallery_ref_01.stk',
-                    'ReferenceIsCtfCorrected': '1',
-                    'ScaleNumberOfSteps': '3',
-                    'ScaleStep': '1',
-                    'Search5DShift': '5',
-                    'Search5DStep': '2',
-                    'SystemFlavour': 'TORQUE-OPENMPI'
-        }
-
-        if not os.path.exists(tmpDirName):
-            os.mkdir(tmpDirName)
-        projection_matching(self.log,dict)
-        testFileName = dict['ProjMatchRootName']
-        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+#    def test_030projection_matching(self):
+#        tmpDirName ='ProjMatch/new20/Iter_01/ProjMatchClasses'
+#        dict = {    'AvailableMemory': 2,
+#                    'CtfGroupDirectory': 'ProjMatch/new20/CtfGroups',
+#                    'CtfGroupRootName': 'ctf',
+#                    'DoComputeResolution': True,
+#                    'DoCtfCorrection': True,
+#                    'DoParallel': True,
+#                    'DoScale': False,
+#                    'InnerRadius': '0',
+#                    'MaxChangeOffset': '1000',
+#                    'MpiJobSize': '1',
+#                    'NumberOfCtfGroups': 2L,
+#                    'NumberOfMpiProcesses': 3,
+#                    'NumberOfThreads': 1,
+#                    'OuterRadius': '64',
+#                    'PaddingFactor': 2,
+#                    'ProjMatchRootName': 'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_01.doc',
+#                    'ProjectLibraryRootName': 'ProjMatch/new20/Iter_01/ReferenceLibrary/gallery_ref_01.stk',
+#                    'ReferenceIsCtfCorrected': '1',
+#                    'ScaleNumberOfSteps': '3',
+#                    'ScaleStep': '1',
+#                    'Search5DShift': '5',
+#                    'Search5DStep': '2',
+#                    'SystemFlavour': 'TORQUE-OPENMPI'
+#        }
 #
-    @unittest.skip("skiped test_040assign_images_to_references")
-    def test_040assign_images_to_references(self):
-        dict = {   
-                'DocFileInputAngles': 'ProjMatch/new20/Iter_01/current_angles.doc',
-                'NumberOfCtfGroups': 2L,
-                'NumberOfReferences': 3,
-                'ProjMatchRootName': [   None,
-                    'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_01.doc',
-                    'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_02.doc',
-                    'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_03.doc']}
-        #cp from goldstandard
-        src = self.src + 'Iter_01/ProjMatchClasses/'
-        dst = self.dst + 'Iter_01/ProjMatchClasses'
-        print "sss",os.getcwd()
-        print "bbb",src+'proj_match_ref_01.doc', dst
-        shutil.copy(src+'proj_match_ref_01.doc', dst)
-        print "ccc"
-        shutil.copy(src+'proj_match_ref_02.doc', dst)
-        shutil.copy(src+'proj_match_ref_03.doc', dst)
-        assign_images_to_references(self.log,dict)
-        testFileName = dict[DocFileInputAngles]
-        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+#        if not os.path.exists(tmpDirName):
+#            os.mkdir(tmpDirName)
+#        projection_matching(self.log,dict)
+#        testFileName = dict['ProjMatchRootName']
+#        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+#        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+##
+#    def test_040assign_images_to_references(self):
+#        dict = {   
+#                'DocFileInputAngles': 'ProjMatch/new20/Iter_01/current_angles.doc',
+#                'NumberOfCtfGroups': 2L,
+#                'NumberOfReferences': 3,
+#                'ProjMatchRootName': [   None,
+#                    'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_01.doc',
+#                    'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_02.doc',
+#                    'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_03.doc']}
+#        #cp from goldstandard
+#        src = self.src + 'Iter_01/ProjMatchClasses/'
+#        dst = self.dst + 'Iter_01/ProjMatchClasses'
+#        print "sss",os.getcwd()
+#        print "bbb",src+'proj_match_ref_01.doc', dst
+#        shutil.copy(src+'proj_match_ref_01.doc', dst)
+#        print "ccc"
+#        shutil.copy(src+'proj_match_ref_02.doc', dst)
+#        shutil.copy(src+'proj_match_ref_03.doc', dst)
+#        assign_images_to_references(self.log,dict)
+#        testFileName = dict[DocFileInputAngles]
+#        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+#        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
 from  XmippPythonTestResult import XmippPythonTestResult
 
