@@ -857,7 +857,8 @@ void MetaData::read(const FileName &_filename,
     //filename is global, so we can write the filename when reporting errors
     filename  = _filename.removeBlockName();
     _read(filename,desiredLabels,BlockName,decomposeStack);
-    //_read llama a clean so I cannot use eFilename as filename ROB
+    //_read calls clean so I cannot use eFilename as filename ROB
+    // since eFilename is reset in clean
     eFilename = filename;
 }
 
@@ -1093,7 +1094,7 @@ bool MetaData::isColumnFormatFile(char * map, size_t mapSize,
     if(*firstData==NULL)
         if(eFilename!="")
             REPORT_ERROR(ERR_MD_WRONGDATABLOCK,(std::string) "Block Named: " +\
-                         szBlockName + " does not exist in file, " );
+                         szBlockName + " does not exist in file, " + eFilename);
         else
             REPORT_ERROR(ERR_MD_WRONGDATABLOCK,(std::string) "Block Named: " +\
             		szBlockName + " does not exist ");
