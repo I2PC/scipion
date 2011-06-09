@@ -31,7 +31,7 @@ DocFileName =' '
 """ Write down the reference/es name. For example "Reference1.vol Reference2.vol"
     specifies two references
 """
-ReferenceFileNames ='ico.vol ico2.vol ico3.vol'
+ReferenceFileNames ='ico1.vol ico2.vol ico3.vol'
 
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
@@ -1107,7 +1107,6 @@ def actionsToBePerformedInsideLoop(_log):
                       }
         _VerifyFiles = []
         _VerifyFiles.append(DocFileInputAngles[iterN])
-        _VerifyFiles.append("potito")
         command = "assign_images_to_references"
         _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
 
