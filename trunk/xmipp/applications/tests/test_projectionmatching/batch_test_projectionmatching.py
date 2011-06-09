@@ -129,17 +129,14 @@ class TestProjMatching(unittest.TestCase):
         
         testFileName = tmpDirName +'_sampling.xmd'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print "1aaa",goldFileName,testFileName,"aaa",compareTwoFiles(goldFileName,testFileName)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
         testFileName = tmpDirName +'_group000001_sampling.xmd'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print "2bbb",goldFileName,testFileName,"aaa",compareTwoFiles(goldFileName,testFileName)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
         testFileName = tmpDirName +'_group000002_sampling.xmd'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print "3ccc",goldFileName,testFileName,"aaa",compareTwoFiles(goldFileName,testFileName)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
     def test_030projection_matching(self):
@@ -174,6 +171,7 @@ class TestProjMatching(unittest.TestCase):
         projection_matching(self.log,dict)
         testFileName = dict['ProjMatchRootName']
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        print "aaaa",goldFileName,testFileName,compareTwoFiles(goldFileName,testFileName)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
 #
     def test_040assign_images_to_references(self):
