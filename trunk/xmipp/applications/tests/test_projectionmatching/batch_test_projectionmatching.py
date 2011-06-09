@@ -201,7 +201,7 @@ class TestProjMatching(unittest.TestCase):
         shutil.copy(src+'proj_match_ref_02.doc', dst)
         shutil.copy(src+'proj_match_ref_03.doc', dst)
         assign_images_to_references(self.log,dict)
-        testFileName = dict[DocFileInputAngles]
+        testFileName = dict['DocFileInputAngles']
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
