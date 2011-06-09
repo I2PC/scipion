@@ -926,7 +926,8 @@ class automated_gui_class:
                               tkMessageBox.QUESTION,
                               tkMessageBox.OKCANCEL)
 
-        if(answer == "ok" or self.deleteWorkingDir == False):
+        isVisualization = "visualize" in self.scriptname
+        if((answer == "ok" or self.deleteWorkingDir == False) and not isVisualization):
             answer = tkMessageBox._show("Execute protocol",
                                           "Use a job queueing system?",
                                           tkMessageBox.QUESTION,
