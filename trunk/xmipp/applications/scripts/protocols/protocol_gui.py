@@ -143,8 +143,11 @@ class automated_gui_class:
     def MakeGui(self):
         self.ScriptRead()
         self.ScriptParseVariables()
-        self.SetupGuiParameters()
-        self.GuiFill()
+        if len(self.variables)==0:
+            self.GuiSaveExecute()
+        else:
+            self.SetupGuiParameters()
+            self.GuiFill()
         
     def SetupGuiParameters(self):
         if (self.is_setupgui):
