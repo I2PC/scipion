@@ -121,7 +121,7 @@ class TestProjMatching(unittest.TestCase):
         print "bbb0",src, dst
 
         shutil.copy(src, dst)
-        tmpDirName = self.src + 'Iter_01/ReferenceLibrary'
+    tmpDirName = self.src + 'Iter_01/ReferenceLibrary'
         if not os.path.exists(tmpDirName):
             os.mkdir(tmpDirName)
         angular_project_library(self.log,dict)
@@ -148,39 +148,39 @@ class TestProjMatching(unittest.TestCase):
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
-#    def test_030projection_matching(self):
-#        tmpDirName ='ProjMatch/new20/Iter_01/ProjMatchClasses'
-#        dict = {    'AvailableMemory': 2,
-#                    'CtfGroupDirectory': 'ProjMatch/new20/CtfGroups',
-#                    'CtfGroupRootName': 'ctf',
-#                    'DoComputeResolution': True,
-#                    'DoCtfCorrection': True,
-#                    'DoParallel': True,
-#                    'DoScale': False,
-#                    'InnerRadius': '0',
-#                    'MaxChangeOffset': '1000',
-#                    'MpiJobSize': '1',
-#                    'NumberOfCtfGroups': 2L,
-#                    'NumberOfMpiProcesses': 3,
-#                    'NumberOfThreads': 1,
-#                    'OuterRadius': '64',
-#                    'PaddingFactor': 2,
-#                    'ProjMatchRootName': 'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_01.doc',
-#                    'ProjectLibraryRootName': 'ProjMatch/new20/Iter_01/ReferenceLibrary/gallery_ref_01.stk',
-#                    'ReferenceIsCtfCorrected': '1',
-#                    'ScaleNumberOfSteps': '3',
-#                    'ScaleStep': '1',
-#                    'Search5DShift': '5',
-#                    'Search5DStep': '2',
-#                    'SystemFlavour': 'TORQUE-OPENMPI'
-#        }
-#
-#        if not os.path.exists(tmpDirName):
-#            os.mkdir(tmpDirName)
-#        projection_matching(self.log,dict)
-#        testFileName = dict['ProjMatchRootName']
-#        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-#        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+    def test_030projection_matching(self):
+        tmpDirName ='ProjMatch/new20/Iter_01/ProjMatchClasses'
+        dict = {    'AvailableMemory': 2,
+                    'CtfGroupDirectory': 'ProjMatch/new20/CtfGroups',
+                    'CtfGroupRootName': 'ctf',
+                    'DoComputeResolution': True,
+                    'DoCtfCorrection': True,
+                    'DoParallel': True,
+                    'DoScale': False,
+                    'InnerRadius': '0',
+                    'MaxChangeOffset': '1000',
+                    'MpiJobSize': '1',
+                    'NumberOfCtfGroups': 2L,
+                    'NumberOfMpiProcesses': 3,
+                    'NumberOfThreads': 1,
+                    'OuterRadius': '64',
+                    'PaddingFactor': 2,
+                    'ProjMatchRootName': 'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_01.doc',
+                    'ProjectLibraryRootName': 'ProjMatch/new20/Iter_01/ReferenceLibrary/gallery_ref_01.stk',
+                    'ReferenceIsCtfCorrected': '1',
+                    'ScaleNumberOfSteps': '3',
+                    'ScaleStep': '1',
+                    'Search5DShift': '5',
+                    'Search5DStep': '2',
+                    'SystemFlavour': 'TORQUE-OPENMPI'
+        }
+
+        if not os.path.exists(tmpDirName):
+            os.mkdir(tmpDirName)
+        projection_matching(self.log,dict)
+        testFileName = dict['ProjMatchRootName']
+        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
 ##
 #    def test_040assign_images_to_references(self):
 #        dict = {   
