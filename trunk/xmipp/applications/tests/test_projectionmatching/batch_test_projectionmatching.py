@@ -31,8 +31,8 @@ class TestProjMatching(unittest.TestCase):
                                 '/tmp',
                                 sys.argv[0],
                                 self.WorkingDir)
-        self.src = 'ProjMatch/goldStandard/Iter_01/'
-        self.dst = 'ProjMatch/new20/Iter_01'
+        self.src = 'ProjMatch/goldStandard/'
+        self.dst = 'ProjMatch/new20/'
 
                 
     def test_000execute_ctf_groups(self):
@@ -115,8 +115,8 @@ class TestProjMatching(unittest.TestCase):
                 'TiltF': 90,
                 'maskedFileNamesIter': 'ProjMatch/new20/Iter_01/masked_reference_ref_01.vol'
         }
-        src = self.src + '/ProjMatchClasses/'+ 'original_angles.doc'
-        dst = self.dst + '/ProjMatchClasses'
+        src = self.src + 'original_angles.doc'
+        dst = self.dst 
         shutil.copy(src, dst)
         tmpDirName = self.src + 'ReferenceLibrary'
         if not os.path.exists(tmpDirName):
@@ -189,8 +189,8 @@ class TestProjMatching(unittest.TestCase):
                     'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_02.doc',
                     'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_03.doc']}
         #cp from goldstandard
-        src = self.src + '/ProjMatchClasses/'
-        dst = self.dst + '/ProjMatchClasses'
+        src = self.src + '/Iter_01/ProjMatchClasses/'
+        dst = self.dst + '/Iter_01/ProjMatchClasses'
         print "sss",os.getcwd()
         print "bbb",src+'proj_match_ref_01.doc', dst
         shutil.copy(src+'proj_match_ref_01.doc', dst)
