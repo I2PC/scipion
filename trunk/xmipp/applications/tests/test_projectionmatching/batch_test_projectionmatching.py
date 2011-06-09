@@ -121,7 +121,7 @@ class TestProjMatching(unittest.TestCase):
         print "bbb0",src, dst
 
         shutil.copy(src, dst)
-        tmpDirName = self.src + 'Iter_01/ReferenceLibrary'
+        tmpDirName = self.dst + 'Iter_01/ReferenceLibrary'
         print "tmpDirName", tmpDirName
         if not os.path.exists(tmpDirName):
             os.mkdir(tmpDirName)
