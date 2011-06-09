@@ -183,9 +183,10 @@ class TestProjMatching(unittest.TestCase):
                     'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_02.doc',
                     'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_03.doc']}
         #cp from goldstandard
-        src = 'ProjMatch/new20/Iter_01/ProjMatchClasses/'
+        src = 'ProjMatch/goldStandard/Iter_01/ProjMatchClasses/'
         dst = 'ProjMatch/new20/Iter_01/ProjMatchClasses'
-        print "bbb"
+        print "sss",os.getcwd()
+        print "bbb",src+'proj_match_ref_01.doc', dst
         shutil.copy(src+'proj_match_ref_01.doc', dst)
         print "ccc"
         shutil.copy(src+'proj_match_ref_02.doc', dst)
