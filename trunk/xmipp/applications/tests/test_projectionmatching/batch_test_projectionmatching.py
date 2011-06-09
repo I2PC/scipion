@@ -129,17 +129,17 @@ class TestProjMatching(unittest.TestCase):
         
         testFileName = tmpDirName +'_sampling.xmd'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print "aaa",goldFileName,testFileName,"aaa"
+        print "1aaa",goldFileName,testFileName,"aaa",compareTwoFiles(goldFileName,testFileName)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
         testFileName = tmpDirName +'_group000001_sampling.xmd'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print "bbb",goldFileName,testFileName,"aaa"
+        print "2bbb",goldFileName,testFileName,"aaa",compareTwoFiles(goldFileName,testFileName)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
         testFileName = tmpDirName +'_group000002_sampling.xmd'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print "ccc",goldFileName,testFileName,"aaa"
+        print "3ccc",goldFileName,testFileName,"aaa",compareTwoFiles(goldFileName,testFileName)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
     def test_030projection_matching(self):
@@ -196,7 +196,6 @@ class TestProjMatching(unittest.TestCase):
         assign_images_to_references(self.log,dict)
         testFileName = dict[DocFileInputAngles]
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",goldFileName,testFileName,"aaa"
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
 from  XmippPythonTestResult import XmippPythonTestResult
