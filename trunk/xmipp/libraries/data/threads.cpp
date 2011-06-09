@@ -176,6 +176,9 @@ void ThreadManager::wait()
 
 ParallelTaskDistributor::ParallelTaskDistributor(size_t nTasks, size_t bSize)
 {
+  if (!(nTasks && bSize && bSize <= nTasks))
+     REPORT_ERROR(ERR_ARG_INCORRECT, "nTasks and bSize should be > 0, also bSize <= nTasks");
+
     numberOfTasks = nTasks;
     blockSize = bSize;
     assignedTasks = 0;
