@@ -122,6 +122,7 @@ class TestProjMatching(unittest.TestCase):
 
         shutil.copy(src, dst)
         tmpDirName = self.src + 'Iter_01/ReferenceLibrary'
+        print "tmpDirName", tmpDirName
         if not os.path.exists(tmpDirName):
             os.mkdir(tmpDirName)
         angular_project_library(self.log,dict)
