@@ -117,6 +117,9 @@ class TestProjMatching(unittest.TestCase):
         }
         src = self.src + 'original_angles.doc'
         dst = self.dst 
+        print "sss0",os.getcwd()
+        print "bbb0",src+'original_angles', dst
+
         shutil.copy(src, dst)
         tmpDirName = self.src + 'ReferenceLibrary'
         if not os.path.exists(tmpDirName):
@@ -189,8 +192,8 @@ class TestProjMatching(unittest.TestCase):
                     'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_02.doc',
                     'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_03.doc']}
         #cp from goldstandard
-        src = self.src + '/Iter_01/ProjMatchClasses/'
-        dst = self.dst + '/Iter_01/ProjMatchClasses'
+        src = self.src + 'Iter_01/ProjMatchClasses/'
+        dst = self.dst + 'Iter_01/ProjMatchClasses'
         print "sss",os.getcwd()
         print "bbb",src+'proj_match_ref_01.doc', dst
         shutil.copy(src+'proj_match_ref_01.doc', dst)
