@@ -714,6 +714,7 @@ void ProgMLTomo::generateInitialReferences()
             if (do_missing)
             {
                 md.getValue(MDL_MISSINGREGION_NR, missno, __iter.objId);
+                --missno;
                 getMissingRegion(Mmissing, my_A, missno);
                 if (iran_fsc == 0)
                     Msumwedge1 += Mmissing;
@@ -1655,7 +1656,7 @@ void ProgMLTomo::precalculateA2(std::vector< Image<double> > &Iref)
 
 // Maximum Likelihood calculation for one image ============================================
 // Integration over all translation, given  model and in-plane rotation
-void ProgMLTomo::expectationSingleImage(MultidimArray<double> &Mimg, int imgno, int missno, double old_psi,
+void ProgMLTomo::expectationSingleImage(MultidimArray<double> &Mimg, int imgno, const int missno, double old_psi,
                                         std::vector< Image<double> > &Iref,
                                         std::vector<MultidimArray<double> > &wsumimgs,
                                         std::vector<MultidimArray<double> > &wsumweds,
@@ -2373,104 +2374,117 @@ void * threadMLTomoExpectationSingleImage( void * data )
     double fracweight, maxweight2, trymindiff, dLL;
     int opt_refno, opt_angno, missno;
 
-    //Aproximate number of images
-    size_t myNum = MDimg->size() / prm->threads;
-    //First and last image to process in each block
-    size_t myFirst, myLast;
-
-    if (prm->verbose && thread_id==0)
-        init_progress_bar(myNum);
-
-    // Loop over all images
-    size_t cc = 0, index;
-    //Work while there are tasks to do
-    //FIXME: now hard coded the number of images
-    //that a thread will work, also in creation
-    //of ThreadTaskDistributor
-    MultidimArray<double > docfiledata(MLTOMO_BLOCKSIZE, MLTOMO_DATALINELENGTH);
-    while (distributor->getTasks(myFirst, myLast))
+    //try
     {
-        for (size_t imgno = myFirst; imgno <= myLast; ++imgno)
+        //Aproximate number of images
+        size_t myNum = MDimg->size() / prm->threads;
+        //First and last image to process in each block
+        size_t myFirst, myLast;
+
+        if (prm->verbose && thread_id==0)
+            init_progress_bar(myNum);
+
+        // Loop over all images
+        size_t cc = 0, index;
+        //Work while there are tasks to do
+        //FIXME: now hard coded the number of images
+        //that a thread will work, also in creation
+        //of ThreadTaskDistributor
+        MultidimArray<double > docfiledata(MLTOMO_BLOCKSIZE, MLTOMO_DATALINELENGTH);
+        while (distributor->getTasks(myFirst, myLast))
         {
-            index = imgno - myFirst;
-            //TODO: Check if really needed the mutexes
-            //only for read from MetaData
-            pthread_mutex_lock(  &mltomo_selfile_access_mutex );
-
-            MDimg->getValue(MDL_IMAGE, fn_img, (*imgs_id)[imgno]);
-
-            pthread_mutex_unlock(  &mltomo_selfile_access_mutex );
-
-            img.read(fn_img);
-            img().setXmippOrigin();
-
-            if (prm->dont_align || prm->do_only_average)
+          String s  = formatString("thread %d: work from image %lu to %lu", thread_id, myFirst, myLast);
+          std::cerr << "DEBUG_JM: s: " << s << std::endl;
+            for (size_t imgno = myFirst; imgno <= myLast; ++imgno)
             {
-                selfTranslate(LINEAR, img(), prm->imgs_optoffsets[imgno], DONT_WRAP);
+                index = imgno - myFirst;
+                //TODO: Check if really needed the mutexes
+                //only for read from MetaData
+                String s  = formatString("thread %d: working on image %lu", thread_id, imgno);
+
+                pthread_mutex_lock(  &mltomo_selfile_access_mutex );
+
+                std::cerr << "DEBUG_JM: s: " << s << std::endl;
+                MDimg->getValue(MDL_IMAGE, fn_img, (*imgs_id)[imgno]);
+
+                pthread_mutex_unlock(  &mltomo_selfile_access_mutex );
+
+                img.read(fn_img);
+                img().setXmippOrigin();
+
+                if (prm->dont_align || prm->do_only_average)
+                {
+                    selfTranslate(LINEAR, img(), prm->imgs_optoffsets[imgno], DONT_WRAP);
+                }
+
+                prm->reScaleVolume(img(),true);
+
+                missno = (prm->do_missing) ? prm->imgs_missno[imgno] : -1;
+
+                // These three parameters speed up expectationSingleImage
+                trymindiff = prm->imgs_trymindiff[imgno];
+                opt_refno = prm->imgs_optrefno[imgno];
+                opt_angno = prm->imgs_optangno[imgno];
+                old_psi = prm->imgs_optpsi[imgno];
+
+                if (prm->do_ml)
+                {
+                    // A. Use maximum likelihood approach
+                    prm->expectationSingleImage(img(), imgno, missno, old_psi, *Iref, *wsumimgs, *wsumweds,
+                                                *wsum_sigma_noise, *wsum_sigma_offset,
+                                                *sumw, *LL, dLL, fracweight, *sumfracweight,
+                                                trymindiff, opt_refno, opt_angno, opt_offsets);
+                }
+                else
+                {
+                    // B. Use constrained correlation coefficient approach
+                    prm->maxConstrainedCorrSingleImage(img(), imgno, missno, old_psi, *Iref,
+                                                       *wsumimgs, *wsumweds, *sumw, fracweight, *sumfracweight,
+                                                       opt_refno, opt_angno, opt_offsets);
+                }
+
+                // Store for next iteration
+                prm->imgs_trymindiff[imgno] = trymindiff;
+                prm->imgs_optrefno[imgno] = opt_refno;
+                prm->imgs_optangno[imgno] = opt_angno;
+
+                // Output MetaData
+                //FIXME: THIS ALSO LIKE JoseMiguel did ML2D
+                dAij(docfiledata, index, 0) = (prm->all_angle_info[opt_angno]).rot;     // rot
+                dAij(docfiledata, index, 1) = (prm->all_angle_info[opt_angno]).tilt;    // tilt
+                dAij(docfiledata, index, 2) = (prm->all_angle_info[opt_angno]).psi;     // psi
+                if (prm->dont_align || prm->do_only_average)
+                {
+                    dAij(docfiledata, index, 3) = prm->imgs_optoffsets[imgno](0);       // Xoff
+                    dAij(docfiledata, index, 4) = prm->imgs_optoffsets[imgno](1);       // Yoff
+                    dAij(docfiledata, index, 5) = prm->imgs_optoffsets[imgno](2);       // zoff
+                }
+                else
+                {
+                    dAij(docfiledata, index, 3) = opt_offsets(0) / prm->scale_factor;   // Xoff
+                    dAij(docfiledata, index, 4) = opt_offsets(1) / prm->scale_factor;   // Yoff
+                    dAij(docfiledata, index, 5) = opt_offsets(2) / prm->scale_factor;   // Zoff
+                }
+                dAij(docfiledata, index, 6) = (double)(opt_refno + 1);   // Ref
+                dAij(docfiledata, index, 7) = (double)(missno + 1);      // Wedge number
+
+                dAij(docfiledata, index, 8) = fracweight;                // P_max/P_tot
+                dAij(docfiledata, index, 9) = dLL;                       // log-likelihood
+
+                if (prm->verbose && thread_id==0)
+                    progress_bar(cc);
+                cc++;
             }
-
-            prm->reScaleVolume(img(),true);
-
-            missno = (prm->do_missing) ? prm->imgs_missno[imgno] : -1;
-
-            // These three parameters speed up expectationSingleImage
-            trymindiff = prm->imgs_trymindiff[imgno];
-            opt_refno = prm->imgs_optrefno[imgno];
-            opt_angno = prm->imgs_optangno[imgno];
-            old_psi = prm->imgs_optpsi[imgno];
-
-            if (prm->do_ml)
-            {
-                // A. Use maximum likelihood approach
-                prm->expectationSingleImage(img(), imgno, missno, old_psi, *Iref, *wsumimgs, *wsumweds,
-                                            *wsum_sigma_noise, *wsum_sigma_offset,
-                                            *sumw, *LL, dLL, fracweight, *sumfracweight,
-                                            trymindiff, opt_refno, opt_angno, opt_offsets);
-            }
-            else
-            {
-                // B. Use constrained correlation coefficient approach
-                prm->maxConstrainedCorrSingleImage(img(), imgno, missno, old_psi, *Iref,
-                                                   *wsumimgs, *wsumweds, *sumw, fracweight, *sumfracweight,
-                                                   opt_refno, opt_angno, opt_offsets);
-            }
-
-            // Store for next iteration
-            prm->imgs_trymindiff[imgno] = trymindiff;
-            prm->imgs_optrefno[imgno] = opt_refno;
-            prm->imgs_optangno[imgno] = opt_angno;
-
-            // Output MetaData
-            //FIXME: THIS ALSO LIKE JoseMiguel did ML2D
-            dAij(docfiledata, index, 0) = (prm->all_angle_info[opt_angno]).rot;     // rot
-            dAij(docfiledata, index, 1) = (prm->all_angle_info[opt_angno]).tilt;    // tilt
-            dAij(docfiledata, index, 2) = (prm->all_angle_info[opt_angno]).psi;     // psi
-            if (prm->dont_align || prm->do_only_average)
-            {
-                dAij(docfiledata, index, 3) = prm->imgs_optoffsets[imgno](0);       // Xoff
-                dAij(docfiledata, index, 4) = prm->imgs_optoffsets[imgno](1);       // Yoff
-                dAij(docfiledata, index, 5) = prm->imgs_optoffsets[imgno](2);       // zoff
-            }
-            else
-            {
-                dAij(docfiledata, index, 3) = opt_offsets(0) / prm->scale_factor;   // Xoff
-                dAij(docfiledata, index, 4) = opt_offsets(1) / prm->scale_factor;   // Yoff
-                dAij(docfiledata, index, 5) = opt_offsets(2) / prm->scale_factor;   // Zoff
-            }
-            dAij(docfiledata, index, 6) = (double)(opt_refno + 1);   // Ref
-            dAij(docfiledata, index, 7) = (double)(missno + 1);      // Wedge number
-
-            dAij(docfiledata, index, 8) = fracweight;                // P_max/P_tot
-            dAij(docfiledata, index, 9) = dLL;                       // log-likelihood
-
-            if (prm->verbose && thread_id==0)
-                progress_bar(cc);
-            cc++;
+            prm->addPartialDocfileData(docfiledata, myFirst, myLast);
         }
-        prm->addPartialDocfileData(docfiledata, myFirst, myLast);
+        if (prm->verbose && thread_id==0)
+            progress_bar(myNum);
     }
-    if (prm->verbose && thread_id==0)
-        progress_bar(myNum);
+//    catch (XmippError xe)
+//    {
+//        std::cerr << xe;
+//        throw xe;
+//    }
 
 #ifdef DEBUG_THREAD
 
@@ -2522,9 +2536,9 @@ void ProgMLTomo::expectation(
     //Get all images id for threads work on it
     MDimg.findObjects(imgs_id);
     //Create a task distributor to distribute images to process
-    ThreadTaskDistributor * distributor = new ThreadTaskDistributor(nr_imgs, MLTOMO_BLOCKSIZE);
-    for (int i = 0; i < nr_imgs; i++)
-        docfiledata.push_back(dataline);
+    size_t blockSize = XMIPP_MAX(1, nr_imgs / (threads * 5));
+    ThreadTaskDistributor * distributor = new ThreadTaskDistributor(nr_imgs, blockSize);
+    docfiledata.assign(nr_imgs, dataline);
     Mzero.initZeros();
     Mzero2.initZeros();
     Mzero2.setXmippOrigin();
@@ -3009,24 +3023,25 @@ bool ProgMLTomo::checkConvergence(std::vector<double> &conv)
     return converged;
 }
 
-void ProgMLTomo::addPartialDocfileData(MultidimArray<double> data,
-                                       int first, int last)
+void ProgMLTomo::addPartialDocfileData(const MultidimArray<double> &data, size_t first, size_t last)
 {
-    int index;
+    size_t index;
+    MDRow row;
 
-    for (int imgno = first; imgno <= last; imgno++)
+    for (size_t imgno = first; imgno <= last; ++imgno)
     {
         index = imgno - first;
-        //FIXME now directly to MDimg
-        MDimg.setValue(MDL_ANGLEROT, dAij(data, index, 0), imgs_id[imgno]);
-        MDimg.setValue(MDL_ANGLETILT, dAij(data, index, 1), imgs_id[imgno]);
-        MDimg.setValue(MDL_ANGLEPSI, dAij(data, index, 2), imgs_id[imgno]);
-        MDimg.setValue(MDL_SHIFTX, dAij(data, index, 3), imgs_id[imgno]);
-        MDimg.setValue(MDL_SHIFTY, dAij(data, index, 4), imgs_id[imgno]);
-        MDimg.setValue(MDL_SHIFTZ, dAij(data, index, 5), imgs_id[imgno]);
-        MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 6)), imgs_id[imgno]);
+        MDimg.getRow(row, imgs_id[imgno]);
+        row.setValue(MDL_ANGLEROT, dAij(data, index, 0));
+        row.setValue(MDL_ANGLETILT, dAij(data, index, 1));
+        row.setValue(MDL_ANGLEPSI, dAij(data, index, 2));
+        row.setValue(MDL_SHIFTX, dAij(data, index, 3));
+        row.setValue(MDL_SHIFTY, dAij(data, index, 4));
+        row.setValue(MDL_SHIFTZ, dAij(data, index, 5));
+        row.setValue(MDL_REF, ROUND(dAij(data, index, 6)));
         if (do_missing)
-            MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 7)), imgs_id[imgno]);
+            row.setValue(MDL_REF, ROUND(dAij(data, index, 7)));
+        MDimg.setRow(row, imgs_id[imgno]);
     }
 }
 

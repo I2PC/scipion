@@ -251,14 +251,14 @@ public:
     void show();
 
     /// Setup lots of stuff
-    void produceSideInfo();
+    virtual void produceSideInfo();
 
     /// Generate initial references from random subset averages
-    void generateInitialReferences();
+    virtual void generateInitialReferences();
 
     /** Read reference images in memory & set offset vectors
         (This produceSideInfo is Selfile-dependent!) */
-    void produceSideInfo2(int nr_vols = 1);
+    virtual void produceSideInfo2(int nr_vols = 1);
 
     /// Calculate Angular sampling
     void perturbAngularSampling();
@@ -290,7 +290,7 @@ public:
     void precalculateA2(std::vector< Image<double> > &Iref);
 
     /// ML-integration over all hidden parameters
-    void expectationSingleImage(MultidimArray<double> &Mimg, int imgno, int missno, double old_rot,
+    void expectationSingleImage(MultidimArray<double> &Mimg, int imgno, const int missno, double old_rot,
                                 std::vector<Image<double> > &Iref,
                                 std::vector<MultidimArray<double> > &wsumimgs,
                                 std::vector<MultidimArray<double> > &wsumweds,
@@ -336,11 +336,10 @@ public:
 
     ///Add info of some processed images
     ///to later write to files
-    void addPartialDocfileData(MultidimArray<double> data,
-        int first, int last);
+    virtual void addPartialDocfileData(const MultidimArray<double> &data, size_t first, size_t last);
 
     /// Write out reference images, selfile and logfile
-    void writeOutputFiles(const int iter,
+    virtual void writeOutputFiles(const int iter,
                           std::vector<MultidimArray<double> > &wsumweds,
                           double &sumw_allrefs, double &LL, double &avefracweight,
                           std::vector<double> &conv, std::vector<MultidimArray<double> > &fsc);
