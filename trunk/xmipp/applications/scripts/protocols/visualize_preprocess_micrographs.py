@@ -18,7 +18,11 @@
 import os,sys
 class visualize_micrographs_class:
     #init variables
-    def __init__(self,WorkingDir):
+    def __init__(self,protocolName):
+        sys.path.insert(0,'.')
+        protocolName=protocolName.replace(".py","")
+        exec "import " + protocolName
+        exec "WorkingDir="+protocolName+".WorkingDir"
         summaryFile=WorkingDir+"/micrographs.sel"
         if os.path.exists(summaryFile):
             os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" &")
