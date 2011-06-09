@@ -26,8 +26,6 @@
 
 //#define DEBUG_JM
 
-#define FN_ITER_VOL(iter, base, refno) formatString("%s_it%06d_%s%06d.vol", fn_root.c_str(), iter, base, refno+1)
-#define FN_ITER_MD(iter) formatString("%s_it%06d.sel", fn_root.c_str(), iter)
 // For blocking of threads
 pthread_mutex_t mltomo_weightedsum_update_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mltomo_selfile_access_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -295,6 +293,8 @@ void ProgMLTomo::run()
         // Check convergence
         converged = checkConvergence(conv);
 
+        addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
+
         writeOutputFiles(iter, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
 
         if (converged)
@@ -323,7 +323,7 @@ void ProgMLTomo::show()
         std::cout << " |   *** Please cite it if this program is of use to you! ***    |" << std::endl;
         std::cout << " -----------------------------------------------------------------" << std::endl;
         std::cout << "--> Maximum-likelihood multi-reference refinement " << std::endl;
-        std::cout << "  Input images            : " << fn_sel << " (" << nr_exp_images << ")" << std::endl;
+        std::cout << "  Input images            : " << fn_sel << " (" << nr_images_global << ")" << std::endl;
         if (!fn_ref.empty())
             std::cout << "  Reference image(s)      : " << fn_ref << std::endl;
         else
@@ -437,7 +437,10 @@ void ProgMLTomo::produceSideInfo()
     // Read metadatafile with experimental images
     MDimg.read(fn_sel);
     MDimg.removeObjects(MDValueEQ(MDL_ENABLED, -1));
-    nr_exp_images = MDimg.size();
+    nr_images_global = MDimg.size();
+    //Get all images id for threads work on it
+    MDimg.findObjects(imgs_id);
+
 
     // Check whether MDimg contains orientations
     mdimg_contains_angles = (MDimg.containsLabel(MDL_ANGLEROT) &&
@@ -616,7 +619,7 @@ void ProgMLTomo::produceSideInfo()
 
     readMissingInfo();
 
-}
+}//end of function produceSideInfo
 
 // Generate initial references =============================================
 void ProgMLTomo::generateInitialReferences()
@@ -633,10 +636,10 @@ void ProgMLTomo::generateInitialReferences()
     //SelLine line;
     MetaData MDrand;
     std::vector<MetaData> MDtmp(nr_ref);
-    int Nsub = ROUND((double)nr_exp_images / nr_ref);
+    int Nsub = ROUND((double)nr_images_global / nr_ref);
     double my_rot, my_tilt, my_psi, my_xoff, my_yoff, resolution;
     //DocLine DL;
-    int missno, c = 0, cc = XMIPP_MAX(1, nr_exp_images / 60);
+    int missno, c = 0, cc = XMIPP_MAX(1, nr_images_global / 60);
 
 #ifdef  DEBUG
 
@@ -650,7 +653,7 @@ void ProgMLTomo::generateInitialReferences()
     if (verbose)
     {
         std::cout << "  Generating initial references by averaging over random subsets" << std::endl;
-        init_progress_bar(nr_exp_images);
+        init_progress_bar(nr_images_global);
     }
 
     fsc.clear();
@@ -773,7 +776,7 @@ void ProgMLTomo::generateInitialReferences()
         Iout.write(fn_tmp);
     }
     if (verbose)
-        progress_bar(nr_exp_images);
+        progress_bar(nr_images_global);
     fn_ref = FN_ITER_MD(0);
     MDref.write(fn_ref);
 
@@ -783,6 +786,16 @@ void ProgMLTomo::generateInitialReferences()
 #endif
 }
 
+/// Set the number of images, this function is useful only for MPI
+void  ProgMLTomo::setNumberOfLocalImages()
+{
+    nr_images_local = nr_images_global;
+    // By default set myFirst and myLast equal to 0 and N - 1
+    // respectively, this should be changed when using MPI
+    // by calling setWorkingImages before produceSideInfo2
+    myFirstImg = 0;
+    myLastImg = nr_images_global - 1;
+}
 // Read reference images to memory and initialize offset vectors
 // This side info is NOT general, i.e. in parallel mode it is NOT the
 // same for all processors! (in contrast to produce_Side_info)
@@ -801,30 +814,32 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
     std::cerr<<"Start produceSideInfo2"<<std::endl;
 #endif
 
+    setNumberOfLocalImages();
     // Store tomogram angles, offset vectors and missing wedge parameters
-    size_t nr_images = MDimg.size();
-    imgs_optrefno.assign(nr_images, 0.);
-    imgs_optangno.assign(nr_images, 0.);
-    imgs_optpsi.assign(nr_images, 0.);
-    imgs_trymindiff.assign(nr_images, -1.);
+    imgs_optrefno.assign(nr_images_local, 0.);
+    imgs_optangno.assign(nr_images_local, 0.);
+    imgs_optpsi.assign(nr_images_local, 0.);
+    imgs_trymindiff.assign(nr_images_local, -1.);
     Matrix1D<double> dum(3);
     if (do_missing)
-        imgs_missno.assign(nr_images, -1);
+        imgs_missno.assign(nr_images_local, -1);
     if (dont_align || dont_rotate || do_only_average)
-        imgs_optoffsets.assign(nr_images, dum);
-
+        imgs_optoffsets.assign(nr_images_local, dum);
+    //--------Setup for Docfile -----------
+    docfiledata.initZeros(nr_images_local, MLTOMO_DATALINELENGTH);
     // Read in MetaData with wedge info, optimal angles, etc.
-    size_t id, count = 0;
+    size_t id, count = 0, imgno;
     int refno;
     MetaData MDsub;
     MDRow row;
     double rot, tilt, psi;
 
-    FOR_ALL_OBJECTS_IN_METADATA(MDimg)
+    //FOR_ALL_OBJECTS_IN_METADATA(MDimg)
+    for (size_t img = myFirstImg; img <= myLastImg; ++img)
     {
 
-        size_t &imgno = __iter.objIndex;
-        MDimg.getRow(row, __iter.objId);
+        imgno = img - myFirstImg;
+        MDimg.getRow(row, imgs_id[imgno]);
         // Get missing wedge type
         if (do_missing)
         {
@@ -2379,33 +2394,25 @@ void * threadMLTomoExpectationSingleImage( void * data )
         //Aproximate number of images
         size_t myNum = MDimg->size() / prm->threads;
         //First and last image to process in each block
-        size_t myFirst, myLast;
+        size_t firstIndex, lastIndex;
 
         if (prm->verbose && thread_id==0)
             init_progress_bar(myNum);
 
         // Loop over all images
-        size_t cc = 0, index;
+        size_t cc = 0;
+        MultidimArray<double> &docfiledata = prm->docfiledata;
+
         //Work while there are tasks to do
-        //FIXME: now hard coded the number of images
-        //that a thread will work, also in creation
-        //of ThreadTaskDistributor
-        MultidimArray<double > docfiledata(MLTOMO_BLOCKSIZE, MLTOMO_DATALINELENGTH);
-        while (distributor->getTasks(myFirst, myLast))
+        while (distributor->getTasks(firstIndex, lastIndex))
         {
-          String s  = formatString("thread %d: work from image %lu to %lu", thread_id, myFirst, myLast);
-          std::cerr << "DEBUG_JM: s: " << s << std::endl;
-            for (size_t imgno = myFirst; imgno <= myLast; ++imgno)
+            for (size_t imgno = firstIndex; imgno <= lastIndex; ++imgno)
             {
-                index = imgno - myFirst;
                 //TODO: Check if really needed the mutexes
                 //only for read from MetaData
-                String s  = formatString("thread %d: working on image %lu", thread_id, imgno);
-
                 pthread_mutex_lock(  &mltomo_selfile_access_mutex );
 
-                std::cerr << "DEBUG_JM: s: " << s << std::endl;
-                MDimg->getValue(MDL_IMAGE, fn_img, (*imgs_id)[imgno]);
+                MDimg->getValue(MDL_IMAGE, fn_img, (*imgs_id)[imgno + prm->myFirstImg]);
 
                 pthread_mutex_unlock(  &mltomo_selfile_access_mutex );
 
@@ -2450,41 +2457,40 @@ void * threadMLTomoExpectationSingleImage( void * data )
 
                 // Output MetaData
                 //FIXME: THIS ALSO LIKE JoseMiguel did ML2D
-                dAij(docfiledata, index, 0) = (prm->all_angle_info[opt_angno]).rot;     // rot
-                dAij(docfiledata, index, 1) = (prm->all_angle_info[opt_angno]).tilt;    // tilt
-                dAij(docfiledata, index, 2) = (prm->all_angle_info[opt_angno]).psi;     // psi
+                dAij(docfiledata, imgno, 0) = (prm->all_angle_info[opt_angno]).rot;     // rot
+                dAij(docfiledata, imgno, 1) = (prm->all_angle_info[opt_angno]).tilt;    // tilt
+                dAij(docfiledata, imgno, 2) = (prm->all_angle_info[opt_angno]).psi;     // psi
                 if (prm->dont_align || prm->do_only_average)
                 {
-                    dAij(docfiledata, index, 3) = prm->imgs_optoffsets[imgno](0);       // Xoff
-                    dAij(docfiledata, index, 4) = prm->imgs_optoffsets[imgno](1);       // Yoff
-                    dAij(docfiledata, index, 5) = prm->imgs_optoffsets[imgno](2);       // zoff
+                    dAij(docfiledata, imgno, 3) = prm->imgs_optoffsets[imgno](0);       // Xoff
+                    dAij(docfiledata, imgno, 4) = prm->imgs_optoffsets[imgno](1);       // Yoff
+                    dAij(docfiledata, imgno, 5) = prm->imgs_optoffsets[imgno](2);       // zoff
                 }
                 else
                 {
-                    dAij(docfiledata, index, 3) = opt_offsets(0) / prm->scale_factor;   // Xoff
-                    dAij(docfiledata, index, 4) = opt_offsets(1) / prm->scale_factor;   // Yoff
-                    dAij(docfiledata, index, 5) = opt_offsets(2) / prm->scale_factor;   // Zoff
+                    dAij(docfiledata, imgno, 3) = opt_offsets(0) / prm->scale_factor;   // Xoff
+                    dAij(docfiledata, imgno, 4) = opt_offsets(1) / prm->scale_factor;   // Yoff
+                    dAij(docfiledata, imgno, 5) = opt_offsets(2) / prm->scale_factor;   // Zoff
                 }
-                dAij(docfiledata, index, 6) = (double)(opt_refno + 1);   // Ref
-                dAij(docfiledata, index, 7) = (double)(missno + 1);      // Wedge number
+                dAij(docfiledata, imgno, 6) = (double)(opt_refno + 1);   // Ref
+                dAij(docfiledata, imgno, 7) = (double)(missno + 1);      // Wedge number
 
-                dAij(docfiledata, index, 8) = fracweight;                // P_max/P_tot
-                dAij(docfiledata, index, 9) = dLL;                       // log-likelihood
+                dAij(docfiledata, imgno, 8) = fracweight;                // P_max/P_tot
+                dAij(docfiledata, imgno, 9) = dLL;                       // log-likelihood
 
                 if (prm->verbose && thread_id==0)
                     progress_bar(cc);
                 cc++;
             }
-            prm->addPartialDocfileData(docfiledata, myFirst, myLast);
         }
         if (prm->verbose && thread_id==0)
             progress_bar(myNum);
     }
-//    catch (XmippError xe)
-//    {
-//        std::cerr << xe;
-//        throw xe;
-//    }
+    //    catch (XmippError xe)
+    //    {
+    //        std::cerr << xe;
+    //        throw xe;
+    //    }
 
 #ifdef DEBUG_THREAD
 
@@ -2506,9 +2512,7 @@ void ProgMLTomo::expectation(
     std::cerr<<"start expectation"<<std::endl;
 #endif
 
-    MultidimArray<double> dataline(MLTOMO_DATALINELENGTH);
     MultidimArray<double> Mzero(dim,dim,hdim+1), Mzero2(dim,dim,dim);
-    std::vector<MultidimArray<double> > docfiledata;
 
     // Perturb all angles
     // (Note that each mpi process will have a different random perturbation)
@@ -2530,15 +2534,10 @@ void ProgMLTomo::expectation(
     wsum_sigma_offset = 0.;
     sumfracweight = 0.;
     sumw.initZeros(nr_ref);
-    dataline.initZeros();
-    //FIXME:
-    size_t nr_imgs = MDimg.size();
-    //Get all images id for threads work on it
-    MDimg.findObjects(imgs_id);
     //Create a task distributor to distribute images to process
-    size_t blockSize = XMIPP_MAX(1, nr_imgs / (threads * 5));
-    ThreadTaskDistributor * distributor = new ThreadTaskDistributor(nr_imgs, blockSize);
-    docfiledata.assign(nr_imgs, dataline);
+    //each thread will process images one by one
+    ThreadTaskDistributor * distributor = new ThreadTaskDistributor(nr_images_local, 1);
+
     Mzero.initZeros();
     Mzero2.initZeros();
     Mzero2.setXmippOrigin();
@@ -2562,7 +2561,6 @@ void ProgMLTomo::expectation(
         threads_d[c].wsumimgs=&wsumimgs;
         threads_d[c].wsumweds=&wsumweds;
         threads_d[c].Iref=&Iref;
-        threads_d[c].docfiledata=&docfiledata;
         threads_d[c].sumw = &sumw;
         threads_d[c].imgs_id = &imgs_id;
         threads_d[c].distributor = distributor;
@@ -2900,7 +2898,7 @@ bool ProgMLTomo::regularize(int iter)
             Iref[refno].write(fnt);
         }
         // Normalized regularization (in N/K)
-        double reg_norm = reg_current * (double)nr_exp_images / (double)nr_ref;
+        double reg_norm = reg_current * (double)nr_images_global / (double)nr_ref;
         MultidimArray<std::complex<double> > Fref, Favg, Fzero(dim,dim,hdim+1);
         MultidimArray<double> Mavg, Mdiff;
         double sum_diff2=0.;
@@ -2935,7 +2933,7 @@ bool ProgMLTomo::regularize(int iter)
         for (int refno = 0; refno < nr_ref; refno++)
         {
             transformer.FourierTransform(Iref[refno](),Fref,true);
-            double sumw = alpha_k(refno) * (double)nr_exp_images;
+            double sumw = alpha_k(refno) * (double)nr_images_global;
             // Fref = (sumw*Fref + reg_norm*Favg) /  (sumw + nr_ref * reg_norm)
 #ifdef DEBUG_REGULARISE
 
@@ -2958,15 +2956,15 @@ bool ProgMLTomo::regularize(int iter)
         // Update the regularized sigma_noise estimate
         if (!fix_sigma_noise)
         {
-            double reg_sigma_noise2 = sigma_noise*sigma_noise*ddim3*(double)nr_exp_images;
+            double reg_sigma_noise2 = sigma_noise*sigma_noise*ddim3*(double)nr_images_global;
 #ifdef DEBUG_REGULARISE
 
             if (verb>0)
-                std::cerr<<"reg_sigma_noise2= "<<reg_sigma_noise2<<" nr_exp_images="<<nr_exp_images<<" ddim3= "<<ddim3<<" sigma_noise= "<<sigma_noise<<" sum_diff2= "<<sum_diff2<<" reg_norm= "<<reg_norm<<std::endl;
+                std::cerr<<"reg_sigma_noise2= "<<reg_sigma_noise2<<" nr_exp_images="<<nr_images_global<<" ddim3= "<<ddim3<<" sigma_noise= "<<sigma_noise<<" sum_diff2= "<<sum_diff2<<" reg_norm= "<<reg_norm<<std::endl;
 #endif
 
             reg_sigma_noise2 += reg_norm * sum_diff2;
-            sigma_noise = sqrt(reg_sigma_noise2/((double)nr_exp_images*ddim3));
+            sigma_noise = sqrt(reg_sigma_noise2/((double)nr_images_global*ddim3));
 #ifdef DEBUG_REGULARISE
 
             if (verb>0)

@@ -47,6 +47,10 @@
 #define SMALLANGLE 2.75
 #define MLTOMO_DATALINELENGTH 10
 #define MLTOMO_BLOCKSIZE 10
+
+#define FN_ITER_VOL(iter, base, refno) formatString("%s_it%06d_%s%06d.vol", fn_root.c_str(), iter, base, refno+1)
+#define FN_ITER_MD(iter) formatString("%s_it%06d.sel", fn_root.c_str(), iter)
+
 class ProgMLTomo;
 
 // Thread declaration
@@ -109,7 +113,13 @@ public:
     /** Keep angles from MetaData in generation of random subset averages */
     bool do_keep_angles;
     /** Total number of experimental images */
-    int nr_exp_images;
+    size_t nr_images_global;
+    /** Number of experimental images assigned to an MPI node */
+    size_t nr_images_local;
+    /** Index of the images to work an MPI node */
+    size_t myFirstImg, myLastImg;
+    /** Store data before write to md */
+    MultidimArray<double > docfiledata;
     /** Sum of squared amplitudes of the references */
     std::vector<double> A2, corrA2;
     /** Stopping criterium */
@@ -256,6 +266,9 @@ public:
     /// Generate initial references from random subset averages
     virtual void generateInitialReferences();
 
+    /// Set the number of images, this function is useful only for MPI
+    virtual void setNumberOfLocalImages();
+
     /** Read reference images in memory & set offset vectors
         (This produceSideInfo is Selfile-dependent!) */
     virtual void produceSideInfo2(int nr_vols = 1);
@@ -308,7 +321,7 @@ public:
                                        int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
 
     /// Integrate over all experimental images
-    void expectation(MetaData &MDimg, std::vector< Image<double> > &Iref, int iter,
+    virtual void expectation(MetaData &MDimg, std::vector< Image<double> > &Iref, int iter,
                      double &LL, double &sumfracweight,
                      std::vector<MultidimArray<double> > &wsumimgs,
                      std::vector<MultidimArray<double> > &wsumweds,
@@ -334,8 +347,7 @@ public:
     /// check convergence
     bool checkConvergence(std::vector<double> &conv);
 
-    ///Add info of some processed images
-    ///to later write to files
+    ///Add info of some processed images to later write to files
     virtual void addPartialDocfileData(const MultidimArray<double> &data, size_t first, size_t last);
 
     /// Write out reference images, selfile and logfile
