@@ -31,6 +31,9 @@ class TestProjMatching(unittest.TestCase):
                                 '/tmp',
                                 sys.argv[0],
                                 self.WorkingDir)
+        self.src = 'ProjMatch/goldStandard/Iter_01/'
+        self.dst = 'ProjMatch/new20/Iter_01'
+
                 
     def test_000execute_ctf_groups(self):
         CtfGroupDirectory = os.path.join(self.path,'CtfGroups')
@@ -112,7 +115,10 @@ class TestProjMatching(unittest.TestCase):
                 'TiltF': 90,
                 'maskedFileNamesIter': 'ProjMatch/new20/Iter_01/masked_reference_ref_01.vol'
         }
-        tmpDirName ='ProjMatch/new20/Iter_01/ReferenceLibrary'
+        src = self.src + '/ProjMatchClasses/'+ 'original_angles.doc'
+        dst = self.dst + '/ProjMatchClasses'
+        shutil.copy(src, dst)
+        tmpDirName = self.src + 'ReferenceLibrary'
         if not os.path.exists(tmpDirName):
             os.mkdir(tmpDirName)
         angular_project_library(self.log,dict)
@@ -183,8 +189,8 @@ class TestProjMatching(unittest.TestCase):
                     'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_02.doc',
                     'ProjMatch/new20/Iter_01/ProjMatchClasses/proj_match_ref_03.doc']}
         #cp from goldstandard
-        src = 'ProjMatch/goldStandard/Iter_01/ProjMatchClasses/'
-        dst = 'ProjMatch/new20/Iter_01/ProjMatchClasses'
+        src = self.src + '/ProjMatchClasses/'
+        dst = self.dst + '/ProjMatchClasses'
         print "sss",os.getcwd()
         print "bbb",src+'proj_match_ref_01.doc', dst
         shutil.copy(src+'proj_match_ref_01.doc', dst)
