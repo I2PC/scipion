@@ -109,7 +109,7 @@ def projection_matching(_log,dict):
         ictf    = NumberOfCtfGroups - ii 
 #        if (_DoCtfCorrection):
         #outputname   = _ProjMatchRootName + '_' + CtfGroupName 
-        inputdocfile    = 'ctfGroup'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
+        inputdocfile    = CtfBlockName+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
         outputname   = 'ctfGroup'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
         #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
         baseTxtFile  = refname[:-len('.stk')] 
@@ -161,6 +161,7 @@ def assign_images_to_references(_log,dict):
     ''' assign the images to the different references based on the crosscorrelation coeficient
         #if only one reference it just copy the docfile generated in the previous step
         '''
+    CtfBlockName = 'ctfGroup'
     DocFileInputAngles  = dict['DocFileInputAngles']
     ProjMatchRootName   = dict['ProjMatchRootName']#
     NumberOfCtfGroups   = dict['NumberOfCtfGroups']
@@ -176,7 +177,7 @@ def assign_images_to_references(_log,dict):
 
     mycounter=0L
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
-        auxInputdocfile = 'ctfGroup' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+        auxInputdocfile = CtfBlockName + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
             inputFileName = ProjMatchRootName[iRef3D]
             inputdocfile    = auxInputdocfile+ inputFileName
@@ -195,7 +196,7 @@ def assign_images_to_references(_log,dict):
         os.remove(outputdocfile)
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         MDaux.clear()
-        auxInputdocfile = 'ctfGroup' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+        auxInputdocfile = CtfBlockName + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
             inputFileName = ProjMatchRootName[iRef3D]
             inputdocfile    = auxInputdocfile+ inputFileName
@@ -232,7 +233,7 @@ def angular_class_average(_log,dict):
     #MdSelect=MetaData()
     ProjMatchRootName = dict['ProjMatchRootName']
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
-        tmpFileName = 'ctfGroup' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+        tmpFileName = CtfBlockName + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
         #extract from metadata relevant images
         tmpFileName += ProjMatchRootName
         #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(iRef3D).zfill(2))
