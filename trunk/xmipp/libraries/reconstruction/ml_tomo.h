@@ -127,7 +127,7 @@ public:
 
     /** Optimal refno and angno from previous iteration */
     std::vector<int> imgs_optrefno, imgs_optangno;
-    std::vector<double> imgs_trymindiff, miss_nr_pixels, imgs_optpsi;
+    std::vector<double> imgs_trymindiff, imgs_optpsi;
     std::vector<Matrix1D<double> > imgs_optoffsets;
     /** Number for missing data structure group */
     std::vector<int> imgs_missno;
@@ -149,15 +149,13 @@ public:
     /// Internally store all missing wedges or re-compute on the fly?
 
     /** Use missing wedges, cones or pyramids */
-    bool do_missing, do_wedge, do_pyramid, do_cone;
+    bool do_missing;//, do_wedge, do_pyramid, do_cone;
     /** Do imputaion-like algorithm? */
     bool do_impute;
     /** Do maximum-likelihood algorithm? */
     bool do_ml;
     /** Threshold for no-imputation algorithm */
     double noimp_threshold;
-    /** Number of missing data structures */
-    int nr_miss;
     /** Maximum resolution (dig.freq.) */
     double maxres, scale_factor;
     MultidimArray<double> fourier_mask, fourier_imask, real_mask, real_omask;
@@ -176,8 +174,23 @@ public:
     /** Just apply optimal rotations and use weighted-averaging to get class averages */
     bool do_only_average;
 
+    // Missing data information
+    enum MissingType { MISSING_WEDGE_Y, MISSING_WEDGE_X, MISSING_PYRAMID, MISSING_CONE };
+    struct MissingInfo
+    {
+        MissingType type;
+        double thy0, thyF, thx0, thxF;
+        double tg0_y, tgF_y, tg0_x, tgF_x;
+        bool do_limit_x, do_limit_y, do_cone;
+        double nr_pixels;
+    };
+    /** Number of missing data structures */
+    int nr_miss;
+    /** vector to store all missing info */
+    std::vector<MissingInfo> all_missing_info;
+
     // Angular sampling information
-    struct angle_info
+    struct AnglesInfo
     {
         int direction;
         double rot, rot_ori;
@@ -185,11 +198,14 @@ public:
         double psi, psi_ori;
         Matrix2D<double> A, A_ori;
     };
-    typedef std::vector<angle_info> All_angle_info;
+    typedef std::vector<AnglesInfo> AnglesInfoVector;
+
+    /// Missing data information
+
     /** Angular sampling  */
     double angular_sampling, psi_sampling;
     /** Vector with all angle combinations */
-    All_angle_info all_angle_info;
+    AnglesInfoVector all_angle_info;
     /** Number of angle combinations */
     int nr_ang;
     /** Pixel size */
@@ -250,9 +266,15 @@ public:
     /// Calculate probability density distribution for in-plane transformations
     void calculatePdfTranslations();
 
+    /** Read missing info from metadata
+     * this function will read the metadata with the missing info and set the
+     * number of missing regions
+     */
+    void readMissingInfo();
+
     /// Get binary missing wedge (or pyramid)
     void getMissingRegion(MultidimArray<double> &Mmeasured,
-                          Matrix2D<double> A,
+                          const Matrix2D<double> &A,
                           const int missno);
 
     void maskSphericalAverageOutside(MultidimArray<double> &Min);

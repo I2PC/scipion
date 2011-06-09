@@ -25,11 +25,4 @@
 
 #include <reconstruction/ml_tomo.h>
 
-int main(int argc, char **argv)
-{
-    ProgMLTomo program;
-    // Read input parameters
-    program.read(argc, argv);
-    // Run the program in a try/catch block
-    program.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgMLTomo);
