@@ -434,7 +434,7 @@ void ASTNode::unexpectedToken(String msg)
 {
     token = *currentToken();
     error(formatString("Unexpected token '%s' (%s) \n %s",
-        token.lexeme.c_str(), ArgToken::typeString(token.type), msg.c_str()));
+                       token.lexeme.c_str(), ArgToken::typeString(token.type), msg.c_str()));
 
 }
 
@@ -964,11 +964,23 @@ void ProgramDef::read(int argc, char ** argv, bool reportErrors)
     //Set the name with the first argument
     name = argv[0];
     singleOption = false;
-    //We assume that all options start with -
-    if (argc > 1 && argv[1][0] != '-')
-        REPORT_ERROR(ERR_ARG_INCORRECT, "Parameters should start with a -");
 
     ParamDef * param = NULL;
+
+    //We assume that all options start with -
+    if (argc > 1 && argv[1][0] != '-')
+    {
+        //Asume if the first is missing, treat as -i
+        if ((param = findParam("-i")) == NULL) //-i is not allowed, report error
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Parameters should start with a -");
+        else
+        {
+            ++(param->counter);
+            if (param->independent)
+                singleOption = true;
+        }
+        //Asume if the first is missing, treat as -i
+    }
 
     //Read command line params and arguments
     for (int i = 1; i < argc; ++i)
@@ -1229,15 +1241,15 @@ void TkPrinter::printProgram(const ProgramDef &program, int v)
     fprintf(output, "XMIPP %d.%d - %s\n", XMIPP_MAJOR, XMIPP_MINOR, program.name.c_str());
     size_t numberOfComments = 0;
     for (size_t i = 0; i < program.usageComments.size(); ++i)
-      if (program.usageComments.visibility[i] <= v)
-        ++numberOfComments;
+        if (program.usageComments.visibility[i] <= v)
+            ++numberOfComments;
     //Send number of usage lines
     fprintf(output, "%d\n", numberOfComments);
     if (numberOfComments > 0)
     {
         for (size_t i = 0; i < program.usageComments.size(); ++i)
-          if (program.usageComments.visibility[i] <= v)
-            fprintf(output, "%s\n", program.usageComments.comments[i].c_str());
+            if (program.usageComments.visibility[i] <= v)
+                fprintf(output, "%s\n", program.usageComments.comments[i].c_str());
     }
 
     for (size_t i = 0; i < program.sections.size(); ++i)
