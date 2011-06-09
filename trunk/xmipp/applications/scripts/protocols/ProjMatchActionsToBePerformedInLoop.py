@@ -3,6 +3,8 @@ import launch_job, utils_xmipp
 from distutils.dir_util import mkpath
 from xmipp import *
 
+CtfBlockName = 'ctfGroup'
+
 def execute_mask(_log, dict):
     _mylog = _log
     _mylog.debug("execute_mask")
@@ -80,11 +82,11 @@ def angular_project_library(_log,dict):
                          1,
                          dict['SystemFlavour'])
     if (not dict['DoCtfCorrection']):
+        print "a1"
         src=dict['ProjectLibraryRootName'].replace(".stk",'_sampling.xmd')
         dst = src.replace('sampling.xmd','group'+
                               str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+
                               '_sampling.xmd')
-        print "aaa", src,dst
         shutil.copy(src, dst)
 
 
@@ -110,7 +112,7 @@ def projection_matching(_log,dict):
 #        if (_DoCtfCorrection):
         #outputname   = _ProjMatchRootName + '_' + CtfGroupName 
         inputdocfile    = CtfBlockName+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
-        outputname   = 'ctfGroup'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
+        outputname   = CtfBlockName+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
         #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
         baseTxtFile  = refname[:-len('.stk')] 
         neighbFile      = baseTxtFile + '_sampling.xmd'
@@ -161,7 +163,6 @@ def assign_images_to_references(_log,dict):
     ''' assign the images to the different references based on the crosscorrelation coeficient
         #if only one reference it just copy the docfile generated in the previous step
         '''
-    CtfBlockName = 'ctfGroup'
     DocFileInputAngles  = dict['DocFileInputAngles']
     ProjMatchRootName   = dict['ProjMatchRootName']#
     NumberOfCtfGroups   = dict['NumberOfCtfGroups']
