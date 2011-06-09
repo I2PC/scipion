@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "base_art_recons.h"
+#include "recons_misc.h"
 #include "fourier_filter.h"
 
 
@@ -300,13 +301,13 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
         }
     }
 
-    // Some initialisation ..................................................
-    Xoutput_volume_size=(artPrm.Xoutput_volume_size==0) ?
-                        artPrm.projXdim:artPrm.Xoutput_volume_size;
-    Youtput_volume_size=(artPrm.Youtput_volume_size==0) ?
-                        artPrm.projYdim:artPrm.Youtput_volume_size;
-    Zoutput_volume_size=(artPrm.Zoutput_volume_size==0) ?
-                        artPrm.projXdim:artPrm.Zoutput_volume_size;
+    // Some initialization ..................................................
+    Xoutput_volume_size = (artPrm.Xoutput_volume_size==0) ?
+                          artPrm.projXdim : artPrm.Xoutput_volume_size;
+    Youtput_volume_size = (artPrm.Youtput_volume_size==0) ?
+                          artPrm.projYdim : artPrm.Youtput_volume_size;
+    Zoutput_volume_size = (artPrm.Zoutput_volume_size==0) ?
+                          artPrm.projXdim : artPrm.Zoutput_volume_size;
 
     // POCS constraints .....................................................
     POCSClass POCS(&artPrm, Zoutput_volume_size, Youtput_volume_size,
@@ -322,16 +323,16 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
     MetaData SF_noise, SF_signal;
     if (artPrm.noisy_reconstruction)
     {
-        vol_basis_noisy=vol_basis;
+        vol_basis_noisy = vol_basis;
         vol_basis_noisy.initZeros();
     }
 
     // If SIRT set normalizing factor and create output volume ..............
     if (artPrm.parallel_mode==BasicARTParameters::SIRT )
     {
-        ART_numIMG=artPrm.numIMG;
-        vol_basis_out=vol_basis;         // Copy the structure of vol_basis
-        ptr_vol_out=&vol_basis_out;      // Pointer to output volume
+        ART_numIMG = artPrm.numIMG;
+        vol_basis_out = vol_basis;         // Copy the structure of vol_basis
+        ptr_vol_out = &vol_basis_out;      // Pointer to output volume
         if (artPrm.variability_analysis)
             ptr_vol_out->initZeros();
     }
@@ -343,22 +344,22 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
         // In those cases, normalization must be done at the top level program once we
         // have the reconstruction values. Have a look ar /Applications/Src/MPIArt/mpi_art.cc for
         // an example
-        ART_numIMG= 1;
-        ptr_vol_out=&vol_basis_out;      // Pointer to output volume
-        vol_basis_out=vol_basis;         // Copy the structure of vol_basis
+        ART_numIMG = 1;
+        ptr_vol_out = &vol_basis_out;      // Pointer to output volume
+        vol_basis_out = vol_basis;         // Copy the structure of vol_basis
         // and possible initial values
     }
-    else if (artPrm.eq_mode==CAV)
+    else if (artPrm.eq_mode == CAV)
     {
-        ART_numIMG=1;                    // Normalizing factor = Total no. images
-        ptr_vol_out=&vol_basis_out;      // Pointer to output volume
-        vol_basis_out=vol_basis;         // Copy the structure of vol_basis
+        ART_numIMG = 1;                    // Normalizing factor = Total no. images
+        ptr_vol_out = &vol_basis_out;      // Pointer to output volume
+        vol_basis_out = vol_basis;         // Copy the structure of vol_basis
         // and possible initial values
     }
     else
     {
-        ART_numIMG=1;                    // No normalizing factor
-        ptr_vol_out=&vol_basis;          // Output volume is the same as
+        ART_numIMG = 1;                    // No normalizing factor
+        ptr_vol_out = &vol_basis;          // Output volume is the same as
         // input one
     }
     // Now iterate ..........................................................
@@ -1022,17 +1023,20 @@ void ARTReconsBase::initHistory(const GridVolume &vol_basis0)
 
     *artPrm.fh_hist << "Grid structure ------\n" << vol_basis0.grid();
 
-
-    // ---- poner en el caso especifico
-
     // Show extra information ..................................................
-    *artPrm.fh_hist << "Extra information ------------------------------------------\n";
-    // *artPrm.fh_hist << eprm;
+    if (typeid(*this) != typeid(ARTReconsBase))
+        *artPrm.fh_hist << "Extra: ";
+    print(*artPrm.fh_hist);
 }
 
-
-std::ostream & ARTReconsBase::operator << (std::ostream &o)
-{}
+void ARTReconsBase::print(std::ostream &o) const
+{
+}
+std::ostream & operator<< (std::ostream &o, const ARTReconsBase& artRecons)
+{
+    artRecons.print(o);
+    return o;
+}
 
 void ARTReconsBase::applySymmetry(GridVolume &vol_in, GridVolume *vol_out,int grid_type)
 {

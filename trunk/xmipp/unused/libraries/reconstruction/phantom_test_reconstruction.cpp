@@ -765,7 +765,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         Plain_ART_Parameters plain_art_prm;
         GridVolume           vol_basis;
 
-        art_prm.default_values();
+        art_prm.defaultValues();
         // art_prm.tell |= TELL_SHOW_ERROR;
         // art_prm.tell |= TELL_SAVE_AT_EACH_STEP;
         if (!prm.voxel_basis)

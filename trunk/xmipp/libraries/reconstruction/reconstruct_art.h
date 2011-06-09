@@ -40,9 +40,7 @@
 class ProgReconsART: public ProgReconsBase
 {
 protected:
-
     ARTReconsBase * artRecons;
-
 public:
 
     ProgReconsART();

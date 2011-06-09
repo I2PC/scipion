@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "reconstruct_art.h"
+#include "art_crystal.h"
 #include "denoise.h"
 #include "fourier_filter.h"
 #include <data/wavelet.h>
@@ -40,17 +41,15 @@ void ProgReconsART::setIO(const FileName &fn_in, const FileName &fn_out)
 
 void ProgReconsART::defineParams()
 {
-    addParamsLine(" == Reconstruction type == ");
-    addParamsLine(" [--crystal] ");
-
     ARTReconsBase::defineParams(this);
-
+    addParamsLine(" == Special Parameters for crystals == ");
+    CrystalARTRecons::defineParams(this);
 }
 
 void ProgReconsART::readParams()
 {
     if (checkParam("--crystal"))
-        ;
+        artRecons = new CrystalARTRecons;
     else
         artRecons = new ARTReconsBase;
 
@@ -73,9 +72,6 @@ void ProgReconsART::run()
     gettimeofday(&start_time, NULL);
 
     // Produce side information and initial volume
-    artPrm.produceSideInfo(vol_basis);
-    //calculate symmetry in produceSideInfo and exit if wrong sampling
-    //printing the right sampling
     artRecons->produceSideInfo(vol_basis);
 
     // Show parameters and initiate history

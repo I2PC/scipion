@@ -31,85 +31,373 @@
 /* ------------------------------------------------------------------------- */
 /* Crystal ART Parameters                                                    */
 /* ------------------------------------------------------------------------- */
-/* Read ART parameters ===================================================== */
-void Crystal_ART_Parameters::read(int argc, char **argv,
-                                  BasicARTParameters &prm)
+/* Define parameters ===================================================== */
+void CrystalARTRecons::defineParams(XmippProgram *program, const char* prefix, const char* comment)
 {
-    try
-    {
-        prm.is_crystal = true;
-        a_mag = textToFloat(getParameter(argc, argv, "-mag_a"));
-        a_mag /= prm.sampling;
-        b_mag = textToFloat(getParameter(argc, argv, "-mag_b"));
-        b_mag /= prm.sampling;
-        ang_a2b_deg = textToFloat(getParameter(argc, argv, "-ang_a2b_deg"));
-        ang_x2a_deg = textToFloat(getParameter(argc, argv, "-ang_x2a_deg", 0));
-        fill_space = checkParameter(argc, argv, "-fill_space");
-        avox.resize(2);
-        bvox.resize(2);
-        //DISCLAMER: I know this 0 and 90 degrees cases are rather silly but
-        //when debuging is so good that 90 is 90 and not 90.000001
-        //NOTE:ang_x2a_deg is applied ONLY in the final volume
-        //when moving from basis to voxels
+    char tempLine[256];
 
-        XX(avox) = a_mag;
-        YY(avox) = 0.;
+    if(prefix == NULL)
+        sprintf(tempLine, "  [--crystal ]   : Crystal mode activation");
+    else
+        sprintf(tempLine,"%s   [--crystal ]   : Crystal mode activation", prefix);
+    if (comment != NULL)
+        sprintf(tempLine, "%s : %s", tempLine, comment);
 
-        if (ang_a2b_deg == 90.)
-        {
-            XX(bvox) = 0;
-            YY(bvox) = b_mag;
-        }
-        else
-        {
-            XX(bvox) = b_mag * COSD(ang_a2b_deg);
-            YY(bvox) = b_mag * SIND(ang_a2b_deg);
-        }
-    }
-    catch (XmippError XE)
-    {
-        throw(XE);
-    }
+    program->addParamsLine(tempLine);
+    program->addParamsLine("   [--mag_a <mag>]         : Magnitude of the first  lattice vector");
+    program->addParamsLine("   [--mag_b <mag>]         : Magnitude of the second lattice vector");
+    program->addParamsLine("   [--ang_a2b_deg <angle>] : Angle from vector a to vector b");
+    program->addParamsLine("   [--ang_x2a_deg <angle=0>] : Angle from vector x to vector a");
+    program->addParamsLine("   [--fill_space]          : Repeat unit cell all over the space (pixels)");
+
 }
-
-/* Usage =================================================================== */
-void Crystal_ART_Parameters::usage_more()
+/* Read ART parameters ===================================================== */
+void CrystalARTRecons::readParams(XmippProgram * program)
 {
-    printf(
-        "Special Parameters for crystals -----------------------------------\n"
-        "    -crystal:            Crystal mode activation\n"
-        "Lattice parameters:\n"
-        "    -mag_a mag   Magnitude of the first  lattice vector\n"
-        "    -mag_b mag   Magnitude of the second lattice vector\n"
-        "    -ang_a2b_deg angle    angle from vector a to vector b\n"
-        "    -ang_x2a_deg angle    angle from vector x to vector a\n"
-        "   [-fill_space]         Repeat unit cell all over the space (pixels)\n"
-    );
+    ARTReconsBase::readParams(program);
+    artPrm.is_crystal = true;
+    a_mag = program->getDoubleParam("--mag_a");
+    a_mag /= artPrm.sampling;
+    b_mag = program->getDoubleParam("--mag_b");
+    b_mag /= artPrm.sampling;
+    ang_a2b_deg = program->getDoubleParam("--ang_a2b_deg");
+    ang_x2a_deg = program->getDoubleParam("--ang_x2a_deg");
+    fill_space = program->checkParam("--fill_space");
+    avox.resize(2);
+    bvox.resize(2);
+    //DISCLAMER: I know this 0 and 90 degrees cases are rather silly but
+    //when debugging is so good that 90 is 90 and not 90.000001
+    //NOTE:ang_x2a_deg is applied ONLY in the final volume
+    //when moving from basis to voxels
+
+    XX(avox) = a_mag;
+    YY(avox) = 0.;
+
+    if (ang_a2b_deg == 90.)
+    {
+        XX(bvox) = 0;
+        YY(bvox) = b_mag;
+    }
+    else
+    {
+        XX(bvox) = b_mag * COSD(ang_a2b_deg);
+        YY(bvox) = b_mag * SIND(ang_a2b_deg);
+    }
+
 }
 
 /* Show parameters ========================================================= */
-std::ostream & operator << (std::ostream &o, const Crystal_ART_Parameters &eprm)
+void CrystalARTRecons::print(std::ostream &o) const
 {
-    o << "Lattice vector a: " << eprm.a.transpose() << std::endl;
-    o << "Lattice vector b: " << eprm.b.transpose() << std::endl;
-    o << "mag_a: " << eprm.a_mag << std::endl;
-    o << "mag_b: " << eprm.b_mag << std::endl;
-    o << "ang_a2b_deg: " << eprm.ang_a2b_deg << std::endl;
-    o << "ang_x2a_deg: " << eprm.ang_x2a_deg << std::endl;
-    o << "Fill space: " << eprm.fill_space << std::endl;
-    o << "Symmetry group: " <<  eprm.space_group;
-    return o;
+    o << "Crystal information ------------------------------------------" << std::endl;
+    o << "Lattice vector a: " << a.transpose() << std::endl;
+    o << "Lattice vector b: " << b.transpose() << std::endl;
+    o << "mag_a: " << a_mag << std::endl;
+    o << "mag_b: " << b_mag << std::endl;
+    o << "ang_a2b_deg: " << ang_a2b_deg << std::endl;
+    o << "ang_x2a_deg: " << ang_x2a_deg << std::endl;
+    o << "Fill space: " << fill_space << std::endl;
+    o << "Symmetry group: " <<  space_group << std::endl;
+}
+
+/* Special vector product ================================================== */
+/* To see if a point is inside a polygon the vector product of cir
+   (the vector which goes from the point (r) to the corner i (ci)
+   position) and each polygon side is computed. This vector product
+   assume that both vectors are in the same plane (XY), so its z component
+   is 0, and we are only interested on the sign of z in the resulting
+   vector. */
+#define SGN0_VEC_PRODUCT(cir,a) SGN0(XX(cir)*YY(a)-YY(cir)*XX(a))
+
+/* Side information ======================================================== */
+//#define DEBUG
+//#define DEBUG_A_LOT
+void CrystalARTRecons::produceSideInfo(GridVolume &vol_basis0)
+{
+    ARTReconsBase::produceSideInfo(vol_basis0);
+
+    // Lattice vectors in BCC units
+    a = avox / artPrm.grid_relative_size;
+    b = bvox / artPrm.grid_relative_size;
+
+    // Compute space_group
+    if (artPrm.fn_sym != "")
+        space_group = artPrm.SL.crystallographic_space_group(a_mag, b_mag,
+                      ang_a2b_deg);
+    else
+        space_group = sym_P1;
+
+    // Integer lattice vectors ----------------------------------------------
+    Matrix2D<double> D;
+    computeIntegerLattice(a, b, a_mag / artPrm.grid_relative_size,
+                          b_mag / artPrm.grid_relative_size,
+                          ang_a2b_deg, aint, bint, D,
+                          space_group);
+    // Define two more useful lattice vectors
+    ai = aint / 2;
+    bi = bint / 2;
+
+    // Set general deformation pointer to this matrix
+    artPrm.D = new Matrix2D<double>;
+    *(artPrm.D) = D;
+    artPrm.D->resize(3, 3);
+    MAT_ELEM(*(artPrm.D), 2, 2) = 1;
+    artPrm.Dinv = new Matrix2D<double>;
+    *(artPrm.Dinv) = artPrm.D->inv();
+    artPrm.basis.set_D(artPrm.D);
+
+    // Unit cell mask within volume -----------------------------------------
+    // Compute the 4 parallelogram corners
+    Matrix1D<double> c1 = ai + bi;
+    Matrix1D<double> c2 = -ai + bi;
+    Matrix1D<double> c3 = -c1;
+    Matrix1D<double> c4 = -c2;
+    Matrix1D<double> c1c3 = c1 - c3; // These extra variables are needed because
+    Matrix1D<double> c2c4 = c2 - c4; // the compiler messes up
+
+    // Resize unit cell mask
+    // The unit mask is a little bigger to avoid the possibility of losing
+    // any basis due to a too tight mask.
+    int mask_xdim = CEIL(XMIPP_MAX(ABS(XX(c1c3)), ABS(XX(c2c4)))) + 3;
+    int mask_ydim = CEIL(XMIPP_MAX(ABS(YY(c1c3)), ABS(YY(c2c4)))) + 3;
+    unit_cell_mask.initZeros(mask_ydim, mask_xdim);
+    unit_cell_mask.setXmippOrigin();
+
+    // Resize the reconstructed volume
+    Matrix1D<double> r1(3), r2(3);
+    for (int n = 0; n < vol_basis0.VolumesNo(); n++)
+    {
+        Image<double> &V = vol_basis0(n);
+        ZZ(r1) = XMIPP_MIN(ZZ(r1), STARTINGZ(V()));
+        ZZ(r2) = XMIPP_MAX(ZZ(r2), FINISHINGZ(V()));
+    }
+    XX(r1) = STARTINGX(unit_cell_mask);
+    YY(r1) = STARTINGY(unit_cell_mask);
+    r1 *= artPrm.grid_relative_size;
+    XX(r2) = FINISHINGX(unit_cell_mask);
+    YY(r2) = FINISHINGY(unit_cell_mask);
+    r2 *= artPrm.grid_relative_size;
+    vol_basis0.resize(r1, r2);
+
+    // Fill the unit cell mask
+    Matrix1D<double> r(2);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(unit_cell_mask)
+    {
+        // Position vector of actual BCC element been considered
+        YY(r) = i;
+        XX(r) = j;
+
+        // Vectors from r to each corner
+        Matrix1D<double> c1r = c1 - r;
+        Matrix1D<double> c2r = c2 - r;
+        Matrix1D<double> c3r = c3 - r;
+        Matrix1D<double> c4r = c4 - r;
+
+        // Product of each of these vectors with tha parallelogram borders
+        int sgn[4];
+        sgn[0] = SGN0_VEC_PRODUCT(c1r, -ai);
+        sgn[1] = SGN0_VEC_PRODUCT(c2r, -bi);
+        sgn[2] = SGN0_VEC_PRODUCT(c3r, ai);
+        sgn[3] = SGN0_VEC_PRODUCT(c4r, bi);
+
+#ifdef DEBUG_A_LOT
+
+        std::cout << "(x,y)=(" << XX(r) << "," << YY(r) << ") " << sgn[0] << sgn[1]
+        << sgn[2] << sgn[3] << std::endl;
+#endif
+
+        // Now check if point is inside
+        int inside_table[4][4] = {
+                                     1, 1, 1, 1,
+                                     0, 1, 1, 1,
+                                     1, 0, 1, 1,
+                                     // 1,1,0,1, Take this side out
+                                     // 1,1,1,0, Take this side out
+                                     0, 0, 1, 1,
+                                     // 1,0,0,1, and their three Vertex
+                                     // 1,1,0,0,
+                                     // 0,1,1,0
+                                 };
+#define INSIDE_ACCORDING_TO(n) \
+    sgn[0]==inside_table[n][0] && sgn[1]==inside_table[n][1] && \
+    sgn[2]==inside_table[n][2] && sgn[3]==inside_table[n][3]
+
+        for (int n = 0; n < 4; n++)
+            if (INSIDE_ACCORDING_TO(n))
+            {
+                unit_cell_mask(i, j) = 1;
+#ifdef DEBUG_A_LOT
+
+                std::cout << "    Inside\n";
+#endif
+
+                break;
+            }
+    }
+
+    // Show all parameters --------------------------------------------------
+#ifdef DEBUG
+    std::cout << "avox= " << avox.transpose() << std::endl;
+    std::cout << "bvox= " << bvox.transpose() << std::endl;
+    std::cout << "grid_relative_size= " << artPrm.grid_relative_size << std::endl;
+    std::cout << "a=    " << a.transpose()    << std::endl;
+    std::cout << "b=    " << b.transpose()    << std::endl;
+    std::cout << "aint= " << aint.transpose() << std::endl;
+    std::cout << "bint= " << bint.transpose() << std::endl;
+    std::cout << "ai=   " << ai.transpose()   << std::endl;
+    std::cout << "bi=   " << bi.transpose()   << std::endl;
+    std::cout << "D=    " << D;
+    std::cout << "Check that a=D*aint " << (D*aint).transpose() << std::endl;
+    std::cout << "Check that b=D*bint " << (D*bint).transpose() << std::endl;
+    std::cout << "Symmetry group: " <<  space_group;
+    ImageXmipp I;
+    I = unit_cell_mask;
+    I.write("unit_cell_mask.xmp");
+    std::cout << "unit_cell_mask shape=";
+    unit_cell_mask.printShape();
+    std::cout << std::endl;
+#endif
+}
+#undef DEBUG
+#undef DEBUG_A_LOT
+
+/* ------------------------------------------------------------------------- */
+/* ART Single step                                                           */
+/* ------------------------------------------------------------------------- */
+void CrystalARTRecons::singleStep(
+    GridVolume              &vol_in,          // Input Reconstructed volume
+    GridVolume              *vol_out,         // Output Reconstructed volume
+    Projection              &theo_proj,       // Projection of the reconstruction
+    // It is outside to make it visible
+    // just if it needed for any
+    // other purpose
+    Projection              &read_proj,       // Real projection
+    int sym_no,                               // Symmetry matrix index
+    Projection              &diff_proj,       // Difference between read and
+    // theoretical projection
+    Projection              &corr_proj,       // Correcting projection
+    Projection              &alig_proj,       // Translation alignement aux proj
+    double                  &mean_error,      // Mean error over the pixels
+    int                      numIMG,          // number of images in the set
+    // in SIRT the correction must
+    // be divided by this number
+    double                   lambda,          // Lambda to be used
+    int                      imagen_no,       // Projection number
+    const FileName           &fn_ctf,         // CTF to apply
+    const MultidimArray<int> *maskPtr,         // Mask to apply
+    bool refine)
+{
+    // Only works for blob volumes .............................................
+    if (artPrm.basis.type != Basis::blobs)
+        REPORT_ERROR(ERR_VALUE_INCORRECT,
+                     "This function only works with blob volumes");
+
+    // Compute lattice vectors to be used ......................................
+    Matrix1D<double> aint, bint, shift;
+    aint.resize(2);
+    bint.resize(2);
+    shift.resize(3);
+    shift.initZeros();
+
+    symmetrize_crystal_vectors(aint, bint, shift, this->space_group, sym_no,
+                               this->aint, this->bint);
+    // Project structure .......................................................
+    // The correction image is reused in this call to store the normalizing
+    // projection, ie, the projection of an all-1 volume
+
+    project_Crystal_Volume(vol_in, artPrm.basis, theo_proj,
+                           corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+                           read_proj.rot(), read_proj.tilt(), read_proj.psi(), shift,
+                           aint, bint, *(artPrm.D), *(artPrm.Dinv), this->unit_cell_mask,
+                           FORWARD, artPrm.eq_mode);
+    double shift_X, shift_Y;
+
+    //   #define DEBUG_SHIFT
+#ifdef DEBUG_SHIFT
+
+    Matrix2D<double> A(3, 3);
+    A.initIdentity();
+    dMij(A, 0, 2) =  8;
+    dMij(A, 1, 2) =  -5;
+    std::cout << "A" << A;
+    //move read_proj
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(theo_proj())
+    dMij(theo_proj(), i, j) = dMij(read_proj(), i, j);
+    applyGeometry(IMGMATRIX(read_proj), A, IMGMATRIX(theo_proj), IS_NOT_INV, WRAP);
+#endif
+#undef DEBUG_SHIFT
+
+    if (artPrm.ref_trans_after != -1    &&
+        imagen_no > artPrm.ref_trans_after && imagen_no != 0)
+    {
+        calculate_and_find_correlation_max_proj(read_proj, theo_proj,
+                                                alig_proj,
+                                                shift_X, shift_Y,
+                                                artPrm.ref_trans_step,
+                                                artPrm.ref_trans_after,
+                                                imagen_no);
+
+        // Apply correction
+        Matrix2D<double> Correction(3, 3);
+        alig_proj().resize(read_proj());
+        Correction.initIdentity();
+
+        dMij(Correction, 0, 2) =  - shift_X;
+        dMij(Correction, 1, 2) =  - shift_Y;
+        //copy theo_proj to a temporal matrix
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(theo_proj())
+        dAij(alig_proj(), i, j) = dAij(read_proj(), i, j);
+        applyGeometry(LINEAR, IMGMATRIX(alig_proj), IMGMATRIX(read_proj), Correction,
+                      IS_NOT_INV, WRAP);
+    }
+    // Now compute differences .................................................
+    double applied_lambda = lambda / numIMG; // In ART mode, numIMG=1
+    mean_error = 0;
+    diff_proj().resize(read_proj());
+
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
+    {
+        // Compute difference image and error
+        IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
+        mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
+
+        // Compute the correction image
+        if (ABS(IMGPIXEL(corr_proj, i, j)) < 1)
+            IMGPIXEL(corr_proj, i, j) = SGN(IMGPIXEL(corr_proj, i, j));
+        IMGPIXEL(corr_proj, i, j) =
+            applied_lambda * IMGPIXEL(diff_proj, i, j) / IMGPIXEL(corr_proj, i, j);
+    }
+    mean_error /= XSIZE(diff_proj()) * YSIZE(diff_proj());
+
+    // Backprojection of correction plane ......................................
+    project_Crystal_Volume(*vol_out, artPrm.basis, theo_proj,
+                           corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+                           read_proj.rot(), read_proj.tilt(), read_proj.psi(), shift,
+                           aint, bint, *(artPrm.D), *(artPrm.Dinv), this->unit_cell_mask,
+                           BACKWARD, artPrm.eq_mode);
+}
+
+
+void CrystalARTRecons::finishIterations(GridVolume &vol_basis)
+{
+    if (fill_space)
+        expandToFillSpace(artPrm, *this, vol_basis);
+}
+
+void CrystalARTRecons::applySymmetry(GridVolume &vol_in, GridVolume *vol_out, int grid_type)
+{
+    symmetrize_crystal_volume(vol_in,aint,bint,space_group,unit_cell_mask,grid_type);
 }
 
 /* Compute integer lattice ================================================= */
-void compute_integer_lattice(const Matrix1D<double> &a,
-                             const Matrix1D<double> &b,
-                             double a_mag_grid, double b_mag_grid,
-                             double ang_a2b_deg,
-                             Matrix1D<double> &aint,
-                             Matrix1D<double> &bint,
-                             Matrix2D<double> &D,
-                             int space_group)
+void computeIntegerLattice(const Matrix1D<double> &a,
+                           const Matrix1D<double> &b,
+                           double a_mag_grid, double b_mag_grid,
+                           double ang_a2b_deg,
+                           Matrix1D<double> &aint,
+                           Matrix1D<double> &bint,
+                           Matrix2D<double> &D,
+                           int space_group)
 {
 
     // Integer lattice
@@ -191,307 +479,11 @@ void compute_integer_lattice(const Matrix1D<double> &a,
     D = L * LI.inv();
 }
 
-/* Special vector product ================================================== */
-/* To see if a point is inside a polygon the vector product of cir
-   (the vector which goes from the point (r) to the corner i (ci)
-   position) and each polygon side is computed. This vector product
-   assume that both vectors are in the same plane (XY), so its z component
-   is 0, and we are only interested on the sign of z in the resulting
-   vector. */
-#define SGN0_VEC_PRODUCT(cir,a) SGN0(XX(cir)*YY(a)-YY(cir)*XX(a))
-
-/* Side information ======================================================== */
-//#define DEBUG
-//#define DEBUG_A_LOT
-void Crystal_ART_Parameters::produce_Side_Info(
-    BasicARTParameters &prm, GridVolume &vol_basis0)
-{
-
-    // Lattice vectors in BCC units
-    a = avox / prm.grid_relative_size;
-    b = bvox / prm.grid_relative_size;
-
-    // Compute space_group
-    if (prm.fn_sym != "")
-        space_group = prm.SL.crystallographic_space_group(a_mag, b_mag,
-                      ang_a2b_deg);
-    else
-        space_group = sym_P1;
-
-    // Integer lattice vectors ----------------------------------------------
-    Matrix2D<double> D;
-    compute_integer_lattice(a, b, a_mag / prm.grid_relative_size,
-                            b_mag / prm.grid_relative_size,
-                            ang_a2b_deg, aint, bint, D,
-                            space_group);
-    // Define two more useful lattice vectors
-    ai = aint / 2;
-    bi = bint / 2;
-
-    // Set general deformation pointer to this matrix
-    prm.D = new Matrix2D<double>;
-    *(prm.D) = D;
-    prm.D->resize(3, 3);
-    MAT_ELEM(*(prm.D), 2, 2) = 1;
-    prm.Dinv = new Matrix2D<double>;
-    *(prm.Dinv) = prm.D->inv();
-    prm.basis.set_D(prm.D);
-
-    // Unit cell mask within volume -----------------------------------------
-    // Compute the 4 parallelogram corners
-    Matrix1D<double> c1 = ai + bi;
-    Matrix1D<double> c2 = -ai + bi;
-    Matrix1D<double> c3 = -c1;
-    Matrix1D<double> c4 = -c2;
-    Matrix1D<double> c1c3 = c1 - c3; // These extra variables are needed because
-    Matrix1D<double> c2c4 = c2 - c4; // the compiler messes up
-
-    // Resize unit cell mask
-    // The unit mask is a little bigger to avoid the possibility of losing
-    // any basis due to a too tight mask.
-    int mask_xdim = CEIL(XMIPP_MAX(ABS(XX(c1c3)), ABS(XX(c2c4)))) + 3;
-    int mask_ydim = CEIL(XMIPP_MAX(ABS(YY(c1c3)), ABS(YY(c2c4)))) + 3;
-    unit_cell_mask.initZeros(mask_ydim, mask_xdim);
-    unit_cell_mask.setXmippOrigin();
-
-    // Resize the reconstructed volume
-    Matrix1D<double> r1(3), r2(3);
-    for (int n = 0; n < vol_basis0.VolumesNo(); n++)
-    {
-        Image<double> &V = vol_basis0(n);
-        ZZ(r1) = XMIPP_MIN(ZZ(r1), STARTINGZ(V()));
-        ZZ(r2) = XMIPP_MAX(ZZ(r2), FINISHINGZ(V()));
-    }
-    XX(r1) = STARTINGX(unit_cell_mask);
-    YY(r1) = STARTINGY(unit_cell_mask);
-    r1 *= prm.grid_relative_size;
-    XX(r2) = FINISHINGX(unit_cell_mask);
-    YY(r2) = FINISHINGY(unit_cell_mask);
-    r2 *= prm.grid_relative_size;
-    vol_basis0.resize(r1, r2);
-
-    // Fill the unit cell mask
-    Matrix1D<double> r(2);
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(unit_cell_mask)
-    {
-        // Position vector of actual BCC element been considered
-        YY(r) = i;
-        XX(r) = j;
-
-        // Vectors from r to each corner
-        Matrix1D<double> c1r = c1 - r;
-        Matrix1D<double> c2r = c2 - r;
-        Matrix1D<double> c3r = c3 - r;
-        Matrix1D<double> c4r = c4 - r;
-
-        // Product of each of these vectors with tha parallelogram borders
-        int sgn[4];
-        sgn[0] = SGN0_VEC_PRODUCT(c1r, -ai);
-        sgn[1] = SGN0_VEC_PRODUCT(c2r, -bi);
-        sgn[2] = SGN0_VEC_PRODUCT(c3r, ai);
-        sgn[3] = SGN0_VEC_PRODUCT(c4r, bi);
-
-#ifdef DEBUG_A_LOT
-
-        std::cout << "(x,y)=(" << XX(r) << "," << YY(r) << ") " << sgn[0] << sgn[1]
-        << sgn[2] << sgn[3] << std::endl;
-#endif
-
-        // Now check if point is inside
-        int inside_table[4][4] = {
-                                     1, 1, 1, 1,
-                                     0, 1, 1, 1,
-                                     1, 0, 1, 1,
-                                     // 1,1,0,1, Take this side out
-                                     // 1,1,1,0, Take this side out
-                                     0, 0, 1, 1,
-                                     // 1,0,0,1, and their three Vertex
-                                     // 1,1,0,0,
-                                     // 0,1,1,0
-                                 };
-#define INSIDE_ACCORDING_TO(n) \
-    sgn[0]==inside_table[n][0] && sgn[1]==inside_table[n][1] && \
-    sgn[2]==inside_table[n][2] && sgn[3]==inside_table[n][3]
-
-        for (int n = 0; n < 4; n++)
-            if (INSIDE_ACCORDING_TO(n))
-            {
-                unit_cell_mask(i, j) = 1;
-#ifdef DEBUG_A_LOT
-
-                std::cout << "    Inside\n";
-#endif
-
-                break;
-            }
-    }
-
-    // Show all parameters --------------------------------------------------
-#ifdef DEBUG
-    std::cout << "avox= " << avox.transpose() << std::endl;
-    std::cout << "bvox= " << bvox.transpose() << std::endl;
-    std::cout << "grid_relative_size= " << prm.grid_relative_size << std::endl;
-    std::cout << "a=    " << a.transpose()    << std::endl;
-    std::cout << "b=    " << b.transpose()    << std::endl;
-    std::cout << "aint= " << aint.transpose() << std::endl;
-    std::cout << "bint= " << bint.transpose() << std::endl;
-    std::cout << "ai=   " << ai.transpose()   << std::endl;
-    std::cout << "bi=   " << bi.transpose()   << std::endl;
-    std::cout << "D=    " << D;
-    std::cout << "Check that a=D*aint " << (D*aint).transpose() << std::endl;
-    std::cout << "Check that b=D*bint " << (D*bint).transpose() << std::endl;
-    std::cout << "Symmetry group: " <<  space_group;
-    ImageXmipp I;
-    I = unit_cell_mask;
-    I.write("unit_cell_mask.xmp");
-    std::cout << "unit_cell_mask shape=";
-    unit_cell_mask.printShape();
-    std::cout << std::endl;
-#endif
-}
-#undef DEBUG
-#undef DEBUG_A_LOT
-
-/* ------------------------------------------------------------------------- */
-/* ART Single step                                                           */
-/* ------------------------------------------------------------------------- */
-void ART_single_step(
-    GridVolume              &vol_in,          // Input Reconstructed volume
-    GridVolume              *vol_out,         // Output Reconstructed volume
-    BasicARTParameters    &prm,             // blob, lambda
-    Crystal_ART_Parameters  &eprm,            // lattice vectors, ...
-    Projection              &theo_proj,       // Projection of the reconstruction
-    // It is outside to make it visible
-    // just if it needed for any
-    // other purpose
-    Projection              &read_proj,       // Real projection
-    int sym_no,                               // Symmetry matrix index
-    Projection              &diff_proj,       // Difference between read and
-    // theoretical projection
-    Projection              &corr_proj,       // Correcting projection
-    Projection              &alig_proj,       // Translation alignement aux proj
-    double                  &mean_error,      // Mean error over the pixels
-    int                      numIMG,          // number of images in the set
-    // in SIRT the correction must
-    // be divided by this number
-    double                   lambda,          // Lambda to be used
-    int                      imagen_no,       // Projection number
-    const FileName           &fn_ctf,         // CTF to apply
-    const MultidimArray<int> *maskPtr         // Mask to apply
-)
-{
-    // Only works for blob volumes .............................................
-    if (prm.basis.type != Basis::blobs)
-        REPORT_ERROR(ERR_VALUE_INCORRECT,
-                     "This function only works with blob volumes");
-
-    // Compute lattice vectors to be used ......................................
-    Matrix1D<double> aint, bint, shift;
-    aint.resize(2);
-    bint.resize(2);
-    shift.resize(3);
-    shift.initZeros();
-
-    symmetrize_crystal_vectors(aint, bint, shift, eprm.space_group, sym_no,
-                               eprm.aint, eprm.bint);
-    // Project structure .......................................................
-    // The correction image is reused in this call to store the normalising
-    // projection, ie, the projection of an all-1 volume
-
-    project_Crystal_Volume(vol_in, prm.basis, theo_proj,
-                           corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-                           read_proj.rot(), read_proj.tilt(), read_proj.psi(), shift,
-                           aint, bint, *(prm.D), *(prm.Dinv), eprm.unit_cell_mask,
-                           FORWARD, prm.eq_mode);
-    double shift_X, shift_Y;
-
-    //   #define DEBUG_SHIFT
-#ifdef DEBUG_SHIFT
-
-    Matrix2D<double> A(3, 3);
-    A.initIdentity();
-    dMij(A, 0, 2) =  8;
-    dMij(A, 1, 2) =  -5;
-    std::cout << "A" << A;
-    //move read_proj
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(theo_proj())
-    dMij(theo_proj(), i, j) = dMij(read_proj(), i, j);
-    applyGeometry(IMGMATRIX(read_proj), A, IMGMATRIX(theo_proj), IS_NOT_INV, WRAP);
-#endif
-#undef DEBUG_SHIFT
-
-    if (prm.ref_trans_after != -1    &&
-        imagen_no > prm.ref_trans_after && imagen_no != 0)
-    {
-        calculate_and_find_correlation_max_proj(read_proj, theo_proj,
-                                                alig_proj,
-                                                shift_X, shift_Y,
-                                                prm.ref_trans_step,
-                                                prm.ref_trans_after,
-                                                imagen_no);
-
-        // Apply correction
-        Matrix2D<double> Correction(3, 3);
-        alig_proj().resize(read_proj());
-        Correction.initIdentity();
-
-        dMij(Correction, 0, 2) =  - shift_X;
-        dMij(Correction, 1, 2) =  - shift_Y;
-        //copy theo_proj to a temporal matrix
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(theo_proj())
-        dAij(alig_proj(), i, j) = dAij(read_proj(), i, j);
-        applyGeometry(LINEAR, IMGMATRIX(alig_proj), IMGMATRIX(read_proj), Correction,
-        		IS_NOT_INV, WRAP);
-    }
-    // Now compute differences .................................................
-    double applied_lambda = lambda / numIMG; // In ART mode, numIMG=1
-    mean_error = 0;
-    diff_proj().resize(read_proj());
-
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
-    {
-        // Compute difference image and error
-        IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
-        mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
-
-        // Compute the correction image
-        if (ABS(IMGPIXEL(corr_proj, i, j)) < 1)
-            IMGPIXEL(corr_proj, i, j) = SGN(IMGPIXEL(corr_proj, i, j));
-        IMGPIXEL(corr_proj, i, j) =
-            applied_lambda * IMGPIXEL(diff_proj, i, j) / IMGPIXEL(corr_proj, i, j);
-    }
-    mean_error /= XSIZE(diff_proj()) * YSIZE(diff_proj());
-
-    // Backprojection of correction plane ......................................
-    project_Crystal_Volume(*vol_out, prm.basis, theo_proj,
-                           corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-                           read_proj.rot(), read_proj.tilt(), read_proj.psi(), shift,
-                           aint, bint, *(prm.D), *(prm.Dinv), eprm.unit_cell_mask,
-                           BACKWARD, prm.eq_mode);
-}
-
-/* Force the {\it trial} volume to be symmetric.----------------------------*/
-void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
-                    const Crystal_ART_Parameters &eprm, int grid_type)
-{
-    symmetrize_crystal_volume(vol_in, eprm.aint, eprm.bint,
-                              eprm.space_group, eprm.unit_cell_mask,
-                              grid_type);
-}
-
-/* Finish iterations ------------------------------------------------------- */
-void finish_ART_iterations(const BasicARTParameters &prm,
-                           const Crystal_ART_Parameters &eprm, GridVolume &vol_basis)
-{
-    if (eprm.fill_space)
-        expand_to_fill_space(prm, eprm, vol_basis);
-}
-
 /* Expansion to fill space ------------------------------------------------- */
 //#define DEBUG
 //#define DEBUG2
-void expand_to_fill_space(const BasicARTParameters &prm,
-                          const Crystal_ART_Parameters &eprm, GridVolume &vol)
+void expandToFillSpace(const BasicARTParameters &prm,
+                       const CrystalARTRecons &eprm, GridVolume &vol)
 {
     std::cerr << "Replicating unit cell ...\n";
 #ifdef DEBUG

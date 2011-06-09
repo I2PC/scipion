@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 {
     BasicARTParameters   art_prm;
     Plain_ART_Parameters   eprm;
-    Crystal_ART_Parameters crystal_art_prm;
+    CrystalARTRecons crystal_art_prm;
     VolumeXmipp            vol_voxels, vol_voxels_aux; // Volume to reconstruct
     GridVolume             vol_basis;
     int                    crystal_mode;
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
         comms_t = 0.0; // Initializes time
 
         art_prm.produceSideInfo(vol_basis, FULL, rank);
-        eprm.produce_Side_Info(art_prm, vol_basis);
+        eprm.produceSideInfo(art_prm, vol_basis);
 
         Basic_ART_Init_history(art_prm, eprm, vol_basis);
 
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 
         // Restore original filename.
         art_prm.fn_root = aux;
-        eprm.produce_Side_Info(art_prm, vol_basis);
+        eprm.produceSideInfo(art_prm, vol_basis);
 
         // ordered list must be the same in all nodes
         MPI_Bcast(MULTIDIM_ARRAY(art_prm.ordered_list), MULTIDIM_SIZE(art_prm.ordered_list), MPI_INT, 0, MPI_COMM_WORLD);

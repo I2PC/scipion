@@ -30,7 +30,7 @@
 #include <data/matrix2d.h>
 #include <data/symmetries.h>
 
-#include "reconstruct_art.h"
+#include "base_art_recons.h"
 
 /**@defgroup ARTCrystal art_crystal (ART for crystals)
    @ingroup ReconsLibrary */
@@ -39,7 +39,8 @@
     Here only those specific parameters for crystals are found, the rest of
     parameters common with normal ART should be looked up in
     \ref BasicARTParameters */
-class Crystal_ART_Parameters
+
+class CrystalARTRecons: public ARTReconsBase
 {
 public:
     /* User parameters ...................................................... */
@@ -82,21 +83,17 @@ public:
         the basis inside this mask. Be careful that this is a 2D mask for a 3D
         reconstruction. */
     MultidimArray<int> unit_cell_mask;
+
 public:
+
+    static void defineParams(XmippProgram * program, const char* prefix=NULL, const char* comment=NULL);
+
+    /** Read special parameters from command line. */
+    void readParams(XmippProgram * program);
+
     /// std::cout << crystal_prm;
-    friend std::ostream & operator << (std::ostream &o,
-                                  const Crystal_ART_Parameters &eprm);
+    void print(std::ostream &o) const;
 
-    /** Read special parameters from a command line.
-        This function reads the parameters from a command line
-        defined by argc and argv. An exception might be thrown by any
-        of the internal conversions, this would mean that there is
-        an error in the command line and you might show a usage message. */
-    void read(int argc, char **argv, BasicARTParameters &prm);
-
-    /** Usage message.
-        This function shows the way of introdustd::cing these parameters. */
-    void usage_more();
 
     /** Produce Initial and Side information for ART+crystal.
         This function computes from the ART+crystal parameters things like
@@ -104,8 +101,34 @@ public:
         The reconstructed volume size can be modified such that the unit cell
         mask fits.
     */
-    void produce_Side_Info(BasicARTParameters &prm,
-                           GridVolume &vol_basis0);
+    void produceSideInfo(GridVolume &vol_basis0);
+
+    /** Run a single step of ART.
+        An ART iteration is compound of as many steps as projections,
+        this function runs a single step of the process. In ART the
+        pointer to the output volume must point to the same vol_in,
+        while in SIRT it should point to a second volume. The read projection
+        must be provided to the algorithm but the rest of projections
+        are output by the routine. The mean error is also an output.
+        numIMG is a normalizing factor to be used in SIRT, if you are
+        running pure ART then this factor should be 1.
+
+        The symmetry matrix from which the view is derived must be given in
+        sym_no. */
+    void singleStep(GridVolume &vol_in, GridVolume *vol_out,
+                    Projection &theo_proj, Projection &read_proj,
+                    int sym_no,
+                    Projection &diff_proj, Projection &corr_proj, Projection &alig_proj,
+                    double &mean_error, int numIMG, double lambda, int act_proj,
+                    const FileName &fn_ctf, const MultidimArray<int> *maskPtr,
+                    bool refine);
+
+    /* Finish ART iterations.
+       Expand output volume to fill space if necessary. */
+    void finishIterations(GridVolume &vol_basis);
+
+    /** Force the trial volume to be symmetric. */
+    void applySymmetry(GridVolume &vol_in, GridVolume *vol_out,int grid_type);
 };
 
 /** Compute integer lattice vectors and passing matrix.
@@ -116,7 +139,7 @@ public:
        aint = Vinv*a; a=V*aint;
        bint = Vinv*b; b=V*bint;
     @endcode */
-void compute_integer_lattice(const Matrix1D<double> &a,
+void computeIntegerLattice(const Matrix1D<double> &a,
                              const Matrix1D<double> &b,
                              double a_mag, double b_mag,
                              double ang_a2b_deg,
@@ -125,41 +148,12 @@ void compute_integer_lattice(const Matrix1D<double> &a,
                              Matrix2D<double> &V,
                              int space_group);
 
-/** Run a single step of ART.
-    An ART iteration is compound of as many steps as projections,
-    this function runs a single step of the process. In ART the
-    pointer to the output volume must point to the same vol_in,
-    while in SIRT it should point to a second volume. The read projection
-    must be provided to the algorithm but the rest of projections
-    are output by the routine. The mean error is also an output.
-    numIMG is a normalizing factor to be used in SIRT, if you are
-    running pure ART then this factor should be 1.
-
-    The symmetry matrix from which the view is derived must be given in
-    sym_no. */
-void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
-                     BasicARTParameters &prm, Crystal_ART_Parameters &eprm,
-                     Projection &theo_proj, Projection &read_proj,
-                     int sym_no,
-                     Projection &diff_proj, Projection &corr_proj, Projection &align_proj,
-                     double &mean_error, int numIMG, double lambda, int act_proj,
-                     const FileName &fn_ctf, const Matrix2D<int> *maskPtr);
-
-/* Finish ART iterations.
-   Expand output volume to fill space if necessary. */
-void finish_ART_iterations(const BasicARTParameters &prm,
-                           const Crystal_ART_Parameters &eprm, GridVolume &vol_basis);
-
 /** Expand basis values to fill space.
     Copy basis values as a crystal in order to fill the whole space determined
     by the output volume. */
-void expand_to_fill_space(const BasicARTParameters &prm,
-                          const Crystal_ART_Parameters &eprm, GridVolume &vol);
+void expandToFillSpace(const BasicARTParameters &prm,
+                          const CrystalARTRecons &eprm, GridVolume &vol);
 
-/** Force the trial volume to be symmetric. */
-void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
-                    const Crystal_ART_Parameters &eprm,
-                    int grid_type);
 //@}
 
 #endif

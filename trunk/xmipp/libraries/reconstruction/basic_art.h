@@ -28,8 +28,6 @@
 #include <data/projection.h>
 #include <data/symmetries.h>
 
-struct ReconsInfo;
-
 /**@defgroup BasicART Parameters and common ART Reconstruction stuff
    @ingroup ReconsLibrary
     The main difference between ART applied to different cases (single
@@ -41,6 +39,43 @@ struct ReconsInfo;
     for the ART process.
 */
 //@{
+
+/** Reconstruction information.
+   This structure contains information for all projections which are
+   going to participate in the reconstruction.
+   This structure has also got
+   information for the symmetry implementation. If there is any symmetry
+   then an entry in this table is created using the same projection name
+   but different symmetry matrices (only the matrix index is annotated
+   in this structure). The Euler angles stored for the symmetrized image
+   are the final ones, ie, the original Euler angles symmetrized according
+   to the symmetry matrix. Then the symmetry identificator kept in this
+   structure is only used to keep some track of what matrix was used to
+   symmetrize. */
+struct ReconsInfo
+{
+    /// Projection filename
+    FileName fn_proj;
+    /// CTF filename
+    FileName fn_ctf;
+    /// Rotational angle
+    double  rot;
+    /// Tilting angle
+    double  tilt;
+    /// Psi angle
+    double  psi;
+    /** Symmetry number.
+        This number express to which symmetry matrix this projection
+        is related to (-1: without symmetry, 0: using symmetry matrix 0,
+        1: using symmetry matrix 1 ...) */
+    int    sym;
+    /** Random seed.
+        For the reconstruction of pure noise for VSSNR, all images
+        coming from the same projection by symmetry relationships should
+        have the same random seed. */
+    int    seed;
+};
+
 /* ART parameters ---------------------------------------------------------- */
 /** ART basic parameters.
     This class contains all information needed about the ART process.
@@ -343,24 +378,15 @@ public:
     /** Generate default values for ART parameters.
         Compulsory parameters are not filled and must be given externally.
         See Manual help (ART) to see which ones are compulsory. */
-    void default_values();
+    void defaultValues();
 
     /** Define command line parameters
      */
     static void defineParams(XmippProgram * program, const char* prefix=NULL, const char* comment=NULL);
 
+    /** Read parameters from command line.
+        This function reads the parameters from command line.*/
     void readParams(XmippProgram * program);
-
-    /** Read parameters from a command line.
-        This function reads the parameters from a command line
-        defined by argc and argv. An exception might be thrown by any
-        of the internal conversions, this would mean that there is
-        an error in the command line and you might show a usage message. */
-    void read(int argc, char **argv);
-
-    /** Read parameters from a file.
-        An exception is thrown if the file cannot be open */
-    void read(const FileName &fn);
 
     /** Usage message.
         This function shows the way of introdustd::cing the most common parameters. */
@@ -435,155 +461,6 @@ public:
     /** Returns Y dimension for projections under use. */
     int ProjYdim();
 
-};
-
-/** Build from a Selection File and a Symmetry List.
-    The result is stored in the Recons_info array which should point
-    to NULL when it is not initialized. */
-void buildReconsInfo(MetaData &selfile,
-                     const FileName &fn_ctf, const SymList &SL, ReconsInfo * &IMG_Inf,
-                     bool do_not_use_symproj);
-
-/** Sort projections orthogonally.
-   This function sorts a number of images given by numIMG, whose information
-   about their Euler angles are in IMG_inf, into an ordered list which
-   gives the indexes. First an image is chosen randomly from the whole
-   set. Then all images are compared to the first one, and the most
-   perpendicular one is chosen. The remaining set of images are compared
-   to this two images and the most perpendicular one to the former two
-   is chosen, and so on until no image is left in the set.
-
-   If the result in ordered list is 4, 70, 54, 203, 1, 0, ... it means
-   that the first image is the number 4, then goes the 70, then the 54, ...
-
-   If N!=-1 then the product is done only with the last N images. A very
-   useful value is N=2*/
-void sortPerpendicular(int numIMG, ReconsInfo *IMG_Inf,
-                       MultidimArray<int> &ordered_list, int N = 2);
-
-/** No projection sorting at all.
-    This function directly returns the same order as in the selection file */
-void noSort(int numIMG, MultidimArray<int> &ordered_list);
-
-/** Randomize the projections.
-   This function sorts randomly a number of images given by numIMG. */
-void sortRandomly(int numIMG, MultidimArray<int> &ordered_list);
-
-/** Update residual vector for WLS ART */
-void updateResidualVector(BasicARTParameters &prm, GridVolume &vol_basis,
-                          double &kappa, double &pow_residual_vol, double &pow_residual_imgs);
-
-/** Reconstruction information.
-   This structure contains information for all projections which are
-   going to participate in the reconstruction.
-   This structure has also got
-   information for the symmetry implementation. If there is any symmetry
-   then an entry in this table is created using the same projection name
-   but different symmetry matrices (only the matrix index is annotated
-   in this structure). The Euler angles stored for the symmetrized image
-   are the final ones, ie, the original Euler angles symmetrized according
-   to the symmetry matrix. Then the symmetry identificator kept in this
-   structure is only used to keep some track of what matrix was used to
-   symmetrize.
-*/
-struct ReconsInfo
-{
-    /// Projection filename
-    FileName fn_proj;
-    /// CTF filename
-    FileName fn_ctf;
-    /// Rotational angle
-    double  rot;
-    /// Tilting angle
-    double  tilt;
-    /// Psi angle
-    double  psi;
-    /** Symmetry number.
-        This number express to which symmetry matrix this projection
-        is related to (-1: without symmetry, 0: using symmetry matrix 0,
-        1: using symmetry matrix 1 ...) */
-    int    sym;
-    /** Random seed.
-        For the reconstruction of pure noise for VSSNR, all images
-        coming from the same projection by symmetry relationships should
-        have the same random seed. */
-    int    seed;
-};
-
-/* ------------------------------------------------------------------------- */
-/** Variability structure */
-class VariabilityClass
-{
-public:
-    typedef enum {VAR_none, VAR_measuring, VAR_analyzing} t_VAR_status;
-    t_VAR_status VAR_state;
-    int Zoutput_volume_size;
-    int Youtput_volume_size;
-    int Xoutput_volume_size;
-    BasicARTParameters *prm;
-
-    /// Vector of training vectors
-    std::vector < MultidimArray<double> > VA;
-
-    /// Number of updates so far
-    int N;
-
-    /// Constructor
-    VariabilityClass(BasicARTParameters *_prm,
-                     int _Zoutput_volume_size, int _Youtput_volume_size,
-                     int _Xoutput_volume_size);
-
-    /** Start a new ART iteration. */
-    void newIteration();
-
-    /** Update data with a new volume.
-        The update volume is set to zeros after this function */
-    void newUpdateVolume(GridVolume *ptr_vol_out, Projection &read_proj);
-
-    /** Finish analysis. */
-    void finishAnalysis();
-};
-
-/* ------------------------------------------------------------------------- */
-/** POCS structure */
-class POCSClass
-{
-public:
-    typedef enum {POCS_measuring, POCS_use, POCS_lowering, POCS_N_measure,
-                  POCS_N_use} t_POCS_status;
-    t_POCS_status POCS_state;
-    double POCS_avg;
-    double POCS_stddev;
-    double POCS_min;
-    double POCS_max;
-    double POCS_mean_error;
-    double POCS_max_error;
-    double POCS_global_mean_error;
-    int POCS_freq;
-    int POCS_i;
-    int POCS_vec_i;
-    int POCS_used;
-    int POCS_N;
-    int Zoutput_volume_size;
-    int Youtput_volume_size;
-    int Xoutput_volume_size;
-    bool apply_POCS;
-    MultidimArray<double> POCS_errors;
-    BasicARTParameters *prm;
-
-    /// Constructor
-    POCSClass(BasicARTParameters *_prm,
-              int _Zoutput_volume_size, int _Youtput_volume_size,
-              int _Xoutput_volume_size);
-
-    /// Start New ART iteration
-    void newIteration();
-
-    /// Start new Projection
-    void newProjection();
-
-    /// Apply
-    void apply(GridVolume &vol_basis, int it, int images);
 };
 //@}
 

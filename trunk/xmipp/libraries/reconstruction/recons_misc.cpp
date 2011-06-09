@@ -26,14 +26,11 @@
 #include "recons_misc.h"
 #include "symmetrize.h"
 
-#include <data/histogram.h>
-#include <data/mask.h>
-#include <data/wavelet.h>
 
 /* Fill Reconstruction info structure -------------------------------------- */
 void buildReconsInfo(MetaData &selfile,
-                       const FileName &fn_ctf, const SymList &SL,
-                       ReconsInfo * &IMG_Inf, bool do_not_use_symproj)
+                     const FileName &fn_ctf, const SymList &SL,
+                     ReconsInfo * &IMG_Inf, bool do_not_use_symproj)
 {
     Matrix2D<double>  L(4, 4), R(4, 4);  // A matrix from the list
     FileName          fn_proj;
@@ -73,7 +70,7 @@ void buildReconsInfo(MetaData &selfile,
     init_progress_bar(trueIMG);
     FOR_ALL_OBJECTS_IN_METADATA(selfile)
     {
-      ReconsInfo &imgInfo = IMG_Inf[i];
+        ReconsInfo &imgInfo = IMG_Inf[i];
         selfile.getValue(MDL_IMAGE,fn_proj,__iter.objId);
         if (is_there_ctf && !is_ctf_unique)
             selfile.getValue(MDL_CTFMODEL,fn_ctf1,__iter.objId);
@@ -130,6 +127,267 @@ void buildReconsInfo(MetaData &selfile,
             progress_bar(i);
     }
     progress_bar(trueIMG);
+}
+
+
+
+/* ------------------------------------------------------------------------- */
+/* Sort_perpendicular                                                        */
+/* ------------------------------------------------------------------------- */
+void sortPerpendicular(int numIMG, ReconsInfo *IMG_Inf,
+                       MultidimArray<int> &ordered_list, int N)
+{
+    int   i, j, k;
+    MultidimArray<short> chosen(numIMG);     // 1 if that image has been already
+    // chosen
+    double min_prod;
+    int   min_prod_proj;
+    Matrix2D<double> v(numIMG, 3);
+    Matrix2D<double> euler;
+    MultidimArray<double> product(numIMG);
+
+    // Initialization
+    ordered_list.resize(numIMG);
+    for (i = 0; i < numIMG; i++)
+    {
+        Matrix1D<double> z;
+        // Initially no image is chosen
+        A1D_ELEM(chosen, i) = 0;
+
+        // Compute the Euler matrix for each image and keep only
+        // the third row of each one
+        //0.f -> double 0. It should be there is the other
+        // arguments are doubles because Euler_angles2matrix
+        //acepts either all doubles or all doubles
+        Euler_angles2matrix(IMG_Inf[i].rot, IMG_Inf[i].tilt, 0.f, euler);
+        euler.getRow(2, z);
+        v.setRow(i, z);
+    }
+
+    // Pick first projection as the first one to be presented
+    i = 0;
+    A1D_ELEM(chosen, i) = 1;
+    A1D_ELEM(ordered_list, 0) = i;
+
+    // Choose the rest of projections
+    std::cerr << "Sorting projections ...\n";
+    init_progress_bar(numIMG - 1);
+    Matrix1D<double> rowj, rowi_1, rowi_N_1;
+    for (i = 1; i < numIMG; i++)
+    {
+        // Compute the product of not already chosen vectors with the just
+        // chosen one, and select that which has minimum product
+        min_prod = MAXFLOAT;
+        v.getRow(A1D_ELEM(ordered_list, i - 1),rowi_1);
+        if (N != -1 && i > N)
+            v.getRow(A1D_ELEM(ordered_list, i - N - 1),rowi_N_1);
+        for (j = 0; j < numIMG; j++)
+        {
+            if (!A1D_ELEM(chosen, j))
+            {
+                v.getRow(j,rowj);
+                A1D_ELEM(product, j) += ABS(dotProduct(rowi_1,rowj));
+                if (N != -1 && i > N)
+                    A1D_ELEM(product, j) -= ABS(dotProduct(rowi_N_1,rowj));
+                if (A1D_ELEM(product, j) < min_prod)
+                {
+                    min_prod = A1D_ELEM(product, j);
+                    min_prod_proj = j;
+                }
+            }
+        }
+
+        // Store the chosen vector and mark it as chosen
+        A1D_ELEM(ordered_list, i) = min_prod_proj;
+        A1D_ELEM(chosen, min_prod_proj) = 1;
+
+        // The progress bar is updated only every 10 images
+        if (i % 10 == 0)
+            progress_bar(i);
+    }
+
+    // A final call to progress bar to finish a possible small piece
+    progress_bar(numIMG - 1);
+    std::cout << std::endl;
+}
+
+/* ------------------------------------------------------------------------- */
+/* No Sort                                                                   */
+/* ------------------------------------------------------------------------- */
+void noSort(int numIMG, MultidimArray<int> &ordered_list)
+{
+    ordered_list.initLinear(0, numIMG - 1);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Random Sort                                                               */
+/* ------------------------------------------------------------------------- */
+void sortRandomly(int numIMG, MultidimArray<int> &ordered_list)
+{
+    int i;
+    MultidimArray<int> chosen;
+
+    // Initialisation
+    ordered_list.resize(numIMG);
+    chosen.initZeros(numIMG);
+
+    std::cerr << "Randomizing projections ...\n";
+    init_progress_bar(numIMG - 1);
+    int ptr = 0;
+    randomize_random_generator();
+    for (int i = numIMG; i > 0; i--)
+    {
+        // Jump a random number starting at the pointed projection
+        int rnd_indx = (int) rnd_unif(0, i) + 1;
+        while (rnd_indx > 0)
+        {
+            // Jump one not chosen image
+            ptr = (ptr + 1) % numIMG;
+            // Check it is not chosen, if it is, go on skipping
+            while (chosen(ptr))
+            {
+                ptr = (ptr + 1) % numIMG;
+            }
+            rnd_indx--;
+        }
+
+        // Annotate this image
+        A1D_ELEM(ordered_list, i - 1) = ptr;
+        A1D_ELEM(chosen, ptr) = 1;
+
+        // The progress bar is updated only every 10 images
+        if (i % 10 == 0)
+            progress_bar(i);
+    }
+
+    // A final call to progress bar to finish a possible small piece
+    progress_bar(numIMG - 1);
+    std::cout << std::endl;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Update residual vector for WLS                                            */
+/* ------------------------------------------------------------------------- */
+void updateResidualVector(BasicARTParameters &prm, GridVolume &vol_basis,
+                          double &kappa, double &pow_residual_vol, double &pow_residual_imgs)
+{
+    GridVolume       residual_vol;
+    Projection       read_proj, dummy_proj, new_proj;
+    FileName         fn_resi, fn_tmp;
+    double           sqrtweight, dim2, norma, normb, apply_kappa;
+    ImageOver        *footprint = (ImageOver *) & prm.basis.blobprint;
+    ImageOver        *footprint2 = (ImageOver *) & prm.basis.blobprint2;
+    Matrix2D<double> *A = NULL;
+    std::vector<MultidimArray<double> > newres_imgs;
+    MultidimArray<int>    mask;
+
+    residual_vol.resize(vol_basis);
+    residual_vol.initZeros();
+
+    // Calculate volume from all backprojected residual images
+    std::cerr << "Backprojection of residual images " << std::endl;
+    if (!(prm.tell&TELL_SHOW_ERROR))
+        init_progress_bar(prm.numIMG);
+
+    for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
+    {
+        // backprojection of the weighted residual image
+        sqrtweight = sqrt(prm.residual_imgs[iact_proj].weight() / prm.sum_weight);
+        read_proj = prm.residual_imgs[iact_proj];
+        read_proj() *= sqrtweight;
+        dummy_proj().resize(read_proj());
+
+        dummy_proj.set_angles(prm.IMG_Inf[iact_proj].rot,
+                              prm.IMG_Inf[iact_proj].tilt,
+                              prm.IMG_Inf[iact_proj].psi);
+
+        project_GridVolume(residual_vol, prm.basis, dummy_proj,
+                           read_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+                           prm.IMG_Inf[iact_proj].rot,
+                           prm.IMG_Inf[iact_proj].tilt,
+                           prm.IMG_Inf[iact_proj].psi, BACKWARD, prm.eq_mode,
+                           prm.GVNeq, NULL, NULL, prm.ray_length, prm.threads);
+
+        if (!(prm.tell&TELL_SHOW_ERROR))
+            if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0)
+                progress_bar(iact_proj);
+    }
+    if (!(prm.tell&TELL_SHOW_ERROR))
+        progress_bar(prm.numIMG);
+
+    // Convert to voxels: solely for output of power of residual volume
+    Image<double>      residual_vox;
+    int Xoutput_volume_size = (prm.Xoutput_volume_size == 0) ?
+                              prm.projXdim : prm.Xoutput_volume_size;
+    int Youtput_volume_size = (prm.Youtput_volume_size == 0) ?
+                              prm.projYdim : prm.Youtput_volume_size;
+    int Zoutput_volume_size = (prm.Zoutput_volume_size == 0) ?
+                              prm.projXdim : prm.Zoutput_volume_size;
+    prm.basis.changeToVoxels(residual_vol, &(residual_vox()),
+                             Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+    pow_residual_vol = residual_vox().sum2() / MULTIDIM_SIZE(residual_vox());
+    residual_vox.clear();
+
+    std::cerr << "Projection of residual volume; kappa = " << kappa << std::endl;
+    if (!(prm.tell&TELL_SHOW_ERROR))
+        init_progress_bar(prm.numIMG);
+
+    // Now that we have the residual volume: project in all directions
+    pow_residual_imgs = 0.;
+    new_proj().resize(read_proj());
+    mask.resize(read_proj());
+    BinaryCircularMask(mask, YSIZE(read_proj()) / 2, INNER_MASK);
+
+    dim2 = (double)YSIZE(read_proj()) * XSIZE(read_proj());
+    for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
+    {
+        project_GridVolume(residual_vol, prm.basis, new_proj,
+                           dummy_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+                           prm.IMG_Inf[iact_proj].rot,
+                           prm.IMG_Inf[iact_proj].tilt,
+                           prm.IMG_Inf[iact_proj].psi, FORWARD, prm.eq_mode,
+                           prm.GVNeq, A, NULL, prm.ray_length, prm.threads);
+
+        sqrtweight = sqrt(prm.residual_imgs[iact_proj].weight() / prm.sum_weight);
+
+        // Next lines like normalization in [EHL] (2.18)?
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(new_proj())
+        {
+            dAij(dummy_proj(), i, j) = XMIPP_MAX(1., dAij(dummy_proj(), i, j)); // to avoid division by zero
+            dAij(new_proj(), i, j) /= dAij(dummy_proj(), i, j);
+        }
+        new_proj() *= sqrtweight * kappa;
+
+        /*
+        fn_tmp="residual_"+integerToString(iact_proj);
+        dummy_proj()=1000*prm.residual_imgs[iact_proj]();
+        dummy_proj.write(fn_tmp+".old");
+        */
+
+        prm.residual_imgs[iact_proj]() -= new_proj();
+        pow_residual_imgs += prm.residual_imgs[iact_proj]().sum2();
+
+        // Mask out edges of the images
+        apply_binary_mask(mask, prm.residual_imgs[iact_proj](), prm.residual_imgs[iact_proj](), 0.);
+
+        /*
+        dummy_proj()=1000*new_proj();
+        dummy_proj.write(fn_tmp+".change");
+        dummy_proj()=1000*prm.residual_imgs[iact_proj]();
+        dummy_proj.write(fn_tmp+".new");
+        */
+
+        if (!(prm.tell&TELL_SHOW_ERROR))
+            if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0)
+                progress_bar(iact_proj);
+    }
+
+    pow_residual_imgs /= dim2;
+    newres_imgs.clear();
+
+    if (!(prm.tell&TELL_SHOW_ERROR))
+        progress_bar(prm.numIMG);
+
 }
 
 /* ------------------------------------------------------------------------- */

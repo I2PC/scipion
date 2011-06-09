@@ -29,7 +29,6 @@
 
 #include "basic_art.h"
 
-
 /**@defgroup common ART Reconstruction stuff
    @ingroup ReconsLibrary
     The main difference between ART applied to different cases (single
@@ -61,9 +60,15 @@ public:
         BasicARTParameters::defineParams(program, prefix, comment);
     }
 
+    /* --- Virtual methods to be implemented by children --- */
+
+    /* Read params from command line
+     */
     virtual void readParams(XmippProgram * program);
 
-    virtual std::ostream & operator << (std::ostream &o);
+    /* Show crystal reconstrution information
+     */
+    virtual void print(std::ostream &o)const;
 
     /// Produce Plain side information from the Class parameters
     virtual void produceSideInfo(GridVolume &vol_basis0);
@@ -85,7 +90,7 @@ public:
                             Projection &theo_proj, Projection &read_proj,
                             int sym_no,
                             Projection &diff_proj, Projection &corr_proj, Projection &alig_proj,
-                            double &mean_error, int numIMG, double lamdba, int act_proj,
+                            double &mean_error, int numIMG, double lambda, int act_proj,
                             const FileName &fn_ctf, const MultidimArray<int> *maskPtr,
                             bool refine);
 
@@ -93,6 +98,12 @@ public:
         For WLS: delete residual images
         Else: do nothing. */
     virtual void finishIterations(GridVolume &vol_basis);
+
+    /** Force the trial volume to be symmetric. So far only implemented
+        for crystals.*/
+    virtual void applySymmetry(GridVolume &vol_in, GridVolume *vol_out,int grid_type);
+
+    /* --- Methods than do not have to be implemented by chidren --- */
 
     /** Write first part of ART history.
         This function writes all ART parameters, projection angles, symmetry
@@ -103,11 +114,7 @@ public:
 
         BasicARTParameters is not constant since things are written in
         \ref BasicARTParameters::fh_hist.*/
-    virtual void initHistory(const GridVolume &vol_basis0);
-
-    /** Force the trial volume to be symmetric. So far only implemented
-        for crystals.*/
-    virtual void applySymmetry(GridVolume &vol_in, GridVolume *vol_out,int grid_type);
+    void initHistory(const GridVolume &vol_basis0);
 
     /** Perform all ART iterations.
         This function performs the iterations according to the ART parameters,
@@ -129,6 +136,9 @@ public:
         This method is not virtual as it should be common for all ARTRecons classes.
     */
     void iterations(GridVolume &vol_basis, int rank = -1);
+
+    friend std::ostream & operator<< (std::ostream &o, const ARTReconsBase& artRecons);
+
 };
 //@}
 #endif /* BASE_ART_RECONS_H_ */
