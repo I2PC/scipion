@@ -242,7 +242,7 @@ void ProgAngularProjectionMatching::produceSideInfo()
     max_nr_imgs_in_memory = ROUND( 1024 * 1024 * 1024 * avail_memory / memory_per_ref);
 
     // Set up angular sampling
-    mysampling.readSamplingFile(fn_ref,false);
+    mysampling.readSamplingFile(fn_ref.removeAllExtensions(),false);
     total_nr_refs = mysampling.no_redundant_sampling_points_angles.size();
 
     // Don't reserve more memory than necessary
