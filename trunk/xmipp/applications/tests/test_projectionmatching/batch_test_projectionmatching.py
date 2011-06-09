@@ -171,7 +171,6 @@ class TestProjMatching(unittest.TestCase):
         projection_matching(self.log,dict)
         testFileName = dict['ProjMatchRootName']
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print "aaaa",goldFileName,testFileName,compareTwoFiles(goldFileName,testFileName)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
 #
     def test_040assign_images_to_references(self):
@@ -187,10 +186,10 @@ class TestProjMatching(unittest.TestCase):
         src = 'new20/Iter_01/ProjMatchClasses/'
         dst = 'ProjMatch/new20/Iter_01/ProjMatchClasses'
         print "bbb"
-        shutil.copy(src+'roj_match_ref_01.doc', dst)
+        shutil.copy(src+'proj_match_ref_01.doc', dst)
         print "ccc"
-        shutil.copy(src+'roj_match_ref_02.doc', dst)
-        shutil.copy(src+'roj_match_ref_03.doc', dst)
+        shutil.copy(src+'proj_match_ref_02.doc', dst)
+        shutil.copy(src+'proj_match_ref_03.doc', dst)
         assign_images_to_references(self.log,dict)
         testFileName = dict[DocFileInputAngles]
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
