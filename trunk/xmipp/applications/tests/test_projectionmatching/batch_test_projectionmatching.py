@@ -117,12 +117,9 @@ class TestProjMatching(unittest.TestCase):
         }
         src = self.src + 'original_angles.doc'
         dst = self.dst 
-        print "sss0",os.getcwd()
-        print "bbb0",src, dst
 
         shutil.copy(src, dst)
         tmpDirName = self.dst + 'Iter_01/ReferenceLibrary'
-        print "tmpDirName", tmpDirName
         if not os.path.exists(tmpDirName):
             os.mkdir(tmpDirName)
         angular_project_library(self.log,dict)
@@ -201,6 +198,7 @@ class TestProjMatching(unittest.TestCase):
         assign_images_to_references(self.log,dict)
         testFileName = dict['DocFileInputAngles']
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        print "aaaa",goldFileName,testFileName
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
 from  XmippPythonTestResult import XmippPythonTestResult
