@@ -172,7 +172,6 @@ class TestProjMatching(unittest.TestCase):
         projection_matching(self.log,dict)
         testFileName = dict['ProjMatchRootName']
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print "aaaa", 
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
 #
     def test_040assign_images_to_references(self):
