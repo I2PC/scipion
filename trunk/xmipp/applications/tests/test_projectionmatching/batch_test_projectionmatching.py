@@ -118,7 +118,7 @@ class TestProjMatching(unittest.TestCase):
         src = self.src + 'original_angles.doc'
         dst = self.dst 
         print "sss0",os.getcwd()
-        print "bbb0",src+'original_angles', dst
+        print "bbb0",src, dst
 
         shutil.copy(src, dst)
         tmpDirName = self.src + 'ReferenceLibrary'
