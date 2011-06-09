@@ -134,10 +134,12 @@ class TestProjMatching(unittest.TestCase):
         
         testFileName = tmpDirName +'_group000001_sampling.xmd'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        print "bbb",goldFileName,testFileName,"aaa"
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
         testFileName = tmpDirName +'_group000002_sampling.xmd'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        print "ccc",goldFileName,testFileName,"aaa"
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
     def test_030projection_matching(self):
