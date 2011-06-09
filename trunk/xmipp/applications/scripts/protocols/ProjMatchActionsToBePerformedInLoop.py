@@ -109,8 +109,8 @@ def projection_matching(_log,dict):
         ictf    = NumberOfCtfGroups - ii 
 #        if (_DoCtfCorrection):
         #outputname   = _ProjMatchRootName + '_' + CtfGroupName 
-        inputdocfile    = 'ctfGroups'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
-        outputname   = 'ctfGroups'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
+        inputdocfile    = 'ctfGroup'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
+        outputname   = 'ctfGroup'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
         #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
         baseTxtFile  = refname[:-len('.stk')] 
         neighbFile      = baseTxtFile + '_sampling.xmd'
@@ -176,7 +176,7 @@ def assign_images_to_references(_log,dict):
 
     mycounter=0L
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
-        auxInputdocfile = 'ctfGroups' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+        auxInputdocfile = 'ctfGroup' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
             inputFileName = ProjMatchRootName[iRef3D]
             inputdocfile    = auxInputdocfile+ inputFileName
@@ -195,7 +195,7 @@ def assign_images_to_references(_log,dict):
         os.remove(outputdocfile)
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         MDaux.clear()
-        auxInputdocfile = 'ctfGroups' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+        auxInputdocfile = 'ctfGroup' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
             inputFileName = ProjMatchRootName[iRef3D]
             inputdocfile    = auxInputdocfile+ inputFileName
