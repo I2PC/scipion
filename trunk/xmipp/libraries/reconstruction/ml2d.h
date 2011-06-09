@@ -49,13 +49,13 @@
 
 ///******** Some macro definitions ****************
 #define FOR_ALL_GLOBAL_IMAGES() \
-    for (size_t imgno = 0; imgno < nr_images_global; imgno++)
+    for (size_t imgno = 0; imgno < nr_images_global; ++imgno)
 
 #define FOR_ALL_LOCAL_IMAGES() \
-    for (size_t imgno = myFirstImg; imgno <= myLastImg; imgno++)
+    for (size_t imgno = myFirstImg; imgno <= myLastImg; ++imgno)
 
 #define IMG_LOCAL_INDEX (imgno - myFirstImg)
-#define IMG_REAL_INDEX(imgno) img_id[(imgno)]
+#define IMG_REAL_INDEX(imgno) (img_id[(imgno)])
 #define IMG_BLOCK(imgno) (imgno) % blocks
 
 //For MPI
