@@ -95,6 +95,7 @@ public:
         addExampleLine("xmipp_transform_window -i g0ta.vol --crop 10");
         addExampleLine("Enlarge the volume by 10 pixels on each direction (negative crop)",false);
         addExampleLine("xmipp_transform_window -i g0ta.vol --crop -10");
+        addKeywords("window, crop, resize, corner, padding");
     }
 
     void readParams()
