@@ -870,7 +870,7 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
               - ddim2 * log(sqrt(PI * df * sigma_noise2)) + gammln(-df2)
               - gammln(df / 2.);
 
-#define DEBUG_JM1
+//#define DEBUG_JM1
 #ifdef DEBUG_JM1
 
     //if (iter>1)
