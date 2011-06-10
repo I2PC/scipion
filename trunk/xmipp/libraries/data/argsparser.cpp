@@ -906,9 +906,6 @@ void ProgramDef::check(std::stringstream & errors)
         for (size_t j = 0; j < section->params.size(); ++j)
         {
             param = section->params[j];
-            String name = param->name;
-            bool orBefore = param->orBefore;
-            size_t size = exclusive.size();
             //Doesn't check for alias, for doesn't repeat error messages
             param->check(errors);
             if (!param->orBefore)
