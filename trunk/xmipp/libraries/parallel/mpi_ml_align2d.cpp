@@ -390,8 +390,139 @@ void MpiProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputTyp
     if (node->isMaster())
         ProgMLF2D::writeOutputFiles(model, outputType);
     else if (outputType == OUT_REFS)
-            outRefsMd = formatString("%s_iter%06d_refs.xmd", fn_root.c_str(), iter);
+        outRefsMd = formatString("%s_iter%06d_refs.xmd", fn_root.c_str(), iter);
     //All nodes wait until files are written
+    node->barrierWait();
+}
+
+
+/** Constructor */
+MpiProgMLTomo::MpiProgMLTomo()
+{}
+/** Destructor */
+MpiProgMLTomo::~MpiProgMLTomo()
+{
+    delete node;
+}
+
+/** Redefine the basic Program read to do it sequentially */
+void MpiProgMLTomo::read(int argc, char ** argv)
+{
+    if (node == NULL)
+        node = new MpiNode(argc, argv);
+    //The following makes the asumption that 'this' also
+    //inherits from an XmippProgram
+    if (!node->isMaster())
+        verbose = 0;
+    // Read subsequently to avoid problems in restart procedure
+    for (int proc = 0; proc < node->size; ++proc)
+    {
+        if (proc == node->rank)
+            ProgMLTomo::read(argc, argv);
+        node->barrierWait();
+    }
+}
+/// Only master will generate initial references
+void MpiProgMLTomo::setNumberOfLocalImages()
+{
+  nr_images_local = divide_equally(nr_images_global, node->size, node->rank, myFirstImg, myLastImg);
+}
+
+/// Only master will generate initial references
+void MpiProgMLTomo::generateInitialReferences()
+{
+    if (node->isMaster())
+        ProgMLTomo::generateInitialReferences();
+    else
+        fn_ref = FN_ITER_MD(0);
+    node->barrierWait();
+}
+
+/// Integrate over all experimental images
+void MpiProgMLTomo::expectation(MetaData &MDimg, std::vector< Image<double> > &Iref, int iter,
+                                double &LL, double &sumfracweight,
+                                std::vector<MultidimArray<double> > &wsumimgs,
+                                std::vector<MultidimArray<double> > &wsumweds,
+                                double &wsum_sigma_noise, double &wsum_sigma_offset,
+                                MultidimArray<double> &sumw)
+{
+    ProgMLTomo::expectation(MDimg,Iref,iter,LL,sumfracweight,wsumimgs,wsumweds,wsum_sigma_noise,wsum_sigma_offset,sumw);
+
+    double aux;
+    MultidimArray<double> Vaux; //1D
+    MultidimArray<double> Maux, Maux2; //3D
+
+    Maux.resize(dim, dim, dim);
+    Maux.setXmippOrigin();
+    Maux2.resize(dim, dim, hdim+1);
+
+    // Here MPI_allreduce of all wsums,LL and sumcorr !!!
+    MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    LL = aux;
+    MPI_Allreduce(&sumfracweight, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    sumfracweight = aux;
+    MPI_Allreduce(&wsum_sigma_noise, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    wsum_sigma_noise = aux;
+    MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    wsum_sigma_offset = aux;
+    Vaux.resize(nr_ref);
+    MPI_Allreduce(MULTIDIM_ARRAY(sumw), MULTIDIM_ARRAY(Vaux),
+                  MULTIDIM_SIZE(sumw), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    sumw = Vaux;
+    for (int refno = 0; refno < 2*nr_ref; ++refno)
+    {
+        MPI_Allreduce(MULTIDIM_ARRAY(wsumimgs[refno]), MULTIDIM_ARRAY(Maux),
+                      MULTIDIM_SIZE(wsumimgs[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        wsumimgs[refno] = Maux;
+        if (do_missing)
+        {
+            MPI_Allreduce(MULTIDIM_ARRAY(wsumweds[refno]), MULTIDIM_ARRAY(Maux2),
+                          MULTIDIM_SIZE(wsumweds[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            wsumweds[refno] = Maux2;
+        }
+    }
+}
+
+///Add info of some processed images to later write to files
+void MpiProgMLTomo::addPartialDocfileData(const MultidimArray<double> &data, size_t first, size_t last)
+{
+  // Write intermediate files
+  if (!node->isMaster())
+  {
+      // All slaves send docfile data to the master
+      int s_size = MULTIDIM_SIZE(docfiledata);
+      MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE, MPI_COMM_WORLD);
+      MPI_Send(MULTIDIM_ARRAY(docfiledata), s_size, MPI_DOUBLE, 0, TAG_DOCFILE, MPI_COMM_WORLD);
+  }
+  else
+  {
+      // Master fills metadata and add it's contribution
+      ProgMLTomo::addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
+      int s_size;
+      size_t first_img, last_img;
+      MPI_Status status;
+
+      for (int docCounter = 1; docCounter < node->size; ++docCounter)
+      {
+          // receive in order
+          MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE, MPI_COMM_WORLD, &status);
+          MPI_Recv(MULTIDIM_ARRAY(docfiledata), s_size, MPI_DOUBLE, docCounter, TAG_DOCFILE, MPI_COMM_WORLD, &status);
+          divide_equally(nr_images_global, node->size, docCounter, first_img, last_img);
+          ProgMLTomo::addPartialDocfileData(docfiledata, first_img, last_img);
+      }
+  }
+}
+
+
+/// Only master write output files
+void MpiProgMLTomo::writeOutputFiles(const int iter,
+                                     std::vector<MultidimArray<double> > &wsumweds,
+                                     double &sumw_allrefs, double &LL, double &avefracweight,
+                                     std::vector<double> &conv, std::vector<MultidimArray<double> > &fsc)
+{
+
+    if (node->isMaster())
+        ProgMLTomo::writeOutputFiles(iter, wsumweds, sumw_allrefs, LL, avefracweight, conv, fsc);
     node->barrierWait();
 }
 

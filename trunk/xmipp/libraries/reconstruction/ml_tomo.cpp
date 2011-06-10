@@ -37,19 +37,19 @@ void ProgMLTomo::defineParams()
     addUsageLine("e.g. subtomograms or RCT reconstructions, by a 3D multi-reference refinement");
     addUsageLine("based on a maximum-likelihood (ML) target function.");
 
-    addParamsLine("   -i <metadata>                : MetaData file with input images (and angles) ");
+    addParamsLine("   -i <metadata>                : Metadata file with input images (and angles) ");
     addParamsLine("   --nref <int=0>               : Number of references to generate automatically (recommended)");
-    addParamsLine("   OR --ref <file=\"\">         : or metadatafile with initial references/single reference image ");
+    addParamsLine("   OR --ref <file=\"\">         : or metadata file with initial references/single reference image ");
     addParamsLine(" [ --oroot <rootname=mltomo> ]  : Output rootname ");
     addParamsLine("        alias -o;");
     //docfile not implemented, it can go in the -i option
     //addParamsLine(" [ --doc <metadata=\"\"> ]      : MetaData with orientations  for all particles ");
     addParamsLine(" [ --sym <symgroup=c1> ]        : Symmetry group ");
-    addParamsLine(" [ --missing <metadata=\"\"> ]  : MetaData file with missing data region definitions");
+    addParamsLine(" [ --missing <metadata=\"\"> ]  : Metadata file with missing data region definitions");
 
     addParamsLine("== Angular sampling ==");
     addParamsLine(" [ --ang <float=10.> ]           : Angular sampling rate (in degrees)");
-    addParamsLine(" [ --ang_search <float=-1.> ]    : Angular search range around orientations from MetaData ");
+    addParamsLine(" [ --ang_search <float=-1.> ]    : Angular search range around orientations from Metadata ");
     addParamsLine("                                 : (by default, exhaustive searches are performed)");
     addParamsLine(" [ --dont_limit_psirange ]       : Exhaustive psi searches when using -ang_search (only for c1 symmetry)");
     addParamsLine(" [ --limit_trans <float=-1.> ]   : Maximum allowed shifts (negative value means no restriction)");
@@ -63,8 +63,8 @@ void ProgMLTomo::defineParams()
     addParamsLine(" [ --reg_steps <int=5> ]        : Number of iterations in which the regularization is changed from reg0 to regF");
 
     addParamsLine("== Others ==");
-    addParamsLine(" [ --dont_rotate ]              : Keep orientations from MetaData fixed, only translate and classify ");
-    addParamsLine(" [ --dont_align ]               : Keep orientations and tran MetaData (otherwise start from random)");
+    addParamsLine(" [ --dont_rotate ]              : Keep orientations from Metadata fixed, only translate and classify ");
+    addParamsLine(" [ --dont_align ]               : Keep orientations and tran Metadata (otherwise start from random)");
     addParamsLine(" [ --only_average ]             : Keep orientations and classes from docfile, only output weighted averages ");
     addParamsLine(" [ --perturb ]                  : Apply random perturbations to angular sampling in each iteration");
     addParamsLine(" [ --dim <int=-1> ]             : Use downscaled (in fourier space) images of this size ");
@@ -77,7 +77,7 @@ void ProgMLTomo::defineParams()
     addParamsLine(" [ --istart <int=1> ]             : number of initial iteration ");
     addParamsLine(" [ --noise <float=1.> ]          : Expected standard deviation for pixel noise ");
     addParamsLine(" [ --offset <float=3.> ]         : Expected standard deviation for origin offset [pix]");
-    addParamsLine(" [ --frac <metadata=\"\"> ]     : MetaData with expected model fractions (default: even distr.)");
+    addParamsLine(" [ --frac <metadata=\"\"> ]     : Metadata with expected model fractions (default: even distr.)");
     addParamsLine(" [ --restart <logfile> ]        : restart a run with all parameters as in the logfile ");
     addParamsLine(" [ --fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise ");
     addParamsLine(" [ --fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets ");

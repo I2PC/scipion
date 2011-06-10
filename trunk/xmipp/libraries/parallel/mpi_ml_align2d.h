@@ -29,6 +29,7 @@
 #include "parallel/mpi.h"
 #include "reconstruction/ml_align2d.h"
 #include "reconstruction/ml_refine3d.h"
+#include "reconstruction/ml_tomo.h"
 
 /**@defgroup MPI_Programs Programs that parallelize using MPI library
    @ingroup ParallelLibrary */
@@ -112,27 +113,63 @@ public:
 }
 ;//end of class  MpiProgMLRefine3D
 
-/** Class to paralleliza the MLF 2D alignment program */
+/** Class to parallelize the MLF 2D alignment program */
 class MpiProgMLF2D: public ProgMLF2D, public MpiML2DBase
 {
 public:
-  /** Default constructor */
-  MpiProgMLF2D();
-  /** Constructor passing the MpiNode */
-  MpiProgMLF2D(MpiNode * node);
-  /** All mpi nodes should syncronize at this point
-   * that's why the need of override the implementation.
-   */
-  void produceSideInfo();
-  void produceSideInfo2();
-  /// Write model parameters
-  void writeOutputFiles(const ModelML2D &model, OutputType outputType = OUT_FINAL);
-  /// After normal ML2D expectation, data must be collected from nodes
-  void expectation();
-  /// Redefine endIteration for some syncronization
-  void endIteration();
+    /** Default constructor */
+    MpiProgMLF2D();
+    /** Constructor passing the MpiNode */
+    MpiProgMLF2D(MpiNode * node);
+    /** All mpi nodes should syncronize at this point
+     * that's why the need of override the implementation.
+     */
+    void produceSideInfo();
+    void produceSideInfo2();
+    /// Write model parameters
+    void writeOutputFiles(const ModelML2D &model, OutputType outputType = OUT_FINAL);
+    /// After normal ML2D expectation, data must be collected from nodes
+    void expectation();
+    /// Redefine endIteration for some syncronization
+    void endIteration();
 }
 ;//end of class MpiProgMLF2D
 
+/** Class to parallelize ML_TOMO */
+class MpiProgMLTomo: public ProgMLTomo
+{
+protected:
+    MpiNode *node;
+public:
+    /** Constructor */
+    MpiProgMLTomo();
+    /** Destructor */
+    ~MpiProgMLTomo();
+
+    /** Redefine the basic Program read to do it sequentially */
+    void read(int argc, char ** argv);
+    /** Only take a part of images for process */
+    void setNumberOfLocalImages();
+    /// Only master will generate initial references
+    void generateInitialReferences();
+
+    /// Integrate over all experimental images, join result from all nodes
+    void expectation(MetaData &MDimg, std::vector< Image<double> > &Iref, int iter,
+                     double &LL, double &sumfracweight,
+                     std::vector<MultidimArray<double> > &wsumimgs,
+                     std::vector<MultidimArray<double> > &wsumweds,
+                     double &wsum_sigma_noise, double &wsum_sigma_offset,
+                     MultidimArray<double> &sumw);
+
+    ///Add info of some processed images to later write to files
+    void addPartialDocfileData(const MultidimArray<double> &data, size_t first, size_t last);
+
+    /// Only master write output files
+    void writeOutputFiles(const int iter,
+                          std::vector<MultidimArray<double> > &wsumweds,
+                          double &sumw_allrefs, double &LL, double &avefracweight,
+                          std::vector<double> &conv, std::vector<MultidimArray<double> > &fsc);
+
+};
 
 #endif /* MPI_ML_ALIGN2D_H_ */

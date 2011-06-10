@@ -23,9 +23,12 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <mpi.h>
-#include <reconstruction/ml_tomo.h>
+//#include <mpi.h>
+#include <parallel/mpi_ml_align2d.h>
 
+RUN_XMIPP_PROGRAM(MpiProgMLTomo);
+
+/*
 #define TAG_DOCFILE 12
 #define TAG_DOCFILESIZE 13
 
@@ -251,3 +254,4 @@ int main(int argc, char **argv)
     MPI_Finalize();
     return 0;
 }
+*/
