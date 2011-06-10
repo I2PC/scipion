@@ -377,7 +377,7 @@ void ProgNormalize::defineParams()
     addUsageLine("Change the range of intensity values of pixels.");
     addUsageLine("In general, most of the methods requires a background to separate "
     		     "particles from noise");
-    addKeywords("mask,normalization");
+    addKeywords("mask,normalization,normalize");
     XmippMetadataProgram::defineParams();
     addParamsLine(" [--method <mth=NewXmipp>]   	 : Normalizing method.");
     addParamsLine("           where <mth>");
@@ -413,13 +413,13 @@ void ProgNormalize::defineParams()
     addParamsLine("           circle <r>             : Circular background outside radius r.");
     mask_prm.defineParams(this,INT_MASK, "or", "Use an alternative type of background mask.");
     addExampleLine("Normalize using OldXmipp method",false);
-    addExampleLine("xmipp_normalize -i images.sel --method OldXmipp",true);
+    addExampleLine("xmipp_transform_normalize -i images.sel --method OldXmipp",true);
     addExampleLine("Normalize 64x64 images using NewXmipp method",false);
-    addExampleLine("xmipp_normalize -i images.sel --method NewXmipp --background circle 29",true);
+    addExampleLine("xmipp_transform_normalize -i images.sel --method NewXmipp --background circle 29",true);
     addExampleLine("Normalize 64x64 images using NewXmipp method and a crown mask",false);
-    addExampleLine("xmipp_normalize -i images.sel --method NewXmipp --mask crown 29 32",true);
+    addExampleLine("xmipp_transform_normalize -i images.sel --method NewXmipp --mask crown 29 32",true);
     addExampleLine("Normalize a volume to have zero mean and unit variance",false);
-    addExampleLine("xmipp_normalize -i volume.vol",true);
+    addExampleLine("xmipp_transform_normalize -i volume.vol",true);
 }
 
 void ProgNormalize::readParams()
