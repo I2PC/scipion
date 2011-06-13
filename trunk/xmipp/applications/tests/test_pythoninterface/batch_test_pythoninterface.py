@@ -128,6 +128,16 @@ class TestXmippPythonInterface(unittest.TestCase):
         ref = mD.getValue(MDL_REF3D, 2L)
         self.assertEqual(ref, 2)
         
+    def test_Metadata_importObjects(self):
+        '''import metadata subset'''
+        mdPath = os.path.join(self.testsPath, "test_pythoninterface", "test.xmd")
+        mD = MetaData(mdPath)
+        mDout = MetaData()
+        mDout.importObjects(mD,MDValueEQ(MDL_REF3D, -1))
+        mdPath = os.path.join(self.testsPath, "test_pythoninterface", "importObject.xmd")
+        mD = MetaData(mdPath)
+        self.assertEqual(mD, mDout)
+        
     def test_Metadata_setValue(self):
         '''MetaData_setValues'''
         '''This test should produce the following metadata, which is the same of 'test.xmd'
@@ -165,8 +175,6 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertEqual(mdRef, md)
         self.assertRaises(XmippError, md.setValue, MDL_COUNT, 5.5, 1L)
        
-   
-         
 from  XmippPythonTestResult import XmippPythonTestResult
 
                                         
