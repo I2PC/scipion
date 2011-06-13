@@ -118,32 +118,33 @@ AnalysisScript="visualize_ml2d.py"
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
-class ML2D_class:
+class ProtML2D:
 
     #init variables
-    def __init__(self,
-                 InSelFile,
-                 WorkingDir,
-                 DoDeleteWorkingDir,
-                 ProjectDir,
-                 LogDir,
-                 DoMlf,
-                 DoCorrectAmplitudes,
-                 InCtfDatFile,
-                 PixelSize,
-                 ImagesArePhaseFlipped,
-                 HighResLimit,
-                 DoML2D,
-                 NumberOfReferences,
-                 DoMirror,
-                 DoFast,
-                 DoNorm,
-                 RestartIter,
-                 ExtraParamsMLalign2D,
-                 NumberOfThreads,
-                 DoParallel,
-                 NumberOfMpiProcesses,
-                 SystemFlavour):
+    def __init__(self):
+#                 self,
+#                 InSelFile,
+#                 WorkingDir,
+#                 DoDeleteWorkingDir,
+#                 ProjectDir,
+#                 LogDir,
+#                 DoMlf,
+#                 DoCorrectAmplitudes,
+#                 InCtfDatFile,
+#                 PixelSize,
+#                 ImagesArePhaseFlipped,
+#                 HighResLimit,
+#                 DoML2D,
+#                 NumberOfReferences,
+#                 DoMirror,
+#                 DoFast,
+#                 DoNorm,
+#                 RestartIter,
+#                 ExtraParamsMLalign2D,
+#                 NumberOfThreads,
+#                 DoParallel,
+#                 NumberOfMpiProcesses,
+#                 SystemFlavour):
 	     
         import os, sys, shutil
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
@@ -151,29 +152,28 @@ class ML2D_class:
         import log
         from xmipp import MetaData
 
-        self.WorkingDir=WorkingDir
-        self.ProjectDir=ProjectDir
-        self.DoMlf=DoMlf
-        self.DoCorrectAmplitudes=DoCorrectAmplitudes
-        self.HighResLimit=HighResLimit
-        self.PixelSize=PixelSize
-        self.ImagesArePhaseFlipped=ImagesArePhaseFlipped
-        self.NumberOfReferences=NumberOfReferences
-        self.DoMirror=DoMirror
-        self.DoFast=DoFast
-        self.DoNorm=DoNorm
-        self.ExtraParamsMLalign2D=ExtraParamsMLalign2D
-        self.NumberOfThreads=NumberOfThreads
-        self.DoParallel=DoParallel
-        self.NumberOfMpiProcesses=NumberOfMpiProcesses
-        self.SystemFlavour=SystemFlavour
-        self.RestartIter=RestartIter 
+#        self.WorkingDir=WorkingDir
+#        self.ProjectDir=ProjectDir
+#        self.DoMlf=DoMlf
+#        self.DoCorrectAmplitudes=DoCorrectAmplitudes
+#        self.HighResLimit=HighResLimit
+#        self.PixelSize=PixelSize
+#        self.ImagesArePhaseFlipped=ImagesArePhaseFlipped
+#        self.NumberOfReferences=NumberOfReferences
+#        self.DoMirror=DoMirror
+#        self.DoFast=DoFast
+#        self.DoNorm=DoNorm
+#        self.ExtraParamsMLalign2D=ExtraParamsMLalign2D
+#        self.NumberOfThreads=NumberOfThreads
+#        self.DoParallel=DoParallel
+#        self.NumberOfMpiProcesses=NumberOfMpiProcesses
+#        self.SystemFlavour=SystemFlavour
+#        self.RestartIter=RestartIter 
    
+        # store script name
+        protocolName = sys.argv[0]
         # Setup logging
-        self.log=log.init_log_system(self.ProjectDir,
-                                     LogDir,
-                                     sys.argv[0],
-                                     self.WorkingDir)
+        self.log = log.init_log_system(ProjectDir, LogDir, protocolName, WorkingDir)
                 
         #assume restart
         restart = True
@@ -183,39 +183,40 @@ class ML2D_class:
             if (DoDeleteWorkingDir and DoML2D): 
                 if (self.WorkingDir==""):
                    raise RuntimeError,"No working directory given"
-                if os.path.exists(self.WorkingDir):
-                    shutil.rmtree(self.WorkingDir)
-            if not os.path.exists(self.WorkingDir):
-                os.makedirs(self.WorkingDir)
+                if os.path.exists(WorkingDir):
+                    shutil.rmtree(WorkingDir)
+            if not os.path.exists(WorkingDir):
+                os.makedirs(WorkingDir)
 
 
             # Create a selfile with absolute pathname in the WorkingDir
-            mysel = MetaData(InSelFile);
-            mysel.makeAbsPath();
-            self.InSelFile = os.path.abspath(os.path.join(self.WorkingDir, InSelFile))
-            mysel.write(self.InSelFile)
+#            mysel = MetaData(InSelFile);
+#            mysel.makeAbsPath();
+#            InSelFile = os.path.abspath(os.path.join(WorkingDir, InSelFile))
+#            mysel.write(InSelFile)
 
-            if (self.DoMlf and self.DoCorrectAmplitudes):
+            if (DoMlf and DoCorrectAmplitudes):
                 # Copy CTFdat to the workingdir as well
-                shutil.copy(InCtfDatFile, os.path.join(self.WorkingDir, 'my.ctfdat'))
+                shutil.copy(InCtfDatFile, os.path.join(WorkingDir, 'my.ctfdat'))
 
             # Backup script
-            log.make_backup_of_script_file(sys.argv[0],
-                                               os.path.abspath(self.WorkingDir))
+            log.make_backup_of_script_file(protocolName, os.path.abspath(WorkingDir))
             restart = False
-            
-        # Execute protocol in the working directory
-        os.chdir(self.WorkingDir)
-        self.execute_MLalign2D(restart)
-        # Return to parent dir
-        os.chdir(os.pardir)
 
-    def execute_MLalign2D(self, restart=False):
+        # Store current directory before moving
+        currentDir = os.getcwd()            
+        # Execute protocol in the working directory
+        os.chdir(WorkingDir)
+        self.run(restart)
+        # Return to parent dir
+        os.chdir(currentDir)
+
+    def run(self, restart=False):
         import os
         import launch_job
         print '*********************************************************************'
         progId = "ml"
-        if (self.DoMlf):
+        if (DoMlf):
             progId += "f"  
         
         program = "xmipp_%s_align2d" % progId
@@ -226,38 +227,32 @@ class ML2D_class:
         print '*  %s %s program :' % (action, program)
         
         if (restart):
-            params= ' -restart ' + utils_xmipp.composeFileName('ml2d_it',self.RestartIter,'log')
+            params= ' --restart ' + utils_xmipp.composeFileName('ml2d_it', RestartIter,'log')
         else: 
-            params = ' -o %s2d -i %s' % (progId, self.InSelFile)
+            params = ' -i %s --oroot %s2d' % (InSelFile, progId)
             # Number of references will be ignored if -ref is passed as expert option
-            if self.ExtraParamsMLalign2D.find("-ref") == -1:
-                params += ' -nref ' + str(self.NumberOfReferences)
-            params +=' ' + self.ExtraParamsMLalign2D
-            if (self.DoFast and not self.DoMlf):
-                params += ' -fast '
-            if (self.DoNorm):
-                params += ' -norm '
-            if (self.DoMirror):
-                params += ' -mirror '
-            if (self.NumberOfThreads > 1  and not self.DoMlf):
-                params += ' -thr ' + str(self.NumberOfThreads)
-            if (self.DoMlf):
-                if (self.DoCorrectAmplitudes):
-                    params += ' -ctfdat my.ctfdat'
+            if ExtraParamsMLalign2D.find("--ref") == -1:
+                params += ' --nref %i' % NumberOfReferences
+            params += ' ' + ExtraParamsMLalign2D
+            if (DoFast and not DoMlf):
+                params += ' --fast'
+            if (DoNorm):
+                params += ' --norm'
+            if (DoMirror):
+                params += ' --mirror'
+            if (NumberOfThreads > 1  and not DoMlf):
+                params += ' --thr %i' % NumberOfThreads
+            if (DoMlf):
+                if (DoCorrectAmplitudes):
+                    params += ' --ctfdat my.ctfdat'
                 else:
-                    params += ' -no_ctf -pixel_size ' + str(self.PixelSize)
+                    params += ' --no_ctf -pixel_size %f' + PixelSize
                 if (not self.ImagesArePhaseFlipped):
-                    params += ' -not_phase_flipped'
+                    params += ' --not_phase_flipped'
                 if (self.HighResLimit > 0):
-                    params += ' -high ' + str(self.HighResLimit)
+                    params += ' --high %f' + HighResLimit
            
-        launch_job.launch_job(program,
-                              params,
-                              self.log,
-                              self.DoParallel,
-                              self.NumberOfMpiProcesses,
-                              self.NumberOfThreads,
-                              self.SystemFlavour)
+        launch_job.launch_job(program, params, self.log, DoParallel, NumberOfMpiProcesses, NumberOfThreads, SystemFlavour)
 
     def close(self):
         message='Done!'
@@ -269,30 +264,31 @@ class ML2D_class:
 #     
 if __name__ == '__main__':
 
-    # create ML2D_class object
+    # create ProtML2D object
 
-    ML2D=ML2D_class(InSelFile,
-                    WorkingDir,
-                    DoDeleteWorkingDir,
-                    ProjectDir,
-                    LogDir,
-                    DoMlf,
-                    DoCorrectAmplitudes,
-                    InCtfDatFile,
-                    PixelSize,
-                    ImagesArePhaseFlipped,
-                    HighResLimit,
-                    DoML2D,
-                    NumberOfReferences,
-                    DoMirror,
-                    DoFast,
-                    DoNorm,
-                    RestartIter,
-                    ExtraParamsMLalign2D,
-                    NumberOfThreads,
-                    DoParallel,
-                    NumberOfMpiProcesses,
-                    SystemFlavour)
+    ML2D = ProtML2D()
+#                    InSelFile,
+#                    WorkingDir,
+#                    DoDeleteWorkingDir,
+#                    ProjectDir,
+#                    LogDir,
+#                    DoMlf,
+#                    DoCorrectAmplitudes,
+#                    InCtfDatFile,
+#                    PixelSize,
+#                    ImagesArePhaseFlipped,
+#                    HighResLimit,
+#                    DoML2D,
+#                    NumberOfReferences,
+#                    DoMirror,
+#                    DoFast,
+#                    DoNorm,
+#                    RestartIter,
+#                    ExtraParamsMLalign2D,
+#                    NumberOfThreads,
+#                    DoParallel,
+#                    NumberOfMpiProcesses,
+#                    SystemFlavour)
     # close 
     ML2D.close()
 
