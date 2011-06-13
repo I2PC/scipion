@@ -551,6 +551,7 @@ ReconsSources = [
     'tomo_detect_missing_wedge.cpp',
     'tomo_remove_fluctuations.cpp',
     'transform_downsample.cpp',
+    #'transform_geometry.cpp',
     'volume_correct_bfactor.cpp',
     'volume_enhance_contrast.cpp',
     'volume_from_pdb.cpp',
@@ -878,6 +879,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
     AddXmippMPIProgram('mpi_run', ['XmippRecons'])
     AddXmippMPIProgram('mpi_transform_filter', ['XmippRecons'])
+    #AddXmippMPIProgram('mpi_transform_geometry', ['XmippRecons'])
     AddXmippMPIProgram('mpi_transform_normalize', ['XmippRecons'])
 #    AddXmippMPIProgram('template_threads', ['XmippRecons'])
 #    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
