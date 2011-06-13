@@ -42,8 +42,8 @@ public class XmippBrowser implements PlugIn {
 
         // @TODO Remove this.
         // -------------------------
-//        DIR = null;
-//        processArgs(string);
+        DIR = null;
+        processArgs(string);
         // -------------------------
 
         if (INPUT != null) {
@@ -69,7 +69,7 @@ public class XmippBrowser implements PlugIn {
         if (input != null) {
             switch (m) {
                 case MODE_TYPE_DEFAULT:
-                    ImagesWindowFactory.openFilesDefault(input, poll);
+                    ImagesWindowFactory.openFilesAsDefault(input, poll);
                     break;
                 case MODE_TYPE_IMAGE:
                     ImagesWindowFactory.openFilesAsImages(input, poll);

@@ -108,6 +108,8 @@ public class ImagesTableModel extends AbstractTableModel {
     }
 
     private String loadMetaData(String filename) {
+        String message = null;
+
         try {
             md = new MetaData(filename);
             isMetadata = true;
@@ -124,18 +126,17 @@ public class ImagesTableModel extends AbstractTableModel {
 
                 String imagefilename = md.getValueString(MDLabel.MDL_IMAGE, id);
 
-                System.out.println(imagefilename + " ? " + enabled);
-
                 long nimage = Filename.getNimage(imagefilename);
                 String name = Filename.getFilename(imagefilename);
 
                 addItem(name, ImageDouble.FIRST_SLICE, nimage, enabled);
             }
         } catch (Exception ex) {
-            return ex.getMessage();
+            message = ex.getMessage();
+            //ex.printStackTrace();
         }
 
-        return null;
+        return message;
     }
 
     protected void addItem(String filename, int slice, long image, boolean enabled) {
@@ -143,6 +144,10 @@ public class ImagesTableModel extends AbstractTableModel {
         item.setEnabled(enabled);
 
         data.add(item);
+    }
+
+    public String getFilename() {
+        return filename;
     }
 
     public Vector<TableImageItem> getAllItems() {

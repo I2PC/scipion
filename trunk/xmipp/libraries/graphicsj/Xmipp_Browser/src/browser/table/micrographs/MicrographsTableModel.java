@@ -326,6 +326,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
 
     public String getPSDfile(int row) {
         long id = (Long) getValueAt(row, 0);
+
         String file = md.getValueString(MDLabel.MDL_PSD, id);
 
         return file;
@@ -342,7 +343,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         int row = e.getFirstRow();
         int column = e.getColumn();
 
-        System.out.println(" *** Table changed @ " + row);
+//        System.out.println(" *** Table changed @ " + row);
 
         // Updates metadata.
         if (column == ENABLED_COLUMN_INDEX) {

@@ -41,7 +41,7 @@ public class ImageConverter {
 
         ImagePlus ip = convertToImagej(image.getData(), w, h, d, n, path);
 
-        // Assign associated file.
+        // Sets associated file info.
         File f = new File(path);
         FileInfo fi = new FileInfo();
         fi.directory = f.getParent();
@@ -94,8 +94,8 @@ public class ImageConverter {
 
             long ids[] = md.findObjects();
 
-            for (int i = 0; i < ids.length; i++) {
-                String filename = md.getValueString(MDLabel.MDL_IMAGE, ids[i]);
+            for (long id : ids) {
+                String filename = md.getValueString(MDLabel.MDL_IMAGE, id);
 
                 try {
                     ImageDouble img = new ImageDouble(filename);
@@ -114,6 +114,13 @@ public class ImageConverter {
 
             ip = new ImagePlus(md.getFilename(), is);
 
+            // Sets associated file info.
+            File f = new File(md.getFilename());
+            FileInfo fi = new FileInfo();
+            fi.directory = f.getParent();
+            fi.fileName = f.getName();
+            ip.setFileInfo(fi);
+
             // Normalize by default
             StackStatistics ss = new StackStatistics(ip);
             ip.getProcessor().setMinAndMax(ss.min, ss.max);
@@ -121,7 +128,7 @@ public class ImageConverter {
 
         // Tells user about missing files.
         if (!missing.isEmpty()) {
-            String message = "Some files were missing:\n";
+            String message = "There are missing files:\n";
             for (int i = 0; i < missing.size(); i++) {
                 message += missing.get(i) + "\n";
             }
@@ -130,6 +137,39 @@ public class ImageConverter {
         }
 
         return ip;
+    }
+    /*
+    public static ImagePlus convertToImagePlus(Vector<TableImageItem> items, String path) {
+    ImagePlus imp = convertToImagePlus(items);
+
+    // Sets associated file info.
+    File f = new File(path);
+    FileInfo fi = new FileInfo();
+    fi.directory = f.getParent();
+    fi.fileName = f.getName();
+    imp.setFileInfo(fi);
+
+    return imp;
+    }*/
+
+    public static ImagePlus convertToImagePlus(Vector<TableImageItem> items) {
+        ImageStack is = null;
+
+        for (int i = 0; i < items.size(); i++) {
+            TableImageItem item = items.elementAt(i);
+
+            if (item.isEnabled() && item.exists()) {
+                ImagePlus ipslice = item.getImagePlus();
+
+                if (is == null) {
+                    is = new ImageStack(ipslice.getWidth(), ipslice.getHeight());
+                }
+
+                is.addSlice(ipslice.getTitle(), ipslice.getProcessor());
+            }
+        }
+
+        return new ImagePlus("", is);
     }
 
     public static void revert(ImagePlus ip, String path) throws Exception {
@@ -178,16 +218,16 @@ public class ImageConverter {
 
         return image;
     }
-
+    /*
     public static ImagePlus toImagePlus(Vector<TableImageItem> items, String title) {
-        TableImageItem item = items.elementAt(0);
+    TableImageItem item = items.elementAt(0);
 
-        ImageStack is = new ImageStack(item.getWidth(), item.getHeight());
+    ImageStack is = new ImageStack(item.getWidth(), item.getHeight());
 
-        for (int i = 0; i < items.size(); i++) {
-            is.addSlice(String.valueOf(i), items.elementAt(i).getPreview().getProcessor());
-        }
-
-        return new ImagePlus(title, is);
+    for (int i = 0; i < items.size(); i++) {
+    is.addSlice(String.valueOf(i), items.elementAt(i).getPreview().getProcessor());
     }
+
+    return new ImagePlus(title, is);
+    }*/
 }

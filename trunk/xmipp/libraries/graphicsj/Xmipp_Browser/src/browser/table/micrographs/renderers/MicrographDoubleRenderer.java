@@ -4,8 +4,8 @@
  */
 package browser.table.micrographs.renderers;
 
-import browser.table.micrographs.renderers.MicrographRowDisablerRenderer;
 import java.awt.Component;
+import java.text.DecimalFormat;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 
@@ -15,6 +15,8 @@ import javax.swing.JTable;
  */
 public class MicrographDoubleRenderer extends MicrographRowDisablerRenderer {
 
+    protected final static DecimalFormat formatter = new DecimalFormat("#.##E0");
+
     public MicrographDoubleRenderer() {
         super();
 
@@ -23,6 +25,8 @@ public class MicrographDoubleRenderer extends MicrographRowDisablerRenderer {
 
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-        return super.getTableCellRendererComponent(table, "<b>" + value + "</b>", isSelected, hasFocus, row, column);//this;
+//        System.out.println(value + " - format ->" + formatter.format(value).replace('E', 'e'));
+
+        return super.getTableCellRendererComponent(table, "<b>" + formatter.format(value).replace('E', 'e') + "</b>", isSelected, hasFocus, row, column);
     }
 }

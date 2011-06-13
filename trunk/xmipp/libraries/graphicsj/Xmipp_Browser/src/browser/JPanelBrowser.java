@@ -215,7 +215,7 @@ public class JPanelBrowser extends JPanel {
             updateListStatus();
         } else {
             if (FileBrowser.hasEnoughMemory(item.getFile())) {
-                ImagesWindowFactory.openDefault(item.getAbsoluteFileName());
+                ImagesWindowFactory.openFileAsDefault(item.getAbsoluteFileName());
             } else {
                 IJ.showMessage(LABELS.TITLE_ERROR,
                         LABELS.MESSAGE_MEMORY_ERROR(item.getFile().length(), IJ.maxMemory()));

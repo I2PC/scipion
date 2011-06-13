@@ -34,10 +34,10 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
     protected boolean poll = false;
     protected Timer timer = null;
     protected final static int PERIOD = 5000;  // repeat every 5 seconds
+    private XmippMenuBar menuBar;
     private String path;// = imp.getOriginalFileInfo().directory + imp.getOriginalFileInfo().fileName;
     private File f;// = new File(path);
     private long last;// = f.lastModified();
-    private XmippMenuBar menuBar;
 
     public ImageWindowOperations(ImagePlus imp) {
         this(imp, false);
@@ -78,17 +78,27 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
         return poll;
     }
 
+    /*protected void setInitialPoll(boolean poll) {
+    // Sets if image can poll (reloaded from disk) or not.
+    FileInfo ofi = imp.getOriginalFileInfo();
+
+    if (ofi != null) {
+    path = ofi.directory + File.separator + ofi.fileName;
+    f = new File(path);
+    last = f.lastModified();
+
+    setPoll(poll);  // If isPoll, starts timer to reload image form disk every period.
+    menuBar.setPollStatus(poll);
+    }
+    }*/
     protected void setInitialPoll(boolean poll) {
         // Sets if image can poll (reloaded from disk) or not.
-        FileInfo ofi = imp.getOriginalFileInfo();
-
-        if (ofi != null) {
-            path = ofi.directory + File.separator + ofi.fileName;
-            f = new File(path);
+        if (menuBar.canPoll()) {
+            FileInfo ofi = imp.getOriginalFileInfo();
+            f = new File(ofi.directory + ofi.fileName);
             last = f.lastModified();
 
-            setPoll(poll);  // If isPoll, starts timer to reload image form disk every period.
-            menuBar.setPollStatus(poll);
+            setPoll(poll);  // If polling, starts timer to reload image form disk every period.
         }
     }
 

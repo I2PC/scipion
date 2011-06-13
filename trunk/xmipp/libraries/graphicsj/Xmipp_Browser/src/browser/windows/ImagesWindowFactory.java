@@ -5,6 +5,8 @@
 package browser.windows;
 
 import browser.imageitems.ImageConverter;
+import browser.imageitems.TableImageItem;
+import browser.table.ImagesTableModel;
 import ij.IJ;
 import ij.ImagePlus;
 import browser.table.JFrameImagesTable;
@@ -12,10 +14,13 @@ import browser.table.micrographs.ctf.CTFImageWindow;
 import browser.table.micrographs.ctf.tasks.TasksEngine;
 import ij.gui.ImageWindow;
 import ij.gui.Toolbar;
+import ij.io.FileInfo;
+import ij.process.StackConverter;
+import ij3d.Content;
+import ij3d.Image3DUniverse;
 import java.io.File;
+import java.util.Vector;
 import xmipp.Filename;
-import xmipp.ImageDouble;
-import xmipp.MetaData;
 
 /**
  *
@@ -23,19 +28,20 @@ import xmipp.MetaData;
  */
 public class ImagesWindowFactory {
 
-    private final static String TEMPDIR_PATH = System.getProperty("java.io.tmpdir");
+    private final static int UNIVERSE_W = 400, UNIVERSE_H = 400;
+//    private final static String TEMPDIR_PATH = System.getProperty("java.io.tmpdir");
 
-    public static void openFilesDefault(String files[], boolean poll) {
+    public static void openFilesAsDefault(String files[], boolean poll) {
         for (int i = 0; i < files.length; i++) {
-            openDefault(files[i], poll);
+            openFileAsDefault(files[i], poll);
         }
     }
 
-    public static void openDefault(String filename) {
-        openDefault(filename, false);
+    public static void openFileAsDefault(String filename) {
+        openFileAsDefault(filename, false);
     }
 
-    public static void openDefault(String filename, boolean poll) {
+    public static void openFileAsDefault(String filename, boolean poll) {
         if (Filename.isSingleImage(filename)) {
             openFileAsImage(filename, poll);
         } else if (Filename.isStackOrVolume(filename)) {
@@ -66,15 +72,16 @@ public class ImagesWindowFactory {
         File f = new File(path);
 
         if (f.exists()) {
-            ImagePlus ip = null;
+            /*            ImagePlus ip = null;
 
             if (Filename.isMetadata(path)) {
-                ip = openMetaDataAsImage_(path);
+            ip = IJ.openImage(path);//openMetaDataAsImage_(path);
             } else if (Filename.isXmippType(path)) {
-                ip = openFileAsImage_(path);
+            ip = IJ.openImage(path);//openFileAsImage_(path);
             } else {
-                ip = IJ.openImage(path);
-            }
+            ip = IJ.openImage(path);
+            }*/
+            ImagePlus ip = IJ.openImage(path);
 
             openXmippImageWindow(ip, poll);
         } else {
@@ -82,32 +89,31 @@ public class ImagesWindowFactory {
         }
     }
 
-    private static ImagePlus openFileAsImage_(String path) {
-        ImagePlus ip = null;
+    /*    private static ImagePlus openFileAsImage_(String path) {
+    ImagePlus ip = null;
 
-        try {
-            ImageDouble image = new ImageDouble(path);
-            ip = ImageConverter.convertToImagej(image, path);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-        return ip;
+    try {
+    ImageDouble image = new ImageDouble(path);
+    ip = ImageConverter.convertToImagej(image, path);
+    } catch (Exception ex) {
+    ex.printStackTrace();
     }
 
-    private static ImagePlus openMetaDataAsImage_(String path) {
-        ImagePlus ip = null;
+    return ip;
+    }*/
 
-        try {
-            MetaData md = new MetaData(path);
-            ip = ImageConverter.convertToImagej(md);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+    /*    private static ImagePlus openMetaDataAsImage_(String path) {
+    ImagePlus ip = null;
 
-        return ip;
+    try {
+    MetaData md = new MetaData(path);
+    ip = ImageConverter.convertToImagej(md);
+    } catch (Exception ex) {
+    ex.printStackTrace();
     }
 
+    return ip;
+    }*/
     private static ImageWindow openXmippImageWindow(ImagePlus imp, boolean poll) {
         ImageWindow iw = null;
 
@@ -158,6 +164,90 @@ public class ImagesWindowFactory {
 
     public static void captureFrame(ImagePlus ip) {
         openXmippImageWindow(ip, false);
+    }
+
+    public static void openTableAs3D(ImagesTableModel tableModel) {
+        try {
+            Vector<TableImageItem> items = tableModel.getAllItems();
+            ImagePlus ip = ImageConverter.convertToImagePlus(items);
+            ip.setTitle(tableModel.getFilename());
+
+            openImagePlusAs3D(ip);
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    public static void openTableAsImagePlus(ImagesTableModel tableModel) {
+        try {
+            String path = tableModel.getFilename();
+
+            // If there is an associated filename, uses it...
+            File file = new File(path);
+            if (file.exists()) {
+//                System.err.println(" +++ EXISTS");
+                openFileAsImage(path);
+            } else {
+//                System.err.println(" !!! EXISTS");
+                // ...otherwise, stores it in a temporary file.
+                File tempFile = File.createTempFile("tableToStack_", ".stk");
+                tempFile.deleteOnExit();
+
+                Vector<TableImageItem> items = tableModel.getAllItems();
+                ImagePlus imp = ImageConverter.convertToImagePlus(items);
+                IJ.run(imp, "Xmipp writer", "save=" + tempFile.getAbsolutePath());
+
+//                System.err.println(" >>> TMP Saved at: " + file.getAbsolutePath());
+
+                imp.setTitle(tempFile.getName());
+
+                captureFrame(imp);
+            }
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    public static void openImagePlusAsTable(ImagePlus imp) {
+        try {
+            FileInfo fi = imp.getOriginalFileInfo();
+//            System.out.println(" +++ FileInfo: " + fi);
+
+            // If path exists, uses it...
+            File file = null;
+            if (fi != null && !fi.fileName.trim().isEmpty() && !fi.directory.trim().isEmpty()) {
+                file = new File(fi.directory + File.separator + fi.fileName);
+            }
+
+            if (file == null || !file.exists()) {   // ...otherwise, stores it in a temporary file.
+//                System.err.println(" !!! EXISTS");
+                file = File.createTempFile("stackToTable_", ".stk");
+                file.deleteOnExit();
+                IJ.run(imp, "Xmipp writer", "save=" + file.getAbsolutePath());
+
+//                System.err.println(" >>> TMP Saved at: " + file.getAbsolutePath());
+//            } else {
+//                System.err.println(" +++ EXISTS");
+            }
+
+            openFileAsTable(file.getAbsolutePath());
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    public static void openImagePlusAs3D(ImagePlus ip) {
+        Image3DUniverse universe = new Image3DUniverse(UNIVERSE_W, UNIVERSE_H);
+
+        // Adds the sphere image plus to universe.
+        new StackConverter(ip).convertToRGB();
+        Content c = universe.addVoltex(ip);
+        c.displayAs(Content.VOLUME);
+
+        universe.show();    // Shows...
     }
 
     public static ImageWindow openCTFImage(ImagePlus ip, String CTFfilename,

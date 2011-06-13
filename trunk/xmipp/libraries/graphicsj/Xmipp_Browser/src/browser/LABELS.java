@@ -154,6 +154,8 @@ public class LABELS {
     public final static String OPERATION_DOTTED_AND_DASHED_LINES = "Dotted and Dashed Lines";
     public final static String OPERATION_RADIAL_GRID = "Radial Grid";
     public final static String OPERATION_TEMPLATE_MATCHING = "Template Matching";
+    public final static String OPERATION_MENU_MASKS = "Masks";
+    public final static String OPERATION_MASKS_TOOLBAR = "Masks Tool Bar";
     //public final static String OPERATION_FLOWJ = "FlowJ";
     //public final static String OPERATION_FLOW3J = "Flow3J";
     //public final static String OPERATION_OBJECTJ = "ObjectJ";

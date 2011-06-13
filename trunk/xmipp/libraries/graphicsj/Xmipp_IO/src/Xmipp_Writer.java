@@ -2,11 +2,10 @@
 import ij.IJ;
 import ij.ImagePlus;
 import ij.io.SaveDialog;
-import ij.plugin.filter.PlugInFilter;
+import ij.plugin.filter.ExtendedPlugInFilter;
+import ij.plugin.filter.PlugInFilterRunner;
 import ij.process.ImageProcessor;
-import ij.util.Tools;
 import java.io.File;
-import xmipp.ImageDouble;
 
 /*
  * To change this template, choose Tools | Templates
@@ -16,14 +15,14 @@ import xmipp.ImageDouble;
  *
  * @author Juanjo Vega
  */
-public class Xmipp_Writer implements PlugInFilter {
+public abstract class Xmipp_Writer implements ExtendedPlugInFilter {
 
     protected String filename, rootdir;
-    protected ImagePlus img;
+    protected ImagePlus imp;
 
-    public int setup(String filename, ImagePlus img) {
+    public int setup(String filename, ImagePlus imp) {
         this.filename = filename;
-        this.img = img;
+        this.imp = imp;
 
         File file = new File(filename);
         rootdir = file.isAbsolute() ? "" : file.getParent() + File.separator;
@@ -31,33 +30,39 @@ public class Xmipp_Writer implements PlugInFilter {
         return DOES_32 + DOES_16 + DOES_8G + NO_CHANGES;
     }
 
-    public void run(ImageProcessor ip) {
+    public int showDialog(ImagePlus ip, String string, PlugInFilterRunner pifr) {
         if (filename == null || filename.isEmpty()) {
-            SaveDialog sd = new SaveDialog("save as xmipp...", System.getProperty("user.dir"), "");
+            SaveDialog sd = new SaveDialog(getSaveDialogTitle(), System.getProperty("user.dir"), "");
             rootdir = sd.getDirectory();
             filename = sd.getFileName();
+
             if (filename == null) {
-                return;
+                return DONE;
             }
         }
 
-        IJ.showStatus("Saving: " + rootdir + filename);
+        return 0;
+    }
+
+    public void setNPasses(int i) {
+    }
+
+    public void run(ImageProcessor ip) {
+        String path = rootdir + filename;
+
+        IJ.showStatus("Saving: " + filename);
 
         try {
-            float data[] = (float[]) img.getProcessor().getPixels();
-            write(filename,
-                    img.getWidth(), img.getHeight(), img.getStackSize(),
-                    Tools.toDouble(data));
+            write(imp, path);
+
+            IJ.showMessage("File successfully saved!");
         } catch (Exception ex) {
+            ex.printStackTrace();
             IJ.error(ex.getMessage());
         }
     }
 
-    protected static void write(String filename, int w, int h, int d, double data[]) throws Exception {
-        ImageDouble image = new ImageDouble();
+    protected abstract String getSaveDialogTitle();
 
-        image.setFilename(filename);
-        image.setData(w, h, d, data);
-        image.write(filename);
-    }
+    protected abstract void write(ImagePlus imp, String path) throws Exception;
 }

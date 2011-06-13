@@ -55,12 +55,14 @@ public class MetadataFileItem extends XmippImageItem {
 
             for (long id : objs) {
                 String field = md.getValueString(MDLabel.MDL_IMAGE, id);
+
                 field = Filename.getFilename(field);      // Avoids image@filename format ;)
                 nimage = Filename.getNimage(field);
 
                 f = new File(field);
 
                 if (f.exists()) {
+                    System.err.println(" *** preview File: " + f.getAbsolutePath());
                     return f.getAbsolutePath();
                 }
             }

@@ -2,9 +2,9 @@
 import ij.IJ;
 import ij.ImagePlus;
 import ij.io.OpenDialog;
-import ij.plugin.PlugIn;
-import xmipp.Filename;
-import xmipp.ImageDouble;
+import ij.plugin.filter.PlugInFilter;
+import ij.process.ImageProcessor;
+import java.io.File;
 
 /*
  * To change this template, choose Tools | Templates
@@ -14,55 +14,47 @@ import xmipp.ImageDouble;
  *
  * @author Juanjo Vega
  */
-public class Xmipp_Reader extends ImagePlus implements PlugIn {
+public abstract class Xmipp_Reader extends ImagePlus implements PlugInFilter {
 
-    public void run(String filename) {
-        boolean show = false;
+    protected String filename, rootdir;
 
-        // If launched from menu...
+    public int setup(String filename, ImagePlus ip) {
+        this.filename = filename;
+
+        File file = new File(filename);
+        rootdir = file.isAbsolute() ? "" : file.getParent() + File.separator;
+
+        return NO_IMAGE_REQUIRED + NO_CHANGES;
+    }
+
+    public int showDialog(ImagePlus ip, String string) {
         if (filename == null || filename.isEmpty()) {
-            OpenDialog od = new OpenDialog("Load xmipp file...", System.getProperty("user.dir"), "");
-            String rootDir = od.getDirectory();
+            OpenDialog od = new OpenDialog(getOpenDialogTitle(), System.getProperty("user.dir"), "");
+            rootdir = od.getDirectory();
             filename = od.getFileName();
-System.out.println(rootDir+" / "+filename);
-            if (filename == null) {
-                return;
-            }
 
-            filename = rootDir + filename;
-            show = true;
+            if (filename == null) {
+                return -1;
+            }
         }
+
+        return 0;
+    }
+
+    public void run(ImageProcessor ip) {
+        String path = rootdir + filename;
 
         IJ.showStatus("Reading: " + filename);
 
         try {
-            String name = Filename.getFilename(filename);
-            ImageDouble image = new ImageDouble(filename);
-
-            ImagePlus imp = ImageConverter.convertToImagej(image, filename);
-
-            // Attach the Image Processor
-            if (imp.getNSlices() > 1) {
-                setStack(name, imp.getStack());
-            } else {
-                setProcessor(name, imp.getProcessor());
-            }
-
-            // Copy the scale info over
-            copyScale(imp);
-//
-//            // Normalizes image.
-//            StackStatistics ims = new StackStatistics(this);
-//            setDisplayRange(ims.min, ims.max);
-
-            // Show the image if it was selected by the file
-            // chooser, don't if an argument was passed ie
-            // some other ImageJ process called the plugin.
-            if (show) {
-                show();
-            }
+            read(path);
         } catch (Exception ex) {
+            ex.printStackTrace();
             IJ.error(ex.getMessage());
         }
     }
+
+    protected abstract String getOpenDialogTitle();
+
+    protected abstract void read(String path) throws Exception;
 }

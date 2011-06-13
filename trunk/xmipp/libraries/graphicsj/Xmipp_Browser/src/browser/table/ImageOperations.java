@@ -21,13 +21,10 @@ public class ImageOperations {
         double mean[] = new double[w * h];
 
         // For all images...
-        for (int k = 0; k < items.size(); k++) {
-            TableImageItem current = items.elementAt(k);
-
+        for (TableImageItem current : items) {
             if (current.isEnabled() && current.exists()) {
                 ImagePlus ip = current.getImagePlus();
                 float pixels[] = (float[]) ip.getProcessor().getPixels();
-                ip.close();
 
                 // Adds current image to sum.
                 for (int i = 0; i < pixels.length; i++) {
@@ -52,8 +49,8 @@ public class ImageOperations {
         double stdDev[] = new double[mean.length];
 
         // Traverses images.
-        for (int k = 0; k < items.size(); k++) {
-            TableImageItem current = items.elementAt(k);
+        for (TableImageItem current : items) {//int k = 0; k < items.size(); k++) {
+            //TableImageItem current = items.elementAt(k);
 
             if (current.isEnabled() && current.exists()) {
                 ImagePlus ip = current.getImagePlus();

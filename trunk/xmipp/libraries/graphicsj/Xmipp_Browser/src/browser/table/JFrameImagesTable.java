@@ -15,8 +15,6 @@ import browser.imageitems.TableImageItem;
 import browser.table.renderers.ImageRenderer;
 import browser.table.renderers.RowHeaderRenderer;
 import browser.windows.ImagesWindowFactory;
-import browser.windows.menubar.XmippMenuBar;
-import ij.ImagePlus;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Point;
@@ -314,13 +312,11 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     }
 
     private void send2stack() {
-        System.out.println(" @TODO >>> sendToStack: " + tableModel.getAllItems());
-        //ImagesWindowFactory.captureFrame(tableModel.getAllItems(), getTitle());
+        ImagesWindowFactory.openTableAsImagePlus(tableModel);
     }
 
     private void openAs3D() {
-        ImagePlus ip = new ImagePlus("/home/juanjo/Desktop/ImageJCTFViewTest/circles.gif");
-        XmippMenuBar.run3DViewer(ip);
+        ImagesWindowFactory.openTableAs3D(tableModel);
     }
 
     /** This method is called from within the constructor to

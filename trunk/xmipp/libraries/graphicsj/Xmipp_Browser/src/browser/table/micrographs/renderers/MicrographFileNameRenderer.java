@@ -40,7 +40,7 @@ public class MicrographFileNameRenderer extends MicrographRowDisablerRenderer {
             w = getFontMetrics(font).stringWidth(str);
         }
 
-        setToolTipText(item.getFileName());
+        setToolTipText(item.getTooltipText());
 
         return super.getTableCellRendererComponent(table, str, isSelected, hasFocus, row, column);//this;
     }

@@ -16,10 +16,8 @@ import ij.gui.ImageWindow;
 import ij.gui.OvalRoi;
 import ij.gui.Roi;
 import ij.gui.Toolbar;
+import ij.io.FileInfo;
 import ij.plugin.filter.Duplicater;
-import ij.process.StackConverter;
-import ij3d.Content;
-import ij3d.Image3DUniverse;
 import java.awt.CheckboxMenuItem;
 import java.awt.Container;
 import java.awt.Menu;
@@ -28,6 +26,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
 
 /**
  *
@@ -35,7 +34,6 @@ import java.awt.event.ItemListener;
  */
 public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
-    private final static int UNIVERSE_W = 400, UNIVERSE_H = 400;
     private ImagePlus imp;
     // *** Transform ***
     private Menu menuTransform = new Menu(LABELS.OPERATION_MENU_TRANSFORM);
@@ -137,6 +135,9 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
     private Menu menuDraw = new Menu(LABELS.OPERATION_MENU_DRAW);
     private MenuItem itemDottedandDashedLines = new MenuItem(LABELS.OPERATION_DOTTED_AND_DASHED_LINES);
     private MenuItem itemRadialGrid = new MenuItem(LABELS.OPERATION_RADIAL_GRID);
+    // *** Masks ***
+    private Menu menuMasks = new Menu(LABELS.OPERATION_MENU_MASKS);
+    private MenuItem itemMasksToolBar = new MenuItem(LABELS.OPERATION_MASKS_TOOLBAR);
 
     public XmippMenuBar(Container parent, ImagePlus imp) {
         super(parent);
@@ -145,9 +146,21 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
         createMenuBar();
 
-        boolean canPoll = imp.getOriginalFileInfo() != null;
+        enableMenuItems(imp.getStackSize(), canPoll());
+    }
 
-        enableMenuItems(imp.getStackSize(), canPoll);
+    public final boolean canPoll() {
+        FileInfo ofi = imp.getOriginalFileInfo();
+
+        if (ofi != null) {
+            // Avoid empty filename.
+            //if (!ofi.directory.trim().isEmpty() && !ofi.fileName.trim().isEmpty()) {
+            File f = new File(ofi.directory + File.separator + ofi.fileName);
+            return f.isFile() && f.exists();
+            //}
+        }
+
+        return false;
     }
 
     private void enableMenuItems(int nslices, boolean canPoll) {
@@ -372,6 +385,10 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
         itemDottedandDashedLines.addActionListener(this);
         itemRadialGrid.addActionListener(this);
 
+        // Masks ***
+        menuMasks.add(itemMasksToolBar);
+
+        itemMasksToolBar.addActionListener(this);
         // Others ***
 //        menuMisc.add(itemFlowJ);
 //        menuMisc.add(itemFlow3J);
@@ -392,6 +409,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
         addMenu(menuBinary);
         addMenu(menuProcess);
         addMenu(menuDraw);
+        addMenu(menuMasks);
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -400,8 +418,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
         try {
             if (e.getSource() == itemToTable) {
-                System.out.println(" @TODO >>> item 2 table: " + imp.getTitle());
-                //ImagesWindowFactory.openTable(imp);
+                ImagesWindowFactory.openImagePlusAsTable(imp);
             } else if (e.getSource() == itemFlipV) {
                 imp.getProcessor().flipVertical();
             } else if (e.getSource() == itemFlipH) {
@@ -660,7 +677,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
                 IJ.run(imp, "Voxel Counter", "");
             } else if (e.getSource() == item3DViewer) {
-                run3DViewer(imp);
+                ImagesWindowFactory.openImagePlusAs3D(imp);
             } else if (e.getSource() == itemErode) {
                 binarized = makeBinary(imp);
                 IJ.run(imp, "Erode", "");
@@ -696,6 +713,8 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
                 IJ.run(imp, "Voronoi", "");
             } else if (e.getSource() == itemOptions) {
                 IJ.run(imp, "Options...", "");
+            } else if (e.getSource() == itemMasksToolBar) {
+                IJ.run("Masks Tool Bar");
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
@@ -726,17 +745,6 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
         }
 
         return false;
-    }
-
-    public static void run3DViewer(ImagePlus ip) {
-        Image3DUniverse universe = new Image3DUniverse(UNIVERSE_W, UNIVERSE_H);
-
-        // Adds the sphere image plus to universe.
-        new StackConverter(ip).convertToRGB();
-        Content c = universe.addVoltex(ip);
-        c.displayAs(Content.VOLUME);
-
-        universe.show();    // Shows...
     }
 
     public void setPollStatus(boolean poll) {

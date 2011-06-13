@@ -8,10 +8,8 @@ import browser.Cache;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.imageitems.ImageDimension;
-import ij.IJ;
 import ij.ImagePlus;
 import ij.process.ImageStatistics;
-import ij.process.StackStatistics;
 import java.io.File;
 import java.text.DecimalFormat;
 import xmipp.ImageDouble;
@@ -22,9 +20,10 @@ import xmipp.ImageDouble;
  */
 public abstract class AbstractImageItem extends FileItem {
 
+    protected final static DecimalFormat decimalFormatter = new DecimalFormat("#.###");
     protected ImageDimension dimension;
     protected Cache cache;
-    protected StackStatistics statistics;
+    protected ImageStatistics statistics;
 
     public AbstractImageItem(File file, Cache cache) {
         super(file);
@@ -64,9 +63,13 @@ public abstract class AbstractImageItem extends FileItem {
 
                 if (preview != null) {
                     cache.put(getKey(), preview);
-
-                    statistics = new StackStatistics(preview);
                 }
+            }
+
+            // Preview might be loaded if it's referenced by another item, 
+            // but statistics, might be still null.
+            if (statistics == null) {
+                statistics = preview.getStatistics();
             }
         } else {    // Null preview.
             preview = ICONS_MANAGER.MISSING_ITEM;
@@ -113,11 +116,10 @@ public abstract class AbstractImageItem extends FileItem {
 
     //public abstract String getImageInfo();
     public String getImageInfo() {
-        DecimalFormat myFormatter = new DecimalFormat("#.###");
-        String strMin = myFormatter.format(statistics.min);
-        String strMax = myFormatter.format(statistics.max);
-        String strMean = myFormatter.format(statistics.mean);
-        String strStdDev = myFormatter.format(statistics.stdDev);
+        String strMin = decimalFormatter.format(statistics.min);
+        String strMax = decimalFormatter.format(statistics.max);
+        String strMean = decimalFormatter.format(statistics.mean);
+        String strStdDev = decimalFormatter.format(statistics.stdDev);
 
         return "<html>"
                 + LABELS.LABEL_WIDTH + dimension.getWidth() + "<br>"

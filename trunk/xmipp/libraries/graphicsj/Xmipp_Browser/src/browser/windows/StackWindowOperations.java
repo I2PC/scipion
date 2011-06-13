@@ -27,7 +27,8 @@ public class StackWindowOperations extends StackWindow implements iPollImageWind
     protected boolean poll = false;
     protected Timer timer = null;
     protected final static int PERIOD = 5000;  // repeat every 5 seconds
-    private String path;// = imp.getOriginalFileInfo().directory + imp.getOriginalFileInfo().fileName;
+    protected XmippMenuBar menuBar;
+    //private String path;// = imp.getOriginalFileInfo().directory + imp.getOriginalFileInfo().fileName;
     private File f;// = new File(path);
     private long last;// = f.lastModified();
 
@@ -50,7 +51,9 @@ public class StackWindowOperations extends StackWindow implements iPollImageWind
         setLayout(new BorderLayout());
 
         add(previousContent, BorderLayout.CENTER);
-        setMenuBar(new XmippMenuBar(this, imp));
+
+        menuBar = new XmippMenuBar(this, imp);
+        setMenuBar(menuBar);
 
         fixSize();
 
@@ -68,14 +71,12 @@ public class StackWindowOperations extends StackWindow implements iPollImageWind
 
     protected void setInitialPoll(boolean poll) {
         // Sets if image can poll (reloaded from disk) or not.
-        FileInfo ofi = imp.getOriginalFileInfo();
-
-        if (ofi != null) {
-            path = ofi.directory + ofi.fileName;
-            f = new File(path);
+        if (menuBar.canPoll()) {
+            FileInfo ofi = imp.getOriginalFileInfo();
+            f = new File(ofi.directory + ofi.fileName);
             last = f.lastModified();
 
-            setPoll(poll);  // If isPoll, starts timer to reload image form disk every period.
+            setPoll(poll);  // If polling, starts timer to reload image form disk every period.
         }
     }
 
@@ -101,7 +102,7 @@ public class StackWindowOperations extends StackWindow implements iPollImageWind
             IJ.showStatus("Reloading " + imp.getTitle());
 
             try {
-                ImageConverter.revert(imp, path);
+                ImageConverter.revert(imp, f.getAbsolutePath());
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

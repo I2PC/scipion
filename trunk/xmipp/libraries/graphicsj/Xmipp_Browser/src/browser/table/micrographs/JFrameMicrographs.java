@@ -101,12 +101,12 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
         // Sets sorter and filter.
         sorter = new TableRowSorter<MicrographsTableModel>(tableModel);
+        sorter.setSortsOnUpdates(true);
         enableFilter = new EnableFilter();
         sorter.setRowFilter(enableFilter);
         table.setRowSorter(sorter);
-
-        //table.setAutoCreateRowSorter(true);
         table.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
+
         table.addMouseListener(new java.awt.event.MouseAdapter() {
 
             @Override
@@ -259,6 +259,8 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     private void tableMouseClicked(java.awt.event.MouseEvent evt) {
         int view_row = table.rowAtPoint(evt.getPoint());
         int view_col = table.columnAtPoint(evt.getPoint());
+        int model_row = table.convertRowIndexToModel(view_row);
+        int model_col = table.convertColumnIndexToModel(view_col);
 
         if (SwingUtilities.isLeftMouseButton(evt)) {
             if (evt.getClickCount() > 1) {
@@ -268,21 +270,18 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
                     ImagesWindowFactory.captureFrame(((TableImageItem) item).getImagePlus());
                 }
             } else {    // Single click
-                int real_row = table.convertRowIndexToModel(view_row);
-                int real_column = table.convertColumnIndexToModel(view_col);
-
-                if (real_column == MicrographsTableModel.INDEX_ENABLED) {
+                if (model_col == MicrographsTableModel.INDEX_ENABLED) {
                     int min = table.getSelectionModel().getMinSelectionIndex();
                     int max = table.getSelectionModel().getMaxSelectionIndex();
 
                     // Multiple rows selection.
                     if (evt.isShiftDown()) {
                         // Last selection value will be the value for all the selected items.
-                        Boolean value = (Boolean) tableModel.getValueAt(real_row, real_column);//getModel().getValueAt(row, 0);
+                        Boolean value = (Boolean) tableModel.getValueAt(model_row, model_col);
 
                         for (int i = min; i <= max; i++) {
                             tableModel.setValueAt(value, table.convertRowIndexToModel(i),
-                                    real_column);
+                                    model_col);
                         }
                     }
 
@@ -293,8 +292,8 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
             table.setRowSelectionInterval(view_row, view_row);
             table.setColumnSelectionInterval(view_col, view_col);
 
-            // Column extraction only allowed for images
-            jPopupMenu.setCell(view_row, view_col);
+            jPopupMenu.setCell(model_row, model_col);
+
             jPopupMenu.refresh();
             jPopupMenu.show(evt.getComponent(), evt.getX(), evt.getY());
         }
@@ -335,18 +334,22 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     }
 
     public void done() {
-        System.out.println("Done!!");
+//        System.out.println("Done!!");
         setRunning(false);
 
         refreshTable();
     }
 
-    public void refreshTable() {
+    private void refreshTable() {
         SwingUtilities.invokeLater(new Runnable() {
 
             public void run() {
+                System.out.println(" *** Refreshing table " + System.currentTimeMillis());
                 tableModel.reload();
-//@HERE                updateTable();
+
+                table.setColumnModel(columnModel);  // Re sets column model to hide columns.
+
+                updateTableStructure();
             }
         });
     }
@@ -362,7 +365,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
         toolBar = new javax.swing.JToolBar();
         bSave = new javax.swing.JButton();
-        jButton1 = new javax.swing.JButton();
+        bReload = new javax.swing.JButton();
         jpCenter = new javax.swing.JPanel();
         jpCheckAll = new javax.swing.JPanel();
         jcbEnableAll = new javax.swing.JCheckBox();
@@ -385,16 +388,16 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         });
         toolBar.add(bSave);
 
-        jButton1.setText("Reload");
-        jButton1.setFocusable(false);
-        jButton1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jButton1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        bReload.setText("Reload");
+        bReload.setFocusable(false);
+        bReload.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        bReload.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        bReload.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                bReloadActionPerformed(evt);
             }
         });
-        toolBar.add(jButton1);
+        toolBar.add(bReload);
 
         getContentPane().add(toolBar, java.awt.BorderLayout.PAGE_START);
 
@@ -454,13 +457,14 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         setFiltering(jcbFilterEnabled.isSelected());
 }//GEN-LAST:event_jcbFilterEnabledItemStateChanged
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        tableModel.reload();
-        updateTableStructure();
-}//GEN-LAST:event_jButton1ActionPerformed
+    private void bReloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bReloadActionPerformed
+//        tableModel.reload();
+//        updateTableStructure();
+        refreshTable();
+}//GEN-LAST:event_bReloadActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton bReload;
     private javax.swing.JButton bSave;
-    private javax.swing.JButton jButton1;
     private javax.swing.JCheckBox jcbEnableAll;
     private javax.swing.JCheckBox jcbFilterEnabled;
     private javax.swing.JLabel jlStatus;
@@ -533,8 +537,10 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
         private void refresh() {
             jmiShowCTF.setEnabled(tableModel.hasCtfData());
-            jmiExtractColumnEnabled.setEnabled(table.getValueAt(row, col) instanceof TableImageItem);
-            jmiExtractColumnAll.setEnabled(table.getValueAt(row, col) instanceof TableImageItem);
+
+            // Column extraction only allowed for images
+            jmiExtractColumnEnabled.setEnabled(tableModel.getValueAt(row, col) instanceof TableImageItem);
+            jmiExtractColumnAll.setEnabled(tableModel.getValueAt(row, col) instanceof TableImageItem);
 
             boolean busy = tableModel.isRowBusy(row);
             jmiRecalculateCTF.setIcon(busy ? ICONS_MANAGER.WAIT_MENU_ICON : null);

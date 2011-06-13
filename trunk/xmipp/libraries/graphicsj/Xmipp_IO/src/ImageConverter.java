@@ -4,6 +4,7 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.FloatProcessor;
 import ij.process.StackStatistics;
+import java.util.LinkedList;
 import xmipp.ImageDouble;
 import xmipp.MDLabel;
 import xmipp.MetaData;
@@ -61,18 +62,18 @@ public class ImageConverter {
     }
 
     public static ImagePlus convertToImagej(MetaData md) {
+        LinkedList<String> missing = new LinkedList<String>();
         ImagePlus ip = null;
 
         if (md.containsLabel(MDLabel.MDL_IMAGE)) {
+            ImageStack is = null;
 
-            try {
-                ImageStack is = null;
+            long ids[] = md.findObjects();
 
-                long ids[] = md.findObjects();
+            for (long id : ids) {
+                String filename = md.getValueString(MDLabel.MDL_IMAGE, id);
 
-                for (int i = 0; i < ids.length; i++) {
-                    String filename = md.getValueString(MDLabel.MDL_IMAGE, ids[i]);
-
+                try {
                     ImageDouble img = new ImageDouble(filename);
                     ImagePlus slice = ImageConverter.convertToImagej(img, filename);
 
@@ -81,17 +82,27 @@ public class ImageConverter {
                     }
 
                     is.addSlice(filename, slice.getProcessor());
+                } catch (Exception ex) {
+                    missing.add(filename);
+                    //ex.printStackTrace();
                 }
-
-                ip = new ImagePlus(md.getFilename(), is);
-
-                // Normalize by default
-                StackStatistics ss = new StackStatistics(ip);
-                ip.getProcessor().setMinAndMax(ss.min, ss.max);
-            } catch (Exception ex) {
-                IJ.error(ex.getMessage());
-                throw new RuntimeException(ex);
             }
+
+            ip = new ImagePlus(md.getFilename(), is);
+
+            // Normalize by default
+            StackStatistics ss = new StackStatistics(ip);
+            ip.getProcessor().setMinAndMax(ss.min, ss.max);
+        }
+
+        // Tells user about missing files.
+        if (!missing.isEmpty()) {
+            String message = "There are missing files:\n";
+            for (int i = 0; i < missing.size(); i++) {
+                message += missing.get(i) + "\n";
+            }
+
+            IJ.error(message);
         }
 
         return ip;
