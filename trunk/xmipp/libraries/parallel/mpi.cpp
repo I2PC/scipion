@@ -308,13 +308,17 @@ void MpiMetadataProgram::read(int argc, char **argv)
     first = 1;
 }
 
-void MpiMetadataProgram::createTaskDistributor(const MetaData &mdIn)
+void MpiMetadataProgram::createTaskDistributor(const MetaData &mdIn, int blockSize)
 {
-    int blockSize=mdIn.size()/(node->size*5);
-    if (blockSize<1)
-        blockSize=1;
+    size_t size = mdIn.size();
+
+    if (blockSize < 1)
+        blockSize = XMIPP_MAX(1, size/(node->size * 5));
+    else if (blockSize > size)
+        blockSize = size;
+
     mdIn.findObjects(imgsId);
-    distributor = new FileTaskDistributor(mdIn.size(), blockSize, node);
+    distributor = new FileTaskDistributor(size, blockSize, node);
 }
 
 //Now use the distributor to grasp images

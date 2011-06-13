@@ -3,8 +3,6 @@
 
 #include <data/transformations.h>
 #include <data/image_generic.h>
-#include <data/args.h>
-#include <data/metadata.h>
 #include <data/metadata_extension.h>
 #include <data/fftw.h>
 #include <data/program.h>
@@ -14,7 +12,13 @@
 typedef enum { SCALE_NONE, SCALE_FACTOR, SCALE_DIM, SCALE_FOURIER, SCALE_PYRAMID_EXPAND, SCALE_PYRAMID_REDUCE } ScaleType;
 #define INTERP_FOURIER -1
 
-class ProgTransformGeometry: public XmippMetadataProgram{
+class ProgTransformGeometry: public XmippMetadataProgram
+{
+public:
+  /** Constructor and destructor, just to avoid vtable undefined references errors */
+  ProgTransformGeometry();
+  ~ProgTransformGeometry();
+
 protected:
     ScaleType scale_type;
 

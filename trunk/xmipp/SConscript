@@ -551,7 +551,7 @@ ReconsSources = [
     'tomo_detect_missing_wedge.cpp',
     'tomo_remove_fluctuations.cpp',
     'transform_downsample.cpp',
-    #'transform_geometry.cpp',
+    'transform_geometry.cpp',
     'volume_correct_bfactor.cpp',
     'volume_enhance_contrast.cpp',
     'volume_from_pdb.cpp',
@@ -741,7 +741,7 @@ AddXmippProgram('transform_adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('transform_center_image')
 AddXmippProgram('transform_downsample', ['XmippRecons'])
 AddXmippProgram('transform_filter', ['XmippRecons'])
-AddXmippProgram('transform_geometry')
+AddXmippProgram('transform_geometry', ['XmippRecons'])
 AddXmippProgram('transform_mask')
 AddXmippProgram('transform_mirror')
 AddXmippProgram('transform_morphology')
@@ -880,7 +880,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
     AddXmippMPIProgram('mpi_run', ['XmippRecons'])
     AddXmippMPIProgram('mpi_transform_filter', ['XmippRecons'])
-    #AddXmippMPIProgram('mpi_transform_geometry', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_transform_geometry', ['XmippRecons'])
     AddXmippMPIProgram('mpi_transform_normalize', ['XmippRecons'])
 #    AddXmippMPIProgram('template_threads', ['XmippRecons'])
 #    AddXmippMPIProgram('template_mpi', ['XmippRecons'])

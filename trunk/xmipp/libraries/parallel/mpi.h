@@ -150,6 +150,7 @@ protected:
     std::vector<size_t> imgsId;
     MpiFileMutex *fileMutex;
     size_t first, last;
+
 public:
     /** Constructor */
     MpiMetadataProgram();
@@ -158,7 +159,7 @@ public:
     /** Read arguments */
     void read(int argc, char **argv);
     /** Create task distributor */
-    void createTaskDistributor(const MetaData &mdIn);
+    void createTaskDistributor(const MetaData &mdIn, int blockSize = 0);
     /** Get task to process */
     bool getTaskToProcess(size_t &objId, size_t &objIndex);
 };
@@ -168,7 +169,18 @@ public:
 #define CREATE_MPI_METADATA_PROGRAM(baseClassName, mpiClassName) \
 class mpiClassName: public baseClassName, public MpiMetadataProgram\
 {\
+  int blockSize;\
 public:\
+    void defineParams()\
+    {\
+        baseClassName::defineParams();\
+        addParamsLine("== MPI ==");\
+        addParamsLine(" [--mpi_job_size <size=0>]     : Number of images sent simultaneously to a mpi node");\
+    }\
+    void readParams()\
+    {\
+        blockSize = getIntParam("--mpi_job_size");\
+    }\
     void read(int argc, char **argv)\
     {\
         MpiMetadataProgram::read(argc,argv);\
@@ -179,7 +191,7 @@ public:\
     void preProcess()\
     {\
         baseClassName::preProcess();\
-        createTaskDistributor(mdIn);\
+        createTaskDistributor(mdIn, blockSize);\
     }\
     void startProcessing()\
     {\
