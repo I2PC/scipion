@@ -65,7 +65,11 @@ public class MetaData {
 
         // Try to fix paths.
         if (Arrays.binarySearch(PATHS_FIELDS, label) >= 0) {
+//            System.out.println("baseDir: " + getBaseDir());
+//            System.out.println("value: " + value);
             value = Filename.fixPath(getBaseDir(), value);
+//            System.out.println("value': " + value);
+//            System.out.println("* * * * * * * * * * * * * * * *");
         }
 
         return value;

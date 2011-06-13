@@ -66,7 +66,7 @@ public class ImageDouble {
 
     // Writing.
     public void write(String filename) throws Exception {
-        write(filename, ALL_IMAGES, false, ImageWriteMode.WRITE_OVERWRITE, CastWriteMode.CW_CAST);
+        write(filename, ALL_IMAGES, Filename.isStackOrVolume(filename), ImageWriteMode.WRITE_OVERWRITE, CastWriteMode.CW_CAST);
     }
 
     public native void write(String filename, int select_img, boolean isStack, int mode, int castWriteMode) throws Exception;

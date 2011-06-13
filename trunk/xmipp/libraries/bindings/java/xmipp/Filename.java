@@ -117,13 +117,14 @@ public class Filename {
             if (!str.isEmpty()) {
                 // str may have a string prefix before the number, so
                 // grab the rightmost part
-                int i=str.length()-1;
-                while(i>=0){
-                        if(Character.isDigit(str.charAt(i)) == false)
-                                break;
-                        i--;
+                int i = str.length() - 1;
+                while (i >= 0) {
+                    if (Character.isDigit(str.charAt(i)) == false) {
+                        break;
+                    }
+                    i--;
                 }
-                String rightPart=str.substring(i+1,str.length());
+                String rightPart = str.substring(i + 1, str.length());
 
                 nimage = Long.valueOf(rightPart);
             }
@@ -140,36 +141,26 @@ public class Filename {
         return filename;
     }
 
+
     private static String getAbsPath(String baseDir, String filename) {
-        String[] tokensDir = baseDir.split(File.separator);
+        baseDir += !baseDir.endsWith(File.separator) ? File.separator : "";
         String[] tokensFile = filename.split(File.separator);
 
-        int indexDir = tokensDir.length - 1;
-        int indexFile = 0;
+        StringBuffer token = new StringBuffer();
 
-        while (indexFile < tokensFile.length && indexDir >= 0) {
-            String dirToken = tokensDir[indexDir];
-            String fileToken = tokensFile[indexFile];
-            if (!dirToken.equals(fileToken)) {
-                break;
-            }
-            indexDir--;
-            indexFile++;
-        }
+        int i = 0;
 
-        // Builds result path.
-        String path = "";
-        // Dir
-        for (int i = 0; i < tokensDir.length; i++) {
-            path += tokensDir[i] + File.separator;
-        }
+        do {
+            token.append(tokensFile[i] + File.separator);
+            i++;
+        } while (i < tokensFile.length && baseDir.contains(token + tokensFile[i]));
 
-        // File
-        for (int i = indexFile; i < tokensFile.length - 1; i++) {
-            path += tokensFile[i] + File.separator;
-        }
-        path += tokensFile[tokensFile.length - 1];  // Last item (to avoid "/" at the end)
+        String left = baseDir.split(token.toString())[0];
 
-        return path;
+        String aux[] = filename.split(token.toString());
+        String center = aux.length > 1 ? token.toString() : "";
+        String right = aux.length > 1 ? aux[1] : filename;
+
+        return left + center + right;
     }
 }
