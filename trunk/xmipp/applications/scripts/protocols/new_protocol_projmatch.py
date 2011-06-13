@@ -73,7 +73,7 @@ CleanUpFiles =False
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 ProjectDir='/gpfs/fs1/home/bioinfo/roberto/PhantomIco'
 """
-ProjectDir='/home/roberto/PhantomIco'
+ProjectDir='/gpfs/fs1/home/bioinfo/roberto/PhantomIco'
 
 # {expert} Directory name for logfiles:
 LogDir ='Logs'
@@ -1090,9 +1090,8 @@ def actionsToBePerformedInsideLoop(_log):
             _VerifyFiles = []
             #File with list of images and references
             _VerifyFiles.append(ProjMatchRootName[iterN][refN] )
-###CHECK THIS
-#            for i in range (1,NumberOfCtfGroups+1):
-#                _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.txt")
+            for i in range (1,NumberOfCtfGroups+1):
+                _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.xmd")
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             
 
