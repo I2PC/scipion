@@ -54,7 +54,7 @@ public class MetadataFileItem extends XmippImageItem {
             long objs[] = md.findObjects();
 
             for (long id : objs) {
-                String field = md.getValueString(MDLabel.MDL_IMAGE, id);
+                String field = md.getValueString(MDLabel.MDL_IMAGE, id, true);
 
                 field = Filename.getFilename(field);      // Avoids image@filename format ;)
                 nimage = Filename.getNimage(field);
@@ -96,69 +96,7 @@ public class MetadataFileItem extends XmippImageItem {
     }
 
     @Override
-    public ImagePlus getImagePlus() {//int image) {
+    public ImagePlus getImagePlus() {
         return ImageConverter.convertToImagej(md);
-        /*        ImagePlus ip = null;
-
-        try {
-        ImageStack is = null;
-        String images[] = getFileNames(md, file.getParent() + File.separator);
-
-        for (int i = 0; i < images.length; i++) {
-        ImageDouble img = new ImageDouble();
-        img.read(images[i]);
-
-        ImagePlus slice_ = ImageConverter.convertToImagej(img, images[i]);
-
-        if (is == null) {
-        is = new ImageStack(slice_.getWidth(), slice_.getHeight());
-        }
-
-        is.addSlice(images[i], slice_.getProcessor());
-        }
-        ip = new ImagePlus(file.getAbsolutePath(), is);
-        } catch (Exception ex) {
-        IJ.error(ex.getMessage());
-        throw new RuntimeException(ex);
-        }
-
-        return ip;*/
     }
-    /*
-    public String[] getFileNames() {
-    return getFileNames(md, file.getParent() + File.separator);
-    }
-
-    protected static String[] getFileNames(MetaData md, String parent) {
-    String filenames[] = null;
-
-    // Skips if there are no images.
-    if (md.containsLabel(MDLabel.MDL_IMAGE)) {
-    filenames = new String[md.size()];
-    File f;
-    //String parent = file.getParent() + File.separator;
-
-    int i = 0;
-    //md.iteratorBegin();
-    long objs[] = md.findObjects();
-
-    //do {
-    for (long id : objs) {
-    //md.getStrFromValue(MDLabel.MDL_IMAGE, field);
-    String field = md.getValueString(MDLabel.MDL_IMAGE, id);
-
-    f = new File(field);
-    if (!f.isAbsolute()) {
-    f = new File(parent + field);
-    }
-
-    filenames[i++] = f.getAbsolutePath();
-
-    //md.iteratorNext();
-    }
-    //while (!md.iteratorEnd());
-    }
-
-    return filenames;
-    }*/
 }

@@ -158,9 +158,11 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
                             case MDLabel.MDL_ASSOCIATED_IMAGE1:
                             case MDLabel.MDL_ASSOCIATED_IMAGE2:
                             case MDLabel.MDL_ASSOCIATED_IMAGE3:
-                                String filename = md.getValueString(label, id);
+                                String filename = md.getValueString(label, id, true);
                                 File f = new File(filename);
-                                row[col] = new TableImageItem(f, cache);
+                                String originalValue = md.getValueString(label, id);
+
+                                row[col] = new TableImageItem(f, originalValue, cache);
                                 break;
                             case MDLabel.MDL_CTF_CRITERION_DAMPING:
                             case MDLabel.MDL_CTF_CRITERION_FIRSTZEROAVG:
@@ -176,7 +178,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
                                 row[col] = md.getValueDouble(label, id);
                                 break;
                             default:
-                                row[col] = md.getValueString(label, id);
+                                row[col] = md.getValueString(label, id, true);
                         }
                     }
                 }
@@ -319,7 +321,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
 
     public String getCTFfile(int row) {
         long id = (Long) getValueAt(row, 0);
-        String file = md.getValueString(MDLabel.MDL_CTFMODEL, id);
+        String file = md.getValueString(MDLabel.MDL_CTFMODEL, id, true);
 
         return file;
     }
@@ -327,14 +329,14 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
     public String getPSDfile(int row) {
         long id = (Long) getValueAt(row, 0);
 
-        String file = md.getValueString(MDLabel.MDL_PSD, id);
+        String file = md.getValueString(MDLabel.MDL_PSD, id, true);
 
         return file;
     }
 
     public String getCTFDisplayfile(int row) {
         long id = (Long) getValueAt(row, 0);
-        String file = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id);
+        String file = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id, true);
 
         return file;
     }

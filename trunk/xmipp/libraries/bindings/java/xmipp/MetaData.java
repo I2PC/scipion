@@ -58,21 +58,25 @@ public class MetaData {
 
     public native double getValueDouble(int label, long objId);
 
-    private native String getValueString_(int label, long objId);
+    public native String getValueString(int label, long objId);
 
-    public String getValueString(int label, long objId) {
-        String value = getValueString_(label, objId);
+    public String getValueString(int label, long objId, boolean fixPaths) {
+        String value = getValueString(label, objId);
 
         // Try to fix paths.
-        if (Arrays.binarySearch(PATHS_FIELDS, label) >= 0) {
-//            System.out.println("baseDir: " + getBaseDir());
-//            System.out.println("value: " + value);
-            value = Filename.fixPath(getBaseDir(), value);
-//            System.out.println("value': " + value);
-//            System.out.println("* * * * * * * * * * * * * * * *");
+        if (fixPaths && isPathField(label)) {
+            value = fixPath(value);
         }
 
         return value;
+    }
+
+    public static boolean isPathField(int label) {
+        return Arrays.binarySearch(PATHS_FIELDS, label) >= 0;
+    }
+
+    public String fixPath(String value) {
+        return Filename.fixPath(getBaseDir(), value);
     }
 
     public native boolean getValueBoolean(int label, long objId);

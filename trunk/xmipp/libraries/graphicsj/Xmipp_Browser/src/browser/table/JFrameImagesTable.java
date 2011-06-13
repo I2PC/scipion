@@ -112,8 +112,8 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
         setRowHeader();
 
-        // Volumes and stacks will be "auto-normalized".
-        if (tableModel.isVolume() || tableModel.isStack()) {
+        // Stacks will be "auto-normalized".
+        if (/*tableModel.isVolume() || */tableModel.isStack()) {
             setNormalized(true);
         }
     }

@@ -33,7 +33,6 @@ public class ImagesTableModel extends AbstractTableModel {
     private LinkedList<TableImageItem> selectedItems = new LinkedList<TableImageItem>();
     private int rows, cols;
     private Cache cache = new Cache();
-    private boolean isMetadata;
     private boolean normalize = false;
     private double min = Double.MIN_VALUE, max = Double.MAX_VALUE;
 
@@ -112,7 +111,6 @@ public class ImagesTableModel extends AbstractTableModel {
 
         try {
             md = new MetaData(filename);
-            isMetadata = true;
 
             long ids[] = md.findObjects();
 
@@ -124,7 +122,7 @@ public class ImagesTableModel extends AbstractTableModel {
                     enabled = md.getValueInt(MDLabel.MDL_ENABLED, id) == 0 ? false : true;
                 }
 
-                String imagefilename = md.getValueString(MDLabel.MDL_IMAGE, id);
+                String imagefilename = md.getValueString(MDLabel.MDL_IMAGE, id, true);
 
                 long nimage = Filename.getNimage(imagefilename);
                 String name = Filename.getFilename(imagefilename);
@@ -409,11 +407,11 @@ public class ImagesTableModel extends AbstractTableModel {
     }
 
     public boolean isStack() {
-        return !isMetadata && ((TableImageItem) getValueAt(0, 0)).isStack();
+        return filename != null && Filename.isStack(filename);
     }
 
     public boolean isVolume() {
-        return !isMetadata && ((TableImageItem) getValueAt(0, 0)).isVolume();
+        return filename != null && Filename.isVolume(filename);
     }
 
     public void printNormalizationInfo() {

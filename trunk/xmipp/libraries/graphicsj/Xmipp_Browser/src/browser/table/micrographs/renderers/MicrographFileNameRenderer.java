@@ -26,7 +26,7 @@ public class MicrographFileNameRenderer extends MicrographRowDisablerRenderer {
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         TableImageItem item = (TableImageItem) value;
 
-        StringBuffer sb = new StringBuffer(item.getAbsoluteFileName());
+        StringBuffer sb = new StringBuffer(item.getOriginalStringValue());
         String str = sb.toString();
 
         int columnWidth = table.getColumnModel().getColumn(column).getWidth();

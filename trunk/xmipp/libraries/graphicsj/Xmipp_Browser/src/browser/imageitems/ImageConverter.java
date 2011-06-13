@@ -95,7 +95,7 @@ public class ImageConverter {
             long ids[] = md.findObjects();
 
             for (long id : ids) {
-                String filename = md.getValueString(MDLabel.MDL_IMAGE, id);
+                String filename = md.getValueString(MDLabel.MDL_IMAGE, id, true);
 
                 try {
                     ImageDouble img = new ImageDouble(filename);

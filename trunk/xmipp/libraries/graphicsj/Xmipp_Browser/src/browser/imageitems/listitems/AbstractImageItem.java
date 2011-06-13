@@ -69,7 +69,8 @@ public abstract class AbstractImageItem extends FileItem {
             // Preview might be loaded if it's referenced by another item, 
             // but statistics, might be still null.
             if (statistics == null) {
-                statistics = preview.getStatistics();
+                statistics = preview.getStatistics(
+                        ImageStatistics.MIN_MAX + ImageStatistics.MEAN + ImageStatistics.STD_DEV);
             }
         } else {    // Null preview.
             preview = ICONS_MANAGER.MISSING_ITEM;

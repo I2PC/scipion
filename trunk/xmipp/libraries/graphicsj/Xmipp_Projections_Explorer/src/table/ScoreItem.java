@@ -28,7 +28,7 @@ public class ScoreItem implements Comparable<ScoreItem> {
     public ScoreItem(MetaData md, long id) {
         this.md = md;
         this.id = id;
-        fileName = md.getValueString(MDLabel.MDL_IMAGE, id);
+        fileName = md.getValueString(MDLabel.MDL_IMAGE, id, true);
         score = md.getValueDouble(MDLabel.MDL_ZSCORE, id);
         good = md.getValueInt(MDLabel.MDL_ENABLED, id) != 0;
 

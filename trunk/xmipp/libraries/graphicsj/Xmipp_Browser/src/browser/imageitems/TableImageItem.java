@@ -19,6 +19,12 @@ public class TableImageItem extends XmippImageItem {
     protected boolean enabled = true;
     protected boolean selected = false;
     protected double scale = 1.0;
+    protected String originalValue = null;
+
+    public TableImageItem(File file, String originalValue, Cache cache) {
+        this(file, cache);
+        this.originalValue = originalValue;
+    }
 
     public TableImageItem(File file, Cache cache) {
         this(file, ImageDouble.FIRST_SLICE, cache);
@@ -43,6 +49,10 @@ public class TableImageItem extends XmippImageItem {
     public String getKey() {
         // TODO: (Maybe not) Fix by overriding: return super.getKey() + "[" + scale + "]";
         return file.getAbsolutePath() + "_" + getThumbnailHeight() + "_" + getThumbnailWidth() + "_" + nslice + "_" + nimage;
+    }
+
+    public String getOriginalStringValue() {
+        return originalValue;
     }
 
     /*    @Override

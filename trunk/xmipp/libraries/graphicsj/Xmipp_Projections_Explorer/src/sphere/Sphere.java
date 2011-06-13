@@ -92,7 +92,7 @@ public class Sphere {
             long ids[] = md.findObjects();
 
             for (long id : ids) {
-                String imageFileName = md.getValueString(MDLabel.MDL_IMAGE, id);
+                String imageFileName = md.getValueString(MDLabel.MDL_IMAGE, id, true);
 
                 if (!imageFileName.startsWith("/")) {   // Builds absolute path (if it's not absolute already)
                     imageFileName = baseDir + imageFileName;
