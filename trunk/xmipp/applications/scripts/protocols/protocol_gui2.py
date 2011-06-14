@@ -62,8 +62,8 @@ TextCitationColour = "dark olive green"
 BackgroundColour = "white"
 LabelBackgroundColor = BackgroundColour
 HighlightBackgroundColour = BackgroundColour
-ButtonBackgroundColour = "LightBlue"
-ButtonActiveBackgroundColour = "LightSkyBlue"
+ButtonBackgroundColor = "LightBlue"
+ButtonActiveBackgroundColor = "LightSkyBlue"
 EntryBackgroundColour = "lemon chiffon" 
 ExpertLabelBackgroundColor = "light salmon"
 ListSelectColour = "DeepSkyBlue4"
@@ -131,14 +131,20 @@ class ProtocolWidget():
         self.variable_value = value
         
     def addWidgets(self):
-        frame = self.master.frame
+        master = self.master
+        frame = master.frame
         row = master.lastRow()
         
         if self.is_section: # Add section
             line = self.comment + '\n----------------------------------------------'
-            label = Label(frame, text=line, fg=TextSectionColor)
-            label.grid(row=row, column=0, columnspan=master.columnspantext, sticky=E)
+            label = Label(frame, text=line, fg=TextSectionColor, bg=LabelBackgroundColor)
+            label.grid(row=row, column=0, columnspan=master.columnspantextlabel, sticky=E)
             self.widgetlist.append(label)
+        elif self.is_list: # Add radiobutton list
+            pass
+        elif self.is_dir or self.is_file:#Add text entry with browse button
+            pass
+            
             
         
         
@@ -165,6 +171,7 @@ class ProtocolGUI():
             if not begin_of_header:
                 self.pre_header_lines.append(line)
             elif not end_of_header:
+                print "LINE: ", line
                 self.header_lines.append(line)
             else:
                 self.post_header_lines.append(line)                
@@ -180,9 +187,6 @@ class ProtocolGUI():
             raise Exception('{end_of_header} tag not found in protocol script: %s' % script)
                 
     def parseHeader(self):
-        scriptfile = open(script, 'r')   
-        begin_of_header = False 
-        end_of_header = False
         #REGURLAR EXPRESSION TO PARSE VARIABLES DEFINITION
         import re
         #Comment regex, match lines starting by # and followed by tags with values
@@ -230,6 +234,8 @@ class ProtocolGUI():
                             w.setVariable(match2.group(1), match2.group(2))
                             self.variablesDict[w.variable_name] = w.variable_value;
                             index += 1
+            else:
+                index += 1
         
             
     def prepareCanvas(self):
@@ -300,7 +306,8 @@ class ProtocolGUI():
             w.addWidgets()
     
     def addButton(self, text, cmd, underline, row, col, sticky):
-        btn = Button(self.frame, text=text, command=cmd, underline=underline)
+        btn = Button(self.frame, text=text, command=cmd, underline=underline,
+                     bg=ButtonBackgroundColor, activebackground=ButtonActiveBackgroundColor)
         btn.grid(row=row, column=col, sticky=sticky)
         
     def close(self, event=""):
