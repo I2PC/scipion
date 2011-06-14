@@ -86,7 +86,7 @@ TEST_F( MetadataTest, similarToOperator)
     auxMetadata.setValue(MDL_Y,4.,id);
     auxMetadata.setValue(MDL_X,3.,id);
     ASSERT_TRUE(auxMetadata==mDsource);
-    auxMetadata.setPrecission(4);
+    auxMetadata.setPrecission()(4);
     ASSERT_FALSE(auxMetadata==mDsource);
 
 
