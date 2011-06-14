@@ -755,6 +755,12 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
     else
         o << "Real-space image" << std::endl;
 
+    o << "Endianess      : ";
+        if (I.swap^IsLittleEndian())
+            o << "Little"  << std::endl;
+        else
+            o << "Big" << std::endl;
+
     o << "Reversed       : ";
     if (I.swap)
         o << "True"  << std::endl;
