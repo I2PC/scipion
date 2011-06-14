@@ -261,9 +261,9 @@ public:
     /**Set precision (number of decimal digits) use by operator == when comparing
      * metadatas with double data. "2" is a good value for angles
      */
-    bool setPrecission(int precision)
+    bool setPrecission(int _precision)
     {
-    	precision= pow (10,precision);
+        precision= pow (10,_precision);
     }
 
     /** Set to false for row format (parameter files).
