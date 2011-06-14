@@ -497,7 +497,7 @@ bool MDSql::equals(const MDSql &op)
         {
             ss2 << ", CAST (" << MDL::label2Str( myMd->activeLabels[i])
             << "*" << precision
-            << " as INTEGER) as MDL::label2Str( myMd->activeLabels[i])";
+            << " as INTEGER) as " << MDL::label2Str( myMd->activeLabels[i]);
 
         }
         else
