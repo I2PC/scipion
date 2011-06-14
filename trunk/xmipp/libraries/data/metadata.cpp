@@ -62,6 +62,7 @@ void MetaData::init(const std::vector<MDLabel> *labelsVector)
         this->activeLabels = *labelsVector;
     //Create table in database
     myMDSql->createMd();
+    precision=100;
 }//close init
 
 void MetaData::copyInfo(const MetaData &md)

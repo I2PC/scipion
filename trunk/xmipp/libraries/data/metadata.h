@@ -136,7 +136,7 @@ protected:
     String comment; ///< A general comment for the MetaData file
 
     bool isColumnFormat; ///< Format for the file, column or row formatted
-
+    int precision;
     /**Input file name
      * Where does this MetaData come from/go to be stored?
      */
@@ -257,6 +257,14 @@ public:
     /**Get column format info.
      */
     bool getColumnFormat() const;
+
+    /**Set precision (number of decimal digits) use by operator == when comparing
+     * metadatas with double data. "2" is a good value for angles
+     */
+    bool setPrecission(int precision)
+    {
+    	precision= pow (10,precision);
+    }
 
     /** Set to false for row format (parameter files).
      *  set to true  for column format (this is the default) (docfiles)
