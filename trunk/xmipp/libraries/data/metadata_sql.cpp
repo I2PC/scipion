@@ -520,7 +520,6 @@ bool MDSql::equals(const MDSql &op)
     << " GROUP BY " << ss2Group.str()
     << " HAVING COUNT(*) <> 2"
     << ") tmp1";
-    //std::cerr << sqlQuery.str() <<std::endl;
     return (execSingleIntStmt(sqlQuery)==0);
 }
 
