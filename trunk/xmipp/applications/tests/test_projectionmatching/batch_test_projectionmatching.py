@@ -126,25 +126,52 @@ class TestProjMatching(unittest.TestCase):
         tmpDirName = os.path.join(tmpDirName,'gallery_ref_01')
         
         #do not use os.path.join because adds an extra /
+        
         testFileName = tmpDirName +'.stk'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(ImgCompare(goldFileName,testFileName))
         
         testFileName = tmpDirName +'.doc'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+        auxGold=MetaData(goldFileName)
+        auxTest=MetaData(testFileName)
+        self.assertTrue(auxGold==auxTest)
         
         testFileName = tmpDirName +'_sampling.xmd'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+        auxGold=MetaData("extra@"+goldFileName)
+        auxTest=MetaData("extra@"+testFileName)
+        self.assertTrue(auxGold==auxTest)
+        auxGold=MetaData("neighbors@"+goldFileName)
+        auxTest=MetaData("neighbors@"+testFileName)
+        self.assertTrue(auxGold==auxTest)
+        auxGold=MetaData("projectionDirections@"+goldFileName)
+        auxTest=MetaData("projectionDirections@"+testFileName)
+        self.assertTrue(auxGold==auxTest)
         
         testFileName = tmpDirName +'_group000001_sampling.xmd'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+        auxGold=MetaData("extra@"+goldFileName)
+        auxTest=MetaData("extra@"+testFileName)
+        self.assertTrue(auxGold==auxTest)
+        auxGold=MetaData("neighbors@"+goldFileName)
+        auxTest=MetaData("neighbors@"+testFileName)
+        self.assertTrue(auxGold==auxTest)
+        auxGold=MetaData("projectionDirections@"+goldFileName)
+        auxTest=MetaData("projectionDirections@"+testFileName)
+        self.assertTrue(auxGold==auxTest)
         
         testFileName = tmpDirName +'_group000002_sampling.xmd'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+        auxGold=MetaData("extra@"+goldFileName)
+        auxTest=MetaData("extra@"+testFileName)
+        self.assertTrue(auxGold==auxTest)
+        auxGold=MetaData("neighbors@"+goldFileName)
+        auxTest=MetaData("neighbors@"+testFileName)
+        self.assertTrue(auxGold==auxTest)
+        auxGold=MetaData("projectionDirections@"+goldFileName)
+        auxTest=MetaData("projectionDirections@"+testFileName)
+        self.assertTrue(auxGold==auxTest)
         
     def test_030projection_matching(self):
         tmpDirName ='ProjMatch/new20/Iter_01/ProjMatchClasses'
