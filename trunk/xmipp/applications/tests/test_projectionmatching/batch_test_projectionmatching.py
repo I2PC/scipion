@@ -35,46 +35,46 @@ class TestProjMatching(unittest.TestCase):
         self.dst = 'ProjMatch/new20/'
 
                 
-    def test_000execute_ctf_groups(self):
-        CtfGroupDirectory = os.path.join(self.path,'CtfGroups')
-        CtfGroupRootName  = 'ctf'
-        dict = {
-                'CTFDatName': 'new_ctf.ctfdat'
-                ,'CtfGroupDirectory': CtfGroupDirectory
-                ,'CtfGroupMaxDiff': 0.10000000000000001
-                ,'CtfGroupMaxResol': 5.5999999999999996
-                ,'CtfGroupRootName': CtfGroupRootName
-                ,'DataArePhaseFlipped': True
-                ,'DoAutoCtfGroup': True
-                ,'DoCtfCorrection': True
-                ,'PaddingFactor': 2
-                ,'SelFileName': 'new20.sel'
-                ,'SplitDefocusDocFile': ''
-                ,'WienerConstant': -1
-           }
-        execute_ctf_groups(self.log,dict)
-
-        testName = CtfGroupDirectory+"/"+CtfGroupRootName+'Info.xmd'
-        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldName,testName))
-        #check two file compare works
-        self.assertFalse(compareTwoFiles(goldName,'/etc/passwd'))
-
-        testName1 = CtfGroupDirectory+"/"+CtfGroupRootName+'_ctf.stk'
-        goldName = testName1.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(ImgCompare(goldName,testName1))
-
-        testName = CtfGroupDirectory+"/"+CtfGroupRootName+'_wien.stk'
-        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(ImgCompare(goldName,testName))
-
-        testName = CtfGroupDirectory+"/"+CtfGroupRootName+'_split.doc'
-        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldName,testName))
-
-        testName = CtfGroupDirectory+"/"+CtfGroupRootName+'_images.sel'
-        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldName,testName))
+#    def test_000execute_ctf_groups(self):
+#        CtfGroupDirectory = os.path.join(self.path,'CtfGroups')
+#        CtfGroupRootName  = 'ctf'
+#        dict = {
+#                'CTFDatName': 'new_ctf.ctfdat'
+#                ,'CtfGroupDirectory': CtfGroupDirectory
+#                ,'CtfGroupMaxDiff': 0.10000000000000001
+#                ,'CtfGroupMaxResol': 5.5999999999999996
+#                ,'CtfGroupRootName': CtfGroupRootName
+#                ,'DataArePhaseFlipped': True
+#                ,'DoAutoCtfGroup': True
+#                ,'DoCtfCorrection': True
+#                ,'PaddingFactor': 2
+#                ,'SelFileName': 'new20.sel'
+#                ,'SplitDefocusDocFile': ''
+#                ,'WienerConstant': -1
+#           }
+#        execute_ctf_groups(self.log,dict)
+#
+#        testName = CtfGroupDirectory+"/"+CtfGroupRootName+'Info.xmd'
+#        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
+#        self.assertTrue(compareTwoFiles(goldName,testName))
+#        #check two file compare works
+#        self.assertFalse(compareTwoFiles(goldName,'/etc/passwd'))
+#
+#        testName1 = CtfGroupDirectory+"/"+CtfGroupRootName+'_ctf.stk'
+#        goldName = testName1.replace(self.WorkingDir,self.goldWorkingDir)
+#        self.assertTrue(ImgCompare(goldName,testName1))
+#
+#        testName = CtfGroupDirectory+"/"+CtfGroupRootName+'_wien.stk'
+#        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
+#        self.assertTrue(ImgCompare(goldName,testName))
+#
+#        testName = CtfGroupDirectory+"/"+CtfGroupRootName+'_split.doc'
+#        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
+#        self.assertTrue(compareTwoFiles(goldName,testName))
+#
+#        testName = CtfGroupDirectory+"/"+CtfGroupRootName+'_images.sel'
+#        goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
+#        self.assertTrue(compareTwoFiles(goldName,testName))
 
 #    def test_010execute_mask(self):
 #        maskedFileNamesIter='ProjMatch/new20/Iter_01/masked_reference_ref_01.vol'
@@ -177,9 +177,10 @@ class TestProjMatching(unittest.TestCase):
             os.mkdir(tmpDirName)
         testFileName = dict['ProjMatchRootName']
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print "aaaa", str(os.environ.get('PWD')), goldFileName,testFileName
+        md1= MetaData(testFileName)
+        md2=MetaData(goldFileName)
         projection_matching(self.log,dict)
-        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+        self.assertTrue(md1==md2)
 #
 #    def test_040assign_images_to_references(self):
 #        dict = {   
