@@ -76,75 +76,75 @@ class TestProjMatching(unittest.TestCase):
         goldName = testName.replace(self.WorkingDir,self.goldWorkingDir)
         self.assertTrue(compareTwoFiles(goldName,testName))
 
-    def test_010execute_mask(self):
-        maskedFileNamesIter='ProjMatch/new20/Iter_01/masked_reference_ref_01.vol'
-        dict = {
-                'DoMask': True,
-                'DoSphericalMask': True,
-                'maskRadius': 64,
-                'maskedFileName': maskedFileNamesIter ,
-                'reconstructedFileName': 'ico.vol',
-                'userSuppliedMask': 'mask.vol'
-        }
-        tmpDirName=os.path.dirname(maskedFileNamesIter)
-        if not os.path.exists(tmpDirName):
-            os.mkdir(tmpDirName)
-        execute_mask(self.log,dict)
-        testFileName = maskedFileNamesIter
-        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(ImgCompare(goldFileName,testFileName))
-
-    def test_020angular_project_library(self):
-        dict = {'AngSamplingRateDeg': '1',
-                'CtfGroupSubsetFileName': 'ProjMatch/new20/CtfGroups/ctf_images.sel',
-                'DoCtfCorrection': True,
-                'DoParallel': True,
-                'DoRestricSearchbyTiltAngle': False,
-                'DocFileInputAngles': 'ProjMatch/new20/original_angles.doc',
-                'MaxChangeInAngles': '1000',
-                'MpiJobSize': '1',
-                'NumberOfMpiProcesses': 3,
-                'NumberOfThreads': 1,
-                'OnlyWinner': False,
-                'PerturbProjectionDirections': False,
-                'ProjectLibraryRootName': 'ProjMatch/new20/Iter_01/ReferenceLibrary/gallery_ref_01.stk',
-                'SymmetryGroup': 'i3',
-                'SymmetryGroupNeighbourhood': '',
-                'SystemFlavour': 'TORQUE-OPENMPI',
-                'Tilt0': 40,
-                'TiltF': 90,
-                'maskedFileNamesIter': 'ProjMatch/new20/Iter_01/masked_reference_ref_01.vol'
-        }
-        src = self.src + 'original_angles.doc'
-        dst = self.dst 
-
-        shutil.copy(src, dst)
-        tmpDirName = self.dst + 'Iter_01/ReferenceLibrary'
-        if not os.path.exists(tmpDirName):
-            os.mkdir(tmpDirName)
-        angular_project_library(self.log,dict)
-        tmpDirName = os.path.join(tmpDirName,'gallery_ref_01')
-        
-        #do not use os.path.join because adds an extra /
-        testFileName = tmpDirName +'.stk'
-        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(ImgCompare(goldFileName,testFileName))
-        
-        testFileName = tmpDirName +'.doc'
-        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
-        
-        testFileName = tmpDirName +'_sampling.xmd'
-        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
-        
-        testFileName = tmpDirName +'_group000001_sampling.xmd'
-        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
-        
-        testFileName = tmpDirName +'_group000002_sampling.xmd'
-        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+#    def test_010execute_mask(self):
+#        maskedFileNamesIter='ProjMatch/new20/Iter_01/masked_reference_ref_01.vol'
+#        dict = {
+#                'DoMask': True,
+#                'DoSphericalMask': True,
+#                'maskRadius': 64,
+#                'maskedFileName': maskedFileNamesIter ,
+#                'reconstructedFileName': 'ico.vol',
+#                'userSuppliedMask': 'mask.vol'
+#        }
+#        tmpDirName=os.path.dirname(maskedFileNamesIter)
+#        if not os.path.exists(tmpDirName):
+#            os.mkdir(tmpDirName)
+#        execute_mask(self.log,dict)
+#        testFileName = maskedFileNamesIter
+#        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+#        self.assertTrue(ImgCompare(goldFileName,testFileName))
+#
+#    def test_020angular_project_library(self):
+#        dict = {'AngSamplingRateDeg': '1',
+#                'CtfGroupSubsetFileName': 'ProjMatch/new20/CtfGroups/ctf_images.sel',
+#                'DoCtfCorrection': True,
+#                'DoParallel': True,
+#                'DoRestricSearchbyTiltAngle': False,
+#                'DocFileInputAngles': 'ProjMatch/new20/original_angles.doc',
+#                'MaxChangeInAngles': '1000',
+#                'MpiJobSize': '1',
+#                'NumberOfMpiProcesses': 3,
+#                'NumberOfThreads': 1,
+#                'OnlyWinner': False,
+#                'PerturbProjectionDirections': False,
+#                'ProjectLibraryRootName': 'ProjMatch/new20/Iter_01/ReferenceLibrary/gallery_ref_01.stk',
+#                'SymmetryGroup': 'i3',
+#                'SymmetryGroupNeighbourhood': '',
+#                'SystemFlavour': 'TORQUE-OPENMPI',
+#                'Tilt0': 40,
+#                'TiltF': 90,
+#                'maskedFileNamesIter': 'ProjMatch/new20/Iter_01/masked_reference_ref_01.vol'
+#        }
+#        src = self.src + 'original_angles.doc'
+#        dst = self.dst 
+#
+#        shutil.copy(src, dst)
+#        tmpDirName = self.dst + 'Iter_01/ReferenceLibrary'
+#        if not os.path.exists(tmpDirName):
+#            os.mkdir(tmpDirName)
+#        angular_project_library(self.log,dict)
+#        tmpDirName = os.path.join(tmpDirName,'gallery_ref_01')
+#        
+#        #do not use os.path.join because adds an extra /
+#        testFileName = tmpDirName +'.stk'
+#        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+#        self.assertTrue(ImgCompare(goldFileName,testFileName))
+#        
+#        testFileName = tmpDirName +'.doc'
+#        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+#        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+#        
+#        testFileName = tmpDirName +'_sampling.xmd'
+#        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+#        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+#        
+#        testFileName = tmpDirName +'_group000001_sampling.xmd'
+#        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+#        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
+#        
+#        testFileName = tmpDirName +'_group000002_sampling.xmd'
+#        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+#        self.assertTrue(compareTwoFiles(goldFileName,testFileName))
         
     def test_030projection_matching(self):
         tmpDirName ='ProjMatch/new20/Iter_01/ProjMatchClasses'
@@ -178,7 +178,7 @@ class TestProjMatching(unittest.TestCase):
         projection_matching(self.log,dict)
         testFileName = dict['ProjMatchRootName']
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        print "aaaa",goldFileName,testFileName
+        print "aaaa", str(os.environ.get('PWD')), goldFileName,testFileName
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
 #
     def test_040assign_images_to_references(self):
