@@ -132,7 +132,7 @@ int ImageBase::readApplyGeo(const MetaData &md, size_t objId, bool only_apply_sh
 
 
 void ImageBase::write(const FileName &name, size_t select_img, bool isStack,
-                      int mode, CastWriteMode castMode)
+                      int mode, CastWriteMode castMode, int _swapWrite)
 {
     const FileName &fname = (name.empty()) ? filename : name;
 
@@ -143,12 +143,16 @@ void ImageBase::write(const FileName &name, size_t select_img, bool isStack,
             mmapOnWrite = !(mmapOnRead = true); // We change mmap mode from write to read to allow writing the image into a stack.
         else
         {
+            if (_swapWrite > 0)
+                REPORT_ERROR(ERR_ARG_INCORRECT, "Cannot swap endianess on writing if file is already mapped.");
             munmapFile();
             if (hasTempFile && std::rename(tempFilename.c_str(), fname.c_str()) != 0)
                 REPORT_ERROR(ERR_IO, formatString("Error renaming file '%s' to '%s'.", tempFilename.c_str(), fname.c_str()));
             return;
         }
     }
+    // Swap the endianess of the image file when writing
+    swapWrite = _swapWrite;
 
     /* If the filename is in stack we will suppose you want to write this,
      * even if you have not set the flags to.
@@ -166,7 +170,7 @@ void ImageBase::write(const FileName &name, size_t select_img, bool isStack,
     closeFile(hFile);
 }
 
-void ImageBase::swapPage(char * page, size_t pageNrElements, DataType datatype)
+void ImageBase::swapPage(char * page, size_t pageNrElements, DataType datatype, int swap)
 {
     size_t datatypesize = gettypesize(datatype);
 #ifdef DEBUG
@@ -756,10 +760,10 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
         o << "Real-space image" << std::endl;
 
     o << "Endianess      : ";
-        if (I.swap^IsLittleEndian())
-            o << "Little"  << std::endl;
-        else
-            o << "Big" << std::endl;
+    if (I.swap^IsLittleEndian())
+        o << "Little"  << std::endl;
+    else
+        o << "Big" << std::endl;
 
     o << "Reversed       : ";
     if (I.swap)

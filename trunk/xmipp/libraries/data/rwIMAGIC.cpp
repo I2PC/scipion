@@ -130,16 +130,8 @@ int  ImageBase::readIMAGIC(size_t select_img)
         REPORT_ERROR(ERR_IO_NOREAD,(String)"readIMAGIC: header file of " + filename + " cannot be read");
 
     // Determine byte order and swap bytes if from little-endian machine
-    char*   b = (char *) header;
-    int    swap = 0;
-    size_t i, extent = IMAGICSIZE - 916;  // exclude char bytes from swapping
-    if ( ( abs(header->nyear) > SWAPTRIG ) || ( header->ixlp > SWAPTRIG ) )
-    {
-        swap = 1;
-        for ( i=0; i<extent; i+=4 )
-            if ( i != 56 )          // exclude type string
-                swapbytes(b+i, 4);
-    }
+    if ( swap = (( abs(header->nyear) > SWAPTRIG ) || ( header->ixlp > SWAPTRIG )) )
+        swapPage((char *) header, IMAGICSIZE - 916, Float); // IMAGICSIZE - 916 is to exclude labels from swapping
 
     DataType datatype;
 
@@ -216,13 +208,11 @@ int  ImageBase::readIMAGIC(size_t select_img)
         if ( fread( header, IMAGICSIZE, 1, fhed ) < 1 )
             return(-2);
         {
-            hend = (char *) header + extent;
             if ( swap )
-                for ( b = (char *) header; b<hend; b+=4 )
-                    swapbytes(b, 4);
+                swapPage((char *) header, IMAGICSIZE - 916, Float);
 
             if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
-            {                
+            {
                 MD[i].setValue(MDL_SHIFTX,  (double)-1. * header->iyold);
                 MD[i].setValue(MDL_SHIFTY,  (double)-1. * header->ixold);
                 MD[i].setValue(MDL_SHIFTZ,  zeroD);
@@ -431,6 +421,12 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
     if(replaceNsize - 1 < header->ifn && imgStart > 0)
     {
         fseek( fhed, sizeof(int), SEEK_SET);
+        if ( swapWrite )
+        {
+            int ifnswp = header->ifn;
+            swapPage((char *) ifnswp, SIZEOF_INT, Int);
+            fwrite(&(ifnswp),SIZEOF_INT,1,fhed);
+        }
         fwrite(&(header->ifn),SIZEOF_INT,1,fhed);
     }
 
@@ -463,6 +459,8 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         // Update index number of image
         header->imn = imgStart + i + 1;
 
+        if ( swapWrite )
+            swapPage((char *) header, IMAGICSIZE - 916, Float);
         fwrite( header, IMAGICSIZE, 1, fhed );
 
         if (dataMode >= DATA)

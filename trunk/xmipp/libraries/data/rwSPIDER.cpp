@@ -146,25 +146,16 @@ int  ImageBase::readSPIDER(size_t select_img)
 
     SPIDERhead* header = new SPIDERhead;
     if ( fread( header, SPIDERSIZE, 1, fimg ) != 1 )
-        REPORT_ERROR(ERR_IO_NOREAD,"rwSPIDER: cannot read Spider main header from file "+\
-        		     filename + ". Error message: " + strerror(errno));
-
-    swap = 0;
+        REPORT_ERROR(ERR_IO_NOREAD, formatString("rwSPIDER: cannot read Spider main header from file %s"
+                     ". Error message: %s", filename.c_str() ,strerror(errno)));
 
     // Determine byte order and swap bytes if from different-endian machine
-    char*    b = (char *) header;
-    int      i;
-    int      extent = SPIDERSIZE - 180;  // exclude char bytes from swapping
-    if ( ( fabs(header->nslice) > SWAPTRIG ) || ( fabs(header->iform) > SWAPTRIG ) ||
-         ( fabs(header->nslice) < 1 ) )
-    {
-        swap = 1;
-        for ( i=0; i<extent; i+=4 )
-            swapbytes(b+i, 4);
-    }
+    if ( swap = (( fabs(header->nslice) > SWAPTRIG ) || ( fabs(header->iform) > SWAPTRIG ) ||
+                 ( fabs(header->nslice) < 1 )) )
+        swapPage((char *) header, SPIDERSIZE - 180, Float);
 
     if(header->labbyt != header->labrec*header->lenbyt)
-        REPORT_ERROR(ERR_IO_NOTFILE,(std::string)"Invalid Spider file:  " + filename);
+        REPORT_ERROR(ERR_IO_NOTFILE,formatString("Invalid Spider file:  %s", filename.c_str()));
 
     offset = (size_t) header->labbyt;
     DataType datatype  = Float;
@@ -243,10 +234,8 @@ int  ImageBase::readSPIDER(size_t select_img)
         {
             if ( fread( header, SPIDERSIZE, 1, fimg ) != 1 )
                 REPORT_ERROR(ERR_IO_NOREAD, formatString("rwSPIDER: cannot read Spider image %lu header", i));
-            hend = (char *) header + extent;
             if ( swap )
-                for ( b = (char *) header; b<hend; b+=4 )
-                    swapbytes(b, 4);
+                swapPage((char *) header, SPIDERSIZE - 180, Float);
         }
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
@@ -509,15 +498,19 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
      */
     fl.l_type   = F_WRLCK;
     fcntl(fileno(fimg), F_SETLKW, &fl); /* locked if a shared or exclusive lock is
-                                           blocked by other locks, the thread shall
-                                           wait until the request can be satisfied*/
+                                                                   blocked by other locks, the thread shall
+                                                                   wait until the request can be satisfied*/
 
     // Write main header
     if( mode == WRITE_OVERWRITE ||
         mode == WRITE_APPEND ||
         writeMainHeaderReplace ||
         newNsize > replaceNsize) //header must change
+    {
+        if ( swapWrite )
+            swapPage((char *) header, SPIDERSIZE - 180, Float);
         fwrite( header, offset, 1, fimg );
+    }
 
     // write single image if not stack
     if ( Ndim == 1 && !isStack)
@@ -570,6 +563,8 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
                 header->scale = 1.;
             }
             //do not need to unlock because we are in the overwrite case
+            if ( swapWrite )
+                swapPage((char *) header, SPIDERSIZE - 180, Float);
             fwrite( header, offset, 1, fimg );
             if (dataMode >= DATA)
             {

@@ -220,9 +220,9 @@ public:
     /** Write image to file.
     */
     inline void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,
-                      int mode=WRITE_OVERWRITE, CastWriteMode castMode = CW_CAST)
+                      int mode=WRITE_OVERWRITE, CastWriteMode castMode = CW_CAST, int _swapWrite = 0)
     {
-        image->write(name,select_img,isStack,mode,castMode);
+        image->write(name,select_img,isStack,mode,castMode,_swapWrite);
     }
 
     /* Create an empty image file of format given by filename and map it to memory.

@@ -951,7 +951,7 @@ private:
                         REPORT_ERROR(ERR_IO_NOREAD,"Cannot read the whole page");
                     //swap per page
                     if (swap)
-                        swapPage(page, readsize, datatype);
+                        swapPage(page, readsize, datatype, swap);
                     // cast to T per page
                     castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype, readsize_n);
                     haveread_n += readsize_n;

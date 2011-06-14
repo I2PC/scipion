@@ -132,19 +132,15 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         return(-2);
 
     // Determine byte order and swap bytes if from little-endian machine
-    swap = 0;
     char*       b = (char *) header;
     int         i;
-    if ( ( abs( header->mode ) > SWAPTRIG ) || ( abs(header->nz) > SWAPTRIG ) )
+    if ( swap = (( abs( header->mode ) > SWAPTRIG ) || ( abs(header->nz) > SWAPTRIG )) )
     {
 #ifdef DEBUG
         fprintf(stderr, "Warning: Swapping header byte order for 4-byte types\n");
 #endif
 
-        swap = 1;
-        int     extent = MRCSIZE - 800; // exclude labels from swapping
-        for ( i=0; i<extent; i+=4 )
-            swapbytes(b+i, 4);
+        swapPage((char *) header, MRCSIZE - 800, Float); // MRCSIZE - 800 is to exclude labels from swapping
     }
 
     // Convert VAX floating point types if necessary
@@ -495,7 +491,11 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
 
     // Write header when needed
     if(!isStack || replaceNsize < header->nz)
+    {
+        if ( swapWrite )
+            swapPage((char *) header, MRCSIZE - 800, Float);
         fwrite( header, MRCSIZE, 1, fimg );
+    }
     freeMemory(header, sizeof(MRChead) );
 
     // Jump to the selected imgStart position

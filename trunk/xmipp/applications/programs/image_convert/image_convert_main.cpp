@@ -47,6 +47,7 @@ private:
     size_t        k;
     int         writeMode;
     bool        appendToStack;
+    bool        swap;
 
 protected:
     void defineParams()
@@ -110,6 +111,7 @@ protected:
         addParamsLine("                 cdouble: Complex double");
         addParamsLine("                 bool");
         addParamsLine("  alias -d;");
+        addParamsLine("  [--swap]        : Swap the endianess of the image file");
         addParamsLine("  [--rangeAdjust] : Adjust the histogram to fill the gray level range.");
         addParamsLine("  alias -r;");
         addParamsLine("or --dont_convert : Do not apply any conversion to gray levels when writing");
@@ -185,6 +187,8 @@ protected:
             writeMode = WRITE_OVERWRITE;
 
         depth = (checkParam("--depth"))? "%" + (String)getParam("--depth") : "";
+
+        swap = checkParam("--swap");
     }
 
     void preProcess()
@@ -259,7 +263,7 @@ protected:
                     _fnImgOut= fnImgOut;
 
                 imIn.read(fnImg, DATA, ALL_IMAGES, true);
-                imIn.write(_fnImgOut+depth, ALL_IMAGES, type == "stk", writeMode, castMode);
+                imIn.write(_fnImgOut+depth, ALL_IMAGES, type == "stk", writeMode, castMode, swap);
 
                 if ((fnImg == fnImgOut) && (rename(tempName.c_str(),fnImgOut.c_str())!=0))
                     REPORT_ERROR(ERR_IO, "ProgConvImg:: Error renaming the file.");
@@ -275,7 +279,7 @@ protected:
         case VOL2MD:
             {
                 imIn.data->getSlice(k++,imOut->data);
-                imOut->write(fnImgOut+depth, ALL_IMAGES, type == "stk", writeMode, castMode);
+                imOut->write(fnImgOut+depth, ALL_IMAGES, type == "stk", writeMode, castMode, swap);
             }
         }
         mdIn.setValue(MDL_IMAGE,fnImgOut, objId); // to keep info in output metadata
@@ -286,6 +290,8 @@ protected:
         switch(convMode)
         {
         case MD2VOL:
+            if (swap)
+                imOut->image->swapOnWrite();
             imOut->write();
             single_image = true;
             progress_bar(time_bar_size);

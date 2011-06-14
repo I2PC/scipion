@@ -354,7 +354,7 @@ public:
      * overwrite = 1 overwrite slice
      */
     void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,
-               int mode=WRITE_OVERWRITE,CastWriteMode castMode = CW_CAST);
+               int mode=WRITE_OVERWRITE,CastWriteMode castMode = CW_CAST, int _swapWrite = 0);
 
     /** Check file Datatype is same as T type to use mmap.
      */
@@ -370,7 +370,15 @@ public:
     /** Swap an entire page
       * input pointer char *
       */
-    void swapPage(char * page, size_t pageNrElements, DataType datatype);
+    void swapPage(char * page, size_t pageNrElements, DataType datatype, int swap = 1);
+
+    /* Force the swapping of the endianess of the file when writing, except for the case
+     * when appending or modifying the file.
+     */
+    void swapOnWrite()
+    {
+      swapWrite = true;
+    }
 
     /** Get file name
      *

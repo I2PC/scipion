@@ -234,7 +234,7 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
     else
         fprintf(fhed,"is_signed= false\n");
     fprintf(fhed,"# Byte order\n");
-    if (IsBigEndian())
+    if ( swapWrite^IsBigEndian() )
         fprintf(fhed,"endianess= big\n");
     else
         fprintf(fhed,"endianess= little\n");
