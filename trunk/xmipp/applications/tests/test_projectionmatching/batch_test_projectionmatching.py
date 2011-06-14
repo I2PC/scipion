@@ -129,15 +129,14 @@ class TestProjMatching(unittest.TestCase):
         
         testFileName = tmpDirName +'.stk'
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-        self.assertTrue(True)
-#        self.assertTrue(ImgCompare(goldFileName,testFileName))
+        self.assertTrue(ImgCompare(goldFileName,testFileName))
         
-#        testFileName = tmpDirName +'.doc'
-#        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
-#        auxGold=MetaData(goldFileName)
-#        auxTest=MetaData(testFileName)
-#        self.assertTrue(auxGold==auxTest)
-#        
+        testFileName = tmpDirName +'.doc'
+        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
+        auxGold=MetaData(goldFileName)
+        auxTest=MetaData(testFileName)
+        self.assertTrue(auxGold==auxTest)
+        
 #        testFileName = tmpDirName +'_sampling.xmd'
 #        goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
 #        auxGold=MetaData("extra@"+goldFileName)
