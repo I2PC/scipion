@@ -175,10 +175,10 @@ class TestProjMatching(unittest.TestCase):
 
         if not os.path.exists(tmpDirName):
             os.mkdir(tmpDirName)
-        projection_matching(self.log,dict)
         testFileName = dict['ProjMatchRootName']
         goldFileName = testFileName.replace(self.WorkingDir,self.goldWorkingDir)
         print "aaaa", str(os.environ.get('PWD')), goldFileName,testFileName
+        projection_matching(self.log,dict)
         self.assertTrue(compareTwoFiles(goldFileName,testFileName))
 #
     def test_040assign_images_to_references(self):
