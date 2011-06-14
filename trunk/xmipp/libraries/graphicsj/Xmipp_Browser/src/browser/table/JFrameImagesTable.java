@@ -10,6 +10,7 @@
  */
 package browser.table;
 
+import browser.DEBUG;
 import browser.LABELS;
 import browser.imageitems.TableImageItem;
 import browser.table.renderers.ImageRenderer;
@@ -113,7 +114,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         setRowHeader();
 
         // Stacks will be "auto-normalized".
-        if (/*tableModel.isVolume() || */tableModel.isStack()) {
+        if (tableModel.isStack()) {
             setNormalized(true);
         }
     }
@@ -133,8 +134,9 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     }
 
     private void updateTable() {
+//        if (table.isShowing()) {
         isUpdating = true;
-        System.out.println(" *** Updating table: " + System.currentTimeMillis());
+        DEBUG.printMessage(" *** Updating table: " + System.currentTimeMillis());
 
         if (tableModel.getSize() > 0) {
             Dimension dimension = getCellSize();
@@ -153,6 +155,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         }
 
         isUpdating = false;
+//        }
     }
 
     private Dimension getCellSize() {
@@ -305,8 +308,6 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         jtbNormalize.setSelected(normalize);
 
         tableModel.setNormalized(normalize);
-
-        tableModel.printNormalizationInfo();
 
         startUpdater();
     }

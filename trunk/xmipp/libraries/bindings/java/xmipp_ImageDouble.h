@@ -139,6 +139,14 @@ JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize
 
 /*
  * Class:     xmipp_ImageDouble
+ * Method:    getMinAndMax
+ * Signature: ()[D
+ */
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getMinAndMax
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageDouble
  * Method:    setXmippOrigin
  * Signature: ()V
  */

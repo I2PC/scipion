@@ -84,6 +84,8 @@ public class ImageDouble {
 
     public native long getNsize();
 
+    public native double[] getMinAndMax();
+
     public native void setXmippOrigin() throws Exception;
 
     public native void printShape();

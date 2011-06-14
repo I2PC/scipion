@@ -7,6 +7,7 @@ package browser.table;
 import browser.imageitems.TableImageItem;
 import ij.ImagePlus;
 import ij.process.FloatProcessor;
+import ij.process.ImageStatistics;
 import java.util.Vector;
 
 /**
@@ -76,22 +77,47 @@ public class ImageOperations {
 
     public static double[] getMinAndMax(Vector<TableImageItem> items) {
         // Initial min and max values.
-        double min = items.elementAt(0).getPreview().getProcessor().getMin();
-        double max = items.elementAt(0).getPreview().getProcessor().getMax();
+        ImageStatistics statistics;
 
-        for (int i = 1; i < items.size(); i++) {
-            double current_min = items.elementAt(i).getPreview().getProcessor().getMin();
-            double current_max = items.elementAt(i).getPreview().getProcessor().getMax();
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
 
-            if (current_min < min) {
-                min = current_min;
+        for (int i = 0; i < items.size(); i++) {
+            statistics = items.elementAt(i).getStatistics();
+
+            if (statistics == null) {
+                statistics = items.elementAt(i).getPreview().getStatistics();
             }
 
-            if (current_max > max) {
-                max = current_max;
+            if (statistics.min < min) {
+                min = statistics.min;
+            }
+
+            if (statistics.max > max) {
+                max = statistics.max;
             }
         }
 
         return new double[]{min, max};
     }
+    /*public static double[] getMinAndMax(Vector<TableImageItem> items) {
+    // Initial min and max values.
+    double min = items.elementAt(0).getPreview().getProcessor().getMin();
+    double max = items.elementAt(0).getPreview().getProcessor().getMax();
+
+    for (int i = 1; i < items.size(); i++) {
+    double current_min = items.elementAt(i).getPreview().getProcessor().getMin();
+    double current_max = items.elementAt(i).getPreview().getProcessor().getMax();
+
+    if (current_min < min) {
+    min = current_min;
+    }
+
+    if (current_max > max) {
+    max = current_max;
+    }
+    }
+
+    return new double[]{min, max};
+    }*/
 }

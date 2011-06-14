@@ -1,5 +1,6 @@
 package browser.windows;
 
+import browser.DEBUG;
 import browser.imageitems.ImageConverter;
 import browser.windows.menubar.XmippMenuBar;
 import ij.IJ;
@@ -98,7 +99,7 @@ public class StackWindowOperations extends StackWindow implements iPollImageWind
     protected void revert() {
         // Reverts only when image has changed since last time.
         if (last < f.lastModified()) {
-            System.out.println(" *** Reverting from disk...");
+            DEBUG.printMessage(" *** Reverting from disk...");
             IJ.showStatus("Reloading " + imp.getTitle());
 
             try {

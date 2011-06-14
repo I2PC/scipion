@@ -4,6 +4,7 @@
  */
 package browser.windows;
 
+import browser.DEBUG;
 import browser.imageitems.ImageConverter;
 import browser.imageitems.TableImageItem;
 import browser.table.ImagesTableModel;
@@ -58,7 +59,7 @@ public class ImagesWindowFactory {
             String filename = Filename.getFilename(filenames[i]);
             long nimage = Filename.getNimage(filenames[i]);
 
-            System.out.println(" *** Opening: " + filename + " / nimage: " + nimage);
+            DEBUG.printMessage(" *** Opening: " + filename + " / nimage: " + nimage);
 
             openFileAsImage(filename, poll);
         }

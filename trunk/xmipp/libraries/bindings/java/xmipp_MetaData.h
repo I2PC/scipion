@@ -97,10 +97,10 @@ JNIEXPORT jdouble JNICALL Java_xmipp_MetaData_getValueDouble
 
 /*
  * Class:     xmipp_MetaData
- * Method:    getValueString_
+ * Method:    getValueString
  * Signature: (IJ)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getValueString_1
+JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getValueString
   (JNIEnv *, jobject, jint, jlong);
 
 /*

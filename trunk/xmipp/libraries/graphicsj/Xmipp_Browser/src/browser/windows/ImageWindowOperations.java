@@ -4,6 +4,7 @@
  */
 package browser.windows;
 
+import browser.DEBUG;
 import browser.imageitems.ImageConverter;
 import ij.IJ;
 import ij.ImagePlus;
@@ -21,9 +22,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JPanel;
 import browser.windows.menubar.XmippMenuBar;
-import ij.ImageStack;
-import ij.process.FloatProcessor;
-import xmipp.ImageDouble;
 
 /**
  *
@@ -120,7 +118,7 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
     protected void revert() {
         // Reverts only when image has changed since last time.
         if (last < f.lastModified()) {
-            System.out.println(" *** Reverting from disk...");
+            DEBUG.printMessage(" *** Reverting from disk...");
             IJ.showStatus("Reloading " + imp.getTitle());
 
             try {

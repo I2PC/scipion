@@ -175,7 +175,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_MetaData_getValueDouble(JNIEnv *env,
 	}
 	return 0;
 }
-JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getValueString_1(JNIEnv *env,
+JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getValueString(JNIEnv *env,
 		jobject jobj, jint label, jlong objId) {
 	MetaData * md = GET_INTERNAL_METADATA(jobj);
 

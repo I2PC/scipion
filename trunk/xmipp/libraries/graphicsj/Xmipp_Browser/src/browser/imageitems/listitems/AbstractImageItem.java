@@ -66,17 +66,24 @@ public abstract class AbstractImageItem extends FileItem {
                 }
             }
 
-            // Preview might be loaded if it's referenced by another item, 
-            // but statistics, might be still null.
+            // Preview might be loaded from cache if it has been already
+            // referenced by another item, but statistics might be still null.
             if (statistics == null) {
-                statistics = preview.getStatistics(
-                        ImageStatistics.MIN_MAX + ImageStatistics.MEAN + ImageStatistics.STD_DEV);
+                /*statistics = preview.getStatistics(
+                ImageStatistics.MIN_MAX + ImageStatistics.MEAN + ImageStatistics.STD_DEV);*/
+                //System.out.println("Loading statistics for: " + getLabel());
+                int moptions = ImageStatistics.MIN_MAX + ImageStatistics.MEAN + ImageStatistics.STD_DEV;
+                statistics = ImageStatistics.getStatistics(preview.getProcessor(), moptions, preview.getCalibration());
             }
         } else {    // Null preview.
             preview = ICONS_MANAGER.MISSING_ITEM;
         }
 
         return preview;
+    }
+
+    public ImageStatistics getImageStatistics() {
+        return statistics;
     }
 
     public String getKey() {

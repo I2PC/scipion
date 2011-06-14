@@ -4,6 +4,7 @@
  */
 package browser.table;
 
+import browser.DEBUG;
 import browser.Cache;
 import browser.imageitems.TableImageItem;
 import ij.IJ;
@@ -34,7 +35,7 @@ public class ImagesTableModel extends AbstractTableModel {
     private int rows, cols;
     private Cache cache = new Cache();
     private boolean normalize = false;
-    private double min = Double.MIN_VALUE, max = Double.MAX_VALUE;
+    private double min = Double.POSITIVE_INFINITY, max = Double.NEGATIVE_INFINITY;
 
     public ImagesTableModel(String filename) {
         super();
@@ -57,6 +58,21 @@ public class ImagesTableModel extends AbstractTableModel {
             }
         } else {
             IJ.error("File not found: " + filename);
+        }
+    }
+
+    private void getMinAndMax() {
+        if (Filename.isStackOrVolume(filename)) {
+            ImageDouble img = new ImageDouble();
+            img.setFilename(filename);
+
+            double min_max[] = img.getMinAndMax();
+            min = min_max[0];
+            max = min_max[1];
+        } else {
+            double min_max[] = ImageOperations.getMinAndMax(data);
+            min = min_max[0];
+            max = min_max[1];
         }
     }
 
@@ -386,16 +402,18 @@ public class ImagesTableModel extends AbstractTableModel {
     public void setNormalized(boolean normalize) {
         this.normalize = normalize;
 
-        if (normalize) {
-            double min_max[] = ImageOperations.getMinAndMax(data);
+        if (min == Double.POSITIVE_INFINITY && max == Double.NEGATIVE_INFINITY) {
+            DEBUG.printMessage(" +++ Retrieving min and max.");
 
-            min = min_max[0];
-            max = min_max[1];
+            getMinAndMax();
         }
+
+        DEBUG.printMessage(" >>> Normalize " + (normalize ? "ON" : "OFF") + " > "
+                + (normalize ? "m=" + min + "/M=" + max : ""));
     }
 
     public boolean isNormalizing() {
-        return normalize;
+        return min > Double.NEGATIVE_INFINITY && max < Double.POSITIVE_INFINITY && normalize;
     }
 
     public double getNormalizeMin() {
@@ -412,10 +430,5 @@ public class ImagesTableModel extends AbstractTableModel {
 
     public boolean isVolume() {
         return filename != null && Filename.isVolume(filename);
-    }
-
-    public void printNormalizationInfo() {
-        System.out.println("Normalize " + (normalize ? "ON" : "OFF") + " > "
-                + (normalize ? "m=" + min + "/M=" + max : ""));
     }
 }

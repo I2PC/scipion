@@ -3,6 +3,7 @@
 #include "xmipp_InternalData.h"
 #include "xmipp_ExceptionsHandler.h"
 #include <data/image.h>
+#include <data/multidim_array_generic.h>
 #include <data/fft.h>
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_storeIds
@@ -311,6 +312,24 @@ JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize(JNIEnv *env,
 	}
 
 	return 0;
+}
+
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getMinAndMax(JNIEnv *env, jobject jobj){
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
+
+	if (image != NULL) {
+		size_t size = 2;
+		double aux[size];
+
+		image->data.computeDoubleMinMax(aux[0], aux[1]);
+
+		jdoubleArray array = env->NewDoubleArray(size);
+		env->SetDoubleArrayRegion(array, 0, size, aux);
+
+		return array;
+	}
+
+	return (jdoubleArray) NULL;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setXmippOrigin
