@@ -29,6 +29,7 @@
 #include <iomanip>
 #include <iostream>
 #include <queue>
+#include "data/color.h"
 
 ///Constant values for weighting the keywords match
 #define NAME_MATCH 5
@@ -83,12 +84,18 @@ protected:
     void show()
     {}
 
-    int getRank(const String &line, const String &key, int weight) const
+    int getRank(String &line, const String &key, int weight) const
     {
         String lineLower = line;
         toLower(lineLower);
-        if (lineLower.find(key) != String::npos)
+        size_t pos;
+        if ((pos = lineLower.find(key)) != String::npos)
+        {
+        	size_t size = key.size();
+        	String part = line.substr(pos, size);
+        	line.replace(pos, size, colorString(part.c_str(), RED));
             return weight;
+        }
         return 0;
     }
 
