@@ -478,20 +478,33 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
 
 bool MDSql::equals(const MDSql &op)
 {
-	std::vector<MDLabel> v1(myMd->activeLabels),v2(op.myMd->activeLabels);
-	std::sort(v1.begin(),v1.end());
-	std::sort(v2.begin(),v2.end());
+    std::vector<MDLabel> v1(myMd->activeLabels),v2(op.myMd->activeLabels);
+    std::sort(v1.begin(),v1.end());
+    std::sort(v2.begin(),v2.end());
 
     if(v1 != v2)
         return (false);
     int size  = myMd->activeLabels.size();
-    std::stringstream sqlQuery,ss2;
+    std::stringstream sqlQuery,ss2,ss2Group;
 
     ss2 << MDL::label2Str(MDL_OBJID);
-
+    ss2Group << MDL::label2Str(MDL_OBJID);
+    int precision = myMd->precision;
     for (int i = 0; i < size; i++)
     {
-        ss2 << ", " << MDL::label2Str( myMd->activeLabels[i]);
+        //when metadata  is double compare
+        if(MDL::isDouble(myMd->activeLabels[i]))
+        {
+            ss2 << ", CAST (" << MDL::label2Str( myMd->activeLabels[i])
+            << "*" << precision
+            << " as INTEGER) as MDL::label2Str( myMd->activeLabels[i])";
+
+        }
+        else
+        {
+            ss2 << ", "       << MDL::label2Str( myMd->activeLabels[i]);
+        }
+        ss2Group<< ", "       << MDL::label2Str( myMd->activeLabels[i]);
     }
     sqlQuery
     << "SELECT count(*) FROM ("
@@ -504,7 +517,7 @@ bool MDSql::equals(const MDSql &op)
     SELECT " << ss2.str() << "\
     FROM " << tableName(op.tableId)
     <<     ") tmp"
-    << " GROUP BY " << ss2.str()
+    << " GROUP BY " << ss2Group.str()
     << " HAVING COUNT(*) <> 2"
     << ") tmp1";
     return (execSingleIntStmt(sqlQuery)==0);
