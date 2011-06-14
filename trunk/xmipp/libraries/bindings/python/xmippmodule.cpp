@@ -890,10 +890,8 @@ MetaData_compare(PyObject * obj, PyObject * obj2)
     {
         try
         {
-        	std::cerr << "11111" <<std::endl;
             if (*(self->metadata) == *(md2->metadata))
                 result = 0;
-        	std::cerr << "33333" <<std::endl;
         }
         catch (XmippError xe)
         {
