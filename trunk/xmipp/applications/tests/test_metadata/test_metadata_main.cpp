@@ -76,6 +76,19 @@ TEST_F( MetadataTest, similarToOperator)
     auxMetadata.setValue(MDL_Y,4.,id);
     auxMetadata.setValue(MDL_X,3.,id);
     ASSERT_EQ(auxMetadata,mDsource);
+    //Test form double with a given precission
+    auxMetadata.clear();
+    auxMetadata.setPrecission(2);
+    id = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_Y,2.001,id);
+    auxMetadata.setValue(MDL_X,1.,id);
+    id = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_Y,4.,id);
+    auxMetadata.setValue(MDL_X,3.,id);
+    ASSERT_TRUE(auxMetadata==mDsource);
+    auxMetadata.setPrecission(4);
+    ASSERT_FALSE(auxMetadata==mDsource);
+
 
 }
 /** SORT FOR ROUTINE ALPHABETIC ORDER
