@@ -240,7 +240,7 @@ def angular_class_average(_log,dict):
     NumberOfCtfGroups   = dict['NumberOfCtfGroups']
     NumberOfReferences  = dict['NumberOfReferences']
     refN                = dict['refN']
-    refname         = str(dict['ProjectLibraryRootName'])
+    refname             = str(dict['ProjectLibraryRootName'])
 
 #    mD    = MetaData()
 #    mDout = MetaData()
