@@ -655,654 +655,489 @@ ViewVerifyedFiles=True
 #-----------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #-----------------------------------------------------------------------------
-#Do not change these variables
-ReferenceVolumeName = 'reference_volume.vol'
-LibraryDir = "ReferenceLibrary"
-ProjectLibraryRootName = LibraryDir + "/gallery"
-ProjMatchDir = "ProjMatchClasses"
-ProjMatchName = 'proj_match'
-ClassAverageName = 'class_average'
-#ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
-ForReconstructionSel = "reconstruction.sel"
-ForReconstructionDoc = "reconstruction.doc"
-MultiAlign2dSel = "multi_align2d.sel"
-DocFileWithOriginalAngles = 'original_angles.doc'
-docfile_with_current_angles = 'current_angles'
-FilteredReconstruction = "filtered_reconstruction"
 
-ReconstructedVolume = "reconstruction"#
-maskReferenceVolume = "masked_reference"#
+from protocol_base import *
 
-OutputFsc = "resolution.fsc"
-CtfGroupDirectory = "CtfGroups"
-CtfGroupRootName = "ctf"
-CtfGroupSubsetFileName = CtfGroupRootName + "_images.sel"
-
-reconstructedFileNamesIter = []# names for reconstructed volumes
-maskedFileNamesIter = []# names masked volumes used as reference
-numberOfReferences = 1#number of references
-createAuxTable = False
-NumberOfCtfGroups = 1
-
-
-import os, sys
-#import launch_job
-#add to pythonPATH
-scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/lib'
-sys.path.append(scriptdir) # add default search path
-scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
-sys.path.append(scriptdir)
-import log, logging
-from pysqlite2 import dbapi2 as sqlite
-from arg import getListFromVector, getBoolListFromVector
-import dataBase
-global _dataBase
-
-#from xmipp import *
-#import pickle
-
-def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
-
-    #Convert directories/files  to absolute path from projdir
-    global CtfGroupDirectory
-    CtfGroupDirectory = WorkingDir + '/' + CtfGroupDirectory
-    global CtfGroupSubsetFileName
-    CtfGroupSubsetFileName = CtfGroupDirectory + '/'+CtfGroupSubsetFileName
-#vector for iterations??????
-#    global ProjMatchDir
-#    ProjMatchDir = WorkingDir +'/' + ProjMatchDir
-    global DocFileWithOriginalAngles
-    DocFileWithOriginalAngles = WorkingDir +'/' + DocFileWithOriginalAngles
-
+class ProtProjMatch(XmippProtocol):
     
-    # Convert vectors to list
-    global ReferenceFileNames
-    ReferenceFileNames = getListFromVector(ReferenceFileNames)
-    global numberOfReferences
-    numberOfReferences = len(ReferenceFileNames)
-    #directory with ProjMatchClasses
-    global ProjMatchDirs
-    ProjMatchDirs=[" "]
-    global LibraryDirs
-    LibraryDirs=[" "]
-    global DocFileInputAngles
-    DocFileInputAngles=[DocFileWithOriginalAngles]
-    #ProjMatchRootName=[" "]
-    for iterN in range(NumberofIterations):
-        ProjMatchDirs.append(WorkingDir + "/Iter_" + \
-                                  str(iterN + 1).zfill(2) + \
-                                  '/' + \
-                                  ProjMatchDir)
-        LibraryDirs.append( WorkingDir + "/Iter_" + \
-                                  str(iterN + 1).zfill(2) + \
-                                  '/' + \
-                                  LibraryDir)
-        DocFileInputAngles.append(WorkingDir + "/Iter_" + \
-                                      str(iterN + 1).zfill(2) + \
-                                      '/' + \
-                                      docfile_with_current_angles + ".doc")
-        #ProjMatchRootName.append(ProjMatchDir[] + "/" + ProjMatchName)
-    #print ProjMatchDirs,LibraryDirs
+    #Some class variables
+    ReferenceVolumeName = 'reference_volume.vol'
+    LibraryDir = "ReferenceLibrary"
+    ProjectLibraryRootName = LibraryDir + "/gallery"
+    ProjMatchDir = "ProjMatchClasses"
+    ProjMatchName = 'proj_match'
+    ClassAverageName = 'class_average'
+    #ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
+    ForReconstructionSel = "reconstruction.sel"
+    ForReconstructionDoc = "reconstruction.doc"
+    MultiAlign2dSel = "multi_align2d.sel"
+    DocFileWithOriginalAngles = 'original_angles.doc'
+    docfile_with_current_angles = 'current_angles'
+    FilteredReconstruction = "filtered_reconstruction"
     
-    auxList = (numberOfReferences + 1) * [None]
-    global ProjectLibraryRootNames
-    ProjectLibraryRootNames=[]
-    ProjectLibraryRootNames.append([None])
-    for iterN in range(NumberofIterations):
-        for refN in range(numberOfReferences):
-            auxList[refN + 1]=WorkingDir + "/Iter_" + \
-                                      str(iterN + 1).zfill(2) + \
-                                      '/' + \
-                                      ProjectLibraryRootName + \
-                                      "_ref_" + str(refN + 1).zfill(2)+\
-                                      ".stk"
-        ProjectLibraryRootNames.append(list(auxList))
-                
-    global ProjMatchRootName
-    ProjMatchRootName=[]
-    ProjMatchRootName.append([None])
-    for iterN in range(NumberofIterations):
-        for refN in range(numberOfReferences):
-            auxList[refN + 1]=ProjMatchDirs[iterN + 1] + \
-                                      '/' + ProjMatchName +\
-                                      "_ref_" + str(refN + 1).zfill(2) + ".doc"
-        ProjMatchRootName.append(list(auxList))
-
-
-    #name of masked volumes
-    global maskedFileNamesIter
-    #add dummy name so indexes start a 1
-    maskedFileNamesIter.append([None])
-    for iterN in range(NumberofIterations):
-        for refN in range(numberOfReferences):
-            auxList[refN + 1] = WorkingDir + "/Iter_" + \
-                                      str(iterN + 1).zfill(2) + \
-                                      '/' + \
-                                      maskReferenceVolume + \
-                                      "_ref_" + str(refN + 1).zfill(2) + ".vol"
-        maskedFileNamesIter.append(list(auxList))
-
-    global reconstructedFileNamesIter
-    ####################################################################
-    #add initial reference, useful for many routines
-    #NOTE THAT INDEXES START AT 1
-    reconstructedFileNamesIter.append([None] + ReferenceFileNames)
-    for iterN in range(NumberofIterations):
-        for refN in range(numberOfReferences):
-            auxList[refN + 1] = WorkingDir + "/Iter_" + \
-                                      str(iterN + 1).zfill(2) + \
-                                      '/' + \
-                                      ReconstructedVolume + \
-                                      "_ref_" + str(refN + 1).zfill(2) + ".vol"
-        reconstructedFileNamesIter.append(list(auxList))
-
-    # Optimal angles from previous iteration or user-provided at the beginning
-#    global DocFileInputAngles
-#    DocFileInputAngles=[]
-#    aux=[DocFileWithOriginalAngles]*(numberOfReferences+1)#+1 fills the zero
-#    DocFileInputAngles.append([None] + aux)
-#    for iterN in range(NumberofIterations):
-#        for refN in range(numberOfReferences):
-#            auxList[refN + 1] = WorkingDir + "/Iter_" + \
-#                                      str(iterN + 1).zfill(2) + \
-#                                      '/' + \
-#                                      docfile_with_current_angles + \
-#                                      "_ref_" + str(refN + 1).zfill(2) + ".doc"
-#        DocFileInputAngles.append(list(auxList))
-
-    global docfile_with_current_anglesList
-    docfile_with_current_anglesList=[]
-    docfile_with_current_anglesList.append(None)
-    for iterN in range(NumberofIterations):
-        docfile_with_current_anglesList.append(WorkingDir + "/Iter_" + \
-                                      str(iterN + 1).zfill(2) + \
-                                      '/' + \
-                                      docfile_with_current_angles + ".doc")
-
-    #parameter for projection matching
-    global Align2DIterNr
-    Align2DIterNr          = [-1]+getListFromVector(Align2DIterNr,NumberofIterations)
-    global Align2dMaxChangeOffset
-    Align2dMaxChangeOffset = [-1]+getListFromVector(Align2dMaxChangeOffset,NumberofIterations)
-    global Align2dMaxChangeRot
-    Align2dMaxChangeRot    = [-1]+getListFromVector(Align2dMaxChangeRot,NumberofIterations)
-    global AngSamplingRateDeg
-    AngSamplingRateDeg     = [-1]+getListFromVector(AngSamplingRateDeg,NumberofIterations)
-    global DiscardPercentage
-    DiscardPercentage      = [-1]+getListFromVector(DiscardPercentage,NumberofIterations)
-    global DoAlign2D
-    DoAlign2D              = [False]+getBoolListFromVector(DoAlign2D,NumberofIterations)
-    global DoComputeResolution
-    DoComputeResolution    = [False]+getBoolListFromVector(DoComputeResolution,NumberofIterations)
-    global DoSplitReferenceImages
-    DoSplitReferenceImages    = [False]+getBoolListFromVector(DoSplitReferenceImages,NumberofIterations)
-    global InnerRadius
-    InnerRadius    = [False]+getListFromVector(InnerRadius,NumberofIterations)
-    global MaxChangeInAngles
-    MaxChangeInAngles      = [-1]+getListFromVector(MaxChangeInAngles,NumberofIterations)
-    global MaxChangeOffset
-    MaxChangeOffset        = [-1]+getListFromVector(MaxChangeOffset,NumberofIterations)
-    global MinimumCrossCorrelation
-    MinimumCrossCorrelation= [-1]+getListFromVector(MinimumCrossCorrelation,NumberofIterations)
-    global OnlyWinner
-    OnlyWinner             = [False]+getBoolListFromVector(OnlyWinner,NumberofIterations)
-    global OuterRadius
-    OuterRadius             = [False]+getListFromVector(OuterRadius,NumberofIterations)
-    global PerturbProjectionDirections
-    PerturbProjectionDirections= [False]+getBoolListFromVector(PerturbProjectionDirections,NumberofIterations)
-    global ReferenceIsCtfCorrected#set to true after first iteration
-    ReferenceIsCtfCorrected= [-1]+getListFromVector(str(ReferenceIsCtfCorrected) + " True", NumberofIterations)
-    global ScaleNumberOfSteps
-    ScaleNumberOfSteps=[-1]+getListFromVector(ScaleNumberOfSteps,NumberofIterations)
-    global ScaleStep
-    ScaleStep=[-1]+getListFromVector(ScaleStep,NumberofIterations)
-    global Search5DShift
-    Search5DShift          = [-1]+getListFromVector(Search5DShift,NumberofIterations)
-    global Search5DStep
-    Search5DStep           = [-1]+getListFromVector(Search5DStep,NumberofIterations)
-    global SymmetryGroup   
-    SymmetryGroup          = [-1]+getListFromVector(SymmetryGroup,NumberofIterations)
+    ReconstructedVolume = "reconstruction"#
+    maskReferenceVolume = "masked_reference"#
     
-from xmipp import *
-def otherActionsToBePerformedBeforeLoop():
-
-    global OuterRadius, NumberOfCtfGroups
+    OutputFsc = "resolution.fsc"
+    CtfGroupDirectory = "CtfGroups"
+    CtfGroupRootName = "ctf"
+    CtfGroupSubsetFileName = CtfGroupRootName + "_images.sel"
     
-    if DoCtfCorrection:
-        auxMD1 = MetaData(CTFDatName)
-        auxMD2 = MetaData()
-        auxMD2.aggregate(auxMD1, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT)
-        NumberOfCtfGroups = auxMD2.size()
-    else:
-        NumberOfCtfGroups = 1
-
-    _Parameters = {
-          'DoDeleteWorkingDir':DoDeleteWorkingDir
-        , 'ProjectDir':ProjectDir
-        , 'WorkingDir':WorkingDir
-        }
-    command = 'deleteWorkingDirectory'
-    _dataBase.insertCommand(command, _Parameters, 1)
-
-    #Create directory
-    _Parameters = {
-          'Iter':0
-        , 'ProjectDir':ProjectDir
-        , 'WorkingDir':WorkingDir
-        }
-    command = 'createDir'
-    _dataBase.insertCommand(command, _Parameters, 1)
-
-    #Backup protocol file
-    _Parameters = {
-          'ProgName'  :sys.argv[0]
-        , 'ProjectDir':ProjectDir
-        , 'WorkingDir':WorkingDir
-        }
-    command = 'pm_make_backup_of_script_file'
-    _dataBase.insertCommand(command, _Parameters, dataBase.dataBaseStruct.doAlways)#backup always
-
-    #Check references and projections size match
-    #Is already done in preconditions but I like to
-    #run protocols from command line bypassing the gui
-    _Parameters = {
-          'ReferenceFileNames':ReferenceFileNames
-        , 'SelFileName':SelFileName
-        }
-    command = 'checkVolumeProjSize'
-    _dataBase.insertCommand(command, _Parameters, 1)
-
-    #Check Option compatibility
-    _Parameters = {
-          'DoAlign2D':DoAlign2D[1]
-        , 'DoCtfCorrection':DoCtfCorrection
-        }
-    command = 'checkOptionsCompatibility'
-    _dataBase.insertCommand(command, _Parameters, 1)
-
-#    #Init Mask references radius
-#    _Parameters = {
-#          'OuterRadius':OuterRadius[1]
-#        , 'SelFileName':SelFileName
-#        }
-#    command = 'self.OuterRadius = initOuterRadius'
-#    _dataBase.insertCommand(command, _Parameters, 1)
-
-    #7 make CTF groups
-    _Parameters = {
-                  'CTFDatName': CTFDatName
-                , 'CtfGroupDirectory': CtfGroupDirectory
-                , 'CtfGroupMaxDiff': CtfGroupMaxDiff
-                , 'CtfGroupMaxResol': CtfGroupMaxResol
-                , 'CtfGroupRootName': CtfGroupRootName
-                , 'DataArePhaseFlipped': DataArePhaseFlipped
-                , 'DoAutoCtfGroup': DoAutoCtfGroup
-                , 'DoCtfCorrection': DoCtfCorrection
-                , 'PaddingFactor': PaddingFactor
-                , 'SelFileName': SelFileName
-                , 'SplitDefocusDocFile': SplitDefocusDocFile
-                , 'WienerConstant': WienerConstant
-               }
-    command = 'execute_ctf_groups'
-    _VerifyFiles = []
-    if DoCtfCorrection:
-        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'Info.xmd')
-        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_ctf.stk')
-        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_wien.stk')
-        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_split.doc')
-    _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_images.sel')
+    reconstructedFileNamesIters = []# names for reconstructed volumes
+    #maskedFileNamesIter = []# names masked volumes used as reference
+    numberOfReferences = 1#number of references
+    createAuxTable = False
+    NumberOfCtfGroups = 1
+    
+    def __init__(self, scriptname, workingdir, projectdir=None, restartStep=1, logdir='Logs'):
+        super(Prot2,self).__init__(scriptname, workingdir, projectdir, restartStep, logdir)
+    
+    def preRun(self):
+        #Convert directories/files  to absolute path from projdir
+        self.CtfGroupDirectory = os.path.join(self.WorkingDir, self.CtfGroupDirectory)
+        self.CtfGroupSubsetFileName = os.path.join(self.CtfGroupDirectory, self.CtfGroupSubsetFileName)
+    #vector for iterations??????
+    #    global ProjMatchDir
+    #    ProjMatchDir = WorkingDir +'/' + ProjMatchDir
+        self.DocFileWithOriginalAngles = os.path.join(self.WorkingDir, self.DocFileWithOriginalAngles)
+    
         
-    _dataBase.insertCommand(command, _Parameters, 1,_VerifyFiles)
-    #Create Initial angular file. Either fill it with zeros or copy input
-    _Parameters = {
-          'DocFileName':DocFileName
-        , 'DocFileWithOriginalAngles':DocFileWithOriginalAngles
-        , 'SelFileName':SelFileName
-        }
-    command = 'initAngularReferenceFile'
-    _VerifyFiles = []
-    _VerifyFiles.append(DocFileWithOriginalAngles)
-    _dataBase.insertCommand(command, _Parameters, 1,_VerifyFiles)
-
-    #Save all parameters in dict for future runs (this is done by database)
-    #so far no parameter is being saved, but dummy=0
-    _Parameters = {
-      'SystemFlavour':SystemFlavour
-    }
-    command = 'self.saveParameters'
-    _dataBase.insertCommand(command, _Parameters, 1)
-    command = 'self.loadParameters'
-    _dataBase.insertCommand(command, _Parameters, dataBase.dataBaseStruct.doAlways)
-
-    #no entries will be save untill this commit
-    print "commit databse"
-    _dataBase.commit()
-
-def actionsToBePerformedInsideLoop(_log):
-    for iterN in range(1, NumberofIterations + 1):
-        #############conn.execute(sqlBegin + "MPI_ON" + sqlEnd)
-        # create working dir
-        _Parameters = {
-             'Iter':iterN
-           , 'WorkingDir':WorkingDir
-            }
-        command = 'createDir'
-        _dataBase.insertCommand(command, _Parameters, iterN)
-
-        #Create directory with classes
-        _Parameters = {
-              'path':ProjMatchDirs[iterN]
-            }
-        command = 'createDir2'
-        _dataBase.insertCommand(command, _Parameters, 1)
-    
-        #Create directory with image libraries
-        _Parameters = {
-              'path':LibraryDirs[iterN]
-            }
-        command = 'createDir2'
-        _dataBase.insertCommand(command, _Parameters, 1)
-        for refN in range(1, numberOfReferences + 1):
-            ##############REMOVE SHUTIL.COPY
-            # Mask reference volume
-            _Parameters = {
-                                  'DoMask'             : DoMask
-                                , 'DoSphericalMask'    : DoSphericalMask
-                                , 'maskedFileName'     : maskedFileNamesIter[iterN][refN]
-                                , 'maskRadius'         : MaskRadius
-                                , 'reconstructedFileName' : reconstructedFileNamesIter[iterN - 1][refN]
-                                , 'userSuppliedMask'   : MaskFileName
-                                }
-            
-            command = "execute_mask"
-            _VerifyFiles = []
-            _VerifyFiles.append(maskedFileNamesIter[iterN][refN])
-            _VerifyFiles.append(maskedFileNamesIter[iterN][refN])
-            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
-
-            # angular_project_library
-            _Parameters = {
-                                  'AngSamplingRateDeg':AngSamplingRateDeg[iterN]
-                                , 'CtfGroupSubsetFileName':CtfGroupSubsetFileName
-                                , 'DoCtfCorrection': DoCtfCorrection
-                                , 'DocFileInputAngles':DocFileInputAngles[iterN-1]
-                                , 'DoParallel': DoParallel
-                                , 'DoRestricSearchbyTiltAngle':DoRestricSearchbyTiltAngle
-                                , 'MaxChangeInAngles':MaxChangeInAngles[iterN]
-                                , 'maskedFileNamesIter':maskedFileNamesIter[iterN][refN]
-                                , 'MpiJobSize':MpiJobSize
-                                , 'NumberOfMpiProcesses':NumberOfMpiProcesses
-                                , 'NumberOfThreads':NumberOfThreads
-                                , 'OnlyWinner':OnlyWinner[iterN]
-                                , 'PerturbProjectionDirections':PerturbProjectionDirections[iterN]
-                                , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
-                                , 'SystemFlavour':SystemFlavour
-                                , 'SymmetryGroup':SymmetryGroup[iterN]
-                                , 'SymmetryGroupNeighbourhood':SymmetryGroupNeighbourhood
-                                , 'Tilt0':Tilt0
-                                , 'TiltF':TiltF
-                                }
-
-            command = "angular_project_library"
-            _VerifyFiles = []
-            #file with projections
-            auxFn=ProjectLibraryRootNames[iterN][refN]
-            _VerifyFiles.append(auxFn)
-            auxFn=auxFn[:-4]#remove extension
-            #file with projection angles angles 
-            _VerifyFiles.append(auxFn + ".doc")
-            #file with sampling point neighbourhood 
-            _VerifyFiles.append(auxFn + "_sampling.xmd")
-            #file with sampling point neighbourhood for each ctf group, this is reduntant but useful
-            
-            for i in range (1,NumberOfCtfGroups+1):
-                _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.xmd")
-                        
-            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
-            # projectionMatching    
-            _Parameters = {
-                                  'AvailableMemory':AvailableMemory
-                                , 'CtfGroupRootName': CtfGroupRootName
-                                , 'CtfGroupDirectory': CtfGroupDirectory
-                                , 'DoComputeResolution':DoComputeResolution[iterN]
-                                , 'DoCtfCorrection': DoCtfCorrection
-                                , 'DoScale':DoScale
-                                , 'DoParallel': DoParallel
-                                , 'InnerRadius':InnerRadius[iterN]
-                                , 'MaxChangeOffset':MaxChangeOffset[iterN]
-                                , 'MpiJobSize':MpiJobSize
-                                , 'NumberOfCtfGroups':NumberOfCtfGroups
-                                , 'NumberOfMpiProcesses':NumberOfMpiProcesses
-                                , 'NumberOfThreads':NumberOfThreads
-                                , 'OuterRadius':OuterRadius[iterN]
-                                , 'PaddingFactor':PaddingFactor
-                                , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
-                                , 'ProjMatchRootName':ProjMatchRootName[iterN][refN]
-                                , 'ReferenceIsCtfCorrected':ReferenceIsCtfCorrected[iterN]
-                                , 'ScaleStep':ScaleStep[iterN]
-                                , 'ScaleNumberOfSteps':ScaleNumberOfSteps[iterN]
-                                , 'Search5DShift':Search5DShift[iterN]
-                                , 'Search5DStep':Search5DStep[iterN]
-                                , 'SystemFlavour':SystemFlavour
-                                }
-
-            command = "projection_matching"
-            _VerifyFiles = []
-            #File with list of images and references
-            _VerifyFiles.append(ProjMatchRootName[iterN][refN] )
-            for i in range (1,NumberOfCtfGroups+1):
-                _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.xmd")
-            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
-            
-
+        # Convert vectors to list
+        self.ReferenceFileNames = getListFromVector(ReferenceFileNames)
+        self.numberOfReferences = len(self.ReferenceFileNames)
+        #directory with ProjMatchClasses
+        self.ProjMatchDirs=[" "]
+        self.LibraryDirs=[" "]
+        self.DocFileInputAngles=[self.DocFileWithOriginalAngles]
+        #ProjMatchRootName=[" "]
         
-        #assign the images to the different references based on the crosscorrelation coheficient
-        #if only one reference it just copy the docfile generated in the previous step
-        _Parameters = {
-                       'DocFileInputAngles' : DocFileInputAngles[iterN]#Output file with angles
-                     , 'NumberOfCtfGroups' : NumberOfCtfGroups
-                     , 'ProjMatchRootName':ProjMatchRootName[iterN]#LIST
-                     , 'NumberOfReferences':numberOfReferences
-                      }
-        _VerifyFiles = []
-        _VerifyFiles.append(DocFileInputAngles[iterN])
-        command = "assign_images_to_references"
-        _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
-
-        #align images, not possible for ctf groups
-        for refN in range(1, numberOfReferences + 1):
-            _Parameters = {
-                       'Align2DIterNr':Align2DIterNr[iterN]#
-                     , 'Align2dMaxChangeRot':Align2dMaxChangeRot[iterN]#
-                     , 'Align2dMaxChangeOffset':Align2dMaxChangeOffset[iterN]#
-                     , 'CtfGroupDirectory': CtfGroupDirectory#
-                     , 'CtfGroupRootName': CtfGroupRootName#
-                     , 'DiscardPercentage':DiscardPercentage[iterN]#
-                     , 'DoAlign2D' : DoAlign2D[iterN]#
-                     , 'DoComputeResolution':DoComputeResolution[iterN]
-                     , 'DoCtfCorrection': DoCtfCorrection#
-                     , 'DocFileInputAngles' : DocFileInputAngles[iterN]#
-                     , 'DoParallel': DoParallel#
-                     , 'DoSplitReferenceImages':DoSplitReferenceImages[iterN]#
-                     , 'InnerRadius':InnerRadius[iterN]#
-                     , 'MaxChangeOffset':MaxChangeOffset[iterN]#
-                     , 'MinimumCrossCorrelation':MinimumCrossCorrelation[iterN]#
-                     , 'NumberOfReferences':numberOfReferences#
-                     , 'NumberOfCtfGroups' : NumberOfCtfGroups#
-                     , 'NumberOfMpiProcesses':NumberOfMpiProcesses#
-                     , 'NumberOfThreads':NumberOfThreads#
-                     , 'PaddingFactor':PaddingFactor#
-                     , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]#
-                     , 'ProjMatchRootName':ProjMatchRootName[iterN][refN]#
-                     , 'refN':refN
-                     , 'SystemFlavour':SystemFlavour#
-                    }
-#, 'MpiJobSize':MpiJobSize#
-#, 'OuterRadius':OuterRadius[iterN]
-            command = "angular_class_average"
-            _VerifyFiles = []
-            _VerifyFiles.append('ertertertert')
-            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
-            
-            ##############REMOVE SHUTIL.COPY
-            # Mask reference volume
-            _Parameters = {
-                                  'Align2dMaxChangeOffset':Align2dMaxChangeOffset[iterN]
-                                , 'Align2dMaxChangeRot':Align2dMaxChangeRot[iterN]
-                                , 'DoMask'             : DoMask
-                                , 'DoSphericalMask'    : DoSphericalMask
-                                , 'maskedFileName'     : maskedFileNamesIter[iterN][refN]
-                                , 'maskRadius'         : MaskRadius
-                                , 'reconstructedFileName' : reconstructedFileNamesIter[iterN - 1][refN]
-                                , 'userSuppliedMask'   : MaskFileName
-                                }
-            
-            command = "execute_mask"
-            _VerifyFiles = []
-            _VerifyFiles.append(maskedFileNamesIter[iterN][refN])
-            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
-
-
-
-
-
-#class average
-#alig2d
-
-#reconstruct
-#resolution
-#
-            
-######################
-######################
-########################            
-            #REMOVE
-            #Create directory
-        _Parameters = {
-             'Iter':iterN + 1
-           , 'WorkingDir':WorkingDir
-            }
-        command = 'createDir'
-        _dataBase.insertCommand(command, _Parameters, iterN)
+        for iterN in range(NumberofIterations):
+            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
+            self.ProjMatchDirs.append(fnBaseIter + self.ProjMatchDir)
+            self.LibraryDirs.append( fnBaseIter + self.LibraryDir)
+            self.DocFileInputAngles.append("%s%s.doc" % (fnBaseIter, self.docfile_with_current_angles))
         
-        _Parameters = {'dummy':''}
-        command = "shutil.copy('%s','%s');dummy" % (ReferenceFileNames[0], reconstructedFileNamesIter[iterN][refN])
-        _VerifyFiles = []
-        _VerifyFiles.append(reconstructedFileNamesIter[iterN][refN])
-        _dataBase.insertCommand(command, _Parameters, iterN)
-
-###            #delete DocFileInputAngles so I can use append style for metadata in DocFileInputAngles
-###            _Parameters = {
-###                           'FileName': DocFileInputAngles[iterN]
-###                          ,'Verbose' : 1
-###                           }
-###            command = "deleteFile"
-###            _dataBase.insertCommand(command, _Parameters, iterN)
-
-###        command = "exit(1)"
-###        _dataBase.insertCommand(command, _Parameters, iterN)
-
-
-######################################
-    _Parameters = {'dummy':''}
-    command = "print 'ALL DONE';dummy"
-    _dataBase.insertCommand(command, _Parameters, dataBase.dataBaseStruct.doAlways)
-
-    _dataBase.commit()
-
-def mainLoop(_log, iter):
-    global ContinueAtIteration
-    _import = 'from ProjMatchActionsToBePerformedBeforeLoop import *;\
-               from ProjMatchActionsToBePerformedInLoop import *'
-    _dataBase.setPrintWrapperParameters(PrintWrapperParameters)
-    _dataBase.setPrintWrapperCommand(PrintWrapperCommand)
-    _dataBase.setProjDir(ProjectDir)
-    _dataBase.setVerify(Verify,ViewVerifyedFiles)
-    StartAtStepN=_dataBase.getStartingStep(IsIter)
-    _dataBase.mainLoop(_log, StartAtStepN, _import)
-
-# Preconditions
-def preconditions(gui):
+        auxList = (self.numberOfReferences + 1) * [None]
+        self.ProjectLibraryRootNames=[[None]]
+        for iterN in range(NumberofIterations):
+            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
+            for refN in range(self.numberOfReferences):                
+                auxList[refN + 1]= "%s%s_ref_%02d.stk" % (fnBaseIter, self.ProjectLibraryRootName, refN)
+            self.ProjectLibraryRootNames.append(list(auxList))
+                    
+        self.ProjMatchRootNames=[[None]]
+        for iterN in range(NumberofIterations):
+            for refN in range(self.numberOfReferences):
+                auxList[refN + 1]="%s/%s_ref_%02d.doc" % (self.ProjMatchDirs[iterN + 1], ProjMatchName, refN + 1)
+            self.ProjMatchRootNames.append(list(auxList))
     
-    retval=True
     
-    # Check if there is workingdir 
-    # move this to gui
-    import tkMessageBox
-    if WorkingDir == "":
-        error_message="No working directory given"
-        retval=False
+        #name of masked volumes
+        #add dummy name so indexes start a 1
+        self.maskedFileNamesIters = [[None]]
+        for iterN in range(NumberofIterations):
+            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
+            for refN in range(self.numberOfReferences):
+                auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.maskReferenceVolume, refN + 1)
+            self.maskedFileNamesIters.append(list(auxList))
     
-    #Check reference and projection size match
-    ###########################global ReferenceFileNames
-    ReferenceFileNames = getListFromVector(ReferenceFileNames)
-    _Parameters = {
-          'ReferenceFileNames':ReferenceFileNames
-        , 'SelFileName':SelFileName
-        }
-    from ProjMatchActionsToBePerformedBeforeLoop import checkVolumeProjSize
-    _retval,_error_message=checkVolumeProjSize(None,_Parameters)
-    if(not _retval):
-        retval=False
-        error_message=_error_message
+        ####################################################################
+        #add initial reference, useful for many routines
+        #NOTE THAT INDEXES START AT 1
+        self.reconstructedFileNamesIters.append([None] + self.ReferenceFileNames)
+        for iterN in range(NumberofIterations):
+            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
+            for refN in range(self.numberOfReferences):
+                auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.ReconstructedVolume, refN + 1)
+            self.reconstructedFileNamesIters.append(list(auxList))
+    
+        # Optimal angles from previous iteration or user-provided at the beginning
+    #    global self.DocFileInputAngles
+    #    self.DocFileInputAngles=[]
+    #    aux=[self.DocFileWithOriginalAngles]*(self.numberOfReferences+1)#+1 fills the zero
+    #    self.DocFileInputAngles.append([None] + aux)
+    #    for iterN in range(NumberofIterations):
+    #        for refN in range(self.numberOfReferences):
+    #            auxList[refN + 1] = WorkingDir + "/Iter_" + \
+    #                                      str(iterN + 1).zfill(2) + \
+    #                                      '/' + \
+    #                                      self.docfile_with_current_angles + \
+    #                                      "_ref_" + str(refN + 1).zfill(2) + ".doc"
+    #        self.DocFileInputAngles.append(list(auxList))
+    
+        self.docfile_with_current_anglesList=[None]
+        for iterN in range(NumberofIterations):
+            fnBaseIter = "%s/Iter_%02d/%s.doc" % (self.WorkingDir, iterN + 1, self.docfile_with_current_angles)
+            self.docfile_with_current_anglesList.append(fnBaseIter)
+    
+        #parameter for projection matching
+        self.Align2DIterNr          = [-1]+getListFromVector(Align2DIterNr,NumberofIterations)
+        self.Align2dMaxChangeOffset = [-1]+getListFromVector(Align2dMaxChangeOffset,NumberofIterations)
+        self.Align2dMaxChangeRot    = [-1]+getListFromVector(Align2dMaxChangeRot,NumberofIterations)
+        self.AngSamplingRateDeg     = [-1]+getListFromVector(AngSamplingRateDeg,NumberofIterations)
+        self.DiscardPercentage      = [-1]+getListFromVector(DiscardPercentage,NumberofIterations)
+        self.DoAlign2D              = [False]+getBoolListFromVector(DoAlign2D,NumberofIterations)
+        self.DoComputeResolution    = [False]+getBoolListFromVector(DoComputeResolution,NumberofIterations)
+        self.DoSplitReferenceImages = [False]+getBoolListFromVector(DoSplitReferenceImages,NumberofIterations)
+        self.InnerRadius            = [False]+getListFromVector(InnerRadius,NumberofIterations)
+        self.MaxChangeInAngles      = [-1]+getListFromVector(MaxChangeInAngles,NumberofIterations)
+        self.MaxChangeOffset        = [-1]+getListFromVector(MaxChangeOffset,NumberofIterations)
+        self.MinimumCrossCorrelation= [-1]+getListFromVector(MinimumCrossCorrelation,NumberofIterations)
+        self.OnlyWinner             = [False]+getBoolListFromVector(OnlyWinner,NumberofIterations)
+        self.OuterRadius            = [False]+getListFromVector(OuterRadius,NumberofIterations)
+        self.PerturbProjectionDirections = [False]+getBoolListFromVector(PerturbProjectionDirections,NumberofIterations)
+        self.ReferenceIsCtfCorrected     = [-1]+getListFromVector(str(ReferenceIsCtfCorrected) + " True", NumberofIterations)
+        self.ScaleNumberOfSteps          = [-1]+getListFromVector(ScaleNumberOfSteps,NumberofIterations)
+        self.ScaleStep              = [-1]+getListFromVector(ScaleStep,NumberofIterations)
+        self.Search5DShift          = [-1]+getListFromVector(Search5DShift,NumberofIterations)
+        self.Search5DStep           = [-1]+getListFromVector(Search5DStep,NumberofIterations)
+        self.SymmetryGroup          = [-1]+getListFromVector(SymmetryGroup,NumberofIterations)
 
-
-    import arg
-    # Never allow DoAlign2D and DoCtfCorrection together
-    if (int(arg.getComponentFromVector(DoAlign2D,1))==1 and DoCtfCorrection):
-        error_message="You cannot realign classes AND perform CTF-correction. Switch either of them off!"
-        print error_message
-        retval=False
-
-    #Now outter radius is compulsory
-    OuterRadius = arg.getComponentFromVector(OuterRadius,1)
-    InnerRadius = arg.getComponentFromVector(InnerRadius,1)
-    if OuterRadius[1] <= InnerRadius[1]:
-        error_message="OuterRadius must be larger than InnerRadius"
-        print error_message
-        retval=False
+    def otherActionsToBePerformedBeforeLoop(self):    
+        #global OuterRadius, 
+        global NumberOfCtfGroups
         
-    if not retval:
-        if gui:
-            tkMessageBox.showerror("Error", error_message)
+        if DoCtfCorrection:
+            auxMD1 = MetaData(CTFDatName)
+            auxMD2 = MetaData()
+            auxMD2.aggregate(auxMD1, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT)
+            NumberOfCtfGroups = auxMD2.size()
         else:
-            print error_message
-        retval=False
+            NumberOfCtfGroups = 1
+    
+        _Parameters = {
+              'DoDeleteWorkingDir':DoDeleteWorkingDir
+            , 'ProjectDir':ProjectDir
+            , 'WorkingDir':WorkingDir
+            }
+        command = 'deleteWorkingDirectory'
+        _dataBase.insertCommand(command, _Parameters, 1)
+    
+        #Create directory
+        _Parameters = {
+              'Iter':0
+            , 'ProjectDir':ProjectDir
+            , 'WorkingDir':WorkingDir
+            }
+        command = 'createDir'
+        _dataBase.insertCommand(command, _Parameters, 1)
+    
+        #Backup protocol file
+        _Parameters = {
+              'ProgName'  :sys.argv[0]
+            , 'ProjectDir':ProjectDir
+            , 'WorkingDir':WorkingDir
+            }
+        command = 'pm_make_backup_of_script_file'
+        _dataBase.insertCommand(command, _Parameters, dataBase.dataBaseStruct.doAlways)#backup always
+    
+        #Check references and projections size match
+        #Is already done in preconditions but I like to
+        #run protocols from command line bypassing the gui
+        _Parameters = {
+              'ReferenceFileNames':self.ReferenceFileNames
+            , 'SelFileName':SelFileName
+            }
+        command = 'checkVolumeProjSize'
+        _dataBase.insertCommand(command, _Parameters, 1)
+    
+        #Check Option compatibility
+        _Parameters = {
+              'DoAlign2D':self.DoAlign2D[1]
+            , 'DoCtfCorrection':DoCtfCorrection
+            }
+        command = 'checkOptionsCompatibility'
+        _dataBase.insertCommand(command, _Parameters, 1)
+    
+    #    #Init Mask references radius
+    #    _Parameters = {
+    #          'OuterRadius':OuterRadius[1]
+    #        , 'SelFileName':SelFileName
+    #        }
+    #    command = 'self.OuterRadius = initOuterRadius'
+    #    _dataBase.insertCommand(command, _Parameters, 1)
+    
+        #7 make CTF groups
+        _Parameters = {
+                      'CTFDatName': CTFDatName
+                    , 'CtfGroupDirectory': CtfGroupDirectory
+                    , 'CtfGroupMaxDiff': CtfGroupMaxDiff
+                    , 'CtfGroupMaxResol': CtfGroupMaxResol
+                    , 'CtfGroupRootName': CtfGroupRootName
+                    , 'DataArePhaseFlipped': DataArePhaseFlipped
+                    , 'DoAutoCtfGroup': DoAutoCtfGroup
+                    , 'DoCtfCorrection': DoCtfCorrection
+                    , 'PaddingFactor': PaddingFactor
+                    , 'SelFileName': SelFileName
+                    , 'SplitDefocusDocFile': SplitDefocusDocFile
+                    , 'WienerConstant': WienerConstant
+                   }
+        command = 'execute_ctf_groups'
+        _VerifyFiles = []
+        fnBase = os.path.join(self.CtfGroupDirectory, self.CtfGroupRootName)
+        if DoCtfCorrection:            
+            _VerifyFiles.append(fnBase+'Info.xmd')
+            _VerifyFiles.append(fnBase+'_ctf.stk')
+            _VerifyFiles.append(fnBase+'_wien.stk')
+            _VerifyFiles.append(fnBase+'_split.doc')
+        _VerifyFiles.append(fnBase+'_images.sel')
+            
+        _dataBase.insertCommand(command, _Parameters, 1,_VerifyFiles)
+        #Create Initial angular file. Either fill it with zeros or copy input
+        _Parameters = {
+              'DocFileName':DocFileName
+            , 'DocFileWithOriginalAngles':self.DocFileWithOriginalAngles
+            , 'SelFileName':SelFileName
+            }
+        command = 'initAngularReferenceFile'
+        _VerifyFiles = []
+        _VerifyFiles.append(self.DocFileWithOriginalAngles)
+        _dataBase.insertCommand(command, _Parameters, 1,_VerifyFiles)
+    
+        #Save all parameters in dict for future runs (this is done by database)
+        #so far no parameter is being saved, but dummy=0
+        _Parameters = {
+          'SystemFlavour':SystemFlavour
+        }
+        command = 'self.saveParameters'
+        _dataBase.insertCommand(command, _Parameters, 1)
+        command = 'self.loadParameters'
+        _dataBase.insertCommand(command, _Parameters, dataBase.dataBaseStruct.doAlways)
+    
+        #no entries will be save untill this commit
+        print "commit databse"
+        _dataBase.commit()
+    
+    def actionsToBePerformedInsideLoop(self, _log):
         
-    return retval
-#######
-# PROTOCOL STARTS HERE
-#######
-if __name__ == '__main__':
-    #create Logging system
-    # Set up logging
-    _log = log.init_log_system(ProjectDir,
-                                LogDir,
-                                sys.argv[0],
-                                WorkingDir)
+        for iterN in range(1, NumberofIterations + 1):
+            #############conn.execute(sqlBegin + "MPI_ON" + sqlEnd)
+            # create working dir
+            _Parameters = {
+                 'Iter':iterN
+               , 'WorkingDir':WorkingDir
+                }
+            command = 'createDir'
+            _dataBase.insertCommand(command, _Parameters, iterN)
     
-    # Uncomment next line to get Debug level logging
-    _log.setLevel(logging.DEBUG)
-    _log.debug("Debug level logging enabled")
-    #init DataBase
-    global _dataBase
-    _dataBase = dataBase.dataBase(ProjectDir,
-                                LogDir,
-                                sys.argv[0],
-                                WorkingDir,
-                                ProjMatchName,
-                                ContinueAtIteration)
+            #Create directory with classes
+            _Parameters = {
+                  'path':self.ProjMatchDirs[iterN]
+                }
+            command = 'createDir2'
+            _dataBase.insertCommand(command, _Parameters, 1)
+        
+            #Create directory with image libraries
+            _Parameters = {
+                  'path':self.LibraryDirs[iterN]
+                }
+            command = 'createDir2'
+            _dataBase.insertCommand(command, _Parameters, 1)
+            for refN in range(1, self.numberOfReferences + 1):
+                ##############REMOVE SHUTIL.COPY
+                # Mask reference volume
+                _Parameters = {
+                                      'DoMask'             : DoMask
+                                    , 'DoSphericalMask'    : DoSphericalMask
+                                    , 'maskedFileName'     : self.maskedFileNamesIters[iterN][refN]
+                                    , 'maskRadius'         : MaskRadius
+                                    , 'reconstructedFileName' : self.reconstructedFileNamesIters[iterN - 1][refN]
+                                    , 'userSuppliedMask'   : MaskFileName
+                                    }
+                
+                command = "execute_mask"
+                _VerifyFiles = []
+                _VerifyFiles.append(self.maskedFileNamesIters[iterN][refN])
+                _VerifyFiles.append(self.maskedFileNamesIters[iterN][refN])
+                _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
     
-    #preprocessing
-    try:
-        actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem()
-        otherActionsToBePerformedBeforeLoop()
-        actionsToBePerformedInsideLoop(_log)
-        mainLoop(_log, iter)
-    except sqlite.Error, e:
-        print "An error occurred:", e.args[0]
+                # angular_project_library
+                _Parameters = {
+                                      'AngSamplingRateDeg':self.AngSamplingRateDeg[iterN]
+                                    , 'CtfGroupSubsetFileName':self.CtfGroupSubsetFileName
+                                    , 'DoCtfCorrection': DoCtfCorrection
+                                    , 'DocFileInputAngles':self.DocFileInputAngles[iterN-1]
+                                    , 'DoParallel': DoParallel
+                                    , 'DoRestricSearchbyTiltAngle':DoRestricSearchbyTiltAngle
+                                    , 'MaxChangeInAngles':self.MaxChangeInAngles[iterN]
+                                    , 'maskedFileNamesIter':self.maskedFileNamesIters[iterN][refN]
+                                    , 'MpiJobSize':MpiJobSize
+                                    , 'NumberOfMpiProcesses':NumberOfMpiProcesses
+                                    , 'NumberOfThreads':NumberOfThreads
+                                    , 'OnlyWinner':self.OnlyWinner[iterN]
+                                    , 'PerturbProjectionDirections':self.PerturbProjectionDirections[iterN]
+                                    , 'ProjectLibraryRootName':self.ProjectLibraryRootNames[iterN][refN]
+                                    , 'SystemFlavour':SystemFlavour
+                                    , 'SymmetryGroup':self.SymmetryGroup[iterN]
+                                    , 'SymmetryGroupNeighbourhood':SymmetryGroupNeighbourhood
+                                    , 'Tilt0':Tilt0
+                                    , 'TiltF':TiltF
+                                    }
     
-                    #(in another file) <<<<< define list with actions and parameters
-                    #                  <<<<< store list in database as it is made
-                    #                  <<<<< link with restart
-    #postprocesing
+                command = "angular_project_library"
+                _VerifyFiles = []
+                #file with projections
+                auxFn=self.ProjectLibraryRootNames[iterN][refN]
+                _VerifyFiles.append(auxFn)
+                auxFn=auxFn[:-4]#remove extension
+                #file with projection angles angles 
+                _VerifyFiles.append(auxFn + ".doc")
+                #file with sampling point neighbourhood 
+                _VerifyFiles.append(auxFn + "_sampling.xmd")
+                #file with sampling point neighbourhood for each ctf group, this is reduntant but useful
+                
+                for i in range (1,NumberOfCtfGroups+1):
+                    _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.xmd")
+                            
+                _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+                # projectionMatching    
+                _Parameters = {
+                                      'AvailableMemory':AvailableMemory
+                                    , 'CtfGroupRootName': CtfGroupRootName
+                                    , 'CtfGroupDirectory': self.CtfGroupDirectory
+                                    , 'DoComputeResolution':self.DoComputeResolution[iterN]
+                                    , 'DoCtfCorrection': DoCtfCorrection
+                                    , 'DoScale':DoScale
+                                    , 'DoParallel': DoParallel
+                                    , 'InnerRadius':self.InnerRadius[iterN]
+                                    , 'MaxChangeOffset':self.MaxChangeOffset[iterN]
+                                    , 'MpiJobSize':MpiJobSize
+                                    , 'NumberOfCtfGroups':NumberOfCtfGroups
+                                    , 'NumberOfMpiProcesses':NumberOfMpiProcesses
+                                    , 'NumberOfThreads':NumberOfThreads
+                                    , 'OuterRadius':self.OuterRadius[iterN]
+                                    , 'PaddingFactor':PaddingFactor
+                                    , 'ProjectLibraryRootName':self.ProjectLibraryRootNames[iterN][refN]
+                                    , 'ProjMatchRootName':self.ProjMatchRootNames[iterN][refN]
+                                    , 'ReferenceIsCtfCorrected':self.ReferenceIsCtfCorrected[iterN]
+                                    , 'ScaleStep':self.ScaleStep[iterN]
+                                    , 'ScaleNumberOfSteps':self.ScaleNumberOfSteps[iterN]
+                                    , 'Search5DShift':self.Search5DShift[iterN]
+                                    , 'Search5DStep':self.Search5DStep[iterN]
+                                    , 'SystemFlavour':SystemFlavour
+                                    }
+    
+                command = "projection_matching"
+                _VerifyFiles = []
+                #File with list of images and references
+                _VerifyFiles.append(self.ProjMatchRootNames[iterN][refN] )
+                for i in range (1,NumberOfCtfGroups+1):
+                    _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.xmd")
+                _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+                
+    
+            
+            #assign the images to the different references based on the crosscorrelation coheficient
+            #if only one reference it just copy the docfile generated in the previous step
+            _Parameters = {
+                           'DocFileInputAngles' : self.DocFileInputAngles[iterN]#Output file with angles
+                         , 'NumberOfCtfGroups' : NumberOfCtfGroups
+                         , 'ProjMatchRootName':self.ProjMatchRootNames[iterN]#LIST
+                         , 'NumberOfReferences':self.numberOfReferences
+                          }
+            _VerifyFiles = []
+            _VerifyFiles.append(self.DocFileInputAngles[iterN])
+            command = "assign_images_to_references"
+            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+    
+            #align images, not possible for ctf groups
+            for refN in range(1, self.numberOfReferences + 1):
+                _Parameters = {
+                           'Align2DIterNr':self.Align2DIterNr[iterN]#
+                         , 'Align2dMaxChangeRot':self.Align2dMaxChangeRot[iterN]#
+                         , 'Align2dMaxChangeOffset':self.Align2dMaxChangeOffset[iterN]#
+                         , 'CtfGroupDirectory': self.CtfGroupDirectory#
+                         , 'CtfGroupRootName': CtfGroupRootName#
+                         , 'DiscardPercentage':self.DiscardPercentage[iterN]#
+                         , 'DoAlign2D' : self.DoAlign2D[iterN]#
+                         , 'DoComputeResolution':self.DoComputeResolution[iterN]
+                         , 'DoCtfCorrection': DoCtfCorrection#
+                         , 'DocFileInputAngles' : self.DocFileInputAngles[iterN]#
+                         , 'DoParallel': DoParallel#
+                         , 'DoSplitReferenceImages':self.DoSplitReferenceImages[iterN]#
+                         , 'InnerRadius':self.InnerRadius[iterN]#
+                         , 'MaxChangeOffset':self.MaxChangeOffset[iterN]#
+                         , 'MinimumCrossCorrelation':self.MinimumCrossCorrelation[iterN]#
+                         , 'NumberOfReferences':self.numberOfReferences#
+                         , 'NumberOfCtfGroups' : NumberOfCtfGroups#
+                         , 'NumberOfMpiProcesses':NumberOfMpiProcesses#
+                         , 'NumberOfThreads':NumberOfThreads#
+                         , 'PaddingFactor':PaddingFactor#
+                         , 'ProjectLibraryRootName':self.ProjectLibraryRootNames[iterN][refN]#
+                         , 'ProjMatchRootName':self.ProjMatchRootNames[iterN][refN]#
+                         , 'refN':refN
+                         , 'SystemFlavour':SystemFlavour#
+                        }
+    #, 'MpiJobSize':MpiJobSize#
+    #, 'OuterRadius':OuterRadius[iterN]
+                command = "angular_class_average"
+                _VerifyFiles = []
+                _VerifyFiles.append('ertertertert')
+                _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+                
+                ##############REMOVE SHUTIL.COPY
+                # Mask reference volume
+                _Parameters = {
+                                      'Align2dMaxChangeOffset':self.Align2dMaxChangeOffset[iterN]
+                                    , 'Align2dMaxChangeRot':self.Align2dMaxChangeRot[iterN]
+                                    , 'DoMask'             : DoMask
+                                    , 'DoSphericalMask'    : DoSphericalMask
+                                    , 'maskedFileName'     : self.maskedFileNamesIters[iterN][refN]
+                                    , 'maskRadius'         : MaskRadius
+                                    , 'reconstructedFileName' : self.reconstructedFileNamesIters[iterN - 1][refN]
+                                    , 'userSuppliedMask'   : MaskFileName
+                                    }
+                
+                command = "execute_mask"
+                _VerifyFiles = []
+                _VerifyFiles.append(self.maskedFileNamesIters[iterN][refN])
+                _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+    
+    
+    
+    
+    
+    #class average
+    #alig2d
+    
+    #reconstruct
+    #resolution
+    #
+                
+    ######################
+    ######################
+    ########################            
+                #REMOVE
+                #Create directory
+            _Parameters = {
+                 'Iter':iterN + 1
+               , 'WorkingDir':WorkingDir
+                }
+            command = 'createDir'
+            _dataBase.insertCommand(command, _Parameters, iterN)
+            
+            _Parameters = {'dummy':''}
+            command = "shutil.copy('%s','%s');dummy" % (self.ReferenceFileNames[0], self.reconstructedFileNamesIters[iterN][refN])
+            _VerifyFiles = []
+            _VerifyFiles.append(self.reconstructedFileNamesIters[iterN][refN])
+            _dataBase.insertCommand(command, _Parameters, iterN)
+    
+    ###            #delete DocFileInputAngles so I can use append style for metadata in DocFileInputAngles
+    ###            _Parameters = {
+    ###                           'FileName': DocFileInputAngles[iterN]
+    ###                          ,'Verbose' : 1
+    ###                           }
+    ###            command = "deleteFile"
+    ###            _dataBase.insertCommand(command, _Parameters, iterN)
+    
+    ###        command = "exit(1)"
+    ###        _dataBase.insertCommand(command, _Parameters, iterN)
+    
+    
+    ######################################
+        _Parameters = {'dummy':''}
+        command = "print 'ALL DONE';dummy"
+        _dataBase.insertCommand(command, _Parameters, dataBase.dataBaseStruct.doAlways)
+    
+        _dataBase.commit()
+
