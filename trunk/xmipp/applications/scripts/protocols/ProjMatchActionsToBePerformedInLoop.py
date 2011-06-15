@@ -256,7 +256,7 @@ def angular_class_average(_log,dict):
                 continue;
             #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(iRef3D).zfill(2))
             parameters =  ' -i '       + auxInputdocfile  + DocFileInputAngles +\
-                          ' --lib '    + refname.replace(".stk","_angles.doc") + \
+                          ' --lib '    + refname.replace(".stk",".doc") + \
                           ' --dont_write_selfiles ' + \
                           ' --limit0 ' + dict['MinimumCrossCorrelation'] + \
                           ' --limitR ' + dict['DiscardPercentage']
