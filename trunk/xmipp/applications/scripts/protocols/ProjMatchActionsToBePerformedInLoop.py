@@ -213,8 +213,8 @@ def assign_images_to_references(_log,dict):
         #CC use it in both reconstruction
         #recover atributes after aggregate function
         MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)
-        MD1.write('MD1.xmd')
-        MDSort.write('MDSort.xmd')
+        #MD1.write('MD1.xmd')
+        #MDSort.write('MDSort.xmd')
         #add a sorting number to make easier to create an stack of averaged classes
         MDout.join(MD1,MDSort,MDL_UNDEFINED,NATURAL)        
         MDout.write(auxInputdocfile+outputdocfile,MD_APPEND)
@@ -228,17 +228,18 @@ def angular_class_average(_log,dict):
     #NumberOfReferences  = dict['NumberOfReferences']
     #ProjMatchRootName   = dict['ProjMatchRootName']
     refname = str(dict['ProjectLibraryRootName'])
+    refN = dict['refN']
+    DocFileInputAngles=dict['DocFileInputAngles']
+    mD=MetaData(DocFileInputAngles)
+    mDout = MetaData()
+    mDout.importObjects(mD,MDValueEQ(MDL_REF3D, refN))
 
-    
-    #Md=MetaData()
-    #MdSelect=MetaData()
     ProjMatchRootName = dict['ProjMatchRootName']
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         tmpFileName = CtfBlockName + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
-        #extract from metadata relevant images
         tmpFileName += ProjMatchRootName
         #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(iRef3D).zfill(2))
-        parameters =  ' -i '      + tmpFileName  + \
+        parameters =  ' -i '       + tmpFileName  + \
                       ' --lib '    + refname.replace(".stk",".doc") + \
                       ' --dont_write_selfiles ' + \
                       ' --limit0 ' + dict['MinimumCrossCorrelation'] + \
