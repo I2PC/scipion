@@ -437,6 +437,9 @@ public:
      */
     FileName removeExtension(const String& ext) const;
 
+    FileName removeLastExtension() const;
+
+
     /**Extract the directory portion from a filename string
      * (e.g. /foo/bar.txt -> /foo).
      *

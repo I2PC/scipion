@@ -29,6 +29,7 @@
 #include <data/projection.h>
 #include <data/fftw.h>
 #include <data/metadata_extension.h>
+#include "reconstruct_art.h"
 
 
 void ProgSSNR::defineParams()
@@ -63,7 +64,7 @@ void ProgSSNR::defineParams()
     addParamsLine("   [--sel_noise  <noise_mdfile>]  : Metadata file with the images used for the noise reconstruction");
     addParamsLine("  alias -selN;");
     addParamsLine("   [-o <SSNR_file=\"\">]     : Output metadata with the SSNR estimation");
-    addParamsLine("                             :+++If the output filename is not given, then the output filename is taken");
+    addParamsLine("                             :+++If the output filename is not given, then the input filename is taken");
     addParamsLine("                             :+++from the -S parameter by inserting _SSNR before the extension.");
     addParamsLine("                             :+++The columns of the output file are as follows: %BR%");
     addParamsLine("                             :+++  =Column 1: Fourier pixel number= %BR%");
@@ -123,7 +124,7 @@ void ProgSSNR::readParams()
         }
     }
     else
-        fn_VSSNR = getParam("-VSSNR");
+        fn_VSSNR = getParam("--VSSNR");
 
     ring_width = getDoubleParam("--ring");
     Tm = getDoubleParam("--sampling_rate");
@@ -332,15 +333,15 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(S2s)
             {
                 double ISSNR = 0, alpha = 0, SSNR = 0;
-                double aux=DIRECT_MULTIDIM_ELEM(N2s,n);
+                double aux = DIRECT_MULTIDIM_ELEM(N2s,n);
                 if (aux > min_power)
                     ISSNR = DIRECT_MULTIDIM_ELEM(S2s,n) / aux;
-                aux=DIRECT_MULTIDIM_ELEM(N2n,n);
+                aux = DIRECT_MULTIDIM_ELEM(N2n,n);
                 if (aux > min_power)
                     alpha = DIRECT_MULTIDIM_ELEM(S2n,n) / aux;
-                if (alpha   > min_power)
+                if (alpha > min_power)
                 {
-                    aux=ISSNR / alpha - 1.0;
+                    aux = ISSNR / alpha - 1.0;
                     SSNR = XMIPP_MAX(aux, 0.0);
                 }
                 if (SSNR    > min_power)
@@ -356,10 +357,9 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
             // Save image
             FileName fn_img_out;
             fn_img_out.compose(imgno, fn_out_images, "stk");
-//            FileName fn_img_out = fn_out_images + integerToString(Is.name().getNumber(), 5) + ".xmp";
             SSNR2D.setEulerAngles(Is.rot(),Is.tilt(),Is.psi());
             SSNR2D.write(fn_img_out);
-            size_t objId=SF_individual.addObject();
+            size_t objId = SF_individual.addObject();
             SF_individual.setValue(MDL_IMAGE,fn_img_out,objId);
         }
 
@@ -452,12 +452,18 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
         std::cerr << "Interpolating the VSSNR ...\n";
         SF_individual.write(fn_out_images + ".xmd");
 
+        //        std::cout << "it should be reconstructing with ART, when implemented." <<std::endl;
 
-        std::cout << "it should be reconstructing with ART, when implemented." <<std::endl;
+        ProgReconsART artRecons;
+        artRecons.read(formatString("-i %s.xmd -o %s -l 0.1 -R %i --ray_length 1 -n 5",fn_out_images.c_str(),
+                                    fn_VSSNR.removeLastExtension().c_str(), ROUND(XSIZE(S()) / 3)));
+        artRecons.run();
 
-//        system(((std::string)"xmipp_art -i " + fn_out_images + ".xmd -o " + fn_VSSNR +
-//                " -l 0.1 -R " + integerToString(ROUND(XSIZE(S()) / 3)) + " -ray_length 1 -n 5").c_str());
-//        system(((std::string)"xmipp_rmsel " + fn_out_images + ".xmd ").c_str());
+        remove(fn_out_images.addExtension("xmd").c_str());
+        remove(fn_out_images.addExtension("stk").c_str());
+        //        system(((std::string)"xmipp_art -i " + fn_out_images + ".xmd -o " + fn_VSSNR +
+        //                " -l 0.1 -R " + integerToString(ROUND(XSIZE(S()) / 3)) + " -ray_length 1 -n 5").c_str());
+        //        system(((std::string)"xmipp_rmsel " + fn_out_images + ".xmd ").c_str());
     }
 }
 
