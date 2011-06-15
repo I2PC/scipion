@@ -1134,6 +1134,7 @@ def actionsToBePerformedInsideLoop(_log):
                      , 'PaddingFactor':PaddingFactor#
                      , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]#
                      , 'ProjMatchRootName':ProjMatchRootName[iterN][refN]#
+                     , 'refN':refN
                      , 'SystemFlavour':SystemFlavour#
                     }
 #, 'MpiJobSize':MpiJobSize#
