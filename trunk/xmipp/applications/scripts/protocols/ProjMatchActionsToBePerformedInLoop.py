@@ -242,11 +242,7 @@ def angular_class_average(_log,dict):
     refN                = dict['refN']
     refname             = str(dict['ProjectLibraryRootName'])
 
-#    mD    = MetaData()
-#    mDout = MetaData()
-#    mDout.importObjects(mD,MDValueEQ(MDL_REF3D, refN))
-
-    MD=MetaData()
+    MD = MetaData()
     ProjMatchRootName = dict['ProjMatchRootName']
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         for iRef3D in range(1,NumberOfReferences+1):
@@ -260,7 +256,7 @@ def angular_class_average(_log,dict):
                 continue;
             #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(iRef3D).zfill(2))
             parameters =  ' -i '       + auxInputdocfile  + DocFileInputAngles +\
-                          ' --lib '    + refname.replace(".stk",".doc") + \
+                          ' --lib '    + refname.replace(".stk","_angles.doc") + \
                           ' --dont_write_selfiles ' + \
                           ' --limit0 ' + dict['MinimumCrossCorrelation'] + \
                           ' --limitR ' + dict['DiscardPercentage']
