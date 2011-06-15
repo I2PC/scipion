@@ -63,7 +63,7 @@ void ProgSSNR::defineParams()
     addParamsLine("  alias -selS;");
     addParamsLine("   [--sel_noise  <noise_mdfile>]  : Metadata file with the images used for the noise reconstruction");
     addParamsLine("  alias -selN;");
-    addParamsLine("   [-o <SSNR_file=\"\">]     : Output metadata with the SSNR estimation");
+    addParamsLine("   [-o <SSNR_file=\"\">]     : Output file with the SSNR estimation");
     addParamsLine("                             :+++If the output filename is not given, then the input filename is taken");
     addParamsLine("                             :+++from the -S parameter by inserting _SSNR before the extension.");
     addParamsLine("                             :+++The columns of the output file are as follows: %BR%");
@@ -93,10 +93,10 @@ void ProgSSNR::defineParams()
     addParamsLine("                             :+ (10*log10(1+1)). The threshold at SSNR = 4 must be shown as the threshold of the output");
     addParamsLine("                             :+ interpolated volume at 6.99 (10*log10(1+4)). The 1D SSNR is also generated as a side-product");
     addParamsLine("   requires --signal,--noise,--VSSNR;");
-    addParamsLine("   [--VSSNR <fn_vol>]        : Volume with the Volumetric SSNR");
+    addParamsLine("   [--VSSNR <fn_vol_file>]   : Volume with the Volumetric SSNR");
     addParamsLine("   [--oroot <root=\"\">]     : Root name for individual SSNR estimations");
     addParamsLine("== Estimation by radial averaging of the VSSNR ==");
-    addParamsLine("   [--radial_avg]             : Do radial averaging estimation");
+    addParamsLine("   [--radial_avg]            : Do radial averaging estimation");
     addParamsLine("   : (Allowed global options: --ring, --sampling_rate, --min_power, -o)");
     addParamsLine("   requires --VSSNR;");
 
@@ -144,9 +144,7 @@ void ProgSSNR::show()
     << "Ring width:        " << ring_width << std::endl
     << "Sampling rate:     " << Tm         << std::endl
     << "Generate VSSNR:    " << generate_VSSNR << std::endl
-    << "Radial average:    " << radial_avg << std::endl
-    ;
-
+    << "Radial average:    " << radial_avg << std::endl;
 }
 
 void ProgSSNR::produceSideInfo()
@@ -163,10 +161,6 @@ void ProgSSNR::produceSideInfo()
 
         SF_S.read(fn_S_sel);
         SF_N.read(fn_N_sel);
-
-        //        int sZdim, sYdim, sXdim;
-        //        size_t sNdim;
-        //        ImgSize(SF_SN, sXdim, sYdim, sZdim, sNdim);
 
         if (fn_out_images == "")
             fn_out_images = "individualSSNR";
@@ -194,10 +188,7 @@ void ProgSSNR::run()
         if (fn_out != "")
             output.write(fn_out);
         else
-        {
-            FileName fn_out = fn_S.insertBeforeExtension("_SSNR");
-            output.write(fn_out.substituteExtension("vol", "txt"));
-        }
+            output.write(fn_S.insertBeforeExtension("_SSNR").removeLastExtension().addExtension("txt"));
     }
     else
     {
@@ -205,7 +196,7 @@ void ProgSSNR::run()
         if (fn_out != "")
             output.write(fn_out);
         else
-            output.write(fn_VSSNR.insertBeforeExtension("_radial_avg"));
+            output.write(fn_VSSNR.insertBeforeExtension("_radial_avg").removeLastExtension().addExtension("txt"));
     }
 }
 
@@ -452,8 +443,6 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
         std::cerr << "Interpolating the VSSNR ...\n";
         SF_individual.write(fn_out_images + ".xmd");
 
-        //        std::cout << "it should be reconstructing with ART, when implemented." <<std::endl;
-
         ProgReconsART artRecons;
         artRecons.read(formatString("-i %s.xmd -o %s -l 0.1 -R %i --ray_length 1 -n 5",fn_out_images.c_str(),
                                     fn_VSSNR.removeLastExtension().c_str(), ROUND(XSIZE(S()) / 3)));
@@ -461,9 +450,6 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
 
         remove(fn_out_images.addExtension("xmd").c_str());
         remove(fn_out_images.addExtension("stk").c_str());
-        //        system(((std::string)"xmipp_art -i " + fn_out_images + ".xmd -o " + fn_VSSNR +
-        //                " -l 0.1 -R " + integerToString(ROUND(XSIZE(S()) / 3)) + " -ray_length 1 -n 5").c_str());
-        //        system(((std::string)"xmipp_rmsel " + fn_out_images + ".xmd ").c_str());
     }
 }
 

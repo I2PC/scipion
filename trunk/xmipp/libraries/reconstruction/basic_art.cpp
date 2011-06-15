@@ -608,7 +608,8 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
             MetaData SF_aux;
             double weight=0.;
             SF_aux.read(fn_sel);
-            SF_aux.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+            if (SF_aux.containsLabel(MDL_ENABLED))
+                SF_aux.removeObjects(MDValueEQ(MDL_ENABLED, -1));
             selfile.clear();
             selfile.importObjects(SF_aux, MDValueRange(MDL_WEIGHT, 1e-9, 99e99));
             if (selfile.size() == 0)
@@ -620,7 +621,8 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
         else
         {
             selfile.read(fn_sel);
-            selfile.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+            if (selfile.containsLabel(MDL_ENABLED))
+                selfile.removeObjects(MDValueEQ(MDL_ENABLED, -1));
         }
         trueIMG = selfile.size();
         if (trueIMG == 0)
@@ -657,7 +659,7 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
     if (level >= FULL)
     {
         buildReconsInfo(selfile, fn_ctf, SL, IMG_Inf,
-                          do_not_use_symproj);
+                        do_not_use_symproj);
 
         if (!(tell&TELL_MANUAL_ORDER))
             if (parallel_mode == SIRT ||
@@ -671,7 +673,7 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
                 sortRandomly(numIMG, ordered_list);
             else if (sort_last_N != -1)
                 sortPerpendicular(numIMG, IMG_Inf, ordered_list,
-                                   sort_last_N);
+                                  sort_last_N);
             else
                 noSort(numIMG, ordered_list);
     }

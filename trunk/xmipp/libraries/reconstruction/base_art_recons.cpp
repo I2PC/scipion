@@ -430,18 +430,22 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
                 noisy_projection.setEulerAngles(artPrm.IMG_Inf[iact_proj].rot,
                                                 artPrm.IMG_Inf[iact_proj].tilt,
                                                 artPrm.IMG_Inf[iact_proj].psi);
-                if (artPrm.IMG_Inf[iact_proj]
-                    .sym==-1 && it==0)
+                if ( it == 0 && artPrm.IMG_Inf[iact_proj].sym==-1 )
                 {
-                    FileName fn_noise=artPrm.fn_root+"_noise_proj"+
-                                      integerToString(read_proj.name().getNumber(),5)+".xmp";
+                    FileName fn_noise;
+                    MDRow row;
+                    fn_noise.compose(read_proj.name().getStackNumber(),artPrm.fn_root+"_noise_proj.stk");
+
                     noisy_projection.write(fn_noise);
-                    id = SF_noise.addObject();
-                    SF_noise.setValue(MDL_IMAGE, fn_noise, id);
-                    SF_noise.setValue(MDL_ENABLED, 1, id);
-                    id = SF_signal.addObject();
-                    SF_signal.setValue(MDL_IMAGE, read_proj.name(), id);
-                    SF_signal.setValue(MDL_ENABLED, 1, id);
+                    row.setValue(MDL_IMAGE, fn_noise);
+                    row.setValue(MDL_ENABLED, 1);
+                    row.setValue(MDL_ANGLEPSI, read_proj.psi());
+                    row.setValue(MDL_ANGLEROT, read_proj.rot());
+                    row.setValue(MDL_ANGLETILT, read_proj.tilt());
+                    SF_noise.addRow(row);
+
+                    row.setValue(MDL_IMAGE, read_proj.name());
+                    SF_signal.addRow(row);
                 }
             }
 
@@ -1030,8 +1034,7 @@ void ARTReconsBase::initHistory(const GridVolume &vol_basis0)
 }
 
 void ARTReconsBase::print(std::ostream &o) const
-{
-}
+{}
 std::ostream & operator<< (std::ostream &o, const ARTReconsBase& artRecons)
 {
     artRecons.print(o);
