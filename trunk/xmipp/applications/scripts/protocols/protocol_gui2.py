@@ -81,85 +81,72 @@ class AutoScrollbar(Scrollbar):
             self.grid()
         Scrollbar.set(self, lo, hi)
         
-class ProtocolWidget():
-    comment = None # Comment string that will be showed in GUI
-    help = None # Help string  with more explanation
-    tags = {}
-    is_section = False
-    is_expert = False
-    is_file = False
-    is_dir = False
-    is_list = False
-    is_cite = True
-    list_choices = None
-    #This is a string containing the condition
-    # that should be statisfied for show this widget on GUI
-    condition = None
-    variable_name = None
-    variable_value = None
-    master = None
-    # Store real tk widgets
-    widgetlist = []
-    
-    def __init__(self, comment, master):
-        self.comment = comment
-        self.master = master
+class ProtocolVariable():
+    def __init__(self):
+        self.name = None
+        self.value = None
+        self.comment = None
+        self.help = None
+        self.tags = {}
+        self.condition_name = None
+        self.condition_value = None
     
     def setTags(self, tags):
-        self.tags.clear()
         for k, v in tags:
-            print "tag %s -> %s" % (k, v)
             self.tags[k] = v
-            if k == 'expert':
-                self.is_expert = True
-            if k == 'section':
-                self.is_section = True
-            elif k == 'file':
-                self.is_file = True
-            elif k == 'dir':
-                self.is_dir = True
-            elif k == 'list':
-                self.is_list = True
-                self.list_choices = v.split('|')
-            elif k == 'condition':
-                self.condition = v
-            elif k == 'please_cite':
-                self.is_cite = True
-                
-    def setVariable(self, name, value):
-        self.variable_name = name
-        self.variable_value = value
-        
-    def addWidgets(self):
-        master = self.master
-        frame = master.frame
-        row = master.lastRow()
-        
-        if self.is_section: # Add section
-            line = self.comment + '\n----------------------------------------------'
-            label = Label(frame, text=line, fg=TextSectionColor, bg=LabelBackgroundColor)
-            label.grid(row=row, column=0, columnspan=master.columnspantextlabel, sticky=E)
-            self.widgetlist.append(label)
-        elif self.is_list: # Add radiobutton list
+            
+    def isExpert(self):
+        return 'expert' in self.tags.keys()
+    
+    def isSection(self):
+        return 'section' in self.tags.keys()
+    
+class ProtocolWidget():
+    def __init__(self, master, var):
+        self.master = master
+        # Store real tk widgets
+        self.widgetlist = []
+        self.variable = var
+    
+def createWidget(master, var):
+    w = ProtocolWidget(master, var)
+    
+    for k, v in var.tags.iteritems():
+        print "tag %s -> %s" % (k, v)
+        self.tags[k] = v
+        if k == 'expert':
+            self.is_expert = True
+        if k == 'section':
+            self.is_section = True
+        elif k == 'file':
+            self.is_file = True
+        elif k == 'dir':
+            self.is_dir = True
+        elif k == 'list':
+            self.is_list = True
+            self.list_choices = v.split('|')
+        elif k == 'condition':
+            self.condition = v
+        elif k == 'please_cite':
+            self.is_cite = True
+        else:
             pass
-        elif self.is_dir or self.is_file:#Add text entry with browse button
-            pass
+            #Other variables, guess the type from value
+
             
             
         
         
         
 class ProtocolGUI():
-    variablesDict = {}
-    widgetsList = []
-    
-    pre_header_lines = []
-    header_lines = []
-    post_header_lines = []
-    have_publication = False
-    expert_mode = False
-    
     def __init__(self, script):
+        self.variablesDict = {}
+        self.widgetsList = []
+        self.pre_header_lines = []
+        self.header_lines = []
+        self.post_header_lines = []
+        self.have_publication = False
+        self.expert_mode = False
         self.scriptname = script
     
     def readProtocolScript(self):
@@ -171,7 +158,7 @@ class ProtocolGUI():
             if not begin_of_header:
                 self.pre_header_lines.append(line)
             elif not end_of_header:
-                print "LINE: ", line
+                #print "LINE: ", line
                 self.header_lines.append(line)
             else:
                 self.post_header_lines.append(line)                
@@ -207,14 +194,18 @@ class ProtocolGUI():
             #Parse the comment line
             match = reComment.search(line)
             if match:
-                w = ProtocolWidget(match.group(2), self)
-                self.widgetsList.append(w)
+                v = ProtocolVariable()
+                v.comment = match.group(2)
+                #w = ProtocolWidget(match.group(2), self)
+                #self.widgetsList.append(w)
                 #print match.groups()
                 if match.group(1) != '':
                     tags = reTags.findall(match.group(1))
-                    w.setTags(tags)
-                if w.is_section:
-                    print "THIS IS A SECTION: ", w.comment
+                    v.setTags(tags)
+                    print 'tags', tags
+                    print 'v.tags', v.tags
+                if v.isSection():
+                    print "THIS IS A SECTION: ", v.comment
                     index += 1
                 else:
                     #This is a variable, try to get help string
@@ -225,14 +216,15 @@ class ProtocolGUI():
                             line = self.header_lines[index]
                             helpStr += line
                             index += 1
-                        w.help = helpStr
+                        v.help = helpStr
                         
                     if index < count:
                         line = self.header_lines[index].strip()
                         match2 = reVariable.match(line)
                         if match2:
-                            w.setVariable(match2.group(1), match2.group(2))
-                            self.variablesDict[w.variable_name] = w.variable_value;
+                            v.name, v.value = (match2.group(1), match2.group(2))
+                            #w.setVariable(match2.group(1), match2.group(2))
+                            self.variablesDict[v.name] = v.value
                             index += 1
             else:
                 index += 1
