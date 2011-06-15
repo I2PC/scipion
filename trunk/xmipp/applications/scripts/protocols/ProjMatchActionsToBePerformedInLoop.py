@@ -4,6 +4,7 @@ from distutils.dir_util import mkpath
 from xmipp import *
 
 CtfBlockName = 'ctfGroup'
+RefBlockName = 'refGroup'
 
 def execute_mask(_log, dict):
     _mylog = _log
@@ -206,61 +207,80 @@ def assign_images_to_references(_log,dict):
             #In practice you should not get duplicates
             MD.removeDuplicates()
             MD.setValueCol(MDL_REF3D,iRef3D)
+            #MD.setValueCol(MDL_CTFMODEL,auxInputdocfile[:-1])
             MDaux.unionAll(MD)
         MDaux.sort()
         MD.aggregate(MDaux,AGGR_MAX,MDL_IMAGE,MDL_MAXCC,MDL_MAXCC)
         #if a single image is assigned to two references with the same 
         #CC use it in both reconstruction
-        #recover atributes after aggregate function
+        #recover atribbutes after aggregate function
         MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)
-        #MD1.write('MD1.xmd')
-        #MDSort.write('MDSort.xmd')
-        #add a sorting number to make easier to create an stack of averaged classes
         MDout.join(MD1,MDSort,MDL_UNDEFINED,NATURAL)        
         MDout.write(auxInputdocfile+outputdocfile,MD_APPEND)
+    #we are done but for the future it is convenient to create more blocks
+    #with the pairs ctf_group reference    
+    for iCTFGroup in range(1,NumberOfCtfGroups+1):
+        auxInputdocfile  = CtfBlockName + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+        MDaux.read(auxInputdocfile+outputdocfile)
+        for iRef3D in range(1,NumberOfReferences+1):
+            auxOutputdocfile  = CtfBlockName + \
+                                str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)
+            auxOutputdocfile += '_' + RefBlockName +\
+                                      str(iRef3D).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+            #select images with ref3d=iRef3D
+            MDout.importObjects(MDaux,MDValueEQ(MDL_REF3D, iRef3D))
+            MDout.write(auxOutputdocfile+outputdocfile,MD_APPEND)
 
 def angular_class_average(_log,dict):
     # Now make the class averages
-    CtfGroupName        = dict['CtfGroupDirectory'] + '/' + dict['CtfGroupRootName']
-    #DocFileInputAngles  = dict['DocFileInputAngles']#
+    CtfGroupName        = dict['CtfGroupDirectory'] + '/' +\
+                          dict['CtfGroupRootName']
+    DocFileInputAngles  = dict['DocFileInputAngles']
     DoCtfCorrection     = dict['DoCtfCorrection']
     NumberOfCtfGroups   = dict['NumberOfCtfGroups']
-    #NumberOfReferences  = dict['NumberOfReferences']
-    #ProjMatchRootName   = dict['ProjMatchRootName']
-    refname = str(dict['ProjectLibraryRootName'])
-    refN = dict['refN']
-    DocFileInputAngles=dict['DocFileInputAngles']
-    mD=MetaData(DocFileInputAngles)
-    mDout = MetaData()
-    mDout.importObjects(mD,MDValueEQ(MDL_REF3D, refN))
+    NumberOfReferences  = dict['NumberOfReferences']
+    refN                = dict['refN']
+    refname         = str(dict['ProjectLibraryRootName'])
 
+#    mD    = MetaData()
+#    mDout = MetaData()
+#    mDout.importObjects(mD,MDValueEQ(MDL_REF3D, refN))
+
+    MD=MetaData()
     ProjMatchRootName = dict['ProjMatchRootName']
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
-        tmpFileName = CtfBlockName + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
-        tmpFileName += ProjMatchRootName
-        #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(iRef3D).zfill(2))
-        parameters =  ' -i '       + tmpFileName  + \
-                      ' --lib '    + refname.replace(".stk",".doc") + \
-                      ' --dont_write_selfiles ' + \
-                      ' --limit0 ' + dict['MinimumCrossCorrelation'] + \
-                      ' --limitR ' + dict['DiscardPercentage']
-        if (DoCtfCorrection):
-            # On-the fly apply Wiener-filter correction and add all CTF groups together
-            parameters += \
-                       ' --wien '   + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@' + CtfGroupName + '_wien.stk' + \
-                       ' --pad '    + str(dict['PaddingFactor']) + \
-                       ' --add_to ' + ProjMatchRootName
-        else:
-            parameters += \
-                      ' -o '                + ProjMatchRootName
-        if (dict['DoAlign2D'] == '1'):
-            parameters += \
-                      ' --iter '             + dict['Align2DIterNr']  + \
-                      ' --Ri '               + str(dict['InnerRadius'])           + \
-                      ' --Ro '               + str(dict['OuterRadius'])           + \
-                      ' --max_shift '        + dict['MaxChangeOffset'] + \
-                      ' --max_shift_change ' + dict['Align2dMaxChangeOffset'] + \
-                      ' --max_psi_change '   + dict['Align2dMaxChangeRot'] 
+        for iRef3D in range(1,NumberOfReferences+1):
+            auxInputdocfile  = CtfBlockName + \
+                                str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)
+            auxInputdocfile += '_' + RefBlockName +\
+                                str(iRef3D).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+            MD.read(auxInputdocfile+DocFileInputAngles)
+            if MD.size()==0:
+                print "Empty metadata, remember to copy the reference"
+                continue;
+            #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(iRef3D).zfill(2))
+            parameters =  ' -i '       + auxInputdocfile  + DocFileInputAngles +\
+                          ' --lib '    + refname.replace(".stk",".doc") + \
+                          ' --dont_write_selfiles ' + \
+                          ' --limit0 ' + dict['MinimumCrossCorrelation'] + \
+                          ' --limitR ' + dict['DiscardPercentage']
+            if (DoCtfCorrection):
+                # On-the fly apply Wiener-filter correction and add all CTF groups together
+                parameters += \
+                           ' --wien '   + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@' + CtfGroupName + '_wien.stk' + \
+                           ' --pad '    + str(dict['PaddingFactor']) + \
+                           ' --add_to ' + ProjMatchRootName.replace('.doc','__')
+            else:
+                parameters += \
+                          ' -o '                + ProjMatchRootName
+            if (dict['DoAlign2D'] == '1'):
+                parameters += \
+                          ' --iter '             + dict['Align2DIterNr']  + \
+                          ' --Ri '               + str(dict['InnerRadius'])           + \
+                          ' --Ro '               + str(dict['OuterRadius'])           + \
+                          ' --max_shift '        + dict['MaxChangeOffset'] + \
+                          ' --max_shift_change ' + dict['Align2dMaxChangeOffset'] + \
+                          ' --max_psi_change '   + dict['Align2dMaxChangeRot'] 
     if (dict['DoComputeResolution'] and dict['DoSplitReferenceImages']):
         parameters += \
                   ' --split '
