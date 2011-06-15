@@ -203,7 +203,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
     MD.clear();
     MD.resize(_nDim,MDL::emptyHeader);
     double daux=1.;
-    for (int i = 0; i < _nDim; ++i )
+    for ( size_t i = 0; i < _nDim; ++i )
     {
         if ( fread( header, IMAGICSIZE, 1, fhed ) < 1 )
             return(-2);
