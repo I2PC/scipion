@@ -135,8 +135,9 @@ public:
     /**
      * Convert to String
      */
-    inline String getString() const {
-	return (String)(*this);
+    inline String getString() const
+    {
+        return (String)(*this);
     }
 
     /** Compose from root, number and extension
@@ -218,10 +219,21 @@ public:
      *
      * @code
      * FileName proj("g1ta00001");
-     * int num = proj.get_number();
+     * int num = proj.getNumber();
      * @endcode
      */
     int getNumber() const;
+
+    /** Get the number from a stack filename
+        *
+        * If there is no number a 0 is returned.
+        *
+        * @code
+        * FileName proj("24@images.stk");
+        * size_t num = proj.getStackNumber();
+        * @endcode
+        */
+    size_t getStackNumber() const;
 
     /** Get the last extension from filename
      *
@@ -528,12 +540,12 @@ public:
      */
     void copyFile(const FileName & target) const;
 
-// This funtion is in funcs, cannot be here because need metadata_generic and metadata_generic
-// need filename
-//    /* Copy one image
-//     *
-//     */
-//    void copyImage(const FileName & target) const;
+    // This funtion is in funcs, cannot be here because need metadata_generic and metadata_generic
+    // need filename
+    //    /* Copy one image
+    //     *
+    //     */
+    //    void copyImage(const FileName & target) const;
 
     //@}
 };

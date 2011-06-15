@@ -90,7 +90,7 @@ void FileName::decompose(size_t &no, String &str) const
         return;
     }
     else if (no == 0)
-      REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("FileName::decompose: Incorrect index number at filename %s; It must start at %lu",c_str(),FIRST_IMAGE));
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("FileName::decompose: Incorrect index number at filename %s; It must start at %lu",c_str(),FIRST_IMAGE));
 
     str = buffer;
 }
@@ -229,6 +229,16 @@ int FileName::getNumber() const
         return -1;
 }
 
+// Get number from file ....................................................
+size_t FileName::getStackNumber() const
+{
+    size_t no;
+    String str(*this);
+    decompose(no, str);
+
+    return no;
+}
+
 // Get the extension of a filename .........................................
 String FileName::getExtension() const
 {
@@ -338,6 +348,16 @@ FileName FileName::removeExtension(const String &ext) const
     }
 }
 
+// Remove the last extension ................................................
+FileName FileName::removeLastExtension() const
+{
+    int first = rfind(".");
+    if (first == -1)
+        return *this;
+    else
+        return substr(0, first);
+}
+
 // Remove all extensions....................................................
 FileName FileName::removeAllExtensions() const
 {
@@ -410,9 +430,9 @@ FileName FileName::removeSliceNumber() const
 
 bool FileName::isMetaData(bool failIfNotExists) const
 {
-  //check empty string
-  if (empty())
-    REPORT_ERROR(ERR_ARG_INCORRECT, "FileName::isMetaData: Empty string is not a MetaData");
+    //check empty string
+    if (empty())
+        REPORT_ERROR(ERR_ARG_INCORRECT, "FileName::isMetaData: Empty string is not a MetaData");
     //file names containing @, : or % are not metadatas
     size_t found = this->find('@');
     if (find_first_of("@:#") != npos)

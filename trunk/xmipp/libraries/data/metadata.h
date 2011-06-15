@@ -426,9 +426,9 @@ public:
         MDObject mdValueOut(label);
         std::vector<size_t> objectsId;
         findObjects(objectsId);
-        int n = objectsId.size();
+        size_t n = objectsId.size();
         valuesOut.resize(n);
-        for (int i = 0; i < n; i++)
+        for (size_t i = 0; i < n; ++i)
         {
             getValue(mdValueOut, objectsId[i]);
             mdValueOut.getValue(value);
