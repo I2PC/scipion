@@ -66,7 +66,7 @@ void buildReconsInfo(MetaData &selfile,
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Build_Recons_Info: No memory for the sorting");
 
     int i = 0; // It will account for the number of valid projections processed
-    std::cerr << "Reading angle information ...\n";
+    std::cout << "Reading angle information ...\n";
     init_progress_bar(trueIMG);
     FOR_ALL_OBJECTS_IN_METADATA(selfile)
     {
@@ -170,7 +170,7 @@ void sortPerpendicular(int numIMG, ReconsInfo *IMG_Inf,
     A1D_ELEM(ordered_list, 0) = i;
 
     // Choose the rest of projections
-    std::cerr << "Sorting projections ...\n";
+    std::cout << "Sorting projections ...\n";
     init_progress_bar(numIMG - 1);
     Matrix1D<double> rowj, rowi_1, rowi_N_1;
     for (i = 1; i < numIMG; i++)
@@ -231,7 +231,7 @@ void sortRandomly(int numIMG, MultidimArray<int> &ordered_list)
     ordered_list.resize(numIMG);
     chosen.initZeros(numIMG);
 
-    std::cerr << "Randomizing projections ...\n";
+    std::cout << "Randomizing projections ...\n";
     init_progress_bar(numIMG - 1);
     int ptr = 0;
     randomize_random_generator();
@@ -285,7 +285,7 @@ void updateResidualVector(BasicARTParameters &prm, GridVolume &vol_basis,
     residual_vol.initZeros();
 
     // Calculate volume from all backprojected residual images
-    std::cerr << "Backprojection of residual images " << std::endl;
+    std::cout << "Backprojection of residual images " << std::endl;
     if (!(prm.tell&TELL_SHOW_ERROR))
         init_progress_bar(prm.numIMG);
 
@@ -328,7 +328,7 @@ void updateResidualVector(BasicARTParameters &prm, GridVolume &vol_basis,
     pow_residual_vol = residual_vox().sum2() / MULTIDIM_SIZE(residual_vox());
     residual_vox.clear();
 
-    std::cerr << "Projection of residual volume; kappa = " << kappa << std::endl;
+    std::cout << "Projection of residual volume; kappa = " << kappa << std::endl;
     if (!(prm.tell&TELL_SHOW_ERROR))
         init_progress_bar(prm.numIMG);
 
@@ -478,7 +478,7 @@ void VariabilityClass::finishAnalysis()
     SignificantT2().initZeros(zsize, ysize, xsize);
     SignificantMaxRatio().initZeros(zsize, ysize, xsize);
     SignificantMinRatio().initZeros(zsize, ysize, xsize);
-    std::cerr << "Classifying voxels ...\n";
+    std::cout << "Classifying voxels ...\n";
     init_progress_bar(MULTIDIM_SIZE(SignificantT2()));
     int counter = 0, nxny = ysize * zsize;
 #ifdef MODE7
@@ -821,7 +821,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
             posi++;
         }
         // Debugging messages
-        //std::cerr << "Relaxation/Positivity " << (double)relax/(double)bg << " "
+        //std::cout << "Relaxation/Positivity " << (double)relax/(double)bg << " "
         //     << (double)posi/(double)fg << " " << std::endl;
 
         // Solve volumetric equations
@@ -903,7 +903,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                     POCS_state = POCS_use;
 #ifdef DEBUG_POCS
 
-                    std::cerr << "1: Changing to " << POCS_freq << std::endl;
+                    std::cout << "1: Changing to " << POCS_freq << std::endl;
 #endif
 
                 }
@@ -940,7 +940,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                         POCS_freq++;
 #ifdef DEBUG_POCS
 
-                        std::cerr << "2: Changing to " << POCS_freq << std::endl;
+                        std::cout << "2: Changing to " << POCS_freq << std::endl;
 #endif
 
                         POCS_used = 0;
@@ -955,7 +955,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                         POCS_used = 0;
 #ifdef DEBUG_POCS
 
-                        std::cerr << "3: Changing to " << POCS_freq << std::endl;
+                        std::cout << "3: Changing to " << POCS_freq << std::endl;
 #endif
 
                     }
@@ -967,7 +967,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                         POCS_state = POCS_lowering;
 #ifdef DEBUG_POCS
 
-                        std::cerr << "Lowering\n";
+                        std::cout << "Lowering\n";
 #endif
 
                     }

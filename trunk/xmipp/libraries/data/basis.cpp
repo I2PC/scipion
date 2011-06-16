@@ -111,6 +111,8 @@ void Basis::defineParams(XmippProgram * program, const char* prefix, const char*
         sprintf(tempLine,"%s --basis <basis_type=blobs> ", prefix);
     if (comment != NULL)
         sprintf(tempLine, "%s : %s", tempLine, comment);
+    else
+        sprintf(tempLine, "%s : Basis function to use for the reconstruction", tempLine);
 
     program->addParamsLine(tempLine);
     program->addParamsLine("    where <basis_type> ");

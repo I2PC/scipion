@@ -241,7 +241,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
     GridVolume *ptr_vol_out;            // Pointer to output volume
     GridVolume vol_basis_out;           // Output volume (only useful in SIRT)
     Image<double> vol_voxels;             // This one is useful only in the
-    // case of saving intermidiate volumes
+    // case of saving intermediate volumes
     int Xoutput_volume_size, Youtput_volume_size, Zoutput_volume_size;
     double aux_tilt;
 
@@ -266,7 +266,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
 
         // Initialize the structures which will contain the parameters passed to different
         // threads
-        project_threads= (project_thread_params *) malloc ( artPrm.threads * sizeof( project_thread_params ) );
+        project_threads = (project_thread_params *) malloc ( artPrm.threads * sizeof( project_thread_params ) );
 
         // Initialize barrier to wait for working threads and the master thread.
         barrier_init( &project_barrier, (artPrm.threads+1) );
@@ -377,7 +377,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
         VC.newIteration();
         if (rank==-1)
         {
-            std::cerr << "Running iteration " << it << " with lambda= " << artPrm.lambda(it)<< "\n" << std::endl;
+            std::cout << "Running iteration " << it << " with lambda= " << artPrm.lambda(it)<< "\n" << std::endl;
             if (!(artPrm.tell&TELL_SHOW_ERROR))
                 init_progress_bar(artPrm.numIMG);
         }
@@ -393,12 +393,12 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
             if (artPrm.tell&TELL_MANUAL_ORDER)
             {
                 int proj_number;
-                std::cerr << "Introduce next projection to study: ";
+                std::cout << "Introduce next projection to study: ";
                 std::cin  >> proj_number;
                 int sym_number=-1;
                 if (artPrm.SL.SymsNo()!=0)
                 {
-                    std::cerr << "Introduce symmetry to study: ";
+                    std::cout << "Introduce symmetry to study: ";
                     std::cin  >> sym_number;
                 }
                 iact_proj=0;
@@ -455,7 +455,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
             if((aux_tilt > artPrm.max_tilt && aux_tilt < 180.-artPrm.max_tilt) ||
                (aux_tilt > artPrm.max_tilt + 180 && aux_tilt < 360.-artPrm.max_tilt))
             {
-                std::cerr << "Skipping Proj no: " << iact_proj
+                std::cout << "Skipping Proj no: " << iact_proj
                 << "tilt=" << read_proj.tilt()  << std::endl;
                 continue;
             }
@@ -475,13 +475,13 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
             if (artPrm.tell&TELL_ONLY_SYM)
                 if( artPrm.IMG_Inf[iact_proj].sym != -1)
                 {
-                    std::cerr << "Skipping Proj no: " << iact_proj
+                    std::cout << "Skipping Proj no: " << iact_proj
                     << " with symmetry no: " << artPrm.IMG_Inf[iact_proj].sym
                     <<  std::endl;
                     continue;
                 }
                 else
-                    std::cerr << "NO Skipping Proj no: " << iact_proj
+                    std::cout << "NO Skipping Proj no: " << iact_proj
                     << " with symmetry no: " << artPrm.IMG_Inf[iact_proj].sym
                     <<  std::endl;
 
@@ -681,7 +681,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
                 act_proj%artPrm.save_intermidiate_every==0)
             {
                 if (artPrm.tell&TELL_SAVE_INTERMIDIATE)
-                    std::cerr << "\nSaving intermidiate ...\n"
+                    std::cout << "\nSaving intermidiate ...\n"
                     << "Converting basis volume to voxels ...\n";
                 // Save reconstructed volume
                 artPrm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
@@ -722,12 +722,12 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
         {
             *artPrm.fh_hist << "Finished - Iteration " << it << std::endl;
             if (artPrm.WLS)
-                std::cerr        << "   Weighted error: " << global_mean_error
+                std::cout        << "   Weighted error: " << global_mean_error
                 << " 1st block: "        << global_mean_error_1stblock
                 << " 2nd block: "        << mean_error_2ndblock
                 << " residual: "         << pow_residual_imgs << std::endl;
             else
-                std::cerr << "   Global mean squared error: "
+                std::cout << "   Global mean squared error: "
                 <<  global_mean_error/artPrm.numIMG << std::endl;
 
             if (artPrm.WLS)
@@ -741,7 +741,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
 
             if (POCS.apply_POCS)
             {
-                std::cerr        << "   POCS Global mean squared error: "
+                std::cout        << "   POCS Global mean squared error: "
                 << POCS.POCS_global_mean_error/POCS.POCS_N << std::endl;
                 *artPrm.fh_hist << "   POCS Global mean squared error: "
                 << POCS.POCS_global_mean_error/POCS.POCS_N << std::endl;
@@ -793,7 +793,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
         if (artPrm.tell&TELL_SAVE_INTERMIDIATE && it!=artPrm.no_it-1)
         {
             if (rank==-1)
-                std::cerr << "Converting basis volume to voxels ...\n";
+                std::cout << "Converting basis volume to voxels ...\n";
             artPrm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
                                         Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
             vol_voxels.write(artPrm.fn_root+"it"+integerToString(it)+".vol");
@@ -831,7 +831,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
     // Destroy created threads. This is done in a tricky way. At this point, threads
     // are "slept" waiting for a barrier to be reached by the master thread to continue
     // projecting/backprojecting a new projection. Here we set the flag destroy=true so
-    // thre threads won't process a projections but will return.
+    // the threads won't process a projections but will return.
     if( artPrm.threads > 1 )
     {
         for( int c = 0 ; c < artPrm.threads ; c++ )

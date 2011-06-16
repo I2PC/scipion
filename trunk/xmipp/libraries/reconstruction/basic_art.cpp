@@ -121,20 +121,23 @@ void BasicARTParameters::defineParams(XmippProgram * program, const char* prefix
     program->addParamsLine("   alias -o;");
     program->addParamsLine("   [--ctf <ctf_file=\"\">]     : Metadata file with CTFs");
     program->addParamsLine("   [--unmatched]               : apply unmatched forward/backward projectors");
-    program->addParamsLine("   [--start <basisvolume_file=\"\">]  : Start from basisvolume. The reconstruction is performed in the same grid as the one ");
+    program->addParamsLine("   [--start <basisvolume_file=\"\">]  : Start from this basis volume. The reconstruction is performed in the same grid as the one ");
     program->addParamsLine("                               : in which the basis volume was stored (any -FCC or -CC or grid size value are useless)");
-    program->addParamsLine("  [--max_tilt <alpha=10.e+6>]  : Skip projection with absolute tilt angle greater than alpha");
-    program->addParamsLine("  [--ref_trans_after <n=-1>]   : Refine the translation alignment after n projections");
-    program->addParamsLine("  [--ref_trans_step <n=-1>]    : Max displacement in translation alignment. This is a double");
+    program->addParamsLine("  [--max_tilt <alpha=10.e+6>]  : Skip projections with absolute tilt angle greater than alpha.");
+    program->addParamsLine("                               : It means that if alpha=40, then only images with tilt angle ");
+    program->addParamsLine("                               : within the ranges 0±40 and 180±40 will be processed. (Projection");
+    program->addParamsLine("                               : tilt angles are forced to be in the range 0-360)");
+    program->addParamsLine("  [--ref_trans_after <n=-1>]   : Refine the translation alignment after n projections. (Integer type)");
+    program->addParamsLine("  [--ref_trans_step <v=-1>]    : Maximum displacement in translation alignment. (Double type)");
     program->addParamsLine("  [--sparse <eps=-1>]          : Sparsity threshold");
     program->addParamsLine("  [--diffusion <eps=-1>]       : Diffusion weight");
-    program->addParamsLine("  [--surface <surf_mask_file=\"\">] : Use this file as a surface mask");
+    program->addParamsLine("  [--surface <surf_mask_file=\"\">] : Mask for the surface constraint. It says where the volume is known to be 0");
     program->addParamsLine("  [--POCS_freq <f=1>]          : Impose POCS conditions every f projections");
-    program->addParamsLine("  [--known_volume <vol=-1>]    : The volume is cut down to this mass, ie, the highest [mass] voxels are kept while ");
+    program->addParamsLine("  [--known_volume <value=-1>]  : The volume is cut down to this mass, ie, the highest [value] voxels are kept while ");
     program->addParamsLine("                               : the rest are set to 0");
-    program->addParamsLine("  [--POCS_positivity]          : Apply positivity constraint");
-    program->addParamsLine("  [--goldmask <value=1.e+6>]   : Pixels below this value are not considered for reconstruction");
-    program->addParamsLine("  [--shiftedTomograms]         : Remove border pixels created by alignment of tomograms");
+    program->addParamsLine("  [--POCS_positivity]          : Force ther resulting volume to be positive");
+    program->addParamsLine("  [--goldmask <value=1.e+6>]   : Pixels below this value are considered to come frome gold beads and are not used for reconstruction");
+    program->addParamsLine("  [--shiftedTomograms]         : Remove external zero-valued border pixels created by alignment of tomograms");
     program->addParamsLine("  [--dont_apply_shifts]        : Do not apply shifts as stored in the 2D-image headers");
     program->addParamsLine("  [--variability]              : Perform variability analysis");
     program->addParamsLine("  [--refine]                   : Refine input projection before backprojecting");
@@ -488,10 +491,7 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
             selfile.clear();
             selfile.importObjects(SF_aux, MDValueRange(MDL_WEIGHT, 1e-9, 99e99));
             if (selfile.size() == 0)
-            {
-                std::cerr << "there is no input file with weight!=0" << std::endl;
-                exit(1);
-            }
+                REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no input file with weight!=0");
         }
         else
         {
