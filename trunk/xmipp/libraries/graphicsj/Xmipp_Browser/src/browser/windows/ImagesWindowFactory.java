@@ -11,6 +11,7 @@ import browser.table.ImagesTableModel;
 import ij.IJ;
 import ij.ImagePlus;
 import browser.table.JFrameImagesTable;
+import browser.table.micrographs.JFrameMicrographs;
 import browser.table.micrographs.ctf.CTFImageWindow;
 import browser.table.micrographs.ctf.tasks.TasksEngine;
 import ij.gui.ImageWindow;
@@ -258,5 +259,16 @@ public class ImagesWindowFactory {
 
         return new CTFImageWindow(ip, CTFfilename, PSDfilename,
                 tasksEngine, row);
+    }
+
+    public static void openMicrograph(String filename) {
+        File f = new File(filename);
+
+        if (f.exists()) {
+            JFrameMicrographs frame = new JFrameMicrographs(filename);
+            frame.setVisible(true);
+        } else {
+            IJ.error("File is missing", filename + " not found.");
+        }
     }
 }

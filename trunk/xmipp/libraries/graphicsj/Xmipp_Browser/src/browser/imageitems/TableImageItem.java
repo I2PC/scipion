@@ -117,6 +117,6 @@ public class TableImageItem extends XmippImageItem {
 
     @Override
     public String toString() {
-        return file.getName() + "@" + nimage + "#" + nslice;
+        return file.getAbsolutePath() + "@" + nimage + "#" + nslice;
     }
 }

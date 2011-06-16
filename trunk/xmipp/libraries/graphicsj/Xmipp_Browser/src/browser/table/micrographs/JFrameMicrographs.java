@@ -10,6 +10,7 @@
  */
 package browser.table.micrographs;
 
+import browser.DEBUG;
 import browser.ICONS_MANAGER;
 import browser.table.micrographs.ctf.JFrameCTF;
 import browser.LABELS;
@@ -101,7 +102,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
         // Sets sorter and filter.
         sorter = new TableRowSorter<MicrographsTableModel>(tableModel);
-        sorter.setSortsOnUpdates(true);
+//        sorter.setSortsOnUpdates(true);
         enableFilter = new EnableFilter();
         sorter.setRowFilter(enableFilter);
         table.setRowSorter(sorter);
@@ -206,7 +207,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     }
 
     private synchronized void updateTableStructure() {
-        System.out.println(" *** Updating table... " + System.currentTimeMillis());
+        DEBUG.printMessage(" *** Updating table... " + System.currentTimeMillis());
         packColumns();
         packRows();
 
@@ -318,7 +319,9 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     private void setFiltering(boolean filtering) {
         enableFilter.setFiltering(filtering);
 
-        tableModel.fireTableStructureChanged();
+        table.setColumnModel(columnModel);  // Re sets column model to hide columns.
+
+        tableModel.fireTableDataChanged();
 
         updateTableStructure();
     }
@@ -344,10 +347,16 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         SwingUtilities.invokeLater(new Runnable() {
 
             public void run() {
-                System.out.println(" *** Refreshing table " + System.currentTimeMillis());
+                DEBUG.printMessage(" *** Refreshing table " + System.currentTimeMillis());
                 tableModel.reload();
 
                 table.setColumnModel(columnModel);  // Re sets column model to hide columns.
+
+                sorter = new TableRowSorter<MicrographsTableModel>(tableModel);
+//        sorter.setSortsOnUpdates(true);
+//                enableFilter = new EnableFilter();
+                sorter.setRowFilter(enableFilter);
+                table.setRowSorter(sorter);
 
                 updateTableStructure();
             }
@@ -582,7 +591,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         }
 
         private void showRecalculateCTFWindow() {
-            Object item = table.getValueAt(row, CTF_IMAGE_COLUMN);
+            Object item = tableModel.getValueAt(row, CTF_IMAGE_COLUMN);
 
             if (item instanceof TableImageItem) {
                 showCTFImage((TableImageItem) item, tableModel.getCTFfile(row),
