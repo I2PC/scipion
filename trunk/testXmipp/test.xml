@@ -89,7 +89,7 @@
         <CASE arguments="-i input/projectionsBacteriorhodopsinWithCTF.sel --vol input/phantomBacteriorhodopsin.vol -o %o/idr.stk" changeDir="FALSE">
             <FILE filename="idr.stk"/>
         </CASE>
-     </PROGRAM>     
+     </PROGRAM>
      <PROGRAM name="xmipp_ctf_create_ctfdat" mpi="FALSE">
         <CASE arguments="-i input/micrographs.xmd --ctfs input/ctfs.xmd --oroot %o/output" changeDir="FALSE">
             <FILE filename="output.ctfdat"/>
@@ -100,7 +100,7 @@
 	    <FILE filename="output000002.ctfparam"/>
         </CASE>
      </PROGRAM>
-     
+
     <PROGRAM name="xmipp_ctf_enhance_psd" mpi="FALSE">
         <CASE arguments="-i input/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/enhanced_psd.xmp" changeDir="FALSE">
             <FILE filename="enhanced_psd.xmp"/>
@@ -269,7 +269,7 @@
             <FILE filename="idr.stk"/>
         </CASE>
      </PROGRAM>
-     
+
     <PROGRAM name="xmipp_mpi_image_sort" mpi="TRUE">
         <CASE arguments="-i input/aFewProjections.sel --oroot %o/sorted" changeDir="FALSE">
              <FILE filename="sorted.stk"/>
@@ -344,6 +344,11 @@
             <FILE filename="shifted.pdb"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_reconstruct_art" mpi="FALSE">
+        <CASE arguments="-i input/projectionsBacteriorhodopsin.xmd -n 2 -o  %o/rec_art --noisy_reconstruction" changeDir="FALSE">
+            <FILE filename="rec_art.vol"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_reconstruct_art_pseudo" mpi="FALSE">
         <CASE arguments="-i input/projectionsBacteriorhodopsin.xmd --pseudo input/pseudoBacteriorhodopsin.pdb  -l 1 -n 5 -o  %o/rec_art_pseudo" changeDir="FALSE">
             <FILE filename="rec_art_pseudo.vol"/>
@@ -362,6 +367,11 @@
     <PROGRAM name="xmipp_resolution_fsc" mpi="FALSE">
         <CASE arguments="--ref input/phantomBacteriorhodopsin.vol -i input/phantomCandida.vol -s 5.6 --do_dpr --oroot %o/phantomBacteriorhodopsin " changeDir="FALSE">
             <FILE filename="phantomBacteriorhodopsin.frc"/>
+        </CASE>
+    </PROGRAM>
+    <PROGRAM name="xmipp_resolution_ssnr" mpi="FALSE">
+        <CASE arguments="-S input/Bacteriorhodopsin_rec_art.vol -N input/rec_art_noise.vol -selS input/rec_art_signal_proj.sel -selN input/rec_art_noise_proj.sel  -o %o/Bacteriorhodopsin_SSNR.txt --gen_VSSNR  --VSSNR %o/Bacteriorhodopsin_VSSNR.vol" changeDir="FALSE">
+            <FILE filename="Bacteriorhodopsin_VSSNR.vol"/>
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_tomo_detect_missing_wedge" mpi="FALSE">
