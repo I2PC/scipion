@@ -877,7 +877,7 @@ void computeAvgStdev_within_binary_mask(const MultidimArray< int >& mask,
     // average and standard deviation
     avg  = sum1 / (double) N;
     if (N > 1)
-        stddev = sqrt(ABS(sum2 / N - avg * avg) * N / (N - 1));
+        stddev = sqrt(fabs(sum2 / N - avg * avg) * N / (N - 1));
     else
         stddev = 0;
 }
