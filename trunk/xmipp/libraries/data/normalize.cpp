@@ -253,19 +253,17 @@ void normalize_NewXmipp2(MultidimArray<double> &I, const MultidimArray<int> &bg_
     DIRECT_MULTIDIM_ELEM(I,n)=(DIRECT_MULTIDIM_ELEM(I,n)-avgbg)*K;
 }
 
-void normalize_ramp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
+void normalize_ramp(MultidimArray<double> &I, MultidimArray<int> &bg_mask)
 {
     // Only 2D ramps implemented
     I.checkDimension(2);
 
-    fit_point          onepoint;
-    std::vector<fit_point>  allpoints;
-    double             pA, pB, pC;
-    double             avgbg, stddevbg, minbg, maxbg;
+    FitPoint onepoint;
+    std::vector<FitPoint>  allpoints;
 
     // Fit a least squares plane through the background pixels
-    allpoints.clear();
     I.setXmippOrigin();
+    bg_mask.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
         if (A2D_ELEM(bg_mask, i, j))
@@ -277,23 +275,39 @@ void normalize_ramp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
             allpoints.push_back(onepoint);
         }
     }
+    size_t N = allpoints.size();
+    if (N<=1)
+    	return;
+
+    double pA, pB, pC;
     least_squares_plane_fit(allpoints, pA, pB, pC);
-    // Substract the plane from the image
+
+    // Substract the plane from the image and compute stddev within mask
+    double sum1 = 0;
+    double sum2 = 0;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
         A2D_ELEM(I, i, j) -= pA * j + pB * i + pC;
+        if (A2D_ELEM(bg_mask, i, j))
+        {
+            double aux=A2D_ELEM(I,i,j);
+            sum1 += aux;
+            sum2 += aux*aux;
+        }
     }
-    // Divide by the remaining std.dev. in the background region
-    computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg, stddevbg);
-    I *= 1.0/stddevbg;
+
+    double avgbg  = sum1 / N;
+    double stddevbg = sqrt(fabs(sum2 / N - avgbg * avgbg) * N / (N - 1));
+    if (stddevbg>1e-6)
+    	I *= 1.0/stddevbg;
 }
 
 void normalize_remove_neighbours(MultidimArray<double> &I,
                                  const MultidimArray<int> &bg_mask,
                                  const double &threshold)
 {
-    fit_point          onepoint;
-    std::vector<fit_point>  allpoints;
+    FitPoint          onepoint;
+    std::vector<FitPoint>  allpoints;
     double             pA, pB, pC;
     double             avgbg, stddevbg, minbg, maxbg, aux, newstddev;
     double             sum1 = 0.;
