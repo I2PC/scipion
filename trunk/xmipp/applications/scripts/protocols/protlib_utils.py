@@ -25,7 +25,9 @@
  ***************************************************************************/
  '''
 
-
+#---------------------------------------------------------------------------
+# Logging utilities
+#---------------------------------------------------------------------------
 class XmippLog:
     '''This class is a simple wrapper around the most rich Python logging system
     Also providing a basic file logging for older python versions
@@ -83,7 +85,9 @@ class XmippLog:
         if self.is_basic:
             self.fh_log.close()
 
-
+#---------------------------------------------------------------------------
+# Naming conventions
+#---------------------------------------------------------------------------
 def getScriptPrefix(script):
     '''This function will extract the root of the protocol filename
     By example:
@@ -96,14 +100,85 @@ def getScriptPrefix(script):
     import os
     script = os.path.basename(script)
     #all protocols script should start by 'xmipp_protocol', the numbering part is optional
-    s = re.match('(xmipp_protocol(?:_[a-zA-Z]\w*[a-zA-Z])+)(?:_\d+)?.py', script)
+    s = re.match('((?:\w*[a-zA-Z])+)(?:_\d+)?.py', script)
     if not s:
         raise Exception('script %s doesn\'t conform Xmipp protocol name convention' % script)
     return s.group(1)
 
-def makeScriptBackup(script, absolute_path_to_working_dir):
+#---------------------------------------------------------------------------
+# Other utilities
+#---------------------------------------------------------------------------
+def makeScriptBackup(log, script, WorkingDir):
+    '''Make a backup of the script
+    This function assumes the execution from ProjectDir
+    '''
+    log.info("Making backup of script " + script);
     import shutil, os
-    script_prefix = getScriptPrefix(script)
-    script_out = os.path.join(absolute_path_to_working_dir, script_prefix + '_backup.py')
-    shutil.copy(script, script_out)
+    try:        
+        script_prefix = getScriptPrefix(script)
+        script_out = os.path.join(WorkingDir, script_prefix + '_backup.py')
+        shutil.copy(script, script_out)
+    except shutil.Error, e:
+        printLog(log, e.message)     
+    
+#---------------------------------------------------------------------------
+# Parsing of arguments
+#---------------------------------------------------------------------------
+def getComponentFromVector(__vector, _iteration):
+    ''' Convert a string to a vector of parameters'''
+    _vector = __vector.strip()
+    listValues = getListFromVector(_vector)
+    if _iteration < 0: _iteration = 0
+    if _iteration < len(listValues): return listValues[_iteration]
+    else:                          return listValues[len(listValues) - 1]
+
+
+def getListFromVector(_vector,numberIteration=None):
+    ''' Convert a string to a list '''
+    import string
+    intervalos = string.split(_vector)
+    if len(intervalos) == 0:
+        raise RuntimeError, "Empty vector"
+    listValues = []
+    for i in range(len(intervalos)):
+        intervalo = intervalos[i]
+        listaIntervalo = string.split(intervalo, 'x')
+        if len(listaIntervalo) == 1:
+            listValues += listaIntervalo
+        elif len(listaIntervalo) == 2:
+            listValues += [ listaIntervalo[1] ] * string.atoi(listaIntervalo[0])
+        else:
+            raise RuntimeError, "Unknown syntax: " + intervalos
+    #fill with last value the iterations
+    if( numberIteration):
+        for i in range(len(listValues),numberIteration):
+            listValues.append(listValues[-1])
+        
+    return listValues
+
+def getBoolListFromVector(_vector,numberIteration=None):
+    ''' Convert a string to a list of booleans'''
+    listValues = getListFromVector(_vector,numberIteration)
+    listValuesBool = []
+    for i in range(len(listValues)):
+        if listValues[i]=='0':
+            listValuesBool.append(False)
+        else:
+            listValuesBool.append(True)
+    return listValuesBool
+
+#---------------------------------------------------------------------------
+# Error handling
+#---------------------------------------------------------------------------
+def printLogError(log, msg):
+    '''Function to write error message to log, to screen and exit'''
+    log.error(msg)
+    print "ERROR: ", msg
+    exit(1)
+    
+def printLog(log, msg):
+    '''Just print a msg and log'''
+    log.info(msg)
+    print msg
+
 

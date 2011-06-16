@@ -904,9 +904,10 @@ class automated_gui_class:
             sys.path.insert(0,'.')
             exec "import " + modulename
         if "preconditions" in eval("dir("+modulename+")"):
-            exec "ok="+modulename+".preconditions(True)"
-            if not ok:
-                return
+            exec "errors = "+modulename+".checkErrors()"
+            if len(errors) > 0:
+                errormsg = '\n'.join(errors)
+                tkMessageBox.showerror("Error", errormsg)
         command = "python " + self.scriptname + ' &'
 
         # For ALT-R direct execution (hidden option)

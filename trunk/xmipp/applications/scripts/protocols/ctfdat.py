@@ -1,3 +1,6 @@
+""""THIS MODULE IS DISCONTINUED"""
+
+
 class ctfdat:
    """ handle ctfdat files
        Authors: Carlos Oscar Sanchez Sorzano

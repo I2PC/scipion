@@ -108,14 +108,12 @@ class ProtocolWidget():
         self.widgetlist = []
         self.variable = var
     
-def createWidget(master, var):
-    w = ProtocolWidget(master, var)
+def createWidget(self, var):
+    w = ProtocolWidget(self.frame, var)
+    self.widgetlist.append(w)
     
     for k, v in var.tags.iteritems():
         print "tag %s -> %s" % (k, v)
-        self.tags[k] = v
-        if k == 'expert':
-            self.is_expert = True
         if k == 'section':
             self.is_section = True
         elif k == 'file':
@@ -132,11 +130,6 @@ def createWidget(master, var):
         else:
             pass
             #Other variables, guess the type from value
-
-            
-            
-        
-        
         
 class ProtocolGUI():
     def __init__(self, script):
@@ -148,6 +141,7 @@ class ProtocolGUI():
         self.have_publication = False
         self.expert_mode = False
         self.scriptname = script
+        self.lastrow = 0
     
     def readProtocolScript(self):
         begin_of_header = False
@@ -191,6 +185,7 @@ class ProtocolGUI():
         count = len(self.header_lines)
         while index < count:
             line = self.header_lines[index].strip()
+            index += 1
             #Parse the comment line
             match = reComment.search(line)
             if match:
@@ -204,12 +199,9 @@ class ProtocolGUI():
                     v.setTags(tags)
                     print 'tags', tags
                     print 'v.tags', v.tags
-                if v.isSection():
-                    print "THIS IS A SECTION: ", v.comment
-                    index += 1
-                else:
+                    
+                if not v.isSection():
                     #This is a variable, try to get help string
-                    index += 1
                     helpStr = ''
                     if index < count and self.header_lines[index].startswith('"""'):
                         while index < count and not helpStr.endswith('"""\n'):
@@ -226,8 +218,8 @@ class ProtocolGUI():
                             #w.setVariable(match2.group(1), match2.group(2))
                             self.variablesDict[v.name] = v.value
                             index += 1
-            else:
-                index += 1
+                createWidget(self, v)            
+                
         
             
     def prepareCanvas(self):
@@ -282,16 +274,14 @@ class ProtocolGUI():
         self.l1 = Label(self.frame, text=headertext, fg=TextSectionColor, bg=LabelBackgroundColor)
         self.l1.configure(wraplength=WrapLenght)
         self.l1.grid(row=0, column=0, columnspan=6, sticky=E+W)
-        sepRow = 1
         if (self.have_publication):
             headertext = "If you publish results obtained with this protocol, please cite:"
             for pub in self.publications:
                 headertext += '\n' + pub.replace('\n', '')
             self.l2 = Label(self.frame, text=headertext, fg=TextCitationColour, bg=LabelBackgroundColor)
             self.l2.configure(wraplength=WrapLenght)
-            self.l2.grid(row=1, column=0, columnspan=5, sticky=EW)
-            sepRow  = 2
-        self.addSeparator(sepRow)
+            self.l2.grid(row=self.getRow(), column=0, columnspan=5, sticky=EW)
+        self.addSeparator(self.getRow())
             
     def fillWidgets(self):
         for w in self.widgetsList:
@@ -314,11 +304,13 @@ class ProtocolGUI():
     def saveExecute(self):
         pass
     
-    def lastRow(self):
-        return self.frame.grid_size()[1]
+    def getRow(self):
+        row = self.lastrow
+        self.lastrow += 1
+        return row
     
     def fillButtons(self):
-        row = self.lastRow()
+        row = self.getRow()
         self.addSeparator(row)
         row += 3
         self.addButton("Close", self.close, 0, row, 0, W)
@@ -346,7 +338,7 @@ class ProtocolGUI():
         
         self.prepareCanvas() 
         self.fillHeader()
-        self.fillWidgets()
+        #self.fillWidgets()
                 # Add bottom row buttons
         self.fillButtons()
         self.addBindings()
@@ -360,11 +352,6 @@ if __name__ == '__main__':
     gui = ProtocolGUI(script)
     gui.readProtocolScript()
     gui.parseHeader()
-    for item in gui.variablesDict.iteritems():
-        print "%s -> %s" % item 
-    for w in gui.widgetsList:
-        if w.is_section:
-            print "section: ", w.comment
     gui.launchGUI()
     #print gui.variablesDict 
     

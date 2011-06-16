@@ -1,16 +1,17 @@
 from pysqlite2 import dbapi2 as sqlite
 import os,sys
 import pickle
+from  bcolors import *
 #
 #
 
-class dataBaseStruct(object):
+class XmippProtocolDbStruct(object):
     ''' class to mimic and structure for verification'''
     doAlways = 99999
 #    def __init__(self):
 #        a = 0
 
-class dataBase:
+class XmippProtocolDb:
  
     # print wrapper name
     PrintWrapperCommand=True
@@ -25,16 +26,17 @@ class dataBase:
     #constant
     SystemFlavour = "None"
     
-    def __init__(self, dbName, tableName, continueAtIteration):
+    def __init__(self, dbName, tableName, continueAt, isIter):
         '''Constructor of the Sqlite database
         dbName    -- The filename of the database, the full path will be created if not exists
         tableName -- The name of the table to be used
-        continueAtIteration -- at wich iteration to continue
+        continueAt -- at wich point to continue
+        isIter     -- if True continueAt refers to iteration, otherwise refers to one step
         '''
         
         self.tableInsertOriginal = tableName
         self.tableInsertRestart = tableName + "Restart"
-        self.ContinueAtIteration = continueAtIteration
+        self.ContinueAtIteration = continueAt        
         self.tableVerify = tableName + "Verify"
         self.dbName = dbName
 
@@ -45,7 +47,7 @@ class dataBase:
         self.cur = self.connection.cursor()
         self.cur_aux = self.connection.cursor()
         self.cur.execute(_sqlCommand, [self.tableInsertOriginal])
-        self.createRestartTable = self.cur.fetchone()[0] == 1 and continueAtIteration != 1
+        self.createRestartTable = self.cur.fetchone()[0] == 1 and self.ContinueAtIteration != 1
 
         if self.createRestartTable:
             self.tableInsert = self.tableInsertRestart
@@ -73,6 +75,9 @@ class dataBase:
         self.cur.executescript(_sqlCommand)
         self.sqlInsertcommand = " insert into " + self.tableInsert + " (command,parameters,iter)             VALUES (?,?,?)"
         self.sqlInsertVerify = "update " + self.tableInsert + " set fileNameList= ? where id=?"
+        
+        #Calculate the step at which should starts
+        self.setStartingStep(isIter)
 
     # print wrapper name
     def setPrintWrapperCommand(self,value):
@@ -86,20 +91,18 @@ class dataBase:
         self.verify=value
         self.viewVerifyedFiles=viewVerifyedFiles
         
-    def getStartingStep(self,isIter):
+    def setStartingStep(self,isIter):
         #if(self.ContinueAtIteration==-1 and self.StartAtStepN>0):
         if(self.ContinueAtIteration>0 and not isIter):
-            self.StartAtStepN= self.ContinueAtIteration
+            self.StartAtStepN = self.ContinueAtIteration
         elif (self.ContinueAtIteration > 0 and isIter):
-            sqlString="Select min(id) from " + self.tableInsert + " where iter=" +str(self.ContinueAtIteration)
+            sqlString="select min(id) from " + self.tableInsert + " where iter=" +str(self.ContinueAtIteration)
             self.cur_aux.execute(sqlString)
-            self.StartAtStepN= self.cur_aux.fetchone()[0]
+            self.StartAtStepN = self.cur_aux.fetchone()[0]
         elif (self.ContinueAtIteration<0):
-            self.StartAtStepN=self.getStartingStepVerify(isIter)
+            self.StartAtStepN =self.getStartingStepVerify(isIter)
         else:
-            print "self.ContinueAtIteration must be !=0"
-            exit(1)
-        return self.StartAtStepN
+            raise Exception("self.ContinueAtIteration must be !=0")
 
     def getStartingStepVerify(self,isIter):
         sqlCommand = '''select id, iter, command, fileNameList 
@@ -221,8 +224,8 @@ class dataBase:
     def commit(self):
         self.connection.commit()
         
-    def runActions(self, _log, stepNumber, _import):
-        from  bcolors import *
+    def runActions(self, _log, _import):
+       
         #print "kk", bcolors.OKBLUE,"kk"
         import pprint
         exec(_import)
@@ -233,10 +236,10 @@ class dataBase:
                 print "ERROR: Can not continue from old execution, parameters do not match. Relunch execution from begining"
                 exit(1)
         sqlCommand = '''SELECT iter,id, command, parameters,fileNameList 
-                        FROM ''' + self.tableInsertOriginal + '''
-                        WHERE id >= ''' + str(stepNumber) +''' OR 
-                             iter=''' + str(dataBaseStruct.doAlways)+'''
-                       ORDER BY id'''
+                        FROM %s 
+                        WHERE id >= %d OR 
+                             iter=%d
+                       ORDER BY id''' % (self.tableInsertOriginal, self.StartAtStepN, XmippProtocolDbStruct.doAlways)
         self.cur.execute(sqlCommand)
 
         kommands=self.cur.fetchall()
@@ -262,8 +265,9 @@ class dataBase:
 
             sqlCommand = "update %s set init = CURRENT_TIMESTAMP where id=%d" % (self.tableInsertOriginal, id)
             self.connection.execute(sqlCommand)
-            print 'command: ', row["command"]
-            exec (row["command"] + '(_log, dict)')
+            print 'commandAAAA: ', row["command"]
+            print row["command"] + '(_log, **dict)'
+            exec (row["command"] + '(_log, **dict)')
             if(self.verify and row["fileNameList"]):
                 _list =pickle.loads(str(row["fileNameList"]))
                 for i in _list:

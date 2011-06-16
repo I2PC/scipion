@@ -1,5 +1,6 @@
 import os, sys
 import socket
+
 class XmippLog:
     def __init__(self, logName):
         self.fh_log = open(logName, 'a')
