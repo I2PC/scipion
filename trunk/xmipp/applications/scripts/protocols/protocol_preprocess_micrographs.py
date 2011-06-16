@@ -402,7 +402,7 @@ class preprocess_A_class:
         finalname=micrographDir + '/micrograph'
         (filepath, micrographName)=os.path.split(relpath(filename))
         (shortname2, extension)=os.path.splitext(micrographName)        
-        if not self.Stddev == -1 or not self.Crop == -1 or not self.Down == 1:
+        if self.DoPreprocess and (not self.Stddev == -1 or not self.Crop == -1 or not self.Down == 1):
             finalname += ".mrc"
         else:
             finalname += extension
