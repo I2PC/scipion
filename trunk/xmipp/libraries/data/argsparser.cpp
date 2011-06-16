@@ -1379,7 +1379,7 @@ void WikiPrinter::printProgram(const ProgramDef &program, int v)
     //print examples
     if (program.examples.size() > 0)
     {
-        *pOut << "---++ Examples" << std::endl;
+        *pOut << "---++ Examples and notes" << std::endl;
         bool verbatim = false;
         for (size_t i = 0; i < program.examples.size(); ++i)
         {
