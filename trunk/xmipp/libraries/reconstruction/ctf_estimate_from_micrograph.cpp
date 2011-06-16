@@ -32,6 +32,7 @@
 #include <data/image.h>
 #include <data/fft.h>
 #include <data/basic_pca.h>
+#include <data/normalize.h>
 
 /* Read parameters ========================================================= */
 void ProgCTFEstimateFromMicrograph::readParams()
@@ -139,6 +140,10 @@ void ProgCTFEstimateFromMicrograph::PSD_piece_by_averaging(MultidimArray<double>
 
     MultidimArray< std::complex<double> > Periodogram;
     MultidimArray<double> small_psd;
+    MultidimArray<int> pieceMask;
+    pieceMask.resizeNoCopy(piece);
+    pieceMask.initConstant(1);
+
     for (int ii = 0; ii < Nsubpiece; ii++)
         for (int jj = 0; jj < Nsubpiece; jj++)
         {
@@ -151,6 +156,7 @@ void ProgCTFEstimateFromMicrograph::PSD_piece_by_averaging(MultidimArray<double>
                 for (j = 0, jb = j0; j < small_Xdim; j++, jb++)
                     DIRECT_A2D_ELEM(small_piece, i, j) =
                         DIRECT_A2D_ELEM(piece, ib, jb);
+            normalize_ramp(piece,pieceMask);
 
 #ifdef DEBUG
 
@@ -254,6 +260,9 @@ void ProgCTFEstimateFromMicrograph::run()
     MultidimArray<int> PCAmask;
     MultidimArray<float> PCAv;
     double pieceDim2=pieceDim*pieceDim;
+    MultidimArray<int> pieceMask;
+    pieceMask.resizeNoCopy(piece);
+    pieceMask.initConstant(1);
     std::cerr << "Computing models of each piece ...\n";
 
     // Prepare these filenames in case they are needed
@@ -303,7 +312,8 @@ void ProgCTFEstimateFromMicrograph::run()
         for (int k = 0; k < YSIZE(piece); k++)
             for (int l = 0; l < XSIZE(piece); l++)
                 DIRECT_A2D_ELEM(piece, k, l) = mM_in(i+k, j+l);
-        piece.statisticsAdjust(0, 1);
+        //piece.statisticsAdjust(0, 1);
+        normalize_ramp(piece,pieceMask);
 
         // Estimate the power spectrum .......................................
         if (Nsubpiece==1)
