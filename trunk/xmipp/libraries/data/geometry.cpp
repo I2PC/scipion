@@ -94,7 +94,7 @@ double point_line_distance_3D(const Matrix1D<double> &p,
     where D = -1
     Returns -1  if  A2+B2+C2 <<1
 */
-void least_squares_plane_fit(const std::vector<fit_point> & IN_points,
+void least_squares_plane_fit(const std::vector<FitPoint> & IN_points,
                              double &plane_a,
                              double &plane_b,
                              double &plane_c)
@@ -111,7 +111,7 @@ void least_squares_plane_fit(const std::vector<fit_point> & IN_points,
     double  W2 = 0;
     double  error = 0;
     double  denom = 0;
-    const fit_point * point;
+    const FitPoint * point;
 
     int n = IN_points.size();
 
@@ -171,7 +171,7 @@ void least_squares_line_fit(const std::vector<fit_point2D> & IN_points,
 
 /* Bspline fitting --------------------------------------------------------- */
 /* See http://en.wikipedia.org/wiki/Weighted_least_squares */
-void Bspline_model_fitting(const std::vector<fit_point> &IN_points,
+void Bspline_model_fitting(const std::vector<FitPoint> &IN_points,
                            int SplineDegree, int l0, int lF, int m0, int mF,
                            double h_x, double h_y, double x0, double y0,
                            Bspline_model &result)
@@ -192,7 +192,7 @@ void Bspline_model_fitting(const std::vector<fit_point> &IN_points,
 
     // Modify the list of points to include the weight
     int Npoints = IN_points.size();
-    std::vector<fit_point> AUX_points = IN_points;
+    std::vector<FitPoint> AUX_points = IN_points;
     for (int i = 0; i < Npoints; ++i)
     {
         double sqrt_w = sqrt(AUX_points[i].w);

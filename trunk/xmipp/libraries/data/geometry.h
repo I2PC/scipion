@@ -180,7 +180,7 @@ inline double point_plane_distance_3D(const Matrix1D< double >& p,
 
 /** Structure of the points to do model fitting
  */
-struct fit_point
+struct FitPoint
 {
     /// x coordinate
     double x;
@@ -210,7 +210,7 @@ struct fit_point
  *
  * where w is a weighting factor. Set it to 1 if you do not want to use it
  */
-void least_squares_plane_fit(const std::vector< fit_point >& IN_points,
+void least_squares_plane_fit(const std::vector< FitPoint >& IN_points,
                              double& plane_A,
                              double& plane_B,
                              double& plane_C);
@@ -388,7 +388,7 @@ public:
  * model.evaluate(x,y);
  * @endcode
  */
-void Bspline_model_fitting(const std::vector< fit_point >& IN_points,
+void Bspline_model_fitting(const std::vector< FitPoint >& IN_points,
                            int SplineDegree,
                            int l0,
                            int lF,
