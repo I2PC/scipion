@@ -25,7 +25,7 @@ class visualize_micrographs_class:
         exec "WorkingDir="+protocolName+".WorkingDir"
         summaryFile=WorkingDir+"/micrographs.sel"
         if os.path.exists(summaryFile):
-            os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" &")
+            os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --mem 2048m &")
         else:
             import tkMessageBox
             message="There is no result yet"
