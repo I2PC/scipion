@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
         */
 
         cav_t = MPI_Wtime();
-        art_prm.compute_CAV_weights(vol_basis, num_img_node);
+        art_prm.computeCAVWeights(vol_basis, num_img_node);
         GVNeq_aux = *(art_prm.GVNeq);
         for (int n = 0 ; n < (art_prm.GVNeq)->VolumesNo(); n++)
         {
@@ -334,7 +334,7 @@ int main(int argc, char *argv[])
 
                 cav_t = MPI_Wtime();
 
-                art_prm.compute_CAV_weights(vol_basis, art_prm.numIMG);
+                art_prm.computeCAVWeights(vol_basis, art_prm.numIMG);
                 GVNeq_aux = *(art_prm.GVNeq);
 
                 // All processors send their result and get the other's so all of them

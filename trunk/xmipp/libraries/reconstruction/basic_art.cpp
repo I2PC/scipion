@@ -147,7 +147,7 @@ void BasicARTParameters::defineParams(XmippProgram * program, const char* prefix
     program->addParamsLine("                               :+++  =[fn_root]_noise.vol= Reconstruction of the pure noise %BR%");
     program->addParamsLine("                               :+++  =[fn_root]_noise_proj.sel= Selection file with the pure noise images %BR%");
     program->addParamsLine("                               :+++  =[fn_root]_signal_proj.sel= Selection file with the signal images (a reordered version of the input (-i) selfile) %BR%");
-    program->addParamsLine("                               :+++  =[fn_root]_noise_proj?????.xmp= Pure noise images used for the reconstruction %BR%");
+    program->addParamsLine("                               :+++  =[fn_root]_noise_proj.stk= Pure noise images used for the reconstruction %BR%");
     program->addParamsLine("  [--ray_length <r=-1>]        : Length of the ray in basis units that will be projected onto the image plane");
 
     program->addParamsLine(" == Symmetry parameters == ");
@@ -286,7 +286,6 @@ void BasicARTParameters::readParams(XmippProgram * program)
     shiftedTomograms = program->checkParam("--shiftedTomograms");
     apply_shifts = !program->checkParam("--dont_apply_shifts");
 
-
     ray_length = program->getDoubleParam("--ray_length");
 
     // Symmetry parameters
@@ -342,7 +341,6 @@ void BasicARTParameters::readParams(XmippProgram * program)
     basis.readParams(program);
 
     // Grid parameters
-
     if (basis.type == Basis::voxels || basis.type == Basis::splines)
         grid_type = CC;
 
@@ -400,9 +398,7 @@ void BasicARTParameters::readParams(XmippProgram * program)
     block_size = program->getIntParam("--block_size");
     //    fn_control = program->getParam("--control");
 
-
     // Debugging parameters
-
     print_system_matrix = program->checkParam("--print_system_matrix");
     if (program->checkParam("--show_error"))
         tell |= TELL_SHOW_ERROR;
@@ -427,8 +423,6 @@ void BasicARTParameters::readParams(XmippProgram * program)
         save_intermidiate_every = program->getIntParam("save_intermediate");
     }
 
-
-
     if (program->checkParam("--variability"))
     {
         variability_analysis = true;
@@ -447,7 +441,6 @@ void BasicARTParameters::readParams(XmippProgram * program)
             noisy_reconstruction = true;
     }
 
-
     //divide by the sampling rate
     if (sampling != 1.)
     {
@@ -457,124 +450,6 @@ void BasicARTParameters::readParams(XmippProgram * program)
             R /= sampling;
         ref_trans_step /= sampling;
     }
-
-}
-
-/* Usage =================================================================== */
-void BasicARTParameters::usage()
-{
-    std::cerr
-    << "Usage: art [Options and Parameters]"
-    << "\nOptions:"
-    << "\nParameter Values: (note space before value)"
-    << "\n    -i selfile           full name of sel file"
-    << "\n   [-o name]             name of output files, extensions are added"
-    << "\n   [-sym symmfile]       Use a symmetry file"
-    << "\n   [-n noit=1]           number of iterations"
-    << "\n   [-l lambda=0.01]      relaxation factor (recommended range 0.0 - 0.1)"
-    << "\n   [-more_help]          show all parameters"
-    << "\n"
-    ;
-}
-
-void BasicARTParameters::usage_more()
-{
-    std::cerr
-    << "Usage: art [Options and Parameters]"
-    << "\nOptions:"
-    << "\nParameter Values: (note space before value)"
-    << "\nI/O parameters"
-    << "\n    -i selfile           full name of sel file"
-    << "\n   [-o name]             name of output files, extensions are added"
-    << "\n   [-CTF name]           name of a sel file with CTFs"
-    << "\n   [-unmatched]          apply unmatched forward/backward projectors"
-    << "\n   [-start basisvolume]  Start from basisvolume"
-    << "\n   [-sym symmfile]       Use a symmetry file"
-    << "\n   [-sym_each n]         Force the reconstruction to be symmetric"
-    << "\n                         each n projections"
-    << "\n   [-max_tilt n]         Skip projection with absolute tilt angle"
-    << "\n                         greater than n\n"
-    << "\n   [-ref_trans_after n]  Refine the translation alignment"
-    << "\n                         after n projections."
-    << "\n   [-ref_trans_step n]   Max displacement in translation alignment"
-    << "\n                         This is a double."
-    << "\n   [-force_sym <n=0>]    Force the reconstruction to be symmetric"
-    << "\n                         n times at each projection"
-    << "\n   [-no_group]           Do not generate symmetry subgroup"
-    << "\n   [-no_symproj]         Do not use symmetrized projections"
-    << "\n   [-sparse <eps=-1>]    Sparsity threshold"
-    << "\n   [-diffusion <eps=-1>] Diffusion weight"
-    << "\n   [-surface surf_mask]  Use this file as a surface mask"
-    << "\n   [-POCS_freq <f=1>]    Impose POCS conditions every <f> projections"
-    << "\n   [-known_volume <vol=-1>] Volume of the reconstruction"
-    << "\n   [-POCS_positivity]    Apply positivity constraint"
-    << "\n   [-goldmask value]     Pixels below this value are not considered for reconstruction"
-    << "\n   [-shiftedTomograms]   Remove border pixels created by alignment of tomograms"
-    << "\n   [-dont_apply_shifts]  Do not apply shifts as stored in the 2D-image headers"
-    << "\n   [-variability]        Perform variability analysis"
-    << "\n   [-refine]             Refine input projection before backprojecting"
-    << "\n   [-noisy_reconstruction] Perform a companion noisy reconstruction"
-    << "\n   [-ray_length <r=-1>]  In basis units\n"
-    ;
-    std::cerr
-    << "\nIteration parameters"
-    << "\n   [-n noit=1]           number of iterations"
-    << "\n   [-stop_at stop_at=0]  number of images presented"
-    << "\n   [-l lambda=0.01 |     relaxation factor (recommended range 0.0 - 0.1)"
-    << "\n    -l [lambda0, lambda1, ...]"
-    << "\n   [-CAVK|-CAV]          by default, ARTK is applied"
-    << "\n   [-sort_last N=2]      Use -1 to sort with all previous projections"
-    << "\n   [-random_sort]        by default, perpendicular sort is used for ART"
-    << "\n   [-no_sort]            No sort must be applied"
-    << "\n   [-WLS]                Perform weighted least squares ART"
-    << "\n   [-k kappa=0.5 |       Relaxation factor for WLS residual "
-    << "\n    -k [kappa0, kappa1, ...]\n"
-    << "\nParallel parameters"
-    << "\n                         by default, sequential ART is applied"
-    << "\n  [-thr N=1]      Number of threads to use. NOTE: Not available when using MPI."
-    << "\n   [-SIRT]               Simultaneous Iterative Reconstruction Technique"
-    << "\n   [-pSIRT]              Parallel (MPI) Simultaneous Iterative Reconstruction Technique"
-    << "\n   [-pfSIRT]             Parallel (MPI) False Simultaneous Iterative Reconstruction Technique (Faster convergence than pSIRT)"
-    << "\n   [-pSART]              Parallel (MPI) Simultaneous ART\n"
-    << "\n   [-pAVSP]              Parallel (MPI) Average Strings\n"
-    << "\n   [-pBiCAV]             Parallel (MPI) Block Iterative CAV\n"
-    << "\n   [-pCAV]               Parallel (MPI) CAV\n"
-    << "\n   [-block_size <n=1>]   Number of projections to each block (SART and BiCAV)\n"
-    << "\n   [-CAVARTK]            Component Averaging Variant of Block ART\n"
-    << "\nGrid parameters"
-    << "\n   [-g gridsz=1.41]      relative grid size"
-    << "\n                         if gridsz =  -1 => gridsz=2^(1/2)"
-    << "\n                                      -2 => gridsz=2^(1/3)"
-    << "\n   [-FCC]                 use a FCC grid instead of a BCC"
-    << "\n   [-SC]                  use a SC grid instead of a BCC"
-    << "\n   [-R interest_sphere=-1] Radius of the interest sphere"
-    << "\n   [-ext proj_ext=0]     projection extension"
-    << "\n   [-output_size Zsize Ysize Xsize] output volume size in PIXELS\n"
-    << "\n   [-sampling=1]         sampling rate,  affects to -r, -g, -R and"
-    << "\n                          -ref_trans_step"
-    << "\n                         Also to -mod_a and mod_b when processing"
-    << "\n                         crystals"
-    ;
-    basis.usage();
-    std::cerr
-    << "\nDebugging options"
-    << "\n   [-print_system_matrix]print the matrix of the system Ax=b"
-    << "\n   [-show_iv <n=10>]     show volumes/images as the reconstruction goes"
-    << "\n                         the volume is update every <n> projections\n"
-    << "\n   [-show_error]         show error for each projection"
-    << "\n   [-show_stats]         give some statistical information during the process"
-    << "\n   [-save_at_each_step]  save intermediate projections"
-    << "\n                             PPPtheo, PPPread, PPPcorr, PPPdiff"
-    << "\n                             PPPbasis.basis, PPPvol.vol"
-    << "\n                             PPPvolPOCS1, PPPvolPOCS2, PPPvolPOCS3"
-    << "\n   [-save_intermediate <n>] save intermediate volumes (every <n> projections)"
-    << "\n                             <fnroot>it<no_it>proj<no_projs>.vol"
-    << "\n   [-save_basis]         every time you have to save a volume, save it"
-    << "\n                         also in basis"
-    << "\n   [-manual_order]       manual selection of projection order"
-    << "\n   [-only_sym]           skip all those symmetries different from -1"
-    << "\n"
-    ;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -742,8 +617,8 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
                                           -(double)FIRST_XMIPP_INDEX(Youtput_volume_size),
                                           -(double)FIRST_XMIPP_INDEX(Zoutput_volume_size));
                 }
-                /* If you substract half the basis radius, you are forcing that the
-                last basis touches slightly the volume border. By not substracting
+                /* If you subtract half the basis radius, you are forcing that the
+                last basis touches slightly the volume border. By not subtracting
                 it there is a basis center as near the border as possible. */
                 corner = corner + proj_ext/*CO: -blob.radius/2*/;
                 switch (grid_type)
@@ -792,7 +667,7 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
 #undef DEBUG
 
 /* Count number of equations for CAV --------------------------------------- */
-void BasicARTParameters::compute_CAV_weights(GridVolume &vol_basis0,
+void BasicARTParameters::computeCAVWeights(GridVolume &vol_basis0,
         int numProjs_node, int debug_level)
 {
     if (GVNeq == NULL)

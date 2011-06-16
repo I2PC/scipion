@@ -388,14 +388,6 @@ public:
         This function reads the parameters from command line.*/
     void readParams(XmippProgram * program);
 
-    /** Usage message.
-        This function shows the way of introdustd::cing the most common parameters. */
-    void usage();
-
-    /** Full Usage message.
-        This function shows the way of introdustd::cing these parameters. */
-    void usage_more();
-
 #define BASIC 0
 #define FULL  1
     /** Produce Initial and Side information for ART.
@@ -411,7 +403,7 @@ public:
          \\ BASIC: Generate basis side information
     \\ FULL: Generate all the rest needed values.
 
-        The rank is a number idetifying the parallel process. If -1 then
+        The rank is a number identifying the parallel process. If -1 then
         the algorithm is sequential. If 0 then it is the root process.
         */
     void produceSideInfo(GridVolume &vol_basis0, int level = FULL, int rank = -1);
@@ -422,7 +414,7 @@ public:
         and the number of equations and unknowns are shown at the end.
         Otherwise nothing is printed (this is the suggested debugging level
         for parallel processing). */
-    void compute_CAV_weights(GridVolume &vol_basis0,
+    void computeCAVWeights(GridVolume &vol_basis0,
                              int numProjs_node, int debug_level = 0);
 
     /** Lambda for iteration n (first one is iteration 0).
