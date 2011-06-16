@@ -4,26 +4,26 @@ import os
 from xmipp import *
 
 
-def checkVolumeProjSize(_log, dict):
+def checkVolumeProjSize(_log, ReferenceFileNames, SelFileName):
     """ check references and projection size match"""
     #5a check volumes have same size
     result = True
     message=""
     try:
-        (xdim, ydim, zdim, ndim) = SingleImgSize(dict['ReferenceFileNames'][0])
-        for reference in dict['ReferenceFileNames']:
+        (xdim, ydim, zdim, ndim) = SingleImgSize(ReferenceFileNames[0])
+        for reference in ReferenceFileNames:
             (xdim2, ydim2, zdim2, ndim2) = SingleImgSize(reference)
     except XmippError, e:
         print "\nEROR:",__name__, 'checkVolumeProjSize:', e
         exit(1)
     if (xdim2, ydim2, zdim2, ndim2) != (xdim, ydim, zdim, ndim):
         message = "Reference %s and %s have not the same size" % \
-              (dict['ReferenceFileNames'][0], reference) 
+              (ReferenceFileNames[0], reference) 
         result = False
     
     if result:
         #5b check volume and projections  have same size
-        (xdim2, ydim2, zdim2, ndim2) = ImgSize(dict['SelFileName'])
+        (xdim2, ydim2, zdim2, ndim2) = ImgSize(SelFileName)
         if (xdim2, ydim2) != (xdim, ydim):
             message = "Volume and reference images have not the same size"
             result = False
@@ -37,62 +37,31 @@ def checkVolumeProjSize(_log, dict):
     return (result,message)
 
 
-#def initOuterRadius(_log, dict):
-#    """ init mask radius for volumes. If suggested value is negative set to half dim"""
-#    OuterRadius = dict['OuterRadius']
-#
-##    print "REMOVE -34"
-##    OuterRadius = -34
-#
-#    xdim = 0
-#    if (OuterRadius < 0):
-#        try:
-#            (xdim, ydim, zdim, ndim) = ImgSize(dict['SelFileName'])
-#        except XmippError, e:
-#            print __name__, 'initOuterRadius:', e
-#            exit(1)
-#        OuterRadius = (xdim / 2) - 1
-#        comment = "InitOuterRadius: Outer radius set to: " + str(OuterRadius)
-#        print '* ' + comment
-#        _log.info(comment)
-#    return OuterRadius
-
-# wrapper for log.make_backup_of_script_file
-def pm_make_backup_of_script_file(_log, dict):
-    import log
-    _log.info("make backup script file: " + dict['ProgName'])
-    log.make_backup_of_script_file(dict['ProgName'], dict['ProjectDir'] + "/" + dict['WorkingDir'])
-
 #------------------------------------------------------------------------
 #make ctf groups
 #------------------------------------------------------------------------
-#    'CTFDatName': CTFDatName
-#  , 'CtfGroupDirectory': CtfGroupDirectory
-#  , 'CtfGroupMaxDiff': CtfGroupMaxDiff
-#  , 'CtfGroupMaxResol': CtfGroupMaxResol
-#  , 'CtfGroupRootName': CtfGroupRootName
-#  , 'DataArePhaseFlipped': DataArePhaseFlipped
-#  , 'DoAutoCtfGroup'      : DoAutoCtfGroup
-#  , 'DoCtfCorrection'      : DoCtfCorrectio
-#  , '_log'                :_log
-#  , 'PaddingFactor'       : PaddingFactor
-#  , 'SelFileName'         : SelFileName
-#  , 'SplitDefocusDocFile' : SplitDefocusDocFile
-#  , 'WienerConstant'      : WienerConstant
-def execute_ctf_groups (_log, dict):
-    CtfGroupDirectory  = dict['CtfGroupDirectory']
-    CtfGroupRootName   = dict['CtfGroupRootName']
-    #Verify
-
-
+def executeCtfGroups (_log, 
+                                 CTFDatName, 
+                                 CtfGroupDirectory,
+                                 CtfGroupMaxDiff, 
+                                 CtfGroupMaxResol,
+                                 CtfGroupRootName,
+                                 DataArePhaseFlipped,
+                                 DoAutoCtfGroup,
+                                 DoCtfCorrection,
+                                 PaddingFactor, 
+                                 SelFileName,
+                                 SplitDefocusDocFile,
+                                 WienerConstant, 
+                                 ) :
     import glob, sys,shutil
     import utils_xmipp
     import launch_job
     if not os.path.exists(CtfGroupDirectory):
         os.makedirs(CtfGroupDirectory)
 
-    if(not dict['DoCtfCorrection']):
-        MD=MetaData(dict['SelFileName' ])
+    if(not DoCtfCorrection):
+        MD=MetaData(SelFileName)
         block_name= 'ctfGroup'+str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH) +\
                     '@' + CtfGroupDirectory+"/"+ CtfGroupRootName +'_images.sel'
         MD.write(block_name)
@@ -103,27 +72,27 @@ def execute_ctf_groups (_log, dict):
 #    remove all entries not present in sel file by
 #    join between selfile and metadatafile
     MDctfdata = MetaData();
-    MDctfdata.read(dict['CTFDatName' ])
+    MDctfdata.read(CTFDatName)
     MDsel = MetaData();
-    MDsel.read(dict['SelFileName' ])
+    MDsel.read(SelFileName)
     MDctfdata.intersection(MDsel,MDL_IMAGE)
-    tmpCtfdat = utils_xmipp.unique_filename(dict['CTFDatName' ])
+    tmpCtfdat = utils_xmipp.unique_filename(CTFDatName)
     MDctfdata.write(tmpCtfdat)
     command = \
               ' --ctfdat ' + tmpCtfdat + \
               ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + \
-              ' --wiener --wc ' + str(dict['WienerConstant']) + \
-              ' --pad ' + str(dict['PaddingFactor'])
+              ' --wiener --wc ' + str(WienerConstant) + \
+              ' --pad ' + str(PaddingFactor)
 
-    if (dict['DataArePhaseFlipped']):
+    if (DataArePhaseFlipped):
         command += ' --phase_flipped '
 
-    if (dict['DoAutoCtfGroup']):
-        command += ' --error ' + str(dict['CtfGroupMaxDiff']) + \
-                   ' --resol ' + str(dict['CtfGroupMaxResol'])
+    if (DoAutoCtfGroup):
+        command += ' --error ' + str(CtfGroupMaxDiff) + \
+                   ' --resol ' + str(CtfGroupMaxResol)
     else:
-        if (len(dict['SplitDefocusDocFile']) > 0):
-            command += ' --split ' + dict['SplitDefocusDocFile']
+        if (len(SplitDefocusDocFile) > 0):
+            command += ' --split ' + SplitDefocusDocFile
         else:
             message = "Error: for non-automated ctf grouping, please provide a docfile!"
             print '* ', message
@@ -141,34 +110,25 @@ def execute_ctf_groups (_log, dict):
     fn = CtfGroupDirectory + '/'+\
                   CtfGroupRootName+\
                  'Info.xmd'
-#    ctflist = glob.glob(wildcardname)
-#    print ctflist, wildcardname
-#    exit(1)
-#    return len(ctflist)
     MD = MetaData(fn)
-    #return MD.size()
-
     
 
-def checkOptionsCompatibility(_log, dict):
+def checkOptionsCompatibility(_log, DoAlign2D, DoCtfCorrection):
     # Never allow DoAlign2D and DoCtfCorrection together
-    if (dict['DoAlign2D'] and int (dict['DoCtfCorrection'])):
+    if (DoAlign2D and int (DoCtfCorrection)):
         error_message = "You cannot realign classes AND perform CTF-correction. Switch either of them off!"
         _log.error(error_message)
         print error_message
         exit(1)
 
-def initAngularReferenceFile(_log,dict):
+def initAngularReferenceFile(_log, DocFileName, DocFileWithOriginalAngles, SelFileName):
     '''Create Initial angular file. Either fill it with zeros or copy input'''
     import shutil
-    if len(dict['DocFileName'])>1:
-        shutil.copy(dict['DocFileName'],dict['DocFileWithOriginalAngles'])
+    if len(DocFileName)>1:
+        shutil.copy(DocFileName,DocFileWithOriginalAngles)
     else:
-        MD=MetaData(dict['SelFileName'])
+        MD=MetaData(SelFileName)
         MD.addLabel(MDL_ANGLEROT)
         MD.addLabel(MDL_ANGLETILT)
         MD.addLabel(MDL_ANGLEPSI)
-        MD.write(dict['DocFileWithOriginalAngles'])
-
-def dummy(_log, dict):
-    print dict['dummy']
+        MD.write(DocFileWithOriginalAngles)

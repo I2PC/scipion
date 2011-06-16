@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+""""THIS MODULE IS DISCONTINUED, moved to protlib_utils.py"""
 import os, sys
 import socket
 

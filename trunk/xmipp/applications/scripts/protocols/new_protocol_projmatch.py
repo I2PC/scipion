@@ -690,7 +690,7 @@ def checkErrors():
     return errors 
 
 
-from protocol_base import *
+from protlib_base import *
 from xmipp import *
 
 class ProtProjMatch(XmippProtocol):
@@ -726,8 +726,7 @@ class ProtProjMatch(XmippProtocol):
         self.createAuxTable = False
         self.NumberOfCtfGroups = 1
         self.Import = 'from protlib_projmatch_before_loop import *;\
-                       from protlib_projmatch_in_loop import *;\
-                       from protlib_filesystem import *;'
+                       from protlib_projmatch_in_loop import *;'
         
     def preRun(self):
         #Convert directories/files  to absolute path from projdir
@@ -886,7 +885,7 @@ class ProtProjMatch(XmippProtocol):
                     , 'SplitDefocusDocFile': SplitDefocusDocFile
                     , 'WienerConstant': WienerConstant
                    }
-        command = 'execute_ctf_groups'
+        command = 'executeCtfGroups'
         _VerifyFiles = []
         fnBase = os.path.join(self.CtfGroupDirectory, self.CtfGroupRootName)
         if DoCtfCorrection:            
@@ -915,6 +914,7 @@ class ProtProjMatch(XmippProtocol):
         }
         command = 'self.saveParameters'
         _dataBase.insertAction(command, _Parameters, 1)
+        _Parameters = {}    
         command = 'self.loadParameters'
         _dataBase.insertAction(command, _Parameters, XmippProtocolDbStruct.doAlways)
     
@@ -962,7 +962,7 @@ class ProtProjMatch(XmippProtocol):
                                     , 'userSuppliedMask'   : MaskFileName
                                     }
                 
-                command = "execute_mask"
+                command = "executeMask"
                 _VerifyFiles = []
                 _VerifyFiles.append(self.maskedFileNamesIters[iterN][refN])
                 _VerifyFiles.append(self.maskedFileNamesIters[iterN][refN])
@@ -1105,7 +1105,7 @@ class ProtProjMatch(XmippProtocol):
                                     , 'userSuppliedMask'   : MaskFileName
                                     }
                 
-                command = "execute_mask"
+                command = "executeMask"
                 _VerifyFiles = []
                 _VerifyFiles.append(self.maskedFileNamesIters[iterN][refN])
                 _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)

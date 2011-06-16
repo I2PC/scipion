@@ -5,6 +5,9 @@ from  bcolors import *
 #
 #
 
+from protlib_utils import *
+from protlib_filesystem import *
+
 class XmippProtocolDbStruct(object):
     ''' class to mimic and structure for verification'''
     doAlways = 99999
@@ -136,23 +139,23 @@ class XmippProtocolDb:
         self.cur_aux.execute(sqlCommand)
         return(self.cur_aux.fetchone()[0])
     
-    def saveParameters(self, _log, dict):
+    def saveParameters(self, _log, SystemFlavour):
         '''save a dictionary to an auxiliary table'''
-        if self.SystemFlavour == dict['SystemFlavour']:
+        if self.SystemFlavour == SystemFlavour:
             return
         cur_aux = self.connection.cursor()
         sqlCommand = '''CREATE TABLE if not exists parameters (parameters text);
                         DELETE FROM parameters;'''
         cur_aux.executescript(sqlCommand,)
         sqlCommand = '''INSERT into parameters(parameters) VALUES(?)'''
-        self.SystemFlavour=dict['SystemFlavour']
-        dict = {
+        self.SystemFlavour = SystemFlavour
+        dict = { 
           'SystemFlavour':self.SystemFlavour
         }
         cur_aux.execute(sqlCommand, [pickle.dumps(dict, 0)])
         self.commit()
         
-    def loadParameters(self, _log, dict):
+    def loadParameters(self, _log):
         '''load a dictionary from an auxiliary table'''
         sqlCommand = '''SELECT parameters FROM parameters'''
         try:
@@ -265,8 +268,7 @@ class XmippProtocolDb:
 
             sqlCommand = "update %s set init = CURRENT_TIMESTAMP where id=%d" % (self.tableInsertOriginal, id)
             self.connection.execute(sqlCommand)
-            print 'commandAAAA: ', row["command"]
-            print row["command"] + '(_log, **dict)'
+            print 'command: ', row["command"]
             exec (row["command"] + '(_log, **dict)')
             if(self.verify and row["fileNameList"]):
                 _list =pickle.loads(str(row["fileNameList"]))
