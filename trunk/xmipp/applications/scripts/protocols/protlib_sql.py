@@ -81,6 +81,8 @@ class XmippProtocolDb:
         
         #Calculate the step at which should starts
         self.setStartingStep(isIter)
+        #set to null time in original table for step >= self.StartAtStepN
+        sqlString = "update " + self.tableInsertOriginal + " set finish=NULL where id >=" + str(self.StartAtStepN)
 
     # print wrapper name
     def setPrintWrapperCommand(self,value):

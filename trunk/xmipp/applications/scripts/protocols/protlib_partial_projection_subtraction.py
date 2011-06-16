@@ -3,39 +3,40 @@ from xmipp import *
 import launch_job
 import os
 
-def joinImageCTF(_log, dict):
-    tmpMD = MetaData(dict['CTFgroupName'])
-    MDaux = MetaData(dict['filename_currentAngles'])
+def joinImageCTF(_log, CTFgroupName, DocFileRef):
+    tmpMD = MetaData(CTFgroupName)
+    MDaux = MetaData(filename_currentAngles)
     outMD = MetaData()
     outMD.join(MDaux, tmpMD, MDL_IMAGE, NATURAL_JOIN)
-    outMD.write(dict['DocFileRef'], MD_APPEND)
+    outMD.write(DocFileRef, MD_APPEND)
+
 
 #reconstruct
 def reconstructVolume(_log, dict):
     #xmipp_reconstruct_fourier -i ctfgroup_1@ctfgroups_Iter_13_current_angles.doc -o rec_ctfg01.vol --sym i3 --weight
-    parameters  = ' -i ' +  dict['DocFileRef'] 
-    parameters += ' -o ' +  dict['reconstructedVolume'] 
-    parameters += ' --sym ' + dict['SymmetryGroup'] +'h'
+    parameters  = ' -i ' +  DocFileRef 
+    parameters += ' -o ' +  reconstructedVolume 
+    parameters += ' --sym ' + SymmetryGroup +'h'
     parameters += ' --weight'
-    doParallel = dict['DoParallel']
+    doParallel = DoParallel
     if (doParallel):
-            parameters += ' --mpi_job_size ' + dict['MpiJobSize']
-            parameters += ' --thr ' + str(dict['NumberOfThreads'])
+            parameters += ' --mpi_job_size ' + MpiJobSize
+            parameters += ' --thr ' + str(NumberOfThreads)
 
     launch_job.launch_job('xmipp_reconstruct_fourier',
                              parameters,
                              _log,
                              doParallel,
-                             dict['NumberOfMpiProcesses'],
-                             dict['NumberOfThreads'],
-                             dict['SystemFlavour'])
+                             NumberOfMpiProcesses,
+                             NumberOfThreads,
+                             SystemFlavour)
 
 
 def maskVolume(_log, dict):
-    parameters  = ' -i ' +  dict['reconstructedVolume'] 
-    parameters += ' -o ' +  dict['maskReconstructedVolume'] 
+    parameters  = ' -i ' +  reconstructedVolume 
+    parameters += ' -o ' +  maskReconstructedVolume 
     
-    parameters += ' --mask raised_crown -%d -%d 2' %(dict['dRradiusMin'], dict['dRradiusMax'])
+    parameters += ' --mask raised_crown -%d -%d 2' %(dRradiusMin, dRradiusMax)
     launch_job.launch_job("xmipp_transform_mask",
                              parameters,
                              _log,
@@ -45,34 +46,34 @@ def maskVolume(_log, dict):
 def createProjections(_log, dict):
     #dirname = 'ReferenceLibrary'
 
-    doParallel = dict['DoParallel']
+    doParallel = DoParallel
 
-    parameters  = ' -i ' +  dict['maskReconstructedVolume'] 
-    parameters += ' --experimental_images ' +  dict['DocFileRef']
+    parameters  = ' -i ' +  maskReconstructedVolume 
+    parameters += ' --experimental_images ' +  DocFileRef
     
-    parameters += ' -o ' +  dict['referenceStack']
-    parameters += ' --sampling_rate ' + dict['AngSamplingRateDeg']
-    parameters += ' --sym ' + dict['SymmetryGroup'] +'h'
+    parameters += ' -o ' +  referenceStack
+    parameters += ' --sampling_rate ' + AngSamplingRateDeg
+    parameters += ' --sym ' + SymmetryGroup +'h'
     parameters += ' --compute_neighbors --near_exp_data ' 
-    parameters += ' --angular_distance ' + str(dict['MaxChangeInAngles'])
+    parameters += ' --angular_distance ' + str(MaxChangeInAngles)
     if (doParallel):
-            parameters += ' --mpi_job_size ' + dict['MpiJobSize']
+            parameters += ' --mpi_job_size ' + MpiJobSize
 
     launch_job.launch_job('xmipp_angular_project_library',
                              parameters,
                              _log,
                              doParallel,
-                             dict['NumberOfMpiProcesses'] *dict['NumberOfThreads'],
+                             NumberOfMpiProcesses *NumberOfThreads,
                              1,
-                             dict['SystemFlavour'])
+                             SystemFlavour)
                 
 
 
 def subtractionScript(_log, dict):
-    md = MetaData(dict['DocFileRef'])#experimental images
-    #referenceStackName = dict['referenceStack']#reference projection for a given defocus group
-    mdRef = MetaData(dict['referenceStackDoc'])#experimental images
-    subtractedStackName = dict['subtractedStack']
+    md = MetaData(DocFileRef)#experimental images
+    #referenceStackName = referenceStack#reference projection for a given defocus group
+    mdRef = MetaData(referenceStackDoc)#experimental images
+    subtractedStackName = subtractedStack
     
     
     imgExp = Image()
@@ -98,7 +99,7 @@ def subtractionScript(_log, dict):
                 refNum = idRef
                 distMin = dist
             
-        #print id,str(refNum)+'@' + dict['referenceStack']
+        #print id,str(refNum)+'@' + referenceStack
         #refImgName = '%06d@%s'%(refNum,referenceStackName)
         imgExp.readApplyGeo(md,       id, False, DATA, ALL_IMAGES,False)
         imgRef.readApplyGeo(mdRef,refNum, False, DATA, ALL_IMAGES,False)

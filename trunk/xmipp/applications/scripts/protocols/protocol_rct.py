@@ -7,6 +7,7 @@
 #
 # Author: Sjors Scheres, March 2007
 #
+# {begin_of_header}
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
@@ -79,8 +80,8 @@ AlignTiltPairsAdditionalParams=""
 #------------------------------------------------------------------------------------------------
 # Perform 3D-reconstructions?
 DoReconstruct=True
-# {list}|fourier|art|wbp| Reconstruction method
-""" The art emthod is very slow, and the relaxation parameter (-l ) needs to be carefully tuned. 
+# {list}(fourier,art,wbp) Reconstruction method
+""" The art method is very slow, and the relaxation parameter (-l ) needs to be carefully tuned. 
     The wbp and fourier methods are much faster, but wbp may give significantly worse results.
     Therefore, the fourier method is the recommended one.
 """
@@ -109,7 +110,7 @@ PixelSize=5.6
 AnalysisScript="visualize_rct.py"
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
-# {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
+# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
