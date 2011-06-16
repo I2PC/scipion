@@ -89,8 +89,6 @@ public:
     double evaluate(const FileName &fnMicrograph,
     	    const FileName &fnPSD, const FileName &fnCTF, const FileName &fnCTF2,
     	    PSDEvaluation &evaluation) const;
-    /** Sort parameters. */
-    double computeCombinedCriterion(MetaData &SF) const;
 
     /** Compute the correlation for all micrographs */
     void run();

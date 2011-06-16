@@ -231,33 +231,6 @@ double ProgPSDSort::evaluate(const FileName &fnMicrograph,
 			                           KLDistance(histGaussian,hist));
 }
 
-// Sort PsdCorr90 + Corr13 Criteria
-double ProgPSDSort::computeCombinedCriterion(MetaData &SF) const
-{
-	std::vector<double> vcorr13, vpsd90;
-	MultidimArray<double> corr13, psd90;
-	MultidimArray<double> rankCorr13, rankPsd90, rankCombined;
-	MultidimArray<int> iCorr13, iPsd90;
-	SF.getColumnValues(MDL_CTF_CRITERION_FITTINGCORR13,vcorr13);
-	SF.getColumnValues(MDL_CTF_CRITERION_PSDCORRELATION90,vpsd90);
-	corr13=vcorr13;
-	corr13.indexSort(iCorr13);
-	rankCorr13.resizeNoCopy(iCorr13);
-	FOR_ALL_ELEMENTS_IN_ARRAY1D(iCorr13)
-	rankCorr13(iCorr13(i)-1)=i;
-
-	psd90=vpsd90;
-	psd90.indexSort(iPsd90);
-	rankPsd90.resizeNoCopy(iPsd90);
-	FOR_ALL_ELEMENTS_IN_ARRAY1D(iPsd90)
-	rankPsd90(iPsd90(i)-1)=i;
-
-	rankCombined=0.5*(rankCorr13+rankPsd90);
-	size_t i=0;
-	FOR_ALL_OBJECTS_IN_METADATA(SF)
-	SF.setValue(MDL_CTF_CRITERION_COMBINED,rankCombined(i++),__iter.objId);
-}
-
 /* Run --------------------------------------------------------------------- */
 void ProgPSDSort::run()
 {
@@ -289,6 +262,5 @@ void ProgPSDSort::run()
         SF.setValue(MDL_CTF_CRITERION_NORMALITY, evaluation.histogramNormality,__iter.objId);
         progress_bar(++idx);
     }
-    computeCombinedCriterion(SF);
     SF.write(fnSel);
 }
