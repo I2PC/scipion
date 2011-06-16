@@ -179,7 +179,7 @@ class kerdensom_class:
         import launch_job
         self.MaskFileName=self.WorkingDir+'/mask_design.msk'
         command=' -sel '+self.SelFileName + ' -save_as '+self.MaskFileName
-        launch_job.launch_job("xmipp_mask_design",
+        launchJob("xmipp_mask_design",
                               command,
                               self.log,
                               False,1,1,'')
@@ -193,7 +193,7 @@ class kerdensom_class:
             command+=' -nomask '
         else:
             command+=' -mask '+ self.MaskFileName
-        launch_job.launch_job("xmipp_convert_img2data",
+        launchJob("xmipp_convert_img2data",
                               command,
                               self.log,
                               False,1,1,'')
@@ -209,7 +209,7 @@ class kerdensom_class:
             command+=' -nomask '
         else:
             command+=' -mask '+ self.MaskFileName
-        launch_job.launch_job("xmipp_convert_data2img",
+        launchJob("xmipp_convert_data2img",
                               command,
                               self.log,
                               False,1,1,'')
@@ -232,7 +232,7 @@ class kerdensom_class:
               ' --reg1 ' + str(self.SomReg1) + \
               ' --steps ' + str(self.SomSteps) + \
               ' '  + str(self.KerdensomExtraCommand)
-      launch_job.launch_job("xmipp_classify_kerdensom",
+      launchJob("xmipp_classify_kerdensom",
                             command,
                             self.log,
                             False,1,1,'')
@@ -243,29 +243,16 @@ class kerdensom_class:
           fh.close()
 
 # Preconditions
-def preconditions(gui):
-    retval=True
+def checkErrors(gui):
+    errors = []
     # Check if there is workingdir
     if WorkingDir == "":
-        message="No working directory given"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("No working directory given")
     # Check that there are any micrograph to process
     if not os.path.exists(SelFileName):
-        message="The input selfile is not valid"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
+        errors.append("The input selfile is not valid")
     
-    return retval
+    return errors
 
 #
 # main

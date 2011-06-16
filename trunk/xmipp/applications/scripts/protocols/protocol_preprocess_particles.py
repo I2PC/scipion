@@ -257,7 +257,7 @@ class preprocess_particles_class:
 
         # Sort by statistics
         rootName,dummy=os.path.splitext(self.OutSelFile)
-        launch_job.launch_job("xmipp_sort_by_statistics",
+        launchJob("xmipp_sort_by_statistics",
                               "-i "+self.OutSelFile+" --multivariate "+\
                               "-o "+rootName+"_sorted_by_score",
                               self.log,
@@ -282,7 +282,7 @@ class preprocess_particles_class:
         log.cat(self.log, commandFile)
         if self.DoParallel:
             command=' -i ' + commandFile
-            launch_job.launch_job("xmipp_run", command, self.log, True,
+            launchJob("xmipp_run", command, self.log, True,
                   self.NumberOfMpiProcesses, 1, self.SystemFlavour)
         else:
             self.log.info(commandFile)     
@@ -399,29 +399,15 @@ class preprocess_particles_class:
             os.write(self.fh_mpi, command+"\n")
         
 # Preconditions
-def preconditions(gui):
+def checkErrors():
     import os
-    retval=True
+    errors = []
     # Check if there is workingdir
     if WorkingDir == "":
-        message="No working directory given"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("No working directory given")
     # Check that there is a valid list of micrographs
     if not os.path.exists(PickingDir)>0:
-        message="Cannot find "+PickingDir
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("Cannot find "+PickingDir)
     # Check that all micrographs exist
     import xmipp
     fnPickingParameters=PickingDir+"/protocolParameters.txt"
@@ -431,7 +417,7 @@ def preconditions(gui):
     mD=xmipp.MetaData();
     xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
     preprocessingDir,dummy=os.path.split(MicrographSelfile)
-    message="Cannot find the following micrographs:\n"
+    errors.append("Cannot find the following micrographs:\n")
     NnotFound=0
     for id in mD:
         micrograph=mD.getValue(xmipp.MDL_IMAGE)
@@ -444,14 +430,9 @@ def preconditions(gui):
                 message+=preprocessingDir+"/"+micrographTilted+"\n"
                 NnotFound=NnotFound+1
     if NnotFound>0:
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
+        errors.append(message)
             
-    return retval
+    return errors
 
 #		
 # Main

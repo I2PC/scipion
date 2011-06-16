@@ -151,14 +151,14 @@ class commonline_class:
       print '*********************************************************************'
       print '* Computing the common lines ...'
       params=' -i '+self.SelFileName+' -o '+self.WorkingDir+"/inputImages.hed"
-      launch_job.launch_job("xmipp_convert_image",
+      launchJob("xmipp_convert_image",
                             params,
                             self.log,
                             False,1,1,'')
       currentDir=os.getcwd()
       os.chdir(self.WorkingDir)
       params="inputImages.hed mask="+str(self.Radius)
-      launch_job.launch_job("cenalignint",
+      launchJob("cenalignint",
                             params,
                             self.log,
                             False,1,1,'')
@@ -168,7 +168,7 @@ class commonline_class:
           params+=" proc="+str(self.NumberOfMpiProcesses)
       if self.Symmetry!="c1":
           params+=" sym "+self.Symmetry
-      launch_job.launch_job("startAny",
+      launchJob("startAny",
                             params,
                             self.log,
                             False,1,1,'')
@@ -180,41 +180,21 @@ class commonline_class:
           fh.close()
 
 # Preconditions
-def preconditions(gui):
-    retval=True
+def checkErrors():
+    errors = []
     # Check if there is workingdir
     if WorkingDir == "":
-        message="No working directory given"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("No working directory given")
     # Check that there are any micrograph to process
     if not os.path.exists(SelFileName):
-        message="The input selfile is not valid"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
-    return retval
-
+        errors.append("The input selfile is not valid")
     # Check that Eman is accessible
     import which
     startAny=which.which('startAny')
     if startAny=='':
-        message="EMAN is not accesible"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
+        errors.append("EMAN is not accesible")
+        
+    return errors
 
 #
 # main

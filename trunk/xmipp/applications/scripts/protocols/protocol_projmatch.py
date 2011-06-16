@@ -810,7 +810,7 @@ class projection_matching_class:
 #          params=' -i ' + self._SelFileName + \ 
 #                 ' -o ' + self._WorkingDir + '/' + \
 #                 DocFileWithOriginalAngles
-#          launch_job.launch_job("xmipp_header_extract",
+#          launchJob("xmipp_header_extract",
 #                                params,
 #                                self._mylog,
 #                                False,1,1,'')
@@ -1157,7 +1157,7 @@ def execute_ctf_groups (_mylog,
          _mylog.info(message)
          sys.exit()
 
-   launch_job.launch_job("xmipp_ctf_group",
+   launchJob("xmipp_ctf_group",
                          command,
                          _mylog,
                          False,1,1,'')
@@ -1197,7 +1197,7 @@ def execute_mask(_DoMask,
           command=' -i '    + InPutVolume + \
                   ' -o '    + _ReferenceVolume + \
                   ' --mask ' + _MaskFileName
-       launch_job.launch_job("xmipp_mask",
+       launchJob("xmipp_mask",
                              command,
                              _mylog,
                              False,1,1,'')
@@ -1318,7 +1318,7 @@ def execute_projection_matching(_mylog,
       parameters+= \
               ' --only_winner '
 
-   launch_job.launch_job('xmipp_angular_project_library',
+   launchJob('xmipp_angular_project_library',
                          parameters,
                          _mylog,
                          _DoParallel,
@@ -1375,7 +1375,7 @@ def execute_projection_matching(_mylog,
       if (_DoParallel):
          parameters = parameters + ' --mpi_job_size ' + str(_MyMpiJobSize)
 
-      launch_job.launch_job('xmipp_angular_projection_matching',
+      launchJob('xmipp_angular_projection_matching',
                             parameters,
                             _mylog,
                             _DoParallel,
@@ -1410,7 +1410,7 @@ def execute_projection_matching(_mylog,
          parameters += \
                     ' --split '
 
-      launch_job.launch_job('xmipp_angular_class_average',
+      launchJob('xmipp_angular_class_average',
                             parameters,
                             _mylog,
                             _DoParallel,
@@ -1502,7 +1502,7 @@ def make_subset_docfiles(_mylog,
       command=' --join ' + _InputDocFileName + ' ' + inselfile + ' --label image'
       command= command + ' -o ' + inputdocfile
       print '*********************************************************************'
-      launch_job.launch_job("xmipp_metadata_utilities",
+      launchJob("xmipp_metadata_utilities",
                             command,
                             _mylog,
                             False,1,1,'')
@@ -1597,7 +1597,7 @@ def execute_reconstruction(_mylog,
       print "Reconstruction method unknown. Quiting"
       exit(1)
     
-   launch_job.launch_job(program,
+   launchJob(program,
                          parameters,
                          _mylog,
                          _DoParallel,
@@ -1700,7 +1700,7 @@ def  execute_resolution(_mylog,
 
        import launch_job
        if(PerformReconstruction):
-           launch_job.launch_job(program,
+           launchJob(program,
                              parameters,
                              _mylog,
                              _DoParallel,
@@ -1717,7 +1717,7 @@ def  execute_resolution(_mylog,
        command = " -i " + Outputvolumes[i] + \
                  " --mask  raised_cosine -" + str(innerrad) + \
                  " -" + str(_OuterRadius)
-       launch_job.launch_job("xmipp_mask",
+       launchJob("xmipp_mask",
                              command,
                              _mylog,
                              False,1,1,_MySystemFlavour)
@@ -1734,7 +1734,7 @@ def  execute_resolution(_mylog,
     aux4 = 2.5 * 0.5 / ncolumns
     command += " --max_sam " + str (_ResolSam/(aux4+_FourierMaxFrequencyOfInterest))
     
-    launch_job.launch_job("xmipp_resolution_fsc",
+    launchJob("xmipp_resolution_fsc",
                           command,
                           _mylog,
                           False,1,1,_MySystemFlavour)
@@ -1819,7 +1819,7 @@ def filter_at_given_resolution(_DoLowPassFilter,
            command = " -i " + Inputvolume +\
                      " -o " + Outputvolume + ' --low_pass ' +\
                      str (filter_in_pixels_at)
-           launch_job.launch_job("xmipp_fourier_filter",
+           launchJob("xmipp_fourier_filter",
                                  command,
                                  _mylog,
                                  False,1,1,_MySystemFlavour)
@@ -1838,19 +1838,19 @@ def execute_center_volume(_mylog,
     
     # Symmetrize input volume
     command = "-i "+_volume+".vol -o tmp.vol --sym i3"
-    launch_job.launch_job("xmipp_symmetrize",
+    launchJob("xmipp_symmetrize",
                          command,
                          _mylog,
                          False,1,1,_MySystemFlavour)
     
     # Align input volume
     command = "--i1 tmp.vol --i2 "+_volume+".vol --local --onlyShift --apply"
-    launch_job.launch_job("xmipp_align_volumes",
+    launchJob("xmipp_align_volumes",
                          command,
                          _mylog,
                          False,1,1,_MySystemFlavour)
 
-    launch_job.launch_job("rm",
+    launchJob("rm",
                          "tmp.vol",
                          _mylog,
                          False,1,1,_MySystemFlavour)

@@ -532,14 +532,14 @@ class MultiResClass:
           if not self.symmetryGroup=="c1":
              params+=" -sym "+self.symmetryGroup
 
-          launch_job.launch_job("xmipp_angular_project_library",
+          launchJob("xmipp_angular_project_library",
                                 params0,
                                 self.mylog,
                                 self.doParallel,
                                 self.NumberOfMpiProcesses*self.NumberOfThreads,
                                 1,
                                 self.SystemFlavour)
-	  launch_job.launch_job("xmipp_angular_discrete_assign",
+	  launchJob("xmipp_angular_discrete_assign",
                                 params,
                                 self.mylog,
                                 self.doParallel,
@@ -559,7 +559,7 @@ class MultiResClass:
 		 "-ang "+self.getDiscreteAnglesFilename(_iteration)+" "+\
 		 "-oang "+self.getContinuousAnglesFilename(_iteration)+" "+\
 		 "-max_shift "+str(self.particleWorkingRadius/5)
-	  launch_job.launch_job("xmipp_angular_continuous_assign",
+	  launchJob("xmipp_angular_continuous_assign",
                                 params,
                                 self.mylog,
                                 self.doParallel,
@@ -836,7 +836,7 @@ class MultiResClass:
         	 self.getModelFFilename(_iteration)+\
 		 " -ctfdat preproc_assign_ctfdat.txt"+\
 		 " -oroot preproc_assign_IDR/preproc_assign_IDR_";
-	  launch_job.launch_job("xmipp_ctf_correct_idr",
+	  launchJob("xmipp_ctf_correct_idr",
                                 params,
                                 self.mylog,
                                 self.doParallel,
@@ -1184,7 +1184,7 @@ class MultiResClass:
 	  doParallel=self.doParallel
 	  if self.getSerialART(_iteration)=="1":
 	     doParallel=False
-	  launch_job.launch_job("xmipp_reconstruct_art",
+	  launchJob("xmipp_reconstruct_art",
                                 params,
                                 self.mylog,
                                 doParallel,
@@ -1202,7 +1202,7 @@ class MultiResClass:
 	     params+=" -radius "+str(0.5*math.floor(math.sqrt(2.0)*
 	        self.workXDim/
 	        math.pow(2.0,int(self.getPyramidLevel(_iteration)))))
-	  launch_job.launch_job("xmipp_reconstruct_wbp",
+	  launchJob("xmipp_reconstruct_wbp",
                                 params,
                                 self.mylog,
                                 self.doParallel,
@@ -1219,7 +1219,7 @@ class MultiResClass:
 # COSS         if self.getComputeFSC(_iteration):
 # COSS           params+=" -prepare_fsc "+self.getReconstructionRootname(_iteration)+\
 # COSS              ".fsc "
-	  launch_job.launch_job("xmipp_reconstruct_fourier",
+	  launchJob("xmipp_reconstruct_fourier",
                                 params,
                                 self.mylog,
                                 self.doParallel,

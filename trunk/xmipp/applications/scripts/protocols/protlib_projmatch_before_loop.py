@@ -99,7 +99,7 @@ def executeCtfGroups (_log,
             _log.info(message)
             sys.exit()
 
-    (_command, retcode) = launch_job.launch_job("xmipp_ctf_group",
+    (_command, retcode) = launchJob("xmipp_ctf_group",
                           command,
                           _log,
                           False, 1, 1, '')

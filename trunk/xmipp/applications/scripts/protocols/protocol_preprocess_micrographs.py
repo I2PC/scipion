@@ -380,7 +380,7 @@ class preprocess_A_class:
             self.log.info(command)     
             os.system(command)     
         
-        message=" Done pre-processing of micrographs"
+        errors.append(" Done pre-processing of micrographs")
         print '* ', message
         print '*********************************************************************'
         self.log.info(message)
@@ -390,7 +390,7 @@ class preprocess_A_class:
         log.cat(self.log, commandFile)
         if self._DoParallel:
             command=' -i ' + commandFile
-            launch_job.launch_job("xmipp_run", command, self.log, True,
+            launchJob("xmipp_run", command, self.log, True,
                   self._MyNumberOfMpiProcesses, 1, self._MySystemFlavour)
         else:
             self.log.info(commandFile)     
@@ -588,47 +588,29 @@ class preprocess_A_class:
         return
 
 # Preconditions
-def preconditions(gui):
-    retval=True
+def checkErrors(gui):
+    errors = []
     # Check if there is workingdir
     if WorkingDir == "":
-        message="No working directory given"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("No working directory given")
     # Check that there are any micrograph to process
     listOfMicrographs=glob.glob(DirMicrographs + '/' + ExtMicrographs)
     if len(listOfMicrographs) == 0:
-        message="There are no micrographs to process in " + DirMicrographs + '/' + ExtMicrographs
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("There are no micrographs to process in ") + DirMicrographs + '/' + ExtMicrographs
     # Check that Q0 is negative
     if AmplitudeContrast>0:
-        message="Q0 should be negative "
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
+        errors.append("Q0 should be negative ")
 
-    return retval
+    return errors
 
 #        
 # Main
 #     
 if __name__ == '__main__':
     # create preprocess_A_class object
-    if not preconditions(False):
+    errors = checkErrors()
+    if len(errors) > 0:
+        print "ERRORS: ", '\n'.join(errors)
         sys.exit(1)
     preprocessA=preprocess_A_class(
                  WorkingDir,

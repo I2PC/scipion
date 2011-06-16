@@ -341,7 +341,7 @@ class MLtomo_class:
                 params+=' -thr ' + str(self.NumberOfThreads)
 
                 
-        launch_job.launch_job("xmipp_ml_tomo",
+        launchJob("xmipp_ml_tomo",
                               params,
                               self.log,
                               self.DoParallel,

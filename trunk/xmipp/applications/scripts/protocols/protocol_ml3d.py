@@ -361,7 +361,7 @@ class ML3D_class:
         print '* Create initial docfile'
         params= ' -i ' + str(self.InSelFile) + \
                 ' -o ' + dirname + docfile
-        launch_job.launch_job("xmipp_header_extract",
+        launchJob("xmipp_header_extract",
                               params,
                               self.log,
                               False,1,1,'')
@@ -375,7 +375,7 @@ class ML3D_class:
                     ' -sym '                 + self.Symmetry + 'h' + \
                     ' -compute_neighbors -angular_distance -1'
 
-        launch_job.launch_job("xmipp_angular_project_library",
+        launchJob("xmipp_angular_project_library",
                               parameters,
                               self.log,
                               self.DoParallel,
@@ -390,7 +390,7 @@ class ML3D_class:
                     ' -o '              + dirname + basename + \
                     ' -ref '            + dirname + refname
 
-        launch_job.launch_job('xmipp_angular_projection_matching',
+        launchJob('xmipp_angular_projection_matching',
                               parameters,
                               self.log,
                               self.DoParallel,
@@ -404,7 +404,7 @@ class ML3D_class:
                       ' -lib '    + dirname + refname  + '_angles.doc' + \
                       ' -o '      + dirname + basename 
 
-        launch_job.launch_job('xmipp_angular_class_average',
+        launchJob('xmipp_angular_class_average',
                               parameters,
                               self.log,
                               self.DoParallel,
@@ -424,7 +424,7 @@ class ML3D_class:
         if (self.NumberOfThreads>1):
             parameters += ' -thr ' + str(self.NumberOfThreads)
            
-        launch_job.launch_job("xmipp_reconstruct_fourier",
+        launchJob("xmipp_reconstruct_fourier",
                               parameters,
                               self.log,
                               self.DoParallel,
@@ -450,7 +450,7 @@ class ML3D_class:
                ' -i ' + reference  + \
                ' -sampling ' + str(self.PixelSize) + \
                ' -low_pass ' + str(self.LowPassFilter)
-        launch_job.launch_job("xmipp_fourier_filter",
+        launchJob("xmipp_fourier_filter",
                               params,
                               self.log,
                               False,1,1,'')
@@ -468,7 +468,7 @@ class ML3D_class:
         params=' -o seeds_split'+ \
                ' -i ' + str(self.InSelFile) + \
                ' -n ' + str(self.NumberOfReferences) +' \n'
-        launch_job.launch_job("xmipp_selfile_split",
+        launchJob("xmipp_selfile_split",
                               params,
                               self.log,
                               False,1,1,'')
@@ -571,7 +571,7 @@ class ML3D_class:
         else:
             program="xmipp_ml_refine3d"
            
-        launch_job.launch_job(program,
+        launchJob(program,
                               params,
                               self.log,
                               self.DoParallel,
@@ -595,7 +595,7 @@ class ML3D_class:
         else:
             program="xmipp_ml_refine3d"
 
-        launch_job.launch_job(program,
+        launchJob(program,
                               params,
                               self.log,
                               self.DoParallel,

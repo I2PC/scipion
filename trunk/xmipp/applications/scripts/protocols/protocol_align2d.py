@@ -209,7 +209,7 @@ class Align2D_class:
                     params+=" --high_pass "+str(self.Highpass)
                 elif self.Lowpass>0:
                     params+=" --low_pass "+str(self.Lowpass)
-                launch_job.launch_job("xmipp_fourier_filter",
+                launchJob("xmipp_fourier_filter",
                                       params,
                                       self.log,
                                       False,
@@ -248,7 +248,7 @@ class Align2D_class:
         else:
             params+=' -codes0 1'
 
-        launch_job.launch_job("xmipp_classify_CL2D",
+        launchJob("xmipp_classify_CL2D",
                               params,
                               self.log,
                               True,
@@ -345,39 +345,19 @@ class Align2D_class:
         fh.close()
 
 # Preconditions
-def preconditions(gui):
-    retval=True
+def checkErrors():
+    errors = []
     # Check if there is workingdir
     if WorkingDir == "":
-        message="No working directory given"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("No working directory given")
     # Check that there are any micrograph to process
     if not os.path.exists(InSelFile):
-        message="The input selfile is not valid"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("The input selfile is not valid")
     # Check filter parameters
     if DoFilter and (Highpass<0 or Highpass>0.5 or Lowpass<0 or Lowpass>0.5):
-        message="The filter frequencies must be between 0 and 0.5"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
+        errors.append("The filter frequencies must be between 0 and 0.5")
 
-    return retval
+    return errors
 
 #		
 # Main

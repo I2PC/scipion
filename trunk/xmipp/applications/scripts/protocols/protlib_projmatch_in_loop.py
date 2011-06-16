@@ -26,7 +26,7 @@ def executeMask(_log,
         else:
             command += ' --mask ' + userSuppliedMask
 
-        launch_job.launch_job("xmipp_transform_mask",
+        launchJob("xmipp_transform_mask",
                               command,
                               _log,
                               False, 1, 1, '')
@@ -100,7 +100,7 @@ def angular_project_library(_log
         parameters+= \
               ' --only_winner '
 
-    launch_job.launch_job('xmipp_angular_project_library',
+    launchJob('xmipp_angular_project_library',
                          parameters,
                          _log,
                          _DoParallel,
@@ -200,7 +200,7 @@ def projection_matching(_log
         if (DoParallel):
             parameters = parameters + ' --mpi_job_size ' + str(MpiJobSize)
         
-        launch_job.launch_job('xmipp_angular_projection_matching',
+        launchJob('xmipp_angular_projection_matching',
                             parameters,
                             _log,
                             DoParallel,
@@ -359,7 +359,7 @@ def angular_class_average(_log
         parameters += \
                   ' --split '
     
-    launch_job.launch_job('xmipp_angular_class_average',
+    launchJob('xmipp_angular_class_average',
                           parameters,
                           _log,
                           DoParallel,

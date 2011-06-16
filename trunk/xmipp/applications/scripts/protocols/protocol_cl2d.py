@@ -322,7 +322,7 @@ class CL2D_class:
                 elif self.Lowpass>0:
                     params+=" low_pass "+str(self.Lowpass)
                 params+=' raised_cosine '+str(slope)
-                launch_job.launch_job("xmipp_transform_filter",
+                launchJob("xmipp_transform_filter",
                                       params,
                                       self.log,
                                       False,
@@ -358,7 +358,7 @@ class CL2D_class:
         if (self.ClusteringMethod=='classical'):
             params+= ' -classicalMultiref '
 
-        launch_job.launch_job("xmipp_classify_CL2D",
+        launchJob("xmipp_classify_CL2D",
                               params,
                               self.log,
                               True,
@@ -399,7 +399,7 @@ class CL2D_class:
                 str(self.NumberOfMpiProcesses)+' '+\
                 self.SystemFlavour
 
-        launch_job.launch_job("xmipp_classify_CL2D_core_analysis",
+        launchJob("xmipp_classify_CL2D_core_analysis",
                               params,
                               self.log,
                               False,
@@ -432,70 +432,28 @@ class CL2D_class:
         fh.close()
 
 # Preconditions
-def preconditions(gui):
-    retval=True
+def checkErrors():
+    errors = []
     # Check if there is workingdir
     if WorkingDir == "":
-        message="No working directory given"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("No working directory given")
     # Check that there are any micrograph to process
     if not os.path.exists(InSelFile):
-        message="The input selfile is not valid"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("The input selfile is not valid")
     # Check that the number of classes is correct
     if NumberOfReferences0<=0:
-        message="The number of initial classes must be positive"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-        
+        errors.append("The number of initial classes must be positive")
     # Check that the number of classes is correct
     if NumberOfReferences0>NumberOfReferences:
-        message="The number of initial classes cannot be larger than the number of final classes"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("The number of initial classes cannot be larger than the number of final classes")
     # Check filter parameters
     if DoFilter and (Highpass<0 or Highpass>0.5 or Lowpass<0 or Lowpass>0.5):
-        message="The filter frequencies must be between 0 and 0.5"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-
+        errors.append("The filter frequencies must be between 0 and 0.5")
     # Check core parameters
     if thGoodClass<0 or thGoodClass>100:
-        message="The good class threshold must be between 0 and 100"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-
-    return retval
-
+        errors.append("The good class threshold must be between 0 and 100")
+    
+    return errors
 #		
 # Main
 #     

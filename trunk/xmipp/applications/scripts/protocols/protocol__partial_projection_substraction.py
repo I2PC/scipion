@@ -370,7 +370,7 @@ class ProtPartialProjectionSubtractionClass(XmippProtocol):
         params += ' -o ' + szMask_InputVolumeName
         params += ' --mask raised_crown -%d -%d 2' %(self.dRradiusMin, self.dRradiusMax)
         print "xmipp_transform_mask",params
-        launch_job.launch_job("xmipp_transform_mask",
+        launchJob("xmipp_transform_mask",
                              params,
                              self.mylog,
                              False,1,1,'')
@@ -398,7 +398,7 @@ class ProtPartialProjectionSubtractionClass(XmippProtocol):
         if (DoParallel):
             parameters += ' --mpi_job_size 1 '
 
-        launch_job.launch_job('xmipp_angular_project_library',
+        launchJob('xmipp_angular_project_library',
                              parameters,
                              self.mylog,
                              self.DoParallel,
@@ -423,7 +423,7 @@ class ProtPartialProjectionSubtractionClass(XmippProtocol):
         if (DoParallel):
             parameters += ' --mpi_job_size 10 '
 
-        launch_job.launch_job('xmipp_reconstruct_fourier',
+        launchJob('xmipp_reconstruct_fourier',
                              parameters,
                              self.mylog,
                              self.DoParallel,
@@ -508,7 +508,7 @@ class ProtPartialProjectionSubtractionClass(XmippProtocol):
              params =  ' -i ' + selFileName 
              params += ' --extract '
              params += ' -o saveOriginalAngles.doc '
-             launch_job.launch_job("xmipp_image_header",
+             launchJob("xmipp_image_header",
                                   params,
                                   self.mylog,
                                   False,1,1,'')
@@ -516,7 +516,7 @@ class ProtPartialProjectionSubtractionClass(XmippProtocol):
         params =  ' -i ' +  _szDocFile
         params += ' --assign '
         params += ' --mirror '
-        launch_job.launch_job("xmipp_image_header",
+        launchJob("xmipp_image_header",
                                   params,
                                   self.mylog,
                                   False,1,1,'')
@@ -559,7 +559,7 @@ class ProtPartialProjectionSubtractionClass(XmippProtocol):
         ### ! Todavia no lanzamos el script
         #if(DoParallel):
         #     command =' -i '+ xmpi_run_file
-        #     launch_job.launch_job("xmipp_run",
+        #     launchJob("xmipp_run",
         #                            command,
         #                            self.mylog,
         #                            True,
@@ -642,7 +642,7 @@ class ProtPartialProjectionSubtractionClass(XmippProtocol):
 
         #if(DoParallel):
         #     command =' -i '+ xmpi_run_file 
-        #     launch_job.launch_job("xmipp_run",
+        #     launchJob("xmipp_run",
         #                            command,
         #                            _mylog,
         #                            True,

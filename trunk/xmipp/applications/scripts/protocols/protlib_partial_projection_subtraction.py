@@ -23,7 +23,7 @@ def reconstructVolume(_log, dict):
             parameters += ' --mpi_job_size ' + MpiJobSize
             parameters += ' --thr ' + str(NumberOfThreads)
 
-    launch_job.launch_job('xmipp_reconstruct_fourier',
+    launchJob('xmipp_reconstruct_fourier',
                              parameters,
                              _log,
                              doParallel,
@@ -37,7 +37,7 @@ def maskVolume(_log, dict):
     parameters += ' -o ' +  maskReconstructedVolume 
     
     parameters += ' --mask raised_crown -%d -%d 2' %(dRradiusMin, dRradiusMax)
-    launch_job.launch_job("xmipp_transform_mask",
+    launchJob("xmipp_transform_mask",
                              parameters,
                              _log,
                              False,1,1,'')
@@ -59,7 +59,7 @@ def createProjections(_log, dict):
     if (doParallel):
             parameters += ' --mpi_job_size ' + MpiJobSize
 
-    launch_job.launch_job('xmipp_angular_project_library',
+    launchJob('xmipp_angular_project_library',
                              parameters,
                              _log,
                              doParallel,

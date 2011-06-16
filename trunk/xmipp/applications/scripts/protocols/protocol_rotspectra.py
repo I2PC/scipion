@@ -250,7 +250,7 @@ class rotational_spectra_class:
               ' --r2 '   + str(self.SpectraOuterRadius) + \
               ' --low ' + str(self.SpectraLowHarmonic) + \
               ' --high ' + str(self.SpectraHighHarmonic)
-      launch_job.launch_job("xmipp_make_spectra",
+      launchJob("xmipp_make_spectra",
                             command,
                             self.mylog,
                             False,1,1,'')
@@ -277,7 +277,7 @@ class rotational_spectra_class:
               ' --reg1 ' + str(self.SomReg1) + \
               ' --steps ' + str(self.SomSteps) + \
               ' '  + str(self.KerdensomExtraCommand)
-      launch_job.launch_job("xmipp_classify_kerdensom",
+      launchJob("xmipp_classify_kerdensom",
                             command,
                             self.mylog,
                             False,1,1,'')
@@ -288,29 +288,16 @@ class rotational_spectra_class:
           fh.close()
 
 # Preconditions
-def preconditions(gui):
-    retval=True
+def checkErrors():
+    errors = []
     # Check if there is workingdir
     if WorkingDir == "":
-        message="No working directory given"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("No working directory given")
     # Check that there are any micrograph to process
     if not os.path.exists(SelFileName):
-        message="The input selfile is not valid"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
+        errors.append("The input selfile is not valid")
     
-    return retval
+    return errors
 
 #
 # main

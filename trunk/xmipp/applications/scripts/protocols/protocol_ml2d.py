@@ -252,7 +252,7 @@ class ProtML2D:
                 if (self.HighResLimit > 0):
                     params += ' --high %f' + HighResLimit
            
-        launch_job.launch_job(program, params, self.log, DoParallel, NumberOfMpiProcesses, NumberOfThreads, SystemFlavour)
+        launchJob(program, params, self.log, DoParallel, NumberOfMpiProcesses, NumberOfThreads, SystemFlavour)
 
     def close(self):
         message='Done!'

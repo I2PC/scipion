@@ -185,7 +185,7 @@ def printLog(log, msg):
 # Jobs launching
 #---------------------------------------------------------------------------    
 # The job should be launched from the working directory!
-def launch_job(programname,
+def launchJob(programname,
                params,
                log,
                DoParallel,

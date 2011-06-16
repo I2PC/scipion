@@ -436,7 +436,7 @@ class particle_pick_class:
         import launch_job
         command=""
         if self.DoParallel:
-            command=launch_job.launch_job("xmipp_run",
+            command=launchJob("xmipp_run",
                                  "-i "+self.WorkingDir+"/pick.sh",
                                  self.log,
                                  True,
@@ -446,7 +446,7 @@ class particle_pick_class:
                                  answer=="yes" or answer==True)
         else:
             os.system("chmod 755 "+self.WorkingDir+"/pick.sh");
-            command=launch_job.launch_job(self.WorkingDir+"/pick.sh",
+            command=launchJob(self.WorkingDir+"/pick.sh",
                                  "",
                                  self.log,
                                  False,
@@ -568,35 +568,21 @@ class particle_pick_class:
         sys.exit(0)
         
 # Preconditions
-def preconditions(gui):
-    retval=True
+def checkErrors():
+    errors = []
     # Check if there is workingdir
     if WorkingDir == "":
-        message="No working directory given"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("No working directory given")
     # Check that there is a valid list of micrographs
     if not os.path.exists(MicrographSelfile)>0:
-        message="Cannot find "+MicrographSelfile
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-    
+        errors.append("Cannot find ")+MicrographSelfile
     # Check that all micrographs exist
     import xmipp
     mD = xmipp.MetaData()
     xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
     isPairList = mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1) and \
                  not xmipp.FileName(MicrographSelfile).isStar1()
-    message="Cannot find the following micrographs:\n"
+    errors.append("Cannot find the following micrographs:\n")
     NnotFound=0
     for id in mD:
          micrograph = mD.getValue(xmipp.MDL_IMAGE)
@@ -610,24 +596,13 @@ def preconditions(gui):
                  NnotFound=NnotFound+1
     
     if not NnotFound>0:
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
+        errors.append(message)
             
     # Check that automatic particle picking is not for tilted
     if isPairList and AutomaticPicking:
-        message="Automatic particle picking cannot be done on tilt pairs"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
+        errors.append("Automatic particle picking cannot be done on tilt pairs")
         
-    return retval
+    return errors
 
 #		
 # Main

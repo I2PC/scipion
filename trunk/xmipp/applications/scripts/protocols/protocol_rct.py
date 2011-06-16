@@ -285,7 +285,7 @@ class RCT_class:
             # Assign angles to the untilted images
             local_unt_docfile = local_unt_selfile.replace('.sel','.doc')
             command=' -i '+self.lastdocfile+' -sel '+local_unt_selfile+' -o '+local_unt_docfile
-            launch_job.launch_job("xmipp_docfile_select_subset",
+            launchJob("xmipp_docfile_select_subset",
                                   command,
                                   self.log,
                                   False,1,1,'')
@@ -324,12 +324,12 @@ class RCT_class:
             local_unt_selfile=self.untiltclasslist[ref][0]
             local_unt_docfile = local_unt_selfile.replace('.sel','.doc')
             command=' -i '+local_unt_docfile+' -o '+local_unt_selfile+' -force -columns 0 0 3 4 5'
-            launch_job.launch_job("xmipp_header_assign",
+            launchJob("xmipp_header_assign",
                                   command,
                                   self.log,
                                   False,1,1,'')
             command=' -i '+local_unt_selfile+' -o '+local_unt_docfile
-            launch_job.launch_job("xmipp_header_extract",
+            launchJob("xmipp_header_extract",
                                   command,
                                   self.log,
                                   False,1,1,'')
@@ -351,7 +351,7 @@ class RCT_class:
                       ' -doc '+docfile + \
                       ' -max_shift ' + str(self.CenterMaxShift)
             command += self.AlignTiltPairsAdditionalParams
-            launch_job.launch_job("xmipp_align_tilt_pairs",
+            launchJob("xmipp_align_tilt_pairs",
                                   command,
                                   self.log,
                                   False,1,1,'')
@@ -379,7 +379,7 @@ class RCT_class:
             if not self.ReconstructAdditionalParams=="":
                 command += ' ' + self.ReconstructAdditionalParams
 
-            launch_job.launch_job(program,
+            launchJob(program,
                                   command,
                                   self.log,
                                   False,1,1,'')
@@ -396,7 +396,7 @@ class RCT_class:
                  ' -i ' + volname  + \
                  ' -sampling ' + str(self.PixelSize) + \
                  ' -low_pass ' + str(self.LowPassFilter)
-                launch_job.launch_job("xmipp_fourier_filter",
+                launchJob("xmipp_fourier_filter",
                                       command,
                                       self.log,
                                       False,1,1,'')
