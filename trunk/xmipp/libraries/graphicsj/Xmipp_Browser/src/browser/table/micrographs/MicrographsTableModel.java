@@ -41,7 +41,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         MDLabel.MDL_CTF_CRITERION_PSDRADIALINTEGRAL,
         MDLabel.MDL_CTF_CRITERION_PSDVARIANCE,
         MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST,
-        MDLabel.MDL_CTF_CRITERION_COMBINED
+        MDLabel.MDL_CTF_CRITERION_NORMALITY
     };
     private static final String COLUMNS_NAMES[] = new String[]{
         "ID",
@@ -61,7 +61,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         "PSD Radial Integral",
         "PSD Variance",
         "PSD PCA Runs Test",
-        "Criterion Combined"};
+        "Micrograph Normality"};
     private static final int EXTRA_COLUMNS_LABELS[] = {
         MDLabel.MDL_CTF_DEFOCUSU,
         MDLabel.MDL_CTF_DEFOCUSV};
@@ -174,7 +174,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
                             case MDLabel.MDL_CTF_CRITERION_PSDRADIALINTEGRAL:
                             case MDLabel.MDL_CTF_CRITERION_PSDVARIANCE:
                             case MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST:
-                            case MDLabel.MDL_CTF_CRITERION_COMBINED:
+                            case MDLabel.MDL_CTF_CRITERION_NORMALITY:
                                 row[col] = md.getValueDouble(label, id);
                                 break;
                             default:
