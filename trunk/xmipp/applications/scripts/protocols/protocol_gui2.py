@@ -108,14 +108,18 @@ class ProtocolWidget():
         self.widgetlist = []
         self.variable = var
     
-def createWidget(self, var):
-    w = ProtocolWidget(self.frame, var)
-    self.widgetlist.append(w)
+def createWidget(master, var):
+    w = ProtocolWidget(master.frame, var)
+    master.widgetlist.append(w)
     
     for k, v in var.tags.iteritems():
         print "tag %s -> %s" % (k, v)
         if k == 'section':
-            self.is_section = True
+            row = master.getRow()
+            line = var.comments + "\n-----------------------------------------------------------"
+            label = Label(master.frame, text=label, fg=TextSectionColour, bg=LabelBackgroundColour)
+            label.grid(row, column=0, columnspan=master.columnspantextlabel, sticky=E)
+            w.widgetlist.append(label)
         elif k == 'file':
             self.is_file = True
         elif k == 'dir':
