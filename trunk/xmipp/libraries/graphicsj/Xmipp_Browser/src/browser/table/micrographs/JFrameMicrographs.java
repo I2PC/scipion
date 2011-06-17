@@ -131,7 +131,6 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         setRowHeader();
 
         updateTableStructure();
-        autoSortTable(MicrographsTableModel.INDEX_COMBINED_COLUMN);
 
         pack();
     }
