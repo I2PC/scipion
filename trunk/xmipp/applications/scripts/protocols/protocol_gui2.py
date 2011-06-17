@@ -56,21 +56,35 @@ Optional:
       variables by a blue line + the corresponding title in the GUI 
 
 """
-FontName = "Helvetica "
-TextSectionColor = "blue4"
-TextCitationColour = "dark olive green"
-BackgroundColour = "white"
-LabelBackgroundColor = BackgroundColour
-HighlightBackgroundColour = BackgroundColour
-ButtonBackgroundColor = "LightBlue"
-ButtonActiveBackgroundColor = "LightSkyBlue"
-EntryBackgroundColour = "lemon chiffon" 
-ExpertLabelBackgroundColor = "light salmon"
-ListSelectColour = "DeepSkyBlue4"
-BooleanSelectColour = "DeepSkyBlue4"
-MaxHeight = 600
-MaxWidth = 800
-WrapLenght = MaxWidth / 2
+
+class ProtocolStyle():
+    ''' Class to define some style settings like font, colors, etc '''
+    def __init__(self):        
+        #Font
+        self.FontName = "Helvetica"
+        self.FontSize = 10
+        #TextColor
+        self.CitationTextColor = "dark olive green"
+        self.LabelTextColor = "black"
+        self.SectionTextColor = "blue4"
+        #Background Color
+        self.BgColor = "white"
+        self.LabelBgColor = self.BgColor
+        self.HighlightBgColor = self.BgColor
+        self.ButtonBgColor = "LightBlue"
+        self.ButtonActiveBgColor = "LightSkyBlue"
+        self.EntryBgColor = "lemon chiffon" 
+        self.ExpertLabelBgColor = "light salmon"
+        #Color
+        self.ListSelectColor = "DeepSkyBlue4"
+        self.BooleanSelectColor = "DeepSkyBlue4"
+        #Dimensions limits
+        self.MaxHeight = 600
+        self.MaxWidth = 800
+        self.MaxFontSize = 14
+        self.MinFontSize = 6
+        self.WrapLenght = self.MaxWidth / 2
+        self.Font = tkFont.Font(family=self.FontName, size=self.FontSize, weight=tkFont.BOLD)
 
 # A scrollbar that hides itself if it's not needed.
 class AutoScrollbar(Scrollbar):
@@ -107,33 +121,13 @@ class ProtocolWidget():
         # Store real tk widgets
         self.widgetlist = []
         self.variable = var
-    
-def createWidget(master, var):
-    w = ProtocolWidget(master.frame, var)
-    master.widgetlist.append(w)
-    
-    for k, v in var.tags.iteritems():
-        print "tag %s -> %s" % (k, v)
-        if k == 'section':
-            row = master.getRow()
-            line = var.comments + "\n-----------------------------------------------------------"
-            label = Label(master.frame, text=label, fg=TextSectionColour, bg=LabelBackgroundColour)
-            label.grid(row, column=0, columnspan=master.columnspantextlabel, sticky=E)
-            w.widgetlist.append(label)
-        elif k == 'file':
-            self.is_file = True
-        elif k == 'dir':
-            self.is_dir = True
-        elif k == 'list':
-            self.is_list = True
-            self.list_choices = v.split('|')
-        elif k == 'condition':
-            self.condition = v
-        elif k == 'please_cite':
-            self.is_cite = True
-        else:
-            pass
-            #Other variables, guess the type from value
+        
+    def display(self, value):
+        for w in self.widgetlist:
+            if value:
+                w.grid()
+            else:
+                w.grid_remove()
         
 class ProtocolGUI():
     def __init__(self, script):
@@ -146,7 +140,135 @@ class ProtocolGUI():
         self.expert_mode = False
         self.scriptname = script
         self.lastrow = 0
+        self.widgetlist = []
+    #-------------------------------------------------------------------
+    # Widgets creation and GUI building
+    #-------------------------------------------------------------------       
+    def createWidget(self, var):
+        w = ProtocolWidget(self.frame, var)
+        self.widgetlist.append(w)
+        label_row = row = self.getRow() # Get row where to place the widget
+        
+        label_text = var.comment
+        label_color = self.style.LabelTextColor
+        label_bgcolor = self.style.LabelBgColor        
+
+        keys = var.tags.keys()
+        if 'expert' in keys:
+           label_bgcolor = self.style.ExpertLabelBgColor
+        if 'section' in keys:
+            label_text += "\n-----------------------------------------------------------"
+            label_color = self.style.SectionTextColor  
+        # Treat variables
+        if var.value:
+        #Escape string literals
+            var_column = self.columntextentry
+            v = StringVar()   
+            
+            if var.value.startswith('"') or var.value.startswith("'"):
+                var.value = var.value.replace('"', '');
+                var.value = var.value.replace("'", '');
+            
+            if var.value == 'True' or var.value == 'False':
+                v.set(var.value)         
+                rb1 = Radiobutton(self.frame, text="Yes", variable=v, value='True', bg=self.style.BgColor, bd=0)
+                rb1.grid(row=row, column=var_column)
+                w.widgetlist.append(rb1)
+                rb2 = Radiobutton(self.frame, text="No", variable=v, value='False', bg=self.style.BgColor, bd=0)
+                rb2.grid(row=row, column=var_column + 1)
+                w.widgetlist.append(rb2)
+            elif 'list' in var.tags.keys():
+                opts = var.tags['list'].split(',')
+                #v.set(var.value)
+                for o in opts:
+                    rb = Radiobutton(self.frame, text=o, variable=v, value=o, bg=self.style.BgColor, bd=0)
+                    rb.grid(row=row, column=var_column, sticky=W)
+                    print 'DEBUG_JM: o=%s, var.value=%s' % (o, var.value)
+                    rb.deselect()
+                    w.widgetlist
+                    if o == var.value:
+                        print "DEBUG_JM: equals"
+                        rb.select()
+                    row = self.getRow()
+            else: #Add a text Entry
+                v.set(var.value)
+                entry = Entry(self.frame, textvariable=v, bg=self.style.EntryBgColor)
+                entry.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W + E)
+                w.widgetlist.append(entry)
+                if 'file' in keys or 'dir' in keys:
+                    btn = self.addButton("Browse", lambda: self.showHelp(var.help), -1, label_row, var_column + 3, NW)
+                    w.widgetlist.append(btn)
+            if var.help:
+                btn = self.addButton("Help", lambda: self.showHelp(var.help), -1, label_row, var_column + 4, NW)
+                w.widgetlist.append(btn)
+                                    
+                    
+        label = Label(self.frame, text=label_text, fg=label_color, bg=label_bgcolor)
+        label.grid(row=label_row, column=0, columnspan=self.columnspantextlabel, sticky=E)
+        w.widgetlist.append(label)
+        
+    def prepareCanvas(self):
+        # Stuff to make the scrollbars work
+        vscrollbar = AutoScrollbar(self.master)
+        vscrollbar.grid(row=0, column=1, sticky=N + S)
+        hscrollbar = AutoScrollbar(self.master, orient=HORIZONTAL)
+        hscrollbar.grid(row=1, column=0, sticky=E + W)
+        self.canvas = Canvas(self.master, background=self.style.BgColor,
+                        yscrollcommand=vscrollbar.set,
+                        xscrollcommand=hscrollbar.set)
+        self.canvas.grid(row=0, column=0, sticky=N + S + E + W)
+        vscrollbar.config(command=self.canvas.yview)
+        hscrollbar.config(command=self.canvas.xview)
+        self.master.grid_rowconfigure(0, weight=1)
+        self.master.grid_columnconfigure(0, weight=1)
+        self.frame = Frame(self.canvas, background=self.style.BgColor)
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.columnconfigure(0, weight=1)
+            
+    def createCanvas(self):
+        # Launch the window
+        self.canvas.create_window(0, 0, anchor=NW, window=self.frame)
+        self.frame.update_idletasks()
+        self.canvas.config(scrollregion=self.canvas.bbox("all")) 
     
+    def addSeparator(self, row):
+        self.l1 = Label(self.frame, text="", bg=self.style.LabelBgColor)
+        self.l1.grid(row=row)
+        self.l2 = Frame(self.frame, height=2, bd=1, bg=self.style.SectionTextColor, relief=RIDGE)
+        self.l2.grid(row=row + 1, column=0, columnspan=self.columnspantextlabel + 3, sticky=EW)
+        self.l3 = Label(self.frame, text="", bg=self.style.LabelBgColor)
+        self.l3.grid(row=row + 2)
+        self.lastrow += 2
+    
+    def fillHeader(self):
+        import os, sys
+        self.morehelp = StringVar()
+        self.whichfile = StringVar()
+        # Script title
+        programname = self.scriptname.replace('.py', '')
+        self.master.title(programname)
+        headertext = 'GUI for Xmipp %s \n Executed in directory: %s' % (programname, os.getcwd())
+        self.l1 = Label(self.frame, text=headertext, fg=self.style.SectionTextColor, bg=self.style.LabelBgColor)
+        self.l1.configure(wraplength=self.style.WrapLenght)
+        self.l1.grid(row=0, column=0, columnspan=6, sticky=E+W)
+        if (self.have_publication):
+            headertext = "If you publish results obtained with this protocol, please cite:"
+            for pub in self.publications:
+                headertext += '\n' + pub.replace('\n', '')
+            self.l2 = Label(self.frame, text=headertext, fg=self.style.CitationTextColor, bg=self.style.LabelBgColor)
+            self.l2.configure(wraplength=self.style.WrapLenght)
+            self.l2.grid(row=self.getRow(), column=0, columnspan=5, sticky=EW)
+        self.addSeparator(self.getRow())
+            
+    def addButton(self, text, cmd, underline, row, col, sticky):
+        f = tkFont.Font(family="Helvetica", size=8, weight=tkFont.BOLD)
+        btn = Button(self.frame, text=text, command=cmd, underline=underline, font=f,
+                     bg=self.style.ButtonBgColor, activebackground=self.style.ButtonActiveBgColor)
+        btn.grid(row=row, column=col, sticky=sticky)
+        return btn
+    #-------------------------------------------------------------------
+    # Reading and parsing script
+    #-------------------------------------------------------------------
     def readProtocolScript(self):
         begin_of_header = False
         end_of_header = False        
@@ -201,8 +323,6 @@ class ProtocolGUI():
                 if match.group(1) != '':
                     tags = reTags.findall(match.group(1))
                     v.setTags(tags)
-                    print 'tags', tags
-                    print 'v.tags', v.tags
                     
                 if not v.isSection():
                     #This is a variable, try to get help string
@@ -219,88 +339,41 @@ class ProtocolGUI():
                         match2 = reVariable.match(line)
                         if match2:
                             v.name, v.value = (match2.group(1), match2.group(2))
-                            #w.setVariable(match2.group(1), match2.group(2))
+                            #print "DEBUG_JM: v.name: '%s', v.value: '%s'" % (v.name, v.value)
                             self.variablesDict[v.name] = v.value
                             index += 1
-                createWidget(self, v)            
+                if v.isSection() or v.name != None:
+                    self.createWidget(v)            
                 
-        
+    def checkVisibility(self, event=""):        
+        for w in self.widgetlist:
+            if w.variable.isExpert():                
+                w.display(self.expert_mode)
             
-    def prepareCanvas(self):
-        # Stuff to make the scrollbars work
-        vscrollbar = AutoScrollbar(self.master)
-        vscrollbar.grid(row=0, column=1, sticky=N + S)
-        hscrollbar = AutoScrollbar(self.master, orient=HORIZONTAL)
-        hscrollbar.grid(row=1, column=0, sticky=E + W)
-        self.canvas = Canvas(self.master, background=BackgroundColour,
-                        yscrollcommand=vscrollbar.set,
-                        xscrollcommand=hscrollbar.set)
-        self.canvas.grid(row=0, column=0, sticky=N + S + E + W)
-        vscrollbar.config(command=self.canvas.yview)
-        hscrollbar.config(command=self.canvas.xview)
-        self.master.grid_rowconfigure(0, weight=1)
-        self.master.grid_columnconfigure(0, weight=1)
-        self.frame = Frame(self.canvas, background=BackgroundColour)
-        self.frame.rowconfigure(0, weight=1)
-        self.frame.columnconfigure(0, weight=1)
-            
-    def createCanvas(self):
-        # Launch the window
-        self.canvas.create_window(0, 0, anchor=NW, window=self.frame)
-        self.frame.update_idletasks()
-        self.canvas.config(scrollregion=self.canvas.bbox("all")) 
-        
+    #-------------------------------------------------------------------
+    # GUI Events handling
+    #-------------------------------------------------------------------           
     def resize(self):
         height = self.frame.winfo_reqheight() + 25
         width = self.frame.winfo_reqwidth() + 25
-        if height > MaxHeight:
-           height = MaxHeight
-        if width > MaxWidth:
-           width = MaxWidth
+        if height > self.style.MaxHeight:
+           height = self.style.MaxHeight
+        if width > self.style.MaxWidth:
+           width = self.style.MaxWidth
         self.master.geometry("%dx%d%+d%+d" % (width, height, 0, 0))
-    
-    def addSeparator(self, row):
-        self.l1 = Label(self.frame, text="", bg=LabelBackgroundColor)
-        self.l1.grid(row=row)
-        self.l2 = Frame(self.frame, height=2, bd=1, bg=TextSectionColor, relief=RIDGE)
-        self.l2.grid(row=row + 1, column=0, columnspan=self.columnspantextlabel + 3, sticky=EW)
-        self.l3 = Label(self.frame, text="", bg=LabelBackgroundColor)
-        self.l3.grid(row=row + 2)
-    
-    def fillHeader(self):
-        import os, sys
-        self.morehelp = StringVar()
-        self.whichfile = StringVar()
-        # Script title
-        programname = self.scriptname.replace('.py', '')
-        self.master.title(programname)
-        headertext = 'GUI for Xmipp %s \n Executed in directory: %s' % (programname, os.getcwd())
-        self.l1 = Label(self.frame, text=headertext, fg=TextSectionColor, bg=LabelBackgroundColor)
-        self.l1.configure(wraplength=WrapLenght)
-        self.l1.grid(row=0, column=0, columnspan=6, sticky=E+W)
-        if (self.have_publication):
-            headertext = "If you publish results obtained with this protocol, please cite:"
-            for pub in self.publications:
-                headertext += '\n' + pub.replace('\n', '')
-            self.l2 = Label(self.frame, text=headertext, fg=TextCitationColour, bg=LabelBackgroundColor)
-            self.l2.configure(wraplength=WrapLenght)
-            self.l2.grid(row=self.getRow(), column=0, columnspan=5, sticky=EW)
-        self.addSeparator(self.getRow())
-            
-    def fillWidgets(self):
-        for w in self.widgetsList:
-            w.addWidgets()
-    
-    def addButton(self, text, cmd, underline, row, col, sticky):
-        btn = Button(self.frame, text=text, command=cmd, underline=underline,
-                     bg=ButtonBackgroundColor, activebackground=ButtonActiveBackgroundColor)
-        btn.grid(row=row, column=col, sticky=sticky)
         
     def close(self, event=""):
         self.master.destroy()
     
     def toggleExpertMode(self, event=""):
-        pass
+        self.expert_mode = not self.expert_mode
+        
+        if self.expert_mode:
+            text = "Hide Expert Options"
+        else:
+            text = "Show Expert Options"
+        self.btnExpert.config(text=text)
+        self.checkVisibility()
     
     def save(self, event=""):
         pass
@@ -308,21 +381,31 @@ class ProtocolGUI():
     def saveExecute(self):
         pass
     
+    def showHelp(self, helpmsg):
+        import tkMessageBox
+        tkMessageBox.showinfo("Help", helpmsg)
+    
     def getRow(self):
         row = self.lastrow
         self.lastrow += 1
         return row
+    
+    def changeFont(self, event=""):
+        deltha = 2
+        if event.char == '-':
+            deltha = -2
+        size = self.style.Font['size']
+        new_size = size + deltha
+        if new_size >= self.style.MinFontSize and new_size <= self.style.MaxFontSize:
+            self.style.Font.configure(size = new_size)
+        self.resize()
     
     def fillButtons(self):
         row = self.getRow()
         self.addSeparator(row)
         row += 3
         self.addButton("Close", self.close, 0, row, 0, W)
-        if self.expert_mode:
-            text2 = "Hide Expert Options"
-        else:
-            text2 = "Show Expert Options"
-        self.addButton(text2, self.toggleExpertMode, 12, row, 1, EW)
+        self.btnExpert = self.addButton("Show Expert Options", self.toggleExpertMode, 12, row, 1, EW)
         self.addButton("Save", self.save, 0, row, 3, W)
         self.addButton("Save & Execute", self.saveExecute, 7, row, 4, W)
         
@@ -332,31 +415,50 @@ class ProtocolGUI():
         self.master.bind('<Alt_L><s>', self.save)
         self.master.bind('<Alt_L><e>', self.saveExecute)
         self.master.bind('<Alt_L><r>', self.saveExecute)
+        self.master.bind('<Alt_L><plus>', self.changeFont)
+        self.master.bind('<Alt_L><minus>', self.changeFont)
         
-    def launchGUI(self):
-        
+    def launchGUI(self):        
         self.master = Tk()
-        self.fontsize = 9
+        self.style = ProtocolStyle()
+        #self.master.configure(font = self.style.Font)
+        self.master.option_add("*Font", self.style.Font)
         self.columnspantextlabel = 3
         self.columntextentry = 3
         
+        self.readProtocolScript()
         self.prepareCanvas() 
         self.fillHeader()
+        self.parseHeader()
         #self.fillWidgets()
                 # Add bottom row buttons
         self.fillButtons()
-        self.addBindings()
+        self.addBindings()        
         self.createCanvas() 
-        self.resize()        
+        self.resize()      
+        self.checkVisibility()  
         self.master.mainloop()    
         
     
 if __name__ == '__main__':
     script = sys.argv[1]  
     gui = ProtocolGUI(script)
-    gui.readProtocolScript()
-    gui.parseHeader()
     gui.launchGUI()
+#    tk = Tk()
+#    frame = Frame(tk, bg='white')
+#    frame.pack()
+#    value = 'fourier'
+#    opts = ['fourier', 'wbp', 'art']
+#    v = StringVar()
+#    v.set(value)
+#    #v.set(var.value)
+#    r = 0
+#    for o in opts:
+#        rb = Radiobutton(frame, text=o, variable=v, value=o, bg='white')
+#        rb.grid(row=r, column=0, sticky=W)
+#        r += 1
+#        
+#    mainloop()
     #print gui.variablesDict 
     
             

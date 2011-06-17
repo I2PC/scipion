@@ -10,6 +10,7 @@
 #
 # Author: Sjors Scheres, January 2008
 #
+# {begin_of_header} 
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
@@ -25,11 +26,11 @@ WorkingDir="ML2D/ML3ref"
 """ Just be careful with this option...
 """
 DoDeleteWorkingDir=False
-# {expert} Root directory name for this project:
+# {expert}{dir} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
 ProjectDir="/home/scheres/xmipp/applications/scripts/protocols"
-# {expert} Directory name for logfiles:
+# {expert}{dir} Directory name for logfiles:
 """ All logfiles will be stored here
 """
 LogDir="Logs"
@@ -109,13 +110,13 @@ NumberOfMpiProcesses=5
 SystemFlavour=''
 
 #------------------------------------------------------------------------------------------------
-# {expert} Analysis of results
+# {expert}{file} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
 AnalysisScript="visualize_ml2d.py"
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
-# {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
+# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 class ProtML2D:
