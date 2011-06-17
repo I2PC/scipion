@@ -45,6 +45,7 @@ public class LABELS {
     public final static String BUTTON_OPEN_AS_TABLE = "Open as table";
     public final static String BUTTON_OK = "Ok";
     public final static String BUTTON_PARENT_DIRECTORY = "Parent";
+    public final static String BUTTON_RELOAD_TABLE = "Reload";
     public final static String BUTTON_REFRESH = "Refresh";
     public final static String BUTTON_REFRESH_DIRECTORY = "Refresh";
     public final static String BUTTON_SAVE = "Save";

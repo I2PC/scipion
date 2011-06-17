@@ -62,18 +62,19 @@ public class ImagesTableModel extends AbstractTableModel {
     }
 
     private void getMinAndMax() {
-        if (Filename.isStackOrVolume(filename)) {
-            ImageDouble img = new ImageDouble();
-            img.setFilename(filename);
+        // @TODO: Min and Max optimized
+        /*        if (Filename.isStackOrVolume(filename)) {
+        ImageDouble img = new ImageDouble();
+        img.setFilename(filename);
 
-            double min_max[] = img.getMinAndMax();
-            min = min_max[0];
-            max = min_max[1];
-        } else {
-            double min_max[] = ImageOperations.getMinAndMax(data);
-            min = min_max[0];
-            max = min_max[1];
-        }
+        double min_max[] = img.getMinAndMax();
+        min = min_max[0];
+        max = min_max[1];
+        } else {*/
+        double min_max[] = ImageOperations.getMinAndMax(data);
+        min = min_max[0];
+        max = min_max[1];
+//        }
     }
 
     public ImagesTableModel(String filenames[], boolean enabled[]) {
