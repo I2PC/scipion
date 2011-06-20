@@ -166,7 +166,7 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
             myCounter++;
 
     if (shears && XSIZE(inputVol())!=0 && VShears==NULL)
-    	VShears=new RealShearsInfo(inputVol());
+        VShears=new RealShearsInfo(inputVol());
 
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
@@ -305,6 +305,14 @@ void ProgAngularProjectLibrary::run()
     mySFin.read(output_file_root+"_angles.doc");
     size_t myCounter=0;
     size_t id;
+
+    MetaData MDexp;
+    if (FnexperimentalImages.size() > 0)
+    {
+        MDexp.read(FnexperimentalImages);
+    }
+
+
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
         FOR_ALL_OBJECTS_IN_METADATA(mySFin)
@@ -326,7 +334,18 @@ void ProgAngularProjectLibrary::run()
             mySFout.setValue(MDL_X,x,id);
             mySFout.setValue(MDL_Y,y,id);
             mySFout.setValue(MDL_Z,z,id);
+
+            if (FnexperimentalImages.size() > 0)
+            {
+            	double shiftx, shifty;
+            	MDexp.getValue(MDL_SHIFTX,shiftx,__iter.objId);
+            	MDexp.getValue(MDL_SHIFTY,shifty,__iter.objId);
+                mySFout.setValue(MDL_X,x,id);
+                mySFout.setValue(MDL_Y,y,id);
+            }
+
             mySFout.setValue(MDL_SCALE,1.0,id);
+
         }
     }
     mySFout.setComment("x,y,z refer to the coordinates of the unitary vector at direction given by the euler angles");
