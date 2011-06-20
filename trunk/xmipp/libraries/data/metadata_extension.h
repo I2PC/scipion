@@ -15,6 +15,13 @@
 void getStatistics(MetaData &MT, Image<double> & _ave, Image<double> & _sd, double& _min,
                     double& _max, bool apply_geo);
 
+/*
+ * Get the min and max values and the mean of the average and standard deviation for all the values
+ * from all the images in the metadata.
+ */
+void getStatistics(MetaData &MT, double& _ave, double& _sd, double& _min,
+                    double& _max, bool apply_geo);
+
 /** Get image size
  *
  */

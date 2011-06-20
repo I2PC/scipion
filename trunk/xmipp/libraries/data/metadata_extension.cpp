@@ -25,12 +25,8 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
         MT.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     // Calculate Mean
     if (MT.isEmpty())
-    {
-        std::cerr << "Empty inputFile File\n";
-        exit(1);
-    }
+        REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images in Metadata.");
 
-    int _enabled;
     Image<double> image, tmpImg;
     double min, max, avg, stddev;
     FileName fnImg;
@@ -80,6 +76,51 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
     }
     _sd() /= (n - 1);
     _sd().selfSQRT();
+}
+
+/*----------   Statistics --------------------------------------- */
+void getStatistics(MetaData &MT_in, double& _ave, double& _sd, double& _min,
+                   double& _max, bool apply_geo)
+{
+    MetaData MT(MT_in); //copy constructor so original MT is not changed
+    _min = MAXDOUBLE;
+    _max = -MAXDOUBLE;
+    _ave = _sd = 0;
+    int n = 0;
+    //Remove disabled images if present
+    if (MT.containsLabel(MDL_ENABLED))
+        MT.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    // Calculate Mean
+    if (MT.isEmpty())
+        REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images in Metadata.");
+
+    ImageGeneric image;
+    double min, max, avg, stddev;
+    FileName fnImg;
+    FOR_ALL_OBJECTS_IN_METADATA(MT)
+    {
+        if (apply_geo)
+            image.readApplyGeo(MT,__iter.objId);
+        else
+        {
+            MT.getValue(MDL_IMAGE,fnImg,__iter.objId);
+            image.read(fnImg, DATA, ALL_IMAGES, true);
+        }
+        image().computeStats(avg, stddev, min, max);
+
+        if (min < _min)
+            _min = min;
+        if (max > _max)
+            _max = max;
+
+        _ave += avg;
+        _sd += stddev;
+
+        n++;
+    }
+
+    _ave /= n;
+    _sd /= n;
 }
 
 void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
