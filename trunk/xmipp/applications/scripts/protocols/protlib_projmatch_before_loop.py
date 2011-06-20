@@ -55,8 +55,7 @@ def executeCtfGroups (_log,
                                  WienerConstant, 
                                  ) :
     import glob, sys,shutil
-    import utils_xmipp
-    import launch_job
+    from protlib_utils import launchJob
     if not os.path.exists(CtfGroupDirectory):
         os.makedirs(CtfGroupDirectory)
 
