@@ -86,8 +86,8 @@ class ProtocolStyle():
         self.WrapLenght = self.MaxWidth / 2
         self.Font = tkFont.Font(family=self.FontName, size=self.FontSize, weight=tkFont.BOLD)
 
-# A scrollbar that hides itself if it's not needed.
 class AutoScrollbar(Scrollbar):
+    '''A scrollbar that hides itself if it's not needed.'''
     def set(self, lo, hi):
         if float(lo) <= 0.0 and float(hi) >= 1.0:
             self.tk.call("grid", "remove", self)
@@ -96,6 +96,7 @@ class AutoScrollbar(Scrollbar):
         Scrollbar.set(self, lo, hi)
         
 class ProtocolVariable():
+    '''Store information about Protocols variables.'''
     def __init__(self):
         self.name = None
         self.value = None
@@ -118,21 +119,35 @@ class ProtocolVariable():
 class ProtocolWidget():
     def __init__(self, master, var):
         self.master = master
-        # Store real tk widgets
-        self.widgetlist = []
+        self.widgetslist = [] # Store real tk widgets
+        self.childwidgets = [] # This will only be used for sections
         self.variable = var
-        
+       
+    def satisfiesCondition(self):
+        if not (self.variable and self.variable.condition_name):
+            return True
+        return self.variable.condition_value == self.master.variablesDict[self.variable.condition_name]
+     
+    def checkVisibility(self):
+        show = True
+        c = self.variable.comment
+        if self.variable.isExpert():
+            show = self.master.expert_mode
+        show = show and self.satisfiesCondition() #has condition, check it
+        self.display(show)    
+            
     def display(self, value):
-        for w in self.widgetlist:
+        for w in self.widgetslist:
             if value:
                 w.grid()
             else:
                 w.grid_remove()
+        for child in self.childwidgets:
+            child.display(value)
         
 class ProtocolGUI():
-    def __init__(self, script):
-        self.variablesDict = {}
-        self.widgetsList = []
+    def init(self, script):
+        self.variablesDict = {}       
         self.pre_header_lines = []
         self.header_lines = []
         self.post_header_lines = []
@@ -140,72 +155,78 @@ class ProtocolGUI():
         self.expert_mode = False
         self.scriptname = script
         self.lastrow = 0
-        self.widgetlist = []
+        self.widgetslist = []
+        self.sectionslist = [] # List of all sections
     #-------------------------------------------------------------------
     # Widgets creation and GUI building
     #-------------------------------------------------------------------       
     def createWidget(self, var):
-        w = ProtocolWidget(self.frame, var)
-        self.widgetlist.append(w)
-        label_row = row = self.getRow() # Get row where to place the widget
-        
+        w = ProtocolWidget(self, var)  
+        self.widgetslist.append(w)      
+        label_row = row = self.getRow() # Get row where to place the widget        
         label_text = var.comment
         label_color = self.style.LabelTextColor
         label_bgcolor = self.style.LabelBgColor        
 
         keys = var.tags.keys()
+        if 'section' in var.tags.keys():
+            label_text += "\n-----------------------------------------------------------"
+            label_color = self.style.SectionTextColor 
+            self.lastSection = w
+            self.sectionslist.append(w)
+        else:
+            self.lastSection.childwidgets.append(w)
+            if self.lastSection.variable.isExpert():
+                var.tags['expert'] = self.lastSection.variable['expert']
+                
+        keys = var.tags.keys()
+                
         if 'expert' in keys:
            label_bgcolor = self.style.ExpertLabelBgColor
-        if 'section' in keys:
-            label_text += "\n-----------------------------------------------------------"
-            label_color = self.style.SectionTextColor  
+         
         # Treat variables
         if var.value:
         #Escape string literals
             var_column = self.columntextentry
-            v = StringVar()   
+            var.v = StringVar()   
             
             if var.value.startswith('"') or var.value.startswith("'"):
                 var.value = var.value.replace('"', '');
                 var.value = var.value.replace("'", '');
             
             if var.value == 'True' or var.value == 'False':
-                v.set(var.value)         
-                rb1 = Radiobutton(self.frame, text="Yes", variable=v, value='True', bg=self.style.BgColor, bd=0)
+                var.v.set(var.value)         
+                rb1 = Radiobutton(self.frame, text="Yes", variable=var.v, value='True', bg=self.style.BgColor, bd=0)
                 rb1.grid(row=row, column=var_column)
-                w.widgetlist.append(rb1)
-                rb2 = Radiobutton(self.frame, text="No", variable=v, value='False', bg=self.style.BgColor, bd=0)
+                w.widgetslist.append(rb1)
+                rb2 = Radiobutton(self.frame, text="No", variable=var.v, value='False', bg=self.style.BgColor, bd=0)
                 rb2.grid(row=row, column=var_column + 1)
-                w.widgetlist.append(rb2)
+                w.widgetslist.append(rb2)
             elif 'list' in var.tags.keys():
                 opts = var.tags['list'].split(',')
-                #v.set(var.value)
+                var.v.set(var.value)
                 for o in opts:
-                    rb = Radiobutton(self.frame, text=o, variable=v, value=o, bg=self.style.BgColor, bd=0)
+                    rb = Radiobutton(self.frame, text=o, variable=var.v, value=o, bg=self.style.BgColor, bd=0)
                     rb.grid(row=row, column=var_column, sticky=W)
-                    print 'DEBUG_JM: o=%s, var.value=%s' % (o, var.value)
-                    rb.deselect()
-                    w.widgetlist
-                    if o == var.value:
-                        print "DEBUG_JM: equals"
-                        rb.select()
                     row = self.getRow()
             else: #Add a text Entry
-                v.set(var.value)
-                entry = Entry(self.frame, textvariable=v, bg=self.style.EntryBgColor)
+                var.v.set(var.value)
+                entry = Entry(self.frame, textvariable=var.v, bg=self.style.EntryBgColor)
                 entry.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W + E)
-                w.widgetlist.append(entry)
+                w.widgetslist.append(entry)
                 if 'file' in keys or 'dir' in keys:
-                    btn = self.addButton("Browse", lambda: self.showHelp(var.help), -1, label_row, var_column + 3, NW)
-                    w.widgetlist.append(btn)
+                    btn = self.addButton("Browse", lambda: self.browse(var.v, ('file' in keys)), -1, label_row, var_column + 3, NW)
+                    w.widgetslist.append(btn)
             if var.help:
                 btn = self.addButton("Help", lambda: self.showHelp(var.help), -1, label_row, var_column + 4, NW)
-                w.widgetlist.append(btn)
+                w.widgetslist.append(btn)
                                     
                     
         label = Label(self.frame, text=label_text, fg=label_color, bg=label_bgcolor)
         label.grid(row=label_row, column=0, columnspan=self.columnspantextlabel, sticky=E)
-        w.widgetlist.append(label)
+        w.widgetslist.append(label)
+        
+        return w
         
     def prepareCanvas(self):
         # Stuff to make the scrollbars work
@@ -266,6 +287,23 @@ class ProtocolGUI():
                      bg=self.style.ButtonBgColor, activebackground=self.style.ButtonActiveBgColor)
         btn.grid(row=row, column=col, sticky=sticky)
         return btn
+    
+    def browse(self, var, isFile):
+        import tkFileDialog
+        import os
+        if isFile:
+            filename = tkFileDialog.askopenfilename(title="Choose file")
+        else:
+            filename = tkFileDialog.askdirectory(title="Choose directory")
+        if len(filename) > 0:
+            var.set(os.path.relpath(filename))
+         
+    def scroll(self, event):
+        if event.num == 5 or event.delta == -120:
+            count = 1
+        if event.num == 4 or event.delta == 120:
+            count = -1
+        self.canvas.yview("scroll", count,"units")
     #-------------------------------------------------------------------
     # Reading and parsing script
     #-------------------------------------------------------------------
@@ -298,14 +336,15 @@ class ProtocolGUI():
         import re
         #Comment regex, match lines starting by # and followed by tags with values
         #of the form {tag}(value) and ending with the comment for the GUI    
-        reComment = re.compile('#\s*((?:{\s*\w+\s*}(?:\([^)]*\))?)*)?\s*(.*)')
+        reComment = re.compile('#\s*((?:{\s*\w+\s*}\s*(?:\([^)]*\))?)*)?\s*(.*)')
         #This take all tags and values from previous one
-        reTags = re.compile('(?:{\s*(\w+)\s*}(?:\(([^)]*)\))?)')
+        reTags = re.compile('(?:{\s*(\w+)\s*}\s*(?:\(([^)]*)\))?\s*)')
         #This is the regular expression of a Variable
         #possible values are: True, False, String with single and double quotes and a number(int or float) 
         reVariable = re.compile('(\w+)\s*=\s*(True|False|".*"|\'.*\'|\d+|)')
         self.variablesDict = {}
-        self.widgetsList = []
+        self.widgetslist = []
+        lastSection = None
         
         index = 0;
         count = len(self.header_lines)
@@ -319,12 +358,13 @@ class ProtocolGUI():
                 v.comment = match.group(2)
                 #w = ProtocolWidget(match.group(2), self)
                 #self.widgetsList.append(w)
-                #print match.groups()
+                #print match.group(1)
                 if match.group(1) != '':
                     tags = reTags.findall(match.group(1))
                     v.setTags(tags)
                     
-                if not v.isSection():
+                is_section = v.isSection()
+                if not is_section:
                     #This is a variable, try to get help string
                     helpStr = ''
                     if index < count and self.header_lines[index].startswith('"""'):
@@ -342,13 +382,12 @@ class ProtocolGUI():
                             #print "DEBUG_JM: v.name: '%s', v.value: '%s'" % (v.name, v.value)
                             self.variablesDict[v.name] = v.value
                             index += 1
-                if v.isSection() or v.name != None:
-                    self.createWidget(v)            
+                if is_section or v.name != None:
+                    w = self.createWidget(v)
                 
     def checkVisibility(self, event=""):        
-        for w in self.widgetlist:
-            if w.variable.isExpert():                
-                w.display(self.expert_mode)
+        for w in self.widgetslist:
+            w.checkVisibility()
             
     #-------------------------------------------------------------------
     # GUI Events handling
@@ -417,8 +456,14 @@ class ProtocolGUI():
         self.master.bind('<Alt_L><r>', self.saveExecute)
         self.master.bind('<Alt_L><plus>', self.changeFont)
         self.master.bind('<Alt_L><minus>', self.changeFont)
+        # with Windows OS
+        self.master.bind("<MouseWheel>", self.scroll)
+        # with Linux OS
+        self.master.bind("<Button-4>", self.scroll)
+        self.master.bind("<Button-5>", self.scroll)
         
-    def launchGUI(self):        
+    def launchGUI(self, script):
+        self.init(script)        
         self.master = Tk()
         self.style = ProtocolStyle()
         #self.master.configure(font = self.style.Font)
@@ -438,27 +483,9 @@ class ProtocolGUI():
         self.resize()      
         self.checkVisibility()  
         self.master.mainloop()    
-        
     
 if __name__ == '__main__':
     script = sys.argv[1]  
-    gui = ProtocolGUI(script)
-    gui.launchGUI()
-#    tk = Tk()
-#    frame = Frame(tk, bg='white')
-#    frame.pack()
-#    value = 'fourier'
-#    opts = ['fourier', 'wbp', 'art']
-#    v = StringVar()
-#    v.set(value)
-#    #v.set(var.value)
-#    r = 0
-#    for o in opts:
-#        rb = Radiobutton(frame, text=o, variable=v, value=o, bg='white')
-#        rb.grid(row=r, column=0, sticky=W)
-#        r += 1
-#        
-#    mainloop()
-    #print gui.variablesDict 
+    gui = ProtocolGUI()
+    gui.launchGUI(script)
     
-            
