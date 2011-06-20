@@ -12,31 +12,30 @@
 
 
 /*----------   Statistics --------------------------------------- */
-void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, double& _min,
+void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, double& _min,
                    double& _max, bool apply_geo)
 {
-    MetaData MT(MT_in); //copy constructor so original MT is not changed
     _min = MAXDOUBLE;
     _max = -MAXDOUBLE;
     bool first = true;
     int n = 0;
     //Remove disabled images if present
-    if (MT.containsLabel(MDL_ENABLED))
-        MT.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    if (MD.containsLabel(MDL_ENABLED))
+        MD.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     // Calculate Mean
-    if (MT.isEmpty())
+    if (MD.isEmpty())
         REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images in Metadata.");
 
     Image<double> image, tmpImg;
     double min, max, avg, stddev;
     FileName fnImg;
-    FOR_ALL_OBJECTS_IN_METADATA(MT)
+    FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         if (apply_geo)
-            image.readApplyGeo(MT,__iter.objId, HEADER);
+            image.readApplyGeo(MD,__iter.objId, HEADER);
         else
         {
-            MT.getValue(MDL_IMAGE,fnImg,__iter.objId);
+            MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
             image.read(fnImg);
         }
         image().computeStats(avg, stddev, min, max);
@@ -61,13 +60,13 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
     _sd = _ave;
     _sd().initZeros();
     // Calculate SD
-    FOR_ALL_OBJECTS_IN_METADATA(MT)
+    FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         if (apply_geo)
-            image.readApplyGeo(MT,__iter.objId, HEADER);
+            image.readApplyGeo(MD,__iter.objId, HEADER);
         else
         {
-            MT.getValue(MDL_IMAGE,fnImg,__iter.objId);
+            MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
             image.read(fnImg);
         }
         tmpImg() = ((image() - _ave()));
@@ -79,31 +78,30 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
 }
 
 /*----------   Statistics --------------------------------------- */
-void getStatistics(MetaData &MT_in, double& _ave, double& _sd, double& _min,
+void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
                    double& _max, bool apply_geo)
 {
-    MetaData MT(MT_in); //copy constructor so original MT is not changed
     _min = MAXDOUBLE;
     _max = -MAXDOUBLE;
     _ave = _sd = 0;
     int n = 0;
     //Remove disabled images if present
-    if (MT.containsLabel(MDL_ENABLED))
-        MT.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    if (MD.containsLabel(MDL_ENABLED))
+        MD.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     // Calculate Mean
-    if (MT.isEmpty())
+    if (MD.isEmpty())
         REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images in Metadata.");
 
     ImageGeneric image;
     double min, max, avg, stddev;
     FileName fnImg;
-    FOR_ALL_OBJECTS_IN_METADATA(MT)
+    FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         if (apply_geo)
-            image.readApplyGeo(MT,__iter.objId);
+            image.readApplyGeo(MD,__iter.objId);
         else
         {
-            MT.getValue(MDL_IMAGE,fnImg,__iter.objId);
+            MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
             image.read(fnImg, DATA, ALL_IMAGES, true);
         }
         image().computeStats(avg, stddev, min, max);
