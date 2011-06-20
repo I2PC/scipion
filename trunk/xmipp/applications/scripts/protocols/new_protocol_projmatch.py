@@ -73,7 +73,7 @@ CleanUpFiles =False
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 ProjectDir='/gpfs/fs1/home/bioinfo/roberto/PhantomIco'
 """
-ProjectDir='/home/josem/work/xmipp/protocols/PhantomIco'
+ProjectDir='/gpfs/fs1/home/bioinfo/roberto/PhantomIco'
 
 # {expert} Directory name for logfiles:
 LogDir ='Logs'
