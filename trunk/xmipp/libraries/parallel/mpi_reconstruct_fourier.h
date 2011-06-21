@@ -45,6 +45,12 @@
 
 #define BUFFSIZE 10000000
 
+//TODO (MARIANA) Please give more documentation and in a good structure e.g. @name
+
+/**@defgroup ProgMPIRecFourier ProgMPIRecFourier
+   @ingroup Programs */
+//@{
+
 class ProgMPIRecFourier: public ProgRecFourier
 {
 public:
@@ -106,6 +112,7 @@ public:
     void error_exit(char * msg);
 
     int  sendDataInChunks( double * pointer, int dest, int totalSize, int buffSize, MPI_Comm comm );
+/** @} */
 
 };//end of class MPI reconstruct fourier
 
