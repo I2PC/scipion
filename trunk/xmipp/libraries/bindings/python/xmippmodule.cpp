@@ -148,7 +148,7 @@ FileName_composeBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
         int number = 1;
         PyArg_ParseTuple(args, "sis|s", &block, &number, &root, &ext);
         std::cerr << "b n r e" << block << " " << number << " "<< root << " " << ext <<std::endl;
-        //self->filename->composeBlock(block, number, root, ext);
+        self->filename->composeBlock(block, number, root, ext);
     }
     Py_RETURN_NONE;//Return None(similar to void in C)
 }
