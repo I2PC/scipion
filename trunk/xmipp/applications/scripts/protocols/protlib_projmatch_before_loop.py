@@ -2,7 +2,8 @@ from distutils.errors   import DistutilsInternalError
 from types              import StringTypes
 import os
 from xmipp import *
-
+from protlib_utils import unique_filename
+from protlib_utils import FILENAMENUMBERLENTGH
 
 def checkVolumeProjSize(_log, ReferenceFileNames, SelFileName):
     """ check references and projection size match"""
@@ -61,7 +62,7 @@ def executeCtfGroups (_log,
 
     if(not DoCtfCorrection):
         MD=MetaData(SelFileName)
-        block_name= 'ctfGroup'+str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH) +\
+        block_name= 'ctfGroup'+str(1).zfill(FILENAMENUMBERLENTGH) +\
                     '@' + CtfGroupDirectory+"/"+ CtfGroupRootName +'_images.sel'
         MD.write(block_name)
         return 1
@@ -75,7 +76,7 @@ def executeCtfGroups (_log,
     MDsel = MetaData();
     MDsel.read(SelFileName)
     MDctfdata.intersection(MDsel,MDL_IMAGE)
-    tmpCtfdat = utils_xmipp.unique_filename(CTFDatName)
+    tmpCtfdat = unique_filename(CTFDatName)
     MDctfdata.write(tmpCtfdat)
     command = \
               ' --ctfdat ' + tmpCtfdat + \

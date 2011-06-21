@@ -1,7 +1,8 @@
 import os, shutil, string, glob, math
-import launch_job, utils_xmipp
+#import launch_job, utils_xmipp
 from distutils.dir_util import mkpath
 from xmipp import *
+from protlib_utils import launchJob
 
 CtfBlockName = 'ctfGroup'
 RefBlockName = 'refGroup'
