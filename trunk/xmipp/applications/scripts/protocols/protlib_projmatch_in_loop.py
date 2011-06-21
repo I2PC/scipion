@@ -27,9 +27,8 @@ def executeMask(_log,
         else:
             command += ' --mask ' + userSuppliedMask
 
-        launchJob("xmipp_transform_mask",
+        runJob(_log,"xmipp_transform_mask",
                               command,
-                              _log,
                               False, 1, 1, '')
 
     else:
