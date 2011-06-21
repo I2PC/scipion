@@ -202,7 +202,8 @@ def runJob(log,
            NumberOfThreads,
            SystemFlavour):
     
-    command = buildRunCommand(programname,
+    command = buildRunCommand(log,
+               programname,
                params,
                DoParallel,
                NumberOfMpiProcesses,
