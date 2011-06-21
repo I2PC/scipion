@@ -35,6 +35,9 @@
 #define RECONS_ART 0
 #define RECONS_FOURIER 1
 
+#define EMPTY_PROJECTIONS 0
+#define EMPTY_VOLUMES 1
+
 
 
 /**@defgroup Refine3d ml_refine3d (Maximum likelihood 3D refinement)
@@ -125,6 +128,10 @@ public:
 
     ///Provides implementation of the run function
     void run();
+
+    /// Create an empty file to avoid read/write conflicts when running in parallel
+    /// it will be used for projections and volumes stacks
+    virtual void createEmptyFiles(int type);
 
     /// Project the reference volumes in evenly sampled directions
     /// fill the metadata mdProj with the projections data

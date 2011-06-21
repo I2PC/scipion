@@ -274,10 +274,18 @@ bool MpiProgMLRefine3D::checkConvergence()
 
 }
 
+void MpiProgMLRefine3D::createEmptyFiles(int type)
+{
+    //only master create empty files
+    if (node->isMaster())
+        ProgMLRefine3D::createEmptyFiles(type);
+    //all nodes waiting until volumes are projected
+    node->barrierWait();
+}
+
 void MpiProgMLRefine3D::projectVolumes(MetaData &mdProj)
 {
-    //only master post process
-    ProgMLRefine3D::projectVolumes(mdProj);
+     ProgMLRefine3D::projectVolumes(mdProj);
     //all nodes waiting until volumes are projected
     node->barrierWait();
 }
@@ -425,7 +433,7 @@ void MpiProgMLTomo::read(int argc, char ** argv)
 /// Only master will generate initial references
 void MpiProgMLTomo::setNumberOfLocalImages()
 {
-  nr_images_local = divide_equally(nr_images_global, node->size, node->rank, myFirstImg, myLastImg);
+    nr_images_local = divide_equally(nr_images_global, node->size, node->rank, myFirstImg, myLastImg);
 }
 
 /// Only master will generate initial references
@@ -486,31 +494,31 @@ void MpiProgMLTomo::expectation(MetaData &MDimg, std::vector< Image<double> > &I
 ///Add info of some processed images to later write to files
 void MpiProgMLTomo::addPartialDocfileData(const MultidimArray<double> &data, size_t first, size_t last)
 {
-  // Write intermediate files
-  if (!node->isMaster())
-  {
-      // All slaves send docfile data to the master
-      int s_size = MULTIDIM_SIZE(docfiledata);
-      MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE, MPI_COMM_WORLD);
-      MPI_Send(MULTIDIM_ARRAY(docfiledata), s_size, MPI_DOUBLE, 0, TAG_DOCFILE, MPI_COMM_WORLD);
-  }
-  else
-  {
-      // Master fills metadata and add it's contribution
-      ProgMLTomo::addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
-      int s_size;
-      size_t first_img, last_img;
-      MPI_Status status;
+    // Write intermediate files
+    if (!node->isMaster())
+    {
+        // All slaves send docfile data to the master
+        int s_size = MULTIDIM_SIZE(docfiledata);
+        MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE, MPI_COMM_WORLD);
+        MPI_Send(MULTIDIM_ARRAY(docfiledata), s_size, MPI_DOUBLE, 0, TAG_DOCFILE, MPI_COMM_WORLD);
+    }
+    else
+    {
+        // Master fills metadata and add it's contribution
+        ProgMLTomo::addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
+        int s_size;
+        size_t first_img, last_img;
+        MPI_Status status;
 
-      for (int docCounter = 1; docCounter < node->size; ++docCounter)
-      {
-          // receive in order
-          MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE, MPI_COMM_WORLD, &status);
-          MPI_Recv(MULTIDIM_ARRAY(docfiledata), s_size, MPI_DOUBLE, docCounter, TAG_DOCFILE, MPI_COMM_WORLD, &status);
-          divide_equally(nr_images_global, node->size, docCounter, first_img, last_img);
-          ProgMLTomo::addPartialDocfileData(docfiledata, first_img, last_img);
-      }
-  }
+        for (int docCounter = 1; docCounter < node->size; ++docCounter)
+        {
+            // receive in order
+            MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE, MPI_COMM_WORLD, &status);
+            MPI_Recv(MULTIDIM_ARRAY(docfiledata), s_size, MPI_DOUBLE, docCounter, TAG_DOCFILE, MPI_COMM_WORLD, &status);
+            divide_equally(nr_images_global, node->size, docCounter, first_img, last_img);
+            ProgMLTomo::addPartialDocfileData(docfiledata, first_img, last_img);
+        }
+    }
 }
 
 

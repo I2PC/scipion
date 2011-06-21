@@ -455,6 +455,28 @@ void ProgMLRefine3D::run()
 
 }//end of function run
 
+void ProgMLRefine3D::createEmptyFiles(int type)
+{
+    int dim, idum;
+    size_t idumLong;
+    ImgSize(fn_sel, dim, idum, idum, idumLong);
+    Image<double> img;
+
+    if (type == EMPTY_PROJECTIONS)
+        createEmptyFile(FN_PROJECTIONS, dim, dim, 1, Nvols*nr_projections, true);
+    //    {
+    //        img().initZeros(dim, dim);
+    //        img.write(FN_PROJECTIONS, Nvols * nr_projections, true, WRITE_OVERWRITE);
+    //    }
+    else if (type == EMPTY_VOLUMES)
+    {
+        img().initZeros(dim, dim, dim);
+        for (int i = 0; i < reconsOutFnBase.size(); ++i)
+            createEmptyFile(reconsOutFnBase[i], dim, dim, dim, Nvols, true);
+        //img.write(reconsOutFnBase[i], Nvols, true, WRITE_OVERWRITE);
+    }
+}
+
 // Projection of the reference (blob) volume =================================
 void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
 {
@@ -464,7 +486,7 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
     Projection                    proj;
     double                       rot, tilt, psi = 0.;
     size_t                        nl, nr_dir, my_rank, id, bar_step;
-    int                           volno;
+    int                           volno, dim;
 
 
     // Here all nodes fill SFlib and DFlib, but each node actually projects
@@ -481,6 +503,8 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
         std::cout << formatString("--> projecting %d volumes x %d projections...", Nvols, nr_projections) << std::endl;
         init_progress_bar(nl);
     }
+
+    createEmptyFiles(EMPTY_PROJECTIONS);
 
     // Loop over all reference volumes
     volno = nr_dir = 0;
@@ -633,6 +657,8 @@ void ProgMLRefine3D::reconstructVolumes()
 
     ProgReconsBase * reconsProgram;// = createReconsProgram();
     int volno_index  = 0;
+
+    createEmptyFiles(EMPTY_VOLUMES);
 
     for (int i = 0; i < reconsOutFnBase.size(); ++i)
     {
