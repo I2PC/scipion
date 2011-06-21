@@ -2848,5 +2848,8 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "_DATA_ALL", (long) _DATA_ALL);
     addIntConstant(dict, "WRAP", (long) WRAP);
     addIntConstant(dict, "ALL_IMAGES", (long) ALL_IMAGES);
+    addIntConstant(dict, "FILENAMENUMBERLENGTH", (long) FILENAMENUMBERLENGTH);
+
+
 
 }

@@ -159,8 +159,8 @@ def projection_matching(_log
         ictf    = NumberOfCtfGroups - ii 
 #        if (_DoCtfCorrection):
         #outputname   = _ProjMatchRootName + '_' + CtfGroupName 
-        inputdocfile    = CtfBlockName+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
-        outputname   = CtfBlockName+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
+        inputdocfile    = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@' + CtfGroupName + '_images.sel'
+        outputname   = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@'+ _ProjMatchRootName
         #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
         baseTxtFile  = refname[:-len('.stk')] 
         neighbFile      = baseTxtFile + '_sampling.xmd'
