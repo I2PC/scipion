@@ -301,8 +301,9 @@ public:
             << output_file << " for "
             << numberProjections << "  projections."
             << std::endl;
-            Image<double> Iaux(Xdim,Ydim);
-            Iaux.write(output_file,numberProjections,true,WRITE_REPLACE);
+            createEmptyFile(output_file,Xdim,Ydim,1,numberProjections,true,WRITE_REPLACE);
+//            Image<double> Iaux(Xdim,Ydim);
+//            Iaux.write(output_file,numberProjections,true,WRITE_REPLACE);
         }
 
         MPI_Barrier(MPI_COMM_WORLD);
