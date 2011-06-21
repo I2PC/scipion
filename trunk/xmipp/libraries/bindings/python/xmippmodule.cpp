@@ -144,7 +144,7 @@ FileName_composeBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
     if (self != NULL)
     {
         PyObject *input = NULL, *pyStr = NULL;
-        char *str = "", *ext = "", *block ="";
+        char *root = "", *ext = "", *block ="";
         int number = 1;
         PyArg_ParseTuple(args, "sis|s", &block, &number, &root, &ext);
         self->filename->composeBlock(block, number, root, ext);
