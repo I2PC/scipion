@@ -40,6 +40,14 @@
 
 typedef std::vector<String> StringVector;
 
+//TODO (MARIANA) Please give more documentation and in a good structure e.g. @name (see args.h as example)
+/* MARIANA: I defined the name of this group. Please define it as you want. */
+
+/** @defgroup Arguments Arguments parser
+ *  @ingroup DataLibrary
+ * @{
+ */
+
 /** Type of tokens for lexical analysis */
 enum TokenType {
     TOK_ID,     //identifier
@@ -352,4 +360,5 @@ public:
     virtual void printCommentList(const CommentList &comments, int v = 0);
     virtual void printToken(ArgToken * token);
 };
+/** @} */
 #endif /* ARGSPARSER_H_ */
