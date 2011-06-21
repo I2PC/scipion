@@ -152,24 +152,24 @@ def projection_matching(_log
     #remove output metadata
     if os.path.exists(_ProjMatchRootName):
         os.remove(_ProjMatchRootName)
-    inputDocFile = FileName()
+    inputDocFile  = FileName()
+    outputDocFile = FileName()
+    neighbFileb   = FileName()
     for ii in range(NumberOfCtfGroups):
         if NumberOfCtfGroups>1 :
             print 'Focus Group: ', ii+1,'/',NumberOfCtfGroups
         ictf    = NumberOfCtfGroups - ii 
-#        if (_DoCtfCorrection):
-        #outputname   = _ProjMatchRootName + '_' + CtfGroupName 
-        inputdocfile    = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@' + CtfGroupName + '_images.sel'
-        outputname   = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@'+ _ProjMatchRootName
-        inputDocFile.composeBlock(CtfBlockName,ictf,CtfGroupName+ '_images.sel')
-        print inputdocfile, inputDocFile
-        exit(1)
-        #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
+        #inputdocfile    = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@' + CtfGroupName + '_images.sel'
+        #outputname   = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@'+ _ProjMatchRootName
+        inputDocFile.composeBlock(CtfBlockName,ictf,CtfGroupName+ '_images','sel')
+        outputDocFile.composeBlock(CtfBlockName,ictf,CtfGroupName+ _ProjMatchRootName)
         baseTxtFile  = refname[:-len('.stk')] 
         neighbFile      = baseTxtFile + '_sampling.xmd'
         if (os.path.exists(neighbFile)):
             os.remove(neighbFile)
-        neighbFileb     = utils_xmipp.composeFileName(baseTxtFile + '_group',ictf,'')
+        #neighbFileb     = utils_xmipp.composeFileName(baseTxtFile + '_group',ictf,'')
+        #neighbFileb     += '_sampling.xmd'
+        neighbFileb.compose(baseTxtFile + '_group',ictf)
         neighbFileb     += '_sampling.xmd'
         shutil.copy(neighbFileb, neighbFile)
 #        else:
