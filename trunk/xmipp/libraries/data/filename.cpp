@@ -72,7 +72,7 @@ void FileName::compose(const String &blockName, const String &str) {
 
 // Constructor: string, number and filename, mainly for numered metadata blocks..
 void FileName::composeBlock(const String &blockName, size_t no, const String &str, const String &ext) {
-	*this = formatStringFast(*this, "%s%06lu@%s", blockName, no, str.c_str());
+	formatStringFast(*this, "%s%06lu@%s", blockName, no, str.c_str());
 	if (ext != "")
 		*this += (String) "." + ext;
 }

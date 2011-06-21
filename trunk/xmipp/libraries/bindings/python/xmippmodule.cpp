@@ -135,6 +135,23 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_RETURN_NONE;//Return None(similar to void in C)
 }
 
+/* composeBlock */
+static PyObject *
+FileName_composeBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    FileNameObject *self = (FileNameObject*) obj;
+
+    if (self != NULL)
+    {
+        PyObject *input = NULL, *pyStr = NULL;
+        char *str = "", *ext = "", block ="";
+        int number = 1;
+        PyArg_ParseTuple(args, "sis|s", &block, &number, &root, &ext);
+        self->filename->composeBlock(block, number, root, ext);
+    }
+    Py_RETURN_NONE;//Return None(similar to void in C)
+}
+
 /* isInStack */
 static PyObject *
 FileName_isInStack(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -224,6 +241,8 @@ static PyMethodDef FileName_methods[] =
     {
         { "compose", (PyCFunction) FileName_compose, METH_VARARGS,
           "Compose from root, number and extension OR prefix with number @" },
+        { "composeBlock", (PyCFunction) FileName_composeBlock, METH_VARARGS,
+          "Compose from blockname, number, root and extension" },
         { "decompose", (PyCFunction) FileName_decompose, METH_NOARGS,
           "Decompose filenames with @. Mainly from selfiles" },
         { "getBaseName", (PyCFunction) FileName_getBaseName, METH_NOARGS,
