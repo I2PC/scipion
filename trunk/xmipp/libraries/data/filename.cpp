@@ -29,10 +29,7 @@
 
 // Constructor with root, number and extension .............................
 void FileName::compose(const String &str, size_t no, const String &ext) {
-	std::cerr << "compose1"
-			  << str << " "
-			  << no  << " "
-			  << ext << std::endl;
+
 	if (no == ALL_IMAGES || no == (size_t) -1)
 		REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 or -1 index, now images index start at 1");
 
@@ -71,6 +68,13 @@ void FileName::compose(size_t no, const String &str, const String &ext) {
 // Constructor: string  and filename, mainly for metadata blocks..
 void FileName::compose(const String &blockName, const String &str) {
 	*this = (FileName) (blockName + (String) "@" + str);
+}
+
+// Constructor: string, number and filename, mainly for numered metadata blocks..
+void FileName::composeBlock(const String &blockName, size_t no, const String &str, const String &ext) {
+	*this = formatStringFast(*this, "%s%06lu@%s", blockName, no, str.c_str());
+	if (ext != "")
+		*this += (String) "." + ext;
 }
 
 // Is in stack ............................................................

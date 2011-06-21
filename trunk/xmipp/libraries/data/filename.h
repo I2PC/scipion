@@ -175,6 +175,16 @@ public:
      */
     void compose(const String &blockName , const String &str);
 
+    /** Constructor: string, number, rootfilename and extension:
+     *  mainly for numered metadata blocks..
+     *
+     * @code
+     * fn_proj.composeBlock("bb",5, "g1ta","xmp");  // fn_proj = "bb000005@g1ta.xmp"
+     * fn_proj.composeBlock("bb",5, "g1ta.xmp");    // fn_proj = "bb000005@g1ta.xmp"
+     * @endcode
+    */
+    void composeBlock(const String &blockName, size_t no, const String &str, const String &ext="");
+
 
     /** True if this filename belongs to a stack
      */
