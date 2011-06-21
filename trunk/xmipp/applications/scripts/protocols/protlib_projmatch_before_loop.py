@@ -56,7 +56,7 @@ def executeCtfGroups (_log,
                                  WienerConstant, 
                                  ) :
     import glob, sys,shutil
-    from protlib_utils import launchJob
+    from protlib_utils import runJob
     if not os.path.exists(CtfGroupDirectory):
         os.makedirs(CtfGroupDirectory)
 
@@ -99,10 +99,10 @@ def executeCtfGroups (_log,
             _log.info(message)
             sys.exit()
 
-    (_command, retcode) = launchJob("xmipp_ctf_group",
-                          command,
-                          _log,
-                          False, 1, 1, '')
+    (_command, retcode) = runJob(_log,
+                                    "xmipp_ctf_group",
+                                    command,
+                                     False, 1, 1, '')
 
     if(retcode):
         print "command", command, "failed with exit status", retcode
