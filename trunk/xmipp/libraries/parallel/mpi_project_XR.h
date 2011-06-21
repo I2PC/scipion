@@ -29,8 +29,8 @@
 #include "reconstruction/project_XR.h"
 #include "parallel/mpi.h"
 
-/**@defgroup MPIProjectionXRProgram project_xr (project for tilt series)
-   @ingroup ParallelLibrary */
+/**@defgroup ProgMPIXrayProject ProgMPIXrayProject
+   @ingroup MPI */
 //@{
 /* Projection XR Program -------------------------------- */
 /** Program class for the project program */
@@ -57,4 +57,5 @@ int PROJECT_mpi_XR_Effectively_project(
     XRayPSF &psf,
     MetaData &SF) ;
 
+/** @} */
 #endif /* MPI_PROJECT_XR_H_ */

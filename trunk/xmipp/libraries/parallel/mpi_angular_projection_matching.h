@@ -30,8 +30,8 @@
 #include "reconstruction/angular_projection_matching.h"
 
 
-/**@defgroup MPI_Programs Programs that parallelize using MPI library
-   @ingroup ParallelLibrary */
+/**@defgroup MpiProgAngularProjectionMatching  MpiProgAngularProjectionMatching
+   @ingroup MPI */
 //@{
 /** Program to parallelize the ML 2D alignment program */
 class MpiProgAngularProjectionMatching: public ProgAngularProjectionMatching
@@ -99,5 +99,5 @@ public:
     void computeChunkAngularDistance(int symmetry, int sym_order);
 }
 ;//end of class MpiProgML2D
-
+/** @} */
 #endif /* MPI_ANGULAR_PROJECTION_MATCHING_H_ */

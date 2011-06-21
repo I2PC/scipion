@@ -239,8 +239,7 @@ enum MDLabel
     MDL_ZSIZE, ///< Z size (int)
 
 
-    MDL_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
-    // it is here for looping purposes
+    MDL_LAST_LABEL  // **** NOTE ****: Do keep this label always at the end,it is here for looping purposes
 };//close enum Label
 
 /** Macro for iterate over all labels */

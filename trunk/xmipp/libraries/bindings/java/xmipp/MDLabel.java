@@ -188,5 +188,5 @@ public class MDLabel {
    public static final int MDL_ZINT = 183;  ///< Z component (int)
    public static final int MDL_ZSCORE = 184;  ///< Z Score (double)
    public static final int MDL_ZSIZE = 185;  ///< Z size (int)
-   public static final int MDL_LAST_LABEL = 186;                       // **** NOTE ****: Do keep this label always at the end
+   public static final int MDL_LAST_LABEL = 186;  // **** NOTE ****: Do keep this label always at the end;it is here for looping purposes
 }

@@ -35,7 +35,8 @@
 #include "data/threads.h"
 #include "data/program.h"
 
-/** @addtogroup Parallel
+/** @defgroup MPI MPI
+ *  @ingroup ParallelLibrary
  * @{
  */
 

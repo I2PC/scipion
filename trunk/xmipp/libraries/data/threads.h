@@ -5,15 +5,17 @@
 #ifndef THREADS_T
 #define THREADS_T
 
-/**@defgroup Parallel Parallel Stuff
- * @{
- */
 
 class ThreadManager;
 class ThreadArgument;
 
-/** Prototype of functions for threads works. */
+/* Prototype of functions for threads works. */
 typedef void (*ThreadFunction) (ThreadArgument &arg);
+
+/** @defgroup Threads Threads
+ *  @ingroup ParallelLibrary
+ * @{
+ */
 
 /** Class wrapping around the pthreads mutex.
  * This class will provide a more object oriented implementation

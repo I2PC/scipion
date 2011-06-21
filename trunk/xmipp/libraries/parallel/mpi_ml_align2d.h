@@ -100,6 +100,8 @@ public:
     void copyVolumes();
     /** Only master postprocess volumes */
     void postProcessVolumes();
+    /** Only master create empty files */
+    virtual void createEmptyFiles(int type);
     /** Project volumes, sync after projection */
     void projectVolumes(MetaData &mdProj);
     /** Make noise images, only master */
