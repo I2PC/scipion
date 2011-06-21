@@ -30,3 +30,6 @@
 
 /// @defgroup BilibLibrary Bilib library
 /// @ingroup Libraries 
+
+/// @defgroup ParallelLibrary Parallel library
+/// @ingroup Libraries
