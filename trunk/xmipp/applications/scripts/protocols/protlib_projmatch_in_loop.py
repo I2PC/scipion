@@ -2,7 +2,7 @@ import os, shutil, string, glob, math
 #import launch_job, utils_xmipp
 from distutils.dir_util import mkpath
 from xmipp import *
-from protlib_utils import launchJob
+from protlib_utils import runJob
 
 CtfBlockName = 'ctfGroup'
 RefBlockName = 'refGroup'
@@ -359,10 +359,10 @@ def angular_class_average(_log
         parameters += \
                   ' --split '
     
-    launchJob('xmipp_angular_class_average',
-                          parameters,
-                          _log,
-                          DoParallel,
-                          NumberOfMpiProcesses * NumberOfThreads,
-                          1,
-                          SystemFlavour)
+    runJob(_log,
+           parameters,
+           _log,
+           DoParallel,
+           NumberOfMpiProcesses * NumberOfThreads,
+           1,
+           SystemFlavour)
