@@ -87,18 +87,39 @@ TEST_F( ImageGenericTest, add)
 
 TEST_F( ImageGenericTest, subtract)
 {
-  FileName sumFn = filename + "/../applications/tests/test_image_generic/sum.spi";
-  ImageGeneric sumImg(sumFn);
-  FileName fn1((String)"1@"+stackName);
-  ImageGeneric img1(fn1);
-  sumImg.subtract(img1);
-  FileName fn2((String)"2@"+stackName);
-  ImageGeneric img2(fn2);
+    FileName sumFn = filename + "/../applications/tests/test_image_generic/sum.spi";
+    ImageGeneric sumImg(sumFn);
+    FileName fn1((String)"1@"+stackName);
+    ImageGeneric img1(fn1);
+    sumImg.subtract(img1);
+    FileName fn2((String)"2@"+stackName);
+    ImageGeneric img2(fn2);
 
-  EXPECT_TRUE(sumImg == fn2);
+    EXPECT_TRUE(sumImg == fn2);
 }
 
+// check if an empty file is correctly created
+TEST_F( ImageGenericTest, createEmptyFile)
+{
+    FileName Fn(filename + "/../applications/tests/test_image_generic/emptyFile.stk");
+    const int size = 16;
+    createEmptyFile(Fn,size,size,size,size);
+    FileName Fn2;
+    size_t dump;
+    Fn.decompose(dump, Fn2);
+    ImageGeneric Img(Fn2);
 
+    int Xdim, Ydim, Zdim;
+    size_t Ndim;
+    Img.getDimensions(Xdim, Ydim, Zdim, Ndim);
+    EXPECT_TRUE( Xdim == size && Ydim == size && Zdim == size && Ndim == size);
+    double std, avg, min, max;
+    Img().computeStats(avg, std, min, max);
+    EXPECT_DOUBLE_EQ(avg, 0);
+    EXPECT_DOUBLE_EQ(std, 0);
+    EXPECT_DOUBLE_EQ(min, 0);
+    EXPECT_DOUBLE_EQ(max, 0);
+}
 
 GTEST_API_ int main(int argc, char **argv)
 {
