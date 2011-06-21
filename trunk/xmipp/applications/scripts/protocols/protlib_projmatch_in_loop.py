@@ -152,25 +152,21 @@ def projection_matching(_log
     #remove output metadata
     if os.path.exists(_ProjMatchRootName):
         os.remove(_ProjMatchRootName)
-    inputDocFile  = FileName()
-    outputDocFile = FileName()
-    neighbFileb   = FileName()
+    
     for ii in range(NumberOfCtfGroups):
         if NumberOfCtfGroups>1 :
             print 'Focus Group: ', ii+1,'/',NumberOfCtfGroups
         ictf    = NumberOfCtfGroups - ii 
-        #inputdocfile    = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@' + CtfGroupName + '_images.sel'
-        #outputname   = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@'+ _ProjMatchRootName
-        inputDocFile.composeBlock(CtfBlockName,ictf,CtfGroupName+ '_images','sel')
-        outputDocFile.composeBlock(CtfBlockName,ictf,CtfGroupName+ _ProjMatchRootName)
+#        if (_DoCtfCorrection):
+        #outputname   = _ProjMatchRootName + '_' + CtfGroupName 
+        inputdocfile    = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@' + CtfGroupName + '_images.sel'
+        outputname   = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@'+ _ProjMatchRootName
+        #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
         baseTxtFile  = refname[:-len('.stk')] 
         neighbFile      = baseTxtFile + '_sampling.xmd'
         if (os.path.exists(neighbFile)):
             os.remove(neighbFile)
-        #neighbFileb     = utils_xmipp.composeFileName(baseTxtFile + '_group',ictf,'')
-        #neighbFileb     += '_sampling.xmd'
-        neighbFileb.compose(baseTxtFile + '_group',ictf)
-        neighbFileb     += '_sampling.xmd'
+        neighbFileb     = baseTxtFile + '_group'+str(ictf).zfill(FILENAMENUMBERLENGTH) + '_sampling.xmd'
         shutil.copy(neighbFileb, neighbFile)
 #        else:
 #            inputdocfile    = 'ctfGroup'+str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
@@ -194,7 +190,7 @@ def projection_matching(_log
                     ' --scale '          + str(ScaleStep) + ' ' + str(ScaleNumberOfSteps) 
         
         if (_DoCtfCorrection and ReferenceIsCtfCorrected):
-            ctffile = str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_ctf.stk'
+            ctffile = str(ictf).zfill(FILENAMENUMBERLENGTH) + '@' + CtfGroupName + '_ctf.stk'
             parameters += \
                       ' --pad '            + str(PaddingFactor) + \
                       ' --ctf '            + ctffile
@@ -233,7 +229,7 @@ def assign_images_to_references(_log
 
     mycounter=0L
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
-        auxInputdocfile = CtfBlockName + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+        auxInputdocfile = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
             inputFileName = ProjMatchRootName[iRef3D]
             inputdocfile    = auxInputdocfile+ inputFileName
@@ -252,7 +248,7 @@ def assign_images_to_references(_log
         os.remove(outputdocfile)
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         MDaux.clear()
-        auxInputdocfile = CtfBlockName + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+        auxInputdocfile = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
             inputFileName = ProjMatchRootName[iRef3D]
             inputdocfile    = auxInputdocfile+ inputFileName
@@ -274,13 +270,13 @@ def assign_images_to_references(_log
     #we are done but for the future it is convenient to create more blocks
     #with the pairs ctf_group reference    
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
-        auxInputdocfile  = CtfBlockName + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+        auxInputdocfile  = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@'
         MDaux.read(auxInputdocfile+outputdocfile)
         for iRef3D in range(1,NumberOfReferences+1):
             auxOutputdocfile  = CtfBlockName + \
-                                str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)
+                                str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)
             auxOutputdocfile += '_' + RefBlockName +\
-                                      str(iRef3D).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+                                      str(iRef3D).zfill(FILENAMENUMBERLENGTH)+'@'
             #select images with ref3d=iRef3D
             MDout.importObjects(MDaux,MDValueEQ(MDL_REF3D, iRef3D))
             MDout.write(auxOutputdocfile+outputdocfile,MD_APPEND)
@@ -326,9 +322,9 @@ def angular_class_average(_log
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         for iRef3D in range(1,NumberOfReferences+1):
             auxInputdocfile  = CtfBlockName + \
-                                str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)
+                                str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)
             auxInputdocfile += '_' + RefBlockName +\
-                                str(iRef3D).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+                                str(iRef3D).zfill(FILENAMENUMBERLENGTH)+'@'
             MD.read(auxInputdocfile+DocFileInputAngles)
             if MD.size()==0:
                 print "Empty metadata, remember to copy the reference"
@@ -342,7 +338,7 @@ def angular_class_average(_log
             if (DoCtfCorrection):
                 # On-the fly apply Wiener-filter correction and add all CTF groups together
                 parameters += \
-                           ' --wien '   + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@' + CtfGroupName + '_wien.stk' + \
+                           ' --wien '   + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@' + CtfGroupName + '_wien.stk' + \
                            ' --pad '    + str(PaddingFactor) + \
                            ' --add_to ' + ProjMatchRootName.replace('.doc','__')
             else:
