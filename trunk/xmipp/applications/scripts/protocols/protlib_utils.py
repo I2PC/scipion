@@ -229,6 +229,7 @@ def buildRunCommand(
                NumberOfMpiProcesses,
                NumberOfThreads,
                SystemFlavour):
+    paramsDict={}
     if not DoParallel:
         command = programname + ' ' + params
     else:
