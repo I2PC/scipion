@@ -47,7 +47,9 @@ public:
 /** Class to represent data of programs categories */
 class DbCategory
 {
-
+public:
+  int id;
+  String name, description, prefixes;
 };//end of class DbCategory
 
 /** Class that will encapsulate the Xmipp objects representation
@@ -85,5 +87,10 @@ public:
   bool updateProgram(DbProgram * program);
   bool selectPrograms(std::vector<DbProgram*> &programs);
 
+  /** Select all categories from DB */
+  bool selectCategories(std::vector<DbCategory*> &categories);
+
 };//end of class ProgramDB
+
+
 #endif /* PROGRAM_SQL_H_ */

@@ -119,6 +119,12 @@ AnalysisScript="visualize_ml2d.py"
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
+
+def checkErrors():
+    '''This function will be used to validate the protocols
+    should be implemented in all derived protocols'''
+    return ['testing error']
+
 class ProtML2D:
 
     #init variables

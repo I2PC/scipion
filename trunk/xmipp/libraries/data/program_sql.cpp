@@ -44,7 +44,7 @@ XmippDB::XmippDB()
   init(xmippBaseDir().append("/programs.db"));
 }
 
-bool XmippDB::execStmt(const std::string &stmt, const std::string &error)
+bool XmippDB::execStmt(const String &stmt, const String &error)
 {
     if (sqlite3_exec(db, stmt.c_str(), NULL, NULL, &errmsg) != SQLITE_OK)
     {
@@ -102,7 +102,7 @@ String getSqliteStr(const String & str)
         pos += 2;
     }
 
-    return (String)"'" + temp + "'";
+    return formatString("'%s'", temp.c_str());
 }
 
 bool XmippDB::deleteProgramByName(const String &programName)

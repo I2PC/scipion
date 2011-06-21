@@ -4,6 +4,8 @@ import os
 import string
 from Tkinter import *
 import tkFont
+import tkMessageBox
+from protlib_utils import *
 """ Guidelines for python script header formatting:
 
 The idea of the GUI class is that it provides a graphical editor of
@@ -57,34 +59,38 @@ Optional:
 
 """
 
-class ProtocolStyle():
+sepLine = "#------------------------------------------------------------------------------------------\n" 
+
+class ProtocolStyle(dict):
     ''' Class to define some style settings like font, colors, etc '''
     def __init__(self):        
         #Font
-        self.FontName = "Helvetica"
-        self.FontSize = 10
+        default = {}
+        default['FontName'] = "Helvetica"
+        default['FontSize'] = 10
         #TextColor
-        self.CitationTextColor = "dark olive green"
-        self.LabelTextColor = "black"
-        self.SectionTextColor = "blue4"
+        default['CitationTextColor'] = "dark olive green"
+        default['LabelTextColor'] = "black"
+        default['SectionTextColor'] = "blue4"
         #Background Color
-        self.BgColor = "white"
-        self.LabelBgColor = self.BgColor
-        self.HighlightBgColor = self.BgColor
-        self.ButtonBgColor = "LightBlue"
-        self.ButtonActiveBgColor = "LightSkyBlue"
-        self.EntryBgColor = "lemon chiffon" 
-        self.ExpertLabelBgColor = "light salmon"
+        default['BgColor'] = "white"
+        default['LabelBgColor'] = default['BgColor']
+        default['HighlightBgColor'] = default['BgColor']
+        default['ButtonBgColor'] = "LightBlue"
+        default['ButtonActiveBgColor'] = "LightSkyBlue"
+        default['EntryBgColor'] = "lemon chiffon" 
+        default['ExpertLabelBgColor'] = "light salmon"
         #Color
-        self.ListSelectColor = "DeepSkyBlue4"
-        self.BooleanSelectColor = "DeepSkyBlue4"
+        default['ListSelectColor'] = "DeepSkyBlue4"
+        default['BooleanSelectColor'] = "DeepSkyBlue4"
         #Dimensions limits
-        self.MaxHeight = 600
-        self.MaxWidth = 800
-        self.MaxFontSize = 14
-        self.MinFontSize = 6
-        self.WrapLenght = self.MaxWidth / 2
-        self.Font = tkFont.Font(family=self.FontName, size=self.FontSize, weight=tkFont.BOLD)
+        default['MaxHeight'] = 600
+        default['MaxWidth'] = 800
+        default['MaxFontSize'] = 14
+        default['MinFontSize'] = 6
+        default['WrapLenght'] = default['MaxWidth'] / 2
+        default['Font'] = tkFont.Font(family=default['FontName'], size=default['FontSize'], weight=tkFont.BOLD)
+        self.update(default)
 
 class AutoScrollbar(Scrollbar):
     '''A scrollbar that hides itself if it's not needed.'''
@@ -105,7 +111,8 @@ class ProtocolVariable():
         self.help = None
         self.tags = {}
         self.conditions = {}
-        self.is_string = False                           
+        self.is_string = False    
+        self.tktext = None #special text widget                       
     
     def setTags(self, tags):
         for k, v in tags:
@@ -118,16 +125,21 @@ class ProtocolVariable():
         return 'section' in self.tags.keys()
     
     def getValue(self):
+        if self.tktext:
+            return '""%s""' % self.tktext.get(1.0, END)
         return self.tkvar.get() 
     
-    def getLines(self):        
-        lines = [self.commentline]
+    def getLines(self):   
+        if self.isSection():
+            lines = [sepLine + self.commentline + '\n' + sepLine]
+        else:    
+            lines = [self.commentline + '\n']
         if self.help:
-            lines.append(self.help + '\n')
+            lines.append(self.help)
         if self.is_string:
-            template = '%s = "%s\n"'
+            template = '%s = "%s"\n\n'
         else:
-            template = '%s = %s\n'  
+            template = '%s = %s\n\n'  
         if self.tkvar:   
             lines.append(template % (self.name, self.getValue()))
         return lines
@@ -177,27 +189,30 @@ class ProtocolGUI():
         self.lastrow = 0
         self.widgetslist = []
         self.sectionslist = [] # List of all sections
+        # Script title
+        self.programname = self.scriptname.replace('.py', '')
+        self.scriptmodule = loadModule(self.programname)
     #-------------------------------------------------------------------
     # Widgets creation and GUI building
     #-------------------------------------------------------------------  
     def addSeparator(self, row):
-        self.l1 = Label(self.frame, text="", bg=self.style.LabelBgColor)
+        self.l1 = Label(self.frame, text="", bg=self.style['LabelBgColor'])
         self.l1.grid(row=row)
-        self.l2 = Frame(self.frame, height=2, bd=1, bg=self.style.SectionTextColor, relief=RIDGE)
+        self.l2 = Frame(self.frame, height=2, bd=1, bg=self.style['SectionTextColor'], relief=RIDGE)
         self.l2.grid(row=row + 1, column=0, columnspan=self.columnspantextlabel + 3, sticky=EW)
-        self.l3 = Label(self.frame, text="", bg=self.style.LabelBgColor)
+        self.l3 = Label(self.frame, text="", bg=self.style['LabelBgColor'])
         self.l3.grid(row=row + 2)
         self.lastrow += 2
         
     def addButton(self, text, cmd, underline, row, col, sticky):
         f = tkFont.Font(family="Helvetica", size=8, weight=tkFont.BOLD)
         btn = Button(self.frame, text=text, command=cmd, underline=underline, font=f,
-                     bg=self.style.ButtonBgColor, activebackground=self.style.ButtonActiveBgColor)
+                     bg=self.style['ButtonBgColor'], activebackground=self.style['ButtonActiveBgColor'])
         btn.grid(row=row, column=col, sticky=sticky)
         return btn
     
     def addRadioButton(self, w, var, text, value, row, col):
-        rb = Radiobutton(self.frame, text=text, variable=var.tkvar, value=value, bg=self.style.BgColor, command=self.checkVisibility)
+        rb = Radiobutton(self.frame, text=text, variable=var.tkvar, value=value, bg=self.style['BgColor'], command=self.checkVisibility)
         rb.grid(row=row, column=col, sticky=W)
         w.widgetslist.append(rb)
         return rb
@@ -207,12 +222,12 @@ class ProtocolGUI():
         self.widgetslist.append(w)      
         label_row = row = self.getRow() # Get row where to place the widget        
         label_text = var.comment
-        label_color = self.style.LabelTextColor
-        label_bgcolor = self.style.LabelBgColor        
+        label_color = self.style['LabelTextColor']
+        label_bgcolor = self.style['LabelBgColor']        
 
         if 'section' in var.tags.keys():
             label_text += "\n-----------------------------------------------------------"
-            label_color = self.style.SectionTextColor 
+            label_color = self.style['SectionTextColor'] 
             self.lastSection = w
             self.sectionslist.append(w)
         else:
@@ -226,7 +241,7 @@ class ProtocolGUI():
         keys = var.tags.keys()
                 
         if 'expert' in keys:
-           label_bgcolor = self.style.ExpertLabelBgColor
+           label_bgcolor = self.style['ExpertLabelBgColor']
            
         if 'condition' in keys:
             conditions = var.tags['condition'].split(',')
@@ -258,11 +273,12 @@ class ProtocolGUI():
                     self.addRadioButton(w, var, o, o, row, var_column)
                     row = self.getRow()
             elif 'text' in keys:
-                text = Text(self.frame, width=30, height=10,)
-                text.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W+E)
-                w.widgetslist.append(text)
+                var.tktext = Text(self.frame, width=30, height=10,)
+                var.tktext.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W+E)
+                w.widgetslist.append(var.tktext)
+                var.tktext.insert(END, var.value)
             else: #Add a text Entry
-                entry = Entry(self.frame, textvariable=var.tkvar, bg=self.style.EntryBgColor)
+                entry = Entry(self.frame, textvariable=var.tkvar, bg=self.style['EntryBgColor'])
                 entry.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W+E)
                 w.widgetslist.append(entry)
                 if 'file' in keys or 'dir' in keys:
@@ -285,7 +301,7 @@ class ProtocolGUI():
         vscrollbar.grid(row=0, column=1, sticky=N + S)
         hscrollbar = AutoScrollbar(self.master, orient=HORIZONTAL)
         hscrollbar.grid(row=1, column=0, sticky=E + W)
-        self.canvas = Canvas(self.master, background=self.style.BgColor,
+        self.canvas = Canvas(self.master, background=self.style['BgColor'],
                         yscrollcommand=vscrollbar.set,
                         xscrollcommand=hscrollbar.set)
         self.canvas.grid(row=0, column=0, sticky=N + S + E + W)
@@ -293,7 +309,7 @@ class ProtocolGUI():
         hscrollbar.config(command=self.canvas.xview)
         self.master.grid_rowconfigure(0, weight=1)
         self.master.grid_columnconfigure(0, weight=1)
-        self.frame = Frame(self.canvas, background=self.style.BgColor)
+        self.frame = Frame(self.canvas, background=self.style['BgColor'])
         self.frame.rowconfigure(0, weight=1)
         self.frame.columnconfigure(0, weight=1)
             
@@ -304,20 +320,18 @@ class ProtocolGUI():
         self.canvas.config(scrollregion=self.canvas.bbox("all")) 
     
     def fillHeader(self):
-        import os, sys
-        # Script title
-        programname = self.scriptname.replace('.py', '')
-        self.master.title(programname)
-        headertext = 'GUI for Xmipp %s \n Executed in directory: %s' % (programname, os.getcwd())
-        self.l1 = Label(self.frame, text=headertext, fg=self.style.SectionTextColor, bg=self.style.LabelBgColor)
-        self.l1.configure(wraplength=self.style.WrapLenght)
+        import os, sys        
+        self.master.title(self.programname)
+        headertext = 'GUI for Xmipp %s \n Executed in directory: %s' % (self.programname, os.getcwd())
+        self.l1 = Label(self.frame, text=headertext, fg=self.style['SectionTextColor'], bg=self.style['LabelBgColor'])
+        self.l1.configure(wraplength=self.style['WrapLenght'])
         self.l1.grid(row=0, column=0, columnspan=6, sticky=E+W)
         if (self.have_publication):
             headertext = "If you publish results obtained with this protocol, please cite:"
             for pub in self.publications:
                 headertext += '\n' + pub.replace('\n', '')
-            self.l2 = Label(self.frame, text=headertext, fg=self.style.CitationTextColor, bg=self.style.LabelBgColor)
-            self.l2.configure(wraplength=self.style.WrapLenght)
+            self.l2 = Label(self.frame, text=headertext, fg=self.style['CitationTextColor'], bg=self.style['LabelBgColor'])
+            self.l2.configure(wraplength=self.style['WrapLenght'])
             self.l2.grid(row=self.getRow(), column=0, columnspan=5, sticky=EW)
         self.addSeparator(self.getRow())
             
@@ -424,10 +438,10 @@ class ProtocolGUI():
     def resize(self):
         height = self.frame.winfo_reqheight() + 25
         width = self.frame.winfo_reqwidth() + 25
-        if height > self.style.MaxHeight:
-           height = self.style.MaxHeight
-        if width > self.style.MaxWidth:
-           width = self.style.MaxWidth
+        if height > self.style['MaxHeight']:
+           height = self.style['MaxHeight']
+        if width > self.style['MaxWidth']:
+           width = self.style['MaxWidth']
         self.master.geometry("%dx%d%+d%+d" % (width, height, 0, 0))
         
     def close(self, event=""):
@@ -444,18 +458,41 @@ class ProtocolGUI():
         self.checkVisibility()
     
     def save(self, event=""):
-        #f = open(self.scriptname, 'w')
-        f = sys.stdout
+        print "* Saving script: %s" % self.scriptname
+        f = open(self.scriptname, 'w')
+        #f = sys.stdout
         f.writelines(self.pre_header_lines)
         for w in self.widgetslist:
             wlines = w.variable.getLines()
             f.writelines(wlines)
+        f.writelines(sepLine + '# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE\n') 
         f.writelines(self.post_header_lines)
-        #f.close()
-        #os.chmod(self.scriptname, 0755)
+        f.close()
+        os.chmod(self.scriptname, 0755)
     
-    def saveExecute(self):
-        pass
+    def confirmDeleteWorkingDir(self):
+        if 'DoDeleteWorkingDir' in self.variablesDict and self.variablesDict['DoDeleteWorkingDir'].getValue() == 'True':
+             return tkMessageBox.askyesno("Confirm DELETE", "Working dir '%s' will be DELETED. Do you want to continue?" % self.variablesDict['WorkingDir'].getValue())
+        return True
+    
+    def validateProtocol(self):
+        mod = self.scriptmodule
+        reload(mod)
+        print dir(mod)
+        if 'checkErrors' in dir(mod):
+            errors = mod.checkErrors()
+            if len(errors) > 0:
+                #Ensure minimum width
+                import textwrap 
+                err = [textwrap.fill(e, 150) for e in errors]
+                tkMessageBox.showerror("Validation ERRORS",'\n'.join(err))
+                return False
+        return True
+    
+    def saveExecute(self, event=""):
+        self.save() 
+        if self.confirmDeleteWorkingDir() and self.validateProtocol():
+            print "EXECUTING"           
     
     def showHelp(self, helpmsg):
         import tkMessageBox
@@ -470,10 +507,10 @@ class ProtocolGUI():
         deltha = 2
         if event.char == '-':
             deltha = -2
-        size = self.style.Font['size']
+        size = self.style['Font']['size']
         new_size = size + deltha
-        if new_size >= self.style.MinFontSize and new_size <= self.style.MaxFontSize:
-            self.style.Font.configure(size = new_size)
+        if new_size >= self.style['MinFontSize'] and new_size <= self.style['MaxFontSize']:
+            self.style['Font'].configure(size = new_size)
         self.resize()
         
     def checkVisibility(self, event=""):        
@@ -507,8 +544,7 @@ class ProtocolGUI():
         self.init(script)        
         self.master = Tk()
         self.style = ProtocolStyle()
-        #self.master.configure(font = self.style.Font)
-        self.master.option_add("*Font", self.style.Font)
+        self.master.option_add("*Font", self.style['Font'])
         self.columnspantextlabel = 3
         self.columntextentry = 3
         

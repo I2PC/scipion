@@ -71,8 +71,7 @@ class XmippProtocol(object):
 
         #Create dir if not exists
         if not os.path.exists(logdir):
-            os.makedirs(logdir)
-            
+            os.makedirs(logdir)            
         
         logfile = self.LogPrefix + ".log"
         self.Log = XmippLog( logfile, logfile )
@@ -98,7 +97,7 @@ class XmippProtocol(object):
         pass
     
     def run(self):
-        '''The run of the protocols
+        '''Run of the protocols
         if the other functions have been correctly implemented, this not need to be
         touched in derived class, since the run of protocols should be the same'''
         errors = self.validate()

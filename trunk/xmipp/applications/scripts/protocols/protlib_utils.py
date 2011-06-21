@@ -25,8 +25,11 @@
  ***************************************************************************/
  '''
 
+import os
+import sys
 '''number of leading zeros in filenames'''
 FILENAMENUMBERLENTGH=6
+
 #---------------------------------------------------------------------------
 # Logging utilities
 #---------------------------------------------------------------------------
@@ -49,7 +52,7 @@ class XmippLog:
             self._logfile = open(filename, 'a')
             self.is_basic = True
         # append a line with user, machine and date
-        import os, socket
+        import socket
         myusername = str(os.environ.get('USERNAME'))
         myhost = str(socket.gethostname())
         mypwd = str(os.environ.get('PWD'))
@@ -99,7 +102,6 @@ def getScriptPrefix(script):
     script - script filename, could also contains path
     '''
     import re
-    import os
     script = os.path.basename(script)
     #all protocols script should start by 'xmipp_protocol', the numbering part is optional
     s = re.match('((?:\w*[a-zA-Z])+)(?:_\d+)?.py', script)
@@ -172,10 +174,15 @@ def getBoolListFromVector(_vector,numberIteration=None):
 #---------------------------------------------------------------------------
 # Error handling
 #---------------------------------------------------------------------------
+def reportError(msg):
+    '''Function to write error message to log, to screen and exit'''
+    print >> sys.stderr, "ERROR: ", msg
+    exit(1)
+        
 def printLogError(log, msg):
     '''Function to write error message to log, to screen and exit'''
     log.error(msg)
-    print "ERROR: ", msg
+    print >> sys.stderr, "ERROR: ", msg
     exit(1)
     
 def printLog(log, msg):
@@ -187,84 +194,108 @@ def printLog(log, msg):
 # Jobs launching
 #---------------------------------------------------------------------------    
 # The job should be launched from the working directory!
-def launchJob(programname,
-               params,
-               log,
-               DoParallel,
-               NumberOfMpiProcesses,
-               NumberOfThreads,
-               SystemFlavour,
-               onlyBuildCommand=False):
-    import os, sys
-    command = buildCommand(programname,
+def runJob(log, 
+           programname,
+           params,
+           DoParallel,
+           NumberOfMpiProcesses,
+           NumberOfThreads,
+           SystemFlavour):
+    
+    command = buildLauchCommand(programname,
                params,
                DoParallel,
                NumberOfMpiProcesses,
                NumberOfThreads,
                SystemFlavour)
-    if command == '':
-            message = "Error: unrecognized SystemFlavour: ", SystemFlavour
-            print '* ', message
-            print '*********************************************************************'
-            log.info(message)
-            sys.exit(1)
-    print '* ', command, '\n'
-    log.info(command)
+    printLog(log, "Running command: %s" % command)
+
     from subprocess import call
-
     retcode = 0
-    if (not onlyBuildCommand):
-        try:
-            retcode = call(command, shell=True)
-            if retcode > 0:
-                print >> sys.stderr, "Warning:", command, ' was terminated by signal', retcode
-        except OSError, e:
-            print >> sys.stderr, "Execution failed:", e
-            exit(1)
+    try:
+        retcode = call(command, shell=True)
+        printLog(log, "Process returned with code %d" % retcode)
+    except OSError, e:
+        printLogError(log, "Execution failed %s" % e)
 
-    return(command, retcode);
+    return (command, retcode)
 
-def buildCommand(programname,
+def buildRunCommand(
+               log,
+               programname,
                params,
                DoParallel,
                NumberOfMpiProcesses,
                NumberOfThreads,
                SystemFlavour):
-    import os, sys
-
     if not DoParallel:
         command = programname + ' ' + params
     else:
-        mpiprogramname = programname.replace('xmipp', 'xmipp_mpi')
-
+        paramsDict['prog'] = programname.replace('xmipp', 'xmipp_mpi')
+        paramsDict['jobs'] = NumberOfMpiProcesses
+        paramsDict['params'] = params
+        
         if (SystemFlavour == 'SLURM-MPICH'): # like BSCs MareNostrum, LaPalma etc
             mpicommand = 'srun '
-
         elif (SystemFlavour == 'TORQUE-OPENMPI'): # like our crunchy
+            mpicommand = 'mpirun -mca mpi_yield_when_idle 1 -np %(jobs)d'
             if (int(NumberOfThreads) > 1):
-                mpicommand = 'mpirun -mca mpi_yield_when_idle 1 --bynode -np ' + str(NumberOfMpiProcesses)
-            else:
-                mpicommand = 'mpirun -mca mpi_yield_when_idle 1 -np ' + str(NumberOfMpiProcesses)
-
+                mpicommand += ' --bynode'
         elif (SystemFlavour == 'SGE-OPENMPI'): # like cluster at imp.ac.at (no variable nr_cpus yet...)
-            mpicommand = 'mpiexec -n ' + str(NumberOfMpiProcesses)
-
+            mpicommand = 'mpiexec -n  %(jobs)d' 
         elif (SystemFlavour == 'PBS'): # like in Vermeer and FinisTerrae
-            mpicommand = 'mpirun -np ' + str(NumberOfMpiProcesses) + ' -hostfile ' + os.environ.get('PBS_NODEFILE')
-
+            paramsDict['file']  = os.environ.get('PBS_NODEFILE')
+            mpicommand = 'mpirun -np  %(jobs)d -hostfile %(file)s'
         elif (SystemFlavour == 'XMIPP_MACHINEFILE'): # environment variable $XMIPP_MACHINEFILE points to machinefile
-            mpicommand = 'mpirun -np ' + str(NumberOfMpiProcesses) + ' -machinefile ' + os.environ.get('XMIPP_MACHINEFILE')
-
+            paramsDict['file']  = os.environ.get('XMIPP_MACHINEFILE')
+            mpicommand = 'mpirun -np  %(jobs)d -machinefile %(file)s'
         elif (SystemFlavour == 'HOME_MACHINEFILE'): # machinefile is called $HOME/machines.dat
-            mpicommand = 'mpirun -np ' + str(NumberOfMpiProcesses) + ' -machinefile ' + os.environ.get('HOME') + '/machinefile.dat'
-
+            paramsDict['file'] = os.environ.get('HOME') + '/machinefile.dat'
+            mpicommand = 'mpirun -np   %(jobs)d -machinefile %(file)s'
         elif (SystemFlavour == ''):
-            mpicommand = 'mpirun -mca mpi_yield_when_idle 1 -np ' + str(NumberOfMpiProcesses)
-
+            mpicommand = 'mpirun -mca mpi_yield_when_idle 1 -np %(jobs)d'
         else:
-            return ''
-        command = mpicommand + ' `which ' + str(mpiprogramname) + '` ' + params
-    return(command);
+            printLogError(log, 'Unrecognized SystemFlavour %s' % SystemFlavour)
+        command = (mpicommand + ' `which %(prog)s` %(params)s') % paramsDict
+    return command
+
+def loadModule(moduleName):
+    try:
+        if moduleName in sys.modules:
+            module = sys.modules[moduleName]
+            reload(module)
+        else:
+            module = __import__(moduleName)
+    except ImportError, e:
+        reportError(str(e))
+    return module
+        
+def loadLaunchConfig(configFile):
+    moduleName = configFile.replace('.py', '')
+    try:
+        if moduleName in sys.modules:
+            module = sys.modules[moduleName]
+            reload(module)
+        else:
+            module = __import__(moduleName)
+    except ImportError, e:
+        reportError(str(e))
+        
+def createLaunchFile(outFilename, fileTemplate, **kargs):
+    file = open(outFilename, 'w')
+    file.write(fileTemplate % kargs)
+    file.close()
+    
+def launchJob(cmdTemplate, jobFile):
+    command = cmdTemplate % {'file':jobFile}
+    printLog(log, "Lauching job: %s" % command)
+    from subprocess import call
+    retcode = 0
+    try:
+        retcode = call(command, shell=True)
+    except OSError, e:
+        reportError("Launch failed %s" % e)
+
 
 #---------------------------------------------------------------------------
 # Metadata stuff

@@ -903,7 +903,7 @@ class automated_gui_class:
         else:
             sys.path.insert(0,'.')
             exec "import " + modulename
-        if "preconditions" in eval("dir("+modulename+")"):
+        if "checkErrors" in eval("dir("+modulename+")"):
             exec "errors = "+modulename+".checkErrors()"
             if len(errors) > 0:
                 errormsg = '\n'.join(errors)
