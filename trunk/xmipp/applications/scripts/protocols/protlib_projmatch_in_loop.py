@@ -100,9 +100,8 @@ def angular_project_library(_log
         parameters+= \
               ' --only_winner '
 
-    launchJob('xmipp_angular_project_library',
+    runJob(_log,'xmipp_angular_project_library',
                          parameters,
-                         _log,
                          _DoParallel,
                          NumberOfMpiProcesses*NumberOfThreads,
                          1,
@@ -200,9 +199,8 @@ def projection_matching(_log
         if (DoParallel):
             parameters = parameters + ' --mpi_job_size ' + str(MpiJobSize)
         
-        launchJob('xmipp_angular_projection_matching',
+        runJob(_log,'xmipp_angular_projection_matching',
                             parameters,
-                            _log,
                             DoParallel,
                             NumberOfMpiProcesses,
                             NumberOfThreads,
