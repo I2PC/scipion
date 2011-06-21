@@ -21,6 +21,9 @@ public class FileItem {
 
     protected File file;
 
+    public FileItem() {
+    }
+
     public FileItem(File file) {
         this.file = file;
     }

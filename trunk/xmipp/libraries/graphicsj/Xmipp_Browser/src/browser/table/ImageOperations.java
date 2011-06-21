@@ -4,7 +4,7 @@
  */
 package browser.table;
 
-import browser.imageitems.TableImageItem;
+import browser.imageitems.tableitems.AbstractTableImageItem;
 import ij.ImagePlus;
 import ij.process.FloatProcessor;
 import ij.process.ImageStatistics;
@@ -16,13 +16,13 @@ import java.util.Vector;
  */
 public class ImageOperations {
 
-    public static ImagePlus mean(Vector<TableImageItem> items) {
+    public static ImagePlus mean(Vector<AbstractTableImageItem> items) {
         int w = items.get(0).getWidth();
         int h = items.get(0).getHeight();
         double mean[] = new double[w * h];
 
         // For all images...
-        for (TableImageItem current : items) {
+        for (AbstractTableImageItem current : items) {
             if (current.isEnabled() && current.exists()) {
                 ImagePlus ip = current.getImagePlus();
                 float pixels[] = (float[]) ip.getProcessor().getPixels();
@@ -42,7 +42,7 @@ public class ImageOperations {
         return new ImagePlus("Mean", new FloatProcessor(w, h, mean));
     }
 
-    public static ImagePlus std_deviation(Vector<TableImageItem> items) {
+    public static ImagePlus std_deviation(Vector<AbstractTableImageItem> items) {
         int w = items.get(0).getWidth();
         int h = items.get(0).getHeight();
 
@@ -50,7 +50,7 @@ public class ImageOperations {
         double stdDev[] = new double[mean.length];
 
         // Traverses images.
-        for (TableImageItem current : items) {//int k = 0; k < items.size(); k++) {
+        for (AbstractTableImageItem current : items) {//int k = 0; k < items.size(); k++) {
             //TableImageItem current = items.elementAt(k);
 
             if (current.isEnabled() && current.exists()) {
@@ -75,7 +75,7 @@ public class ImageOperations {
         return std_ip;
     }
 
-    public static double[] getMinAndMax(Vector<TableImageItem> items) {
+    public static double[] getMinAndMax(Vector<AbstractTableImageItem> items) {
         // Initial min and max values.
         ImageStatistics statistics;
 

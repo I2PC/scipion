@@ -1,5 +1,6 @@
 package browser.imageitems;
 
+import browser.imageitems.tableitems.AbstractTableImageItem;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -25,11 +26,11 @@ import xmipp.Projection;
  */
 public class ImageConverter {
 
-    public static ImagePlus convertToImagej(ImageDouble image, String path) {
-        return convertToImagej(image, path, true);
+    public static ImagePlus convertToImagej(ImageDouble image, String title) {
+        return convertToImagej(image, title, true);
     }
 
-    public static ImagePlus convertToImagej(ImageDouble image, String path, boolean useLogarithm) {
+    public static ImagePlus convertToImagej(ImageDouble image, String title, boolean useLogarithm) {
         if (image.isPSD()) {
             image.convertPSD(useLogarithm);
         }
@@ -39,10 +40,10 @@ public class ImageConverter {
         int d = image.getZsize();
         long n = image.getNsize();
 
-        ImagePlus ip = convertToImagej(image.getData(), w, h, d, n, path);
+        ImagePlus ip = convertToImagej(image.getData(), w, h, d, n, title);
 
         // Sets associated file info.
-        File f = new File(path);
+        File f = new File(title);
         FileInfo fi = new FileInfo();
         fi.directory = f.getParent();
         fi.fileName = f.getName();
@@ -51,13 +52,13 @@ public class ImageConverter {
         return ip;
     }
 
-    public static ImagePlus convertToImagej(Projection projection, String path) {
+    public static ImagePlus convertToImagej(Projection projection, String title) {
 
         int w = projection.getXsize();
         int h = projection.getYsize();
         int d = projection.getZsize();
 
-        return convertToImagej(projection.getData(), w, h, d, 1, path);
+        return convertToImagej(projection.getData(), w, h, d, 1, title);
     }
 
     private static ImagePlus convertToImagej(double array[], int w, int h, int d, long n, String title) {
@@ -152,11 +153,11 @@ public class ImageConverter {
     return imp;
     }*/
 
-    public static ImagePlus convertToImagePlus(Vector<TableImageItem> items) {
+    public static ImagePlus convertToImagePlus(Vector<AbstractTableImageItem> items) {
         ImageStack is = null;
 
         for (int i = 0; i < items.size(); i++) {
-            TableImageItem item = items.elementAt(i);
+            AbstractTableImageItem item = items.elementAt(i);
 
             if (item.isEnabled() && item.exists()) {
                 ImagePlus ipslice = item.getImagePlus();

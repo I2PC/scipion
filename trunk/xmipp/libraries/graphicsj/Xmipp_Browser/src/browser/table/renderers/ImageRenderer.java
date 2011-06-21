@@ -4,14 +4,15 @@
  */
 package browser.table.renderers;
 
-import browser.imageitems.TableImageItem;
+import browser.imageitems.tableitems.AbstractTableImageItem;
 import ij.ImagePlus;
 import java.awt.Component;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
-import browser.table.ImagesTableModel;
+import browser.table.models.AbstractXmippTableModel;
 import java.awt.Color;
+import java.awt.Font;
 import javax.swing.BorderFactory;
 import javax.swing.border.Border;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -36,7 +37,7 @@ public class ImageRenderer extends DefaultTableCellRenderer {
 
     @Override
     public Component getTableCellRendererComponent(JTable table, Object object, boolean isSelected, boolean hasFocus, int row, int column) {
-        TableImageItem item = (TableImageItem) object;
+        AbstractTableImageItem item = (AbstractTableImageItem) object;
 
         // Calls super class so foreground, background, borders and rest of stuff is set.
         super.getTableCellRendererComponent(table, null,
@@ -44,8 +45,8 @@ public class ImageRenderer extends DefaultTableCellRenderer {
                 item != null && hasFocus, row, column);
 
         if (item != null) {
-            //System.out.println("*** Rendering: " + item + " S: " + item.slice + " N: " + item.nimage);
-            ImagesTableModel tableModel = (ImagesTableModel) table.getModel();
+//        DEBUG.printMessage("*** Rendering: " + item + " S: " + "<item.slice>" + " N: " + item.nimage);
+            AbstractXmippTableModel tableModel = (AbstractXmippTableModel) table.getModel();
 
             // Loads image...
             ImagePlus img = item.getPreview();
@@ -68,7 +69,10 @@ public class ImageRenderer extends DefaultTableCellRenderer {
 
             // (Shows label only when required).
             if (isShowingLabels()) {
-                setText(item.getLabel());
+                String label = cutString(item.getLabel(),
+                        table.getColumnModel().getColumn(column).getWidth());
+
+                setText(label);
             } else {
                 setText(null);
             }
@@ -89,7 +93,7 @@ public class ImageRenderer extends DefaultTableCellRenderer {
         return this;
     }
 
-    private void normalize(ImagePlus image, ImagesTableModel tableModel) {
+    private void normalize(ImagePlus image, AbstractXmippTableModel tableModel) {
         if (tableModel.isNormalizing()) {
             image.getProcessor().setMinAndMax(tableModel.getNormalizeMin(),
                     tableModel.getNormalizeMax());
@@ -98,5 +102,21 @@ public class ImageRenderer extends DefaultTableCellRenderer {
         }
 
         image.updateImage();  // Repaint
+    }
+
+    protected String cutString(String string, int columnWidth) {
+        StringBuffer sb = new StringBuffer(string);
+        String str = sb.toString();
+
+        Font font = getFont();
+        int w = getFontMetrics(font).stringWidth(str);
+
+        int i = 0;
+        while (w > columnWidth) {
+            str = "..." + sb.substring(i++);
+            w = getFontMetrics(font).stringWidth(str);
+        }
+
+        return str;
     }
 }

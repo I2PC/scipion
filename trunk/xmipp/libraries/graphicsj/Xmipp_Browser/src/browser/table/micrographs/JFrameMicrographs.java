@@ -14,8 +14,8 @@ import browser.DEBUG;
 import browser.ICONS_MANAGER;
 import browser.table.micrographs.ctf.JFrameCTF;
 import browser.LABELS;
-import browser.imageitems.TableImageItem;
-import browser.table.ImagesRowHeaderModel;
+import browser.imageitems.MicrographsTableImageItem;
+import browser.table.models.ImagesRowHeaderModel;
 import browser.table.micrographs.ctf.profile.CTFViewImageWindow;
 import browser.table.micrographs.ctf.tasks.TasksEngine;
 import browser.table.micrographs.ctf.tasks.iCTFGUI;
@@ -209,7 +209,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     }
 
     private void setRenderers() {
-        table.setDefaultRenderer(TableImageItem.class, imageRenderer);
+        table.setDefaultRenderer(MicrographsTableImageItem.class, imageRenderer);
         table.setDefaultRenderer(Double.class, doubleRenderer);
 
         // Image is quite big, so don't show it by default.
@@ -279,8 +279,8 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
             if (evt.getClickCount() > 1) {
                 Object item = table.getValueAt(view_row, view_col);
 
-                if (item instanceof TableImageItem) {
-                    TableImageItem tableItem = (TableImageItem) item;
+                if (item instanceof MicrographsTableImageItem) {
+                    MicrographsTableImageItem tableItem = (MicrographsTableImageItem) item;
                     ImagePlus ip = tableItem.getImagePlus();
                     ip.setTitle(tableItem.getOriginalStringValue());
 
@@ -342,7 +342,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         updateTableStructure();
     }
 
-    private void showCTFImage(TableImageItem item, String CTFFilename,
+    private void showCTFImage(MicrographsTableImageItem item, String CTFFilename,
             String PSDfilename, String MicrographFilename, int row) {
         ImagesWindowFactory.openCTFImage(item.getImagePlus(), CTFFilename,
                 PSDfilename, tasksEngine, MicrographFilename, row);
@@ -611,8 +611,8 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
             jmiShowCTF.setEnabled(tableModel.hasCtfData());
 
             // Column extraction only allowed for images
-            jmiExtractColumnEnabled.setEnabled(tableModel.getValueAt(row, col) instanceof TableImageItem);
-            jmiExtractColumnAll.setEnabled(tableModel.getValueAt(row, col) instanceof TableImageItem);
+            jmiExtractColumnEnabled.setEnabled(tableModel.getValueAt(row, col) instanceof MicrographsTableImageItem);
+            jmiExtractColumnAll.setEnabled(tableModel.getValueAt(row, col) instanceof MicrographsTableImageItem);
 
             boolean busy = tableModel.isRowBusy(row);
             jmiRecalculateCTF.setIcon(busy ? ICONS_MANAGER.WAIT_MENU_ICON : null);
@@ -656,8 +656,8 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         private void showRecalculateCTFWindow() {
             Object item = tableModel.getValueAt(row, CTF_IMAGE_COLUMN);
 
-            if (item instanceof TableImageItem) {
-                showCTFImage((TableImageItem) item, tableModel.getCTFfile(row),
+            if (item instanceof MicrographsTableImageItem) {
+                showCTFImage((MicrographsTableImageItem) item, tableModel.getCTFfile(row),
                         tableModel.getPSDfile(row), tableModel.getFilename(), row);
             }
         }

@@ -3,7 +3,6 @@
 #include "xmipp_InternalData.h"
 #include "xmipp_ExceptionsHandler.h"
 #include <data/image.h>
-#include <data/multidim_array_generic.h>
 #include <data/fft.h>
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_storeIds
@@ -162,7 +161,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData__IIII_3D
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write
-  (JNIEnv *env, jobject jobj, jstring filename, jint select_img, jboolean istack, jint mode, jint castWriteMode) {
+(JNIEnv *env, jobject jobj, jstring filename, jint select_img, jboolean istack, jint mode, jint castWriteMode) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
@@ -190,12 +189,30 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write
 
 JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData(JNIEnv *env,
 		jobject jobj) {
+	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
+
 	if (image != NULL) {
-		size_t size = image->getSize();
-		jdoubleArray array = env->NewDoubleArray(size);
-		env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(image->data));
-		return array;
+		try {
+			size_t size = image->getSize();
+			jdoubleArray array = env->NewDoubleArray(size);
+			env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(
+					image->data));
+			return array;
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Image is NULL";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
 	}
 
 	return (jdoubleArray) NULL;
@@ -218,7 +235,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setPixel
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
-	  IMGPIXEL(*image, (int) x, (int) y) = (double)value;
+		IMGPIXEL(*image, (int) x, (int) y) = (double)value;
 	}
 }
 
@@ -228,7 +245,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_ImageDouble_getVoxel(JNIEnv *env,
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
-	  value = A3D_ELEM(image->data,  (int) x, (int) y, (int) z);
+		value = A3D_ELEM(image->data, (int) x, (int) y, (int) z);
 	}
 
 	return value;
@@ -239,7 +256,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setVoxel
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
-	  A3D_ELEM(image->data,  (int) x, (int) y, (int) z) = (double)value;
+		A3D_ELEM(image->data, (int) x, (int) y, (int) z) = (double)value;
 	}
 }
 
@@ -312,24 +329,6 @@ JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize(JNIEnv *env,
 	}
 
 	return 0;
-}
-
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getMinAndMax(JNIEnv *env, jobject jobj){
-	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
-
-	if (image != NULL) {
-		size_t size = 2;
-		double aux[size];
-
-		image->data.computeDoubleMinMax(aux[0], aux[1]);
-
-		jdoubleArray array = env->NewDoubleArray(size);
-		env->SetDoubleArrayRegion(array, 0, size, aux);
-
-		return array;
-	}
-
-	return (jdoubleArray) NULL;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setXmippOrigin

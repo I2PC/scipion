@@ -20,6 +20,9 @@ public class XmippImageItem extends AbstractImageItem {
     public int nslice = ImageDouble.MID_SLICE;
     public long nimage = ImageDouble.FIRST_IMAGE;
 
+    public XmippImageItem() {
+    }
+
     public XmippImageItem(File file, Cache cache) {
         super(file, cache);
     }

@@ -25,6 +25,9 @@ public abstract class AbstractImageItem extends FileItem {
     protected Cache cache;
     protected ImageStatistics statistics;
 
+    public AbstractImageItem() {
+    }
+
     public AbstractImageItem(File file, Cache cache) {
         super(file);
 

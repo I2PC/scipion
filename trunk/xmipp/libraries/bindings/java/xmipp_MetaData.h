@@ -33,10 +33,10 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_destroy
 
 /*
  * Class:     xmipp_MetaData
- * Method:    read
+ * Method:    read_
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_read
+JNIEXPORT void JNICALL Java_xmipp_MetaData_read_1
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -77,7 +77,15 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_containsLabel
  * Signature: (I)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_xmipp_MetaData_label2Str
-  (JNIEnv *, jobject, jint);
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    getActiveLabels
+ * Signature: ()[I
+ */
+JNIEXPORT jintArray JNICALL Java_xmipp_MetaData_getActiveLabels
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_MetaData
@@ -113,11 +121,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_getValueBoolean
 
 /*
  * Class:     xmipp_MetaData
- * Method:    getFilename
- * Signature: ()Ljava/lang/String;
+ * Method:    getStatistics
+ * Signature: (Z)[D
  */
-JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getFilename
-  (JNIEnv *, jobject);
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_MetaData_getStatistics
+  (JNIEnv *, jobject, jboolean);
 
 /*
  * Class:     xmipp_MetaData

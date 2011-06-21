@@ -23,6 +23,7 @@ public class MetaData {
         // (It's executed just for the first time)
         Arrays.sort(PATHS_FIELDS);
     }
+    private String filename;
     //hold pointer to Image class in C++ space
     private long peer;
 
@@ -41,7 +42,12 @@ public class MetaData {
     private synchronized native void destroy();
 
     //reading
-    public native void read(String filename) throws Exception;
+    public native void read_(String filename) throws Exception;
+
+    public void read(String filename) throws Exception {
+        this.filename = filename;
+        read_(filename);
+    }
 
     public native int size();
 
@@ -51,7 +57,9 @@ public class MetaData {
 
     public native boolean containsLabel(int label);
 
-    public native String label2Str(int label);
+    public static native String label2Str(int label);
+
+    public native int[] getActiveLabels();
 
     //get values from metadata
     public native int getValueInt(int label, long objId);
@@ -81,7 +89,9 @@ public class MetaData {
 
     public native boolean getValueBoolean(int label, long objId);
 
-    public native String getFilename();
+    public String getFilename() {
+        return filename;
+    }
 
     public String getBaseDir() {
         File f = new File(getFilename());
@@ -89,6 +99,8 @@ public class MetaData {
 
         return f.getParent();
     }
+
+    public native double[] getStatistics(boolean applyGeo);
 
     //set values
     public native boolean setValueInt(int label, int value, long objId);

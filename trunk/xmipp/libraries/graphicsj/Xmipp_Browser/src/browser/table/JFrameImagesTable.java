@@ -10,12 +10,17 @@
  */
 package browser.table;
 
-import browser.DEBUG;
-import browser.LABELS;
-import browser.imageitems.TableImageItem;
+import browser.table.models.ImagesRowHeaderModel;
+import browser.table.models.MDTableModel;
+import browser.table.models.ImagesTableColumnModel;
+import browser.imageitems.tableitems.AbstractTableImageItem;
 import browser.table.renderers.ImageRenderer;
 import browser.table.renderers.RowHeaderRenderer;
 import browser.windows.ImagesWindowFactory;
+import browser.DEBUG;
+import browser.LABELS;
+import browser.table.models.AbstractXmippTableModel;
+import browser.table.models.VolumeTableModel;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Point;
@@ -39,6 +44,7 @@ import javax.swing.KeyStroke;
 import javax.swing.LookAndFeel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.Border;
+import xmipp.Filename;
 
 /**
  *
@@ -47,7 +53,7 @@ import javax.swing.border.Border;
 public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
     private final static int DELAY_TO_UPDATE = 500;
-    private ImagesTableModel tableModel;
+    private AbstractXmippTableModel tableModel;
     private ImagesTableColumnModel columnModel;
     private ImagesRowHeaderModel rowHeaderModel;
     private JList rowHeader;
@@ -72,7 +78,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     public JFrameImagesTable(String filename, int initialRows, int initialColumns) {
         super();
 
-        tableModel = new ImagesTableModel(filename);
+        tableModel = Filename.isVolume(filename) ? new VolumeTableModel(filename) : new MDTableModel(filename);
         postInit();
     }
 
@@ -87,7 +93,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     public JFrameImagesTable(String filenames[], boolean enabled[], int initialRows, int initialColumns) {
         super();
 
-        tableModel = new ImagesTableModel(filenames, enabled);
+        tableModel = new MDTableModel(filenames, enabled);
         postInit();
     }
 
@@ -100,7 +106,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         initComponents();
 
         table.setColumnModel(columnModel);
-        table.setDefaultRenderer(TableImageItem.class, renderer);
+        table.setDefaultRenderer(AbstractTableImageItem.class, renderer);
 
         setTitle(tableModel.getTitle());
 
@@ -223,7 +229,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
     private double getInitialScale() {
         double W = jsPanel.getVisibleRect().width;
-        double w = ((TableImageItem) tableModel.getValueAt(0, 0)).getWidth();
+        double w = ((AbstractTableImageItem) tableModel.getValueAt(0, 0)).getWidth();
 
         double scale = W / w;
 
@@ -537,8 +543,8 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
             if (evt.getClickCount() > 1) {
                 Object item = table.getValueAt(view_row, view_col);
 
-                if (item instanceof TableImageItem) {
-                    ImagesWindowFactory.captureFrame(((TableImageItem) item).getImagePlus());
+                if (item instanceof AbstractTableImageItem) {
+                    ImagesWindowFactory.captureFrame(((AbstractTableImageItem) item).getImagePlus());
                 }
             } else {
                 // Ctrl adds items to selection, otherwise previous ones are removed.

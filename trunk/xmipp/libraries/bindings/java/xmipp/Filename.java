@@ -50,27 +50,27 @@ public class Filename {
     };
 
     public static boolean isPSD(String filename) {
-        return filename.endsWith(EXTENSION_PSD);
+        return filename != null && filename.endsWith(EXTENSION_PSD);
     }
 
     public static boolean isSingleImage(String filename) {
-        return filename.contains(SEPARATOR) || isFileType(filename, SINGLE_IMAGES);
+        return filename != null && (filename.contains(SEPARATOR) || isFileType(filename, SINGLE_IMAGES));
     }
 
     public static boolean isVolume(String filename) {
-        return isFileType(filename, VOLUMES);
+        return filename != null && isFileType(filename, VOLUMES);
     }
 
     public static boolean isStack(String filename) {
-        return isFileType(filename, STACKS);
+        return filename != null && isFileType(filename, STACKS);
     }
 
     public static boolean isStackOrVolume(String filename) {
-        return isStack(filename) || isVolume(filename);
+        return filename != null && (isStack(filename) || isVolume(filename));
     }
 
     public static boolean isMetadata(String filename) {
-        return isFileType(filename, METADATAS);
+        return filename != null && isFileType(filename, METADATAS);
     }
 
     private static boolean isFileType(String filename, String filetypes[]) {
@@ -140,7 +140,6 @@ public class Filename {
 
         return filename;
     }
-
 
     private static String getAbsPath(String baseDir, String filename) {
         baseDir += !baseDir.endsWith(File.separator) ? File.separator : "";

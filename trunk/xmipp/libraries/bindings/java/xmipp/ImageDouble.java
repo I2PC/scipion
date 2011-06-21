@@ -29,9 +29,9 @@ public class ImageDouble {
     public final static int ALL_IMAGES = 0;
     public final static int ALL_SLICES = 0;
     public final static int MID_SLICE = -1;
+    private String filename;
     // pointer to Image class in C++ space. Needed by native library.
     private long peer;
-    private String filename;
 
     // Initialize library.
     static {
@@ -84,8 +84,6 @@ public class ImageDouble {
 
     public native long getNsize();
 
-    public native double[] getMinAndMax();
-
     public native void setXmippOrigin() throws Exception;
 
     public native void printShape();
@@ -133,17 +131,16 @@ public class ImageDouble {
     public void read(String filename) throws Exception {
         read(filename, ALL_IMAGES);
     }
-    
+
     public void readStack(String filename) throws Exception {
         read(filename, ALL_IMAGES);
     }
-    
+
     public void readSlice(String filename) throws Exception {
         // select_img/nimage is only used for reading all the images, otherwise
         // the slice is encoded in the filename
         read(filename, -10);
     }
-
 
     public void read(String filename, long nimage) throws Exception {
         read(filename, true, nimage);

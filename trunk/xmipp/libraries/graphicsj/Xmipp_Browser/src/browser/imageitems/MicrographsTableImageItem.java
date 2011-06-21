@@ -14,31 +14,31 @@ import xmipp.ImageDouble;
  *
  * @author Juanjo Vega
  */
-public class TableImageItem extends XmippImageItem {
+public class MicrographsTableImageItem extends XmippImageItem {
 
     protected boolean enabled = true;
     protected boolean selected = false;
     protected double scale = 1.0;
     protected String originalValue = null;
 
-    public TableImageItem(File file, String originalValue, Cache cache) {
+    public MicrographsTableImageItem(File file, String originalValue, Cache cache) {
         this(file, cache);
         this.originalValue = originalValue;
     }
 
-    public TableImageItem(File file, Cache cache) {
+    public MicrographsTableImageItem(File file, Cache cache) {
         this(file, ImageDouble.FIRST_SLICE, cache);
     }
 
-    public TableImageItem(File file, int slice, Cache cache) {
+    public MicrographsTableImageItem(File file, int slice, Cache cache) {
         this(file, slice, ImageDouble.FIRST_IMAGE, cache);
     }
 
-    public TableImageItem(File file, long nimage, Cache cache) {
+    public MicrographsTableImageItem(File file, long nimage, Cache cache) {
         this(file, ImageDouble.FIRST_SLICE, nimage, cache);
     }
 
-    public TableImageItem(File file, int slice, long nimage, Cache cache) {
+    public MicrographsTableImageItem(File file, int slice, long nimage, Cache cache) {
         super(file, cache);
 
         this.nslice = slice;

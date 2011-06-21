@@ -4,7 +4,7 @@
  */
 package browser.table.micrographs.renderers;
 
-import browser.imageitems.TableImageItem;
+import browser.imageitems.MicrographsTableImageItem;
 import ij.ImagePlus;
 import java.awt.Component;
 import javax.swing.ImageIcon;
@@ -22,7 +22,7 @@ public class MicrographImageRenderer extends MicrographRowDisablerRenderer {
 
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-        TableImageItem item = (TableImageItem) value;
+        MicrographsTableImageItem item = (MicrographsTableImageItem) value;
 
         ImagePlus preview = item.getPreview(CELL_WIDTH, CELL_HEIGHT);
 

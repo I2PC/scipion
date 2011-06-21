@@ -4,8 +4,6 @@
  */
 package browser.table.micrographs;
 
-import browser.Cache;
-import browser.imageitems.TableImageItem;
 import ij.IJ;
 import java.io.File;
 import java.util.LinkedList;
@@ -13,6 +11,8 @@ import java.util.Vector;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
+import browser.Cache;
+import browser.imageitems.MicrographsTableImageItem;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -40,7 +40,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         MDLabel.MDL_CTF_CRITERION_PSDCORRELATION90,
         MDLabel.MDL_CTF_CRITERION_PSDRADIALINTEGRAL,
         MDLabel.MDL_CTF_CRITERION_PSDVARIANCE,
-        MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST, //        MDLabel.MDL_CTF_CRITERION_COMBINED
+        MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST
     };
     private static final String COLUMNS_NAMES[] = new String[]{
         "ID",
@@ -60,7 +60,6 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         "PSD Radial Integral",
         "PSD Variance",
         "PSD PCA Runs Test"
-//        "Criterion Combined"
     };
     private static final int EXTRA_COLUMNS_LABELS[] = {
         MDLabel.MDL_CTF_DEFOCUSU,
@@ -160,7 +159,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
                                 File f = new File(filename);
                                 String originalValue = md.getValueString(label, id);
 
-                                row[col] = new TableImageItem(f, originalValue, cache);
+                                row[col] = new MicrographsTableImageItem(f, originalValue, cache);
                                 break;
                             case MDLabel.MDL_CTF_CRITERION_DAMPING:
                             case MDLabel.MDL_CTF_CRITERION_FIRSTZEROAVG:
@@ -279,7 +278,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         LinkedList<String> filenames = new LinkedList<String>();
 
         for (int i = 0; i < getRowCount(); i++) {
-            TableImageItem item = (TableImageItem) getValueAt(i, column);
+            MicrographsTableImageItem item = (MicrographsTableImageItem) getValueAt(i, column);
 
             if (!onlyenabled || isRowEnabled(i)) {
                 filenames.add(item.getAbsoluteFileName());

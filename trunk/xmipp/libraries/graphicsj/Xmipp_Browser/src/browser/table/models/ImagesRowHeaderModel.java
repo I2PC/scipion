@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package browser.table;
+package browser.table.models;
 
 import javax.swing.JTable;
 import javax.swing.ListModel;

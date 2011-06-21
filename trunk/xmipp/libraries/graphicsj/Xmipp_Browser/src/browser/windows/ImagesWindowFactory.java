@@ -6,8 +6,8 @@ package browser.windows;
 
 import browser.DEBUG;
 import browser.imageitems.ImageConverter;
-import browser.imageitems.TableImageItem;
-import browser.table.ImagesTableModel;
+import browser.imageitems.tableitems.AbstractTableImageItem;
+import browser.table.models.AbstractXmippTableModel;
 import ij.IJ;
 import ij.ImagePlus;
 import browser.table.JFrameImagesTable;
@@ -168,9 +168,9 @@ public class ImagesWindowFactory {
         openXmippImageWindow(ip, false);
     }
 
-    public static void openTableAs3D(ImagesTableModel tableModel) {
+    public static void openTableAs3D(AbstractXmippTableModel tableModel) {
         try {
-            Vector<TableImageItem> items = tableModel.getAllItems();
+            Vector<AbstractTableImageItem> items = tableModel.getAllItems();
             ImagePlus ip = ImageConverter.convertToImagePlus(items);
             ip.setTitle(tableModel.getFilename());
 
@@ -181,7 +181,7 @@ public class ImagesWindowFactory {
         }
     }
 
-    public static void openTableAsImagePlus(ImagesTableModel tableModel) {
+    public static void openTableAsImagePlus(AbstractXmippTableModel tableModel) {
         try {
             String path = tableModel.getFilename();
 
@@ -196,7 +196,7 @@ public class ImagesWindowFactory {
                 File tempFile = File.createTempFile("tableToStack_", ".stk");
                 tempFile.deleteOnExit();
 
-                Vector<TableImageItem> items = tableModel.getAllItems();
+                Vector<AbstractTableImageItem> items = tableModel.getAllItems();
                 ImagePlus imp = ImageConverter.convertToImagePlus(items);
                 IJ.run(imp, "Xmipp writer", "save=" + tempFile.getAbsolutePath());
 
