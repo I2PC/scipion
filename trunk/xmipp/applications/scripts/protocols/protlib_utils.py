@@ -25,6 +25,8 @@
  ***************************************************************************/
  '''
 
+'''number of leading zeros in filenames'''
+FILENAMENUMBERLENTGH=6
 #---------------------------------------------------------------------------
 # Logging utilities
 #---------------------------------------------------------------------------
@@ -353,3 +355,17 @@ def compute_histogram(mD,bin,col,min,max):
        allMD.unionAll(outMD)
        
    return allMD
+
+#########################
+# FileName Handling
+###########################
+def unique_filename(file_name):
+    ''' Create a unique filename (not file handler)
+       this approach is unsecure but good enought for most purposes'''
+    import os
+    counter = 1
+    file_name_parts = os.path.splitext(file_name) # returns ('/path/file', '.ext')
+    while os.path.isfile(file_name):
+        file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
+        counter += 1
+    return file_name 
