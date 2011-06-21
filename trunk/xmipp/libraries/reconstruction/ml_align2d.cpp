@@ -2136,7 +2136,7 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
 }//close function addDocfileData
 
 //Some macros
-#define ITER_PREFIX "iter"//formatString("iter%06d", iter)
+#define ITER_PREFIX "iter"//formatString("iter%0FILENAMENUMBERLENTGHd", iter)
 #define IS_FINAL outputType == OUT_FINAL
 
 void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
@@ -2202,7 +2202,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         static WriteModeMetaData mode = MD_OVERWRITE;
         //Write image metadata, for each iteration a new block will be written
         if (fn_prefix == ITER_PREFIX)
-            fn_tmp = formatString("iter%06d@%s_iter_images.xmd", iter, rootStr);
+            fn_tmp = formatString("iter%0FILENAMENUMBERLENTGHd@%s_iter_images.xmd", iter, rootStr);
         else
             fn_tmp = formatString("%s_%s_images.xmd", rootStr, prefixStr);
         MDimg.write(fn_tmp, mode);
@@ -2221,7 +2221,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         int select_img;
 
         if (fn_prefix == ITER_PREFIX)
-            fn_tmp = formatString("%s_iter%06d_refs.stk", rootStr, iter);
+            fn_tmp = formatString("%s_iter%0FILENAMENUMBERLENTGHd_refs.stk", rootStr, iter);
         else
             fn_tmp = formatString("%s_%s_refs.stk", rootStr, prefixStr);
 
@@ -2234,7 +2234,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
             Itmp.write(fn_tmp, select_img, true, WRITE_REPLACE);
             //MDref.setValue(MDL_ITER, iter, objId);//write out iteration number
             MDref.setValue(MDL_REF, select_img, objId); //Also write reference number
-            MDref.setValue(MDL_IMAGE, formatString("%06d@%s", select_img, fn_tmp.c_str()), objId);
+            MDref.setValue(MDL_IMAGE, formatString("%0FILENAMENUMBERLENTGHd@%s", select_img, fn_tmp.c_str()), objId);
             MDref.setValue(MDL_ENABLED, 1, objId);
             MDref.setValue(MDL_WEIGHT, model.WsumMref[refno].weight(), objId);
             if (do_mirror)
@@ -2252,7 +2252,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         FileName fn_ref = fn_tmp + "_refs.xmd";
 
         if (!fn_prefix.contains("block"))
-            fn_ref = formatString("iter%06d@%s", iter, fn_ref.c_str());
+            fn_ref = formatString("iter%0FILENAMENUMBERLENTGHd@%s", iter, fn_ref.c_str());
 
         MDref.write(fn_ref, mode);
         if (outputType == OUT_REFS)

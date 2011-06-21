@@ -227,7 +227,7 @@ public:
             	MD.setValue(MDL_IMAGE,fn,MD.addObject());
             }
             if (MD.size()>0)
-            	MD.write(formatString("cluster%06d@%s",i,fn_out.c_str()),MD_APPEND);
+            	MD.write(formatString("cluster%0FILENAMENUMBERLENTGHd@%s",i,fn_out.c_str()),MD_APPEND);
         }
 
         // Save code vectors
