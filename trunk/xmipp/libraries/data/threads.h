@@ -12,6 +12,8 @@ class ThreadArgument;
 /* Prototype of functions for threads works. */
 typedef void (*ThreadFunction) (ThreadArgument &arg);
 
+//TODO (MARIANA) Please give more documentation and in a good structure e.g. @name (see args.h as example)
+
 /** @defgroup Threads Threads
  *  @ingroup ParallelLibrary
  * @{
