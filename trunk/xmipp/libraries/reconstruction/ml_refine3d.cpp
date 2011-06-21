@@ -44,7 +44,7 @@
 
 //#define DEBUG
 //Macro to obtain the iteration base name
-#define FN_ITER_BASE(iter) formatString("%s_iter%0FILENAMENUMBERLENTGHd_vols.stk", fn_root.c_str(), (iter))
+#define FN_ITER_BASE(iter) formatString("%s_iter%06d_vols.stk", fn_root.c_str(), (iter))
 #define FN_INITIAL_BASE (fn_root + "_iter000000_vols.stk")
 #define FN_PROJECTIONS_MD (fn_root + "_projections.xmd")
 #define FN_PROJECTIONS (fn_root + "_projections.stk")

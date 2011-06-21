@@ -56,7 +56,6 @@
 #include "macros.h"
 #include "error.h"
 
-#define FILENAMENUMBERLENGTH 6
 
 /// @defgroup GeneralFunctions General functions
 /// @ingroup DataLibrary

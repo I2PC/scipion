@@ -2894,7 +2894,7 @@ bool ProgMLTomo::regularize(int iter)
         FileName fnt;
         for (int refno = 0; refno < nr_ref; refno++)
         {
-            fnt = formatString("%s_it%0FILENAMENUMBERLENTGHd_oriref%0FILENAMENUMBERLENTGHd.vol", fn_root.c_str(), iter, refno+1);
+            fnt = formatString("%s_it%06d_oriref%06d.vol", fn_root.c_str(), iter, refno+1);
             Iref[refno].write(fnt);
         }
         // Normalized regularization (in N/K)
@@ -3065,7 +3065,7 @@ void ProgMLTomo::writeOutputFiles(const int iter,
     fn_base = fn_root;
     if (iter >= 0)
     {
-        fn_base = formatString("%s_it%0FILENAMENUMBERLENTGHd", fn_root.c_str(), iter);
+        fn_base = formatString("%s_it%06d", fn_root.c_str(), iter);
     }
 
     // Write out current reference images and fill sel & log-file
@@ -3074,7 +3074,7 @@ void ProgMLTomo::writeOutputFiles(const int iter,
     //for (int refno = 0; refno < nr_ref; refno++)
     FOR_ALL_OBJECTS_IN_METADATA(MDref)
     {
-        fn_tmp = formatString("%s_ref%0FILENAMENUMBERLENTGHd.vol", fn_base.c_str(), refno + 1);
+        fn_tmp = formatString("%s_ref%06d.vol", fn_base.c_str(), refno + 1);
         Vt = Iref[refno];
         reScaleVolume(Vt(),false);
         Vt.write(fn_tmp);
@@ -3109,7 +3109,7 @@ void ProgMLTomo::writeOutputFiles(const int iter,
 
             CenterFFT(Vt(),true);
             reScaleVolume(Vt(),false);
-            fn_tmp = formatString("%s_wedge%0FILENAMENUMBERLENTGHd.vol", fn_base.c_str(), refno + 1);
+            fn_tmp = formatString("%s_wedge%06d.vol", fn_base.c_str(), refno + 1);
             Vt.write(fn_tmp);
         }
     }

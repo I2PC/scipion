@@ -609,7 +609,7 @@ void ProgCtfGroup::writeOutputToDisc()
     for(int i=1;i<= ctfInfo.size(); i++)
     {
         auxMetaData.importObjects(ctfImagesGroup,MDValueEQ(MDL_DEFGROUP,i));
-        imagesInDefoculGroup.assign( formatString("ctfGroup%06d@%s_images.sel", i, fn_root.c_str()) );
+        imagesInDefoculGroup.assign( formatString("ctfGroup%06ul@%s_images.sel", i, fn_root.c_str()) );
         auxMetaData.write( imagesInDefoculGroup,MD_APPEND);
     }
 
@@ -641,11 +641,13 @@ void ProgCtfGroup::writeOutputToDisc()
         sortedCtfMD.getValue(MDL_ORDER,order,__iter.objId);
         sortedCtfMD.getValue(MDL_COUNT,count,__iter.objId);
         double dCount = (double)count;
+        std::cerr << "one" << std::endl;
 
         if (defGroup != olddefGroup)
         {
             if (sumimg!=0)
             {
+                std::cerr << "two"  << sumimg<< std::endl;
                 ctf2D /= sumimg;
                 outFileName.compose(olddefGroup,outFileNameCTF);
                 //save CTF
@@ -653,18 +655,26 @@ void ProgCtfGroup::writeOutputToDisc()
                 //save winer filter
                 if (do_wiener)
                 {
+                    std::cerr << "three" << std::endl;
                     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctf2D)
                     {
                         dAij(ctf2D,i,j) /= dAij(Mwien,i,j);
                     }
+                    std::cerr << "compose_before" << olddefGroup << std::endl;
                     outFileName.compose(olddefGroup,outFileNameWIEN);
+                    std::cerr << "compose_after" << outFileNameWIEN<< std::endl;
+                    std::cerr << "outFileName" << outFileName<< std::endl;
                     Ictf2D.write(outFileName);
                 }
+                std::cerr << "four" << std::endl;
+
                 ctf2D.initZeros();
                 olddefGroup=defGroup;
                 sumimg=0.;
             }
         }
+        std::cerr << "five" << std::endl;
+
         sumimg += dCount;
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctf2D)
         {

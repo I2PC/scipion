@@ -48,8 +48,8 @@
 #define MLTOMO_DATALINELENGTH 10
 #define MLTOMO_BLOCKSIZE 10
 
-#define FN_ITER_VOL(iter, base, refno) formatString("%s_it%0FILENAMENUMBERLENTGHd_%s%0FILENAMENUMBERLENTGHd.vol", fn_root.c_str(), iter, base, refno+1)
-#define FN_ITER_MD(iter) formatString("%s_it%0FILENAMENUMBERLENTGHd.sel", fn_root.c_str(), iter)
+#define FN_ITER_VOL(iter, base, refno) formatString("%s_it%d_%s%d.vol", fn_root.c_str(), iter, base, refno+1)
+#define FN_ITER_MD(iter) formatString("%s_it%d.sel", fn_root.c_str(), iter)
 
 class ProgMLTomo;
 
