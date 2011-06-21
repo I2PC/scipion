@@ -152,7 +152,7 @@ def projection_matching(_log
     #remove output metadata
     if os.path.exists(_ProjMatchRootName):
         os.remove(_ProjMatchRootName)
-    
+    inputDocFile = FileName()
     for ii in range(NumberOfCtfGroups):
         if NumberOfCtfGroups>1 :
             print 'Focus Group: ', ii+1,'/',NumberOfCtfGroups
@@ -161,6 +161,9 @@ def projection_matching(_log
         #outputname   = _ProjMatchRootName + '_' + CtfGroupName 
         inputdocfile    = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@' + CtfGroupName + '_images.sel'
         outputname   = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@'+ _ProjMatchRootName
+        inputDocFile.composeBlock(CtfBlockName,ictf,CtfGroupName+ '_images.sel')
+        print inputdocfile, inputDocFile
+        exit(1)
         #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
         baseTxtFile  = refname[:-len('.stk')] 
         neighbFile      = baseTxtFile + '_sampling.xmd'
