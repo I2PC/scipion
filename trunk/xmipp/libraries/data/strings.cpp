@@ -586,7 +586,6 @@ void * _memmem ( const void *haystack, size_t haystack_len, const void *needle, 
 String formatString(const char * format, ...)
 {
     char formatBuffer[1024];
-    std::cerr << "formatString " << format << std::endl;
     va_list args;
     va_start(args, format);
     vsprintf (formatBuffer, format, args);
