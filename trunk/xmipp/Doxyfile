@@ -91,7 +91,7 @@ FILE_PATTERNS          = *.h \
                          *.c \
                          *.dox
 RECURSIVE              = YES
-EXCLUDE                =
+EXCLUDE                =./applications/tests
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = moc* */swig/* */graphicsj/* */scripts/* */.svn/* */cppsqlite3*
 EXAMPLE_PATH           =
