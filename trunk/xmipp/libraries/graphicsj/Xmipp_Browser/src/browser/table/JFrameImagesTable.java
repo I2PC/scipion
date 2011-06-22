@@ -154,7 +154,10 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 //            rowHeader.setFixedCellWidth(rowHeader.getModel().getSize() * 2);
             columnModel.setWidth(dimension.width > 0 ? dimension.width : 1);
 
-            autoAdjustColumns();    // If auto adjust columns is enabled, refresh!
+            // If auto adjust columns is enabled, refresh!
+            if (autoAdjustColumns) {
+                autoAdjustColumns();
+            }
 
             rowHeader.repaint();
             table.revalidate();
@@ -203,13 +206,11 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     }
 
     private void autoAdjustColumns() {
-        if (autoAdjustColumns) {
-            tableModel.autoAdjustColumns(jsPanel.getViewportBorderBounds().width - jsPanel.getVerticalScrollBar().getWidth(),
-                    table.getIntercellSpacing().width);
+        tableModel.autoAdjustColumns(jsPanel.getViewportBorderBounds().width - jsPanel.getVerticalScrollBar().getWidth(),
+                table.getIntercellSpacing().width);
 
-            jsRows.setValue(tableModel.getRowCount());
-            jsColumns.setValue(tableModel.getColumnCount());
-        }
+        jsRows.setValue(tableModel.getRowCount());
+        jsColumns.setValue(tableModel.getColumnCount());
     }
 
     private void setInitialValues() {

@@ -15,6 +15,7 @@ import browser.table.micrographs.JFrameMicrographs;
 import browser.table.micrographs.ctf.CTFImageWindow;
 import browser.table.micrographs.ctf.tasks.TasksEngine;
 import ij.gui.ImageWindow;
+import ij.gui.Overlay;
 import ij.gui.Toolbar;
 import ij.io.FileInfo;
 import ij.process.StackConverter;
@@ -74,15 +75,6 @@ public class ImagesWindowFactory {
         File f = new File(path);
 
         if (f.exists()) {
-            /*            ImagePlus ip = null;
-
-            if (Filename.isMetadata(path)) {
-            ip = IJ.openImage(path);//openMetaDataAsImage_(path);
-            } else if (Filename.isXmippType(path)) {
-            ip = IJ.openImage(path);//openFileAsImage_(path);
-            } else {
-            ip = IJ.openImage(path);
-            }*/
             ImagePlus ip = IJ.openImage(path);
 
             openXmippImageWindow(ip, poll);

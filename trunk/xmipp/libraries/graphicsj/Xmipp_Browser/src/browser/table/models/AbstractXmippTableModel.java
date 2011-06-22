@@ -4,7 +4,6 @@
  */
 package browser.table.models;
 
-import browser.DEBUG;
 import browser.Cache;
 import browser.imageitems.tableitems.AbstractTableImageItem;
 import ij.IJ;
@@ -240,7 +239,10 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         if (rows > 0) {
             this.rows = rows;
 
-            cols = getNecessaryCols(rows);
+            // Calculates necessary cols for desired number of rows.
+            cols = (int) Math.ceil((double) data.size() / (double) rows);
+
+//            DEBUG.printMessage("R:" + rows + " / C:" + cols + " > S: " + (rows * cols));
 
             fireTableStructureChanged();
         }
@@ -254,14 +256,18 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         if (cols > 0) {
             this.cols = cols;
 
-            rows = getNecessaryRows(cols);
+            // Calculates necessary rows for desired number of cols.
+            rows = (int) Math.ceil((double) data.size() / (double) cols);
+
+//            DEBUG.printMessage("R:" + rows + " / C:" + cols + " > S: " + (rows * cols));
 
             fireTableStructureChanged();
         }
     }
 
     public void autoAdjustColumns(int width, int interCellWidth) {
-        int displayableColumns = width / (getCellWidth() + 2 * interCellWidth);
+        int displayableColumns = (int) Math.floor(
+                width / (getCellWidth() + 2 * interCellWidth));
 
         if (getColumnCount() != displayableColumns) {
             setColumns(displayableColumns);
@@ -276,35 +282,15 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         return getAllItems().elementAt(0).getThumbnailHeight();//(int) (getAllItems().elementAt(0).getHeight() * zoomScale);
     }
 
-    @SuppressWarnings("empty-statement")
-    private int getNecessaryRows(int cols) {
-        int rows_;
-
-        for (rows_ = 1; cols * rows_ < data.size(); rows_++);
-
-        return rows_;
-    }
-
-    @SuppressWarnings("empty-statement")
-    private int getNecessaryCols(int rows) {
-        int cols_;
-
-        for (cols_ = 1; cols_ * rows < data.size(); cols_++);
-
-        return cols_;
-    }
-
     public void setNormalized(boolean normalize) {
         this.normalize = normalize;
 
         if (min == Double.POSITIVE_INFINITY && max == Double.NEGATIVE_INFINITY) {
-            DEBUG.printMessage(" +++ Retrieving min and max.");
-
             getMinAndMax();
         }
 
-        DEBUG.printMessage(" >>> Normalize " + (normalize ? "ON" : "OFF") + " > "
-                + (normalize ? "m=" + min + "/M=" + max : ""));
+        /*        DEBUG.printMessage(" >>> Normalize " + (normalize ? "ON" : "OFF") + " > "
+        + (normalize ? "m=" + min + "/M=" + max : ""));*/
     }
 
     public boolean isNormalizing() {

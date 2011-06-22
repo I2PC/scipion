@@ -88,6 +88,7 @@ public class ImageRenderer extends DefaultTableCellRenderer {
         } else {
             setIcon(null);
             setText(null);
+            setToolTipText(null);
         }
 
         return this;
