@@ -36,7 +36,7 @@ iterationNo=4
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =1
+ContinueAtIteration =8
 
 # {expert} Resume at Iter (vs Step)
 """This option control how to resume a previously performed run.
@@ -169,7 +169,7 @@ from xmipp import *
 class ProtPartialProjectionSubtraction(XmippProtocol):
 
     def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
-        self.super(ProtPartialProjectionSubtraction,self).__init__(scriptname, workingdir, self.ProjectDir, logdir, restartStep, isIter)
+        super(ProtPartialProjectionSubtraction,self).__init__(scriptname, workingdir, ProjectDir, logdir, restartStep, isIter)
         self.myName='partial_projection_subtraction'
         self.run_file1='./readDocfileAndPairExperimentalAndReferenceImages_v3.sh'
         self.subtractionDir ='Subtraction'
@@ -177,7 +177,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.referenceStack ='ref'
         self.subImgsDir  = 'SubImgs'
         self.subtractedStack ='subtracted'
-        self.referenceDir ='Vols'
+        self.volsDir ='Vols'
         self.tempFileName=''
         self.current_angles='current_angles.doc'
         self.Import = 'from protlib_partial_projection_subtraction import *'
@@ -249,7 +249,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             self.subtractedStack.append(tmpSubtract)
         #FIXME
         #DO we need to import this paths or are already in pythonpath
-        import shutil,time
+        #import shutil,time
         scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
         sys.path.append(scriptdir)
 
@@ -259,6 +259,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.Db.setVerify(Verify,ViewVerifyedFiles)
         
     def actionsToBePerformedInsideLoop(self):
+        _dataBase = self.Db
         for iterN in range(1, self.defocusGroupNo):
             #Create auxiliary metadata with image names , angles and CTF
             _Parameters = {
@@ -270,7 +271,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles = []
             auxFilename = FileName(self.DocFileRef[iterN])
             _VerifyFiles.append(auxFilename.removeBlockName())
-            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+            _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
             
             
             #reconstruct each CTF group
@@ -287,7 +288,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             command = "reconstructVolume"
             _VerifyFiles = []
             _VerifyFiles.append(self.reconstructedVolume[iterN])
-            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+            _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
             #mask volume before projection
             
             _Parameters = {
@@ -300,7 +301,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles = []
             auxFilename = FileName(self.DocFileRef[iterN])
             _VerifyFiles.append(self.maskReconstructedVolume[iterN])
-            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+            _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
     
             #project reconstructe4d volumes
             _Parameters = {
@@ -321,9 +322,9 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles.append(self.referenceStack[iterN])
             tmp = self.referenceStack[iterN]
             _VerifyFiles.append(tmp.replace('.stk','.doc'))
-            _VerifyFiles.append(tmp.replace('.stk','_sampling.txt'))
+            _VerifyFiles.append(tmp.replace('.stk','_sampling.xmd'))
             
-            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+            _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
                      
                      
     #project reconstructe4d volumes
@@ -338,7 +339,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles.append(self.subtractedStack[iterN]+'ref')
             _VerifyFiles.append(self.subtractedStack[iterN]+'exp')
             
-            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+            _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
         
         
     def otherActionsToBePerformedBeforeLoop(self):
@@ -348,25 +349,25 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
               'path':self.subtractionDir
             }
         command = 'createDir'
-        _dataBase.insertCommand(command, _Parameters, 1)
+        _dataBase.insertAction(command, _Parameters, 1)
         
         _Parameters = {
               'path':self.volsDir
             }
         command = 'createDir'
-        _dataBase.insertCommand(command, _Parameters, 1)
+        _dataBase.insertAction(command, _Parameters, 1)
         
         _Parameters = {
               'path':self.referenceDir
             }
         command = 'createDir'
-        _dataBase.insertCommand(command, _Parameters, 1)
+        _dataBase.insertAction(command, _Parameters, 1)
     
         _Parameters = {
               'path':self.subImgsDir
             }
         command = 'createDir'
-        _dataBase.insertCommand(command, _Parameters, 1)
+        _dataBase.insertAction(command, _Parameters, 1)
         
 #def mainLoop(_log, iter):
 #    global ContinueAtIteration
