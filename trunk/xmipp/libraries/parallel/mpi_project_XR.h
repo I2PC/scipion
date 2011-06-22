@@ -32,7 +32,7 @@
 //TODO (MARIANA) Please give more documentation and in a good structure e.g. @name
 
 /**@defgroup ProgMPIXrayProject ProgMPIXrayProject
-   @ingroup Programs*/
+   @ingroup Programs
 //@{
 /* Projection XR Program -------------------------------- */
 /** Program class for the project program */
