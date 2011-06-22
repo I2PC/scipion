@@ -31,8 +31,10 @@
 #include "reconstruction/ml_refine3d.h"
 #include "reconstruction/ml_tomo.h"
 
-/**@defgroup MPI_Programs Programs that parallelize using MPI library
-   @ingroup ParallelLibrary */
+//TODO (MARIANA) Please give more documentation and in a good structure e.g. @name
+
+/**@defgroup MPI_ML MPI_ML
+   @ingroup Programs */
 //@{
 
 /** Class to organize some useful MPI-functions for ML programs
@@ -173,5 +175,5 @@ public:
                           std::vector<double> &conv, std::vector<MultidimArray<double> > &fsc);
 
 };
-
+/** @} */
 #endif /* MPI_ML_ALIGN2D_H_ */
