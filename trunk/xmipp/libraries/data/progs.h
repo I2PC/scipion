@@ -42,7 +42,7 @@
  * @{
  */
 /** Virtual program parameters class.
- * @ingroup Programs
+ * @ingroup Programs1
  *
  * Program parameters must be a class inheriting from this class.
  */
