@@ -183,12 +183,12 @@ class ProtocolGUI():
         self.pre_header_lines = []
         self.header_lines = []
         self.post_header_lines = []
-        self.have_publication = False
         self.expert_mode = False
         self.scriptname = script
         self.lastrow = 0
         self.widgetslist = []
         self.sectionslist = [] # List of all sections
+        self.citeslist = []
         # Script title
         self.programname = self.scriptname.replace('.py', '')
         self.scriptmodule = loadModule(self.programname)
@@ -219,7 +219,11 @@ class ProtocolGUI():
         
     def createWidget(self, var):
         w = ProtocolWidget(self, var)  
-        self.widgetslist.append(w)      
+        self.widgetslist.append(w)  
+        #please_cite will be special widget
+        if 'please_cite' in var.tags.keys():
+            self.citeslist.append(var.tags['please_cite'])
+            return w    
         label_row = row = self.getRow() # Get row where to place the widget        
         label_text = var.comment
         label_color = self.style['LabelTextColor']
@@ -234,7 +238,7 @@ class ProtocolGUI():
             self.lastSection.childwidgets.append(w)
             #widgets inherit expert from section and its conditions 
             if self.lastSection.variable.isExpert():
-                var.tags['expert'] = self.lastSection.variable['expert']
+                var.tags['expert'] = self.lastSection.variable.tags['expert']
             for k, v in self.lastSection.variable.conditions.iteritems():
                 var.conditions[k] = v
                 
@@ -429,6 +433,7 @@ class ProtocolGUI():
                             index += 1
                 if is_section or v.name:
                     w = self.createWidget(v)
+                    
                 
 
             
