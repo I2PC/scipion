@@ -121,7 +121,8 @@ struct ImageFHandler
 };
 
 
-/// @name ImagesSpeedUp Images Speed-up
+
+/// @name Images Speed-up
 /// @{
 
 /** Volume Matrix access.
@@ -196,7 +197,7 @@ struct ImageFHandler
  * @endcode
  */
 #define DIRECT_VOLVOXEL(I, k, i, j) DIRECT_A3D_ELEM(((I).data), (k), (i), (j))
-//@}
+///@}
 
 /** Swapping trigger.
  * Threshold file z size above which bytes are swapped.
@@ -697,5 +698,5 @@ protected:
     friend std::ostream& operator<<(std::ostream& o, const ImageBase& I);
 
 };
-
+//@}
 #endif /* IMAGE_BASE_H_ */
