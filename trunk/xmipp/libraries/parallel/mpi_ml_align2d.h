@@ -34,7 +34,7 @@
 //TODO (MARIANA) Please give more documentation and in a good structure e.g. @name
 
 /**@defgroup MPI_ML MPI_ML
-   @ingroup Programs */
+   @ingroup Programs
 //@{
 
 /** Class to organize some useful MPI-functions for ML programs
