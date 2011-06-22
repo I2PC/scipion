@@ -33,8 +33,10 @@
 #include "multidim_array_generic.h"
 #include "fft.h"
 
+
 /** @defgroup FourierW FFTW Fourier transforms
   * @ingroup DataLibrary
+  *@{
   */
 
 /** Fourier Transformer class.
@@ -604,3 +606,4 @@ void adaptSpectrum(MultidimArray<double> &Min,
                    int spectrum_type=AMPLITUDE_SPECTRUM,
                    bool leave_origin_intact=false);
 #endif
+/** @} */
