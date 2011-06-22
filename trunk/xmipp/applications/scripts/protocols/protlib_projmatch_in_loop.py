@@ -327,7 +327,7 @@ def angular_class_average(_log
                                 str(iRef3D).zfill(FILENAMENUMBERLENGTH)+'@'
             MD.read(auxInputdocfile+DocFileInputAngles)
             if MD.size()==0:
-                print "Empty metadata, remember to copy the reference"
+                print "Empty metadata, remember to copy the reference",iCTFGroup,iRef3D
                 continue;
             #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(iRef3D).zfill(2))
             parameters =  ' -i '       + auxInputdocfile  + DocFileInputAngles +\
