@@ -1094,9 +1094,7 @@ class ProtProjMatch(XmippProtocol):
                 ##############REMOVE SHUTIL.COPY
                 # Mask reference volume
                 _Parameters = {
-                                      'Align2dMaxChangeOffset':self.Align2dMaxChangeOffset[iterN]
-                                    , 'Align2dMaxChangeRot':self.Align2dMaxChangeRot[iterN]
-                                    , 'DoMask'             : DoMask
+                                      'DoMask'             : DoMask
                                     , 'DoSphericalMask'    : DoSphericalMask
                                     , 'maskedFileName'     : self.maskedFileNamesIters[iterN][refN]
                                     , 'maskRadius'         : MaskRadius
@@ -1108,13 +1106,6 @@ class ProtProjMatch(XmippProtocol):
                 _VerifyFiles = []
                 _VerifyFiles.append(self.maskedFileNamesIters[iterN][refN])
                 _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
-    
-    
-    
-    
-    
-    #class average
-    #alig2d
     
     #reconstruct
     #resolution
