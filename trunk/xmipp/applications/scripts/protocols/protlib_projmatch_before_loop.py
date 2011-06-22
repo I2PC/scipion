@@ -3,7 +3,6 @@ from types              import StringTypes
 import os
 from xmipp import *
 from protlib_utils import unique_filename
-from protlib_utils import FILENAMENUMBERLENTGH
 
 def checkVolumeProjSize(_log, ReferenceFileNames, SelFileName):
     """ check references and projection size match"""
