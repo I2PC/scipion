@@ -276,7 +276,7 @@ class XmippProtocolDb:
                 _list =pickle.loads(str(row["fileNameList"]))
                 for i in _list:
                     if not os.path.exists(i):
-                        print "ERROR at  step: %d, file %d has not been created." % (id, i)
+                        print "ERROR at  step: %d, file %s has not been created." % (id, i)
                         exit(1)
                     elif self.viewVerifyedFiles:
                         print "Verified file:", i
