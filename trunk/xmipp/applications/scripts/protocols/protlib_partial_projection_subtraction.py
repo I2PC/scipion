@@ -3,16 +3,27 @@ from xmipp import *
 import launch_job
 import os
 
-def joinImageCTF(_log, CTFgroupName, DocFileRef):
+#'([A-z]*)'[ ]*:(.*)\n
+#$1\n
+
+def joinImageCTF(_log, CTFgroupName,DocFileRef,filename_currentAngles):
     tmpMD = MetaData(CTFgroupName)
     MDaux = MetaData(filename_currentAngles)
     outMD = MetaData()
     outMD.join(MDaux, tmpMD, MDL_IMAGE, NATURAL_JOIN)
     outMD.write(DocFileRef, MD_APPEND)
 
-
 #reconstruct
-def reconstructVolume(_log, dict):
+def reconstructVolume(_log 
+                     ,DocFileRef
+                     , DoParallel
+                     , MpiJobSize
+                     , NumberOfMpiProcesses
+                     , NumberOfThreads
+                     , reconstructedVolume
+                     , SymmetryGroup
+                     , SystemFlavour
+                     ):
     #xmipp_reconstruct_fourier -i ctfgroup_1@ctfgroups_Iter_13_current_angles.doc -o rec_ctfg01.vol --sym i3 --weight
     parameters  = ' -i ' +  DocFileRef 
     parameters += ' -o ' +  reconstructedVolume 
@@ -23,7 +34,7 @@ def reconstructVolume(_log, dict):
             parameters += ' --mpi_job_size ' + MpiJobSize
             parameters += ' --thr ' + str(NumberOfThreads)
 
-    launchJob('xmipp_reconstruct_fourier',
+    launch_job.launch_job('xmipp_reconstruct_fourier',
                              parameters,
                              _log,
                              doParallel,
@@ -32,18 +43,35 @@ def reconstructVolume(_log, dict):
                              SystemFlavour)
 
 
-def maskVolume(_log, dict):
+def maskVolume(_log
+              ,dRradiusMax
+              ,dRradiusMin
+              ,maskReconstructedVolume
+              ,reconstructedVolume
+):
     parameters  = ' -i ' +  reconstructedVolume 
     parameters += ' -o ' +  maskReconstructedVolume 
     
     parameters += ' --mask raised_crown -%d -%d 2' %(dRradiusMin, dRradiusMax)
-    launchJob("xmipp_transform_mask",
+    launch_job.launch_job("xmipp_transform_mask",
                              parameters,
                              _log,
                              False,1,1,'')
     
     #project
-def createProjections(_log, dict):
+def createProjections(_log
+                      ,AngSamplingRateDeg
+                      ,DocFileRef
+                      ,DoParallel
+                      ,maskReconstructedVolume
+                      ,MaxChangeInAngles
+                      , MpiJobSize
+                      ,NumberOfMpiProcesses
+                      ,NumberOfThreads
+                      ,referenceStack
+                      ,SymmetryGroup
+                      ,SystemFlavour
+):
     #dirname = 'ReferenceLibrary'
 
     doParallel = DoParallel
@@ -59,7 +87,7 @@ def createProjections(_log, dict):
     if (doParallel):
             parameters += ' --mpi_job_size ' + MpiJobSize
 
-    launchJob('xmipp_angular_project_library',
+    launch_job.launch_job('xmipp_angular_project_library',
                              parameters,
                              _log,
                              doParallel,
@@ -69,7 +97,11 @@ def createProjections(_log, dict):
                 
 
 
-def subtractionScript(_log, dict):
+def subtractionScript(_log
+                      ,DocFileRef
+                      ,referenceStackDoc
+                      ,subtractedStack
+                      ):
     md = MetaData(DocFileRef)#experimental images
     #referenceStackName = referenceStack#reference projection for a given defocus group
     mdRef = MetaData(referenceStackDoc)#experimental images
@@ -108,5 +140,3 @@ def subtractionScript(_log, dict):
         imgExp.write('%06d@%s'%(id,subtractedStackName+'exp'))
         imgRef.write('%06d@%s'%(id,subtractedStackName+'ref'))
 
-
-        
