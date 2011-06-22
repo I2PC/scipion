@@ -61,7 +61,7 @@ IsIter =False
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =1
+ContinueAtIteration =23
 
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, 
@@ -1089,7 +1089,6 @@ class ProtProjMatch(XmippProtocol):
     #, 'OuterRadius':OuterRadius[iterN]
                 command = "angular_class_average"
                 _VerifyFiles = []
-                _VerifyFiles.append('ertertertert')
                 _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
                 
                 ##############REMOVE SHUTIL.COPY
