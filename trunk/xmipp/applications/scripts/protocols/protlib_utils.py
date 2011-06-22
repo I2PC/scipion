@@ -27,8 +27,6 @@
 
 import os
 import sys
-'''number of leading zeros in filenames'''
-FILENAMENUMBERLENTGH=6
 
 #---------------------------------------------------------------------------
 # Logging utilities
