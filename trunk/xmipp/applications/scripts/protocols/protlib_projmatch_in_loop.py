@@ -357,9 +357,10 @@ def angular_class_average(_log
                   ' --split '
     
     runJob(_log,
+           'xmipp_angular_class_average',
            parameters,
-           _log,
            DoParallel,
+           True,
            NumberOfMpiProcesses * NumberOfThreads,
            1,
            SystemFlavour)
