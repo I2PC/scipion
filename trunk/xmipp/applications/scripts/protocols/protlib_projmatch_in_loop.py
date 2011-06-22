@@ -310,57 +310,51 @@ def angular_class_average(_log
     # Now make the class averages
     CtfGroupName        = CtfGroupDirectory + '/' +\
                           CtfGroupRootName
-    DocFileInputAngles  = DocFileInputAngles
-    DoCtfCorrection     = DoCtfCorrection
-    NumberOfCtfGroups   = NumberOfCtfGroups
-    NumberOfReferences  = NumberOfReferences
-    refN                = refN
     refname             = str(ProjectLibraryRootName)
-
     MD = MetaData()
     ProjMatchRootName = ProjMatchRootName
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
-        for iRef3D in range(1,NumberOfReferences+1):
-            auxInputdocfile  = CtfBlockName + \
-                                str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)
-            auxInputdocfile += '_' + RefBlockName +\
-                                str(iRef3D).zfill(FILENAMENUMBERLENGTH)+'@'
-            MD.read(auxInputdocfile+DocFileInputAngles)
-            if MD.size()==0:
-                print "Empty metadata, remember to copy the reference",iCTFGroup,iRef3D
-                continue;
-            #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(iRef3D).zfill(2))
-            parameters =  ' -i '       + auxInputdocfile  + DocFileInputAngles +\
-                          ' --lib '    + refname.replace(".stk",".doc") + \
-                          ' --dont_write_selfiles ' + \
-                          ' --limit0 ' + MinimumCrossCorrelation + \
-                          ' --limitR ' + DiscardPercentage
-            if (DoCtfCorrection):
-                # On-the fly apply Wiener-filter correction and add all CTF groups together
-                parameters += \
-                           ' --wien '   + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@' + CtfGroupName + '_wien.stk' + \
-                           ' --pad '    + str(PaddingFactor) + \
-                           ' --add_to ' + ProjMatchRootName.replace('.doc','__')
-            else:
-                parameters += \
-                          ' -o '                + ProjMatchRootName
-            if (DoAlign2D == '1'):
-                parameters += \
-                          ' --iter '             + Align2DIterNr  + \
-                          ' --Ri '               + str(InnerRadius)           + \
-                          ' --Ro '               + str(OuterRadius)           + \
-                          ' --max_shift '        + MaxChangeOffset + \
-                          ' --max_shift_change ' + Align2dMaxChangeOffset + \
-                          ' --max_psi_change '   + Align2dMaxChangeRot 
-    if (DoComputeResolution and DoSplitReferenceImages):
-        parameters += \
-                  ' --split '
-    
-    runJob(_log,
-           'xmipp_angular_class_average',
-           parameters,
-           DoParallel,
-           NumberOfMpiProcesses * NumberOfThreads,
-           1,
-           SystemFlavour)
+#        for iRef3D in range(1,NumberOfReferences+1):
+        auxInputdocfile  = CtfBlockName + \
+                            str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)
+        auxInputdocfile += '_' + RefBlockName +\
+                            str(refN).zfill(FILENAMENUMBERLENGTH)+'@'
+        MD.read(auxInputdocfile+DocFileInputAngles)
+        if MD.size()==0:
+            print "Empty metadata, remember to copy the reference",iCTFGroup,refN
+            continue;
+        #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(refN).zfill(2))
+        parameters =  ' -i '       + auxInputdocfile  + DocFileInputAngles +\
+                      ' --lib '    + refname.replace(".stk",".doc") + \
+                      ' --dont_write_selfiles ' + \
+                      ' --limit0 ' + MinimumCrossCorrelation + \
+                      ' --limitR ' + DiscardPercentage
+        if (DoCtfCorrection):
+            # On-the fly apply Wiener-filter correction and add all CTF groups together
+            parameters += \
+                       ' --wien '   + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@' + CtfGroupName + '_wien.stk' + \
+                       ' --pad '    + str(PaddingFactor) + \
+                       ' --add_to ' + ProjMatchRootName.replace('.doc','__')
+        else:
+            parameters += \
+                      ' -o '                + ProjMatchRootName
+        if (DoAlign2D == '1'):
+            parameters += \
+                      ' --iter '             + Align2DIterNr  + \
+                      ' --Ri '               + str(InnerRadius)           + \
+                      ' --Ro '               + str(OuterRadius)           + \
+                      ' --max_shift '        + MaxChangeOffset + \
+                      ' --max_shift_change ' + Align2dMaxChangeOffset + \
+                      ' --max_psi_change '   + Align2dMaxChangeRot 
+        if (DoComputeResolution and DoSplitReferenceImages):
+            parameters += \
+                      ' --split '
+        
+        runJob(_log,
+               'xmipp_angular_class_average',
+               parameters,
+               DoParallel,
+               NumberOfMpiProcesses * NumberOfThreads,
+               1,
+               SystemFlavour)
 
