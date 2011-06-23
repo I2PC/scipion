@@ -32,7 +32,8 @@ import tkFont
 sections = [\
 ('Preprocessing', ['Preprocess Micrograph', 'Particles picking', 'Preprocess Particles']),\
 ('2D', ['Align+Classify', 'Align', 'Classify']),\
-('3D', ['Initial Model', 'Model Refinement']) ]
+('3D', ['Initial Model', 'Model Refinement']),\
+('Other', ['Browse'])]
 
 #Font
 FontName = "Helvetica"
@@ -73,11 +74,19 @@ class XmippProject(Frame):
         self.createGUI()
         self.root.mainloop()
         
+    def dragWindows(self, event):
+        btn, menu = self.lastPair
+        if btn:
+            self.postMenu(btn, menu) #Move the popup menu with the windows
+        
     def createMainMenu(self):
         self.menubar = Menu(self.root)
         self.fileMenu = Menu(self.root, tearoff=0)
         self.fileMenu.add_command(label="Exit", command=self.onExit)
         self.menubar.add_cascade(label="File", menu=self.fileMenu)
+        self.lastPair = (None, None)
+        self.lastIndex = None
+        self.root.bind('<Configure>', self.dragWindows)
         
     def addTbLabel(self, text, row):
         '''Add a label to left toolbar'''
@@ -88,34 +97,49 @@ class XmippProject(Frame):
     def addTbButton(self, text, row):
         '''Add a button to left toolbar'''
         Font = tkFont.Font(family=FontName, size=FontSize, weight=tkFont.BOLD)
-        btn = Menubutton(self.toolbar, bd = 1, text=text, font=Font, relief=RAISED,
-                         bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
+        
+        menu = Menu(self.frame, bg=ButtonBgColor, activebackground=ButtonBgColor, font=Font, tearoff=0)
+        
+        
+        btn = Button(self.toolbar, bd = 1, text=text, font=Font, relief=RAISED,
+                         bg=ButtonBgColor, activebackground=ButtonBgColor)
         btn.grid(row = row, column = 0, sticky=W+E, pady=2, padx=5)
-        menu = Menu(btn, bg=ButtonBgColor, activebackground=ButtonActiveBgColor, font=Font)
-        btn['menu'] = menu
-        menu.add_command(label="option1")
-        menu.add_command(label="option2")
-#        self.bGet = Menubutton(self.frame, text=label, relief=RAISED,  
-#                                       width=30, bg=ButtonBackgroundColour, 
-#                                        activebackground=ButtonActiveBackgroundColour,
-#                                        highlightbackground=HighlightBackgroundColour); 
-#                self.bMenu = Menu(self.bGet)
-#                self.bGet["menu"] = self.bMenu          
-#                if not 'childs' in button:
-#                    print "ERROR: button '", label , "' doesn't have script neither childs."
-#                    sys.exit() 
-#                childs = button['childs'].split(", ")
-#                for child in childs:
-#                    option = setup.LaunchButtons[child];
-#                    label = option['title']
-#                    self.bMenu.add_radiobutton(label=label, variable=self.which_setup, 
-#                                             value = option['script'], command=self.GuiLaunchSetup,
-#                                             activebackground=ButtonActiveBackgroundColour,                                             
-#                                             selectcolor=ButtonBackgroundColour);
+        
+        cmd = lambda:self.showPopup(btn, menu)
+        menu.add_command(label="option1", command=lambda:self.menuPick(btn, menu, 0))
+        menu.add_command(label="option2", command=lambda:self.menuPick(btn, menu, 1))
+        btn.config(command=cmd)
+        
+    def postMenu(self, btn, menu):
+        x, y, w = btn.winfo_x(), btn.winfo_y(), btn.winfo_width()
+        xroot, yroot = self.root.winfo_x(), self.root.winfo_y()
+        menu.post(xroot + x + w + 10, yroot + y)
+        btn.config(bg=ButtonActiveBgColor, activebackground=ButtonActiveBgColor)
+        
+        
+    def menuPick(self, btn, menu, index):
+        self.postMenu(btn, menu)
+        print "index %s, self.lastIndex %s" % (index, self.lastIndex)
+        if self.lastIndex:
+            menu.entryconfig(self.lastIndex, background=ButtonBgColor, activebackground=ButtonBgColor)
+        self.lastIndex = index
+        menu.entryconfig(index, background=ButtonActiveBgColor, activebackground=ButtonActiveBgColor)
+        
+    def showPopup(self, btn, menu):
+        lastBtn, lastMenu = self.lastPair
+        if lastBtn and lastBtn != btn:
+            lastBtn.config(bg=ButtonBgColor)
+            lastMenu.unpost()
+            
+        if lastBtn != btn:
+            self.lastPair = (btn, menu)
+            self.postMenu(btn, menu)
+            
+        
 
     def createGUI(self):
       
-        self.root.title("Popup menu")
+        self.root.title("Xmipp Protocols")
         self.createMainMenu()
         
         self.toolbar = Frame(self.root, bd=1, relief=RAISED)
