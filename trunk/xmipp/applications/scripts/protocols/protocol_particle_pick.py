@@ -6,11 +6,8 @@
 # the xmipp_mark program 
 # A graphical interface exists to identify micrographs that have been finished
 #
-# Example use:
-# python xmipp_particle_pick.py &
-#
 # Author: Sjors Scheres, March 2007
-# Author: Carlos Oscar Sorzano, November, 2010
+# Author: Carlos Oscar Sorzano, June, 2011
 #
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
@@ -21,7 +18,7 @@
 WorkingDir='ParticlePicking'
 
 # {file} Selfile with all micrographs to pick particles from:
-MicrographSelfile='Preprocessing/all_micrographs.sel'
+MicrographSelfile='Preprocessing/micrographs.sel'
 
 # Perform automatic particle picking
 """ Perform automatic particle picking """
@@ -62,21 +59,6 @@ import os,shutil,sys
 scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
 sys.path.append(scriptdir) # add default search path
 import xmipp
-
-# Taken from Python 2.6
-import posixpath
-def relpath(path, start=posixpath.curdir):
-    """Return a relative version of a path"""
-    if not path:
-        raise ValueError("no path specified")
-    start_list=posixpath.abspath(start).split(posixpath.sep)
-    path_list=posixpath.abspath(path).split(posixpath.sep)
-    # Work out how much of the filepath is shared by start and path.
-    i=len(posixpath.commonprefix([start_list, path_list]))
-    rel_list=[posixpath.pardir] * (len(start_list) - i) + path_list[i:]
-    if not rel_list:
-        return curdir
-    return posixpath.join(*rel_list)
 
 # Create a GUI automatically from a selfile of micrographs
 class particle_pick_class:
@@ -155,7 +137,7 @@ class particle_pick_class:
                                            "IsPairList"]);
             
         # Make working directory if it does not exist yet
-        import time
+        import time, protlib_filesystem
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
             fh=open(self.WorkingDir + "/status.txt", "w")
@@ -163,7 +145,7 @@ class particle_pick_class:
             fh.write("Step 0: Directory created at " + time.asctime() + "\n")
             fh.close()
             os.system("ln -s "+\
-                      relpath(os.path.abspath(self.MicrographSelfile),self.WorkingDir)+" "+\
+                      protlib_filesystem.relpath(os.path.abspath(self.MicrographSelfile),self.WorkingDir)+" "+\
                     self.WorkingDir+"/micrographs.sel")
             self.saveAndCompareParameters(["MicrographSelfile",
                                            "IsPairList"]);
@@ -235,9 +217,13 @@ class particle_pick_class:
         self.selectedForAutomaticPickingName=[]
         self.selectedForAutomaticPickingMark=[]
         directory,dummy=os.path.split(self.MicrographSelfile)
+        containsEnable=self.mD.containsLabel(xmipp.MDL_ENABLED)
         if not self.IsPairList:
             for id in self.mD:
-                micrograph=self.mD.getValue(xmipp.MDL_IMAGE)
+                micrograph=self.mD.getValue(xmipp.MDL_IMAGE,id)
+                if containsEnable:
+                    if self.mD.getValue(xmipp.MDL_ENABLED,id)==0:
+                        continue
                 if not os.path.exists(directory+"/"+micrograph):
                     c=0
                     cauto=0
@@ -252,8 +238,8 @@ class particle_pick_class:
                     self.row[micrograph]=row
         else:
             for id in self.mD:
-                micrograph=self.mD.getValue(xmipp.MDL_IMAGE)
-                tilted=self.mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
+                micrograph=self.mD.getValue(xmipp.MDL_IMAGE,id)
+                tilted=self.mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1,id)
                 c=self.CountPicked(micrograph,str(self.PosName))
                 total+=c
                 self.whichtilted[micrograph]=tilted
@@ -315,7 +301,7 @@ class particle_pick_class:
     def GuiAddSingleMarkEntry(self,micrograph,count,count_auto):
         row=self.frame.grid_size()[1]
 
-        label=os.path.basename(micrograph)
+        label=micrograph.split("/")[-2]
         l=Label(self.frame, text=label, 
                 bg=self.LabelBackgroundColour)
         l.grid(row=row, column=0, sticky=E)
@@ -423,7 +409,7 @@ class particle_pick_class:
                   'echo "Step A: "'+micrograph+' automatically marked on `date` >> ' + \
                   self.WorkingDir + "/status.txt; fi )\n")
                  
-        command_file.write("MPI_Barrier\n")
+        command_file.write("MPI_BARRIER\n")
         command_file.write('echo "Step F: " finished marking on `date` >> ' + \
                   self.WorkingDir + "/status.txt \n")
         command_file.close();
@@ -507,8 +493,8 @@ class particle_pick_class:
         if name=='':
             return
         basedirectory,dummy=os.path.split(self.MicrographSelfile)
-        directory,micrograph=os.path.split(name)
-        command='( xmipp_micrograph_mark -i '+basedirectory+"/"+directory+"/"+micrograph+\
+        micrograph=name.split("/")[-2]
+        command='( xmipp_micrograph_mark -i '+name+\
                   " --outputRoot "+self.WorkingDir+"/"+micrograph
         if (self.AutomaticPicking):
             command+=' --auto '+self.WorkingDir+"/"+self.PosName+'.auto'
@@ -531,12 +517,11 @@ class particle_pick_class:
         
         untilted=self.whichmark.get()
         tilted=self.whichtilted[self.whichmark.get()]
-        basedirectory,dummy=os.path.split(self.MicrographSelfile)
-        directoryUname,uname=os.path.split(untilted)
-        directoryTname,tname=os.path.split(tilted)
+        uname=untilted.split("/")[-2]
+        tname=tilted.split("/")[-2]
         filename=self.WorkingDir+"/"+uname+"."+self.PosName+".pos"
-        command='( xmipp_micrograph_mark -i '+basedirectory+"/"+directoryUname+"/"+uname+\
-                ' --tilted '+basedirectory+"/"+directoryTname+"/"+tname+\
+        command='( xmipp_micrograph_mark -i '+untilted+\
+                ' --tilted '+tilted+\
                 " --outputRoot "+self.WorkingDir+"/"+uname
         command+="; if [ -e " + filename + ' ]; then ' + \
                  'echo "Step M: "'+uname+' manually marked pair on `date` >> ' + \
@@ -585,17 +570,17 @@ def checkErrors():
     errors.append("Cannot find the following micrographs:\n")
     NnotFound=0
     for id in mD:
-         micrograph = mD.getValue(xmipp.MDL_IMAGE)
+         micrograph = mD.getValue(xmipp.MDL_IMAGE,id)
          if not os.path.exists(micrograph):
             message+=micrograph+"\n"
             NnotFound=NnotFound+1
          if isPairList:
-             micrograph = mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
+             micrograph = mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1,id)
              if not os.path.exists(micrograph):
                  message+=micrograph+"\n"
                  NnotFound=NnotFound+1
     
-    if not NnotFound>0:
+    if NnotFound>0:
         errors.append(message)
             
     # Check that automatic particle picking is not for tilted
