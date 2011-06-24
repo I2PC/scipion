@@ -259,7 +259,7 @@ def buildRunCommand(
         command = (mpicommand + ' `which %(prog)s` %(params)s') % paramsDict
     return command
 
-def loadModule(moduleName):
+def loadModule(moduleName, report=False):
     try:
         if moduleName in sys.modules:
             module = sys.modules[moduleName]
@@ -267,7 +267,9 @@ def loadModule(moduleName):
         else:
             module = __import__(moduleName)
     except ImportError, e:
-        reportError(str(e))
+        if report:
+            reportError(str(e))
+        return None
     return module
         
 def loadLaunchConfig(configFile):
