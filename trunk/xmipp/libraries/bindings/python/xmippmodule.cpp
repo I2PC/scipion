@@ -865,6 +865,8 @@ MetaData_merge(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
 static PyObject *
+MetaData_operate(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
 MetaData_readPlain(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_setComment(PyObject *obj, PyObject *args, PyObject *kwargs);
@@ -1693,6 +1695,8 @@ MetaData_methods[] =
          "Intersection of two metadatas using a common label. The results is stored in self." },
         { "setComment", (PyCFunction) MetaData_setComment,
           METH_VARARGS, "Set comment in Metadata." },
+        { "operate", (PyCFunction) MetaData_operate,
+          METH_VARARGS, "Basic operations on columns data." },
         { "removeDuplicates", (PyCFunction) MetaData_removeDuplicates,
           METH_VARARGS, "Remove duplicate rows" },
         {
@@ -2031,6 +2035,28 @@ MetaData_intersection(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* Basic operations on columns data. */
+static PyObject *
+MetaData_operate(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    char *str = "";
+    if (PyArg_ParseTuple(args, "s", &str))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*) obj;
+            self->metadata->operate(str);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+
 MDObject *
 createMDObject(int label, PyObject *pyValue)
 {
@@ -2135,9 +2161,9 @@ Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
         PyObject *only_apply_shifts = Py_False;
         PyObject *wrap ;
         if (WRAP)
-        	wrap = Py_True;
+            wrap = Py_True;
         else
-        	wrap = Py_False;
+            wrap = Py_False;
         size_t objectId = BAD_OBJID;
         bool boolOnly_apply_shifts = false;
         bool boolWrap = WRAP;
@@ -2157,7 +2183,7 @@ Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
                 else
                     PyErr_SetString(PyExc_TypeError, "ImageGeneric::readApplyGeo: Expecting boolean value");
                 self->image->readApplyGeo(MetaData_Value(md), objectId, boolOnly_apply_shifts,
-                		(DataMode)datamode, select_img,boolWrap);
+                                          (DataMode)datamode, select_img,boolWrap);
                 Py_RETURN_NONE;
             }
             catch (XmippError xe)
@@ -2354,25 +2380,25 @@ xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
-        	MetaData md;
-        	if (PyString_Check(pyValue))
-        	{
-        		char * str = PyString_AsString(pyValue);
-        		md.read(str);
-        	}
-			else if (FileName_Check(pyValue))
-			{
-				md.read(FileName_Value(pyValue));
-			}
-			else if (MetaData_Check(pyValue))
-			{
-				md = MetaData_Value(pyValue);
-			}
-			else
-			{
-				 PyErr_SetString(PyXmippError, "Invalid argument: expected String, FileName or MetaData");
-				return NULL;
-			}
+            MetaData md;
+            if (PyString_Check(pyValue))
+            {
+                char * str = PyString_AsString(pyValue);
+                md.read(str);
+            }
+            else if (FileName_Check(pyValue))
+            {
+                md.read(FileName_Value(pyValue));
+            }
+            else if (MetaData_Check(pyValue))
+            {
+                md = MetaData_Value(pyValue);
+            }
+            else
+            {
+                PyErr_SetString(PyXmippError, "Invalid argument: expected String, FileName or MetaData");
+                return NULL;
+            }
             int xdim, ydim, zdim;
             size_t ndim;
             ImgSize(md, xdim, ydim, zdim, ndim);
