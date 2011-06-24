@@ -32,6 +32,6 @@ class visualize_micrographs_class:
             tkMessageBox.showerror("Error", message)
 
 if __name__ == '__main__':
-    WorkingDir=sys.argv[1]
-    visualize=visualize_micrographs_class(WorkingDir)
+    protocolName=sys.argv[1]
+    visualize=visualize_micrographs_class(protocolName)
 
