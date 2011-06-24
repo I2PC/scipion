@@ -819,6 +819,7 @@ AddBatch('browserj', 'applications/scripts/browserj', '.sh')
 # Protocols
 #Protocol libraries
 AddProtocol('protlib_base.py', 'applications/scripts/protocols')
+AddProtocol('protlib_filesystem.py', 'applications/scripts/protocols')
 AddProtocol('protlib_partial_projection_subtraction.py', 'applications/scripts/protocols')
 AddProtocol('protlib_projmatch_before_loop.py', 'applications/scripts/protocols')
 AddProtocol('protlib_projmatch_in_loop.py', 'applications/scripts/protocols')
