@@ -16,7 +16,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Working subdirectory:
-WorkingDir='Preprocessing2'
+WorkingDir='Preprocessing'
 # {dir} Directory name from where to process all scanned micrographs
 DirMicrographs='Micrographs'
 # Which files in this directory to process
@@ -381,9 +381,7 @@ class preprocess_A_class:
             os.system(command)     
         
         errors.append(" Done pre-processing of micrographs")
-        print '* ', message
         print '*********************************************************************'
-        self.log.info(message)
 
     def launchCommandFile(self, commandFile):
         import launch_job, log
@@ -588,7 +586,7 @@ class preprocess_A_class:
         return
 
 # Preconditions
-def checkErrors(gui):
+def checkErrors():
     errors = []
     # Check if there is workingdir
     if WorkingDir == "":
