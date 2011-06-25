@@ -275,36 +275,46 @@ def loadModule(modulePath, report=True):
     except ImportError, e:
         if report:
             reportError(str(e))
-        module=None
+        module = None
     del sys.path[0]
     return module
         
-def loadLaunchConfig(configFile):
-    moduleName = configFile.replace('.py', '')
-    try:
-        if moduleName in sys.modules:
-            module = sys.modules[moduleName]
-            reload(module)
-        else:
-            module = __import__(moduleName)
-    except ImportError, e:
-        reportError(str(e))
+def loadLaunchConfig():
+    '''Load the launch config module. 
+    The config module should be in the xmipp installation folder
+    and should contains to global vars: FileTemplate and LaunchTemplate
+    '''
+    mod = loadModule('config_launch.py')
+    return (mod.FileTemplate, mod.LaunchTemplate)
         
-def createLaunchFile(outFilename, fileTemplate, **kargs):
+def createQueueLaunchFile(outFilename, fileTemplate, **kargs):
+    '''Create the final file to launch the job to queue
+    using a platform specific template (fileTemplate)
+    '''
     file = open(outFilename, 'w')
     file.write(fileTemplate % kargs)
     file.close()
     
-def launchJob(cmdTemplate, jobFile):
-    command = cmdTemplate % {'file':jobFile}
-    printLog(log, "Lauching job: %s" % command)
-    from subprocess import call
-    retcode = 0
-    try:
-        retcode = call(command, shell=True)
-    except OSError, e:
-        reportError("Launch failed %s" % e)
-
+def launchProtocol(protocolPath):
+    '''Launch a protocol, to a queue or executing directly.
+    If the queue options are found, it will be launched with 
+    configuration (command and file template) found in project settings
+    This function should be called from ProjectDir
+    '''
+    print "* Launching protocol script: '%s'" % protocolPath
+    prot = loadModule(protocolPath)
+    if 'DoSubmit' in dir(prot) and prot.DoSubmit:
+        file = protocolPath.replace('.py', '.job')
+        print "** Creating submit file: '%s'" % file
+        fileTemplate, cmdTemplate = loadLaunchConfig()
+        createQueueLaunchFile(file, fileTemplate, params)
+        command = cmdTemplate % {'file': file}
+        print "** Submiting to queue: '%s'" % command
+    else:
+        command = "%python %s" % protocolPath
+        print "** Option 'DoSubmit' not found or set to False"
+        print "** Running command: '%s'" % command
+    os.system(command)
 
 #---------------------------------------------------------------------------
 # Metadata stuff
