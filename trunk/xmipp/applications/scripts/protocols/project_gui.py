@@ -29,20 +29,31 @@
 from Tkinter import *
 import tkFont
 
-sections = [\
-('Preprocessing', \
-   [['Preprocess Micrograph'], \
-    ['Particles picking'], \
-    ['Preprocess Particles']]),\
-('2D', \
-   [['Align+Classify', 'ML2D', 'CL2D'], \
-    ['Align', 'ML2D', 'CL2D'], \
-    ['Classify', 'KerDenSOM', 'Rotational Spectra']]),\
-('3D', \
-   [['Initial Model', 'Common Lines', 'Random Conical Tilt'], \
-    ['Model Refinement']]),\
+sections = [
+('Preprocessing', 
+   [['Preprocess Micrograph'], 
+    ['Particles picking'], 
+    ['Preprocess Particles']]),
+('2D', 
+   [['Align+Classify', 'ML2D', 'CL2D'], 
+    ['Align', 'ML2D', 'CL2D'], 
+    ['Classify', 'KerDenSOM', 'Rotational Spectra']]),
+('3D', 
+   [['Initial Model', 'Common Lines', 'Random Conical Tilt'], 
+    ['Model Refinement']]),
 ('Other', [['Browse']])]
 
+launchDict = {
+              'Preprocess Micrograph': 'xmipp_protocol_preprocess_micrographs.py',
+              'Particles picking':     'xmipp_protocol_particle_pick.py', 
+              'Preprocess Particles':  'xmipp_protocol_preprocess_particles.py', 
+              'ML2D':                  'xmipp_protocol_ml2d.py',
+              'CL2D':                  'xmipp_protocol_cl2d.py',
+              'KerDenSOM':             'xmipp_protocol_kerdensom.py',
+              'Rotational Spectra':    'xmipp_protocol_rotspectra.py',
+              'Common Lines':          'xmipp_protocol_rct.py',
+              'Random conical Tilt':    'xmipp_protocol_commonlines.py'
+              }
 #Font
 FontName = "Helvetica"
 FontSize = 10
@@ -77,35 +88,19 @@ class XmippProject(Frame):
   
     def __init__(self):
         self.root = Tk()
-        #self.root.geometry("250x150+300+300")
-        self.frame = Frame(self.root)
         self.createGUI()
         self.root.mainloop()
-        
-    def dragWindows(self, event):
-        btn, menu = self.lastPair
-        if btn:
-            self.postMenu(btn, menu) #Move the popup menu with the windows
         
     def createMainMenu(self):
         self.menubar = Menu(self.root)
         self.fileMenu = Menu(self.root, tearoff=0)
         self.fileMenu.add_command(label="Exit", command=self.onExit)
         self.menubar.add_cascade(label="File", menu=self.fileMenu)
-        self.lastPair = (None, None)
-        self.lastIndex = None
-        self.root.bind('<Configure>', self.dragWindows)
-        self.root.bind("<Unmap>", self.OnUnmap)
-        self.root.bind("<Map>", self.dragWindows)
         
-    def OnUnmap(self, event=''):
-        if event.widget == self.root and self.lastPair:
-            btn, menu = self.lastPair
-            menu.unpost()
-    
+   
     def addTbLabel(self, text, row):
         '''Add a label to left toolbar'''
-        Font = tkFont.Font(family=FontName, size=FontSize+2, weight=tkFont.BOLD)
+        Font = tkFont.Font(family=FontName, size=FontSize+1, weight=tkFont.BOLD)
         label = Label(self.toolbar, text=text, font=Font, fg=SectionTextColor)
         label.grid(row = row, column=0)
         
@@ -116,47 +111,41 @@ class XmippProject(Frame):
                          bg=ButtonBgColor, activebackground=ButtonBgColor)
         btn.grid(row = row, column = 0, sticky=W+E, pady=2, padx=5)
         
+        btnFrame = Frame(self.frame, width=100, bd=1, relief=GROOVE)
+        btnFrame.columnconfigure(0, minsize=130)
+        label = Label(btnFrame, text='Protocols:')
+        label.grid(row=0, column=0, pady=5)
         if len(opts) > 0:
-            menu = Menu(self.frame, bg=ButtonBgColor, activebackground=ButtonBgColor, font=self.ButtonFont, tearoff=0)
             i = 0
             for o in opts:
-                menu.add_command(label = o, command=lambda:self.menuPick(btn, menu, i))
                 i += 1
-            btn.config(command=lambda:self.showPopup(btn, menu))
-        
-    def postMenu(self, btn, menu):
-        x, y, w = btn.winfo_x(), btn.winfo_y(), btn.winfo_width()
-        xroot, yroot = self.root.winfo_x(), self.root.winfo_y()
-        menu.post(xroot + x + w + 10, yroot + y)
-        btn.config(bg=ButtonActiveBgColor, activebackground=ButtonActiveBgColor)
-        
-        
-    def menuPick(self, btn, menu, index):
-        self.postMenu(btn, menu)
-        print "index %s, self.lastIndex %s" % (index, self.lastIndex)
-        if self.lastIndex:
-            menu.entryconfig(self.lastIndex, background=ButtonBgColor, activebackground=ButtonBgColor)
-        self.lastIndex = index
-        menu.entryconfig(index, background=ButtonActiveBgColor, activebackground=ButtonActiveBgColor)
-        
-    def showPopup(self, btn, menu):
-        lastBtn, lastMenu = self.lastPair
-        if lastBtn and lastBtn != btn:
-            lastBtn.config(bg=ButtonBgColor)
-            lastMenu.unpost()
-            
-        if lastBtn != btn:
-            self.lastPair = (btn, menu)
-            self.postMenu(btn, menu)
-            
-        
+                label = Label(btnFrame, text=o)
+                label.grid(row=2*i, column=0, sticky=W)
+                btnLaunch = Button(btnFrame, text='Launch')
+                btnLaunch.grid(row=2*i+1, column=0, pady=5, sticky=E)
+                
+        btn.config(command=lambda:self.menuPick(btn, btnFrame))
+
+    def menuPick(self, btn, frame):
+        if self.lastSelectedFrame:
+            self.lastSelectedFrame.grid_remove()
+        self.lastSelectedFrame = frame
+        frame.grid(row=0, column=1, sticky=W+E, padx=5)
 
     def createGUI(self):
         self.root.title("Xmipp Protocols")
         self.createMainMenu()
+        self.lastSelectedFrame = None
+        #Create a main frame that contains all other widgets
+        self.frame = Frame(self.root)
+        self.frame.pack(fill=BOTH)
+        self.frame.columnconfigure(0, minsize=150, weight=1)
+        self.frame.columnconfigure(1, minsize=150, weight=1)
+        self.frame.columnconfigure(2, minsize=300, weight=2)
         
-        self.toolbar = Frame(self.root, bd=1, relief=RAISED)
-
+        #Configure toolbar frame
+        self.toolbar = Frame(self.frame, bd=1, relief=RAISED)
+        self.toolbar.grid(row=0, column=0, sticky=N+W+S)#side=LEFT, fill=Y)
         # Create buttons
         self.ButtonFont = tkFont.Font(family=FontName, size=FontSize, weight=tkFont.BOLD)
         i = 1
@@ -167,11 +156,10 @@ class XmippProject(Frame):
                 self.addTbButton(i, btn[0], btn[1:])
                 i += 1
             
-        self.toolbar.pack(side=LEFT, fill=Y)
-        text = Text(self.root)
-        text.pack(side=RIGHT, fill=BOTH)
+        
+        text = Text(self.frame)
+        text.grid(row=0, column=2)#pack(side=RIGHT, fill=BOTH)
         self.root.config(menu=self.menubar)
-        self.frame.pack()
         
        
     def onExit(self):
