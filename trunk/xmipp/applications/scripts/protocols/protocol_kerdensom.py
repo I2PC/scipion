@@ -8,6 +8,7 @@
 # Author:Carlos Oscar Sorzano, January 2011
 #
 #
+# {begin_of_header}
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
@@ -64,7 +65,7 @@ KerdensomExtraCommand=''
 AnalysisScript='visualize_kerdensom.py'
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
-# {end-of-header} do not change anything bellow this line unless you know what you are doing
+# {end_of_header} do not change anything bellow this line unless you know what you are doing
 #-----------------------------------------------------------------------------
 import os,shutil,sys,time
 scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'

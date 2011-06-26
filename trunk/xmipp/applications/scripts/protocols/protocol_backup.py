@@ -23,5 +23,5 @@ DoDir2=True
 """
 DoDir3=True
 #-------------------------------------------------------------------------------
-# {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
+# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #-------------------------------------------------------------------------------

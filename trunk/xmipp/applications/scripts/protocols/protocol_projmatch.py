@@ -8,6 +8,7 @@
 # Authors: Roberto Marabini,
 #          Sjors Scheres,    March 2008
 #
+# {begin_of_header}
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
@@ -575,7 +576,7 @@ AnalysisScript='visualize_projmatch.py'
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
-# {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
+# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #-----------------------------------------------------------------------------
 #Do not change these variables
 ReferenceVolumeName='reference_volume.vol'

@@ -33,7 +33,7 @@ LogDir='Logs'
 #
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
-# {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
+# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
@@ -136,10 +136,10 @@ class setup_protocols_class:
             while (isheader!=True):
                 line=fh.readline()
                 if line=="":
-                    print "Error, this file does not have a {end-of-header} label"
+                    print "Error, this file does not have a {end_of_header} label"
                     sys.exit()
                 header_lines.append(line)
-                if (line.find('{end-of-header}') > -1):
+                if (line.find('{end_of_header}') > -1):
                     isheader=True
 
             body_lines=fh.readlines()

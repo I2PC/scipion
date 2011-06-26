@@ -74,3 +74,18 @@ def deleteFile(_mylog, FileName, Verbose):
         if Verbose:
             printLog( 'Do not need to delete %s; already gone' % Filename )
 
+#--------------------------- Xmipp specific tools ---------------------------------
+def getXmippPath(subfolder=''):
+    '''Return the path the the Xmipp installation folder
+    if a subfoder is provided, will be concatenated to the path'''
+    import os
+    protdir = os.popen('which xmipp_protocols', 'r').read()
+    xmippdir = os.path.dirname(os.path.dirname(protdir))
+    return os.path.join(xmippdir, subfolder)
+
+def includeProtocolsDir():
+    protDir = getXmippPath('protocols')
+    import sys
+    sys.path.append(protDir)
+    
+

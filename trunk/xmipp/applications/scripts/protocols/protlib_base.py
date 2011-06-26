@@ -113,6 +113,8 @@ class XmippProtocol(object):
         self.Db.runActions(self.Log, self.Import)
         return 0
       
+class XmippProject():
+    pass
             
       
 

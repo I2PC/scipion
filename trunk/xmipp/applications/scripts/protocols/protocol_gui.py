@@ -18,7 +18,7 @@ Usage:
 Where the header of script.py should be organized as follows:
 
 Obligatory:
-    * Include a {end-of-header} label at the end of the header
+    * Include a {end_of_header} label at the end of the header
     * Variable declaration (visible in GUI): Variablename=XXX
           o If XXX is True or False, the variable is considered as a
             Boolean (yes/no button in GUI)
@@ -556,7 +556,7 @@ class ProtocolGUI():
         self.master.bind("<Button-4>", self.scroll)
         self.master.bind("<Button-5>", self.scroll)
         
-    def launchGUI(self, script):
+    def createGUI(self, script):
         self.init(script)        
         self.master = Tk()
         self.style = ProtocolStyle('config_gui')
@@ -570,6 +570,7 @@ class ProtocolGUI():
         self.parseHeader()
         #self.fillWidgets()
                 # Add bottom row buttons
+    def launchGUI(self):
         self.fillButtons()
         self.addBindings()        
         self.createCanvas() 
@@ -580,5 +581,6 @@ class ProtocolGUI():
 if __name__ == '__main__':
     script = sys.argv[1]  
     gui = ProtocolGUI()
-    gui.launchGUI(script)
+    gui.createGUI(script)
+    gui.launchGUI()
     

@@ -9,6 +9,7 @@
 # Author: Sjors Scheres, March 2007
 # Author: Carlos Oscar Sorzano, June, 2011
 #
+# {begin_of_header}
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
@@ -50,7 +51,7 @@ SystemFlavour=''
 
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
-# {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
+# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
@@ -446,7 +447,7 @@ class particle_pick_class:
             python_file.write("WorkingDir='"+self.WorkingDir+"'\n")
             python_file.write("DoParallel="+str(self.DoParallel)+"\n")
             python_file.write("NumberOfMpiProcesses="+str(self.NumberOfMpiProcesses)+"\n")
-            python_file.write("# {end-of-header}\n")
+            python_file.write("# {end_of_header}\n")
             python_file.write("import os\n")
             python_file.write('os.system("'+command+'")\n');
             python_file.close();

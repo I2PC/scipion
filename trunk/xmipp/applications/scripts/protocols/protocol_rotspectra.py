@@ -12,6 +12,7 @@
 # required files: log.py, spider_header.py, Sel_Files.py
 # by defaults searchs for python files in ../python directory
 #
+# {begin_of_header}
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
@@ -74,7 +75,7 @@ KerdensomExtraCommand=''
 AnalysisScript='visualize_rotspectra.py'
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
-# {end-of-header} do not change anything bellow this line unless you know what you are doing
+# {end_of_header} do not change anything bellow this line unless you know what you are doing
 #-----------------------------------------------------------------------------
 import os,shutil,sys,time
 scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'

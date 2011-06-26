@@ -10,6 +10,7 @@
 #
 # Author: Carlos Oscar Sanchez Sorzano, June 2007
 #
+# {begin_of_header}
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
@@ -306,7 +307,7 @@ SystemFlavour=''
 """
 AnalysisScript='visualize_multires.py'
 #-----------------------------------------------------------------------------
-# {end-of-header} do not change anything bellow this line unless you know what you are doing
+# {end_of_header} do not change anything bellow this line unless you know what you are doing
 #-----------------------------------------------------------------------------
 #===========================================================================
 # Beginning of the protocol

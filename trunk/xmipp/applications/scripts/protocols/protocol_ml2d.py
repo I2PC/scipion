@@ -10,6 +10,7 @@
 #
 # Author: Sjors Scheres, January 2008
 #
+#
 # {begin_of_header} 
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
@@ -57,7 +58,7 @@ ImagesArePhaseFlipped=True
 """
 HighResLimit=20
 #------------------------------------------------------------------------------------------------
-# {section} ml(f)_align2d parameters
+# {section}{expert} ml(f)_align2d parameters
 #------------------------------------------------------------------------------------------------
 # Perform 2D maximum-likelihood refinement?
 DoML2D=True

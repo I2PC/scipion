@@ -8,6 +8,8 @@
 # Authors: Roberto Marabini,
 #          Sjors Scheres,    March 2008
 #        Rewritten by Roberto Marabini
+#
+# {begin_of_header}
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
@@ -653,7 +655,7 @@ ViewVerifyedFiles=True
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
-# {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
+# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #-----------------------------------------------------------------------------
        
 def checkErrors():    
