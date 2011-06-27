@@ -69,9 +69,9 @@ class XmippProtocolDb:
         try:
             self.cur.executescript(_sqlCommand)
         except sqlite.Error, e:
-            print "kk",e
+            #print "kk",e
             if(e.args[0].find('database is locked')!= -1):
-                print 'consider deleting the database (',LogName,')'
+                print 'consider deleting the database (',self.dbName,')'
             sys.exit(1)
 
 
