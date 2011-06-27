@@ -2005,45 +2005,31 @@ void ProgML2D::maximization()
     {
         bool special_first = (!do_restart && iter == istart);
         ModelML2D block_model(model.n_ref);
-        //fixme: this is for testing only, not updating with blocks
-        if (no_iem)
-            special_first = true;
 
         if (!special_first)
         {
             readModel(block_model, current_block);
-
-            //fixme: remove printings
-            printModel(formatString("Readed block model: %d", current_block), block_model);
             model.substractModel(block_model);
-            printModel("GLOBAL model: after subtraction: ", model);
         }
 
         maximizeModel(block_model);
-        printModel(formatString("Maximazed block model: %d", current_block), block_model);
-
         writeOutputFiles(block_model, OUT_BLOCK);
 
         if (!special_first)
         {
             model.addModel(block_model);
             model.update();
-            printModel("GLOBAL model: after addition and update: ", model);
         }
         else if (current_block == blocks - 1) //last block
         {
             for (current_block = 0; current_block < blocks; current_block++)
             {
                 readModel(block_model, current_block);
-                // std::cerr << "====== Readed block model: " << current_block <<" =========" <<std::endl;
-                //block_model.print();
 
                 if (current_block == 0)
                     model = block_model;
                 else
                     model.addModel(block_model);
-                //std::cerr << "====== GLOBAL model: after addition: " << " =========" <<std::endl;
-                //model.print();
             }
             model.update();
             printModel("GLOBAL model: after addition and update: ", model);
@@ -2053,9 +2039,6 @@ void ProgML2D::maximization()
             --current_block;
         }
     }
-
-    //std::cerr << "======After maximization MODEL: ========= block: " << current_block << std::endl;
-    //model.print();
 
     if (model.do_norm)
         correctScaleAverage();
