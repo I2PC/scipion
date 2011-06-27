@@ -33,7 +33,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "funcs.h"
-#include "memory.h"
 #include "image_macros.h"
 #include "multidim_array.h"
 #include "transformations.h"
@@ -76,7 +75,7 @@ typedef enum
     WRITE_REPLACE,   //replace a particular object by another
     WRITE_READONLY,   //only can read the file
     WRITE_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
-        // it is here for looping purposes
+    // it is here for looping purposes
 } WriteMode;
 
 /** Data mode
@@ -98,12 +97,12 @@ typedef enum
  */
 typedef enum
 {
-	// prefix needed so extract_image_enums.py script can create the equivalent class for Java
+    // prefix needed so extract_image_enums.py script can create the equivalent class for Java
     CW_CAST,       //Only cast the data type
     CW_CONVERT,    //Convert the data from one type to another
     CW_ADJUST,     //Adjust the histogram to fill the gray level range
     CW_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
-        // it is here for looping purposes
+    // it is here for looping purposes
 } CastWriteMode;
 
 /** Open File struct
@@ -227,7 +226,7 @@ protected:
     TransformType       transform;   // Transform type
     size_t              replaceNsize;// Stack size in the replace case
     bool                _exists;     // does target file exists?
-                                     // equal 0 is not exists or not a stack
+    // equal 0 is not exists or not a stack
     bool                mmapOnRead;  // Mapping when reading from file
     bool                mmapOnWrite; // Mapping when writing to file
     int                 mFd;         // Handle the file in reading method and mmap
@@ -378,7 +377,7 @@ public:
      */
     void swapOnWrite()
     {
-      swapWrite = true;
+        swapWrite = true;
     }
 
     /** Get file name
@@ -636,6 +635,9 @@ protected:
     /**
      *  Specific read functions for different file formats
      */
+    /// @defgroup ImageFormats Image Formats
+    /// @ingroup Images
+    // Functions belonging to this topic are commented in rw*.h
 #include "rwDM3.h"
 #include "rwIMAGIC.h"
 #include "rwMRC.h"

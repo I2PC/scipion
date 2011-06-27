@@ -33,6 +33,9 @@
 #include "image_base.h"
 #include "image_generic.h"
 
+/// @addtogroup Images
+//@{
+
 /** Template class for images.
  * The image class is the general image handling class.
  */
@@ -1101,11 +1104,5 @@ void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim,
 void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim,
                    size_t &Ndim, DataType &datatype);
 
-
-
-
-/// @defgroup ImageFormats Image Formats
-/// @ingroup Images
-// Functions belonging to this topic are commented in rw*.h
 //@}
 #endif
