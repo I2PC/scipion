@@ -13,8 +13,14 @@
 #-----------------------------------------------------------------------------
 #Comment
 Comment='Describe your project here...'
+
+#Comment
+""" Subtraction directory suffix. '01' will create 'Subtraction_01' directory
+"""
+SubtractionDirectorySuffix='shifts_01'
+
 # {file} Protocol Name
-ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy/xmipp_protocol_projmatch_backup.py'
+ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy_shifts/xmipp_protocol_projmatch_shifts_backup.py'
 
 # {expert}{file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all 
@@ -28,7 +34,7 @@ ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy/xmipp_protocol_projmatch_b
 #Show results for iteration
 """ Use data coming from iteration
 """
-iterationNo=4
+iterationNo=5
 
 # Resume at iteration
 """ Set to 1 to start a new run, set to -1 to continue the process (where you left it),
@@ -37,7 +43,7 @@ iterationNo=4
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =8
+ContinueAtIteration =9
 
 # {expert} Resume at Iter (vs Step)
 """This option control how to resume a previously performed run.
@@ -56,7 +62,7 @@ szInputVolumeName=''
 """Name of the doc file used to compute reference library, by dfault
    ../Iter_(X-1)/Iter_(X-1)_current_angles.doc
 """
-DocFileRef=''
+DocFileExp=''
 
 # {expert} Mask reference volume?
 doMask =True
@@ -95,6 +101,21 @@ CTFDatName=''
 """ Set to True if you want to correct by CTF
 """
 doCTFCorrection=False
+
+# Scale images?
+""" Set to True if you want to scale images (Using padding/windowing in Fourier space)
+"""
+doScaleImages=True
+
+# New X dimension
+""" New X dimension.
+"""
+dimX = 32
+
+# {expert} New Y dimensions
+""" New Y dimension. -1 means Y = X
+"""
+dimY = -1
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -172,7 +193,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
     def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
         super(ProtPartialProjectionSubtraction,self).__init__(scriptname, workingdir, ProjectDir, logdir, restartStep, isIter)
         self.myName='partial_projection_subtraction'
-        self.run_file1='./readDocfileAndPairExperimentalAndReferenceImages_v3.sh'
+        #self.run_file1='./readDocfileAndPairExperimentalAndReferenceImages_v3.sh'
         self.subtractionDir ='Subtraction'
         self.referenceDir   ='Refs'
         self.referenceStack ='ref'
@@ -182,27 +203,57 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.tempFileName=''
         self.current_angles='current_angles.doc'
         self.Import = 'from protlib_partial_projection_subtraction import *'
+        self.scaledImages = 'scaled'
         
     def preRun(self):
 
         self.Iteration_Working_Directory = os.path.join(WorkingDir,'Iter_'+ str(iterationNo))
-        self.subtractionDir              = os.path.join(self.Iteration_Working_Directory,self.subtractionDir)
+        self.subtractionDir = os.path.join(self.subtractionDir,SubtractionDirectorySuffix)
+        self.subtractionDir = os.path.join(self.Iteration_Working_Directory,self.subtractionDir)
         self.volsDir = os.path.join(self.subtractionDir,self.volsDir)
         self.referenceDir = os.path.join(self.subtractionDir,self.referenceDir)
         self.subImgsDir = os.path.join(self.subtractionDir,self.subImgsDir)
         
-        #fixme
-        #####WHERE THIS VARIABLE IS USED
-        #if ( len(szInputVolumeName) < 1 ):
-        #    self.szInputVolumeName = 'Iter_'+str(iterationNo)+'_reconstruction.vol'
-    
+        self.scaledImages = os.path.join(self.subtractionDir,self.scaledImages)
+        
+        self.doScaleImages = doScaleImages
+        
+        self.dimX = dimX
+        self.dimY = dimY
+        
+        self.dRradiusMax = dRradiusMax
+        self.dRradiusMin = dRradiusMin
+        
         if(MaxChangeInAngles > 100):
             self.MaxChangeInAngles=-1
         else:
             self.MaxChangeInAngles = MaxChangeInAngles
+            
         #new vwersion need zfill
         tmpFilename = 'Iter_'+ str(iterationNo) + '_' + self.current_angles #zfill()
         self.filename_currentAngles = os.path.join(self.Iteration_Working_Directory,tmpFilename)
+        
+        print "dRradiusMax: ", self.dRradiusMax
+        print "dRradiusMin: ", self.dRradiusMin
+            
+        if(self.doScaleImages):
+            
+            md = MetaData(self.filename_currentAngles)
+            img = Image()
+            img.readApplyGeo(md,       1, False, DATA, ALL_IMAGES,False)
+            x=y=z=n=0
+            (x,y,z,n) = img.getDimensions()
+            factorX = x / self.dimX
+            if (self.dimY<0):
+                factorY = y / self.dimX
+            else:
+                factorY = y / self.dimY
+
+            self.dRradiusMax = round(self.dRradiusMax/factorX)
+            self.dRradiusMin = round(self.dRradiusMin/factorY)
+            
+        print "dRradiusMax: ", self.dRradiusMax
+        print "dRradiusMin: ", self.dRradiusMin
         
         tmpFileName = os.path.join(self.WorkingDir,'CtfGroups/ctf_group??????.sel')
         self.defGroups=['']
@@ -211,42 +262,42 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         
         self.defocusGroupNo = len(self.defGroups)
         
-        self.DocFileRef=['']
-        if DocFileRef!='':
-            tmpFileName = DocFileRef
+        self.DocFileExp=['']
+        if DocFileExp!='':
+            tmpFileName = DocFileExp
         else:
             tmpFileName = FileName(self.filename_currentAngles)
         tmpFileName = tmpFileName.withoutExtension()
         for iterN in range(1, self.defocusGroupNo ):
-            tmpDocFileRef = 'ctfgroup_' + str(iterN).zfill(FILENAMENUMBERLENTGH) + '@' + tmpFileName + '_ctfgroups.doc'
-            self.DocFileRef.append(tmpDocFileRef
+            tmpDocFileExp = 'ctfgroup_' + str(iterN).zfill(6) + '@' + tmpFileName + '_ctfgroups.doc'
+            self.DocFileExp.append(tmpDocFileExp
                               )
         self.reconstructedVolume = [""]
         for iterN in range(1, self.defocusGroupNo ):
-            tmpReconstruct = os.path.join(self.volsDir, 'rec_ctfg' + str(iterN).zfill(FILENAMENUMBERLENTGH) + '.vol')
+            tmpReconstruct = os.path.join(self.volsDir, 'rec_ctfg' + str(iterN).zfill(6) + '.vol')
             self.reconstructedVolume.append(tmpReconstruct)
             
         self.maskReconstructedVolume = [""]
         for iterN in range(1, self.defocusGroupNo ):
-            tmpReconstruct = os.path.join(self.volsDir, 'rec_ctfg' + str(iterN).zfill(FILENAMENUMBERLENTGH) + '_mask.vol')
+            tmpReconstruct = os.path.join(self.volsDir, 'rec_ctfg' + str(iterN).zfill(6) + '_mask.vol')
             self.maskReconstructedVolume.append(tmpReconstruct)
     
         tmp = self.referenceStack  #'ref'
         self.referenceStackDoc = [""]
         for iterN in range(1, self.defocusGroupNo ):
-            tmpReference = os.path.join(self.referenceDir, tmp + '_' + str(iterN).zfill(FILENAMENUMBERLENTGH) + '.doc')
+            tmpReference = os.path.join(self.referenceDir, tmp + '_' + str(iterN).zfill(6) + '.doc')
             self.referenceStackDoc.append(tmpReference)
     
         tmp = self.referenceStack
         self.referenceStack = [""]
         for iterN in range(1, self.defocusGroupNo ):
-            tmpReference = os.path.join(self.referenceDir, tmp + '_' + str(iterN).zfill(FILENAMENUMBERLENTGH) + '.stk')
+            tmpReference = os.path.join(self.referenceDir, tmp + '_' + str(iterN).zfill(6) + '.stk')
             self.referenceStack.append(tmpReference)
     
         tmp = self.subtractedStack
         self.subtractedStack = [""]
         for iterN in range(1, self.defocusGroupNo ):
-            tmpSubtract = os.path.join(self.subImgsDir, tmp + '_' + str(iterN).zfill(FILENAMENUMBERLENTGH) + '.stk')
+            tmpSubtract = os.path.join(self.subImgsDir, tmp + '_' + str(iterN).zfill(6) + '.stk')
             self.subtractedStack.append(tmpSubtract)
         #FIXME
         #DO we need to import this paths or are already in pythonpath
@@ -263,21 +314,35 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         _dataBase = self.Db
         for iterN in range(1, self.defocusGroupNo):
             #Create auxiliary metadata with image names , angles and CTF
+            if(self.doScaleImages):
+                inputSelfile = self.scaledImages
+            else:
+                inputSelfile = self.filename_currentAngles
+
             _Parameters = {
                            'CTFgroupName': self.defGroups[iterN]
-                          ,'DocFileRef':self.DocFileRef[iterN]
-                          ,'filename_currentAngles':self.filename_currentAngles
+                          ,'DocFileExp':self.DocFileExp[iterN]
+                          ,'inputSelfile':inputSelfile
                           }
             command = "joinImageCTF"
             _VerifyFiles = []
-            auxFilename = FileName(self.DocFileRef[iterN])
+            auxFilename = FileName(self.DocFileExp[iterN])
             _VerifyFiles.append(auxFilename.removeBlockName())
             _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
             
-            
+            if(self.doScaleImages):
+                _Parameters = {
+                           'inputSelfile':self.DocFileExp[iterN]
+                          }
+                command = "updateImageLabel"
+                _VerifyFiles = []
+                #auxFilename = FileName(self.DocFileExp[iterN])
+                #_VerifyFiles.append(auxFilename.removeBlockName())
+                _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
+
             #reconstruct each CTF group
             _Parameters = {
-                           'DocFileRef': self.DocFileRef[iterN]
+                           'DocFileExp': self.DocFileExp[iterN]
                           , 'DoParallel' : DoParallel
                           , 'MpiJobSize':MpiJobSize
                           , 'NumberOfMpiProcesses':NumberOfMpiProcesses
@@ -290,24 +355,24 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles = []
             _VerifyFiles.append(self.reconstructedVolume[iterN])
             _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
-            #mask volume before projection
             
+            #mask volume before projection
             _Parameters = {
-                           'dRradiusMax':dRradiusMax
-                          ,'dRradiusMin':dRradiusMin
+                           'dRradiusMax':self.dRradiusMax
+                          ,'dRradiusMin':self.dRradiusMin
                           ,'maskReconstructedVolume':self.maskReconstructedVolume[iterN]
                           ,'reconstructedVolume':self.reconstructedVolume[iterN]
                           }
             command = "maskVolume"
             _VerifyFiles = []
-            auxFilename = FileName(self.DocFileRef[iterN])
+            auxFilename = FileName(self.DocFileExp[iterN])
             _VerifyFiles.append(self.maskReconstructedVolume[iterN])
             _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
     
             #project reconstructe4d volumes
             _Parameters = {
                           'AngSamplingRateDeg':AngSamplingRateDeg
-                          ,'DocFileRef':self.DocFileRef[iterN]#################docfile with ALL experimental images
+                          ,'DocFileExp':self.DocFileExp[iterN]#################docfile with ALL experimental images
                           ,'DoParallel' : DoParallel
                           ,'maskReconstructedVolume':self.maskReconstructedVolume[iterN]
                           ,'MaxChangeInAngles':self.MaxChangeInAngles
@@ -330,7 +395,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                      
     #project reconstructe4d volumes
             _Parameters = {
-                          'DocFileRef':self.DocFileRef[iterN]
+                          'DocFileExp':self.DocFileExp[iterN]
                           ,'referenceStackDoc':self.referenceStackDoc[iterN]
                           ,'subtractedStack':self.subtractedStack[iterN]
                           }
@@ -370,17 +435,22 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         command = 'createDir'
         _dataBase.insertAction(command, _Parameters, 1)
         
-#def mainLoop(_log, iter):
-#    global ContinueAtIteration
-#    _import = 'from ProjMatchActionsToBePerformedBeforeLoop import createDir2;\
-#               from aux_partial_projection_subtraction import *'
-#    _dataBase.setPrintWrapperParameters(PrintWrapperParameters)
-#    _dataBase.setPrintWrapperCommand(PrintWrapperCommand)
-#    _dataBase.setProjDir(ProjectDir)
-#    _dataBase.setVerify(Verify,ViewVerifyedFiles)
-#    StartAtStepN=_dataBase.getStartingStep(IsIter)
-#    _dataBase.mainLoop(_log, StartAtStepN, _import)
-
+        #Create auxiliary metadata with image names , angles and CTF
+        
+        if(doScaleImages):
+            _Parameters = {
+                          'filename_currentAngles':self.filename_currentAngles
+                          ,'scaledImages':self.scaledImages
+                          ,'dimX':self.dimX
+                          ,'dimY':self.dimY
+                         }
+            command = "scaleImages"
+        #_VerifyFiles = []
+        #auxFilename = FileName(self.DocFileExp[iterN])
+        #_VerifyFiles.append(auxFilename.removeBlockName())
+            _dataBase.insertAction(command, _Parameters, 1)
+            
+            self.scaledImages = self.scaledImages + ".xmd"
 
     def defineActions(self):
         self.otherActionsToBePerformedBeforeLoop()
@@ -420,7 +490,7 @@ def ImportProtocol():
     if(len(MaxChangeInAngles) < 1):
         MaxChangeInAngles=arg.getComponentFromVector(eval(fn +'.MaxChangeInAngles'),iterationNo)
     global refDirNameAngSamplingRateDeg
-    refDirName=  eval(fn +'.LibraryDir')
+    #refDirName=  eval(fn +'.LibraryDir')
 
     
 if __name__ == '__main__':

@@ -6,16 +6,99 @@ import os
 #'([A-z]*)'[ ]*:(.*)\n
 #$1\n
 
-def joinImageCTF(_log, CTFgroupName,DocFileRef,filename_currentAngles):
+def scaleImages(_log, filename_currentAngles, scaledImages, dimX, dimY):
+    
+    parameters  = ' -i ' +  filename_currentAngles 
+    parameters += ' -o ' +  scaledImages + ".stk" 
+    parameters += ' --scale fourier ' + str(dimX)
+    if (dimY>0):
+        parameters += ' ' + str(dimY)
+
+    launch_job.launch_job('xmipp_transform_geometry',
+                             parameters,
+                             _log,
+                             False,1,1,'')
+    
+    print "scaledImages: ", scaledImages
+    
+    md = MetaData(filename_currentAngles)
+    scaledImages = scaledImages+".xmd"
+    mdScaled = MetaData(scaledImages)
+    
+    #md.addLabel("original_image")
+    mdScaled.addLabel(MDL_IMAGE_ORIGINAL)
+    mdScaled.setValueCol(MDL_IMAGE_ORIGINAL,".")
+    
+    # Calculate scale factor
+    img = Image()
+    img.readApplyGeo(md,       1, False, DATA, ALL_IMAGES,False)
+    x=y=z=n=0
+    (x,y,z,n) = img.getDimensions()
+    print "X = ",x 
+    print "Y = ",y 
+    print "Z = ",z 
+    print "N = ",n 
+    factorX = x / dimX
+    if (dimY<0):
+        dimY = dimX
+    factorY = y / dimY
+    # Copy images to original images column
+    for id in md:
+        image = mdScaled.getValue(MDL_IMAGE, id)
+        mdScaled.setValue(MDL_IMAGE_ORIGINAL, image, id)
+        
+    mdScaled.write(scaledImages)
+    
+    print "scaledImages file written"
+    #mdScaled.deleteRow(MDL_IMAGE_ORIGINAL)
+    
+    #parameters  = ' -i ' +  filename_currentAngles 
+    #parameters += ' --set merge ' +  scaledImages 
+    parameters  = ' -i ' +  scaledImages 
+    parameters += ' --set merge ' +  filename_currentAngles 
+    parameters += ' -o ' + scaledImages
+    
+    launch_job.launch_job('xmipp_metadata_utilities',
+                             parameters,
+                             _log,
+                             False,1,1,'')
+    
+    mdScaled = MetaData(scaledImages)
+    scaleXstr = 'shiftX=(shiftX /  ' + str(factorX) + ')'
+    scaleYstr = 'shiftY=(shiftY /  ' + str(factorY) + ')'
+    print "scaleXstr: ",scaleXstr
+    print "scaleYstr: ",scaleYstr
+    mdScaled.operate(scaleXstr)
+    mdScaled.operate(scaleYstr)
+    
+    mdScaled.write(scaledImages)
+    
+    # xmipp_metadata_utilities  -i Iter_6_current_angles.doc --operate modify_values "shiftX=(shiftX/4)" -o Iter_6_current_angles_scaled.doc
+    # xmipp_metadata_utilities  -i Iter_6_current_angles_scaled.doc --operate modify_values "shiftY=(shiftY/4)" -o Iter_6_current_angles_scaled.doc
+
+    # ctfgroups sels and current angles, images names, need to be changed to the new scaled names.
+    
+
+def joinImageCTF(_log, CTFgroupName,DocFileExp,inputSelfile):
     tmpMD = MetaData(CTFgroupName)
-    MDaux = MetaData(filename_currentAngles)
+    MDaux = MetaData(inputSelfile)
     outMD = MetaData()
     outMD.join(MDaux, tmpMD, MDL_IMAGE, NATURAL_JOIN)
-    outMD.write(DocFileRef, MD_APPEND)
+    outMD.write(DocFileExp, MD_APPEND)
+
+
+def updateImageLabel(_log, inputSelfile):
+    md = MetaData(inputSelfile)
+    
+    for id in md:
+        image = md.getValue(MDL_IMAGE_ORIGINAL, id)
+        md.setValue(MDL_IMAGE, image, id)
+
+    md.write(inputSelfile)
 
 #reconstruct
 def reconstructVolume(_log 
-                     ,DocFileRef
+                     ,DocFileExp
                      , DoParallel
                      , MpiJobSize
                      , NumberOfMpiProcesses
@@ -25,7 +108,7 @@ def reconstructVolume(_log
                      , SystemFlavour
                      ):
     #xmipp_reconstruct_fourier -i ctfgroup_1@ctfgroups_Iter_13_current_angles.doc -o rec_ctfg01.vol --sym i3 --weight
-    parameters  = ' -i ' +  DocFileRef 
+    parameters  = ' -i ' +  DocFileExp 
     parameters += ' -o ' +  reconstructedVolume 
     parameters += ' --sym ' + SymmetryGroup +'h'
     parameters += ' --weight'
@@ -61,7 +144,7 @@ def maskVolume(_log
     #project
 def createProjections(_log
                       ,AngSamplingRateDeg
-                      ,DocFileRef
+                      ,DocFileExp
                       ,DoParallel
                       ,maskReconstructedVolume
                       ,MaxChangeInAngles
@@ -77,7 +160,7 @@ def createProjections(_log
     doParallel = DoParallel
 
     parameters  = ' -i ' +  maskReconstructedVolume 
-    parameters += ' --experimental_images ' +  DocFileRef
+    parameters += ' --experimental_images ' +  DocFileExp
     
     parameters += ' -o ' +  referenceStack
     parameters += ' --sampling_rate ' + AngSamplingRateDeg
@@ -98,15 +181,26 @@ def createProjections(_log
 
 
 def subtractionScript(_log
-                      ,DocFileRef
+                      ,DocFileExp
                       ,referenceStackDoc
                       ,subtractedStack
                       ):
-    md = MetaData(DocFileRef)#experimental images
+    md = MetaData(DocFileExp)#experimental images
     #referenceStackName = referenceStack#reference projection for a given defocus group
     mdRef = MetaData(referenceStackDoc)#experimental images
     subtractedStackName = subtractedStack
     
+    #Set shifts to 0
+    a = md.getValue(MDL_SHIFTX, 1)
+    print "antes  : ", a
+    md.operate("shiftX=(shiftX*-1)")
+    b = md.getValue(MDL_SHIFTX, 1)
+    print "despues: ", b
+    
+    md.operate("shiftY=(shiftY*-1)")
+    
+    mdRef.setValueCol(MDL_SHIFTX,0.)
+    mdRef.setValueCol(MDL_SHIFTY,0.)
     
     imgExp = Image()
     imgRef = Image()
@@ -134,6 +228,7 @@ def subtractionScript(_log
         #print id,str(refNum)+'@' + referenceStack
         #refImgName = '%06d@%s'%(refNum,referenceStackName)
         imgExp.readApplyGeo(md,       id, False, DATA, ALL_IMAGES,False)
+        #read only
         imgRef.readApplyGeo(mdRef,refNum, False, DATA, ALL_IMAGES,False)
         imgSub = imgExp - imgRef
         imgSub.write('%06d@%s'%(id,subtractedStackName))
