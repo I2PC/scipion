@@ -16,7 +16,7 @@ typedef void (*ThreadFunction) (ThreadArgument &arg);
 
 /** @defgroup Threads Threads
  *  @ingroup ParallelLibrary
- * @{
+ //@{
  */
 
 /** Class wrapping around the pthreads mutex.
@@ -337,6 +337,7 @@ protected:
 
 /** @name Old parallel stuff. */
 /** Barrier structure */
+//@{
 typedef struct mybarrier_t {
 	/// How many threads should be awaited
     int needed;
@@ -354,6 +355,6 @@ int barrier_init(barrier_t *barrier, int needed);
 int barrier_destroy(barrier_t *barrier);
 /** Wait at the barrier */
 int barrier_wait(barrier_t *barrier);
-/** @} */
-
+//@}
+//@}
 #endif
