@@ -273,7 +273,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
 /** MRC Writer
   * @ingroup MRC
 */
-int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string bitDepth, bool adjust)
+int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String &bitDepth, bool adjust)
 {
 
     MRChead*  header = (MRChead *) askMemory(sizeof(MRChead));
