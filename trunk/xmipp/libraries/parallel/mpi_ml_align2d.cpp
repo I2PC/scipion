@@ -25,7 +25,7 @@
 
 #include "mpi_ml_align2d.h"
 
-/** Some constast to message passing tags */
+/* Some constast to message passing tags */
 #define TAG_SEED 1
 #define TAG_DOCFILESIZE 2
 #define TAG_DOCFILE 3
