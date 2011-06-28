@@ -70,11 +70,13 @@
 /// @addtogroup MultidimensionalArrays
 
 //@{
+
 /** @name MultidimArrayGenericSpeedUp Speed up macros
 /** Array access.
  *
  * This macros gives you access to the array (T **)
  */
+ //@{
 #ifndef MULTIDIM_ARRAY_BASE
 #define MULTIDIM_ARRAY_BASE(v) (*((v).data->im))
 #endif
@@ -357,5 +359,5 @@ public:
 }
 ;
 //@}
-
+//@}
 #endif /* MULTIDIM_ARRAY_GENERIC_H_ */
