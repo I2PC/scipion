@@ -27,13 +27,15 @@
  '''
 
 import os
+import shutil 
 from Tkinter import *
 import tkFont
 from protlib_filesystem import getXmippPath
 from protlib_base import *
 from protlib_utils import getScriptPrefix
 from config import *
-import shutil   
+from protlib_gui import *
+  
 
 #Font
 FontName = "Helvetica"
@@ -157,7 +159,7 @@ class XmippProjectGUI():
             w.destroy()
         
         label = Label(self.histFrame, text="History", bg=BgColor, fg=SectionTextColor, font=self.ButtonFont)
-        label.grid(row=0, column=0)
+        label.grid(row=0, column=0, columnspan=2)
         row = 1
         for run in runs:
             label = Label(self.histFrame, text=str(run['last_modified']), bg=BgColor)
@@ -210,12 +212,15 @@ class XmippProjectGUI():
                 i += 1
             
         
-        canvas = Canvas(self.frame, width=50, height=150, bg=BgColor, bd=2, relief=RIDGE)
+        vscrollbar = Scrollbar(self.frame)
+        vscrollbar.grid(row=0, column=3, sticky=N + S)
+        canvas = Canvas(self.frame, width=50, height=150, bg=BgColor, bd=2,
+                        yscrollcommand=vscrollbar.set, relief=RIDGE)
         canvas.grid(row=0, column=2, padx=5, pady=5, sticky=N+W+E+S)
         self.histFrame = Frame(canvas, bg=BgColor)
         self.histFrame.grid(row=0, column=0, pady=10, padx=10, sticky=N+W+E+S)
         canvas = Canvas(self.frame, height=50, bg=BgColor, bd=2, relief=RIDGE)
-        canvas.grid(row=1, column=1, columnspan=2, sticky=S+W+E+N, padx=5, pady=5)
+        canvas.grid(row=1, column=1, columnspan=3, sticky=S+W+E+N, padx=5, pady=5)
         self.detailsFrame = Frame(canvas)
         self.detailsFrame.grid(row=0, column=0)
         self.root.config(menu=self.menubar)
