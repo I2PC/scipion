@@ -574,7 +574,7 @@ void MDSql::setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLa
     execSingleStmt(ss);
 }
 
-bool MDSql::operate(const std::string &expression)
+bool MDSql::operate(const String &expression)
 {
     std::stringstream ss;
     ss << "UPDATE " << tableName(tableId) << " SET " << expression;
