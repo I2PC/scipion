@@ -220,11 +220,11 @@ std::string MetaData::getPath()   const
     return path;
 }
 
-void MetaData::setPath(std::string newPath)
+void MetaData::setPath(const String &newPath)
 {
     const size_t length = 512;
     char _buffer[length];
-    path = (newPath == "") ? std::string(getcwd(_buffer, length)) : newPath;
+    path = (newPath == "") ? String(getcwd(_buffer, length)) : newPath;
 }
 
 std::string MetaData::getComment() const
@@ -232,7 +232,7 @@ std::string MetaData::getComment() const
     return  comment;
 }
 
-void MetaData::setComment(const std::string &newComment)
+void MetaData::setComment(const String &newComment)
 {
     comment = newComment;
 }
@@ -242,7 +242,7 @@ FileName MetaData::getFilename() const
     return inFile;
 }
 
-void MetaData::setFilename(const FileName _fileName)
+void MetaData::setFilename(const FileName &_fileName)
 {
     inFile=_fileName;
 }
@@ -265,7 +265,7 @@ int MetaData::getMaxStringLength(const MDLabel thisLabel) const
     return myMDSql->columnMaxLength(thisLabel);
 }
 
-bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, size_t id)
+bool MetaData::setValueFromStr(const MDLabel label, const String &value, size_t id)
 {
     addLabel(label);
 
@@ -471,7 +471,7 @@ void MetaData::write(const FileName &_outFile, WriteModeMetaData mode) const
 
 }
 
-void MetaData::_write(const FileName &outFile,const std::string &blockName, WriteModeMetaData mode) const
+void MetaData::_write(const FileName &outFile,const String &blockName, WriteModeMetaData mode) const
 {
     struct stat file_status;
     int fd;
@@ -587,7 +587,7 @@ void MetaData::_writeRows(std::ostream &os) const
     }
 }
 
-void MetaData::write(std::ostream &os,const std::string &blockName, WriteModeMetaData mode ) const
+void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData mode ) const
 {
     if(mode==MD_OVERWRITE)
         os << "# XMIPP_STAR_1 * "// << (isColumnFormat ? "column" : "row")
@@ -907,7 +907,7 @@ void MetaData::addPlain(const FileName &inFile, const String &labelsString, cons
 
 void MetaData::_read(const FileName &filename,
                      const std::vector<MDLabel> *desiredLabels,
-                     const std::string & blockName, bool decomposeStack)
+                     const String & blockName, bool decomposeStack)
 {
     //First try to open the file as a metadata
     _clear();
@@ -1215,7 +1215,7 @@ void MetaData::join(const MetaData &mdInLeft, const MetaData &mdInRight, const M
     _setOperates(mdInLeft, mdInRight, label, (SetOperation)type);
 }
 
-void MetaData::operate(const std::string &expression)
+void MetaData::operate(const String &expression)
 {
     if (!myMDSql->operate(expression))
         REPORT_ERROR(ERR_MD, "MetaData::operate: error doing operation");
@@ -1248,7 +1248,7 @@ void MetaData::sort(MetaData &MDin, const MDLabel sortLabel,bool asc)
     firstObject();
 }
 
-void MetaData::sort(MetaData &MDin, const std::string &sortLabel,bool asc)
+void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc)
 {
     // Check if the label has semicolon
     int ipos=sortLabel.find(':');
