@@ -36,6 +36,30 @@
 #include <external/bilib/headers/pyramidtools.h>
 #include "matrix1d.h"
 
+// Forward declarations
+template<typename T>
+class Matrix1D;
+template<typename T>
+class Matrix2D;
+
+template<typename T>
+void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d);
+
+template<typename T>
+void lubksb(const Matrix2D<T>& LU, Matrix1D< int >& indx, Matrix1D<T>& b);
+
+template<typename T>
+void svdcmp(const Matrix2D< T >& a,
+            Matrix2D< double >& u,
+            Matrix1D< double >& w,
+            Matrix2D< double >& v);
+
+void svbksb(Matrix2D< double >& u,
+            Matrix1D< double >& w,
+            Matrix2D< double >& v,
+            Matrix1D< double >& b,
+            Matrix1D< double >& x);
+
 /** @defgroup Matrices Matrix2D Matrices
  * @ingroup DataLibrary
  */
@@ -245,30 +269,6 @@
         spduptmp0 = 1.0 / (dMn(A,0)*dMn(Ainv,0)+dMn(A,3)*dMn(Ainv,1)+dMn(A,6)*dMn(Ainv,2)); \
         M3x3_BY_CT(Ainv, Ainv, spduptmp0); }
 
-// Forward declarations
-template<typename T>
-class Matrix1D;
-template<typename T>
-class Matrix2D;
-
-template<typename T>
-void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d);
-
-template<typename T>
-void lubksb(const Matrix2D<T>& LU, Matrix1D< int >& indx, Matrix1D<T>& b);
-
-template<typename T>
-void svdcmp(const Matrix2D< T >& a,
-            Matrix2D< double >& u,
-            Matrix1D< double >& w,
-            Matrix2D< double >& v);
-
-void svbksb(Matrix2D< double >& u,
-            Matrix1D< double >& w,
-            Matrix2D< double >& v,
-            Matrix1D< double >& b,
-            Matrix1D< double >& x);
-
 /** Matrix2D class */
 template<typename T>
 class Matrix2D
@@ -288,9 +288,10 @@ public:
 
     // Total number of elements
     int mdim;
-
-    /// @name Constructors
-    /// @{
+//@}
+    
+/// @name Constructors
+//@{
     /** Empty constructor
      */
     Matrix2D()
@@ -1325,28 +1326,6 @@ public:
     //@}
 };
 
-// Implementation of the vector*matrix
-// Documented in matrix1D.h
-template<typename T>
-Matrix1D<T> Matrix1D<T>::operator*(const Matrix2D<T>& M)
-{
-    Matrix1D<T> result;
-
-    if (VEC_XSIZE(*this) != MAT_YSIZE(M))
-        REPORT_ERROR(ERR_MATRIX_SIZE, "Not compatible sizes in matrix by vector");
-
-    if (!isRow())
-        REPORT_ERROR(ERR_MATRIX_DIM, "Vector is not a row");
-
-    result.initZeros(MAT_XSIZE(M));
-    for (int j = 0; j < MAT_XSIZE(M); j++)
-        for (int i = 0; i < MAT_YSIZE(M); i++)
-            VEC_ELEM(result,j) += VEC_ELEM(*this,i) * MAT_ELEM(M,i, j);
-
-    result.setRow();
-    return result;
-}
-
 /**@name Matrix Related functions
  * These functions are not methods of Matrix2D
  */
@@ -1441,4 +1420,27 @@ void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T2>& v2)
 }
 //@}
 //@}
+
+// Implementation of the vector*matrix
+// Documented in matrix1D.h
+template<typename T>
+Matrix1D<T> Matrix1D<T>::operator*(const Matrix2D<T>& M)
+{
+    Matrix1D<T> result;
+
+    if (VEC_XSIZE(*this) != MAT_YSIZE(M))
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Not compatible sizes in matrix by vector");
+
+    if (!isRow())
+        REPORT_ERROR(ERR_MATRIX_DIM, "Vector is not a row");
+
+    result.initZeros(MAT_XSIZE(M));
+    for (int j = 0; j < MAT_XSIZE(M); j++)
+        for (int i = 0; i < MAT_YSIZE(M); i++)
+            VEC_ELEM(result,j) += VEC_ELEM(*this,i) * MAT_ELEM(M,i, j);
+
+    result.setRow();
+    return result;
+}
+
 #endif /* MATRIX2D_H_ */
