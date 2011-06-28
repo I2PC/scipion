@@ -112,9 +112,10 @@ public:
     void error_exit(char * msg);
 
     int  sendDataInChunks( double * pointer, int dest, int totalSize, int buffSize, MPI_Comm comm );
-/** @} */
 
-};//end of class MPI reconstruct fourier
+};
+//@}
+//end of class MPI reconstruct fourier
 
 
 
