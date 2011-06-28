@@ -27,7 +27,9 @@
 #define DATATYPE_H_
 
 #include <string>
-
+/** @addtogroup Images
+*/
+//@{
 /** Data type.
  * This class defines the datatype of the data inside this image.
  */
@@ -57,7 +59,7 @@ typedef enum
 size_t gettypesize(DataType type);
 
 /** Convert datatype string to datatypr enun */
-DataType datatypeString2Int(std::string str);
+DataType datatypeString2Int(const std::string & str);
 
-
+//@}
 #endif /* DATATYPE_H_ */
