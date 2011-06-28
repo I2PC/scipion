@@ -31,9 +31,7 @@
 #define IMAGEOVER_H
 
 #include "image.h"
-
-/** Oversampled images
- * @ingroup Images
+/** @ingroup Images
  *
  * The oversampled images are images which allow a more accurate treatment of
  * information by oversampling all pixels. The idea of this class is to have an
