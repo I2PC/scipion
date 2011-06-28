@@ -517,6 +517,7 @@ ReconsSources = [
     'directions.cpp',
     'fourier_filter.cpp',
     'image_rotational_spectra.cpp',
+#    'image_rotational_pca.cpp',
     'ml_align2d.cpp',
 ###    'ml_align3d.cpp',
     'mean_shift.cpp',
@@ -820,6 +821,7 @@ AddBatch('browserj', 'applications/scripts/browserj', '.sh')
 #Protocol libraries
 AddProtocol('protlib_base.py', 'applications/scripts/protocols')
 AddProtocol('protlib_filesystem.py', 'applications/scripts/protocols')
+AddProtocol('protlib_gui.py', 'applications/scripts/protocols')
 AddProtocol('protlib_partial_projection_subtraction.py', 'applications/scripts/protocols')
 AddProtocol('protlib_projmatch_before_loop.py', 'applications/scripts/protocols')
 AddProtocol('protlib_projmatch_in_loop.py', 'applications/scripts/protocols')
@@ -878,6 +880,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
     AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
+#    AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
     AddXmippMPIProgram('mpi_image_sort', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])
