@@ -29,8 +29,7 @@
 #include "image_base.h"
 #include "multidim_array_generic.h"
 
-/// @addtogroup Images
-
+/** @addtogroup Images
 //@{
 
 /**
