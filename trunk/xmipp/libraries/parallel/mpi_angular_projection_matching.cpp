@@ -25,17 +25,17 @@
 
 #include "mpi_angular_projection_matching.h"
 
-/** Some constast to message passing tags */
+/*Some constast to message passing tags */
 #define TAG_JOB_REQUEST 1
 #define TAG_JOB_REPLY 2
 
-/** Constructor */
+/*Constructor */
 MpiProgAngularProjectionMatching::MpiProgAngularProjectionMatching()
 {
   imagesBuffer = NULL;
   last_chunk = NULL;
 }
-/** Destructor */
+/* Destructor */
 MpiProgAngularProjectionMatching::~MpiProgAngularProjectionMatching()
 {
     if (node->isMaster())
