@@ -169,7 +169,8 @@ public class LABELS {
      * Labels
      */
     public final static String LABEL_AUTO_AJUST_COLUMNS = "Auto adjust columns";
-    public final static String LABEL_SHOW_LABELS = "Show labels";
+    public final static String LABEL_SHOW_LABELS = "Show label";
+    public final static String LABEL_SORT_BY_LABEL = "Sort by label";
     public final static String LABEL_FILTER = "Filter: ";
     public final static String LABEL_WIDTH = "Width: ";
     public final static String LABEL_HEIGHT = "Height: ";
@@ -203,6 +204,7 @@ public class LABELS {
     public final static String LABEL_PROCESS = "Process: ";
     public final static String LABEL_RESLICE = "Reslice: ";
     public final static String LABEL_OPEN_AS = "Open as: ";
+    public final static String UNKNOWN_LABEL = "Unknown label";
 
     public final static String LABEL_FILES_SHOWING(int elements, int total) {
         return total != elements ? " Showing " + elements + " / " + total + " elements." : "";

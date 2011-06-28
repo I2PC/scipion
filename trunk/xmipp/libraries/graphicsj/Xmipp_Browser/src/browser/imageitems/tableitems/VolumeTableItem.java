@@ -5,8 +5,10 @@
 package browser.imageitems.tableitems;
 
 import browser.Cache;
+import browser.LABELS;
 import java.io.File;
 import xmipp.ImageDouble;
+import xmipp.MDLabel;
 
 /**
  *
@@ -68,7 +70,15 @@ public class VolumeTableItem extends AbstractTableImageItem {
         return getAbsoluteFileName() + "[" + slice + "]";
     }
 
-    public String getLabel() {
-        return filename + "[" + slice + "]";
+    public Object getLabelValue(int label) {
+
+        switch (label) {
+            case MDLabel.MDL_IMAGE:
+                return filename + "[" + slice + "]";
+            case MDLabel.MDL_ENABLED:
+                return enabled;
+        }
+
+        return LABELS.UNKNOWN_LABEL;
     }
 }

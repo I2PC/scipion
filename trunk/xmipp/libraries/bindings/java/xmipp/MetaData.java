@@ -61,6 +61,8 @@ public class MetaData {
 
     public native int[] getActiveLabels();
 
+    public static native Class getLabelType(int label);
+
     //get values from metadata
     public native int getValueInt(int label, long objId);
 

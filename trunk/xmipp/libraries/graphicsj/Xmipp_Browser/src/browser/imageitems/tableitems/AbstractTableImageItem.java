@@ -19,7 +19,7 @@ import xmipp.ImageDouble;
  *
  * @author Juanjo Vega
  */
-public abstract class AbstractTableImageItem {// extends XmippImageItem {
+public abstract class AbstractTableImageItem implements iMDComparable<AbstractTableImageItem> {// extends XmippImageItem {
 
     protected Cache cache;
     protected ImageDimension dimension;
@@ -29,6 +29,14 @@ public abstract class AbstractTableImageItem {// extends XmippImageItem {
 
     public AbstractTableImageItem(Cache cache) {
         this.cache = cache;
+    }
+
+    // CompareTo for mergesort algorithm.
+    public int compareToByLabel(AbstractTableImageItem item, int label) {
+        String a = String.valueOf(getLabelValue(label));
+        String b = String.valueOf(item.getLabelValue(label));
+
+        return a.compareTo(b);
     }
 
     public abstract String getPath();
@@ -99,7 +107,7 @@ public abstract class AbstractTableImageItem {// extends XmippImageItem {
 
     public abstract String getTitle();
 
-    public abstract String getLabel();
+    public abstract Object getLabelValue(int label);
 
     public ImagePlus getImagePlus() {
         ImagePlus ip = null;
@@ -148,7 +156,7 @@ public abstract class AbstractTableImageItem {// extends XmippImageItem {
             if (statistics == null) {
                 /*statistics = preview.getStatistics(
                 ImageStatistics.MIN_MAX + ImageStatistics.MEAN + ImageStatistics.STD_DEV);*/
-                //System.out.println("Loading statistics for: " + getLabel());
+                //System.out.println("Loading statistics for: " + getLabelAsString());
                 int moptions = ImageStatistics.MIN_MAX + ImageStatistics.MEAN + ImageStatistics.STD_DEV;
                 statistics = ImageStatistics.getStatistics(preview.getProcessor(), moptions, preview.getCalibration());
             }

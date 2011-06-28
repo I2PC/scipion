@@ -8,6 +8,7 @@ import xmipp.Filename;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 import browser.Cache;
+import browser.LABELS;
 import xmipp.ImageDouble;
 
 /**
@@ -68,11 +69,29 @@ public class MDTableItem extends AbstractTableImageItem {
     }
 
     public String getTooltipText() {
-        return originalValue;
+        return path + (Filename.isStack(path) ? "[" + getNSlice() + "]" : "");
     }
 
-    public String getLabel() {
-        return path;
+    public Object getLabelValue(int label) {
+        Class class_ = MetaData.getLabelType(label);
+
+        // Special label.
+        if (label == MDLabel.MDL_ENABLED) {
+            return md.getValueInt(label, id) > 0 ? Boolean.TRUE : Boolean.FALSE;
+        }
+
+        // Rest of them...
+        if (class_ == Integer.class) {
+            return md.getValueInt(label, id);
+        }
+        if (class_ == Double.class) {
+            return md.getValueDouble(label, id);
+        }
+        if (class_ == String.class) {
+            return md.getValueString(label, id);
+        }
+
+        return LABELS.UNKNOWN_LABEL;
     }
 
     // Metadata related methods.

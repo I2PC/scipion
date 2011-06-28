@@ -5,13 +5,16 @@
 package browser.table.models;
 
 import browser.Cache;
+import browser.DEBUG;
 import browser.imageitems.tableitems.AbstractTableImageItem;
+import browser.imageitems.tableitems.iMDComparable;
 import ij.IJ;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 import javax.swing.table.AbstractTableModel;
+import xmipp.MDLabel;
 
 /**
  *
@@ -26,6 +29,11 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     protected Cache cache = new Cache();
     protected boolean normalize = false;
     protected double min = Double.POSITIVE_INFINITY, max = Double.NEGATIVE_INFINITY;
+    protected boolean showLabels = false;
+    protected int selectedLabel = MDLabel.MDL_IMAGE;
+    protected int labelsValues[];
+    protected boolean sort = false;
+    protected int index[];
 
     public AbstractXmippTableModel() {
         super();
@@ -50,6 +58,24 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         }
 
 //        printMD(md);
+    }
+
+    public void setShowLabels(boolean showLabels) {
+        this.showLabels = showLabels;
+    }
+
+    public boolean isShowingLabels() {
+        return showLabels;
+    }
+
+    public abstract String[] getLabels();
+
+    public int getSelectedLabel() {
+        return selectedLabel;
+    }
+
+    public void setSelectedLabel(int selectedLabel) {
+        this.selectedLabel = labelsValues[selectedLabel];
     }
 
     protected abstract String populateTable(String filename);
@@ -103,10 +129,113 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         return cols;
     }
 
-    public Object getValueAt(int rowIndex, int columnIndex) {
-        int index = getDataIndex(rowIndex, columnIndex);
+    public boolean isSorting() {
+        return sort;
+    }
 
-        return index < data.size() ? data.get(index) : null;
+    public void setSorting(boolean sort) {
+        this.sort = sort;
+
+        DEBUG.printMessage(sort ? " *** Sorting" : " *** UN sorting");
+
+        sort();
+    }
+
+    public void updateSort() {
+        if (isSorting()) {
+            DEBUG.printMessage(" *** Updating sort...");
+            sort();
+        }
+    }
+
+    private void sort() {
+        // Creates index and...
+        index = new int[getSize()];
+        for (int i = 0; i < index.length; i++) {
+            index[i] = i;
+        }
+
+        // ...sorts.
+        mergeSort(data, index, selectedLabel);
+    }
+
+    /**
+     * Mergesort algorithm.
+     * @param data an array of Comparable items.
+     * @param index index used to avoid moving data.
+     */
+    protected static void mergeSort(Vector data, int index[], int label) {
+        int tmpArray[] = new int[data.size()];
+        mergeSort(data, tmpArray, 0, data.size() - 1, index, label);
+    }
+
+    /**
+     * Internal method that makes recursive calls.
+     * @param data an array of Comparable items.
+     * @param tmpArray an array to place the merged result.
+     * @param left the left-most index of the subarray.
+     * @param right the right-most index of the subarray.
+     * @param index index used to avoid moving data.
+     */
+    private static void mergeSort(Vector<iMDComparable> data, int tmpArray[],
+            int left, int right, int index[], int label) {
+        if (left < right) {
+            int center = (left + right) / 2;
+            mergeSort(data, tmpArray, left, center, index, label);
+            mergeSort(data, tmpArray, center + 1, right, index, label);
+            merge(data, tmpArray, left, center + 1, right, index, label);
+        }
+    }
+
+    /**
+     * Internal method that merges two sorted halves of a subarray.
+     * @param data an array of Comparable items.
+     * @param tmpArray an array to place the merged result.
+     * @param leftPos the left-most index of the subarray.
+     * @param rightPos the index of the start of the second half.
+     * @param rightEnd the right-most index of the subarray.
+     * @param index index used to avoid moving data.
+     */
+    private static void merge(Vector<iMDComparable> data, int tmpArray[],
+            int leftPos, int rightPos, int rightEnd, int index[], int label) {
+        int leftEnd = rightPos - 1;
+        int tmpPos = leftPos;
+        int numElements = rightEnd - leftPos + 1;
+
+        // Main loop
+        while (leftPos <= leftEnd && rightPos <= rightEnd) {
+            if (data.get(index[leftPos]).compareToByLabel(
+                    data.get(index[rightPos]), label) <= 0) {
+                tmpArray[tmpPos++] = index[leftPos++];//data[index[leftPos++]];
+            } else {
+                tmpArray[tmpPos++] = index[rightPos++];//data[index[rightPos++]];
+            }
+        }
+
+        while (leftPos <= leftEnd) { // Copy rest of first half
+            tmpArray[tmpPos++] = index[leftPos++];//data[index[leftPos++]];
+        }
+
+        while (rightPos <= rightEnd) { // Copy rest of right half
+            tmpArray[tmpPos++] = index[rightPos++];//data[index[rightPos++]];
+        }
+
+        // Copy tmpArray back
+        for (int i = 0; i < numElements; i++, rightEnd--) {
+            //data[rightEnd] = tmpArray[rightEnd];
+            index[rightEnd] = tmpArray[rightEnd];
+        }
+    }
+
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        int i = getDataIndex(rowIndex, columnIndex);
+
+        // If sorting, data will be accessed through the index.
+        if (isSorting() && i < data.size()) {
+            i = index[i];
+        }
+
+        return i < data.size() ? data.get(i) : null;
     }
 
     private int getDataIndex(int rowIndex, int columnIndex) {
@@ -189,15 +318,6 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
             selectedItems.removeLast();
         }
     }
-//
-//    private void enableItems(List<AbstractTableImageItem> items, boolean enable[]) {
-//        if (items != null) {
-//            for (int i = 0; i < items.size(); i++) {
-//                items.get(i).setEnabled(enable[i]);
-//            }
-//            fireTableDataChanged();
-//        }
-//    }
 
     private void enableItems(List<AbstractTableImageItem> items, boolean enable) {
         if (items != null) {
@@ -205,6 +325,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
                 items.get(i).setEnabled(enable);
             }
 
+            updateSort();   // Just in case it's sorting by field "enabled".
             fireTableDataChanged();
         }
     }
@@ -285,12 +406,12 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     public void setNormalized(boolean normalize) {
         this.normalize = normalize;
 
-        if (min == Double.POSITIVE_INFINITY && max == Double.NEGATIVE_INFINITY) {
-            getMinAndMax();
+        if (normalize) {
+            if (min == Double.POSITIVE_INFINITY && max == Double.NEGATIVE_INFINITY) {
+                DEBUG.printMessage(" *** Retrieving minAndMax.");
+                getMinAndMax();
+            }
         }
-
-        /*        DEBUG.printMessage(" >>> Normalize " + (normalize ? "ON" : "OFF") + " > "
-        + (normalize ? "m=" + min + "/M=" + max : ""));*/
     }
 
     public boolean isNormalizing() {

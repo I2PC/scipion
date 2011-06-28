@@ -16,7 +16,7 @@ import xmipp.MetaData;
  */
 public class MDTableModel extends AbstractXmippTableModel {
 
-    private MetaData md;
+    protected MetaData md;
 
     public MDTableModel(String filename) {
         super(filename);
@@ -96,6 +96,18 @@ public class MDTableModel extends AbstractXmippTableModel {
         for (long id : ids) {
             data.add(new MDTableItem(id, md, cache));
         }
+    }
+
+    @Override
+    public String[] getLabels() {
+        labelsValues = md.getActiveLabels();
+        String labels[] = new String[labelsValues.length];
+
+        for (int i = 0; i < labelsValues.length; i++) {
+            labels[i] = MetaData.label2Str(labelsValues[i]);
+        }
+
+        return labels;
     }
 
     @Override

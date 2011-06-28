@@ -212,6 +212,46 @@ JNIEXPORT jintArray JNICALL Java_xmipp_MetaData_getActiveLabels(JNIEnv *env,
 	return NULL;
 }
 
+JNIEXPORT jclass JNICALL Java_xmipp_MetaData_getLabelType(JNIEnv *env,
+		jclass jclass_, jint label) {
+	std::string msg = "";
+	jclass class_ = NULL;
+
+	try {
+		switch (MDL::labelType((MDLabel) label)) {
+		case LABEL_BOOL:
+			class_ = env->FindClass("java/lang/Boolean");
+			break;
+		case LABEL_INT:
+			class_ = env->FindClass("java/lang/Integer");
+			break;
+		case LABEL_DOUBLE:
+			class_ = env->FindClass("java/lang/Double");
+			break;
+		case LABEL_STRING:
+			class_ = env->FindClass("java/lang/String");
+			break;
+		case LABEL_VECTOR:
+		case LABEL_VECTOR_LONG:
+			class_ = env->FindClass("java/util/Vector");
+			break;
+		}
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return class_;
+}
+
 JNIEXPORT jint JNICALL Java_xmipp_MetaData_getValueInt(JNIEnv *env,
 		jobject jobj, jint label, jlong objId) {
 	std::string msg = "";
@@ -444,8 +484,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_MetaData_getStatistics(JNIEnv *env,
 	if (md != NULL) {
 		try {
 			double avg, stddev, min, max;
-
-			getStatistics((* md), avg, stddev, min, max, applyGeo);
+			getStatistics((*md), avg, stddev, min, max, applyGeo);
 
 			// Copies vector into array.
 			double statistics[4];

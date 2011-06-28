@@ -8,6 +8,8 @@ import browser.DEBUG;
 import browser.imageitems.tableitems.VolumeTableItem;
 import xmipp.ImageDouble;
 import xmipp.ImageGeneric;
+import xmipp.MDLabel;
+import xmipp.MetaData;
 
 /**
  *
@@ -45,6 +47,18 @@ public class VolumeTableModel extends AbstractXmippTableModel {
     }
 
     @Override
+    public String[] getLabels() {
+        labelsValues = new int[]{MDLabel.MDL_IMAGE, MDLabel.MDL_ENABLED};
+        String labels[] = new String[labelsValues.length];
+
+        for (int i = 0; i < labelsValues.length; i++) {
+            labels[i] = MetaData.label2Str(labelsValues[i]);
+        }
+
+        return labels;
+    }
+
+    @Override
     protected void getMinAndMax() {
         try {
             ImageGeneric ig = new ImageGeneric(filename);
@@ -57,11 +71,6 @@ public class VolumeTableModel extends AbstractXmippTableModel {
         }
 
         DEBUG.printMessage(" *** VolumeTableModel: m=" + min + " M=" + max);
-        /*        ImagePlus ip = new ImagePlus(filename);//data.get(0).getImagePlus();
-        StackStatistics ss = new StackStatistics(ip);
-
-        min = ss.min;
-        max = ss.max;*/
     }
 
     public String getFilename() {
