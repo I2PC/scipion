@@ -66,7 +66,7 @@ size_t R = 100000;
 size_t blockSize = 1000;
 size_t totalCounter = 0;
 
-/** Here the number of jobs is the radius R that will be sampled */
+/*Here the number of jobs is the radius R that will be sampled */
 size_t &numberOfJobs = R;
 
 void nothingFunctionNew(ThreadArgument &thArg)
@@ -74,7 +74,7 @@ void nothingFunctionNew(ThreadArgument &thArg)
     std::cerr << "Hello from thread " <<  thArg.thread_id;
 }
 
-/** Function to count the number of points that lies
+/*Function to count the number of points that lies
  * inside a circle of radius R, just for calculating PI.
  * This is parallelized distributing some points for each threads
  */
@@ -167,8 +167,7 @@ int main(int argc, char **argv)
         else
         {
             /////////////////////////////////////////////////////////////////////////
-            /** Following is the old way to do the same thing with posix functions
-             * @code */
+            /* Following is the old way to do the same thing with posix functions*/
             pthread_t threads[numberOfThreads];
             int rc;
             long t;
@@ -188,9 +187,6 @@ int main(int argc, char **argv)
                 rc = pthread_join(threads[t], NULL);
             }
 
-            /**
-             * @endcode
-            */
         }
         ////////////////////////////////////////////////////////////////////////
         //Calculate PI based on the number of points inside circle
