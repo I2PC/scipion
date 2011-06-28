@@ -304,7 +304,7 @@ public:
     /**Set Path.
      * the path will appear in first line
      */
-    void setPath(String newPath = "");
+    void setPath(const String &newPath = "");
 
     /**Get Header Comment.
      * the comment will appear in second line.
@@ -322,7 +322,7 @@ public:
 
     /**Set metadata filename.
      */
-    void setFilename(const FileName _filename);
+    void setFilename(const FileName &_filename);
 
     /**Get safe access to active labels.
      */
