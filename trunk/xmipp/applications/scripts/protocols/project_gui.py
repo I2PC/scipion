@@ -239,7 +239,7 @@ if __name__ == '__main__':
         # Launch a protocol directly
         from protocol_gui import *
         script = sys.argv[1]
-        project.load(dir)  
+        project.load()  
         gui = ProtocolGUI()
         gui.createGUI(script)
         gui.launchGUI()
@@ -250,9 +250,9 @@ if __name__ == '__main__':
             print 'You are in directory: ', dir
             answer = raw_input('Do you want to create a new xmipp_protocols PROJECT in this folder? [y/n]:')
             if answer == 'y':
-                project.create(dir)
+                project.create()
         else:
-            project.load(dir)
+            project.load()
         gui = XmippProjectGUI(project)
         gui.createGUI()
         gui.launchGUI()
