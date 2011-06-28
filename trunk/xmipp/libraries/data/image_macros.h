@@ -26,6 +26,9 @@
 #ifndef IMAGE_MACROS_H_
 #define IMAGE_MACROS_H_
 
+//@addtogroup Images
+
+//@{
 // Macros used to select slice in readPreview
 #define CENTRAL_SLICE -1
 #define ALL_SLICES 0
@@ -35,6 +38,6 @@
 #define IMG_INDEX(select_img) ((select_img == ALL_IMAGES) ? 0 : select_img - 1)
 /** Macro for appending an image when doing mapFile2Write */
 #define APPEND_IMAGE 0
-
+//@}
 
 #endif /* IMAGE_MACROS_H_ */
