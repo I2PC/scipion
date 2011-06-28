@@ -46,6 +46,7 @@ import xmipp.ImageWriteMode;
 
 // TODO: make TomoController extend AbstractController?
 
+
 /**
  * - Why? 
  * I opted for Model-View-Controller as the overall UI paradigm, hence the Controller: here we
@@ -117,7 +118,7 @@ public class TomoController implements AdjustmentListener{
 			try {
 				backgroundMethod.invoke(target);
 			} catch (Exception ex) {
-				Xmipp_Tomo.debug("BackgroundMethod.doInBackground()", ex);
+				Logger.debug("BackgroundMethod.doInBackground()", ex);
 			}
 			return "";
 		}
@@ -128,7 +129,7 @@ public class TomoController implements AdjustmentListener{
 				if(doneMethod!=null)
 					doneMethod.invoke(target);
 			} catch (Exception ex) {
-				Xmipp_Tomo.debug("BackgroundMethod.done()", ex);
+				Logger.debug("BackgroundMethod.done()", ex);
 			}
 		}
 	} //end BackgroundMethod
@@ -150,7 +151,7 @@ public class TomoController implements AdjustmentListener{
 				sleep(TomoWindow.WAIT_FOR_DIALOG_SHOWS);
 				window.captureDialog();
 			} catch (Exception ex) {
-				Xmipp_Tomo.debug(
+				Logger.debug(
 						"DialogCaptureThread.run - unexpected exception", ex);
 			}
 		}
@@ -161,12 +162,12 @@ public class TomoController implements AdjustmentListener{
 		if (areProjectionsPlaying()) {
 			// switch to pause
 			setProjectionsPlaying(false);
-			window.changeIcon(Command.PLAY.getId(), TomoWindow.PLAY_ICON);
+			window.changeIcon(XmippTomoCommands.PLAY.getId(), TomoWindow.PLAY_ICON);
 		} else {
 			try {
 				new BackgroundMethod(getClass().getMethod("play"), this).execute();
 			} catch (Exception ex) {
-				Xmipp_Tomo.debug("TomoController.playPause() ", ex);
+				Logger.debug("TomoController.playPause() ", ex);
 			}
 		}
 	}
@@ -174,7 +175,7 @@ public class TomoController implements AdjustmentListener{
 	// this method must be public so Class.getMethod() finds it
 	public void play() {
 		setProjectionsPlaying(true);
-		window.changeIcon(Command.PLAY.getId(), TomoWindow.PAUSE_ICON);
+		window.changeIcon(XmippTomoCommands.PLAY.getId(), TomoWindow.PAUSE_ICON);
 		while (areProjectionsPlaying()) {
 			// 1..N
 			int nextProjection = 0;
@@ -210,11 +211,11 @@ public class TomoController implements AdjustmentListener{
 			// if the button was pressed while loading, it means user wants to
 			// cancel
 			window.setLastCommandState(Command.State.CANCELED);
-			window.getButton(Command.LOAD.getId()).setText(
-					Command.LOAD.getLabel());
-			Xmipp_Tomo.debug("loadEM - cancelled");
+			window.getButton(XmippTomoCommands.LOAD.getId()).setText(
+					XmippTomoCommands.LOAD.getLabel());
+			Logger.debug("loadEM - cancelled");
 		} else {
-			String path = FileDialog.openDialog("Load EM", window);
+			String path = TomoFileDialog.openDialog("Load EM", window);
 			if (path == null)
 				return;
 			// free previous model (if any) ??
@@ -224,7 +225,7 @@ public class TomoController implements AdjustmentListener{
 				new BackgroundMethod(this, getClass().getMethod("loadEMBackground"), getClass().getMethod("loadedEM")).execute();
 				getModelToLoad().waitForFirstImage();
 			} catch (Exception ex) {
-				Xmipp_Tomo.debug("TomoController.loadEM() ", ex);
+				Logger.debug("TomoController.loadEM() ", ex);
 			}
 			
 			setModel(getModelToLoad());
@@ -249,7 +250,7 @@ public class TomoController implements AdjustmentListener{
 	
 	public void loadEMBackground(){
 		// setModel(getModelToLoad());
-		window.getButton(Command.LOAD.getId()).setText("Cancel " + Command.LOAD.getLabel());
+		window.getButton(XmippTomoCommands.LOAD.getId()).setText("Cancel " + XmippTomoCommands.LOAD.getLabel());
 		window.setLastCommandState(Command.State.LOADING);
 
 		String errorMessage = "";
@@ -286,17 +287,17 @@ public class TomoController implements AdjustmentListener{
 			getModelToLoad().lastImageLoaded();
 			
 		} catch (FileNotFoundException ex) {
-			Xmipp_Tomo.debug("loadEMBackground - ", ex);
+			Logger.debug("loadEMBackground - ", ex);
 		} catch (IOException ex) {
-			Xmipp_Tomo.debug("loadEMBackground - Error opening file ",
+			Logger.debug("loadEMBackground - Error opening file ",
 					ex);
 			errorMessage = "Error opening file";
 		} catch (OutOfMemoryError err) {
-			Xmipp_Tomo.debug("loadEMBackground - Out of memory"
+			Logger.debug("loadEMBackground - Out of memory"
 					+ err.toString());
 			errorMessage = "Out of memory";
 		} catch (Exception ex) {
-			Xmipp_Tomo.debug("loadEMBackground - unexpected exception",
+			Logger.debug("loadEMBackground - unexpected exception",
 					ex);
 		} finally {
 			if (getModelToLoad().getNumberOfProjections() < 1) {
@@ -318,8 +319,8 @@ public class TomoController implements AdjustmentListener{
 	public void loadedEM() {
 		if (window.getLastCommandState() == Command.State.LOADING) {
 			window.setLastCommandState(Command.State.LOADED);
-			window.getButton(Command.LOAD.getId()).setText(
-					Command.LOAD.getLabel());
+			window.getButton(XmippTomoCommands.LOAD.getId()).setText(
+					XmippTomoCommands.LOAD.getLabel());
 		}
 	}
 
@@ -346,7 +347,7 @@ public class TomoController implements AdjustmentListener{
 	// TODO: enhance contrast seems to not be applied...
 	public void apply() {
 
-		String destinationPath = FileDialog.saveDialog("Save stack...", window);
+		String destinationPath = TomoFileDialog.saveDialog("Save stack...", window);
 		if (destinationPath == null) {
 			return;
 		}
@@ -354,7 +355,7 @@ public class TomoController implements AdjustmentListener{
 		try {
 			new BackgroundMethod(this, getClass().getMethod("applyBackground"), null).execute();
 		} catch (Exception ex) {
-			Xmipp_Tomo.debug("TomoController.apply() ", ex);
+			Logger.debug("TomoController.apply() ", ex);
 		}
 		
 
@@ -405,9 +406,9 @@ public class TomoController implements AdjustmentListener{
 				}
 			}
 		}catch (IOException ex) {
-			Xmipp_Tomo.debug("apply - Error opening file ",	ex);
+			Logger.debug("apply - Error opening file ",	ex);
 		}catch (Exception ex) {
-			Xmipp_Tomo.debug("apply ",	ex);
+			Logger.debug("apply ",	ex);
 		} 
 		window.setStatus("Done");
 	}
@@ -423,7 +424,7 @@ public class TomoController implements AdjustmentListener{
 				new BackgroundMethod(this, getClass().getMethod("readImage"), null).execute();
 				modelToLoad.waitForLastImage();
 			} catch (Exception ex) {
-				Xmipp_Tomo.debug("actionApply - unexpected exception", ex);
+				Logger.debug("actionApply - unexpected exception", ex);
 			}
 
 			window.setLastCommandState(Command.State.LOADED);
@@ -434,43 +435,43 @@ public class TomoController implements AdjustmentListener{
 	public void gaussian() {
 		Plugin plugin = new GaussianPlugin();
 		window.setPlugin(plugin);
-		runIjCmd(Command.GAUSSIAN, plugin);
+		runIjCmd(XmippTomoCommands.GAUSSIAN, plugin);
 	}
 
 	public void measure() {
 		Plugin plugin = new MeasurePlugin();
 		window.setPlugin(plugin);
-		runIjCmd(Command.MEASURE, plugin);
+		runIjCmd(XmippTomoCommands.MEASURE, plugin);
 	}
 
 	public void median() {
 		Plugin plugin = new MedianPlugin();
 		window.setPlugin(plugin);
-		runIjCmd(Command.MEDIAN, plugin);
+		runIjCmd(XmippTomoCommands.MEDIAN, plugin);
 	}
 
 	public void subBackground() {
 		Plugin plugin = new BackgroundSubstractPlugin();
 		window.setPlugin(plugin);
-		runIjCmd(Command.SUB_BACKGROUND, plugin);
+		runIjCmd(XmippTomoCommands.SUB_BACKGROUND, plugin);
 	}
 
 	public void enhanceContrast() {
 		Plugin plugin = new ContrastEnhancePlugin();
 		window.setPlugin(plugin);
-		runIjCmd(Command.ENHANCE_CONTRAST, plugin);
+		runIjCmd(XmippTomoCommands.ENHANCE_CONTRAST, plugin);
 	}
 	
 	public void gammaCorrection() {
 		Plugin plugin = new GammaCorrectionPlugin();
 		window.setPlugin(plugin);
-		runIjCmd(Command.GAMMA_CORRECTION, plugin);
+		runIjCmd(XmippTomoCommands.GAMMA_CORRECTION, plugin);
 	}
 	
 	public void bandpass() {
 		Plugin plugin = new BandpassPlugin();
 		window.setPlugin(plugin);
-		runIjCmd(Command.BANDPASS, plugin);
+		runIjCmd(XmippTomoCommands.BANDPASS, plugin);
 	}
 	
 	// TODO: image viewer pops out
@@ -483,7 +484,7 @@ public class TomoController implements AdjustmentListener{
 		// TODO: it may be better to use a custom dialog, so user does not need to check "Histogram Equalization" and "Normalize all"
 		Plugin plugin = new ContrastEnhancePlugin();
 		window.setPlugin(plugin);
-		runIjCmd(Command.ENHANCE_CONTRAST, plugin);
+		runIjCmd(XmippTomoCommands.ENHANCE_CONTRAST, plugin);
 		
 		// convert back to 32 bit
 		window.protectWindow();
@@ -523,7 +524,7 @@ public class TomoController implements AdjustmentListener{
 			IJ.run(command);
 		} catch (Exception ex) {
 			// catch java.lang.RuntimeException: Macro canceled
-			Xmipp_Tomo.debug("actionRunIjCmd - action canceled");
+			Logger.debug("actionRunIjCmd - action canceled");
 			return;
 		}
 		window.refreshImageCanvas();
@@ -555,7 +556,7 @@ public class TomoController implements AdjustmentListener{
 	}
 
 	public void convert() {
-		String destinationPath = FileDialog.saveDialog("Convert...", window);
+		String destinationPath = TomoFileDialog.saveDialog("Convert...", window);
 		if (destinationPath == null) {
 			return;
 		}
@@ -570,7 +571,7 @@ public class TomoController implements AdjustmentListener{
 		try {
 			new BackgroundMethod(this, getClass().getMethod("convertBackground"), null).execute();
 		} catch (Exception ex) {
-			Xmipp_Tomo.debug("TomoController.convert() ", ex);
+			Logger.debug("TomoController.convert() ", ex);
 		}
 	}
 
@@ -594,7 +595,7 @@ public class TomoController implements AdjustmentListener{
 						// the recommended way is using the @ notation,
 						// TODO: get the @ path with the help of the Filename xmipp class
 						String sliceDestPath = String.valueOf(projectionId) +"@"+ destinationPath;
-						Xmipp_Tomo.debug(sliceDestPath);
+						Logger.debug(sliceDestPath);
 						image.write(sliceDestPath);
 						// image.write(destinationPath, (int)projectionId, false, ImageWriteMode.WRITE_APPEND, CastWriteMode.CW_CAST);
 					}
@@ -606,9 +607,9 @@ public class TomoController implements AdjustmentListener{
 				img.write(getDestinationPath(), 0, true, ImageWriteMode.WRITE_OVERWRITE, CastWriteMode.CW_CAST);
 			}
 		}catch (IOException ex) {
-			Xmipp_Tomo.debug("convert - Error opening file ",	ex);
+			Logger.debug("convert - Error opening file ",	ex);
 		}catch (Exception ex) {
-			Xmipp_Tomo.debug("convert ",	ex);
+			Logger.debug("convert ",	ex);
 		}  
 
 	}
@@ -640,11 +641,11 @@ public class TomoController implements AdjustmentListener{
 		XrayImportDialog d = new XrayImportDialog("X-Ray import", window);
 		// d.setup();
 		d.showDialog();
-		if (d.getStatus() == Xmipp_Tomo.ExitValues.OK) {
+		if (d.getStatus().equals(ExitValue.OK)) {
 			String command = d.getCommand();
 			// Xmipp_Tomo.debug("bash -c " + '"' + command + '"');
-			Xmipp_Tomo.ExitValues error = Xmipp_Tomo.exec(command,false);
-			if (error == Xmipp_Tomo.ExitValues.OK){
+			ExitValue error = Xmipp_Tomo.exec(command,false);
+			if (error == ExitValue.OK){
 				String imagePath= d.getImagePath();
 				// loadImage(imagePath);
 				setModelToLoad(new TomoData(imagePath));
@@ -652,10 +653,10 @@ public class TomoController implements AdjustmentListener{
 					new BackgroundMethod(this, getClass().getMethod("loadEMBackground"), getClass().getMethod("loadedEM")).execute();
 					getModel().waitForFirstImage();
 				} catch (Exception ex) {
-					Xmipp_Tomo.debug("TomoController.loadEM() ", ex);
+					Logger.debug("TomoController.loadEM() ", ex);
 				}
 			}else
-				Xmipp_Tomo.debug("Error (" + error + ") executing " + command);
+				Logger.debug("Error (" + error + ") executing " + command);
 		}
 
 		
@@ -678,7 +679,7 @@ public class TomoController implements AdjustmentListener{
 	}
 	
 	public void currentProjectionInfo(){
-		Xmipp_Tomo.debug(getModel().getCurrentProjectionInfo());
+		Logger.debug(getModel().getCurrentProjectionInfo());
 	}
 	
 	/**
@@ -746,6 +747,7 @@ public class TomoController implements AdjustmentListener{
 	public void setModelToLoad(TomoData modelToLoad) {
 		this.modelToLoad = modelToLoad;
 	}
+	
 	
 	// TODO: xmipp_tomo_remove_fluctuations (preprocessing)
 }

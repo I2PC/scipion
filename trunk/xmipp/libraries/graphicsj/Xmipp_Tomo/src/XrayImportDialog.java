@@ -25,6 +25,7 @@
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
@@ -33,8 +34,12 @@ import java.awt.Insets;
 import java.util.Hashtable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -50,6 +55,8 @@ import ij.io.SaveDialog;
  * @author jcuenca
  *
  */
+
+// TODO: refactor - reuse Form code for mainPanel
 public class XrayImportDialog extends JDialog implements ActionListener
 //, TextListener, FocusListener, ItemListener, KeyListener, AdjustmentListener, WindowListener 
 {
@@ -59,7 +66,7 @@ public class XrayImportDialog extends JDialog implements ActionListener
 	private JButton okButton,cancelButton;
 	private GridBagConstraints gbc;
 	//int mainPanelRow=0;
-	private Xmipp_Tomo.ExitValues status= Xmipp_Tomo.ExitValues.CANCEL;
+	private ExitValue status= ExitValue.CANCEL;
 	private static String BROWSE_LABEL="Browse...", DATA_LABEL="Data directory ", FLAT_LABEL="Flatfield directory ", ROOT_LABEL="Root directory ", ROOT_FILE_LABEL="Root file ", CROP_LABEL="Crop ";
 	private Hashtable<String, JTextField> textFields= new Hashtable<String, JTextField>();
 	private String command;
@@ -96,13 +103,7 @@ public class XrayImportDialog extends JDialog implements ActionListener
     	addNumericField(4,CROP_LABEL, 7);
 	}
 	
-    
-    protected JLabel makeLabel(String label) {
-    	if (IJ.isMacintosh())
-    		label += " ";
-		return new JLabel(label);
-    }
-    
+      
     public void showDialog(){
     	pack();
     	setVisible(true);
@@ -115,13 +116,12 @@ public class XrayImportDialog extends JDialog implements ActionListener
     	String label2 = label;
    		if (label2.indexOf('_')!=-1)
    			label2 = label2.replace('_', ' ');
-		JLabel theLabel = makeLabel(label2);
+		JLabel theLabel = new JLabel(label2);
 		gbc.gridy = row; gbc.gridx=0;
 		gbc.anchor = GridBagConstraints.EAST;
 		mainPanel.add(theLabel,gbc);
 
 		JTextField tf = new JTextField(defaultText, 15);
-		if (IJ.isLinux()) tf.setBackground(Color.white);
 		tf.addActionListener(this);
 		// tf.addTextListener(this);
 		// tf.addFocusListener(this);
@@ -137,49 +137,31 @@ public class XrayImportDialog extends JDialog implements ActionListener
 		gbc.gridx=2;
 		gbc.fill=GridBagConstraints.NONE;
 		mainPanel.add(b,gbc);
-		//mainPanelRow++;
     }
     
+    /**
+     * 
+     * @param row (starts at 0)
+     * @param label
+     * @param defaultText
+     * @param columns
+     */
 	public void addStringField(int row,String label, String defaultText, int columns) {
-   		String label2 = label;
-   		if (label2.indexOf('_')!=-1)
-   			label2 = label2.replace('_', ' ');
-		JLabel theLabel = makeLabel(label2);
+		JLabel theLabel = new JLabel(label);
 		gbc.gridx = 0; gbc.gridy = row;
+		gbc.weightx = 0.0; gbc.gridwidth=1;
 		gbc.anchor = GridBagConstraints.EAST;
-		//c.gridwidth = 1;
-		/*boolean custom = customInsets;
-		if (stringField==null) {
-			stringField = new Vector(4);
-			c.insets = getInsets(5, 0, 5, 0);
-		} else
-			c.insets = getInsets(0, 0, 5, 0);
-		grid.setConstraints(theLabel, c);*/
+
 		mainPanel.add(theLabel,gbc);
-		/*if (custom) {
-			if (stringField.size()==0)
-				c.insets = getInsets(5, 0, 5, 0);
-			else
-				c.insets = getInsets(0, 0, 5, 0);
-		}*/
 		JTextField tf = new JTextField(defaultText, columns);
-		if (IJ.isLinux()) tf.setBackground(Color.white);
-		/*tf.setEchoChar(echoChar);
-		echoChar = 0;*/
 		textFields.put(label, tf);
 		tf.addActionListener(this);
-		/*tf.addTextListener(this);
-		tf.addFocusListener(this);
-		tf.addKeyListener(this);*/
 		gbc.gridx = 1; gbc.gridy = row;
 		gbc.anchor = GridBagConstraints.WEST;
-		//grid.setConstraints(tf, c);
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.weightx = 0.0; gbc.gridwidth=GridBagConstraints.REMAINDER;
 		tf.setEditable(true);
 		mainPanel.add(tf,gbc);
-		/*stringField.addElement(tf);
-		if (Recorder.record || macro)
-			saveLabel(tf, label);
-		y++;*/
     }
 	
 	public void addNumericField(int row,String label,int defaultValue){
@@ -196,7 +178,7 @@ public class XrayImportDialog extends JDialog implements ActionListener
 		String label = e.getActionCommand();
 		if (source== okButton || source==cancelButton) {
 			if(source == okButton)
-				status=Xmipp_Tomo.ExitValues.OK;
+				status=ExitValue.OK;
 			buildCommand();
 			dispose();
 		}else if(BROWSE_LABEL.equals(label))
@@ -208,7 +190,7 @@ public class XrayImportDialog extends JDialog implements ActionListener
 
 
 	private void actionBrowse(String fieldName){
-		String path=FileDialog.openDialog(fieldName, this);
+		String path=TomoFileDialog.openDialog(fieldName, this);
 		if(path != null) 
 			textFields.get(fieldName).setText(path);
 	}
@@ -216,7 +198,7 @@ public class XrayImportDialog extends JDialog implements ActionListener
 	/**
 	 * @return the status
 	 */
-	public Xmipp_Tomo.ExitValues getStatus() {
+	public ExitValue getStatus() {
 		return status;
 	}
 
@@ -224,7 +206,7 @@ public class XrayImportDialog extends JDialog implements ActionListener
 	/**
 	 * @param status the status to set
 	 */
-	private void setStatus(Xmipp_Tomo.ExitValues status) {
+	private void setStatus(ExitValue status) {
 		this.status = status;
 	}
 
@@ -270,8 +252,8 @@ public class XrayImportDialog extends JDialog implements ActionListener
 	 * @return Xmipp_Tomo.ExitValues.CANCEL / YES / NO
 	 */
 	
-	// TODO: use swing dialog
-	public static Xmipp_Tomo.ExitValues dialogYesNoCancel(String title, String message, boolean showCancelButton) {
+	// TODO: use swing JOptionPane dialog directly (no need of a static method...)
+	public static ExitValue dialogYesNoCancel(String title, String message, boolean showCancelButton) {
 		GenericDialog gd = new GenericDialog(title);
 
 		gd.addMessage(message);
@@ -279,11 +261,11 @@ public class XrayImportDialog extends JDialog implements ActionListener
 			gd.enableYesNoCancel();
 		gd.showDialog();
 		if (gd.wasCanceled())
-			return Xmipp_Tomo.ExitValues.CANCEL;
+			return ExitValue.CANCEL;
 		else if (gd.wasOKed())
-			return Xmipp_Tomo.ExitValues.YES;
+			return ExitValue.YES;
 		else
-			return Xmipp_Tomo.ExitValues.NO;
+			return ExitValue.NO;
 	}
 
 
@@ -318,5 +300,20 @@ public class XrayImportDialog extends JDialog implements ActionListener
 			result = "";
 		}
 		return result;
+	}
+	
+	public static void main(String args[]) {
+		JFrame window=new JFrame();
+		Container content = window.getContentPane();
+		//content.add(dialog, BorderLayout.CENTER);
+		window.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {System.exit(0);}
+		});
+
+		window.setSize(200, 200);
+		window.setVisible(true);
+		XrayImportDialog dialog = new XrayImportDialog("Titulo", window);
+		dialog.showDialog();
+
 	}
 }

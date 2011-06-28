@@ -32,10 +32,20 @@ public class UserAction {
 	public static int ROOT_WINDOWID=0;
 	
 	private int windowId;
-	private String command=null,parameters=null,name="";
+	private String command=null,parameters=null,name=null;
 	private Plugin plugin;
 	private boolean neededForFile=false;
+	private String inputFile,outputFile;
+	private String comments;
 	
+	public String getComments() {
+		return comments;
+	}
+
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+
 	public UserAction(int windowId){
 		setWindowId(windowId);
 	}
@@ -50,10 +60,20 @@ public class UserAction {
 		setParameters(params);
 	}
 	
+	public UserAction(int windowId,String name,String cmd,String params){
+		this(windowId,cmd,params);
+		setName(name);
+	}
+	
 	public UserAction(int windowId,String cmd,Plugin plugin){
 		this(windowId,cmd);
 		setPlugin(plugin);
 		setNeededForFile(true); 
+	}
+	
+	public UserAction(int windowId,String name, String cmd,Plugin plugin){
+		this(windowId,cmd,plugin);
+		setName(name);
 	}
 	
 	public int getWindowId() {
@@ -81,10 +101,31 @@ public class UserAction {
 	}
 	
 	public String toString(){
-		String res= getName() + ". " + getCommand();
-		return res;
+		String actionName = getName(), actionText="";
+		if(actionName != null)
+		  actionText = actionText + actionName + ".";
+
+		actionText = actionText + " :: " + getProgress();
+		
+		return actionText;
 	}
 
+	public String getCommandDetails(){
+		String details="";
+
+		String actionCommand = getCommand();
+		if(actionCommand != null){
+		  details = details + actionCommand;
+		  String actionParameters = getParameters();
+		  if(actionParameters!= null)
+			  details = details + " ["+actionParameters+"]";
+		  if(getPlugin()!= null)
+			  details = details + " ["+getPlugin().getOptions()+"]"; 
+		  
+		}
+		return details;
+	}
+	
 	public Plugin getPlugin() {
 		return plugin;
 	}
@@ -107,6 +148,11 @@ public class UserAction {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public String getProgress(){
+		int p = (getCommand().length() % 4) * 25;
+		return String.valueOf(p) + "%";
 	}
 	
 }

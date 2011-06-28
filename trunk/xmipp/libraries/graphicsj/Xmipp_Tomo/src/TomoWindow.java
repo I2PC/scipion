@@ -120,42 +120,42 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	// Lists of commands for each menu tab
 	private static java.util.List<Command> commandsMenuFile = new LinkedList<Command>() {
 		{
-			add(Command.LOAD);
-			add(Command.XRAY);
-			add(Command.CONVERT);
-			add(Command.DEFINE_TILT);
-			add(Command.DISCARD_PROJECTION);
+			add(XmippTomoCommands.LOAD);
+			add(XmippTomoCommands.XRAY);
+			add(XmippTomoCommands.CONVERT);
+			add(XmippTomoCommands.DEFINE_TILT);
+			add(XmippTomoCommands.DISCARD_PROJECTION);
 		}
 	};
 
 	private static java.util.List<Command> commandsMenuPreproc = new LinkedList<Command>() {
 		{
-			add(Command.NORMALIZE_SERIES);
-			add(Command.HOTSPOT_REMOVAL);
-			add(Command.GAUSSIAN);
-			add(Command.MEDIAN);
-			add(Command.SUB_BACKGROUND);
-			add(Command.ENHANCE_CONTRAST);
-			add(Command.GAMMA_CORRECTION);
-			add(Command.BANDPASS);
-			add(Command.HISTOGRAM_EQUALIZATION);
-			add(Command.CROP);
-			add(Command.APPLY);
+			add(XmippTomoCommands.NORMALIZE_SERIES);
+			add(XmippTomoCommands.HOTSPOT_REMOVAL);
+			add(XmippTomoCommands.GAUSSIAN);
+			add(XmippTomoCommands.MEDIAN);
+			add(XmippTomoCommands.SUB_BACKGROUND);
+			add(XmippTomoCommands.ENHANCE_CONTRAST);
+			add(XmippTomoCommands.GAMMA_CORRECTION);
+			add(XmippTomoCommands.BANDPASS);
+			add(XmippTomoCommands.HISTOGRAM_EQUALIZATION);
+			add(XmippTomoCommands.CROP);
+			add(XmippTomoCommands.APPLY);
 		}
 	};
 
 	private static java.util.List<Command> commandsMenuAlign = new LinkedList<Command>() {
 		{
-			add(Command.ALIGN_AUTO);
-			add(Command.ALIGN_MANUAL);
-			add(Command.ALIGN_CORRELATION);
+			add(XmippTomoCommands.ALIGN_AUTO);
+			add(XmippTomoCommands.ALIGN_MANUAL);
+			add(XmippTomoCommands.ALIGN_CORRELATION);
 		}
 	};
 
 	private static java.util.List<Command> commandsMenuDebug = new LinkedList<Command>() {
 		{
-			add(Command.PRINT_WORKFLOW);
-			add(Command.CURRENT_PROJECTION_INFO);
+			add(XmippTomoCommands.PRINT_WORKFLOW);
+			add(XmippTomoCommands.CURRENT_PROJECTION_INFO);
 		}
 	};
 
@@ -164,24 +164,24 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		{
 			// disabled until native writing (using Xmipp library) is implemented
 			//add(Command.SAVE);
-			add(Command.NORMALIZE_SERIES);
-			add(Command.DEFINE_TILT);
-			add(Command.DISCARD_PROJECTION);
-			add(Command.GAUSSIAN);
-			add(Command.MEDIAN);
-			add(Command.SUB_BACKGROUND);
-			add(Command.ENHANCE_CONTRAST);
-			add(Command.GAMMA_CORRECTION);
-			add(Command.BANDPASS);
-			add(Command.HISTOGRAM_EQUALIZATION);
-			add(Command.CROP);
+			add(XmippTomoCommands.NORMALIZE_SERIES);
+			add(XmippTomoCommands.DEFINE_TILT);
+			add(XmippTomoCommands.DISCARD_PROJECTION);
+			add(XmippTomoCommands.GAUSSIAN);
+			add(XmippTomoCommands.MEDIAN);
+			add(XmippTomoCommands.SUB_BACKGROUND);
+			add(XmippTomoCommands.ENHANCE_CONTRAST);
+			add(XmippTomoCommands.GAMMA_CORRECTION);
+			add(XmippTomoCommands.BANDPASS);
+			add(XmippTomoCommands.HISTOGRAM_EQUALIZATION);
+			add(XmippTomoCommands.CROP);
 			//add(Command.HOTSPOT_REMOVAL);
-			add(Command.APPLY);
-			add(Command.CONVERT);
-			add(Command.PRINT_WORKFLOW);
-			add(Command.CURRENT_PROJECTION_INFO);
-			add(Command.MEASURE);
-			add(Command.PLAY);
+			add(XmippTomoCommands.APPLY);
+			add(XmippTomoCommands.CONVERT);
+			add(XmippTomoCommands.PRINT_WORKFLOW);
+			add(XmippTomoCommands.CURRENT_PROJECTION_INFO);
+			add(XmippTomoCommands.MEASURE);
+			add(XmippTomoCommands.PLAY);
 		}
 	};
 
@@ -303,14 +303,14 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	}
 
 	private void addButton(Command cmd, Container panel) throws Exception {
-		TomoAction a = new TomoAction(getController(), cmd);
+		Action a = new Action(getController(), cmd);
 		JButton b = new JButton(a);
 		panel.add(b);
 		buttons.put(cmd.getId(), b);
 	}
 	
 	private JCheckBox addCheckbox(Command cmd, Container panel) throws Exception {
-		TomoAction a = new TomoAction(getController(), cmd);
+		Action a = new Action(getController(), cmd);
 		JCheckBox b = new JCheckBox(a);
 		b.setLabel(cmd.getLabel());
 		panel.add(b);
@@ -343,7 +343,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		try{
 			addMenuTabs();
 		}catch (Exception ex){
-			Xmipp_Tomo.debug("Tomowindow.addMainPanels - addmenutabs ", ex);
+			Logger.debug("Tomowindow.addMainPanels - addmenutabs ", ex);
 		}
 		menuPanel.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 		menuPanel.setPreferredSize(new Dimension(MENUPANEL_MINWIDTH,
@@ -461,12 +461,12 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		controlPanel.add(projectionScrollbar);
 
 		try {
-			addButton(Command.PLAY, controlPanel);
-			addCheckbox(Command.PLAY_LOOP, controlPanel,true);
-			addButton(Command.MEASURE, controlPanel);
-			addButton(Command.ADJUSTBC, controlPanel);
+			addButton(XmippTomoCommands.PLAY, controlPanel);
+			addCheckbox(XmippTomoCommands.PLAY_LOOP, controlPanel,true);
+			addButton(XmippTomoCommands.MEASURE, controlPanel);
+			addButton(XmippTomoCommands.ADJUSTBC, controlPanel);
 		} catch (Exception ex) {
-			Xmipp_Tomo.debug("addControls - play");
+			Logger.debug("addControls - play");
 		}
 		realWindow.pack(); // adjust window size to host the new controls panel
 
@@ -741,7 +741,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		if (closed)
 			return;
 		if (isChangeSaved()) {
-			Xmipp_Tomo.ExitValues choice = dialogYesNoCancel("Close window",
+			ExitValue choice = dialogYesNoCancel("Close window",
 					"Are you sure you want to close this window?",false);
 			switch (choice) {
 				case NO:
@@ -749,11 +749,11 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 					return;
 			}
 		} else {
-			Xmipp_Tomo.ExitValues choice = dialogYesNoCancel("Save changes",
+			ExitValue choice = dialogYesNoCancel("Save changes",
 					"Do you want to save changes?",true);
 			switch (choice) {
 			case YES:
-				String path = FileDialog.saveDialog("Save...", this);
+				String path = TomoFileDialog.saveDialog("Save...", this);
 				if ("".equals(path))
 					return;
 				controller.saveFile(this, getModel(), path);
@@ -794,7 +794,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	}
 
 	public void mouseReleased(MouseEvent e) {
-		Xmipp_Tomo.debug("Mouse released");
+		Logger.debug("Mouse released");
 	}
 
 	public void mousePressed(MouseEvent e) {
@@ -815,16 +815,16 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			refreshImageCanvas();
 			// Discard button label
 			if(getModel().isCurrentEnabled())
-				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.DISCARD_PROJECTION.getLabel());
+				changeLabel(XmippTomoCommands.DISCARD_PROJECTION.getId(), XmippTomoCommands.DISCARD_PROJECTION.getLabel());
 			else
-				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.UNDO_DISCARD_PROJECTION.getLabel());
+				changeLabel(XmippTomoCommands.DISCARD_PROJECTION.getId(), XmippTomoCommands.UNDO_DISCARD_PROJECTION.getLabel());
 		}else if(TomoData.Properties.CURRENT_TILT_ANGLE.name().equals(event.getPropertyName())){
 			updateCurrentTiltAngleText();
 		}else if(TomoData.Properties.CURRENT_PROJECTION_ENABLED.name().equals(event.getPropertyName())){
 			if(getModel().isCurrentEnabled())
-				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.DISCARD_PROJECTION.getLabel());
+				changeLabel(XmippTomoCommands.DISCARD_PROJECTION.getId(), XmippTomoCommands.DISCARD_PROJECTION.getLabel());
 			else
-				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.UNDO_DISCARD_PROJECTION.getLabel());
+				changeLabel(XmippTomoCommands.DISCARD_PROJECTION.getId(), XmippTomoCommands.UNDO_DISCARD_PROJECTION.getLabel());
 			refreshImageCanvas();	
 		}
 	}
@@ -943,7 +943,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 *            Dialog message
 	 * @return Xmipp_Tomo.ExitValues.CANCEL / YES / NO
 	 */
-	private Xmipp_Tomo.ExitValues dialogYesNoCancel(String title, String message,boolean showCancelButton) {
+	private ExitValue dialogYesNoCancel(String title, String message,boolean showCancelButton) {
 		return XrayImportDialog.dialogYesNoCancel(title, message,showCancelButton);
 	}
 

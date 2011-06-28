@@ -263,7 +263,7 @@ public class MrcIOJava {
 		model.setWidth(fi.width);
 
 		// load images
-		Xmipp_Tomo.debug("Number of images: " + fi.nImages);
+		Logger.debug("Number of images: " + fi.nImages);
 		for (int i = 1; i <= fi.nImages; i++) {
 			if (model.isLoadCanceled())
 				break;
@@ -363,7 +363,7 @@ public class MrcIOJava {
 			file.write(out);
 			out.close();
 		} catch (IOException ioe) {
-			Xmipp_Tomo.debug("TiltSeriesOpener.writeMRC" + ioe);
+			Logger.debug("TiltSeriesOpener.writeMRC" + ioe);
 		}
 
 		// write tilt file

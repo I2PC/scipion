@@ -133,7 +133,7 @@ public class TomoData{
 	public void setCurrentProjectionNumber(int newProjectionNumber) {
 		
 		if((newProjectionNumber<1) || (newProjectionNumber > getNumberOfProjections())){
-			Xmipp_Tomo.debug("setCurrentProjection("+newProjectionNumber+")");		
+			Logger.debug("setCurrentProjection("+newProjectionNumber+")");		
 			return;
 		}
 		int oldProjectionNumber=currentProjectionNumber;
@@ -143,7 +143,7 @@ public class TomoData{
 		try{
 			getImage().setSlice(getCurrentProjectionNumber());
 		} catch (IllegalArgumentException ex){
-			Xmipp_Tomo.debug("setCurrentProjection - ", ex);
+			Logger.debug("setCurrentProjection - ", ex);
 		}
 		firePropertyChange(Properties.CURRENT_PROJECTION_NUMBER.name(), oldProjectionNumber, currentProjectionNumber);
 	}
@@ -584,7 +584,7 @@ public class TomoData{
 			TiltSeriesIO.readTiltAngles(path, getMetadata());
 	
 		}catch (Exception ex){
-			Xmipp_Tomo.debug("readMetadata - problem with "+path+". Please check that the file exists and its permissions", ex);
+			Logger.debug("readMetadata - problem with "+path+". Please check that the file exists and its permissions", ex);
 		}
 		firePropertyChange(Properties.CURRENT_TILT_ANGLE.name(), null, 0.0);
 		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), null, false);

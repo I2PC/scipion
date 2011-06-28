@@ -50,7 +50,7 @@ public class Converter {
 	
 	public static ImageDouble convertToImageDouble(ImagePlus img) {
 		if(img == null){
-			Xmipp_Tomo.debug("Null image");
+			Logger.debug("Null image");
 			return null;
 		}
 		// Creates image 
@@ -74,7 +74,7 @@ public class Converter {
 			// for tomograms we need N instead of Z, so Z = 1
 			imageDouble.setData(width, height, 1, numberOfProjections, data);
 		}catch (Exception ex){
-			Xmipp_Tomo.debug("convert ImagePlus->ImageDouble", ex);
+			Logger.debug("convert ImagePlus->ImageDouble", ex);
 		}
 		return imageDouble;
 	}

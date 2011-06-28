@@ -26,42 +26,13 @@
  * - Why a Command class?
  * To provide a simple declaration (using this class constructors) of the program's commands,
  * independent of whether the program implements them as buttons, menus... 
- * - Alternatives:
- * A configuration file parsed at runtime before GUI construction
+ * @see XmippTomoCommands
  */
 
 import javax.swing.ImageIcon;
 
 public class Command {
-	
-	public static Command 
-	PLAY= new Command("controls.play","", "playPause", false, TomoWindow.PLAY_ICON),
-	PLAY_LOOP= new Command("controls.play_loop","Loop", "changePlayMode", true, null),
-	LOAD=new Command("file.emload","Load","loadEM",true,null),
-	XRAY=new Command("file.xrayload","Import X-Ray","loadXray",true,null),
-	CONVERT=new Command("file.convert","Convert","convert",false,null),
-	ADJUSTBC=new Command("controls.adjustbc","Adjust Brightness/Contrast","adjustbc",false,null),
-	NORMALIZE_SERIES=new Command("preproc.normalize","Normalize series","normalize",false,null),
-	DEFINE_TILT = new Command("file.tilt","Set tilt angles","setTilt",false,null),
-	DISCARD_PROJECTION = new Command("file.discard_projection","Discard Projection","discardProjection",false,null),
-	// defined here only for the label
-	UNDO_DISCARD_PROJECTION = new Command("file.undo_discard_projection","Undo Discard Proj.","discardProjection",false,null),
-	HOTSPOT_REMOVAL = new Command("proc.hotspotremoval","Hotspot Removal","hotspotRemoval", false,null),
-	GAUSSIAN = new Command("proc.gaussian","Gaussian","gaussian", false,null),
-	MEDIAN = new Command("proc.median","Median","median", false,null),
-	SUB_BACKGROUND = new Command("proc.sub_background","Substract Background","subBackground",false,null),
-	ENHANCE_CONTRAST = new Command("proc.enhance_contrast","Enhance Contrast","enhanceContrast",false,null),
-	GAMMA_CORRECTION = new Command("proc.gamma_correction","Gamma Correction","gammaCorrection",false,null),
-	HISTOGRAM_EQUALIZATION = new Command("proc.histogram_equalization","Histogram Equalization","histogramEqualization",false,null),
-	CROP = new Command("proc.crop","Crop","crop",false,null),
-	BANDPASS = new Command("proc.bandpass","Bandpass Filter","bandpass",false,null),
-	MEASURE = new Command("controls.measure","Measure","measure",false,null),
-	APPLY = new Command("proc.apply","Apply&Save","apply",false,null),
-	ALIGN_AUTO = new Command("align.auto","Auto","alignAuto",false,null),
-	ALIGN_MANUAL = new Command("align.manual","Manual","alignManual",false,null),
-	ALIGN_CORRELATION = new Command("align.correlation","Quick","alignCorrelation",false,null),
-	PRINT_WORKFLOW = new Command("debug.print_workflow","Print workflow","printWorkflow",false,null), 
-	CURRENT_PROJECTION_INFO = new Command("debug.current_projection_info","Current Projection Info","currentProjectionInfo",false,null);;
+	// TODO: get out this static commands to a better place (XmippTomoCommands?)
 	
 	/* Complex commands may transit through some states.
 	 * For example, loading a file takes time - the command may be canceled.
@@ -104,14 +75,14 @@ public class Command {
 		return method;
 	}
 
-	public ImageIcon getIcon() throws Exception {
+	public ImageIcon getIcon(){
 		if(iconName == null)
 			return null;
-		java.net.URL imageURL = Xmipp_Tomo.class.getResource(iconName);
+		java.net.URL imageURL = Command.class.getResource(iconName);
 		if (imageURL != null) {
 			return new ImageIcon(imageURL);
 		}else
-			throw new Exception("Command.getIcon() - icon not found");
+			return null;
 	}
 
 	public String getId() {

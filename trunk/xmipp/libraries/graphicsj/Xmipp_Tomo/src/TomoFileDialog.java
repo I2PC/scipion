@@ -30,20 +30,25 @@
  * FileNameExtensionFilters
  * Remember last path
  */
-
+import ij.Prefs;
 import java.awt.Component;
 import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-public class FileDialog {
+
+// TODO: reuse FileDialog code by extending it
+public class TomoFileDialog {
 	private JFileChooser fileChooser;
+	private static File lastChosenDirectory;
+	private static String prefsPrefix="xmipptomo.";
 
 	private void setupDialog(String title, String path, final String fileName,int type) {
 		fileChooser = new JFileChooser();
 		fileChooser.setDialogTitle(title);
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		fileChooser.setCurrentDirectory(getLastChosenDirectory(title));
 		fileChooser.setDialogType(type);
 
 		File fdir = null;
@@ -56,25 +61,37 @@ public class FileDialog {
 	}
 
 	public static String openDialog(String title, Component parent) {
-		FileDialog fd = new FileDialog();
+		TomoFileDialog fd = new TomoFileDialog();
 		fd.setupDialog(title, null, null,JFileChooser.OPEN_DIALOG);
+		fd.addTomoImagesFileExtensionFilters();
 		int status = fd.showOpenDialog(parent);
 		if (status != JFileChooser.APPROVE_OPTION)
 			return "";
 		String path=fd.getPath();
+		setLastChosenDirectory(title, path);
 		return path;
 	}
 	
 	public static String saveDialog(String title, Component parent) {
-		FileDialog fd = new FileDialog();
+		TomoFileDialog fd = new TomoFileDialog();
 		fd.setupDialog(title, null, null,JFileChooser.SAVE_DIALOG);
+		fd.addTomoImagesFileExtensionFilters();
 		int status = fd.showSaveDialog(parent);
 		if (status != JFileChooser.APPROVE_OPTION)
 			return "";
 		String path=fd.getPath();
+		setLastChosenDirectory(title, path);
 		return path;
 	}
 	
+	public void addTomoImagesFileExtensionFilters(){
+		addFilter(new FileNameExtensionFilter("Spider", "spi"));
+		addFilter(new FileNameExtensionFilter("Sel file", "sel"));
+		addFilter(new FileNameExtensionFilter("MRC", "mrcs"));
+		addFilter(new FileNameExtensionFilter("VOL", "vol"));
+		addFilter(new FileNameExtensionFilter("Xmipp Stack", "stk"));
+	}
+
 	/**
 	 * @depends on setupOpenDialog
 	 * @return Cancel, Approve or Error - @see fileChooser.showOpenDialog
@@ -125,5 +142,20 @@ public class FileDialog {
 		fileChooser.addChoosableFileFilter(filter);
 	}
 
+	/**
+	 * @return path, which may be null.
+	 * This path always ends with the separator character ("/" or "\").
+	 */
+	private static File getLastChosenDirectory(String title) {
+		if (lastChosenDirectory == null){
+			String dirImage = Prefs.get(prefsPrefix+title,".");
+			lastChosenDirectory = new File(dirImage);
+		}
+		return lastChosenDirectory;
+	}
 
+	private static void setLastChosenDirectory(String title,String filePath){
+		String directory=new File(filePath).getParent();
+		Prefs.set(prefsPrefix+title,directory);
+	}
 }

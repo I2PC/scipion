@@ -65,7 +65,6 @@
 
 import ij.*;
 import java.io.*;
-import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -78,7 +77,8 @@ import ij.plugin.PlugIn;
 /**
  * implements PlugIn (ImageJ plugins base interface)
  * 
- * Main class, responsible for plugin initialization
+ * Main class, responsible for plugin initialization.
+ * It serves as entry point to the plugin.
  */
 
 // underscore in the name is required for automatic installation in the plugins menu...
@@ -88,14 +88,6 @@ public class Xmipp_Tomo implements PlugIn{
 	 * Required because of inherited "serializationability"...
 	 */
 	private static final long serialVersionUID = -4063711977454855701L;
-	
-	public static enum ExitValues {
-		OK(0),ERROR(1),YES(2),NO(3),CANCEL(4),RUNTIME_ERROR(5),PROGRAM_NOT_FOUND(6),
-		EXTERNAL_PROGRAM_BROKEN(7);
-		private final int value;
-		ExitValues(int err) { value=err;}
-		public int value(){return value;}
-	};
 	
 	// enable debuging tests - release versions should have this set to 0
 	final static int TESTING = 1;
@@ -122,7 +114,7 @@ public class Xmipp_Tomo implements PlugIn{
 	
 	public static DefaultMutableTreeNode addUserAction(DefaultMutableTreeNode last, UserAction newAction){
 		if(last == null){
-			Xmipp_Tomo.debug("Xmipp_Tomo.addUserAction - last is null");
+			Logger.debug("Xmipp_Tomo.addUserAction - last is null");
 		}else
 			last.add(new DefaultMutableTreeNode(newAction));
 		return last;
@@ -139,7 +131,7 @@ public class Xmipp_Tomo implements PlugIn{
 		while(current_node != getWorkflow().getRoot()){
 			DefaultMutableTreeNode parent_node= (DefaultMutableTreeNode)current_node.getParent();
 			if (parent_node == null)
-				debug("Null parent");
+				Logger.debug("Null parent");
 			else{
 				current_node=parent_node;
 				res.push((UserAction)current_node.getUserObject());
@@ -165,7 +157,7 @@ public class Xmipp_Tomo implements PlugIn{
 	public static void printWorkflow(){
 		Enumeration e = getWorkflow().breadthFirstEnumeration();
 		while(e.hasMoreElements())
-			debug((e.nextElement()).toString());
+			Logger.debug((e.nextElement()).toString());
 	}
 
 	
@@ -173,24 +165,24 @@ public class Xmipp_Tomo implements PlugIn{
 	 * @param cmdline
 	 * @return the exit value of cmdline (@see Process.waitFor())
 	 */
-	public static ExitValues exec(String cmdline,boolean readStderr){
+	public static ExitValue exec(String cmdline,boolean readStderr){
 		// execution details may change with each OS...
 		//String osName = System.getProperty("os.name" );
 		
-		ExitValues exitValue=ExitValues.OK;
+		ExitValue exitValue=ExitValue.OK;
 		Process proc=null;
 		
 		Runtime rt = Runtime.getRuntime();
 		
 		// Xmipp_Tomo.debug(System.getenv("LD_LIBRARY_PATH"));
-		Xmipp_Tomo.debug(cmdline);
+		Logger.debug(cmdline);
 		
 		try{
 			proc = rt.exec(cmdline);
 		}catch (IOException ex){
-			debug(ex.toString());
+			Logger.debug(ex.toString());
 			// one improvement would be to extract the error code from the exception and return the exitvalue accordingly
-			return ExitValues.PROGRAM_NOT_FOUND;
+			return ExitValue.PROGRAM_NOT_FOUND;
 		}
 		
 		// Prepare buffered readers from inputstreams (stderr, stdout) ...
@@ -207,11 +199,11 @@ public class Xmipp_Tomo implements PlugIn{
 		
 		try{
 			while ( (line = stdout_br.readLine()) != null)
-	            debug(line);    
+	            Logger.debug(line);    
 	        
 			if(readStderr)
 				while ( (line = stderr_br.readLine()) != null)
-		            debug(line);    
+		            Logger.debug(line);    
 			
         } catch (IOException ex){
             ex.printStackTrace();  
@@ -222,19 +214,19 @@ public class Xmipp_Tomo implements PlugIn{
         	// convert from int ev to ExitValue
         	switch(ev){
         		case 0:
-        			exitValue = ExitValues.OK;
+        			exitValue = ExitValue.OK;
         			break;
         		case 127:
         			// recompile the program
-        			exitValue = ExitValues.EXTERNAL_PROGRAM_BROKEN;
+        			exitValue = ExitValue.EXTERNAL_PROGRAM_BROKEN;
         			break;
         		default:
-        			debug(String.valueOf(ev));
-        			exitValue = ExitValues.ERROR;
+        			Logger.debug(String.valueOf(ev));
+        			exitValue = ExitValue.ERROR;
         	}
         	
         }catch (java.lang.InterruptedException ex){
-        	exitValue=ExitValues.ERROR;
+        	exitValue=ExitValue.ERROR;
         }
         return exitValue;
 	} // exec end
@@ -244,30 +236,6 @@ public class Xmipp_Tomo implements PlugIn{
     /********************* Trace methods for debugging ****************************/
     
     
-	/** print s with a timestamp, using IJ Results window (@see IJ.write)
-	 * @param s
-	 */
-	public static void debug(String s){
-		Calendar calendar = Calendar.getInstance();
-		java.util.Date now = calendar.getTime();
-		String output="" + now.getTime() + " > " + s;
-		if(TESTING == 1){
-			/*if(tw != null)
-				IJ.write(output);
-			else */
-				System.err.println(output);
-		}
-	}
-
-	/** same as Debug, plus ex stack trace
-	 * @param s
-	 * @param ex Exception
-	 */
-	public static void debug(String s, Exception ex){
-		debug(s + ex.toString());
-		ex.printStackTrace();
-	}
-	
 	private int getNextWindowId(){
 		lastWindowId++;
 		return lastWindowId;
@@ -295,7 +263,19 @@ public class Xmipp_Tomo implements PlugIn{
 		
 	}
 	
-	public void testWorkflow(){
+	public void getTestWorkflow(){
+		// Use workflow class to encapsulate the tree and allow
+		// this method to be static
+		UserAction a1=new UserAction(0,"Load" , "g1ta.spi");
+		UserAction a2=new UserAction(0,"Gaussian Blur..." , "Sigma (Radius)=2.0");
+		UserAction a3=new UserAction(0,"Median..." , "Sigma (Radius)=2.0");
+		UserAction a4=new UserAction(0,"Bandpass Filter..." , "Filter_Large Structures Down to=40.0Filter_Small Structures Up to=3.0Suppress Stripes:=Tolerance of Direction:=5.0Autoscale After Filtering=trueSaturate Image when AutoscalingtrueDisplay Filterfalse");
+		
+		DefaultMutableTreeNode last=addUserAction(getWorkflow(), a1);
+		addUserAction(last, a2);
+		addUserAction(last, a3);
+		addUserAction(last, a4);
+		
 		/* // create tree
 		DefaultMutableTreeNode root=new DefaultMutableTreeNode("1"),n2=new DefaultMutableTreeNode("2"),
 		n3=new DefaultMutableTreeNode("3"),n4=new DefaultMutableTreeNode("4"),n5=new DefaultMutableTreeNode("5");
@@ -314,7 +294,7 @@ public class Xmipp_Tomo implements PlugIn{
 	
 	public static void main(String[] args) {
 		Xmipp_Tomo xt= new Xmipp_Tomo();
-		xt.testWorkflow();
+		xt.getTestWorkflow();
 	}
 
 	/**

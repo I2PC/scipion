@@ -112,7 +112,7 @@ public class TiltSeriesIO {
 				} catch (IOException ex) {
 					// maybe the exception was due to the need of absolute paths
 					// give a second try with absolute path
-					Xmipp_Tomo.debug("TiltseriesIO.read", ex);
+					Logger.debug("TiltseriesIO.read", ex);
 					if(! isAbsolute(fileName)){
 						buildPath = true;
 						fileName=buildAbsolutePath(absolutePath, fileName);
@@ -140,7 +140,7 @@ public class TiltSeriesIO {
 	// Stack: ask only for stack file path (same overwrite warning), then save both stack and tlt [OK]
 	public static void write(TomoData model) {
 		String path = model.getFilePath();
-		Xmipp_Tomo.debug("writing " + path);
+		Logger.debug("writing " + path);
 		try{
 			if(isImage(path)){
 				writeStack(path,model);
@@ -152,7 +152,7 @@ public class TiltSeriesIO {
 			}
 				
 		}catch (Exception ex){
-			Xmipp_Tomo.debug("write", ex);
+			Logger.debug("write", ex);
 		}
 	}
 	
@@ -280,7 +280,7 @@ private static String buildAbsolutePath(String selFilePath, String path){
 	
 	private static ImageDouble convert(ImagePlus img) {
 		if(img == null){
-			Xmipp_Tomo.debug("Null image");
+			Logger.debug("Null image");
 			return null;
 		}
 		// Creates image 
@@ -304,7 +304,7 @@ private static String buildAbsolutePath(String selFilePath, String path){
 			// for tomograms we need N instead of Z, so Z = 1
 			imageDouble.setData(width, height, 1, numberOfProjections, data);
 		}catch (Exception ex){
-			Xmipp_Tomo.debug("convert ImagePlus->ImageDouble", ex);
+			Logger.debug("convert ImagePlus->ImageDouble", ex);
 		}
 		return imageDouble;
 	}
@@ -356,7 +356,7 @@ private static String buildAbsolutePath(String selFilePath, String path){
 			}
 
 		} catch (FileNotFoundException ex) {
-			Xmipp_Tomo.debug("writeTlt - file not found");
+			Logger.debug("writeTlt - file not found");
 		} finally {
 			output.close();
 		}
@@ -397,7 +397,7 @@ private static String buildAbsolutePath(String selFilePath, String path){
 				image.write(firstFilePath);
 			}
 		} catch (Exception ex){
-			Xmipp_Tomo.debug("test1",ex);
+			Logger.debug("test1",ex);
 		}
 	}
 	
@@ -410,7 +410,7 @@ private static String buildAbsolutePath(String selFilePath, String path){
 			model.setFile(copyFilePath);
 			TiltSeriesIO.write(model);
 		} catch (Exception ex){
-			Xmipp_Tomo.debug("test1",ex);
+			Logger.debug("test1",ex);
 		}
 	}
 

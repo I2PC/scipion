@@ -37,26 +37,47 @@ import javax.swing.AbstractAction;
  * Alternatives to "Action paradigm": trying to identify a component in a "if list" by its label
  */
 
-public class TomoAction extends AbstractAction {
+public class Action extends AbstractAction {
 	// Following MVC paradigm, a mechanism is needed to establish which Controller's method to call when
 	// some specific event (like clicking on a button) happens, and hence actionPerformed is called.
 	// I opted for Java reflection, which allows for calling methods using a String.
 	// The alternative would be a long "if list", again
 	private Method methodToCall;
-	private TomoController controller;
+	private Object controller;
 	// right now it's not necessary because controller's method have no
 	// parameters
-	protected Object[] params;
+	protected Object[] params=null;
 
-	TomoAction(TomoController c, Command cmd) throws Exception{
+	// no need for the controller to be a TomoControler...
+	// TODO: but maybe Object is too generic... use AbstractController?
+	/**
+	 * @param c - controller class which has the method that will be
+	 * called in actionPerformed
+	 */
+	Action(Object c, Command cmd) {
+		this(c,cmd,null);	
+	}
+
+	Action(Object c, Command cmd,Object parameter) {
 		super(cmd.getLabel(), cmd.getIcon());
 		setEnabled(cmd.isEnabled());
 		controller = c;
-	    try {
-	      methodToCall = controller.getClass().getMethod(cmd.getMethod());
-	    } catch (Exception e) {
-	      e.printStackTrace();
-	    }
+		setMethodToCall(cmd, parameter);
+		if(parameter != null){
+			params=new Object[1];
+			params[0]=parameter;
+		}
+	}
+
+	private void setMethodToCall(Command cmd, Object parameter){
+		try {
+			if(parameter==null)
+				methodToCall = controller.getClass().getMethod(cmd.getMethod());
+			else
+				methodToCall = controller.getClass().getMethod(cmd.getMethod(),parameter.getClass());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/*
@@ -66,13 +87,16 @@ public class TomoAction extends AbstractAction {
 	 */
 	public void actionPerformed(ActionEvent ae) {
 		try {
-			methodToCall.invoke(controller);
+			if(params==null)
+				methodToCall.invoke(controller);
+			else
+				methodToCall.invoke(controller, params);
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 		} catch (NullPointerException ex){
-			Xmipp_Tomo.debug("TomoAction.actionPerformed " + ex.toString());
+			Logger.debug("TomoAction.actionPerformed " + ex.toString());
 		}
 	}
 
