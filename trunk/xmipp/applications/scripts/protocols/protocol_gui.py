@@ -139,7 +139,7 @@ class ProtocolWidget():
         for child in self.childwidgets:
             child.display(value)
         
-class ProtocolGUI():
+class ProtocolGUI(BasicGUI):
     def init(self, script):
         self.variablesDict = {}       
         self.pre_header_lines = []
@@ -257,30 +257,6 @@ class ProtocolGUI():
         
         return w
         
-    def prepareCanvas(self):
-        # Stuff to make the scrollbars work
-        vscrollbar = AutoScrollbar(self.master)
-        vscrollbar.grid(row=0, column=1, sticky=N + S)
-        hscrollbar = AutoScrollbar(self.master, orient=HORIZONTAL)
-        hscrollbar.grid(row=1, column=0, sticky=E + W)
-        self.canvas = Canvas(self.master, background=self.style.BgColor,
-                        yscrollcommand=vscrollbar.set,
-                        xscrollcommand=hscrollbar.set)
-        self.canvas.grid(row=0, column=0, sticky=N + S + E + W)
-        vscrollbar.config(command=self.canvas.yview)
-        hscrollbar.config(command=self.canvas.xview)
-        self.master.grid_rowconfigure(0, weight=1)
-        self.master.grid_columnconfigure(0, weight=1)
-        self.frame = Frame(self.canvas, background=self.style.BgColor)
-        self.frame.rowconfigure(0, weight=1)
-        self.frame.columnconfigure(0, weight=1)
-            
-    def createCanvas(self):
-        # Launch the window
-        self.canvas.create_window(0, 0, anchor=NW, window=self.frame)
-        self.frame.update_idletasks()
-        self.canvas.config(scrollregion=self.canvas.bbox("all")) 
-    
     def fillHeader(self):
         import os, sys        
         self.master.title(self.programname)
@@ -404,14 +380,6 @@ class ProtocolGUI():
     #-------------------------------------------------------------------
     # GUI Events handling
     #-------------------------------------------------------------------           
-    def resize(self):
-        height = self.frame.winfo_reqheight() + 25
-        width = self.frame.winfo_reqwidth() + 25
-        if height > self.style.MaxHeight:
-           height = self.style.MaxHeight
-        if width > self.style.MaxWidth:
-           width = self.style.MaxWidth
-        self.master.geometry("%dx%d%+d%+d" % (width, height, 0, 0))
         
     def close(self, event=""):
         self.master.destroy()
@@ -507,26 +475,24 @@ class ProtocolGUI():
         
     def createGUI(self, script):
         self.init(script)        
-        self.master = Tk()
-        self.style = ProtocolStyle('config_gui')
-        self.style.createFonts()
+        #self.master = Tk()
+        #self.style = ProtocolStyle('config_gui')
+        #self.style.createFonts()
+        self.createBasicGUI()
         self.master.option_add("*Font", self.style.Font)
         self.columnspantextlabel = 3
         self.columntextentry = 3
         
         self.readProtocolScript()
-        self.prepareCanvas() 
+        self.createScrollableCanvas()
         self.fillHeader()
         self.parseHeader()
         #self.fillWidgets()
                 # Add bottom row buttons
-    def launchGUI(self):
+    def fillGUI(self):
         self.fillButtons()
         self.addBindings()        
-        self.createCanvas() 
-        self.resize()      
         self.checkVisibility()  
-        self.master.mainloop()    
     
 if __name__ == '__main__':
     script = sys.argv[1]  
