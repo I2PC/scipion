@@ -30,33 +30,11 @@ import os
 from Tkinter import *
 import tkFont
 from protlib_filesystem import getXmippPath
+from protlib_base import *
+from protlib_utils import getScriptPrefix
+from config import *
+import shutil   
 
-sections = [
-('Preprocessing', 
-   [['Preprocess Micrograph'], 
-    ['Particles picking'], 
-    ['Preprocess Particles']]),
-('2D', 
-   [['Align+Classify', 'ML2D', 'CL2D'], 
-    ['Align', 'ML2D', 'CL2D'], 
-    ['Classify', 'KerDenSOM', 'Rotational Spectra']]),
-('3D', 
-   [['Initial Model', 'Common Lines', 'Random Conical Tilt'], 
-    ['Model Refinement', 'Projection Matching']]),
-('Other', [['Browse']])]
-
-launchDict = {
-              'Preprocess Micrograph': 'preprocess_micrographs.py',
-              'Particles picking':     'particle_pick.py', 
-              'Preprocess Particles':  'preprocess_particles.py', 
-              'ML2D':                  'ml2d.py',
-              'CL2D':                  'cl2d.py',
-              'KerDenSOM':             'kerdensom.py',
-              'Rotational Spectra':    'rotspectra.py',
-              'Common Lines':          'commonlines.py',
-              'Random Conical Tilt':   'rct.py',
-              'Projection Matching':      'projmatch.py'
-              }
 #Font
 FontName = "Helvetica"
 FontSize = 10
@@ -87,19 +65,16 @@ MinFontSize = 6
 
 
         
-class XmippProjectGUI(Frame):
-  
-    def __init__(self):
-        self.root = Tk()
-        self.createGUI()
-        self.root.mainloop()
+class XmippProjectGUI():  
+    def __init__(self, project):
+        self.project = project
         
     def createMainMenu(self):
         self.menubar = Menu(self.root)
         self.fileMenu = Menu(self.root, tearoff=0)
         self.fileMenu.add_command(label="Exit", command=self.onExit)
         self.menubar.add_cascade(label="File", menu=self.fileMenu)
-        
+        self.btnFrameDict = {}
    
     def addTbLabel(self, text, row):
         '''Add a label to left toolbar'''
@@ -110,8 +85,8 @@ class XmippProjectGUI(Frame):
     def addLaunchButton(self, o, btnFrame, row, Font):
         label = Label(btnFrame, text=o, font=Font)
         label.grid(row=2*row, column=0, sticky=W, padx=5)
-        btnLaunch = Button(btnFrame, text='Launch', font=Font, relief=RAISED,
-                         bg=ButtonBgColor, activebackground=ButtonBgColor, command=lambda:self.launchProtocol(o))
+        btnLaunch = Button(btnFrame, text='New', font=Font, relief=RAISED,
+                         bg=ButtonBgColor, activebackground=ButtonBgColor, command=lambda:self.newProtocol(o))
         btnLaunch.grid(row=2*row+1, column=0, padx=5, pady=5, sticky=E)
         
     def addTbButton(self, row, text, opts=[]):
@@ -132,27 +107,83 @@ class XmippProjectGUI(Frame):
                 self.addLaunchButton(o, btnFrame, i, Font)
         else:
             self.addLaunchButton(text, btnFrame, 1, Font)
-                
-        btn.config(command=lambda:self.menuPick(btn, btnFrame))
+               
+        self.btnFrameDict[text] = btnFrame 
+        btn.config(command=lambda:self.menuPick(text))
 
+    def newProtocol(self, btnName):
+        protocol = launchDict[btnName]
+        protDir = getXmippPath('protocols')
+        srcProtName = 'xmipp_protocol_%s.py' % protocol
+        srcProtDir = getXmippPath('protocols')
+        srcProtAbsPath = os.path.join(protDir, srcProtName)
+        
+        lastRunName = self.project.db.getLastRunName(protocol)
+        
+        g = getScriptPrefix(lastRunName)
+        print g
+        prefix, suffix =g
+        n = 1
+        if suffix:
+            n = int(suffix) + 1
+        runName = "%s_%03d" % (prefix, n)
+        dstAbsPath = os.path.join(self.project.runsDir, 'xmipp_protocol_%s_%s.py' % (protocol, runName))
+        print "Copying %s to %s" % (srcProtAbsPath, dstAbsPath)
+        shutil.copy(srcProtAbsPath, dstAbsPath)
+        run = {
+               'protocol_name':protocol, 
+               'run_name': runName, 
+               'script': dstAbsPath, 
+               'comment': "my first run"
+               }
+        self.project.db.insertRun(run)
+        os.system('python %s %s &' % (os.path.join(protDir, 'xmipp_protocol_gui.py'), dstAbsPath))
+        
     def launchProtocol(self, btnName):
         protName = 'xmipp_protocol_%s' % launchDict[btnName]
-        protDestName = os.path.join('Runs', protName)
+        protDestName = os.path.join(self.project.runsDir, protName)
         protDir = getXmippPath('protocols')
         
         if not os.path.exists(protDestName):
-            import shutil   
             protAbsPath = os.path.join(protDir, protName)
             shutil.copy(protAbsPath, protDestName)
+        run = XmippProjectRun(protName, protDestName, "my first run")
+        self.project.db.insertRun(run)
         os.system('python %s %s &' % (os.path.join(protDir, 'xmipp_protocol_gui.py'), protDestName))
         
-    def menuPick(self, btn, frame):
-        if self.lastSelectedFrame:
+    def updateHistory(self, runs): 
+        #TODO: this can be done in a better way
+        for w in self.histFrame.grid_slaves():
+            w.destroy()
+        
+        label = Label(self.histFrame, text="History", bg=BgColor, fg=SectionTextColor, font=self.ButtonFont)
+        label.grid(row=0, column=0)
+        row = 1
+        for run in runs:
+            label = Label(self.histFrame, text=str(run['last_modified']), bg=BgColor)
+            label.grid(row=row, column=1, sticky=W)
+            label = Label(self.histFrame, text="%s_%s" % (run['protocol_name'], run['run_name']), 
+                          bg="white", font=self.ButtonFont)
+            label.grid(row=row, column=0, sticky=W, padx=15)
+            row += 1       
+        
+    def menuPick(self, text):
+        frame = self.btnFrameDict[text]
+        if self.lastSelectedFrame and frame != self.lastSelectedFrame:
             self.lastSelectedFrame.grid_remove()
-        self.lastSelectedFrame = frame
-        frame.grid(row=0, column=1, sticky=W+E, padx=5)
+        if frame != self.lastSelectedFrame:
+            self.lastSelectedFrame = frame
+            self.lastSelectedFrame.grid(row=0, column=1, sticky=W+E+N, padx=10, pady=10)
+            self.project.config.set('project', 'lastselected', text)
+            self.project.writeConfig()
+            runs = self.project.db.selectRuns(text)
+            self.updateHistory(runs)
+            
 
-    def createGUI(self):
+    def createGUI(self, root=None):
+        if not root:
+            root = Tk()
+        self.root = root
         self.root.title("Xmipp Protocols")
         self.createMainMenu()
         self.lastSelectedFrame = None
@@ -162,10 +193,12 @@ class XmippProjectGUI(Frame):
         self.frame.columnconfigure(0, minsize=150, weight=1)
         self.frame.columnconfigure(1, minsize=170, weight=1)
         self.frame.columnconfigure(2, minsize=300, weight=2)
+        self.frame.rowconfigure(0, minsize=150)
+        self.frame.rowconfigure(1, minsize=50)
         
         #Configure toolbar frame
-        self.toolbar = Frame(self.frame, bd=1, relief=RAISED)
-        self.toolbar.grid(row=0, column=0, sticky=N+W+S)#side=LEFT, fill=Y)
+        self.toolbar = Frame(self.frame, bd=2, relief=RIDGE)
+        self.toolbar.grid(row=0, column=0, sticky=N+W+S, rowspan=2, padx=5, pady=5)#side=LEFT, fill=Y)
         # Create buttons
         self.ButtonFont = tkFont.Font(family=FontName, size=FontSize, weight=tkFont.BOLD)
         i = 1
@@ -177,10 +210,21 @@ class XmippProjectGUI(Frame):
                 i += 1
             
         
-        canvas = Canvas(self.frame, width=50, bg=BgColor, bd=2, relief=RIDGE)
-        canvas.grid(row=0, column=2, padx=5, pady=5, sticky=N+W+S+E)#pack(side=RIGHT, fill=BOTH)
+        canvas = Canvas(self.frame, width=50, height=150, bg=BgColor, bd=2, relief=RIDGE)
+        canvas.grid(row=0, column=2, padx=5, pady=5, sticky=N+W+E+S)
+        self.histFrame = Frame(canvas, bg=BgColor)
+        self.histFrame.grid(row=0, column=0, pady=10, padx=10, sticky=N+W+E+S)
+        canvas = Canvas(self.frame, height=50, bg=BgColor, bd=2, relief=RIDGE)
+        canvas.grid(row=1, column=1, columnspan=2, sticky=S+W+E+N, padx=5, pady=5)
+        self.detailsFrame = Frame(canvas)
+        self.detailsFrame.grid(row=0, column=0)
         self.root.config(menu=self.menubar)
-        
+        #select lastSelected
+        if self.project.config.has_option('project', 'lastselected'):
+            self.menuPick(self.project.config.get('project', 'lastselected'))
+    
+    def launchGUI(self):
+        self.root.mainloop()
        
     def onExit(self):
         self.root.destroy()
@@ -188,42 +232,28 @@ class XmippProjectGUI(Frame):
 
 if __name__ == '__main__':
     import sys
+    dir = os.getcwd()
+    project = XmippProject(dir)    
     
     if len(sys.argv) > 1:
         # Launch a protocol directly
         from protocol_gui import *
-        script = sys.argv[1]  
+        script = sys.argv[1]
+        project.load(dir)  
         gui = ProtocolGUI()
         gui.createGUI(script)
         gui.launchGUI()
      
     else: #lauch project     
-        import ConfigParser
         projectCfg = '.project.cfg'
         if not os.path.exists(projectCfg):
-            dir = os.getcwd()
             print 'You are in directory: ', dir
             answer = raw_input('Do you want to create a new xmipp_protocols PROJECT in this folder? [y/n]:')
             if answer == 'y':
-                print 'Creating new project...'
-                 #TODO: do this other place
-                 #==== CREATE CONFIG file
-                config = ConfigParser.RawConfigParser()            
-                config.add_section('project')
-                config.set('project', 'mpiflavour', 'OPEN-MPI')
-                config.set('project', 'projectdir', dir)
-                # Writing our configuration file to 'example.cfg'
-                with open(projectCfg, 'wb') as configfile:
-                    config.write(configfile)
-                #===== CREATE LOG AND RUN directories
-                os.mkdir('Logs')
-                os.mkdir('Runs')
-                
-                XmippProjectGUI()
+                project.create(dir)
         else:
-            print 'Loading project..'
-            config = ConfigParser.RawConfigParser()
-            config.read(projectCfg)
-            print "mpi: ", config.get('project', 'mpiflavour')
-        XmippProjectGUI()
+            project.load(dir)
+        gui = XmippProjectGUI(project)
+        gui.createGUI()
+        gui.launchGUI()
     

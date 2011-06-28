@@ -102,10 +102,10 @@ def getScriptPrefix(script):
     import re
     script = os.path.basename(script)
     #all protocols script should start by 'xmipp_protocol', the numbering part is optional
-    s = re.match('((?:\w*[a-zA-Z])+)(?:_\d+)?.py', script)
+    s = re.match('((?:\w*[a-zA-Z])+)(?:_(\d+))?(?:\.py)?', script)
     if not s:
         raise Exception('script %s doesn\'t conform Xmipp protocol name convention' % script)
-    return s.group(1)
+    return s.groups()
 
 #---------------------------------------------------------------------------
 # Other utilities
@@ -117,7 +117,7 @@ def makeScriptBackup(log, script, WorkingDir):
     log.info("Making backup of script " + script);
     import shutil, os
     try:        
-        script_prefix = getScriptPrefix(script)
+        script_prefix, script_number = getScriptPrefix(script)
         script_out = os.path.join(WorkingDir, script_prefix + '_backup.py')
         shutil.copy(script, script_out)
     except shutil.Error, e:

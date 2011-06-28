@@ -413,7 +413,7 @@ class ProtocolGUI(BasicGUI):
         return True
     
     def validateProtocol(self):
-        mod= loadModule(self.scriptname)
+        mod = loadModule(self.scriptname)
         #print dir(mod)
         if 'checkErrors' in dir(mod):
             errors = mod.checkErrors()

@@ -28,93 +28,149 @@
  
 import os
 import shutil
-import log
-import logging
+import ConfigParser
+from config import *
 from protlib_sql import *
 from protlib_utils import *
 
-def checkErrors():
-    '''This function will be used to validate the protocols
-    should be implemented in all derived protocols'''
-    return []
+class XmippProject():
+    def __init__(self, dir):
+        self.dir = dir
+        self.cfgName = projectDefaults['Cfg']
+        self.dbName =  projectDefaults['Db']
+        self.logsDir = projectDefaults['LogsDir']
+        self.runsDir = projectDefaults['RunsDir']
+    
+    def exists(self):
+        pass
+    
+    def create(self):
+        os.chdir(self.dir)
+        print "Creating new project on directory: '%s'" % self.dir
+         #==== CREATE CONFIG file
+        self.config = ConfigParser.RawConfigParser()            
+        self.config.add_section('project')
+        self.config.set('project', 'projectdir', self.dir)
+        self.config.set('project', 'mpiflavour', 'OPEN-MPI')
+        self.writeConfig()
+        #===== CREATE LOG AND RUN directories
+        os.mkdir(self.logsDir)
+        os.mkdir(self.runsDir)
+        #===== CREATE DATABASE
+        self.db = XmippProjectDb(self.dbName)
+        #===== POPULATE SOME TABLES
+        for section, groupList in sections:
+            for group in groupList:
+                groupName = group[0]            
+                prots = group[1:]
+                self.db.insertGroup(groupName)
+                for p in prots:
+                    self.db.insertProtocol(groupName, launchDict[p])
+        # commint changes
+        self.db.connection.commit()
+        
+    def load(self):
+        print 'Loading project..'
+        self.config = ConfigParser.RawConfigParser()
+        self.config.read(self.cfgName)
+        # Load database
+        self.db = XmippProjectDb(self.dbName)
+        
+    def writeConfig(self):
+       with open(self.cfgName, 'wb') as configfile:
+            self.config.write(configfile) 
+            
 
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
     
-    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
-        '''Basic constructor of the Protocol'''
+    def __init__(self, protocolName, runName, project):
+        '''Basic constructor of the Protocol
+        protocolName -- the name of the protocol, should be unique
+        runName      -- the name of the run,  should be unique for one protocol
+        project      -- project instance
         '''
-        scriptname  -- the name of the protocol script name, ej: xmipp_protocol_ml2d.py
-        projectdir  -- directory of the project, usually where to run several protocols
-        workingdir  -- directory for the output of this protocol (relative to projectdir) 
-        
-        logdir      -- directory for logs (relative to projectdir)
-        restartStep -- at wich step do you wish to continue the protocol if was launched previously
-        isIter      -- if True previous param refers to iter number, if not, to step number 
-        '''
-        self.Name = scriptname
-        #Setup prefix from scriptname, this impose using names 'xmipp_protocol_xxx'
-        self.Prefix = getScriptPrefix(scriptname)
+        self.Name = protocolName
+        self.runName = runName
+        self.project = project
         self.Import = '' # this can be used by database for import modules
-        self.WorkingDir = workingdir        
-        self.Step = restartStep        
-                
-        if not projectdir:
-            self.ProjectDir = os.getcwd()
-        else:
-            self.ProjectDir = projectdir
-                
+        self.WorkingDir = os.path.join(protocolName, runName)
+        self.ProjectDir = project.dir  
         #Setup the Log for the Protocol
-        self.LogDir = logdir
-        uniquePrefix = "%s_%s" % (self.Prefix, workingdir.replace('/', '_'))
-        self.LogPrefix = os.path.join(logdir, uniquePrefix)
-
-        #Create dir if not exists
-        if not os.path.exists(logdir):
-            os.makedirs(logdir)            
-        
-        logfile = self.LogPrefix + ".log"
-        self.Log = XmippLog( logfile, logfile )
-        #Setup database for executing commands
-        dbfile = self.LogPrefix + ".sqlite"
-        self.Db = XmippProtocolDb(dbfile, self.Prefix + "Table", self.Step, isIter)
+        self.LogDir = project.logsDir
+        uniquePrefix = self.WorkingDir.replace('/', '_')
+        self.LogPrefix = os.path.join(self.LogDir, uniquePrefix)       
 
         
     def validate(self):
-        '''This function will validate if the protocols is ready to be run
+        '''Validate if the protocols is ready to be run
         it should be redefine in derived protocol classes, it will be a wrapper
         around the module function checkErrors
         '''
-        return checkErrors()
+        pass
+    
+    def summary(self):
+        '''Produces a summary with the most relevant information of the protocol run'''
+        pass
+    
+    def warnings(self):
+        '''Output some warnings that can be errors and require user confirmation to procceed'''
+        pass
     
     def preRun(self):
         '''This function will be called before the run function is executed'''
         pass
+    
+    def postRun(self):
+        '''This function will be called before the run function is executed'''
+        pass   
     
     def defineActions(self):
         '''In this funciton the actions to be performed by the protocol will be add to db.
         each particular protocol need to add its specific actions'''
         pass
     
-    def run(self):
+    def init(self):
+        #Create dir if not exists
+        #if not os.path.exists(logdir):
+        #    os.makedirs(logdir)            
+        
+        logfile = self.LogPrefix + ".log"
+        self.Log = XmippLog(logfile, logfile)
+        #Setup database for executing commands
+        #dbfile = self.LogPrefix + ".sqlite"
+        #self.Db = self.project.XmippProtocolDb(dbfile, self.Prefix + "Table", self.Step, isIter)
+        self.Db = project.db
+        
+    def run(self, restartStep=1, isIter=True):
         '''Run of the protocols
         if the other functions have been correctly implemented, this not need to be
         touched in derived class, since the run of protocols should be the same'''
+        
         errors = self.validate()
         if len(errors) > 0:
             raise Exception('\n'.join(errors))
-        #Stuff before running
-        self.preRun()
+        self.Step = restartStep
+        #Initialization of log and db
+        self.init()        
         #Add actions to database
         self.defineActions()
         #Change to project dir
         os.chdir(self.ProjectDir);
+        #Stuff before running
+        self.preRun()
         #Run actions from database
         self.Db.runActions(self.Log, self.Import)
+        #Stuff after running
+        self.postRun()
         return 0
+    
+    
       
-class XmippProject():
-    pass
+
+    
+    
+
             
       
 
