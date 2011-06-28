@@ -72,7 +72,7 @@ public:
   /** Constructor, it will create the Sqlite db. */
   XmippDB(const FileName &dbName);
   /** Begin and end transaction */
-  bool execStmt(const std::string &stmt, const std::string &error="");
+  bool execStmt(const String &stmt, const String &error="");
   bool beginTrans();
   bool commitTrans();
   /** Create program categories tables */
