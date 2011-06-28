@@ -76,7 +76,7 @@ size_t gettypesize(DataType type)
 }
 
 /** Convert datatype string to datatypr enun */
-DataType datatypeString2Int(std::string str)
+DataType datatypeString2Int(const std::string & str)
 {
     DataType datatype;
 
