@@ -138,7 +138,6 @@ class BasicGUI():
         self.canvas.config(scrollregion=self.canvas.bbox("all")) 
     
     def launchGUI(self):
-        self.fillGUI()
         self.launchCanvas() 
         self.resize()      
         self.master.mainloop() 

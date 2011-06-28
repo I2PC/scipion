@@ -498,5 +498,6 @@ if __name__ == '__main__':
     script = sys.argv[1]  
     gui = ProtocolGUI()
     gui.createGUI(script)
+    gui.fillGUI()
     gui.launchGUI()
     

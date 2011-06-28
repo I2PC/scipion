@@ -141,6 +141,7 @@ class ProtParticlePicking(BasicGUI):
         # Execute protocol in the working directory
         self.print_warning()
         self.createGUI()
+        self.fillGUI()
         self.launchGUI()
 
     def print_warning(self):
