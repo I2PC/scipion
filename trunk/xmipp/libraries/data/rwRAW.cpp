@@ -25,13 +25,6 @@
 
 #include "image_base.h"
 
-///@defgroup RAW RAW Data type
-///@ingroup ImageFormats
-
-// I/O prototypes
-/** RAW Reader
-  * @ingroup RAW
-*/
 
 DataType ImageBase::datatypeRAW(String strDT)
 {
@@ -71,13 +64,6 @@ DataType ImageBase::datatypeRAW(String strDT)
     return datatype;
 }
 
-///@defgroup RAW RAW File format
-///@ingroup ImageFormats
-
-// I/O prototypes
-/** RAW Reader
-  * @ingroup RAW
-*/
 
 int ImageBase::readRAW(size_t select_img, bool isStack)
 {
