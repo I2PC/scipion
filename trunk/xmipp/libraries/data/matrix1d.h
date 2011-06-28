@@ -1328,7 +1328,7 @@ public:
 /**@name Vector Related functions
  * These functions are not methods of Matrix1D
  */
-
+//@{
 /** Creates vector in R2.
  * After this function the vector is (x,y) in R2.
  *
@@ -1473,5 +1473,6 @@ void typeCast(const Matrix1D<T1>& v1,  Matrix1D<T2>& v2)
     }
 
 }
+//@}
 //@}
 #endif /* MATRIX1D_H_ */
