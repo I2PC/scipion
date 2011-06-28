@@ -9,6 +9,21 @@ from protlib_filesystem import *
 class XmippProtocolDbStruct(object):
     doAlways = 99999
 
+def existsDB(dbName):
+    '''check if database has been created by checking if the table tableruns exist'''
+    connection = sqlite.Connection(dbName)
+    connection.row_factory = sqlite.Row
+    cur = connection.cursor()
+    _sqlCommand = "SELECT count(*) from sqlite_master where tbl_name = '%(TableRuns)s';"%projectDefaults
+    print _sqlCommand
+    result = False
+    try:
+        cur.execute(_sqlCommand)
+        result=True
+    except sqlite.Error, e:
+        print "database %s is missing"% dbName
+    return result
+
         
 class XmippProjectDb:
         
@@ -84,6 +99,7 @@ class XmippProjectDb:
                             WHERE step_id = 0 AND run_id = NEW.run_id; 
                          END'''
         
+
     def insertGroup(self, groupName):
         self.defaults['group'] = groupName
         _sqlCommand = "INSERT INTO %(TableGroups)s VALUES('%(group)s');" % self.defaults
@@ -144,10 +160,9 @@ class XmippProjectDb:
     
 class XmippProtocolDb: 
     
-    def __init__(self, dbName, tableName, continueAt, isIter, run_id):
+    def __init__(self, dbName, continueAt, isIter, run_id):
         '''Constructor of the Sqlite database
         dbName    -- The filename of the database, the full path will be created if not exists
-        tableName -- The name of the table to be used
         continueAt -- at wich point to continue
         isIter     -- if True continueAt refers to iteration, otherwise refers to one step
         '''

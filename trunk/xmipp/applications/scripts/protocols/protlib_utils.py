@@ -386,25 +386,25 @@ def check_angle_range(inFileName,outFileName):
 #compute histogram
 def compute_histogram(mD,bin,col,min,max):
     
-   allMD = MetaData()
-   outMD = MetaData()   
-   _bin = (max-min)/bin
+    allMD = MetaData()
+    outMD = MetaData()   
+    _bin = (max-min)/bin
    
-   for h in range(0,bin):
-       outMD.removeObjects(MDQuery("*"))
-       if (h==0):
-           outMD.importObjects(mD, MDValueRange(col, float(min), float(_bin*(h + 1)+min)))
-       if (h>0 and h<(bin-1)):
-           outMD.importObjects(mD, MDValueRange(col, float(_bin * h + min), float(_bin*(h + 1)+min)))
-       if (h==(bin-1)):
-           outMD.importObjects(mD, MDValueRange(col, float(_bin * h + min), float(max)))
+    for h in range(0,bin):
+        outMD.removeObjects(MDQuery("*"))
+        if (h==0):
+            outMD.importObjects(mD, MDValueRange(col, float(min), float(_bin*(h + 1)+min)))
+        if (h>0 and h<(bin-1)):
+            outMD.importObjects(mD, MDValueRange(col, float(_bin * h + min), float(_bin*(h + 1)+min)))
+        if (h==(bin-1)):
+            outMD.importObjects(mD, MDValueRange(col, float(_bin * h + min), float(max)))
        
-       _sum=float(outMD.aggregateSingle(AGGR_SUM,MDL_WEIGHT))
-       outMD.addLabel(MDL_COUNT)
-       outMD.setValueCol(MDL_COUNT, int(_sum+0.1))
-       allMD.unionAll(outMD)
+        _sum=float(outMD.aggregateSingle(AGGR_SUM,MDL_WEIGHT))
+        outMD.addLabel(MDL_COUNT)
+        outMD.setValueCol(MDL_COUNT, int(_sum+0.1))
+        allMD.unionAll(outMD)
        
-   return allMD
+    return allMD
 
 #########################
 # FileName Handling

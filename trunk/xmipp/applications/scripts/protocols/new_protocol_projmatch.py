@@ -38,7 +38,7 @@ ReferenceFileNames ='ico1.vol ico2.vol ico3.vol'
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir ='ProjMatch/new20'
+RunName ='new20'
 
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
@@ -63,7 +63,7 @@ IsIter =False
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =23
+ContinueAtIteration =27
 
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, 
@@ -74,8 +74,9 @@ CleanUpFiles =False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 ProjectDir='/gpfs/fs1/home/bioinfo/roberto/PhantomIco'
+ProjectDir='/home/roberto/PhantomIco'
 """
-ProjectDir='/gpfs/fs1/home/bioinfo/roberto/PhantomIco'
+ProjectDir='/home/roberto/PhantomIco'
 
 # {expert} Directory name for logfiles:
 LogDir ='Logs'
@@ -658,47 +659,18 @@ ViewVerifyedFiles=True
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #-----------------------------------------------------------------------------
        
-def checkErrors():    
-    errors = []        
-    # Check if there is workingdir 
-    # move this to gui
-    if WorkingDir == "":
-        errors.append("No working directory given")
-    
-    #Check reference and projection size match
-    ###########################global ReferenceFileNames
-    ReferenceFileNames = getListFromVector(ReferenceFileNames)
-    _Parameters = {
-          'ReferenceFileNames':ReferenceFileNames
-        , 'SelFileName':SelFileName
-        }
-    from protlib_projmatch_before_loop import checkVolumeProjSize
-    _retval, _error_message = checkVolumeProjSize(None,_Parameters)
-    if(not _retval):
-        errors.append(_error_message)
-
-
-    import arg
-    # Never allow DoAlign2D and DoCtfCorrection together
-    if (int(arg.getComponentFromVector(DoAlign2D,1))==1 and DoCtfCorrection):
-        errors.append("You cannot realign classes AND perform CTF-correction. Switch either of them off!")
-
-    #Now outter radius is compulsory
-    OuterRadius = arg.getComponentFromVector(OuterRadius,1)
-    InnerRadius = arg.getComponentFromVector(InnerRadius,1)
-    if OuterRadius[1] <= InnerRadius[1]:
-        errors.append("OuterRadius must be larger than InnerRadius")
-        
-    return errors 
 
 
 from protlib_base import *
 from xmipp import *
+from protlib_utils import getListFromVector
+import os
 
 class ProtProjMatch(XmippProtocol):
-    
-    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
-        super(ProtProjMatch,self).__init__(scriptname, workingdir, projectdir, logdir, restartStep, isIter)
+
+#    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
+    def __init__(self, scriptname, _runName,project=None):
+        super(ProtProjMatch,self).__init__(scriptname, _runName, project)
         #Some class variables
         self.ReferenceVolumeName = 'reference_volume.vol'
         self.LibraryDir = "ReferenceLibrary"
@@ -729,6 +701,48 @@ class ProtProjMatch(XmippProtocol):
         self.NumberOfCtfGroups = 1
         self.Import = 'from protlib_projmatch_before_loop import *;\
                        from protlib_projmatch_in_loop import *;'
+        #self.WorkingDir = os.path.join(self.Name,_runName)
+
+        self.command_line_options()
+        
+    def validate(self):
+        #1 call base class, checks if project exists
+        super(ProtProjMatch, self).validate()
+        
+        #2 Check reference and projection size match
+        _ReferenceFileNames = getListFromVector(ReferenceFileNames)
+        _Parameters = {
+              'ReferenceFileNames':_ReferenceFileNames
+            , 'SelFileName':SelFileName
+            }
+        from protlib_projmatch_before_loop import checkVolumeProjSize
+        _retval, _error_message = checkVolumeProjSize(None,**_Parameters)
+        if(not _retval):
+            self.errors.append(_error_message)
+    
+    
+        import arg
+        # 3 Never allow DoAlign2D and DoCtfCorrection together
+        if (int(arg.getComponentFromVector(DoAlign2D,1))==1 and DoCtfCorrection):
+            self.errors.append("You cannot realign classes AND perform CTF-correction. Switch either of them off!")
+    
+        #4N outter radius is compulsory
+        _OuterRadius = arg.getComponentFromVector(OuterRadius,1)
+        _InnerRadius = arg.getComponentFromVector(InnerRadius,1)
+        if _OuterRadius <= _InnerRadius:
+            self.errors.append("OuterRadius must be larger than InnerRadius")
+        #not clear if this a need to return anything since is part of the class
+        #FIXME
+        return self.errors 
+    
+    def summary(self):
+        super(ProtProjMatch, self).summary()
+        auxString = 'Performed %d iterations'%self.NumberofIterations
+        auxString += ' with angular sampling rate %s'%AngSamplingRateDeg
+        auxString += '\nFinal Resolution is %s'%'not yet implemented'
+        auxString += '\nNumber of CTFgroups and References is %d %d respectively'\
+                        %(self.NumberOfCtfGroups,self.numberOfReferences)
+        self.summary.append(auxString)
         
     def preRun(self):
         #Convert directories/files  to absolute path from projdir
@@ -834,10 +848,10 @@ class ProtProjMatch(XmippProtocol):
         _Parameters = {
               'DoDeleteWorkingDir':DoDeleteWorkingDir
             , 'ProjectDir':ProjectDir
-            , 'WorkingDir':WorkingDir
+            , 'WorkingDir':self.WorkingDir
             }
         command = 'deleteWorkingDirectory'
-        _dataBase.insertAction(command, _Parameters, 1)
+        self.Db.insertAction(command, _Parameters, 1)
     
         #Create directory
         _Parameters = {
@@ -849,7 +863,7 @@ class ProtProjMatch(XmippProtocol):
         #Backup protocol file
         _Parameters = {
               'script'  :self.Name
-            , 'WorkingDir':WorkingDir
+            , 'WorkingDir':self.WorkingDir
             }
         command = 'makeScriptBackup'
         _dataBase.insertAction(command, _Parameters, XmippProtocolDbStruct.doAlways)#backup always
@@ -1069,7 +1083,6 @@ class ProtProjMatch(XmippProtocol):
                          , 'CtfGroupRootName': self.CtfGroupRootName#
                          , 'DiscardPercentage':self.DiscardPercentage[iterN]#
                          , 'DoAlign2D' : self.DoAlign2D[iterN]#
-                         , 'DoComputeResolution':self.DoComputeResolution[iterN]
                          , 'DoCtfCorrection': DoCtfCorrection#
                          , 'DocFileInputAngles' : self.DocFileInputAngles[iterN]#
                          , 'DoParallel': DoParallel#
@@ -1153,12 +1166,23 @@ class ProtProjMatch(XmippProtocol):
         self.otherActionsToBePerformedBeforeLoop()
         self.actionsToBePerformedInsideLoop()
         
-    def validate(self):
-        return checkErrors()
+    import optparse
+
+def checkErrors():
+    print "No longer implemented"
+    exit(1)
+#    def validate(self):
+#        return checkErrors()
     
 if __name__ == '__main__':
     import sys
-    script  = sys.argv[0]
-    p = ProtProjMatch(script, WorkingDir, ProjectDir, LogDir, ContinueAtIteration, IsIter)
-    p.run()
+    script  = sys.argv[0] 
+    #self.parser = optparse.OptionParser()
+    #process command line
+    project = XmippProject(ProjectDir)
+    #project.create()
+    p = ProtProjMatch(script, RunName, project)
+    #super(ProtProjMatch,self).__init__(scriptname, runName, project)
+
+    p.run(ContinueAtIteration,IsIter)
 
