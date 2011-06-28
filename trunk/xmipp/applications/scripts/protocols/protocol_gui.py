@@ -6,6 +6,8 @@ from Tkinter import *
 import tkFont
 import tkMessageBox
 from protlib_utils import *
+from protlib_gui import *
+
 """ Guidelines for python script header formatting:
 
 The idea of the GUI class is that it provides a graphical editor of
@@ -60,59 +62,6 @@ Optional:
 """
 
 sepLine = "#------------------------------------------------------------------------------------------\n" 
-
-class ProtocolStyle():
-    ''' Class to define some style settings like font, colors, etc '''
-    def __init__(self, configModuleName=None):        
-        #Font
-        self.FontName = "Helvetica"
-        self.FontSize = 10
-        self.ButtonFontSize = self.FontSize
-        #TextColor
-        self.CitationTextColor = "dark olive green"
-        self.LabelTextColor = "black"
-        self.SectionTextColor = "blue4"
-        #Background Color
-        self.BgColor = "white"
-        self.LabelBgColor = self.BgColor
-        self.HighlightBgColor = self.BgColor
-        self.ButtonBgColor = "LightBlue"
-        self.ButtonActiveBgColor = "LightSkyBlue"
-        self.EntryBgColor = "lemon chiffon" 
-        self.ExpertLabelBgColor = "light salmon"
-        #Color
-        self.ListSelectColor = "DeepSkyBlue4"
-        self.BooleanSelectColor = "DeepSkyBlue4"
-        #Dimensions limits
-        self.MaxHeight = 600
-        self.MaxWidth = 800
-        self.MaxFontSize = 14
-        self.MinFontSize = 6
-        self.WrapLenght = self.MaxWidth / 2
-        
-        if configModuleName:
-            self.load(configModuleName)
-            
-        self.Font = tkFont.Font(family=self.FontName, size=self.FontSize, weight=tkFont.BOLD)
-        
-    def load(self, configModuleName):
-        mod = loadModule(configModuleName,False)
-        if mod:
-            modDir = dir(mod)
-            selfDir = dir(self)
-            for a in modDir:
-                if a in selfDir and not a.startswith('_'):
-                        self.__dict__[a] = mod.__dict__[a]
-                    
-
-class AutoScrollbar(Scrollbar):
-    '''A scrollbar that hides itself if it's not needed.'''
-    def set(self, lo, hi):
-        if float(lo) <= 0.0 and float(hi) >= 1.0:
-            self.tk.call("grid", "remove", self)
-        else:
-            self.grid()
-        Scrollbar.set(self, lo, hi)
         
 class ProtocolVariable():
     '''Store information about Protocols variables.'''
@@ -560,6 +509,7 @@ class ProtocolGUI():
         self.init(script)        
         self.master = Tk()
         self.style = ProtocolStyle('config_gui')
+        self.style.createFonts()
         self.master.option_add("*Font", self.style.Font)
         self.columnspantextlabel = 3
         self.columntextentry = 3
