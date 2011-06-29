@@ -85,10 +85,6 @@ INPUT                  =./documentation.dox \
                          ./applications \
                          ./external/bilib
 FILE_PATTERNS          = *.h \
-                         *.cpp \
-                         *.cc \
-                         *.inc \
-                         *.c \
                          *.dox
 RECURSIVE              = YES
 EXCLUDE                =./applications/tests
