@@ -71,16 +71,6 @@ ContinueAtIteration =27
 """
 CleanUpFiles =False
 
-# {expert} Root directory name for this project:
-""" Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
-ProjectDir='/gpfs/fs1/home/bioinfo/roberto/PhantomIco'
-ProjectDir='/home/roberto/PhantomIco'
-"""
-ProjectDir='/home/roberto/PhantomIco'
-
-# {expert} Directory name for logfiles:
-LogDir ='Logs'
-
 #-----------------------------------------------------------------------------
 # {section} CTF correction
 #-----------------------------------------------------------------------------
@@ -666,11 +656,12 @@ from xmipp import *
 from protlib_utils import getListFromVector
 import os
 
+
 class ProtProjMatch(XmippProtocol):
 
 #    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
-    def __init__(self, scriptname, _runName,project=None):
-        super(ProtProjMatch,self).__init__(scriptname, _runName, project)
+    def __init__(self, scriptname,project=None):
+        super(ProtProjMatch,self).__init__(ProtocolNames.projmatch,scriptname, RunName, project)
         #Some class variables
         self.ReferenceVolumeName = 'reference_volume.vol'
         self.LibraryDir = "ReferenceLibrary"
@@ -703,7 +694,6 @@ class ProtProjMatch(XmippProtocol):
                        from protlib_projmatch_in_loop import *;'
         #self.WorkingDir = os.path.join(self.Name,_runName)
 
-        self.command_line_options()
         
     def validate(self):
         #1 call base class, checks if project exists
@@ -721,14 +711,13 @@ class ProtProjMatch(XmippProtocol):
             self.errors.append(_error_message)
     
     
-        import arg
         # 3 Never allow DoAlign2D and DoCtfCorrection together
-        if (int(arg.getComponentFromVector(DoAlign2D,1))==1 and DoCtfCorrection):
+        if (int(getComponentFromVector(DoAlign2D,1))==1 and DoCtfCorrection):
             self.errors.append("You cannot realign classes AND perform CTF-correction. Switch either of them off!")
     
         #4N outter radius is compulsory
-        _OuterRadius = arg.getComponentFromVector(OuterRadius,1)
-        _InnerRadius = arg.getComponentFromVector(InnerRadius,1)
+        _OuterRadius = getComponentFromVector(OuterRadius,1)
+        _InnerRadius = getComponentFromVector(InnerRadius,1)
         if _OuterRadius <= _InnerRadius:
             self.errors.append("OuterRadius must be larger than InnerRadius")
         #not clear if this a need to return anything since is part of the class
@@ -1168,20 +1157,16 @@ class ProtProjMatch(XmippProtocol):
         
     import optparse
 
-def checkErrors():
-    print "No longer implemented"
-    exit(1)
-#    def validate(self):
-#        return checkErrors()
     
 if __name__ == '__main__':
     import sys
     script  = sys.argv[0] 
+    options = command_line_options()
     #self.parser = optparse.OptionParser()
     #process command line
-    project = XmippProject(ProjectDir)
-    #project.create()
-    p = ProtProjMatch(script, RunName, project)
+    project = XmippProject()
+    project.load()
+    p = ProtProjMatch(script, project)
     #super(ProtProjMatch,self).__init__(scriptname, runName, project)
 
     p.run(ContinueAtIteration,IsIter)
