@@ -34,12 +34,16 @@ from protlib_sql import *
 from protlib_utils import *
 
 class XmippProject():
-    def __init__(self, projectDir):
-        self.projectDir = projectDir
+    def __init__(self, projectDir=None):
+        if not projectDir:
+            self.projectDir = os.getcwd()
+        else:
+            self.projectDir = projectDir
         self.cfgName = projectDefaults['Cfg']
         self.dbName =  projectDefaults['Db']
         self.logsDir = projectDefaults['LogsDir']
         self.runsDir = projectDefaults['RunsDir']
+        
     
     def exists(self):
         ''' a project exists if the data base can be opened and directories Logs and Runs
@@ -94,24 +98,34 @@ class XmippProject():
        with open(self.cfgName, 'wb') as configfile:
             self.config.write(configfile) 
             
-
+    def clean(self):
+        ''' delete files related with a project'''
+        if not os.path.exists(self.logsDir):
+            shutil.rmtree(self.logsDir)
+        if not os.path.exists(self.runsDir):
+            shutil.rmtree(self.runsDir)
+        if not os.path.exists(self.cfgName):
+            os.remove(self.cfgName)
+        if not os.path.exists(self.dbName):
+            os.remove(self.dbName)
+            
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
-    
-    def __init__(self, protocolName, runName, project=None):
+    def __init__(self, protocolName, scriptname,runName, project=None):
         '''Basic constructor of the Protocol
         protocolName -- the name of the protocol, should be unique
+        scriptname,     file containing the protocol instance
         runName      -- the name of the run,  should be unique for one protocol
         project      -- project instance
         '''
-
         self.Name = protocolName
         self.runName = runName
+        self.scriptName = scriptname
         #A protocol must be able to find its own project
         self.project = project
         self.Import = '' # this can be used by database for import modules
         self.WorkingDir = os.path.join(launchDict['Projection Matching'],runName)
-        self.ProjectDir = project.ProjectDir  
+        self.projectDir = project.projectDir  
         #Setup the Log for the Protocol
         self.LogDir = project.logsDir
         uniquePrefix = self.WorkingDir.replace('/', '_')
@@ -120,6 +134,7 @@ class XmippProtocol(object):
         self.summary = []
         self.continueAt=1
         self.isIter=False
+        
         
     def getProjectId(self):
         pass
@@ -134,7 +149,7 @@ class XmippProtocol(object):
         self.errors=[]
         #check if there is a valid project, otherwise abort
         if not self.project.exists():
-            self.errors.append("Not Valid project available")
+            self.errors.append("Not valid project available")
     
     def summary(self):
         '''Produces a summary with the most relevant information of the protocol run'''
@@ -143,10 +158,6 @@ class XmippProtocol(object):
     
     def warnings(self):
         '''Output some warnings that can be errors and require user confirmation to procceed'''
-        pass
-    
-    def preRun(self):
-        '''This function will be called before the run function is executed'''
         pass
     
     def postRun(self):
@@ -159,65 +170,74 @@ class XmippProtocol(object):
         pass
     
     def init(self):
-        #Create dir if not exists
-        #if not os.path.exists(logdir):
-        #    os.makedirs(logdir)            
-        
         logfile = self.LogPrefix + ".log"
         self.Log = XmippLog(logfile, logfile)
-        #Setup database for executing commands
-        #dbfile = self.LogPrefix + ".sqlite"
-        #self.Db = self.project.XmippProtocolDb(dbfile, self.Prefix + "Table", self.Step, isIter)
-        #self.project.load()
-        self.Db = XmippProtocolDb(project.dbName, self.continueAt,self.isIter,self.run_id)
+        self.Db = XmippProtocolDb(self.project.dbName
+                                , self.restartStep
+                                , self.isIter
+                                , self.runName)
 
-    def __init__(self, continueAt, isIter, run_id):
-
-        self.init()
         
-    def command_line_options(self):
-        '''process protocol command line'''
-        import optparse
-        self.parser = optparse.OptionParser()
-        self.parser.add_option('-g', '--gui',
-                                  dest="gui",
-                                  default=False,
-                                  action="store_true",
-                                  help="use graphic interface to launch protocol "
-                                  )
-        self.parser.add_option('-c', '--no_check',
-                                  dest="no_check",
-                                  default=False,
-                                  action="store_true",
-                                  help="do NOT check run checks before execute protocols"
-                                  )
-        self.gui, self.no_check = self.parser.parse_args()
 
     def run(self, restartStep=1, isIter=True):
         '''Run of the protocols
         if the other functions have been correctly implemented, this not need to be
         touched in derived class, since the run of protocols should be the same'''
         
+        #Change to project dir
+        os.chdir(self.projectDir);
+
         errors = self.validate()
         if len(errors) > 0:
             raise Exception('\n'.join(errors))
-        self.Step = restartStep
+        self.restartStep = restartStep
+        self.isIter = isIter
         #Initialization of log and db
-        self.init()        
+        self.init()
         #Add actions to database
         self.defineActions()
-        #Change to project dir
-        os.chdir(self.ProjectDir);
-        #Stuff before running
-        self.preRun()
         #Run actions from database
         self.Db.runActions(self.Log, self.Import)
         #Stuff after running
         self.postRun()
         return 0
     
-    
-      
+def command_line_options():
+    '''process protocol command line'''
+    try:
+        import argparse
+        parser = argparse.ArgumentParser(description='test goes here')
+        parser.add_argument('-g', '--gui',
+                                  dest="gui",
+                                  default=False,
+                                  action="store_true",
+                                  help="use graphic interface to launch protocol "
+                                  )
+        parser.add_argument('-c', '--no_check',
+                                  dest="no_check",
+                                  default=False,
+                                  action="store_true",
+                                  help="do NOT check run checks before execute protocols"
+                                  )
+        (options, args) = parser.parse_args()
+        
+    except:
+        import optparse
+        parser = optparse.OptionParser()
+        parser.add_option('-g', '--gui',
+                                  dest="gui",
+                                  default=False,
+                                  action="store_true",
+                                  help="use graphic interface to launch protocol "
+                                  )
+        parser.add_option('-c', '--no_check',
+                                  dest="no_check",
+                                  default=False,
+                                  action="store_true",
+                                  help="do NOT check run checks before execute protocols"
+                                  )
+        (options, args) = parser.parse_args()
+    return options
 
     
     

@@ -12,19 +12,30 @@ sections = [
     ['Model Refinement', 'Projection Matching']]),
 ('Other', [['Browse']])]
 
-launchDict = {
-              'Preprocess Micrograph': 'preprocess_micrographs',
-              'Particles picking':     'particle_pick', 
-              'Preprocess Particles':  'preprocess_particles', 
-              'ML2D':                  'ml2d',
-              'CL2D':                  'cl2d',
-              'KerDenSOM':             'kerdensom',
-              'Rotational Spectra':    'rotspectra',
-              'Common Lines':          'commonlines',
-              'Random Conical Tilt':   'rct',
-              'Projection Matching':   'projmatch'
-              }
+class ProtocolNames:
+    preprocess_micrographs = 'preprocess_micrographs'    
+    particle_pick = 'particle_pick' 
+    preprocess_particles = 'preprocess_particles' 
+    ml2d = 'ml2d'
+    cl2d = 'cl2d'
+    kerdensom = 'kerdensom'
+    rotspectra = 'rotspectra'
+    commonlines = 'commonlines'
+    rct = 'rct'
+    projmatch = 'projmatch'
 
+launchDict = {
+              'Preprocess Micrograph': ProtocolNames.preprocess_micrographs,
+              'Particles picking':     ProtocolNames.particle_pick, 
+              'Preprocess Particles':  ProtocolNames.preprocess_particles, 
+              'ML2D':                  ProtocolNames.ml2d,
+              'CL2D':                  ProtocolNames.cl2d,
+              'KerDenSOM':             ProtocolNames.kerdensom,
+              'Rotational Spectra':    ProtocolNames.rotspectra,
+              'Common Lines':          ProtocolNames.commonlines,
+              'Random Conical Tilt':   ProtocolNames.rct,
+              'Projection Matching':   ProtocolNames.projmatch
+              }
 projectDefaults = {
                    'Cfg': '.project.cfg',
                    'Db': '.project.sqlite',

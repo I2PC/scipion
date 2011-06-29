@@ -23,9 +23,7 @@ def existsDB(dbName):
         print "database %s is missing"% dbName
     return result
 
-        
-class XmippProjectDb:
-        
+class connectorDB:
     def execSqlCommand(self, sqlCmd, errMsg):
         """Helper function to execute sqlite commands"""
         try:
@@ -33,73 +31,80 @@ class XmippProjectDb:
         except sqlite.Error, e:
             print errMsg, e
             if(e.args[0].find('database is locked') != -1):
-                print 'consider deleting the database (%s)' % LogName
+                print 'consider deleting the database (%s)' % self.dbName
             sys.exit(1)  
         self.connection.commit()
         
-    def __init__(self, dbName):
-        self.dbName = dbName
-        self.connection = sqlite.Connection(dbName)
-        self.connection.row_factory = sqlite.Row
-        self.cur = self.connection.cursor()
-        self.sqlDict = projectDefaults
+class XmippProjectDb(connectorDB):
         
-        _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableGroups)s
-             (group_name TEXT PRIMARY KEY);""" % self.sqlDict
-        self.execSqlCommand(_sqlCommand, "Error creating '%(TableGroups)s' table: " % self.sqlDict)
 
-        _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableProtocols)s
-                     (protocol_name TEXT PRIMARY KEY);""" % self.sqlDict
-        self.execSqlCommand(_sqlCommand, "Error creating '%(TableProtocols)s' table: " % self.sqlDict)
         
-        _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableProtocolsGroups)s
-                     (protocol_name TEXT,
-                      group_name TEXT,
-                      PRIMARY KEY(protocol_name, group_name));""" % self.sqlDict
-        self.execSqlCommand(_sqlCommand, "Error creating '%(TableProtocolsGroups)s' table: " % self.sqlDict)        
-                
-        _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableRuns)s
-                     (run_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                      run_name TEXT,
-                      script TEXT,
-                      init DATE, 
-                      last_modified DATE,
-                      protocol_name TEXT REFERENCES %(TableProtocols)s(protocol_name),
-                      comment TEXT,
-                      CONSTRAINT unique_workingdir UNIQUE(run_name, protocol_name));""" % self.sqlDict
-        self.execSqlCommand(_sqlCommand, "Error creating '%(TableRuns)s' table: " % self.sqlDict)
-        
-        def createStepTable(tableName):            
-            _sqlCommand = (" CREATE TABLE IF NOT EXISTS " + tableName +  """
-                         (step_id INTEGER DEFAULT 0,
-                         command TEXT, 
-                         parameters TEXT,
-                         init DATE, 
-                         finish DATE,
-                         verified BOOL,
-                         fileNameList TEXT,
-                         iter INTEGER,
-                         run_id INTEGER REFERENCES %(TableRuns)s(run_id) ON DELETE CASCADE,
-                         PRIMARY KEY(step_id, run_id))""") % self.sqlDict
-        
-            self.execSqlCommand(_sqlCommand, ("Error creating " + tableName + " table: ") % self.sqlDict)
-        createStepTable('%(TableSteps)s')
-        createStepTable('%(TableStepsRestart)s')
-        
-        _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableParams)s 
-                        (parameters TEXT,
-                        run_id INTEGER REFERENCES %(TableRuns)s(run_id) ON DELETE CASCADE);""" % self.sqlDict
-        self.execSqlCommand(_sqlCommand, "Error creating '%(TableParams)s' table: " % self.sqlDict)
-                
-        _sqlCommand = """CREATE TRIGGER IF NOT EXISTS increment_step_id 
-                         AFTER INSERT ON %(TableSteps)s FOR EACH ROW  
-                         BEGIN 
-                            UPDATE steps SET step_id = SELECT MAX(step_id) + 1 
-                                                       FROM %(TableSteps)s 
-                                                       WHERE run_id = NEW.run_id
-                            WHERE step_id = 0 AND run_id = NEW.run_id; 
-                         END """ % self.sqlDict
-        
+    def __init__(self, dbName):
+        try:
+            self.dbName = dbName
+            self.connection = sqlite.Connection(dbName)
+            self.connection.row_factory = sqlite.Row
+            self.cur = self.connection.cursor()
+            self.sqlDict = projectDefaults
+            
+            _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableGroups)s
+                 (group_name TEXT PRIMARY KEY);""" % self.sqlDict
+            self.execSqlCommand(_sqlCommand, "Error creating '%(TableGroups)s' table: " % self.sqlDict)
+    
+            _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableProtocols)s
+                         (protocol_name TEXT PRIMARY KEY);""" % self.sqlDict
+            self.execSqlCommand(_sqlCommand, "Error creating '%(TableProtocols)s' table: " % self.sqlDict)
+            
+            _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableProtocolsGroups)s
+                         (protocol_name TEXT,
+                          group_name TEXT,
+                          PRIMARY KEY(protocol_name, group_name));""" % self.sqlDict
+            self.execSqlCommand(_sqlCommand, "Error creating '%(TableProtocolsGroups)s' table: " % self.sqlDict)        
+                    
+            _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableRuns)s
+                         (run_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                          run_name TEXT,
+                          script TEXT,
+                          init DATE, 
+                          last_modified DATE,
+                          protocol_name TEXT REFERENCES %(TableProtocols)s(protocol_name),
+                          comment TEXT,
+                          CONSTRAINT unique_workingdir UNIQUE(run_name, protocol_name));""" % self.sqlDict
+            self.execSqlCommand(_sqlCommand, "Error creating '%(TableRuns)s' table: " % self.sqlDict)
+            
+            def createStepTable(tableName):            
+                _sqlCommand = (" CREATE TABLE IF NOT EXISTS " + tableName +  """
+                             (step_id INTEGER DEFAULT 0,
+                             command TEXT, 
+                             parameters TEXT,
+                             init DATE, 
+                             finish DATE,
+                             verified BOOL,
+                             fileNameList TEXT,
+                             iter INTEGER,
+                             run_id INTEGER REFERENCES %(TableRuns)s(run_id) ON DELETE CASCADE,
+                             PRIMARY KEY(step_id, run_id))""") % self.sqlDict
+            
+                self.execSqlCommand(_sqlCommand, ("Error creating " + tableName + " table: ") % self.sqlDict)
+            createStepTable('%(TableSteps)s')
+            createStepTable('%(TableStepsRestart)s')
+            
+            _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableParams)s 
+                            (parameters TEXT,
+                            run_id INTEGER REFERENCES %(TableRuns)s(run_id) ON DELETE CASCADE);""" % self.sqlDict
+            self.execSqlCommand(_sqlCommand, "Error creating '%(TableParams)s' table: " % self.sqlDict)
+                    
+            _sqlCommand = """CREATE TRIGGER IF NOT EXISTS increment_step_id 
+                             AFTER INSERT ON %(TableSteps)s FOR EACH ROW  
+                             BEGIN 
+                                UPDATE steps SET step_id = (SELECT MAX(step_id) + 1 
+                                                           FROM %(TableSteps)s 
+                                                           WHERE run_id = NEW.run_id)
+                                WHERE step_id = 0 AND run_id = NEW.run_id; 
+                             END """ % self.sqlDict
+            self.execSqlCommand(_sqlCommand, "Error creating trigger: increment_step_id ")
+        except sqlite.Error, e:
+            reportError("database initialization failed: " + e)
 
     def insertGroup(self, groupName):
         self.sqlDict['group'] = groupName
@@ -162,7 +167,7 @@ class XmippProjectDb:
         self.cur.execute(_sqlCommand) 
         return self.cur.fetchall()
     
-class XmippProtocolDb: 
+class XmippProtocolDb(connectorDB): 
     
     def __init__(self, dbName, continueAt, isIter, runName):
         """Constructor of the Sqlite database
@@ -176,6 +181,8 @@ class XmippProtocolDb:
         self.dbName = dbName
         self.connection = sqlite.Connection(dbName)
         self.connection.row_factory = sqlite.Row
+        self.cur                = self.connection.cursor()
+        self.cur_aux            = self.connection.cursor()
 
         # print wrapper name
         self.PrintWrapperCommand=True
@@ -191,47 +198,38 @@ class XmippProtocolDb:
         self.SystemFlavour = "None"
         #get run_id
         self.sqlDict['run_name'] = runName
-        _sqlCommand = """ SELECT COALESCE(run_id,-1) 
-                          FROM %(TableSteps)s 
+        _sqlCommand = """ SELECT run_id 
+                          FROM %(TableRuns)s 
                           WHERE run_name = '%(run_name)s'""" % self.sqlDict
                             
-        self.cur                = self.connection.cursor()
-        self.cur_aux            = self.connection.cursor()
-        
-        self.cur.execute(_sqlCommand, [self.sqlDict['TableSteps']])
-        run_id = self.cur.fetchone()[0]
-        if run_id == -1:
+        self.cur.execute(_sqlCommand)
+        result = self.cur.fetchone()
+        if not result:
             reportError("Protocol run %s has not been registered in project database" % runName)
-
-        self.sqlDict['run_id'] = run_id
+        self.sqlDict['run_id'] = result['run_id']
                         
-        #check if protocol has ben run previosluy
+        #check if protocol has ben run previosluy (that is, there are finished steps)
         _sqlCommand = """ SELECT COUNT(*) 
                           FROM %(TableRuns)s NATURAL JOIN %(TableSteps)s
                           WHERE finish IS NOT NULL 
                             AND run_id = %(run_id)d""" % self.sqlDict
-                            
-        self.cur                = self.connection.cursor()
-        self.cur_aux            = self.connection.cursor()
         
-        self.cur.execute(_sqlCommand, [self.sqlDict['TableSteps']])
-        self.run_id = self.cur.fetchone()[0]
-        if self.run_id == -1:
-            reportError("Protocols database run %s has not been registered"%runName)
+        self.cur.execute(_sqlCommand)
+        stepNo = self.cur.fetchone()[0]
             
-            
-        self.createRestartTable = self.cur.fetchone()[0] == 1 and self.ContinueAtIteration != 1
+        self.createRestartTable = stepNo>0 and self.ContinueAtIteration != 1
 
         if self.createRestartTable:
             self.sqlDict['TableStepsCurrent'] = self.sqlDict['TableStepsRestart']
         else:
             self.sqlDict['TableStepsCurrent'] = self.sqlDict['TableSteps']
+            
         _sqlCommand = 'DELETE FROM %(TableStepsCurrent)s WHERE run_id = %(run_id)d' % self.sqlDict
         self.execSqlCommand(_sqlCommand, "Error cleaning table: %(TableStepsCurrent)s" % self.sqlDict)
         #Auxiliary string to insert/UPDATE data
         self.sqlInsertcommand = """ INSERT INTO 
                                     %(TableStepsCurrent)s(command,parameters,iter,run_id) VALUES (?,?,?,?)""" % self.sqlDict
-        self.sqlInsertVerify  = " UPDATE %(TableStepsCurrent)s SET fileNameList= ? WHERE id=?"% self.sqlDict
+        self.sqlInsertVerify  = " UPDATE %(TableStepsCurrent)s SET fileNameList= ? WHERE step_id=?"% self.sqlDict
         #Calculate the step at which should starts
         self.setStartingStep(isIter)
         #set to null time in original table for step >= self.StartAtStepN
@@ -240,7 +238,6 @@ class XmippProtocolDb:
                          WHERE step_id >= %(step_id)d
                            AND run_id = %(run_id)d""" % self.sqlDict
         self.execSqlCommand(_sqlCommand, "Error reseting finish date: ")
-                                            
 
     # print wrapper name
     def setPrintWrapperCommand(self,value):
@@ -307,7 +304,7 @@ class XmippProtocolDb:
         sqlCommand = """DELETE FROM %(TableParams)s
                                WHERE run_id = %(run_id)d""" % self.sqlDict
         cur_aux.execute(sqlCommand)
-        sqlCommand = """INSERT INTO %(TableParams)s(parameters, run_id) VALUES(?, ?)"""
+        sqlCommand = """INSERT INTO %(TableParams)s(parameters, run_id) VALUES(?, %(run_id)d)"""% self.sqlDict
         self.SystemFlavour = SystemFlavour
         dict = { 
           'SystemFlavour':self.SystemFlavour
@@ -383,7 +380,7 @@ class XmippProtocolDb:
         parameters = pickle.dumps(_Parameters, 0)#Dict
         self.cur_aux = self.connection.cursor()
         #print self.sqlInsertcommand, [command, parameters, iter]
-        self.cur_aux.execute(self.sqlInsertcommand, [command, parameters, iter])
+        self.cur_aux.execute(self.sqlInsertcommand, [command, parameters, iter,self.sqlDict['run_id']])
         lastid = self.cur_aux.lastrowid
         if (verifyfiles):
             verifyfiles = pickle.dumps(verifyfiles, 0)#Dict
@@ -433,8 +430,8 @@ class XmippProtocolDb:
             sqlCommand = "UPDATE %(TableSteps)s SET init = CURRENT_TIMESTAMP WHERE step_id=%(step_id)d" % self.sqlDict
             self.connection.execute(sqlCommand)
             print 'command: ', command
-            #exec (row["command"] + '(_log, **dict)')
-            __dict__[command](_log, **dict)
+            exec (row["command"] + '(_log, **dict)')
+            #__dict__[command](_log, **dict)
             
             if self.verify and row["fileNameList"]:
                 _list =pickle.loads(str(row["fileNameList"]))

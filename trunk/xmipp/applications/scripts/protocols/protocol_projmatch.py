@@ -7,15 +7,19 @@
 #
 # Authors: Roberto Marabini,
 #          Sjors Scheres,    March 2008
+#        Rewritten by Roberto Marabini
 #
 # {begin_of_header}
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
+#Comment
+Comment='Describe your project here...'
 # {file} Selfile with the input images:
+#from XmippData import SingleImgSize
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName ='10.sel'
+SelFileName ='new20.sel'
 
 # {file} {expert} Docfile with the input angles:
 """ Do not provide anything if there are no angles yet. 
@@ -23,44 +27,49 @@ SelFileName ='10.sel'
     This docfile should be in newXmipp-style format (with filenames as comments)
     Note that all filenames in this docfile should be with absolute paths!
 """
-DocFileName=''
+DocFileName =' '
 
 # {file} Initial 3D reference map:
-ReferenceFileName='reference.vol'
+""" Write down the reference/es name. For example "Reference1.vol Reference2.vol"
+    specifies two references
+"""
+ReferenceFileNames ='ico1.vol ico2.vol ico3.vol'
 
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir='ProjMatch/run1'
+RunName ='run_001'
 
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
-DoDeleteWorkingDir=True
+DoDeleteWorkingDir =True
 
 # Number of iterations to perform
-NumberofIterations=4
+NumberofIterations = 4
+
+# {expert} Resume at Iter (vs Step)
+"""This option control how to resume a previously performed run.
+    Set to TRUE to restart at the beginning of iteration N
+    or FALSE to continue at step N. (N is set in the next parameter).
+    NOTE:If you do not know what are you doing make it equal to False
+"""
+IsIter =False
 
 # Resume at iteration
-""" This option may be used to finish a previously performed run.
-    Set to 1 to start a new run 
-    Note: Do NOT delete working directory if this option is not set to 1
+""" Set to 1 to start a new run, set to -1 to continue the process (where you left it),
+    set to a positive number N to restart at the begining of iteration N
+    Note1: Do NOT delete working directory if this option is not set to 1
+    Note2: Set this option to -1 if you want to perform extra iterations after
+           successfully finish an execution
 """
-ContinueAtIteration=1
+ContinueAtIteration =1
 
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, 
     since all class averages, selfiles etc will be deleted.
 """
-CleanUpFiles = True
-
-# {expert} Root directory name for this project:
-""" Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
-"""
-ProjectDir='/home/roberto/Test/T7'
-
-# {expert} Directory name for logfiles:
-LogDir='Logs'
+CleanUpFiles =False
 
 #-----------------------------------------------------------------------------
 # {section} CTF correction
@@ -71,7 +80,7 @@ LogDir='Logs'
     and the data will be processed in CTF groups.
     Note that you cannot combine CTF-correction with re-alignment of the classes.
 """
-DoCtfCorrection=False
+DoCtfCorrection =True
 
 # {file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all 
@@ -80,40 +89,40 @@ DoCtfCorrection=False
     Note that this file should be positioned in the project directory, and that the
     image names and ctf parameter filenames should be in absolute paths.
 """
-CTFDatName='all_images.ctfdat'
+CTFDatName ='new_ctf.ctfdat'
 
 # Make CTF groups automatically?
 """ Make CTF groups based on a maximum differences at a given resolution limit.
     If this option is set to false, a docfile with the defocus values where to 
     split the images in distinct defocus group has to be provided (see expert option below)
 """
-DoAutoCtfGroup=True
+DoAutoCtfGroup =True
 
 # Maximum difference in CTF-values in one group
 """ If the difference between the CTF-values up to the resolution limit specified 
     below is larger than the value given here, two images will be placed in 
     distinct CTF groups.
 """
-CtfGroupMaxDiff=0.5
+CtfGroupMaxDiff = 0.1
 
 # Resolution limit (Ang) for CTF-differences in one group
 """ Maximum resolution where to consider CTF-differences among different groups.
     One should use somewhat higher resolutions than those aimed for in the refinement.
 """
-CtfGroupMaxResol=15
+CtfGroupMaxResol = 5.6
 
 # {file} {expert} Docfile with defocus values where to split into groups
 """ This field is obligatory if you do not want to make the CTF groups automatically.
     Note that the requested docfile can be made initially with the xmipp_ctf_group program,
     and then it can be edited manually to suit your needs. 
 """
-SplitDefocusDocFile=''
+SplitDefocusDocFile =''
 
 # {expert} Padding factor
 """ Application of CTFs to reference projections and of Wiener filter to class averages will be done using padded images.
     Use values larger than one to pad the images. Suggestion, use 1 for large image and 2 for small
 """
-PaddingFactor=1.
+PaddingFactor =2
 
 # {expert} Wiener constant
 """ Term that will be added to the denominator of the Wiener filter.
@@ -122,13 +131,25 @@ PaddingFactor=1.
     (i.e. 10% of average sum terms over entire space) 
     see Grigorieff JSB 157 (2006) pp117-125
 """
-WienerConstant=-1
+WienerConstant = -1
 
 # Images have been phase flipped?
-DataArePhaseFlipped=True
+DataArePhaseFlipped =True
 
 # Is the initial reference map CTF (amplitude) corrected?
-ReferenceIsCtfCorrected=True
+"""
+    You may specify this option for each iteration. 
+    This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
+    specifies 4 iterations, the first two applied alig2d while the last 2
+    dont. an alternative compact notation is 
+    is ("2x1 2x0", i.e.,
+    2 iterations with value 1, and 2 with value 0).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+    IMPORTANT: if you set this variable to 0 the output  of the projection
+    muching step will be copied as output of align2d
+"""
+ReferenceIsCtfCorrected ='1'
 
 #-----------------------------------------------------------------------------
 # {section} Mask
@@ -138,63 +159,32 @@ ReferenceIsCtfCorrected=True
     Do not provide a very tight mask.
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mask for details
 """
-DoMask=True
+DoMask =True
 
 # Use a spherical mask?
 """ If set to true, provide the radius of the mask in the next input field
     if set to false, provide a binary mask file in the second next input field
 """
-DoSphericalMask=True
+DoSphericalMask =True
 
 # Radius of spherical mask
 """ This is the radius (in pixels) of the spherical mask 
 """
-MaskRadius=72
+MaskRadius = 64
 
 # {file} Binary mask file
 """ This should be a binary (only 0/1-valued) Xmipp volume of equal dimension as your reference
     The protein region should be white (1) and the solvent should be black (0).
     Note that this entry is only relevant if no spherical mask is used.
 """
-MaskFileName='mask.vol'
+MaskFileName ='mask.vol'
 
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
 #-----------------------------------------------------------------------------
-# Perform projection Matching?
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Projection_matching and
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_projection_matching for details
-"""
-DoProjectionMatching=True
-
-# {expert} Show projection maching library and classes
-""" Show average of projections. Do not set this option to true for non-interactive processing (jobs sent to queues)
-"""
-DisplayProjectionMatching=False
-
 # Inner radius for rotational correlation:
 """ In pixels from the image center
-"""
-InnerRadius=0
-
-# Outer radius for rotational correlation
-""" In pixels from the image center. Use a negative number to use the entire image.
-    WARNING: this radius will be use for masking before computing resoution
-"""
-OuterRadius = 72
-
-# {expert} Available memory to store all references (Gb)
-""" This is only for the storage of the references. If your projections do not fit in memory, 
-    the projection matching program will run MUCH slower. But, keep in mind that probably 
-    some additional memory is needed for the operating system etc.
-    Note that the memory per computing node needs to be given. That is, when using threads, 
-    this value will be multiplied automatically by the number of (shared-memory) threads.
-"""
-AvailableMemory = 1
-
-# Angular sampling rate
-"""Angular distance (in degrees) between neighboring projection  points
-    You must specify this option for each iteration. 
+    You may specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "8 8 2 2 " 
     specifies 4 iterations, the first two set the value to 8 
     and the last two to 2. An alternative compact notation 
@@ -203,11 +193,47 @@ AvailableMemory = 1
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg ='6 4 2 1'
+InnerRadius = '0'
+
+# Outer radius for rotational correlation
+""" In pixels from the image center. Use a negative number to use the entire image.
+    WARNING: this radius will be use for masking before computing resolution
+    You may specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, "8 8 2 2 " 
+    specifies 4 iterations, the first two set the value to 8 
+    and the last two to 2. An alternative compact notation 
+    is ("2x8 2x0", i.e.,
+    2 iterations with value 8, and 2 with value 2).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+"""
+OuterRadius = '64'
+
+# {expert} Available memory to store all references (Gb)
+""" This is only for the storage of the references. If your projections do not fit in memory, 
+    the projection matching program will run MUCH slower. But, keep in mind that probably 
+    some additional memory is needed for the operating system etc.
+    Note that the memory per computing node needs to be given. That is, when using threads, 
+    this value will be multiplied automatically by the number of (shared-memory) threads.
+"""
+AvailableMemory = 2
+
+# Angular sampling rate
+"""Angular distance (in degrees) between neighboring projection  points
+    You may specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, "8 8 2 2 " 
+    specifies 4 iterations, the first two set the value to 8 
+    and the last two to 2. An alternative compact notation 
+    is ("2x8 2x0", i.e.,
+    2 iterations with value 8, and 2 with value 2).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+"""
+AngSamplingRateDeg='1 3 2 1'
 
 # Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
-    You must specify this option for each iteration. 
+    You may specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "1000 1000 10 10 " 
     specifies 4 iterations, the first two set the value to 1000 (no restriction)
     and the last two to 10degrees. An alternative compact notation 
@@ -216,14 +242,22 @@ AngSamplingRateDeg ='6 4 2 1'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeInAngles ='1000 16 12 8 4 2'
+MaxChangeInAngles='1000 10 4 2'
 
 # {expert} Perturb projection directions?
-""" If set to true, this option will result to a Gaussian perturbation to the 
+""" If set to 1, this option will result to a Gaussian perturbation to the 
     evenly sampled projection directions of the reference library. 
     This may serve to decrease the effects of model bias.
+    You may specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, "1 1 0" 
+    specifies 3 iterations, the first two set the value to 1 
+    and the last to 0. An alternative compact notation 
+    is ("2x1 0", i.e.,
+    2 iterations with value 1, and 1 with value 0).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
 """
-PerturbProjectionDirections=False
+PerturbProjectionDirections ='0'
 
 # Maximum change in origin offset
 """ Maximum allowed change in shift in the 3D+2D searches (in +/- pixels).
@@ -237,7 +271,7 @@ PerturbProjectionDirections=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeOffset ='1000 10 5'
+MaxChangeOffset='1000 10 5'
 
 # Search range for 5D translational search 
 """ Give search range from the image center for 5D searches (in +/- pixels).
@@ -253,7 +287,7 @@ MaxChangeOffset ='1000 10 5'
     Note: if there are more values than iterations the extra value are ignored
     
 """
-Search5DShift='4x5 0'
+Search5DShift ='4x5 0'
 
 # {expert} Step size for 5D translational search
 """ Provide a sequence of numbers (for instance, "2 2 1 1" specifies 4 iterations,
@@ -264,16 +298,16 @@ Search5DShift='4x5 0'
     Note: if there are more values than iterations the extra value are ignored
     
 """
-Search5DStep='2'
+Search5DStep ='2'
 
 # {expert} Restrict tilt angle search?
-DoRetricSearchbyTiltAngle=False
+DoRestricSearchbyTiltAngle =False
 
 # {expert} Lower-value for restricted tilt angle search
-Tilt0=40
+Tilt0 = 40
 
 # {expert} Higher-value for restricted tilt angle search
-TiltF=90
+TiltF = 90
 
 # Symmetry group
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
@@ -290,13 +324,21 @@ SymmetryGroup ='i3'
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
-SymmetryGroupNeighbourhood=''
+SymmetryGroupNeighbourhood =''
 
 # {expert} compute only closest neighbor 
 """ This option is only relevant if SymmetryGroupNeighbourhood !=''
-    If set to True only one neighbor will be computed per sampling point
-"""    
-OnlyWinner=False
+    If set to 1 only one neighbor will be computed per sampling point
+    You may specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, "1 1 0" 
+    specifies 3 iterations, the first two set the value to 1 
+    and the last to 0. An alternative compact notation 
+    is ("2x1 0", i.e.,
+    2 iterations with value 1, and 1 with value 0).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+"""
+OnlyWinner ='0'
 
 # Discard images with ccf below
 """ Provide a sequence of numbers (for instance, "0.3 0.3 0.5 0.5" specifies 4 iterations,
@@ -305,8 +347,8 @@ OnlyWinner=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
     Set to -1 to prevent discarding any images
-"""    
-MinimumCrossCorrelation='-1'
+"""
+MinimumCrossCorrelation ='-1'
 
 # Discard percentage of images with ccf below
 """ Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
@@ -315,26 +357,26 @@ MinimumCrossCorrelation='-1'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
     Set to zero to prevent discarding any images
-"""    
-DiscardPercentage='10'
+"""
+DiscardPercentage ='10'
 
 # Perform scale search?
 """ If true perform scale refinement
 """
-DoScale=False
+DoScale =False
 
 # Step scale factors size
 """ Scale step factor size (1 means 0.01 in/de-crements arround 1)
-"""    
-ScaleStep='1'
+"""
+ScaleStep ='1'
 
 # Number of scale steps
 """ Number of scale steps.
     With default values (ScaleStep='1' and ScaleNumberOfSteps='3'): 1 +/-0.01 | +/-0.02 | +/-0.03.    
     With values ScaleStep='2' and ScaleNumberOfSteps='4' it performs a scale search over:
      1 +/-0.02 | +/-0.04 | +/-0.06 | +/-0.08.    
-"""    
-ScaleNumberOfSteps='3'
+"""
+ScaleNumberOfSteps ='3'
 
 
 # {expert} Additional options for Projection_Matching
@@ -344,7 +386,7 @@ ScaleNumberOfSteps='3'
     the particle inner and outter radius)
     
 """
-ProjMatchingExtra=''
+ProjMatchingExtra =''
 
 #-----------------------------------------------------------------------------
 # {section} 2D re-alignment of classes
@@ -367,12 +409,21 @@ ProjMatchingExtra=''
     IMPORTANT: if you set this variable to 0 the output  of the projection
     muching step will be copied as output of align2d
 """
-DoAlign2D='0'
+DoAlign2D ='0'
 
 # {expert} Number of align2d iterations:
 """ Use at least 3 iterations
+    The number of align iteration may change in each projection matching iteration
+    Ffor instance, "4 4 3 3 " 
+    specifies 4 alig2d iterations in the first projection matching iteration 
+    and  two 3 alig2d iteration in the last 2 projection matching iterations.
+     An alternative compact notation 
+    is ("2x4 2x3", i.e.,
+    2 iterations with value 4, and 2 with value 3).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
 """
-Align2DIterNr=4
+Align2DIterNr ='4'
 
 # {expert} Maximum change in origin offset (+/- pixels)
 """Maximum change in shift  (+/- pixels)
@@ -385,7 +436,7 @@ Align2DIterNr=4
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-Align2dMaxChangeOffset='2x1000 2x10'
+Align2dMaxChangeOffset ='2x1000 2x10'
 
 # {expert} Maximum change in rotation (+/- degrees)
 """Maximum change in shift  (+/- pixels)
@@ -398,28 +449,16 @@ Align2dMaxChangeOffset='2x1000 2x10'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-Align2dMaxChangeRot='2x1000 2x20'
+Align2dMaxChangeRot ='2x1000 2x20'
 
 #-----------------------------------------------------------------------------
 # {section} 3D Reconstruction
 #-----------------------------------------------------------------------------
-# Perform 3D Reconstruction?
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp and
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_fourier
-        for details
-"""
-DoReconstruction=True
-
-# {expert} Display reconstructed volume?
-DisplayReconstruction=False
 
 # {list}|fourier|art|wbp| Reconstruction method
 """ Choose between wbp, art or fourier
 """
-ReconstructionMethod='fourier'
+ReconstructionMethod ='fourier'
 
 # {expert} Values of lambda for art
 """ IMPORTANT: ou must specify a value of lambda for each iteration even
@@ -437,26 +476,26 @@ ReconstructionMethod='fourier'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ARTLambda='0.2'
+ARTLambda ='0.2'
 
 # {expert} Additional reconstruction parameters for ART
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
         for details
 """
-ARTReconstructionExtraCommand='-k 0.5 -n 10 '
+ARTReconstructionExtraCommand ='-k 0.5 -n 10 '
 
 # Initial maximum frequency used by reconstruct fourier
 """ This number os only used in the first iteration. 
     From then on, it will be set to resolution computed in the resolution section
 """
-FourierMaxFrequencyOfInterest='0.25'
+FourierMaxFrequencyOfInterest =0.25
 
 # {expert} Additional reconstruction parameters for WBP
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp and
         for details
 """
-WBPReconstructionExtraCommand=' '
+WBPReconstructionExtraCommand =''
 
 # {expert} Additional reconstruction parameters for Fourier
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier and
@@ -464,15 +503,23 @@ WBPReconstructionExtraCommand=' '
         for details
     -thr_width 
 """
-FourierReconstructionExtraCommand=' '
+FourierReconstructionExtraCommand =''
 
 #-----------------------------------------------------------------------------
 # {section} Compute Resolution
 #-----------------------------------------------------------------------------
 # Compute resolution?
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution fo details
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution for details
+    You may specify this option for each iteration. 
+    This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
+    specifies 4 iterations, the first two applied alig2d while the last 2
+    dont. an alternative compact notation is 
+    is ("2x1 2x0", i.e.,
+    2 iterations with value 1, and 2 with value 0).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
 """
-DoComputeResolution=True
+DoComputeResolution ='1'
 
 # {expert} Split references averages
 """In theory each reference average should be splited
@@ -487,23 +534,28 @@ DoComputeResolution=True
    IMPORTANT: the second option has ONLY been implemented for FOURIER
    reconstruction method. Other reconstruction methods require this
    flag to be set to True
+    You may specify this option for each iteration. 
+    This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
+    specifies 4 iterations, the first two split the images   while the last 2
+    don't. an alternative compact notation is 
+    is ("2x1 2x0", i.e.,
+    2 iterations with value 1, and 2 with value 0).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more vapplications/scripts/protocols/new_protocol_projmatch.pyalues than iterations the extra value are ignored
 """
-DoSplitReferenceImages=True
+DoSplitReferenceImages ="1"
 
 
 # Pixel size (in Ang.)
 """ This will make that the X-axis in the resolution plots has units 1/Angstrom
 """
-ResolSam = 5.6
-
-# {expert} Display resolution?
-DisplayResolution=False
+ResolSam=5.6
 
 #-----------------------------------------------------------------------------
 # {section} Postprocessing
 #-----------------------------------------------------------------------------
 # Low-pass filter the reference?
-DoLowPassFilter=True
+DoLowPassFilter =True
 
 # Use estimated resolution for low-pass filtering?
 """If set to true, the volume will be filtered at a frecuency equal to
@@ -514,7 +566,7 @@ DoLowPassFilter=True
    value provided by the user in the next box (in digital frequency, 
    i.e. pixel-1: minimum 0, maximum 0.5) 
 """
-UseFscForFilter=True
+UseFscForFilter =True
 
 # Constant to by add to the estimated resolution
 """ The meaning of this field depends on the previous flag.
@@ -534,11 +586,11 @@ UseFscForFilter=True
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ConstantToAddToFiltration='0.1'
+ConstantToAddToFiltration ='0.1'
 
 # {expert} Center volume
 """ Center volume after each iteration """
-DoCenterVolume=False
+DoCenterVolume =False
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -547,1436 +599,584 @@ DoCenterVolume=False
 """ This option provides shared-memory parallelization on multi-core machines. 
     It does not require any additional software, other than xmipp
 """
-NumberOfThreads=1
+NumberOfThreads = 1
 
 # distributed-memory parallelization (MPI)?
 """ This option provides distributed-memory parallelization on multi-node machines. 
     It requires the installation of some MPI flavour, possibly together with a queueing system
 """
-DoParallel = False
+DoParallel =True
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses=5
+NumberOfMpiProcesses = 3
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
-MpiJobSize='10'
+MpiJobSize ='1'
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
     Ask the person who installed your xmipp version, which option to use. 
     Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
 """
-SystemFlavour=''
+SystemFlavour ='TORQUE-OPENMPI'
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
-AnalysisScript='visualize_projmatch.py'
+AnalysisScript ='visualize_projmatch.py'
+#-----------------------------------------------------------------------------
+# {section} Debug
+#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------
+
+#Verify
+"""Check that some output files are created. 
+"""
+Verify=True
+
+# {expert} print wrapper name
+PrintWrapperCommand=True
+
+# {expert} print wrapper parameters
+PrintWrapperParameters=True
+
+# {expert} show file verification
+ViewVerifyedFiles=True 
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #-----------------------------------------------------------------------------
-#Do not change these variables
-ReferenceVolumeName='reference_volume.vol'
-LibraryDir = "ReferenceLibrary"
-ProjectLibraryRootName= LibraryDir + "/ref"
-ProjMatchDir = "ProjMatchClasses"
-ProjMatchName = 'proj_match'
-ProjMatchRootName= ProjMatchDir + "/" + ProjMatchName
-ForReconstructionSel="reconstruction.sel"
-ForReconstructionDoc="reconstruction.doc"
-MultiAlign2dSel="multi_align2d.sel"
-DocFileWithOriginalAngles='original_angles.doc'
-docfile_with_current_angles='current_angles.doc'
-FilteredReconstruction="filtered_reconstruction"
-ReconstructedVolume="reconstruction"
-OutputFsc="resolution.fsc"
-CtfGroupDirectory="CtfGroups"
-CtfGroupRootName="ctf"
-CtfGroupSubsetFileName="ctf_groups_subset_docfiles.sel"
+       
 
-# Import libraries and add Xmipp libs to default search path
-import os,sys,shutil
-scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/lib'
-sys.path.append(scriptdir) # add default search path
-scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
-sys.path.append(scriptdir)
-import arg,log,logging
-import launch_job
+
+from protlib_base import *
 from xmipp import *
- 
-class projection_matching_class:
+from protlib_utils import getListFromVector
+import os
+
+
+class ProtProjMatch(XmippProtocol):
+
+#    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
+    def __init__(self, scriptname,project=None):
+        super(ProtProjMatch,self).__init__(ProtocolNames.projmatch,scriptname, RunName, project)
+        #Some class variables
+        self.ReferenceVolumeName = 'reference_volume.vol'
+        self.LibraryDir = "ReferenceLibrary"
+        self.ProjectLibraryRootName = self.LibraryDir + "/gallery"
+        self.ProjMatchDir = "ProjMatchClasses"
+        self.ProjMatchName = 'proj_match'
+        self.ClassAverageName = 'class_average'
+        #ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
+        self.ForReconstructionSel = "reconstruction.sel"
+        self.ForReconstructionDoc = "reconstruction.doc"
+        self.MultiAlign2dSel = "multi_align2d.sel"
+        self.DocFileWithOriginalAngles = 'original_angles.doc'
+        self.docfile_with_current_angles = 'current_angles'
+        self.FilteredReconstruction = "filtered_reconstruction"
+        
+        self.ReconstructedVolume = "reconstruction"#
+        self.maskReferenceVolume = "masked_reference"#
+        
+        self.OutputFsc = "resolution.fsc"
+        self.CtfGroupDirectory = "CtfGroups"
+        self.CtfGroupRootName = "ctf"
+        self.CtfGroupSubsetFileName = self.CtfGroupRootName + "_images.sel"
+        
+        self.reconstructedFileNamesIters = []# names for reconstructed volumes
+        #maskedFileNamesIter = []# names masked volumes used as reference
+        self.numberOfReferences = 1#number of references
+        self.createAuxTable = False
+        self.NumberOfCtfGroups = 1
+        self.Import = 'from protlib_projmatch_before_loop import *;\
+                       from protlib_projmatch_in_loop import *;'
+        #self.WorkingDir = os.path.join(self.Name,_runName)
+
+        
+    def validate(self):
+        #1 call base class, checks if project exists
+        super(ProtProjMatch, self).validate()
+        
+        #2 Check reference and projection size match
+        _ReferenceFileNames = getListFromVector(ReferenceFileNames)
+        _Parameters = {
+              'ReferenceFileNames':_ReferenceFileNames
+            , 'SelFileName':SelFileName
+            }
+        from protlib_projmatch_before_loop import checkVolumeProjSize
+        _retval, _error_message = checkVolumeProjSize(None,**_Parameters)
+        if(not _retval):
+            self.errors.append(_error_message)
     
-    #init variables
-   
-   def __init__(self,
-                _NumberofIterations,
-                _ContinueAtIteration,
-                _CleanUpFiles,
-                _DoMask, 
-                _DoSphericalMask,
-                _MaskRadius,
-                _ReferenceFileName,
-                _MaskFileName,
-                _DoProjectionMatching,
-                _DisplayProjectionMatching,
-                _AngSamplingRateDeg,
-                _PerturbProjectionDirections,
-                _DoRetricSearchbyTiltAngle,
-                _Tilt0,
-                _TiltF,
-                _DoScale,
-                _ScaleStep,
-                _ScaleNumberOfSteps,
-                _ProjMatchingExtra,
-                _MaxChangeOffset,
-                _MaxChangeInAngles,
-                _MinimumCrossCorrelation,
-                _DiscardPercentage,
-                _DoAlign2D,
-                _InnerRadius,
-                _OuterRadius,
-                _Search5DShift,
-                _Search5DStep,
-                _AvailableMemory,
-                _Align2DIterNr,
-                _Align2dMaxChangeOffset,
-                _Align2dMaxChangeRot,
-                _DisplayReconstruction,
-                _DisplayResolution,
-                _DoReconstruction,
-                _ReconstructionMethod,
-                _ARTLambda,
-                _ARTReconstructionExtraCommand,
-                _WBPReconstructionExtraCommand,
-                _FourierReconstructionExtraCommand,
-                _FourierMaxFrequencyOfInterest,
-                _DoComputeResolution,
-                _DoSplitReferenceImages,
-                _ResolSam,
-                _SelFileName,
-                _DocFileName,
-                _DoCtfCorrection,
-                _CTFDatName,
-                _WienerConstant,
-                _DoAutoCtfGroup,
-                _CtfGroupMaxDiff,
-                _CtfGroupMaxResol,
-                _SplitDefocusDocFile,
-                _PaddingFactor,
-                _DataArePhaseFlipped,
-                _ReferenceIsCtfCorrected,
-                _WorkingDir,
-                _ProjectDir,
-                _LogDir,
-                _DoParallel,
-                _MyNumberOfMpiProcesses,
-                _MySystemFlavour,
-                _MyMpiJobSize,
-                _MyNumberOfThreads,
-                _SymmetryGroup,
-                _SymmetryGroupNeighbourhood,
-                _OnlyWinner,
-                _DoLowPassFilter,
-                _UseFscForFilter,
-                _ConstantToAddToFiltration,
-                _DoCenterVolume
-                ):
- 
-       self._CleanUpFiles=_CleanUpFiles
-       self._WorkingDir=os.getcwd()+'/'+_WorkingDir
-       self._SelFileName=_SelFileName
-       selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
-       self._ReferenceFileName=os.path.abspath(_ReferenceFileName)
-       self._MaskFileName=os.path.abspath(_MaskFileName)
-       self._DoMask=_DoMask
-       self._DoSphericalMask=_DoSphericalMask
-       self._MaskRadius=_MaskRadius
-       self._DoProjectionMatching=_DoProjectionMatching
-       self._DisplayProjectionMatching=_DisplayProjectionMatching
-       self._DoRetricSearchbyTiltAngle=_DoRetricSearchbyTiltAngle
-       self._PerturbProjectionDirections=_PerturbProjectionDirections
-       self._Tilt0=_Tilt0
-       self._TiltF=_TiltF
-       self._DoScale=_DoScale
-       self._ScaleStep=_ScaleStep
-       self._ScaleNumberOfSteps=_ScaleNumberOfSteps
-       self._ProjMatchingExtra=_ProjMatchingExtra
-       self._ProjectDir=_ProjectDir
-       self._InnerRadius=_InnerRadius
-       self._AvailableMemory=_AvailableMemory
-       self._Align2DIterNr=_Align2DIterNr
-       self._DisplayReconstruction=_DisplayReconstruction
-       self._DisplayResolution=_DisplayResolution
-       self._DoReconstruction=_DoReconstruction
-       self._DoComputeResolution=_DoComputeResolution
-       self._DoSplitReferenceImages=_DoSplitReferenceImages
-       self._ResolSam=_ResolSam
-       self._DoCtfCorrection=_DoCtfCorrection
-       self._WienerConstant=_WienerConstant
-       self._DoAutoCtfGroup=_DoAutoCtfGroup
-       self._CtfGroupMaxDiff=_CtfGroupMaxDiff
-       self._CtfGroupMaxResol=_CtfGroupMaxResol
-       self._SplitDefocusDocFile =''  
-       if(len(_SplitDefocusDocFile) > 1):
-            self._SplitDefocusDocFile=os.path.abspath(_SplitDefocusDocFile)
-       self._DocFileName =''  
-       if(len(_DocFileName) > 1):
-            self._DocFileName=os.path.abspath(_DocFileName)
-       self._PaddingFactor=PaddingFactor
-       self._DataArePhaseFlipped=_DataArePhaseFlipped
-       self._DoParallel=_DoParallel
-       self._MyNumberOfMpiProcesses=_MyNumberOfMpiProcesses
-       self._SymmetryGroup=_SymmetryGroup
-       self._SymmetryGroupNeighbourhood=_SymmetryGroupNeighbourhood
-       self._OnlyWinner=_OnlyWinner
-       self._ARTReconstructionExtraCommand=_ARTReconstructionExtraCommand
-       self._WBPReconstructionExtraCommand=_WBPReconstructionExtraCommand
-       self._FourierReconstructionExtraCommand=_FourierReconstructionExtraCommand
-       self._DoLowPassFilter=_DoLowPassFilter
-       self._UseFscForFilter=_UseFscForFilter
-       # if we are not starting at the first iteration
-       # globalFourierMaxFrequencyOfInterest must be computed
-       # untill I fix this properlly let us set it at max_frequency,
-      
-       if _ContinueAtIteration==1:
-           globalFourierMaxFrequencyOfInterest=float(_FourierMaxFrequencyOfInterest)
-       else:
-           globalFourierMaxFrequencyOfInterest=0.5
-       self._MySystemFlavour=_MySystemFlavour
-       
-       self._MyMpiJobSize =_MyMpiJobSize
-       self._MyNumberOfThreads =_MyNumberOfThreads
-       self._user_suplied_ReferenceVolume=self._ReferenceFileName
-
-       # Set up logging
-       self._mylog=log.init_log_system(_ProjectDir,
-                                       _LogDir,
-                                       sys.argv[0],
-                                       _WorkingDir)
-                                      
-       # Uncomment next line to get Debug level logging
-       self._mylog.setLevel(logging.DEBUG)
-       self._mylog.debug("Debug level logging enabled")
-       #input files should exists
-       check_file_exists(_ReferenceFileName,self._mylog)
-                                      
-       _NumberofIterations +=1;
-       if _ContinueAtIteration!=1 and DoDeleteWorkingDir==True:
-          print "You can not delete the working directory"
-          print " and start at iteration", _ContinueAtIteration
-          exit(1)
-       if (DoDeleteWorkingDir): 
-          delete_working_directory(self._mylog,self._WorkingDir)
-       else:
-          self._mylog.info("Skipped DoDeleteWorkingDir") 
-       if ReconstructionMethod!='fourier' and not _DoSplitReferenceImages:
-          print "DoSplitReferenceImages must be set to True if"
-          print " reconstruction method is not fourier"
-          exit(1)
-       create_working_directory(self._mylog,self._WorkingDir)
-       log.make_backup_of_script_file(sys.argv[0],self._WorkingDir)
-       
-       # Create a selfile with absolute pathname in the WorkingDir
-       #newsel= XmippData.MetaData(XmippData.FileName(_SelFileName))
-       newsel = MetaData(_SelFileName)
-       newsel.makeAbsPath(MDL_IMAGE)
-       self._SelFileName=os.path.abspath(self._WorkingDir + '/' + _SelFileName)
-       newsel.write(self._SelFileName)
-       
-       # For ctf groups, also create a CTFdat file with absolute pathname in the WorkingDir
-       if (self._DoCtfCorrection):
-          #import ctfdat
-          myctfdat=MetaData(_CTFDatName)
-          myctfdat.makeAbsPath(MDL_IMAGE)
-          myctfdat.makeAbsPath(MDL_CTFMODEL)
-          self._CTFDatName=os.path.abspath(self._WorkingDir + '/' + _CTFDatName)
-          myctfdat.write(self._CTFDatName)
-
-       # Set self._OuterRadius
-       if (_OuterRadius < 0):
-          xdim,ydim=newsel.imgSize()
-          self._OuterRadius = (xdim/2) - 1 
-          comment = " Outer radius set to: " + str(self._OuterRadius)
-          print '* ' + comment
-          self._mylog.info(comment)
-       else:   
-          self._OuterRadius=_OuterRadius
-
-       # Create a docfile with the current angles in the WorkingDir
-       if (self._DocFileName==''):
-
-#          params=' -i ' + self._SelFileName + \ 
-#                 ' -o ' + self._WorkingDir + '/' + \
-#                 DocFileWithOriginalAngles
-#          launchJob("xmipp_header_extract",
-#                                params,
-#                                self._mylog,
-#                                False,1,1,'')
-          command = "copy" , self._SelFileName ,  self._WorkingDir + '/' + DocFileWithOriginalAngles
-          self._mylog.info(command)
-          shutil.copy(self._SelFileName, self._WorkingDir + '/' + DocFileWithOriginalAngles)
-       else:
-          command = "copy" , self._DocFileName ,  self._WorkingDir + '/' + DocFileWithOriginalAngles
-          self._mylog.info(command)
-          shutil.copy(self._DocFileName, self._WorkingDir + '/' + DocFileWithOriginalAngles)
-
-       # Change to working dir
-       os.chdir(self._WorkingDir)
-       self._SelFileName=self._WorkingDir+'/'+\
-                         str(os.path.basename(self._SelFileName))
-
-       # Make CTF groups
-       if (self._DoCtfCorrection):
-          self._NumberOfCtfGroups=execute_ctf_groups(self._mylog,
-                                                     self._SelFileName,
-                                                     self._CTFDatName,
-                                                     self._PaddingFactor,
-                                                     self._DataArePhaseFlipped,
-                                                     self._WienerConstant,
-                                                     self._DoAutoCtfGroup,
-                                                     self._CtfGroupMaxDiff,
-                                                     self._CtfGroupMaxResol,
-                                                     self._SplitDefocusDocFile)
-       else:
-          self._NumberOfCtfGroups=1
-
-       ##
-       ##LOOP
-       ##
-       #output of reconstruction cycle
-       #first value given by user
-       #these names are the input of the mask program
-       #in general is the output of the reconstruction plus filtration
-       self._ReconstructedVolume=[]
-       fill_name_vector("",
-                        self._ReconstructedVolume,
-                        _NumberofIterations,
-                        ReconstructedVolume)
-                        
-       self._ReconstructedandfilteredVolume=[]
-       fill_name_vector(self._user_suplied_ReferenceVolume,
-                        self._ReconstructedandfilteredVolume,
-                        _NumberofIterations,
-                        FilteredReconstruction)
-
-       # Optimal angles from previous iteration or user-provided at the beginning
-       self._DocFileInputAngles=[]
-       fill_name_vector('../'+DocFileWithOriginalAngles,
-                        self._DocFileInputAngles,
-                        _NumberofIterations+1,
-                        docfile_with_current_angles)
-
-       # Reconstructed and filtered volume of n-1 after masking called reference volume
-       self._ReferenceVolume=[]
-       fill_name_vector("",
-                        self._ReferenceVolume,
-                        _NumberofIterations,
-                        ReferenceVolumeName)
-
-       for _iteration_number in range(_ContinueAtIteration, _NumberofIterations):
-          debug_string =  "ITERATION: " +  str(_iteration_number)
-          print "*", debug_string
-          self._mylog.info(debug_string)
-
-          # Never allow DoAlign2D and DoCtfCorrection together
-          if (int(arg.getComponentFromVector(_DoAlign2D,_iteration_number))==1 and
-              self._DoCtfCorrection):
-             error_message="You cannot realign classes AND perform CTF-correction. Switch either of them off!"
-             self._mylog.error(error_message)
-             print error_message
-             exit(1)
-
-          # Create working dir for this iteration and go there
-          Iteration_Working_Directory=self._WorkingDir+'/Iter_'+\
-                                      str(_iteration_number)
-          create_working_directory(self._mylog,Iteration_Working_Directory)
-          os.chdir(Iteration_Working_Directory)
-
-          # Mask reference volume
-          execute_mask(self._DoMask,
-                       self._mylog,
-                       self._ProjectDir,
-                       self._ReconstructedandfilteredVolume[_iteration_number],#in
-                       self._MaskFileName,
-                       self._DoSphericalMask,
-                       self._MaskRadius,
-                       _iteration_number,
-                       self._ReferenceVolume[_iteration_number])#out
-
-          if (_DoProjectionMatching):
-             # Parameters for projection matching
-             self._AngSamplingRateDeg=arg.getComponentFromVector(_AngSamplingRateDeg,\
-                                                           _iteration_number-1)
-             self._MaxChangeOffset=arg.getComponentFromVector(_MaxChangeOffset,\
-                                                           _iteration_number-1)
-             self._MaxChangeInAngles=arg.getComponentFromVector(_MaxChangeInAngles,\
-                                                           _iteration_number-1)
-             self._Search5DShift=arg.getComponentFromVector(_Search5DShift,\
-                                                           _iteration_number-1)
-             self._Search5DStep=arg.getComponentFromVector(_Search5DStep,\
-                                                           _iteration_number-1)
-             self._MinimumCrossCorrelation=arg.getComponentFromVector(_MinimumCrossCorrelation,\
-                                                           _iteration_number-1)
-             self._DiscardPercentage=arg.getComponentFromVector(_DiscardPercentage,\
-                                                           _iteration_number-1)
-             self._DoAlign2D=arg.getComponentFromVector(_DoAlign2D,\
-                                                           _iteration_number-1)
-             self._Align2dMaxChangeOffset=arg.getComponentFromVector(_Align2dMaxChangeOffset,\
-                                                           _iteration_number-1)
-             self._Align2dMaxChangeRot=arg.getComponentFromVector(_Align2dMaxChangeRot,\
-                                                           _iteration_number-1)
-
-             # Initial reference is CTF-amplitude corrected?
-             if ( (_iteration_number == 1) and (_ReferenceIsCtfCorrected==False) ):
-                self._ReferenceIsCtfCorrected=False
-             else: 
-                self._ReferenceIsCtfCorrected=True
-
-             execute_projection_matching(self._mylog,
-                                         self._ProjectDir,
-                                         self._ReferenceVolume[_iteration_number],
-                                         self._MaskFileName,
-                                         self._DocFileInputAngles[_iteration_number],
-                                         self._DocFileInputAngles[_iteration_number+1],
-                                         self._DoCtfCorrection,
-                                         self._NumberOfCtfGroups,
-                                         self._WienerConstant,
-                                         self._PaddingFactor,
-                                         self._ReferenceIsCtfCorrected,
-                                         self._AngSamplingRateDeg,
-                                         self._PerturbProjectionDirections,
-                                         self._DoRetricSearchbyTiltAngle,
-                                         self._Tilt0,
-                                         self._TiltF,
-                                         self._InnerRadius,
-                                         self._OuterRadius,
-                                         self._Search5DShift,
-                                         self._Search5DStep,
-                                         self._MaxChangeOffset, 
-                                         self._MaxChangeInAngles,
-                                         self._DoScale,
-                                         self._ScaleStep,
-                                         self._ScaleNumberOfSteps,
-                                         self._ProjMatchingExtra,
-                                         self._MinimumCrossCorrelation,
-                                         self._DiscardPercentage,
-                                         self._DisplayProjectionMatching,
-                                         self._DoParallel,
-                                         self._MyNumberOfMpiProcesses,
-                                         self._MyNumberOfThreads,
-                                         self._MySystemFlavour,
-                                         self._MyMpiJobSize,
-                                         self._WorkingDir,
-                                         self._SymmetryGroup,
-                                         self._SymmetryGroupNeighbourhood,
-                                         self._OnlyWinner,
-                                         self._AvailableMemory,
-                                         self._DoComputeResolution,
-                                         self._DoSplitReferenceImages,
-                                         self._DoAlign2D,
-                                         self._Align2DIterNr,
-                                         self._Align2dMaxChangeOffset,
-                                         self._Align2dMaxChangeRot,
-                                         _iteration_number
-                                         )
-          else:
-             self._mylog.info("Skipped ProjectionMatching") 
-
-
-          # Make a new selfile excluding the images that were possibly discarded by the user
-          command='cat ' + MultiAlign2dSel + \
-                        ' | grep -v ' +  ProjectLibraryRootName + \
-                        ' | grep -v ref.xmp ' + \
-                        ' | grep -v \ -1 >' + ForReconstructionSel
-          
-          self._mylog.info(command)
-          os.system(command)
-
-          self._ReconstructionMethod=arg.getComponentFromVector(_ReconstructionMethod,\
-                                                        _iteration_number-1)
-          self._ARTLambda=arg.getComponentFromVector(_ARTLambda,\
-                                                        _iteration_number-1)
-          if (_DoReconstruction):
-             execute_reconstruction(self._mylog, 
-                                    self._ARTReconstructionExtraCommand,
-                                    self._WBPReconstructionExtraCommand,
-                                    self._FourierReconstructionExtraCommand,
-                                    _iteration_number,
-                                    self._DisplayReconstruction,
-                                    self._DoParallel,
-                                    self._MyNumberOfMpiProcesses,
-                                    self._MyNumberOfThreads,
-                                    self._MySystemFlavour,
-                                    self._MyMpiJobSize,
-                                    self._ReconstructionMethod,
-                                    globalFourierMaxFrequencyOfInterest,
-                                    self._ARTLambda,
-                                    self._SymmetryGroup,
-                                    self._ReconstructedVolume[_iteration_number],
-                                    self._DoComputeResolution,
-                                    self._DoSplitReferenceImages,
-                    self._PaddingFactor
-                                    )
-          else:
-             self._mylog.info("Skipped Reconstruction") 
-          
-          if (_DoComputeResolution):
-              filter_frequency=execute_resolution(self._mylog,
-                                                  self._ARTReconstructionExtraCommand,
-                                                  self._WBPReconstructionExtraCommand,
-                                                  self._FourierReconstructionExtraCommand,
-                                                  self._ReconstructionMethod,
-                                                  globalFourierMaxFrequencyOfInterest,
-                                                  _iteration_number,
-                                                  self._DisplayReconstruction,
-                                                  self._ResolSam,
-                                                  self._DoParallel,
-                                                  self._MyNumberOfMpiProcesses,
-                                                  self._MyNumberOfThreads,
-                                                  self._MySystemFlavour,
-                                                  self._MyMpiJobSize,
-                                                  self._SymmetryGroup,
-                                                  self._DisplayResolution,
-                                                  self._ReconstructedVolume[_iteration_number],
-                                                  self._ARTLambda,
-                                                  self._OuterRadius,
-                          self._DoSplitReferenceImages,
-                          self._PaddingFactor
-                                                  )
-          else:
-             filter_frequency=0
-             self._mylog.info("Skipped Resolution calculation") 
-          
-          self._ConstantToAddToFiltration=arg.getComponentFromVector(\
-                                               ConstantToAddToFiltration,\
-                                                  _iteration_number-1)
-
-          globalFourierMaxFrequencyOfInterest=filter_at_given_resolution(_DoLowPassFilter,
-                                     _DoComputeResolution,
-                                     self._mylog, 
-                                     _iteration_number,
-                                     self._UseFscForFilter,
-                                     self._ConstantToAddToFiltration,
-                                     filter_frequency,
-                                     self._ReconstructedVolume[_iteration_number],
-                                     self._ReconstructedandfilteredVolume[1+_iteration_number],
-                                     self._MySystemFlavour
-                                     )
-
-          # Center the volume if necessary
-          if (_DoCenterVolume):
-            execute_center_volume(self._mylog,
-                self._ReconstructedandfilteredVolume[1+_iteration_number],
-                self._MySystemFlavour)
-
-          # Remove all class averages and reference projections
-          if (self._CleanUpFiles):
-             execute_cleanup(self._mylog,
-                             True,
-                             True)
-
-       print '\n\n*********************************************************************'
-       print 'Projection Matching Protocol finished!!'
-       print '*********************************************************************'
-
-
-#------------------------------------------------------------------------
-#delete_working directory
-#------------------------------------------------------------------------
-def delete_working_directory(_mylog,_WorkingDir):
-    import os
-    import shutil
-    print '*********************************************************************'
-    print '* Delete working directory tree'
-    _mylog.info("Delete working directory tree")
-
-    if (_WorkingDir==""):
-       raise RuntimeError,"No working directory given"
-       
-    if os.path.exists(_WorkingDir):
-       shutil.rmtree(_WorkingDir)
-       
-#------------------------------------------------------------------------
-#create_working directory
-#------------------------------------------------------------------------
-def create_working_directory(_mylog,_WorkingDir):
-    import os
-    print '*********************************************************************'
-    print '* Create directory ' + _WorkingDir 
-    _mylog.info("Create working directory " + _WorkingDir )
-
-    if not os.path.exists(_WorkingDir):
-       os.makedirs(_WorkingDir)
-    # Also create subdirectories
-    if not os.path.exists(_WorkingDir + "/" + LibraryDir):
-       os.makedirs(_WorkingDir + "/" + LibraryDir)
-    if not os.path.exists(_WorkingDir + "/" + ProjMatchDir):
-       os.makedirs(_WorkingDir + "/" + ProjMatchDir)
-
-#------------------------------------------------------------------------
-#make ctf groups
-#------------------------------------------------------------------------
-def execute_ctf_groups (_mylog,
-                        _InPutSelfile,
-                        _CtfDatFile,
-                        _PaddingFactor,
-                        _DataArePhaseFlipped,
-                        _WienerConstant,
-                        _DoAutoCtfGroup,
-                        _CtfGroupMaxDiff,
-                        _CtfGroupMaxResol,
-                        _SplitDefocusDocFile):
-
-   import os,glob,sys
-   import utils_xmipp
-   import launch_job
-
-   if not os.path.exists(CtfGroupDirectory):
-      os.makedirs(CtfGroupDirectory)
-
-   print '*********************************************************************'
-   print '* Make CTF groups'
-   command=' -i '    + _InPutSelfile + \
-           ' --ctfdat ' + _CtfDatFile + \
-           ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + \
-           ' --wiener --wc ' + str(_WienerConstant) + \
-           ' --pad ' + str(_PaddingFactor)
-   if (_DataArePhaseFlipped):
-      command += ' --phase_flipped '
-   if (_DoAutoCtfGroup):
-      command += ' --error ' + str(_CtfGroupMaxDiff) + \
-                 ' --resol ' + str(_CtfGroupMaxResol)
-   else:
-      if (len(_SplitDefocusDocFile) > 0):
-         command += ' --split ' + _SplitDefocusDocFile
-      else:
-         message = "Error: for non-automated ctf grouping, please provide a docfile!"
-         print '* ',message
-         _mylog.info(message)
-         sys.exit()
-
-   launchJob("xmipp_ctf_group",
-                         command,
-                         _mylog,
-                         False,1,1,'')
-
-   wildcardname=utils_xmipp.composeWildcardFileName(CtfGroupDirectory + '/' + CtfGroupRootName+'_group','ctf')
-   ctflist=glob.glob(wildcardname)
-   return len(ctflist)
-
-#------------------------------------------------------------------------
-#execute_mask
-#------------------------------------------------------------------------
-def execute_mask(_DoMask,
-                 _mylog,
-                 _ProjectDir,
-                 _ReferenceFileName,
-                 _MaskFileName,
-                 _DoSphericalMask,
-                 _MaskRadius,
-                 _iteration_number,
-                 _ReferenceVolume):
-   import os,shutil
-   import launch_job
-   _mylog.debug("execute_mask")
-   if(_iteration_number==1):
-      InPutVolume=_ReferenceFileName
-   else:   
-      InPutVolume=_ReferenceFileName+".vol"
-   if (_DoMask):
-       MaskedVolume=_ReferenceVolume
-       print '*********************************************************************'
-       print '* Mask the reference volume'
-       if (_DoSphericalMask):
-          command=' -i '    + InPutVolume + \
-                  ' -o '    + _ReferenceVolume + \
-                  ' --mask circular -' + str(_MaskRadius)
-       else:
-          command=' -i '    + InPutVolume + \
-                  ' -o '    + _ReferenceVolume + \
-                  ' --mask ' + _MaskFileName
-       launchJob("xmipp_mask",
-                             command,
-                             _mylog,
-                             False,1,1,'')
-
-   else:
-       shutil.copy(InPutVolume,_ReferenceVolume)
-       _mylog.info("Skipped Mask")
-       _mylog.info("cp" + InPutVolume +\
-                   " "  + _ReferenceVolume )
-       print '*********************************************************************'
-       print '* Skipped Mask'
-
-#------------------------------------------------------------------------
-#execute_projection_matching
-#------------------------------------------------------------------------
-def execute_projection_matching(_mylog,
-                                _ProjectDir,
-                                _ReferenceVolume,
-                                _MaskFileName,
-                                _InputDocFileName,
-                                _OutputDocFileName,
-                                _DoCtfCorrection,
-                                _NumberOfCtfGroups,
-                                _WienerConstant,
-                                _PaddingFactor,
-                                _ReferenceIsCtfCorrected,
-                                _AngSamplingRateDeg,
-                                _PerturbProjectionDirections,
-                                _DoRetricSearchbyTiltAngle,
-                                _Tilt0,
-                                _TiltF,
-                                _Ri,
-                                _Ro,
-                                _Search5DShift,
-                                _Search5DStep,
-                                _MaxChangeOffset,
-                                _MaxChangeInAngles,
-                                _DoScale,
-                                _ScaleStep,
-                                _ScaleNumberOfSteps,
-                                _ProjMatchingExtra,
-                                _MinimumCrossCorrelation,
-                                _DiscardPercentage,
-                                _DisplayProjectionMatching,
-                                _DoParallel,
-                                _MyNumberOfMpiProcesses,
-                                _MyNumberOfThreads,
-                                _MySystemFlavour,
-                                _MyMpiJobSize,
-                                _WorkingDir,
-                                _SymmetryGroup,
-                                _SymmetryGroupNeighbourhood,
-                                _OnlyWinner,
-                                _AvailableMemory,
-                                _DoComputeResolution,
-                                _DoSplitReferenceImages,
-                                _DoAlign2D,
-                                _Align2DIterNr,
-                                _Align2dMaxChangeOffset,
-                                _Align2dMaxChangeRot,
-                                _iteration_number):
-                                           
-   _mylog.debug("execute_projection_matching")
-   import os, shutil, string, glob, math
-   #import launch_job, selfile, docfiles, utils_xmipp
-   import launch_job, utils_xmipp
-      
-   if (_DoCtfCorrection):
-      # To use -add_to in angular_class_average correctly, 
-      # make sure there are no proj_match_class* files from previous runs. 
-      print ' * CleanUp: deleting directory '+ ProjMatchDir
-      os.system(' rm -r ' + ProjMatchDir)
-      os.makedirs(ProjMatchDir)
-      # Create docfiles for each defocus group and corresponding selfile containing all of them      
-      make_subset_docfiles(_mylog,
-                           _InputDocFileName,
-                           _NumberOfCtfGroups)
-      
-   # Project all references
-   print '*********************************************************************'
-   print '* Create projection library'
-   parameters=' -i '                   + _ReferenceVolume + \
-              ' --experimental_images ' +  _InputDocFileName + \
-              ' -o '                   + ProjectLibraryRootName + \
-              ' --sampling_rate '       + _AngSamplingRateDeg  + \
-              ' --sym '                 + _SymmetryGroup + 'h' + \
-              ' --compute_neighbors'
-
-   if ( string.atof(_MaxChangeInAngles) < 181.):
-      parameters+= \
-              ' --near_exp_data --angular_distance '    + str(_MaxChangeInAngles)
-   else:
-      parameters+= \
-              ' --angular_distance -1'
-
-   if (_PerturbProjectionDirections):
-      # Just follow Roberto's suggestion
-      perturb=math.sin(math.radians(float(_AngSamplingRateDeg)))/4.
-      parameters+= \
-          ' --perturb ' + str(perturb)
-
-   if (_DoRetricSearchbyTiltAngle):
-     parameters+=  \
-              ' --min_tilt_angle '      + str(_Tilt0) + \
-              ' --max_tilt_angle '      + str(_TiltF)
-  
-   if (_DoCtfCorrection):
-     parameters+=  \
-              ' --groups '              + CtfGroupSubsetFileName
-
-   if (_DoParallel):
-      parameters = parameters + ' --mpi_job_size ' + str(_MyMpiJobSize)
-      
-   if (len(SymmetryGroupNeighbourhood)>1):
-      parameters+= \
-          ' --sym_neigh ' + SymmetryGroupNeighbourhood + 'h'
-   if (OnlyWinner):
-      parameters+= \
-              ' --only_winner '
-
-   launchJob('xmipp_angular_project_library',
-                         parameters,
-                         _mylog,
-                         _DoParallel,
-                         _MyNumberOfMpiProcesses*_MyNumberOfThreads,
-                         1,
-                         _MySystemFlavour)
-
-
-   # Loop over all CTF groups
-   # Use reverse order to have same order in add_to docfiles from angular_class_average
-   for ii in range(_NumberOfCtfGroups):
-      ictf = _NumberOfCtfGroups - ii - 1
-
-      refname          = ProjectLibraryRootName
-      if (_DoCtfCorrection):
-         CtfGroupName = utils_xmipp.composeFileName(CtfGroupRootName + '_group',ictf+1,'')
-         outputname   = ProjMatchRootName + '_' + CtfGroupName 
-         CtfGroupName = '../' + CtfGroupDirectory + '/' + CtfGroupName
-         inselfile    = CtfGroupName + '.sel'
-         inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
-         txtfile      = ProjectLibraryRootName + '_sampling.txt'
-         if (os.path.exists(txtfile)):
-            os.remove(txtfile)
-         txtfileb     = utils_xmipp.composeFileName(ProjectLibraryRootName + '_group',ictf+1,'')
-         txtfileb     += '_sampling.txt'
-         shutil.copy(txtfileb, txtfile)
-      else:
-         outputname   = ProjMatchRootName
-         inputdocfile = _InputDocFileName
-
-      print '*********************************************************************'
-      print '* Perform projection matching'
-      parameters= ' -i '              + inputdocfile + \
-                  ' -o '              + outputname + \
-                  ' --ref '            + refname + \
-                  ' --Ri '             + str(_Ri)           + \
-                  ' --Ro '             + str(_Ro)           + \
-                  ' --max_shift '      + str(_MaxChangeOffset) + \
-                  ' --search5d_shift ' + str(_Search5DShift) + \
-                  ' --search5d_step  ' + str(_Search5DStep) + \
-                  ' --mem '            + str(_AvailableMemory * _MyNumberOfThreads) + \
-                  ' --thr '            + str(_MyNumberOfThreads)
-      
-      if (_DoScale):
-         parameters += \
-                  ' --scale '          + str(_ScaleStep) + ' ' + str(_ScaleNumberOfSteps) 
-
-      if (_DoCtfCorrection and _ReferenceIsCtfCorrected):
-         ctffile = CtfGroupName + '.ctf'
-         parameters += \
-                  ' --pad '            + str(_PaddingFactor) + \
-                  ' --ctf '            + ctffile
-
-      if (_DoParallel):
-         parameters = parameters + ' --mpi_job_size ' + str(_MyMpiJobSize)
-
-      launchJob('xmipp_angular_projection_matching',
-                            parameters,
-                            _mylog,
-                            _DoParallel,
-                            _MyNumberOfMpiProcesses,
-                            _MyNumberOfThreads,
-                            _MySystemFlavour)
-
-      # Now make the class averages
-      parameters =  ' -i '      + outputname + '.doc'  + \
-                    ' --lib '    + ProjectLibraryRootName + '.doc' + \
-                    ' --dont_write_selfiles ' + \
-                    ' --limit0 ' + str(_MinimumCrossCorrelation) + \
-                    ' --limitR ' + str(_DiscardPercentage)
-      if (_DoCtfCorrection):
-         # On-the fly apply Wiener-filter correction and add all CTF groups together
-         parameters += \
-                    ' --wien '             + CtfGroupName + '.wien' + \
-                    ' --pad '              + str(_PaddingFactor) + \
-                    ' --add_to '           + ProjMatchRootName
-      else:
-         parameters += \
-                    ' -o '                + ProjMatchRootName
-      if (_DoAlign2D == '1'):
-         parameters += \
-                    ' --iter '             + str(_Align2DIterNr) + \
-                    ' --Ri '               + str(_Ri)           + \
-                    ' --Ro '               + str(_Ro)           + \
-                    ' --max_shift '        + str(_MaxChangeOffset) + \
-                    ' --max_shift_change ' + str(_Align2dMaxChangeOffset) + \
-                    ' --max_psi_change '   + str(_Align2dMaxChangeRot) 
-      if (_DoComputeResolution and _DoSplitReferenceImages):
-         parameters += \
-                    ' --split '
-
-      launchJob('xmipp_angular_class_average',
-                            parameters,
-                            _mylog,
-                            _DoParallel,
-                            _MyNumberOfMpiProcesses*_MyNumberOfThreads,
-                            1,
-                            _MySystemFlavour)
-
-      if (_DoAlign2D == '1'):
-         outputdocfile =  ProjMatchRootName + '_realigned.doc'
-      else:
-         outputdocfile =  ProjMatchRootName + '.doc'
-
-      if (_DoCtfCorrection):
-         os.remove(outputname + '.doc')
-         os.remove(inputdocfile)
-
-   # End loop over all CTF groups
-
-   # Move outputdocfile to standard name
-   shutil.move(outputdocfile,_OutputDocFileName)
-                
-   # Make absolute path so visualization protocol can be run from the same directory
-   # Make selfile with reference projections, class averages and realigned averages
-
-   import  metadataUtils
-   metadataUtils.intercalate_union_3(ProjMatchRootName + '_classes.sel',
-                                     MultiAlign2dSel,
-                     ProjMatchRootName + '_class',
-                     ProjectLibraryRootName,
-                     '.xmp',
-                     '.ref.xmp'
-                     )
-   
-#   #classselfile=selfile.selfile()
-#   #classselfile.read(ProjMatchRootName+'_classes.sel')
-#   classselfile = XmippData.MetaData(XmippData.FileName(ProjMatchRootName+'_classes.sel'))
-#   library_sel_file = XmippData.MetaData(classselfile)
-#   before_alignment_sel_file = XmippData.MetaData(classselfile)
-#   newsel = XmippData.MetaData()
-#   #library_sel_file=classselfile.replace_string(ProjMatchRootName+'_class',
-#   #                                                     ProjectLibraryRootName);
-#   library_sel_file.replaceString(library_sel_file,ProjMatchRootName+'_class',ProjectLibraryRootName)
-#   #before_alignment_sel_file=classselfile.replace_string('.xmp','.ref.xmp');
-#   metadataUtils.replaceString(before_alignment_sel_file,'.xmp','.ref.xmp')
-#
-#   #before_alignment_sel_file.deactivate_all_images()
-#   metadataUtils.deactivate_all_images(before_alignment_sel_file)
-#   
-#   #
-#   newsel=library_sel_file.intercalate_union_3(before_alignment_sel_file, classselfile)
-#   compare_sel_file=ProjMatchRootName+'_compare.sel'
-#   newsel=newsel.make_abspath()
-#   newsel.write(MultiAlign2dSel)
-   
-   # Also make abspath in classes docfile
-###   newdoc=docfiles.docfile(ProjMatchRootName + '_classes.doc')
-###   newdoc.make_abspath()
-###   newdoc.write(ForReconstructionDoc)
-   metadataUtils.absolutePath(ProjMatchRootName + '_classes.doc',
-                              ForReconstructionDoc)
-
-   if (_DisplayProjectionMatching):
-      command='xmipp_show -sel '+ "../"+'Iter_'+\
-                   str(_iteration_number) +'/'+ MultiAlign2dSel +' -w 9 '
-      if (_DoAlign2D == '1'):
-         command += ' --showall '
-
-      print '*********************************************************************'
-      print '* ',command
-      _mylog.info(command) 
-      os.system(command)
-
-def make_subset_docfiles(_mylog,
-                         _InputDocFileName,
-                         _NumberOfCtfGroups):
-
-   import os;
-   import utils_xmipp
-   import launch_job
-
-   # Loop over all CTF groups
-   docselfile = []
-   for ictf in range(_NumberOfCtfGroups):
-      
-      CtfGroupName=utils_xmipp.composeFileName(CtfGroupRootName + '_group',ictf+1,'')
-      CtfGroupName = '../' + CtfGroupDirectory + '/' + CtfGroupName
-      inselfile = CtfGroupName + '.sel'
-      inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
-      command=' --join ' + _InputDocFileName + ' ' + inselfile + ' --label image'
-      command= command + ' -o ' + inputdocfile
-      print '*********************************************************************'
-      launchJob("xmipp_metadata_utilities",
-                            command,
-                            _mylog,
-                            False,1,1,'')
-      
-      docselfile.append(inputdocfile+' 1\n')
-
-   # Write the selfile of all these docfiles
-   fh = open(CtfGroupSubsetFileName,'w')
-   fh.writelines(docselfile)
-   fh.close()
-
-
-#------------------------------------------------------------------------
-#execute_reconstruction
-#------------------------------------------------------------------------
-def execute_reconstruction(_mylog,
-                           _ARTReconstructionExtraCommand,
-                           _WBPReconstructionExtraCommand,
-                           _FourierReconstructionExtraCommand,
-                           _iteration_number,
-                           _DisplayReconstruction,
-                           _DoParallel,
-                           _MyNumberOfMpiProcesses,
-                           _MyNumberOfThreads,
-                           _MySystemFlavour,
-                           _MyMpiJobSize,
-                           _ReconstructionMethod,
-                           _FourierMaxFrequencyOfInterest,
-                           _ARTLambda,
-                           _SymmetryGroup,
-                           _ReconstructedandfilteredVolume,
-                           _DoComputeResolution,
-                           _DoSplitReferenceImages,
-               _PaddingFactor):
-
-   _mylog.debug("execute_reconstruction")
-
-   import os,shutil,math
-   import launch_job
-
-
-   Outputvolume = _ReconstructedandfilteredVolume
-
-   print '*********************************************************************'
-   print '* Reconstruct volume using '
-   if _ReconstructionMethod=='wbp':
-      Outputvolume = Outputvolume+".vol"
-      program = 'xmipp_reconstruct_wbp'
-      parameters= ' -i '    + ForReconstructionSel + \
-                  ' --doc '  + ForReconstructionDoc + \
-                  ' -o '    + Outputvolume + \
-                  ' --sym '  + _SymmetryGroup + \
-                  ' --weight --use_each_image '
-      parameters = parameters + _WBPReconstructionExtraCommand
-      _MyNumberOfThreads = 1
-              
-   elif _ReconstructionMethod=='art':
-      program = 'xmipp_reconstruct_art'
-      _DoParallel=False
-      parameters=' -i '    + ForReconstructionSel + \
-                 ' -o '    + Outputvolume + ' ' + \
-                 ' --sym '  + _SymmetryGroup + \
-         ' --thr '  + str(_MyNumberOfThreads) + \
-                 ' --WLS '
-      if len(_ARTLambda)>1:
-         parameters = parameters + ' -l '   + _ARTLambda + ' '
-      parameters = parameters + _ARTReconstructionExtraCommand
-   elif _ReconstructionMethod=='fourier':
-      if ( _MyNumberOfMpiProcesses ==1):
-         _DoParallel=False
-      program = 'xmipp_reconstruct_fourier'
-      parameters=' -i '    + ForReconstructionSel + \
-                 ' -o '    + Outputvolume + '.vol ' + \
-                 ' --sym '  + _SymmetryGroup + \
-                 ' --thr '  + str(_MyNumberOfThreads) + \
-                 ' --weight ' + \
-                 ' --max_resolution ' + str(_FourierMaxFrequencyOfInterest) +\
-         ' --pad_proj ' + str(_PaddingFactor) +\
-         ' --pad_vol ' + str(_PaddingFactor)
-      if (_DoParallel):
-         parameters = parameters + ' --mpi_job_size ' + str(_MyMpiJobSize)
-      if (_DoComputeResolution and not _DoSplitReferenceImages):
-         myFileName =  ProjMatchDir + '/' + ProjMatchName
-         parameters = parameters + ' --prepare_fsc ' + myFileName + ' '
-         rand_command  = ' xmipp_metadata_split -i '
-         rand_command += ForReconstructionSel + ' --dont_sort -n 1 ' 
-         os.system(rand_command)
-         _mylog.info(rand_command)
-      parameters = parameters + _FourierReconstructionExtraCommand 
-   else:
-      _mylog.error("Reconstruction method unknown. Quiting")
-      print "Reconstruction method unknown. Quiting"
-      exit(1)
     
-   launchJob(program,
-                         parameters,
-                         _mylog,
-                         _DoParallel,
-                         _MyNumberOfMpiProcesses,
-                         _MyNumberOfThreads,
-                         _MySystemFlavour)
-
-   #_mylog.info(command+ ' ' + parameters)
-   if _DisplayReconstruction==True:
-      command='xmipp_show --vol '+ Outputvolume + '&'
-      print '*********************************************************************'
-      print '* ',command
-      _mylog.info(command)
-      os.system(command)
-
-#------------------------------------------------------------------------
-#           execute_resolution(self._SelFileName)
-#------------------------------------------------------------------------
-def  execute_resolution(_mylog,
-                        _ARTReconstructionExtraCommand,
-                        _WBPReconstructionExtraCommand,
-                        _FourierReconstructionExtraCommand,
-                        _ReconstructionMethod,
-                        _FourierMaxFrequencyOfInterest,
-                        _iteration_number,
-                        _DisplayReconstruction,
-                        _ResolSam,
-                        _DoParallel,
-                        _MyNumberOfMpiProcesses,
-                        _MyNumberOfThreads,
-                        _MySystemFlavour,
-                        _MyMpiJobSize,
-                        _SymmetryGroup,
-                        _DisplayResolution,
-                        _ReconstructedVolume,
-                        _ARTLambda,
-                        _OuterRadius,
-            _DoSplitReferenceImages,
-            _PaddingFactor):
-
-    import os,shutil,math
-    #from xmipp import *
-
-    PerformReconstruction=True
-    split_sel_root_name=ProjMatchRootName+'_split'
-    Outputvolumes=[]
-    Outputvolumes.append(split_sel_root_name+'_1')
-    Outputvolumes.append(split_sel_root_name+'_2')
+        # 3 Never allow DoAlign2D and DoCtfCorrection together
+        if (int(getComponentFromVector(DoAlign2D,1))==1 and DoCtfCorrection):
+            self.errors.append("You cannot realign classes AND perform CTF-correction. Switch either of them off!")
     
-    Selfiles=[]
-    Selfiles.append(split_sel_root_name+'_1_classes.sel')
-    Selfiles.append(split_sel_root_name+'_2_classes.sel')
-    Docfiles=[]
-    Docfiles.append(split_sel_root_name+'_1_classes.doc')
-    Docfiles.append(split_sel_root_name+'_2_classes.doc')
-    for i in range(len(Outputvolumes)):
-       print '*********************************************************************'
-       print '* Reconstruct volume'
-       if _ReconstructionMethod=='wbp':
-          program = 'xmipp_reconstruct_wbp'
-          parameters= ' -i '    + Selfiles[i] + \
-                      ' --doc '  + Docfiles[i] + \
-                      ' -o '    + Outputvolumes[i] + ".vol" + \
-                      ' --sym '  + _SymmetryGroup + \
-                      ' --weight --use_each_image '
-          parameters = parameters + _WBPReconstructionExtraCommand
-          _MyNumberOfThreads = 1
-       elif _ReconstructionMethod=='art':
-          program = 'xmipp_reconstruct_art'
-          _DoParallel=False
-          parameters=' -i '    + Selfiles[i] + \
-                     ' -o '    + Outputvolumes[i] + \
-                     ' --sym '  + _SymmetryGroup + \
-             ' --thr '  + str(_MyNumberOfThreads) + \
-                     ' --WLS '
-          if len(_ARTLambda)>1:
-             parameters = parameters + ' -l '   + _ARTLambda + ' '
-          parameters = parameters + _ARTReconstructionExtraCommand
-       elif _ReconstructionMethod=='fourier':
-          if ( _MyNumberOfMpiProcesses ==1):
-             _DoParallel=False
-          program = 'xmipp_reconstruct_fourier'
-          parameters=' -i '    +  Selfiles[i] + \
-                     ' -o '    +  Outputvolumes[i] + '.vol ' + \
-                     ' --sym '  + _SymmetryGroup + \
-             ' --thr '  + str(_MyNumberOfThreads) + \
-                     ' --weight ' + \
-                     ' --max_resolution ' + str(_FourierMaxFrequencyOfInterest) +\
-             ' --pad_proj ' + str(_PaddingFactor) +\
-             ' --pad_vol ' + str(_PaddingFactor)
-          if (_DoParallel):
-             parameters = parameters + ' --mpi_job_size ' + str(_MyMpiJobSize)
-          if ( not _DoSplitReferenceImages):
-             PerformReconstruction=False
-          parameters = parameters + _FourierReconstructionExtraCommand
-       else:
-          _mylog.error("Reconstruction method unknown. Quiting")
-          print "Reconstruction method unknown. Quiting"
-          exit(1)
-
-       import launch_job
-       if(PerformReconstruction):
-           launchJob(program,
-                             parameters,
-                             _mylog,
-                             _DoParallel,
-                             _MyNumberOfMpiProcesses,
-                             _MyNumberOfThreads,
-                             _MySystemFlavour)
-
-    # Prevent high-resolution correlation because of discrete mask from wbp
-    innerrad = _OuterRadius - 2
-    for i in range(len(Outputvolumes)):
-       Outputvolumes[i]+=".vol"
-       print '*********************************************************************'
-       print '* Applying a soft mask'
-       command = " -i " + Outputvolumes[i] + \
-                 " --mask  raised_cosine -" + str(innerrad) + \
-                 " -" + str(_OuterRadius)
-       launchJob("xmipp_mask",
-                             command,
-                             _mylog,
-                             False,1,1,_MySystemFlavour)
-  
-    print '**************************************************************'
-    print '* Compute resolution ' 
-    command = " --ref " + Outputvolumes[0] +\
-              " -i " +Outputvolumes[1]  + ' --sam ' + str(_ResolSam)
-    if ReconstructionMethod=='fourier':
-        import spider_header
-        myheader=spider_header.spiderheader(Outputvolumes[i] )
-        ncolumns=myheader.nx
-    #2.5 is the blob radius 
-    aux4 = 2.5 * 0.5 / ncolumns
-    command += " --max_sam " + str (_ResolSam/(aux4+_FourierMaxFrequencyOfInterest))
+        #4N outter radius is compulsory
+        _OuterRadius = getComponentFromVector(OuterRadius,1)
+        _InnerRadius = getComponentFromVector(InnerRadius,1)
+        if _OuterRadius <= _InnerRadius:
+            self.errors.append("OuterRadius must be larger than InnerRadius")
+        #not clear if this a need to return anything since is part of the class
+        #FIXME
+        return self.errors 
     
-    launchJob("xmipp_resolution_fsc",
-                          command,
-                          _mylog,
-                          False,1,1,_MySystemFlavour)
-    import visualization
-    if _DisplayResolution==True:
-      plot=visualization.gnuplot()
-      plot.plot_xy_file(Outputvolumes[1]+'.frc',
-                          Title="Resolution",
-                          X_Label="Armstrong^-1",
-                          Y_Label="y",
-                          X_col=1,
-                          Y_col=2)
-      print '*********************************************************************'
-      print '* plot resolution'
-      _mylog.info(" plot resolution")
-
-    # Copy FSC to standard name file
-    outputfsc=_ReconstructedVolume.replace(ReconstructedVolume,OutputFsc)
-    shutil.copy(Outputvolumes[1]+'.frc',outputfsc) 
-
-    #compute resolution
-    resolution_fsc_file = Outputvolumes[1]+'.frc'
-
-    #from xmipp import *
+    def summary(self):
+        super(ProtProjMatch, self).summary()
+        auxString = 'Performed %d iterations'%self.NumberofIterations
+        auxString += ' with angular sampling rate %s'%AngSamplingRateDeg
+        auxString += '\nFinal Resolution is %s'%'not yet implemented'
+        auxString += '\nNumber of CTFgroups and References is %d %d respectively'\
+                        %(self.NumberOfCtfGroups,self.numberOfReferences)
+        self.summary.append(auxString)
+        
+    def preRun(self):
+        print "in PRERUN"
+        #Convert directories/files  to absolute path from projdir
+        self.CtfGroupDirectory = os.path.join(self.WorkingDir, self.CtfGroupDirectory)
+        self.CtfGroupSubsetFileName = os.path.join(self.CtfGroupDirectory, self.CtfGroupSubsetFileName)
+    #vector for iterations??????
+    #    global ProjMatchDir
+    #    ProjMatchDir = WorkingDir +'/' + ProjMatchDir
+        self.DocFileWithOriginalAngles = os.path.join(self.WorkingDir, self.DocFileWithOriginalAngles)
     
-    mD = MetaData(resolution_fsc_file)
-    freq=0.
+        
+        # Convert vectors to list
+        self.ReferenceFileNames = getListFromVector(ReferenceFileNames)
+        self.numberOfReferences = len(self.ReferenceFileNames)
+        #directory with ProjMatchClasses
+        self.ProjMatchDirs=[" "]
+        self.LibraryDirs=[" "]
+        self.DocFileInputAngles=[self.DocFileWithOriginalAngles]
+        #ProjMatchRootName=[" "]
+        
+        for iterN in range(NumberofIterations):
+            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
+            self.ProjMatchDirs.append(fnBaseIter + self.ProjMatchDir)
+            self.LibraryDirs.append( fnBaseIter + self.LibraryDir)
+            self.DocFileInputAngles.append("%s%s.doc" % (fnBaseIter, self.docfile_with_current_angles))
+        
+        auxList = (self.numberOfReferences + 1) * [None]
+        self.ProjectLibraryRootNames=[[None]]
+        for iterN in range(NumberofIterations):
+            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
+            for refN in range(self.numberOfReferences):                
+                auxList[refN + 1]= "%s%s_ref_%02d.stk" % (fnBaseIter, self.ProjectLibraryRootName, refN)
+            self.ProjectLibraryRootNames.append(list(auxList))
+                    
+        self.ProjMatchRootNames=[[None]]
+        for iterN in range(NumberofIterations):
+            for refN in range(self.numberOfReferences):
+                auxList[refN + 1]="%s/%s_ref_%02d.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName, refN + 1)
+            self.ProjMatchRootNames.append(list(auxList))
     
-    for id in mD:
-         fsc = mD.getValue(MDL_RESOLUTION_FRC, id)
-         if(fsc < 0.5):
-             freq=mD.getValue(MDL_RESOLUTION_FREQ, id)
-             break
+    
+        #name of masked volumes
+        #add dummy name so indexes start a 1
+        self.maskedFileNamesIters = [[None]]
+        for iterN in range(NumberofIterations):
+            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
+            for refN in range(self.numberOfReferences):
+                auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.maskReferenceVolume, refN + 1)
+            self.maskedFileNamesIters.append(list(auxList))
+    
+        ####################################################################
+        #add initial reference, useful for many routines
+        #NOTE THAT INDEXES START AT 1
+        self.reconstructedFileNamesIters.append([None] + self.ReferenceFileNames)
+        for iterN in range(NumberofIterations):
+            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
+            for refN in range(self.numberOfReferences):
+                auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.ReconstructedVolume, refN + 1)
+            self.reconstructedFileNamesIters.append(list(auxList))
+    
+        self.docfile_with_current_anglesList=[None]
+        for iterN in range(NumberofIterations):
+            fnBaseIter = "%s/Iter_%02d/%s.doc" % (self.WorkingDir, iterN + 1, self.docfile_with_current_angles)
+            self.docfile_with_current_anglesList.append(fnBaseIter)
+    
+        #parameter for projection matching
+        self.Align2DIterNr          = [-1]+getListFromVector(Align2DIterNr,NumberofIterations)
+        self.Align2dMaxChangeOffset = [-1]+getListFromVector(Align2dMaxChangeOffset,NumberofIterations)
+        self.Align2dMaxChangeRot    = [-1]+getListFromVector(Align2dMaxChangeRot,NumberofIterations)
+        self.AngSamplingRateDeg     = [-1]+getListFromVector(AngSamplingRateDeg,NumberofIterations)
+        self.DiscardPercentage      = [-1]+getListFromVector(DiscardPercentage,NumberofIterations)
+        self.DoAlign2D              = [False]+getBoolListFromVector(DoAlign2D,NumberofIterations)
+        self.DoComputeResolution    = [False]+getBoolListFromVector(DoComputeResolution,NumberofIterations)
+        self.DoSplitReferenceImages = [False]+getBoolListFromVector(DoSplitReferenceImages,NumberofIterations)
+        self.InnerRadius            = [False]+getListFromVector(InnerRadius,NumberofIterations)
+        self.MaxChangeInAngles      = [-1]+getListFromVector(MaxChangeInAngles,NumberofIterations)
+        self.MaxChangeOffset        = [-1]+getListFromVector(MaxChangeOffset,NumberofIterations)
+        self.MinimumCrossCorrelation= [-1]+getListFromVector(MinimumCrossCorrelation,NumberofIterations)
+        self.OnlyWinner             = [False]+getBoolListFromVector(OnlyWinner,NumberofIterations)
+        self.OuterRadius            = [False]+getListFromVector(OuterRadius,NumberofIterations)
+        self.PerturbProjectionDirections = [False]+getBoolListFromVector(PerturbProjectionDirections,NumberofIterations)
+        self.ReferenceIsCtfCorrected     = [-1]+getListFromVector(str(ReferenceIsCtfCorrected) + " True", NumberofIterations)
+        self.ScaleNumberOfSteps          = [-1]+getListFromVector(ScaleNumberOfSteps,NumberofIterations)
+        self.ScaleStep              = [-1]+getListFromVector(ScaleStep,NumberofIterations)
+        self.Search5DShift          = [-1]+getListFromVector(Search5DShift,NumberofIterations)
+        self.Search5DStep           = [-1]+getListFromVector(Search5DStep,NumberofIterations)
+        self.SymmetryGroup          = [-1]+getListFromVector(SymmetryGroup,NumberofIterations)
          
-    filter_frequency = freq
+        # Configure dabase
+        self.Db.setPrintWrapperParameters(PrintWrapperParameters)
+        self.Db.setPrintWrapperCommand(PrintWrapperCommand)
+        self.Db.setVerify(Verify,ViewVerifyedFiles)
+
+    def otherActionsToBePerformedBeforeLoop(self):
+        print "in otherActionsToBePerformedBeforeLoop"
+
+        _dataBase = self.Db
+        
+        if DoCtfCorrection:
+            auxMD1 = MetaData(CTFDatName)
+            auxMD2 = MetaData()
+            auxMD2.aggregate(auxMD1, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT)
+            self.NumberOfCtfGroups = auxMD2.size()
     
-    print '* maximum resolution (A^-1): ', filter_frequency
-    filter_frequency *= _ResolSam
-    print '* maximum resolution (px^-1): ', filter_frequency
-    return filter_frequency
+        _Parameters = {
+              'DoDeleteWorkingDir':DoDeleteWorkingDir
+            , 'ProjectDir':self.projectDir
+            , 'WorkingDir':self.WorkingDir
+            }
+        command = 'deleteWorkingDirectory'
+        _dataBase.insertAction(command, _Parameters, 1)
 
-#------------------------------------------------------------------------
-#           filter_at_given_resolution
-#------------------------------------------------------------------------
-def filter_at_given_resolution(_DoLowPassFilter,
-                               _DoComputeResolution,
-                               _mylog, 
-                               _iteration_number,
-                               _UseFscForFilter,
-                               _ConstantToAddToFiltration,
-                               _filter_frequency,
-                               _ReconstructedVolume,
-                               _ReconstructedandfilteredVolume,
-                               _MySystemFlavour
-                               ):
-
-    import os,shutil
-    import launch_job
-    Inputvolume   =_ReconstructedVolume+'.vol'
-    Outputvolume  =_ReconstructedandfilteredVolume+'.vol'
-
-    filter_in_pixels_at=0.5
-    if (not _DoLowPassFilter):
-        shutil.copy(Inputvolume,Outputvolume) 
-        command ="shutilcopy" + Inputvolume + ' ' + Outputvolume
-        _mylog.info(command)
-    else:   
-        print '**************************************************************'
-        print '* Filter reconstruction ' 
-        if (_UseFscForFilter):
-           filter_in_pixels_at = float(_filter_frequency) +\
-                                 float(_ConstantToAddToFiltration)
-        else:
-           filter_in_pixels_at = float(_ConstantToAddToFiltration)
-
-        if (filter_in_pixels_at>0.5):
-           shutil.copy(Inputvolume,Outputvolume) 
-           command ="shutilcopy" + Inputvolume + ' ' + Outputvolume
-           _mylog.info(command)
-           filter_in_pixels_at=0.5
-        else:
-           command = " -i " + Inputvolume +\
-                     " -o " + Outputvolume + ' --low_pass ' +\
-                     str (filter_in_pixels_at)
-           launchJob("xmipp_fourier_filter",
-                                 command,
-                                 _mylog,
-                                 False,1,1,_MySystemFlavour)
-
-    return filter_in_pixels_at
-
-
-#------------------------------------------------------------------------
-# Recenter volume
-#------------------------------------------------------------------------
-def execute_center_volume(_mylog,
-                          _volume,
-                          _MySystemFlavour):
-    import launch_job
-    _mylog.info("Centering "+_volume)
+        #Create directory
+        _Parameters = {
+              'path': self.getIterDirName(0)
+            }
+        command = 'createDir'
+        _dataBase.insertAction(command, _Parameters, 1)
     
-    # Symmetrize input volume
-    command = "-i "+_volume+".vol -o tmp.vol --sym i3"
-    launchJob("xmipp_symmetrize",
-                         command,
-                         _mylog,
-                         False,1,1,_MySystemFlavour)
+        #Backup protocol file
+        _Parameters = {
+              'script'  :self.scriptName
+            , 'WorkingDir':self.WorkingDir
+            }
+        command = 'makeScriptBackup'
+        _dataBase.insertAction(command, _Parameters, XmippProtocolDbStruct.doAlways)#backup always
     
-    # Align input volume
-    command = "--i1 tmp.vol --i2 "+_volume+".vol --local --onlyShift --apply"
-    launchJob("xmipp_align_volumes",
-                         command,
-                         _mylog,
-                         False,1,1,_MySystemFlavour)
+        #Check references and projections size match
+        #Is already done in preconditions but I like to
+        #run protocols from command line bypassing the gui
+        _Parameters = {
+              'ReferenceFileNames':self.ReferenceFileNames
+            , 'SelFileName':SelFileName
+            }
+        command = 'checkVolumeProjSize'
+        _dataBase.insertAction(command, _Parameters, 1)
+    
+        #Check Option compatibility
+        _Parameters = {
+              'DoAlign2D':self.DoAlign2D[1]
+            , 'DoCtfCorrection':DoCtfCorrection
+            }
+        command = 'checkOptionsCompatibility'
+        _dataBase.insertAction(command, _Parameters, 1)
+    
+        #7 make CTF groups
+        _Parameters = {
+                      'CTFDatName': CTFDatName
+                    , 'CtfGroupDirectory': self.CtfGroupDirectory
+                    , 'CtfGroupMaxDiff': CtfGroupMaxDiff
+                    , 'CtfGroupMaxResol': CtfGroupMaxResol
+                    , 'CtfGroupRootName': self.CtfGroupRootName
+                    , 'DataArePhaseFlipped': DataArePhaseFlipped
+                    , 'DoAutoCtfGroup': DoAutoCtfGroup
+                    , 'DoCtfCorrection': DoCtfCorrection
+                    , 'PaddingFactor': PaddingFactor
+                    , 'SelFileName': SelFileName
+                    , 'SplitDefocusDocFile': SplitDefocusDocFile
+                    , 'WienerConstant': WienerConstant
+                   }
+        command = 'executeCtfGroups'
+        _VerifyFiles = []
+        fnBase = os.path.join(self.CtfGroupDirectory, self.CtfGroupRootName)
+        if DoCtfCorrection:            
+            _VerifyFiles.append(fnBase+'Info.xmd')
+            _VerifyFiles.append(fnBase+'_ctf.stk')
+            _VerifyFiles.append(fnBase+'_wien.stk')
+            _VerifyFiles.append(fnBase+'_split.doc')
+        _VerifyFiles.append(fnBase+'_images.sel')
+            
+        _dataBase.insertAction(command, _Parameters, 1,_VerifyFiles)
+        #Create Initial angular file. Either fill it with zeros or copy input
+        _Parameters = {
+              'DocFileName':DocFileName
+            , 'DocFileWithOriginalAngles':self.DocFileWithOriginalAngles
+            , 'SelFileName':SelFileName
+            }
+        command = 'initAngularReferenceFile'
+        _VerifyFiles = []
+        _VerifyFiles.append(self.DocFileWithOriginalAngles)
+        _dataBase.insertAction(command, _Parameters, 1,_VerifyFiles)
+    
+        #Save all parameters in dict for future runs (this is done by database)
+        #so far no parameter is being saved, but dummy=0
+        _Parameters = {
+          'SystemFlavour':SystemFlavour
+        }
+        command = 'self.saveParameters'
+        _dataBase.insertAction(command, _Parameters, 1)
+        _Parameters = {}    
+        command = 'self.loadParameters'
+        _dataBase.insertAction(command, _Parameters, XmippProtocolDbStruct.doAlways)
+    
+        #no entries will be save untill this commit
+        print "commit databse"
+        _dataBase.connection.commit()
+    
+    def getIterDirName(self, iterN):
+        return os.path.join(self.projectDir, self.WorkingDir, 'Iter%02d' % iterN)
+    
+    def actionsToBePerformedInsideLoop(self):
+        _log = self.Log
+        _dataBase = self.Db
+        
+        for iterN in range(1, NumberofIterations + 1):
+            # create working dir
+            _Parameters = {
+                 'path': self.getIterDirName(iterN)
+                }
+            command = 'createDir'
+            _dataBase.insertAction(command, _Parameters, iterN)
+    
+            #Create directory with classes
+            _Parameters = {
+                  'path':self.ProjMatchDirs[iterN]
+                }
+            command = 'createDir'
+            _dataBase.insertAction(command, _Parameters, 1)
+        
+            #Create directory with image libraries
+            _Parameters = {
+                  'path':self.LibraryDirs[iterN]
+                }
+            command = 'createDir'
+            _dataBase.insertAction(command, _Parameters, 1)
+            for refN in range(1, self.numberOfReferences + 1):
+                ##############REMOVE SHUTIL.COPY
+                # Mask reference volume
+                _Parameters = {
+                                      'DoMask'             : DoMask
+                                    , 'DoSphericalMask'    : DoSphericalMask
+                                    , 'maskedFileName'     : self.maskedFileNamesIters[iterN][refN]
+                                    , 'maskRadius'         : MaskRadius
+                                    , 'reconstructedFileName' : self.reconstructedFileNamesIters[iterN - 1][refN]
+                                    , 'userSuppliedMask'   : MaskFileName
+                                    }
+                
+                command = "executeMask"
+                _VerifyFiles = []
+                _VerifyFiles.append(self.maskedFileNamesIters[iterN][refN])
+                _VerifyFiles.append(self.maskedFileNamesIters[iterN][refN])
+                _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
+    
+                # angular_project_library
+                _Parameters = {
+                                      'AngSamplingRateDeg':self.AngSamplingRateDeg[iterN]
+                                    , 'CtfGroupSubsetFileName':self.CtfGroupSubsetFileName
+                                    , 'DoCtfCorrection': DoCtfCorrection
+                                    , 'DocFileInputAngles':self.DocFileInputAngles[iterN-1]
+                                    , 'DoParallel': DoParallel
+                                    , 'DoRestricSearchbyTiltAngle':DoRestricSearchbyTiltAngle
+                                    , 'MaxChangeInAngles':self.MaxChangeInAngles[iterN]
+                                    , 'maskedFileNamesIter':self.maskedFileNamesIters[iterN][refN]
+                                    , 'MpiJobSize':MpiJobSize
+                                    , 'NumberOfMpiProcesses':NumberOfMpiProcesses
+                                    , 'NumberOfThreads':NumberOfThreads
+                                    , 'OnlyWinner':self.OnlyWinner[iterN]
+                                    , 'PerturbProjectionDirections':self.PerturbProjectionDirections[iterN]
+                                    , 'ProjectLibraryRootName':self.ProjectLibraryRootNames[iterN][refN]
+                                    , 'SystemFlavour':SystemFlavour
+                                    , 'SymmetryGroup':self.SymmetryGroup[iterN]
+                                    , 'SymmetryGroupNeighbourhood':SymmetryGroupNeighbourhood
+                                    , 'Tilt0':Tilt0
+                                    , 'TiltF':TiltF
+                                    }
+    
+                command = "angular_project_library"
+                _VerifyFiles = []
+                #file with projections
+                auxFn=self.ProjectLibraryRootNames[iterN][refN]
+                _VerifyFiles.append(auxFn)
+                auxFn=auxFn[:-4]#remove extension
+                #file with projection angles angles 
+                _VerifyFiles.append(auxFn + ".doc")
+                #file with sampling point neighbourhood 
+                _VerifyFiles.append(auxFn + "_sampling.xmd")
+                #file with sampling point neighbourhood for each ctf group, this is reduntant but useful
+                
+                for i in range (1,self.NumberOfCtfGroups+1):
+                    _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.xmd")
+                            
+                _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
+                # projectionMatching    
+                _Parameters = {
+                                      'AvailableMemory':AvailableMemory
+                                    , 'CtfGroupRootName': self.CtfGroupRootName
+                                    , 'CtfGroupDirectory': self.CtfGroupDirectory
+                                    , 'DoComputeResolution':self.DoComputeResolution[iterN]
+                                    , 'DoCtfCorrection': DoCtfCorrection
+                                    , 'DoScale':DoScale
+                                    , 'DoParallel': DoParallel
+                                    , 'InnerRadius':self.InnerRadius[iterN]
+                                    , 'MaxChangeOffset':self.MaxChangeOffset[iterN]
+                                    , 'MpiJobSize':MpiJobSize
+                                    , 'NumberOfCtfGroups':self.NumberOfCtfGroups
+                                    , 'NumberOfMpiProcesses':NumberOfMpiProcesses
+                                    , 'NumberOfThreads':NumberOfThreads
+                                    , 'OuterRadius':self.OuterRadius[iterN]
+                                    , 'PaddingFactor':PaddingFactor
+                                    , 'ProjectLibraryRootName':self.ProjectLibraryRootNames[iterN][refN]
+                                    , 'ProjMatchRootName':self.ProjMatchRootNames[iterN][refN]
+                                    , 'ReferenceIsCtfCorrected':self.ReferenceIsCtfCorrected[iterN]
+                                    , 'ScaleStep':self.ScaleStep[iterN]
+                                    , 'ScaleNumberOfSteps':self.ScaleNumberOfSteps[iterN]
+                                    , 'Search5DShift':self.Search5DShift[iterN]
+                                    , 'Search5DStep':self.Search5DStep[iterN]
+                                    , 'SystemFlavour':SystemFlavour
+                                    }
+    
+                command = "projection_matching"
+                _VerifyFiles = []
+                #File with list of images and references
+                _VerifyFiles.append(self.ProjMatchRootNames[iterN][refN] )
+                for i in range (1,self.NumberOfCtfGroups+1):
+                    _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.xmd")
+                _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
+                
+    
+            
+            #assign the images to the different references based on the crosscorrelation coheficient
+            #if only one reference it just copy the docfile generated in the previous step
+            _Parameters = {
+                           'DocFileInputAngles' : self.DocFileInputAngles[iterN]#Output file with angles
+                         , 'NumberOfCtfGroups' : self.NumberOfCtfGroups
+                         , 'ProjMatchRootName':self.ProjMatchRootNames[iterN]#LIST
+                         , 'NumberOfReferences':self.numberOfReferences
+                          }
+            _VerifyFiles = []
+            _VerifyFiles.append(self.DocFileInputAngles[iterN])
+            command = "assign_images_to_references"
+            _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
+    
+            #align images, not possible for ctf groups
+            for refN in range(1, self.numberOfReferences + 1):
+                _Parameters = {
+                           'Align2DIterNr':self.Align2DIterNr[iterN]#
+                         , 'Align2dMaxChangeRot':self.Align2dMaxChangeRot[iterN]#
+                         , 'Align2dMaxChangeOffset':self.Align2dMaxChangeOffset[iterN]#
+                         , 'CtfGroupDirectory': self.CtfGroupDirectory#
+                         , 'CtfGroupRootName': self.CtfGroupRootName#
+                         , 'DiscardPercentage':self.DiscardPercentage[iterN]#
+                         , 'DoAlign2D' : self.DoAlign2D[iterN]#
+                         , 'DoCtfCorrection': DoCtfCorrection#
+                         , 'DocFileInputAngles' : self.DocFileInputAngles[iterN]#
+                         , 'DoParallel': DoParallel#
+                         , 'DoSplitReferenceImages':self.DoSplitReferenceImages[iterN]#
+                         , 'InnerRadius':self.InnerRadius[iterN]#
+                         , 'MaxChangeOffset':self.MaxChangeOffset[iterN]#
+                         , 'MinimumCrossCorrelation':self.MinimumCrossCorrelation[iterN]#
+                         , 'NumberOfReferences':self.numberOfReferences#
+                         , 'NumberOfCtfGroups' : self.NumberOfCtfGroups#
+                         , 'NumberOfMpiProcesses':NumberOfMpiProcesses#
+                         , 'NumberOfThreads':NumberOfThreads#
+                         , 'PaddingFactor':PaddingFactor#
+                         , 'ProjectLibraryRootName':self.ProjectLibraryRootNames[iterN][refN]#
+                         , 'ProjMatchRootName':self.ProjMatchRootNames[iterN][refN]#
+                         , 'refN':refN
+                         , 'SystemFlavour':SystemFlavour#
+                        }
+    #, 'MpiJobSize':MpiJobSize#
+    #, 'OuterRadius':OuterRadius[iterN]
+                command = "angular_class_average"
+                _VerifyFiles = []
+                _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
+                
+                ##############REMOVE SHUTIL.COPY
+                # Mask reference volume
+                _Parameters = {
+                                      'DoMask'             : DoMask
+                                    , 'DoSphericalMask'    : DoSphericalMask
+                                    , 'maskedFileName'     : self.maskedFileNamesIters[iterN][refN]
+                                    , 'maskRadius'         : MaskRadius
+                                    , 'reconstructedFileName' : self.reconstructedFileNamesIters[iterN - 1][refN]
+                                    , 'userSuppliedMask'   : MaskFileName
+                                    }
+                
+                command = "executeMask"
+                _VerifyFiles = []
+                _VerifyFiles.append(self.maskedFileNamesIters[iterN][refN])
+                _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
+    
+    #reconstruct
+    #resolution
+    #
+                
+    ######################
+    ######################
+    ########################            
+                #REMOVE
+                #Create directory
+            _Parameters = {
+                 'path':self.getIterDirName(iterN + 1)
+                }
+            command = 'createDir'
+            _dataBase.insertAction(command, _Parameters, iterN)
+            
+            _Parameters = {'dummy':''}
+            command = "shutil.copy('%s','%s');dummy" % (self.ReferenceFileNames[0], self.reconstructedFileNamesIters[iterN][refN])
+            _VerifyFiles = []
+            _VerifyFiles.append(self.reconstructedFileNamesIters[iterN][refN])
+            _dataBase.insertAction(command, _Parameters, iterN)
+    
+    ###            #delete DocFileInputAngles so I can use append style for metadata in DocFileInputAngles
+    ###            _Parameters = {
+    ###                           'FileName': DocFileInputAngles[iterN]
+    ###                          ,'Verbose' : 1
+    ###                           }
+    ###            command = "deleteFile"
+    ###            _dataBase.insertAction(command, _Parameters, iterN)
+    
+    ###        command = "exit(1)"
+    ###        _dataBase.insertAction(command, _Parameters, iterN)
+    
+    
+    ######################################
+        _Parameters = {'dummy':''}
+        command = "print 'ALL DONE';dummy"
+        _dataBase.insertAction(command, _Parameters, XmippProtocolDbStruct.doAlways)
+    
+        _dataBase.connection.commit()
 
-    launchJob("rm",
-                         "tmp.vol",
-                         _mylog,
-                         False,1,1,_MySystemFlavour)
-
-#------------------------------------------------------------------------
-#clean working directory
-#------------------------------------------------------------------------
-def execute_cleanup(_mylog,
-                    _DeleteClassAverages,
-                    _DeleteReferenceProjections):
-   import os,glob
-   import utils_xmipp
-   
-   if (_DeleteClassAverages):
-      message=' CleanUp: deleting directory '+ ProjMatchDir
-      print '* ',message
-      _mylog.info(message)
-      os.system(' rm -r ' + ProjMatchDir + ' &')
-
-   if (_DeleteReferenceProjections):
-      message=' CleanUp: deleting directory '+ LibraryDir
-      print '* ',message
-      _mylog.info(message)
-      os.system(' rm -r ' + LibraryDir + ' &')
-
-def  fill_name_vector(_user_suplied_name,
-                      _volume_name_list,
-                      _NumberofIterations,
-                      _root_name):
-     _volume_name_list.append("dummy")
-     if (len(_user_suplied_name)>1):
-        _volume_name_list.append(_user_suplied_name)
-     for _iteration_number in range(1, _NumberofIterations):
-         _volume_name_list.append("../"+'Iter_'+\
-                                   str(_iteration_number)+'/'+ 'Iter_'+\
-                                   str(_iteration_number)+'_'+\
-                                   _root_name)
-                  
-def check_file_exists(name,log):
-    import os,sys
-    if not os.path.exists(name):
-        message='Error: File '+name+' does not exist, exiting...'
-        print '*',message
-        log.error(message)
-        sys.exit()
-
-#
-# main
-#     
+    def defineActions(self):
+        self.preRun()
+        self.otherActionsToBePerformedBeforeLoop()
+        self.actionsToBePerformedInsideLoop()
+    
 if __name__ == '__main__':
+    import sys
+    script  = sys.argv[0] 
+    options = command_line_options()
+    
+    if options.gui:
+        gui = ProtocolGUI()
+        gui.createGUI(script)
+        gui.fillGUI()
+        gui.launchGUI()
+    else:
+        
+        #self.parser = optparse.OptionParser()
+        #process command line
+        project = XmippProject()
+        project.load()
+        p = ProtProjMatch(script, project)
+        #super(ProtProjMatch,self).__init__(scriptname, runName, project)
+    
+        p.run(ContinueAtIteration,IsIter)
 
-    # create rotational_spectra_class object
-    # 
-   
-    #init variables
-  my_projmatch=projection_matching_class(
-                NumberofIterations,     
-                ContinueAtIteration,  
-                CleanUpFiles,
-                DoMask,   
-                DoSphericalMask,
-                MaskRadius,
-                ReferenceFileName,              
-                MaskFileName,                   
-                DoProjectionMatching,           
-                DisplayProjectionMatching,      
-                AngSamplingRateDeg,             
-                PerturbProjectionDirections,
-                DoRetricSearchbyTiltAngle,      
-                Tilt0,                          
-                TiltF,   
-                DoScale,   
-                ScaleStep,
-                ScaleNumberOfSteps,
-                ProjMatchingExtra,              
-                MaxChangeOffset,
-                MaxChangeInAngles,
-                MinimumCrossCorrelation,
-                DiscardPercentage,
-                DoAlign2D,                      
-                InnerRadius,                    
-                OuterRadius,                    
-                Search5DShift,
-                Search5DStep,
-                AvailableMemory,
-                Align2DIterNr,                  
-                Align2dMaxChangeOffset,
-                Align2dMaxChangeRot,            
-                DisplayReconstruction,
-                DisplayResolution,          
-                DoReconstruction,
-                ReconstructionMethod,
-                ARTLambda,
-                ARTReconstructionExtraCommand,
-                WBPReconstructionExtraCommand,
-                FourierReconstructionExtraCommand,
-                FourierMaxFrequencyOfInterest,
-                DoComputeResolution,
-                DoSplitReferenceImages,
-                ResolSam,
-                SelFileName,                    
-                DocFileName,                    
-                DoCtfCorrection,
-                CTFDatName,
-                WienerConstant,
-                DoAutoCtfGroup,
-                CtfGroupMaxDiff,
-                CtfGroupMaxResol,
-                SplitDefocusDocFile,
-                PaddingFactor,
-                DataArePhaseFlipped,
-                ReferenceIsCtfCorrected,
-                WorkingDir,                  
-                ProjectDir,                     
-                LogDir,                         
-                DoParallel,                     
-                NumberOfMpiProcesses,                   
-                SystemFlavour,
-                MpiJobSize,
-                NumberOfThreads,
-                SymmetryGroup,  
-                SymmetryGroupNeighbourhood,
-                OnlyWinner,
-                DoLowPassFilter,
-                UseFscForFilter,
-                ConstantToAddToFiltration,
-                DoCenterVolume
-                )
