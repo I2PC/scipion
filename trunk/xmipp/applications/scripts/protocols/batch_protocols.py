@@ -120,7 +120,7 @@ class XmippProjectGUI():
         srcProtDir = getXmippPath('protocols')
         srcProtAbsPath = os.path.join(protDir, srcProtName)
         
-        lastRunName = self.project.db.getLastRunName(protocol)
+        lastRunName = self.project.projectDb.getLastRunName(protocol)
         
         g = getScriptPrefix(lastRunName)
         print g
@@ -138,7 +138,7 @@ class XmippProjectGUI():
                'script': dstAbsPath, 
                'comment': "my first run"
                }
-        self.project.db.insertRun(run)
+        self.project.projectDb.insertRun(run)
         os.system('python %s %s &' % (os.path.join(protDir, 'xmipp_protocol_gui.py'), dstAbsPath))
         
     def launchProtocol(self, btnName):
@@ -150,7 +150,7 @@ class XmippProjectGUI():
             protAbsPath = os.path.join(protDir, protName)
             shutil.copy(protAbsPath, protDestName)
         run = XmippProjectRun(protName, protDestName, "my first run")
-        self.project.db.insertRun(run)
+        self.project.projectDb.insertRun(run)
         os.system('python %s %s &' % (os.path.join(protDir, 'xmipp_protocol_gui.py'), protDestName))
         
     def updateHistory(self, runs): 
@@ -178,7 +178,7 @@ class XmippProjectGUI():
             self.lastSelectedFrame.grid(row=0, column=1, sticky=W+E+N, padx=10, pady=10)
             self.project.config.set('project', 'lastselected', text)
             self.project.writeConfig()
-            runs = self.project.db.selectRuns(text)
+            runs = self.project.projectDb.selectRuns(text)
             self.updateHistory(runs)
             
 

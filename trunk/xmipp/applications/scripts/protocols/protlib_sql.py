@@ -60,34 +60,36 @@ class XmippProjectDb:
                 
         _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableRuns)s
                      (run_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                      run_name TEXT UNIQUE,
+                      run_name TEXT,
                       script TEXT,
                       init DATE, 
                       last_modified DATE,
                       protocol_name TEXT REFERENCES %(TableProtocols)s(protocol_name),
-                      comment TEXT);""" % self.sqlDict
+                      comment TEXT,
+                      CONSTRAINT unique_workingdir UNIQUE(run_name, protocol_name));""" % self.sqlDict
         self.execSqlCommand(_sqlCommand, "Error creating '%(TableRuns)s' table: " % self.sqlDict)
         
-        _sqlCommand = """CREATE TABLE IF NOT EXISTS %s
-                     (step_id INTEGER DEFAULT 0,
-                     command TEXT, 
-                     parameters TEXT,
-                     init DATE, 
-                     finish DATE,
-                     verified BOOL,
-                     fileNameList TEXT,
-                     iter INTEGER,
-                     run_id INTEGER REFERENCES runs(run_id) ON DELETE CASCADE,
-                     PRIMARY KEY(step_id, run_id))"""
-        self.execSqlCommand((_sqlCommand % '%(TableSteps)s') % self.sqlDict, 
-                            "Error creating '%(TableSteps)s' table: " % self.sqlDict)
-        self.execSqlCommand((_sqlCommand % '%(TableStepsRestart)s') % self.sqlDict, 
-                            "Error creating '%(TableStepsRestart)s' table: " % self.sqlDict)
+        def createStepTable(tableName):            
+            _sqlCommand = (" CREATE TABLE IF NOT EXISTS " + tableName +  """
+                         (step_id INTEGER DEFAULT 0,
+                         command TEXT, 
+                         parameters TEXT,
+                         init DATE, 
+                         finish DATE,
+                         verified BOOL,
+                         fileNameList TEXT,
+                         iter INTEGER,
+                         run_id INTEGER REFERENCES %(TableRuns)s(run_id) ON DELETE CASCADE,
+                         PRIMARY KEY(step_id, run_id))""") % self.sqlDict
         
-        _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableParameters)s 
+            self.execSqlCommand(_sqlCommand, ("Error creating " + tableName + " table: ") % self.sqlDict)
+        createStepTable('%(TableSteps)s')
+        createStepTable('%(TableStepsRestart)s')
+        
+        _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableParams)s 
                         (parameters TEXT,
-                        run_id INTEGER REFERENCES runs(run_id) ON DELETE CASCADE);""" % self.sqlDict
-        self.execSqlCommand(_sqlCommand, "Error creating '%(TableParameters)s' table: " % self.sqlDict)
+                        run_id INTEGER REFERENCES %(TableRuns)s(run_id) ON DELETE CASCADE);""" % self.sqlDict
+        self.execSqlCommand(_sqlCommand, "Error creating '%(TableParams)s' table: " % self.sqlDict)
                 
         _sqlCommand = """CREATE TRIGGER IF NOT EXISTS increment_step_id 
                          AFTER INSERT ON %(TableSteps)s FOR EACH ROW  
@@ -96,7 +98,7 @@ class XmippProjectDb:
                                                        FROM %(TableSteps)s 
                                                        WHERE run_id = NEW.run_id
                             WHERE step_id = 0 AND run_id = NEW.run_id; 
-                         END""" % self.sqlDict
+                         END """ % self.sqlDict
         
 
     def insertGroup(self, groupName):

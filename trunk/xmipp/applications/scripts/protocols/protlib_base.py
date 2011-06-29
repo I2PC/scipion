@@ -88,7 +88,7 @@ class XmippProject():
         self.config = ConfigParser.RawConfigParser()
         self.config.read(self.cfgName)
         # Load database
-        self.db = XmippProjectDb(self.dbName)
+        self.projectDb = XmippProjectDb(self.dbName)
         
     def writeConfig(self):
        with open(self.cfgName, 'wb') as configfile:

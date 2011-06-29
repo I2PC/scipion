@@ -75,7 +75,7 @@ def AddProtocol(name, basedir='applications/scripts/protocols'):
     
     destName = os.path.join(env['prefix'], 'protocols', name)
     
-    install = env.Command(srcName, destName, [Copy('$TARGET', '$SOURCE'), Chmod('$TARGET', 0755)])
+    install = env.Command(destName, srcName, [Copy('$TARGET', '$SOURCE'), Chmod('$TARGET', 0755)])
     #alias = env.Alias(fullname, command)
     alias = env.Alias('protocols', install)
     env.Default(alias)        
