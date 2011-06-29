@@ -69,7 +69,7 @@ public class MDTableItem extends AbstractTableImageItem {
     }
 
     public String getTooltipText() {
-        return path + (Filename.isStack(path) ? "[" + getNSlice() + "]" : "");
+        return path + (Filename.isStack(path) ? " [" + getNImage() + "]" : "");
     }
 
     public Object getLabelValue(int label) {

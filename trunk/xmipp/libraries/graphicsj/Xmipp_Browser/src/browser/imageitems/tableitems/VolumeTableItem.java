@@ -67,14 +67,17 @@ public class VolumeTableItem extends AbstractTableImageItem {
 
     @Override
     public String getTooltipText() {
-        return getAbsoluteFileName() + "[" + slice + "]";
+        return getAbsoluteFileName() + " (" + slice + ")";
     }
 
     public Object getLabelValue(int label) {
 
         switch (label) {
             case MDLabel.MDL_IMAGE:
-                return filename + "[" + slice + "]";
+                int digits = String.valueOf(dimension.getDepth()).length();
+                String sliceStr = String.format("%1$0" + digits + "d", getNSlice());
+
+                return sliceStr + "#" + filename;
             case MDLabel.MDL_ENABLED:
                 return enabled;
         }
