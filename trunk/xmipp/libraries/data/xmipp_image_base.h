@@ -119,8 +119,6 @@ struct ImageFHandler
     bool     exist;       // Shows if the file exists. Equal 0 means file does not exist or not stack.
 };
 
-
-
 /// @name Images Speed-up
 /// @{
 
@@ -204,7 +202,7 @@ struct ImageFHandler
 #define SWAPTRIG     65535
 
 
-// Image base class
+/// Image base class
 class ImageBase
 {
 public:
@@ -663,15 +661,15 @@ protected:
       */
     void closeFile(ImageFHandler* hFile = NULL) const;
 
-    /* Internal apply geometrical transformations */
+    /** Internal apply geometrical transformations */
     virtual void applyGeo(const MDRow &row, bool only_apply_shifts = false, bool wrap = WRAP) = 0;
 
-    /* Internal read image file method.
+    /** Internal read image file method.
      */
     int _read(const FileName &name, ImageFHandler* hFile, DataMode datamode = DATA, size_t select_img = ALL_IMAGES,
               bool mapData = false);
 
-    /* Internal write image file method.
+    /** Internal write image file method.
      */
     void _write(const FileName &name, ImageFHandler* hFile, size_t select_img = ALL_IMAGES,
                 bool isStack=false, int mode=WRITE_OVERWRITE,CastWriteMode castMode = CW_CAST);
@@ -680,23 +678,24 @@ protected:
       */
     virtual void readData(FILE* fimg, size_t select_img, DataType datatype, size_t pad) = 0;
 
-    /* Write the raw date after a data type casting.
+    /** Write the raw date after a data type casting.
      */
     virtual void writeData(FILE* fimg, size_t offset, DataType wDType, size_t datasize_n,
                            CastWriteMode castMode=CW_CAST) = 0;
 
-    /* Mmap the Image class to an image file.
+    /** Mmap the Image class to an image file.
      */
     virtual void mmapFile() = 0;
 
-    /* Munmap the image file.
+    /** Munmap the image file.
      */
     virtual void munmapFile() = 0;
 
-    /* Return the datatype of the current image object
+    /** Return the datatype of the current image object
      */
     virtual DataType myT()=0;
 
+    /** Show ImageBase */
     friend std::ostream& operator<<(std::ostream& o, const ImageBase& I);
 
 };
