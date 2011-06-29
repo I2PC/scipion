@@ -84,7 +84,7 @@ class BasicARTParameters
 {
 public:
     // Type of the parallel processing
-    typedef enum {ART, pCAV, pAVSP, pSART, pBiCAV, pSIRT, pfSIRT, SIRT } t_parallel_mode;
+    typedef enum {ART, pCAV, pAVSP, pSART, pBiCAV, pSIRT, pfSIRT, SIRT } ARTParallelMode;
 
     /* User parameters ...................................................... */
     //@{
@@ -100,10 +100,8 @@ public:
     /** Valid methods are ART, pCAV, pAVSP, pSART, pBiCAV, pSIRT and pfSIRT
         for parallel computation. This variable establish the way that particles are
         divided into blocks for parallel processing. If sequential
-        processing is wanted, set it to ART or SIRT. This is the default.
-
-        \\Ex: parallel_mode=BasicARTParameters::ART*/
-    t_parallel_mode parallel_mode;
+        processing is wanted, set it to ART or SIRT. This is the default.*/
+    ARTParallelMode parallel_mode;
 
     /// Number of projections for each parallel block
     int block_size;

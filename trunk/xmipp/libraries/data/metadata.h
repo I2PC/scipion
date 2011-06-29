@@ -199,7 +199,7 @@ protected:
     void _readRows(std::istream& is, std::vector<MDObject*> & columnValues, bool useCommentAsImage);
     /** This function will be used to parse the rows data in START format
      * @param[out] columnValues MDRow with values to fill in
-     * @param pchStar pointer to the position of '_loop' in memory
+     * @param pchStart pointer to the position of '_loop' in memory
      * @param pEnd  pointer to the position of the next '_data' in memory
      */
     void _readRowsStar(std::vector<MDObject*> & columnValues, char * pchStart, char * pEnd);

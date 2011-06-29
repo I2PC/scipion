@@ -93,8 +93,8 @@
  * an exception is thrown then a core is generated and the program is
  * automatically aborted.
  *
- * @{
  */
+/** @{ */
 /** Enum with errors types.
  * This enum represent the code of all possible
  * Xmipp erros that will be used to reporting errors

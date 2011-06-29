@@ -146,7 +146,7 @@ public:
     /// Projection Ydim
     int      proj_Ydim;
 
-    /// Debugging level. See \ref Prog_Project_Parameters::tell
+    /// Debugging level
     int tell;
 
     /// Enable angle range mode (0 or 1)
@@ -253,9 +253,8 @@ int PROJECT_Effectively_project(const std::string &fnOut,
 /** Main Project routine.
     Generate a set of projections given the projection parameters.
     This is the main projecting routine. This function generates a set
-    of projections according to the projecting parameters defined (see
-    \ref Prog_Project_Parameters to know more about how to specify
-    everything). The projections are written to disk.
+    of projections according to the projecting parameters defined.
+    The projections are written to disk.
 
     The Projection field will keep
     at the end the last projection, this is useful in case you want

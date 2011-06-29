@@ -1,4 +1,4 @@
-/***************************************************************************
+/**************************************************************************
  *
  * Authors:      J.R. Bilbao-Castro (jrbcast@ace.ual.es)
  *
@@ -206,7 +206,7 @@ bool MetaData::getColumnFormat() const
 {
     return isColumnFormat;
 }
-/** Set to false for row format (parameter files)
+/* Set to false for row format (parameter files)
  *  @ingroup GettersAndSetters
  *  set to true  for column format (this is the default) (docfiles)
  *
@@ -649,7 +649,7 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
     }
 }//write
 
-/** This function will read the posible columns from the file
+/* This function will read the posible columns from the file
  * and mark as MDL_UNDEFINED those who aren't valid labels
  * or those who appears in the IgnoreLabels vector
  * also set the activeLabels (for OLD doc files)
@@ -692,7 +692,7 @@ void MetaData::_parseObject(std::istream &is, MDObject &object, size_t id)
 }//end of function parseObject
 
 #define END_OF_LINE() ((char*) memchr (pchStart, '\n', pEnd-pchStart+1))
-/** This function will read the posible columns from the file
+/* This function will read the posible columns from the file
  * and mark as MDL_UNDEFINED those who aren't valid labels
  * or those who appears in the IgnoreLabels vector
  * also set the activeLabels (for new STAR files)
@@ -755,7 +755,7 @@ char * MetaData::_readColumnsStar(char * pStart,
     return pchStart;
 }
 
-/** This function will be used to parse the rows data
+/* This function will be used to parse the rows data
  * having read the columns labels before and setting wich are desired
  * the useCommentAsImage is for compatibility with old DocFile format
  * where the image were in comments
@@ -794,10 +794,7 @@ void MetaData::_readRows(std::istream& is, std::vector<MDObject*> & columnValues
     }
 }
 
-/** This function will be used to parse the rows data in START format
- * @param[out] columnValues MDRow with values to fill in
- * @param pchStar pointer to the position of '_loop' in memory
- * @param pEnd  pointer to the position of the next '_data' in memory
+/* This function will be used to parse the rows data in START format
  */
 void MetaData::_readRowsStar(std::vector<MDObject*> & columnValues, char * pchStart, char * pEnd)
 {
@@ -823,7 +820,7 @@ void MetaData::_readRowsStar(std::vector<MDObject*> & columnValues, char * pchSt
     }
 }
 
-/**This function will read the md data if is in row format */
+/*This function will read the md data if is in row format */
 void MetaData::_readRowFormat(std::istream& is)
 {
     std::string line, token;
@@ -1569,7 +1566,7 @@ WriteModeMetaData metadataModeConvert (String mode)
     REPORT_ERROR(ERR_ARG_INCORRECT,"metadataModeConvert: Invalid mode");
 }
 
-/** Class to generate values for columns of a metadata*/
+/* Class to generate values for columns of a metadata*/
 bool MDValueGenerator::fill(MetaData &md)
 {
     FOR_ALL_OBJECTS_IN_METADATA(md)
@@ -1578,7 +1575,7 @@ bool MDValueGenerator::fill(MetaData &md)
     }
 }
 
-/** Class to fill columns with another metadata in row format */
+/* Class to fill columns with another metadata in row format */
 bool MDExpandGenerator::fillValue(MetaData &md, size_t objId)
 {
     if (md.getValue(label, fn, objId))
