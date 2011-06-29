@@ -34,8 +34,8 @@ from protlib_sql import *
 from protlib_utils import *
 
 class XmippProject():
-    def __init__(self, dir):
-        self.dir = dir
+    def __init__(self, projectDir):
+        self.projectDir = projectDir
         self.cfgName = projectDefaults['Cfg']
         self.dbName =  projectDefaults['Db']
         self.logsDir = projectDefaults['LogsDir']
@@ -50,17 +50,19 @@ class XmippProject():
             status = False
         elif not os.path.exists(self.runsDir):
             status = False
+        elif not os.path.exists(self.cfgName):
+            status = False
         elif not existsDB(self.dbName):
             status = False
         return status
     
     def create(self):
-        os.chdir(self.dir)
-        print "Creating new project on directory: '%s'" % self.dir
+        os.chdir(self.projectDir)
+        print "Creating new project on directory: '%s'" % self.projectDir
          #==== CREATE CONFIG file
         self.config = ConfigParser.RawConfigParser()            
         self.config.add_section('project')
-        self.config.set('project', 'projectdir', self.dir)
+        self.config.set('project', 'projectdir', self.projectDir)
         self.config.set('project', 'mpiflavour', 'OPEN-MPI')
         self.writeConfig()
         #===== CREATE LOG AND RUN directories
@@ -75,11 +77,11 @@ class XmippProject():
             for group in groupList:
                 groupName = group[0]            
                 prots = group[1:]
-                self.db.insertGroup(groupName)
+                self.projectDb.insertGroup(groupName)
                 for p in prots:
-                    self.db.insertProtocol(groupName, launchDict[p])
+                    self.projectDb.insertProtocol(groupName, launchDict[p])
         # commint changes
-        self.db.connection.commit()
+        self.projectDb.connection.commit()
         
     def load(self):
         print 'Loading project..'
@@ -109,7 +111,7 @@ class XmippProtocol(object):
         self.project = project
         self.Import = '' # this can be used by database for import modules
         self.WorkingDir = os.path.join(launchDict['Projection Matching'],runName)
-        self.ProjectDir = project.dir  
+        self.ProjectDir = project.ProjectDir  
         #Setup the Log for the Protocol
         self.LogDir = project.logsDir
         uniquePrefix = self.WorkingDir.replace('/', '_')
