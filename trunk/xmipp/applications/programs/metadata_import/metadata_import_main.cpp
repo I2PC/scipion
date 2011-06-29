@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <data/metadata.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 class ProgMetadataImport: public XmippProgram
 {

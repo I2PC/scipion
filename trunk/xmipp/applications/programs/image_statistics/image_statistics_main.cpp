@@ -26,10 +26,10 @@
  ***************************************************************************/
 
 #include <cstdio>
-#include "data/args.h"
-#include "data/metadata.h"
-#include "data/image_generic.h"
-#include "data/mask.h"
+#include <data/xmipp_program.h>
+#include <data/xmipp_image_generic.h>
+#include <data/metadata.h>
+#include <data/mask.h>
 
 /* PROGRAM ----------------------------------------------------------------- */
 class ProgStatistics: public XmippMetadataProgram

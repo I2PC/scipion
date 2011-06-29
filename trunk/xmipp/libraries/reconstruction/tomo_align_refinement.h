@@ -25,10 +25,10 @@
 #ifndef _PROG_ANGULAR_PREDICT_TOMOGRAPHY
 #define _PROG_ANGULAR_PREDICT_TOMOGRPAHY
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/metadata.h>
-#include <data/image.h>
-#include <data/program.h>
+#include <data/xmipp_image.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup AngularPredictTomography angular_assign_for_tomogram (Discrete angular assignment for tomography)
    @ingroup ReconsLibrary */

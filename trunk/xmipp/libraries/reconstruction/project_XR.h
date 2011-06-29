@@ -27,8 +27,8 @@
 #define _PROJECTXR_H_
 
 #include <data/psf_xr.h>
-#include <data/program.h>
-#include <data/threads.h>
+#include <data/xmipp_program.h>
+#include <data/xmipp_threads.h>
 
 /**@defgroup ProjectionXRProgram project_xr (project for tilt series)
    @ingroup ReconsLibrary */

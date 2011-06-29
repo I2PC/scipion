@@ -24,14 +24,11 @@
  ***************************************************************************/
 
 #include <data/mask.h>
-#include <data/args.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
-#include <data/image.h>
+#include <data/xmipp_program.h>
 
 #include <cstdio>
-
-#include <data/program.h>
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv)

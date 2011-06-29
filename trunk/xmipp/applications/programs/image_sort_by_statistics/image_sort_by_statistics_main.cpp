@@ -26,12 +26,12 @@
 
 #include <data/basic_pca.h>
 #include <data/histogram.h>
-#include <data/image.h>
-#include <data/fftw.h>
+#include <data/xmipp_image.h>
+#include <data/xmipp_fftw.h>
 #include <data/args.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 class ProgSortByStatistics: public XmippProgram
 {

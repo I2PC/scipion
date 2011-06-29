@@ -26,7 +26,7 @@
 #ifndef MPI_ANGULAR_PROJECTION_MATCHING_H_
 #define MPI_ANGULAR_PROJECTION_MATCHING_H_
 
-#include "parallel/mpi.h"
+#include "parallel/xmipp_mpi.h"
 #include "reconstruction/angular_projection_matching.h"
 
 //TODO (MARIANA) Please give more documentation and in a good structure e.g. @name

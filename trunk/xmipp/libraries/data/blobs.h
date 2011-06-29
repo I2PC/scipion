@@ -28,7 +28,7 @@
 
 #include "grids.h"
 #include "multidim_array.h"
-#include "imageover.h"
+#include "xmipp_image_over.h"
 #include <pthread.h>
 
 // Thread declaration

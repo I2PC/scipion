@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <data/argsparser.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 #include <data/micrograph.h>
 #include <data/args.h>
 

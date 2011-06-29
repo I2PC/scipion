@@ -27,7 +27,7 @@
 #include <math.h>
 
 #include "geometry.h"
-#include "funcs.h"
+#include "xmipp_funcs.h"
 
 /* ######################################################################### */
 /* Geometrical Operations                                                    */

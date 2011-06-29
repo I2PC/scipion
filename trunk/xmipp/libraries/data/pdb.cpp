@@ -28,7 +28,7 @@
 #include "args.h"
 #include "matrix2d.h"
 #include "mask.h"
-#include "fftw.h"
+#include "xmipp_fftw.h"
 #include "integration.h"
 #include "numerical_tools.h"
 

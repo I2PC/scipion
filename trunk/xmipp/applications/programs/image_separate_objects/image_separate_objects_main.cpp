@@ -23,10 +23,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/image.h>
-#include <data/args.h>
+#include <data/xmipp_image.h>
 #include <data/filters.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 class ProgSeparateObjects: public XmippProgram
 {

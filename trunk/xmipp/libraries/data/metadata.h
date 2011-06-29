@@ -36,8 +36,8 @@
 #include <stdio.h>
 #include <sstream>
 #include <strings.h>
-#include "funcs.h"
-#include "strings.h"
+#include "xmipp_funcs.h"
+#include "xmipp_strings.h"
 #include "metadata_sql.h"
 
 /** @defgroup MetaData Metadata Stuff

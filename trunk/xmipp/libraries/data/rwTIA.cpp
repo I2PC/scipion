@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "image_base.h"
+#include "xmipp_image_base.h"
 
 #define TIASIZE    30 // Size of the TIA header without pDATA_OFFSET
 

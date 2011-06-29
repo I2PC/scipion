@@ -22,12 +22,9 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#include <data/progs.h>
-#include <data/args.h>
 
 #include <reconstruction/angular_projection_matching.h>
 
-/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
     ProgAngularProjectionMatching program;

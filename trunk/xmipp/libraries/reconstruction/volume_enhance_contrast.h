@@ -28,11 +28,10 @@
 #define VOLUME_ENHANCE_CONTRAST_H
 
 #include <string>
-#include <data/progs.h>
 #include <data/morphology.h>
 #include <data/filters.h>
 #include <data/transformations.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 
 #include <queue>

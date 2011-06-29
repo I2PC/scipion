@@ -26,7 +26,7 @@
  ***************************************************************************/
 
 #include "ctf_group.h"
-#include <data/fft.h>
+#include <data/xmipp_fft.h>
 #include <data/metadata_extension.h>
 #include <data/metadata_extension.h>
 

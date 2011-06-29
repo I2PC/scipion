@@ -23,13 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/args.h>
-#include <data/progs.h>
-
 #include <reconstruction/angular_class_average.h>
 
-
-/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
     ProgAngularClassAverage program;

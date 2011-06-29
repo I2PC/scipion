@@ -24,14 +24,14 @@
  ***************************************************************************/
 
 #include <data/argsparser.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 #include <string.h>
 #include <data/metadata.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <iostream>
 #include <fstream>
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 
 class ProgMetadataUtilities: public XmippProgram
 {

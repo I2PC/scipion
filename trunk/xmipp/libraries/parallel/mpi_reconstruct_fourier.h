@@ -23,13 +23,13 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#include "mpi.h"
+#include "xmipp_mpi.h"
 #include <data/args.h>
 #include <reconstruction/reconstruct_fourier.h>
 #include <data/projection.h>
 #include <cstring>
 #include <cstdlib>
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/matrix2d.h>
 #include <sys/time.h>
 #include <iostream>

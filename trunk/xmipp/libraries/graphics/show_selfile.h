@@ -31,7 +31,7 @@
 
 #include <data/metadata_extension.h>
 #include <data/metadata_extension.h>
-#include <data/fft.h>
+#include <data/xmipp_fft.h>
 
 #ifdef QT3_SUPPORT
 //Added by qt3to4:

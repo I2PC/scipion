@@ -31,10 +31,10 @@
  ***************************************************************************/
 #ifndef POLAR_H
 #define POLAR_H
-#include "funcs.h"
+#include "xmipp_funcs.h"
 #include "multidim_array.h"
 #include "transformations.h"
-#include "fftw.h"
+#include "xmipp_fftw.h"
 
 #define FULL_CIRCLES 0
 #define HALF_CIRCLES 1

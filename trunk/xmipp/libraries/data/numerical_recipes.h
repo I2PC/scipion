@@ -29,9 +29,9 @@
 #define _NUMERICAL_HH
 
 #include <math.h>
-#include "memory.h"
-#include "macros.h"
-#include "error.h"
+#include "xmipp_memory.h"
+#include "xmipp_macros.h"
+#include "xmipp_error.h"
 
 //@defgroup NumericalRecipes Functions from the Numerical Recipes
 //@ingroup DataLibrary

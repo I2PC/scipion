@@ -27,10 +27,10 @@
 #define _PROG_SSNR
 
 #include <iostream>
-#include <data/program.h>
-#include <data/image.h>
+#include <data/xmipp_program.h>
+#include <data/xmipp_image.h>
 #include <data/metadata.h>
-#include <data/fft.h>
+#include <data/xmipp_fft.h>
 
 /**@defgroup SSNR resolution_ssnr (Spectral Signal to Noise Ratio)
    @ingroup ReconsLibrary */

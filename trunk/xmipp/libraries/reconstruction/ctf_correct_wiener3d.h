@@ -25,9 +25,9 @@
 
 #include "fourier_filter.h"
 
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/metadata.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup CorrectAmplitude3D ctf_correct_amplitude3D (3D Wiener filtering)
    @ingroup ReconsLibrary */

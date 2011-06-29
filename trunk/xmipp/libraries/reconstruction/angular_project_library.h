@@ -32,9 +32,9 @@
 #include <iostream>
 #include <string>
 #include <data/projection.h>
-#include <data/image.h>
-#include <data/funcs.h>
-#include <data/program.h>
+#include <data/xmipp_image.h>
+#include <data/xmipp_funcs.h>
+#include <data/xmipp_program.h>
 #include "project_real_shears.h"
 #include <data/metadata_extension.h>
 

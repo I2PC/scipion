@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <parallel/mpi.h>
+#include <parallel/xmipp_mpi.h>
 #include <reconstruction/reconstruct_wbp.h>
 
 class ProgMPIRecWbp: public ProgRecWbp, public MpiMetadataProgram

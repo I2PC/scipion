@@ -26,10 +26,10 @@
 #ifndef _PROG_CTF_SORT_PSDS_HH
 #  define _PROG_CTF_SORT_PSDS_HH
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/metadata.h>
 #include <data/multidim_array.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup SortPSD psd_Sort (Sort visualization of the PSD)
    @ingroup ReconsLibrary */

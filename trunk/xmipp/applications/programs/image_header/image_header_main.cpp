@@ -24,10 +24,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/args.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/metadata.h>
-#include <data/progs.h>
+#include <data/xmipp_program.h>
 
 typedef enum { PRINT, EXTRACT, ASSIGN, RESET } HeaderOperation;
 

@@ -27,7 +27,7 @@
 
 #include <data/args.h>
 #include <data/docfile.h>
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/matrix2d.h>
 #include <data/matrix1d.h>
 #include <data/projection.h>

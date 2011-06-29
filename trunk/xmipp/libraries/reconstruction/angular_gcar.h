@@ -25,7 +25,7 @@
 #ifndef _PROG_ANGULAR_GCAR
 #define _PROG_ANGULAR_GCAR
 
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup AngularGCAR Globally Convergent Angular Reconstitution
    @ingroup ReconsLibrary */

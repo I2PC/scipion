@@ -27,7 +27,7 @@
 
 #include <data/image.h>
 #include <data/volume.h>
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/vectorial.h>
 
 /**@defgroup AdjustSurfaceProgram adjust_surface (Adjust a surface to a volume)

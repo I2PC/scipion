@@ -22,13 +22,8 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#include <data/progs.h>
-#include <data/args.h>
 
 #include <reconstruction/reconstruct_fourier.h>
-
-
-/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
 
@@ -36,4 +31,3 @@ int main(int argc, char **argv)
     program.read(argc, argv);
     return program.tryRun();
 }
-

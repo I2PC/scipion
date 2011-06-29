@@ -31,13 +31,12 @@
 #include "histogram.h"
 #include "blobs.h"
 
-#include "program.h"
+#include "xmipp_program.h"
 #include "metadata.h"
 #include "args.h"
 #include "wavelet.h"
-#include "progs.h"
 
-#include "program.h"
+#include "xmipp_program.h"
 #include "metadata_extension.h"
 
 

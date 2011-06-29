@@ -27,7 +27,7 @@
 #include <data/filters.h>
 #include <data/mask.h>
 #include <data/polar.h>
-#include <data/image_generic.h>
+#include <data/xmipp_image_generic.h>
 
 /* CL2DClass basics ---------------------------------------------------- */
 void CL2DClass::updateProjection(const MultidimArray<double> &I,

@@ -25,12 +25,11 @@
 
 #include <mpi.h>
 #include <data/filters.h>
-#include <data/funcs.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/mask.h>
 #include <data/metadata.h>
-#include <data/program.h>
-#include <parallel/mpi.h>
+#include <data/xmipp_program.h>
+#include <parallel/xmipp_mpi.h>
 
 class ProgSortImages: public XmippProgram
 {

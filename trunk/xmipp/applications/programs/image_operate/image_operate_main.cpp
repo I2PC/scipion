@@ -24,14 +24,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/args.h>
 #include <data/filters.h>
-#include <data/image.h>
-#include <data/funcs.h>
+#include <data/xmipp_image.h>
+#include <data/xmipp_program.h>
+#include <data/metadata_extension.h>
 #include <algorithm>
-
-#include "data/program.h"
-#include "data/metadata_extension.h"
 
 //This define the prototype of binary operations on images
 //the result will be left in op1

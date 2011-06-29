@@ -28,7 +28,7 @@
 
 #include <fstream>
 
-#include <data/program.h>
+#include <data/xmipp_program.h>
 #include <classification/gaussian_kerdensom.h>
 
 /* Parameters class ======================================================= */

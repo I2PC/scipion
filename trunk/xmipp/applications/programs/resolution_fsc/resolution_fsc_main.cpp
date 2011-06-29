@@ -24,11 +24,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/progs.h>
-#include <data/args.h>
-#include <data/fftw.h>
+#include <data/xmipp_program.h>
+#include <data/xmipp_fftw.h>
 #include <data/metadata_extension.h>
-
 
 class ProgResolutionFsc : public XmippProgram
 {

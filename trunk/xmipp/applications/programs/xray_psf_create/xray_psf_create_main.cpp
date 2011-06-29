@@ -23,9 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "data/psf_xr.h"
-#include "data/program.h"
-
+#include <data/psf_xr.h>
+#include <data/xmipp_program.h>
 
 class ProgPSFXrCreate: public XmippProgram
 {

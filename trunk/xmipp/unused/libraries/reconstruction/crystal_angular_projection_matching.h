@@ -25,7 +25,7 @@
 
 #include <data/fft.h>
 #include <data/args.h>
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/selfile.h>
 #include <data/docfile.h>
 #include <data/image.h>

@@ -27,8 +27,8 @@
 #ifndef _PROG_ANGULAR_PREDICT_CONTINOUOS
 #define _PROG_ANGULAR_PREDICT_CONTINUOUS
 
-#include <data/progs.h>
-#include <data/image.h>
+#include <data/xmipp_program.h>
+#include <data/xmipp_image.h>
 #include <data/mask.h>
 #include <data/metadata.h>
 

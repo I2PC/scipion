@@ -29,7 +29,7 @@
 #include <data/metadata.h>
 #include <data/multidim_array.h>
 #include <data/matrix2d.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup AlignDualProgram Align two dual tilt series
    @ingroup ReconsLibrary */

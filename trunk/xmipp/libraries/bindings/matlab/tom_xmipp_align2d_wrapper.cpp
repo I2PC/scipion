@@ -23,7 +23,7 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "image.h"
+#include "xmipp_image.h"
 #include "tom_xmipp_helpers.h"
 #include "reconstruction/align2d.h"
 

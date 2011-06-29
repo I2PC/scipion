@@ -27,12 +27,12 @@
 #define METADATALABEL_H
 
 #include <map>
-#include "strings.h"
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <fstream>
-#include "funcs.h"
+#include "xmipp_funcs.h"
+#include "xmipp_strings.h"
 
 class MDLabelData;
 class MDObject;

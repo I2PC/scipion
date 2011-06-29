@@ -25,10 +25,10 @@
 #ifndef _PROG_PROJECTION_TOMOGRAPHY_HH
 #define _PROG_PROJECTION_TOMOGRAPHY_HH
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/metadata.h>
 #include <data/projection.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup ProjectionTomographyProgram projectTomograpy (project for tilt series)
    @ingroup ReconsLibrary */

@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "metadata_sql.h"
-#include "threads.h"
+#include "xmipp_threads.h"
 //#define DEBUG
 
 //This is needed for static memory allocation

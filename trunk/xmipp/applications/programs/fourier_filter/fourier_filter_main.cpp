@@ -23,11 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/progs.h>
-#include <data/args.h>
 #include <reconstruction/fourier_filter.h>
 
-/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
     FourierFilter program;

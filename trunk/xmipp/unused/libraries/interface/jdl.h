@@ -30,7 +30,7 @@
 #ifndef _XMIPP_JDL_HH
 #define _XMIPP_JDL_HH
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 
 #include <vector>
 

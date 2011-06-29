@@ -32,7 +32,7 @@
 #include <data/args.h>
 #include <data/matrix1d.h>
 #include <data/matrix2d.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/metadata.h>
 
 // Forward declaration

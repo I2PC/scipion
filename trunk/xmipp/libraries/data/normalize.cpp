@@ -30,7 +30,7 @@
 #include "micrograph.h"
 #include "normalize.h"
 #include "metadata.h"
-#include "image_generic.h"
+#include "xmipp_image_generic.h"
 
 /* Normalizations ---------------------------------------------------------- */
 void normalize_OldXmipp(MultidimArray<double> &I)

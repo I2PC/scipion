@@ -29,16 +29,16 @@
 #define __RECONSTRUCT_FOURIER_H
 
 #include <iostream>
-#include <data/fftw.h>
-#include <data/funcs.h>
-#include <data/image.h>
+#include <data/xmipp_fftw.h>
+#include <data/xmipp_funcs.h>
+#include <data/xmipp_image.h>
 #include <data/projection.h>
-#include <data/threads.h>
+#include <data/xmipp_threads.h>
 #include <data/blobs.h>
 #include <data/metadata.h>
 
 #include <data/args.h>
-#include <data/fft.h>
+#include <data/xmipp_fft.h>
 #include <sys/time.h>
 
 #include <data/metadata.h>

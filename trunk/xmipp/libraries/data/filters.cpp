@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "filters.h"
-#include "fftw.h"
+#include "xmipp_fftw.h"
 #include "polar.h"
 #include <list>
 

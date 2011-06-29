@@ -26,12 +26,12 @@
 #ifndef _MLTOMO_H
 #define _MLTOMO_H
 
-#include <data/fftw.h>
-#include <data/fft.h>
+#include <data/xmipp_fftw.h>
+#include <data/xmipp_fft.h>
 #include <data/args.h>
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/metadata_extension.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/geometry.h>
 #include <data/filters.h>
 #include <data/mask.h>
@@ -39,9 +39,9 @@
 #include <data/sampling.h>
 #include <data/symmetries.h>
 #include "symmetrize.h"
-#include <data/threads.h>
+#include <data/xmipp_threads.h>
 #include <vector>
-#include "data/program.h"
+#include <data/xmipp_program.h>
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLANGLE 2.75

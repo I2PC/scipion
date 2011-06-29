@@ -25,8 +25,8 @@
 #ifndef _PROG_IDR_ART_HH
 #  define _PROG_IDR_ART_HH
 
-#include <data/image.h>
-#include <data/program.h>
+#include <data/xmipp_image.h>
+#include <data/xmipp_program.h>
 #include <data/projection.h>
 #include "fourier_filter.h"
 

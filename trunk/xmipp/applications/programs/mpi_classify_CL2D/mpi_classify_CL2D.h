@@ -25,14 +25,14 @@
 #ifndef _PROG_VQ_PROJECTIONS
 #define _PROG_VQ_PROJECTIONS
 
-#include <parallel/mpi.h>
+#include <parallel/xmipp_mpi.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
 #include <data/polar.h>
-#include <data/fftw.h>
+#include <data/xmipp_fftw.h>
 #include <data/histogram.h>
 #include <data/numerical_tools.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 #include <vector>
 
 /**@defgroup VQforProjections Vector Quantization for Projections

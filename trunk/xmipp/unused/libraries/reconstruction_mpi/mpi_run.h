@@ -28,7 +28,7 @@
 #include <fstream>
 #include <iostream>
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 
 #include <mpi.h>
 

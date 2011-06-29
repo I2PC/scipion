@@ -29,7 +29,7 @@
 #ifndef _XMIPP_VIRUS_HH
 #define _XMIPP_VIRUS_HH
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/matrix2d.h>
 
 #define Vir_Eq_Views 60

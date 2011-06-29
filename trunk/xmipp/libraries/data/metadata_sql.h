@@ -28,7 +28,7 @@
 
 #include <iostream>
 #include <map>
-#include "strings.h"
+#include "xmipp_strings.h"
 #include <external/sqlite-3.6.23/sqlite3.h>
 #include "metadata_label.h"
 

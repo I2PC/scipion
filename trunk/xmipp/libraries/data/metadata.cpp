@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "metadata.h"
-#include "image.h"
+#include "xmipp_image.h"
 
 //-----Constructors and related functions ------------
 void MetaData::_clear(bool onlyData)

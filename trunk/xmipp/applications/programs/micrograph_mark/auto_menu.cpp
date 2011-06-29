@@ -29,8 +29,6 @@
 #include "widget_micrograph.h"
 #include "main_widget_mark.h"
 
-#include <data/funcs.h>
-
 #ifdef QT3_SUPPORT
 #include <q3filedialog.h>
 #include <q3grid.h>

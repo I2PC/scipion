@@ -23,8 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/progs.h>
-#include <data/args.h>
 #include <reconstruction/volume_correct_bfactor.h>
 
 /* MAIN -------------------------------------------------------------------- */

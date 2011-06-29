@@ -26,7 +26,7 @@
  ***************************************************************************/
 //#include <mpi.h>
 #include <reconstruction/nma_alignment.h>
-#include <parallel/mpi.h>
+#include <parallel/xmipp_mpi.h>
 
 /** Class to perfom the NMA Alignment with  MPI parallelization */
 class MpiProgNMA: public ProgNmaAlignment

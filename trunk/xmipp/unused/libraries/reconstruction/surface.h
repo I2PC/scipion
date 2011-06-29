@@ -25,7 +25,7 @@
 #ifndef _PROG_SURFACE_HH
 #  define _PROG_SURFACE_HH
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/phantom.h>
 
 /**@defgroup SurfaceProgram surface (Create a surface from a phantom)

@@ -29,7 +29,7 @@
 #include <data/matrix1d.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 #include <pthread.h>
 
 /**@defgroup AngularAssignTiltSeries angular_assign_for_tilt_series

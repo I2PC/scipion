@@ -15,8 +15,8 @@ PYSQliteDir = "external/pysqlite-2.6.3"
 
 PluginLibs = {}
 PluginResources = {}
-javaEnumDict = {'ImageWriteMode': ['libraries/data/image_base.h', 'WRITE_'],
-            'CastWriteMode': ['libraries/data/image_base.h', 'CW_'],
+javaEnumDict = {'ImageWriteMode': ['libraries/data/xmipp_image_base.h', 'WRITE_'],
+            'CastWriteMode': ['libraries/data/xmipp_image_base.h', 'CW_'],
             'MDLabel': ['libraries/data/metadata_label.h', 'MDL_']}
 javaEnumFiles = []
 headerEnumFiles = []
@@ -628,7 +628,7 @@ if int(env['java']):
           WriteJavaEnum(class_name, list[0], list[1], None)
 
     env.Alias('javaEnums', env.Command("libraries/bindings/java/xmipp/enums.changelog",
-                            ["libraries/data/image_base.h","libraries/data/metadata_label.h" ], ExtractEnumFromHeader))
+                            ["libraries/data/xmipp_image_base.h","libraries/data/metadata_label.h" ], ExtractEnumFromHeader))
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
     javaJni = AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,
     ['#libraries', '#external', '#']+env['JNI_CPPPATH'], ['lib'],

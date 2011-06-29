@@ -26,7 +26,7 @@
 #ifndef PROGRAM_EXTENSION_H_
 #define PROGRAM_EXTENSION_H_
 
-#include "data/program.h"
+#include <data/xmipp_program.h>
 
 /** @defgroup Programs3 Some extensions related with Xmipp programs
  *  @ingroup DataLibrary

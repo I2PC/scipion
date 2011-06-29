@@ -34,7 +34,7 @@
 #include "histogram.h"
 #include "mask.h"
 
-#include "image.h"
+#include "xmipp_image.h"
 #include <external/bilib/headers/wavelet.h>
 
 /* Wavelet ----------------------------------------------------------------- */

@@ -26,10 +26,10 @@
 #ifndef _CTF_HH
 #define _CTF_HH
 
-#include "image.h"
+#include "xmipp_image.h"
 #include "numerical_recipes.h"
 #include "metadata.h"
-#include "program.h"
+#include "xmipp_program.h"
 #include <map>
 
 /**@defgroup CTFSupport CTF support classes
@@ -85,7 +85,7 @@ public:
 #include <reconstruction/fourier_filter.h>
 #include <data/ctf.h>
 
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 
 int main(int argc, char **argv)

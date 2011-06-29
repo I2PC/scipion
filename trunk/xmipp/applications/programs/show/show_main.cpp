@@ -25,7 +25,7 @@
  ***************************************************************************/
 
 #include <data/args.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 #include <graphics/show_2d.h>
 #include <graphics/show_selfile.h>
 #include <graphics/show_vol.h>

@@ -25,7 +25,7 @@
 
 #include "ctf.h"
 #include "args.h"
-#include "fft.h"
+#include "xmipp_fft.h"
 #include "metadata.h"
 
 /* Read -------------------------------------------------------------------- */

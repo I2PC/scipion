@@ -25,7 +25,7 @@
  ***************************************************************************/
 
 #include "steerable.h"
-#include "fftw.h"
+#include "xmipp_fftw.h"
 #include "histogram.h"
 #include "filters.h"
 #include "morphology.h"

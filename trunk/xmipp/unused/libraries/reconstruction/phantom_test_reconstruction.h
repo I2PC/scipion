@@ -27,7 +27,7 @@
 
 #include <vector>
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 
 #include "foms_evaluate.h"
 

@@ -34,8 +34,8 @@
 #include <algorithm>
 #include <stdio.h>
 #include <stdlib.h>
-#include "error.h"
-#include "strings.h"
+#include "xmipp_error.h"
+#include "xmipp_strings.h"
 
 
 typedef std::vector<String> StringVector;

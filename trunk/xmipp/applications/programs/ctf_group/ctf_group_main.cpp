@@ -23,16 +23,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/progs.h>
-#include <data/args.h>
 #include <reconstruction/ctf_group.h>
 
 int main(int argc, char **argv)
 {
     ProgCtfGroup program;
     program.read(argc, argv);
-
     return program.tryRun();
-
 }
-

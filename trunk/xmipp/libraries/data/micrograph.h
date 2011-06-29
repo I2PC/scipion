@@ -31,12 +31,12 @@
 /* ************************************************************************* */
 #include <vector>
 #include "filters.h"
-#include "funcs.h"
+#include "xmipp_funcs.h"
 #include "multidim_array.h"
-#include "image.h"
-#include "fftw.h"
+#include "xmipp_image.h"
+#include "xmipp_fftw.h"
 #include "metadata.h"
-#include "error.h"
+#include "xmipp_error.h"
 
 /* ************************************************************************* */
 /* FORWARD DEFINITIONS                                                       */

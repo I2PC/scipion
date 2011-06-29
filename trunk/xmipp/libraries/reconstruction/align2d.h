@@ -25,13 +25,13 @@
 #ifndef _PROG_ALIGN2D
 #define _PROG_ALIGN2D
 
-#include <data/fftw.h>
+#include <data/xmipp_fftw.h>
 #include <data/args.h>
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/metadata_extension.h>
 #include <data/metadata.h>
-#include <data/image.h>
-#include <data/program.h>
+#include <data/xmipp_image.h>
+#include <data/xmipp_program.h>
 #include <vector>
 
 /**@defgroup Align2DProgram align2d (Align a set of 2D images)

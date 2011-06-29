@@ -43,7 +43,7 @@
 #include <qdragobject.h>
 #endif
 
-#include <data/fft.h>
+#include <data/xmipp_fft.h>
 #include <data/histogram.h>
 #include <data/args.h>
 

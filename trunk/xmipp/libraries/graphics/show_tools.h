@@ -40,8 +40,8 @@
 #include <qtextedit.h>
 #endif
 
-#include <data/image.h>
-#include <data/fft.h>
+#include <data/xmipp_image.h>
+#include <data/xmipp_fft.h>
 
 #include <vector>
 #include <string>

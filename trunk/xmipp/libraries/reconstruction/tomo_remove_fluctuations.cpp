@@ -25,9 +25,9 @@
 
 #include "tomo_remove_fluctuations.h"
 #include <data/args.h>
-#include <data/fftw.h>
+#include <data/xmipp_fftw.h>
 #include <data/metadata_extension.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 
 // Read from command line --------------------------------------------------
 void ProgTomoRemoveFluctuations::readParams()

@@ -29,7 +29,7 @@
 
 #include "blobs.h"
 
-#include "funcs.h"
+#include "xmipp_funcs.h"
 #include "geometry.h"
 
 pthread_mutex_t blobs_conv_mutex = PTHREAD_MUTEX_INITIALIZER;

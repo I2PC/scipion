@@ -31,7 +31,6 @@
 #include "main_widget_mark.h"
 
 #include <data/micrograph.h>
-#include <data/funcs.h>
 #include <data/args.h>
 
 #include <qlabel.h>

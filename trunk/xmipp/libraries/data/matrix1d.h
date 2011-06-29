@@ -26,7 +26,7 @@
 #ifndef MATRIX1D_H_
 #define MATRIX1D_H_
 
-#include "funcs.h"
+#include "xmipp_funcs.h"
 
 extern int bestPrecision(float F, int _width);
 extern std::string floatToString(float F, int _width, int _prec);

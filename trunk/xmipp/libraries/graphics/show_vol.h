@@ -29,7 +29,7 @@
 
 #include "show_table.h"
 
-#include <data/image.h>
+#include <data/xmipp_image.h>
 
 #ifdef QT3_SUPPORT
 //Added by qt3to4:

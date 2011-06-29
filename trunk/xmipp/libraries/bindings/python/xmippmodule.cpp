@@ -26,7 +26,7 @@
 #include <Python.h>
 
 #include <data/metadata_extension.h>
-#include <data/image_generic.h>
+#include <data/xmipp_image_generic.h>
 
 static PyObject * PyXmippError;
 

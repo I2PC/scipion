@@ -38,8 +38,8 @@
 #include <fstream>
 #include <unistd.h>
 #include <iomanip> //for print pi with more decimals
-#include "data/threads.h"
-#include "data/image.h"
+#include <data/xmipp_threads.h>
+#include <data/xmipp_image.h>
 
 using namespace std;
 

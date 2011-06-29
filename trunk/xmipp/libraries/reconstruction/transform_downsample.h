@@ -26,7 +26,7 @@
 #ifndef _DOWNSAMPLE
 #define _DOWNSAMPLE
 
-#include <data/program.h>
+#include <data/xmipp_program.h>
 #include <data/micrograph.h>
 
 ///@defgroup MicrographDownsample Micrograph Downsample

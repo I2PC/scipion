@@ -30,7 +30,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/matrix1d.h>
 #include <data/geometry.h>
 

@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <data/phantom.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 class ProgPhantomCreate: public XmippProgram
 {

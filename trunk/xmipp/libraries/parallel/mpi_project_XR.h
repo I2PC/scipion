@@ -27,7 +27,7 @@
 #define MPI_PROJECT_XR_H_
 
 #include "reconstruction/project_XR.h"
-#include "parallel/mpi.h"
+#include "parallel/xmipp_mpi.h"
 
 //TODO (MARIANA) Please give more documentation and in a good structure e.g. @name
 

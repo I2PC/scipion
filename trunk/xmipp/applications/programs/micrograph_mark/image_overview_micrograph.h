@@ -20,7 +20,7 @@
 #ifndef __QT_IMAGE_OVERVIEW_MICROGRAPH_HH__
 #define __QT_IMAGE_OVERVIEW_MICROGRAPH_HH__
 
-#include "image.h"
+#include "qt_image.h"
 
 #ifdef QT3_SUPPORT
 //Added by qt3to4:

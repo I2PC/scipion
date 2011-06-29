@@ -26,7 +26,7 @@
 #ifndef _DIRECTIONS_H
 #define _DIRECTIONS_H
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/metadata.h>
 
 #include <data/symmetries.h>

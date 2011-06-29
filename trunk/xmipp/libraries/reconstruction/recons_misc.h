@@ -26,7 +26,7 @@
 #ifndef _RECONS_MISC_HH
 #define _RECONS_MISC_HH
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/metadata.h>
 #include <data/symmetries.h>
 #include <data/projection.h>

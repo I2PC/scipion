@@ -23,7 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/image.h>
 #include <reconstruction/volume_segment.h>
 
 int main(int argc, char **argv)

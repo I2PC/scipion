@@ -26,7 +26,7 @@
 #ifndef _RECONS_HH
 #define _RECONS_HH
 
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 /** Class for provide a common interface for all reconstruction programs.
  *

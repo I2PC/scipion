@@ -27,7 +27,7 @@
 #define _FOURIER_FILTER_HH
 
 #include <data/ctf.h>
-#include <data/fftw.h>
+#include <data/xmipp_fftw.h>
 #include <data/filters.h>
 
 /**@defgroup FourierMasks Masks in Fourier space

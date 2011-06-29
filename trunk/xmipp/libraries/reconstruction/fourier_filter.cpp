@@ -26,9 +26,9 @@
 #include "fourier_filter.h"
 
 #include <data/args.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/mask.h>
-#include <data/fft.h>
+#include <data/xmipp_fft.h>
 
 /* Clear ------------------------------------------------------------------- */
 void FourierFilter::init()

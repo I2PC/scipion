@@ -25,7 +25,7 @@
 #ifndef _PROG_ENHANCE_PSD_HH
 #  define _PROG_ENHANCE_PSD_HH
 
-#include <data/progs.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup EnhancePSD psd_enhance (Enhance visualization of the PSD)
    @ingroup ReconsLibrary */

@@ -35,7 +35,7 @@
 
 #include <data/args.h>
 #include <data/filters.h>
-#include <data/fft.h>
+#include <data/xmipp_fft.h>
 
 /* Read parameters --------------------------------------------------------- */
 void ProgCTFEnhancePSD::readParams()

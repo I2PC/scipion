@@ -27,7 +27,7 @@
 #ifndef _EMFILES_H
 #define _EMFILES_H
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/matrix3d.h>
 #include <data/geometry.h>
 #include <data/volume.h>

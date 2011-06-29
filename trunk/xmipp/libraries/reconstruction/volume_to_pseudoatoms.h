@@ -27,10 +27,10 @@
 #ifndef _CONVERT_VOL2PSEUDO_HH
 #define _CONVERT_VOL2PSEUDO_HH
 
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/mask.h>
-#include <data/threads.h>
-#include <data/program.h>
+#include <data/xmipp_threads.h>
+#include <data/xmipp_program.h>
 #include <vector>
 
 /**@defgroup ConvertVol2Pseudo ConvertVol2Pseudo

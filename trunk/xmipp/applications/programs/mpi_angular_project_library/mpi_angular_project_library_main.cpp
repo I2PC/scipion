@@ -28,13 +28,11 @@
 #include <mpi.h>
 #include <cstring>
 #include <cstdlib>
-#include <data/funcs.h>
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <iomanip>
 
-#include <data/args.h>
 #include <reconstruction/angular_project_library.h>
 
 #define TAG_WORKFORWORKER   0

@@ -21,7 +21,7 @@
 #define __QT_FILTER_HH__
 
 #include <data/micrograph.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <reconstruction/fourier_filter.h>
 #include <data/metadata_extension.h>
 #include <qstring.h>

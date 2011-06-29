@@ -25,7 +25,7 @@
 #ifndef _PROG_ART_CRYSTAL_HH
 #  define _PROG_ART_CRYSTAL_HH
 
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/matrix1d.h>
 #include <data/matrix2d.h>
 #include <data/symmetries.h>

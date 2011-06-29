@@ -28,7 +28,7 @@
 
 #define LOG2 0.693147181
 
-#include "image.h"
+#include "xmipp_image.h"
 #include "mask.h"
 #include "numerical_tools.h"
 #include "morphology.h"

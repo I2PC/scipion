@@ -23,16 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/program.h>
-#include <data/image.h>
+#include <data/xmipp_program.h>
 #include <data/mask.h>
-#include <data/args.h>
-
-/// @defgroup RangeAdjust Adjust grey level range of images and volumes
-
-/** Parameter class for the project program.
- * @ingroup RangeAdjust
- */
 
 class ProgTransRangeAdjust: public XmippMetadataProgram
 {

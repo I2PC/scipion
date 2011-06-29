@@ -27,10 +27,10 @@
 #define _PSF_XR_HH
 
 //#include <complex>
-#include "image.h"
-#include "fftw.h"
+#include "xmipp_image.h"
+#include "xmipp_fftw.h"
 #include "projection.h"
-#include "program.h"
+#include "xmipp_program.h"
 
 /**@defgroup PSFXRSupport X-Ray Microscope PSF class
    @ingroup DataLibrary */

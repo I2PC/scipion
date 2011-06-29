@@ -25,9 +25,9 @@
 #ifndef _PROG_PROJECTION_NEIGHBOURHOOD
 #define _PROG_PROJECTION_NEIGHBOURHOOD
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/metadata.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 #include <data/symmetries.h>
 

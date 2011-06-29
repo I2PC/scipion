@@ -34,7 +34,7 @@
 #include <qimageio.h>
 #endif
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/args.h>
 
 int main(int argc, char **argv)

@@ -27,7 +27,7 @@
 
 #include <data/blobs.h>
 #include <data/pdb.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup PDBPhantom convert_pdb2vol (PDB Phantom program)
    @ingroup ReconsLibrary */

@@ -26,7 +26,7 @@
 #define _PROG_PDB_NMA_DEFORM_HH
 
 #include <data/pdb.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup PDBNMADeform Deform PDB according to NMA
    @ingroup ReconsLibrary */

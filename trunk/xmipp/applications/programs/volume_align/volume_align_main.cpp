@@ -23,13 +23,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/args.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/filters.h>
 #include <data/geometry.h>
 #include <data/mask.h>
-
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 // Alignment parameters needed by fitness ----------------------------------
 class AlignParams

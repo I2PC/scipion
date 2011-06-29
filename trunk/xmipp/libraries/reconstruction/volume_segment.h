@@ -25,10 +25,10 @@
 #ifndef _PROG_SEGMENT
 #define _PROG_SEGMENT
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/multidim_array.h>
-#include <data/image.h>
-#include <data/program.h>
+#include <data/xmipp_image.h>
+#include <data/xmipp_program.h>
 
 ///@defgroup VolumeSegment Volume segmentation
 ///@ingroup ReconsLibrary

@@ -27,7 +27,7 @@
 #define IMAGE_COLLECTION_H_
 
 #include "metadata.h"
-#include "image.h"
+#include "xmipp_image.h"
 
 /** Class to represent a collection of images.
  * This class is an abstraction layer to handle(iterate, read, write) a group

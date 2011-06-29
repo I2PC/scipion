@@ -26,8 +26,8 @@
 #include "angular_neighbourhood.h"
 
 #include <data/args.h>
-#include <data/funcs.h>
-#include <data/image.h>
+#include <data/xmipp_funcs.h>
+#include <data/xmipp_image.h>
 
 // Read arguments ==========================================================
 void ProgAngularNeighbourhood::readParams()

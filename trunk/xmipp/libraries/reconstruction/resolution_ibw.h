@@ -26,8 +26,8 @@
 #ifndef _PROG_RESOLUTION_IBW_HH
 #  define _PROG_RESOLUTION_IBW_HH
 
-#include <data/funcs.h>
-#include <data/program.h>
+#include <data/xmipp_funcs.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup ResolutionIBW Measure resolution through the inverse of border widths
    @ingroup ReconsLibrary */

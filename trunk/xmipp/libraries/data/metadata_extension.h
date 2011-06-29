@@ -8,8 +8,8 @@
 #ifndef METADATA_EXTENSION_H_
 #define METADATA_EXTENSION_H_
 
-#include "filename.h"
-#include "image.h"
+#include "xmipp_filename.h"
+#include "xmipp_image.h"
 #include "metadata.h"
 
 void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, double& _min,

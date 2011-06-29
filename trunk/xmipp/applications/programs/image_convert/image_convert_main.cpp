@@ -25,8 +25,8 @@
  ***************************************************************************/
 
 #include <data/metadata_extension.h>
-#include <data/program.h>
-#include <data/image_generic.h>
+#include <data/xmipp_program.h>
+#include <data/xmipp_image_generic.h>
 
 typedef enum
 {

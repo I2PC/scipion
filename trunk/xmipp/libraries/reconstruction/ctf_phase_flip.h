@@ -27,9 +27,9 @@
 #define CTF_PHASE_FLIPPING_H
 #include <data/args.h>
 #include <data/micrograph.h>
-#include <data/fftw.h>
+#include <data/xmipp_fftw.h>
 #include <data/ctf.h>
-#include <data/fft.h>
+#include <data/xmipp_fft.h>
 
 /**@defgroup Micrograph_phase_Flipp (phase flipping)
    @ingroup ReconsLibrary

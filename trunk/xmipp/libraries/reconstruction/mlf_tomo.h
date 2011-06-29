@@ -26,12 +26,12 @@
 #ifndef _MLF_TOMO_H
 #define _MLF_TOMO_H
 
-#include <data/fft.h>
+#include <data/xmipp_fft.h>
 #include <data/args.h>
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/selfile.h>
 #include <data/docfile.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/filters.h>
 #include <data/mask.h>
 #include <data/geometry.h>

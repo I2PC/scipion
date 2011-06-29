@@ -25,7 +25,7 @@
 #include "data_types.h"
 #include "training_vector.h"
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/matrix2d.h>
 #include <data/multidim_array.h>
 

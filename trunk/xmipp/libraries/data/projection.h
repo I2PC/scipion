@@ -26,11 +26,11 @@
 #ifndef PROJECTION_H
 #define PROJECTION_H
 
-#include "image.h"
-#include "threads.h"
+#include "xmipp_image.h"
+#include "xmipp_threads.h"
 #include "grids.h"
 #include "basis.h"
-#include "program.h"
+#include "xmipp_program.h"
 
 // These two structures are needed when projecting and backprojecting using
 // threads. They make mutual exclusion and synchronization possible.

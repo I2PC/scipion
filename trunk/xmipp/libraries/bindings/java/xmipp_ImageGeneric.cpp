@@ -2,8 +2,8 @@
 #include "xmipp_ImageGeneric.h"
 #include "xmipp_InternalData.h"
 #include "xmipp_ExceptionsHandler.h"
-#include <data/image_generic.h>
-#include <data/fft.h>
+#include <data/xmipp_image_generic.h>
+#include <data/xmipp_fft.h>
 
 JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_storeIds
 (JNIEnv *env, jclass cls) {

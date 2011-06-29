@@ -27,7 +27,6 @@
 /* Includes                                                                  */
 /* ------------------------------------------------------------------------- */
 #include <reconstruction/angular_project_library.h>
-#include <data/error.h>
 #include <iostream>
 
 /* ------------------------------------------------------------------------- */

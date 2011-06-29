@@ -23,13 +23,12 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/progs.h>
+#include <data/xmipp_program.h>
 #include <data/args.h>
-#include <data/strings.h>
+#include <data/xmipp_color.h>
 #include <iomanip>
 #include <iostream>
 #include <queue>
-#include "data/color.h"
 
 ///Constant values for weighting the keywords match
 #define NAME_MATCH 5

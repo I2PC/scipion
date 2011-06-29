@@ -30,9 +30,9 @@
 #include <string>
 #include <vector>
 
-#include "funcs.h"
+#include "xmipp_funcs.h"
 #include "matrix1d.h"
-#include "strings.h"
+#include "xmipp_strings.h"
 
 template <typename T>
 class Matrix1D;

@@ -25,11 +25,11 @@
 #ifndef _PROG_ANGULAR_PREDICT
 #define _PROG_ANGULAR_PREDICT
 
-#include <data/funcs.h>
-#include <data/progs.h>
+#include <data/xmipp_funcs.h>
+#include <data/xmipp_program.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <classification/pca.h>
 
 #include "angular_distance.h"

@@ -25,7 +25,7 @@
 #ifndef _PROG_EVALUATE_FSCs_HH
 #  define _PROG_EVALUATE_FSCs_HH
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/volume.h>
 #include <data/selfile.h>
 

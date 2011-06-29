@@ -1,8 +1,8 @@
 #ifndef XMIPP_INTERNAL_DATA
 #define XMIPP_INTERNAL_DATA
 #include <jni.h>
-#include <data/image.h>
-#include <data/image_generic.h>
+#include <data/xmipp_image.h>
+#include <data/xmipp_image_generic.h>
 #include <data/projection.h>
 #include <data/ctf.h>
 

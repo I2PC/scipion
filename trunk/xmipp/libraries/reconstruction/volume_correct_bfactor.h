@@ -27,10 +27,10 @@
 #define VOLUME_CORRECT_BFACTOR_H
 
 #include <data/geometry.h>
-#include <data/fft.h>
-#include <data/fftw.h>
-#include <data/image.h>
-#include <data/program.h>
+#include <data/xmipp_fft.h>
+#include <data/xmipp_fftw.h>
+#include <data/xmipp_image.h>
+#include <data/xmipp_program.h>
 
 /** @defgroup Correct Bfactor
   * @ingroup ReconsLibrary

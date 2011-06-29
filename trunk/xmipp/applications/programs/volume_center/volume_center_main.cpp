@@ -23,9 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/image.h>
 #include <data/mask.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 class ProgVolumeCenter: public XmippMetadataProgram
 {

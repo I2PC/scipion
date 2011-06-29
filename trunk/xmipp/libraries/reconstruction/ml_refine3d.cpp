@@ -25,9 +25,9 @@
 
 #include "ml_refine3d.h"
 
-#include <data/fft.h>
+#include <data/xmipp_fft.h>
 #include <data/args.h>
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/filters.h>
 #include <data/mask.h>
 #include <data/morphology.h>

@@ -24,7 +24,7 @@
  ***************************************************************************/
 #include <data/args.h>
 #include <interface/spider.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 class ProgSpiderTranslate: public XmippMetadataProgram
 {

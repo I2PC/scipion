@@ -30,7 +30,7 @@
 #ifndef _XVMRC_H
 #define _XVMRC_H
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/matrix2d.h>
 #include <data/matrix3d.h>
 #include <data/geometry.h>

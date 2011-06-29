@@ -28,8 +28,8 @@
 
 #include "blobs.h"
 #include "splines.h"
-#include "imageover.h"
-#include "program.h"
+#include "xmipp_image_over.h"
+#include "xmipp_program.h"
 
 const int BLOB_SUBSAMPLING = 10;
 const int PIXEL_SUBSAMPLING = 1;

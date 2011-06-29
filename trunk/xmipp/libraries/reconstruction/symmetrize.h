@@ -25,11 +25,11 @@
 #ifndef _PROG_SYMMETRIZE_HH
 #  define _PROG_SYMMETRIZE_HH
 
-#include <data/funcs.h>
-#include <data/image.h>
+#include <data/xmipp_funcs.h>
+#include <data/xmipp_image.h>
 #include <data/mask.h>
 #include <data/symmetries.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup SymmetrizeProgram symmetrize (Symmetrize a volume or image)
    @ingroup ReconsLibrary */

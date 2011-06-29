@@ -28,7 +28,7 @@
 
 #include <data/args.h>
 #include <data/filters.h>
-#include <data/image_base.h>
+#include <data/xmipp_image_base.h>
 
 // Empty constructor =======================================================
 AlignmentTomography::AlignmentTomography()

@@ -26,7 +26,7 @@
 #ifndef MULTIDIM_ARRAY_GENERIC_H_
 #define MULTIDIM_ARRAY_GENERIC_H_
 
-#include "datatype.h"
+#include "xmipp_datatype.h"
 #include "multidim_array.h"
 
 /* Switch among different datatypes.

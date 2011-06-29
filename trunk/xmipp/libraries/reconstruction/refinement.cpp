@@ -29,9 +29,9 @@
 
 #include "refinement.h"
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/geometry.h>
-#include <data/fft.h>
+#include <data/xmipp_fft.h>
 
 //-------------------------------------------------------------------------
 /* Correlate two projections and find the maximun of the correlation matrix -- */

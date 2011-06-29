@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "sampling.h"
-#include "macros.h"
+#include "xmipp_macros.h"
 
 /* Default Constructor */
 Sampling::Sampling()

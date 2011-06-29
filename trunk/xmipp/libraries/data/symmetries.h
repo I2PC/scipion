@@ -30,7 +30,7 @@
 
 #include "matrix1d.h"
 #include "matrix2d.h"
-#include "funcs.h"
+#include "xmipp_funcs.h"
 #include "args.h"
 #include "grids.h"
 

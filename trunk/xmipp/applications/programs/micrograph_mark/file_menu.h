@@ -24,7 +24,7 @@
 #define MARK_SQUARE 1
 
 #include "popup_menu_mark.h"
-#include <data/filename.h>
+#include <data/xmipp_filename.h>
 
 #include <qradiobutton.h>
 

@@ -23,7 +23,7 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "image.h"
+#include "xmipp_image.h"
 #include "micrograph.h"
 #include "tom_xmipp_helpers.h"
 

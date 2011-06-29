@@ -2,10 +2,10 @@
 #define TRANSFORMGEOMETRY_H
 
 #include <data/transformations.h>
-#include <data/image_generic.h>
+#include <data/xmipp_image_generic.h>
 #include <data/metadata_extension.h>
-#include <data/fftw.h>
-#include <data/program.h>
+#include <data/xmipp_fftw.h>
+#include <data/xmipp_program.h>
 #include <data/matrix2d.h>
 
 

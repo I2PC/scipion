@@ -30,13 +30,12 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "funcs.h"
-#include "error.h"
-#include "image_macros.h"
+#include "xmipp_funcs.h"
+#include "xmipp_error.h"
+#include "xmipp_macros.h"
 #include "args.h"
 #include "matrix1d.h"
 #include "matrix2d.h"
-
 
 extern int bestPrecision(float F, int _width);
 extern String floatToString(float F, int _width, int _prec);

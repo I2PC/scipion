@@ -25,7 +25,7 @@
 
 #include "align2d.h"
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/mask.h>
 #include <data/filters.h>
 

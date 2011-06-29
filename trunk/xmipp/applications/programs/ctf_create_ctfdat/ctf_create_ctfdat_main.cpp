@@ -23,12 +23,10 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/progs.h>
-#include <data/args.h>
 #include <data/metadata.h>
 #include <data/ctf.h>
 
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 class ProgCtfCreateCtfdat : public XmippProgram
 {

@@ -23,9 +23,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <parallel/mpi.h>
-#include <data/funcs.h>
-#include <data/program.h>
+#include <parallel/xmipp_mpi.h>
+#include <data/xmipp_funcs.h>
+#include <data/xmipp_program.h>
 
 #define TAG_WORK   0
 #define TAG_STOP   1

@@ -25,7 +25,7 @@
 
 #include <data/args.h>
 #include <data/geometry.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 class FlipParameters: public XmippMetadataProgram
 {

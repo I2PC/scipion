@@ -25,7 +25,7 @@
 
 #include <data/metadata.h>
 #include <data/args.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 class ProgMetadataSplit: public XmippProgram
 {

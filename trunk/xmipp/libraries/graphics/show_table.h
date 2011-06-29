@@ -48,7 +48,7 @@
 #include <qpopupmenu.h>
 #endif
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/multidim_array.h>
 #include <data/metadata_extension.h>
 #include <data/metadata_extension.h>

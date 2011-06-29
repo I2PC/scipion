@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "image_collection.h"
+#include "xmipp_image_collection.h"
 
 ImageCollection::ImageCollection(int mode)
 {

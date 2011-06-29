@@ -47,7 +47,7 @@
 #ifndef _RADON_HH
 #define _RADON_HH
 
-#include <data/image.h>
+#include <data/xmipp_image.h>
 
 /**@defgroup RadonTransform radon (Radon transform)
    @ingroup ReconsLibrary */

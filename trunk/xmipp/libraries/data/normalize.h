@@ -26,8 +26,8 @@
 #ifndef NORMALIZE_H
 #define NORMALIZE_H
 
-#include "progs.h"
-#include "image.h"
+#include "xmipp_program.h"
+#include "xmipp_image.h"
 #include "mask.h"
 
 /// @defgroup Normalize Normalization of images and volumes

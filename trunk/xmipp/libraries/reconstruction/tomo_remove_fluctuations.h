@@ -28,7 +28,7 @@
 
 #include <data/multidim_array.h>
 #include <data/metadata.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 /// @defgroup RemoveFluctuations Remove fluctuations in tilt series
 /// @ingroup ReconsLibrary

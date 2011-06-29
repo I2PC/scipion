@@ -25,7 +25,7 @@
 
 #include "tomo_detect_missing_wedge.h"
 #include <data/args.h>
-#include <data/fftw.h>
+#include <data/xmipp_fftw.h>
 #include <data/numerical_tools.h>
 
 // Evaluate plane ----------------------------------------------------------

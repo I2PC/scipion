@@ -27,14 +27,14 @@
 #define _angular_projection_matching_H
 
 #include <data/args.h>
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/metadata.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/filters.h>
 #include <data/mask.h>
 #include <data/polar.h>
-#include <data/fftw.h>
-#include <data/threads.h>
+#include <data/xmipp_fftw.h>
+#include <data/xmipp_threads.h>
 #include <pthread.h>
 
 #include <data/projection.h>
@@ -42,7 +42,7 @@
 #include <data/sampling.h>
 #include <data/ctf.h>
 
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 #define MY_OUPUT_SIZE 10
 

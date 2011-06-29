@@ -26,7 +26,7 @@
  ***************************************************************************/
 
 #include <reconstruction/angular_continuous_assign.h>
-#include <parallel/mpi.h>
+#include <parallel/xmipp_mpi.h>
 
 CREATE_MPI_METADATA_PROGRAM(ProgAngularContinuousAssign, MpiProgAngularContinuousAssign);
 

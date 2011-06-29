@@ -31,9 +31,9 @@
 
 #include <data/metadata.h>
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <interface/docfile.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 
 /**@defgroup SpiderInterface Spider
    @ingroup InterfaceLibrary */

@@ -27,7 +27,7 @@
 #include "ctf_estimate_psd_with_arma.h"
 
 #include <data/args.h>
-#include <data/fftw.h>
+#include <data/xmipp_fftw.h>
 #include <data/filters.h>
 
 /* Read parameters from command line --------------------------------------- */

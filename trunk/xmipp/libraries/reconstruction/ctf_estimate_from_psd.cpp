@@ -32,7 +32,7 @@
 #include <data/args.h>
 #include <data/histogram.h>
 #include <data/filters.h>
-#include <data/fft.h>
+#include <data/xmipp_fft.h>
 
 /* prototypes */
 double CTF_fitness(double *, void *);

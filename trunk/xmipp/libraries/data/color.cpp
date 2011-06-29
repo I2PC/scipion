@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "color.h"
+#include "xmipp_color.h"
 
 void textcolor(int attr, int fg, int bg)
 {

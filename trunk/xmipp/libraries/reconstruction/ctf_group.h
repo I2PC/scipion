@@ -31,7 +31,7 @@
 #include "fourier_filter.h"
 #include <data/ctf.h>
 
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup CTFGroup ctf_group
    @ingroup ReconsLibrary */

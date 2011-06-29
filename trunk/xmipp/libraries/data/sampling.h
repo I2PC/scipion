@@ -30,7 +30,7 @@
 #include <iterator>
 
 #include "metadata.h"
-#include "macros.h"
+#include "xmipp_macros.h"
 #include "multidim_array.h"
 #include "symmetries.h"
 #include "geometry.h"

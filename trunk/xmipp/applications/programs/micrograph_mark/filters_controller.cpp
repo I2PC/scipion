@@ -26,9 +26,9 @@
 
 #include "filters_controller.h"
 #include "filter.h"
-#include "image_converter.h"
+#include "qt_image_converter.h"
 
-#include <data/image.h>
+#include <data/xmipp_image.h>
 
 #ifdef QT3_SUPPORT
 #include <q3listbox.h>

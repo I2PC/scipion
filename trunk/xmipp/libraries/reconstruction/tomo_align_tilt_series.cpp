@@ -27,7 +27,7 @@
 
 #include <data/args.h>
 #include <data/filters.h>
-#include <data/fftw.h>
+#include <data/xmipp_fftw.h>
 #include <data/metadata.h>
 #include <data/numerical_tools.h>
 #include <data/morphology.h>

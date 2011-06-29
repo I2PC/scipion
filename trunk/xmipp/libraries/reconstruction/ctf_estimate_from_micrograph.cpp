@@ -29,8 +29,8 @@
 #include <data/args.h>
 #include <data/micrograph.h>
 #include <data/metadata.h>
-#include <data/image.h>
-#include <data/fft.h>
+#include <data/xmipp_image.h>
+#include <data/xmipp_fft.h>
 #include <data/basic_pca.h>
 #include <data/normalize.h>
 

@@ -26,9 +26,9 @@
 
 #include "show_2d.h"
 #include "show_tools.h"
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/histogram.h>
-#include <data/fft.h>
+#include <data/xmipp_fft.h>
 #include <reconstruction/ctf_enhance_psd.h>
 
 #include <qmenubar.h>

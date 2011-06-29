@@ -26,16 +26,16 @@
 #ifndef _ANGULAR_CLASS_AVERAGE_H
 #define _ANGULAR_CLASS_AVERAGE_H
 
-#include <data/fftw.h>
+#include <data/xmipp_fftw.h>
 #include <data/args.h>
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/metadata.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/filters.h>
 #include <data/mask.h>
 #include <data/polar.h>
 
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 #define AVG_OUPUT_SIZE 10
 

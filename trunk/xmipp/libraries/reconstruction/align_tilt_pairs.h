@@ -22,16 +22,16 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#include <data/fftw.h>
+#include <data/xmipp_fftw.h>
 #include <data/args.h>
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/geometry.h>
 #include <data/filters.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup Centilt align_tilt_pairs (Align tilted and untilted images in a random conical tilt experiment)
    @ingroup ReconsLibrary */

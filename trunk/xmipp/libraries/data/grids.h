@@ -31,7 +31,7 @@
 
 #include <vector>
 
-#include "image.h"
+#include "xmipp_image.h"
 #include "geometry.h"
 #include "args.h"
 

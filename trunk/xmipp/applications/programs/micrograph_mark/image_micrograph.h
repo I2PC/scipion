@@ -23,7 +23,7 @@
 #define MARK_CIRCLE 0
 #define MARK_SQUARE 1
 
-#include "image.h"
+#include "qt_image.h"
 
 #ifdef QT3_SUPPORT
 //Added by qt3to4:

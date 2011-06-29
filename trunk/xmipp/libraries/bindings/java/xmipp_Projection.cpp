@@ -2,7 +2,7 @@
 #include "xmipp_Projection.h"
 #include "xmipp_ImageDouble.h"
 #include "xmipp_ExceptionsHandler.h"
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <data/projection.h>
 #include "xmipp_InternalData.h"
 

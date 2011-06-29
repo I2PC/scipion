@@ -25,9 +25,9 @@
 #ifndef _PROG_ANGULAR_DISTANCE
 #define _PROG_ANGULAR_DISTANCE
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/metadata.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 #include <data/symmetries.h>
 
 /**@defgroup AngularDistance angular_distance (Distance between two angular assignments)

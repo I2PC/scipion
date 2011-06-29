@@ -27,7 +27,7 @@
 
 #include <data/args.h>
 #include <data/projection.h>
-#include <data/fftw.h>
+#include <data/xmipp_fftw.h>
 #include <data/metadata_extension.h>
 #include "reconstruct_art.h"
 

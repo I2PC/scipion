@@ -25,11 +25,11 @@
 #ifndef _PROG_ANALYZE_CLUSTER
 #define _PROG_ANALYZE_CLUSTER
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
 #include <data/basic_pca.h>
-#include <data/program.h>
+#include <data/xmipp_program.h>
 
 /**@defgroup AnalyzeClusterProgram Analyze cluster
    @ingroup ClassificationLibrary */

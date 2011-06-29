@@ -25,11 +25,11 @@
 #ifndef _PROG_XRAY_IMPORT
 #define _PROG_XRAY_IMPORT
 
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <data/multidim_array.h>
-#include <data/image.h>
-#include <data/program.h>
-#include <data/threads.h>
+#include <data/xmipp_image.h>
+#include <data/xmipp_program.h>
+#include <data/xmipp_threads.h>
 
 ///@defgroup XrayImport Xray import
 ///@ingroup ReconsLibrary

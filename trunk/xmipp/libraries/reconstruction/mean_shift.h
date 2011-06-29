@@ -29,8 +29,8 @@
 
 #include <string>
 #include <data/filters.h>
-#include <data/funcs.h>
-#include <data/threads.h>
+#include <data/xmipp_funcs.h>
+#include <data/xmipp_threads.h>
 #include <data/histogram.h>
 
 typedef struct threadProcessPlaneArgs
