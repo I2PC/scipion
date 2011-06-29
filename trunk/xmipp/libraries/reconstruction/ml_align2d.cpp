@@ -2032,7 +2032,7 @@ void ProgML2D::maximization()
                     model.addModel(block_model);
             }
             model.update();
-            printModel("GLOBAL model: after addition and update: ", model);
+            //printModel("GLOBAL model: after addition and update: ", model);
             // After iteration 0, factor_nref will ALWAYS be one
             factor_nref = 1;
             //restore the value of current block
@@ -2240,7 +2240,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         MDref.write(fn_ref, mode);
         if (outputType == OUT_REFS)
             outRefsMd = fn_ref;
-        std::cerr << "DEBUG_JM: outRefsMd: " << outRefsMd << std::endl;
+//std::cerr << "DEBUG_JM: outRefsMd: " << outRefsMd << std::endl;
         // Write out log-file
         MetaData mdLog;
         objId = mdLog.addObject();
