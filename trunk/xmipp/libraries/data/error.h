@@ -23,15 +23,15 @@
 *  e-mail address 'xmipp@cnb.csic.es'
 ***************************************************************************/
 
-#ifndef ERROR_H
-#define ERROR_H
+#ifndef XMIPP_ERROR_H
+#define XMIPP_ERROR_H
 #include <cstdlib>
 #include <string>
 #include <iostream>
 #ifdef LINUX
 #include <execinfo.h>
 #endif
-/** @defgroup ErrorHandling Error handling
+/* @defgroup ErrorHandling Error handling
  *  @ingroup DataLibrary
  *
  * The error handling is performed in two different ways depending on the
@@ -94,8 +94,8 @@
  * automatically aborted.
  *
  */
-/** @{ */
-/** Enum with errors types.
+/* @{ */
+/* Enum with errors types.
  * This enum represent the code of all possible
  * Xmipp erros that will be used to reporting errors
  * with REPORT_ERROR and EXIT_ERROR.
@@ -193,7 +193,7 @@ enum ErrorType
     ERR_VALUE_NOTSET        ///< Value has not been set.
 };
 
-/** Show message and exit
+/* Show message and exit
  *
  * This is an internal function (not to be used by programmers)
  * that shows the given message and exits with the error code.
@@ -203,7 +203,7 @@ enum ErrorType
 void _Xmipp_error(const ErrorType nerr, const std::string& what,
                   const std::string &file, const long line);
 
-/** Show message and throw exception
+/* Show message and throw exception
  *
  * This macro shows the given message and exits with the error code.
  *
@@ -213,10 +213,10 @@ void _Xmipp_error(const ErrorType nerr, const std::string& what,
  * @endcode
  */
 #define REPORT_ERROR(nerr, ErrormMsg) throw XmippError(nerr, ErrormMsg, __FILE__, __LINE__)
-/** Report error without any extra message */
+/* Report error without any extra message */
 //#define REPORT_ERROR(nerr) throw XmippError((ErrorType)nerr, "", __FILE__, __LINE__)
 
-/** Exception class
+/* Exception class
  *
  * This is the class type for the errors thrown by the routines when the
  * exception handling mode is active (see Xmipp Configuration for details about
@@ -259,5 +259,5 @@ public:
     static char * getDefaultMessage(ErrorType e);
 };
 
-/** @} */
+/* @} */
 #endif

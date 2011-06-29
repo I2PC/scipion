@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef MACROS_H
-#define MACROS_H
+#ifndef XMIPP_MACROS_H
+#define XMIPP_MACROS_H
 
 #ifndef __CYGWIN__
 #ifdef __APPLE__
