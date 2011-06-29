@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
-# General script (part A) for Xmipp-based manual particle picking
+# General script for Xmipp-based manual particle picking
 #
-# For each micrograph in the MicrographSelfile, this program will launch
+# For each micrograph in the PreprocessingDir, this program will launch
 # the xmipp_mark program 
 # A graphical interface exists to identify micrographs that have been finished
 #
@@ -20,8 +20,8 @@
 """
 WorkingDir = "ParticlePicking"
 
-# {file} Selfile with all micrographs to pick particles from:
-MicrographSelfile = "Preprocessing/micrographs.sel"
+# {dir}{expert} Directory with the preprocessing
+PreprocessingDir = "Preprocessing"
 
 # Perform automatic particle picking
 """ Perform automatic particle picking """
@@ -30,7 +30,7 @@ AutomaticPicking = False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir = "/media/usbdisk/Experiments/TestProtocols"
+ProjectDir = "/media/usbdisk/Experiments/TestProtocols/Marcaje_automatico"
 
 #------------------------------------------------------------------------------------------
 # {section}{condition}(AutomaticPicking=True) Parallelization issues for automatic particle picking
@@ -56,9 +56,7 @@ SystemFlavour = ""
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
-from Tkinter import *
-import tkFont
-import os,shutil,sys
+import os,shutil,sys,time
 scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
 sys.path.append(scriptdir) # add default search path
 import xmipp
@@ -96,9 +94,6 @@ class ProtParticlePicking(BasicGUI):
         self.SYSTEMSCRIPTDIR=scriptdir
         import log
 
-        # get color definition from protocol_gui
-        self.PosName="Common"
-
         # Setup logging
         self.log=log.init_log_system(ProjectDir,
                                      "Log",
@@ -107,17 +102,17 @@ class ProtParticlePicking(BasicGUI):
                 
         # Read micrographs
         self.mD=xmipp.MetaData();
-        xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, self.mD)
+        self.MicrographSelfile=PreprocessingDir+"/micrographs.sel"
+        xmipp.readMetaDataWithTwoPossibleImages(self.MicrographSelfile, self.mD)
         self.IsPairList = self.mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1) and \
-                          not xmipp.FileName(MicrographSelfile).isStar1()
+                          not xmipp.FileName(self.MicrographSelfile).isStar1()
 
         # Store parameters
         if os.path.exists(WorkingDir):
-            self.saveAndCompareParameters(["MicrographSelfile",
+            self.saveAndCompareParameters(["PreprocessingDir",
                                            "self.IsPairList"]);
             
         # Make working directory if it does not exist yet
-        import time, protlib_filesystem
         if not os.path.exists(WorkingDir):
             os.makedirs(WorkingDir)
             fh=open(WorkingDir + "/status.txt", "w")
@@ -125,9 +120,9 @@ class ProtParticlePicking(BasicGUI):
             fh.write("Step 0: Directory created at " + time.asctime() + "\n")
             fh.close()
             os.system("ln -s "+\
-                      os.path.relpath(os.path.abspath(MicrographSelfile),WorkingDir)+" "+\
+                      os.path.relpath(os.path.abspath(self.MicrographSelfile),WorkingDir)+" "+\
                       WorkingDir+"/micrographs.sel")
-            self.saveAndCompareParameters(["MicrographSelfile",
+            self.saveAndCompareParameters(["PreprocessingDir",
                                            "IsPairList"]);
         else:
             fh=open(WorkingDir + "/status.txt", "a")
@@ -145,201 +140,140 @@ class ProtParticlePicking(BasicGUI):
         self.launchGUI()
 
     def print_warning(self):
-        import os, sys
         print '*********************************************************************'
-        print '*  Perform manual particle picking for micrographs in: '+os.path.basename(MicrographSelfile)
-        print '*'
-        print '* DONT FORGET TO SAVE YOUR COORDINATES REGULARLY, AND ALWAYS BEFORE CLOSING!'
+        print "* DON'T FORGET TO SAVE YOUR COORDINATES REGULARLY, AND ALWAYS BEFORE CLOSING!"
         if (self.IsPairList):
             print '* AND ALSO SAVE THE ANGLES IN THE UNTILTED MICROGRAPHS!'
-        print '*'
 
     def createGUI(self):
         self.createBasicGUI()
         self.createScrollableCanvas()
-        self.total_count=0
-        self.total_count_auto=0
-        self.whichmark=StringVar()
-        self.whichtilted={}
-        self.row={}
-        self.LabelBackgroundColour=self.style.LabelBgColor
-        self.ButtonBackgroundColour=self.style.ButtonBgColor
-        self.ButtonActiveBackgroundColour=self.style.ButtonActiveBgColor
-        self.HighlightBackgroundColour=self.style.HighlightBgColor
-        self.BooleanSelectColour=self.style.BooleanSelectColor
  
-    def fillGUI(self):
-        import os
+    def addLabel(self,_text,_row=-1,_column=0,_columnspan=1,_sticky=EW,_bgColor="",_fgColor=""):
+        if _fgColor=="":
+            _fgColor=self.style.LabelTextColor
+        if _bgColor=="":
+            _bgColor=self.style.LabelBgColor
+        if _row==-1:
+            _row=self.frame.grid_size()[1]+1
+        label=Label(self.frame, text=_text, bg=_bgColor, fg=_fgColor)
+        label.grid(row=_row,column=_column,sticky=_sticky)
+        return label
 
-        # Script title
+    def addCheckButton(self,_text,_row,_column,_default,_command,_sticky):
+        controlVar = IntVar()
+        controlVar.set(_default)
+        check=Checkbutton(self.frame, _text, variable=controlVar,
+                      command=_command, 
+                      selectcolor=self.style.BooleanSelectColor)
+        check.grid(row=_row, column=_column, sticky=_sticky)
+        return check
+
+    def addRadioButton(self,_text,_row,_column,_variable,_value,_command,_sticky=""):
+        radio=Radiobutton(self.frame,text=_text,variable=_variable,
+                          value=_value,indicatoron=0,
+                          command=_command, 
+                          bg=self.style.ButtonBgColor, 
+                          activebackground=self.style.ButtonActiveBgColor,
+                          highlightbackground=self.style.HighlightBgColor, 
+                          selectcolor=self.style.ButtonActiveBgColor)
+        radio.grid(row=_row, column=_column,sticky=_sticky)
+        return radio
+
+    def addButton(self,_text,_row,_column,_command,_sticky="",_binding=""):
+        button = Button(self.frame, text=_text, 
+                        command=_command, 
+                        bg=self.style.ButtonBgColor, 
+                        activebackground=self.style.ButtonActiveBgColor)
+        button.grid(row=_row,column=_column,sticky=_sticky)
+        if _binding!="":
+            self.master.bind(_binding, _command)
+        return button
+
+    def addLine(self,_color,_column,_columnspan):
+        line=Frame(self.frame, height=2, bd=1, bg=_color,relief=RIDGE)
+        line.grid(row=self.frame.grid_size()[1]+1, column=_column,columnspan=_columnspan,sticky=EW)
+        return line
+
+    def fillGUI(self):
+        # Init GUI variables
+        self.whichmark=StringVar()
+        self.row={}
+        if AutomaticPicking:
+            self.selectedForAutomaticPickingAuto=[]
+            self.selectedForAutomaticPickingName=[]
+            self.selectedForAutomaticPickingMark=[]
+            titleSpan=5
+        else:
+            titleSpan=3
+        if self.IsPairList:
+            self.whichtilted={}
+
+        # Window title
         self.master.title("GUI for Xmipp particle picking")
-        headertext='GUI for Xmipp particle picking\n'
-        headertext+="Executed in directory: "+str(os.getcwd())
-        l1=Label(self.frame, text=headertext, fg="medium blue")
+        
+        # Frame header
+        self.addLabel("Project directory: "+ProjectDir,0,0,titleSpan,_fgColor="medium blue",_sticky=W)
+        self.addLabel("Preprocessing directory: "+PreprocessingDir,1,0,titleSpan,_fgColor="medium blue",_sticky=W)
         if (AutomaticPicking):
-            l1.grid(row=0, column=0,columnspan=5,sticky=EW)
             Label(self.frame, text="Manual").grid(row=1,column=3)
             Label(self.frame, text="Auto").grid(row=1,column=4)
-        else:
-            l1.grid(row=0, column=0,columnspan=3,sticky=EW)
  
-        total=0
-        total_auto=0
-        self.selectedForAutomaticPickingTrain=[]
-        self.selectedForAutomaticPickingAuto=[]
-        self.selectedForAutomaticPickingName=[]
-        self.selectedForAutomaticPickingMark=[]
-        directory,dummy=os.path.split(MicrographSelfile)
+        # Add all micrographs
         containsEnable=self.mD.containsLabel(xmipp.MDL_ENABLED)
-        if not self.IsPairList:
-            for id in self.mD:
-                micrograph=self.mD.getValue(xmipp.MDL_IMAGE,id)
-                if containsEnable:
-                    if self.mD.getValue(xmipp.MDL_ENABLED,id)==0:
-                        continue
-                if not os.path.exists(directory+"/"+micrograph):
-                    c=0
-                    cauto=0
-                    row=self.GuiAddSingleMarkEntry(micrograph,c,cauto)
-                    self.row[micrograph]=row
-                else:
-                    c=self.CountPicked(micrograph,str(self.PosName))
-                    cauto=self.CountPicked(micrograph,str(self.PosName+'.auto'))
-                    total+=c
-                    total_auto+=cauto
-                    row=self.GuiAddSingleMarkEntry(micrograph,c,cauto)
-                    self.row[micrograph]=row
-        else:
-            for id in self.mD:
-                micrograph=self.mD.getValue(xmipp.MDL_IMAGE,id)
-                tilted=self.mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1,id)
-                c=self.CountPicked(micrograph,str(self.PosName))
-                total+=c
-                self.whichtilted[micrograph]=tilted
-                row=self.GuiAddPairMarkEntry(micrograph,c)
-                self.row[micrograph]=row
+        for id in self.mD:
+            micrograph=self.mD.getValue(xmipp.MDL_IMAGE,id)
+            if containsEnable:
+                if self.mD.getValue(xmipp.MDL_ENABLED,id)==0:
+                    continue
+            if self.IsPairList:
+                self.whichtilted[micrograph]=self.mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1,id)
+            self.GuiAddMarkEntry(micrograph)
 
-        row=(self.frame.grid_size()[1]+1)
-        Label(self.frame,text="", 
-              bg=self.LabelBackgroundColour).grid(row=row)
-        l2=Frame(self.frame, height=2, bd=1, bg="medium blue",relief=RIDGE)
-        l2.grid(row=row+1, column=0,columnspan=6,sticky=EW)
-        Label(self.frame,text="", 
-              bg=self.LabelBackgroundColour).grid(row=row+2)
+        # Add blue line surrounded by two empty rows 
+        self.addLabel("")
+        self.addLine("medium blue",0,6)
+        self.addLabel("")
+
+        # Add some buttons
         self.buttonrow=(self.frame.grid_size()[1]+1)
-
-        b = Button(self.frame, text="Close", 
-                   command=self.GuiClose,underline=0, 
-                   bg=self.ButtonBackgroundColour, 
-                   activebackground=self.ButtonActiveBackgroundColour)
-        b.grid(row=self.buttonrow,column=0,sticky=W)
-        self.master.bind('<Control_L><c>', self.GuiClose)
-
+        self.addButton("Show preprocessing",self.buttonrow,0,self.ShowPreprocessing,_sticky=E)
         if (AutomaticPicking):
-            b = Button(self.frame, text="Invert Selection", 
-                       command=self.InvertSelection, 
-                       bg=self.ButtonBackgroundColour, 
-                       activebackground=self.ButtonActiveBackgroundColour)
-            b.grid(row=self.buttonrow,column=1,sticky=N+S+W+E)
+            self.addButton("Invert Selection",self.buttonrow,1,self.InvertSelection)
             nextColumn=2
         else:
             nextColumn=1
-
-        b = Button(self.frame, text="Update Total Count:", 
-                   command=self.GuiUpdateCount, underline=0,
-                   bg=self.ButtonBackgroundColour, 
-                   activebackground=self.ButtonActiveBackgroundColour)
-        b.grid(row=self.buttonrow,column=nextColumn)
-        self.master.bind('<Control_L><U>', self.GuiUpdateCount)
+        self.addButton("Update Total Count",self.buttonrow,nextColumn,self.GuiUpdateCount,_binding='<Control_L><U>')
         nextColumn+=1
-
-        label=str(total).zfill(5)
-        l = Label(self.frame, text=label, 
-                  bg=self.LabelBackgroundColour)
-        l.grid(row=self.buttonrow,column=nextColumn)
-        nextColumn+=1
-        
         if (AutomaticPicking):
-            label=str(total_auto).zfill(5)
-            l = Label(self.frame, text=label, 
-                      bg=self.LabelBackgroundColour)
-            l.grid(row=self.buttonrow,column=nextColumn)
+            self.addButton("AutoSelect",self.buttonrow+1,1,self.AutomaticallyDetect)
 
-            b = Button(self.frame, text="AutoSelect",
-                       command=self.AutomaticallyDetect,underline=0, 
-                       bg=self.ButtonBackgroundColour, 
-                       activebackground=self.ButtonActiveBackgroundColour)
-            b.grid(row=self.buttonrow+1,column=1,sticky=N+S+W+E)
+        # Update counts
+        self.GuiUpdateCount()
         
-    def GuiAddSingleMarkEntry(self,micrograph,count,count_auto):
+    def GuiAddMarkEntry(self,micrograph):
         row=self.frame.grid_size()[1]
+        self.row[micrograph]=row
 
+        # Add Micrograph name
         label=micrograph.split("/")[-2]
-        l=Label(self.frame, text=label, 
-                bg=self.LabelBackgroundColour)
-        l.grid(row=row, column=0, sticky=E)
-
-        if (AutomaticPicking):
-            controlTrain = IntVar()
-            c=Checkbutton(self.frame, text="Train", variable=controlTrain,
-                          command=self.TrainSelectionChanged, 
-                          selectcolor=self.BooleanSelectColour)
-            c.grid(row=row, column=1, sticky=N+W)
-            controlTrain.set(1)
-            self.selectedForAutomaticPickingTrain.append(controlTrain)
-
-            controlAuto = IntVar()
-            c=Checkbutton(self.frame, text="Auto", variable=controlAuto,
-                          command=self.AutoSelectionChanged, 
-                          selectcolor=self.BooleanSelectColour)
-            c.grid(row=row, column=1, sticky=S+E)
-            controlAuto.set(0)
-            self.selectedForAutomaticPickingAuto.append(controlAuto)
-
+        if self.IsPairList:
+            tiltedName=self.whichtilted[micrograph].split("/")[-2]
+            label+=' : '+tiltedName
+        self.addLabel(label, row, 0, _sticky=E)
+        
+        # If automatic particle picking, add checkbox
+        if AutomaticPicking:
+            self.selectedForAutomaticPickingAuto.append(self.addCheckButton("Auto", row, 1, 0, self.AutoSelectionChanged, NW))
             self.selectedForAutomaticPickingName.append(micrograph)
             nextColumn=2
         else:
             nextColumn=1
-
-        r=Radiobutton(self.frame,text="Mark",variable=self.whichmark,
-                      value=micrograph,indicatoron=0,
-                      command=self.LaunchSingleMark, 
-                      bg=self.ButtonBackgroundColour, 
-                      activebackground=self.ButtonActiveBackgroundColour,
-                      highlightbackground=self.HighlightBackgroundColour, 
-                      selectcolor=self.ButtonActiveBackgroundColour)
-        r.grid(row=row, column=nextColumn,sticky=N)
-        self.selectedForAutomaticPickingMark.append(r)
-        nextColumn+=1
-
-        label=str(count).zfill(5)
-        l=Label(self.frame, text=label, 
-                bg=self.LabelBackgroundColour)
-        l.grid(row=row, column=nextColumn, sticky=N+S+W+E)
-        nextColumn+=1
-
-        if (AutomaticPicking):
-            label=str(count_auto).zfill(5)
-            l=Label(self.frame, text=label, 
-                    bg=self.LabelBackgroundColour)
-            l.grid(row=row, column=nextColumn, sticky=N+S+W+E)
-        return row
-
-    def GuiAddPairMarkEntry(self,micrograph,count):
-        row=self.frame.grid_size()[1]
-        label=os.path.basename(micrograph)+' : '+os.path.basename(self.whichtilted[micrograph])
-        l=Label(self.frame, text=label, 
-                bg=self.LabelBackgroundColour)
-        l.grid(row=row, column=0, sticky=E)
-        label=str(count).zfill(5)
-        l=Label(self.frame, text=label, 
-                bg=self.LabelBackgroundColour)
-        l.grid(row=row, column=2)
-        r=Radiobutton(self.frame,text="Mark",variable=self.whichmark,
-                           value=micrograph, indicatoron=0,
-                           command=self.LaunchPairMark)
-        r.grid(row=row, column=1,sticky=N)
-        return row
+        
+        # Add Mark button
+        radio=self.addRadioButton("Mark", row, nextColumn, self.whichmark, micrograph, self.LaunchSingleMark, N)
+        if AutomaticPicking:
+            self.selectedForAutomaticPickingMark.append(radio)
 
     def InvertSelection(self):
         for i in range(0,len(self.selectedForAutomaticPickingAuto)):
@@ -347,36 +281,25 @@ class ProtParticlePicking(BasicGUI):
                 self.selectedForAutomaticPickingAuto[i].get());
         self.AutoSelectionChanged();
 
-    def TrainSelectionChanged(self):
-        for i in range(0,len(self.selectedForAutomaticPickingTrain)):
-            if (self.selectedForAutomaticPickingTrain[i].get()):
-                self.selectedForAutomaticPickingMark[i].config(state=NORMAL)
-                self.selectedForAutomaticPickingAuto[i].set(0)
-            else:
-                self.selectedForAutomaticPickingMark[i].config(state=DISABLED)
-                self.selectedForAutomaticPickingAuto[i].set(1)
-
     def AutoSelectionChanged(self):
         for i in range(0,len(self.selectedForAutomaticPickingTrain)):
             if (self.selectedForAutomaticPickingAuto[i].get()):
                 self.selectedForAutomaticPickingMark[i].config(state=DISABLED)
-                self.selectedForAutomaticPickingTrain[i].set(0)
             else:
                 self.selectedForAutomaticPickingMark[i].config(state=NORMAL)
-                self.selectedForAutomaticPickingTrain[i].set(1)
 
     def AutomaticallyDetect(self):
         command_file = open(WorkingDir+"/pick.sh", "w")
-        directoryPreprocessing,dummy=os.path.split(MicrographSelfile)
+        directoryPreprocessing,dummy=os.path.split(self.MicrographSelfile)
         for i in range(0,len(self.selectedForAutomaticPickingAuto)):
             if (self.selectedForAutomaticPickingAuto[i].get()):
                directory,micrograph=os.path.split(
                   self.selectedForAutomaticPickingName[i])
-               filename=WorkingDir+"/"+micrograph+"."+self.PosName+".auto.pos"
+               filename=WorkingDir+"/"+micrograph+".Common.auto.pos"
                command_file.write(
                   "( xmipp_micrograph_mark -i "+directoryPreprocessing+"/"+\
                   self.selectedForAutomaticPickingName[i]+\
-                  " --auto "+WorkingDir+"/"+self.PosName+".auto --autoSelect "+\
+                  " --auto "+WorkingDir+"/Common.auto --autoSelect "+\
                   " --outputRoot "+WorkingDir+"/"+micrograph+\
                   "; if [ -e " + filename + ' ]; then ' + \
                   'echo "Step A: "'+micrograph+' automatically marked on `date` >> ' + \
@@ -428,71 +351,73 @@ class ProtParticlePicking(BasicGUI):
         else:
             os.system(command);
 
+    def GuiUpdateCount(self):
+        total_manual=0
+        total_auto=0
+        if AutomaticPicking:
+            familyColumn=2
+        else:
+            familyColumn=3
+
+        # Count all micrographs
+        for micrograph,row in self.row.items():
+            manual=self.CountPicked(micrograph,"Common")
+            total_manual+=manual
+            self.addLabel(str(manual).zfill(5),row,familyColumn, _sticky=N+S+W+E)
+            if AutomaticPicking:
+                auto=self.CountPicked(micrograph,"Common.auto")
+                total_auto+=auto
+                self.addLabel(str(auto).zfill(5),row,familyColumn+1, _sticky=N+S+W+E)
+
+        # Add summaries
+        self.addLabel(str(total_manual).zfill(5),self.buttonrow,familyColumn, _sticky=N+S+W+E)
+        if AutomaticPicking:
+            self.addLabel(str(total_auto).zfill(5),self.buttonrow,familyColumn+1, _sticky=N+S+W+E)
+
     def CountPicked(self,micrograph,label):
-        directory,fnMicrograph=os.path.split(micrograph);
-        posfile=WorkingDir+"/"+str(fnMicrograph)+'.'+label+'.pos'
+        micrographName=micrograph.split("/")[-2]
+        posfile=WorkingDir+"/"+str(micrographName)+'.'+label+'.pos'
         if os.path.exists(posfile):
-            import xmipp
             mD=xmipp.MetaData(posfile);
             return mD.size()
         return 0
     
-    def CountAll(self, family=''):
-        total=0
-        for mic,row in self.row.items():
-            if family=='':
-                c=self.CountPicked(mic,str(self.PosName))
-            else:
-                c=self.CountPicked(mic,family)
-            total=total+c
-            label=str(c).zfill(5)
-            l=Label(self.frame, text=label, 
-                    bg=self.LabelBackgroundColour)
-            if (AutomaticPicking):
-                if family=='':
-                    l.grid(row=row, column=3)
-                else:
-                    l.grid(row=row, column=4)
-            else:
-                l.grid(row=row, column=2)
-        return total
-        
-    def LaunchSingleMark(self):
-        import launch_job
-
+    def ShowPreprocessing(self):
         self.GuiUpdateCount()
-        print "* Marking ... "
-        name=self.whichmark.get()
-        if name=='':
+        command='xmipp_visualize_preprocessing_micrographj -i '+self.MicrographSelfile+" &"
+        self.log.info(command)
+        os.system(command)
+
+    def LaunchSingleMark(self):
+        self.GuiUpdateCount()
+        micrograph=self.whichmark.get()
+        if micrograph=='':
             return
-        basedirectory,dummy=os.path.split(MicrographSelfile)
-        micrograph=name.split("/")[-2]
-        command='( xmipp_micrograph_mark -i '+name+\
-                  " --outputRoot "+WorkingDir+"/"+micrograph
+        micrographName=micrograph.split("/")[-2]
+        command='( xmipp_micrograph_mark -i '+micrograph+\
+                  " --outputRoot "+WorkingDir+"/"+micrographName
         if (AutomaticPicking):
-            command+=' --auto '+WorkingDir+"/"+self.PosName+'.auto'
-            filename=WorkingDir+"/"+micrograph+"."+self.PosName+".auto.pos"
+            command+=' --auto '+WorkingDir+"/Common.auto"
+            filename=WorkingDir+"/"+micrographName+".Common.auto.pos"
             command+="; if [ -e " + filename + ' ]; then ' + \
-                 'echo "Step L: "'+micrograph+' used for learning on `date` >> ' + \
+                 'echo "Step L: "'+micrographName+' used for learning on `date` >> ' + \
                  WorkingDir + "/status.txt; fi "
-        filename=WorkingDir+"/"+micrograph+"."+self.PosName+".pos"
-        command+="; if [ -e " + filename + ' ]; then ' + \
-                 'echo "Step M: "'+micrograph+' manually marked on `date` >> ' + \
-                 WorkingDir + "/status.txt; fi "
+        else:
+            filename=WorkingDir+"/"+micrographName+".Common.pos"
+            command+="; if [ -e " + filename + ' ]; then ' + \
+                     'echo "Step M: "'+micrograph+' manually marked on `date` >> ' + \
+                     WorkingDir + "/status.txt; fi "
         command+=") &"
         self.log.info(command)
         os.system(command)
 
     def LaunchPairMark(self):
-        import launch_job
         self.GuiUpdateCount()
-        print "* Marking pair ... "
-        
         untilted=self.whichmark.get()
-        tilted=self.whichtilted[self.whichmark.get()]
+        tilted=self.whichtilted[untilted]
         uname=untilted.split("/")[-2]
         tname=tilted.split("/")[-2]
-        filename=WorkingDir+"/"+uname+"."+self.PosName+".pos"
+        filename=WorkingDir+"/"+uname+".Common.pos"
         command='( xmipp_micrograph_mark -i '+untilted+\
                 ' --tilted '+tilted+\
                 " --outputRoot "+WorkingDir+"/"+uname
@@ -503,28 +428,6 @@ class ProtParticlePicking(BasicGUI):
         self.log.info(command)
         os.system(command)
 
-    def GuiUpdateCount(self):
-        print "* Updating count ..."
-        total=self.CountAll()
-        label=str(total).zfill(5)
-        l=Label(self.frame, text=label, 
-                bg=self.LabelBackgroundColour)
-        if (AutomaticPicking):
-            l.grid(row=self.buttonrow, column=3)
-            totalAuto=self.CountAll(self.PosName+'.auto')
-            label=str(totalAuto).zfill(5)
-            l=Label(self.frame, text=label, 
-                    bg=self.LabelBackgroundColour)
-            l.grid(row=self.buttonrow, column=4)
-        else:
-            l.grid(row=self.buttonrow, column=2)
-
-    def GuiClose(self):
-        import sys
-        self.master.quit()
-        self.master.destroy()
-        sys.exit(0)
-        
 # Preconditions
 def checkErrors():
     errors = []
@@ -532,10 +435,11 @@ def checkErrors():
     if WorkingDir == "":
         errors.append("No working directory given")
     # Check that there is a valid list of micrographs
+    MicrographSelfile=PreprocessingDir+"/micrographs.sel"
     if not os.path.exists(MicrographSelfile)>0:
         errors.append("Cannot find ")+MicrographSelfile
+    
     # Check that all micrographs exist
-    import xmipp
     mD = xmipp.MetaData()
     xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
     isPairList = mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1) and \
