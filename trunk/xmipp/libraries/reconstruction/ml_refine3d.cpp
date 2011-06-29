@@ -662,8 +662,8 @@ void ProgMLRefine3D::reconstructVolumes()
 
     for (int i = 0; i < reconsOutFnBase.size(); ++i)
     {
-      std::cerr << "DEBUG_JM: rank: " << rank << std::endl;
-      std::cerr << "DEBUG_JM: reconsMdFn[i]: " << reconsMdFn[i] << std::endl;
+      //std::cerr << "DEBUG_JM: rank: " << rank << std::endl;
+      //std::cerr << "DEBUG_JM: reconsMdFn[i]: " << reconsMdFn[i] << std::endl;
         mdProj.read(reconsMdFn[i]);
         String &fn_base = reconsOutFnBase[i];
         for (int volno = 1; volno <= Nvols; ++volno)
