@@ -276,7 +276,7 @@ void ProgMLRefine3D::readParams()
         reconsOutFnBase.push_back(FN_CREF_VOL);
         reconsOutFnBase.push_back(FN_NOISE_VOL);
         {//make fn_root local scope
-            String fn_root = this->fn_root + "_" + ml2d->defaultRoot; // this is need for the following macron
+            String fn_root = this->fn_root + "_" + ml2d->defaultRoot; // this is need for the following macro
             reconsMdFn.push_back(FN_CREF_IMG_MD);
         }
         reconsMdFn.push_back(FN_NOISE_IMG_MD);
@@ -662,6 +662,8 @@ void ProgMLRefine3D::reconstructVolumes()
 
     for (int i = 0; i < reconsOutFnBase.size(); ++i)
     {
+      std::cerr << "DEBUG_JM: rank: " << rank << std::endl;
+      std::cerr << "DEBUG_JM: reconsMdFn[i]: " << reconsMdFn[i] << std::endl;
         mdProj.read(reconsMdFn[i]);
         String &fn_base = reconsOutFnBase[i];
         for (int volno = 1; volno <= Nvols; ++volno)

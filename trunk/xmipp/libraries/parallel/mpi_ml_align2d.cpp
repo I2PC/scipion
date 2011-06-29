@@ -398,7 +398,7 @@ void MpiProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputTyp
     if (node->isMaster())
         ProgMLF2D::writeOutputFiles(model, outputType);
     else if (outputType == OUT_REFS)
-        outRefsMd = formatString("%s_iter%0FILENAMENUMBERLENTGHd_refs.xmd", fn_root.c_str(), iter);
+        outRefsMd = formatString("%s_iter%06d_refs.xmd", fn_root.c_str(), iter);
     //All nodes wait until files are written
     node->barrierWait();
 }

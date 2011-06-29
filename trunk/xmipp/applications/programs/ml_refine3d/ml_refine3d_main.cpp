@@ -25,9 +25,4 @@
 
 #include <reconstruction/ml_refine3d.h>
 
-int main(int argc, char **argv)
-{
-    ProgMLRefine3D program;
-    program.read(argc, argv);
-    return program.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgMLRefine3D);
