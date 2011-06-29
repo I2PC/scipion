@@ -806,7 +806,7 @@ AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_creat
 AddBatch('metadata_show', 'applications/scripts/metadata_show', '.py')
 #AddBatch('metadata_operate', 'applications/scripts/metadata_operate','.py')
 AddBatch('classify_CL2D_core_analysis', 'applications/scripts/classify_CL2D_core_analysis')
-AddBatch('protocols', 'applications/scripts/protocols')
+AddBatch('protocols', 'applications/scripts/protocols', '.py')
 AddBatch('gui', 'applications/scripts/protocols')
 AddBatch('showj', 'applications/scripts/showj', '.sh')
 #AddBatch('showj', 'applications/scripts/showj', '.py')
@@ -874,7 +874,7 @@ AddProtocol('protocol_setup.py', 'applications/scripts/protocols')
 
 # MPI
 if int(env['mpi']):
-    AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
+    #AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
