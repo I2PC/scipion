@@ -780,7 +780,7 @@ if int(env['gtest']):
      #python modules
      #FIXME ROB -how to install dependences?????
      AddProtocol('XmippPythonTestResult.py', 'applications/tests/pythonlib')
-     AddProtocol('bcolors.py', 'applications/tests/pythonlib')
+     #AddProtocol('bcolors.py', 'applications/tests/pythonlib')
      #python tests
      test = AddXmippPythonTest('test_pythoninterface')
      AddXmippPythonTest('test_projectionmatching')
