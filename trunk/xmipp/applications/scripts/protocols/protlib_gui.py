@@ -143,6 +143,67 @@ class BasicGUI():
         self.launchCanvas() 
         self.resize()      
         self.master.mainloop() 
+
+    def nextRow(self, parent=None):
+        if not parent:
+            parent=self.frame
+        return parent.grid_size()[1] + 1
+    
+    def addLabel(self,text,row=None,column=0,columnspan=1,sticky=EW,bgColor="",fgColor="",parent=None):
+        if not parent:
+            parent=self.frame
+        if fgColor=="":
+            fgColor=self.style.LabelTextColor
+        if bgColor=="":
+            bgColor=self.style.LabelBgColor
+        if not row:
+            row = self.nextRow(parent)
+        label=Label(parent, text=text, bg=bgColor, fg=fgColor)
+        label.grid(row=row,column=column,sticky=sticky)
+        return label
+    
+    def addCheckButton(self,text,row,column,default,command,sticky,parent=None):
+        if not parent:
+            parent=self.frame
+        controlVar = IntVar()
+        controlVar.set(default)
+        check=Checkbutton(parent, text, variable=controlVar,
+                      command=command, 
+                      selectcolor=self.style.BooleanSelectColor)
+        check.grid(row=row, column=column, sticky=sticky)
+        return check
+
+    def addRadioButton(self,text,row,column,variable,value,command,sticky="",parent=None):
+        if not parent:
+            parent=self.frame
+        radio=Radiobutton(parent,text=text,variable=variable,
+                          value=value,indicatoron=0,
+                          command=command, 
+                          bg=self.style.ButtonBgColor, 
+                          activebackground=self.style.ButtonActiveBgColor,
+                          highlightbackground=self.style.HighlightBgColor, 
+                          selectcolor=self.style.ButtonActiveBgColor)
+        radio.grid(row=row, column=column,sticky=sticky)
+        return radio
+
+    def addButton(self,text,row,column,command,sticky="",binding="",parent=None):
+        if not parent:
+            parent=self.frame
+        button = Button(parent, text=text, 
+                        command=command, 
+                        bg=self.style.ButtonBgColor, 
+                        activebackground=self.style.ButtonActiveBgColor)
+        button.grid(row=row,column=column,sticky=sticky)
+        if binding!="":
+            self.master.bind(binding, command)
+        return button
+
+    def addLine(self,_color,column,columnspan,parent=None):
+        if not parent:
+            parent=self.frame
+        line=Frame(parent, height=2, bd=1, bg=_color,relief=RIDGE)
+        line.grid(row=self.nextRow(), column=column,columnspan=columnspan,sticky=EW)
+        return line
         
 sepLine = "#------------------------------------------------------------------------------------------\n" 
         
