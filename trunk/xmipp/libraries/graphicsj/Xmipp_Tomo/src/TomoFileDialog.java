@@ -48,7 +48,10 @@ public class TomoFileDialog {
 		fileChooser = new JFileChooser();
 		fileChooser.setDialogTitle(title);
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-		fileChooser.setCurrentDirectory(getLastChosenDirectory(title));
+		File lastChosenDirectory = getLastChosenDirectory(title);
+		if (lastChosenDirectory == null)
+			lastChosenDirectory=new File(".");
+		fileChooser.setCurrentDirectory(TomoFileDialog.lastChosenDirectory);
 		fileChooser.setDialogType(type);
 
 		File fdir = null;
