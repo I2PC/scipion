@@ -124,7 +124,7 @@ class XmippProtocol(object):
         #A protocol must be able to find its own project
         self.project = project
         self.Import = '' # this can be used by database for import modules
-        self.WorkingDir = os.path.join(launchDict['Projection Matching'],runName)
+        self.WorkingDir = os.path.join(protocolName,runName)
         self.projectDir = project.projectDir  
         #Setup the Log for the Protocol
         self.LogDir = project.logsDir
