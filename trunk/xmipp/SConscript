@@ -844,7 +844,6 @@ AddProtocol('visualize_rct.py')
 AddProtocol('visualize_rotspectra.py')
 AddProtocol('which.py')
 
-AddProtocol('protocol_gui.py')
 AddProtocol('protocol_align2d.py')
 AddProtocol('protocol_backup.py')
 AddProtocol('protocol_cl2d.py')
