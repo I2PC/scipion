@@ -139,7 +139,13 @@ class XmippProjectGUI():
                'comment': "my first run"
                }
         self.project.projectDb.insertRun(run)
-        os.system('python %s %s &' % (os.path.join(protDir, 'xmipp_protocol_gui.py'), dstAbsPath))
+        
+        top = TopLevel()
+        gui = ProtocolGUI()
+        gui.createGUI(script, top)
+        gui.fillGUI()
+        gui.launchGUI()
+        #os.system('python %s %s &' % (os.path.join(protDir, 'xmipp_protocol_gui.py'), dstAbsPath))
         
     def launchProtocol(self, btnName):
         protName = 'xmipp_protocol_%s' % launchDict[btnName]
