@@ -431,6 +431,7 @@ class XmippProtocolDb(connectorDB):
 
             sqlCommand = "UPDATE %(TableSteps)s SET init = CURRENT_TIMESTAMP WHERE step_id=%(step_id)d" % self.sqlDict
             self.connection.execute(sqlCommand)
+            self.connection.commit()
             print 'command: ', command
             exec (row["command"] + '(_log, **dict)')
             #__dict__[command](_log, **dict)
