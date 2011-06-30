@@ -1,7 +1,6 @@
 from pysqlite2 import dbapi2 as sqlite
 import os,sys
 import pickle
-from  bcolors import *
 from config import *
 from protlib_utils import *
 from protlib_filesystem import *
@@ -169,13 +168,14 @@ class XmippProjectDb(connectorDB):
     
 class XmippProtocolDb(connectorDB): 
     
-    def __init__(self, dbName, continueAt, isIter, runName):
+    def __init__(self, dbName, continueAt, isIter, protocol):
         """Constructor of the Sqlite database
         dbName    -- The filename of the database, the full path will be created if not exists
         continueAt -- at wich point to continue
         isIter     -- if True continueAt refers to iteration, otherwise refers to one step
         """
         self.sqlDict = projectDefaults
+        self.protocol = protocol
 
         self.ContinueAtIteration = continueAt        
         self.dbName = dbName
@@ -197,10 +197,12 @@ class XmippProtocolDb(connectorDB):
         #constant
         self.SystemFlavour = "None"
         #get run_id
-        self.sqlDict['run_name'] = runName
+        self.sqlDict['run_name'] = protocol.runName
+        self.sqlDict['protocol_name'] = protocol.Name
         _sqlCommand = """ SELECT run_id 
                           FROM %(TableRuns)s 
-                          WHERE run_name = '%(run_name)s'""" % self.sqlDict
+                          WHERE run_name = '%(run_name)s'
+                            AND protocol_name = '%(protocol_name)s' """ % self.sqlDict
                             
         self.cur.execute(_sqlCommand)
         result = self.cur.fetchone()
