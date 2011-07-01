@@ -113,39 +113,49 @@ class XmippProjectGUI():
         self.btnFrameDict[text] = btnFrame 
         btn.config(command=lambda:self.menuPick(text))
 
-    def newProtocol(self, btnName):
-        protocol = launchDict[btnName]
+    def newProtocol(self, protKey):
+        protocol = launchDict[protKey]
         protDir = getXmippPath('protocols')
         srcProtName = 'xmipp_protocol_%s.py' % protocol
         srcProtDir = getXmippPath('protocols')
         srcProtAbsPath = os.path.join(protDir, srcProtName)
-        
-        lastRunName = self.project.projectDb.getLastRunName(protocol)
-        
-        g = getScriptPrefix(lastRunName)
-        print g
-        prefix, suffix =g
+
+        #suggest a new run_name        
+        lastRunName = self.project.projectDb.getLastRunName(protocol)        
+        prefix, suffix  = getScriptPrefix(lastRunName)
         n = 1
         if suffix:
             n = int(suffix) + 1
         runName = "%s_%03d" % (prefix, n)
         dstAbsPath = os.path.join(self.project.runsDir, 'xmipp_protocol_%s_%s.py' % (protocol, runName))
-        print "Copying %s to %s" % (srcProtAbsPath, dstAbsPath)
-        shutil.copy(srcProtAbsPath, dstAbsPath)
+#        print "Copying %s to %s" % (srcProtAbsPath, dstAbsPath)
+#        shutil.copy(srcProtAbsPath, dstAbsPath)
         run = {
                'protocol_name':protocol, 
                'run_name': runName, 
                'script': dstAbsPath, 
                'comment': "my first run"
                }
-        self.project.projectDb.insertRun(run)
         
-        top = TopLevel()
+        
+        top = Toplevel()
         gui = ProtocolGUI()
-        gui.createGUI(script, top)
+        gui.createGUI(srcProtAbsPath, dstAbsPath, top)
         gui.fillGUI()
+        #set the suggested runName
+        gui.variablesDict['RunName'].setValue(runName)
+        s, ss = getSection(protKey)
+        gui.saveCallback = lambda: self.protcolSaveCallback(run, ss)
         gui.launchGUI()
         #os.system('python %s %s &' % (os.path.join(protDir, 'xmipp_protocol_gui.py'), dstAbsPath))
+        
+    def protcolSaveCallback(self, run, protGroup):
+        print "called save callback " + protGroup
+        self.project.projectDb.insertRun(run)
+        
+        if self.btnFrameDict[protGroup] == self.lastSelectedFrame:
+            self.updateHistory(protGroup) 
+    
         
     def launchProtocol(self, btnName):
         protName = 'xmipp_protocol_%s' % launchDict[btnName]
@@ -159,8 +169,8 @@ class XmippProjectGUI():
         self.project.projectDb.insertRun(run)
         os.system('python %s %s &' % (os.path.join(protDir, 'xmipp_protocol_gui.py'), protDestName))
         
-    def updateHistory(self, runs): 
-        #TODO: this can be done in a better way
+    def updateHistory(self, protGroup): 
+        runs = self.project.projectDb.selectRuns(protGroup)
         for w in self.histFrame.grid_slaves():
             w.destroy()
         
@@ -184,8 +194,7 @@ class XmippProjectGUI():
             self.lastSelectedFrame.grid(row=0, column=1, sticky=W+E+N, padx=10, pady=10)
             self.project.config.set('project', 'lastselected', text)
             self.project.writeConfig()
-            runs = self.project.projectDb.selectRuns(text)
-            self.updateHistory(runs)
+            self.updateHistory(text)
             
 
     def createGUI(self, root=None):

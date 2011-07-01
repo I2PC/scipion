@@ -12,6 +12,13 @@ sections = [
     ['Model Refinement', 'Projection Matching']]),
 ('Other', [['Browse']])]
 
+def getSection(protKey):
+    for s, list in sections:
+        for subList in list:
+            if protKey in subList:
+                return (s, subList[0])
+    return None
+
 class ProtocolNames:
     preprocess_micrographs = 'preprocess_micrographs'    
     particle_pick = 'particle_pick' 

@@ -125,19 +125,20 @@ class BasicGUI():
         self.style.createFonts()
         
     def resize(self):
-        height = self.frame.winfo_reqheight() + 25
-        width = self.frame.winfo_reqwidth() + 25
-        if height > self.style.MaxHeight:
-            height = self.style.MaxHeight
-        if width > self.style.MaxWidth:
-            width = self.style.MaxWidth
-        self.master.geometry("%dx%d%+d%+d" % (width, height, 0, 0))
+        height = min(self.frame.winfo_reqheight() + 25, self.style.MaxHeight)
+        width = min(self.frame.winfo_reqwidth() + 25, self.style.MaxWidth)
+        x = self.frame.winfo_x()
+        y = self.frame.winfo_y()
+        self.master.geometry("%dx%d%+d%+d" % (width, height, x, y))
+
+    def updateScrollRegion(self):
+        self.frame.update_idletasks()
+        self.canvas.config(scrollregion=self.canvas.bbox("all")) 
         
     def launchCanvas(self):
         # Launch the window
         self.canvas.create_window(0, 0, anchor=NW, window=self.frame)
-        self.frame.update_idletasks()
-        self.canvas.config(scrollregion=self.canvas.bbox("all")) 
+        self.updateScrollRegion()
     
     def launchGUI(self):
         self.launchCanvas() 
@@ -276,6 +277,7 @@ class ProtocolWidget():
             show = self.master.expert_mode
         show = show and self.satisfiesCondition() #has condition, check it
         self.display(show)    
+
             
     def display(self, value):
         for w in self.widgetslist:
@@ -347,19 +349,21 @@ Optional:
 """       
 
 class ProtocolGUI(BasicGUI):
-    def init(self, script):
+    def init(self, inScript, outScript):
         self.variablesDict = {}       
         self.pre_header_lines = []
         self.header_lines = []
         self.post_header_lines = []
         self.expert_mode = False
-        self.scriptname = script
+        self.inScript = inScript
+        self.outScript = outScript
         self.lastrow = 0
         self.widgetslist = []
         self.sectionslist = [] # List of all sections
         self.citeslist = []
         # Script title
-        self.programname = os.path.basename(self.scriptname.replace('.py', ''))
+        self.programname = os.path.basename(self.inScript.replace('.py', ''))
+        self.saveCallback = None
 
     #-------------------------------------------------------------------
     # Widgets creation and GUI building
@@ -496,7 +500,7 @@ class ProtocolGUI(BasicGUI):
     def readProtocolScript(self):
         begin_of_header = False
         end_of_header = False        
-        f = open(self.scriptname, 'r')
+        f = open(self.inScript, 'r')
         for line in f:
             #print "LINE: ", line
             if not begin_of_header:
@@ -594,10 +598,11 @@ class ProtocolGUI(BasicGUI):
             text = "Show Expert Options"
         self.btnExpert.config(text=text)
         self.checkVisibility()
+        self.updateScrollRegion()
     
     def save(self, event=""):
-        print "* Saving script: %s" % self.scriptname
-        f = open(self.scriptname, 'w')
+        print "* Saving script: %s" % self.outScript
+        f = open(self.outScript, 'w')
         #f = sys.stdout
         f.writelines(self.pre_header_lines)
         for w in self.widgetslist:
@@ -606,7 +611,10 @@ class ProtocolGUI(BasicGUI):
         f.writelines(sepLine + '# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE\n') 
         f.writelines(self.post_header_lines)
         f.close()
-        os.chmod(self.scriptname, 0755)
+        os.chmod(self.outScript, 0755)
+        
+        if self.saveCallback:
+            self.saveCallback()
     
     def confirmDeleteWorkingDir(self):
         if 'DoDeleteWorkingDir' in self.variablesDict and self.variablesDict['DoDeleteWorkingDir'].getValue() == 'True':
@@ -614,7 +622,7 @@ class ProtocolGUI(BasicGUI):
         return True
     
     def validateProtocol(self):
-        mod = loadModule(self.scriptname)
+        mod = loadModule(self.outScript)
         #print dir(mod)
         if 'checkErrors' in dir(mod):
             errors = mod.checkErrors()
@@ -649,7 +657,9 @@ class ProtocolGUI(BasicGUI):
         
     def checkVisibility(self, event=""):        
         for w in self.widgetslist:
-            w.checkVisibility()    
+            w.checkVisibility()   
+        self.updateScrollRegion() 
+
     
     def fillButtons(self):
         row = self.getRow()
@@ -674,12 +684,14 @@ class ProtocolGUI(BasicGUI):
         self.master.bind("<Button-4>", self.scroll)
         self.master.bind("<Button-5>", self.scroll)
         
-    def createGUI(self, script):
-        self.init(script)        
+    def createGUI(self, inScript, outScript = None, master=None):
+        if not outScript:
+            outScript = inScript
+        self.init(inScript, outScript)        
         #self.master = Tk()
         #self.style = ProtocolStyle('config_gui')
         #self.style.createFonts()
-        self.createBasicGUI()
+        self.createBasicGUI(master)
         self.master.option_add("*Font", self.style.Font)
         self.columnspantextlabel = 3
         self.columntextentry = 3

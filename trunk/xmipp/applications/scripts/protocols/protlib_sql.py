@@ -136,7 +136,6 @@ class XmippProjectDb(SqliteDb):
           
     def insertRun(self, run):#run_name, script, comment=''):
         self.sqlDict.update(run)
-        print self.sqlDict
         _sqlCommand = """INSERT INTO %(TableRuns)s values(
                             NULL, 
                             '%(run_name)s', 
@@ -190,8 +189,6 @@ class XmippProtocolDb(SqliteDb):
         isIter     -- if True continueAt refers to iteration, otherwise refers to one step
         """
         self.sqlDict = projectDefaults
-        #self.protocol = protocol
-
         self.ContinueAtIteration = continueAt        
         self.dbName = dbName
         self.connection = sqlite.Connection(dbName)
@@ -433,15 +430,10 @@ class XmippProtocolDb(SqliteDb):
                 pp = pprint.PrettyPrinter(indent=4,width=20)
                 pp.pprint(dict)
 
-#                for i in dict.items():
-#                    print i
-
             sqlCommand = "UPDATE %(TableSteps)s SET init = CURRENT_TIMESTAMP WHERE step_id=%(step_id)d" % self.sqlDict
             self.connection.execute(sqlCommand)
-            self.connection.commit()
-            print 'command: ', command
-            exec (row["command"] + '(_log, **dict)')
-            #__dict__[command](_log, **dict)
+            
+            exec ( command + '(_log, **dict)')
             
             if self.verify and row["fileNameList"]:
                 _list =pickle.loads(str(row["fileNameList"]))

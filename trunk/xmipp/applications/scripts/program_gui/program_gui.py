@@ -196,8 +196,8 @@ class ParamWidget(Frame):
             self.checkButton.pack(side=LEFT)
         if len(self.comments) > 0:
             try:
-                helpImage = PhotoImage(file="~/Download/help256.gif").subsample(12, 12)
-                helpButton = Button(self, image=helpImage, command=self.buttonHelp_click)
+                helpImage = PhotoImage(file = "/home/josem/Download/help.gif")
+                helpButton = Button(self, image=helpImage, command=self.buttonHelp_click, bd=0)
                 helpButton.image = helpImage;
             except TclError:
                 helpButton = Button(self, text="Help",
@@ -532,11 +532,13 @@ def centerWindows(win, w, h, x, y):
         
         
 root = Tk()
+root.withdraw()
 w = root.winfo_screenwidth()
 h = root.winfo_screenheight()
 program = ProgramGUI(root)
 root.update_idletasks();
 centerWindows(root, w, h, 0, 0)
+root.deiconify()
 root.mainloop()
 
 
