@@ -32,6 +32,7 @@ import ConfigParser
 from config import *
 from protlib_sql import *
 from protlib_utils import *
+import sys
 
 class XmippProject():
     def __init__(self, projectDir=None):
@@ -94,6 +95,7 @@ class XmippProject():
         # Load database
         self.projectDb = XmippProjectDb(self.dbName)
         
+
     def writeConfig(self):
        with open(self.cfgName, 'wb') as configfile:
             self.config.write(configfile) 
@@ -128,8 +130,8 @@ class XmippProtocol(object):
         self.projectDir = project.projectDir  
         #Setup the Log for the Protocol
         self.LogDir = project.logsDir
-        uniquePrefix = self.WorkingDir.replace('/', '_')
-        self.LogPrefix = os.path.join(self.LogDir, uniquePrefix)       
+        self.uniquePrefix = self.WorkingDir.replace('/', '_')
+        self.LogPrefix = os.path.join(self.LogDir, self.uniquePrefix)       
         self.errors = []
         self.summary = []
         self.continueAt=1
@@ -169,13 +171,13 @@ class XmippProtocol(object):
         each particular protocol need to add its specific actions'''
         pass
     
-    def init(self):
+    def runSetup(self):
         logfile = self.LogPrefix + ".log"
         self.Log = XmippLog(logfile, logfile)
         self.Db = XmippProtocolDb(self.project.dbName
                                 , self.restartStep
                                 , self.isIter
-                                , self.runName)
+                                , self)
 
         
 
@@ -193,7 +195,7 @@ class XmippProtocol(object):
         self.restartStep = restartStep
         self.isIter = isIter
         #Initialization of log and db
-        self.init()
+        self.runSetup()
         #Add actions to database
         self.defineActions()
         #Run actions from database
@@ -239,9 +241,57 @@ def command_line_options():
         (options, args) = parser.parse_args()
     return options
 
+def main(ProtocolClass):
+    script  = sys.argv[0]
+    options = command_line_options()
     
+    #1) just call the gui
     
-
+    if options.gui:
+        from protlib_gui import ProtocolGUI 
+        gui = ProtocolGUI()
+        gui.createGUI(script)
+        gui.fillGUI()
+        gui.launchGUI()
+    else:#2) Run from command line
+        mod = loadModule(script)
+        #init project
+        project = XmippProject()
+        #load project: read config file and open conection database
+        project.load()
+        #register run with runName, script, comment=''):
+        p = ProtocolClass(script, project)
+        run_id = project.projectDb.getRunId(p.Name, mod.RunName)
+        
+        if options.no_check: 
+            if not run_id:
+                reportError("Protocol run '%s' has not been registered in project database" % mod.RunName)
+        else:
+            if not confirmWarning(p.warnings()):
+                exit(0)
             
-      
+            if not run_id:
+                _run={
+                       'comment' : mod.Comment
+                      ,'protocol_name': p.Name
+                      ,'run_name' : mod.RunName
+                      ,'script'  : script 
+                      }
+                project.projectDb.insertRun(_run)
+            if mod.SubmmitToQueue:
+                submitProtocol(script,
+                               jobId = p.uniquePrefix,
+                               queueName = mod.QueueName,
+                               nodes = mod.NumberOfMpiProcesses,
+                               threads = mod.NumberOfThreads,
+                               hours = mod.QueueHours,
+                               command = 'python %s --no_check' % script
+                               )
+                exit(0)
+#            else:
+#                reportError("%s[ Protocol runs already created, data will be overwrited ]%s\n"  << quitar color 
+#                                 % (bcolors.FAIL, bcolors.ENDC)) 
+        
+        p.run(mod.ContinueAtIteration,mod.IsIter)
+
 

@@ -22,7 +22,7 @@ def existsDB(dbName):
         print "database %s is missing"% dbName
     return result
 
-class connectorDB:
+class SqliteDb:
     def execSqlCommand(self, sqlCmd, errMsg):
         """Helper function to execute sqlite commands"""
         try:
@@ -33,10 +33,22 @@ class connectorDB:
                 print 'consider deleting the database (%s)' % self.dbName
             sys.exit(1)  
         self.connection.commit()
-        
-class XmippProjectDb(connectorDB):
-        
-
+    
+    def getRunId(self, protName,runName):
+        self.sqlDict['protocol_name'] = protName
+        self.sqlDict['run_name'] = runName        
+        _sqlCommand = """ SELECT run_id 
+                          FROM %(TableRuns)s 
+                          WHERE run_name = '%(run_name)s'
+                            AND protocol_name = '%(protocol_name)s' """ % self.sqlDict
+                            
+        self.cur.execute(_sqlCommand)
+        result = self.cur.fetchone()
+        if result:
+            result = result['run_id']
+        return result
+    
+class XmippProjectDb(SqliteDb):
         
     def __init__(self, dbName):
         try:
@@ -112,18 +124,19 @@ class XmippProjectDb(connectorDB):
         
     def insertProtocol(self, groupName, protName):
         self.sqlDict['group'] = groupName
-        self.sqlDict['protocol'] = protName
+        self.sqlDict['protocol_name'] = protName
         #check if protocol exists
-        _sqlCommand = "SELECT COUNT(*) FROM %(TableProtocols)s WHERE protocol_name = '%(protocol)s'" % self.sqlDict
+        _sqlCommand = "SELECT COUNT(*) FROM %(TableProtocols)s WHERE protocol_name = '%(protocol_name)s'" % self.sqlDict
         self.cur.execute(_sqlCommand)
         if self.cur.fetchone()[0] == 0:
-            _sqlCommand = "INSERT INTO %(TableProtocols)s VALUES('%(protocol)s')" % self.sqlDict
+            _sqlCommand = "INSERT INTO %(TableProtocols)s VALUES('%(protocol_name)s')" % self.sqlDict
             self.cur.execute(_sqlCommand)
-        _sqlCommand = "INSERT INTO %(TableProtocolsGroups)s VALUES('%(protocol)s', '%(group)s')" % self.sqlDict
+        _sqlCommand = "INSERT INTO %(TableProtocolsGroups)s VALUES('%(protocol_name)s', '%(group)s')" % self.sqlDict
         self.cur.execute(_sqlCommand)
           
-    def insertRun(self, run):#Name, script, comment=''):
+    def insertRun(self, run):#run_name, script, comment=''):
         self.sqlDict.update(run)
+        print self.sqlDict
         _sqlCommand = """INSERT INTO %(TableRuns)s values(
                             NULL, 
                             '%(run_name)s', 
@@ -136,11 +149,13 @@ class XmippProjectDb(connectorDB):
         run['run_id'] = self.cur.lastrowid
         self.connection.commit()
         
+
+        
     def getLastRunName(self, protName):
-        self.sqlDict['protocol'] = protName
+        self.sqlDict['protocol_name'] = protName
         _sqlCommand = """SELECT COALESCE(MAX(run_name), '%(RunsPrefix)s') AS run_name 
                          FROM %(TableRuns)s NATURAL JOIN %(TableProtocols)s
-                         WHERE protocol_name = '%(protocol)s'""" % self.sqlDict
+                         WHERE protocol_name = '%(protocol_name)s'""" % self.sqlDict
         self.cur.execute(_sqlCommand) 
         return self.cur.fetchone()[0]     
         
@@ -166,7 +181,7 @@ class XmippProjectDb(connectorDB):
         self.cur.execute(_sqlCommand) 
         return self.cur.fetchall()
     
-class XmippProtocolDb(connectorDB): 
+class XmippProtocolDb(SqliteDb): 
     
     def __init__(self, dbName, continueAt, isIter, protocol):
         """Constructor of the Sqlite database
@@ -175,7 +190,7 @@ class XmippProtocolDb(connectorDB):
         isIter     -- if True continueAt refers to iteration, otherwise refers to one step
         """
         self.sqlDict = projectDefaults
-        self.protocol = protocol
+        #self.protocol = protocol
 
         self.ContinueAtIteration = continueAt        
         self.dbName = dbName
@@ -197,18 +212,10 @@ class XmippProtocolDb(connectorDB):
         #constant
         self.SystemFlavour = "None"
         #get run_id
-        self.sqlDict['run_name'] = protocol.runName
-        self.sqlDict['protocol_name'] = protocol.Name
-        _sqlCommand = """ SELECT run_id 
-                          FROM %(TableRuns)s 
-                          WHERE run_name = '%(run_name)s'
-                            AND protocol_name = '%(protocol_name)s' """ % self.sqlDict
-                            
-        self.cur.execute(_sqlCommand)
-        result = self.cur.fetchone()
-        if not result:
-            reportError("Protocol run %s has not been registered in project database" % runName)
-        self.sqlDict['run_id'] = result['run_id']
+        run_id = self.getRunId(protocol.Name, protocol.runName)
+        if not run_id:
+            reportError("Protocol run '%(run_name)s' has not been registered in project database" % self.sqlDict)
+        self.sqlDict['run_id'] = run_id
                         
         #check if protocol has ben run previosluy (that is, there are finished steps)
         _sqlCommand = """ SELECT COUNT(*) 

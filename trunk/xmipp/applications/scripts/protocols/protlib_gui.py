@@ -128,9 +128,9 @@ class BasicGUI():
         height = self.frame.winfo_reqheight() + 25
         width = self.frame.winfo_reqwidth() + 25
         if height > self.style.MaxHeight:
-           height = self.style.MaxHeight
+            height = self.style.MaxHeight
         if width > self.style.MaxWidth:
-           width = self.style.MaxWidth
+            width = self.style.MaxWidth
         self.master.geometry("%dx%d%+d%+d" % (width, height, 0, 0))
         
     def launchCanvas(self):
@@ -410,7 +410,7 @@ class ProtocolGUI(BasicGUI):
         keys = var.tags.keys()
                 
         if 'expert' in keys:
-           label_bgcolor = self.style.ExpertLabelBgColor
+            label_bgcolor = self.style.ExpertLabelBgColor
            
         if 'condition' in keys:
             conditions = var.tags['condition'].split(',')

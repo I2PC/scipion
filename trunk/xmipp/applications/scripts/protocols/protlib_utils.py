@@ -174,8 +174,19 @@ def getBoolListFromVector(_vector,numberIteration=None):
 #---------------------------------------------------------------------------
 def reportError(msg):
     '''Function to write error message to log, to screen and exit'''
-    print >> sys.stderr, "ERROR: ", msg
+    print >> sys.stderr, "%sERROR: %s %s"% (bcolors.FAIL,msg,bcolors.ENDC)
     exit(1)
+
+def confirmWarning(warningList):
+    '''Function to write error message to log, to screen and exit'''
+    if not warningList or len(warningList) == 0:
+        return True
+    for warning in warningList:
+        print >> sys.stderr, "%sWARNING: %s %s"% (bcolors.WARNING,warning,bcolors.ENDC)
+    answer = raw_input('Do you want to proceed? [y/N]:')
+    if not answer or answer.lower() == 'n':
+        return False
+    return True
         
 def printLogError(log, msg):
     '''Function to write error message to log, to screen and exit'''
@@ -287,33 +298,25 @@ def loadLaunchConfig():
     mod = loadModule('config_launch.py')
     return (mod.FileTemplate, mod.LaunchTemplate)
         
-def createQueueLaunchFile(outFilename, fileTemplate, **kargs):
+def createQueueLaunchFile(outFilename, fileTemplate, params):
     '''Create the final file to launch the job to queue
     using a platform specific template (fileTemplate)
     '''
     file = open(outFilename, 'w')
-    file.write(fileTemplate % kargs)
+    file.write(fileTemplate % params)
     file.close()
     
-def launchProtocol(protocolPath):
+def submitProtocol(protocolPath, **params):
     '''Launch a protocol, to a queue or executing directly.
     If the queue options are found, it will be launched with 
     configuration (command and file template) found in project settings
     This function should be called from ProjectDir
     '''
-    print "* Launching protocol script: '%s'" % protocolPath
-    prot = loadModule(protocolPath)
-    if 'DoSubmit' in dir(prot) and prot.DoSubmit:
-        file = protocolPath.replace('.py', '.job')
-        print "** Creating submit file: '%s'" % file
-        fileTemplate, cmdTemplate = loadLaunchConfig()
-        createQueueLaunchFile(file, fileTemplate, params)
-        command = cmdTemplate % {'file': file}
-        print "** Submiting to queue: '%s'" % command
-    else:
-        command = "%python %s" % protocolPath
-        print "** Option 'DoSubmit' not found or set to False"
-        print "** Running command: '%s'" % command
+    file = protocolPath.replace('.py', '.job')
+    fileTemplate, cmdTemplate = loadLaunchConfig()
+    createQueueLaunchFile(file, fileTemplate, params)
+    command = cmdTemplate % {'file': file}
+    print "** Submiting to queue: '%s'" % command
     os.system(command)
 
 #---------------------------------------------------------------------------

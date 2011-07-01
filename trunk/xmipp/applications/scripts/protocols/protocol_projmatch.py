@@ -71,10 +71,6 @@ ContinueAtIteration =1
 """
 CleanUpFiles =False
 
-#-----------------------------------------------------------------------------
-# {section} CTF correction
-#-----------------------------------------------------------------------------
-
 # Perform CTF correction?
 """ If set to true, a CTF (amplitude and phase) corrected map will be refined,
     and the data will be processed in CTF groups.
@@ -82,6 +78,9 @@ CleanUpFiles =False
 """
 DoCtfCorrection =True
 
+#-----------------------------------------------------------------------------
+# {section}{condition}(DoCtfCorrection =True) CTF correction
+#-----------------------------------------------------------------------------
 # {file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all 
     images in the input selfile must be present in the CTFDat file. This field is 
@@ -455,12 +454,12 @@ Align2dMaxChangeRot ='2x1000 2x20'
 # {section} 3D Reconstruction
 #-----------------------------------------------------------------------------
 
-# {list}|fourier|art|wbp| Reconstruction method
+# {list}(fourier, art, wbp) Reconstruction method
 """ Choose between wbp, art or fourier
 """
 ReconstructionMethod ='fourier'
 
-# {expert} Values of lambda for art
+# {expert}{condition}(ReconstructionMethod=art) Values of lambda for art
 """ IMPORTANT: ou must specify a value of lambda for each iteration even
     if art has not been selected.
     IMPORTANT: NOte that we are using the WLS version of ART that 
@@ -478,26 +477,26 @@ ReconstructionMethod ='fourier'
 """
 ARTLambda ='0.2'
 
-# {expert} Additional reconstruction parameters for ART
+# {expert}{condition}(ReconstructionMethod=art) Additional reconstruction parameters for ART
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
         for details
 """
 ARTReconstructionExtraCommand ='-k 0.5 -n 10 '
 
-# Initial maximum frequency used by reconstruct fourier
+# {condition}(ReconstructionMethod=fourier) Initial maximum frequency used by reconstruct fourier
 """ This number os only used in the first iteration. 
     From then on, it will be set to resolution computed in the resolution section
 """
 FourierMaxFrequencyOfInterest =0.25
 
-# {expert} Additional reconstruction parameters for WBP
+# {expert}{condition}(ReconstructionMethod=wbp) Additional reconstruction parameters for WBP
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp and
         for details
 """
 WBPReconstructionExtraCommand =''
 
-# {expert} Additional reconstruction parameters for Fourier
+# {expert} {condition}(ReconstructionMethod=fourier)Additional reconstruction parameters for Fourier
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_Fourier and
         for details
@@ -601,24 +600,29 @@ DoCenterVolume =False
 """
 NumberOfThreads = 1
 
-# distributed-memory parallelization (MPI)?
-""" This option provides distributed-memory parallelization on multi-node machines. 
-    It requires the installation of some MPI flavour, possibly together with a queueing system
-"""
-DoParallel =True
-
-# Number of MPI processes to use:
+# Number of MPI processes to use
 NumberOfMpiProcesses = 3
 
-# minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
+#MPI job size 
+"""Minimum size of jobs in mpi processes. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
+"""
 MpiJobSize ='1'
 
-# MPI system Flavour 
-""" Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
-    Ask the person who installed your xmipp version, which option to use. 
-    Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
-"""
-SystemFlavour ='TORQUE-OPENMPI'
+#Submmit to queue
+"""Submmit to queue"""
+SubmmitToQueue=False
+#------------------------------------------------------------------------------------------------
+# {section}{expert}{condition}(SubmmitToQueue=True) Queue 
+#------------------------------------------------------------------------------------------------
+
+# Queue name
+"""Name of the queue to submit the job"""
+QueueName="default"
+# Queue hours
+"""This establish a maximum number of hours the job will
+be running, after that time it will be killed by the 
+queue system"""
+QueueHours=72
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -649,7 +653,9 @@ ViewVerifyedFiles=True
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #-----------------------------------------------------------------------------
        
-
+       #FIXME REMOVE THIS
+DoParallel=True
+SystemFlavour=''
 
 from protlib_base import *
 from xmipp import *
@@ -692,6 +698,7 @@ class ProtProjMatch(XmippProtocol):
         self.NumberOfCtfGroups = 1
         self.Import = 'from protlib_projmatch_before_loop import *;\
                        from protlib_projmatch_in_loop import *;'
+        self.runName=RunName
         #self.WorkingDir = os.path.join(self.Name,_runName)
 
         
@@ -1093,7 +1100,7 @@ class ProtProjMatch(XmippProtocol):
                          , 'SystemFlavour':SystemFlavour#
                         }
     #, 'MpiJobSize':MpiJobSize#
-    #, 'OuterRadius':OuterRadius[iterN]
+    #, 'OuterRadius':OuterRadiuProtProjMatchs[iterN]
                 command = "angular_class_average"
                 _VerifyFiles = []
                 _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
@@ -1134,20 +1141,6 @@ class ProtProjMatch(XmippProtocol):
             _VerifyFiles = []
             _VerifyFiles.append(self.reconstructedFileNamesIters[iterN][refN])
             _dataBase.insertAction(command, _Parameters, iterN)
-    
-    ###            #delete DocFileInputAngles so I can use append style for metadata in DocFileInputAngles
-    ###            _Parameters = {
-    ###                           'FileName': DocFileInputAngles[iterN]
-    ###                          ,'Verbose' : 1
-    ###                           }
-    ###            command = "deleteFile"
-    ###            _dataBase.insertAction(command, _Parameters, iterN)
-    
-    ###        command = "exit(1)"
-    ###        _dataBase.insertAction(command, _Parameters, iterN)
-    
-    
-    ######################################
         _Parameters = {'dummy':''}
         command = "print 'ALL DONE';dummy"
         _dataBase.insertAction(command, _Parameters, XmippProtocolDbStruct.doAlways)
@@ -1158,25 +1151,7 @@ class ProtProjMatch(XmippProtocol):
         self.preRun()
         self.otherActionsToBePerformedBeforeLoop()
         self.actionsToBePerformedInsideLoop()
-    
-if __name__ == '__main__':
-    import sys
-    script  = sys.argv[0] 
-    options = command_line_options()
-    
-    if options.gui:
-        gui = ProtocolGUI()
-        gui.createGUI(script)
-        gui.fillGUI()
-        gui.launchGUI()
-    else:
-        
-        #self.parser = optparse.OptionParser()
-        #process command line
-        project = XmippProject()
-        project.load()
-        p = ProtProjMatch(script, project)
-        #super(ProtProjMatch,self).__init__(scriptname, runName, project)
-    
-        p.run(ContinueAtIteration,IsIter)
+from protlib_utils import *
 
+if __name__ == '__main__':
+    main(ProtProjMatch)
