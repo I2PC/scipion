@@ -241,7 +241,7 @@ def command_line_options():
         (options, args) = parser.parse_args()
     return options
 
-def main(ProtocolClass):
+def protocolMain(ProtocolClass):
     script  = sys.argv[0]
     options = command_line_options()
     

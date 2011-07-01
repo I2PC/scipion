@@ -1154,4 +1154,4 @@ class ProtProjMatch(XmippProtocol):
 from protlib_utils import *
 
 if __name__ == '__main__':
-    main(ProtProjMatch)
+    protocolMain(ProtProjMatch)
