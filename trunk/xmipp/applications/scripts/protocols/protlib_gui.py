@@ -33,6 +33,7 @@ from Tkinter import *
 import tkFont
 import tkMessageBox
 from protlib_utils import *
+from protlib_filesystem import getXmippPath
 
 class ProtocolStyle():
     ''' Class to define some style settings like font, colors, etc '''
@@ -377,9 +378,22 @@ class ProtocolGUI(BasicGUI):
         self.l3.grid(row=row + 2)
         self.lastrow += 2
         
-    def addButton(self, text, cmd, underline, row, col, sticky):
+    def addButton(self, text, cmd, underline, row, col, sticky, imageFilename=None):
         f = tkFont.Font(family=self.style.FontName, size=self.style.ButtonFontSize, weight=tkFont.BOLD)
-        btn = Button(self.frame, text=text, command=cmd, underline=underline, font=f,
+        helpImage = None
+        if imageFilename:
+            try:
+                imgPath = os.path.join(getXmippPath('resources'), imageFilename)
+                helpImage = PhotoImage(file = imgPath)
+            except TclError:
+                pass
+        
+        if helpImage:
+            btn = Button(self.frame, image=helpImage, command=cmd, bg=self.style.BgColor, 
+                         activebackground=self.style.BgColor, bd=0)
+            btn.image = helpImage
+        else:
+            btn = Button(self.frame, text=text, command=cmd, underline=underline, font=f,
                      bg=self.style.ButtonBgColor, activebackground=self.style.ButtonActiveBgColor)
         btn.grid(row=row, column=col, sticky=sticky)
         return btn
@@ -455,11 +469,13 @@ class ProtocolGUI(BasicGUI):
                 entry.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W+E)
                 w.widgetslist.append(entry)
                 if 'file' in keys or 'dir' in keys:
-                    btn = self.addButton("Browse", lambda: self.browse(var.tkvar, ('file' in keys)), -1, label_row, var_column + 3, NW)
+                    btn = self.addButton("Browse", lambda: self.browse(var.tkvar, ('file' in keys)), -1, label_row, var_column + 3, NW, 'browse.gif')
                     w.widgetslist.append(btn)
             if var.help:
-                btn = self.addButton("Help", lambda: self.showHelp(var.help), -1, label_row, var_column + 4, NW)
+                btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column + 4, NW, 'help.gif')
                 w.widgetslist.append(btn)
+                
+   
                                     
                     
         label = Label(self.frame, text=label_text, fg=label_color, bg=label_bgcolor)
