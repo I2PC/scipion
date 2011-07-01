@@ -82,7 +82,6 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 INPUT                  =./documentation.dox \
                          ./libraries \
-                         ./applications \
                          ./external/bilib
 FILE_PATTERNS          = *.h \
                          *.dox
