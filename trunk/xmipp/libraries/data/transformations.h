@@ -176,6 +176,12 @@ void translation3DMatrix(const Matrix1D< double >& v, Matrix2D< double > &m);
 void scale3DMatrix(const Matrix1D< double >& sc, Matrix2D< double > &m,
                    bool homogeneous=true);
 
+#define NEAREST 0
+#define LINEAR 1
+#define BSPLINE2 2
+#define BSPLINE3 3
+#define BSPLINE4 4
+
 /** Applies a geometrical transformation.
  * @ingroup GeometricalTransformations
  *
@@ -249,12 +255,6 @@ void scale3DMatrix(const Matrix1D< double >& sc, Matrix2D< double > &m,
  * applyGeometry(V2, A, V1);
  * @endcode
  */
-#define NEAREST 0
-#define LINEAR 1
-#define BSPLINE2 2
-#define BSPLINE3 3
-#define BSPLINE4 4
-
 template<typename T1,typename T>
 void applyGeometry(int SplineDegree,
                    MultidimArray<T>& V2,

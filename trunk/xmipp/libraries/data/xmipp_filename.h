@@ -45,7 +45,6 @@
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 
-#include "numerical_recipes.h"
 #include "xmipp_macros.h"
 #include "xmipp_error.h"
 #include "xmipp_strings.h"

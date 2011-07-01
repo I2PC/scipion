@@ -28,6 +28,7 @@
 
 #include "geometry.h"
 #include "xmipp_funcs.h"
+#include "transformations.h"
 
 /* ######################################################################### */
 /* Geometrical Operations                                                    */
@@ -919,7 +920,6 @@ void Euler_rotate(const MultidimArrayGeneric &V, double rot, double tilt, double
   SWITCHDATATYPE(V.datatype, APPLYGEO)
 #undef APPLYGEO
 }
-
 
 void computeCircleAroundE(const Matrix2D<double> &E,
                           double angCircle, double angStep, std::vector<double> &outputEulerAngles)
