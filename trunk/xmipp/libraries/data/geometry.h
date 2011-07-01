@@ -27,6 +27,7 @@
 #define GEOMETRY_H
 
 #include "multidim_array.h"
+#include "multidim_array_generic.h"
 
 #ifndef FLT_EPSILON
 #define FLT_EPSILON 1.19209e-07
@@ -822,6 +823,10 @@ void Euler_rotate(const MultidimArray< double >& V,
                   double psi,
                   MultidimArray< double >& result);
 
+/** Rotate a volume after 3 Euler angles
+ *
+ * Input and output volumes cannot be the same one.
+ */
 void Euler_rotate(const MultidimArrayGeneric &V,
                   double rot,
                   double tilt,
