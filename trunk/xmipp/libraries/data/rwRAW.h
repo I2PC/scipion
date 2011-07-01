@@ -31,7 +31,7 @@
 
 // I/O prototypes
 /** RAW Reader
-  * @ingroup RAW
+  * @ingroup RAW1
 */
 
 DataType datatypeRAW(String strDT);
@@ -41,7 +41,7 @@ DataType datatypeRAW(String strDT);
 
 // I/O prototypes
 /** RAW Reader
-  * @ingroup RAW
+  * @ingroup RAW1
 */
 
 int readRAW(size_t select_img,bool isStack=false);

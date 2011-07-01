@@ -24,9 +24,7 @@
  ***************************************************************************/
 
 #include "xmipp_image_base.h"
-//#include "rwDM3.h"
 
-//#include "metadata.h"
 ///@defgroup DM3 DM3 File format
 ///@ingroup ImageFormats
 

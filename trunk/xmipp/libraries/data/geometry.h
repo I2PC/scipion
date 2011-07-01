@@ -27,7 +27,6 @@
 #define GEOMETRY_H
 
 #include "multidim_array.h"
-#include "multidim_array_generic.h"
 
 #ifndef FLT_EPSILON
 #define FLT_EPSILON 1.19209e-07
@@ -513,32 +512,20 @@ int line_plane_intersection(const Matrix1D< double > normal_plane,
 /// @name Euler operations
 /// @{
 
-/** Getting the Euler angles to a range
- *
- * Adjust angles until they are in the range
- *
- * @code
- * 0 < rot  < 360
- * 0 < tilt < 360
- * 0 < psi  < 360
- * @endcode
- *
+/** Getting the Euler angles to a range (0-360).
  * No direction equivalence is applied, ie, there is no correction of the
  * direction of projection making use that a view from the top is the same as a
  * view from the bottom but reversed ... Just a wrapping of the angles is done
  * until the angles fall in the specified ranges. The angles given must be
  * variables and they are modified with the new values.
  *
- * @code
- * EULER_CLIPPING(rot, tilt, psi);
- * @endcode
  */
 #define EULER_CLIPPING(rot,tilt,psi) \
     rot = realWRAP(rot, 0, 360); \
     tilt = realWRAP(tilt, 0, 360); \
     psi = realWRAP(psi, 0, 360);
 
-/** Getting the Euler angles to a range (0-2*PI)
+/** Getting the Euler angles to a range (0-2*PI).
  *
  * The same as before but the angles are expressed in radians.
  */
@@ -547,7 +534,7 @@ int line_plane_intersection(const Matrix1D< double > normal_plane,
     tilt = realWRAP(tilt, 0, 2.0*PI); \
     psi = realWRAP(psi, 0, 2.0*PI);
 
-/** Euler angles --> "Euler" matrix
+/** Euler angles --> Euler matrix.
  *
  * This function returns the transformation matrix associated to the 3 given
  * Euler angles (in degrees).

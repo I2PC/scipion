@@ -147,7 +147,7 @@
 #define ROUND(x) (((x) > 0) ? (int)((x) + 0.5) : (int)((x) - 0.5))
 #endif
 
-/** Round to next larger integer
+/** Round to next larger integer.
  *
  * Valid for any kind of numbers (int, short, float, etc). The result is of type
  * integer.

@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (joton@cnb.csic.es)
+ * Authors:     Joaquin Oton (joton@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -27,7 +27,8 @@
 #define DATATYPE_H_
 
 #include <string>
-/** @addtogroup Images
+/** @defgroup Datatypes Datatypes for MultidimArrays
+ *  @ingroup DataLibrary
 */
 //@{
 /** Data type.

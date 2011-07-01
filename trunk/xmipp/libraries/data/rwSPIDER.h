@@ -107,8 +107,6 @@ struct SPIDERhead
 /** Spider Reader
   * @ingroup Spider
 */
-#include "metadata_label.h"
-
 int  readSPIDER(size_t select_img);
 
 /************************************************************************
@@ -126,4 +124,3 @@ int  readSPIDER(size_t select_img);
 */
 int  writeSPIDER(size_t select_img = ALL_IMAGES, bool isStack=false, int mode=WRITE_OVERWRITE);
 #endif
-

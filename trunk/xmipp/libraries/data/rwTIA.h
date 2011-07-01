@@ -27,6 +27,9 @@
 #define RWTIA_H_
 
 
+///@defgroup TIA TIA File format
+///@ingroup ImageFormats
+
 // I/O prototypes
 /** TIA Reader
   * @ingroup TIA

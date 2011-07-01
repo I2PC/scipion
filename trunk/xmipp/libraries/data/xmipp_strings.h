@@ -39,12 +39,12 @@
 typedef std::string String;
 typedef std::vector<String> StringVector;
 
-/** Macro to test if to string are the same */
-#define STR_EQUAL(str1, str2) (strcmp((str1), (str2)) == 0)
-
 /// @defgroup StringUtilities String utilities
 /// @ingroup DataLibrary
 //@{
+
+/** Macro to test if to string are the same */
+#define STR_EQUAL(str1, str2) (strcmp((str1), (str2)) == 0)
 
 //@name String processing
 //@{
