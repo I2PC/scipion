@@ -5,7 +5,7 @@ class MultiListbox(PanedWindow):
         PanedWindow.__init__(self,master,borderwidth=1,showhandle=False,sashwidth=2,sashpad=0,relief=SUNKEN)
         self.lists = []
         self.columns=[]
-        for l,w in lists:
+        for l, w in lists:
             self.columns.append(l)
             frame = Frame(self); frame.pack(side=LEFT, expand=YES, fill=BOTH)
             tl=Label(frame, text=l, borderwidth=2, relief=GROOVE)
@@ -29,15 +29,16 @@ class MultiListbox(PanedWindow):
             l['yscrollcommand']=sb.set
         self.add(frame)
         self.pack(expand=YES,fill=BOTH)
-        self.sortedBy=-1
-        self.previousWheel=0
+        self.sortedBy = -1
+        self.previousWheel = 0
+        self.SelectCallback = None
+        self.AllowSort = True
 
 
     def _select(self, y,state=16):
         row = self.lists[0].nearest(y)
         if state==16:self.selection_clear(0, END)
         self.selection_set(row)
-##        print self.curselection()
         return 'break'
 
 
@@ -58,7 +59,8 @@ class MultiListbox(PanedWindow):
 
 
     def clickon(self,e):
-        self._sortBy(self.columns.index(e.widget['text']))
+        if self.AllowSort:
+            self._sortBy(self.columns.index(e.widget['text']))
 
 
     def _sortBy(self, column):
@@ -139,6 +141,8 @@ class MultiListbox(PanedWindow):
         for l in self.lists:
             l.selection_set(first, last)
         #print self.curselection()
+        if self.SelectCallback:
+            self.SelectCallback(int(self.curselection()[0]))
 
 
 if __name__ == '__main__':
