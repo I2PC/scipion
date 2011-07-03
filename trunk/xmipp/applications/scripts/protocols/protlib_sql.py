@@ -7,6 +7,8 @@ from protlib_filesystem import *
 
 class XmippProtocolDbStruct(object):
     doAlways = 99999
+    lastStep  = -1
+    firstStep =  0
 
 def existsDB(dbName):
     """check if database has been created by checking if the table tableruns exist"""
@@ -93,10 +95,12 @@ class XmippProjectDb(SqliteDb):
                              verified BOOL,
                              fileNameList TEXT,
                              iter INTEGER,
-                             run_id INTEGER REFERENCES %(TableRuns)s(run_id) ON DELETE CASCADE,
+                             run_id         INTEGER REFERENCES        %(TableRuns)s(run_id)  ON DELETE CASCADE,
+                             parent_step_id INTEGER REFERENCES """ + tableName +"""(step_id) ON DELETE CASCADE,
                              PRIMARY KEY(step_id, run_id))""") % self.sqlDict
             
                 self.execSqlCommand(_sqlCommand, ("Error creating " + tableName + " table: ") % self.sqlDict)
+                
             createStepTable('%(TableSteps)s')
             createStepTable('%(TableStepsRestart)s')
             
@@ -195,7 +199,9 @@ class XmippProtocolDb(SqliteDb):
         self.connection.row_factory = sqlite.Row
         self.cur                = self.connection.cursor()
         self.cur_aux            = self.connection.cursor()
-
+        self.lastid = XmippProtocolDbStruct.firstStep
+        self.iter = self.lastid + 1
+        self.parentCase=XmippProtocolDbStruct.lastStep
         # print wrapper name
         self.PrintWrapperCommand=True
         # print wrapper parameters
@@ -234,7 +240,8 @@ class XmippProtocolDb(SqliteDb):
         self.execSqlCommand(_sqlCommand, "Error cleaning table: %(TableStepsCurrent)s" % self.sqlDict)
         #Auxiliary string to insert/UPDATE data
         self.sqlInsertcommand = """ INSERT INTO 
-                                    %(TableStepsCurrent)s(command,parameters,iter,run_id) VALUES (?,?,?,?)""" % self.sqlDict
+                                    %(TableStepsCurrent)s(command,parameters,iter,run_id,parent_step_id)
+                                     VALUES (?,?,?,?,?)""" % self.sqlDict
         self.sqlInsertVerify  = " UPDATE %(TableStepsCurrent)s SET fileNameList= ? WHERE step_id=?"% self.sqlDict
         #Calculate the step at which should starts
         self.setStartingStep(isIter)
@@ -382,15 +389,28 @@ class XmippProtocolDb(SqliteDb):
         self.connection.commit()
         return result
 
-    def insertAction(self, command, _Parameters,iter,verifyfiles=None):
+    def setParentDefault(self, value):
+        self.parentCase = value
+        
+    def setIteration(self,iter):
+        self.iter=iter
+        
+    def insertAction(self, command,verifyfiles=None,parent_step_id=None, **_Parameters):
+        if not parent_step_id:
+            if self.parentCase == XmippProtocolDbStruct.lastStep:
+                parent_step_id=self.lastid
+            elif self.parentCase == XmippProtocolDbStruct.firstStep:
+                parent_step_id=XmippProtocolDbStruct.firstStep
+    
         parameters = pickle.dumps(_Parameters, 0)#Dict
         self.cur_aux = self.connection.cursor()
         #print self.sqlInsertcommand, [command, parameters, iter]
-        self.cur_aux.execute(self.sqlInsertcommand, [command, parameters, iter,self.sqlDict['run_id']])
-        lastid = self.cur_aux.lastrowid
+        self.cur_aux.execute(self.sqlInsertcommand, [command, parameters, self.iter,self.sqlDict['run_id'],parent_step_id])
+        self.lastid = self.cur_aux.lastrowid
         if (verifyfiles):
             verifyfiles = pickle.dumps(verifyfiles, 0)#Dict
-            self.cur_aux.execute(self.sqlInsertVerify, [verifyfiles,lastid])
+            self.cur_aux.execute(self.sqlInsertVerify, [verifyfiles,self.lastid])
+        return self.lastid
 
     def runActions(self, _log, _import):
        
@@ -432,12 +452,14 @@ class XmippProtocolDb(SqliteDb):
 
             sqlCommand = "UPDATE %(TableSteps)s SET init = CURRENT_TIMESTAMP WHERE step_id=%(step_id)d" % self.sqlDict
             self.connection.execute(sqlCommand)
+            self.connection.commit()
             
             exec ( command + '(_log, **dict)')
             
             if self.verify and row["fileNameList"]:
                 _list =pickle.loads(str(row["fileNameList"]))
                 for i in _list:
+                    print "i", i
                     if not os.path.exists(i):
                         self.sqlDict['file'] = i
                         print "ERROR at  step: %(step_id)d, file %(file)s has not been created." % self.sqlDict
@@ -447,9 +469,9 @@ class XmippProtocolDb(SqliteDb):
             
             sqlCommand = "UPDATE %(TableSteps)s SET finish = CURRENT_TIMESTAMP WHERE step_id=%(step_id)d" %  self.sqlDict
             self.connection.execute(sqlCommand)
+            self.connection.commit()
             
             if self.PrintWrapperCommand:
                 print "Wrapper step: %(step_id)d finished\n" % self.sqlDict
-            self.connection.commit()
         print '********************************************************'
         print ' Protocol FINISHED'

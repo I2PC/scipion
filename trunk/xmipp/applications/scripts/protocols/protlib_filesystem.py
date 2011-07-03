@@ -60,10 +60,10 @@ def deleteDir(_log, path):
     if os.path.exists(path):
         remove_tree(path, True)
            
-def deleteWorkingDirectory(_log, ProjectDir, WorkingDir, DoDeleteWorkingDir):
+def deleteWorkingDirectory(_log, WorkingDir, DoDeleteWorkingDir):
 
     if DoDeleteWorkingDir:
-        deleteDir(_log, os.path.join(ProjectDir, WorkingDir))
+        deleteDir(_log,  WorkingDir)
 
 def deleteFile(_mylog, FileName, Verbose):
     if os.path.exists(Filename):

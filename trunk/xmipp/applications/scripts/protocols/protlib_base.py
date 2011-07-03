@@ -136,6 +136,7 @@ class XmippProtocol(object):
         self.summary = []
         self.continueAt=1
         self.isIter=False
+        self.DoDeleteWorkingDir=False
         
         
     def getProjectId(self):
@@ -172,9 +173,9 @@ class XmippProtocol(object):
         pass
     
     def runSetup(self):
-        logfile = self.LogPrefix + ".log"
+        logfile  = self.LogPrefix + ".log"
         self.Log = XmippLog(logfile, logfile)
-        self.Db = XmippProtocolDb(self.project.dbName
+        self.Db  = XmippProtocolDb(self.project.dbName
                                 , self.restartStep
                                 , self.isIter
                                 , self)
@@ -196,6 +197,18 @@ class XmippProtocol(object):
         self.isIter = isIter
         #Initialization of log and db
         self.runSetup()
+        
+        self.Db.setIteration(1)
+        #insert basic operations for all scripta
+        self.Db.insertAction('deleteWorkingDirectory'
+                                                        ,DoDeleteWorkingDir  = self.DoDeleteWorkingDir
+                                                        ,WorkingDir          = self.WorkingDir)
+
+        id = self.Db.insertAction('createDir', path = self.WorkingDir)
+        id = self.Db.insertAction('makeScriptBackup',None, XmippProtocolDbStruct.doAlways
+                                                      ,script     = self.scriptName
+                                                      ,WorkingDir = self.WorkingDir)#backup always
+
         #Add actions to database
         self.defineActions()
         #Run actions from database
