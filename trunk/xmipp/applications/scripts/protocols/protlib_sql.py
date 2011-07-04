@@ -404,7 +404,6 @@ class XmippProtocolDb(SqliteDb):
         
     def insertAction(self, command,
                            verifyfiles=None,
-                           iter=None,
                            parent_step_id=None, 
                            execute=True,
                            **_Parameters):
