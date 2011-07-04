@@ -25,7 +25,15 @@
 #ifndef _PROG_ANGULAR_GCAR
 #define _PROG_ANGULAR_GCAR
 
-#include <data/xmipp_program.h>
+#include <data/program.h>
+#include <data/matrix2d.h>
+#include <data/matrix1d.h>
+#include <data/funcs.h>
+#include <math.h>
+#include <vector>
+#include <blas1c.h>
+#include <lapackc.h>
+#include <arsnsym.h>
 
 /**@defgroup AngularGCAR Globally Convergent Angular Reconstitution
    @ingroup ReconsLibrary */
@@ -47,6 +55,36 @@ public:
 
     /** Run */
     void run();
+
+    ///  qrand
+    void qrand(Matrix2D<double>& q, int K);
+
+	/// qToRot
+	void qToRot(const Matrix1D<double>& q, Matrix2D<double> &rotMatrix);
+
+	/// commonLineQ
+	void commonLineQ(const Matrix2D<double>& q, int k1, int k2, int nTheta, int& idx1, int& idx2);
+
+	/// clmatrixCheaatQ
+	void clmatrixCheatQ(const Matrix2D<double>& q, int nTheta, Matrix2D<int>& clmatrix, Matrix2D<int>&  clcorr);
+
+	void cryoCosmetify(const Matrix2D<double>& PHI, Matrix2D<double>& PHI2, int K, int L);
+
+	void Q2S2(const Matrix2D<double>& Q, Matrix2D<double>& PHIRef, int NTheta);
+
+	void cryoOrientationsSdp(const SparseMatrix2D W, int nEigs, Matrix2D<double> PHI);
 };
+
+class EigElement {
+public:
+	double eigenvalue;
+	int    pos;
+};
+
+inline bool operator<(const EigElement& e1, const EigElement& e2)
+{
+	return e1.eigenvalue>e2.eigenvalue; //Orden descendente
+}
+
 //@}
 #endif
