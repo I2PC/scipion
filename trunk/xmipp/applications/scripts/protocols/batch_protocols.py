@@ -77,7 +77,11 @@ class XmippProjectGUI():
         self.fileMenu = Menu(self.root, tearoff=0)
         self.fileMenu.add_command(label="Exit", command=self.onExit)
         self.menubar.add_cascade(label="File", menu=self.fileMenu)
-        self.btnFrameDict = {}
+        self.ToolbarButtonsDict = {}
+        self.lastSelected = None
+        #self.root.bind('<Configure>', self.dragWindows)
+        self.root.bind("<Unmap>", self.OnUnmap)
+        #self.root.bind("<Map>", self.dragWindows)
    
     def addHeaderLabel(self, parent, text, row, col=0):
         '''Add a label to left toolbar'''
@@ -91,27 +95,24 @@ class XmippProjectGUI():
                          bg=ButtonBgColor, activebackground=ButtonBgColor, command=lambda:self.newProtocol(o))
         btnLaunch.grid(row=2*row+1, column=0, padx=5, pady=5, sticky=E)
         
-    def addTbButton(self, row, text, opts=[]):
+    def createToolbarButton(self, row, text, opts=[]):
         '''Add a button to left toolbar'''
         Font = tkFont.Font(family=FontName, size=FontSize-1, weight=tkFont.BOLD)
         btn = Button(self.toolbar, bd = 1, text=text, font=self.ButtonFont, relief=RAISED,
                          bg=ButtonBgColor, activebackground=ButtonBgColor)
         btn.grid(row = row, column = 0, sticky=W+E, pady=2, padx=5)
         
-        btnFrame = Frame(self.frame, width=100, bd=1, relief=GROOVE)
-        btnFrame.columnconfigure(0, minsize=150)
-        label = Label(btnFrame, text='Protocols:', fg=SectionTextColor, font=Font)
-        label.grid(row=0, column=0, pady=5)
         if len(opts) > 0:
+            menu = Menu(self.frame, bg=ButtonBgColor, activebackground=ButtonBgColor, font=self.ButtonFont, tearoff=0)
             i = 0
             for o in opts:
+                menu.add_command(label = o, command=lambda:self.newProtocol(o))
+                menu.bind("<Leave>", self.unpostMenu)
+                #command=lambda:self.selectToolbarButton(btn, menu, i))
                 i += 1
-                self.addLaunchButton(o, btnFrame, i, Font)
-        else:
-            self.addLaunchButton(text, btnFrame, 1, Font)
-               
-        self.btnFrameDict[text] = btnFrame 
-        btn.config(command=lambda:self.menuPick(text))
+            btn.config(command=lambda:self.showPopup(btn, menu))
+            self.ToolbarButtonsDict[text] = (btn, menu)
+            btn.config(command=lambda:self.selectToolbarButton(text))
 
     def newProtocol(self, protKey):
         protocol = launchDict[protKey]
@@ -152,7 +153,7 @@ class XmippProjectGUI():
     def protocolSaveCallback(self, run, protGroup):
         self.project.projectDb.insertRun(run)
         
-        if self.btnFrameDict[protGroup] == self.lastSelectedFrame:
+        if self.protGroup == self.lastSelected:
             self.updateRunHistory(protGroup) 
 
     def updateRunHistory(self, protGroup): 
@@ -163,16 +164,46 @@ class XmippProjectGUI():
                                 run['last_modified']))
     def updateRunDetails(self, index):
         run = self.runs[index]
+
+    #---------------- Functions related with Popup menu ----------------------   
+    def lastPair(self):
+        if self.lastSelected:
+            return  self.ToolbarButtonsDict[self.lastSelected]
+        return None
         
-                
+#    def dragWindows(self, event):
+#        if self.lastSelected:
+#            btn, menu = self.lastPair()
+#            self.postMenu(btn, menu) #Move the popup menu with the windows               
     
-    def menuPick(self, text):
-        frame = self.btnFrameDict[text]
-        if self.lastSelectedFrame and frame != self.lastSelectedFrame:
-            self.lastSelectedFrame.grid_remove()
-        if frame != self.lastSelectedFrame:
-            self.lastSelectedFrame = frame
-            #self.lastSelectedFrame.grid(row=0, column=1, sticky=W+E+N, padx=10, pady=10, rowspan=4)
+    def OnUnmap(self, event=''):
+        if event.widget == self.root and self.lastSelected:
+            btn, menu = self.lastPair()
+            menu.unpost()
+            
+    def unpostMenu(self, event=None):
+        if self.lastSelected:
+            btn, menu = self.lastPair()
+            menu.unpost()
+            
+    def postMenu(self, btn, menu):
+        x, y, w = btn.winfo_x(), btn.winfo_y(), btn.winfo_width()
+        xroot, yroot = self.root.winfo_x(), self.root.winfo_y()
+        menu.post(xroot + x + w + 10, yroot + y)
+        btn.config(bg=ButtonActiveBgColor, activebackground=ButtonActiveBgColor)
+        
+    def selectToolbarButton(self, text):
+        btn, menu = self.ToolbarButtonsDict[text]
+
+        if self.lastSelected and self.lastSelected != text:
+            lastBtn, lastMenu = self.lastPair()
+            lastBtn.config(bg=ButtonBgColor)
+            lastMenu.unpost()
+            
+        self.postMenu(btn, menu)
+        
+        if self.lastSelected != text:
+            self.lastSelected = text            
             self.project.config.set('project', 'lastselected', text)
             self.project.writeConfig()
             self.updateRunHistory(text)
@@ -180,13 +211,41 @@ class XmippProjectGUI():
     def runSelectCallback(self, index):
         print self.runs[index]['run_name']
 
+    def createToolbar(self):
+        #Configure toolbar frame
+        self.toolbar = Frame(self.frame, bd=2, relief=RIDGE)
+        self.toolbar.grid(row=0, column=0, sticky=N+W+S, 
+                          rowspan=4, padx=5, pady=5)
+        #Create toolbar buttons
+        i = 1
+        for k, v in sections:
+            self.addHeaderLabel(self.toolbar, k, i)
+            i += 1
+            for btn in v:
+                self.createToolbarButton(i, btn[0], btn[1:])
+                i += 1
+                
+    def createRunHistory(self):
+        self.addHeaderLabel(self.frame, 'History', 0, 1)
+        self.frameHist = Frame(self.frame)
+        self.frameHist.grid(row=1, column=1, sticky=N+W+E+S)
+        self.lbHist = MultiListbox(self.frameHist, (('Run', 40), ('Modified', 20)))
+        self.lbHist.SelectCallback = self.runSelectCallback
+        self.lbHist.AllowSort = False
+        self.lbHist.pack()
+        
+    def createRunDetails(self):
+        #Create RUN details
+        self.addHeaderLabel(self.frame, 'Details', 2, 1)
+        self.frameDetails = Text(self.frame, bg=BgColor, height=10)
+        self.frameDetails.grid(row=3, column=1)
+
     def createGUI(self, root=None):
         if not root:
             root = Tk()
         self.root = root
         self.root.title("Xmipp Protocols")
         self.createMainMenu()
-        self.lastSelectedFrame = None
         #Create a main frame that contains all other widgets
         self.frame = Frame(self.root)
         self.frame.pack(fill=BOTH)
@@ -196,40 +255,18 @@ class XmippProjectGUI():
         self.frame.rowconfigure(1, minsize=50, weight=1)
         self.frame.rowconfigure(3, minsize=50, weight=1)
         
-        #Configure toolbar frame
-        self.toolbar = Frame(self.frame, bd=2, relief=RIDGE)
-        self.toolbar.grid(row=0, column=0, sticky=N+W+S, 
-                          rowspan=4, padx=5, pady=5)
         # Create some fonts for later use
         self.ButtonFont = tkFont.Font(family=FontName, size=FontSize, weight=tkFont.BOLD)
         self.LabelFont = tkFont.Font(family=FontName, size=FontSize+1, weight=tkFont.BOLD)
-        #Create toolbar buttons
-        i = 1
-        for k, v in sections:
-            self.addHeaderLabel(self.toolbar, k, i)
-            i += 1
-            for btn in v:
-                self.addTbButton(i, btn[0], btn[1:])
-                i += 1
-        #Create RUNS history 
-        self.addHeaderLabel(self.frame, 'History', 0, 1)
-        self.frameHist = Frame(self.frame)
-        self.frameHist.grid(row=1, column=1, sticky=N+W+E+S)
-        self.lbHist = MultiListbox(self.frameHist, (('Run', 40), ('Modified', 20)))
-        self.lbHist.SelectCallback = self.runSelectCallback
-        self.lbHist.AllowSort = False
-        self.lbHist.pack()
-        #Create RUN details
-        self.addHeaderLabel(self.frame, 'Details', 2, 1)
-        self.frameDetails = Text(self.frame, bg=BgColor, height=10)
-        self.frameDetails.grid(row=3, column=1)
-        #self.detailsFrame = Frame(canvas)
-        #self.detailsFrame.grid(row=0, column=0)
         
+        self.createToolbar()
+        self.createRunHistory()
+        self.createRunDetails()
+
         self.root.config(menu=self.menubar)
         #select lastSelected
-        if self.project.config.has_option('project', 'lastselected'):
-            self.menuPick(self.project.config.get('project', 'lastselected'))
+        #if self.project.config.has_option('project', 'lastselected'):
+        #    self.selectToolbarButton(self.project.config.get('project', 'lastselected'))
     
     def launchGUI(self):
         self.root.mainloop()
