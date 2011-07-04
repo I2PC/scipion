@@ -185,10 +185,10 @@ public:\
     }\
     void read(int argc, char **argv)\
     {\
+        baseClassName::read(argc, argv);\
         MpiMetadataProgram::read(argc,argv);\
         if (!node->isMaster())\
             verbose=0;\
-        baseClassName::read(argc, argv);\
     }\
     void preProcess()\
     {\
