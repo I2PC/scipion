@@ -303,10 +303,10 @@ Search5DStep ='2'
 DoRestricSearchbyTiltAngle =False
 
 # {expert} Lower-value for restricted tilt angle search
-Tilt0 = 40
+Tilt0 = -91
 
 # {expert} Higher-value for restricted tilt angle search
-TiltF = 90
+TiltF = 91
 
 # Symmetry group
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
@@ -865,7 +865,7 @@ class ProtProjMatch(XmippProtocol):
             suffixes += ['Info.xmd', '_ctf.stk', '_wien.stk', '_split.doc']        
         fnBase = os.path.join(self.CtfGroupDirectory, self.CtfGroupRootName)
         _VerifyFiles = [fnBase + s for s in suffixes]
-        _dataBase.insertAction('executeCtfGroups', _VerifyFiles, None,   CTFDatName = CTFDatName
+        _dataBase.insertAction('executeCtfGroups', _VerifyFiles, None, None,  CTFDatName = CTFDatName
                                                                             , CtfGroupDirectory = self.CtfGroupDirectory
                                                                             , CtfGroupMaxDiff = CtfGroupMaxDiff
                                                                             , CtfGroupMaxResol = CtfGroupMaxResol
@@ -879,8 +879,8 @@ class ProtProjMatch(XmippProtocol):
                                                                             , WienerConstant = WienerConstant)
         #Create Initial angular file. Either fill it with zeros or copy input
         _VerifyFiles = [self.DocFileWithOriginalAngles]
-        _dataBase.insertAction('initAngularReferenceFile', _VerifyFiles, None,
-                                                                  DocFileName =DocFileName
+        _dataBase.insertAction('initAngularReferenceFile', _VerifyFiles, None, None
+                                                                , DocFileName =DocFileName
                                                                 , DocFileWithOriginalAngles =self.DocFileWithOriginalAngles
                                                                 , SelFileName =SelFileName)
     
@@ -914,7 +914,7 @@ class ProtProjMatch(XmippProtocol):
             for refN in range(1, self.numberOfReferences + 1):
                 # Mask reference volume
                 _VerifyFiles = [self.maskedFileNamesIters[iterN][refN]]
-                _dataBase.insertAction('executeMask', _VerifyFiles, id
+                _dataBase.insertAction('executeMask', _VerifyFiles, id, None
                                     , DoMask =             DoMask
                                     , DoSphericalMask =    DoSphericalMask
                                     , maskedFileName =     self.maskedFileNamesIters[iterN][refN]
@@ -935,7 +935,7 @@ class ProtProjMatch(XmippProtocol):
                 for i in range (1,self.NumberOfCtfGroups+1):
                     _VerifyFiles.append(auxFn + "_group" + str(i).zfill(FILENAMENUMBERLENGTH) +"_sampling.xmd")
                             
-                _dataBase.insertAction('angular_project_library', _VerifyFiles, None, 
+                _dataBase.insertAction('angular_project_library', _VerifyFiles, None, None,
                                       AngSamplingRateDeg = self.AngSamplingRateDeg[iterN]
                                     , CtfGroupSubsetFileName = self.CtfGroupSubsetFileName
                                     , DoCtfCorrection = DoCtfCorrection
@@ -961,7 +961,7 @@ class ProtProjMatch(XmippProtocol):
                 for i in range (1,self.NumberOfCtfGroups+1):
                     _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.xmd")
                     
-                _dataBase.insertAction('projection_matching', _VerifyFiles, None,
+                _dataBase.insertAction('projection_matching', _VerifyFiles, None, None,
                                       AvailableMemory =AvailableMemory
                                     , CtfGroupRootName = self.CtfGroupRootName
                                     , CtfGroupDirectory = self.CtfGroupDirectory
@@ -992,8 +992,8 @@ class ProtProjMatch(XmippProtocol):
             #if only one reference it just copy the docfile generated in the previous step
             _VerifyFiles = [self.DocFileInputAngles[iterN]]
             _dataBase.insertAction('assign_images_to_references', [self.DocFileInputAngles[iterN]],
-                                    None,  
-                                       DocFileInputAngles = self.DocFileInputAngles[iterN]#Output file with angles
+                                    None, None 
+                                     , DocFileInputAngles = self.DocFileInputAngles[iterN]#Output file with angles
                                      , NumberOfCtfGroups  = self.NumberOfCtfGroups
                                      , ProjMatchRootName  = self.ProjMatchRootNames[iterN]#LIST
                                      , NumberOfReferences = self.numberOfReferences
@@ -1002,8 +1002,8 @@ class ProtProjMatch(XmippProtocol):
             #align images, not possible for ctf groups
             for refN in range(1, self.numberOfReferences + 1):
                 _VerifyFiles = []
-                id = _dataBase.insertAction('angular_class_average', _VerifyFiles, None, 
-                           Align2DIterNr = self.Align2DIterNr[iterN]#
+                id = _dataBase.insertAction('angular_class_average', _VerifyFiles, None, None
+                         , Align2DIterNr = self.Align2DIterNr[iterN]#
                          , Align2dMaxChangeRot = self.Align2dMaxChangeRot[iterN]#
                          , Align2dMaxChangeOffset = self.Align2dMaxChangeOffset[iterN]#
                          , CtfGroupDirectory = self.CtfGroupDirectory#
@@ -1032,7 +1032,8 @@ class ProtProjMatch(XmippProtocol):
                 # Mask reference volume
                 
                 id = _dataBase.insertAction('executeMask', [self.maskedFileNamesIters[iterN][refN]],
-                                            None, DoMask =             DoMask
+                                            None,None
+                                                , DoMask =             DoMask
                                                 , DoSphericalMask =    DoSphericalMask
                                                 , maskedFileName =     self.maskedFileNamesIters[iterN][refN]
                                                 , maskRadius =         MaskRadius

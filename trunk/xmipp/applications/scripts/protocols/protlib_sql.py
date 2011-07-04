@@ -76,27 +76,33 @@ class XmippProjectDb(SqliteDb):
                     
             _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableRuns)s
                          (run_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                          run_name TEXT,
-                          script TEXT,
-                          init DATE, 
-                          last_modified DATE,
-                          protocol_name TEXT REFERENCES %(TableProtocols)s(protocol_name),
-                          comment TEXT,
+                          run_name TEXT,  -- label 
+                          script TEXT,    -- strip full name
+                          init DATE,      -- run started at
+                          last_modified DATE, --last modification (edition usually)
+                          protocol_name TEXT REFERENCES %(TableProtocols)s(protocol_name), -- protocol name
+                          comment TEXT, -- user defined comment
                           CONSTRAINT unique_workingdir UNIQUE(run_name, protocol_name));""" % self.sqlDict
             self.execSqlCommand(_sqlCommand, "Error creating '%(TableRuns)s' table: " % self.sqlDict)
             
             def createStepTable(tableName):            
                 _sqlCommand = (" CREATE TABLE IF NOT EXISTS " + tableName +  """
-                             (step_id INTEGER DEFAULT 0,
-                             command TEXT, 
-                             parameters TEXT,
-                             init DATE, 
-                             finish DATE,
-                             verified BOOL,
-                             fileNameList TEXT,
-                             iter INTEGER,
+                             (step_id INTEGER DEFAULT 0, -- primary key (weak entity)
+                             command TEXT,               -- comment (NOT USED, DROP?)
+                             parameters TEXT,            -- wrapper parameters
+                             init DATE,                  -- process started at
+                             finish DATE,                -- process finished at
+                             verified BOOL DEFAULT 'f',  -- auxiliary column to mark verified files (NOT USED, DROP?)
+                             fileNameList TEXT,          -- list with files to modify
+                             iter INTEGER DEFAULT 1,     -- for iterative scripts, iteration number
+                                                         -- useful to restart at iteration n
+                             execute BOOL,               -- Should the script execute this wrapper or is there
+                                                         -- an external program taht will run it
                              run_id         INTEGER REFERENCES        %(TableRuns)s(run_id)  ON DELETE CASCADE,
+                                                         -- key that unify all processes belonging to a run 
                              parent_step_id INTEGER REFERENCES """ + tableName +"""(step_id) ON DELETE CASCADE,
+                                                          -- parent_step_id step must be executed before 
+                                                          -- step_id may be executed
                              PRIMARY KEY(step_id, run_id))""") % self.sqlDict
             
                 self.execSqlCommand(_sqlCommand, ("Error creating " + tableName + " table: ") % self.sqlDict)
@@ -240,8 +246,9 @@ class XmippProtocolDb(SqliteDb):
         self.execSqlCommand(_sqlCommand, "Error cleaning table: %(TableStepsCurrent)s" % self.sqlDict)
         #Auxiliary string to insert/UPDATE data
         self.sqlInsertcommand = """ INSERT INTO 
-                                    %(TableStepsCurrent)s(command,parameters,iter,run_id,parent_step_id)
-                                     VALUES (?,?,?,?,?)""" % self.sqlDict
+                                    %(TableStepsCurrent)s(command,parameters,iter,execute,run_id,parent_step_id)
+                                     VALUES (?,?,?,?,?,?)""" % self.sqlDict
+        
         self.sqlInsertVerify  = " UPDATE %(TableStepsCurrent)s SET fileNameList= ? WHERE step_id=?"% self.sqlDict
         #Calculate the step at which should starts
         self.setStartingStep(isIter)
@@ -395,17 +402,24 @@ class XmippProtocolDb(SqliteDb):
     def setIteration(self,iter):
         self.iter=iter
         
-    def insertAction(self, command,verifyfiles=None,parent_step_id=None, **_Parameters):
+    def insertAction(self, command,
+                           verifyfiles=None,
+                           iter=None,
+                           parent_step_id=None, 
+                           execute=True,
+                           **_Parameters):
         if not parent_step_id:
             if self.parentCase == XmippProtocolDbStruct.lastStep:
                 parent_step_id=self.lastid
             elif self.parentCase == XmippProtocolDbStruct.firstStep:
                 parent_step_id=XmippProtocolDbStruct.firstStep
-    
+        if not execute:
+            execute=True
         parameters = pickle.dumps(_Parameters, 0)#Dict
         self.cur_aux = self.connection.cursor()
         #print self.sqlInsertcommand, [command, parameters, iter]
-        self.cur_aux.execute(self.sqlInsertcommand, [command, parameters, self.iter,self.sqlDict['run_id'],parent_step_id])
+        self.cur_aux.execute(self.sqlInsertcommand, [command, parameters, self.iter,execute,
+                                                     self.sqlDict['run_id'],parent_step_id])
         self.lastid = self.cur_aux.lastrowid
         if (verifyfiles):
             verifyfiles = pickle.dumps(verifyfiles, 0)#Dict
@@ -459,7 +473,6 @@ class XmippProtocolDb(SqliteDb):
             if self.verify and row["fileNameList"]:
                 _list =pickle.loads(str(row["fileNameList"]))
                 for i in _list:
-                    print "i", i
                     if not os.path.exists(i):
                         self.sqlDict['file'] = i
                         print "ERROR at  step: %(step_id)d, file %(file)s has not been created." % self.sqlDict

@@ -206,6 +206,7 @@ class XmippProtocol(object):
 
         id = self.Db.insertAction('createDir', path = self.WorkingDir)
         id = self.Db.insertAction('makeScriptBackup',None, XmippProtocolDbStruct.doAlways
+                                                      , None,None 
                                                       ,script     = self.scriptName
                                                       ,WorkingDir = self.WorkingDir)#backup always
 
