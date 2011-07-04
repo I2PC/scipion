@@ -25,15 +25,15 @@
 #ifndef _PROG_ANGULAR_GCAR
 #define _PROG_ANGULAR_GCAR
 
-#include <data/program.h>
+#include <data/xmipp_program.h>
 #include <data/matrix2d.h>
 #include <data/matrix1d.h>
-#include <data/funcs.h>
+#include <data/xmipp_funcs.h>
 #include <math.h>
 #include <vector>
-#include <blas1c.h>
-#include <lapackc.h>
-#include <arsnsym.h>
+#include <external/arpack++-2.3/include/blas1c.h>
+#include <external/arpack++-2.3/include/lapackc.h>
+#include <external/arpack++-2.3/include/arsnsym.h>
 
 /**@defgroup AngularGCAR Globally Convergent Angular Reconstitution
    @ingroup ReconsLibrary */
@@ -62,6 +62,12 @@ public:
 	/// qToRot
 	void qToRot(const Matrix1D<double>& q, Matrix2D<double> &rotMatrix);
 
+	/// Register orientations
+	void registerOrientations(Matrix2D<double>& PHI,const Matrix2D<double>& PHIRef);
+
+	/// Check orientations
+	void checkOrientations(const Matrix2D<double>& PHI,const Matrix2D<double>& PHIref);
+
 	/// commonLineQ
 	void commonLineQ(const Matrix2D<double>& q, int k1, int k2, int nTheta, int& idx1, int& idx2);
 
@@ -72,7 +78,7 @@ public:
 
 	void Q2S2(const Matrix2D<double>& Q, Matrix2D<double>& PHIRef, int NTheta);
 
-	void cryoOrientationsSdp(const SparseMatrix2D W, int nEigs, Matrix2D<double> PHI);
+	void cryoOrientationsSdp(SparseMatrix2D &W, int nEigs, Matrix2D<double> &PHI);
 };
 
 class EigElement {

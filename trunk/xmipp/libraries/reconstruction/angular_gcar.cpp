@@ -93,8 +93,8 @@ void ProgAngularGCAR::run()
 	//fout.close();
 
     int nEigs = 20;
-    SparseMatrix2D W = new SparseMatrix2D();
-    W.loadMatrix(W, "/home/xmippuser/Desktop/cosa.txt");
+    SparseMatrix2D W;
+    W.loadMatrix("/home/xmippuser/Desktop/cosa.txt");
     cryoOrientationsSdp(W,nEigs,PHI);
 
 	//q.initZeros(4,100);
@@ -505,7 +505,7 @@ void ProgAngularGCAR::registerOrientations(Matrix2D<double>& PHI,const Matrix2D<
 	PHI = PHI*Q;
 }
 
-void ProgAngularGCAR::checkOrientations(const Matrix2D<double>& PHI,const Matrix2D<double>& PHIref)
+void ProgAngularGCAR::checkOrientations(const Matrix2D<double>& PHI,const Matrix2D<double>& PHIRef)
 {
 	Matrix2D<double> PHICopia;
 	Matrix1D<double> cosAngle;
@@ -530,7 +530,7 @@ void ProgAngularGCAR::checkOrientations(const Matrix2D<double>& PHI,const Matrix
 	//Pintar cositas
 }
 
-void ProgAngularGCAR::cryoOrientationsSdp(const SparseMatrix2D W, int nEigs, Matrix2D<double> PHI)
+void ProgAngularGCAR::cryoOrientationsSdp(SparseMatrix2D& W, int nEigs, Matrix2D<double> &PHI)
 {
 	std::vector<EigElement> vec(nEigs);
 	Matrix1D<double> vec1;
@@ -543,13 +543,14 @@ void ProgAngularGCAR::cryoOrientationsSdp(const SparseMatrix2D W, int nEigs, Mat
 	int realIndex;
 	double normVec2, normVec3;
 
-	ARNonSymStdEig<double, SparseMatrix2D > dprob(W.N, nEigs, &W, &SparseMatrix2D::MultMv);
-	dprob.FindEigenvectors();
+	int N=W.nrows();
+	ARNonSymStdEig<double, SparseMatrix2D > dpro(N, nEigs, &W, &SparseMatrix2D::multMv);
+	dpro.FindEigenvectors();
 
-	PHI.resizeNoCopy(W.N,3);
-	vec1.initZeros(W.N);
-	vec2.initZeros(W.N);
-	vec3.initZeros(W.N);
+	PHI.resizeNoCopy(N,3);
+	vec1.initZeros(N);
+	vec2.initZeros(N);
+	vec3.initZeros(N);
 
 	for(int i=0; i<nEigs; i++)
 	{
