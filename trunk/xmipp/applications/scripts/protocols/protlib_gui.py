@@ -468,8 +468,13 @@ class ProtocolGUI(BasicGUI):
                 entry = Entry(self.frame, textvariable=var.tkvar, bg=self.style.EntryBgColor)
                 entry.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W+E)
                 w.widgetslist.append(entry)
-                if 'file' in keys or 'dir' in keys:
-                    btn = self.addButton("Browse", lambda: self.browse(var.tkvar, ('file' in keys)), -1, label_row, var_column + 3, NW, 'browse.gif')
+                image = None
+                if 'file' in keys:
+                    image = 'fileopen.gif'
+                elif 'dir' in keys:
+                    image = 'folderopen.gif'
+                if image:
+                    btn = self.addButton("Browse", lambda: self.browse(var.tkvar, ('file' in keys)), -1, label_row, var_column + 3, NW, image)
                     w.widgetslist.append(btn)
             if var.help:
                 btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column + 4, NW, 'help.gif')

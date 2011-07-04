@@ -16,6 +16,7 @@ class MultiListbox(PanedWindow):
             self.lists.append(lb)
             lb.bind('<B1-Motion>', lambda e, s=self: s._select(e.y))
             lb.bind('<Button-1>', lambda e, s=self: s._select(e.y))
+            lb.bind('<Double-Button-1>', lambda e, s=self: s._doubleClick)
             lb.bind('<Leave>', lambda e: 'break')
             lb.bind('<B2-Motion>', lambda e, s=self: s._b2motion(e.x, e.y))
             lb.bind('<Button-2>', lambda e, s=self: s._button2(e.x, e.y))
@@ -32,8 +33,13 @@ class MultiListbox(PanedWindow):
         self.sortedBy = -1
         self.previousWheel = 0
         self.SelectCallback = None
+        self.DoubleClickCallback = None
         self.AllowSort = True
 
+    def _doubleClick(self, event=''):
+        print "double clicking...."
+        if self.DoubleClickCallback:
+            self.DoubleClickCallback(self.selectedIndex())
 
     def _select(self, y,state=16):
         row = self.lists[0].nearest(y)
@@ -137,13 +143,27 @@ class MultiListbox(PanedWindow):
         return self.lists[0].selection_includes(index)
 
 
+    def selectedIndex(self):
+        return int(self.curselection()[0])
+    
     def selection_set(self, first, last=None):
         for l in self.lists:
             l.selection_set(first, last)
         #print self.curselection()
         if self.SelectCallback:
-            self.SelectCallback(int(self.curselection()[0]))
+            self.SelectCallback(self.selectedIndex())
 
+def getGeometry(win):
+    return win.winfo_reqwidth(), win.winfo_reqheight(), win.winfo_x(), win.winfo_y()
+
+def centerWindows(root):
+    """Center a windows in the middle of the screen"""
+    w = root.winfo_screenwidth()
+    h = root.winfo_screenheight()
+    gw, gh, gx, gy = getGeometry(root)
+    x = w / 2 - gw / 2
+    y = h / 2 - gh / 2
+    root.geometry("%dx%d+%d+%d" % (gw, gh, x, y))
 
 if __name__ == '__main__':
     tk = Tk()

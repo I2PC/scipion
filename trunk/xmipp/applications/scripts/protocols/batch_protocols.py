@@ -35,7 +35,7 @@ from protlib_base import *
 from protlib_utils import getScriptPrefix
 from config import *
 from protlib_gui import *
-from protlib_gui_ext import MultiListbox
+from protlib_gui_ext import *
   
 
 #Font
@@ -129,15 +129,12 @@ class XmippProjectGUI():
             n = int(suffix) + 1
         runName = "%s_%03d" % (prefix, n)
         dstAbsPath = os.path.join(self.project.runsDir, 'xmipp_protocol_%s_%s.py' % (protocol, runName))
-#        print "Copying %s to %s" % (srcProtAbsPath, dstAbsPath)
-#        shutil.copy(srcProtAbsPath, dstAbsPath)
         run = {
                'protocol_name':protocol, 
                'run_name': runName, 
                'script': dstAbsPath, 
                'comment': "my first run"
                }
-        
         
         top = Toplevel()
         gui = ProtocolGUI()
@@ -210,6 +207,9 @@ class XmippProjectGUI():
             
     def runSelectCallback(self, index):
         print self.runs[index]['run_name']
+        
+    def runDoubleClickCallback(self, index):
+        print "double click on : ", self.runs[index]['run_name']
 
     def createToolbar(self):
         #Configure toolbar frame
@@ -225,25 +225,45 @@ class XmippProjectGUI():
                 self.createToolbarButton(i, btn[0], btn[1:])
                 i += 1
                 
+    def addRunButton(self, text, cmd, col, imageFilename=None):
+        btnImage = None
+        if imageFilename:
+            try:
+                imgPath = os.path.join(getXmippPath('resources'), imageFilename)
+                btnImage = PhotoImage(file = imgPath)
+            except TclError:
+                pass
+        
+        if btnImage:
+            btn = Button(self.frame, image=helpImage, command=cmd, bd=0)
+            btn.image = helpImage
+        else:
+            btn = Button(self.frame, text=text, command=cmd, font=self.ButtonFont,
+                     bg=self.style.ButtonBgColor, activebackground=self.style.ButtonActiveBgColor)
+        btn.grid(row=row, column=col)
+        return btn
+    
     def createRunHistory(self):
         self.addHeaderLabel(self.frame, 'History', 0, 1)
         self.frameHist = Frame(self.frame)
         self.frameHist.grid(row=1, column=1, sticky=N+W+E+S)
         self.lbHist = MultiListbox(self.frameHist, (('Run', 40), ('Modified', 20)))
         self.lbHist.SelectCallback = self.runSelectCallback
+        self.lbHist.runDoubleClickCallback = self.runDoubleClickCallback
         self.lbHist.AllowSort = False
         self.lbHist.pack()
         
     def createRunDetails(self):
         #Create RUN details
         self.addHeaderLabel(self.frame, 'Details', 2, 1)
-        self.frameDetails = Text(self.frame, bg=BgColor, height=10)
-        self.frameDetails.grid(row=3, column=1)
+        self.frameDetails = Frame(self.frame, bg=BgColor, bd=1, relief=RIDGE)
+        self.frameDetails.grid(row=3, column=1,sticky=N+W+E+S)
 
     def createGUI(self, root=None):
         if not root:
             root = Tk()
         self.root = root
+        root.withdraw() # Hide the windows for centering
         self.root.title("Xmipp Protocols")
         self.createMainMenu()
         #Create a main frame that contains all other widgets
@@ -265,10 +285,14 @@ class XmippProjectGUI():
 
         self.root.config(menu=self.menubar)
         #select lastSelected
-        #if self.project.config.has_option('project', 'lastselected'):
-        #    self.selectToolbarButton(self.project.config.get('project', 'lastselected'))
+        if self.project.config.has_option('project', 'lastselected'):
+            self.selectToolbarButton(self.project.config.get('project', 'lastselected'))
     
-    def launchGUI(self):
+    def launchGUI(self, center=True):
+        if center:
+            self.root.update_idletasks()
+            centerWindows(self.root)
+        self.root.deiconify()
         self.root.mainloop()
        
     def onExit(self):
