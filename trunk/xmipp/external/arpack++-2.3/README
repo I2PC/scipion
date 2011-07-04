@@ -1,0 +1,159 @@
+ARPACK++ version 1.2. Feb 20, 2000.
+
+ARPACK++ is a c++ interface to the ARPACK package.
+ARPACK is a FORTRAN library which implements the implicit restarted
+Arnoldi method for solving sparse eigenvalue problems.
+
+This is ARPACK++ main directory.
+
+1) Files included in this directory:
+
+   a) readme:
+
+      This file.
+
+   b) Makefile.inc:
+
+      An include file used to compile arpack++ examples. You must change
+      some directories and machine-dependent directives contained into
+      this file prior to compiling the examples. See the description of
+      the "makefiles" directory below.
+
+
+2) ARPACK++ subdirectories:
+
+   a) makefiles
+
+      This directory contains example Makefile.inc include files 
+      for some platforms. Choose one and copy it onto the 
+      ~/arpack++/Makefile.inc file.
+
+   b) include:
+
+      The directory that contains arpack++ library, i.e., all header
+      files that define arpack++ class templates.
+
+   c) examples:
+
+      The directory where all arpack++ examples can be found.
+      These examples are intended to illustrate how to use and compile
+      arpack++ classes and are divided according to the type of problem
+      being solved and also the kind of information that the user is
+      supposed to supply. Look at the examples/README file for further
+      information.
+
+   d) doc:
+
+      The directory that contains a PostScript version of Arpack++
+      user's manual and some instructions on how to install the
+      libraries required by ARPACK++.
+
+3) Libraries required by ARPACK++:
+
+   a) ARPACK (fortran version):
+
+   ARPACK++ is a c++ interface to ARPACK fortran code, so the original
+   ARPACK library must be installed prior to using the c++ version.
+   ARPACK may be obtained from Netlib or directly from the URL
+   ftp://ftp.caam.rice.edu/pub/software/ARPACK.
+
+   b) BLAS and LAPACK (fortran versions):
+
+   BLAS and LAPACK routines required by ARPACK fortran code are 
+   distributed along with the software. However, some arpack++
+   examples require routines from these libraries that are not 
+   included in the ARPACK distribution, so it would be better to 
+   install BLAS and LAPACK before compiling the examples. Besides, 
+   you should use vendor-optimized versions of these libraries if
+   they are available.
+
+   c) SUPERLU:
+
+   Some ARPACK++ classes call SUPERLU library functions to solve
+   eigenvalue problems that require complex or real nonsymmetric matrix
+   decompositions. Thus, SUPERLU must also be installed if you intend
+   to use one of these classes. SUPERLU is available at the URL:
+   http://www.netlib.org/scalapack/prototype.
+
+   d) UMFPACK:
+
+   UMFPACK package can also be used to solve eigenvalue problems that
+   require real or complex nonsymmetric/non-Hermitian matrix
+   decompositions. However, UMFPACK may be used SOLELY for educational,
+   research, and benchmarking purposes by non-profit organizations and
+   the U.S. government.  Commercial and other organizations may make use
+   of UMFPACK SOLELY for benchmarking purposes. UMFPACK can be obtained
+   from ftp://ftp.cis.ufl.edu/pub/umfpack. The MA38 Package in the
+   Harwell Subroutine Library (HSL) has equivalent functionality (and
+   identical calling interface) as UMFPACK and is available for
+   commercial use. Technical reports and information on HSL can be found
+   at http://www.cis.rl.ac.uk/struct/ARCD/NUM.html. However, neither MA38
+   nor older versions of UMFPACK are able to handle complex matrices.
+
+4) ARPACK++ documentation:
+
+   ARPACK++ user's manual is available in the doc directory. It contains
+   all information needed to declare and solve eigenvalue problems using
+   arpack++ classes and functions. Arpack++ computational modes and data
+   types are also described in the manual.
+   Instructions on how to install the above mentioned libraries are
+   given in the doc/install.txt file.
+   Moreover, README files were include in many Arpack++ directories
+   to give aditional information about arpack++ files and examples.
+
+5) Using Arpack++:
+
+   As a collection of class templates, arpack++ need not to be compiled.
+   Because templates are defined in header (.h) files, no object (.o)
+   or library (.a) files have to be built, except those corresponding to
+   other libraries required by arpack++ (arpack, lapack, blas, superlu
+   and umfpack). Arpack++ header files are included in the "include"
+   directory and can be moved to another directory if desired. An option
+   in the form
+
+                         -I$(ARPACKPP_INC)
+
+   should be added to the command line when compiling programs that
+   use arpack++. Here, ARPACKPP_INC is the name of the directory that
+   contains all arpack++ header files.
+
+6) Compiler-dependent instructions.
+
+   Some compiler-dependent functions and data types used by arpack++ were
+   grouped in the file include/arch.h. Thus, this file should be changed
+   to reflect the characteristics of your system. Because at the present
+   time the library was only compiled with the GNU g++ compiler and
+   tested in a SUN SparcStation, further work must be done in order to
+   allow the use of ARPACK++ in other environments.
+
+   Moreover, arpack++ also includes a file, include/arcomp,h, that contains
+   the definition of a class template called arcomplex, created to emulate
+   the g++ complex class when other compilers are being used. arcomplex is
+   the only complex type referenced by other ARPACK++ files, so you must
+   change the definition of this class in order to work with complex
+   numbers if g++ (or CC) is not being used.
+
+7) Compiling and running ARPACK++ examples:
+
+   Arpack++ example directories contain Makefiles that should be used
+   to compile the examples. For example, to compile example "symsimp"
+   (that can be found in the examples/product/simple directory, you
+   just need to write
+
+                             make symsimp
+
+   File symsimp.cc will be compiled and linked to arpack libraries,
+   and an executable file named symsimp will be created.
+
+8) Reporting bugs and questions:
+
+   To report bugs and also to obtain more information about obscure parts
+   of the ARPACK++ user's manual, send an e-mail to chico@ime.unicamp.br.
+
+9) ARPACK (fortran) authors:
+
+   Danny Sorensen   (sorensen@caam.rice.edu)
+   Richard Lehoucq  (lehoucq@mcs.anl.gov)
+   Chao Yang        (chao@caam.rice.edu)
+   Kristi Maschhoff (kristyn@caam.rice.edu)
+

@@ -1,0 +1,5 @@
+* Arpack++ 2.3
+==============
+
+ o updated email address to christophe.prudhomme@ujf-grenoble.fr
+ o don't check for g2c anymore in configure
