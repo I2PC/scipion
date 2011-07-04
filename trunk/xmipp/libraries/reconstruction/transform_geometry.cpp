@@ -207,13 +207,14 @@ void ProgTransformGeometry::preProcess()
             if (isVol)
                 REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type is only valid for images");
             int oxdim = xdim, oydim = ydim;
-            if (oxdim < xdim || oydim < ydim)
-                REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
             scale_type = SCALE_FOURIER;
 
             xdim = getIntParam("--scale", 1);
             ydim = STR_EQUAL(getParam("--scale", 2), "x") ? xdim : getIntParam("--scale", 2);
             fourier_threads = getIntParam("--scale", 3);
+            //Do not think this is true
+//            if (oxdim < xdim || oydim < ydim)
+//                REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
         }
         else if (STR_EQUAL(getParam("--scale"), "pyramid"))
         {
@@ -285,7 +286,7 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
         imgOut.setDatatype(img.getDatatype());
 
         /*FIXME: Little tiny gunny Cuban!! it is mandatory to assign the size to the image
-         * in order to really be scaled when applyGeometry is runned. If not, then
+         * in order to really be scaled when applyGeometry is run. If not, then
          * the old size remains.
          *
          * It would be interesting to put a boolean flag to decide when to map
@@ -294,9 +295,7 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
         //imgOut.mapFile2Write(xdim, ydim, zdim, fnImgOut, fnImg == fnImgOut);
         //FIXME, I do not get the point. You resize the image BEFORE
         //calling to the resize routine!?
-        //imgOut().resize(1, zdim, ydim, xdim, false);
-
-
+        imgOut().resize(1, zdim, ydim, xdim, false);
         imgOut().setXmippOrigin();
         applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap, 0.);
 
