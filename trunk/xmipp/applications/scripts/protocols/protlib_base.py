@@ -64,7 +64,7 @@ class XmippProject():
     def create(self):
         os.chdir(self.projectDir)
         print "Creating new project on directory: '%s'" % self.projectDir
-         #==== CREATE CONFIG file
+        #==== CREATE CONFIG file
         self.config = ConfigParser.RawConfigParser()            
         self.config.add_section('project')
         self.config.set('project', 'projectdir', self.projectDir)
@@ -85,7 +85,7 @@ class XmippProject():
                 self.projectDb.insertGroup(groupName)
                 for p in prots:
                     self.projectDb.insertProtocol(groupName, launchDict[p])
-        # commint changes
+        # commit changes
         self.projectDb.connection.commit()
         
     def load(self):
@@ -127,6 +127,15 @@ class XmippProtocol(object):
                 self.DoParallel = False
         except NameError:
             self.DoParallel = False
+        #do something similar with mpiflavour whenever we decide what to do
+#        self.mpiflavour = ''
+#        try:
+#            SystemFlavour
+#            if SystemFlavour == None or SystemFlavour !='':
+#                self.mpiflavour = SystemFlavour
+#        except NameError:
+#            self.DoParallel = False
+#        SystemFlavour
             
         self.Name = protocolName
         self.runName = runName
@@ -165,7 +174,7 @@ class XmippProtocol(object):
     def summary(self):
         '''Produces a summary with the most relevant information of the protocol run'''
         self.summary=[]
-        self.summary.append(self.Name)
+        self.summary.append(self.comment)
     
     def warnings(self):
         '''Output some warnings that can be errors and require user confirmation to procceed'''
@@ -176,8 +185,9 @@ class XmippProtocol(object):
         pass   
     
     def defineActions(self):
-        '''In this funciton the actions to be performed by the protocol will be add to db.
-        each particular protocol need to add its specific actions'''
+        '''In this function the actions to be performed by the protocol will be added to db.
+        each particular protocol need to add its specific actions. Thing to be performed before 
+        "run" should be added here'''
         pass
     
     def runSetup(self):
@@ -212,10 +222,11 @@ class XmippProtocol(object):
                                                         ,DoDeleteWorkingDir  = self.DoDeleteWorkingDir
                                                         ,WorkingDir          = self.WorkingDir)
 
-        id = self.Db.insertAction('createDir', path = self.WorkingDir)
-        id = self.Db.insertAction('makeScriptBackup',None, XmippProtocolDbStruct.doAlways
-                                                      ,script     = self.scriptName
+        self.Db.insertAction('createDir', path = self.WorkingDir)
+        self.Db.setIteration(XmippProtocolDbStruct.doAlways)
+        self.Db.insertAction('makeScriptBackup',script     = self.scriptName
                                                       ,WorkingDir = self.WorkingDir)#backup always
+        self.Db.setIteration(1)
 
         #Add actions to database
         self.defineActions()
