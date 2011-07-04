@@ -1,0 +1,41 @@
+This is the arpack++/examples/reverse/sym directory.
+
+1) Examples included in this directory:
+
+   This directory contains examples intended to show how to use
+   ARPACK++ to solve real symmetric eigenvalue problems in various
+   computational modes using the reverse communication interface.
+
+   file              Description
+   -----------       --------------------------------------------------
+
+   rsymreg.cc        In this example a standard eigenvalue problem
+                     is solved using the regular mode.
+
+   rsymshft.cc       In this example a standard eigenvalue problem
+                     is solved using the shift and invert mode.
+
+   rsymgreg.cc       In this example a generalized eigenvalue problem
+                     is solved using the regular mode.
+
+   rsymgshf.cc       In this example a generalized eigenvalue problem
+                     is solved using the shift and invert mode.
+
+   rsymgbkl.cc       In this example a generalized eigenvalue problem
+                     is solved using the buckling mode.
+
+   rsymgcay.cc       In this example a generalized eigenvalue problem
+                     is solved using the Cayley mode.
+
+
+2) Compiling the examples:
+
+   To compile and link all the above mentioned programs you just have
+   to type "make all". Each example can also be compiled separately by
+   using a specific command, such as "make rsymgshf".
+
+3) Running the examples:
+
+   A program is executed by just typing its name (rsymgshf, for
+   example).
+

@@ -1,0 +1,77 @@
+This is the ARPACK++ examples directory.
+The examples included here are intended to illustrate how
+to use arpack++ to solve different eigenvalue problems
+taking advantage of various features included in the
+software.
+
+Subdirectories:
+
+   a) areig:
+
+   This directory contains examples that use the AREig function.
+   AREig is a MATLAB-style function intended to be the easiest
+   way of solving eigenvalue problems.
+   Because some of these examples contain spectral transformations
+   that require the solution of linear systems, the SuperLU library
+   must be installed prior to compiling the programs contained in
+   this directory.
+   Since the CC compiler does not allow function templates to have
+   default parameters, none of the examples of the areig directory
+   can be compiled with CC.
+
+   b) superlu:
+
+   This directory contains examples that show how to solve
+   eigenvalue problems when matrices are supplied in CSC format.
+   The SuperLU package is called by some examples to solve the
+   linear systems that appear when a spectral transformation
+   is used.
+
+   c) umfpack:
+
+   This directory contains the same examples of the superlu
+   directory. However, UMFPACK is used to solve the linear
+   systems, instead of SuperLU.
+
+   d) product:
+
+   This directory contains examples that show how to use ARPACK++
+   to solve eigenvalue problems if user-defined matrix-vector
+   product functions are available.
+
+   e) reverse:
+
+   This directory contains examples that illustrate how to use the
+   reverse communication interface. In these examples, eigenvalue
+   problems are declared using a set of ARPACK++ classes that does
+   not store any information on how to perform the matrix-vector
+   products required by the Arnoldi process, so all products must
+   be performed directly by the user.
+
+   f) band:
+
+   This directory contains examples that illustrate how to solve
+   band eigenvalue problems using ARPACK++. 
+
+   g) dense:
+
+   This directory contains examples that illustrate how to solve
+   dense eigenvalue problems.
+
+   h) harwell:
+
+   This directory contains examples that illustrate how to solve
+   eigenvalue problems when matrices are stored in harwell-boeing
+   files.
+
+   i) matrices:
+
+   This directory contains the definition of all matrices used by
+   the examples of the areig, band, superlu and umfpack directories.
+
+   j) matprod:
+
+   This directory contains the definition of all matrix classes
+   used by the examples of the product and reverse directories.
+
+

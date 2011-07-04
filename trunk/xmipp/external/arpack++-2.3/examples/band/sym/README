@@ -1,0 +1,42 @@
+This is the arpack++/examples/band/sym directory.
+
+1) Examples included in this directory:
+
+   This directory contains examples intended to show how to use
+   ARPACK++ to solve real symmetric band eigenvalue problems in
+   various computational modes.
+
+   file              Description
+   -----------       --------------------------------------------------
+
+   bsymreg.cc        In this example a standard eigenvalue problem
+                     is solved using the regular mode.
+
+   bsymshft.cc       In this example a standard eigenvalue problem
+                     is solved using the shift and invert mode.
+
+   bsymgreg.cc       In this example a generalized eigenvalue problem
+                     is solved using the regular mode.
+
+   bsymgshf.cc       In this example a generalized eigenvalue problem
+                     is solved using the shift and invert mode.
+
+   bsymgbkl.cc       In this example a generalized eigenvalue problem
+                     is solved using the buckling mode.
+
+   bsymgcay.cc       In this example a generalized eigenvalue problem
+                     is solved using the Cayley mode.
+
+
+2) Compiling the examples:
+
+   To compile and link all the above mentioned programs you just have
+   to type "make all". Each example can also be compiled separately by
+   using a specific command, such as "make bsymgshf".
+
+
+3) Running the examples:
+
+   A program is executed by just typing its name (bsymgshf, for
+   example).
+
