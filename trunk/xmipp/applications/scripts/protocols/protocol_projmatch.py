@@ -654,7 +654,6 @@ ViewVerifyedFiles=True
 #-----------------------------------------------------------------------------
        
        #FIXME REMOVE THIS
-DoParallel=True
 SystemFlavour=''
 
 from protlib_base import *
@@ -886,9 +885,10 @@ class ProtProjMatch(XmippProtocol):
     
         #Save all parameters in dict for future runs (this is done by database)
         #so far no parameter is being saved, but dummy=0
+        self.Db.setIteration(XmippProtocolDbStruct.doAlways)
         _dataBase.insertAction('self.saveParameters', SystemFlavour =SystemFlavour)
-        _dataBase.insertAction('self.loadParameters', None, XmippProtocolDbStruct.doAlways)
-    
+        _dataBase.insertAction('self.loadParameters', None, None)
+        self.Db.setIteration(1)
         #no entries will be save untill this commit
         print "commit databse"
         _dataBase.connection.commit()
@@ -940,7 +940,7 @@ class ProtProjMatch(XmippProtocol):
                                     , CtfGroupSubsetFileName = self.CtfGroupSubsetFileName
                                     , DoCtfCorrection = DoCtfCorrection
                                     , DocFileInputAngles = self.DocFileInputAngles[iterN-1]
-                                    , DoParallel = DoParallel
+                                    , DoParallel = self.DoParallel
                                     , DoRestricSearchbyTiltAngle = DoRestricSearchbyTiltAngle
                                     , MaxChangeInAngles = self.MaxChangeInAngles[iterN]
                                     , maskedFileNamesIter = self.maskedFileNamesIters[iterN][refN]
@@ -968,7 +968,7 @@ class ProtProjMatch(XmippProtocol):
                                     , DoComputeResolution =self.DoComputeResolution[iterN]
                                     , DoCtfCorrection = DoCtfCorrection
                                     , DoScale =DoScale
-                                    , DoParallel = DoParallel
+                                    , DoParallel = self.DoParallel
                                     , InnerRadius =self.InnerRadius[iterN]
                                     , MaxChangeOffset =self.MaxChangeOffset[iterN]
                                     , MpiJobSize =MpiJobSize
@@ -1012,7 +1012,7 @@ class ProtProjMatch(XmippProtocol):
                          , DoAlign2D         = self.DoAlign2D[iterN]#
                          , DoCtfCorrection = DoCtfCorrection#
                          , DocFileInputAngles = self.DocFileInputAngles[iterN]#
-                         , DoParallel = DoParallel#
+                         , DoParallel = self.DoParallel#
                          , DoSplitReferenceImages =self.DoSplitReferenceImages[iterN]#
                          , InnerRadius =self.InnerRadius[iterN]#
                          , MaxChangeOffset =self.MaxChangeOffset[iterN]#
@@ -1053,7 +1053,10 @@ class ProtProjMatch(XmippProtocol):
             command = "shutil.copy('%s','%s');dummy" % (self.ReferenceFileNames[0], self.reconstructedFileNamesIters[iterN][refN])
             id = _dataBase.insertAction(command, self.reconstructedFileNamesIters[iterN][refN])
         command = "print 'ALL DONE';dummy"
+        self.Db.setIteration(XmippProtocolDbStruct.doAlways)
         _dataBase.setIteration(XmippProtocolDbStruct.doAlways)
+        self.Db.setIteration(iterN)
+
         id = _dataBase.insertAction(command)
     
         _dataBase.connection.commit()
