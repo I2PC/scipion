@@ -292,7 +292,9 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
          */
 
         //imgOut.mapFile2Write(xdim, ydim, zdim, fnImgOut, fnImg == fnImgOut);
-        imgOut().resize(1, zdim, ydim, xdim, false);
+        //FIXME, I do not get the point. You resize the image BEFORE
+        //calling to the resize routine!?
+        //imgOut().resize(1, zdim, ydim, xdim, false);
 
 
         imgOut().setXmippOrigin();
