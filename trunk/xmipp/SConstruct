@@ -74,6 +74,9 @@ opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '--enable-threads')
 opts.Add(BoolVariable('verbose_tiff', 'Verbose configuring of TIFF libraries?', 'no'))
 opts.Add('TIFFFLAGS', 'Additional flags for TIFF configure', 'CPPFLAGS=-w')
 
+opts.Add(BoolVariable('verbose_arpack', 'Verbose configuring of ARPACK++ libraries?', 'no'))
+opts.Add('ARPACKFLAGS', 'Additional flags for ARPACK++ configure', '')
+
 opts.Add(BoolVariable('verbose_sqlite', 'Verbose configuring of SQLite libraries?', 'no'))
 opts.Add('SQLITEFLAGS', 'Additional flags for SQLite configure', 'CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1')
 
@@ -289,6 +292,9 @@ if (ARGUMENTS['mode'] == 'configure'):
     
     ConfigureExternalLibrary('tiff', env['TIFFFLAGS'], 
                      'tiff-3.9.4', int(env['verbose_tiff']))
+
+    ConfigureExternalLibrary('arpack++', env['ARPACKFLAGS'], 
+                     'arpack++-2.3', int(env['verbose_arpack']))
 
     # Finish configuration
     env = conf.Finish()
