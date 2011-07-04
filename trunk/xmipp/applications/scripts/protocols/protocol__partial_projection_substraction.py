@@ -15,9 +15,9 @@
 Comment='Describe your project here...'
 
 #Comment
-""" Subtraction directory suffix. '01' will create 'Subtraction_01' directory
+""" Subtraction subdirectory. 'run_001' will create 'Subtraction/run_001' directory
 """
-SubtractionDirectorySuffix='shifts_01'
+RunName='run_001'
 
 # {file} Protocol Name
 ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy_shifts/xmipp_protocol_projmatch_shifts_backup.py'
@@ -43,7 +43,7 @@ iterationNo=5
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =9
+ContinueAtIteration =1
 
 # {expert} Resume at Iter (vs Step)
 """This option control how to resume a previously performed run.
@@ -117,33 +117,52 @@ dimX = 32
 """
 dimY = -1
 
+
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
-
-# distributed-memory parallelization (MPI)?
-""" This option provides distributed-memory parallelization on multi-node machines. 
-    It requires the installation of some MPI flavour, possibly together with a queueing system
-"""
-DoParallel=True
-
 # Number of (shared-memory) threads?
 """ This option provides shared-memory parallelization on multi-core machines. 
     It does not require any additional software, other than xmipp
 """
-NumberOfThreads=2
+NumberOfThreads = 2
 
-# Number of MPI processes to use:
-NumberOfMpiProcesses=2
+# Number of MPI processes to use
+NumberOfMpiProcesses = 2
+
+#MPI job size 
+"""Minimum size of jobs in mpi processes. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
+"""
+MpiJobSize ='1'
+
+#Submmit to queue
+"""Submmit to queue"""
+SubmmitToQueue=False
+#------------------------------------------------------------------------------------------------
+# {section}{expert}{condition}(SubmmitToQueue=True) Queue 
+#------------------------------------------------------------------------------------------------
+
+# Queue name
+"""Name of the queue to submit the job"""
+QueueName="default"
+# Queue hours
+"""This establish a maximum number of hours the job will
+be running, after that time it will be killed by the 
+queue system"""
+QueueHours=72
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
-MpiJobSize ='3'
+#MpiJobSize ='3'
 
-# MPI system Flavour 
-""" Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
-    Ask the person who installed your xmipp version, which option to use. Or read: xxx
+#------------------------------------------------------------------------------------------------
+# {hidden} Analysis of results
+""" This script serves only for GUI-assisted visualization of the results
 """
-SystemFlavour='TORQUE-OPENMPI'
+AnalysisScript='visualize_partial_projection_subtraction.py'
+#-----------------------------------------------------------------------------
+# {section} Debug
+#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------
 
 #Verify
 """Check that some output files are created. 
@@ -160,18 +179,13 @@ PrintWrapperParameters=True
 ViewVerifyedFiles=True 
 
 #------------------------------------------------------------------------------------------------
-# {hidden} Analysis of results
-""" This script serves only for GUI-assisted visualization of the results
-"""
-AnalysisScript='visualize_partial_projection_subtraction.py'
-
-
-#------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
+SystemFlavour = "TORQUE-OPENMPI"
+
 
 import os,sys
 def checkErrors():    
@@ -190,8 +204,11 @@ from xmipp import *
 
 class ProtPartialProjectionSubtraction(XmippProtocol):
 
-    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
-        super(ProtPartialProjectionSubtraction,self).__init__(scriptname, workingdir, ProjectDir, logdir, restartStep, isIter)
+    def __init__(self, scriptname,project=None):
+        super(ProtPartialProjectionSubtraction,self).__init__(ProtocolNames.subtraction, scriptname, RunName, project,NumberOfMpiProcesses)
+        #super(ProtPartialProjectionSubtraction,self).__init__(scriptname, workingdir, ProjectDir, logdir, restartStep, isIter)
+    #def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
+    #    super(ProtProjMatch,self).__init__(ProtocolNames.projmatch,scriptname, RunName, project)
         self.myName='partial_projection_subtraction'
         #self.run_file1='./readDocfileAndPairExperimentalAndReferenceImages_v3.sh'
         self.subtractionDir ='Subtraction'
@@ -204,17 +221,18 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.current_angles='current_angles.doc'
         self.Import = 'from protlib_partial_projection_subtraction import *'
         self.scaledImages = 'scaled'
+        self.runName = RunName
         
     def preRun(self):
 
+        print "in PRERUN"
         self.Iteration_Working_Directory = os.path.join(WorkingDir,'Iter_'+ str(iterationNo))
-        self.subtractionDir = os.path.join(self.subtractionDir,SubtractionDirectorySuffix)
-        self.subtractionDir = os.path.join(self.Iteration_Working_Directory,self.subtractionDir)
-        self.volsDir = os.path.join(self.subtractionDir,self.volsDir)
-        self.referenceDir = os.path.join(self.subtractionDir,self.referenceDir)
-        self.subImgsDir = os.path.join(self.subtractionDir,self.subImgsDir)
+        self.subtractionDir = os.path.join(self.WorkingDir,RunName)
+        self.volsDir = os.path.join(self.WorkingDir,self.volsDir)
+        self.referenceDir = os.path.join(self.WorkingDir,self.referenceDir)
+        self.subImgsDir = os.path.join(self.WorkingDir,self.subImgsDir)
         
-        self.scaledImages = os.path.join(self.subtractionDir,self.scaledImages)
+        self.scaledImages = os.path.join(self.WorkingDir,self.scaledImages)
         
         self.doScaleImages = doScaleImages
         
@@ -311,6 +329,9 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.Db.setVerify(Verify,ViewVerifyedFiles)
         
     def actionsToBePerformedInsideLoop(self):
+        
+        print "actionsToBePerformedInsideLoop"
+        print "self.defocusGroupNo: ", self.defocusGroupNo
         _dataBase = self.Db
         for iterN in range(1, self.defocusGroupNo):
             #Create auxiliary metadata with image names , angles and CTF
@@ -319,78 +340,62 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             else:
                 inputSelfile = self.filename_currentAngles
 
-            _Parameters = {
-                           'CTFgroupName': self.defGroups[iterN]
-                          ,'DocFileExp':self.DocFileExp[iterN]
-                          ,'inputSelfile':inputSelfile
-                          }
-            command = "joinImageCTF"
             _VerifyFiles = []
             auxFilename = FileName(self.DocFileExp[iterN])
             _VerifyFiles.append(auxFilename.removeBlockName())
-            _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
+            id = _dataBase.insertAction('joinImageCTF', _VerifyFiles, None, None
+                                        , CTFgroupName = self.defGroups[iterN]
+                                        , DocFileExp = self.DocFileExp[iterN]
+                                        , inputSelfile = inputSelfile)
             
             if(self.doScaleImages):
-                _Parameters = {
-                           'inputSelfile':self.DocFileExp[iterN]
-                          }
-                command = "updateImageLabel"
                 _VerifyFiles = []
-                #auxFilename = FileName(self.DocFileExp[iterN])
-                #_VerifyFiles.append(auxFilename.removeBlockName())
-                _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
-
+                id = _dataBase.insertAction('updateImageLabel', _VerifyFiles, None, None
+                                            , inputSelfile = self.DocFileExp[iterN])
+                
             #reconstruct each CTF group
-            _Parameters = {
-                           'DocFileExp': self.DocFileExp[iterN]
-                          , 'DoParallel' : DoParallel
-                          , 'MpiJobSize':MpiJobSize
-                          , 'NumberOfMpiProcesses':NumberOfMpiProcesses
-                          , 'NumberOfThreads':NumberOfThreads
-                          , 'reconstructedVolume':self.reconstructedVolume[iterN]
-                          , 'SymmetryGroup': SymmetryGroup
-                          , 'SystemFlavour':SystemFlavour
-                          }
-            command = "reconstructVolume"
             _VerifyFiles = []
             _VerifyFiles.append(self.reconstructedVolume[iterN])
-            _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
+            id = _dataBase.insertAction('reconstructVolume', _VerifyFiles, None, None
+                                        , DocFileExp = self.DocFileExp[iterN]
+                                        , DoParallel = DoParallel
+                                        , MpiJobSize = MpiJobSize
+                                        , NumberOfMpiProcesses = NumberOfMpiProcesses
+                                        , NumberOfThreads = NumberOfThreads
+                                        , reconstructedVolume = self.reconstructedVolume[iterN]
+                                        , SymmetryGroup = SymmetryGroup
+                                        , SystemFlavour = SystemFlavour)
             
             #mask volume before projection
-            _Parameters = {
-                           'dRradiusMax':self.dRradiusMax
-                          ,'dRradiusMin':self.dRradiusMin
-                          ,'maskReconstructedVolume':self.maskReconstructedVolume[iterN]
-                          ,'reconstructedVolume':self.reconstructedVolume[iterN]
-                          }
-            command = "maskVolume"
             _VerifyFiles = []
             auxFilename = FileName(self.DocFileExp[iterN])
             _VerifyFiles.append(self.maskReconstructedVolume[iterN])
-            _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
+            id = _dataBase.insertAction('maskVolume', _VerifyFiles, None, None
+                                        , dRradiusMax = self.dRradiusMax
+                                        , dRradiusMin = self.dRradiusMin
+                                        , maskReconstructedVolume = self.maskReconstructedVolume[iterN]
+                                        , reconstructedVolume = self.reconstructedVolume[iterN])
     
             #project reconstructe4d volumes
-            _Parameters = {
-                          'AngSamplingRateDeg':AngSamplingRateDeg
-                          ,'DocFileExp':self.DocFileExp[iterN]#################docfile with ALL experimental images
-                          ,'DoParallel' : DoParallel
-                          ,'maskReconstructedVolume':self.maskReconstructedVolume[iterN]
-                          ,'MaxChangeInAngles':self.MaxChangeInAngles
-                          , 'MpiJobSize':MpiJobSize
-                          ,'NumberOfMpiProcesses':NumberOfMpiProcesses
-                          ,'NumberOfThreads':NumberOfThreads
-                          ,'referenceStack':self.referenceStack[iterN]
-                          ,'SymmetryGroup': SymmetryGroup
-                          ,'SystemFlavour':SystemFlavour
-                          }
-            command = "createProjections"
             _VerifyFiles = []
             _VerifyFiles.append(self.referenceStack[iterN])
             tmp = self.referenceStack[iterN]
             _VerifyFiles.append(tmp.replace('.stk','.doc'))
             _VerifyFiles.append(tmp.replace('.stk','_sampling.xmd'))
             
-            _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
+            id = _dataBase.insertAction('createProjections', _VerifyFiles, None, None
+                                        , AngSamplingRateDeg = AngSamplingRateDeg
+                                        , DocFileExp = self.DocFileExp[iterN]
+                                        , DoParallel = DoParallel
+                                        , maskReconstructedVolume = self.maskReconstructedVolume[iterN]
+                                        , MaxChangeInAngles = self.MaxChangeInAngles
+                                        , MpiJobSize = MpiJobSize
+                                        , NumberOfMpiProcesses = NumberOfMpiProcesses
+                                        , NumberOfThreads = NumberOfThreads
+                                        , referenceStack = self.referenceStack[iterN]
+                                        , SymmetryGroup = SymmetryGroup
+                                        , SystemFlavour = SystemFlavour)
+                          
                      
                      
     #project reconstructe4d volumes
@@ -406,53 +411,40 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles.append(self.subtractedStack[iterN]+'exp')
             
             _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
+            id = _dataBase.insertAction('subtractionScript', _VerifyFiles, None, None
+                                        , DocFileExp = self.DocFileExp[iterN] 
+                                        , referenceStackDoc = self.referenceStackDoc[iterN]
+                                        , subtractedStack = self.subtractedStack[iterN])
+                          
+            
         
         
     def otherActionsToBePerformedBeforeLoop(self):
         _dataBase = self.Db
         #Create directories
-        _Parameters = {
-              'path':self.subtractionDir
-            }
-        command = 'createDir'
-        _dataBase.insertAction(command, _Parameters, 1)
-        
-        _Parameters = {
-              'path':self.volsDir
-            }
-        command = 'createDir'
-        _dataBase.insertAction(command, _Parameters, 1)
-        
-        _Parameters = {
-              'path':self.referenceDir
-            }
-        command = 'createDir'
-        _dataBase.insertAction(command, _Parameters, 1)
-    
-        _Parameters = {
-              'path':self.subImgsDir
-            }
-        command = 'createDir'
-        _dataBase.insertAction(command, _Parameters, 1)
+        _dataBase.insertAction('createDir', path = self.volsDir)
+        _dataBase.insertAction('createDir', path = self.referenceDir)
+        _dataBase.insertAction('createDir', path = self.subImgsDir)
         
         #Create auxiliary metadata with image names , angles and CTF
         
         if(doScaleImages):
-            _Parameters = {
-                          'filename_currentAngles':self.filename_currentAngles
-                          ,'scaledImages':self.scaledImages
-                          ,'dimX':self.dimX
-                          ,'dimY':self.dimY
-                         }
-            command = "scaleImages"
-        #_VerifyFiles = []
-        #auxFilename = FileName(self.DocFileExp[iterN])
-        #_VerifyFiles.append(auxFilename.removeBlockName())
-            _dataBase.insertAction(command, _Parameters, 1)
-            
+            _VerifyFiles = []
+            id = _dataBase.insertAction('scaleImages', _VerifyFiles, None, None
+                                       , dimX = self.dimX
+                                       , dimY = self.dimY
+                                       , DoParallel = self.DoParallel
+                                       , filename_currentAngles = self.filename_currentAngles
+                                       , MpiJobSize = MpiJobSize
+                                       , NumberOfMpiProcesses = NumberOfMpiProcesses
+                                       , NumberOfThreads = NumberOfThreads
+                                       , scaledImages = self.scaledImages
+                                       , SystemFlavour = SystemFlavour
+                                       )            
             self.scaledImages = self.scaledImages + ".xmd"
 
     def defineActions(self):
+        self.preRun()
         self.otherActionsToBePerformedBeforeLoop()
         self.actionsToBePerformedInsideLoop()
         
@@ -491,11 +483,12 @@ def ImportProtocol():
         MaxChangeInAngles=arg.getComponentFromVector(eval(fn +'.MaxChangeInAngles'),iterationNo)
     global refDirNameAngSamplingRateDeg
     #refDirName=  eval(fn +'.LibraryDir')
-
-    
+        
 if __name__ == '__main__':
-    import sys
     ImportProtocol()
-    script  = sys.argv[0]
-    p = ProtPartialProjectionSubtraction(script, WorkingDir, ProjectDir, LogDir, ContinueAtIteration, IsIter)
-    p.run()
+    protocolMain(ProtPartialProjectionSubtraction)
+    #import sys
+    #ImportProtocol()
+    #script  = sys.argv[0]
+    #p = ProtPartialProjectionSubtraction(script, WorkingDir, ProjectDir, LogDir, ContinueAtIteration, IsIter)
+    #p.run()

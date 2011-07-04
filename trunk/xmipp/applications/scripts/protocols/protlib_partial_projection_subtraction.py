@@ -2,24 +2,47 @@
 from xmipp import *
 import launch_job
 import os
+from protlib_utils import runJob
 
 #'([A-z]*)'[ ]*:(.*)\n
 #$1\n
 
-def scaleImages(_log, filename_currentAngles, scaledImages, dimX, dimY):
-    
+def scaleImages(_log
+                    , dimX
+                    , dimY
+                    , DoParallel
+                    , filename_currentAngles
+                    , MpiJobSize
+                    , NumberOfMpiProcesses
+                    , NumberOfThreads
+                    , scaledImages
+                    , SystemFlavour
+                    ):
+    #create blanck file
+    outFileName=scaledImages + ".stk"
+    if os.path.exists(outFileName):
+        os.remove(outFileName)
+    dimN=MetaData(filename_currentAngles).size()
+    if (dimY<0):
+        dimY = dimX
+    createEmptyFile(outFileName,dimX,dimY,1,dimN)
+
     parameters  = ' -i ' +  filename_currentAngles 
-    parameters += ' -o ' +  scaledImages + ".stk" 
+    parameters += ' -o ' + outFileName 
     parameters += ' --scale fourier ' + str(dimX)
     if (dimY>0):
         parameters += ' ' + str(dimY)
 
-    launch_job.launch_job('xmipp_transform_geometry',
-                             parameters,
-                             _log,
-                             False,1,1,'')
-    
-    print "scaledImages: ", scaledImages
+#    launch_job.launch_job('xmipp_transform_geometry',
+#                             parameters,
+#                             _log,
+#                             False,1,1,'')
+    runJob(_log,'xmipp_transform_geometry',
+                     parameters,
+                     DoParallel,
+                     NumberOfMpiProcesses*NumberOfThreads,
+                     1,
+                     SystemFlavour)
     
     md = MetaData(filename_currentAngles)
     scaledImages = scaledImages+".xmd"
@@ -39,8 +62,6 @@ def scaleImages(_log, filename_currentAngles, scaledImages, dimX, dimY):
     print "Z = ",z 
     print "N = ",n 
     factorX = x / dimX
-    if (dimY<0):
-        dimY = dimX
     factorY = y / dimY
     # Copy images to original images column
     for id in md:
