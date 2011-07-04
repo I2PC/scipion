@@ -180,6 +180,7 @@ public:\
     }\
     void readParams()\
     {\
+        baseClassName::readParams();\
         blockSize = getIntParam("--mpi_job_size");\
     }\
     void read(int argc, char **argv)\
