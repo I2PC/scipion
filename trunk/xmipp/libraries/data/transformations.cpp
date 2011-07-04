@@ -356,7 +356,10 @@ void applyGeometry(int SplineDegree,
                          MULTIDIM_ARRAY(V2), MULTIDIM_SIZE(re));
     }
     else
+    { //FIXME I do not think you want to recall your self
+    	REPORT_ERROR(ERR_NOT_IMPLEMENTED,"I do not think you want to recall your self");
         applyGeometry(SplineDegree, V2, V1, A, inv, wrap, outside);
+    }
 }
 
 // Special case for complex numbers
