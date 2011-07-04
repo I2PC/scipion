@@ -61,7 +61,6 @@ def deleteDir(_log, path):
         remove_tree(path, True)
            
 def deleteWorkingDirectory(_log, WorkingDir, DoDeleteWorkingDir):
-
     if DoDeleteWorkingDir:
         deleteDir(_log,  WorkingDir)
 
