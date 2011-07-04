@@ -1,0 +1,42 @@
+This is the arpack++/examples/product/sym directory.
+
+1) Examples included in this directory:
+
+   This directory contains examples intended to show how to use
+   ARPACK++ to solve real symmetric eigenvalue problems in various
+   computational modes when the user is able to supply some classes that
+   contain all required matrix-vector products as member functions.
+
+   file              Description
+   -----------       --------------------------------------------------
+
+   symreg.cc         In this example a standard eigenvalue problem
+                     is solved using the regular mode.
+
+   symshft.cc        In this example a standard eigenvalue problem
+                     is solved using the shift and invert mode.
+
+   symgreg.cc        In this example a generalized eigenvalue problem
+                     is solved using the regular mode.
+
+   symgshft.cc       In this example a generalized eigenvalue problem
+                     is solved using the shift and invert mode.
+
+   symgbklg.cc       In this example a generalized eigenvalue problem
+                     is solved using the buckling mode.
+
+   symgcayl.cc       In this example a generalized eigenvalue problem
+                     is solved using the Cayley mode.
+
+
+2) Compiling the examples:
+
+   To compile and link all the above mentioned programs you just have
+   to type "make all". Each example can also be compiled separately by
+   using a specific command, such as "make symgshft".
+
+3) Running the examples:
+
+   A program is executed by just typing its name (symgshft, for
+   example).
+

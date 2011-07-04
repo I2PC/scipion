@@ -1,0 +1,34 @@
+This is the arpack++/examples/dense/complex directory.
+
+1) Examples included in this directory:
+
+   This directory contains examples intended to show how to use
+   ARPACK++ to solve complex dense eigenvalue problems in various
+   computational modes.
+
+   file              Description
+   -----------       --------------------------------------------------
+
+   dcompreg.cc       In this example a standard eigenvalue problem
+                     is solved using the regular mode.
+
+   dcompshf.cc       In this example a standard eigenvalue problem
+                     is solved using the shift and invert mode.
+
+   dcompgre.cc       In this example a generalized eigenvalue problem
+                     is solved using the regular mode.
+
+   dcompgsh.cc       In this example a generalized eigenvalue problem
+                     is solved using the real shift and invert mode.
+
+
+2) Compiling the examples:
+
+   To compile and link all the above mentioned programs you just have
+   to type "make all". Each example can also be compiled separately by
+   using a specific command, such as "make dcompgsh".
+
+3) Running the examples:
+
+   A program is executed by just typing its name (dcompgsh, for
+   example).

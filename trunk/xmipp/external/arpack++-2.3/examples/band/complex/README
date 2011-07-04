@@ -1,0 +1,34 @@
+This is the arpack++/examples/band/complex directory.
+
+1) Examples included in this directory:
+
+   This directory contains examples intended to show how to use
+   ARPACK++ to solve complex band eigenvalue problems in various
+   computational modes.
+
+   file              Description
+   -----------       --------------------------------------------------
+
+   bcompreg.cc       In this example a standard eigenvalue problem
+                     is solved using the regular mode.
+
+   bcompshf.cc       In this example a standard eigenvalue problem
+                     is solved using the shift and invert mode.
+
+   bcompgre.cc       In this example a generalized eigenvalue problem
+                     is solved using the regular mode.
+
+   bcompgsh.cc       In this example a generalized eigenvalue problem
+                     is solved using the real shift and invert mode.
+
+
+2) Compiling the examples:
+
+   To compile and link all the above mentioned programs you just have
+   to type "make all". Each example can also be compiled separately by
+   using a specific command, such as "make bcompgsh".
+
+3) Running the examples:
+
+   A program is executed by just typing its name (bcompgsh, for
+   example).

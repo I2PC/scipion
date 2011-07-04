@@ -1,0 +1,48 @@
+This is the arpack++/examples/product/nonsym directory.
+
+1) Examples included in this directory:
+
+   This directory contains examples intended to show how to use 
+   ARPACK++ to solve real nonsymmetric eigenvalue problems in various
+   computational modes when the user is able to supply some classes that
+   contain all required matrix-vector products as member functions.
+
+   file              Description
+   -----------       --------------------------------------------------
+
+   nsymreg.cc        In this example a standard eigenvalue problem
+                     is solved using the regular mode.
+
+   nsymshf.cc        In this example a standard eigenvalue problem
+                     is solved using the shift and invert mode.
+
+   nsymgreg.cc       In this example a generalized eigenvalue problem
+                     is solved using the regular mode.
+
+   nsymgshf.cc       In this example a generalized eigenvalue problem
+                     is solved using the real shift and invert mode.
+
+   nsymgscr.cc       In this example a generalized eigenvalue problem
+                     is solved using the complex shift and invert mode
+                     (considering only the real part of inv(A-sigmaB)).
+
+   nsymgsci.cc       In this example a generalized eigenvalue problem
+                     is solved using the complex shift and invert mode
+                     (considering only the imaginary part of
+                     inv(A-sigmaB)).
+
+   svd.cc            In this example ARPACK++ is used to obtain a few
+                     singular values of a real nonsymmetric matrix.
+
+2) Compiling the examples:
+
+   To compile and link all the above mentioned programs you just have
+   to type "make all". Each example can also be compiled separately by
+   using a specific command, such as "make nsymgshf".
+
+
+3) Running the examples:
+
+   A program is executed by just typing its name (nsymgshf, for
+   example).
+
