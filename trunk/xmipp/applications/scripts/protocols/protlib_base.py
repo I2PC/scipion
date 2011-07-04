@@ -113,7 +113,7 @@ class XmippProject():
             
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
-    def __init__(self, protocolName, scriptname,runName, project=None):
+    def __init__(self, protocolName, scriptname,runName, project=None, NumberOfMpiProcesses=None):
         '''Basic constructor of the Protocol
         protocolName -- the name of the protocol, should be unique
         scriptname,     file containing the protocol instance
