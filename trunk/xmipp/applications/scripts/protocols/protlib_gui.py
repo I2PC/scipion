@@ -364,7 +364,6 @@ class ProtocolGUI(BasicGUI):
         self.citeslist = []
         # Script title
         self.programname = os.path.basename(self.inScript.replace('.py', ''))
-        self.saveCallback = None
 
     #-------------------------------------------------------------------
     # Widgets creation and GUI building
@@ -479,9 +478,6 @@ class ProtocolGUI(BasicGUI):
             if var.help:
                 btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column + 4, NW, 'help.gif')
                 w.widgetslist.append(btn)
-                
-   
-                                    
                     
         label = Label(self.frame, text=label_text, fg=label_color, bg=label_bgcolor)
         label.grid(row=label_row, column=0, columnspan=self.columnspantextlabel, sticky=E)
@@ -634,6 +630,13 @@ class ProtocolGUI(BasicGUI):
         f.close()
         os.chmod(self.outScript, 0755)
         
+        #update database
+        
+        if self.outScript != self.inScript:
+            self.project.projectDb.insertRun(self.run)
+        else:
+            self.project.projectDb.updateRun(self.run)
+            
         if self.saveCallback:
             self.saveCallback()
     
@@ -705,9 +708,15 @@ class ProtocolGUI(BasicGUI):
         self.master.bind("<Button-4>", self.scroll)
         self.master.bind("<Button-5>", self.scroll)
         
-    def createGUI(self, inScript, outScript = None, master=None):
-        if not outScript:
+    def createGUI(self, inScript, project, run = None, master=None, saveCallback=None):
+        if run:
+            outScript = run['script']
+        else:
             outScript = inScript
+        self.run = run
+        self.saveCallback = saveCallback
+        self.project = project
+        
         self.init(inScript, outScript)        
         #self.master = Tk()
         #self.style = ProtocolStyle('config_gui')
@@ -721,6 +730,9 @@ class ProtocolGUI(BasicGUI):
         self.createScrollableCanvas()
         self.fillHeader()
         self.parseHeader()
+        #Set the run_name
+        if self.run:
+            self.variablesDict['RunName'].setValue(run['run_name'])
         #self.fillWidgets()
                 # Add bottom row buttons
     def fillGUI(self):

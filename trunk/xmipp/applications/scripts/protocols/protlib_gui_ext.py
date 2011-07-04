@@ -7,7 +7,7 @@ class MultiListbox(PanedWindow):
         self.columns=[]
         for l, w in lists:
             self.columns.append(l)
-            frame = Frame(self); frame.pack(side=LEFT, expand=YES, fill=BOTH)
+            frame = Frame(self, bg="green"); frame.pack(side=LEFT, expand=YES, fill=BOTH)
             tl=Label(frame, text=l, borderwidth=2, relief=GROOVE)
             tl.pack(fill=X)
             tl.bind('<Button-1>',self.clickon)

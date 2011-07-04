@@ -14,15 +14,20 @@ sections = [
  [['Browse','Partial Projection Subtraction']])
 ]
 
-def getSection(protKey):
+def getSectionByKey(protKey):
     for s, list in sections:
         for subList in list:
             if protKey in subList:
                 return (s, subList[0])
     return None
 
+def getSectionByValue(protValue):
+    for k, v in launchDict.iteritems():
+        if v == protValue:
+            return getSectionByKey(k)
+
 class ProtocolNames:
-    preprocess_micrographs = 'preprocess_micrographs'    
+    preprocess_micrographs = 'preprocess_micrographs'
     particle_pick = 'particle_pick' 
     preprocess_particles = 'preprocess_particles' 
     ml2d = 'ml2d'
@@ -61,3 +66,11 @@ projectDefaults = {
                    'TableSteps': 'steps',
                    'TableStepsRestart': 'steps_restart'
                    } 
+
+runColumns = ['run_id',
+              'run_name',
+              'script',
+              'init',
+              'last_modfied',
+              'protocol_name',
+              'comment']

@@ -172,7 +172,7 @@ class XmippProjectDb(SqliteDb):
         self.sqlDict.update(run)
         _sqlCommand = """UPDATE %(TableRuns)s SET
                             last_modified = datetime('now'),
-                            comment = %(comment)s
+                            comment = '%(comment)s'
                         WHERE run_id = %(run_id)d"""  % self.sqlDict
                          
         self.execSqlCommand(_sqlCommand, "Error updating run: %(run_name)s" % run)  

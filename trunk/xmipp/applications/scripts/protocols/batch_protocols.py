@@ -79,6 +79,7 @@ class XmippProjectGUI():
         self.menubar.add_cascade(label="File", menu=self.fileMenu)
         self.ToolbarButtonsDict = {}
         self.lastSelected = None
+        self.lastRunSelected = None
         #self.root.bind('<Configure>', self.dragWindows)
         self.root.bind("<Unmap>", self.OnUnmap)
         #self.root.bind("<Map>", self.dragWindows)
@@ -87,6 +88,7 @@ class XmippProjectGUI():
         '''Add a label to left toolbar'''
         label = Label(parent, text=text, font=self.LabelFont, fg=SectionTextColor)
         label.grid(row = row, column=col)
+        return label
         
     def addLaunchButton(self, o, btnFrame, row, Font):
         label = Label(btnFrame, text=o, font=Font)
@@ -114,6 +116,13 @@ class XmippProjectGUI():
             self.ToolbarButtonsDict[text] = (btn, menu)
             btn.config(command=lambda:self.selectToolbarButton(text))
 
+    def launchProtocolGUI(self, run, srcScript, saveCallback):
+        top = Toplevel()
+        gui = ProtocolGUI()
+        gui.createGUI(srcScript, self.project, run, top, saveCallback)
+        gui.fillGUI()
+        gui.launchGUI()
+        
     def newProtocol(self, protKey):
         protocol = launchDict[protKey]
         protDir = getXmippPath('protocols')
@@ -135,22 +144,16 @@ class XmippProjectGUI():
                'script': dstAbsPath, 
                'comment': "my first run"
                }
-        
-        top = Toplevel()
-        gui = ProtocolGUI()
-        gui.createGUI(srcProtAbsPath, dstAbsPath, top)
-        gui.fillGUI()
-        #set the suggested runName
-        gui.variablesDict['RunName'].setValue(runName)
-        s, ss = getSection(protKey)
-        gui.saveCallback = lambda: self.protocolSaveCallback(run, ss)
-        gui.launchGUI()
+        s, ss = getSectionByKey(protKey)
+        self.launchProtocolGUI(run, srcProtAbsPath, 
+                               lambda: self.protocolSaveCallback(run, ss))
+
         #os.system('python %s %s &' % (os.path.join(protDir, 'xmipp_protocol_gui.py'), dstAbsPath))
         
     def protocolSaveCallback(self, run, protGroup):
-        self.project.projectDb.insertRun(run)
         
-        if self.protGroup == self.lastSelected:
+        
+        if protGroup == self.lastSelected:
             self.updateRunHistory(protGroup) 
 
     def updateRunHistory(self, protGroup): 
@@ -159,24 +162,21 @@ class XmippProjectGUI():
         for run in self.runs:
             self.lbHist.insert(END, ('%s_%s' % (run['protocol_name'], run['run_name']),
                                 run['last_modified']))
+            
     def updateRunDetails(self, index):
         run = self.runs[index]
-
     #---------------- Functions related with Popup menu ----------------------   
     def lastPair(self):
         if self.lastSelected:
             return  self.ToolbarButtonsDict[self.lastSelected]
         return None
         
-#    def dragWindows(self, event):
-#        if self.lastSelected:
-#            btn, menu = self.lastPair()
-#            self.postMenu(btn, menu) #Move the popup menu with the windows               
+    def dragWindows(self, event):
+        self.unpostMenu()
     
     def OnUnmap(self, event=''):
-        if event.widget == self.root and self.lastSelected:
-            btn, menu = self.lastPair()
-            menu.unpost()
+        if event.widget == self.root:
+            self.unpostMenu()
             
     def unpostMenu(self, event=None):
         if self.lastSelected:
@@ -195,27 +195,39 @@ class XmippProjectGUI():
         if self.lastSelected and self.lastSelected != text:
             lastBtn, lastMenu = self.lastPair()
             lastBtn.config(bg=ButtonBgColor)
-            lastMenu.unpost()
-            
-        self.postMenu(btn, menu)
+            lastMenu.unpost()            
+        if self.lastSelected:
+            self.postMenu(btn, menu)
         
         if self.lastSelected != text:
-            self.lastSelected = text            
             self.project.config.set('project', 'lastselected', text)
             self.project.writeConfig()
             self.updateRunHistory(text)
+            if len(self.runs) > 0:
+                self.lbHist.selection_set(0)
+        self.lastSelected = text  
             
     def runSelectCallback(self, index):
-        print self.runs[index]['run_name']
+        self.lastRunSelected = self.runs[index]
         
-    def runDoubleClickCallback(self, index):
-        print "double click on : ", self.runs[index]['run_name']
+    def runButtonClick(self, event=None):
+        run = dict(zip(runColumns, self.lastRunSelected))
+        print "protocol_name", run['protocol_name']
+        s, ss = getSectionByValue(run['protocol_name'])
+        if event == 'Edit':
+            self.launchProtocolGUI(run, run['script'], 
+                               lambda: self.protocolSaveCallback(run, ss))
+        elif event == 'Copy':
+            print "Copying "
+        elif event == "Delete":
+            print "Deleteing"
+        
 
     def createToolbar(self):
         #Configure toolbar frame
         self.toolbar = Frame(self.frame, bd=2, relief=RIDGE)
         self.toolbar.grid(row=0, column=0, sticky=N+W+S, 
-                          rowspan=4, padx=5, pady=5)
+                          rowspan=5, padx=5, pady=5)
         #Create toolbar buttons
         i = 1
         for k, v in sections:
@@ -225,39 +237,46 @@ class XmippProjectGUI():
                 self.createToolbarButton(i, btn[0], btn[1:])
                 i += 1
                 
-    def addRunButton(self, text, cmd, col, imageFilename=None):
+    def addRunButton(self, frame, text, cmd, col, imageFilename=None):
         btnImage = None
         if imageFilename:
             try:
                 imgPath = os.path.join(getXmippPath('resources'), imageFilename)
-                btnImage = PhotoImage(file = imgPath)
+                btnImage = PhotoImage(file=imgPath)
             except TclError:
                 pass
         
         if btnImage:
-            btn = Button(self.frame, image=helpImage, command=cmd, bd=0)
-            btn.image = helpImage
+            btn = Button(frame, image=btnImage, bd=0)
+            btn.image = btnImage
         else:
-            btn = Button(self.frame, text=text, command=cmd, font=self.ButtonFont,
-                     bg=self.style.ButtonBgColor, activebackground=self.style.ButtonActiveBgColor)
-        btn.grid(row=row, column=col)
+            btn = Button(frame, text=text, command=cmd, font=self.ButtonFont,
+                     bg=self.style.ButtonBgColor)
+        btn.config(command=lambda:self.runButtonClick(text), 
+                 activebackground=ButtonActiveBgColor)
+        btn.grid(row=0, column=col)
         return btn
     
     def createRunHistory(self):
-        self.addHeaderLabel(self.frame, 'History', 0, 1)
+        label = self.addHeaderLabel(self.frame, 'History', 0, 1)
+        #Button(self.frame, text="Edit").grid(row=0, column=2)
+        frame = Frame(self.frame)
+        frame.grid(row=0, column=2)
+        self.addRunButton(frame, "Edit", None, 0, 'edit.gif')
+        self.addRunButton(frame, "Copy", None, 1, 'copy.gif')
+        self.addRunButton(frame, "Delete", None, 2, 'delete.gif')
         self.frameHist = Frame(self.frame)
-        self.frameHist.grid(row=1, column=1, sticky=N+W+E+S)
+        self.frameHist.grid(row=2, column=1, sticky=N+W+E+S, columnspan=2)
         self.lbHist = MultiListbox(self.frameHist, (('Run', 40), ('Modified', 20)))
         self.lbHist.SelectCallback = self.runSelectCallback
-        self.lbHist.runDoubleClickCallback = self.runDoubleClickCallback
-        self.lbHist.AllowSort = False
-        self.lbHist.pack()
+        self.lbHist.AllowSort = False        
+        #self.lbHist.pack()
         
     def createRunDetails(self):
         #Create RUN details
-        self.addHeaderLabel(self.frame, 'Details', 2, 1)
+        self.addHeaderLabel(self.frame, 'Details', 3, 1)
         self.frameDetails = Frame(self.frame, bg=BgColor, bd=1, relief=RIDGE)
-        self.frameDetails.grid(row=3, column=1,sticky=N+W+E+S)
+        self.frameDetails.grid(row=4, column=1,sticky=N+W+E+S, columnspan=2)
 
     def createGUI(self, root=None):
         if not root:
@@ -272,8 +291,8 @@ class XmippProjectGUI():
         self.frame.columnconfigure(0, minsize=150, weight=1)
         self.frame.columnconfigure(1, minsize=300, weight=2)
         #self.frame.columnconfigure(2, minsize=300, weight=2)
-        self.frame.rowconfigure(1, minsize=50, weight=1)
-        self.frame.rowconfigure(3, minsize=50, weight=1)
+        self.frame.rowconfigure(2, minsize=50, weight=1)
+        self.frame.rowconfigure(4, minsize=50, weight=1)
         
         # Create some fonts for later use
         self.ButtonFont = tkFont.Font(family=FontName, size=FontSize, weight=tkFont.BOLD)
