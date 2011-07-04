@@ -120,6 +120,14 @@ class XmippProtocol(object):
         runName      -- the name of the run,  should be unique for one protocol
         project      -- project instance
         '''
+        self.DoParallel = True
+        try:
+            NumberOfMpiProcesses
+            if NumberOfMpiProcesses == None or NumberOfMpiProcesses ==0:
+                self.DoParallel = False
+        except NameError:
+            self.DoParallel = False
+            
         self.Name = protocolName
         self.runName = runName
         self.scriptName = scriptname
