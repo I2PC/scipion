@@ -10,7 +10,9 @@ sections = [
 ('3D', 
    [['Initial Model', 'Common Lines', 'Random Conical Tilt'], 
     ['Model Refinement', 'Projection Matching']]),
-('Other', [['Browse']])]
+('Other',
+ [['Browse','Partial Projection Subtraction']])
+]
 
 def getSection(protKey):
     for s, list in sections:
@@ -30,18 +32,20 @@ class ProtocolNames:
     commonlines = 'commonlines'
     rct = 'rct'
     projmatch = 'projmatch'
+    subtraction = 'subtraction'
 
 launchDict = {
-              'Preprocess Micrograph': ProtocolNames.preprocess_micrographs,
-              'Particles picking':     ProtocolNames.particle_pick, 
-              'Preprocess Particles':  ProtocolNames.preprocess_particles, 
-              'ML2D':                  ProtocolNames.ml2d,
-              'CL2D':                  ProtocolNames.cl2d,
-              'KerDenSOM':             ProtocolNames.kerdensom,
-              'Rotational Spectra':    ProtocolNames.rotspectra,
-              'Common Lines':          ProtocolNames.commonlines,
-              'Random Conical Tilt':   ProtocolNames.rct,
-              'Projection Matching':   ProtocolNames.projmatch
+              'Preprocess Micrograph':          ProtocolNames.preprocess_micrographs,
+              'Particles picking':              ProtocolNames.particle_pick, 
+              'Preprocess Particles':           ProtocolNames.preprocess_particles, 
+              'ML2D':                           ProtocolNames.ml2d,
+              'CL2D':                           ProtocolNames.cl2d,
+              'KerDenSOM':                      ProtocolNames.kerdensom,
+              'Rotational Spectra':             ProtocolNames.rotspectra,
+              'Common Lines':                   ProtocolNames.commonlines,
+              'Random Conical Tilt':            ProtocolNames.rct,
+              'Projection Matching':            ProtocolNames.projmatch,
+              'Partial Projection Subtraction': ProtocolNames.subtraction
               }
 projectDefaults = {
                    'Cfg': '.project.cfg',
