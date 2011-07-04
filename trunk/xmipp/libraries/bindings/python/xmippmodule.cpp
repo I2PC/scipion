@@ -2344,6 +2344,25 @@ xmipp_MDValueRange(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+/* createEmptyFile */
+static PyObject *
+xmipp_createEmptyFile(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *pyValue1, *pyValue2; //Only used to skip label and value
+
+    int Xdim,Ydim,Zdim;
+    size_t Ndim;
+    Zdim=1;
+    Ndim=1;
+    PyObject * input;
+    if (PyArg_ParseTuple(args, "Oii|ii", &input, &Xdim, &Ydim, &Zdim,
+                         &Ndim))
+    {
+    	createEmptyFile(PyString_AsString(input),Xdim,Ydim,Zdim,Ndim,true,WRITE_REPLACE);
+        Py_RETURN_NONE;
+    }
+    return NULL;
+}
 /* SingleImgSize */
 static PyObject *
 xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -2588,6 +2607,8 @@ xmipp_methods[] =
           METH_VARARGS, "Construct a relational query" },
         { "MDValueRange", (PyCFunction) xmipp_MDValueRange,
           METH_VARARGS, "Construct a range query" },
+        { "createEmptyFile", (PyCFunction) xmipp_createEmptyFile,
+          METH_VARARGS, "create empty stack (speed up things)" },
         { "SingleImgSize", (PyCFunction) xmipp_SingleImgSize,
           METH_VARARGS, "Get image dimensions" },
         { "ImgSize", (PyCFunction) xmipp_ImgSize, METH_VARARGS,
