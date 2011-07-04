@@ -9,6 +9,8 @@ FFTWDir = "external/fftw-3.2.2"
 FFTWLibs = ['fftw3', 'fftw3_threads']
 TIFFDir = "external/tiff-3.9.4"
 TIFFLibs = ['tiff']
+ARPACKppDir = "external/arpack++-2.3"
+ARPACKppLibs = ['arpack++']
 SQliteDir = "external/sqlite-3.6.23"
 SQLiteLibs = ['sqlite3']
 PYSQliteDir = "external/pysqlite-2.6.3"
@@ -152,6 +154,8 @@ def AddXmippProgram(name, libs=[], folder='programs'):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries', '#']
     finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs
+    if int(env["arpack"]):
+        finalLibs+=['arpack++','arpack','lapack','blas']
     return AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
 # Add a program integrated in the Xmipp structure
@@ -189,6 +193,8 @@ def AddXmippMPIProgram(name, libs=[]):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries', '#']
     finalLibs = libs + ['XmippData', 'XmippExternal', 'XmippParallel'] + FFTWLibs + SQLiteLibs + TIFFLibs
+    if int(env["arpack"]):
+        finalLibs+=['arpack++','arpack','lapack','blas']
     for i in range(len(libs)):
        if libs[i] == 'XmippRecons':
           finalLibPath += ['libraries/reconstruction']
@@ -445,6 +451,11 @@ fftw = AddExternalLibrary('fftw', FFTWLibsPaths, FFTWDir, '.3')
 TIFFLibsPaths = ['libtiff/.libs/libtiff']
 tiff = AddExternalLibrary('tiff', TIFFLibsPaths, TIFFDir, '.3')
 
+# ARPACK
+if int(env["arpack"]):
+    ARPACKppLibsPaths = ['src/.libs/libarpack++']
+    arpackpp = AddExternalLibrary('arpack++', ARPACKppLibsPaths, ARPACKppDir, '.2')
+
 # Gtest
 if int(env['gtest']):
     DataSources = Glob('external/gtest-1.6.0/fused-src/gtest', 'gtest-all.cc', [])
@@ -485,7 +496,6 @@ ReconsSources = [
     'angular_continuous_assign.cpp',
     'angular_discrete_assign.cpp',
     'angular_distance.cpp',
-    'angular_gcar.cpp',
     'angular_neighbourhood.cpp',
     'angular_projection_matching.cpp',
     'angular_class_average.cpp',
@@ -550,9 +560,13 @@ ReconsSources = [
     'volume_to_pseudoatoms.cpp',
     'xray_import.cpp'
 ]
+ReconsDependLibraries =['XmippExternal', 'XmippData', 'pthread']
+if int(env['arpack']):
+    ReconsSources.append("angular_gcar.cpp")
+    ReconsDependLibraries+=['arpack','lapack','blas']
 
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
-           ['#libraries', '#external', '#'], ['lib'], ['XmippExternal', 'XmippData', 'pthread'])
+           ['#libraries', '#external', '#'], ['lib'], ReconsDependLibraries)
 
 # Classification
 ClassificationSources = Glob('libraries/classification', '*.cpp', [])
@@ -671,7 +685,6 @@ AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
 AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
 AddXmippProgram('angular_distance', ['XmippRecons'])
 AddXmippProgram('angular_distribution_show', ['XmippInterface'])
-AddXmippProgram('angular_gcar', ['XmippRecons'])
 AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
 AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 AddXmippProgram('angular_project_library', ['XmippRecons'])
@@ -763,6 +776,10 @@ AddXmippProgram('volume_to_pseudoatoms', ['XmippRecons'])
 AddXmippProgram('xray_import', ['XmippRecons'])
 AddXmippProgram('xray_psf_create')
 AddXmippProgram('xray_project', ['XmippRecons'])
+
+if int(env['arpack']):
+    AddXmippProgram('angular_gcar', ['XmippRecons'])
+
 
 #---- Test
 if int(env['gtest']):
