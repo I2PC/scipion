@@ -27,7 +27,8 @@
 #ifndef TRANSFORMATIONS_H
 #define TRANSFORMATIONS_H
 
-#include "external/bilib/headers/kerneldiff1.h"
+#include <external/bilib/headers/kerneldiff1.h>
+#include "matrix2d.h"
 #include "multidim_array.h"
 #include "multidim_array_generic.h"
 #include "geometry.h"
