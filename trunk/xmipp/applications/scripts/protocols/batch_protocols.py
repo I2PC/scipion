@@ -33,10 +33,8 @@ import tkFont
 from protlib_filesystem import getXmippPath
 from protlib_base import *
 from protlib_utils import getScriptPrefix
-from config import *
 from protlib_gui import *
 from protlib_gui_ext import *
-  
 
 #Font
 FontName = "Helvetica"

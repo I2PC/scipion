@@ -1,7 +1,7 @@
 from pysqlite2 import dbapi2 as sqlite
 import os,sys
 import pickle
-from config import *
+from config_protocols import *
 from protlib_utils import *
 from protlib_filesystem import *
 

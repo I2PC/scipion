@@ -29,7 +29,7 @@
 import os
 import shutil
 import ConfigParser
-from config import *
+from config_protocols import *
 from protlib_sql import *
 from protlib_utils import *
 import sys

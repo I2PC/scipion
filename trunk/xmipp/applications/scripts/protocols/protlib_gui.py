@@ -122,7 +122,7 @@ class BasicGUI():
         if not master:
             master = Tk()
         self.master = master
-        self.style = ProtocolStyle('config_gui')
+        self.style = ProtocolStyle('config_protocols')
         self.style.createFonts()
         
     def resize(self):
