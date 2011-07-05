@@ -22,7 +22,7 @@ public:
 protected:
     ScaleType scale_type;
 
-    int             zdim, ydim, xdim, splineDegree, dim, pyramid_level, fourier_threads;
+    int             zdim, ydim, xdim, splineDegree, dim, pyramid_level, fourier_threads,only_scale;
     size_t          ndim;
     bool            applyTransform, inverse, wrap, isVol, flip;
     Matrix2D<double> R, T, S, A, B;

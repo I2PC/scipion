@@ -25,7 +25,9 @@
 #include "transform_geometry.h"
 
 ProgTransformGeometry::ProgTransformGeometry()
-{}
+{
+	only_scale=0;//do apply rotations is available
+}
 ProgTransformGeometry::~ProgTransformGeometry()
 {}
 
@@ -66,7 +68,9 @@ void ProgTransformGeometry::defineParams()
     addParamsLine("         where <scale_type>");
     addParamsLine("             factor <n=1>           : Scaling factor, 0.5 halves and 2 doubles");
     addParamsLine("             dim <x> <y=x> <z=x>    : New x,y and z dimensions");
-    addParamsLine("             fourier <x> <y=x> <thr=1>   : Use padding/windowing in Fourier Space");
+    addParamsLine("             fourier <x> <y=x> <thr=1>  <only_scale=0> : Use padding/windowing in Fourier Space");
+    addParamsLine("                                    : x,y are dimensions, thr number of threads and only_scale=1");
+    addParamsLine("                                    : does not apply rotations");
     addParamsLine("             pyramid <levels=1>    : Use positive value to expand and negative to reduce");
     addParamsLine(" alias -s;");
     addParamsLine("[--shift <x> <y=0> <z=0>]    : Shift by x, y and z");
@@ -212,6 +216,7 @@ void ProgTransformGeometry::preProcess()
             xdim = getIntParam("--scale", 1);
             ydim = STR_EQUAL(getParam("--scale", 2), "x") ? xdim : getIntParam("--scale", 2);
             fourier_threads = getIntParam("--scale", 3);
+            only_scale = getIntParam("--scale", 4);
             //Do not think this is true
             //            if (oxdim < xdim || oydim < ydim)
             //                REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
@@ -297,7 +302,9 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
            scale_type!=SCALE_FOURIER )
             imgOut().resize(1, zdim, ydim, xdim, false);
         imgOut().setXmippOrigin();
-        applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap, 0.);
+        if (only_scale)
+        	T.initIdentity();
+		applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap, 0.);
 
         //imgOut.write(fnImgOut + ".before");
 
