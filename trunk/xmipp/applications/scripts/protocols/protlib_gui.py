@@ -146,6 +146,11 @@ class BasicGUI():
         self.resize()      
         self.master.mainloop() 
 
+    def currentRow(self, parent=None):
+        if not parent:
+            parent=self.frame
+        return parent.grid_size()[1]
+    
     def nextRow(self, parent=None):
         if not parent:
             parent=self.frame
@@ -161,17 +166,17 @@ class BasicGUI():
         if not row:
             row = self.nextRow(parent)
         label=Label(parent, text=text, bg=bgColor, fg=fgColor)
-        label.grid(row=row,column=column,sticky=sticky)
+        label.grid(row=row,column=column,sticky=sticky,columnspan=columnspan)
         return label
     
-    def addCheckButton(self,text,row,column,default,command,sticky,parent=None):
+    def addCheckButton(self,text,row,column,controlVar,default,command,sticky,parent=None):
         if not parent:
             parent=self.frame
-        controlVar = IntVar()
         controlVar.set(default)
         check=Checkbutton(parent, text=text, variable=controlVar,
                       command=command, 
-                      selectcolor=self.style.BooleanSelectColor)
+                      selectcolor=self.style.BooleanSelectColor,
+                      bg=self.style.BgColor)
         check.grid(row=row, column=column, sticky=sticky)
         return check
 
