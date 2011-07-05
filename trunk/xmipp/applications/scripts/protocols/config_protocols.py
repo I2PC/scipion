@@ -10,20 +10,24 @@ class ProtocolData:
 class ProtocolDictionary:
     def addProtocol(self,key,title,protocolDir):
         p = ProtocolData(key,title,protocolDir)
-        protocolDict[key]=p
+        self.protocolDict[key]=p
         return p
-    protocolDict={}
-    preprocess_micrographs = addProtocol('preprocess_micrographs', 'Preprocess Micrograph', 'Preprocess')
-    particle_pick = addProtocol('particle_pick',  'Particles picking', 'ParticlePicking')
-    preprocess_particles = addProtocol('preprocess_particles',  'Preprocess Particles', 'Images')
-    ml2d = addProtocol('ml2d', 'ML2D', '2D/ML2D')
-    cl2d = addProtocol('cl2d', 'CL2D', '2D/CL2D')
-    kerdensom = addProtocol('kerdensom', 'KerDenSOM',  '2D/KerDenSOM')
-    rotspectra = addProtocol('rotspectra', 'Rotational Spectra', '2D/RotSpectra')
-    commonlines = addProtocol('commonlines', 'Common Lines', '3D/CommonLines')
-    rct = addProtocol('rct', 'Random Conical Tilt', '3D/RCT')
-    projmatch = addProtocol('projmatch', 'Projection Matching', '3D/ProjMatch') 
-    projsubs = addProtocol('subtraction', 'Partial Projection Subtraction', '3D/ProjSubs')
+    
+    def __init__(self):
+        self.protocolDict={}
+        self.preprocess_micrographs = self.addProtocol('preprocess_micrographs', 'Preprocess Micrograph', 'Preprocess')
+        self.particle_pick = self.addProtocol('particle_pick',  'Particles picking', 'ParticlePicking')
+        self.preprocess_particles = self.addProtocol('preprocess_particles',  'Preprocess Particles', 'Images')
+        self.ml2d = self.addProtocol('ml2d', 'ML2D', '2D/ML2D')
+        self.cl2d = self.addProtocol('cl2d', 'CL2D', '2D/CL2D')
+        self.kerdensom = self.addProtocol('kerdensom', 'KerDenSOM',  '2D/KerDenSOM')
+        self.rotspectra = self.addProtocol('rotspectra', 'Rotational Spectra', '2D/RotSpectra')
+        self.commonlines = self.addProtocol('commonlines', 'Common Lines', '3D/CommonLines')
+        self.rct = self.addProtocol('rct', 'Random Conical Tilt', '3D/RCT')
+        self.projmatch = self.addProtocol('projmatch', 'Projection Matching', '3D/ProjMatch') 
+        self.projsubs = self.addProtocol('subtraction', 'Partial Projection Subtraction', '3D/ProjSubs')
+
+protDict=ProtocolDictionary()
 
 #--------------------------------------------------------------------------------
 # Project default settings
@@ -49,18 +53,18 @@ projectDefaults = {
 
 sections = [
 ('Preprocessing', 
-   [['Preprocess Micrograph', ProtocolDictionary.preprocess_micrographs], 
-    ['Particles picking', ProtocolDictionary.particle_pick], 
-    ['Preprocess Particles', ProtocolDictionary.preprocess_particles]]),
+   [['Preprocess Micrograph', protDict.preprocess_micrographs], 
+    ['Particles picking', protDict.particle_pick], 
+    ['Preprocess Particles', protDict.preprocess_particles]]),
 ('2D', 
-   [['Align+Classify', ProtocolDictionary.ml2d, ProtocolDictionary.cl2d], 
-    ['Align', ProtocolDictionary.ml2d, ProtocolDictionary.cl2d], 
-    ['Classify', ProtocolDictionary.kerdensom, ProtocolDictionary.rotspectra]]),
+   [['Align+Classify', protDict.ml2d, protDict.cl2d], 
+    ['Align', protDict.ml2d, protDict.cl2d], 
+    ['Classify', protDict.kerdensom, protDict.rotspectra]]),
 ('3D', 
-   [['Initial Model', ProtocolDictionary.commonlines, ProtocolDictionary.rct], 
-    ['Model Refinement', ProtocolDictionary.projmatch]]),
+   [['Initial Model', protDict.commonlines, protDict.rct], 
+    ['Model Refinement', protDict.projmatch]]),
 ('Other',
- [['Browse',ProtocolDictionary.projsubs]])
+ [['Browse',protDict.projsubs]])
 ]
 
 def getSectionByKey(protKey):
@@ -71,7 +75,7 @@ def getSectionByKey(protKey):
     return None
 
 def getSectionByValue(protValue):
-    for k, v in ProtocolDictionary.protocolDict.iteritems():
+    for k, v in protDict.protocolDict.iteritems():
         if v == protValue:
             return getSectionByKey(k)
 
