@@ -169,7 +169,7 @@ class BasicGUI():
             parent=self.frame
         controlVar = IntVar()
         controlVar.set(default)
-        check=Checkbutton(parent, text, variable=controlVar,
+        check=Checkbutton(parent, text=text, variable=controlVar,
                       command=command, 
                       selectcolor=self.style.BooleanSelectColor)
         check.grid(row=row, column=column, sticky=sticky)
