@@ -103,7 +103,7 @@ ExpertLabelBgColor = "light salmon"
 
 #Color
 ListSelectColor = "DeepSkyBlue4"
-BooleanSelectColor = "DeepSkyBlue4"
+BooleanSelectColor = "white"
 
 #Dimensions limits
 MaxHeight = 800
