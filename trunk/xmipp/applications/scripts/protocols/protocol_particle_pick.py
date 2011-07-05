@@ -16,6 +16,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------
 # Comment
+from Tkinter import IntVar
 """ Specify the particularities of this run """
 Comment=''
 
@@ -31,7 +32,7 @@ PreprocessingDir = "Preprocessing/micrographs_001"
 
 # Perform automatic particle picking
 """ Perform automatic particle picking """
-AutomaticPicking = False
+AutomaticPicking = True
 
 #------------------------------------------------------------------------------------------
 # {section}{condition}(AutomaticPicking=True) Parallelization issues for automatic particle picking
@@ -170,9 +171,6 @@ class ProtParticlePickingGUI(BasicGUI):
         # Frame header
         self.addLabel("Project directory: "+self.ProjectDir,0,0,titleSpan,fgColor="medium blue",sticky=W)
         self.addLabel("Preprocessing directory: "+self.PreprocessingDir,1,0,titleSpan,fgColor="medium blue",sticky=W)
-        if (AutomaticPicking):
-            Label(self.frame, text="Manual").grid(row=1,column=3)
-            Label(self.frame, text="Auto").grid(row=1,column=4)
  
         # Add all micrographs
         containsEnable=self.mD.containsLabel(xmipp.MDL_ENABLED)
@@ -188,7 +186,12 @@ class ProtParticlePickingGUI(BasicGUI):
         # Add blue line surrounded by two empty rows 
         self.addLabel("")
         self.addLine("medium blue",0,6)
-        self.addLabel("")
+        if (AutomaticPicking):
+            row=self.currentRow()
+            self.addLabel("Manual",row=row,column=3)
+            self.addLabel("Auto",row=row,column=4)
+        else:
+            self.addLabel("")
 
         # Add some buttons
         self.buttonrow=(self.frame.grid_size()[1]+1)
@@ -198,7 +201,7 @@ class ProtParticlePickingGUI(BasicGUI):
             nextColumn=2
         else:
             nextColumn=1
-        self.addButton("Update Total Count",self.buttonrow,nextColumn,self.GuiUpdateCount,binding='<Control_L><U>')
+        self.addButton("Update Count",self.buttonrow,nextColumn,self.GuiUpdateCount,binding='<Control_L><U>')
         nextColumn+=1
         if (AutomaticPicking):
             self.addButton("AutoSelect",self.buttonrow+1,1,self.AutomaticallyDetect)
@@ -219,7 +222,8 @@ class ProtParticlePickingGUI(BasicGUI):
         
         # If automatic particle picking, add checkbox
         if AutomaticPicking:
-            self.selectedForAutomaticPickingAuto.append(self.addCheckButton("Auto", row, 1, 0, self.AutoSelectionChanged, NW))
+            self.selectedForAutomaticPickingAuto.append(IntVar())
+            self.addCheckButton("Auto", row, 1, self.selectedForAutomaticPickingAuto[-1], 0, self.AutoSelectionChanged, "")
             self.selectedForAutomaticPickingName.append(micrograph)
             nextColumn=2
         else:
@@ -237,7 +241,7 @@ class ProtParticlePickingGUI(BasicGUI):
         self.AutoSelectionChanged();
 
     def AutoSelectionChanged(self):
-        for i in range(0,len(self.selectedForAutomaticPickingTrain)):
+        for i in range(0,len(self.selectedForAutomaticPickingAuto)):
             if (self.selectedForAutomaticPickingAuto[i].get()):
                 self.selectedForAutomaticPickingMark[i].config(state=DISABLED)
             else:
@@ -310,9 +314,9 @@ class ProtParticlePickingGUI(BasicGUI):
         total_manual=0
         total_auto=0
         if AutomaticPicking:
-            familyColumn=2
-        else:
             familyColumn=3
+        else:
+            familyColumn=2
 
         # Count all micrographs
         for micrograph,row in self.row.items():
