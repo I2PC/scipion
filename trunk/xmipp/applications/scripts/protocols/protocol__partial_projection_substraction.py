@@ -205,6 +205,7 @@ from xmipp import *
 class ProtPartialProjectionSubtraction(XmippProtocol):
 
     def __init__(self, scriptname,project=None):
+        from config import *
         super(ProtPartialProjectionSubtraction,self).__init__(ProtocolNames.subtraction, scriptname, RunName, project,NumberOfMpiProcesses)
         #super(ProtPartialProjectionSubtraction,self).__init__(scriptname, workingdir, ProjectDir, logdir, restartStep, isIter)
     #def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
@@ -278,6 +279,8 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         import glob
         self.defGroups +=glob.glob(tmpFileName)
         
+        print "self.defGroups: ", self.defGroups 
+        
         self.defocusGroupNo = len(self.defGroups)
         
         self.DocFileExp=['']
@@ -333,7 +336,8 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         print "actionsToBePerformedInsideLoop"
         print "self.defocusGroupNo: ", self.defocusGroupNo
         _dataBase = self.Db
-        for iterN in range(1, self.defocusGroupNo):
+        for iterN in range(1, self.defocusGroupNo+1):
+            print "inside for"
             #Create auxiliary metadata with image names , angles and CTF
             if(self.doScaleImages):
                 inputSelfile = self.scaledImages
@@ -429,7 +433,8 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         #Create auxiliary metadata with image names , angles and CTF
         
         if(doScaleImages):
-            _VerifyFiles = []
+            _VerifyFiles = [self.scaledImages+".stk"]
+            _VerifyFiles.append(self.scaledImages+".xmd")
             id = _dataBase.insertAction('scaleImages', _VerifyFiles, None, None
                                        , dimX = self.dimX
                                        , dimY = self.dimY

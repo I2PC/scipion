@@ -29,9 +29,8 @@ def scaleImages(_log
 
     parameters  = ' -i ' +  filename_currentAngles 
     parameters += ' -o ' + outFileName 
-    parameters += ' --scale fourier ' + str(dimX)
-    if (dimY>0):
-        parameters += ' ' + str(dimY)
+    parameters += ' --scale fourier ' + str(dimX) + ' ' + str(dimY) 
+    parameters += ' ' +  str(NumberOfThreads) + ' 1 ' 
 
 #    launch_job.launch_job('xmipp_transform_geometry',
 #                             parameters,
@@ -40,12 +39,23 @@ def scaleImages(_log
     runJob(_log,'xmipp_transform_geometry',
                      parameters,
                      DoParallel,
-                     NumberOfMpiProcesses*NumberOfThreads,
-                     1,
+                     NumberOfMpiProcesses,
+                     1, # Threads go in --scale option
                      SystemFlavour)
+    #create selfile, the one provided by defualt is buggy when mpi is used
+    
+    
+    scaledImages = scaledImages+".xmd"
+    parameters  = ' -p ' +  outFileName + ' -o' + scaledImages + ' -s'
+
+    runJob(_log,'xmipp_metadata_selfile_create',
+                     parameters,
+                     False,
+                     1,
+                     1,
+                     None)
     
     md = MetaData(filename_currentAngles)
-    scaledImages = scaledImages+".xmd"
     mdScaled = MetaData(scaledImages)
     
     #md.addLabel("original_image")
@@ -66,6 +76,7 @@ def scaleImages(_log
     # Copy images to original images column
     for id in md:
         image = mdScaled.getValue(MDL_IMAGE, id)
+        #print image, id
         mdScaled.setValue(MDL_IMAGE_ORIGINAL, image, id)
         
     mdScaled.write(scaledImages)
