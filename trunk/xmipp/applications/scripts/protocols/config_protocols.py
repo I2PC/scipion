@@ -53,31 +53,28 @@ projectDefaults = {
 
 sections = [
 ('Preprocessing', 
-   [['Preprocess Micrograph', protDict.preprocess_micrographs], 
-    ['Particles picking', protDict.particle_pick], 
-    ['Preprocess Particles', protDict.preprocess_particles]]),
+   [['Preprocess Micrograph', protDict.preprocess_micrographs.key], 
+    ['Particles picking', protDict.particle_pick.key], 
+    ['Preprocess Particles', protDict.preprocess_particles.key]]),
 ('2D', 
-   [['Align+Classify', protDict.ml2d, protDict.cl2d], 
-    ['Align', protDict.ml2d, protDict.cl2d], 
-    ['Classify', protDict.kerdensom, protDict.rotspectra]]),
+   [['Align+Classify', protDict.ml2d.key, protDict.cl2d.key], 
+    ['Align', protDict.ml2d.key, protDict.cl2d.key], 
+    ['Classify', protDict.kerdensom.key, protDict.rotspectra.key]]),
 ('3D', 
-   [['Initial Model', protDict.commonlines, protDict.rct], 
-    ['Model Refinement', protDict.projmatch]]),
-('Other',
- [['Browse',protDict.projsubs]])
+   [['Initial Model', protDict.commonlines.key, protDict.rct.key], 
+    ['Model Refinement', protDict.projmatch.key]])
+#,
+#('Other',
+# [['Browse',protDict.projsubs]])
 ]
 
-def getSectionByKey(protKey):
+def getSectionByKey(prot): 
     for s, list in sections:
         for subList in list:
-            if protKey in subList:
+            if prot.key in subList:
                 return (s, subList[0])
     return None
 
-def getSectionByValue(protValue):
-    for k, v in protDict.protocolDict.iteritems():
-        if v == protValue:
-            return getSectionByKey(k)
 
 #--------------------------------------------------------------------------------
 # GUI Properties

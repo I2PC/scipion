@@ -636,9 +636,11 @@ class ProtocolGUI(BasicGUI):
         os.chmod(self.outScript, 0755)
         
         #update database
-        
         if self.outScript != self.inScript:
+            print "Inserting in database"
             self.project.projectDb.insertRun(self.run)
+            self.inScript = self.outScript
+            self.inRunName = self.variablesDict['RunName'].getValue()
         else:
             self.project.projectDb.updateRun(self.run)
             
@@ -713,6 +715,12 @@ class ProtocolGUI(BasicGUI):
         self.master.bind("<Button-4>", self.scroll)
         self.master.bind("<Button-5>", self.scroll)
         
+    def getRunName(self):
+        return self.variablesDict['RunName'].getValue()
+    
+    def setRunName(self, value):
+        self.variablesDict['RunName'].setValue(value)
+        
     def createGUI(self, inScript, project, run = None, master=None, saveCallback=None):
         if run:
             outScript = run['script']
@@ -738,6 +746,7 @@ class ProtocolGUI(BasicGUI):
         #Set the run_name
         if self.run:
             self.variablesDict['RunName'].setValue(run['run_name'])
+            self.inRunName = run['run_name']
         #self.fillWidgets()
                 # Add bottom row buttons
     def fillGUI(self):

@@ -88,13 +88,6 @@ class XmippProjectGUI():
         label.grid(row = row, column=col)
         return label
         
-    def addLaunchButton(self, o, btnFrame, row, Font):
-        label = Label(btnFrame, text=o, font=Font)
-        label.grid(row=2*row, column=0, sticky=W, padx=5)
-        btnLaunch = Button(btnFrame, text='New', font=Font, relief=RAISED,
-                         bg=ButtonBgColor, activebackground=ButtonBgColor, command=lambda:self.newProtocol(o))
-        btnLaunch.grid(row=2*row+1, column=0, padx=5, pady=5, sticky=E)
-        
     def createToolbarButton(self, row, text, opts=[]):
         '''Add a button to left toolbar'''
         Font = tkFont.Font(family=FontName, size=FontSize-1, weight=tkFont.BOLD)
@@ -106,7 +99,9 @@ class XmippProjectGUI():
             menu = Menu(self.frame, bg=ButtonBgColor, activebackground=ButtonBgColor, font=self.ButtonFont, tearoff=0)
             i = 0
             for o in opts:
-                menu.add_command(label = o, command=lambda:self.newProtocol(o))
+                p = protDict.protocolDict[o]
+                title = p.title
+                menu.add_command(label=title, command=lambda:self.newProtocol(p))
                 menu.bind("<Leave>", self.unpostMenu)
                 #command=lambda:self.selectToolbarButton(btn, menu, i))
                 i += 1
@@ -121,20 +116,11 @@ class XmippProjectGUI():
         gui.fillGUI()
         gui.launchGUI()
         
-    def newProtocol(self, protKey):
-        protocol = launchDict[protKey]
+    def loadProtocol(self, prot, srcProtAbsPath):
+        protocol = prot.key
         protDir = getXmippPath('protocols')
-        srcProtName = 'xmipp_protocol_%s.py' % protocol
-        srcProtDir = getXmippPath('protocols')
-        srcProtAbsPath = os.path.join(protDir, srcProtName)
-
         #suggest a new run_name        
-        lastRunName = self.project.projectDb.getLastRunName(protocol)        
-        prefix, suffix  = getScriptPrefix(lastRunName)
-        n = 1
-        if suffix:
-            n = int(suffix) + 1
-        runName = "%s_%03d" % (prefix, n)
+        runName = self.project.projectDb.suggestRunName(protocol)
         dstAbsPath = os.path.join(self.project.runsDir, 'xmipp_protocol_%s_%s.py' % (protocol, runName))
         run = {
                'protocol_name':protocol, 
@@ -142,15 +128,19 @@ class XmippProjectGUI():
                'script': dstAbsPath, 
                'comment': "my first run"
                }
-        s, ss = getSectionByKey(protKey)
+        s, ss = getSectionByKey(prot)
         self.launchProtocolGUI(run, srcProtAbsPath, 
                                lambda: self.protocolSaveCallback(run, ss))
-
-        #os.system('python %s %s &' % (os.path.join(protDir, 'xmipp_protocol_gui.py'), dstAbsPath))
+                
+    def newProtocol(self, prot):
+        protocol = prot.key
+        protDir = getXmippPath('protocols')
+        srcProtName = 'xmipp_protocol_%s.py' % protocol
+        srcProtDir = getXmippPath('protocols')
+        srcProtAbsPath = os.path.join(protDir, srcProtName)
+        self.loadProtocol(prot, srcProtAbsPath)
         
     def protocolSaveCallback(self, run, protGroup):
-        
-        
         if protGroup == self.lastSelected:
             self.updateRunHistory(protGroup) 
 
@@ -211,12 +201,12 @@ class XmippProjectGUI():
     def runButtonClick(self, event=None):
         run = dict(zip(runColumns, self.lastRunSelected))
         print "protocol_name", run['protocol_name']
-        s, ss = getSectionByValue(run['protocol_name'])
+        s, ss = getSectionByKey(protDict.protocolDict[run['protocol_name']])
         if event == 'Edit':
             self.launchProtocolGUI(run, run['script'], 
                                lambda: self.protocolSaveCallback(run, ss))
         elif event == 'Copy':
-            print "Copying "
+            self.loadProtocol(protDict.protocolDict[run['protocol_name']], run['script'])
         elif event == "Delete":
             print "Deleteing"
         
@@ -262,7 +252,8 @@ class XmippProjectGUI():
         frame.grid(row=0, column=2)
         self.addRunButton(frame, "Edit", None, 0, 'edit.gif')
         self.addRunButton(frame, "Copy", None, 1, 'copy.gif')
-        self.addRunButton(frame, "Delete", None, 2, 'delete.gif')
+        self.addRunButton(frame, "Visualize", None, 2, 'visualize.gif')
+        self.addRunButton(frame, "Delete", None, 3, 'delete.gif')
         self.frameHist = Frame(self.frame)
         self.frameHist.grid(row=2, column=1, sticky=N+W+E+S, columnspan=2)
         self.lbHist = MultiListbox(self.frameHist, (('Run', 40), ('Modified', 20)))

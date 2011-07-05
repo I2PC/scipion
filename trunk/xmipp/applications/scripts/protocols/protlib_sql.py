@@ -168,13 +168,19 @@ class XmippProjectDb(SqliteDb):
         
 
         
-    def getLastRunName(self, protName):
+    def suggestRunName(self, protName):
         self.sqlDict['protocol_name'] = protName
         _sqlCommand = """SELECT COALESCE(MAX(run_name), '%(RunsPrefix)s') AS run_name 
                          FROM %(TableRuns)s NATURAL JOIN %(TableProtocols)s
                          WHERE protocol_name = '%(protocol_name)s'""" % self.sqlDict
-        self.cur.execute(_sqlCommand) 
-        return self.cur.fetchone()[0]     
+        self.cur.execute(_sqlCommand)         
+        lastRunName = self.cur.fetchone()[0]    
+        prefix, suffix  = getScriptPrefix(lastRunName)
+        n = 1
+        if suffix:
+            n = int(suffix) + 1
+        runName = "%s_%03d" % (prefix, n)
+        return runName     
         
     def updateRun(self, run):
         self.sqlDict.update(run)
@@ -194,7 +200,8 @@ class XmippProjectDb(SqliteDb):
         self.sqlDict['group'] = groupName
         _sqlCommand = """SELECT * 
                          FROM %(TableRuns)s NATURAL JOIN %(TableProtocolsGroups)s
-                         WHERE group_name = '%(group)s'""" % self.sqlDict
+                         WHERE group_name = '%(group)s'
+                         ORDER BY last_modified DESC """ % self.sqlDict
         self.cur.execute(_sqlCommand) 
         return self.cur.fetchall()
     

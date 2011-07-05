@@ -84,7 +84,7 @@ class XmippProject():
                 prots = group[1:]
                 self.projectDb.insertGroup(groupName)
                 for p in prots:
-                    self.projectDb.insertProtocol(groupName, launchDict[p])
+                    self.projectDb.insertProtocol(groupName, p.key)
         # commit changes
         self.projectDb.connection.commit()
         
@@ -277,23 +277,30 @@ def protocolMain(ProtocolClass):
     script  = sys.argv[0]
     options = command_line_options()
     
-    #1) just call the gui
+    mod = loadModule(script)
+    #init project
+    project = XmippProject()
+    #load project: read config file and open conection database
+    project.load()
+    #register run with runName, script, comment=''):
+    p = ProtocolClass(script, project)
+    run_id = project.projectDb.getRunId(p.Name, mod.RunName)
     
+    #1) just call the gui    
     if options.gui:
+        run = {
+           'run_id': run_id,
+           'protocol_name':p.Name, 
+           'run_name': mod.RunName, 
+           'script': script, 
+           'comment': "my first run"
+           }
         from protlib_gui import ProtocolGUI 
         gui = ProtocolGUI()
-        gui.createGUI(script)
+        gui.createGUI(script, project, run)
         gui.fillGUI()
         gui.launchGUI()
     else:#2) Run from command line
-        mod = loadModule(script)
-        #init project
-        project = XmippProject()
-        #load project: read config file and open conection database
-        project.load()
-        #register run with runName, script, comment=''):
-        p = ProtocolClass(script, project)
-        run_id = project.projectDb.getRunId(p.Name, mod.RunName)
         
         if options.no_check: 
             if not run_id:
