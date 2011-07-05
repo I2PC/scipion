@@ -251,7 +251,19 @@ enum MDLabelType
     LABEL_NOTYPE = -1, LABEL_INT, LABEL_BOOL, LABEL_DOUBLE, LABEL_FLOAT, LABEL_STRING, LABEL_VECTOR, LABEL_LONG, LABEL_VECTOR_LONG
 };
 
-
+/** Possible types of the values of labels */
+enum MDLabelTag
+{
+	TAGLABEL_NOTAG = 0,
+	TAGLABEL_TEXTFILE=0x1,
+	TAGLABEL_METADATA=0x3,
+	TAGLABEL_CTFPARAM=0x5,
+	TAGLABEL_IMAGE=0x8,
+	TAGLABEL_VOLUME=0x10,
+	TAGLABEL_STACK=0x20,
+	TAGLABEL_MICROGRAPH=0x48,
+	TAGLABEL_PSD=0x88
+};
 
 /**Just an utility function */
 bool vectorContainsLabel(const std::vector<MDLabel>& labelsVector, const MDLabel label);
@@ -262,16 +274,19 @@ class MDLabelData
 public:
     MDLabelType type;
     String str;
+    int tags;
     //Default constructor
     MDLabelData()
     {
         type = LABEL_NOTYPE;
+        tags=TAGLABEL_NOTAG;
     }
 
-    MDLabelData(MDLabelType t, const String &s)
+    MDLabelData(MDLabelType t, const String &s, int tags)
     {
         type = t;
         str = s;
+        this->tags=tags;
     }
 }
 ;//close class MDLabelData
@@ -480,6 +495,15 @@ public:
     static bool isValidLabel(const String &labelName);
     static MDLabelType labelType(const MDLabel label);
     static MDLabelType labelType(const String &labelName);
+    static bool hasTag(const MDLabel label, const int tags);
+    static bool isTextFile(const MDLabel label);
+    static bool isMetadata(const MDLabel label);
+    static bool isCtfParam(const MDLabel label);
+    static bool isImage(const MDLabel label);
+    static bool isVolume(const MDLabel label);
+    static bool isStack(const MDLabel label);
+    static bool isMicrograph(const MDLabel label);
+    static bool isPSD(const MDLabel label);
     static std::map<String, MDLabel>& getLabelDict();
     static MDRow emptyHeader;
     /** @} */
@@ -491,7 +515,7 @@ private:
     static MDLabelStaticInit initialization; //Just for initialization
 
 
-    static void addLabel(MDLabel label, MDLabelType type, const String &name, const String &name2 = "", const String &name3 = "");
+    static void addLabel(MDLabel label, MDLabelType type, const String &name, int tags=TAGLABEL_NOTAG, const String &name2 = "", const String &name3 = "");
 
     friend class MDLabelStaticInit;
 }
@@ -509,18 +533,18 @@ private:
         //The label MDL_OBJID is special and should not be used
         MDL::addLabel(MDL_OBJID, LABEL_LONG, "objId");
 
-        MDL::addLabel(MDL_ANGLE_COMPARISON, LABEL_VECTOR, "angleComparison", "psi2");
-        MDL::addLabel(MDL_ANGLEPSI2, LABEL_DOUBLE, "anglePsi2", "psi2");
-        MDL::addLabel(MDL_ANGLEPSI, LABEL_DOUBLE, "anglePsi", "psi");
-        MDL::addLabel(MDL_ANGLEROT2, LABEL_DOUBLE, "angleRot2", "rot2");
-        MDL::addLabel(MDL_ANGLEROT, LABEL_DOUBLE, "angleRot", "rot");
-        MDL::addLabel(MDL_ANGLETILT2, LABEL_DOUBLE, "angleTilt2", "tilt2");
-        MDL::addLabel(MDL_ANGLETILT, LABEL_DOUBLE, "angleTilt", "tilt");
-        MDL::addLabel(MDL_ASSOCIATED_IMAGE1, LABEL_STRING, "associatedImage1");
-        MDL::addLabel(MDL_ASSOCIATED_IMAGE2, LABEL_STRING, "associatedImage2");
-        MDL::addLabel(MDL_ASSOCIATED_IMAGE3, LABEL_STRING, "associatedImage3");
-        MDL::addLabel(MDL_ASSOCIATED_IMAGE4, LABEL_STRING, "associatedImage4");
-        MDL::addLabel(MDL_ASSOCIATED_IMAGE5, LABEL_STRING, "associatedImage5");
+        MDL::addLabel(MDL_ANGLE_COMPARISON, LABEL_VECTOR, "angleComparison", TAGLABEL_NOTAG, "psi2");
+        MDL::addLabel(MDL_ANGLEPSI2, LABEL_DOUBLE, "anglePsi2", TAGLABEL_NOTAG, "psi2");
+        MDL::addLabel(MDL_ANGLEPSI, LABEL_DOUBLE, "anglePsi", TAGLABEL_NOTAG, "psi");
+        MDL::addLabel(MDL_ANGLEROT2, LABEL_DOUBLE, "angleRot2", TAGLABEL_NOTAG, "rot2");
+        MDL::addLabel(MDL_ANGLEROT, LABEL_DOUBLE, "angleRot", TAGLABEL_NOTAG, "rot");
+        MDL::addLabel(MDL_ANGLETILT2, LABEL_DOUBLE, "angleTilt2", TAGLABEL_NOTAG, "tilt2");
+        MDL::addLabel(MDL_ANGLETILT, LABEL_DOUBLE, "angleTilt", TAGLABEL_NOTAG, "tilt");
+        MDL::addLabel(MDL_ASSOCIATED_IMAGE1, LABEL_STRING, "associatedImage1", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_ASSOCIATED_IMAGE2, LABEL_STRING, "associatedImage2", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_ASSOCIATED_IMAGE3, LABEL_STRING, "associatedImage3", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_ASSOCIATED_IMAGE4, LABEL_STRING, "associatedImage4", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_ASSOCIATED_IMAGE5, LABEL_STRING, "associatedImage5", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_AVG, LABEL_DOUBLE, "avg");
         MDL::addLabel(MDL_AZIMUTALANGLE, LABEL_DOUBLE, "azimutalAngle");
         MDL::addLabel(MDL_BGMEAN, LABEL_DOUBLE, "bgMean");
@@ -533,9 +557,9 @@ private:
         MDL::addLabel(MDL_COMMENT, LABEL_STRING, "comment");
         MDL::addLabel(MDL_COST, LABEL_DOUBLE, "cost");
         MDL::addLabel(MDL_COUNT, LABEL_LONG, "count");
-        MDL::addLabel(MDL_CTFINPUTPARAMS, LABEL_STRING, "CTFInputParams");
-        MDL::addLabel(MDL_CTFMODEL, LABEL_STRING, "CTFModel");
-        MDL::addLabel(MDL_CTFMODEL2, LABEL_STRING, "CTFModel2");
+        MDL::addLabel(MDL_CTFINPUTPARAMS, LABEL_STRING, "CTFInputParams", TAGLABEL_TEXTFILE);
+        MDL::addLabel(MDL_CTFMODEL, LABEL_STRING, "CTFModel", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_CTFMODEL2, LABEL_STRING, "CTFModel2", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_CTF_SAMPLING_RATE, LABEL_DOUBLE, "CTF_Sampling_rate");
         MDL::addLabel(MDL_CTF_SAMPLING_RATE_Z, LABEL_DOUBLE, "CTF_Sampling_rate_z");
         MDL::addLabel(MDL_CTF_VOLTAGE, LABEL_DOUBLE, "CTF_Voltage");
@@ -604,14 +628,14 @@ private:
         MDL::addLabel(MDL_DM3_VALUE, LABEL_VECTOR, "Value");
 
         MDL::addLabel(MDL_ENABLED, LABEL_INT, "enabled");
-        MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip", "Flip");
+        MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip", TAGLABEL_NOTAG, "Flip");
         MDL::addLabel(MDL_IMAGE_CLASS_COUNT, LABEL_INT, "class_count");
         MDL::addLabel(MDL_IMAGE_CLASS_GROUP, LABEL_STRING, "class_group");
-        MDL::addLabel(MDL_IMAGE_CLASS, LABEL_STRING, "class_representative");
-        MDL::addLabel(MDL_IMAGE, LABEL_STRING, "image");
-        MDL::addLabel(MDL_IMAGE_ORIGINAL, LABEL_STRING, "original_image");
-        MDL::addLabel(MDL_IMAGE_TILTED, LABEL_STRING, "tilted_image");
-        MDL::addLabel(MDL_IMGMD, LABEL_STRING, "imageMetaData");
+        MDL::addLabel(MDL_IMAGE_CLASS, LABEL_STRING, "class_representative", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMAGE, LABEL_STRING, "image", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMAGE_ORIGINAL, LABEL_STRING, "original_image", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMAGE_TILTED, LABEL_STRING, "tilted_image", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMGMD, LABEL_STRING, "imageMetaData", TAGLABEL_METADATA);
         MDL::addLabel(MDL_INTSCALE, LABEL_DOUBLE, "intScale");
         MDL::addLabel(MDL_ITER, LABEL_INT, "iterationNumber");
         MDL::addLabel(MDL_K, LABEL_DOUBLE, "K");
@@ -619,13 +643,13 @@ private:
         MDL::addLabel(MDL_KERDENSOM_REGULARIZATION, LABEL_DOUBLE, "KerDenSOM_Regularization");
         MDL::addLabel(MDL_KERDENSOM_SIGMA, LABEL_DOUBLE, "KerDenSOM_Sigma");
         MDL::addLabel(MDL_KSTEST, LABEL_DOUBLE, "KStest");
-        MDL::addLabel(MDL_LL, LABEL_DOUBLE, "logLikelihood", "LL");
+        MDL::addLabel(MDL_LL, LABEL_DOUBLE, "logLikelihood", TAGLABEL_NOTAG, "LL");
         MDL::addLabel(MDL_MAPTOPOLOGY, LABEL_STRING, "mapTopology");
-        MDL::addLabel(MDL_MASK, LABEL_STRING, "mask");
+        MDL::addLabel(MDL_MASK, LABEL_STRING, "mask", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_MAXCC, LABEL_DOUBLE, "maxCC");
         MDL::addLabel(MDL_MAX, LABEL_DOUBLE, "max");
-        MDL::addLabel(MDL_MICROGRAPH, LABEL_STRING, "micrograph");
-        MDL::addLabel(MDL_MICROGRAPH_TILTED, LABEL_STRING, "micrographTilted");
+        MDL::addLabel(MDL_MICROGRAPH, LABEL_STRING, "micrograph", TAGLABEL_MICROGRAPH);
+        MDL::addLabel(MDL_MICROGRAPH_TILTED, LABEL_STRING, "micrographTilted", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MIN, LABEL_DOUBLE, "min");
         MDL::addLabel(MDL_MIRRORFRAC, LABEL_DOUBLE, "mirrorFraction");
         MDL::addLabel(MDL_MISSINGREGION_NR, LABEL_INT, "missingRegionNumber");
@@ -638,7 +662,7 @@ private:
         MDL::addLabel(MDL_NEIGHBORS, LABEL_VECTOR_LONG, "neighbors");
         MDL::addLabel(MDL_NEIGHBORHOOD_RADIUS, LABEL_DOUBLE, "neighborhoodRadius");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR, "NMADisplacements");
-        MDL::addLabel(MDL_NMA_MODEFILE, LABEL_STRING, "NMAModefile");
+        MDL::addLabel(MDL_NMA_MODEFILE, LABEL_STRING, "NMAModefile", TAGLABEL_TEXTFILE);
         MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR, "noiseAngles");
         MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR, "noiseParticleCoord");
         MDL::addLabel(MDL_NOISE_PIXEL_LEVEL, LABEL_VECTOR, "noisePixelLevel");
@@ -646,15 +670,15 @@ private:
         MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
         MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
-        MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax", "Pmax", "sumP");
+        MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax", TAGLABEL_NOTAG, "Pmax", "sumP");
         MDL::addLabel(MDL_PRJ_DIMENSIONS, LABEL_VECTOR, "projDimensions");
         MDL::addLabel(MDL_PRJ_TILT_RANGE, LABEL_VECTOR, "projTiltRange");
-        MDL::addLabel(MDL_PRJ_VOL, LABEL_STRING, "projVolume");
-        MDL::addLabel(MDL_PSD, LABEL_STRING, "powerSpectrum");
+        MDL::addLabel(MDL_PRJ_VOL, LABEL_STRING, "projVolume", TAGLABEL_VOLUME);
+        MDL::addLabel(MDL_PSD, LABEL_STRING, "powerSpectrum", TAGLABEL_PSD);
         MDL::addLabel(MDL_RANDOMSEED, LABEL_INT, "randomSeed");
         MDL::addLabel(MDL_REF3D, LABEL_INT, "ref3d");
-        MDL::addLabel(MDL_REF, LABEL_INT, "ref", "Ref");
-        MDL::addLabel(MDL_REFMD, LABEL_STRING, "referenceMetaData");
+        MDL::addLabel(MDL_REF, LABEL_INT, "ref", TAGLABEL_NOTAG, "Ref");
+        MDL::addLabel(MDL_REFMD, LABEL_STRING, "referenceMetaData", TAGLABEL_METADATA);
         MDL::addLabel(MDL_RESOLUTION_DPR, LABEL_DOUBLE, "DPR");
         MDL::addLabel(MDL_RESOLUTION_ERRORL2, LABEL_DOUBLE, "Error_l2");
         MDL::addLabel(MDL_RESOLUTION_FRC, LABEL_DOUBLE, "FRC");
@@ -665,12 +689,12 @@ private:
         MDL::addLabel(MDL_SAMPLINGRATEX, LABEL_DOUBLE, "sampling_rateX");
         MDL::addLabel(MDL_SAMPLINGRATEY, LABEL_DOUBLE, "sampling_rateY");
         MDL::addLabel(MDL_SAMPLINGRATEZ, LABEL_DOUBLE, "sampling_rateZ");
-        MDL::addLabel(MDL_SCALE, LABEL_DOUBLE, "scale", "Scale");
-        MDL::addLabel(MDL_SELFILE, LABEL_STRING, "selfile");
+        MDL::addLabel(MDL_SCALE, LABEL_DOUBLE, "scale", TAGLABEL_NOTAG, "Scale");
+        MDL::addLabel(MDL_SELFILE, LABEL_STRING, "selfile", TAGLABEL_METADATA);
         MDL::addLabel(MDL_SERIE, LABEL_STRING, "serie");
-        MDL::addLabel(MDL_SHIFTX, LABEL_DOUBLE, "shiftX", "Xoff");
-        MDL::addLabel(MDL_SHIFTY, LABEL_DOUBLE, "shiftY", "Yoff");
-        MDL::addLabel(MDL_SHIFTZ, LABEL_DOUBLE, "shiftZ", "Zoff");
+        MDL::addLabel(MDL_SHIFTX, LABEL_DOUBLE, "shiftX", TAGLABEL_NOTAG, "Xoff");
+        MDL::addLabel(MDL_SHIFTY, LABEL_DOUBLE, "shiftY", TAGLABEL_NOTAG, "Yoff");
+        MDL::addLabel(MDL_SHIFTZ, LABEL_DOUBLE, "shiftZ", TAGLABEL_NOTAG, "Zoff");
         MDL::addLabel(MDL_SIGMANOISE, LABEL_DOUBLE, "sigmaNoise");
         MDL::addLabel(MDL_SIGMAOFFSET, LABEL_DOUBLE, "sigmaOffset");
         MDL::addLabel(MDL_SIGNALCHANGE, LABEL_DOUBLE, "signalChange");
@@ -681,14 +705,14 @@ private:
         MDL::addLabel(MDL_SYMNO, LABEL_INT, "symNo");
         MDL::addLabel(MDL_TRANSFORMATIONMTRIX, LABEL_VECTOR, "transMat");
         MDL::addLabel(MDL_VOLTAGE, LABEL_DOUBLE, "voltage");
-        MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight", "Weight");
+        MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight", TAGLABEL_NOTAG, "Weight");
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");
         MDL::addLabel(MDL_X, LABEL_DOUBLE, "X");
-        MDL::addLabel(MDL_XINT, LABEL_INT, "Xcoor", "<X position>");
+        MDL::addLabel(MDL_XINT, LABEL_INT, "Xcoor", TAGLABEL_NOTAG, "<X position>");
         MDL::addLabel(MDL_XINTTILT, LABEL_INT, "XcoorTilt");
         MDL::addLabel(MDL_XSIZE, LABEL_INT, "Xsize");
         MDL::addLabel(MDL_Y, LABEL_DOUBLE, "Y");
-        MDL::addLabel(MDL_YINT, LABEL_INT, "Ycoor", "<Y position>");
+        MDL::addLabel(MDL_YINT, LABEL_INT, "Ycoor", TAGLABEL_NOTAG, "<Y position>");
         MDL::addLabel(MDL_YINTTILT, LABEL_INT, "YcoorTilt");
         MDL::addLabel(MDL_YSIZE, LABEL_INT, "Ysize");
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "Z");

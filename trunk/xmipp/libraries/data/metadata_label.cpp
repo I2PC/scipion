@@ -32,10 +32,10 @@ MDRow MDL::emptyHeader;
 MDLabelStaticInit MDL::initialization; //Just for initialization
 
 
-void MDL::addLabel(const MDLabel label, const MDLabelType type, const String &name, const String &name2, const String &name3)
+void MDL::addLabel(const MDLabel label, const MDLabelType type, const String &name, int tags, const String &name2, const String &name3)
 {
     int index = (int)label;
-    data[index] = new MDLabelData(type, name);
+    data[index] = new MDLabelData(type, name, tags);
     names[name] = label;
     if (name2 != "")
         names[name2] = label;
@@ -140,6 +140,45 @@ std::map<String, MDLabel>& MDL::getLabelDict()
     return names;
 }
 
+bool MDL::hasTag(const MDLabel label, const int tags)
+{
+    return data[(int)label]->tags & tags;
+}
+
+bool MDL::isTextFile(const MDLabel label)
+{
+    return data[(int)label]->tags & TAGLABEL_TEXTFILE;
+}
+
+bool MDL::isMetadata(const MDLabel label)
+{
+    return data[(int)label]->tags & TAGLABEL_METADATA;
+}
+
+bool MDL::isCtfParam(const MDLabel label)
+{
+    return data[(int)label]->tags & TAGLABEL_CTFPARAM;
+}
+
+bool MDL::isImage(const MDLabel label)
+{
+    return data[(int)label]->tags & TAGLABEL_VOLUME;
+}
+
+bool MDL::isStack(const MDLabel label)
+{
+    return data[(int)label]->tags & TAGLABEL_STACK;
+}
+
+bool MDL::isMicrograph(const MDLabel label)
+{
+    return data[(int)label]->tags & TAGLABEL_MICROGRAPH;
+}
+
+bool MDL::isPSD(const MDLabel label)
+{
+    return data[(int)label]->tags & TAGLABEL_PSD;
+}
 
 bool vectorContainsLabel(const std::vector<MDLabel>& labelsVector, const MDLabel label)
 {
