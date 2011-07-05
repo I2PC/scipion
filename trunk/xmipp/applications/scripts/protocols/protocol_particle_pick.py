@@ -355,8 +355,7 @@ class ProtParticlePickingGUI(BasicGUI):
             verifyFile=[self.WorkingDir+"/"+micrographName+".Common.auto.pos"]
         else:
             verifyFile=[self.WorkingDir+"/"+micrographName+".Common.pos"]
-        print arguments
-        RunJobThread(self.log,"xmipp_micrograph_mark",arguments,verifyFile)
+        RunJobThread(self.log,"xmipp_micrograph_mark",arguments,verifyFile).start()
 
     def LaunchPairMark(self):
         self.GuiUpdateCount()
@@ -375,11 +374,12 @@ class RunJobThread(threading.Thread):
         self.program=program
         self.arguments=arguments
         self.verifyFiles=verifyFiles
+        threading.Thread.__init__ ( self )
     
     def run(self):
-        runJob(self.log,self.program,self.arguments,parameters,False,1,1,"")
+        runJob(self.log,self.program,self.arguments,False,1,1,"")
         OK=True
-        for file in verifyFiles:
+        for verifyFile in self.verifyFiles:
             if not os.path.exists(verifyFile):
                 OK=False
 
