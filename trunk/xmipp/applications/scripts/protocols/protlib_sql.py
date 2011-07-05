@@ -5,6 +5,14 @@ from config import *
 from protlib_utils import *
 from protlib_filesystem import *
 
+runColumns = ['run_id',
+              'run_name',
+              'script',
+              'init',
+              'last_modfied',
+              'protocol_name',
+              'comment']
+
 class XmippProtocolDbStruct(object):
     doAlways = 99999
     lastStep  = -1
@@ -277,7 +285,7 @@ class XmippProtocolDb(SqliteDb):
             self.StartAtStepN = self.ContinueAtIteration
         elif (self.ContinueAtIteration > 0 and isIter):
             self.sqlDict['iter'] = self.ContinueAtIteration
-            _sqlCommand = """SELECT MIN(id) 
+            _sqlCommand = """SELECT MIN(step_id) 
                              FROM %(TableStepsCurrent)s
                              WHERE iter = %(iter)d
                                AND run_id = %(run_id)d"""  % self.sqlDict
@@ -289,7 +297,7 @@ class XmippProtocolDb(SqliteDb):
             raise Exception("self.ContinueAtIteration must be !=0")
 
     def getStartingStepVerify(self,isIter):
-        _sqlCommand = """SELECT id, iter, command, fileNameList 
+        _sqlCommand = """SELECT step_id, iter, command, fileNameList 
                         FROM %(TableSteps)s
                         WHERE finish IS NULL
                              AND fileNameList IS NOT NULL
