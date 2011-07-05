@@ -837,7 +837,7 @@ AddProtocol('protlib_utils.py')
 
 #AddProtocol('arg.py')
 AddProtocol('apply_bfactor.py')
-AddProtocol('config.py')
+AddProtocol('config_protocols.py')
 #AddProtocol('ctfdat.py')
 #AddProtocol('launch_job.py')
 #AddProtocol('log.py')
