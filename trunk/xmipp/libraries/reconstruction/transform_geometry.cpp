@@ -213,8 +213,8 @@ void ProgTransformGeometry::preProcess()
             ydim = STR_EQUAL(getParam("--scale", 2), "x") ? xdim : getIntParam("--scale", 2);
             fourier_threads = getIntParam("--scale", 3);
             //Do not think this is true
-//            if (oxdim < xdim || oydim < ydim)
-//                REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
+            //            if (oxdim < xdim || oydim < ydim)
+            //                REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
         }
         else if (STR_EQUAL(getParam("--scale"), "pyramid"))
         {
@@ -291,11 +291,11 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
          *
          * It would be interesting to put a boolean flag to decide when to map
          */
-
-        //imgOut.mapFile2Write(xdim, ydim, zdim, fnImgOut, fnImg == fnImgOut);
-        //FIXME, I do not get the point. You resize the image BEFORE
-        //calling to the resize routine!?
-        imgOut().resize(1, zdim, ydim, xdim, false);
+        /* if special scale do not resize output just rotate image */
+        if(scale_type!=SCALE_PYRAMID_EXPAND &&
+           scale_type!=SCALE_PYRAMID_REDUCE &&
+           scale_type!=SCALE_FOURIER )
+            imgOut().resize(1, zdim, ydim, xdim, false);
         imgOut().setXmippOrigin();
         applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap, 0.);
 
