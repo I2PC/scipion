@@ -283,7 +283,7 @@ class XmippProtocolDb(SqliteDb):
         #if(self.ContinueAtIteration==-1 and self.StartAtStepN>0):
         if(self.ContinueAtIteration>0 and not isIter):
             self.StartAtStepN = self.ContinueAtIteration
-        elif (self.ContinueAtIteration > 0 and isIter):
+        elif (self.ContinueAtIteration > 1 and isIter):
             self.sqlDict['iter'] = self.ContinueAtIteration
             _sqlCommand = """SELECT MIN(step_id) 
                              FROM %(TableStepsCurrent)s
@@ -293,6 +293,8 @@ class XmippProtocolDb(SqliteDb):
             self.StartAtStepN = self.cur_aux.fetchone()[0]
         elif (self.ContinueAtIteration < 0):
             self.StartAtStepN =self.getStartingStepVerify(isIter)
+        elif self.ContinueAtIteration==1:
+            self.StartAtStepN = 1
         else:
             raise Exception("self.ContinueAtIteration must be !=0")
 
