@@ -729,7 +729,6 @@ class ProtocolGUI(BasicGUI):
         self.variablesDict['RunName'].setValue(value)
         
     def createGUI(self, inScript, project, run=None, master=None, saveCallback=None):
-        print "createGUI script:", inScript
         if run:
             outScript = run['script']
         else:

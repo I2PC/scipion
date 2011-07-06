@@ -196,7 +196,10 @@ class XmippProjectDb(SqliteDb):
         
     def selectRuns(self, groupName):
         self.sqlDict['group'] = groupName
-        sqlCommand = """SELECT * 
+        sqlCommand = """SELECT run_id, run_name, script, 
+                               datetime(init, 'localtime') as init, 
+                               datetime(last_modified, 'localtime') as last_modified,
+                               protocol_name, comment 
                          FROM %(TableRuns)s NATURAL JOIN %(TableProtocolsGroups)s
                          WHERE group_name = '%(group)s'
                          ORDER BY last_modified DESC """ % self.sqlDict

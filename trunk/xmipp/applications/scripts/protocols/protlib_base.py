@@ -94,6 +94,7 @@ class XmippProject():
         self.config.read(self.cfgName)
         # Load database
         self.projectDb = XmippProjectDb(self.dbName)
+        self.MpiFlavour = self.config.get('project', 'mpiflavour')
         
 
     def writeConfig(self):
@@ -111,6 +112,20 @@ class XmippProject():
         if not os.path.exists(self.dbName):
             os.remove(self.dbName)
             
+    def deleteRun(self, run):
+        print "Deleting run: ", run['run_name']
+        script = run['script']
+        log = script.replace(self.runsDir, self.logsDir).replace(".py", ".log")
+        #remove script .py and .pyc files and .log
+        toDelete = [script, script+'c', log] 
+        for f in toDelete:
+            print "Deleting file '%s'" % f
+            if os.path.exists(f):
+                os.remove(f)
+        self.projectDb.deleteRun(run)
+        
+        
+            
     def getRunScriptFileName(self, protocol, runName):
         return os.path.join(self.runsDir, 'xmipp_protocol_%s_%s.py' % (protocol, runName))
             
@@ -123,22 +138,9 @@ class XmippProtocol(object):
         runName      -- the name of the run,  should be unique for one protocol
         project      -- project instance
         '''
-        self.DoParallel = True
-        try:
-            NumberOfMpiProcesses
-            if NumberOfMpiProcesses == None or NumberOfMpiProcesses ==0:
-                self.DoParallel = False
-        except NameError:
-            self.DoParallel = False
-        #do something similar with mpiflavour whenever we decide what to do
-#        self.mpiflavour = ''
-#        try:
-#            SystemFlavour
-#            if SystemFlavour == None or SystemFlavour !='':
-#                self.mpiflavour = SystemFlavour
-#        except NameError:
-#            self.DoParallel = False
-#        SystemFlavour
+        self.DoParallel = False
+        if 'NumberOfMpiProcesses' in dir() and NumberOfMpiProcesses > 0:
+            self.DoParallel = True
             
         self.Name = protocolName
         self.runName = runName

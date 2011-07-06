@@ -76,6 +76,7 @@ class XmippProjectGUI():
         self.fileMenu.add_command(label="Exit", command=self.onExit)
         self.menubar.add_cascade(label="File", menu=self.fileMenu)
         self.ToolbarButtonsDict = {}
+        self.runButtonsDict = {}
         self.lastSelected = None
         self.lastRunSelected = None
         self.root.bind('<Configure>', self.unpostMenu)
@@ -142,7 +143,6 @@ class XmippProjectGUI():
         self.loadProtocol(prot, srcProtAbsPath)
         
     def protocolSaveCallback(self, run, protGroups):
-        print protGroups
         if self.lastSelected in protGroups:
             self.updateRunHistory(self.lastSelected) 
 
@@ -151,23 +151,16 @@ class XmippProjectGUI():
         self.lbHist.delete(0, END)
         for run in self.runs:
             self.lbHist.insert(END, ('%s_%s' % (run['protocol_name'], run['run_name']),
-                                run['last_modified']))
-            
-    def updateRunDetails(self, index):
-        run = self.runs[index]
+                                run['last_modified']))   
+        if len(self.runs) > 0:
+                self.lbHist.selection_set(0)         
+
     #---------------- Functions related with Popup menu ----------------------   
     def lastPair(self):
         if self.lastSelected:
             return  self.ToolbarButtonsDict[self.lastSelected]
         return None
         
-#    def dragWindows(self, event):
-#        self.unpostMenu()
-#    
-#    def OnUnmap(self, event=''):
-#        if event.widget == self.root:
-#            self.unpostMenu()
-            
     def unpostMenu(self, event=None):
         if self.lastSelected:
             btn, menu = self.lastPair()
@@ -192,13 +185,25 @@ class XmippProjectGUI():
         if self.lastSelected != text:
             self.project.config.set('project', 'lastselected', text)
             self.project.writeConfig()
-            self.updateRunHistory(text)
-            if len(self.runs) > 0:
-                self.lbHist.selection_set(0)
+            self.updateRunSelection(-1)
+            self.updateRunHistory(text)            
         self.lastSelected = text  
             
+    def updateRunSelection(self, index):
+        state = NORMAL
+        if index == -1:
+            state = DISABLED
+        for btn in self.runButtonsDict.values():
+            btn.config(state=state)
+            
+        #def updateRunDetails(self, index):
+        #    run = self.runs[index]
+            
     def runSelectCallback(self, index):
-        self.lastRunSelected = self.runs[index]
+        if index >= 0:
+            self.lastRunSelected = self.runs[index]
+        self.updateRunSelection(index)
+            
         
     def runButtonClick(self, event=None):
         run = dict(zip(runColumns, self.lastRunSelected))
@@ -209,7 +214,9 @@ class XmippProjectGUI():
         elif event == 'Copy':
             self.loadProtocol(protDict.protocolDict[run['protocol_name']], run['script'])
         elif event == "Delete":
-            print "Deleteing"
+            if tkMessageBox.askyesno("Confirm DELETE", "All data related to this run will be DELETED. Do you want to continue?"):
+                self.project.deleteRun(run)
+                self.updateRunHistory(self.lastSelected)
         
 
     def createToolbar(self):
@@ -244,7 +251,7 @@ class XmippProjectGUI():
         btn.config(command=lambda:self.runButtonClick(text), 
                  activebackground=ButtonActiveBgColor)
         btn.grid(row=0, column=col)
-        return btn
+        self.runButtonsDict[text] = btn
     
     def createRunHistory(self):
         label = self.addHeaderLabel(self.frame, 'History', 0, 1)

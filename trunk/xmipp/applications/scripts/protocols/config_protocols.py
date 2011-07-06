@@ -63,9 +63,9 @@ sections = [
 ('3D', 
    [['Initial Model', protDict.commonlines.key, protDict.rct.key], 
     ['Model Refinement', protDict.projmatch.key]])
-#,
-#('Other',
-# [['Browse',protDict.projsubs]])
+,
+('Other',
+ [['Extra',protDict.projsubs.key]])
 ]
 
 def getSectionByKey(prot): 
