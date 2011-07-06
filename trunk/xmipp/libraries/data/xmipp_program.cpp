@@ -499,10 +499,11 @@ void XmippMetadataProgram::readParams()
     }
 
     mdIn.read(fn_in, NULL, decompose_stacks);
+    mdInSize = mdIn.size();
 
     if (!fn_in.isMetaData())
     {
-        if (mdIn.size() == 1)
+        if (mdInSize == 1)
             single_image = true;
         else
             input_is_stack = true;
@@ -516,12 +517,13 @@ void XmippMetadataProgram::readParams()
         REPORT_ERROR(ERR_MD_NOOBJ, "");
 
     // if input is volume do not apply geo
-    int xDim, yDim, zDim;
-    size_t nDim;
-    ImgSize(mdIn, xDim, yDim, zDim, nDim);
+    ImgSize(mdIn, xdimOut, ydimOut, zdimOut, ndimOut);
 
-    if (allow_apply_geo && zDim == 1)
+    if (allow_apply_geo && zdimOut == 1)
         apply_geo = !checkParam("--dont_apply_geo");
+
+    // If the output is a stack, create empty stack file in advance to avoid concurrent access to the header
+    create_empty_stackfile = (mdInSize > 1 && oroot.empty());
 }
 
 void XmippMetadataProgram::show()
@@ -535,9 +537,6 @@ void XmippMetadataProgram::show()
     {
         if (!fn_out.empty())
             std::cout << "Output File: " << fn_out << std::endl;
-        //      DO NOT LONGER SUPPORT --OEXT SINCE NOW IT DOES MIND CHANGE FORMAT
-        //if (oext != "")
-        //    std::cout << "Output Extension: " << oext << std::endl;
         if (!oroot.empty())
             std::cout << "Output Root: " << oroot << std::endl;
     }
@@ -554,11 +553,14 @@ void XmippMetadataProgram::startProcessing()
     //Show some info
     show();
     // Initialize progress bar
-    time_bar_size = mdIn.size();
+    time_bar_size = mdInSize;
     if (allow_time_bar && verbose && !single_image)
         init_progress_bar(time_bar_size);
     time_bar_step = CEIL((double)time_bar_size / 60.0);
     time_bar_done = 0;
+
+    if (create_empty_stackfile)
+      createEmptyFile(fn_out, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE);
 }
 
 void XmippMetadataProgram::finishProcessing()

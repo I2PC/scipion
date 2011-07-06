@@ -234,6 +234,12 @@ public:
     FileName        fn_in, fn_out;
     /// Apply geo
     bool apply_geo;
+    /// Output dimensions
+    int zdimOut, ydimOut, xdimOut;
+    size_t ndimOut;
+    /// Number of input elements
+    size_t mdInSize;
+
 protected:
     /// Metadata writing mode: OVERWRITE, APPEND
     WriteModeMetaData mode;
@@ -258,7 +264,7 @@ protected:
     size_t time_bar_step, time_bar_size, time_bar_done;
     /// Flag to know when input is a single image or stack
     bool single_image;
-    bool input_is_stack;
+    bool input_is_stack, create_empty_stackfile;
     bool delete_output_stack; // Delete previous output stack file
     /// Flag to treat a stack file as a set of images instead of a unique file
     bool decompose_stacks;
