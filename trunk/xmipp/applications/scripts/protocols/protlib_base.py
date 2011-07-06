@@ -152,8 +152,6 @@ class XmippProtocol(object):
         self.LogDir = project.logsDir
         self.uniquePrefix = self.WorkingDir.replace('/', '_')
         self.LogPrefix = os.path.join(self.LogDir, self.uniquePrefix)       
-        self.errors = []
-        self.summary = []
         self.continueAt=1
         self.isIter=False
         self.DoDeleteWorkingDir=False
@@ -168,14 +166,14 @@ class XmippProtocol(object):
         validations to all protocols and the function
         validate will be called for specific validation
         of each protocol'''
-        self.errors=[]
+        errors=[]
         #check if there is a valid project, otherwise abort
         if not self.project.exists():
-            self.errors.append("Not valid project available")
+            errors.append("Not valid project available")
         #specific protocols validations
-        self.errors += self.validate()
+        errors += self.validate()
         
-        return self.errors
+        return errors
     
     def validate(self):
         '''Validate if the protocols is ready to be run
@@ -187,11 +185,10 @@ class XmippProtocol(object):
     
     def summary(self):
         '''Produces a summary with the most relevant information of the protocol run'''
-        self.summary=[]
-        self.summary.append(self.comment)
+        return []
     
     def warnings(self):
-        '''Output some warnings that can be errors and require user confirmation to procceed'''
+        '''Output some warnings that can be errors and require user confirmation to proceed'''
         pass
     
     def postRun(self):
