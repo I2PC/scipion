@@ -505,9 +505,9 @@ class ProtocolGUI(BasicGUI):
         import tkFileDialog
         import os
         if isFile:
-            filename = tkFileDialog.askopenfilename(title="Choose file")
+            filename = tkFileDialog.askopenfilename(title="Choose file", parent=self.master)
         else:
-            filename = tkFileDialog.askdirectory(title="Choose directory")
+            filename = tkFileDialog.askdirectory(title="Choose directory", parent=self.master)
         if len(filename) > 0:
             var.set(os.path.relpath(filename))
          
@@ -664,7 +664,7 @@ class ProtocolGUI(BasicGUI):
         prot = getProtocolFromModule(self.outScript, self.project)
         errors = prot.validateInput()        
         if len(errors) > 0:
-            tkMessageBox.showerror("Validation ERRORS", '\n'.join(errors))
+            tkMessageBox.showerror("Validation ERRORS", '\n'.join(errors), parent=self.master)
             return False
         return True
     
@@ -676,7 +676,7 @@ class ProtocolGUI(BasicGUI):
     
     def showHelp(self, helpmsg):
         import tkMessageBox
-        tkMessageBox.showinfo("Help", helpmsg)
+        tkMessageBox.showinfo("Help", helpmsg, parent=self.master)
     
     def getRow(self):
         row = self.lastrow

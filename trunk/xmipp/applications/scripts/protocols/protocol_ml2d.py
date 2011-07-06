@@ -133,8 +133,9 @@ from protlib_base import *
 
 class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(protDict.ml2d.key, scriptname, RunName, project, NumberOfMpiProcesses)
+        XmippProtocol.__init__(self, protDict.ml2d.key, scriptname, RunName, project, NumberOfMpiProcesses)
 
+    def runSetup(self):
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir) # add default search path
         # store script name
@@ -175,9 +176,11 @@ class ProtML2D(XmippProtocol):
         # Return to parent dir
         os.chdir(currentDir)
 
+    def validate(self):
+        return ["Protocol not implemented yet..."]
+    
     def run(self, restart=False):
-        import os
-        import launch_job
+        self.runSetup()
         print '*********************************************************************'
         progId = "ml"
         if (DoMlf):
@@ -217,11 +220,6 @@ class ProtML2D(XmippProtocol):
                     params += ' --high %f' + HighResLimit
            
         launchJob(program, params, self.log, DoParallel, NumberOfMpiProcesses, NumberOfThreads, SystemFlavour)
-
-    def close(self):
-        message='Done!'
-        print '*',message
-        print '*********************************************************************'
 
 
 if __name__ == '__main__':
