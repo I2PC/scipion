@@ -185,6 +185,11 @@ class ProtML2D(XmippProtocol):
     def validate(self):
         return ["Protocol not implemented yet..."]
     
+    def summary(self):
+        return ["This is a test summary",
+                "Need a real summary here..."
+                ]
+    
     def run(self, restart=False):
         self.runSetup()
         print '*********************************************************************'

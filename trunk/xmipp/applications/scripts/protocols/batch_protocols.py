@@ -200,6 +200,26 @@ class XmippProjectGUI():
         state = NORMAL
         if index == -1:
             state = DISABLED
+            #Hide details
+            self.frameDetails.grid_remove()
+        else:
+            state = NORMAL
+            #Show details
+            run = self.lastRunSelected
+            self.DetailsLabelsDict['Run:'].config(text=run['run_name'])
+            self.DetailsLabelsDict['Protocol:'].config(text=run['protocol_name'])
+            self.DetailsLabelsDict['Created:'].config(text=run['init'])
+            self.DetailsLabelsDict['Modified:'].config(text=run['last_modified'])
+            prot = getProtocolFromModule(run['script'], self.project)
+            summary = '\n'.join(prot.summary())
+            self.DetailsLabelsDict['Summary:'].config(text=summary)
+#            self.addDetailsLabel('Run:', 0, 0)
+#            self.addDetailsLabel('Protocol:', 1, 0)
+#            self.addDetailsLabel('Created:', 0, 2)
+#            self.addDetailsLabel('Modified:', 1, 2)
+#            self.addDetailsLabel('Summary:', 2, 0)
+            self.frameDetails.grid(row=4, column=1,sticky=NSEW, columnspan=2)
+            
         for btn in self.runButtonsDict.values():
             btn.config(state=state)
             
@@ -277,11 +297,35 @@ class XmippProjectGUI():
         self.lbHist.AllowSort = False        
         #self.lbHist.pack()
         
+    def addDetailsLabel(self, text, row, col, sumCol=True):
+        label = Label(self.frameDetails,text=text, font=self.DetailsFontBold, bg=BgColor)
+        label.grid(row=row, column=col, sticky=NE, padx=5)
+        if sumCol:
+            col += 1
+        else:
+            row += 1
+        label = Label(self.frameDetails,text="", font=self.DetailsFont, 
+                      bg=BgColor, justify=LEFT)
+        colspan = 1
+        if text == 'Summary:':
+            colspan = 3
+        label.grid(row=row, column=col, sticky=NW, padx=5, columnspan=colspan)
+        self.DetailsLabelsDict[text] = label
+        
     def createRunDetails(self):
+        #Prepare fonts
+        self.DetailsFontBold = tkFont.Font(family=FontName, size=FontSize-1, weight=tkFont.BOLD)
+        self.DetailsFont = tkFont.Font(family=FontName, size=FontSize-1)
         #Create RUN details
         self.addHeaderLabel(self.frame, 'Details', 3, 1)
         self.frameDetails = Frame(self.frame, bg=BgColor, bd=1, relief=RIDGE)
         self.frameDetails.grid(row=4, column=1,sticky=NSEW, columnspan=2)
+        self.DetailsLabelsDict = {}
+        self.addDetailsLabel('Run:', 0, 0)
+        self.addDetailsLabel('Protocol:', 1, 0)
+        self.addDetailsLabel('Created:', 0, 2)
+        self.addDetailsLabel('Modified:', 1, 2)
+        self.addDetailsLabel('Summary:', 2, 0)
 
     def createGUI(self, root=None):
         if not root:

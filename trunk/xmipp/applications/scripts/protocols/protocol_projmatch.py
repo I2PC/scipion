@@ -46,7 +46,7 @@ RunName ='run_001'
 DoDeleteWorkingDir =True
 
 # Number of iterations to perform
-NumberofIterations = 4
+NumberOfIterations = 4
 
 # {expert} Resume at Iter (vs Step)
 """This option control how to resume a previously performed run.
@@ -733,13 +733,13 @@ class ProtProjMatch(XmippProtocol):
     
     def summary(self):
         super(ProtProjMatch, self).summary()
-        auxString = 'Performed %d iterations'%self.NumberofIterations
-        auxString += ' with angular sampling rate %s'%AngSamplingRateDeg
-        auxString += '\nFinal Resolution is %s'%'not yet implemented'
-        auxString += '\nNumber of CTFgroups and References is %d %d respectively'\
-                        %(self.NumberOfCtfGroups,self.numberOfReferences)
-        self.summary.append(auxString)
-        
+        summary = ['Performed %d iterations with angular sampling rate %s' 
+                   % (NumberOfIterations, AngSamplingRateDeg)]
+        summary += ['Final Resolution is %s'%'not yet implemented']
+        summary += ['Number of CTFgroups and References is %d %d respectively'
+                        %(self.NumberOfCtfGroups,self.numberOfReferences)]
+
+        return summary
     def preRun(self):
         print "in PRERUN"
         #Convert directories/files  to absolute path from projdir
@@ -760,7 +760,7 @@ class ProtProjMatch(XmippProtocol):
         self.DocFileInputAngles=[self.DocFileWithOriginalAngles]
         #ProjMatchRootName=[" "]
         
-        for iterN in range(NumberofIterations):
+        for iterN in range(NumberOfIterations):
             fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
             self.ProjMatchDirs.append(fnBaseIter + self.ProjMatchDir)
             self.LibraryDirs.append( fnBaseIter + self.LibraryDir)
@@ -768,14 +768,14 @@ class ProtProjMatch(XmippProtocol):
         
         auxList = (self.numberOfReferences + 1) * [None]
         self.ProjectLibraryRootNames=[[None]]
-        for iterN in range(NumberofIterations):
+        for iterN in range(NumberOfIterations):
             fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
             for refN in range(self.numberOfReferences):                
                 auxList[refN + 1]= "%s%s_ref_%02d.stk" % (fnBaseIter, self.ProjectLibraryRootName, refN)
             self.ProjectLibraryRootNames.append(list(auxList))
                     
         self.ProjMatchRootNames=[[None]]
-        for iterN in range(NumberofIterations):
+        for iterN in range(NumberOfIterations):
             for refN in range(self.numberOfReferences):
                 auxList[refN + 1]="%s/%s_ref_%02d.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName, refN + 1)
             self.ProjMatchRootNames.append(list(auxList))
@@ -784,7 +784,7 @@ class ProtProjMatch(XmippProtocol):
         #name of masked volumes
         #add dummy name so indexes start a 1
         self.maskedFileNamesIters = [[None]]
-        for iterN in range(NumberofIterations):
+        for iterN in range(NumberOfIterations):
             fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
             for refN in range(self.numberOfReferences):
                 auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.maskReferenceVolume, refN + 1)
@@ -794,39 +794,39 @@ class ProtProjMatch(XmippProtocol):
         #add initial reference, useful for many routines
         #NOTE THAT INDEXES START AT 1
         self.reconstructedFileNamesIters.append([None] + self.ReferenceFileNames)
-        for iterN in range(NumberofIterations):
+        for iterN in range(NumberOfIterations):
             fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
             for refN in range(self.numberOfReferences):
                 auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.ReconstructedVolume, refN + 1)
             self.reconstructedFileNamesIters.append(list(auxList))
     
         self.docfile_with_current_anglesList=[None]
-        for iterN in range(NumberofIterations):
+        for iterN in range(NumberOfIterations):
             fnBaseIter = "%s/Iter_%02d/%s.doc" % (self.WorkingDir, iterN + 1, self.docfile_with_current_angles)
             self.docfile_with_current_anglesList.append(fnBaseIter)
     
         #parameter for projection matching
-        self.Align2DIterNr          = [-1]+getListFromVector(Align2DIterNr,NumberofIterations)
-        self.Align2dMaxChangeOffset = [-1]+getListFromVector(Align2dMaxChangeOffset,NumberofIterations)
-        self.Align2dMaxChangeRot    = [-1]+getListFromVector(Align2dMaxChangeRot,NumberofIterations)
-        self.AngSamplingRateDeg     = [-1]+getListFromVector(AngSamplingRateDeg,NumberofIterations)
-        self.DiscardPercentage      = [-1]+getListFromVector(DiscardPercentage,NumberofIterations)
-        self.DoAlign2D              = [False]+getBoolListFromVector(DoAlign2D,NumberofIterations)
-        self.DoComputeResolution    = [False]+getBoolListFromVector(DoComputeResolution,NumberofIterations)
-        self.DoSplitReferenceImages = [False]+getBoolListFromVector(DoSplitReferenceImages,NumberofIterations)
-        self.InnerRadius            = [False]+getListFromVector(InnerRadius,NumberofIterations)
-        self.MaxChangeInAngles      = [-1]+getListFromVector(MaxChangeInAngles,NumberofIterations)
-        self.MaxChangeOffset        = [-1]+getListFromVector(MaxChangeOffset,NumberofIterations)
-        self.MinimumCrossCorrelation= [-1]+getListFromVector(MinimumCrossCorrelation,NumberofIterations)
-        self.OnlyWinner             = [False]+getBoolListFromVector(OnlyWinner,NumberofIterations)
-        self.OuterRadius            = [False]+getListFromVector(OuterRadius,NumberofIterations)
-        self.PerturbProjectionDirections = [False]+getBoolListFromVector(PerturbProjectionDirections,NumberofIterations)
-        self.ReferenceIsCtfCorrected     = [-1]+getListFromVector(str(ReferenceIsCtfCorrected) + " True", NumberofIterations)
-        self.ScaleNumberOfSteps          = [-1]+getListFromVector(ScaleNumberOfSteps,NumberofIterations)
-        self.ScaleStep              = [-1]+getListFromVector(ScaleStep,NumberofIterations)
-        self.Search5DShift          = [-1]+getListFromVector(Search5DShift,NumberofIterations)
-        self.Search5DStep           = [-1]+getListFromVector(Search5DStep,NumberofIterations)
-        self.SymmetryGroup          = [-1]+getListFromVector(SymmetryGroup,NumberofIterations)
+        self.Align2DIterNr          = [-1]+getListFromVector(Align2DIterNr,NumberOfIterations)
+        self.Align2dMaxChangeOffset = [-1]+getListFromVector(Align2dMaxChangeOffset,NumberOfIterations)
+        self.Align2dMaxChangeRot    = [-1]+getListFromVector(Align2dMaxChangeRot,NumberOfIterations)
+        self.AngSamplingRateDeg     = [-1]+getListFromVector(AngSamplingRateDeg,NumberOfIterations)
+        self.DiscardPercentage      = [-1]+getListFromVector(DiscardPercentage,NumberOfIterations)
+        self.DoAlign2D              = [False]+getBoolListFromVector(DoAlign2D,NumberOfIterations)
+        self.DoComputeResolution    = [False]+getBoolListFromVector(DoComputeResolution,NumberOfIterations)
+        self.DoSplitReferenceImages = [False]+getBoolListFromVector(DoSplitReferenceImages,NumberOfIterations)
+        self.InnerRadius            = [False]+getListFromVector(InnerRadius,NumberOfIterations)
+        self.MaxChangeInAngles      = [-1]+getListFromVector(MaxChangeInAngles,NumberOfIterations)
+        self.MaxChangeOffset        = [-1]+getListFromVector(MaxChangeOffset,NumberOfIterations)
+        self.MinimumCrossCorrelation= [-1]+getListFromVector(MinimumCrossCorrelation,NumberOfIterations)
+        self.OnlyWinner             = [False]+getBoolListFromVector(OnlyWinner,NumberOfIterations)
+        self.OuterRadius            = [False]+getListFromVector(OuterRadius,NumberOfIterations)
+        self.PerturbProjectionDirections = [False]+getBoolListFromVector(PerturbProjectionDirections,NumberOfIterations)
+        self.ReferenceIsCtfCorrected     = [-1]+getListFromVector(str(ReferenceIsCtfCorrected) + " True", NumberOfIterations)
+        self.ScaleNumberOfSteps          = [-1]+getListFromVector(ScaleNumberOfSteps,NumberOfIterations)
+        self.ScaleStep              = [-1]+getListFromVector(ScaleStep,NumberOfIterations)
+        self.Search5DShift          = [-1]+getListFromVector(Search5DShift,NumberOfIterations)
+        self.Search5DStep           = [-1]+getListFromVector(Search5DStep,NumberOfIterations)
+        self.SymmetryGroup          = [-1]+getListFromVector(SymmetryGroup,NumberOfIterations)
          
         # Configure dabase
         self.Db.setPrintWrapperParameters(PrintWrapperParameters)
@@ -900,7 +900,7 @@ class ProtProjMatch(XmippProtocol):
         _log = self.Log
         _dataBase = self.Db
         
-        for iterN in range(1, NumberofIterations + 1):
+        for iterN in range(1, NumberOfIterations + 1):
             _dataBase.setIteration(iterN)
             # create IterationDir
             _dataBase.insertAction('createDir', path = self.getIterDirName(iterN))
