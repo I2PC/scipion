@@ -183,9 +183,10 @@ public:\
         baseClassName::readParams();\
         blockSize = getIntParam("--mpi_job_size");\
     }\
-    void read(int argc, char **argv)\
+    void read(int argc, char **argv, bool reportErrors = true)\
     {\
-        baseClassName::read(argc, argv);\
+      std::cerr << "mpi reading.." << std::endl;\
+        baseClassName::read(argc, argv, reportErrors);\
         MpiMetadataProgram::read(argc,argv);\
         if (!node->isMaster())\
             verbose=0;\
@@ -199,6 +200,7 @@ public:\
     {\
         if (node->isMaster())\
             baseClassName::startProcessing();\
+        node->barrierWait();\
     }\
     void showProgress()\
     {\

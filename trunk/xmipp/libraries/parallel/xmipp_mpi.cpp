@@ -249,7 +249,7 @@ void MpiNode::barrierWait()
 void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
                               MDLabel sortLabel)
 {
-    if (size==1)
+    if (size == 1)
         return;
 
     FileName fn;
@@ -263,9 +263,7 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
     barrierWait();
     if (isMaster()) //master should collect and join workers results
     {
-        MetaData mdAll, mdSlave;
-        fn = formatString("%s_node%d.xmd", rootname.c_str(), 1);
-        mdAll.read(fn);
+        MetaData mdAll(MD), mdSlave;
         for (int nodeRank = 1; nodeRank < size; nodeRank++)
         {
             fn = formatString("%s_node%d.xmd", rootname.c_str(), nodeRank);
@@ -274,14 +272,15 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
             if (!mdSlave.isEmpty())
                 mdAll.unionAll(mdSlave);
             //Remove blockname
-            fn=fn.removeBlockName();
+            fn = fn.removeBlockName();
             remove(fn.c_str());
         }
         //remove first metadata
         fn = formatString("%s_node%d.xmd", rootname.c_str(), 1);
-        fn=fn.removeBlockName();
+        fn = fn.removeBlockName();
         remove(fn.c_str());
-        MD.sort(mdAll, MDL_IMAGE);
+        if (MD.containsLabel(sortLabel))
+          MD.sort(mdAll, sortLabel);
     }
 }
 
