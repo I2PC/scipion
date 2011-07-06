@@ -250,14 +250,14 @@ class XmippProjectGUI():
                 pass
         
         if btnImage:
-            btn = Button(frame, image=btnImage, bd=0)
+            btn = Button(frame, image=btnImage, bd=0, height=28, width=28)
             btn.image = btnImage
         else:
             btn = Button(frame, text=text, font=self.ButtonFont, bg=ButtonBgColor)
         btn.config(command=lambda:self.runButtonClick(text), 
                  activebackground=ButtonActiveBgColor)
         btn.grid(row=0, column=col)
-        createToolTip(btn, text)
+        ToolTip(btn, text, 500)
         self.runButtonsDict[text] = btn
     
     def createRunHistory(self):
