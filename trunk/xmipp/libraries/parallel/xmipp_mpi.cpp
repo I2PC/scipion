@@ -266,7 +266,7 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
         MetaData mdAll, mdSlave;
         fn = formatString("%s_node%d.xmd", rootname.c_str(), 1);
         mdAll.read(fn);
-        for (int nodeRank = 2; nodeRank < size; nodeRank++)
+        for (int nodeRank = 1; nodeRank < size; nodeRank++)
         {
             fn = formatString("%s_node%d.xmd", rootname.c_str(), nodeRank);
             mdSlave.read(fn);
