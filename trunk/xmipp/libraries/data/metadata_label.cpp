@@ -162,7 +162,7 @@ bool MDL::isCtfParam(const MDLabel label)
 
 bool MDL::isImage(const MDLabel label)
 {
-    return data[(int)label]->tags & TAGLABEL_VOLUME;
+    return data[(int)label]->tags & TAGLABEL_IMAGE;
 }
 
 bool MDL::isStack(const MDLabel label)

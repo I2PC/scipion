@@ -81,6 +81,14 @@ JNIEXPORT jstring JNICALL Java_xmipp_MetaData_label2Str
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    getBlocksInMetaDataFile
+ * Signature: (Ljava/lang/String;)[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_xmipp_MetaData_getBlocksInMetaDataFile
+  (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    getActiveLabels
  * Signature: ()[I
  */
@@ -93,6 +101,62 @@ JNIEXPORT jintArray JNICALL Java_xmipp_MetaData_getActiveLabels
  * Signature: (I)Ljava/lang/Class;
  */
 JNIEXPORT jclass JNICALL Java_xmipp_MetaData_getLabelType
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    isTextFile
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isTextFile
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    isMetadata
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isMetadata
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    isCtfParam
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isCtfParam
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    isImage
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isImage
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    isStack
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isStack
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    isMicrograph
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isMicrograph
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    isPSD
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isPSD
   (JNIEnv *, jclass, jint);
 
 /*

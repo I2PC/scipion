@@ -7,7 +7,6 @@ package browser.table.models;
 import browser.Cache;
 import browser.DEBUG;
 import browser.imageitems.tableitems.AbstractTableImageItem;
-import browser.imageitems.tableitems.iMDComparable;
 import ij.IJ;
 import java.io.File;
 import java.util.LinkedList;
@@ -177,7 +176,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
      * @param right the right-most index of the subarray.
      * @param index index used to avoid moving data.
      */
-    private static void mergeSort(Vector<iMDComparable> data, int tmpArray[],
+    private static void mergeSort(Vector<AbstractTableImageItem> data, int tmpArray[],
             int left, int right, int index[], int label) {
         if (left < right) {
             int center = (left + right) / 2;
@@ -196,7 +195,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
      * @param rightEnd the right-most index of the subarray.
      * @param index index used to avoid moving data.
      */
-    private static void merge(Vector<iMDComparable> data, int tmpArray[],
+    private static void merge(Vector<AbstractTableImageItem> data, int tmpArray[],
             int leftPos, int rightPos, int rightEnd, int index[], int label) {
         int leftEnd = rightPos - 1;
         int tmpPos = leftPos;

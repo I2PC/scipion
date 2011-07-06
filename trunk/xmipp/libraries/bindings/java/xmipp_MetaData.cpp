@@ -173,6 +173,46 @@ JNIEXPORT jstring JNICALL Java_xmipp_MetaData_label2Str(JNIEnv *env,
 	return NULL;
 }
 
+JNIEXPORT jobjectArray JNICALL Java_xmipp_MetaData_getBlocksInMetaDataFile(
+		JNIEnv *env, jclass class_, jstring filename) {
+	std::string msg = "";
+
+	try {
+		std::vector < std::string > blocks;
+		//StringVector blocks;
+
+		const char * fnStr = env->GetStringUTFChars(filename, false);
+
+		getBlocksInMetaDataFile(fnStr, blocks);
+
+		// Sets array value
+		jstring str;
+		jobjectArray array = env->NewObjectArray(blocks.size(), env->FindClass(
+				"java/lang/String"), NULL);
+
+		for (int i = 0; i < blocks.size(); i++) {
+			str = env->NewStringUTF(blocks[i].data());
+			env->SetObjectArrayElement(array, i, str);
+			env->DeleteLocalRef(str);
+		}
+
+		return array;
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return NULL;
+}
+
 JNIEXPORT jintArray JNICALL Java_xmipp_MetaData_getActiveLabels(JNIEnv *env,
 		jobject jobj) {
 	std::string msg = "";
@@ -250,6 +290,167 @@ JNIEXPORT jclass JNICALL Java_xmipp_MetaData_getLabelType(JNIEnv *env,
 	}
 
 	return class_;
+}
+
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isTextFile(JNIEnv *env,
+		jclass class_, jint label) {
+	std::string msg = "";
+	bool result = false;
+
+	try {
+		result = MDL::isTextFile((MDLabel) label);
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return result;
+}
+
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isMetadata(JNIEnv *env,
+		jclass class_, jint label) {
+	std::string msg = "";
+	bool result = false;
+
+	try {
+		result = MDL::isMetadata((MDLabel) label);
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return result;
+}
+
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isCtfParam(JNIEnv *env,
+		jclass class_, jint label) {
+	std::string msg = "";
+	bool result = false;
+
+	try {
+		result = MDL::isCtfParam((MDLabel) label);
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return result;
+}
+
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isImage(JNIEnv *env,
+		jclass class_, jint label) {
+	std::string msg = "";
+	bool result = false;
+
+	try {
+		result = MDL::isImage((MDLabel) label);
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return result;
+}
+
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isStack(JNIEnv *env,
+		jclass class_, jint label) {
+	std::string msg = "";
+	bool result = false;
+
+	try {
+		result = MDL::isStack((MDLabel) label);
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return result;
+}
+
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isMicrograph(JNIEnv *env,
+		jclass class_, jint label) {
+	std::string msg = "";
+	bool result = false;
+
+	try {
+		result = MDL::isMicrograph((MDLabel) label);
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return result;
+}
+
+JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isPSD(JNIEnv *env,
+		jclass class_, jint label) {
+	std::string msg = "";
+	bool result = false;
+
+	try {
+		result = MDL::isPSD((MDLabel) label);
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return result;
 }
 
 JNIEXPORT jint JNICALL Java_xmipp_MetaData_getValueInt(JNIEnv *env,

@@ -7,22 +7,23 @@ import java.util.Arrays;
  * Protocol for integrating native C++ code - @see ImageDouble.java
  */
 public class MetaData {
+//
+//    // Fields whose content is a path. They will be "fixed" conveniently.
+//    private final static int PATHS_FIELDS[] = {
+//        MDLabel.MDL_ASSOCIATED_IMAGE1,
+//        MDLabel.MDL_ASSOCIATED_IMAGE2,
+//        MDLabel.MDL_ASSOCIATED_IMAGE3,
+//        MDLabel.MDL_IMAGE,
+//        MDLabel.MDL_PSD,
+//        MDLabel.MDL_CTFMODEL
+//    };
+//
+//    static {
+//        // Sorts it to use binary search later.
+//        // (It's executed just for the first time)
+//        Arrays.sort(PATHS_FIELDS);
+//    }
 
-    // Fields whose content is a path. They will be "fixed" conveniently.
-    private final static int PATHS_FIELDS[] = {
-        MDLabel.MDL_ASSOCIATED_IMAGE1,
-        MDLabel.MDL_ASSOCIATED_IMAGE2,
-        MDLabel.MDL_ASSOCIATED_IMAGE3,
-        MDLabel.MDL_IMAGE,
-        MDLabel.MDL_PSD,
-        MDLabel.MDL_CTFMODEL
-    };
-
-    static {
-        // Sorts it to use binary search later.
-        // (It's executed just for the first time)
-        Arrays.sort(PATHS_FIELDS);
-    }
     private String filename;
     //hold pointer to Image class in C++ space
     private long peer;
@@ -59,9 +60,25 @@ public class MetaData {
 
     public static native String label2Str(int label);
 
+    public static native String[] getBlocksInMetaDataFile(String filename) throws Exception;
+
     public native int[] getActiveLabels();
 
     public static native Class getLabelType(int label);
+
+    public static native boolean isTextFile(int label);
+
+    public static native boolean isMetadata(int label);
+
+    public static native boolean isCtfParam(int label);
+
+    public static native boolean isImage(int label);
+
+    public static native boolean isStack(int label);
+
+    public static native boolean isMicrograph(int label);
+
+    public static native boolean isPSD(int label);
 
     //get values from metadata
     public native int getValueInt(int label, long objId);
@@ -82,9 +99,14 @@ public class MetaData {
     }
 
     public static boolean isPathField(int label) {
-        return Arrays.binarySearch(PATHS_FIELDS, label) >= 0;
+        return isTextFile(label) || isMetadata(label)
+                || isCtfParam(label) || isImage(label)
+                || isStack(label) || isMicrograph(label) || isPSD(label);
     }
 
+//    public static boolean isPathField(int label) {
+//        return Arrays.binarySearch(PATHS_FIELDS, label) >= 0;
+//    }
     public String fixPath(String value) {
         return Filename.fixPath(getBaseDir(), value);
     }
@@ -92,7 +114,7 @@ public class MetaData {
     public native boolean getValueBoolean(int label, long objId);
 
     public String getFilename() {
-        return filename;
+        return Filename.getFilename(filename);
     }
 
     public String getBaseDir() {

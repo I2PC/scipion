@@ -19,7 +19,7 @@ import xmipp.ImageDouble;
  *
  * @author Juanjo Vega
  */
-public abstract class AbstractTableImageItem implements iMDComparable<AbstractTableImageItem> {// extends XmippImageItem {
+public abstract class AbstractTableImageItem{
 
     protected Cache cache;
     protected ImageDimension dimension;
@@ -134,7 +134,7 @@ public abstract class AbstractTableImageItem implements iMDComparable<AbstractTa
         return getPreview(getThumbnailWidth(), getThumbnailHeight());
     }
 
-    protected ImagePlus getPreview(int w, int h) {
+    public ImagePlus getPreview(int w, int h) {
         ImagePlus preview;
 
         if (getWidth() > 0 && getHeight() > 0) {

@@ -423,7 +423,6 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         toolBar = new javax.swing.JToolBar();
         bSave = new javax.swing.JButton();
         bReload = new javax.swing.JButton();
-        bReload1 = new javax.swing.JButton();
         jpCenter = new javax.swing.JPanel();
         jpCheckAll = new javax.swing.JPanel();
         jcbEnableAll = new javax.swing.JCheckBox();
@@ -456,17 +455,6 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
             }
         });
         toolBar.add(bReload);
-
-        bReload1.setText(LABELS.BUTTON_RELOAD_TABLE+" (AUTO)");
-        bReload1.setFocusable(false);
-        bReload1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        bReload1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        bReload1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bReload1ActionPerformed(evt);
-            }
-        });
-        toolBar.add(bReload1);
 
         getContentPane().add(toolBar, java.awt.BorderLayout.PAGE_START);
 
@@ -530,12 +518,8 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         reloadTableData();
 }//GEN-LAST:event_bReloadActionPerformed
 
-    private void bReload1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bReload1ActionPerformed
-        refreshTableData();
-    }//GEN-LAST:event_bReload1ActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bReload;
-    private javax.swing.JButton bReload1;
     private javax.swing.JButton bSave;
     private javax.swing.JCheckBox jcbEnableAll;
     private javax.swing.JCheckBox jcbFilterEnabled;
