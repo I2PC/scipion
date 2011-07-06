@@ -201,17 +201,15 @@ def checkErrors():
 
 from protlib_base import *
 from xmipp import *
-
+from config import *
+        
 class ProtPartialProjectionSubtraction(XmippProtocol):
 
     def __init__(self, scriptname,project=None):
-        from config import *
-        super(ProtPartialProjectionSubtraction,self).__init__(ProtocolNames.subtraction, scriptname, RunName, project,NumberOfMpiProcesses)
-        #super(ProtPartialProjectionSubtraction,self).__init__(scriptname, workingdir, ProjectDir, logdir, restartStep, isIter)
-    #def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
-    #    super(ProtProjMatch,self).__init__(ProtocolNames.projmatch,scriptname, RunName, project)
+        #import config
+	#super(ProtPartialProjectionSubtraction,self).__init__(ProtocolNames.subtraction, scriptname, RunName, project,NumberOfMpiProcesses)
+        super(ProtPartialProjectionSubtraction,self).__init__('subtraction', scriptname, RunName, project,NumberOfMpiProcesses)
         self.myName='partial_projection_subtraction'
-        #self.run_file1='./readDocfileAndPairExperimentalAndReferenceImages_v3.sh'
         self.subtractionDir ='Subtraction'
         self.referenceDir   ='Refs'
         self.referenceStack ='ref'

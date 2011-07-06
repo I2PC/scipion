@@ -29,8 +29,8 @@ def scaleImages(_log
 
     parameters  = ' -i ' +  filename_currentAngles 
     parameters += ' -o ' + outFileName 
-    parameters += ' --scale fourier ' + str(dimX) + ' ' + str(dimY) 
-    parameters += ' ' +  str(NumberOfThreads) + ' 1 ' 
+    parameters += ' --scale fourier ' + str(dimX) + ' ' + str(dimY) + ' ' + str(NumberOfThreads)
+    parameters += ' --disable_metadata' 
 
 #    launch_job.launch_job('xmipp_transform_geometry',
 #                             parameters,
