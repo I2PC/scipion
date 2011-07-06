@@ -227,7 +227,8 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
     def preRun(self):
 
         print "in PRERUN"
-        self.Iteration_Working_Directory = os.path.join(WorkingDir,'Iter_'+ str(iterationNo))
+        self.pmprotWorkingDir = WorkingDir
+        self.Iteration_Working_Directory = os.path.join(self.pmprotWorkingDir,'Iter_'+ str(iterationNo))
         self.subtractionDir = os.path.join(self.WorkingDir,RunName)
         self.volsDir = os.path.join(self.WorkingDir,self.volsDir)
         self.referenceDir = os.path.join(self.WorkingDir,self.referenceDir)
@@ -274,10 +275,10 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         print "dRradiusMax: ", self.dRradiusMax
         print "dRradiusMin: ", self.dRradiusMin
         
-        tmpFileName = os.path.join(self.WorkingDir,'CtfGroups/ctf_group??????.sel')
+        tmpFileName = os.path.join(self.pmprotWorkingDir,'CtfGroups/ctf_group??????.sel')
         self.defGroups=['']
         import glob
-        self.defGroups +=glob.glob(tmpFileName)
+        self.defGroups = glob.glob(tmpFileName)
         
         print "self.defGroups: ", self.defGroups 
         
@@ -336,7 +337,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         print "actionsToBePerformedInsideLoop"
         print "self.defocusGroupNo: ", self.defocusGroupNo
         _dataBase = self.Db
-        for iterN in range(1, self.defocusGroupNo+1):
+        for iterN in range(1, self.defocusGroupNo):
             print "inside for"
             #Create auxiliary metadata with image names , angles and CTF
             if(self.doScaleImages):
@@ -362,7 +363,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles.append(self.reconstructedVolume[iterN])
             id = _dataBase.insertAction('reconstructVolume', _VerifyFiles, None, None
                                         , DocFileExp = self.DocFileExp[iterN]
-                                        , DoParallel = DoParallel
+                                        , DoParallel = self.DoParallel
                                         , MpiJobSize = MpiJobSize
                                         , NumberOfMpiProcesses = NumberOfMpiProcesses
                                         , NumberOfThreads = NumberOfThreads
@@ -390,7 +391,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             id = _dataBase.insertAction('createProjections', _VerifyFiles, None, None
                                         , AngSamplingRateDeg = AngSamplingRateDeg
                                         , DocFileExp = self.DocFileExp[iterN]
-                                        , DoParallel = DoParallel
+                                        , DoParallel = self.DoParallel
                                         , maskReconstructedVolume = self.maskReconstructedVolume[iterN]
                                         , MaxChangeInAngles = self.MaxChangeInAngles
                                         , MpiJobSize = MpiJobSize
@@ -414,7 +415,6 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles.append(self.subtractedStack[iterN]+'ref')
             _VerifyFiles.append(self.subtractedStack[iterN]+'exp')
             
-            _dataBase.insertAction(command, _Parameters, iterN,_VerifyFiles)
             id = _dataBase.insertAction('subtractionScript', _VerifyFiles, None, None
                                         , DocFileExp = self.DocFileExp[iterN] 
                                         , referenceStackDoc = self.referenceStackDoc[iterN]
