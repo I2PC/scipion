@@ -146,14 +146,14 @@ class MultiListbox(PanedWindow):
     def selectedIndex(self):
         if len(self.curselection()) > 0:
             return int(self.curselection()[0])
-        return None
+        return -1
     
     def selection_set(self, first, last=None):
         for l in self.lists:
             l.selection_set(first, last)
         #print self.curselection()
         index = self.selectedIndex()
-        if self.SelectCallback and index:
+        if self.SelectCallback and index > -1:
             self.SelectCallback(index)
 
 def getGeometry(win):

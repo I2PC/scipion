@@ -665,7 +665,7 @@ import os
 class ProtProjMatch(XmippProtocol):
 
 #    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
-    def __init__(self, scriptname,project=None):
+    def __init__(self, scriptname, project=None):
         super(ProtProjMatch,self).__init__(protDict.projmatch.key,scriptname, RunName, project,NumberOfMpiProcesses)
         #Some class variables
         self.ReferenceVolumeName = 'reference_volume.vol'

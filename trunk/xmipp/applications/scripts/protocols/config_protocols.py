@@ -70,9 +70,12 @@ sections = [
 
 def getSectionByKey(prot): 
     for s, list in sections:
+        ss = []
         for subList in list:
             if prot.key in subList:
-                return (s, subList[0])
+                ss.append(subList[0])
+        if len(ss) > 0:
+            return (s, ss)
     return None
 
 

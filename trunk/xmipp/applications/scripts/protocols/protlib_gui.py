@@ -32,6 +32,7 @@ import string
 from Tkinter import *
 import tkFont
 import tkMessageBox
+from protlib_base import *
 from protlib_utils import *
 from protlib_filesystem import getXmippPath
 
@@ -68,7 +69,7 @@ class ProtocolStyle():
             self.load(configModuleName)
                     
     def load(self, configModuleName):
-        mod = loadModule(configModuleName,False)
+        mod = loadModule(configModuleName, False)
         if mod:
             modDir = dir(mod)
             selfDir = dir(self)
@@ -148,68 +149,68 @@ class BasicGUI():
 
     def currentRow(self, parent=None):
         if not parent:
-            parent=self.frame
+            parent = self.frame
         return parent.grid_size()[1]
     
     def nextRow(self, parent=None):
         if not parent:
-            parent=self.frame
+            parent = self.frame
         return parent.grid_size()[1] + 1
     
-    def addLabel(self,text,row=None,column=0,columnspan=1,sticky=EW,bgColor="",fgColor="",parent=None):
+    def addLabel(self, text, row=None, column=0, columnspan=1, sticky=EW, bgColor="", fgColor="", parent=None):
         if not parent:
-            parent=self.frame
-        if fgColor=="":
-            fgColor=self.style.LabelTextColor
-        if bgColor=="":
-            bgColor=self.style.LabelBgColor
+            parent = self.frame
+        if fgColor == "":
+            fgColor = self.style.LabelTextColor
+        if bgColor == "":
+            bgColor = self.style.LabelBgColor
         if not row:
             row = self.nextRow(parent)
-        label=Label(parent, text=text, bg=bgColor, fg=fgColor)
-        label.grid(row=row,column=column,sticky=sticky,columnspan=columnspan)
+        label = Label(parent, text=text, bg=bgColor, fg=fgColor)
+        label.grid(row=row, column=column, sticky=sticky, columnspan=columnspan)
         return label
     
-    def addCheckButton(self,text,row,column,controlVar,default,command,sticky,parent=None):
+    def addCheckButton(self, text, row, column, controlVar, default, command, sticky, parent=None):
         if not parent:
-            parent=self.frame
+            parent = self.frame
         controlVar.set(default)
-        check=Checkbutton(parent, text=text, variable=controlVar,
-                      command=command, 
+        check = Checkbutton(parent, text=text, variable=controlVar,
+                      command=command,
                       selectcolor=self.style.BooleanSelectColor,
                       bg=self.style.BgColor)
         check.grid(row=row, column=column, sticky=sticky)
         return check
 
-    def addRadioButton(self,text,row,column,variable,value,command,sticky="",parent=None):
+    def addRadioButton(self, text, row, column, variable, value, command, sticky="", parent=None):
         if not parent:
-            parent=self.frame
-        radio=Radiobutton(parent,text=text,variable=variable,
-                          value=value,indicatoron=0,
-                          command=command, 
-                          bg=self.style.ButtonBgColor, 
+            parent = self.frame
+        radio = Radiobutton(parent, text=text, variable=variable,
+                          value=value, indicatoron=0,
+                          command=command,
+                          bg=self.style.ButtonBgColor,
                           activebackground=self.style.ButtonActiveBgColor,
-                          highlightbackground=self.style.HighlightBgColor, 
+                          highlightbackground=self.style.HighlightBgColor,
                           selectcolor=self.style.ButtonActiveBgColor)
-        radio.grid(row=row, column=column,sticky=sticky)
+        radio.grid(row=row, column=column, sticky=sticky)
         return radio
 
-    def addButton(self,text,row,column,command,sticky="",binding="",parent=None):
+    def addButton(self, text, row, column, command, sticky="", binding="", parent=None):
         if not parent:
-            parent=self.frame
-        button = Button(parent, text=text, 
-                        command=command, 
-                        bg=self.style.ButtonBgColor, 
+            parent = self.frame
+        button = Button(parent, text=text,
+                        command=command,
+                        bg=self.style.ButtonBgColor,
                         activebackground=self.style.ButtonActiveBgColor)
-        button.grid(row=row,column=column,sticky=sticky)
-        if binding!="":
+        button.grid(row=row, column=column, sticky=sticky)
+        if binding != "":
             self.master.bind(binding, command)
         return button
 
-    def addLine(self,_color,column,columnspan,parent=None):
+    def addLine(self, _color, column, columnspan, parent=None):
         if not parent:
-            parent=self.frame
-        line=Frame(parent, height=2, bd=1, bg=_color,relief=RIDGE)
-        line.grid(row=self.nextRow(), column=column,columnspan=columnspan,sticky=EW)
+            parent = self.frame
+        line = Frame(parent, height=2, bd=1, bg=_color, relief=RIDGE)
+        line.grid(row=self.nextRow(), column=column, columnspan=columnspan, sticky=EW)
         return line
         
 sepLine = "#------------------------------------------------------------------------------------------\n" 
@@ -388,12 +389,12 @@ class ProtocolGUI(BasicGUI):
         if imageFilename:
             try:
                 imgPath = os.path.join(getXmippPath('resources'), imageFilename)
-                helpImage = PhotoImage(file = imgPath)
+                helpImage = PhotoImage(file=imgPath)
             except TclError:
                 pass
         
         if helpImage:
-            btn = Button(self.frame, image=helpImage, command=cmd, bg=self.style.BgColor, 
+            btn = Button(self.frame, image=helpImage, command=cmd, bg=self.style.BgColor,
                          activebackground=self.style.BgColor, bd=0)
             btn.image = helpImage
         else:
@@ -465,12 +466,12 @@ class ProtocolGUI(BasicGUI):
                     row = self.getRow()
             elif 'text' in keys:
                 var.tktext = Text(self.frame, width=30, height=10,)
-                var.tktext.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W+E)
+                var.tktext.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W + E)
                 w.widgetslist.append(var.tktext)
                 var.tktext.insert(END, var.value)
             else: #Add a text Entry
                 entry = Entry(self.frame, textvariable=var.tkvar, bg=self.style.EntryBgColor)
-                entry.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W+E)
+                entry.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W + E)
                 w.widgetslist.append(entry)
                 image = None
                 if 'file' in keys:
@@ -496,7 +497,7 @@ class ProtocolGUI(BasicGUI):
         headertext = 'GUI for Xmipp %s \n Executed in directory: %s' % (self.programname, os.getcwd())
         self.l1 = Label(self.frame, text=headertext, fg=self.style.SectionTextColor, bg=self.style.LabelBgColor)
         self.l1.configure(wraplength=self.style.WrapLenght)
-        self.l1.grid(row=self.getRow(), column=0, columnspan=6, sticky=E+W)
+        self.l1.grid(row=self.getRow(), column=0, columnspan=6, sticky=E + W)
         self.citerow = self.getRow()        
         self.addSeparator(self.getRow())
             
@@ -515,7 +516,7 @@ class ProtocolGUI(BasicGUI):
             count = 1
         if event.num == 4 or event.delta == 120:
             count = -1
-        self.canvas.yview("scroll", count,"units")
+        self.canvas.yview("scroll", count, "units")
     #-------------------------------------------------------------------
     # Reading and parsing script
     #-------------------------------------------------------------------
@@ -623,6 +624,22 @@ class ProtocolGUI(BasicGUI):
         self.updateScrollRegion()
     
     def save(self, event=""):
+        runName = self.getRunName()
+
+        if runName != self.inRunName:
+            protocol = self.run['protocol_name']
+            self.run['run_name'] = runName
+            self.outScript = self.project.getRunScriptFileName(protocol, runName)
+            self.run['script'] = self.outScript
+        #update database
+        if self.outScript != self.inScript:
+            print "Creating new run of this protocol..."
+            self.project.projectDb.insertRun(self.run)
+            self.inScript = self.outScript
+            self.inRunName = runName
+        else:
+            self.project.projectDb.updateRun(self.run)
+
         print "* Saving script: %s" % self.outScript
         f = open(self.outScript, 'w')
         #f = sys.stdout
@@ -634,15 +651,6 @@ class ProtocolGUI(BasicGUI):
         f.writelines(self.post_header_lines)
         f.close()
         os.chmod(self.outScript, 0755)
-        
-        #update database
-        if self.outScript != self.inScript:
-            print "Inserting in database"
-            self.project.projectDb.insertRun(self.run)
-            self.inScript = self.outScript
-            self.inRunName = self.variablesDict['RunName'].getValue()
-        else:
-            self.project.projectDb.updateRun(self.run)
             
         if self.saveCallback:
             self.saveCallback()
@@ -653,18 +661,17 @@ class ProtocolGUI(BasicGUI):
         return True
     
     def validateProtocol(self):
-        mod = loadModule(self.outScript)
-        #print dir(mod)
-        if 'checkErrors' in dir(mod):
-            errors = mod.checkErrors()
-            if len(errors) > 0:
-                tkMessageBox.showerror("Validation ERRORS",'\n'.join(errors))
-                return False
+        prot = getProtocolFromModule(self.outScript, self.project)
+        errors = prot.validateInput()        
+        if len(errors) > 0:
+            tkMessageBox.showerror("Validation ERRORS", '\n'.join(errors))
+            return False
         return True
     
     def saveExecute(self, event=""):
         self.save() 
-        if self.confirmDeleteWorkingDir() and self.validateProtocol():
+        #if self.confirmDeleteWorkingDir() and self.validateProtocol():
+        if self.validateProtocol():
             print "EXECUTING"           
     
     def showHelp(self, helpmsg):
@@ -683,7 +690,7 @@ class ProtocolGUI(BasicGUI):
         size = self.style.Font['size']
         new_size = size + deltha
         if new_size >= self.style.MinFontSize and new_size <= self.style.MaxFontSize:
-            self.style.Font.configure(size = new_size)
+            self.style.Font.configure(size=new_size)
         self.resize()
         
     def checkVisibility(self, event=""):        
@@ -721,7 +728,8 @@ class ProtocolGUI(BasicGUI):
     def setRunName(self, value):
         self.variablesDict['RunName'].setValue(value)
         
-    def createGUI(self, inScript, project, run = None, master=None, saveCallback=None):
+    def createGUI(self, inScript, project, run=None, master=None, saveCallback=None):
+        print "createGUI script:", inScript
         if run:
             outScript = run['script']
         else:
@@ -731,9 +739,6 @@ class ProtocolGUI(BasicGUI):
         self.project = project
         
         self.init(inScript, outScript)        
-        #self.master = Tk()
-        #self.style = ProtocolStyle('config_gui')
-        #self.style.createFonts()
         self.createBasicGUI(master)
         self.master.option_add("*Font", self.style.Font)
         self.columnspantextlabel = 3
@@ -745,8 +750,8 @@ class ProtocolGUI(BasicGUI):
         self.parseHeader()
         #Set the run_name
         if self.run:
-            self.variablesDict['RunName'].setValue(run['run_name'])
             self.inRunName = run['run_name']
+            self.setRunName(self.inRunName)
         #self.fillWidgets()
                 # Add bottom row buttons
     def fillGUI(self):

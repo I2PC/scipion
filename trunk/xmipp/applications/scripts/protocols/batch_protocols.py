@@ -78,9 +78,9 @@ class XmippProjectGUI():
         self.ToolbarButtonsDict = {}
         self.lastSelected = None
         self.lastRunSelected = None
-        #self.root.bind('<Configure>', self.dragWindows)
-        self.root.bind("<Unmap>", self.OnUnmap)
-        #self.root.bind("<Map>", self.dragWindows)
+        self.root.bind('<Configure>', self.unpostMenu)
+        self.root.bind("<Unmap>", self.unpostMenu)
+        self.root.bind("<Map>", self.unpostMenu)
    
     def addHeaderLabel(self, parent, text, row, col=0):
         '''Add a label to left toolbar'''
@@ -94,20 +94,22 @@ class XmippProjectGUI():
         btn = Button(self.toolbar, bd = 1, text=text, font=self.ButtonFont, relief=RAISED,
                          bg=ButtonBgColor, activebackground=ButtonBgColor)
         btn.grid(row = row, column = 0, sticky=W+E, pady=2, padx=5)
-        
+        list = ['a', 'b', 'c', 'd']
+        i = 0
         if len(opts) > 0:
-            menu = Menu(self.frame, bg=ButtonBgColor, activebackground=ButtonBgColor, font=self.ButtonFont, tearoff=0)
-            i = 0
-            for o in opts:
-                p = protDict.protocolDict[o]
-                title = p.title
-                menu.add_command(label=title, command=lambda:self.newProtocol(p))
-                menu.bind("<Leave>", self.unpostMenu)
-                #command=lambda:self.selectToolbarButton(btn, menu, i))
-                i += 1
-            btn.config(command=lambda:self.showPopup(btn, menu))
-            self.ToolbarButtonsDict[text] = (btn, menu)
-            btn.config(command=lambda:self.selectToolbarButton(text))
+            menu = Menu(self.root, bg=ButtonBgColor, activebackground=ButtonBgColor, font=self.ButtonFont, tearoff=0)
+            prots = [protDict.protocolDict[o] for o in opts]
+            for p in prots:
+                #Following is a bit tricky, its due Python notion of scope, a for does not define a new scope
+                # and menu items command setting
+                def item_command(prot): 
+                    def new_command(): 
+                        self.newProtocol(prot)
+                    return new_command 
+                menu.add_command(label=p.title, command=item_command(p))
+            menu.bind("<Leave>", self.unpostMenu)
+        self.ToolbarButtonsDict[text] = (btn, menu)
+        btn.config(command=lambda:self.selectToolbarButton(text))
 
     def launchProtocolGUI(self, run, srcScript, saveCallback):
         top = Toplevel()
@@ -121,7 +123,7 @@ class XmippProjectGUI():
         protDir = getXmippPath('protocols')
         #suggest a new run_name        
         runName = self.project.projectDb.suggestRunName(protocol)
-        dstAbsPath = os.path.join(self.project.runsDir, 'xmipp_protocol_%s_%s.py' % (protocol, runName))
+        dstAbsPath = self.project.getRunScriptFileName(protocol, runName)
         run = {
                'protocol_name':protocol, 
                'run_name': runName, 
@@ -133,16 +135,16 @@ class XmippProjectGUI():
                                lambda: self.protocolSaveCallback(run, ss))
                 
     def newProtocol(self, prot):
-        protocol = prot.key
         protDir = getXmippPath('protocols')
-        srcProtName = 'xmipp_protocol_%s.py' % protocol
+        srcProtName = 'xmipp_protocol_%s.py' % prot.key
         srcProtDir = getXmippPath('protocols')
         srcProtAbsPath = os.path.join(protDir, srcProtName)
         self.loadProtocol(prot, srcProtAbsPath)
         
-    def protocolSaveCallback(self, run, protGroup):
-        if protGroup == self.lastSelected:
-            self.updateRunHistory(protGroup) 
+    def protocolSaveCallback(self, run, protGroups):
+        print protGroups
+        if self.lastSelected in protGroups:
+            self.updateRunHistory(self.lastSelected) 
 
     def updateRunHistory(self, protGroup): 
         self.runs = self.project.projectDb.selectRuns(protGroup)
@@ -159,12 +161,12 @@ class XmippProjectGUI():
             return  self.ToolbarButtonsDict[self.lastSelected]
         return None
         
-    def dragWindows(self, event):
-        self.unpostMenu()
-    
-    def OnUnmap(self, event=''):
-        if event.widget == self.root:
-            self.unpostMenu()
+#    def dragWindows(self, event):
+#        self.unpostMenu()
+#    
+#    def OnUnmap(self, event=''):
+#        if event.widget == self.root:
+#            self.unpostMenu()
             
     def unpostMenu(self, event=None):
         if self.lastSelected:
@@ -200,7 +202,6 @@ class XmippProjectGUI():
         
     def runButtonClick(self, event=None):
         run = dict(zip(runColumns, self.lastRunSelected))
-        print "protocol_name", run['protocol_name']
         s, ss = getSectionByKey(protDict.protocolDict[run['protocol_name']])
         if event == 'Edit':
             self.launchProtocolGUI(run, run['script'], 
@@ -239,7 +240,7 @@ class XmippProjectGUI():
             btn.image = btnImage
         else:
             btn = Button(frame, text=text, command=cmd, font=self.ButtonFont,
-                     bg=self.style.ButtonBgColor)
+                     bg=ButtonBgColor)
         btn.config(command=lambda:self.runButtonClick(text), 
                  activebackground=ButtonActiveBgColor)
         btn.grid(row=0, column=col)
@@ -255,7 +256,7 @@ class XmippProjectGUI():
         self.addRunButton(frame, "Visualize", None, 2, 'visualize.gif')
         self.addRunButton(frame, "Delete", None, 3, 'delete.gif')
         self.frameHist = Frame(self.frame)
-        self.frameHist.grid(row=2, column=1, sticky=N+W+E+S, columnspan=2)
+        self.frameHist.grid(row=2, column=1, sticky=NSEW, columnspan=2)
         self.lbHist = MultiListbox(self.frameHist, (('Run', 40), ('Modified', 20)))
         self.lbHist.SelectCallback = self.runSelectCallback
         self.lbHist.AllowSort = False        
@@ -265,7 +266,7 @@ class XmippProjectGUI():
         #Create RUN details
         self.addHeaderLabel(self.frame, 'Details', 3, 1)
         self.frameDetails = Frame(self.frame, bg=BgColor, bd=1, relief=RIDGE)
-        self.frameDetails.grid(row=4, column=1,sticky=N+W+E+S, columnspan=2)
+        self.frameDetails.grid(row=4, column=1,sticky=NSEW, columnspan=2)
 
     def createGUI(self, root=None):
         if not root:

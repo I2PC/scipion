@@ -166,8 +166,6 @@ class XmippProjectDb(SqliteDb):
         run['run_id'] = self.cur.lastrowid
         self.connection.commit()
         
-
-        
     def suggestRunName(self, protName):
         self.sqlDict['protocol_name'] = protName
         _sqlCommand = """SELECT COALESCE(MAX(run_name), '%(RunsPrefix)s') AS run_name 
@@ -198,11 +196,11 @@ class XmippProjectDb(SqliteDb):
         
     def selectRuns(self, groupName):
         self.sqlDict['group'] = groupName
-        _sqlCommand = """SELECT * 
+        sqlCommand = """SELECT * 
                          FROM %(TableRuns)s NATURAL JOIN %(TableProtocolsGroups)s
                          WHERE group_name = '%(group)s'
                          ORDER BY last_modified DESC """ % self.sqlDict
-        self.cur.execute(_sqlCommand) 
+        self.cur.execute(sqlCommand) 
         return self.cur.fetchall()
     
 class XmippProtocolDb(SqliteDb): 

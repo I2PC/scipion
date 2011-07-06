@@ -80,11 +80,11 @@ class XmippProject():
         #===== POPULATE SOME TABLES
         for section, groupList in sections:
             for group in groupList:
-                groupName = group[0]            
+                groupName = group[0]
                 prots = group[1:]
                 self.projectDb.insertGroup(groupName)
                 for p in prots:
-                    self.projectDb.insertProtocol(groupName, p.key)
+                    self.projectDb.insertProtocol(groupName, p)
         # commit changes
         self.projectDb.connection.commit()
         
@@ -110,6 +110,9 @@ class XmippProject():
             os.remove(self.cfgName)
         if not os.path.exists(self.dbName):
             os.remove(self.dbName)
+            
+    def getRunScriptFileName(self, protocol, runName):
+        return os.path.join(self.runsDir, 'xmipp_protocol_%s_%s.py' % (protocol, runName))
             
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
@@ -159,17 +162,28 @@ class XmippProtocol(object):
     def getProjectId(self):
         pass
         #self.project = project.getId(launchDict['Projection Matching'],runName,)
+    def validateInput(self):
+        '''Validate if the protocols is ready to be run
+        in this function will be implemented all common
+        validations to all protocols and the function
+        validate will be called for specific validation
+        of each protocol'''
+        self.errors=[]
+        #check if there is a valid project, otherwise abort
+        if not self.project.exists():
+            self.errors.append("Not valid project available")
+        #specific protocols validations
+        self.errors += self.validate()
         
+        return self.errors
+    
     def validate(self):
         '''Validate if the protocols is ready to be run
         it may be redefined in derived protocol classes but do not forget
         to call the main class with
         super(ProtProjMatch, self).validate()
         '''
-        self.errors=[]
-        #check if there is a valid project, otherwise abort
-        if not self.project.exists():
-            self.errors.append("Not valid project available")
+        return []
     
     def summary(self):
         '''Produces a summary with the most relevant information of the protocol run'''
@@ -208,7 +222,7 @@ class XmippProtocol(object):
         #Change to project dir
         os.chdir(self.projectDir);
 
-        errors = self.validate()
+        errors = self.validateInput()
         if len(errors) > 0:
             raise Exception('\n'.join(errors))
         self.restartStep = restartStep
@@ -273,6 +287,14 @@ def command_line_options():
         (options, args) = parser.parse_args()
     return options
 
+def getProtocolFromModule(script, project):
+    mod = loadModule(script)
+    from inspect import isclass
+    for k, v in mod.__dict__.iteritems():
+        if isclass(v) and issubclass(v, XmippProtocol) and v != XmippProtocol:
+            return v(script, project)
+    return None
+            
 def protocolMain(ProtocolClass):
     script  = sys.argv[0]
     options = command_line_options()

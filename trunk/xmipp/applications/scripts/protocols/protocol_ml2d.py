@@ -8,86 +8,92 @@
 # Example use:
 # ./xmipp_protocol_ml2d.py
 #
-# Author: Sjors Scheres, January 2008
-#
+#  Author:  Sjors Scheres, January 2008
+# Updated:  J. M. de la Rosa Trevin July 2011
 #
 # {begin_of_header} 
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
+
+# Working subdirectory: 
+""" This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
+"""
+RunName ='run_001'
+
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
 InSelFile="all_images.sel"
-# Working subdirectory:
-""" This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
-"""
-WorkingDir="ML2D/ML3ref"
-# Delete working subdirectory if it already exists?
-""" Just be careful with this option...
-"""
-DoDeleteWorkingDir=False
-# {expert}{dir} Root directory name for this project:
-""" Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
-"""
-ProjectDir="/home/scheres/xmipp/applications/scripts/protocols"
-# {expert}{dir} Directory name for logfiles:
-""" All logfiles will be stored here
-"""
-LogDir="Logs"
-#------------------------------------------------------------------------------------------------
-# {section} MLF-specific parameters
-#------------------------------------------------------------------------------------------------
+
 # Perform MLF2D instead of ML2D classification?
 DoMlf=False
+
+#------------------------------------------------------------------------------------------------
+# {section} {condition}(DoMlf=True) MLF-specific parameters
+#------------------------------------------------------------------------------------------------
+
 # Use CTF-amplitude correction inside MLF?
 """ If set to true, provide the ctfdat file in the field below. If set to false, one can ignore the ctfdat field, but has to provide the image pixel size in Angstrom"""
 DoCorrectAmplitudes=True
+
 # {file} CTFdat file with the input images:
 """ The names of both the images and the ctf-parameter files should be with absolute paths.
 """
 InCtfDatFile="all_images.ctfdat"
+
 # Image pixel size (in Angstroms)
 PixelSize=4.2
+
 # Are the images CTF phase flipped?
 """ You can run MLF with or without having phase flipped the images.
 """
 ImagesArePhaseFlipped=True
+
 # High-resolution limit (in Angstroms)
 """ No frequencies higher than this limit will be taken into account. If zero is given, no limit is imposed
 """
 HighResLimit=20
+
 #------------------------------------------------------------------------------------------------
 # {section}{expert} ml(f)_align2d parameters
 #------------------------------------------------------------------------------------------------
+
 # Perform 2D maximum-likelihood refinement?
 DoML2D=True
+
 # Number of references (or classes) to be used:
 NumberOfReferences=3
+
 # Also include mirror transformation in the alignment?
 """  Including the mirror transformation is useful if your particles have a handedness and may fall either face-up or face-down on the grid.
  Note that when you want to use this ML2D run for later RCT reconstruction, you can NOT include the mirror transformation here.
 """
 DoMirror=False
+
 # Use the fast version of this algorithm?
 """ See Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244:
     http://dx.doi.org/10.1093/bioinformatics/bti1140
 """
 DoFast=True
+
 # Refine the normalization parameters for each image?
 """ This variant of the algorithm deals with normalization errors. For more info see (and please cite) Scheres et. al. (2009) J. Struc. Biol., in press
 """
 DoNorm=False
+
 # {expert} Restart after iteration:
 """ For previous runs that stopped before convergence, resume the calculations
     after the completely finished iteration. (Use zero to start from the beginning)
 """
 RestartIter=0
+
 # {expert} Additional xmipp_ml_align2d parameters:
 """ For a complete description see the ml_align2d manual page at:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/MLalign2D
 """
 ExtraParamsMLalign2D=""
+
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
@@ -121,68 +127,18 @@ AnalysisScript="visualize_ml2d.py"
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 
-def checkErrors():
-    '''This function will be used to validate the protocols
-    should be implemented in all derived protocols'''
-    return ['testing error']
+import os, sys, shutil
+from xmipp import MetaData
+from protlib_base import *
 
-class ProtML2D:
+class ProtML2D(XmippProtocol):
+    def __init__(self, scriptname, project):
+        XmippProtocol.__init__(protDict.ml2d.key, scriptname, RunName, project, NumberOfMpiProcesses)
 
-    #init variables
-    def __init__(self):
-#                 self,
-#                 InSelFile,
-#                 WorkingDir,
-#                 DoDeleteWorkingDir,
-#                 ProjectDir,
-#                 LogDir,
-#                 DoMlf,
-#                 DoCorrectAmplitudes,
-#                 InCtfDatFile,
-#                 PixelSize,
-#                 ImagesArePhaseFlipped,
-#                 HighResLimit,
-#                 DoML2D,
-#                 NumberOfReferences,
-#                 DoMirror,
-#                 DoFast,
-#                 DoNorm,
-#                 RestartIter,
-#                 ExtraParamsMLalign2D,
-#                 NumberOfThreads,
-#                 DoParallel,
-#                 NumberOfMpiProcesses,
-#                 SystemFlavour):
-	     
-        import os, sys, shutil
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir) # add default search path
-        import log
-        from xmipp import MetaData
-
-#        self.WorkingDir=WorkingDir
-#        self.ProjectDir=ProjectDir
-#        self.DoMlf=DoMlf
-#        self.DoCorrectAmplitudes=DoCorrectAmplitudes
-#        self.HighResLimit=HighResLimit
-#        self.PixelSize=PixelSize
-#        self.ImagesArePhaseFlipped=ImagesArePhaseFlipped
-#        self.NumberOfReferences=NumberOfReferences
-#        self.DoMirror=DoMirror
-#        self.DoFast=DoFast
-#        self.DoNorm=DoNorm
-#        self.ExtraParamsMLalign2D=ExtraParamsMLalign2D
-#        self.NumberOfThreads=NumberOfThreads
-#        self.DoParallel=DoParallel
-#        self.NumberOfMpiProcesses=NumberOfMpiProcesses
-#        self.SystemFlavour=SystemFlavour
-#        self.RestartIter=RestartIter 
-   
         # store script name
         protocolName = sys.argv[0]
-        # Setup logging
-        self.log = log.init_log_system(ProjectDir, LogDir, protocolName, WorkingDir)
-                
         #assume restart
         restart = True
         # This is not a restart
@@ -267,36 +223,7 @@ class ProtML2D:
         print '*',message
         print '*********************************************************************'
 
-#		
-# Main
-#     
+
 if __name__ == '__main__':
-
-    # create ProtML2D object
-
-    ML2D = ProtML2D()
-#                    InSelFile,
-#                    WorkingDir,
-#                    DoDeleteWorkingDir,
-#                    ProjectDir,
-#                    LogDir,
-#                    DoMlf,
-#                    DoCorrectAmplitudes,
-#                    InCtfDatFile,
-#                    PixelSize,
-#                    ImagesArePhaseFlipped,
-#                    HighResLimit,
-#                    DoML2D,
-#                    NumberOfReferences,
-#                    DoMirror,
-#                    DoFast,
-#                    DoNorm,
-#                    RestartIter,
-#                    ExtraParamsMLalign2D,
-#                    NumberOfThreads,
-#                    DoParallel,
-#                    NumberOfMpiProcesses,
-#                    SystemFlavour)
-    # close 
-    ML2D.close()
+    protocolMain(ProtML2D)
 
