@@ -165,7 +165,7 @@ public:
     bool getTaskToProcess(size_t &objId, size_t &objIndex);
 };
 
-/** Macro to define a simple MPI paralelization
+/** Macro to define a simple MPI parallelization
  * of a program based on XmippMetaDataProgram */
 #define CREATE_MPI_METADATA_PROGRAM(baseClassName, mpiClassName) \
 class mpiClassName: public baseClassName, public MpiMetadataProgram\
