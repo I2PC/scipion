@@ -108,9 +108,8 @@ void ProgTransformGeometry::readParams()
 
 void ProgTransformGeometry::preProcess()
 {
-    ImgSize(mdIn, xdim, ydim , zdim, ndim);
-    //If zdim greater than 1, is a volume and should apply transform
-    dim = (isVol = (zdim > 1)) ? 3 : 2;
+    //If zdimOut greater than 1, is a volume and should apply transform
+    dim = (isVol = (zdimOut > 1)) ? 3 : 2;
     //Check that fourier interpolation is only for scale in 2d
     if (splineDegree == INTERP_FOURIER &&
         (checkParam("--shift") || checkParam("--rotate") || isVol))
@@ -186,12 +185,12 @@ void ProgTransformGeometry::preProcess()
             //Calculate scale factor from images sizes and given dimensions
             //this approach assumes that all images have equal size
 
-            double oxdim = xdim, oydim = ydim, ozdim = zdim;
-            xdim = getIntParam("--scale", 1);
-            ydim = STR_EQUAL(getParam("--scale", 2), "x") ? xdim : getIntParam("--scale", 2);
+            double oxdim = xdimOut, oydim = ydimOut, ozdim = zdimOut;
+            xdimOut = getIntParam("--scale", 1);
+            ydimOut = STR_EQUAL(getParam("--scale", 2), "x") ? xdimOut : getIntParam("--scale", 2);
 
-            XX(scaleV) = (double)xdim / oxdim;
-            YY(scaleV) = (double)ydim / oydim;
+            XX(scaleV) = (double)xdimOut / oxdim;
+            YY(scaleV) = (double)ydimOut / oydim;
 
             //if scale factor is large splines s not the way to go, print a warning
             if( fabs(1.0-XX(scaleV)) > 0.1 )
@@ -202,23 +201,23 @@ void ProgTransformGeometry::preProcess()
             }
             if (isVol)
             {
-                zdim = STR_EQUAL(getParam("--scale", 3), "x")
-                       ? xdim : getIntParam("--scale", 3);
-                ZZ(scaleV) = (double)zdim / ozdim;
+                zdimOut = STR_EQUAL(getParam("--scale", 3), "x")
+                       ? xdimOut : getIntParam("--scale", 3);
+                ZZ(scaleV) = (double)zdimOut / ozdim;
             }
         }
         else if (STR_EQUAL(getParam("--scale"), "fourier"))
         {
             if (isVol)
                 REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type is only valid for images");
-            int oxdim = xdim, oydim = ydim;
+            int oxdim = xdimOut, oydim = ydimOut;
             scale_type = SCALE_FOURIER;
 
-            xdim = getIntParam("--scale", 1);
-            ydim = STR_EQUAL(getParam("--scale", 2), "x") ? xdim : getIntParam("--scale", 2);
+            xdimOut = getIntParam("--scale", 1);
+            ydimOut = STR_EQUAL(getParam("--scale", 2), "x") ? xdimOut : getIntParam("--scale", 2);
             fourier_threads = getIntParam("--scale", 3);
             //Do not think this is true
-            //            if (oxdim < xdim || oydim < ydim)
+            //            if (oxdim < xdimOut || oydim < ydimOut)
             //                REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
         }
         else if (STR_EQUAL(getParam("--scale"), "pyramid"))
@@ -226,10 +225,10 @@ void ProgTransformGeometry::preProcess()
             scale_type = SCALE_PYRAMID_EXPAND;
             pyramid_level = getIntParam("--scale", 1);
             double scale_factor = (double)(pow(2.0, pyramid_level));
-            xdim *= scale_factor;
-            ydim *= scale_factor;
+            xdimOut *= scale_factor;
+            ydimOut *= scale_factor;
             if (isVol)
-                zdim *= scale_factor;
+                zdimOut *= scale_factor;
             if (pyramid_level < 0)
             {
                 pyramid_level *= -1; //change sign, negative means reduce operation
@@ -303,7 +302,7 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
         if(scale_type!=SCALE_PYRAMID_EXPAND &&
            scale_type!=SCALE_PYRAMID_REDUCE &&
            scale_type!=SCALE_FOURIER )
-            imgOut().resize(1, zdim, ydim, xdim, false);
+            imgOut().resize(1, zdimOut, ydimOut, xdimOut, false);
         imgOut().setXmippOrigin();
         //        if (only_scale)
         //         T.initIdentity();
@@ -320,7 +319,7 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
             selfPyramidReduce(splineDegree, imgOut(), pyramid_level);
             break;
         case SCALE_FOURIER:
-            selfScaleToSizeFourier(ydim, xdim,imgOut(), fourier_threads);
+            selfScaleToSizeFourier(ydimOut, xdimOut,imgOut(), fourier_threads);
             break;
         }
         imgOut.write(fnImgOut);
