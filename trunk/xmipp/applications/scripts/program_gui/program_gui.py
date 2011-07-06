@@ -29,7 +29,8 @@ from Tkinter import *;
 import tkFont;
 import tkMessageBox;
 import tkFileDialog;
-from subprocess import call;
+from subprocess import call
+from protlib_filesystem import getXmippPath
 
 
 BORDER = 0;
@@ -50,7 +51,17 @@ def getEntryWith(name, default=None):
     if default:
         return max(10, len(default));
     return 10;
-    
+
+def createImageButton(parent, text, image, cmd):
+    try:
+        helpImage = PhotoImage(file = getXmippPath(os.path.join("resources", image)))
+        btn = Button(parent, image=helpImage, command=cmd, bd=0)
+        btn.image = helpImage;
+    except TclError:
+        btn = Button(parent, text=text, bg="#a7dce1", activebackground="#72b9bf",
+                            command=cmd)
+    return btn
+        
 class OptionWidget(Frame):
     def __init__(self, parent, optionName, default, subOptions=0):
         self.parent = parent;
@@ -74,7 +85,7 @@ class OptionWidget(Frame):
               )
             self.entry.pack(side=LEFT, padx="1m")
             if self.isFile:
-                self.browseButton = Button(self, text="Browse", command=self.browseFile)
+                self.browseButton = createImageButton(self, "Browse", "fileopen.gif", self.browseFile)
                 self.browseButton.pack(side=LEFT, padx="1m")
         else:
             self.menuTextVar = StringVar()
@@ -195,16 +206,8 @@ class ParamWidget(Frame):
             self.checkButton = Checkbutton(self, variable=self.checkVar)
             self.checkButton.pack(side=LEFT)
         if len(self.comments) > 0:
-            try:
-                helpImage = PhotoImage(file = "/home/josem/Download/help.gif")
-                helpButton = Button(self, image=helpImage, command=self.buttonHelp_click, bd=0)
-                helpButton.image = helpImage;
-            except TclError:
-                helpButton = Button(self, text="Help",
-                                    bg="#a7dce1",
-                                    activebackground="#72b9bf",
-                                    command=self.buttonHelp_click)
-            helpButton.pack(side=LEFT, padx="1m")  
+            helpButton = createImageButton(self, "Help", "help.gif", self.buttonHelp_click)
+            helpButton.pack(side=LEFT, padx="1m")              
         if not self.parent.single and len(self.parent.params) > 1:
             self.disable() 
         if len(self.options) > 2:
