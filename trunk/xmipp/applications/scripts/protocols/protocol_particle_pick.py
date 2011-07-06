@@ -37,8 +37,13 @@ AutomaticPicking = True
 #------------------------------------------------------------------------------------------
 # {section}{condition}(AutomaticPicking=True) Parallelization issues for automatic particle picking
 #------------------------------------------------------------------------------------------
-# Number of MPI processes to use:
-NumberOfMpiProcesses = 1
+# Number of MPI processes to use
+""" This parameter is used during the automatic picking phase in the background """
+NumberOfMpiProcesses = 3
+
+# Number of threads to use
+""" This parameter is used during the training phase """
+NumberOfThreads = 4
 
 #Submmit to queue
 """Submmit to queue"""
@@ -83,7 +88,8 @@ class ProtParticlePicking(XmippProtocol):
     def __init__(self, scriptname,project=None):
         super(ProtParticlePicking,self).__init__(protDict.particle_pick.key, scriptname, RunName, project)
         self.Import = 'from xmipp_protocol_particle_pick import *'
-
+        print self.summary()
+    
     def defineActions(self):
         # Create link to input micrographs
         micrographSelfile=os.path.join(PreprocessingDir,"micrographs.sel")
@@ -91,10 +97,38 @@ class ProtParticlePicking(XmippProtocol):
 
         # Launch GUI
         self.Db.insertAction('launchParticlePickingGUI', AutomaticPicking=AutomaticPicking, ProjectDir=self.projectDir,
-                             PreprocessingDir=PreprocessingDir, WorkingDir=self.WorkingDir)       
+                             PreprocessingDir=PreprocessingDir, WorkingDir=self.WorkingDir, NumberOfThreads=NumberOfThreads)       
 
     def summary(self):
-        pass
+        mD = xmipp.MetaData()
+        MicrographSelfile=PreprocessingDir+"/micrographs.sel"
+        xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
+        isPairList = mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1) and \
+                     not xmipp.FileName(MicrographSelfile).isStar1()
+        if isPairList:
+            msg=["Input: "+MicrographSelfile+" (Tilt pairs)"]
+        else:
+            msg=["Input: "+MicrographSelfile]
+        
+        total_manual=0
+        total_auto=0
+        N_manual=0
+        N_auto=0
+        for id in mD:
+             micrograph = mD.getValue(xmipp.MDL_IMAGE,id)
+             manual=CountPicked(self.WorkingDir,micrograph,"Common")
+             if manual>0:
+                 total_manual+=manual
+                 N_manual+=1
+             if AutomaticPicking:
+                 auto=CountPicked(self.WorkingDir,micrograph,"Common.auto")
+                 if auto>0:
+                     total_auto+=auto
+                     N_auto+=1
+        msg.append("# Manually picked: "+str(total_manual)+" (from "+str(N_manual)+" micrographs)")
+        if AutomaticPicking:
+            msg.append("# Automatically picked: "+str(total_auto)+" (from "+str(N_auto)+" micrographs)")
+        return msg
     
     def validate(self):
         errors = []
@@ -133,12 +167,13 @@ class ProtParticlePicking(XmippProtocol):
 
 # GUI For marking micrographs
 class ProtParticlePickingGUI(BasicGUI):
-    def __init__(self,log,AutomaticPicking,ProjectDir,PreprocessingDir,WorkingDir):
+    def __init__(self,log,AutomaticPicking,ProjectDir,PreprocessingDir,WorkingDir,NumberOfThreads):
         self.log=log
         self.AutomaticPicking=AutomaticPicking
         self.ProjectDir=ProjectDir
         self.PreprocessingDir=PreprocessingDir
         self.WorkingDir=WorkingDir
+        self.NumberOfThreads=NumberOfThreads
 
         # Read micrographs
         self.mD=xmipp.MetaData();
@@ -230,7 +265,7 @@ class ProtParticlePickingGUI(BasicGUI):
             nextColumn=1
         
         # Add Mark button
-        radio=self.addRadioButton("Mark", row, nextColumn, self.whichmark, micrograph, self.LaunchSingleMark, N)
+        radio=self.addRadioButton("Mark", row, nextColumn, self.whichmark, micrograph, self.LaunchSingleMarkFromGUI, N)
         if AutomaticPicking:
             self.selectedForAutomaticPickingMark.append(radio)
 
@@ -248,67 +283,10 @@ class ProtParticlePickingGUI(BasicGUI):
                 self.selectedForAutomaticPickingMark[i].config(state=NORMAL)
 
     def AutomaticallyDetect(self):
-        command_file = open(WorkingDir+"/pick.sh", "w")
-        directoryPreprocessing,dummy=os.path.split(self.MicrographSelfile)
+        command_file = open(self.WorkingDir+"/pick.sh", "w")
         for i in range(0,len(self.selectedForAutomaticPickingAuto)):
             if (self.selectedForAutomaticPickingAuto[i].get()):
-               directory,micrograph=os.path.split(
-                  self.selectedForAutomaticPickingName[i])
-               filename=WorkingDir+"/"+micrograph+".Common.auto.pos"
-               command_file.write(
-                  "( xmipp_micrograph_mark -i "+directoryPreprocessing+"/"+\
-                  self.selectedForAutomaticPickingName[i]+\
-                  " --auto "+WorkingDir+"/Common.auto --autoSelect "+\
-                  " --outputRoot "+WorkingDir+"/"+micrograph+\
-                  "; if [ -e " + filename + ' ]; then ' + \
-                  'echo "Step A: "'+micrograph+' automatically marked on `date` >> ' + \
-                  WorkingDir + "/status.txt; fi )\n")
-                 
-        command_file.write("MPI_BARRIER\n")
-        command_file.write('echo "Step F: " finished marking on `date` >> ' + \
-                  WorkingDir + "/status.txt \n")
-        command_file.close();
-
-        import tkMessageBox
-        answer=tkMessageBox._show("Execute autodetection",
-                                  "Use a job queueing system?",
-                                  tkMessageBox.QUESTION, 
-                                  tkMessageBox.YESNO)
-        import launch_job
-        command=""
-        if DoParallel:
-            command=launchJob("xmipp_run",
-                                 "-i "+WorkingDir+"/pick.sh",
-                                 self.log,
-                                 True,
-                                 NumberOfMpiProcesses,
-                                 1,
-                                 SystemFlavour,
-                                 answer=="yes" or answer==True)
-        else:
-            os.system("chmod 755 "+WorkingDir+"/pick.sh");
-            command=launchJob(WorkingDir+"/pick.sh",
-                                 "",
-                                 self.log,
-                                 False,
-                                 NumberOfMpiProcesses,
-                                 1,
-                                 SystemFlavour,
-                                 answer=="yes" or answer==True)
-        if (answer=="yes" or answer==True):
-            import xmipp_protocol_gui
-            python_file = open(WorkingDir+"/pick.py", "w")
-            python_file.write("WorkingDir='"+WorkingDir+"'\n")
-            python_file.write("DoParallel="+str(DoParallel)+"\n")
-            python_file.write("NumberOfMpiProcesses="+str(NumberOfMpiProcesses)+"\n")
-            python_file.write("# {end-of-header}\n")
-            python_file.write("import os\n")
-            python_file.write('os.system("'+command+'")\n');
-            python_file.close();
-
-            d = xmipp_protocol_gui.MyQueueLaunch(self.master,"python "+WorkingDir+"/pick.py")
-        else:
-            os.system(command);
+                self.LaunchSingleMark(self.selectedForAutomaticPickingName[i],False)
 
     def GuiUpdateCount(self):
         total_manual=0
@@ -320,11 +298,11 @@ class ProtParticlePickingGUI(BasicGUI):
 
         # Count all micrographs
         for micrograph,row in self.row.items():
-            manual=self.CountPicked(micrograph,"Common")
+            manual=CountPicked(self.WorkingDir,micrograph,"Common")
             total_manual+=manual
             self.addLabel(str(manual).zfill(5),row,familyColumn, sticky=N+S+W+E)
             if AutomaticPicking:
-                auto=self.CountPicked(micrograph,"Common.auto")
+                auto=CountPicked(self.WorkingDir,micrograph,"Common.auto")
                 total_auto+=auto
                 self.addLabel(str(auto).zfill(5),row,familyColumn+1, sticky=N+S+W+E)
 
@@ -333,35 +311,30 @@ class ProtParticlePickingGUI(BasicGUI):
         if AutomaticPicking:
             self.addLabel(str(total_auto).zfill(5),self.buttonrow,familyColumn+1, sticky=N+S+W+E)
 
-    def CountPicked(self,micrograph,label):
-        micrographName=micrograph.split("/")[-2]
-        posfile=self.WorkingDir+"/"+str(micrographName)+'.'+label+'.pos'
-        if os.path.exists(posfile):
-            mD=xmipp.MetaData(posfile);
-            return mD.size()
-        return 0
-    
     def ShowPreprocessing(self):
         self.GuiUpdateCount()
         command='xmipp_visualize_preprocessing_micrographj -i '+self.MicrographSelfile+" &"
         os.system(command)
 
-    def LaunchSingleMark(self):
+    def LaunchSingleMarkFromGUI(self):
         self.GuiUpdateCount()
         micrograph=self.whichmark.get()
         if micrograph=='':
             return
+        self.LaunchSingleMark(micrograph,True)
+    
+    def LaunchSingleMark(self,micrograph,interactive):
         micrographName=micrograph.split("/")[-2]
-        
         arguments=' -i '+micrograph+" --outputRoot "+self.WorkingDir+"/"+micrographName
         if (AutomaticPicking):
-            arguments+=' --auto '+self.WorkingDir+"/Common.auto"
+            arguments+=' --auto '+self.WorkingDir+"/Common.auto --thr "+str(self.NumberOfThreads)
             verifyFile=[self.WorkingDir+"/"+micrographName+".Common.auto.pos"]
         else:
             verifyFile=[self.WorkingDir+"/"+micrographName+".Common.pos"]
-        RunJobThread(self.log,"xmipp_micrograph_mark",arguments,verifyFile).start()
+        if interactive:
+            RunJobThread(self.log,"xmipp_micrograph_mark",arguments,verifyFile).start()
 
-    def LaunchPairMark(self):
+    def LaunchPairMarkFromGUI(self):
         self.GuiUpdateCount()
         untilted=self.whichmark.get()
         tilted=self.whichtilted[untilted]
@@ -371,6 +344,14 @@ class ProtParticlePickingGUI(BasicGUI):
         verifyFile=[self.WorkingDir+"/"+uname+".Common.pos"]
         RunJobThread(self.log,"xmipp_micrograph_mark",arguments,verifyFile).start()
 
+def CountPicked(WorkingDir,micrograph,label):
+    micrographName=micrograph.split("/")[-2]
+    posfile=WorkingDir+"/"+str(micrographName)+'.'+label+'.pos'
+    if os.path.exists(posfile):
+        mD=xmipp.MetaData(posfile);
+        return mD.size()
+    return 0
+    
 # RunJobThread
 class RunJobThread(threading.Thread):
     def __init__(self,log,program,arguments,verifyFiles):
@@ -394,8 +375,8 @@ def createLinkToMicrographs(log,WorkingDir,MicrographSelfile):
         os.system("ln -s "+os.path.relpath(os.path.abspath(MicrographSelfile),WorkingDir)+" "+inputSelfile)
 
 # Execute protocol in the working directory
-def launchParticlePickingGUI(log,AutomaticPicking,ProjectDir,PreprocessingDir,WorkingDir):
-    gui=ProtParticlePickingGUI(log,AutomaticPicking,ProjectDir,PreprocessingDir,WorkingDir)
+def launchParticlePickingGUI(log,AutomaticPicking,ProjectDir,PreprocessingDir,WorkingDir,NumberOfThreads):
+    gui=ProtParticlePickingGUI(log,AutomaticPicking,ProjectDir,PreprocessingDir,WorkingDir,NumberOfThreads)
     gui.createGUI()
     gui.fillGUI()
     gui.launchGUI()
