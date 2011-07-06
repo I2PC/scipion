@@ -22,9 +22,9 @@ public:
 protected:
     ScaleType scale_type;
 
-    int             zdim, ydim, xdim, splineDegree, dim, pyramid_level, fourier_threads,only_scale;
+    int             zdim, ydim, xdim, splineDegree, dim, pyramid_level, fourier_threads;
     size_t          ndim;
-    bool            applyTransform, inverse, wrap, isVol, flip;
+    bool            applyTransform, inverse, wrap, isVol, flip, disableMetadata;
     Matrix2D<double> R, T, S, A, B;
     Matrix1D<double>          shiftV, rotV, scaleV;
     MDRow            input, transformation;
