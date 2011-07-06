@@ -1,6 +1,7 @@
 from Tkinter import *
 
 class MultiListbox(PanedWindow):
+    """MultiListbox class for creating a Grid widget"""
     def __init__(self,master,lists):
         PanedWindow.__init__(self,master,borderwidth=1,showhandle=False,sashwidth=2,sashpad=0,relief=SUNKEN)
         self.lists = []
@@ -16,10 +17,11 @@ class MultiListbox(PanedWindow):
             self.lists.append(lb)
             lb.bind('<B1-Motion>', lambda e, s=self: s._select(e.y))
             lb.bind('<Button-1>', lambda e, s=self: s._select(e.y))
-            lb.bind('<Double-Button-1>', lambda e, s=self: s._doubleClick)
+            lb.bind('<Double-Button-1>', self._doubleClick)
             lb.bind('<Leave>', lambda e: 'break')
             lb.bind('<B2-Motion>', lambda e, s=self: s._b2motion(e.x, e.y))
             lb.bind('<Button-2>', lambda e, s=self: s._button2(e.x, e.y))
+            lb.bind('<Button-3>', lambda e, s=self: s._button3(e.x, e.y))
             lb.bind('<Button-4>', lambda e, s=self: s._scroll(SCROLL, 1, PAGES))
             lb.bind('<Button-5>', lambda e, s=self: s._scroll(SCROLL, -1, PAGES))
             self.add(frame)
@@ -29,7 +31,7 @@ class MultiListbox(PanedWindow):
         for l in self.lists:
             l['yscrollcommand']=sb.set
         self.add(frame)
-        self.pack(expand=YES,fill=BOTH)
+        self.pack(expand=YES,fill=BOTH, side=TOP)
         self.sortedBy = -1
         self.previousWheel = 0
         self.SelectCallback = None
@@ -37,9 +39,8 @@ class MultiListbox(PanedWindow):
         self.AllowSort = True
 
     def _doubleClick(self, event=''):
-        print "double clicking...."
         if self.DoubleClickCallback:
-            self.DoubleClickCallback(self.selectedIndex())
+            self.DoubleClickCallback()
 
     def _select(self, y,state=16):
         row = self.lists[0].nearest(y)
@@ -47,14 +48,18 @@ class MultiListbox(PanedWindow):
         self.selection_set(row)
         return 'break'
 
-
     def _button2(self, x, y):
         for l in self.lists: l.scan_mark(x, y)
         return 'break'
 
+    def _button3(self, x, y):
+        print "right click"
+        #self._select(y, state)
+        return 'break'
+    
 
     def _b2motion(self, x, y):
-        for l in self.lists: l.scan_dragto(x, y)
+        for l in self.lists: l.scan_dragto(x, y)        
         return 'break'
 
 
@@ -120,10 +125,8 @@ class MultiListbox(PanedWindow):
                 l.insert(index, e[i])
                 i = i + 1
 
-
     def size(self):
         return self.lists[0].size()
-
 
     def see(self, index):
         for l in self.lists:
@@ -132,7 +135,6 @@ class MultiListbox(PanedWindow):
     def selection_anchor(self, index):
         for l in self.lists:
             l.selection_anchor(index)
-
 
     def selection_clear(self, first, last=None):
         for l in self.lists:
@@ -168,12 +170,37 @@ def centerWindows(root):
     y = h / 2 - gh / 2
     root.geometry("%dx%d+%d+%d" % (gw, gh, x, y))
 
-if __name__ == '__main__':
-    tk = Tk()
-    Label(tk, text='MultiListbox').pack(side=TOP)
-    mlb = MultiListbox(tk, (('Subject', 40), ('Sender', 20), ('Date', 10)))
-    for i in range(5000):
-        mlb.insert(END, ('Important Message: %d' % i, 'John Doe %d' % i, '10/10/%04d' % (1900+i)))
-    mlb.pack(expand=YES,fill=BOTH,side=TOP)
-    tk.mainloop()
+__tipwindow = None
+
+# Creates a tooptip box for a widget.
+def createToolTip( widget, text ):
+    def enter( event ):
+        global __tipwindow
+        x = y = 0
+        if __tipwindow or not text:
+            return
+        x, y, cx, cy = widget.bbox( "insert" )
+        x += widget.winfo_rootx() + 27
+        y += widget.winfo_rooty() + 27
+        # Creates a toplevel window
+        __tipwindow = tw = Toplevel( widget )
+        # Leaves only the label and removes the app window
+        tw.wm_overrideredirect( 1 )
+        tw.wm_geometry( "+%d+%d" % ( x, y ) )
+        label = Label( tw, text = text, justify = LEFT,
+                       background = "#ffffe0", relief = SOLID, borderwidth = 1,
+                       font = ( "tahoma", "8", "normal" ) )
+        label.pack( ipadx = 1 )
+        
+    def close( event ):
+        global __tipwindow
+        tw = __tipwindow
+        __tipwindow = None
+        if tw:
+            tw.destroy()
+            
+    widget.bind( "<Enter>", enter )
+    widget.bind( "<Leave>", close )
+
+
 

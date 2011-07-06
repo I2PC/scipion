@@ -101,20 +101,26 @@ ExtraParamsMLalign2D=""
 """ This option provides shared-memory parallelization on multi-core machines. 
     It does not require any additional software, other than xmipp
 """
-NumberOfThreads=1
-# Use distributed-memory parallelization (MPI)?
-""" This option provides distributed-memory parallelization on multi-node machines. 
-    It requires the installation of some MPI flavour, possibly together with a queueing system
-"""
-DoParallel=False
-# Number of MPI processes to use:
-NumberOfMpiProcesses=5
-# MPI system Flavour 
-""" Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
-    Ask the person who installed your xmipp version, which option to use. 
-    Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. 
-"""
-SystemFlavour=''
+NumberOfThreads = 1
+
+# Number of MPI processes to use
+NumberOfMpiProcesses = 3
+
+#Submmit to queue?
+"""Submmit to queue"""
+SubmmitToQueue=False
+#------------------------------------------------------------------------------------------------
+# {section}{expert}{condition}(SubmmitToQueue=True) Queue 
+#------------------------------------------------------------------------------------------------
+
+# Queue name
+"""Name of the queue to submit the job"""
+QueueName="default"
+# Queue hours
+"""This establish a maximum number of hours the job will
+be running, after that time it will be killed by the 
+queue system"""
+QueueHours=72
 
 #------------------------------------------------------------------------------------------------
 # {expert}{file} Analysis of results

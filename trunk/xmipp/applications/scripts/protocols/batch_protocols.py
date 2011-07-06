@@ -35,6 +35,7 @@ from protlib_base import *
 from protlib_utils import getScriptPrefix
 from protlib_gui import *
 from protlib_gui_ext import *
+import tkMessageBox
 
 #Font
 FontName = "Helvetica"
@@ -70,9 +71,15 @@ class XmippProjectGUI():
     def __init__(self, project):
         self.project = project
         
+    def deleteProject(self):
+        if tkMessageBox.askyesno("DELETE confirmation", "You are going to DELETE all project data (runs, logs, results...Do you want to continue?"):
+            self.project.clean()
+            self.updateRunHistory("")#clean history and details
+            
     def createMainMenu(self):
         self.menubar = Menu(self.root)
         self.fileMenu = Menu(self.root, tearoff=0)
+        self.fileMenu.add_command(label="Delete project", command=self.deleteProject)
         self.fileMenu.add_command(label="Exit", command=self.onExit)
         self.menubar.add_cascade(label="File", menu=self.fileMenu)
         self.ToolbarButtonsDict = {}
@@ -233,7 +240,7 @@ class XmippProjectGUI():
                 self.createToolbarButton(i, btn[0], btn[1:])
                 i += 1
                 
-    def addRunButton(self, frame, text, cmd, col, imageFilename=None):
+    def addRunButton(self, frame, text, col, imageFilename=None):
         btnImage = None
         if imageFilename:
             try:
@@ -246,11 +253,11 @@ class XmippProjectGUI():
             btn = Button(frame, image=btnImage, bd=0)
             btn.image = btnImage
         else:
-            btn = Button(frame, text=text, command=cmd, font=self.ButtonFont,
-                     bg=ButtonBgColor)
+            btn = Button(frame, text=text, font=self.ButtonFont, bg=ButtonBgColor)
         btn.config(command=lambda:self.runButtonClick(text), 
                  activebackground=ButtonActiveBgColor)
         btn.grid(row=0, column=col)
+        createToolTip(btn, text)
         self.runButtonsDict[text] = btn
     
     def createRunHistory(self):
@@ -258,14 +265,15 @@ class XmippProjectGUI():
         #Button(self.frame, text="Edit").grid(row=0, column=2)
         frame = Frame(self.frame)
         frame.grid(row=0, column=2)
-        self.addRunButton(frame, "Edit", None, 0, 'edit.gif')
-        self.addRunButton(frame, "Copy", None, 1, 'copy.gif')
-        self.addRunButton(frame, "Visualize", None, 2, 'visualize.gif')
-        self.addRunButton(frame, "Delete", None, 3, 'delete.gif')
+        self.addRunButton(frame, "Edit", 0, 'edit.gif')
+        self.addRunButton(frame, "Copy", 1, 'copy.gif')
+        self.addRunButton(frame, "Visualize", 2, 'visualize.gif')
+        self.addRunButton(frame, "Delete", 3, 'delete.gif')
         self.frameHist = Frame(self.frame)
         self.frameHist.grid(row=2, column=1, sticky=NSEW, columnspan=2)
         self.lbHist = MultiListbox(self.frameHist, (('Run', 40), ('Modified', 20)))
         self.lbHist.SelectCallback = self.runSelectCallback
+        self.lbHist.DoubleClickCallback = lambda:self.runButtonClick("Edit")
         self.lbHist.AllowSort = False        
         #self.lbHist.pack()
         

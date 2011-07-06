@@ -608,7 +608,7 @@ NumberOfMpiProcesses = 3
 """
 MpiJobSize ='1'
 
-#Submmit to queue
+#Submmit to queue?
 """Submmit to queue"""
 SubmmitToQueue=False
 #------------------------------------------------------------------------------------------------
