@@ -1095,7 +1095,7 @@ bool MetaData::isColumnFormatFile(char * map, size_t mapSize,
                          szBlockName + " does not exist in file, " + eFilename);
         else
             REPORT_ERROR(ERR_MD_WRONGDATABLOCK,(std::string) "Block Named: " +\
-            		szBlockName + " does not exist ");
+                         szBlockName + " does not exist ");
     size_t size = mapSize - (*firstData - map) - 1;
     *secondData = (char *)  _memmem((*firstData+1), size,"data_", 5);
     *firstloop  = (char *)  _memmem((*firstData), size, "loop_", 5);
@@ -1156,7 +1156,11 @@ void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, SetOperat
     mdIn.myMDSql->setOperate(this, label, operation);
 }
 
-void MetaData::_setOperates(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, SetOperation operation)
+void MetaData::_setOperates(const MetaData &mdInLeft,
+                            const MetaData &mdInRight,
+                            const MDLabel labelLeft,
+                            const MDLabel labelRight,
+                            SetOperation operation)
 {
     if (this == &mdInLeft || this == &mdInRight) //not sense to operate on same metadata
         REPORT_ERROR(ERR_MD, "Couldn't perform this operation on input metadata");
@@ -1164,9 +1168,10 @@ void MetaData::_setOperates(const MetaData &mdInLeft, const MetaData &mdInRight,
     for (int i = 0; i < mdInLeft.activeLabels.size(); i++)
         addLabel(mdInLeft.activeLabels[i]);
     for (int i = 0; i < mdInRight.activeLabels.size(); i++)
-        addLabel(mdInRight.activeLabels[i]);
+        if(mdInRight.activeLabels[i]!=labelRight)
+            addLabel(mdInRight.activeLabels[i]);
 
-    myMDSql->setOperate(&mdInLeft, &mdInRight, label, operation);
+    myMDSql->setOperate(&mdInLeft, &mdInRight, labelLeft,labelRight, operation);
 }
 
 void MetaData::unionDistinct(const MetaData &mdIn, const MDLabel label)
@@ -1208,8 +1213,14 @@ void MetaData::subtraction(const MetaData &mdIn, const MDLabel label)
 
 void MetaData::join(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, JoinType type)
 {
+    join(mdInLeft, mdInRight, label, label, type);
+}
+
+void MetaData::join(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel labelLeft,
+                    const MDLabel labelRight, JoinType type)
+{
     clear();
-    _setOperates(mdInLeft, mdInRight, label, (SetOperation)type);
+    _setOperates(mdInLeft, mdInRight, labelLeft,labelRight, (SetOperation)type);
 }
 
 void MetaData::operate(const String &expression)

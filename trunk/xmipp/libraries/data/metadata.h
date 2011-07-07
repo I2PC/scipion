@@ -189,7 +189,11 @@ protected:
      * ADD, SUBSTRACT of intersection part
      */
     void _setOperates(const MetaData &mdIn, const MDLabel label, SetOperation operation);
-    void _setOperates(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, SetOperation operation);
+    void _setOperates(const MetaData &mdInLeft,
+    		          const MetaData &mdInRight,
+    		          const MDLabel labelLeft,
+    		          const MDLabel labelRight,
+    		          SetOperation operation);
     /** clear data and table structure */
     void _clear(bool onlyData=false);
 
@@ -682,6 +686,10 @@ public:
      * Result in "calling" metadata
      */
     void join(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, JoinType type=LEFT);
+    /** Join two Metadatas
+     * Result in "calling" metadata. join may be done using different labels in each metadata
+     */
+    void join(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel labelLeft, const MDLabel labelRight , JoinType type=LEFT);
 
     /** Basic operations on columns data.
      * Mainly perform replacements on string values and
