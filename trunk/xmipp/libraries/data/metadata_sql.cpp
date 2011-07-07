@@ -562,7 +562,6 @@ void MDSql::setOperate(const MetaData *mdInLeft,
         ss3 << MDL::label2Str( myMd->activeLabels[i]);
         sep = ", ";
     }
-    dumpToFile("kk.sqlite");
     ss << "INSERT INTO " << tableName(tableId)
     << " (" << ss2.str() << ")"
     << " SELECT " << ss3.str()
