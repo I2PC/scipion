@@ -90,22 +90,6 @@ void computePoints(int thread_id)
         for (size_t x = 0; x <= R; x++)//just for more work to do
             for (size_t y = first; y <= last; y++)
             {
-        // MetaData md1;
-    //MetaData md2;
-             Image<double> img;
-
-        //tm.run(nothingFunctionNew);
-        //sleep(1);
-//  ThreadTaskDistributor td(R, blockSize);
-                //std::cerr << "th" << thread_id << ": MD1 --- clearing metadatassss....: " << std::endl;
-                //md1.clear();
-        //std::cerr << "th" << thread_id << ": MD1 --- Adding object....: " << std::endl;
-                //md1.addObject();
-                //std::cerr << "th" << thread_id << ": ---------------------- MD2 ---------- clearing metadatassss....: " << std::endl;
-                //md2.clear();
-        //std::cerr << "th" << thread_id << ":----------------------- MD2 ---------- Adding object....: " << std::endl;
-                //md2.addObject();
-                //std::cerr << "th" << thread_id << ": calculating....: " << std::endl;
                 if (X2 + Y2 <= R2)
                     insideCounter++;
 

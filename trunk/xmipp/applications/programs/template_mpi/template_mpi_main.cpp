@@ -40,7 +40,7 @@
  * distributing the work.
  ***************************************************************************/
 
-#include "parallel/mpi.h"
+#include "parallel/xmipp_mpi.h"
 
 //Some useful macros
 double PI25DT = 3.14159265358979323842643;
