@@ -151,7 +151,7 @@ private:
 
     /**Functions to implement set operations */
     void setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operation);
-    void setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLabel column, SetOperation operation);
+    void setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLabel columnLeft, MDLabel columnRight,SetOperation operation);
     /** Function to dump DB to file */
     bool operate(const String &expression);
 

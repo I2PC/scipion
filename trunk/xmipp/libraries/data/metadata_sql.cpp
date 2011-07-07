@@ -523,7 +523,11 @@ bool MDSql::equals(const MDSql &op)
     return (execSingleIntStmt(sqlQuery)==0);
 }
 
-void MDSql::setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLabel column, SetOperation operation)
+void MDSql::setOperate(const MetaData *mdInLeft,
+		               const MetaData *mdInRight,
+		               MDLabel columnLeft,
+		               MDLabel columnRight,
+		               SetOperation operation)
 {
     std::stringstream ss, ss2, ss3;
     int size;
@@ -542,33 +546,32 @@ void MDSql::setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLa
         break;
     case NATURAL_JOIN:
         join_type = " NATURAL ";
-        column = MDL_UNDEFINED;
+        columnLeft = columnRight = MDL_UNDEFINED;
         break;
     }
-    MDSql temp(NULL);
-    temp.createTable(&(mdInRight->activeLabels), false);
-    mdInRight->myMDSql->copyObjects(&temp);
     size = myMd->activeLabels.size();
 
     for (int i = 0; i < size; i++)
     {
         ss2 << sep << MDL::label2Str( myMd->activeLabels[i]);
         ss3 << sep;
-        if (column == myMd->activeLabels[i])
+        if (mdInLeft->activeLabels[i] == myMd->activeLabels[i])
             ss3 << tableName(mdInLeft->myMDSql->tableId) << ".";
+        else
+            ss3 << tableName(mdInRight->myMDSql->tableId) << ".";
         ss3 << MDL::label2Str( myMd->activeLabels[i]);
         sep = ", ";
     }
-
+    dumpToFile("kk.sqlite");
     ss << "INSERT INTO " << tableName(tableId)
     << " (" << ss2.str() << ")"
     << " SELECT " << ss3.str()
     << " FROM " << tableName(mdInLeft->myMDSql->tableId)
-    << join_type << " JOIN " << tableName(temp.tableId);
+    << join_type << " JOIN " << tableName(mdInRight->myMDSql->tableId);
 
     if (operation != NATURAL_JOIN)
-        ss << " ON " << tableName(mdInLeft->myMDSql->tableId) << "." << MDL::label2Str(column)
-        << "=" << tableName(temp.tableId) << "." << MDL::label2Str(column) ;
+        ss << " ON " << tableName(mdInLeft->myMDSql->tableId) << "." << MDL::label2Str(columnLeft)
+        << "=" << tableName(mdInRight->myMDSql->tableId) << "." << MDL::label2Str(columnRight) ;
     ss << ";";
 
     execSingleStmt(ss);
