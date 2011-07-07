@@ -147,7 +147,7 @@ TEST_F( MetadataTest, ImportObject)
     EXPECT_EQ(auxMetadata,mDunion);
 }
 
-TEST_F( MetadataTest, InnerJoin)
+TEST_F( MetadataTest, LeftJoin)
 {
     MetaData auxMetadata;
     MetaData auxMetadata2 = mDsource;
@@ -155,6 +155,41 @@ TEST_F( MetadataTest, InnerJoin)
     auxMetadata2.setValue(MDL_Z,444.,auxMetadata2.firstObject()+1);//A little bit irregular
     auxMetadata.join(mDsource,mDjoin,MDL_X);
     EXPECT_EQ(auxMetadata,auxMetadata2)<< mDjoin;//print mDjoin if error
+}
+
+TEST_F( MetadataTest, InnerJoin1)
+{
+    MetaData auxMetadata;
+    MetaData auxMetadataResult;
+    MetaData auxMetadataLeft = mDsource;
+    MetaData auxMetadataRight;
+
+    auxMetadataRight.setValue(MDL_Z,1.,auxMetadataRight.firstObject());
+    auxMetadataRight.setValue(MDL_ANGLEPSI,11.,auxMetadataRight.firstObject());
+
+    auxMetadata.join(auxMetadataLeft,auxMetadataRight,MDL_X,MDL_Z,INNER);
+    auxMetadataResult.setValue(MDL_X,1.,auxMetadataRight.firstObject());
+    auxMetadataResult.setValue(MDL_Y,2.,auxMetadataRight.firstObject());
+    auxMetadataResult.setValue(MDL_ANGLEPSI,11.,auxMetadataRight.firstObject());
+
+    EXPECT_EQ(auxMetadata,auxMetadataResult)<< mDjoin;//print mDjoin if error
+}
+
+TEST_F( MetadataTest, InnerJoin2)
+{
+    MetaData auxMetadata;
+    MetaData auxMetadataResult;
+    MetaData auxMetadataLeft = mDsource;
+    MetaData auxMetadataRight;
+
+    auxMetadataRight.setValue(MDL_Z,1.,auxMetadataRight.firstObject());
+    auxMetadataRight.setValue(MDL_Y,11.,auxMetadataRight.firstObject());
+
+    auxMetadata.join(auxMetadataLeft,auxMetadataRight,MDL_X,MDL_Z,INNER);
+    auxMetadataResult.setValue(MDL_X,1.,auxMetadataRight.firstObject());
+    auxMetadataResult.setValue(MDL_Y,2.,auxMetadataRight.firstObject());
+
+    EXPECT_EQ(auxMetadata,auxMetadataResult)<< mDjoin;//print mDjoin if error
 }
 
 TEST_F( MetadataTest, Intersect)
