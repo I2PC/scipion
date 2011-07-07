@@ -130,14 +130,6 @@ public class TiltSeriesIO {
 	}
 
 	// fixed: bug - write fails? spider and derivatives fixed, test with other formats (MRC / MRCS)
-	// TODO: write details (below)
-	// First show dialog to choose file type to save (primarily sel vs stack)
-	// Sel: One option would be to ask for sel and stack file paths (defaults to same paths, 
-	//      ask if user wants to reuse the image file, or overwrite it, or use a different name...)
-	//      right now we reuse the image file
-	//      Other option is use same name and offer only to choose
-	//      the stack type (stk or mrc)
-	// Stack: ask only for stack file path (same overwrite warning), then save both stack and tlt [OK]
 	public static void write(TomoData model) {
 		String path = model.getFilePath();
 		Logger.debug("writing " + path);
@@ -385,8 +377,7 @@ private static String buildAbsolutePath(String selFilePath, String path){
  * @return
  */
 	public static boolean shouldResize(int width, int height){
-		// TODO: shouldResize - when applying changes to the original image, don't resize
-		return (width > resizeThreshold.width ) || (height > resizeThreshold.height);
+			return (width > resizeThreshold.width ) || (height > resizeThreshold.height);
 	}
 	
 	public static void test1(String filepath){

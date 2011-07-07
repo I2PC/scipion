@@ -84,8 +84,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	
 	// TODO: progress bar that monitors commands stdout / log file / etc. Implement with SwingWorker? (@see example in Swingworker documentation)
 	// TODO: font antialiasing - @see ZZZZ
-	// TODO: zoom, scroll...
-	// TODO: enable load canceling
+	// TODO: zoom, scroll... (quite buggy right now...)
+	// TODO: remove load canceling (in the new approach with a cache, slices will be loaded one by one)
 	// TODO: preprocessing - non-blocking previews
 	// TODO: Undo - begin with preproc Undo
 	// TODO: preproc.export or option in save dialog - write a file without the disabled (discarded) projections, not simply setting enable in selfile
@@ -232,7 +232,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	Point cursorLocation = new Point();
 
 	// action history hints - so we can navigate the workflow
-	// TODO: is firstAction really needed?
+	// with the new Workflow approach, we'll only need a reference to the current action
+	// TODO: adapt to new approach (class Workflow)
 	private DefaultMutableTreeNode firstAction, lastAction;
 
 	// for window resizing
@@ -527,7 +528,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		realWindow.setVisible(true);
 	}
 
-	// TODO: sometimes the label does not refresh automatically (for example, when saving a file)
+	// TODO: (bug) sometimes the label does not refresh automatically (for example, when saving a file)
+	// probably was caused by not running some processes in background... check if this bug still happens
 	public void setStatus(String text) {
 		getStatusLabel().setText(text);
 	}

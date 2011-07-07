@@ -26,7 +26,7 @@
 import java.util.Calendar;
 
 
-// TODO: replace with Logger / ConsoleHandler
+// TODO: replace with Logger / ConsoleHandler (JDK classses)
 public class Logger {
 
 	/** print s to stderr with a timestamp

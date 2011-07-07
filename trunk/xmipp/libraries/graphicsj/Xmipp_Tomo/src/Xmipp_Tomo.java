@@ -28,6 +28,10 @@
  * 
  * XmippTomo is an ImageJ plugin that simplifies 3D-EM & X-Ray tomography tasks with a simple yet powerful workflow
  * 
+ * Dependences: Xmipp Java bindings, which means...
+ * - XmippJavaInterface.jar inside ImageJ plugins directory
+ * - LD_LIBRARY_PATH must include Xmipp's lib directory (since we also need libXmippJavaInterface.so)
+ * 
  * - Why "package" is not used?
  * 
  * - Why "package" may be used?

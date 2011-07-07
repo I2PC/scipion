@@ -406,7 +406,7 @@ public class TomoData{
 		firstLoaded.release();
 	}
 	
-	// TODO: loadCanceled
+	// TODO: loadCanceled - no need for load canceling with the cache approach... 
 	public void loadCanceled(){
 		firstImageLoaded();
 	}
@@ -462,7 +462,7 @@ public class TomoData{
 		return resized;
 	}
 	
-	// TODO: isLoadCanceled - manage with thread.cancel
+	// TODO: deprecated - no need for load canceling with the cache approach... isLoadCanceled - manage with thread.cancel
 	public boolean isLoadCanceled(){
 //		return(window.getLastCommandState() == Command.State.CANCELED);
 		return false;
@@ -518,7 +518,7 @@ public class TomoData{
 	 * @param bitDepth
 	 */
 	public void convertTo(int bitDepth){
-		// TODO converTo - check if Coss equation fits better than ImageJ convert algorithm
+		// TODO converTo - check if equation differs from ImageJ convert algorithm
 		if(bitDepth == getBitDepth())
 			return;
 		

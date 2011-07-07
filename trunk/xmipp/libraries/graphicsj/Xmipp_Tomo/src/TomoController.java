@@ -45,7 +45,17 @@ import xmipp.ImageDouble;
 import xmipp.ImageWriteMode;
 
 // TODO: make TomoController extend AbstractController?
-
+/**
+ * 	// TODO: write operations (below)
+ *  the "problem": most files are single files (for instance, an mrc). but selfiles imply 2 files:
+ *  the selfile and the stack file. So, what file naming policy to use?
+	// Sel: One option would be to ask for sel and stack file paths (defaults to same paths, 
+	//      ask if user wants to reuse the image file, or overwrite it, or use a different name...)
+	//      right now we reuse the image filename
+	//      Other option is use same name and offer only to choose the stack type (stk or mrc)
+	 * Let's start with second one (choose type)
+	// Stack: ask only for stack file path (same overwrite warning), then save both stack and tlt [OK]
+ */
 
 /**
  * - Why? 
@@ -307,9 +317,9 @@ public class TomoController implements AdjustmentListener{
 		}
 	}
 
-	
+	// TODO: shouldResize - maybe there's a better place for this method?
 	public static boolean shouldResize(int width, int height){
-		// TODO: shouldResize - when applying changes to the original image, don't resize
+
 		return (width > resizeThreshold.width ) || (height > resizeThreshold.height);
 	}
 	
@@ -342,7 +352,7 @@ public class TomoController implements AdjustmentListener{
 	 */
 	// TODO: - CURRENT - in write actions, handle writeSel
 	// TODO: in write actions, if the file exists delete it first (to avoid overwrite problems)
-	// TODO: progress bar while applying filters
+	// TODO: progress bar while applying filters - or at least update status bar
 	// TODO: update file name (model) in window title (once saved)
 	// TODO: enhance contrast seems to not be applied...
 	public void apply() {
