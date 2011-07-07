@@ -103,13 +103,13 @@ class XmippProject():
             
     def clean(self):
         ''' delete files related with a project'''
-        if not os.path.exists(self.logsDir):
+        if os.path.exists(self.logsDir):
             shutil.rmtree(self.logsDir)
-        if not os.path.exists(self.runsDir):
+        if os.path.exists(self.runsDir):
             shutil.rmtree(self.runsDir)
-        if not os.path.exists(self.cfgName):
+        if os.path.exists(self.cfgName):
             os.remove(self.cfgName)
-        if not os.path.exists(self.dbName):
+        if os.path.exists(self.dbName):
             os.remove(self.dbName)
             
     def deleteRun(self, run):
