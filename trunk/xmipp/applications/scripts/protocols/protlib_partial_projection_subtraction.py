@@ -18,115 +18,58 @@ def scaleImages(_log
                     , scaledImages
                     , SystemFlavour
                     ):
-    #create blanck file
+
     outFileName=scaledImages + ".stk"
     if os.path.exists(outFileName):
         os.remove(outFileName)
-    dimN=MetaData(filename_currentAngles).size()
+
     if (dimY<0):
         dimY = dimX
-    createEmptyFile(outFileName,dimX,dimY,1,dimN)
-
+    
     parameters  = ' -i ' +  filename_currentAngles 
     parameters += ' -o ' + outFileName 
     parameters += ' --scale fourier ' + str(dimX) + ' ' + str(dimY) + ' ' + str(NumberOfThreads)
     parameters += ' --disable_metadata' 
 
-#    launch_job.launch_job('xmipp_transform_geometry',
-#                             parameters,
-#                             _log,
-#                             False,1,1,'')
     runJob(_log,'xmipp_transform_geometry',
                      parameters,
                      DoParallel,
                      NumberOfMpiProcesses,
                      1, # Threads go in --scale option
                      SystemFlavour)
-    #create selfile, the one provided by defualt is buggy when mpi is used
-    
-    
-    scaledImages = scaledImages+".xmd"
-    parameters  = ' -p ' +  outFileName + ' -o' + scaledImages + ' -s'
 
-    runJob(_log,'xmipp_metadata_selfile_create',
-                     parameters,
-                     False,
-                     1,
-                     1,
-                     None)
-    
+    #merge new scaled metadata with original metadata
+    fnScaledImages = scaledImages+".xmd"
+    mdScaled = MetaData(fnScaledImages)
     md = MetaData(filename_currentAngles)
-    mdScaled = MetaData(scaledImages)
     
-    #md.addLabel("original_image")
-    mdScaled.addLabel(MDL_IMAGE_ORIGINAL)
-    mdScaled.setValueCol(MDL_IMAGE_ORIGINAL,".")
+    # copy images to original images column
+    md.addLabel(MDL_IMAGE_ORIGINAL)
+    for id in md:
+        imageScale=mdScaled.getValue(MDL_IMAGE, id)
+        imageOriginal=md.getValue(MDL_IMAGE, id)
+        md.setValue(MDL_IMAGE, imageScale, id)
+        md.setValue(MDL_IMAGE_ORIGINAL, imageOriginal, id)
     
     # Calculate scale factor
-    img = Image()
-    img.readApplyGeo(md,       1, False, DATA, ALL_IMAGES,False)
-    x=y=z=n=0
-    (x,y,z,n) = img.getDimensions()
-    print "X = ",x 
-    print "Y = ",y 
-    print "Z = ",z 
-    print "N = ",n 
-    factorX = x / dimX
-    factorY = y / dimY
-    # Copy images to original images column
-    for id in md:
-        image = mdScaled.getValue(MDL_IMAGE, id)
-        #print image, id
-        mdScaled.setValue(MDL_IMAGE_ORIGINAL, image, id)
-        
-    mdScaled.write(scaledImages)
-    
-    print "scaledImages file written"
-    #mdScaled.deleteRow(MDL_IMAGE_ORIGINAL)
-    
-    #parameters  = ' -i ' +  filename_currentAngles 
-    #parameters += ' --set merge ' +  scaledImages 
-    parameters  = ' -i ' +  scaledImages 
-    parameters += ' --set merge ' +  filename_currentAngles 
-    parameters += ' -o ' + scaledImages
-    
-    launch_job.launch_job('xmipp_metadata_utilities',
-                             parameters,
-                             _log,
-                             False,1,1,'')
-    
-    mdScaled = MetaData(scaledImages)
+    (x,y,z,n) =ImgSize(filename_currentAngles)
+    factorX = float(x) / dimX
+    factorY = float(y) / dimY
+
     scaleXstr = 'shiftX=(shiftX /  ' + str(factorX) + ')'
     scaleYstr = 'shiftY=(shiftY /  ' + str(factorY) + ')'
-    print "scaleXstr: ",scaleXstr
-    print "scaleYstr: ",scaleYstr
-    mdScaled.operate(scaleXstr)
-    mdScaled.operate(scaleYstr)
+    md.operate(scaleXstr)
+    md.operate(scaleYstr)
     
-    mdScaled.write(scaledImages)
-    
-    # xmipp_metadata_utilities  -i Iter_6_current_angles.doc --operate modify_values "shiftX=(shiftX/4)" -o Iter_6_current_angles_scaled.doc
-    # xmipp_metadata_utilities  -i Iter_6_current_angles_scaled.doc --operate modify_values "shiftY=(shiftY/4)" -o Iter_6_current_angles_scaled.doc
-
-    # ctfgroups sels and current angles, images names, need to be changed to the new scaled names.
+    md.write(fnScaledImages)
     
 
 def joinImageCTF(_log, CTFgroupName,DocFileExp,inputSelfile):
-    tmpMD = MetaData(CTFgroupName)
+    ctfMD = MetaData(CTFgroupName)
     MDaux = MetaData(inputSelfile)
     outMD = MetaData()
-    outMD.join(MDaux, tmpMD, MDL_IMAGE, NATURAL_JOIN)
+    outMD.join(MDaux, ctfMD, MDL_IMAGE_ORIGINAL, MDL_IMAGE, INNER_JOIN)
     outMD.write(DocFileExp, MD_APPEND)
-
-
-def updateImageLabel(_log, inputSelfile):
-    md = MetaData(inputSelfile)
-    
-    for id in md:
-        image = md.getValue(MDL_IMAGE_ORIGINAL, id)
-        md.setValue(MDL_IMAGE, image, id)
-
-    md.write(inputSelfile)
 
 #reconstruct
 def reconstructVolume(_log 

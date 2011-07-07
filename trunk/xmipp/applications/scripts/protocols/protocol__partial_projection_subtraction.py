@@ -15,9 +15,9 @@
 Comment='Describe your project here...'
 
 #Comment
-""" Subtraction subdirectory. 'run_001' will create 'Subtraction/run_001' directory
+""" Subtraction subdirectory. 'run_001' will create 'subtraction/run_001' directory
 """
-RunName='run_001'
+RunName='run_003'
 
 # {file} Protocol Name
 ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy_shifts/xmipp_protocol_projmatch_shifts_backup.py'
@@ -201,14 +201,14 @@ def checkErrors():
 
 from protlib_base import *
 from xmipp import *
-from config import *
+#from config import *
         
 class ProtPartialProjectionSubtraction(XmippProtocol):
 
     def __init__(self, scriptname,project=None):
         #import config
-	#super(ProtPartialProjectionSubtraction,self).__init__(ProtocolNames.subtraction, scriptname, RunName, project,NumberOfMpiProcesses)
-        super(ProtPartialProjectionSubtraction,self).__init__('subtraction', scriptname, RunName, project,NumberOfMpiProcesses)
+        super(ProtPartialProjectionSubtraction,self).__init__(protDict.projsubs.key, scriptname, RunName, project,NumberOfMpiProcesses)
+        #super(ProtPartialProjectionSubtraction,self).__init__('subtraction', scriptname, RunName, project,NumberOfMpiProcesses)
         self.myName='partial_projection_subtraction'
         self.subtractionDir ='Subtraction'
         self.referenceDir   ='Refs'
@@ -276,7 +276,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         tmpFileName = os.path.join(self.pmprotWorkingDir,'CtfGroups/ctf_group??????.sel')
         self.defGroups=['']
         import glob
-        self.defGroups = glob.glob(tmpFileName)
+        self.defGroups += glob.glob(tmpFileName)
         
         print "self.defGroups: ", self.defGroups 
         
@@ -288,10 +288,13 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         else:
             tmpFileName = FileName(self.filename_currentAngles)
         tmpFileName = tmpFileName.withoutExtension()
+        tmpFileName = tmpFileName + '_ctfgroups.doc'
+        if os.path.exists(tmpFileName):
+            os.remove(tmpFileName)
         for iterN in range(1, self.defocusGroupNo ):
-            tmpDocFileExp = 'ctfgroup_' + str(iterN).zfill(6) + '@' + tmpFileName + '_ctfgroups.doc'
-            self.DocFileExp.append(tmpDocFileExp
-                              )
+            tmpDocFileExp = 'ctfgroup_' + str(iterN).zfill(6) + '@' + tmpFileName
+            self.DocFileExp.append(tmpDocFileExp)
+            
         self.reconstructedVolume = [""]
         for iterN in range(1, self.defocusGroupNo ):
             tmpReconstruct = os.path.join(self.volsDir, 'rec_ctfg' + str(iterN).zfill(6) + '.vol')
@@ -332,34 +335,29 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         
     def actionsToBePerformedInsideLoop(self):
         
-        print "actionsToBePerformedInsideLoop"
-        print "self.defocusGroupNo: ", self.defocusGroupNo
         _dataBase = self.Db
         for iterN in range(1, self.defocusGroupNo):
-            print "inside for"
             #Create auxiliary metadata with image names , angles and CTF
             if(self.doScaleImages):
-                inputSelfile = self.scaledImages
+                inputSelfile = self.scaledImages +'.xmd'
             else:
                 inputSelfile = self.filename_currentAngles
+                
+            print 'self.defGroups[' + str(iterN) + ']: ', self.defGroups[iterN]
 
             _VerifyFiles = []
             auxFilename = FileName(self.DocFileExp[iterN])
             _VerifyFiles.append(auxFilename.removeBlockName())
-            id = _dataBase.insertAction('joinImageCTF', _VerifyFiles, None, None
+            _VerifyFiles.append("www")
+            id = self.Db.insertAction('joinImageCTF', _VerifyFiles, None, None, None
                                         , CTFgroupName = self.defGroups[iterN]
                                         , DocFileExp = self.DocFileExp[iterN]
-                                        , inputSelfile = inputSelfile)
-            
-            if(self.doScaleImages):
-                _VerifyFiles = []
-                id = _dataBase.insertAction('updateImageLabel', _VerifyFiles, None, None
-                                            , inputSelfile = self.DocFileExp[iterN])
-                
+                                        , inputSelfile = inputSelfile
+                                        )
             #reconstruct each CTF group
             _VerifyFiles = []
             _VerifyFiles.append(self.reconstructedVolume[iterN])
-            id = _dataBase.insertAction('reconstructVolume', _VerifyFiles, None, None
+            id = self.Db.insertAction('reconstructVolume', _VerifyFiles, None, None, None
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , DoParallel = self.DoParallel
                                         , MpiJobSize = MpiJobSize
@@ -373,7 +371,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles = []
             auxFilename = FileName(self.DocFileExp[iterN])
             _VerifyFiles.append(self.maskReconstructedVolume[iterN])
-            id = _dataBase.insertAction('maskVolume', _VerifyFiles, None, None
+            id = self.Db.insertAction('maskVolume', _VerifyFiles, None, None, None
                                         , dRradiusMax = self.dRradiusMax
                                         , dRradiusMin = self.dRradiusMin
                                         , maskReconstructedVolume = self.maskReconstructedVolume[iterN]
@@ -386,7 +384,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles.append(tmp.replace('.stk','.doc'))
             _VerifyFiles.append(tmp.replace('.stk','_sampling.xmd'))
             
-            id = _dataBase.insertAction('createProjections', _VerifyFiles, None, None
+            id = self.Db.insertAction('createProjections', _VerifyFiles, None, None, None
                                         , AngSamplingRateDeg = AngSamplingRateDeg
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , DoParallel = self.DoParallel
@@ -413,7 +411,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles.append(self.subtractedStack[iterN]+'ref')
             _VerifyFiles.append(self.subtractedStack[iterN]+'exp')
             
-            id = _dataBase.insertAction('subtractionScript', _VerifyFiles, None, None
+            id = self.Db.insertAction('subtractionScript', _VerifyFiles, None, None, None
                                         , DocFileExp = self.DocFileExp[iterN] 
                                         , referenceStackDoc = self.referenceStackDoc[iterN]
                                         , subtractedStack = self.subtractedStack[iterN])
@@ -424,16 +422,16 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
     def otherActionsToBePerformedBeforeLoop(self):
         _dataBase = self.Db
         #Create directories
-        _dataBase.insertAction('createDir', path = self.volsDir)
-        _dataBase.insertAction('createDir', path = self.referenceDir)
-        _dataBase.insertAction('createDir', path = self.subImgsDir)
+        _dataBase.insertAction('createDir', None, path = self.volsDir)
+        _dataBase.insertAction('createDir', None, path = self.referenceDir)
+        _dataBase.insertAction('createDir', None, path = self.subImgsDir)
         
         #Create auxiliary metadata with image names , angles and CTF
         
         if(doScaleImages):
             _VerifyFiles = [self.scaledImages+".stk"]
             _VerifyFiles.append(self.scaledImages+".xmd")
-            id = _dataBase.insertAction('scaleImages', _VerifyFiles, None, None
+            id = _dataBase.insertAction('scaleImages', _VerifyFiles, None, None, None
                                        , dimX = self.dimX
                                        , dimY = self.dimY
                                        , DoParallel = self.DoParallel
@@ -444,7 +442,6 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                                        , scaledImages = self.scaledImages
                                        , SystemFlavour = SystemFlavour
                                        )            
-            self.scaledImages = self.scaledImages + ".xmd"
 
     def defineActions(self):
         self.preRun()
