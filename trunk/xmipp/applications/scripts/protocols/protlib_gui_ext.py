@@ -367,6 +367,37 @@ class ToolTip:
 
 ##---------demo code-----------------------------------##
 
+from tkSimpleDialog import Dialog
+'''Implement a Listbox Dialog, it will return
+the index selected in the lisbox or -1 on Cancel'''
+class ListboxDialog(Dialog):
+    def __init__(self, master, itemList, **kargs):
+        self.list = itemList
+        self.kargs = kargs
+        Dialog.__init__(self, master)        
+        
+    def body(self, master):
+        self.result = []
+        self.lb = Listbox(master, selectmode=EXTENDED, bg="white")
+        self.lb.config(**self.kargs)
+        self.lb.pack(fill=BOTH)
+        self.lb.bind('<Double-Button-1>', self.ok)
+        for item in self.list:
+            self.lb.insert(END, item)
+        if len(self.list) > 0:
+            self.lb.selection_set(0)
+        return self.lb # initial focus
+
+    def buttonbox(self):
+        box = Frame(self)
+        w = Button(box, text="OK", width=7, command=self.ok, default=ACTIVE)
+        w.pack(side=RIGHT, padx=5, pady=5)
+        self.bind("<Return>", self.ok)
+        box.pack()
+        
+    def apply(self):
+        self.result = map(int, self.lb.curselection())
+
 def demo():
     root = Tk(className='ToolTip-demo')
     l = Listbox(root)

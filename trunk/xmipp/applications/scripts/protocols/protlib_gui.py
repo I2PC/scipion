@@ -409,6 +409,12 @@ class ProtocolGUI(BasicGUI):
         w.widgetslist.append(rb)
         return rb
         
+    def createSectionWidget(self, var):
+        label_text += "\n-----------------------------------------------------------"
+        label_color = self.style.SectionTextColor 
+        self.lastSection = w
+        self.sectionslist.append(w)
+        
     def createWidget(self, var):
         w = ProtocolWidget(self, var)  
         self.widgetslist.append(w)  

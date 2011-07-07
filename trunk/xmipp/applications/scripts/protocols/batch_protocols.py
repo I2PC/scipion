@@ -74,10 +74,7 @@ class XmippProjectGUI():
     def deleteProject(self):
         if tkMessageBox.askyesno("DELETE confirmation", "You are going to DELETE all project data (runs, logs, results...Do you want to continue?"):
             self.project.clean()
-            self.updateRunHistory("")#clean history and details
-            self.updateRunSelection(-1)
-            self.lastRunSelected = None
-            self.lastSelected = None
+            self.onExit()            
             
     def createMainMenu(self):
         self.menubar = Menu(self.root)
@@ -216,18 +213,10 @@ class XmippProjectGUI():
             prot = getProtocolFromModule(run['script'], self.project)
             summary = '\n'.join(prot.summary())
             self.DetailsLabelsDict['Summary:'].config(text=summary)
-#            self.addDetailsLabel('Run:', 0, 0)
-#            self.addDetailsLabel('Protocol:', 1, 0)
-#            self.addDetailsLabel('Created:', 0, 2)
-#            self.addDetailsLabel('Modified:', 1, 2)
-#            self.addDetailsLabel('Summary:', 2, 0)
             self.frameDetails.grid(row=4, column=1,sticky=NSEW, columnspan=2)
             
         for btn in self.runButtonsDict.values():
             btn.config(state=state)
-            
-        #def updateRunDetails(self, index):
-        #    run = self.runs[index]
             
     def runSelectCallback(self, index):
         if index >= 0:
@@ -247,6 +236,12 @@ class XmippProjectGUI():
             if tkMessageBox.askyesno("Confirm DELETE", "All data related to this run will be DELETED. Do you want to continue?"):
                 self.project.deleteRun(run)
                 self.updateRunHistory(self.lastSelected)
+        elif event == "Visualize":
+            pass
+        elif event == "Help":
+            from protlib_gui_ext import ListboxDialog
+            d = ListboxDialog(self.frame, ['Edit', 'Copy', 'Delete', 'Visualize'], selectmode=SINGLE)
+            print d.result
         
 
     def createToolbar(self):
@@ -292,6 +287,7 @@ class XmippProjectGUI():
         self.addRunButton(frame, "Copy", 1, 'copy.gif')
         self.addRunButton(frame, "Visualize", 2, 'visualize.gif')
         self.addRunButton(frame, "Delete", 3, 'delete.gif')
+        self.addRunButton(frame, "Help", 4, 'help.gif')
         self.frameHist = Frame(self.frame)
         self.frameHist.grid(row=2, column=1, sticky=NSEW, columnspan=2)
         self.lbHist = MultiListbox(self.frameHist, (('Run', 40), ('Modified', 20)))
