@@ -105,7 +105,8 @@ class XmippProjectDb(SqliteDb):
                              iter INTEGER DEFAULT 1,     -- for iterative scripts, iteration number
                                                          -- useful to restart at iteration n
                              execute BOOL,               -- Should the script execute this wrapper or is there
-                                                         -- an external program taht will run it
+                                                         -- an external program that will run it
+                             passDb BOOL,                -- Should the script pass the database handler
                              run_id         INTEGER REFERENCES        %(TableRuns)s(run_id)  ON DELETE CASCADE,
                                                          -- key that unify all processes belonging to a run 
                              parent_step_id INTEGER REFERENCES """ + tableName +"""(step_id) ON DELETE CASCADE,
@@ -262,8 +263,8 @@ class XmippProtocolDb(SqliteDb):
         self.execSqlCommand(_sqlCommand, "Error cleaning table: %(TableStepsCurrent)s" % self.sqlDict)
         #Auxiliary string to insert/UPDATE data
         self.sqlInsertcommand = """ INSERT INTO 
-                                    %(TableStepsCurrent)s(command,parameters,iter,execute,run_id,parent_step_id)
-                                     VALUES (?,?,?,?,?,?)""" % self.sqlDict
+                                    %(TableStepsCurrent)s(command,parameters,iter,execute,passDb,run_id,parent_step_id)
+                                     VALUES (?,?,?,?,?,?,?)""" % self.sqlDict
         
         self.sqlInsertVerify  = " UPDATE %(TableStepsCurrent)s SET fileNameList= ? WHERE step_id=?"% self.sqlDict
         #Calculate the step at which should starts
@@ -424,19 +425,26 @@ class XmippProtocolDb(SqliteDb):
                            verifyfiles=None,
                            parent_step_id=None, 
                            execute=True,
+                           passDb=False,
                            **_Parameters):
         if not parent_step_id:
             if self.parentCase == XmippProtocolDbStruct.lastStep:
                 parent_step_id=self.lastid
             elif self.parentCase == XmippProtocolDbStruct.firstStep:
                 parent_step_id=XmippProtocolDbStruct.firstStep
-        if not execute:
+        if execute==None:
             execute=True
+        if passDb==None:
+            passDb=False
         parameters = pickle.dumps(_Parameters, 0)#Dict
         self.cur_aux = self.connection.cursor()
         #print self.sqlInsertcommand, [command, parameters, iter]
-        self.cur_aux.execute(self.sqlInsertcommand, [command, parameters, self.iter,execute,
+        try:
+            self.cur_aux.execute(self.sqlInsertcommand, [command, parameters, self.iter,execute,passDb,
                                                      self.sqlDict['run_id'],parent_step_id])
+        except sqlite.Error, e:
+            print "Cannot insert command:", e.args[0]
+            exit(1)        
         self.lastid = self.cur_aux.lastrowid
         if (verifyfiles):
             verifyfiles = pickle.dumps(verifyfiles, 0)#Dict
@@ -444,10 +452,6 @@ class XmippProtocolDb(SqliteDb):
         return self.lastid
 
     def runActions(self, _log, _import):
-       
-        #print "kk", bcolors.OKBLUE,"kk"
-        import pprint
-        exec(_import)
         #check if tableName and tablename_aux are identical if not abort
         if self.createRestartTable:
             if self.compareParameters():
@@ -456,52 +460,87 @@ class XmippProtocolDb(SqliteDb):
                 exit(1)
         self.sqlDict['step_id'] = self.StartAtStepN
         self.sqlDict['iter'] = XmippProtocolDbStruct.doAlways
-        sqlCommand = """ SELECT iter, step_id, command, parameters,fileNameList 
+        sqlCommand = """ SELECT step_id
                         FROM %(TableSteps)s 
                         WHERE (step_id >= %(step_id)d OR iter = %(iter)d)
                           AND (run_id = %(run_id)d)
+                          AND (execute=1)
                        ORDER BY step_id """ % self.sqlDict
         self.cur.execute(sqlCommand)
 
-        kommands = self.cur.fetchall()
-        for row in kommands:
-            self.sqlDict['step_id'] = row['step_id']
-            self.sqlDict['iter'] = row['iter']
-            command = row['command']
-            dict = pickle.loads(str(row["parameters"]))
-            if(self.PrintWrapperCommand):
-                if iter == 99999:
-                    self.sqlDict['siter'] = 'N/A'
-                else:
-                    self.sqlDict['siter'] = str(row['iter'])
-                print bcolors.OKBLUE,"--------\nExecution of wrapper: %(step_id)d (iter=%(siter)s)" % self.sqlDict
-                print bcolors.HEADER,(command.split())[-1],bcolors.ENDC
-            #print in column format rather tahn in raw, easier to read 
-            if(self.PrintWrapperParameters):
-                pp = pprint.PrettyPrinter(indent=4,width=20)
-                pp.pprint(dict)
-
-            sqlCommand = "UPDATE %(TableSteps)s SET init = CURRENT_TIMESTAMP WHERE step_id=%(step_id)d" % self.sqlDict
-            self.connection.execute(sqlCommand)
-            self.connection.commit()
-            
-            exec ( command + '(_log, **dict)')
-            
-            if self.verify and row["fileNameList"]:
-                _list =pickle.loads(str(row["fileNameList"]))
-                for i in _list:
-                    if not os.path.exists(i):
-                        self.sqlDict['file'] = i
-                        print "ERROR at  step: %(step_id)d, file %(file)s has not been created." % self.sqlDict
-                        exit(1)
-                    elif self.viewVerifyedFiles:
-                        print "Verified file:", i
-            
-            sqlCommand = "UPDATE %(TableSteps)s SET finish = CURRENT_TIMESTAMP WHERE step_id=%(step_id)d" %  self.sqlDict
-            self.connection.execute(sqlCommand)
-            self.connection.commit()
-            
-            if self.PrintWrapperCommand:
-                print "Wrapper step: %(step_id)d finished\n" % self.sqlDict
+        commands = self.cur.fetchall()
+        for row in commands:
+            self.runSingleAction(self.connection, self.cur,_log, _import, row['step_id'])
         print '********************************************************'
         print ' Protocol FINISHED'
+
+    def runSingleAction(self, _connection, _cursor, _log, _import, _step_id):
+        import pprint
+        exec(_import)
+        self.sqlDict['step_id'] = _step_id
+        sqlCommand = """ SELECT iter, passDb, command, parameters,fileNameList 
+                        FROM %(TableSteps)s 
+                        WHERE (step_id = %(step_id)d)
+                          AND (run_id = %(run_id)d) """ % self.sqlDict
+        _cursor.execute(sqlCommand)
+
+        row = _cursor.fetchone()
+        self.sqlDict['iter'] = row['iter']
+        command = row['command']
+        dict = pickle.loads(str(row["parameters"]))
+        if(self.PrintWrapperCommand):
+            if iter == XmippProtocolDbStruct.doAlways:
+                siter = 'N/A'
+            else:
+                siter = str(row['iter'])
+            print bcolors.OKBLUE,"--------\nExecution of wrapper: %d (iter=%s)" % (_step_id,siter)
+            print bcolors.HEADER,(command.split())[-1],bcolors.ENDC
+
+        #print in column format rather than in raw, easier to read 
+        if(self.PrintWrapperParameters):
+            pp = pprint.PrettyPrinter(indent=4,width=20)
+            pp.pprint(dict)
+
+        sqlCommand = "UPDATE %(TableSteps)s SET init = CURRENT_TIMESTAMP WHERE step_id=%(step_id)d" % self.sqlDict
+        _connection.execute(sqlCommand)
+        _connection.commit()
+        
+        if row['passDb']:
+            exec ( command + '(_log, self, **dict)')
+        else:
+            exec ( command + '(_log, **dict)')
+        
+        if self.verify and row["fileNameList"]:
+            _list =pickle.loads(str(row["fileNameList"]))
+            for i in _list:
+                if not os.path.exists(i):
+                    self.sqlDict['file'] = i
+                    print "ERROR at  step: %(step_id)d, file %(file)s has not been created." % self.sqlDict
+                    exit(1)
+                elif self.viewVerifyedFiles:
+                    print "Verified file:", i
+        
+        sqlCommand = "UPDATE %(TableSteps)s SET finish = CURRENT_TIMESTAMP WHERE step_id=%(step_id)d" %  self.sqlDict
+        print "Updating finish",sqlCommand
+        _connection.execute(sqlCommand)
+        _connection.commit()
+        
+        if self.PrintWrapperCommand:
+            print "Wrapper step: %(step_id)d finished\n" % self.sqlDict
+
+# RunJobThread
+import threading
+class RunDbActionInThread(threading.Thread):
+    def __init__(self,_log,_Db,_import,_step_id):
+        self._log=_log
+        self._Db=_Db
+        self._import=_import
+        self._step_id=_step_id
+        threading.Thread.__init__ ( self )
+    
+    def run(self):
+        connection = sqlite.Connection(self._Db.dbName)
+        connection.row_factory = sqlite.Row
+        cursor = connection.cursor()
+        self._Db.runSingleAction(connection,cursor,self._log,self._import,self._step_id)
+
