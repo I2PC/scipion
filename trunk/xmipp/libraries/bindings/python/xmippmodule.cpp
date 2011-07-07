@@ -1971,13 +1971,14 @@ MetaData_setComment(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int label;
+    int labelLeft;
+    int labelRight;
     PyObject *pyMdLeft = NULL;
     PyObject *pyMdright = NULL;
     PyObject *pyQuery = NULL;
     JoinType jt;
 
-    if (PyArg_ParseTuple(args, "OOii", &pyMdLeft, &pyMdright, &label, &jt))
+    if (PyArg_ParseTuple(args, "OOiii", &pyMdLeft, &pyMdright, &labelLeft,&labelRight, &jt))
     {
         try
         {
@@ -1995,7 +1996,8 @@ MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs)
             }
             MetaDataObject *self = (MetaDataObject*) obj;
             self->metadata->join(MetaData_Value(pyMdLeft),
-                                 MetaData_Value(pyMdright), (MDLabel) label, (JoinType) jt);
+                                 MetaData_Value(pyMdright), (MDLabel) labelLeft,
+                                 (MDLabel) labelRight, (JoinType) jt);
             Py_RETURN_NONE;
         }
         catch (XmippError xe)
