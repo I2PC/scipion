@@ -240,6 +240,7 @@ class XmippProtocol(object):
 
         #Add actions to database
         self.defineActions()
+        self.Db.connection.commit()
         #Run actions from database
         self.Db.runActions(self.Log, self.Import)
         #Stuff after running
