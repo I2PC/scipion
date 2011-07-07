@@ -75,6 +75,9 @@ class XmippProjectGUI():
         if tkMessageBox.askyesno("DELETE confirmation", "You are going to DELETE all project data (runs, logs, results...Do you want to continue?"):
             self.project.clean()
             self.updateRunHistory("")#clean history and details
+            self.updateRunSelection(-1)
+            self.lastRunSelected = None
+            self.lastSelected = None
             
     def createMainMenu(self):
         self.menubar = Menu(self.root)
