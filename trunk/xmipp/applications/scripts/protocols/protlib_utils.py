@@ -209,7 +209,8 @@ def runJob(log,
            DoParallel,
            NumberOfMpiProcesses,
            NumberOfThreads,
-           SystemFlavour):
+           SystemFlavour,
+           RunInBackground=False):
     
     command = buildRunCommand(log,
                programname,
@@ -217,12 +218,14 @@ def runJob(log,
                DoParallel,
                NumberOfMpiProcesses,
                NumberOfThreads,
-               SystemFlavour)
+               SystemFlavour,
+               RunInBackground)
     printLog(log, "Running command: %s" % command)
 
     from subprocess import call
     retcode = 0
     try:
+        print RunInBackground
         retcode = call(command, shell=True)
         printLog(log, "Process returned with code %d" % retcode)
     except OSError, e:
@@ -237,7 +240,8 @@ def buildRunCommand(
                DoParallel,
                NumberOfMpiProcesses,
                NumberOfThreads,
-               SystemFlavour):
+               SystemFlavour,
+               RunInBackground):
     paramsDict={}
     if not DoParallel:
         command = programname + ' ' + params
@@ -268,6 +272,8 @@ def buildRunCommand(
         else:
             printLogError(log, 'Unrecognized SystemFlavour %s' % SystemFlavour)
         command = (mpicommand + ' `which %(prog)s` %(params)s') % paramsDict
+    if RunInBackground:
+        command+=" &"
     return command
 
 def loadModule(modulePath, report=True):
