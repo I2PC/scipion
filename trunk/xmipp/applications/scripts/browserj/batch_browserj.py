@@ -1,4 +1,7 @@
+#!/usr/bin/env python
+
 import os, glob, sys, optparse
+from protlib_filesystem import getXmippPath
 
 def command_line_options():
 	""" add command line options here"""
@@ -16,15 +19,16 @@ memory, workdir = command_line_options();
 if memory == "512m":
 	print "No memory size provided. Using default: " + memory
 
-workdir_str = ""
-if workdir:
-	workdir_str = "-dir " + workdir
+if len(workdir) > 0:
+	workdir = "-dir " + workdir
 
-imagej_home = "../../../external/imagej"
+
+imagej_home = getXmippPath("external/imagej")
 plugins_dir = imagej_home + "/plugins/"
 macros_dir = imagej_home + "/macros/"
 imagej_jar = imagej_home + "/ij.jar"
 macro = macros_dir + "xmippBrowser.txt"
-cmd = "echo 'java -Xmx%s -Dplugins.dir=%s -jar %s -macro %s \"%s\"'" % (memory, plugins_dir, macro, imagej_jar, workdir_str)
+cmd = """ java -Xmx%s -Dplugins.dir=%s -jar %s -macro %s "%s" """ % (memory, plugins_dir, imagej_jar, macro, workdir)
 #$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "-dir $WORKDIR"
+print cmd
 os.system(cmd)
