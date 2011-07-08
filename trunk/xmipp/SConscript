@@ -662,6 +662,7 @@ if int(env['java']):
     javaPlugins.append(AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins'))
+    javaPlugins.append(AddImageJPlugin('Xmipp_MetaData_Browser', 'libraries/graphicsj/Xmipp_MetaData_Browser', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Masks_ToolBar', 'libraries/graphicsj/Masks_ToolBar', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
     # Java apps
@@ -822,6 +823,8 @@ AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_
 #AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
 AddBatch('browserj', 'applications/scripts/browserj', '.sh')
 #AddBatch('browserj', 'applications/scripts/browserj', '.py')
+AddBatch('metadata_browserj', 'applications/scripts/metadata_browserj', '.sh')
+#AddBatch('metadata_browserj', 'applications/scripts/metadata_browserj', '.py')
 
 # Protocols
 #Protocol libraries

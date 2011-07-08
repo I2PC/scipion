@@ -31,7 +31,7 @@ else
 		shift
 	done
 
-	if test -z "$MEM" || test -z "$IMG" || test -z "$SEL" || test -z "$VOL"
+	if test -z "$MEM" || test -z "$FILES"
 	then
 		SHOW_HELP=1
 	fi
