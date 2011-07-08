@@ -16,11 +16,10 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------
 # Comment
-from Tkinter import IntVar
 """ Specify the particularities of this run """
 Comment=''
 
-# Working subdirectory:
+# Run name
 """ Working directory for this protocol 
 """
 RunName = "particles_001"
@@ -45,7 +44,7 @@ NumberOfMpiProcesses = 3
 """ This parameter is used during the training phase """
 NumberOfThreads = 4
 
-#Submmit to queue
+# Submmit to queue?
 """Submmit to queue"""
 SubmmitToQueue=False
 #------------------------------------------------------------------------------------------------
@@ -82,6 +81,7 @@ import xmipp
 from protlib_gui import *
 from protlib_base import *
 from protlib_filesystem import *
+from Tkinter import IntVar
 
 # Create a GUI automatically from a selfile of micrographs
 class ProtParticlePicking(XmippProtocol):
@@ -100,7 +100,7 @@ class ProtParticlePicking(XmippProtocol):
         micrographSelfile=os.path.join(PreprocessingDir,"micrographs.sel")
         self.Db.insertAction('createLinkToMicrographs', [micrographSelfile], MicrographSelfile=micrographSelfile, WorkingDir=self.WorkingDir)       
 
-        # Insert one action per micrograph
+        # Create a dictionary of relevant micrograph information
         micrographDict={}
         containsEnable=self.mD.containsLabel(xmipp.MDL_ENABLED)
         for id in self.mD:
@@ -109,24 +109,10 @@ class ProtParticlePicking(XmippProtocol):
                 if self.mD.getValue(xmipp.MDL_ENABLED,id)==0:
                     continue
             micrographName=micrograph.split("/")[-2]
-            micrographDict[micrographName]=[]
-            if AutomaticPicking:
-                verifyFile=[self.WorkingDir+"/"+micrographName+".Common.auto.pos"]
-                tilted=""
-            elif self.isPairList:
-                tilted=self.mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1,id)
-                verifyFile=[self.WorkingDir+"/"+micrographName+".Common.pos"]
-            else:
-                verifyFile=[self.WorkingDir+"/"+micrographName+".Common.pos"]
-            micrographDict[micrographName].append(self.Db.insertAction('launchMark', verifyFile, execute=False,
-                                                                       micrograph=micrograph,
-                                                                       micrographName=micrographName,
-                                                                       WorkingDir=self.WorkingDir,
-                                                                       automaticPicking=AutomaticPicking,
-                                                                       tilted=tilted,
-                                                                       interactive=True,
-                                                                       Nthreads=NumberOfThreads))
+            micrographDict[micrographName]=[micrograph]
             if self.isPairList:
+                tilted=self.mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1,id)
+                micrographDict[micrographName].append(tilted)
                 micrographDict[micrographName].append(tilted.split("/")[-2])
 
         # Launch GUI
@@ -264,7 +250,7 @@ class ProtParticlePickingGUI(BasicGUI):
         # Add Micrograph name
         label=micrograph
         if self.IsPairList:
-            label+=' : '+self.micrographDict[micrograph][1]
+            label+=' : '+self.micrographDict[micrograph][2]
         self.addLabel(label, row, 0, sticky=E)
         
         # If automatic particle picking, add checkbox
@@ -333,19 +319,12 @@ class ProtParticlePickingGUI(BasicGUI):
         micrograph=self.whichmark.get()
         if micrograph=='':
             return
-        RunDbActionInThread(self.log,self.Db,'from xmipp_protocol_particle_pick import launchMark', self.micrographDict[micrograph][0]).start()
-    
-def launchMark(log,micrograph,micrographName,WorkingDir,automaticPicking,tilted,interactive,Nthreads):
-    arguments=' -i '+micrograph+" --outputRoot "+WorkingDir+"/"+micrographName
-    if automaticPicking:
-        arguments+=' --auto '+WorkingDir+"/Common.auto"
-    elif tilted!="":
-        arguments+=" --tilted "+tilted
-    if interactive:
-        NthreadsToUse=Nthreads
-    else:
-        NthreadsToUse=1
-    runJob(log,'xmipp_micrograph_mark',arguments,False,1,NthreadsToUse,"")
+        arguments=' -i '+self.micrographDict[micrograph][0]+" --outputRoot "+self.WorkingDir+"/"+micrograph
+        if AutomaticPicking:
+            arguments+=' --auto '+self.WorkingDir+"/Common.auto"
+        elif tilted!="":
+            arguments+=" --tilted "+self.micrographDict[micrograph][1]
+        runJob(self.log,'xmipp_micrograph_mark',arguments,False,1,NumberOfThreads,"",True)
     
 def CountPicked(WorkingDir,micrograph,label):
     posfile=WorkingDir+"/"+str(micrograph)+'.'+label+'.pos'
