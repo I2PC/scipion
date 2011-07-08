@@ -51,15 +51,11 @@
 
 /** This class represent an Xmipp Program.
  * It have some of the basic functionalities of
- * the programs like argument parsing, cheking, usage printing.
+ * the programs like argument parsing, checking, usage printing.
  */
 class XmippProgram
 {
 private:
-    /** Flag to check whether to run or not*/
-    bool notRun;
-    /** Value to store possible error codes */
-    int errorCode;
     /** Initialization function */
     void init();
 
@@ -78,6 +74,10 @@ private:
     void createWiki();
 
 protected:
+    /** Flag to check whether to run or not*/
+    bool notRun;
+    /** Value to store possible error codes */
+    int errorCode;
     /// Program definition and arguments parser
     ProgramDef * progDef;
 
@@ -204,7 +204,7 @@ public:
      * 0 means success
      * and a value greater than 0 represents the error type
      * */
-    int tryRun();
+    virtual int tryRun();
 
     /** @name Constructors
      * @{
