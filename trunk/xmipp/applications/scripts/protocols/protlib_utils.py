@@ -324,6 +324,24 @@ def submitProtocol(protocolPath, **params):
     command = cmdTemplate % {'file': file}
     print "** Submiting to queue: '%s'" % command
     os.system(command)
+    
+    
+def runImageJPlugin(memory, macro, args):
+    '''Launch an ImageJPlugin '''
+    from protlib_filesystem import getXmippPath
+    if len(memory) == 0:
+        memory = "512m"
+        print "No memory size provided. Using default: " + memory
+    imagej_home = getXmippPath("external/imagej")
+    plugins_dir = os.path.join(imagej_home, "plugins")
+    macro = os.path.join(imagej_home, "macros", macro)
+    imagej_jar = os.path.join(imagej_home, "ij.jar")
+    cmd = """ java -Xmx%s -Dplugins.dir=%s -jar %s -macro %s "%s" """ % (memory, plugins_dir, imagej_jar, macro, args)
+    #$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$IMG $SEL $VOL $POLL"
+    print cmd
+    os.system(cmd)
+    
+    
 
 #---------------------------------------------------------------------------
 # Metadata stuff
