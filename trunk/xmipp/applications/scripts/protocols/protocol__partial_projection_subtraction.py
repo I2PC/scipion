@@ -348,8 +348,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles = []
             auxFilename = FileName(self.DocFileExp[iterN])
             _VerifyFiles.append(auxFilename.removeBlockName())
-            _VerifyFiles.append("www")
-            id = self.Db.insertAction('joinImageCTF', _VerifyFiles, None, None, None
+            id = self.Db.insertAction('joinImageCTF', _VerifyFiles
                                         , CTFgroupName = self.defGroups[iterN]
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , inputSelfile = inputSelfile
@@ -357,7 +356,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             #reconstruct each CTF group
             _VerifyFiles = []
             _VerifyFiles.append(self.reconstructedVolume[iterN])
-            id = self.Db.insertAction('reconstructVolume', _VerifyFiles, None, None, None
+            id = self.Db.insertAction('reconstructVolume', _VerifyFiles
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , DoParallel = self.DoParallel
                                         , MpiJobSize = MpiJobSize
@@ -371,7 +370,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles = []
             auxFilename = FileName(self.DocFileExp[iterN])
             _VerifyFiles.append(self.maskReconstructedVolume[iterN])
-            id = self.Db.insertAction('maskVolume', _VerifyFiles, None, None, None
+            id = self.Db.insertAction('maskVolume', _VerifyFiles
                                         , dRradiusMax = self.dRradiusMax
                                         , dRradiusMin = self.dRradiusMin
                                         , maskReconstructedVolume = self.maskReconstructedVolume[iterN]
@@ -384,7 +383,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles.append(tmp.replace('.stk','.doc'))
             _VerifyFiles.append(tmp.replace('.stk','_sampling.xmd'))
             
-            id = self.Db.insertAction('createProjections', _VerifyFiles, None, None, None
+            id = self.Db.insertAction('createProjections', _VerifyFiles
                                         , AngSamplingRateDeg = AngSamplingRateDeg
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , DoParallel = self.DoParallel
@@ -411,7 +410,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles.append(self.subtractedStack[iterN]+'ref')
             _VerifyFiles.append(self.subtractedStack[iterN]+'exp')
             
-            id = self.Db.insertAction('subtractionScript', _VerifyFiles, None, None, None
+            id = self.Db.insertAction('subtractionScript', _VerifyFiles
                                         , DocFileExp = self.DocFileExp[iterN] 
                                         , referenceStackDoc = self.referenceStackDoc[iterN]
                                         , subtractedStack = self.subtractedStack[iterN])
