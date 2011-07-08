@@ -476,8 +476,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                         int thread_id, int numthreads)
 {
     Matrix1D<double> zero(3);                // Origin (0,0,0)
-    Matrix1D<double> prjPix(3);       // Position of the pixel within the
-    // projection
+    Matrix1D<double> prjPix(3);       // Position of the pixel within the projection
     Matrix1D<double> prjX(3);         // Coordinate: Projection of the
     Matrix1D<double> prjY(3);         // 3 grid vectors
     Matrix1D<double> prjZ(3);
