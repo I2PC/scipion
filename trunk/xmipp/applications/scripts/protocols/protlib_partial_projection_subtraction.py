@@ -86,20 +86,17 @@ def reconstructVolume(_log
     parameters  = ' -i ' +  DocFileExp 
     parameters += ' -o ' +  reconstructedVolume 
     parameters += ' --sym ' + SymmetryGroup +'h'
-    parameters += ' --weight'
     doParallel = DoParallel
     if (doParallel):
             parameters += ' --mpi_job_size ' + MpiJobSize
             parameters += ' --thr ' + str(NumberOfThreads)
 
-    launch_job.launch_job('xmipp_reconstruct_fourier',
+    runJob(_log,'xmipp_reconstruct_fourier',
                              parameters,
-                             _log,
                              doParallel,
                              NumberOfMpiProcesses,
                              NumberOfThreads,
                              SystemFlavour)
-
 
 def maskVolume(_log
               ,dRradiusMax
@@ -109,11 +106,10 @@ def maskVolume(_log
 ):
     parameters  = ' -i ' +  reconstructedVolume 
     parameters += ' -o ' +  maskReconstructedVolume 
-    
     parameters += ' --mask raised_crown -%d -%d 2' %(dRradiusMin, dRradiusMax)
-    launch_job.launch_job("xmipp_transform_mask",
+
+    runJob( _log,"xmipp_transform_mask",
                              parameters,
-                             _log,
                              False,1,1,'')
     
     #project
@@ -130,8 +126,6 @@ def createProjections(_log
                       ,SymmetryGroup
                       ,SystemFlavour
 ):
-    #dirname = 'ReferenceLibrary'
-
     doParallel = DoParallel
 
     parameters  = ' -i ' +  maskReconstructedVolume 
@@ -145,9 +139,8 @@ def createProjections(_log
     if (doParallel):
             parameters += ' --mpi_job_size ' + MpiJobSize
 
-    launch_job.launch_job('xmipp_angular_project_library',
+    runJob(_log,'xmipp_angular_project_library',
                              parameters,
-                             _log,
                              doParallel,
                              NumberOfMpiProcesses *NumberOfThreads,
                              1,
@@ -160,22 +153,19 @@ def subtractionScript(_log
                       ,referenceStackDoc
                       ,subtractedStack
                       ):
+    printLog("subtractionScript, docfile %s referenceStackDoc %s substracted stack %s"%
+                       (DocFileExp
+                      ,referenceStackDoc
+                      ,subtractedStack))
     md = MetaData(DocFileExp)#experimental images
     #referenceStackName = referenceStack#reference projection for a given defocus group
-    mdRef = MetaData(referenceStackDoc)#experimental images
-    subtractedStackName = subtractedStack
+    mdRef = MetaData(referenceStackDoc)#refrence ibrary
+    subtractedStackName = subtractedStack#output
     
     #Set shifts to 0
-    a = md.getValue(MDL_SHIFTX, 1)
-    print "antes  : ", a
     md.operate("shiftX=(shiftX*-1)")
-    b = md.getValue(MDL_SHIFTX, 1)
-    print "despues: ", b
-    
     md.operate("shiftY=(shiftY*-1)")
-    
-    mdRef.setValueCol(MDL_SHIFTX,0.)
-    mdRef.setValueCol(MDL_SHIFTY,0.)
+    md.operate("anglePsi=(anglePsi*-1)")
     
     imgExp = Image()
     imgRef = Image()
@@ -186,7 +176,6 @@ def subtractionScript(_log
         angRot = md.getValue(MDL_ANGLEROT, id)
         angTilt = md.getValue(MDL_ANGLETILT, id)
         psi = md.getValue(MDL_ANGLEPSI, id)
-        md.setValue(MDL_ANGLEPSI, psi * -1.,id)
         
         # Search for the closest idRef
         dist = -1.
