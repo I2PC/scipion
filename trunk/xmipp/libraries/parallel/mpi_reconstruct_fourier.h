@@ -23,6 +23,9 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+#ifndef MPI_RECONSTRUCT_FOURIER_H_
+#define MPI_RECONSTRUCT_FOURIER_H_
+
 #include "xmipp_mpi.h"
 #include <data/args.h>
 #include <reconstruction/reconstruct_fourier.h>
@@ -116,6 +119,8 @@ public:
 };
 //@}
 //end of class MPI reconstruct fourier
+
+#endif /* MPI_RECONSTRUCT_FOURIER_H_ */
 
 
 
