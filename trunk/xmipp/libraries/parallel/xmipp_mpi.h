@@ -41,8 +41,8 @@
  */
 
 /** Class to wrapp some MPI common calls in an work node.
- *
- */
+*
+*/
 class MpiNode
 {
 
@@ -56,7 +56,7 @@ public:
     void barrierWait();
     /** Gather metadatas */
     void gatherMetadatas(MetaData &MD, const FileName &rootName,
-    		MDLabel sortLabel=MDL_IMAGE);
+                         MDLabel sortLabel=MDL_IMAGE);
 };
 
 //mpi macros
@@ -91,12 +91,12 @@ public:
 class MpiFileMutex: public Mutex
 {
 protected:
-	MpiNode * node;
-	    int lockFile;
-	    bool fileCreator;
+    MpiNode * node;
+    int lockFile;
+    bool fileCreator;
 public:
     /** Default constructor. */
-	MpiFileMutex(MpiNode * node);
+    MpiFileMutex(MpiNode * node);
 
     /** Destructor. */
     ~MpiFileMutex();
@@ -142,6 +142,53 @@ public:
     virtual ~FileTaskDistributor();
 }
 ;//end of class FileTaskDistributor
+
+/** This class represent an Xmipp MPI Program.
+ *  It includes the basic MPI functionalities to the programs,
+ *  like an mpinode, a mutex...
+ *
+ *  To be compatible with inheritance multiple, the  BaseXmippProgram
+ *  must be declared with XmippProgramm as virtual.
+ *
+ * @code
+ * class BaseProgram: public virtual XmippProgram {};
+ * class BaseMpiProgram: public BaseProgram, public XmippMpiProgram {};
+ * @endcode
+ */
+class XmippMpiProgram: public virtual XmippProgram
+{
+protected:
+    /** Number of Processors **/
+    int nProcs;
+
+    /** Divide the job in this number block with this number of images */
+    int mpi_job_size;
+
+    /** Number of independent MPI jobs **/
+    int numberOfJobs;
+
+    /** Mpi node */
+    MpiNode * node;
+    bool created_node;
+
+    /** status after an MPI call */
+    MPI_Status status;
+
+    XmippMpiProgram();
+    ~XmippMpiProgram();
+
+    /** Provide a node when calling from another MPI program  */
+    void setNode(MpiNode * node);
+
+    /** Read MPI params from command line */
+    void read(int argc, char *argv[]);
+
+public:
+    /** Call the run function inside a try/catch block
+    * sending an abort signal to the rest of mpi nodes.
+    * */
+    int tryRun();
+};
 
 class MpiMetadataProgram
 {
@@ -219,6 +266,20 @@ public:\
         node->gatherMetadatas(mdOut, fn_out);\
         if (node->isMaster())\
             baseClassName::finishProcessing();\
+    }\
+    int tryRun()\
+    {\
+        try\
+        {\
+            if (!notRun)\
+                this->run();\
+        }\
+        catch (XmippError xe)\
+        {\
+            std::cerr << xe;\
+            errorCode = MPI_Abort(MPI_COMM_WORLD, xe.__errno);\
+        }\
+        return errorCode;\
     }\
 }\
 

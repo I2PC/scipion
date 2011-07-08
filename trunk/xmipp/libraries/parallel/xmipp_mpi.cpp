@@ -280,8 +280,61 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
         fn = fn.removeBlockName();
         remove(fn.c_str());
         if (MD.containsLabel(sortLabel))
-          MD.sort(mdAll, sortLabel);
+            MD.sort(mdAll, sortLabel);
     }
+}
+
+/* -------------------- XmippMPIPRogram ---------------------- */
+
+XmippMpiProgram::XmippMpiProgram()
+{
+    node = NULL;
+}
+/** destructor */
+XmippMpiProgram::~XmippMpiProgram()
+{
+    if (created_node)
+        delete node;
+}
+
+void XmippMpiProgram::read(int argc, char *argv[])
+{
+    if (node == NULL)
+    {
+        node = new MpiNode(argc, argv);
+        nProcs = node->size;
+        created_node = true;
+
+        if (!node->isMaster())
+            verbose = false;
+    }
+}
+
+void XmippMpiProgram::setNode(MpiNode *node)
+{
+    if (created_node)
+        delete this->node;
+
+    this->node = node;
+    created_node = false;
+    verbose = node->isMaster();
+}
+
+
+int XmippMpiProgram::tryRun()
+{
+    try
+    {
+        if (!notRun)
+            this->run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
+        errorCode = xe.__errno;
+        MPI::COMM_WORLD.Abort(xe.__errno);
+    }
+    return errorCode;
 }
 
 /* -------------------- MpiMetadataProgram ------------------- */
