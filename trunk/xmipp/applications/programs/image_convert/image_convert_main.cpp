@@ -125,25 +125,25 @@ protected:
 
         //Examples
         addExampleLine("Put a selection file into a stack:",false);
-        addExampleLine("xmipp_convert_image -i list.sel -o images.stk");
+        addExampleLine("xmipp_image_convert -i list.sel -o images.stk");
         addExampleLine("Convert a Spider volume to a MRC stack:",false);
-        addExampleLine("xmipp_convert_image -i spider.vol -o stack.mrcs -t stk");
+        addExampleLine("xmipp_image_convert -i spider.vol -o stack.mrcs -t stk");
         addExampleLine("Create a stack of volumes with a Spider volume :",false);
-        addExampleLine("xmipp_convert_image -i spider.vol -o vol_stack.stk -t vol");
+        addExampleLine("xmipp_image_convert -i spider.vol -o vol_stack.stk -t vol");
         addExampleLine("Append a volume to a volume stack:",false);
-        addExampleLine("xmipp_convert_image -i spider.vol -o vol_stack.stk -a");
+        addExampleLine("xmipp_image_convert -i spider.vol -o vol_stack.stk -a");
         addExampleLine("Substitute a volume in a volume stack:",false);
-        addExampleLine("xmipp_convert_image -i spider.vol -o 3@vol_stack.stk");
+        addExampleLine("xmipp_image_convert -i spider.vol -o 3@vol_stack.stk");
         addExampleLine("Save images in a stack as independent TIFF files in image directory with \"newimage\" basename in 8bit format:",false);
-        addExampleLine("xmipp_convert_image -i stackFile.stk -o tiffImages.sel --oroot images/newimage:tif -d uint8");
+        addExampleLine("xmipp_image_convert -i stackFile.stk -o tiffImages.sel --oroot images/newimage:tif -d uint8");
         addExampleLine("Convert a selection file of 16bit TIFF images to 8bit and overwrites files and sel file:",false);
-        addExampleLine("xmipp_convert_image -i tiff16.sel -d uint8");
+        addExampleLine("xmipp_image_convert -i tiff16.sel -d uint8");
         addExampleLine("Append a single image to a stack:",false);
-        addExampleLine("xmipp_convert_image -i img.spi -o stackFile.stk --append");
+        addExampleLine("xmipp_image_convert -i img.spi -o stackFile.stk --append");
         addExampleLine("Append a selection file to a stack:",false);
-        addExampleLine("xmipp_convert_image -i selFile.sel -o stackFile.stk --append");
+        addExampleLine("xmipp_image_convert -i selFile.sel -o stackFile.stk --append");
         addExampleLine("Replace a single image into a stack:",false);
-        addExampleLine("xmipp_convert_image -i img.spi -o 3@stackFile.stk");
+        addExampleLine("xmipp_image_convert -i img.spi -o 3@stackFile.stk");
     }
 
     void readParams()
