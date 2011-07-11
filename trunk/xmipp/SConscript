@@ -551,6 +551,7 @@ ReconsSources = [
     'tomo_align_refinement.cpp',
     'tomo_detect_missing_wedge.cpp',
     'tomo_remove_fluctuations.cpp',
+    'tomo_extract_subvolume.cpp',
     'transform_downsample.cpp',
     'transform_geometry.cpp',
     'volume_correct_bfactor.cpp',
@@ -765,6 +766,7 @@ AddXmippProgram('tomo_align_tilt_series', ['XmippRecons'])
 AddXmippProgram('tomo_detect_missing_wedge', ['XmippRecons'])
 AddXmippProgram('tomo_project', ['XmippRecons'])
 AddXmippProgram('tomo_remove_fluctuations', ['XmippRecons'])
+AddXmippProgram('tomo_extract_subvolume', ['XmippRecons'])
 AddXmippProgram('volume_align')
 AddXmippProgram('volume_center')
 AddXmippProgram('volume_correct_bfactor', ['XmippRecons'])
@@ -800,7 +802,7 @@ if int(env['gtest']):
      #AddProtocol('bcolors.py', 'applications/tests/pythonlib')
      #python tests
      test = AddXmippPythonTest('test_pythoninterface')
-     AddXmippPythonTest('test_projectionmatching')
+     #AddXmippPythonTest('test_projectionmatching')
      env.Depends(test, pythonbinding)
      #env.Default('run_tests'     )
 
