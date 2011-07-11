@@ -42,8 +42,8 @@ public class XmippBrowser implements PlugIn {
 
         // @TODO Remove this.
         // -------------------------
-        DIR = null;
-        processArgs(string);
+//        DIR = null;
+//        processArgs(string);
         // -------------------------
 
         if (INPUT != null) {

@@ -5,7 +5,7 @@ from protlib_utils import runImageJPlugin
 
 def command_line_options():
 	""" add command line options here"""
-	_usage="""Usage: xmipp_showj [--mem <memory_ammount>] [-i file1 [-i file2 [..]]] [--poll]"""
+	_usage="""xmipp_projections_explorerj [--mem memory_ammount] <-i volume_file [--angles angles_file]>"""
 	parser = optparse.OptionParser(_usage)
 	parser.add_option("-m", "--memory",  dest="memory", default="", help="Memory ammount for JVM")        
 	parser.add_option("-i", "--input", dest="inputFile", help="input volume file to show")
@@ -19,7 +19,7 @@ memory, inputFile, anglesFile = command_line_options();
 
 args = ""
 if inputFile:
-	args += " -vol " + inputFile
+	args += "-i " + inputFile
 	if anglesFile:
 		args += " -angles " + anglesFile
 
