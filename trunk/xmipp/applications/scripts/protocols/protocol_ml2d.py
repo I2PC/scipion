@@ -2,8 +2,6 @@
 #------------------------------------------------------------------------------------------------
 # Protocol for Xmipp-based 2D alignment and classification,
 # using maximum-likelihood principles, according to:
-# {please cite} for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149 
-# {please cite} for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
 #
 # Example use:
 # ./xmipp_protocol_ml2d.py
@@ -11,7 +9,12 @@
 #  Author:  Sjors Scheres, January 2008
 # Updated:  J. M. de la Rosa Trevin July 2011
 #
-# {begin_of_header} 
+# {begin_of_header}
+# {please_cite} 
+"""
+for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149 
+for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
+"""
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
@@ -26,12 +29,11 @@ RunName ='run_001'
 """
 InSelFile="all_images.sel"
 
-# Perform MLF2D instead of ML2D classification?
+#------------------------------------------------------------------------------------------------
+# {section} {has_question} MLF-specific parameters
+#------------------------------------------------------------------------------------------------
+# Use MLF2D instead of ML2D
 DoMlf=False
-
-#------------------------------------------------------------------------------------------------
-# {section} {condition}(DoMlf=True) MLF-specific parameters
-#------------------------------------------------------------------------------------------------
 
 # Use CTF-amplitude correction inside MLF?
 """ If set to true, provide the ctfdat file in the field below. If set to false, one can ignore the ctfdat field, but has to provide the image pixel size in Angstrom"""
@@ -106,13 +108,13 @@ NumberOfThreads = 1
 # Number of MPI processes to use
 NumberOfMpiProcesses = 3
 
-#Submmit to queue?
+
+#------------------------------------------------------------------------------------------------
+# {section}{has_question} Queue 
+#------------------------------------------------------------------------------------------------
+#Submmit to queue
 """Submmit to queue"""
 SubmmitToQueue=False
-#------------------------------------------------------------------------------------------------
-# {section}{expert}{condition}(SubmmitToQueue=True) Queue 
-#------------------------------------------------------------------------------------------------
-
 # Queue name
 """Name of the queue to submit the job"""
 QueueName="default"

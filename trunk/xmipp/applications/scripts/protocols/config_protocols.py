@@ -93,13 +93,14 @@ LabelTextColor = "black"
 SectionTextColor = "blue4"
 
 #Background Color
-BgColor = "white"
-LabelBgColor = BgColor
+BgColor = "light grey"
+LabelBgColor = "white"
 HighlightBgColor = BgColor
 ButtonBgColor = "LightBlue"
 ButtonActiveBgColor = "LightSkyBlue"
 EntryBgColor = "lemon chiffon" 
 ExpertLabelBgColor = "light salmon"
+SectionBgColor = ButtonBgColor
 
 #Color
 ListSelectColor = "DeepSkyBlue4"
@@ -110,3 +111,4 @@ MaxHeight = 800
 MaxWidth = 800
 MaxFontSize = 14
 MinFontSize = 6
+WrapLenght = MaxWidth / 2

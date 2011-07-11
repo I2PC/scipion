@@ -102,7 +102,6 @@ class XmippProjectGUI():
         btn = Button(self.toolbar, bd = 1, text=text, font=self.ButtonFont, relief=RAISED,
                          bg=ButtonBgColor, activebackground=ButtonBgColor)
         btn.grid(row = row, column = 0, sticky=W+E, pady=2, padx=5)
-        list = ['a', 'b', 'c', 'd']
         i = 0
         if len(opts) > 0:
             menu = Menu(self.root, bg=ButtonBgColor, activebackground=ButtonBgColor, font=self.ButtonFont, tearoff=0)
@@ -112,45 +111,22 @@ class XmippProjectGUI():
                 # and menu items command setting
                 def item_command(prot): 
                     def new_command(): 
-                        self.newProtocol(prot)
+                        self.launchProtocolGUI(self.project.newProtocol(prot.key))
                     return new_command 
                 menu.add_command(label=p.title, command=item_command(p))
             menu.bind("<Leave>", self.unpostMenu)
         self.ToolbarButtonsDict[text] = (btn, menu)
         btn.config(command=lambda:self.selectToolbarButton(text))
 
-    def launchProtocolGUI(self, run, srcScript, saveCallback):
+    def launchProtocolGUI(self, run):
         top = Toplevel()
         gui = ProtocolGUI()
-        gui.createGUI(srcScript, self.project, run, top, saveCallback)
+        gui.createGUI(self.project, run, top, lambda: self.protocolSaveCallback(run))
         gui.fillGUI()
         gui.launchGUI()
         
-    def loadProtocol(self, prot, srcProtAbsPath):
-        protocol = prot.key
-        protDir = getXmippPath('protocols')
-        #suggest a new run_name        
-        runName = self.project.projectDb.suggestRunName(protocol)
-        dstAbsPath = self.project.getRunScriptFileName(protocol, runName)
-        run = {
-               'protocol_name':protocol, 
-               'run_name': runName, 
-               'script': dstAbsPath, 
-               'comment': "my first run"
-               }
-        s, ss = getSectionByKey(prot)
-        self.launchProtocolGUI(run, srcProtAbsPath, 
-                               lambda: self.protocolSaveCallback(run, ss))
-                
-    def newProtocol(self, prot):
-        protDir = getXmippPath('protocols')
-        srcProtName = 'xmipp_protocol_%s.py' % prot.key
-        srcProtDir = getXmippPath('protocols')
-        srcProtAbsPath = os.path.join(protDir, srcProtName)
-        self.loadProtocol(prot, srcProtAbsPath)
-        
-    def protocolSaveCallback(self, run, protGroups):
-        if self.lastSelected in protGroups:
+    def protocolSaveCallback(self, run):
+        if self.lastSelected in run['group_name']:
             self.updateRunHistory(self.lastSelected) 
 
     def updateRunHistory(self, protGroup): 
@@ -226,22 +202,21 @@ class XmippProjectGUI():
         
     def runButtonClick(self, event=None):
         run = dict(zip(runColumns, self.lastRunSelected))
-        s, ss = getSectionByKey(protDict.protocolDict[run['protocol_name']])
+        run['source'] = run['script']
         if event == 'Edit':
-            self.launchProtocolGUI(run, run['script'], 
-                               lambda: self.protocolSaveCallback(run, ss))
+            self.launchProtocolGUI(run)
         elif event == 'Copy':
-            self.loadProtocol(protDict.protocolDict[run['protocol_name']], run['script'])
+            self.launchProtocolGUI(self.project.copyProtocol(run['protocol_name'], run['script']))
         elif event == "Delete":
             if tkMessageBox.askyesno("Confirm DELETE", "All data related to this run will be DELETED. Do you want to continue?"):
                 self.project.deleteRun(run)
                 self.updateRunHistory(self.lastSelected)
         elif event == "Visualize":
             pass
-        elif event == "Help":
-            from protlib_gui_ext import ListboxDialog
-            d = ListboxDialog(self.frame, ['Edit', 'Copy', 'Delete', 'Visualize'], selectmode=SINGLE)
-            print d.result
+#        elif event == "Help":
+#            from protlib_gui_ext import ListboxDialog
+#            d = ListboxDialog(self.frame, ['Edit', 'Copy', 'Delete', 'Visualize'], selectmode=SINGLE)
+#            print d.result
         
 
     def createToolbar(self):

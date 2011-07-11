@@ -123,11 +123,41 @@ class XmippProject():
             if os.path.exists(f):
                 os.remove(f)
         self.projectDb.deleteRun(run)
-        
-        
             
-    def getRunScriptFileName(self, protocol, runName):
-        return os.path.join(self.runsDir, 'xmipp_protocol_%s_%s.py' % (protocol, runName))
+    def getRunScriptFileName(self, protocol_name, runName):
+        return os.path.join(self.runsDir, 'xmipp_protocol_%s_%s.py' % (protocol_name, runName))
+    
+    def createRunFromScript(self, protocol_name, script):
+        #suggest a new run_name        
+        runName = self.projectDb.suggestRunName(protocol_name)
+        dstAbsPath = self.getRunScriptFileName(protocol_name, runName)
+        run = {
+               'protocol_name':protocol_name, 
+               'run_name': runName, 
+               'script': dstAbsPath, 
+               'comment': "",
+               'source': script
+               }
+        return run
+    
+    def newProtocol(self, protocol_name):
+        srcProtAbsPath = os.path.join(getXmippPath('protocols'),
+                                       'xmipp_protocol_%s.py' % protocol_name)
+        return self.createRunFromScript(protocol_name, srcProtAbsPath)
+    
+    def copyProtocol(self, protocol_name, script):
+        return self.createRunFromScript(protocol_name, script)
+        
+    def loadProtocol(self, protocol_name, runName):
+        run = self.projectDb.selectRunByName(self, protocol_name, runName)
+        if not run is None:
+            run['source'] = run['script']
+    
+    def newOrLoadProtocol(self, protocol_name, runName):
+        run = self.loadProtocol(project, protocol_name, runName)
+        if run is None:
+            run = self.newProtocol(protocol_name)
+        return run
             
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
@@ -312,11 +342,12 @@ def protocolMain(ProtocolClass):
            'protocol_name':p.Name, 
            'run_name': mod.RunName, 
            'script': script, 
-           'comment': "my first run"
+           'comment': "",
+           'source': script
            }
         from protlib_gui import ProtocolGUI 
         gui = ProtocolGUI()
-        gui.createGUI(script, project, run)
+        gui.createGUI(project, run)
         gui.fillGUI()
         gui.launchGUI()
     else:#2) Run from command line
@@ -353,3 +384,7 @@ def protocolMain(ProtocolClass):
         p.run(mod.ContinueAtIteration,mod.IsIter)
 
 
+    
+    
+    
+    

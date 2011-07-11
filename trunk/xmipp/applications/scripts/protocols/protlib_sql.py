@@ -11,7 +11,8 @@ runColumns = ['run_id',
               'init',
               'last_modfied',
               'protocol_name',
-              'comment']
+              'comment',
+              'group_name']
 
 class XmippProtocolDbStruct(object):
     doAlways = 99999
@@ -200,12 +201,28 @@ class XmippProjectDb(SqliteDb):
         sqlCommand = """SELECT run_id, run_name, script, 
                                datetime(init, 'localtime') as init, 
                                datetime(last_modified, 'localtime') as last_modified,
-                               protocol_name, comment 
+                               protocol_name, comment,
+                               group_name 
                          FROM %(TableRuns)s NATURAL JOIN %(TableProtocolsGroups)s
                          WHERE group_name = '%(group)s'
                          ORDER BY last_modified DESC """ % self.sqlDict
         self.cur.execute(sqlCommand) 
         return self.cur.fetchall()
+    
+    def selectRunByName(self, protocol_name, runName):
+        self.sqlDict['run_name'] = runName
+        self.sqlDict['protocol_name'] = protocol_name
+        sqlCommand = """SELECT run_id, run_name, script, 
+                               datetime(init, 'localtime') as init, 
+                               datetime(last_modified, 'localtime') as last_modified,
+                               protocol_name, comment,
+                               group_name 
+                         FROM %(TableRuns)s NATURAL JOIN %(TableProtocolsGroups)s
+                         WHERE protocol_name = %(protocol_name)s 
+                               AND run_name = '%(run_name)s'
+                         ORDER BY last_modified DESC """ % self.sqlDict
+        self.cur.execute(sqlCommand) 
+        return self.cur.fetchone()
     
 class XmippProtocolDb(SqliteDb): 
     

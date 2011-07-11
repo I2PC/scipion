@@ -279,7 +279,6 @@ class ProtocolWidget():
      
     def checkVisibility(self):
         show = True
-        c = self.variable.comment
         if self.variable.isExpert():
             show = self.master.expert_mode
         show = show and self.satisfiesCondition() #has condition, check it
@@ -292,8 +291,6 @@ class ProtocolWidget():
                 w.grid()
             else:
                 w.grid_remove()
-        for child in self.childwidgets:
-            child.display(value)
 
 """ Guidelines for python script header formatting:
 
@@ -356,36 +353,29 @@ Optional:
 """       
 
 class ProtocolGUI(BasicGUI):
-    def init(self, inScript, outScript):
+    def init(self):
         self.variablesDict = {}       
         self.pre_header_lines = []
         self.header_lines = []
         self.post_header_lines = []
         self.expert_mode = False
-        self.inScript = inScript
-        self.outScript = outScript
         self.lastrow = 0
         self.widgetslist = []
         self.sectionslist = [] # List of all sections
         self.citeslist = []
         # Script title
-        self.programname = os.path.basename(self.inScript.replace('.py', ''))
+        self.programname = os.path.basename(self.run['source'].replace('.py', ''))
+        self.maxLabelWidth = 0
 
     #-------------------------------------------------------------------
     # Widgets creation and GUI building
     #-------------------------------------------------------------------  
-    def addSeparator(self, row):
-        self.l1 = Label(self.frame, text="", bg=self.style.LabelBgColor)
-        self.l1.grid(row=row)
-        self.l2 = Frame(self.frame, height=2, bd=1, bg=self.style.SectionTextColor, relief=RIDGE)
-        self.l2.grid(row=row + 1, column=0, columnspan=self.columnspantextlabel + 3, sticky=EW)
-        self.l3 = Label(self.frame, text="", bg=self.style.LabelBgColor)
-        self.l3.grid(row=row + 2)
-        self.lastrow += 2
         
-    def addButton(self, text, cmd, underline, row, col, sticky, imageFilename=None):
+    def addButton(self, text, cmd, underline, row, col, sticky, imageFilename=None, parent=None):
         f = tkFont.Font(family=self.style.FontName, size=self.style.ButtonFontSize, weight=tkFont.BOLD)
         helpImage = None
+        if parent is None:
+            parent = self.frame
         if imageFilename:
             try:
                 imgPath = os.path.join(getXmippPath('resources'), imageFilename)
@@ -394,27 +384,40 @@ class ProtocolGUI(BasicGUI):
                 pass
         
         if helpImage:
-            btn = Button(self.frame, image=helpImage, command=cmd, bg=self.style.BgColor,
-                         activebackground=self.style.BgColor, bd=0)
+            btn = Button(parent, image=helpImage, bg=self.style.LabelBgColor, bd=0)
             btn.image = helpImage
+            pad = 3
         else:
-            btn = Button(self.frame, text=text, command=cmd, underline=underline, font=f,
-                     bg=self.style.ButtonBgColor, activebackground=self.style.ButtonActiveBgColor)
-        btn.grid(row=row, column=col, sticky=sticky)
+            btn = Button(parent, text=text, underline=underline, font=f,
+                     bg=self.style.ButtonBgColor)
+            pad = 5
+        btn.config(command=cmd, activebackground=self.style.ButtonActiveBgColor)
+        btn.grid(row=row, column=col, sticky=sticky, padx=pad, pady=pad)
         return btn
     
-    def addRadioButton(self, w, var, text, value, row, col):
-        rb = Radiobutton(self.frame, text=text, variable=var.tkvar, value=value, bg=self.style.BgColor, command=self.checkVisibility)
+    def addRadioButton(self, w, var, text, value, row, col, parent):
+        rb = Radiobutton(parent, text=text, variable=var.tkvar, value=value, bg=self.style.LabelBgColor, command=self.checkVisibility)
         rb.grid(row=row, column=col, sticky=W)
         w.widgetslist.append(rb)
         return rb
         
-    def createSectionWidget(self, var):
-        label_text += "\n-----------------------------------------------------------"
-        label_color = self.style.SectionTextColor 
-        self.lastSection = w
-        self.sectionslist.append(w)
+    def createSectionWidget(self, w, var):
+        w.frame = Frame(self.frame, bd=2, relief=RAISED, bg=SectionBgColor)
+        w.frame.columnconfigure(0, weight=1)
+        w.label = Label(w.frame, text=var.comment, fg=LabelTextColor, bg=SectionBgColor)
+        w.label.grid(row=0, column=0, sticky=W)
+        w.content = Frame(w.frame, bg=LabelBgColor, bd=0)
+        w.content.grid(row=1, column=0, columnspan=5, sticky=NSEW, ipadx=5, ipady=5)
+        w.widgetslist.append(w.frame)
         
+    def expandCollapseSection(self, section):
+        print section.tkvar.get()
+        if section.tkvar.get() == 'False':
+            section.content.grid_remove()
+        else:
+            section.content.grid(row=1, column=0, columnspan=5, sticky=NSEW)
+        self.updateScrollRegion()
+            
     def createWidget(self, var):
         w = ProtocolWidget(self, var)  
         self.widgetslist.append(w)  
@@ -422,18 +425,23 @@ class ProtocolGUI(BasicGUI):
         label_text = var.comment
         label_color = self.style.LabelTextColor
         label_bgcolor = self.style.LabelBgColor        
-
+        
         if 'section' in var.tags.keys():
-            label_text += "\n-----------------------------------------------------------"
-            label_color = self.style.SectionTextColor 
+            self.createSectionWidget(w, var)
+            w.frame.grid(row=label_row, column=0, columnspan=5, 
+                         sticky=EW, pady=5, padx=5)
+            w.has_question = 'has_question' in var.tags.keys()
             self.lastSection = w
+            section = w
             self.sectionslist.append(w)
         else:
-            self.lastSection.childwidgets.append(w)
+            section = self.lastSection
+            section.childwidgets.append(w)
+            frame = section.content
             #widgets inherit expert from section and its conditions 
-            if self.lastSection.variable.isExpert():
-                var.tags['expert'] = self.lastSection.variable.tags['expert']
-            for k, v in self.lastSection.variable.conditions.iteritems():
+            if section.variable.isExpert():
+                var.tags['expert'] = section.variable.tags['expert']
+            for k, v in section.variable.conditions.iteritems():
                 var.conditions[k] = v
                 
         keys = var.tags.keys()
@@ -458,25 +466,35 @@ class ProtocolGUI(BasicGUI):
                 var.value = var.value.replace("'", '')
                 var.is_string = True
                 
-                
             var.tkvar.set(var.value)
             
             if var.value == 'True' or var.value == 'False':
-                self.addRadioButton(w, var, 'Yes', 'True', row, var_column)  
-                self.addRadioButton(w, var, 'No', 'False', row, var_column + 1)  
+                #Check if that boolean variable is the question of the section
+                if section.has_question and len(section.childwidgets) == 1:
+                    section.tkvar = var.tkvar
+                    #Label(section.frame, text=label_text, bg=SectionBgColor).grid(row=0, column=1, padx=(5, 0))
+                    chb = Checkbutton(section.frame, text=label_text, variable=var.tkvar, 
+                                onvalue='True', offvalue='False',
+                                command=lambda:self.expandCollapseSection(section),
+                                bg=SectionBgColor, activebackground=ButtonActiveBgColor)
+                    chb.grid(row=0, column=1, padx=(5, 0))
+                    self.expandCollapseSection(section)
+                else:
+                    self.addRadioButton(w, var, 'Yes', 'True', row, var_column, frame)  
+                    self.addRadioButton(w, var, 'No', 'False', row, var_column + 1, frame)  
             elif 'list' in keys:
                 opts = var.tags['list'].split(',')
                 for o in opts:
                     o = o.strip()
-                    self.addRadioButton(w, var, o, o, row, var_column)
+                    self.addRadioButton(w, var, o, o, row, var_column, frame)
                     row = self.getRow()
             elif 'text' in keys:
-                var.tktext = Text(self.frame, width=30, height=10,)
+                var.tktext = Text(frame, width=30, height=10,)
                 var.tktext.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W + E)
                 w.widgetslist.append(var.tktext)
                 var.tktext.insert(END, var.value)
             else: #Add a text Entry
-                entry = Entry(self.frame, textvariable=var.tkvar, bg=self.style.EntryBgColor)
+                entry = Entry(frame, textvariable=var.tkvar, bg=self.style.EntryBgColor)
                 entry.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W + E)
                 w.widgetslist.append(entry)
                 image = None
@@ -485,27 +503,30 @@ class ProtocolGUI(BasicGUI):
                 elif 'dir' in keys:
                     image = 'folderopen.gif'
                 if image:
-                    btn = self.addButton("Browse", lambda: self.browse(var.tkvar, ('file' in keys)), -1, label_row, var_column + 3, NW, image)
+                    btn = self.addButton("Browse", lambda: self.browse(var.tkvar, ('file' in keys)), -1, label_row, var_column + 3, NW, image, frame)
                     w.widgetslist.append(btn)
             if var.help:
-                btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column + 4, NW, 'help.gif')
+                btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column + 4, NW, 'help.gif', frame)
                 w.widgetslist.append(btn)
                     
-        label = Label(self.frame, text=label_text, fg=label_color, bg=label_bgcolor)
-        label.grid(row=label_row, column=0, columnspan=self.columnspantextlabel, sticky=E)
-        w.widgetslist.append(label)
+            label = Label(frame, text=label_text, fg=label_color, bg=label_bgcolor)
+            label.grid(row=label_row, column=0, columnspan=self.columnspantextlabel, sticky=E)
+            self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_width())
+            w.widgetslist.append(label)
         
         return w
         
     def fillHeader(self):
         import os, sys        
-        self.master.title(self.programname)
-        headertext = 'GUI for Xmipp %s \n Executed in directory: %s' % (self.programname, os.getcwd())
-        self.l1 = Label(self.frame, text=headertext, fg=self.style.SectionTextColor, bg=self.style.LabelBgColor)
-        self.l1.configure(wraplength=self.style.WrapLenght)
-        self.l1.grid(row=self.getRow(), column=0, columnspan=6, sticky=E + W)
+        self.master.title("Run script: %(script)s" % self.run)
+        headertext  = "Xmipp Protocol: %s\n" % protDict.protocolDict[self.run['protocol_name']].title
+        headertext += "Project: %s" % self.project.projectDir 
+        self.fonts = {}
+        self.fonts['header'] = tkFont.Font(family=FontName, size=FontSize+2, weight=tkFont.BOLD)
+        self.l1 = Label(self.frame, text=headertext, fg=SectionTextColor, bg=BgColor, font=self.fonts['header'])
+        self.l1.configure(wraplength=WrapLenght)
+        self.l1.grid(row=self.getRow(), column=0, columnspan=6, sticky=EW)
         self.citerow = self.getRow()        
-        self.addSeparator(self.getRow())
             
     def browse(self, var, isFile):
         import tkFileDialog
@@ -529,7 +550,7 @@ class ProtocolGUI(BasicGUI):
     def readProtocolScript(self):
         begin_of_header = False
         end_of_header = False        
-        f = open(self.inScript, 'r')
+        f = open(self.run['source'], 'r')
         for line in f:
             #print "LINE: ", line
             if not begin_of_header:
@@ -577,21 +598,30 @@ class ProtocolGUI(BasicGUI):
                 
                 if match.group(1) != '':
                     tags = reTags.findall(match.group(1))
+                    print "tags", tags
                     v.setTags(tags)
                     
                 is_section = v.isSection()
                 if not is_section:
                     #This is a variable, try to get help string
                     helpStr = ''
-                    if index < count and self.header_lines[index].startswith('"""'):
-                        while index < count and not helpStr.endswith('"""\n'):
-                            line = self.header_lines[index]
-                            helpStr += line
+                    countQuotes = 0 # count starting and endi
+                    if index < count and self.header_lines[index].strip().startswith('"""'):
+                        while index < count and countQuotes < 2:
+                            line = self.header_lines[index].strip()
+                            if line.startswith('"""'):
+                                countQuotes += 1
+                            if len(line) > 4 and line.endswith('"""\n'):
+                                countQuotes += 1
+                            print line, countQuotes
+                            line = line.replace('"""', '')
+                            if len(line) > 0:
+                                helpStr += line + '\n'
                             index += 1
                         v.help = helpStr
                         
                     if 'please_cite' in v.tags.keys():
-                        self.citeslist.append(v.help.replace('"', ''))
+                        self.citeslist.append(v.help)
                     else:
                         if index < count:
                             line = self.header_lines[index].strip()
@@ -604,12 +634,14 @@ class ProtocolGUI(BasicGUI):
                 if is_section or v.name:
                     w = self.createWidget(v)
         #Update if citations found
-        if len(self.citeslist):
+        if len(self.citeslist) > 0:
             citetext = "If you publish results obtained with this protocol, please cite:\n"
             citetext += '\n'.join(self.citeslist)
-            label = Label(self.frame, text=citetext, fg=self.style.CitationTextColor, bg=self.style.LabelBgColor)
-            label.configure(wraplength=self.style.WrapLenght)
+            label = Label(self.frame, text=citetext, fg=self.style.CitationTextColor, bg=self.style.BgColor)
+            label.configure(wraplength=WrapLenght)
             label.grid(row=self.citerow, column=0, columnspan=5, sticky=EW)
+            print citetext
+            print self.citerow
             
     #-------------------------------------------------------------------
     # GUI Events handling
@@ -627,27 +659,24 @@ class ProtocolGUI(BasicGUI):
             text = "Show Expert Options"
         self.btnExpert.config(text=text)
         self.checkVisibility()
-        self.updateScrollRegion()
     
     def save(self, event=""):
         runName = self.getRunName()
 
         if runName != self.inRunName:
-            protocol = self.run['protocol_name']
             self.run['run_name'] = runName
-            self.outScript = self.project.getRunScriptFileName(protocol, runName)
-            self.run['script'] = self.outScript
+            self.run['script'] = self.project.getRunScriptFileName(self.run['protocol_name'], runName)
         #update database
-        if self.outScript != self.inScript:
+        if self.run['script'] != self.run['source']:
             print "Creating new run of this protocol..."
             self.project.projectDb.insertRun(self.run)
-            self.inScript = self.outScript
+            self.run['source'] = self.run['script']
             self.inRunName = runName
         else:
             self.project.projectDb.updateRun(self.run)
 
-        print "* Saving script: %s" % self.outScript
-        f = open(self.outScript, 'w')
+        print "* Saving script: %s" % self.run['script']
+        f = open(self.run['script'], 'w')
         #f = sys.stdout
         f.writelines(self.pre_header_lines)
         for w in self.widgetslist:
@@ -656,7 +685,7 @@ class ProtocolGUI(BasicGUI):
         f.writelines(sepLine + '# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE\n') 
         f.writelines(self.post_header_lines)
         f.close()
-        os.chmod(self.outScript, 0755)
+        os.chmod(self.run['script'], 0755)
             
         if self.saveCallback:
             self.saveCallback()
@@ -667,7 +696,7 @@ class ProtocolGUI(BasicGUI):
         return True
     
     def validateProtocol(self):
-        prot = getProtocolFromModule(self.outScript, self.project)
+        prot = getProtocolFromModule(self.run['script'], self.project)
         errors = prot.validateInput()        
         if len(errors) > 0:
             tkMessageBox.showerror("Validation ERRORS", '\n'.join(errors), parent=self.master)
@@ -700,14 +729,17 @@ class ProtocolGUI(BasicGUI):
         self.resize()
         
     def checkVisibility(self, event=""):        
-        for w in self.widgetslist:
-            w.checkVisibility()   
+        for s in self.sectionslist:
+            #if s.has_question:
+            #    self.expandCollapseSection(s)
+            s.checkVisibility()
+            #for w in s.childwidgets:
+            #    w.checkVisibility()
         self.updateScrollRegion() 
 
     
     def fillButtons(self):
         row = self.getRow()
-        self.addSeparator(row)
         row += 3
         self.addButton("Close", self.close, 0, row, 0, W)
         self.btnExpert = self.addButton("Show Expert Options", self.toggleExpertMode, 12, row, 1, EW)
@@ -734,16 +766,11 @@ class ProtocolGUI(BasicGUI):
     def setRunName(self, value):
         self.variablesDict['RunName'].setValue(value)
         
-    def createGUI(self, inScript, project, run=None, master=None, saveCallback=None):
-        if run:
-            outScript = run['script']
-        else:
-            outScript = inScript
+    def createGUI(self, project, run, master=None, saveCallback=None):
         self.run = run
         self.saveCallback = saveCallback
         self.project = project
-        
-        self.init(inScript, outScript)        
+        self.init()        
         self.createBasicGUI(master)
         self.master.option_add("*Font", self.style.Font)
         self.columnspantextlabel = 3
@@ -753,6 +780,11 @@ class ProtocolGUI(BasicGUI):
         self.createScrollableCanvas()
         self.fillHeader()
         self.parseHeader()
+        self.master.update_idletasks()
+        maxWidth = max([s.frame.winfo_width() for s in self.sectionslist])
+        for section in self.sectionslist:
+            section.frame.grid_columnconfigure(0, minsize=maxWidth, weight=1)
+            section.content.grid_columnconfigure(0, minsize=200, weight=1)
         #Set the run_name
         if self.run:
             self.inRunName = run['run_name']
@@ -761,6 +793,7 @@ class ProtocolGUI(BasicGUI):
                 # Add bottom row buttons
     def fillGUI(self):
         self.fillButtons()
-        self.addBindings()        
+        self.addBindings()    
+        self.master.update_idletasks()    
         self.checkVisibility() 
     
