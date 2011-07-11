@@ -17,7 +17,7 @@ import xmipp.MetaData;
  *
  * @author Juanjo Vega
  */
-public class MetaDataTableModel extends DefaultTableModel {// implements TableModelListener {
+public class MetaDataTableModel extends DefaultTableModel {
 
     private int ENABLED_COLUMN_INDEX;
     private int MD_LABELS[];
@@ -201,13 +201,14 @@ public class MetaDataTableModel extends DefaultTableModel {// implements TableMo
 
     public void setRowEnabled(int row, boolean enabled) {
         md.setValueInt(MDLabel.MDL_ENABLED, enabled ? 1 : 0, ids[row]);
-        setValueAt(enabled, row, ENABLED_COLUMN_INDEX);
+//        setValueAt(enabled, row, ENABLED_COLUMN_INDEX);
     }
 
     public void enableAllRows(boolean enabled) {
         // Updates table.
         for (int i = 0; i < getRowCount(); i++) {
             setRowEnabled(i, enabled);
+            setValueAt(enabled, i, ENABLED_COLUMN_INDEX);
         }
     }
 

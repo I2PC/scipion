@@ -30,15 +30,11 @@ public class RowHeaderRenderer extends JLabel implements ListCellRenderer {
 
         Integer rowNumber = (Integer) value;
 
-        if (rowNumber != null) {
-            setEnabled(list.isEnabled());
+        //setEnabled(list.isEnabled());
 
-            setFont(list.getFont());
-            setText(String.valueOf(rowNumber));
+        //setFont(list.getFont());
+        setText(String.valueOf(rowNumber));
 
-            return this;
-        } else {
-            return null;
-        }
+        return this;
     }
 }

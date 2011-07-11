@@ -28,12 +28,13 @@ import metadata.images.TableImageItem;
 import metadata.renderers.MetaDataStringRenderer;
 import metadata.renderers.MetaDataNumberRenderer;
 import metadata.renderers.MetaDataImageRenderer;
-import metadata.filters.EnableFilter;
+import metadata.filters.RowEnableFilter;
 import metadata.models.MetaDataTableModel;
 import metadata.models.XTableColumnModel;
 import browser.DEBUG;
 import browser.windows.ImagesWindowFactory;
 import ij.ImagePlus;
+import java.awt.Dimension;
 import java.awt.event.ItemEvent;
 import metadata.dialogs.JDialogColumnsSelector;
 import metadata.dialogs.JDialogTextFile;
@@ -53,12 +54,13 @@ public class JFrameMetaData extends JFrame {
     private XTableColumnModel columnModel = new XTableColumnModel();
     private JFileChooser fc = new JFileChooser();
     private JList rowHeader;
+    private RowHeaderRenderer rowHeaderRenderer = new RowHeaderRenderer();
     private FileItemRenderer fileRenderer = new FileItemRenderer();
     private MetaDataImageRenderer imageRenderer = new MetaDataImageRenderer();
     private MetaDataStringRenderer stringRenderer = new MetaDataStringRenderer();
     private MetaDataNumberRenderer numberRenderer = new MetaDataNumberRenderer();
     private TableRowSorter sorter;
-    private EnableFilter enableFilter = new EnableFilter();
+    private RowEnableFilter rowEnableFilter = new RowEnableFilter();
     private JDialogColumnsSelector frameColumnsSelector = new JDialogColumnsSelector();
 
     /** Creates new form JFrameMetaData */
@@ -96,10 +98,9 @@ public class JFrameMetaData extends JFrame {
             }
         };
 
-        enableFilter = new EnableFilter();
+        rowEnableFilter = new RowEnableFilter();
         sorter = new TableRowSorter<MetaDataTableModel>(tableModel);
         sorter.setSortsOnUpdates(true);
-        sorter.setRowFilter(enableFilter);
         table.setRowSorter(sorter);
 
         table.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
@@ -113,6 +114,7 @@ public class JFrameMetaData extends JFrame {
         });
 
         jsPanel.setViewportView(table);
+//        setRowHeader();
 
         table.setColumnModel(columnModel);
 
@@ -160,7 +162,7 @@ public class JFrameMetaData extends JFrame {
 
         rowHeader.setFixedCellHeight(imageRenderer.getCellHeight());
 
-        rowHeader.setCellRenderer(new RowHeaderRenderer());
+        rowHeader.setCellRenderer(rowHeaderRenderer);
 
         jsPanel.setRowHeaderView(rowHeader);
     }
@@ -179,17 +181,18 @@ public class JFrameMetaData extends JFrame {
         packColumns();
         packRows();
 
-        rowHeader.repaint();
+        table.repaint();
         table.getTableHeader().repaint();
+        rowHeader.repaint();
+
+        jsPanel.setRowHeaderView(rowHeader);
     }
 
     private void packColumns() {
-        for (int i = 0; i < columnModel.getColumnCount(true); i++) {
-            TableColumn tcolumn = columnModel.getColumnByModelIndex(i);
+        for (int i = 0; i < columnModel.getColumnCount(/*true*/); i++) {
+            TableColumn tcolumn = columnModel.getColumn(i);/*(i, true);*/
 
-            if (columnModel.isColumnVisible(tcolumn)) {
-                tcolumn.setPreferredWidth(imageRenderer.getCellWidth());
-            }
+            tcolumn.setPreferredWidth(imageRenderer.getCellWidth());
         }
     }
 
@@ -227,6 +230,8 @@ public class JFrameMetaData extends JFrame {
                         Boolean value = (Boolean) tableModel.getValueAt(model_row, model_col);
 
                         tableModel.setRowEnabled(model_row, value);
+
+                        updateTableStructure();
                     }
                 }
             } else if (SwingUtilities.isRightMouseButton(evt)) {
@@ -272,19 +277,21 @@ public class JFrameMetaData extends JFrame {
     }
 
     private void hideDisabled(boolean hide) {
-        enableFilter.setFiltering(hide);
+        sorter.setRowFilter(hide ? rowEnableFilter : null);
 
         updateTableStructure();
     }
 
     private void setRenderImages(boolean renderImages) {
         imageRenderer.setRenderImages(renderImages);
+
         updateTableStructure();
     }
 
     private void reloadTableData() {
         DEBUG.printMessage(" *** Refreshing table [RELOAD]: " + System.currentTimeMillis());
 
+        columnModel.clear();
         tableModel.reload();
 
         setRowHeader();
