@@ -679,11 +679,37 @@ int PROJECT_Effectively_project(const std::string &fnOut,
     init_progress_bar(side.DF.size());
     SF.setComment("First set of angles=actual angles; Second set of angles=noisy angles");
 
+//#define DEBUG
+#ifdef DEBUG
+
+    MetaData mdShifts;
+    MetaData mdRotations;
+    /**
+     * Here we create two auxiliary metadata files to check that the
+     * Alignment information that is created by project is correct
+     * We can not just use the metadata file created by project because this is
+     * designed to be applied to the volume (during the reconstruction) but
+     * not to the images.
+     *
+     * Helpful batch file:
+     * xmipp_phantom_project  -i Phantom/asy.vol -o Images/proj_shifts.stk --params Phantom/asy2.param
+    cp Images/proj_shifts.stk kk.stk
+    xmipp_show Images/proj_shifts.stk
+    xmipp_transform_geometry -i shifts.xmd  --apply_transform -o Images/kk.stk
+    mv Images/kk.stk  Images/proj_shifts.stk
+    xmipp_show Images/proj_shifts.stk
+    xmipp_transform_geometry -i rotations.xmd  --apply_transform -o Images/kk.stk
+    mv Images/kk.stk  Images/proj_shifts.stk
+    xmipp_show Images/proj_shifts.stk
+     *
+     */
+#endif
+
     int projIdx=FIRST_IMAGE;
     FileName fn_proj;              // Projection name
     RealShearsInfo *Vshears=NULL;
     if (shears && side.phantomMode==PROJECT_Side_Info::VOXEL)
-    	Vshears=new RealShearsInfo(side.phantomVol());
+        Vshears=new RealShearsInfo(side.phantomVol());
     FOR_ALL_OBJECTS_IN_METADATA(side.DF)
     {
         size_t DFmov_objId=SF.addObject();
@@ -711,6 +737,23 @@ int PROJECT_Effectively_project(const std::string &fnOut,
         SF.setValue(MDL_SHIFTX,-shiftX,DFmov_objId);
         SF.setValue(MDL_SHIFTY,-shiftY,DFmov_objId);
 
+#ifdef DEBUG
+
+        mdShifts.addObject();
+        mdShifts.setValue(MDL_IMAGE,fn_proj,DFmov_objId);
+        mdShifts.setValue(MDL_SHIFTX,-shiftX,DFmov_objId);
+        mdShifts.setValue(MDL_SHIFTY,-shiftY,DFmov_objId);
+        mdShifts.setValue(MDL_ENABLED,1,DFmov_objId);
+
+
+        mdRotations.addObject();
+        mdRotations.setValue(MDL_IMAGE,fn_proj,DFmov_objId);
+        mdRotations.setValue(MDL_ANGLEROT,-rot,DFmov_objId);
+        mdRotations.setValue(MDL_ANGLETILT,-tilt,DFmov_objId);
+        mdRotations.setValue(MDL_ANGLEPSI,-psi,DFmov_objId);
+
+
+#endif
         // Really project ....................................................
         if (side.phantomMode==PROJECT_Side_Info::VOXEL)
         {
@@ -762,8 +805,6 @@ int PROJECT_Effectively_project(const std::string &fnOut,
         SF.setValue(MDL_ANGLEROT,rot,DFmov_objId);
         SF.setValue(MDL_ANGLETILT,tilt,DFmov_objId);
         SF.setValue(MDL_ANGLEPSI,psi,DFmov_objId);
-        proj.setEulerAngles(rot, tilt, psi);
-        proj.setShifts(-shiftX,-shiftY);
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
         // Save ..............................................................
@@ -775,6 +816,13 @@ int PROJECT_Effectively_project(const std::string &fnOut,
         NumProjs++;
     }
     progress_bar(side.DF.size());
+
+#ifdef DEBUG
+
+    mdShifts.write("shifts.xmd");
+    mdRotations.write("rotations.xmd");
+#endif
+#undef DEBUG
 
     return NumProjs;
 }
