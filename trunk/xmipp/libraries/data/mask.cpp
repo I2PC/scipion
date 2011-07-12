@@ -435,25 +435,72 @@ void BinaryCylinderMask(MultidimArray<int> &mask,
     }
 }
 
-void BinaryConeMask(MultidimArray<int> &mask, double theta, int mode)
+void BinaryConeMask(MultidimArray<int> &mask, double theta, int mode,bool centerOrigin)
 {
+
+    int halfX, halfY,halfZ;
+    int minX,minY,minZ;
+    int maxX,maxY,maxZ;
+    int ipp,jpp,kpp;
+
+    halfX = mask.xdim/2;
+    halfY = mask.ydim/2;
+    halfZ = mask.zdim/2;
+
+    minX = -halfX;
+    minY = -halfY;
+    minZ = -halfZ;
+
+    maxX = (mask.xdim-0.5)/2;
+    maxY = (mask.ydim-0.5)/2;
+    maxZ = (mask.zdim-0.5)/2;
 
     FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
     {
-        double rad = tan(PI * theta / 180.) * (double)k;
-        if ((double)(i*i + j*j) < rad*rad)
-            A3D_ELEM(mask, k, i, j) = 0;
+        if (centerOrigin)
+        {
+            kpp = intWRAP (k+halfZ,minZ,maxZ);
+            ipp = intWRAP (i+halfY,minY,maxY);
+            jpp = intWRAP (j+halfX,minX,maxX);
+        }
         else
-            A3D_ELEM(mask, k, i, j) = 1;
-        if (mode == OUTSIDE_MASK)
-            A3D_ELEM(mask, k, i, j) = 1 - A3D_ELEM(mask, k, i, j);
-    }
+        {
+            kpp=k;
+            ipp=i;
+            jpp=j;
+        }
 
+        double rad = tan(PI * theta / 180.) * (double)k;
+        if ((double)(i*i + j*j) < (rad*rad))
+            A3D_ELEM(mask, kpp, ipp, jpp) = 0;
+        else
+            A3D_ELEM(mask, kpp, ipp, jpp) = 1;
+        if (mode == OUTSIDE_MASK)
+            A3D_ELEM(mask, kpp, ipp, jpp) = 1 - A3D_ELEM(mask, kpp, ipp, jpp);
+    }
 }
 
 void BinaryWedgeMask(MultidimArray<int> &mask, double theta0, double thetaF,
-                     Matrix2D<double> A)
+                     Matrix2D<double> A, bool centerOrigin)
 {
+
+    int halfX, halfY,halfZ;
+    int minX,minY,minZ;
+    int maxX,maxY,maxZ;
+    int ipp,jpp,kpp;
+
+    halfX = mask.xdim/2;
+    halfY = mask.ydim/2;
+    halfZ = mask.zdim/2;
+
+    minX = -halfX;
+    minY = -halfY;
+    minZ = -halfZ;
+
+    maxX = (mask.xdim-0.5)/2;
+    maxY = (mask.ydim-0.5)/2;
+    maxZ = (mask.zdim-0.5)/2;
+
 
     double xp, yp, zp;
     double tg0, tgF, limx0, limxF;
@@ -464,31 +511,46 @@ void BinaryWedgeMask(MultidimArray<int> &mask, double theta0, double thetaF,
         tg0=0.;
     if (ABS(tgF) < XMIPP_EQUAL_ACCURACY)
         tgF=0.;
-
     A = A.inv();
     FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
     {
         xp = A(0, 0) * (double)j + A(0, 1) * (double)i + A(0, 2) * (double)k;
         zp = A(2, 0) * (double)j + A(2, 1) * (double)i + A(2, 2) * (double)k;
 
+        if (centerOrigin)
+        {
+            kpp = intWRAP (k+halfZ,minZ,maxZ);
+            ipp = intWRAP (i+halfY,minY,maxY);
+            jpp = intWRAP (j+halfX,minX,maxX);
+        }
+        else
+        {
+            kpp=k;
+            ipp=i;
+            jpp=j;
+        }
+
         limx0 = tg0 * zp;// + 0.5;
         limxF = tgF * zp;// + 0.5;
         if (zp >= 0)
         {
             if (xp <= limx0 || xp >= limxF)
-                A3D_ELEM(mask, k, i, j) = 1.;
+            {
+                A3D_ELEM(mask, kpp, ipp, jpp) = 1.;
+            }
             else
-                A3D_ELEM(mask, k, i, j) = 0.;
+                A3D_ELEM(mask, kpp, ipp, jpp) = 0.;
         }
         else
         {
             if (xp <= limxF || xp >= limx0)
-                A3D_ELEM(mask, k, i, j) = 1.;
+            {
+            	A3D_ELEM(mask, kpp, ipp, jpp) = 1.;
+            }
             else
-                A3D_ELEM(mask, k, i, j) = 0.;
+                A3D_ELEM(mask, kpp, ipp, jpp) = 0.;
         }
     }
-
 }
 
 

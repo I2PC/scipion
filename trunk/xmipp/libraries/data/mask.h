@@ -276,7 +276,7 @@ void BinaryFrameMask(MultidimArray< int >& mask,
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
 void BinaryConeMask(MultidimArray< int >& mask,
-                    double theta, int mode = INNER_MASK);
+                    double theta, int mode = INNER_MASK, bool centerOrigin=false);
 
 /** Creates a 3D missing wedge mask
  *
@@ -287,7 +287,7 @@ void BinaryConeMask(MultidimArray< int >& mask,
  * (x0,y0,z0), and rotated with respect to euler angle matrix A.
  */
 void BinaryWedgeMask(MultidimArray< int >& mask, double theta0, double thetaF,
-                     Matrix2D< double > A);
+                     Matrix2D< double > A, bool centerOrigin=false);
 
 
 /** Creates a 3x3x3 mask with value (1 by default) for those 6-neighbors of the
