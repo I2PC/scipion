@@ -12,31 +12,37 @@
 #include "xmipp_image.h"
 #include "metadata.h"
 
+/** @defgroup MetaDataExtension Extension to Metadata Stuff
+ * @ingroup DataLibrary
+ * @{
+ */
+/** Get the image statistics of a metadata.
+ * Note that the mean and stddev are images, not values.*/
 void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, double& _min,
                     double& _max, bool apply_geo);
 
-/*
- * Get the min and max values and the mean of the average and standard deviation for all the values
- * from all the images in the metadata.
+/** Get the image statistics of a metadata.
  */
 void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
                     double& _max, bool apply_geo);
 
 /** Get image size
- *
  */
 void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim);
+
+/** Get image size and data type */
 void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype);
 
+/** Get image size and data type of a Metadata file */
 void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim);
 
 /// compare two image files
 bool ImgCompare(const FileName &filename1, const FileName &filename2);
 
-void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList);
-
+/** Maximum length of the filenames inside */
 int MaxFileNameLength(MetaData &MD);
 
+/** Choose a part of the metadata for MPI */
 void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot);
 
 /** Read a 1 or two column list of micrographs.
@@ -51,5 +57,6 @@ void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD);
  */
 void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const FileName &fnOut,
 		MDLabel label, bool skipFirstBlock);
+//@}
 
 #endif /* METADATA_EXTENSION_H_ */
