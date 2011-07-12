@@ -1,4 +1,4 @@
-/***************************************************************************
+/**************************************************************************
  *
  * Authors:     J.R. Bilbao-Castro (jrbcast@ace.ual.es)
  *
@@ -26,8 +26,9 @@
 #include "xmipp_strings.h"
 #include "xmipp_error.h"
 #include "xmipp_macros.h"
-#include <math.h>
 #include "gcc_version.h"
+#include <math.h>
+#include <regex.h>
 
 String removeChar( const String& str, char character )
 {
@@ -101,7 +102,7 @@ String simplify( const String& str )
     return temp;
 }
 
-/** Trim all spaces from the begining and the end */
+/* Trim all spaces from the begining and the end */
 void trim(String& str)
 {
     String::size_type pos = str.find_last_not_of(' ');
@@ -519,7 +520,7 @@ String findAndReplace(const String& tInput, const String &tFind,
 
 
 
-/** Tokenizer  for char arrays. It does NOT modify
+/* Tokenizer  for char arrays. It does NOT modify
  * the input array
  *  src is a pointer to the array beginning.
  *  It may be modified to trim the token
@@ -580,7 +581,7 @@ void * _memmem ( const void *haystack, size_t haystack_len, const void *needle, 
     return NULL;
 }
 
-/** Obtain an string from a format in the way of printf works
+/* Obtain an string from a format in the way of printf works
  *
  */
 String formatString(const char * format, ...)
@@ -595,7 +596,7 @@ String formatString(const char * format, ...)
     return result;
 }
 
-/** Obtain an string from a format in the way of printf works
+/* Obtain an string from a format in the way of printf works
  *
  */
 void formatStringFast(String &str, const char * format, ...)
@@ -608,3 +609,20 @@ void formatStringFast(String &str, const char * format, ...)
     str=formatBuffer;
     va_end (args);
 }
+
+/* Matches regular expression */
+bool matchRegExp(const String &inputString, const String &pattern)
+{
+	// Construct regular expression
+    regex_t re;
+    if (regcomp(&re, pattern.c_str(), REG_EXTENDED|REG_NOSUB) != 0)
+    	REPORT_ERROR(ERR_ARG_INCORRECT,(String)"Pattern cannot be parsed:"+pattern);
+
+    // Check if the string matches the pattern
+    int status = regexec(&re, inputString.c_str(), (size_t) 0, NULL, 0);
+    regfree(&re);
+    if (status != 0)
+    	return false;
+    return true;
+}
+

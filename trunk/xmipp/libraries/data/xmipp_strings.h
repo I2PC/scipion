@@ -371,7 +371,7 @@ void tokenize(const String& str,
     char   *str;
     char   *end;
     start=(char *) malloc(128);
-    strcpy(start,"Filtrose    el\tmozo\n en una zahurda lóbrega, las paredes\
+    strcpy(start,"Filtrose    el\tmozo\n en una zahurda lobrega, las paredes\
     enhollinadas");
     fprintf(stderr,"Mstart=%d",(void *) start);
     char aux[64];
@@ -390,11 +390,11 @@ void tokenize(const String& str,
     printf(">%s< %d\n", aux,(void *) end);
  @endcode
  */
-
 char   *memtok(char **src,  char **_end, const char *sep);
 
 /** Memory string search, taken from GNU C Library */
 void * _memmem ( const void *haystack, size_t haystack_len, const void *needle, size_t needle_len);
+//@}
 
 /** Obtain an string from a format in the way of printf works
  *
@@ -406,6 +406,7 @@ String formatString(const char * format, ...);
  */
 void formatStringFast(String &str, const char * format, ...);
 
-//@}
+/** True if the inputString matches the regular expression in pattern */
+bool matchRegExp(const String &inputString, const String &pattern);
 //@}
 #endif
