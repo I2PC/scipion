@@ -55,6 +55,10 @@ void ProgFilter::defineParams()
     addExampleLine("xmipp_transform_filter  -i volume.vol -o volumeFiltered.vol -f band_pass 0.1 0.3");
     addExampleLine("xmipp_transform_filter  -i image.ser  -o imageFiltered.xmp --background plane");
     addExampleLine("xmipp_transform_filter  -i smallStack.stk -o smallFiltered.stk -w DAUB12 difussion");
+    addExampleLine("Filter a volume using a wedge mask rotated 10 degress",false);
+    addExampleLine("xmipp_transform_filter  --fourier wedge  -60 60 0 0 10 -i ico.spi -o kk0.spi --verbose",false);
+    addExampleLine("save filtering mask (do not filter)",false);
+    addExampleLine("xmipp_transform_filter  --fourier wedge  -60 60 0 0 10 -i ico.spi -o kk0.spi --verbose --save mask.spi",false);
 }
 
 void ProgFilter::readParams()
