@@ -146,21 +146,23 @@ char * XmippError::getDefaultMessage(ErrorType e)
         return " Incorrect matrix size";
 
     case ERR_MD:
-        return " MetaData error";
+        return " MetaData error.";
     case ERR_MD_BADLABEL:
-        return " Unexpected label";
+        return " Unexpected label.";
     case ERR_MD_BADTYPE:
         return " Bad label type.";
     case ERR_MD_NOACTIVE:
-        return " No active object in MetaData";
+        return " No active object in MetaData.";
     case ERR_MD_NOOBJ:
-        return " No exist requested object";
+        return " No exist requested object.";
     case ERR_MD_SQL:
         return " Error in SQL of MetaData operations";
     case ERR_MD_OBJECTNUMBER:
         return " Bad number of objects in MetaData";
     case ERR_MD_UNDEFINED:
         return " Undefined label.";
+    case ERR_MD_WRONGDATABLOCK:
+    	return " Block not existing.";
 
     case ERR_MEM_BADREQUEST:
         return " Bad amount of memory requested.";
