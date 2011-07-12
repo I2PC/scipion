@@ -1002,8 +1002,34 @@ size_t xmippFWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
     return retval;
 }
 
+/* Map file */
+void mapFile(const FileName &filename, char*&map, size_t &size, int &fileDescriptor)
+{
+    struct stat file_status;
+    if(stat(filename.data(), &file_status) != 0)
+        REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot get filesize for file "+filename);
+    size = file_status.st_size;
+    if(size==0)
+        REPORT_ERROR(ERR_IO_NOPATH,(String)"File size=0, cannot read it ("+filename+")");
 
-/** Conversion little-big endian any size */
+    fileDescriptor = open(filename.data(),  O_RDWR, S_IREAD | S_IWRITE);
+    if (fileDescriptor == -1)
+        REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot read file named "+filename);
+
+    map = (char *) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0);
+    if (map == MAP_FAILED)
+        REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
+}
+
+/* Unmap file*/
+void unmapFile(char *&map, size_t &size, int& fileDescriptor)
+{
+    if (munmap(map, size) == -1)
+        REPORT_ERROR(ERR_MEM_NOTDEALLOC,"Cannot unmap memory");
+    close(fileDescriptor);
+}
+
+/* Conversion little-big endian any size */
 void ByteSwap(unsigned char * b, int n)
 {
     register int i = 0;

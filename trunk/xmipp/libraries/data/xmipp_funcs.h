@@ -1092,6 +1092,12 @@ size_t xmippFWRITE(const void* src,
                    FILE*& fp,
                    bool reverse = false);
 
+/** Map file to memory */
+void mapFile(const FileName &filename, char*&map,size_t &size, int &fileDescriptor);
+
+/** Unmap file*/
+void unmapFile(char *&map, size_t &size, int& fileDescriptor);
+
 /** Conversion little-big endian
  *
  * This function is not ported to Python.
