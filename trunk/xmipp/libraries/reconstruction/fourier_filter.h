@@ -82,6 +82,9 @@ public:
     /** Second frequency for bandpass and stopband. Normalized to 1/2 */
     double w2;
 
+    /** Wedge and cone filter parameters */
+    double t1, t2;
+
     /** Pixels around the central frequency for the raised cosine */
     double raised_w;
 

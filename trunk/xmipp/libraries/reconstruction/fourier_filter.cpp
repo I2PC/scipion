@@ -59,10 +59,11 @@ void FourierFilter::defineParams(XmippProgram *program)
     program->addParamsLine("            high_pass <w1>                   : Cutoff freq (<1/2 or A)");
     program->addParamsLine("            band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)");
     program->addParamsLine("            stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)");
-    program->addParamsLine("         where <mask_type> ");
-    program->addParamsLine("            raised_cosine <raisedw=0.02>     : Use raised cosine edges (in dig.freq.)");
     program->addParamsLine("            wedge <th0> <thF>                : Missing wedge (along y) for data between th0-thF ");
     program->addParamsLine("            cone <th0>                       : Missing cone for tilt angles up to th0 ");
+    program->addParamsLine("                                             : do not use mask type for wedge or cone filters");
+    program->addParamsLine("         where <mask_type>");
+    program->addParamsLine("            raised_cosine <raisedw=0.02>     : Use raised cosine edges (in dig.freq.)");
     program->addParamsLine("            gaussian                         : Gaussian with sigma = w1");
     program->addParamsLine("            real_gaussian                    : Convolution with a Gaussian in real-space with sigma = w1");
     program->addParamsLine("            ctf <ctfile>                     : Provide a .ctfparam file");
@@ -110,6 +111,18 @@ void FourierFilter::readParams(XmippProgram *program)
         maskPos = 3;
         FilterBand = STOPBAND;
     }
+    else if (cuttoff == "wedge")
+    {
+      std::cerr << "DEBUG_JM: wedge" <<std::endl;
+        t1 = program->getDoubleParam("--fourier", "wedge", 0);
+        t2 = program->getDoubleParam("--fourier", "wedge", 1);
+        FilterShape = WEDGE;
+    }
+    else if (cuttoff == "cone")
+    {
+        t1 = program->getDoubleParam("--fourier", "cone", 0);
+        FilterShape = CONE;
+    }
 
     if (!(FilterBand == BFACTOR) && program->checkParam("--sampling"))
     {
@@ -123,23 +136,14 @@ void FourierFilter::readParams(XmippProgram *program)
     //Read mask options
     mask = program->getParam("--fourier", maskPos);
 
-    if (mask == "raised_cosine")
+    if(FilterShape == WEDGE || FilterShape == CONE)
+    {
+
+    }
+    else if (mask == "raised_cosine")
     {
         raised_w = program->getDoubleParam("--fourier", "raised_cosine");
         FilterShape = RAISED_COSINE;
-    }
-    else if (mask == "wedge")
-    {
-        w1 = program->getDoubleParam("--fourier", "wedge", 0);
-        w2 = program->getDoubleParam("--fourier", "wedge", 1);
-        FilterShape = WEDGE;
-        do_generate_3dmask = true;
-    }
-    else if (mask == "cone")
-    {
-        w1 = program->getDoubleParam("--fourier", "cone", 0);
-        FilterShape = CONE;
-        do_generate_3dmask = true;
     }
     else if (mask == "gaussian")
     {
@@ -181,11 +185,11 @@ void FourierFilter::show()
 {
     if (FilterShape == WEDGE)
     {
-        std::cout << "Missing wedge for data between tilting angles of " << w1 << " and " << w2 << " deg\n";
+        std::cout << "Missing wedge for data between tilting angles of " << t1 << " and " << t2 << " deg\n";
     }
     else if (FilterShape == CONE)
     {
-        std::cout << "Missing cone for RCT data with tilting angles up to " << w1 << " deg\n";
+        std::cout << "Missing cone for RCT data with tilting angles up to " << t1 << " deg\n";
     }
     else
     {
@@ -241,7 +245,7 @@ void FourierFilter::show()
 void FourierFilter::apply(MultidimArray<double> &img)
 {
     static bool firstTime = true;
-
+    do_generate_3dmask = (img.zdim > 1);
     if (firstTime)
     {
         generateMask(img);
@@ -354,11 +358,11 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
                 {
                     Matrix2D<double> A(3,3);
                     A.initIdentity();
-                    BinaryWedgeMask(maskFourier, w1, w2, A);
+                    BinaryWedgeMask(maskFourier, t1, t2, A);
                     break;
                 }
             case CONE:
-                BinaryConeMask(maskFourier, 90. - w1);
+                BinaryConeMask(maskFourier, 90. - t1);
                 break;
             }
         }
@@ -417,7 +421,7 @@ void FourierFilter::applyMaskSpace(MultidimArray<double> &v)
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux3D)
         DIRECT_MULTIDIM_ELEM(aux3D,n)*=DIRECT_MULTIDIM_ELEM(maskFourier,n);
     }
-    else if (XSIZE(maskFourierd)!=0)
+    if (XSIZE(maskFourierd)!=0)
     {
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux3D)
         DIRECT_MULTIDIM_ELEM(aux3D,n)*=DIRECT_MULTIDIM_ELEM(maskFourierd,n);

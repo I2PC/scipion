@@ -36,6 +36,7 @@ private:
 protected:
     void defineParams();
     void readParams();
+    void preProcess();
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
 
 public:

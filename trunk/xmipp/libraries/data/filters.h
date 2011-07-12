@@ -1311,6 +1311,9 @@ public:
     virtual ~XmippFilter()
     {}
     ;
+
+    /** Show some info before running */
+    virtual void show() {};
 };
 
 /** Some concrete filters */

@@ -79,6 +79,12 @@ void ProgFilter::readParams()
     filter->readParams(this);
 }
 
+void ProgFilter::preProcess()
+{
+  if (verbose)
+    filter->show();
+}
+
 void ProgFilter::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
     Image<double> img;

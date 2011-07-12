@@ -460,14 +460,19 @@ void BinaryWedgeMask(MultidimArray<int> &mask, double theta0, double thetaF,
 
     tg0 = -tan(PI * (-90. - thetaF) / 180.);
     tgF = -tan(PI * (90. - theta0) / 180.);
+    if (ABS(tg0) < XMIPP_EQUAL_ACCURACY)
+        tg0=0.;
+    if (ABS(tgF) < XMIPP_EQUAL_ACCURACY)
+        tgF=0.;
 
     A = A.inv();
     FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
     {
         xp = A(0, 0) * (double)j + A(0, 1) * (double)i + A(0, 2) * (double)k;
         zp = A(2, 0) * (double)j + A(2, 1) * (double)i + A(2, 2) * (double)k;
-        limx0 = tg0 * zp;
-        limxF = tgF * zp;
+
+        limx0 = tg0 * zp;// + 0.5;
+        limxF = tgF * zp;// + 0.5;
         if (zp >= 0)
         {
             if (xp <= limx0 || xp >= limxF)
@@ -1385,7 +1390,7 @@ void Mask::readParams(XmippProgram * program)
     }
     else
     {
-       fn_mask = program->getParam("--mask","binary_file");
+        fn_mask = program->getParam("--mask","binary_file");
         type = READ_MASK;
     }
 }
