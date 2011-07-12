@@ -284,6 +284,7 @@ public:
     bool nextBlockToRead(regex_t &re,
     					 char * map, size_t mapSize,
     					 bool &isCColumnFormat,
+    					 String &blockName,
                          char ** firstData,
                          char ** secondData,
                          char ** firstloop);

@@ -30,35 +30,36 @@
 // Get the blocks available
 void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
 {
+	MetaData MDaux;
     blockList.clear();
     if (!inFile.isMetaData())
         return;
 
-    std::ifstream is(inFile.data(), std::ios_base::in);
-    int state=0;
-    String candidateBlock, line;
-    while (!is.eof())
+    //map file
+    int fd;
+    char *map=NULL;
+    size_t size;
+    mapFile(inFile,map,size,fd);
+
+    char * firstData=NULL, *secondData=NULL, *firstloop=NULL;
+    regex_t re;
+    if (regcomp(&re, ".*", REG_EXTENDED|REG_NOSUB) != 0)
+    	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot construct regular expression");
+    char *startingPoint=map;
+    size_t remainingSize=size;
+	String blockName;
+	bool isColumnFormat;
+    while (MDaux.nextBlockToRead(re, startingPoint, remainingSize, isColumnFormat,
+    					         blockName, &firstData, &secondData, &firstloop))
     {
-        getline(is,line);
-        trim(line);
-        switch (state)
-        {
-        case 0:
-            if (line.find("data_")==0)
-            {
-                state=1;
-                candidateBlock=line.substr(5,line.size()-5);
-            }
-            break;
-        case 1:
-            if (line.find("loop_")==0)
-            {
-                state=0;
-                blockList.push_back(candidateBlock);
-            }
-            break;
-        }
+		if(secondData ==NULL)
+			secondData = map + size;
+    	blockList.push_back(blockName);
+		startingPoint=secondData;
+		remainingSize=size-(startingPoint-map);
     }
+    unmapFile(map,size,fd);
+    regfree(&re);
 }
 
 //-----Constructors and related functions ------------
@@ -894,7 +895,7 @@ void MetaData::read(const FileName &_filename,
     eFilename = filename;
 }
 
-#define LINE_LENGHT 1024
+#define LINE_LENGTH 1024
 void MetaData::readPlain(const FileName &inFile, const String &labelsString, const String &separator)
 {
 
@@ -902,7 +903,7 @@ void MetaData::readPlain(const FileName &inFile, const String &labelsString, con
     std::vector<MDLabel> labels;
     MDL::str2LabelVector(labelsString, labels);
 
-    char lineBuffer[LINE_LENGHT];
+    char lineBuffer[LINE_LENGTH];
     String line;
     std::ifstream is(inFile.data(), std::ios_base::in);
     size_t lineCounter = 0;
@@ -910,7 +911,7 @@ void MetaData::readPlain(const FileName &inFile, const String &labelsString, con
     size_t objId;
     StringVector parts;
 
-    while (is.getline(lineBuffer, LINE_LENGHT))
+    while (is.getline(lineBuffer, LINE_LENGTH))
     {
         ++lineCounter;
         line.assign(lineBuffer);
@@ -1017,9 +1018,11 @@ void MetaData::_read(const FileName &filename,
 				         blockRegExp.find("[")==std::string::npos &&
 				         blockRegExp.find("*")==std::string::npos &&
 				         blockRegExp.find("+")==std::string::npos;
-        while (nextBlockToRead(re, startingPoint, remainingSize, isColumnFormat, &firstData, &secondData, &firstloop))
+		String blockName;
+        while (nextBlockToRead(re, startingPoint, remainingSize, isColumnFormat,
+        					   blockName, &firstData, &secondData, &firstloop))
         {
-			if(secondData ==NULL)//this should not be necessary but you never know
+			if(secondData ==NULL)
 				secondData = map + size;
 
 			//Read column labels from the datablock that starts at firstData
@@ -1109,6 +1112,7 @@ void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
 bool MetaData::nextBlockToRead(regex_t &re,
 		                       char * map, size_t mapSize,
 		                       bool &isCColumnFormat,
+		                       String &strBlockName,
                                char ** firstData,
                                char ** secondData,
                                char ** firstloop)
@@ -1130,7 +1134,10 @@ bool MetaData::nextBlockToRead(regex_t &re,
 
 		    // Check if block name meets the regular expression
 		    if (regexec(&re, blockName, (size_t) 0, NULL, 0)==0)
+		    {
+		    	strBlockName=blockName+5;
 		    	break; // We found a block following the regular expression
+		    }
 		    startingPoint=*firstData;
 	    }
 	} while (*firstData!=NULL);
