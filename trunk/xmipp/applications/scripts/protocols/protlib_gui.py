@@ -433,7 +433,7 @@ class ProtocolGUI(BasicGUI):
         if 'section' in var.tags.keys():
             self.createSectionWidget(w, var)
             w.frame.grid(row=label_row, column=0, columnspan=5, 
-                         sticky=EW, pady=5, padx=5)
+                         sticky=EW, pady=5, padx=(10,5))
             w.has_question = 'has_question' in var.tags.keys()
             self.lastSection = w
             section = w
@@ -518,7 +518,7 @@ class ProtocolGUI(BasicGUI):
                 w.widgetslist.append(btn)
                     
             label = Label(frame, text=label_text, fg=label_color, bg=label_bgcolor)
-            label.grid(row=label_row, column=0, sticky=E)
+            label.grid(row=label_row, column=0, sticky=E, padx=(5, 10))
             self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_reqwidth())
             w.widgetslist.append(label)
         
@@ -531,7 +531,8 @@ class ProtocolGUI(BasicGUI):
         headertext += "Project: %s" % self.project.projectDir 
         self.fonts = {}
         self.fonts['header'] = tkFont.Font(family=FontName, size=FontSize+2, weight=tkFont.BOLD)
-        self.l1 = Label(self.frame, text=headertext, fg=SectionTextColor, bg=BgColor, font=self.fonts['header'])
+        self.l1 = Label(self.frame, text=headertext, fg=SectionTextColor, bg=BgColor, 
+                        font=self.fonts['header'], pady=5)
         self.l1.configure(wraplength=WrapLenght)
         self.l1.grid(row=self.getRow(), column=0, columnspan=6, sticky=EW)
         self.citerow = self.getRow()        
@@ -643,8 +644,9 @@ class ProtocolGUI(BasicGUI):
         if len(self.citeslist) > 0:
             citetext = "If you publish results obtained with this protocol, please cite:\n"
             citetext += '\n'.join(self.citeslist)
-            label = Label(self.frame, text=citetext, fg=self.style.CitationTextColor, bg=self.style.BgColor)
-            label.configure(wraplength=WrapLenght)
+            self.fonts['cites'] = tkFont.Font(family=FontName, size=FontSize-2, weight=tkFont.BOLD)
+            label = Label(self.frame, text=citetext, fg=CitationTextColor, bg=BgColor,
+                          font=self.fonts['cites'], wraplength=WrapLenght)
             label.grid(row=self.citerow, column=0, columnspan=5, sticky=EW)
             
     #-------------------------------------------------------------------
@@ -798,7 +800,7 @@ class ProtocolGUI(BasicGUI):
         for section in self.sectionslist:
             section.frame.grid_columnconfigure(0, minsize=maxWidth)
             section.content.grid_columnconfigure(0, minsize=self.maxLabelWidth)
-            #section.content.grid_columnconfigure(1, weight=1)
+            #section.content.grid_columnconfigure(1)
             #section.content.grid_columnconfigure(2, weight=1)
         #Set the run_name
         if self.run:

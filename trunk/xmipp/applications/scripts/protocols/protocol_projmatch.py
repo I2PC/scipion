@@ -13,11 +13,19 @@
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
+# Run name:
+""" This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
+run1 for it. This name together with the protocol output folder will determine the working dir for this run.
+"""
+RunName = "run_001"
+
 #Comment
 Comment='Describe your project here...'
+
 # {file} Selfile with the input images:
-#from XmippData import SingleImgSize
-""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
+""" This selfile points to the spider single-file format images that make up 
+your data set. The filenames can have relative or absolute paths, but it is 
+strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
 SelFileName ='new20.sel'
 
@@ -35,10 +43,6 @@ DocFileName =' '
 """
 ReferenceFileNames ='ico1.vol ico2.vol ico3.vol'
 
-# Working subdirectory: 
-""" This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
-"""
-RunName ='run_001'
 
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
@@ -71,16 +75,17 @@ ContinueAtIteration =1
 """
 CleanUpFiles =False
 
-# Perform CTF correction?
+
+#-----------------------------------------------------------------------------
+# {section}{has_question} CTF correction
+#-----------------------------------------------------------------------------
+# Perform CTF correction
 """ If set to true, a CTF (amplitude and phase) corrected map will be refined,
     and the data will be processed in CTF groups.
     Note that you cannot combine CTF-correction with re-alignment of the classes.
 """
-DoCtfCorrection =True
+DoCtfCorrection = True
 
-#-----------------------------------------------------------------------------
-# {section}{condition}(DoCtfCorrection =True) CTF correction
-#-----------------------------------------------------------------------------
 # {file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all 
     images in the input selfile must be present in the CTFDat file. This field is 
@@ -151,9 +156,9 @@ DataArePhaseFlipped =True
 ReferenceIsCtfCorrected ='1'
 
 #-----------------------------------------------------------------------------
-# {section} Mask
+# {section} {has_question} Mask
 #-----------------------------------------------------------------------------
-# Mask reference volume?
+# Mask reference volume
 """ Masking the reference volume will increase the signal to noise ratio.
     Do not provide a very tight mask.
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mask for details
@@ -166,12 +171,12 @@ DoMask =True
 """
 DoSphericalMask =True
 
-# Radius of spherical mask
+# {condition}(DoSphericalMask=True) Radius of spherical mask
 """ This is the radius (in pixels) of the spherical mask 
 """
 MaskRadius = 64
 
-# {file} Binary mask file
+# {file} {condition}(DoSphericalMask=False)  Binary mask file
 """ This should be a binary (only 0/1-valued) Xmipp volume of equal dimension as your reference
     The protein region should be white (1) and the solvent should be black (0).
     Note that this entry is only relevant if no spherical mask is used.
@@ -300,12 +305,12 @@ Search5DShift ='4x5 0'
 Search5DStep ='2'
 
 # {expert} Restrict tilt angle search?
-DoRestricSearchbyTiltAngle =False
+DoRestricSearchbyTiltAngle = False
 
-# {expert} Lower-value for restricted tilt angle search
+# {expert} {condition}(DoRestricSearchbyTiltAngle=True) Lower-value for restricted tilt angle search
 Tilt0 = -91
 
-# {expert} Higher-value for restricted tilt angle search
+# {expert} {condition}(DoRestricSearchbyTiltAngle=True) Higher-value for restricted tilt angle search
 TiltF = 91
 
 # Symmetry group
@@ -362,14 +367,14 @@ DiscardPercentage ='10'
 # Perform scale search?
 """ If true perform scale refinement
 """
-DoScale =False
+DoScale = False
 
-# Step scale factors size
+# {condition}(DoScale=True) Step scale factors size
 """ Scale step factor size (1 means 0.01 in/de-crements arround 1)
 """
 ScaleStep ='1'
 
-# Number of scale steps
+# {condition}(DoScale=True) Number of scale steps
 """ Number of scale steps.
     With default values (ScaleStep='1' and ScaleNumberOfSteps='3'): 1 +/-0.01 | +/-0.02 | +/-0.03.    
     With values ScaleStep='2' and ScaleNumberOfSteps='4' it performs a scale search over:
@@ -388,8 +393,11 @@ ScaleNumberOfSteps ='3'
 ProjMatchingExtra =''
 
 #-----------------------------------------------------------------------------
-# {section} 2D re-alignment of classes
+# {section}{expert}{has_question} 2D re-alignment of classes
 #-----------------------------------------------------------------------------
+# Perform 2D re-alignment
+PerformAlign2D = False
+
 # Perform 2D re-alignment of classes?
 """ After performing a 3D projection matching iteration, each of the
     subsets of images assigned to one of the library projections is
@@ -410,7 +418,7 @@ ProjMatchingExtra =''
 """
 DoAlign2D ='0'
 
-# {expert} Number of align2d iterations:
+# Number of align2d iterations:
 """ Use at least 3 iterations
     The number of align iteration may change in each projection matching iteration
     Ffor instance, "4 4 3 3 " 
@@ -424,7 +432,7 @@ DoAlign2D ='0'
 """
 Align2DIterNr ='4'
 
-# {expert} Maximum change in origin offset (+/- pixels)
+# Maximum change in origin offset (+/- pixels)
 """Maximum change in shift  (+/- pixels)
     You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "1000 1000 10 10 " 
@@ -437,7 +445,7 @@ Align2DIterNr ='4'
 """
 Align2dMaxChangeOffset ='2x1000 2x10'
 
-# {expert} Maximum change in rotation (+/- degrees)
+# Maximum change in rotation (+/- degrees)
 """Maximum change in shift  (+/- pixels)
     You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "1000 1000 10 10 " 
@@ -483,7 +491,7 @@ ARTLambda ='0.2'
 """
 ARTReconstructionExtraCommand ='-k 0.5 -n 10 '
 
-# {condition}(ReconstructionMethod=fourier) Initial maximum frequency used by reconstruct fourier
+# {condition}(ReconstructionMethod=fourier) Initial maximum frequency
 """ This number os only used in the first iteration. 
     From then on, it will be set to resolution computed in the resolution section
 """
@@ -554,9 +562,9 @@ ResolSam=5.6
 # {section} Postprocessing
 #-----------------------------------------------------------------------------
 # Low-pass filter the reference?
-DoLowPassFilter =True
+DoLowPassFilter = True
 
-# Use estimated resolution for low-pass filtering?
+# {condition}(DoLowPassFilter=True) Use estimated resolution for low-pass filtering?
 """If set to true, the volume will be filtered at a frecuency equal to
    the  resolution computed with a FSC=0.5 threshold, possibly 
    plus a constant provided by the user in the next input box. 
@@ -565,9 +573,9 @@ DoLowPassFilter =True
    value provided by the user in the next box (in digital frequency, 
    i.e. pixel-1: minimum 0, maximum 0.5) 
 """
-UseFscForFilter =True
+UseFscForFilter = True
 
-# Constant to by add to the estimated resolution
+# {condition}(DoLowPassFilter=True) Constant to by add to the estimated resolution
 """ The meaning of this field depends on the previous flag.
     If set to true, then the volume will be filtered at a frecuency equal to
     the  resolution computed with resolution_fsc (FSC=0.5) plus the value 
@@ -589,7 +597,7 @@ ConstantToAddToFiltration ='0.1'
 
 # {expert} Center volume
 """ Center volume after each iteration """
-DoCenterVolume =False
+DoCenterVolume = False
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -608,33 +616,36 @@ NumberOfMpiProcesses = 3
 """
 MpiJobSize ='1'
 
-#Submmit to queue?
-"""Submmit to queue"""
-SubmmitToQueue=False
-#------------------------------------------------------------------------------------------------
-# {section}{expert}{condition}(SubmmitToQueue=True) Queue 
-#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
+# {section}{has_question} Queue
+#------------------------------------------------------------------------------------------
+# Submmit to queue
+"""Submmit to queue
+"""
+SubmmitToQueue = True
 
 # Queue name
-"""Name of the queue to submit the job"""
-QueueName="default"
+"""Name of the queue to submit the job
+"""
+QueueName = "default"
+
 # Queue hours
 """This establish a maximum number of hours the job will
-be running, after that time it will be killed by the 
-queue system"""
-QueueHours=72
+be running, after that time it will be killed by the
+queue system
+"""
+QueueHours = 72
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
 AnalysisScript ='visualize_projmatch.py'
-#-----------------------------------------------------------------------------
-# {section} Debug
-#-----------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------
 
-#Verify
+#-----------------------------------------------------------------------------
+# {section}{has_question} Debug
+#-----------------------------------------------------------------------------
+# Do debug
 """Check that some output files are created. 
 """
 Verify=True
@@ -647,6 +658,11 @@ PrintWrapperParameters=True
 
 # {expert} show file verification
 ViewVerifyedFiles=True 
+
+# {hidden} Show expert options
+"""If True, expert options will be displayed
+"""
+ShowExpertOptions = False
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
