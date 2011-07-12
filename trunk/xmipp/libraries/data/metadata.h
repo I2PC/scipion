@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <sstream>
 #include <strings.h>
+#include <regex.h>
 #include "xmipp_funcs.h"
 #include "xmipp_strings.h"
 #include "metadata_sql.h"
@@ -109,7 +110,8 @@ typedef enum
              __iter.hasNext() && __iter2.hasNext(); \
              __iter.moveNext(), __iter2.moveNext())
 
-
+/** Which are the blocks available in a metadata */
+void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList);
 
 class MDQuery;
 class MDSql;
@@ -275,14 +277,16 @@ public:
      */
     void setColumnFormat(bool column);
 
-    /** Check if the file (not the object) is in column format
+    /** Check if there is any other block to read with the name
+     * given by the regular expression.
      *  returns pointer do first two data_entries and firts loop
      */
-    bool isColumnFormatFile(char * map, size_t mapSize,
-                            char ** firstData,
-                            char ** secondData,
-                            char ** firstloop,
-                            const char * blockName, size_t blockNameSize);
+    bool nextBlockToRead(regex_t &re,
+    					 char * map, size_t mapSize,
+    					 bool &isCColumnFormat,
+                         char ** firstData,
+                         char ** secondData,
+                         char ** firstloop);
     /** Export medatada to xml file.
      *
      */
@@ -300,7 +304,9 @@ public:
     char * _readColumnsStar(char * start,
                             char * end,
                             std::vector<MDObject*> & columnValues,
-                            const std::vector<MDLabel>* desiredLabels, size_t id = BAD_OBJID);
+                            const std::vector<MDLabel>* desiredLabels,
+                            bool addColumns=true,
+                            size_t id = BAD_OBJID);
     /**Get path.
      */
     String getPath() const ;

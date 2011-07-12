@@ -25,6 +25,41 @@
 
 #include "metadata.h"
 #include "xmipp_image.h"
+#include <regex.h>
+
+// Get the blocks available
+void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
+{
+    blockList.clear();
+    if (!inFile.isMetaData())
+        return;
+
+    std::ifstream is(inFile.data(), std::ios_base::in);
+    int state=0;
+    String candidateBlock, line;
+    while (!is.eof())
+    {
+        getline(is,line);
+        trim(line);
+        switch (state)
+        {
+        case 0:
+            if (line.find("data_")==0)
+            {
+                state=1;
+                candidateBlock=line.substr(5,line.size()-5);
+            }
+            break;
+        case 1:
+            if (line.find("loop_")==0)
+            {
+                state=0;
+                blockList.push_back(candidateBlock);
+            }
+            break;
+        }
+    }
+}
 
 //-----Constructors and related functions ------------
 void MetaData::_clear(bool onlyData)
@@ -78,8 +113,6 @@ void MetaData::copyInfo(const MetaData &md)
     this->ignoreLabels = md.ignoreLabels;
 
 }//close copyInfo
-
-
 
 void MetaData::copyMetadata(const MetaData &md, bool copyObjects)
 {
@@ -512,7 +545,7 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
             else
             {
                 //block name
-                std::string _szBlockName = (std::string)("data_") + blockName;
+                std::string _szBlockName = (std::string)("\ndata_") + blockName;
                 size_t blockNameSize = _szBlockName.size();
 
                 //search for the string
@@ -520,7 +553,7 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
                 target = (char *) _memmem(map, size, _szBlockName.data(), blockNameSize);
                 if(target!=NULL)
                 {
-                    target2 = (char *) _memmem(target+1, size - (target - map), "data_", 5);
+                    target2 = (char *) _memmem(target+1, size - (target - map), "\ndata_", 6);
 
                     if (target2==NULL)//truncate file at target
                         ftruncate(fd, target - map);
@@ -539,7 +572,6 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
         }
         else
             mode=MD_OVERWRITE;
-
     }
 
     std::ios_base::openmode openMode;
@@ -551,7 +583,6 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
 
     write(ofs, blockName, mode);
     ofs.close();
-
 }
 
 void MetaData::append(const FileName &outFile)
@@ -700,7 +731,9 @@ void MetaData::_parseObject(std::istream &is, MDObject &object, size_t id)
 char * MetaData::_readColumnsStar(char * pStart,
                                   char * pEnd,
                                   std::vector<MDObject*> & columnValues,
-                                  const std::vector<MDLabel>* desiredLabels, size_t id)
+                                  const std::vector<MDLabel>* desiredLabels,
+                                  bool addColumns,
+                                  size_t id)
 {
     char * pchStart, *pchEnd;
     pchStart =pStart;
@@ -744,7 +777,8 @@ char * MetaData::_readColumnsStar(char * pStart,
             else
                 addLabel(label);
             MDObject * _mdObject = new MDObject(label);
-            columnValues.push_back(_mdObject);//add the value here with a char
+            if (addColumns)
+            	columnValues.push_back(_mdObject);//add the value here with a char
             if(!isColumnFormat)
                 _parseObject(ss, *_mdObject, id);
             pchStart = pchEnd + 1;//go to next line character
@@ -904,14 +938,13 @@ void MetaData::addPlain(const FileName &inFile, const String &labelsString, cons
 
 void MetaData::_read(const FileName &filename,
                      const std::vector<MDLabel> *desiredLabels,
-                     const String & blockName, bool decomposeStack)
+                     const String & blockRegExp, bool decomposeStack)
 {
     //First try to open the file as a metadata
     _clear();
     myMDSql->createMd();
     isColumnFormat = true;
 
-    String dataBlockName = (String) "data_" + blockName;
     size_t id;
 
     if (!filename.isMetaData())//if not a metadata, try to read as image or stack
@@ -958,65 +991,60 @@ void MetaData::_read(const FileName &filename,
 
     if (line.find("XMIPP_STAR_1") != std::string::npos)
     {
-        //map file
-        struct stat file_status;
-        int fd;
-        char *map;
         oldFormat=false;
 
-        if(stat(filename.data(), &file_status) != 0)
-            REPORT_ERROR(ERR_IO_NOPATH,"Metadata:isColumnFormat can not get filesize for file "+filename);
-        size_t size = file_status.st_size;
-        if(size==0)
-            REPORT_ERROR(ERR_IO_NOPATH,"Metadata:isColumnFormat: File size=0, can not read it ("+filename+")");
-
-        fd = open(filename.data(),  O_RDWR, S_IREAD | S_IWRITE);
-        if (fd == -1)
-            REPORT_ERROR(ERR_IO_NOPATH,"Metadata:isColumnFormat can not read file named "+filename);
-
-        map = (char *) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-        if (map == MAP_FAILED)
-            REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
-
-        char * firstData, * secondData, * firstloop;
-        isColumnFormat=isColumnFormatFile(map, size,
-                                          &firstData,
-                                          &secondData,
-                                          &firstloop,
-                                          dataBlockName.data(), dataBlockName.size());
-        if(secondData ==NULL)//this should not be necessary but you never know
-            secondData = map + size;
-
+    	// Read comment
         is.ignore(256,'#');
         is.ignore(256,'#');
         getline(is, line);
         trim(line);
-        setComment(line);//this stream is no longer needed
-        //        if (isColumnFormat)
-        //        {
-        //Read column labels from the datablock that starts at firstData
-        //Label ends at firstloop
-        char * aux;
-        if (isColumnFormat)
+        setComment(line);
+
+        //map file
+        int fd;
+        char *map=NULL;
+        size_t size;
+        mapFile(filename,map,size,fd);
+
+        char * firstData=NULL, *secondData=NULL, *firstloop=NULL;
+	    regex_t re;
+	    if (regcomp(&re, blockRegExp.c_str(), REG_EXTENDED|REG_NOSUB) != 0)
+	    	REPORT_ERROR(ERR_ARG_INCORRECT,(String)"Pattern cannot be parsed:"+blockRegExp);
+	    char *startingPoint=map;
+	    size_t remainingSize=size;
+	    bool oneBlockRead=false;
+		bool singleBlock=blockRegExp.find(".")==std::string::npos &&
+				         blockRegExp.find("[")==std::string::npos &&
+				         blockRegExp.find("*")==std::string::npos &&
+				         blockRegExp.find("+")==std::string::npos;
+        while (nextBlockToRead(re, startingPoint, remainingSize, isColumnFormat, &firstData, &secondData, &firstloop))
         {
-            aux = _readColumnsStar(firstloop, secondData, columnValues, desiredLabels);
-            _readRowsStar(columnValues, aux, secondData);
+			if(secondData ==NULL)//this should not be necessary but you never know
+				secondData = map + size;
+
+			//Read column labels from the datablock that starts at firstData
+			//Label ends at firstloop
+			if (isColumnFormat)
+			{
+				char * aux = _readColumnsStar(firstloop, secondData, columnValues, desiredLabels, !oneBlockRead);
+				_readRowsStar(columnValues, aux, secondData);
+			}
+			else
+			{
+				id = addObject();
+				_readColumnsStar(firstData,secondData, columnValues, desiredLabels, !oneBlockRead, id);
+			}
+			oneBlockRead=true;
+			startingPoint=secondData;
+			remainingSize=size-(startingPoint-map);
+
+			if (singleBlock)
+				break;
         }
-        else
-        {
-            id = addObject();
-            _readColumnsStar(firstData,secondData, columnValues, desiredLabels, id);
-        }
-        //        }
-        //        else//row format
-        //        {
-        //            _readRowFormatStar(firstData,secondData, columnValues, desiredLabels);
-        //        }
-        if (munmap(map, size) == -1)
-        {
-            REPORT_ERROR(ERR_MEM_NOTDEALLOC,"metadata:write, Can not unmap memory");
-        }
-        close(fd);
+        unmapFile(map,size,fd);
+	    regfree(&re);
+	    if (!oneBlockRead)
+	    	REPORT_ERROR(ERR_MD_WRONGDATABLOCK,blockRegExp);
     }
     else if (line.find("Headerinfo columns:") != std::string::npos)
     {
@@ -1078,27 +1106,41 @@ void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
     mdValueOut.setValue(myMDSql->aggregateSingleDouble(op,aggregateLabel));
 }
 
-bool MetaData::isColumnFormatFile(char * map, size_t mapSize,
-                                  char ** firstData,
-                                  char ** secondData,
-                                  char ** firstloop,
-                                  const char * szBlockName, size_t blockNameSize)
+bool MetaData::nextBlockToRead(regex_t &re,
+		                       char * map, size_t mapSize,
+		                       bool &isCColumnFormat,
+                               char ** firstData,
+                               char ** secondData,
+                               char ** firstloop)
 {
-    //search for the first data_XXX line
-    //then for the next data_ line if any
-    //rewind to the first hit and look for loop_
-    //std::string _szBlockName = (std::string)("data_") + blockName;
-    *firstData  = (char *)  _memmem(map,  mapSize, szBlockName, blockNameSize);
-    if(*firstData==NULL)
-        if(eFilename!="")
-            REPORT_ERROR(ERR_MD_WRONGDATABLOCK,(std::string) "Block Named: " +\
-                         szBlockName + " does not exist in file, " + eFilename);
-        else
-            REPORT_ERROR(ERR_MD_WRONGDATABLOCK,(std::string) "Block Named: " +\
-                         szBlockName + " does not exist ");
-    size_t size = mapSize - (*firstData - map) - 1;
-    *secondData = (char *)  _memmem((*firstData+1), size,"data_", 5);
-    *firstloop  = (char *)  _memmem((*firstData), size, "loop_", 5);
+	size_t remainingSize=mapSize;
+	char *startingPoint=map;
+	do {
+		*firstData  = (char *) _memmem(startingPoint,  remainingSize, "\ndata_", 6);
+	    if (*firstData!=NULL)
+	    {
+	    	// Get block name
+		    (*firstData)++;
+		    remainingSize = mapSize - (*firstData - map) - 1;
+		    char *newLine=(char *) _memmem(*firstData,  remainingSize, "\n", 1);
+		    size_t blockNameSize=newLine-*firstData;
+		    char blockName[blockNameSize+1];
+		    memcpy(blockName,*firstData,blockNameSize);
+		    blockName[blockNameSize]='\0';
+
+		    // Check if block name meets the regular expression
+		    if (regexec(&re, blockName, (size_t) 0, NULL, 0)==0)
+		    	break; // We found a block following the regular expression
+		    startingPoint=*firstData;
+	    }
+	} while (*firstData!=NULL);
+	if (*firstData==NULL)
+	{
+		*secondData=*firstloop=NULL;
+		return false;
+	}
+    *secondData = (char *)  _memmem(*firstData, remainingSize,"\ndata_", 6);
+    *firstloop  = (char *)  _memmem(*firstData, remainingSize, "\nloop_", 6);
     //#define DEBUG
 #ifdef DEBUG
 
@@ -1109,11 +1151,15 @@ bool MetaData::isColumnFormatFile(char * map, size_t mapSize,
 #endif
 #undef DEBUG
 
-    if (*firstloop==NULL)
-        return (false);
-    else if(*secondData == NULL || (*secondData) > (*firstloop))
-        return (true);
-    return (false);
+    isColumnFormat=false;
+    if (*firstloop!=NULL)
+    {
+		(*firstloop)++;
+		if(*secondData == NULL || (*secondData) > (*firstloop))
+			isColumnFormat=true;
+
+    }
+    return true;
 }
 
 void MetaData::aggregate(const MetaData &mdIn, AggregateOperation op,
