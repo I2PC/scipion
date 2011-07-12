@@ -119,6 +119,7 @@ class XmippProjectGUI():
         btn.config(command=lambda:self.selectToolbarButton(text))
 
     def launchProtocolGUI(self, run):
+        run['group_name'] = self.lastSelected
         top = Toplevel()
         gui = ProtocolGUI()
         gui.createGUI(self.project, run, top, lambda: self.protocolSaveCallback(run))
@@ -126,7 +127,7 @@ class XmippProjectGUI():
         gui.launchGUI()
         
     def protocolSaveCallback(self, run):
-        if self.lastSelected in run['group_name']:
+        if self.lastSelected == run['group_name']:
             self.updateRunHistory(self.lastSelected) 
 
     def updateRunHistory(self, protGroup): 
@@ -202,7 +203,7 @@ class XmippProjectGUI():
         
     def runButtonClick(self, event=None):
         run = dict(zip(runColumns, self.lastRunSelected))
-        run['source'] = run['script']
+        run['source'] = run['script']        
         if event == 'Edit':
             self.launchProtocolGUI(run)
         elif event == 'Copy':

@@ -238,6 +238,9 @@ class ProtocolVariable():
     def isSection(self):
         return 'section' in self.tags.keys()
     
+    def isHidden(self):
+        return 'hidden' in self.tags.keys()
+    
     def getValue(self):
         if self.tktext:
             return self.tktext.get(1.0, END)
@@ -252,7 +255,7 @@ class ProtocolVariable():
         else:    
             lines = [self.commentline + '\n']
         if self.help:
-            lines.append(self.help)
+            lines.append('"""%s"""\n' %  self.help)
         if self.is_string:
             template = '%s = "%s"\n\n'
         else:
@@ -281,7 +284,8 @@ class ProtocolWidget():
         show = True
         if self.variable.isExpert():
             show = self.master.expert_mode
-        show = show and self.satisfiesCondition() #has condition, check it
+        if show:
+            show = self.satisfiesCondition() #has condition, check it
         self.display(show)    
 
             
@@ -358,7 +362,7 @@ class ProtocolGUI(BasicGUI):
         self.pre_header_lines = []
         self.header_lines = []
         self.post_header_lines = []
-        self.expert_mode = False
+        self.expert_mode = True
         self.lastrow = 0
         self.widgetslist = []
         self.sectionslist = [] # List of all sections
@@ -406,12 +410,12 @@ class ProtocolGUI(BasicGUI):
         w.frame.columnconfigure(0, weight=1)
         w.label = Label(w.frame, text=var.comment, fg=LabelTextColor, bg=SectionBgColor)
         w.label.grid(row=0, column=0, sticky=W)
+        w.name = var.comment
         w.content = Frame(w.frame, bg=LabelBgColor, bd=0)
         w.content.grid(row=1, column=0, columnspan=5, sticky=NSEW, ipadx=5, ipady=5)
         w.widgetslist.append(w.frame)
         
     def expandCollapseSection(self, section):
-        print section.tkvar.get()
         if section.tkvar.get() == 'False':
             section.content.grid_remove()
         else:
@@ -458,7 +462,7 @@ class ProtocolGUI(BasicGUI):
         # Treat variables
         if var.value:
         #Escape string literals
-            var_column = self.columntextentry
+            var_column = 1
             var.tkvar = StringVar()   
             
             if var.value.startswith('"') or var.value.startswith("'"):
@@ -467,6 +471,9 @@ class ProtocolGUI(BasicGUI):
                 var.is_string = True
                 
             var.tkvar.set(var.value)
+            
+            if 'hidden' in keys:
+                return w
             
             if var.value == 'True' or var.value == 'False':
                 #Check if that boolean variable is the question of the section
@@ -479,6 +486,7 @@ class ProtocolGUI(BasicGUI):
                                 bg=SectionBgColor, activebackground=ButtonActiveBgColor)
                     chb.grid(row=0, column=1, padx=(5, 0))
                     self.expandCollapseSection(section)
+                    return w
                 else:
                     self.addRadioButton(w, var, 'Yes', 'True', row, var_column, frame)  
                     self.addRadioButton(w, var, 'No', 'False', row, var_column + 1, frame)  
@@ -490,12 +498,12 @@ class ProtocolGUI(BasicGUI):
                     row = self.getRow()
             elif 'text' in keys:
                 var.tktext = Text(frame, width=30, height=10,)
-                var.tktext.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W + E)
+                var.tktext.grid(row=row, column=var_column, columnspan=2, sticky=W + E)
                 w.widgetslist.append(var.tktext)
-                var.tktext.insert(END, var.value)
+                var.tktext.insert(END, var.value)            
             else: #Add a text Entry
                 entry = Entry(frame, textvariable=var.tkvar, bg=self.style.EntryBgColor)
-                entry.grid(row=row, column=self.columntextentry, columnspan=2, sticky=W + E)
+                entry.grid(row=row, column=var_column, columnspan=2, sticky=W + E)
                 w.widgetslist.append(entry)
                 image = None
                 if 'file' in keys:
@@ -510,8 +518,8 @@ class ProtocolGUI(BasicGUI):
                 w.widgetslist.append(btn)
                     
             label = Label(frame, text=label_text, fg=label_color, bg=label_bgcolor)
-            label.grid(row=label_row, column=0, columnspan=self.columnspantextlabel, sticky=E)
-            self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_width())
+            label.grid(row=label_row, column=0, sticky=E)
+            self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_reqwidth())
             w.widgetslist.append(label)
         
         return w
@@ -598,7 +606,6 @@ class ProtocolGUI(BasicGUI):
                 
                 if match.group(1) != '':
                     tags = reTags.findall(match.group(1))
-                    print "tags", tags
                     v.setTags(tags)
                     
                 is_section = v.isSection()
@@ -611,9 +618,8 @@ class ProtocolGUI(BasicGUI):
                             line = self.header_lines[index].strip()
                             if line.startswith('"""'):
                                 countQuotes += 1
-                            if len(line) > 4 and line.endswith('"""\n'):
+                            if len(line) > 4 and line.endswith('"""'):
                                 countQuotes += 1
-                            print line, countQuotes
                             line = line.replace('"""', '')
                             if len(line) > 0:
                                 helpStr += line + '\n'
@@ -640,8 +646,6 @@ class ProtocolGUI(BasicGUI):
             label = Label(self.frame, text=citetext, fg=self.style.CitationTextColor, bg=self.style.BgColor)
             label.configure(wraplength=WrapLenght)
             label.grid(row=self.citerow, column=0, columnspan=5, sticky=EW)
-            print citetext
-            print self.citerow
             
     #-------------------------------------------------------------------
     # GUI Events handling
@@ -655,8 +659,12 @@ class ProtocolGUI(BasicGUI):
         
         if self.expert_mode:
             text = "Hide Expert Options"
+            strValue = 'True'
         else:
             text = "Show Expert Options"
+            strValue = 'False'
+        if 'ShowExpertOptions' in self.variablesDict.keys():
+            self.variablesDict['ShowExpertOptions'].setValue(strValue)
         self.btnExpert.config(text=text)
         self.checkVisibility()
     
@@ -679,6 +687,10 @@ class ProtocolGUI(BasicGUI):
         f = open(self.run['script'], 'w')
         #f = sys.stdout
         f.writelines(self.pre_header_lines)
+        if len(self.citeslist) > 0:
+            f.writelines('#{please_cite}\n"""\n')
+            f.writelines(self.citeslist)
+            f.writelines('"""\n')
         for w in self.widgetslist:
             wlines = w.variable.getLines()
             f.writelines(wlines)
@@ -728,13 +740,13 @@ class ProtocolGUI(BasicGUI):
             self.style.Font.configure(size=new_size)
         self.resize()
         
-    def checkVisibility(self, event=""):        
+    def checkVisibility(self, event=""):
         for s in self.sectionslist:
-            #if s.has_question:
-            #    self.expandCollapseSection(s)
+            if s.has_question:
+                self.expandCollapseSection(s)
             s.checkVisibility()
-            #for w in s.childwidgets:
-            #    w.checkVisibility()
+            for w in s.childwidgets:
+                w.checkVisibility()
         self.updateScrollRegion() 
 
     
@@ -773,8 +785,8 @@ class ProtocolGUI(BasicGUI):
         self.init()        
         self.createBasicGUI(master)
         self.master.option_add("*Font", self.style.Font)
-        self.columnspantextlabel = 3
-        self.columntextentry = 3
+        #self.columnspantextlabel = 3
+        #self.columntextentry = 3
         
         self.readProtocolScript()
         self.createScrollableCanvas()
@@ -782,9 +794,12 @@ class ProtocolGUI(BasicGUI):
         self.parseHeader()
         self.master.update_idletasks()
         maxWidth = max([s.frame.winfo_width() for s in self.sectionslist])
+        #self.maxLabelWidth = 300
         for section in self.sectionslist:
-            section.frame.grid_columnconfigure(0, minsize=maxWidth, weight=1)
-            section.content.grid_columnconfigure(0, minsize=200, weight=1)
+            section.frame.grid_columnconfigure(0, minsize=maxWidth)
+            section.content.grid_columnconfigure(0, minsize=self.maxLabelWidth)
+            #section.content.grid_columnconfigure(1, weight=1)
+            #section.content.grid_columnconfigure(2, weight=1)
         #Set the run_name
         if self.run:
             self.inRunName = run['run_name']
@@ -794,6 +809,8 @@ class ProtocolGUI(BasicGUI):
     def fillGUI(self):
         self.fillButtons()
         self.addBindings()    
-        self.master.update_idletasks()    
-        self.checkVisibility() 
+        self.master.update_idletasks()  
+        self.expert_mode = 'ShowExpertOptions'in self.variablesDict and \
+                            self.variablesDict['ShowExpertOptions'].getValue() == 'True'
+        self.checkVisibility()  
     

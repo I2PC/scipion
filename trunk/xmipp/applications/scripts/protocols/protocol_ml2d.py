@@ -10,128 +10,136 @@
 # Updated:  J. M. de la Rosa Trevin July 2011
 #
 # {begin_of_header}
-# {please_cite} 
+#{please_cite}
 """
-for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149 
+for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149
 for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
 """
-#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
 # {section} Global parameters
-#------------------------------------------------------------------------------------------------
-
-# Working subdirectory: 
-""" This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
+#------------------------------------------------------------------------------------------
+# Run name:
+""" This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
+run1 for it. This name together with the protocol output folder will determine the working dir for this run.
 """
-RunName ='run_001'
+RunName = "run_001"
 
-# {file} Selfile with the input images:
-""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
+# {file}{expert} Selfile with the input images:
+""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR.
 """
-InSelFile="all_images.sel"
+InSelFile = "all_images.sel"
 
-#------------------------------------------------------------------------------------------------
-# {section} {has_question} MLF-specific parameters
-#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
+# {section}{has_question} MLF-specific parameters
+#------------------------------------------------------------------------------------------
 # Use MLF2D instead of ML2D
-DoMlf=False
+DoMlf = False
 
 # Use CTF-amplitude correction inside MLF?
-""" If set to true, provide the ctfdat file in the field below. If set to false, one can ignore the ctfdat field, but has to provide the image pixel size in Angstrom"""
-DoCorrectAmplitudes=True
+""" If set to true, provide the ctfdat file in the field below. If set to false, one can ignore the ctfdat field, but has to provide the image pixel size in Angstrom
+"""
+DoCorrectAmplitudes = True
 
-# {file} CTFdat file with the input images:
+# {file}{condition}(DoCorrectAmplitudes=True) CTFdat file with the input images:
 """ The names of both the images and the ctf-parameter files should be with absolute paths.
 """
-InCtfDatFile="all_images.ctfdat"
+InCtfDatFile = "all_images.ctfdat"
 
-# Image pixel size (in Angstroms)
-PixelSize=4.2
+# {condition}(DoCorrectAmplitudes=False)Image pixel size (in Angstroms)
+PixelSize = 4
 
 # Are the images CTF phase flipped?
 """ You can run MLF with or without having phase flipped the images.
 """
-ImagesArePhaseFlipped=True
+ImagesArePhaseFlipped = True
 
 # High-resolution limit (in Angstroms)
 """ No frequencies higher than this limit will be taken into account. If zero is given, no limit is imposed
 """
-HighResLimit=20
+HighResLimit = 20
 
-#------------------------------------------------------------------------------------------------
-# {section}{expert} ml(f)_align2d parameters
-#------------------------------------------------------------------------------------------------
-
-# Perform 2D maximum-likelihood refinement?
-DoML2D=True
+#------------------------------------------------------------------------------------------
+# {section}{expert}{has_question} ml(f)_align2d parameters
+#------------------------------------------------------------------------------------------
+# Perform ML2D refinement
+DoML2D = True
 
 # Number of references (or classes) to be used:
-NumberOfReferences=3
+NumberOfReferences = 3
 
-# Also include mirror transformation in the alignment?
+# Also include mirror in the alignment?
 """  Including the mirror transformation is useful if your particles have a handedness and may fall either face-up or face-down on the grid.
- Note that when you want to use this ML2D run for later RCT reconstruction, you can NOT include the mirror transformation here.
+Note that when you want to use this ML2D run for later RCT reconstruction, you can NOT include the mirror transformation here.
 """
-DoMirror=False
+DoMirror = False
 
 # Use the fast version of this algorithm?
 """ See Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244:
-    http://dx.doi.org/10.1093/bioinformatics/bti1140
+http://dx.doi.org/10.1093/bioinformatics/bti1140
 """
-DoFast=True
+DoFast = True
 
-# Refine the normalization parameters for each image?
+# Refine the normalization for each image?
 """ This variant of the algorithm deals with normalization errors. For more info see (and please cite) Scheres et. al. (2009) J. Struc. Biol., in press
 """
-DoNorm=False
+DoNorm = False
 
-# {expert} Restart after iteration:
+# Restart after iteration:
 """ For previous runs that stopped before convergence, resume the calculations
-    after the completely finished iteration. (Use zero to start from the beginning)
+after the completely finished iteration. (Use zero to start from the beginning)
 """
-RestartIter=0
+RestartIter = 0
 
-# {expert} Additional xmipp_ml_align2d parameters:
+# Additional xmipp_ml_align2d parameters:
 """ For a complete description see the ml_align2d manual page at:
-    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/MLalign2D
+http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/MLalign2D
 """
-ExtraParamsMLalign2D=""
+ExtraParamsMLalign2D = ""
 
-#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
 # {section} Parallelization issues
-#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
 # Number of (shared-memory) threads?
-""" This option provides shared-memory parallelization on multi-core machines. 
-    It does not require any additional software, other than xmipp
+""" This option provides shared-memory parallelization on multi-core machines.
+It does not require any additional software, other than xmipp
 """
 NumberOfThreads = 1
 
 # Number of MPI processes to use
 NumberOfMpiProcesses = 3
 
+#------------------------------------------------------------------------------------------
+# {section}{has_question} Queue
+#------------------------------------------------------------------------------------------
+# Submmit to queue
+"""Submmit to queue
+"""
+SubmmitToQueue = True
 
-#------------------------------------------------------------------------------------------------
-# {section}{has_question} Queue 
-#------------------------------------------------------------------------------------------------
-#Submmit to queue
-"""Submmit to queue"""
-SubmmitToQueue=False
 # Queue name
-"""Name of the queue to submit the job"""
-QueueName="default"
+"""Name of the queue to submit the job
+"""
+QueueName = "default"
+
 # Queue hours
 """This establish a maximum number of hours the job will
-be running, after that time it will be killed by the 
-queue system"""
-QueueHours=72
+be running, after that time it will be killed by the
+queue system
+"""
+QueueHours = 72
 
-#------------------------------------------------------------------------------------------------
-# {expert}{file} Analysis of results
+#{hidden}  Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
-AnalysisScript="visualize_ml2d.py"
-#------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------
-# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
+AnalysisScript = "visualize_ml2d.py"
+
+# {hidden} Show expert options
+"""If True, expert options will be displayed
+"""
+ShowExpertOptions = False
+
+#------------------------------------------------------------------------------------------
+# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 
@@ -237,4 +245,3 @@ class ProtML2D(XmippProtocol):
 
 if __name__ == '__main__':
     protocolMain(ProtML2D)
-
