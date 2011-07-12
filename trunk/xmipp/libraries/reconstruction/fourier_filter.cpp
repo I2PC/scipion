@@ -59,7 +59,8 @@ void FourierFilter::defineParams(XmippProgram *program)
     program->addParamsLine("            high_pass <w1>                   : Cutoff freq (<1/2 or A)");
     program->addParamsLine("            band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)");
     program->addParamsLine("            stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)");
-    program->addParamsLine("            wedge <th0> <thF>                : Missing wedge (along y) for data between th0-thF ");
+    program->addParamsLine("            wedge <th0> <thF> <rot=0> <tilt=0> <psi=0>  : Missing wedge (along y) for data between th0-thF ");
+    program->addParamsLine("                                             : y is rotated by euler angles degrees");
     program->addParamsLine("            cone <th0>                       : Missing cone for tilt angles up to th0 ");
     program->addParamsLine("                                             : do not use mask type for wedge or cone filters");
     program->addParamsLine("         where <mask_type>");
@@ -119,6 +120,9 @@ void FourierFilter::readParams(XmippProgram *program)
     {
         t1 = program->getDoubleParam("--fourier", "wedge", 0);
         t2 = program->getDoubleParam("--fourier", "wedge", 1);
+        rot  = program->getDoubleParam("--fourier", "wedge", 2);
+        tilt = program->getDoubleParam("--fourier", "wedge", 3);
+        psi  = program->getDoubleParam("--fourier", "wedge", 4);
         FilterShape = FilterBand = WEDGE;
     }
     else if (cuttoff == "cone")
@@ -385,8 +389,8 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
             {
             case WEDGE:
                 {
-                    Matrix2D<double> A(3,3);
-                    A.initIdentity();
+                    Matrix2D<double> A;
+                    Euler_angles2matrix(rot,tilt,psi,A,false);
                     BinaryWedgeMask(maskFourier, t1, t2, A,true);
                     break;
                 }

@@ -83,7 +83,7 @@ public:
     double w2;
 
     /** Wedge and cone filter parameters */
-    double t1, t2;
+    double t1, t2,rot,tilt,psi;
 
     /** Filename in which store the mask (valid only for fourier masks) */
     FileName maskFn;
