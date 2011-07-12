@@ -85,6 +85,9 @@ public:
     /** Wedge and cone filter parameters */
     double t1, t2;
 
+    /** Filename in which store the mask (valid only for fourier masks) */
+    FileName maskFn;
+
     /** Pixels around the central frequency for the raised cosine */
     double raised_w;
 
