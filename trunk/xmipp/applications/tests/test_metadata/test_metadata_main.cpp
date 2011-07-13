@@ -2,6 +2,7 @@
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 #include <stdlib.h>
+#include <string.h>
 /*
  * Define a "Fixure so we may reuse the metadatas
  */
@@ -138,6 +139,38 @@ TEST_F( MetadataTest, Copy)
 }
 
 
+TEST_F( MetadataTest, GetBlocksInMetadata)
+{
+    char sfn[64] = "";
+    strncpy(sfn, "/tmp/testGetBlocks_XXXXXX", sizeof sfn);
+    mkstemp(sfn);
+
+    MetaData auxMetadata;
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_1.xmp",auxMetadata.addObject());
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_2.xmp",auxMetadata.addObject());
+    auxMetadata.write(sfn,MD_OVERWRITE);
+    auxMetadata.clear();
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_1_1.xmp",auxMetadata.addObject());
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_1_2.xmp",auxMetadata.addObject());
+    auxMetadata.write((String)"block_000001@"+sfn,MD_APPEND);
+    auxMetadata.clear();
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_2_1.xmp",auxMetadata.addObject());
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_2_2.xmp",auxMetadata.addObject());
+    auxMetadata.write((String)"block_000002@"+sfn,MD_APPEND);
+    auxMetadata.clear();
+
+    StringVector compBlockList;
+    compBlockList.push_back("");
+    compBlockList.push_back("block_000001");
+    compBlockList.push_back("block_000002");
+
+    StringVector readBlockList;
+    getBlocksInMetaDataFile(sfn,readBlockList);
+
+    EXPECT_EQ(compBlockList,readBlockList);
+    unlink(sfn);
+}
+
 TEST_F( MetadataTest, ImportObject)
 {
     //FIXME importObjects test is in the test named select
@@ -268,7 +301,57 @@ TEST_F( MetadataTest, Randomize)
     EXPECT_EQ(different,equal);
 }
 
-#include <string.h>
+TEST_F( MetadataTest, ReadMultipleBlocks)
+{
+    char sfn[64] = "";
+    strncpy(sfn, "/tmp/testReadMultipleBlocks_XXXXXX", sizeof sfn);
+    mkstemp(sfn);
+
+    MetaData auxMetadata;
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_1.xmp",auxMetadata.addObject());
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_2.xmp",auxMetadata.addObject());
+    auxMetadata.write(sfn,MD_OVERWRITE);
+    auxMetadata.clear();
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_1_1.xmp",auxMetadata.addObject());
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_1_2.xmp",auxMetadata.addObject());
+    auxMetadata.write((String)"block_000001@"+sfn,MD_APPEND);
+    auxMetadata.clear();
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_2_1.xmp",auxMetadata.addObject());
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_2_2.xmp",auxMetadata.addObject());
+    auxMetadata.write((String)"block_000002@"+sfn,MD_APPEND);
+    auxMetadata.clear();
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_no_1.xmp",auxMetadata.addObject());
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_no_2.xmp",auxMetadata.addObject());
+    auxMetadata.write((String)"noblock@"+sfn,MD_APPEND);
+    auxMetadata.clear();
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_3_1.xmp",auxMetadata.addObject());
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_3_2.xmp",auxMetadata.addObject());
+    auxMetadata.write((String)"block_000003@"+sfn,MD_APPEND);
+    auxMetadata.clear();
+
+    MetaData compMetadata;
+    compMetadata.setValue(MDL_IMAGE,(String)"image_data_1_1.xmp",compMetadata.addObject());
+    compMetadata.setValue(MDL_IMAGE,(String)"image_data_1_2.xmp",compMetadata.addObject());
+    compMetadata.setValue(MDL_IMAGE,(String)"image_data_2_1.xmp",compMetadata.addObject());
+    compMetadata.setValue(MDL_IMAGE,(String)"image_data_2_2.xmp",compMetadata.addObject());
+    auxMetadata.read((String)"block_00000[12]@"+sfn);
+    EXPECT_EQ(compMetadata,auxMetadata);
+    compMetadata.clear();
+
+    compMetadata.setValue(MDL_IMAGE,(String)"image_data_3_1.xmp",compMetadata.addObject());
+    compMetadata.setValue(MDL_IMAGE,(String)"image_data_3_2.xmp",compMetadata.addObject());
+    auxMetadata.read((String)"block_000003@"+sfn);
+    EXPECT_EQ(compMetadata,auxMetadata);
+    compMetadata.clear();
+
+    compMetadata.setValue(MDL_IMAGE,(String)"image_1.xmp",compMetadata.addObject());
+    compMetadata.setValue(MDL_IMAGE,(String)"image_2.xmp",compMetadata.addObject());
+    auxMetadata.read(sfn);
+    EXPECT_EQ(compMetadata,auxMetadata);
+    compMetadata.clear();
+    unlink(sfn);
+}
+
 TEST_F( MetadataTest, ReadWrite)
 {
     //temp file name
