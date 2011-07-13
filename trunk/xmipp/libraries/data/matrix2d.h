@@ -1361,6 +1361,7 @@ void svbksb(Matrix2D< double >& u,
             Matrix1D< double >& b,
             Matrix1D< double >& x);
 
+//#define VIA_NR
 #define VIA_BILIB
 /** SVD Decomposition
  */
@@ -1383,7 +1384,7 @@ void svdcmp(const Matrix2D< T >& a,
     svdcmp(u.mdata,
            u.mdimy, u.mdimx,
            w.vdata,
-           v.vdata);
+           v.mdata);
 #endif
 
 #ifdef VIA_BILIB
