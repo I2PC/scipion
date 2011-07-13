@@ -287,7 +287,7 @@ void BinaryConeMask(MultidimArray< int >& mask,
  * (x0,y0,z0), and rotated with respect to euler angle matrix A.
  */
 void BinaryWedgeMask(MultidimArray< int >& mask, double theta0, double thetaF,
-                     Matrix2D< double > A, bool centerOrigin=false);
+                     const Matrix2D< double > &A, bool centerOrigin=false);
 
 
 /** Creates a 3x3x3 mask with value (1 by default) for those 6-neighbors of the

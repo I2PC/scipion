@@ -481,9 +481,8 @@ void BinaryConeMask(MultidimArray<int> &mask, double theta, int mode,bool center
 }
 
 void BinaryWedgeMask(MultidimArray<int> &mask, double theta0, double thetaF,
-                     Matrix2D<double> A, bool centerOrigin)
+                       const Matrix2D<double> &A, bool centerOrigin)
 {
-
     int halfX, halfY,halfZ;
     int minX,minY,minZ;
     int maxX,maxY,maxZ;
@@ -511,11 +510,14 @@ void BinaryWedgeMask(MultidimArray<int> &mask, double theta0, double thetaF,
         tg0=0.;
     if (ABS(tgF) < XMIPP_EQUAL_ACCURACY)
         tgF=0.;
-    A = A.inv();
+    // ROB: A=A.inv(); A no const
     FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
     {
-        xp = A(0, 0) * (double)j + A(0, 1) * (double)i + A(0, 2) * (double)k;
-        zp = A(2, 0) * (double)j + A(2, 1) * (double)i + A(2, 2) * (double)k;
+        double di=(double)i;
+        double dj=(double)j;
+        double dk=(double)k;
+        xp = MAT_ELEM(A, 0, 0) * dj + MAT_ELEM(A, 0, 1) * di + MAT_ELEM(A, 0, 2) * dk;
+        zp = MAT_ELEM(A, 2, 0) * dj + MAT_ELEM(A, 2, 1) * di + MAT_ELEM(A, 2, 2) * dk;
 
         if (centerOrigin)
         {
