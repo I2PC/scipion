@@ -1,1 +1,1 @@
-java -Xmx512m -jar ij.jar
+java -Xmx2048m -jar ij.jar

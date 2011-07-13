@@ -373,6 +373,10 @@ def AddImageJPlugin(name, pluginDir, outDir):
             PluginLibs[lname] = install
         env.Depends(buildClasses, PluginLibs[lname])
 
+    previousPlugins = Glob(outDir, "*.jar", [])
+    for l in previousPlugins:
+	env.Depends(buildClasses, l)
+
     copyPluginResources = env.Install(buildResourcesDir, Glob(resourcesDir, "*?.???", []))
     env.Depends(buildJar, [copyPluginConfig, copyPluginResources, buildClasses])
     pluginAlias = env.Alias(name, buildJar)
