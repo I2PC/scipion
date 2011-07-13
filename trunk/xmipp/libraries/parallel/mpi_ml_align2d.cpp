@@ -416,7 +416,7 @@ MpiProgMLTomo::~MpiProgMLTomo()
 }
 
 /** Redefine the basic Program read to do it sequentially */
-void MpiProgMLTomo::read(int argc, char ** argv)
+void MpiProgMLTomo::read(int argc, char ** argv, bool reportErrors)
 {
     if (node == NULL)
         node = new MpiNode(argc, argv);

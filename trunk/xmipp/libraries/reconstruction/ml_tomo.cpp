@@ -1359,7 +1359,9 @@ void ProgMLTomo::getMissingRegion(MultidimArray<double> &Mmissing,
     test().setXmippOrigin();
     MultidimArray<int> ress(dim,dim,dim);
     ress.setXmippOrigin();
-    BinaryWedgeMask(test(),all_missing_info[missno].thy0, all_missing_info[missno].thyF, A);
+    //ROB
+//    BinaryWedgeMask(test(),all_missing_info[missno].thy0, all_missing_info[missno].thyF, A);
+    BinaryWedgeMask(test(),all_missing_info[missno].thy0, all_missing_info[missno].thyF, A.inv());
     test.write("Mwedge.vol");
 #endif
 #ifdef DEBUG_JM

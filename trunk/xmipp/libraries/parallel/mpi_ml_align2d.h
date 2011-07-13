@@ -151,7 +151,7 @@ public:
     ~MpiProgMLTomo();
 
     /** Redefine the basic Program read to do it sequentially */
-    void read(int argc, char ** argv);
+    void read(int argc, char ** argv, bool reportErrors = true);
     /** Only take a part of images for process */
     void setNumberOfLocalImages();
     /// Only master will generate initial references
