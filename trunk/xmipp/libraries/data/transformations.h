@@ -87,7 +87,7 @@ void rotation2DMatrix(double ang, Matrix2D< double > &m, bool homogeneous=true);
  * m = translation2DMatrix(vectorR2(1, 0));
  * @endcode
  */
-void translation2DMatrix(const Matrix1D< double > &v, Matrix2D< double > &m);
+void translation2DMatrix(const Matrix1D< double > &v, Matrix2D< double > &m,bool inverse=false);
 
 /** Creates a rotational matrix (4x4) for volumes around system axis
  * @ingroup GeometricalTransformations
@@ -166,7 +166,7 @@ void alignWithZ(const Matrix1D< double >& axis, Matrix2D< double > &m, bool homo
  * m = translation3DMatrix(vectorR3(0, 0, 2));
  * @endcode
  */
-void translation3DMatrix(const Matrix1D< double >& v, Matrix2D< double > &m);
+void translation3DMatrix(const Matrix1D< double >& v, Matrix2D< double > &m,bool inverse=false);
 
 /** Creates a scaling matrix (4x4) for volumes
  * @ingroup GeometricalTransformations
@@ -930,13 +930,12 @@ void translate(int SplineDegree,
 {
     Matrix2D< double > tmp;
     if (V1.getDim()==2)
-        translation2DMatrix(v, tmp);
+        translation2DMatrix(v, tmp,true);
     else if (V1.getDim()==3)
-        translation3DMatrix(v, tmp);
+        translation3DMatrix(v, tmp,true);
     else
         REPORT_ERROR(ERR_MULTIDIM_DIM,"translate ERROR: translate only valid for 2D or 3D arrays");
-
-    applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, wrap, outside);
+    applyGeometry(SplineDegree, V2, V1, tmp, IS_INV, wrap, outside);
 }
 
 /** Translate an array.
