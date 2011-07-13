@@ -24,7 +24,7 @@
  ***************************************************************************/
 #include "tomo_extract_subvolume.h"
 
-//#define DEBUG
+#define DEBUG
 
 // Read arguments ==========================================================
 
@@ -108,15 +108,19 @@ void ProgTomoExtractSubvolume::readParams()
     fn_sym = getParam( "--sym");
     fn_root = getParam("-o");
     center_ref.resize(3);
-    XX(center_ref) = getIntParam( "--size",1);
-    YY(center_ref) = getIntParam( "--size",2);
-    ZZ(center_ref) = getIntParam( "--size",3);
+    size = getIntParam("--size");
+    XX(center_ref) = getIntParam( "--center",0);
+    YY(center_ref) = getIntParam( "--center",1);
+    ZZ(center_ref) = getIntParam( "--center",2);
     mindist = getDoubleParam("--mindist");
 }
 
 // Usage ===================================================================
 void ProgTomoExtractSubvolume::show()
 {
+#ifdef DEBUG
+	std::cerr << "start show" <<std::endl;
+#endif
     if (verbose)
     {
         std::cout << " -----------------------------------------------------------------" << std::endl;
@@ -133,6 +137,9 @@ void ProgTomoExtractSubvolume::show()
         std::cout << "Symmetry group       " <<  fn_sym       << std::endl;
         std::cout << "Minimum distance between subvolumes " << mindist << std::endl;
     }
+#ifdef DEBUG
+	std::cerr << "end show" <<std::endl;
+#endif
 }
 
 // Set up a lot of general stuff
@@ -189,11 +196,16 @@ void ProgTomoExtractSubvolume::produceSideInfo()
             rotations_subvolumes.push_back(R);
         }
     }
+#ifdef  DEBUG
+    std::cerr<<"End produceSideInfo"<<std::endl;
+#endif
 
 }
 void ProgTomoExtractSubvolume::processImages(int imgno_start, int imgno_end)
 {
-
+#ifdef  DEBUG
+    std::cerr<<"Start processImages"<<std::endl;
+#endif
     FileName fn_img, fn_out;
     Image<double> vol, volout;
     //DocLine DL, DLout;
@@ -249,16 +261,21 @@ void ProgTomoExtractSubvolume::processImages(int imgno_start, int imgno_end)
             M3x3_BY_V3x1(center, A, center);
             // 2. translate center
             center -= doccenter;
+            std::cerr<<"5.3 Start processImages"<<std::endl;
             // 3. Apply possible non-integer center to volume
-            translate(BSPLINE3,volout(),vol(),DONT_WRAP,0);
+            //FIXME -center rob
+            translate(BSPLINE3,volout(),vol(),center);
             //vol().translate(-center, volout(), DONT_WRAP);
             //4. Window operation and write subvolume to disc
+            std::cerr<<"5.4 Start processImages"<<std::endl;
             volout().selfWindow(x0,x0,x0,xF,xF,xF);
             fn_out=fn_img.removeLastExtension();
             fn_out+="_sub";
             fn_out.compose(fn_out,i+1,"vol");
             volout.write(fn_out);
+            std::cerr<<"6 Start processImages"<<std::endl;
 
+            std::cerr<<"5.5 Start processImages"<<std::endl;
 
             // 5. Calculate output angles: apply symmetry rotation to rot,tilt and psi
             Euler_apply_transf(rotations_subvolumes[i], I, rot, tilt, psi, rotp, tiltp, psip);
@@ -284,9 +301,13 @@ void ProgTomoExtractSubvolume::processImages(int imgno_start, int imgno_end)
             //            DFout.append_line(DLout);
 
             //            SFout.insert(fn_out);
+            std::cerr<<"7 Start processImages"<<std::endl;
         }
 
     }
+#ifdef  DEBUG
+    std::cerr<<"end processImages"<<std::endl;
+#endif
 }
 void ProgTomoExtractSubvolume::run()
 {
