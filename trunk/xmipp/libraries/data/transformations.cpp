@@ -183,14 +183,24 @@ void rotation2DMatrix(double ang, Matrix2D< double > &result, bool homogeneous)
 
 /* Translation 2D ---------------------------------------------------------- */
 void translation2DMatrix(const Matrix1D<double> &v,
-                         Matrix2D< double > &result)
+                         Matrix2D< double > &result,
+                         bool inverse)
 {
     if (VEC_XSIZE(v) != 2)
         REPORT_ERROR(ERR_MATRIX_SIZE, "Translation2D_matrix: vector is not in R2");
 
     result.initIdentity(3);
-    MAT_ELEM(result,0, 2) = XX(v);
-    MAT_ELEM(result,1, 2) = YY(v);
+    if (inverse)
+    {
+        MAT_ELEM(result,0, 2) = -XX(v);
+        MAT_ELEM(result,1, 2) = -YY(v);
+    }
+    else
+    {
+        MAT_ELEM(result,0, 2) = XX(v);
+        MAT_ELEM(result,1, 2) = YY(v);
+    }
+
 }
 
 /* Rotation 3D around the system axes -------------------------------------- */
@@ -297,15 +307,24 @@ void rotation3DMatrix(double ang, const Matrix1D<double> &axis,
 }
 
 /* Translation 3D ---------------------------------------------------------- */
-void translation3DMatrix(const Matrix1D<double> &v, Matrix2D<double> &result)
+void translation3DMatrix(const Matrix1D<double> &v, Matrix2D<double> &result, bool inverse)
 {
     if (VEC_XSIZE(v) != 3)
         REPORT_ERROR(ERR_MATRIX_SIZE, "Translation3D_matrix: vector is not in R3");
 
     result.initIdentity(4);
-    MAT_ELEM(result,0, 3) = XX(v);
-    MAT_ELEM(result,1, 3) = YY(v);
-    MAT_ELEM(result,2, 3) = ZZ(v);
+    if (inverse)
+    {
+        MAT_ELEM(result,0, 3) = -XX(v);
+        MAT_ELEM(result,1, 3) = -YY(v);
+        MAT_ELEM(result,2, 3) = -ZZ(v);
+    }
+    else
+    {
+        MAT_ELEM(result,0, 3) = XX(v);
+        MAT_ELEM(result,1, 3) = YY(v);
+        MAT_ELEM(result,2, 3) = ZZ(v);
+    }
 }
 
 /* Scale 3D ---------------------------------------------------------------- */
@@ -357,7 +376,7 @@ void applyGeometry(int SplineDegree,
     }
     else
     { //FIXME I do not think you want to recall your self
-    	REPORT_ERROR(ERR_NOT_IMPLEMENTED,"I do not think you want to recall your self");
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"I do not think you want to recall your self");
         applyGeometry(SplineDegree, V2, V1, A, inv, wrap, outside);
     }
 }
@@ -518,7 +537,7 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
                     xsum += Coeff * Bspline02(xminusl);
                     break;
                 case 3:
-                	BSPLINE03DIFF1(aux,xminusl);
+                    BSPLINE03DIFF1(aux,xminusl);
                     xsum += Coeff * aux;
                     break;
                 case 4:
@@ -549,7 +568,7 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
                 yxsum += xsum * Bspline02(yminusm);
                 break;
             case 3:
-            	BSPLINE03(aux,yminusm);
+                BSPLINE03(aux,yminusm);
                 yxsum += xsum * aux;
                 break;
             case 4:
@@ -580,7 +599,7 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
             zyxsum += yxsum * Bspline02(zminusn);
             break;
         case 3:
-        	BSPLINE03(aux,zminusn);
+            BSPLINE03(aux,zminusn);
             zyxsum += yxsum * aux;
             break;
         case 4:
@@ -673,7 +692,7 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
                     xsum += Coeff * Bspline02(xminusl);
                     break;
                 case 3:
-                	BSPLINE03(aux,xminusl);
+                    BSPLINE03(aux,xminusl);
                     xsum += Coeff * aux;
                     break;
                 case 4:
@@ -704,7 +723,7 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
                 yxsum += xsum * Bspline02(yminusm);
                 break;
             case 3:
-            	BSPLINE03DIFF1(aux,yminusm);
+                BSPLINE03DIFF1(aux,yminusm);
                 yxsum += xsum * aux;
                 break;
             case 4:
@@ -735,7 +754,7 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
             zyxsum += yxsum * Bspline02(zminusn);
             break;
         case 3:
-        	BSPLINE03(aux,zminusn);
+            BSPLINE03(aux,zminusn);
             zyxsum += yxsum * aux;
             break;
         case 4:
@@ -828,7 +847,7 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
                     xsum += Coeff * Bspline02(xminusl);
                     break;
                 case 3:
-                	BSPLINE03(aux,xminusl);
+                    BSPLINE03(aux,xminusl);
                     xsum += Coeff * aux;
                     break;
                 case 4:
@@ -859,7 +878,7 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
                 yxsum += xsum * Bspline02(yminusm);
                 break;
             case 3:
-            	BSPLINE03(aux,yminusm);
+                BSPLINE03(aux,yminusm);
                 yxsum += xsum * aux;
                 break;
             case 4:
@@ -890,7 +909,7 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
             zyxsum += yxsum * Bspline02(zminusn);
             break;
         case 3:
-        	BSPLINE03DIFF1(aux,zminusn);
+            BSPLINE03DIFF1(aux,zminusn);
             zyxsum += yxsum * aux;
             break;
         case 4:
