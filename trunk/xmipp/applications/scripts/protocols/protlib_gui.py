@@ -123,15 +123,17 @@ class BasicGUI():
         if not master:
             master = Tk()
         self.master = master
+        self.master.withdraw()
         self.style = ProtocolStyle('config_protocols')
         self.style.createFonts()
         
     def resize(self):
-        height = min(self.frame.winfo_reqheight() + 25, self.style.MaxHeight)
-        width = min(self.frame.winfo_reqwidth() + 25, self.style.MaxWidth)
+        height = min(self.frame.winfo_reqheight() + 25, MaxHeight)
+        width = min(self.frame.winfo_reqwidth() + 25, MaxWidth)
         x = self.frame.winfo_x()
         y = self.frame.winfo_y()
         self.master.geometry("%dx%d%+d%+d" % (width, height, x, y))
+        return (width, height)
 
     def updateScrollRegion(self):
         self.frame.update_idletasks()
@@ -144,7 +146,9 @@ class BasicGUI():
     
     def launchGUI(self):
         self.launchCanvas() 
-        self.resize()      
+        from protlib_gui_ext import centerWindows, getGeometry
+        centerWindows(self.master, self.resize() )
+        self.master.deiconify()     
         self.master.mainloop() 
 
     def currentRow(self, parent=None):
@@ -254,6 +258,8 @@ class ProtocolVariable():
             lines = [sepLine + self.commentline + '\n' + sepLine]
         else:    
             lines = [self.commentline + '\n']
+        if 'text' in self.tags.keys(): #Store the value in the comment field
+            self.help = self.getValue()
         if self.help:
             lines.append('"""%s"""\n' %  self.help)
         if self.is_string:
@@ -339,10 +345,15 @@ Obligatory:
 Optional:
     * There are extra tags in the comment that have some semantic for the GUI:
         - {section} defines a section with the comment, not a variable      
+        - {has_question} this tag can be used with a section and take the next 
+              boolean variables as a checkbutton for show/hide the entire section box
         - {expert} mark this variable or section as "expert", not shown in the GUI
               by default, showed when pressed the "Show expert options" button
         - {file} or {dir} marks the option as a Filename or Directory, and will add 
               a corresponding "Browse" button to that option
+        - {view} this will add an extra button to view/explore some files or folders
+        - {run}(prot1, prot2) Select as input previous runs from other(or same) protocol
+        - {text} Will display a text box with more space for writing
         - {list}(option A, option B, option C) marks the option as a radio-list button. 
               The selected variable should be one of the options indicated.
         - {condition}(option=True)
@@ -375,7 +386,7 @@ class ProtocolGUI(BasicGUI):
     # Widgets creation and GUI building
     #-------------------------------------------------------------------  
         
-    def addButton(self, text, cmd, underline, row, col, sticky, imageFilename=None, parent=None):
+    def addButton(self, text, cmd, underline, row, col, sticky, imageFilename=None, parent=None, tip=None):
         f = tkFont.Font(family=self.style.FontName, size=self.style.ButtonFontSize, weight=tkFont.BOLD)
         helpImage = None
         if parent is None:
@@ -397,6 +408,9 @@ class ProtocolGUI(BasicGUI):
             pad = 5
         btn.config(command=cmd, activebackground=self.style.ButtonActiveBgColor)
         btn.grid(row=row, column=col, sticky=sticky, padx=pad, pady=pad)
+        if tip:
+            from protlib_gui_ext import ToolTip
+            ToolTip(btn, tip, 500)
         return btn
     
     def addRadioButton(self, w, var, text, value, row, col, parent):
@@ -459,6 +473,16 @@ class ProtocolGUI(BasicGUI):
                 cond_name, cond_value = cond.split('=')
                 var.conditions[cond_name.strip()] = cond_value.strip()
          
+        if 'text' in keys:
+            #scrollbar = AutoScrollbar(frame)
+            #scrollbar.grid(row=label_row, column=6, sticky=NS)
+            var.tktext = Text(frame, width=66, height=10, wrap=WORD, bg=EntryBgColor)#, yscrollcommand=scrollbar.set, bg=EntryBgColor)
+            #scrollbar.config(command=var.tktext.yview)
+            var.tktext.grid(row=label_row, column=0, columnspan=5, sticky=W+E, padx=(10, 0), pady=(10, 0))
+            var.tktext.insert(END, var.help)
+            w.widgetslist.append(var.tktext)
+            #w.widgetslist.append(scrollbar)
+            return w
         # Treat variables
         if var.value:
         #Escape string literals
@@ -489,7 +513,7 @@ class ProtocolGUI(BasicGUI):
                     return w
                 else:
                     self.addRadioButton(w, var, 'Yes', 'True', row, var_column, frame)  
-                    self.addRadioButton(w, var, 'No', 'False', row, var_column + 1, frame)  
+                    self.addRadioButton(w, var, 'No', 'False', row, var_column + 1, frame) 
             elif 'list' in keys:
                 opts = var.tags['list'].split(',')
                 for o in opts:
@@ -497,24 +521,41 @@ class ProtocolGUI(BasicGUI):
                     self.addRadioButton(w, var, o, o, row, var_column, frame)
                     row = self.getRow()
             elif 'text' in keys:
-                var.tktext = Text(frame, width=30, height=10,)
-                var.tktext.grid(row=row, column=var_column, columnspan=2, sticky=W + E)
+                scrollbar = Scrollbar(frame)
+                scrollbar.grid(row=label_row+1, column=1, sticky=NS)
+                var.tktext = Text(frame, width=66, height=10, wrap=WORD, yscrollcommand=scrollbar.set, bg=EntryBgColor)
+                scrollbar.config(command=var.tktext.yview)
+                var.tktext.grid(row=label_row+1, column=0, columnspan=5, sticky=W+E, padx=(10, 0))
                 w.widgetslist.append(var.tktext)
                 var.tktext.insert(END, var.value)            
             else: #Add a text Entry
-                entry = Entry(frame, textvariable=var.tkvar, bg=self.style.EntryBgColor)
-                entry.grid(row=row, column=var_column, columnspan=2, sticky=W + E)
+                entry = Entry(frame, textvariable=var.tkvar, bg=EntryBgColor)
+                entry.grid(row=row, column=var_column, columnspan=2, sticky=W+E)
                 w.widgetslist.append(entry)
-                image = None
+                args = None
                 if 'file' in keys:
-                    image = 'fileopen.gif'
+                    args = ['Browse', lambda: self.browse(var.tkvar, True), 'fileopen.gif', 'Browse file']
                 elif 'dir' in keys:
-                    image = 'folderopen.gif'
-                if image:
-                    btn = self.addButton("Browse", lambda: self.browse(var.tkvar, ('file' in keys)), -1, label_row, var_column + 3, NW, image, frame)
+                    args = ['Browse', lambda: self.browse(var.tkvar, False), 'folderopen.gif', 'Browse folder']
+                elif 'run' in keys:
+                    protocols = var.tags['run'].split(',')
+                    runs = []
+                    for p in protocols:
+                        runs += self.project.projectDb.selectRunsByProtocol(p)
+                    list = ["%s_%s" % (r[5], r[1]) for r in runs]
+                    args = ['Select Run', lambda: self.selectFromList(var, list), 'select_run.gif', 'Select run']
+                elif 'blocks' in keys:
+                    #md = self.variablesDict[var.tags['blocks']].getValue()
+                    args = ['Select Blocks', lambda: self.selectFromList(var, ['block1', 'block2', 'block3']), 'select_blocks.gif', 'Select blocks']
+                
+                if args:
+                    btn = self.addButton(args[0], args[1], -1, label_row, var_column+2, NW, args[2], frame, args[3])
                     w.widgetslist.append(btn)
+                
+                if 'view' in keys:
+                    btn = self.addButton("View", lambda: self.viewFiles(), -1, label_row, var_column+3, NW, 'visualize.gif', frame, 'View file')
             if var.help:
-                btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column + 4, NW, 'help.gif', frame)
+                btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column+4, NW, 'help.gif', frame, 'Show info')
                 w.widgetslist.append(btn)
                     
             label = Label(frame, text=label_text, fg=label_color, bg=label_bgcolor)
@@ -638,7 +679,7 @@ class ProtocolGUI(BasicGUI):
                                 #print "DEBUG_JM: v.name: '%s', v.value: '%s'" % (v.name, v.value)
                                 self.variablesDict[v.name] = v
                                 index += 1
-                if is_section or v.name:
+                if is_section or v.name or 'text' in v.tags.keys():
                     w = self.createWidget(v)
         #Update if citations found
         if len(self.citeslist) > 0:
@@ -723,6 +764,17 @@ class ProtocolGUI(BasicGUI):
         if self.validateProtocol():
             print "EXECUTING"           
     
+    def viewFiles(self):
+        import tkMessageBox
+        tkMessageBox.showinfo("Visualize", "This should open ImageJ plugin to display files", parent=self.master)
+        
+    def selectFromList(self, var, list):
+        from protlib_gui_ext import ListboxDialog
+        d = ListboxDialog(self.frame, list, selectmode=SINGLE)
+        if len(d.result) > 0:
+            index = d.result[0]
+            var.setValue(list[index])
+        
     def showHelp(self, helpmsg):
         import tkMessageBox
         tkMessageBox.showinfo("Help", helpmsg, parent=self.master)

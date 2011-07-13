@@ -214,10 +214,6 @@ class XmippProjectGUI():
                 self.updateRunHistory(self.lastSelected)
         elif event == "Visualize":
             pass
-#        elif event == "Help":
-#            from protlib_gui_ext import ListboxDialog
-#            d = ListboxDialog(self.frame, ['Edit', 'Copy', 'Delete', 'Visualize'], selectmode=SINGLE)
-#            print d.result
         
 
     def createToolbar(self):
@@ -261,9 +257,9 @@ class XmippProjectGUI():
         frame.grid(row=0, column=2)
         self.addRunButton(frame, "Edit", 0, 'edit.gif')
         self.addRunButton(frame, "Copy", 1, 'copy.gif')
-        self.addRunButton(frame, "Visualize", 2, 'visualize.gif')
-        self.addRunButton(frame, "Delete", 3, 'delete.gif')
-        self.addRunButton(frame, "Help", 4, 'help.gif')
+        #self.addRunButton(frame, "Visualize", 2, 'visualize.gif')
+        self.addRunButton(frame, "Delete", 2, 'delete.gif')
+        #self.addRunButton(frame, "Help", 4, 'help.gif')
         self.frameHist = Frame(self.frame)
         self.frameHist.grid(row=2, column=1, sticky=NSEW, columnspan=2)
         self.lbHist = MultiListbox(self.frameHist, (('Run', 40), ('Modified', 20)))
@@ -357,8 +353,7 @@ if __name__ == '__main__':
         gui.launchGUI()
      
     else: #lauch project     
-        projectCfg = '.project.cfg'
-        if not os.path.exists(projectCfg):
+        if not project.exists():
             print 'You are in directory: ', dir
             answer = raw_input('Do you want to create a new xmipp_protocols PROJECT in this folder? [Y/n]:')
             if not answer or answer.lower() == 'y':

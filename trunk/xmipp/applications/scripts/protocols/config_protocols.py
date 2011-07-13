@@ -107,8 +107,8 @@ ListSelectColor = "DeepSkyBlue4"
 BooleanSelectColor = "white"
 
 #Dimensions limits
-MaxHeight = 800
+MaxHeight = 650
 MaxWidth = 800
 MaxFontSize = 14
 MinFontSize = 6
-WrapLenght = MaxWidth / 2
+WrapLenght = MaxWidth - 50

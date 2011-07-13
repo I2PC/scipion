@@ -168,13 +168,15 @@ class MultiListbox(PanedWindow):
 def getGeometry(win):
     return win.winfo_reqwidth(), win.winfo_reqheight(), win.winfo_x(), win.winfo_y()
 
-def centerWindows(root):
+def centerWindows(root, dim=None):
     """Center a windows in the middle of the screen"""
     w = root.winfo_screenwidth()
     h = root.winfo_screenheight()
     gw, gh, gx, gy = getGeometry(root)
-    x = w / 2 - gw / 2
-    y = h / 2 - gh / 2
+    if not dim is None:
+        gw, gh = dim
+    x = (w - gw) / 2
+    y = (h - gh) / 2
     root.geometry("%dx%d+%d+%d" % (gw, gh, x, y))
 
 __tipwindow = None

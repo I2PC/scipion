@@ -196,34 +196,38 @@ class XmippProjectDb(SqliteDb):
         _sqlCommand = "DELETE FROM %(TableRuns)s WHERE run_id = %(run_id)d " % self.sqlDict
         self.execSqlCommand(_sqlCommand, "Error deleting run: %(run_name)s" % run)
         
-    def selectRuns(self, groupName):
-        self.sqlDict['group'] = groupName
+    def selectRunsCommand(self):
         sqlCommand = """SELECT run_id, run_name, script, 
                                datetime(init, 'localtime') as init, 
                                datetime(last_modified, 'localtime') as last_modified,
                                protocol_name, comment,
                                group_name 
-                         FROM %(TableRuns)s NATURAL JOIN %(TableProtocolsGroups)s
-                         WHERE group_name = '%(group)s'
-                         ORDER BY last_modified DESC """ % self.sqlDict
+                         FROM %(TableRuns)s NATURAL JOIN %(TableProtocolsGroups)s """ % self.sqlDict
+        return sqlCommand
+                         
+    def selectRuns(self, groupName):
+        self.sqlDict['group'] = groupName
+        sqlCommand = self.selectRunsCommand() + """WHERE group_name = '%(group)s'
+                                                   ORDER BY last_modified DESC """ % self.sqlDict
         self.cur.execute(sqlCommand) 
         return self.cur.fetchall()
     
     def selectRunByName(self, protocol_name, runName):
         self.sqlDict['run_name'] = runName
         self.sqlDict['protocol_name'] = protocol_name
-        sqlCommand = """SELECT run_id, run_name, script, 
-                               datetime(init, 'localtime') as init, 
-                               datetime(last_modified, 'localtime') as last_modified,
-                               protocol_name, comment,
-                               group_name 
-                         FROM %(TableRuns)s NATURAL JOIN %(TableProtocolsGroups)s
-                         WHERE protocol_name = %(protocol_name)s 
-                               AND run_name = '%(run_name)s'
-                         ORDER BY last_modified DESC """ % self.sqlDict
+        sqlCommand = self.selectRunsCommand() + """WHERE protocol_name = '%(protocol_name)s'
+                                                     AND run_name = '%(run_name)s'
+                                                   ORDER BY last_modified DESC """ % self.sqlDict
         self.cur.execute(sqlCommand) 
         return self.cur.fetchone()
     
+    def selectRunsByProtocol(self, protocol_name):
+        self.sqlDict['protocol_name'] = protocol_name
+        sqlCommand = self.selectRunsCommand() + """WHERE protocol_name = '%(protocol_name)s'
+                                                   ORDER BY last_modified DESC """ % self.sqlDict
+        self.cur.execute(sqlCommand) 
+        return self.cur.fetchall()
+     
 class XmippProtocolDb(SqliteDb): 
     
     def __init__(self, dbName, continueAt, isIter, protocol):

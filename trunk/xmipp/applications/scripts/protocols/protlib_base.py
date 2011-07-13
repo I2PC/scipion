@@ -152,6 +152,7 @@ class XmippProject():
         run = self.projectDb.selectRunByName(self, protocol_name, runName)
         if not run is None:
             run['source'] = run['script']
+        return run
     
     def newOrLoadProtocol(self, protocol_name, runName):
         run = self.loadProtocol(project, protocol_name, runName)
