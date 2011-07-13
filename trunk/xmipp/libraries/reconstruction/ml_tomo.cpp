@@ -36,6 +36,20 @@ void ProgMLTomo::defineParams()
     addUsageLine("Align and classify 3D images with missing data regions in Fourier space,");
     addUsageLine("e.g. subtomograms or RCT reconstructions, by a 3D multi-reference refinement");
     addUsageLine("based on a maximum-likelihood (ML) target function.");
+    addUsageLine("+++For several cases, this method has been shown to be able to both align and "
+                 "classify in a completely *reference-free* manner, by starting from random assignments of "
+                 "the orientations and classes. The mathematical details behind this approach are explained "
+                 "in detail in");
+    addUsageLine("+++Scheres et al. (2009) Structure, 17, 1563-1572",true);
+    addUsageLine("+++*Please cite this paper if this program is of use to you!* %BR% "
+                 "There also exists a standardized python script [[http://newxmipp.svn.sourceforge.net/viewvc/"
+                 "newxmipp/trunk/xmipp/applications/scripts/protocols/protocol__mltomo.py]"
+                 "[xmipp_protocol__mltomo.py]] for this program. "
+                 "Thereby, rather than executing the command line options explained below, the user"
+                 " can submit his jobs through a convenient GUI in the [[GettingStartedWithProtocols][Xmipp_protocols]], "
+                 "although we still recommend reading this page carefully in order "
+                 "to fully understand the options given in the protocol. Note that this protocol is available "
+                 "from the main xmipp_protocols setup window by pressing the _Additional protocols_ button.)");
 
     addParamsLine("   -i <metadata>                : Metadata file with input images (and angles) ");
     addParamsLine("   --nref <int=0>               : Number of references to generate automatically (recommended)");
