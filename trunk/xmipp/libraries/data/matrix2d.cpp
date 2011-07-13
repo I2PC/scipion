@@ -8,6 +8,20 @@
 #include "matrix2d.h"
 #include "multidim_array.h"
 
+/* Cholesky decomposition -------------------------------------------------- */
+void cholesky(const Matrix2D<double> &M, Matrix2D<double> &L)
+{
+	L=M;
+	Matrix1D<double> p;
+	p.initZeros(MAT_XSIZE(M));
+	choldc(L.adaptForNumericalRecipes2(), MAT_XSIZE(M), p.adaptForNumericalRecipes());
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(L)
+	if (i==j)
+		MAT_ELEM(L,i,j)=VEC_ELEM(p,i);
+	else if (i<j)
+		MAT_ELEM(L,i,j)=0.0;
+}
+
 /* Interface to numerical recipes: svbksb ---------------------------------- */
 void svbksb(Matrix2D<double> &u, Matrix1D<double> &w, Matrix2D<double> &v,
             Matrix1D<double> &b, Matrix1D<double> &x)

@@ -1337,6 +1337,12 @@ void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d)
            indx.adaptForNumericalRecipes(), &d);
 }
 
+/** Cholesky decomposition.
+ * Given M, this function decomposes M as M=L*L^t where L is a lower triangular matrix.
+ * M must be positive semi-definite.
+ */
+void cholesky(const Matrix2D<double> &M, Matrix2D<double> &L);
+
 /** LU Backsubstitution
  */
 template<typename T>
