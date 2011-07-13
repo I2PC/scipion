@@ -285,7 +285,7 @@ void MpiProgMLRefine3D::createEmptyFiles(int type)
 
 void MpiProgMLRefine3D::projectVolumes(MetaData &mdProj)
 {
-     ProgMLRefine3D::projectVolumes(mdProj);
+    ProgMLRefine3D::projectVolumes(mdProj);
     //all nodes waiting until volumes are projected
     node->barrierWait();
 }
@@ -406,7 +406,9 @@ void MpiProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputTyp
 
 /** Constructor */
 MpiProgMLTomo::MpiProgMLTomo()
-{}
+{
+    node = NULL;
+}
 /** Destructor */
 MpiProgMLTomo::~MpiProgMLTomo()
 {
