@@ -266,11 +266,11 @@ void drawWedge(double rotPos, double tiltPos, double rotNeg, double tiltNeg,
 // Read from command line --------------------------------------------------
 void ProgDetectMissingWedge::readParams()
 {
-    fn_vol  = getParameter(argc, argv, "-i");
-    maxFreq = textToFloat(getParameter(argc, argv, "-maxFreq", "2"));
-    planeWidth = textToFloat(getParameter(argc, argv, "-width", "2"));
-    saveMarks = checkParameter(argc, argv, "-saveMarks");
-    saveMask = checkParameter(argc, argv, "-saveMask");
+    fn_vol  = getParam("-i");
+    maxFreq = getDoubleParam("--maxFreq");
+    planeWidth = getDoubleParam("--width");
+    saveMarks = checkParam("--saveMarks");
+    saveMask = checkParam("--saveMask");
 }
 
 // Produce side info -------------------------------------------------------
