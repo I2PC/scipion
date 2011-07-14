@@ -834,7 +834,7 @@ public:
         return *this;
     }
 
-    /** Another function for assigment.*/
+    /** Another function for assignment.*/
     void assign(const GridVolumeT& RV)
     {
         *this = RV;
