@@ -795,7 +795,6 @@ public:
             for (int j = 0; j < mdimx; j++)
                 MAT_ELEM(*this,i, j) -= MAT_ELEM(op1, i, j);
     }
-
     /** Equality.
      *
      * Returns true if this object has got the same shape (origin and size)
@@ -1320,6 +1319,13 @@ public:
     }
     //@}
 };
+
+template<typename T>
+bool operator==(const Matrix2D<T>& op1, const Matrix2D<T>& op2)
+{
+	return op1.equal(op2);
+}
+
 
 /**@name Matrix Related functions
  * These functions are not methods of Matrix2D
