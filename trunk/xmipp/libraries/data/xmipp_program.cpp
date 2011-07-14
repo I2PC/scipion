@@ -92,8 +92,8 @@ bool XmippProgram::checkBuiltIns()
                     usage(cmdHelp);
                 else
                 {
-                    if (verbose)
-                        std::cerr << "Unrecognized param " << helpParam << " neither - or --" << std::endl;
+                  if (verbose)
+                    std::cerr << "Unrecognized param " << helpParam << " neither - or --" << std::endl;
                     usage();
                 }
             }
@@ -220,8 +220,8 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
             progDef->read(argc, argv, reportErrors);
             if (!checkBuiltIns())
             {
-                if (verbose) //if 0, ignore the parameter, useful for mpi programs
-                    verbose = getIntParam("--verbose");
+              if (verbose) //if 0, ignore the parameter, useful for mpi programs
+                verbose = getIntParam("--verbose");
                 this->readParams();
                 notRun = false;
             }
@@ -229,11 +229,11 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
         catch (XmippError xe)
         {
             ///If an input error, shows error message
-            if (verbose)
-            {
-                std::cerr << xe;
-                std::cerr << "For more info use --help" << std::endl;
-            }
+          if (verbose)
+          {
+            std::cerr << xe;
+            std::cerr << "For more info use --help" << std::endl;
+          }
             errorCode = xe.__errno;
         }
     }
@@ -384,26 +384,26 @@ const char * XmippProgram::name() const
 
 void XmippProgram::usage(int verb) const
 {
-    if (verbose)
-    {
-        ConsolePrinter cp;
-        char * var = getenv("XMIPP_COLOR_OFF");
-        if (var != NULL)
-            cp.color = false;
-        cp.printProgram(*progDef, verb);
-    }
+  if (verbose)
+  {
+    ConsolePrinter cp;
+    char * var = getenv("XMIPP_COLOR_OFF");
+    if (var != NULL)
+      cp.color = false;
+    cp.printProgram(*progDef, verb);
+  }
 }
 
 void XmippProgram::usage(const std::string & param, int verb)
 {
-    if (verbose)
-    {
-        ConsolePrinter cp;
-        ParamDef * paramDef = progDef->findParam(param);
-        if (paramDef == NULL)
-            REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
-        cp.printParam(*paramDef, verb);
-    }
+  if (verbose)
+  {
+    ConsolePrinter cp;
+    ParamDef * paramDef = progDef->findParam(param);
+    if (paramDef == NULL)
+        REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
+    cp.printParam(*paramDef, verb);
+  }
     quit(0);
 }
 
@@ -522,10 +522,8 @@ void XmippMetadataProgram::readParams()
     if (allow_apply_geo && zdimOut == 1)
         apply_geo = !checkParam("--dont_apply_geo");
 
-    /* If the output is a stack, create empty stack file in advance to avoid
-    concurrent access to the header */
-    create_empty_stackfile = ( each_image_produces_an_output  \
-                               && mdInSize > 1 && oroot.empty() );
+    // If the output is a stack, create empty stack file in advance to avoid concurrent access to the header
+    create_empty_stackfile = (mdInSize > 1 && oroot.empty());
 }
 
 void XmippMetadataProgram::show()
@@ -562,7 +560,7 @@ void XmippMetadataProgram::startProcessing()
     time_bar_done = 0;
 
     if (create_empty_stackfile)
-        createEmptyFile(fn_out, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE);
+      createEmptyFile(fn_out, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE);
 }
 
 void XmippMetadataProgram::finishProcessing()
@@ -626,7 +624,7 @@ void XmippMetadataProgram::run()
     //FOR_ALL_OBJECTS_IN_METADATA(mdIn)
     while (getImageToProcess(objId, objIndex))
     {
-        ++objIndex; //increment for composing starting at 1
+      ++objIndex; //increment for composing starting at 1
         mdIn.getValue(MDL_IMAGE, fnImg, objId);
 
         if (fnImg.empty())
