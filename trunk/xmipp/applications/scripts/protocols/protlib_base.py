@@ -323,8 +323,9 @@ def getProtocolFromModule(script, project):
             return v(script, project)
     return None
             
-def protocolMain(ProtocolClass):
-    script  = sys.argv[0]
+def protocolMain(ProtocolClass, script=None):
+    if script is None:
+        script  = sys.argv[0]
     options = command_line_options()
     
     mod = loadModule(script)

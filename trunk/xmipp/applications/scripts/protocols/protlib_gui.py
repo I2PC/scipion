@@ -755,14 +755,15 @@ class ProtocolGUI(BasicGUI):
         errors = prot.validateInput()        
         if len(errors) > 0:
             tkMessageBox.showerror("Validation ERRORS", '\n'.join(errors), parent=self.master)
-            return False
-        return True
+            return None
+        return prot
     
     def saveExecute(self, event=""):
         self.save() 
         #if self.confirmDeleteWorkingDir() and self.validateProtocol():
-        if self.validateProtocol():
-            print "EXECUTING"           
+        prot = self.validateProtocol()
+        if not prot is None:
+            protocolMain(prot.__class__, self.run['script'])    
     
     def viewFiles(self):
         import tkMessageBox
