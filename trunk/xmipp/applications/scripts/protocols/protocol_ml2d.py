@@ -16,18 +16,44 @@ for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149
 for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
 """
 #------------------------------------------------------------------------------------------
+# {section}{has_question} Comment
+#------------------------------------------------------------------------------------------
+# Display comment
+DisplayComment = False
+
+# {text} Write a comment:
+""" This field will serve you to annotate anything about your processing, now testing if this does a good job and if not...
+asdfasdfasd
+Now a more importante comment...
+Not so importante
+
+"""
+#------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------
 # Run name:
 """ This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
 run1 for it. This name together with the protocol output folder will determine the working dir for this run.
 """
-RunName = "run_001"
+RunName = "run_004"
 
 # {file}{expert} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR.
 """
-InSelFile = "all_images.sel"
+InSelFile = ".project.sqlite"
+
+# {blocks} Input blocks
+InBlocks = ""
+
+# {dir}{view} Output Dir:
+""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR.
+"""
+OutputDir = "Logs"
+
+# {run}(projmatch) Previous Protocol
+""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR.
+"""
+PreviousProtocol = "projmatch_run_002"
 
 #------------------------------------------------------------------------------------------
 # {section}{has_question} MLF-specific parameters
@@ -103,7 +129,7 @@ ExtraParamsMLalign2D = ""
 """ This option provides shared-memory parallelization on multi-core machines.
 It does not require any additional software, other than xmipp
 """
-NumberOfThreads = 1
+NumberOfThreads = 11
 
 # Number of MPI processes to use
 NumberOfMpiProcesses = 3
