@@ -45,11 +45,11 @@
 class ProgTomoExtractSubvolume;
 
 /** tomo_extract_subvolume parameters. */
-class ProgTomoExtractSubvolume: public XmippProgram
+class ProgTomoExtractSubvolume: public XmippMetadataProgram
 {
 public:
     /** Filenames reference selfile/image, fraction metadata & output rootname */
-    FileName fn_doc, fn_root, fn_sym, fn_missing, fn_mask;
+    FileName fn_doc, fn_root, fn_sym, fn_missing, fn_mask, fn_aux;
 
     /** Size of the output subvolume */
     int size;
@@ -68,14 +68,14 @@ public:
     int nr_output_volumes;
 
     // Metadata with input volumes names and their alignment parameters
-    MetaData DF;
+    //MetaData DF;
 
     // Docfile with output subvolumes names and their alignment parameters
     // This file can be fed directly to ml_tomo again...
     MetaData DFout;
 
     // Selfile with output subvolumes
-    MetaData SFout;
+    //MetaData SFout;
 
     /** Minimum distance between unique subvolumes */
     double mindist;
@@ -83,6 +83,15 @@ public:
     // Symmetry setup
     int symmetry, sym_order;
     SymList SL;
+
+    //Some local variables
+    FileName fn_out;
+    Image<double> vol, volout;
+    Matrix1D<double> center, doccenter;
+    Matrix2D<double> A, R, I;
+    double rot, tilt, psi, rotp, tiltp, psip;
+    int x0, xF;
+    SPEED_UP_temps;
 
 
 public:
@@ -93,16 +102,19 @@ public:
     /// Read arguments from command line
     void readParams();
 
-    /// Main body of the program
-    void run();
-
     /// Show
     void show();
 
     /// Setup lots of stuff
     void produceSideInfo();
 
-    void processImages(int imgno_start, int imgno_end);
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+
+    void postProcess();
+    void preProcess();
+
+
+    //void processImage(int imgno_start, int imgno_end);
 
 };
 //@}

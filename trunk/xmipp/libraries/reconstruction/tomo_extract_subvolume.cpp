@@ -24,12 +24,26 @@
  ***************************************************************************/
 #include "tomo_extract_subvolume.h"
 
-#define DEBUG
+//#define DEBUG
 
 // Read arguments ==========================================================
 
+void ProgTomoExtractSubvolume::preProcess()
+{
+    produceSideInfo();
+
+    center.resizeNoCopy(3);
+    doccenter.resizeNoCopy(3);
+    A.resizeNoCopy(3,3);
+    R.resizeNoCopy(3,3);
+    I.resizeNoCopy(3,3);
+    I.initIdentity();
+}
 void ProgTomoExtractSubvolume::defineParams()
 {
+    defaultComments["-i"].addComment("Metadata file with input volumes (and rotations/shifts)");
+
+    XmippMetadataProgram::defineParams();
     addUsageLine("Extract subvolumes of the asymmetric parts of each subtomogram");
 
     addUsageLine("+++This program works closely together with the ml_tomo program, which is used to align");
@@ -38,9 +52,8 @@ void ProgTomoExtractSubvolume::defineParams()
     addUsageLine("+++ asymmetric parts of each subtomogram. The metadata file  that is output by this program orients");
     addUsageLine("+++ each subvolume and its missing wedge in the correct orientation, so that it can be fed");
     addUsageLine("+++ directly back into ml_tomo. There, the sub-subtomograms can be further aligned and/or classified");
-
-    addParamsLine("-i <metadata>          : Metadata file with input volume");
-    addParamsLine("-o <subvolumeName=\"subvolume\"> : Root FileName output subvolume");
+    addParamsLine("--oroot <root=\"out\">  : Root FileName output subvolume");
+    addParamsLine("[-o <filename=\"\">]         : Name of output metadata (\"oroot\".xmd by default)");
     addParamsLine("--sym  <sym=\"c1\">     : Symmetry group");
     addParamsLine("--size     <dim>        : size output subvolumes");
     addParamsLine("--mindist  <distance>   : minimum distance between subvolume centers, usefull to avoid repetition of subvolumes place at simmetry axis");
@@ -75,10 +88,10 @@ void ProgTomoExtractSubvolume::defineParams()
     addExampleLine("+++ maximum cross-correlation (rather than maximum likelihood) to avoid problems with absolute ",false);
     addExampleLine("+++ greyscales and the standard deviation in the noise. ",false);
 
-    addExampleLine("+++ ml_tomo -i images.sel -doc images.doc -ref myreference.vol -o align/mltomo_10deg -missing wedges.doc -iter 1 -ang 10");
-    addExampleLine("+++ ml_tomo -i images.sel -doc align/mltomo_10deg_it000001.doc -ref myreference.vol -o align/mltomo_5deg -missing wedges.doc -iter 1 -ang 5 -ang_search 20");
-    addExampleLine("+++ ml_tomo -i images.sel -doc align/mltomo_5deg_it000001.doc -ref myreference.vol -o align/mltomo_2deg -missing wedges.doc -iter 1 -ang 2 -ang_search 8");
-    addExampleLine("+++ ml_tomo -i images.sel -doc align/mltomo_2deg_it000001.doc -ref myreference.vol -o align/mltomo_1deg -missing wedges.doc -iter 1 -ang 1 -ang_search 3");
+    addExampleLine("+++ ml_tomo -i images.sel -doc images.doc -ref myreference.vol --oroot align/mltomo_10deg -missing wedges.doc -iter 1 -ang 10");
+    addExampleLine("+++ ml_tomo -i images.sel -doc align/mltomo_10deg_it000001.doc -ref myreference.vol --oroot align/mltomo_5deg -missing wedges.doc -iter 1 -ang 5 -ang_search 20");
+    addExampleLine("+++ ml_tomo -i images.sel -doc align/mltomo_5deg_it000001.doc -ref myreference.vol --oroot align/mltomo_2deg -missing wedges.doc -iter 1 -ang 2 -ang_search 8");
+    addExampleLine("+++ ml_tomo -i images.sel -doc align/mltomo_2deg_it000001.doc -ref myreference.vol --oroot align/mltomo_1deg -missing wedges.doc -iter 1 -ang 1 -ang_search 3");
 
     addExampleLine("+++ Now, we will identify the x,y,z coordinates of the vertex in the reference structure (which has symmetry i3): ",false);
     addExampleLine("+++ -center 0 0 59. And we will extract 12 vertices (subvolumes) in boxes of size 12x12x12 pixels ",false);
@@ -103,10 +116,13 @@ void ProgTomoExtractSubvolume::defineParams()
 
 void ProgTomoExtractSubvolume::readParams()
 {
+	XmippMetadataProgram::readParams();
+	oroot = getParam("--oroot");
+	fn_out = getParam("-o");
+	if (fn_out.empty())
+		fn_out = oroot.addExtension("xmd");
     // Read command line
-    fn_doc = getParam( "-i");
-    fn_sym = getParam( "--sym");
-    fn_root = getParam("-o");
+    fn_sym  = getParam( "--sym");
     center_ref.resize(3);
     size = getIntParam("--size");
     XX(center_ref) = getIntParam( "--center",0);
@@ -119,8 +135,9 @@ void ProgTomoExtractSubvolume::readParams()
 void ProgTomoExtractSubvolume::show()
 {
 #ifdef DEBUG
-	std::cerr << "start show" <<std::endl;
+    std::cerr << "start show" <<std::endl;
 #endif
+
     if (verbose)
     {
         std::cout << " -----------------------------------------------------------------" << std::endl;
@@ -130,15 +147,16 @@ void ProgTomoExtractSubvolume::show()
         std::cout << " |   *** Please cite it if this program is of use to you! ***    |" << std::endl;
         std::cout << " -----------------------------------------------------------------" << std::endl;
 
-        std::cout << "Input  Metadata File " <<  fn_doc       << std::endl;
-        std::cout << "Output volume root   " <<  fn_root      << std::endl;
+        std::cout << "Input  Metadata File " <<  fn_in       << std::endl;
+        std::cout << "Output volume root   " <<  oroot      << std::endl;
+        std::cout << "Output metadata file " <<  fn_out      << std::endl;
         std::cout << "Coordenate center    " <<  center_ref   << std::endl;
         std::cout << "Size subvolume       " <<  size         << std::endl;
         std::cout << "Symmetry group       " <<  fn_sym       << std::endl;
         std::cout << "Minimum distance between subvolumes " << mindist << std::endl;
     }
 #ifdef DEBUG
-	std::cerr << "end show" <<std::endl;
+    std::cerr << "end show" <<std::endl;
 #endif
 }
 
@@ -147,13 +165,15 @@ void ProgTomoExtractSubvolume::show()
 // all processors! (in contrast to produce_Side_info2)
 void ProgTomoExtractSubvolume::produceSideInfo()
 {
+	//do not write metadata
+
 #ifdef  DEBUG
     std::cerr<<"Start produceSideInfo"<<std::endl;
 #endif
 
-    //Read in Docfile
-    DF.read(fn_doc);
-    nr_exp_images = DF.size();
+    //    //Read in Docfile
+    //    DF.read(fn_doc);
+    //    nr_exp_images = DF.size();
 
     // Setup symmetry
     if (!SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
@@ -201,119 +221,79 @@ void ProgTomoExtractSubvolume::produceSideInfo()
 #endif
 
 }
-void ProgTomoExtractSubvolume::processImages(int imgno_start, int imgno_end)
+void ProgTomoExtractSubvolume::processImage(const FileName &fn_img,
+        const FileName &fnImgOut,
+        size_t objId)
 {
 #ifdef  DEBUG
     std::cerr<<"Start processImages"<<std::endl;
 #endif
-    FileName fn_img, fn_out;
-    Image<double> vol, volout;
-    //DocLine DL, DLout;
-    Matrix1D<double> center(3), intcenter(3), doccenter(3);
-    Matrix2D<double> A(3,3), R(3,3), I(3,3);
-    double rot, tilt, psi, rotp, tiltp, psip;
-    int x0, xF;
-    I.initIdentity();
-    DFout.clear();
-    SPEED_UP_temps;
 
     //    for (int imgno=imgno_start; imgno <imgno_end; imgno++)
-    FOR_ALL_OBJECTS_IN_METADATA(DF)
+    mdIn.getValue(MDL_ANGLEROT,rot,objId);
+    mdIn.getValue(MDL_ANGLETILT,tilt,objId);
+    mdIn.getValue(MDL_ANGLEPSI,psi,objId);
+
+    double auxD;
+    mdIn.getValue(MDL_ORIGINX,auxD,objId);
+    XX(doccenter) = auxD;
+    mdIn.getValue(MDL_ORIGINY,auxD,objId);
+    YY(doccenter) = auxD;
+    mdIn.getValue(MDL_ORIGINZ,auxD,objId);
+    ZZ(doccenter) = auxD;
+
+    // Read volume
+    vol.read(fn_img);
+    vol().setXmippOrigin();
+
+    x0 = FIRST_XMIPP_INDEX(size);
+    xF = LAST_XMIPP_INDEX(size);
+
+    // Tomo_Extract each of the unique subvolumes
+    size_t oId;
+    for (int i = 0; i < centers_subvolumes.size(); i++)
     {
-        //DF.locate(imgno+1);
-        //DL = DF.get_current_line();
-        //DF.previous();
-        //        if (DF.get_current_line().Is_comment())
-        //        {
-        //            fn_img = ((DF.get_current_line()).get_text()).erase(0, 3);
-        //        }
-        //        else
-        //        {
-        //            REPORT_ERROR(1,"BUG: no comment in DF where expected....");
-        //        }
-        DF.getValue(MDL_IMAGE,fn_img,__iter.objId);
-        DF.getValue(MDL_ANGLEROT,rot,__iter.objId);
-        DF.getValue(MDL_ANGLETILT,rot,__iter.objId);
-        DF.getValue(MDL_ANGLEPSI,rot,__iter.objId);
+        center=centers_subvolumes[i];
 
-        double auxD;
-        DF.getValue(MDL_ORIGINX,auxD,__iter.objId);
-        XX(doccenter) = auxD;
-        DF.getValue(MDL_ORIGINY,auxD,__iter.objId);
-        YY(doccenter) = auxD;
-        DF.getValue(MDL_ORIGINZ,auxD,__iter.objId);
-        ZZ(doccenter) = auxD;
+        // 1. rotate center
+        Euler_angles2matrix(-psi,-tilt,-rot,A,false);
+        M3x3_BY_V3x1(center, A, center);
+        // 2. translate center
+        center -= doccenter;
+        // 3. Apply possible non-integer center to volume
+        //FIXME -center rob
+        translate(BSPLINE3,volout(),vol(),center);
 
-        // Read volume
-        vol.read(fn_img);
-        vol().setXmippOrigin();
+        //vol().translate(-center, volout(), DONT_WRAP);
+        //4. Window operation and write subvolume to disc
+        volout().selfWindow(x0,x0,x0,xF,xF,xF);
+        fn_aux=fn_img.removeLastExtension();
+        fn_aux+="_sub";
+        fn_aux.compose(fn_aux,i+1,"vol");
+        volout.write(fn_aux);
 
-        x0 = FIRST_XMIPP_INDEX(size);
-        xF = LAST_XMIPP_INDEX(size);
 
-        // Tomo_Extract each of the unique subvolumes
-        for (int i = 0; i < centers_subvolumes.size(); i++)
-        {
-            center=centers_subvolumes[i];
+        // 5. Calculate output angles: apply symmetry rotation to rot,tilt and psi
+        Euler_apply_transf(rotations_subvolumes[i], I, rot, tilt, psi, rotp, tiltp, psip);
+        oId=DFout.addObject();
 
-            // 1. rotate center
-            Euler_angles2matrix(-psi,-tilt,-rot,A);
-            M3x3_BY_V3x1(center, A, center);
-            // 2. translate center
-            center -= doccenter;
-            std::cerr<<"5.3 Start processImages"<<std::endl;
-            // 3. Apply possible non-integer center to volume
-            //FIXME -center rob
-            translate(BSPLINE3,volout(),vol(),center);
-            //vol().translate(-center, volout(), DONT_WRAP);
-            //4. Window operation and write subvolume to disc
-            std::cerr<<"5.4 Start processImages"<<std::endl;
-            volout().selfWindow(x0,x0,x0,xF,xF,xF);
-            fn_out=fn_img.removeLastExtension();
-            fn_out+="_sub";
-            fn_out.compose(fn_out,i+1,"vol");
-            volout.write(fn_out);
-            std::cerr<<"6 Start processImages"<<std::endl;
-
-            std::cerr<<"5.5 Start processImages"<<std::endl;
-
-            // 5. Calculate output angles: apply symmetry rotation to rot,tilt and psi
-            Euler_apply_transf(rotations_subvolumes[i], I, rot, tilt, psi, rotp, tiltp, psip);
-            DFout.setValue(MDL_ANGLEROT,rotp,__iter.objId);
-            DFout.setValue(MDL_ANGLETILT,tiltp,__iter.objId);
-            DFout.setValue(MDL_ANGLEPSI,psip,__iter.objId);
-            //
-            //            DLout[0] = rotp;
-            //            DLout[1] = tiltp;
-            //            DLout[2] = psip;
-
-            DFout.setValue(MDL_IMAGE,fn_out,__iter.objId);
-
-            DFout.setValue(MDL_ORIGINX,0.,__iter.objId);
-            DFout.setValue(MDL_ORIGINY,0.,__iter.objId);
-            DFout.setValue(MDL_ORIGINZ,0.,__iter.objId);
-
-            // 6. Output translations will be zero because subvolumes are centered by definition
-            //            DLout[3] = 0.;
-            //            DLout[4] = 0.;
-            //            DLout[5] = 0.;
-            //            DFout.append_comment(fn_out);
-            //            DFout.append_line(DLout);
-
-            //            SFout.insert(fn_out);
-            std::cerr<<"7 Start processImages"<<std::endl;
-        }
-
+        DFout.setValue(MDL_IMAGE,fn_aux,oId);
+        DFout.setValue(MDL_ANGLEROT,rotp,oId);
+        DFout.setValue(MDL_ANGLETILT,tiltp,oId);
+        DFout.setValue(MDL_ANGLEPSI,psip,oId);
     }
+    // 6. Output translations will be zero because subvolumes are centered by definition
+    DFout.setValueCol(MDL_ORIGINX,0.);
+    DFout.setValueCol(MDL_ORIGINY,0.);
+    DFout.setValueCol(MDL_ORIGINZ,0.);
+
+
 #ifdef  DEBUG
+
     std::cerr<<"end processImages"<<std::endl;
 #endif
 }
-void ProgTomoExtractSubvolume::run()
+void ProgTomoExtractSubvolume::postProcess()
 {
-    produceSideInfo();
-    show();
-    processImages(0,nr_exp_images);
-    DFout.write(fn_root+".doc");
-
+    DFout.write(fn_out);
 }
