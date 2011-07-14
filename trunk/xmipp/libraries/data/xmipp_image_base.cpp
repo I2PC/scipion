@@ -384,6 +384,9 @@ void ImageBase::getShifts(double &xoff, double &yoff, double &zoff, const size_t
   */
 ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
 {
+    if (name.empty())
+        REPORT_ERROR(ERR_PARAM_INCORRECT, "Cannot open an empty Filename.");
+
     ImageFHandler* hFile = new ImageFHandler;
     FileName fileName, headName = "";
     FileName ext_name = name.getFileFormat();
@@ -753,6 +756,8 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
       */
 std::ostream& operator<<(std::ostream& o, const ImageBase& I)
 {
+    o << std::endl;
+    o << "Filename       : " << I.filename << std::endl;
     o << "Image type     : ";
     if (I.isComplex())
         o << "Fourier-space image" << std::endl;
@@ -835,7 +840,7 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
     {
         oGeo << "Euler angles   : " << std::endl;
         oGeo << "                 Phi   (rotation around Z axis)                  = " << I.rot() << std::endl;
-        oGeo << "                 theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
+        oGeo << "                 Theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
         oGeo << "                 Psi   (third rotation around new Z axis)        = " << I.psi() << std::endl;
     }
     if (I.individualContainsLabel(MDL_SHIFTX))
