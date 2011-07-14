@@ -24,6 +24,5 @@
  ***************************************************************************/
 
 #include <reconstruction/reconstruct_art.h>
-//#include <reconstruction/art_crystal.h>
 
 RUN_XMIPP_PROGRAM(ProgReconsART)

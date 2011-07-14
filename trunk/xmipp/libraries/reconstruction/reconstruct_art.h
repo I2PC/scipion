@@ -41,14 +41,17 @@ class ProgReconsART: public ProgReconsBase
 {
 protected:
     ARTReconsBase * artRecons;
+    bool            isMpi; // True if prog is mpi version
 public:
 
     ProgReconsART();
     ~ProgReconsART();
 
+    ///Functions of common reconstruction interface
     void setIO(const FileName &fn_in, const FileName &fn_out);
     void defineParams();
     void readParams();
+    void show();
     void run();
 }
 ;

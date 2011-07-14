@@ -33,9 +33,9 @@ void ARTReconsBase::readParams(XmippProgram * program)
     artPrm.readParams(program);
 }
 
-void ARTReconsBase::produceSideInfo(GridVolume &vol_basis0)
+void ARTReconsBase::produceSideInfo(GridVolume &vol_basis0, int level, int rank)
 {
-    artPrm.produceSideInfo(vol_basis0);
+    artPrm.produceSideInfo(vol_basis0, level, rank);
 }
 
 void ARTReconsBase::singleStep(GridVolume &vol_in, GridVolume *vol_out,
@@ -414,23 +414,24 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
             {
                 iact_proj = artPrm.ordered_list(act_proj);
             }
-            read_proj.read(artPrm.IMG_Inf[iact_proj].fn_proj,artPrm.apply_shifts);
+
+            ReconsInfo &imgInfo = artPrm.IMG_Inf[iact_proj];
+
+            read_proj.read(imgInfo.fn_proj, artPrm.apply_shifts, DATA, &imgInfo.row);
             read_proj().setXmippOrigin();
-            read_proj.setEulerAngles(artPrm.IMG_Inf[iact_proj].rot,
-                                     artPrm.IMG_Inf[iact_proj].tilt,
-                                     artPrm.IMG_Inf[iact_proj].psi);
+            read_proj.setEulerAngles(imgInfo.rot, imgInfo.tilt, imgInfo.psi);
 
             // If noisy reconstruction
             if (artPrm.noisy_reconstruction)
             {
-                init_random_generator(artPrm.IMG_Inf[iact_proj].seed);
+                init_random_generator(imgInfo.seed);
                 noisy_projection().resize(read_proj());
                 noisy_projection().initRandom(0,1,"gaussian");
                 noisy_projection().setXmippOrigin();
-                noisy_projection.setEulerAngles(artPrm.IMG_Inf[iact_proj].rot,
-                                                artPrm.IMG_Inf[iact_proj].tilt,
-                                                artPrm.IMG_Inf[iact_proj].psi);
-                if ( it == 0 && artPrm.IMG_Inf[iact_proj].sym==-1 )
+                noisy_projection.setEulerAngles(imgInfo.rot,
+                                                imgInfo.tilt,
+                                                imgInfo.psi);
+                if ( it == 0 && imgInfo.sym==-1 )
                 {
                     FileName fn_noise;
                     MDRow row;
@@ -473,16 +474,16 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
 
             //Skip if desired
             if (artPrm.tell&TELL_ONLY_SYM)
-                if( artPrm.IMG_Inf[iact_proj].sym != -1)
+                if( imgInfo.sym != -1)
                 {
                     std::cout << "Skipping Proj no: " << iact_proj
-                    << " with symmetry no: " << artPrm.IMG_Inf[iact_proj].sym
+                    << " with symmetry no: " << imgInfo.sym
                     <<  std::endl;
                     continue;
                 }
                 else
                     std::cout << "NO Skipping Proj no: " << iact_proj
-                    << " with symmetry no: " << artPrm.IMG_Inf[iact_proj].sym
+                    << " with symmetry no: " << imgInfo.sym
                     <<  std::endl;
 
             // For wlsART: use alig_proj for residual image!!
@@ -508,10 +509,10 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
             // Apply the reconstruction algorithm ............................
             // Notice that the following function is especific for each art type
             singleStep(vol_basis, ptr_vol_out,
-                       theo_proj, read_proj, artPrm.IMG_Inf[iact_proj].sym , diff_proj,
+                       theo_proj, read_proj, imgInfo.sym , diff_proj,
                        corr_proj, alig_proj,
                        mean_error, ART_numIMG, artPrm.lambda(it),
-                       images, artPrm.IMG_Inf[iact_proj].fn_ctf, maskPtr,
+                       images, imgInfo.fn_ctf, maskPtr,
                        artPrm.refine);
 
             if (artPrm.WLS)
@@ -525,10 +526,10 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
             {
                 double noise_mean_error;
                 singleStep(vol_basis_noisy, &vol_basis_noisy,
-                           theo_proj, noisy_projection, artPrm.IMG_Inf[iact_proj].sym,
+                           theo_proj, noisy_projection, imgInfo.sym,
                            diff_proj,  corr_proj, alig_proj,
                            noise_mean_error, ART_numIMG, artPrm.lambda(it),
-                           images, artPrm.IMG_Inf[iact_proj].fn_ctf,maskPtr,
+                           images, imgInfo.fn_ctf,maskPtr,
                            false);
             }
 
@@ -603,15 +604,15 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
             }
 
             // Show results ..................................................
-            *artPrm.fh_hist << artPrm.IMG_Inf[iact_proj].fn_proj << ", sym="
-            << artPrm.IMG_Inf[iact_proj].sym << "\t\t" << mean_error;
+            *artPrm.fh_hist << imgInfo.fn_proj << ", sym="
+            << imgInfo.sym << "\t\t" << mean_error;
             if (POCS.apply_POCS)
                 *artPrm.fh_hist << "\tPOCS:" << POCS.POCS_mean_error;
             *artPrm.fh_hist << std::endl;
             if (artPrm.tell&TELL_SHOW_ERROR)
             {
-                std::cout << artPrm.IMG_Inf[iact_proj].fn_proj << ", sym="
-                << artPrm.IMG_Inf[iact_proj].sym << "\t\t" << mean_error;
+                std::cout << imgInfo.fn_proj << ", sym="
+                << imgInfo.sym << "\t\t" << mean_error;
                 if (POCS.apply_POCS)
                     std::cout        << "\tPOCS:" << POCS.POCS_mean_error;
                 std::cout << std::endl;
@@ -675,7 +676,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
                 std::cin >> c;
             }
 
-            // Save intermidiate
+            // Save intermediate
             if ((artPrm.tell&TELL_SAVE_INTERMIDIATE | artPrm.tell&TELL_IV) &&
                 artPrm.save_intermidiate_every!=0 &&
                 act_proj%artPrm.save_intermidiate_every==0)
@@ -695,7 +696,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
                 // Launch viewer
                 if (!iv_launched)
                 {
-                    system("xmipp_show -vol PPPvol.vol -poll &");
+                    system("xmipp_show -i PPPvol.vol --poll &");
                     iv_launched=true;
                 }
             }
@@ -863,13 +864,15 @@ void ARTReconsBase::finishIterations(GridVolume &vol_basis)
 void ARTReconsBase::initHistory(const GridVolume &vol_basis0)
 {
     // Show general information ................................................
-    *artPrm.fh_hist << " RECONSTRUCTION HISTORY: \n\n";
+    *artPrm.fh_hist << " ============================================================\n";
+    *artPrm.fh_hist << " ART RECONSTRUCTION HISTORY: \n";
+    *artPrm.fh_hist << " ============================================================\n\n";
     *artPrm.fh_hist << " Parameters -------------------------------------------------\n";
-    *artPrm.fh_hist << " Projections file: " << artPrm.fn_sel << std::endl;
-    *artPrm.fh_hist << " CTF file:         " << artPrm.fn_ctf << std::endl;
-    *artPrm.fh_hist << " Goldmask:         " << artPrm.goldmask << std::endl;
-    *artPrm.fh_hist << " Unmatched projectors:" << artPrm.unmatched << std::endl;
-    *artPrm.fh_hist << " Sampling= " << artPrm.sampling << std::endl;
+    *artPrm.fh_hist << " Projections file     : " << artPrm.fn_sel << std::endl;
+    *artPrm.fh_hist << " CTF file             : " << artPrm.fn_ctf << std::endl;
+    *artPrm.fh_hist << " Goldmask             : " << artPrm.goldmask << std::endl;
+    *artPrm.fh_hist << " Unmatched projectors : " << artPrm.unmatched << std::endl;
+    *artPrm.fh_hist << " Sampling             : " << artPrm.sampling << std::endl;
     *artPrm.fh_hist << artPrm.basis << std::endl;
     switch (artPrm.grid_type)
     {
@@ -963,12 +966,12 @@ void ARTReconsBase::initHistory(const GridVolume &vol_basis0)
     *artPrm.fh_hist << " Number of total projections (including symmetrized): "
     << artPrm.numIMG << std::endl;
     *artPrm.fh_hist << " Number of different projections: " << artPrm.trueIMG << std::endl;
-    *artPrm.fh_hist << " Forstd::cing symmetry: " << artPrm.force_sym << std::endl;
+    *artPrm.fh_hist << " Forcing symmetry: " << artPrm.force_sym << std::endl;
     *artPrm.fh_hist << " Stop at: " << artPrm.stop_at << std::endl;
     if (artPrm.random_sort)
-        *artPrm.fh_hist << "Random sort" << std::endl;
+        *artPrm.fh_hist << " Random sort" << std::endl;
     else
-        *artPrm.fh_hist << "Sort with last " << artPrm.sort_last_N << " images\n";
+        *artPrm.fh_hist << " Sort with last " << artPrm.sort_last_N << " images\n";
     *artPrm.fh_hist << " Variability analysis: " << artPrm.variability_analysis << std::endl;
     *artPrm.fh_hist << " Refine projections: " << artPrm.refine << std::endl;
     *artPrm.fh_hist << " Sparsity epsilon: " << artPrm.sparseEps << std::endl;
@@ -976,12 +979,12 @@ void ARTReconsBase::initHistory(const GridVolume &vol_basis0)
     if (artPrm.SL.SymsNo()!=0)
     {
         Matrix2D<double> L(4,4),R(4,4); // A matrix from the list
-        *artPrm.fh_hist << "Symmetry matrices -------\n";
+        *artPrm.fh_hist << " Symmetry matrices -------\n";
         for (int j=0; j<artPrm.SL.SymsNo(); j++)
         {
             artPrm.SL.get_matrices(j,L,R);
-            *artPrm.fh_hist << "Left  Symmetry matrix " << j << std::endl << L;
-            *artPrm.fh_hist << "Right Symmetry matrix " << j << std::endl << R << std::endl;
+            *artPrm.fh_hist << " Left  Symmetry matrix " << j << std::endl << L;
+            *artPrm.fh_hist << " Right Symmetry matrix " << j << std::endl << R << std::endl;
         }
     }
     *artPrm.fh_hist << " Saving intermidiate at every "
@@ -1021,15 +1024,15 @@ void ARTReconsBase::initHistory(const GridVolume &vol_basis0)
 
     // Show Initial volume and volume structure ................................
     if (artPrm.fn_start != "")
-        *artPrm.fh_hist << "Starting from file: " << artPrm.fn_start << std::endl;
+        *artPrm.fh_hist << " Starting from file: " << artPrm.fn_start << std::endl;
     else
-        *artPrm.fh_hist << "Starting from a zero volume\n";
+        *artPrm.fh_hist << " Starting from a zero volume\n";
 
-    *artPrm.fh_hist << "Grid structure ------\n" << vol_basis0.grid();
+    *artPrm.fh_hist << " Grid structure ------\n" << vol_basis0.grid();
 
     // Show extra information ..................................................
     if (typeid(*this) != typeid(ARTReconsBase))
-        *artPrm.fh_hist << "Extra: ";
+        *artPrm.fh_hist << " Extra: ";
     print(*artPrm.fh_hist);
 }
 

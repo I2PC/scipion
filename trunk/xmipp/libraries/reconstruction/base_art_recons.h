@@ -55,9 +55,9 @@ public:
     virtual ~ARTReconsBase()
     {}
 
-    static void defineParams(XmippProgram * program, const char* prefix=NULL, const char* comment=NULL)
+    static void defineParams(XmippProgram * program, bool mpiMode = false)
     {
-        BasicARTParameters::defineParams(program, prefix, comment);
+        BasicARTParameters::defineParams(program, mpiMode);
     }
 
     /* --- Virtual methods to be implemented by children --- */
@@ -71,7 +71,7 @@ public:
     virtual void print(std::ostream &o)const;
 
     /// Produce Plain side information from the Class parameters
-    virtual void produceSideInfo(GridVolume &vol_basis0);
+    virtual void produceSideInfo(GridVolume &vol_basis0, int level = FULL, int rank = -1);
 
     /** Run a single step of ART.
         An ART iteration is compound of as many steps as projections,

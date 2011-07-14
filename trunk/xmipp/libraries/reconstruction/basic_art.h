@@ -56,6 +56,8 @@ struct ReconsInfo
 {
     /// Projection filename
     FileName fn_proj;
+    /// Header information of projection
+    MDRow    row;
     /// CTF filename
     FileName fn_ctf;
     /// Rotational angle
@@ -272,11 +274,11 @@ public:
 #define TELL_STATS                 0x1
     /** Debugging level.
         This is a bit valued field, you can set the following bits
-        \\TELL_IV: Show intermidiate images if saved,
+        \\TELL_IV: Show intermediate images if saved,
         \\         Show the reconstructed volume each time the progress
                    bar is updated.
         \\TELL_ONLY_SYM: Skip all the extra projections created using the
-           samle symmetry
+           sample symmetry
         \\TELL_USE_INPUT_BASISVOLUME: This flag causes the program to
             not resizing the gridvolume. The same as the input one is
      used as starting point for the algorithm
@@ -307,6 +309,9 @@ public:
 
     /// Frequency for saving intermidiate
     int save_intermidiate_every;
+
+    /// Verbose level
+    int verbose;
 
     /// Name of file for improved control in parallel jobs
     FileName fn_control;
@@ -380,7 +385,7 @@ public:
 
     /** Define command line parameters
      */
-    static void defineParams(XmippProgram * program, const char* prefix=NULL, const char* comment=NULL);
+    static void defineParams(XmippProgram * program, bool mpiMode = false);
 
     /** Read parameters from command line.
         This function reads the parameters from command line.*/

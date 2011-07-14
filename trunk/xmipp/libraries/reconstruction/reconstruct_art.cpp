@@ -32,7 +32,9 @@
 
 
 ProgReconsART::ProgReconsART()
-{}
+{
+    isMpi = false;
+}
 ProgReconsART::~ProgReconsART()
 {}
 
@@ -47,7 +49,7 @@ void ProgReconsART::defineParams()
     addUsageLine("+you have. The reconstruction is performed using some basis (blobs or voxels) in ");
     addUsageLine("+different grids (BCC (by default), FCC or CC).");
 
-    ARTReconsBase::defineParams(this);
+    ARTReconsBase::defineParams(this, isMpi);
 
     //    addParamsLine(" == Special Parameters for crystals == ");
     //    CrystalARTRecons::defineParams(this);
@@ -99,8 +101,8 @@ void ProgReconsART::defineParams()
     addExampleLine("reconstruct_art -i projections.sel -o artrec");
     addExampleLine("Create the equivalent noisy reconstruction:",false);
     addExampleLine("reconstruct_art -i projections.sel -o artrec --noisy_reconstruction");
-//    addExampleLine("Reconstruct using SIRT parallelization algorithm for five iterations:",false);
-//    addExampleLine("reconstruct_art -i projections.sel -o artrec -n 5 --parallel_mode SIRT");
+    //    addExampleLine("Reconstruct using SIRT parallelization algorithm for five iterations:",false);
+    //    addExampleLine("reconstruct_art -i projections.sel -o artrec -n 5 --parallel_mode SIRT");
     addExampleLine("Save the basis information at each iteration:",false);
     addExampleLine("reconstruct_art -i projections.sel -o artrec -n 3 --save_basis");
 }
@@ -113,6 +115,29 @@ void ProgReconsART::readParams()
     artRecons = new ARTReconsBase;
 
     artRecons->readParams(this);
+
+    if (artRecons->artPrm.threads > 1 && isMpi)
+        REPORT_ERROR(ERR_ARG_BADCMDLINE, "Threads not compatible in mpi version.");
+    if (!isMpi && artRecons->artPrm.parallel_mode != BasicARTParameters::ART)
+        REPORT_ERROR(ERR_ARG_BADCMDLINE, "If --parallel_mode is passed, then mpi version must be used.");
+
+}
+
+void ProgReconsART::show()
+{
+    if (verbose > 0)
+    {
+        std::cout << " =====================================================================" << std::endl;
+        std::cout << " ART reconstruction method " << std::endl;
+        std::cout << " =====================================================================" << std::endl;
+        std::cout << " Projections file             : "  << artRecons->artPrm.fn_sel << std::endl;
+        std::cout << " Output rootname              : "  << artRecons->artPrm.fn_root << std::endl;
+        std::cout << " Iterations                   : "  << artRecons->artPrm.no_it << std::endl;
+        std::cout << " Lambda                       : "  << artRecons->artPrm.lambda_list(0) << std::endl;
+        std::cout << std::endl;
+        std::cout << " More info in the history file: "  << artRecons->artPrm.fn_root + ".hist" << std::endl;
+        std::cout << " ---------------------------------------------------------------------\n" << std::endl;
+    }
 }
 
 void ProgReconsART::run()
@@ -129,9 +154,15 @@ void ProgReconsART::run()
 
     gettimeofday(&start_time, NULL);
 
+    show();
     // Produce side information and initial volume
     artRecons->produceSideInfo(vol_basis);
-
+    if (verbose > 0)
+    {
+        std::cout << " ---------------------------------------------------------------------" << std::endl;
+        std::cout << " Projections                  : "  << artRecons->artPrm.numIMG << std::endl;
+        std::cout << " ---------------------------------------------------------------------" << std::endl;
+    }
     // Show parameters and initiate history
     artRecons->initHistory(vol_basis);
 

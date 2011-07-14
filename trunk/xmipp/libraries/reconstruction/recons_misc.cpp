@@ -79,6 +79,8 @@ void buildReconsInfo(MetaData &selfile,
             //            read_proj.read(fn_proj, false, HEADER);
             // Filling structure
             imgInfo.fn_proj = fn_proj;
+            selfile.getRow(imgInfo.row, __iter.objId);
+            imgInfo.row;
             if (is_ctf_unique)
                 imgInfo.fn_ctf = fn_ctf;
             else if (is_there_ctf)

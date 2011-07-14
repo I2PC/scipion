@@ -99,18 +99,9 @@ void BasicARTParameters::defaultValues()
     threads            = 1;
 }
 
-void BasicARTParameters::defineParams(XmippProgram * program, const char* prefix, const char* comment)
+void BasicARTParameters::defineParams(XmippProgram * program, bool mpiMode)
 {
-    //  char tempLine[256];
-    //
-    //    if(prefix == NULL)
-    //        sprintf(tempLine, "  [--basis <basis_type=blobs>] ");
-    //    else
-    //        sprintf(tempLine,"%s --basis <basis_type=blobs> ", prefix);
-    //    if (comment != NULL)
-    //        sprintf(tempLine, "%s : %s", tempLine, comment);
-    //
-    //    program->addParamsLine(tempLine);
+
     program->addParamsLine(" == I/O Parameters == ");
     program->addParamsLine("   -i <md_file>                : Metadata file with input projections");
     program->addParamsLine("   [--oroot <rootname>]        : Output rootname. If not supplied, input name is taken without extension.");
@@ -120,7 +111,7 @@ void BasicARTParameters::defineParams(XmippProgram * program, const char* prefix
     program->addParamsLine("                               :+++  =outputname.hist= History and information about the 3D reconstruction process %BR%");
     program->addParamsLine("   alias -o;");
     program->addParamsLine("   [--ctf <ctf_file=\"\">]     : Metadata file with CTFs");
-    program->addParamsLine("   [--unmatched]               : apply unmatched forward/backward projectors");
+    program->addParamsLine("   [--unmatched]               : Apply unmatched forward/backward projectors");
     program->addParamsLine("   [--start <basisvolume_file=\"\">]  : Start from this basis volume. The reconstruction is performed in the same grid as the one ");
     program->addParamsLine("                               : in which the basis volume was stored (any -FCC or -CC or grid size value are useless)");
     program->addParamsLine("  [--max_tilt <alpha=10.e+6>]  : Skip projections with absolute tilt angle greater than alpha.");
@@ -135,7 +126,7 @@ void BasicARTParameters::defineParams(XmippProgram * program, const char* prefix
     program->addParamsLine("  [--POCS_freq <f=1>]          : Impose POCS conditions every f projections");
     program->addParamsLine("  [--known_volume <value=-1>]  : The volume is cut down to this mass, ie, the highest [value] voxels are kept while ");
     program->addParamsLine("                               : the rest are set to 0");
-    program->addParamsLine("  [--POCS_positivity]          : Force ther resulting volume to be positive");
+    program->addParamsLine("  [--POCS_positivity]          : Force the resulting volume to be positive");
     program->addParamsLine("  [--goldmask <value=1.e+6>]   : Pixels below this value are considered to come frome gold beads and are not used for reconstruction");
     program->addParamsLine("  [--shiftedTomograms]         : Remove external zero-valued border pixels created by alignment of tomograms");
     program->addParamsLine("  [--dont_apply_shifts]        : Do not apply shifts as stored in the 2D-image headers");
@@ -426,6 +417,8 @@ void BasicARTParameters::readParams(XmippProgram * program)
         save_intermidiate_every = program->getIntParam("save_intermediate");
     }
 
+    verbose = program->getIntParam("--verbose");
+
     if (program->checkParam("--variability"))
     {
         variability_analysis = true;
@@ -453,6 +446,8 @@ void BasicARTParameters::readParams(XmippProgram * program)
             R /= sampling;
         ref_trans_step /= sampling;
     }
+
+
 }
 
 /* ------------------------------------------------------------------------- */
@@ -663,6 +658,9 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
     /* Express the ray length in basis units ----------------------------------- */
     if (ray_length != -1)
         ray_length *= basis.max_length();
+
+    if(eq_mode == CAV && parallel_mode != pCAV && parallel_mode != pBiCAV)
+        computeCAVWeights(vol_basis0, numIMG, verbose-1);
 }
 #undef DEBUG
 
@@ -683,7 +681,9 @@ void BasicARTParameters::computeCAVWeights(GridVolume &vol_basis0,
     }
     for (int act_proj = 0; act_proj < numProjs_node ; act_proj++)
     {
-        read_proj.read(IMG_Inf[ordered_list(act_proj)].fn_proj, apply_shifts);
+        ReconsInfo &imgInfo = IMG_Inf[ordered_list(act_proj)];
+
+        read_proj.read(imgInfo.fn_proj, apply_shifts, DATA, &imgInfo.row);
         read_proj().setXmippOrigin();
 
         // Projection extension? .........................................
