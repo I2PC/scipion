@@ -32,7 +32,7 @@
  *
  */
 
-class ProgReconsBase: public XmippProgram
+class ProgReconsBase: public virtual XmippProgram
 {
 public:
   virtual void setIO(const FileName &fn_in, const FileName &fn_out) = 0;
