@@ -312,9 +312,6 @@ void XmippMpiProgram::read(int argc, char *argv[])
 
 void XmippMpiProgram::setNode(MpiNode *node)
 {
-    if (created_node)
-        delete this->node;
-
     this->node = node;
     created_node = false;
     verbose = node->isMaster();
