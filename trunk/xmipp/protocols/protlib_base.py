@@ -69,6 +69,8 @@ class XmippProject():
         self.config.add_section('project')
         self.config.set('project', 'projectdir', self.projectDir)
         self.config.set('project', 'systemflavour', 'OPEN-MPI')
+        self.SystemFlavour = self.config.get('project', 'systemflavour')
+
         self.writeConfig()
         #===== CREATE LOG AND RUN directories
         if not os.path.exists(self.logsDir):
