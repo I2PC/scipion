@@ -142,7 +142,7 @@ class XmippProject():
     
     def newProtocol(self, protocol_name):
         srcProtAbsPath = os.path.join(getXmippPath('protocols'),
-                                       'xmipp_protocol_%s.py' % protocol_name)
+                                       'protocol_%s_header.py' % protocol_name)
         return self.createRunFromScript(protocol_name, srcProtAbsPath)
     
     def copyProtocol(self, protocol_name, script):
