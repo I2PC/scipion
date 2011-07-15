@@ -25,7 +25,6 @@ headerEnumFiles = []
 
 copyJar = None
 
-
 def AddMatchingFiles((pattern, blacklist, sources), directory, files):
     ''' Callback, adds all matching files in dir '''
     import fnmatch
@@ -67,20 +66,6 @@ def AddBatch(name, basedir, extension=''):
     env.Alias(fullname, install)
     env.Default(alias)
     return install
-
-def AddProtocol(name, basedir='applications/scripts/protocols'):
-    
-    srcName = os.path.join(basedir, name)
-    # only add prefix to protocol_*
-    if name.startswith('protocol'):
-        name = env['prepend'] + name        
-    
-    destName = os.path.join(env['prefix'], 'protocols', name)
-    
-    install = env.Command(destName, srcName, [Copy('$TARGET', '$SOURCE'), Chmod('$TARGET', 0755)])
-    #alias = env.Alias(fullname, command)
-    alias = env.Alias('protocols', install)
-    env.Default(alias)        
 
 def AddProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
                includes=[], libpath=[], libs=[], cxxflags=[],
@@ -796,10 +781,6 @@ if int(env['gtest']):
      AddXmippCTest('test_sampling')
      AddXmippCTest('test_transformation')     
      env.Depends('run_tests', [fftw, tiff, sqlite])
-     #python modules
-     #FIXME ROB -how to install dependences?????
-     AddProtocol('XmippPythonTestResult.py', 'applications/tests/pythonlib')
-     #AddProtocol('bcolors.py', 'applications/tests/pythonlib')
      #python tests
      test = AddXmippPythonTest('test_pythoninterface')
      #AddXmippPythonTest('test_projectionmatching')
@@ -816,72 +797,11 @@ AddBatch('metadata_show', 'applications/scripts/metadata_show', '.py')
 AddBatch('classify_CL2D_core_analysis', 'applications/scripts/classify_CL2D_core_analysis')
 protocols_main = AddBatch('protocols', 'applications/scripts/protocols', '.py')
 env.Alias('protocols', protocols_main)
-AddBatch('gui', 'applications/scripts/protocols')
-#AddBatch('showj', 'applications/scripts/showj', '.sh')
 AddBatch('showj', 'applications/scripts/showj', '.py')
-#AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', '.sh')
 AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', '.py')
-#AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.sh')
 AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
-#AddBatch('browserj', 'applications/scripts/browserj', '.sh')
 AddBatch('browserj', 'applications/scripts/browserj', '.py')
-#AddBatch('metadata_browserj', 'applications/scripts/metadata_browserj', '.sh')
 AddBatch('metadata_browserj', 'applications/scripts/metadata_browserj', '.py')
-
-# Protocols
-#Protocol libraries
-AddProtocol('protlib_base.py')
-AddProtocol('protlib_filesystem.py')
-AddProtocol('protlib_gui.py')
-AddProtocol('protlib_gui_ext.py')
-AddProtocol('protlib_partial_projection_subtraction.py')
-AddProtocol('protlib_projmatch_before_loop.py')
-AddProtocol('protlib_projmatch_in_loop.py')
-AddProtocol('protlib_sql.py')
-AddProtocol('protlib_utils.py')
-
-#AddProtocol('arg.py')
-AddProtocol('apply_bfactor.py')
-AddProtocol('config_protocols.py')
-#AddProtocol('ctfdat.py')
-#AddProtocol('launch_job.py')
-#AddProtocol('log.py')
-#AddProtocol('not_implemented.py')
-#AddProtocol('rename_files.py')
-#AddProtocol('spider_header.py')
-#AddProtocol('utils_xmipp.py')
-#AddProtocol('metadataUtils.py')
-#AddProtocol('ProjMatchActionsToBePerformedBeforeLoop.py')
-#AddProtocol('ProjMatchActionsToBePerformedInLoop.py')
-AddProtocol('visualization.py')
-AddProtocol('visualize_kerdensom.py')
-AddProtocol('visualize_ml2d.py')
-AddProtocol('visualize_cl2d.py')
-AddProtocol('visualize_ml3d.py')
-AddProtocol('visualize_multires.py')
-AddProtocol('visualize_preprocess_micrographs.py')
-AddProtocol('visualize_preprocess_particles.py')
-AddProtocol('visualize_projmatch.py')
-AddProtocol('visualize_rct.py')
-AddProtocol('visualize_rotspectra.py')
-AddProtocol('which.py')
-
-AddProtocol('protocol_align2d.py')
-AddProtocol('protocol_backup.py')
-AddProtocol('protocol_cl2d.py')
-AddProtocol('protocol_commonlines.py')
-AddProtocol('protocol_kerdensom.py')
-AddProtocol('protocol_ml2d.py')
-AddProtocol('protocol_ml3d.py')
-AddProtocol('protocol__mltomo.py')
-AddProtocol('protocol_multires.py')
-AddProtocol('protocol_particle_pick.py')
-AddProtocol('protocol_preprocess_micrographs.py')
-AddProtocol('protocol_preprocess_particles.py')
-AddProtocol('protocol_projmatch.py')
-AddProtocol('protocol_rct.py')
-AddProtocol('protocol_rotspectra.py')
-AddProtocol('protocol_setup.py')
 
 # MPI
 if int(env['mpi']):
