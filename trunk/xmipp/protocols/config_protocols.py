@@ -16,7 +16,8 @@ class ProtocolDictionary:
     def __init__(self):
         self.protocolDict={}
         self.preprocess_micrographs = self.addProtocol('preprocess_micrographs', 'Preprocess Micrograph', 'Preprocess')
-        self.particle_pick = self.addProtocol('particle_pick',  'Particles picking', 'ParticlePicking')
+        self.particle_pick = self.addProtocol('particle_pick',  'Particle picking', 'ParticlePicking')
+        self.particle_pick_auto = self.addProtocol('particle_pick_automatic',  'Automatic particle picking', 'ParticlePickingAuto')
         self.preprocess_particles = self.addProtocol('preprocess_particles',  'Preprocess Particles', 'Images')
         self.ml2d = self.addProtocol('ml2d', 'ML2D', '2D/ML2D')
         self.cl2d = self.addProtocol('cl2d', 'CL2D', '2D/CL2D')
@@ -54,7 +55,7 @@ projectDefaults = {
 sections = [
 ('Preprocessing', 
    [['Preprocess Micrograph', protDict.preprocess_micrographs.key], 
-    ['Particles picking', protDict.particle_pick.key], 
+    ['Particle picking', protDict.particle_pick.key], 
     ['Preprocess Particles', protDict.preprocess_particles.key]]),
 ('2D', 
    [['Align+Classify', protDict.ml2d.key, protDict.cl2d.key], 
