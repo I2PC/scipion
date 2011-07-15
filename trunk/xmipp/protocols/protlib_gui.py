@@ -88,7 +88,15 @@ class AutoScrollbar(Scrollbar):
         else:
             self.grid()
         Scrollbar.set(self, lo, hi)
-       
+
+def createSection(parent, text):
+    frame = Frame(parent, bd=2, relief=RAISED, bg=SectionBgColor)
+    frame.columnconfigure(0, weight=1)
+    label = Label(frame, text=text, fg=LabelTextColor, bg=SectionBgColor)
+    label.grid(row=0, column=0, sticky=W)        
+    content = Frame(frame, bg=LabelBgColor, bd=0)
+    content.grid(row=1, column=0, columnspan=5, sticky=NSEW, ipadx=5, ipady=5)  
+    return (frame, label, content)     
 
 class BasicGUI(): 
     def __init__(self):
@@ -420,13 +428,8 @@ class ProtocolGUI(BasicGUI):
         return rb
         
     def createSectionWidget(self, w, var):
-        w.frame = Frame(self.frame, bd=2, relief=RAISED, bg=SectionBgColor)
-        w.frame.columnconfigure(0, weight=1)
-        w.label = Label(w.frame, text=var.comment, fg=LabelTextColor, bg=SectionBgColor)
-        w.label.grid(row=0, column=0, sticky=W)
+        w.frame, w.label, w.content = createSection(self.frame, var.comment)
         w.name = var.comment
-        w.content = Frame(w.frame, bg=LabelBgColor, bd=0)
-        w.content.grid(row=1, column=0, columnspan=5, sticky=NSEW, ipadx=5, ipady=5)
         w.widgetslist.append(w.frame)
         
     def expandCollapseSection(self, section):
@@ -557,9 +560,9 @@ class ProtocolGUI(BasicGUI):
             if var.help:
                 btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column+4, NW, 'help.gif', frame, 'Show info')
                 w.widgetslist.append(btn)
-                    
             if var.name == 'RunName':
                 label_text += ' %s_' % self.run['protocol_name']
+                    
             label = Label(frame, text=label_text, fg=label_color, bg=label_bgcolor)
             label.grid(row=label_row, column=0, sticky=E, padx=(5, 10))
             self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_reqwidth())
