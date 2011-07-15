@@ -86,5 +86,10 @@ def includeProtocolsDir():
     protDir = getXmippPath('protocols')
     import sys
     sys.path.append(protDir)
-    
 
+def getProtocolTemplate(prot):
+    protDir = getXmippPath('protocols')
+    srcProtName = 'xmipp_protocol_%s.py' % prot.key
+    srcProtDir = getXmippPath('protocols')
+    srcProtAbsPath = os.path.join(protDir, srcProtName)
+    return srcProtAbsPath
