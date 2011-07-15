@@ -68,7 +68,7 @@ class XmippProject():
         self.config = ConfigParser.RawConfigParser()            
         self.config.add_section('project')
         self.config.set('project', 'projectdir', self.projectDir)
-        self.config.set('project', 'mpiflavour', 'OPEN-MPI')
+        self.config.set('project', 'systemflavour', 'OPEN-MPI')
         self.writeConfig()
         #===== CREATE LOG AND RUN directories
         if not os.path.exists(self.logsDir):
@@ -94,7 +94,7 @@ class XmippProject():
         self.config.read(self.cfgName)
         # Load database
         self.projectDb = XmippProjectDb(self.dbName)
-        self.MpiFlavour = self.config.get('project', 'mpiflavour')
+        self.SystemFlavour = self.config.get('project', 'systemflavour')
         
 
     def writeConfig(self):
@@ -162,30 +162,34 @@ class XmippProject():
             
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
-    def __init__(self, protocolName, scriptname,runName, project=None, NumberOfMpiProcesses=None):
+    def __init__(self, protocolName, scriptname, project):
         '''Basic constructor of the Protocol
         protocolName -- the name of the protocol, should be unique
         scriptname,     file containing the protocol instance
         runName      -- the name of the run,  should be unique for one protocol
         project      -- project instance
         '''
-        self.DoParallel = 'NumberOfMpiProcesses' in dir() and NumberOfMpiProcesses > 0
+        #Set if not defined in protocol header
+        self.continueAt = 1
+        self.isIter = False
+        #Import all variables in the protocol header
+        self.Header = loadModule(scriptname)
+        for k, v in self.Header.__dict__.iteritems():
+            self.__dict__[k] = v
+            
+        self.DoParallel = 'NumberOfMpiProcesses' in dir() and self.NumberOfMpiProcesses > 1
         self.Name = protocolName
-        self.runName = runName
         self.scriptName = scriptname
         #A protocol must be able to find its own project
         self.project = project
         self.Import = '' # this can be used by database for import modules
-        self.WorkingDir = os.path.join(protocolName,runName)
+        self.WorkingDir = os.path.join(protocolName, self.RunName)
         self.projectDir = project.projectDir  
         #Setup the Log for the Protocol
         self.LogDir = project.logsDir
         self.uniquePrefix = self.WorkingDir.replace('/', '_')
         self.LogPrefix = os.path.join(self.LogDir, self.uniquePrefix)       
-        self.continueAt=1
-        self.isIter=False
-        self.DoDeleteWorkingDir=False
-        
+        self.SystemFlavour = project.SystemFlavour
         
     def getProjectId(self):
         pass
@@ -324,9 +328,14 @@ def getProtocolFromModule(script, project):
     return None
             
 def protocolMain(ProtocolClass, script=None):
+    gui = False
+    no_check = False
+    
     if script is None:
         script  = sys.argv[0]
-    options = command_line_options()
+        options = command_line_options()
+        gui = options.gui
+        no_check = options.no_check
     
     mod = loadModule(script)
     #init project
@@ -338,7 +347,7 @@ def protocolMain(ProtocolClass, script=None):
     run_id = project.projectDb.getRunId(p.Name, mod.RunName)
     
     #1) just call the gui    
-    if options.gui:
+    if gui:
         run = {
            'run_id': run_id,
            'protocol_name':p.Name, 
@@ -354,7 +363,7 @@ def protocolMain(ProtocolClass, script=None):
         gui.launchGUI()
     else:#2) Run from command line
         
-        if options.no_check: 
+        if no_check: 
             if not run_id:
                 reportError("Protocol run '%s' has not been registered in project database" % mod.RunName)
         else:

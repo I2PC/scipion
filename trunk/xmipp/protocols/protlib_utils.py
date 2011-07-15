@@ -225,7 +225,6 @@ def runJob(log,
     from subprocess import call
     retcode = 0
     try:
-        print RunInBackground
         retcode = call(command, shell=True)
         printLog(log, "Process returned with code %d" % retcode)
     except OSError, e:

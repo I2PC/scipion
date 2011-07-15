@@ -30,8 +30,12 @@ run1 for it. This name together with the protocol output folder will determine t
 """
 RunName = "run_001"
 
-#Comment
-Comment='Describe your project here...'
+# Delete working directory?
+""" If TRUE the working directory will be deleted before run.
+Set this option to TRUE if you want to start from scratch the same run
+with previous parameters
+"""
+DoDeleteWorkingDir = False
 
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up 
@@ -53,12 +57,6 @@ DocFileName =' '
     specifies two references
 """
 ReferenceFileNames ='ico1.vol ico2.vol ico3.vol'
-
-
-# Delete working subdirectory if it already exists?
-""" Just be careful with this option...
-"""
-DoDeleteWorkingDir =True
 
 # Number of iterations to perform
 NumberOfIterations = 4
@@ -137,7 +135,7 @@ SplitDefocusDocFile =''
 """ Application of CTFs to reference projections and of Wiener filter to class averages will be done using padded images.
     Use values larger than one to pad the images. Suggestion, use 1 for large image and 2 for small
 """
-PaddingFactor =2
+PaddingFactor = 2
 
 # {expert} Wiener constant
 """ Term that will be added to the denominator of the Wiener filter.
@@ -633,7 +631,7 @@ MpiJobSize ='1'
 # Submmit to queue
 """Submmit to queue
 """
-SubmmitToQueue = True
+SubmmitToQueue = False
 
 # Queue name
 """Name of the queue to submit the job

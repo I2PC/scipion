@@ -10,6 +10,7 @@
 #        Rewritten by Roberto Marabini
 #
 
+
 from protlib_base import *
 from xmipp import *
 from protlib_utils import getListFromVector
@@ -20,13 +21,13 @@ class ProtProjMatch(XmippProtocol):
 
 #    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
     def __init__(self, scriptname, project=None):
-        super(ProtProjMatch,self).__init__(protDict.projmatch.key,scriptname, RunName, project,NumberOfMpiProcesses)
+        super(ProtProjMatch,self).__init__(protDict.projmatch.key, scriptname, project)
         #Some class variables
         self.ReferenceVolumeName = 'reference_volume.vol'
         self.LibraryDir = "ReferenceLibrary"
         self.ProjectLibraryRootName = self.LibraryDir + "/gallery"
         self.ProjMatchDir = "ProjMatchClasses"
-        self.ProjMatchName = 'proj_match'
+        self.ProjMatchName = self.Name
         self.ClassAverageName = 'class_average'
         #ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
         self.ForReconstructionSel = "reconstruction.sel"
@@ -50,10 +51,7 @@ class ProtProjMatch(XmippProtocol):
         self.createAuxTable = False
         self.NumberOfCtfGroups = 1
         self.Import = 'from protocol_projmatch_before_loop import *;\
-                       from protocol_projmatch_in_loop import *;'
-        self.runName=RunName
-        self.DoDeleteWorkingDir = DoDeleteWorkingDir
-        #self.WorkingDir = os.path.join(self.Name,_runName)
+                       from protocol_projmatch_in_loop import *;'        
 
         
     def validate(self):
@@ -62,10 +60,10 @@ class ProtProjMatch(XmippProtocol):
         super(ProtProjMatch, self).validate()
         
         #2 Check reference and projection size match
-        _ReferenceFileNames = getListFromVector(ReferenceFileNames)
+        _ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
         _Parameters = {
               'ReferenceFileNames':_ReferenceFileNames
-            , 'SelFileName':SelFileName
+            , 'SelFileName':self.SelFileName
             }
         from protocol_projmatch_before_loop import checkVolumeProjSize
         _retval, _error_message = checkVolumeProjSize(None,**_Parameters)
@@ -74,22 +72,21 @@ class ProtProjMatch(XmippProtocol):
     
     
         # 3 Never allow DoAlign2D and DoCtfCorrection together
-        if (int(getComponentFromVector(DoAlign2D,1))==1 and DoCtfCorrection):
+        if (int(getComponentFromVector(self.DoAlign2D,1))==1 and self.DoCtfCorrection):
             errors.append("You cannot realign classes AND perform CTF-correction. Switch either of them off!")
     
         #4N outter radius is compulsory
-        _OuterRadius = getComponentFromVector(OuterRadius,1)
-        _InnerRadius = getComponentFromVector(InnerRadius,1)
+        _OuterRadius = getComponentFromVector(self.OuterRadius,1)
+        _InnerRadius = getComponentFromVector(self.InnerRadius,1)
         if _OuterRadius <= _InnerRadius:
             errors.append("OuterRadius must be larger than InnerRadius")
-        #not clear if this a need to return anything since is part of the class
-        #FIXME
+
         return errors 
     
     def summary(self):
         super(ProtProjMatch, self).summary()
         summary = ['Performed %d iterations with angular sampling rate %s' 
-                   % (NumberOfIterations, AngSamplingRateDeg)]
+                   % (self.NumberOfIterations, self.AngSamplingRateDeg)]
         summary += ['Final Resolution is %s'%'not yet implemented']
         summary += ['Number of CTFgroups and References is %d %d respectively'
                         %(self.NumberOfCtfGroups,self.numberOfReferences)]
@@ -108,7 +105,7 @@ class ProtProjMatch(XmippProtocol):
     
         
         # Convert vectors to list
-        self.ReferenceFileNames = getListFromVector(ReferenceFileNames)
+        self.ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
         self.numberOfReferences = len(self.ReferenceFileNames)
         #directory with ProjMatchClasses
         self.ProjMatchDirs=[" "]
@@ -116,7 +113,7 @@ class ProtProjMatch(XmippProtocol):
         self.DocFileInputAngles=[self.DocFileWithOriginalAngles]
         #ProjMatchRootName=[" "]
         
-        for iterN in range(NumberOfIterations):
+        for iterN in range(self.NumberOfIterations):
             fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
             self.ProjMatchDirs.append(fnBaseIter + self.ProjMatchDir)
             self.LibraryDirs.append( fnBaseIter + self.LibraryDir)
@@ -124,14 +121,14 @@ class ProtProjMatch(XmippProtocol):
         
         auxList = (self.numberOfReferences + 1) * [None]
         self.ProjectLibraryRootNames=[[None]]
-        for iterN in range(NumberOfIterations):
+        for iterN in range(self.NumberOfIterations):
             fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
             for refN in range(self.numberOfReferences):                
                 auxList[refN + 1]= "%s%s_ref_%02d.stk" % (fnBaseIter, self.ProjectLibraryRootName, refN)
             self.ProjectLibraryRootNames.append(list(auxList))
                     
         self.ProjMatchRootNames=[[None]]
-        for iterN in range(NumberOfIterations):
+        for iterN in range(self.NumberOfIterations):
             for refN in range(self.numberOfReferences):
                 auxList[refN + 1]="%s/%s_ref_%02d.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName, refN + 1)
             self.ProjMatchRootNames.append(list(auxList))
@@ -140,7 +137,7 @@ class ProtProjMatch(XmippProtocol):
         #name of masked volumes
         #add dummy name so indexes start a 1
         self.maskedFileNamesIters = [[None]]
-        for iterN in range(NumberOfIterations):
+        for iterN in range(self.NumberOfIterations):
             fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
             for refN in range(self.numberOfReferences):
                 auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.maskReferenceVolume, refN + 1)
@@ -150,52 +147,52 @@ class ProtProjMatch(XmippProtocol):
         #add initial reference, useful for many routines
         #NOTE THAT INDEXES START AT 1
         self.reconstructedFileNamesIters.append([None] + self.ReferenceFileNames)
-        for iterN in range(NumberOfIterations):
+        for iterN in range(self.NumberOfIterations):
             fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
             for refN in range(self.numberOfReferences):
                 auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.ReconstructedVolume, refN + 1)
             self.reconstructedFileNamesIters.append(list(auxList))
     
         self.docfile_with_current_anglesList=[None]
-        for iterN in range(NumberOfIterations):
+        for iterN in range(self.NumberOfIterations):
             fnBaseIter = "%s/Iter_%02d/%s.doc" % (self.WorkingDir, iterN + 1, self.docfile_with_current_angles)
             self.docfile_with_current_anglesList.append(fnBaseIter)
     
         #parameter for projection matching
-        self.Align2DIterNr          = [-1]+getListFromVector(Align2DIterNr,NumberOfIterations)
-        self.Align2dMaxChangeOffset = [-1]+getListFromVector(Align2dMaxChangeOffset,NumberOfIterations)
-        self.Align2dMaxChangeRot    = [-1]+getListFromVector(Align2dMaxChangeRot,NumberOfIterations)
-        self.AngSamplingRateDeg     = [-1]+getListFromVector(AngSamplingRateDeg,NumberOfIterations)
-        self.DiscardPercentage      = [-1]+getListFromVector(DiscardPercentage,NumberOfIterations)
-        self.DoAlign2D              = [False]+getBoolListFromVector(DoAlign2D,NumberOfIterations)
-        self.DoComputeResolution    = [False]+getBoolListFromVector(DoComputeResolution,NumberOfIterations)
-        self.DoSplitReferenceImages = [False]+getBoolListFromVector(DoSplitReferenceImages,NumberOfIterations)
-        self.InnerRadius            = [False]+getListFromVector(InnerRadius,NumberOfIterations)
-        self.MaxChangeInAngles      = [-1]+getListFromVector(MaxChangeInAngles,NumberOfIterations)
-        self.MaxChangeOffset        = [-1]+getListFromVector(MaxChangeOffset,NumberOfIterations)
-        self.MinimumCrossCorrelation= [-1]+getListFromVector(MinimumCrossCorrelation,NumberOfIterations)
-        self.OnlyWinner             = [False]+getBoolListFromVector(OnlyWinner,NumberOfIterations)
-        self.OuterRadius            = [False]+getListFromVector(OuterRadius,NumberOfIterations)
-        self.PerturbProjectionDirections = [False]+getBoolListFromVector(PerturbProjectionDirections,NumberOfIterations)
-        self.ReferenceIsCtfCorrected     = [-1]+getListFromVector(str(ReferenceIsCtfCorrected) + " True", NumberOfIterations)
-        self.ScaleNumberOfSteps          = [-1]+getListFromVector(ScaleNumberOfSteps,NumberOfIterations)
-        self.ScaleStep              = [-1]+getListFromVector(ScaleStep,NumberOfIterations)
-        self.Search5DShift          = [-1]+getListFromVector(Search5DShift,NumberOfIterations)
-        self.Search5DStep           = [-1]+getListFromVector(Search5DStep,NumberOfIterations)
-        self.SymmetryGroup          = [-1]+getListFromVector(SymmetryGroup,NumberOfIterations)
+        self.Align2DIterNr          = [-1]+getListFromVector(self.Align2DIterNr,self.NumberOfIterations)
+        self.Align2dMaxChangeOffset = [-1]+getListFromVector(self.Align2dMaxChangeOffset,self.NumberOfIterations)
+        self.Align2dMaxChangeRot    = [-1]+getListFromVector(self.Align2dMaxChangeRot,self.NumberOfIterations)
+        self.AngSamplingRateDeg     = [-1]+getListFromVector(self.AngSamplingRateDeg,self.NumberOfIterations)
+        self.DiscardPercentage      = [-1]+getListFromVector(self.DiscardPercentage,self.NumberOfIterations)
+        self.DoAlign2D              = [False]+getBoolListFromVector(self.DoAlign2D,self.NumberOfIterations)
+        self.DoComputeResolution    = [False]+getBoolListFromVector(self.DoComputeResolution,self.NumberOfIterations)
+        self.DoSplitReferenceImages = [False]+getBoolListFromVector(self.DoSplitReferenceImages,self.NumberOfIterations)
+        self.InnerRadius            = [False]+getListFromVector(self.InnerRadius,self.NumberOfIterations)
+        self.MaxChangeInAngles      = [-1]+getListFromVector(self.MaxChangeInAngles,self.NumberOfIterations)
+        self.MaxChangeOffset        = [-1]+getListFromVector(self.MaxChangeOffset,self.NumberOfIterations)
+        self.MinimumCrossCorrelation= [-1]+getListFromVector(self.MinimumCrossCorrelation,self.NumberOfIterations)
+        self.OnlyWinner             = [False]+getBoolListFromVector(self.OnlyWinner,self.NumberOfIterations)
+        self.OuterRadius            = [False]+getListFromVector(self.OuterRadius,self.NumberOfIterations)
+        self.PerturbProjectionDirections = [False]+getBoolListFromVector(self.PerturbProjectionDirections,self.NumberOfIterations)
+        self.ReferenceIsCtfCorrected     = [-1]+getListFromVector(str(self.ReferenceIsCtfCorrected) + " True", self.NumberOfIterations)
+        self.ScaleNumberOfSteps          = [-1]+getListFromVector(self.ScaleNumberOfSteps,self.NumberOfIterations)
+        self.ScaleStep              = [-1]+getListFromVector(self.ScaleStep,self.NumberOfIterations)
+        self.Search5DShift          = [-1]+getListFromVector(self.Search5DShift,self.NumberOfIterations)
+        self.Search5DStep           = [-1]+getListFromVector(self.Search5DStep,self.NumberOfIterations)
+        self.SymmetryGroup          = [-1]+getListFromVector(self.SymmetryGroup,self.NumberOfIterations)
          
         # Configure dabase
-        self.Db.setPrintWrapperParameters(PrintWrapperParameters)
-        self.Db.setPrintWrapperCommand(PrintWrapperCommand)
-        self.Db.setVerify(Verify,ViewVerifyedFiles)
+        self.Db.setPrintWrapperParameters(self.PrintWrapperParameters)
+        self.Db.setPrintWrapperCommand(self.PrintWrapperCommand)
+        self.Db.setVerify(self.Verify,self.ViewVerifyedFiles)
         self.Db.setParentDefault(XmippProtocolDbStruct.lastStep)
 
     def otherActionsToBePerformedBeforeLoop(self):
         print "in otherActionsToBePerformedBeforeLoop"
 
         _dataBase = self.Db
-        if DoCtfCorrection:
-            auxMD1 = MetaData(CTFDatName)
+        if self.DoCtfCorrection:
+            auxMD1 = MetaData(self.CTFDatName)
             auxMD2 = MetaData()
             auxMD2.aggregate(auxMD1, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT)
             self.NumberOfCtfGroups = auxMD2.size()
@@ -208,41 +205,41 @@ class ProtProjMatch(XmippProtocol):
         #run protocols from command line bypassing the gui
         _dataBase.insertAction('checkVolumeProjSize', 
                                                          ReferenceFileNames = self.ReferenceFileNames
-                                                       , SelFileName = SelFileName)
+                                                       , SelFileName = self.SelFileName)
     
         #Check Option compatibility
         _dataBase.insertAction('checkOptionsCompatibility', DoAlign2D       = self.DoAlign2D[1]
-                                                          , DoCtfCorrection = DoCtfCorrection)
+                                                          , DoCtfCorrection = self.DoCtfCorrection)
     
         #7 make CTF groups
         suffixes = ['_images.sel']
-        if DoCtfCorrection:
+        if self.DoCtfCorrection:
             suffixes += ['Info.xmd', '_ctf.stk', '_wien.stk', '_split.doc']        
         fnBase = os.path.join(self.CtfGroupDirectory, self.CtfGroupRootName)
         _VerifyFiles = [fnBase + s for s in suffixes]
-        _dataBase.insertAction('executeCtfGroups', _VerifyFiles, None, None,  CTFDatName = CTFDatName
+        _dataBase.insertAction('executeCtfGroups', _VerifyFiles, None, None,  CTFDatName = self.CTFDatName
                                                                             , CtfGroupDirectory = self.CtfGroupDirectory
-                                                                            , CtfGroupMaxDiff = CtfGroupMaxDiff
-                                                                            , CtfGroupMaxResol = CtfGroupMaxResol
+                                                                            , CtfGroupMaxDiff = self.CtfGroupMaxDiff
+                                                                            , CtfGroupMaxResol = self.CtfGroupMaxResol
                                                                             , CtfGroupRootName = self.CtfGroupRootName
-                                                                            , DataArePhaseFlipped = DataArePhaseFlipped
-                                                                            , DoAutoCtfGroup = DoAutoCtfGroup
-                                                                            , DoCtfCorrection = DoCtfCorrection
-                                                                            , PaddingFactor = PaddingFactor
-                                                                            , SelFileName = SelFileName
-                                                                            , SplitDefocusDocFile = SplitDefocusDocFile
-                                                                            , WienerConstant = WienerConstant)
+                                                                            , DataArePhaseFlipped = self.DataArePhaseFlipped
+                                                                            , DoAutoCtfGroup = self.DoAutoCtfGroup
+                                                                            , DoCtfCorrection = self.DoCtfCorrection
+                                                                            , PaddingFactor = self.PaddingFactor
+                                                                            , SelFileName = self.SelFileName
+                                                                            , SplitDefocusDocFile = self.SplitDefocusDocFile
+                                                                            , WienerConstant = self.WienerConstant)
         #Create Initial angular file. Either fill it with zeros or copy input
         _VerifyFiles = [self.DocFileWithOriginalAngles]
         _dataBase.insertAction('initAngularReferenceFile', _VerifyFiles, None, None
-                                                                , DocFileName =DocFileName
-                                                                , DocFileWithOriginalAngles =self.DocFileWithOriginalAngles
-                                                                , SelFileName =SelFileName)
+                                                                , DocFileName = self.DocFileName
+                                                                , DocFileWithOriginalAngles = self.DocFileWithOriginalAngles
+                                                                , SelFileName =self.SelFileName)
     
         #Save all parameters in dict for future runs (this is done by database)
         #so far no parameter is being saved, but dummy=0
         self.Db.setIteration(XmippProtocolDbStruct.doAlways)
-        _dataBase.insertAction('self.saveParameters', SystemFlavour =SystemFlavour)
+        _dataBase.insertAction('self.saveParameters', SystemFlavour = self.SystemFlavour)
         _dataBase.insertAction('self.loadParameters', None, None)
         self.Db.setIteration(1)
         #no entries will be save untill this commit
@@ -256,7 +253,7 @@ class ProtProjMatch(XmippProtocol):
         _log = self.Log
         _dataBase = self.Db
         
-        for iterN in range(1, NumberOfIterations + 1):
+        for iterN in range(1, self.NumberOfIterations + 1):
             _dataBase.setIteration(iterN)
             # create IterationDir
             _dataBase.insertAction('createDir', path = self.getIterDirName(iterN))
@@ -271,12 +268,12 @@ class ProtProjMatch(XmippProtocol):
                 # Mask reference volume
                 _VerifyFiles = [self.maskedFileNamesIters[iterN][refN]]
                 _dataBase.insertAction('executeMask', _VerifyFiles, id, None
-                                    , DoMask =             DoMask
-                                    , DoSphericalMask =    DoSphericalMask
+                                    , DoMask =             self.DoMask
+                                    , DoSphericalMask =    self.DoSphericalMask
                                     , maskedFileName =     self.maskedFileNamesIters[iterN][refN]
-                                    , maskRadius =         MaskRadius
+                                    , maskRadius =         self.MaskRadius
                                     , reconstructedFileName = self.reconstructedFileNamesIters[iterN - 1][refN]
-                                    , userSuppliedMask =   MaskFileName)
+                                    , userSuppliedMask =   self.MaskFileName)
 
                 # angular_project_library
                 #file with projections
@@ -294,23 +291,23 @@ class ProtProjMatch(XmippProtocol):
                 _dataBase.insertAction('angular_project_library', _VerifyFiles, None, None,
                                       AngSamplingRateDeg = self.AngSamplingRateDeg[iterN]
                                     , CtfGroupSubsetFileName = self.CtfGroupSubsetFileName
-                                    , DoCtfCorrection = DoCtfCorrection
+                                    , DoCtfCorrection = self.DoCtfCorrection
                                     , DocFileInputAngles = self.DocFileInputAngles[iterN-1]
                                     , DoParallel = self.DoParallel
-                                    , DoRestricSearchbyTiltAngle = DoRestricSearchbyTiltAngle
+                                    , DoRestricSearchbyTiltAngle = self.DoRestricSearchbyTiltAngle
                                     , MaxChangeInAngles = self.MaxChangeInAngles[iterN]
                                     , maskedFileNamesIter = self.maskedFileNamesIters[iterN][refN]
-                                    , MpiJobSize = MpiJobSize
-                                    , NumberOfMpiProcesses = NumberOfMpiProcesses
-                                    , NumberOfThreads = NumberOfThreads
+                                    , MpiJobSize = self.MpiJobSize
+                                    , NumberOfMpiProcesses = self.NumberOfMpiProcesses
+                                    , NumberOfThreads = self.NumberOfThreads
                                     , OnlyWinner = self.OnlyWinner[iterN]
                                     , PerturbProjectionDirections = self.PerturbProjectionDirections[iterN]
                                     , ProjectLibraryRootName = self.ProjectLibraryRootNames[iterN][refN]
-                                    , SystemFlavour = SystemFlavour
+                                    , SystemFlavour = self.SystemFlavour
                                     , SymmetryGroup = self.SymmetryGroup[iterN]
-                                    , SymmetryGroupNeighbourhood = SymmetryGroupNeighbourhood
-                                    , Tilt0  = Tilt0
-                                    , TiltF = TiltF)
+                                    , SymmetryGroupNeighbourhood = self.SymmetryGroupNeighbourhood
+                                    , Tilt0  = self.Tilt0
+                                    , TiltF = self.TiltF)
                 # projectionMatching    
                 #File with list of images and references
                 _VerifyFiles=[self.ProjMatchRootNames[iterN][refN]]
@@ -318,21 +315,21 @@ class ProtProjMatch(XmippProtocol):
                     _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.xmd")
                     
                 _dataBase.insertAction('projection_matching', _VerifyFiles, None, None,
-                                      AvailableMemory =AvailableMemory
+                                      AvailableMemory =self.AvailableMemory
                                     , CtfGroupRootName = self.CtfGroupRootName
                                     , CtfGroupDirectory = self.CtfGroupDirectory
                                     , DoComputeResolution =self.DoComputeResolution[iterN]
-                                    , DoCtfCorrection = DoCtfCorrection
-                                    , DoScale =DoScale
+                                    , DoCtfCorrection = self.DoCtfCorrection
+                                    , DoScale =self.DoScale
                                     , DoParallel = self.DoParallel
                                     , InnerRadius =self.InnerRadius[iterN]
                                     , MaxChangeOffset =self.MaxChangeOffset[iterN]
-                                    , MpiJobSize =MpiJobSize
+                                    , MpiJobSize =self.MpiJobSize
                                     , NumberOfCtfGroups =self.NumberOfCtfGroups
-                                    , NumberOfMpiProcesses =NumberOfMpiProcesses
-                                    , NumberOfThreads =NumberOfThreads
+                                    , NumberOfMpiProcesses =self.NumberOfMpiProcesses
+                                    , NumberOfThreads =self.NumberOfThreads
                                     , OuterRadius =self.OuterRadius[iterN]
-                                    , PaddingFactor =PaddingFactor
+                                    , PaddingFactor =self.PaddingFactor
                                     , ProjectLibraryRootName =self.ProjectLibraryRootNames[iterN][refN]
                                     , ProjMatchRootName =self.ProjMatchRootNames[iterN][refN]
                                     , ReferenceIsCtfCorrected =self.ReferenceIsCtfCorrected[iterN]
@@ -340,14 +337,13 @@ class ProtProjMatch(XmippProtocol):
                                     , ScaleNumberOfSteps =self.ScaleNumberOfSteps[iterN]
                                     , Search5DShift=self.Search5DShift[iterN]
                                     , Search5DStep=self.Search5DStep[iterN]
-                                    , SystemFlavour=SystemFlavour)
-                
-    
+                                    , SystemFlavour=self.SystemFlavour)
+
             
             #assign the images to the different references based on the crosscorrelation coheficient
             #if only one reference it just copy the docfile generated in the previous step
             _VerifyFiles = [self.DocFileInputAngles[iterN]]
-            _dataBase.insertAction('assign_images_to_references', [self.DocFileInputAngles[iterN]],
+            _dataBase.insertAction('assign_images_to_references', _VerifyFiles,
                                     None, None 
                                      , DocFileInputAngles = self.DocFileInputAngles[iterN]#Output file with angles
                                      , NumberOfCtfGroups  = self.NumberOfCtfGroups
@@ -366,7 +362,7 @@ class ProtProjMatch(XmippProtocol):
                          , CtfGroupRootName  = self.CtfGroupRootName#
                          , DiscardPercentage = self.DiscardPercentage[iterN]#
                          , DoAlign2D         = self.DoAlign2D[iterN]#
-                         , DoCtfCorrection = DoCtfCorrection#
+                         , DoCtfCorrection = self.DoCtfCorrection#
                          , DocFileInputAngles = self.DocFileInputAngles[iterN]#
                          , DoParallel = self.DoParallel#
                          , DoSplitReferenceImages =self.DoSplitReferenceImages[iterN]#
@@ -375,13 +371,13 @@ class ProtProjMatch(XmippProtocol):
                          , MinimumCrossCorrelation =self.MinimumCrossCorrelation[iterN]#
                          , NumberOfReferences =self.numberOfReferences#
                          , NumberOfCtfGroups = self.NumberOfCtfGroups#
-                         , NumberOfMpiProcesses =NumberOfMpiProcesses#
-                         , NumberOfThreads =NumberOfThreads#
-                         , PaddingFactor =PaddingFactor#
+                         , NumberOfMpiProcesses =self.NumberOfMpiProcesses#
+                         , NumberOfThreads =self.NumberOfThreads#
+                         , PaddingFactor =self.PaddingFactor#
                          , ProjectLibraryRootName =self.ProjectLibraryRootNames[iterN][refN]#
                          , ProjMatchRootName =self.ProjMatchRootNames[iterN][refN]#
                          , refN =refN
-                         , SystemFlavour =SystemFlavour#
+                         , SystemFlavour =self.SystemFlavour#
                          )
                 
                 ##############REMOVE SHUTIL.COPY
@@ -389,12 +385,12 @@ class ProtProjMatch(XmippProtocol):
                 
                 id = _dataBase.insertAction('executeMask', [self.maskedFileNamesIters[iterN][refN]],
                                             None,None
-                                                , DoMask =             DoMask
-                                                , DoSphericalMask =    DoSphericalMask
+                                                , DoMask =             self.DoMask
+                                                , DoSphericalMask =    self.DoSphericalMask
                                                 , maskedFileName =     self.maskedFileNamesIters[iterN][refN]
-                                                , maskRadius =         MaskRadius
+                                                , maskRadius =         self.MaskRadius
                                                 , reconstructedFileName = self.reconstructedFileNamesIters[iterN - 1][refN]
-                                                , userSuppliedMask =   MaskFileName)
+                                                , userSuppliedMask =   self.MaskFileName)
     
     #reconstruct
     #resolution

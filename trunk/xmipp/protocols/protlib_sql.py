@@ -259,7 +259,7 @@ class XmippProtocolDb(SqliteDb):
         #constant
         self.SystemFlavour = "None"
         #get run_id
-        run_id = self.getRunId(protocol.Name, protocol.runName)
+        run_id = self.getRunId(protocol.Name, protocol.RunName)
         if not run_id:
             reportError("Protocol run '%(run_name)s' has not been registered in project database" % self.sqlDict)
         self.sqlDict['run_id'] = run_id
@@ -542,7 +542,7 @@ class XmippProtocolDb(SqliteDb):
                     print "Verified file:", i
         
         sqlCommand = "UPDATE %(TableSteps)s SET finish = CURRENT_TIMESTAMP WHERE step_id=%(step_id)d" %  self.sqlDict
-        print "Updating finish",sqlCommand
+        #print "Updating finish",sqlCommand
         _connection.execute(sqlCommand)
         _connection.commit()
         
