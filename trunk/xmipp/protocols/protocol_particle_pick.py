@@ -12,13 +12,19 @@
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {begin_of_header} 
+
+#------------------------------------------------------------------------------------------
+# {section}{has_question} Comment
+#------------------------------------------------------------------------------------------
+# Show comment
+DisplayComment = False
+
+# {text} Comment
+""" Specify the particularities of this run """
+
 #------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------
-# Comment
-""" Specify the particularities of this run """
-Comment=''
-
 # Run name
 """ Working directory for this protocol 
 """
@@ -33,37 +39,20 @@ PreprocessingDir = "Preprocessing/micrographs_001"
 """ Perform automatic particle picking """
 AutomaticPicking = True
 
-#------------------------------------------------------------------------------------------
-# {section}{condition}(AutomaticPicking=True) Parallelization issues for automatic particle picking
-#------------------------------------------------------------------------------------------
-# Number of MPI processes to use
-""" This parameter is used during the automatic picking phase in the background """
-NumberOfMpiProcesses = 3
-
 # Number of threads to use
 """ This parameter is used during the training phase """
 NumberOfThreads = 4
 
-# Submmit to queue?
-"""Submmit to queue"""
-SubmmitToQueue=False
-#------------------------------------------------------------------------------------------------
-# {section}{expert}{condition}(SubmmitToQueue=True) Queue 
-#------------------------------------------------------------------------------------------------
-
-# Queue name
-"""Name of the queue to submit the job"""
-QueueName="default"
-
-# Queue hours
-"""This establish a maximum number of hours the job will
-be running, after that time it will be killed by the 
-queue system"""
-QueueHours=72
 #------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
+# This program is interactive and cannot use MPI or queues
+NumberOfMpiProcesses = 1
+SubmmitToQueue=False
+QueueName="default"
+QueueHours=72
+
 # Do not repeat already taken steps
 IsIter=False
 ContinueAtIteration=1
@@ -120,15 +109,17 @@ class ProtParticlePicking(XmippProtocol):
                              micrographDict=micrographDict)       
 
     def summary(self):
+        MicrographSelfile=os.path.join(PreprocessingDir,"micrographs.sel")
         if self.isPairList:
             msg=["Input: "+MicrographSelfile+" (Tilt pairs)"]
         else:
             msg=["Input: "+MicrographSelfile]
         
-        total_manual=0
-        total_auto=0
-        N_manual=0
-        N_auto=0
+        total_manual = 0
+        total_auto = 0
+        N_manual = 0
+        N_auto = 0
+        mD = MetaData(MicrographSelfile)
         for id in mD:
              micrograph = mD.getValue(xmipp.MDL_IMAGE,id)
              manual=CountPicked(self.WorkingDir,micrograph,"Common")
@@ -200,6 +191,7 @@ class ProtParticlePickingGUI(BasicGUI):
         self.whichmark=StringVar() # Which mark button has been pressed
         if AutomaticPicking:
             self.selectedForAutomaticPickingAuto=[] # Checkboxes for automatic particle picking
+            self.selectedForAutomaticPickingMicrograph=[] # List of micrograph names associated to each button
             self.selectedForAutomaticPickingMark=[] # Mark buttons in automatic particle picking must be disabled
             titleSpan=5
         else:
@@ -256,6 +248,7 @@ class ProtParticlePickingGUI(BasicGUI):
         # If automatic particle picking, add checkbox
         if AutomaticPicking:
             self.selectedForAutomaticPickingAuto.append(IntVar())
+            self.selectedForAutomaticPickingMicrograph.append(micrograph)
             self.addCheckButton("Auto", row, 1, self.selectedForAutomaticPickingAuto[-1], 0, self.AutoSelectionChanged, "")
             nextColumn=2
         else:
@@ -280,11 +273,27 @@ class ProtParticlePickingGUI(BasicGUI):
                 self.selectedForAutomaticPickingMark[i].config(state=NORMAL)
 
     def AutomaticallyDetect(self):
-        command_file = open(self.WorkingDir+"/pick.sh", "w")
+        mDauto=xmipp.MetaData();
         for i in range(0,len(self.selectedForAutomaticPickingAuto)):
             if (self.selectedForAutomaticPickingAuto[i].get()):
-                self.LaunchSingleMark(self.selectedForAutomaticPickingName[i],False)
+                id=mDauto.addObject()
+                mDauto.setValue(xmipp.MDL_IMAGE,self.micrographDict[self.selectedForAutomaticPickingMicrograph[i]][0],id)
+        if mDauto.size()>0:
+            mDauto.write(os.path.join(self.WorkingDir, "forAutomaticPicking.xmd"))
 
+            # Create a project
+            project=XmippProject(os.getcwd())
+            project.load()
+            
+            # Get run parameters
+            run=project.newOrLoadProtocol(protDict.particle_pick_auto.key, RunName+"_auto")
+            run["comment"]="Automatic particle picking from ParticlePicking/"+RunName
+            
+            gui = ProtocolGUI()
+            gui.createGUI(project, run, Toplevel())
+            gui.fillGUI()
+            gui.launchGUI()
+            
     def GuiUpdateCount(self):
         total_manual=0
         total_auto=0
@@ -324,7 +333,8 @@ class ProtParticlePickingGUI(BasicGUI):
             arguments+=' --auto '+self.WorkingDir+"/Common.auto"
         elif tilted!="":
             arguments+=" --tilted "+self.micrographDict[micrograph][1]
-        runJob(self.log,'xmipp_micrograph_mark',arguments,False,1,NumberOfThreads,"",True)
+        arguments+=" --thr "+str(NumberOfThreads)
+        runJob(self.log,'xmipp_micrograph_mark',arguments,False,1,1,"",True)
     
 def CountPicked(WorkingDir,micrograph,label):
     posfile=WorkingDir+"/"+str(micrograph)+'.'+label+'.pos'
