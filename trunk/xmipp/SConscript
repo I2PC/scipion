@@ -795,7 +795,7 @@ AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_creat
 AddBatch('metadata_show', 'applications/scripts/metadata_show', '.py')
 #AddBatch('metadata_operate', 'applications/scripts/metadata_operate','.py')
 AddBatch('classify_CL2D_core_analysis', 'applications/scripts/classify_CL2D_core_analysis')
-protocols_main = AddBatch('protocols', 'applications/scripts/protocols', '.py')
+protocols_main = AddBatch('protocols', 'protocols', '.py')
 env.Alias('protocols', protocols_main)
 AddBatch('showj', 'applications/scripts/showj', '.py')
 AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', '.py')
