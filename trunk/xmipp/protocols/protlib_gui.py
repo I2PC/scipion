@@ -636,7 +636,9 @@ class ProtocolGUI(BasicGUI):
         reTags = re.compile('(?:{\s*(\w+)\s*}\s*(?:\(([^)]*)\))?\s*)')
         #This is the regular expression of a Variable
         #possible values are: True, False, String with single and double quotes and a number(int or float) 
-        reVariable = re.compile('(\w+)\s*=\s*(True|False|".*"|\'.*\'|\d+|)')
+        #reVariable = re.compile('(\w+)\s*=\s*(True|False|".*"|\'.*\'|\d+|)')
+        reVariable = re.compile('(\w+)\s*=\s*(True|False|".*"|\'.*\'|[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|)')
+        
         self.variablesDict = {}
         self.widgetslist = []
         lastSection = None
