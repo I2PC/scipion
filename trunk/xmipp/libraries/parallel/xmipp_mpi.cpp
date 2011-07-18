@@ -325,7 +325,7 @@ int XmippMpiProgram::tryRun()
         if (!notRun)
             this->run();
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         std::cerr << xe;
         errorCode = xe.__errno;
