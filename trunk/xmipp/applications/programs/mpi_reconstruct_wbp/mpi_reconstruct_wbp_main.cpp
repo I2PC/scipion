@@ -29,11 +29,19 @@
 class ProgMPIRecWbp: public ProgRecWbp, public MpiMetadataProgram
 {
 public:
+    void defineParams()
+    {
+        ProgRecWbp::defineParams();
+        MpiMetadataProgram::defineParams();
+    }
+    void readParams()
+    {
+        MpiMetadataProgram::readParams();
+        ProgRecWbp::readParams();
+    }
     void read(int argc, char **argv)
     {
         MpiMetadataProgram::read(argc,argv);
-        if (!node->isMaster())
-            verbose=0;
         ProgRecWbp::read(argc, argv);
     }
     void produceSideInfo()
@@ -55,7 +63,7 @@ public:
     }
     void finishProcessing()
     {
-    	MultidimArray<double> aux;
+        MultidimArray<double> aux;
         aux.resizeNoCopy(reconstructedVolume());
         MPI_Allreduce(MULTIDIM_ARRAY(reconstructedVolume()), MULTIDIM_ARRAY(aux),
                       MULTIDIM_SIZE(aux), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -73,7 +81,7 @@ public:
 
 int main(int argc, char **argv)
 {
-	ProgMPIRecWbp program;
-	program.read(argc,argv);
-	return program.tryRun();
+    ProgMPIRecWbp program;
+    program.read(argc,argv);
+    return program.tryRun();
 }

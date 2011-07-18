@@ -79,7 +79,7 @@ protected:
 
 public:
     MpiTaskDistributor(size_t nTasks, size_t bSize, MpiNode *node);
-    ~MpiTaskDistributor();
+    virtual ~MpiTaskDistributor();
 
     friend void __threadMpiMasterDistributor(ThreadArgument &arg);
 }
@@ -158,19 +158,13 @@ public:
 class XmippMpiProgram: public virtual XmippProgram
 {
 protected:
-    /** Number of Processors **/
-    int nProcs;
-
-    /** Divide the job in this number block with this number of images */
-    int mpi_job_size;
-
-    /** Number of independent MPI jobs **/
-    int numberOfJobs;
-
     /** Mpi node */
     MpiNode * node;
     bool created_node;
-
+	/** Number of Processors **/
+    int nProcs;
+    /** Number of independent MPI jobs **/
+    int numberOfJobs;
     /** status after an MPI call */
     MPI_Status status;
 
@@ -190,10 +184,11 @@ public:
     int tryRun();
 };
 
-class MpiMetadataProgram
+class MpiMetadataProgram: public XmippMpiProgram
 {
 protected:
-    MpiNode *node;
+    /** Divide the job in this number block with this number of images */
+    int blockSize;
     FileTaskDistributor *distributor;
     std::vector<size_t> imgsId;
     MpiFileMutex *fileMutex;
@@ -206,6 +201,9 @@ public:
     ~MpiMetadataProgram();
     /** Read arguments */
     void read(int argc, char **argv);
+
+    void defineParams();
+    void readParams();
     /** Create task distributor */
     void createTaskDistributor(const MetaData &mdIn, int blockSize = 0);
     /** Get task to process */
@@ -217,26 +215,23 @@ public:
 #define CREATE_MPI_METADATA_PROGRAM(baseClassName, mpiClassName) \
 class mpiClassName: public baseClassName, public MpiMetadataProgram\
 {\
-  int blockSize;\
 public:\
     void defineParams()\
     {\
         baseClassName::defineParams();\
-        addParamsLine("== MPI ==");\
-        addParamsLine(" [--mpi_job_size <size=0>]     : Number of images sent simultaneously to a mpi node");\
+        MpiMetadataProgram::defineParams();\
     }\
     void readParams()\
     {\
         baseClassName::readParams();\
-        blockSize = getIntParam("--mpi_job_size");\
+        MpiMetadataProgram::readParams();\
     }\
     void read(int argc, char **argv, bool reportErrors = true)\
     {\
-      std::cerr << "mpi reading.." << std::endl;\
-        baseClassName::read(argc, argv, reportErrors);\
         MpiMetadataProgram::read(argc,argv);\
-        if (!node->isMaster())\
-            verbose=0;\
+        if (verbose)\
+        	std::cerr << "mpi reading.." << std::endl;\
+        baseClassName::read(argc, argv, reportErrors);\
     }\
     void preProcess()\
     {\
@@ -267,21 +262,7 @@ public:\
         if (node->isMaster())\
             baseClassName::finishProcessing();\
     }\
-    int tryRun()\
-    {\
-        try\
-        {\
-            if (!notRun)\
-                this->run();\
-        }\
-        catch (XmippError xe)\
-        {\
-            std::cerr << xe;\
-            errorCode = MPI_Abort(MPI_COMM_WORLD, xe.__errno);\
-        }\
-        return errorCode;\
-    }\
-}\
+};\
 
 /** @} */
 #endif /* XMIPP_MPI_H_ */

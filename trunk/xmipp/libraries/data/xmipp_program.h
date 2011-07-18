@@ -225,7 +225,7 @@ public:
  * The function processImage is virtual here and needs to be implemented by derived classes.
  * Optionally can be implemented preProcess and postProcess to perform some customs actions.
  */
-class XmippMetadataProgram: public XmippProgram
+class XmippMetadataProgram: public virtual XmippProgram
 {
 protected:
 public:
