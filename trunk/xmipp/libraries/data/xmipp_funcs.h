@@ -1332,11 +1332,14 @@ private:
     }
 };
 //@}
-//@}
 /// binary comparison of two files skipping first "offset" bytes
 bool compareTwoFiles(const FileName &fn1, const FileName &fn2, size_t offset = 0);
-/* Copy one image
+/** Copy one image
  *
  */
 void copyImage(const FileName & source,const FileName & target);
+
+/** Create empty file with a given length. */
+void createEmptyFileWithGivenLength(const FileName &fn, size_t length);
+//@}
 #endif

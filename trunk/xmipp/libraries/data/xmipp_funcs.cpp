@@ -735,6 +735,17 @@ void copyImage(const FileName & source, const FileName & target)
 	img.write(target);
 }
 
+void createEmptyFileWithGivenLength(const FileName &fn, size_t length)
+{
+    FILE* fMap = fopen(fn.c_str(),"wb");
+    if (!fMap)
+    	REPORT_ERROR(ERR_IO_NOWRITE,fn);
+    char c=0;
+    if ((fseek(fMap, length-1, SEEK_SET) == -1) || (fwrite(&c,1,1,fMap) != 1))
+        REPORT_ERROR(ERR_IO_NOWRITE,"Cannot create empty file");
+    fclose(fMap);
+}
+
 /* Time managing ----------------------------------------------------------- */
 #ifdef _NO_TIME
 void time_config()
