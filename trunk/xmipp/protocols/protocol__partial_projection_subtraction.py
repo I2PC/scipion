@@ -369,9 +369,17 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                 
             print 'self.defGroups[' + str(iterN) + ']: ', self.defGroups[iterN]
             print 'self.defocusGroupNo: ' + str(self.defocusGroupNo)
-
             
-            if(self.defocusGroupNo > 2):
+            if(self.defocusGroupNo > 2 and self.doScaleImages):
+                _VerifyFiles = []
+                auxFilename = FileName(self.DocFileExp[iterN])
+                _VerifyFiles.append(auxFilename.removeBlockName())
+                id = self.Db.insertAction('joinImageCTFscale', _VerifyFiles
+                                        , CTFgroupName = self.defGroups[iterN]
+                                        , DocFileExp = self.DocFileExp[iterN]
+                                        , inputSelfile = inputSelfile
+                                        )
+            elif (self.defocusGroupNo > 2 and not self.doScaleImages):
                 _VerifyFiles = []
                 auxFilename = FileName(self.DocFileExp[iterN])
                 _VerifyFiles.append(auxFilename.removeBlockName())
@@ -379,7 +387,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                                         , CTFgroupName = self.defGroups[iterN]
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , inputSelfile = inputSelfile
-                                        )
+                                        )                
             else:
                 self.DocFileExp[iterN] = self.defGroups[iterN]
             #reconstruct each CTF group
