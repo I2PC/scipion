@@ -223,6 +223,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         
         # Check these params
         self.DoDeleteWorkingDir = False
+        self.DoParallel = True
         
     def preRun(self):
 
