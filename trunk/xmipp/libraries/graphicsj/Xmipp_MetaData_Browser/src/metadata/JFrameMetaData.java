@@ -10,9 +10,7 @@
  */
 package metadata;
 
-import metadata.renderers.RowHeaderRenderer;
 import ij.IJ;
-import ij.ImagePlus;
 import java.awt.event.MouseEvent;
 import java.awt.event.ItemEvent;
 import java.io.File;
@@ -26,6 +24,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
+import browser.DEBUG;
+import browser.windows.ImagesWindowFactory;
 import metadata.images.TableImageItem;
 import metadata.renderers.MetaDataStringRenderer;
 import metadata.renderers.MetaDataNumberRenderer;
@@ -33,13 +33,12 @@ import metadata.renderers.MetaDataImageRenderer;
 import metadata.filters.RowEnableFilter;
 import metadata.models.MetaDataTableModel;
 import metadata.models.XTableColumnModel;
-import browser.DEBUG;
-import browser.windows.ImagesWindowFactory;
 import metadata.dialogs.JDialogColumnsSelector;
 import metadata.dialogs.JDialogTextFile;
 import metadata.images.TableFileItem;
 import metadata.images.TableMetaDataItem;
 import metadata.renderers.FileItemRenderer;
+import metadata.renderers.RowHeaderRenderer;
 
 /**
  *
@@ -180,11 +179,11 @@ public class JFrameMetaData extends JFrame {
         packColumns();
         packRows();
 
-        table.repaint();
-        table.getTableHeader().repaint();
+        table.getTableHeader().revalidate();
+        table.revalidate();
         rowHeader.repaint();
 
-        jsPanel.setRowHeaderView(rowHeader);
+//        jsPanel.setRowHeaderView(rowHeader);
     }
 
     private void packColumns() {
@@ -243,9 +242,9 @@ public class JFrameMetaData extends JFrame {
     }
 
     private void openXmippImage(TableImageItem item) {
-        ImagePlus ip = item.getImagePlus();
-        ip.setTitle(item.getTitle());
-        ImagesWindowFactory.captureFrame(ip);
+//        ImagePlus ip = item.getImagePlus();
+//        ImagesWindowFactory.captureFrame(ip);
+        ImagesWindowFactory.openFileAsImage(item.getPath());
     }
 
     private void openXmippTextFile(TableFileItem item) {

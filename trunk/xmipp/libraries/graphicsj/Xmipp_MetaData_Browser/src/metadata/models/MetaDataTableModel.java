@@ -56,9 +56,7 @@ public class MetaDataTableModel extends DefaultTableModel {
     private void clear() {
         cache.clear();
 
-        while (getRowCount() > 0) {
-            removeRow(0);
-        }
+        getDataVector().removeAllElements();
 
         setColumnCount(0);
     }
