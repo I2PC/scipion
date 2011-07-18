@@ -106,6 +106,15 @@ void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_fil
                                   applyGeo(row, only_apply_shifts, wrap); \
                                   closeFile(hFile); \
                                   return err
+
+#define APPLY_GEO()        MDRow row; md.getRow(row, objId); \
+                           applyGeo(row, only_apply_shifts, wrap) \
+
+void ImageBase::applyGeo(const MetaData &md, size_t objId, bool only_apply_shifts, bool wrap)
+{
+	APPLY_GEO();
+}
+
 int ImageBase::readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts, DataMode datamode, size_t select_img, bool wrap)
 {
     READ_AND_RETURN();

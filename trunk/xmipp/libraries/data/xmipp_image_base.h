@@ -341,6 +341,9 @@ public:
     int readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false,
                      DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
 
+    /** Apply geometry in refering metadata to the image */
+    void applyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false, bool wrap = WRAP);
+
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
      */

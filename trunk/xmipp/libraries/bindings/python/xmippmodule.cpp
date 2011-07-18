@@ -455,6 +455,9 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+static PyObject *
+Image_applyGeo(PyObject *obj, PyObject *args, PyObject *kwargs);
+
 
 /* getPixel */
 static PyObject *
@@ -611,6 +614,8 @@ static PyNumberMethods Image_NumberMethods = {
 /* Image methods */
 static PyMethodDef Image_methods[] =
     {
+        { "applyGeo", (PyCFunction) Image_applyGeo, METH_VARARGS,
+          "Apply geometry in refering metadata to an image" },
         { "read", (PyCFunction) Image_read, METH_VARARGS,
           "Read image from disk" },
         { "readApplyGeo", (PyCFunction) Image_readApplyGeo, METH_VARARGS,
@@ -2196,6 +2201,48 @@ Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+
+static PyObject *
+Image_applyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+
+    if (self != NULL)
+    {
+        PyObject *md = NULL;
+        PyObject *only_apply_shifts = Py_False;
+        PyObject *wrap ;
+        if (WRAP)
+            wrap = Py_True;
+        else
+            wrap = Py_False;
+        size_t objectId = BAD_OBJID;
+        bool boolOnly_apply_shifts = false;
+        bool boolWrap = WRAP;
+
+        if (PyArg_ParseTuple(args, "Ok|OO", &md, &objectId, &only_apply_shifts, &wrap))
+        {
+            try
+            {
+                if (PyBool_Check(only_apply_shifts))
+                    boolOnly_apply_shifts = (only_apply_shifts == Py_True);
+                else
+                    PyErr_SetString(PyExc_TypeError, "ImageGeneric::applyGeo: Expecting boolean value");
+                if (PyBool_Check(wrap))
+                    boolWrap = (wrap == Py_True);
+                else
+                    PyErr_SetString(PyExc_TypeError, "ImageGeneric::applyGeo: Expecting boolean value");
+                self->image->applyGeo(MetaData_Value(md), objectId, boolOnly_apply_shifts,boolWrap);
+                Py_RETURN_NONE;
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
+        }
+    }
+    return NULL;
+}
 /***************************************************************/
 /*                            Global methods                   */
 /***************************************************************/
@@ -2360,7 +2407,7 @@ xmipp_createEmptyFile(PyObject *obj, PyObject *args, PyObject *kwargs)
     if (PyArg_ParseTuple(args, "Oii|ii", &input, &Xdim, &Ydim, &Zdim,
                          &Ndim))
     {
-    	createEmptyFile(PyString_AsString(input),Xdim,Ydim,Zdim,Ndim,true,WRITE_REPLACE);
+        createEmptyFile(PyString_AsString(input),Xdim,Ydim,Zdim,Ndim,true,WRITE_REPLACE);
         Py_RETURN_NONE;
     }
     return NULL;

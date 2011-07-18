@@ -232,6 +232,12 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply
     image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img, wrap);
 }
 
+/** Apply geometry in refering metadata to the image */
+void ImageGeneric::applyGeo(const MetaData &md, size_t objId, bool only_apply_shifts, bool wrap)
+{
+    image->applyGeo(md, objId, only_apply_shifts, wrap);
+}
+
 ImageGeneric& ImageGeneric::operator=(const ImageGeneric &img)
 {
     copy(img);

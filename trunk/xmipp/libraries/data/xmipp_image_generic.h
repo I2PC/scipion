@@ -207,6 +207,9 @@ public:
     int readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false,
                      DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
 
+    /** Apply geometry in refering metadata to the image */
+    void applyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false, bool wrap = WRAP);
+
     /** Read image mapped from file.
      */
     int readMapped(const FileName &name, size_t select_img = ALL_IMAGES);
