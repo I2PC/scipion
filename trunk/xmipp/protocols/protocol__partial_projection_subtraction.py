@@ -17,10 +17,10 @@ Comment='Describe your project here...'
 #Comment
 """ Subtraction subdirectory. 'run_001' will create 'subtraction/run_001' directory
 """
-RunName='run_003'
+RunName='run_003_exp_small'
 
 # {file} Protocol Name
-ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy_shifts/xmipp_protocol_projmatch_shifts_backup.py'
+ProtocolName='ProjMatch/xmipp2.4_exp_small/xmipp_protocol_projmatch_backup.py'
 
 # {expert}{file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all 
@@ -34,7 +34,7 @@ ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy_shifts/xmipp_protocol_proj
 #Show results for iteration
 """ Use data coming from iteration
 """
-iterationNo=5
+iterationNo=1
 
 # Resume at iteration
 """ Set to 1 to start a new run, set to -1 to continue the process (where you left it),
@@ -43,7 +43,7 @@ iterationNo=5
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =1
+ContinueAtIteration =10
 
 # {expert} Resume at Iter (vs Step)
 """This option control how to resume a previously performed run.
@@ -105,7 +105,7 @@ doCTFCorrection=False
 # Scale images?
 """ Set to True if you want to scale images (Using padding/windowing in Fourier space)
 """
-doScaleImages=True
+doScaleImages=False
 
 # New X dimension
 """ New X dimension.
@@ -207,8 +207,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
 
     def __init__(self, scriptname,project=None):
         #import config
-        super(ProtPartialProjectionSubtraction,self).__init__(protDict.projsubs.key, scriptname, RunName, project,NumberOfMpiProcesses)
-        #super(ProtPartialProjectionSubtraction,self).__init__('subtraction', scriptname, RunName, project,NumberOfMpiProcesses)
+        super(ProtPartialProjectionSubtraction,self).__init__(protDict.projsubs.key, scriptname, project)
         self.myName='partial_projection_subtraction'
         self.subtractionDir ='Subtraction'
         self.referenceDir   ='Refs'
@@ -222,9 +221,11 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.scaledImages = 'scaled'
         self.runName = RunName
         
+        # Check these params
+        self.DoDeleteWorkingDir = False
+        
     def preRun(self):
 
-        print "in PRERUN"
         self.pmprotWorkingDir = WorkingDir
         self.Iteration_Working_Directory = os.path.join(self.pmprotWorkingDir,'Iter_'+ str(iterationNo))
         self.subtractionDir = os.path.join(self.WorkingDir,RunName)
@@ -251,9 +252,6 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         tmpFilename = 'Iter_'+ str(iterationNo) + '_' + self.current_angles #zfill()
         self.filename_currentAngles = os.path.join(self.Iteration_Working_Directory,tmpFilename)
         
-        print "dRradiusMax: ", self.dRradiusMax
-        print "dRradiusMin: ", self.dRradiusMin
-            
         if(self.doScaleImages):
             
             md = MetaData(self.filename_currentAngles)
@@ -273,13 +271,15 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         print "dRradiusMax: ", self.dRradiusMax
         print "dRradiusMin: ", self.dRradiusMin
         
+        #if not ctf info available use original sel FIXME
         tmpFileName = os.path.join(self.pmprotWorkingDir,'CtfGroups/ctf_group??????.sel')
         self.defGroups=['']
         import glob
         self.defGroups += glob.glob(tmpFileName)
-        
-        print "self.defGroups: ", self.defGroups 
-        
+        #if not CTF groups available
+        if  len(self.defGroups)<2:
+            self.defGroups.append(self.filename_currentAngles) 
+            
         self.defocusGroupNo = len(self.defGroups)
         
         self.DocFileExp=['']
@@ -333,6 +333,30 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.Db.setPrintWrapperCommand(PrintWrapperCommand)
         self.Db.setVerify(Verify,ViewVerifyedFiles)
         
+        
+    def otherActionsToBePerformedBeforeLoop(self):
+        _dataBase = self.Db
+        #Create directories
+        _dataBase.insertAction('createDir', None, path = self.volsDir)
+        _dataBase.insertAction('createDir', None, path = self.referenceDir)
+        _dataBase.insertAction('createDir', None, path = self.subImgsDir)
+        
+        #Create auxiliary metadata with image names , angles and CTF
+        
+        if(doScaleImages):
+            _VerifyFiles = [self.scaledImages+".stk"]
+            _VerifyFiles.append(self.scaledImages+".xmd")
+            id = _dataBase.insertAction('scaleImages', _VerifyFiles, None, None, None
+                                       , dimX = self.dimX
+                                       , dimY = self.dimY
+                                       , DoParallel = self.DoParallel
+                                       , filename_currentAngles = self.filename_currentAngles
+                                       , MpiJobSize = MpiJobSize
+                                       , NumberOfMpiProcesses = NumberOfMpiProcesses
+                                       , NumberOfThreads = NumberOfThreads
+                                       , scaledImages = self.scaledImages
+                                       , SystemFlavour = SystemFlavour
+                                       )            
     def actionsToBePerformedInsideLoop(self):
         
         _dataBase = self.Db
@@ -344,15 +368,20 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                 inputSelfile = self.filename_currentAngles
                 
             print 'self.defGroups[' + str(iterN) + ']: ', self.defGroups[iterN]
+            print 'self.defocusGroupNo: ' + str(self.defocusGroupNo)
 
-            _VerifyFiles = []
-            auxFilename = FileName(self.DocFileExp[iterN])
-            _VerifyFiles.append(auxFilename.removeBlockName())
-            id = self.Db.insertAction('joinImageCTF', _VerifyFiles
+            
+            if(self.defocusGroupNo > 2):
+                _VerifyFiles = []
+                auxFilename = FileName(self.DocFileExp[iterN])
+                _VerifyFiles.append(auxFilename.removeBlockName())
+                id = self.Db.insertAction('joinImageCTF', _VerifyFiles
                                         , CTFgroupName = self.defGroups[iterN]
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , inputSelfile = inputSelfile
                                         )
+            else:
+                self.DocFileExp[iterN] = self.defGroups[iterN]
             #reconstruct each CTF group
             _VerifyFiles = []
             _VerifyFiles.append(self.reconstructedVolume[iterN])
@@ -418,29 +447,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             
         
         
-    def otherActionsToBePerformedBeforeLoop(self):
-        _dataBase = self.Db
-        #Create directories
-        _dataBase.insertAction('createDir', None, path = self.volsDir)
-        _dataBase.insertAction('createDir', None, path = self.referenceDir)
-        _dataBase.insertAction('createDir', None, path = self.subImgsDir)
-        
-        #Create auxiliary metadata with image names , angles and CTF
-        
-        if(doScaleImages):
-            _VerifyFiles = [self.scaledImages+".stk"]
-            _VerifyFiles.append(self.scaledImages+".xmd")
-            id = _dataBase.insertAction('scaleImages', _VerifyFiles, None, None, None
-                                       , dimX = self.dimX
-                                       , dimY = self.dimY
-                                       , DoParallel = self.DoParallel
-                                       , filename_currentAngles = self.filename_currentAngles
-                                       , MpiJobSize = MpiJobSize
-                                       , NumberOfMpiProcesses = NumberOfMpiProcesses
-                                       , NumberOfThreads = NumberOfThreads
-                                       , scaledImages = self.scaledImages
-                                       , SystemFlavour = SystemFlavour
-                                       )            
+
 
     def defineActions(self):
         self.preRun()
@@ -465,7 +472,7 @@ def ImportProtocol():
     #FIXME use load module??
     exec  "import " + fn
     #loadModule(fn)
-    import arg
+    #import arg
     global ProjectDir
     ProjectDir = eval(fn +'.ProjectDir')
     global WorkingDir
@@ -476,12 +483,15 @@ def ImportProtocol():
     SymmetryGroup = eval(fn +'.SymmetryGroup')
     global AngSamplingRateDeg
     if(len(AngSamplingRateDeg) < 1):
-        AngSamplingRateDeg=arg.getComponentFromVector(eval(fn +'.AngSamplingRateDeg'),iterationNo)
+        AngSamplingRateDeg=getComponentFromVector(eval(fn +'.AngSamplingRateDeg'),iterationNo)
     global MaxChangeInAngles
     if(len(MaxChangeInAngles) < 1):
-        MaxChangeInAngles=arg.getComponentFromVector(eval(fn +'.MaxChangeInAngles'),iterationNo)
+        MaxChangeInAngles=getComponentFromVector(eval(fn +'.MaxChangeInAngles'),iterationNo)
     global refDirNameAngSamplingRateDeg
     #refDirName=  eval(fn +'.LibraryDir')
+    
+    
+    
         
 if __name__ == '__main__':
     ImportProtocol()
