@@ -40,6 +40,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.text.Document;
 
 public class Form extends JPanel 
 {
@@ -47,6 +48,7 @@ public class Form extends JPanel
 	private JPanel mainPanel;
 	private GridBagConstraints gbc;
 	private Hashtable<String, JTextField> textFields= new Hashtable<String, JTextField>();
+	private int columns=2,currentColumn=0,currentRow=0;
 
 	private static String BROWSE_LABEL="Browse...";
 
@@ -59,13 +61,39 @@ public class Form extends JPanel
 		gbc.insets=new Insets(5,5,5,5);
 		add(mainPanel,BorderLayout.CENTER);
 	}
+	
+	public Form(String title,int columns){
+		this(title);
+		this.columns=columns;
+	}
 
+	public void addStringField(String label, String defaultText,Document doc) {
+		addStringField(currentRow,label, defaultText,doc,true);
+		currentRow++;
+	}
+	
 	public void addStringField(int row,String label, String defaultText) {
 		addStringField(row,label, defaultText,true);
 	}
 	
+	/**
+	 * Spread buttons across the grid, left to right and top to bottom
+	 * @param a
+	 */
+	public void addButton(Action a){
+		gbc.gridx = currentColumn; gbc.gridy = currentRow;
+		gbc.weightx = 0.0; gbc.gridwidth=1;
+		gbc.anchor = GridBagConstraints.CENTER;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		JButton button=new JButton(a);
+		mainPanel.add(button,gbc);
+		columnMove();
+	}
+	
+	
+	
 	// TODO: bug? some labels don't align to right
-	private void addStringField(int row,String label, String defaultText,boolean expandTextField) {
+	private void addStringField(int row,String label, String defaultText,Document doc,boolean expandTextField) {
 		JLabel theLabel = new JLabel(label);
 		gbc.gridx = 0; gbc.gridy = row;
 		gbc.weightx = 0.0; gbc.gridwidth=1;
@@ -73,6 +101,9 @@ public class Form extends JPanel
 		mainPanel.add(theLabel,gbc);
 
 		JTextField tf = new JTextField(defaultText);
+		if(doc != null)
+			tf.setDocument(doc);
+		theLabel.setLabelFor(tf);
 		textFields.put(label, tf);
 		gbc.gridx = 1; gbc.gridy = row;
 		gbc.anchor = GridBagConstraints.WEST;
@@ -82,6 +113,10 @@ public class Form extends JPanel
 			gbc.gridwidth=GridBagConstraints.REMAINDER;		
 		tf.setEditable(true);
 		mainPanel.add(tf,gbc);
+	}
+	
+	private void addStringField(int row,String label, String defaultText,boolean expandTextField) {
+		addStringField(row,label,defaultText,null,expandTextField);
 	}
 
 	public void addNumericField(int row,String label,int defaultValue){
@@ -98,6 +133,12 @@ public class Form extends JPanel
 		mainPanel.add(b,gbc);
 	}
 
+	private void columnMove(){
+		if(currentColumn == columns-1)
+			currentRow++;
+		currentColumn = (currentColumn + 1) % columns;
+	}
+	
 	public void openDialog(String fieldName){
 		String path=FileDialog.openDialog(fieldName, this);
 		if(path != null) 
@@ -105,15 +146,34 @@ public class Form extends JPanel
 	}
 	
 	
-	private String getText(String textField){
+	public String getText(String label){
 		String result ="";
 		try{
-			result= textFields.get(textField).getText();
+			result= getTextField(label).getText();
 		}catch (NullPointerException ex){
 			result = "";
 		}
 		return result;
 	}
+	
+	private JTextField getTextField(String label){
+		return textFields.get(label);
+	}
+	
+	public void setText(String label,String text){
+		try{
+			getTextField(label).setText(text);
+		}catch (NullPointerException ex){
+		}
+	}
+	
+	public void setDocument(String label,Document doc){
+		try{
+			getTextField(label).setDocument(doc);
+		}catch (NullPointerException ex){
+		}
+	}
+
 
 	public static void main(String args[]) {
 		JFrame window=new JFrame("Form test");

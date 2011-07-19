@@ -46,18 +46,27 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.text.Document;
+import javax.swing.text.PlainDocument;
 import javax.swing.tree.*;
 
-// TODO: test insert/delete nodes in runtime
-// TODO: should show/expand all nodes by default (except the details nodes)
-// TODO: new design: add a form in the bottom for details & comments
-public class WorkflowView extends JPanel {
+// TODO: change default icons - actions are not folders nor files
+// TODO: change details text field appeareance so it does not promote changing its contents
+public class WorkflowView extends JPanel implements TreeSelectionListener{
 	// The initial width and height of the frame
-	private static int WIDTH = 300, HEIGHT = 200;
-	private static Dimension BUTTONS_PANEL_PREF_SIZE = new Dimension(250,100);
+	private static int WIDTH = 400, HEIGHT = 300;
+	private static Dimension BUTTONS_PANEL_PREF_SIZE = new Dimension(350,150),TREE_PANEL_PREF_SIZE= new Dimension(350,350);
+	private static String DETAILS_LABEL="Details", COMMENTS_LABEL="Comments";
 
-	// the controller must have access to the model
+	// the controller must have access to the model. By default, this class acts as
+	// a controller
 	private Workflow model;
+	
+	private JTree tree;
+	private Form formPanel;
 	/**
 	 * Create the panel with all its subcomponents
 	 * @param root
@@ -70,54 +79,90 @@ public class WorkflowView extends JPanel {
 		if(controller == null)
 			controller = this;
 		
-		model=newModel;
-		TreeNode root = model.getRoot();
+        setBorder(BorderFactory.createCompoundBorder(
+        		BorderFactory.createTitledBorder("Workflow"),
+                BorderFactory.createEmptyBorder(5,5,5,5)));
+	
+        model=newModel;
 		
 		// use a layout that will stretch tree to panel size
 		setLayout(new BorderLayout());
 
 		// Create tree
-		JTree tree = new JTree(root);
-
+		tree = new JTree(model);
+		tree.addTreeSelectionListener(this);
+		
+		
 		// Set line style
 		tree.putClientProperty("JTree.lineStyle", "Angled");
 		tree.setRowHeight(0);
 		tree.setScrollsOnExpand(true);
+		expandAll();
+		tree.setSelectionPath(new TreePath(model.getRoot()));
+		
 		/*tree.setAlignmentX(Component.TOP_ALIGNMENT);
       tree.setAlignmentY(Component.TOP_ALIGNMENT);*/
 
 
 		// Put tree in a scrollable pane
 		JScrollPane sp = new JScrollPane(tree);
+		sp.setPreferredSize(TREE_PANEL_PREF_SIZE);
 
 		add(sp, BorderLayout.CENTER);
-		JPanel formPanel=new JPanel();
-		formPanel.setLayout(new GridBagLayout());
+		formPanel=new Form("form",2);
+		//formPanel.setLayout(new GridBagLayout());
 		add(formPanel,BorderLayout.SOUTH);
 		Action a = new Action(controller, new Command("workflow.newop","New Operation","newOperation",true,null));
 		Action b = new Action(controller, new Command("workflow.discardop","Discard Operation","discardOperation",true,null));      
-		Action c = new Action(controller, new Command("workflow.load","Load Workflow","loadWorkflow",true,null));
-		Action d = new Action(controller, new Command("workflow.save","Save Workflow","saveWorkflow",true,null));
-		JButton newOp=new JButton(a), delOp=new JButton(b), load=new JButton(c), save=new JButton(d);
-		formPanel.add(newOp);
-		formPanel.add(delOp);
-		formPanel.add(load);
-		formPanel.add(save);
+		Action c = new Action(controller, new Command("workflow.load","Load Workflow","loadWorkflow",false,null));
+		Action d = new Action(controller, new Command("workflow.save","Save Workflow","saveWorkflow",false,null));
+		formPanel.addButton(a);
+		formPanel.addButton(b);
+		formPanel.addButton(c);
+		formPanel.addButton(d);
+		formPanel.addStringField(DETAILS_LABEL, null,null);
+		formPanel.addStringField(COMMENTS_LABEL, null,getCommentsDocument());
+		
 		formPanel.setPreferredSize(BUTTONS_PANEL_PREF_SIZE);
 	}
 
-	// TODO: should add the operation to the current node
-	// TODO: the treepanel does not  show new node...
+	// TODO: warn the user when no node is selected
 	public void newOperation(){
-		Logger.debug("newOperation");
-		UserAction a1=new UserAction(0,"Load2","Load2" , "g1ta2.spi");
-		DefaultMutableTreeNode n1=model.addUserAction(model.getRoot(), a1);
+		if(getSelectedNode() != null){
+			UserAction a1=new UserAction(0,"Load2","Load2" , "g1ta2.spi");
+			DefaultMutableTreeNode n1=model.addUserAction(getSelectedNode(), a1);
+			tree.scrollPathToVisible(new TreePath(n1.getPath()));
+		}
 	}
 
 	public void discardOperation(){
-		Logger.debug("discardOperation");
+	    if (getSelectedNode() != null) {
+            DefaultMutableTreeNode currentNode = getSelectedNode();
+            MutableTreeNode parent = (MutableTreeNode)(currentNode.getParent());
+            if (parent != null) {
+            	model.removeNodeFromParent(currentNode);
+            }
+        } 
 	}
 
+	public void expandAll(){
+		for (int i = 0; i < tree.getRowCount(); i++) 
+	         tree.expandRow(i);
+	}
+	
+	public DefaultMutableTreeNode getSelectedNode(){
+		return (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+	}
+	
+	/**
+	 * @return may be null (watch out)
+	 */
+	public UserAction getSelectedUserAction(){
+		if(getSelectedNode()==null)
+			return null;
+		return (UserAction) (getSelectedNode().getUserObject());
+	}
+	
 	public void loadWorkflow(){
 		Logger.debug("loadWorkflow");
 		Logger.debug(model.toString());
@@ -125,8 +170,34 @@ public class WorkflowView extends JPanel {
 
 	public void saveWorkflow(){
 		Logger.debug("saveWorkflow");
+		expandAll();
+	}
+	
+	private void setDetails(String details){
+		if(details != null && formPanel != null)
+			formPanel.setText(DETAILS_LABEL, details);
+	}
+	
+	private void setCommentsDocument(Document doc){
+		if(doc != null && formPanel != null)
+			formPanel.setDocument(COMMENTS_LABEL, doc);
+	}
+	
+	private Document getCommentsDocument(){
+		UserAction ua=getSelectedUserAction();
+		if(ua==null)
+			return new PlainDocument();
+		return ua.getCommentsDocument();
 	}
 
+	public void valueChanged(TreeSelectionEvent e){
+		UserAction ua=getSelectedUserAction();
+		if(ua != null){
+			setDetails(ua.getCommandDetails());
+			setCommentsDocument(ua.getCommentsDocument());
+		}
+	}
+	
 	public static void main(String args[]) {
 		JFrame window=new JFrame();
 		Container content = window.getContentPane();
@@ -141,6 +212,9 @@ public class WorkflowView extends JPanel {
 		window.setSize(WIDTH, HEIGHT);
 		window.setVisible(true);
 	}
+	
+	
+	
 }
 
 /*

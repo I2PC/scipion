@@ -1,3 +1,6 @@
+import javax.swing.text.BadLocationException;
+import javax.swing.text.PlainDocument;
+
 /***************************************************************************
  *
  * @author: Jesus Cuenca (jcuenca@cnb.csic.es)
@@ -30,20 +33,33 @@
  */
 public class UserAction {
 	public static int ROOT_WINDOWID=0;
+	private static String WORKFLOW_ROOT_NAME="Start";
 	
 	private int windowId;
 	private String command=null,parameters=null,name=null;
 	private Plugin plugin;
 	private boolean neededForFile=false;
 	private String inputFile,outputFile;
-	private String comments;
+	private PlainDocument comments;
 	
 	public String getComments() {
+		String result="";
+		try{
+			result= comments.getText(0, comments.getLength());
+		}catch (BadLocationException ex){}
+		return result;
+	}
+	
+	public PlainDocument getCommentsDocument(){
+		if(comments == null)
+			comments=new PlainDocument();
 		return comments;
 	}
 
-	public void setComments(String comments) {
-		this.comments = comments;
+	public void setComments(String text) {
+		try{
+			comments.replace(0,comments.getLength(),text,null);
+		}catch (BadLocationException ex){}
 	}
 
 	public UserAction(int windowId){
@@ -76,6 +92,11 @@ public class UserAction {
 		setName(name);
 	}
 	
+	public static UserAction start(){
+		return new UserAction(UserAction.ROOT_WINDOWID,WORKFLOW_ROOT_NAME,"","");
+		
+	}
+	
 	public int getWindowId() {
 		return windowId;
 	}
@@ -105,7 +126,8 @@ public class UserAction {
 		if(actionName != null)
 		  actionText = actionText + actionName + ".";
 
-		actionText = actionText + " :: " + getProgress();
+		if(getProgress() != null)
+			actionText = actionText + " :: " + getProgress();
 		
 		return actionText;
 	}
@@ -151,6 +173,8 @@ public class UserAction {
 	}
 	
 	public String getProgress(){
+		if(WORKFLOW_ROOT_NAME.equals(getName()))
+			return null;
 		int p = (getCommand().length() % 4) * 25;
 		return String.valueOf(p) + "%";
 	}

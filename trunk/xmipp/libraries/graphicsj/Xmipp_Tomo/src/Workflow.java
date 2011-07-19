@@ -40,7 +40,7 @@ public class Workflow extends DefaultTreeModel{
 
 
 	public Workflow(){
-		super(new DefaultMutableTreeNode(new UserAction(UserAction.ROOT_WINDOWID,"Project")));
+		super(new DefaultMutableTreeNode(UserAction.start()));
 	}
 	
 	public static Workflow getTestWorkflow(){
