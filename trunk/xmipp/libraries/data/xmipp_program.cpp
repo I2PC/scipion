@@ -226,7 +226,7 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
                 notRun = false;
             }
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             ///If an input error, shows error message
           if (verbose)
@@ -257,7 +257,7 @@ int XmippProgram::tryRun()
         if (!notRun)
             this->run();
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         std::cerr << xe;
         errorCode = xe.__errno;
