@@ -1187,10 +1187,10 @@ public:
         }
         catch (std::bad_alloc &)
         {
-        	std::ostringstream sstream;
-        	sstream << "Allocate: No space left to alloc ";
-        	sstream << (NZYXdim * sizeof(T)/1024/1024/1024) ;
-        	sstream << "Gb." ;
+            std::ostringstream sstream;
+            sstream << "Allocate: No space left to alloc ";
+            sstream << (NZYXdim * sizeof(T)/1024/1024/1024) ;
+            sstream << "Gb." ;
             REPORT_ERROR(ERR_MEM_NOTENOUGH, sstream.str());
         }
 
@@ -1929,7 +1929,7 @@ public:
 
         M.resizeNoCopy(1, ZSIZE(*this), YSIZE(*this), XSIZE(*this));
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(M)
-        DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
+        DIRECT_ZYX_ELEM(M, k, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
 
         STARTINGX(M) = STARTINGX(*this);
         STARTINGY(M) = STARTINGY(*this);
