@@ -39,8 +39,11 @@ Set this option to TRUE if you want to start from scratch the same run
 with previous parameters
 """
 DoDeleteWorkingDir = False
-# {dir} Directory name from where to process all scanned micrographs
+
+# {dir} Micrographs directory
+"""Directory name from where to process all scanned micrographs"""
 DirMicrographs = 'Micrographs'
+
 # Which files in this directory to process
 """ This is typically *.tif or *.ser, but may also be *.mrc, *.spi 
     (see the expert options)
