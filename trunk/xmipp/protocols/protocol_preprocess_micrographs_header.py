@@ -1,0 +1,182 @@
+#!/usr/bin/env python
+#------------------------------------------------------------------------------------------------
+# General script for Xmipp-based pre-processing of micrographs: 
+#  - downsampling
+#  - power spectral density (PSD) and CTF estimation on the micrograph
+#
+# For each micrograph given, this script will perform 
+# the requested operations below.
+# For each micrograph a subdirectory will be created
+#
+# Author: Sjors Scheres, March 2007
+#         Roberto Marabini (mpi extension)
+#         Carlos Oscar Sorzano, November 2010
+#
+
+# {begin_of_header}
+#------------------------------------------------------------------------------------------
+# {section}{has_question} Comment
+#------------------------------------------------------------------------------------------
+# Display comment
+DisplayComment = False
+
+# {text} Write a comment:
+""" 
+Describe your run here...
+"""
+#-----------------------------------------------------------------------------
+# {section} Global parameters
+#-----------------------------------------------------------------------------
+# Run name:
+""" This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
+run1 for it. This name together with the protocol output folder will determine the working dir for this run.
+"""
+RunName = "run_001"
+
+# Delete working directory?
+""" If TRUE the working directory will be deleted before run.
+Set this option to TRUE if you want to start from scratch the same run
+with previous parameters
+"""
+DoDeleteWorkingDir = False
+# {dir} Directory name from where to process all scanned micrographs
+DirMicrographs = 'Micrographs'
+# Which files in this directory to process
+""" This is typically *.tif or *.ser, but may also be *.mrc, *.spi 
+    (see the expert options)
+    Note that any wildcard is possible, e.g. *3[1,2].tif
+"""
+ExtMicrographs = '*.mrc'
+
+#------------------------------------------------------------------------------------------------
+# {section}{has_question} Preprocess
+#------------------------------------------------------------------------------------------------
+# Do proceprocess
+DoPreprocess = True
+
+# Crop borders
+""" Crop a given amount of pixels from each border.
+    Set this option to -1 for not applying it."""
+Crop = -1
+
+# Remove bad pixels
+""" Values will be thresholded to this multiple of standard deviations. Typical
+    values are about 5, i.e., pixel values beyond 5 times the standard deviation will be
+    substituted by the local median. Set this option to -1 for not applying it."""
+Stddev = -1
+
+# Downsampling factor 
+""" Set to 1 for no downsampling. Non-integer downsample factors are possible."""
+Down = 2
+
+#------------------------------------------------------------------------------------------------
+# {section}{has_question} CTF estimation
+#------------------------------------------------------------------------------------------------
+# Perform CTF estimation
+DoCtfEstimate=True
+
+# Microscope voltage (in kV)
+Voltage = 200
+
+# Spherical aberration
+SphericalAberration = 2.26
+
+# Magnification rate
+Magnification = 70754
+
+# Scanned pixel size (in um)
+ScannedPixelSize = 15
+
+# Amplitude Contrast
+""" It should be a negative number"""
+AmplitudeContrast = -0.1
+
+# {expert} Only perform power spectral density estimation?
+""" Skip the CTF estimation part, and only estimate the PSD
+"""
+OnlyEstimatePSD = False
+
+# {expert} Lowest resolution for CTF estimation
+""" Give a value in digital frequency (i.e. between 0.0 and 0.5)
+    This cut-off prevents the typically peak at the center of the PSD to interfere with CTF estimation.  
+    The default value is 0.05, but for micrographs with a very fine sampling this may be lowered towards 0.0
+"""
+LowResolCutoff = 0.05
+
+# {expert} Highest resolution for CTF estimation
+""" Give a value in digital frequency (i.e. between 0.0 and 0.5)
+    This cut-off prevents high-resolution terms where only noise exists to interfere with CTF estimation.  
+    The default value is 0.35, but it should be increased for micrographs with signals extending beyond this value
+"""
+HighResolCutoff = 0.35
+
+# {expert} Minimum defocus to search (in Ang.)
+""" Minimum defocus value (in Angstrom) to include in defocus search
+"""
+MinFocus = 5000
+
+# {expert} Maximum defocus to search (in Ang.)
+""" Maximum defocus value (in Angstrom) to include in defocus search
+"""
+MaxFocus = 100000
+
+# {expert} Window size for Xmipp
+WinSizeXmipp = 256
+
+# {expert} Window size for CTFFIND
+WinSizeCTFFind = 256
+
+# {expert} Defocus step for CTFFIND (in Ang.)
+""" Step size for defocus search (in Angstrom)
+"""
+StepFocus = 500
+
+
+#------------------------------------------------------------------------------------------
+# {section} Parallelization issues
+#------------------------------------------------------------------------------------------
+# Number of (shared-memory) threads?
+""" This option provides shared-memory parallelization on multi-core machines.
+It does not require any additional software, other than xmipp
+"""
+NumberOfThreads = 1
+
+# Number of MPI processes to use
+NumberOfMpiProcesses = 3
+
+#------------------------------------------------------------------------------------------
+# {section}{has_question} Queue
+#------------------------------------------------------------------------------------------
+# Submmit to queue
+"""Submmit to queue
+"""
+SubmmitToQueue = True
+
+# Queue name
+"""Name of the queue to submit the job
+"""
+QueueName = "default"
+
+# Queue hours
+"""This establish a maximum number of hours the job will
+be running, after that time it will be killed by the
+queue system
+"""
+QueueHours = 72
+
+# {hidden} Show expert options
+"""If True, expert options will be displayed
+"""
+ShowExpertOptions = False
+
+#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------
+# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
+#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------
+from protocol_preprocess_micrographs import *
+#        
+# Main
+#     
+if __name__ == '__main__':
+    protocolMain(ProtPreprocessMicrographs)

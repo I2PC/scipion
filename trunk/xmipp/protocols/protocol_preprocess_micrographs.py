@@ -11,152 +11,13 @@
 # Author: Sjors Scheres, March 2007
 #         Roberto Marabini (mpi extension)
 #         Carlos Oscar Sorzano, November 2010
-#
-# {begin_of_header}
-#------------------------------------------------------------------------------------------------
-# {section} Global parameters
-#------------------------------------------------------------------------------------------------
-# Working subdirectory:
-WorkingDir='Preprocessing'
-# {dir} Directory name from where to process all scanned micrographs
-DirMicrographs='Micrographs'
-# Which files in this directory to process
-""" This is typically *.tif or *.ser, but may also be *.mrc, *.spi 
-    (see the expert options)
-    Note that any wildcard is possible, e.g. *3[1,2].tif
-"""
-ExtMicrographs='*.mrc'
-# Rootname for these micrographs
-# {expert} Root directory name for this project:
-""" Absolute path to the root directory for this project
-"""
-ProjectDir ='/media/usbdisk/Experiments/TestProtocols/MicrographPreprocessing'
-#------------------------------------------------------------------------------------------------
-# {section} Preprocess
-#------------------------------------------------------------------------------------------------
-# Do proceprocess
-# Perform preprocessing? 
-DoPreprocess=True
-# Crop borders
-""" Crop a given amount of pixels from each border.
-    Set this option to -1 for not applying it."""
-Crop=-1
-# Remove bad pixels
-""" Values will be thresholded to this multiple of standard deviations. Typical
-    values are about 5, i.e., pixel values beyond 5 times the standard deviation will be
-    substituted by the local median. Set this option to -1 for not applying it."""
-Stddev=-1
-# Downsampling factor 
-""" Set to 1 for no downsampling. Non-integer downsample factors are possible."""
-Down=2
-#------------------------------------------------------------------------------------------------
-# {section} CTF estimation
-#------------------------------------------------------------------------------------------------
-# Perform CTF estimation?
-DoCtfEstimate=True
-# Microscope voltage (in kV)
-Voltage=200
-# Spherical aberration
-SphericalAberration=2.26
-# Magnification rate
-Magnification=70754
-# Scanned pixel size (in um)
-ScannedPixelSize=15
-# Amplitude Contrast
-""" It should be a negative number"""
-AmplitudeContrast=-0.1
-# {expert} Only perform power spectral density estimation?
-""" Skip the CTF estimation part, and only estimate the PSD
-"""
-OnlyEstimatePSD=False
-# {expert} Lowest resolution for CTF estimation
-""" Give a value in digital frequency (i.e. between 0.0 and 0.5)
-    This cut-off prevents the typically peak at the center of the PSD to interfere with CTF estimation.  
-    The default value is 0.05, but for micrographs with a very fine sampling this may be lowered towards 0.0
-"""
-LowResolCutoff=0.05
-# {expert} Highest resolution for CTF estimation
-""" Give a value in digital frequency (i.e. between 0.0 and 0.5)
-    This cut-off prevents high-resolution terms where only noise exists to interfere with CTF estimation.  
-    The default value is 0.35, but it should be increased for micrographs with signals extending beyond this value
-"""
-HighResolCutoff=0.35
-# {expert} Minimum defocus to search (in Ang.)
-""" Minimum defocus value (in Angstrom) to include in defocus search
-"""
-MinFocus=5000
-# {expert} Maximum defocus to search (in Ang.)
-""" Maximum defocus value (in Angstrom) to include in defocus search
-"""
-MaxFocus=100000
-# {expert} Window size for Xmipp
-WinSizeXmipp=256
-# {expert} Window size for CTFFIND
-WinSizeCTFFind=256
-# {expert} Defocus step for CTFFIND (in Ang.)
-""" Step size for defocus search (in Angstrom)
-"""
-StepFocus=500
 
-#------------------------------------------------------------------------------------------------
-# {section} Parallelization issues
-#------------------------------------------------------------------------------------------------
-# distributed-memory parallelization (MPI)?
-""" This option provides distributed-memory parallelization on multi-node machines. 
-    It requires the installation of some MPI flavour, possibly together with a queueing system
-"""
-DoParallel=True
-
-# Number of MPI processes to use:
-NumberOfMpiProcesses=3
-
-# MPI system Flavour 
-""" Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
-    Ask the person who installed your xmipp version, which option to use. 
-    Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
-"""
-SystemFlavour='TORQUE-OPENMPI'
-
-#------------------------------------------------------------------------------------------------
-# {hidden} Analysis of results
-""" This script serves only for GUI-assisted visualization of the results
-"""
-AnalysisScript='visualize_preprocess_micrographs.py'
-
-#------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------
-# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
-#------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------
-#
-# Taken from Python 2.6
-import posixpath
-def relpath(path, start=posixpath.curdir):
-    """Return a relative version of a path"""
-    if not path:
-        raise ValueError("no path specified")
-    start_list=posixpath.abspath(start).split(posixpath.sep)
-    path_list=posixpath.abspath(path).split(posixpath.sep)
-    # Work out how much of the filepath is shared by start and path.
-    i=len(posixpath.commonprefix([start_list, path_list]))
-    rel_list=[posixpath.pardir] * (len(start_list) - i) + path_list[i:]
-    if not rel_list:
-        return curdir
-    return posixpath.join(*rel_list)
-
-def stepPerformed(step,filename):
-    import re
-    f = open(filename, 'r')
-    lines=f.readlines()
-    f.close()
-    expr = re.compile(step)
-    return len(filter(expr.search,lines))>0
 
 import glob, os, shutil, sys
-scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
-sys.path.append(scriptdir)
+from protlib_base import *
 
-class preprocess_A_class:
+#FIXME: IMPLEMENTATION SHOULD BE REVISED
+class ProtPreprocessMicrographs(XmippProtocol):
     def saveAndCompareParameters(self, listOfParameters):
         fnOut=self.WorkingDir + "/protocolParameters.txt"
         linesNew=[];
@@ -183,71 +44,12 @@ class preprocess_A_class:
         f.writelines(linesNew)
         f.close()
     
-    def __init__(self,
-                 WorkingDir,
-                 DirMicrographs,
-                 ExtMicrographs,
-                 ProjectDir,
-                 DoPreprocess,
-                 Crop,
-                 Stddev,
-                 Down,
-                 DoCtfEstimate,
-                 Voltage,
-                 SphericalAberration,
-                 Magnification,
-                 ScannedPixelSize,
-                 AmplitudeContrast,
-                 OnlyEstimatePSD,
-                 LowResolCutoff,
-                 HighResolCutoff,
-                 MinFocus,
-                 MaxFocus,
-                 WinSizeXmipp,
-                 WinSizeCTFFind,
-                 StepFocus,
-                 DoParallel,
-                 NumberOfMpiProcesses,
-                 SystemFlavour
-                 ):
-        
-        import log
-
-        self.WorkingDir=WorkingDir
-        self.DirMicrographs=DirMicrographs
-        self.ExtMicrographs=ExtMicrographs.strip()
-        self.ProjectDir=os.path.abspath(ProjectDir)
-        self.LogDir="Logs"
-        self.DoPreprocess=DoPreprocess
-        self.Crop=Crop
-        self.Stddev=Stddev
-        if (float(Down) == int(Down)):
-            self.Down=int(Down)
-        else:
-            self.Down=float(Down)
-        self.DoCtfEstimate=DoCtfEstimate
-        self.Voltage=Voltage
-        self.SphericalAberration=SphericalAberration
-        self.Magnification=Magnification
-        self.ScannedPixelSize=ScannedPixelSize
-        self.AmplitudeContrast=AmplitudeContrast
-        self.OnlyEstimatePSD=OnlyEstimatePSD
-        self.LowResolCutoff=LowResolCutoff
-        self.HighResolCutoff=HighResolCutoff
-        self.MinFocus=MinFocus
-        self.MaxFocus=MaxFocus
-        self.WinSizeCTFFind=WinSizeCTFFind
-        self.WinSizeXmipp=WinSizeXmipp
-        self.StepFocus=StepFocus
-        self._MySystemFlavour=SystemFlavour
-        self._DoParallel=DoParallel
-        self._MyNumberOfMpiProcesses=NumberOfMpiProcesses
-
+    def __init__(self):
         # Setup logging
-        self.log=log.init_log_system(self.ProjectDir,
-                                     self.LogDir,
-                                     sys.argv[0],
-                                     self.WorkingDir)
+        #self.log=log.init_log_system(self.ProjectDir,
+        #                             self.LogDir,
+        #                             sys.argv[0],
+        #                             self.WorkingDir)
 
         # Check ctffind executable
         import which
@@ -586,6 +388,15 @@ class preprocess_A_class:
 
         return
 
+def stepPerformed(step,filename):
+    import re
+    f = open(filename, 'r')
+    lines=f.readlines()
+    f.close()
+    expr = re.compile(step)
+    return len(filter(expr.search,lines))>0
+
+#FIXME: THIS SHOULD BE IMPLEMENTED AS CLASS METHOD validate
 # Preconditions
 def checkErrors():
     errors = []
