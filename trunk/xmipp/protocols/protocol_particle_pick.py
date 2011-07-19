@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------------------------
 # General script for Xmipp-based manual particle picking
 #
-# For each micrograph in the PreprocessingDir, this program will launch
+# For each micrograph in the self.PreprocessingRun, this program will launch
 # the xmipp_mark program 
 # A graphical interface exists to identify micrographs that have been finished
 #
@@ -10,48 +10,6 @@
 # Author: Carlos Oscar Sorzano, June, 2011
 #
 #------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------
-# {begin_of_header} 
-
-#------------------------------------------------------------------------------------------
-# {section}{has_question} Comment
-#------------------------------------------------------------------------------------------
-# Show comment
-DisplayComment = False
-
-# {text} Comment
-""" Specify the particularities of this run """
-
-#------------------------------------------------------------------------------------------
-# {section} Global parameters
-#------------------------------------------------------------------------------------------
-# Run name
-""" Working directory for this protocol 
-"""
-RunName = "particles_001"
-
-# {dir} Preprocessing dir
-""" Directory with the preprocessing (output of the Preprocessing Micrographs protocol)
-"""
-PreprocessingDir = "Preprocessing/micrographs_001"
-
-# Perform automatic particle picking
-""" Perform automatic particle picking """
-AutomaticPicking = True
-
-# Number of threads to use
-""" This parameter is used during the training phase """
-NumberOfThreads = 4
-
-#------------------------------------------------------------------------------------------
-# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
-#------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------
-# This program is interactive and cannot use MPI or queues
-NumberOfMpiProcesses = 1
-SubmmitToQueue=False
-QueueName="default"
-QueueHours=72
 
 # Do not repeat already taken steps
 IsIter=False
@@ -74,19 +32,19 @@ from Tkinter import IntVar
 
 # Create a GUI automatically from a selfile of micrographs
 class ProtParticlePicking(XmippProtocol):
-    def __init__(self, scriptname,project=None):
-        super(ProtParticlePicking,self).__init__(protDict.particle_pick.key, scriptname, RunName, project)
+    def __init__(self, scriptname, project):
+        XmippProtocol.__init__(self, protDict.particle_pick.key, scriptname, project)
         self.Import = 'from xmipp_protocol_particle_pick import *'
 
+    def defineActions(self):
         self.mD = xmipp.MetaData()
-        self.MicrographSelfile=PreprocessingDir+"/micrographs.sel"
+        self.MicrographSelfile = os.path.join(self.self.PreprocessingRun, "micrographs.sel")
         xmipp.readMetaDataWithTwoPossibleImages(self.MicrographSelfile, self.mD)
         self.isPairList = self.mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1) and \
                           not xmipp.FileName(self.MicrographSelfile).isStar1()
     
-    def defineActions(self):
         # Create link to input micrographs
-        micrographSelfile=os.path.join(PreprocessingDir,"micrographs.sel")
+        micrographSelfile=os.path.join(self.PreprocessingRun,"micrographs.sel")
         self.Db.insertAction('createLinkToMicrographs', [micrographSelfile], MicrographSelfile=micrographSelfile, WorkingDir=self.WorkingDir)       
 
         # Create a dictionary of relevant micrograph information
@@ -109,11 +67,14 @@ class ProtParticlePicking(XmippProtocol):
                              micrographDict=micrographDict)       
 
     def summary(self):
-        MicrographSelfile=os.path.join(PreprocessingDir,"micrographs.sel")
+        summary = []
+        #FIXME:
+        return summary
+        MicrographSelfile = os.path.join(self.PreprocessingRun,"micrographs.sel")
         if self.isPairList:
-            msg=["Input: "+MicrographSelfile+" (Tilt pairs)"]
+            summary=["Input: "+MicrographSelfile+" (Tilt pairs)"]
         else:
-            msg=["Input: "+MicrographSelfile]
+            summary=["Input: "+MicrographSelfile]
         
         total_manual = 0
         total_auto = 0
@@ -131,13 +92,16 @@ class ProtParticlePicking(XmippProtocol):
                  if auto>0:
                      total_auto+=auto
                      N_auto+=1
-        msg.append("# Manually picked: "+str(total_manual)+" (from "+str(N_manual)+" micrographs)")
+        summary.append("# Manually picked: %d (from %d micrographs)" % (total_manual, N_manual))
         if AutomaticPicking:
-            msg.append("# Automatically picked: "+str(total_auto)+" (from "+str(N_auto)+" micrographs)")
-        return msg
+            summary.append("# Automatically picked: %d (from %d micrographs) " % (total_auto, N_auto))
+        return summary
     
     def validate(self):
         errors = []
+        
+        #Fixme:
+        return errors
 
         # Check that there is a valid list of micrographs
         if not os.path.exists(self.MicrographSelfile)>0:
@@ -177,7 +141,7 @@ class ProtParticlePickingGUI(BasicGUI):
 
         # Read micrographs
         self.mD=xmipp.MetaData();
-        self.MicrographSelfile=PreprocessingDir+"/micrographs.sel"
+        self.MicrographSelfile=self.PreprocessingRun+"/micrographs.sel"
         xmipp.readMetaDataWithTwoPossibleImages(self.MicrographSelfile, self.mD)
         self.IsPairList = self.mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1) and \
                           not xmipp.FileName(self.MicrographSelfile).isStar1()
@@ -202,7 +166,7 @@ class ProtParticlePickingGUI(BasicGUI):
         
         # Frame header
         self.addLabel("Project directory: "+self.ProjectDir,0,0,titleSpan,fgColor="medium blue",sticky=W)
-        self.addLabel("Preprocessing directory: "+PreprocessingDir,1,0,titleSpan,fgColor="medium blue",sticky=W)
+        self.addLabel("Preprocessing directory: "+self.PreprocessingRun,1,0,titleSpan,fgColor="medium blue",sticky=W)
  
         # Add all micrographs
         containsEnable=self.mD.containsLabel(xmipp.MDL_ENABLED)
