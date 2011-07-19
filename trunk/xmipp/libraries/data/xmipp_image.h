@@ -661,8 +661,8 @@ public:
 
         ImageGeneric im;
         int imXdim, imYdim, imZdim, Zdim;
-
-        im.readMapped(name, select_img);
+        int err;
+        err = im.readMapped(name, select_img);
         im.getDimensions(imXdim, imYdim, imZdim);
         im().setXmippOrigin();
 
@@ -678,6 +678,7 @@ public:
             Zdim = (select_slice == ALL_SLICES)? imZdim: 1;
             scaleToSize(0,IMGMATRIX(*this),im(), Xdim, Ydim, Zdim);
         }
+        return err;
     }
 
     /** Write an entire page as datatype
