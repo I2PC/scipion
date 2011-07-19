@@ -275,6 +275,9 @@ public:
     // Destroy data
     bool destroyData;
 
+    // Mapped data
+    bool mappedData;
+
     // Number of elements in X
     int mdimx;
 
@@ -292,6 +295,11 @@ public:
     Matrix2D()
     {
         coreInit();
+    }
+
+    Matrix2D(const FileName &fnMappedMatrix, int Ydim, int Xdim)
+    {
+    	coreInit(fnMappedMatrix,Ydim,Xdim);
     }
 
     /** Dimension constructor
@@ -351,6 +359,19 @@ public:
         coreInit();
     }
 
+    /** Core init from mapped file */
+    void coreInit(const FileName &fn, int Ydim, int Xdim)
+    {
+    	mdimx=Xdim;
+    	mdimy=Ydim;
+    	destroyData=false;
+    	mappedData=true;
+        FILE* fMap = fopen(fn.c_str(),"rwb");
+        int Fd = fileno(fMap);
+        if ( (mdata = (T*) mmap(0,Ydim*Xdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, Fd, 0)) == NULL )
+            REPORT_ERROR(ERR_MMAP_NOTADDR,(String)"mmap failed "+integerToString(errno));
+    }
+
     /** Core init.
      * Initialize everything to 0
      */
@@ -359,6 +380,7 @@ public:
         mdimx=mdimy=mdim=0;
         mdata=NULL;
         destroyData=true;
+        mappedData=false;
     }
 
     /** Core allocate.
@@ -375,6 +397,7 @@ public:
         mdimy=_mdimy;
         mdim=_mdimx*_mdimy;
         mdata = new T [mdim];
+        mappedData=false;
         if (mdata == NULL)
             REPORT_ERROR(ERR_MEM_NOTENOUGH, "coreAllocate: No space left");
     }
@@ -386,6 +409,8 @@ public:
     {
         if (mdata != NULL && destroyData)
             delete[] mdata;
+        if (mappedData)
+        	munmap(mdata,mdimx*mdimy*sizeof(T));
         mdata=NULL;
     }
     //@}
@@ -441,6 +466,7 @@ public:
         mdimx = Xdim;
         mdimy = Ydim;
         mdim = Xdim * Ydim;
+        mappedData = false;
     }
 
     /** Resize according to a pattern.
@@ -477,6 +503,15 @@ public:
     {
         if (mdimx != v.mdimx || mdimy != v.mdimy)
             resize(v.mdimy, v.mdimx, true);
+    }
+
+    /** Map to file.
+     * The matrix is mapped to a file. The file is presumed to be already created with
+     * enough space for a matrix of size Ydim x Xdim.
+     */
+    void mapToFile(const FileName &fn, int Ydim, int Xdim)
+    {
+    	coreInit(fn,Ydim,Xdim);
     }
 
     /** Extract submatrix and assign to this object.
