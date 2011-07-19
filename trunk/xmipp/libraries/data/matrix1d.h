@@ -320,7 +320,7 @@ public:
     {
         coreInit();
         *this = v;
-        row!=column;
+        row = !column;
     }
 
     /** Destructor.
