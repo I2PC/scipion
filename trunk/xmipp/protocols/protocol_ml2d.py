@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
 # Protocol for Xmipp-based 2D alignment and classification,
-# using maximum-likelihood principles, according to:
+# using maximum-likelihood principles
 #
-# Example use:
-# ./xmipp_protocol_ml2d.py
-#
-#  Author:  Sjors Scheres, January 2008
-# Updated:  J. M. de la Rosa Trevin July 2011
+#   Author:  Sjors Scheres, January 2008
+#  Updated:  J. M. de la Rosa Trevin July 2011
 #
 
 import os, sys, shutil
@@ -18,46 +15,6 @@ class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.ml2d.key, scriptname, project)
         self.Import = 'from xmipp_protocol_ml2d import *'
-#    def runSetup(self):
-#        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
-#        sys.path.append(scriptdir) # add default search path
-#        # store script name
-#        protocolName = sys.argv[0]
-#        #assume restart
-#        restart = True
-#        # This is not a restart
-#        if (RestartIter < 1):
-#            # Delete working directory if it exists, make a new one
-#            if (DoDeleteWorkingDir and DoML2D): 
-#                if (self.WorkingDir==""):
-#                   raise RuntimeError,"No working directory given"
-#                if os.path.exists(WorkingDir):
-#                    shutil.rmtree(WorkingDir)
-#            if not os.path.exists(WorkingDir):
-#                os.makedirs(WorkingDir)
-#
-#
-#            # Create a selfile with absolute pathname in the WorkingDir
-##            mysel = MetaData(InSelFile);
-##            mysel.makeAbsPath();
-##            InSelFile = os.path.abspath(os.path.join(WorkingDir, InSelFile))
-##            mysel.write(InSelFile)
-#
-#            if (DoMlf and DoCorrectAmplitudes):
-#                # Copy CTFdat to the workingdir as well
-#                shutil.copy(InCtfDatFile, os.path.join(WorkingDir, 'my.ctfdat'))
-#
-#            # Backup script
-#            log.make_backup_of_script_file(protocolName, os.path.abspath(WorkingDir))
-#            restart = False
-#
-#        # Store current directory before moving
-#        currentDir = os.getcwd()            
-#        # Execute protocol in the working directory
-#        os.chdir(WorkingDir)
-#        self.run(restart)
-#        # Return to parent dir
-#        os.chdir(currentDir)
 
     def validate(self):
         return []
@@ -114,6 +71,3 @@ def launchML(log, program, params):
     print "Running program: '%s %s'" % (program, params)
     log.info("Running program: '%s %s'" % (program, params))
 
-
-if __name__ == '__main__':
-    protocolMain(ProtML2D)
