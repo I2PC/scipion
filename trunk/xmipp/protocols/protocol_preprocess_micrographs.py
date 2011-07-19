@@ -15,81 +15,81 @@
 
 import glob, os, shutil, sys
 from protlib_base import *
+from protlib_utils import which
 
 #FIXME: IMPLEMENTATION SHOULD BE REVISED
 class ProtPreprocessMicrographs(XmippProtocol):
-    def saveAndCompareParameters(self, listOfParameters):
-        fnOut=self.WorkingDir + "/protocolParameters.txt"
-        linesNew=[];
-        for prm in listOfParameters:
-            eval("linesNew.append('"+prm +"='+str("+prm+")+'\\n')")
-        if os.path.exists(fnOut):
-            f = open(fnOut, 'r')
-            linesOld=f.readlines()
-            f.close()
-            same=True;
-            if len(linesOld)==len(linesNew):
-                for i in range(len(linesNew)):
-                    if not linesNew[i]==linesOld[i]:
-                        same=False
-                        break;
-            else:
-                same=False
-            if not same:
-                print("Deleting")
-                self.log.info("Deleting working directory since it is run with different parameters")
-                shutil.rmtree(self.WorkingDir)
-                os.makedirs(self.WorkingDir)
-        f = open(fnOut, 'w')
-        f.writelines(linesNew)
-        f.close()
-    
-    def __init__(self):
+    def __init__(self, scriptname, project):
         # Setup logging
         #self.log=log.init_log_system(self.ProjectDir,
         #                             self.LogDir,
         #                             sys.argv[0],
         #                             self.WorkingDir)
-
+        XmippProtocol.__init__(self, protDict.ml2d.key, scriptname, project)
         # Check ctffind executable
-        import which
-        self.CtffindExec=which.which('ctffind3.exe')
-        self.DoCtffind=self.CtffindExec!=''
+        self.CtffindExec = which('ctffind3.exe')
+        self.DoCtffind = self.CtffindExec != ''
 
         # Delete working directory if exists, make a new one
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
 
         # Save parameters and compare to possible previous runs
-        self.saveAndCompareParameters([
-                 "DirMicrographs",
-                 "ExtMicrographs",
-                 "DoPreprocess",
-                 "Crop",
-                 "Stddev",
-                 "Down",
-                 "DoCtfEstimate",
-                 "Voltage",
-                 "SphericalAberration",
-                 "Magnification",
-                 "ScannedPixelSize",
-                 "AmplitudeContrast",
-                 "OnlyEstimatePSD",
-                 "LowResolCutoff",
-                 "HighResolCutoff",
-                 "MinFocus",
-                 "MaxFocus",
-                 "WinSizeXmipp",
-                 "WinSizeCTFFind",
-                 "StepFocus"]);
+#        self.saveAndCompareParameters([
+#                 "DirMicrographs",
+#                 "ExtMicrographs",
+#                 "DoPreprocess",
+#                 "Crop",
+#                 "Stddev",
+#                 "Down",
+#                 "DoCtfEstimate",
+#                 "Voltage",
+#                 "SphericalAberration",
+#                 "Magnification",
+#                 "ScannedPixelSize",
+#                 "AmplitudeContrast",
+#                 "OnlyEstimatePSD",
+#                 "LowResolCutoff",
+#                 "HighResolCutoff",
+#                 "MinFocus",
+#                 "MaxFocus",
+#                 "WinSizeXmipp",
+#                 "WinSizeCTFFind",
+#                 "StepFocus"]);
         
         # Backup script
-        log.make_backup_of_script_file(sys.argv[0],self.WorkingDir)
-        self.xmpi_run_file=self.WorkingDir + "/preprocess_micrographs.sh" 
+        #log.make_backup_of_script_file(sys.argv[0],self.WorkingDir)
+        #self.xmpi_run_file=self.WorkingDir + "/preprocess_micrographs.sh" 
 
         # Execute protocol in the working directory
-        self.process_all_micrographs(self.xmpi_run_file)
+        #self.process_all_micrographs(self.xmpi_run_file)
 
+#    def saveAndCompareParameters(self, listOfParameters):
+#        fnOut=self.WorkingDir + "/protocolParameters.txt"
+#        linesNew=[];
+#        for prm in listOfParameters:
+#            eval("linesNew.append('"+prm +"='+str("+prm+")+'\\n')")
+#        if os.path.exists(fnOut):
+#            f = open(fnOut, 'r')
+#            linesOld=f.readlines()
+#            f.close()
+#            same=True;
+#            if len(linesOld)==len(linesNew):
+#                for i in range(len(linesNew)):
+#                    if not linesNew[i]==linesOld[i]:
+#                        same=False
+#                        break;
+#            else:
+#                same=False
+#            if not same:
+#                print("Deleting")
+#                self.log.info("Deleting working directory since it is run with different parameters")
+#                shutil.rmtree(self.WorkingDir)
+#                os.makedirs(self.WorkingDir)
+#        f = open(fnOut, 'w')
+#        f.writelines(linesNew)
+#        f.close()
+        
     def process_all_micrographs(self, xmpi_run_file):
         import time
 
@@ -388,6 +388,21 @@ class ProtPreprocessMicrographs(XmippProtocol):
 
         return
 
+    def validate():
+        errors = []
+        # Check if there is workingdir
+        if WorkingDir == "":
+            errors.append("No working directory given")
+        # Check that there are any micrograph to process
+        listOfMicrographs=glob.glob(DirMicrographs + '/' + ExtMicrographs)
+        if len(listOfMicrographs) == 0:
+            errors.append("There are no micrographs to process in ") + DirMicrographs + '/' + ExtMicrographs
+        # Check that Q0 is negative
+        if AmplitudeContrast>0:
+            errors.append("Q0 should be negative ")
+    
+        return errors
+    
 def stepPerformed(step,filename):
     import re
     f = open(filename, 'r')
@@ -395,23 +410,6 @@ def stepPerformed(step,filename):
     f.close()
     expr = re.compile(step)
     return len(filter(expr.search,lines))>0
-
-#FIXME: THIS SHOULD BE IMPLEMENTED AS CLASS METHOD validate
-# Preconditions
-def checkErrors():
-    errors = []
-    # Check if there is workingdir
-    if WorkingDir == "":
-        errors.append("No working directory given")
-    # Check that there are any micrograph to process
-    listOfMicrographs=glob.glob(DirMicrographs + '/' + ExtMicrographs)
-    if len(listOfMicrographs) == 0:
-        errors.append("There are no micrographs to process in ") + DirMicrographs + '/' + ExtMicrographs
-    # Check that Q0 is negative
-    if AmplitudeContrast>0:
-        errors.append("Q0 should be negative ")
-
-    return errors
 
 #        
 # Main
