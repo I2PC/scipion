@@ -310,7 +310,7 @@ void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
     MultidimArray<std::complex<double> > ImFT;
     FourierTransformer FTransAppOTF(FFTW_BACKWARD);
 
-//    #define DEBUG
+    #define DEBUG
 #ifdef DEBUG
 
     Image<double> _Im;
@@ -437,7 +437,12 @@ void XRayPSF::generatePSF()
 
     for (int k = STARTINGZ(VOLMATRIX(*PSF)); k <= FINISHINGZ(VOLMATRIX(*PSF)); k++)
     {
-        Z = Zo + DeltaZo + k*dzoPSF;
+      /* We keep sign of Z and Zo positives in object space for the sake of simplicity in calculations,
+       * it is, they increase opposite to Zdim in Xmipp reference system, so this is why to calculate
+       * the plane Z we subtract  DeltaZo and k*dzoPSF.
+       */
+
+      Z = Zo - ( DeltaZo + k*dzoPSF );
 
         switch (type)
         {

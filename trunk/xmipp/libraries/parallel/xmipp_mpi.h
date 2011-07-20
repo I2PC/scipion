@@ -45,9 +45,10 @@
 */
 class MpiNode
 {
-
 public:
-    int rank, size;
+
+	MPI_Comm *comm;
+    int rank, size, active, activeNodes;
     MpiNode(int &argc, char ** argv);
     ~MpiNode();
 
@@ -57,6 +58,8 @@ public:
     /** Gather metadatas */
     void gatherMetadatas(MetaData &MD, const FileName &rootName,
                          MDLabel sortLabel=MDL_IMAGE);
+    int getActiveNodes();
+    void updateComm();
 };
 
 //mpi macros

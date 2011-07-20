@@ -52,7 +52,7 @@ class XrayProjPhantom
 {
 public:
     /// Phantom Xmipp volume
-    Image<double>         iniVol;
+    ImageGeneric          iniVol;
     MultidimArray<double> rotVol;
 
 public:

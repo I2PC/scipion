@@ -677,12 +677,12 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
             }
 
             // Save intermediate
-            if ((artPrm.tell&TELL_SAVE_INTERMIDIATE | artPrm.tell&TELL_IV) &&
+            if (((artPrm.tell&TELL_SAVE_INTERMIDIATE) | (artPrm.tell&TELL_IV)) &&
                 artPrm.save_intermidiate_every!=0 &&
                 act_proj%artPrm.save_intermidiate_every==0)
             {
                 if (artPrm.tell&TELL_SAVE_INTERMIDIATE)
-                    std::cout << "\nSaving intermidiate ...\n"
+                    std::cout << "\nSaving intermediate ...\n"
                     << "Converting basis volume to voxels ...\n";
                 // Save reconstructed volume
                 artPrm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
@@ -791,7 +791,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
             }
         }
 
-        if (artPrm.tell&TELL_SAVE_INTERMIDIATE && it!=artPrm.no_it-1)
+        if ( (artPrm.tell&TELL_SAVE_INTERMIDIATE) && it!=artPrm.no_it-1)
         {
             if (rank==-1)
                 std::cout << "Converting basis volume to voxels ...\n";

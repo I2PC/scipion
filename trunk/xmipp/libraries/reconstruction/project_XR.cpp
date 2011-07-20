@@ -89,7 +89,8 @@ void ProgXrayProject::preRun()
     mainDataThread->imOut = &proj;
 
     //Create the job handler to distribute thread jobs
-    size_t blockSize, numberOfJobs = ZSIZE(MULTIDIM_ARRAY(phantom.iniVol));
+
+    size_t blockSize, numberOfJobs = ZSIZE(MULTIDIM_ARRAY_BASE(phantom.iniVol));
     blockSize = (nThr == 1) ? numberOfJobs : numberOfJobs/nThr/2;
     td = new ThreadTaskDistributor(numberOfJobs, blockSize);
     mainDataThread->td = td;
@@ -207,68 +208,89 @@ void ProgXrayProject::run()
 void XrayProjPhantom::read(
     const ParametersProjectionTomography &prm)
 {
+//    iniVol.readMapped(prm.fnPhantom);
     iniVol.read(prm.fnPhantom);
-    MULTIDIM_ARRAY(iniVol).setXmippOrigin();
-    rotVol.resizeNoCopy(MULTIDIM_ARRAY(iniVol));
+    MULTIDIM_ARRAY_GENERIC(iniVol).setXmippOrigin();
+    //    rotVol.resizeNoCopy(MULTIDIM_ARRAY(iniVol));
 }
 
 void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projection &P,
                                   int Ydim, int Xdim, int idxSlice)
 {
 
-    int iniXdim, iniYdim, iniZdim, newXdim, newYdim;
-    int xOffsetN, yOffsetN, zinit, zend, yinit, yend, xinit, xend;
+    int iniXdim, iniYdim, iniZdim, newXdim, newYdim, newZdim, rotXdim, rotYdim, rotZdim;
+    int zinit, zend, yinit, yend, xinit, xend;
 
-    iniXdim = XSIZE(MULTIDIM_ARRAY(phantom.iniVol));
-    iniYdim = YSIZE(MULTIDIM_ARRAY(phantom.iniVol));
-    iniZdim = ZSIZE(MULTIDIM_ARRAY(phantom.iniVol));
+    iniXdim = XSIZE(MULTIDIM_ARRAY_BASE(phantom.iniVol));
+    iniYdim = YSIZE(MULTIDIM_ARRAY_BASE(phantom.iniVol));
+    iniZdim = ZSIZE(MULTIDIM_ARRAY_BASE(phantom.iniVol));
+
+    /* If Xdim is greater than Zdim, then as we rotate the volume the rotated Zdim must be
+     * great enough to cover all the volume.
+     */
+    double radi, theta0, theta, tilt;
+
+    radi = sqrt(iniZdim*iniZdim + iniXdim*iniXdim);
+    theta0 = atan2(iniZdim, iniXdim);
+    tilt = ((P.tilt() < 90)? P.tilt(): 180 - P.tilt())* PI / 180;
+
+    rotZdim = XMIPP_MAX(ROUND(radi * sin(ABS(tilt) + ABS(theta0))), iniZdim);
+    rotXdim = XMIPP_MAX(ROUND(radi * cos(ABS(tilt) - ABS(theta0))), iniXdim);
+    rotYdim = iniYdim;
+
+    std::cerr << "DEBUG: rotXdim: " << rotXdim << std::endl;
+    std::cerr << "DEBUG: rotZdim: " << rotZdim << std::endl;
+
+
+    //    rotZdim = iniZdim;
+    //    rotXdim = iniXdim;
 
     // Projection offset in pixels
-    xOffsetN = P.Xoff()/psf.dxo;
-    yOffsetN = P.Yoff()/psf.dxo;
+    Matrix1D<double> offsetNV(3);
+    P.getShifts(XX(offsetNV), YY(offsetNV), ZZ(offsetNV));
 
-    newXdim = iniXdim + 2*ABS(xOffsetN);
-    newYdim = iniYdim + 2*ABS(yOffsetN);
+    //    xOffsetN = P.Xoff()/psf.dxo;
+    //    yOffsetN = P.Yoff()/psf.dxo;
 
-    zinit = STARTINGZ(MULTIDIM_ARRAY(phantom.iniVol));
-    zend = zinit + iniZdim - 1;
+    newXdim = rotXdim + 2*ABS(XX(offsetNV));
+    newYdim = iniYdim + 2*ABS(YY(offsetNV));
+    newZdim = rotZdim;
 
-    if (yOffsetN<=0)
-        yinit = STARTINGY(MULTIDIM_ARRAY(phantom.iniVol));
-    else
-        yinit = STARTINGY(MULTIDIM_ARRAY(phantom.iniVol)) - 2 * yOffsetN;
+    // We set the dimensions only to obtains the values of starting X,Y,Z
+    phantom.rotVol.setDimensions(rotXdim, rotYdim, rotZdim, 1);
+    phantom.rotVol.setXmippOrigin();
 
+    zinit = STARTINGZ((phantom.rotVol));
+    zend = zinit + rotZdim - 1;
+
+    yinit = STARTINGY((phantom.rotVol));
+    if (YY(offsetNV) > 0)
+        yinit -= 2 * YY(offsetNV);
     yend = yinit + newYdim -1;
 
-    if (xOffsetN<=0)
-        xinit = STARTINGX(MULTIDIM_ARRAY(phantom.iniVol));
-    else
-        xinit = STARTINGX(MULTIDIM_ARRAY(phantom.iniVol)) - 2 * xOffsetN;
-
+    xinit = STARTINGX((phantom.rotVol));
+    if (XX(offsetNV) > 0)
+        xinit -= 2 * XX(offsetNV);
     xend = xinit + newXdim - 1;
 
 
     if (psf.verbose > 1)
     {
-        int finalXdim = xend - xinit + 1;
-        int finalYdim = yend - yinit + 1;
-
-        if (finalXdim != iniXdim || finalYdim != iniYdim)
+        if (newXdim != iniXdim || newYdim != iniYdim)
         {
             std::cout << std::endl;
             std::cout << "--------------------------------" << std::endl;
             std::cout << "XrayProject::Volume_offCentered:" << std::endl;
             std::cout << "--------------------------------" << std::endl;
-            std::cout << "(X,Y,Z) shifts = (" << P.Xoff()*1e6 << "," << P.Yoff()*1e6 << ","
-            << P.Zoff()*1e6 << ") um" << std::endl;
+            std::cout << "(X,Y,Z) shifts = (" << XX(offsetNV) << "," << YY(offsetNV) << ","
+            << ZZ(offsetNV) << ") um" << std::endl;
             std::cout << "Image resize (Nx,Ny): (" << iniXdim << "," << iniYdim << ") --> ("
-            << finalXdim << "," << finalYdim << ") " << std::endl;
+            << newXdim << "," << newYdim << ") " << std::endl;
         }
-
 #ifdef DEBUG
 
-        std::cout <<"yoffsetN "<< yOffsetN <<std::endl;
-        std::cout <<"xoffsetN "<< xOffsetN <<std::endl;
+        std::cout <<"yoffsetN "<< YY(offsetNV) <<std::endl;
+        std::cout <<"xoffsetN "<< XX(offsetNV) <<std::endl;
         std::cout <<"yinit    " << yinit  <<std::endl;
         std::cout <<"yend     "    << yend  <<std::endl;
         std::cout <<"xinit    "   << xinit  <<std::endl;
@@ -279,19 +301,39 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
 
     }
 
-    // Rotate volume ....................................................
-    //    applyGeometry(LINEAR,volTemp(), V, Euler_rotation3DMatrix(rot, tilt, psi), IS_NOT_INV, DONT_WRAP);
 
-    phantom.rotVol.resizeNoCopy(iniZdim,iniYdim,iniXdim);
-    //    side.rotPhantomVol().zinit = zinit;
-    //    side.rotPhantomVol().yinit = yinit;
-    //    side.rotPhantomVol().xinit = xinit;
+
+    //    phantom.rotVol.setMmap(true);
+    phantom.rotVol.resizeNoCopy(newZdim, newYdim, newXdim);
     phantom.rotVol.setXmippOrigin();
 
-    Euler_rotate(MULTIDIM_ARRAY(phantom.iniVol), P.rot(), P.tilt(), P.psi(),phantom.rotVol);
+    // Rotate volume ....................................................
+
+    Matrix2D<double> R, T;
+
+
+    std::cerr << "DEBUG: shiftV: " << offsetNV << std::endl;
+
+
+    ZZ(offsetNV) = 0; // We are not interested in apply this Zshift
+    translation3DMatrix(offsetNV, T);
+    Euler_angles2matrix(P.rot(), P.tilt(), P.psi(), R, true);
+
+    std::cerr << "DEBUG: T*R: " << T*R << std::endl;
+
+
+    applyGeometry(1, phantom.rotVol, MULTIDIM_ARRAY_GENERIC(phantom.iniVol), T*R, IS_NOT_INV, DONT_WRAP);
+
+    Image<double> tempvol;
+
+    tempvol.data.alias(phantom.rotVol);
+
+    tempvol.write("rotvol.vol");
+
+    //    Euler_rotate(MULTIDIM_ARRAY_GENERIC(phantom.iniVol), P.rot(), P.tilt(), P.psi(),phantom.rotVol);
 
     // Correct the shift position due to tilt axis is out of optical axis
-    phantom.rotVol.selfWindow(zinit, yinit, xinit, zend, yend, xend);
+    //    phantom.rotVol.selfWindow(zinit, yinit, xinit, zend, yend, xend);
 
     psf.adjustParam(phantom.rotVol);
 

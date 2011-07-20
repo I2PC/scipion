@@ -228,14 +228,20 @@ void FileTaskDistributor::unlock()
 MpiNode::MpiNode(int &argc, char ** argv)
 {
     //MPI Initialization
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI::Init(argc, argv);
+    comm = new MPI_Comm;
+    MPI_Comm_dup(MPI_COMM_WORLD, comm);
+    MPI_Comm_rank(*comm, &rank);
+    MPI_Comm_size(*comm, &size);
+    active = 1;
+    activeNodes = size;
 }
 
 MpiNode::~MpiNode()
 {
-    MPI_Finalize();
+    active = 0;
+    barrierWait();
+    MPI::Finalize();
 }
 
 bool MpiNode::isMaster() const
@@ -245,7 +251,29 @@ bool MpiNode::isMaster() const
 
 void MpiNode::barrierWait()
 {
-    MPI_Barrier(MPI_COMM_WORLD);
+    int nodes = getActiveNodes();
+    if (nodes < activeNodes)
+    {
+        updateComm();
+        activeNodes = nodes;
+    }
+    MPI_Barrier(*comm);
+}
+
+int MpiNode::getActiveNodes()
+{
+    int activeNodes = 0;
+    MPI_Allreduce(&active, &activeNodes, 1, MPI_INT, MPI_SUM, *comm);
+    return activeNodes;
+}
+
+void MpiNode::updateComm()
+{
+    MPI_Comm *newComm = new MPI_Comm;
+    MPI_Comm_split(*comm, active, rank, newComm);
+    MPI_Comm_disconnect(comm);
+    delete comm;
+    comm = newComm;
 }
 
 void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,

@@ -659,6 +659,8 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
     if (ray_length != -1)
         ray_length *= basis.max_length();
 
+    /* With CAV equalization mode weights must be calculated, but for the parallel cases
+       where weights are calculated in a parallel manner.*/
     if(eq_mode == CAV && parallel_mode != pCAV && parallel_mode != pBiCAV)
         computeCAVWeights(vol_basis0, numIMG, verbose-1);
 }

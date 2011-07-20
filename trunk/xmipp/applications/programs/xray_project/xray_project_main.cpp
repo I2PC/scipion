@@ -29,11 +29,9 @@
 
 int main(int argc, char *argv[])
 {
-    ProgXrayProject      prog_prm;
+    ProgXrayProject      prog;
 
-    prog_prm.read(argc, argv);
-    prog_prm.tryRun();
-
-    return 0;
+    prog.read(argc, argv);
+    return prog.tryRun();
 }
 
