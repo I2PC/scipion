@@ -164,6 +164,21 @@ class MultiListbox(PanedWindow):
         index = self.selectedIndex()
         if self.SelectCallback:
             self.SelectCallback(index)
+            
+    def selection_move_up(self):
+        index = self.selectedIndex() 
+        if index > 0:
+            self.selection_clear(0, END)
+            #self.selection_clear(0, END)
+            self.selection_set(index - 1)
+            
+    def selection_move_down(self):
+        index = self.selectedIndex()
+        if index != -1 and index < self.size() - 1:
+            self.selection_clear(0, END)
+            #self.selection_clear(0, END)
+            self.selection_set(index + 1)
+            
 
 def getGeometry(win):
     return win.winfo_reqwidth(), win.winfo_reqheight(), win.winfo_x(), win.winfo_y()

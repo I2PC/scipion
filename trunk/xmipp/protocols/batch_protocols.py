@@ -89,7 +89,16 @@ class XmippProjectGUI():
         self.root.bind('<Configure>', self.unpostMenu)
         self.root.bind("<Unmap>", self.unpostMenu)
         self.root.bind("<Map>", self.unpostMenu)
-   
+        self.root.bind('<Return>', lambda e: self.runButtonClick('Edit'))
+        self.root.bind('<Up>', self.selectRunUpDown)
+        self.root.bind('<Down>', self.selectRunUpDown)
+        
+    def selectRunUpDown(self, event):
+        if event.keycode == 111: # Up arrow
+            self.lbHist.selection_move_up()
+        elif event.keycode == 116: # Down arrow
+            self.lbHist.selection_move_down()
+            
     def addHeaderLabel(self, parent, text, row, col=0):
         '''Add a label to left toolbar'''
         label = Label(parent, text=text, font=self.LabelFont, fg=SectionTextColor)
@@ -188,6 +197,9 @@ class XmippProjectGUI():
             self.DetailsLabelsDict['Created:'].config(text=run['init'])
             self.DetailsLabelsDict['Modified:'].config(text=run['last_modified'])
             prot = getProtocolFromModule(run['script'], self.project)
+            if prot is None:
+                print "Can load protocol from " + run['script']
+                exit(1)
             summary = '\n'.join(prot.summary())
             self.DetailsLabelsDict['Summary:'].config(text=summary)
             self.frameDetails.grid(row=4, column=1,sticky=NSEW, columnspan=2)
