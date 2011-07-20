@@ -357,7 +357,7 @@ if __name__ == '__main__':
     
     if len(sys.argv) > 1:
         # Launch a protocol directly
-        from protocol_gui import *
+        from protlib_gui import *
         script = sys.argv[1]
         project.load()  
         gui = ProtocolGUI()
