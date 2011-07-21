@@ -316,11 +316,11 @@ public:
      * Matrix1D< double > v2(v1);
      * @endcode
      */
-    Matrix1D(const Matrix1D<T>& v, bool column=true)
+    Matrix1D(const Matrix1D<T>& v)
     {
         coreInit();
         *this = v;
-        row = !column;
+        row = v.row;
     }
 
     /** Destructor.
