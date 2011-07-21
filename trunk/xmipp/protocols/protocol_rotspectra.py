@@ -12,74 +12,8 @@
 # required files: log.py, spider_header.py, Sel_Files.py
 # by defaults searchs for python files in ../python directory
 #
-# {begin_of_header}
-#-----------------------------------------------------------------------------
-# {section} Global parameters
-#-----------------------------------------------------------------------------
-# {file} Selfile or stack with the input images:
-""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
-"""
-SelFileName='all_images.sel'
-# Working subdirectory: 
-""" This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
-"""
-WorkingDir='RotSpectra/test1'
-# {expert} Root directory name for this project:
-""" Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
-"""
-ProjectDir="/home2/bioinfo/scheres/work/protocols"
-# {hidden} Directory name for logfiles:
-LogDir='Logs'
-#-----------------------------------------------------------------------------
-# {section} Rotational spectra calculation
-#-----------------------------------------------------------------------------
-# {list}|Use the middle of the image|Minimize first harmonic| How to find the center of rotation?
-HowCenter='Use the middle of the image'
-# Inner radius for rotational harmonics calculation:
-""" These values are in pixels from the image center
-    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Makespectra
-"""
-SpectraInnerRadius=7
-# Outer radius for rotational harmonics calculation:
-SpectraOuterRadius=32
-# {expert} Lowest harmonic to calculate
-SpectraLowHarmonic=1
-# {expert} Highest harmonic to calculate
-SpectraHighHarmonic=15
-#-----------------------------------------------------------------------------
-# {section} Classification: classify_kerdensom 
-#-----------------------------------------------------------------------------
-# X-dimension of the self-organizing map:
-SomXdim=7
-# Y-dimension of the self-organizing map:
-SomYdim=7
-# {expert} Initial regularization factor:
-""" The kerdenSOM algorithm anneals from an initial high regularization factor
-    to a final lower one, in a user-defined number of steps.
-    If the output map is too smooth, lower the regularization factors
-    If the output map is not organized, higher the regularization factors
-    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
-"""
-SomReg0=1000
-# {expert} Final regularization factor:
-SomReg1=200
-# {expert} Number of steps to lower the regularization factor:
-SomSteps=5
-# {expert} Additional kerdenSOM parameters:
-""" For a complete description 
-    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
-"""
-KerdensomExtraCommand=''
-#------------------------------------------------------------------------------------------------
-# {hidden} Analysis of results
-AnalysisScript='visualize_rotspectra.py'
-#-----------------------------------------------------------------------------
-#-----------------------------------------------------------------------------
-# {end_of_header} do not change anything bellow this line unless you know what you are doing
-#-----------------------------------------------------------------------------
-import os,shutil,sys,time
-scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
-sys.path.append(scriptdir) # add default search path
+import os, shutil, time
+from protlib_base import *
 
 def stepPerformed(step,filename):
     import re
@@ -89,8 +23,12 @@ def stepPerformed(step,filename):
     expr = re.compile(step)
     return len(filter(expr.search,lines))>0
 
-class rotational_spectra_class:
-   def saveAndCompareParameters(self, listOfParameters):
+class ProtRotSpectra(XmippProtocol):
+    def __init__(self, scriptname, project):
+        XmippProtocol.__init__(self, protDict.rotspectra.key, scriptname, project)
+        self.Import = 'from protocol_rotspectra import *'    
+    
+    def saveAndCompareParameters(self, listOfParameters):
         fnOut=self.WorkingDir + "/protocolParameters.txt"
         linesNew=[];
         for prm in listOfParameters:
@@ -117,82 +55,83 @@ class rotational_spectra_class:
         f.close()
 
    #init variables
-   def __init__(self,
-                SelFileName,
-                WorkingDir,
-                ProjectDir,
-                HowCenter,
-                SpectraInnerRadius,
-                SpectraOuterRadius,
-                SpectraLowHarmonic,
-                SpectraHighHarmonic,
-                SomXdim,
-                SomYdim,
-                SomReg0,
-                SomReg1,
-                SomSteps,                
-                KerdensomExtraCommand):
-       import log
-
-       self.SelFileName=SelFileName
-       self.WorkingDir=WorkingDir
-       self.ProjectDir=ProjectDir
-       self.HowCenter=HowCenter
-       self.SpectraInnerRadius=SpectraInnerRadius
-       self.SpectraOuterRadius=SpectraOuterRadius
-       self.SpectraLowHarmonic=SpectraLowHarmonic
-       self.SpectraHighHarmonic=SpectraHighHarmonic
-       self.SomXdim=SomXdim
-       self.SomYdim=SomYdim
-       self.SomReg0=SomReg0
-       self.SomReg1=SomReg1
-       self.SomSteps=SomSteps              
-       self.KerdensomExtraCommand=KerdensomExtraCommand
-       self.mylog=log.init_log_system(ProjectDir,
-                                      LogDir,
-                                      sys.argv[0],
-                                      WorkingDir)
-       
-       # Create directory if does not exist
-       if not os.path.exists(self.WorkingDir):
-           os.makedirs(self.WorkingDir)
-
-       # Save parameters and compare to possible previous runs
-       self.saveAndCompareParameters([
-                 "SelFileName",
-                 "HowCenter",
-                 "SpectraInnerRadius",
-                 "SpectraOuterRadius",
-                 "SpectraLowHarmonic",
-                 "SpectraHighHarmonic",
-                 "SomXdim",
-                 "SomYdim",
-                 "SomReg0",
-                 "SomReg1",
-                 "SomSteps",
-                 "KerdensomExtraCommand"]);
-
-       #made backup of this script
-       log.make_backup_of_script_file(sys.argv[0],self.WorkingDir)
-
-       # Update status
-       fh=open(self.WorkingDir + "/status.txt", "a")
-       fh.write("Step 0: Process started at " + time.asctime() + "\n")
-       fh.close()
-
-       # Effectively run
-       self.execute_findcenter()
-       self.execute_spectra()
-       self.execute_KerDenSOM()
-  
-       fh=open(self.WorkingDir + "/status.txt", "a")
-       fh.write("Step F: Process finished at " + time.asctime() + "\n")
-       fh.close()
+#   def __init__(self,
+#                SelFileName,
+#                WorkingDir,
+#                ProjectDir,
+#                HowCenter,
+#                SpectraInnerRadius,
+#                SpectraOuterRadius,
+#                SpectraLowHarmonic,
+#                SpectraHighHarmonic,
+#                SomXdim,
+#                SomYdim,
+#                SomReg0,
+#                SomReg1,
+#                SomSteps,                
+#                KerdensomExtraCommand):
+#       import log
+#
+#       self.SelFileName=SelFileName
+#       self.WorkingDir=WorkingDir
+#       self.ProjectDir=ProjectDir
+#       self.HowCenter=HowCenter
+#       self.SpectraInnerRadius=SpectraInnerRadius
+#       self.SpectraOuterRadius=SpectraOuterRadius
+#       self.SpectraLowHarmonic=SpectraLowHarmonic
+#       self.SpectraHighHarmonic=SpectraHighHarmonic
+#       self.SomXdim=SomXdim
+#       self.SomYdim=SomYdim
+#       self.SomReg0=SomReg0
+#       self.SomReg1=SomReg1
+#       self.SomSteps=SomSteps              
+#       self.KerdensomExtraCommand=KerdensomExtraCommand
+#       self.mylog=log.init_log_system(ProjectDir,
+#                                      LogDir,
+#                                      sys.argv[0],
+#                                      WorkingDir)
+#       
+#       # Create directory if does not exist
+#       if not os.path.exists(self.WorkingDir):
+#           os.makedirs(self.WorkingDir)
+#
+#       # Save parameters and compare to possible previous runs
+#       self.saveAndCompareParameters([
+#                 "SelFileName",
+#                 "HowCenter",
+#                 "SpectraInnerRadius",
+#                 "SpectraOuterRadius",
+#                 "SpectraLowHarmonic",
+#                 "SpectraHighHarmonic",
+#                 "SomXdim",
+#                 "SomYdim",
+#                 "SomReg0",
+#                 "SomReg1",
+#                 "SomSteps",
+#                 "KerdensomExtraCommand"]);
+#
+#       #made backup of this script
+#       log.make_backup_of_script_file(sys.argv[0],self.WorkingDir)
+#
+#       # Update status
+#       fh=open(self.WorkingDir + "/status.txt", "a")
+#       fh.write("Step 0: Process started at " + time.asctime() + "\n")
+#       fh.close()
+#
+#       # Effectively run
+#       self.execute_findcenter()
+#       self.execute_spectra()
+#       self.execute_KerDenSOM()
+#  
+#       fh=open(self.WorkingDir + "/status.txt", "a")
+#       fh.write("Step F: Process finished at " + time.asctime() + "\n")
+#       fh.close()
        
    #------------------------------------------------------------------------
    #execute_findcenter
    #------------------------------------------------------------------------
-   def execute_findcenter(self):
+    
+    def execute_findcenter(self):
       import os, string, xmipp
       print '*********************************************************************'
       print '* Looking for the position of the center of symmetry ...'
@@ -236,7 +175,7 @@ class rotational_spectra_class:
    #------------------------------------------------------------------------
    #execute_spectra
    #------------------------------------------------------------------------
-   def execute_spectra(self):
+    def execute_spectra(self):
       import os, string
       import launch_job
       if not stepPerformed("Step 1",self.WorkingDir + "/status.txt"):
@@ -263,7 +202,7 @@ class rotational_spectra_class:
    #------------------------------------------------------------------------
    #execute_KerDenSOM
    #------------------------------------------------------------------------
-   def execute_KerDenSOM(self):
+    def execute_KerDenSOM(self):
       import launch_job
 
       if not stepPerformed("Step 2",self.WorkingDir + "/status.txt"):
@@ -288,33 +227,14 @@ class rotational_spectra_class:
           fh.write("Step 3: KerDenSOM finished at " + time.asctime() + "\n")
           fh.close()
 
-# Preconditions
-def checkErrors():
-    errors = []
-    # Check if there is workingdir
-    if WorkingDir == "":
-        errors.append("No working directory given")
-    # Check that there are any micrograph to process
-    if not os.path.exists(SelFileName):
-        errors.append("The input selfile is not valid")
-    
-    return errors
-
-#
-# main
-#     
-if __name__ == '__main__':
-   myspectra=rotational_spectra_class(SelFileName,
-                                      WorkingDir,
-                                      ProjectDir,
-                                      HowCenter,
-                                      SpectraInnerRadius,
-                                      SpectraOuterRadius,
-                                      SpectraLowHarmonic,
-                                      SpectraHighHarmonic,
-                                      SomXdim,
-                                      SomYdim,
-                                      SomReg0,
-                                      SomReg1,
-                                      SomSteps,                
-                                      KerdensomExtraCommand)
+    # Preconditions
+    def validate():
+        errors = []
+        # Check if there is workingdir
+        if WorkingDir == "":
+            errors.append("No working directory given")
+        # Check that there are any micrograph to process
+        if not os.path.exists(SelFileName):
+            errors.append("The input selfile is not valid")
+        
+        return errors
