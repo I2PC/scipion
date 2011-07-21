@@ -8,124 +8,9 @@
 #
 # Author: Carlos Oscar Sanchez Sorzano, July 2009
 #
-## {begin_of_header}
-#------------------------------------------------------------------------------------------------
-# {section} Global parameters
-#------------------------------------------------------------------------------------------------
-# {file} Selfile with the input images:
-""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
-"""
-InSelFile='sort_junk.sel'
-# Working subdirectory:
-""" This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
-"""
-WorkingDir='CL2D/classes64'
-# {expert} Root directory name for this project:
-""" Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
-"""
-ProjectDir='/gpfs/fs1/home/bioinfo/coss/analu/Mcm467_cdt1_sinOli-7AporPix'
-# {expert} Directory name for logfiles:
-""" All logfiles will be stored here
-"""
-LogDir='Logs'
-
-#------------------------------------------------------------------------------------------------
-# {section} Class averages parameters
-#------------------------------------------------------------------------------------------------
-# Number of references (or classes) to be used:
-NumberOfReferences=64
-
-# {expert} Number of initial references
-""" Initial number of initial models
-"""
-NumberOfReferences0=4
-
-# {expert} Number of iterations
-""" Maximum number of iterations within each level
-"""
-NumberOfIterations=15
-
-# {expert} Band pass filter
-""" Apply a band pass filter before clustering """
-DoFilter =True
-
-# {expert} Highpass cutoff frequency
-""" In (Angstroms/Pixel). Set to 0 if not desired """
-Highpass =0.02
-
-# {expert} Lowpass cutoff frequency
-""" In (Angstroms/Pixel). Set to 0 if not desired """
-Lowpass =0.4
-
-# {expert}{list}|correntropy|correlation| Comparison method
-""" Use correlation or correntropy """
-ComparisonMethod='correlation'
-
-# {expert}{list}|classical|robust| Clustering criterion
-""" Use the classical clustering criterion or the robust clustering criterion """
-ClusteringMethod='classical'
-
-# {expert} Additional parameters for classify_CL2D
-""" -verbose, -corrSplit, ...
-"""
-AdditionalParameters=''
-
-#------------------------------------------------------------------------------------------------
-# {section} Core analysis
-#------------------------------------------------------------------------------------------------
-# Good class core size (%)
-""" A class is a good class if at least this percentage (around 50%) of the
-    images assigned to it have been together in all the previous levels.
-    Larger values of this parameter tend to keep few good classes. Smaller
-    values of this parameter tend to consider more classes as good ones."""
-thGoodClass=50
-
-# Junk Zscore
-""" Which is the average Z-score to be considered as junk. Typical values
-    go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is
-    within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores
-    accept more images."""
-thZscore=3
-
-# PCA Zscore
-""" Which is the PCA Z-score to be considered as junk. Typical values
-    go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is
-    within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores
-    accept more images.
-    
-    This Z-score is measured after projecting onto the PCA space."""
-thPCAZscore=3
-
-#------------------------------------------------------------------------------------------------
-# {section} Parallelization issues
-#------------------------------------------------------------------------------------------------
-# Number of MPI processes to use:
-NumberOfMpiProcesses=40
-
-# MPI system Flavour 
-""" Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
-    Ask the person who installed your xmipp version, which option to use. 
-    Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. 
-"""
-SystemFlavour='TORQUE-OPENMPI'
-
-# {hidden} This protocol only works in parallel
-DoParallel=True
-
-#------------------------------------------------------------------------------------------------
-# {hidden} Analysis of results
-""" This script serves only for GUI-assisted visualization of the results
-"""
-AnalysisScript='visualize_cl2d.py'
-#------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------
-# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
-#------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------
 
 import os,sys,shutil,time
-scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
-sys.path.append(scriptdir)
+from protlib_base import *
 
 def getParameter(prm,filename):
     f = open(filename, 'r')
@@ -145,7 +30,11 @@ def stepPerformed(step,filename):
     expr = re.compile(step)
     return len(filter(expr.search,lines))>0
 
-class CL2D_class:
+class ProtCL2D(XmippProtocol):
+    def __init__(self, scriptname, project):
+        XmippProtocol.__init__(self, protDict.cl2d.key, scriptname, project)
+        self.Import = 'from protocol_cl2d import *'    
+        
     def saveAndCompareParameters(self, listOfParameters):
         fnOut=self.WorkingDir + "/protocolParameters.txt"
         linesNew=[];
@@ -173,131 +62,131 @@ class CL2D_class:
         f.close()
 
     #init variables
-    def __init__(self,
-                 InSelFile,
-                 WorkingDir,
-                 ProjectDir,
-                 LogDir,
-                 NumberOfReferences,
-                 NumberOfReferences0,
-                 NumberOfIterations,
-                 DoFilter,
-                 Highpass,
-                 Lowpass,
-                 ComparisonMethod,
-                 ClusteringMethod,
-                 AdditionalParameters,
-                 thGoodClass,
-                 thZscore,
-                 thPCAZscore,
-                 NumberOfMpiProcesses,
-                 SystemFlavour):
-	     
-        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
-        sys.path.append(scriptdir) # add default search path
-        import log
-
-        self.WorkingDir=WorkingDir
-        self.ProjectDir=ProjectDir
-        self.InSelFile=InSelFile
-        self.NumberOfReferences=NumberOfReferences
-        self.NumberOfReferences0=NumberOfReferences0
-        self.NumberOfIterations=NumberOfIterations
-        self.DoFilter=DoFilter
-        self.Highpass=Highpass
-        self.Lowpass=Lowpass
-        self.ComparisonMethod=ComparisonMethod
-        self.ClusteringMethod=ClusteringMethod
-        self.AdditionalParameters=AdditionalParameters
-        self.thGoodClass=thGoodClass
-        self.thZscore=thZscore
-        self.thPCAZscore=thPCAZscore
-        self.NumberOfMpiProcesses=NumberOfMpiProcesses
-        self.SystemFlavour=SystemFlavour
-   
-        # Setup logging
-        self.log=log.init_log_system(self.ProjectDir,
-                                     LogDir,
-                                     sys.argv[0],
-                                     self.WorkingDir)
-                
-        # Create directory if does not exist
-        if not os.path.exists(self.WorkingDir):
-            os.makedirs(self.WorkingDir)
-            self.doStep1=True
-            self.doStep2=True
-            self.doStep3=True
-        else:
-            fnParam=self.WorkingDir + "/protocolParameters.txt"
-            oldInSelFile=getParameter("InSelFile",fnParam)
-            oldDoFilter=getParameter("DoFilter",fnParam)
-            oldHighpass=getParameter("Highpass",fnParam)
-            oldLowpass=getParameter("Lowpass",fnParam)
-
-            oldNumberOfReferences=getParameter("NumberOfReferences",fnParam)
-            oldNumberOfReferences0=getParameter("NumberOfReferences0",fnParam)
-            oldNumberOfIterations=getParameter("NumberOfIterations",fnParam)
-            oldComparisonMethod=getParameter("ComparisonMethod",fnParam)
-            oldClusteringMethod=getParameter("ClusteringMethod",fnParam)
-            oldAdditionalParameters=getParameter("AdditionalParameters",fnParam)
-            
-            oldthGoodClass=getParameter("thGoodClass",fnParam)
-            oldthZscore=getParameter("thZscore",fnParam)
-            oldthPCAZscore=getParameter("thPCAZscore",fnParam)
-            self.doStep1=False
-            self.doStep2=False
-            self.doStep3=False
-            if oldInSelFile!=InSelFile or str(DoFilter)!=oldDoFilter or \
-               oldHighpass!=str(Highpass) or oldLowpass!=str(Lowpass):
-                self.doStep1=True
-                self.doStep2=True
-                self.doStep3=True
-            elif oldNumberOfReferences!=str(NumberOfReferences) or \
-               oldNumberOfReferences0!=str(NumberOfReferences0) or \
-               oldNumberOfIterations!=str(NumberOfIterations) or \
-               oldComparisonMethod!=ComparisonMethod or \
-               oldClusteringMethod!=ClusteringMethod or \
-               oldAdditionalParameters!=AdditionalParameters:
-                self.doStep2=True
-                self.doStep3=True
-            elif oldthGoodClass!=str(thGoodClass) or oldthZscore!=str(thZscore) or \
-               oldthPCAZscore!=str(thPCAZscore):
-                self.doStep3=True
-                
-        # Save parameters and compare to possible previous runs
-        self.saveAndCompareParameters([
-                 "InSelFile",
-                 "NumberOfReferences",
-                 "NumberOfReferences0",
-                 "NumberOfIterations",
-                 "DoFilter",
-                 "Highpass",
-                 "Lowpass",
-                 "ComparisonMethod",
-                 "ClusteringMethod",
-                 "AdditionalParameters",
-                 "thGoodClass",
-                 "thZscore",
-                 "thPCAZscore"]);
-
-        # Backup script
-        log.make_backup_of_script_file(sys.argv[0],
-            os.path.abspath(self.WorkingDir))
-
-        # Update status
-        fh=open(self.WorkingDir + "/status.txt", "a")
-        fh.write("Step 0: Process started at " + time.asctime() + "\n")
-        fh.close()
-
-        # Run
-        self.preprocess()
-        self.execute_CLalign2D()
-        self.execute_core_analysis()
-        self.postprocess()
-        
-        fh=open(self.WorkingDir + "/status.txt", "a")
-        fh.write("Step F: Process finished at " + time.asctime() + "\n")
-        fh.close()
+#    def __init__(self,
+#                 InSelFile,
+#                 WorkingDir,
+#                 ProjectDir,
+#                 LogDir,
+#                 NumberOfReferences,
+#                 NumberOfReferences0,
+#                 NumberOfIterations,
+#                 DoFilter,
+#                 Highpass,
+#                 Lowpass,
+#                 ComparisonMethod,
+#                 ClusteringMethod,
+#                 AdditionalParameters,
+#                 thGoodClass,
+#                 thZscore,
+#                 thPCAZscore,
+#                 NumberOfMpiProcesses,
+#                 SystemFlavour):
+#	     
+#        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
+#        sys.path.append(scriptdir) # add default search path
+#        import log
+#
+#        self.WorkingDir=WorkingDir
+#        self.ProjectDir=ProjectDir
+#        self.InSelFile=InSelFile
+#        self.NumberOfReferences=NumberOfReferences
+#        self.NumberOfReferences0=NumberOfReferences0
+#        self.NumberOfIterations=NumberOfIterations
+#        self.DoFilter=DoFilter
+#        self.Highpass=Highpass
+#        self.Lowpass=Lowpass
+#        self.ComparisonMethod=ComparisonMethod
+#        self.ClusteringMethod=ClusteringMethod
+#        self.AdditionalParameters=AdditionalParameters
+#        self.thGoodClass=thGoodClass
+#        self.thZscore=thZscore
+#        self.thPCAZscore=thPCAZscore
+#        self.NumberOfMpiProcesses=NumberOfMpiProcesses
+#        self.SystemFlavour=SystemFlavour
+#   
+#        # Setup logging
+#        self.log=log.init_log_system(self.ProjectDir,
+#                                     LogDir,
+#                                     sys.argv[0],
+#                                     self.WorkingDir)
+#                
+#        # Create directory if does not exist
+#        if not os.path.exists(self.WorkingDir):
+#            os.makedirs(self.WorkingDir)
+#            self.doStep1=True
+#            self.doStep2=True
+#            self.doStep3=True
+#        else:
+#            fnParam=self.WorkingDir + "/protocolParameters.txt"
+#            oldInSelFile=getParameter("InSelFile",fnParam)
+#            oldDoFilter=getParameter("DoFilter",fnParam)
+#            oldHighpass=getParameter("Highpass",fnParam)
+#            oldLowpass=getParameter("Lowpass",fnParam)
+#
+#            oldNumberOfReferences=getParameter("NumberOfReferences",fnParam)
+#            oldNumberOfReferences0=getParameter("NumberOfReferences0",fnParam)
+#            oldNumberOfIterations=getParameter("NumberOfIterations",fnParam)
+#            oldComparisonMethod=getParameter("ComparisonMethod",fnParam)
+#            oldClusteringMethod=getParameter("ClusteringMethod",fnParam)
+#            oldAdditionalParameters=getParameter("AdditionalParameters",fnParam)
+#            
+#            oldthGoodClass=getParameter("thGoodClass",fnParam)
+#            oldthZscore=getParameter("thZscore",fnParam)
+#            oldthPCAZscore=getParameter("thPCAZscore",fnParam)
+#            self.doStep1=False
+#            self.doStep2=False
+#            self.doStep3=False
+#            if oldInSelFile!=InSelFile or str(DoFilter)!=oldDoFilter or \
+#               oldHighpass!=str(Highpass) or oldLowpass!=str(Lowpass):
+#                self.doStep1=True
+#                self.doStep2=True
+#                self.doStep3=True
+#            elif oldNumberOfReferences!=str(NumberOfReferences) or \
+#               oldNumberOfReferences0!=str(NumberOfReferences0) or \
+#               oldNumberOfIterations!=str(NumberOfIterations) or \
+#               oldComparisonMethod!=ComparisonMethod or \
+#               oldClusteringMethod!=ClusteringMethod or \
+#               oldAdditionalParameters!=AdditionalParameters:
+#                self.doStep2=True
+#                self.doStep3=True
+#            elif oldthGoodClass!=str(thGoodClass) or oldthZscore!=str(thZscore) or \
+#               oldthPCAZscore!=str(thPCAZscore):
+#                self.doStep3=True
+#                
+#        # Save parameters and compare to possible previous runs
+#        self.saveAndCompareParameters([
+#                 "InSelFile",
+#                 "NumberOfReferences",
+#                 "NumberOfReferences0",
+#                 "NumberOfIterations",
+#                 "DoFilter",
+#                 "Highpass",
+#                 "Lowpass",
+#                 "ComparisonMethod",
+#                 "ClusteringMethod",
+#                 "AdditionalParameters",
+#                 "thGoodClass",
+#                 "thZscore",
+#                 "thPCAZscore"]);
+#
+#        # Backup script
+#        log.make_backup_of_script_file(sys.argv[0],
+#            os.path.abspath(self.WorkingDir))
+#
+#        # Update status
+#        fh=open(self.WorkingDir + "/status.txt", "a")
+#        fh.write("Step 0: Process started at " + time.asctime() + "\n")
+#        fh.close()
+#
+#        # Run
+#        self.preprocess()
+#        self.execute_CLalign2D()
+#        self.execute_core_analysis()
+#        self.postprocess()
+#        
+#        fh=open(self.WorkingDir + "/status.txt", "a")
+#        fh.write("Step F: Process finished at " + time.asctime() + "\n")
+#        fh.close()
 
     def preprocess(self):
         import launch_job,xmipp
