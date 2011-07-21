@@ -46,7 +46,6 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.text.Document;
@@ -56,9 +55,9 @@ import javax.swing.tree.*;
 // TODO: change default icons - actions are not folders nor files
 // TODO: change details text field appeareance so it does not promote changing its contents
 public class WorkflowView extends JPanel implements TreeSelectionListener{
-	// The initial width and height of the frame
-	private static int WIDTH = 400, HEIGHT = 300;
-	private static Dimension BUTTONS_PANEL_PREF_SIZE = new Dimension(350,150),TREE_PANEL_PREF_SIZE= new Dimension(350,350);
+	public static int PREFERED_WIDTH = 350;
+	private static Dimension BUTTONS_PANEL_PREF_SIZE = new Dimension(PREFERED_WIDTH,150),
+		TREE_PANEL_PREF_SIZE= new Dimension(PREFERED_WIDTH,350);
 	private static String DETAILS_LABEL="Details", COMMENTS_LABEL="Comments";
 
 	// the controller must have access to the model. By default, this class acts as
@@ -112,7 +111,7 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 		formPanel=new Form("form",2);
 		//formPanel.setLayout(new GridBagLayout());
 		add(formPanel,BorderLayout.SOUTH);
-		Action a = new Action(controller, new Command("workflow.newop","New Operation","newOperation",true,null));
+		Action a = new Action(controller, new Command("workflow.print","Print Workflow","printWorkflow",true,null));
 		Action b = new Action(controller, new Command("workflow.discardop","Discard Operation","discardOperation",true,null));      
 		Action c = new Action(controller, new Command("workflow.load","Load Workflow","loadWorkflow",false,null));
 		Action d = new Action(controller, new Command("workflow.save","Save Workflow","saveWorkflow",false,null));
@@ -127,10 +126,9 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 	}
 
 	// TODO: warn the user when no node is selected
-	public void newOperation(){
+	public void newOperation(UserAction action){
 		if(getSelectedNode() != null){
-			UserAction a1=new UserAction(0,"Load2","Load2" , "g1ta2.spi");
-			DefaultMutableTreeNode n1=model.addUserAction(getSelectedNode(), a1);
+			DefaultMutableTreeNode n1=model.addUserAction(getSelectedNode(), action);
 			tree.scrollPathToVisible(new TreePath(n1.getPath()));
 		}
 	}
@@ -165,6 +163,10 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 	
 	public void loadWorkflow(){
 		Logger.debug("loadWorkflow");
+		
+	}
+	
+	public void printWorkflow(){
 		Logger.debug(model.toString());
 	}
 
@@ -199,6 +201,7 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 	}
 	
 	public static void main(String args[]) {
+		int windowWidth = 400, windowHeight = 300;
 		JFrame window=new JFrame();
 		Container content = window.getContentPane();
 		Workflow workflow=Workflow.getTestWorkflow();
@@ -209,7 +212,7 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 			public void windowClosing(WindowEvent e) {System.exit(0);}
 		});
 
-		window.setSize(WIDTH, HEIGHT);
+		window.setSize(windowWidth, windowHeight);
 		window.setVisible(true);
 	}
 	

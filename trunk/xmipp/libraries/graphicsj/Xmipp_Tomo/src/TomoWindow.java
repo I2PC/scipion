@@ -95,6 +95,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	// MVC Controller. Controller Should not be needed here (passive window)
 	private TomoController controller;
+	// Workflow model
+	private Workflow workflow;
 	
 	// total number of digits to display as a String
 	private static int MAX_DIGITS = 9;
@@ -211,11 +213,11 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	/* Window GUI components */
 	/* 4 main panels */
 	private JTabbedPane menuPanel;
-	private JPanel imagePanel, controlPanel, statusPanel;
+	private JPanel imagePanel, stackPanel, viewControlsPanel,controlPanel, statusPanel;
 	private JPanel viewsPanel;
 
 	private JScrollPane projectPanel;
-	private JTree projectView; // other tree views: Prefuse
+	private WorkflowView projectView; // other tree views: Prefuse
 	
 	// hack for reusing ImageJ ImageWindow
 	private JFrame realWindow;
@@ -290,6 +292,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		realWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		WindowManager.addWindow(this);
 		realWindow.setTitle(getTitle());
+		setWorkflow(new Workflow());
 		addMainPanels();
 	}
 
@@ -359,22 +362,34 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		imagePanel.setMinimumSize(new Dimension(MENUPANEL_MINWIDTH/2,100));
 		viewsPanel.setLeftComponent(imagePanel); */
 		viewsPanel = new JPanel();
+		viewsPanel.setLayout(new BorderLayout());
+		viewControlsPanel = new JPanel();
+		stackPanel = new JPanel();
+		stackPanel.setLayout(new BoxLayout(stackPanel,BoxLayout.PAGE_AXIS));
 		imagePanel = new JPanel();
-		viewsPanel.add(imagePanel);
+        stackPanel.setBorder(BorderFactory.createCompoundBorder(
+        		BorderFactory.createTitledBorder("Stack View"),
+                BorderFactory.createEmptyBorder(5,5,5,5)));
+        stackPanel.add(imagePanel);
+        stackPanel.add(viewControlsPanel);
+		viewsPanel.add(stackPanel,BorderLayout.CENTER);
 		
 		
-		// TODO: start with all nodes expanded
-		// TODO: projectview - add tree selection listener? Or just get selected node when performing a tree action
-		projectView = new JTree(Xmipp_Tomo.getWorkflow());
+		/*projectView = new JTree(Xmipp_Tomo.getWorkflow());
 		projectView.setShowsRootHandles(true);
 		projectView.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		projectPanel = new JScrollPane(projectView);
 		projectPanel.setMinimumSize(new Dimension(MENUPANEL_MINWIDTH/2,TiltSeriesIO.resizeThreshold.height));
+		*/
+		projectView=new WorkflowView(getWorkflow(),null);
 		
-		viewsPanel.add(projectPanel);
+		viewsPanel.add(projectView,BorderLayout.EAST);
 		// viewsPanel.setDividerLocation(MENUPANEL_MINWIDTH / 2); 
 		// viewsPanel.setPreferredSize(new Dimension(MENUPANEL_MINWIDTH, 100));
 		getContentPane().add(viewsPanel);
+		
+        //imagePanel.setPreferredSize(new Dimension(MENUPANEL_MINWIDTH/2,projectView.getMinimumSize().height));
+        //imagePanel.setMaximumSize(new Dimension(MENUPANEL_MINWIDTH/2,projectView.getPreferredSize().height));
 
 		controlPanel = new JPanel();
 		getContentPane().add(controlPanel);
@@ -445,6 +460,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 		FlowLayout fl2 = new FlowLayout();
 		fl2.setAlignment(FlowLayout.CENTER);
+		viewControlsPanel.setLayout(fl2);
 		controlPanel.setLayout(fl2);
 
 		JLabel tiltTextLabel = new JLabel("Tilt");
@@ -452,18 +468,18 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		// the user won't change angles one by one - he will change all of them
 		// at once with the tilt change dialog
 		tiltTextField.setEditable(false);
-		controlPanel.add(tiltTextLabel);
-		controlPanel.add(tiltTextField);
+		viewControlsPanel.add(tiltTextLabel);
+		viewControlsPanel.add(tiltTextField);
 
 		projectionScrollbar = new LabelScrollbar(1, getModel()
 				.getNumberOfProjections());
 		projectionScrollbar.setText("Projection #");
 		projectionScrollbar.addAdjustmentListener(getController());
-		controlPanel.add(projectionScrollbar);
+		viewControlsPanel.add(projectionScrollbar);
 
 		try {
-			addButton(XmippTomoCommands.PLAY, controlPanel);
-			addCheckbox(XmippTomoCommands.PLAY_LOOP, controlPanel,true);
+			addButton(XmippTomoCommands.PLAY, viewControlsPanel);
+			addCheckbox(XmippTomoCommands.PLAY_LOOP, viewControlsPanel,true);
 			addButton(XmippTomoCommands.MEASURE, controlPanel);
 			addButton(XmippTomoCommands.ADJUSTBC, controlPanel);
 		} catch (Exception ex) {
@@ -584,9 +600,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	/* -------------------------- Action management -------------------- */
 
-	// TODO: useractions setname (S0, S1...)
-	public void addUserAction(UserAction a) {
-		setLastAction(Xmipp_Tomo.addUserAction(getLastAction(), a));
+	public void addUserAction(UserAction action) {
+		projectView.newOperation(action);
 	}
 
 	public void changeIcon(String buttonId, String iconName) {
@@ -1012,6 +1027,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	public int getWindowId() {
 		return windowId;
 	}
+	
+
 
 	public void setWindowId(int windowId) {
 		this.windowId = windowId;
@@ -1114,5 +1131,13 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 */
 	private void setCanvas(ImageCanvas canvas) {
 		ic = canvas;
+	}
+	
+	public Workflow getWorkflow() {
+		return workflow;
+	}
+
+	public void setWorkflow(Workflow workflow) {
+		this.workflow = workflow;
 	}
 }

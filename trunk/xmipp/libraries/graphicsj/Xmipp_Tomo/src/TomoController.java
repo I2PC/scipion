@@ -212,7 +212,7 @@ public class TomoController implements AdjustmentListener{
 	}
 	
 	public void printWorkflow() {
-		Xmipp_Tomo.printWorkflow();
+		Logger.debug(window.getWorkflow().toString());
 	}
 
 	// TODO: reset workflow after loading a stack
@@ -247,7 +247,7 @@ public class TomoController implements AdjustmentListener{
 				window.addView();
 				window.addControls();
 				window.addUserAction(new UserAction(window.getWindowId(),
-						"Load", getModel().getFileName()));
+						"Load", "Load", getModel().getFileName()));
 				window.enableButtonsAfterLoad();
 			}
 
@@ -375,7 +375,7 @@ public class TomoController implements AdjustmentListener{
 	// original image must be scaled too
 	private ImagePlus applyWorkflowTo(ImagePlus image){
 		// iterate through the user actions that make sense
-		Enumeration e = Xmipp_Tomo.getWorkflow().breadthFirstEnumeration();
+		Enumeration e = window.getWorkflow().getRoot().breadthFirstEnumeration();
 		while(e.hasMoreElements()){
 			UserAction currentAction=(UserAction) (((DefaultMutableTreeNode)e.nextElement()).getUserObject());
 			if (currentAction.isNeededForFile()) {
@@ -559,7 +559,7 @@ public class TomoController implements AdjustmentListener{
 		runIjCmd(cmd);
 
 		if(plugin != null)
-			window.addUserAction(new UserAction(window.getWindowId(), cmd, window
+			window.addUserAction(new UserAction(window.getWindowId(), label, cmd, window
 				.getPlugin()));
 
 		window.setPlugin(null);

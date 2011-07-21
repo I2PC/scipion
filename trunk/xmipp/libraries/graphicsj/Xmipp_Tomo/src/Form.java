@@ -45,7 +45,7 @@ import javax.swing.text.Document;
 public class Form extends JPanel 
 {
 
-	private JPanel mainPanel;
+	// share the constraints between different fields
 	private GridBagConstraints gbc;
 	private Hashtable<String, JTextField> textFields= new Hashtable<String, JTextField>();
 	private int columns=2,currentColumn=0,currentRow=0;
@@ -55,11 +55,9 @@ public class Form extends JPanel
 	public Form(String title) {
 		super();
 		setLayout(new BorderLayout());
-		mainPanel=new JPanel();
-		mainPanel.setLayout(new GridBagLayout());
+		setLayout(new GridBagLayout());
 		gbc=new GridBagConstraints();
 		gbc.insets=new Insets(5,5,5,5);
-		add(mainPanel,BorderLayout.CENTER);
 	}
 	
 	public Form(String title,int columns){
@@ -86,11 +84,18 @@ public class Form extends JPanel
 		gbc.anchor = GridBagConstraints.CENTER;
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		JButton button=new JButton(a);
-		mainPanel.add(button,gbc);
+		add(button,gbc);
 		columnMove();
 	}
 	
-	
+	public void addJPanel(JPanel panel){
+		gbc.gridx = currentColumn; gbc.gridy = currentRow;
+		gbc.weightx = 0.0; gbc.gridwidth=1;
+		gbc.anchor = GridBagConstraints.CENTER;
+		gbc.fill = GridBagConstraints.BOTH;
+		add(panel,gbc);
+		columnMove();
+	}
 	
 	// TODO: bug? some labels don't align to right
 	private void addStringField(int row,String label, String defaultText,Document doc,boolean expandTextField) {
@@ -98,7 +103,7 @@ public class Form extends JPanel
 		gbc.gridx = 0; gbc.gridy = row;
 		gbc.weightx = 0.0; gbc.gridwidth=1;
 		gbc.anchor = GridBagConstraints.EAST;
-		mainPanel.add(theLabel,gbc);
+		add(theLabel,gbc);
 
 		JTextField tf = new JTextField(defaultText);
 		if(doc != null)
@@ -112,7 +117,7 @@ public class Form extends JPanel
 		if(expandTextField)
 			gbc.gridwidth=GridBagConstraints.REMAINDER;		
 		tf.setEditable(true);
-		mainPanel.add(tf,gbc);
+		add(tf,gbc);
 	}
 	
 	private void addStringField(int row,String label, String defaultText,boolean expandTextField) {
@@ -130,7 +135,7 @@ public class Form extends JPanel
 		JButton b = new JButton(action);
 		gbc.gridx=2;
 		gbc.fill=GridBagConstraints.NONE;
-		mainPanel.add(b,gbc);
+		add(b,gbc);
 	}
 
 	private void columnMove(){
@@ -139,6 +144,7 @@ public class Form extends JPanel
 		currentColumn = (currentColumn + 1) % columns;
 	}
 	
+
 	public void openDialog(String fieldName){
 		String path=FileDialog.openDialog(fieldName, this);
 		if(path != null) 

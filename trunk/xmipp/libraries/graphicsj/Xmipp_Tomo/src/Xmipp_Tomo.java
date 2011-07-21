@@ -69,13 +69,6 @@
 
 import ij.*;
 import java.io.*;
-import java.util.Enumeration;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeNode;
-
 import ij.plugin.PlugIn;
 
 /**
@@ -99,14 +92,11 @@ public class Xmipp_Tomo implements PlugIn{
 	// UI elements
 	private static TomoWindow tw=null;
 	
-	private static DefaultMutableTreeNode workflow;
-	
 	private int lastWindowId=0;
 	
 	/* entry point for PlugIn implementors
 	 */
 	public void run(String arg){
-		setWorkflow(null);
 		createTomoWindow();
 		// debug("library path: " + System.getProperty("java.library.path"));
 		
@@ -116,55 +106,8 @@ public class Xmipp_Tomo implements PlugIn{
 			tw.display();
 	}
 	
-	public static DefaultMutableTreeNode addUserAction(DefaultMutableTreeNode last, UserAction newAction){
-		if(last == null){
-			Logger.debug("Xmipp_Tomo.addUserAction - last is null");
-		}else
-			last.add(new DefaultMutableTreeNode(newAction));
-		return last;
-	}
-	
-	/** 
-	 * @param last
-	 * @return the section of the workflow which last action is the one passed as a parameter
-	 */
-	public static List<UserAction> getWorkflow(DefaultMutableTreeNode last){
-		LinkedList <UserAction> res=new LinkedList<UserAction>();
-		res.push((UserAction)last.getUserObject());
-		DefaultMutableTreeNode current_node=last;
-		while(current_node != getWorkflow().getRoot()){
-			DefaultMutableTreeNode parent_node= (DefaultMutableTreeNode)current_node.getParent();
-			if (parent_node == null)
-				Logger.debug("Null parent");
-			else{
-				current_node=parent_node;
-				res.push((UserAction)current_node.getUserObject());
-			}
-		}
-		
-		return res;
-	}
-	
-	// workflow is a singleton
-	public static DefaultMutableTreeNode getWorkflow(){
-		if(workflow == null){
-			UserAction workflowRoot = new UserAction(UserAction.ROOT_WINDOWID,"Project");
-			setWorkflow(new DefaultMutableTreeNode(workflowRoot));
-		}
-		return workflow;
-	}
-	
-	private static UserAction getWorkflowRoot(){
-		return (UserAction)((DefaultMutableTreeNode)getWorkflow().getRoot()).getUserObject();
-	}
-	
-	public static void printWorkflow(){
-		Enumeration e = getWorkflow().breadthFirstEnumeration();
-		while(e.hasMoreElements())
-			Logger.debug((e.nextElement()).toString());
-	}
 
-	
+
 	/** Run cmdline in a shell and show standard output & error via debug()
 	 * @param cmdline
 	 * @return the exit value of cmdline (@see Process.waitFor())
@@ -247,9 +190,7 @@ public class Xmipp_Tomo implements PlugIn{
 	
 	private void createTomoWindow(){
 			tw= new TomoWindow(getNextWindowId());
-			UserAction newWindow= new UserAction(UserAction.ROOT_WINDOWID,"New Window");
-			addUserAction(getWorkflow(),newWindow);
-			tw.setFirstAction(getWorkflow());
+
 	}
 		
 	
@@ -266,47 +207,8 @@ public class Xmipp_Tomo implements PlugIn{
 		IJ.showMessage("Finished.",name+", thank you for running this plugin");
 		
 	}
-	
-	public void getTestWorkflow(){
-		// Use workflow class to encapsulate the tree and allow
-		// this method to be static
-		UserAction a1=new UserAction(0,"Load" , "g1ta.spi");
-		UserAction a2=new UserAction(0,"Gaussian Blur..." , "Sigma (Radius)=2.0");
-		UserAction a3=new UserAction(0,"Median..." , "Sigma (Radius)=2.0");
-		UserAction a4=new UserAction(0,"Bandpass Filter..." , "Filter_Large Structures Down to=40.0Filter_Small Structures Up to=3.0Suppress Stripes:=Tolerance of Direction:=5.0Autoscale After Filtering=trueSaturate Image when AutoscalingtrueDisplay Filterfalse");
-		
-		DefaultMutableTreeNode last=addUserAction(getWorkflow(), a1);
-		addUserAction(last, a2);
-		addUserAction(last, a3);
-		addUserAction(last, a4);
-		
-		/* // create tree
-		DefaultMutableTreeNode root=new DefaultMutableTreeNode("1"),n2=new DefaultMutableTreeNode("2"),
-		n3=new DefaultMutableTreeNode("3"),n4=new DefaultMutableTreeNode("4"),n5=new DefaultMutableTreeNode("5");
-		// get one lineage
-		addUserAction(root, n2);
-		addUserAction(root, n4);
-		addUserAction(n2, n3);
-		addUserAction(n4, n5);
-		printWorkflow();
-		
-		List <UserAction> l=getWorkflow(n5);
-		// should print root - n4 - n5
-		for(UserAction ua:l)
-			debug(ua.toString());*/
-	}
-	
-	public static void main(String[] args) {
-		Xmipp_Tomo xt= new Xmipp_Tomo();
-		xt.getTestWorkflow();
-	}
 
-	/**
-	 * @param workflow the workflow to set
-	 */
-	private static void setWorkflow(DefaultMutableTreeNode workflow) {
-		Xmipp_Tomo.workflow = workflow;
-	}
+
 	
 }
 

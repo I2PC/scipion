@@ -26,7 +26,6 @@ import javax.swing.text.PlainDocument;
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-
 /**
  * - Why?
  * A simple data structure to save user action's info (for the user action workflow)
