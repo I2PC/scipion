@@ -188,6 +188,7 @@ class XmippProjectGUI():
             state = DISABLED
             #Hide details
             self.frameDetails.grid_remove()
+            self.buttonDetails.grid_remove()
         else:
             state = NORMAL
             #Show details
@@ -203,7 +204,7 @@ class XmippProjectGUI():
             summary = '\n'.join(prot.summary())
             self.DetailsLabelsDict['Summary:'].config(text=summary)
             self.frameDetails.grid(row=4, column=1,sticky=NSEW, columnspan=2)
-            
+            self.buttonDetails.grid()
         for btn in self.runButtonsDict.values():
             btn.config(state=state)
             
@@ -273,7 +274,7 @@ class XmippProjectGUI():
         self.addRunButton(frame, "Delete", 2, 'delete.gif')
         #self.addRunButton(frame, "Help", 4, 'help.gif')
         self.frameHist = Frame(self.frame)
-        self.frameHist.grid(row=2, column=1, sticky=NSEW, columnspan=2)
+        self.frameHist.grid(row=2, column=1, sticky=NSEW, columnspan=2, padx=5, pady=(0, 5))
         self.lbHist = MultiListbox(self.frameHist, (('Run', 40), ('Modified', 20)))
         self.lbHist.SelectCallback = self.runSelectCallback
         self.lbHist.DoubleClickCallback = lambda:self.runButtonClick("Edit")
@@ -301,8 +302,11 @@ class XmippProjectGUI():
         self.DetailsFont = tkFont.Font(family=FontName, size=FontSize-1)
         #Create RUN details
         self.addHeaderLabel(self.frame, 'Details', 3, 1)
+        self.buttonDetails = Button(self.frame, text="Analize results", font=self.ButtonFont, 
+                                    bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
+        self.buttonDetails.grid(row=3, column=2, padx=5, pady=5)
         self.frameDetails = Frame(self.frame, bg=BgColor, bd=1, relief=RIDGE)
-        self.frameDetails.grid(row=4, column=1,sticky=NSEW, columnspan=2)
+        self.frameDetails.grid(row=4, column=1, sticky=NSEW, columnspan=2, padx=5, pady=5)
         self.DetailsLabelsDict = {}
         self.addDetailsLabel('Run:', 0, 0)
         self.addDetailsLabel('Protocol:', 1, 0)
