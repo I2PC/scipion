@@ -240,7 +240,7 @@ MpiNode::MpiNode(int &argc, char ** argv)
 MpiNode::~MpiNode()
 {
     active = 0;
-    barrierWait();
+    checkStatus();
     MPI::Finalize();
 }
 
@@ -251,13 +251,17 @@ bool MpiNode::isMaster() const
 
 void MpiNode::barrierWait()
 {
+    MPI_Barrier(*comm);
+}
+
+void MpiNode::checkStatus()
+{
     int nodes = getActiveNodes();
     if (nodes < activeNodes)
     {
         updateComm();
         activeNodes = nodes;
     }
-    MPI_Barrier(*comm);
 }
 
 int MpiNode::getActiveNodes()

@@ -59,6 +59,7 @@ public:
     void gatherMetadatas(MetaData &MD, const FileName &rootName,
                          MDLabel sortLabel=MDL_IMAGE);
     int getActiveNodes();
+    void checkStatus();
     void updateComm();
 };
 

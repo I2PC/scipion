@@ -207,7 +207,7 @@ void BasicARTParameters::defineParams(XmippProgram * program, bool mpiMode)
     program->addParamsLine(" ==+ Parallel parameters == ");
     program->addParamsLine(" : by default, sequential ART is applied");
     program->addParamsLine("   [--thr <N=1>]               : Number of threads to use. NOTE: Not available when using MPI.");
-    program->addParamsLine("   [--parallel_mode <mode=ART>]: Parallel mode");
+    program->addParamsLine("   [--parallel_mode <mode=ART>]: Parallelization algorithm to use with threads or MPI program version");
     program->addParamsLine("        where <mode>");
     program->addParamsLine("               ART             : Default");
     program->addParamsLine("               SIRT            : Simultaneous Iterative Reconstruction Technique");
@@ -217,7 +217,7 @@ void BasicARTParameters::defineParams(XmippProgram * program, bool mpiMode)
     program->addParamsLine("   pAVSP                       : Parallel (MPI) Average Strings");
     program->addParamsLine("   pBiCAV                      : Parallel (MPI) Block Iterative CAV");
     program->addParamsLine("   pCAV                        : Parallel (MPI) CAV");
-    program->addParamsLine("   [--block_size <n=1>]        : Number of projections to each block (SART and BiCAV)");
+    program->addParamsLine("   [--block_size <n=1>]        : Number of projections for each block (SART and BiCAV)");
 
     program->addParamsLine("==+ Debugging options ==");
     program->addParamsLine("  [--print_system_matrix]      : Print the matrix of the system Ax=b. The format is:");
