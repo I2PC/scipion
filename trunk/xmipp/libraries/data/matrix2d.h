@@ -366,9 +366,10 @@ public:
     	mdimy=Ydim;
     	destroyData=false;
     	mappedData=true;
-        FILE* fMap = fopen(fn.c_str(),"rwb");
-        int Fd = fileno(fMap);
-        if ( (mdata = (T*) mmap(0,Ydim*Xdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, Fd, 0)) == NULL )
+    	int Fd = open(fn.data(),  O_RDWR, S_IREAD | S_IWRITE);
+		if (Fd == -1)
+			REPORT_ERROR(ERR_IO_NOPATH,fn);
+        if ( (mdata = (T*) mmap(0,Ydim*Xdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, Fd, 0)) == MAP_FAILED )
             REPORT_ERROR(ERR_MMAP_NOTADDR,(String)"mmap failed "+integerToString(errno));
     }
 
