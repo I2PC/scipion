@@ -14,7 +14,7 @@ from protlib_base import *
 class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.ml2d.key, scriptname, project)
-        self.Import = 'from xmipp_protocol_ml2d import *'
+        self.Import = 'from protocol_ml2d import *'
 
     def validate(self):
         return []
