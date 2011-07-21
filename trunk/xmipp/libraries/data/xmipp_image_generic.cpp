@@ -108,6 +108,13 @@ void ImageGeneric::setDatatype(DataType imgType)
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
         break;
+    case Double:
+        {
+            Image<double> *imT = new Image<double>;
+            image = imT;
+            data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
+        }
+        break;
     case UInt:
         {
             Image<unsigned int> *imT = new Image<unsigned int>;
