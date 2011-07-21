@@ -16,102 +16,14 @@
 # Author: Sjors Scheres, March 2007
 #         Carlos Oscar, December 2010
 #
-# {begin_of_header}
-#------------------------------------------------------------------------------------------------
-# {section} Global parameters
-#------------------------------------------------------------------------------------------------
-# {dir} Working subdirectory:
-""" Output directory for the individual images
-"""
-WorkingDir='Images'
+from protlib_base import *
 
-# {dir} Directory with the particle picking
-PickingDir='ParticlePicking'
+class ProtPreprocessParticles(XmippProtocol):
+    def __init__(self, scriptname, project):
+        XmippProtocol.__init__(self, protDict.preprocess_particles.key, scriptname, project)
+        self.Import = 'from xmipp_protocol_particle_pick import *'
 
-# {expert} Name for the output selfile:
-""" This name should have extension .sel
-"""
-OutSelFile='all_images.sel'
-
-# {expert} Root directory name for this project:
-""" Absolute path to the root directory for this project
-"""
-ProjectDir='/home/coss/temp/F22_cib'
-
-#------------------------------------------------------------------------------------------------
-# {section} Processing parameters
-#------------------------------------------------------------------------------------------------
-# Box size of the particles to extract (in pix.)
-Size=80
-
-# Do phase flipping?
-DoFlip=True
-
-# {expert} Take Logarithm?
-DoLog=False 
-
-# Invert contrast?
-DoInvert=False
-
-# {expert} Background radius
-"""Pixels outside this circle are assumed to be noise and their stddev is set to 1.
-   Radius for background circle definition (in pix.).
-   If this value is 0, then the same as the particle radius is used. """
-BackGroundRadius=0
-
-# Perform dust particles removal?
-""" Sets pixels with unusually large values to random values from a Gaussian with zero-mean and unity-standard deviation.
-"""
-DoRemoveDust=True
-
-# {expert} Threshold for dust removal:
-""" Pixels with a signal higher or lower than this value times the standard deviation of the image will be affected. For cryo, 3.5 is a good value. For high-contrast negative stain, the signal itself may be affected so that a higher value may be preferable.
-"""
-DustRemovalThreshold=3.5
-
-#------------------------------------------------------------------------------------------------
-# {section} Parallelization issues
-#------------------------------------------------------------------------------------------------
-# distributed-memory parallelization (MPI)?
-""" This option provides distributed-memory parallelization on multi-node machines. 
-    It requires the installation of some MPI flavour, possibly together with a queueing system
-"""
-DoParallel=True
-
-# Number of MPI processes to use:
-NumberOfMpiProcesses=3
-
-# MPI system Flavour 
-""" Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
-    Ask the person who installed your xmipp version, which option to use. 
-    Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
-"""
-SystemFlavour=''
-
-#------------------------------------------------------------------------------------------------
-# {hidden} Analysis of results
-""" This script serves only for GUI-assisted visualization of the results
-"""
-AnalysisScript='visualize_preprocess_particles.py'
-#
-#------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------
-#  {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
-#------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------
-#
-def getParameter(prm,filename):
-    f = open(filename, 'r')
-    lines=f.readlines()
-    f.close()
-    for line in lines:
-        tokens=line.split('=')
-        if tokens[0]==prm:
-            return tokens[1].strip()
-    return ""
-
-class preprocess_particles_class:
-
+    #FIXME: I guess this is not longer needed with DB structure
     def saveAndCompareParameters(self, listOfParameters):
         import os,shutil
         fnOut=self.WorkingDir + "/protocolParameters.txt"
@@ -142,141 +54,141 @@ class preprocess_particles_class:
         f.close()
         return retval
 
-    #init variables
-    def __init__(self,
-                 WorkingDir,
-                 PickingDir,
-                 ProjectDir,
-                 Size,
-                 DoFlip,
-                 DoLog, 
-                 DoInvert,
-                 BackGroundRadius,
-                 DoRemoveDust,
-                 DustRemovalThreshold,
-                 DoParallel,
-                 NumberOfMpiProcesses,
-                 SystemFlavour
-                 ):
-	     
-        import os,sys,time
-        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
-        sys.path.append(scriptdir) # add default search path
-        import log,xmipp,launch_job
-        
-        self.WorkingDir=WorkingDir.strip()
-        self.PickingDir=PickingDir.strip()
-        self.ProjectDir=ProjectDir.strip()
-        self.LogDir="Logs"
-        self.PosFile="Common"
-        self.Size=Size
-        self.DoFlip=DoFlip
-        self.DoLog=DoLog 
-        self.DoInvert=DoInvert
-        if BackGroundRadius!=0:
-            self.BackGroundRadius=BackGroundRadius
-        else:
-            self.BackGroundRadius=Size/2
-        self.DoRemoveDust=DoRemoveDust
-        self.DustRemovalThreshold=DustRemovalThreshold
-        self.OutSelFile=OutSelFile
-        self.DoParallel=DoParallel
-        self.NumberOfMpiProcesses=NumberOfMpiProcesses
-        self.SystemFlavour=SystemFlavour
-
-        # Setup logging
-        self.log=log.init_log_system(self.ProjectDir,
-                                     self.LogDir,
-                                     sys.argv[0],
-                                     self.WorkingDir)
-                
-        # Make working directory if it does not exist yet
-        if not os.path.exists(self.WorkingDir):
-            os.makedirs(self.WorkingDir)
-
-        # Save parameters and compare to possible previous runs
-        deleted=self.saveAndCompareParameters([
-                 "PickingDir",
-                 "Size",
-                 "DoFlip",
-                 "DoInvert",
-                 "DoLog",
-                 "BackGroundRadius",
-                 "DoRemoveDust",
-                 "DustRemovalThreshold"]);
-
-        # Update status
-        fh=open(self.WorkingDir + "/status.txt", "a")
-        fh.write("Step 0: Processed started at " + time.asctime() + "\n")
-        fh.close()
-
-        # Backup script
-        log.make_backup_of_script_file(sys.argv[0],
-                                       os.path.abspath(self.WorkingDir))
-    
-        # Preprocess paticles
-        fnScript=self.WorkingDir+'/pickParticles.sh'
-        self.fh_mpi=os.open(fnScript, os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0700)
-        self.process_all_micrographs()
-        os.close(self.fh_mpi)
-        self.launchCommandFile(fnScript)
-
-        # Join results
-        generalMD=xmipp.MetaData()
-        i=0
-        for selfile in self.outputSel:
-            if not os.path.exists(selfile):
-                fh=open(self.WorkingDir + "/status.txt", "a")
-                fh.write("Step E: Cannot read "+selfile+". Finishing at " + time.asctime() + "\n")
-                fh.close()
-                sys.exit(1)
-            MD=xmipp.MetaData(selfile)
-            if self.isPairTilt:
-                MDtilt=xmipp.MetaData(self.outputTiltedSel[i])
-                for id in MD:
-                    MD.setValue(xmipp.MDL_IMAGE_TILTED,MDtilt.getValue(xmipp.MDL_IMAGE))
-                    MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,MDtilt.getValue(xmipp.MDL_MICROGRAPH))
-                    xtilt=MDtilt.getValue(xmipp.MDL_XINT)
-                    MD.setValue(xmipp.MDL_XINTTILT,xtilt)
-                    MD.setValue(xmipp.MDL_YINTTILT,MDtilt.getValue(xmipp.MDL_YINT))
-                    enabledTilted=MDtilt.getValue(xmipp.MDL_ENABLED)
-                    enabled=MD.getValue(xmipp.MDL_ENABLED)
-                    if enabled==-1 or enabledTilted==-1:
-                        MD.setValue(xmipp.MDL_ENABLED,-1)
-                    else:
-                        MD.setValue(xmipp.MDL_ENABLED,1)
-                    MDtilt.nextObject()
-                i=i+1
-            else:
-                for id in MD:
-                    imageFrom=MD.getValue(xmipp.MDL_MICROGRAPH)
-                    MD.setValue(xmipp.MDL_MICROGRAPH,self.correspondingMicrograph[imageFrom])
-                    if (self.correspondingCTF[imageFrom]!=""):
-                        MD.setValue(xmipp.MDL_CTFMODEL,self.correspondingCTF[imageFrom])
-            generalMD.unionAll(MD)
-        generalMD.write(self.OutSelFile)
-
-        # Sort by statistics
-        rootName,dummy=os.path.splitext(self.OutSelFile)
-        launchJob("xmipp_sort_by_statistics",
-                              "-i "+self.OutSelFile+" --multivariate "+\
-                              "-o "+rootName+"_sorted_by_score",
-                              self.log,
-                              False,1,1,'')
-
-        # Remove intermediate selfiles
-        for selfile in self.outputSel:
-            if os.path.exists(selfile):
-                os.remove(selfile)
-        for selfile in self.outputTiltedSel:
-            if os.path.exists(selfile):
-                os.remove(selfile)
-    
-        # Update status    
-        if os.path.exists(rootName+"_sorted_by_score.sel"):
-            fh=open(self.WorkingDir + "/status.txt", "a")
-            fh.write("Step F: Processed finished at " + time.asctime() + "\n")
-            fh.close()
+#    #init variables
+#    def __init__(self,
+#                 WorkingDir,
+#                 PickingDir,
+#                 ProjectDir,
+#                 Size,
+#                 DoFlip,
+#                 DoLog, 
+#                 DoInvert,
+#                 BackGroundRadius,
+#                 DoRemoveDust,
+#                 DustRemovalThreshold,
+#                 DoParallel,
+#                 NumberOfMpiProcesses,
+#                 SystemFlavour
+#                 ):
+#	     
+#        import os,sys,time
+#        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
+#        sys.path.append(scriptdir) # add default search path
+#        import log,xmipp,launch_job
+#        
+#        self.WorkingDir=WorkingDir.strip()
+#        self.PickingDir=PickingDir.strip()
+#        self.ProjectDir=ProjectDir.strip()
+#        self.LogDir="Logs"
+#        self.PosFile="Common"
+#        self.Size=Size
+#        self.DoFlip=DoFlip
+#        self.DoLog=DoLog 
+#        self.DoInvert=DoInvert
+#        if BackGroundRadius!=0:
+#            self.BackGroundRadius=BackGroundRadius
+#        else:
+#            self.BackGroundRadius=Size/2
+#        self.DoRemoveDust=DoRemoveDust
+#        self.DustRemovalThreshold=DustRemovalThreshold
+#        self.OutSelFile=OutSelFile
+#        self.DoParallel=DoParallel
+#        self.NumberOfMpiProcesses=NumberOfMpiProcesses
+#        self.SystemFlavour=SystemFlavour
+#
+#        # Setup logging
+#        self.log=log.init_log_system(self.ProjectDir,
+#                                     self.LogDir,
+#                                     sys.argv[0],
+#                                     self.WorkingDir)
+#                
+#        # Make working directory if it does not exist yet
+#        if not os.path.exists(self.WorkingDir):
+#            os.makedirs(self.WorkingDir)
+#
+#        # Save parameters and compare to possible previous runs
+#        deleted=self.saveAndCompareParameters([
+#                 "PickingDir",
+#                 "Size",
+#                 "DoFlip",
+#                 "DoInvert",
+#                 "DoLog",
+#                 "BackGroundRadius",
+#                 "DoRemoveDust",
+#                 "DustRemovalThreshold"]);
+#
+#        # Update status
+#        fh=open(self.WorkingDir + "/status.txt", "a")
+#        fh.write("Step 0: Processed started at " + time.asctime() + "\n")
+#        fh.close()
+#
+#        # Backup script
+#        log.make_backup_of_script_file(sys.argv[0],
+#                                       os.path.abspath(self.WorkingDir))
+#    
+#        # Preprocess paticles
+#        fnScript=self.WorkingDir+'/pickParticles.sh'
+#        self.fh_mpi=os.open(fnScript, os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0700)
+#        self.process_all_micrographs()
+#        os.close(self.fh_mpi)
+#        self.launchCommandFile(fnScript)
+#
+#        # Join results
+#        generalMD=xmipp.MetaData()
+#        i=0
+#        for selfile in self.outputSel:
+#            if not os.path.exists(selfile):
+#                fh=open(self.WorkingDir + "/status.txt", "a")
+#                fh.write("Step E: Cannot read "+selfile+". Finishing at " + time.asctime() + "\n")
+#                fh.close()
+#                sys.exit(1)
+#            MD=xmipp.MetaData(selfile)
+#            if self.isPairTilt:
+#                MDtilt=xmipp.MetaData(self.outputTiltedSel[i])
+#                for id in MD:
+#                    MD.setValue(xmipp.MDL_IMAGE_TILTED,MDtilt.getValue(xmipp.MDL_IMAGE))
+#                    MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,MDtilt.getValue(xmipp.MDL_MICROGRAPH))
+#                    xtilt=MDtilt.getValue(xmipp.MDL_XINT)
+#                    MD.setValue(xmipp.MDL_XINTTILT,xtilt)
+#                    MD.setValue(xmipp.MDL_YINTTILT,MDtilt.getValue(xmipp.MDL_YINT))
+#                    enabledTilted=MDtilt.getValue(xmipp.MDL_ENABLED)
+#                    enabled=MD.getValue(xmipp.MDL_ENABLED)
+#                    if enabled==-1 or enabledTilted==-1:
+#                        MD.setValue(xmipp.MDL_ENABLED,-1)
+#                    else:
+#                        MD.setValue(xmipp.MDL_ENABLED,1)
+#                    MDtilt.nextObject()
+#                i=i+1
+#            else:
+#                for id in MD:
+#                    imageFrom=MD.getValue(xmipp.MDL_MICROGRAPH)
+#                    MD.setValue(xmipp.MDL_MICROGRAPH,self.correspondingMicrograph[imageFrom])
+#                    if (self.correspondingCTF[imageFrom]!=""):
+#                        MD.setValue(xmipp.MDL_CTFMODEL,self.correspondingCTF[imageFrom])
+#            generalMD.unionAll(MD)
+#        generalMD.write(self.OutSelFile)
+#
+#        # Sort by statistics
+#        rootName,dummy=os.path.splitext(self.OutSelFile)
+#        launchJob("xmipp_sort_by_statistics",
+#                              "-i "+self.OutSelFile+" --multivariate "+\
+#                              "-o "+rootName+"_sorted_by_score",
+#                              self.log,
+#                              False,1,1,'')
+#
+#        # Remove intermediate selfiles
+#        for selfile in self.outputSel:
+#            if os.path.exists(selfile):
+#                os.remove(selfile)
+#        for selfile in self.outputTiltedSel:
+#            if os.path.exists(selfile):
+#                os.remove(selfile)
+#    
+#        # Update status    
+#        if os.path.exists(rootName+"_sorted_by_score.sel"):
+#            fh=open(self.WorkingDir + "/status.txt", "a")
+#            fh.write("Step F: Processed finished at " + time.asctime() + "\n")
+#            fh.close()
 
     def launchCommandFile(self, commandFile):
         import launch_job, log, os
@@ -400,57 +312,48 @@ class preprocess_particles_class:
             os.write(self.fh_mpi, command+"\n")
         
 # Preconditions
-def checkErrors():
-    import os
-    errors = []
-    # Check if there is workingdir
-    if WorkingDir == "":
-        errors.append("No working directory given")
-    # Check that there is a valid list of micrographs
-    if not os.path.exists(PickingDir)>0:
-        errors.append("Cannot find "+PickingDir)
-    # Check that all micrographs exist
-    import xmipp
-    fnPickingParameters=PickingDir+"/protocolParameters.txt"
-    isPairTilt=getParameter("IsPairList",fnPickingParameters)=="True"
-    MicrographSelfile=getParameter("MicrographSelfile",fnPickingParameters)
-    print os.path.curdir
-    mD=xmipp.MetaData();
-    xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
-    preprocessingDir,dummy=os.path.split(MicrographSelfile)
-    errors.append("Cannot find the following micrographs:\n")
-    NnotFound=0
-    for id in mD:
-        micrograph=mD.getValue(xmipp.MDL_IMAGE)
-        if not os.path.exists(preprocessingDir+"/"+micrograph):
-            message+=preprocessingDir+"/"+micrograph+"\n"
-            NnotFound=NnotFound+1
-        if isPairTilt:
-            micrographTilted=mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
-            if not os.path.exists(preprocessingDir+"/"+micrographTilted):
-                message+=preprocessingDir+"/"+micrographTilted+"\n"
+    def validate():
+        import os
+        errors = []
+        # Check if there is workingdir
+        if WorkingDir == "":
+            errors.append("No working directory given")
+        # Check that there is a valid list of micrographs
+        if not os.path.exists(PickingDir)>0:
+            errors.append("Cannot find "+PickingDir)
+        # Check that all micrographs exist
+        import xmipp
+        fnPickingParameters=PickingDir+"/protocolParameters.txt"
+        isPairTilt=getParameter("IsPairList",fnPickingParameters)=="True"
+        MicrographSelfile=getParameter("MicrographSelfile",fnPickingParameters)
+        print os.path.curdir
+        mD=xmipp.MetaData();
+        xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
+        preprocessingDir,dummy=os.path.split(MicrographSelfile)
+        errors.append("Cannot find the following micrographs:\n")
+        NnotFound=0
+        for id in mD:
+            micrograph=mD.getValue(xmipp.MDL_IMAGE)
+            if not os.path.exists(preprocessingDir+"/"+micrograph):
+                message+=preprocessingDir+"/"+micrograph+"\n"
                 NnotFound=NnotFound+1
-    if NnotFound>0:
-        errors.append(message)
-            
-    return errors
+            if isPairTilt:
+                micrographTilted=mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
+                if not os.path.exists(preprocessingDir+"/"+micrographTilted):
+                    message+=preprocessingDir+"/"+micrographTilted+"\n"
+                    NnotFound=NnotFound+1
+        if NnotFound>0:
+            errors.append(message)
+                
+        return errors
 
-#		
-# Main
-#     
-if __name__ == '__main__':
-   	# create preprocess_particles_class object
-	preprocess_particles=preprocess_particles_class(
-                 WorkingDir,
-                 PickingDir,
-                 ProjectDir,
-                 Size,
-                 DoFlip,
-                 DoLog, 
-                 DoInvert,
-                 BackGroundRadius,
-                 DoRemoveDust,
-                 DustRemovalThreshold,
-                 DoParallel,
-                 NumberOfMpiProcesses,
-                 SystemFlavour)
+def getParameter(prm,filename):
+    f = open(filename, 'r')
+    lines=f.readlines()
+    f.close()
+    for line in lines:
+        tokens=line.split('=')
+        if tokens[0]==prm:
+            return tokens[1].strip()
+    return ""
+
