@@ -17,10 +17,11 @@ Comment='Describe your project here...'
 #Comment
 """ Subtraction subdirectory. 'run_001' will create 'subtraction/run_001' directory
 """
-RunName='run_003_exp_small'
+RunName='run_007_exp_small'
 
 # {file} Protocol Name
 ProtocolName='ProjMatch/xmipp2.4_exp_small/xmipp_protocol_projmatch_backup.py'
+#ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy/xmipp_protocol_projmatch_backup.py'
 
 # {expert}{file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all 
@@ -492,10 +493,10 @@ def ImportProtocol():
     SymmetryGroup = eval(fn +'.SymmetryGroup')
     global AngSamplingRateDeg
     if(len(AngSamplingRateDeg) < 1):
-        AngSamplingRateDeg=getComponentFromVector(eval(fn +'.AngSamplingRateDeg'),iterationNo)
+        AngSamplingRateDeg=getComponentFromVector(eval(fn +'.AngSamplingRateDeg'),iterationNo - 1)
     global MaxChangeInAngles
     if(len(MaxChangeInAngles) < 1):
-        MaxChangeInAngles=getComponentFromVector(eval(fn +'.MaxChangeInAngles'),iterationNo)
+        MaxChangeInAngles=getComponentFromVector(eval(fn +'.MaxChangeInAngles'),iterationNo - 1)
     global refDirNameAngSamplingRateDeg
     #refDirName=  eval(fn +'.LibraryDir')
     
