@@ -40,6 +40,10 @@ public:
 	FileName fnIn;
 	/** Output root */
 	FileName fnRoot;
+	/** Number of eigenvectors */
+	int Neigen;
+	/** Number of iterations */
+	int Nits;
     /** Psi step */
     double psi_step;
     /** Maximum shift change */
@@ -47,10 +51,35 @@ public:
     /** Shift step */
     double shift_step;
 public:
+    // Input metadata
+    MetaData MD;
+    // Number of images
+    size_t Nimg;
+    // Number of angles
+    int Nangles;
+    // Number of shifts
+    int Nshifts;
+    // Image size
+    int Xdim;
     // Mpi node
     MpiNode *node;
     // SVD matrix
+    Matrix2D<double> H;
+public:
+    // Input image
+    Image<double> I;
+    // Rotated and shifted image
+    MultidimArray<double> Iaux;
+    // Geometric transformation
+    Matrix2D<double> A;
+    // H block
+    Matrix2D<double> Hblock;
+    // W
     Matrix2D<double> W;
+    // W node
+    Matrix2D<double> Wnode;
+    // W transpose
+    Matrix2D<double> Wtranspose;
 public:
     /// Empty constructor
     ProgImageRotationalPCA(int argc, char **argv);
@@ -69,6 +98,16 @@ public:
 
     /// Produce side info
     void produceSideInfo();
+
+    /** Apply T.
+     * W=T(H).
+     */
+    void applyT();
+
+    /** Apply Tt.
+     * H=Tt(W).
+     */
+    void applyTt();
 
     /** Run. */
     void run();
