@@ -371,6 +371,7 @@ public:
     {
     	mdimx=Xdim;
     	mdimy=Ydim;
+    	mdim=mdimx*mdimy;
     	destroyData=false;
     	mappedData=true;
     	fdMap = open(fn.data(),  O_RDWR, S_IREAD | S_IWRITE);
