@@ -278,6 +278,12 @@ public:
     // Mapped data
     bool mappedData;
 
+    // File descriptor for mapped files
+    int fdMap;
+
+    // Mapped data original pointer
+    char* mdataOriginal;
+
     // Number of elements in X
     int mdimx;
 
@@ -297,9 +303,9 @@ public:
         coreInit();
     }
 
-    Matrix2D(const FileName &fnMappedMatrix, int Ydim, int Xdim)
+    Matrix2D(const FileName &fnMappedMatrix, int Ydim, int Xdim, size_t offset=0)
     {
-    	coreInit(fnMappedMatrix,Ydim,Xdim);
+    	coreInit(fnMappedMatrix,Ydim,Xdim,offset);
     }
 
     /** Dimension constructor
@@ -359,18 +365,23 @@ public:
         coreInit();
     }
 
-    /** Core init from mapped file */
-    void coreInit(const FileName &fn, int Ydim, int Xdim)
+    /** Core init from mapped file.
+     * Offset is in bytes. */
+    void coreInit(const FileName &fn, int Ydim, int Xdim, size_t offset=0)
     {
     	mdimx=Xdim;
     	mdimy=Ydim;
     	destroyData=false;
     	mappedData=true;
-    	int Fd = open(fn.data(),  O_RDWR, S_IREAD | S_IWRITE);
-		if (Fd == -1)
+    	fdMap = open(fn.data(),  O_RDWR, S_IREAD | S_IWRITE);
+		if (fdMap == -1)
 			REPORT_ERROR(ERR_IO_NOPATH,fn);
-        if ( (mdata = (T*) mmap(0,Ydim*Xdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, Fd, 0)) == MAP_FAILED )
+		const size_t pagesize=sysconf(_SC_PAGESIZE);
+		size_t offsetPages=(offset/pagesize)*pagesize;
+		size_t offsetDiff=offset-offsetPages;
+        if ( (mdataOriginal = (char*) mmap(0,Ydim*Xdim*sizeof(T)+offsetDiff, PROT_READ | PROT_WRITE, MAP_SHARED, fdMap, offsetPages)) == MAP_FAILED )
             REPORT_ERROR(ERR_MMAP_NOTADDR,(String)"mmap failed "+integerToString(errno));
+        mdata=(T*)(mdataOriginal+offsetDiff);
     }
 
     /** Core init.
@@ -380,8 +391,10 @@ public:
     {
         mdimx=mdimy=mdim=0;
         mdata=NULL;
+        mdataOriginal=NULL;
         destroyData=true;
         mappedData=false;
+        fdMap=-1;
     }
 
     /** Core allocate.
@@ -398,7 +411,9 @@ public:
         mdimy=_mdimy;
         mdim=_mdimx*_mdimy;
         mdata = new T [mdim];
+        mdataOriginal = NULL;
         mappedData=false;
+        fdMap=-1;
         if (mdata == NULL)
             REPORT_ERROR(ERR_MEM_NOTENOUGH, "coreAllocate: No space left");
     }
@@ -411,8 +426,12 @@ public:
         if (mdata != NULL && destroyData)
             delete[] mdata;
         if (mappedData)
-        	munmap(mdata,mdimx*mdimy*sizeof(T));
+        {
+        	munmap(mdataOriginal,mdimx*mdimy*sizeof(T));
+        	close(fdMap);
+        }
         mdata=NULL;
+        mdataOriginal=NULL;
     }
     //@}
 
@@ -509,10 +528,13 @@ public:
     /** Map to file.
      * The matrix is mapped to a file. The file is presumed to be already created with
      * enough space for a matrix of size Ydim x Xdim.
+     * Offset is in bytes.
      */
-    void mapToFile(const FileName &fn, int Ydim, int Xdim)
+    void mapToFile(const FileName &fn, int Ydim, int Xdim, size_t offset=0)
     {
-    	coreInit(fn,Ydim,Xdim);
+    	if (mdata!=NULL)
+    		clear();
+    	coreInit(fn,Ydim,Xdim,offset);
     }
 
     /** Extract submatrix and assign to this object.
