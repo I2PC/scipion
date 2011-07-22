@@ -60,9 +60,8 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         exec  "import " + fn
     
         self.pmprotWorkingDir = eval(fn +'.WorkingDir')
-        SymmetryGroup = eval(fn +'.SymmetryGroup')
-        if (SymmetryGroup != ''):
-            self.SymmetryGroup    = SymmetryGroup
+        if (self.SymmetryGroup == ''):
+            self.SymmetryGroup    = eval(fn +'.SymmetryGroup')
         AngSamplingRateDeg=getComponentFromVector(eval(fn +'.AngSamplingRateDeg'),self.iterationNo - 1)
         if (len(self.AngSamplingRateDeg) <1):
             self.AngSamplingRateDeg    = AngSamplingRateDeg
