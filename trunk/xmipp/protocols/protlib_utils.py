@@ -62,6 +62,12 @@ class XmippLog:
         event += mypwd 
         self.info(event)
         
+    def error(self, message):
+        if self.is_basic:
+            self.info("ERROR: " + message)
+        else:
+            self._log.error(message)
+
     def debug(self, message):
         if self.is_basic:
             self.info("DEBUG: " + message)
@@ -211,7 +217,7 @@ def runJob(log,
            NumberOfThreads,
            SystemFlavour,
            RunInBackground=False):
-    
+
     command = buildRunCommand(log,
                programname,
                params,
@@ -241,6 +247,7 @@ def buildRunCommand(
                NumberOfThreads,
                SystemFlavour,
                RunInBackground):
+
     paramsDict={}
     if not DoParallel:
         command = programname + ' ' + params
