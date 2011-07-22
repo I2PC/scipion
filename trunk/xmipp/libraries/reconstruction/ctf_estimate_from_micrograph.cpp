@@ -125,7 +125,6 @@ void constructPieceSmoother(const MultidimArray<double> &piece, MultidimArray<do
     // Attenuate borders to avoid discontinuities
     pieceSmoother.resizeNoCopy(piece);
     pieceSmoother.initConstant(1);
-    return;
     pieceSmoother.setXmippOrigin();
     double iHalfsize=2.0/YSIZE(pieceSmoother);
     const double alpha=0.025;
@@ -195,7 +194,7 @@ void ProgCTFEstimateFromMicrograph::PSD_piece_by_averaging(MultidimArray<double>
                 for (j = 0, jb = j0; j < small_Xdim; j++, jb++)
                     DIRECT_A2D_ELEM(small_piece, i, j) =
                         DIRECT_A2D_ELEM(piece, ib, jb);
-            //normalize_ramp(piece,pieceMask);
+            normalize_ramp(piece,pieceMask);
             piece*=pieceSmoother;
 
 #ifdef DEBUG
@@ -357,8 +356,8 @@ void ProgCTFEstimateFromMicrograph::run()
         for (int k = 0; k < YSIZE(piece); k++)
             for (int l = 0; l < XSIZE(piece); l++)
                 DIRECT_A2D_ELEM(piece, k, l) = mM_in(i+k, j+l);
-        //piece.statisticsAdjust(0, 1);
-        //normalize_ramp(piece,pieceMask);
+        piece.statisticsAdjust(0, 1);
+        normalize_ramp(piece,pieceMask);
         piece*=pieceSmoother;
 
         // Estimate the power spectrum .......................................
