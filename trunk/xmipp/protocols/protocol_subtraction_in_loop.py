@@ -111,10 +111,10 @@ def subtractionScript(_log
     # Save Metadata with just rotations (shifts will be applied when reading)
     mdRotations.setValueCol(MDL_SHIFTX, 0.)
     mdRotations.setValueCol(MDL_SHIFTY, 0.)
+    mdRotations.operate('anglePsi=-anglePsi')
     
     #reference projection for a given defocus group
     mdRef = MetaData(referenceStackDoc) #reference library
-    subtractedStackName = subtractedStack #output
     
     imgExp = Image()
     imgRef = Image()
@@ -137,23 +137,20 @@ def subtractionScript(_log
             if(dist < distMin or dist == -1):
                 refNum = idRef
                 distMin = dist
-            
-        #print id,str(refNum)+'@' + referenceStack
-        #refImgName = '%06d@%s'%(refNum,referenceStackName)
-        
+                    
         # Apply alignment as follows: shifts firt (while reading), then rotations
-        print "step 1"
         imgExp.readApplyGeo(md, id, True, DATA, ALL_IMAGES, False) # only_apply_shifts = true
-        print "step 2"
-        imgExp.write("image_tmp.spi")
-        #imgExp = Image("image_tmp.spi")
         imgExp.applyGeo(mdRotations, id, False, False)  
-        print "step 3"
-        #void applyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false, bool wrap = WRAP)
         
         imgRef.readApplyGeo(mdRef,refNum, False, DATA, ALL_IMAGES,False)
         imgSub = imgExp - imgRef
-        imgSub.write('%06d@%s'%(id,subtractedStackName))
-        imgExp.write('%06d@%s'%(id,subtractedStackName+'exp'))
-        imgRef.write('%06d@%s'%(id,subtractedStackName+'ref'))
+        imgSub.write('%06d@%s'%(id,subtractedStack))
+        imgExp.write('%06d@%s'%(id,subtractedStack+'exp'))
+        imgRef.write('%06d@%s'%(id,subtractedStack+'ref'))
+        
+        mdRotations.setValue(MDL_IMAGE, '%06d@%s'%(id,subtractedStack), id)
+        
+    
+    mdRotations.operate('anglePsi=0')
+    mdRotations.write(subtractedStack.replace('.stk','.xmd'))
 
