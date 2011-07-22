@@ -119,6 +119,41 @@ void ProgCTFEstimateFromMicrograph::defineParams()
     addExampleLine("xmipp_ctf_estimate_from_micrograph --micrograph micrograph.mrc --mode particles micrograph.pos --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000");
 }
 
+/* Construct piece smoother =============================================== */
+void constructPieceSmoother(const MultidimArray<double> &piece, MultidimArray<double> &pieceSmoother)
+{
+    // Attenuate borders to avoid discontinuities
+    pieceSmoother.resizeNoCopy(piece);
+    pieceSmoother.initConstant(1);
+    return;
+    pieceSmoother.setXmippOrigin();
+    double iHalfsize=2.0/YSIZE(pieceSmoother);
+    const double alpha=0.025;
+    const double alpha1=1-alpha;
+    const double ialpha=1.0/alpha;
+    for (int i=STARTINGY(pieceSmoother); i<=FINISHINGY(pieceSmoother); i++)
+    {
+        double iFraction=fabs(i*iHalfsize);
+        if (iFraction>alpha1)
+        {
+            double maskValue=0.5*(1+cos(PI*((iFraction-1)*ialpha+1)));
+            for (int j=STARTINGX(pieceSmoother); j<=FINISHINGX(pieceSmoother); j++)
+                A2D_ELEM(pieceSmoother,i,j)*=maskValue;
+        }
+    }
+
+    for (int j=STARTINGX(pieceSmoother); j<=FINISHINGX(pieceSmoother); j++)
+    {
+        double jFraction=fabs(j*iHalfsize);
+        if (jFraction>alpha1)
+        {
+            double maskValue=0.5*(1+cos(PI*((jFraction-1)*ialpha+1)));
+            for (int i=STARTINGY(pieceSmoother); i<=FINISHINGY(pieceSmoother); i++)
+                A2D_ELEM(pieceSmoother,i,j)*=maskValue;
+        }
+    }
+}
+
 /* Compute PSD by piece averaging ========================================== */
 //#define DEBUG
 void ProgCTFEstimateFromMicrograph::PSD_piece_by_averaging(MultidimArray<double> &piece,
@@ -144,6 +179,10 @@ void ProgCTFEstimateFromMicrograph::PSD_piece_by_averaging(MultidimArray<double>
     pieceMask.resizeNoCopy(piece);
     pieceMask.initConstant(1);
 
+    // Attenuate borders to avoid discontinuities
+    MultidimArray<double> pieceSmoother;
+    constructPieceSmoother(piece,pieceSmoother);
+
     for (int ii = 0; ii < Nsubpiece; ii++)
         for (int jj = 0; jj < Nsubpiece; jj++)
         {
@@ -156,7 +195,8 @@ void ProgCTFEstimateFromMicrograph::PSD_piece_by_averaging(MultidimArray<double>
                 for (j = 0, jb = j0; j < small_Xdim; j++, jb++)
                     DIRECT_A2D_ELEM(small_piece, i, j) =
                         DIRECT_A2D_ELEM(piece, ib, jb);
-            normalize_ramp(piece,pieceMask);
+            //normalize_ramp(piece,pieceMask);
+            piece*=pieceSmoother;
 
 #ifdef DEBUG
 
@@ -263,6 +303,11 @@ void ProgCTFEstimateFromMicrograph::run()
     MultidimArray<int> pieceMask;
     pieceMask.resizeNoCopy(piece);
     pieceMask.initConstant(1);
+
+    // Attenuate borders to avoid discontinuities
+    MultidimArray<double> pieceSmoother;
+    constructPieceSmoother(piece,pieceSmoother);
+
     std::cerr << "Computing models of each piece ...\n";
 
     // Prepare these filenames in case they are needed
@@ -313,7 +358,8 @@ void ProgCTFEstimateFromMicrograph::run()
             for (int l = 0; l < XSIZE(piece); l++)
                 DIRECT_A2D_ELEM(piece, k, l) = mM_in(i+k, j+l);
         //piece.statisticsAdjust(0, 1);
-        normalize_ramp(piece,pieceMask);
+        //normalize_ramp(piece,pieceMask);
+        piece*=pieceSmoother;
 
         // Estimate the power spectrum .......................................
         if (Nsubpiece==1)
