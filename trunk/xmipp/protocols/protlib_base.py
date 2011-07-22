@@ -68,7 +68,7 @@ class XmippProject():
         self.config = ConfigParser.RawConfigParser()            
         self.config.add_section('project')
         self.config.set('project', 'projectdir', self.projectDir)
-        self.config.set('project', 'systemflavour', 'OPEN-MPI')
+        self.config.set('project', 'systemflavour', '')
         self.SystemFlavour = self.config.get('project', 'systemflavour')
 
         self.writeConfig()
