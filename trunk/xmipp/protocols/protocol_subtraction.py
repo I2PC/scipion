@@ -13,31 +13,20 @@ from protlib_base import *
 from protlib_utils import *
 #from protlib_utils import getListFromVector
 #import os,sys
-from protocol_partial_projection_subtraction_header import *
+#from protocol_partial_projection_subtraction_header import *
 
-def checkErrors():    
-    '''This function will be used to validate the protocols
-    should be implemented in all derived protocols'''
-    errors = []        
-    # Check if there is workingdir 
-    # move this to gui
-    if not os.path.exists(ProtocolName):
-        errors.append("Refered protocol named %s does not exist"%ProtocolName)
-        
-    return errors 
         
 class ProtPartialProjectionSubtraction(XmippProtocol):
 
     def __init__(self, scriptname,project=None):
         
-	XmippProtocol.__init__(self, protDict.projsubs.key, scriptname, project)
+        XmippProtocol.__init__(self, protDict.projsubs.key, scriptname, project)
         print "0"
-	self.Import = 'from protocol_partial_projection_subtraction import *'
-	print "1"
-	#import config
-        #super(ProtPartialProjectionSubtraction,self).__init__(protDict.projsubs.key, scriptname, project)
-        print "2"	
-	self.myName='partial_projection_subtraction'
+        self.Import = 'from protocol_subtraction import *;\
+                       from protocol_subtraction_before_loop import *;\
+                       from protocol_subtraction_in_loop import *;'        
+        
+        self.myName='partial_projection_subtraction'
         self.subtractionDir ='Subtraction'
         self.referenceDir   ='Refs'
         self.referenceStack ='ref'
@@ -46,40 +35,79 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.volsDir ='Vols'
         self.tempFileName=''
         self.current_angles='current_angles.doc'
-        self.Import = 'from protlib_partial_projection_subtraction import *'
         self.scaledImages = 'scaled'
-        self.runName = RunName
+        #self.runName = RunName
         
         # Check these params
         self.DoDeleteWorkingDir = False
         self.DoParallel = True
         
+        
+        
+    def ImportProtocol(self):
+#        scriptdir = os.getcwd()
+#        sys.path.append(scriptdir)
+#    
+        from protlib_utils import unique_filename
+        from protlib_utils import loadModule
+        pardir=os.path.abspath(os.getcwd())
+        tempFileName=unique_filename(self.ProtocolName)
+        fn = FileName(tempFileName)
+        fn=fn.getBaseName()
+        shutil.copy(self.ProtocolName,fn+'.py')
+        
+        #FIXME use load module??
+        exec  "import " + fn
+    
+        self.pmprotWorkingDir = eval(fn +'.WorkingDir')
+        SymmetryGroup = eval(fn +'.SymmetryGroup')
+        if (SymmetryGroup != ''):
+            self.SymmetryGroup    = SymmetryGroup
+        AngSamplingRateDeg=getComponentFromVector(eval(fn +'.AngSamplingRateDeg'),self.iterationNo - 1)
+        if (len(self.AngSamplingRateDeg) <1):
+            self.AngSamplingRateDeg    = AngSamplingRateDeg
+        MaxChangeInAngles=getComponentFromVector(eval(fn +'.MaxChangeInAngles'),self.iterationNo - 1)
+        if (len(self.MaxChangeInAngles) <1):
+            self.MaxChangeInAngles    = MaxChangeInAngles
+        
+    def validate(self):    
+        '''This function will be used to validate the protocols
+        should be implemented in all derived protocols'''
+        errors = []        
+        # Check if there is workingdir 
+        # move this to gui
+        if not os.path.exists(self.ProtocolName):
+            errors.append("Refered protocol named %s does not exist"%ProtocolName)
+            
+        return errors 
+    
     def preRun(self):
 
-        self.pmprotWorkingDir = WorkingDir
-        self.Iteration_Working_Directory = os.path.join(self.pmprotWorkingDir,'Iter_'+ str(iterationNo))
-        self.subtractionDir = os.path.join(self.WorkingDir,RunName)
+        self.ImportProtocol()
+        
+        self.Iteration_Working_Directory = os.path.join(self.pmprotWorkingDir,'Iter_'+ str(self.iterationNo))
+        self.subtractionDir = os.path.join(self.WorkingDir,self.RunName)
         self.volsDir = os.path.join(self.WorkingDir,self.volsDir)
         self.referenceDir = os.path.join(self.WorkingDir,self.referenceDir)
         self.subImgsDir = os.path.join(self.WorkingDir,self.subImgsDir)
         
         self.scaledImages = os.path.join(self.WorkingDir,self.scaledImages)
         
-        self.doScaleImages = doScaleImages
+#        self.doScaleImages = doScaleImages
+#        
+#        self.dimX = dimX
+#        self.dimY = dimY
+#        
+#        self.dRradiusMax = dRradiusMax
+#        self.dRradiusMin = dRradiusMin
         
-        self.dimX = dimX
-        self.dimY = dimY
-        
-        self.dRradiusMax = dRradiusMax
-        self.dRradiusMin = dRradiusMin
-        
-        if(MaxChangeInAngles > 100):
+        if(self.MaxChangeInAngles > 100):
             self.MaxChangeInAngles=-1
-        else:
-            self.MaxChangeInAngles = MaxChangeInAngles
+#        else:
+#            self.MaxChangeInAngles = MaxChangeInAngles
             
         #new vwersion need zfill
-        tmpFilename = 'Iter_'+ str(iterationNo) + '_' + self.current_angles #zfill()
+        tmpFilename = 'Iter_'+ str(self.iterationNo) + '_' + self.current_angles #zfill()
         self.filename_currentAngles = os.path.join(self.Iteration_Working_Directory,tmpFilename)
         
         if(self.doScaleImages):
@@ -112,11 +140,11 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             
         self.defocusGroupNo = len(self.defGroups)
         
-        self.DocFileExp=['']
-        if DocFileExp!='':
-            tmpFileName = DocFileExp
+        if self.DocFileExp!='':
+            tmpFileName = self.DocFileExp
         else:
             tmpFileName = FileName(self.filename_currentAngles)
+        self.DocFileExp=['']
         tmpFileName = tmpFileName.withoutExtension()
         tmpFileName = tmpFileName + '_ctfgroups.doc'
         if os.path.exists(tmpFileName):
@@ -159,12 +187,13 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         sys.path.append(scriptdir)
 
         #from pysqlite2 import dbapi2 as sqlite
-        self.Db.setPrintWrapperParameters(PrintWrapperParameters)
-        self.Db.setPrintWrapperCommand(PrintWrapperCommand)
-        self.Db.setVerify(Verify,ViewVerifyedFiles)
+        self.Db.setPrintWrapperParameters(self.PrintWrapperParameters)
+        self.Db.setPrintWrapperCommand(self.PrintWrapperCommand)
+        self.Db.setVerify(self.Verify,self.ViewVerifyedFiles)
         
         
     def otherActionsToBePerformedBeforeLoop(self):
+        _log = self.Log
         _dataBase = self.Db
         #Create directories
         _dataBase.insertAction('createDir', None, path = self.volsDir)
@@ -173,7 +202,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         
         #Create auxiliary metadata with image names , angles and CTF
         
-        if(doScaleImages):
+        if(self.doScaleImages):
             _VerifyFiles = [self.scaledImages+".stk"]
             _VerifyFiles.append(self.scaledImages+".xmd")
             id = _dataBase.insertAction('scaleImages', _VerifyFiles, None, None, None
@@ -181,14 +210,14 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                                        , dimY = self.dimY
                                        , DoParallel = self.DoParallel
                                        , filename_currentAngles = self.filename_currentAngles
-                                       , MpiJobSize = MpiJobSize
+                                       , MpiJobSize = self.MpiJobSize
                                        , NumberOfMpiProcesses = NumberOfMpiProcesses
-                                       , NumberOfThreads = NumberOfThreads
+                                       , NumberOfThreads = self.NumberOfThreads
                                        , scaledImages = self.scaledImages
                                        , SystemFlavour = SystemFlavour
                                        )            
     def actionsToBePerformedInsideLoop(self):
-        
+        _log = self.Log
         _dataBase = self.Db
         for iterN in range(1, self.defocusGroupNo):
             #Create auxiliary metadata with image names , angles and CTF
@@ -226,12 +255,12 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             id = self.Db.insertAction('reconstructVolume', _VerifyFiles
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , DoParallel = self.DoParallel
-                                        , MpiJobSize = MpiJobSize
-                                        , NumberOfMpiProcesses = NumberOfMpiProcesses
-                                        , NumberOfThreads = NumberOfThreads
+                                        , MpiJobSize = self.MpiJobSize
+                                        , NumberOfMpiProcesses = self.NumberOfMpiProcesses
+                                        , NumberOfThreads = self.NumberOfThreads
                                         , reconstructedVolume = self.reconstructedVolume[iterN]
-                                        , SymmetryGroup = SymmetryGroup
-                                        , SystemFlavour = SystemFlavour)
+                                        , SymmetryGroup = self.SymmetryGroup
+                                        , SystemFlavour = self.SystemFlavour)
             
             #mask volume before projection
             _VerifyFiles = []
@@ -251,17 +280,17 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles.append(tmp.replace('.stk','_sampling.xmd'))
             
             id = self.Db.insertAction('createProjections', _VerifyFiles
-                                        , AngSamplingRateDeg = AngSamplingRateDeg
+                                        , AngSamplingRateDeg = self.AngSamplingRateDeg
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , DoParallel = self.DoParallel
                                         , maskReconstructedVolume = self.maskReconstructedVolume[iterN]
                                         , MaxChangeInAngles = self.MaxChangeInAngles
-                                        , MpiJobSize = MpiJobSize
-                                        , NumberOfMpiProcesses = NumberOfMpiProcesses
-                                        , NumberOfThreads = NumberOfThreads
+                                        , MpiJobSize = self.MpiJobSize
+                                        , NumberOfMpiProcesses = self.NumberOfMpiProcesses
+                                        , NumberOfThreads = self.NumberOfThreads
                                         , referenceStack = self.referenceStack[iterN]
-                                        , SymmetryGroup = SymmetryGroup
-                                        , SystemFlavour = SystemFlavour)
+                                        , SymmetryGroup = self.SymmetryGroup
+                                        , SystemFlavour = self.SystemFlavour)
                           
                      
                      
@@ -286,46 +315,11 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.preRun()
         self.otherActionsToBePerformedBeforeLoop()
         self.actionsToBePerformedInsideLoop()
-        
-    def validate(self):
-        return checkErrors()
-    
-def ImportProtocol():
-    print "Import Protocol"
-    scriptdir = os.getcwd()
-    sys.path.append(scriptdir)
 
-    from protlib_utils import unique_filename
-    from protlib_utils import loadModule
-    pardir=os.path.abspath(os.getcwd())
-    tempFileName=unique_filename(ProtocolName)
-    fn = FileName(tempFileName)
-    fn=fn.getBaseName()
-    shutil.copy(ProtocolName,fn+'.py')
-    
-    #FIXME use load module??
-    exec  "import " + fn
-    #loadModule(fn)
-    #import arg
-    global ProjectDir
-    ProjectDir = eval(fn +'.ProjectDir')
-    global WorkingDir
-    WorkingDir = eval(fn +'.WorkingDir')
-    global LogDir
-    LogDir = eval(fn +'.LogDir')
-    global SymmetryGroup
-    SymmetryGroup = eval(fn +'.SymmetryGroup')
-    global AngSamplingRateDeg
-    if(len(AngSamplingRateDeg) < 1):
-        AngSamplingRateDeg=getComponentFromVector(eval(fn +'.AngSamplingRateDeg'),iterationNo - 1)
-    global MaxChangeInAngles
-    if(len(MaxChangeInAngles) < 1):
-        MaxChangeInAngles=getComponentFromVector(eval(fn +'.MaxChangeInAngles'),iterationNo - 1)
-    global refDirNameAngSamplingRateDeg
-    #refDirName=  eval(fn +'.LibraryDir')
+
     
            
 if __name__ == '__main__':
-    ImportProtocol()
+#    ImportProtocol()
     protocolMain(ProtPartialProjectionSubtraction)
     

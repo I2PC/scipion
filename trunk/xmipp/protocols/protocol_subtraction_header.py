@@ -186,7 +186,7 @@ ViewVerifyedFiles=True
 #------------------------------------------------------------------------------------------------
 #
 #SystemFlavour = "TORQUE-OPENMPI"
-from protocol_partial_projection_subtraction import *
+from protocol_subtraction import *
            
 if __name__ == '__main__':
     ImportProtocol()
