@@ -26,16 +26,15 @@
 #include "mpi_reconstruct_fourier.h"
 
 /** Empty constructor */
-ProgMPIRecFourier::ProgMPIRecFourier()
-{
-    node = NULL;
-}
+//ProgMPIRecFourier::ProgMPIRecFourier()
+//{
+//    node = NULL;
+//}
 
 /*  constructor ------------------------------------------------------- */
 ProgMPIRecFourier::ProgMPIRecFourier(int argc, char *argv[])
 {
-    node = new MpiNode(argc, argv);
-    created_node = true;
+    this->read(argc, argv);
 }
 
 /* constructor providing an MpiNode
@@ -43,42 +42,14 @@ ProgMPIRecFourier::ProgMPIRecFourier(int argc, char *argv[])
  */
 ProgMPIRecFourier::ProgMPIRecFourier(MpiNode * node)
 {
-    this->node = node;
-    created_node = false;
+    this->setNode(node);
 }
 
 /* Special way of reading to sync all nodes */
 void ProgMPIRecFourier::read(int argc, char** argv)
 {
-    if (node == NULL)
-    {
-        node = new MpiNode(argc, argv);
-        created_node = true;
-    }
-
-    nProcs = node->size;
-
-    if (node->isMaster())
-        ProgRecFourier::read(argc, argv);
-    node->barrierWait();
-
-    if (!node->isMaster())
-        ProgRecFourier::read(argc, argv);
-
-}
-
-/* Read parameters --------------------------------------------------------- */
-void ProgMPIRecFourier::readParams()
-{
-    ProgRecFourier::readParams();
-    mpi_job_size=getIntParam("--mpi_job_size");
-}
-
-/** destructor */
-ProgMPIRecFourier::~ProgMPIRecFourier()
-{
-    if (created_node)
-        delete node;
+    XmippMpiProgram::read(argc, argv);
+    ProgRecFourier::read(argc, argv);
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -91,16 +62,26 @@ void ProgMPIRecFourier::defineParams()
     addParamsLine("                                : posible value that may not be the best option");
 }
 
+/* Read parameters --------------------------------------------------------- */
+void ProgMPIRecFourier::readParams()
+{
+    ProgRecFourier::readParams();
+    mpi_job_size=getIntParam("--mpi_job_size");
+}
+
 /* Pre Run PreRun for all nodes but not for all works */
 void ProgMPIRecFourier::preRun()
 {
     if (nProcs < 2)
-        error_exit("This program cannot be executed in a single working node");
+        REPORT_ERROR(ERR_ARG_INCORRECT,"This program cannot be executed in a single working node");
 
     if (node->isMaster())
     {
         show();
         SF.read(fn_sel);
+
+        //Send verbose level to node 1
+        MPI_Send(&verbose, 1, MPI_INT, 1, TAG_SETVERBOSE, *node->comm);
     }
     else
     {
@@ -114,6 +95,9 @@ void ProgMPIRecFourier::preRun()
     //only one node will write in the console
     if (node->rank == 1 )
     {
+        // Get verbose status
+        MPI_Recv(&verbose, 1, MPI_INT, 0, TAG_SETVERBOSE, *node->comm, &status);
+
         //use threads for volume inverse fourier transform, plan is created in setReal()
         //only rank=1 makes inverse Fourier trnasform
         transformerVol.setThreadsNumber(numThreads);
@@ -130,9 +114,6 @@ void ProgMPIRecFourier::preRun()
 #undef DEBUGDOUBLE
 
     }
-    else
-        verbose=false;
-
 }
 /* Run --------------------------------------------------------------------- */
 void ProgMPIRecFourier::run()
@@ -157,6 +138,10 @@ void ProgMPIRecFourier::run()
         }
 
         nProcs = numberOfJobs;
+
+        // Unused nodes are removed from the MPI communicator
+        node->active = (node->rank <= numberOfJobs);
+        node->updateComm();
     }
 
     if (node->isMaster())
@@ -180,16 +165,14 @@ void ProgMPIRecFourier::run()
 #undef DEBUG
 
             MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
-                     MPI_COMM_WORLD, &status);
+                     *node->comm, &status);
 
             if ( status.MPI_TAG != TAG_FREEWORKER )
-            {
-                std::cout << "Unexpected TAG, please contact developers " << std::endl;
-                exit(-1);
-            }
+                REPORT_ERROR(ERR_ARG_INCORRECT,"Unexpected TAG, please contact developers");
 
             //#define DEBUG
 #ifdef DEBUG
+
             std::cerr << "master-send i=" << i << std::endl;
 #endif
 #undef DEBUG
@@ -199,7 +182,7 @@ void ProgMPIRecFourier::run()
                      MPI_INT,
                      status.MPI_SOURCE,
                      TAG_WORKFORWORKER,
-                     MPI_COMM_WORLD);
+                     *node->comm);
 
             if( i == FSC && fn_fsc != "" )
             {
@@ -211,7 +194,7 @@ void ProgMPIRecFourier::run()
                              MPI_INT,
                              MPI_ANY_SOURCE,
                              TAG_FREEWORKER,
-                             MPI_COMM_WORLD,
+                             *node->comm,
                              &status);
 
                     MPI_Send( 0,
@@ -219,7 +202,7 @@ void ProgMPIRecFourier::run()
                               MPI_INT,
                               status.MPI_SOURCE,
                               TAG_COLLECT_FOR_FSC,
-                              MPI_COMM_WORLD);
+                              *node->comm);
                 }
             }
 
@@ -236,7 +219,7 @@ void ProgMPIRecFourier::run()
                      MPI_INT,
                      MPI_ANY_SOURCE,
                      TAG_FREEWORKER,
-                     MPI_COMM_WORLD,
+                     *node->comm,
                      &status);
         }
 
@@ -245,7 +228,8 @@ void ProgMPIRecFourier::run()
         total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
         total_time=(double)total_usecs/(double)1000000;
 
-        std::cout << "\n\nProcessing time: " << total_time << " secs." << std::endl;
+        if (verbose > 0)
+            std::cout << "\n\nProcessing time: " << total_time << " secs." << std::endl;
 
         // Start collecting results
         for ( int i = 1 ; i <= nProcs ; i ++ )
@@ -255,429 +239,412 @@ void ProgMPIRecFourier::run()
                      MPI_INT,
                      i,
                      TAG_TRANSFER,
-                     MPI_COMM_WORLD );
+                     *node->comm );
         }
 
     }
-    else
+    else if( node->active )
     {
-        if( node->rank > numberOfJobs )
+        // Select only relevant part of selfile for this rank
+        // job number
+        // job size
+        // aux variable
+        double * fourierVolume = (double *)VoutFourier.data;
+        double * fourierWeights = FourierWeights.data;
+
+        sizeout = MULTIDIM_SIZE(FourierWeights);
+
+        barrier_init( &barrier, numThreads+1);
+        pthread_mutex_init( &workLoadMutex, NULL );
+        statusArray = NULL;
+        th_ids = (pthread_t *)malloc(numThreads * sizeof(pthread_t));
+        th_args = (ImageThreadParams *)malloc(numThreads * sizeof(ImageThreadParams));
+
+        for ( int nt = 0 ; nt < numThreads ; nt++ )
         {
-            // Do nothing, this worker is not needed
+            th_args[nt].parent=this;
+            th_args[nt].myThreadID = nt;
+            th_args[nt].selFile = new MetaData(SF);
+            pthread_create((th_ids+nt),NULL,processImageThread,(void*)(th_args+nt));
         }
-        else
+
+        while (1)
         {
-            // Select only relevant part of selfile for this rank
-            // job number
-            // job size
-            // aux variable
-            double * fourierVolume = (double *)VoutFourier.data;
-            double * fourierWeights = FourierWeights.data;
+            int jobNumber;
 
-            sizeout = MULTIDIM_SIZE(FourierWeights);
-
-            barrier_init( &barrier, numThreads+1);
-            pthread_mutex_init( &workLoadMutex, NULL );
-            statusArray = NULL;
-            th_ids = (pthread_t *)malloc(numThreads * sizeof(pthread_t));
-            th_args = (ImageThreadParams *)malloc(numThreads * sizeof(ImageThreadParams));
-
-            for ( int nt = 0 ; nt < numThreads ; nt++ )
-            {
-                th_args[nt].parent=this;
-                th_args[nt].myThreadID = nt;
-                th_args[nt].selFile = new MetaData(SF);
-                pthread_create((th_ids+nt),NULL,processImageThread,(void*)(th_args+nt));
-            }
-
-            while (1)
-            {
-                int jobNumber;
-
-                //#define DEBUG
+            //#define DEBUG
 #ifdef DEBUG
 
-                std::cerr << "slave-send TAG_FREEWORKER rank=" << node->rank << std::endl;
+            std::cerr << "slave-send TAG_FREEWORKER rank=" << node->rank << std::endl;
 #endif
      #undef DEBUG
-                //I am free
-                MPI_Send(0, 0, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
-                MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            //I am free
+            MPI_Send(0, 0, MPI_INT, 0, TAG_FREEWORKER, *node->comm);
+            MPI_Probe(0, MPI_ANY_TAG, *node->comm, &status);
 
-                if (status.MPI_TAG == TAG_COLLECT_FOR_FSC)
+            if (status.MPI_TAG == TAG_COLLECT_FOR_FSC)
+            {
+                //If I  do not read this tag
+                //master will no further process
+                //a posibility is a non-blocking send
+                MPI_Recv(0, 0, MPI_INT, 0, TAG_COLLECT_FOR_FSC, *node->comm, &status);
+
+                if( node->rank == 1 )
                 {
-                    //If I  do not read this tag
-                    //master will no further process
-                    //a posibility is a non-blocking send
-                    MPI_Recv(0, 0, MPI_INT, 0, TAG_COLLECT_FOR_FSC, MPI_COMM_WORLD, &status);
+                    // Reserve memory for the receive buffer
+                    double * recBuffer = (double *) malloc (sizeof(double)*BUFFSIZE);
+                    int receivedSize;
+                    double * pointer;
+                    pointer = fourierVolume;
+                    int currentSource;
 
-                    if( node->rank == 1 )
+                    if ( nProcs > 2 )
                     {
-                        // Reserve memory for the receive buffer
-                        double * recBuffer = (double *) malloc (sizeof(double)*BUFFSIZE);
-                        int receivedSize;
-                        double * pointer;
-                        pointer = fourierVolume;
-                        int currentSource;
-
-                        if ( nProcs > 2 )
+                        // Receive from other workers
+                        for ( int i = 2 ; i <= nProcs ; i++)
                         {
-                            // Receive from other workers
-                            for ( int i = 2 ; i <= nProcs ; i++)
+                            MPI_Recv(0,0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
+                                     *node->comm, &status);
+
+                            currentSource = status.MPI_SOURCE;
+
+                            pointer = fourierVolume;
+
+                            while (1)
                             {
-                                MPI_Recv(0,0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
-                                         MPI_COMM_WORLD, &status);
+                                MPI_Probe( currentSource, MPI_ANY_TAG, *node->comm, &status );
 
-                                currentSource = status.MPI_SOURCE;
-
-                                pointer = fourierVolume;
-
-                                while (1)
+                                if ( status.MPI_TAG == TAG_FREEWORKER )
                                 {
-                                    MPI_Probe( currentSource, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-
-                                    if ( status.MPI_TAG == TAG_FREEWORKER )
-                                    {
-                                        MPI_Recv(0,0, MPI_INT, currentSource, TAG_FREEWORKER, MPI_COMM_WORLD, &status );
-                                        break;
-                                    }
-
-                                    MPI_Recv( recBuffer,
-                                              BUFFSIZE,
-                                              MPI_DOUBLE,
-                                              currentSource,
-                                              MPI_ANY_TAG,
-                                              MPI_COMM_WORLD,
-                                              &status );
-
-                                    MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
-
-                                    for ( int i = 0 ; i < receivedSize ; i ++ )
-                                    {
-                                        pointer[i] += recBuffer[i];
-                                    }
-
-                                    pointer += receivedSize;
+                                    MPI_Recv(0,0, MPI_INT, currentSource, TAG_FREEWORKER, *node->comm, &status );
+                                    break;
                                 }
 
-                                pointer = fourierWeights;
+                                MPI_Recv( recBuffer,
+                                          BUFFSIZE,
+                                          MPI_DOUBLE,
+                                          currentSource,
+                                          MPI_ANY_TAG,
+                                          *node->comm,
+                                          &status );
 
-                                while (1)
+                                MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
+
+                                for ( int i = 0 ; i < receivedSize ; i ++ )
                                 {
-                                    MPI_Probe( currentSource, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-
-                                    if ( status.MPI_TAG == TAG_FREEWORKER )
-                                    {
-                                        MPI_Recv( 0,0,MPI_INT,currentSource,TAG_FREEWORKER, MPI_COMM_WORLD,&status );
-
-                                        break;
-                                    }
-
-                                    MPI_Recv( recBuffer,
-                                              BUFFSIZE,
-                                              MPI_DOUBLE,
-                                              currentSource,
-                                              MPI_ANY_TAG,
-                                              MPI_COMM_WORLD,
-                                              &status );
-
-                                    MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
-
-                                    for ( int i = 0 ; i < receivedSize ; i ++ )
-                                    {
-                                        pointer[i] += recBuffer[i];
-                                    }
-
-                                    pointer += receivedSize;
+                                    pointer[i] += recBuffer[i];
                                 }
+
+                                pointer += receivedSize;
+                            }
+
+                            pointer = fourierWeights;
+
+                            while (1)
+                            {
+                                MPI_Probe( currentSource, MPI_ANY_TAG, *node->comm, &status );
+
+                                if ( status.MPI_TAG == TAG_FREEWORKER )
+                                {
+                                    MPI_Recv( 0,0,MPI_INT,currentSource,TAG_FREEWORKER, *node->comm,&status );
+
+                                    break;
+                                }
+
+                                MPI_Recv( recBuffer,
+                                          BUFFSIZE,
+                                          MPI_DOUBLE,
+                                          currentSource,
+                                          MPI_ANY_TAG,
+                                          *node->comm,
+                                          &status );
+
+                                MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
+
+                                for ( int i = 0 ; i < receivedSize ; i ++ )
+                                {
+                                    pointer[i] += recBuffer[i];
+                                }
+
+                                pointer += receivedSize;
                             }
                         }
-                        free( recBuffer );
-
-                        Image<double> auxVolume1;
-                        auxVolume1().alias( FourierWeights );
-                        auxVolume1.write((std::string)fn_fsc + "_1_Weights.vol");
-
-                        Image< std::complex<double> > auxFourierVolume1;
-                        auxFourierVolume1().alias( VoutFourier );
-                        auxFourierVolume1.write((std::string) fn_fsc + "_1_Fourier.vol");
-
-
-                        // Normalize global volume and store data
-                        finishComputations(FileName((std::string) fn_fsc + "_split_1.vol"));
-
-                        Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
-
-                        transformerVol.setReal(Vout());
-                        Vout().clear();
-                        transformerVol.getFourierAlias(VoutFourier);
-                        FourierWeights.initZeros(VoutFourier);
-                        VoutFourier.initZeros();
                     }
-                    else
-                    {
-                        MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, MPI_COMM_WORLD );
+                    free( recBuffer );
 
-                        sendDataInChunks( fourierVolume, 1, 2*sizeout, BUFFSIZE, MPI_COMM_WORLD );
+                    Image<double> auxVolume1;
+                    auxVolume1().alias( FourierWeights );
+                    auxVolume1.write((std::string)fn_fsc + "_1_Weights.vol");
 
-                        MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, MPI_COMM_WORLD );
-
-                        sendDataInChunks( fourierWeights, 1, sizeout, BUFFSIZE, MPI_COMM_WORLD);
-
-                        MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER,MPI_COMM_WORLD);
-
-                        Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
-                        transformerVol.setReal(Vout());
-                        Vout().clear();
-                        transformerVol.getFourierAlias(VoutFourier);
-                        FourierWeights.initZeros(VoutFourier);
-                        VoutFourier.initZeros();
-                    }
-                }
-                else if (status.MPI_TAG == TAG_TRANSFER)
-                {
-                    //If I  do not read this tag
-                    //master will no further process
-                    MPI_Recv(0, 0, MPI_INT, 0, TAG_TRANSFER, MPI_COMM_WORLD, &status);
-#ifdef DEBUG
-
-                    std::cerr << "Wr" << node->rank << " " << "TAG_STOP" << std::endl;
-#endif
-
-                    if ( node->rank == 1 )
-                    {
-                        // Reserve memory for the receive buffer
-                        double * recBuffer = (double *) malloc (sizeof(double)*BUFFSIZE);
-                        int receivedSize;
-                        double * pointer;
-                        pointer = fourierVolume;
-                        int currentSource;
-
-                        gettimeofday(&start_time,NULL);
-
-                        if ( nProcs > 1 )
-                        {
-                            // Receive from other workers
-
-                            for ( int i = 0 ; i <= (nProcs-2) ; i++)
-                            {
-                                MPI_Recv(0,0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
-                                         MPI_COMM_WORLD, &status);
-
-                                currentSource = status.MPI_SOURCE;
-
-                                pointer = fourierVolume;
-
-                                while (1)
-                                {
-                                    MPI_Probe( currentSource, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-
-                                    if ( status.MPI_TAG == TAG_FREEWORKER )
-                                    {
-                                        MPI_Recv(0,0, MPI_INT, currentSource, TAG_FREEWORKER, MPI_COMM_WORLD, &status );
-
-                                        break;
-                                    }
-
-                                    MPI_Recv( recBuffer,
-                                              BUFFSIZE,
-                                              MPI_DOUBLE,
-                                              currentSource,
-                                              MPI_ANY_TAG,
-                                              MPI_COMM_WORLD,
-                                              &status );
-
-                                    MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
-
-                                    for ( int i = 0 ; i < receivedSize ; i ++ )
-                                    {
-                                        pointer[i] += recBuffer[i];
-                                    }
-
-                                    pointer += receivedSize;
-                                }
-
-                                pointer = fourierWeights;
-
-                                while (1)
-                                {
-                                    MPI_Probe( currentSource, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-
-                                    if ( status.MPI_TAG == TAG_FREEWORKER )
-                                    {
-                                        MPI_Recv( 0,0,MPI_INT,currentSource,TAG_FREEWORKER, MPI_COMM_WORLD,&status );
-
-                                        break;
-                                    }
-
-                                    MPI_Recv( recBuffer,
-                                              BUFFSIZE,
-                                              MPI_DOUBLE,
-                                              currentSource,
-                                              MPI_ANY_TAG,
-                                              MPI_COMM_WORLD,
-                                              &status );
-
-                                    MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
-
-                                    for ( int i = 0 ; i < receivedSize ; i ++ )
-                                    {
-                                        pointer[i] += recBuffer[i];
-                                    }
-
-                                    pointer += receivedSize;
-                                }
-                            }
-                        }
-
-                        free( recBuffer );
-                        gettimeofday(&end_time,NULL);
-
-                        total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
-                        total_time=(double)total_usecs/(double)1000000;
-
-                        std::cout << "Transfers time: " << total_time << " secs." << std::endl;
-
-                        if( fn_fsc != "" )
-                        {
-
-                            Image<double> auxVolume2;
-                            auxVolume2().alias( FourierWeights );
-                            auxVolume2.write((std::string)fn_fsc + "_2_Weights.vol");
-
-                            Image< std::complex<double> > auxFourierVolume2;
-                            auxFourierVolume2().alias( VoutFourier );
-                            auxFourierVolume2.write((std::string) fn_fsc + "_2_Fourier.vol");
+                    Image< std::complex<double> > auxFourierVolume1;
+                    auxFourierVolume1().alias( VoutFourier );
+                    auxFourierVolume1.write((std::string) fn_fsc + "_1_Fourier.vol");
 
 
-                            // Normalize global volume and store data
-                            finishComputations(FileName((std::string) fn_fsc + "_split_2.vol"));
+                    // Normalize global volume and store data
+                    finishComputations(FileName((std::string) fn_fsc + "_split_1.vol"));
 
-                            Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
-                            transformerVol.setReal(Vout());
-                            Vout().clear();
-                            transformerVol.getFourierAlias(VoutFourier);
-                            FourierWeights.initZeros(VoutFourier);
-                            VoutFourier.initZeros();
+                    Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
 
-                            //int x,y,z;
-
-                            //FourierWeights.getDimension(y,x,z);
-                            gettimeofday(&start_time,NULL);
-
-                            auxVolume2.sumWithFile((std::string) fn_fsc + "_1_Weights.vol");
-
-                            gettimeofday(&end_time,NULL);
-                            total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
-                            total_time=(double)total_usecs/(double)1000000;
-                            std::cout << "SumFile1: " << total_time << " secs." << std::endl;
-
-                            auxVolume2.sumWithFile((std::string) fn_fsc + "_2_Weights.vol");
-
-                            //VoutFourier.getDimension(y,x,z);
-                            auxFourierVolume2.sumWithFile((std::string) fn_fsc + "_1_Fourier.vol");
-                            auxFourierVolume2.sumWithFile((std::string) fn_fsc + "_2_Fourier.vol");
-
-                            //remove temporary files
-                            remove(((std::string) fn_fsc + "_1_Weights.vol").c_str());
-                            remove(((std::string) fn_fsc + "_2_Weights.vol").c_str());
-                            remove(((std::string) fn_fsc + "_1_Fourier.vol").c_str());
-                            remove(((std::string) fn_fsc + "_2_Fourier.vol").c_str());
-                            gettimeofday(&end_time,NULL);
-                            total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
-                            total_time=(double)total_usecs/(double)1000000;
-                            std::cout << "SumFile: " << total_time << " secs." << std::endl;
-
-                            /*Save SUM
-                                                        //this is an image but not an xmipp image
-                                                        auxFourierVolume.write((std::string)fn_fsc + "_all_Fourier.vol",
-                                                                false,VDOUBLE);
-                                                        auxVolume.write((std::string)fn_fsc + "_all_Weights.vol",
-                                                                false,VDOUBLE);
-                            */
-                        }
-
-                        // Normalize global volume and store data
-                        gettimeofday(&start_time,NULL);
-                        finishComputations(fn_out);
-                        gettimeofday(&end_time,NULL);
-                        int i=0;
-
-                        total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
-                        total_time=(double)total_usecs/(double)1000000;
-
-                        std::cout << "Weighting time: " << total_time << " secs." << std::endl;
-                        std::cout << "Execution completed successfully\n" << std::endl;
-                        break;
-                    }
-                    else
-                    {
-                        MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, MPI_COMM_WORLD );
-
-                        sendDataInChunks( fourierVolume, 1, 2 * sizeout, BUFFSIZE, MPI_COMM_WORLD);
-
-                        MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, MPI_COMM_WORLD );
-
-                        sendDataInChunks( fourierWeights, 1, sizeout, BUFFSIZE, MPI_COMM_WORLD);
-
-                        MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, MPI_COMM_WORLD);
-
-                        break;
-                    }
-                }
-                else if (status.MPI_TAG == TAG_WORKFORWORKER)
-                {
-                    //get the job number
-                    MPI_Recv(&jobNumber, 1, MPI_INT, 0, TAG_WORKFORWORKER, MPI_COMM_WORLD, &status);
-                    //LABEL
-                    //(if jobNumber == -1) break;
-                    threadOpCode=PROCESS_IMAGE;
-
-                    int min_i, max_i;
-
-                    min_i = jobNumber*mpi_job_size;
-                    max_i = min_i + mpi_job_size - 1;
-
-                    if ( max_i >= SF.size())
-                        max_i  = SF.size()-1;
-
-                    processImages( min_i, max_i );
+                    transformerVol.setReal(Vout());
+                    Vout().clear();
+                    transformerVol.getFourierAlias(VoutFourier);
+                    FourierWeights.initZeros(VoutFourier);
+                    VoutFourier.initZeros();
                 }
                 else
                 {
-                    std::cerr << "3) Received unknown TAG I quit" << std::endl;
-                    exit(0);
+                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, *node->comm );
+
+                    sendDataInChunks( fourierVolume, 1, 2*sizeout, BUFFSIZE, *node->comm );
+
+                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, *node->comm );
+
+                    sendDataInChunks( fourierWeights, 1, sizeout, BUFFSIZE, *node->comm);
+
+                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER,*node->comm);
+
+                    Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
+                    transformerVol.setReal(Vout());
+                    Vout().clear();
+                    transformerVol.getFourierAlias(VoutFourier);
+                    FourierWeights.initZeros(VoutFourier);
+                    VoutFourier.initZeros();
                 }
             }
+            else if (status.MPI_TAG == TAG_TRANSFER)
+            {
+                //If I  do not read this tag
+                //master will no further process
+                MPI_Recv(0, 0, MPI_INT, 0, TAG_TRANSFER, *node->comm, &status);
+#ifdef DEBUG
+
+                std::cerr << "Wr" << node->rank << " " << "TAG_STOP" << std::endl;
+#endif
+
+                if ( node->rank == 1 )
+                {
+                    // Reserve memory for the receive buffer
+                    double * recBuffer = (double *) malloc (sizeof(double)*BUFFSIZE);
+                    int receivedSize;
+                    double * pointer;
+                    pointer = fourierVolume;
+                    int currentSource;
+
+                    gettimeofday(&start_time,NULL);
+
+                    if ( nProcs > 1 )
+                    {
+                        // Receive from other workers
+
+                        for ( int i = 0 ; i <= (nProcs-2) ; i++)
+                        {
+                            MPI_Recv(0,0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
+                                     *node->comm, &status);
+
+                            currentSource = status.MPI_SOURCE;
+
+                            pointer = fourierVolume;
+
+                            while (1)
+                            {
+                                MPI_Probe( currentSource, MPI_ANY_TAG, *node->comm, &status );
+
+                                if ( status.MPI_TAG == TAG_FREEWORKER )
+                                {
+                                    MPI_Recv(0,0, MPI_INT, currentSource, TAG_FREEWORKER, *node->comm, &status );
+
+                                    break;
+                                }
+
+                                MPI_Recv( recBuffer,
+                                          BUFFSIZE,
+                                          MPI_DOUBLE,
+                                          currentSource,
+                                          MPI_ANY_TAG,
+                                          *node->comm,
+                                          &status );
+
+                                MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
+
+                                for ( int i = 0 ; i < receivedSize ; i ++ )
+                                {
+                                    pointer[i] += recBuffer[i];
+                                }
+
+                                pointer += receivedSize;
+                            }
+
+                            pointer = fourierWeights;
+
+                            while (1)
+                            {
+                                MPI_Probe( currentSource, MPI_ANY_TAG, *node->comm, &status );
+
+                                if ( status.MPI_TAG == TAG_FREEWORKER )
+                                {
+                                    MPI_Recv( 0,0,MPI_INT,currentSource,TAG_FREEWORKER, *node->comm,&status );
+
+                                    break;
+                                }
+
+                                MPI_Recv( recBuffer,
+                                          BUFFSIZE,
+                                          MPI_DOUBLE,
+                                          currentSource,
+                                          MPI_ANY_TAG,
+                                          *node->comm,
+                                          &status );
+
+                                MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
+
+                                for ( int i = 0 ; i < receivedSize ; i ++ )
+                                {
+                                    pointer[i] += recBuffer[i];
+                                }
+
+                                pointer += receivedSize;
+                            }
+                        }
+                    }
+
+                    free( recBuffer );
+                    gettimeofday(&end_time,NULL);
+
+                    total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
+                    total_time=(double)total_usecs/(double)1000000;
+                    if (verbose > 0)
+                        std::cout << "Transfers time: " << total_time << " secs." << std::endl;
+
+                    if( fn_fsc != "" )
+                    {
+
+                        Image<double> auxVolume2;
+                        auxVolume2().alias( FourierWeights );
+                        auxVolume2.write((std::string)fn_fsc + "_2_Weights.vol");
+
+                        Image< std::complex<double> > auxFourierVolume2;
+                        auxFourierVolume2().alias( VoutFourier );
+                        auxFourierVolume2.write((std::string) fn_fsc + "_2_Fourier.vol");
+
+
+                        // Normalize global volume and store data
+                        finishComputations(FileName((std::string) fn_fsc + "_split_2.vol"));
+
+                        Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
+                        transformerVol.setReal(Vout());
+                        Vout().clear();
+                        transformerVol.getFourierAlias(VoutFourier);
+                        FourierWeights.initZeros(VoutFourier);
+                        VoutFourier.initZeros();
+
+                        //int x,y,z;
+
+                        //FourierWeights.getDimension(y,x,z);
+                        gettimeofday(&start_time,NULL);
+
+                        auxVolume2.sumWithFile((std::string) fn_fsc + "_1_Weights.vol");
+
+                        gettimeofday(&end_time,NULL);
+                        total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
+                        total_time=(double)total_usecs/(double)1000000;
+                        if (verbose > 0)
+                            std::cout << "SumFile1: " << total_time << " secs." << std::endl;
+
+                        auxVolume2.sumWithFile((std::string) fn_fsc + "_2_Weights.vol");
+
+                        //VoutFourier.getDimension(y,x,z);
+                        auxFourierVolume2.sumWithFile((std::string) fn_fsc + "_1_Fourier.vol");
+                        auxFourierVolume2.sumWithFile((std::string) fn_fsc + "_2_Fourier.vol");
+
+                        //remove temporary files
+                        remove(((std::string) fn_fsc + "_1_Weights.vol").c_str());
+                        remove(((std::string) fn_fsc + "_2_Weights.vol").c_str());
+                        remove(((std::string) fn_fsc + "_1_Fourier.vol").c_str());
+                        remove(((std::string) fn_fsc + "_2_Fourier.vol").c_str());
+                        gettimeofday(&end_time,NULL);
+                        total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
+                        total_time=(double)total_usecs/(double)1000000;
+                        if (verbose > 0)
+                            std::cout << "SumFile: " << total_time << " secs." << std::endl;
+
+                        /*Save SUM
+                                                    //this is an image but not an xmipp image
+                                                    auxFourierVolume.write((std::string)fn_fsc + "_all_Fourier.vol",
+                                                            false,VDOUBLE);
+                                                    auxVolume.write((std::string)fn_fsc + "_all_Weights.vol",
+                                                            false,VDOUBLE);
+                        */
+                    }
+
+                    // Normalize global volume and store data
+                    gettimeofday(&start_time,NULL);
+                    finishComputations(fn_out);
+                    gettimeofday(&end_time,NULL);
+                    int i=0;
+
+                    total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
+                    total_time=(double)total_usecs/(double)1000000;
+                    if (verbose > 0)
+                    {
+                        std::cout << "Weighting time: " << total_time << " secs." << std::endl;
+                        std::cout << "Execution completed successfully\n" << std::endl;
+                    }
+                    break;
+                }
+                else
+                {
+                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, *node->comm );
+
+                    sendDataInChunks( fourierVolume, 1, 2 * sizeout, BUFFSIZE, *node->comm);
+
+                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, *node->comm );
+
+                    sendDataInChunks( fourierWeights, 1, sizeout, BUFFSIZE, *node->comm);
+
+                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, *node->comm);
+
+                    break;
+                }
+            }
+            else if (status.MPI_TAG == TAG_WORKFORWORKER)
+            {
+                //get the job number
+                MPI_Recv(&jobNumber, 1, MPI_INT, 0, TAG_WORKFORWORKER, *node->comm, &status);
+                //LABEL
+                //(if jobNumber == -1) break;
+                threadOpCode=PROCESS_IMAGE;
+
+                int min_i, max_i;
+
+                min_i = jobNumber*mpi_job_size;
+                max_i = min_i + mpi_job_size - 1;
+
+                if ( max_i >= SF.size())
+                    max_i  = SF.size()-1;
+
+                processImages( min_i, max_i );
+            }
+            else
+            {
+                std::cerr << "3) Received unknown TAG I quit" << std::endl;
+                exit(0);
+            }
         }
     }
-
-    // Synchronize all workers
-    MPI_Barrier( MPI_COMM_WORLD );
 
     // Kill threads used on workers
-    if ( node->rank > 0 )
+    if ( node->active && !node->isMaster() )
     {
-        if( node->rank <= numberOfJobs )
+        threadOpCode = EXIT_THREAD;
+        barrier_wait( &barrier );
+
+        for ( int nt=0; nt<numThreads; nt++)
         {
-            threadOpCode=EXIT_THREAD;
-            barrier_wait( &barrier );
-
-            for ( int nt=0; nt<numThreads; nt++)
-            {
-                pthread_join(*(th_ids+nt),NULL);
-            }
-
-            barrier_destroy( &barrier );
+            pthread_join(*(th_ids+nt),NULL);
         }
+        barrier_destroy( &barrier );
     }
-}
-
-/* a short function to print a message and exit */
-void ProgMPIRecFourier::error_exit(char * msg)
-{
-    fprintf(stderr, "%s", msg);
-    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
 }
 
 int  ProgMPIRecFourier::sendDataInChunks( double * pointer, int dest, int totalSize, int buffSize, MPI_Comm comm )
@@ -691,21 +658,13 @@ int  ProgMPIRecFourier::sendDataInChunks( double * pointer, int dest, int totalS
     for ( int i = 0 ; i < numChunks ; i ++ )
     {
         if ( i == (numChunks-1))
-        {
             packetSize = totalSize-i*buffSize;
-        }
         else
-        {
             packetSize = buffSize;
-        }
 
-        if ( err = MPI_Send( localPointer,
-                             packetSize,
-                             MPI_DOUBLE,
-                             dest,
-                             0,
-                             comm
-                           ) != MPI_SUCCESS )
+        if ( (err = MPI_Send( localPointer, packetSize,
+                              MPI_DOUBLE, dest, 0, comm ))
+             != MPI_SUCCESS )
         {
             break;
         }

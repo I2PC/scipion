@@ -240,7 +240,7 @@ MpiNode::MpiNode(int &argc, char ** argv)
 MpiNode::~MpiNode()
 {
     active = 0;
-    checkStatus();
+    updateComm();
     MPI::Finalize();
 }
 
@@ -254,12 +254,16 @@ void MpiNode::barrierWait()
     MPI_Barrier(*comm);
 }
 
-void MpiNode::checkStatus()
+void MpiNode::updateComm()
 {
     int nodes = getActiveNodes();
     if (nodes < activeNodes)
     {
-        updateComm();
+        MPI_Comm *newComm = new MPI_Comm;
+        MPI_Comm_split(*comm, active, rank, newComm);
+        MPI_Comm_disconnect(comm);
+        delete comm;
+        comm = newComm;
         activeNodes = nodes;
     }
 }
@@ -269,15 +273,6 @@ int MpiNode::getActiveNodes()
     int activeNodes = 0;
     MPI_Allreduce(&active, &activeNodes, 1, MPI_INT, MPI_SUM, *comm);
     return activeNodes;
-}
-
-void MpiNode::updateComm()
-{
-    MPI_Comm *newComm = new MPI_Comm;
-    MPI_Comm_split(*comm, active, rank, newComm);
-    MPI_Comm_disconnect(comm);
-    delete comm;
-    comm = newComm;
 }
 
 void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,

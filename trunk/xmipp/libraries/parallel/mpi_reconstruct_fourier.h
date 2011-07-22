@@ -45,6 +45,7 @@
 #define TAG_TRANSFER   2
 #define TAG_FREEWORKER    3
 #define TAG_COLLECT_FOR_FSC  4
+#define TAG_SETVERBOSE  5
 
 #define BUFFSIZE 10000000
 
@@ -54,36 +55,19 @@
    @ingroup Programs */
 //@{
 
-class ProgMPIRecFourier: public ProgRecFourier
+class ProgMPIRecFourier: public ProgRecFourier, public XmippMpiProgram
 {
 public:
-
-    FileName          fn_img;
 
     /** Fourier transform size for volumes **/
     long int sizeout;
 
-    /** Number of Procesors **/
-    int nProcs;
-
     /** Dvide the job in this number block with this number of images */
     int mpi_job_size;
 
-    /** Number of independent MPI jobs **/
-    int numberOfJobs;
-
-    /** Mpi node */
-    MpiNode * node;
-    bool created_node;
-
-    /** status after am MPI call */
-    MPI_Status status;
-
-    /** verbose mode on/off.  */
-    bool verbose;
-
     /** Empty constructor */
-    ProgMPIRecFourier();
+    ProgMPIRecFourier()
+    {}
 
     /*  constructor ------------------------------------------------------- */
     ProgMPIRecFourier(int argc, char *argv[]);
@@ -100,7 +84,7 @@ public:
     void readParams();
 
     /** destructor */
-    ~ProgMPIRecFourier();
+    //    ~ProgMPIRecFourier();
 
     /* Usage ------------------------------------------------------------------- */
     void defineParams();
@@ -110,9 +94,6 @@ public:
 
     /* Run --------------------------------------------------------------------- */
     void run();
-
-    /* a short function to print a message and exit */
-    void error_exit(char * msg);
 
     int  sendDataInChunks( double * pointer, int dest, int totalSize, int buffSize, MPI_Comm comm );
 

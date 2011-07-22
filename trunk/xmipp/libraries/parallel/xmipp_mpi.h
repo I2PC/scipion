@@ -47,20 +47,26 @@ class MpiNode
 {
 public:
 
-	MPI_Comm *comm;
+    MPI_Comm *comm;
     int rank, size, active, activeNodes;
     MpiNode(int &argc, char ** argv);
     ~MpiNode();
 
+    /** Check if the node is master */
     bool isMaster() const;
     /** Wait on a barrier for the other MPI nodes */
     void barrierWait();
     /** Gather metadatas */
     void gatherMetadatas(MetaData &MD, const FileName &rootName,
                          MDLabel sortLabel=MDL_IMAGE);
-    int getActiveNodes();
-    void checkStatus();
+
+    /** Update the MPI communicator to connect the currently active nodes */
     void updateComm();
+
+protected:
+    /** Calculate the number of still active nodes */
+    int getActiveNodes();
+
 };
 
 //mpi macros
@@ -69,8 +75,8 @@ public:
 #define TAG_WAIT   2
 
 /** This class is another implementation of ParallelTaskDistributor with MPI workers.
- * It extends from ThreadTaskDistributor and add the MPI call
- * for making the distribution and extra locking mechanims between
+ * It extends from ThreadTaskDistributor and adds the MPI call
+ * for making the distribution and extra locking mechanisms among
  * MPI nodes.
  */
 class MpiTaskDistributor: public ThreadTaskDistributor
@@ -165,7 +171,7 @@ protected:
     /** Mpi node */
     MpiNode * node;
     bool created_node;
-	/** Number of Processors **/
+    /** Number of Processors **/
     int nProcs;
     /** Number of independent MPI jobs **/
     int numberOfJobs;
@@ -234,7 +240,7 @@ public:\
     {\
         MpiMetadataProgram::read(argc,argv);\
         if (verbose)\
-        	std::cerr << "mpi reading.." << std::endl;\
+         std::cerr << "mpi reading.." << std::endl;\
         baseClassName::read(argc, argv, reportErrors);\
     }\
     void preProcess()\

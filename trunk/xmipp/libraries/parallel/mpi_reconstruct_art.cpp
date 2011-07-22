@@ -140,7 +140,8 @@ void ProgMPIReconsArt::run()
         myFirst = Npart * node->rank + remaining;
 
     // Shift the starting position for each node
-    myLast = myFirst + num_img_node - 1;
+//    myLast = myFirst + num_img_node - 1; // Actually it isn't used
+
     STARTINGX(artPrm.ordered_list) = -myFirst;
 
     GridVolume   vol_basis_aux = vol_basis;
@@ -257,7 +258,7 @@ void ProgMPIReconsArt::run()
 
                 STARTINGX(artPrm.ordered_list) -= artPrm.numIMG;
 
-                node->checkStatus();//Update communicator to avoid already finished nodes
+                node->updateComm();//Update communicator to avoid already finished nodes
 
                 // All processors send their result and get the other's so all of them
                 // have the same volume for the next step.
@@ -310,7 +311,7 @@ void ProgMPIReconsArt::run()
                 artPrm.computeCAVWeights(vol_basis, artPrm.numIMG, verbose-1);
                 GVNeq_aux = *(artPrm.GVNeq);
 
-                node->checkStatus();
+                node->updateComm();
                 // All processors send their result and get the other's so all of them
                 // have the weights.
 
