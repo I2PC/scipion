@@ -3,9 +3,10 @@
 # Xmipp protocol for subtraction
 #
 # Example use:
-# ./xmipp_partial_projection_subtraction.py
+# ./protocol_subtraction_header.py
 #
-# Authors: 
+# Authors: Roberto Marabini,
+#          Alejandro Echeverria Rey.
 #
 # {begin_of_header}
 #-----------------------------------------------------------------------------
@@ -22,15 +23,6 @@ RunName='run_008_exp_small'
 # {file} Protocol Name
 ProtocolName='ProjMatch/xmipp2.4_exp_small/xmipp_protocol_projmatch_backup.py'
 #ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy/xmipp_protocol_projmatch_backup.py'
-
-# {expert}{file} CTFDat file with CTF data:
-""" The input selfile may be a subset of the images in the CTFDat file, but all 
-    images in the input selfile must be present in the CTFDat file. This field is 
-    obligatory if CTF correction is to be performed. 
-    Note that this file should be positioned in the project directory, and that the
-    image names and ctf parameter filenames should be in absolute paths.
-    Usually optained from the protocol file
-"""
 
 #Show results for iteration
 """ Use data coming from iteration
@@ -118,7 +110,6 @@ dimX = 32
 """
 dimY = -1
 
-
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
@@ -139,6 +130,7 @@ MpiJobSize ='1'
 #Submmit to queue
 """Submmit to queue"""
 SubmmitToQueue=False
+
 #------------------------------------------------------------------------------------------------
 # {section}{expert}{condition}(SubmmitToQueue=True) Queue 
 #------------------------------------------------------------------------------------------------
@@ -146,20 +138,20 @@ SubmmitToQueue=False
 # Queue name
 """Name of the queue to submit the job"""
 QueueName="default"
+
 # Queue hours
 """This establish a maximum number of hours the job will
 be running, after that time it will be killed by the 
 queue system"""
 QueueHours=72
 
-# minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
-#MpiJobSize ='3'
-
 #------------------------------------------------------------------------------------------------
 # {hidden} Analysis of results
+
 """ This script serves only for GUI-assisted visualization of the results
 """
 AnalysisScript='visualize_partial_projection_subtraction.py'
+
 #-----------------------------------------------------------------------------
 # {section} Debug
 #-----------------------------------------------------------------------------
@@ -189,6 +181,5 @@ ViewVerifyedFiles=True
 from protocol_subtraction import *
            
 if __name__ == '__main__':
-    ImportProtocol()
     protocolMain(ProtPartialProjectionSubtraction)
     

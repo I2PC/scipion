@@ -3,25 +3,20 @@
 # Xmipp protocol for subtraction
 #
 # Example use:
-# ./xmipp_partial_projection_subtraction.py
+# ./protocol_subtraction_header.py
 #
-# Authors: 
+# Authors: Roberto Marabini,
+#          Alejandro Echeverria Rey.
 #
-
 from xmipp import *
 from protlib_base import *
 from protlib_utils import *
-#from protlib_utils import getListFromVector
-#import os,sys
-#from protocol_partial_projection_subtraction_header import *
-
         
 class ProtPartialProjectionSubtraction(XmippProtocol):
 
     def __init__(self, scriptname,project=None):
         
         XmippProtocol.__init__(self, protDict.projsubs.key, scriptname, project)
-        print "0"
         self.Import = 'from protocol_subtraction import *;\
                        from protocol_subtraction_before_loop import *;\
                        from protocol_subtraction_in_loop import *;'        
@@ -36,18 +31,13 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.tempFileName=''
         self.current_angles='current_angles.doc'
         self.scaledImages = 'scaled'
-        #self.runName = RunName
         
         # Check these params
         self.DoDeleteWorkingDir = False
         self.DoParallel = True
         
-        
-        
     def ImportProtocol(self):
-#        scriptdir = os.getcwd()
-#        sys.path.append(scriptdir)
-#    
+
         from protlib_utils import unique_filename
         from protlib_utils import loadModule
         pardir=os.path.abspath(os.getcwd())
@@ -89,21 +79,10 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.volsDir = os.path.join(self.WorkingDir,self.volsDir)
         self.referenceDir = os.path.join(self.WorkingDir,self.referenceDir)
         self.subImgsDir = os.path.join(self.WorkingDir,self.subImgsDir)
-        
         self.scaledImages = os.path.join(self.WorkingDir,self.scaledImages)
-        
-#        self.doScaleImages = doScaleImages
-#        
-#        self.dimX = dimX
-#        self.dimY = dimY
-#        
-#        self.dRradiusMax = dRradiusMax
-#        self.dRradiusMin = dRradiusMin
-        
+                
         if(self.MaxChangeInAngles > 100):
             self.MaxChangeInAngles=-1
-#        else:
-#            self.MaxChangeInAngles = MaxChangeInAngles
             
         #new vwersion need zfill
         tmpFilename = 'Iter_'+ str(self.iterationNo) + '_' + self.current_angles #zfill()
@@ -199,8 +178,6 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         _dataBase.insertAction('createDir', None, path = self.referenceDir)
         _dataBase.insertAction('createDir', None, path = self.subImgsDir)
         
-        #Create auxiliary metadata with image names , angles and CTF
-        
         if(self.doScaleImages):
             _VerifyFiles = [self.scaledImages+".stk"]
             _VerifyFiles.append(self.scaledImages+".xmd")
@@ -224,10 +201,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                 inputSelfile = self.scaledImages +'.xmd'
             else:
                 inputSelfile = self.filename_currentAngles
-                
-            print 'self.defGroups[' + str(iterN) + ']: ', self.defGroups[iterN]
-            print 'self.defocusGroupNo: ' + str(self.defocusGroupNo)
-            
+                            
             if(self.defocusGroupNo > 2 and self.doScaleImages):
                 _VerifyFiles = []
                 auxFilename = FileName(self.DocFileExp[iterN])
@@ -314,11 +288,8 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.preRun()
         self.otherActionsToBePerformedBeforeLoop()
         self.actionsToBePerformedInsideLoop()
-
-
     
            
 if __name__ == '__main__':
-#    ImportProtocol()
     protocolMain(ProtPartialProjectionSubtraction)
     
