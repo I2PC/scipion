@@ -1,6 +1,7 @@
 /***************************************************************************
- *
  * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
+ *     Joaquin Oton         (joton@cnb.csic.es)
+ *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -23,11 +24,29 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <parallel/mpi_reconstruct_wbp.h>
+#ifndef MPI_RECONSTRUCT_WBP_H_
+#define MPI_RECONSTRUCT_WBP_H_
 
-int main(int argc, char **argv)
+#include "xmipp_mpi.h"
+#include <reconstruction/reconstruct_wbp.h>
+
+class ProgMPIRecWbp: public ProgRecWbp, public MpiMetadataProgram
 {
-    ProgMPIRecWbp program;
-    program.read(argc,argv);
-    return program.tryRun();
-}
+public:
+    //Empty constructor
+    ProgMPIRecWbp()
+    {
+    }
+    ProgMPIRecWbp(int argc, char *argv[]);
+    ProgMPIRecWbp(MpiNode *node);
+    void defineParams();
+    void readParams();
+    void read(int argc, char **argv);
+    void produceSideInfo();
+    void showProgress();
+    bool getImageToProcess(size_t &objId, size_t &objIndex);
+    void finishProcessing();
+};
+
+
+#endif /* MPI_RECONSTRUCT_WBP_H_ */

@@ -64,7 +64,7 @@ public:
 
 /* Projection XR Program -------------------------------- */
 /** Program class for the project program */
-class ProgXrayProject: public XmippProgram
+class ProgXrayProject: public virtual XmippProgram
 {
 
 public:

@@ -233,8 +233,8 @@ public:\
     }\
     void readParams()\
     {\
-        baseClassName::readParams();\
         MpiMetadataProgram::readParams();\
+        baseClassName::readParams();\
     }\
     void read(int argc, char **argv, bool reportErrors = true)\
     {\
