@@ -289,7 +289,3 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.otherActionsToBePerformedBeforeLoop()
         self.actionsToBePerformedInsideLoop()
     
-           
-if __name__ == '__main__':
-    protocolMain(ProtPartialProjectionSubtraction)
-    
