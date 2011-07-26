@@ -36,6 +36,9 @@
 /// @addtogroup Images
 //@{
 
+/** Size of the page used to read and write images from/to file */
+const size_t rw_max_page_size = 4194304; // 4Mb
+
 /** Template class for images.
  * The image class is the general image handling class.
  */
@@ -984,30 +987,45 @@ private:
     void writeData(FILE* fimg, size_t offset, DataType wDType, size_t datasize_n,
                    CastWriteMode castMode=CW_CAST)
     {
-        size_t datasize = datasize_n * gettypesize(wDType);
-        char* fdata = (char *) askMemory(datasize);
+        size_t dTypeSize = gettypesize(wDType);
+        size_t datasize = datasize_n * dTypeSize;
+        size_t ds2Write = rw_max_page_size;
+        size_t dsN2Write = rw_max_page_size/dTypeSize;
+        size_t rw_max_n = dsN2Write;
 
-        switch(castMode)
+        char* fdata;
+        double min0 = 0, max0 = 0;
+
+        if (castMode != CW_CAST)
+            data.computeDoubleMinMaxRange(min0, max0, offset, datasize_n);
+
+        if (datasize > rw_max_page_size)
+            fdata = (char *) askMemory(rw_max_page_size*sizeof(char));
+        else
+            fdata = (char *) askMemory(datasize*sizeof(char));
+
+
+        for (size_t writtenDataN = 0; writtenDataN < datasize_n; writtenDataN += rw_max_n )
         {
-        case CW_CAST:
+
+            if (writtenDataN + rw_max_n > datasize_n )
             {
-                castPage2Datatype(MULTIDIM_ARRAY(data)+offset, fdata, wDType, datasize_n);
-                break;
+                dsN2Write = datasize_n - writtenDataN;
+                ds2Write = dsN2Write * dTypeSize;
             }
-        default:
-            {
-                double min0, max0;
-                data.computeDoubleMinMaxRange(min0, max0, offset, datasize_n);
-                castConvertPage2Datatype(MULTIDIM_ARRAY(data)+offset, fdata, wDType, datasize_n,min0 ,max0, castMode);
-            }
+
+            if (castMode == CW_CAST)
+                castPage2Datatype(MULTIDIM_ARRAY(data)+offset+writtenDataN, fdata, wDType, dsN2Write);
+            else
+                castConvertPage2Datatype(MULTIDIM_ARRAY(data)+offset+writtenDataN,fdata,wDType,dsN2Write,min0,max0,castMode);
+
+            //swap per page
+            if (swapWrite)
+                swapPage(fdata, ds2Write, wDType);
+
+            fwrite( fdata, ds2Write, 1, fimg );
         }
-
-        //swap per page
-        if (swapWrite)
-            swapPage(fdata, datasize, wDType);
-
-        fwrite( fdata, datasize, 1, fimg );
-        freeMemory(fdata, datasize);
+        freeMemory(fdata, rw_max_page_size);
     }
 
     /* Mmap the Image class to an image file.
