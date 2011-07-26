@@ -1,7 +1,6 @@
 package xmipp;
 
 import java.io.File;
-import java.util.Arrays;
 
 /**
  * Protocol for integrating native C++ code - @see ImageDouble.java
@@ -136,6 +135,8 @@ public class MetaData {
     public native boolean setValueBoolean(int label, boolean value, long objId);
 
     public native long[] findObjects();
+
+    public native long firstObject();
 
     public native long addObject();
 

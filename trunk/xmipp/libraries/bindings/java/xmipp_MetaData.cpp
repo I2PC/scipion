@@ -657,7 +657,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueBoolean(JNIEnv *env,
 
 	if (md != NULL) {
 		try {
-			return md->setValue((MDLabel) label, value, objId);
+			return md->setValue((MDLabel) label, (bool)value, objId);
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {
@@ -756,6 +756,34 @@ JNIEXPORT jlongArray JNICALL Java_xmipp_MetaData_findObjects(JNIEnv *env,
 	}
 
 	return NULL;
+}
+
+JNIEXPORT jlong JNICALL Java_xmipp_MetaData_firstObject
+  (JNIEnv *env, jobject jobj){
+	std::string msg = "";
+	MetaData * md = GET_INTERNAL_METADATA(jobj);
+        jlong id = 0;
+
+	if (md != NULL) {
+		try {
+			id = md->firstObject();
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Metadata is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return id;
 }
 
 JNIEXPORT jlong JNICALL Java_xmipp_MetaData_addObject(JNIEnv *env, jobject jobj) {
