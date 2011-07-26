@@ -197,7 +197,7 @@ def confirmWarning(warningList):
 def printLogError(log, msg):
     '''Function to write error message to log, to screen and exit'''
     log.error(msg)
-    print >> sys.stderr, "ERROR: ", msg
+    print >> sys.stderr, redStr("ERROR: " + msg)
     exit(1)
     
 def printLog(log, msg):
@@ -211,22 +211,20 @@ def printLog(log, msg):
 # The job should be launched from the working directory!
 def runJob(log, 
            programname,
-           params,
-           DoParallel,
-           NumberOfMpiProcesses,
-           NumberOfThreads,
-           SystemFlavour,
+           params,           
+           NumberOfMpiProcesses = 1,
+           NumberOfThreads = 1,
+           SystemFlavour = None,
            RunInBackground=False):
 
     command = buildRunCommand(log,
                programname,
                params,
-               DoParallel,
                NumberOfMpiProcesses,
                NumberOfThreads,
                SystemFlavour,
                RunInBackground)
-    printLog(log, "Running command: %s" % command)
+    printLog(log, "Running command: %s" % greenStr(command))
 
     from subprocess import call
     retcode = 0
@@ -242,12 +240,12 @@ def buildRunCommand(
                log,
                programname,
                params,
-               DoParallel,
                NumberOfMpiProcesses,
                NumberOfThreads,
                SystemFlavour,
                RunInBackground):
 
+    DoParallel = NumberOfMpiProcesses > 1
     paramsDict={}
     if not DoParallel:
         command = programname + ' ' + params
@@ -462,13 +460,27 @@ class bcolors:
     FAIL = '\033[91m'
     ENDC = '\033[0m'
     
+def colorStr(color, string):
+    if color == 'blue':
+        result = bcolors.OKBLUE
+    elif color == 'green':
+        result = bcolors.OKGREEN
+    elif color == 'red':
+        result = bcolors.FAIL
+    result += string + bcolors.ENDC
+    return result
+
+blueStr = lambda s: colorStr('blue', s)
+greenStr = lambda s: colorStr('green', s)
+redStr = lambda s: colorStr('red', s)
+    
 #apply bfactor to a vector of volumes
-#
 """ This utility boost up the high frequencies. Do not use the automated
     mode [default] for maps with resolutions lower than 12-15 Angstroms.
     It does not make sense to apply the Bfactor to the firsts iterations
     see http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
 """
+
 def apply_bfactor(_DisplayReference_list,\
         bFactorExtension,\
         _SamplingRate,\
