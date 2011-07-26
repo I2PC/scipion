@@ -56,16 +56,17 @@ protected:
         save_metadata_stack = false;
         delete_output_stack = false;
         defaultComments["-i"].addComment("++ Supported read formats are:");
-        defaultComments["-i"].addComment("++ dm3 : Digital Micrograph 3.");
-        defaultComments["-i"].addComment("++ img : Imagic.");
-        defaultComments["-i"].addComment("++ inf,raw : RAW file with header INF file.");
-        defaultComments["-i"].addComment("++ mrc : CCP4.");
-        defaultComments["-i"].addComment("++ spe : Princeton Instruments CCD camera.");
-        defaultComments["-i"].addComment("++ spi, xmp : Spider.");
-        defaultComments["-i"].addComment("++ tif : TIFF.");
-        defaultComments["-i"].addComment("++ ser : tecnai imaging and analysis.");
-        defaultComments["-i"].addComment("++ raw#xDim,yDim,[zDim],offset,datatype,[r] : RAW image file without header file.");
-        defaultComments["-i"].addComment("++ where datatype can be: uint8,int8,uint16,int16,uint32,int32,long,float,double,cint16,cint32,cfloat,cdouble,bool");
+        defaultComments["-i"].addComment("++ dm3 : Digital Micrograph 3");
+        defaultComments["-i"].addComment("++ img : Imagic");
+        defaultComments["-i"].addComment("++ inf,raw : RAW file with header INF file");
+        defaultComments["-i"].addComment("++ mrc : CCP4");
+        defaultComments["-i"].addComment("++ spe : Princeton Instruments CCD camera");
+        defaultComments["-i"].addComment("++ spi, xmp : Spider");
+        defaultComments["-i"].addComment("++ tif : TIFF");
+        defaultComments["-i"].addComment("++ ser : Tecnai Imaging and Analysis");
+        defaultComments["-i"].addComment("++ raw#xDim,yDim,[zDim],offset,datatype,[r] : RAW image file without header file");
+        defaultComments["-i"].addComment("++ where datatype can be: uint8,int8,uint16,int16,uint32,int32,long,float,double,");
+        defaultComments["-i"].addComment("++                        cint16,cint32,cfloat,cdouble,bool");
         XmippMetadataProgram::defineParams();
 
         addUsageLine("Convert among stacks, volumes and images, and change the file format.");
@@ -84,7 +85,7 @@ protected:
         addParamsLine("         mrc : CCP4 (Data types: uint8, int16, float* and cfloat).");
         addParamsLine("         spi : Spider (Data types: float* and cfloat).");
         addParamsLine("         xmp : Spider (Data types: float* and cfloat).");
-        addParamsLine("         tif : TIFF. (Data types: uint8*, uint16, uint32 and float).");
+        addParamsLine("         tif : TIFF (Data types: uint8*, uint16, uint32 and float).");
         addParamsLine("         custom <ext> : Custom extension name, the real format will be Spider.");
         addParamsLine("  [--type <output_type=img>] : Output file type.");
         addParamsLine("          where <output_type>");
@@ -95,7 +96,7 @@ protected:
         addParamsLine("== Bit options == ");
         addParamsLine("  [--depth+ <bit_depth=default>] : Image bit depth.");
         addParamsLine("          where <bit_depth>");
-        addParamsLine("                 default: Default selected value (*).");
+        addParamsLine("                 default: Default selected value (*)");
         addParamsLine("                 uint8 : Equivalent to uchar");
         addParamsLine("                 int8  : Equivalent to char");
         addParamsLine("                 uint16: Equivalent to ushort");
@@ -112,15 +113,15 @@ protected:
         addParamsLine("                 bool");
         addParamsLine("  alias -d;");
         addParamsLine("  [--swap]        : Swap the endianess of the image file");
-        addParamsLine("  [--rangeAdjust] : Adjust the histogram to fill the gray level range.");
+        addParamsLine("  [--rangeAdjust] : Adjust the histogram to fill the gray level range");
         addParamsLine("  alias -r;");
         addParamsLine("or --dont_convert : Do not apply any conversion to gray levels when writing");
-        addParamsLine("                  : in a lower bit depth or changing the sign.");
+        addParamsLine("                  : in a lower bit depth or changing the sign");
         addParamsLine("== Stack options == ");
         addParamsLine("  [--selfile_stack]    : Create a selfile with the images of the output stack,");
         addParamsLine("                       : keeping the rest of columns of the input selfile");
         addParamsLine("  alias -s;");
-        addParamsLine("  [--append]           : Append the input to the output stack instead of overwriting it.");
+        addParamsLine("  [--append]           : Append the input to the output stack instead of overwriting it");
         addParamsLine("  alias -a;");
 
         //Examples
