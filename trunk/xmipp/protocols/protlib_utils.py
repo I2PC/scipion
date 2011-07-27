@@ -120,8 +120,8 @@ def makeScriptBackup(log, script, WorkingDir):
     '''Make a backup of the script
     This function assumes the execution from ProjectDir
     '''
-    log.info("Making backup of script " + script);
-    import shutil, os
+    log.info("Making backup of script " + script)
+    import shutil
     try:        
         script_prefix, script_number = getScriptPrefix(script)
         script_out = os.path.join(WorkingDir, script_prefix + '_backup.py')
@@ -353,49 +353,47 @@ def runImageJPlugin(memory, macro, args):
 #create a metadata file with original image name, and two other 
 #lines with variation over the original name
 def intercalate_union_3(inFileName,outFileName, src1,targ1,src2,targ2):
-   
-   mD = MetaData(inFileName)
-   mDout = MetaData()
-   
-   for id in mD:       
-       idOut = mDout.addObject()
-       sIn = mD.getValue(MDL_IMAGE,id)
-       mDout.setValue(MDL_IMAGE, sIn, idOut)
-       enabled= mD.containsLabel(MDL_ENABLED)
+    import xmipp
+    mD = xmipp.MetaData(inFileName)
+    mDout = xmipp.MetaData()   
+    for id in mD:       
+        idOut = mDout.addObject()
+        sIn = mD.getValue(xmipp.MDL_IMAGE,id)
+        mDout.setValue(xmipp.MDL_IMAGE, sIn, idOut)
+        enabled= mD.containsLabel(xmipp.MDL_ENABLED)
        
-       if  (enabled):
+        if  (enabled):       
+            i = int(mD.getValue(xmipp.MDL_ENABLED,id))
+            mDout.setValue(xmipp.MDL_ENABLED, i, idOut)
        
-            i = int(mD.getValue(MDL_ENABLED,id))
-            mDout.setValue(MDL_ENABLED, i, idOut)
-       
-       idOut = mDout.addObject()
+        idOut = mDout.addObject()
 
-       ss = sIn.replace(src1,targ1)
-       mDout.setValue(MDL_IMAGE, ss, idOut)
+        ss = sIn.replace(src1,targ1)
+        mDout.setValue(xmipp.MDL_IMAGE, ss, idOut)
+        
+        if  (enabled):
+            mDout.setValue(xmipp.MDL_ENABLED, i, idOut)
+            
+        idOut = mDout.addObject()
        
-       if  (enabled):
-           mDout.setValue(MDL_ENABLED, i, idOut)
-           
-       idOut = mDout.addObject()
+        ss = sIn.replace(src2,targ2)
+        mDout.setValue(xmipp.MDL_IMAGE, ss, idOut)
+        
+        if  (enabled):
+            mDout.setValue(xmipp.MDL_ENABLED, i, idOut)
        
-       ss = sIn.replace(src2,targ2)
-       mDout.setValue(MDL_IMAGE, ss, idOut)
-       
-       if  (enabled):
-           mDout.setValue(MDL_ENABLED, i, idOut)
-       
-   mDout.write(outFileName)
+    mDout.write(outFileName)
 
 #set rot and tilt between -180,180 and -90,90
 def check_angle_range(inFileName,outFileName):
-
-    mD    = MetaData(inFileName)
+    import xmipp
+    mD    = xmipp.MetaData(inFileName)
     doWrite=False
     
     for id in mD: 
         doWrite2=False
-        rot = mD.getValue(MDL_ANGLEROT,id)
-        tilt = mD.getValue(MDL_ANGLETILT,id)
+        rot = mD.getValue(xmipp.MDL_ANGLEROT,id)
+        tilt = mD.getValue(xmipp.MDL_ANGLETILT,id)
         if tilt > 90.: 
             tilt = -(int(tilt)-180)
             rot  += 180.
@@ -407,8 +405,8 @@ def check_angle_range(inFileName,outFileName):
             doWrite=True
             doWrite2=True
         if (doWrite2):
-            mD.setValue(MDL_ANGLEROT , rot, id)
-            mD.setValue(MDL_ANGLETILT, tilt, id)
+            mD.setValue(xmipp.MDL_ANGLEROT , rot, id)
+            mD.setValue(xmipp.MDL_ANGLETILT, tilt, id)
         
     if(doWrite or inFileName != outFileName):
         mD.write(outFileName)
@@ -416,23 +414,23 @@ def check_angle_range(inFileName,outFileName):
 
 #compute histogram
 def compute_histogram(mD,bin,col,min,max):
-    
-    allMD = MetaData()
-    outMD = MetaData()   
+    import xmipp
+    allMD = xmipp.MetaData()
+    outMD = xmipp.MetaData()   
     _bin = (max-min)/bin
    
     for h in range(0,bin):
-        outMD.removeObjects(MDQuery("*"))
+        outMD.removeObjects(xmipp.MDQuery("*"))
         if (h==0):
-            outMD.importObjects(mD, MDValueRange(col, float(min), float(_bin*(h + 1)+min)))
+            outMD.importObjects(mD, xmipp.MDValueRange(col, float(min), float(_bin*(h + 1)+min)))
         if (h>0 and h<(bin-1)):
-            outMD.importObjects(mD, MDValueRange(col, float(_bin * h + min), float(_bin*(h + 1)+min)))
+            outMD.importObjects(mD, xmipp.MDValueRange(col, float(_bin * h + min), float(_bin*(h + 1)+min)))
         if (h==(bin-1)):
-            outMD.importObjects(mD, MDValueRange(col, float(_bin * h + min), float(max)))
+            outMD.importObjects(mD, xmipp.MDValueRange(col, float(_bin * h + min), float(max)))
        
-        _sum=float(outMD.aggregateSingle(AGGR_SUM,MDL_WEIGHT))
-        outMD.addLabel(MDL_COUNT)
-        outMD.setValueCol(MDL_COUNT, int(_sum+0.1))
+        _sum=float(outMD.aggregateSingle(xmipp.AGGR_SUM, xmipp.MDL_WEIGHT))
+        outMD.addLabel(xmipp.MDL_COUNT)
+        outMD.setValueCol(xmipp.MDL_COUNT, int(_sum+0.1))
         allMD.unionAll(outMD)
        
     return allMD
@@ -443,7 +441,6 @@ def compute_histogram(mD,bin,col,min,max):
 def unique_filename(file_name):
     ''' Create a unique filename (not file handler)
        this approach is unsecure but good enought for most purposes'''
-    import os
     counter = 1
     file_name_parts = os.path.splitext(file_name) # returns ('/path/file', '.ext')
     while os.path.isfile(file_name):
@@ -489,15 +486,14 @@ def apply_bfactor(_DisplayReference_list,\
         volExtension,\
         _mylog\
         ):
-    import os
     if len(_CorrectBfactorExtraCommand)<1:
         _CorrectBfactorExtraCommand=' --auto '
     for name in _DisplayReference_list:
-       xmipp_command='xmipp_correct_bfactor '
-       aux_name = name.replace(bFactorExtension,'')
-       if not os.path.exists(aux_name):
+        xmipp_command='xmipp_correct_bfactor '
+        aux_name = name.replace(bFactorExtension,'')
+        if not os.path.exists(aux_name):
             print '* WARNING: '+ aux_name +' does not exist, skipping...'
-       else:
+        else:
             argument = ' -i ' + name.replace(bFactorExtension,'') +\
                        ' -o ' + name +\
                        ' --sampling ' + str(_SamplingRate)+\

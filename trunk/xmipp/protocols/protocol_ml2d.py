@@ -7,14 +7,13 @@
 #  Updated:  J. M. de la Rosa Trevin July 2011
 #
 
-import os, sys, shutil
-from xmipp import MetaData
-from protlib_base import *
+from protlib_base import XmippProtocol
+from config_protocols import protDict
 
 class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.ml2d.key, scriptname, project)
-        self.Import = 'from protocol_ml2d import *'
+        self.Import = 'from protocol_ml2d import *; from protlib_utils import runJob;'
 
     def validate(self):
         return []
@@ -28,7 +27,7 @@ class ProtML2D(XmippProtocol):
     def defineActions(self):
         print '*********************************************************************'
         progId = "ml"
-        if (DoMlf):
+        if (self.DoMlf):
             progId += "f"  
         
         program = "xmipp_%s_align2d" % progId
@@ -39,35 +38,37 @@ class ProtML2D(XmippProtocol):
 #        print '*  %s %s program :' % (action, program)
         restart = False
         if (restart):
-            params= ' --restart ' + utils_xmipp.composeFileName('ml2d_it', RestartIter,'log')
+            pass 
+            #Not yet implemented
+            #params= ' --restart ' + utils_xmipp.composeFileName('ml2d_it', RestartIter,'log')
         else: 
-            params = ' -i %s --oroot %s2d' % (InSelFile, progId)
+            params = ' -i %s --oroot %s/%s2d' % (self.InSelFile, self.WorkingDir, progId)
             # Number of references will be ignored if -ref is passed as expert option
-            if ExtraParamsMLalign2D.find("--ref") == -1:
-                params += ' --nref %i' % NumberOfReferences
-            params += ' ' + ExtraParamsMLalign2D
-            if (DoFast and not DoMlf):
+            if self.ExtraParams.find("--ref") == -1:
+                params += ' --nref %i' % self.NumberOfReferences
+            params += ' ' + self.ExtraParams
+            if (self.DoFast and not self.DoMlf):
                 params += ' --fast'
-            if (DoNorm):
+            if (self.DoNorm):
                 params += ' --norm'
-            if (DoMirror):
+            if (self.DoMirror):
                 params += ' --mirror'
-            if (NumberOfThreads > 1  and not DoMlf):
-                params += ' --thr %i' % NumberOfThreads
-            if (DoMlf):
-                if (DoCorrectAmplitudes):
-                    params += ' --ctfdat my.ctfdat'
+            if (self.NumberOfThreads > 1  and not self.DoMlf):
+                params += ' --thr %i' % self.NumberOfThreads
+            if (self.DoMlf):
+                if (self.DoCorrectAmplitudes):
+                    params += ' --ctfdat %s' % self.InCtfDatFile
                 else:
-                    params += ' --no_ctf -pixel_size %f' + PixelSize
+                    params += ' --no_ctf --pixel_size %f' % self.PixelSize
                 if (not self.ImagesArePhaseFlipped):
                     params += ' --not_phase_flipped'
                 if (self.HighResLimit > 0):
-                    params += ' --high %f' + HighResLimit
+                    params += ' --high %f' % self.HighResLimit
                     
-        self.Db.insertAction('launchML', program=program, params=params)
-    
-def launchML(log, program, params):
-    #launchJob(program, params, self.log, DoParallel, NumberOfMpiProcesses, NumberOfThreads, SystemFlavour)
-    print "Running program: '%s %s'" % (program, params)
-    log.info("Running program: '%s %s'" % (program, params))
+        self.Db.insertAction('runJob', 
+                             programname=program, 
+                             params=params,
+                             NumberOfMpiProcesses = self.NumberOfMpiProcesses,
+                             NumberOfThreads = self.NumberOfThreads,
+                             SystemFlavour = self.project.SystemFlavour)
 

@@ -1,4 +1,4 @@
-from Tkinter import *
+import Tkinter as tk
 
 '''
 Taken from following forum:
@@ -7,20 +7,20 @@ This is a compound widget that gangs multiple Tk Listboxes to a single scrollbar
 multi-column scrolled listbox. Most of the Listbox API is mirrored to make it act like the normal 
 Listbox but with multiple values per row.
 '''
-class MultiListbox(PanedWindow):
+class MultiListbox(tk.PanedWindow):
     """MultiListbox class for creating a Grid widget"""
     def __init__(self,master,lists):
-        PanedWindow.__init__(self,master,borderwidth=1,showhandle=False,sashwidth=2,sashpad=0,relief=SUNKEN)
+        tk.PanedWindow.__init__(self,master,borderwidth=1,showhandle=False,sashwidth=2,sashpad=0,relief=tk.SUNKEN)
         self.lists = []
         self.columns=[]
         for l, w in lists:
             self.columns.append(l)
-            frame = Frame(self); frame.pack(side=LEFT, expand=YES, fill=BOTH)
-            tl=Label(frame, text=l, borderwidth=2, relief=GROOVE)
-            tl.pack(fill=X)
+            frame = tk.Frame(self); frame.pack(side=tk.LEFT, expand=tk.YES, fill=tk.BOTH)
+            tl=tk.Label(frame, text=l, borderwidth=2, relief=tk.GROOVE)
+            tl.pack(fill=tk.X)
             tl.bind('<Button-1>',self.clickon)
-            lb = Listbox(frame, width=w, borderwidth=0, selectborderwidth=0,relief=FLAT, exportselection=FALSE, selectmode=MULTIPLE ,bg='white')
-            lb.pack(expand=YES, fill=BOTH)
+            lb = tk.Listbox(frame, width=w, borderwidth=0, selectborderwidth=0,relief=tk.FLAT, exportselection=tk.FALSE, selectmode=tk.MULTIPLE ,bg='white')
+            lb.pack(expand=tk.YES, fill=tk.BOTH)
             self.lists.append(lb)
             lb.bind('<B1-Motion>', lambda e, s=self: s._select(e.y))
             lb.bind('<Button-1>', lambda e, s=self: s._select(e.y))
@@ -29,16 +29,16 @@ class MultiListbox(PanedWindow):
             lb.bind('<B2-Motion>', lambda e, s=self: s._b2motion(e.x, e.y))
             lb.bind('<Button-2>', lambda e, s=self: s._button2(e.x, e.y))
             lb.bind('<Button-3>', lambda e, s=self: s._button3(e.x, e.y))
-            lb.bind('<Button-4>', lambda e, s=self: s._scroll(SCROLL, 1, PAGES))
-            lb.bind('<Button-5>', lambda e, s=self: s._scroll(SCROLL, -1, PAGES))
+            lb.bind('<Button-4>', lambda e, s=self: s._scroll(tk.SCROLL, 1, tk.PAGES))
+            lb.bind('<Button-5>', lambda e, s=self: s._scroll(tk.SCROLL, -1, tk.PAGES))
             self.add(frame)
-        Label(master, borderwidth=1, relief=FLAT).pack(fill=X)
-        sb = Scrollbar(master, orient=VERTICAL, command=self._scroll,borderwidth=1)
-        sb.pack(fill=Y,side=RIGHT,expand=NO)
+        tk.Label(master, borderwidth=1, relief=tk.FLAT).pack(fill=tk.X)
+        sb = tk.Scrollbar(master, orient=tk.VERTICAL, command=self._scroll,borderwidth=1)
+        sb.pack(fill=tk.Y,side=tk.RIGHT,expand=tk.NO)
         for l in self.lists:
             l['yscrollcommand']=sb.set
         self.add(frame)
-        self.pack(expand=YES,fill=BOTH, side=TOP)
+        self.pack(expand=tk.YES,fill=tk.BOTH, side=tk.TOP)
         self.sortedBy = -1
         self.previousWheel = 0
         self.SelectCallback = None
@@ -51,7 +51,7 @@ class MultiListbox(PanedWindow):
 
     def _select(self, y,state=16):
         row = self.lists[0].nearest(y)
-        if state==16:self.selection_clear(0, END)
+        if state==16:self.selection_clear(0, tk.END)
         self.selection_set(row)
         return 'break'
 
@@ -88,10 +88,10 @@ class MultiListbox(PanedWindow):
         else:
             direction = 1
 
-        elements = self.get(0, END)
-        self.delete(0, END)
+        elements = self.get(0, tk.END)
+        self.delete(0, tk.END)
         elements.sort(lambda x, y: self._sortAssist(column, direction, x, y))
-        self.insert(END, *elements)
+        self.insert(tk.END, *elements)
 
         self.sortedBy = column
         self.direction = direction
@@ -168,14 +168,14 @@ class MultiListbox(PanedWindow):
     def selection_move_up(self):
         index = self.selectedIndex() 
         if index > 0:
-            self.selection_clear(0, END)
+            self.selection_clear(0, tk.END)
             #self.selection_clear(0, END)
             self.selection_set(index - 1)
             
     def selection_move_down(self):
         index = self.selectedIndex()
         if index != -1 and index < self.size() - 1:
-            self.selection_clear(0, END)
+            self.selection_clear(0, tk.END)
             #self.selection_clear(0, END)
             self.selection_set(index + 1)
             
@@ -200,19 +200,18 @@ __tipwindow = None
 def createToolTip( widget, text ):
     def enter( event ):
         global __tipwindow
-        x = y = 0
         if __tipwindow or not text:
             return
         x, y, cx, cy = widget.bbox( "insert" )
         x += widget.winfo_rootx() + 27
         y += widget.winfo_rooty() + 27
         # Creates a toplevel window
-        __tipwindow = tw = Toplevel( widget )
+        __tipwindow = tw = tk.Toplevel( widget )
         # Leaves only the label and removes the app window
         tw.wm_overrideredirect( 1 )
         tw.wm_geometry( "+%d+%d" % ( x, y ) )
-        label = Label( tw, text = text, justify = LEFT,
-                       background = "#ffffe0", relief = SOLID, borderwidth = 1,
+        label = tk.Label( tw, text = text, justify = tk.LEFT,
+                       background = "#ffffe0", relief = tk.SOLID, borderwidth = 1,
                        font = ( "tahoma", "8", "normal" ) )
         label.pack( ipadx = 1 )
         
@@ -326,7 +325,7 @@ class ToolTip:
             self._unschedule()
             return
         if not self._tipwindow:
-            self._tipwindow = tw = Toplevel(self.master)
+            self._tipwindow = tw = tk.Toplevel(self.master)
             # hide the window until we know the geometry
             tw.withdraw()
             tw.wm_overrideredirect(1)
@@ -379,7 +378,7 @@ class ToolTip:
         opts = self._opts.copy()
         for opt in ('delay', 'follow_mouse', 'state'):
             del opts[opt]
-        label = Label(self._tipwindow, **opts)
+        label = tk.Label(self._tipwindow, **opts)
         label.pack()
 
 ##---------demo code-----------------------------------##
@@ -395,20 +394,20 @@ class ListboxDialog(Dialog):
         
     def body(self, master):
         self.result = []
-        self.lb = Listbox(master, selectmode=EXTENDED, bg="white")
+        self.lb = tk.Listbox(master, selectmode=tk.EXTENDED, bg="white")
         self.lb.config(**self.kargs)
-        self.lb.pack(fill=BOTH)
+        self.lb.pack(fill=tk.BOTH)
         self.lb.bind('<Double-Button-1>', self.ok)
         for item in self.list:
-            self.lb.insert(END, item)
+            self.lb.insert(tk.END, item)
         if len(self.list) > 0:
             self.lb.selection_set(0)
         return self.lb # initial focus
 
     def buttonbox(self):
-        box = Frame(self)
-        w = Button(box, text="OK", width=7, command=self.ok, default=ACTIVE)
-        w.pack(side=RIGHT, padx=5, pady=5)
+        box = tk.Frame(self)
+        w = tk.Button(box, text="OK", width=7, command=self.ok, default=tk.ACTIVE)
+        w.pack(side=tk.RIGHT, padx=5, pady=5)
         self.bind("<Return>", self.ok)
         box.pack()
         
@@ -416,14 +415,14 @@ class ListboxDialog(Dialog):
         self.result = map(int, self.lb.curselection())
 
 def demo():
-    root = Tk(className='ToolTip-demo')
-    l = Listbox(root)
+    root = tk.Tk(className='ToolTip-demo')
+    l = tk.Listbox(root)
     l.insert('end', "I'm a listbox")
     l.pack(side='top')
-    t1 = ToolTip(l, follow_mouse=1, text="I'm a tooltip with follow_mouse set to 1, so I won't be placed outside my parent")
-    b = Button(root, text='Quit', command=root.quit)
+    ToolTip(l, follow_mouse=1, text="I'm a tooltip with follow_mouse set to 1, so I won't be placed outside my parent")
+    b = tk.Button(root, text='Quit', command=root.quit)
     b.pack(side='bottom')
-    t2 = ToolTip(b, text='Enough of this')
+    ToolTip(b, text='Enough of this')
     root.mainloop()
 
 if __name__ == '__main__':

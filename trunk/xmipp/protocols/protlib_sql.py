@@ -1,9 +1,9 @@
 from pysqlite2 import dbapi2 as sqlite
-import os,sys
 import pickle
-from config_protocols import *
-from protlib_utils import *
-from protlib_filesystem import *
+import os, sys
+from config_protocols import projectDefaults
+from protlib_utils import reportError, getScriptPrefix, printLog, printLogError, bcolors, makeScriptBackup
+from protlib_filesystem import deleteWorkingDirectory, createDir
 
 runColumns = ['run_id',
               'run_name',
@@ -14,11 +14,6 @@ runColumns = ['run_id',
               'comment',
               'group_name']
 
-class XmippProtocolDbStruct(object):
-    doAlways = 99999
-    lastStep  = -1
-    firstStep =  0
-
 def existsDB(dbName):
     """check if database has been created by checking if the table tableruns exist"""
     result = False
@@ -26,11 +21,11 @@ def existsDB(dbName):
         connection = sqlite.Connection(dbName)
         connection.row_factory = sqlite.Row
         cur = connection.cursor()
-        _sqlCommand = "SELECT count(*) from sqlite_master where tbl_name = '%(TableRuns)s';"%projectDefaults
+        _sqlCommand = "SELECT count(*) from sqlite_master where tbl_name = '%(TableRuns)s';" % projectDefaults
         cur.execute(_sqlCommand)
-        result=True
+        result = True
     except sqlite.Error, e:
-        print "database %s is missing"% dbName
+        print "Could not connect to database %s\nERROR: %S" % (dbName, str(e))
     return result
 
 class SqliteDb:
@@ -45,7 +40,7 @@ class SqliteDb:
             sys.exit(1)  
         self.connection.commit()
     
-    def getRunId(self, protName,runName):
+    def getRunId(self, protName, runName):
         self.sqlDict['protocol_name'] = protName
         self.sqlDict['run_name'] = runName        
         _sqlCommand = """ SELECT run_id 
@@ -60,7 +55,10 @@ class SqliteDb:
         return result
     
 class XmippProjectDb(SqliteDb):
-        
+    doAlways = 99999
+    lastStep  = -1
+    firstStep =  0
+            
     def __init__(self, dbName):
         try:
             self.dbName = dbName
@@ -243,9 +241,9 @@ class XmippProtocolDb(SqliteDb):
         self.connection.row_factory = sqlite.Row
         self.cur                = self.connection.cursor()
         self.cur_aux            = self.connection.cursor()
-        self.lastid = XmippProtocolDbStruct.firstStep
+        self.lastid = XmippProjectDb.firstStep
         self.iter = self.lastid + 1
-        self.parentCase=XmippProtocolDbStruct.lastStep
+        self.parentCase=XmippProjectDb.lastStep
         # print wrapper name
         self.PrintWrapperCommand=True
         # print wrapper parameters
@@ -449,10 +447,10 @@ class XmippProtocolDb(SqliteDb):
                            passDb=False,
                            **_Parameters):
         if not parent_step_id:
-            if self.parentCase == XmippProtocolDbStruct.lastStep:
+            if self.parentCase == XmippProjectDb.lastStep:
                 parent_step_id=self.lastid
-            elif self.parentCase == XmippProtocolDbStruct.firstStep:
-                parent_step_id=XmippProtocolDbStruct.firstStep
+            elif self.parentCase == XmippProjectDb.firstStep:
+                parent_step_id=XmippProjectDb.firstStep
         if execute==None:
             execute=True
         if passDb==None:
@@ -477,11 +475,10 @@ class XmippProtocolDb(SqliteDb):
         if self.createRestartTable:
             if self.compareParameters():
                 ##########################Restore original table from backup
-                print "ERROR: Can not continue from old execution, parameters do not match. Relaunch execution from begining"
-                exit(1)
+                printLogError(_log, "Can not continue from old execution, parameters do not match. Relaunch execution from begining")
         self.sqlDict['step_id'] = self.StartAtStepN
-        self.sqlDict['iter'] = XmippProtocolDbStruct.doAlways
-        sqlCommand = """ SELECT step_id
+        self.sqlDict['iter'] = XmippProjectDb.doAlways
+        sqlCommand = """ SELECT step_id, iter, passDb, command, parameters,fileNameList 
                         FROM %(TableSteps)s 
                         WHERE (step_id >= %(step_id)d OR iter = %(iter)d)
                           AND (run_id = %(run_id)d)
@@ -491,30 +488,31 @@ class XmippProtocolDb(SqliteDb):
 
         commands = self.cur.fetchall()
         for row in commands:
-            self.runSingleAction(self.connection, self.cur,_log, _import, row['step_id'])
-        print '********************************************************'
-        print ' Protocol FINISHED'
+            self.runSingleAction(self.connection, self.cur,_log, _import, row)
+        printLog('********************************************************')
+        printLog(' Protocol FINISHED')
 
-    def runSingleAction(self, _connection, _cursor, _log, _import, _step_id):
+    def runSingleAction(self, _connection, _cursor, _log, _import, actionRow):
         import pprint
         exec(_import)
-        self.sqlDict['step_id'] = _step_id
-        sqlCommand = """ SELECT iter, passDb, command, parameters,fileNameList 
-                        FROM %(TableSteps)s 
-                        WHERE (step_id = %(step_id)d)
-                          AND (run_id = %(run_id)d) """ % self.sqlDict
-        _cursor.execute(sqlCommand)
-
-        row = _cursor.fetchone()
-        self.sqlDict['iter'] = row['iter']
-        command = row['command']
-        dict = pickle.loads(str(row["parameters"]))
+        step_id = actionRow['step_id']
+        self.sqlDict['step_id'] = step_id
+#        sqlCommand = """ SELECT iter, passDb, command, parameters,fileNameList 
+#                        FROM %(TableSteps)s 
+#                        WHERE (step_id = %(step_id)d)
+#                          AND (run_id = %(run_id)d) """ % self.sqlDict
+#        _cursor.execute(sqlCommand)
+#
+#        row = _cursor.fetchone()
+        self.sqlDict['iter'] = actionRow['iter']
+        command = actionRow['command']
+        dict = pickle.loads(str(actionRow["parameters"]))
         if(self.PrintWrapperCommand):
-            if iter == XmippProtocolDbStruct.doAlways:
+            if iter == XmippProjectDb.doAlways:
                 siter = 'N/A'
             else:
-                siter = str(row['iter'])
-            print bcolors.OKBLUE,"--------\nExecution of wrapper: %d (iter=%s)" % (_step_id,siter)
+                siter = str(actionRow['iter'])
+            print bcolors.OKBLUE,"--------\nExecution of wrapper: %d (iter=%s)" % (step_id,siter)
             print bcolors.HEADER,(command.split())[-1],bcolors.ENDC
 
         #print in column format rather than in raw, easier to read 
@@ -522,17 +520,19 @@ class XmippProtocolDb(SqliteDb):
             pp = pprint.PrettyPrinter(indent=4,width=20)
             pp.pprint(dict)
 
-        sqlCommand = "UPDATE %(TableSteps)s SET init = CURRENT_TIMESTAMP WHERE step_id=%(step_id)d" % self.sqlDict
+        sqlCommand = """UPDATE %(TableSteps)s SET init = CURRENT_TIMESTAMP 
+                        WHERE step_id=%(step_id)d
+                          AND run_id=%(run_id)d""" % self.sqlDict
         _connection.execute(sqlCommand)
         _connection.commit()
         
-        if row['passDb']:
+        if actionRow['passDb']:
             exec ( command + '(_log, self, **dict)')
         else:
             exec ( command + '(_log, **dict)')
         
-        if self.verify and row["fileNameList"]:
-            _list =pickle.loads(str(row["fileNameList"]))
+        if self.verify and actionRow["fileNameList"]:
+            _list =pickle.loads(str(actionRow["fileNameList"]))
             for i in _list:
                 if not os.path.exists(i):
                     self.sqlDict['file'] = i
@@ -541,7 +541,9 @@ class XmippProtocolDb(SqliteDb):
                 elif self.viewVerifyedFiles:
                     print "Verified file:", i
         
-        sqlCommand = "UPDATE %(TableSteps)s SET finish = CURRENT_TIMESTAMP WHERE step_id=%(step_id)d" %  self.sqlDict
+        sqlCommand = """UPDATE %(TableSteps)s SET finish = CURRENT_TIMESTAMP 
+                        WHERE step_id=%(step_id)d
+                          AND run_id=%(run_id)d""" % self.sqlDict
         #print "Updating finish",sqlCommand
         _connection.execute(sqlCommand)
         _connection.commit()

@@ -27,15 +27,13 @@
  '''
 
 import os
-import shutil 
-from Tkinter import *
-import tkFont
-from protlib_filesystem import getXmippPath
-from protlib_base import *
-from protlib_utils import getScriptPrefix
-from protlib_gui import *
-from protlib_gui_ext import *
+import Tkinter as tk
 import tkMessageBox
+import tkFont
+from protlib_gui import ProtocolGUI
+from protlib_gui_ext import ToolTip, MultiListbox, centerWindows
+from config_protocols import protDict, sections
+from protlib_base import getProtocolFromModule, XmippProject
 
 #Font
 FontName = "Helvetica"
@@ -45,25 +43,12 @@ FontSize = 10
 CitationTextColor = "dark olive green"
 LabelTextColor = "black"
 SectionTextColor = "blue4"
-
 #Background Color
 BgColor = "white"
 LabelBgColor = BgColor
 HighlightBgColor = BgColor
 ButtonBgColor = "LightBlue"
 ButtonActiveBgColor = "LightSkyBlue"
-EntryBgColor = "lemon chiffon" 
-ExpertLabelBgColor = "light salmon"
-
-#Color
-ListSelectColor = "DeepSkyBlue4"
-BooleanSelectColor = "DeepSkyBlue4"
-
-#Dimensions limits
-MaxHeight = 800
-MaxWidth = 800
-MaxFontSize = 14
-MinFontSize = 6
 
 
         
@@ -77,8 +62,8 @@ class XmippProjectGUI():
             self.onExit()            
             
     def createMainMenu(self):
-        self.menubar = Menu(self.root)
-        self.fileMenu = Menu(self.root, tearoff=0)
+        self.menubar = tk.Menu(self.root)
+        self.fileMenu = tk.Menu(self.root, tearoff=0)
         self.fileMenu.add_command(label="Delete project", command=self.deleteProject)
         self.fileMenu.add_command(label="Exit", command=self.onExit)
         self.menubar.add_cascade(label="File", menu=self.fileMenu)
@@ -101,19 +86,17 @@ class XmippProjectGUI():
             
     def addHeaderLabel(self, parent, text, row, col=0):
         '''Add a label to left toolbar'''
-        label = Label(parent, text=text, font=self.LabelFont, fg=SectionTextColor)
+        label = tk.Label(parent, text=text, font=self.LabelFont, fg=SectionTextColor)
         label.grid(row = row, column=col)
         return label
         
     def createToolbarButton(self, row, text, opts=[]):
         '''Add a button to left toolbar'''
-        Font = tkFont.Font(family=FontName, size=FontSize-1, weight=tkFont.BOLD)
-        btn = Button(self.toolbar, bd = 1, text=text, font=self.ButtonFont, relief=RAISED,
+        btn = tk.Button(self.toolbar, bd = 1, text=text, font=self.ButtonFont, relief=tk.RAISED,
                          bg=ButtonBgColor, activebackground=ButtonBgColor)
-        btn.grid(row = row, column = 0, sticky=W+E, pady=2, padx=5)
-        i = 0
+        btn.grid(row = row, column = 0, sticky='ew', pady=2, padx=5)
         if len(opts) > 0:
-            menu = Menu(self.root, bg=ButtonBgColor, activebackground=ButtonBgColor, font=self.ButtonFont, tearoff=0)
+            menu = tk.Menu(self.root, bg=ButtonBgColor, activebackground=ButtonBgColor, font=self.ButtonFont, tearoff=0)
             prots = [protDict.protocolDict[o] for o in opts]
             for p in prots:
                 #Following is a bit tricky, its due Python notion of scope, a for does not define a new scope
@@ -129,7 +112,7 @@ class XmippProjectGUI():
 
     def launchProtocolGUI(self, run):
         run['group_name'] = self.lastSelected
-        top = Toplevel()
+        top = tk.Toplevel()
         gui = ProtocolGUI()
         gui.createGUI(self.project, run, top, lambda: self.protocolSaveCallback(run))
         gui.fillGUI()
@@ -141,12 +124,14 @@ class XmippProjectGUI():
 
     def updateRunHistory(self, protGroup): 
         self.runs = self.project.projectDb.selectRuns(protGroup)
-        self.lbHist.delete(0, END)
+        self.lbHist.delete(0, tk.END)
         for run in self.runs:
-            self.lbHist.insert(END, ('%s_%s' % (run['protocol_name'], run['run_name']),
+            self.lbHist.insert(tk.END, ('%s_%s' % (run['protocol_name'], run['run_name']),
                                 run['last_modified']))   
         if len(self.runs) > 0:
-                self.lbHist.selection_set(0)         
+            self.lbHist.selection_set(0)
+        else:
+            self.updateRunSelection(-1)
 
     #---------------- Functions related with Popup menu ----------------------   
     def lastPair(self):
@@ -156,7 +141,7 @@ class XmippProjectGUI():
         
     def unpostMenu(self, event=None):
         if self.lastSelected:
-            btn, menu = self.lastPair()
+            menu = self.lastPair()[1]
             menu.unpost()
             
     def postMenu(self, btn, menu):
@@ -183,14 +168,14 @@ class XmippProjectGUI():
         self.lastSelected = text  
             
     def updateRunSelection(self, index):
-        state = NORMAL
+        state = tk.NORMAL
         if index == -1:
-            state = DISABLED
+            state = tk.DISABLED
             #Hide details
             self.frameDetails.grid_remove()
             self.buttonDetails.grid_remove()
         else:
-            state = NORMAL
+            state = tk.NORMAL
             #Show details
             run = self.lastRunSelected
             self.DetailsLabelsDict['Run:'].config(text=run['run_name'])
@@ -203,7 +188,7 @@ class XmippProjectGUI():
                 exit(1)
             summary = '\n'.join(prot.summary())
             self.DetailsLabelsDict['Summary:'].config(text=summary)
-            self.frameDetails.grid(row=4, column=1,sticky=NSEW, columnspan=2)
+            self.frameDetails.grid(row=4, column=1,sticky='nsew', columnspan=2)
             self.buttonDetails.grid()
         for btn in self.runButtonsDict.values():
             btn.config(state=state)
@@ -215,6 +200,7 @@ class XmippProjectGUI():
             
         
     def runButtonClick(self, event=None):
+        from protlib_sql import runColumns
         run = dict(zip(runColumns, self.lastRunSelected))
         run['source'] = run['script']        
         if event == 'Edit':
@@ -231,8 +217,8 @@ class XmippProjectGUI():
 
     def createToolbar(self):
         #Configure toolbar frame
-        self.toolbar = Frame(self.frame, bd=2, relief=RIDGE)
-        self.toolbar.grid(row=0, column=0, sticky=N+W+S, 
+        self.toolbar = tk.Frame(self.frame, bd=2, relief=tk.RIDGE)
+        self.toolbar.grid(row=0, column=0, sticky='nws', 
                           rowspan=5, padx=5, pady=5)
         #Create toolbar buttons
         i = 1
@@ -247,16 +233,17 @@ class XmippProjectGUI():
         btnImage = None
         if imageFilename:
             try:
+                from protlib_filesystem import getXmippPath
                 imgPath = os.path.join(getXmippPath('resources'), imageFilename)
-                btnImage = PhotoImage(file=imgPath)
-            except TclError:
+                btnImage = tk.PhotoImage(file=imgPath)
+            except tk.TclError:
                 pass
         
         if btnImage:
-            btn = Button(frame, image=btnImage, bd=0, height=28, width=28)
+            btn = tk.Button(frame, image=btnImage, bd=0, height=28, width=28)
             btn.image = btnImage
         else:
-            btn = Button(frame, text=text, font=self.ButtonFont, bg=ButtonBgColor)
+            btn = tk.Button(frame, text=text, font=self.ButtonFont, bg=ButtonBgColor)
         btn.config(command=lambda:self.runButtonClick(text), 
                  activebackground=ButtonActiveBgColor)
         btn.grid(row=0, column=col)
@@ -264,17 +251,17 @@ class XmippProjectGUI():
         self.runButtonsDict[text] = btn
     
     def createRunHistory(self):
-        label = self.addHeaderLabel(self.frame, 'History', 0, 1)
+        self.addHeaderLabel(self.frame, 'History', 0, 1)
         #Button(self.frame, text="Edit").grid(row=0, column=2)
-        frame = Frame(self.frame)
+        frame = tk.Frame(self.frame)
         frame.grid(row=0, column=2)
         self.addRunButton(frame, "Edit", 0, 'edit.gif')
         self.addRunButton(frame, "Copy", 1, 'copy.gif')
         #self.addRunButton(frame, "Visualize", 2, 'visualize.gif')
         self.addRunButton(frame, "Delete", 2, 'delete.gif')
         #self.addRunButton(frame, "Help", 4, 'help.gif')
-        self.frameHist = Frame(self.frame)
-        self.frameHist.grid(row=2, column=1, sticky=NSEW, columnspan=2, padx=5, pady=(0, 5))
+        self.frameHist = tk.Frame(self.frame)
+        self.frameHist.grid(row=2, column=1, sticky='nsew', columnspan=2, padx=5, pady=(0, 5))
         self.lbHist = MultiListbox(self.frameHist, (('Run', 40), ('Modified', 20)))
         self.lbHist.SelectCallback = self.runSelectCallback
         self.lbHist.DoubleClickCallback = lambda:self.runButtonClick("Edit")
@@ -282,18 +269,18 @@ class XmippProjectGUI():
         #self.lbHist.pack()
         
     def addDetailsLabel(self, text, row, col, sumCol=True):
-        label = Label(self.frameDetails,text=text, font=self.DetailsFontBold, bg=BgColor)
-        label.grid(row=row, column=col, sticky=NE, padx=5)
+        label = tk.Label(self.frameDetails,text=text, font=self.DetailsFontBold, bg=BgColor)
+        label.grid(row=row, column=col, sticky='ne', padx=5)
         if sumCol:
             col += 1
         else:
             row += 1
-        label = Label(self.frameDetails,text="", font=self.DetailsFont, 
-                      bg=BgColor, justify=LEFT)
+        label = tk.Label(self.frameDetails,text="", font=self.DetailsFont, 
+                      bg=BgColor, justify=tk.LEFT)
         colspan = 1
         if text == 'Summary:':
             colspan = 3
-        label.grid(row=row, column=col, sticky=NW, padx=5, columnspan=colspan)
+        label.grid(row=row, column=col, sticky='nw', padx=5, columnspan=colspan)
         self.DetailsLabelsDict[text] = label
         
     def createRunDetails(self):
@@ -302,11 +289,11 @@ class XmippProjectGUI():
         self.DetailsFont = tkFont.Font(family=FontName, size=FontSize-1)
         #Create RUN details
         self.addHeaderLabel(self.frame, 'Details', 3, 1)
-        self.buttonDetails = Button(self.frame, text="Analize results", font=self.ButtonFont, 
+        self.buttonDetails = tk.Button(self.frame, text="Analize results", font=self.ButtonFont, 
                                     bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
         self.buttonDetails.grid(row=3, column=2, padx=5, pady=5)
-        self.frameDetails = Frame(self.frame, bg=BgColor, bd=1, relief=RIDGE)
-        self.frameDetails.grid(row=4, column=1, sticky=NSEW, columnspan=2, padx=5, pady=5)
+        self.frameDetails = tk.Frame(self.frame, bg=BgColor, bd=1, relief=tk.RIDGE)
+        self.frameDetails.grid(row=4, column=1, sticky='nsew', columnspan=2, padx=5, pady=5)
         self.DetailsLabelsDict = {}
         self.addDetailsLabel('Run:', 0, 0)
         self.addDetailsLabel('Protocol:', 1, 0)
@@ -316,14 +303,14 @@ class XmippProjectGUI():
 
     def createGUI(self, root=None):
         if not root:
-            root = Tk()
+            root = tk.Tk()
         self.root = root
         root.withdraw() # Hide the windows for centering
         self.root.title("Xmipp Protocols")
         self.createMainMenu()
         #Create a main frame that contains all other widgets
-        self.frame = Frame(self.root)
-        self.frame.pack(fill=BOTH)
+        self.frame = tk.Frame(self.root)
+        self.frame.pack(fill=tk.BOTH)
         self.frame.columnconfigure(0, minsize=150, weight=1)
         self.frame.columnconfigure(1, minsize=300, weight=2)
         #self.frame.columnconfigure(2, minsize=300, weight=2)
@@ -355,13 +342,11 @@ class XmippProjectGUI():
 
 
 if __name__ == '__main__':
-    import sys
     dir = os.getcwd()
     project = XmippProject(dir)    
-    
+    import sys
     if len(sys.argv) > 1:
         # Launch a protocol directly
-        from protlib_gui import *
         script = sys.argv[1]
         project.load()  
         gui = ProtocolGUI()

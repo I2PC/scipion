@@ -28,10 +28,9 @@
 #---------------------------------------------------------------------------
 # Filesystem utilities
 #---------------------------------------------------------------------------
-from distutils.errors   import DistutilsInternalError
 import os
-from protlib_utils import printLogError
-from xmipp import *
+from protlib_utils import printLog, printLogError
+#from xmipp import *
 
 # The following are Wrappers to be used from Protocols
 # provinding filesystem utitities
@@ -64,20 +63,19 @@ def deleteWorkingDirectory(_log, WorkingDir, DoDeleteWorkingDir):
     if DoDeleteWorkingDir:
         deleteDir(_log,  WorkingDir)
 
-def deleteFile(_mylog, FileName, Verbose):
-    if os.path.exists(Filename):
-        os.remove(Filename)
+def deleteFile(_mylog, filename, Verbose):
+    if os.path.exists(filename):
+        os.remove(filename)
         if Verbose:
-            printLog( 'Deleted file %s' % Filename )
+            printLog( 'Deleted file %s' % filename )
     else:
         if Verbose:
-            printLog( 'Do not need to delete %s; already gone' % Filename )
+            printLog( 'Do not need to delete %s; already gone' % filename )
 
 #--------------------------- Xmipp specific tools ---------------------------------
 def getXmippPath(subfolder=''):
     '''Return the path the the Xmipp installation folder
     if a subfoder is provided, will be concatenated to the path'''
-    import os
     protdir = os.popen('which xmipp_protocols', 'r').read()
     xmippdir = os.path.dirname(os.path.dirname(protdir))
     return os.path.join(xmippdir, subfolder)
@@ -90,6 +88,6 @@ def includeProtocolsDir():
 def getProtocolTemplate(prot):
     protDir = getXmippPath('protocols')
     srcProtName = 'xmipp_protocol_%s.py' % prot.key
-    srcProtDir = getXmippPath('protocols')
+    #srcProtDir = getXmippPath('protocols')
     srcProtAbsPath = os.path.join(protDir, srcProtName)
     return srcProtAbsPath

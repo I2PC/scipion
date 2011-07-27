@@ -29,10 +29,10 @@
 import os
 import shutil
 import ConfigParser
-from config_protocols import *
-from protlib_sql import *
-from protlib_utils import *
-import sys
+from config_protocols import projectDefaults, sections
+from protlib_sql import XmippProjectDb, XmippProtocolDb
+from protlib_utils import XmippLog, loadModule
+
 
 class XmippProject():
     def __init__(self, projectDir=None):
@@ -100,7 +100,7 @@ class XmippProject():
         
 
     def writeConfig(self):
-       with open(self.cfgName, 'wb') as configfile:
+        with open(self.cfgName, 'wb') as configfile:
             self.config.write(configfile) 
             
     def clean(self):
@@ -124,6 +124,11 @@ class XmippProject():
             print "Deleting file '%s'" % f
             if os.path.exists(f):
                 os.remove(f)
+        workingDir = os.path.join(run['protocol_name'], run['run_name'])
+        from distutils.dir_util import remove_tree
+        if os.path.exists(workingDir):
+            print "Deleting working dir: '%s'" % workingDir
+            remove_tree(workingDir, True)
         self.projectDb.deleteRun(run)
             
     def getRunScriptFileName(self, protocol_name, runName):
@@ -143,6 +148,7 @@ class XmippProject():
         return run
     
     def newProtocol(self, protocol_name):
+        from protlib_filesystem import getXmippPath
         srcProtAbsPath = os.path.join(getXmippPath('protocols'),
                                        'protocol_%s_header.py' % protocol_name)
         return self.createRunFromScript(protocol_name, srcProtAbsPath)
@@ -157,7 +163,7 @@ class XmippProject():
         return run
     
     def newOrLoadProtocol(self, protocol_name, runName):
-        run = self.loadProtocol(project, protocol_name, runName)
+        run = self.loadProtocol(self.project, protocol_name, runName)
         if run is None:
             run = self.newProtocol(protocol_name)
         return run
@@ -264,13 +270,13 @@ class XmippProtocol(object):
         self.runSetup()
         
         self.Db.setIteration(1)
-        #insert basic operations for all scripta
+        #insert basic operations for all scripts
         self.Db.insertAction('deleteWorkingDirectory'
                                                         ,DoDeleteWorkingDir  = self.DoDeleteWorkingDir
                                                         ,WorkingDir          = self.WorkingDir)
 
         self.Db.insertAction('createDir', path = self.WorkingDir)
-        self.Db.setIteration(XmippProtocolDbStruct.doAlways)
+        self.Db.setIteration(XmippProjectDb.doAlways)
         self.Db.insertAction('makeScriptBackup',script     = self.scriptName
                                                       ,WorkingDir = self.WorkingDir)#backup always
         self.Db.setIteration(1)
@@ -286,45 +292,27 @@ class XmippProtocol(object):
     
 def command_line_options():
     '''process protocol command line'''
-    try:
-        import argparse
-        parser = argparse.ArgumentParser(description='test goes here')
-        parser.add_argument('-g', '--gui',
-                                  dest="gui",
-                                  default=False,
-                                  action="store_true",
-                                  help="use graphic interface to launch protocol "
-                                  )
-        parser.add_argument('-c', '--no_check',
-                                  dest="no_check",
-                                  default=False,
-                                  action="store_true",
-                                  help="do NOT check run checks before execute protocols"
-                                  )
-        (options, args) = parser.parse_args()
-        
-    except:
-        import optparse
-        parser = optparse.OptionParser()
-        parser.add_option('-g', '--gui',
-                                  dest="gui",
-                                  default=False,
-                                  action="store_true",
-                                  help="use graphic interface to launch protocol "
-                                  )
-        parser.add_option('-c', '--no_check',
-                                  dest="no_check",
-                                  default=False,
-                                  action="store_true",
-                                  help="do NOT check run checks before execute protocols"
-                                  )
-        (options, args) = parser.parse_args()
+    import optparse
+    parser = optparse.OptionParser()
+    parser.add_option('-g', '--gui',
+                              dest="gui",
+                              default=False,
+                              action="store_true",
+                              help="use graphic interface to launch protocol "
+                              )
+    parser.add_option('-c', '--no_check',
+                              dest="no_check",
+                              default=False,
+                              action="store_true",
+                              help="do NOT check run checks before execute protocols"
+                              )
+    options = parser.parse_args()[0]
     return options
 
 def getProtocolFromModule(script, project):
     mod = loadModule(script)
     from inspect import isclass
-    for k, v in mod.__dict__.iteritems():
+    for v in mod.__dict__.values():
         if isclass(v) and issubclass(v, XmippProtocol) and v != XmippProtocol:
             return v(script, project)
     return None
@@ -334,6 +322,7 @@ def protocolMain(ProtocolClass, script=None):
     no_check = False
     
     if script is None:
+        import sys
         script  = sys.argv[0]
         options = command_line_options()
         gui = options.gui
@@ -367,8 +356,10 @@ def protocolMain(ProtocolClass, script=None):
         
         if no_check: 
             if not run_id:
+                from protlib_utils import reportError
                 reportError("Protocol run '%s' has not been registered in project database" % mod.RunName)
         else:
+            from protlib_utils import confirmWarning
             if not confirmWarning(p.warnings()):
                 exit(0)
             
@@ -381,6 +372,7 @@ def protocolMain(ProtocolClass, script=None):
                       }
                 project.projectDb.insertRun(_run)
             if mod.SubmmitToQueue:
+                from protlib_utils import submitProtocol
                 submitProtocol(script,
                                jobId = p.uniquePrefix,
                                queueName = mod.QueueName,

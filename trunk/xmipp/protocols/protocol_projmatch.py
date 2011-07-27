@@ -185,7 +185,7 @@ class ProtProjMatch(XmippProtocol):
         self.Db.setPrintWrapperParameters(self.PrintWrapperParameters)
         self.Db.setPrintWrapperCommand(self.PrintWrapperCommand)
         self.Db.setVerify(self.Verify,self.ViewVerifyedFiles)
-        self.Db.setParentDefault(XmippProtocolDbStruct.lastStep)
+        self.Db.setParentDefault(XmippProjectDb.lastStep)
 
     def otherActionsToBePerformedBeforeLoop(self):
         print "in otherActionsToBePerformedBeforeLoop"
@@ -238,7 +238,7 @@ class ProtProjMatch(XmippProtocol):
     
         #Save all parameters in dict for future runs (this is done by database)
         #so far no parameter is being saved, but dummy=0
-        self.Db.setIteration(XmippProtocolDbStruct.doAlways)
+        self.Db.setIteration(XmippProjectDb.doAlways)
         _dataBase.insertAction('self.saveParameters', SystemFlavour = self.SystemFlavour)
         _dataBase.insertAction('self.loadParameters', None, None)
         self.Db.setIteration(1)
@@ -405,8 +405,8 @@ class ProtProjMatch(XmippProtocol):
             command = "shutil.copy('%s','%s');dummy" % (self.ReferenceFileNames[0], self.reconstructedFileNamesIters[iterN][refN])
             id = _dataBase.insertAction(command, self.reconstructedFileNamesIters[iterN][refN])
         command = "print 'ALL DONE';dummy"
-        self.Db.setIteration(XmippProtocolDbStruct.doAlways)
-        _dataBase.setIteration(XmippProtocolDbStruct.doAlways)
+        self.Db.setIteration(XmippProjectDb.doAlways)
+        _dataBase.setIteration(XmippProjectDb.doAlways)
         self.Db.setIteration(iterN)
 
         id = _dataBase.insertAction(command)

@@ -26,15 +26,17 @@
 # ***************************************************************************
  '''
  
-import sys
 import os
-import string
-from Tkinter import *
-import tkFont
+import Tkinter as tk
 import tkMessageBox
-from protlib_base import *
-from protlib_utils import *
+import tkFont
+from protlib_base import protocolMain, getProtocolFromModule
+from protlib_utils import loadModule
 from protlib_filesystem import getXmippPath
+from config_protocols import protDict
+from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
+from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
+from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor, ButtonActiveBgColor                         
 
 class ProtocolStyle():
     ''' Class to define some style settings like font, colors, etc '''
@@ -80,22 +82,22 @@ class ProtocolStyle():
     def createFonts(self):
         self.Font = tkFont.Font(family=self.FontName, size=self.FontSize, weight=tkFont.BOLD)
 
-class AutoScrollbar(Scrollbar):
+class AutoScrollbar(tk.Scrollbar):
     '''A scrollbar that hides itself if it's not needed.'''
     def set(self, lo, hi):
         if float(lo) <= 0.0 and float(hi) >= 1.0:
             self.tk.call("grid", "remove", self)
         else:
             self.grid()
-        Scrollbar.set(self, lo, hi)
+        tk.Scrollbar.set(self, lo, hi)
 
 def createSection(parent, text):
-    frame = Frame(parent, bd=2, relief=RAISED, bg=SectionBgColor)
+    frame = tk.Frame(parent, bd=2, relief=tk.RAISED, bg=SectionBgColor)
     frame.columnconfigure(0, weight=1)
-    label = Label(frame, text=text, fg=LabelTextColor, bg=SectionBgColor)
-    label.grid(row=0, column=0, sticky=W)        
-    content = Frame(frame, bg=LabelBgColor, bd=0)
-    content.grid(row=1, column=0, columnspan=5, sticky=NSEW, ipadx=5, ipady=5)  
+    label = tk.Label(frame, text=text, fg=LabelTextColor, bg=SectionBgColor)
+    label.grid(row=0, column=0, sticky=tk.W)        
+    content = tk.Frame(frame, bg=LabelBgColor, bd=0)
+    content.grid(row=1, column=0, columnspan=5, sticky=tk.NSEW, ipadx=5, ipady=5)  
     return (frame, label, content)     
 
 class BasicGUI(): 
@@ -107,18 +109,18 @@ class BasicGUI():
         It will set .frame and .canvas new properties
         """
         vscrollbar = AutoScrollbar(self.master)
-        vscrollbar.grid(row=0, column=1, sticky=N + S)
-        hscrollbar = AutoScrollbar(self.master, orient=HORIZONTAL)
-        hscrollbar.grid(row=1, column=0, sticky=E + W)
-        self.canvas = Canvas(self.master, background=self.style.BgColor,
+        vscrollbar.grid(row=0, column=1, sticky='ns')
+        hscrollbar = AutoScrollbar(self.master, orient=tk.HORIZONTAL)
+        hscrollbar.grid(row=1, column=0, sticky='ew')
+        self.canvas = tk.Canvas(self.master, background=self.style.BgColor,
                         yscrollcommand=vscrollbar.set,
                         xscrollcommand=hscrollbar.set)
-        self.canvas.grid(row=0, column=0, sticky=N + S + E + W)
+        self.canvas.grid(row=0, column=0, sticky='nsew')
         vscrollbar.config(command=self.canvas.yview)
         hscrollbar.config(command=self.canvas.xview)
         self.master.grid_rowconfigure(0, weight=1)
         self.master.grid_columnconfigure(0, weight=1)
-        self.frame = Frame(self.canvas, background=self.style.BgColor)
+        self.frame = tk.Frame(self.canvas, background=self.style.BgColor)
         self.frame.rowconfigure(0, weight=1)
         self.frame.columnconfigure(0, weight=1)
     
@@ -129,7 +131,7 @@ class BasicGUI():
         - create scrollable canvas
         """
         if not master:
-            master = Tk()
+            master = tk.Tk()
         self.master = master
         self.master.withdraw()
         self.style = ProtocolStyle('config_protocols')
@@ -149,12 +151,12 @@ class BasicGUI():
         
     def launchCanvas(self):
         # Launch the window
-        self.canvas.create_window(0, 0, anchor=NW, window=self.frame)
+        self.canvas.create_window(0, 0, anchor='nw', window=self.frame)
         self.updateScrollRegion()
     
     def launchGUI(self):
         self.launchCanvas() 
-        from protlib_gui_ext import centerWindows, getGeometry
+        from protlib_gui_ext import centerWindows
         centerWindows(self.master, self.resize() )
         self.master.deiconify()     
         self.master.mainloop() 
@@ -169,16 +171,16 @@ class BasicGUI():
             parent = self.frame
         return parent.grid_size()[1] + 1
     
-    def addLabel(self, text, row=None, column=0, columnspan=1, sticky=EW, bgColor="", fgColor="", parent=None):
+    def addLabel(self, text, row=None, column=0, columnspan=1, sticky='ew', bgColor='', fgColor='', parent=None):
         if not parent:
             parent = self.frame
-        if fgColor == "":
+        if fgColor == '':
             fgColor = self.style.LabelTextColor
-        if bgColor == "":
+        if bgColor == '':
             bgColor = self.style.LabelBgColor
         if not row:
             row = self.nextRow(parent)
-        label = Label(parent, text=text, bg=bgColor, fg=fgColor)
+        label = tk.Label(parent, text=text, bg=bgColor, fg=fgColor)
         label.grid(row=row, column=column, sticky=sticky, columnspan=columnspan)
         return label
     
@@ -186,17 +188,17 @@ class BasicGUI():
         if not parent:
             parent = self.frame
         controlVar.set(default)
-        check = Checkbutton(parent, text=text, variable=controlVar,
+        check = tk.Checkbutton(parent, text=text, variable=controlVar,
                       command=command,
                       selectcolor=self.style.BooleanSelectColor,
                       bg=self.style.BgColor)
         check.grid(row=row, column=column, sticky=sticky)
         return check
 
-    def addRadioButton(self, text, row, column, variable, value, command, sticky="", parent=None):
+    def addRadioButton(self, text, row, column, variable, value, command, sticky='', parent=None):
         if not parent:
             parent = self.frame
-        radio = Radiobutton(parent, text=text, variable=variable,
+        radio = tk.Radiobutton(parent, text=text, variable=variable,
                           value=value, indicatoron=0,
                           command=command,
                           bg=self.style.ButtonBgColor,
@@ -209,7 +211,7 @@ class BasicGUI():
     def addButton(self, text, row, column, command, sticky="", binding="", parent=None):
         if not parent:
             parent = self.frame
-        button = Button(parent, text=text,
+        button = tk.Button(parent, text=text,
                         command=command,
                         bg=self.style.ButtonBgColor,
                         activebackground=self.style.ButtonActiveBgColor)
@@ -221,8 +223,8 @@ class BasicGUI():
     def addLine(self, _color, column, columnspan, parent=None):
         if not parent:
             parent = self.frame
-        line = Frame(parent, height=2, bd=1, bg=_color, relief=RIDGE)
-        line.grid(row=self.nextRow(), column=column, columnspan=columnspan, sticky=EW)
+        line = tk.Frame(parent, height=2, bd=1, bg=_color, relief=tk.RIDGE)
+        line.grid(row=self.nextRow(), column=column, columnspan=columnspan, sticky='ew')
         return line
         
 sepLine = "#------------------------------------------------------------------------------------------\n" 
@@ -255,7 +257,7 @@ class ProtocolVariable():
     
     def getValue(self):
         if self.tktext:
-            return self.tktext.get(1.0, END)
+            return self.tktext.get(1.0, tk.END)
         return self.tkvar.get() 
 
     def setValue(self, value):
@@ -402,16 +404,16 @@ class ProtocolGUI(BasicGUI):
         if imageFilename:
             try:
                 imgPath = os.path.join(getXmippPath('resources'), imageFilename)
-                helpImage = PhotoImage(file=imgPath)
-            except TclError:
+                helpImage = tk.PhotoImage(file=imgPath)
+            except tk.TclError:
                 pass
         
         if helpImage:
-            btn = Button(parent, image=helpImage, bg=self.style.LabelBgColor, bd=0)
+            btn = tk.Button(parent, image=helpImage, bg=self.style.LabelBgColor, bd=0)
             btn.image = helpImage
             pad = 3
         else:
-            btn = Button(parent, text=text, underline=underline, font=f,
+            btn = tk.Button(parent, text=text, underline=underline, font=f,
                      bg=self.style.ButtonBgColor)
             pad = 5
         btn.config(command=cmd, activebackground=self.style.ButtonActiveBgColor)
@@ -422,8 +424,8 @@ class ProtocolGUI(BasicGUI):
         return btn
     
     def addRadioButton(self, w, var, text, value, row, col, parent):
-        rb = Radiobutton(parent, text=text, variable=var.tkvar, value=value, bg=self.style.LabelBgColor, command=self.checkVisibility)
-        rb.grid(row=row, column=col, sticky=W)
+        rb = tk.Radiobutton(parent, text=text, variable=var.tkvar, value=value, bg=self.style.LabelBgColor, command=self.checkVisibility)
+        rb.grid(row=row, column=col, sticky='w')
         w.widgetslist.append(rb)
         return rb
         
@@ -436,7 +438,7 @@ class ProtocolGUI(BasicGUI):
         if section.tkvar.get() == 'False':
             section.content.grid_remove()
         else:
-            section.content.grid(row=1, column=0, columnspan=5, sticky=NSEW)
+            section.content.grid(row=1, column=0, columnspan=5, sticky='nsew')
         self.updateScrollRegion()
             
     def createWidget(self, var):
@@ -450,7 +452,7 @@ class ProtocolGUI(BasicGUI):
         if 'section' in var.tags.keys():
             self.createSectionWidget(w, var)
             w.frame.grid(row=label_row, column=0, columnspan=5, 
-                         sticky=EW, pady=5, padx=(10,5))
+                         sticky='ew', pady=5, padx=(10,5))
             w.has_question = 'has_question' in var.tags.keys()
             self.lastSection = w
             section = w
@@ -479,10 +481,10 @@ class ProtocolGUI(BasicGUI):
         if 'text' in keys:
             #scrollbar = AutoScrollbar(frame)
             #scrollbar.grid(row=label_row, column=6, sticky=NS)
-            var.tktext = Text(frame, width=66, height=10, wrap=WORD, bg=EntryBgColor)#, yscrollcommand=scrollbar.set, bg=EntryBgColor)
+            var.tktext = tk.Text(frame, width=66, height=10, wrap=tk.WORD, bg=EntryBgColor)#, yscrollcommand=scrollbar.set, bg=EntryBgColor)
             #scrollbar.config(command=var.tktext.yview)
-            var.tktext.grid(row=label_row, column=0, columnspan=5, sticky=W+E, padx=(10, 0), pady=(10, 0))
-            var.tktext.insert(END, var.help)
+            var.tktext.grid(row=label_row, column=0, columnspan=5, sticky='ew', padx=(10, 0), pady=(10, 0))
+            var.tktext.insert(tk.END, var.help)
             w.widgetslist.append(var.tktext)
             #w.widgetslist.append(scrollbar)
             return w
@@ -490,7 +492,7 @@ class ProtocolGUI(BasicGUI):
         if var.value:
         #Escape string literals
             var_column = 1
-            var.tkvar = StringVar()   
+            var.tkvar = tk.StringVar()   
             
             if var.value.startswith('"') or var.value.startswith("'"):
                 var.value = var.value.replace('"', '')
@@ -507,7 +509,7 @@ class ProtocolGUI(BasicGUI):
                 if section.has_question and len(section.childwidgets) == 1:
                     section.tkvar = var.tkvar
                     #Label(section.frame, text=label_text, bg=SectionBgColor).grid(row=0, column=1, padx=(5, 0))
-                    chb = Checkbutton(section.frame, text=label_text, variable=var.tkvar, 
+                    chb = tk.Checkbutton(section.frame, text=label_text, variable=var.tkvar, 
                                 onvalue='True', offvalue='False',
                                 command=lambda:self.expandCollapseSection(section),
                                 bg=SectionBgColor, activebackground=ButtonActiveBgColor)
@@ -524,16 +526,16 @@ class ProtocolGUI(BasicGUI):
                     self.addRadioButton(w, var, o, o, row, var_column, frame)
                     row = self.getRow()
             elif 'text' in keys:
-                scrollbar = Scrollbar(frame)
-                scrollbar.grid(row=label_row+1, column=1, sticky=NS)
-                var.tktext = Text(frame, width=66, height=10, wrap=WORD, yscrollcommand=scrollbar.set, bg=EntryBgColor)
+                scrollbar = tk.Scrollbar(frame)
+                scrollbar.grid(row=label_row+1, column=1, sticky='ns')
+                var.tktext = tk.Text(frame, width=66, height=10, wrap=tk.WORD, yscrollcommand=scrollbar.set, bg=EntryBgColor)
                 scrollbar.config(command=var.tktext.yview)
-                var.tktext.grid(row=label_row+1, column=0, columnspan=5, sticky=W+E, padx=(10, 0))
+                var.tktext.grid(row=label_row+1, column=0, columnspan=5, sticky='ew', padx=(10, 0))
                 w.widgetslist.append(var.tktext)
-                var.tktext.insert(END, var.value)            
+                var.tktext.insert(tk.END, var.value)            
             else: #Add a text Entry
-                entry = Entry(frame, textvariable=var.tkvar, bg=EntryBgColor)
-                entry.grid(row=row, column=var_column, columnspan=2, sticky=W+E)
+                entry = tk.Entry(frame, textvariable=var.tkvar, bg=EntryBgColor)
+                entry.grid(row=row, column=var_column, columnspan=2, sticky='ew')
                 w.widgetslist.append(entry)
                 args = None
                 if 'file' in keys:
@@ -552,40 +554,38 @@ class ProtocolGUI(BasicGUI):
                     args = ['Select Blocks', lambda: self.selectFromList(var, ['block1', 'block2', 'block3']), 'select_blocks.gif', 'Select blocks']
                 
                 if args:
-                    btn = self.addButton(args[0], args[1], -1, label_row, var_column+2, NW, args[2], frame, args[3])
+                    btn = self.addButton(args[0], args[1], -1, label_row, var_column+2, 'nw', args[2], frame, args[3])
                     w.widgetslist.append(btn)
                 
                 if 'view' in keys:
-                    btn = self.addButton("View", lambda: self.viewFiles(), -1, label_row, var_column+3, NW, 'visualize.gif', frame, 'View file')
+                    btn = self.addButton("View", lambda: self.viewFiles(), -1, label_row, var_column+3, 'nw', 'visualize.gif', frame, 'View file')
             if var.help:
-                btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column+4, NW, 'help.gif', frame, 'Show info')
+                btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column+4, 'nw', 'help.gif', frame, 'Show info')
                 w.widgetslist.append(btn)
             if var.name == 'RunName':
                 label_text += ' %s_' % self.run['protocol_name']
                     
-            label = Label(frame, text=label_text, fg=label_color, bg=label_bgcolor)
-            label.grid(row=label_row, column=0, sticky=E, padx=(5, 10))
+            label = tk.Label(frame, text=label_text, fg=label_color, bg=label_bgcolor)
+            label.grid(row=label_row, column=0, sticky='e', padx=(5, 10))
             self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_reqwidth())
             w.widgetslist.append(label)
         
         return w
         
     def fillHeader(self):
-        import os, sys        
         self.master.title("Run script: %(script)s" % self.run)
         headertext  = "Xmipp Protocol: %s\n" % protDict.protocolDict[self.run['protocol_name']].title
         headertext += "Project: %s" % self.project.projectDir 
         self.fonts = {}
         self.fonts['header'] = tkFont.Font(family=FontName, size=FontSize+2, weight=tkFont.BOLD)
-        self.l1 = Label(self.frame, text=headertext, fg=SectionTextColor, bg=BgColor, 
+        self.l1 = tk.Label(self.frame, text=headertext, fg=SectionTextColor, bg=BgColor, 
                         font=self.fonts['header'], pady=5)
         self.l1.configure(wraplength=WrapLenght)
-        self.l1.grid(row=self.getRow(), column=0, columnspan=6, sticky=EW)
+        self.l1.grid(row=self.getRow(), column=0, columnspan=6, sticky='ew')
         self.citerow = self.getRow()        
             
     def browse(self, var, isFile):
         import tkFileDialog
-        import os
         if isFile:
             filename = tkFileDialog.askopenfilename(title="Choose file", parent=self.master)
         else:
@@ -604,8 +604,9 @@ class ProtocolGUI(BasicGUI):
     #-------------------------------------------------------------------
     def readProtocolScript(self):
         begin_of_header = False
-        end_of_header = False        
-        f = open(self.run['source'], 'r')
+        end_of_header = False    
+        script = self.run['source']    
+        f = open(script, 'r')
         for line in f:
             #print "LINE: ", line
             if not begin_of_header:
@@ -641,7 +642,6 @@ class ProtocolGUI(BasicGUI):
         
         self.variablesDict = {}
         self.widgetslist = []
-        lastSection = None
         index = 0;
         count = len(self.header_lines)
         while index < count:
@@ -687,15 +687,15 @@ class ProtocolGUI(BasicGUI):
                                 self.variablesDict[v.name] = v
                                 index += 1
                 if is_section or v.name or 'text' in v.tags.keys():
-                    w = self.createWidget(v)
+                    self.createWidget(v)
         #Update if citations found
         if len(self.citeslist) > 0:
             citetext = "If you publish results obtained with this protocol, please cite:\n"
             citetext += '\n'.join(self.citeslist)
             self.fonts['cites'] = tkFont.Font(family=FontName, size=FontSize-2, weight=tkFont.BOLD)
-            label = Label(self.frame, text=citetext, fg=CitationTextColor, bg=BgColor,
+            label = tk.Label(self.frame, text=citetext, fg=CitationTextColor, bg=BgColor,
                           font=self.fonts['cites'], wraplength=WrapLenght)
-            label.grid(row=self.citerow, column=0, columnspan=5, sticky=EW)
+            label.grid(row=self.citerow, column=0, columnspan=5, sticky='ew')
             
     #-------------------------------------------------------------------
     # GUI Events handling
@@ -754,7 +754,7 @@ class ProtocolGUI(BasicGUI):
     
     def confirmDeleteWorkingDir(self):
         if 'DoDeleteWorkingDir' in self.variablesDict and self.variablesDict['DoDeleteWorkingDir'].getValue() == 'True':
-             return tkMessageBox.askyesno("Confirm DELETE", "Working dir '%s' will be DELETED. Do you want to continue?" % self.variablesDict['WorkingDir'].getValue())
+            return tkMessageBox.askyesno("Confirm DELETE", "Working dir '%s' will be DELETED. Do you want to continue?" % self.variablesDict['WorkingDir'].getValue())
         return True
     
     def validateProtocol(self):
@@ -773,18 +773,16 @@ class ProtocolGUI(BasicGUI):
             protocolMain(prot.__class__, self.run['script'])    
     
     def viewFiles(self):
-        import tkMessageBox
         tkMessageBox.showinfo("Visualize", "This should open ImageJ plugin to display files", parent=self.master)
         
     def selectFromList(self, var, list):
         from protlib_gui_ext import ListboxDialog
-        d = ListboxDialog(self.frame, list, selectmode=SINGLE)
+        d = ListboxDialog(self.frame, list, selectmode=tk.SINGLE)
         if len(d.result) > 0:
             index = d.result[0]
             var.setValue(list[index])
         
     def showHelp(self, helpmsg):
-        import tkMessageBox
         tkMessageBox.showinfo("Help", helpmsg, parent=self.master)
     
     def getRow(self):
@@ -815,10 +813,10 @@ class ProtocolGUI(BasicGUI):
     def fillButtons(self):
         row = self.getRow()
         row += 3
-        self.addButton("Close", self.close, 0, row, 0, W)
-        self.btnExpert = self.addButton("Show Expert Options", self.toggleExpertMode, 12, row, 1, EW)
-        self.addButton("Save", self.save, 0, row, 3, W)
-        self.addButton("Save & Execute", self.saveExecute, 7, row, 4, W)
+        self.addButton("Close", self.close, 0, row, 0, 'w')
+        self.btnExpert = self.addButton("Show Expert Options", self.toggleExpertMode, 12, row, 1, 'ew')
+        self.addButton("Save", self.save, 0, row, 3, 'w')
+        self.addButton("Save & Execute", self.saveExecute, 7, row, 4, 'w')
         
     def addBindings(self):
         self.master.bind('<Alt_L><c>', self.close)

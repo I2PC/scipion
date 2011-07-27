@@ -44,7 +44,7 @@ DoDeleteWorkingDir = False
 # {file}{expert} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR.
 """
-InSelFile = ".project.sqlite"
+InSelFile = "all_images.sel"
 
 # {blocks} Input blocks
 InBlocks = ""
@@ -89,10 +89,10 @@ ImagesArePhaseFlipped = True
 HighResLimit = 20
 
 #------------------------------------------------------------------------------------------
-# {section}{expert}{has_question} ml(f)_align2d parameters
+# {section}{expert}{has_question} Advanced parameters
 #------------------------------------------------------------------------------------------
-# Perform ML2D refinement
-DoML2D = True
+# Show advanced parameters
+AdvancedParameters = True
 
 # Number of references (or classes) to be used:
 NumberOfReferences = 3
@@ -120,11 +120,13 @@ after the completely finished iteration. (Use zero to start from the beginning)
 """
 RestartIter = 0
 
-# Additional xmipp_ml_align2d parameters:
+# Additional parameters:
 """ For a complete description see the ml_align2d manual page at:
 http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/MLalign2D
+or use:
+ml(f)_align2d --help 
 """
-ExtraParamsMLalign2D = ""
+ExtraParams = ""
 
 #------------------------------------------------------------------------------------------
 # {section} Parallelization issues
