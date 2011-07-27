@@ -107,7 +107,7 @@ class XmippProjectDb(SqliteDb):
                              fileNameList TEXT,          -- list with files to modify
                              iter INTEGER DEFAULT 1,     -- for iterative scripts, iteration number
                                                          -- useful to restart at iteration n
-                             execute BOOL,               -- Should the script execute this wrapper or is there
+                             execute_mainloop BOOL,      -- Should the script execute this wrapper in main loop?
                                                          -- an external program that will run it
                              passDb BOOL,                -- Should the script pass the database handler
                              run_id         INTEGER REFERENCES        %(TableRuns)s(run_id)  ON DELETE CASCADE,
@@ -447,7 +447,7 @@ class XmippProtocolDb(SqliteDb):
     def insertAction(self, command,
                            verifyfiles=None,
                            parent_step_id=None, 
-                           execute=True,
+                           execute_mainloop = True,
                            passDb=False,
                            **_Parameters):
         if not parent_step_id:
@@ -455,8 +455,8 @@ class XmippProtocolDb(SqliteDb):
                 parent_step_id=self.lastid
             elif self.parentCase == XmippProjectDb.firstStep:
                 parent_step_id=XmippProjectDb.firstStep
-        if execute==None:
-            execute=True
+        if execute_mainloop == None:
+            execute_mainloop = True
         if passDb==None:
             passDb=False
         parameters = pickle.dumps(_Parameters, 0)#Dict
@@ -486,12 +486,13 @@ class XmippProtocolDb(SqliteDb):
                         FROM %(TableSteps)s 
                         WHERE (step_id >= %(step_id)d OR iter = %(iter)d)
                           AND (run_id = %(run_id)d)
-                          AND (execute=1)
+                          AND (execute_mainloop = 1)
                        ORDER BY step_id """ % self.sqlDict
         self.cur.execute(sqlCommand)
 
         commands = self.cur.fetchall()
         for row in commands:
+            self.lastStepId = row['step_id']
             self.runSingleAction(self.connection, self.cur,_log, _import, row)
         printLog(_log,'********************************************************')
         printLog(_log,' Protocol FINISHED')
@@ -561,11 +562,45 @@ class XmippProtocolDb(SqliteDb):
     # NO_MORE_GAPS, actionRow is None and there are not more gaps to work on
     # NO_AVAIL_GAP, actionRow is Nonew and not available gaps now, retry later
     # ACTION_GAP, actionRow is a valid action row to work on
-    def getActionGap(self):
-        pass
+    def getActionGap(self, cursor):
+        #TODO: update to begin transaction
+        if self.countActionGaps(cursor) > 0:
+            self.sqlDict['step_id'] = self.StartAtStepN
+            self.sqlDict['iter'] = XmippProjectDb.doAlways
+            sqlCommand = """ SELECT child.step_id, child.iter, child.passDb, child.command, child.parameters,child.fileNameList 
+                        FROM %(TableSteps)s parent, %(TableSteps)s child
+                        WHERE (parent.step_id = child.step_id) 
+                          AND (child.step_id < %(step_id)d)
+                          AND (child.init IS NULL)
+                          AND (parent.finish IS NOT NULL)
+                          AND (execute_mainloop =  0)
+                          AND run_id=%(run_id)d
+                        LIMIT 1""" % self.sqlDict
+            cursor.execute(sqlCommand)
+            result = cursor.fetchone()
+            if result is None:
+                result = (NO_AVAIL_GAP, None)
+            else:
+                result = (ACTION_GAP, result)
+        else:
+            result = (NO_MORE_GAPS, None)
+        return result
     
+    def countActionGaps(self, cursor):
+        self.sqlDict['step_id'] = self.lastStepId
+        sqlCommand = """ UPDATE dummy SET id = 1; -- Force lock the database 
+                        SELECT COUNT(*) 
+                        FROM %(TableSteps)s 
+                        WHERE (step_id < %(step_id)d 
+                          AND (finish IS NOT NULL)
+                          AND (execute_mainloop =  0)
+                          AND run_id=%(run_id)d""" % self.sqlDict
+        cursor.execute(sqlCommand)
+        return cursor.fetchone()[0]
+        
     # Function to fill gaps of action in database
     # this will be usefull for parallel processing, i.e., in threads or with MPI
+    # step_id is the step that will launch the process to fill previous gaps
     def runActionGaps(self, _log, _import, connection=None, cursor=None):
         if connection is None:
             connection = self.connection
@@ -574,13 +609,15 @@ class XmippProtocolDb(SqliteDb):
             
         import time
         while True:
-            state, actionRow = self.getActionGap()
-            if state == ACTION_GAP:
+            state, actionRow = self.getActionGap(connection, cursor)
+            if state == ACTION_GAP: #database will be unlocked after commit on init timestamp
                 self.runSingleAction(connection, cursor, _log, _import, actionRow)
-            elif state == NO_AVAIL_GAP:
-                time.sleep(1)
-            else: #NO_MORE_GAPS
-                break                
+            else:
+                connection.rollback() #unlock database
+                if state == NO_AVAIL_GAP:
+                    time.sleep(1)
+                else:
+                    break
             
             
  
