@@ -31,7 +31,7 @@ import shutil
 import ConfigParser
 from config_protocols import projectDefaults, sections
 from protlib_sql import XmippProjectDb, XmippProtocolDb
-from protlib_utils import XmippLog, loadModule
+from protlib_utils import XmippLog, loadModule, reportError
 
 
 class XmippProject():
@@ -212,6 +212,9 @@ class XmippProtocol(object):
         #check if there is a valid project, otherwise abort
         if not self.project.exists():
             errors.append("Not valid project available")
+        # Check if there is runname
+        if self.RunName == "":
+            errors.append("No run name given")
         #specific protocols validations
         errors += self.validate()
         
@@ -228,6 +231,10 @@ class XmippProtocol(object):
     def summary(self):
         '''Produces a summary with the most relevant information of the protocol run'''
         return []
+    
+    def visualize(self):
+        '''Visualizes the results of this run'''
+        pass
     
     def warnings(self):
         '''Output some warnings that can be errors and require user confirmation to proceed'''
@@ -315,7 +322,7 @@ def getProtocolFromModule(script, project):
     for v in mod.__dict__.values():
         if isclass(v) and issubclass(v, XmippProtocol) and v != XmippProtocol:
             return v(script, project)
-    return None
+    reportError("Can load protocol from " + script)
             
 def protocolMain(ProtocolClass, script=None):
     gui = False
@@ -371,20 +378,23 @@ def protocolMain(ProtocolClass, script=None):
                       ,'script'  : script 
                       }
                 project.projectDb.insertRun(_run)
-            if mod.SubmmitToQueue:
+            if 'SubmitToQueue' in dir(mod) and mod.SubmitToQueue:
                 from protlib_utils import submitProtocol
+                NumberOfThreads = 1
+                if 'NumberOfThreads' in dir(mod):
+                    NumberOfThreads=mod.NumberOfThreads
                 submitProtocol(script,
                                jobId = p.uniquePrefix,
                                queueName = mod.QueueName,
                                nodes = mod.NumberOfMpiProcesses,
-                               threads = mod.NumberOfThreads,
+                               threads = NumberOfThreads,
                                hours = mod.QueueHours,
                                command = 'python %s --no_check' % script
                                )
                 exit(0)
         
         
-        if 'ContinueAtIteration' in mod.__dict__.keys():
+        if 'ContinueAtIteration' in dir(mod):
             ContinueAtIteration = mod.ContinueAtIteration
             IsIter = mod.IsIter
         else:
