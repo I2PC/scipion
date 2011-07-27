@@ -2,7 +2,7 @@ from pysqlite2 import dbapi2 as sqlite
 import pickle
 import os, sys
 from config_protocols import projectDefaults
-from protlib_utils import reportError, getScriptPrefix, printLog, printLogError, bcolors, makeScriptBackup
+from protlib_utils import reportError, getScriptPrefix, printLog, printLogError, bcolors, makeScriptBackup, runJob
 from protlib_filesystem import deleteWorkingDirectory, createDir
 
 runColumns = ['run_id',
@@ -13,6 +13,10 @@ runColumns = ['run_id',
               'protocol_name',
               'comment',
               'group_name']
+
+NO_MORE_GAPS = 0 #no more gaps to work on
+NO_AVAIL_GAP = 1 #no available gaps now, retry later
+ACTION_GAP   = 2 #action gap to work on
 
 def existsDB(dbName):
     """check if database has been created by checking if the table tableruns exist"""
@@ -551,15 +555,44 @@ class XmippProtocolDb(SqliteDb):
         if self.PrintWrapperCommand:
             print "Wrapper step: %(step_id)d finished\n" % self.sqlDict
 
+    # Function to get the first avalaible gap to run 
+    # it will return pair (state, actionRow)
+    # if state is:
+    # NO_MORE_GAPS, actionRow is None and there are not more gaps to work on
+    # NO_AVAIL_GAP, actionRow is Nonew and not available gaps now, retry later
+    # ACTION_GAP, actionRow is a valid action row to work on
+    def getActionGap(self):
+        pass
+    
+    # Function to fill gaps of action in database
+    # this will be usefull for parallel processing, i.e., in threads or with MPI
+    def runActionGaps(self, _log, _import, connection=None, cursor=None):
+        if connection is None:
+            connection = self.connection
+        if cursor is None:
+            cursor = self.cur
+            
+        import time
+        while True:
+            state, actionRow = self.getActionGap()
+            if state == ACTION_GAP:
+                self.runSingleAction(connection, cursor, _log, _import, actionRow)
+            elif state == NO_AVAIL_GAP:
+                time.sleep(1)
+            else: #NO_MORE_GAPS
+                break                
+            
+            
+ 
 # RunJobThread
-import threading
-class RunDbActionInThread(threading.Thread):
+from threading import Thread
+class RunDbActionInThread(Thread):
     def __init__(self,_log,_Db,_import,_step_id):
         self._log=_log
         self._Db=_Db
         self._import=_import
         self._step_id=_step_id
-        threading.Thread.__init__ ( self )
+        Thread.__init__ ( self )
     
     def run(self):
         connection = sqlite.Connection(self._Db.dbName)
