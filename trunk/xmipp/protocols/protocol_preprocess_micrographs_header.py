@@ -8,9 +8,7 @@
 # the requested operations below.
 # For each micrograph a subdirectory will be created
 #
-# Author: Sjors Scheres, March 2007
-#         Roberto Marabini (mpi extension)
-#         Carlos Oscar Sorzano, November 2010
+# Author: Carlos Oscar Sorzano, July 2011
 #
 
 # {begin_of_header}
@@ -54,7 +52,7 @@ ExtMicrographs = '*.mrc'
 #------------------------------------------------------------------------------------------------
 # {section}{has_question} Preprocess
 #------------------------------------------------------------------------------------------------
-# Do proceprocess
+# Do preprocess
 DoPreprocess = True
 
 # Crop borders
@@ -87,17 +85,18 @@ SphericalAberration = 2.26
 # Magnification rate
 Magnification = 70754
 
-# Scanned pixel size (in um)
+# {list}(From image, From scanner) Sampling rate mode
+SamplingRateMode="From image"
+
+# {condition}(SamplingRateMode=From image) Sampling rate (A/pixel)
+SamplingRate = 1
+
+# {condition}(SamplingRateMode=From scanner) Scanned pixel size (in um/pixel)
 ScannedPixelSize = 15
 
 # Amplitude Contrast
 """ It should be a negative number"""
 AmplitudeContrast = -0.1
-
-# {expert} Only perform power spectral density estimation?
-""" Skip the CTF estimation part, and only estimate the PSD
-"""
-OnlyEstimatePSD = False
 
 # {expert} Lowest resolution for CTF estimation
 """ Give a value in digital frequency (i.e. between 0.0 and 0.5)
@@ -123,44 +122,31 @@ MinFocus = 5000
 """
 MaxFocus = 100000
 
-# {expert} Window size for Xmipp
-WinSizeXmipp = 256
-
-# {expert} Window size for CTFFIND
-WinSizeCTFFind = 256
+# {expert} Window size
+WinSize = 256
 
 # {expert} Defocus step for CTFFIND (in Ang.)
 """ Step size for defocus search (in Angstrom)
 """
-StepFocus = 500
-
+StepFocus = 1000
 
 #------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------
-# Number of (shared-memory) threads?
-""" This option provides shared-memory parallelization on multi-core machines.
-It does not require any additional software, other than xmipp
-"""
-NumberOfThreads = 1
-
 # Number of MPI processes to use
 NumberOfMpiProcesses = 3
 
-#------------------------------------------------------------------------------------------
-# {section}{has_question} Queue
-#------------------------------------------------------------------------------------------
-# Submmit to queue
-"""Submmit to queue
+# Submit to queue
+"""Submit to queue
 """
-SubmmitToQueue = True
+SubmitToQueue = True
 
-# Queue name
+# {condition}(SubmitToQueue=True) Queue name
 """Name of the queue to submit the job
 """
 QueueName = "default"
 
-# Queue hours
+# {condition}(SubmitToQueue=True) Queue hours
 """This establish a maximum number of hours the job will
 be running, after that time it will be killed by the
 queue system
