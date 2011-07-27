@@ -36,12 +36,13 @@ from protlib_utils import printLog, printLogError
 # provinding filesystem utitities
 
 def createDir(_log, path):
-    """ Create directory no add workingdir"""
+    """ Create directory, does not add workingdir"""
     from distutils.dir_util import mkpath
     from distutils.errors import DistutilsFileError
     _log.info("Creating directory " + path)
     try:
-        mkpath(path, 0777, True)
+        if not os.path.exists(path):
+            mkpath(path, 0777, True)
     except DistutilsFileError, e:
         printLogError(_log, "could not create '%s': %s" % (os.path.abspath(path), e))
 
