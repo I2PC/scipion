@@ -13,7 +13,7 @@ from config_protocols import protDict
 class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.ml2d.key, scriptname, project)
-        self.Import = 'from protocol_ml2d import *; from protlib_utils import runJob;'
+        #self.Import = 'from protocol_ml2d import *'
 
     def validate(self):
         return []
