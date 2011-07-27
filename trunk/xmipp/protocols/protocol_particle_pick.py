@@ -6,10 +6,14 @@
 # the xmipp_mark program 
 # A graphical interface exists to identify micrographs that have been finished
 #
-# Author: Sjors Scheres, March 2007
 # Author: Carlos Oscar Sorzano, June, 2011
 #
 #------------------------------------------------------------------------------------------------
+# This program is interactive and cannot use MPI or queues
+NumberOfMpiProcesses = 1
+SubmmitToQueue=False
+QueueName="default"
+QueueHours=72
 
 # Do not repeat already taken steps
 IsIter=False
@@ -22,8 +26,6 @@ PrintWrapperParameters=True # Print wrapper parameters
 ViewVerifyedFiles=True      # Show file verification 
 
 import os,shutil,sys,time
-scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
-sys.path.append(scriptdir) # add default search path
 import xmipp
 from protlib_gui import *
 from protlib_base import *
@@ -168,11 +170,15 @@ class ProtParticlePickingGUI(BasicGUI):
         self.addLabel("Project directory: "+self.ProjectDir,0,0,titleSpan,fgColor="medium blue",sticky=W)
         self.addLabel("Preprocessing directory: "+self.PreprocessingRun,1,0,titleSpan,fgColor="medium blue",sticky=W)
  
+        sectionFrame, sectionLabel, sectionContent = createSection(self.frame, 'Micrographs')
+        
         # Add all micrographs
         containsEnable=self.mD.containsLabel(xmipp.MDL_ENABLED)
         for micrograph in self.micrographDict.keys():
-            self.GuiAddMarkEntry(micrograph)
-
+            self.GuiAddMarkEntry(sectionFrame, micrograph)
+        
+        sectionFrame.grid(row=2, column=0)
+        
         # Add blue line surrounded by two empty rows 
         self.addLabel("")
         self.addLine("medium blue",0,6)
@@ -199,27 +205,28 @@ class ProtParticlePickingGUI(BasicGUI):
         # Update counts
         self.GuiUpdateCount()
         
-    def GuiAddMarkEntry(self,micrograph):
-        row=self.frame.grid_size()[1]
+    def GuiAddMarkEntry(self, parent, micrograph):
+        return
+        row=parent.grid_size()[1]
         self.micrographDict[micrograph].append(row)
 
         # Add Micrograph name
         label=micrograph
         if self.IsPairList:
             label+=' : '+self.micrographDict[micrograph][2]
-        self.addLabel(label, row, 0, sticky=E)
+        self.addLabel(label, row, 0, sticky=E, parent=parent)
         
         # If automatic particle picking, add checkbox
         if AutomaticPicking:
             self.selectedForAutomaticPickingAuto.append(IntVar())
             self.selectedForAutomaticPickingMicrograph.append(micrograph)
-            self.addCheckButton("Auto", row, 1, self.selectedForAutomaticPickingAuto[-1], 0, self.AutoSelectionChanged, "")
+            self.addCheckButton("Auto", row, 1, self.selectedForAutomaticPickingAuto[-1], 0, self.AutoSelectionChanged, "", parent)
             nextColumn=2
         else:
             nextColumn=1
         
         # Add Mark button
-        radio=self.addRadioButton("Mark", row, nextColumn, self.whichmark, micrograph, self.LaunchMarkFromGUI, N)
+        radio=self.addRadioButton("Mark", row, nextColumn, self.whichmark, micrograph, self.LaunchMarkFromGUI, N, parent)
         if AutomaticPicking:
             self.selectedForAutomaticPickingMark.append(radio)
 
