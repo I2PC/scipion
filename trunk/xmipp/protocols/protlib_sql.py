@@ -493,8 +493,8 @@ class XmippProtocolDb(SqliteDb):
         commands = self.cur.fetchall()
         for row in commands:
             self.runSingleAction(self.connection, self.cur,_log, _import, row)
-        printLog('********************************************************')
-        printLog(' Protocol FINISHED')
+        printLog(_log,'********************************************************')
+        printLog(_log,' Protocol FINISHED')
 
     def runSingleAction(self, _connection, _cursor, _log, _import, actionRow):
         import pprint
