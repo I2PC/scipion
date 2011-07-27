@@ -25,4 +25,8 @@ public class TableFileItem {
     public String getOriginalValue() {
         return originalValue;
     }
+
+    public void setOriginalValue(String originalValue) {
+        this.originalValue = originalValue;
+    }
 }

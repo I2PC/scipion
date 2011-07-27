@@ -23,12 +23,12 @@ public class LABELS {
     public final static String TITLE_SEND2WINDOW = "Send image to window";
 
     // @TODO Remove
-    public final static String TITLE_TABLE_WINDOW(int items) {
+    public static String TITLE_TABLE_WINDOW(int items) {
         return items + " images";
     }
 
     // @TODO Remove
-    public final static String TITLE_TABLE_WINDOW(XmippImageItem item) {
+    public static String TITLE_TABLE_WINDOW(XmippImageItem item) {
         return item.getFileName()
                 + (item.isVolume() ? " / " + item.getDepth() + " slices" : "")
                 + (item.isStack() ? " / " + item.getNImages() + " images" : "");
@@ -58,6 +58,8 @@ public class LABELS {
     public final static String CB_PLOT_ENVELOPE = "Envelope";
     public final static String CB_PLOT_PSD = "PSD";
     public final static String CB_PLOT_CTF = "CTF";
+    public final static String SAMPLING_DIRECT = "A";
+    public final static String SAMPLING_INVERSE = "1/A";
     /**
      * Operations
      */
@@ -190,7 +192,8 @@ public class LABELS {
     public final static String LABEL_PSD = "PSD";
     public final static String LABEL_PROFILES = "Profiles";
     public final static String LABEL_RADIAL_AVERAGE = "Radial Average";
-    public final static String LABEL_RADIAL_XLEGEND = "freq. (1/A)";
+    public final static String LABEL_RADIAL_FREQ_DIRECT = "freq. (A)";
+    public final static String LABEL_RADIAL_FREQ_INVERSE = "freq. (1/A)";
     public final static String LABEL_RADIAL_AVG = "Radial Average";
     public final static String LABEL_TAB_PROFILE = "Profiles";
     public final static String LABEL_TAB_RADIAL_AVERAGE = "Radial Average";
@@ -204,13 +207,14 @@ public class LABELS {
     public final static String LABEL_PROCESS = "Process: ";
     public final static String LABEL_RESLICE = "Reslice: ";
     public final static String LABEL_OPEN_AS = "Open as: ";
-    public final static String UNKNOWN_LABEL = "Unknown label";
+    public final static String LABEL_UNKNOWN = "Unknown label";
+    public final static String LABEL_SAMPLING = "Sampling: ";
 
-    public final static String LABEL_FILES_SHOWING(int elements, int total) {
+    public static String LABEL_FILES_SHOWING(int elements, int total) {
         return total != elements ? " Showing " + elements + " / " + total + " elements." : "";
     }
 
-    public final static String MESSAGE_MEMORY_ERROR(long fileSize, long maxMemory) {
+    public static String MESSAGE_MEMORY_ERROR(long fileSize, long maxMemory) {
         return "File size (" + FileBrowser.getFileSizeString(fileSize) + ") is bigger than available memory (" + FileBrowser.getFileSizeString(maxMemory) + ")";
     }
     public final static String MESSAGE_NO_ITEMS_SELECTED = "No items selected (or not enabled)";

@@ -1,19 +1,23 @@
 package browser.table.micrographs.ctf.profile;
 
+import browser.table.micrographs.ctf.profile.utils.Plot;
 import browser.LABELS;
 import browser.imageitems.ImageConverter;
+import browser.windows.ImagesWindowFactory;
 import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.gui.Line;
-import ij.gui.Plot;
 import ij.gui.ProfilePlot;
 import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Checkbox;
+import java.awt.CheckboxGroup;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Label;
 import java.awt.Panel;
 import java.awt.Point;
 import java.awt.Scrollbar;
@@ -21,13 +25,19 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.LinkedList;
 import javax.swing.BoxLayout;
+import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.UIManager;
 import xmipp.CTFDescription;
 import xmipp.ImageDouble;
+import xmipp.MDLabel;
+import xmipp.MetaData;
 
 /*
  * To change this template, choose Tools | Templates
@@ -45,6 +55,7 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
     private final static Color COLOR_ENVELOPE = Color.GREEN;
     private final static Color COLOR_PSD = Color.BLUE;
     private final static Color COLOR_CTF = Color.MAGENTA;
+    private final static Color COLOR_DISABLED = UIManager.getColor("ComboBox.disabledForeground");
     private ImagePlus psdimage;
     private Scrollbar scrollbar;
     private CTFDescription ctfmodel;
@@ -53,13 +64,33 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
     private int displayLength, samples;
     private double angle;
     private Checkbox cbBgNoise, cbEnvelope, cbPSD, cbCTF;
+    private CheckboxGroup cbgSampling = new CheckboxGroup();
+    private Checkbox cbTdirect, cbTinverse;
     private double xValues[];
     private double plotProfile[], plotBgNoise[], plotEnvelope[], plotPSD[], plotCTF[];
     private double plotAVGprofile[], plotAVGbgnoise[], plotAVGenvelope[], plotAVGpsd[], plotAVGctf[];
 //    private double minPlots, minAVGPlots, maxPlots, maxAVGPlots;
-    private double CTFUpperLimit, CTFLowerLimit;
+//    private double CTFUpperLimit, CTFLowerLimit;
     private Plot plot, plotAVG;
+    private double Tm;
+    private boolean invert = true;
 
+//    public static void main(String args[]) {
+//        String file = "/data2/coss/Preprocessing/DnaB-DnaC_50000X3/xmipp_ctf_ctfmodel_halfplane.xmp";
+//        String CTFFilename = "/data2/coss/Preprocessing/DnaB-DnaC_50000X3/xmipp_ctf.ctfparam";
+//        String PSDFilename = "/data2/coss/Preprocessing/DnaB-DnaC_50000X3/xmipp_ctf.psd";
+//
+//        try {
+//            new ImageJ();
+//            ImagePlus imp = ImageConverter.convertToImagej(
+//                    new ImageDouble(file), file);
+//
+//            ImagesWindowFactory.openCTFView(imp, CTFFilename, PSDFilename);
+//            //ImagesWindowFactory.openFileAsText(CTFFilename, null);
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
+//    }
     public CTFViewImageWindow(ImagePlus imp, String CTFFilename, String PSDFilename) {
         super(imp);
 
@@ -68,6 +99,8 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
         try {
             ImageCanvas imc = imp.getCanvas();
             imc.setEnabled(false);  // Clicks won't remove selection ;)
+
+            Tm = getSamplingRate(CTFFilename);
 
             ctfmodel = new CTFDescription(CTFFilename);
             ImageDouble image = new ImageDouble(PSDFilename);
@@ -103,12 +136,13 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
 
                     scrollbar.setValue(newValue);
                     refreshPlots();
+
+                    // Updates tooltips
+                    Point p = e.getPoint();
+                    jlPlot.setToolTipText(plot.getCoordinates(p.x, p.y));
+                    jlPlotAVG.setToolTipText(plotAVG.getCoordinates(p.x, p.y));
                 }
             });
-
-            // JLabels for plots.
-            jlPlot = new JLabelPlot();
-            jlPlotAVG = new JLabelPlot();
 
             // Buttons to extract graphs.
             Button bExtractGraph = new Button(LABELS.BUTTON_EXTRACT_PROFILE);
@@ -127,9 +161,22 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
                 }
             });
 
+            // JLabels for plots.
+            jlPlot = new JLabelPlot();
+            jlPlotAVG = new JLabelPlot();
+
             JTabbedPane jtpPlots = new JTabbedPane();
-            jtpPlots.add(LABELS.LABEL_TAB_PROFILE, jlPlot);
-            jtpPlots.add(LABELS.LABEL_TAB_RADIAL_AVERAGE, jlPlotAVG);
+            JPanel panelPlot = new JPanel();
+            JPanel panelPlotAVG = new JPanel();
+
+            panelPlot.add(jlPlot);
+            panelPlotAVG.add(jlPlotAVG);
+
+            panelPlot.setBackground(Color.WHITE);
+            panelPlotAVG.setBackground(Color.WHITE);
+
+            jtpPlots.add(LABELS.LABEL_TAB_PROFILE, panelPlot);
+            jtpPlots.add(LABELS.LABEL_TAB_RADIAL_AVERAGE, panelPlotAVG);
 
             Panel pCenter = new Panel(new BorderLayout());
             pCenter.add(jtpPlots);
@@ -140,15 +187,15 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
             cbPSD = new Checkbox(LABELS.CB_PLOT_PSD, true);
             cbCTF = new Checkbox(LABELS.CB_PLOT_CTF, true);
 
-            cbBgNoise.setForeground(COLOR_BACKGROUND_NOISE);
-            cbEnvelope.setForeground(COLOR_ENVELOPE);
-            cbPSD.setForeground(COLOR_PSD);
-            cbCTF.setForeground(COLOR_CTF);
+            cbTdirect = new Checkbox(LABELS.SAMPLING_DIRECT, true, cbgSampling);
+            cbTinverse = new Checkbox(LABELS.SAMPLING_INVERSE, true, cbgSampling);
 
             cbBgNoise.addItemListener(this);
             cbEnvelope.addItemListener(this);
             cbPSD.addItemListener(this);
             cbCTF.addItemListener(this);
+            cbTdirect.addItemListener(this);
+            cbTinverse.addItemListener(this);
 
             Panel panelCBoxes = new Panel();
             panelCBoxes.setLayout(new BoxLayout(panelCBoxes, BoxLayout.PAGE_AXIS));
@@ -156,6 +203,13 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
             panelCBoxes.add(cbEnvelope);
             panelCBoxes.add(cbPSD);
             panelCBoxes.add(cbCTF);
+
+            Panel panelSampling = new Panel();
+            panelSampling.add(new Label(LABELS.LABEL_SAMPLING));
+            panelSampling.add(cbTdirect);
+            panelSampling.add(cbTinverse);
+
+            panelCBoxes.add(panelSampling);
             panelCBoxes.add(bExtractGraph, BorderLayout.SOUTH);
             panelCBoxes.add(bExtractAvgGraph, BorderLayout.SOUTH);
 
@@ -172,7 +226,7 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
             displayLength = (int) (imp.getWidth() / 2);
             samples = (int) (psdimage.getWidth() / 2);
 
-            xValues = getXValues(samples);
+            xValues = getXValues(samples, Tm);
 
             setCBEnableStatus();
             refreshPlots();
@@ -194,6 +248,10 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
     public void itemStateChanged(ItemEvent ie) {
         if (ie.getSource() == cbCTF) {
             setCBEnableStatus();
+        } else if (ie.getSource() == cbTdirect) {
+            invert = false;
+        } else if (ie.getSource() == cbTinverse) {
+            invert = true;
         }
 
         updatePlots();
@@ -204,6 +262,11 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
         cbBgNoise.setEnabled(!cbCTF.getState());
         cbEnvelope.setEnabled(!cbCTF.getState());
         cbPSD.setEnabled(!cbCTF.getState());
+
+        cbBgNoise.setForeground(cbBgNoise.isEnabled() ? COLOR_BACKGROUND_NOISE : COLOR_DISABLED);
+        cbEnvelope.setForeground(cbEnvelope.isEnabled() ? COLOR_ENVELOPE : COLOR_DISABLED);
+        cbPSD.setForeground(cbPSD.isEnabled() ? COLOR_PSD : COLOR_DISABLED);
+        cbCTF.setForeground(cbCTF.isEnabled() ? COLOR_CTF : COLOR_DISABLED);
     }
 
     /*
@@ -214,39 +277,77 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
         updatePlots();
     }
 
+    private boolean showBGNoise() {
+        return cbBgNoise.isEnabled() && cbBgNoise.getState();
+    }
+
+    private boolean showEnvelope() {
+        return cbEnvelope.isEnabled() && cbEnvelope.getState();
+    }
+
+    private boolean showPSD() {
+        return cbPSD.isEnabled() && cbPSD.getState();
+    }
+
+    private boolean showCTF() {
+        return cbCTF.isEnabled() && cbCTF.getState();
+    }
+
     private void updatePlots() {
+        boolean show_ctf = showCTF();
+
         // Store it for "extract graph" operation
-        plot = buildPlot(LABELS.LABEL_PROFILES, xValues, CTFLowerLimit, CTFUpperLimit,
-                plotProfile,
-                plotBgNoise,
-                plotEnvelope,
-                plotPSD,
-                plotCTF,
-                cbBgNoise.isEnabled() && cbBgNoise.getState(),
-                cbEnvelope.isEnabled() && cbEnvelope.getState(),
-                cbPSD.isEnabled() && cbPSD.getState(),
-                cbCTF.isEnabled() && cbCTF.getState());
+        plot = buildPlot(LABELS.LABEL_PROFILES,
+                invert ? LABELS.LABEL_RADIAL_FREQ_INVERSE : LABELS.LABEL_RADIAL_FREQ_DIRECT,
+                show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD,
+                xValues,
+                plotProfile, plotBgNoise, plotEnvelope, plotPSD, plotCTF,
+                showBGNoise(), showEnvelope(), showPSD(),
+                show_ctf, invert);
 
         jlPlot.setImage(plot.getImagePlus());
+        jlPlot.addMouseMotionListener(new MouseMotionListener() {
+
+            public void mouseDragged(MouseEvent me) {
+            }
+
+            public void mouseMoved(MouseEvent me) {
+                Point p = me.getPoint();
+                jlPlot.setToolTipText(plot.getCoordinates(p.x, p.y));
+            }
+        });
     }
 
     private void updateRadialAverage() {
         calculateRadialProfile();
 
-        plotAVG = buildPlot(LABELS.LABEL_RADIAL_AVERAGE, xValues, CTFLowerLimit, CTFUpperLimit,
-                plotAVGprofile,
-                plotAVGbgnoise,
-                plotAVGenvelope,
-                plotAVGpsd,
-                plotAVGctf,
-                cbBgNoise.isEnabled() && cbBgNoise.getState(),
-                cbEnvelope.isEnabled() && cbEnvelope.getState(),
-                cbPSD.isEnabled() && cbPSD.getState(),
-                cbCTF.isEnabled() && cbCTF.getState());
+        boolean show_ctf = showCTF();
+        plotAVG = buildPlot(LABELS.LABEL_RADIAL_AVERAGE,
+                invert ? LABELS.LABEL_RADIAL_FREQ_INVERSE : LABELS.LABEL_RADIAL_FREQ_DIRECT,
+                show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD,
+                xValues,
+                plotAVGprofile, plotAVGbgnoise, plotAVGenvelope, plotAVGpsd, plotAVGctf,
+                showBGNoise(), showEnvelope(), showPSD(),
+                show_ctf, invert);
 
         jlPlotAVG.setImage(plotAVG.getImagePlus());
+        jlPlotAVG.addMouseMotionListener(new MouseMotionListener() {
+
+            public void mouseDragged(MouseEvent me) {
+            }
+
+            public void mouseMoved(MouseEvent me) {
+                Point p = me.getPoint();
+                jlPlotAVG.setToolTipText(plotAVG.getCoordinates(p.x, p.y));
+            }
+        });
     }
 
+//    private void setToolTipValues(Point p) {
+//        System.out.println(System.currentTimeMillis() + " >> " + p + " > " + plot.getCoordinates(p.x, p.y));
+//        jlPlot.setToolTipText(plot.getCoordinates(p.x, p.y));
+//        jlPlotAVG.setToolTipText(plotAVG.getCoordinates(p.x, p.y));
+//    }
     private void calculatePlots() {
         double value = scrollbar.getValue();
         angle = Math.toRadians(-value);
@@ -279,8 +380,21 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
         plotCTF = ctfmodel.profiles[CTFDescription.CTF];
 
 //        storePlotsMinAndMax(plotProfile, plotBgNoise, plotEnvelope, plotPSD, plotCTF);
-        CTFLowerLimit = min(plotCTF);
-        CTFUpperLimit = max(plotCTF);
+//        CTFLowerLimit = min(plotCTF);
+//        CTFUpperLimit = max(plotCTF);
+    }
+
+    private double getSamplingRate(String CTFFilename) {
+        double samplingRate = 1.0;
+
+        try {
+            MetaData md = new MetaData(CTFFilename);
+            samplingRate = md.getValueDouble(MDLabel.MDL_CTF_SAMPLING_RATE, md.firstObject());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return samplingRate;
     }
 
     private void calculateRadialProfile() {
@@ -316,33 +430,16 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
         plotAVGctf = ctfmodel.avgprofiles[CTFDescription.CTF];
 
 //        storePlotsMinAndMax(plotAVGprofile, plotAVGbgnoise, plotAVGenvelope, plotAVGpsd, plotAVGctf);
-        CTFLowerLimit = min(plotAVGctf);
-        CTFUpperLimit = max(plotAVGctf);
+//        CTFLowerLimit = min(plotAVGctf);
+//        CTFUpperLimit = max(plotAVGctf);
     }
-    /*
-    private double[] storePlotsMinAndMax(double profile[], double bg[], double envelope[], double psd[], double ctf[]) {
-    double profileMin = min(profile);
-    double bgMin = min(bg);
-    double envelopeMin = min(envelope);
-    double psdMin = min(psd);
-    double ctfMin = min(ctf);
 
-    double min = min(new double[]{profileMin, bgMin, envelopeMin, psdMin, ctfMin});
-
-    double profileMax = max(profile);
-    double bgMax = max(bg);
-    double envelopeMax = max(envelope);
-    double psdMax = max(psd);
-    double ctfMax = max(ctf);
-
-    double max = min(new double[]{profileMax, bgMax, envelopeMax, psdMax, ctfMax});
-
-    return new double[]{min, max};
-    }*/
-
-    private static Plot buildPlot(String label, double xValues[], double lowerLimit, double upperLimit,
-            double profile[], double bgNoise[], double envelope[], double psd[], double ctf[],
-            boolean show_bgnoise, boolean show_envelope, boolean show_psd, boolean show_ctf) {
+    private static Plot buildPlot(String label, String xLabel, String yLabel,
+            double xValues[],
+            //double lowerLimit, double upperLimit,
+            double profile[], double bgNoise[], double envelope[], double psd[],
+            double ctf[], boolean show_bgnoise, boolean show_envelope,
+            boolean show_psd, boolean show_ctf, boolean invert) {
 
         LinkedList<double[]> plots = new LinkedList<double[]>();
         LinkedList<Color> colors = new LinkedList<Color>();
@@ -370,15 +467,10 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
             }
         }
 
-        String yAxis = show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD;
-        Plot plot = new Plot(label, LABELS.LABEL_RADIAL_XLEGEND, yAxis, xValues, plots.getFirst());
+        Plot plot = new Plot(label, xLabel, yLabel, xValues, plots.getFirst());
+        plot.setInvert(invert);
 
-        if (show_ctf) {
-            plot.setLimits(0, profile.length,
-                    lowerLimit, upperLimit);
-        }
-
-        for (int i = 0; i < plots.size(); i++) {
+        for (int i = 1; i < plots.size(); i++) {
             plot.setColor(colors.get(i));
 
             plot.addPoints(xValues, plots.get(i), Plot.LINE);
@@ -388,11 +480,12 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
         return plot;
     }
 
-    private static double[] getXValues(int size) {
-        double values[] = new double[size];
+    private static double[] getXValues(int length, double Tm) {
+        double values[] = new double[length];
+        double factor = 1 / (length * 2 * Tm);
 
-        for (int i = 0; i < values.length; i++) {
-            values[i] = i;
+        for (int i = 0; i < length; i++) {
+            values[i] = (double) i * factor;
         }
 
         return values;
@@ -409,30 +502,30 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
             array[i] /= value;
         }
     }
-
-    private static double min(double array[]) {
-        double min = array[0];
-
-        for (int i = 1; i < array.length; i++) {
-            double value = array[i];
-            if (value < min) {
-                min = value;
-            }
-        }
-
-        return min;
-    }
-
-    private static double max(double array[]) {
-        double max = array[0];
-
-        for (int i = 1; i < array.length; i++) {
-            double value = array[i];
-            if (value > max) {
-                max = value;
-            }
-        }
-
-        return max;
-    }
+//
+//    private static double min(double array[]) {
+//        double min = array[0];
+//
+//        for (int i = 1; i < array.length; i++) {
+//            double value = array[i];
+//            if (value < min) {
+//                min = value;
+//            }
+//        }
+//
+//        return min;
+//    }
+//
+//    private static double max(double array[]) {
+//        double max = array[0];
+//
+//        for (int i = 1; i < array.length; i++) {
+//            double value = array[i];
+//            if (value > max) {
+//                max = value;
+//            }
+//        }
+//
+//        return max;
+//    }
 }

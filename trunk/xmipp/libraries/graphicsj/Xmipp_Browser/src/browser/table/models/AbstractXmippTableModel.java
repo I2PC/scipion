@@ -9,9 +9,9 @@ import browser.DEBUG;
 import browser.imageitems.tableitems.AbstractTableImageItem;
 import ij.IJ;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Vector;
 import javax.swing.table.AbstractTableModel;
 import xmipp.MDLabel;
 
@@ -22,7 +22,7 @@ import xmipp.MDLabel;
 public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     protected String filename;
-    protected Vector<AbstractTableImageItem> data = new Vector<AbstractTableImageItem>();
+    protected ArrayList<AbstractTableImageItem> data = new ArrayList<AbstractTableImageItem>();
     protected LinkedList<AbstractTableImageItem> selectedItems = new LinkedList<AbstractTableImageItem>();
     protected int rows, cols;
     protected Cache cache = new Cache();
@@ -100,7 +100,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     public abstract String getFilename();
 
-    public Vector<AbstractTableImageItem> getAllItems() {
+    public ArrayList<AbstractTableImageItem> getAllItems() {
         return data;
     }
 
@@ -163,7 +163,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
      * @param data an array of Comparable items.
      * @param index index used to avoid moving data.
      */
-    protected static void mergeSort(Vector data, int index[], int label) {
+    protected static void mergeSort(ArrayList data, int index[], int label) {
         int tmpArray[] = new int[data.size()];
         mergeSort(data, tmpArray, 0, data.size() - 1, index, label);
     }
@@ -176,7 +176,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
      * @param right the right-most index of the subarray.
      * @param index index used to avoid moving data.
      */
-    private static void mergeSort(Vector<AbstractTableImageItem> data, int tmpArray[],
+    private static void mergeSort(ArrayList<AbstractTableImageItem> data, int tmpArray[],
             int left, int right, int index[], int label) {
         if (left < right) {
             int center = (left + right) / 2;
@@ -195,7 +195,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
      * @param rightEnd the right-most index of the subarray.
      * @param index index used to avoid moving data.
      */
-    private static void merge(Vector<AbstractTableImageItem> data, int tmpArray[],
+    private static void merge(ArrayList<AbstractTableImageItem> data, int tmpArray[],
             int leftPos, int rightPos, int rightEnd, int index[], int label) {
         int leftEnd = rightPos - 1;
         int tmpPos = leftPos;
@@ -285,7 +285,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     public void setSelected(int index) {
         clearSelection();
 
-        AbstractTableImageItem item = data.elementAt(index);
+        AbstractTableImageItem item = data.get(index);
         item.setSelected(true);
         selectedItems.addLast(item);
     }
@@ -294,7 +294,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         clearSelection();
 
         for (int i = 0; i < getSize(); i++) {
-            AbstractTableImageItem item = data.elementAt(i);
+            AbstractTableImageItem item = data.get(i);
 
             item.setSelected(true);
             selectedItems.addLast(item);
@@ -347,7 +347,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     public void setZoomScale(double zoomScale) {
         for (int i = 0; i < getSize(); i++) {
-            data.elementAt(i).setZoomScale(zoomScale);
+            data.get(i).setZoomScale(zoomScale);
         }
     }
 
@@ -395,11 +395,11 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     }
 
     public int getCellWidth() {
-        return getAllItems().elementAt(0).getThumbnailWidth();//(int) (getAllItems().elementAt(0).getWidth() * zoomScale);
+        return getAllItems().get(0).getThumbnailWidth();//(int) (getAllItems().elementAt(0).getWidth() * zoomScale);
     }
 
     public int getCellHeight() {
-        return getAllItems().elementAt(0).getThumbnailHeight();//(int) (getAllItems().elementAt(0).getHeight() * zoomScale);
+        return getAllItems().get(0).getThumbnailHeight();//(int) (getAllItems().elementAt(0).getHeight() * zoomScale);
     }
 
     public void setNormalized(boolean normalize) {

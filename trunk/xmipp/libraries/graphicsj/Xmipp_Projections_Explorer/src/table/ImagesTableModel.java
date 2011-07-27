@@ -5,11 +5,9 @@
 package table;
 
 import ij.ImagePlus;
-import ij.gui.Plot;
 import ij.process.FloatProcessor;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Vector;
 import javax.swing.table.AbstractTableModel;
 import sphere.ImageConverter;
 import xmipp.ImageDouble;
@@ -85,7 +83,7 @@ public class ImagesTableModel extends AbstractTableModel {
         Collections.sort(data);
     }
 
-    public static ImagePlus mean(Vector<String> images) {
+    public static ImagePlus mean(ArrayList<String> images) {
         try {
             ImageDouble firstImage = new ImageDouble();
 

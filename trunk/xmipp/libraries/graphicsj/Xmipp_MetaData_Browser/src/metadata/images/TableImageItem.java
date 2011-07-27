@@ -40,6 +40,17 @@ public class TableImageItem extends AbstractTableImageItem {
         return path;
     }
 
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getOriginalValue() {
+        return originalValue;
+    }
+
+    public void setOriginalValue(String value) {
+        originalValue = value;
+    }
     @Override
     public long getNImage() {
         return ImageDouble.FIRST_IMAGE;
@@ -60,13 +71,9 @@ public class TableImageItem extends AbstractTableImageItem {
         return originalValue;
     }
 
-    public String getLabel() {
-        return originalValue;
-    }
-
     @Override
     public Object getLabelValue(int label) {
-        return getLabel();
+        return getOriginalValue();
     }
 
     @Override

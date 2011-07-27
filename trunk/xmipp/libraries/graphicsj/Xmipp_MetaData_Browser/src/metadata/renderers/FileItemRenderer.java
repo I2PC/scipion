@@ -38,7 +38,7 @@ public class FileItemRenderer extends MetaDataRowDisablerRenderer {
     }
 
     private String getShortLabel(String label, int width) {
-        StringBuffer sb = new StringBuffer(label);
+        StringBuilder sb = new StringBuilder(label);
         String sortLabel = sb.toString();
 
         int w = getFontMetrics(font).stringWidth(sortLabel);

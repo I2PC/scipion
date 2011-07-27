@@ -19,7 +19,7 @@ import xmipp.ImageDouble;
  *
  * @author Juanjo Vega
  */
-public abstract class AbstractTableImageItem{
+public abstract class AbstractTableImageItem {
 
     protected Cache cache;
     protected ImageDimension dimension;
@@ -185,7 +185,8 @@ public abstract class AbstractTableImageItem{
             ip = ImageConverter.convertToImagej(image, getTitle());
         } catch (Exception ex) {
             System.err.println(" >>> Error loading preview: " + getKey());
-            ex.printStackTrace();
+            ip = ICONS_MANAGER.MISSING_ITEM;
+            //ex.printStackTrace();
             //throw new RuntimeException(ex);
         }
 

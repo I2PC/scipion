@@ -12,17 +12,18 @@ import ij.IJ;
 import ij.ImagePlus;
 import browser.table.JFrameImagesTable;
 import browser.table.micrographs.JFrameMicrographs;
-import browser.table.micrographs.ctf.CTFImageWindow;
+import browser.table.micrographs.ctf.CTFRecalculateImageWindow;
+import browser.table.micrographs.ctf.profile.CTFViewImageWindow;
 import browser.table.micrographs.ctf.tasks.TasksEngine;
 import ij.gui.ImageWindow;
-import ij.gui.Overlay;
 import ij.gui.Toolbar;
 import ij.io.FileInfo;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
+import java.awt.Component;
 import java.io.File;
-import java.util.Vector;
+import java.util.ArrayList;
 import xmipp.Filename;
 
 /**
@@ -83,31 +84,6 @@ public class ImagesWindowFactory {
         }
     }
 
-    /*    private static ImagePlus openFileAsImage_(String path) {
-    ImagePlus ip = null;
-
-    try {
-    ImageDouble image = new ImageDouble(path);
-    ip = ImageConverter.convertToImagej(image, path);
-    } catch (Exception ex) {
-    ex.printStackTrace();
-    }
-
-    return ip;
-    }*/
-
-    /*    private static ImagePlus openMetaDataAsImage_(String path) {
-    ImagePlus ip = null;
-
-    try {
-    MetaData md = new MetaData(path);
-    ip = ImageConverter.convertToImagej(md);
-    } catch (Exception ex) {
-    ex.printStackTrace();
-    }
-
-    return ip;
-    }*/
     private static ImageWindow openXmippImageWindow(ImagePlus imp, boolean poll) {
         ImageWindow iw = null;
 
@@ -143,8 +119,6 @@ public class ImagesWindowFactory {
             table.setVisible(true);
         } else {
             for (int i = 0; i < filenames.length; i++) {
-                //JFrameImagesTable table = new JFrameImagesTable(filenames[i]);
-                //table.setVisible(true);
                 openFileAsTable(filenames[i]);
             }
         }
@@ -162,7 +136,7 @@ public class ImagesWindowFactory {
 
     public static void openTableAs3D(AbstractXmippTableModel tableModel) {
         try {
-            Vector<AbstractTableImageItem> items = tableModel.getAllItems();
+            ArrayList<AbstractTableImageItem> items = tableModel.getAllItems();
             ImagePlus ip = ImageConverter.convertToImagePlus(items);
             ip.setTitle(tableModel.getFilename());
 
@@ -188,7 +162,7 @@ public class ImagesWindowFactory {
                 File tempFile = File.createTempFile("tableToStack_", ".stk");
                 tempFile.deleteOnExit();
 
-                Vector<AbstractTableImageItem> items = tableModel.getAllItems();
+                ArrayList<AbstractTableImageItem> items = tableModel.getAllItems();
                 ImagePlus imp = ImageConverter.convertToImagePlus(items);
                 IJ.run(imp, "Xmipp writer", "save=" + tempFile.getAbsolutePath());
 
@@ -249,7 +223,7 @@ public class ImagesWindowFactory {
             String MicrographFilename, int row) {
         IJ.setTool(Toolbar.FREEROI);
 
-        return new CTFImageWindow(ip, CTFfilename, PSDfilename,
+        return new CTFRecalculateImageWindow(ip, CTFfilename, PSDfilename,
                 tasksEngine, row);
     }
 
@@ -262,5 +236,29 @@ public class ImagesWindowFactory {
         } else {
             IJ.error("File is missing", filename + " not found.");
         }
+    }
+
+    public static void openFileAsText(String filename, Component parent) {
+        JFrameTextFile frameCTF = new JFrameTextFile(filename);
+        frameCTF.setLocationRelativeTo(parent);
+        frameCTF.setVisible(true);
+    }
+
+    public static void openCTFView(ImagePlus imp, String CTFFilename, String PSDFilename) {
+        CTFViewImageWindow ctfView = new CTFViewImageWindow(imp, CTFFilename, PSDFilename);
+        ctfView.setVisible(true);
+    }
+
+    public static String getTitle(String title, int width) {
+        int strlenght = title.length() / 4; // Approximated string graphical lenght.
+
+        int toremove = strlenght - width;
+
+        int start = toremove > 0 ? toremove : 0;
+
+        String newtitle = title.substring(start, title.length());
+        String prefix = toremove > 0 ? "..." : "";
+
+        return prefix + newtitle;
     }
 }

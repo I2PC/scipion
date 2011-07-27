@@ -65,7 +65,7 @@ public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
             ImagePlus preview = item.getPreview(CELL_WIDTH, CELL_HEIGHT);
             icon = new ImageIcon(preview.getImage());
         } else {
-            label = getShortLabel(item.getLabel(), table.getColumnModel().getColumn(column).getWidth());
+            label = getShortLabel(item.getOriginalValue(), table.getColumnModel().getColumn(column).getWidth());
         }
 
         setText(label);

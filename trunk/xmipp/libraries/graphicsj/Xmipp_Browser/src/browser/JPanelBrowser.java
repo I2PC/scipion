@@ -20,7 +20,6 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
-import java.util.Vector;
 import browser.files.FileBrowser;
 import browser.windows.ImagesWindowFactory;
 import browser.files.FileListRenderer;
@@ -29,6 +28,7 @@ import browser.files.FilterFilesModel;
 import browser.imageitems.listitems.AbstractImageItem;
 import browser.windows.ImageWindowOperations;
 import browser.windows.StackWindowOperations;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 /**
@@ -65,7 +65,7 @@ public class JPanelBrowser extends JPanel {
         updatePreview();
     }
 
-    protected void updateTitle() {
+    private void updateTitle() {
         ((TitledBorder) jspFilesFiltering.getBorder()).setTitle(filteringFilesModel.getCurrentDirectory());
         jspFilesFiltering.updateUI();
     }
@@ -123,11 +123,11 @@ public class JPanelBrowser extends JPanel {
             } else if (item instanceof XmippImageItem) {
             XmippImageItem xmippItem = (XmippImageItem) item;
             int n = 0;
-
+            
             if (xmippItem.isStack()) {
             n = getImageIndexFromUser(xmippItem);
             }
-
+            
             if (n >= 0) {
             ImagesWindowFactory.openImage((XmippImageItem) item, n);
             }
@@ -145,16 +145,16 @@ public class JPanelBrowser extends JPanel {
     // If there are more than une image, asks user for the one to open.
     private static int getImageIndexFromUser(XmippImageItem item) {
     int image = -1;
-
+    
     if (item.isStack()) {
     final GenericDialog dialog = new GenericDialog("Select image from: " + item.getFileName());
     final String[] indexes = new String[(int) item.getNImages() + 1];
-
+    
     indexes[0] = "All";
     for (int i = ImageDouble.FIRST_IMAGE; i <= item.getNImages(); i++) {
     indexes[i] = String.valueOf(i);
     }
-
+    
     dialog.addChoice("image:", indexes, indexes[0]);
     dialog.showDialog();
     if (!dialog.wasCanceled()) {
@@ -163,7 +163,7 @@ public class JPanelBrowser extends JPanel {
     } else {
     image = 0;
     }
-
+    
     return image;
     }
      */
@@ -197,14 +197,14 @@ public class JPanelBrowser extends JPanel {
     /*
     private void send2Table(Object items[]) {
     LinkedList<String> filenames = new LinkedList<String>();
-
+    
     for (int i = 0; i < items.length; i++) {
     Object object = items[i];
     if (object instanceof AbstractImageItem) {
     filenames.add(((AbstractImageItem) object).getFile().getAbsolutePath());
     }
     }
-
+    
     ImagesWindowFactory.openTable(filenames.toArray(new String[filenames.size()]), true);
     }*/
 
@@ -240,7 +240,7 @@ public class JPanelBrowser extends JPanel {
 
     private void captureFrames() {
         int ids[] = WindowManager.getIDList();
-        Vector<String> windows = new Vector<String>();
+        ArrayList<String> windows = new ArrayList<String>();
 
         if (ids != null) {
             for (int i = 0; i < ids.length; i++) {

@@ -82,6 +82,6 @@ public class VolumeTableItem extends AbstractTableImageItem {
                 return enabled;
         }
 
-        return LABELS.UNKNOWN_LABEL;
+        return LABELS.LABEL_UNKNOWN;
     }
 }

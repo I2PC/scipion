@@ -8,7 +8,7 @@ import browser.imageitems.tableitems.AbstractTableImageItem;
 import ij.ImagePlus;
 import ij.process.FloatProcessor;
 import ij.process.ImageStatistics;
-import java.util.Vector;
+import java.util.ArrayList;
 
 /**
  *
@@ -16,7 +16,7 @@ import java.util.Vector;
  */
 public class ImageOperations {
 
-    public static ImagePlus mean(Vector<AbstractTableImageItem> items) {
+    public static ImagePlus mean(ArrayList<AbstractTableImageItem> items) {
         int w = items.get(0).getWidth();
         int h = items.get(0).getHeight();
         double mean[] = new double[w * h];
@@ -42,7 +42,7 @@ public class ImageOperations {
         return new ImagePlus("Mean", new FloatProcessor(w, h, mean));
     }
 
-    public static ImagePlus std_deviation(Vector<AbstractTableImageItem> items) {
+    public static ImagePlus std_deviation(ArrayList<AbstractTableImageItem> items) {
         int w = items.get(0).getWidth();
         int h = items.get(0).getHeight();
 
@@ -75,7 +75,7 @@ public class ImageOperations {
         return std_ip;
     }
 
-    public static double[] getMinAndMax(Vector<AbstractTableImageItem> items) {
+    public static double[] getMinAndMax(ArrayList<AbstractTableImageItem> items) {
         // Initial min and max values.
         ImageStatistics statistics;
 
@@ -83,10 +83,10 @@ public class ImageOperations {
         double max = Double.MIN_VALUE;
 
         for (int i = 0; i < items.size(); i++) {
-            statistics = items.elementAt(i).getStatistics();
+            statistics = items.get(i).getStatistics();
 
             if (statistics == null) {
-                statistics = items.elementAt(i).getPreview().getStatistics();
+                statistics = items.get(i).getPreview().getStatistics();
             }
 
             if (statistics.min < min) {

@@ -4,11 +4,11 @@
  */
 
 /*
- * JFrameCTF.java
+ * JFrameTextFile.java
  *
  * Created on 12-dic-2010, 0:46:53
  */
-package browser.table.micrographs.ctf;
+package browser.windows;
 
 import ij.IJ;
 import java.io.BufferedReader;
@@ -21,19 +21,21 @@ import javax.swing.JDialog;
  *
  * @author Juanjo Vega
  */
-public class JFrameCTF extends JDialog {
+public class JFrameTextFile extends JDialog {
 
-    /** Creates new form JFrameCTF */
-    public JFrameCTF() {
+    /** Creates new form JFrameTextFile */
+    public JFrameTextFile(String filename) {
         super();
 
         initComponents();
+
+        setTitle(ImagesWindowFactory.getTitle(filename, getWidth()));
+
+        loadFile(filename);
     }
 
-    public void loadFile(String fileName) {
-        setTitle(fileName);
-
-        File file = new File(fileName);
+    private void loadFile(String filename) {
+        File file = new File(filename);
 
         try {
             BufferedReader inputStream = new BufferedReader(new FileReader(file));

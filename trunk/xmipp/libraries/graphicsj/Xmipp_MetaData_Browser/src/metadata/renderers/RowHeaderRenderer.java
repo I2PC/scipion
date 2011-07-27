@@ -27,13 +27,15 @@ public class RowHeaderRenderer extends JLabel implements ListCellRenderer {
 
     public Component getListCellRendererComponent(JList list, Object value, int index,
             boolean selected, boolean hasFocus) {
+        setText(String.valueOf((Integer) value));
 
-        Integer rowNumber = (Integer) value;
-
-        //setEnabled(list.isEnabled());
-
-        //setFont(list.getFont());
-        setText(String.valueOf(rowNumber));
+        if (selected) {
+            setBackground(list.getSelectionBackground());
+            setForeground(list.getSelectionForeground());
+        } else {
+            setBackground(list.getBackground());
+            setForeground(list.getForeground());
+        }
 
         return this;
     }

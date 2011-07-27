@@ -9,8 +9,8 @@ import ij.process.FloatProcessor;
 import ij.process.StackStatistics;
 import ij.util.Tools;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.Vector;
 import xmipp.ImageDouble;
 import xmipp.MDLabel;
 import xmipp.MetaData;
@@ -153,11 +153,11 @@ public class ImageConverter {
     return imp;
     }*/
 
-    public static ImagePlus convertToImagePlus(Vector<AbstractTableImageItem> items) {
+    public static ImagePlus convertToImagePlus(ArrayList<AbstractTableImageItem> items) {
         ImageStack is = null;
 
         for (int i = 0; i < items.size(); i++) {
-            AbstractTableImageItem item = items.elementAt(i);
+            AbstractTableImageItem item = items.get(i);
 
             if (item.isEnabled() && item.exists()) {
                 ImagePlus ipslice = item.getImagePlus();

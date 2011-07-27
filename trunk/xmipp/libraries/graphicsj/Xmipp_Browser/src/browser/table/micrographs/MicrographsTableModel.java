@@ -7,12 +7,13 @@ package browser.table.micrographs;
 import ij.IJ;
 import java.io.File;
 import java.util.LinkedList;
-import java.util.Vector;
+
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import browser.Cache;
 import browser.imageitems.MicrographsTableImageItem;
+import java.util.ArrayList;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -73,7 +74,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
     public final static int INDEX_DEFOCUS_U_COL = 7;
     public final static int INDEX_DEFOCUS_V_COL = 8;
     public final static int INDEX_AUTOSORT_COLUMN = 16;
-    protected Vector<Integer> busyRows = new Vector<Integer>();
+    protected ArrayList<Integer> busyRows = new ArrayList<Integer>();
     // Data type contained by columns to set renderes properly.
     protected static Cache cache = new Cache();
     private MetaData md;
@@ -220,8 +221,8 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         }
     }
 
-    public Vector<Integer> getColumnsToHide() {
-        Vector<Integer> toHide = new Vector<Integer>();
+    public ArrayList<Integer> getColumnsToHide() {
+        ArrayList<Integer> toHide = new ArrayList<Integer>();
 
         // Hide ID column.
         toHide.add(INDEX_ID);

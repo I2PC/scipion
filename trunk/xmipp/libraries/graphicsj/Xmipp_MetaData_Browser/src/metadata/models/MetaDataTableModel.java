@@ -27,7 +27,7 @@ public class MetaDataTableModel extends DefaultTableModel {
     private int selectedBlock = 0;
     private long ids[];
     protected static Cache cache = new Cache();
-    private MetaData md;
+//    private MetaData md;
 
     public MetaDataTableModel(String filename) {
         super();
@@ -35,16 +35,22 @@ public class MetaDataTableModel extends DefaultTableModel {
         this.filename = filename;
         loadBlocks(filename);
     }
-//
+
 //    public void print() {
 //        System.out.println(" -------------------------------- ");
-//        Vector data = getDataVector();
-//        for (int i = 0; i < data.size(); i++) {
-//            System.out.println(i + ": " + isRowEnabled(i));
+//
+//        int rows = getRowCount();
+//        int columns = getColumnCount();
+//        for (int i = 0; i < rows; i++) {
+//            System.out.print(i + ": ");
+//            for (int j = 0; j < columns; j++) {
+//                //Object item = getValueAt(i, j);
+//                System.out.print(getValueAt(i, j) + "\t");
+//            }
+//            System.out.println();
 //        }
 //        System.out.println(" -------------------------------- ");
 //    }
-
     public void selectBlock(int selectedBlock) {
         this.selectedBlock = selectedBlock;
     }
@@ -70,7 +76,6 @@ public class MetaDataTableModel extends DefaultTableModel {
             blocks = MetaData.getBlocksInMetaDataFile(filename);
         } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
             throw new RuntimeException(ex);
         }
     }
@@ -84,7 +89,7 @@ public class MetaDataTableModel extends DefaultTableModel {
             clear();    // Clear the whole data.
 
             block += !block.isEmpty() ? Filename.SEPARATOR : "";
-            md = new MetaData(block + filename);
+            MetaData md = new MetaData(block + filename);
 
             // Contains field enabled ?
             boolean hasEnabledField = true;
@@ -155,8 +160,12 @@ public class MetaDataTableModel extends DefaultTableModel {
             }
         } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            throw new RuntimeException(ex);
         }
+    }
+
+    private long getID(int row) {
+        return ids[row];
     }
 
     public String[] getLabels() {
@@ -177,12 +186,12 @@ public class MetaDataTableModel extends DefaultTableModel {
 
         return item != null ? item.getClass() : Object.class;
     }
-
-    @Override
-    public boolean isCellEditable(int row, int column) {
-        //return MD_LABELS[column] == MDLabel.MDL_ENABLED;
-        return column == ENABLED_COLUMN_INDEX;
-    }
+//
+//    @Override
+//    public boolean isCellEditable(int row, int column) {
+//        //return MD_LABELS[column] == MDLabel.MDL_ENABLED;
+//        return column == ENABLED_COLUMN_INDEX;
+//    }
 
     @Override
     public int getColumnCount() {
@@ -194,32 +203,85 @@ public class MetaDataTableModel extends DefaultTableModel {
     }
 
     public boolean isRowEnabled(int row) {
-        return md.getValueInt(MDLabel.MDL_ENABLED, ids[row]) == 1;
+        return ((Boolean) getValueAt(row, ENABLED_COLUMN_INDEX)).booleanValue();
     }
 
-    public void setRowEnabled(int row, boolean enabled) {
-        md.setValueInt(MDLabel.MDL_ENABLED, enabled ? 1 : 0, ids[row]);
-//        setValueAt(enabled, row, ENABLED_COLUMN_INDEX);
-    }
-
+//
+//    public void setValueAtMetaData(int row, int col, Object value) {
+//        int label = MD_LABELS[col];
+//        long id = getID(row);
+//
+//        Class class_ = MetaData.getLabelType(label);
+//
+//        if (class_ == String.class) {
+//            md.setValueString(label, value.toString(), id);
+//        } else if (class_ == Double.class) {
+//            md.setValueDouble(label, Double.parseDouble(value.toString()), id);
+//        } else if (class_ == Integer.class) {
+//            if (col == ENABLED_COLUMN_INDEX) {
+//                boolean enabled = Boolean.parseBoolean(value.toString());
+//                md.setValueInt(label, enabled ? 1 : 0, id);
+//                fireTableRowsUpdated(row, row);
+//            } else {
+//                md.setValueInt(label, Integer.parseInt(value.toString()), id);
+//            }
+//        } else if (class_ == Boolean.class) {
+//            md.setValueBoolean(label, Boolean.parseBoolean(value.toString()), id);
+//        }
+//    }
     public void enableAllRows(boolean enabled) {
         // Updates table.
         for (int i = 0; i < getRowCount(); i++) {
-            setRowEnabled(i, enabled);
+            //setRowEnabled(i, enabled);
             setValueAt(enabled, i, ENABLED_COLUMN_INDEX);
         }
     }
 
     public boolean save(String fileName) {
-        boolean saved = true;
-
         try {
+            MetaData md = new MetaData();
+
+            // @TODO Build.
+            for (int i = 0; i < MD_LABELS.length; i++) {
+                md.addLabel(MD_LABELS[i]);
+            }
+
+            for (int row = 0; row < getRowCount(); row++) {
+                long id = md.addObject();
+
+                for (int column = 0; column < getColumnCount(); column++) {
+                    int label = MD_LABELS[column];
+                    Class class_ = getColumnClass(column);
+                    Object item = getValueAt(row, column);
+
+                    if (class_ == TableFileItem.class) {
+                        md.setValueString(label, ((TableFileItem) item).getOriginalValue(), id);
+                    } else if (class_ == TableImageItem.class) {
+                        md.setValueString(label, ((TableImageItem) item).getOriginalValue(), id);
+                    } else if (class_ == String.class) {
+                        md.setValueString(label, ((String) item), id);
+                    } else if (class_ == Double.class) {
+                        md.setValueDouble(label, ((Double) item).doubleValue(), id);
+                    } else if (class_ == Boolean.class) {
+                        if (column == ENABLED_COLUMN_INDEX) {
+                            md.setValueInt(label, ((Boolean) item) == Boolean.TRUE ? 1 : 0, id);
+                        } else {
+                            md.setValueBoolean(label, ((Boolean) item).booleanValue(), id);
+                        }
+                    } else if (class_ == Integer.class) {
+                        md.setValueInt(label, ((Integer) item).intValue(), id);
+                    }
+                }
+            }
+
             md.write(fileName);
+
+            return true;
         } catch (Exception ex) {
+            ex.printStackTrace();
             IJ.error(ex.getMessage());
-            saved = false;
         }
 
-        return saved;
+        return true;
     }
 }

@@ -28,7 +28,7 @@ import java.awt.event.MouseListener;
  *
  * @author Juanjo Vega
  */
-public class CTFImageWindow extends ImageWindow {
+public class CTFRecalculateImageWindow extends ImageWindow {
 
     private Button button = new Button(LABELS.LABEL_RECALCULATE_CTF);
     protected EllipseFitter ellipseFitter = new EllipseFitter();
@@ -37,7 +37,7 @@ public class CTFImageWindow extends ImageWindow {
     private String PSDFilename;
     private int row;
 
-    public CTFImageWindow(ImagePlus imp, String CTFFilename, String PSDFilename,
+    public CTFRecalculateImageWindow(ImagePlus imp, String CTFFilename, String PSDFilename,
             TasksEngine tasksEngine, int row) {
         super(imp);
 

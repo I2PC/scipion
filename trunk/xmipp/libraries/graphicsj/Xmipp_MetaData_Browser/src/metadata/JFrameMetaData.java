@@ -11,6 +11,7 @@
 package metadata;
 
 import ij.IJ;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.ItemEvent;
 import java.io.File;
@@ -21,11 +22,15 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.LookAndFeel;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ListSelectionEvent;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 import browser.DEBUG;
 import browser.windows.ImagesWindowFactory;
+import java.awt.event.KeyListener;
+import javax.swing.JTextField;
+import javax.swing.event.ListSelectionListener;
 import metadata.images.TableImageItem;
 import metadata.renderers.MetaDataStringRenderer;
 import metadata.renderers.MetaDataNumberRenderer;
@@ -39,6 +44,8 @@ import metadata.images.TableFileItem;
 import metadata.images.TableMetaDataItem;
 import metadata.renderers.FileItemRenderer;
 import metadata.renderers.RowHeaderRenderer;
+import metadata.renderers.editors.TableFileItemEditor;
+import metadata.renderers.editors.TableImageItemEditor;
 
 /**
  *
@@ -50,13 +57,16 @@ public class JFrameMetaData extends JFrame {
     private MetaDataTableModel tableModel;
     private ImagesRowHeaderModel rowHeaderModel;
     private XTableColumnModel columnModel = new XTableColumnModel();
-    private JFileChooser fc = new JFileChooser();
+    private JFileChooser fc;
     private JList rowHeader;
     private RowHeaderRenderer rowHeaderRenderer = new RowHeaderRenderer();
     private FileItemRenderer fileRenderer = new FileItemRenderer();
     private MetaDataImageRenderer imageRenderer = new MetaDataImageRenderer();
     private MetaDataStringRenderer stringRenderer = new MetaDataStringRenderer();
     private MetaDataNumberRenderer numberRenderer = new MetaDataNumberRenderer();
+    private TableImageItemEditor imageEditor = new TableImageItemEditor();
+    private TableFileItemEditor metadataEditor = new TableFileItemEditor(new JTextField());
+    private TableFileItemEditor fileEditor = new TableFileItemEditor(new JTextField());
     private TableRowSorter sorter;
     private RowEnableFilter rowEnableFilter = new RowEnableFilter();
     private JDialogColumnsSelector frameColumnsSelector = new JDialogColumnsSelector();
@@ -110,6 +120,20 @@ public class JFrameMetaData extends JFrame {
                 tableMouseClicked(evt);
             }
         });
+        table.addKeyListener(new KeyListener() {
+
+            public void keyTyped(KeyEvent ke) {
+            }
+
+            public void keyPressed(KeyEvent ke) {
+            }
+
+            public void keyReleased(KeyEvent ke) {
+                if (ke.getKeyCode() == KeyEvent.VK_DELETE) {
+                    removeSelectedRows();
+                }
+            }
+        });
 
         jsPanel.setViewportView(table);
 //        setRowHeader();
@@ -117,6 +141,7 @@ public class JFrameMetaData extends JFrame {
         table.setColumnModel(columnModel);
 
         setRenderers();
+        enableEditors(true);
 
         jcbBlock.addItemListener(new java.awt.event.ItemListener() {
 
@@ -163,6 +188,23 @@ public class JFrameMetaData extends JFrame {
         rowHeader.setCellRenderer(rowHeaderRenderer);
 
         jsPanel.setRowHeaderView(rowHeader);
+
+        rowHeader.addListSelectionListener(new ListSelectionListener() {
+
+            public void valueChanged(ListSelectionEvent lse) {
+                if (!lse.getValueIsAdjusting()) {
+                    System.out.println("@TODO Selection rowHeader <-> table.");
+//                    int indices[] = rowHeader.getSelectedIndices();
+//
+//                    table.clearSelection();
+//                    for (int i = 0; i < indices.length; i++) {
+//                        for (int j = 0; j < table.getColumnCount(); j++) {
+//                            table.changeSelection(indices[i], j, true, true);
+//                        }
+//                    }
+                }
+            }
+        });
     }
 
     private void setRenderers() {
@@ -172,6 +214,12 @@ public class JFrameMetaData extends JFrame {
         table.setDefaultRenderer(String.class, stringRenderer);
         table.setDefaultRenderer(Double.class, numberRenderer);
         table.setDefaultRenderer(Integer.class, numberRenderer);
+    }
+
+    private void enableEditors(boolean enable) {
+        table.setDefaultEditor(TableImageItem.class, enable ? imageEditor : null);
+        table.setDefaultEditor(TableMetaDataItem.class, enable ? metadataEditor : null);
+        table.setDefaultEditor(TableFileItem.class, enable ? fileEditor : null);
     }
 
     private synchronized void updateTableStructure() {
@@ -209,41 +257,29 @@ public class JFrameMetaData extends JFrame {
         int view_col = table.columnAtPoint(evt.getPoint());
 
         if (view_row >= 0 && view_col >= 0) {
-            int model_row = table.convertRowIndexToModel(view_row);
-            int model_col = table.convertColumnIndexToModel(view_col);
-
             if (SwingUtilities.isLeftMouseButton(evt)) {
-                if (evt.getClickCount() > 1) {
-                    Object item = table.getValueAt(view_row, view_col);
+                if (jcbRenderImages.isSelected()) { // Opens images just when rendering. Otherwise, edits it.
+                    if (evt.getClickCount() > 1) {
+                        Object item = table.getValueAt(view_row, view_col);
 
-                    if (item instanceof TableImageItem) {
-                        openXmippImage((TableImageItem) item);
-                    } else if (item instanceof TableMetaDataItem) {
-                        openMetaDataFile((TableMetaDataItem) item);
-                    } else if (item instanceof TableFileItem) {
-                        openXmippTextFile((TableFileItem) item);
-                    }
-                } else {    // Single click
-                    if (model_col == tableModel.getEnabledColumnIndex()) {
-                        Boolean value = (Boolean) tableModel.getValueAt(model_row, model_col);
-
-                        tableModel.setRowEnabled(model_row, value);
-
-                        updateTableStructure();
+                        if (item instanceof TableImageItem) {
+                            openXmippImage((TableImageItem) item);
+                        } else if (item instanceof TableMetaDataItem) {
+                            openMetaDataFile((TableMetaDataItem) item);
+                        } else if (item instanceof TableFileItem) {
+                            openXmippTextFile((TableFileItem) item);
+                        }
                     }
                 }
             } else if (SwingUtilities.isRightMouseButton(evt)) {
                 table.setRowSelectionInterval(view_row, view_row);
                 table.setColumnSelectionInterval(view_col, view_col);
             }
-        } else {
-            updateTableStructure();
         }
+        updateTableStructure();
     }
 
     private void openXmippImage(TableImageItem item) {
-//        ImagePlus ip = item.getImagePlus();
-//        ImagesWindowFactory.captureFrame(ip);
         ImagesWindowFactory.openFileAsImage(item.getPath());
     }
 
@@ -280,8 +316,9 @@ public class JFrameMetaData extends JFrame {
         updateTableStructure();
     }
 
-    private void setRenderImages(boolean renderImages) {
+    private void enableImagesRendering(boolean renderImages) {
         imageRenderer.setRenderImages(renderImages);
+        enableEditors(!renderImages);
 
         updateTableStructure();
     }
@@ -317,6 +354,16 @@ public class JFrameMetaData extends JFrame {
         }
 
         return states;
+    }
+
+    private void removeSelectedRows() {
+        int i;
+
+        while ((i = table.getSelectedRow()) != -1) {
+            tableModel.removeRow(table.convertRowIndexToModel(i));
+        }
+
+        updateTableStructure();
     }
 
     /** This method is called from within the constructor to
@@ -423,8 +470,11 @@ public class JFrameMetaData extends JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void bSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bSaveActionPerformed
-        // Sets path and filename automatically.
-        fc.setSelectedFile(new File(tableModel.getFilename()));
+        if (fc == null) {
+            // Sets path and filename automatically.
+            fc = new JFileChooser();
+            fc.setSelectedFile(new File(tableModel.getFilename()));
+        }
 
         if (fc.showSaveDialog(this) != JFileChooser.CANCEL_OPTION) {
             boolean response = true;
@@ -454,7 +504,7 @@ public class JFrameMetaData extends JFrame {
 }//GEN-LAST:event_bReloadActionPerformed
 
     private void jcbRenderImagesItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jcbRenderImagesItemStateChanged
-        setRenderImages(jcbRenderImages.isSelected());
+        enableImagesRendering(jcbRenderImages.isSelected());
     }//GEN-LAST:event_jcbRenderImagesItemStateChanged
 
     private void bHideColumnsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bHideColumnsActionPerformed

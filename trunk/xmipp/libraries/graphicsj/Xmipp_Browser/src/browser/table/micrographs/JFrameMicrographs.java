@@ -12,7 +12,6 @@ package browser.table.micrographs;
 
 import browser.DEBUG;
 import browser.ICONS_MANAGER;
-import browser.table.micrographs.ctf.JFrameCTF;
 import browser.LABELS;
 import browser.imageitems.MicrographsTableImageItem;
 import browser.table.models.ImagesRowHeaderModel;
@@ -32,7 +31,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.util.Vector;
+import java.util.ArrayList;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JList;
@@ -66,7 +65,6 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     private MicrographFileNameRenderer fileNameRenderer = new MicrographFileNameRenderer();
     private MicrographImageRenderer imageRenderer = new MicrographImageRenderer();
     private MicrographDoubleRenderer doubleRenderer = new MicrographDoubleRenderer();
-    private JFrameCTF frameCTF = new JFrameCTF();
     private TableRowSorter sorter;
     private EnableFilter enableFilter;
     private TasksEngine tasksEngine = new TasksEngine(this);
@@ -75,7 +73,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     public JFrameMicrographs(String filename) {
         super();
 
-        setTitle(getTitle(filename));
+        setTitle(ImagesWindowFactory.getTitle(filename, getWidth()));
 
         initComponents();
 
@@ -155,19 +153,6 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         table.setRowSorter(sorter);
     }
 
-    private String getTitle(String title) {
-        int strlenght = title.length() / 4; // Approximated string graphical lenght.
-
-        int toremove = strlenght - getWidth();
-
-        int start = toremove > 0 ? toremove : 0;
-
-        String newtitle = title.substring(start, title.length());
-        String prefix = toremove > 0 ? "..." : "";
-
-        return prefix + newtitle;
-    }
-
     public String getFilename() {
         return tableModel.getFilename();
     }
@@ -184,10 +169,10 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     }
 
     private void hideColumns() {
-        Vector<Integer> columns = tableModel.getColumnsToHide();
+        ArrayList<Integer> columns = tableModel.getColumnsToHide();
 
         for (int i = 0; i < columns.size(); i++) {
-            TableColumn column = columnModel.getColumnByModelIndex(columns.elementAt(i));
+            TableColumn column = columnModel.getColumnByModelIndex(columns.get(i));
             columnModel.setColumnVisible(column, false);
         }
     }
@@ -361,29 +346,29 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     /*
     private void refreshTable(final boolean auto) {
     /*        SwingUtilities.invokeLater(new Runnable() {
-
+    
     public void run() {*/
     /*        String autoStr = auto ? "AUTO" : "MANUAL";
     DEBUG.printMessage(" *** Refreshing table [" + autoStr + "]: " + System.currentTimeMillis());
-
+    
     boolean enabled[] = null;
-
+    
     if (auto) {
     enabled = tableModel.getEnabledRows();   // Gets currently enabled rows...
     }
-
+    
     tableModel.reload();
-
+    
     if (auto) {
     tableModel.setEnabledRows(enabled);    // ...sets previously enabled.
     }
-
+    
     table.setColumnModel(columnModel);  // Re sets column model to hide columns.
-
+    
     if (!auto) {
     setNewTableRowSorter();
     }
-
+    
     updateTableStructure();
     /*            }
     });*//*
@@ -517,7 +502,6 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     private void bReloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bReloadActionPerformed
         reloadTableData();
 }//GEN-LAST:event_bReloadActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bReload;
     private javax.swing.JButton bSave;
@@ -610,10 +594,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         private void showCTFFile(int row) {
             String CTFfile = tableModel.getCTFfile(row);
 
-            frameCTF.loadFile(CTFfile);
-
-            frameCTF.setLocationRelativeTo(this);
-            frameCTF.setVisible(true);
+            ImagesWindowFactory.openFileAsText(CTFfile, this);
         }
 
         private void extractColumn(int column, boolean onlyenabled) {
@@ -628,10 +609,10 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
         private void showCTFProfile() {
             String CTFFilename = tableModel.getCTFfile(row);
-            String DisplayFilename = tableModel.getCTFDisplayfile(row);
+            String displayFilename = tableModel.getCTFDisplayfile(row);
             String PSDFilename = tableModel.getPSDfile(row);
 
-            ImagePlus ip = IJ.openImage(DisplayFilename);
+            ImagePlus ip = IJ.openImage(displayFilename);
 
             CTFViewImageWindow frame = new CTFViewImageWindow(ip, CTFFilename, PSDFilename);
             frame.setVisible(true);

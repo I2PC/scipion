@@ -91,7 +91,7 @@ public class MDTableItem extends AbstractTableImageItem {
             return md.getValueString(label, id);
         }
 
-        return LABELS.UNKNOWN_LABEL;
+        return LABELS.LABEL_UNKNOWN;
     }
 
     // Metadata related methods.
