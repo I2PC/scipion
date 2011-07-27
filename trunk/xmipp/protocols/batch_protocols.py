@@ -183,9 +183,6 @@ class XmippProjectGUI():
             self.DetailsLabelsDict['Created:'].config(text=run['init'])
             self.DetailsLabelsDict['Modified:'].config(text=run['last_modified'])
             prot = getProtocolFromModule(run['script'], self.project)
-            if prot is None:
-                print "Can load protocol from " + run['script']
-                exit(1)
             summary = '\n'.join(prot.summary())
             self.DetailsLabelsDict['Summary:'].config(text=summary)
             self.frameDetails.grid(row=4, column=1,sticky='nsew', columnspan=2)
@@ -289,8 +286,9 @@ class XmippProjectGUI():
         self.DetailsFont = tkFont.Font(family=FontName, size=FontSize-1)
         #Create RUN details
         self.addHeaderLabel(self.frame, 'Details', 3, 1)
-        self.buttonDetails = tk.Button(self.frame, text="Analize results", font=self.ButtonFont, 
-                                    bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
+        self.buttonDetails = tk.Button(self.frame, text="Analyze results", font=self.ButtonFont, 
+                                    bg=ButtonBgColor, activebackground=ButtonActiveBgColor,
+                                    command=self.visualizeRun)
         self.buttonDetails.grid(row=3, column=2, padx=5, pady=5)
         self.frameDetails = tk.Frame(self.frame, bg=BgColor, bd=1, relief=tk.RIDGE)
         self.frameDetails.grid(row=4, column=1, sticky='nsew', columnspan=2, padx=5, pady=5)
@@ -340,6 +338,8 @@ class XmippProjectGUI():
     def onExit(self):
         self.root.destroy()
 
+    def visualizeRun(self):
+        getProtocolFromModule(self.lastRunSelected['script'], self.project).visualize()
 
 if __name__ == '__main__':
     dir = os.getcwd()
