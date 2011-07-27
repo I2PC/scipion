@@ -190,6 +190,7 @@ enum MDLabel
     MDL_PRJ_TILT_RANGE, // Vector with the initial and final tilt angle values, and step size
     MDL_PRJ_VOL,        // Volume file name to generate projections from
     MDL_PSD, ///< A Power Spectrum Density file name (std::string)
+    MDL_PSD_ENHANCED, ///< A enhanced Power Spectrum Density file name (std::string)
     MDL_RANDOMSEED, ///< Seed for random number generator
     MDL_REF3D, ///< 3D Class to which the image belongs (int)
     MDL_REF, ///< Class to which the image belongs (int)
@@ -675,6 +676,7 @@ private:
         MDL::addLabel(MDL_PRJ_TILT_RANGE, LABEL_VECTOR, "projTiltRange");
         MDL::addLabel(MDL_PRJ_VOL, LABEL_STRING, "projVolume", TAGLABEL_VOLUME);
         MDL::addLabel(MDL_PSD, LABEL_STRING, "powerSpectrum", TAGLABEL_PSD);
+        MDL::addLabel(MDL_PSD_ENHANCED, LABEL_STRING, "enhancedPowerSpectrum", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_RANDOMSEED, LABEL_INT, "randomSeed");
         MDL::addLabel(MDL_REF3D, LABEL_INT, "ref3d");
         MDL::addLabel(MDL_REF, LABEL_INT, "ref", TAGLABEL_NOTAG, "Ref");
