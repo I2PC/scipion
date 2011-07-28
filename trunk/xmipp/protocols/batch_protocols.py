@@ -75,6 +75,7 @@ class XmippProjectGUI():
         self.root.bind("<Unmap>", self.unpostMenu)
         self.root.bind("<Map>", self.unpostMenu)
         self.root.bind('<Return>', lambda e: self.runButtonClick('Edit'))
+        self.root.bind('<Delete>', lambda e: self.runButtonClick('Delete'))
         self.root.bind('<Up>', self.selectRunUpDown)
         self.root.bind('<Down>', self.selectRunUpDown)
         
@@ -142,7 +143,8 @@ class XmippProjectGUI():
     def unpostMenu(self, event=None):
         if self.lastSelected:
             menu = self.lastPair()[1]
-            menu.unpost()
+            if menu:
+                menu.unpost()
             
     def postMenu(self, btn, menu):
         x, y, w = btn.winfo_x(), btn.winfo_y(), btn.winfo_width()
@@ -157,13 +159,16 @@ class XmippProjectGUI():
             lastBtn, lastMenu = self.lastPair()
             lastBtn.config(bg=ButtonBgColor)
             lastMenu.unpost()            
+        
         if self.lastSelected:
+            print 'posting menu'
             self.postMenu(btn, menu)
         
         if self.lastSelected != text:
             self.project.config.set('project', 'lastselected', text)
             self.project.writeConfig()
-            self.updateRunSelection(-1)
+            #self.updateRunSelection(-1)
+            print 'updating'
             self.updateRunHistory(text)            
         self.lastSelected = text  
             
@@ -195,7 +200,6 @@ class XmippProjectGUI():
             self.lastRunSelected = self.runs[index]
         self.updateRunSelection(index)
             
-        
     def runButtonClick(self, event=None):
         from protlib_sql import runColumns
         run = dict(zip(runColumns, self.lastRunSelected))

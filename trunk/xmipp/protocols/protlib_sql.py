@@ -458,10 +458,10 @@ class XmippProtocolDb(SqliteDb):
                 parent_step_id=self.lastid
             elif self.parentCase == XmippProjectDb.firstStep:
                 parent_step_id=XmippProjectDb.firstStep
-        if execute_mainloop == None:
-            execute_mainloop = True
-        if passDb==None:
-            passDb=False
+#        if execute_mainloop == None:
+#            execute_mainloop = True
+#        if passDb==None:
+#            passDb=False
         parameters = pickle.dumps(_Parameters, 0)#Dict
         self.cur_aux = self.connection.cursor()
         #print self.sqlInsertcommand, [command, parameters, iter]

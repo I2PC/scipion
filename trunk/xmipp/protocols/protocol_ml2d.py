@@ -66,23 +66,10 @@ class ProtML2D(XmippProtocol):
                 if (self.HighResLimit > 0):
                     params += ' --high %f' % self.HighResLimit
                     
-#        self.Db.insertAction('runJob', 
-#                             programname=program, 
-#                             params=params,
-#                             NumberOfMpiProcesses = self.NumberOfMpiProcesses,
-#                             NumberOfThreads = self.NumberOfThreads,
-#                             SystemFlavour = self.project.SystemFlavour)
-        a1 = self.Db.insertAction('funcA', number=1)
-        b1 = self.Db.insertAction('funcB', parent_step_id=a1, execute_mainloop=False, number=1)
-        b2 = self.Db.insertAction('funcB', parent_step_id=a1, execute_mainloop=False, number=2)
-        b10 = self.Db.insertAction('funcB',  parent_step_id=b1, execute_mainloop=False, number=10)
-        b20 = self.Db.insertAction('funcB',  parent_step_id=b2, execute_mainloop=False, number=20)
-        b20 = self.Db.insertAction('runActionGaps', passDb=True, NumberOfThreads=3)
-        a1 = self.Db.insertAction('funcC', number=1)
-     
-def funcA(log, number):
-    printLog(log, "calling funcA(%d)" % number)
-def funcB(log, number):
-    printLog(log, "calling funcB(%d)" % number)   
-def funcC(log, number):
-    printLog(log, "calling funcC(%d)" % number)    
+        self.Db.insertAction('runJob', 
+                             programname=program, 
+                             params=params,
+                             NumberOfMpiProcesses = self.NumberOfMpiProcesses,
+                             NumberOfThreads = self.NumberOfThreads,
+                             SystemFlavour = self.project.SystemFlavour)
+

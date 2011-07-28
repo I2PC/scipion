@@ -11,6 +11,7 @@
 
 import os,sys,shutil,time
 from protlib_base import *
+from config_protocols import protDict
 
 def getParameter(prm,filename):
     f = open(filename, 'r')

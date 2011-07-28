@@ -10,6 +10,7 @@
 #
 import os,shutil,time
 from protlib_base import *
+from config_protocols import protDict
 
 class ProtCommonLines(XmippProtocol):
     def __init__(self, scriptname, project):
