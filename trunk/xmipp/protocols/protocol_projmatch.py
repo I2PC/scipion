@@ -11,11 +11,10 @@
 #
 
 
-#from protlib_base import *
-#from xmipp import *
+import os
 from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL,MDL_COUNT
 from protlib_base import XmippProtocol, protocolMain
-from protlib_utils import getListFromVector
+from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector
 from protlib_sql import XmippProjectDb
 from config_protocols import protDict
 
@@ -220,7 +219,7 @@ class ProtProjMatch(XmippProtocol):
             suffixes += ['Info.xmd', '_ctf.stk', '_wien.stk', '_split.doc']        
         fnBase = os.path.join(self.CtfGroupDirectory, self.CtfGroupRootName)
         _VerifyFiles = [fnBase + s for s in suffixes]
-        _dataBase.insertAction('executeCtfGroups', _VerifyFiles, None, None,  CTFDatName = self.CTFDatName
+        _dataBase.insertAction('executeCtfGroups', verifyfiles=_VerifyFiles, CTFDatName = self.CTFDatName
                                                                             , CtfGroupDirectory = self.CtfGroupDirectory
                                                                             , CtfGroupMaxDiff = self.CtfGroupMaxDiff
                                                                             , CtfGroupMaxResol = self.CtfGroupMaxResol
@@ -234,19 +233,19 @@ class ProtProjMatch(XmippProtocol):
                                                                             , WienerConstant = self.WienerConstant)
         #Create Initial angular file. Either fill it with zeros or copy input
         _VerifyFiles = [self.DocFileWithOriginalAngles]
-        _dataBase.insertAction('initAngularReferenceFile', _VerifyFiles, None, None
+        _dataBase.insertAction('initAngularReferenceFile', verifyfiles=_VerifyFiles
                                                                 , DocFileName = self.DocFileName
                                                                 , DocFileWithOriginalAngles = self.DocFileWithOriginalAngles
                                                                 , SelFileName =self.SelFileName)
     
         #Save all parameters in dict for future runs (this is done by database)
         #so far no parameter is being saved, but dummy=0
-        self.Db.setIteration(XmippProjectDb.doAlways)
-        _dataBase.insertAction('self.saveParameters', SystemFlavour = self.SystemFlavour)
-        _dataBase.insertAction('self.loadParameters', None, None)
-        self.Db.setIteration(1)
+        #self.Db.setIteration(XmippProjectDb.doAlways)
+        #_dataBase.insertAction('self.saveParameters', SystemFlavour = self.SystemFlavour)
+        #_dataBase.insertAction('self.loadParameters', None, None)
+        #self.Db.setIteration(1)
         #no entries will be save untill this commit
-        print "commit databse"
+        #print "commit databse"
         _dataBase.connection.commit()
     
     def getIterDirName(self, iterN):
@@ -270,7 +269,7 @@ class ProtProjMatch(XmippProtocol):
             for refN in range(1, self.numberOfReferences + 1):
                 # Mask reference volume
                 _VerifyFiles = [self.maskedFileNamesIters[iterN][refN]]
-                _dataBase.insertAction('executeMask', _VerifyFiles, id, None
+                _dataBase.insertAction('executeMask', verifyfiles=_VerifyFiles, parent_step_id=id
                                     , DoMask =             self.DoMask
                                     , DoSphericalMask =    self.DoSphericalMask
                                     , maskedFileName =     self.maskedFileNamesIters[iterN][refN]
@@ -291,8 +290,8 @@ class ProtProjMatch(XmippProtocol):
                 for i in range (1,self.NumberOfCtfGroups+1):
                     _VerifyFiles.append(auxFn + "_group" + str(i).zfill(FILENAMENUMBERLENGTH) +"_sampling.xmd")
                             
-                _dataBase.insertAction('angular_project_library', _VerifyFiles, None, None,
-                                      AngSamplingRateDeg = self.AngSamplingRateDeg[iterN]
+                _dataBase.insertAction('angular_project_library', verifyfiles=_VerifyFiles
+                                    , AngSamplingRateDeg = self.AngSamplingRateDeg[iterN]
                                     , CtfGroupSubsetFileName = self.CtfGroupSubsetFileName
                                     , DoCtfCorrection = self.DoCtfCorrection
                                     , DocFileInputAngles = self.DocFileInputAngles[iterN-1]
@@ -317,7 +316,7 @@ class ProtProjMatch(XmippProtocol):
                 for i in range (1,self.NumberOfCtfGroups+1):
                     _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.xmd")
                     
-                _dataBase.insertAction('projection_matching', _VerifyFiles, None, None,
+                _dataBase.insertAction('projection_matching', verifyfiles=_VerifyFiles,
                                       AvailableMemory =self.AvailableMemory
                                     , CtfGroupRootName = self.CtfGroupRootName
                                     , CtfGroupDirectory = self.CtfGroupDirectory
@@ -346,8 +345,7 @@ class ProtProjMatch(XmippProtocol):
             #assign the images to the different references based on the crosscorrelation coheficient
             #if only one reference it just copy the docfile generated in the previous step
             _VerifyFiles = [self.DocFileInputAngles[iterN]]
-            _dataBase.insertAction('assign_images_to_references', _VerifyFiles,
-                                    None, None 
+            _dataBase.insertAction('assign_images_to_references', verifyfiles=_VerifyFiles
                                      , DocFileInputAngles = self.DocFileInputAngles[iterN]#Output file with angles
                                      , NumberOfCtfGroups  = self.NumberOfCtfGroups
                                      , ProjMatchRootName  = self.ProjMatchRootNames[iterN]#LIST
@@ -357,7 +355,7 @@ class ProtProjMatch(XmippProtocol):
             #align images, not possible for ctf groups
             for refN in range(1, self.numberOfReferences + 1):
                 _VerifyFiles = []
-                id = _dataBase.insertAction('angular_class_average', _VerifyFiles, None, None
+                id = _dataBase.insertAction('angular_class_average', verifyfiles=_VerifyFiles
                          , Align2DIterNr = self.Align2DIterNr[iterN]#
                          , Align2dMaxChangeRot = self.Align2dMaxChangeRot[iterN]#
                          , Align2dMaxChangeOffset = self.Align2dMaxChangeOffset[iterN]#
@@ -386,8 +384,7 @@ class ProtProjMatch(XmippProtocol):
                 ##############REMOVE SHUTIL.COPY
                 # Mask reference volume
                 
-                id = _dataBase.insertAction('executeMask', [self.maskedFileNamesIters[iterN][refN]],
-                                            None,None
+                id = _dataBase.insertAction('executeMask', verifyfiles=[self.maskedFileNamesIters[iterN][refN]]
                                                 , DoMask =             self.DoMask
                                                 , DoSphericalMask =    self.DoSphericalMask
                                                 , maskedFileName =     self.maskedFileNamesIters[iterN][refN]
@@ -420,7 +417,4 @@ class ProtProjMatch(XmippProtocol):
         self.preRun()
         self.otherActionsToBePerformedBeforeLoop()
         self.actionsToBePerformedInsideLoop()
-from protlib_utils import *
 
-if __name__ == '__main__':
-    protocolMain(ProtProjMatch)
