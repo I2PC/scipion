@@ -11,10 +11,13 @@
 #
 
 
-from protlib_base import *
-from xmipp import *
+#from protlib_base import *
+#from xmipp import *
+from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL,MDL_COUNT
+from protlib_base import XmippProtocol, protocolMain
 from protlib_utils import getListFromVector
-import os
+from protlib_sql import XmippProjectDb
+from config_protocols import protDict
 
 
 class ProtProjMatch(XmippProtocol):
