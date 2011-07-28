@@ -5,7 +5,6 @@ from protlib_utils import runJob
 def scaleImages(_log
                     , dimX
                     , dimY
-                    , DoParallel
                     , filename_currentAngles
                     , MpiJobSize
                     , NumberOfMpiProcesses
@@ -28,8 +27,7 @@ def scaleImages(_log
 
     runJob(_log,'xmipp_transform_geometry',
                      parameters,
-                     DoParallel,
-                     NumberOfMpiProcesses,
+                     NumberOfMpiProcesses * NumberOfThreads,
                      1, # Threads go in --scale option
                      SystemFlavour)
 

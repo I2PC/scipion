@@ -21,7 +21,6 @@ def joinImageCTF(_log, CTFgroupName,DocFileExp,inputSelfile):
 #reconstruct
 def reconstructVolume(_log 
                      ,DocFileExp
-                     , DoParallel
                      , MpiJobSize
                      , NumberOfMpiProcesses
                      , NumberOfThreads
@@ -33,14 +32,12 @@ def reconstructVolume(_log
     parameters  = ' -i ' +  DocFileExp 
     parameters += ' -o ' +  reconstructedVolume 
     parameters += ' --sym ' + SymmetryGroup +'h'
-    doParallel = DoParallel
-    if (doParallel):
+    if (NumberOfMpiProcesses>1):
             parameters += ' --mpi_job_size ' + MpiJobSize
             parameters += ' --thr ' + str(NumberOfThreads)
 
     runJob(_log,'xmipp_reconstruct_fourier',
                              parameters,
-                             doParallel,
                              NumberOfMpiProcesses,
                              NumberOfThreads,
                              SystemFlavour)
@@ -63,7 +60,6 @@ def maskVolume(_log
 def createProjections(_log
                       ,AngSamplingRateDeg
                       ,DocFileExp
-                      ,DoParallel
                       ,maskReconstructedVolume
                       ,MaxChangeInAngles
                       , MpiJobSize
@@ -73,7 +69,6 @@ def createProjections(_log
                       ,SymmetryGroup
                       ,SystemFlavour
 ):
-    doParallel = DoParallel
 
     parameters  = ' -i ' +  maskReconstructedVolume 
     parameters += ' --experimental_images ' +  DocFileExp
@@ -83,12 +78,11 @@ def createProjections(_log
     parameters += ' --sym ' + SymmetryGroup +'h'
     parameters += ' --compute_neighbors --near_exp_data ' 
     parameters += ' --angular_distance ' + str(MaxChangeInAngles)
-    if (doParallel):
+    if ((NumberOfMpiProcesses *NumberOfThreads)>1):
             parameters += ' --mpi_job_size ' + MpiJobSize
 
     runJob(_log,'xmipp_angular_project_library',
                              parameters,
-                             doParallel,
                              NumberOfMpiProcesses *NumberOfThreads,
                              1,
                              SystemFlavour)
