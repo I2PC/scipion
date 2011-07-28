@@ -112,7 +112,7 @@ void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_fil
 
 void ImageBase::applyGeo(const MetaData &md, size_t objId, bool only_apply_shifts, bool wrap)
 {
-	APPLY_GEO();
+    APPLY_GEO();
 }
 
 int ImageBase::readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts, DataMode datamode, size_t select_img, bool wrap)
@@ -467,13 +467,25 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
         }
 
         // Open image file
-        if ( ( hFile->fimg = fopen(fileName.c_str(), wmChar.c_str()) ) == NULL )
-            REPORT_ERROR(ERR_IO_NOTOPEN,(String)"Image::openFile cannot open: " + fileName);
+        if ( (hFile->fimg = fopen(fileName.c_str(), wmChar.c_str())) == NULL )
+        {
+            if (errno == EACCES)
+                REPORT_ERROR(ERR_IO_NOPERM,formatString("Image::openFile: permission denied when opening %s",fileName.c_str()));
+            else
+                REPORT_ERROR(ERR_IO_NOTOPEN,formatString("Image::openFile cannot open: %s", fileName.c_str()));
+        }
+
 
         if (headName != "")
         {
-            if ( ( hFile->fhed = fopen(headName.c_str(), wmChar.c_str()) ) == NULL )
-                REPORT_ERROR(ERR_IO_NOTOPEN,(String)"Image::openFile cannot open: " + headName);
+            if ((hFile->fhed = fopen(headName.c_str(), wmChar.c_str()))  == NULL )
+            {
+                if (errno == EACCES)
+                    REPORT_ERROR(ERR_IO_NOPERM,formatString("Image::openFile: permission denied when opening %s",headName.c_str()));
+                else
+                    REPORT_ERROR(ERR_IO_NOTOPEN,formatString("Image::openFile cannot open: %s",headName.c_str()));
+            }
+
         }
         else
             hFile->fhed = NULL;

@@ -1042,6 +1042,8 @@ public:
       */
     void setDimensions(int Xdim, int Ydim, int Zdim, int Ndim)
     {
+    	if (Xdim*Ydim*Zdim*Ndim < 1)
+    		REPORT_ERROR(ERR_MULTIDIM_SIZE, "Dimensions' size cannot be zero nor negative.");
         ndim=Ndim;
         zdim=Zdim;
         ydim=Ydim;

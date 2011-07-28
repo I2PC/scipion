@@ -1032,9 +1032,13 @@ private:
      */
     void mmapFile()
     {
-        if ( ( mFd = open(dataFName.c_str(), O_RDWR, S_IREAD | S_IWRITE) ) == -1 )
-            REPORT_ERROR(ERR_IO_NOTOPEN,"Image Class::ReadData: Error opening the image file.");
-
+        if ( (mFd = open(dataFName.c_str(), O_RDWR, S_IREAD | S_IWRITE)) == -1 )
+        {
+            if (errno == EACCES)
+                REPORT_ERROR(ERR_IO_NOPERM,formatString("Image Class::mmapFile: permission denied when opening %s",dataFName.c_str()));
+            else
+                REPORT_ERROR(ERR_IO_NOTOPEN,"Image Class::mmapFile: Error opening the image file to be mapped.");
+        }
         char * map;
 
         if ( (map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )

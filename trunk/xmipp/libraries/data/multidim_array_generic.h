@@ -44,6 +44,9 @@
 #define SWITCHDATATYPE(datatype,OP) \
     switch (datatype)\
         {\
+    	case Double:\
+    	    {OP(double)};\
+            break;\
         case Float:\
             {OP(float)};\
             break;\
