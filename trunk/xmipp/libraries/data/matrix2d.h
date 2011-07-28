@@ -376,7 +376,7 @@ public:
     	mappedData=true;
     	fdMap = open(fn.data(),  O_RDWR, S_IREAD | S_IWRITE);
 		if (fdMap == -1)
-			REPORT_ERROR(ERR_IO_NOPATH,fn);
+			REPORT_ERROR(ERR_IO_NOTOPEN,fn);
 		const size_t pagesize=sysconf(_SC_PAGESIZE);
 		size_t offsetPages=(offset/pagesize)*pagesize;
 		size_t offsetDiff=offset-offsetPages;
@@ -1084,8 +1084,7 @@ public:
             if (VEC_XSIZE(op1)!=mdimx)
                 op1.resizeNoCopy(mdimx);
 
-            for (int j = 0; j < mdimx; j++)
-                VEC_ELEM(op1,j) = MAT_ELEM(*this,0, j);
+            memcpy(&VEC_ELEM(op1,0),&MAT_ELEM(*this,0,0),mdimx*sizeof(double));
 
             op1.setRow();
         }
@@ -1141,8 +1140,7 @@ public:
 
         if (VEC_XSIZE(v)!=mdimx)
             v.resizeNoCopy(mdimx);
-        for (int j = 0; j < mdimx; j++)
-            VEC_ELEM(v,j) = MAT_ELEM(*this,i, j);
+        memcpy(&VEC_ELEM(v,0),&MAT_ELEM(*this,i,0),mdimx*sizeof(double));
 
         v.setRow();
     }
@@ -1199,8 +1197,7 @@ public:
         if (!v.isRow())
             REPORT_ERROR(ERR_MATRIX_DIM, "setRow: Not a row vector in assignment");
 
-        for (int j = 0; j < mdimx; j++)
-            MAT_ELEM(*this,i, j) = VEC_ELEM(v,j);
+        memcpy(&MAT_ELEM(*this,i,0),&VEC_ELEM(v,0),mdimx*sizeof(double));
     }
 
     /** Set Column
