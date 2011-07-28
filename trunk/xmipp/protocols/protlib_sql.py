@@ -62,6 +62,7 @@ class XmippProjectDb(SqliteDb):
     doAlways = 99999
     lastStep  = -1
     firstStep =  0
+    biggestStepId = 99999
             
     def __init__(self, dbName):
         try:
@@ -494,9 +495,13 @@ class XmippProtocolDb(SqliteDb):
         self.cur.execute(sqlCommand)
 
         commands = self.cur.fetchall()
-        for row in commands:
-            self.lastStepId = row['step_id']
-            self.runSingleAction(self.connection, self.cur, row)
+        n = len(commands)
+        for i in range(n):
+            if i < n - 1:
+                self.nextStepId = commands[i+1]['step_id']
+            else:
+                self.nextStepId = XmippProjectDb.biggestStepId
+            self.runSingleAction(self.connection, self.cur, commands[i])
         printLog(_log,'********************************************************')
         printLog(_log,' Protocol FINISHED')
 
@@ -505,15 +510,16 @@ class XmippProtocolDb(SqliteDb):
         _log = self.Log
         exec(self.Import)
         step_id = actionRow['step_id']
-        self.sqlDict['step_id'] = step_id
+        myDict = self.sqlDict.copy()
+        myDict['step_id'] = step_id
 #        sqlCommand = """ SELECT iter, passDb, command, parameters,fileNameList 
 #                        FROM %(TableSteps)s 
 #                        WHERE (step_id = %(step_id)d)
-#                          AND (run_id = %(run_id)d) """ % self.sqlDict
+#                          AND (run_id = %(run_id)d) """ % myDict
 #        _cursor.execute(sqlCommand)
 #
 #        row = _cursor.fetchone()
-        self.sqlDict['iter'] = actionRow['iter']
+        myDict['iter'] = actionRow['iter']
         command = actionRow['command']
         dict = pickle.loads(str(actionRow["parameters"]))
         if(self.PrintWrapperCommand):
@@ -531,7 +537,8 @@ class XmippProtocolDb(SqliteDb):
 
         sqlCommand = """UPDATE %(TableSteps)s SET init = CURRENT_TIMESTAMP 
                         WHERE step_id=%(step_id)d
-                          AND run_id=%(run_id)d""" % self.sqlDict
+                          AND run_id=%(run_id)d""" % myDict
+        #print "Updating init",sqlCommand
         _connection.execute(sqlCommand)
         _connection.commit()
         
@@ -544,21 +551,21 @@ class XmippProtocolDb(SqliteDb):
             _list =pickle.loads(str(actionRow["fileNameList"]))
             for i in _list:
                 if not os.path.exists(i):
-                    self.sqlDict['file'] = i
-                    print "ERROR at  step: %(step_id)d, file %(file)s has not been created." % self.sqlDict
+                    myDict['file'] = i
+                    print "ERROR at  step: %(step_id)d, file %(file)s has not been created." % myDict
                     exit(1)
                 elif self.viewVerifyedFiles:
                     print "Verified file:", i
         
         sqlCommand = """UPDATE %(TableSteps)s SET finish = CURRENT_TIMESTAMP 
                         WHERE step_id=%(step_id)d
-                          AND run_id=%(run_id)d""" % self.sqlDict
+                          AND run_id=%(run_id)d""" % myDict
         #print "Updating finish",sqlCommand
         _connection.execute(sqlCommand)
         _connection.commit()
         
         if self.PrintWrapperCommand:
-            print "Wrapper step: %(step_id)d finished\n" % self.sqlDict
+            print "Wrapper step: %d finished\n" % step_id
 
     # Function to get the first avalaible gap to run 
     # it will return pair (state, actionRow)
@@ -580,19 +587,18 @@ class XmippProtocolDb(SqliteDb):
                           AND (child.run_id=%(run_id)d)
                         LIMIT 1""" % self.sqlDict
             cursor.execute(sqlCommand)
-            print 'getActionGap', sqlCommand
             row = cursor.fetchone()
+            #print "getActionGap", sqlCommand
             if row is None:
                 result = (NO_AVAIL_GAP, None)
             else:
                 result = (ACTION_GAP, row)
-                print "row:", row
         else:
             result = (NO_MORE_GAPS, None)
         return result
     
     def countActionGaps(self, cursor):
-        self.sqlDict['step_id'] = self.lastStepId
+        self.sqlDict['step_id'] = self.nextStepId
         sqlCommand = """SELECT COUNT(*) FROM %(TableSteps)s 
                         WHERE (step_id < %(step_id)d) 
                           AND (finish IS NULL)
@@ -600,10 +606,9 @@ class XmippProtocolDb(SqliteDb):
                           AND (run_id=%(run_id)d) """ % self.sqlDict
         
         cursor.execute(sqlCommand)
-        result = cursor.fetchone()[0] 
-        print "countActionGaps", result
+        result =  cursor.fetchone()[0] 
+#        print 'countActionGaps', result
         return result
-        
 # Function to fill gaps of action in database
 # this will be usefull for parallel processing, i.e., in threads or with MPI
 # step_id is the step that will launch the process to fill previous gaps
@@ -626,7 +631,6 @@ def runThreadLoop(db, connection, cursor):
     import time
     while True:
         state, actionRow = db.getActionGap(cursor)
-        print "state", state
         if state == ACTION_GAP: #database will be unlocked after commit on init timestamp
             db.runSingleAction(connection, cursor, actionRow)
         else:
