@@ -80,6 +80,8 @@ public:
     Matrix2D<double> Wnode;
     // W transpose
     Matrix2D<double> Wtranspose;
+    // Q matrix
+    Matrix2D<double> Q;
 public:
     /// Empty constructor
     ProgImageRotationalPCA(int argc, char **argv);
@@ -108,6 +110,12 @@ public:
      * H=Tt(W).
      */
     void applyTt();
+
+    /** QR decomposition.
+     * In fact, only Q is computed. It returns the number of columns
+     * of Q different from 0.
+     */
+    int QR(const FileName &fnF, int Ydim, int Xdim);
 
     /** Run. */
     void run();
