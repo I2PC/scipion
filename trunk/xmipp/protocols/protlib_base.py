@@ -266,7 +266,7 @@ class XmippProtocol(object):
         touched in derived class, since the run of protocols should be the same'''
         
         #Change to project dir
-        os.chdir(self.projectDir);
+        os.chdir(self.projectDir)
 
         errors = self.validateInput()
         if len(errors) > 0:
@@ -292,7 +292,7 @@ class XmippProtocol(object):
         self.defineActions()
         self.Db.connection.commit()
         #Run actions from database
-        self.Db.runActions(self.Log, self.Import)
+        self.Db.runActions()
         #Stuff after running
         self.postRun()
         return 0

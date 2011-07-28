@@ -265,7 +265,8 @@ class XmippProtocolDb(SqliteDb):
         if not run_id:
             reportError("Protocol run '%(run_name)s' has not been registered in project database" % self.sqlDict)
         self.sqlDict['run_id'] = run_id
-                        
+        self.Import = protocol.Import  
+        self.Log = protocol.Log             
         #check if protocol has ben run previosluy (that is, there are finished steps)
         _sqlCommand = """ SELECT COUNT(*) 
                           FROM %(TableRuns)s NATURAL JOIN %(TableSteps)s
@@ -286,7 +287,7 @@ class XmippProtocolDb(SqliteDb):
         self.execSqlCommand(_sqlCommand, "Error cleaning table: %(TableStepsCurrent)s" % self.sqlDict)
         #Auxiliary string to insert/UPDATE data
         self.sqlInsertcommand = """ INSERT INTO 
-                                    %(TableStepsCurrent)s(command,parameters,iter,execute,passDb,run_id,parent_step_id)
+                                    %(TableStepsCurrent)s(command,parameters,iter,execute_mainloop,passDb,run_id,parent_step_id)
                                      VALUES (?,?,?,?,?,?,?)""" % self.sqlDict
         
         self.sqlInsertVerify  = " UPDATE %(TableStepsCurrent)s SET fileNameList= ? WHERE step_id=?"% self.sqlDict
@@ -330,7 +331,7 @@ class XmippProtocolDb(SqliteDb):
         else:
             raise Exception("self.ContinueAtIteration must be !=0")
 
-    def getStartingStepVerify(self,isIter):
+    def getStartingStepVerify(self, isIter):
         _sqlCommand = """SELECT step_id, iter, command, fileNameList 
                         FROM %(TableSteps)s
                         WHERE finish IS NULL
@@ -358,7 +359,7 @@ class XmippProtocolDb(SqliteDb):
                 return getMinId(row)
         return getMinId(row)
     
-    def saveParameters(self, _log, SystemFlavour):
+    def saveParameters(self, SystemFlavour):
         """save a dictionary to an auxiliary table"""
         if self.SystemFlavour == SystemFlavour:
             return
@@ -374,7 +375,7 @@ class XmippProtocolDb(SqliteDb):
         cur_aux.execute(sqlCommand, [pickle.dumps(dict, 0)])
         self.connection.commit()
         
-    def loadParameters(self, _log):
+    def loadParameters(self):
         """load a dictionary from an auxiliary table"""
         sqlCommand = """ SELECT parameters FROM %(TableParams)s WHERE run_id = %(run_id)d """ % self.sqlDict
         try:
@@ -463,18 +464,20 @@ class XmippProtocolDb(SqliteDb):
         self.cur_aux = self.connection.cursor()
         #print self.sqlInsertcommand, [command, parameters, iter]
         try:
-            self.cur_aux.execute(self.sqlInsertcommand, [command, parameters, self.iter,execute,passDb,
+            self.cur_aux.execute(self.sqlInsertcommand, [command, parameters, self.iter,execute_mainloop,passDb,
                                                      self.sqlDict['run_id'],parent_step_id])
         except sqlite.Error, e:
-            print "Cannot insert command:", e.args[0]
-            exit(1)        
+            reportError( "Cannot insert command: %s" % e.args[0])
         self.lastid = self.cur_aux.lastrowid
-        if (verifyfiles):
+        if verifyfiles:
             verifyfiles = pickle.dumps(verifyfiles, 0)#Dict
             self.cur_aux.execute(self.sqlInsertVerify, [verifyfiles,self.lastid])
+        print "insertAction", self.lastid
         return self.lastid
+    
 
-    def runActions(self, _log, _import):
+    def runActions(self):
+        _log = self.Log
         #check if tableName and tablename_aux are identical if not abort
         if self.createRestartTable:
             if self.compareParameters():
@@ -493,13 +496,14 @@ class XmippProtocolDb(SqliteDb):
         commands = self.cur.fetchall()
         for row in commands:
             self.lastStepId = row['step_id']
-            self.runSingleAction(self.connection, self.cur,_log, _import, row)
+            self.runSingleAction(self.connection, self.cur, row)
         printLog(_log,'********************************************************')
         printLog(_log,' Protocol FINISHED')
 
-    def runSingleAction(self, _connection, _cursor, _log, _import, actionRow):
+    def runSingleAction(self, _connection, _cursor, actionRow):
         import pprint
-        exec(_import)
+        _log = self.Log
+        exec(self.Import)
         step_id = actionRow['step_id']
         self.sqlDict['step_id'] = step_id
 #        sqlCommand = """ SELECT iter, passDb, command, parameters,fileNameList 
@@ -532,7 +536,7 @@ class XmippProtocolDb(SqliteDb):
         _connection.commit()
         
         if actionRow['passDb']:
-            exec ( command + '(_log, self, **dict)')
+            exec ( command + '(self, **dict)')
         else:
             exec ( command + '(_log, **dict)')
         
@@ -563,77 +567,84 @@ class XmippProtocolDb(SqliteDb):
     # NO_AVAIL_GAP, actionRow is Nonew and not available gaps now, retry later
     # ACTION_GAP, actionRow is a valid action row to work on
     def getActionGap(self, cursor):
-        #TODO: update to begin transaction
+        #The following query is just to start a transaction, pysqlite doesn't provide a better way
+        cursor.execute("UPDATE %(TableSteps)s SET step_id = -1 WHERE step_id < 0" % self.sqlDict)
         if self.countActionGaps(cursor) > 0:
-            self.sqlDict['step_id'] = self.StartAtStepN
-            self.sqlDict['iter'] = XmippProjectDb.doAlways
             sqlCommand = """ SELECT child.step_id, child.iter, child.passDb, child.command, child.parameters,child.fileNameList 
                         FROM %(TableSteps)s parent, %(TableSteps)s child
-                        WHERE (parent.step_id = child.step_id) 
+                        WHERE (parent.step_id = child.parent_step_id) 
                           AND (child.step_id < %(step_id)d)
                           AND (child.init IS NULL)
                           AND (parent.finish IS NOT NULL)
-                          AND (execute_mainloop =  0)
-                          AND run_id=%(run_id)d
+                          AND (child.execute_mainloop =  0)
+                          AND (child.run_id=%(run_id)d)
                         LIMIT 1""" % self.sqlDict
             cursor.execute(sqlCommand)
-            result = cursor.fetchone()
-            if result is None:
+            print 'getActionGap', sqlCommand
+            row = cursor.fetchone()
+            if row is None:
                 result = (NO_AVAIL_GAP, None)
             else:
-                result = (ACTION_GAP, result)
+                result = (ACTION_GAP, row)
+                print "row:", row
         else:
             result = (NO_MORE_GAPS, None)
         return result
     
     def countActionGaps(self, cursor):
         self.sqlDict['step_id'] = self.lastStepId
-        sqlCommand = """ UPDATE dummy SET id = 1; -- Force lock the database 
-                        SELECT COUNT(*) 
-                        FROM %(TableSteps)s 
-                        WHERE (step_id < %(step_id)d 
-                          AND (finish IS NOT NULL)
+        sqlCommand = """SELECT COUNT(*) FROM %(TableSteps)s 
+                        WHERE (step_id < %(step_id)d) 
+                          AND (finish IS NULL)
                           AND (execute_mainloop =  0)
-                          AND run_id=%(run_id)d""" % self.sqlDict
-        cursor.execute(sqlCommand)
-        return cursor.fetchone()[0]
+                          AND (run_id=%(run_id)d) """ % self.sqlDict
         
-    # Function to fill gaps of action in database
-    # this will be usefull for parallel processing, i.e., in threads or with MPI
-    # step_id is the step that will launch the process to fill previous gaps
-    def runActionGaps(self, _log, _import, connection=None, cursor=None):
-        if connection is None:
-            connection = self.connection
-        if cursor is None:
-            cursor = self.cur
-            
-        import time
-        while True:
-            state, actionRow = self.getActionGap(connection, cursor)
-            if state == ACTION_GAP: #database will be unlocked after commit on init timestamp
-                self.runSingleAction(connection, cursor, _log, _import, actionRow)
+        cursor.execute(sqlCommand)
+        result = cursor.fetchone()[0] 
+        print "countActionGaps", result
+        return result
+        
+# Function to fill gaps of action in database
+# this will be usefull for parallel processing, i.e., in threads or with MPI
+# step_id is the step that will launch the process to fill previous gaps
+def runActionGaps(db, NumberOfThreads):
+    # If run in separate threads, each one should create 
+    # a new connection and cursor
+    if NumberOfThreads > 1: 
+        threads = []
+        for i in range(NumberOfThreads):
+            thr = ThreadActionGap(db)
+            thr.start()
+            threads.append(thr)
+        #wait until all threads finish
+        for thr in threads:
+            thr.join() 
+    else:
+        runThreadLoop(db, db.connection, db.cur)
+        
+def runThreadLoop(db, connection, cursor):
+    import time
+    while True:
+        state, actionRow = db.getActionGap(cursor)
+        print "state", state
+        if state == ACTION_GAP: #database will be unlocked after commit on init timestamp
+            db.runSingleAction(connection, cursor, actionRow)
+        else:
+            connection.rollback() #unlock database
+            if state == NO_AVAIL_GAP:
+                time.sleep(1)
             else:
-                connection.rollback() #unlock database
-                if state == NO_AVAIL_GAP:
-                    time.sleep(1)
-                else:
-                    break
-            
-            
+                break
  
 # RunJobThread
 from threading import Thread
-class RunDbActionInThread(Thread):
-    def __init__(self,_log,_Db,_import,_step_id):
-        self._log=_log
-        self._Db=_Db
-        self._import=_import
-        self._step_id=_step_id
-        Thread.__init__ ( self )
-    
+class ThreadActionGap(Thread):
+    def __init__(self, db):
+        Thread.__init__(self)
+        self.db = db
     def run(self):
-        connection = sqlite.Connection(self._Db.dbName)
-        connection.row_factory = sqlite.Row
-        cursor = connection.cursor()
-        self._Db.runSingleAction(connection,cursor,self._log,self._import,self._step_id)
+        conn = sqlite.Connection(self.db.dbName)
+        conn.row_factory = sqlite.Row
+        cur = conn.cursor()
+        runThreadLoop(self.db, conn, cur)
 

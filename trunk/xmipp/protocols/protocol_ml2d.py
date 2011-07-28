@@ -7,13 +7,14 @@
 #  Updated:  J. M. de la Rosa Trevin July 2011
 #
 
-from protlib_base import XmippProtocol
+from protlib_base import XmippProtocol, protocolMain
+from protlib_utils import printLog   
 from config_protocols import protDict
 
 class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.ml2d.key, scriptname, project)
-        #self.Import = 'from protocol_ml2d import *'
+        self.Import = 'from protocol_ml2d import *'
 
     def validate(self):
         return []
@@ -65,10 +66,23 @@ class ProtML2D(XmippProtocol):
                 if (self.HighResLimit > 0):
                     params += ' --high %f' % self.HighResLimit
                     
-        self.Db.insertAction('runJob', 
-                             programname=program, 
-                             params=params,
-                             NumberOfMpiProcesses = self.NumberOfMpiProcesses,
-                             NumberOfThreads = self.NumberOfThreads,
-                             SystemFlavour = self.project.SystemFlavour)
-
+#        self.Db.insertAction('runJob', 
+#                             programname=program, 
+#                             params=params,
+#                             NumberOfMpiProcesses = self.NumberOfMpiProcesses,
+#                             NumberOfThreads = self.NumberOfThreads,
+#                             SystemFlavour = self.project.SystemFlavour)
+        a1 = self.Db.insertAction('funcA', number=1)
+        b1 = self.Db.insertAction('funcB', parent_step_id=a1, execute_mainloop=False, number=1)
+        b2 = self.Db.insertAction('funcB', parent_step_id=a1, execute_mainloop=False, number=2)
+        b10 = self.Db.insertAction('funcB',  parent_step_id=b1, execute_mainloop=False, number=10)
+        b20 = self.Db.insertAction('funcB',  parent_step_id=b2, execute_mainloop=False, number=20)
+        b20 = self.Db.insertAction('runActionGaps', passDb=True, NumberOfThreads=3)
+        a1 = self.Db.insertAction('funcC', number=1)
+     
+def funcA(log, number):
+    printLog(log, "calling funcA(%d)" % number)
+def funcB(log, number):
+    printLog(log, "calling funcB(%d)" % number)   
+def funcC(log, number):
+    printLog(log, "calling funcC(%d)" % number)    
