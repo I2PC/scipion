@@ -360,34 +360,35 @@ class XmippProtocolDb(SqliteDb):
                 return getMinId(row)
         return getMinId(row)
     
-    def saveParameters(self, SystemFlavour):
-        """save a dictionary to an auxiliary table"""
-        if self.SystemFlavour == SystemFlavour:
-            return
-        cur_aux = self.connection.cursor()
-        sqlCommand = """DELETE FROM %(TableParams)s
-                               WHERE run_id = %(run_id)d""" % self.sqlDict
-        cur_aux.execute(sqlCommand)
-        sqlCommand = """INSERT INTO %(TableParams)s(parameters, run_id) VALUES(?, %(run_id)d)"""% self.sqlDict
-        self.SystemFlavour = SystemFlavour
-        dict = { 
-          'SystemFlavour':self.SystemFlavour
-        }
-        cur_aux.execute(sqlCommand, [pickle.dumps(dict, 0)])
-        self.connection.commit()
-        
-    def loadParameters(self):
-        """load a dictionary from an auxiliary table"""
-        sqlCommand = """ SELECT parameters FROM %(TableParams)s WHERE run_id = %(run_id)d """ % self.sqlDict
-        try:
-            self.cur_aux.execute(sqlCommand)
-        except sqlite.Error, e:
-            print "loadParameters: Can not access to parameters computed in previous iteration:", e.args[0]
-            print "you may need to set ContinueAtIteration=1"
-            exit(1)
-        dict = pickle.loads(str(self.cur_aux.fetchone()[0]))
-        print dict
-        self.SystemFlavour=dict['SystemFlavour']
+# Maybe are DEPRECATED
+#    def saveParameters(self, SystemFlavour):
+#        """save a dictionary to an auxiliary table"""
+#        if self.SystemFlavour == SystemFlavour:
+#            return
+#        cur_aux = self.connection.cursor()
+#        sqlCommand = """DELETE FROM %(TableParams)s
+#                               WHERE run_id = %(run_id)d""" % self.sqlDict
+#        cur_aux.execute(sqlCommand)
+#        sqlCommand = """INSERT INTO %(TableParams)s(parameters, run_id) VALUES(?, %(run_id)d)"""% self.sqlDict
+#        self.SystemFlavour = SystemFlavour
+#        dict = { 
+#          'SystemFlavour':self.SystemFlavour
+#        }
+#        cur_aux.execute(sqlCommand, [pickle.dumps(dict, 0)])
+#        self.connection.commit()
+#        
+#    def loadParameters(self):
+#        """load a dictionary from an auxiliary table"""
+#        sqlCommand = """ SELECT parameters FROM %(TableParams)s WHERE run_id = %(run_id)d """ % self.sqlDict
+#        try:
+#            self.cur_aux.execute(sqlCommand)
+#        except sqlite.Error, e:
+#            print "loadParameters: Can not access to parameters computed in previous iteration:", e.args[0]
+#            print "you may need to set ContinueAtIteration=1"
+#            exit(1)
+#        dict = pickle.loads(str(self.cur_aux.fetchone()[0]))
+#        print dict
+#        self.SystemFlavour=dict['SystemFlavour']
 
     def compareParameters (self):
         """return 0 if new execution of script (tableName2) is a subset of and old execution(tableName1)
@@ -473,7 +474,6 @@ class XmippProtocolDb(SqliteDb):
         if verifyfiles:
             verifyfiles = pickle.dumps(verifyfiles, 0)#Dict
             self.cur_aux.execute(self.sqlInsertVerify, [verifyfiles,self.lastid])
-        print "insertAction", self.lastid
         return self.lastid
     
 
