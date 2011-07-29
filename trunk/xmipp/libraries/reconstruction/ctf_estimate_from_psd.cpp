@@ -654,6 +654,7 @@ void ProgCTFEstimateFromPSD::produce_side_info()
     prm.apply(enhanced_ctftomodel());
     CenterFFT(enhanced_ctftomodel(), false);
     enhanced_ctftomodel_fullsize() = enhanced_ctftomodel();
+    enhanced_ctftomodel_fullsize.write(fn_psd+"_enhanced_psd.xmp");
 
     // Enhance PSD for optimization
     prm.filter_w1 = f1;
@@ -668,7 +669,7 @@ void ProgCTFEstimateFromPSD::produce_side_info()
     double min_val = enhanced_ctftomodel().computeMin();
     FOR_ALL_ELEMENTS_IN_ARRAY2D(global_mask)
     if (global_mask(i, j)<=0)
-        enhanced_ctftomodel()(i, j) = min_val;
+        enhanced_ctftomodel(i, j) = min_val;
     MultidimArray<double> aux;
     medianFilter3x3(enhanced_ctftomodel(), aux);
     enhanced_ctftomodel() = aux;
