@@ -217,7 +217,7 @@ int ImageGeneric::readApplyGeo(const FileName &name, const MDRow &row, bool only
     DataType datatype;
     getImageType(name, datatype);
     setDatatype(datatype);
-    image->readApplyGeo(name, row, only_apply_shifts, datamode, select_img, wrap);
+    return image->readApplyGeo(name, row, only_apply_shifts, datamode, select_img, wrap);
 }
 
 int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts, DataMode datamode,
@@ -226,7 +226,7 @@ int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t 
     DataType datatype;
     getImageType(name, datatype);
     setDatatype(datatype);
-    image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img, wrap);
+    return image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img, wrap);
 }
 
 /** Read an image from metadata, filename is taken from MDL_IMAGE */
@@ -238,7 +238,7 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply
     DataType datatype;
     getImageType(name, datatype);
     setDatatype(datatype);
-    image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img, wrap);
+    return image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img, wrap);
 }
 
 /** Apply geometry in refering metadata to the image */
