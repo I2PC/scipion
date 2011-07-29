@@ -3,7 +3,7 @@ import pickle
 import os, sys
 from config_protocols import projectDefaults
 from protlib_utils import reportError, getScriptPrefix, printLog, printLogError, bcolors, makeScriptBackup, runJob
-from protlib_filesystem import deleteWorkingDirectory, createDir
+from protlib_filesystem import createDir
 
 runColumns = ['run_id',
               'run_name',
