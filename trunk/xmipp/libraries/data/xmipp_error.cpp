@@ -162,7 +162,7 @@ char * XmippError::getDefaultMessage(ErrorType e)
     case ERR_MD_UNDEFINED:
         return " Undefined label.";
     case ERR_MD_WRONGDATABLOCK:
-    	return " Block not existing.";
+        return " Block not existing.";
 
     case ERR_MEM_BADREQUEST:
         return " Bad amount of memory requested.";
@@ -223,5 +223,9 @@ char * XmippError::getDefaultMessage(ErrorType e)
     }
 }
 
-
+void reportWarning(const std::string& what)
+{
+    String error = formatString("=== XMIPP_WARNING ===\n%s", what.c_str());
+    std::cerr << colorString(error.c_str(), RED) << std::endl;
+}
 

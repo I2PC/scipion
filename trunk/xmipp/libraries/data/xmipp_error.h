@@ -259,5 +259,8 @@ public:
     static char * getDefaultMessage(ErrorType e);
 };
 
+
+void reportWarning(const std::string& what);
+
 /* @} */
 #endif

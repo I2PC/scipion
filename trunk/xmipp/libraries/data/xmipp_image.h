@@ -32,6 +32,7 @@
 
 #include "xmipp_image_base.h"
 #include "xmipp_image_generic.h"
+#include "xmipp_color.h"
 
 /// @addtogroup Images
 //@{
@@ -897,7 +898,8 @@ private:
         // Flag to know that data is not going to be mapped although mmapOn is true
         if (mmapOnRead && !checkMmapT(datatype))
         {
-            std::cout << " === WARNING === Image Class::readData: File datatype and image declaration not compatible with mmap. Loading into memory." <<std::endl;
+            reportWarning("Image::readData: File datatype and image declaration not "
+                          "compatible with mmap. Loading into memory.");
             mmapOnRead = false;
             mFd = -1;
         }
