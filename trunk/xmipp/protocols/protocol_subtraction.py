@@ -13,7 +13,8 @@
 #from protlib_utils import *
         
 import os, shutil, sys
-from xmipp import FileName
+from xmipp import FileName, MetaData, Image
+from xmipp import DATA, ALL_IMAGES
 #from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL,MDL_COUNT
 from protlib_base import XmippProtocol, protocolMain
 #from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector
@@ -204,10 +205,10 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                                        , dimY = self.dimY
                                        , filename_currentAngles = self.filename_currentAngles
                                        , MpiJobSize = self.MpiJobSize
-                                       , NumberOfMpiProcesses = NumberOfMpiProcesses
+                                       , NumberOfMpiProcesses = self.NumberOfMpiProcesses
                                        , NumberOfThreads = self.NumberOfThreads
                                        , scaledImages = self.scaledImages
-                                       , SystemFlavour = SystemFlavour
+                                       , SystemFlavour = self.SystemFlavour
                                        )            
     def actionsToBePerformedInsideLoop(self):
         _log = self.Log
