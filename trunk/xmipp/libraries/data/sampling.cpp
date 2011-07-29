@@ -131,8 +131,8 @@ void Sampling::setNeighborhoodRadius(double neighborhood)
     if(neighborhood<0)
         cos_neighborhood_radius=-1.01;
     else if(neighborhood>180.001)
-      REPORT_ERROR(ERR_ARG_INCORRECT,"Neighborhood can not be greater than 180. \n \
-          Use any negative value to cover the whole space ");
+        REPORT_ERROR(ERR_ARG_INCORRECT,"Neighborhood can not be greater than 180. \n \
+                     Use any negative value to cover the whole space ");
     else
     {
         neighborhood_radius_rad = DEG2RAD(neighborhood);
@@ -1549,33 +1549,33 @@ void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool
 
     if (write_sampling_sphere)
     {
-      //Read projection directions
-      md.read(FN_SAMPLING_SPHERE(fn_base));
-      size_t size = md.size();
-      sampling_points_angles.resize(size);
-      if (read_vectors)
-          sampling_points_vector.resize(size);
+        //Read projection directions
+        md.read(FN_SAMPLING_SPHERE(fn_base));
+        size_t size = md.size();
+        sampling_points_angles.resize(size);
+        if (read_vectors)
+            sampling_points_vector.resize(size);
 
-      FOR_ALL_OBJECTS_IN_METADATA(md)
-      {
-          size_t &i = __iter.objIndex;
-          size_t &id = __iter.objId;
+        FOR_ALL_OBJECTS_IN_METADATA(md)
+        {
+            size_t &i = __iter.objIndex;
+            size_t &id = __iter.objId;
 
-          Matrix1D<double> &angles = sampling_points_angles[i];
-          angles.resizeNoCopy(3);
-          md.getValue(MDL_ANGLEROT, XX(angles), id);
-          md.getValue(MDL_ANGLETILT, YY(angles), id);
-          md.getValue(MDL_ANGLEPSI, ZZ(angles), id);
+            Matrix1D<double> &angles = sampling_points_angles[i];
+            angles.resizeNoCopy(3);
+            md.getValue(MDL_ANGLEROT, XX(angles), id);
+            md.getValue(MDL_ANGLETILT, YY(angles), id);
+            md.getValue(MDL_ANGLEPSI, ZZ(angles), id);
 
-          if (read_vectors)
-          {
-              Matrix1D<double> &vectors = sampling_points_vector[i];
-              vectors.resizeNoCopy(3);
-              md.getValue(MDL_X, XX(vectors), id);
-              md.getValue(MDL_Y, YY(vectors), id);
-              md.getValue(MDL_Z, ZZ(vectors), id);
-          }
-      }
+            if (read_vectors)
+            {
+                Matrix1D<double> &vectors = sampling_points_vector[i];
+                vectors.resizeNoCopy(3);
+                md.getValue(MDL_X, XX(vectors), id);
+                md.getValue(MDL_Y, YY(vectors), id);
+                md.getValue(MDL_Z, ZZ(vectors), id);
+            }
+        }
 
     }
 }
@@ -1603,14 +1603,21 @@ void Sampling::computeNeighbors(bool only_winner)
     size_t exp_data_projection_direction_by_L_R_size = exp_data_projection_direction_by_L_R.size();
     size_t no_redundant_sampling_points_vector_size = no_redundant_sampling_points_vector.size();
 
-
+    std::cout << "Find valid sampling points based on the neighborhood" <<std::endl;
+    init_progress_bar(exp_data_projection_direction_by_L_R_size);
+    size_t ratio = exp_data_projection_direction_by_L_R_size /60;
     for(size_t j = 0; j < exp_data_projection_direction_by_L_R_size;)
     {
+        if ((j%ratio) == 0)
+            progress_bar(j);
+
 #ifdef MYPSI
+
         aux_neighbors_psi.clear();
 #endif
 
         aux_neighbors.clear();
+        size_t * aux_neighborsArray;
         for (size_t k = 0; k < R_repository.size(); k++,j++)
         {
             winner_dotProduct = -1.;
@@ -1625,6 +1632,7 @@ void Sampling::computeNeighbors(bool only_winner)
                     {
                         aux_neighbors.push_back(no_redundant_sampling_points_index[i]);
                         winner_dotProduct=my_dotProduct;
+                        aux_neighborsArray =  &aux_neighbors[0];
 
 #ifdef MYPSI
 
@@ -1656,9 +1664,13 @@ void Sampling::computeNeighbors(bool only_winner)
                         }
                         else
                         {
-                            for( int l=0;l<  aux_neighbors.size();l++)
+                            //precalculate size saves time here but
+                            //not in the whole loop
+                            size_t _size = aux_neighbors.size();
+                            for( int l=0;l<  _size;l++)
                             {
-                                if (aux_neighbors[l]==i)
+                                //if (aux_neighbors[l]==i)
+                                if (aux_neighborsArray[l]==i)
                                 {
                                     new_reference=false;
                                     break;
@@ -1690,8 +1702,10 @@ void Sampling::computeNeighbors(bool only_winner)
 #endif
 
     }//for j
+    progress_bar(exp_data_projection_direction_by_L_R_size);
     //#define CHIMERA
 #ifdef CHIMERA
+
     std::ofstream filestr;
     filestr.open ("compute_neighbors.bild");
     filestr    << ".color white"
@@ -1750,7 +1764,7 @@ void Sampling::removePointsFarAwayFromExperimentalData()
 
     for (int i = 0; i <= my_end; i++)
     {
-      bool my_delete=true;
+        bool my_delete=true;
         for (int j=0; my_delete && j< exp_data_projection_direction_by_L_R.size();j++)
         {
             my_dotProduct = dotProduct(no_redundant_sampling_points_vector[i],
