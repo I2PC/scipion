@@ -24,6 +24,8 @@ def scaleImages(_log
     parameters += ' -o ' + outFileName 
     parameters += ' --scale fourier ' + str(dimX) + ' ' + str(dimY) + ' ' + str(NumberOfThreads)
     parameters += ' --disable_metadata' 
+    if ((NumberOfMpiProcesses *NumberOfThreads)>1):
+            parameters += ' --mpi_job_size ' + MpiJobSize
 
     runJob(_log,'xmipp_transform_geometry',
                      parameters,
