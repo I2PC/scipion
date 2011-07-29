@@ -1032,7 +1032,12 @@ private:
      */
     void mmapFile()
     {
-        if ( (mFd = open(dataFName.c_str(), O_RDWR, S_IREAD | S_IWRITE)) == -1 )
+        if (this->hFile->mode == WRITE_READONLY)
+            mFd = open(dataFName.c_str(), O_RDONLY, S_IREAD);
+        else
+            mFd = open(dataFName.c_str(), O_RDWR, S_IREAD | S_IWRITE);
+
+        if ( mFd == -1 )
         {
             if (errno == EACCES)
                 REPORT_ERROR(ERR_IO_NOPERM,formatString("Image Class::mmapFile: permission denied when opening %s",dataFName.c_str()));
@@ -1041,7 +1046,12 @@ private:
         }
         char * map;
 
-        if ( (map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
+        if (this->hFile->mode == WRITE_READONLY)
+            map = (char*) mmap(0,mappedSize, PROT_READ, MAP_SHARED, mFd, 0);
+        else
+            map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0);
+
+        if ( map == (void*) -1 )
             REPORT_ERROR(ERR_MMAP_NOTADDR,"Image Class::ReadData: mmap of image file failed.");
         data.data = reinterpret_cast<T*> (map+mappedOffset);
         data.nzyxdimAlloc = XSIZE(data)*YSIZE(data)*ZSIZE(data)*NSIZE(data);

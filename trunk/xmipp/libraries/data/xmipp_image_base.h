@@ -117,6 +117,7 @@ struct ImageFHandler
     FileName  headName;   // Header file name
     FileName  ext_name;   // Filename extension
     bool     exist;       // Shows if the file exists. Equal 0 means file does not exist or not stack.
+    int     	  mode;   // Opening mode behavior
 };
 
 /// @name Images Speed-up
@@ -216,6 +217,7 @@ protected:
     FILE*               fimg;        // Image File handler
     FILE*               fhed;        // Image File header handler
     TIFF*               tif;         // TIFF Image file hander
+    ImageFHandler*      hFile;       // Image File handler information structure
     DataMode            dataMode;    // Flag to force select what will be read/write from image files
     bool                stayOpen;    // To maintain the image file open after read/write
     size_t              offset;      // Data offset
@@ -297,7 +299,7 @@ public:
     }
 
     /* Read image mapped from file */
-    int readMapped(const FileName &name, int select_slice = ALL_SLICES, size_t select_img = ALL_IMAGES);
+    int readMapped(const FileName &name, size_t select_img = ALL_IMAGES, int mode = WRITE_READONLY);
 
     /** Create a mapped image file
      *
@@ -314,12 +316,16 @@ public:
      * or a single image file from an stack, in the second case
      * the select slide may come in the image name or in the select_img parameter
      * file name takes precedence over select_img
-     * If -1 is given the whole object is read
+     * If ALL_IMAGES is given the whole object is read.
      *
-     * This function cannot apply geometrical transformations, but can map the image in disk
+     * Parameter mapData allows to access to image mapped to disk instead of loaded into
+     * memory. In case the mapped image is intended to be modified the parameter
+     * mode must be WRITE_REPLACE.
+     *
+     * This function cannot apply geometrical transformations.
      */
     int read(const FileName &name, DataMode datamode = DATA, size_t select_img = ALL_IMAGES,
-             bool mapData = false);
+             bool mapData = false, int mode = WRITE_READONLY);
 
     /** General read function
      * you can read a single image from a single image file

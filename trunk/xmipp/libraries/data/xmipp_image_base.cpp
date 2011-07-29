@@ -56,13 +56,24 @@ void ImageBase::clearHeader()
 
 /** General read function
  */
-int ImageBase::read(const FileName &name, DataMode datamode, size_t select_img, bool mapData)
+int ImageBase::read(const FileName &name, DataMode datamode, size_t select_img,
+                    bool mapData, int mode)
 {
-    ImageFHandler* hFile = openFile(name);
+    if (!mapData)
+        mode = WRITE_READONLY;
+
+    hFile = openFile(name, mode);
     int err = _read(name, hFile, datamode, select_img, mapData);
     closeFile(hFile);
 
     return err;
+}
+
+int ImageBase::readMapped(const FileName &name, size_t select_img, int mode)
+{
+    read(name, HEADER);
+    bool swap = this->swap > 0;
+    return read(name, DATA, select_img, !swap, mode);
 }
 
 /** New mapped file */
@@ -174,7 +185,7 @@ void ImageBase::write(const FileName &name, size_t select_img, bool isStack,
     //    else if (!isStack && mode != WRITE_OVERWRITE)
     //        mode = WRITE_OVERWRITE;
 
-    ImageFHandler* hFile = openFile(fname, mode);
+    hFile = openFile(fname, mode);
     _write(fname, hFile, select_img, isStack, mode, castMode);
     closeFile(hFile);
 }
@@ -394,7 +405,7 @@ void ImageBase::getShifts(double &xoff, double &yoff, double &zoff, const size_t
 ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
 {
     if (name.empty())
-        REPORT_ERROR(ERR_PARAM_INCORRECT, "Cannot open an empty Filename.");
+        REPORT_ERROR(ERR_PARAM_INCORRECT, "ImageBase::openFile Cannot open an empty Filename.");
 
     ImageFHandler* hFile = new ImageFHandler;
     FileName fileName, headName = "";
@@ -411,6 +422,7 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
         fileName = fileName.substr(0, found) ;
 
     hFile->exist = exists(fileName);
+    hFile->mode = mode;
 
     String wmChar;
 

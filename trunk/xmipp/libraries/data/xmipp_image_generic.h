@@ -212,7 +212,7 @@ public:
 
     /** Read image mapped from file.
      */
-    int readMapped(const FileName &name, size_t select_img = ALL_IMAGES);
+    int readMapped(const FileName &name, size_t select_img = ALL_IMAGES, int mode = WRITE_READONLY);
 
     /* Read an image with a lower resolution as a preview image.
     * If Zdim parameter is not passed, then all slices are rescaled.

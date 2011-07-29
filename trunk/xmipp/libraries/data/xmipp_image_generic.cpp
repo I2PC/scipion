@@ -173,17 +173,17 @@ int ImageGeneric::read(const FileName &name, DataMode datamode, size_t select_im
     DataType datatype;
     getImageType(name, datatype, swap);
     setDatatype(datatype);
-    image->read(name, datamode, select_img, mapData && !swap);
+    return image->read(name, datamode, select_img, mapData && !swap);
 }
 
-int ImageGeneric::readMapped(const FileName &name, size_t select_img)
+int ImageGeneric::readMapped(const FileName &name, size_t select_img, int mode)
 {
     bool swap;
     DataType datatype;
     getImageType(name, datatype, swap);
     setDatatype(datatype);
 
-    image->read(name, DATA, select_img, !swap);
+    return image->read(name, DATA, select_img, !swap, mode);
 }
 
 int ImageGeneric::readPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img)
@@ -192,7 +192,7 @@ int ImageGeneric::readPreview(const FileName &name, int Xdim, int Ydim, int sele
     getImageType(name, datatype);
     setDatatype(datatype);
 
-    image->readPreview(name, Xdim, Ydim, select_slice, select_img);
+    return image->readPreview(name, Xdim, Ydim, select_slice, select_img);
 }
 
 void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
