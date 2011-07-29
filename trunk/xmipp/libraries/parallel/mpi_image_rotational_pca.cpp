@@ -99,8 +99,6 @@ void ProgImageRotationalPCA::produceSideInfo()
 
     Hblock.resizeNoCopy(Nangles*Nshifts,Neigen+2);
     W.resizeNoCopy(Xdim*Xdim, Neigen+2);
-    Wnode.resizeNoCopy(Xdim*Xdim,Neigen+2);
-    Wtranspose.resizeNoCopy(Neigen+2,Xdim*Ydim);
 
     if (node->isMaster())
     {
@@ -125,8 +123,8 @@ void ProgImageRotationalPCA::produceSideInfo()
 // Apply T ================================================================
 void ProgImageRotationalPCA::applyT()
 {
-    W.initZeros();
-    Wnode.initZeros();
+    W.initZeros(Xdim*Xdim,MAT_XSIZE(H));
+    Wnode.initZeros(Xdim*Xdim,MAT_XSIZE(H));
 
     FileName fnImg;
     size_t idx=0;
@@ -217,6 +215,7 @@ void ProgImageRotationalPCA::applyT()
 void ProgImageRotationalPCA::applyTt()
 {
     // Compute W transpose to accelerate memory access
+	Wtranspose.resizeNoCopy(MAT_XSIZE(W),MAT_YSIZE(W));
     FOR_ALL_ELEMENTS_IN_MATRIX2D(Wtranspose)
     MAT_ELEM(Wtranspose,i,j) = MAT_ELEM(W,j,i);
 
@@ -336,6 +335,7 @@ int ProgImageRotationalPCA::QR(const FileName &fnF, int FYdim, int FXdim)
 
         // Keep qj1 in Q if it has enough norm
         double Rii=qj1.module();
+        std::cout << Rii << std::endl;
         if (Rii>1e-14)
         {
             // Make qj1 to be unitary
@@ -387,4 +387,7 @@ void ProgImageRotationalPCA::run()
         Q.mapToFile(fnRoot+"_matrixQ.raw",FXdim,FYdim);
     }
 
+    // Load Q in matrix H and apply T
+    H.mapToFile(fnRoot+"_matrixQ.raw",Nimg*Nshifts*Nangles,qrDim);
+    applyT();
 }
