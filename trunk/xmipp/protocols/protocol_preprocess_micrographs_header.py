@@ -23,7 +23,7 @@ DisplayComment = False
 Describe your run here...
 """
 #-----------------------------------------------------------------------------
-# {section} Global parameters
+# {section} Run parameters
 #-----------------------------------------------------------------------------
 # Run name:
 """ This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
@@ -31,18 +31,19 @@ run1 for it. This name together with the protocol output folder will determine t
 """
 RunName = "run_001"
 
-# Delete working directory?
-""" If TRUE the working directory will be deleted before run.
-Set this option to TRUE if you want to start from scratch the same run
-with previous parameters
+# {list}(Resume, Restart) Run behavior
+""" Resume from the last step, restart the whole process or continue at a given step or iteration
 """
-DoDeleteWorkingDir = False
+Behavior = "Resume"
 
+#-----------------------------------------------------------------------------
+# {section} Input micrographs
+#-----------------------------------------------------------------------------
 # {dir} Micrographs directory
 """Directory name from where to process all scanned micrographs"""
 DirMicrographs = 'Micrographs'
 
-# Which files in this directory to process
+# Files to process
 """ This is typically *.tif or *.ser, but may also be *.mrc, *.spi 
     (see the expert options)
     Note that any wildcard is possible, e.g. *3[1,2].tif
@@ -53,7 +54,7 @@ ExtMicrographs = '*.mrc'
 # {section}{has_question} Preprocess
 #------------------------------------------------------------------------------------------------
 # Do preprocess
-DoPreprocess = True
+DoPreprocess = False
 
 # Crop borders
 """ Crop a given amount of pixels from each border.
@@ -112,34 +113,37 @@ LowResolCutoff = 0.05
 """
 HighResolCutoff = 0.35
 
-# {expert} Minimum defocus to search (in Ang.)
-""" Minimum defocus value (in Angstrom) to include in defocus search
+# {expert} Minimum defocus to search (in microns)
+""" Minimum defocus value (in microns) to include in defocus search
 """
-MinFocus = 5000
+MinFocus = 0.5
 
-# {expert} Maximum defocus to search (in Ang.)
-""" Maximum defocus value (in Angstrom) to include in defocus search
+# {expert} Maximum defocus to search (in microns)
+""" Maximum defocus value (in microns) to include in defocus search
 """
-MaxFocus = 100000
+MaxFocus = 10
 
 # {expert} Window size
 WinSize = 256
 
-# {expert} Defocus step for CTFFIND (in Ang.)
-""" Step size for defocus search (in Angstrom)
+# Do CTFFIND
+DoCtffind = False
+
+# {condition}(DoCtffind=True){expert} Defocus step for CTFFIND (in microns)
+""" Step size for defocus search (in microns)
 """
-StepFocus = 1000
+StepFocus = 0.1
 
 #------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------
-# Number of MPI processes to use
-NumberOfMpiProcesses = 3
+# Number of MPI processes
+NumberOfMpiProcesses = 8
 
 # Submit to queue
 """Submit to queue
 """
-SubmitToQueue = True
+SubmitToQueue = False
 
 # {condition}(SubmitToQueue=True) Queue name
 """Name of the queue to submit the job
@@ -151,7 +155,7 @@ QueueName = "default"
 be running, after that time it will be killed by the
 queue system
 """
-QueueHours = 72
+QueueHours = 24
 
 # {hidden} Show expert options
 """If True, expert options will be displayed

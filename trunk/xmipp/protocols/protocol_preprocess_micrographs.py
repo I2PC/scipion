@@ -22,13 +22,17 @@ import xmipp
 class ProtPreprocessMicrographs(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.preprocess_micrographs.key, scriptname, project)
-        self.Import="from protocol_preprocess_micrographs import launchPreprocessMicrographsBatch, gatherResults"
-
-        # Check if ctffind executable is available
+        self.Import="from protocol_preprocess_micrographs import *"
         self.CtffindExec =  which('ctffind3.exe')
-        self.DoCtffind = self.CtffindExec != ''
+        if self.Behavior=="Resume": # It should be in a common place
+            self.isIter=False
+            self.continueAt=-1
+        elif self.Behavior=="Restart":
+            self.isIter=False
+            self.continueAt=1
 
     def defineActions(self):
+        CtfFindActions=[]        
         for filename in glob.glob(self.DirMicrographs + '/' + self.ExtMicrographs):
             # Get the shortname and extension
             (filepath, micrographName)=os.path.split(filename)
@@ -46,31 +50,34 @@ class ProtPreprocessMicrographs(XmippProtocol):
                 AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
             
             # Insert actions in the database
-            self.Db.insertAction('createDir',path=micrographDir)
-            id=self.Db.insertAction('preprocessMicrograph',[os.path.join(micrographDir,"micrograph."+extension)],None,
-                                    False,False,micrograph=filename,micrographDir=micrographDir,DoPreprocess=self.DoPreprocess,
+            id=self.Db.insertAction('createDir',path=micrographDir,execute_mainloop=True)
+            id=self.Db.insertAction('preprocessMicrograph',verifyfiles=[os.path.join(micrographDir,"micrograph"+extension)],
+                                    parent_step_id=id, execute_mainloop=True,
+                                    micrograph=filename,micrographDir=micrographDir,DoPreprocess=self.DoPreprocess,
                                     Crop=self.Crop,Stddev=self.Stddev,Down=self.Down)
             if self.DoCtfEstimate:
-                self.Db.insertAction('estimateCtfXmipp',[os.path.join(micrographDir,"xmipp_ctf.ctfparam")],id,False,False,
+                self.Db.insertAction('estimateCtfXmipp',verifyfiles=[os.path.join(micrographDir,"xmipp_ctf.ctfparam")],
+                                     parent_step_id=id,execute_mainloop=True,
                                      micrograph=finalname,micrographDir=micrographDir,Voltage=self.Voltage,
                                      SphericalAberration=self.SphericalAberration,AngPix=AngPix,
                                      AmplitudeContrast=self.AmplitudeContrast,LowResolCutoff=self.LowResolCutoff,
                                      HighResolCutoff=self.HighResolCutoff,
                                      MinFocus=self.MinFocus,MaxFocus=self.MaxFocus,WinSize=self.WinSize)
                 if self.DoCtffind:
-                    self.Db.insertAction('estimateCtfCtffind',[os.path.join(micrographDir,"ctffind.ctfparam")],id,False,False,
+                    CtfFindActions.append([dict(verifyfiles=[os.path.join(micrographDir,"ctffind.ctfparam")],
+                                         execute_mainloop=True,
                                          CtffindExec=self.CtffindExec,micrograph=finalname,micrographDir=micrographDir,
                                          Voltage=self.Voltage,SphericalAberration=self.SphericalAberration,
                                          AngPix=AngPix,Magnification=self.Magnification,AmplitudeContrast=self.AmplitudeContrast,
                                          LowResolCutoff=self.LowResolCutoff,
                                          HighResolCutoff=self.HighResolCutoff,MinFocus=self.MinFocus,MaxFocus=self.MaxFocus,
-                                         StepFocus=self.StepFocus,WinSize=self.WinSize)
-
-        # Launch all the external actions
-        self.Db.insertAction('launchPreprocessMicrographsBatch',WorkingDir=self.WorkingDir,protocolHeader=self.scriptName)
+                                         StepFocus=self.StepFocus,WinSize=self.WinSize)])
+        for action in CtfFindActions:
+            action["parent_step_id"]=id # This makes all ctffinds to go after the last preprocessing
+            self.Db.insertAction('estimateCtfCtffind',action)
         
         # Gather results after external actions
-        self.Db.insertAction('gatherResults',WorkingDir=self.WorkingDir,DirMicrographs=self.DirMicrographs,
+        self.Db.insertAction('gatherResults',verifyfiles=[os.path.join(micrographDir,"micrographs.sel")],WorkingDir=self.WorkingDir,DirMicrographs=self.DirMicrographs,
                              ExtMicrographs=self.ExtMicrographs, DoCtfEstimate=self.DoCtfEstimate,DoCtffind=self.DoCtffind)
                
     def validate(self):
@@ -84,6 +91,10 @@ class ProtPreprocessMicrographs(XmippProtocol):
         # Check that Q0 is negative
         if self.AmplitudeContrast>0:
             errors.append("Q0 should be negative ")
+        
+        # Check CTFFIND is available
+        if self.DoCtffind and self.CtffindExec=="":
+            errors.append("Cannot locate ctffind3.exe")
     
         return errors
 
@@ -109,6 +120,131 @@ class ProtPreprocessMicrographs(XmippProtocol):
 def launchPreprocessMicrographsBatch(log,WorkingDir,protocolHeader):
     pass
 
+def preprocessMicrograph(log,micrograph,micrographDir,DoPreprocess,Crop,Stddev,Down):
+    # Decide name after preprocessing
+    finalname=os.path.join(micrographDir,'micrograph')
+    (filepath, micrographName)=os.path.split(os.path.relpath(micrograph))
+    (shortname2, extension)=os.path.splitext(micrographName)        
+    if DoPreprocess and (not Stddev == -1 or not Crop == -1 or not Down == 1):
+        finalname += ".mrc"
+    else:
+        finalname += extension
+        if not os.path.exists(finalname):
+            relpath = os.path.relpath(micrograph, micrographDir)
+            runJob(log,"ln",'-s %(relpath)s %(finalname)s' % locals())
+            if micrograph.endswith(".raw"):
+                runJob(log,"ln",'-s %(relpath)s.inf %(finalname)s.inf' % locals())
+            return
+    if not DoPreprocess:
+        return
+    
+    # Crop
+    iname=micrograph
+    if not Crop == -1:
+        runJob(log,"xmipp_transform_window"," -i %(iname)s -o %(finalname)s --crop %(Crop)d -v 0" % locals())
+        iname=finalname
+    
+    # Remove bad pixels
+    if not Stddev == -1:
+        params = " -i %(iname)s --bad_pixels outliers %(Stddev)f -v 0" % locals()
+        if not iname == finalname:
+            params += " -o " + finalname
+            iname=finalname
+        runJob(log,"xmipp_transform_filter",params)
+    
+    # Downsample
+    if not Down == 1:
+        tmpFile=os.path.join(micrographDir,"tmp.mrc")
+        runJob(log,"xmipp_transform_downsample","-i %(iname)s -o %(tmpFile)s --step %(Down)f --method fourier" % locals())
+        runJob(log,"mv", "-f %(tmpFile)s %(finalname)s" % locals())
+
+def estimateCtfXmipp(log,micrograph,micrographDir,Voltage,SphericalAberration,AngPix,
+                     AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,WinSize):
+    params="--micrograph "+os.path.join(micrographDir,micrograph)+" --oroot "+os.path.join(micrographDir,"xmipp_ctf")+\
+           " --kV "+str(Voltage)+\
+           " --Cs "+str(SphericalAberration)+\
+           " --sampling_rate "+str(AngPix)+\
+           " --ctfmodelSize 256"+\
+           " --Q0 "+str(AmplitudeContrast)+\
+           " --min_freq "+str(LowResolCutoff)+\
+           " --max_freq "+str(HighResolCutoff)+\
+           " --pieceDim "+str(WinSize)+\
+           " --defocus_range "+str((MaxFocus-MinFocus)*10000/2)+\
+           " --defocusU "+str((MaxFocus+MinFocus)*10000/2)
+    runJob(log,"xmipp_ctf_estimate_from_micrograph",params)
+
+def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,Voltage,SphericalAberration,AngPix,Magnification,
+                       AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
+    # Convert image to MRC
+    if not micrograph.endswith('.mrc'):
+        mrcMicrograph= os.path.join(micrographDir,'tmp.mrc')
+        runJob(log,'xmipp_image_convert','-i ' + micrograph + ' -o ' + mrcMicrograph + ' -v 0')
+    else:
+        mrcMicrograph = micrograph;
+
+    # Prepare parameters for CTFTILT
+    (filepath, micrographName)=os.path.split(micrograph)
+    (fnRoot, extension)=os.path.splitext(micrographName)
+    params = '  << eof > ' + micrographDir + '/ctffind.log\n'
+    params += os.path.join(micrographDir,mrcMicrograph) + "\n"
+    params += micrographDir + '/ctffind_spectrum.mrc\n'
+    params += str(SphericalAberration) + ',' + \
+              str(Voltage) + ',' + \
+              str(AmplitudeContrast) + ',' + \
+              str(Magnification) + ',' + \
+              str(Magnification*AngPix*1e-4) + "\n"
+    params += str(WinSize) + ',' + \
+              str(AngPix / LowResolCutoff) + ',' + \
+              str(AngPix / HighResolCutoff) + ',' + \
+              str(MinFocus*10000) + ',' + \
+              str(MaxFocus*10000) + ',' + \
+              str(StepFocus*10000) + "\n"
+    runJob(log, "export NATIVEMTZ=kk ; "+CtffindExec,params)
+
+    fnOut=micrographDir + '/ctffind.ctfparam'
+
+    # Remove temporary files
+    if os.path.exists(micrographDir + '/tmp.mrc'):
+        os.remove(micrographDir + '/tmp.mrc')
+
+    # Pick values from ctffind
+    if not os.path.exists(micrographDir + '/ctffind.log'):
+        return
+    
+    # Effectively pickup results
+    fh=open(micrographDir + '/ctffind.log', 'r')
+    lines=fh.readlines()
+    fh.close()
+    DF1=0.
+    DF2=0.
+    Angle=0.
+    found=False
+    for i in range(len(lines)):
+        if not (lines[i].find('Final Values') == -1):
+            words=lines[i].split()
+            DF1=float(words[0])
+            DF2=float(words[1])
+            Angle=float(words[2])
+            found=True
+            break
+
+    if not found:
+        return
+    
+    # Generate Xmipp .ctfparam file:
+    MD=xmipp.MetaData()
+    MD.setColumnFormat(False)
+    objId=MD.addObject()
+    MD.setValue(xmipp.MDL_CTF_SAMPLING_RATE, float(AngPix), objId)
+    MD.setValue(xmipp.MDL_CTF_VOLTAGE,       float(Voltage), objId)
+    MD.setValue(xmipp.MDL_CTF_DEFOCUSU,      float(-DF2), objId)
+    MD.setValue(xmipp.MDL_CTF_DEFOCUSV,      float(-DF1), objId)
+    MD.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, float(Angle), objId)
+    MD.setValue(xmipp.MDL_CTF_CS,            float(SphericalAberration), objId)
+    MD.setValue(xmipp.MDL_CTF_Q0,            float(-AmplitudeContrast), objId)
+    MD.setValue(xmipp.MDL_CTF_K,             1.0, objId)
+    MD.write(fnOut)
+
 def gatherResults(log,WorkingDir,DirMicrographs,ExtMicrographs,DoCtfEstimate,DoCtffind):
     MD=xmipp.MetaData()
     for filename in glob.glob(DirMicrographs + '/' + ExtMicrographs):
@@ -120,7 +256,7 @@ def gatherResults(log,WorkingDir,DirMicrographs,ExtMicrographs,DoCtfEstimate,DoC
         MD.setValue(xmipp.MDL_IMAGE, filename,objId)
         if DoCtfEstimate:
             MD.setValue(xmipp.MDL_PSD,               os.path.join(micrographDir,"xmipp_ctf.psd"),objId)
-            MD.setValue(xmipp.MDL_PSD_ENHANCED,      os.path.join(micrographDir,"xmipp_ctf_psd_enhanced.xmp"),objId)
+            MD.setValue(xmipp.MDL_PSD_ENHANCED,      os.path.join(micrographDir,"xmipp_ctf_enhanced_psd.xmp"),objId)
             MD.setValue(xmipp.MDL_CTFMODEL,          os.path.join(micrographDir,"xmipp_ctf.ctfparam"),objId)
             MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE1, os.path.join(micrographDir,"xmipp_ctf_ctfmodel_quadrant.xmp"),objId)
             MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE2, os.path.join(micrographDir,"xmipp_ctf_ctfmodel_halfplane.xmp"),objId)
