@@ -93,16 +93,16 @@ void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_fil
     else
         fnToOpen=_filename;
 
-    /* If the filename is in stack we will suppose you want to write this,
-     * even if you have not set the flags to.
+    /* If the filename is in stack or an image is selected, we will suppose
+     * you want to write this, even if you have not set the flags to.
      */
-    if ( filename.isInStack() && mode == WRITE_OVERWRITE)
+    if ( (filename.isInStack() || select_img > ALL_IMAGES) && mode == WRITE_OVERWRITE)
     {
         isStack = true;
         mode = WRITE_REPLACE;
     }
 
-    ImageFHandler *hFile = openFile(fnToOpen, mode);
+    hFile = openFile(fnToOpen, mode);
     _write(filename, hFile, select_img, isStack, mode);
     closeFile(hFile);
 }
@@ -720,16 +720,7 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
             std::cerr << "(_x,_y,_z) " << _Xdim << " " << _Ydim << " " << _Zdim << " " <<_Ndim <<std::endl;
             REPORT_ERROR(ERR_MULTIDIM_SIZE,"write: target and source objects have different size");
         }
-
-        //            if( mode == WRITE_REPLACE && select_img > _Ndim )
-        //                replaceNsize = select_img;
-
-        //            if(auxI.replaceNsize < 1 &&
-        //               (mode==WRITE_REPLACE || mode==WRITE_APPEND))
-        //                REPORT_ERROR(ERR_IO,"write: output file is not an stack");
     }
-    //    else if (!_exists && mode == WRITE_REPLACE)
-    //        mode == WRITE_OVERWRITE; //
     else if(!_exists && mode == WRITE_APPEND)
     {
         ;

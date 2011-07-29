@@ -70,10 +70,10 @@ typedef enum
  */
 typedef enum
 {
-    WRITE_OVERWRITE, //forget about the old file and overwrite it
-    WRITE_APPEND,    //append and object at the end of a stack, so far can not append stacks
-    WRITE_REPLACE,   //replace a particular object by another
     WRITE_READONLY,   //only can read the file
+    WRITE_OVERWRITE, //forget about the old file and overwrite it
+    WRITE_REPLACE,   //replace a particular object by another
+    WRITE_APPEND,    //append and object at the end of a stack, so far can not append stacks
     WRITE_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
     // it is here for looping purposes
 } WriteMode;

@@ -491,13 +491,6 @@ void XmippMetadataProgram::readParams()
         oroot = getParam("--oroot");
     }
 
-    if (fn_out != fn_in && oroot.empty() && delete_output_stack)
-    {
-        FileName fn_stack_plain = fn_out.removeFileFormat();
-        if (exists(fn_stack_plain))
-            unlink(fn_stack_plain.c_str());
-    }
-
     mdIn.read(fn_in, NULL, decompose_stacks);
     mdInSize = mdIn.size();
 
@@ -521,6 +514,9 @@ void XmippMetadataProgram::readParams()
 
     if (allow_apply_geo && zdimOut == 1)
         apply_geo = !checkParam("--dont_apply_geo");
+
+    if (delete_output_stack)
+        delete_output_stack = fn_out != fn_in && oroot.empty();
 
     // If the output is a stack, create empty stack file in advance to avoid concurrent access to the header
     create_empty_stackfile = (each_image_produces_an_output &&
@@ -551,6 +547,16 @@ void XmippMetadataProgram::postProcess()
 
 void XmippMetadataProgram::startProcessing()
 {
+    if (delete_output_stack)
+    {
+        FileName fn_stack_plain = fn_out.removeFileFormat();
+        if (exists(fn_stack_plain))
+            unlink(fn_stack_plain.c_str());
+    }
+
+    if (create_empty_stackfile)
+        createEmptyFile(fn_out, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE);
+
     //Show some info
     show();
     // Initialize progress bar
@@ -559,9 +565,6 @@ void XmippMetadataProgram::startProcessing()
         init_progress_bar(time_bar_size);
     time_bar_step = CEIL((double)time_bar_size / 60.0);
     time_bar_done = 0;
-
-    if (create_empty_stackfile)
-        createEmptyFile(fn_out, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE);
 }
 
 void XmippMetadataProgram::finishProcessing()
