@@ -28,7 +28,7 @@
 #include <data/metadata.h>
 #include <data/xmipp_program.h>
 
-typedef enum { PRINT, EXTRACT, ASSIGN, RESET } HeaderOperation;
+typedef enum { HEADER_PRINT, HEADER_EXTRACT, HEADER_ASSIGN, HEADER_RESET } HeaderOperation;
 
 class ProgHeader: public XmippMetadataProgram
 {
@@ -69,20 +69,20 @@ protected:
     void readParams()
     {
         if (checkParam("--extract"))
-            operation = EXTRACT;
+            operation = HEADER_EXTRACT;
         else if (checkParam("--assign"))
-            operation = ASSIGN;
+            operation = HEADER_ASSIGN;
         else if (checkParam("--reset"))
-            operation = RESET;
+            operation = HEADER_RESET;
         else
         {
-            operation = PRINT;
+            operation = HEADER_PRINT;
             allow_time_bar = false;
             decompose_stacks = getIntParam("--print") == 1;
         }
         XmippMetadataProgram::readParams();
         round_shifts = checkParam("--round_shifts");
-        if (operation != EXTRACT && checkParam("-o"))
+        if (operation != HEADER_EXTRACT && checkParam("-o"))
           REPORT_ERROR(ERR_PARAM_INCORRECT, "Argument -o is not valid for this operation");
     }
 
@@ -91,16 +91,16 @@ protected:
         String msg;
         switch (operation)
         {
-        case PRINT:
+        case HEADER_PRINT:
             msg = "Printing headers...";
             break;
-        case EXTRACT:
+        case HEADER_EXTRACT:
             msg = "Extracting image(s) geometrical transformations from header to metadata...";
             break;
-        case ASSIGN:
+        case HEADER_ASSIGN:
             msg = "Assigning image(s) geometrical transformations from metadata to header...";
             break;
-        case RESET:
+        case HEADER_RESET:
             msg = "Reseting geometrical transformations from headers...";
             break;
         }
@@ -133,18 +133,18 @@ protected:
 
         switch (operation)
         {
-        case PRINT:
+        case HEADER_PRINT:
             img.read(fnImg, _HEADER_ALL);
             img.print();
             break;
-        case EXTRACT:
+        case HEADER_EXTRACT:
             img.read(fnImg, _HEADER_ALL);
             row = img.getGeometry();
             if (round_shifts)
                 roundShifts();
             mdIn.setRow(row, objId);
             break;
-        case ASSIGN:
+        case HEADER_ASSIGN:
             mdIn.getRow(row, objId);
             if (round_shifts)
                 roundShifts();
@@ -152,7 +152,7 @@ protected:
             img.setDataMode(_HEADER_ALL);
             img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
             break;
-        case RESET:
+        case HEADER_RESET:
             img.read(fnImg, _HEADER_ALL);
             img.initGeometry();
             img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
@@ -162,7 +162,7 @@ protected:
 
     void finishProcessing()
     {
-        if (operation == EXTRACT)
+        if (operation ==HEADER_EXTRACT)
         {
             mdOut = mdIn;
             single_image = false;
@@ -172,12 +172,6 @@ protected:
 }
 ;// end of class ProgHeader
 
-/* MAIN -------------------------------------------------------------------- */
-int main(int argc, char *argv[])
-{
-    ProgHeader program;
-    program.read(argc, argv);
-    program.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgHeader);
 
 
