@@ -710,7 +710,11 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         auxI.getDimensions(_Xdim, _Ydim, _Zdim, _Ndim);
 
         replaceNsize = _Ndim;
-        swapWrite = auxI.swap;
+
+        /** If we are going to changes all images, then swap of the file may be changed,
+         *  otherwise, original swap remains. */
+        if (select_img > ALL_IMAGES || Ndim < replaceNsize)
+            swapWrite = auxI.swap;
 
         if(Xdim != _Xdim ||
            Ydim != _Ydim ||

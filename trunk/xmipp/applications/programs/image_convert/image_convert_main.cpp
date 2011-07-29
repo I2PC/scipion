@@ -38,7 +38,8 @@ typedef enum
 class ProgConvImg: public XmippMetadataProgram
 {
 private:
-    std::string  type, depth;
+    std::string  type;       // Type of output conversion
+    std::string  depth;
     ImageGeneric imIn, *imOut;
     DataType     outDataT;
     MDRow        row;
@@ -183,10 +184,13 @@ protected:
             type == "img";
             writeMode = WRITE_REPLACE;
         }
-        else if (type == "stk" || appendToStack)
+        else if (type == "stk" && appendToStack)
             writeMode = WRITE_APPEND;
         else
+        {
             writeMode = WRITE_OVERWRITE;
+            delete_output_stack = true;
+        }
 
         depth = (checkParam("--depth"))? "%" + (String)getParam("--depth") : "";
 
@@ -195,9 +199,11 @@ protected:
 
     void preProcess()
     {
-        FileName fn_stack_plain = fn_out.removeFileFormat();
-        if (exists(fn_stack_plain) && !appendToStack) // Allow to append a single image to a stack
-            unlink(fn_stack_plain.c_str());
+        if (create_empty_stackfile)
+        {
+            createEmptyFile(fn_out, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE, swap);
+            create_empty_stackfile = false;
+        }
 
         convMode = MD2MD;
 

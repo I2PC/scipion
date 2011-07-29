@@ -231,7 +231,7 @@ public:
      */
     void mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
                        bool createTempFile=false, size_t select_img = APPEND_IMAGE,
-                       bool isStack=false, int mode=WRITE_OVERWRITE);
+                       bool isStack=false, int mode=WRITE_OVERWRITE, int _swapWrite = 0);
 
     /* MultidimArrayGeneric data access
      */
@@ -322,10 +322,11 @@ private:
     *
     * An image file, which name and format are given by filename,
     * is created. Only the header info is written, and if image number is given, then disk space
-    * until ndim - 1 is reserved.
+    * is reserved until select_img .
+    * Swap the endianess of the image header is also possible.
     */
 void createEmptyFile(const FileName &_filename, int Xdim, int Ydim, int Zdim = 1,
                      size_t select_img = APPEND_IMAGE, bool isStack = false,
-                     int mode = WRITE_OVERWRITE);
+                     int mode = WRITE_OVERWRITE, int _swapWrite = 0);
 
 #endif /* IMAGE_GENERIC_H_ */

@@ -29,24 +29,28 @@
 
 #include <stdio.h>
 #include "xmipp_strings.h"
+enum colorAttribute
+{
+    RESET     =  0,
+    BRIGHT    =  1,
+    DIM       =  2,
+    UNDERLINE =  3,
+    BLINK     =  4,
+    REVERSE   =  7,
+    HIDDEN    =  8
+};
 
-#define RESET       0
-#define BRIGHT      1
-#define DIM         2
-#define UNDERLINE   3
-#define BLINK       4
-#define REVERSE     7
-#define HIDDEN      8
-
-#define BLACK       0
-#define RED         1
-#define GREEN       2
-#define YELLOW      3
-#define BLUE        4
-#define MAGENTA     5
-#define CYAN        6
-#define WHITE       7
-
+enum colorCode
+{
+    BLACK   =  0,
+    RED     =  1,
+    GREEN   =  2,
+    YELLOW  =  3,
+    BLUE    =  4,
+    MAGENTA =  5,
+    CYAN    =  6,
+    WHITE   =  7
+};
 
 void textcolor(int attr, int fg, int bg);
 

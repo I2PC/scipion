@@ -196,9 +196,11 @@ int ImageGeneric::readPreview(const FileName &name, int Xdim, int Ydim, int sele
 }
 
 void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
-                                  bool createTempFile, size_t select_img, bool isStack,int mode)
+                                  bool createTempFile, size_t select_img, bool isStack,int mode, int swapWrite)
 {
     image->setDataMode(HEADER); // Use this to ask rw* which datatype to use
+    if (swapWrite > 0)
+        image->swapOnWrite();
     image->mapFile2Write(Xdim,Ydim,Zdim,_filename,createTempFile, select_img, isStack, mode);
 
     DataType writeDT = image->dataType();
@@ -210,7 +212,7 @@ void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &
 }
 
 int ImageGeneric::readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts,
-    DataMode datamode, size_t select_img, bool wrap)
+                               DataMode datamode, size_t select_img, bool wrap)
 {
     DataType datatype;
     getImageType(name, datatype);
@@ -229,7 +231,7 @@ int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t 
 
 /** Read an image from metadata, filename is taken from MDL_IMAGE */
 int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts,
-    DataMode datamode, size_t select_img, bool wrap)
+                               DataMode datamode, size_t select_img, bool wrap)
 {
     FileName name;
     md.getValue(MDL_IMAGE, name, objId/*md.firstObject()*/);
@@ -298,7 +300,7 @@ void ImageGeneric::subtract(const ImageGeneric &img)
 
 
 void createEmptyFile(const FileName &filename, int Xdim, int Ydim, int Zdim,
-                     size_t select_img, bool isStack, int mode)
+                     size_t select_img, bool isStack, int mode, int _swapWrite)
 {
     ImageGeneric image;
     size_t found = filename.find_first_of("%");
@@ -312,5 +314,5 @@ void createEmptyFile(const FileName &filename, int Xdim, int Ydim, int Zdim,
         image.setDatatype(datatypeString2Int(strType));
     }
 
-    image.mapFile2Write(Xdim, Ydim, Zdim, filename, false, select_img, isStack, mode);
+    image.mapFile2Write(Xdim, Ydim, Zdim, filename, false, select_img, isStack, mode, _swapWrite);
 }
