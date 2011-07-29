@@ -278,9 +278,8 @@ class XmippProtocol(object):
         
         self.Db.setIteration(1)
         #insert basic operations for all scripts
-        self.Db.insertAction('deleteWorkingDirectory'
-                                                        ,DoDeleteWorkingDir  = self.DoDeleteWorkingDir
-                                                        ,WorkingDir          = self.WorkingDir)
+        if self.Behavior=="Restart":
+             self.Db.insertAction('deleteDir',path = self.WorkingDir)
 
         self.Db.insertAction('createDir', path = self.WorkingDir)
         self.Db.setIteration(XmippProjectDb.doAlways)
