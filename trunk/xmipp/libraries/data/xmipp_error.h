@@ -259,7 +259,8 @@ public:
     static char * getDefaultMessage(ErrorType e);
 };
 
-
+/** Print a report warning and continue the execution.
+ */
 void reportWarning(const std::string& what);
 
 /* @} */
