@@ -127,12 +127,12 @@ NumberOfMpiProcesses = 2
 """
 MpiJobSize ='1'
 
-#Submmit to queue
+#Submit to queue
 """Submmit to queue"""
-SubmmitToQueue=False
+SubmitToQueue=False
 
 #------------------------------------------------------------------------------------------------
-# {section}{expert}{condition}(SubmmitToQueue=True) Queue 
+# {section}{expert}{condition}(SubmitToQueue=True) Queue 
 #------------------------------------------------------------------------------------------------
 
 # Queue name
