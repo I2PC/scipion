@@ -63,7 +63,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         AngSamplingRateDeg=getComponentFromVector(eval(fn +'.AngSamplingRateDeg'),self.iterationNo - 1)
         if (len(self.AngSamplingRateDeg) <1):
             self.AngSamplingRateDeg    = AngSamplingRateDeg
-        MaxChangeInAngles=getComponentFromVector(eval(fn +'.MaxChangeInAngles'),self.iterationNo - 1)
+        MaxChangeInAngles=float(getComponentFromVector(eval(fn +'.MaxChangeInAngles'),self.iterationNo - 1))
         if (len(self.MaxChangeInAngles) <1):
             self.MaxChangeInAngles    = MaxChangeInAngles
         
@@ -123,9 +123,6 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             self.dRradiusMax = round(self.dRradiusMax/factorX)
             self.dRradiusMin = round(self.dRradiusMin/factorY)
             
-        print "dRradiusMax: ", self.dRradiusMax
-        print "dRradiusMin: ", self.dRradiusMin
-        
         #if not ctf info available use original sel FIXME
         tmpFileName = os.path.join(self.pmprotWorkingDir,'CtfGroups/ctf_group??????.sel')
         self.defGroups=['']
