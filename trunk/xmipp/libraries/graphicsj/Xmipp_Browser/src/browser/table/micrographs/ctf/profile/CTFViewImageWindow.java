@@ -3,9 +3,7 @@ package browser.table.micrographs.ctf.profile;
 import browser.table.micrographs.ctf.profile.utils.Plot;
 import browser.LABELS;
 import browser.imageitems.ImageConverter;
-import browser.windows.ImagesWindowFactory;
 import ij.IJ;
-import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
@@ -69,28 +67,10 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
     private double xValues[];
     private double plotProfile[], plotBgNoise[], plotEnvelope[], plotPSD[], plotCTF[];
     private double plotAVGprofile[], plotAVGbgnoise[], plotAVGenvelope[], plotAVGpsd[], plotAVGctf[];
-//    private double minPlots, minAVGPlots, maxPlots, maxAVGPlots;
-//    private double CTFUpperLimit, CTFLowerLimit;
     private Plot plot, plotAVG;
     private double Tm;
     private boolean invert = true;
 
-//    public static void main(String args[]) {
-//        String file = "/data2/coss/Preprocessing/DnaB-DnaC_50000X3/xmipp_ctf_ctfmodel_halfplane.xmp";
-//        String CTFFilename = "/data2/coss/Preprocessing/DnaB-DnaC_50000X3/xmipp_ctf.ctfparam";
-//        String PSDFilename = "/data2/coss/Preprocessing/DnaB-DnaC_50000X3/xmipp_ctf.psd";
-//
-//        try {
-//            new ImageJ();
-//            ImagePlus imp = ImageConverter.convertToImagej(
-//                    new ImageDouble(file), file);
-//
-//            ImagesWindowFactory.openCTFView(imp, CTFFilename, PSDFilename);
-//            //ImagesWindowFactory.openFileAsText(CTFFilename, null);
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//        }
-//    }
     public CTFViewImageWindow(ImagePlus imp, String CTFFilename, String PSDFilename) {
         super(imp);
 

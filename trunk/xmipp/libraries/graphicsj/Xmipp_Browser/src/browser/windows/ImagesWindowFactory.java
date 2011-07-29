@@ -25,6 +25,7 @@ import java.awt.Component;
 import java.io.File;
 import java.util.ArrayList;
 import xmipp.Filename;
+import xmipp.ImageDouble;
 
 /**
  *
@@ -73,14 +74,13 @@ public class ImagesWindowFactory {
     }
 
     public static void openFileAsImage(String path, boolean poll) {
-        File f = new File(path);
+        try {
+            ImageDouble id = new ImageDouble(path);
+            ImagePlus imp = ImageConverter.convertToImagej(id, path);
 
-        if (f.exists()) {
-            ImagePlus ip = IJ.openImage(path);
-
-            openXmippImageWindow(ip, poll);
-        } else {
-            IJ.error("File not found: " + path);
+            openXmippImageWindow(imp, poll);
+        } catch (Exception e) {
+            IJ.error(e.getMessage() + ": " + path);
         }
     }
 
