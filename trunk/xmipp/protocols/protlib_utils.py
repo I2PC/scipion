@@ -35,11 +35,11 @@ class XmippLog:
     '''This class is a simple wrapper around the most rich Python logging system
     Also providing a basic file logging for older python versions
     '''    
-    def __init__(self, logname, filename):
+    def __init__(self, filename):
         self.is_basic = False
         try:
             import logging
-            mylog = logging.getLogger(logname)
+            mylog = logging.getLogger(filename)
             hdlr = logging.FileHandler(filename)
             formatter = logging.Formatter('(%(asctime)s) %(levelname)s (%(lineno)4d) %(message)s')
             hdlr.setFormatter(formatter)
@@ -114,22 +114,6 @@ def getScriptPrefix(script):
     return s.groups()
 
 #---------------------------------------------------------------------------
-# Other utilities
-#---------------------------------------------------------------------------
-def makeScriptBackup(log, script, WorkingDir):
-    '''Make a backup of the script
-    This function assumes the execution from ProjectDir
-    '''
-    log.info("Making backup of script " + script)
-    import shutil
-    try:        
-        script_prefix, script_number = getScriptPrefix(script)
-        script_out = os.path.join(WorkingDir, script_prefix + '_backup.py')
-        shutil.copy(script, script_out)
-    except shutil.Error, e:
-        printLog(log, e.message)     
-    
-#---------------------------------------------------------------------------
 # Parsing of arguments
 #---------------------------------------------------------------------------
 def getComponentFromVector(__vector, _iteration):
@@ -183,12 +167,14 @@ def reportError(msg):
     print >> sys.stderr, "%sERROR: %s %s"% (bcolors.FAIL,msg,bcolors.ENDC)
     exit(1)
 
-def confirmWarning(warningList):
+def showWarnings(warningList, notConfirm=False):
     '''Function to write error message to log, to screen and exit'''
     if not warningList or len(warningList) == 0:
         return True
     for warning in warningList:
         print >> sys.stderr, "%sWARNING: %s %s"% (bcolors.WARNING,warning,bcolors.ENDC)
+    if notConfirm:
+        return True
     answer = raw_input('Do you want to proceed? [y/N]:')
     if not answer or answer.lower() == 'n':
         return False
