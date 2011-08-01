@@ -2,8 +2,8 @@ from pysqlite2 import dbapi2 as sqlite
 import pickle
 import os, sys
 from config_protocols import projectDefaults
-from protlib_utils import reportError, getScriptPrefix, printLog, printLogError, bcolors, makeScriptBackup, runJob
-from protlib_filesystem import createDir
+from protlib_utils import reportError, getScriptPrefix, printLog, printLogError, bcolors, runJob
+from protlib_filesystem import createDir, deleteDir
 
 runColumns = ['run_id',
               'run_name',
@@ -59,10 +59,10 @@ class SqliteDb:
         return result
     
 class XmippProjectDb(SqliteDb):
-    doAlways = 99999
-    lastStep  = -1
-    firstStep =  0
-    biggestStepId = 99999
+    LAST_STEP  = -1
+    FIRST_STEP = 1
+    FIRST_ITER = 1
+    BIGGEST_STEP = 99999
             
     def __init__(self, dbName):
         try:
@@ -97,31 +97,26 @@ class XmippProjectDb(SqliteDb):
                           CONSTRAINT unique_workingdir UNIQUE(run_name, protocol_name));""" % self.sqlDict
             self.execSqlCommand(_sqlCommand, "Error creating '%(TableRuns)s' table: " % self.sqlDict)
             
-            def createStepTable(tableName):            
-                _sqlCommand = (" CREATE TABLE IF NOT EXISTS " + tableName +  """
-                             (step_id INTEGER DEFAULT 0, -- primary key (weak entity)
-                             command TEXT,               -- comment (NOT USED, DROP?)
-                             parameters TEXT,            -- wrapper parameters
-                             init DATE,                  -- process started at
-                             finish DATE,                -- process finished at
-                             verified BOOL DEFAULT 'f',  -- auxiliary column to mark verified files (NOT USED, DROP?)
-                             fileNameList TEXT,          -- list with files to modify
-                             iter INTEGER DEFAULT 1,     -- for iterative scripts, iteration number
-                                                         -- useful to restart at iteration n
-                             execute_mainloop BOOL,      -- Should the script execute this wrapper in main loop?
-                                                         -- an external program that will run it
-                             passDb BOOL,                -- Should the script pass the database handler
-                             run_id         INTEGER REFERENCES        %(TableRuns)s(run_id)  ON DELETE CASCADE,
-                                                         -- key that unify all processes belonging to a run 
-                             parent_step_id INTEGER REFERENCES """ + tableName +"""(step_id) ON DELETE CASCADE,
-                                                          -- parent_step_id step must be executed before 
-                                                          -- step_id may be executed
-                             PRIMARY KEY(step_id, run_id))""") % self.sqlDict
-            
-                self.execSqlCommand(_sqlCommand, ("Error creating " + tableName + " table: ") % self.sqlDict)
-                
-            createStepTable('%(TableSteps)s')
-            createStepTable('%(TableStepsRestart)s')
+            _sqlCommand = """ CREATE TABLE IF NOT EXISTS %(TableSteps)s 
+                         (step_id INTEGER DEFAULT 0, -- primary key (weak entity)
+                         command TEXT,               -- comment (NOT USED, DROP?)
+                         parameters TEXT,            -- wrapper parameters
+                         init DATE,                  -- process started at
+                         finish DATE,                -- process finished at
+                         verifyFiles TEXT,           -- list with files to modify
+                         iter INTEGER DEFAULT 1,     -- for iterative scripts, iteration number
+                                                     -- useful to resume at iteration n
+                         execute_mainloop BOOL,      -- Should the script execute this wrapper in main loop?
+                                                     -- an external program that will run it
+                         passDb BOOL,                -- Should the script pass the database handler
+                         run_id INTEGER REFERENCES %(TableRuns)s(run_id)  ON DELETE CASCADE,
+                                                     -- key that unify all processes belonging to a run 
+                         parent_step_id INTEGER REFERENCES %(TableSteps)s(step_id) ON DELETE CASCADE,
+                                                      -- parent_step_id step must be executed before 
+                                                      -- step_id may be executed
+                         PRIMARY KEY(step_id, run_id))""" % self.sqlDict
+        
+            self.execSqlCommand(_sqlCommand, "Error creating %(TableSteps)s table: " % self.sqlDict)
             
             _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableParams)s 
                             (parameters TEXT,
@@ -232,266 +227,87 @@ class XmippProjectDb(SqliteDb):
         return self.cur.fetchall()
      
 class XmippProtocolDb(SqliteDb): 
-    
-    def __init__(self, dbName, continueAt, isIter, protocol):
-        """Constructor of the Sqlite database
-        dbName    -- The filename of the database, the full path will be created if not exists
-        continueAt -- at wich point to continue
-        isIter     -- if True continueAt refers to iteration, otherwise refers to one step
-        """
+    def __init__(self, protocol):
+        self.runBehavior = protocol.Behavior
+        self.dbName = protocol.project.dbName
+        self.Import = protocol.Import  
+        self.Log = protocol.Log             
         self.sqlDict = projectDefaults
-        self.ContinueAtIteration = continueAt        
-        self.dbName = dbName
-        self.connection = sqlite.Connection(dbName)
+        self.connection = sqlite.Connection(self.dbName)
         self.connection.row_factory = sqlite.Row
-        self.cur                = self.connection.cursor()
-        self.cur_aux            = self.connection.cursor()
-        self.lastid = XmippProjectDb.firstStep
-        self.iter = self.lastid + 1
-        self.parentCase=XmippProjectDb.lastStep
-        # print wrapper name
-        self.PrintWrapperCommand=True
-        # print wrapper parameters
-        self.PrintWrapperParameters=False
-        #project dir
-        self.ProjDir="."
-        #verify output files
-        self.verify=True
-        #show file veification
-        self.viewVerifyedFiles=False
-        #constant
-        self.SystemFlavour = "None"
+        self.cur = self.connection.cursor()
+        self.cur_aux = self.connection.cursor()
+        self.lastStepId = XmippProjectDb.FIRST_STEP
+        self.iter = XmippProjectDb.FIRST_ITER
+        self.ProjDir = "."
+
         #get run_id
         run_id = self.getRunId(protocol.Name, protocol.RunName)
         if not run_id:
             reportError("Protocol run '%(run_name)s' has not been registered in project database" % self.sqlDict)
         self.sqlDict['run_id'] = run_id
-        self.Import = protocol.Import  
-        self.Log = protocol.Log             
-        #check if protocol has ben run previosluy (that is, there are finished steps)
-        _sqlCommand = """ SELECT COUNT(*) 
-                          FROM %(TableRuns)s NATURAL JOIN %(TableSteps)s
-                          WHERE finish IS NOT NULL 
-                            AND run_id = %(run_id)d""" % self.sqlDict
-        
-        self.cur.execute(_sqlCommand)
-        stepNo = self.cur.fetchone()[0]
-            
-        self.createRestartTable = stepNo>0 and self.ContinueAtIteration != 1
 
-        if self.createRestartTable:
-            self.sqlDict['TableStepsCurrent'] = self.sqlDict['TableStepsRestart']
+        # Restart or resume
+        if self.runBehavior=="Restart":
+            _sqlCommand = 'DELETE FROM %(TableSteps)s WHERE run_id = %(run_id)d' % self.sqlDict
+            self.execSqlCommand(_sqlCommand, "Error cleaning table: %(TableSteps)s" % self.sqlDict)
+            self.insertStatus=True
         else:
-            self.sqlDict['TableStepsCurrent'] = self.sqlDict['TableSteps']
-            
-        _sqlCommand = 'DELETE FROM %(TableStepsCurrent)s WHERE run_id = %(run_id)d' % self.sqlDict
-        self.execSqlCommand(_sqlCommand, "Error cleaning table: %(TableStepsCurrent)s" % self.sqlDict)
-        #Auxiliary string to insert/UPDATE data
-        self.sqlInsertcommand = """ INSERT INTO 
-                                    %(TableStepsCurrent)s(command,parameters,iter,execute_mainloop,passDb,run_id,parent_step_id)
-                                     VALUES (?,?,?,?,?,?,?)""" % self.sqlDict
-        
-        self.sqlInsertVerify  = " UPDATE %(TableStepsCurrent)s SET fileNameList= ? WHERE step_id=?"% self.sqlDict
-        #Calculate the step at which should starts
-        self.setStartingStep(isIter)
-        #set to null time in original table for step >= self.StartAtStepN
-        self.sqlDict['step_id'] = self.StartAtStepN
-        _sqlCommand = """UPDATE %(TableSteps)s SET finish=NULL 
-                         WHERE step_id >= %(step_id)d
-                           AND run_id = %(run_id)d""" % self.sqlDict
-        self.execSqlCommand(_sqlCommand, "Error reseting finish date: ")
+            sqlCommand = """ SELECT step_id, iter, command, parameters, verifyFiles 
+                             FROM %(TableSteps)s 
+                             WHERE (run_id = %(run_id)d)
+                             ORDER BY step_id """ % self.sqlDict
+            self.cur.execute(sqlCommand)            
+            self.insertStatus=False
 
-    # print wrapper name
-    def setPrintWrapperCommand(self,value):
-        self.PrintWrapperCommand=value
-        
-    # print wrapper parameters
-    def setPrintWrapperParameters(self,value):
-        self.PrintWrapperParameters=value
-
-    def setVerify(self,value,viewVerifyedFiles):
-        self.verify=value
-        self.viewVerifyedFiles=viewVerifyedFiles
-        
-    def setStartingStep(self,isIter):
-        #if(self.ContinueAtIteration==-1 and self.StartAtStepN>0):
-        if(self.ContinueAtIteration>0 and not isIter):
-            self.StartAtStepN = self.ContinueAtIteration
-        elif (self.ContinueAtIteration > 1 and isIter):
-            self.sqlDict['iter'] = self.ContinueAtIteration
-            _sqlCommand = """SELECT MIN(step_id) 
-                             FROM %(TableStepsCurrent)s
-                             WHERE iter = %(iter)d
-                               AND run_id = %(run_id)d"""  % self.sqlDict
-            self.cur_aux.execute(_sqlCommand)
-            self.StartAtStepN = self.cur_aux.fetchone()[0]
-        elif (self.ContinueAtIteration < 0):
-            self.StartAtStepN =self.getStartingStepVerify(isIter)
-        elif self.ContinueAtIteration==1:
-            self.StartAtStepN = 1
-        else:
-            raise Exception("self.ContinueAtIteration must be !=0")
-
-    def getStartingStepVerify(self, isIter):
-        _sqlCommand = """SELECT step_id, iter, command, fileNameList 
-                        FROM %(TableSteps)s
-                        WHERE finish IS NULL
-                             AND fileNameList IS NOT NULL
-                             AND run_id = %(run_id)d
-                        ORDER BY id """ % self.sqlDict
-        #print "getstart", sqlCommand
-        self.cur_aux.execute(_sqlCommand)
-                    
-        def getMinId(row):
-            if isIter:
-                self.sqlDict['iter'] = row['iter']
-                _sqlCommand= """ SELECT MIN(step_id)
-                                 FROM %(TableSteps)s
-                                 WHERE iter = %(iter)d
-                                   AND run_id = %(run_id)d""" % self.sqlDict
-                self.cur_aux.execute(_sqlCommand)
-                return(self.cur_aux.fetchone()[0])
-            else:
-                return (row['step_id'])
-            
-        for row in self.cur_aux:
-            _list = pickle.loads(str(row["fileNameList"]))
-            for i in _list:
-                return getMinId(row)
-        return getMinId(row)
-    
-# Maybe are DEPRECATED
-#    def saveParameters(self, SystemFlavour):
-#        """save a dictionary to an auxiliary table"""
-#        if self.SystemFlavour == SystemFlavour:
-#            return
-#        cur_aux = self.connection.cursor()
-#        sqlCommand = """DELETE FROM %(TableParams)s
-#                               WHERE run_id = %(run_id)d""" % self.sqlDict
-#        cur_aux.execute(sqlCommand)
-#        sqlCommand = """INSERT INTO %(TableParams)s(parameters, run_id) VALUES(?, %(run_id)d)"""% self.sqlDict
-#        self.SystemFlavour = SystemFlavour
-#        dict = { 
-#          'SystemFlavour':self.SystemFlavour
-#        }
-#        cur_aux.execute(sqlCommand, [pickle.dumps(dict, 0)])
-#        self.connection.commit()
-#        
-#    def loadParameters(self):
-#        """load a dictionary from an auxiliary table"""
-#        sqlCommand = """ SELECT parameters FROM %(TableParams)s WHERE run_id = %(run_id)d """ % self.sqlDict
-#        try:
-#            self.cur_aux.execute(sqlCommand)
-#        except sqlite.Error, e:
-#            print "loadParameters: Can not access to parameters computed in previous iteration:", e.args[0]
-#            print "you may need to set ContinueAtIteration=1"
-#            exit(1)
-#        dict = pickle.loads(str(self.cur_aux.fetchone()[0]))
-#        print dict
-#        self.SystemFlavour=dict['SystemFlavour']
-
-    def compareParameters (self):
-        """return 0 if new execution of script (tableName2) is a subset of and old execution(tableName1)
-        for those steps in with finish is not null. This is interesting for continue at iteration N"""
-        
-        _sqlCommand = """ SELECT count(*) FROM
-                              (SELECT command,parameters 
-                               FROM %(TableSteps)s 
-                               WHERE finish IS NOT NULL 
-                                 AND command <> 'self.saveParameters'
-                                 AND run_id = %(run_id)d
-                               
-                               except
-                               
-                               SELECT command,parameters 
-                               FROM %(TableStepsRestart)s 
-                               WHERE run_id = %(run_id)d
-                              )""" % self.sqlDict
-        #cur = self.connection.cursor()
-        self.cur_aux.execute(_sqlCommand)
-        result = self.cur_aux.fetchone()[0]
-        #if original table is not a subset of restart then return error, i.e. result !=0
-        # else overwrite original with restart for all those values that
-        # has finish set to null
-        if(not result):#original table is a subset of restart
-            _sqlCommand = """ DELETE FROM %(TableSteps)s WHERE finish IS NULL AND run_id = %(run_id)d;
-                              INSERT INTO %(TableSteps)s 
-                                 SELECT * 
-                                 FROM %(TableStepsRestart)s 
-                                 WHERE step_id > (SELECT MAX(step_id) FROM %(TableSteps)s WHERE run_id = %(run_id)d)
-                                   AND run_id = %(run_id)d""" % self.sqlDict
-        else:
-            #do the query again and print result
-            _sqlCommand =   """SELECT command,parameters 
-                               FROM %(TableSteps)s 
-                               WHERE finish IS NOT NULL and command <> 'self.saveParameters'
-                                 AND run_id = %(run_id)d
-                                 
-                               except
-                               
-                               SELECT command, parameters 
-                               FROM %(TableStepsRestart)s 
-                               WHERE run_id = %(run_id)d""" % self.sqlDict
-
-            self.cur_aux.execute(_sqlCommand)
-            for i in self.cur_aux:
-                print i
-            
-        self.cur_aux.executescript(_sqlCommand)
-        self.connection.commit()
-        return result
-
-    def setParentDefault(self, value):
-        self.parentCase = value
-        
     def setIteration(self,iter):
         self.iter=iter
         
-    def insertAction(self, command,
-                           verifyfiles=None,
+    def insertStep(self, command,
+                           verifyfiles=[],
                            parent_step_id=None, 
                            execute_mainloop = True,
                            passDb=False,
                            **_Parameters):
         if not parent_step_id:
-            if self.parentCase == XmippProjectDb.lastStep:
-                parent_step_id=self.lastid
-            elif self.parentCase == XmippProjectDb.firstStep:
-                parent_step_id=XmippProjectDb.firstStep
-#        if execute_mainloop == None:
-#            execute_mainloop = True
-#        if passDb==None:
-#            passDb=False
-        parameters = pickle.dumps(_Parameters, 0)#Dict
-        self.cur_aux = self.connection.cursor()
-        #print self.sqlInsertcommand, [command, parameters, iter]
-        try:
-            self.cur_aux.execute(self.sqlInsertcommand, [command, parameters, self.iter,execute_mainloop,passDb,
-                                                     self.sqlDict['run_id'],parent_step_id])
-        except sqlite.Error, e:
-            reportError( "Cannot insert command: %s" % e.args[0])
-        self.lastid = self.cur_aux.lastrowid
-        if verifyfiles:
-            verifyfiles = pickle.dumps(verifyfiles, 0)#Dict
-            self.cur_aux.execute(self.sqlInsertVerify, [verifyfiles,self.lastid])
-        return self.lastid
-    
+            parent_step_id=self.lastStepId
 
-    def runActions(self):
-        _log = self.Log
-        #check if tableName and tablename_aux are identical if not abort
-        if self.createRestartTable:
-            if self.compareParameters():
-                ##########################Restore original table from backup
-                printLogError(_log, "Can not continue from old execution, parameters do not match. Relaunch execution from begining")
-        self.sqlDict['step_id'] = self.StartAtStepN
-        self.sqlDict['iter'] = XmippProjectDb.doAlways
-        sqlCommand = """ SELECT step_id, iter, passDb, command, parameters,fileNameList 
-                        FROM %(TableSteps)s 
-                        WHERE (step_id >= %(step_id)d OR iter = %(iter)d)
-                          AND (run_id = %(run_id)d)
-                          AND (execute_mainloop = 1)
-                       ORDER BY step_id """ % self.sqlDict
+        parameters = pickle.dumps(_Parameters, 0)
+        verifyfilesString = pickle.dumps(verifyfiles, 0)
+        if self.insertStatus==False:
+            row=self.cur.fetchone()
+            if row is None:
+                self.insertStatus=True
+            else:
+                if row['parameters']!=parameters or row['verifyFiles']!=verifyfilesString:
+                    self.insertStatus=True
+                else:
+                    for file in verifyfiles:
+                        if not os.path.exists(file):
+                            self.insertStatus=True
+                            break
+                self.lastStepId=row['step_id']
+                if self.insertStatus==True:
+                    self.sqlDict['step_id'] = row['step_id']
+                    self.cur.execute("""DELETE FROM %(TableSteps)s WHERE run_id = %(run_id)d AND step_id>=%(step_id)d""" % self.sqlDict)
+                    self.connection.commit()
+        if self.insertStatus==True:
+            try:
+                self.cur_aux.execute("""INSERT INTO 
+                                    %(TableSteps)s(command,parameters,verifyFiles,iter,execute_mainloop,passDb,run_id,parent_step_id)
+                                     VALUES (?,?,?,?,?,?,?,?)""" % self.sqlDict,
+                                     [command, parameters, verifyfilesString, self.iter,execute_mainloop,passDb,self.sqlDict['run_id'], parent_step_id])
+            except sqlite.Error, e:
+                reportError( "Cannot insert command: %s" % e.args[0])
+            self.lastStepId = self.cur_aux.lastrowid
+        return self.lastStepId
+
+    def runSteps(self):
+        self.connection.commit()
+        sqlCommand = """ SELECT step_id, iter, passDb, command, parameters, verifyFiles 
+                         FROM %(TableSteps)s 
+                         WHERE finish IS NULL AND execute_mainloop = 1
+                         ORDER BY step_id """ % self.sqlDict
         self.cur.execute(sqlCommand)
 
         commands = self.cur.fetchall()
@@ -500,72 +316,58 @@ class XmippProtocolDb(SqliteDb):
             if i < n - 1:
                 self.nextStepId = commands[i+1]['step_id']
             else:
-                self.nextStepId = XmippProjectDb.biggestStepId
-            self.runSingleAction(self.connection, self.cur, commands[i])
-        printLog(_log,'********************************************************')
-        printLog(_log,' Protocol FINISHED')
+                self.nextStepId = XmippProjectDb.BIGGEST_STEP
+            self.runSingleStep(self.connection, self.cur, commands[i])
+        printLog(self.Log,'********************************************************\nProtocol FINISHED')
 
-    def runSingleAction(self, _connection, _cursor, actionRow):
-        import pprint
-        _log = self.Log
+    def runSingleStep(self, _connection, _cursor, actionRow):
         exec(self.Import)
         step_id = actionRow['step_id']
         myDict = self.sqlDict.copy()
         myDict['step_id'] = step_id
-#        sqlCommand = """ SELECT iter, passDb, command, parameters,fileNameList 
-#                        FROM %(TableSteps)s 
-#                        WHERE (step_id = %(step_id)d)
-#                          AND (run_id = %(run_id)d) """ % myDict
-#        _cursor.execute(sqlCommand)
-#
-#        row = _cursor.fetchone()
         myDict['iter'] = actionRow['iter']
         command = actionRow['command']
         dict = pickle.loads(str(actionRow["parameters"]))
-        if(self.PrintWrapperCommand):
-            if iter == XmippProjectDb.doAlways:
-                siter = 'N/A'
-            else:
-                siter = str(actionRow['iter'])
-            print bcolors.OKBLUE,"--------\nExecution of wrapper: %d (iter=%s)" % (step_id,siter)
-            print bcolors.HEADER,(command.split())[-1],bcolors.ENDC
+        
+        # Print
+        import pprint
+        print bcolors.OKBLUE,"--------\nStep: %d (iter=%d)" % (step_id,actionRow['iter'])
+        print bcolors.HEADER,(command.split())[-1],bcolors.ENDC
+        pprint.PrettyPrinter(indent=4,width=20).pprint(dict)
 
-        #print in column format rather than in raw, easier to read 
-        if(self.PrintWrapperParameters):
-            pp = pprint.PrettyPrinter(indent=4,width=20)
-            pp.pprint(dict)
-
+        # Set init time
         sqlCommand = """UPDATE %(TableSteps)s SET init = CURRENT_TIMESTAMP 
                         WHERE step_id=%(step_id)d
                           AND run_id=%(run_id)d""" % myDict
-        #print "Updating init",sqlCommand
-        _connection.execute(sqlCommand)
+        _cursor.execute(sqlCommand)
         _connection.commit()
         
+        # Execute Python function
         if actionRow['passDb']:
             exec ( command + '(self, **dict)')
         else:
-            exec ( command + '(_log, **dict)')
+            exec ( command + '(self.Log, **dict)')
         
-        if self.verify and actionRow["fileNameList"]:
-            _list =pickle.loads(str(actionRow["fileNameList"]))
-            for i in _list:
-                if not os.path.exists(i):
-                    myDict['file'] = i
+        # Check verify files
+        if len(actionRow["verifyFiles"])>0:
+            fileList =pickle.loads(str(actionRow["verifyFiles"]))
+            missingFiles=False
+            for file in fileList:
+                if not os.path.exists(file):
+                    myDict['file'] = file
                     print "ERROR at  step: %(step_id)d, file %(file)s has not been created." % myDict
-                    exit(1)
-                elif self.viewVerifyedFiles:
-                    print "Verified file:", i
-        
+                    missingFiles=True
+            if missingFiles:
+                exit(1)
+     
+        # Update finish
         sqlCommand = """UPDATE %(TableSteps)s SET finish = CURRENT_TIMESTAMP 
                         WHERE step_id=%(step_id)d
                           AND run_id=%(run_id)d""" % myDict
-        #print "Updating finish",sqlCommand
-        _connection.execute(sqlCommand)
+        _cursor.execute(sqlCommand)
         _connection.commit()
         
-        if self.PrintWrapperCommand:
-            print "Wrapper step: %d finished\n" % step_id
+        print "Step %d finished\n" % step_id
 
     # Function to get the first avalaible gap to run 
     # it will return pair (state, actionRow)
@@ -573,7 +375,7 @@ class XmippProtocolDb(SqliteDb):
     # NO_MORE_GAPS, actionRow is None and there are not more gaps to work on
     # NO_AVAIL_GAP, actionRow is Nonew and not available gaps now, retry later
     # ACTION_GAP, actionRow is a valid action row to work on
-    def getActionGap(self, cursor):
+    def getStepGap(self, cursor):
         #The following query is just to start a transaction, pysqlite doesn't provide a better way
         cursor.execute("UPDATE %(TableSteps)s SET step_id = -1 WHERE step_id < 0" % self.sqlDict)
         if self.countActionGaps(cursor) > 0:
@@ -597,7 +399,7 @@ class XmippProtocolDb(SqliteDb):
             result = (NO_MORE_GAPS, None)
         return result
     
-    def countActionGaps(self, cursor):
+    def countStepGaps(self, cursor):
         self.sqlDict['step_id'] = self.nextStepId
         sqlCommand = """SELECT COUNT(*) FROM %(TableSteps)s 
                         WHERE (step_id < %(step_id)d) 
@@ -612,7 +414,7 @@ class XmippProtocolDb(SqliteDb):
 # Function to fill gaps of action in database
 # this will be usefull for parallel processing, i.e., in threads or with MPI
 # step_id is the step that will launch the process to fill previous gaps
-def runActionGaps(db, NumberOfThreads):
+def runStepGaps(db, NumberOfThreads):
     # If run in separate threads, each one should create 
     # a new connection and cursor
     if NumberOfThreads > 1: 
@@ -630,9 +432,9 @@ def runActionGaps(db, NumberOfThreads):
 def runThreadLoop(db, connection, cursor):
     import time
     while True:
-        state, actionRow = db.getActionGap(cursor)
+        state, stepRow = db.getStepGap(cursor)
         if state == ACTION_GAP: #database will be unlocked after commit on init timestamp
-            db.runSingleAction(connection, cursor, actionRow)
+            db.runSingleStep(connection, cursor, stepRow)
         else:
             connection.rollback() #unlock database
             if state == NO_AVAIL_GAP:
