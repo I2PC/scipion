@@ -199,17 +199,14 @@ protected:
 
     void preProcess()
     {
-        if (create_empty_stackfile)
-        {
-            createEmptyFile(fn_out, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE, swap);
-            create_empty_stackfile = false;
-        }
+    	create_empty_stackfile = !appendToStack;
 
-        convMode = MD2MD;
+    	convMode = MD2MD;
 
         if (!single_image && type == "vol")
         {
             convMode = MD2VOL;
+            delete_output_stack = false;
 
             int Xdim, Ydim, Zdim;
             size_t Ndim;
@@ -223,14 +220,8 @@ protected:
         }
         else if (single_image)
         {
-            int Xdim, Ydim, Zdim;
-            size_t Ndim;
-            Image<char>  imTemp;
-            imTemp.read(fn_in, HEADER);
-            imTemp.getDimensions(Xdim,Ydim,Zdim,Ndim);
-
             // If --append is set, or fn_out is in a stack, then it is supposed not to convert VOL2MD
-            if ( Zdim > 1 && !(type == "vol" || fn_out.isInStack() || appendToStack))
+            if ( zdimOut > 1 && !(type == "vol" || fn_out.isInStack() || appendToStack))
             {
                 convMode = VOL2MD;
                 single_image = false;
@@ -240,7 +231,7 @@ protected:
                 FileName fnTemp;
 
                 //Fill mdIn to allow XmippMetaDataProgram create the fnImgOut
-                for (k = 1;k <= Zdim; k++)
+                for (k = 1;k <= zdimOut; k++)
                 {
                     fnTemp.compose(k, fn_in);
 
@@ -251,8 +242,13 @@ protected:
                 imIn.read(fn_in, DATA, ALL_IMAGES, true);
                 imOut = new ImageGeneric(imIn.getDatatype());
                 k = 0; // Reset to zero to select the slices when working with volumes
+                createEmptyFile(fn_out, xdimOut, ydimOut, 1, zdimOut, true, WRITE_OVERWRITE, swap);
             }
         }
+        else if (create_empty_stackfile)
+            createEmptyFile(fn_out, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE, swap);
+
+        create_empty_stackfile = false;
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
@@ -288,6 +284,7 @@ protected:
             {
                 imIn.data->getSlice(k++,imOut->data);
                 imOut->write(fnImgOut+depth, ALL_IMAGES, type == "stk", writeMode, castMode, swap);
+                break;
             }
         }
         mdIn.setValue(MDL_IMAGE,fnImgOut, objId); // to keep info in output metadata
