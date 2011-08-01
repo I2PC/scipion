@@ -309,16 +309,17 @@ class XmippProtocolDb(SqliteDb):
                          WHERE finish IS NULL AND execute_mainloop = 1
                          ORDER BY step_id """ % self.sqlDict
         self.cur.execute(sqlCommand)
-
         commands = self.cur.fetchall()
         n = len(commands)
+        printLog(self.Log,'***************************** Protocol STARTED mode: %s'%self.runBehavior,True)
+        
         for i in range(n):
             if i < n - 1:
                 self.nextStepId = commands[i+1]['step_id']
             else:
                 self.nextStepId = XmippProjectDb.BIGGEST_STEP
             self.runSingleStep(self.connection, self.cur, commands[i])
-        printLog(self.Log,'********************************************************\nProtocol FINISHED')
+        printLog(self.Log,'***************************** Protocol FINISHED',True)
 
     def runSingleStep(self, _connection, _cursor, actionRow):
         exec(self.Import)
