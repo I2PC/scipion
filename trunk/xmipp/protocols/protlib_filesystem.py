@@ -39,9 +39,9 @@ def createDir(_log, path):
     """ Create directory, does not add workingdir"""
     from distutils.dir_util import mkpath
     from distutils.errors import DistutilsFileError
-    _log.info("Creating directory " + path)
     try:
         if not os.path.exists(path):
+            _log.info("Creating directory " + path)
             mkpath(path, 0777, True)
     except DistutilsFileError, e:
         printLogError(_log, "could not create '%s': %s" % (os.path.abspath(path), e))
@@ -56,8 +56,8 @@ def changeDir(_log, path):
 
 def deleteDir(_log, path):
     from distutils.dir_util import remove_tree
-    _log.info("Deleting directory " + path)
     if os.path.exists(path):
+        _log.info("Deleting directory " + path)
         remove_tree(path, True)
            
 def deleteFile(_mylog, filename, Verbose):
