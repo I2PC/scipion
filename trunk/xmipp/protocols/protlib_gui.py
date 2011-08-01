@@ -759,7 +759,7 @@ class ProtocolGUI(BasicGUI):
     
     def validateProtocol(self):
         prot = getProtocolFromModule(self.run['script'], self.project)
-        errors = prot.validateInput()        
+        errors = prot.validateBase()        
         if len(errors) > 0:
             tkMessageBox.showerror("Validation ERRORS", '\n'.join(errors), parent=self.master)
             return None
@@ -767,10 +767,12 @@ class ProtocolGUI(BasicGUI):
     
     def saveExecute(self, event=""):
         self.save() 
-        #if self.confirmDeleteWorkingDir() and self.validateProtocol():
         prot = self.validateProtocol()
         if not prot is None:
-            protocolMain(prot.__class__, self.run['script'])    
+            warnings=prot.warningsBase()
+            if len(warnings)==0 or tkMessageBox.askyesno("Confirm execution",'\n'.join(warnings), parent=self.master):
+                os.system('python %s --no_confirm >>%s 2>>%s &' % (self.run['script'], prot.Out, prot.Err) )
+                self.master.destroy() 
     
     def viewFiles(self):
         tkMessageBox.showinfo("Visualize", "This should open ImageJ plugin to display files", parent=self.master)
