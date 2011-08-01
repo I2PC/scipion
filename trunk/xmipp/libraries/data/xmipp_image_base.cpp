@@ -720,9 +720,11 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
            Ydim != _Ydim ||
            Zdim != _Zdim)
         {
-            std::cerr << "(x,y,z) " << Xdim << " " << Ydim << " " << Zdim << " "<< Ndim << std::endl;
-            std::cerr << "(_x,_y,_z) " << _Xdim << " " << _Ydim << " " << _Zdim << " " <<_Ndim <<std::endl;
-            REPORT_ERROR(ERR_MULTIDIM_SIZE,"write: target and source objects have different size");
+            REPORT_ERROR(ERR_MULTIDIM_SIZE,formatString(
+                             "ImageBase::Write: images source and target have different sizes:\n"
+                             "Image source to be written (x,y,z,n) = %d %d %d %lu\n"
+                             "Image file target %s (x,y,z,n) = %d %d %d %lu",
+                             Xdim,Ydim,Zdim,Ndim,dataFName.c_str(),_Xdim,_Ydim,_Zdim,_Ndim));
         }
     }
     else if(!_exists && mode == WRITE_APPEND)
