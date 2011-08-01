@@ -57,7 +57,7 @@ class XmippLog:
         event = "\n"
         event += "NEW LOG SESSION\n" 
         event += "===============\n" 
-        event += myusername + '@' 
+        event += "Running at: "+myusername + '@' 
         event += myhost + ':' 
         event += mypwd 
         self.info(event)
@@ -186,10 +186,14 @@ def printLogError(log, msg):
     print >> sys.stderr, redStr("ERROR: " + msg)
     exit(1)
     
-def printLog(log, msg):
+def printLog(log, msg, printAlsoInStderr=False):
     '''Just print a msg and log'''
+    import time
     log.info(msg)
-    print msg
+    msgForConsole=time.asctime(time.localtime(time.time()))+" "+msg
+    print msgForConsole
+    if printAlsoInStderr:
+        print >> sys.stderr, msgForConsole
     
 #---------------------------------------------------------------------------
 # Jobs launching
