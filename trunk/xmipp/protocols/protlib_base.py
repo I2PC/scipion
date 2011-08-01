@@ -91,7 +91,6 @@ class XmippProject():
         self.projectDb.connection.commit()
         
     def load(self):
-        print 'Loading project..'
         self.config = ConfigParser.RawConfigParser()
         self.config.read(self.cfgName)
         # Load database
@@ -115,7 +114,6 @@ class XmippProject():
             os.remove(self.dbName)
             
     def deleteRun(self, run):
-        print "Deleting run: ", run['run_name']
         script = run['script']
         log = script.replace(self.runsDir, self.logsDir).replace(".py", ".log")
         err = script.replace(self.runsDir, self.logsDir).replace(".py", ".err")
@@ -123,13 +121,11 @@ class XmippProject():
         #remove script .py and .pyc files and .log
         toDelete = [script, script+'c', log, err, out] 
         for f in toDelete:
-            print "Deleting file '%s'" % f
             if os.path.exists(f):
                 os.remove(f)
         workingDir = os.path.join(run['protocol_name'], run['run_name'])
         from distutils.dir_util import remove_tree
         if os.path.exists(workingDir):
-            print "Deleting working dir: '%s'" % workingDir
             remove_tree(workingDir, True)
         self.projectDb.deleteRun(run)
             
