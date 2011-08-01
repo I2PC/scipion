@@ -44,8 +44,7 @@ projectDefaults = {
                    'TableProtocols': 'protocols',
                    'TableProtocolsGroups': 'protocols_groups',
                    'TableRuns': 'runs',
-                   'TableSteps': 'steps',
-                   'TableStepsRestart': 'steps_restart'
+                   'TableSteps': 'steps'
                    } 
 
 #--------------------------------------------------------------------------------
