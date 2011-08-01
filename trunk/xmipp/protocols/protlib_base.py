@@ -32,7 +32,7 @@ import ConfigParser
 from config_protocols import projectDefaults, sections
 from protlib_sql import XmippProjectDb, XmippProtocolDb
 from protlib_utils import XmippLog, loadModule, reportError
-
+from protlib_filesystem import deleteDir
 
 class XmippProject():
     def __init__(self, projectDir=None):
@@ -118,8 +118,10 @@ class XmippProject():
         print "Deleting run: ", run['run_name']
         script = run['script']
         log = script.replace(self.runsDir, self.logsDir).replace(".py", ".log")
+        err = script.replace(self.runsDir, self.logsDir).replace(".py", ".err")
+        out = script.replace(self.runsDir, self.logsDir).replace(".py", ".out")
         #remove script .py and .pyc files and .log
-        toDelete = [script, script+'c', log] 
+        toDelete = [script, script+'c', log, err, out] 
         for f in toDelete:
             print "Deleting file '%s'" % f
             if os.path.exists(f):
@@ -167,7 +169,7 @@ class XmippProject():
         if run is None:
             run = self.newProtocol(protocol_name)
         return run
-            
+
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
     def __init__(self, protocolName, scriptname, project):
@@ -177,9 +179,6 @@ class XmippProtocol(object):
         runName      -- the name of the run,  should be unique for one protocol
         project      -- project instance
         '''
-        #Set if not defined in protocol header
-        self.continueAt = 1
-        self.isIter = False
         #Import all variables in the protocol header
         self.Header = loadModule(scriptname)
         for k, v in self.Header.__dict__.iteritems():
@@ -197,12 +196,14 @@ class XmippProtocol(object):
         self.LogDir = project.logsDir
         self.uniquePrefix = self.WorkingDir.replace('/', '_')
         self.LogPrefix = os.path.join(self.LogDir, self.uniquePrefix)       
+        self.Err = self.LogPrefix+".err"
+        self.Out = self.LogPrefix+".out"
         self.SystemFlavour = project.SystemFlavour
         
     def getProjectId(self):
         pass
         #self.project = project.getId(launchDict['Projection Matching'],runName,)
-    def validateInput(self):
+    def validateBase(self):
         '''Validate if the protocols is ready to be run
         in this function will be implemented all common
         validations to all protocols and the function
@@ -215,6 +216,15 @@ class XmippProtocol(object):
         # Check if there is runname
         if self.RunName == "":
             errors.append("No run name given")
+            
+        #Check that number of threads and mpi are int and greater than 0
+        if 'NumberOfThreads' in dir(self):
+            if self.NumberOfThreads<1:
+                errors.append("Number of threads has to be >=1")
+        if 'NumberOfMpiProcesses' in dir(self):
+            if self.NumberOfMpiProcesses<2:
+                errors.append("Number of MPI processes has to be >=2")
+        
         #specific protocols validations
         errors += self.validate()
         
@@ -236,31 +246,33 @@ class XmippProtocol(object):
         '''Visualizes the results of this run'''
         pass
     
+    def warningsBase(self):
+        '''Output some warnings that can be errors and require user confirmation to proceed'''
+        warningList=[]
+        if self.Behavior=="Restart":
+            warningList.append("Restarting a protocol will delete previous results")
+        warningList += self.warnings()
+        return warningList
+
     def warnings(self):
         '''Output some warnings that can be errors and require user confirmation to proceed'''
-        pass
+        return []
     
     def postRun(self):
         '''This function will be called after the run function is executed'''
         pass   
     
-    def defineActions(self):
+    def defineSteps(self):
         '''In this function the actions to be performed by the protocol will be added to db.
         each particular protocol need to add its specific actions. Thing to be performed before 
         "run" should be added here'''
         pass
     
     def runSetup(self):
-        logfile  = self.LogPrefix + ".log"
-        self.Log = XmippLog(logfile, logfile)
-        self.Db  = XmippProtocolDb(self.project.dbName
-                                , self.restartStep
-                                , self.isIter
-                                , self)
+        self.Log = XmippLog(self.LogPrefix + ".log")
+        self.Db  = XmippProtocolDb(self)
 
-        
-
-    def run(self, restartStep=1, isIter=True):
+    def run(self):
         '''Run of the protocols
         if the other functions have been correctly implemented, this not need to be
         touched in derived class, since the run of protocols should be the same'''
@@ -268,31 +280,20 @@ class XmippProtocol(object):
         #Change to project dir
         os.chdir(self.projectDir)
 
-        errors = self.validateInput()
+        errors = self.validateBase()
         if len(errors) > 0:
             raise Exception('\n'.join(errors))
-        self.restartStep = restartStep
-        self.isIter = isIter
         #Initialization of log and db
         self.runSetup()
         
-        self.Db.setIteration(1)
         #insert basic operations for all scripts
         if self.Behavior=="Restart":
-             self.Db.insertAction('deleteDir',path = self.WorkingDir)
+             deleteDir(self.Log,self.WorkingDir)
+        self.Db.insertStep('createDir', path = self.WorkingDir)
 
-        self.Db.insertAction('createDir', path = self.WorkingDir)
-        self.Db.setIteration(XmippProjectDb.doAlways)
-        self.Db.insertAction('makeScriptBackup',script     = self.scriptName
-                                                      ,WorkingDir = self.WorkingDir)#backup always
-        self.Db.setIteration(1)
-
-        #Add actions to database
-        self.defineActions()
-        self.Db.connection.commit()
-        #Run actions from database
-        self.Db.runActions()
-        #Stuff after running
+        # Run all the actions
+        self.defineSteps()
+        self.Db.runSteps()
         self.postRun()
         return 0
     
@@ -312,6 +313,13 @@ def command_line_options():
                               action="store_true",
                               help="do NOT check run checks before execute protocols"
                               )
+    parser.add_option('-n', '--no_confirm',
+                          dest="no_confirm",
+                          default=False,
+                          action="store_true",
+                          help="do NOT ask confirmation for warnings"
+                          )
+        
     options = parser.parse_args()[0]
     return options
 
@@ -326,6 +334,7 @@ def getProtocolFromModule(script, project):
 def protocolMain(ProtocolClass, script=None):
     gui = False
     no_check = False
+    no_confirm = False
     
     if script is None:
         import sys
@@ -333,6 +342,7 @@ def protocolMain(ProtocolClass, script=None):
         options = command_line_options()
         gui = options.gui
         no_check = options.no_check
+        no_confirm = options.no_confirm
     
     mod = loadModule(script)
     #init project
@@ -365,8 +375,8 @@ def protocolMain(ProtocolClass, script=None):
                 from protlib_utils import reportError
                 reportError("Protocol run '%s' has not been registered in project database" % mod.RunName)
         else:
-            from protlib_utils import confirmWarning
-            if not confirmWarning(p.warnings()):
+            from protlib_utils import showWarnings
+            if not showWarnings(p.warningsBase(), no_confirm):
                 exit(0)
             
             if not run_id:
@@ -388,22 +398,8 @@ def protocolMain(ProtocolClass, script=None):
                                nodes = mod.NumberOfMpiProcesses,
                                threads = NumberOfThreads,
                                hours = mod.QueueHours,
-                               command = 'python %s --no_check' % script
+                               command = 'python %s --no_check >>%s 2>>%s' % (script,p.Out,p.Err)
                                )
                 exit(0)
         
-        
-        if 'ContinueAtIteration' in dir(mod):
-            ContinueAtIteration = mod.ContinueAtIteration
-            IsIter = mod.IsIter
-        else:
-            ContinueAtIteration = 1
-            IsIter = True
-            
-        p.run(ContinueAtIteration, IsIter)
-
-
-    
-    
-    
-    
+        p.run()
