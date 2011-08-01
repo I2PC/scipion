@@ -38,7 +38,7 @@ class ProtParticlePicking(XmippProtocol):
         XmippProtocol.__init__(self, protDict.particle_pick.key, scriptname, project)
         self.Import = 'from xmipp_protocol_particle_pick import *'
 
-    def defineActions(self):
+    def defineSteps(self):
         self.mD = xmipp.MetaData()
         self.MicrographSelfile = os.path.join(self.self.PreprocessingRun, "micrographs.sel")
         xmipp.readMetaDataWithTwoPossibleImages(self.MicrographSelfile, self.mD)
@@ -47,7 +47,7 @@ class ProtParticlePicking(XmippProtocol):
     
         # Create link to input micrographs
         micrographSelfile=os.path.join(self.PreprocessingRun,"micrographs.sel")
-        self.Db.insertAction('createLinkToMicrographs', [micrographSelfile], MicrographSelfile=micrographSelfile, WorkingDir=self.WorkingDir)       
+        self.Db.insertStep('createLinkToMicrographs', [micrographSelfile], MicrographSelfile=micrographSelfile, WorkingDir=self.WorkingDir)       
 
         # Create a dictionary of relevant micrograph information
         micrographDict={}
@@ -65,7 +65,7 @@ class ProtParticlePicking(XmippProtocol):
                 micrographDict[micrographName].append(tilted.split("/")[-2])
 
         # Launch GUI
-        self.Db.insertAction('launchParticlePickingGUI', passDb=True, ProjectDir=self.projectDir, WorkingDir=self.WorkingDir,
+        self.Db.insertStep('launchParticlePickingGUI', passDb=True, ProjectDir=self.projectDir, WorkingDir=self.WorkingDir,
                              micrographDict=micrographDict)       
 
     def summary(self):

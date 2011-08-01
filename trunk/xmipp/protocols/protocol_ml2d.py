@@ -25,7 +25,7 @@ class ProtML2D(XmippProtocol):
                 "Need a real summary here..."
                 ]
         
-    def defineActions(self):
+    def defineSteps(self):
         print '*********************************************************************'
         progId = "ml"
         if (self.DoMlf):
@@ -66,7 +66,7 @@ class ProtML2D(XmippProtocol):
                 if (self.HighResLimit > 0):
                     params += ' --high %f' % self.HighResLimit
                     
-        self.Db.insertAction('runJob', 
+        self.Db.insertStep('runJob', 
                              programname=program, 
                              params=params,
                              NumberOfMpiProcesses = self.NumberOfMpiProcesses,

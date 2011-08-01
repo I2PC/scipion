@@ -24,14 +24,8 @@ class ProtPreprocessMicrographs(XmippProtocol):
         XmippProtocol.__init__(self, protDict.preprocess_micrographs.key, scriptname, project)
         self.Import="from protocol_preprocess_micrographs import *"
         self.CtffindExec =  which('ctffind3.exe')
-        if self.Behavior=="Resume": # It should be in a common place
-            self.isIter=False
-            self.continueAt=-1
-        elif self.Behavior=="Restart":
-            self.isIter=False
-            self.continueAt=1
 
-    def defineActions(self):
+    def defineSteps(self):
         CtfFindActions=[]        
         for filename in glob.glob(self.DirMicrographs + '/' + self.ExtMicrographs):
             # Get the shortname and extension
@@ -50,13 +44,13 @@ class ProtPreprocessMicrographs(XmippProtocol):
                 AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
             
             # Insert actions in the database
-            id=self.Db.insertAction('createDir',path=micrographDir,execute_mainloop=True)
-            id=self.Db.insertAction('preprocessMicrograph',verifyfiles=[os.path.join(micrographDir,"micrograph"+extension)],
+            id=self.Db.insertStep('createDir',path=micrographDir,execute_mainloop=True)
+            id=self.Db.insertStep('preprocessMicrograph',verifyfiles=[os.path.join(micrographDir,"micrograph"+extension)],
                                     parent_step_id=id, execute_mainloop=True,
                                     micrograph=filename,micrographDir=micrographDir,DoPreprocess=self.DoPreprocess,
                                     Crop=self.Crop,Stddev=self.Stddev,Down=self.Down)
             if self.DoCtfEstimate:
-                self.Db.insertAction('estimateCtfXmipp',verifyfiles=[os.path.join(micrographDir,"xmipp_ctf.ctfparam")],
+                self.Db.insertStep('estimateCtfXmipp',verifyfiles=[os.path.join(micrographDir,"xmipp_ctf.ctfparam")],
                                      parent_step_id=id,execute_mainloop=True,
                                      micrograph=finalname,micrographDir=micrographDir,Voltage=self.Voltage,
                                      SphericalAberration=self.SphericalAberration,AngPix=AngPix,
@@ -74,11 +68,12 @@ class ProtPreprocessMicrographs(XmippProtocol):
                                          StepFocus=self.StepFocus,WinSize=self.WinSize)])
         for action in CtfFindActions:
             action["parent_step_id"]=id # This makes all ctffinds to go after the last preprocessing
-            self.Db.insertAction('estimateCtfCtffind',action)
+            self.Db.insertStep('estimateCtfCtffind',action)
         
         # Gather results after external actions
-        self.Db.insertAction('gatherResults',verifyfiles=[os.path.join(micrographDir,"micrographs.sel")],WorkingDir=self.WorkingDir,DirMicrographs=self.DirMicrographs,
-                             ExtMicrographs=self.ExtMicrographs, DoCtfEstimate=self.DoCtfEstimate,DoCtffind=self.DoCtffind)
+        self.Db.insertStep('gatherResults',verifyfiles=[os.path.join(self.WorkingDir,"micrographs.sel")],
+                           WorkingDir=self.WorkingDir,DirMicrographs=self.DirMicrographs,
+                           ExtMicrographs=self.ExtMicrographs, DoCtfEstimate=self.DoCtfEstimate,DoCtffind=self.DoCtffind)
                
     def validate(self):
         errors = []

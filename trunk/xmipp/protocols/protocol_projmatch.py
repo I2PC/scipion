@@ -200,17 +200,17 @@ class ProtProjMatch(XmippProtocol):
             self.NumberOfCtfGroups = auxMD2.size()
             
         #create dir for iteration 1 (This need to be 0 or 1? ROB FIXME
-        _dataBase.insertAction('createDir', path = self.getIterDirName(0))
+        _dataBase.insertStep('createDir', path = self.getIterDirName(0))
     
         #Check references and projections size match
         #Is already done in preconditions but I like to
         #run protocols from command line bypassing the gui
-        _dataBase.insertAction('checkVolumeProjSize', 
+        _dataBase.insertStep('checkVolumeProjSize', 
                                                          ReferenceFileNames = self.ReferenceFileNames
                                                        , SelFileName = self.SelFileName)
     
         #Check Option compatibility
-        _dataBase.insertAction('checkOptionsCompatibility', DoAlign2D       = self.DoAlign2D[1]
+        _dataBase.insertStep('checkOptionsCompatibility', DoAlign2D       = self.DoAlign2D[1]
                                                           , DoCtfCorrection = self.DoCtfCorrection)
     
         #7 make CTF groups
@@ -219,7 +219,7 @@ class ProtProjMatch(XmippProtocol):
             suffixes += ['Info.xmd', '_ctf.stk', '_wien.stk', '_split.doc']        
         fnBase = os.path.join(self.CtfGroupDirectory, self.CtfGroupRootName)
         _VerifyFiles = [fnBase + s for s in suffixes]
-        _dataBase.insertAction('executeCtfGroups', verifyfiles=_VerifyFiles, CTFDatName = self.CTFDatName
+        _dataBase.insertStep('executeCtfGroups', verifyfiles=_VerifyFiles, CTFDatName = self.CTFDatName
                                                                             , CtfGroupDirectory = self.CtfGroupDirectory
                                                                             , CtfGroupMaxDiff = self.CtfGroupMaxDiff
                                                                             , CtfGroupMaxResol = self.CtfGroupMaxResol
@@ -233,7 +233,7 @@ class ProtProjMatch(XmippProtocol):
                                                                             , WienerConstant = self.WienerConstant)
         #Create Initial angular file. Either fill it with zeros or copy input
         _VerifyFiles = [self.DocFileWithOriginalAngles]
-        _dataBase.insertAction('initAngularReferenceFile', verifyfiles=_VerifyFiles
+        _dataBase.insertStep('initAngularReferenceFile', verifyfiles=_VerifyFiles
                                                                 , DocFileName = self.DocFileName
                                                                 , DocFileWithOriginalAngles = self.DocFileWithOriginalAngles
                                                                 , SelFileName =self.SelFileName)
@@ -241,8 +241,8 @@ class ProtProjMatch(XmippProtocol):
         #Save all parameters in dict for future runs (this is done by database)
         #so far no parameter is being saved, but dummy=0
         #self.Db.setIteration(XmippProjectDb.doAlways)
-        #_dataBase.insertAction('self.saveParameters', SystemFlavour = self.SystemFlavour)
-        #_dataBase.insertAction('self.loadParameters', None, None)
+        #_dataBase.insertStep('self.saveParameters', SystemFlavour = self.SystemFlavour)
+        #_dataBase.insertStep('self.loadParameters', None, None)
         #self.Db.setIteration(1)
         #no entries will be save untill this commit
         #print "commit databse"
@@ -258,18 +258,18 @@ class ProtProjMatch(XmippProtocol):
         for iterN in range(1, self.NumberOfIterations + 1):
             _dataBase.setIteration(iterN)
             # create IterationDir
-            _dataBase.insertAction('createDir', path = self.getIterDirName(iterN))
+            _dataBase.insertStep('createDir', path = self.getIterDirName(iterN))
     
             #Create directory with classes
-            _dataBase.insertAction('createDir', path = self.ProjMatchDirs[iterN])
+            _dataBase.insertStep('createDir', path = self.ProjMatchDirs[iterN])
         
             #Create directory with image libraries
-            id = _dataBase.insertAction('createDir', path = self.LibraryDirs[iterN])
+            id = _dataBase.insertStep('createDir', path = self.LibraryDirs[iterN])
 
             for refN in range(1, self.numberOfReferences + 1):
                 # Mask reference volume
                 _VerifyFiles = [self.maskedFileNamesIters[iterN][refN]]
-                _dataBase.insertAction('executeMask', verifyfiles=_VerifyFiles, parent_step_id=id
+                _dataBase.insertStep('executeMask', verifyfiles=_VerifyFiles, parent_step_id=id
                                     , DoMask =             self.DoMask
                                     , DoSphericalMask =    self.DoSphericalMask
                                     , maskedFileName =     self.maskedFileNamesIters[iterN][refN]
@@ -290,7 +290,7 @@ class ProtProjMatch(XmippProtocol):
                 for i in range (1,self.NumberOfCtfGroups+1):
                     _VerifyFiles.append(auxFn + "_group" + str(i).zfill(FILENAMENUMBERLENGTH) +"_sampling.xmd")
                             
-                _dataBase.insertAction('angular_project_library', verifyfiles=_VerifyFiles
+                _dataBase.insertStep('angular_project_library', verifyfiles=_VerifyFiles
                                     , AngSamplingRateDeg = self.AngSamplingRateDeg[iterN]
                                     , CtfGroupSubsetFileName = self.CtfGroupSubsetFileName
                                     , DoCtfCorrection = self.DoCtfCorrection
@@ -316,7 +316,7 @@ class ProtProjMatch(XmippProtocol):
                 for i in range (1,self.NumberOfCtfGroups+1):
                     _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.xmd")
                     
-                _dataBase.insertAction('projection_matching', verifyfiles=_VerifyFiles,
+                _dataBase.insertStep('projection_matching', verifyfiles=_VerifyFiles,
                                       AvailableMemory =self.AvailableMemory
                                     , CtfGroupRootName = self.CtfGroupRootName
                                     , CtfGroupDirectory = self.CtfGroupDirectory
@@ -345,7 +345,7 @@ class ProtProjMatch(XmippProtocol):
             #assign the images to the different references based on the crosscorrelation coheficient
             #if only one reference it just copy the docfile generated in the previous step
             _VerifyFiles = [self.DocFileInputAngles[iterN]]
-            _dataBase.insertAction('assign_images_to_references', verifyfiles=_VerifyFiles
+            _dataBase.insertStep('assign_images_to_references', verifyfiles=_VerifyFiles
                                      , DocFileInputAngles = self.DocFileInputAngles[iterN]#Output file with angles
                                      , NumberOfCtfGroups  = self.NumberOfCtfGroups
                                      , ProjMatchRootName  = self.ProjMatchRootNames[iterN]#LIST
@@ -355,7 +355,7 @@ class ProtProjMatch(XmippProtocol):
             #align images, not possible for ctf groups
             for refN in range(1, self.numberOfReferences + 1):
                 _VerifyFiles = []
-                id = _dataBase.insertAction('angular_class_average', verifyfiles=_VerifyFiles
+                id = _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
                          , Align2DIterNr = self.Align2DIterNr[iterN]#
                          , Align2dMaxChangeRot = self.Align2dMaxChangeRot[iterN]#
                          , Align2dMaxChangeOffset = self.Align2dMaxChangeOffset[iterN]#
@@ -384,7 +384,7 @@ class ProtProjMatch(XmippProtocol):
                 ##############REMOVE SHUTIL.COPY
                 # Mask reference volume
                 
-                id = _dataBase.insertAction('executeMask', verifyfiles=[self.maskedFileNamesIters[iterN][refN]]
+                id = _dataBase.insertStep('executeMask', verifyfiles=[self.maskedFileNamesIters[iterN][refN]]
                                                 , DoMask =             self.DoMask
                                                 , DoSphericalMask =    self.DoSphericalMask
                                                 , maskedFileName =     self.maskedFileNamesIters[iterN][refN]
@@ -401,19 +401,19 @@ class ProtProjMatch(XmippProtocol):
     ########################            
                 #REMOVE
                 #Create directory
-            _dataBase.insertAction('createDir', path =self.getIterDirName(iterN + 1))
+            _dataBase.insertStep('createDir', path =self.getIterDirName(iterN + 1))
             command = "shutil.copy('%s','%s');dummy" % (self.ReferenceFileNames[0], self.reconstructedFileNamesIters[iterN][refN])
-            id = _dataBase.insertAction(command, self.reconstructedFileNamesIters[iterN][refN])
+            id = _dataBase.insertStep(command, self.reconstructedFileNamesIters[iterN][refN])
         command = "print 'ALL DONE';dummy"
         self.Db.setIteration(XmippProjectDb.doAlways)
         _dataBase.setIteration(XmippProjectDb.doAlways)
         self.Db.setIteration(iterN)
 
-        id = _dataBase.insertAction(command)
+        id = _dataBase.insertStep(command)
     
         _dataBase.connection.commit()
 
-    def defineActions(self):
+    def defineSteps(self):
         self.preRun()
         self.otherActionsToBePerformedBeforeLoop()
         self.actionsToBePerformedInsideLoop()
