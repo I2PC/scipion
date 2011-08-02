@@ -32,6 +32,7 @@ import tkMessageBox
 import tkFont
 from protlib_base import protocolMain, getProtocolFromModule
 from protlib_utils import loadModule
+from protlib_gui_ext import centerWindows
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
@@ -156,7 +157,6 @@ class BasicGUI():
     
     def launchGUI(self):
         self.launchCanvas() 
-        from protlib_gui_ext import centerWindows
         centerWindows(self.master, self.resize() )
         self.master.deiconify()     
         self.master.mainloop() 
@@ -249,6 +249,9 @@ class ProtocolVariable():
     def isExpert(self):
         return 'expert' in self.tags.keys()
     
+    def isVisualize(self):
+        return 'visualize' in self.tags.keys()
+    
     def isSection(self):
         return 'section' in self.tags.keys()
     
@@ -297,8 +300,8 @@ class ProtocolWidget():
         return True
      
     def checkVisibility(self):
-        show = True
-        if self.variable.isExpert():
+        show = self.variable.isVisualize() == self.master.visualize_mode
+        if show and self.variable.isExpert():
             show = self.master.expert_mode
         if show:
             show = self.satisfiesCondition() #has condition, check it
@@ -375,6 +378,8 @@ Optional:
               If more than one citation lines are present, they will all be displayed.
               DONT use very long citations, as this will results in an ugly gui.
         - {hidden} label on the comment line (#) marks the option as -hidden-
+        - {wizzard} (WizzardFunction) this will serve to plugin a graphical wizzard
+             to select some parameter
 """       
 
 class ProtocolGUI(BasicGUI):
@@ -384,6 +389,7 @@ class ProtocolGUI(BasicGUI):
         self.header_lines = []
         self.post_header_lines = []
         self.expert_mode = True
+        self.visualize_mode = False
         self.lastrow = 0
         self.widgetslist = []
         self.sectionslist = [] # List of all sections
@@ -424,7 +430,7 @@ class ProtocolGUI(BasicGUI):
         return btn
     
     def addRadioButton(self, w, var, text, value, row, col, parent):
-        rb = tk.Radiobutton(parent, text=text, variable=var.tkvar, value=value, bg=self.style.LabelBgColor, command=self.checkVisibility)
+        rb = tk.Radiobutton(parent, text=text, variable=var.tkvar, value=value, bg=self.style.LabelBgColor)#, command=self.checkVisibility)
         rb.grid(row=row, column=col, sticky='w')
         w.widgetslist.append(rb)
         return rb
@@ -464,6 +470,8 @@ class ProtocolGUI(BasicGUI):
             #widgets inherit expert from section and its conditions 
             if section.variable.isExpert():
                 var.tags['expert'] = section.variable.tags['expert']
+            if section.variable.isVisualize():
+                var.tags['visualize'] = section.variable.tags['visualize']
             for k, v in section.variable.conditions.iteritems():
                 var.conditions[k] = v
                 
@@ -548,10 +556,10 @@ class ProtocolGUI(BasicGUI):
                     for p in protocols:
                         runs += self.project.projectDb.selectRunsByProtocol(p)
                     list = ["%s_%s" % (r[5], r[1]) for r in runs]
-                    args = ['Select Run', lambda: self.selectFromList(var, list), 'select_run.gif', 'Select run']
+                    args = ['Select Run', lambda: self.selectFromList(var, list), 'wizzard.gif', 'Select run']
                 elif 'blocks' in keys:
                     #md = self.variablesDict[var.tags['blocks']].getValue()
-                    args = ['Select Blocks', lambda: self.selectFromList(var, ['block1', 'block2', 'block3']), 'select_blocks.gif', 'Select blocks']
+                    args = ['Select Blocks', lambda: self.selectFromList(var, ['block1', 'block2', 'block3']), 'wizzard.gif', 'Select blocks']
                 
                 if args:
                     btn = self.addButton(args[0], args[1], -1, label_row, var_column+2, 'nw', args[2], frame, args[3])
@@ -715,40 +723,49 @@ class ProtocolGUI(BasicGUI):
             strValue = 'False'
         if 'ShowExpertOptions' in self.variablesDict.keys():
             self.variablesDict['ShowExpertOptions'].setValue(strValue)
-        self.btnExpert.config(text=text)
+        self.btnToggleExpert.config(text=text)
+        self.checkVisibility()
+        
+    def toggleVisualizeMode(self, event=''):
+        self.visualize_mode = not self.visualize_mode
+        if self.visualize_mode:
+            text = "Show Run Options"
+        else:
+            text = "Show Visualize Options"
+        self.btnToggleVisualize.config(text=text)    
         self.checkVisibility()
     
     def save(self, event=""):
-        runName = self.getRunName()
-
-        if runName != self.inRunName:
-            self.run['run_name'] = runName
-            self.run['script'] = self.project.getRunScriptFileName(self.run['protocol_name'], runName)
-        #update database
-        if self.run['script'] != self.run['source']:
-            print "Creating new run of this protocol..."
-            self.project.projectDb.insertRun(self.run)
-            self.run['source'] = self.run['script']
-            self.inRunName = runName
-        else:
-            self.project.projectDb.updateRun(self.run)
-
-        print "* Saving script: %s" % self.run['script']
-        f = open(self.run['script'], 'w')
-        #f = sys.stdout
-        f.writelines(self.pre_header_lines)
-        if len(self.citeslist) > 0:
-            f.writelines('#{please_cite}\n"""\n')
-            f.writelines(self.citeslist)
-            f.writelines('"""\n')
-        for w in self.widgetslist:
-            wlines = w.variable.getLines()
-            f.writelines(wlines)
-        f.writelines(sepLine + '# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE\n') 
-        f.writelines(self.post_header_lines)
-        f.close()
-        os.chmod(self.run['script'], 0755)
-            
+        try:
+            runName = self.getRunName()
+            if runName != self.inRunName:
+                self.run['run_name'] = runName
+                self.run['script'] = self.project.getRunScriptFileName(self.run['protocol_name'], runName)
+            #update database
+            if self.run['script'] != self.run['source']:
+                self.project.projectDb.insertRun(self.run)
+                self.run['source'] = self.run['script']
+                self.inRunName = runName
+            else:
+                self.project.projectDb.updateRun(self.run)
+    
+            #print "* Saving script: %s" % self.run['script']
+            f = open(self.run['script'], 'w')
+            #f = sys.stdout
+            f.writelines(self.pre_header_lines)
+            if len(self.citeslist) > 0:
+                f.writelines('#{please_cite}\n"""\n')
+                f.writelines(self.citeslist)
+                f.writelines('"""\n')
+            for w in self.widgetslist:
+                wlines = w.variable.getLines()
+                f.writelines(wlines)
+            f.writelines(sepLine + '# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE\n') 
+            f.writelines(self.post_header_lines)
+            f.close()
+            os.chmod(self.run['script'], 0755)
+        except Exception, e:
+            tkMessageBox.showerror("Error saving run parameters", str(e), parent=self.master)
         if self.saveCallback:
             self.saveCallback()
     
@@ -800,7 +817,7 @@ class ProtocolGUI(BasicGUI):
         new_size = size + deltha
         if new_size >= self.style.MinFontSize and new_size <= self.style.MaxFontSize:
             self.style.Font.configure(size=new_size)
-        self.resize()
+        centerWindows(self.master, self.resize() )
         
     def checkVisibility(self, event=""):
         for s in self.sectionslist:
@@ -809,20 +826,22 @@ class ProtocolGUI(BasicGUI):
             s.checkVisibility()
             for w in s.childwidgets:
                 w.checkVisibility()
+        centerWindows(self.master, self.resize() )
         self.updateScrollRegion() 
 
     
     def fillButtons(self):
         row = self.getRow()
         row += 3
-        self.addButton("Close", self.close, 0, row, 0, 'w')
-        self.btnExpert = self.addButton("Show Expert Options", self.toggleExpertMode, 12, row, 1, 'ew')
+        self.btnToggleVisualize = self.addButton("Show Visualize Options", self.toggleVisualizeMode, 0, row, 0, 'w')
+        self.btnToggleExpert = self.addButton("Show Expert Options", self.toggleExpertMode, 12, row, 1, 'ew')
         self.addButton("Save", self.save, 0, row, 3, 'w')
         self.addButton("Save & Execute", self.saveExecute, 7, row, 4, 'w')
         
     def addBindings(self):
         self.master.bind('<Alt_L><c>', self.close)
         self.master.bind('<Alt_L><o>', self.toggleExpertMode)
+        self.master.bind('<Alt_L><v>', self.toggleVisualizeMode)
         self.master.bind('<Alt_L><s>', self.save)
         self.master.bind('<Alt_L><e>', self.saveExecute)
         self.master.bind('<Alt_L><r>', self.saveExecute)
@@ -840,7 +859,7 @@ class ProtocolGUI(BasicGUI):
     def setRunName(self, value):
         self.variablesDict['RunName'].setValue(value)
         
-    def createGUI(self, project, run, master=None, saveCallback=None):
+    def createGUI(self, project, run, master=None, saveCallback=None, visualize_mode=False):
         self.run = run
         self.saveCallback = saveCallback
         self.project = project
@@ -866,6 +885,8 @@ class ProtocolGUI(BasicGUI):
         if self.run:
             self.inRunName = run['run_name']
             self.setRunName(self.inRunName)
+            
+        self.visualize_mode = visualize_mode
         #self.fillWidgets()
                 # Add bottom row buttons
     def fillGUI(self):

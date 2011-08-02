@@ -332,8 +332,9 @@ class XmippProtocolDb(SqliteDb):
         
         # Print
         import pprint
-        print bcolors.OKBLUE,"--------\nStep: %d (iter=%d)" % (step_id,actionRow['iter'])
-        print bcolors.HEADER,(command.split())[-1],bcolors.ENDC
+        from protlib_utils import blueStr, headerStr
+        print blueStr("--------\nStep: %d (iter=%d)" % (step_id,actionRow['iter']))
+        print headerStr((command.split())[-1])
         pprint.PrettyPrinter(indent=4,width=20).pprint(dict)
 
         # Set init time

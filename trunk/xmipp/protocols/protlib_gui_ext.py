@@ -383,6 +383,7 @@ class ToolTip:
 
 ##---------demo code-----------------------------------##
 
+from protlib_utils import bcolors
 from tkSimpleDialog import Dialog
 '''Implement a Listbox Dialog, it will return
 the index selected in the lisbox or -1 on Cancel'''
@@ -414,6 +415,87 @@ class ListboxDialog(Dialog):
     def apply(self):
         self.result = map(int, self.lb.curselection())
 
+class FilePollTextArea(tk.Frame):
+    def __init__(self, master, filename):
+        tk.Frame.__init__(self, master)
+        self.filename = filename
+        self.createWidgets()
+        self.fillTextArea()
+
+    def createWidgets(self):        
+        #define a new frame and put a text area in it
+        textfr = tk.Frame(self)
+        self.text = tk.Text(textfr,height=30,width=100,background='black', fg="white")
+        
+        # put a scroll bar in the frame
+        yscroll = tk.Scrollbar(textfr)
+        self.text.configure(yscrollcommand=yscroll.set)
+        xscroll = tk.Scrollbar(textfr, orient="horizontal")
+        self.text.configure(xscrollcommand=xscroll.set)
+        #pack everything
+        self.text.pack(side=tk.LEFT)
+        yscroll.pack(side=tk.RIGHT,fill=tk.Y)
+        xscroll.pack(side=tk.BOTTOM,fill=tk.X)
+        textfr.pack(side=tk.TOP)
+        self.text.tag_config("fail_red", foreground="red")
+        self.text.tag_config("ok_blue", foreground="blue")
+        self.text.tag_config("ok_green", foreground="green")
+
+    def escapeLine(self, line):
+        colors = [bcolors.HEADER, bcolors.OKBLUE, bcolors.OKGREEN,
+                  bcolors.WARNING, bcolors.FAIL, bcolors.ENDC]
+        for c in colors:
+            line = line.replace(c, '')
+        return line
+    
+    
+    def fillTextArea(self):
+        file = open(self.filename)
+        for line in file:
+            tag = None
+            if line.find(bcolors.FAIL) != -1:
+                tag = "fail_red"
+            elif line.find(bcolors.OKBLUE) != -1:
+                tag = "ok_blue"
+            elif line.find(bcolors.OKGREEN) != -1:
+                tag = "ok_blue"
+            
+            print "line: ", line
+            print "tag:", tag
+            self.text.insert(tk.END, self.escapeLine(line), (tag))
+#                self.text.insert(tk.END, line)
+        file.close()
+        
+class OutputTextArea(tk.Frame):
+    def __init__(self, master, fileprefix):
+        tk.Frame.__init__(self, master)
+        self.exts = ['.log', '.out', '.err']
+        self.files = [fileprefix + ext for ext in self.exts]
+        self.createWidgets()
+    
+    def createWidgets(self):
+        self.indexVar = tk.IntVar()
+        self.indexVar.set(0)
+        self.taList = []
+        self.lastIndex = 0
+        options = ['Log', 'Standard output', 'Standard error']
+        tk.Label(self, text='Select output file:').grid(row=0, column=0, padx=5, pady=5)
+        for i in range(3):
+            tk.Radiobutton(self, text='%s (%s)' % (options[i], self.exts[i]), 
+                                       variable=self.indexVar, command=self.selectionChanged,
+                                       value=i).grid(row=0, column=i+1, padx=5, pady=5)
+            ta = FilePollTextArea(self, self.files[i])
+            ta.grid(row=2, column=0, columnspan=5, padx=5, pady=5)
+            if i != self.indexVar.get():
+                ta.grid_remove()
+            self.taList.append(ta)
+                
+    def selectionChanged(self):
+        if self.lastIndex != self.indexVar.get():
+            self.taList[self.lastIndex].grid_remove()
+            self.lastIndex = self.indexVar.get()
+            self.taList[self.lastIndex].grid()
+        
 def demo():
     root = tk.Tk(className='ToolTip-demo')
     l = tk.Listbox(root)
@@ -424,7 +506,17 @@ def demo():
     b.pack(side='bottom')
     ToolTip(b, text='Enough of this')
     root.mainloop()
+    
+def demo2():
+    import sys
+    root = tk.Tk()
+    root.title("LogTextArea demo")
+    l = OutputTextArea(root, sys.argv[1])
+    l.pack(side=tk.TOP)
+    #b = tk.Button(root, text='Quit', command=root.quit)
+    #b.pack(side='bottom')
+    root.mainloop()    
 
 if __name__ == '__main__':
-    demo() 
+    demo2() 
 

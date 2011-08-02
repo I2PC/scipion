@@ -34,6 +34,7 @@ from protlib_gui import ProtocolGUI
 from protlib_gui_ext import ToolTip, MultiListbox, centerWindows
 from config_protocols import protDict, sections
 from protlib_base import getProtocolFromModule, XmippProject
+from protlib_utils import reportError
 
 #Font
 FontName = "Helvetica"
@@ -75,6 +76,7 @@ class XmippProjectGUI():
         self.root.bind("<Unmap>", self.unpostMenu)
         self.root.bind("<Map>", self.unpostMenu)
         self.root.bind('<Return>', lambda e: self.runButtonClick('Edit'))
+        self.root.bind('<Control_L><Return>', lambda e: self.runButtonClick('Copy'))
         self.root.bind('<Delete>', lambda e: self.runButtonClick('Delete'))
         self.root.bind('<Up>', self.selectRunUpDown)
         self.root.bind('<Down>', self.selectRunUpDown)
@@ -111,18 +113,19 @@ class XmippProjectGUI():
         self.ToolbarButtonsDict[text] = (btn, menu)
         btn.config(command=lambda:self.selectToolbarButton(text))
 
-    def launchProtocolGUI(self, run):
+    def launchProtocolGUI(self, run, visualizeMode=False):
         run['group_name'] = self.lastSelected
         top = tk.Toplevel()
         gui = ProtocolGUI()
-        gui.createGUI(self.project, run, top, lambda: self.protocolSaveCallback(run))
+        gui.createGUI(self.project, run, top, 
+                      lambda: self.protocolSaveCallback(run), visualizeMode)
         gui.fillGUI()
         gui.launchGUI()
         
     def protocolSaveCallback(self, run):
+        self.selectToolbarButton(run['group_name'], False)
         if self.lastSelected == run['group_name']:
-            self.updateRunHistory(self.lastSelected) 
-
+            self.updateRunHistory(self.lastSelected)
     def updateRunHistory(self, protGroup): 
         self.runs = self.project.projectDb.selectRuns(protGroup)
         self.lbHist.delete(0, tk.END)
@@ -152,7 +155,7 @@ class XmippProjectGUI():
         menu.post(xroot + x + w + 10, yroot + y)
         btn.config(bg=ButtonActiveBgColor, activebackground=ButtonActiveBgColor)
         
-    def selectToolbarButton(self, text):
+    def selectToolbarButton(self, text, showMenu=True):
         btn, menu = self.ToolbarButtonsDict[text]
 
         if self.lastSelected and self.lastSelected != text:
@@ -160,15 +163,12 @@ class XmippProjectGUI():
             lastBtn.config(bg=ButtonBgColor)
             lastMenu.unpost()            
         
-        if self.lastSelected:
-            print 'posting menu'
+        if self.lastSelected and showMenu:
             self.postMenu(btn, menu)
         
         if self.lastSelected != text:
             self.project.config.set('project', 'lastselected', text)
             self.project.writeConfig()
-            #self.updateRunSelection(-1)
-            print 'updating'
             self.updateRunHistory(text)            
         self.lastSelected = text  
             
@@ -190,7 +190,7 @@ class XmippProjectGUI():
             prot = getProtocolFromModule(run['script'], self.project)
             summary = '\n'.join(prot.summary())
             self.DetailsLabelsDict['Summary:'].config(text=summary)
-            self.frameDetails.grid(row=4, column=1,sticky='nsew', columnspan=2)
+            self.frameDetails.grid()
             self.buttonDetails.grid()
         for btn in self.runButtonsDict.values():
             btn.config(state=state)
@@ -200,10 +200,14 @@ class XmippProjectGUI():
             self.lastRunSelected = self.runs[index]
         self.updateRunSelection(index)
             
-    def runButtonClick(self, event=None):
+    def getLastRunDict(self):
         from protlib_sql import runColumns
         run = dict(zip(runColumns, self.lastRunSelected))
         run['source'] = run['script']        
+        return run
+    
+    def runButtonClick(self, event=None):
+        run = self.getLastRunDict()
         if event == 'Edit':
             self.launchProtocolGUI(run)
         elif event == 'Copy':
@@ -255,14 +259,14 @@ class XmippProjectGUI():
         self.addHeaderLabel(self.frame, 'History', 0, 1)
         #Button(self.frame, text="Edit").grid(row=0, column=2)
         frame = tk.Frame(self.frame)
-        frame.grid(row=0, column=2)
+        frame.grid(row=0, column=3)
         self.addRunButton(frame, "Edit", 0, 'edit.gif')
         self.addRunButton(frame, "Copy", 1, 'copy.gif')
         #self.addRunButton(frame, "Visualize", 2, 'visualize.gif')
         self.addRunButton(frame, "Delete", 2, 'delete.gif')
         #self.addRunButton(frame, "Help", 4, 'help.gif')
         self.frameHist = tk.Frame(self.frame)
-        self.frameHist.grid(row=2, column=1, sticky='nsew', columnspan=2, padx=5, pady=(0, 5))
+        self.frameHist.grid(row=2, column=1, sticky='nsew', columnspan=3, padx=5, pady=(0, 5))
         self.lbHist = MultiListbox(self.frameHist, (('Run', 40), ('Modified', 20)))
         self.lbHist.SelectCallback = self.runSelectCallback
         self.lbHist.DoubleClickCallback = lambda:self.runButtonClick("Edit")
@@ -294,8 +298,12 @@ class XmippProjectGUI():
                                     bg=ButtonBgColor, activebackground=ButtonActiveBgColor,
                                     command=self.visualizeRun)
         self.buttonDetails.grid(row=3, column=2, padx=5, pady=5)
+        self.buttonOutput = tk.Button(self.frame, text="Show output", font=self.ButtonFont, 
+                                    bg=ButtonBgColor, activebackground=ButtonActiveBgColor,
+                                    command=self.showOutput)
+        self.buttonOutput.grid(row=3, column=3, padx=5, pady=5)
         self.frameDetails = tk.Frame(self.frame, bg=BgColor, bd=1, relief=tk.RIDGE)
-        self.frameDetails.grid(row=4, column=1, sticky='nsew', columnspan=2, padx=5, pady=5)
+        self.frameDetails.grid(row=4, column=1, sticky='nsew', columnspan=3, padx=5, pady=5)
         self.DetailsLabelsDict = {}
         self.addDetailsLabel('Run:', 0, 0)
         self.addDetailsLabel('Protocol:', 1, 0)
@@ -342,21 +350,28 @@ class XmippProjectGUI():
     def onExit(self):
         self.root.destroy()
 
+    def showOutput(self):
+        prot = getProtocolFromModule(self.lastRunSelected['script'], self.project)
+        root = tk.Toplevel()
+        root.title(self.lastRunSelected['script'])
+        from protlib_gui_ext import OutputTextArea
+        l = OutputTextArea(root, prot.LogPrefix)
+        l.pack(side=tk.TOP)
+        root.mainloop() 
+        
     def visualizeRun(self):
-        getProtocolFromModule(self.lastRunSelected['script'], self.project).visualize()
+        run = self.getLastRunDict()
+        self.launchProtocolGUI(run, True)
 
 if __name__ == '__main__':
     dir = os.getcwd()
     project = XmippProject(dir)    
     import sys
     if len(sys.argv) > 1:
-        # Launch a protocol directly
-        script = sys.argv[1]
-        project.load()  
-        gui = ProtocolGUI()
-        gui.createGUI(script)
-        gui.launchGUI()
-     
+        if sys.argv[1] == "--clean":
+            project.clean()
+        else:
+            reportError('Unrecognized option: %s' % sys.argv[1])
     else: #lauch project     
         if not project.exists():
             print 'You are in directory: ', dir

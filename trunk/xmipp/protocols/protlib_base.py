@@ -34,6 +34,7 @@ from protlib_sql import XmippProjectDb, XmippProtocolDb
 from protlib_utils import XmippLog, loadModule, reportError
 from protlib_filesystem import deleteDir
 
+
 class XmippProject():
     def __init__(self, projectDir=None):
         if not projectDir:
@@ -112,6 +113,8 @@ class XmippProject():
             os.remove(self.cfgName)
         if os.path.exists(self.dbName):
             os.remove(self.dbName)
+        self.create()
+            
             
     def deleteRun(self, run):
         script = run['script']
@@ -165,7 +168,7 @@ class XmippProject():
         if run is None:
             run = self.newProtocol(protocol_name)
         return run
-
+            
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
     def __init__(self, protocolName, scriptname, project):
@@ -187,6 +190,7 @@ class XmippProtocol(object):
         self.project = project
         self.Import = '' # this can be used by database for import modules
         self.WorkingDir = os.path.join(protocolName, self.RunName)
+        self.TmpDir = os.path.join(self.WorkingDir, 'tmp')
         self.projectDir = project.projectDir  
         #Setup the Log for the Protocol
         self.LogDir = project.logsDir
@@ -284,10 +288,9 @@ class XmippProtocol(object):
         
         #insert basic operations for all scripts
         if self.Behavior=="Restart":
-             deleteDir(self.Log,self.WorkingDir)
+            deleteDir(self.Log,self.WorkingDir)
         self.Db.insertStep('createDir', path = self.WorkingDir)
-
-        # Run all the actions
+        self.Db.insertStep('createDir', path = self.TmpDir)
         self.defineSteps()
         self.Db.runSteps()
         self.postRun()
@@ -368,7 +371,6 @@ def protocolMain(ProtocolClass, script=None):
         
         if no_check: 
             if not run_id:
-                from protlib_utils import reportError
                 reportError("Protocol run '%s' has not been registered in project database" % mod.RunName)
         else:
             from protlib_utils import showWarnings

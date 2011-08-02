@@ -448,18 +448,12 @@ class bcolors:
     ENDC = '\033[0m'
     
 def colorStr(color, string):
-    if color == 'blue':
-        result = bcolors.OKBLUE
-    elif color == 'green':
-        result = bcolors.OKGREEN
-    elif color == 'red':
-        result = bcolors.FAIL
-    result += string + bcolors.ENDC
-    return result
+    return color + string + bcolors.ENDC
 
-blueStr = lambda s: colorStr('blue', s)
-greenStr = lambda s: colorStr('green', s)
-redStr = lambda s: colorStr('red', s)
+blueStr = lambda s: colorStr(bcolors.OKBLUE, s)
+greenStr = lambda s: colorStr(bcolors.OKGREEN, s)
+redStr = lambda s: colorStr(bcolors.FAIL, s)
+headerStr = lambda s: colorStr(bcolors.HEADER, s)
     
 #apply bfactor to a vector of volumes
 """ This utility boost up the high frequencies. Do not use the automated

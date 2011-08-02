@@ -26,7 +26,7 @@ DisplayComment = False
 Describe your run here...
 """
 #-----------------------------------------------------------------------------
-# {section} Global parameters
+# {section} Run parameters
 #-----------------------------------------------------------------------------
 # Run name:
 """ This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
@@ -34,30 +34,15 @@ run1 for it. This name together with the protocol output folder will determine t
 """
 RunName = "run_001"
 
-# Delete working directory?
-""" If TRUE the working directory will be deleted before run.
-Set this option to TRUE if you want to start from scratch the same run
-with previous parameters
+# {list}(Resume, Restart) Run behavior
+""" Resume from the last step, restart the whole process or continue at a given step or iteration
 """
-DoDeleteWorkingDir = False
+Behavior = "Resume"
 
 # {file}{expert} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR.
 """
 InSelFile = "all_images.sel"
-
-# {blocks} Input blocks
-InBlocks = ""
-
-# {dir}{view} Output Dir:
-""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR.
-"""
-OutputDir = "Logs"
-
-# {run}(projmatch) Previous Protocol
-""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR.
-"""
-PreviousProtocol = "projmatch_run_002"
 
 #------------------------------------------------------------------------------------------
 # {section}{has_question} MLF-specific parameters
@@ -89,10 +74,10 @@ ImagesArePhaseFlipped = True
 HighResLimit = 20
 
 #------------------------------------------------------------------------------------------
-# {section}{expert}{has_question} Advanced parameters
+# {section}{has_question} Advanced parameters
 #------------------------------------------------------------------------------------------
 # Show advanced parameters
-AdvancedParameters = True
+AdvancedParameters = False
 
 # Number of references (or classes) to be used:
 NumberOfReferences = 3
@@ -129,36 +114,46 @@ ml(f)_align2d --help
 ExtraParams = ""
 
 #------------------------------------------------------------------------------------------
-# {section} Parallelization issues
+# {section} Parallelization 
 #------------------------------------------------------------------------------------------
-# Number of (shared-memory) threads?
+# Number of threads
 """ This option provides shared-memory parallelization on multi-core machines.
 It does not require any additional software, other than xmipp
 """
 NumberOfThreads = 1
 
-# Number of MPI processes to use
+# Number of MPI processes
 NumberOfMpiProcesses = 3
 
-#------------------------------------------------------------------------------------------
-# {section}{has_question} Queue
-#------------------------------------------------------------------------------------------
-# Submmit to queue
-"""Submmit to queue
+# Submit to queue ? 
+"""Submit to queue
 """
-SubmmitToQueue = True
+SubmitToQueue = True
 
-# Queue name
+# {expert}{condition}(SubmitToQueue = True) Queue name
 """Name of the queue to submit the job
 """
 QueueName = "default"
 
-# Queue hours
+# {condition}(SubmitToQueue = True) Queue hours
 """This establish a maximum number of hours the job will
 be running, after that time it will be killed by the
 queue system
 """
 QueueHours = 72
+
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Visualization
+#------------------------------------------------------------------------------------------------
+# Visualize the class averages of all iterations in matrix-view?
+DoMatrixAllIter=True
+# Separately visualize class averages of the last iteration?
+DoShowLastIter=True
+# Plot model (and mirror) fractions of the last iteration?
+DoShowFractions=True
+# Plot convergence statistics for all iterations?
+DoShowStatsAllIter=True
+
 
 # {hidden} Show expert options
 """If True, expert options will be displayed
