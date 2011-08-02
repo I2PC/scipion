@@ -29,7 +29,7 @@ class ProtPreprocessMicrographs(XmippProtocol):
         a=True
         b = not a
         if a:
-            parentId = self.Db.insertStep('runStepGaps',passDb=True,NumberOfThreads=1)        
+            parentId = self.Db.insertStep('runStepGaps',passDb=True,NumberOfThreads=3)        
         for filename in glob.glob(self.DirMicrographs + '/' + self.ExtMicrographs):
             # Get the shortname and extension
             (filepath, micrographName)=os.path.split(filename)
@@ -47,7 +47,7 @@ class ProtPreprocessMicrographs(XmippProtocol):
                 AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
             
             # Insert actions in the database
-            id=self.Db.insertStep('createDir',path=micrographDir,parent_step_id=parentId,execute_mainloop=b)
+            id=self.Db.insertStep('createDir',path=micrographDir,parent_step_id=XmippProjectDb.FIRST_STEP,execute_mainloop=b)
             id=self.Db.insertStep('preprocessMicrograph',verifyfiles=[os.path.join(micrographDir,"micrograph"+extension)],
                                     parent_step_id=id, execute_mainloop=b,
                                     micrograph=filename,micrographDir=micrographDir,DoPreprocess=self.DoPreprocess,
@@ -82,9 +82,10 @@ class ProtPreprocessMicrographs(XmippProtocol):
         errors = []
 
         # Check that there are any micrograph to process
-        listOfMicrographs=glob.glob(self.DirMicrographs + '/' + self.ExtMicrographs)
+        listStr = self.DirMicrographs + '/' + self.ExtMicrographs
+        listOfMicrographs = glob.glob(listStr)
         if len(listOfMicrographs) == 0:
-            errors.append("There are no micrographs to process in ") + DirMicrographs + '/' + ExtMicrographs
+            errors.append("There are no micrographs to process in " + listStr)
         
         # Check that Q0 is negative
         if self.AmplitudeContrast>0:

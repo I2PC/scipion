@@ -32,7 +32,7 @@ import ConfigParser
 from config_protocols import projectDefaults, sections
 from protlib_sql import XmippProjectDb, XmippProtocolDb
 from protlib_utils import XmippLog, loadModule, reportError
-from protlib_filesystem import deleteDir
+from protlib_filesystem import deleteDir, deleteFiles
 
 
 class XmippProject():
@@ -115,25 +115,25 @@ class XmippProject():
             os.remove(self.dbName)
         self.create()
             
-            
-    def deleteRun(self, run):
+    
+    def cleanRun(self, run):
         script = run['script']
-        log = script.replace(self.runsDir, self.logsDir).replace(".py", ".log")
-        err = script.replace(self.runsDir, self.logsDir).replace(".py", ".err")
-        out = script.replace(self.runsDir, self.logsDir).replace(".py", ".out")
-        #remove script .py and .pyc files and .log
-        toDelete = [script, script+'c', log, err, out] 
-        for f in toDelete:
-            if os.path.exists(f):
-                os.remove(f)
+        toDelete = [script.replace(self.runsDir, self.logsDir).replace(".py", ext) for ext in ['.log', '.err', '.out']]
+        deleteFiles(None, toDelete, False)
         workingDir = os.path.join(run['protocol_name'], run['run_name'])
         from distutils.dir_util import remove_tree
         if os.path.exists(workingDir):
             remove_tree(workingDir, True)
+
+    def deleteRun(self, run):
+        script = run['script']
+        deleteFiles(None, [script, script+'c'], False)
+        self.cleanRun(run)
         self.projectDb.deleteRun(run)
+        
             
     def getRunScriptFileName(self, protocol_name, runName):
-        return os.path.join(self.runsDir, 'xmipp_protocol_%s_%s.py' % (protocol_name, runName))
+        return os.path.join(self.runsDir, '%s_%s.py' % (protocol_name, runName))
     
     def createRunFromScript(self, protocol_name, script):
         #suggest a new run_name        
@@ -269,6 +269,12 @@ class XmippProtocol(object):
         pass
     
     def runSetup(self):
+        import sys
+        #Redirecting standard output and error to files
+        self.fOut = open(self.Out, 'a')
+        self.fErr = open(self.Err, 'a')
+        sys.stdout = self.fOut
+        sys.stderr = self.fErr
         self.Log = XmippLog(self.LogPrefix + ".log")
         self.Db  = XmippProtocolDb(self)
 
@@ -283,17 +289,25 @@ class XmippProtocol(object):
         errors = self.validateBase()
         if len(errors) > 0:
             raise Exception('\n'.join(errors))
-        #Initialization of log and db
-        self.runSetup()
         
         #insert basic operations for all scripts
         if self.Behavior=="Restart":
-            deleteDir(self.Log,self.WorkingDir)
+            run = {
+               'protocol_name':self.Name, 
+               'run_name': self.RunName, 
+               'script': self.scriptName, 
+               'source': self.scriptName
+               }
+            self.project.cleanRun(run)
+        #Initialization of log and db
+        self.runSetup()
         self.Db.insertStep('createDir', path = self.WorkingDir)
         self.Db.insertStep('createDir', path = self.TmpDir)
         self.defineSteps()
         self.Db.runSteps()
         self.postRun()
+        self.fOut.close()
+        self.fErr.close()         
         return 0
     
 def command_line_options():
@@ -396,7 +410,7 @@ def protocolMain(ProtocolClass, script=None):
                                nodes = mod.NumberOfMpiProcesses,
                                threads = NumberOfThreads,
                                hours = mod.QueueHours,
-                               command = 'python %s --no_check >>%s 2>>%s' % (script,p.Out,p.Err)
+                               command = 'python %s --no_check' % script
                                )
                 exit(0)
         

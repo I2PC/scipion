@@ -7,6 +7,7 @@ This is a compound widget that gangs multiple Tk Listboxes to a single scrollbar
 multi-column scrolled listbox. Most of the Listbox API is mirrored to make it act like the normal 
 Listbox but with multiple values per row.
 '''
+import tkMessageBox
 class MultiListbox(tk.PanedWindow):
     """MultiListbox class for creating a Grid widget"""
     def __init__(self,master,lists):
@@ -383,7 +384,6 @@ class ToolTip:
 
 ##---------demo code-----------------------------------##
 
-from protlib_utils import bcolors
 from tkSimpleDialog import Dialog
 '''Implement a Listbox Dialog, it will return
 the index selected in the lisbox or -1 on Cancel'''
@@ -415,6 +415,8 @@ class ListboxDialog(Dialog):
     def apply(self):
         self.result = map(int, self.lb.curselection())
 
+from protlib_utils import colorMap, colorStr
+
 class FilePollTextArea(tk.Frame):
     def __init__(self, master, filename):
         tk.Frame.__init__(self, master)
@@ -430,36 +432,37 @@ class FilePollTextArea(tk.Frame):
         # put a scroll bar in the frame
         yscroll = tk.Scrollbar(textfr)
         self.text.configure(yscrollcommand=yscroll.set)
-        xscroll = tk.Scrollbar(textfr, orient="horizontal")
-        self.text.configure(xscrollcommand=xscroll.set)
+        yscroll.config(command=self.text.yview)
         #pack everything
         self.text.pack(side=tk.LEFT)
         yscroll.pack(side=tk.RIGHT,fill=tk.Y)
-        xscroll.pack(side=tk.BOTTOM,fill=tk.X)
         textfr.pack(side=tk.TOP)
-        self.text.tag_config("fail_red", foreground="red")
-        self.text.tag_config("ok_blue", foreground="blue")
-        self.text.tag_config("ok_green", foreground="green")
+        for color in colorMap.keys():
+            self.text.tag_config("tag_" + color, foreground=color)
 
-    def escapeLine(self, line):
-        colors = [bcolors.HEADER, bcolors.OKBLUE, bcolors.OKGREEN,
-                  bcolors.WARNING, bcolors.FAIL, bcolors.ENDC]
-        for c in colors:
-            line = line.replace(c, '')
-        return line[line.rfind("\r")+1:]    
-    
     def fillTextArea(self):
+        self.text.delete(1.0, tk.END)
         file = open(self.filename)
         for line in file:
-            tag = None
-            if line.find(bcolors.FAIL) != -1:
-                tag = "fail_red"
-            elif line.find(bcolors.OKBLUE) != -1:
-                tag = "ok_blue"
-            elif line.find(bcolors.OKGREEN) != -1:
-                tag = "ok_blue"
-            self.text.insert(tk.END, self.escapeLine(line), (tag))
+            tuple = findColor(line)
+            if tuple is None:
+                self.text.insert(tk.END, line[line.rfind("\r")+1:])  
+            else:
+                self.text.insert(tk.END, tuple[3], "tag_" + tuple[0])
         file.close()
+        
+def findColor(str):
+    '''This function will search if there are color characters present
+    on string and return the color and positions on string'''
+    for k, v in colorMap.iteritems():
+        x, y = colorStr(v, "_..._").split("_..._")
+        if str.find(x) != -1 and str.find(y) != -1:
+            str = str.replace(x, '').replace(y, '')
+            return (k, str.find(x), str.find(y), str)
+    return None
+            
+   
+    
         
 class OutputTextArea(tk.Frame):
     def __init__(self, master, fileprefix):
@@ -467,6 +470,7 @@ class OutputTextArea(tk.Frame):
         self.exts = ['.log', '.out', '.err']
         self.files = [fileprefix + ext for ext in self.exts]
         self.createWidgets()
+        self.master = master
     
     def createWidgets(self):
         self.indexVar = tk.IntVar()
@@ -489,8 +493,18 @@ class OutputTextArea(tk.Frame):
         if self.lastIndex != self.indexVar.get():
             self.taList[self.lastIndex].grid_remove()
             self.lastIndex = self.indexVar.get()
+            self.taList[self.lastIndex].fillTextArea()
             self.taList[self.lastIndex].grid()
-        
+            
+    def addBindings(self):
+        self.master.bind('<Control_L><Up>', lambda: self.changePosition(1.0))
+        self.master.bind('<Control_L><Down>', lambda: self.changePosition(tk.END))
+       
+    def changePosition(self, index):
+        tkMessageBox.showinfo("test", "binding with index " + str(index))
+        return
+        self.taList[self.lastIndex].see(index)
+         
 def demo():
     root = tk.Tk(className='ToolTip-demo')
     l = tk.Listbox(root)

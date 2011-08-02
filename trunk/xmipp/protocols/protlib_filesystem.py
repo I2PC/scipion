@@ -35,40 +35,44 @@ from protlib_utils import printLog, printLogError
 # The following are Wrappers to be used from Protocols
 # provinding filesystem utitities
 
-def createDir(_log, path):
+def createDir(log, path):
     """ Create directory, does not add workingdir"""
     from distutils.dir_util import mkpath
     from distutils.errors import DistutilsFileError
     try:
         if not os.path.exists(path):
-            _log.info("Creating directory " + path)
+            printLog(log, "Creating directory " + path)
             mkpath(path, 0777, True)
     except DistutilsFileError, e:
-        printLogError(_log, "could not create '%s': %s" % (os.path.abspath(path), e))
+        printLogError(log, "could not create '%s': %s" % (os.path.abspath(path), e))
 
-def changeDir(_log, path):
+def changeDir(log, path):
     """ Change to Directory """
-    _log.info("Changing to directory " + path)
+    printLog(log, "Changing to directory " + path)
     try:
         os.chdir(path)
     except os.error, (errno, errstr):
-        printLogError(_log, "could not change to directory '%s'\nError (%d): %s" % (path, errno, errstr))
+        printLogError(log, "Could not change to directory '%s'\nError (%d): %s" % (path, errno, errstr))
 
-def deleteDir(_log, path):
+def deleteDir(log, path):
     from distutils.dir_util import remove_tree
     if os.path.exists(path):
-        _log.info("Deleting directory " + path)
+        printLog(log, "Deleting directory " + path)
         remove_tree(path, True)
            
-def deleteFile(_mylog, filename, Verbose):
+def deleteFile(log, filename, verbose):
     if os.path.exists(filename):
         os.remove(filename)
-        if Verbose:
-            printLog( 'Deleted file %s' % filename )
+        if verbose:
+            printLog(log, 'Deleted file %s' % filename )
     else:
-        if Verbose:
-            printLog( 'Do not need to delete %s; already gone' % filename )
+        if verbose:
+            printLog(log, 'Do not need to delete %s; already gone' % filename )
 
+def deleteFiles(log, filelist, verbose):
+    for file in filelist:
+        deleteFile(log, file, verbose)
+        
 #--------------------------- Xmipp specific tools ---------------------------------
 def getXmippPath(subfolder=''):
     '''Return the path the the Xmipp installation folder
@@ -84,7 +88,7 @@ def includeProtocolsDir():
 
 def getProtocolTemplate(prot):
     protDir = getXmippPath('protocols')
-    srcProtName = 'xmipp_protocol_%s.py' % prot.key
+    srcProtName = '%s.py' % prot.key
     #srcProtDir = getXmippPath('protocols')
     srcProtAbsPath = os.path.join(protDir, srcProtName)
     return srcProtAbsPath

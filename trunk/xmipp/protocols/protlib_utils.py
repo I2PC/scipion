@@ -163,16 +163,16 @@ def getBoolListFromVector(_vector,numberIteration=None):
 # Error handling
 #---------------------------------------------------------------------------
 def reportError(msg):
-    '''Function to write error message to log, to screen and exit'''
-    print >> sys.stderr, "%sERROR: %s %s"% (bcolors.FAIL,msg,bcolors.ENDC)
-    exit(1)
+    '''Function to write error message to stderr and raise an Exception'''
+    print >> sys.stderr, failStr("ERROR: %s" %  msg)
+    raise Exception(msg)
 
 def showWarnings(warningList, notConfirm=False):
     '''Function to write error message to log, to screen and exit'''
     if not warningList or len(warningList) == 0:
         return True
     for warning in warningList:
-        print >> sys.stderr, "%sWARNING: %s %s"% (bcolors.WARNING,warning,bcolors.ENDC)
+        print >> sys.stderr, warnStr("WARNING: %s"% warning)
     if notConfirm:
         return True
     answer = raw_input('Do you want to proceed? [y/N]:')
@@ -219,10 +219,11 @@ def runJob(log,
     from subprocess import call
     retcode = 0
     try:
-        retcode = call(command, shell=True)
+        #retcode = call(command, shell=True)
+        retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
         printLog(log, "Process returned with code %d" % retcode)
     except OSError, e:
-        printLogError(log, "Execution failed %s" % e)
+        printLogError(log, "Execution failed %s, '''command''': %s" % (e, command))
 
     return (command, retcode)
 
@@ -439,22 +440,18 @@ def unique_filename(file_name):
     return file_name 
 
 # Colors ########################
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    
-def colorStr(color, string):
-    return color + string + bcolors.ENDC
+from xmipp import XMIPP_MAGENTA, XMIPP_BLUE, XMIPP_GREEN, XMIPP_RED, XMIPP_YELLOW, XMIPP_CYAN, colorStr
 
-blueStr = lambda s: colorStr(bcolors.OKBLUE, s)
-greenStr = lambda s: colorStr(bcolors.OKGREEN, s)
-redStr = lambda s: colorStr(bcolors.FAIL, s)
-headerStr = lambda s: colorStr(bcolors.HEADER, s)
-    
+colorMap = {'red': XMIPP_RED, 'blue': XMIPP_BLUE, 
+            'green': XMIPP_GREEN, 'magenta': XMIPP_MAGENTA,
+            'yellow': XMIPP_YELLOW, 'cyan': XMIPP_CYAN}
+
+blueStr = lambda s: colorStr(XMIPP_BLUE, s)
+greenStr = lambda s: colorStr(XMIPP_GREEN, s)
+failStr = redStr = lambda s: colorStr(XMIPP_RED, s)
+headerStr = magentaStr = lambda s: colorStr(XMIPP_MAGENTA, s)
+yellowStr = lambda s: colorStr(XMIPP_YELLOW, s)
+warnStr = cyanStr = lambda s: colorStr(XMIPP_CYAN, s)    
 #apply bfactor to a vector of volumes
 """ This utility boost up the high frequencies. Do not use the automated
     mode [default] for maps with resolutions lower than 12-15 Angstroms.

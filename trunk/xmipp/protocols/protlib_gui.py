@@ -31,7 +31,7 @@ import Tkinter as tk
 import tkMessageBox
 import tkFont
 from protlib_base import protocolMain, getProtocolFromModule
-from protlib_utils import loadModule
+from protlib_utils import loadModule, runJob
 from protlib_gui_ext import centerWindows
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
@@ -788,7 +788,7 @@ class ProtocolGUI(BasicGUI):
         if not prot is None:
             warnings=prot.warningsBase()
             if len(warnings)==0 or tkMessageBox.askyesno("Confirm execution",'\n'.join(warnings), parent=self.master):
-                os.system('python %s --no_confirm >>%s 2>>%s &' % (self.run['script'], prot.Out, prot.Err) )
+                os.system('python %s --no_confirm &' % self.run['script'] )
                 self.master.destroy() 
     
     def viewFiles(self):

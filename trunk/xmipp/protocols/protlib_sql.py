@@ -2,7 +2,7 @@ from pysqlite2 import dbapi2 as sqlite
 import pickle
 import os, sys
 from config_protocols import projectDefaults
-from protlib_utils import reportError, getScriptPrefix, printLog, printLogError, bcolors, runJob
+from protlib_utils import reportError, getScriptPrefix, printLog, printLogError, runJob
 from protlib_filesystem import createDir, deleteDir
 
 runColumns = ['run_id',
@@ -193,6 +193,10 @@ class XmippProjectDb(SqliteDb):
         self.sqlDict.update(run)
         _sqlCommand = "DELETE FROM %(TableRuns)s WHERE run_id = %(run_id)d " % self.sqlDict
         self.execSqlCommand(_sqlCommand, "Error deleting run: %(run_name)s" % run)
+        #this should be working automatically with the ON DELETE CASCADE
+        #but isn't working, so...
+        _sqlCommand = "DELETE FROM %(TableSteps)s WHERE run_id = %(run_id)d " % self.sqlDict
+        self.execSqlCommand(_sqlCommand, "Error deleting steps of run: %(run_name)s" % run)        
         
     def selectRunsCommand(self):
         sqlCommand = """SELECT run_id, run_name, script, 
@@ -297,17 +301,19 @@ class XmippProtocolDb(SqliteDb):
                                     %(TableSteps)s(command,parameters,verifyFiles,iter,execute_mainloop,passDb,run_id,parent_step_id)
                                      VALUES (?,?,?,?,?,?,?,?)""" % self.sqlDict,
                                      [command, parameters, verifyfilesString, self.iter,execute_mainloop,passDb,self.sqlDict['run_id'], parent_step_id])
+                #select the last step_id inserted for this run
+                self.cur_aux.execute("""SELECT MAX(step_id) FROM %(TableSteps)s WHERE run_id = %(run_id)d""" % self.sqlDict)
+                self.lastStepId = self.cur_aux.fetchone()[0]
             except sqlite.Error, e:
                 reportError( "Cannot insert command: %s" % e.args[0])
-            self.lastStepId = self.cur_aux.lastrowid
         return self.lastStepId
 
     def runSteps(self):
         self.connection.commit()
-        print "Estoy en runSteps"
         sqlCommand = """ SELECT step_id, iter, passDb, command, parameters, verifyFiles 
                          FROM %(TableSteps)s 
-                         WHERE finish IS NULL AND execute_mainloop = 1
+                         WHERE run_id = %(run_id)d 
+                         AND finish IS NULL AND execute_mainloop = 1
                          ORDER BY step_id """ % self.sqlDict
         self.cur.execute(sqlCommand)
         commands = self.cur.fetchall()
@@ -319,7 +325,6 @@ class XmippProtocolDb(SqliteDb):
                 self.nextStepId = commands[i+1]['step_id']
             else:
                 self.nextStepId = XmippProjectDb.BIGGEST_STEP
-            print "comando",commands[i] 
             self.runSingleStep(self.connection, self.cur, commands[i])
         printLog(self.Log,'***************************** Protocol FINISHED',True)
 
@@ -335,7 +340,7 @@ class XmippProtocolDb(SqliteDb):
         # Print
         import pprint
         from protlib_utils import blueStr, headerStr
-        print blueStr("--------\nStep: %d (iter=%d)" % (step_id,stepRow['iter']))
+        print blueStr("-------- Step: %d (iter=%d)" % (step_id,stepRow['iter']))
         print headerStr((command.split())[-1])
         pprint.PrettyPrinter(indent=4,width=20).pprint(dict)
 
@@ -353,16 +358,17 @@ class XmippProtocolDb(SqliteDb):
             exec ( command + '(self.Log, **dict)')
         
         # Check verify files
-        if len(stepRow["verifyFiles"])>0:
-            fileList =pickle.loads(str(stepRow["verifyFiles"]))
-            missingFiles=False
-            for file in fileList:
-                if not os.path.exists(file):
-                    myDict['file'] = file
-                    print "ERROR at  step: %(step_id)d, file %(file)s has not been created." % myDict
-                    missingFiles=True
-            if missingFiles:
-                exit(1)
+        fileList =pickle.loads(str(stepRow["verifyFiles"]))
+        print "About to check", fileList
+        missingFiles=False
+        for file in fileList:
+            print "Checking",file
+            if not os.path.exists(file):
+                myDict['file'] = file
+                printLogError(self.Log, "ERROR at  step: %(step_id)d, file %(file)s has not been created." % myDict)
+                missingFiles=True
+        if missingFiles:
+            exit(1)
      
         # Update finish
         sqlCommand = """UPDATE %(TableSteps)s SET finish = CURRENT_TIMESTAMP 
@@ -429,22 +435,17 @@ def runStepGaps(db, NumberOfThreads):
         for thr in threads:
             thr.join() 
     else:
-        print "Not launching threads, running 'runThreadLoop'"
         runThreadLoop(db, db.connection, db.cur)
         
 def runThreadLoop(db, connection, cursor):
     import time
     counter = 0
     while True:
-        if counter > 1000:
-            reportError(msg)
+        if counter > 100:
+            reportError("runThreadLoop: more than 100 times here, this is probably a bug")
         state, stepRow = db.getStepGap(cursor)
-        print 'i',i
-        print 'state', state
-        print 'stepRow', stepRow
-        i=i+1
+        counter += 1
         if state == STEP_GAP: #database will be unlocked after commit on init timestamp
-            print "Step_GAP",stepRow
             db.runSingleStep(connection, cursor, stepRow)
         else:
             connection.rollback() #unlock database
@@ -463,6 +464,5 @@ class ThreadStepGap(Thread):
         conn = sqlite.Connection(self.db.dbName)
         conn.row_factory = sqlite.Row
         cur = conn.cursor()
-        print "In threads, running 'runThreadLoop'"
         runThreadLoop(self.db, conn, cur)
 

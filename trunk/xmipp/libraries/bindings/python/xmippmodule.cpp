@@ -27,6 +27,7 @@
 
 #include <data/metadata_extension.h>
 #include <data/xmipp_image_generic.h>
+#include <data/xmipp_color.h>
 
 static PyObject * PyXmippError;
 
@@ -2268,6 +2269,19 @@ xmipp_label2Str(PyObject *obj, PyObject *args)
 }
 
 static PyObject *
+xmipp_colorStr(PyObject *obj, PyObject *args)
+{
+    char *str;
+    int color;
+    if (PyArg_ParseTuple(args, "is", &color, &str))
+    {
+        String labelStr = colorString(str, color);
+        return PyString_FromString(labelStr.c_str());
+    }
+    return NULL;
+}
+
+static PyObject *
 xmipp_labelType(PyObject *obj, PyObject *args)
 {
     PyObject * input;
@@ -2632,6 +2646,8 @@ xmipp_methods[] =
           "return list with metadata blocks in a file" },
         { "label2Str", xmipp_label2Str, METH_VARARGS,
           "Convert MDLabel to string" },
+          { "colorStr", xmipp_colorStr, METH_VARARGS,
+            "Create a string with color characters sequence for print in console" },
         { "labelType", xmipp_labelType, METH_VARARGS,
           "Return the type of a label" },
         { "str2Label", xmipp_str2Label, METH_VARARGS,
@@ -2965,6 +2981,14 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "WRAP", (long) WRAP);
     addIntConstant(dict, "ALL_IMAGES", (long) ALL_IMAGES);
     addIntConstant(dict, "FILENAMENUMBERLENGTH", (long) FILENAMENUMBERLENGTH);
+    addIntConstant(dict, "XMIPP_BLACK", (long) BLACK);
+    addIntConstant(dict, "XMIPP_RED", (long) RED);
+    addIntConstant(dict, "XMIPP_GREEN", (long) GREEN);
+    addIntConstant(dict, "XMIPP_YELLOW", (long) YELLOW);
+    addIntConstant(dict, "XMIPP_BLUE", (long) BLUE);
+    addIntConstant(dict, "XMIPP_MAGENTA", (long) MAGENTA);
+    addIntConstant(dict, "XMIPP_CYAN", (long) CYAN);
+    addIntConstant(dict, "XMIPP_WHITE", (long) WHITE);
 
 
 
