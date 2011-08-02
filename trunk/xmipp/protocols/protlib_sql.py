@@ -16,7 +16,7 @@ runColumns = ['run_id',
 
 NO_MORE_GAPS = 0 #no more gaps to work on
 NO_AVAIL_GAP = 1 #no available gaps now, retry later
-ACTION_GAP   = 2 #action gap to work on
+STEP_GAP   = 2 #step gap to work on
 
 def existsDB(dbName):
     """check if database has been created by checking if the table tableruns exist"""
@@ -304,6 +304,7 @@ class XmippProtocolDb(SqliteDb):
 
     def runSteps(self):
         self.connection.commit()
+        print "Estoy en runSteps"
         sqlCommand = """ SELECT step_id, iter, passDb, command, parameters, verifyFiles 
                          FROM %(TableSteps)s 
                          WHERE finish IS NULL AND execute_mainloop = 1
@@ -318,22 +319,23 @@ class XmippProtocolDb(SqliteDb):
                 self.nextStepId = commands[i+1]['step_id']
             else:
                 self.nextStepId = XmippProjectDb.BIGGEST_STEP
+            print "comando",commands[i] 
             self.runSingleStep(self.connection, self.cur, commands[i])
         printLog(self.Log,'***************************** Protocol FINISHED',True)
 
-    def runSingleStep(self, _connection, _cursor, actionRow):
+    def runSingleStep(self, _connection, _cursor, stepRow):
         exec(self.Import)
-        step_id = actionRow['step_id']
+        step_id = stepRow['step_id']
         myDict = self.sqlDict.copy()
         myDict['step_id'] = step_id
-        myDict['iter'] = actionRow['iter']
-        command = actionRow['command']
-        dict = pickle.loads(str(actionRow["parameters"]))
+        myDict['iter'] = stepRow['iter']
+        command = stepRow['command']
+        dict = pickle.loads(str(stepRow["parameters"]))
         
         # Print
         import pprint
         from protlib_utils import blueStr, headerStr
-        print blueStr("--------\nStep: %d (iter=%d)" % (step_id,actionRow['iter']))
+        print blueStr("--------\nStep: %d (iter=%d)" % (step_id,stepRow['iter']))
         print headerStr((command.split())[-1])
         pprint.PrettyPrinter(indent=4,width=20).pprint(dict)
 
@@ -345,14 +347,14 @@ class XmippProtocolDb(SqliteDb):
         _connection.commit()
         
         # Execute Python function
-        if actionRow['passDb']:
+        if stepRow['passDb']:
             exec ( command + '(self, **dict)')
         else:
             exec ( command + '(self.Log, **dict)')
         
         # Check verify files
-        if len(actionRow["verifyFiles"])>0:
-            fileList =pickle.loads(str(actionRow["verifyFiles"]))
+        if len(stepRow["verifyFiles"])>0:
+            fileList =pickle.loads(str(stepRow["verifyFiles"]))
             missingFiles=False
             for file in fileList:
                 if not os.path.exists(file):
@@ -372,16 +374,16 @@ class XmippProtocolDb(SqliteDb):
         print "Step %d finished\n" % step_id
 
     # Function to get the first avalaible gap to run 
-    # it will return pair (state, actionRow)
+    # it will return pair (state, stepRow)
     # if state is:
-    # NO_MORE_GAPS, actionRow is None and there are not more gaps to work on
-    # NO_AVAIL_GAP, actionRow is Nonew and not available gaps now, retry later
-    # ACTION_GAP, actionRow is a valid action row to work on
+    # NO_MORE_GAPS, stepRow is None and there are not more gaps to work on
+    # NO_AVAIL_GAP, stepRow is Nonew and not available gaps now, retry later
+    # STEP_GAP, stepRow is a valid step row to work on
     def getStepGap(self, cursor):
         #The following query is just to start a transaction, pysqlite doesn't provide a better way
         cursor.execute("UPDATE %(TableSteps)s SET step_id = -1 WHERE step_id < 0" % self.sqlDict)
-        if self.countActionGaps(cursor) > 0:
-            sqlCommand = """ SELECT child.step_id, child.iter, child.passDb, child.command, child.parameters,child.fileNameList 
+        if self.countStepGaps(cursor) > 0:
+            sqlCommand = """ SELECT child.step_id, child.iter, child.passDb, child.command, child.parameters,child.verifyFiles 
                         FROM %(TableSteps)s parent, %(TableSteps)s child
                         WHERE (parent.step_id = child.parent_step_id) 
                           AND (child.step_id < %(step_id)d)
@@ -392,11 +394,10 @@ class XmippProtocolDb(SqliteDb):
                         LIMIT 1""" % self.sqlDict
             cursor.execute(sqlCommand)
             row = cursor.fetchone()
-            #print "getActionGap", sqlCommand
             if row is None:
                 result = (NO_AVAIL_GAP, None)
             else:
-                result = (ACTION_GAP, row)
+                result = (STEP_GAP, row)
         else:
             result = (NO_MORE_GAPS, None)
         return result
@@ -411,9 +412,8 @@ class XmippProtocolDb(SqliteDb):
         
         cursor.execute(sqlCommand)
         result =  cursor.fetchone()[0] 
-#        print 'countActionGaps', result
         return result
-# Function to fill gaps of action in database
+# Function to fill gaps of step in database
 # this will be usefull for parallel processing, i.e., in threads or with MPI
 # step_id is the step that will launch the process to fill previous gaps
 def runStepGaps(db, NumberOfThreads):
@@ -422,20 +422,29 @@ def runStepGaps(db, NumberOfThreads):
     if NumberOfThreads > 1: 
         threads = []
         for i in range(NumberOfThreads):
-            thr = ThreadActionGap(db)
+            thr = ThreadStepGap(db)
             thr.start()
             threads.append(thr)
         #wait until all threads finish
         for thr in threads:
             thr.join() 
     else:
+        print "Not launching threads, running 'runThreadLoop'"
         runThreadLoop(db, db.connection, db.cur)
         
 def runThreadLoop(db, connection, cursor):
     import time
+    counter = 0
     while True:
+        if counter > 1000:
+            reportError(msg)
         state, stepRow = db.getStepGap(cursor)
-        if state == ACTION_GAP: #database will be unlocked after commit on init timestamp
+        print 'i',i
+        print 'state', state
+        print 'stepRow', stepRow
+        i=i+1
+        if state == STEP_GAP: #database will be unlocked after commit on init timestamp
+            print "Step_GAP",stepRow
             db.runSingleStep(connection, cursor, stepRow)
         else:
             connection.rollback() #unlock database
@@ -446,7 +455,7 @@ def runThreadLoop(db, connection, cursor):
  
 # RunJobThread
 from threading import Thread
-class ThreadActionGap(Thread):
+class ThreadStepGap(Thread):
     def __init__(self, db):
         Thread.__init__(self)
         self.db = db
@@ -454,5 +463,6 @@ class ThreadActionGap(Thread):
         conn = sqlite.Connection(self.db.dbName)
         conn.row_factory = sqlite.Row
         cur = conn.cursor()
+        print "In threads, running 'runThreadLoop'"
         runThreadLoop(self.db, conn, cur)
 

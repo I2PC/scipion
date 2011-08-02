@@ -18,7 +18,6 @@ from protlib_utils import which, runJob
 from protlib_filesystem import *
 import xmipp
 
-#FIXME: IMPLEMENTATION SHOULD BE REVISED
 class ProtPreprocessMicrographs(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.preprocess_micrographs.key, scriptname, project)
@@ -26,7 +25,11 @@ class ProtPreprocessMicrographs(XmippProtocol):
         self.CtffindExec =  which('ctffind3.exe')
 
     def defineSteps(self):
-        CtfFindActions=[]        
+        CtfFindActions=[]
+        a=True
+        b = not a
+        if a:
+            parentId = self.Db.insertStep('runStepGaps',passDb=True,NumberOfThreads=1)        
         for filename in glob.glob(self.DirMicrographs + '/' + self.ExtMicrographs):
             # Get the shortname and extension
             (filepath, micrographName)=os.path.split(filename)
@@ -44,14 +47,14 @@ class ProtPreprocessMicrographs(XmippProtocol):
                 AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
             
             # Insert actions in the database
-            id=self.Db.insertStep('createDir',path=micrographDir,execute_mainloop=True)
+            id=self.Db.insertStep('createDir',path=micrographDir,parent_step_id=parentId,execute_mainloop=b)
             id=self.Db.insertStep('preprocessMicrograph',verifyfiles=[os.path.join(micrographDir,"micrograph"+extension)],
-                                    parent_step_id=id, execute_mainloop=True,
+                                    parent_step_id=id, execute_mainloop=b,
                                     micrograph=filename,micrographDir=micrographDir,DoPreprocess=self.DoPreprocess,
                                     Crop=self.Crop,Stddev=self.Stddev,Down=self.Down)
             if self.DoCtfEstimate:
                 self.Db.insertStep('estimateCtfXmipp',verifyfiles=[os.path.join(micrographDir,"xmipp_ctf.ctfparam")],
-                                     parent_step_id=id,execute_mainloop=True,
+                                     parent_step_id=id,execute_mainloop=b,
                                      micrograph=finalname,micrographDir=micrographDir,Voltage=self.Voltage,
                                      SphericalAberration=self.SphericalAberration,AngPix=AngPix,
                                      AmplitudeContrast=self.AmplitudeContrast,LowResolCutoff=self.LowResolCutoff,
@@ -59,7 +62,7 @@ class ProtPreprocessMicrographs(XmippProtocol):
                                      MinFocus=self.MinFocus,MaxFocus=self.MaxFocus,WinSize=self.WinSize)
                 if self.DoCtffind:
                     CtfFindActions.append([dict(verifyfiles=[os.path.join(micrographDir,"ctffind.ctfparam")],
-                                         execute_mainloop=True,
+                                         execute_mainloop=b,
                                          CtffindExec=self.CtffindExec,micrograph=finalname,micrographDir=micrographDir,
                                          Voltage=self.Voltage,SphericalAberration=self.SphericalAberration,
                                          AngPix=AngPix,Magnification=self.Magnification,AmplitudeContrast=self.AmplitudeContrast,
