@@ -145,7 +145,6 @@ double ProgPSDSort::evaluate(const FileName &fnMicrograph,
     enhancePSD.mask_w1 = mask_w1;
     enhancePSD.mask_w2 = mask_w2;
     enhancePSD.apply(PSD());
-    PSD.write(fnRoot + "_Periodogramavg_enhanced.xmp");
 
     // Evaluate the radial integral
     PSD().setXmippOrigin();
