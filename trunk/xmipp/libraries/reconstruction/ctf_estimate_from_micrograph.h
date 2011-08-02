@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Javier Angel Velazquez Muriel (javi@cnb.csic.es)
- *              Carlos Oscar S�nchez Sorzano
+ *              Carlos Oscar Sanchez Sorzano
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -82,5 +82,10 @@ public:
     /// Process the whole thing
     void run();
 };
+
+/** Fast estimate enhanced PSD.
+ *  Set downsampling to 2 for halving the image size. */
+void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling, MultidimArray<double> &enhancedPSD);
+
 //@}
 #endif

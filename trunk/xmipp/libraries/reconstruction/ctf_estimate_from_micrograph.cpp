@@ -25,6 +25,7 @@
  ***************************************************************************/
 
 #include "ctf_estimate_from_micrograph.h"
+#include "ctf_enhance_psd.h"
 
 #include <data/args.h>
 #include <data/micrograph.h>
@@ -307,7 +308,8 @@ void ProgCTFEstimateFromMicrograph::run()
     MultidimArray<double> pieceSmoother;
     constructPieceSmoother(piece,pieceSmoother);
 
-    std::cerr << "Computing models of each piece ...\n";
+    if (verbose)
+    	std::cerr << "Computing models of each piece ...\n";
 
     // Prepare these filenames in case they are needed
     FileName fn_psd;
@@ -316,7 +318,8 @@ void ProgCTFEstimateFromMicrograph::run()
     else
         fn_psd=fn_root+".psdstk";
 
-    init_progress_bar(div_Number);
+    if (verbose)
+    	init_progress_bar(div_Number);
     int N = 1; // Index of current piece
     int i = 0, j = 0; // top-left corner of the current piece
     while (N <= div_Number)
@@ -453,11 +456,14 @@ void ProgCTFEstimateFromMicrograph::run()
         }
 
         // Increment the division counter
-        progress_bar(++N);
+        ++N;
+        if (verbose)
+        	progress_bar(N);
         if (psd_mode==OnePerParticle)
             iterPosFile.moveNext();
     }
-    progress_bar(div_Number);
+    if (verbose)
+    	progress_bar(div_Number);
 
     // If averaging, compute the CTF model ----------------------------------
     if (psd_mode==OnePerMicrograph)
@@ -623,4 +629,38 @@ void ProgCTFEstimateFromMicrograph::run()
         }
     }
     posFile.write(fn_pos);
+}
+
+/* Fast estimate of PSD --------------------------------------------------- */
+void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
+                             MultidimArray<double> &enhancedPSD)
+{
+	ProgCTFEstimateFromMicrograph prog1;
+	prog1.fn_micrograph=fnMicrograph;
+	prog1.fn_root=fnMicrograph.withoutExtension()+"_tmp";
+    prog1.pieceDim=(int)(256*downsampling);
+    prog1.PSDEstimator_mode=ProgCTFEstimateFromMicrograph::Periodogram;
+    prog1.Nsubpiece=1;
+    prog1.psd_mode=ProgCTFEstimateFromMicrograph::OnePerMicrograph;
+    prog1.estimate_ctf=false;
+    prog1.bootstrapN=-1;
+    prog1.verbose=0;
+    prog1.run();
+
+    ProgCTFEnhancePSD prog2;
+    prog2.filter_w1 = 0.02;
+    prog2.filter_w2 = 0.2;
+    prog2.decay_width = 0.02;
+    prog2.mask_w1 = 0.005;
+    prog2.mask_w2 = 0.5;
+
+    Image<double> PSD;
+    PSD.read(prog1.fn_root+".psd");
+    prog2.apply(PSD());
+    enhancedPSD=PSD();
+    unlink(PSD.name().c_str());
+
+    int downXdim_2=(int)(XSIZE(enhancedPSD)/(2*downsampling));
+    enhancedPSD.setXmippOrigin();
+    enhancedPSD.selfWindow(-128,-128,127,127);
 }
