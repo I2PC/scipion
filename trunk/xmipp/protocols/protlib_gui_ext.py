@@ -446,8 +446,7 @@ class FilePollTextArea(tk.Frame):
                   bcolors.WARNING, bcolors.FAIL, bcolors.ENDC]
         for c in colors:
             line = line.replace(c, '')
-        return line
-    
+        return line[line.rfind("\r")+1:]    
     
     def fillTextArea(self):
         file = open(self.filename)
@@ -459,11 +458,7 @@ class FilePollTextArea(tk.Frame):
                 tag = "ok_blue"
             elif line.find(bcolors.OKGREEN) != -1:
                 tag = "ok_blue"
-            
-            print "line: ", line
-            print "tag:", tag
             self.text.insert(tk.END, self.escapeLine(line), (tag))
-#                self.text.insert(tk.END, line)
         file.close()
         
 class OutputTextArea(tk.Frame):
