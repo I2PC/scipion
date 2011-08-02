@@ -1,4 +1,5 @@
 from unittest import TestResult, _TextTestResult
+from protlib_utils import greenStr, failStr
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
 except ImportError:
@@ -17,11 +18,11 @@ class XmippPythonTestResult(TestResult):
     def closeXmlReport(self):
          self.xml.write('</testsuite>\n')
          self.xml.close()
-         sys.stderr.write("%s[==========]%s run %d tests\n" % (bcolors.OKGREEN, bcolors.ENDC, self.numberTests))
+         print >> sys.stderr, greenStr("[==========]") + " run %d tests\n" % self.numberTests
          if (self.testFailed):
-             sys.stderr.write("%s[  FAILED  ] %s %d tests\n" % (bcolors.FAIL, bcolors.ENDC, self.testFailed))
+             print >> sys.stderr, failStr("[  FAILED  ]") + " %d tests\n" % self.testFailed
          else:
-             sys.stderr.write("%s[  PASSED  ] %s %d tests\n" % (bcolors.OKGREEN, bcolors.ENDC, self.numberTests - self.testFailed))
+             print >> sys.stderr, greenStr("[  PASSED  ]") + " %d tests\n" % (self.numberTests - self.testFailed)
              
     
     def getTestNames(self, test):
@@ -35,15 +36,15 @@ class XmippPythonTestResult(TestResult):
     def addSuccess(self, test):
         name, classname = self.getTestNames(test)
         self.xml.write('   <testcase name="%s" classname="%s"/>\n' % (name, classname))
-        sys.stderr.write("%s[ RUN      ]%s %s.%s\n" % (bcolors.OKGREEN, bcolors.ENDC, classname, name))
-        sys.stderr.write("%s[      OK  ]%s %s.%s\n" % (bcolors.OKGREEN, bcolors.ENDC, classname, name))
+        sys.stderr.write("%s %s.%s\n" % (greenStr('[ RUN      ]'), classname, name))
+        sys.stderr.write("%s %s.%s\n" % (greenStr('[      OK  ]'), classname, name))
     
     def reportError(self, test, err):
         name, classname = self.getTestNames(test)
         self.xml.write('   <testcase name="%s" classname="%s">\n' % (name, classname))
         self.xml.write('      <failure message=" "/>\n')
         self.xml.write('   </testcase>\n')
-        sys.stderr.write("%s[   FAILED ]%s %s.%s\n" % (bcolors.FAIL, bcolors.ENDC, classname, name))
+        sys.stderr.write("%s %s.%s\n" % (failStr('[   FAILED ]'), classname, name))
         self.testFailed += 1
                 
     def addError(self, test, err):

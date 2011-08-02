@@ -463,7 +463,7 @@ def findColor(str):
             
    
     
-        
+from config_protocols import BgColor, EntryBgColor     
 class OutputTextArea(tk.Frame):
     def __init__(self, master, fileprefix):
         tk.Frame.__init__(self, master)
@@ -471,6 +471,9 @@ class OutputTextArea(tk.Frame):
         self.files = [fileprefix + ext for ext in self.exts]
         self.createWidgets()
         self.master = master
+        #Add bindings
+        self.master.bind('<Control_L><Home>', lambda e: self.changePosition(1.0))
+        self.master.bind('<Control_L><End>', lambda e: self.changePosition(tk.END))
     
     def createWidgets(self):
         self.indexVar = tk.IntVar()
@@ -478,13 +481,20 @@ class OutputTextArea(tk.Frame):
         self.taList = []
         self.lastIndex = 0
         options = ['Log', 'Standard output', 'Standard error']
+        #Label to show the output type
         tk.Label(self, text='Select output file:').grid(row=0, column=0, padx=5, pady=5)
+        #Add the search box
+        self.searchVar = tk.StringVar()
+        tk.Label(self, text='Search:').grid(row=0, column=2, padx=5, pady=5)
+        tk.Entry(self, bg=EntryBgColor, textvariable=self.searchVar).grid(row=0, column=3, sticky='ew')
+        tk.Button(self, text='Next', command=self.findText).grid(row=0, column=4)
+        #Add radiobuttons and textareas
         for i in range(3):
             tk.Radiobutton(self, text='%s (%s)' % (options[i], self.exts[i]), 
                                        variable=self.indexVar, command=self.selectionChanged,
-                                       value=i).grid(row=0, column=i+1, padx=5, pady=5)
+                                       value=i).grid(row=i, column=1, padx=5, pady=(5,0))
             ta = FilePollTextArea(self, self.files[i])
-            ta.grid(row=2, column=0, columnspan=5, padx=5, pady=5)
+            ta.grid(row=3, column=0, columnspan=5, padx=5, pady=5)
             if i != self.indexVar.get():
                 ta.grid_remove()
             self.taList.append(ta)
@@ -496,14 +506,25 @@ class OutputTextArea(tk.Frame):
             self.taList[self.lastIndex].fillTextArea()
             self.taList[self.lastIndex].grid()
             
-    def addBindings(self):
-        self.master.bind('<Control_L><Up>', lambda: self.changePosition(1.0))
-        self.master.bind('<Control_L><Down>', lambda: self.changePosition(tk.END))
-       
     def changePosition(self, index):
-        tkMessageBox.showinfo("test", "binding with index " + str(index))
+        tkMessageBox.showinfo("test", "binding with index " + str(index), parent=self.master)
         return
         self.taList[self.lastIndex].see(index)
+        
+    def findText(self, event=''):
+        text = self.taList[self.lastIndex].text
+        text.tag_remove('found', '1.0', tk.END)
+        s = self.searchVar.get()
+        if s:
+            idx = '1.0'
+            while True:
+                idx = text.search(s, idx, nocase=1, stopindex=tk.END)
+                if not idx: break
+                lastidx = '%s+%dc' % (idx, len(s))
+                text.tag_add('found', idx, lastidx)
+                idx = lastidx
+            text.tag_config('found', foreground='yellow')
+        #self.searchEntry.focus_set()
          
 def demo():
     root = tk.Tk(className='ToolTip-demo')

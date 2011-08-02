@@ -60,13 +60,13 @@ class XmippProjectGUI():
     def deleteProject(self):
         if tkMessageBox.askyesno("DELETE confirmation", "You are going to DELETE all project data (runs, logs, results...Do you want to continue?"):
             self.project.clean()
-            self.onExit()            
+            self.close()
             
     def createMainMenu(self):
         self.menubar = tk.Menu(self.root)
         self.fileMenu = tk.Menu(self.root, tearoff=0)
         self.fileMenu.add_command(label="Delete project", command=self.deleteProject)
-        self.fileMenu.add_command(label="Exit", command=self.onExit)
+        self.fileMenu.add_command(label="Exit", command=self.close)
         self.menubar.add_cascade(label="File", menu=self.fileMenu)
         self.ToolbarButtonsDict = {}
         self.runButtonsDict = {}
@@ -80,6 +80,7 @@ class XmippProjectGUI():
         self.root.bind('<Delete>', lambda e: self.runButtonClick('Delete'))
         self.root.bind('<Up>', self.selectRunUpDown)
         self.root.bind('<Down>', self.selectRunUpDown)
+        self.root.bind('<Alt_L><c>', self.close )
         
     def selectRunUpDown(self, event):
         if event.keycode == 111: # Up arrow
@@ -126,6 +127,7 @@ class XmippProjectGUI():
         self.selectToolbarButton(run['group_name'], False)
         if self.lastSelected == run['group_name']:
             self.updateRunHistory(self.lastSelected)
+            
     def updateRunHistory(self, protGroup): 
         self.runs = self.project.projectDb.selectRuns(protGroup)
         self.lbHist.delete(0, tk.END)
@@ -347,7 +349,7 @@ class XmippProjectGUI():
         self.root.deiconify()
         self.root.mainloop()
        
-    def onExit(self):
+    def close(self, event=""):
         self.root.destroy()
 
     def showOutput(self):
