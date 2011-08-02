@@ -652,9 +652,9 @@ void ProgCTFEstimateFromPSD::produce_side_info()
     prm.mask_w2 = 0.5;
     enhanced_ctftomodel() = ctftomodel();
     prm.apply(enhanced_ctftomodel());
+    enhanced_ctftomodel.write(fn_psd.withoutExtension()+"_enhanced_psd.xmp");
     CenterFFT(enhanced_ctftomodel(), false);
     enhanced_ctftomodel_fullsize() = enhanced_ctftomodel();
-    enhanced_ctftomodel_fullsize.write(fn_psd.withoutExtension()+"_enhanced_psd.xmp");
 
     // Enhance PSD for optimization
     prm.filter_w1 = f1;
