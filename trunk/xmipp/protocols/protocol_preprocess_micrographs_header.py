@@ -32,7 +32,7 @@ run1 for it. This name together with the protocol output folder will determine t
 RunName = "run_001"
 
 # {list}(Resume, Restart) Run behavior
-""" Resume from the last step, restart the whole process or continue at a given step or iteration
+""" Resume from the last step, restart the whole process
 """
 Behavior = "Resume"
 
@@ -45,7 +45,6 @@ DirMicrographs = 'Micrographs'
 
 # Files to process
 """ This is typically *.tif or *.ser, but may also be *.mrc, *.spi 
-    (see the expert options)
     Note that any wildcard is possible, e.g. *3[1,2].tif
 """
 ExtMicrographs = '*.mrc'
@@ -69,7 +68,7 @@ Stddev = -1
 
 # Downsampling factor 
 """ Set to 1 for no downsampling. Non-integer downsample factors are possible."""
-Down = 2
+Down = 1
 
 #------------------------------------------------------------------------------------------------
 # {section}{has_question} CTF estimation
@@ -80,7 +79,7 @@ DoCtfEstimate=True
 # Microscope voltage (in kV)
 Voltage = 200
 
-# Spherical aberration
+# Spherical aberration (in mm)
 SphericalAberration = 2.26
 
 # Magnification rate
@@ -96,7 +95,7 @@ SamplingRate = 1
 ScannedPixelSize = 15
 
 # Amplitude Contrast
-""" It should be a negative number"""
+""" It should be a negative number, typically between -0.05 and -0.3."""
 AmplitudeContrast = -0.1
 
 # {expert} Lowest resolution for CTF estimation
@@ -109,7 +108,8 @@ LowResolCutoff = 0.05
 # {expert} Highest resolution for CTF estimation
 """ Give a value in digital frequency (i.e. between 0.0 and 0.5)
     This cut-off prevents high-resolution terms where only noise exists to interfere with CTF estimation.  
-    The default value is 0.35, but it should be increased for micrographs with signals extending beyond this value
+    The default value is 0.35, but it should be increased for micrographs with signals extending beyond this value.
+    However, if your micrographs extend further than 0.35, you should consider sampling them at a finer rate.
 """
 HighResolCutoff = 0.35
 
@@ -124,9 +124,14 @@ MinFocus = 0.5
 MaxFocus = 10
 
 # {expert} Window size
+""" The PSD is estimated from small patches of this size. Bigger patches allow identifying more details.
+    However, since there are fewer windows, estimations are noisier.
+"""
 WinSize = 256
 
 # Do CTFFIND
+""" This option can be applied if ctffind3.exe is on the system PATH.
+"""
 DoCtffind = False
 
 # {condition}(DoCtffind=True){expert} Defocus step for CTFFIND (in microns)
@@ -138,6 +143,7 @@ StepFocus = 0.1
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------
 # Number of MPI processes
+""" Set to 1 if you do not have MPI installed"""
 NumberOfMpiProcesses = 8
 
 # Submit to queue
@@ -155,7 +161,7 @@ QueueName = "default"
 be running, after that time it will be killed by the
 queue system
 """
-QueueHours = 24
+QueueHours = 6
 
 # {hidden} Show expert options
 """If True, expert options will be displayed
