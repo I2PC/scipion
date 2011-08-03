@@ -441,27 +441,36 @@ class FilePollTextArea(tk.Frame):
             self.text.tag_config("tag_" + color, foreground=color)
 
     def fillTextArea(self):
+        self.text.config(state=tk.NORMAL)
         self.text.delete(1.0, tk.END)
         file = open(self.filename)
+        lineNo=1
         for line in file:
             tuple = findColor(line)
+            self.text.insert(tk.END, "%05d:   "%lineNo)  
             if tuple is None:
                 self.text.insert(tk.END, line[line.rfind("\r")+1:])  
             else:
-                self.text.insert(tk.END, tuple[3], "tag_" + tuple[0])
+                color,idxInitColor,idxFinishColor,cleanText=tuple
+                if idxInitColor>0:
+                    self.text.insert(tk.END, cleanText[:(idxInitColor-1)]+" ")
+                self.text.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + tuple[0])
+                self.text.insert(tk.END, cleanText[idxFinishColor:])
+            lineNo+=1
         file.close()
+        self.text.config(state=tk.DISABLED)
         
 def findColor(str):
     '''This function will search if there are color characters present
     on string and return the color and positions on string'''
     for k, v in colorMap.iteritems():
         x, y = colorStr(v, "_..._").split("_..._")
-        if str.find(x) != -1 and str.find(y) != -1:
+        fx=str.find(x)
+        fy=str.find(y)
+        if fx != -1 and fy != -1:
             str = str.replace(x, '').replace(y, '')
-            return (k, str.find(x), str.find(y), str)
+            return (k, fx, fy, str)
     return None
-            
-   
     
 from config_protocols import BgColor, EntryBgColor, LabelBgColor, ButtonBgColor   
 from config_protocols import FontName, FontSize
@@ -550,7 +559,6 @@ class OutputTextArea(tk.Frame):
         self.searchEntry.focus_set()
         
     def buildSearchList(self, text, str):
-        print 'building list str:', str
         text.tag_remove('found', '1.0', tk.END)
         list = []
         if str:
