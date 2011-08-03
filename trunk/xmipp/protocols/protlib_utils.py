@@ -77,8 +77,7 @@ class XmippLog:
 
     def info(self, message):
         if self.is_basic:
-            import time
-            self.fh_log.write("%s %s\n" % (message, time.asctime(time.localtime(time.time()))))
+            self.fh_log.write(getLogMessage(message))
             self.fh_log.flush()
         else:
             self._log.info(message)
@@ -94,6 +93,16 @@ class XmippLog:
     def __del__(self):
         if self.is_basic:
             self.fh_log.close()
+
+def getLogMessage(message):
+    return "%s:   %s" % (getCurrentTimeStr(), message)
+#---------------------------------------------------------------------------
+# Time helper functions
+#---------------------------------------------------------------------------
+
+def getCurrentTimeStr():
+    import time
+    return time.asctime(time.localtime(time.time()))
 
 #---------------------------------------------------------------------------
 # Naming conventions
@@ -181,36 +190,23 @@ def showWarnings(warningList, notConfirm=False):
         return False
     return True
         
-def printLogError(log, msg):
-    '''Function to write error message to log'''
-    log.error(msg)
-    
-def printLog(log, msg):
+def printLog(msg, log=None, out=True, err=False, isError=False):
     '''Just print a msg in the log'''
-    log.info(msg)
-
-def printLogOutErr(log,msg,color=None):
-    """Prints a msg in the three outputs"""
-    log.info(msg)
-    printOutErr(msg,color)
+    if not log is None:
+        if isError: log.error(msg)
+        else:       log.info(msg)
+        
+    if out or err:
+        if isError:
+            msg = redStr("ERROR: ") + msg
+        msg = getLogMessage(msg)
+        if out:
+            print msg
+            sys.stdout.flush()
+        if err:
+            print >> sys.stderr, msg
+            sys.stderr.flush()
     
-def printLogErrorOutErr(log,msg,color=None):
-    """Prints a msg in the three outputs"""
-    log.error(msg)
-    printOutErr(msg,color)
-
-def printOutErr(msg,color=None):
-    """Prints a msg in the two outputs"""
-    if color==None:
-        colorMsg=msg
-    else:
-        colorMsg=colorStr(color,msg)
-    print colorMsg
-    print >> sys.stderr, colorMsg
-    sys.stdout.flush()
-    sys.stderr.flush()
-    
-
 #---------------------------------------------------------------------------
 # Jobs launching
 #---------------------------------------------------------------------------    

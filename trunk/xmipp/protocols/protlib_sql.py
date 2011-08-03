@@ -2,9 +2,11 @@ from pysqlite2 import dbapi2 as sqlite
 import pickle
 import os, sys
 from config_protocols import projectDefaults
-from protlib_utils import reportError, getScriptPrefix, printLog, printLogError, printLogErrorOutErr, printLogOutErr, printOutErr, runJob
+from protlib_utils import reportError, getScriptPrefix, printLog, runJob
 from protlib_filesystem import createDir, deleteDir
-from xmipp import XMIPP_RED, XMIPP_BLUE, XMIPP_GREEN, XmippError
+from protlib_utils import blueStr, redStr, headerStr, greenStr
+
+from xmipp import XmippError
 
 runColumns = ['run_id',
               'run_name',
@@ -299,6 +301,7 @@ class XmippProtocolDb(SqliteDb):
         if self.insertStatus==True:
             try:
                 self.cur_aux.execute("""INSERT INTO 
+
                                     %(TableSteps)s(command,parameters,verifyFiles,iter,execute_mainloop,passDb,run_id,parent_step_id)
                                      VALUES (?,?,?,?,?,?,?,?)""" % self.sqlDict,
                                      [command, parameters, verifyfilesString, self.iter,execute_mainloop,passDb,self.sqlDict['run_id'], parent_step_id])
@@ -320,21 +323,33 @@ class XmippProtocolDb(SqliteDb):
         commands = self.cur.fetchall()
         n = len(commands)
         msg='***************************** Protocol STARTED mode: %s'%self.runBehavior
-        printLogOutErr(self.Log,msg)
+        printLog(msg, self.Log,msg, out=True, err=True)
         
         for i in range(n):
+            #Keep the next main steps to have stop condition for parallel steps gaps
             if i < n - 1:
                 self.nextStepId = commands[i+1]['step_id']
             else:
                 self.nextStepId = XmippProjectDb.BIGGEST_STEP
+            #Execute the step
             try:
                 self.runSingleStep(self.connection, self.cur, commands[i])
             except Exception as e:
-                printLogErrorOutErr(self.Log, "Stopping batch execution since one of the steps could not be performed: %s"%e, XMIPP_RED)
-                return
+                msg = redStr("Stopping batch execution since one of the steps could not be performed: %s" % e)
+                printLog(msg, self.Log, out=True, err=True, isError=True)
+                raise
         msg='***************************** Protocol FINISHED'
-        printLogOutErr(self.Log,msg)
+        printLog(msg, self.Log,msg, out=True, err=True)
 
+    def verifyStepFiles(self, fileList):
+        missingFilesStr = ''
+        for file in fileList:
+            if not os.path.exists(file):
+                missingFilesStr += ' ' + file
+                
+        if len(missingFilesStr) > 0:
+            raise XmippError("Missing result files: " + missingFilesStr)
+        
     def runSingleStep(self, _connection, _cursor, stepRow):
         exec(self.Import)
         step_id = stepRow['step_id']
@@ -346,9 +361,9 @@ class XmippProtocolDb(SqliteDb):
         
         # Print
         import pprint, time
-        from protlib_utils import blueStr, redStr, headerStr
-        printLog(self.Log,"Step %d started" % step_id)
-        printOutErr("-------- Step start:  %d (iter=%d) %s" % (step_id,stepRow['iter'], time.asctime(time.localtime(time.time()))),XMIPP_BLUE)
+        stepStr = "%d (iter=%d)" % (step_id, stepRow['iter'])
+        msg = blueStr("-------- Step start:  %s" % stepStr)
+        printLog(msg, self.Log, out=True, err=True)
         print headerStr((command.split())[-1])
         pprint.PrettyPrinter(indent=4,width=20).pprint(dict)
 
@@ -365,34 +380,21 @@ class XmippProtocolDb(SqliteDb):
                 exec ( command + '(self, **dict)')
             else:
                 exec ( command + '(self.Log, **dict)')
+            # Check that expected result files were produced
+            self.verifyStepFiles(pickle.loads(str(stepRow["verifyFiles"])))
         except Exception as e:
-            printLogError(self.Log,"Step %d finished with error: %s" % (step_id,e))
-            printOutErr("         Step finish with error: %d (iter=%d) %s: %s" % (step_id,stepRow['iter'], time.asctime(time.localtime(time.time())),e),xmipp.XMIPP_RED)
-            return 1
+            msg = redStr("         Step finish with error: %(stepStr)s: %(e)s" % locals())
+            printLog(msg, self.Log, out=True, err=True, isError=True)
+            raise
         
-        # Check verify files
-        fileList =pickle.loads(str(stepRow["verifyFiles"]))
-        missingFiles=False
-        for file in fileList:
-            if not os.path.exists(file):
-                myDict['file'] = file
-                msg="At step: %(step_id)d, file %(file)s has not been created." % myDict
-                printLogError(self.Log, msg)
-                printOutErr("ERROR: "+msg,XMIPP_RED)
-                missingFiles=True
-        if missingFiles:
-            return 1
-     
-        # Update finish
+        # Report step finish and update database
+        msg = greenStr("         Step finish: %s" % stepStr)
+        printLog(msg, self.Log, out=True, err=True)
         sqlCommand = """UPDATE %(TableSteps)s SET finish = CURRENT_TIMESTAMP 
                         WHERE step_id=%(step_id)d
                           AND run_id=%(run_id)d""" % myDict
         _cursor.execute(sqlCommand)
         _connection.commit()
-        
-        printLog(self.Log,"Step %d finished\n" % step_id)
-        printOutErr("         Step finish: %d (iter=%d) %s" % (step_id,stepRow['iter'], time.asctime(time.localtime(time.time()))),XMIPP_GREEN)
-        return 0
 
     # Function to get the first avalaible gap to run 
     # it will return pair (state, stepRow)
@@ -437,7 +439,7 @@ class XmippProtocolDb(SqliteDb):
 # Function to fill gaps of step in database
 # this will be usefull for parallel processing, i.e., in threads or with MPI
 # step_id is the step that will launch the process to fill previous gaps
-def runStepGaps(db, NumberOfThreads):
+def runStepGaps(db, NumberOfThreads=1):
     # If run in separate threads, each one should create 
     # a new connection and cursor
     if NumberOfThreads > 1: 
@@ -462,7 +464,8 @@ def runThreadLoop(db, connection, cursor):
         counter += 1
         if state == STEP_GAP: #database will be unlocked after commit on init timestamp
             if db.runSingleStep(connection, cursor, stepRow):
-                printLogErrorOutErr(db.Log,"Stopping thread execution since one of the steps could not be performed",XMIPP_RED)
+                msg = redStr("Stopping thread execution since one of the steps could not be performed")
+                printLog(msg, db.Log, out=True, err=True, isError=True)
                 raise XmippError("Stopping Thread")
         else:
             connection.rollback() #unlock database

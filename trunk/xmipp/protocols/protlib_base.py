@@ -300,15 +300,21 @@ class XmippProtocol(object):
                }
             self.project.cleanRun(run)
         #Initialization of log and db
-        self.runSetup()
-        self.Db.insertStep('createDir', path = self.WorkingDir)
-        self.Db.insertStep('createDir', path = self.TmpDir)
-        self.defineSteps()
-        self.Db.runSteps()
-        self.postRun()
-        self.fOut.close()
-        self.fErr.close()         
-        return 0
+        retcode = 0
+        try:
+            self.runSetup()
+            self.Db.insertStep('createDir', path = self.WorkingDir)
+            self.Db.insertStep('createDir', path = self.TmpDir)
+            self.defineSteps()
+            self.Db.runSteps()
+            self.postRun()
+        except Exception:
+            retcode = 1;   
+        finally:
+            self.fOut.close()
+            self.fErr.close()  
+                            
+        return retcode
     
 def command_line_options():
     '''process protocol command line'''
@@ -414,4 +420,4 @@ def protocolMain(ProtocolClass, script=None):
                                )
                 exit(0)
         
-        p.run()
+        return p.run()
