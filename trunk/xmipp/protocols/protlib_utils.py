@@ -198,7 +198,10 @@ def printLog(msg, log=None, out=True, err=False, isError=False):
         
     if out or err:
         if isError:
-            msg = redStr("ERROR: ") + msg
+            tuple = findColor(msg)
+            if not tuple is None:
+                color,idxInitColor,idxFinishColor,msg=tuple
+            msg = redStr("ERROR: "+ msg)
         msg = getLogMessage(msg)
         if out:
             print msg
@@ -231,7 +234,7 @@ def runJob(log,
     from subprocess import call
     retcode = 1000
     try:
-        retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
+        retcode = call(command, shell=False, stdout=sys.stdout, stderr=sys.stderr)
         printLog("Process returned with code %d" % retcode,log)
     except OSError, e:
         raise xmipp.XmippError("Execution failed %s, command: %s" % (e, command))
@@ -462,7 +465,20 @@ greenStr = lambda s: colorStr(XMIPP_GREEN, s)
 failStr = redStr = lambda s: colorStr(XMIPP_RED, s)
 headerStr = magentaStr = lambda s: colorStr(XMIPP_MAGENTA, s)
 yellowStr = lambda s: colorStr(XMIPP_YELLOW, s)
-warnStr = cyanStr = lambda s: colorStr(XMIPP_CYAN, s)    
+warnStr = cyanStr = lambda s: colorStr(XMIPP_CYAN, s)
+
+def findColor(str):
+    '''This function will search if there are color characters present
+    on string and return the color and positions on string'''
+    for k, v in colorMap.iteritems():
+        x, y = colorStr(v, "_..._").split("_..._")
+        fx=str.find(x)
+        fy=str.find(y)
+        if fx != -1 and fy != -1:
+            str = str.replace(x, '').replace(y, '')
+            return (k, fx, fy, str)
+    return None
+    
 #apply bfactor to a vector of volumes
 """ This utility boost up the high frequencies. Do not use the automated
     mode [default] for maps with resolutions lower than 12-15 Angstroms.

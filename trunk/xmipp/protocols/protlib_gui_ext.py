@@ -415,7 +415,7 @@ class ListboxDialog(Dialog):
     def apply(self):
         self.result = map(int, self.lb.curselection())
 
-from protlib_utils import colorMap, colorStr
+from protlib_utils import colorMap, colorStr, findColor
 
 class FilePollTextArea(tk.Frame):
     def __init__(self, master, filename):
@@ -460,18 +460,6 @@ class FilePollTextArea(tk.Frame):
         file.close()
         self.text.config(state=tk.DISABLED)
         
-def findColor(str):
-    '''This function will search if there are color characters present
-    on string and return the color and positions on string'''
-    for k, v in colorMap.iteritems():
-        x, y = colorStr(v, "_..._").split("_..._")
-        fx=str.find(x)
-        fy=str.find(y)
-        if fx != -1 and fy != -1:
-            str = str.replace(x, '').replace(y, '')
-            return (k, fx, fy, str)
-    return None
-
 def changeFontSizeByDeltha(font, deltha, min=-999, max=999):
         size = font['size']
         new_size = size + deltha
