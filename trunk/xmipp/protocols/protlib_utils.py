@@ -221,8 +221,7 @@ def runJob(log,
     from subprocess import call
     retcode = 1000
     try:
-        # retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
-        retcode = call(command, stdout=sys.stdout, stderr=sys.stderr)
+        retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
         printLog(log, "Process returned with code %d" % retcode)
     except OSError, e:
         printLogError(log, "Execution failed %s, command: %s" % (e, command))
