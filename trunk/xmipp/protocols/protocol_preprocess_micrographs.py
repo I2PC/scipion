@@ -64,6 +64,7 @@ class ProtPreprocessMicrographs(XmippProtocol):
                     CtfFindActions.append([dict(verifyfiles=[os.path.join(micrographDir,"ctffind.ctfparam")],
                                          execute_mainloop=b,
                                          CtffindExec=self.CtffindExec,micrograph=finalname,micrographDir=micrographDir,
+                                         tmpDir=self.TmpDir,
                                          Voltage=self.Voltage,SphericalAberration=self.SphericalAberration,
                                          AngPix=AngPix,Magnification=self.Magnification,AmplitudeContrast=self.AmplitudeContrast,
                                          LowResolCutoff=self.LowResolCutoff,
@@ -169,13 +170,16 @@ def estimateCtfXmipp(log,micrograph,micrographDir,Voltage,SphericalAberration,An
            " --defocusU "+str((MaxFocus+MinFocus)*10000/2)
     runJob(log,"xmipp_ctf_estimate_from_micrograph",params)
 
-def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,Voltage,SphericalAberration,AngPix,Magnification,
+def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
                        AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
     # Convert image to MRC
     if not micrograph.endswith('.mrc'):
-        mrcMicrograph= os.path.join(micrographDir,'tmp.mrc')
+        import uuid, os
+        deleteTempMicrograph=True
+        mrcMicrograph= os.path.join(tmpDir,os.path.splitext(micrograph)[0]+"_"+str(uuid.uuid4())+'.mrc')
         runJob(log,'xmipp_image_convert','-i ' + micrograph + ' -o ' + mrcMicrograph + ' -v 0')
     else:
+        deleteTempMicrograph=False
         mrcMicrograph = micrograph;
 
     # Prepare parameters for CTFTILT
@@ -200,7 +204,8 @@ def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,Voltage,Spherica
     fnOut=micrographDir + '/ctffind.ctfparam'
 
     # Remove temporary files
-    deleteFile(log, micrographDir + '/tmp.mrc')
+    if deleteTempMicrograph:
+        deleteFile(log, mrcMicrograph)
 
     # Pick values from ctffind
     ctffindLog=os.path.join(micrographDir,'ctffind.log')
