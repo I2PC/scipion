@@ -29,7 +29,7 @@ class ProtPreprocessMicrographs(XmippProtocol):
         a=True
         b = not a
         if a:
-            parentId = self.Db.insertStep('runStepGaps',passDb=True,NumberOfThreads=3)        
+            parentId = self.Db.insertStep('runStepGaps',passDb=True,NumberOfThreads=4)        
         for filename in glob.glob(self.DirMicrographs + '/' + self.ExtMicrographs):
             # Get the shortname and extension
             (filepath, micrographName)=os.path.split(filename)
@@ -116,9 +116,6 @@ class ProtPreprocessMicrographs(XmippProtocol):
             import tkMessageBox
             tkMessageBox.showerror("Error", "There is no result yet")        
     
-def launchPreprocessMicrographsBatch(log,WorkingDir,protocolHeader):
-    pass
-
 def preprocessMicrograph(log,micrograph,micrographDir,DoPreprocess,Crop,Stddev,Down):
     # Decide name after preprocessing
     finalname=os.path.join(micrographDir,'micrograph')
@@ -130,17 +127,20 @@ def preprocessMicrograph(log,micrograph,micrographDir,DoPreprocess,Crop,Stddev,D
         finalname += extension
         if not os.path.exists(finalname):
             relpath = os.path.relpath(micrograph, micrographDir)
-            runJob(log,"ln",'-s %(relpath)s %(finalname)s' % locals())
-            if micrograph.endswith(".raw"):
-                runJob(log,"ln",'-s %(relpath)s.inf %(finalname)s.inf' % locals())
-            return
+            if runJob(log,"ln",'-s %(relpath)s %(finalname)s' % locals()):
+                return 1
+            if micrograph.endswith(".raw") and retval==0:
+                if runJob(log,"ln",'-s %(relpath)s.inf %(finalname)s.inf' % locals()):
+                    return 1
+            return 0
     if not DoPreprocess:
-        return
+        return 0
     
     # Crop
     iname=micrograph
     if not Crop == -1:
-        runJob(log,"xmipp_transform_window"," -i %(iname)s -o %(finalname)s --crop %(Crop)d -v 0" % locals())
+        if runJob(log,"xmipp_transform_window"," -i %(iname)s -o %(finalname)s --crop %(Crop)d -v 0" % locals()):
+            return 1
         iname=finalname
     
     # Remove bad pixels
@@ -149,13 +149,17 @@ def preprocessMicrograph(log,micrograph,micrographDir,DoPreprocess,Crop,Stddev,D
         if not iname == finalname:
             params += " -o " + finalname
             iname=finalname
-        runJob(log,"xmipp_transform_filter",params)
+        if runJob(log,"xmipp_transform_filter",params):
+            return 1
     
     # Downsample
     if not Down == 1:
         tmpFile=os.path.join(micrographDir,"tmp.mrc")
-        runJob(log,"xmipp_transform_downsample","-i %(iname)s -o %(tmpFile)s --step %(Down)f --method fourier" % locals())
-        runJob(log,"mv", "-f %(tmpFile)s %(finalname)s" % locals())
+        if runJob(log,"xmipp_transform_downsample","-i %(iname)s -o %(tmpFile)s --step %(Down)f --method fourier" % locals()):
+            return 1
+        if runJob(log,"mv", "-f %(tmpFile)s %(finalname)s" % locals()):
+            return 1
+    return 0
 
 def estimateCtfXmipp(log,micrograph,micrographDir,Voltage,SphericalAberration,AngPix,
                      AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,WinSize):
@@ -170,14 +174,15 @@ def estimateCtfXmipp(log,micrograph,micrographDir,Voltage,SphericalAberration,An
            " --pieceDim "+str(WinSize)+\
            " --defocus_range "+str((MaxFocus-MinFocus)*10000/2)+\
            " --defocusU "+str((MaxFocus+MinFocus)*10000/2)
-    runJob(log,"xmipp_ctf_estimate_from_micrograph",params)
+    return runJob(log,"xmipp_ctf_estimate_from_micrograph",params)
 
 def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,Voltage,SphericalAberration,AngPix,Magnification,
                        AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
     # Convert image to MRC
     if not micrograph.endswith('.mrc'):
         mrcMicrograph= os.path.join(micrographDir,'tmp.mrc')
-        runJob(log,'xmipp_image_convert','-i ' + micrograph + ' -o ' + mrcMicrograph + ' -v 0')
+        if runJob(log,'xmipp_image_convert','-i ' + micrograph + ' -o ' + mrcMicrograph + ' -v 0'):
+            return 1
     else:
         mrcMicrograph = micrograph;
 
@@ -198,17 +203,17 @@ def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,Voltage,Spherica
               str(MinFocus*10000) + ',' + \
               str(MaxFocus*10000) + ',' + \
               str(StepFocus*10000) + "\n"
-    runJob(log, "export NATIVEMTZ=kk ; "+CtffindExec,params)
+    if runJob(log, "export NATIVEMTZ=kk ; "+CtffindExec,params):
+        return 1
 
     fnOut=micrographDir + '/ctffind.ctfparam'
 
     # Remove temporary files
-    if os.path.exists(micrographDir + '/tmp.mrc'):
-        os.remove(micrographDir + '/tmp.mrc')
+    deleteFile(log, micrographDir + '/tmp.mrc')
 
     # Pick values from ctffind
     if not os.path.exists(micrographDir + '/ctffind.log'):
-        return
+        return 1
     
     # Effectively pickup results
     fh=open(micrographDir + '/ctffind.log', 'r')
@@ -243,6 +248,7 @@ def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,Voltage,Spherica
     MD.setValue(xmipp.MDL_CTF_Q0,            float(-AmplitudeContrast), objId)
     MD.setValue(xmipp.MDL_CTF_K,             1.0, objId)
     MD.write(fnOut)
+    return 0
 
 def gatherResults(log,WorkingDir,DirMicrographs,ExtMicrographs,DoCtfEstimate,DoCtffind):
     MD=xmipp.MetaData()
@@ -267,4 +273,6 @@ def gatherResults(log,WorkingDir,DirMicrographs,ExtMicrographs,DoCtfEstimate,DoC
 
     # CTF Quality control
     if DoCtfEstimate:
-        runJob(log,"xmipp_ctf_sort_psds","-i "+WorkingDir + "/micrographs.sel")
+        if runJob(log,"xmipp_ctf_sort_psds","-i "+WorkingDir + "/micrographs.sel"):
+            return 1
+    return 0
