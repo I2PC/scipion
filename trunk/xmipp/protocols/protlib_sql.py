@@ -325,7 +325,9 @@ class XmippProtocolDb(SqliteDb):
                 self.nextStepId = commands[i+1]['step_id']
             else:
                 self.nextStepId = XmippProjectDb.BIGGEST_STEP
-            self.runSingleStep(self.connection, self.cur, commands[i])
+            if self.runSingleStep(self.connection, self.cur, commands[i]):
+                printLogError(self.Log, "Stopping batch execution since one of the steps could not be performed")
+                return 1
         printLog(self.Log,'***************************** Protocol FINISHED',True)
 
     def runSingleStep(self, _connection, _cursor, stepRow):
@@ -340,6 +342,7 @@ class XmippProtocolDb(SqliteDb):
         # Print
         import pprint
         from protlib_utils import blueStr, headerStr
+        printLog(self.Log,"Step %d started" % step_id)
         print blueStr("-------- Step: %d (iter=%d)" % (step_id,stepRow['iter']))
         print headerStr((command.split())[-1])
         pprint.PrettyPrinter(indent=4,width=20).pprint(dict)
@@ -353,16 +356,17 @@ class XmippProtocolDb(SqliteDb):
         
         # Execute Python function
         if stepRow['passDb']:
-            exec ( command + '(self, **dict)')
+            exec ( 'retval=' + command + '(self, **dict)')
         else:
-            exec ( command + '(self.Log, **dict)')
+            exec ( 'retval=' + command + '(self.Log, **dict)')
+        if retval:
+            printLog(self.Log,"Step %d finished with error %d\n" % (step_id,retval),True)
+            return retval
         
         # Check verify files
         fileList =pickle.loads(str(stepRow["verifyFiles"]))
-        print "About to check", fileList
         missingFiles=False
         for file in fileList:
-            print "Checking",file
             if not os.path.exists(file):
                 myDict['file'] = file
                 printLogError(self.Log, "ERROR at  step: %(step_id)d, file %(file)s has not been created." % myDict)
@@ -377,7 +381,8 @@ class XmippProtocolDb(SqliteDb):
         _cursor.execute(sqlCommand)
         _connection.commit()
         
-        print "Step %d finished\n" % step_id
+        printLog(self.Log,"Step %d finished\n" % step_id)
+        return 0
 
     # Function to get the first avalaible gap to run 
     # it will return pair (state, stepRow)
@@ -446,7 +451,9 @@ def runThreadLoop(db, connection, cursor):
         state, stepRow = db.getStepGap(cursor)
         counter += 1
         if state == STEP_GAP: #database will be unlocked after commit on init timestamp
-            db.runSingleStep(connection, cursor, stepRow)
+            if db.runSingleStep(connection, cursor, stepRow):
+                printLogError(db.Log,"Stopping thread execution since one of the steps could not be performed")
+                return 1
         else:
             connection.rollback() #unlock database
             if state == NO_AVAIL_GAP:
