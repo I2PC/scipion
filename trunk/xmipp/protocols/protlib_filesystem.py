@@ -41,24 +41,26 @@ def createDir(log, path):
     from distutils.errors import DistutilsFileError
     try:
         if not os.path.exists(path):
-            printLog("Creating directory " + path,log)
             mkpath(path, 0777, True)
+            printLog("Created dir " + path, log)
     except DistutilsFileError, e:
-        printLog(redStr("Could not create '%s': %s" % (os.path.abspath(path), e)),log,err=True,isError=True)
+        printLog(redStr("Couldn't create dir: '%(path)s': %(e)s" % locals()), 
+                 log, err=True, isError=True)
 
 def changeDir(log, path):
     """ Change to Directory """
-    printLog("Changing to directory " + path,log)
     try:
         os.chdir(path)
+        printLog("Changed to dir " + path,log)
     except os.error, (errno, errstr):
-        printLog(redStr("Could not change to directory '%s': Error (%d): %s" % (path, errno, errstr)),log,err=True,isError=True)
+        printLog(redStr("Couldn't change to dir: '%(path)s': %(errno)s:%(errstr)" % locals()), 
+                 log, err=True, isError=True)
 
 def deleteDir(log, path):
     from distutils.dir_util import remove_tree
     if os.path.exists(path):
-        printLog("Deleting directory " + path,log)
         remove_tree(path, True)
+        printLog("Deleted directory " + path, log)
            
 def deleteFile(log, filename, verbose):
     if os.path.exists(filename):
