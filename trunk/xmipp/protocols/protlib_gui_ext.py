@@ -447,7 +447,7 @@ class FilePollTextArea(tk.Frame):
         lineNo=1
         for line in file:
             tuple = findColor(line)
-            self.text.insert(tk.END, "%05d:   "%lineNo)  
+            self.text.insert(tk.END, "%05d:   "%lineNo,"tag_cyan")  
             if tuple is None:
                 self.text.insert(tk.END, line[line.rfind("\r")+1:])  
             else:
@@ -579,6 +579,8 @@ class OutputTextArea(tk.Frame):
     def nextSearchIndex(self, text, dir=1):
         #use dir=-1 to go backward
         text.tag_remove('found_current', '1.0', tk.END)
+        if len(self.searchList)==0:
+            return
         self.currentIndex = (self.currentIndex + dir) % len(self.searchList)
         idx, lastidx = self.searchList[self.currentIndex]
         text.tag_config('found_current', foreground='yellow', background='red')
