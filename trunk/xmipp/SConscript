@@ -808,6 +808,7 @@ AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', 
 AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
 AddBatch('browserj', 'applications/scripts/browserj', '.py')
 AddBatch('metadata_browserj', 'applications/scripts/metadata_browserj', '.py')
+AddBatch('mpi_steps_runner', 'protocols', '.py')
 
 # MPI
 if int(env['mpi']):
