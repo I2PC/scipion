@@ -463,7 +463,10 @@ def findColor(str):
             
    
     
-from config_protocols import BgColor, EntryBgColor     
+from config_protocols import BgColor, EntryBgColor, LabelBgColor, ButtonBgColor   
+from config_protocols import FontName, FontSize
+import tkFont
+
 class OutputTextArea(tk.Frame):
     def __init__(self, master, fileprefix):
         tk.Frame.__init__(self, master)
@@ -471,60 +474,108 @@ class OutputTextArea(tk.Frame):
         self.files = [fileprefix + ext for ext in self.exts]
         self.createWidgets()
         self.master = master
+        #Search list will be a tuple, with the first element
+        #is the index of the current search match and the second
+        #is the list of matches, start_pos, finish_pos
+        self.searchList = None
+        self.lastSearch = None
         #Add bindings
         self.master.bind('<Control_L><Home>', lambda e: self.changePosition(1.0))
         self.master.bind('<Control_L><End>', lambda e: self.changePosition(tk.END))
+        self.master.bind('<Alt_L><c>', lambda e: self.master.destroy())
+        self.master.bind('<Alt_L>1' , lambda e: self.changeSelection(0))
+        self.master.bind('<Alt_L>2' , lambda e: self.changeSelection(1))
+        self.master.bind('<Alt_L>3' , lambda e: self.changeSelection(2))
+        self.master.bind('<Control_L><f>', lambda e: self.searchEntry.focus_set())
+        self.master.bind('<Return>', lambda e: self.findText())
+        self.master.bind('<Control_L><n>', lambda e: self.findText())
+        self.master.bind('<Control_L><p>', lambda e: self.findText(-1))
     
     def createWidgets(self):
+        normal = tkFont.Font(family=FontName, size=FontSize)
+        bold = tkFont.Font(family=FontName, size=FontSize, weight=tkFont.BOLD)
         self.indexVar = tk.IntVar()
         self.indexVar.set(0)
         self.taList = []
         self.lastIndex = 0
         options = ['Log', 'Standard output', 'Standard error']
         #Label to show the output type
-        tk.Label(self, text='Select output file:').grid(row=0, column=0, padx=5, pady=5)
+        frame = tk.Frame(self, bd=2, relief=tk.RIDGE)
+        frame.grid(row=0, column=0, padx=5, pady=5, sticky='ew')
+        tk.Label(frame, text='Select output file:', 
+                 font=bold).grid(row=0, column=0, padx=5, pady=5)
         #Add the search box
         self.searchVar = tk.StringVar()
-        tk.Label(self, text='Search:').grid(row=0, column=2, padx=5, pady=5)
-        tk.Entry(self, bg=EntryBgColor, textvariable=self.searchVar).grid(row=0, column=3, sticky='ew')
-        tk.Button(self, text='Next', command=self.findText).grid(row=0, column=4)
+        tk.Label(frame, text='Search:', 
+                 font=bold).grid(row=0, column=3, padx=5, pady=5)
+        self.searchEntry = tk.Entry(frame, textvariable=self.searchVar)
+        self.searchEntry.grid(row=0, column=4, sticky='ew', padx=5, pady=5)
+        #tk.Button(frame, text='Next', command=self.findText,
+        #         ).grid(row=1, column=4, padx=5, pady=5)
+        
         #Add radiobuttons and textareas
         for i in range(3):
-            tk.Radiobutton(self, text='%s (%s)' % (options[i], self.exts[i]), 
-                                       variable=self.indexVar, command=self.selectionChanged,
-                                       value=i).grid(row=i, column=1, padx=5, pady=(5,0))
+            tk.Radiobutton(frame, text='%s (%s)' % (options[i], self.exts[i]), 
+                           variable=self.indexVar, command=lambda:self.changeSelection(self.indexVar.get()),
+                           value=i, font=normal).grid(row=1, column=i, padx=5, pady=(5,0))
             ta = FilePollTextArea(self, self.files[i])
-            ta.grid(row=3, column=0, columnspan=5, padx=5, pady=5)
+            ta.text.config(font=normal)
+            ta.grid(row=1, column=0, columnspan=5, padx=5, pady=5)
             if i != self.indexVar.get():
                 ta.grid_remove()
             self.taList.append(ta)
+        self.searchEntry.focus_set()
                 
-    def selectionChanged(self):
-        if self.lastIndex != self.indexVar.get():
+    def changeSelection(self, newValue):
+        if self.lastIndex != newValue:
+            self.indexVar.set(newValue)
             self.taList[self.lastIndex].grid_remove()
-            self.lastIndex = self.indexVar.get()
+            self.lastIndex = newValue
             self.taList[self.lastIndex].fillTextArea()
             self.taList[self.lastIndex].grid()
             
     def changePosition(self, index):
-        tkMessageBox.showinfo("test", "binding with index " + str(index), parent=self.master)
-        return
-        self.taList[self.lastIndex].see(index)
+        #tkMessageBox.showinfo("test", "binding with index " + str(index), parent=self.master)
+        #return
+        self.taList[self.lastIndex].text.see(index)
         
-    def findText(self, event=''):
+    def findText(self, dir=1):
         text = self.taList[self.lastIndex].text
+        str = self.searchVar.get()
+        if str is None or str != self.lastSearch:
+            self.buildSearchList(text, str)
+            self.lastSearch = str
+        else:
+            self.nextSearchIndex(text, dir)
+        self.searchEntry.focus_set()
+        
+    def buildSearchList(self, text, str):
+        print 'building list str:', str
         text.tag_remove('found', '1.0', tk.END)
-        s = self.searchVar.get()
-        if s:
+        list = []
+        if str:
             idx = '1.0'
             while True:
-                idx = text.search(s, idx, nocase=1, stopindex=tk.END)
+                idx = text.search(str, idx, nocase=1, stopindex=tk.END)
                 if not idx: break
-                lastidx = '%s+%dc' % (idx, len(s))
+                lastidx = '%s+%dc' % (idx, len(str))
                 text.tag_add('found', idx, lastidx)
+                list.append((idx, lastidx))
                 idx = lastidx
-            text.tag_config('found', foreground='yellow')
-        #self.searchEntry.focus_set()
+        text.tag_config('found', foreground='white', background='blue')
+        #Set class variables
+        self.searchList = list
+        self.currentIndex = -1
+        self.nextSearchIndex(text) #select first element
+    
+    def nextSearchIndex(self, text, dir=1):
+        #use dir=-1 to go backward
+        text.tag_remove('found_current', '1.0', tk.END)
+        self.currentIndex = (self.currentIndex + dir) % len(self.searchList)
+        idx, lastidx = self.searchList[self.currentIndex]
+        text.tag_config('found_current', foreground='yellow', background='red')
+        text.tag_add('found_current', idx, lastidx)
+        text.see(idx)
          
 def demo():
     root = tk.Tk(className='ToolTip-demo')

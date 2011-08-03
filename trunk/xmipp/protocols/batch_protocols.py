@@ -81,6 +81,8 @@ class XmippProjectGUI():
         self.root.bind('<Up>', self.selectRunUpDown)
         self.root.bind('<Down>', self.selectRunUpDown)
         self.root.bind('<Alt_L><c>', self.close )
+        self.root.bind('<Alt_L><l>', self.showOutput)
+        self.root.bind('<Alt_L><a>', self.visualizeRun)
         
     def selectRunUpDown(self, event):
         if event.keycode == 111: # Up arrow
@@ -352,16 +354,16 @@ class XmippProjectGUI():
     def close(self, event=""):
         self.root.destroy()
 
-    def showOutput(self):
+    def showOutput(self, event=''):
         prot = getProtocolFromModule(self.lastRunSelected['script'], self.project)
         root = tk.Toplevel()
-        root.title(self.lastRunSelected['script'])
+        root.title("Output Console - %s" % self.lastRunSelected['script'])
         from protlib_gui_ext import OutputTextArea
         l = OutputTextArea(root, prot.LogPrefix)
         l.pack(side=tk.TOP)
         root.mainloop() 
         
-    def visualizeRun(self):
+    def visualizeRun(self, event=''):
         run = self.getLastRunDict()
         self.launchProtocolGUI(run, True)
 
