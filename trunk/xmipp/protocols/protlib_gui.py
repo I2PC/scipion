@@ -32,7 +32,7 @@ import tkMessageBox
 import tkFont
 from protlib_base import protocolMain, getProtocolFromModule
 from protlib_utils import loadModule, runJob
-from protlib_gui_ext import centerWindows
+from protlib_gui_ext import centerWindows, changeFontSize
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
@@ -810,13 +810,7 @@ class ProtocolGUI(BasicGUI):
         return row
     
     def changeFont(self, event=""):
-        deltha = 2
-        if event.char == '-':
-            deltha = -2
-        size = self.style.Font['size']
-        new_size = size + deltha
-        if new_size >= self.style.MinFontSize and new_size <= self.style.MaxFontSize:
-            self.style.Font.configure(size=new_size)
+        changeFontSize(self.style.Font, event, self.style.MinFontSize, self.style.MaxFontSize)
         centerWindows(self.master, self.resize() )
         
     def checkVisibility(self, event=""):

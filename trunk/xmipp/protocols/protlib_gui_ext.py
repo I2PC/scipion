@@ -454,7 +454,7 @@ class FilePollTextArea(tk.Frame):
                 color,idxInitColor,idxFinishColor,cleanText=tuple
                 if idxInitColor>0:
                     self.text.insert(tk.END, cleanText[:(idxInitColor-1)]+" ")
-                self.text.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + tuple[0])
+                self.text.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + color)
                 self.text.insert(tk.END, cleanText[idxFinishColor:])
             lineNo+=1
         file.close()
@@ -471,9 +471,20 @@ def findColor(str):
             str = str.replace(x, '').replace(y, '')
             return (k, fx, fy, str)
     return None
+
+def changeFontSizeByDeltha(font, deltha, min=-999, max=999):
+        size = font['size']
+        new_size = size + deltha
+        if new_size >= min and new_size <= max:
+            font.configure(size=new_size)
+            
+def changeFontSize(font, event, min=-999, max=999):
+        deltha = 2
+        if event.char == '-':
+            deltha = -2
+        changeFontSizeByDeltha(font, deltha, min, max)    
     
-from config_protocols import BgColor, EntryBgColor, LabelBgColor, ButtonBgColor   
-from config_protocols import FontName, FontSize
+from config_protocols import LabelBgColor, FontName, FontSize
 import tkFont
 
 class OutputTextArea(tk.Frame):
@@ -481,25 +492,13 @@ class OutputTextArea(tk.Frame):
         tk.Frame.__init__(self, master)
         self.exts = ['.log', '.out', '.err']
         self.files = [fileprefix + ext for ext in self.exts]
-        self.createWidgets()
-        self.master = master
-        #Search list will be a tuple, with the first element
-        #is the index of the current search match and the second
-        #is the list of matches, start_pos, finish_pos
         self.searchList = None
         self.lastSearch = None
-        #Add bindings
-        self.master.bind('<Control_L><Home>', lambda e: self.changePosition(1.0))
-        self.master.bind('<Control_L><End>', lambda e: self.changePosition(tk.END))
-        self.master.bind('<Alt_L><c>', lambda e: self.master.destroy())
-        self.master.bind('<Alt_L>1' , lambda e: self.changeSelection(0))
-        self.master.bind('<Alt_L>2' , lambda e: self.changeSelection(1))
-        self.master.bind('<Alt_L>3' , lambda e: self.changeSelection(2))
-        self.master.bind('<Control_L><f>', lambda e: self.searchEntry.focus_set())
-        self.master.bind('<Return>', lambda e: self.findText())
-        self.master.bind('<Control_L><n>', lambda e: self.findText())
-        self.master.bind('<Control_L><p>', lambda e: self.findText(-1))
-    
+        self.fontDict = {}
+        self.createWidgets()
+        self.master = master
+        self.addBinding()
+        
     def createWidgets(self):
         normal = tkFont.Font(family=FontName, size=FontSize)
         bold = tkFont.Font(family=FontName, size=FontSize, weight=tkFont.BOLD)
@@ -517,11 +516,8 @@ class OutputTextArea(tk.Frame):
         self.searchVar = tk.StringVar()
         tk.Label(frame, text='Search:', 
                  font=bold).grid(row=0, column=3, padx=5, pady=5)
-        self.searchEntry = tk.Entry(frame, textvariable=self.searchVar)
+        self.searchEntry = tk.Entry(frame, textvariable=self.searchVar, bg=LabelBgColor)
         self.searchEntry.grid(row=0, column=4, sticky='ew', padx=5, pady=5)
-        #tk.Button(frame, text='Next', command=self.findText,
-        #         ).grid(row=1, column=4, padx=5, pady=5)
-        
         #Add radiobuttons and textareas
         for i in range(3):
             tk.Radiobutton(frame, text='%s (%s)' % (options[i], self.exts[i]), 
@@ -534,7 +530,27 @@ class OutputTextArea(tk.Frame):
                 ta.grid_remove()
             self.taList.append(ta)
         self.searchEntry.focus_set()
-                
+        self.fontDict['normal'] = normal
+        self.fontDict['bold'] = bold
+
+    def addBinding(self):
+        self.master.bind('<Control_L><Home>', lambda e: self.changePosition(1.0))
+        self.master.bind('<Control_L><End>', lambda e: self.changePosition(tk.END))
+        self.master.bind('<Alt_L><c>', lambda e: self.master.destroy())
+        self.master.bind('<Alt_L>1' , lambda e: self.changeSelection(0))
+        self.master.bind('<Alt_L>2' , lambda e: self.changeSelection(1))
+        self.master.bind('<Alt_L>3' , lambda e: self.changeSelection(2))
+        self.master.bind('<Control_L><f>', lambda e: self.searchEntry.focus_set())
+        self.master.bind('<Return>', lambda e: self.findText())
+        self.master.bind('<Control_L><n>', lambda e: self.findText())
+        self.master.bind('<Control_L><p>', lambda e: self.findText(-1))
+        self.master.bind('<Alt_L><plus>', self.changeFont)
+        self.master.bind('<Alt_L><minus>', self.changeFont)
+    
+    def changeFont(self, event=""):
+        for font in self.fontDict.values():
+            changeFontSize(font, event)
+              
     def changeSelection(self, newValue):
         if self.lastIndex != newValue:
             self.indexVar.set(newValue)
