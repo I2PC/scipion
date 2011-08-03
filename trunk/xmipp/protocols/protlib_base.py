@@ -308,8 +308,9 @@ class XmippProtocol(object):
             self.defineSteps()
             self.Db.runSteps()
             self.postRun()
-        except Exception:
-            retcode = 1;   
+        except Exception, e:
+            retcode = 1;
+            print e
         finally:
             self.fOut.close()
             self.fErr.close()  
