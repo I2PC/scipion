@@ -226,13 +226,13 @@ def runJob(log,
                NumberOfThreads,
                SystemFlavour,
                RunInBackground)
-    printLog(log, "Running command: %s" % greenStr(command))
+    printLog("Running command: %s" % greenStr(command),log)
 
     from subprocess import call
     retcode = 1000
     try:
         retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
-        printLog(log, "Process returned with code %d" % retcode)
+        printLog("Process returned with code %d" % retcode,log)
     except OSError, e:
         raise xmipp.XmippError("Execution failed %s, command: %s" % (e, command))
 
@@ -276,7 +276,7 @@ def buildRunCommand(
         elif (SystemFlavour == ''):
             mpicommand = 'mpirun -mca mpi_yield_when_idle 1 -np %(jobs)d'
         else:
-            printLogError(log, 'Unrecognized SystemFlavour %s' % SystemFlavour)
+            printLog(redStr('Unrecognized SystemFlavour %s' % SystemFlavour),log,err=True,isError=True)
         command = (mpicommand + ' `which %(prog)s` %(params)s') % paramsDict
     if RunInBackground:
         command+=" &"

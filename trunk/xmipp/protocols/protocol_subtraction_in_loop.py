@@ -94,11 +94,6 @@ def subtractionScript(_log
                       ,referenceStackDoc
                       ,subtractedStack
                       ):
-    #printLog("subtractionScript, docfile %s referenceStackDoc %s substracted stack %s"%
-    #                   (DocFileExp
-    #                  ,referenceStackDoc
-    #                  ,subtractedStack))
-
     md = MetaData(DocFileExp)#experimental images
     mdRotations = MetaData(md) #rotations
     

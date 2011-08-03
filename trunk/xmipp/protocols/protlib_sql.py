@@ -323,7 +323,7 @@ class XmippProtocolDb(SqliteDb):
         commands = self.cur.fetchall()
         n = len(commands)
         msg='***************************** Protocol STARTED mode: %s'%self.runBehavior
-        printLog(msg, self.Log,msg, out=True, err=True)
+        printLog(msg, self.Log, out=True, err=True)
         
         for i in range(n):
             #Keep the next main steps to have stop condition for parallel steps gaps

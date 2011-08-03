@@ -8,7 +8,6 @@
 #
 
 from protlib_base import XmippProtocol, protocolMain
-from protlib_utils import printLog   
 from config_protocols import protDict
 
 class ProtML2D(XmippProtocol):
