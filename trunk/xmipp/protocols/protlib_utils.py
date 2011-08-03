@@ -27,6 +27,7 @@
 
 import os
 import sys
+import xmipp
 
 #---------------------------------------------------------------------------
 # Logging utilities
@@ -181,22 +182,35 @@ def showWarnings(warningList, notConfirm=False):
     return True
         
 def printLogError(log, msg):
-    '''Function to write error message to log, to screen and exit'''
+    '''Function to write error message to log'''
     log.error(msg)
-    print >> sys.stderr, redStr("ERROR: " + msg)
+    
+def printLog(log, msg):
+    '''Just print a msg in the log'''
+    log.info(msg)
+
+def printLogOutErr(log,msg,color=None):
+    """Prints a msg in the three outputs"""
+    log.info(msg)
+    printOutErr(msg,color)
+    
+def printLogErrorOutErr(log,msg,color=None):
+    """Prints a msg in the three outputs"""
+    log.error(msg)
+    printOutErr(msg,color)
+
+def printOutErr(msg,color=None):
+    """Prints a msg in the two outputs"""
+    if color==None:
+        colorMsg=msg
+    else:
+        colorMsg=colorStr(color,msg)
+    print colorMsg
+    print >> sys.stderr, colorMsg
+    sys.stdout.flush()
     sys.stderr.flush()
     
-def printLog(log, msg, printAlsoInStderr=False):
-    '''Just print a msg and log'''
-    import time
-    log.info(msg)
-    msgForConsole=time.asctime(time.localtime(time.time()))+" "+msg
-    print msgForConsole
-    sys.stdout.flush()
-    if printAlsoInStderr:
-        print >> sys.stderr, msgForConsole
-        sys.stderr.flush()
-    
+
 #---------------------------------------------------------------------------
 # Jobs launching
 #---------------------------------------------------------------------------    
@@ -221,10 +235,10 @@ def runJob(log,
     from subprocess import call
     retcode = 1000
     try:
-        retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
+        retcode = call(command, shell=False, stdout=sys.stdout, stderr=sys.stderr)
         printLog(log, "Process returned with code %d" % retcode)
     except OSError, e:
-        printLogError(log, "Execution failed %s, command: %s" % (e, command))
+        raise xmipp.XmippError("Execution failed %s, command: %s" % (e, command))
 
     return retcode
 
