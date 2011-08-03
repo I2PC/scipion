@@ -50,8 +50,8 @@ class XmippLog:
             self._logfile = open(filename, 'a')
             self.is_basic = True
         # append a line with user, machine and date
-        import socket
-        myusername = str(os.environ.get('USERNAME'))
+        import socket, pwd, os
+        myusername = pwd.getpwuid( os.getuid() )[ 0 ] # str(os.environ.get('USERNAME'))
         myhost = str(socket.gethostname())
         mypwd = str(os.environ.get('PWD'))
         event = "\n"
@@ -184,7 +184,7 @@ def printLogError(log, msg):
     '''Function to write error message to log, to screen and exit'''
     log.error(msg)
     print >> sys.stderr, redStr("ERROR: " + msg)
-    exit(1)
+    sys.stderr.flush()
     
 def printLog(log, msg, printAlsoInStderr=False):
     '''Just print a msg and log'''
@@ -192,8 +192,10 @@ def printLog(log, msg, printAlsoInStderr=False):
     log.info(msg)
     msgForConsole=time.asctime(time.localtime(time.time()))+" "+msg
     print msgForConsole
+    sys.stdout.flush()
     if printAlsoInStderr:
         print >> sys.stderr, msgForConsole
+        sys.stderr.flush()
     
 #---------------------------------------------------------------------------
 # Jobs launching
@@ -217,15 +219,15 @@ def runJob(log,
     printLog(log, "Running command: %s" % greenStr(command))
 
     from subprocess import call
-    retcode = 0
+    retcode = 1000
     try:
-        #retcode = call(command, shell=True)
-        retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
+        # retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
+        retcode = call(command, stdout=sys.stdout, stderr=sys.stderr)
         printLog(log, "Process returned with code %d" % retcode)
     except OSError, e:
-        printLogError(log, "Execution failed %s, '''command''': %s" % (e, command))
+        printLogError(log, "Execution failed %s, command: %s" % (e, command))
 
-    return (command, retcode)
+    return retcode
 
 def buildRunCommand(
                log,
