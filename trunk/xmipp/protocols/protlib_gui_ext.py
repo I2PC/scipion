@@ -558,6 +558,9 @@ class OutputTextArea(tk.Frame):
             self.lastIndex = newValue
             self.taList[self.lastIndex].fillTextArea()
             self.taList[self.lastIndex].grid()
+            # Reset search stuff
+            self.searchList = None
+            self.lastSearch = None
             
     def changePosition(self, index):
         #tkMessageBox.showinfo("test", "binding with index " + str(index), parent=self.master)
