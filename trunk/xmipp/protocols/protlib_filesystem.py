@@ -29,7 +29,7 @@
 # Filesystem utilities
 #---------------------------------------------------------------------------
 import os
-from protlib_utils import printLog, redStr
+from protlib_utils import printLog
 #from xmipp import *
 
 # The following are Wrappers to be used from Protocols
@@ -53,8 +53,7 @@ def changeDir(log, path):
         os.chdir(path)
         printLog("Changed to dir " + path,log)
     except os.error, (errno, errstr):
-        printLog(redStr("Couldn't change to dir: '%(path)s': %(errno)s:%(errstr)" % locals()), 
-                 log, err=True, isError=True)
+        printLog("Could not change to directory '%s': Error (%d): %s" % (path, errno, errstr),log,err=True,isError=True)
 
 def deleteDir(log, path):
     from distutils.dir_util import remove_tree
