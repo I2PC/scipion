@@ -98,19 +98,12 @@ def executeCtfGroups (_log,
             _log.info(message)
             sys.exit()
 
-    (_command, retcode) = runJob(_log,
-                                    "xmipp_ctf_group",
-                                    command,
-                                     False, 1, 1, '')
-
-    if(retcode):
-        print "command", command, "failed with exit status", retcode
-        exit(1)
+    if runJob(_log,"xmipp_ctf_group",command,False, 1, 1, ''):
+        return 1
     fn = CtfGroupDirectory + '/'+\
                   CtfGroupRootName+\
                  'Info.xmd'
     MD = MetaData(fn)
-    
 
 def checkOptionsCompatibility(_log, DoAlign2D, DoCtfCorrection):
     # Never allow DoAlign2D and DoCtfCorrection together
