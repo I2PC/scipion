@@ -4,7 +4,7 @@ import os, sys
 from config_protocols import projectDefaults
 from protlib_utils import reportError, getScriptPrefix, printLog, runJob
 from protlib_filesystem import createDir, deleteDir
-from protlib_utils import blueStr, redStr, headerStr, greenStr
+from protlib_utils import blueStr, headerStr, greenStr
 
 from xmipp import XmippError
 
@@ -335,7 +335,7 @@ class XmippProtocolDb(SqliteDb):
             try:
                 self.runSingleStep(self.connection, self.cur, commands[i])
             except Exception as e:
-                msg = redStr("Stopping batch execution since one of the steps could not be performed: %s" % e)
+                msg = "Stopping batch execution since one of the steps could not be performed: %s" % e
                 printLog(msg, self.Log, out=True, err=True, isError=True)
                 raise
         msg='***************************** Protocol FINISHED'
@@ -383,7 +383,7 @@ class XmippProtocolDb(SqliteDb):
             # Check that expected result files were produced
             self.verifyStepFiles(pickle.loads(str(stepRow["verifyFiles"])))
         except Exception as e:
-            msg = redStr("         Step finish with error: %(stepStr)s: %(e)s" % locals())
+            msg = "         Step finish with error: %(stepStr)s: %(e)s" % locals()
             printLog(msg, self.Log, out=True, err=True, isError=True)
             raise
         
@@ -463,10 +463,7 @@ def runThreadLoop(db, connection, cursor):
         state, stepRow = db.getStepGap(cursor)
         counter += 1
         if state == STEP_GAP: #database will be unlocked after commit on init timestamp
-            if db.runSingleStep(connection, cursor, stepRow):
-                msg = redStr("Stopping thread execution since one of the steps could not be performed")
-                printLog(msg, db.Log, out=True, err=True, isError=True)
-                raise XmippError("Stopping Thread")
+            db.runSingleStep(connection, cursor, stepRow)
         else:
             connection.rollback() #unlock database
             if state == NO_AVAIL_GAP:
@@ -481,8 +478,10 @@ class ThreadStepGap(Thread):
         Thread.__init__(self)
         self.db = db
     def run(self):
-        conn = sqlite.Connection(self.db.dbName)
-        conn.row_factory = sqlite.Row
-        cur = conn.cursor()
-        runThreadLoop(self.db, conn, cur)
-
+        try:
+            conn = sqlite.Connection(self.db.dbName)
+            conn.row_factory = sqlite.Row
+            cur = conn.cursor()
+            runThreadLoop(self.db, conn, cur)
+        except Exception, e:
+            printLog("Stopping threads because of error %s"%e,self.db.Log,out=True,err=True,isError=True)
