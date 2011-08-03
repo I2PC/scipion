@@ -300,7 +300,7 @@ class ProtProjMatch(XmippProtocol):
                                     , MaxChangeInAngles = self.MaxChangeInAngles[iterN]
                                     , maskedFileNamesIter = self.maskedFileNamesIters[iterN][refN]
                                     , MpiJobSize = self.MpiJobSize
-                                    , NumberOfMpiProcesses = self.NumberOfMpiProcesses
+                                    , NumberOfMpi = self.NumberOfMpi
                                     , NumberOfThreads = self.NumberOfThreads
                                     , OnlyWinner = self.OnlyWinner[iterN]
                                     , PerturbProjectionDirections = self.PerturbProjectionDirections[iterN]
@@ -328,7 +328,7 @@ class ProtProjMatch(XmippProtocol):
                                     , MaxChangeOffset =self.MaxChangeOffset[iterN]
                                     , MpiJobSize =self.MpiJobSize
                                     , NumberOfCtfGroups =self.NumberOfCtfGroups
-                                    , NumberOfMpiProcesses =self.NumberOfMpiProcesses
+                                    , NumberOfMpi =self.NumberOfMpi
                                     , NumberOfThreads =self.NumberOfThreads
                                     , OuterRadius =self.OuterRadius[iterN]
                                     , PaddingFactor =self.PaddingFactor
@@ -372,7 +372,7 @@ class ProtProjMatch(XmippProtocol):
                          , MinimumCrossCorrelation =self.MinimumCrossCorrelation[iterN]#
                          , NumberOfReferences =self.numberOfReferences#
                          , NumberOfCtfGroups = self.NumberOfCtfGroups#
-                         , NumberOfMpiProcesses =self.NumberOfMpiProcesses#
+                         , NumberOfMpi =self.NumberOfMpi#
                          , NumberOfThreads =self.NumberOfThreads#
                          , PaddingFactor =self.PaddingFactor#
                          , ProjectLibraryRootName =self.ProjectLibraryRootNames[iterN][refN]#

@@ -202,7 +202,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                                        , dimY = self.dimY
                                        , filename_currentAngles = self.filename_currentAngles
                                        , MpiJobSize = self.MpiJobSize
-                                       , NumberOfMpiProcesses = self.NumberOfMpiProcesses
+                                       , NumberOfMpi = self.NumberOfMpi
                                        , NumberOfThreads = self.NumberOfThreads
                                        , scaledImages = self.scaledImages
                                        , SystemFlavour = self.SystemFlavour
@@ -243,7 +243,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             id = self.Db.insertAction('reconstructVolume', verifyfiles = _VerifyFiles
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , MpiJobSize = self.MpiJobSize
-                                        , NumberOfMpiProcesses = self.NumberOfMpiProcesses
+                                        , NumberOfMpi = self.NumberOfMpi
                                         , NumberOfThreads = self.NumberOfThreads
                                         , reconstructedVolume = self.reconstructedVolume[iterN]
                                         , SymmetryGroup = self.SymmetryGroup
@@ -272,7 +272,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                                         , maskReconstructedVolume = self.maskReconstructedVolume[iterN]
                                         , MaxChangeInAngles = self.MaxChangeInAngles
                                         , MpiJobSize = self.MpiJobSize
-                                        , NumberOfMpiProcesses = self.NumberOfMpiProcesses
+                                        , NumberOfMpi = self.NumberOfMpi
                                         , NumberOfThreads = self.NumberOfThreads
                                         , referenceStack = self.referenceStack[iterN]
                                         , SymmetryGroup = self.SymmetryGroup

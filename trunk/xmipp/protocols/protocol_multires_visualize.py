@@ -132,7 +132,7 @@ class VisualizeMultires3DClass:
 		    xmipp_protocol_multires.Recenter,
 
 		    xmipp_protocol_multires.DoParallel,
-		    xmipp_protocol_multires.NumberOfMpiProcesses,
+		    xmipp_protocol_multires.NumberOfMpi,
                     xmipp_protocol_multires.NumberOfThreads,
 		    xmipp_protocol_multires.SystemFlavour,
 

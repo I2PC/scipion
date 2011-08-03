@@ -292,7 +292,7 @@ DoParallel=True
 """ This option provides distributed-memory parallelization on multi-node machines. 
     It requires the installation of some MPI flavour, possibly together with a queueing system
 """
-NumberOfMpiProcesses=16
+NumberOfMpi=16
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -372,7 +372,7 @@ class MultiResClass:
 		_Recenter,
 
 		_DoParallel,
-		_NumberOfMpiProcesses,
+		_NumberOfMpi,
                 _NumberOfThreads,
 		_SystemFlavour,
 		
@@ -428,7 +428,7 @@ class MultiResClass:
        self.recenter=_Recenter
 
        self.doParallel=_DoParallel
-       self.NumberOfMpiProcesses=_NumberOfMpiProcesses
+       self.NumberOfMpi=_NumberOfMpi
        self.NumberOfThreads=_NumberOfThreads
        self.SystemFlavour=SystemFlavour
 
@@ -537,14 +537,14 @@ class MultiResClass:
                                 params0,
                                 self.mylog,
                                 self.doParallel,
-                                self.NumberOfMpiProcesses*self.NumberOfThreads,
+                                self.NumberOfMpi*self.NumberOfThreads,
                                 1,
                                 self.SystemFlavour)
 	  launchJob("xmipp_angular_discrete_assign",
                                 params,
                                 self.mylog,
                                 self.doParallel,
-                                self.NumberOfMpiProcesses*self.NumberOfThreads,
+                                self.NumberOfMpi*self.NumberOfThreads,
                                 1,
                                 self.SystemFlavour)
       	  self.execute("find . -name \"ref*\" -exec rm -f {} \; &")
@@ -564,7 +564,7 @@ class MultiResClass:
                                 params,
                                 self.mylog,
                                 self.doParallel,
-                                self.NumberOfMpiProcesses*self.NumberOfThreads,
+                                self.NumberOfMpi*self.NumberOfThreads,
                                 1,
                                 self.SystemFlavour)
        else:
@@ -841,7 +841,7 @@ class MultiResClass:
                                 params,
                                 self.mylog,
                                 self.doParallel,
-                                self.NumberOfMpiProcesses*NumberOfThreads,
+                                self.NumberOfMpi*NumberOfThreads,
                                 1,
                                 self.SystemFlavour)
           self.execute('xmipp_selfile_create "preproc_assign_IDR/*" > preproc_assign.sel')
@@ -1189,7 +1189,7 @@ class MultiResClass:
                                 params,
                                 self.mylog,
                                 doParallel,
-                                self.NumberOfMpiProcesses,
+                                self.NumberOfMpi,
                                 1,
                                 self.SystemFlavour)
 	  self.deleteFile(_outputRootName+".hist")
@@ -1207,7 +1207,7 @@ class MultiResClass:
                                 params,
                                 self.mylog,
                                 self.doParallel,
-                                self.NumberOfMpiProcesses*self.NumberOfThreads,
+                                self.NumberOfMpi*self.NumberOfThreads,
                                 1,
                                 self.SystemFlavour)
        elif self.getReconstructionMethod(_iteration)=="fourier":
@@ -1224,7 +1224,7 @@ class MultiResClass:
                                 params,
                                 self.mylog,
                                 self.doParallel,
-                                self.NumberOfMpiProcesses,
+                                self.NumberOfMpi,
                                 self.NumberOfThreads,
                                 self.SystemFlavour)
        else:
@@ -1345,7 +1345,7 @@ if __name__ == '__main__':
 		Recenter,
 
 		DoParallel,
-		NumberOfMpiProcesses,
+		NumberOfMpi,
                 NumberOfThreads,
 		SystemFlavour,
 		

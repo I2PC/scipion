@@ -54,7 +54,7 @@ It does not require any additional software, other than xmipp
 NumberOfThreads = 1
 
 # Number of MPI processes to use
-NumberOfMpiProcesses = 3
+NumberOfMpi = 3
 
 #------------------------------------------------------------------------------------------
 # {section}{has_question} Queue

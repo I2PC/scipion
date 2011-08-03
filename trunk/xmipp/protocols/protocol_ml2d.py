@@ -68,7 +68,7 @@ class ProtML2D(XmippProtocol):
         self.Db.insertStep('runJob', 
                              programname=program, 
                              params=params,
-                             NumberOfMpiProcesses = self.NumberOfMpiProcesses,
+                             NumberOfMpi = self.NumberOfMpi,
                              NumberOfThreads = self.NumberOfThreads,
                              SystemFlavour = self.project.SystemFlavour)
 

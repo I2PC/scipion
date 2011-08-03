@@ -123,7 +123,7 @@ It does not require any additional software, other than xmipp
 NumberOfThreads = 1
 
 # Number of MPI processes
-NumberOfMpiProcesses = 3
+NumberOfMpi = 3
 
 # Submit to queue ? 
 """Submit to queue

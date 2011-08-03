@@ -10,7 +10,7 @@
 #
 #------------------------------------------------------------------------------------------------
 # This program is interactive and cannot use MPI or queues
-NumberOfMpiProcesses = 1
+NumberOfMpi = 1
 SubmmitToQueue=False
 QueueName="default"
 QueueHours=72

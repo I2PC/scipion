@@ -22,7 +22,7 @@ def joinImageCTF(_log, CTFgroupName,DocFileExp,inputSelfile):
 def reconstructVolume(_log 
                      ,DocFileExp
                      , MpiJobSize
-                     , NumberOfMpiProcesses
+                     , NumberOfMpi
                      , NumberOfThreads
                      , reconstructedVolume
                      , SymmetryGroup
@@ -32,13 +32,13 @@ def reconstructVolume(_log
     parameters  = ' -i ' +  DocFileExp 
     parameters += ' -o ' +  reconstructedVolume 
     parameters += ' --sym ' + SymmetryGroup +'h'
-    if (NumberOfMpiProcesses>1):
+    if (NumberOfMpi>1):
             parameters += ' --mpi_job_size ' + MpiJobSize
             parameters += ' --thr ' + str(NumberOfThreads)
 
     runJob(_log,'xmipp_reconstruct_fourier',
                              parameters,
-                             NumberOfMpiProcesses,
+                             NumberOfMpi,
                              NumberOfThreads,
                              SystemFlavour)
 
@@ -63,7 +63,7 @@ def createProjections(_log
                       ,maskReconstructedVolume
                       ,MaxChangeInAngles
                       , MpiJobSize
-                      ,NumberOfMpiProcesses
+                      ,NumberOfMpi
                       ,NumberOfThreads
                       ,referenceStack
                       ,SymmetryGroup
@@ -78,12 +78,12 @@ def createProjections(_log
     parameters += ' --sym ' + SymmetryGroup +'h'
     parameters += ' --compute_neighbors --near_exp_data ' 
     parameters += ' --angular_distance ' + str(MaxChangeInAngles)
-    if ((NumberOfMpiProcesses *NumberOfThreads)>1):
+    if ((NumberOfMpi *NumberOfThreads)>1):
             parameters += ' --mpi_job_size ' + MpiJobSize
 
     runJob(_log,'xmipp_angular_project_library',
                              parameters,
-                             NumberOfMpiProcesses *NumberOfThreads,
+                             NumberOfMpi *NumberOfThreads,
                              1,
                              SystemFlavour)
                 

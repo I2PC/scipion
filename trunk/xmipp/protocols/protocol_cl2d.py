@@ -80,7 +80,7 @@ class ProtCL2D(XmippProtocol):
 #                 thGoodClass,
 #                 thZscore,
 #                 thPCAZscore,
-#                 NumberOfMpiProcesses,
+#                 NumberOfMpi,
 #                 SystemFlavour):
 #	     
 #        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
@@ -102,7 +102,7 @@ class ProtCL2D(XmippProtocol):
 #        self.thGoodClass=thGoodClass
 #        self.thZscore=thZscore
 #        self.thPCAZscore=thPCAZscore
-#        self.NumberOfMpiProcesses=NumberOfMpiProcesses
+#        self.NumberOfMpi=NumberOfMpi
 #        self.SystemFlavour=SystemFlavour
 #   
 #        # Setup logging
@@ -253,7 +253,7 @@ class ProtCL2D(XmippProtocol):
                               params,
                               self.log,
                               True,
-                              self.NumberOfMpiProcesses,
+                              self.NumberOfMpi,
                               1,
                               self.SystemFlavour)
         
@@ -287,7 +287,7 @@ class ProtCL2D(XmippProtocol):
                 str(self.thGoodClass)+' '+\
                 str(self.thZscore)+' '+\
                 str(self.thPCAZscore)+' '+\
-                str(self.NumberOfMpiProcesses)+' '+\
+                str(self.NumberOfMpi)+' '+\
                 self.SystemFlavour
 
         launchJob("xmipp_classify_CL2D_core_analysis",
@@ -295,7 +295,7 @@ class ProtCL2D(XmippProtocol):
                               self.log,
                               False,
                               1,
-                              self.NumberOfMpiProcesses,
+                              self.NumberOfMpi,
                               self.SystemFlavour)
         if os.path.exists(self.WorkingDir+"/class_core_sorted.sel"):
             fh=open(self.WorkingDir + "/status.txt", "a")
@@ -366,5 +366,5 @@ if __name__ == '__main__':
                  thGoodClass,
                  thZscore,
                  thPCAZscore,
-                 NumberOfMpiProcesses,
+                 NumberOfMpi,
                  SystemFlavour)

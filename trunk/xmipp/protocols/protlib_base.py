@@ -30,7 +30,7 @@ import os
 import shutil
 import ConfigParser
 from config_protocols import projectDefaults, sections
-from protlib_sql import XmippProjectDb, XmippProtocolDb
+from protlib_sql import SqliteDb, XmippProjectDb, XmippProtocolDb
 from protlib_utils import XmippLog, loadModule, reportError
 from protlib_filesystem import deleteDir, deleteFiles
 
@@ -183,7 +183,7 @@ class XmippProtocol(object):
         for k, v in self.Header.__dict__.iteritems():
             self.__dict__[k] = v
             
-        self.DoParallel = 'NumberOfMpiProcesses' in dir() and self.NumberOfMpiProcesses > 1
+        self.DoParallel = 'NumberOfMpi' in dir() and self.NumberOfMpi > 1
         self.Name = protocolName
         self.scriptName = scriptname
         #A protocol must be able to find its own project
@@ -221,8 +221,8 @@ class XmippProtocol(object):
         if 'NumberOfThreads' in dir(self):
             if self.NumberOfThreads<1:
                 errors.append("Number of threads has to be >=1")
-        if 'NumberOfMpiProcesses' in dir(self):
-            if self.NumberOfMpiProcesses<2:
+        if 'NumberOfMpi' in dir(self):
+            if self.NumberOfMpi<2:
                 errors.append("Number of MPI processes has to be >=2")
         
         #specific protocols validations
@@ -414,11 +414,12 @@ def protocolMain(ProtocolClass, script=None):
                 submitProtocol(script,
                                jobId = p.uniquePrefix,
                                queueName = mod.QueueName,
-                               nodes = mod.NumberOfMpiProcesses,
+                               nodes = mod.NumberOfMpi,
                                threads = NumberOfThreads,
                                hours = mod.QueueHours,
                                command = 'python %s --no_check' % script
                                )
+                project.updateRunState(SqliteDb.RUN_LAUNCHED)
                 exit(0)
         
         return p.run()

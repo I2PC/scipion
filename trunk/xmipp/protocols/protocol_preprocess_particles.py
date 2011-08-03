@@ -67,7 +67,7 @@ class ProtPreprocessParticles(XmippProtocol):
 #                 DoRemoveDust,
 #                 DustRemovalThreshold,
 #                 DoParallel,
-#                 NumberOfMpiProcesses,
+#                 NumberOfMpi,
 #                 SystemFlavour
 #                 ):
 #	     
@@ -93,7 +93,7 @@ class ProtPreprocessParticles(XmippProtocol):
 #        self.DustRemovalThreshold=DustRemovalThreshold
 #        self.OutSelFile=OutSelFile
 #        self.DoParallel=DoParallel
-#        self.NumberOfMpiProcesses=NumberOfMpiProcesses
+#        self.NumberOfMpi=NumberOfMpi
 #        self.SystemFlavour=SystemFlavour
 #
 #        # Setup logging
@@ -196,7 +196,7 @@ class ProtPreprocessParticles(XmippProtocol):
         if self.DoParallel:
             command=' -i ' + commandFile
             launchJob("xmipp_run", command, self.log, True,
-                  self.NumberOfMpiProcesses, 1, self.SystemFlavour)
+                  self.NumberOfMpi, 1, self.SystemFlavour)
         else:
             self.log.info(commandFile)     
             os.system(commandFile)     

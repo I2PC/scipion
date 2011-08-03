@@ -51,7 +51,7 @@ class ProtCommonLines(XmippProtocol):
 #                Radius,
 #                Symmetry,
 #                DoParallel,
-#                NumberOfMpiProcesses,
+#                NumberOfMpi,
 #                SystemFlavour):
 #       import log
 #
@@ -61,7 +61,7 @@ class ProtCommonLines(XmippProtocol):
 #       self.Radius=Radius
 #       self.Symmetry=Symmetry
 #       self.DoParallel=DoParallel
-#       self.NumberOfMpiProcesses=NumberOfMpiProcesses
+#       self.NumberOfMpi=NumberOfMpi
 #       self.SystemFlavour=SystemFlavour
 #       self.log=log.init_log_system(ProjectDir,
 #                                      LogDir,
@@ -116,7 +116,7 @@ class ProtCommonLines(XmippProtocol):
       os.system("rm -f avg.* inputImages.*")
       params="ali.hed mask="+str(self.Radius)+" rounds=5"
       if self.DoParallel:
-          params+=" proc="+str(self.NumberOfMpiProcesses)
+          params+=" proc="+str(self.NumberOfMpi)
       if self.Symmetry!="c1":
           params+=" sym "+self.Symmetry
       launchJob("startAny",

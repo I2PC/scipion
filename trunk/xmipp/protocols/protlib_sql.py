@@ -2,14 +2,17 @@ from pysqlite2 import dbapi2 as sqlite
 import pickle
 import os, sys
 from config_protocols import projectDefaults
-from protlib_utils import reportError, getScriptPrefix, printLog, runJob
-from protlib_filesystem import createDir, deleteDir
+from protlib_utils import reportError, getScriptPrefix, printLog
 from protlib_utils import blueStr, headerStr, greenStr
-
 from xmipp import XmippError
+#The following imports are not directly used, but are common operations
+#that will be performed by running steps on database
+from protlib_utils import runJob
+from protlib_filesystem import createDir, deleteDir
 
 runColumns = ['run_id',
               'run_name',
+              'run_state',
               'script',
               'init',
               'last_modfied',
@@ -36,6 +39,13 @@ def existsDB(dbName):
     return result
 
 class SqliteDb:
+    #Some constants of run state
+    RUN_SAVED = 0
+    RUN_LAUNCHED = 1
+    RUN_STARTED = 2
+    RUN_FINISHED = 3
+    RUN_FAILED = 4
+    
     def execSqlCommand(self, sqlCmd, errMsg):
         """Helper function to execute sqlite commands"""
         try:
@@ -60,6 +70,16 @@ class SqliteDb:
         if result:
             result = result['run_id']
         return result
+    
+    def updateRunState(self, runState, cursor=None):
+        self.sqlDict['run_state'] = runState
+        _sqlCommand = """UPDATE %(TableRuns)s SET
+                            run_state = %(run_state)d,
+                            last_modified = datetime('now')
+                        WHERE run_id = %(run_id)d"""  % self.sqlDict
+        if cursor is None:
+            cursor = self.cur
+        cursor.execute(_sqlCommand)
     
 class XmippProjectDb(SqliteDb):
     LAST_STEP  = -1
@@ -92,6 +112,12 @@ class XmippProjectDb(SqliteDb):
             _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableRuns)s
                          (run_id INTEGER PRIMARY KEY AUTOINCREMENT,
                           run_name TEXT,  -- label 
+                          run_state INT  DEFAULT 0,  -- state of the run, possible values are:
+                                          -- 0 - Saved (Never executed)
+                                          -- 1 - Launched (Submited to queue)
+                                          -- 2 - Running (Directly or from queue)
+                                          -- 3 - Finished (Run finish correctly)
+                                          -- 4 - Failed (Run produced an error)
                           script TEXT,    -- strip full name
                           init DATE,      -- run started at
                           last_modified DATE, --last modification (edition usually)
@@ -160,6 +186,7 @@ class XmippProjectDb(SqliteDb):
         _sqlCommand = """INSERT INTO %(TableRuns)s values(
                             NULL, 
                             '%(run_name)s', 
+                            0,
                             '%(script)s', 
                             datetime('now'), 
                             datetime('now'), 
@@ -186,6 +213,7 @@ class XmippProjectDb(SqliteDb):
     def updateRun(self, run):
         self.sqlDict.update(run)
         _sqlCommand = """UPDATE %(TableRuns)s SET
+                            run_state = %(run_state)d,
                             last_modified = datetime('now'),
                             comment = '%(comment)s'
                         WHERE run_id = %(run_id)d"""  % self.sqlDict
@@ -202,7 +230,7 @@ class XmippProjectDb(SqliteDb):
         self.execSqlCommand(_sqlCommand, "Error deleting steps of run: %(run_name)s" % run)        
         
     def selectRunsCommand(self):
-        sqlCommand = """SELECT run_id, run_name, script, 
+        sqlCommand = """SELECT run_id, run_name, run_state, script, 
                                datetime(init, 'localtime') as init, 
                                datetime(last_modified, 'localtime') as last_modified,
                                protocol_name, comment,
@@ -233,7 +261,7 @@ class XmippProjectDb(SqliteDb):
         self.cur.execute(sqlCommand) 
         return self.cur.fetchall()
      
-class XmippProtocolDb(SqliteDb): 
+class XmippProtocolDb(SqliteDb):
     def __init__(self, protocol):
         self.runBehavior = protocol.Behavior
         self.dbName = protocol.project.dbName
@@ -313,6 +341,7 @@ class XmippProtocolDb(SqliteDb):
         return self.lastStepId
 
     def runSteps(self):
+        self.updateRunState(SqliteDb.RUN_STARTED)
         self.connection.commit()
         sqlCommand = """ SELECT step_id, iter, passDb, command, parameters, verifyFiles 
                          FROM %(TableSteps)s 
@@ -337,9 +366,11 @@ class XmippProtocolDb(SqliteDb):
             except Exception as e:
                 msg = "Stopping batch execution since one of the steps could not be performed: %s" % e
                 printLog(msg, self.Log, out=True, err=True, isError=True)
+                self.updateRunState(SqliteDb.RUN_FAILED)
                 raise
         msg='***************************** Protocol FINISHED'
-        printLog(msg, self.Log,msg, out=True, err=True)
+        printLog(msg, self.Log, out=True, err=True)
+        self.updateRunState(SqliteDb.RUN_FINISHED)
 
     def verifyStepFiles(self, fileList):
         missingFilesStr = ''
@@ -405,7 +436,7 @@ class XmippProtocolDb(SqliteDb):
     def getStepGap(self, cursor):
         #The following query is just to start a transaction, pysqlite doesn't provide a better way
         cursor.execute("UPDATE %(TableSteps)s SET step_id = -1 WHERE step_id < 0" % self.sqlDict)
-        if self.countStepGaps(cursor) > 0:
+        if self.checkRunOk(cursor) and self.countStepGaps(cursor) > 0:
             sqlCommand = """ SELECT child.step_id, child.iter, child.passDb, child.command, child.parameters,child.verifyFiles 
                         FROM %(TableSteps)s parent, %(TableSteps)s child
                         WHERE (parent.step_id = child.parent_step_id) 
@@ -425,6 +456,12 @@ class XmippProtocolDb(SqliteDb):
             result = (NO_MORE_GAPS, None)
         return result
     
+    def checkRunOk(self, cursor):
+        sqlCommand = "SELECT run_state FROM %(TableRuns)s WHERE run_id = %(run_id)d" % self.sqlDict
+        cursor.execute(sqlCommand)
+        runState = cursor.fetchone()[0]
+        return runState == SqliteDb.RUN_STARTED 
+        
     def countStepGaps(self, cursor):
         self.sqlDict['step_id'] = self.nextStepId
         sqlCommand = """SELECT COUNT(*) FROM %(TableSteps)s 
@@ -437,8 +474,15 @@ class XmippProtocolDb(SqliteDb):
         result =  cursor.fetchone()[0] 
         return result
 # Function to fill gaps of step in database
+#this will use mpi process
 # this will be usefull for parallel processing, i.e., in threads or with MPI
 # step_id is the step that will launch the process to fill previous gaps
+def runStepGapsMpi(db, script, NumberOfMpi=1):
+    if NumberOfMpi > 1:
+        runJob(db.Log, "xmipp_steps_runner",  script, NumberOfMpi)
+    else:
+        runThreadLoop(db, db.connection, db.cur) 
+           
 def runStepGaps(db, NumberOfThreads=1):
     # If run in separate threads, each one should create 
     # a new connection and cursor
@@ -485,3 +529,4 @@ class ThreadStepGap(Thread):
             runThreadLoop(self.db, conn, cur)
         except Exception, e:
             printLog("Stopping threads because of error %s"%e,self.db.Log,out=True,err=True,isError=True)
+            self.db.updateRunState(SqliteDb.RUN_FAILED, cur)

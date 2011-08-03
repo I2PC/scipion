@@ -49,7 +49,7 @@ def angular_project_library(_log
                                 ,MaxChangeInAngles
                                 ,maskedFileNamesIter
                                 ,MpiJobSize
-                                ,NumberOfMpiProcesses
+                                ,NumberOfMpi
                                 ,NumberOfThreads
                                 ,OnlyWinner
                                 ,PerturbProjectionDirections
@@ -103,7 +103,7 @@ def angular_project_library(_log
     runJob(_log,'xmipp_angular_project_library',
                          parameters,
                          _DoParallel,
-                         NumberOfMpiProcesses*NumberOfThreads,
+                         NumberOfMpi*NumberOfThreads,
                          1,
                          SystemFlavour)
     if (not DoCtfCorrection):
@@ -127,7 +127,7 @@ def projection_matching(_log
                             , MaxChangeOffset
                             , MpiJobSize
                             , NumberOfCtfGroups
-                            , NumberOfMpiProcesses
+                            , NumberOfMpi
                             , NumberOfThreads
                             , OuterRadius
                             , PaddingFactor
@@ -201,7 +201,7 @@ def projection_matching(_log
         runJob(_log,'xmipp_angular_projection_matching',
                             parameters,
                             DoParallel,
-                            NumberOfMpiProcesses,
+                            NumberOfMpi,
                             NumberOfThreads,
                             SystemFlavour)
         
@@ -299,7 +299,7 @@ def angular_class_average(_log
                          , MinimumCrossCorrelation
                          , NumberOfReferences
                          , NumberOfCtfGroups
-                         , NumberOfMpiProcesses
+                         , NumberOfMpi
                          , NumberOfThreads
                          , PaddingFactor
                          , ProjectLibraryRootName
@@ -354,7 +354,7 @@ def angular_class_average(_log
                'xmipp_angular_class_average',
                parameters,
                DoParallel,
-               NumberOfMpiProcesses * NumberOfThreads,
+               NumberOfMpi * NumberOfThreads,
                1,
                SystemFlavour)
 

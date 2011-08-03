@@ -7,7 +7,7 @@ def scaleImages(_log
                     , dimY
                     , filename_currentAngles
                     , MpiJobSize
-                    , NumberOfMpiProcesses
+                    , NumberOfMpi
                     , NumberOfThreads
                     , scaledImages
                     , SystemFlavour
@@ -24,12 +24,12 @@ def scaleImages(_log
     parameters += ' -o ' + outFileName 
     parameters += ' --scale fourier ' + str(dimX) + ' ' + str(dimY) + ' ' + str(NumberOfThreads)
     parameters += ' --disable_metadata' 
-    if ((NumberOfMpiProcesses *NumberOfThreads)>1):
+    if ((NumberOfMpi *NumberOfThreads)>1):
             parameters += ' --mpi_job_size ' + MpiJobSize
 
     runJob(_log,'xmipp_transform_geometry',
                      parameters,
-                     NumberOfMpiProcesses * NumberOfThreads,
+                     NumberOfMpi * NumberOfThreads,
                      1, # Threads go in --scale option
                      SystemFlavour)
 

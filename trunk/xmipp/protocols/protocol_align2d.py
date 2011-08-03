@@ -57,7 +57,7 @@ Lowpass =0.4
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Number of MPI processes to use:
-NumberOfMpiProcesses=40
+NumberOfMpi=40
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -130,7 +130,7 @@ class Align2D_class:
                  DoFilter,
                  Highpass,
                  Lowpass,
-                 NumberOfMpiProcesses,
+                 NumberOfMpi,
                  SystemFlavour):
 	     
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
@@ -145,7 +145,7 @@ class Align2D_class:
         self.DoFilter=DoFilter
         self.Highpass=Highpass
         self.Lowpass=Lowpass
-        self.NumberOfMpiProcesses=NumberOfMpiProcesses
+        self.NumberOfMpi=NumberOfMpi
         self.SystemFlavour=SystemFlavour
    
         # Setup logging
@@ -253,7 +253,7 @@ class Align2D_class:
                               params,
                               self.log,
                               True,
-                              self.NumberOfMpiProcesses,
+                              self.NumberOfMpi,
                               1,
                               self.SystemFlavour)
         
@@ -374,5 +374,5 @@ if __name__ == '__main__':
                  DoFilter,
                  Highpass,
                  Lowpass,
-                 NumberOfMpiProcesses,
+                 NumberOfMpi,
                  SystemFlavour)

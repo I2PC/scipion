@@ -17,6 +17,7 @@
 #      Following vars are availables to template:
 #      - %(file)s     : file to be launched 
 #--------------------------------------------------------------------------------
+SystemFlavour = 'TORQUE-OPENMPI'
 
 FileTemplate = """
 #!/bin/bash

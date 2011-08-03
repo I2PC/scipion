@@ -170,7 +170,7 @@ DoParallel=True
 """ This option provides distributed-memory parallelization on multi-node machines. 
     It requires the installation of some MPI flavour, possibly together with a queueing system
 """
-NumberOfMpiProcesses=5
+NumberOfMpi=5
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
     Ask the person who installed your xmipp version, which option to use. 
@@ -225,7 +225,7 @@ class ML3D_class:
                  SeedsSelfile,
                  NumberOfThreads,
                  DoParallel,
-                 NumberOfMpiProcesses,
+                 NumberOfMpi,
                  SystemFlavour):
 	     
         import os, sys, shutil
@@ -261,7 +261,7 @@ class ML3D_class:
         self.ProjMatchSampling=ProjMatchSampling
         self.NumberOfThreads=NumberOfThreads
         self.DoParallel=DoParallel
-        self.NumberOfMpiProcesses=NumberOfMpiProcesses
+        self.NumberOfMpi=NumberOfMpi
         self.SystemFlavour=SystemFlavour
 
         # Setup logging
@@ -380,7 +380,7 @@ class ML3D_class:
                               parameters,
                               self.log,
                               self.DoParallel,
-                              self.NumberOfMpiProcesses,
+                              self.NumberOfMpi,
                               self.NumberOfThreads,
                               self.SystemFlavour)
 
@@ -395,7 +395,7 @@ class ML3D_class:
                               parameters,
                               self.log,
                               self.DoParallel,
-                              self.NumberOfMpiProcesses,
+                              self.NumberOfMpi,
                               self.NumberOfThreads,
                               self.SystemFlavour)
 
@@ -409,7 +409,7 @@ class ML3D_class:
                               parameters,
                               self.log,
                               self.DoParallel,
-                              self.NumberOfMpiProcesses,
+                              self.NumberOfMpi,
                               self.NumberOfThreads,
                               self.SystemFlavour)
 
@@ -429,7 +429,7 @@ class ML3D_class:
                               parameters,
                               self.log,
                               self.DoParallel,
-                              self.NumberOfMpiProcesses,
+                              self.NumberOfMpi,
                               self.NumberOfThreads,
                               self.SystemFlavour)
  
@@ -576,7 +576,7 @@ class ML3D_class:
                               params,
                               self.log,
                               self.DoParallel,
-                              self.NumberOfMpiProcesses,
+                              self.NumberOfMpi,
                               self.NumberOfThreads,
                               self.SystemFlavour)
 
@@ -600,7 +600,7 @@ class ML3D_class:
                               params,
                               self.log,
                               self.DoParallel,
-                              self.NumberOfMpiProcesses,
+                              self.NumberOfMpi,
                               self.NumberOfThreads,
                               self.SystemFlavour)
 
@@ -646,7 +646,7 @@ if __name__ == '__main__':
                     SeedsSelfile,
                     NumberOfThreads,
                     DoParallel,
-                    NumberOfMpiProcesses,
+                    NumberOfMpi,
                     SystemFlavour)
     
     # close 

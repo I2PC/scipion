@@ -618,7 +618,7 @@ DoCenterVolume = False
 NumberOfThreads = 1
 
 # Number of MPI processes to use
-NumberOfMpiProcesses = 3
+NumberOfMpi = 3
 
 #MPI job size 
 """Minimum size of jobs in mpi processes. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)

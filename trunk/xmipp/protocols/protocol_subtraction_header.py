@@ -120,7 +120,7 @@ dimY = -1
 NumberOfThreads = 2
 
 # Number of MPI processes to use
-NumberOfMpiProcesses = 2
+NumberOfMpi = 2
 
 #MPI job size 
 """Minimum size of jobs in mpi processes. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)

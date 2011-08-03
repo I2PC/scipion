@@ -71,6 +71,7 @@ class XmippLog:
 
     def debug(self, message):
         if self.is_basic:
+
             self.info("DEBUG: " + message)
         else:
             self._log.debug(message)
@@ -193,14 +194,14 @@ def showWarnings(warningList, notConfirm=False):
 def printLog(msg, log=None, out=True, err=False, isError=False):
     '''Just print a msg in the log'''
     if not log is None:
-        if isError: log.error(msg)
+        if isError: log.error(redStr(msg))
         else:       log.info(msg)
         
     if out or err:
         if isError:
             tuple = findColor(msg)
             if not tuple is None:
-                color,idxInitColor,idxFinishColor,msg=tuple
+                msg=tuple[3]
             msg = redStr("ERROR: "+ msg)
         msg = getLogMessage(msg)
         if out:
@@ -217,46 +218,44 @@ def printLog(msg, log=None, out=True, err=False, isError=False):
 def runJob(log, 
            programname,
            params,           
-           NumberOfMpiProcesses = 1,
+           NumberOfMpi = 1,
            NumberOfThreads = 1,
-           SystemFlavour = None,
            RunInBackground=False):
 
     command = buildRunCommand(log,
                programname,
                params,
-               NumberOfMpiProcesses,
+               NumberOfMpi,
                NumberOfThreads,
-               SystemFlavour,
                RunInBackground)
     printLog("Running command: %s" % greenStr(command),log)
 
     from subprocess import call
     retcode = 1000
     try:
-        retcode = call(command, shell=False, stdout=sys.stdout, stderr=sys.stderr)
+        retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
         printLog("Process returned with code %d" % retcode,log)
     except OSError, e:
         raise xmipp.XmippError("Execution failed %s, command: %s" % (e, command))
 
     return retcode
 
+from config_launch import SystemFlavour
 def buildRunCommand(
                log,
                programname,
                params,
-               NumberOfMpiProcesses,
+               NumberOfMpi,
                NumberOfThreads,
-               SystemFlavour,
                RunInBackground):
 
-    DoParallel = NumberOfMpiProcesses > 1
+    DoParallel = NumberOfMpi > 1
     paramsDict={}
     if not DoParallel:
         command = programname + ' ' + params
     else:
         paramsDict['prog'] = programname.replace('xmipp', 'xmipp_mpi')
-        paramsDict['jobs'] = NumberOfMpiProcesses
+        paramsDict['jobs'] = NumberOfMpi
         paramsDict['params'] = params
         
         if (SystemFlavour == 'SLURM-MPICH'): # like BSCs MareNostrum, LaPalma etc

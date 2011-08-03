@@ -144,7 +144,7 @@ StepFocus = 0.1
 #------------------------------------------------------------------------------------------
 # Number of MPI processes
 """ Set to 1 if you do not have MPI installed"""
-NumberOfMpiProcesses = 8
+NumberOfMpi = 8
 
 # Submit to queue
 """Submit to queue

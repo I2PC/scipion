@@ -164,7 +164,7 @@ DoParallel=True
 """ This option provides distributed-memory parallelization on multi-node machines. 
     It requires the installation of some MPI flavour, possibly together with a queueing system
 """
-NumberOfMpiProcesses=2
+NumberOfMpi=2
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, 
@@ -215,7 +215,7 @@ class MLtomo_class:
                  MaskName,
                  NumberOfThreads,
                  DoParallel,
-                 NumberOfMpiProcesses,
+                 NumberOfMpi,
                  SystemFlavour):
 	     
         import os,sys,shutil
@@ -249,7 +249,7 @@ class MLtomo_class:
         self.MaskName=MaskName
         self.NumberOfThreads=NumberOfThreads
         self.DoParallel=DoParallel
-        self.NumberOfMpiProcesses=NumberOfMpiProcesses
+        self.NumberOfMpi=NumberOfMpi
         self.SystemFlavour=SystemFlavour
 
         # Setup logging
@@ -346,7 +346,7 @@ class MLtomo_class:
                               params,
                               self.log,
                               self.DoParallel,
-                              self.NumberOfMpiProcesses,
+                              self.NumberOfMpi,
                               self.NumberOfThreads,
                               self.SystemFlavour)
 
@@ -387,7 +387,7 @@ if __name__ == '__main__':
                         MaskName,
                         NumberOfThreads,
                         DoParallel,
-                        NumberOfMpiProcesses,
+                        NumberOfMpi,
                         SystemFlavour)
 
     

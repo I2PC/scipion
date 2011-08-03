@@ -30,7 +30,7 @@ import os
 import Tkinter as tk
 import tkMessageBox
 import tkFont
-from protlib_base import protocolMain, getProtocolFromModule
+from protlib_base import protocolMain, getProtocolFromModule, XmippProtocol
 from protlib_utils import loadModule, runJob
 from protlib_gui_ext import centerWindows, changeFontSize
 from protlib_filesystem import getXmippPath
@@ -38,6 +38,7 @@ from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
 from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
 from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor, ButtonActiveBgColor                         
+from protlib_sql import SqliteDb
 
 class ProtocolStyle():
     ''' Class to define some style settings like font, colors, etc '''
@@ -747,6 +748,7 @@ class ProtocolGUI(BasicGUI):
                 self.run['source'] = self.run['script']
                 self.inRunName = runName
             else:
+                self.run['run_state'] = SqliteDb.RUN_SAVED
                 self.project.projectDb.updateRun(self.run)
     
             #print "* Saving script: %s" % self.run['script']
@@ -768,11 +770,6 @@ class ProtocolGUI(BasicGUI):
             tkMessageBox.showerror("Error saving run parameters", str(e), parent=self.master)
         if self.saveCallback:
             self.saveCallback()
-    
-    def confirmDeleteWorkingDir(self):
-        if 'DoDeleteWorkingDir' in self.variablesDict and self.variablesDict['DoDeleteWorkingDir'].getValue() == 'True':
-            return tkMessageBox.askyesno("Confirm DELETE", "Working dir '%s' will be DELETED. Do you want to continue?" % self.variablesDict['WorkingDir'].getValue())
-        return True
     
     def validateProtocol(self):
         prot = getProtocolFromModule(self.run['script'], self.project)
