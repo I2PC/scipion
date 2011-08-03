@@ -29,7 +29,7 @@
 # Filesystem utilities
 #---------------------------------------------------------------------------
 import os
-from protlib_utils import printLog, printLogError
+from protlib_utils import printLog, redStr
 #from xmipp import *
 
 # The following are Wrappers to be used from Protocols
@@ -41,33 +41,33 @@ def createDir(log, path):
     from distutils.errors import DistutilsFileError
     try:
         if not os.path.exists(path):
-            printLog(log, "Creating directory " + path)
+            printLog("Creating directory " + path,log)
             mkpath(path, 0777, True)
     except DistutilsFileError, e:
-        printLogError(log, "could not create '%s': %s" % (os.path.abspath(path), e))
+        printLog(redStr("Could not create '%s': %s" % (os.path.abspath(path), e)),log,err=True,isError=True)
 
 def changeDir(log, path):
     """ Change to Directory """
-    printLog(log, "Changing to directory " + path)
+    printLog("Changing to directory " + path,log)
     try:
         os.chdir(path)
     except os.error, (errno, errstr):
-        printLogError(log, "Could not change to directory '%s'\nError (%d): %s" % (path, errno, errstr))
+        printLog(redStr("Could not change to directory '%s': Error (%d): %s" % (path, errno, errstr)),log,err=True,isError=True)
 
 def deleteDir(log, path):
     from distutils.dir_util import remove_tree
     if os.path.exists(path):
-        printLog(log, "Deleting directory " + path)
+        printLog("Deleting directory " + path,log)
         remove_tree(path, True)
            
 def deleteFile(log, filename, verbose):
     if os.path.exists(filename):
         os.remove(filename)
         if verbose:
-            printLog(log, 'Deleted file %s' % filename )
+            printLog('Deleted file %s' % filename,log)
     else:
         if verbose:
-            printLog(log, 'Do not need to delete %s; already gone' % filename )
+            printLog('Do not need to delete %s; already gone' % filename,log)
 
 def deleteFiles(log, filelist, verbose):
     for file in filelist:
