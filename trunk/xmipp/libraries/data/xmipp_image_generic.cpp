@@ -72,11 +72,15 @@ void ImageGeneric::clear()
 
 void  ImageGeneric::copy(const ImageGeneric &img)
 {
-    setDatatype(img.datatype);
+    if (img.datatype != Unknown_Type)
+    {
+        setDatatype(img.datatype);
 #define COPY(type) (*(Image<type>*)image) = (*(Image<type>*)img.image);
 
-    SWITCHDATATYPE(datatype, COPY);
+        SWITCHDATATYPE(datatype, COPY);
 #undef COPY
+
+    }
 
 }
 
@@ -158,7 +162,7 @@ void ImageGeneric::setDatatype(DataType imgType)
         }
         break;
     case Unknown_Type:
-        REPORT_ERROR(ERR_IMG_UNKNOWN,"");
+        REPORT_ERROR(ERR_IMG_UNKNOWN,"Datatype of the image file is unknown.");
         break;
     default:
         REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Datatype not implemented.");
