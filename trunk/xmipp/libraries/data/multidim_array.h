@@ -379,6 +379,15 @@ extern String floatToString(float F, int _width, int _prec);
      STARTINGX(v1) == STARTINGX(v2) && \
      STARTINGY(v1) == STARTINGY(v2))
 
+#define SAME_SHAPE3D(v1, v2) \
+    (XSIZE(v1) == XSIZE(v2) && \
+     YSIZE(v1) == YSIZE(v2) && \
+     ZSIZE(v1) == ZSIZE(v2) && \
+     STARTINGX(v1) == STARTINGX(v2) && \
+     STARTINGY(v1) == STARTINGY(v2) && \
+     STARTINGZ(v1) == STARTINGZ(v2))
+
+
 /** For all elements in the array
  *
  * This macro is used to generate loops for the matrix in an easy way. It
@@ -2055,8 +2064,9 @@ public:
             return;
 
         if (k < STARTINGZ(*this) || k > FINISHINGZ(*this))
-            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,
-                         "setSlice: MultidimArray subscript (k) out of range");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,formatString(
+                         "setSlice: MultidimArray subscript (k=%d) out of range [%d, %d]",
+                         k,STARTINGZ(*this),FINISHINGZ(*this)));
 
         if (v.rowNumber() != YSIZE(*this) || v.colNumber() != XSIZE(*this))
             REPORT_ERROR(ERR_MULTIDIM_DIM,

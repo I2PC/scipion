@@ -52,8 +52,8 @@ void geo2TransformationMatrix(const MDRow &imageHeader, Matrix2D<double> &A,
 
 /** Retrieve the geometry transformations from matrix for 2D. */
 void transformationMatrix2Parameters2D(const Matrix2D<double> &A, bool &flip,
-                                     double &scale, double &shiftX, double &shiftY,
-                                     double &psi);
+                                       double &scale, double &shiftX, double &shiftY,
+                                       double &psi);
 
 /** Retrieve the geometry transformations from matrix for D. */
 void transformationMatrix2Parameters3D(const Matrix2D<double> &A, bool &flip,
@@ -274,7 +274,7 @@ void applyGeometry(int SplineDegree,
         REPORT_ERROR(ERR_MATRIX_SIZE,"ApplyGeometry: 3D transformation matrix is not 4x4");
 #endif
 
-    if (A.isIdentity())
+    if (A.isIdentity() && ( XSIZE(V2) == 0 || SAME_SHAPE3D(V1,V2) ) )
     {
         typeCast(V1,V2);
         return;
@@ -304,7 +304,7 @@ void applyGeometry(int SplineDegree,
 
     if (outside != 0.)
     {
-        // Initialise output matrix with value=outside
+        // Initialize output matrix with value=outside
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V2)
         DIRECT_MULTIDIM_ELEM(V2, n) = outside;
     }
