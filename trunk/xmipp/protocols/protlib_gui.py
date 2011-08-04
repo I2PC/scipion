@@ -398,6 +398,7 @@ class ProtocolGUI(BasicGUI):
         # Script title
         self.programname = os.path.basename(self.run['source'].replace('.py', ''))
         self.maxLabelWidth = 0
+        self.hasVisualizeOptions = False
 
     #-------------------------------------------------------------------
     # Widgets creation and GUI building
@@ -472,6 +473,7 @@ class ProtocolGUI(BasicGUI):
             if section.variable.isExpert():
                 var.tags['expert'] = section.variable.tags['expert']
             if section.variable.isVisualize():
+                self.hasVisualizeOptions = True
                 var.tags['visualize'] = section.variable.tags['visualize']
             for k, v in section.variable.conditions.iteritems():
                 var.conditions[k] = v
@@ -727,15 +729,6 @@ class ProtocolGUI(BasicGUI):
         self.btnToggleExpert.config(text=text)
         self.checkVisibility()
         
-    def toggleVisualizeMode(self, event=''):
-        self.visualize_mode = not self.visualize_mode
-        if self.visualize_mode:
-            text = "Show Run Options"
-        else:
-            text = "Show Visualize Options"
-        self.btnToggleVisualize.config(text=text)    
-        self.checkVisibility()
-    
     def save(self, event=""):
         try:
             runName = self.getRunName()
@@ -771,22 +764,27 @@ class ProtocolGUI(BasicGUI):
         if self.saveCallback:
             self.saveCallback()
     
-    def validateProtocol(self):
-        prot = getProtocolFromModule(self.run['script'], self.project)
+    def validateProtocol(self, prot):
         errors = prot.validateBase()        
         if len(errors) > 0:
             tkMessageBox.showerror("Validation ERRORS", '\n'.join(errors), parent=self.master)
-            return None
-        return prot
+            return False
+        return True
+    
+    def getProtocol(self):
+        return getProtocolFromModule(self.run['script'], self.project)
     
     def saveExecute(self, event=""):
         self.save() 
-        prot = self.validateProtocol()
-        if not prot is None:
-            warnings=prot.warningsBase()
-            if len(warnings)==0 or tkMessageBox.askyesno("Confirm execution",'\n'.join(warnings), parent=self.master):
-                os.system('python %s --no_confirm &' % self.run['script'] )
-                self.master.destroy() 
+        prot = self.getProtocol()        
+        if self.visualize_mode:
+            prot.visualize()
+        else:
+            if self.validateProtocol(prot):
+                warnings=prot.warningsBase()
+                if len(warnings)==0 or tkMessageBox.askyesno("Confirm execution",'\n'.join(warnings), parent=self.master):
+                    os.system('python %s --no_confirm &' % self.run['script'] )
+                    self.master.destroy() 
     
     def viewFiles(self):
         tkMessageBox.showinfo("Visualize", "This should open ImageJ plugin to display files", parent=self.master)
@@ -824,15 +822,13 @@ class ProtocolGUI(BasicGUI):
     def fillButtons(self):
         row = self.getRow()
         row += 3
-        self.btnToggleVisualize = self.addButton("Show Visualize Options", self.toggleVisualizeMode, 0, row, 0, 'w')
         self.btnToggleExpert = self.addButton("Show Expert Options", self.toggleExpertMode, 12, row, 1, 'ew')
         self.addButton("Save", self.save, 0, row, 3, 'w')
-        self.addButton("Save & Execute", self.saveExecute, 7, row, 4, 'w')
+        self.btnExecute = self.addButton("Save & Execute", self.saveExecute, 7, row, 4, 'w')
         
     def addBindings(self):
         self.master.bind('<Alt_L><c>', self.close)
         self.master.bind('<Alt_L><o>', self.toggleExpertMode)
-        self.master.bind('<Alt_L><v>', self.toggleVisualizeMode)
         self.master.bind('<Alt_L><s>', self.save)
         self.master.bind('<Alt_L><e>', self.saveExecute)
         self.master.bind('<Alt_L><r>', self.saveExecute)
@@ -881,10 +877,18 @@ class ProtocolGUI(BasicGUI):
         #self.fillWidgets()
                 # Add bottom row buttons
     def fillGUI(self):
+        if self.visualize_mode and not self.hasVisualizeOptions:
+            return
         self.fillButtons()
         self.addBindings()    
         self.master.update_idletasks()  
         self.expert_mode = 'ShowExpertOptions'in self.variablesDict and \
                             self.variablesDict['ShowExpertOptions'].getValue() == 'True'
         self.checkVisibility()  
+        
+    def launchGUI(self):
+        if self.visualize_mode and not self.hasVisualizeOptions:
+            self.getProtocol().visualize()
+        else:
+            BasicGUI.launchGUI(self)
     

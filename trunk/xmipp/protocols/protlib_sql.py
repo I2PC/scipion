@@ -431,7 +431,7 @@ class XmippProtocolDb(SqliteDb):
             sqlCommand = """ SELECT child.step_id, child.iter, child.passDb, child.command, child.parameters,child.verifyFiles 
                         FROM %(TableSteps)s parent, %(TableSteps)s child
                         WHERE (parent.step_id = child.parent_step_id) 
-                          AND (child.step_id < %(step_id)d)
+                          AND (child.step_id < %(next_step_id)d)
                           AND (child.init IS NULL)
                           AND (parent.finish IS NOT NULL)
                           AND (child.execute_mainloop =  0)
@@ -454,10 +454,16 @@ class XmippProtocolDb(SqliteDb):
         return runState == SqliteDb.RUN_STARTED 
         
     def countStepGaps(self, cursor):
+        #Select first the next step id in main loop to limit the gaps
+        sqlCommand = """SELECT COALESCE(MIN(step_id), 99999) 
+                         FROM %(TableSteps)s 
+                        WHERE run_id=%(run_id)d 
+                          AND init IS NULL AND execute_mainloop=1""" % self.sqlDict
+        cursor.execute(sqlCommand)
+        # Count the gaps before the next step in main loop
+        self.sqlDict['next_step_id'] = cursor.fetchone()[0]
         sqlCommand = """SELECT COUNT(*) FROM %(TableSteps)s 
-                        WHERE (step_id < 
-                          (SELECT COALESCE(MIN(step_id), 99999) 
-                             FROM %(TableSteps)s WHERE run_id=%(run_id)d AND init IS NULL AND execute_mainloop=1))
+                        WHERE (step_id < %(next_step_id)d)
                           AND (finish IS NULL)
                           AND (execute_mainloop =  0)
                           AND (run_id=%(run_id)d) """ % self.sqlDict
