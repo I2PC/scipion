@@ -46,6 +46,8 @@ class SqliteDb:
     RUN_FINISHED = 3
     RUN_FAILED = 4
     
+    StateNames = ['Saved', 'Launched', 'Running', 'Finish', 'Failed']
+    
     def execSqlCommand(self, sqlCmd, errMsg):
         """Helper function to execute sqlite commands"""
         try:
@@ -221,6 +223,7 @@ class XmippProjectDb(SqliteDb):
                         WHERE run_id = %(run_id)d"""  % self.sqlDict
                          
         self.execSqlCommand(_sqlCommand, "Error updating run: %(run_name)s" % run)  
+        self.connection.commit()
         
     def deleteRun(self, run):
         self.sqlDict.update(run)
@@ -241,6 +244,7 @@ class XmippProjectDb(SqliteDb):
         return sqlCommand
                          
     def selectRuns(self, groupName):
+        self.connection.commit()
         self.sqlDict['group'] = groupName
         sqlCommand = self.selectRunsCommand() + """WHERE group_name = '%(group)s'
                                                    ORDER BY last_modified DESC """ % self.sqlDict
@@ -262,6 +266,13 @@ class XmippProjectDb(SqliteDb):
                                                    ORDER BY last_modified DESC """ % self.sqlDict
         self.cur.execute(sqlCommand) 
         return self.cur.fetchall()
+    
+    def getRunProgress(self, run):
+        self.sqlDict['run_id'] = run['run_id']
+        sqlCommand = """ SELECT COUNT(step_id) FROM %(TableSteps)s WHERE run_id=%(run_id)d""" % self.sqlDict 
+        steps_total = self.cur.execute(sqlCommand).fetchone()[0]
+        steps_done = self.cur.execute(sqlCommand + ' AND finish IS NOT NULL').fetchone()[0]
+        return (steps_done, steps_total)
      
 class XmippProtocolDb(SqliteDb):
     def __init__(self, protocol, isMainLoop=True):

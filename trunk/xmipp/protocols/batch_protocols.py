@@ -35,6 +35,7 @@ from protlib_gui_ext import ToolTip, MultiListbox, centerWindows
 from config_protocols import protDict, sections
 from protlib_base import getProtocolFromModule, XmippProject
 from protlib_utils import reportError
+from protlib_sql import SqliteDb
 
 #Font
 FontName = "Helvetica"
@@ -51,7 +52,57 @@ HighlightBgColor = BgColor
 ButtonBgColor = "LightBlue"
 ButtonActiveBgColor = "LightSkyBlue"
 
+Fonts = {}
 
+def registerFont(name, **opts):
+    global Fonts
+    Fonts[name] = tkFont.Font(**opts)
+    
+def configDefaults(opts, defaults):
+    for key in defaults.keys():
+        if not opts.has_key(key):
+            opts[key] = defaults[key]
+            
+def ProjectButton(master, text, imagePath=None, **opts):
+    configDefaults(opts, {'activebackground': ButtonActiveBgColor})
+    btnImage = None
+    if imagePath:
+        try:
+            from protlib_filesystem import getXmippPath
+            imgPath = os.path.join(getXmippPath('resources'), imagePath)
+            btnImage = tk.PhotoImage(file=imgPath)
+        except tk.TclError:
+            pass
+    
+    if btnImage:
+        btn = tk.Button(master, image=btnImage, bd=0, height=28, width=28, **opts)
+        btn.image = btnImage
+    else:
+        btn = tk.Button(master, text=text, font=Fonts['button'], bg=ButtonBgColor, **opts)
+    return btn
+
+    
+def ProjectLabel(master, **opts):
+    return tk.Label(master, font=Fonts['label'], fg=SectionTextColor, **opts)
+        
+class ProjectSection(tk.Frame):
+    def __init__(self, master, label_text, **opts):
+        tk.Frame.__init__(self, master, bd=2)
+        self.config(**opts)
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(1, weight=1)
+        self.label = tk.Label(self, text=label_text, font=Fonts['label'], fg=SectionTextColor)
+        self.label.grid(row=0, column=0, sticky='sw')
+        self.frameButtons = tk.Frame(self)
+        self.frameButtons.grid(row=0, column=1, sticky='e')
+        self.frameContent = tk.Frame(self)
+        self.frameContent.grid(row=1, column=0, columnspan=2, sticky='nsew')
+        
+    def addButton(self, text, imagePath=None, **opts):
+        btn = ProjectButton(self.frameButtons, text, imagePath, **opts)
+        btn.pack(side=tk.LEFT, padx=5)
+        return btn
         
 class XmippProjectGUI():  
     def __init__(self, project):
@@ -61,17 +112,16 @@ class XmippProjectGUI():
         if tkMessageBox.askyesno("DELETE confirmation", "You are going to DELETE all project data (runs, logs, results...Do you want to continue?"):
             self.project.clean()
             self.close()
-            
-    def createMainMenu(self):
-        self.menubar = tk.Menu(self.root)
-        self.fileMenu = tk.Menu(self.root, tearoff=0)
-        self.fileMenu.add_command(label="Delete project", command=self.deleteProject)
-        self.fileMenu.add_command(label="Exit", command=self.close)
-        self.menubar.add_cascade(label="File", menu=self.fileMenu)
+      
+    def initVariables(self):
         self.ToolbarButtonsDict = {}
         self.runButtonsDict = {}
         self.lastSelected = None
         self.lastRunSelected = None
+        self.Frames = {}
+        self.historyRefresh = None
+              
+    def addBindings(self):
         self.root.bind('<Configure>', self.unpostMenu)
         self.root.bind("<Unmap>", self.unpostMenu)
         self.root.bind("<Map>", self.unpostMenu)
@@ -84,25 +134,26 @@ class XmippProjectGUI():
         self.root.bind('<Alt_L><l>', self.showOutput)
         self.root.bind('<Alt_L><a>', self.visualizeRun)
         
+    def createMainMenu(self):
+        self.menubar = tk.Menu(self.root)
+        self.fileMenu = tk.Menu(self.root, tearoff=0)
+        self.fileMenu.add_command(label="Delete project", command=self.deleteProject)
+        self.fileMenu.add_command(label="Exit", command=self.close)
+        self.menubar.add_cascade(label="File", menu=self.fileMenu)
+        
     def selectRunUpDown(self, event):
         if event.keycode == 111: # Up arrow
             self.lbHist.selection_move_up()
         elif event.keycode == 116: # Down arrow
             self.lbHist.selection_move_down()
-            
-    def addHeaderLabel(self, parent, text, row, col=0):
-        '''Add a label to left toolbar'''
-        label = tk.Label(parent, text=text, font=self.LabelFont, fg=SectionTextColor)
-        label.grid(row = row, column=col)
-        return label
         
     def createToolbarButton(self, row, text, opts=[]):
         '''Add a button to left toolbar'''
-        btn = tk.Button(self.toolbar, bd = 1, text=text, font=self.ButtonFont, relief=tk.RAISED,
+        btn = tk.Button(self.Frames['toolbar'], bd = 1, text=text, font=Fonts['button'], relief=tk.RAISED,
                          bg=ButtonBgColor, activebackground=ButtonBgColor)
         btn.grid(row = row, column = 0, sticky='ew', pady=2, padx=5)
         if len(opts) > 0:
-            menu = tk.Menu(self.root, bg=ButtonBgColor, activebackground=ButtonBgColor, font=self.ButtonFont, tearoff=0)
+            menu = tk.Menu(self.root, bg=ButtonBgColor, activebackground=ButtonBgColor, font=Fonts['button'], tearoff=0)
             prots = [protDict.protocolDict[o] for o in opts]
             for p in prots:
                 #Following is a bit tricky, its due Python notion of scope, a for does not define a new scope
@@ -130,14 +181,25 @@ class XmippProjectGUI():
         if self.lastSelected == run['group_name']:
             self.updateRunHistory(self.lastSelected)
             
-    def updateRunHistory(self, protGroup): 
+    def updateRunHistory(self, protGroup):
+        #Cancel if there are pending refresh
+        if self.historyRefresh:
+            self.lbHist.after_cancel(self.historyRefresh)
+            self.historyRefresh = None
+
         self.runs = self.project.projectDb.selectRuns(protGroup)
         self.lbHist.delete(0, tk.END)
         for run in self.runs:
-            self.lbHist.insert(tk.END, ('%s_%s' % (run['protocol_name'], run['run_name']),
-                                run['last_modified']))   
+            run_name = '%s_%s' % (run['protocol_name'], run['run_name'])
+            state = run['run_state']
+            stateStr = SqliteDb.StateNames[state]
+            if state == SqliteDb.RUN_STARTED:
+                stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
+            self.lbHist.insert(tk.END, (run_name, stateStr, run['last_modified']))   
         if len(self.runs) > 0:
             self.lbHist.selection_set(0)
+            #Generate an automatic refresh after 500 ms 
+            self.historyRefresh = self.lbHist.after(3000, self.updateRunHistory, protGroup)
         else:
             self.updateRunSelection(-1)
 
@@ -181,8 +243,7 @@ class XmippProjectGUI():
         if index == -1:
             state = tk.DISABLED
             #Hide details
-            self.frameDetails.grid_remove()
-            self.buttonDetails.grid_remove()
+            self.Frames['details'].grid_remove()
         else:
             state = tk.NORMAL
             #Show details
@@ -194,8 +255,7 @@ class XmippProjectGUI():
             prot = getProtocolFromModule(run['script'], self.project)
             summary = '\n'.join(prot.summary())
             self.DetailsLabelsDict['Summary:'].config(text=summary)
-            self.frameDetails.grid()
-            self.buttonDetails.grid()
+            self.Frames['details'].grid()
         for btn in self.runButtonsDict.values():
             btn.config(state=state)
             
@@ -224,19 +284,19 @@ class XmippProjectGUI():
             pass
         
 
-    def createToolbar(self):
+    def createToolbarFrame(self, parent):
         #Configure toolbar frame
-        self.toolbar = tk.Frame(self.frame, bd=2, relief=tk.RIDGE)
-        self.toolbar.grid(row=0, column=0, sticky='nws', 
-                          rowspan=5, padx=5, pady=5)
+        toolbar = tk.Frame(parent, bd=2, relief=tk.RIDGE)
+        self.Frames['toolbar'] = toolbar
         #Create toolbar buttons
         i = 1
         for k, v in sections:
-            self.addHeaderLabel(self.toolbar, k, i)
+            ProjectLabel(toolbar, text=k).grid(column=0, row=i)
             i += 1
             for btn in v:
                 self.createToolbarButton(i, btn[0], btn[1:])
                 i += 1
+        return toolbar
                 
     def addRunButton(self, frame, text, col, imageFilename=None):
         btnImage = None
@@ -252,68 +312,54 @@ class XmippProjectGUI():
             btn = tk.Button(frame, image=btnImage, bd=0, height=28, width=28)
             btn.image = btnImage
         else:
-            btn = tk.Button(frame, text=text, font=self.ButtonFont, bg=ButtonBgColor)
+            btn = tk.Button(frame, text=text, font=Fonts['button'], bg=ButtonBgColor)
         btn.config(command=lambda:self.runButtonClick(text), 
                  activebackground=ButtonActiveBgColor)
         btn.grid(row=0, column=col)
         ToolTip(btn, text, 500)
         self.runButtonsDict[text] = btn
     
-    def createRunHistory(self):
-        self.addHeaderLabel(self.frame, 'History', 0, 1)
-        #Button(self.frame, text="Edit").grid(row=0, column=2)
-        frame = tk.Frame(self.frame)
-        frame.grid(row=0, column=3)
-        self.addRunButton(frame, "Edit", 0, 'edit.gif')
-        self.addRunButton(frame, "Copy", 1, 'copy.gif')
-        #self.addRunButton(frame, "Visualize", 2, 'visualize.gif')
-        self.addRunButton(frame, "Delete", 2, 'delete.gif')
-        #self.addRunButton(frame, "Help", 4, 'help.gif')
-        self.frameHist = tk.Frame(self.frame)
-        self.frameHist.grid(row=2, column=1, sticky='nsew', columnspan=3, padx=5, pady=(0, 5))
-        self.lbHist = MultiListbox(self.frameHist, (('Run', 40), ('Modified', 20)))
+    def createHistoryFrame(self, parent):
+        history = ProjectSection(parent, 'History')
+        self.Frames['history'] = history
+        list = [('Edit', 'edit.gif'), ('Copy', 'copy.gif'), ('Delete', 'delete.gif')]
+        for k, v in list:
+            btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k))
+            ToolTip(btn, k, 500)
+            self.runButtonsDict[k] = btn
+            
+        self.lbHist = MultiListbox(history.frameContent, (('Run', 35), ('State', 15), ('Modified', 15)))
         self.lbHist.SelectCallback = self.runSelectCallback
         self.lbHist.DoubleClickCallback = lambda:self.runButtonClick("Edit")
-        self.lbHist.AllowSort = False        
-        #self.lbHist.pack()
+        self.lbHist.AllowSort = False   
+        return history     
         
-    def addDetailsLabel(self, text, row, col, sumCol=True):
-        label = tk.Label(self.frameDetails,text=text, font=self.DetailsFontBold, bg=BgColor)
+    def addDetailsLabel(self, parent, text, row, col, colspan=1):
+        label = tk.Label(parent, text=text, font=Fonts['details'], bg=BgColor)
         label.grid(row=row, column=col, sticky='ne', padx=5)
-        if sumCol:
-            col += 1
-        else:
-            row += 1
-        label = tk.Label(self.frameDetails,text="", font=self.DetailsFont, 
+        label = tk.Label(parent,text="", font=Fonts['details_bold'],
                       bg=BgColor, justify=tk.LEFT)
-        colspan = 1
-        if text == 'Summary:':
-            colspan = 3
-        label.grid(row=row, column=col, sticky='nw', padx=5, columnspan=colspan)
+        label.grid(row=row, column=col+1, sticky='nw', padx=5, columnspan=colspan)
         self.DetailsLabelsDict[text] = label
         
-    def createRunDetails(self):
-        #Prepare fonts
-        self.DetailsFontBold = tkFont.Font(family=FontName, size=FontSize-1, weight=tkFont.BOLD)
-        self.DetailsFont = tkFont.Font(family=FontName, size=FontSize-1)
+    def createDetailsFrame(self, parent):
+        details = ProjectSection(parent, 'Details')
+        self.Frames['details'] = details
         #Create RUN details
-        self.addHeaderLabel(self.frame, 'Details', 3, 1)
-        self.buttonDetails = tk.Button(self.frame, text="Analyze results", font=self.ButtonFont, 
-                                    bg=ButtonBgColor, activebackground=ButtonActiveBgColor,
-                                    command=self.visualizeRun)
-        self.buttonDetails.grid(row=3, column=2, padx=5, pady=5)
-        self.buttonOutput = tk.Button(self.frame, text="Show output", font=self.ButtonFont, 
-                                    bg=ButtonBgColor, activebackground=ButtonActiveBgColor,
-                                    command=self.showOutput)
-        self.buttonOutput.grid(row=3, column=3, padx=5, pady=5)
-        self.frameDetails = tk.Frame(self.frame, bg=BgColor, bd=1, relief=tk.RIDGE)
-        self.frameDetails.grid(row=4, column=1, sticky='nsew', columnspan=3, padx=5, pady=5)
+        details.addButton("Analyze results", command=self.visualizeRun)
+        details.addButton("Show output", command=self.showOutput)
+        content = details.frameContent
+        content.config(bg=BgColor, bd=1, relief=tk.RIDGE)
+        content.grid_configure(pady=(5, 0))
         self.DetailsLabelsDict = {}
-        self.addDetailsLabel('Run:', 0, 0)
-        self.addDetailsLabel('Protocol:', 1, 0)
-        self.addDetailsLabel('Created:', 0, 2)
-        self.addDetailsLabel('Modified:', 1, 2)
-        self.addDetailsLabel('Summary:', 2, 0)
+        registerFont('details', family=FontName, size=FontSize-1, weight=tkFont.BOLD)
+        registerFont('details_bold', family=FontName, size=FontSize-1)
+        self.addDetailsLabel(content, 'Run:', 0, 0)
+        self.addDetailsLabel(content, 'Protocol:', 1, 0)
+        self.addDetailsLabel(content, 'Created:', 0, 2)
+        self.addDetailsLabel(content, 'Modified:', 1, 2)
+        self.addDetailsLabel(content, 'Summary:', 2, 0, 3)
+        return details
 
     def createGUI(self, root=None):
         if not root:
@@ -321,24 +367,32 @@ class XmippProjectGUI():
         self.root = root
         root.withdraw() # Hide the windows for centering
         self.root.title("Xmipp Protocols")
+        self.initVariables()        
         self.createMainMenu()
-        #Create a main frame that contains all other widgets
-        self.frame = tk.Frame(self.root)
-        self.frame.pack(fill=tk.BOTH)
-        self.frame.columnconfigure(0, minsize=150, weight=1)
-        self.frame.columnconfigure(1, minsize=300, weight=2)
-        #self.frame.columnconfigure(2, minsize=300, weight=2)
-        self.frame.rowconfigure(2, minsize=50, weight=1)
-        self.frame.rowconfigure(4, minsize=50, weight=1)
+        self.addBindings()
+        #Create main frame that will contain all other sections
+        #Configure min size and expanding behaviour
+        root.minsize(750, 500)
+        root.columnconfigure(0, weight=1)
+        root.rowconfigure(0, weight=1)
+        main = tk.Frame(self.root)
+        main.grid(row=0, column=0, sticky="nsew")
+        main.columnconfigure(0, minsize=150)
+        main.columnconfigure(1, minsize=450, weight=1)
+        main.rowconfigure(1, minsize=200, weight=1)
+        main.rowconfigure(2, minsize=200, weight=1)
+        self.Frames['main'] = main
         
         # Create some fonts for later use
-        self.ButtonFont = tkFont.Font(family=FontName, size=FontSize, weight=tkFont.BOLD)
-        self.LabelFont = tkFont.Font(family=FontName, size=FontSize+1, weight=tkFont.BOLD)
+        global Fonts
+        Fonts['button'] = tkFont.Font(family=FontName, size=FontSize, weight=tkFont.BOLD)
+        Fonts['label'] = tkFont.Font(family=FontName, size=FontSize+1, weight=tkFont.BOLD)
         
-        self.createToolbar()
-        self.createRunHistory()
-        self.createRunDetails()
-
+        #Create section frames and locate them
+        self.createToolbarFrame(main).grid(row=1, column=0, sticky='nse', padx=5, pady=5, rowspan=2)
+        self.createHistoryFrame(main).grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
+        self.createDetailsFrame(main).grid(row=2, column=1, sticky='nsew', padx=5, pady=5)
+        
         self.root.config(menu=self.menubar)
         #select lastSelected
         if self.project.config.has_option('project', 'lastselected'):

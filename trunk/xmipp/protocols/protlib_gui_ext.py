@@ -33,7 +33,6 @@ class MultiListbox(tk.PanedWindow):
             lb.bind('<Button-4>', lambda e, s=self: s._scroll(tk.SCROLL, 1, tk.PAGES))
             lb.bind('<Button-5>', lambda e, s=self: s._scroll(tk.SCROLL, -1, tk.PAGES))
             self.add(frame)
-        tk.Label(master, borderwidth=1, relief=tk.FLAT).pack(fill=tk.X)
         sb = tk.Scrollbar(master, orient=tk.VERTICAL, command=self._scroll,borderwidth=1)
         sb.pack(fill=tk.Y,side=tk.RIGHT,expand=tk.NO)
         for l in self.lists:
