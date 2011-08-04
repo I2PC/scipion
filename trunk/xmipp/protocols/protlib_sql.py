@@ -71,7 +71,7 @@ class SqliteDb:
             result = result['run_id']
         return result
     
-    def updateRunState(self, runState, cursor=None):
+    def updateRunState(self, runState, cursor=None, connection=None):
         self.sqlDict['run_state'] = runState
         _sqlCommand = """UPDATE %(TableRuns)s SET
                             run_state = %(run_state)d,
@@ -79,7 +79,9 @@ class SqliteDb:
                         WHERE run_id = %(run_id)d"""  % self.sqlDict
         if cursor is None:
             cursor = self.cur
+            connection = self.connection
         cursor.execute(_sqlCommand)
+        connection.commit()
     
 class XmippProjectDb(SqliteDb):
     LAST_STEP  = -1
@@ -289,6 +291,12 @@ class XmippProtocolDb(SqliteDb):
                 _sqlCommand = 'DELETE FROM %(TableSteps)s WHERE run_id = %(run_id)d' % self.sqlDict
                 self.execSqlCommand(_sqlCommand, "Error cleaning table: %(TableSteps)s" % self.sqlDict)
             else:
+                #This will select steps for comparision in resume mode when insertStep is invoked
+                sqlCommand = """ SELECT step_id, iter, command, parameters, verifyFiles 
+                                 FROM %(TableSteps)s 
+                                 WHERE (run_id = %(run_id)d)
+                                 ORDER BY step_id """ % self.sqlDict
+                self.cur.execute(sqlCommand)
                 self.insertStatus = False
 
     def setIteration(self,iter):
@@ -305,7 +313,8 @@ class XmippProtocolDb(SqliteDb):
 
         parameters = pickle.dumps(_Parameters, 0)
         verifyfilesString = pickle.dumps(verifyfiles, 0)
-        if self.insertStatus==False:
+        if not self.insertStatus:
+            #This will use previous select query in constructor
             row=self.cur.fetchone()
             if row is None:
                 self.insertStatus=True
@@ -337,8 +346,15 @@ class XmippProtocolDb(SqliteDb):
         return self.lastStepId
 
     def runSteps(self):
+        #Update run state to STARTED
         self.updateRunState(SqliteDb.RUN_STARTED)
+        #Clean init date for previous unfinished steps
+        sqlCommand = """ UPDATE %(TableSteps)s  set init=NULL
+                         WHERE run_id = %(run_id)d 
+                         AND finish IS NULL""" % self.sqlDict
+        self.cur.execute(sqlCommand)
         self.connection.commit()
+        #Select steps to run
         sqlCommand = """ SELECT step_id, iter, passDb, command, parameters, verifyFiles 
                          FROM %(TableSteps)s 
                          WHERE run_id = %(run_id)d 
@@ -529,4 +545,4 @@ class ThreadStepGap(Thread):
             runThreadLoop(self.db, conn, cur)
         except Exception, e:
             printLog("Stopping threads because of error %s"%e,self.db.Log,out=True,err=True,isError=True)
-            self.db.updateRunState(SqliteDb.RUN_FAILED, cur)
+            self.db.updateRunState(SqliteDb.RUN_FAILED, cur, conn)
