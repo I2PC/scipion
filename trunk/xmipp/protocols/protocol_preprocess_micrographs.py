@@ -10,7 +10,6 @@
 #
 # Author: Carlos Oscar Sorzano, July 2011
 
-
 import glob
 from config_protocols import protDict
 from protlib_base import *
@@ -111,8 +110,13 @@ class ProtPreprocessMicrographs(XmippProtocol):
         if os.path.exists(summaryFile):
             os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --mem 2048m &")
         else:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", "There is no result yet")        
+            summaryFile=os.path.join(self.TmpDir,"micrographs.sel")
+            buildSummaryMetadata(self.WorkingDir,self.DoCtfEstimate,self.DoCtffind,summaryFile)
+            if os.path.exists(summaryFile):
+                os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --mem 2048m &")
+            else:
+                import tkMessageBox
+                tkMessageBox.showerror("Error", "There is no result yet")        
     
 def preprocessMicrograph(log,micrograph,micrographDir,DoPreprocess,Crop,Stddev,Down):
     # Decide name after preprocessing
@@ -240,27 +244,40 @@ def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,S
     MD.setValue(xmipp.MDL_CTF_K,             1.0, objId)
     MD.write(fnOut)
 
-def gatherResults(log,WorkingDir,DirMicrographs,ExtMicrographs,DoCtfEstimate,DoCtffind):
+def buildSummaryMetadata(WorkingDir,DoCtfEstimate,DoCtffind,summaryFile):
     MD=xmipp.MetaData()
-    for filename in glob.glob(DirMicrographs + '/' + ExtMicrographs):
-        micrographName = os.path.split(filename)[1]
-        shortname = os.path.splitext(micrographName)[0]
-        micrographDir = os.path.join(WorkingDir, shortname)
-
+    for filename in glob.glob(WorkingDir + '/*/micrograph.*'):
+        micrographDir=os.path.dirname(filename)
         objId=MD.addObject()
-        MD.setValue(xmipp.MDL_IMAGE, filename,objId)
+        MD.setValue(xmipp.MDL_IMAGE,filename,objId)
         if DoCtfEstimate:
-            MD.setValue(xmipp.MDL_PSD,               os.path.join(micrographDir,"xmipp_ctf.psd"),objId)
-            MD.setValue(xmipp.MDL_PSD_ENHANCED,      os.path.join(micrographDir,"xmipp_ctf_enhanced_psd.xmp"),objId)
-            MD.setValue(xmipp.MDL_CTFMODEL,          os.path.join(micrographDir,"xmipp_ctf.ctfparam"),objId)
-            MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE1, os.path.join(micrographDir,"xmipp_ctf_ctfmodel_quadrant.xmp"),objId)
-            MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE2, os.path.join(micrographDir,"xmipp_ctf_ctfmodel_halfplane.xmp"),objId)
+            ctfparam=os.path.join(micrographDir,"xmipp_ctf.ctfparam")
+            if os.path.exists(ctfparam):
+                MD.setValue(xmipp.MDL_PSD,               os.path.join(micrographDir,"xmipp_ctf.psd"),objId)
+                MD.setValue(xmipp.MDL_PSD_ENHANCED,      os.path.join(micrographDir,"xmipp_ctf_enhanced_psd.xmp"),objId)
+                MD.setValue(xmipp.MDL_CTFMODEL,          ctfparam,objId)
+                MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE1, os.path.join(micrographDir,"xmipp_ctf_ctfmodel_quadrant.xmp"),objId)
+                MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE2, os.path.join(micrographDir,"xmipp_ctf_ctfmodel_halfplane.xmp"),objId)
+            else:
+                MD.setValue(xmipp.MDL_PSD,               "NA",objId)
+                MD.setValue(xmipp.MDL_PSD_ENHANCED,      "NA",objId)
+                MD.setValue(xmipp.MDL_CTFMODEL,          "NA",objId)
+                MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE1, "NA",objId)
+                MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE2, "NA",objId)
             if DoCtffind:
-                MD.setValue(xmipp.MDL_CTFMODEL2, os.path.join(micrographDir,"ctffind.ctfparam"),objId)
-                MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE3, os.path.join(micrographDir,"ctffind_spectrum.mrc"),objId)
-    MD.sort(xmipp.MDL_IMAGE);
-    MD.write(os.path.join(WorkingDir,"micrographs.sel"))
+                ctffindCTF=os.path.join(micrographDir,"ctffind.ctfparam")
+                if os.path.exists(ctffindCTF):
+                    MD.setValue(xmipp.MDL_CTFMODEL2,         ctffindCTF,objId)
+                    MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE3, os.path.join(micrographDir,"ctffind_spectrum.mrc"),objId)
+                else:
+                    MD.setValue(xmipp.MDL_CTFMODEL2,         "NA",objId)
+                    MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE3, "NA",objId)
+    if MD.size()!=0:
+        MD.sort(xmipp.MDL_IMAGE);
+        MD.write(summaryFile)
 
-    # CTF Quality control
+def gatherResults(log,WorkingDir,DirMicrographs,ExtMicrographs,DoCtfEstimate,DoCtffind):
+    summaryFile=os.path.join(WorkingDir,"micrographs.sel")
+    buildSummaryMetadata(WorkingDir,DoCtfEstimate,DoCtffind,summaryFile)
     if DoCtfEstimate:
-        runJob(log,"xmipp_ctf_sort_psds","-i "+WorkingDir + "/micrographs.sel")
+        runJob(log,"xmipp_ctf_sort_psds","-i "+summaryFile)
