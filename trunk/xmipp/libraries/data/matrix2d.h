@@ -292,10 +292,10 @@ public:
 
     // Total number of elements
     int mdim;
-//@}
-    
-/// @name Constructors
-//@{
+    //@}
+
+    /// @name Constructors
+    //@{
     /** Empty constructor
      */
     Matrix2D()
@@ -305,7 +305,7 @@ public:
 
     Matrix2D(const FileName &fnMappedMatrix, int Ydim, int Xdim, size_t offset=0)
     {
-    	coreInit(fnMappedMatrix,Ydim,Xdim,offset);
+        coreInit(fnMappedMatrix,Ydim,Xdim,offset);
     }
 
     /** Dimension constructor
@@ -369,17 +369,17 @@ public:
      * Offset is in bytes. */
     void coreInit(const FileName &fn, int Ydim, int Xdim, size_t offset=0)
     {
-    	mdimx=Xdim;
-    	mdimy=Ydim;
-    	mdim=mdimx*mdimy;
-    	destroyData=false;
-    	mappedData=true;
-    	fdMap = open(fn.data(),  O_RDWR, S_IREAD | S_IWRITE);
-		if (fdMap == -1)
-			REPORT_ERROR(ERR_IO_NOTOPEN,fn);
-		const size_t pagesize=sysconf(_SC_PAGESIZE);
-		size_t offsetPages=(offset/pagesize)*pagesize;
-		size_t offsetDiff=offset-offsetPages;
+        mdimx=Xdim;
+        mdimy=Ydim;
+        mdim=mdimx*mdimy;
+        destroyData=false;
+        mappedData=true;
+        fdMap = open(fn.data(),  O_RDWR, S_IREAD | S_IWRITE);
+        if (fdMap == -1)
+            REPORT_ERROR(ERR_IO_NOTOPEN,fn);
+        const size_t pagesize=sysconf(_SC_PAGESIZE);
+        size_t offsetPages=(offset/pagesize)*pagesize;
+        size_t offsetDiff=offset-offsetPages;
         if ( (mdataOriginal = (char*) mmap(0,Ydim*Xdim*sizeof(T)+offsetDiff, PROT_READ | PROT_WRITE, MAP_SHARED, fdMap, offsetPages)) == MAP_FAILED )
             REPORT_ERROR(ERR_MMAP_NOTADDR,(String)"mmap failed "+integerToString(errno));
         mdata=(T*)(mdataOriginal+offsetDiff);
@@ -428,8 +428,8 @@ public:
             delete[] mdata;
         if (mappedData)
         {
-        	munmap(mdataOriginal,mdimx*mdimy*sizeof(T));
-        	close(fdMap);
+            munmap(mdataOriginal,mdimx*mdimy*sizeof(T));
+            close(fdMap);
         }
         mdata=NULL;
         mdataOriginal=NULL;
@@ -466,18 +466,18 @@ public:
 
         // Copy needed elements, fill with 0 if necessary
         if (!noCopy)
-			for (int i = 0; i < Ydim; i++)
-				for (int j = 0; j < Xdim; j++)
-				{
-					T val;
-					if (i >= mdimy)
-						val = 0;
-					else if (j >= mdimx)
-						val = 0;
-					else
-						val = mdata[i*mdimx + j];
-					new_mdata[i*Xdim+j] = val;
-				}
+            for (int i = 0; i < Ydim; i++)
+                for (int j = 0; j < Xdim; j++)
+                {
+                    T val;
+                    if (i >= mdimy)
+                        val = 0;
+                    else if (j >= mdimx)
+                        val = 0;
+                    else
+                        val = mdata[i*mdimx + j];
+                    new_mdata[i*Xdim+j] = val;
+                }
 
         // deallocate old vector
         coreDeallocate();
@@ -513,7 +513,7 @@ public:
      */
     inline void resizeNoCopy(int Ydim, int Xdim)
     {
-    	resize(Ydim, Xdim, true);
+        resize(Ydim, Xdim, true);
     }
 
     /** Resize according to a pattern.
@@ -533,9 +533,9 @@ public:
      */
     void mapToFile(const FileName &fn, int Ydim, int Xdim, size_t offset=0)
     {
-    	if (mdata!=NULL)
-    		clear();
-    	coreInit(fn,Ydim,Xdim,offset);
+        if (mdata!=NULL)
+            clear();
+        coreInit(fn,Ydim,Xdim,offset);
     }
 
     /** Extract submatrix and assign to this object.
@@ -973,7 +973,7 @@ public:
         if (!fhIn)
             REPORT_ERROR(ERR_IO_NOTEXIST,fn);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-        	fhIn >> MAT_ELEM(*this,i,j);
+        fhIn >> MAT_ELEM(*this,i,j);
         fhIn.close();
     }
 
@@ -1379,7 +1379,7 @@ public:
 template<typename T>
 bool operator==(const Matrix2D<T>& op1, const Matrix2D<T>& op2)
 {
-	return op1.equal(op2);
+    return op1.equal(op2);
 }
 
 
@@ -1483,19 +1483,29 @@ void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T2>& v2)
         v2.mdata[n] = static_cast< T2 > (v1.mdata[n]);
 }
 
+/** Conversion from one type to another.
+ * In some cases, the two types are the same. So a faster way is simply by assignment.
+ */
+template<typename T1>
+void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T1>& v2)
+{
+	v2=v1;
+}
+
 /** Sparse element.
  *  This class is used to create the SparseMatrices. */
-class SparseElement {
+class SparseElement
+{
 public:
-	size_t i;
-	size_t j;
-	double value;
+    size_t i;
+    size_t j;
+    double value;
 };
 
 /** Function to sort the sparse elements by their i,j position */
 inline bool operator< (const SparseElement& _x, const SparseElement& _y)
 {
-	return ( _x.i < _y.i) || (( _x.i== _y.i) && ( _x.j< _y.j));
+    return ( _x.i < _y.i) || (( _x.i== _y.i) && ( _x.j< _y.j));
 }
 
 /** Square, sparse matrices.
@@ -1512,86 +1522,93 @@ inline bool operator< (const SparseElement& _x, const SparseElement& _y)
  *
  * i.e.:
 
-	Vector values
-	_4_, 3, _1_, 2, _1_, 4, _3_
+ Vector values
+ _4_, 3, _1_, 2, _1_, 4, _3_
 
-	Vector jIdX
-	 1,  2,  1,  2,  2,  4,  4
+ Vector jIdX
+  1,  2,  1,  2,  2,  4,  4
 
-	Vector iIdx
-	1, 3, 5, 7
+ Vector iIdx
+ 1, 3, 5, 7
 
-	Matriz A:
-	_4_		 3		0	 0
-	_1_		 2		0	 0
-	 0		_1_		0	 4
-	 0		 0		0	_3_
+ Matriz A:
+ _4_   3  0  0
+ _1_   2  0  0
+  0  _1_  0  4
+  0   0  0 _3_
  */
-class SparseMatrix2D {
+class SparseMatrix2D
+{
 public:
-  /// The matrix is of size NxN
-  int N;
+    /// The matrix is of size NxN
+    int N;
 
-  /// List of i positions
-  MultidimArray<int>    iIdx;
-  /// List of j positions
-  MultidimArray<int>    jIdx;
-  /// List of values
-  MultidimArray<double> values;
+    /// List of i positions
+    MultidimArray<int>    iIdx;
+    /// List of j positions
+    MultidimArray<int>    jIdx;
+    /// List of values
+    MultidimArray<double> values;
 public:
-  /// Y size of the matrix
-  int nrows() const { return N; }
+    /// Y size of the matrix
+    int nrows() const
+    {
+        return N;
+    }
 
-  /// X size of the matrix
-  int ncols() const { return N; }
+    /// X size of the matrix
+    int ncols() const
+    {
+        return N;
+    }
 
-  /// Empty constructor
-  SparseMatrix2D();
+    /// Empty constructor
+    SparseMatrix2D();
 
-  /** Constructor from a set of i,j indexes and their corresponding values.
-   * N is the total dimension of the square, sparse matrix.
-   */
-  SparseMatrix2D(std::vector<SparseElement> &_elements, int _N);
+    /** Constructor from a set of i,j indexes and their corresponding values.
+     * N is the total dimension of the square, sparse matrix.
+     */
+    SparseMatrix2D(std::vector<SparseElement> &_elements, int _N);
 
-  /** Assig operator *this=X */
-  SparseMatrix2D &operator =(const SparseMatrix2D &X);
+    /** Assig operator *this=X */
+    SparseMatrix2D &operator =(const SparseMatrix2D &X);
 
-  /// Fill the sparse matrix A with the elements of the vector.
-  void sparseMatrix2DFromVector(std::vector<SparseElement> &_elements);
+    /// Fill the sparse matrix A with the elements of the vector.
+    void sparseMatrix2DFromVector(std::vector<SparseElement> &_elements);
 
-  /** Computes y=this*x
-   * y and x are vectors of size Nx1
-   */
-  void multMv(double* x, double* y);
+    /** Computes y=this*x
+     * y and x are vectors of size Nx1
+     */
+    void multMv(double* x, double* y);
 
-  /// Computes Y=this*X
-  void multMM(const SparseMatrix2D &X, SparseMatrix2D &Y);
+    /// Computes Y=this*X
+    void multMM(const SparseMatrix2D &X, SparseMatrix2D &Y);
 
-  /** Computes Y=this*D where D is a diagonal matrix.
-   * It is assumed that the size of this sparse matrix is NxN and that the length of y is N.
-  */
-  void multMMDiagonal(const MultidimArray<double> &D, SparseMatrix2D &Y);
+    /** Computes Y=this*D where D is a diagonal matrix.
+     * It is assumed that the size of this sparse matrix is NxN and that the length of y is N.
+    */
+    void multMMDiagonal(const MultidimArray<double> &D, SparseMatrix2D &Y);
 
-  /// Shows the dense Matrix asociated
-  friend std::ostream & operator << (std::ostream &out, const SparseMatrix2D &X);
+    /// Shows the dense Matrix asociated
+    friend std::ostream & operator << (std::ostream &out, const SparseMatrix2D &X);
 
-  /** Returns the value on position (row,col).
-   * The matrix goes from 0 to N-1
-   */
-  double getElemIJ(int row, int col) const;
+    /** Returns the value on position (row,col).
+     * The matrix goes from 0 to N-1
+     */
+    double getElemIJ(int row, int col) const;
 
-  /** Loads a sparse matrix from a file.
-   * Loads a SparseMatrix2D from a file which has the following format:
-   *
-   * sizeOfMatrix
-   * 1 1 	value
-   * 2 1	value
-   * .	.	.
-   * i	j	value
-   * .	.	.
-   * last_i	last_j	last_value
-   */
-  void loadMatrix(const FileName &fn);
+    /** Loads a sparse matrix from a file.
+     * Loads a SparseMatrix2D from a file which has the following format:
+     *
+     * sizeOfMatrix
+     * 1 1  value
+     * 2 1 value
+     * . . .
+     * i j value
+     * . . .
+     * last_i last_j last_value
+     */
+    void loadMatrix(const FileName &fn);
 };
 
 //@}

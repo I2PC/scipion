@@ -1051,8 +1051,8 @@ public:
       */
     void setDimensions(int Xdim, int Ydim, int Zdim, int Ndim)
     {
-    	if (Xdim*Ydim*Zdim*Ndim < 1)
-    		REPORT_ERROR(ERR_MULTIDIM_SIZE, "Dimensions' size cannot be zero nor negative.");
+        if (Xdim*Ydim*Zdim*Ndim < 1)
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Dimensions' size cannot be zero nor negative.");
         ndim=Ndim;
         zdim=Zdim;
         ydim=Ydim;
@@ -4840,6 +4840,16 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2)
     for (size_t n=nmax; n<NZYXSIZE(v1); ++n, ++ptr1)
         DIRECT_MULTIDIM_ELEM(v2,n)   = static_cast< T2 >(*ptr1);
 }
+
+/** Conversion from one type to another.
+ * In some cases, the two types are the same. So a faster way is simply by assignment.
+ */
+template<typename T1>
+void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T1>& v2)
+{
+	v2=v1;
+}
+
 
 /** MultidimArray equality.*/
 template<typename T>

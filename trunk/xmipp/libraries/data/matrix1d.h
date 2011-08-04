@@ -1441,13 +1441,13 @@ public:
         int iBlockMax=vdim/4;
         for (int i=0; i<iBlockMax; i++)
         {
-        	sum+=(*ptr1++)*(*ptr2++);
-        	sum+=(*ptr1++)*(*ptr2++);
-        	sum+=(*ptr1++)*(*ptr2++);
-        	sum+=(*ptr1++)*(*ptr2++);
+            sum+=(*ptr1++)*(*ptr2++);
+            sum+=(*ptr1++)*(*ptr2++);
+            sum+=(*ptr1++)*(*ptr2++);
+            sum+=(*ptr1++)*(*ptr2++);
         }
         for (int i=iBlockMax*4; i<vdim; ++i)
-        	sum+=(*ptr1++)*(*ptr2++);
+            sum+=(*ptr1++)*(*ptr2++);
         return sum;
     }
 
@@ -1795,8 +1795,17 @@ void typeCast(const Matrix1D<T1>& v1,  Matrix1D<T2>& v2)
     {
         v2.vdata[j] = static_cast< T2 > (v1.vdata[j]);
     }
-
 }
+
+/** Conversion from one type to another.
+ * In some cases, the two types are the same. So a faster way is simply by assignment.
+ */
+template<typename T1>
+void typeCast(const Matrix1D<T1>& v1,  Matrix1D<T1>& v2)
+{
+	v2=v1;
+}
+
 //@}
 //@}
 #endif /* MATRIX1D_H_ */
