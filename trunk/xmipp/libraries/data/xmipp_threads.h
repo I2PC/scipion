@@ -22,7 +22,7 @@ typedef void (*ThreadFunction) (ThreadArgument &arg);
 /** Class wrapping around the pthreads mutex.
  * This class will provide a more object oriented implementation
  * of a mutex, to ensure the unique access to critical regions of
- * code and other syncronization problems.
+ * code and other synchronization problems.
  */
 class Mutex
 {
@@ -90,11 +90,11 @@ public:
      * also in the barrier with the worker threads to all
      * can move on.
      * @code
-     *  //For syncronize 10 threads created by a main thread
+     *  //For synchronize 10 threads created by a main thread
      *  //you can create the barrier from the main thread
      *  Barrier * barrier = new Barrier(10);
      *  //...
-     *  //In the syncronization point
+     *  //In the synchronization point
      *  barrier->wait();
      * @endcode
      * */
@@ -150,7 +150,7 @@ private:
     int threads; ///< number of working threads.
     pthread_t * ids; ///< pthreads identifiers
     ThreadArgument * arguments; ///< Arguments passed to threads
-    Barrier * barrier; ///< barrier for syncronized between tasks.
+    Barrier * barrier; ///< barrier for synchronized between tasks.
     /// Pointer to the function to work on,
     /// if null threads should exit
     ThreadFunction workFunction;
@@ -329,7 +329,7 @@ public:
     {}
     virtual ~ThreadTaskDistributor(){};
 protected:
-    Mutex mutex; ///< Mutex to syncronize access to critical region
+    Mutex mutex; ///< Mutex to synchronize access to critical region
     virtual void lock();
     virtual void unlock();
     virtual bool distribute(size_t &first, size_t &last);
