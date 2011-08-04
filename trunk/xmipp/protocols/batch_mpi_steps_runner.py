@@ -29,14 +29,24 @@
 import sys
 from protlib_base import XmippProject, getProtocolFromModule
 from protlib_sql import runStepGaps
+from protlib_utils import printLog
 
 if __name__ == '__main__':
     script  = sys.argv[1]
     project = XmippProject()
     project.load()
     protocol = getProtocolFromModule(script, project)
+    protocol.runSetup(isMainLoop=False)
+    db = protocol.Db
     #Create database and other output files
-    protocol.runSetup()
-    runStepGaps(protocol.Db)
+    try:
+        print "Running step gaps"
+        runStepGaps(db)
+        print "After Running step gaps"
+    except Exception, e:
+        print "Stopping MPI process because of error"
+        printLog("Stopping MPI process because of error %s"%e, db.Log, out=True, err=True, isError=True)
+        db.updateRunState(db.RUN_FAILED)
+        exit(1)
     
     

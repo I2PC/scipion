@@ -268,7 +268,7 @@ class XmippProtocol(object):
         "run" should be added here'''
         pass
     
-    def runSetup(self):
+    def runSetup(self, isMainLoop=True):
         import sys
         #Redirecting standard output and error to files
         self.fOut = open(self.Out, 'a')
@@ -276,7 +276,7 @@ class XmippProtocol(object):
         sys.stdout = self.fOut
         sys.stderr = self.fErr
         self.Log = XmippLog(self.LogPrefix + ".log")
-        self.Db  = XmippProtocolDb(self)
+        self.Db  = XmippProtocolDb(self, isMainLoop)
 
     def run(self):
         '''Run of the protocols

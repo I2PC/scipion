@@ -262,7 +262,7 @@ class XmippProjectDb(SqliteDb):
         return self.cur.fetchall()
      
 class XmippProtocolDb(SqliteDb):
-    def __init__(self, protocol):
+    def __init__(self, protocol, isMainLoop=True):
         self.runBehavior = protocol.Behavior
         self.dbName = protocol.project.dbName
         self.Import = protocol.Import  
@@ -282,18 +282,14 @@ class XmippProtocolDb(SqliteDb):
             reportError("Protocol run '%(run_name)s' has not been registered in project database" % self.sqlDict)
         self.sqlDict['run_id'] = run_id
 
-        # Restart or resume
-        if self.runBehavior=="Restart":
-            _sqlCommand = 'DELETE FROM %(TableSteps)s WHERE run_id = %(run_id)d' % self.sqlDict
-            self.execSqlCommand(_sqlCommand, "Error cleaning table: %(TableSteps)s" % self.sqlDict)
-            self.insertStatus=True
-        else:
-            sqlCommand = """ SELECT step_id, iter, command, parameters, verifyFiles 
-                             FROM %(TableSteps)s 
-                             WHERE (run_id = %(run_id)d)
-                             ORDER BY step_id """ % self.sqlDict
-            self.cur.execute(sqlCommand)            
-            self.insertStatus=False
+        if isMainLoop:
+            # Restart or resume, only meaningless for execution on main protocol loop
+            if self.runBehavior=="Restart":
+                self.insertStatus = True
+                _sqlCommand = 'DELETE FROM %(TableSteps)s WHERE run_id = %(run_id)d' % self.sqlDict
+                self.execSqlCommand(_sqlCommand, "Error cleaning table: %(TableSteps)s" % self.sqlDict)
+            else:
+                self.insertStatus = False
 
     def setIteration(self,iter):
         self.iter=iter
@@ -355,11 +351,6 @@ class XmippProtocolDb(SqliteDb):
         printLog(msg, self.Log, out=True, err=True)
         
         for i in range(n):
-            #Keep the next main steps to have stop condition for parallel steps gaps
-            if i < n - 1:
-                self.nextStepId = commands[i+1]['step_id']
-            else:
-                self.nextStepId = XmippProjectDb.BIGGEST_STEP
             #Execute the step
             try:
                 self.runSingleStep(self.connection, self.cur, commands[i])
@@ -463,9 +454,10 @@ class XmippProtocolDb(SqliteDb):
         return runState == SqliteDb.RUN_STARTED 
         
     def countStepGaps(self, cursor):
-        self.sqlDict['step_id'] = self.nextStepId
         sqlCommand = """SELECT COUNT(*) FROM %(TableSteps)s 
-                        WHERE (step_id < %(step_id)d) 
+                        WHERE (step_id < 
+                          (SELECT COALESCE(MIN(step_id), 99999) 
+                             FROM %(TableSteps)s WHERE run_id=%(run_id)d AND init IS NULL AND execute_mainloop=1))
                           AND (finish IS NULL)
                           AND (execute_mainloop =  0)
                           AND (run_id=%(run_id)d) """ % self.sqlDict
@@ -479,7 +471,9 @@ class XmippProtocolDb(SqliteDb):
 # step_id is the step that will launch the process to fill previous gaps
 def runStepGapsMpi(db, script, NumberOfMpi=1):
     if NumberOfMpi > 1:
-        runJob(db.Log, "xmipp_steps_runner",  script, NumberOfMpi)
+        retcode = runJob(db.Log, "xmipp_steps_runner",  script, NumberOfMpi)
+        if retcode != 0:
+            raise XmippError('xmipp_mpi_steps_runner execution failed')
     else:
         runThreadLoop(db, db.connection, db.cur) 
            
