@@ -119,7 +119,10 @@ public:
     /// Current OTF
     MultidimArray< std::complex<double> > OTF;
     /// 3D PSF
-    Image<double> * PSF;
+    ImageGeneric  PSFGen;
+    // Transformation Matrix when reading PSF from file
+    Matrix2D<double>  T;
+
     /// Lens shape Mask
     MultidimArray<double> mask;
 
@@ -137,11 +140,11 @@ public:
 
     /* Digital Parameters */
     /// X size of the input image (object plane size)
-    double Nox;
+    int Nox;
     /// Y size of the input image (object plane size)
-    double Noy;
+    int Noy;
     /// Z size of the input image (object plane size)
-    double Noz;
+    int Noz;
     /* Maximum pixel size in image plane (Minimum resolution condition).
      The same for both axis x-y, due to the symmetry of the lens aperture */
     double dxiMax;
@@ -234,9 +237,6 @@ public:
     /** Write to file.
         An exception is thrown if the file cannot be open.*/
     void write(const FileName &fn);
-
-    /// Usage
-    void usage();
 
     /// Show the microscope parameters
     void show();

@@ -80,6 +80,8 @@ void ProgXrayProject::preRun()
 
     psf.calculateParams(dxo);
     phantom.read(projParam);
+    //Correct the rotation axis displacement in projectionParams from pixels to meters
+    projParam.raxis *= psf.dxo;
 
     // Threads stuff
     mainDataThread = new XrayThread;
@@ -117,10 +119,12 @@ void ProgXrayProject::run()
     int expectedNumProjs = FLOOR((projParam.tiltF-projParam.tilt0)/projParam.tiltStep);
     int numProjs=0;
 
-    std::cerr << "Projecting ...\n";
-    if (!(projParam.show_angles))
-        init_progress_bar(expectedNumProjs);
-
+    if (verbose > 0)
+    {
+        std::cerr << "Projecting ...\n";
+        if (!(projParam.show_angles))
+            init_progress_bar(expectedNumProjs);
+    }
     projMD.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
     double tRot,tTilt,tPsi,rot,tilt,psi;
     FileName fn_proj;  // Projection name
@@ -183,7 +187,7 @@ void ProgXrayProject::run()
             std::cout << idx << "\t" << proj.rot() << "\t"
             << proj.tilt() << "\t" << proj.psi() << std::endl;
         }
-        else if ((expectedNumProjs % XMIPP_MAX(1, numProjs / 60))  == 0)
+        else if ((expectedNumProjs % XMIPP_MAX(1, numProjs / 60))  == 0 && verbose > 0)
             progress_bar(numProjs);
 
         numProjs++;
@@ -204,16 +208,6 @@ void ProgXrayProject::run()
     return;
 }
 
-/* Produce Side Information ================================================ */
-void XrayProjPhantom::read(
-    const ParametersProjectionTomography &prm)
-{
-//    iniVol.readMapped(prm.fnPhantom);
-    iniVol.read(prm.fnPhantom);
-    MULTIDIM_ARRAY_GENERIC(iniVol).setXmippOrigin();
-    //    rotVol.resizeNoCopy(MULTIDIM_ARRAY(iniVol));
-}
-
 void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projection &P,
                                   int Ydim, int Xdim, int idxSlice)
 {
@@ -225,26 +219,6 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
     iniYdim = YSIZE(MULTIDIM_ARRAY_BASE(phantom.iniVol));
     iniZdim = ZSIZE(MULTIDIM_ARRAY_BASE(phantom.iniVol));
 
-    /* If Xdim is greater than Zdim, then as we rotate the volume the rotated Zdim must be
-     * great enough to cover all the volume.
-     */
-    double radi, theta0, theta, tilt;
-
-    radi = sqrt(iniZdim*iniZdim + iniXdim*iniXdim);
-    theta0 = atan2(iniZdim, iniXdim);
-    tilt = ((P.tilt() < 90)? P.tilt(): 180 - P.tilt())* PI / 180;
-
-    rotZdim = XMIPP_MAX(ROUND(radi * sin(ABS(tilt) + ABS(theta0))), iniZdim);
-    rotXdim = XMIPP_MAX(ROUND(radi * cos(ABS(tilt) - ABS(theta0))), iniXdim);
-    rotYdim = iniYdim;
-
-    std::cerr << "DEBUG: rotXdim: " << rotXdim << std::endl;
-    std::cerr << "DEBUG: rotZdim: " << rotZdim << std::endl;
-
-
-    //    rotZdim = iniZdim;
-    //    rotXdim = iniXdim;
-
     // Projection offset in pixels
     Matrix1D<double> offsetNV(3);
     P.getShifts(XX(offsetNV), YY(offsetNV), ZZ(offsetNV));
@@ -252,12 +226,45 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
     //    xOffsetN = P.Xoff()/psf.dxo;
     //    yOffsetN = P.Yoff()/psf.dxo;
 
+
+    /* If Xdim is greater than Zdim, then as we rotate the volume the rotated Zdim must be
+     * great enough to cover all the volume.
+     */
+    /* By now, we are going to keep it unused */
+    //    if (true)
+    //    {
+    //        double radi, theta0, theta, tilt;
+    //
+    //        radi = sqrt(iniZdim*iniZdim + iniXdim*iniXdim);
+    //        theta0 = atan2(iniZdim, iniXdim);
+    //        tilt = ((P.tilt() < 90)? P.tilt(): 180 - P.tilt())* PI / 180;
+    //
+    //        rotZdim = XMIPP_MAX(ROUND(radi * sin(ABS(tilt) + ABS(theta0))), iniZdim);
+    //        rotXdim = XMIPP_MAX(ROUND(radi * cos(ABS(tilt) - ABS(theta0))), iniXdim);
+    //        rotYdim = iniYdim;
+    //
+    //        //    rotZdim = iniZdim;
+    //        //    rotXdim = iniXdim;
+    //
+    //        newXdim = rotXdim + 2*ABS(XX(offsetNV));
+    //        newYdim = iniYdim + 2*ABS(YY(offsetNV));
+    //        newZdim = rotZdim;
+    //    }
+    //    else
+    {
+        rotXdim = iniXdim;
+        rotYdim = iniYdim;
+        rotZdim = iniZdim;
+    }
+
     newXdim = rotXdim + 2*ABS(XX(offsetNV));
     newYdim = iniYdim + 2*ABS(YY(offsetNV));
     newZdim = rotZdim;
 
     // We set the dimensions only to obtains the values of starting X,Y,Z
-    phantom.rotVol.setDimensions(rotXdim, rotYdim, rotZdim, 1);
+    //    phantom.rotVol.setDimensions(rotXdim, rotYdim, rotZdim, 1);
+    phantom.rotVol.setDimensions(newXdim, newYdim, newZdim, 1);
+
     phantom.rotVol.setXmippOrigin();
 
     zinit = STARTINGZ((phantom.rotVol));
@@ -272,7 +279,6 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
     if (XX(offsetNV) > 0)
         xinit -= 2 * XX(offsetNV);
     xend = xinit + newXdim - 1;
-
 
     if (psf.verbose > 1)
     {
@@ -311,24 +317,19 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
 
     Matrix2D<double> R, T;
 
-
-    std::cerr << "DEBUG: shiftV: " << offsetNV << std::endl;
-
-
     ZZ(offsetNV) = 0; // We are not interested in apply this Zshift
     translation3DMatrix(offsetNV, T);
     Euler_angles2matrix(P.rot(), P.tilt(), P.psi(), R, true);
 
-    std::cerr << "DEBUG: T*R: " << T*R << std::endl;
-
+    phantom.iniVol.data->setXmippOrigin();
 
     applyGeometry(1, phantom.rotVol, MULTIDIM_ARRAY_GENERIC(phantom.iniVol), T*R, IS_NOT_INV, DONT_WRAP);
 
-    Image<double> tempvol;
-
-    tempvol.data.alias(phantom.rotVol);
-
-    tempvol.write("rotvol.vol");
+    //        Image<double> tempvol;
+    //
+    //        tempvol.data.alias(phantom.rotVol);
+    //
+    //        tempvol.write("rotvol.vol");
 
     //    Euler_rotate(MULTIDIM_ARRAY_GENERIC(phantom.iniVol), P.rot(), P.tilt(), P.psi(),phantom.rotVol);
 
@@ -349,6 +350,16 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
                    -ROUND(outYDim/2) + outYDim -1,
                    -ROUND(outXDim/2) + outXDim -1);
 
+}
+
+/* Produce Side Information ================================================ */
+void XrayProjPhantom::read(
+    const ParametersProjectionTomography &prm)
+{
+    //    iniVol.readMapped(prm.fnPhantom);
+    iniVol.read(prm.fnPhantom);
+    MULTIDIM_ARRAY_GENERIC(iniVol).setXmippOrigin();
+    //    rotVol.resizeNoCopy(MULTIDIM_ARRAY(iniVol));
 }
 
 /// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
