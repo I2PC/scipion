@@ -30,7 +30,7 @@ import os
 import Tkinter as tk
 import tkMessageBox
 import tkFont
-from protlib_gui import ProtocolGUI
+from protlib_gui import ProtocolGUI, Fonts, registerFont, registerCommonFonts
 from protlib_gui_ext import ToolTip, MultiListbox, centerWindows
 from config_protocols import protDict, sections
 from protlib_base import getProtocolFromModule, XmippProject
@@ -52,12 +52,6 @@ HighlightBgColor = BgColor
 ButtonBgColor = "LightBlue"
 ButtonActiveBgColor = "LightSkyBlue"
 
-Fonts = {}
-
-def registerFont(name, **opts):
-    global Fonts
-    Fonts[name] = tkFont.Font(**opts)
-    
 def configDefaults(opts, defaults):
     for key in defaults.keys():
         if not opts.has_key(key):
@@ -180,26 +174,29 @@ class XmippProjectGUI():
         self.selectToolbarButton(run['group_name'], False)
         if self.lastSelected == run['group_name']:
             self.updateRunHistory(self.lastSelected)
-            
-    def updateRunHistory(self, protGroup):
+          
+        
+    def updateRunHistory(self, protGroup, selectFirst=True):
         #Cancel if there are pending refresh
         if self.historyRefresh:
             self.lbHist.after_cancel(self.historyRefresh)
             self.historyRefresh = None
-
-        self.runs = self.project.projectDb.selectRuns(protGroup)
+        index = 0
+        if not selectFirst:
+            index = self.lbHist.selectedIndex()
         self.lbHist.delete(0, tk.END)
-        for run in self.runs:
-            run_name = '%s_%s' % (run['protocol_name'], run['run_name'])
-            state = run['run_state']
-            stateStr = SqliteDb.StateNames[state]
-            if state == SqliteDb.RUN_STARTED:
-                stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
-            self.lbHist.insert(tk.END, (run_name, stateStr, run['last_modified']))   
+        self.runs = self.project.projectDb.selectRuns(protGroup)
         if len(self.runs) > 0:
-            self.lbHist.selection_set(0)
-            #Generate an automatic refresh after 500 ms 
-            self.historyRefresh = self.lbHist.after(3000, self.updateRunHistory, protGroup)
+            for run in self.runs:
+                run_name = '%s_%s' % (run['protocol_name'], run['run_name'])
+                state = run['run_state']
+                stateStr = SqliteDb.StateNames[state]
+                if state == SqliteDb.RUN_STARTED:
+                    stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
+                self.lbHist.insert(tk.END, (run_name, stateStr, run['last_modified']))   
+            self.lbHist.selection_set(index)
+            #Generate an automatic refresh after 3000 ms 
+            self.historyRefresh = self.lbHist.after(1000, self.updateRunHistory, protGroup, False)
         else:
             self.updateRunSelection(-1)
 
@@ -383,10 +380,7 @@ class XmippProjectGUI():
         main.rowconfigure(2, minsize=200, weight=1)
         self.Frames['main'] = main
         
-        # Create some fonts for later use
-        global Fonts
-        Fonts['button'] = tkFont.Font(family=FontName, size=FontSize, weight=tkFont.BOLD)
-        Fonts['label'] = tkFont.Font(family=FontName, size=FontSize+1, weight=tkFont.BOLD)
+        registerCommonFonts()
         
         #Create section frames and locate them
         self.createToolbarFrame(main).grid(row=1, column=0, sticky='nse', padx=5, pady=5, rowspan=2)

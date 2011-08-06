@@ -7,7 +7,6 @@ This is a compound widget that gangs multiple Tk Listboxes to a single scrollbar
 multi-column scrolled listbox. Most of the Listbox API is mirrored to make it act like the normal 
 Listbox but with multiple values per row.
 '''
-import tkMessageBox
 class MultiListbox(tk.PanedWindow):
     """MultiListbox class for creating a Grid widget"""
     def __init__(self,master,lists):
@@ -131,6 +130,11 @@ class MultiListbox(tk.PanedWindow):
             for l in self.lists:
                 l.insert(index, e[i])
                 i = i + 1
+    
+    def changetext(self, index, *elements):
+        for e in elements:
+            for l in self.lists:
+                l.itemconfig(index, text=e)        
 
     def size(self):
         return self.lists[0].size()
@@ -439,7 +443,7 @@ class FilePollTextArea(tk.Frame):
         for color in colorMap.keys():
             self.text.tag_config("tag_" + color, foreground=color)
 
-    def fillTextArea(self):
+    def fillTextArea(self, goEnd=False):
         self.text.config(state=tk.NORMAL)
         self.text.delete(1.0, tk.END)
         file = open(self.filename)
@@ -458,6 +462,8 @@ class FilePollTextArea(tk.Frame):
             lineNo+=1
         file.close()
         self.text.config(state=tk.DISABLED)
+        if goEnd:
+            self.text.see(tk.END)
         
 def changeFontSizeByDeltha(font, deltha, min=-999, max=999):
         size = font['size']
@@ -481,6 +487,7 @@ class OutputTextArea(tk.Frame):
         self.files = [fileprefix + ext for ext in self.exts]
         self.searchList = None
         self.lastSearch = None
+        self.refreshAlarm = None
         self.fontDict = {}
         self.createWidgets()
         self.master = master
@@ -538,20 +545,25 @@ class OutputTextArea(tk.Frame):
         for font in self.fontDict.values():
             changeFontSize(font, event)
               
+    def refreshOutput(self):
+        if self.refreshAlarm:
+            self.after_cancel(self.refreshAlarm)
+            self.refreshAlarm = None
+        self.taList[self.lastIndex].fillTextArea()
+        #self.refreshAlarm = self.after(2000, self.refreshOutput)
+        
     def changeSelection(self, newValue):
         if self.lastIndex != newValue:
             self.indexVar.set(newValue)
             self.taList[self.lastIndex].grid_remove()
             self.lastIndex = newValue
-            self.taList[self.lastIndex].fillTextArea()
+            self.refreshOutput()
             self.taList[self.lastIndex].grid()
             # Reset search stuff
             self.searchList = None
             self.lastSearch = None
             
     def changePosition(self, index):
-        #tkMessageBox.showinfo("test", "binding with index " + str(index), parent=self.master)
-        #return
         self.taList[self.lastIndex].text.see(index)
         
     def findText(self, dir=1):

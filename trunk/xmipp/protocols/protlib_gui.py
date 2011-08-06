@@ -31,7 +31,7 @@ import Tkinter as tk
 import tkMessageBox
 import tkFont
 from protlib_base import protocolMain, getProtocolFromModule, XmippProtocol
-from protlib_utils import loadModule, runJob
+from protlib_utils import loadModule, runJob, runImageJPlugin
 from protlib_gui_ext import centerWindows, changeFontSize
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
@@ -40,6 +40,16 @@ from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
 from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor, ButtonActiveBgColor                         
 from protlib_sql import SqliteDb
 
+Fonts = {}
+
+def registerFont(name, **opts):
+    global Fonts
+    Fonts[name] = tkFont.Font(**opts)
+
+def registerCommonFonts():
+    registerFont('button', family=FontName, size=FontSize, weight=tkFont.BOLD)
+    registerFont('label', family=FontName, size=FontSize+1, weight=tkFont.BOLD)
+    
 class ProtocolStyle():
     ''' Class to define some style settings like font, colors, etc '''
     def __init__(self, configModuleName=None):        
@@ -381,6 +391,8 @@ Optional:
         - {hidden} label on the comment line (#) marks the option as -hidden-
         - {wizzard} (WizzardFunction) this will serve to plugin a graphical wizzard
              to select some parameter
+        - {validate}(non_empty, file_exists, is_int, is_float) Impose some validating
+             on values entered by the user     
 """       
 
 class ProtocolGUI(BasicGUI):
@@ -405,7 +417,7 @@ class ProtocolGUI(BasicGUI):
     #-------------------------------------------------------------------  
         
     def addButton(self, text, cmd, underline, row, col, sticky, imageFilename=None, parent=None, tip=None):
-        f = tkFont.Font(family=self.style.FontName, size=self.style.ButtonFontSize, weight=tkFont.BOLD)
+        f = Fonts['button']
         helpImage = None
         if parent is None:
             parent = self.frame
@@ -550,9 +562,9 @@ class ProtocolGUI(BasicGUI):
                 w.widgetslist.append(entry)
                 args = None
                 if 'file' in keys:
-                    args = ['Browse', lambda: self.browse(var.tkvar, True), 'fileopen.gif', 'Browse file']
+                    args = ['Browse', lambda: self.wizardBrowse(var), 'fileopen.gif', 'Browse file']
                 elif 'dir' in keys:
-                    args = ['Browse', lambda: self.browse(var.tkvar, False), 'folderopen.gif', 'Browse folder']
+                    args = ['Browse', lambda: self.wizardBrowse(var), 'folderopen.gif', 'Browse folder']
                 elif 'run' in keys:
                     protocols = var.tags['run'].split(',')
                     runs = []
@@ -562,14 +574,24 @@ class ProtocolGUI(BasicGUI):
                     args = ['Select Run', lambda: self.selectFromList(var, list), 'wizzard.gif', 'Select run']
                 elif 'blocks' in keys:
                     #md = self.variablesDict[var.tags['blocks']].getValue()
-                    args = ['Select Blocks', lambda: self.selectFromList(var, ['block1', 'block2', 'block3']), 'wizzard.gif', 'Select blocks']
-                
+                    args = ['Select Blocks', lambda: self.selectFromList(var, ['block1', 'block2', 'block3']), 'wizard.gif', 'Select blocks']
+                elif 'wizard' in keys:
+                    func = self.wizardNotFound
+                    funcName = var.tags['wizard']
+                    if funcName in dir(self) and callable(getattr(self, funcName)):
+                        func = getattr(self, funcName)
+                    #TODO: Maybe do more validations if fu
+                    args = [funcName, lambda:func(var), 'wizard.gif', funcName]
                 if args:
                     btn = self.addButton(args[0], args[1], -1, label_row, var_column+2, 'nw', args[2], frame, args[3])
                     w.widgetslist.append(btn)
-                
                 if 'view' in keys:
-                    btn = self.addButton("View", lambda: self.viewFiles(), -1, label_row, var_column+3, 'nw', 'visualize.gif', frame, 'View file')
+                    func = self.wizardShowJ
+                    funcName = var.tags['view']
+                    if funcName in dir(self) and callable(getattr(self, funcName)):
+                        func = getattr(self, funcName)
+                    #TODO: Maybe do more validations if fu
+                    btn = self.addButton("View", lambda:func(var), -1, label_row, var_column+3, 'nw', 'visualize.gif', frame, 'View')
             if var.help:
                 btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column+4, 'nw', 'help.gif', frame, 'Show info')
                 w.widgetslist.append(btn)
@@ -586,7 +608,7 @@ class ProtocolGUI(BasicGUI):
     def fillHeader(self):
         self.master.title("Run script: %(script)s" % self.run)
         headertext  = "Xmipp Protocol: %s\n" % protDict.protocolDict[self.run['protocol_name']].title
-        headertext += "Project: %s" % self.project.projectDir 
+        headertext += "Project: %s" % os.path.basename(self.project.projectDir) 
         self.fonts = {}
         self.fonts['header'] = tkFont.Font(family=FontName, size=FontSize+2, weight=tkFont.BOLD)
         self.l1 = tk.Label(self.frame, text=headertext, fg=SectionTextColor, bg=BgColor, 
@@ -595,15 +617,6 @@ class ProtocolGUI(BasicGUI):
         self.l1.grid(row=self.getRow(), column=0, columnspan=6, sticky='ew')
         self.citerow = self.getRow()        
             
-    def browse(self, var, isFile):
-        import tkFileDialog
-        if isFile:
-            filename = tkFileDialog.askopenfilename(title="Choose file", parent=self.master)
-        else:
-            filename = tkFileDialog.askdirectory(title="Choose directory", parent=self.master)
-        if len(filename) > 0:
-            var.set(os.path.relpath(filename))
-         
     def scroll(self, event):
         if event.num == 5 or event.delta == -120:
             count = 1
@@ -643,7 +656,7 @@ class ProtocolGUI(BasicGUI):
         import re
         #Comment regex, match lines starting by # and followed by tags with values
         #of the form {tag}(value) and ending with the comment for the GUI    
-        reComment = re.compile('#\s*((?:{\s*\w+\s*}\s*(?:\([^)]*\))?)*)?\s*(.*)')
+        reComment = re.compile('#\s*((?:{\s*\w+\s*}\s*(?:\([^)]*\)\s*)?)*)?\s*(.*)')
         #This take all tags and values from previous one
         reTags = re.compile('(?:{\s*(\w+)\s*}\s*(?:\(([^)]*)\))?\s*)')
         #This is the regular expression of a Variable
@@ -795,6 +808,8 @@ class ProtocolGUI(BasicGUI):
         if len(d.result) > 0:
             index = d.result[0]
             var.setValue(list[index])
+            
+        
         
     def showHelp(self, helpmsg):
         tkMessageBox.showinfo("Help", helpmsg, parent=self.master)
@@ -852,7 +867,7 @@ class ProtocolGUI(BasicGUI):
         self.project = project
         self.init()        
         self.createBasicGUI(master)
-        self.master.option_add("*Font", self.style.Font)
+        #self.master.option_add("*Font", self.style.Font)
         #self.columnspantextlabel = 3
         #self.columntextentry = 3
         
@@ -874,8 +889,8 @@ class ProtocolGUI(BasicGUI):
             self.setRunName(self.inRunName)
             
         self.visualize_mode = visualize_mode
-        #self.fillWidgets()
-                # Add bottom row buttons
+        registerCommonFonts()
+        
     def fillGUI(self):
         if self.visualize_mode and not self.hasVisualizeOptions:
             return
@@ -892,3 +907,29 @@ class ProtocolGUI(BasicGUI):
         else:
             BasicGUI.launchGUI(self)
     
+# This group of function are called Wizzards and should help
+# to set some parameters  in the GUI, they will receive as parameters
+# ProtocolGUI instance and the variable to setup 
+# wizard functions should usually set the variable value
+# if not, can be used as viewers
+
+    def wizardNotFound(self, var):
+        tkMessageBox.showerror("Wizard not found", "The wizard '%s' for this parameter has not been found" % var.tags['wizard']
+                               , parent=self.master)
+        
+    def wizardDummy(self, var):
+        tkMessageBox.showinfo("Wizard test", "This is only a test on wizards setup", parent=self.master)
+        
+    def wizardBrowse(self, var):
+        import tkFileDialog
+        isFile = 'file' in var.tags.keys()
+        if isFile:
+            filename = tkFileDialog.askopenfilename(title="Choose file", parent=self.master)
+        else:
+            filename = tkFileDialog.askdirectory(title="Choose directory", parent=self.master)
+        if len(filename) > 0:
+            var.tkvar.set(os.path.relpath(filename))
+            
+    def wizardShowJ(self, var):
+        runImageJPlugin("512m", "xmippBrowser.txt", "-i %s" % var.tkvar.get())
+

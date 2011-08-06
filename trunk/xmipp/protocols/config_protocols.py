@@ -27,6 +27,7 @@ class ProtocolDictionary:
         self.rct = self.addProtocol('rct', 'Random Conical Tilt', '3D/RCT')
         self.projmatch = self.addProtocol('projmatch', 'Projection Matching', '3D/ProjMatch') 
         self.projsubs = self.addProtocol('subtraction', 'Partial Projection Subtraction', '3D/ProjSubs')
+        self.dummy = self.addProtocol('dummy', 'Dummy', 'Dummy')
 
 protDict=ProtocolDictionary()
 
@@ -65,7 +66,7 @@ sections = [
     ['Model Refinement', protDict.projmatch.key]])
 ,
 ('Other',
- [['Extra',protDict.projsubs.key]])
+ [['Extra',protDict.projsubs.key, protDict.dummy.key]])
 ]
 
 def getSectionByKey(prot): 

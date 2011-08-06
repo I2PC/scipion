@@ -357,7 +357,6 @@ def runImageJPlugin(memory, macro, args):
 #create a metadata file with original image name, and two other 
 #lines with variation over the original name
 def intercalate_union_3(inFileName,outFileName, src1,targ1,src2,targ2):
-    import xmipp
     mD = xmipp.MetaData(inFileName)
     mDout = xmipp.MetaData()   
     for id in mD:       
@@ -418,7 +417,6 @@ def check_angle_range(inFileName,outFileName):
 
 #compute histogram
 def compute_histogram(mD,bin,col,min,max):
-    import xmipp
     allMD = xmipp.MetaData()
     outMD = xmipp.MetaData()   
     _bin = (max-min)/bin

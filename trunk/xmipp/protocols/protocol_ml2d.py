@@ -69,6 +69,5 @@ class ProtML2D(XmippProtocol):
                              programname=program, 
                              params=params,
                              NumberOfMpi = self.NumberOfMpi,
-                             NumberOfThreads = self.NumberOfThreads,
-                             SystemFlavour = self.project.SystemFlavour)
+                             NumberOfThreads = self.NumberOfThreads)
 
