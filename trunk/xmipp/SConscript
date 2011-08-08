@@ -49,6 +49,12 @@ def AddLastSlash(string):
         str = str + '/'
     return str
 
+def SymLink(target, source, env):
+    #As the link will be in bin/ directory we need to move up
+    source = '../%s' % str(source[0])
+    link = str(target[0])
+    os.symlink(source, link)
+
 def AddBatch(name, basedir, extension=''):
     # setup
     basedir = AddLastSlash(basedir)
@@ -56,16 +62,17 @@ def AddBatch(name, basedir, extension=''):
     binprefix = os.path.join(env['prefix'], 'bin')
 
     # action
-    command = env.Command(os.path.join(basedir, fullname),
-        os.path.join(basedir, 'batch_' + name + extension), [Copy('$TARGET',
-        '$SOURCE'), Chmod('$TARGET', 0755)])
+    source = os.path.join(basedir, 'batch_' + name + extension)
+    target = os.path.join(binprefix, fullname)
+    command = env.Command(target, source,  
+        [Chmod('$SOURCE', 0755), SymLink])
 
     # alias
     alias = env.Alias(fullname, command)
-    install = env.Install(binprefix, command)
-    env.Alias(fullname, install)
+    #install = env.Install(binprefix, command)
+    #env.Alias(fullname, install)
     env.Default(alias)
-    return install
+    return command
 
 def AddProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
                includes=[], libpath=[], libs=[], cxxflags=[],
