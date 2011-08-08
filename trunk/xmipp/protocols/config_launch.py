@@ -19,9 +19,10 @@
 #--------------------------------------------------------------------------------
 
 #System flavour to use
-SystemFlavour = 'TORQUE-OPENMPI'
+SystemFlavour = "TORQUE-OPENMPI"
 #Program to launch jobs
 Program = "qsub"
+MpiProgram = "mpirun"
 #Arguments template to launch
 ArgsTemplate = "%(file)s"
 
