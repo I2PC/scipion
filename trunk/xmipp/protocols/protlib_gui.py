@@ -31,7 +31,8 @@ import Tkinter as tk
 import tkMessageBox
 import tkFont
 from protlib_base import protocolMain, getProtocolFromModule, XmippProtocol
-from protlib_utils import loadModule, runJob, runImageJPlugin, which
+from protlib_utils import loadModule, runJob, runImageJPlugin, which,\
+    runImageJPluginWithResponse
 from protlib_gui_ext import centerWindows, changeFontSize
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
@@ -935,4 +936,8 @@ class ProtocolGUI(BasicGUI):
             
     def wizardShowJ(self, var):
         runImageJPlugin("512m", "xmippBrowser.txt", "-i %s" % var.tkvar.get())
+        
+    def wizardBrowseJ(self, var):
+        msg = runImageJPluginWithResponse("512m", "xmippFileList.txt", "-d dir -p port -f f1,f2,f3")
+        var.tkvar.set(msg.replace('\n', ','))
 

@@ -326,8 +326,8 @@ def submitProtocol(protocolPath, **params):
     print "** Submiting to queue: '%s'" % command
     os.system(command)
     
-    
-def runImageJPlugin(memory, macro, args):
+ 
+def runImageJPlugin(memory, macro, args, batchMode=False):
     '''Launch an ImageJPlugin '''
     from protlib_filesystem import getXmippPath
     if len(memory) == 0:
@@ -338,9 +338,35 @@ def runImageJPlugin(memory, macro, args):
     macro = os.path.join(imagej_home, "macros", macro)
     imagej_jar = os.path.join(imagej_home, "ij.jar")
     cmd = """ java -Xmx%s -Dplugins.dir=%s -jar %s -macro %s "%s" """ % (memory, plugins_dir, imagej_jar, macro, args)
+    if batchMode:
+        cmd += " &"
     #$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$IMG $SEL $VOL $POLL"
     print cmd
     os.system(cmd)
+    
+def runImageJPluginWithResponse(memory, macro, args):
+    #Create a simple socket server to wait for response
+    HOST = ''                 # Symbolic name meaning the local host
+    PORT = 54321
+    args += " -d port %d" % PORT
+    #Launch the plugin that will send the data response over a socket
+    #runImageJPlugin(memory, macro, args, batchMode=True)
+    os.system('java SocketsTest 54321 &')
+    #Create the socket server
+    import  socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind((HOST, PORT))
+    s.listen(1)
+    conn, addr = s.accept()
+    #Read len of message (max 4 bytes)
+    msg = ''
+    while True:
+        data = conn.recv(1024)
+        msg += data
+        if not data or msg.find('__END__') !=-1: break      
+    conn.close()
+    return msg.replace('__END__', '')
     
     
 

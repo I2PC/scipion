@@ -432,7 +432,7 @@ if __name__ == '__main__':
     project = XmippProject(dir)    
     import sys
     if len(sys.argv) > 1:
-        if sys.argv[1] == "--clean":
+        if sys.argv[1] in ["--clean", "-c", "-clean"]:
             project.clean()
         else:
             reportError('Unrecognized option: %s' % sys.argv[1])
