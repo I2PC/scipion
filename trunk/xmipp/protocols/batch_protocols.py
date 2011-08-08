@@ -33,13 +33,10 @@ import tkFont
 from protlib_gui import ProtocolGUI, Fonts, registerFont, registerCommonFonts
 from protlib_gui_ext import ToolTip, MultiListbox, centerWindows
 from config_protocols import protDict, sections
+from config_protocols import FontName, FontSize
 from protlib_base import getProtocolFromModule, XmippProject
 from protlib_utils import reportError
 from protlib_sql import SqliteDb
-
-#Font
-FontName = "Helvetica"
-FontSize = 10
 
 #TextColor
 CitationTextColor = "dark olive green"
@@ -97,6 +94,12 @@ class ProjectSection(tk.Frame):
         btn = ProjectButton(self.frameButtons, text, imagePath, **opts)
         btn.pack(side=tk.LEFT, padx=5)
         return btn
+    
+    def displayButtons(self, show=True):
+        if show:
+            self.frameButtons.grid()
+        else:
+            self.frameButtons.grid_remove()
         
 class XmippProjectGUI():  
     def __init__(self, project):
@@ -179,7 +182,6 @@ class XmippProjectGUI():
         gui = ProtocolGUI()
         gui.createGUI(self.project, run, top, 
                       lambda: self.protocolSaveCallback(run), visualizeMode)
-        gui.fillGUI()
         gui.launchGUI()
         
     def protocolSaveCallback(self, run):
@@ -221,7 +223,7 @@ class XmippProjectGUI():
     def unpostMenu(self, event=None):
         if self.lastSelected:
             menu = self.lastPair()[1]
-            if menu:
+            if menu is not None:
                 menu.unpost()
             
     def postMenu(self, btn, menu):
@@ -249,10 +251,11 @@ class XmippProjectGUI():
             
     def updateRunSelection(self, index):
         state = tk.NORMAL
+        details = self.Frames['details']
         if index == -1:
             state = tk.DISABLED
             #Hide details
-            self.Frames['details'].grid_remove()
+            details.grid_remove()
         else:
             state = tk.NORMAL
             #Show details
@@ -262,9 +265,15 @@ class XmippProjectGUI():
             self.DetailsLabelsDict['Created:'].config(text=run['init'])
             self.DetailsLabelsDict['Modified:'].config(text=run['last_modified'])
             prot = getProtocolFromModule(run['script'], self.project)
-            summary = '\n'.join(prot.summary())
+            if os.path.exists(prot.WorkingDir):
+                summary = '\n'.join(prot.summary())
+                showButtons = True
+            else:
+                summary = "This protocol run has not been executed yet"
+                showButtons = False
             self.DetailsLabelsDict['Summary:'].config(text=summary)
-            self.Frames['details'].grid()
+            details.displayButtons(showButtons)
+            details.grid()
         for btn in self.runButtonsDict.values():
             btn.config(state=state)
             
@@ -403,6 +412,8 @@ class XmippProjectGUI():
         #select lastSelected
         if self.project.config.has_option('project', 'lastselected'):
             self.selectToolbarButton(self.project.config.get('project', 'lastselected'))
+        else:
+            self.Frames['details'].grid_remove()
     
     def launchGUI(self, center=True):
         if center:
