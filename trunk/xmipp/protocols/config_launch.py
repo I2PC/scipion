@@ -17,7 +17,13 @@
 #      Following vars are availables to template:
 #      - %(file)s     : file to be launched 
 #--------------------------------------------------------------------------------
+
+#System flavour to use
 SystemFlavour = 'TORQUE-OPENMPI'
+#Program to launch jobs
+Program = "qsub"
+#Arguments template to launch
+ArgsTemplate = "%(file)s"
 
 FileTemplate = """
 #!/bin/bash
@@ -53,4 +59,3 @@ cat $PBS_NODEFILE
 %(command)s
 """
 
-LaunchTemplate = "qsub %(file)s"

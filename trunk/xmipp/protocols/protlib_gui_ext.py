@@ -446,21 +446,25 @@ class FilePollTextArea(tk.Frame):
     def fillTextArea(self, goEnd=False):
         self.text.config(state=tk.NORMAL)
         self.text.delete(1.0, tk.END)
-        file = open(self.filename)
-        lineNo=1
-        for line in file:
-            tuple = findColor(line)
-            self.text.insert(tk.END, "%05d:   "%lineNo,"tag_cyan")  
-            if tuple is None:
-                self.text.insert(tk.END, line[line.rfind("\r")+1:])  
-            else:
-                color,idxInitColor,idxFinishColor,cleanText=tuple
-                if idxInitColor>0:
-                    self.text.insert(tk.END, cleanText[:(idxInitColor-1)]+" ")
-                self.text.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + color)
-                self.text.insert(tk.END, cleanText[idxFinishColor:])
-            lineNo+=1
-        file.close()
+        import os
+        if os.path.exists(self.filename):
+            file = open(self.filename)
+            lineNo=1
+            for line in file:
+                tuple = findColor(line)
+                self.text.insert(tk.END, "%05d:   "%lineNo,"tag_cyan")  
+                if tuple is None:
+                    self.text.insert(tk.END, line[line.rfind("\r")+1:])  
+                else:
+                    color,idxInitColor,idxFinishColor,cleanText=tuple
+                    if idxInitColor>0:
+                        self.text.insert(tk.END, cleanText[:(idxInitColor-1)]+" ")
+                    self.text.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + color)
+                    self.text.insert(tk.END, cleanText[idxFinishColor:])
+                lineNo+=1
+            file.close()
+        else:
+            self.text.insert(tk.END, "File '%s' doesn't exist" % self.filename) 
         self.text.config(state=tk.DISABLED)
         if goEnd:
             self.text.see(tk.END)

@@ -102,10 +102,17 @@ class XmippProjectGUI():
     def __init__(self, project):
         self.project = project
         
-    def deleteProject(self):
+    def cleanProject(self):
         if tkMessageBox.askyesno("DELETE confirmation", "You are going to DELETE all project data (runs, logs, results...Do you want to continue?"):
             self.project.clean()
             self.close()
+            
+    def deleteTmpFiles(self):
+        try:
+            self.project.deleteTmpFiles()
+            tkMessageBox.showinfo("Operation success", "All temporaly files has been successfully removed")
+        except Exception, e:
+            tkMessageBox.showerror("Operation error ", str(e))
       
     def initVariables(self):
         self.ToolbarButtonsDict = {}
@@ -131,9 +138,14 @@ class XmippProjectGUI():
     def createMainMenu(self):
         self.menubar = tk.Menu(self.root)
         self.fileMenu = tk.Menu(self.root, tearoff=0)
-        self.fileMenu.add_command(label="Delete project", command=self.deleteProject)
         self.fileMenu.add_command(label="Exit", command=self.close)
+        #File menu
         self.menubar.add_cascade(label="File", menu=self.fileMenu)
+        #Project menu
+        self.menuProject = tk.Menu(self.root, tearoff=0)
+        self.menubar.add_cascade(label="Project", menu=self.menuProject)
+        self.menuProject.add_command(label="Remove temporaly files", command=self.deleteTmpFiles)        
+        self.menuProject.add_command(label="Clean project", command=self.cleanProject)
         
     def selectRunUpDown(self, event):
         if event.keycode == 111: # Up arrow

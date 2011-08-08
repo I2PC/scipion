@@ -31,7 +31,7 @@ import Tkinter as tk
 import tkMessageBox
 import tkFont
 from protlib_base import protocolMain, getProtocolFromModule, XmippProtocol
-from protlib_utils import loadModule, runJob, runImageJPlugin
+from protlib_utils import loadModule, runJob, runImageJPlugin, which
 from protlib_gui_ext import centerWindows, changeFontSize
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
@@ -106,7 +106,7 @@ class AutoScrollbar(tk.Scrollbar):
 def createSection(parent, text):
     frame = tk.Frame(parent, bd=2, relief=tk.RAISED, bg=SectionBgColor)
     frame.columnconfigure(0, weight=1)
-    label = tk.Label(frame, text=text, fg=LabelTextColor, bg=SectionBgColor)
+    label = tk.Label(frame, text=text, fg=LabelTextColor, bg=SectionBgColor, font=Fonts['button'])
     label.grid(row=0, column=0, sticky=tk.W)        
     content = tk.Frame(frame, bg=LabelBgColor, bd=0)
     content.grid(row=1, column=0, columnspan=5, sticky=tk.NSEW, ipadx=5, ipady=5)  
@@ -489,7 +489,7 @@ class ProtocolGUI(BasicGUI):
                 var.tags['visualize'] = section.variable.tags['visualize']
             for k, v in section.variable.conditions.iteritems():
                 var.conditions[k] = v
-                
+        
         keys = var.tags.keys()
                 
         if 'expert' in keys:
@@ -710,6 +710,7 @@ class ProtocolGUI(BasicGUI):
                                 #print "DEBUG_JM: v.name: '%s', v.value: '%s'" % (v.name, v.value)
                                 self.variablesDict[v.name] = v
                                 index += 1
+                                self.checkSpecialCases(v)
                 if is_section or v.name or 'text' in v.tags.keys():
                     self.createWidget(v)
         #Update if citations found
@@ -823,6 +824,13 @@ class ProtocolGUI(BasicGUI):
         changeFontSize(self.style.Font, event, self.style.MinFontSize, self.style.MaxFontSize)
         centerWindows(self.master, self.resize() )
         
+    def checkSpecialCases(self, var):
+        if var.name == "SubmitToQueue":
+            launch = loadModule('config_launch.py')
+            if which(launch.Program) == '':
+                var.value = "False"
+                var.tags['hidden'] = True
+        
     def checkVisibility(self, event=""):
         for s in self.sectionslist:
             if s.has_question:
@@ -833,7 +841,6 @@ class ProtocolGUI(BasicGUI):
         centerWindows(self.master, self.resize() )
         self.updateScrollRegion() 
 
-    
     def fillButtons(self):
         row = self.getRow()
         row += 3
@@ -866,11 +873,8 @@ class ProtocolGUI(BasicGUI):
         self.saveCallback = saveCallback
         self.project = project
         self.init()        
+        registerCommonFonts()
         self.createBasicGUI(master)
-        #self.master.option_add("*Font", self.style.Font)
-        #self.columnspantextlabel = 3
-        #self.columntextentry = 3
-        
         self.readProtocolScript()
         self.createScrollableCanvas()
         self.fillHeader()
@@ -889,7 +893,6 @@ class ProtocolGUI(BasicGUI):
             self.setRunName(self.inRunName)
             
         self.visualize_mode = visualize_mode
-        registerCommonFonts()
         
     def fillGUI(self):
         if self.visualize_mode and not self.hasVisualizeOptions:
@@ -899,7 +902,7 @@ class ProtocolGUI(BasicGUI):
         self.master.update_idletasks()  
         self.expert_mode = 'ShowExpertOptions'in self.variablesDict and \
                             self.variablesDict['ShowExpertOptions'].getValue() == 'True'
-        self.checkVisibility()  
+        self.checkVisibility()
         
     def launchGUI(self):
         if self.visualize_mode and not self.hasVisualizeOptions:

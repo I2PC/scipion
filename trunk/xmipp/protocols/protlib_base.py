@@ -131,6 +131,16 @@ class XmippProject():
         self.cleanRun(run)
         self.projectDb.deleteRun(run)
         
+    def deleteTmpFiles(self):
+        for section, groupList in sections:
+            for group in groupList:
+                groupName = group[0]
+                runs = self.projectDb.selectRuns(groupName)
+                for run in runs:
+                    tmpDir = os.path.join(run['protocol_name'], run['run_name'], 'tmp')
+                    if os.path.exists(tmpDir):
+                        shutil.rmtree(tmpDir)
+        
             
     def getRunScriptFileName(self, protocol_name, runName):
         return os.path.join(self.runsDir, '%s_%s.py' % (protocol_name, runName))
@@ -299,6 +309,9 @@ class XmippProtocol(object):
                'source': self.scriptName
                }
             self.project.cleanRun(run)
+        #Remove temporaly files
+        if os.path.exists(self.TmpDir):
+            shutil.rmtree(self.TmpDir)
         #Initialization of log and db
         retcode = 0
         try:

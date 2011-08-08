@@ -304,14 +304,6 @@ def loadModule(modulePath, report=True):
     del sys.path[0]
     return module
         
-def loadLaunchConfig():
-    '''Load the launch config module. 
-    The config module should be in the xmipp installation folder
-    and should contains to global vars: FileTemplate and LaunchTemplate
-    '''
-    mod = loadModule('config_launch.py')
-    return (mod.FileTemplate, mod.LaunchTemplate)
-        
 def createQueueLaunchFile(outFilename, fileTemplate, params):
     '''Create the final file to launch the job to queue
     using a platform specific template (fileTemplate)
@@ -326,10 +318,11 @@ def submitProtocol(protocolPath, **params):
     configuration (command and file template) found in project settings
     This function should be called from ProjectDir
     '''
+    #Load the config module
+    launch = loadModule('config_launch.py')
     file = protocolPath.replace('.py', '.job')
-    fileTemplate, cmdTemplate = loadLaunchConfig()
-    createQueueLaunchFile(file, fileTemplate, params)
-    command = cmdTemplate % {'file': file}
+    createQueueLaunchFile(file, launch.FileTemplate, params)
+    command = "%s %s" % (launch.Program, launch.ArgsTemplate % {'file': file})
     print "** Submiting to queue: '%s'" % command
     os.system(command)
     
