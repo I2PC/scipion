@@ -40,6 +40,7 @@ from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
 from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
 from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor, ButtonActiveBgColor                         
 from protlib_sql import SqliteDb
+from xmipp import XmippError
 
 Fonts = {}
 
@@ -48,8 +49,10 @@ def registerFont(name, **opts):
     Fonts[name] = tkFont.Font(**opts)
 
 def registerCommonFonts():
-    registerFont('button', family=FontName, size=FontSize, weight=tkFont.BOLD)
-    registerFont('label', family=FontName, size=FontSize+1, weight=tkFont.BOLD)
+    if 'button' not in Fonts.keys():
+        registerFont('button', family=FontName, size=FontSize, weight=tkFont.BOLD)
+    if 'label' not in Fonts.keys():
+        registerFont('label', family=FontName, size=FontSize+1, weight=tkFont.BOLD)
     
 class ProtocolStyle():
     ''' Class to define some style settings like font, colors, etc '''
@@ -418,6 +421,7 @@ class ProtocolGUI(BasicGUI):
     #-------------------------------------------------------------------  
         
     def addButton(self, text, cmd, underline, row, col, sticky, imageFilename=None, parent=None, tip=None):
+        
         f = Fonts['button']
         helpImage = None
         if parent is None:
@@ -630,8 +634,12 @@ class ProtocolGUI(BasicGUI):
     def readProtocolScript(self):
         begin_of_header = False
         end_of_header = False    
-        script = self.run['source']    
-        f = open(script, 'r')
+        script = self.run['source'] 
+        try:   
+            f = open(script, 'r')
+        except Exception, e:
+            raise XmippError("Script read failed", "Couldn't read from script file '%s'" % script)
+        
         for line in f:
             #print "LINE: ", line
             if not begin_of_header:
@@ -831,6 +839,18 @@ class ProtocolGUI(BasicGUI):
             if which(launch.Program) == '':
                 var.value = "False"
                 var.tags['hidden'] = True
+        elif var.name == 'Behavior':
+            if not os.path.exists(self.run['script']) or not os.path.exists(self.getProtocol().WorkingDir):
+                var.value = '"Restart"'
+                var.tags['hidden'] = True
+            else:
+                var.value = '"Resume"'
+        elif var.name == "NumberOfMpi":
+           launch = loadModule('config_launch.py')         
+           if which(launch.MpiProgram) == '':
+                var.value = "False"
+                var.tags['hidden'] = True
+                
         
     def checkVisibility(self, event=""):
         for s in self.sectionslist:
@@ -870,32 +890,40 @@ class ProtocolGUI(BasicGUI):
         self.variablesDict['RunName'].setValue(value)
         
     def createGUI(self, project, run, master=None, saveCallback=None, visualize_mode=False):
-        self.run = run
-        self.saveCallback = saveCallback
-        self.project = project
-        self.init()        
-        registerCommonFonts()
-        self.createBasicGUI(master)
-        self.readProtocolScript()
-        self.createScrollableCanvas()
-        self.fillHeader()
-        self.parseHeader()
-        self.master.update_idletasks()
-        maxWidth = max([s.frame.winfo_width() for s in self.sectionslist])
-        #self.maxLabelWidth = 300
-        for section in self.sectionslist:
-            section.frame.grid_columnconfigure(0, minsize=maxWidth)
-            section.content.grid_columnconfigure(0, minsize=self.maxLabelWidth)
-            #section.content.grid_columnconfigure(1)
-            #section.content.grid_columnconfigure(2, weight=1)
-        #Set the run_name
-        if self.run:
-            self.inRunName = run['run_name']
-            self.setRunName(self.inRunName)
-            
-        self.visualize_mode = visualize_mode
+        try:
+            self.Error = None
+            self.run = run
+            self.saveCallback = saveCallback
+            self.project = project
+            self.init()        
+            registerCommonFonts()
+            self.createBasicGUI(master)
+            self.readProtocolScript()
+            self.createScrollableCanvas()
+            self.fillHeader()
+            self.parseHeader()
+            self.master.update_idletasks()
+            maxWidth = max([s.frame.winfo_width() for s in self.sectionslist])
+            #self.maxLabelWidth = 300
+            for section in self.sectionslist:
+                section.frame.grid_columnconfigure(0, minsize=maxWidth)
+                section.content.grid_columnconfigure(0, minsize=self.maxLabelWidth)
+                #section.content.grid_columnconfigure(1)
+                #section.content.grid_columnconfigure(2, weight=1)
+            #Set the run_name
+            if self.run:
+                self.inRunName = run['run_name']
+                self.setRunName(self.inRunName)
+                
+            self.visualize_mode = visualize_mode
+            self.fillGUI()
+        except Exception, e:
+            errMsg = "Couldn't create GUI. ERROR: %s\n" % e
+            tkMessageBox.showerror("GUI Creation Error", errMsg)
+            self.Error = e
+            raise
         
-    def fillGUI(self):
+    def fillGUI(self):        
         if self.visualize_mode and not self.hasVisualizeOptions:
             return
         self.fillButtons()
@@ -906,6 +934,8 @@ class ProtocolGUI(BasicGUI):
         self.checkVisibility()
         
     def launchGUI(self):
+        if self.Error:
+            return
         if self.visualize_mode and not self.hasVisualizeOptions:
             self.getProtocol().visualize()
         else:
