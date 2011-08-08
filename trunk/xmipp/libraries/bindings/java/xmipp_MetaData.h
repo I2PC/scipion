@@ -55,7 +55,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_setColumnFormat
   (JNIEnv *, jobject, jboolean);
 /*
  * Class:     xmipp_MetaData
- * Method:    write
+ * Method:    setColumnFormat
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_xmipp_MetaData_write
@@ -63,11 +63,11 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_write
 
 /*
  * Class:     xmipp_MetaData
- * Method:    write
+ * Method:    writeBlock
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_xmipp_MetaData_writeBlock
-  (JNIEnv *, jobject, jstring, jint);
+  (JNIEnv *, jobject, jstring);
 
 /*
  * Class:     xmipp_MetaData
