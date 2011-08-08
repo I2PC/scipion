@@ -22,6 +22,8 @@ public class MetaData {
 //        // (It's executed just for the first time)
 //        Arrays.sort(PATHS_FIELDS);
 //    }
+	public static final int MD_OVERWRITE = 0;
+	public static final int MD_APPEND = 1; 
 
     private String filename;
     //hold pointer to Image class in C++ space
@@ -50,8 +52,10 @@ public class MetaData {
     }
 
     public native int size();
+    public native void setColumnFormat(boolean format);
 
     public native void write(String filename) throws Exception;
+    public native void writeBlock(String filename) throws Exception;
 
     public native void print();
 

@@ -46,7 +46,13 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_read_1
  */
 JNIEXPORT jint JNICALL Java_xmipp_MetaData_size
   (JNIEnv *, jobject);
-
+/*
+ * Class:     xmipp_MetaData
+ * Method:    size
+ * Signature: ()I
+ */
+JNIEXPORT void JNICALL Java_xmipp_MetaData_setColumnFormat
+  (JNIEnv *, jobject, jboolean);
 /*
  * Class:     xmipp_MetaData
  * Method:    write
@@ -54,6 +60,14 @@ JNIEXPORT jint JNICALL Java_xmipp_MetaData_size
  */
 JNIEXPORT void JNICALL Java_xmipp_MetaData_write
   (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    write
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_MetaData_writeBlock
+  (JNIEnv *, jobject, jstring, jint);
 
 /*
  * Class:     xmipp_MetaData

@@ -79,6 +79,29 @@ JNIEXPORT jint JNICALL Java_xmipp_MetaData_size(JNIEnv *env, jobject jobj) {
 	return 0;
 }
 
+JNIEXPORT void JNICALL Java_xmipp_MetaData_setColumnFormat(JNIEnv *env, jobject jobj, jboolean format) {
+    MetaData * md = GET_INTERNAL_METADATA(jobj);
+    std::string msg = "";
+    if (md != NULL) {
+        try {
+            md->setColumnFormat(format);
+        } catch (XmippError xe) {
+            msg = xe.getDefaultMessage();
+        } catch (std::exception& e) {
+            msg = e.what();
+        } catch (...) {
+            msg = "Unhandled exception";
+        }
+    } else {
+        msg = "Metadata is null";
+    }
+
+    // If there was an exception, sends it to java environment.
+    if (!msg.empty()) {
+        handleXmippException(env, msg);
+    }
+}
+
 JNIEXPORT void JNICALL Java_xmipp_MetaData_write
 (JNIEnv *env, jobject jobj, jstring filename) {
 	std::string msg = "";
@@ -104,6 +127,33 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_write
 	if(!msg.empty()) {
 		handleXmippException(env, msg);
 	}
+}
+
+JNIEXPORT void JNICALL Java_xmipp_MetaData_writeBlock
+(JNIEnv *env, jobject jobj, jstring filename) {
+    std::string msg = "";
+    MetaData * md = GET_INTERNAL_METADATA(jobj);
+
+    if (md != NULL) {
+        const char * fnStr = env->GetStringUTFChars(filename, false);
+
+        try {
+            md->write(fnStr, MD_APPEND);
+        } catch (XmippError xe) {
+            msg = xe.getDefaultMessage();
+        } catch (std::exception& e) {
+            msg = e.what();
+        } catch (...) {
+            msg = "Unhandled exception";
+        }
+    } else {
+        msg = "Metadata is null";
+    }
+
+    // If there was an exception, sends it to java environment.
+    if(!msg.empty()) {
+        handleXmippException(env, msg);
+    }
 }
 
 JNIEXPORT void JNICALL Java_xmipp_MetaData_print
