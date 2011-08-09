@@ -586,9 +586,9 @@ class ProtocolGUI(BasicGUI):
                 w.widgetslist.append(entry)
                 args = None
                 if 'file' in keys:
-                    args = ['Browse', lambda: self.wizardBrowse(var), 'fileopen.gif', 'Browse file']
+                    args = ['Browse', lambda: self.wizardBrowseJ(var), 'fileopen.gif', 'Browse file']
                 elif 'dir' in keys:
-                    args = ['Browse', lambda: self.wizardBrowse(var), 'folderopen.gif', 'Browse folder']
+                    args = ['Browse', lambda: self.wizardBrowseJ(var), 'folderopen.gif', 'Browse folder']
                 elif 'run' in keys:
                     protocols = var.tags['run'].split(',')
                     runs = []
@@ -772,10 +772,8 @@ class ProtocolGUI(BasicGUI):
         self.checkVisibility()
         
     def save(self, event=""):
-        prot = self.getProtocol()
-        if not self.validateProtocol(prot):
+        if not self.validateInput():
             return False
-            
         try:
             runName = self.getRunName()
             if runName != self.inRunName:
@@ -817,10 +815,13 @@ class ProtocolGUI(BasicGUI):
         for s in self.sectionslist:
             for w in s.childwidgets:
                 errors += w.validate()
-        return errors
+        if len(errors) > 0:
+            tkMessageBox.showerror("Validation ERRORS", '\n'.join(errors), parent=self.master)
+            return False
+        return True
         
     def validateProtocol(self, prot):
-        errors = self.validateInput() + prot.validateBase()        
+        errors = prot.validateBase()        
         if len(errors) > 0:
             tkMessageBox.showerror("Validation ERRORS", '\n'.join(errors), parent=self.master)
             return False
@@ -830,12 +831,13 @@ class ProtocolGUI(BasicGUI):
         return getProtocolFromModule(self.run['script'], self.project)
     
     def saveExecute(self, event=""):
+        if not self.save(): #Validate user input
+            return
         prot = self.getProtocol()        
         if self.visualize_mode:
-            if self.save():
-                prot.visualize()
+            prot.visualize()
         else:
-            if self.save():
+            if self.validateProtocol(prot):
                 warnings = prot.warningsBase()
                 if len(warnings)==0 or tkMessageBox.askyesno("Confirm execution",'\n'.join(warnings), parent=self.master):
                     os.system('python %s --no_confirm &' % self.run['script'] )
@@ -996,8 +998,10 @@ class ProtocolGUI(BasicGUI):
         runImageJPlugin("512m", "xmippBrowser.txt", "-i %s" % var.tkvar.get())
         
     def wizardBrowseJ(self, var):
-        msg = runImageJPluginWithResponse("512m", "xmippFileList.txt", "-d dir -p port -f f1,f2,f3")
-        var.tkvar.set(msg.replace('\n', ','))
+        msg = runImageJPluginWithResponse("512m", "xmippFileList.txt", "")
+        msg = msg.strip()
+        if len(msg) > 0:
+            var.tkvar.set(os.path.relpath(msg.replace('\n', ',')))
         
 # This group of functions are called Validator, and should serve
 # for validation of user input for each variable

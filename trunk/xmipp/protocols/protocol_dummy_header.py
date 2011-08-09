@@ -47,11 +47,13 @@ Behavior = "Resume"
 """
 InputMd = "all_images.xmd"
 
-# {wizard}(wizardBrowseJ){validate}(IsInt) Number of part
+# {validate}(IsInt) Number of part
 """ Number of new metadatas splitted from the input one
 """
 NumberOfParts = 2
 
+# {validate}(NonEmpty) Part prefix
+Prefix = "part"
 
 #------------------------------------------------------------------------------------------
 # {section} Parallelization 

@@ -28,6 +28,7 @@
 import os
 import sys
 import xmipp
+import tkMessageBox
 
 #---------------------------------------------------------------------------
 # Logging utilities
@@ -348,24 +349,29 @@ def runImageJPluginWithResponse(memory, macro, args):
     #Create a simple socket server to wait for response
     HOST = ''                 # Symbolic name meaning the local host
     PORT = 54321
-    args += " -d port %d" % PORT
+    args += " -port %d -dir . -filter *.sel,*.xmd" % PORT
     #Launch the plugin that will send the data response over a socket
-    #runImageJPlugin(memory, macro, args, batchMode=True)
-    os.system('java SocketsTest 54321 &')
+    runImageJPlugin(memory, macro, args, batchMode=True)
+    #os.system('java SocketsTest 54321 &')
     #Create the socket server
-    import  socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind((HOST, PORT))
-    s.listen(1)
-    conn, addr = s.accept()
-    #Read len of message (max 4 bytes)
     msg = ''
-    while True:
-        data = conn.recv(1024)
-        msg += data
-        if not data or msg.find('__END__') !=-1: break      
-    conn.close()
+    try:
+        import  socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        #s.settimeout(0.0)
+        s.bind((HOST, PORT))
+        s.listen(1)
+        conn, addr = s.accept()
+        #Read len of message (max 4 bytes)
+        while True:
+            data = conn.recv(1024)
+            msg += data
+            if not data or msg.find('__END__') !=-1: break      
+        conn.close()
+    except Exception, e:
+        tkMessageBox.showerror("Error waiting for response", "No reponse, returning empty string. ERROR: " + str(e))
+    
     return msg.replace('__END__', '')
     
     

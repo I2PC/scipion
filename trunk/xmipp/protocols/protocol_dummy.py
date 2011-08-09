@@ -10,6 +10,8 @@
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 import os
+from protlib_filesystem import copyFile
+from xmipp import MetaData
 
 class ProtDummy(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -26,14 +28,15 @@ class ProtDummy(XmippProtocol):
                 ]
         
     def defineSteps(self):
-        print '*********************************************************************'
-        self.Db.insertStep('runJob', programname="xmipp_apropos", params="-k fourier")
-        tmpFile = os.path.join(self.TmpDir, "kk.txt")
-        self.Db.insertStep('createTempFile', filename=tmpFile)
-        
+        filename = self.InputMd
+        self.Db.insertStep('backupMetaData', [filename + '.backup'], filename=filename)
+        self.Db.insertStep('splitMetaData', filename=filename, parts=self.NumberOfParts)
 
-def createTempFile(log, filename):
-    f = open(filename, 'w')
-    f.write("Esto es una prueba")
-    f.close()
+def backupMetaData(log, filename):
+    pass
+    #copyFile(log, filename, filename + ".backup")
+    
+def splitMetaData(log, filename, parts):
+    md = MetaData(filename)
+    print md
 

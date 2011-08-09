@@ -30,6 +30,7 @@
 #---------------------------------------------------------------------------
 import os
 from protlib_utils import printLog
+from shutil import copyfile
 #from xmipp import *
 
 # The following are Wrappers to be used from Protocols
@@ -69,6 +70,14 @@ def deleteFile(log, filename, verbose):
     else:
         if verbose:
             printLog('Do not need to delete %s; already gone' % filename,log)
+            
+def copyFile(log, source, dest):
+    try:
+        copyfile(source, dest)
+        printLog("Copied '%s' to '%s'" % (source, dest))
+    except Exception, e:
+        printLog("Could not copy '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
+    
 
 def deleteFiles(log, filelist, verbose):
     for file in filelist:
