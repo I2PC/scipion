@@ -42,15 +42,15 @@ Behavior = "Resume"
 #-----------------------------------------------------------------------------
 # {section} Input
 #-----------------------------------------------------------------------------
-# {file}{view}Input images
-""" Metadata with input images
+# {file}{view}{validate}(PathExists)Metadata to be splitted
+""" Metadata to be splitted
 """
 InputMd = "all_images.xmd"
 
-# {wizard}(wizardBrowseJ) Reference image
-""" Reference image
+# {wizard}(wizardBrowseJ){validate}(IsInt) Number of part
+""" Number of new metadatas splitted from the input one
 """
-RefImage = ""
+NumberOfParts = 2
 
 
 #------------------------------------------------------------------------------------------

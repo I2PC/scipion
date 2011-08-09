@@ -31,8 +31,7 @@ import Tkinter as tk
 import tkMessageBox
 import tkFont
 from protlib_base import protocolMain, getProtocolFromModule, XmippProtocol
-from protlib_utils import loadModule, runJob, runImageJPlugin, which,\
-    runImageJPluginWithResponse
+from protlib_utils import loadModule, runJob, runImageJPlugin, which, runImageJPluginWithResponse
 from protlib_gui_ext import centerWindows, changeFontSize
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
@@ -253,8 +252,11 @@ class ProtocolVariable():
         self.comment = None
         self.help = None
         self.tags = {}
-        self.conditions = {}
-        self.is_string = False    
+        self.conditions = {} #map with conditions to be visible
+        self.validators = [] #list with validators for this variable
+        self.isString = False
+        self.isBoolean = False
+        self.isNumber = False    
         self.tktext = None #special text widget                       
     
     def setTags(self, tags):
@@ -290,7 +292,7 @@ class ProtocolVariable():
             self.help = self.getValue()
         if self.help:
             lines.append('"""%s"""\n' %  self.help)
-        if self.is_string:
+        if self.isString:
             template = '%s = "%s"\n\n'
         else:
             template = '%s = %s\n\n'  
@@ -329,6 +331,14 @@ class ProtocolWidget():
                 w.grid()
             else:
                 w.grid_remove()
+                
+    def validate(self):
+        errors = []
+        for v in self.variable.validators:
+            e = globals()[v](self.variable)
+            if e:
+                errors.append(e)
+        return errors
 
 """ Guidelines for python script header formatting:
 
@@ -395,7 +405,7 @@ Optional:
         - {hidden} label on the comment line (#) marks the option as -hidden-
         - {wizzard} (WizzardFunction) this will serve to plugin a graphical wizzard
              to select some parameter
-        - {validate}(non_empty, file_exists, is_int, is_float) Impose some validating
+        - {validate}(NonEmpty, PathExists, IsInt, IsFloat) Impose some validating
              on values entered by the user     
 """       
 
@@ -505,6 +515,9 @@ class ProtocolGUI(BasicGUI):
             for cond in conditions:
                 cond_name, cond_value = cond.split('=')
                 var.conditions[cond_name.strip()] = cond_value.strip()
+        
+        if 'validate' in keys:
+            var.validators = ['validator' + v.strip() for v in var.tags['validate'].split(',')]
          
         if 'text' in keys:
             #scrollbar = AutoScrollbar(frame)
@@ -525,7 +538,13 @@ class ProtocolGUI(BasicGUI):
             if var.value.startswith('"') or var.value.startswith("'"):
                 var.value = var.value.replace('"', '')
                 var.value = var.value.replace("'", '')
-                var.is_string = True
+                var.isString = True
+            elif var.value in ['True', 'False']:
+                var.isBoolean = True
+            else: #Should be a number
+                var.isNumber = True
+                if 'validatorIsInt' not in var.validators:
+                    var.validators.append('validatorIsFloat')
                 
             var.tkvar.set(var.value)
             
@@ -753,6 +772,10 @@ class ProtocolGUI(BasicGUI):
         self.checkVisibility()
         
     def save(self, event=""):
+        prot = self.getProtocol()
+        if not self.validateProtocol(prot):
+            return False
+            
         try:
             runName = self.getRunName()
             if runName != self.inRunName:
@@ -782,13 +805,22 @@ class ProtocolGUI(BasicGUI):
             f.writelines(self.post_header_lines)
             f.close()
             os.chmod(self.run['script'], 0755)
+            if self.saveCallback:
+                self.saveCallback()
         except Exception, e:
             tkMessageBox.showerror("Error saving run parameters", str(e), parent=self.master)
-        if self.saveCallback:
-            self.saveCallback()
+            return False
+        return True
     
+    def validateInput(self):
+        errors = []
+        for s in self.sectionslist:
+            for w in s.childwidgets:
+                errors += w.validate()
+        return errors
+        
     def validateProtocol(self, prot):
-        errors = prot.validateBase()        
+        errors = self.validateInput() + prot.validateBase()        
         if len(errors) > 0:
             tkMessageBox.showerror("Validation ERRORS", '\n'.join(errors), parent=self.master)
             return False
@@ -798,13 +830,13 @@ class ProtocolGUI(BasicGUI):
         return getProtocolFromModule(self.run['script'], self.project)
     
     def saveExecute(self, event=""):
-        self.save() 
         prot = self.getProtocol()        
         if self.visualize_mode:
-            prot.visualize()
+            if self.save():
+                prot.visualize()
         else:
-            if self.validateProtocol(prot):
-                warnings=prot.warningsBase()
+            if self.save():
+                warnings = prot.warningsBase()
                 if len(warnings)==0 or tkMessageBox.askyesno("Confirm execution",'\n'.join(warnings), parent=self.master):
                     os.system('python %s --no_confirm &' % self.run['script'] )
                     self.master.destroy() 
@@ -818,8 +850,6 @@ class ProtocolGUI(BasicGUI):
         if len(d.result) > 0:
             index = d.result[0]
             var.setValue(list[index])
-            
-        
         
     def showHelp(self, helpmsg):
         tkMessageBox.showinfo("Help", helpmsg, parent=self.master)
@@ -840,14 +870,12 @@ class ProtocolGUI(BasicGUI):
                 var.value = "False"
                 var.tags['hidden'] = True
         elif var.name == 'Behavior':
+            var.value = '"Resume"'
             if not os.path.exists(self.run['script']) or not os.path.exists(self.getProtocol().WorkingDir):
-                var.value = '"Restart"'
                 var.tags['hidden'] = True
-            else:
-                var.value = '"Resume"'
         elif var.name == "NumberOfMpi":
-           launch = loadModule('config_launch.py')         
-           if which(launch.MpiProgram) == '':
+            launch = loadModule('config_launch.py')         
+            if which(launch.MpiProgram) == '':
                 var.value = "False"
                 var.tags['hidden'] = True
                 
@@ -970,4 +998,40 @@ class ProtocolGUI(BasicGUI):
     def wizardBrowseJ(self, var):
         msg = runImageJPluginWithResponse("512m", "xmippFileList.txt", "-d dir -p port -f f1,f2,f3")
         var.tkvar.set(msg.replace('\n', ','))
+        
+# This group of functions are called Validator, and should serve
+# for validation of user input for each variable
+# The return value of each validator should be an error message string 
+# or None if not error
+def validatorNonEmpty(var):
+    if len(var.tkvar.get().strip()) == 0:
+        return "Input for '%s' is empty" % var.comment
+    return None
+    
+def validatorPathExists(var):
+    err = validatorNonEmpty(var)
+    if not err:
+        path = var.tkvar.get()
+        if not os.path.exists(path):
+            err = "Input path: '%s' for '%s' doesn't exist" % (path, var.comment)
+    return err  
 
+def validatorIsFloat(var):
+    err = validatorNonEmpty(var)
+    if not err:
+        try:
+            value = var.tkvar.get()
+            float(value)
+        except ValueError:
+            err = "Input value: '%s' for '%s' isn't a valid number" % (value, var.comment)
+    return err    
+
+def validatorIsInt(var):
+    err = validatorNonEmpty(var)
+    if not err:
+        value = var.tkvar.get()
+        try:
+            int(value)
+        except ValueError:
+            err = "Input value: '%s' for '%s' isn't a valid integer" % (value, var.comment)
+    return err 

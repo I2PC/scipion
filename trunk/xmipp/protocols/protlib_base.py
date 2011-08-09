@@ -432,7 +432,7 @@ def protocolMain(ProtocolClass, script=None):
                                hours = mod.QueueHours,
                                command = 'python %s --no_check' % script
                                )
-                project.updateRunState(SqliteDb.RUN_LAUNCHED)
+                project.projectDb.updateRunState(SqliteDb.RUN_LAUNCHED)
                 exit(0)
         
         return p.run()
