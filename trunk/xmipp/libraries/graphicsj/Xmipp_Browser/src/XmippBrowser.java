@@ -43,19 +43,11 @@ public class XmippBrowser implements PlugIn {
             DIR = System.getProperty("user.dir");
         }
 
-        // @TODO Remove this.
-        // -------------------------
-//        DIR = null;
-//        processArgs(string);
-        // -------------------------
-
         if (INPUT != null) {
             openFiles(INPUT, MODE, POLL);
         }
 
         if (DIR != null) {
-//            JFrameBrowser_ frameBrowser = new JFrameBrowser_(LABELS.TITLE_MAIN_WINDOW, DIR);
-//            frameBrowser.setVisible(true);
             runBrowser(DIR, FILTER, SINGLE_SELECTION);
         }
     }

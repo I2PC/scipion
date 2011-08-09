@@ -64,33 +64,27 @@ public class JFrameXmippFilesList extends javax.swing.JFrame {
     }
 
     protected boolean sendSelectedFiles() {
+        return send(panelXmippBrowser.getSelectedValues());
+    }
+
+    protected boolean send(Object items[]) {
         try {
-            System.out.println(" -- Client Started --- ");
-
-            System.out.println(" -- Client: Connecting... ");
             Socket socket = new Socket(InetAddress.getByName("127.0.0.1"), port);
-
-            System.out.println(" -- Client: Connected to: "
-                    + socket.getInetAddress().getHostName());
 
             // Get streams.
             OutputStreamWriter output = new OutputStreamWriter(socket.getOutputStream());
             output.flush();
 
-            //ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
-            Object items[] = panelXmippBrowser.getSelectedValues();
-
-            for (int i = 0; i < items.length; i++) {
-                output.write(items[i].toString() + "\n");
-                System.out.println(" -- Client: Message " + (i + 1) + "/" + items.length + " sent... ");
+            if (items != null) {
+                for (int i = 0; i < items.length; i++) {
+                    output.write(items[i].toString() + "\n");
+                }
             }
 
             output.write(EOT);
             output.flush();
-            System.out.println(" -- Client: End of transmission. ");
 
             // Closes connection.
-            //input.close();
             output.close();
             socket.close();
 
@@ -103,7 +97,13 @@ public class JFrameXmippFilesList extends javax.swing.JFrame {
     }
 
     protected void button2Clicked() {
-        dispose();
+        cancel();
+    }
+
+    void cancel() {
+        if (send(null)) {
+            dispose();
+        }
     }
 
     protected void goParent() {
@@ -125,6 +125,12 @@ public class JFrameXmippFilesList extends javax.swing.JFrame {
         jpButtons = new javax.swing.JPanel();
         jbOk = new javax.swing.JButton();
         jbCancel = new javax.swing.JButton();
+
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         jToolBar.setFloatable(false);
         jToolBar.setRollover(true);
@@ -191,6 +197,10 @@ public class JFrameXmippFilesList extends javax.swing.JFrame {
     private void jbParentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbParentActionPerformed
         goParent();
     }//GEN-LAST:event_jbParentActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        cancel();
+    }//GEN-LAST:event_formWindowClosing
     // Variables declaration - do not modify//GEN-BEGIN:variables
     javax.swing.JToolBar jToolBar;
     javax.swing.JButton jbCancel;

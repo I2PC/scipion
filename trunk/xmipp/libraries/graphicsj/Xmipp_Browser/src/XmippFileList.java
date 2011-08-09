@@ -23,12 +23,6 @@ public class XmippFileList implements PlugIn {
     private boolean SINGLE_SELECTION = false;
     private String FILTER = "";
     int PORT;
-//
-//    public XmippFileList(int PORT) {
-//        super();
-//
-//        this.PORT = PORT;
-//    }
 
     @Override
     public void run(String string) {
@@ -36,21 +30,13 @@ public class XmippFileList implements PlugIn {
             // "string" is used when called from another plugin or installed command.
             // "Macro.getOptions()" used when called from a run("command", arg) macro function.
             processArgs(Macro.getOptions().trim());
-        } else {    // From menu.
+        }
+
+        if (DIR == null) {
             DIR = System.getProperty("user.dir");
         }
 
-        // @TODO Remove this.
-        // -------------------------
-//        DIR = null;
-//        processArgs(string);
-        // -------------------------
-
-        if (DIR != null) {
-//            JFrameBrowser_ frameBrowser = new JFrameBrowser_(LABELS.TITLE_MAIN_WINDOW, DIR);
-//            frameBrowser.setVisible(true);
-            runBrowser(DIR, PORT, FILTER, SINGLE_SELECTION);
-        }
+        runBrowser(DIR, PORT, FILTER, SINGLE_SELECTION);
     }
 
     void runBrowser(String directory, int port, String expression, boolean singleSelection) {
