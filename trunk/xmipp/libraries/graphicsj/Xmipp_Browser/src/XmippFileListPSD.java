@@ -1,10 +1,10 @@
 
 import browser.COMMAND_PARAMETERS;
-import browser.filebrowsers.JFrameXmippFilesList;
-import browser.filebrowsers.JFrameXmippFilesListPSD;
+import browser.filebrowsers.JDialogXmippFilesListPSD;
 import ij.IJ;
 import ij.Macro;
 import ij.plugin.PlugIn;
+import java.awt.Frame;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -41,8 +41,13 @@ public class XmippFileListPSD implements PlugIn {
     }
 
     void runBrowser(String directory, int port, String expression, boolean singleSelection) {
-        JFrameXmippFilesListPSD frameBrowser = new JFrameXmippFilesListPSD(directory, port, expression, singleSelection);
+        IJ.getInstance().setExtendedState(Frame.ICONIFIED);
+        IJ.getInstance().setVisible(false);
+
+        JDialogXmippFilesListPSD frameBrowser = new JDialogXmippFilesListPSD(directory, port, expression, singleSelection);
         frameBrowser.setVisible(true);
+
+        IJ.getInstance().setVisible(true);
     }
 
     void processArgs(String args) {

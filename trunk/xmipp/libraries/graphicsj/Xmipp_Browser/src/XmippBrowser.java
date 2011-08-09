@@ -5,7 +5,7 @@ import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import browser.COMMAND_PARAMETERS;
-import browser.filebrowsers.JFrameXmippBrowser;
+import browser.filebrowsers.JDialogXmippBrowser;
 import browser.windows.ImagesWindowFactory;
 import ij.plugin.PlugIn;
 import java.util.LinkedList;
@@ -126,7 +126,7 @@ public class XmippBrowser implements PlugIn {
     }
 
     void runBrowser(String directory, String expression, boolean singleSelection) {
-        JFrameXmippBrowser frameBrowser = new JFrameXmippBrowser(directory, expression, singleSelection);
+        JDialogXmippBrowser frameBrowser = new JDialogXmippBrowser(directory, expression, singleSelection);
         frameBrowser.setVisible(true);
     }
 

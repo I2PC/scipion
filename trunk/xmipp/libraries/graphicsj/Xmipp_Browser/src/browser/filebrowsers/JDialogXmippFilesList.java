@@ -4,7 +4,7 @@
  */
 
 /*
- * JFrameXmippFilesList.java
+ * JDialogXmippFilesList.java
  *
  * Created on Aug 2, 2011, 5:56:47 PM
  */
@@ -22,27 +22,29 @@ import java.net.Socket;
  *
  * @author Juanjo Vega
  */
-public class JFrameXmippFilesList extends javax.swing.JFrame {
+public class JDialogXmippFilesList extends javax.swing.JDialog {//Frame {
 
     final static String EOT = "__END__";
     JPanelXmippBrowser panelXmippBrowser;
     int port;
 
-    /** Creates new form JFrameXmippFilesList */
-    public JFrameXmippFilesList(String directory, int port) {
+    /** Creates new form JDialogXmippFilesList */
+    public JDialogXmippFilesList(String directory, int port) {
         this(directory, port, false);
     }
 
-    public JFrameXmippFilesList(String directory, int port, String expression) {
+    public JDialogXmippFilesList(String directory, int port, String expression) {
         this(directory, port, expression, false);
     }
 
-    public JFrameXmippFilesList(String directory, int port, boolean singleSelection) {
+    public JDialogXmippFilesList(String directory, int port, boolean singleSelection) {
         this(directory, port, "", singleSelection);
     }
 
-    public JFrameXmippFilesList(String directory, int port, String expression, boolean singleSelection) {
-        super(LABELS.TITLE_XMIPP_FILE_SELECTOR);
+    public JDialogXmippFilesList(String directory, int port, String expression, boolean singleSelection) {
+        super();//
+        setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR);
+        setModal(true);
 
         this.port = port;
 

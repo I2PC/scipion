@@ -11,22 +11,22 @@ import java.awt.BorderLayout;
  *
  * @author Juanjo Vega
  */
-public class JFrameXmippFilesListPSD extends JFrameXmippFilesList {
+public class JDialogXmippFilesListPSD extends JDialogXmippFilesList {
 
-    /** Creates new form JFrameXmippFilesList */
-    public JFrameXmippFilesListPSD(String directory, int port) {
+    /** Creates new form JDialogXmippFilesList */
+    public JDialogXmippFilesListPSD(String directory, int port) {
         this(directory, port, false);
     }
 
-    public JFrameXmippFilesListPSD(String directory, int port, String expression) {
+    public JDialogXmippFilesListPSD(String directory, int port, String expression) {
         this(directory, port, expression, false);
     }
 
-    public JFrameXmippFilesListPSD(String directory, int port, boolean singleSelection) {
+    public JDialogXmippFilesListPSD(String directory, int port, boolean singleSelection) {
         this(directory, port, "", singleSelection);
     }
 
-    public JFrameXmippFilesListPSD(String directory, int port, String expression, boolean singleSelection) {
+    public JDialogXmippFilesListPSD(String directory, int port, String expression, boolean singleSelection) {
         super(directory, port, expression, singleSelection);
 
         setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR_PSD);

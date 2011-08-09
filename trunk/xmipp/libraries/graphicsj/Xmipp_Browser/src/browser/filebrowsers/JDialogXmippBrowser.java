@@ -21,25 +21,26 @@ import javax.swing.JButton;
  *
  * @author Juanjo Vega
  */
-public class JFrameXmippBrowser extends JFrameXmippFilesList {
+public class JDialogXmippBrowser extends JDialogXmippFilesList {
 
-    protected JButton jbCaptureWindow, jbParent;
+    protected JButton jbCaptureWindow;
 
-    public JFrameXmippBrowser(String directory) {
+    public JDialogXmippBrowser(String directory) {
         this(directory, "");
     }
 
-    public JFrameXmippBrowser(String directory, String expression) {
+    public JDialogXmippBrowser(String directory, String expression) {
         this(directory, expression, false);
     }
 
-    public JFrameXmippBrowser(String directory, boolean singleSelection) {
+    public JDialogXmippBrowser(String directory, boolean singleSelection) {
         this(directory, "", singleSelection);
     }
 
-    public JFrameXmippBrowser(String directory, String expression, boolean singleSelection) {
+    public JDialogXmippBrowser(String directory, String expression, boolean singleSelection) {
         super(directory, 0, expression, singleSelection);   // Port won't be used as method is overriden.
 
+        setModal(false);
         setTitle(LABELS.TITLE_XMIPP_BROWSER);
 
         // Toolbar buttons.
@@ -58,6 +59,10 @@ public class JFrameXmippBrowser extends JFrameXmippFilesList {
 
         jbOk.setText(LABELS.BUTTON_OPEN_AS_IMAGE);
         jbCancel.setText(LABELS.BUTTON_OPEN_AS_TABLE);
+    }
+
+    @Override
+    void cancel() {
     }
 
     @Override
