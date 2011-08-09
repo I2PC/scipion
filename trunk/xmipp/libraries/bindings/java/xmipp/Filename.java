@@ -42,27 +42,27 @@ public class Filename {
         EXTENSION_SPI,
         EXTENSION_TIF
     };
-//    private final static String[] SINGLE_IMAGES = new String[]{
-//        EXTENSION_XMP,
-//        EXTENSION_IMG,
-//        EXTENSION_HED,
-//        EXTENSION_PSD,
-//        EXTENSION_SER,
-//        EXTENSION_DM3,
-//        EXTENSION_RAW,
-//        EXTENSION_INF,
-//        EXTENSION_SPE,
-//        EXTENSION_SPI,
-//        EXTENSION_TIF
-//    };
-//    private final static String[] VOLUMES = new String[]{
-//        EXTENSION_MRC,
-//        EXTENSION_VOL
-//    };
-//    private final static String[] STACKS = new String[]{
-//        EXTENSION_MRCS,
-//        EXTENSION_STK
-//    };
+    private final static String[] SINGLE_IMAGES = new String[]{
+        EXTENSION_XMP,
+        EXTENSION_IMG,
+        EXTENSION_HED,
+        EXTENSION_PSD,
+        EXTENSION_SER,
+        EXTENSION_DM3,
+        EXTENSION_RAW,
+        EXTENSION_INF,
+        EXTENSION_SPE,
+        EXTENSION_SPI,
+        EXTENSION_TIF
+    };
+    private final static String[] VOLUMES = new String[]{
+        EXTENSION_MRC,
+        EXTENSION_VOL
+    };
+    private final static String[] STACKS = new String[]{
+        EXTENSION_MRCS,
+        EXTENSION_STK
+    };
     private final static String[] METADATAS = new String[]{
         EXTENSION_SEL,
         EXTENSION_XMD
@@ -90,24 +90,36 @@ public class Filename {
 //
 
     public static boolean isSingleImage(String filename) throws Exception {
-        ImageDouble img = new ImageDouble();
-        img.readHeader(filename);
+        try {
+            ImageDouble img = new ImageDouble();
+            img.readHeader(filename);
 
-        return img.isSingleImage();
+            return img.isSingleImage();
+        } catch (Exception ex) {
+            return filename != null && isFileType(filename, SINGLE_IMAGES);
+        }
     }
 
-    public static boolean isVolume(String filename) throws Exception {
-        ImageDouble img = new ImageDouble();
-        img.readHeader(filename);
+    public static boolean isVolume(String filename) {
+        try {
+            ImageDouble img = new ImageDouble();
+            img.readHeader(filename);
 
-        return img.isVolume();
+            return img.isVolume();
+        } catch (Exception ex) {
+            return filename != null && isFileType(filename, VOLUMES);
+        }
     }
 
     public static boolean isStack(String filename) throws Exception {
-        ImageDouble img = new ImageDouble();
-        img.readHeader(filename);
+        try {
+            ImageDouble img = new ImageDouble();
+            img.readHeader(filename);
 
-        return img.isStack();
+            return img.isStack();
+        } catch (Exception ex) {
+            return filename != null && isFileType(filename, STACKS);
+        }
     }
 
     public static boolean isMetadata(String filename) {

@@ -77,16 +77,16 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         try {
             tableModel = Filename.isVolume(filename)
                     ? new VolumeTableModel(filename) : new MDTableModel(filename);
+
+            postInit();
+
+            // Set comboBox items.
+            String labels[] = tableModel.getLabels();
+            for (int i = 0; i < labels.length; i++) {
+                jcbMDLabels.addItem(labels[i]);
+            }
         } catch (Exception e) {
             IJ.error(e.getMessage());
-        }
-
-        postInit();
-
-        // Set comboBox items.
-        String labels[] = tableModel.getLabels();
-        for (int i = 0; i < labels.length; i++) {
-            jcbMDLabels.addItem(labels[i]);
         }
     }
 
@@ -592,7 +592,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
                 table.repaint();
             }
         } else if (evt.getButton() == MouseEvent.BUTTON3) {  // Right click.
-            if(tableModel.getSelectedItems().isEmpty()){
+            if (tableModel.getSelectedItems().isEmpty()) {
                 tableModel.setSelected(view_row, view_col, true);
             }
 //            table.setRowSelectionInterval(view_row, view_row);

@@ -1,6 +1,9 @@
 
 import browser.COMMAND_PARAMETERS;
 import browser.filebrowsers.JFrameXmippFilesList;
+import ij.IJ;
+import ij.Macro;
+import ij.plugin.PlugIn;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -13,35 +16,81 @@ import org.apache.commons.cli.Options;
  *
  * @author Juanjo Vega
  */
-public class XmippFileList extends XmippBrowser {
+public class XmippFileList implements PlugIn {
 
+    // Browser
+    private String DIR;
+    private boolean SINGLE_SELECTION = false;
+    private String FILTER = "";
     int PORT;
-
-    public XmippFileList(int PORT) {
-        super();
-
-        this.PORT = PORT;
-    }
+//
+//    public XmippFileList(int PORT) {
+//        super();
+//
+//        this.PORT = PORT;
+//    }
 
     @Override
-    void runBrowser(String directory, String expression, boolean singleSelection) {
-        JFrameXmippFilesList frameBrowser = new JFrameXmippFilesList(
-                directory, PORT, expression, singleSelection);
+    public void run(String string) {
+        if (IJ.isMacro() && Macro.getOptions() != null && !Macro.getOptions().trim().isEmpty()) { // From macro.
+            // "string" is used when called from another plugin or installed command.
+            // "Macro.getOptions()" used when called from a run("command", arg) macro function.
+            processArgs(Macro.getOptions().trim());
+        } else {    // From menu.
+            DIR = System.getProperty("user.dir");
+        }
+
+        // @TODO Remove this.
+        // -------------------------
+//        DIR = null;
+//        processArgs(string);
+        // -------------------------
+
+        if (DIR != null) {
+//            JFrameBrowser_ frameBrowser = new JFrameBrowser_(LABELS.TITLE_MAIN_WINDOW, DIR);
+//            frameBrowser.setVisible(true);
+            runBrowser(DIR, PORT, FILTER, SINGLE_SELECTION);
+        }
+    }
+
+    void runBrowser(String directory, int port, String expression, boolean singleSelection) {
+        JFrameXmippFilesList frameBrowser = new JFrameXmippFilesList(directory, port, expression, singleSelection);
         frameBrowser.setVisible(true);
     }
 
-    @Override
     void processArgs(String args) {
-        super.processArgs(args);
-
         String argsList[] = args.split(" ");
         Options options = new Options();
+
+        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, COMMAND_PARAMETERS.OPTION_INPUT_DIR_DESCRIPTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, COMMAND_PARAMETERS.OPTION_FILTER);
+        options.addOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION, false, COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION);
 
         options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, COMMAND_PARAMETERS.OPTION_SOCKET_PORT_DESCRIPTION);
 
         try {
             BasicParser parser = new BasicParser();
             CommandLine cmdLine = parser.parse(options, argsList);
+
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR)) {
+                DIR = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_INPUT_DIR);
+            }
+
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_FILTER)) {
+                String filters[] = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_FILTER).split(COMMAND_PARAMETERS.FILTERS_SEPARATOR);
+
+                FILTER = "";
+                for (int i = 0; i < filters.length; i++) {
+                    FILTER += filters[i];
+                    if (i < filters.length - 1) {
+                        FILTER += " ";
+                    }
+                }
+            }
+
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION)) {
+                SINGLE_SELECTION = true;
+            }
 
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT)) {
                 PORT = Integer.valueOf(cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_SOCKET_PORT));

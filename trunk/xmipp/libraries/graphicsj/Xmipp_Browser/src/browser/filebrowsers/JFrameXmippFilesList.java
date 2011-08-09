@@ -14,7 +14,6 @@ import browser.ICONS_MANAGER;
 import browser.LABELS;
 import ij.IJ;
 import java.awt.BorderLayout;
-import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.Socket;

@@ -11,11 +11,6 @@ import browser.filebrowsers.JFrameXmippFilesListPSD;
  */
 public class XmippFileListPSD extends XmippFileList {
 
-    public XmippFileListPSD(int PORT) {
-        super(PORT);
-    }
-
-    @Override
     void runBrowser(String directory, String expression, boolean singleSelection) {
         JFrameXmippFilesListPSD frameBrowser = new JFrameXmippFilesListPSD(
                 directory, PORT, expression, singleSelection);
