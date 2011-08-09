@@ -74,6 +74,8 @@ private:
     void createWiki();
 
 protected:
+    /** Define Commons */
+    void defineCommons();
     /** Flag to check whether to run or not*/
     bool notRun;
     /** Value to store possible error codes */
@@ -305,6 +307,26 @@ public:
     virtual void run();
 }
 ;// end of class XmippMetadataProgram
+
+/** This class will serve as an interface for python scripts
+ * useful for command line parsing and help message printing
+ */
+class XmippProgramGeneric: public XmippProgram
+{
+public:
+  bool definitionComplete;
+   ///Constructor
+  XmippProgramGeneric();
+  void endDefinition();
+  virtual void read(int argc, char ** argv, bool reportErrors = true);
+
+protected:
+    void defineParams();
+    void readParams();
+    void show();
+    void run();
+}
+;// end of class XmippProgramGeneric
 
 /** This macro will be useful for define the main and run
  * an XmippProgram

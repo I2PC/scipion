@@ -31,7 +31,7 @@ void XmippProgram::initComments()
 {
     CommentList comments;
     comments.addComment("Verbosity level, 0 means no output.");
-    defaultComments["-v"]=comments;
+    defaultComments["-v"] = comments;
 }
 
 void XmippProgram::processDefaultComment(const char *param, const char *left)
@@ -42,11 +42,8 @@ void XmippProgram::processDefaultComment(const char *param, const char *left)
         addParamsLine(((String)":"+defaultComments[param].comments[i]).c_str());
 }
 
-void XmippProgram::init()
+void XmippProgram::defineCommons()
 {
-    initComments();
-    progDef = new ProgramDef();
-    this->defineParams();
     ///Add some common definitions to all Xmipp programs
     addParamsLine("== Common options ==");
     processDefaultComment("-v","[-v+ <verbose_level=1>]");
@@ -63,7 +60,14 @@ void XmippProgram::init()
     addParamsLine("==+++++ Internal section ==");
     addParamsLine("[--xmipp_write_definition* <dbname>] : Print metadata info about the program to sqlite database");
     addParamsLine("[--xmipp_write_wiki* ] : Print metadata info about the program in wiki format");
+}
 
+void XmippProgram::init()
+{
+    initComments();
+    progDef = new ProgramDef();
+    this->defineParams();
+    this->defineCommons();
     progDef->parse();
 }
 
@@ -687,3 +691,33 @@ void XmippMetadataProgram::run()
 
     postProcess();
 }
+
+XmippProgramGeneric::XmippProgramGeneric()
+{
+    initComments();
+    progDef = new ProgramDef();
+    definitionComplete = false;
+}
+
+void XmippProgramGeneric::endDefinition()
+{
+    definitionComplete = true;
+    this->defineCommons();
+    progDef->parse();
+}
+
+void XmippProgramGeneric::read(int argc, char ** argv, bool reportErrors)
+{
+    if (!definitionComplete)
+        endDefinition();
+    XmippProgram::read(argc, argv, reportErrors);
+}
+//All the following are necesary to override the base class implementation
+void XmippProgramGeneric::readParams()
+{}
+void XmippProgramGeneric::defineParams()
+{}
+void XmippProgramGeneric::show()
+{}
+void XmippProgramGeneric::run()
+{}
