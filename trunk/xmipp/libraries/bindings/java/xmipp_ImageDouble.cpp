@@ -4,10 +4,11 @@
 #include "xmipp_ExceptionsHandler.h"
 #include <data/xmipp_image.h>
 #include <data/xmipp_fft.h>
+#include <reconstruction/ctf_estimate_from_micrograph.h>
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_storeIds
-(JNIEnv *env, jclass cls) {
-	peerId = env->GetFieldID(cls, "peer", "J");
+(JNIEnv *env, jclass class_) {
+	peerId = env->GetFieldID(class_, "peer", "J");
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_create
@@ -360,4 +361,35 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_printShape
 (JNIEnv *env, jobject jobj) {
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 	std::cout << (*image) << std::endl;
+}
+
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD(
+		JNIEnv *env, jclass class_, jstring filename, jdouble downsampling) {
+	std::string msg = "";
+
+	try {
+		MultidimArray<double> enhancedPSD;
+		const char *fnStr = env->GetStringUTFChars(filename, false);
+
+		fastEstimateEnhancedPSD(fnStr, downsampling, enhancedPSD);
+
+		size_t size = enhancedPSD.getSize();
+		jdoubleArray array = env->NewDoubleArray(size);
+		env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(enhancedPSD));
+
+		return array;
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return NULL;
 }

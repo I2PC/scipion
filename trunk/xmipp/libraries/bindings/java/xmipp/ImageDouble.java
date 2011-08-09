@@ -66,7 +66,7 @@ public class ImageDouble {
 
     // Writing.
     public void write(String filename) throws Exception {
-        write(filename, ALL_IMAGES, Filename.isStackOrVolume(filename), ImageWriteMode.WRITE_OVERWRITE, CastWriteMode.CW_CAST);
+        write(filename, ALL_IMAGES, isStack(), ImageWriteMode.WRITE_OVERWRITE, CastWriteMode.CW_CAST);
     }
 
     public native void write(String filename, int select_img, boolean isStack, int mode, int castWriteMode) throws Exception;
@@ -87,6 +87,8 @@ public class ImageDouble {
     public native void setXmippOrigin() throws Exception;
 
     public native void printShape();
+
+    public native static double[] fastEstimateEnhancedPSD(String filename, double downsampling) throws Exception;
 
     //non-native functions
     //constructor
@@ -182,5 +184,21 @@ public class ImageDouble {
 
     public boolean isPSD() {
         return Filename.isPSD(filename);
+    }
+
+    public boolean isStack() {
+        return getNsize() > 1;
+    }
+
+    public boolean isVolume() {
+        return getZsize() > 1;
+    }
+
+    public boolean isStackOrVolume() {
+        return isStack() || isVolume();
+    }
+
+    public boolean isSingleImage() {
+        return !isStackOrVolume();
     }
 }

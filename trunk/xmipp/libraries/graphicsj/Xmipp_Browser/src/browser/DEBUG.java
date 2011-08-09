@@ -10,7 +10,7 @@ package browser;
  */
 public class DEBUG {
 
-    public final static boolean DEBUG = true;
+    private final static boolean DEBUG = true;
 
     public static void printMessage(String message) {
         if (DEBUG) {

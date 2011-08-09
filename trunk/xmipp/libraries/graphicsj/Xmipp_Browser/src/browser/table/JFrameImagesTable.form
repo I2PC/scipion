@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.1" encoding="UTF-8" ?>
 
 <Form version="1.5" maxVersion="1.7" type="org.netbeans.modules.form.forminfo.JFrameFormInfo">
   <SyntheticProperties>
@@ -120,17 +120,17 @@
 
           <Layout class="org.netbeans.modules.form.compat2.layouts.DesignFlowLayout"/>
           <SubComponents>
+            <Component class="javax.swing.JLabel" name="jLabel1">
+              <Properties>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="LABELS.LABEL_ZOOM" type="code"/>
+                </Property>
+              </Properties>
+            </Component>
             <Component class="javax.swing.JSpinner" name="jsZoom">
               <Properties>
                 <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
                   <SpinnerModel initial="1" minimum="1" numberType="java.lang.Integer" stepSize="1" type="number"/>
-                </Property>
-                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-                  <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                    <TitledBorder title="&lt;User Code&gt;">
-                      <Connection PropertyName="titleX" code="LABELS.LABEL_ZOOM" type="code"/>
-                    </TitledBorder>
-                  </Border>
                 </Property>
               </Properties>
               <Events>
@@ -165,15 +165,15 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jcbSortByLabelActionPerformed"/>
               </Events>
             </Component>
+            <Component class="javax.swing.JLabel" name="jLabel2">
+              <Properties>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="LABELS.LABEL_GO2IMAGE" type="code"/>
+                </Property>
+              </Properties>
+            </Component>
             <Component class="javax.swing.JSpinner" name="jsGoToImage">
               <Properties>
-                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-                  <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                    <TitledBorder title="&lt;User Code&gt;">
-                      <Connection PropertyName="titleX" code="LABELS.LABEL_GO2IMAGE" type="code"/>
-                    </TitledBorder>
-                  </Border>
-                </Property>
                 <Property name="value" type="java.lang.Object" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
                   <Connection code="1" type="code"/>
                 </Property>
@@ -234,16 +234,14 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jcbAutoAdjustColumnsActionPerformed"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JSpinner" name="jsRows">
+            <Component class="javax.swing.JLabel" name="jLabel3">
               <Properties>
-                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-                  <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                    <TitledBorder title="&lt;User Code&gt;">
-                      <Connection PropertyName="titleX" code="LABELS.LABEL_ROWS" type="code"/>
-                    </TitledBorder>
-                  </Border>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="LABELS.LABEL_ROWS" type="code"/>
                 </Property>
               </Properties>
+            </Component>
+            <Component class="javax.swing.JSpinner" name="jsRows">
               <Events>
                 <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="jsRowsStateChanged"/>
               </Events>
@@ -251,16 +249,14 @@
                 <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="4"/>
               </AuxValues>
             </Component>
-            <Component class="javax.swing.JSpinner" name="jsColumns">
+            <Component class="javax.swing.JLabel" name="jLabel4">
               <Properties>
-                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-                  <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                    <TitledBorder title="&lt;User Code&gt;">
-                      <Connection PropertyName="titleX" code="LABELS.LABEL_COLUMNS" type="code"/>
-                    </TitledBorder>
-                  </Border>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="LABELS.LABEL_COLUMNS" type="code"/>
                 </Property>
               </Properties>
+            </Component>
+            <Component class="javax.swing.JSpinner" name="jsColumns">
               <Events>
                 <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="jsColumnsStateChanged"/>
               </Events>

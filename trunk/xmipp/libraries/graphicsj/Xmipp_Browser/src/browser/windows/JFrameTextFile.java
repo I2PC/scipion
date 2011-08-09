@@ -29,7 +29,8 @@ public class JFrameTextFile extends JDialog {
 
         initComponents();
 
-        setTitle(ImagesWindowFactory.getTitle(filename, getWidth()));
+        setTitle(ImagesWindowFactory.getSortTitle(filename, getWidth(),
+                getGraphics().getFontMetrics()));
 
         loadFile(filename);
     }

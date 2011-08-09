@@ -8,13 +8,13 @@ import browser.DEBUG;
 import browser.imageitems.ImageConverter;
 import browser.imageitems.tableitems.AbstractTableImageItem;
 import browser.table.models.AbstractXmippTableModel;
-import ij.IJ;
-import ij.ImagePlus;
 import browser.table.JFrameImagesTable;
 import browser.table.micrographs.JFrameMicrographs;
 import browser.table.micrographs.ctf.CTFRecalculateImageWindow;
 import browser.table.micrographs.ctf.profile.CTFViewImageWindow;
 import browser.table.micrographs.ctf.tasks.TasksEngine;
+import ij.IJ;
+import ij.ImagePlus;
 import ij.gui.ImageWindow;
 import ij.gui.Toolbar;
 import ij.io.FileInfo;
@@ -22,6 +22,7 @@ import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
 import java.awt.Component;
+import java.awt.FontMetrics;
 import java.io.File;
 import java.util.ArrayList;
 import xmipp.Filename;
@@ -36,9 +37,9 @@ public class ImagesWindowFactory {
     private final static int UNIVERSE_W = 400, UNIVERSE_H = 400;
 //    private final static String TEMPDIR_PATH = System.getProperty("java.io.tmpdir");
 
-    public static void openFilesAsDefault(String files[], boolean poll) {
-        for (int i = 0; i < files.length; i++) {
-            openFileAsDefault(files[i], poll);
+    public static void openFilesAsDefault(String filenames[], boolean poll) {
+        for (int i = 0; i < filenames.length; i++) {
+            openFileAsDefault(filenames[i], poll);
         }
     }
 
@@ -47,14 +48,24 @@ public class ImagesWindowFactory {
     }
 
     public static void openFileAsDefault(String filename, boolean poll) {
-        if (Filename.isSingleImage(filename)) {
-            openFileAsImage(filename, poll);
-        } else if (Filename.isStackOrVolume(filename)) {
-            openFileAsTable(filename);
-        } else if (Filename.isMetadata(filename)) {
+        if (Filename.isMetadata(filename)) {
             openFileAsTable(filename);
         } else {
-            openFileAsImage(filename, poll);
+            try {
+                ImageDouble img = new ImageDouble();
+                img.readHeader(filename);
+
+                if (img.isSingleImage()) {
+                    openFileAsImage(filename, poll);
+                } else if (img.isStackOrVolume()) {
+                    openFileAsTable(filename);
+                } else {
+                    openFileAsImage(filename, poll);
+                }
+            } catch (Exception e) {
+                IJ.open(filename);
+                //IJ.error(e.getMessage());
+            }
         }
     }
 
@@ -65,7 +76,7 @@ public class ImagesWindowFactory {
 
             DEBUG.printMessage(" *** Opening: " + filename + " / nimage: " + nimage);
 
-            openFileAsImage(filename, poll);
+            openFileAsImage(filenames[i], poll);
         }
     }
 
@@ -249,16 +260,17 @@ public class ImagesWindowFactory {
         ctfView.setVisible(true);
     }
 
-    public static String getTitle(String title, int width) {
-        int strlenght = title.length() / 4; // Approximated string graphical lenght.
+    public static String getSortTitle(String title, int width, FontMetrics fontMetrics) {
+        String sort = title;
+        int strlenght = fontMetrics.stringWidth(sort);
+        int index = 0;
 
-        int toremove = strlenght - width;
+        while (strlenght > width) {
+            index++;
+            sort = "..." + title.substring(index);
+            strlenght = fontMetrics.stringWidth(sort);
+        }
 
-        int start = toremove > 0 ? toremove : 0;
-
-        String newtitle = title.substring(start, title.length());
-        String prefix = toremove > 0 ? "..." : "";
-
-        return prefix + newtitle;
+        return sort;
     }
 }

@@ -52,7 +52,7 @@ public class ImageItem extends AbstractImageItem {
                 imageInputStream.close();
             }
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            //throw new RuntimeException(ex);
         }
     }
 

@@ -4,6 +4,7 @@
  */
 package browser.table.models;
 
+import browser.LABELS;
 import browser.imageitems.tableitems.MDTableItem;
 import ij.IJ;
 import java.io.File;
@@ -37,11 +38,11 @@ public class MDTableModel extends AbstractXmippTableModel {
             if (f.exists()) {
                 try {
                     if (md == null) {
-                        md = new MetaData(currentFile);
-                    } else {
-                        long id = md.addObject();
-                        md.setValueString(MDLabel.MDL_IMAGE, currentFile, id);
+                        md = new MetaData();
                     }
+
+                    long id = md.addObject();
+                    md.setValueString(MDLabel.MDL_IMAGE, currentFile, id);
                 } catch (Exception ex) {
                     message = ex.getMessage();
                 }
@@ -61,8 +62,10 @@ public class MDTableModel extends AbstractXmippTableModel {
         this(filenames);
 
         // Set enabled/disabled
-        for (int i = 0; i < enabled.length; i++) {
-            getAllItems().get(i).setEnabled(enabled[i]);
+        if (enabled != null) {
+            for (int i = 0; i < enabled.length; i++) {
+                getAllItems().get(i).setEnabled(enabled[i]);
+            }
         }
     }
 
@@ -117,7 +120,8 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     @Override
     public String getTitle() {
-        return md.getFilename() + ": " + getSize() + " images.";
+        String title = md.getFilename();
+        return (title == null ? LABELS.TITLE_UNTITLED : title) + ": " + getSize() + " images.";
     }
 
     @Override

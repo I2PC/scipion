@@ -21,4 +21,11 @@ public class COMMAND_PARAMETERS {
     public final static String MODE_DEFAULT = "default";
     public final static String MODE_IMAGE = "image";
     public final static String MODE_TABLE = "table";
+    public final static String OPTION_SINGLE_SELECTION = "singlesel";
+    public final static String OPTION_SINGLE_SELECTION_DESCRIPTION = "Allows single files selection";
+    public final static String OPTION_FILTER = "filter";
+    public final static String FILTERS_SEPARATOR = ",";
+    public final static String OPTION_FILTER_DESCRIPTION = "Regular expression to filter";
+    public final static String OPTION_SOCKET_PORT = "port";
+    public final static String OPTION_SOCKET_PORT_DESCRIPTION = "Communications Socket";
 }

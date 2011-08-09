@@ -7,7 +7,6 @@ package browser.table.micrographs;
 import ij.IJ;
 import java.io.File;
 import java.util.LinkedList;
-
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;

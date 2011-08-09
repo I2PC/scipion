@@ -79,16 +79,28 @@ public abstract class AbstractTableImageItem {
         return selected;
     }
 
+    public boolean isStack() {
+        return dimension != null && dimension.getNimages() > 1;
+    }
+
+    public boolean isVolume() {
+        return dimension != null && dimension.getDepth() > 1;
+    }
+
+    public double getZoomScale_() {
+        return scale;
+    }
+
     public void setZoomScale(double scale) {
         this.scale = scale;
     }
 
     public int getWidth() {
-        return dimension != null ? dimension.getWidth() : 0;
+        return dimension != null ? dimension.getWidth() : ICONS_MANAGER.DEFAULT_PREVIEW_WIDTH;
     }
 
     public int getHeight() {
-        return dimension != null ? dimension.getHeight() : 0;
+        return dimension != null ? dimension.getHeight() : ICONS_MANAGER.DEFAULT_PREVIEW_HEIGHT;
     }
 
     public String getKey() {
@@ -123,7 +135,6 @@ public abstract class AbstractTableImageItem {
                 ip.setTitle(getTitle());
             } catch (Exception ex) {
                 IJ.error(ex.getMessage());
-                ex.printStackTrace();
             }
         }
 
@@ -184,7 +195,7 @@ public abstract class AbstractTableImageItem {
             image.readPreview(getPath(), w_, h_, getNSlice(), getNImage());
             ip = ImageConverter.convertToImagej(image, getTitle());
         } catch (Exception ex) {
-            System.err.println(" >>> Error loading preview: " + getKey());
+//            System.err.println(" >>> Error loading preview: " + getKey());
             ip = ICONS_MANAGER.MISSING_ITEM;
             //ex.printStackTrace();
             //throw new RuntimeException(ex);

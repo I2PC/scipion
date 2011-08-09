@@ -8,8 +8,10 @@
  *
  * Created on 21-ene-2010, 15:50:48
  */
-package browser;
+package browser.filebrowsers;
 
+import browser.ICONS_MANAGER;
+import browser.LABELS;
 import java.awt.Dimension;
 import java.awt.Image;
 import javax.swing.ImageIcon;
@@ -25,7 +27,7 @@ public class JPanelImageInfo extends javax.swing.JPanel {
     public JPanelImageInfo() {
         initComponents();
 
-        jlPreview.setPreferredSize(new Dimension(ICONS_MANAGER.PREVIEW_WIDTH, ICONS_MANAGER.PREVIEW_HEIGHT * 5 / 3));
+        jlPreview.setPreferredSize(new Dimension(ICONS_MANAGER.DEFAULT_PREVIEW_WIDTH, ICONS_MANAGER.DEFAULT_PREVIEW_HEIGHT * 5 / 3));
         jlPreview.setHorizontalAlignment(JLabel.CENTER);
 
         setImageInfo(null);

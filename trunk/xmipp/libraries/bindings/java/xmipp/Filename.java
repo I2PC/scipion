@@ -23,7 +23,7 @@ public class Filename {
     private final static String EXTENSION_SPI = ".spi";
     private final static String EXTENSION_TIF = ".tif";
     // Types of images contained by each file type.
-    private final static String[] SINGLE_IMAGES = new String[]{
+    private final static String[] XMIPP_TYPES = new String[]{
         EXTENSION_XMP,
         EXTENSION_IMG,
         EXTENSION_HED,
@@ -33,17 +33,36 @@ public class Filename {
         EXTENSION_RAW,
         EXTENSION_INF,
         EXTENSION_SPE,
+        EXTENSION_MRC,
+        EXTENSION_MRCS,
+        EXTENSION_STK,
+        EXTENSION_SEL,
+        EXTENSION_VOL,
+        EXTENSION_XMD,
         EXTENSION_SPI,
         EXTENSION_TIF
     };
-    private final static String[] VOLUMES = new String[]{
-        EXTENSION_MRC,
-        EXTENSION_VOL
-    };
-    private final static String[] STACKS = new String[]{
-        EXTENSION_MRCS,
-        EXTENSION_STK
-    };
+//    private final static String[] SINGLE_IMAGES = new String[]{
+//        EXTENSION_XMP,
+//        EXTENSION_IMG,
+//        EXTENSION_HED,
+//        EXTENSION_PSD,
+//        EXTENSION_SER,
+//        EXTENSION_DM3,
+//        EXTENSION_RAW,
+//        EXTENSION_INF,
+//        EXTENSION_SPE,
+//        EXTENSION_SPI,
+//        EXTENSION_TIF
+//    };
+//    private final static String[] VOLUMES = new String[]{
+//        EXTENSION_MRC,
+//        EXTENSION_VOL
+//    };
+//    private final static String[] STACKS = new String[]{
+//        EXTENSION_MRCS,
+//        EXTENSION_STK
+//    };
     private final static String[] METADATAS = new String[]{
         EXTENSION_SEL,
         EXTENSION_XMD
@@ -52,25 +71,51 @@ public class Filename {
     public static boolean isPSD(String filename) {
         return filename != null && filename.endsWith(EXTENSION_PSD);
     }
+//
+//    public static boolean isSingleImage(String filename) {
+//        return filename != null && (filename.contains(SEPARATOR) || isFileType(filename, SINGLE_IMAGES));
+//    }
+//
+//    public static boolean isVolume(String filename) {
+//        return filename != null && isFileType(filename, VOLUMES);
+//    }
+//
+//    public static boolean isStack(String filename) {
+//        return filename != null && isFileType(filename, STACKS);
+//    }
+//
+//    public static boolean isStackOrVolume(String filename) {
+//        return filename != null && (isStack(filename) || isVolume(filename));
+//    }
+//
 
-    public static boolean isSingleImage(String filename) {
-        return filename != null && (filename.contains(SEPARATOR) || isFileType(filename, SINGLE_IMAGES));
+    public static boolean isSingleImage(String filename) throws Exception {
+        ImageDouble img = new ImageDouble();
+        img.readHeader(filename);
+
+        return img.isSingleImage();
     }
 
-    public static boolean isVolume(String filename) {
-        return filename != null && isFileType(filename, VOLUMES);
+    public static boolean isVolume(String filename) throws Exception {
+        ImageDouble img = new ImageDouble();
+        img.readHeader(filename);
+
+        return img.isVolume();
     }
 
-    public static boolean isStack(String filename) {
-        return filename != null && isFileType(filename, STACKS);
-    }
+    public static boolean isStack(String filename) throws Exception {
+        ImageDouble img = new ImageDouble();
+        img.readHeader(filename);
 
-    public static boolean isStackOrVolume(String filename) {
-        return filename != null && (isStack(filename) || isVolume(filename));
+        return img.isStack();
     }
 
     public static boolean isMetadata(String filename) {
         return filename != null && isFileType(filename, METADATAS);
+    }
+
+    public static boolean isXmippType(String filename) {
+        return isFileType(filename, XMIPP_TYPES);
     }
 
     private static boolean isFileType(String filename, String filetypes[]) {
@@ -81,10 +126,6 @@ public class Filename {
         }
 
         return false;
-    }
-
-    public static boolean isXmippType(String filename) {
-        return isSingleImage(filename) || isStackOrVolume(filename) || isMetadata(filename);
     }
 
     // Auxiliary methods.
@@ -148,9 +189,9 @@ public class Filename {
         StringBuffer token = new StringBuffer();
 
         int i = 0;
-
         do {
-            token.append(tokensFile[i] + File.separator);
+            token.append(tokensFile[i]);
+            token.append(File.separator);
             i++;
         } while (i < tokensFile.length && baseDir.contains(token + tokensFile[i]));
 

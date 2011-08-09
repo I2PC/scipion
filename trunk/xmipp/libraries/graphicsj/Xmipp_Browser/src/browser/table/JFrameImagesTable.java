@@ -19,8 +19,10 @@ import browser.table.renderers.RowHeaderRenderer;
 import browser.windows.ImagesWindowFactory;
 import browser.DEBUG;
 import browser.LABELS;
+import browser.SpringUtilities;
 import browser.table.models.AbstractXmippTableModel;
 import browser.table.models.VolumeTableModel;
+import ij.IJ;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Point;
@@ -45,6 +47,7 @@ import javax.swing.JSpinner;
 import javax.swing.KeyStroke;
 import javax.swing.LookAndFeel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SpringLayout;
 import javax.swing.border.Border;
 import xmipp.Filename;
 
@@ -69,18 +72,14 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
     /** Creates new form JFrameImagesTable */
     public JFrameImagesTable(String filename) {
-        this(filename, 0, 0);
-    }
-
-    public JFrameImagesTable(String filenames[]) {
-        this(filenames, 0, 0);
-    }
-
-    // @TODO Clean initialRows and cols: It might not be used anymore.
-    public JFrameImagesTable(String filename, int initialRows, int initialColumns) {
         super();
 
-        tableModel = Filename.isVolume(filename) ? new VolumeTableModel(filename) : new MDTableModel(filename);
+        try {
+            tableModel = Filename.isVolume(filename)
+                    ? new VolumeTableModel(filename) : new MDTableModel(filename);
+        } catch (Exception e) {
+            IJ.error(e.getMessage());
+        }
 
         postInit();
 
@@ -91,15 +90,11 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         }
     }
 
-    public JFrameImagesTable(String filenames[], int initialRows, int initialColumns) {
-        this(filenames, null, initialRows, initialColumns);
+    public JFrameImagesTable(String filenames[]) {
+        this(filenames, null);
     }
 
     public JFrameImagesTable(String filenames[], boolean enabled[]) {
-        this(filenames, enabled, 0, 0);
-    }
-
-    public JFrameImagesTable(String filenames[], boolean enabled[], int initialRows, int initialColumns) {
         super();
 
         tableModel = new MDTableModel(filenames, enabled);
@@ -124,7 +119,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         // Sets limits for spinners.
         jsRows.setModel(new SpinnerNumberModel(1, 1, tableModel.getSize(), 1));
         jsColumns.setModel(new SpinnerNumberModel(1, 1, tableModel.getSize(), 1));
-        jsGoToImage.setModel(new SpinnerNumberModel(0, 0, tableModel.getSize() - 1, 1));
+        jsGoToImage.setModel(new SpinnerNumberModel(1, 1, tableModel.getSize(), 1));
 
         setRowHeader();
 
@@ -132,6 +127,11 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         ((JSpinner.NumberEditor) jsGoToImage.getEditor()).getTextField().setColumns(8);
         ((JSpinner.NumberEditor) jsRows.getEditor()).getTextField().setColumns(8);
         ((JSpinner.NumberEditor) jsColumns.getEditor()).getTextField().setColumns(8);
+
+        jpDisplay.setLayout(new SpringLayout());
+        SpringUtilities.makeCompactGrid(jpDisplay, 1, 7, 0, 0, 3, 3);
+        jpStructure.setLayout(new SpringLayout());
+        SpringUtilities.makeCompactGrid(jpStructure, 1, 5, 0, 0, 3, 3);
 
         // Stacks will be "auto-normalized".
         setNormalized(tableModel.isVolume());
@@ -226,7 +226,8 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     }
 
     private void autoAdjustColumns() {
-        tableModel.autoAdjustColumns(jsPanel.getViewportBorderBounds().width - jsPanel.getVerticalScrollBar().getWidth(),
+        tableModel.autoAdjustColumns(
+                jsPanel.getVisibleRect().width,
                 table.getIntercellSpacing().width);
 
         jsRows.setValue(tableModel.getRowCount());
@@ -235,7 +236,10 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
     private void setInitialValues() {
         if (tableModel.getSize() > 0) {
-            setZoom((int) (getInitialScale() * 100));
+            double scale = tableModel.getInitialZoomScale(
+                    jsPanel.getVisibleRect().width,
+                    table.getIntercellSpacing().width);
+            setZoom((int) (scale * 100));
 
             setAutoAdjustColumns(true);
         } else {
@@ -246,15 +250,8 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
             jsColumns.setEnabled(false);
             jsGoToImage.setEnabled(false);
         }
-    }
 
-    private double getInitialScale() {
-        double W = jsPanel.getVisibleRect().width;
-        double w = ((AbstractTableImageItem) tableModel.getValueAt(0, 0)).getWidth();
-
-        double scale = W / w;
-
-        return scale > 1.0 ? 1.0 : scale;
+        updateTable();
     }
 
     private void setZoom(int zoom) {
@@ -292,10 +289,10 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         jcbAutoAdjustColumns.setSelected(autoAdjustColumns);
 
         this.autoAdjustColumns = autoAdjustColumns;
-
-        if (autoAdjustColumns) {
-            autoAdjustColumns();
-        }
+//
+//        if (autoAdjustColumns) {
+//            autoAdjustColumns();
+//        }
 
         jsColumns.setEnabled(!jcbAutoAdjustColumns.isSelected());
         jsRows.setEnabled(!jcbAutoAdjustColumns.isSelected());
@@ -362,16 +359,20 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         jbTo3D = new javax.swing.JButton();
         jpCenter = new javax.swing.JPanel();
         jpDisplay = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
         jsZoom = new javax.swing.JSpinner();
         jcbShowLabels = new javax.swing.JCheckBox();
         jcbMDLabels = new javax.swing.JComboBox();
         jcbSortByLabel = new javax.swing.JCheckBox();
+        jLabel2 = new javax.swing.JLabel();
         jsGoToImage = new javax.swing.JSpinner();
         jsPanel = new javax.swing.JScrollPane();
         table = new javax.swing.JTable();
         jpStructure = new javax.swing.JPanel();
         jcbAutoAdjustColumns = new javax.swing.JCheckBox();
+        jLabel3 = new javax.swing.JLabel();
         jsRows = new javax.swing.JSpinner();
+        jLabel4 = new javax.swing.JLabel();
         jsColumns = new javax.swing.JSpinner();
 
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -446,8 +447,10 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
         jpCenter.setLayout(new java.awt.BorderLayout());
 
+        jLabel1.setText(LABELS.LABEL_ZOOM);
+        jpDisplay.add(jLabel1);
+
         jsZoom.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(1), null, Integer.valueOf(1)));
-        jsZoom.setBorder(javax.swing.BorderFactory.createTitledBorder(LABELS.LABEL_ZOOM));
         jsZoom.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 jsZoomStateChanged(evt);
@@ -478,7 +481,9 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         });
         jpDisplay.add(jcbSortByLabel);
 
-        jsGoToImage.setBorder(javax.swing.BorderFactory.createTitledBorder(LABELS.LABEL_GO2IMAGE));
+        jLabel2.setText(LABELS.LABEL_GO2IMAGE);
+        jpDisplay.add(jLabel2);
+
         jsGoToImage.setValue(1);
         jsGoToImage.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
@@ -508,7 +513,9 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         });
         jpStructure.add(jcbAutoAdjustColumns);
 
-        jsRows.setBorder(javax.swing.BorderFactory.createTitledBorder(LABELS.LABEL_ROWS));
+        jLabel3.setText(LABELS.LABEL_ROWS);
+        jpStructure.add(jLabel3);
+
         jsRows.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 jsRowsStateChanged(evt);
@@ -516,7 +523,9 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         });
         jpStructure.add(jsRows);
 
-        jsColumns.setBorder(javax.swing.BorderFactory.createTitledBorder(LABELS.LABEL_COLUMNS));
+        jLabel4.setText(LABELS.LABEL_COLUMNS);
+        jpStructure.add(jLabel4);
+
         jsColumns.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 jsColumnsStateChanged(evt);
@@ -541,8 +550,8 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         setAutoAdjustColumns(jcbAutoAdjustColumns.isSelected());
     }//GEN-LAST:event_jcbAutoAdjustColumnsActionPerformed
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
-        setInitialValues();
         pack();
+        setInitialValues();
     }//GEN-LAST:event_formWindowOpened
     private void jsRowsStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jsRowsStateChanged
         if (!isUpdating) {
@@ -555,7 +564,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         }
 }//GEN-LAST:event_jsColumnsStateChanged
     private void jsGoToImageStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jsGoToImageStateChanged
-        goToImage((Integer) jsGoToImage.getValue());
+        goToImage((Integer) jsGoToImage.getValue() - 1);
 }//GEN-LAST:event_jsGoToImageStateChanged
     private void formComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_formComponentResized
         startUpdater();
@@ -583,14 +592,17 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
                 table.repaint();
             }
         } else if (evt.getButton() == MouseEvent.BUTTON3) {  // Right click.
-            table.setRowSelectionInterval(view_row, view_row);
-            table.setColumnSelectionInterval(view_col, view_col);
-
-            if (!evt.isControlDown()) {
-                tableModel.clearSelection();
+            if(tableModel.getSelectedItems().isEmpty()){
+                tableModel.setSelected(view_row, view_col, true);
             }
-
-            tableModel.setSelected(view_row, view_col, true);
+//            table.setRowSelectionInterval(view_row, view_row);
+//            table.setColumnSelectionInterval(view_col, view_col);
+//
+//            if (!evt.isControlDown()) {
+//                tableModel.clearSelection();
+//            }
+//
+//            tableModel.setSelected(view_row, view_col, true);
 
             jpopUpMenuTable.show(evt.getComponent(), evt.getX(), evt.getY());
         }
@@ -627,6 +639,10 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         updateTable();
     }//GEN-LAST:event_jcbSortByLabelActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JButton jbMean;
     private javax.swing.JButton jbStdDev;
     private javax.swing.JButton jbTo3D;

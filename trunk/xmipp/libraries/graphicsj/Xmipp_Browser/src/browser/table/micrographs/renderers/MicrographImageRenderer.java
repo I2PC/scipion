@@ -20,6 +20,12 @@ public class MicrographImageRenderer extends MicrographRowDisablerRenderer {
     public static final int CELL_HEIGHT = 128;
     public final static int CELL_WIDTH_MIN = 50;
 
+    public MicrographImageRenderer() {
+        super();
+
+        setHorizontalAlignment(MicrographImageRenderer.CENTER);
+    }
+
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         MicrographsTableImageItem item = (MicrographsTableImageItem) value;

@@ -94,7 +94,7 @@ public class MetaData {
         String value = getValueString(label, objId);
 
         // Try to fix paths.
-        if (fixPaths && isPathField(label)) {
+        if (fixPaths && filename != null && isPathField(label)) {
             value = fixPath(value);
         }
 
@@ -117,11 +117,11 @@ public class MetaData {
     public native boolean getValueBoolean(int label, long objId);
 
     public String getFilename() {
-        return Filename.getFilename(filename);
+        return filename;//Filename.getFilename(filename);
     }
 
     public String getBaseDir() {
-        File f = new File(getFilename());
+        File f = new File(filename);
         f = new File(f.getAbsolutePath());
 
         return f.getParent();

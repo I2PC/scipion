@@ -73,7 +73,8 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     public JFrameMicrographs(String filename) {
         super();
 
-        setTitle(ImagesWindowFactory.getTitle(filename, getWidth()));
+        setTitle(filename);//ImagesWindowFactory.getSortTitle(filename, getWidth(),
+                //getGraphics().getFontMetrics()));
 
         initComponents();
 
@@ -267,9 +268,12 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
                 if (item instanceof MicrographsTableImageItem) {
                     MicrographsTableImageItem tableItem = (MicrographsTableImageItem) item;
                     ImagePlus ip = tableItem.getImagePlus();
-                    ip.setTitle(tableItem.getOriginalStringValue());
 
-                    ImagesWindowFactory.captureFrame(ip);
+                    if (ip != null) {
+                        ip.setTitle(tableItem.getOriginalStringValue());
+
+                        ImagesWindowFactory.captureFrame(ip);
+                    }
                 }
             } else {    // Single click
                 if (model_col == MicrographsTableModel.INDEX_ENABLED) {

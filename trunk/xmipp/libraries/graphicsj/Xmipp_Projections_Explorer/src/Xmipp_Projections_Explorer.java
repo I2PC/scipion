@@ -19,7 +19,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Vector;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.View;
 import javax.swing.Timer;
@@ -251,7 +251,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
 
         ImagePlus image = sphere.getProjection(xmippVolume, rot, tilt);
 
-        ArrayList<String> images = sphere.getFiles(rot, tilt);
+        Vector<String> images = sphere.getFiles(rot, tilt);
         int n_images = images != null ? images.size() : 0;
 
         // Shows projection using a custom window.

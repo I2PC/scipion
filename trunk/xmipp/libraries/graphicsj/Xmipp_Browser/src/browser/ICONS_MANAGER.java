@@ -4,6 +4,7 @@
  */
 package browser;
 
+import browser.filebrowsers.REGISTERED_FILE_ITEMS;
 import ij.ImagePlus;
 import javax.swing.ImageIcon;
 
@@ -13,8 +14,8 @@ import javax.swing.ImageIcon;
  */
 public class ICONS_MANAGER {
 
-    public static int PREVIEW_WIDTH = 80;
-    public static int PREVIEW_HEIGHT = 80;
+    public static int DEFAULT_PREVIEW_WIDTH = 80;
+    public static int DEFAULT_PREVIEW_HEIGHT = 80;
     //public static int CACHE_SIZE_BROWSER = 20;
     //public static int CACHE_SIZE_TABLE = 50;
     public final static String PATH_ICONS = "/resources/";

@@ -4,7 +4,7 @@
  */
 package browser;
 
-import browser.files.FileBrowser;
+import browser.filebrowsers.model.FileBrowser;
 import browser.imageitems.listitems.XmippImageItem;
 
 /**
@@ -13,14 +13,17 @@ import browser.imageitems.listitems.XmippImageItem;
  */
 public class LABELS {
 
-    public final static String APP_NAME = "Xmipp Browser";
+    public final static String APP_NAME = "XmippJ";
     public final static String MESAGE_ABOUT = "About " + APP_NAME;
     public final static String TITLE_ABOUT = "About " + APP_NAME;
+    public final static String TITLE_XMIPP_BROWSER = "Xmipp Browser";
+    public final static String TITLE_XMIPP_FILE_SELECTOR = "Select file";
+    public final static String TITLE_XMIPP_FILE_SELECTOR_PSD = "Select file (PSD)";
     public final static String TITLE_ERROR = "Memory error";
     public final static String TITLE_GO_TO_SLICE = "Go to slice";
-    public final static String TITLE_MAIN_WINDOW = "ImageJ/Xmipp Browser";
-    public final static String TITLE_PREVIEW = "Preview";
+    public final static String TITLE_PREVIEW = "Preview:";
     public final static String TITLE_SEND2WINDOW = "Send image to window";
+    public final static String TITLE_UNTITLED = "Untitled";
 
     // @TODO Remove
     public static String TITLE_TABLE_WINDOW(int items) {
@@ -171,7 +174,7 @@ public class LABELS {
      * Labels
      */
     public final static String LABEL_AUTO_AJUST_COLUMNS = "Auto adjust columns";
-    public final static String LABEL_SHOW_LABELS = "Show label";
+    public final static String LABEL_SHOW_LABELS = "Show label: ";
     public final static String LABEL_SORT_BY_LABEL = "Sort by label";
     public final static String LABEL_FILTER = "Filter: ";
     public final static String LABEL_WIDTH = "Width: ";
@@ -209,6 +212,8 @@ public class LABELS {
     public final static String LABEL_OPEN_AS = "Open as: ";
     public final static String LABEL_UNKNOWN = "Unknown label";
     public final static String LABEL_SAMPLING = "Sampling: ";
+    public final static String LABEL_DOWNSAMPLING = "Downsampling: ";
+    //public final static String LABEL_MISSING_INFO = "Missing info";
 
     public static String LABEL_FILES_SHOWING(int elements, int total) {
         return total != elements ? " Showing " + elements + " / " + total + " elements." : "";
@@ -218,4 +223,5 @@ public class LABELS {
         return "File size (" + FileBrowser.getFileSizeString(fileSize) + ") is bigger than available memory (" + FileBrowser.getFileSizeString(maxMemory) + ")";
     }
     public final static String MESSAGE_NO_ITEMS_SELECTED = "No items selected (or not enabled)";
+    //public final static String FILE_SELECTED_OUTPUT_PREFIX = "File selected: ";
 }

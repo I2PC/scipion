@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Vector;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
@@ -117,7 +118,7 @@ public class Sphere {
 
         double value = addHit(hitted, hitted, imageFileName);    // ...adds a hit...
 
-        ArrayList<Point2d> points = new ArrayList<Point2d>();
+        Vector<Point2d> points = new Vector<Point2d>();
         spreadHit(hitted, hitted, value, imageFileName, points);    // ...and spreads it...
 
         setLocked(hitted, false);   // Finally unlocks all the points.
@@ -127,7 +128,7 @@ public class Sphere {
     }
 
     private void spreadHit(Point2d hitted, Point2d current, double value,
-            String imageFileName, ArrayList<Point2d> points) {
+            String imageFileName, Vector<Point2d> points) {
         if (value > MIN_SPREAD_VALUE) {
             // Calculates all neighbours.
             ArrayList<Point2d> neighbours = getNeighbours(current);
@@ -353,7 +354,7 @@ public class Sphere {
      * @param rot
      * @param tilt
      */
-    public ArrayList<String> getFiles(double rot, double tilt) {
+    public Vector<String> getFiles(double rot, double tilt) {
         Point2d point = new Point2d(rot, tilt);
         Geometry.fixPoint(point);
 
@@ -364,7 +365,7 @@ public class Sphere {
         return cell != null ? cell.fileNames : null;
     }
 
-    private static void writeSelFile(String selFileName, ArrayList<String> fileNames) {
+    private static void writeSelFile(String selFileName, Vector<String> fileNames) {
         MetaData md = new MetaData();
 
         md.addLabel(MDLabel.MDL_IMAGE);
@@ -420,7 +421,7 @@ public class Sphere {
             p.write(projectionFileName);
 
             // * Gets file names related to ROT and TILT
-            ArrayList<String> files = getFiles(rot, tilt);
+            Vector<String> files = getFiles(rot, tilt);
 
             // * Generate .sel file
             writeSelFile(selFileName, files);

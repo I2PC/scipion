@@ -3,7 +3,7 @@ package sphere;
 
 
 
-import java.util.ArrayList;
+import java.util.Vector;
 
 /*
  * To change this template, choose Tools | Templates
@@ -15,11 +15,11 @@ import java.util.ArrayList;
  */
 public class SphereCell {
 
-    public ArrayList<String> fileNames;    // Image file name.
+    public Vector<String> fileNames;    // Image file name.
     public double value = 0.0;
     public boolean locked = false;
 
     public SphereCell() {
-        fileNames = new ArrayList<String>();
+        fileNames = new Vector<String>();
     }
 }

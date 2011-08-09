@@ -23,4 +23,4 @@ if inputFile:
 	if anglesFile:
 		args += " -angles " + anglesFile
 
-runImageJPlugin(memory, "xmippExplorer.txt", args)
+runImageJPlugin(memory, "xmippProjectionsExplorer.txt", args)

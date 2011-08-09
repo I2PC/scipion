@@ -6,6 +6,7 @@ package browser.table.models;
 
 import browser.Cache;
 import browser.DEBUG;
+import browser.ICONS_MANAGER;
 import browser.imageitems.tableitems.AbstractTableImageItem;
 import ij.IJ;
 import java.io.File;
@@ -385,9 +386,23 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         }
     }
 
-    public void autoAdjustColumns(int width, int interCellWidth) {
+    public double getInitialZoomScale(int width, int intercellWidth) {
+        double scale = 1.0;
+        int i = 0;
+
+        for (i = 0; i < getSize(); i++) {
+            if (data.get(i).exists()) {
+                scale = (double) (width - getSize() * (2 * intercellWidth)) / (double) data.get(i).getWidth();
+                break;
+            }
+        }
+
+        return scale > 1.0 ? 1.0 : scale;
+    }
+
+    public void autoAdjustColumns(int width, int intercellWidth) {
         int displayableColumns = (int) Math.floor(
-                width / (getCellWidth() + 2 * interCellWidth));
+                (double) (width - getSize() * (2 * intercellWidth)) / (double) getCellWidth());
 
         if (getColumnCount() != displayableColumns) {
             setColumns(displayableColumns);
@@ -395,11 +410,29 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     }
 
     public int getCellWidth() {
-        return getAllItems().get(0).getThumbnailWidth();//(int) (getAllItems().elementAt(0).getWidth() * zoomScale);
+        int i = 0;
+
+        for (i = 0; i < getSize(); i++) {
+            if (data.get(i).exists()) {
+                return getAllItems().get(i).getThumbnailWidth();
+            }
+        }
+
+        return ICONS_MANAGER.DEFAULT_PREVIEW_WIDTH;
     }
 
     public int getCellHeight() {
-        return getAllItems().get(0).getThumbnailHeight();//(int) (getAllItems().elementAt(0).getHeight() * zoomScale);
+        int i = 0;
+
+        for (i = 0; i < getSize(); i++) {
+            if (data.get(i).exists()) {
+//                System.out.println("H: " + getAllItems().get(i).getThumbnailHeight());
+
+                return getAllItems().get(i).getThumbnailHeight();
+            }
+        }
+
+        return ICONS_MANAGER.DEFAULT_PREVIEW_HEIGHT;
     }
 
     public void setNormalized(boolean normalize) {

@@ -62,7 +62,7 @@ public class MetadataFileItem extends XmippImageItem {
                 f = new File(field);
 
                 if (f.exists()) {
-                    System.err.println(" *** preview File: " + f.getAbsolutePath());
+//                    System.err.println(" *** preview File: " + f.getAbsolutePath());
                     return f.getAbsolutePath();
                 }
             }

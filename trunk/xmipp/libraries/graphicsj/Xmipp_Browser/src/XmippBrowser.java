@@ -1,15 +1,14 @@
 
-import browser.JFrameBrowser;
-import browser.LABELS;
-import browser.COMMAND_PARAMETERS;
-import browser.windows.ImagesWindowFactory;
 import ij.IJ;
 import ij.Macro;
-import ij.plugin.PlugIn;
-import java.util.LinkedList;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import browser.COMMAND_PARAMETERS;
+import browser.filebrowsers.JFrameXmippBrowser;
+import browser.windows.ImagesWindowFactory;
+import ij.plugin.PlugIn;
+import java.util.LinkedList;
 import xmipp.Filename;
 
 /*
@@ -22,15 +21,19 @@ import xmipp.Filename;
  */
 public class XmippBrowser implements PlugIn {
 
+    // Browser
     private String DIR;
+    private boolean SINGLE_SELECTION = false;
+    private String FILTER = "";
+    // Show
     private String INPUT[];
     private String MODE = COMMAND_PARAMETERS.MODE_DEFAULT;
     private boolean POLL = false;
     private final static int MODE_TYPE_DEFAULT = 0;
     private final static int MODE_TYPE_IMAGE = 1;
     private final static int MODE_TYPE_TABLE = 2;
-    protected JFrameBrowser frameBrowser;
 
+    @Override
     public void run(String string) {
         if (IJ.isMacro() && Macro.getOptions() != null && !Macro.getOptions().trim().isEmpty()) { // From macro.
             // "string" is used when called from another plugin or installed command.
@@ -51,8 +54,9 @@ public class XmippBrowser implements PlugIn {
         }
 
         if (DIR != null) {
-            frameBrowser = new JFrameBrowser(LABELS.TITLE_MAIN_WINDOW, DIR);
-            frameBrowser.setVisible(true);
+//            JFrameBrowser_ frameBrowser = new JFrameBrowser_(LABELS.TITLE_MAIN_WINDOW, DIR);
+//            frameBrowser.setVisible(true);
+            runBrowser(DIR, FILTER, SINGLE_SELECTION);
         }
     }
 
@@ -100,8 +104,12 @@ public class XmippBrowser implements PlugIn {
         for (int i = 0; i < items.length; i++) {
             String filename = items[i];
 
-            storeTo = Filename.isSingleImage(filename) ? images : files;
-            storeTo.add(filename);
+            try {
+                storeTo = Filename.isSingleImage(filename) ? images : files;
+                storeTo.add(filename);
+            } catch (Exception e) {
+                IJ.error(e.getMessage());
+            }
         }
 
         String result[][] = new String[2][];
@@ -117,11 +125,27 @@ public class XmippBrowser implements PlugIn {
         return result;
     }
 
-    private void processArgs(String args) {
+    void runBrowser(String directory) {
+        runBrowser(directory, false);
+    }
+
+    void runBrowser(String directory, boolean singleSelection) {
+        runBrowser(directory, "", singleSelection);
+    }
+
+    void runBrowser(String directory, String expression, boolean singleSelection) {
+        JFrameXmippBrowser frameBrowser = new JFrameXmippBrowser(directory, expression, singleSelection);
+        frameBrowser.setVisible(true);
+    }
+
+    void processArgs(String args) {
         String argsList[] = args.split(" ");
         Options options = new Options();
 
         options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, COMMAND_PARAMETERS.OPTION_INPUT_DIR_DESCRIPTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, COMMAND_PARAMETERS.OPTION_FILTER);
+        options.addOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION, false, COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION);
+
         options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, COMMAND_PARAMETERS.OPTION_INPUT_FILE_DESCRIPTION);
         options.addOption(COMMAND_PARAMETERS.OPTION_MODE, true, COMMAND_PARAMETERS.OPTION_MODE_DESCRIPTION);
         options.addOption(COMMAND_PARAMETERS.OPTION_POLL, false, COMMAND_PARAMETERS.OPTION_POLL_DESCRIPTION);
@@ -137,9 +161,24 @@ public class XmippBrowser implements PlugIn {
             BasicParser parser = new BasicParser();
             CommandLine cmdLine = parser.parse(options, argsList);
 
-            // Dir.
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR)) {
                 DIR = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_INPUT_DIR);
+            }
+
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_FILTER)) {
+                String filters[] = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_FILTER).split(COMMAND_PARAMETERS.FILTERS_SEPARATOR);
+
+                FILTER = "";
+                for (int i = 0; i < filters.length; i++) {
+                    FILTER += filters[i];
+                    if (i < filters.length - 1) {
+                        FILTER += " ";
+                    }
+                }
+            }
+
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION)) {
+                SINGLE_SELECTION = true;
             }
 
             // Input.

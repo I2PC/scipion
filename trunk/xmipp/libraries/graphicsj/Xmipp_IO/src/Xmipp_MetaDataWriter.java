@@ -1,5 +1,4 @@
 
-import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import java.io.File;
@@ -32,13 +31,16 @@ public class Xmipp_MetaDataWriter extends Xmipp_Writer {
             dir.mkdir();
         }
 
+        Xmipp_ImageWriter writer = new Xmipp_ImageWriter();
+
         // Saves each slice and adds its name to metadata to save it later.
         ImageStack stack = imp.getStack();
         for (int i = 1; i <= stack.getSize(); i++) {
             String imageName = dir.getAbsolutePath() + File.separator + i + ext;
 
             ImagePlus slice = new ImagePlus(imageName, stack.getProcessor(i));
-            IJ.run(slice, "Xmipp writer", "save=" + imageName);
+            //IJ.run(slice, "Xmipp writer", "save=" + imageName);
+            writer.write(slice, imageName);
 
             // Adds imagename to metadata.
             long id = md.addObject();

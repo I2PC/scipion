@@ -127,23 +127,27 @@ public abstract class AbstractImageItem extends FileItem {
 
     //public abstract String getImageInfo();
     public String getImageInfo() {
-        String strMin = decimalFormatter.format(statistics.min);
-        String strMax = decimalFormatter.format(statistics.max);
-        String strMean = decimalFormatter.format(statistics.mean);
-        String strStdDev = decimalFormatter.format(statistics.stdDev);
+        if (statistics != null) {
+            String strMin = decimalFormatter.format(statistics.min);
+            String strMax = decimalFormatter.format(statistics.max);
+            String strMean = decimalFormatter.format(statistics.mean);
+            String strStdDev = decimalFormatter.format(statistics.stdDev);
 
-        return "<html>"
-                + LABELS.LABEL_WIDTH + dimension.getWidth() + "<br>"
-                + LABELS.LABEL_HEIGHT + dimension.getHeight() + "<br>"
-                + (isVolume() ? LABELS.LABEL_DEPTH + dimension.getDepth() + "<br>" : "")
-                + (isStack() ? LABELS.LABEL_NIMAGES + dimension.getNimages() : "")
-                + "<br>" + "<br>"
-                + "Min=" + strMin + "<br>"
-                + "Max=" + strMax + "<br>"
-                + "Mean=" + strMean + "<br>"
-                + "Std. dev.=" + strStdDev + "<br>"
-                + "</p>"
-                + "</html>";
+            return "<html>"
+                    + LABELS.LABEL_WIDTH + dimension.getWidth() + "<br>"
+                    + LABELS.LABEL_HEIGHT + dimension.getHeight() + "<br>"
+                    + (isVolume() ? LABELS.LABEL_DEPTH + dimension.getDepth() + "<br>" : "")
+                    + (isStack() ? LABELS.LABEL_NIMAGES + dimension.getNimages() : "")
+                    + "<br>" + "<br>"
+                    + "Min=" + strMin + "<br>"
+                    + "Max=" + strMax + "<br>"
+                    + "Mean=" + strMean + "<br>"
+                    + "Std. dev.=" + strStdDev + "<br>"
+                    + "</p>"
+                    + "</html>";
+        } else {
+            return "";
+        }
     }
 
     protected abstract ImagePlus loadPreview(int w, int h);

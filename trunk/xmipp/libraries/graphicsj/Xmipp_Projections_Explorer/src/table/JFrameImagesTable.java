@@ -17,7 +17,9 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Vector;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -106,7 +108,7 @@ public class JFrameImagesTable extends javax.swing.JFrame {
     }
 
     private static ImagePlus calculateMean(ArrayList<ScoreItem> data) {
-        ArrayList<String> files = new ArrayList<String>();
+        Vector<String> files = new Vector<String>();
 
         for (int i = 0; i < data.size(); i++) {
             ScoreItem item = data.get(i);

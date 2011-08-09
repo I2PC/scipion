@@ -34,6 +34,8 @@ public class MDTableItem extends AbstractTableImageItem {
         this.path = Filename.getFilename(field);
         nimage = Filename.getNimage(field);
 
+        setEnabled(true);
+
         loadImageData();
     }
 
@@ -69,7 +71,7 @@ public class MDTableItem extends AbstractTableImageItem {
     }
 
     public String getTooltipText() {
-        return path + (Filename.isStack(path) ? " [" + getNImage() + "]" : "");
+        return path + (isStack() ? " [" + getNImage() + "]" : "");
     }
 
     public Object getLabelValue(int label) {

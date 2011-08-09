@@ -1,5 +1,5 @@
 // This macro allows to run plugins from command line passing parameters to them.
 
- macro "XmippBrowser" {
-    run("Xmipp Browser", getArgument);
+ macro "XmippFileList" {
+    run("Xmipp File List", getArgument);
  }

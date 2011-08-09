@@ -10,7 +10,7 @@
  */
 package browser.imageitems.listitems;
 
-import browser.files.FileBrowser;
+import browser.filebrowsers.model.FileBrowser;
 import java.io.File;
 
 /**
