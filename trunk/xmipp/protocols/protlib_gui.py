@@ -785,6 +785,11 @@ class ProtocolGUI(BasicGUI):
                 self.run['source'] = self.run['script']
                 self.inRunName = runName
             else:
+                if self.run['run_state'] in [SqliteDb.RUN_STARTED, SqliteDb.RUN_LAUNCHED]:
+                    tkMessageBox.showerror('Save not allowed', 
+                                           "This run appears to be RUNNING or LAUNCHED, so you can't save it",
+                                           parent=self.master)
+                    return False 
                 self.run['run_state'] = SqliteDb.RUN_SAVED
                 self.project.projectDb.updateRun(self.run)
     
