@@ -168,7 +168,7 @@ def estimateCtfXmipp(log,micrograph,micrographDir,Voltage,SphericalAberration,An
            " --max_freq "+str(HighResolCutoff)+\
            " --pieceDim "+str(WinSize)+\
            " --defocus_range "+str((MaxFocus-MinFocus)*10000/2)+\
-           " --defocusU "+str((MaxFocus+MinFocus)*10000/2)
+           " --defocusU "+str(-(MaxFocus+MinFocus)*10000/2)
     runJob(log,"xmipp_ctf_estimate_from_micrograph",params)
 
 def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
