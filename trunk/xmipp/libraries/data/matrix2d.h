@@ -779,7 +779,7 @@ public:
         for (int i = 0; i < mdimy; i++)
             for (int j = 0; j < op1.mdimx; j++)
                 for (int k = 0; k < mdimx; k++)
-                    result(i, j) += (*this)(i, k) * op1(k, j);
+                    MAT_ELEM(result,i, j) += MAT_ELEM(*this,i, k) * MAT_ELEM(op1, k, j);
         return result;
     }
 
