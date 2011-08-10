@@ -944,10 +944,12 @@ Program_read(PyObject *obj, PyObject *args, PyObject *kwargs)
                     return NULL;
                 }
                 argv[i] = PyString_AsString(item);
-                std::cout << "argv[" << i <<"]: " << argv[i] << std::endl;
             }
             self->program->read((int)size, argv);
-            Py_RETURN_NONE;
+            if (self->program->doRun)
+              Py_RETURN_TRUE;
+            else
+              Py_RETURN_FALSE;
         }
       }
     }

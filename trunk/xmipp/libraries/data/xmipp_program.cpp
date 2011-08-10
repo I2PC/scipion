@@ -159,13 +159,13 @@ XmippProgram::XmippProgram()
     // this can be changed on mpi slaves node for no output at all
     verbose = 1;
     progDef = NULL;
-    notRun = true;
+    doRun = false;
     errorCode = 0;
 }
 
 XmippProgram::XmippProgram(int argc, char ** argv)
 {
-    notRun = true;
+    doRun = false;
     errorCode = 0;
     init();
     read(argc, argv);
@@ -203,7 +203,7 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
 
     setProgramName(argv[0]);
 
-    notRun = true;
+    doRun = false;
     errorCode = 0; //suppose no errors
     ///If not arguments are provided, show the GUI or console program help
     //this behavior will be defined with environment variable XMIPP_BEHAVIOR
@@ -227,7 +227,7 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
                 if (verbose) //if 0, ignore the parameter, useful for mpi programs
                     verbose = getIntParam("--verbose");
                 this->readParams();
-                notRun = false;
+                doRun = true;
             }
         }
         catch (XmippError &xe)
@@ -258,7 +258,7 @@ int XmippProgram::tryRun()
 {
     try
     {
-        if (!notRun)
+        if (doRun)
             this->run();
     }
     catch (XmippError &xe)

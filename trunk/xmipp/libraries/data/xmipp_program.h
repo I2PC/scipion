@@ -76,8 +76,6 @@ private:
 protected:
     /** Define Commons */
     void defineCommons();
-    /** Flag to check whether to run or not*/
-    bool notRun;
     /** Value to store possible error codes */
     int errorCode;
     /// Program definition and arguments parser
@@ -91,6 +89,8 @@ protected:
     char ** argv;
 
 public:
+    /** Flag to check whether to run or not*/
+    bool doRun;
     /** @name Functions to be implemented by subclasses.
      * @{
      */
