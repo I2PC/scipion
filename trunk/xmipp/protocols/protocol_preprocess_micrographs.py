@@ -25,8 +25,8 @@ class ProtPreprocessMicrographs(XmippProtocol):
 
     def defineSteps(self):
         CtfFindActions=[]
-        self.Db.insertStep('runStepGapsMpi',passDb=True, script=self.scriptName,NumberOfMpi=self.NumberOfMpi)        
-        for filename in glob.glob(self.DirMicrographs + '/' + self.ExtMicrographs):
+        self.Db.insertStep('runStepGapsMpi',passDb=True, script=self.scriptName, NumberOfMpi=self.NumberOfMpi)        
+        for filename in glob.glob(os.path.join(self.DirMicrographs, self.ExtMicrographs)):
             # Get the shortname and extension
             micrographName = os.path.split(filename)[1]
             (shortname, extension)=os.path.splitext(micrographName)

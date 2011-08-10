@@ -326,23 +326,28 @@ class XmippProtocolDb(SqliteDb):
         verifyfilesString = pickle.dumps(verifyfiles, 0)
         if not self.insertStatus:
             #This will use previous select query in constructor
-            row=self.cur.fetchone()
+            row = self.cur.fetchone()
             if row is None:
-                self.insertStatus=True
+                self.insertStatus = True
             else:
-                if row['parameters']!=parameters or row['verifyFiles']!=verifyfilesString:
-                    self.insertStatus=True
+                if row['parameters'] != parameters or row['verifyFiles'] != verifyfilesString:
+                    self.insertStatus = True
                 else:
+                    print "insertStep, verifyfiles: ", verifyfiles
                     for file in verifyfiles:
                         if not os.path.exists(file):
-                            self.insertStatus=True
+                            self.insertStatus = True
                             break
                 self.lastStepId=row['step_id']
-                if self.insertStatus==True:
+                if self.insertStatus:
                     self.sqlDict['step_id'] = row['step_id']
-                    self.cur.execute("""DELETE FROM %(TableSteps)s WHERE run_id = %(run_id)d AND step_id>=%(step_id)d""" % self.sqlDict)
+                    sqlCommand = """DELETE FROM %(TableSteps)s WHERE run_id = %(run_id)d AND step_id>=%(step_id)d""" % self.sqlDict
+                    print "---------- Resuming from step: ", row['step_id']
+                    print "---------- sqlCommand: ", sqlCommand
+                    
+                    self.cur.execute(sqlCommand)
                     self.connection.commit()
-        if self.insertStatus==True:
+        if self.insertStatus:
             try:
                 self.cur_aux.execute("""INSERT INTO 
 
@@ -372,6 +377,8 @@ class XmippProtocolDb(SqliteDb):
                          AND finish IS NULL AND execute_mainloop = 1
                          ORDER BY step_id """ % self.sqlDict
         self.cur.execute(sqlCommand)
+        print sqlCommand
+        exit(1)
         commands = self.cur.fetchall()
         n = len(commands)
         msg='***************************** Protocol STARTED mode: %s'%self.runBehavior
@@ -391,11 +398,13 @@ class XmippProtocolDb(SqliteDb):
         self.updateRunState(SqliteDb.RUN_FINISHED)
 
     def verifyStepFiles(self, fileList):
+        print "verifying list: ", fileList
         missingFilesStr = ''
         for file in fileList:
             if not os.path.exists(file):
                 missingFilesStr += ' ' + file
-                
+
+        print "missing: ", missingFilesStr            
         if len(missingFilesStr) > 0:
             raise XmippError("Missing result files: " + missingFilesStr)
         

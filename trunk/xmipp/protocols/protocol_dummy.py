@@ -29,12 +29,12 @@ class ProtDummy(XmippProtocol):
         
     def defineSteps(self):
         filename = self.InputMd
-        self.Db.insertStep('backupMetaData', [filename + '.backup'], filename=filename)
+        backup = os.path.join(self.WorkingDir, os.path.basename(filename) + ".backup")
+        self.Db.insertStep('backupMetaData', [backup], filename=filename, backup=backup)
         self.Db.insertStep('splitMetaData', filename=filename, parts=self.NumberOfParts)
 
-def backupMetaData(log, filename):
-    pass
-    #copyFile(log, filename, filename + ".backup")
+def backupMetaData(log, filename, backup):    
+    copyFile(log, filename, backup)
     
 def splitMetaData(log, filename, parts):
     md = MetaData(filename)
