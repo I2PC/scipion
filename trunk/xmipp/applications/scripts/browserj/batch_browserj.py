@@ -1,26 +1,26 @@
 #!/usr/bin/env python
 
-import optparse
 from protlib_utils import runImageJPlugin
+from protlib_xmipp import XmippScript
 
-def command_line_options():
-	""" add command line options here"""
-	_usage="""Usage: xmipp_browserj [--mem <memory_ammount>] [--dir dir]"""
-	parser = optparse.OptionParser(_usage)
-	parser.add_option("-m", "--memory",  dest="memory", default="512m", help="Memory ammount for JVM")        
-	parser.add_option("-d", "--dir", default="", dest="workdir", help="work directory")
-
-	(options, args) = parser.parse_args()
-
-	return (options.memory,options.workdir)
-
-memory, workdir = command_line_options();
-
-if memory == "512m":
-	print "No memory size provided. Using default: " + memory
-
-args = ""
-if len(workdir) > 0:
-	args += "-dir " + workdir
-
-runImageJPlugin(memory, "xmippBrowser.txt", args)
+class ScriptBrowserJ(XmippScript):
+	def defineParams(self):
+		self.addParamsLine('  [--memory <mem="512m">]        : Memory ammount for JVM');
+		self.addParamsLine('         alias -m;');
+		self.addParamsLine('  --dir <directory="">           : List of params ');
+		self.addParamsLine('         alias -d;');
+			
+	def readParams(self):
+		self.memory = self.getParam('--memory')
+		if self.memory == "512m":
+			print "No memory size provided. Using default: " + self.memory
+		workdir = self.getParam('--dir')
+		self.args = ""
+		if len(workdir) > 0:
+			self.args += "-dir " + workdir
+		
+	def run(self):
+		runImageJPlugin(self.memory, "xmippBrowser.txt", self.args)
+			
+if __name__ == '__main__':
+	ScriptBrowserJ().tryRun()		
