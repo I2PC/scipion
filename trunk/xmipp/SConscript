@@ -664,7 +664,7 @@ if int(env['java']):
     javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
     # Java apps
     javaPlugins.append(AddJavaApp('Java3DInstaller', 'libraries/graphicsj/Java3DInstaller', 'external/Java3DInstaller'))
-    javaPlugins.append(AddJavaApp('Stitching', 'libraries/graphicsj/Stitching', 'external/Stitching'))
+#    javaPlugins.append(AddJavaApp('Stitching', 'libraries/graphicsj/Stitching', 'external/Stitching'))
 
     import sys
     sys.path.append("scons/ToolsFromWiki")
@@ -754,7 +754,7 @@ AddXmippProgram('transform_range_adjust')
 AddXmippProgram('transform_symmetrize', ['XmippRecons'])
 AddXmippProgram('transform_threshold', ['XmippRecons'])
 AddXmippProgram('transform_window')
-#AddXmippProgram('test_program')
+#AddXmippProgram('test_program', ['XmippRecons'])
 #AddXmippProgram('test_sql')
 AddXmippProgram('template_threads')
 AddXmippProgram('tomo_align_dual_tilt_series', ['XmippRecons'])

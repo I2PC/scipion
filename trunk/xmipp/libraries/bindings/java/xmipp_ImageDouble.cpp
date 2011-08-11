@@ -363,8 +363,8 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_printShape
 	std::cout << (*image) << std::endl;
 }
 
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD(
-		JNIEnv *env, jclass class_, jstring filename, jdouble downsampling) {
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD__Ljava_lang_String_2D
+  (JNIEnv *env, jclass class_, jstring filename, jdouble downsampling) {
 	std::string msg = "";
 
 	try {
@@ -372,6 +372,39 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD(
 		const char *fnStr = env->GetStringUTFChars(filename, false);
 
 		fastEstimateEnhancedPSD(fnStr, downsampling, enhancedPSD);
+
+		size_t size = enhancedPSD.getSize();
+		jdoubleArray array = env->NewDoubleArray(size);
+		env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(enhancedPSD));
+
+		return array;
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return NULL;
+}
+
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD__Ljava_lang_String_2DII
+  (JNIEnv *env, jclass class_, jstring filename, jdouble downsampling, jint w, jint h) {
+	std::string msg = "";
+
+	try {
+		MultidimArray<double> enhancedPSD;
+		const char *fnStr = env->GetStringUTFChars(filename, false);
+
+		fastEstimateEnhancedPSD(fnStr, downsampling, enhancedPSD);
+
+                enhancedPSD.resize(1, 1, (int)w, (int)h);
 
 		size_t size = enhancedPSD.getSize();
 		jdoubleArray array = env->NewDoubleArray(size);

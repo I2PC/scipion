@@ -90,6 +90,8 @@ public class ImageDouble {
 
     public native static double[] fastEstimateEnhancedPSD(String filename, double downsampling) throws Exception;
 
+    public native static double[] fastEstimateEnhancedPSD(String filename, double downsampling, int w, int h) throws Exception;
+
     //non-native functions
     //constructor
     public ImageDouble() {

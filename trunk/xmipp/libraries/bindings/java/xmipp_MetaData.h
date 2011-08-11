@@ -7,6 +7,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef xmipp_MetaData_MD_OVERWRITE
+#define xmipp_MetaData_MD_OVERWRITE 0L
+#undef xmipp_MetaData_MD_APPEND
+#define xmipp_MetaData_MD_APPEND 1L
 /*
  * Class:     xmipp_MetaData
  * Method:    storeIds
@@ -46,16 +50,18 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_read_1
  */
 JNIEXPORT jint JNICALL Java_xmipp_MetaData_size
   (JNIEnv *, jobject);
-/*
- * Class:     xmipp_MetaData
- * Method:    size
- * Signature: ()I
- */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_setColumnFormat
-  (JNIEnv *, jobject, jboolean);
+
 /*
  * Class:     xmipp_MetaData
  * Method:    setColumnFormat
+ * Signature: (Z)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_MetaData_setColumnFormat
+  (JNIEnv *, jobject, jboolean);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    write
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_xmipp_MetaData_write
