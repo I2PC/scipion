@@ -1,5 +1,5 @@
 // This macro allows to run plugins from command line passing multiple parameters to them.
 
-macro "xmippStitiching" {
-    run("Stitching", getArgument);
+macro "XmippStitiching" {
+    run("Xmipp Stitching", getArgument);
 }

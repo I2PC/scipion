@@ -11,30 +11,30 @@ import java.awt.BorderLayout;
  *
  * @author Juanjo Vega
  */
-public class JDialogXmippFilesListPSD extends JDialogXmippFilesList {
+public class JDialogXmippFilesListCTF extends JDialogXmippFilesList {
 
     /** Creates new form JDialogXmippFilesList */
-    public JDialogXmippFilesListPSD(String directory, int port) {
+    public JDialogXmippFilesListCTF(String directory, int port) {
         this(directory, port, false);
     }
 
-    public JDialogXmippFilesListPSD(String directory, int port, String expression) {
+    public JDialogXmippFilesListCTF(String directory, int port, String expression) {
         this(directory, port, expression, false);
     }
 
-    public JDialogXmippFilesListPSD(String directory, int port, boolean singleSelection) {
+    public JDialogXmippFilesListCTF(String directory, int port, boolean singleSelection) {
         this(directory, port, "", singleSelection);
     }
 
-    public JDialogXmippFilesListPSD(String directory, int port, String expression, boolean singleSelection) {
+    public JDialogXmippFilesListCTF(String directory, int port, String expression, boolean singleSelection) {
         super(directory, port, expression, singleSelection);
 
-        setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR_PSD);
+        setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR_CTF);
 
         // Hack: Replaces panel.
         remove(panelXmippBrowser);
 
-        panelXmippBrowser = new JPanelXmippFileListPSD(directory, expression);
+        panelXmippBrowser = new JPanelXmippFileListCTF(directory, expression);
         panelXmippBrowser.setSingleSelection(singleSelection);
 
         add(panelXmippBrowser, BorderLayout.CENTER);

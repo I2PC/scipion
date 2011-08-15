@@ -43,10 +43,10 @@ public class JDialogXmippFilesList extends javax.swing.JDialog {//Frame {
 
     public JDialogXmippFilesList(String directory, int port, String expression, boolean singleSelection) {
         super();//
-        setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR);
-        setModal(true);
 
         this.port = port;
+
+        setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR);
 
         initComponents();
 

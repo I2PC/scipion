@@ -17,4 +17,10 @@ public class DEBUG {
             System.out.println(message);
         }
     }
+
+    public static void printException(Exception ex) {
+        if (DEBUG) {
+            ex.printStackTrace();
+        }
+    }
 }

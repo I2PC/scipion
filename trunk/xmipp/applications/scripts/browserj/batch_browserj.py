@@ -20,7 +20,7 @@ class ScriptBrowserJ(XmippScript):
 			self.args += "-dir " + workdir
 		
 	def run(self):
-		runImageJPlugin(self.memory, "xmippBrowser.txt", self.args)
+		runImageJPlugin(self.memory, "XmippBrowser.txt", self.args)
 			
 if __name__ == '__main__':
 	ScriptBrowserJ().tryRun()		

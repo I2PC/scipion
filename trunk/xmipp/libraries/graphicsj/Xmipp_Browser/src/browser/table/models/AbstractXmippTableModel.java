@@ -9,6 +9,7 @@ import browser.DEBUG;
 import browser.ICONS_MANAGER;
 import browser.imageitems.tableitems.AbstractTableImageItem;
 import ij.IJ;
+import ij.ImagePlus;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -26,7 +27,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     protected ArrayList<AbstractTableImageItem> data = new ArrayList<AbstractTableImageItem>();
     protected LinkedList<AbstractTableImageItem> selectedItems = new LinkedList<AbstractTableImageItem>();
     protected int rows, cols;
-    protected Cache cache = new Cache();
+    protected Cache<String, ImagePlus> cache = new Cache<String, ImagePlus>();
     protected boolean normalize = false;
     protected double min = Double.POSITIVE_INFINITY, max = Double.NEGATIVE_INFINITY;
     protected boolean showLabels = false;

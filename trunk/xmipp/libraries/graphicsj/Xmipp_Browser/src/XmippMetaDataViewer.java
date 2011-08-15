@@ -18,7 +18,7 @@ import org.apache.commons.cli.Options;
  *
  * @author Juanjo Vega
  */
-public class XmippMetaDataBrowser implements PlugIn {
+public class XmippMetaDataViewer implements PlugIn {
 
     public void run(String args) {
         if (IJ.isMacro() && Macro.getOptions() != null && !Macro.getOptions().trim().isEmpty()) { // From macro.

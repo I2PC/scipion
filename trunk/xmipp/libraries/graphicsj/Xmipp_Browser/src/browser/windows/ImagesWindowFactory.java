@@ -27,6 +27,7 @@ import java.io.File;
 import java.util.ArrayList;
 import xmipp.Filename;
 import xmipp.ImageDouble;
+import xmipp.MetaData;
 
 /**
  *
@@ -86,12 +87,21 @@ public class ImagesWindowFactory {
 
     public static void openFileAsImage(String path, boolean poll) {
         try {
-            ImageDouble id = new ImageDouble(path);
-            ImagePlus imp = ImageConverter.convertToImagej(id, path);
+            ImagePlus imp;
+
+            if (Filename.isMetadata(path)) {
+                MetaData md = new MetaData(path);
+
+                imp = ImageConverter.convertToImagej(md);
+            } else {
+                ImageDouble id = new ImageDouble(path);
+                imp = ImageConverter.convertToImagej(id, path);
+            }
 
             openXmippImageWindow(imp, poll);
-        } catch (Exception e) {
-            IJ.error(e.getMessage() + ": " + path);
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage() + ": " + path);
+            DEBUG.printException(ex);
         }
     }
 

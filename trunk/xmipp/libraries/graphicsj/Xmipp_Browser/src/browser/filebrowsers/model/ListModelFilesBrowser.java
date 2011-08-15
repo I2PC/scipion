@@ -9,6 +9,7 @@ import browser.imageitems.listitems.FolderFileItem;
 import browser.imageitems.listitems.ImageItem;
 import browser.imageitems.listitems.MetadataFileItem;
 import browser.imageitems.listitems.XmippImageItem;
+import ij.ImagePlus;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +36,7 @@ public class ListModelFilesBrowser extends AbstractListModel implements Document
     protected List<FileItem> list;
     protected List<FileItem> filteredList;
     protected String lastFilter = "";
-    protected static Cache cache = new Cache();
+    protected static Cache<String, ImagePlus> cache = new Cache<String, ImagePlus>();
 
     public ListModelFilesBrowser(String folder) {
         super();
@@ -220,7 +221,7 @@ public class ListModelFilesBrowser extends AbstractListModel implements Document
     }
 
     protected boolean acceptFile(FileItem file, String filters[]) {
-        return filters.length == 0 || filter(file.getFile().getName(), filters);
+        return file.isDirectory() || filters.length == 0 || filter(file.getFile().getName(), filters);
     }
 
     protected static boolean filter(String file, String filters[]) {

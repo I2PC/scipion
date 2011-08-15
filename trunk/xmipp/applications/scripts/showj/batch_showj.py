@@ -4,7 +4,7 @@ from protlib_xmipp import ScriptPluginIJ
 
 class ScriptShowJ(ScriptPluginIJ):
 	def __init__(self):
-		ScriptPluginIJ.__init__(self, "xmippBrowser.txt")
+		ScriptPluginIJ.__init__(self, "XmippBrowser.txt")
 		
 	def defineOtherParams(self):
 		self.addParamsLine('  [--mode <mode_value=image>]           : List of params ');
@@ -20,5 +20,5 @@ class ScriptShowJ(ScriptPluginIJ):
 			self.args += " --poll"
 		
 if __name__ == '__main__':
-	ScriptShowJ().tryRun()	
+	ScriptShowJ().tryRun()
 

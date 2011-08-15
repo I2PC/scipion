@@ -18,7 +18,7 @@ public class LABELS {
     public final static String TITLE_ABOUT = "About " + APP_NAME;
     public final static String TITLE_XMIPP_BROWSER = "Xmipp Browser";
     public final static String TITLE_XMIPP_FILE_SELECTOR = "Select file";
-    public final static String TITLE_XMIPP_FILE_SELECTOR_PSD = "Select file (PSD)";
+    public final static String TITLE_XMIPP_FILE_SELECTOR_CTF = "Select file (CTF)";
     public final static String TITLE_ERROR = "Memory error";
     public final static String TITLE_GO_TO_SLICE = "Go to slice";
     public final static String TITLE_PREVIEW = "Preview:";

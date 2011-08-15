@@ -1003,7 +1003,7 @@ class ProtocolGUI(BasicGUI):
         runImageJPlugin("512m", "xmippBrowser.txt", "-i %s" % var.tkvar.get())
         
     def wizardBrowseJ(self, var):
-        msg = runImageJPluginWithResponse("512m", "xmippFileList.txt", "")
+        msg = runImageJPluginWithResponse("512m", "XmippFileList.txt", "")
         msg = msg.strip()
         if len(msg) > 0:
             var.tkvar.set(os.path.relpath(msg.replace('\n', ',')))

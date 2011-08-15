@@ -1,5 +1,5 @@
 // This macro allows to run plugins from command line passing parameters to them.
 
-macro "XmippMicrograph" {
-    run("Xmipp Micrograph", getArgument);
+macro "XmippMicrographViewer" {
+    run("Xmipp Micrograph Viewer", getArgument);
 }

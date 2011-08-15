@@ -1,6 +1,6 @@
 
 import browser.COMMAND_PARAMETERS;
-import browser.filebrowsers.JDialogXmippFilesListPSD;
+import browser.filebrowsers.JDialogXmippFilesListCTF;
 import ij.IJ;
 import ij.Macro;
 import ij.plugin.PlugIn;
@@ -17,7 +17,7 @@ import org.apache.commons.cli.Options;
  *
  * @author Juanjo Vega
  */
-public class XmippFileListPSD implements PlugIn {
+public class XmippFileListCTF implements PlugIn {
 
     // Browser
     private String DIR;
@@ -41,13 +41,13 @@ public class XmippFileListPSD implements PlugIn {
     }
 
     void runBrowser(String directory, int port, String expression, boolean singleSelection) {
-        IJ.getInstance().setExtendedState(Frame.ICONIFIED);
-        IJ.getInstance().setVisible(false);
+//        IJ.getInstance().setExtendedState(Frame.ICONIFIED);
+//        IJ.getInstance().setVisible(false);
 
-        JDialogXmippFilesListPSD frameBrowser = new JDialogXmippFilesListPSD(directory, port, expression, singleSelection);
+        JDialogXmippFilesListCTF frameBrowser = new JDialogXmippFilesListCTF(directory, port, expression, singleSelection);
         frameBrowser.setVisible(true);
 
-        IJ.getInstance().setVisible(true);
+//        IJ.getInstance().setVisible(true);
     }
 
     void processArgs(String args) {

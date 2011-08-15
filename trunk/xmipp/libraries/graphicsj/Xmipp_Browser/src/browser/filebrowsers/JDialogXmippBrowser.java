@@ -40,7 +40,9 @@ public class JDialogXmippBrowser extends JDialogXmippFilesList {
     public JDialogXmippBrowser(String directory, String expression, boolean singleSelection) {
         super(directory, 0, expression, singleSelection);   // Port won't be used as method is overriden.
 
-        setModal(false);
+//        setModal(false);
+//        setAlwaysOnTop(false);
+        toFront();
         setTitle(LABELS.TITLE_XMIPP_BROWSER);
 
         // Toolbar buttons.

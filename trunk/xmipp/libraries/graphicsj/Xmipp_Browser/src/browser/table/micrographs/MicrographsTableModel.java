@@ -12,6 +12,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import browser.Cache;
 import browser.imageitems.MicrographsTableImageItem;
+import ij.ImagePlus;
 import java.util.ArrayList;
 import xmipp.MDLabel;
 import xmipp.MetaData;
@@ -75,7 +76,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
     public final static int INDEX_AUTOSORT_COLUMN = 16;
     protected ArrayList<Integer> busyRows = new ArrayList<Integer>();
     // Data type contained by columns to set renderes properly.
-    protected static Cache cache = new Cache();
+    protected static Cache<String, ImagePlus> cache = new Cache<String, ImagePlus>();
     private MetaData md;
 
     public MicrographsTableModel(String filename) {

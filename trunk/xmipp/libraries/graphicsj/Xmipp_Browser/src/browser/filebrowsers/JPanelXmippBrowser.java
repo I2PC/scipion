@@ -96,7 +96,6 @@ public class JPanelXmippBrowser extends JPanel {
 
                     if (preview != null) {
                         jpImageInfo.setPreview(preview.getImage(), imageItem.getImageInfo());
-                        preview.close();
                     } else {
                         jpImageInfo.clearPreview();
                     }
@@ -130,11 +129,19 @@ public class JPanelXmippBrowser extends JPanel {
         return jlFileFilter.getSelectedValues();
     }
 
+    // When a file is open by clicking it or pressing the "enter" key.
     protected void openSelectedFile() {
         if (jlFileFilter.getSelectedIndex() == 0) {
             goParent();
         } else {
-            openFileAsDefault((FileItem) jlFileFilter.getSelectedValue());
+            FileItem item = (FileItem) jlFileFilter.getSelectedValue();
+
+            if (item.isDirectory()) {
+                listModelFilesList.changeDirectory(item.getFile());
+                updateListStatus();
+            } else {
+                openFileAsDefault(item);
+            }
         }
     }
 
@@ -146,18 +153,12 @@ public class JPanelXmippBrowser extends JPanel {
         openFilesAsTable(jlFileFilter.getSelectedValues());
     }
 
-    // When a file is open by clicking it or pressing the "enter" key.
     protected void openFileAsDefault(FileItem item) {
-        if (item.isDirectory()) {
-            listModelFilesList.changeDirectory(item.getFile());
-            updateListStatus();
+        if (FileBrowser.hasEnoughMemory(item.getFile())) {
+            ImagesWindowFactory.openFileAsDefault(item.getAbsoluteFileName());
         } else {
-            if (FileBrowser.hasEnoughMemory(item.getFile())) {
-                ImagesWindowFactory.openFileAsDefault(item.getAbsoluteFileName());
-            } else {
-                IJ.showMessage(LABELS.TITLE_ERROR,
-                        LABELS.MESSAGE_MEMORY_ERROR(item.getFile().length(), IJ.maxMemory()));
-            }
+            IJ.showMessage(LABELS.TITLE_ERROR,
+                    LABELS.MESSAGE_MEMORY_ERROR(item.getFile().length(), IJ.maxMemory()));
         }
     }
 

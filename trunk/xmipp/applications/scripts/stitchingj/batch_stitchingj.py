@@ -3,4 +3,4 @@
 from protlib_xmipp import ScriptPluginIJ
 
 if __name__ == '__main__':
-	ScriptPluginIJ("xmippStitching.txt").tryRun()	
+	ScriptPluginIJ("XmippStitching.txt").tryRun()	

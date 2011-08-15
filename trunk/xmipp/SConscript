@@ -655,11 +655,7 @@ if int(env['java']):
     javaPlugins = []
     javaPlugins.append(AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins'))
-    
-    browserj = javaPlugins.append(AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins'))
-#    MDbrowserj = javaPlugins.append(AddImageJPlugin('Xmipp_MetaData_Browser', 'libraries/graphicsj/Xmipp_MetaData_Browser', 'external/imagej/plugins'))
-#    env.Depends(MDbrowserj, browserj)
-
+    javaPlugins.append(AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Masks_ToolBar', 'libraries/graphicsj/Masks_ToolBar', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Xmipp_Stitching', 'libraries/graphicsj/Xmipp_Stitching', 'external/imagej/plugins'))
@@ -815,7 +811,7 @@ AddBatch('showj', 'applications/scripts/showj', '.py')
 AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', '.py')
 AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
 AddBatch('browserj', 'applications/scripts/browserj', '.py')
-AddBatch('metadata_browserj', 'applications/scripts/metadata_browserj', '.py')
+AddBatch('metadata_viewerj', 'applications/scripts/metadata_viewerj', '.py')
 AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
 AddBatch('mpi_steps_runner', 'protocols', '.py')
 

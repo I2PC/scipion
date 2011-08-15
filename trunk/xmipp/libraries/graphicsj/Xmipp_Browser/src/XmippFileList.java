@@ -4,7 +4,6 @@ import browser.filebrowsers.JDialogXmippFilesList;
 import ij.IJ;
 import ij.Macro;
 import ij.plugin.PlugIn;
-import java.awt.Frame;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -41,13 +40,13 @@ public class XmippFileList implements PlugIn {
     }
 
     void runBrowser(String directory, int port, String expression, boolean singleSelection) {
-        IJ.getInstance().setExtendedState(Frame.ICONIFIED);
-        IJ.getInstance().setVisible(false);
+//        IJ.getInstance().setExtendedState(Frame.ICONIFIED);
+//        IJ.getInstance().setVisible(false);
 
         JDialogXmippFilesList frameBrowser = new JDialogXmippFilesList(directory, port, expression, singleSelection);
         frameBrowser.setVisible(true);
 
-        IJ.getInstance().setVisible(true);
+//        IJ.getInstance().setVisible(true);
     }
 
     void processArgs(String args) {
