@@ -108,7 +108,8 @@ bool XmippProgram::checkBuiltIns()
     }
     if (checkParam("--xmipp_write_definition"))
     {
-        writeToDB("programs.db");
+        //writeToDB("programs.db");
+        writeInfo();
         return true;
     }
     if (checkParam("--xmipp_write_wiki"))
@@ -137,6 +138,16 @@ void XmippProgram::writeToDB(const FileName &dbName)
     db.beginTrans();
     db.insertProgram(&progData);
     db.commitTrans();
+}
+
+void XmippProgram::writeInfo(	)
+{
+	std::cout << "PROGRAM: " << name() << std::endl;
+	std::cout << "KEYWORDS: " << progDef->keywords << std::endl;
+    StringVector::const_iterator it;
+	StringVector & desc = progDef->usageComments.comments;
+    for (it = desc.begin(); it < desc.end(); ++it)
+		std::cout << "DESCRIPTION: " << *it << std::endl;
 }
 
 void XmippProgram::createGUI()

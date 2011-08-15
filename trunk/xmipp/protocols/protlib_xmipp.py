@@ -61,11 +61,11 @@ class XmippScript():
     def getListParam(self, param):
         return self._prog.getListParam(param)
     
-    def addUsageLine(self, line):
-        self._prog.addUsageLine(line)
+    def addUsageLine(self, line, verbatim=False):
+        self._prog.addUsageLine(line, verbatim)
 
-    def addExamplesLine(self, line):
-        self._prog.addExampleLine(line)
+    def addExampleLine(self, line, verbatim=True):
+        self._prog.addExampleLine(line, verbatim)
         
     def addParamsLine(self, line):
         self._prog.addParamsLine(line)
@@ -117,5 +117,13 @@ class ScriptPluginIJ(XmippScript):
     def run(self):
         runImageJPlugin(self.memory, self.macro, self.args)
             
- 
+def getXmippPrograms():
+    import os
+    from glob import glob
+    from protlib_filesystem import getXmippPath
+    programs = [os.path.basename(p) for p in glob(os.path.join(getXmippPath(), 'bin', 'xmipp_*'))]
+    programs.sort()
+    return programs
+
+
         

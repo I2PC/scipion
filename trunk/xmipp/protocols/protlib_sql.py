@@ -499,6 +499,7 @@ class XmippProtocolDb(SqliteDb):
         cursor.execute(sqlCommand)
         result =  cursor.fetchone()[0] 
         return result
+
 # Function to fill gaps of step in database
 #this will use mpi process
 # this will be usefull for parallel processing, i.e., in threads or with MPI
@@ -558,3 +559,54 @@ class ThreadStepGap(Thread):
         except Exception, e:
             printLog("Stopping threads because of error %s"%e,self.db.Log,out=True,err=True,isError=True)
             self.db.updateRunState(SqliteDb.RUN_FAILED, cur, conn)
+            
+def escapeStr(str):
+    return "'%s'" % str.replace("'", "''") 
+          
+class ProgramDb():
+    def __init__(self, dbName):
+        self.dbName = dbName
+        self.connection = sqlite.Connection(dbName)
+        self.connection.row_factory = sqlite.Row
+        self.cursor = self.connection.cursor()
+            
+    def create(self):
+        self.createTables()
+        
+    def createTables(self):
+            sqlCommand = """DROP TABLE IF EXISTS Category;
+                            CREATE TABLE Category (
+                               id INTEGER PRIMARY KEY ASC AUTOINCREMENT, 
+                               name TEXT UNIQUE, 
+                               desc TEXT, 
+                               prefixes TEXT);
+                            INSERT INTO Category VALUES(NULL, 'Classification', NULL, 'classify_ ml_ mlf_');
+                            INSERT INTO Category VALUES(NULL, 'CTF', NULL, 'ctf_');
+                            INSERT INTO Category VALUES(NULL, 'Images', NULL, 'image_');
+                            INSERT INTO Category VALUES(NULL, 'Metadatas', NULL, 'metadata_');
+                            INSERT INTO Category VALUES(NULL, 'Phantoms', NULL, 'phantom_ pdb_');
+                            INSERT INTO Category VALUES(NULL, 'Angular assignment', NULL, 'angular_');
+                            INSERT INTO Category VALUES(NULL, 'Tomography', NULL, 'tomo_ xray_');
+                            INSERT INTO Category VALUES(NULL, 'Transformations', NULL, 'transform_');
+                            INSERT INTO Category VALUES(NULL, 'Volumes', NULL, 'volume_ reconstruct_ resolution_');                             
+                            
+                            DROP TABLE IF EXISTS Program;
+                            CREATE TABLE Program (
+                               id INTEGER PRIMARY KEY ASC AUTOINCREMENT,
+                               category_id INTEGER, 
+                               name TEXT UNIQUE,
+                               desc TEXT,
+                               keywords TEXT);
+                         """
+            self.cursor.executescript(sqlCommand)
+            self.connection.commit()
+            
+    def insertProgram(self, program):
+        program['desc'] = escapeStr(program['desc'])
+        sqlCommand = """INSERT INTO Program VALUES (
+                           NULL, %(category_id)d, %(name)s, %(desc)s, %(keywords)s);
+                     """ % program
+                     
+    def selectPrograms(self, category=None):
+        pass
+        

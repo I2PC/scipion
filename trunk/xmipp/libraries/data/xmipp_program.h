@@ -64,6 +64,8 @@ private:
 
     /** Write Program info to DB */
     void writeToDB(const FileName &dbName);
+    /** Print some information to stdout */
+    void writeInfo();
 
     /** Create program GUI */
     /** By default, a simple Tk GUI is create based on parameters definition.
