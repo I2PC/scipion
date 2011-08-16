@@ -131,7 +131,7 @@ void ProgImageRotationalPCA::produceSideInfo()
     else
         // Receive W
         MPI_Bcast(&MAT_ELEM(W,0,0),MAT_XSIZE(W)*MAT_YSIZE(W),MPI_DOUBLE,0,MPI_COMM_WORLD);
-    F.mapToFile(fnRoot+"_matrixF.raw",Nimg*Nshifts*Nangles,(Neigen+2)*(Nits+1));
+    F.mapToFile(fnRoot+"_matrixF.raw",(Neigen+2)*(Nits+1),Nimg*Nshifts*Nangles);
     H.mapToFile(fnRoot+"_matrixH.raw",Nimg*Nshifts*Nangles,Neigen+2);
     Hblock.resizeNoCopy(Nangles*Nshifts,Neigen+2);
 
@@ -230,11 +230,9 @@ void ProgImageRotationalPCA::applyT()
             }
         }
     }
-    std::cout << "T:"; print_elapsed_time(t0); std::cout << std::endl;
-    annotate_time(&t0);
     MPI_Allreduce(MATRIX2D_ARRAY(Wnode), MATRIX2D_ARRAY(W), MAT_XSIZE(W)*MAT_YSIZE(W),
                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    std::cout << "TMPI:"; print_elapsed_time(t0); std::cout << std::endl;
+    std::cout << "T:"; print_elapsed_time(t0);
 }
 
 // Apply T ================================================================
@@ -310,10 +308,8 @@ void ProgImageRotationalPCA::applyTt()
         size_t Hidx=(idx-1)*Nangles*Nshifts;
         writeToHBuffer(&MAT_ELEM(H,Hidx,0));
     }
-    std::cout << "Tt:"; print_elapsed_time(t0); std::cout << std::endl;
-    annotate_time(&t0);
     flushHBuffer();
-    std::cout << "Tt flush:"; print_elapsed_time(t0); std::cout << std::endl;
+    std::cout << "Tt:"; print_elapsed_time(t0);
 }
 
 // QR =====================================================================
@@ -323,11 +319,11 @@ int ProgImageRotationalPCA::QR()
 	annotate_time(&t0);
     size_t jQ=0;
     Matrix1D<double> qj1, qj2;
-    int iBlockMax=MAT_YSIZE(F)/4;
+    int iBlockMax=MAT_XSIZE(F)/4;
 
-    for (int j1=0; j1<MAT_XSIZE(F); j1++)
+    for (int j1=0; j1<MAT_YSIZE(F); j1++)
     {
-        F.getCol(j1,qj1);
+        F.getRow(j1,qj1);
         // Project twice in the already established subspace
         // One projection should be enough but Gram-Schmidt suffers
         // from numerical problems
@@ -335,7 +331,7 @@ int ProgImageRotationalPCA::QR()
         {
             for (int j2=0; j2<jQ; j2++)
             {
-                F.getCol(j2,qj2);
+                F.getRow(j2,qj2);
 
                 // Compute dot product
                 double s12=qj1.dotProduct(qj2);
@@ -350,7 +346,7 @@ int ProgImageRotationalPCA::QR()
                     (*ptr1++)-=s12*(*ptr2++);
                     (*ptr1++)-=s12*(*ptr2++);
                 }
-                for (int i=iBlockMax*4; i<MAT_YSIZE(F); ++i)
+                for (int i=iBlockMax*4; i<MAT_XSIZE(F); ++i)
                     (*ptr1++)-=s12*(*ptr2++);
             }
         }
@@ -361,10 +357,10 @@ int ProgImageRotationalPCA::QR()
         {
             // Make qj1 to be unitary and store in Q
             qj1/=Rii;
-            F.setCol(jQ++,qj1);
+            F.setRow(jQ++,qj1);
         }
     }
-    std::cout << "QR:"; print_elapsed_time(t0); std::cout << std::endl;
+    std::cout << "QR:"; print_elapsed_time(t0);
     return jQ;
 }
 
@@ -374,9 +370,8 @@ void ProgImageRotationalPCA::copyHtoF(int block)
 	if (node->isMaster())
 	{
 		size_t Hidx=block*MAT_XSIZE(H);
-		size_t HrowLength=MAT_XSIZE(H)*sizeof(double);
-		for (int i=0; i<MAT_YSIZE(H); ++i)
-			memcpy(&MAT_ELEM(F,i,Hidx),&MAT_ELEM(H,i,0),HrowLength);
+		FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
+			MAT_ELEM(F,Hidx+j,i)=MAT_ELEM(H,i,j);
 	}
 	node->barrierWait();
 }
@@ -413,16 +408,15 @@ void ProgImageRotationalPCA::run()
 	if (node->isMaster())
 	{
         createEmptyFileWithGivenLength(fnRoot+"_matrixH.raw",Nimg*Nshifts*Nangles*qrDim*sizeof(double));
-        H.mapToFile(fnRoot+"_matrixH.raw",MAT_YSIZE(F),qrDim);
-		size_t qrRowLength=qrDim*sizeof(double);
-		for (int i=0; i<MAT_YSIZE(F); ++i)
-			memcpy(&MAT_ELEM(H,i,0),&MAT_ELEM(F,i,0),qrRowLength);
+        H.mapToFile(fnRoot+"_matrixH.raw",MAT_XSIZE(F),qrDim);
+		FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
+        MAT_ELEM(H,i,j)=MAT_ELEM(F,j,i);
 		node->barrierWait();
 	}
 	else
 	{
 		node->barrierWait();
-        H.mapToFile(fnRoot+"_matrixH.raw",MAT_YSIZE(F),qrDim);
+        H.mapToFile(fnRoot+"_matrixH.raw",MAT_XSIZE(F),qrDim);
 	}
 
 	// Apply T
@@ -438,7 +432,7 @@ void ProgImageRotationalPCA::run()
         Matrix2D<double> U,V;
         Matrix1D<double> S;
         svdcmp(W,U,S,V);
-        std::cout << "SVD:"; print_elapsed_time(t0); std::cout << std::endl;
+        std::cout << "SVD:"; print_elapsed_time(t0);
 
         // Keep the first Neigen images from U
     	annotate_time(&t0);
@@ -460,6 +454,6 @@ void ProgImageRotationalPCA::run()
             MD.setValue(MDL_WEIGHT,VEC_ELEM(S,eig),id);
         }
         MD.write(fnRoot+".xmd");
-        std::cout << "Output:"; print_elapsed_time(t0); std::cout << std::endl;
+        std::cout << "Output:"; print_elapsed_time(t0);
     }
 }
