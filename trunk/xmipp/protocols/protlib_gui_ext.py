@@ -402,8 +402,11 @@ class ListboxDialog(Dialog):
         self.lb.config(**self.kargs)
         self.lb.pack(fill=tk.BOTH)
         self.lb.bind('<Double-Button-1>', self.ok)
+        maxLength=0
         for item in self.list:
             self.lb.insert(tk.END, item)
+            maxLength=max(maxLength,len(item))
+        self.lb.config(width=maxLength+3)
         if len(self.list) > 0:
             self.lb.selection_set(0)
         return self.lb # initial focus

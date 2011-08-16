@@ -29,7 +29,7 @@
 import os
 import shutil
 import ConfigParser
-from config_protocols import projectDefaults, sections
+from config_protocols import projectDefaults, sections, protDict
 from protlib_sql import SqliteDb, XmippProjectDb, XmippProtocolDb
 from protlib_utils import XmippLog, loadModule, reportError
 from protlib_filesystem import deleteDir, deleteFiles
@@ -120,7 +120,7 @@ class XmippProject():
         script = run['script']
         toDelete = [script.replace(self.runsDir, self.logsDir).replace(".py", ext) for ext in ['.log', '.err', '.out']]
         deleteFiles(None, toDelete, False)
-        workingDir = os.path.join(run['protocol_name'], run['run_name'])
+        workingDir = self.getWorkingDir(run['protocol_name'], run['run_name'])
         from distutils.dir_util import remove_tree
         if os.path.exists(workingDir):
             remove_tree(workingDir, True)
@@ -137,10 +137,12 @@ class XmippProject():
                 groupName = group[0]
                 runs = self.projectDb.selectRuns(groupName)
                 for run in runs:
-                    tmpDir = os.path.join(run['protocol_name'], run['run_name'], 'tmp')
+                    tmpDir = os.path.join(self.getWorkingDir(run['protocol_name'], run['run_name']), 'tmp')
                     if os.path.exists(tmpDir):
                         shutil.rmtree(tmpDir)
-        
+
+    def getWorkingDir(self,protocol_name,run_name):
+        return os.path.join(protDict[protocol_name].dir,run_name)
             
     def getRunScriptFileName(self, protocol_name, runName):
         return os.path.join(self.runsDir, '%s_%s.py' % (protocol_name, runName))
@@ -199,7 +201,7 @@ class XmippProtocol(object):
         #A protocol must be able to find its own project
         self.project = project
         self.Import = '' # this can be used by database for import modules
-        self.WorkingDir = os.path.join(protocolName, self.RunName)
+        self.WorkingDir = project.getWorkingDir(protocolName, self.RunName)
         self.TmpDir = os.path.join(self.WorkingDir, 'tmp')
         self.projectDir = project.projectDir  
         #Setup the Log for the Protocol

@@ -19,7 +19,7 @@ import xmipp
 
 class ProtPreprocessMicrographs(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.preprocess_micrographs.key, scriptname, project)
+        XmippProtocol.__init__(self, protDict.preprocess_micrographs.name, scriptname, project)
         self.Import="from protocol_preprocess_micrographs import *"
         self.CtffindExec =  which('ctffind3.exe')
 
@@ -44,18 +44,18 @@ class ProtPreprocessMicrographs(XmippProtocol):
                 AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
             
             # Insert actions in the database
-            id=self.Db.insertStep('createDir',path=micrographDir,parent_step_id=XmippProjectDb.FIRST_STEP,execute_mainloop=False)
+            id=self.Db.insertStep('createDir',path=micrographDir,parent_step_id=XmippProjectDb.FIRST_STEP,execution_mode=SqliteDb.EXEC_GAP)
             fnOut=os.path.join(micrographDir,"micrograph"+extension)
             verifyFiles.append(fnOut)
             id=self.Db.insertStep('preprocessMicrograph',verifyfiles=[fnOut],
-                                    parent_step_id=id, execute_mainloop=False,
+                                    parent_step_id=id, execution_mode=SqliteDb.EXEC_GAP,
                                     micrograph=filename,micrographDir=micrographDir,DoPreprocess=self.DoPreprocess,
                                     Crop=self.Crop,Stddev=self.Stddev,Down=self.Down)
             if self.DoCtfEstimate:
                 fnOut=os.path.join(micrographDir,"xmipp_ctf.ctfparam")
                 verifyFiles.append(fnOut)
                 self.Db.insertStep('estimateCtfXmipp',verifyfiles=[fnOut],
-                                     parent_step_id=id,execute_mainloop=False,
+                                     parent_step_id=id,execution_mode=SqliteDb.EXEC_GAP,
                                      micrograph=finalname,micrographDir=micrographDir,Voltage=self.Voltage,
                                      SphericalAberration=self.SphericalAberration,AngPix=AngPix,
                                      AmplitudeContrast=self.AmplitudeContrast,LowResolCutoff=self.LowResolCutoff,
@@ -65,7 +65,7 @@ class ProtPreprocessMicrographs(XmippProtocol):
                     fnOut=os.path.join(micrographDir,"ctffind.ctfparam")
                     verifyFiles.append(fnOut)
                     CtfFindActions.append([dict(verifyfiles=[fnOut],
-                                         execute_mainloop=False,
+                                         execution_mode=SqliteDb.EXEC_GAP,
                                          CtffindExec=self.CtffindExec,micrograph=finalname,micrographDir=micrographDir,
                                          tmpDir=self.TmpDir,
                                          Voltage=self.Voltage,SphericalAberration=self.SphericalAberration,

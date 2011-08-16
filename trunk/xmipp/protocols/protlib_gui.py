@@ -403,7 +403,7 @@ Optional:
               If more than one citation lines are present, they will all be displayed.
               DONT use very long citations, as this will results in an ugly gui.
         - {hidden} label on the comment line (#) marks the option as -hidden-
-        - {wizzard} (WizzardFunction) this will serve to plugin a graphical wizzard
+        - {wizard} (WizardFunction) this will serve to plugin a graphical wizard
              to select some parameter
         - {validate}(NonEmpty, PathExists, IsInt, IsFloat) Impose some validating
              on values entered by the user     
@@ -595,8 +595,10 @@ class ProtocolGUI(BasicGUI):
                     runs = []
                     for p in protocols:
                         runs += self.project.projectDb.selectRunsByProtocol(p)
-                    list = ["%s_%s" % (r[5], r[1]) for r in runs]
-                    args = ['Select Run', lambda: self.selectFromList(var, list), 'wizzard.gif', 'Select run']
+                    list = ["%s_%s" % (r['protocol_name'], r['run_name']) for r in runs]
+                    if len(list)==1:
+                        var.tkvar.set(list[0])
+                    args = ['Select Run', lambda: self.selectFromList(var, list), 'wizard.gif', 'Select run']
                 elif 'blocks' in keys:
                     #md = self.variablesDict[var.tags['blocks']].getValue()
                     args = ['Select Blocks', lambda: self.selectFromList(var, ['block1', 'block2', 'block3']), 'wizard.gif', 'Select blocks']
@@ -632,7 +634,7 @@ class ProtocolGUI(BasicGUI):
         
     def fillHeader(self):
         self.master.title("Run script: %(script)s" % self.run)
-        headertext  = "Xmipp Protocol: %s\n" % protDict.protocolDict[self.run['protocol_name']].title
+        headertext  = "Xmipp Protocol: %s\n" % protDict[self.run['protocol_name']].title
         headertext += "Project: %s" % os.path.basename(self.project.projectDir) 
         self.fonts = {}
         self.fonts['header'] = tkFont.Font(family=FontName, size=FontSize+2, weight=tkFont.BOLD)

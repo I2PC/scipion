@@ -163,13 +163,13 @@ class XmippProjectGUI():
         btn.grid(row = row, column = 0, sticky='ew', pady=2, padx=5)
         if len(opts) > 0:
             menu = tk.Menu(self.root, bg=ButtonBgColor, activebackground=ButtonBgColor, font=Fonts['button'], tearoff=0)
-            prots = [protDict.protocolDict[o] for o in opts]
+            prots = [protDict[o] for o in opts]
             for p in prots:
                 #Following is a bit tricky, its due Python notion of scope, a for does not define a new scope
                 # and menu items command setting
                 def item_command(prot): 
                     def new_command(): 
-                        self.launchProtocolGUI(self.project.newProtocol(prot.key))
+                        self.launchProtocolGUI(self.project.newProtocol(prot.name))
                     return new_command 
                 menu.add_command(label=p.title, command=item_command(p))
             menu.bind("<Leave>", self.unpostMenu)
