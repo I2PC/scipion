@@ -61,10 +61,22 @@ public:
     int Nshifts;
     // Image size
     int Xdim;
+    // Number of pixels
+    int Npixels;
     // Mpi node
     MpiNode *node;
+    // H buffer
+    std::vector<double *> Hbuffer;
+    // H buffer destination addresses
+    std::vector<double *> HbufferDestination;
+    // Buffer maximum length
+    static const int HbufferMax=20;
+    // Mpi file lock
+    MpiFileMutex *fileMutex;
     // SVD matrix
     Matrix2D<double> H;
+    // SVD matrix
+    Matrix2D<double> F;
 public:
     // Input image
     Image<double> I;
@@ -80,8 +92,8 @@ public:
     Matrix2D<double> Wnode;
     // W transpose
     Matrix2D<double> Wtranspose;
-    // Q matrix
-    Matrix2D<double> Q;
+    // Mask
+    MultidimArray< unsigned char > mask;
 public:
     /// Empty constructor
     ProgImageRotationalPCA(int argc, char **argv);
@@ -101,6 +113,16 @@ public:
     /// Produce side info
     void produceSideInfo();
 
+    /** Write to H buffer */
+    void writeToHBuffer(double *dest);
+
+    /** Flush buffer */
+    void flushHBuffer();
+
+    /** Copy H to F.
+     */
+    void copyHtoF(int block);
+
     /** Apply T.
      * W=T(H).
      */
@@ -115,7 +137,7 @@ public:
      * In fact, only Q is computed. It returns the number of columns
      * of Q different from 0.
      */
-    int QR(const FileName &fnF, int Ydim, int Xdim);
+    int QR();
 
     /** Run. */
     void run();
