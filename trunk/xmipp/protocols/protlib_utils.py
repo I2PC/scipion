@@ -349,7 +349,7 @@ def runImageJPluginWithResponse(memory, macro, args):
     #Create a simple socket server to wait for response
     HOST = ''                 # Symbolic name meaning the local host
     PORT = 54321
-    args += " -port %d -dir . -filter *.sel,*.xmd" % PORT
+    args += " -port %d -dir ." % PORT
     #Launch the plugin that will send the data response over a socket
     runImageJPlugin(memory, macro, args, batchMode=True)
     #os.system('java SocketsTest 54321 &')
