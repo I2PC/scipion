@@ -346,7 +346,6 @@ class XmippProtocolDb(SqliteDb):
         if self.insertStatus:
             try:
                 self.cur_aux.execute("""INSERT INTO 
-
                                     %(TableSteps)s(command,parameters,verifyFiles,iter,execute_mainloop,passDb,run_id,parent_step_id)
                                      VALUES (?,?,?,?,?,?,?,?)""" % self.sqlDict,
                                      [command, parameters, verifyfilesString, self.iter,execute_mainloop,passDb,self.sqlDict['run_id'], parent_step_id])
@@ -356,6 +355,14 @@ class XmippProtocolDb(SqliteDb):
             except sqlite.Error, e:
                 reportError( "Cannot insert command: %s" % e.args[0])
         return self.lastStepId
+
+    def updateVerifyFiles(self, step_id, verifyfiles):
+            self.sqlDict['verifyFiles'] = pickle.dumps(verifyfiles, 0)
+            self.sqlDict['step_id'] = step_id
+            try:
+                self.cur_aux.execute("""UPDATE %(TableSteps)s set verifyFiles="%(verifyFiles)s" WHERE step_id=%(step_id)d AND run_id = %(run_id)d""" % self.sqlDict)
+            except sqlite.Error, e:
+                reportError( "Cannot update verify files for : %d" % step_id)
 
     def runSteps(self):
         #Update run state to STARTED
