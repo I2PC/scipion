@@ -113,7 +113,7 @@ class XmippProjectGUI():
     def deleteTmpFiles(self):
         try:
             self.project.deleteTmpFiles()
-            tkMessageBox.showinfo("Operation success", "All temporaly files has been successfully removed")
+            tkMessageBox.showinfo("Operation success", "All temporary files have been successfully removed")
         except Exception, e:
             tkMessageBox.showerror("Operation error ", str(e))
       
