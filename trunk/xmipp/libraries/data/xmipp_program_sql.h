@@ -26,71 +26,58 @@
 #ifndef PROGRAM_SQL_H_
 #define PROGRAM_SQL_H_
 
+#include <map>
 #include "xmipp_program.h"
-#include <external/sqlite-3.6.23/sqlite3.h>
+#include "external/sqlite-3.6.23/sqlite3.h"
 
-/** Class to represent data related to a program in a DB */
-class DbProgram
-{
-public:
-  int rank; //Used to compare and sorting
-  int id;
-  int cat_id;
-  String name, description, keywords;
-
-  bool operator < (const DbProgram & prog) { return rank < prog.rank; }
-
-};//end of class DbProgram
-
-
-
-/** Class to represent data of programs categories */
-class DbCategory
-{
-public:
-  int id;
-  String name, description, prefixes;
-};//end of class DbCategory
+typedef std::map<char*, String> DictDB;
 
 /** Class that will encapsulate the Xmipp objects representation
  * on Sqlite db. Program are a kind of this objects.
  * Programas db storing will be useful for handle meta-info.
  */
-class XmippDB
+class ProgramDb: public Printer
 {
 private:
-  sqlite3 * db;
-  int rc;
-  char * errmsg, *zLeftover;
+    sqlite3 * db;
+    int rc;
+    char * errmsg, *zLeftover;
 
 
 public:
-  /** Some initialization */
-  void init(const FileName &dbName);
-  /** Empty constructor */
-  XmippDB();
-  /** Constructor, it will create the Sqlite db. */
-  XmippDB(const FileName &dbName);
-  /** Begin and end transaction */
-  bool execStmt(const String &stmt, const String &error="");
-  bool beginTrans();
-  bool commitTrans();
-  /** Create program categories tables */
-  bool createCategoryTable();
-  /** Create tables related with programs */
-  bool createProgramTable();
-  /** Delete a program knowing the name */
-  bool deleteProgramByName(const String &programName);
-  /** Insert a program into db, the id field will be filled */
-  bool insertProgram(DbProgram * program);
-  /** Update program data, id must be valid */
-  bool updateProgram(DbProgram * program);
-  bool selectPrograms(std::vector<DbProgram*> &programs);
+    /** Some initialization */
+    void init(const FileName &dbName);
+    /** Empty constructor */
+    ProgramDb();
+    /** Constructor, it will create the Sqlite db. */
+    ProgramDb(const FileName &dbName);
+    /** Begin and end transaction */
+    bool execStmt(const String &stmt, const String &error="");
+    bool beginTrans();
+    bool commitTrans();
+    /** Create tables related with programs */
+    bool createProgramTables();
+    /** Insert a program into db, the id field will be filled */
+    bool insertProgram(DictDB &program);
 
-  /** Select all categories from DB */
-  bool selectCategories(std::vector<DbCategory*> &categories);
+    //Methods inherits from Program Printer
+    virtual void printProgram(const ProgramDef &program, int v = 0);
+    virtual void printSection(const SectionDef &section, int v = 0);
+    virtual void printParam(const ParamDef &param, int v = 0);
+    virtual void printArgument(const ArgumentDef & argument, int v = 0);
+    virtual void printCommentList(const CommentList &comments, int v = 0);
 
-};//end of class ProgramDB
-
-
+}
+;//end of class ProgramDB
+//
+///** Print wiki text */
+//class SqlitePrinter: public Printer
+//{
+//protected:
+//    ProgramDb *db;
+//
+//public:
+//    /**Constructor */
+//    SqlitePrinter(ProgramDb *db);
+//};
 #endif /* PROGRAM_SQL_H_ */

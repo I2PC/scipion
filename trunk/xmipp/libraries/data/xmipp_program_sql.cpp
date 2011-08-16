@@ -25,7 +25,7 @@
 
 #include "xmipp_program_sql.h"
 
-void XmippDB::init(const FileName &dbName)
+void ProgramDb::init(const FileName &dbName)
 {
   rc = sqlite3_open(dbName.c_str(), &db);
   sqlite3_exec(db, "PRAGMA temp_store=MEMORY",NULL, NULL, &errmsg);
@@ -34,17 +34,17 @@ void XmippDB::init(const FileName &dbName)
   sqlite3_exec(db, "PRAGMA page_size=4092",NULL, NULL, &errmsg);
 }
 
-XmippDB::XmippDB(const FileName &dbName)
+ProgramDb::ProgramDb(const FileName &dbName)
 {
     init(dbName);
 }
 
-XmippDB::XmippDB()
+ProgramDb::ProgramDb()
 {
-  init(xmippBaseDir().append("/programs.db"));
+  init(xmippBaseDir().append("/programs.sqlite"));
 }
 
-bool XmippDB::execStmt(const String &stmt, const String &error)
+bool ProgramDb::execStmt(const String &stmt, const String &error)
 {
     if (sqlite3_exec(db, stmt.c_str(), NULL, NULL, &errmsg) != SQLITE_OK)
     {
@@ -54,39 +54,39 @@ bool XmippDB::execStmt(const String &stmt, const String &error)
     return true;
 }
 
-bool XmippDB::beginTrans()
+bool ProgramDb::beginTrans()
 {
     return execStmt("BEGIN TRANSACTION", "Couldn't begin transaction:  ");
 }
 
-bool XmippDB::commitTrans()
+bool ProgramDb::commitTrans()
 {
     return execStmt("COMMIT TRANSACTION", "Couldn't commit transaction:  ");
 }
 
-bool XmippDB::createCategoryTable()
+/** Create tables related with programs */
+bool ProgramDb::createProgramTables()
 {
     char * cmdStr =
         "DROP TABLE IF EXISTS Category;"
         "CREATE TABLE Category ("
-        "id INTEGER PRIMARY KEY ASC AUTOINCREMENT,"
-        "name TEXT UNIQUE, desc TEXT, prefixes TEXT);"
-        "INSERT INTO Category VALUES(NULL, 'Micrograph', 'Programs to work with micrographs', 'micrograph_');"
-        "INSERT INTO Category VALUES(NULL, 'Metadata', 'Selfiles, docfiles and metadatas', 'selfile_ docfile_ metadata_');"
-        "INSERT INTO Category VALUES(NULL, 'Header', 'Header manipulation', 'header_');"
-        "INSERT INTO Category VALUES(NULL, 'Classification', 'classification programs', 'classify_');"
-        ;
-    return execStmt(cmdStr, "Couldn't create Category table:  ");
-}
-
-/** Create tables related with programs */
-bool XmippDB::createProgramTable()
-{
-    char * cmdStr =
+        "   id INTEGER PRIMARY KEY ASC AUTOINCREMENT, "
+        "   name TEXT UNIQUE, "
+        "   desc TEXT, "
+        "   prefixes TEXT);"
+        "INSERT INTO Category VALUES(NULL, 'Classification', NULL, 'classify_ ml_ mlf_');"
+        "INSERT INTO Category VALUES(NULL, 'CTF', NULL, 'ctf_');"
+        "INSERT INTO Category VALUES(NULL, 'Images', NULL, 'image_');"
+        "INSERT INTO Category VALUES(NULL, 'Metadatas', NULL, 'metadata_');"
+        "INSERT INTO Category VALUES(NULL, 'Phantoms', NULL, 'phantom_ pdb_');"
+        "INSERT INTO Category VALUES(NULL, 'Angular assignment', NULL, 'angular_');"
+        "INSERT INTO Category VALUES(NULL, 'Tomography', NULL, 'tomo_ xray_');"
+        "INSERT INTO Category VALUES(NULL, 'Transformations', NULL, 'transform_');"
+        "INSERT INTO Category VALUES(NULL, 'Volumes', NULL, 'volume_ reconstruct_ resolution_');"
         "DROP TABLE IF EXISTS Program;"
         "CREATE TABLE Program ("
         "id INTEGER PRIMARY KEY ASC AUTOINCREMENT,"
-        "cat_id INTEGER, name TEXT UNIQUE, desc TEXT,"
+        "category_id INTEGER, name TEXT UNIQUE, usage TEXT, examples TEXT,"
         "keywords TEXT);";
 
     return execStmt(cmdStr, "Couldn't create Program table:  ");
@@ -105,54 +105,102 @@ String getSqliteStr(const String & str)
     return formatString("'%s'", temp.c_str());
 }
 
-bool XmippDB::deleteProgramByName(const String &programName)
-{
-    std::stringstream ss;
-    ss << "DELETE FROM Program WHERE name=" << getSqliteStr(programName) << ";";
-    bool result = execStmt(ss.str(), "Couldn't delete program " + programName);
-    return result;
-}
-
-/** Insert a program into db, the id field will be filled */
-bool XmippDB::insertProgram(DbProgram * program)
+/** Insert program into db, the id field will be filled */
+bool ProgramDb::insertProgram(DictDB &program)
 {
     ///Delete first the program if exist
-    deleteProgramByName(program->name);
+    //deleteProgramByName(program["name"]);
     std::stringstream ss;
     ss << "INSERT INTO Program VALUES(NULL, NULL,"
-    << getSqliteStr(program->name) << ","
-    << getSqliteStr(program->description) << ", "
-    << getSqliteStr(program->keywords) << ");";
+    << getSqliteStr(program["name"]) << ","
+    << getSqliteStr(program["usage"]) << ", "
+    << getSqliteStr(program["examples"]) << ", "
+    << getSqliteStr(program["keywords"]) << ");";
     bool result = execStmt(ss.str(), "Couldn't insert program");
-    program->id = sqlite3_last_insert_rowid(db);
+    //program["id"] = sqlite3_last_insert_rowid(db);
     return result;
 }
 
+/** Select programs from db **/
+//bool ProgramDb::selectPrograms()
+
+
+
 /** Update program data, id must be valid */
-bool XmippDB::updateProgram(DbProgram * program)
-{}
+//bool ProgramDb::updateProgram(DbProgram * program)
+//{}
+//
+//bool ProgramDb::selectPrograms(std::vector<DbProgram*> &programs)
+//{
+//
+//    sqlite3_stmt *stmt;
+//    char * cmdStr = "SELECT * FROM Program ORDER BY name;";
+//    DbProgram * progData;
+//
+//    rc = sqlite3_prepare_v2(db, cmdStr, -1, &stmt, NULL);
+//    programs.clear();
+//
+//    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
+//    {
+//        progData = new DbProgram();
+//        progData->id = sqlite3_column_int(stmt, 0);
+//        progData->cat_id = sqlite3_column_int(stmt, 1);
+//        progData->name.assign((char*)sqlite3_column_text(stmt, 2));
+//        progData->description.assign((char*)sqlite3_column_text(stmt, 3));
+//        progData->keywords.assign((char*)sqlite3_column_text(stmt, 4));
+//        programs.push_back(progData);
+//    }
+//    rc = sqlite3_finalize(stmt);
+//
+//    return rc == SQLITE_OK;
+//}
 
-bool XmippDB::selectPrograms(std::vector<DbProgram*> &programs)
+
+//--------- SQLITE  PRINTER -----------------------
+void ProgramDb::printProgram(const ProgramDef &program, int v)
 {
+    //print program name and usage
+    String usage, examples;
+    DictDB dict;
 
-    sqlite3_stmt *stmt;
-    char * cmdStr = "SELECT * FROM Program ORDER BY name;";
-    DbProgram * progData;
-
-    rc = sqlite3_prepare_v2(db, cmdStr, -1, &stmt, NULL);
-    programs.clear();
-
-    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
+    dict["name"] = program.name;
+    dict["usage"] = "";
+    dict["examples"] = "";
+    dict["keywords"] = program.keywords;
+    //print usage
+    if (program.usageComments.size() > 0)
     {
-        progData = new DbProgram();
-        progData->id = sqlite3_column_int(stmt, 0);
-        progData->cat_id = sqlite3_column_int(stmt, 1);
-        progData->name.assign((char*)sqlite3_column_text(stmt, 2));
-        progData->description.assign((char*)sqlite3_column_text(stmt, 3));
-        progData->keywords.assign((char*)sqlite3_column_text(stmt, 4));
-        programs.push_back(progData);
+        for (size_t i = 0; i < program.usageComments.size(); ++i)
+          dict["usage"] += program.usageComments.comments[i] + '\n';
     }
-    rc = sqlite3_finalize(stmt);
+    //print examples
+    if (program.examples.size() > 0)
+    {
+        for (size_t i = 0; i < program.examples.size(); ++i)
+          dict["examples"] += program.examples.comments[i] + '\n';
+    }
+    insertProgram(dict);
 
-    return rc == SQLITE_OK;
+    //print sections and params
+    if (program.sections.size() > 0)
+    {
+        for (size_t i = 0; i < program.sections.size(); ++i)
+            printSection(*program.sections[i], v);
+    }
+}
+
+void ProgramDb::printSection(const SectionDef &section, int v)
+{
+}
+
+void ProgramDb::printParam(const ParamDef &param, int v)
+{
+}
+
+void ProgramDb::printArgument(const ArgumentDef & argument, int v)
+{
+}
+
+void ProgramDb::printCommentList(const CommentList &comments, int v)
+{
 }
