@@ -542,7 +542,7 @@ void ProgCTFEstimateFromPSD::defineBasicParams(XmippProgram * program)
     program->addParamsLine("                                : This is used to test the variability of the fit");
     program->addParamsLine("                                : N defines the number of times the fit is repeated");
     program->addParamsLine("==+ CTF fit: Output CTF models");
-    program->addParamsLine("   [--ctfmodelSize <size=128>]  : Size for the ctfmodel thumbnails");
+    program->addParamsLine("   [--ctfmodelSize <size=256>]  : Size for the ctfmodel thumbnails");
     program->addParamsLine("==+ PSD enhancement");
     program->addParamsLine("   [--enhance_min_freq <f1>]    : Bandpass cutoff. Normalized to 0.5");
     program->addParamsLine("                                : If fmax>0.35, f1 default=0.01");
