@@ -4,6 +4,7 @@
 #include "xmipp_ExceptionsHandler.h"
 #include <data/xmipp_image.h>
 #include <data/xmipp_fft.h>
+#include <data/transformations.h>
 #include <reconstruction/ctf_estimate_from_micrograph.h>
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_storeIds
@@ -404,7 +405,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD__L
 
 		fastEstimateEnhancedPSD(fnStr, downsampling, enhancedPSD);
 
-                enhancedPSD.resize(1, 1, (int)w, (int)h);
+        selfScaleToSize(LINEAR, enhancedPSD, (int)w, (int)h);
 
 		size_t size = enhancedPSD.getSize();
 		jdoubleArray array = env->NewDoubleArray(size);
