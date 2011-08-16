@@ -1343,12 +1343,16 @@ extern int		SingularValueDecomposition
 				h = f * g - s;
 				U[ii] = f - g;
 				for (j = l; (j < Columns); j++) {
-					for (s = 0.0, k = i; (k < Lines); k++) {
-						s += U[k * Columns + i] * U[k * Columns + j];
+					double *ptrUi=&U[i * Columns + i];
+					double *ptrUj=&U[i * Columns + j];
+					for (s = 0.0, k = i; (k < Lines); k++, ptrUi+=Columns, ptrUj+=Columns) {
+						s += (*ptrUi) * (*ptrUj);
 					}
 					f = s / h;
-					for (k = i; (k < Lines); k++) {
-						U[k * Columns + j] += f * U[k * Columns + i];
+					ptrUi=&U[i * Columns + i];
+					ptrUj=&U[i * Columns + j];
+					for (k = i; (k < Lines); k++, ptrUi+=Columns, ptrUj+=Columns) {
+						*ptrUj += f * *ptrUi;
 					}
 				}
 				for (k = i; (k < Lines); k++) {
@@ -1379,11 +1383,14 @@ extern int		SingularValueDecomposition
 					rv1[k] = U[i * Columns + k] *ih;
 				}
 				for (j = l; (j < Lines); j++) {
-					for (s = 0.0, k = l; (k < Columns); k++) {
-						s += U[j * Columns + k] * U[i * Columns + k];
+					double *ptrUj=&U[j * Columns + l];
+					double *ptrUi=&U[i * Columns + l];
+					for (s = 0.0, k = l; (k < Columns); ++k, ++ptrUi, ++ptrUj) {
+						s += (*ptrUj) * (*ptrUi);
 					}
-					for (k = l; (k < Columns); k++) {
-						U[j * Columns + k] += s * rv1[k];
+					ptrUj=&U[j * Columns + l];
+					for (k = l; (k < Columns); ++k, ++ptrUj) {
+						*ptrUj += s * rv1[k];
 					}
 				}
 				for (k = l; (k < Columns); k++) {
@@ -1427,13 +1434,17 @@ extern int		SingularValueDecomposition
 		if (g != 0.0) {
 			g = 1.0 / g;
 			for (j = l; (j < Columns); j++) {
-				for (s = 0.0, k = l; (k < Lines); k++) {
-					s += U[k * Columns + i] * U[k * Columns + j];
+				double *ptrUi=&U[l * Columns + i];
+				double *ptrUj=&U[l * Columns + j];
+				for (s = 0.0, k = l; (k < Lines); k++, ptrUi+=Columns, ptrUj+=Columns) {
+					s += (*ptrUi) * (*ptrUj);
 				}
 				f = s * g / U[i * Columns + i];
-				for (k = i; (k < Lines); k++) {
-					if (f != 0.0) {
-						U[k * Columns + j] += f * U[k * Columns + i];
+				if (f != 0.0) {
+					ptrUi=&U[i * Columns + i];
+					ptrUj=&U[i * Columns + j];
+					for (k = i; (k < Lines); k++, ptrUi+=Columns, ptrUj+=Columns) {
+						*ptrUj += f * (*ptrUi);
 					}
 				}
 			}
