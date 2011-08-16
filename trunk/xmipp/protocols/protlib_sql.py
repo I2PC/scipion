@@ -46,6 +46,10 @@ class SqliteDb:
     RUN_FINISHED = 3
     RUN_FAILED = 4
     
+    EXEC_GAP = 0
+    EXEC_MAINLOOP = 1
+    EXEC_ALWAYS = 2
+    
     StateNames = ['Saved', 'Launched', 'Running', 'Finish', 'Failed']
     
     def execSqlCommand(self, sqlCmd, errMsg):
@@ -98,6 +102,9 @@ class XmippProjectDb(SqliteDb):
             self.connection.row_factory = sqlite.Row
             self.cur = self.connection.cursor()
             self.sqlDict = projectDefaults
+            self.sqlDict['execution_gap'] = SqliteDb.EXEC_GAP
+            self.sqlDict['execution_mainloop'] = SqliteDb.EXEC_MAINLOOP
+            self.sqlDict['execution_always'] = SqliteDb.EXEC_ALWAYS
             
             _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableGroups)s
                  (group_name TEXT PRIMARY KEY);""" % self.sqlDict
@@ -139,7 +146,7 @@ class XmippProjectDb(SqliteDb):
                          verifyFiles TEXT,           -- list with files to modify
                          iter INTEGER DEFAULT 1,     -- for iterative scripts, iteration number
                                                      -- useful to resume at iteration n
-                         execute_mainloop BOOL,      -- Should the script execute this wrapper in main loop?
+                         execution_mode INTEGER,     -- Possible values are: 0 - Gap, 1-Mainloop, 2-DoAlways
                                                      -- an external program that will run it
                          passDb BOOL,                -- Should the script pass the database handler
                          run_id INTEGER REFERENCES %(TableRuns)s(run_id)  ON DELETE CASCADE,
@@ -316,7 +323,7 @@ class XmippProtocolDb(SqliteDb):
     def insertStep(self, command,
                            verifyfiles=[],
                            parent_step_id=None, 
-                           execute_mainloop = True,
+                           execution_mode = SqliteDb.EXEC_MAINLOOP,
                            passDb=False,
                            **_Parameters):
         if not parent_step_id:
@@ -346,9 +353,9 @@ class XmippProtocolDb(SqliteDb):
         if self.insertStatus:
             try:
                 self.cur_aux.execute("""INSERT INTO 
-                                    %(TableSteps)s(command,parameters,verifyFiles,iter,execute_mainloop,passDb,run_id,parent_step_id)
+                                    %(TableSteps)s(command,parameters,verifyFiles,iter,execution_mode,passDb,run_id,parent_step_id)
                                      VALUES (?,?,?,?,?,?,?,?)""" % self.sqlDict,
-                                     [command, parameters, verifyfilesString, self.iter,execute_mainloop,passDb,self.sqlDict['run_id'], parent_step_id])
+                                     [command, parameters, verifyfilesString, self.iter,execution_mode,passDb,self.sqlDict['run_id'], parent_step_id])
                 #select the last step_id inserted for this run
                 self.cur_aux.execute("""SELECT MAX(step_id) FROM %(TableSteps)s WHERE run_id = %(run_id)d""" % self.sqlDict)
                 self.lastStepId = self.cur_aux.fetchone()[0]
@@ -367,17 +374,17 @@ class XmippProtocolDb(SqliteDb):
     def runSteps(self):
         #Update run state to STARTED
         self.updateRunState(SqliteDb.RUN_STARTED)
-        #Clean init date for previous unfinished steps
-        sqlCommand = """ UPDATE %(TableSteps)s  set init=NULL
+        #Clean init and finish for unfinished and doAlways steps
+        sqlCommand = """ UPDATE %(TableSteps)s  SET init=NULL, finish=NULL
                          WHERE run_id = %(run_id)d 
-                         AND finish IS NULL""" % self.sqlDict
+                         AND (finish IS NULL OR execution_mode = %(execution_always)d)""" % self.sqlDict
         self.cur.execute(sqlCommand)
         self.connection.commit()
         #Select steps to run
         sqlCommand = """ SELECT step_id, iter, passDb, command, parameters, verifyFiles 
                          FROM %(TableSteps)s 
                          WHERE run_id = %(run_id)d 
-                         AND finish IS NULL AND execute_mainloop = 1
+                         AND finish IS NULL AND execution_mode > %(execution_gap)d
                          ORDER BY step_id """ % self.sqlDict
         self.cur.execute(sqlCommand)
         commands = self.cur.fetchall()
@@ -469,7 +476,7 @@ class XmippProtocolDb(SqliteDb):
                           AND (child.step_id < %(next_step_id)d)
                           AND (child.init IS NULL)
                           AND (parent.finish IS NOT NULL)
-                          AND (child.execute_mainloop =  0)
+                          AND (child.execution_mode = %(execution_gap)d)
                           AND (child.run_id=%(run_id)d)
                         LIMIT 1""" % self.sqlDict
             cursor.execute(sqlCommand)
@@ -493,14 +500,14 @@ class XmippProtocolDb(SqliteDb):
         sqlCommand = """SELECT COALESCE(MIN(step_id), 99999) 
                          FROM %(TableSteps)s 
                         WHERE run_id=%(run_id)d 
-                          AND init IS NULL AND execute_mainloop=1""" % self.sqlDict
+                          AND init IS NULL AND execution_mode > %(execution_gap)d""" % self.sqlDict
         cursor.execute(sqlCommand)
         # Count the gaps before the next step in main loop
         self.sqlDict['next_step_id'] = cursor.fetchone()[0]
         sqlCommand = """SELECT COUNT(*) FROM %(TableSteps)s 
                         WHERE (step_id < %(next_step_id)d)
                           AND (finish IS NULL)
-                          AND (execute_mainloop =  0)
+                          AND (execution_mode = %(execution_gap)d)
                           AND (run_id=%(run_id)d) """ % self.sqlDict
         
         cursor.execute(sqlCommand)
@@ -613,7 +620,9 @@ class ProgramDb():
         sqlCommand = """INSERT INTO Program VALUES (
                            NULL, %(category_id)d, %(name)s, %(desc)s, %(keywords)s);
                      """ % program
+        self.cursor.execute(sqlCommand)
                      
     def selectPrograms(self, category=None):
-        pass
-        
+        sqlCommand = """SELECT FROM Program ORDER BY category_id;"""
+        self.cursor.execute(sqlCommand)
+        return self.cursor.fetchall()
