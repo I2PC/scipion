@@ -1605,10 +1605,10 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
     int    opt_itrans, iflip_start, iflip_stop, nr_mir;
     int    img_start, ref_start, wsum_start;
 
-    TimeStamp t0;
+    ProcessorTimeStamp t0;
     time_config();
 
-    annotate_time(&t0);
+    annotate_processor_time(&t0);
 
     if (!do_norm)
         opt_scale =1.;
@@ -1660,7 +1660,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
     {
         std::cout<<"processOneImage 1 ";
         print_elapsed_time(t0);
-        annotate_time(&t0);
+        annotate_processor_time(&t0);
     }
 
     Mweight.initZeros(nr_trans, model.n_ref, nr_flip*nr_psi);
@@ -1869,7 +1869,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
     {
         std::cout<<"processOneImage 2 ";
         print_elapsed_time(t0);
-        annotate_time(&t0);
+        annotate_processor_time(&t0);
     }
 
     // Now for all irefmir, check significant rotations...
@@ -2148,7 +2148,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
     {
         std::cout<<"processOneImage 3 ";
         print_elapsed_time(t0);
-        annotate_time(&t0);
+        annotate_processor_time(&t0);
     }
 
     // Update opt_scale
@@ -2283,7 +2283,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
     {
         std::cout<<"processOneImage 4 ";
         print_elapsed_time(t0);
-        annotate_time(&t0);
+        annotate_processor_time(&t0);
     }
 
     // Distribution widths

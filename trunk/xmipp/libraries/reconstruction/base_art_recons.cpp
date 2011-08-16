@@ -363,8 +363,8 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
         // input one
     }
     // Now iterate ..........................................................
-    TimeStamp time0;                    // For measuring the elapsed time
-    annotate_time(&time0);
+    ProcessorTimeStamp time0;                    // For measuring the elapsed time
+    annotate_processor_time(&time0);
     int images=0;
     double mean_error_2ndblock,pow_residual_imgs;
     bool iv_launched=false;

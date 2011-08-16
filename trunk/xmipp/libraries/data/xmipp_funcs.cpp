@@ -750,13 +750,13 @@ void createEmptyFileWithGivenLength(const FileName &fn, size_t length)
 #ifdef _NO_TIME
 void time_config()
 {}
-void annotate_time(TimeStamp *time)
+void annotate_time(ProcessorTimeStamp *time)
 {}
-void print_elapsed_time(TimeStamp &time)
+void print_elapsed_time(ProcessorTimeStamp &time)
 {}
-double elapsed_time(TimeStamp &time)
+double elapsed_time(ProcessorTimeStamp &time)
 {}
-double time_to_go(TimeStamp &time, double fraction_done)
+double time_to_go(ProcessorTimeStamp &time, double fraction_done)
 {}
 void TimeMessage(const std::string &message)
 {}
@@ -774,24 +774,24 @@ void time_config()
 }
 
 // Annotate actual time ....................................................
-void annotate_time(TimeStamp *time)
+void annotate_processor_time(ProcessorTimeStamp *time)
 {
     times(time);
 }
 
 // Acumulative time
-void acum_time(TimeStamp *orig, TimeStamp *dest)
+void acum_time(ProcessorTimeStamp *orig, ProcessorTimeStamp *dest)
 {
-    TimeStamp now;
+    ProcessorTimeStamp now;
     times(&now);
     (*dest).tms_utime += (*dest).tms_utime + (now.tms_utime - (*orig).tms_utime);
     (*dest).tms_stime += (*dest).tms_stime + (now.tms_utime - (*orig).tms_utime);
 }
 
 // Show elapsed time since last annotation .................................
-void print_elapsed_time(TimeStamp &time, bool _IN_SECS)
+void print_elapsed_time(ProcessorTimeStamp &time, bool _IN_SECS)
 {
-    TimeStamp now;
+    ProcessorTimeStamp now;
     times(&now);
     double userTime = now.tms_utime - time.tms_utime;
     double sysTime = now.tms_stime - time.tms_stime;
@@ -805,9 +805,9 @@ void print_elapsed_time(TimeStamp &time, bool _IN_SECS)
 }
 
 // Calculate elapsed time since last annotation .............................
-double elapsed_time(TimeStamp &time, bool _IN_SECS)
+double elapsed_time(ProcessorTimeStamp &time, bool _IN_SECS)
 {
-    TimeStamp now;
+    ProcessorTimeStamp now;
     times(&now);
     double userTime = now.tms_utime - time.tms_utime;
     double sysTime = now.tms_stime - time.tms_stime;
@@ -820,9 +820,9 @@ double elapsed_time(TimeStamp &time, bool _IN_SECS)
 }
 
 // Compute the predicted time left .........................................
-double time_to_go(TimeStamp &time, double fraction_done)
+double time_to_go(ProcessorTimeStamp &time, double fraction_done)
 {
-    TimeStamp now;
+    ProcessorTimeStamp now;
     times(&now);
     double totalTime = (now.tms_utime - time.tms_utime +
                         now.tms_stime - time.tms_stime) / XmippTICKS;

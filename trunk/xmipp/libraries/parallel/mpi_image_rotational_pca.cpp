@@ -164,8 +164,8 @@ void ProgImageRotationalPCA::flushHBuffer()
 // Apply T ================================================================
 void ProgImageRotationalPCA::applyT()
 {
-	TimeStamp t0;
-	annotate_time(&t0);
+	ProcessorTimeStamp t0;
+	annotate_processor_time(&t0);
     W.initZeros(Npixels,MAT_XSIZE(H));
     Wnode.initZeros(Npixels,MAT_XSIZE(H));
 
@@ -238,8 +238,8 @@ void ProgImageRotationalPCA::applyT()
 // Apply T ================================================================
 void ProgImageRotationalPCA::applyTt()
 {
-	TimeStamp t0;
-	annotate_time(&t0);
+	ProcessorTimeStamp t0;
+	annotate_processor_time(&t0);
 
 	// Compute W transpose to accelerate memory access
     Wtranspose.resizeNoCopy(MAT_XSIZE(W),MAT_YSIZE(W));
@@ -315,8 +315,8 @@ void ProgImageRotationalPCA::applyTt()
 // QR =====================================================================
 int ProgImageRotationalPCA::QR()
 {
-	TimeStamp t0;
-	annotate_time(&t0);
+	ProcessorTimeStamp t0;
+	annotate_processor_time(&t0);
     size_t jQ=0;
     Matrix1D<double> qj1, qj2;
     int iBlockMax=MAT_XSIZE(F)/4;
@@ -426,16 +426,16 @@ void ProgImageRotationalPCA::run()
     // Apply SVD and extract the basis
     if (node->isMaster())
     {
-    	TimeStamp t0;
-    	annotate_time(&t0);
+    	ProcessorTimeStamp t0;
+    	annotate_processor_time(&t0);
         // SVD of W
         Matrix2D<double> U,V;
         Matrix1D<double> S;
         svdcmp(W,U,S,V);
-        std::cout << "SVD:"; print_elapsed_time(t0);
+        std::cout << "SVD " << MAT_YSIZE(W) << "x" << MAT_XSIZE(W) << ":"; print_elapsed_time(t0);
 
         // Keep the first Neigen images from U
-    	annotate_time(&t0);
+    	annotate_processor_time(&t0);
         Image<double> I;
         I().resizeNoCopy(Xdim,Xdim);
         const MultidimArray<double> &mI=I();

@@ -727,7 +727,7 @@ double rnd_log(double a, double b);
  * time_config();
  * ...
  *
- * annotate_time(&t0);
+ * annotate_processor_time(&t0);
  * // Part to be measured
  * ...
  *
@@ -742,12 +742,32 @@ double rnd_log(double a, double b);
  *
  * @code
  * // Variable declaration
- * TimeStamp t0;
+ * ProcessorTimeStamp t0;
  * double to_go;
  *
  * // Beginning of the program
  * time_config();
  * ...
+ *
+ * annotate_processor_time(&t0);
+ * // Part to be measured
+ * for (int i=0; i<60; i++)
+ * {
+ *     ...
+ *     // Compute the time to go with the fraction of work already done
+ *     to_go = time_to_go(t0, (double) (i + 1) / 60);
+ *     std::cout << "I think you will be here " << to_go << "seconds more\n";
+ * }
+ * // End of part to be measured
+ * print_elapsed_time(t0);
+ * @endcode
+ *
+ * Alternatively:
+ *
+ * @code
+ * // Variable declaration
+ * TimeStamp t0;
+ * double to_go;
  *
  * annotate_time(&t0);
  * // Part to be measured
@@ -758,6 +778,8 @@ double rnd_log(double a, double b);
  *     to_go = time_to_go(t0, (double) (i + 1) / 60);
  *     std::cout << "I think you will be here " << to_go << "seconds more\n";
  * }
+ * // End of part to be measured
+ * print_elapsed_time(t0);
  * @endcode
  *
  * Graphical:
@@ -791,9 +813,9 @@ double rnd_log(double a, double b);
  */
 //@{
 #ifdef _NO_TIME
-typedef int TimeStamp; // Any other kind of data will do
+typedef int ProcessorTimeStamp; // Any other kind of data will do
 #else
-typedef struct tms TimeStamp; // Renaming of the time structure
+typedef struct tms ProcessorTimeStamp; // Renaming of the time structure
 #endif
 
 /** Read the system clock frequency
@@ -820,7 +842,7 @@ void time_config();
  *
  * This function is not ported to Python.
  */
-void annotate_time(TimeStamp* time);
+void annotate_processor_time(ProcessorTimeStamp* time);
 
 /** Acumulate time
  *
@@ -831,7 +853,7 @@ void annotate_time(TimeStamp* time);
  *
  * This function is not ported to Python.
  */
-void acum_time(TimeStamp* orig, TimeStamp* dest);
+void acum_time(ProcessorTimeStamp* orig, ProcessorTimeStamp* dest);
 
 /** Compute elapsed time since a given annotation
  *
@@ -854,7 +876,7 @@ void acum_time(TimeStamp* orig, TimeStamp* dest);
  *
  * This function is not ported to Python.
  */
-double elapsed_time(TimeStamp& time, bool _IN_SECS = true);
+double elapsed_time(ProcessorTimeStamp& time, bool _IN_SECS = true);
 
 /** Show on screen the elapsed time since a given annotation
  *
@@ -874,7 +896,7 @@ double elapsed_time(TimeStamp& time, bool _IN_SECS = true);
  *
  * This function is not ported to Python.
  */
-void print_elapsed_time(TimeStamp& time, bool _IN_SECS = true);
+void print_elapsed_time(ProcessorTimeStamp& time, bool _IN_SECS = true);
 
 /** Returns the estimated time left to finish
  *
@@ -884,7 +906,7 @@ void print_elapsed_time(TimeStamp& time, bool _IN_SECS = true);
  *
  * This function is not ported to Python.
  */
-double time_to_go(TimeStamp& time, double fraction_done);
+double time_to_go(ProcessorTimeStamp& time, double fraction_done);
 
 /** Initialise the progress bar
  *
