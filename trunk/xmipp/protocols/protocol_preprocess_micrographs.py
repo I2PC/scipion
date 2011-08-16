@@ -25,7 +25,8 @@ class ProtPreprocessMicrographs(XmippProtocol):
 
     def defineSteps(self):
         CtfFindActions=[]
-        self.Db.insertStep('runStepGapsMpi',passDb=True, script=self.scriptName, NumberOfMpi=self.NumberOfMpi)        
+        idMPI=self.Db.insertStep('runStepGapsMpi',passDb=True, script=self.scriptName, NumberOfMpi=self.NumberOfMpi)
+        verifyFiles=[]        
         for filename in glob.glob(os.path.join(self.DirMicrographs, self.ExtMicrographs)):
             # Get the shortname and extension
             micrographName = os.path.split(filename)[1]
@@ -44,12 +45,16 @@ class ProtPreprocessMicrographs(XmippProtocol):
             
             # Insert actions in the database
             id=self.Db.insertStep('createDir',path=micrographDir,parent_step_id=XmippProjectDb.FIRST_STEP,execute_mainloop=False)
-            id=self.Db.insertStep('preprocessMicrograph',verifyfiles=[os.path.join(micrographDir,"micrograph"+extension)],
+            fnOut=os.path.join(micrographDir,"micrograph"+extension)
+            verifyFiles.append(fnOut)
+            id=self.Db.insertStep('preprocessMicrograph',verifyfiles=[fnOut],
                                     parent_step_id=id, execute_mainloop=False,
                                     micrograph=filename,micrographDir=micrographDir,DoPreprocess=self.DoPreprocess,
                                     Crop=self.Crop,Stddev=self.Stddev,Down=self.Down)
             if self.DoCtfEstimate:
-                self.Db.insertStep('estimateCtfXmipp',verifyfiles=[os.path.join(micrographDir,"xmipp_ctf.ctfparam")],
+                fnOut=os.path.join(micrographDir,"xmipp_ctf.ctfparam")
+                verifyFiles.append(fnOut)
+                self.Db.insertStep('estimateCtfXmipp',verifyfiles=[fnOut],
                                      parent_step_id=id,execute_mainloop=False,
                                      micrograph=finalname,micrographDir=micrographDir,Voltage=self.Voltage,
                                      SphericalAberration=self.SphericalAberration,AngPix=AngPix,
@@ -57,7 +62,9 @@ class ProtPreprocessMicrographs(XmippProtocol):
                                      HighResolCutoff=self.HighResolCutoff,
                                      MinFocus=self.MinFocus,MaxFocus=self.MaxFocus,WinSize=self.WinSize)
                 if self.DoCtffind:
-                    CtfFindActions.append([dict(verifyfiles=[os.path.join(micrographDir,"ctffind.ctfparam")],
+                    fnOut=os.path.join(micrographDir,"ctffind.ctfparam")
+                    verifyFiles.append(fnOut)
+                    CtfFindActions.append([dict(verifyfiles=[fnOut],
                                          execute_mainloop=False,
                                          CtffindExec=self.CtffindExec,micrograph=finalname,micrographDir=micrographDir,
                                          tmpDir=self.TmpDir,
@@ -69,6 +76,7 @@ class ProtPreprocessMicrographs(XmippProtocol):
         for action in CtfFindActions:
             action["parent_step_id"]=id # This makes all ctffinds to go after the last preprocessing
             self.Db.insertStep('estimateCtfCtffind',action)
+        self.Db.updateVerifyFiles(idMPI,verifyFiles)
         
         # Gather results after external actions
         self.Db.insertStep('gatherResults',verifyfiles=[os.path.join(self.WorkingDir,"micrographs.sel")],
@@ -108,12 +116,12 @@ class ProtPreprocessMicrographs(XmippProtocol):
     def visualize(self):
         summaryFile=os.path.join(self.WorkingDir,"micrographs.sel")
         if os.path.exists(summaryFile):
-            os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --mem 2048m &")
+            os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --memory 2048m &")
         else:
             summaryFile=os.path.join(self.TmpDir,"micrographs.sel")
             buildSummaryMetadata(self.WorkingDir,self.DoCtfEstimate,self.DoCtffind,summaryFile)
             if os.path.exists(summaryFile):
-                os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --mem 2048m &")
+                os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --memory 2048m &")
             else:
                 import tkMessageBox
                 tkMessageBox.showerror("Error", "There is no result yet")        
