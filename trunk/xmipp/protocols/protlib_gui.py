@@ -459,7 +459,7 @@ class ProtocolGUI(BasicGUI):
         return btn
     
     def addRadioButton(self, w, var, text, value, row, col, parent):
-        rb = tk.Radiobutton(parent, text=text, variable=var.tkvar, value=value, bg=self.style.LabelBgColor)#, command=self.checkVisibility)
+        rb = tk.Radiobutton(parent, text=text, variable=var.tkvar, value=value, bg=self.style.LabelBgColor, command=self.checkVisibility)
         rb.grid(row=row, column=col, sticky='w')
         w.widgetslist.append(rb)
         return rb
@@ -504,6 +504,7 @@ class ProtocolGUI(BasicGUI):
                 var.tags['visualize'] = section.variable.tags['visualize']
             for k, v in section.variable.conditions.iteritems():
                 var.conditions[k] = v
+                
         
         keys = var.tags.keys()
                 
