@@ -303,7 +303,7 @@ public:
     virtual void printParam(const ParamDef &param, int v = 0) = 0;
     virtual void printArgument(const ArgumentDef & argument, int v = 0) = 0;
     virtual void printCommentList(const CommentList &comments, int v = 0) = 0;
-    virtual void printToken(ArgToken * token) = 0;
+    virtual void printToken(ArgToken * token);
 };
 
 
@@ -322,7 +322,6 @@ public:
     virtual void printParam(const ParamDef &param, int v = 0);
     virtual void printArgument(const ArgumentDef & argument, int v = 0);
     virtual void printCommentList(const CommentList &comments, int v = 0);
-    virtual void printToken(ArgToken * token);
 };
 
 /** Print out to create Tk GUI */
@@ -341,10 +340,9 @@ public:
   virtual void printParam(const ParamDef &param, int v = 0);
   virtual void printArgument(const ArgumentDef & argument, int v = 0);
   virtual void printCommentList(const CommentList &comments, int v = 0){};
-  virtual void printToken(ArgToken * token){};
 };
 
-/** Just print to out stream */
+/** Print wiki text */
 class WikiPrinter: public Printer
 {
 protected:
@@ -358,7 +356,7 @@ public:
     virtual void printParam(const ParamDef &param, int v = 0);
     virtual void printArgument(const ArgumentDef & argument, int v = 0);
     virtual void printCommentList(const CommentList &comments, int v = 0);
-    virtual void printToken(ArgToken * token);
 };
+
 /** @} */
 #endif /* ARGSPARSER_H_ */

@@ -1065,6 +1065,15 @@ const char * ProgramDef::getParam(const char * paramName, const char * subParam,
 }
 
 //-------------------   PRINTER IMPLEMENTATIONS   --------------------------------
+void Printer::printToken(ArgToken * token)
+{
+
+    std::cerr << "token: '" << token->lexeme
+    << "' type: " << ArgToken::typeString(token->type)
+    << " line: " << token->line + 1
+    << " pos: " << token->start + 1 << std::endl;
+}
+
 //--------- CONSOLE PRINTER -----------------------
 #define COLOR(x, c) (color ? colorString(x, c) : String(x))
 
@@ -1207,15 +1216,6 @@ void ConsolePrinter::printCommentList(const CommentList &comments, int v)
     for (size_t i = 0; i < comments.size(); ++i)
         if (comments.visibility[i] <= v)
             *pOut << "          " << comments.comments[i] << std::endl;
-}
-
-void ConsolePrinter::printToken(ArgToken * token)
-{
-
-    std::cerr << "token: '" << token->lexeme
-    << "' type: " << ArgToken::typeString(token->type)
-    << " line: " << token->line + 1
-    << " pos: " << token->start + 1 << std::endl;
 }
 
 //-------------------   TK PRINTER IMPLEMENTATIONS   --------------------------------
@@ -1509,11 +1509,3 @@ void WikiPrinter::printCommentList(const CommentList &comments, int v)
     *pOut << "%BR%" << std::endl;
 }
 
-void WikiPrinter::printToken(ArgToken * token)
-{
-
-    std::cerr << "token: '" << token->lexeme
-    << "' type: " << ArgToken::typeString(token->type)
-    << " line: " << token->line + 1
-    << " pos: " << token->start + 1 << std::endl;
-}
