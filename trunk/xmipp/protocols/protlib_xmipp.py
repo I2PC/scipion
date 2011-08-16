@@ -33,8 +33,8 @@ from protlib_utils import runImageJPlugin
 class XmippScript():
     ''' This class will serve as wrapper around the XmippProgram class
     to have same facilities from Python scripts'''
-    def __init__(self):
-        self._prog = Program()
+    def __init__(self, runWithoutArgs=False):
+        self._prog = Program(runWithoutArgs)
         
     def defineParams(self):
         ''' This function should be overwrited by subclasses for 
