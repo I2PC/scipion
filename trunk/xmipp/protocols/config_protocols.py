@@ -2,19 +2,18 @@
 # Protocol information
 #--------------------------------------------------------------------------------
 class ProtocolData:
-    def __init__(self,key,title,protocolDir):
-        self.key=key
+    def __init__(self,name,title,dir):
+        self.name=name
         self.title=title
-        self.protocolDir=protocolDir
+        self.dir=dir
 
-class ProtocolDictionary:
-    def addProtocol(self,key,title,protocolDir):
-        p = ProtocolData(key,title,protocolDir)
-        self.protocolDict[key]=p
+class ProtocolDictionary(dict):
+    def addProtocol(self,name,title,dir):
+        p = ProtocolData(name,title,dir)
+        self[name]=p
         return p
     
     def __init__(self):
-        self.protocolDict={}
         self.preprocess_micrographs = self.addProtocol('preprocess_micrographs', 'Preprocess Micrograph', 'Preprocess')
         self.particle_pick = self.addProtocol('particle_pick',  'Particle picking', 'ParticlePicking')
         self.particle_pick_auto = self.addProtocol('particle_pick_automatic',  'Automatic particle picking', 'ParticlePickingAuto')
@@ -54,26 +53,26 @@ projectDefaults = {
 
 sections = [
 ('Preprocessing', 
-   [['Preprocess Micrograph', protDict.preprocess_micrographs.key], 
-    ['Particle picking', protDict.particle_pick.key], 
-    ['Preprocess Particles', protDict.preprocess_particles.key]]),
+   [['Preprocess Micrograph', protDict.preprocess_micrographs.name], 
+    ['Particle picking', protDict.particle_pick.name], 
+    ['Preprocess Particles', protDict.preprocess_particles.name]]),
 ('2D', 
-   [['Align+Classify', protDict.ml2d.key, protDict.cl2d.key], 
-    ['Align', protDict.ml2d.key, protDict.cl2d.key], 
-    ['Classify', protDict.kerdensom.key, protDict.rotspectra.key]]),
+   [['Align+Classify', protDict.ml2d.name, protDict.cl2d.name], 
+    ['Align', protDict.ml2d.name, protDict.cl2d.name], 
+    ['Classify', protDict.kerdensom.name, protDict.rotspectra.name]]),
 ('3D', 
-   [['Initial Model', protDict.commonlines.key, protDict.rct.key], 
-    ['Model Refinement', protDict.projmatch.key]])
+   [['Initial Model', protDict.commonlines.name, protDict.rct.name], 
+    ['Model Refinement', protDict.projmatch.name]])
 ,
 ('Other',
- [['Extra',protDict.projsubs.key, protDict.dummy.key]])
+ [['Extra',protDict.projsubs.name, protDict.dummy.name]])
 ]
 
-def getSectionByKey(prot): 
+def getSectionByName(prot): 
     for s, list in sections:
         ss = []
         for subList in list:
-            if prot.key in subList:
+            if prot.name in subList:
                 ss.append(subList[0])
         if len(ss) > 0:
             return (s, ss)
