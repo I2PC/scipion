@@ -127,27 +127,30 @@ bool XmippProgram::checkBuiltIns()
 
 void XmippProgram::writeToDB(const FileName &dbName)
 {
-    XmippDB db;
-    DbProgram progData;
-    progData.name = name();
-    progData.keywords = progDef->keywords;
-    StringVector::const_iterator it;
-    StringVector & desc = progDef->usageComments.comments;
-    for (it = desc.begin(); it < desc.end(); ++it)
-        progData.description += *it + "\n";
-    db.beginTrans();
-    db.insertProgram(&progData);
-    db.commitTrans();
+    //    ProgramDb db;
+    //    DbProgram progData;
+    //    progData.name = name();
+    //    progData.keywords = progDef->keywords;
+    //    StringVector::const_iterator it;
+    //    StringVector & desc = progDef->usageComments.comments;
+    //    for (it = desc.begin(); it < desc.end(); ++it)
+    //        progData.description += *it + "\n";
+    //    db.beginTrans();
+    //    db.insertProgram(&progData);
+    //    db.commitTrans();
 }
 
-void XmippProgram::writeInfo(	)
+void XmippProgram::writeInfo( )
 {
-	std::cout << "PROGRAM: " << name() << std::endl;
-	std::cout << "KEYWORDS: " << progDef->keywords << std::endl;
-    StringVector::const_iterator it;
-	StringVector & desc = progDef->usageComments.comments;
-    for (it = desc.begin(); it < desc.end(); ++it)
-		std::cout << "DESCRIPTION: " << *it << std::endl;
+    ProgramDb db;
+    db.printProgram(*progDef);
+
+    //  std::cout << "PROGRAM: " << name() << std::endl;
+    // std::cout << "KEYWORDS: " << progDef->keywords << std::endl;
+    //    StringVector::const_iterator it;
+    // StringVector & desc = progDef->usageComments.comments;
+    //    for (it = desc.begin(); it < desc.end(); ++it)
+    //  std::cout << "DESCRIPTION: " << *it << std::endl;
 }
 
 void XmippProgram::createGUI()
@@ -170,13 +173,13 @@ XmippProgram::XmippProgram()
     // this can be changed on mpi slaves node for no output at all
     verbose = 1;
     progDef = NULL;
-    doRun = false;
+    runWithoutArgs = doRun = false;
     errorCode = 0;
 }
 
 XmippProgram::XmippProgram(int argc, char ** argv)
 {
-    doRun = false;
+    runWithoutArgs = doRun = false;
     errorCode = 0;
     init();
     read(argc, argv);
@@ -220,11 +223,16 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
     //this behavior will be defined with environment variable XMIPP_BEHAVIOR
     if (argc == 1)
     {
-        char * var = getenv("XMIPP_GUI_ON");
-        if (var != NULL)
-            createGUI();
+        if (runWithoutArgs)
+            doRun = true;
         else
-            usage();
+        {
+            char * var = getenv("XMIPP_GUI_ON");
+            if (var != NULL)
+                createGUI();
+            else
+                usage();
+        }
     }
     else
     {

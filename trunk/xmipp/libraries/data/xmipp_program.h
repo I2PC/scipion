@@ -93,6 +93,10 @@ protected:
 public:
     /** Flag to check whether to run or not*/
     bool doRun;
+    /** Flag to mark if the program should run without arguments
+     * or just print the usage(default behavior)
+     */
+    bool runWithoutArgs;
     /** @name Functions to be implemented by subclasses.
      * @{
      */

@@ -785,7 +785,24 @@ Program_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     ProgramObject *self = (ProgramObject*) type->tp_alloc(type, 0);
     if (self != NULL)
+    {
         self->program = new XmippProgramGeneric();
+        PyObject * runWithoutArgs = Py_False;
+        if (PyArg_ParseTuple(args, "|O", &runWithoutArgs))
+        {
+          try
+          {
+              if (PyBool_Check(runWithoutArgs))
+                  self->program->runWithoutArgs = (runWithoutArgs == Py_True);
+              else
+                  PyErr_SetString(PyExc_TypeError, "MetaData::new: Expecting boolean value");
+          }
+          catch (XmippError xe)
+          {
+              PyErr_SetString(PyXmippError, xe.msg.c_str());
+          }
+        }
+    }
     return (PyObject *) self;
 }
 
