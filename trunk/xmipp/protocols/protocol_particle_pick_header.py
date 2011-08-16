@@ -24,54 +24,37 @@ DisplayComment = False
 Describe your run here...
 """
 
-#------------------------------------------------------------------------------------------
-# {section} Global parameters
-#------------------------------------------------------------------------------------------
-# Run name
-""" Working directory for this protocol 
+#-----------------------------------------------------------------------------
+# {section} Run parameters
+#-----------------------------------------------------------------------------
+# Run name:
+""" This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
+run1 for it. This name together with the protocol output folder will determine the working dir for this run.
 """
-RunName = "particles_001"
+RunName = "run_001"
 
+# {hidden} Run behavior
+""" Resume from the last step, restart the whole process
+"""
+Behavior = "Resume"
+
+#------------------------------------------------------------------------------------------
+# {section} Picking parameters
+#------------------------------------------------------------------------------------------
 # {run}(preprocess_micrographs) Preprocessing Micrographs run
 """ Directory with the preprocessing (output of the Preprocessing Micrographs protocol)
 """
-PreprocessingRun = "Preprocessing/micrographs_001"
+PreprocessingRun = ""
 
 # Perform automatic particle picking
 """ Perform automatic particle picking """
-AutomaticPicking = True
+AutomaticPicking = False
 
-#------------------------------------------------------------------------------------------
-# {section} Parallelization issues
-#------------------------------------------------------------------------------------------
-# Number of (shared-memory) threads?
+# {condition}(AutomaticPicking=True) Number of threads
 """ This option provides shared-memory parallelization on multi-core machines.
-It does not require any additional software, other than xmipp
+It does not require any additional software, other than xmipp.
 """
-NumberOfThreads = 1
-
-# Number of MPI processes to use
-NumberOfMpi = 3
-
-#------------------------------------------------------------------------------------------
-# {section}{has_question} Queue
-#------------------------------------------------------------------------------------------
-# Submmit to queue
-"""Submmit to queue
-"""
-SubmmitToQueue = True
-
-# Queue name
-"""Name of the queue to submit the job
-"""
-QueueName = "default"
-
-# Queue hours
-"""This establish a maximum number of hours the job will
-be running, after that time it will be killed by the
-queue system
-"""
-QueueHours = 72
+NumberOfThreads = 2
 
 # {hidden} Show expert options
 """If True, expert options will be displayed
