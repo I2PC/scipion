@@ -109,7 +109,7 @@ void ProgImageRotationalPCA::produceSideInfo()
     double R2=0.25*Xdim*Xdim;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
     	A2D_ELEM(mask,i,j)=(i*i+j*j<R2);
-    mask.initConstant(1); // COSS Temporarily the mask is full
+    // mask.initConstant(1); // COSS Temporarily the mask is full
     Npixels=(int)mask.sum();
 
     W.resizeNoCopy(Npixels, Neigen+2);
@@ -206,25 +206,28 @@ void ProgImageRotationalPCA::applyT()
                     applyGeometry(1,Iaux,mI,A,IS_INV,true);
 
                     // Update Wnode
-                    for (int i=0; i<MAT_YSIZE(Wnode); ++i)
+                    int i=0;
+                    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Iaux)
                     {
-                        double pixval=DIRECT_MULTIDIM_ELEM(Iaux,i);
+                    	if (DIRECT_MULTIDIM_ELEM(mask,n)==0)
+                    		continue;
+                        double pixval=DIRECT_MULTIDIM_ELEM(Iaux,n);
                         double *ptrWnode=&MAT_ELEM(Wnode,i,0);
-                        unsigned char *ptrMask=&DIRECT_MULTIDIM_ELEM(mask,0);
                         double *ptrHblock=&MAT_ELEM(Hblock,block_idx,0);
-                        for (int j=0; j<jmax; j+=unroll, ptrHblock+=unroll, ptrMask+=unroll)
+                        for (int j=0; j<jmax; j+=unroll, ptrHblock+=unroll, ptrWnode+=unroll)
                         {
-                            if (*ptrMask    ) (*ptrWnode++) +=pixval*(*ptrHblock  );
-                            if (*(ptrMask+1)) (*ptrWnode++) +=pixval*(*(ptrHblock+1));
-                            if (*(ptrMask+2)) (*ptrWnode++) +=pixval*(*(ptrHblock+2));
-                            if (*(ptrMask+3)) (*ptrWnode++) +=pixval*(*(ptrHblock+3));
-                            if (*(ptrMask+4)) (*ptrWnode++) +=pixval*(*(ptrHblock+4));
-                            if (*(ptrMask+5)) (*ptrWnode++) +=pixval*(*(ptrHblock+5));
-                            if (*(ptrMask+6)) (*ptrWnode++) +=pixval*(*(ptrHblock+6));
-                            if (*(ptrMask+7)) (*ptrWnode++) +=pixval*(*(ptrHblock+7));
+                            (*(ptrWnode  )) +=pixval*(*ptrHblock  );
+                            (*(ptrWnode+1)) +=pixval*(*(ptrHblock+1));
+                            (*(ptrWnode+2)) +=pixval*(*(ptrHblock+2));
+                            (*(ptrWnode+3)) +=pixval*(*(ptrHblock+3));
+                            (*(ptrWnode+4)) +=pixval*(*(ptrHblock+4));
+                            (*(ptrWnode+5)) +=pixval*(*(ptrHblock+5));
+                            (*(ptrWnode+6)) +=pixval*(*(ptrHblock+6));
+                            (*(ptrWnode+7)) +=pixval*(*(ptrHblock+7));
                         }
-                        for (int j=jmax; j<MAT_XSIZE(Wnode); ++j, ptrHblock+=1, ptrMask+=1)
-                            if (*ptrMask) (*ptrWnode++) +=pixval*(*ptrHblock);
+                        for (int j=jmax; j<MAT_XSIZE(Wnode); ++j, ptrHblock+=1, ptrWnode+=1)
+                            (*(ptrWnode  )) +=pixval*(*ptrHblock  );
+                        ++i;
                     }
                 }
             }
@@ -436,6 +439,7 @@ void ProgImageRotationalPCA::run()
     // Apply SVD and extract the basis
     if (node->isMaster())
     {
+    	std::cout << "Empiezo SVD" << std::endl;
     	annotate_time(&t0);
         // SVD of W
         Matrix2D<double> U,V;
