@@ -36,15 +36,18 @@ ProgImageRotationalPCA::ProgImageRotationalPCA(int argc, char **argv)
     node=new MpiNode(argc,argv);
     if (!node->isMaster())
         verbose=0;
+    fileMutex=NULL;
+    taskDistributor=NULL;
 }
 
 // MPI destructor
 ProgImageRotationalPCA::~ProgImageRotationalPCA()
 {
-	delete fileMutex;
+    delete fileMutex;
+    delete taskDistributor;
     delete node;
     for (int n=0; n<HbufferMax; n++)
-    	delete [] Hbuffer[n];
+        delete [] Hbuffer[n];
 }
 
 // Read arguments ==========================================================
@@ -92,7 +95,7 @@ void ProgImageRotationalPCA::defineParams()
 // Produce side info =====================================================
 void ProgImageRotationalPCA::produceSideInfo()
 {
-	time_config();
+    time_config();
 
     MD.read(fnIn);
     Nimg=MD.size();
@@ -108,7 +111,7 @@ void ProgImageRotationalPCA::produceSideInfo()
     mask.setXmippOrigin();
     double R2=0.25*Xdim*Xdim;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-    	A2D_ELEM(mask,i,j)=(i*i+j*j<R2);
+    A2D_ELEM(mask,i,j)=(i*i+j*j<R2);
     // mask.initConstant(1); // COSS Temporarily the mask is full
     Npixels=(int)mask.sum();
 
@@ -138,115 +141,123 @@ void ProgImageRotationalPCA::produceSideInfo()
     // Prepare buffer
     fileMutex = new MpiFileMutex(node);
     for (int n=0; n<HbufferMax; n++)
-    	Hbuffer.push_back(new double[MAT_XSIZE(Hblock)*MAT_YSIZE(Hblock)]);
+        Hbuffer.push_back(new double[MAT_XSIZE(Hblock)*MAT_YSIZE(Hblock)]);
+
+    // Construct a FileTaskDistributor
+    MD.findObjects(objId);
+    size_t Nimgs=objId.size();
+    taskDistributor=new FileTaskDistributor(Nimgs,XMIPP_MAX(1,Nimgs/(5*node->size)),node);
 }
 
 // Buffer =================================================================
 void ProgImageRotationalPCA::writeToHBuffer(double *dest)
 {
-	int n=HbufferDestination.size();
+    int n=HbufferDestination.size();
     memcpy(Hbuffer[n],&MAT_ELEM(Hblock,0,0),MAT_XSIZE(Hblock)*MAT_YSIZE(Hblock)*sizeof(double));
     HbufferDestination.push_back(dest);
     if (n==(HbufferMax-1))
-    	flushHBuffer();
+        flushHBuffer();
 }
 
 void ProgImageRotationalPCA::flushHBuffer()
 {
-	int nmax=HbufferDestination.size();
-	fileMutex->lock();
-	for (int n=0; n<nmax; ++n)
-		memcpy(HbufferDestination[n],Hbuffer[n],MAT_XSIZE(Hblock)*MAT_YSIZE(Hblock)*sizeof(double));
-	fileMutex->unlock();
-	HbufferDestination.clear();
+    int nmax=HbufferDestination.size();
+    fileMutex->lock();
+    for (int n=0; n<nmax; ++n)
+        memcpy(HbufferDestination[n],Hbuffer[n],MAT_XSIZE(Hblock)*MAT_YSIZE(Hblock)*sizeof(double));
+    fileMutex->unlock();
+    HbufferDestination.clear();
 }
 
 // Apply T ================================================================
 void ProgImageRotationalPCA::applyT()
 {
-	TimeStamp t0;
-	annotate_time(&t0);
+    TimeStamp t0;
+    annotate_time(&t0);
     W.initZeros(Npixels,MAT_XSIZE(H));
     Wnode.initZeros(Npixels,MAT_XSIZE(H));
 
     FileName fnImg;
-    size_t idx=0;
     const int unroll=8;
     const int jmax=(MAT_XSIZE(Wnode)/unroll)*unroll;
 
-    FOR_ALL_OBJECTS_IN_METADATA(MD)
+    taskDistributor->reset();
+    size_t first, last;
+    while (taskDistributor->getTasks(first, last))
     {
-        // Process image only if it is in my rank
-        if ((++idx)%(node->size)!=node->rank)
-            continue;
-
-        // Read image
-        MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
-        I.read(fnImg);
-        const MultidimArray<double> &mI=I();
-
-        // Locate the corresponding index in Matrix H
-        // and copy a block in memory to speed up calculations
-        size_t Hidx=(idx-1)*Nangles*Nshifts;
-        memcpy(&MAT_ELEM(Hblock,0,0),&MAT_ELEM(H,Hidx,0),MAT_XSIZE(Hblock)*MAT_YSIZE(Hblock)*sizeof(double));
-
-        // For each rotation and shift
-        int block_idx=0;
-        for (double psi=0; psi<360; psi+=psi_step)
+    	std::cout << "Rank " << node->rank << " [" << first << "," << last << "]" << std::endl;
+        for (size_t idx=first; idx<=last; ++idx)
         {
-            rotation2DMatrix(psi,A,true);
-            for (double y=-max_shift_change; y<=max_shift_change; y+=shift_step)
+            // Read image
+            MD.getValue(MDL_IMAGE,fnImg,objId[idx]);
+            I.read(fnImg);
+            const MultidimArray<double> &mI=I();
+
+            // Locate the corresponding index in Matrix H
+            // and copy a block in memory to speed up calculations
+            size_t Hidx=(idx-1)*Nangles*Nshifts;
+            memcpy(&MAT_ELEM(Hblock,0,0),&MAT_ELEM(H,Hidx,0),MAT_XSIZE(Hblock)*MAT_YSIZE(Hblock)*sizeof(double));
+
+            // For each rotation and shift
+            int block_idx=0;
+            for (double psi=0; psi<360; psi+=psi_step)
             {
-                MAT_ELEM(A,1,2)=y;
-                for (double x=-max_shift_change; x<=max_shift_change; x+=shift_step, ++block_idx)
+                rotation2DMatrix(psi,A,true);
+                for (double y=-max_shift_change; y<=max_shift_change; y+=shift_step)
                 {
-                    MAT_ELEM(A,0,2)=x;
-
-                    // Rotate and shift image
-                    applyGeometry(1,Iaux,mI,A,IS_INV,true);
-
-                    // Update Wnode
-                    int i=0;
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Iaux)
+                    MAT_ELEM(A,1,2)=y;
+                    for (double x=-max_shift_change; x<=max_shift_change; x+=shift_step, ++block_idx)
                     {
-                    	if (DIRECT_MULTIDIM_ELEM(mask,n)==0)
-                    		continue;
-                        double pixval=DIRECT_MULTIDIM_ELEM(Iaux,n);
-                        double *ptrWnode=&MAT_ELEM(Wnode,i,0);
-                        double *ptrHblock=&MAT_ELEM(Hblock,block_idx,0);
-                        for (int j=0; j<jmax; j+=unroll, ptrHblock+=unroll, ptrWnode+=unroll)
+                        MAT_ELEM(A,0,2)=x;
+
+                        // Rotate and shift image
+                        applyGeometry(1,Iaux,mI,A,IS_INV,true);
+
+                        // Update Wnode
+                        int i=0;
+                        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Iaux)
                         {
-                            (*(ptrWnode  )) +=pixval*(*ptrHblock  );
-                            (*(ptrWnode+1)) +=pixval*(*(ptrHblock+1));
-                            (*(ptrWnode+2)) +=pixval*(*(ptrHblock+2));
-                            (*(ptrWnode+3)) +=pixval*(*(ptrHblock+3));
-                            (*(ptrWnode+4)) +=pixval*(*(ptrHblock+4));
-                            (*(ptrWnode+5)) +=pixval*(*(ptrHblock+5));
-                            (*(ptrWnode+6)) +=pixval*(*(ptrHblock+6));
-                            (*(ptrWnode+7)) +=pixval*(*(ptrHblock+7));
+                            if (DIRECT_MULTIDIM_ELEM(mask,n)==0)
+                                continue;
+                            double pixval=DIRECT_MULTIDIM_ELEM(Iaux,n);
+                            double *ptrWnode=&MAT_ELEM(Wnode,i,0);
+                            double *ptrHblock=&MAT_ELEM(Hblock,block_idx,0);
+                            for (int j=0; j<jmax; j+=unroll, ptrHblock+=unroll, ptrWnode+=unroll)
+                            {
+                                (*(ptrWnode  )) +=pixval*(*ptrHblock  );
+                                (*(ptrWnode+1)) +=pixval*(*(ptrHblock+1));
+                                (*(ptrWnode+2)) +=pixval*(*(ptrHblock+2));
+                                (*(ptrWnode+3)) +=pixval*(*(ptrHblock+3));
+                                (*(ptrWnode+4)) +=pixval*(*(ptrHblock+4));
+                                (*(ptrWnode+5)) +=pixval*(*(ptrHblock+5));
+                                (*(ptrWnode+6)) +=pixval*(*(ptrHblock+6));
+                                (*(ptrWnode+7)) +=pixval*(*(ptrHblock+7));
+                            }
+                            for (int j=jmax; j<MAT_XSIZE(Wnode); ++j, ptrHblock+=1, ptrWnode+=1)
+                                (*(ptrWnode  )) +=pixval*(*ptrHblock  );
+                            ++i;
                         }
-                        for (int j=jmax; j<MAT_XSIZE(Wnode); ++j, ptrHblock+=1, ptrWnode+=1)
-                            (*(ptrWnode  )) +=pixval*(*ptrHblock  );
-                        ++i;
                     }
                 }
             }
         }
     }
-    std::cout << "T:"; print_elapsed_time(t0);
+    std::cout << "T:";
+    print_elapsed_time(t0);
     annotate_time(&t0);
     MPI_Allreduce(MATRIX2D_ARRAY(Wnode), MATRIX2D_ARRAY(W), MAT_XSIZE(W)*MAT_YSIZE(W),
                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    std::cout << "TMPI:"; print_elapsed_time(t0);
+    std::cout << "TMPI:";
+    print_elapsed_time(t0);
 }
 
 // Apply T ================================================================
 void ProgImageRotationalPCA::applyTt()
 {
-	TimeStamp t0;
-	annotate_time(&t0);
+    TimeStamp t0;
+    annotate_time(&t0);
 
-	// Compute W transpose to accelerate memory access
+    // Compute W transpose to accelerate memory access
     Wtranspose.resizeNoCopy(MAT_XSIZE(W),MAT_YSIZE(W));
     FOR_ALL_ELEMENTS_IN_MATRIX2D(Wtranspose)
     MAT_ELEM(Wtranspose,i,j) = MAT_ELEM(W,j,i);
@@ -255,75 +266,87 @@ void ProgImageRotationalPCA::applyTt()
     const size_t nmax=(MAT_XSIZE(Wtranspose)/unroll)*unroll;
 
     FileName fnImg;
-    size_t idx=0;
-    FOR_ALL_OBJECTS_IN_METADATA(MD)
+    taskDistributor->reset();
+    size_t first, last;
+    while (taskDistributor->getTasks(first, last))
     {
-        // Process image only if it is in my rank
-        if ((++idx)%(node->size)!=node->rank)
-            continue;
-
-        // Read image
-        MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
-        I.read(fnImg);
-        const MultidimArray<double> &mI=I();
-
-        // For each rotation and shift
-        int block_idx=0;
-        for (double psi=0; psi<360; psi+=psi_step)
+    	std::cout << "Rank " << node->rank << " [" << first << "," << last << "]" << std::endl;
+        for (size_t idx=first; idx<=last; ++idx)
         {
-            rotation2DMatrix(psi,A,true);
-            for (double y=-max_shift_change; y<=max_shift_change; y+=shift_step)
+            // Read image
+            MD.getValue(MDL_IMAGE,fnImg,objId[idx]);
+            I.read(fnImg);
+            const MultidimArray<double> &mI=I();
+
+            // For each rotation and shift
+            int block_idx=0;
+            for (double psi=0; psi<360; psi+=psi_step)
             {
-                MAT_ELEM(A,1,2)=y;
-                for (double x=-max_shift_change; x<=max_shift_change; x+=shift_step, ++block_idx)
+                rotation2DMatrix(psi,A,true);
+                for (double y=-max_shift_change; y<=max_shift_change; y+=shift_step)
                 {
-                    MAT_ELEM(A,0,2)=x;
-
-                    // Rotate and shift image
-                    applyGeometry(1,Iaux,mI,A,IS_INV,true);
-
-                    // Update Hblock
-                    for (int j=0; j<MAT_XSIZE(Hblock); j++)
+                    MAT_ELEM(A,1,2)=y;
+                    for (double x=-max_shift_change; x<=max_shift_change; x+=shift_step, ++block_idx)
                     {
-                        double dotproduct=0;
-                        const double *ptrIaux=MULTIDIM_ARRAY(Iaux);
-                        unsigned char *ptrMask=&DIRECT_MULTIDIM_ELEM(mask,0);
-                        const double *ptrWtranspose=&MAT_ELEM(Wtranspose,j,0);
-                        for (size_t n=0; n<nmax; n+=unroll, ptrIaux+=unroll, ptrMask+=unroll)
+                        MAT_ELEM(A,0,2)=x;
+
+                        // Rotate and shift image
+                        applyGeometry(1,Iaux,mI,A,IS_INV,true);
+
+                        // Update Hblock
+                        for (int j=0; j<MAT_XSIZE(Hblock); j++)
                         {
-                            if (*(ptrMask  )) dotproduct+=(*(ptrIaux  ))*(*ptrWtranspose++);
-                            if (*(ptrMask+1)) dotproduct+=(*(ptrIaux+1))*(*ptrWtranspose++);
-                            if (*(ptrMask+2)) dotproduct+=(*(ptrIaux+2))*(*ptrWtranspose++);
-                            if (*(ptrMask+3)) dotproduct+=(*(ptrIaux+3))*(*ptrWtranspose++);
-                            if (*(ptrMask+4)) dotproduct+=(*(ptrIaux+4))*(*ptrWtranspose++);
-                            if (*(ptrMask+5)) dotproduct+=(*(ptrIaux+5))*(*ptrWtranspose++);
-                            if (*(ptrMask+6)) dotproduct+=(*(ptrIaux+6))*(*ptrWtranspose++);
-                            if (*(ptrMask+7)) dotproduct+=(*(ptrIaux+7))*(*ptrWtranspose++);
+                            double dotproduct=0;
+                            const double *ptrIaux=MULTIDIM_ARRAY(Iaux);
+                            unsigned char *ptrMask=&DIRECT_MULTIDIM_ELEM(mask,0);
+                            const double *ptrWtranspose=&MAT_ELEM(Wtranspose,j,0);
+                            for (size_t n=0; n<nmax; n+=unroll, ptrIaux+=unroll, ptrMask+=unroll)
+                            {
+                                if (*(ptrMask  ))
+                                    dotproduct+=(*(ptrIaux  ))*(*ptrWtranspose++);
+                                if (*(ptrMask+1))
+                                    dotproduct+=(*(ptrIaux+1))*(*ptrWtranspose++);
+                                if (*(ptrMask+2))
+                                    dotproduct+=(*(ptrIaux+2))*(*ptrWtranspose++);
+                                if (*(ptrMask+3))
+                                    dotproduct+=(*(ptrIaux+3))*(*ptrWtranspose++);
+                                if (*(ptrMask+4))
+                                    dotproduct+=(*(ptrIaux+4))*(*ptrWtranspose++);
+                                if (*(ptrMask+5))
+                                    dotproduct+=(*(ptrIaux+5))*(*ptrWtranspose++);
+                                if (*(ptrMask+6))
+                                    dotproduct+=(*(ptrIaux+6))*(*ptrWtranspose++);
+                                if (*(ptrMask+7))
+                                    dotproduct+=(*(ptrIaux+7))*(*ptrWtranspose++);
+                            }
+                            for (size_t n=nmax; n<MAT_XSIZE(Wtranspose); ++n, ++ptrMask, ++ptrIaux)
+                                if (*ptrMask)
+                                    dotproduct+=(*ptrIaux)*(*ptrWtranspose++);
+                            MAT_ELEM(Hblock,block_idx,j)=dotproduct;
                         }
-                        for (size_t n=nmax; n<MAT_XSIZE(Wtranspose); ++n, ++ptrMask, ++ptrIaux)
-                            if (*ptrMask) dotproduct+=(*ptrIaux)*(*ptrWtranspose++);
-                        MAT_ELEM(Hblock,block_idx,j)=dotproduct;
                     }
                 }
             }
-        }
 
-        // Locate the corresponding index in Matrix H
-        // and copy block to disk
-        size_t Hidx=(idx-1)*Nangles*Nshifts;
-        writeToHBuffer(&MAT_ELEM(H,Hidx,0));
+            // Locate the corresponding index in Matrix H
+            // and copy block to disk
+            size_t Hidx=(idx-1)*Nangles*Nshifts;
+            writeToHBuffer(&MAT_ELEM(H,Hidx,0));
+        }
     }
-    std::cout << "Tt:"; print_elapsed_time(t0);
-	annotate_time(&t0);
+    std::cout << "Tt:";
+    print_elapsed_time(t0);
+    annotate_time(&t0);
     flushHBuffer();
-    std::cout << "Tt flush:"; print_elapsed_time(t0);
+    std::cout << "Tt flush:";
+    print_elapsed_time(t0);
 }
 
 // QR =====================================================================
 int ProgImageRotationalPCA::QR()
 {
-	TimeStamp t0;
-	annotate_time(&t0);
+    TimeStamp t0;
+    annotate_time(&t0);
     size_t jQ=0;
     Matrix1D<double> qj1, qj2;
     int iBlockMax=MAT_XSIZE(F)/4;
@@ -367,31 +390,33 @@ int ProgImageRotationalPCA::QR()
             F.setRow(jQ++,qj1);
         }
     }
-    std::cout << "QR:"; print_elapsed_time(t0);
+    std::cout << "QR:";
+    print_elapsed_time(t0);
     return jQ;
 }
 
 // Copy H to F ============================================================
 void ProgImageRotationalPCA::copyHtoF(int block)
 {
-	TimeStamp t0;
-	annotate_time(&t0);
-	FileName fnSync=fnRoot+".sync";
-	if (node->isMaster())
-	{
-		size_t Hidx=block*MAT_XSIZE(H);
-		FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
-			MAT_ELEM(F,Hidx+j,i)=MAT_ELEM(H,i,j);
-		createEmptyFileWithGivenLength(fnSync);
-	}
-	node->barrierWait(fnSync,1);
-    std::cout << "Copying H to F:"; print_elapsed_time(t0);
+    TimeStamp t0;
+    annotate_time(&t0);
+    FileName fnSync=fnRoot+".sync";
+    if (node->isMaster())
+    {
+        size_t Hidx=block*MAT_XSIZE(H);
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
+        MAT_ELEM(F,Hidx+j,i)=MAT_ELEM(H,i,j);
+        createEmptyFileWithGivenLength(fnSync);
+    }
+    node->barrierWait(fnSync,1);
+    std::cout << "Copying H to F:";
+    print_elapsed_time(t0);
 }
 
 // Run ====================================================================
 void ProgImageRotationalPCA::run()
 {
-	TimeStamp t0;
+    TimeStamp t0;
     show();
     produceSideInfo();
 
@@ -419,37 +444,38 @@ void ProgImageRotationalPCA::run()
     MPI_Bcast(&qrDim,1,MPI_INT,0,MPI_COMM_WORLD);
 
     // Load the first qrDim columns of F in matrix H
-	if (node->isMaster())
-	{
+    if (node->isMaster())
+    {
         createEmptyFileWithGivenLength(fnRoot+"_matrixH.raw",Nimg*Nshifts*Nangles*qrDim*sizeof(double));
         H.mapToFile(fnRoot+"_matrixH.raw",MAT_XSIZE(F),qrDim);
-		FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
         MAT_ELEM(H,i,j)=MAT_ELEM(F,j,i);
         createEmptyFileWithGivenLength(fnSync);
-		node->barrierWait(fnSync,2);
-	}
-	else
-	{
-		node->barrierWait(fnSync,2);
+        node->barrierWait(fnSync,2);
+    }
+    else
+    {
+        node->barrierWait(fnSync,2);
         H.mapToFile(fnRoot+"_matrixH.raw",MAT_XSIZE(F),qrDim);
-	}
+    }
 
-	// Apply T
+    // Apply T
     Hblock.resizeNoCopy(Nangles*Nshifts,qrDim);
     applyT();
 
     // Apply SVD and extract the basis
     if (node->isMaster())
     {
-    	annotate_time(&t0);
+        annotate_time(&t0);
         // SVD of W
         Matrix2D<double> U,V;
         Matrix1D<double> S;
         svdcmp(W,U,S,V);
-        std::cout << "SVD " << MAT_YSIZE(W) << "x" << MAT_XSIZE(W) << ":"; print_elapsed_time(t0);
+        std::cout << "SVD " << MAT_YSIZE(W) << "x" << MAT_XSIZE(W) << ":";
+        print_elapsed_time(t0);
 
         // Keep the first Neigen images from U
-    	annotate_time(&t0);
+        annotate_time(&t0);
         Image<double> I;
         I().resizeNoCopy(Xdim,Xdim);
         const MultidimArray<double> &mI=I();
@@ -457,10 +483,10 @@ void ProgImageRotationalPCA::run()
         MetaData MD;
         for (int eig=0; eig<Neigen; eig++)
         {
-        	int Un=0;
+            int Un=0;
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mI)
-            	if (DIRECT_MULTIDIM_ELEM(mask,n))
-            		DIRECT_MULTIDIM_ELEM(mI,n)=MAT_ELEM(U,Un++,eig);
+            if (DIRECT_MULTIDIM_ELEM(mask,n))
+                DIRECT_MULTIDIM_ELEM(mI,n)=MAT_ELEM(U,Un++,eig);
             fnImg.compose(eig+1,fnRoot,"stk");
             I.write(fnImg);
             size_t id=MD.addObject();
@@ -468,7 +494,8 @@ void ProgImageRotationalPCA::run()
             MD.setValue(MDL_WEIGHT,VEC_ELEM(S,eig),id);
         }
         MD.write(fnRoot+".xmd");
-        std::cout << "Output:"; print_elapsed_time(t0);
+        std::cout << "Output:";
+        print_elapsed_time(t0);
         createEmptyFileWithGivenLength(fnSync);
     }
     node->barrierWait(fnSync,15);
@@ -476,7 +503,7 @@ void ProgImageRotationalPCA::run()
     // Clean files
     if (node->isMaster())
     {
-    	unlink((fnRoot+"_matrixH.raw").c_str());
-    	unlink((fnRoot+"_matrixF.raw").c_str());
+        unlink((fnRoot+"_matrixH.raw").c_str());
+        unlink((fnRoot+"_matrixF.raw").c_str());
     }
 }

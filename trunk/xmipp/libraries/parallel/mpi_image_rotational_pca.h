@@ -94,6 +94,10 @@ public:
     Matrix2D<double> Wtranspose;
     // Mask
     MultidimArray< unsigned char > mask;
+    // FileTaskDistributor
+    FileTaskDistributor *taskDistributor;
+    // Vector of object ids
+    std::vector<size_t> objId;
 public:
     /// Empty constructor
     ProgImageRotationalPCA(int argc, char **argv);
