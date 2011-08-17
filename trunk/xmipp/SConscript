@@ -721,6 +721,7 @@ AddXmippProgram('metadata_import')
 AddXmippProgram('metadata_split')
 AddXmippProgram('metadata_utilities')
 AddXmippProgram('micrograph_scissor'),
+AddXmippProgram('micrograph_automatic_picking',['XmippRecons'])
 AddXmippProgram('ml_align2d', ['XmippRecons'])
 AddXmippProgram('mlf_align2d', ['XmippRecons'])
 AddXmippProgram('ml_refine3d', ['XmippRecons'])
