@@ -180,6 +180,7 @@ void ProgramDb::printProgram(const ProgramDef &program, int v)
           dict["examples"] += program.examples.comments[i] + '\n';
     }
     insertProgram(dict);
+    //std::cerr << "DEBUG_JM: program.name: " << program.name << std::endl;
 
     //print sections and params
     if (program.sections.size() > 0)
