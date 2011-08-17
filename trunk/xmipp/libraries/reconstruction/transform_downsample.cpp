@@ -106,7 +106,7 @@ void ProgTransformDownsample::processImage(const FileName &fnImg, const FileName
     else if (method==FOURIER)
         downsampleFourier(M_in,step,M_out,nThreads);
     else
-        downsampleSmooth(M_in,step,M_out);
+        downsampleSmooth(M_in,M_out);
 
     M_out.write(fnImgOut);
 }
@@ -260,7 +260,7 @@ void downsampleFourier(const ImageGeneric &M, double step, ImageGeneric &Mp, int
         Mp.setPixel(i, j, A2D_ELEM(Mpmem,i,j));
 }
 
-void downsampleSmooth(const ImageGeneric &M, double step, ImageGeneric &Mp)
+void downsampleSmooth(const ImageGeneric &M, ImageGeneric &Mp)
 {
     if (Mp.datatype!=UChar)
         REPORT_ERROR(ERR_ARG_INCORRECT,"Smooth downsampling is only valid for 8 bit images");

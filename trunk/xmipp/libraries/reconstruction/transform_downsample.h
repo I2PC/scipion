@@ -74,6 +74,6 @@ void downsampleFourier(const ImageGeneric &M, double step, ImageGeneric &Mp, int
 /** Downsample a micrograph using smooth and color dithering.
  * The input and output micrographs must be already open.
  */
-void downsampleSmooth(const ImageGeneric &M, double step, ImageGeneric &Mp);
+void downsampleSmooth(const ImageGeneric &M, ImageGeneric &Mp);
 //@}
 #endif
