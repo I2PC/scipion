@@ -438,24 +438,35 @@ class XmippProjectGUI():
         run = self.getLastRunDict()
         self.launchProtocolGUI(run, True)
 
-if __name__ == '__main__':
-    dir = os.getcwd()
-    project = XmippProject(dir)    
-    import sys
-    if len(sys.argv) > 1:
-        if sys.argv[1] in ["--clean", "-c", "-clean"]:
-            project.clean()
-        else:
-            reportError('Unrecognized option: %s' % sys.argv[1])
-    else: #lauch project     
-        if not project.exists():
-            print 'You are in directory: ', dir
-            answer = raw_input('Do you want to create a new xmipp_protocols PROJECT in this folder? [Y/n]:')
-            if not answer or answer.lower() == 'y':
-                project.create()
-        else:
-            project.load()
-        gui = XmippProjectGUI(project)
-        gui.createGUI()
-        gui.launchGUI()
+from protlib_xmipp import XmippScript
+
+class ScriptProtocols(XmippScript):
+    def __init__(self):
+        XmippScript.__init__(self, True)
+        
+    def defineParams(self):
+        self.addUsageLine("Create Xmipp project on this folder.");
+        ## params
+        self.addParamsLine("[ -c  ]            : Clean project");
+        self.addParamsLine("   alias --clean;");    
     
+    def run(self):
+        dir = os.getcwd()
+        project = XmippProject(dir)
+
+        if self.checkParam('--clean'):
+            project.clean()
+        else: #lauch project     
+            if not project.exists():
+                print 'You are in directory: ', dir
+                answer = raw_input('Do you want to create a new xmipp_protocols PROJECT in this folder? [Y/n]:')
+                if not answer or answer.lower() == 'y':
+                    project.create()
+            else:
+                project.load()
+            gui = XmippProjectGUI(project)
+            gui.createGUI()
+            gui.launchGUI()
+
+if __name__ == '__main__':
+    ScriptProtocols().tryRun()
