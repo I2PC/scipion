@@ -164,8 +164,8 @@ void ProgImageRotationalPCA::flushHBuffer()
 // Apply T ================================================================
 void ProgImageRotationalPCA::applyT()
 {
-	ProcessorTimeStamp t0;
-	annotate_processor_time(&t0);
+	TimeStamp t0;
+	annotate_time(&t0);
     W.initZeros(Npixels,MAT_XSIZE(H));
     Wnode.initZeros(Npixels,MAT_XSIZE(H));
 
@@ -230,16 +230,18 @@ void ProgImageRotationalPCA::applyT()
             }
         }
     }
+    std::cout << "T:"; print_elapsed_time(t0);
+    annotate_time(&t0);
     MPI_Allreduce(MATRIX2D_ARRAY(Wnode), MATRIX2D_ARRAY(W), MAT_XSIZE(W)*MAT_YSIZE(W),
                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    std::cout << "T:"; print_elapsed_time(t0);
+    std::cout << "TMPI:"; print_elapsed_time(t0);
 }
 
 // Apply T ================================================================
 void ProgImageRotationalPCA::applyTt()
 {
-	ProcessorTimeStamp t0;
-	annotate_processor_time(&t0);
+	TimeStamp t0;
+	annotate_time(&t0);
 
 	// Compute W transpose to accelerate memory access
     Wtranspose.resizeNoCopy(MAT_XSIZE(W),MAT_YSIZE(W));
@@ -308,15 +310,17 @@ void ProgImageRotationalPCA::applyTt()
         size_t Hidx=(idx-1)*Nangles*Nshifts;
         writeToHBuffer(&MAT_ELEM(H,Hidx,0));
     }
-    flushHBuffer();
     std::cout << "Tt:"; print_elapsed_time(t0);
+	annotate_time(&t0);
+    flushHBuffer();
+    std::cout << "Tt flush:"; print_elapsed_time(t0);
 }
 
 // QR =====================================================================
 int ProgImageRotationalPCA::QR()
 {
-	ProcessorTimeStamp t0;
-	annotate_processor_time(&t0);
+	TimeStamp t0;
+	annotate_time(&t0);
     size_t jQ=0;
     Matrix1D<double> qj1, qj2;
     int iBlockMax=MAT_XSIZE(F)/4;
@@ -367,6 +371,8 @@ int ProgImageRotationalPCA::QR()
 // Copy H to F ============================================================
 void ProgImageRotationalPCA::copyHtoF(int block)
 {
+	TimeStamp t0;
+	annotate_time(&t0);
 	if (node->isMaster())
 	{
 		size_t Hidx=block*MAT_XSIZE(H);
@@ -374,13 +380,17 @@ void ProgImageRotationalPCA::copyHtoF(int block)
 			MAT_ELEM(F,Hidx+j,i)=MAT_ELEM(H,i,j);
 	}
 	node->barrierWait();
+    std::cout << "Copying H to F:"; print_elapsed_time(t0);
 }
 
 // Run ====================================================================
 void ProgImageRotationalPCA::run()
 {
+	TimeStamp t0;
     show();
+	annotate_time(&t0);
     produceSideInfo();
+    std::cout << "Produce side info:"; print_elapsed_time(t0);
 
     // Compute matrix F:
     // Set H pointing to the first block of F
@@ -426,8 +436,7 @@ void ProgImageRotationalPCA::run()
     // Apply SVD and extract the basis
     if (node->isMaster())
     {
-    	ProcessorTimeStamp t0;
-    	annotate_processor_time(&t0);
+    	annotate_time(&t0);
         // SVD of W
         Matrix2D<double> U,V;
         Matrix1D<double> S;
@@ -435,7 +444,7 @@ void ProgImageRotationalPCA::run()
         std::cout << "SVD " << MAT_YSIZE(W) << "x" << MAT_XSIZE(W) << ":"; print_elapsed_time(t0);
 
         // Keep the first Neigen images from U
-    	annotate_processor_time(&t0);
+    	annotate_time(&t0);
         Image<double> I;
         I().resizeNoCopy(Xdim,Xdim);
         const MultidimArray<double> &mI=I();
