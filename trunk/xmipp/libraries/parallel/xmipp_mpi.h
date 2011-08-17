@@ -155,6 +155,7 @@ private:
 protected:
     MpiFileMutex *fileMutex;
     int           lockFile;
+    MpiNode      *node;
 
     virtual void lock();
     virtual void unlock();
@@ -162,6 +163,8 @@ protected:
 public:
     FileTaskDistributor(size_t nTasks, size_t bSize, MpiNode * node  = NULL);
     virtual ~FileTaskDistributor();
+    /** Restart the file distributor so that all tasks can be reassigned */
+    void reset();
 }
 ;//end of class FileTaskDistributor
 

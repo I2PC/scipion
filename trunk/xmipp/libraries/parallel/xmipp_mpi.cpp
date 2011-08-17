@@ -157,11 +157,20 @@ FileTaskDistributor::FileTaskDistributor(size_t nTasks, size_t bSize,
     if (node == NULL || node->isMaster())
         createLockFile();
     loadLockFile();
+    this->node=node;
 }
 
 FileTaskDistributor::~FileTaskDistributor()
 {
     delete fileMutex;
+}
+
+void FileTaskDistributor::reset()
+{
+    if (node == NULL || node->isMaster())
+    	setAssignedTasks(0);
+    if (node!=NULL)
+    	node->barrierWait();
 }
 
 void FileTaskDistributor::createLockFile()
