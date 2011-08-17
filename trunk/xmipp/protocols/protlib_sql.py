@@ -609,7 +609,8 @@ class ProgramDb():
                                id INTEGER PRIMARY KEY ASC AUTOINCREMENT,
                                category_id INTEGER, 
                                name TEXT UNIQUE,
-                               desc TEXT,
+                               usage TEXT,
+                               examples TEXT,
                                keywords TEXT);
                          """
             self.cursor.executescript(sqlCommand)
@@ -623,6 +624,19 @@ class ProgramDb():
         self.cursor.execute(sqlCommand)
                      
     def selectPrograms(self, category=None):
-        sqlCommand = """SELECT FROM Program ORDER BY category_id;"""
+        categoryWhere = ""
+        if category:
+            categoryWhere = "WHERE category_id=%d" % category['id']
+        sqlCommand = "SELECT * FROM Program %s ORDER BY name;""" % categoryWhere
         self.cursor.execute(sqlCommand)
         return self.cursor.fetchall()
+    
+    def selectCategories(self):
+        sqlCommand = "SELECT * FROM Category;"""
+        self.cursor.execute(sqlCommand)
+        return self.cursor.fetchall()
+    
+    def updateProgramCategory(self, program_name, category):
+        sqlCommand = "UPDATE Program SET category_id = %d WHERE name='%s';" % (category['id'], program_name)
+        self.cursor.execute(sqlCommand)
+        self.connection.commit()        
