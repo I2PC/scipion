@@ -46,7 +46,8 @@ ProgImageRotationalPCA::~ProgImageRotationalPCA()
     delete fileMutex;
     delete taskDistributor;
     delete node;
-    for (int n=0; n<HbufferMax; n++)
+    int nmax=Hbuffer.size();
+    for (int n=0; n<nmax; n++)
         delete [] Hbuffer[n];
 }
 
@@ -112,7 +113,6 @@ void ProgImageRotationalPCA::produceSideInfo()
     double R2=0.25*Xdim*Xdim;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
     A2D_ELEM(mask,i,j)=(i*i+j*j<R2);
-    // mask.initConstant(1); // COSS Temporarily the mask is full
     Npixels=(int)mask.sum();
 
     W.resizeNoCopy(Npixels, Neigen+2);
