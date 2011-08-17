@@ -146,6 +146,8 @@ def AddXmippProgram(name, libs=[], folder='programs'):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries', '#']
     finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs
+    if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
+        finalLibs.append('XmippClassif')
     if int(env["arpack"]):
         finalLibs+=['arpack++','arpack','lapack','blas']
     return AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
@@ -510,6 +512,7 @@ ReconsSources = [
     'directions.cpp',
     'fourier_filter.cpp',
     'image_rotational_spectra.cpp',
+    'micrograph_automatic_picking.cpp',
     'ml_align2d.cpp',
 ###    'ml_align3d.cpp',
     'mean_shift.cpp',
@@ -554,7 +557,7 @@ ReconsSources = [
     'volume_to_pseudoatoms.cpp',
     'xray_import.cpp'
 ]
-ReconsDependLibraries =['XmippExternal', 'XmippData', 'pthread']
+ReconsDependLibraries =['XmippExternal', 'XmippData', 'pthread','XmippClassif']
 if int(env['arpack']):
     ReconsSources.append("angular_gcar.cpp")
     ReconsDependLibraries+=['arpack','lapack','blas']
