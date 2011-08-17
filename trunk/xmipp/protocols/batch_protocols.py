@@ -35,8 +35,8 @@ from protlib_gui_ext import ToolTip, MultiListbox, centerWindows
 from config_protocols import protDict, sections
 from config_protocols import FontName, FontSize
 from protlib_base import getProtocolFromModule, XmippProject
-from protlib_utils import reportError
-from protlib_sql import SqliteDb
+from protlib_utils import reportError, runImageJPlugin
+from protlib_sql import SqliteDb, ProgramDb
 
 #TextColor
 CitationTextColor = "dark olive green"
@@ -48,6 +48,7 @@ LabelBgColor = BgColor
 HighlightBgColor = BgColor
 ButtonBgColor = "LightBlue"
 ButtonActiveBgColor = "LightSkyBlue"
+ButtonSelectedColor = "DeepSkyBlue2"
 
 def configDefaults(opts, defaults):
     for key in defaults.keys():
@@ -83,7 +84,7 @@ class ProjectSection(tk.Frame):
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
         self.rowconfigure(1, weight=1)
-        self.label = tk.Label(self, text=label_text, font=Fonts['label'], fg=SectionTextColor)
+        self.label = ProjectLabel(self, text=label_text)
         self.label.grid(row=0, column=0, sticky='sw')
         self.frameButtons = tk.Frame(self)
         self.frameButtons.grid(row=0, column=1, sticky='e')
@@ -100,6 +101,17 @@ class ProjectSection(tk.Frame):
             self.frameButtons.grid()
         else:
             self.frameButtons.grid_remove()
+            
+class ProjectButtonMenu(tk.Frame):
+    def __init__(self, master, label_text, **opts):
+        tk.Frame.__init__(self, master, **opts)
+        self.label = ProjectLabel(self, text=label_text)
+        self.label.pack(padx=5, pady=(5, 0))
+        
+    def addButton(self, button_text, **opts):
+        btn = ProjectButton(self, button_text, **opts)
+        btn.pack(fill=tk.X, padx=5, pady=(5, 0))
+        return btn
         
 class XmippProjectGUI():  
     def __init__(self, project):
@@ -116,7 +128,10 @@ class XmippProjectGUI():
             tkMessageBox.showinfo("Operation success", "All temporary files have been successfully removed")
         except Exception, e:
             tkMessageBox.showerror("Operation error ", str(e))
-      
+    
+    def browseFiles(self):
+        runImageJPlugin("512m", "XmippBrowser.txt", "")
+        
     def initVariables(self):
         self.ToolbarButtonsDict = {}
         self.runButtonsDict = {}
@@ -147,6 +162,7 @@ class XmippProjectGUI():
         #Project menu
         self.menuProject = tk.Menu(self.root, tearoff=0)
         self.menubar.add_cascade(label="Project", menu=self.menuProject)
+        self.menuProject.add_command(label="Browse files", command=self.browseFiles)
         self.menuProject.add_command(label="Remove temporaly files", command=self.deleteTmpFiles)        
         self.menuProject.add_command(label="Clean project", command=self.cleanProject)
         
@@ -156,13 +172,9 @@ class XmippProjectGUI():
         elif event.keycode == 116: # Down arrow
             self.lbHist.selection_move_down()
         
-    def createToolbarButton(self, row, text, opts=[]):
-        '''Add a button to left toolbar'''
-        btn = tk.Button(self.Frames['toolbar'], bd = 1, text=text, font=Fonts['button'], relief=tk.RAISED,
-                         bg=ButtonBgColor, activebackground=ButtonBgColor)
-        btn.grid(row = row, column = 0, sticky='ew', pady=2, padx=5)
+    def createToolbarMenu(self, parent, opts=[]):
         if len(opts) > 0:
-            menu = tk.Menu(self.root, bg=ButtonBgColor, activebackground=ButtonBgColor, font=Fonts['button'], tearoff=0)
+            menu = tk.Menu(parent, bg=ButtonBgColor, activebackground=ButtonBgColor, font=Fonts['button'], tearoff=0)
             prots = [protDict[o] for o in opts]
             for p in prots:
                 #Following is a bit tricky, its due Python notion of scope, a for does not define a new scope
@@ -173,8 +185,77 @@ class XmippProjectGUI():
                     return new_command 
                 menu.add_command(label=p.title, command=item_command(p))
             menu.bind("<Leave>", self.unpostMenu)
-        self.ToolbarButtonsDict[text] = (btn, menu)
-        btn.config(command=lambda:self.selectToolbarButton(text))
+            return menu
+        return None
+
+    
+            
+    def launchProgramsGUI(self, event=None):
+        db = ProgramDb()
+        root = tk.Toplevel()
+        root.title('Xmipp Programs')
+        detailsSection = ProjectSection(root, 'Details')
+        txt = tk.Text(detailsSection.frameContent, width=60, height=10,
+                        bg=BgColor, bd=1, relief=tk.RIDGE)
+        txt.pack()
+        detailsSection.grid(row=1, column=1)
+        #Create programs panel
+        progSection = ProjectSection(root, 'Programs')
+        lb = tk.Listbox(progSection.frameContent, width=60, height=15,
+                        bg=BgColor, bd=1, relief=tk.RIDGE)
+
+        def runClick(event=None):
+            program_name = lb.get(int(lb.curselection()[0]))
+            os.system(program_name + " --gui")
+        
+        def showSelection(event):
+            #lb = event.widget
+            program_name = lb.get(int(lb.curselection()[0]))
+            program = db.selectProgram(program_name)
+            txt.delete(1.0, tk.END)
+            desc = program['usage'].splitlines()
+            for line in desc:
+                txt.insert(tk.END, line)
+                
+        detailsSection.addButton('Run', command=runClick)
+        
+            
+        lb.bind('<ButtonRelease-1>', showSelection)
+        #lb.bind('<Double-Button-1>', self._doubleClick)
+        lb.pack()
+        progSection.grid(row=0, column=1, sticky='n', padx=5, pady=5)
+        #Create toolbar
+        toolbar = tk.Frame(root, bd=2, relief=tk.RIDGE)
+        section = ProjectButtonMenu(toolbar, 'Categories')
+        section.pack(fill=tk.X, pady=5)
+        categories = db.selectCategories()
+        for c in categories:
+            def fillProgramsListBox(category, lb):
+                def command():
+                    programs = db.selectPrograms(category)
+                    lb.delete(0, tk.END)
+                    for p in programs:
+                        lb.insert(tk.END, p['name'])
+                return command
+            section.addButton(c['name'], command=fillProgramsListBox(c, lb))
+        toolbar.grid(row=0, column=0, rowspan=2)
+        
+        
+        
+        
+        root.mainloop() 
+        
+#        self.Frames['history'] = history
+#        list = [('Edit', 'edit.gif'), ('Copy', 'copy.gif'), ('Delete', 'delete.gif')]
+#        for k, v in list:
+#            btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k))
+#            ToolTip(btn, k, 500)
+#            self.runButtonsDict[k] = btn
+            
+#        self.lbHist.SelectCallback = self.runSelectCallback
+#        self.lbHist.DoubleClickCallback = lambda:self.runButtonClick("Edit")
+#        self.lbHist.AllowSort = False   
+#        return history  
 
     def launchProtocolGUI(self, run, visualizeMode=False):
         run['group_name'] = self.lastSelected
@@ -221,33 +302,34 @@ class XmippProjectGUI():
         return None
         
     def unpostMenu(self, event=None):
-        if self.lastSelected:
+        try: #I'm getting here an weird Tk exception
             menu = self.lastPair()[1]
-            if menu is not None:
-                menu.unpost()
+            menu.unpost()
+        except Exception:
+            pass
             
     def postMenu(self, btn, menu):
         x, y, w = btn.winfo_x(), btn.winfo_y(), btn.winfo_width()
-        xroot, yroot = self.root.winfo_x(), self.root.winfo_y()
+        xroot, yroot = self.root.winfo_x() + btn.master.winfo_x(), self.root.winfo_y()+ btn.master.winfo_y()
         menu.post(xroot + x + w + 10, yroot + y)
-        btn.config(bg=ButtonActiveBgColor, activebackground=ButtonActiveBgColor)
         
     def selectToolbarButton(self, text, showMenu=True):
         btn, menu = self.ToolbarButtonsDict[text]
 
         if self.lastSelected and self.lastSelected != text:
             lastBtn, lastMenu = self.lastPair()
-            lastBtn.config(bg=ButtonBgColor)
+            lastBtn.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
             lastMenu.unpost()            
-        
-        if self.lastSelected and showMenu:
-            self.postMenu(btn, menu)
         
         if self.lastSelected != text:
             self.project.config.set('project', 'lastselected', text)
             self.project.writeConfig()
             self.updateRunHistory(text)            
-        self.lastSelected = text  
+            self.lastSelected = text  
+            btn.config(bg=ButtonSelectedColor, activebackground=ButtonSelectedColor)
+            
+        if self.lastSelected and showMenu:
+            self.postMenu(btn, menu)
             
     def updateRunSelection(self, index):
         state = tk.NORMAL
@@ -307,13 +389,22 @@ class XmippProjectGUI():
         toolbar = tk.Frame(parent, bd=2, relief=tk.RIDGE)
         self.Frames['toolbar'] = toolbar
         #Create toolbar buttons
-        i = 1
+        #i = 1
+        section = None
         for k, v in sections:
-            ProjectLabel(toolbar, text=k).grid(column=0, row=i)
-            i += 1
-            for btn in v:
-                self.createToolbarButton(i, btn[0], btn[1:])
-                i += 1
+            section = ProjectButtonMenu(toolbar, k)
+            section.pack(fill=tk.X, pady=5)
+            for o in v:
+                text = o[0]
+                opts = o[1:]
+                def btn_command(text): 
+                    def new_command(): 
+                        self.selectToolbarButton(text)
+                    return new_command 
+                btn = section.addButton(text, command=btn_command(text))
+                menu = self.createToolbarMenu(section, opts)
+                self.ToolbarButtonsDict[text] = (btn, menu)
+        btn = section.addButton('Xmipp Programs', command=self.launchProgramsGUI)
         return toolbar
                 
     def addRunButton(self, frame, text, col, imageFilename=None):
@@ -411,7 +502,7 @@ class XmippProjectGUI():
         self.root.config(menu=self.menubar)
         #select lastSelected
         if self.project.config.has_option('project', 'lastselected'):
-            self.selectToolbarButton(self.project.config.get('project', 'lastselected'))
+            self.selectToolbarButton(self.project.config.get('project', 'lastselected'), False)
         else:
             self.Frames['details'].grid_remove()
     

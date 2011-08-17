@@ -415,7 +415,7 @@ def protocolMain(ProtocolClass, script=None):
             
             if not run_id:
                 _run={
-                       'comment' : mod.Comment
+                       'comment' : ''
                       ,'protocol_name': p.Name
                       ,'run_name' : mod.RunName
                       ,'script'  : script 

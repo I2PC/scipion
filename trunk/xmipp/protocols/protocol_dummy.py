@@ -15,7 +15,7 @@ from xmipp import MetaData
 
 class ProtDummy(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.dummy.key, scriptname, project)
+        XmippProtocol.__init__(self, protDict.dummy.name, scriptname, project)
         self.Import = 'from protocol_dummy import *'
 
     def validate(self):

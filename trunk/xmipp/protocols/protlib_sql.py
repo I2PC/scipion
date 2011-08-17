@@ -578,7 +578,10 @@ def escapeStr(str):
     return "'%s'" % str.replace("'", "''") 
           
 class ProgramDb():
-    def __init__(self, dbName):
+    def __init__(self, dbName=None):
+        if dbName is None:
+            from protlib_filesystem import getXmippPath
+            dbName = os.path.join(getXmippPath(), 'programs.sqlite')
         self.dbName = dbName
         self.connection = sqlite.Connection(dbName)
         self.connection.row_factory = sqlite.Row
@@ -631,6 +634,11 @@ class ProgramDb():
         self.cursor.execute(sqlCommand)
         return self.cursor.fetchall()
     
+    def selectProgram(self, program_name):
+        sqlCommand = "SELECT * FROM Program WHERE name='%s';""" % program_name
+        self.cursor.execute(sqlCommand)
+        return self.cursor.fetchone()
+        
     def selectCategories(self):
         sqlCommand = "SELECT * FROM Category;"""
         self.cursor.execute(sqlCommand)
