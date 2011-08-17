@@ -172,8 +172,6 @@ void ProgImageRotationalPCA::flushHBuffer()
 // Apply T ================================================================
 void ProgImageRotationalPCA::applyT()
 {
-    TimeStamp t0;
-    annotate_time(&t0);
     W.initZeros(Npixels,MAT_XSIZE(H));
     Wnode.initZeros(Npixels,MAT_XSIZE(H));
 
@@ -183,9 +181,13 @@ void ProgImageRotationalPCA::applyT()
 
     taskDistributor->reset();
     size_t first, last;
+    if (node->isMaster())
+    {
+    	std::cerr << "Applying T ...\n";
+    	init_progress_bar(objId.size());
+    }
     while (taskDistributor->getTasks(first, last))
     {
-    	std::cout << "Rank " << node->rank << " [" << first << "," << last << "]" << std::endl;
         for (size_t idx=first; idx<=last; ++idx)
         {
             // Read image
@@ -241,22 +243,18 @@ void ProgImageRotationalPCA::applyT()
                 }
             }
         }
+        if (node->isMaster())
+        	progress_bar(last);
     }
-    std::cout << "T:";
-    print_elapsed_time(t0);
-    annotate_time(&t0);
     MPI_Allreduce(MATRIX2D_ARRAY(Wnode), MATRIX2D_ARRAY(W), MAT_XSIZE(W)*MAT_YSIZE(W),
                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    std::cout << "TMPI:";
-    print_elapsed_time(t0);
+    if (node->isMaster())
+    	progress_bar(objId.size());
 }
 
 // Apply T ================================================================
 void ProgImageRotationalPCA::applyTt()
 {
-    TimeStamp t0;
-    annotate_time(&t0);
-
     // Compute W transpose to accelerate memory access
     Wtranspose.resizeNoCopy(MAT_XSIZE(W),MAT_YSIZE(W));
     FOR_ALL_ELEMENTS_IN_MATRIX2D(Wtranspose)
@@ -268,9 +266,13 @@ void ProgImageRotationalPCA::applyTt()
     FileName fnImg;
     taskDistributor->reset();
     size_t first, last;
+    if (node->isMaster())
+    {
+    	std::cerr << "Applying Tt ...\n";
+    	init_progress_bar(objId.size());
+    }
     while (taskDistributor->getTasks(first, last))
     {
-    	std::cout << "Rank " << node->rank << " [" << first << "," << last << "]" << std::endl;
         for (size_t idx=first; idx<=last; ++idx)
         {
             // Read image
@@ -333,20 +335,17 @@ void ProgImageRotationalPCA::applyTt()
             size_t Hidx=(idx-1)*Nangles*Nshifts;
             writeToHBuffer(&MAT_ELEM(H,Hidx,0));
         }
+        if (node->isMaster())
+        	progress_bar(last);
     }
-    std::cout << "Tt:";
-    print_elapsed_time(t0);
-    annotate_time(&t0);
     flushHBuffer();
-    std::cout << "Tt flush:";
-    print_elapsed_time(t0);
+    if (node->isMaster())
+    	progress_bar(objId.size());
 }
 
 // QR =====================================================================
 int ProgImageRotationalPCA::QR()
 {
-    TimeStamp t0;
-    annotate_time(&t0);
     size_t jQ=0;
     Matrix1D<double> qj1, qj2;
     int iBlockMax=MAT_XSIZE(F)/4;
@@ -390,16 +389,12 @@ int ProgImageRotationalPCA::QR()
             F.setRow(jQ++,qj1);
         }
     }
-    std::cout << "QR:";
-    print_elapsed_time(t0);
     return jQ;
 }
 
 // Copy H to F ============================================================
 void ProgImageRotationalPCA::copyHtoF(int block)
 {
-    TimeStamp t0;
-    annotate_time(&t0);
     FileName fnSync=fnRoot+".sync";
     if (node->isMaster())
     {
@@ -409,14 +404,11 @@ void ProgImageRotationalPCA::copyHtoF(int block)
         createEmptyFileWithGivenLength(fnSync);
     }
     node->barrierWait(fnSync,1);
-    std::cout << "Copying H to F:";
-    print_elapsed_time(t0);
 }
 
 // Run ====================================================================
 void ProgImageRotationalPCA::run()
 {
-    TimeStamp t0;
     show();
     produceSideInfo();
 
@@ -437,6 +429,7 @@ void ProgImageRotationalPCA::run()
     FileName fnSync=fnRoot+".sync";
     if (node->isMaster())
     {
+    	std::cerr << "Performing QR decomposition ..." << std::endl;
         qrDim=QR();
         createEmptyFileWithGivenLength(fnSync);
     }
@@ -466,16 +459,13 @@ void ProgImageRotationalPCA::run()
     // Apply SVD and extract the basis
     if (node->isMaster())
     {
-        annotate_time(&t0);
+    	std::cerr << "Performing SVD decomposition ..." << std::endl;
         // SVD of W
         Matrix2D<double> U,V;
         Matrix1D<double> S;
         svdcmp(W,U,S,V);
-        std::cout << "SVD " << MAT_YSIZE(W) << "x" << MAT_XSIZE(W) << ":";
-        print_elapsed_time(t0);
 
         // Keep the first Neigen images from U
-        annotate_time(&t0);
         Image<double> I;
         I().resizeNoCopy(Xdim,Xdim);
         const MultidimArray<double> &mI=I();
@@ -494,8 +484,6 @@ void ProgImageRotationalPCA::run()
             MD.setValue(MDL_WEIGHT,VEC_ELEM(S,eig),id);
         }
         MD.write(fnRoot+".xmd");
-        std::cout << "Output:";
-        print_elapsed_time(t0);
         createEmptyFileWithGivenLength(fnSync);
     }
     node->barrierWait(fnSync,15);
