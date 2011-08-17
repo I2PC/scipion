@@ -115,8 +115,7 @@ MpiFileMutex::MpiFileMutex(MpiNode * node)
         close(lockFile);
     }
     //if using mpi broadcast the filename from master to slaves
-    if (node != NULL
-       )
+    if (node != NULL)
         MPI_Bcast(lockFilename, L_tmpnam, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if ((lockFile = open(lockFilename, O_RDWR)) == -1)
@@ -247,6 +246,24 @@ MpiNode::~MpiNode()
 bool MpiNode::isMaster() const
 {
     return rank == 0;
+}
+
+void MpiNode::prepareFileBarrierWaiting(FileName &fnToWaitOn)
+{
+	char tempFileName[L_tmpnam];
+	if (isMaster())
+		tmpnam_r(tempFileName);
+    MPI_Bcast(tempFileName, L_tmpnam, MPI_CHAR, 0, MPI_COMM_WORLD);
+    fnToWaitOn=tempFileName;
+}
+
+void MpiNode::barrierWait(const FileName &fnToWaitOn, int sleepTime)
+{
+	while (!exists(fnToWaitOn))
+		sleep(sleepTime);
+	barrierWait();
+	if (isMaster())
+		unlink(fnToWaitOn.c_str());
 }
 
 void MpiNode::barrierWait()
