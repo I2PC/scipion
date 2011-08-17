@@ -814,8 +814,10 @@ double rnd_log(double a, double b);
 //@{
 #ifdef _NO_TIME
 typedef int ProcessorTimeStamp; // Any other kind of data will do
+typedef int TimeStamp; // Any other kind of data will do
 #else
 typedef struct tms ProcessorTimeStamp; // Renaming of the time structure
+typedef size_t TimeStamp;              // Timestamp in miliseconds
 #endif
 
 /** Read the system clock frequency
@@ -836,15 +838,28 @@ void time_config();
  * This annotation is used later to compute the elapsed time.
  *
  * @code
- * TimeStamp t0;
- * annotate_time(&t0);
+ * ProcessorTimeStamp t0;
+ * annotate_processor_time(&t0);
  * @endcode
  *
  * This function is not ported to Python.
  */
 void annotate_processor_time(ProcessorTimeStamp* time);
 
-/** Acumulate time
+/** Annotate actual time
+ *
+ * This annotation is used later to compute the elapsed time.
+ *
+ * @code
+ * TimeStamp t0;
+ * annotate_time(&t0);
+ * @endcode
+ *
+ * This function is not ported to Python.
+ */
+void annotate_time(TimeStamp* time);
+
+/** Accumulate time
  *
  * Initially dest_time should be set to orig time. Then you acumulate succesive
  * times calling this function (Destination time=destination_time + (now -
@@ -885,6 +900,26 @@ double elapsed_time(ProcessorTimeStamp& time, bool _IN_SECS = true);
  * since the last annotation in this TimeStamp variable.
  *
  * @code
+ * ProcessorTimeStamp t0;
+ * annotate_processor_time(&t0);
+ * ...;
+ * print_elapsed_time(t0);
+ * @endcode
+ *
+ * Usually the time is shown in seconds, but you might specify to show it in
+ * clock ticks setting the variable _IN_SECS to FALSE.
+ *
+ * This function is not ported to Python.
+ */
+void print_elapsed_time(ProcessorTimeStamp& time, bool _IN_SECS = true);
+
+/** Show on screen the elapsed time since a given annotation
+ *
+ * The format of the printing is "Elapsed time: User(13) System(1)" that means
+ * that the user has used 13 seconds and the system 1, a total of 14 seconds
+ * since the last annotation in this TimeStamp variable.
+ *
+ * @code
  * TimeStamp t0;
  * annotate_time(&t0);
  * ...;
@@ -896,7 +931,7 @@ double elapsed_time(ProcessorTimeStamp& time, bool _IN_SECS = true);
  *
  * This function is not ported to Python.
  */
-void print_elapsed_time(ProcessorTimeStamp& time, bool _IN_SECS = true);
+void print_elapsed_time(TimeStamp& time, bool _IN_SECS = true);
 
 /** Returns the estimated time left to finish
  *

@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/time.h>
 #include <complex>
 #include <fstream>
 #include <typeinfo>
@@ -779,6 +780,16 @@ void annotate_processor_time(ProcessorTimeStamp *time)
     times(time);
 }
 
+void annotate_time(TimeStamp *time)
+{
+	struct timeval  tv;
+	gettimeofday(&tv, NULL);
+	struct tm tm;
+	localtime_r(&tv.tv_sec,&tm);
+	*time = tm.tm_hour * 3600 * 1000 + tm.tm_min * 60 * 1000 + tm.tm_sec * 1000 +
+			tv.tv_usec / 1000;
+}
+
 // Acumulative time
 void acum_time(ProcessorTimeStamp *orig, ProcessorTimeStamp *dest)
 {
@@ -802,6 +813,23 @@ void print_elapsed_time(ProcessorTimeStamp &time, bool _IN_SECS)
     }
     std::cout << "Elapsed time: User(" << userTime << ") System(" << sysTime
     << ")\n";
+}
+
+void print_elapsed_time(TimeStamp& time, bool _IN_SECS)
+{
+	struct timeval  tv;
+	gettimeofday(&tv, NULL);
+	struct tm tm;
+	localtime_r(&tv.tv_sec,&tm);
+	TimeStamp now = tm.tm_hour * 3600 * 1000 + tm.tm_min * 60 * 1000 + tm.tm_sec * 1000 +
+			        tv.tv_usec / 1000;
+	TimeStamp diff=now-time;
+
+	std::cout << "Elapsed time: ";
+	if (_IN_SECS)
+		std::cout << diff/1000.0 << " secs." << std::endl;
+	else
+		std::cout << diff << " msecs." << std::endl;
 }
 
 // Calculate elapsed time since last annotation .............................
