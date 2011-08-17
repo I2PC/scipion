@@ -377,11 +377,21 @@ struct AutomaticallySelectThreadParams
 /// Automatically Select Particles thread
 void * automaticallySelectParticlesThread(void *);
 
-class ProgMicrographAutomaticPickingPSD: public XmippProgram
+class ProgMicrographAutomaticPicking: public XmippProgram
 {
 public:
     /// Micrograph filename
-    FileName             fn_micrograph;
+    FileName fn_micrograph;
+    /// Model rootname
+    FileName fn_model;
+    /// Particle size
+    int size;
+    /// Mode
+    String mode;
+    /// Number of threads
+    int Nthreads;
+    /// Output rootname
+    FileName fn_root;
 public:
     /// Read parameters
     void readParams();
@@ -391,9 +401,6 @@ public:
 
     /// Define Parameters
     void defineParams();
-
-    /// Produce side information
-    void produce_side_info();
 
     /** Run */
     void run();

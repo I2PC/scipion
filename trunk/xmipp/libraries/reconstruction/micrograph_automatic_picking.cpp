@@ -1968,26 +1968,67 @@ void AutoParticlePicking::configure_auto(int _ellipse_radius)
     __reduction=(int)std::pow(2.0, __output_scale);
 }
 
-void ProgMicrographAutomaticPickingPSD::readParams()
-{}
-
-void ProgMicrographAutomaticPickingPSD::show()
+// Program interface ========================================================
+void ProgMicrographAutomaticPicking::readParams()
 {
-
+    fn_micrograph=getParam("-i");
+    fn_model=getParam("--model");
+    size=getIntParam("--particleSize");
+    mode=getParam("--mode");
+    Nthreads=getIntParam("--thr");
+    fn_root=getParam("--outputRoot");
 }
 
-void ProgMicrographAutomaticPickingPSD::defineParams()
+void ProgMicrographAutomaticPicking::show()
 {
-
+	if (!verbose)
+		return;
+	std::cout
+	<< "Micrograph: " << fn_micrograph << std::endl
+	<< "Model     : " << fn_model      << std::endl
+	<< "Mode      : " << mode          << std::endl
+	<< "Threads   : " << Nthreads      << std::endl
+	<< "Output    : " << fn_root       << std::endl
+	;
 }
 
-void ProgMicrographAutomaticPickingPSD::produce_side_info()
+void ProgMicrographAutomaticPicking::defineParams()
 {
-
+    addUsageLine("Automatic particle picking for micrographs");
+    addUsageLine("+The algorithm is designed to learn the particles from the user, as well as from its own errors.");
+    addUsageLine("+The algorithm is fully described in [[http://www.ncbi.nlm.nih.gov/pubmed/19555764][this paper]].");
+    addParamsLine("  -i <micrograph>               : Micrograph image");
+    addParamsLine("  --mode <mode>                 : Operation mode");
+    addParamsLine("         where <mode>");
+    addParamsLine("                    train <file>: Training file");
+    addParamsLine("                    autoselect  : Autoselect");
+    addParamsLine("  --model <model_rootname>      : Bayesian model of the particles to pick");
+    addParamsLine("  --particleSize <size>         : Particle size in pixels");
+    addParamsLine("  [--thr <p=1>]                 : Number of threads for automatic picking");
+    addParamsLine("  [--outputRoot <rootname=\"\">] : Output rootname");
+    addParamsLine("                                : If not given, the micrograph name is taken");
+    addExampleLine("Training:",false);
+    addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --mode train training.xmd --model model --thr 4");
+    addExampleLine("Automatically select particles:",false);
+    addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --mode autoselect --model model --thr 4");
 }
 
-
-void ProgMicrographAutomaticPickingPSD::run()
+void ProgMicrographAutomaticPicking::run()
 {
-
+	Micrograph m;
+	m.open_micrograph(fn_micrograph);
+    AutoParticlePicking *autoPicking=new AutoParticlePicking(&m);
+    autoPicking->setNumThreads(Nthreads);
+    autoPicking->loadModels(fn_model);
+    autoPicking->setOutputRoot(fn_root);
+    if (mode=="autoselect")
+    {
+        autoPicking->automaticallySelectParticles();
+        autoPicking->saveAutoParticles();
+    }
+    else
+    {
+        autoPicking->learnParticles(size/2);
+        autoPicking->saveModels(fn_model);
+    }
 }
