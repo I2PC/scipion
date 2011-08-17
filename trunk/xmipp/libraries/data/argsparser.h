@@ -363,7 +363,7 @@ class ProtPrinter: public Printer
 {
 protected:
   FILE * output;
-  String label, condition;
+  String label, condition, parent_name;
 public:
   /** buffer to read the command line output */
   char readbuffer[1024];

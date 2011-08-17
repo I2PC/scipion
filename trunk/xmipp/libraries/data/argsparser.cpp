@@ -1606,22 +1606,20 @@ void ProtPrinter::printParam(const ParamDef &param, int v)
     if (param.independent)
         return;
     bool expert = param.visible > v;
-    {
 
-        size_t n_args = param.arguments.size();
+	size_t n_args = param.arguments.size();
 
-        fprintf(output, "# %s\n\"\"\"\n", param.name.c_str());
-        //Add comments to the help
-        for (size_t i = 0; i < param.comments.size(); ++i)
-            //if (param.comments.visibility[i] <= v)
-            fprintf(output, "%s\n", param.comments.comments[i].c_str());
-        fprintf(output, "\"\"\"\n");
-        label = param.name;
-        for (size_t i = 0; i < n_args; ++i)
-        {
-            printArgument(*param.arguments[i], v);
-        }
-    }
+	//fprintf(output, "# %s\n\"\"\"\n", param.name.c_str());
+	//Add comments to the help
+	for (size_t i = 0; i < param.comments.size(); ++i)
+		//if (param.comments.visibility[i] <= v)
+		fprintf(output, "%s\n", param.comments.comments[i].c_str());
+	fprintf(output, "\"\"\"\n");
+	label = parent_name = param.name;
+	for (size_t i = 0; i < n_args; ++i)
+	{
+		printArgument(*param.arguments[i], v);
+	}
 }
 
 void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
@@ -1634,22 +1632,29 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
             tags += "," + argument.subParams[j]->name;
         tags += ")";
     }
+    tags += condition;
+
     label += "   " + argument.name;
     fprintf(output, "# %s %s\n", tags.c_str(), label.c_str());
-    fprintf(output, "AA = \"%s\"\n\n",argument.argDefault.c_str());
-    label = "";
-    return;
+    String tmp = parent_name;
+    parent_name = formatString("%s_%s",parent_name.c_str(), argument.name.c_str());
+    fprintf(output, "%s = \"%s\"\n\n",
+    		parent_name.c_str(), argument.argDefault.c_str());
     if (argument.subParams.size() > 0)
     {
-        tags = "{list}(" + argument.subParams[0]->name;
         for (size_t j = 1; j < argument.subParams.size(); ++j)
         {
-            tags += "," + argument.subParams[j]->name;
+        	condition = formatString("{condition}(%s=%s)",
+				argument.name.c_str(), argument.subParams[j]->name.c_str());
             for (size_t k = 0; k < argument.subParams[j]->arguments.size(); ++k)
             {
+            	label = argument.subParams[j]->name;
                 printArgument(*(argument.subParams[j]->arguments[k]));
             }
         }
     }
+    parent_name = tmp;
+    label = "";
+    condition = "";
 }
 
