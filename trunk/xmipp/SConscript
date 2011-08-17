@@ -687,7 +687,6 @@ AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
 AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 AddXmippProgram('angular_project_library', ['XmippRecons'])
 AddXmippProgram('angular_rotate')
-AddXmippProgram('apropos', ['XmippInterface'])
 AddXmippProgram('classify_analyze_cluster', ['XmippClassif'])
 AddXmippProgram('classify_kerdensom', ['XmippClassif'])
 AddXmippProgram('ctf_correct_wiener3d', ['XmippRecons'])
@@ -803,6 +802,7 @@ if int(env['gtest']):
 
 # Batches (apps)
 #
+AddBatch('apropos', 'applications/scripts/apropos', '.py')
 AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_create', '.py')
 AddBatch('metadata_show', 'applications/scripts/metadata_show', '.py')
 #AddBatch('metadata_operate', 'applications/scripts/metadata_operate','.py')
