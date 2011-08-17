@@ -60,6 +60,7 @@ void XmippProgram::defineCommons()
     addParamsLine("==+++++ Internal section ==");
     addParamsLine("[--xmipp_write_definition* <dbname>] : Print metadata info about the program to sqlite database");
     addParamsLine("[--xmipp_write_wiki* ] : Print metadata info about the program in wiki format");
+    addParamsLine("[--xmipp_write_protocol* ] : Generate protocol header file");
 }
 
 void XmippProgram::init()
@@ -75,17 +76,14 @@ bool XmippProgram::checkBuiltIns()
 {
     ///If -more_options provided, show extended usage
     if (checkParam("--more"))
-    {
         usage(1);
-        return true;
-    }
     ///If help requested, print usage message
-    if (checkParam("--help"))
+    else if (checkParam("--help"))
     {
-        std::string helpParam = getParam("-h");
+        String helpParam = getParam("-h");
         if (helpParam != "")
         {
-            std::string cmdHelp("-");
+            String cmdHelp("-");
             cmdHelp += helpParam;
             if (existsParam(cmdHelp.c_str()))
                 usage(cmdHelp);
@@ -104,67 +102,42 @@ bool XmippProgram::checkBuiltIns()
         }
         else
             usage();
-        return true;
     }
-    if (checkParam("--xmipp_write_definition"))
-    {
-        //writeToDB("programs.db");
-        writeInfo();
-        return true;
-    }
-    if (checkParam("--xmipp_write_wiki"))
-    {
+    else if (checkParam("--xmipp_write_definition"))
+        writeToDB();
+    else if (checkParam("--xmipp_write_wiki"))
         createWiki();
-        return true;
-    }
-    if (checkParam("--gui"))
-    {
+    else if (checkParam("--xmipp_write_protocol"))
+        writeToProtocol();
+    else if (checkParam("--gui"))
         createGUI();
-        return true;
-    }
-    return false;
+    else
+        return false;
+    return true;
 }
 
-void XmippProgram::writeToDB(const FileName &dbName)
-{
-    //    ProgramDb db;
-    //    DbProgram progData;
-    //    progData.name = name();
-    //    progData.keywords = progDef->keywords;
-    //    StringVector::const_iterator it;
-    //    StringVector & desc = progDef->usageComments.comments;
-    //    for (it = desc.begin(); it < desc.end(); ++it)
-    //        progData.description += *it + "\n";
-    //    db.beginTrans();
-    //    db.insertProgram(&progData);
-    //    db.commitTrans();
-}
-
-void XmippProgram::writeInfo( )
+void XmippProgram::writeToDB()
 {
     ProgramDb db;
     db.printProgram(*progDef);
+}
 
-    //  std::cout << "PROGRAM: " << name() << std::endl;
-    // std::cout << "KEYWORDS: " << progDef->keywords << std::endl;
-    //    StringVector::const_iterator it;
-    // StringVector & desc = progDef->usageComments.comments;
-    //    for (it = desc.begin(); it < desc.end(); ++it)
-    //  std::cout << "DESCRIPTION: " << *it << std::endl;
+void XmippProgram::writeToProtocol( )
+{
+    ProtPrinter pp;
+    pp.printProgram(*progDef);
 }
 
 void XmippProgram::createGUI()
 {
-    TkPrinter * tk = new TkPrinter();
-    tk->printProgram(*progDef);
-    delete tk;
+    TkPrinter tk;
+    tk.printProgram(*progDef);
 }
 
 void XmippProgram::createWiki()
 {
-    WikiPrinter * wiki = new WikiPrinter();
-    wiki->printProgram(*progDef, 3);
-    delete wiki;
+    WikiPrinter wiki;
+    wiki.printProgram(*progDef, 3);
 }
 
 XmippProgram::XmippProgram()
@@ -366,7 +339,7 @@ void XmippProgram::getListParam(const char * param, StringVector &list)
 {
     ParamDef * paramDef = progDef->findParam(param);
     if (paramDef == NULL)
-        REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
+        REPORT_ERROR(ERR_ARG_INCORRECT, ((String)"Doesn't exists param: " + param));
     list.clear();
     for (int i = 0; i < paramDef->cmdArguments.size(); ++i)
         list.push_back(paramDef->cmdArguments[i]);
@@ -376,7 +349,7 @@ int XmippProgram::getCountParam(const char * param)
 {
     ParamDef * paramDef = progDef->findParam(param);
     if (paramDef == NULL)
-        REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
+        REPORT_ERROR(ERR_ARG_INCORRECT, ((String)"Doesn't exists param: " + param));
     return paramDef->cmdArguments.size();
 }
 
@@ -384,7 +357,7 @@ bool XmippProgram::checkParam(const char * param)
 {
     ParamDef * paramDef = progDef->findParam(param);
     if (paramDef == NULL)
-        REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
+        REPORT_ERROR(ERR_ARG_INCORRECT, ((String)"Doesn't exists param: " + param));
     return paramDef->counter == 1;
 }
 
@@ -417,14 +390,14 @@ void XmippProgram::usage(int verb) const
     }
 }
 
-void XmippProgram::usage(const std::string & param, int verb)
+void XmippProgram::usage(const String & param, int verb)
 {
     if (verbose)
     {
         ConsolePrinter cp;
         ParamDef * paramDef = progDef->findParam(param);
         if (paramDef == NULL)
-            REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
+            REPORT_ERROR(ERR_ARG_INCORRECT, ((String)"Doesn't exists param: " + param));
         cp.printParam(*paramDef, verb);
     }
     quit(0);

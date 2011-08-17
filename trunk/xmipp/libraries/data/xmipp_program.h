@@ -63,9 +63,9 @@ private:
     bool checkBuiltIns();
 
     /** Write Program info to DB */
-    void writeToDB(const FileName &dbName);
+    void writeToDB();
     /** Print some information to stdout */
-    void writeInfo();
+    void writeToProtocol();
 
     /** Create program GUI */
     /** By default, a simple Tk GUI is create based on parameters definition.
@@ -177,7 +177,7 @@ public:
     /** Print the usage of the program, reduced version */
     virtual void usage(int verb = 0) const;
     /** Print help about specific parameter */
-    virtual void usage(const std::string & param, int verb = 2);
+    virtual void usage(const String & param, int verb = 2);
 
     /** Return the version of the program */
     int version() const;

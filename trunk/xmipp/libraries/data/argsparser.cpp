@@ -1509,3 +1509,147 @@ void WikiPrinter::printCommentList(const CommentList &comments, int v)
     *pOut << "%BR%" << std::endl;
 }
 
+//-------------------   PROTOCOL PRINTER IMPLEMENTATIONS   --------------------------------
+
+ProtPrinter::ProtPrinter()
+{
+    FileName dir = xmippBaseDir();
+    dir.append("/test_header.py");
+    output = fopen(dir.c_str(), "w+");
+}
+
+ProtPrinter::~ProtPrinter()
+{
+    fclose(output);
+}
+//# {begin_of_header}
+//#{please_cite}
+//"""
+//for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149
+//for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
+//"""
+//
+//# {list}(Resume, Restart) Run behavior
+//""" Resume from the last step, restart the whole process or continue at a given step or iteration
+//"""
+//Behavior = "Resume"
+void printBegin(FILE * output, const ProgramDef &program)
+{
+    fprintf(output, "# -------------------------------------------------------------------------------\n");
+    fprintf(output, "# Protocol header automatically generated for program: %s\n", program.name.c_str());
+    size_t numberOfComments = program.usageComments.size();
+    for (size_t i = 0; i < numberOfComments; ++i)
+    {
+        fprintf(output, "#   %s\n", program.usageComments.comments[i].c_str());
+        printf("#   %s\n", program.usageComments.comments[i].c_str());
+    }
+    fprintf(output,
+            "# -------------------------------------------------------------------------------\n"
+            "# {begin_of_header}\n"
+            "#------------------------------------------------------------------------------------------\n"
+            "# {section}{has_question} Comment\n"
+            "#------------------------------------------------------------------------------------------\n"
+            "# Display comment\n"
+            "DisplayComment = False\n\n"
+            "# {text} Write a comment:\n"
+            "\"\"\"\nDescribe your run here...\n\"\"\"\n"
+            "#-----------------------------------------------------------------------------\n"
+            "# {section} Run parameters\n"
+            "#-----------------------------------------------------------------------------\n"
+            "# Run name:\n"
+            "\"\"\" This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two\n"
+            "run1 for it. This name together with the protocol output folder will determine the working dir for this run.\n\"\"\"\n"
+            "RunName = \"run_001\"\n\n");
+}
+
+void printEnd(FILE * output)
+{
+    fprintf(output,
+            "# {hidden} Show expert options"
+            "\"\"\"If True, expert options will be displayed\"\"\"\n"
+            "ShowExpertOptions = False\n"
+            "#------------------------------------------------------------------------------------------\n"
+            "# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE\n"
+            "#------------------------------------------------------------------------------------------------\n\n"
+            "from protocol_dummy import *\n\n"
+            "if __name__ == '__main__':\n"
+            "    protocolMain(ProtDummy)\n");
+}
+
+void ProtPrinter::printProgram(const ProgramDef &program, int v)
+{
+    printBegin(output, program);
+    for (size_t i = 0; i < program.sections.size(); ++i)
+        printSection(*program.sections[i], v);
+    printEnd(output);
+}
+
+void ProtPrinter::printSection(const SectionDef &section, int v)
+{
+    //Just ignore in the GUI this section
+    if (section.name == " Common options ")
+        return;
+
+    bool expert = section.visible > v;
+
+    //if (section.name.length() > 0)
+    fprintf(output,
+            "#------------------------------------------------------------------------------------------\n"
+            "# {section} %s %s\n", (expert ? "{expert}" : ""), section.name.c_str());
+    for (size_t i = 0; i < section.params.size(); ++i)
+        printParam(*section.params[i], v);
+}
+
+void ProtPrinter::printParam(const ParamDef &param, int v)
+{
+    //Independent params are some kind of special ones
+    if (param.independent)
+        return;
+    bool expert = param.visible > v;
+    {
+
+        size_t n_args = param.arguments.size();
+
+        fprintf(output, "# %s\n\"\"\"\n", param.name.c_str());
+        //Add comments to the help
+        for (size_t i = 0; i < param.comments.size(); ++i)
+            //if (param.comments.visibility[i] <= v)
+            fprintf(output, "%s\n", param.comments.comments[i].c_str());
+        fprintf(output, "\"\"\"\n");
+        label = param.name;
+        for (size_t i = 0; i < n_args; ++i)
+        {
+            printArgument(*param.arguments[i], v);
+        }
+    }
+}
+
+void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
+{
+    String tags = "";
+    if (argument.subParams.size() > 0)
+    {
+        tags = "{list}(" + argument.subParams[0]->name;
+        for (size_t j = 1; j < argument.subParams.size(); ++j)
+            tags += "," + argument.subParams[j]->name;
+        tags += ")";
+    }
+    label += "   " + argument.name;
+    fprintf(output, "# %s %s\n", tags.c_str(), label.c_str());
+    fprintf(output, "AA = \"%s\"\n\n",argument.argDefault.c_str());
+    label = "";
+    return;
+    if (argument.subParams.size() > 0)
+    {
+        tags = "{list}(" + argument.subParams[0]->name;
+        for (size_t j = 1; j < argument.subParams.size(); ++j)
+        {
+            tags += "," + argument.subParams[j]->name;
+            for (size_t k = 0; k < argument.subParams[j]->arguments.size(); ++k)
+            {
+                printArgument(*(argument.subParams[j]->arguments[k]));
+            }
+        }
+    }
+}
+

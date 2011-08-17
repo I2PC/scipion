@@ -358,5 +358,24 @@ public:
     virtual void printCommentList(const CommentList &comments, int v = 0);
 };
 
+/** Print out to create Protocol header script */
+class ProtPrinter: public Printer
+{
+protected:
+  FILE * output;
+  String label, condition;
+public:
+  /** buffer to read the command line output */
+  char readbuffer[1024];
+  /** Constructor */
+  ProtPrinter();
+  ~ProtPrinter();
+  virtual void printProgram(const ProgramDef &program, int v = 0);
+  virtual void printSection(const SectionDef &section, int v = 0);
+  virtual void printParam(const ParamDef &param, int v = 0);
+  virtual void printArgument(const ArgumentDef & argument, int v = 0);
+  virtual void printCommentList(const CommentList &comments, int v = 0){};
+};
+
 /** @} */
 #endif /* ARGSPARSER_H_ */
