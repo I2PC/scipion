@@ -376,13 +376,15 @@ void ProgImageRotationalPCA::copyHtoF(int block)
 {
 	TimeStamp t0;
 	annotate_time(&t0);
+	FileName fnSync=fnRoot+".sync";
 	if (node->isMaster())
 	{
 		size_t Hidx=block*MAT_XSIZE(H);
 		FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
 			MAT_ELEM(F,Hidx+j,i)=MAT_ELEM(H,i,j);
+		createEmptyFileWithGivenLength(fnSync);
 	}
-	node->barrierWait();
+	node->barrierWait(fnSync,1);
     std::cout << "Copying H to F:"; print_elapsed_time(t0);
 }
 
@@ -391,9 +393,7 @@ void ProgImageRotationalPCA::run()
 {
 	TimeStamp t0;
     show();
-	annotate_time(&t0);
     produceSideInfo();
-    std::cout << "Produce side info:"; print_elapsed_time(t0);
 
     // Compute matrix F:
     // Set H pointing to the first block of F
@@ -409,13 +409,14 @@ void ProgImageRotationalPCA::run()
 
     // QR decomposition of matrix F
     int qrDim;
+    FileName fnSync=fnRoot+".sync";
     if (node->isMaster())
     {
         qrDim=QR();
-        MPI_Bcast(&qrDim,1,MPI_INT,0,MPI_COMM_WORLD);
+        createEmptyFileWithGivenLength(fnSync);
     }
-    else
-        MPI_Bcast(&qrDim,1,MPI_INT,0,MPI_COMM_WORLD);
+    node->barrierWait(fnSync,10);
+    MPI_Bcast(&qrDim,1,MPI_INT,0,MPI_COMM_WORLD);
 
     // Load the first qrDim columns of F in matrix H
 	if (node->isMaster())
@@ -424,11 +425,12 @@ void ProgImageRotationalPCA::run()
         H.mapToFile(fnRoot+"_matrixH.raw",MAT_XSIZE(F),qrDim);
 		FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
         MAT_ELEM(H,i,j)=MAT_ELEM(F,j,i);
-		node->barrierWait();
+        createEmptyFileWithGivenLength(fnSync);
+		node->barrierWait(fnSync,2);
 	}
 	else
 	{
-		node->barrierWait();
+		node->barrierWait(fnSync,2);
         H.mapToFile(fnRoot+"_matrixH.raw",MAT_XSIZE(F),qrDim);
 	}
 
@@ -439,7 +441,6 @@ void ProgImageRotationalPCA::run()
     // Apply SVD and extract the basis
     if (node->isMaster())
     {
-    	std::cout << "Empiezo SVD" << std::endl;
     	annotate_time(&t0);
         // SVD of W
         Matrix2D<double> U,V;
@@ -468,5 +469,14 @@ void ProgImageRotationalPCA::run()
         }
         MD.write(fnRoot+".xmd");
         std::cout << "Output:"; print_elapsed_time(t0);
+        createEmptyFileWithGivenLength(fnSync);
+    }
+    node->barrierWait(fnSync,15);
+
+    // Clean files
+    if (node->isMaster())
+    {
+    	unlink((fnRoot+"_matrixH.raw").c_str());
+    	unlink((fnRoot+"_matrixF.raw").c_str());
     }
 }
