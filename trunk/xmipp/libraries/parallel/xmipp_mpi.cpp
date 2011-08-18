@@ -273,6 +273,7 @@ void MpiNode::barrierWait(const FileName &fnToWaitOn, int sleepTime)
 	barrierWait();
 	if (isMaster())
 		unlink(fnToWaitOn.c_str());
+	barrierWait();
 }
 
 void MpiNode::barrierWait()
