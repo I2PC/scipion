@@ -66,7 +66,7 @@ Crop = -1
     substituted by the local median. Set this option to -1 for not applying it."""
 Stddev = -1
 
-# Downsampling factor 
+# {wizard}(wizardDummy) Downsampling factor 
 """ Set to 1 for no downsampling. Non-integer downsample factors are possible."""
 Down = 1
 
@@ -98,14 +98,14 @@ ScannedPixelSize = 15
 """ It should be a negative number, typically between -0.05 and -0.3."""
 AmplitudeContrast = -0.1
 
-# {expert} Lowest resolution for CTF estimation
+# {wizard}(wizardDummy){expert} Lowest resolution for CTF estimation
 """ Give a value in digital frequency (i.e. between 0.0 and 0.5)
     This cut-off prevents the typically peak at the center of the PSD to interfere with CTF estimation.  
     The default value is 0.05, but for micrographs with a very fine sampling this may be lowered towards 0.0
 """
 LowResolCutoff = 0.05
 
-# {expert} Highest resolution for CTF estimation
+# {wizard}(wizardDummy){expert} Highest resolution for CTF estimation
 """ Give a value in digital frequency (i.e. between 0.0 and 0.5)
     This cut-off prevents high-resolution terms where only noise exists to interfere with CTF estimation.  
     The default value is 0.35, but it should be increased for micrographs with signals extending beyond this value.
