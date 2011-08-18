@@ -56,14 +56,20 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
 #endif
 
     // Denoise the piece
-    WaveletFilter denoiser;
-    denoiser.denoising_type = WaveletFilter::BAYESIAN;
-    denoiser.scale = 3;
-    denoiser.output_scale = 1;
-    denoiser.produceSideInfo();
-    denoiser.apply(piece);
-    if (!(piece(0, 0) == piece(0, 0)))
-        return false;
+    if (__fast)
+        selfScaleToSize(1,piece,XSIZE(piece)/2,YSIZE(piece)/2);
+    else
+    {
+        WaveletFilter denoiser;
+        denoiser.denoising_type = WaveletFilter::BAYESIAN;
+        denoiser.scale = 3;
+        denoiser.output_scale = 1;
+        denoiser.produceSideInfo();
+        denoiser.apply(piece);
+        if (!(piece(0, 0) == piece(0, 0)))
+            return false;
+    }
+
 #ifdef DEBUG_PREPARE
 
     save() = piece;
@@ -76,7 +82,7 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
     Filter.FilterShape = RAISED_COSINE;
     Filter.FilterBand = BANDPASS;
     Filter.w1 = __highpass_cutoff;
-    Filter.w2 = 1.0 / (__particle_radius / (__reduction * 5));
+    Filter.w2 = 1.0 / (__particle_radius / (__reduction * 4));
     Filter.raised_w = XMIPP_MIN(0.02, __highpass_cutoff);
     Filter.generateMask(piece);
     Filter.applyMaskSpace(piece);
@@ -404,7 +410,7 @@ void AutoParticlePicking::buildPositiveVectors()
 {
     int num_part = __m->ParticleNo();
     std::cerr << "Building " << num_part
-    		  << " particle vectors for this image. Please wait..." << std::endl;
+    << " particle vectors for this image. Please wait..." << std::endl;
     __selection_model.addMicrograph();
     int width, height;
     __m->size(width, height);
@@ -1344,10 +1350,20 @@ void AutoParticlePicking::get_centered_piece(MultidimArray<double> &piece,
     }
 
     //read the matrix from the micrograph
-    const Micrograph &micrograph = *__m;
-    for (int i = 0; i < __piece_xsize; i++)
-        for (int j = 0; j < __piece_xsize; j++)
-            DIRECT_A2D_ELEM(piece, i, j) = micrograph(starty + i, startx + j);
+    if (__incore)
+    {
+        const MultidimArray<double> &micrograph = MULTIDIM_ARRAY(__I);
+        size_t rowLength=__piece_xsize*sizeof(double);
+        for (int i = 0; i < __piece_xsize; i++)
+            memcpy(&DIRECT_A2D_ELEM(piece, i, 0),&DIRECT_A2D_ELEM(micrograph,starty + i, startx),rowLength);
+        }
+    else
+    {
+        const Micrograph &micrograph = *__m;
+        for (int i = 0; i < __piece_xsize; i++)
+            for (int j = 0; j < __piece_xsize; j++)
+                DIRECT_A2D_ELEM(piece, i, j) = micrograph(starty + i, startx + j);
+    }
 }
 
 // Get a piece whose top-left corner is at the desired position (if possible)
@@ -1394,10 +1410,20 @@ bool AutoParticlePicking::get_corner_piece(MultidimArray<double> &piece,
     if (copyPiece)
     {
         piece.resizeNoCopy(__piece_xsize, __piece_xsize);
-        const Micrograph& micrograph = *__m;
-        for (int i = 0; i < __piece_xsize; i++)
-            for (int j = 0; j < __piece_xsize; j++)
-                DIRECT_A2D_ELEM(piece,i, j) = micrograph(_top + i, _left + j);
+        if (__incore)
+        {
+            const MultidimArray<double> &micrograph = MULTIDIM_ARRAY(__I);
+            size_t rowLength=__piece_xsize*sizeof(double);
+            for (int i = 0; i < __piece_xsize; i++)
+                memcpy(&DIRECT_A2D_ELEM(piece, i, 0),&DIRECT_A2D_ELEM(micrograph,_top + i, _left),rowLength);
+        }
+        else
+        {
+            const Micrograph& micrograph = *__m;
+            for (int i = 0; i < __piece_xsize; i++)
+                for (int j = 0; j < __piece_xsize; j++)
+                    DIRECT_A2D_ELEM(piece,i, j) = micrograph(_top + i, _left + j);
+        }
     }
 
     return true;
@@ -1425,7 +1451,7 @@ void Classification_model::initNaiveBayesEnsemble(
     __bayesEnsembleNet->setCostMatrix(cost);
 }
 
-AutoParticlePicking::AutoParticlePicking(Micrograph *_m)
+AutoParticlePicking::AutoParticlePicking(Micrograph *_m, bool _fast)
 {
     __m = _m;
     __numThreads = 1;
@@ -1434,6 +1460,14 @@ AutoParticlePicking::AutoParticlePicking(Micrograph *_m)
     __piece_overlap = 0;
     __scan_overlap = 0;
     __learn_overlap = 0;
+    __fast=_fast;
+    __incore=false;
+}
+
+void AutoParticlePicking::readMicrograph(const FileName &fn)
+{
+    __I.read(fn);
+    __incore=true;
 }
 
 /* produceFeatures --------------------------------------------------------- */
@@ -1666,7 +1700,7 @@ void AutoParticlePicking::saveAutoParticles(const FileName &fn) const
         size_t id = MD.addObject();
         const Particle &p = __auto_candidates[n];
         MD.setValue(MDL_XINT, p.x, id);
-        MD.setValue(MDL_YINT, p.x, id);
+        MD.setValue(MDL_YINT, p.y, id);
         MD.setValue(MDL_COST, p.cost, id);
     }
     MD.write(fn);
@@ -1721,7 +1755,8 @@ void ProgMicrographAutomaticPicking::readParams()
         fn_train = getParam("--mode", 1);
     Nthreads = getIntParam("--thr");
     fn_root = getParam("--outputRoot");
-    writeFeatures = checkParam("--writeFeatures");
+    fast = checkParam("--fast");
+    incore = checkParam("--in_core");
 }
 
 void ProgMicrographAutomaticPicking::show()
@@ -1732,7 +1767,10 @@ void ProgMicrographAutomaticPicking::show()
     << "Model        : " << fn_model << std::endl << "Mode         : "
     << mode << std::endl << "Training file: " << fn_train << std::endl
     << "Threads      : " << Nthreads << std::endl << "Output       : "
-    << fn_root << std::endl;
+    << fn_root << std::endl
+    << "Fast         : " << fast << std::endl
+    << "In core      : " << incore << std::endl
+    ;
 }
 
 void ProgMicrographAutomaticPicking::defineParams()
@@ -1744,6 +1782,7 @@ void ProgMicrographAutomaticPicking::defineParams()
     addParamsLine("  --outputRoot <rootname>       : Output rootname");
     addParamsLine("  --mode <mode>                 : Operation mode");
     addParamsLine("         where <mode>");
+    addParamsLine("                    try              : Try to autoselect within the training phase.");
     addParamsLine("                    train <posfile>  : posfile contains the coordinates of manually picked particles");
     addParamsLine("                                     : <rootname>_auto_feature_vectors.xmd contains the particle structure created by this program when used in automatic selection mode");
     addParamsLine("                                     : <rootname>_false_positives.xmd contains the list of false positives among the automatically picked particles");
@@ -1751,28 +1790,30 @@ void ProgMicrographAutomaticPicking::defineParams()
     addParamsLine("  --model <model_rootname>      : Bayesian model of the particles to pick");
     addParamsLine("  --particleSize <size>         : Particle size in pixels");
     addParamsLine("  [--thr <p=1>]                 : Number of threads for automatic picking");
-    addParamsLine("  [--writeFeatures]             : Write the feature vectors of the automatically selected particles");
-    addParamsLine("                                : under the name  <rootname>_auto_feature_vectors.xmd");
-    addExampleLine("Training:", false);
-    addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --mode train manual.pos --model model --thr 4 --outputRoot micrograph");
+    addParamsLine("  [--fast]                      : Perform a fast preprocessing of the micrograph (Fourier filter instead of Wavelet filter)");
+    addParamsLine("  [--in_core]                   : Read the micrograph in memory");
     addExampleLine("Automatically select particles during training:", false);
-    addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --mode autoselect --model model --thr 4  --outputRoot micrograph --write_features");
+    addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --model model --thr 4 --outputRoot micrograph --mode try ");
+    addExampleLine("Training:", false);
+    addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --model model --thr 4 --outputRoot micrograph --mode train manual.pos");
     addExampleLine("Automatically select particles after training:", false);
-    addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --mode autoselect --model model --thr 4  --outputRoot micrograph");
+    addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --model model --thr 4 --outputRoot micrograph --mode autoselect");
 }
 
 void ProgMicrographAutomaticPicking::run()
 {
     Micrograph m;
     m.open_micrograph(fn_micrograph);
-    AutoParticlePicking *autoPicking = new AutoParticlePicking(&m);
+    AutoParticlePicking *autoPicking = new AutoParticlePicking(&m,fast);
     autoPicking->setNumThreads(Nthreads);
     autoPicking->loadModels(fn_model);
-    if (mode == "autoselect")
+    if (incore)
+    	autoPicking->readMicrograph(fn_micrograph);
+    if (mode == "autoselect" || mode=="try")
     {
         autoPicking->automaticallySelectParticles();
         autoPicking->saveAutoParticles(fn_root + "_" + fn_model.removeDirectories() + ".pos");
-        if (writeFeatures)
+        if (mode=="try")
             autoPicking->saveAutoFeatureVectors(fn_root + "_auto_feature_vectors.xmd");
     }
     else

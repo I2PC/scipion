@@ -142,6 +142,7 @@ public:
 	static const int    __reduction=2; // Of the piece with respect to the micrograph
 
 	Micrograph                *__m;
+	Image<double>		       __I;
     int                        __numThreads;
     Mask                       __mask;
     Classification_model       __selection_model;
@@ -150,6 +151,8 @@ public:
     int                        __piece_overlap;
     int                        __scan_overlap;
     int                        __learn_overlap;
+    bool                       __fast;
+    bool                       __incore;
     std::vector<Particle>      __auto_candidates;
     std::vector<Particle>      __rejected_particles;
     std::vector < MultidimArray<int> * >    __mask_classification;
@@ -159,7 +162,10 @@ public:
     std::vector < MultidimArray<int> * >    __Nsector;
 public:
     /// Empty constructor
-    AutoParticlePicking(Micrograph *_m);
+    AutoParticlePicking(Micrograph *_m, bool __fast);
+
+    /// Read the micrograph in memory
+    void readMicrograph(const FileName &fn);
 
     /// Set the number of threads
     inline void setNumThreads(int _numThreads)
@@ -316,8 +322,10 @@ public:
     int Nthreads;
     /// Output rootname
     FileName fn_root;
-    /// Write features
-    bool writeFeatures;
+    /// Fast
+    bool fast;
+    /// In core
+    bool incore;
 public:
     /// Read parameters
     void readParams();
