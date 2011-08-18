@@ -294,9 +294,6 @@ void ProgImageRotationalPCA::applyTt()
 
                         // Rotate and shift image
                         applyGeometry(1,Iaux,mI,A,IS_INV,true);
-                        Image<double> save;
-                        save()=Iaux;
-                        save.write("PPPI.xmp");
 
                         // Update Hblock
                         for (int j=0; j<MAT_XSIZE(Hblock); j++)
