@@ -67,8 +67,14 @@ public class PPData {
 
 	public void loadFamilyData()
 	{
-		String xmd = PPConfiguration.getFamiliesXMD();
 		families.clear();
+		String xmd = PPConfiguration.getFamiliesXMD();
+		if(!new File(xmd).exists())
+		{
+			families.add(Family.getDefaultFamily());
+			return;
+		}
+		
 		Family family;
 		int rgb, size;
 		String gname;		
