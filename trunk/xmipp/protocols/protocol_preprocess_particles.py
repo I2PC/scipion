@@ -20,7 +20,7 @@ from protlib_base import *
 
 class ProtPreprocessParticles(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.preprocess_particles.key, scriptname, project)
+        XmippProtocol.__init__(self, protDict.preprocess_particles.name, scriptname, project)
         self.Import = 'from protocol_particle_pick import *'
 
     #FIXME: I guess this is not longer needed with DB structure

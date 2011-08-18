@@ -22,7 +22,7 @@ def stepPerformed(step,filename):
 
 class ProtKerdensom(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.kerdensom.key, scriptname, project)
+        XmippProtocol.__init__(self, protDict.kerdensom.name, scriptname, project)
         self.Import = 'from protocol_kerdensom import *'
     
     def saveAndCompareParameters(self, listOfParameters):

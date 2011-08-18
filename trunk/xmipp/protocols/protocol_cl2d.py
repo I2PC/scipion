@@ -33,7 +33,7 @@ def stepPerformed(step,filename):
 
 class ProtCL2D(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.cl2d.key, scriptname, project)
+        XmippProtocol.__init__(self, protDict.cl2d.name, scriptname, project)
         self.Import = 'from protocol_cl2d import *'    
         
     def saveAndCompareParameters(self, listOfParameters):

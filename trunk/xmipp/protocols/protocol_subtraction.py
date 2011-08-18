@@ -26,7 +26,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
 
     def __init__(self, scriptname,project=None):
         
-        XmippProtocol.__init__(self, protDict.projsubs.key, scriptname, project)
+        XmippProtocol.__init__(self, protDict.projsubs.name, scriptname, project)
         self.Import = 'from protocol_subtraction_before_loop import *;\
                        from protocol_subtraction_in_loop import *;'        
         

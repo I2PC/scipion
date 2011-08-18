@@ -35,7 +35,7 @@ from Tkinter import IntVar
 # Create a GUI automatically from a selfile of micrographs
 class ProtParticlePicking(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.particle_pick.key, scriptname, project)
+        XmippProtocol.__init__(self, protDict.particle_pick.name, scriptname, project)
         self.Import = 'from xmipp_protocol_particle_pick import *'
 
     def defineSteps(self):
@@ -257,7 +257,7 @@ class ProtParticlePickingGUI(BasicGUI):
             project.load()
             
             # Get run parameters
-            run=project.newOrLoadProtocol(protDict.particle_pick_auto.key, RunName+"_auto")
+            run=project.newOrLoadProtocol(protDict.particle_pick_auto.name, RunName+"_auto")
             run["comment"]="Automatic particle picking from ParticlePicking/"+RunName
             
             gui = ProtocolGUI()

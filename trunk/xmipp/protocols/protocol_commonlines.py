@@ -14,7 +14,7 @@ from config_protocols import protDict
 
 class ProtCommonLines(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.commonlines.key, scriptname, project)
+        XmippProtocol.__init__(self, protDict.commonlines.name, scriptname, project)
         self.Import = 'from protocol_commonlines import *'
     
     def saveAndCompareParameters(self, listOfParameters):

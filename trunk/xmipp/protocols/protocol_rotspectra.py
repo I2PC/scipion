@@ -25,7 +25,7 @@ def stepPerformed(step,filename):
 
 class ProtRotSpectra(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.rotspectra.key, scriptname, project)
+        XmippProtocol.__init__(self, protDict.rotspectra.name, scriptname, project)
         self.Import = 'from protocol_rotspectra import *'    
     
     def saveAndCompareParameters(self, listOfParameters):
