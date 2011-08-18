@@ -74,17 +74,11 @@ public:
     /// Constructor
     Classification_model(int _classNo=3, int _maxTrainingVectors=20000);
 
-    // Clear
-    void clear();
-
     /// Is empty
     inline bool isEmpty()
     {
         return __micrographs_number==0;
     }
-
-    /// Initialize
-    void init(int _classNo=3);
 
     /// Different additions
     inline void addMicrographScanned(int micrographScanned)
@@ -112,9 +106,6 @@ public:
     {
         __micrographs_number++;
     }
-
-    /// Import classification model
-    void import_model(const Classification_model &_model);
 
     /// Is a particle?
     inline int isParticle(const Matrix1D<double> &new_features, double &cost)
@@ -144,37 +135,25 @@ public:
 class AutoParticlePicking
 {
 public:
-    Micrograph                *__m;
+	static const double __penalization = 10;
+	static const double __gray_bins = 8;
+	static const double __radial_bins = 16;
+	static const double __highpass_cutoff = 0.02;
+	static const int    __reduction=2; // Of the piece with respect to the micrograph
+
+	Micrograph                *__m;
     FileName                   __modelRootName;
     FileName                   __outputRoot;
     int                        __numThreads;
-    bool                       __learn_particles_done;
-    bool                       __autoselection_done;
     Mask                       __mask;
-    Classification_model       __training_model;
-    Classification_model       __training_loaded_model;
     Classification_model       __selection_model;
-    Classification_model       __selection_model2;
-    Classification_model       __selection_model3;
-    int                        __auto_label;
-    int                        __gray_bins;
-    int                        __radial_bins;
-    double                     __highpass_cutoff;
-    double                     __penalization;
-    float                      __minCost;
     int                        __piece_xsize;
     int                        __particle_radius;
-    int                        __mask_size;
-    int                        __min_distance_between_particles;
-    int                        __output_scale;
-    int                        __reduction; // Of the piece with respect to the micrograph
     int                        __piece_overlap;
     int                        __scan_overlap;
     int                        __learn_overlap;
-    int                        __classNo;
     std::vector<Particle>      __auto_candidates;
     std::vector<Particle>      __rejected_particles;
-    bool                       __is_model_loaded;
     std::vector < MultidimArray<int> * >    __mask_classification;
     std::vector < MultidimArray<int> * >    __radial_val;
     std::vector < MultidimArray<double> * > __sector;
@@ -200,17 +179,16 @@ public:
     void learnParticles(int _ellipse_radius);
 
     /// Create mask for learning particles
-    void createMask();
+    void createMask(int mask_size);
 
     /// Classify mask
     void classifyMask();
 
     /// Build vectors
-    void buildPositiveVectors(std::vector<int> &_idx, Classification_model &_model);
+    void buildPositiveVectors();
 
     /** Build vector from non particles */
-    void buildNegativeVectors(Classification_model &__model,
-                              bool checkForPalsePostives);
+    void buildNegativeVectors(bool checkForPalsePostives);
 
     /** Build classification vector.
         x,y are in the coordinate system of the piece (that might be
@@ -254,7 +232,7 @@ public:
         and their positions in the piece image.
         */
     void find_neighbour(const MultidimArray<double> &piece,
-                        std::vector<int> &_idx, int _index,
+                        int _index,
                         int _x, int _y,
                         int _posx, int _posy, MultidimArray<char> &_visited,
                         std::vector< Matrix1D<int> > &_nbr);
@@ -307,29 +285,16 @@ public:
     void loadAutoFeatureVectors(const FileName &fn);
 
     /// Get Features of the classification model
-    void getFeatures(const Classification_model &_model,
-                         std::vector < MultidimArray<double> > &_features);
+    void getFeatures(std::vector < MultidimArray<double> > &_features);
 
     /// Get classes probabilities
-    void getClassesProbabilities(const Classification_model &_model,
-                                     Matrix1D<double> &probabilities);
+    void getClassesProbabilities(Matrix1D<double> &probabilities);
 
     /// Get false positives automatically selected
-    void getAutoFalsePositives(Classification_model &_training_model);
+    void getAutoFalsePositives();
 
     /// Get true positives automatically selected
-    void getAutoTruePositives(Classification_model &_training_model);
-
-    /// Restrict selection
-    void restrictSelection(float _cost);
-
-    /** Move particle.
-        The input index is the index of the moved particle in the micrograph list */
-    void move_particle(int _idx);
-
-    /** Delete particle.
-        The input index is the index of the moved particle in the micrograph list */
-    void delete_particle(int _idx);
+    void getAutoTruePositives();
 };
 
 /// AutomaticallySelectThreadParams
