@@ -5,11 +5,11 @@
  * and open the template in the editor.
  */
 import browser.COMMAND_PARAMETERS;
-import browser.table.micrographs.JFrameMicrographs;
 import ij.IJ;
 import ij.Macro;
 import ij.plugin.PlugIn;
 import java.io.File;
+import micrographs.JFrameMicrographs;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

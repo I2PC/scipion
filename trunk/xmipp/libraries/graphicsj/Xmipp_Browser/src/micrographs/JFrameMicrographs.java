@@ -8,20 +8,14 @@
  *
  * Created on Oct 25, 2010, 10:50:01 AM
  */
-package browser.table.micrographs;
+package micrographs;
 
 import browser.DEBUG;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.imageitems.MicrographsTableImageItem;
+import browser.table.micrographs.MicrographsTableModel;
 import browser.table.models.ImagesRowHeaderModel;
-import browser.table.micrographs.ctf.profile.CTFViewImageWindow;
-import browser.table.micrographs.ctf.tasks.TasksEngine;
-import browser.table.micrographs.ctf.tasks.iCTFGUI;
-import browser.table.micrographs.filters.EnableFilter;
-import browser.table.micrographs.renderers.MicrographDoubleRenderer;
-import browser.table.micrographs.renderers.MicrographFileNameRenderer;
-import browser.table.micrographs.renderers.MicrographImageRenderer;
 import browser.table.renderers.RowHeaderRenderer;
 import browser.windows.ImagesWindowFactory;
 import ij.IJ;
@@ -47,6 +41,14 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
+import metadata.models.XTableColumnModel;
+import micrographs.ctf.profile.CTFViewImageWindow;
+import micrographs.ctf.tasks.TasksEngine;
+import micrographs.ctf.tasks.iCTFGUI;
+import micrographs.filters.EnableFilter;
+import micrographs.renderers.MicrographDoubleRenderer;
+import micrographs.renderers.MicrographFileNameRenderer;
+import micrographs.renderers.MicrographImageRenderer;
 
 /**
  *
@@ -74,7 +76,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         super();
 
         setTitle(filename);//ImagesWindowFactory.getSortTitle(filename, getWidth(),
-                //getGraphics().getFontMetrics()));
+        //getGraphics().getFontMetrics()));
 
         initComponents();
 
@@ -592,6 +594,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
 //            repaint();
             updateUI();
+
             pack();
         }
 

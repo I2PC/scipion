@@ -1,4 +1,4 @@
-package browser.table.micrographs.ctf.profile;
+package micrographs.ctf.profile;
 
 
 import ij.ImagePlus;

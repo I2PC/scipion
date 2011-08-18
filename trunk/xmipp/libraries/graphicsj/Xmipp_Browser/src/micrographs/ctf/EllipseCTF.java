@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package browser.table.micrographs.ctf;
+package micrographs.ctf;
 
 import ij.IJ;
 import xmipp.MDLabel;

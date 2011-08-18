@@ -2,11 +2,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package browser.table.micrographs.ctf;
+package micrographs.ctf;
 
 import browser.LABELS;
-import browser.table.micrographs.ctf.tasks.EstimateFromCTFTask;
-import browser.table.micrographs.ctf.tasks.TasksEngine;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageLayout;
@@ -23,6 +21,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import micrographs.ctf.tasks.EstimateFromCTFTask;
+import micrographs.ctf.tasks.TasksEngine;
 
 /**
  *
@@ -138,7 +138,7 @@ public class CTFRecalculateImageWindow extends ImageWindow {
         // Add "estimate..." to tasks.
         EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
                 ellipseCTF,
-                90 - ellipseFitter.angle, PSDFilename, tasksEngine, row);
+                90 - ellipseFitter.angle, PSDFilename, imp.getWidth(), tasksEngine, row);
 
         tasksEngine.add(estimateFromCTFTask);
 

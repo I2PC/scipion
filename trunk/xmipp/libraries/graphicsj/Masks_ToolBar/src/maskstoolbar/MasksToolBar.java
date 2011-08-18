@@ -161,7 +161,7 @@ public class MasksToolBar extends PlugInFrame implements ActionListener {
             Roi roi = ip.getRoi();
 
             if (roi != null) {
-                if (mask == null || !jtbLockMask.isSelected()) {
+                if (mask == null || !mask.isVisible() || !jtbLockMask.isSelected()) {
                     ByteProcessor processor = new ByteProcessor(ip.getWidth(), ip.getHeight());
                     mask = new ImagePlus("Mask", processor);
                 }

@@ -1,6 +1,5 @@
-package browser.table.micrographs.ctf.profile;
+package micrographs.ctf.profile;
 
-import browser.table.micrographs.ctf.profile.utils.Plot;
 import browser.LABELS;
 import browser.imageitems.ImageConverter;
 import ij.IJ;
@@ -32,6 +31,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
+import micrographs.ctf.profile.utils.Plot;
 import xmipp.CTFDescription;
 import xmipp.ImageDouble;
 import xmipp.MDLabel;
@@ -162,12 +162,12 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
             pCenter.add(jtpPlots);
 
             // Check boxes for plots
-            cbBgNoise = new Checkbox(LABELS.CB_PLOT_BGNOISE, true);
-            cbEnvelope = new Checkbox(LABELS.CB_PLOT_ENVELOPE, true);
+            cbBgNoise = new Checkbox(LABELS.CB_PLOT_BGNOISE, false);
+            cbEnvelope = new Checkbox(LABELS.CB_PLOT_ENVELOPE, false);
             cbPSD = new Checkbox(LABELS.CB_PLOT_PSD, true);
             cbCTF = new Checkbox(LABELS.CB_PLOT_CTF, true);
 
-            cbTdirect = new Checkbox(LABELS.SAMPLING_DIRECT, true, cbgSampling);
+            cbTdirect = new Checkbox(LABELS.SAMPLING_DIRECT, false, cbgSampling);
             cbTinverse = new Checkbox(LABELS.SAMPLING_INVERSE, true, cbgSampling);
 
             cbBgNoise.addItemListener(this);
@@ -228,10 +228,10 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
     public void itemStateChanged(ItemEvent ie) {
         if (ie.getSource() == cbCTF) {
             setCBEnableStatus();
-        } else if (ie.getSource() == cbTdirect) {
-            invert = false;
         } else if (ie.getSource() == cbTinverse) {
             invert = true;
+        } else if (ie.getSource() == cbTdirect) {
+            invert = false;
         }
 
         updatePlots();
@@ -283,7 +283,7 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
                 xValues,
                 plotProfile, plotBgNoise, plotEnvelope, plotPSD, plotCTF,
                 showBGNoise(), showEnvelope(), showPSD(),
-                show_ctf, invert);
+                show_ctf, !invert);
 
         jlPlot.setImage(plot.getImagePlus());
         jlPlot.addMouseMotionListener(new MouseMotionListener() {
@@ -308,7 +308,7 @@ public class CTFViewImageWindow extends ImageWindow implements ItemListener {
                 xValues,
                 plotAVGprofile, plotAVGbgnoise, plotAVGenvelope, plotAVGpsd, plotAVGctf,
                 showBGNoise(), showEnvelope(), showPSD(),
-                show_ctf, invert);
+                show_ctf, !invert);
 
         jlPlotAVG.setImage(plotAVG.getImagePlus());
         jlPlotAVG.addMouseMotionListener(new MouseMotionListener() {

@@ -10,13 +10,16 @@
  */
 package browser.filebrowsers;
 
+import browser.COMMAND_PARAMETERS;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
+import browser.imageitems.listitems.FileItem;
 import ij.IJ;
 import java.awt.BorderLayout;
 import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  *
@@ -25,6 +28,7 @@ import java.net.Socket;
 public class JDialogXmippFilesList extends javax.swing.JDialog {//Frame {
 
     final static String EOT = "__END__";
+    String seltype;
     JPanelXmippBrowser panelXmippBrowser;
     int port;
 
@@ -34,19 +38,30 @@ public class JDialogXmippFilesList extends javax.swing.JDialog {//Frame {
     }
 
     public JDialogXmippFilesList(String directory, int port, String expression) {
-        this(directory, port, expression, false);
+        this(directory, port, expression, false, COMMAND_PARAMETERS.SELECTION_TYPE_ANY);
     }
 
     public JDialogXmippFilesList(String directory, int port, boolean singleSelection) {
-        this(directory, port, "", singleSelection);
+        this(directory, port, "", singleSelection, COMMAND_PARAMETERS.SELECTION_TYPE_ANY);
     }
 
     public JDialogXmippFilesList(String directory, int port, String expression, boolean singleSelection) {
-        super();//
+        this(directory, port, expression, singleSelection, COMMAND_PARAMETERS.SELECTION_TYPE_ANY);
+    }
+
+    public JDialogXmippFilesList(String directory, int port, String expression, boolean singleSelection, String seltype) {
+        super();
 
         this.port = port;
+        this.seltype = seltype;
 
-        setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR);
+        if (seltype.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_FILE) == 0) {
+            setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR_FILE);
+        } else if (seltype.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_DIR) == 0) {
+            setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR_DIR);
+        } else {
+            setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR_ANY);
+        }
 
         initComponents();
 
@@ -54,6 +69,9 @@ public class JDialogXmippFilesList extends javax.swing.JDialog {//Frame {
         panelXmippBrowser.setSingleSelection(singleSelection);
 
         add(panelXmippBrowser, BorderLayout.CENTER);
+
+        remove(jToolBar);   // Removes toolbar.
+//        remove(jpButtons);  // ...and buttons.
 
         pack();
         setLocationRelativeTo(null);
@@ -66,7 +84,28 @@ public class JDialogXmippFilesList extends javax.swing.JDialog {//Frame {
     }
 
     protected boolean sendSelectedFiles() {
-        return send(panelXmippBrowser.getSelectedValues());
+        Object objs[] = panelXmippBrowser.getSelectedValues();
+        ArrayList<FileItem> list = new ArrayList<FileItem>();
+
+        for (int i = 0; i < objs.length; i++) {
+            FileItem item = (FileItem) objs[i];
+
+            if (acceptFile(item)) {
+                list.add(item);
+            }
+        }
+
+        return send(list.toArray());
+    }
+
+    boolean acceptFile(FileItem item) {
+        if (seltype.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_ANY) == 0) {
+            return true;
+        } else if (item.isDirectory()) {
+            return seltype.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_DIR) == 0;
+        } else {
+            return seltype.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_FILE) == 0;
+        }
     }
 
     protected boolean send(Object items[]) {

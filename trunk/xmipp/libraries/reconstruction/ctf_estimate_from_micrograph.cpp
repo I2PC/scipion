@@ -663,7 +663,4 @@ void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
     int downXdim_2=(int)(XSIZE(enhancedPSD)/(2*downsampling));
     enhancedPSD.setXmippOrigin();
     enhancedPSD.selfWindow(-128,-128,127,127);
-    Image<double> save;
-    save()=enhancedPSD;
-    save.write("PPP.xmp");
 }

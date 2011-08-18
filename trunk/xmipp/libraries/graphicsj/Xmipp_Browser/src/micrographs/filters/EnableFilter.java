@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package browser.table.micrographs.filters;
+package micrographs.filters;
 
 import browser.table.micrographs.MicrographsTableModel;
 import javax.swing.RowFilter;

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package browser.table.micrographs.renderers;
+package micrographs.renderers;
 
 import browser.imageitems.MicrographsTableImageItem;
 import java.awt.Component;

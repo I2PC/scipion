@@ -47,6 +47,8 @@ public class JPanelXmippBrowser extends JPanel {
     }
 
     public JPanelXmippBrowser(String folder, String expression) {
+        super();
+
         initComponents();
 
         listModelFilesList = new ListModelFilesBrowser(folder);
@@ -289,13 +291,13 @@ public class JPanelXmippBrowser extends JPanel {
         updatePreview();
     }//GEN-LAST:event_jcbPreviewActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JCheckBox jcbPreview;
-    private browser.filebrowsers.JListFileFilter jlFileFilter;
-    private javax.swing.JLabel jlFiltering;
+    javax.swing.JCheckBox jcbPreview;
+    browser.filebrowsers.JListFileFilter jlFileFilter;
+    javax.swing.JLabel jlFiltering;
     javax.swing.JPanel jpCenter;
-    private javax.swing.JPanel jpFileBrowser;
+    javax.swing.JPanel jpFileBrowser;
     private browser.filebrowsers.JPanelImageInfo jpImageInfo;
-    private javax.swing.JPanel jpPreview;
+    javax.swing.JPanel jpPreview;
     private javax.swing.JScrollPane jspFilesFiltering;
     // End of variables declaration//GEN-END:variables
 }

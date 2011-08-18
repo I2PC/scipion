@@ -17,8 +17,9 @@ public class LABELS {
     public final static String MESAGE_ABOUT = "About " + APP_NAME;
     public final static String TITLE_ABOUT = "About " + APP_NAME;
     public final static String TITLE_XMIPP_BROWSER = "Xmipp Browser";
-    public final static String TITLE_XMIPP_FILE_SELECTOR = "Select file";
-    public final static String TITLE_XMIPP_FILE_SELECTOR_CTF = "Select file (CTF)";
+    public final static String TITLE_XMIPP_FILE_SELECTOR_ANY = "Select...";
+    public final static String TITLE_XMIPP_FILE_SELECTOR_FILE = "Select file(s)";
+    public final static String TITLE_XMIPP_FILE_SELECTOR_DIR = "Select dir(s)";
     public final static String TITLE_ERROR = "Memory error";
     public final static String TITLE_GO_TO_SLICE = "Go to slice";
     public final static String TITLE_PREVIEW = "Preview:";
@@ -89,9 +90,13 @@ public class LABELS {
     public final static String OPERATION_PLOT_PROFILE = "Plot Profile";
     public final static String OPERATION_MEASUREMENTS = "Measurements";
     public final static String OPERATION_BC = "Bright&Contrast";
+    public final static String OPERATION_ENHANCE_CONTRAST = "Enhance Contrast";
     public final static String OPERATION_THRESHOLD = "Threshold";
     public final static String OPERATION_SUBTRACTBG = "Subtract Background";
     public final static String OPERATION_GAUSSIAN_BLUR = "Gaussian Blur";
+    public final static String OPERATION_CONVOLVE = "Convolve";
+    public final static String OPERATION_MEDIAN = "Median";
+    public final static String OPERATION_MEAN = "Mean";
     public final static String OPERATION_FFT = "FFT";
     public final static String OPERATION_FFT_BAND_PASS_FILTER = "FFT Band Pass Filter";
     public final static String OPERATION_RESLICE_TOP = "Reslice Top";

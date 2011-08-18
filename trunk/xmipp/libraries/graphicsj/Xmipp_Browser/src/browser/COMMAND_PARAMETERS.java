@@ -23,6 +23,11 @@ public class COMMAND_PARAMETERS {
     public final static String MODE_TABLE = "table";
     public final static String OPTION_SINGLE_SELECTION = "singlesel";
     public final static String OPTION_SINGLE_SELECTION_DESCRIPTION = "Allows single files selection";
+    public final static String OPTION_SELECTION_TYPE = "seltype";
+    public final static String OPTION_SELECTION_TYPE_DESCRIPTION = "Type of the selection: file(s), dir(s). [by default any]";
+    public final static String SELECTION_TYPE_ANY = "any";
+    public final static String SELECTION_TYPE_FILE = "file";
+    public final static String SELECTION_TYPE_DIR = "dir";
     public final static String OPTION_FILTER = "filter";
     public final static String FILTERS_SEPARATOR = ",";
     public final static String OPTION_FILTER_DESCRIPTION = "Regular expression to filter";

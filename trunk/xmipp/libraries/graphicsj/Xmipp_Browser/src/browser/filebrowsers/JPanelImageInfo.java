@@ -27,7 +27,7 @@ public class JPanelImageInfo extends javax.swing.JPanel {
     public JPanelImageInfo() {
         initComponents();
 
-        jlPreview.setPreferredSize(new Dimension(ICONS_MANAGER.DEFAULT_PREVIEW_WIDTH, ICONS_MANAGER.DEFAULT_PREVIEW_HEIGHT * 5 / 3));
+        jlPreview.setPreferredSize(new Dimension(ICONS_MANAGER.DEFAULT_PREVIEW_WIDTH * 4 / 3, ICONS_MANAGER.DEFAULT_PREVIEW_HEIGHT * 4 / 3));
         jlPreview.setHorizontalAlignment(JLabel.CENTER);
 
         setImageInfo(null);

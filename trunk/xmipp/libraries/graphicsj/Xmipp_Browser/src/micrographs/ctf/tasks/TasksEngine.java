@@ -1,4 +1,4 @@
-package browser.table.micrographs.ctf.tasks;
+package micrographs.ctf.tasks;
 
 /*
  * To change this template, choose Tools | Templates

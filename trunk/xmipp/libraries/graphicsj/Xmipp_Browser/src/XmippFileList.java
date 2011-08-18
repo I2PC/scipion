@@ -21,6 +21,7 @@ public class XmippFileList implements PlugIn {
     // Browser
     private String DIR;
     private boolean SINGLE_SELECTION = false;
+    private String SELECTION_TYPE = COMMAND_PARAMETERS.SELECTION_TYPE_ANY;
     private String FILTER = "";
     int PORT;
 
@@ -36,14 +37,14 @@ public class XmippFileList implements PlugIn {
             DIR = System.getProperty("user.dir");
         }
 
-        runBrowser(DIR, PORT, FILTER, SINGLE_SELECTION);
+        runBrowser(DIR, PORT, FILTER, SINGLE_SELECTION, SELECTION_TYPE);
     }
 
-    void runBrowser(String directory, int port, String expression, boolean singleSelection) {
+    void runBrowser(String directory, int port, String expression, boolean singleSelection, String seltype) {
 //        IJ.getInstance().setExtendedState(Frame.ICONIFIED);
 //        IJ.getInstance().setVisible(false);
 
-        JDialogXmippFilesList frameBrowser = new JDialogXmippFilesList(directory, port, expression, singleSelection);
+        JDialogXmippFilesList frameBrowser = new JDialogXmippFilesList(directory, port, expression, singleSelection, seltype);
         frameBrowser.setVisible(true);
 
 //        IJ.getInstance().setVisible(true);
@@ -55,7 +56,8 @@ public class XmippFileList implements PlugIn {
 
         options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, COMMAND_PARAMETERS.OPTION_INPUT_DIR_DESCRIPTION);
         options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, COMMAND_PARAMETERS.OPTION_FILTER);
-        options.addOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION, false, COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION, false, COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION_DESCRIPTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_SELECTION_TYPE, true, COMMAND_PARAMETERS.OPTION_SELECTION_TYPE_DESCRIPTION);
 
         options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, COMMAND_PARAMETERS.OPTION_SOCKET_PORT_DESCRIPTION);
 
@@ -81,6 +83,10 @@ public class XmippFileList implements PlugIn {
 
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION)) {
                 SINGLE_SELECTION = true;
+            }
+
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SELECTION_TYPE)) {
+                SELECTION_TYPE = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_SELECTION_TYPE);
             }
 
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT)) {

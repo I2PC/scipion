@@ -1,10 +1,9 @@
 
 import browser.COMMAND_PARAMETERS;
-import browser.filebrowsers.JDialogXmippFilesListCTF;
+import browser.filebrowsers.JDialogXmippFilesListPSD;
 import ij.IJ;
 import ij.Macro;
 import ij.plugin.PlugIn;
-import java.awt.Frame;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -17,7 +16,7 @@ import org.apache.commons.cli.Options;
  *
  * @author Juanjo Vega
  */
-public class XmippFileListCTF implements PlugIn {
+public class XmippFileListPSD implements PlugIn {
 
     // Browser
     private String DIR;
@@ -44,7 +43,7 @@ public class XmippFileListCTF implements PlugIn {
 //        IJ.getInstance().setExtendedState(Frame.ICONIFIED);
 //        IJ.getInstance().setVisible(false);
 
-        JDialogXmippFilesListCTF frameBrowser = new JDialogXmippFilesListCTF(directory, port, expression, singleSelection);
+        JDialogXmippFilesListPSD frameBrowser = new JDialogXmippFilesListPSD(directory, port, expression, singleSelection);
         frameBrowser.setVisible(true);
 
 //        IJ.getInstance().setVisible(true);
@@ -57,6 +56,7 @@ public class XmippFileListCTF implements PlugIn {
         options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, COMMAND_PARAMETERS.OPTION_INPUT_DIR_DESCRIPTION);
         options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, COMMAND_PARAMETERS.OPTION_FILTER);
         options.addOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION, false, COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_SELECTION_TYPE, true, COMMAND_PARAMETERS.OPTION_SELECTION_TYPE_DESCRIPTION);
 
         options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, COMMAND_PARAMETERS.OPTION_SOCKET_PORT_DESCRIPTION);
 

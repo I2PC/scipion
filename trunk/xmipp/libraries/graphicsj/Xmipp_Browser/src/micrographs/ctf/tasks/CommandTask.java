@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package browser.table.micrographs.ctf.tasks;
+package micrographs.ctf.tasks;
 
 import ij.IJ;
 import java.io.BufferedReader;

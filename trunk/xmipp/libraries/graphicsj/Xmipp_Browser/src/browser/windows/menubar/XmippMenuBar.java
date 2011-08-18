@@ -11,8 +11,10 @@ import browser.windows.StackWindowOperations;
 import browser.windows.iPollImageWindow;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.gui.ImageWindow;
+import ij.gui.Line;
 import ij.gui.OvalRoi;
 import ij.gui.Roi;
 import ij.gui.Toolbar;
@@ -35,6 +37,8 @@ import java.io.File;
 public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
     private ImagePlus imp;
+    boolean converted = false;
+    boolean binarized = false;
     // *** Transform ***
     private Menu menuTransform = new Menu(LABELS.OPERATION_MENU_TRANSFORM);
     private MenuItem itemToTable = new MenuItem(LABELS.OPERATION_TO_TABLE);
@@ -124,8 +128,12 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
     // *** Process ***
     private Menu menuProcess = new Menu(LABELS.OPERATION_MENU_PROCESS);
     private MenuItem itemBC = new MenuItem(LABELS.OPERATION_BC);
+    private MenuItem itemEnhanceContrast = new MenuItem(LABELS.OPERATION_ENHANCE_CONTRAST);
     private MenuItem itemSubtractBG = new MenuItem(LABELS.OPERATION_SUBTRACTBG);
     private MenuItem itemGaussianBlur = new MenuItem(LABELS.OPERATION_GAUSSIAN_BLUR);
+    private MenuItem itemConvolve = new MenuItem(LABELS.OPERATION_CONVOLVE);
+    private MenuItem itemMedian = new MenuItem(LABELS.OPERATION_MEDIAN);
+    private MenuItem itemMean = new MenuItem(LABELS.OPERATION_MEAN);
     private MenuItem itemFFT = new MenuItem(LABELS.OPERATION_FFT);
     private MenuItem itemCLAHE = new MenuItem(LABELS.OPERATION_CLAHE);
     private MenuItem itemPCA = new MenuItem(LABELS.OPERATION_PCA);
@@ -268,7 +276,6 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
         menuInfo.add(itemPlotProfile);
         menuInfo.add(itemMeasurements);
         menuInfo.add(itemAutocorrelation);
-        menuInfo.add(itemConcentricCircles);
         menuInfo.add(itemLineAnalyzer);
         menuInfo.add(itemOvalProfilePlot);
         menuInfo.add(itemRadialProfilePlotAngle);
@@ -294,7 +301,6 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
         itemPlotProfile.addActionListener(this);
         itemMeasurements.addActionListener(this);
         itemAutocorrelation.addActionListener(this);
-        itemConcentricCircles.addActionListener(this);
         itemLineAnalyzer.addActionListener(this);
         itemOvalProfilePlot.addActionListener(this);
         itemRadialProfilePlotAngle.addActionListener(this);
@@ -361,8 +367,12 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
         // Process ***
         menuProcess.add(itemBC);
+        menuProcess.add(itemEnhanceContrast);
         menuProcess.add(itemSubtractBG);
         menuProcess.add(itemGaussianBlur);
+        menuProcess.add(itemConvolve);
+        menuProcess.add(itemMedian);
+        menuProcess.add(itemMean);
         menuProcess.add(itemFFT);
         menuProcess.add(itemCLAHE);
         menuProcess.add(itemPCA);
@@ -370,8 +380,12 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
         menuProcess.add(itemTemplateMatching);
 
         itemBC.addActionListener(this);
+        itemEnhanceContrast.addActionListener(this);
         itemSubtractBG.addActionListener(this);
         itemGaussianBlur.addActionListener(this);
+        itemConvolve.addActionListener(this);
+        itemMedian.addActionListener(this);
+        itemMean.addActionListener(this);
         itemFFT.addActionListener(this);
         itemCLAHE.addActionListener(this);
         itemPCA.addActionListener(this);
@@ -381,9 +395,11 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
         // Draw ***
         menuDraw.add(itemDottedandDashedLines);
         menuDraw.add(itemRadialGrid);
+        menuDraw.add(itemConcentricCircles);
 
         itemDottedandDashedLines.addActionListener(this);
         itemRadialGrid.addActionListener(this);
+        itemConcentricCircles.addActionListener(this);
 
         // Masks ***
         menuMasks.add(itemMasksToolBar);
@@ -413,8 +429,10 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent e) {
-        boolean converted = false;
-        boolean binarized = false;
+        converted = false;
+        binarized = false;
+
+        int lineWidth = Line.getWidth();    // Stores line width to restore it later.
 
         try {
             if (e.getSource() == itemToTable) {
@@ -452,12 +470,21 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
                 IJ.run(imp, "Measure", "");
             } else if (e.getSource() == itemBC) {
                 IJ.run(imp, "Brightness/Contrast...", "");
+            } else if (e.getSource() == itemEnhanceContrast) {
+                converted = convert(imp, 8, "8-bit");
+                IJ.run(imp, "Enhance Contrast", "");
             } else if (e.getSource() == itemThreshold) {
                 IJ.run(imp, "Threshold...", "");
             } else if (e.getSource() == itemSubtractBG) {
                 IJ.run(imp, "Subtract Background...", "");
             } else if (e.getSource() == itemGaussianBlur) {
                 IJ.run(imp, "Gaussian Blur...", "");
+            } else if (e.getSource() == itemConvolve) {
+                IJ.run(imp, "Convolve...", "");
+            } else if (e.getSource() == itemMedian) {
+                IJ.run(imp, "Median...", "");
+            } else if (e.getSource() == itemMean) {
+                IJ.run(imp, "Mean...", "");
             } else if (e.getSource() == itemFFT) {
                 IJ.run(imp, "FFT", "");
             } else if (e.getSource() == itemFFT_band_pass_filter) {
@@ -483,13 +510,9 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
                 imp.setSlice(slice);
             } else if (e.getSource() == itemAnisotropicDiffusion) {
+                converted = convert(imp, 8, "8-bit");
                 IJ.run(imp, "Anisotropic Diffusion...", "");
             } else if (e.getSource() == itemAutocorrelation) {
-                if (imp.getBitDepth() != 8) {
-                    IJ.run(imp, "8-bit", "");
-                    converted = true;
-                }
-
                 // Check if there is a line selected. If not, it
                 // selects the right tool for the next time.
                 Roi roi = imp.getRoi();
@@ -497,7 +520,10 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
                     IJ.setTool(Toolbar.RECTANGLE);
                 }
 
+                converted = convert(imp, 8, "8-bit");
+                System.out.println(" + AUTO CORRELATION");
                 IJ.run(imp, "Auto Corr", "");
+                System.out.println(" / AUTO CORRELATION");
             } else if (e.getSource() == itemConcentricCircles) {
                 IJ.run(imp, "Concentric Circles", "");
             } else if (e.getSource() == itemLineAnalyzer) {
@@ -510,11 +536,6 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
                 IJ.run(imp, "Line Analyzer", "");
             } else if (e.getSource() == itemOvalProfilePlot) {
-                if (imp.getBitDepth() != 8) {
-                    IJ.run(imp, "8-bit", "");
-                    converted = true;
-                }
-
                 // Check if there is an oval selected. If not, it
                 // selects the right tool for the next time.
                 Roi roi = imp.getRoi();
@@ -523,6 +544,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
                     IJ.setTool(Toolbar.OVAL);
                 }
 
+                converted = convert(imp, 8, "8-bit");
                 IJ.run(imp, "Oval Profile", "");
             } else if (e.getSource() == itemRadialProfilePlotAngle) {
                 // Check if there is an oval selected. If not, it
@@ -537,11 +559,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
             } else if (e.getSource() == itemRadialProfilePlotHeight) {
                 IJ.run(imp, "Radial Profile Height", "");
             } else if (e.getSource() == itemSyncMeasure3D) {
-                if (imp.getBitDepth() != 8) {
-                    IJ.run(imp, "8-bit", "");
-                    converted = true;
-                }
-
+                converted = convert(imp, 8, "8-bit");
                 IJ.run(imp, "Sync Measure 3D", "");
             } else if (e.getSource() == itemTemplateMatching) {
                 IJ.run(imp, "Create Template", "");
@@ -552,43 +570,24 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
             } else if (e.getSource() == itemMeanShiftFilter) {
                 IJ.run(imp, "Mean Shift", "");
             } else if (e.getSource() == itemMaximumEntropyThresholding) {
-                if (imp.getBitDepth() != 8) {
-                    IJ.run(imp, "8-bit", "");
-                    converted = true;
-                }
-
+                converted = convert(imp, 8, "8-bit");
                 IJ.run(imp, "Entropy Threshold", "");
             } else if (e.getSource() == itemMixtureModelingThresholding) {
-                if (imp.getBitDepth() != 8) {
-                    IJ.run(imp, "8-bit", "");
-                    converted = true;
-                }
-
+                converted = convert(imp, 8, "8-bit");
                 IJ.run(imp, "Mixture Modeling", "");
             } else if (e.getSource() == itemMultiThresholder) {
                 IJ.run(imp, "MultiThresholder", "");
             } else if (e.getSource() == itemMultiOtsuThreshold) {
-                if (imp.getBitDepth() != 8) {
-                    IJ.run(imp, "8-bit", "");
-                    converted = true;
-                }
-
+                converted = convert(imp, 8, "8-bit");
                 IJ.run(imp, "Multi OtsuThreshold", "");
             } else if (e.getSource() == itemOtsuThresholding) {
-                if (imp.getBitDepth() != 8) {
-                    IJ.run(imp, "8-bit", "");
-                    converted = true;
-                }
-
+                converted = convert(imp, 8, "8-bit");
                 IJ.run(imp, "Otsu Thresholding", "");
             } else if (e.getSource() == itemRATS) {
                 IJ.run(imp, "RATS ", "");
             } else if (e.getSource() == itemSIOX) {
-                if (imp.getBitDepth() != 8) {
-                    IJ.run(imp, "RGB Color", "");
-                    converted = true;
-                }
-
+                System.out.println(imp.getBitDepth());
+                converted = convert(imp, 24, "RGB Color");
                 IJ.run(imp, "SIOX Segmentation", "");
             } else if (e.getSource() == itemContourPlotter) {
                 IJ.run(imp, "ContourPlotter ", "");
@@ -631,11 +630,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
             } else if (e.getSource() == itemSubstackMaker) {
                 IJ.run(imp, "Substack Maker", "");
             } else if (e.getSource() == itemSurfaceJ) {
-                if (imp.getBitDepth() != 8) {
-                    IJ.run(imp, "8-bit", "");
-                    converted = true;
-                }
-
+                converted = convert(imp, 8, "8-bit");
                 IJ.run(imp, "SurfaceJ ", "");
             } else if (e.getSource() == itemSyncWindows) {
                 IJ.run(imp, "Sync Windows", "");
@@ -670,11 +665,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
             } else if (e.getSource() == itemVolumeViewer3DSlicer) {
                 IJ.run(imp, "Volume Viewer", "");
             } else if (e.getSource() == itemVoxelCounter) {
-                if (imp.getBitDepth() != 8) {
-                    IJ.run(imp, "8-bit", "");
-                    converted = true;
-                }
-
+                converted = convert(imp, 8, "8-bit");
                 IJ.run(imp, "Voxel Counter", "");
             } else if (e.getSource() == item3DViewer) {
                 ImagesWindowFactory.openImagePlusAs3D(imp);
@@ -717,13 +708,14 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
                 IJ.run("Masks Tool Bar");
             }
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            //throw new RuntimeException(ex);
         }
 
-        //imp.updateAndDraw();
+        // Restores line width.
+        Line.setWidth(lineWidth);
 
         // To avoid windows without our cool menu :)
-        ImageWindow iw = IJ.getImage().getWindow();
+        ImageWindow iw = WindowManager.getCurrentWindow();
         if (!(iw instanceof StackWindowOperations || iw instanceof ImageWindowOperations)) {
             ImagesWindowFactory.captureFrame(iw.getImagePlus());
         }
@@ -738,12 +730,19 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
         }
     }
 
+    private boolean convert(ImagePlus imp, int bytes, String strBytes) {
+        if (imp.getBitDepth() != bytes) {
+            IJ.run(imp, strBytes, "");
+            return true;
+        }
+        return false;
+    }
+
     private boolean makeBinary(ImagePlus imp) {
         if (imp.getBitDepth() != 8) {
             IJ.run(imp, "Make Binary", "");
             return true;
         }
-
         return false;
     }
 

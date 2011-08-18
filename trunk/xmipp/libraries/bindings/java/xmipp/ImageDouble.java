@@ -88,7 +88,7 @@ public class ImageDouble {
 
     public native void printShape();
 
-    public native static double[] fastEstimateEnhancedPSD(String filename, double downsampling) throws Exception;
+//    public native static double[] fastEstimateEnhancedPSD(String filename, double downsampling) throws Exception;
 
     public native static double[] fastEstimateEnhancedPSD(String filename, double downsampling, int w, int h) throws Exception;
 

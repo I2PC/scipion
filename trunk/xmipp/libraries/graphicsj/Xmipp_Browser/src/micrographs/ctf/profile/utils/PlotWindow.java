@@ -1,4 +1,4 @@
-package browser.table.micrographs.ctf.profile.utils;
+package micrographs.ctf.profile.utils;
 
 import java.awt.*;
 import java.awt.event.*;
