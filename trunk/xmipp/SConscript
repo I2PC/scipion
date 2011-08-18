@@ -515,6 +515,7 @@ ReconsSources = [
     'fourier_filter.cpp',
     'image_rotational_spectra.cpp',
     'micrograph_automatic_picking.cpp',
+    'micrograph_automatic_picking_for_qt.cpp',
     'ml_align2d.cpp',
 ###    'ml_align3d.cpp',
     'mean_shift.cpp',
