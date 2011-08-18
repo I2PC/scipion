@@ -9356,7 +9356,7 @@ void wtn(double a[], unsigned long nn[], int ndim, int isign,
             {
                 for (i1 = 1;i1 <= nprev;i1++)
                 {
-                    for (i3 = i1 + i2, k = 1;k <= n;k++, i3 += nprev)
+                    for (i3 = i1 + i2, k = 1;k <= n;++k, i3 += nprev)
                         wksp[k] = a[i3];
                     if (isign >= 0)
                     {
@@ -9369,7 +9369,7 @@ void wtn(double a[], unsigned long nn[], int ndim, int isign,
                             (*wtstep)(wksp, nt, isign);
                     }
 
-                    for (i3 = i1 + i2, k = 1;k <= n;k++, i3 += nprev)
+                    for (i3 = i1 + i2, k = 1;k <= n;++k, i3 += nprev)
                         a[i3] = wksp[k];
                 }
             }
