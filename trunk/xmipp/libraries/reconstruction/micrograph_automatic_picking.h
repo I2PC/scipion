@@ -102,7 +102,7 @@ public:
     }
 
     /// Add micrograph
-    inline void addMicrographItem()
+    inline void addMicrograph()
     {
         __micrographs_number++;
     }
@@ -142,8 +142,6 @@ public:
 	static const int    __reduction=2; // Of the piece with respect to the micrograph
 
 	Micrograph                *__m;
-    FileName                   __modelRootName;
-    FileName                   __outputRoot;
     int                        __numThreads;
     Mask                       __mask;
     Classification_model       __selection_model;
@@ -169,14 +167,8 @@ public:
         __numThreads=_numThreads;
     }
 
-    /// Set output directory
-    inline void setOutputRoot(const FileName &outputRoot)
-    {
-        __outputRoot=outputRoot;
-    }
-
     /// Learn particles
-    void learnParticles(int _ellipse_radius);
+    void learnParticles(int _particle_radius);
 
     /// Create mask for learning particles
     void createMask(int mask_size);
@@ -270,13 +262,13 @@ public:
         std::vector<Particle> &_Input, double _min_dist, bool _reject_both);
 
     /// load models with a name
-    void loadModels(const FileName &fn);
+    void loadModels(const FileName &fn_root);
 
     /// Save models
-    void saveModels(const FileName &fn) const;
+    void saveModels(const FileName &fn_root) const;
 
     /// Save automatically selected particles
-    void saveAutoParticles() const;
+    void saveAutoParticles(const FileName &fn) const;
 
     /// Save the feature vectors of the automatically selected particles
     void saveAutoFeatureVectors(const FileName &fn) const;
