@@ -243,7 +243,7 @@ void WaveletFilter::apply(MultidimArray<double> &img)
             if (output_scale != 0)
             {
                 int reduction = (int)pow(2.0, output_scale);
-                img.resizeNoCopy(YSIZE(img) / reduction, XSIZE(img) / reduction);
+                img.resize(YSIZE(img) / reduction, XSIZE(img) / reduction);
             }
             IDWT(img, img);
         }
