@@ -75,11 +75,11 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
     int l = l0;
     while (l < lF)
     {
-        // Compute the entropy of the clases if we split by l
+        // Compute the entropy of the classes if we split by l
         double entropy = 0;
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(p)
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(p)
         {
-            double aux=DIRECT_A2D_ELEM(p,i,j);
+            double aux=DIRECT_MULTIDIM_ELEM(p,n);
             if (aux != 0)
                 entropy -= aux * log10(aux);
         }
@@ -97,7 +97,7 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
         }
 
         // Move to next split point
-        l++;
+        ++l;
 
         // Update probabilities of being l<=l0 and l>l0
         for (int k = 0; k < K; k++)
