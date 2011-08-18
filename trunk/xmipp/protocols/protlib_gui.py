@@ -37,7 +37,7 @@ from protlib_filesystem import getXmippPath
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
 from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
-from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor, ButtonActiveBgColor                         
+from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor, ButtonActiveBgColor, ButtonBgColor                         
 from protlib_sql import SqliteDb
 from xmipp import XmippError
 
@@ -155,8 +155,8 @@ class BasicGUI():
     def resize(self):
         height = min(self.frame.winfo_reqheight() + 25, MaxHeight)
         width = min(self.frame.winfo_reqwidth() + 25, MaxWidth)
-        x = self.frame.winfo_x()
-        y = self.frame.winfo_y()
+        x = self.master.winfo_x()
+        y = self.master.winfo_y()
         self.master.geometry("%dx%d%+d%+d" % (width, height, x, y))
         return (width, height)
 
@@ -311,8 +311,7 @@ class ProtocolWidget():
         if not (self.variable and self.variable.conditions):
             return True
         for k, v in self.variable.conditions.iteritems():
-            var = self.master.variablesDict[k]
-            if var.getValue() != v:
+            if self.master.getVarValue(k) != v:
                 return False
         return True
      
@@ -567,12 +566,42 @@ class ProtocolGUI(BasicGUI):
                 else:
                     self.addRadioButton(w, var, 'Yes', 'True', row, var_column, frame)  
                     self.addRadioButton(w, var, 'No', 'False', row, var_column + 1, frame) 
+            elif 'list_combo' in keys:
+                opts = [o.strip() for o in var.tags['list_combo'].split(',')]
+                optMenu = tk.OptionMenu(frame, var.tkvar, *opts)
+                optMenu.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
+                optMenu.grid(row=row, column=var_column, sticky='ew', columnspan=2)
+                def checkChange(*args):
+                    self.checkVisibility()
+                w.widgetslist.append(optMenu)
+                var.tkvar.trace('w', checkChange)
+                
             elif 'list' in keys:
                 opts = var.tags['list'].split(',')
                 for o in opts:
                     o = o.strip()
                     self.addRadioButton(w, var, o, o, row, var_column, frame)
                     row = self.getRow()
+#            self.menuTextVar = StringVar()
+#            self.maxWidth = 6;    
+#            self.menuSelectionVar = IntVar()
+#            self.menuSelectionVar.set(-1)
+#            self.menuButton = Menubutton(self,
+#                                         relief=RAISED,
+#                                         textvariable=self.menuTextVar)            
+#            self.menuButton.menu = Menu(self.menuButton)
+#            self.menuButton["menu"] = self.menuButton.menu;
+#            self.menuButton.pack(side=LEFT)                    
+#        param.isSubparam = True;
+#        self.subparams.append(param)
+#        self.maxWidth = max(self.maxWidth, len(param.paramName))
+#        self.menuButton.config(width=self.maxWidth)
+#        index = len(self.subparams) - 1;
+#        self.menuButton.menu.add_radiobutton(label=param.paramName,
+#                                             variable=self.menuSelectionVar,
+#                                             value=index,
+#                                             command=self.selectionChanged)
+                                           
             elif 'text' in keys:
                 scrollbar = tk.Scrollbar(frame)
                 scrollbar.grid(row=label_row+1, column=1, sticky='ns')
@@ -769,8 +798,8 @@ class ProtocolGUI(BasicGUI):
         else:
             text = "Show Expert Options"
             strValue = 'False'
-        if 'ShowExpertOptions' in self.variablesDict.keys():
-            self.variablesDict['ShowExpertOptions'].setValue(strValue)
+        if self.hasVar('ShowExpertOptions'):
+            self.setVarValue('ShowExpertOptions', strValue)
         self.btnToggleExpert.config(text=text)
         self.checkVisibility()
         
@@ -778,7 +807,7 @@ class ProtocolGUI(BasicGUI):
         if not self.validateInput():
             return False
         try:
-            runName = self.getRunName()
+            runName = self.getVarValue('RunName')
             if runName != self.inRunName:
                 self.run['run_name'] = runName
                 self.run['script'] = self.project.getRunScriptFileName(self.run['protocol_name'], runName)
@@ -897,7 +926,7 @@ class ProtocolGUI(BasicGUI):
             s.checkVisibility()
             for w in s.childwidgets:
                 w.checkVisibility()
-        centerWindows(self.master, self.resize() )
+        self.resize()
         self.updateScrollRegion() 
 
     def fillButtons(self):
@@ -921,11 +950,17 @@ class ProtocolGUI(BasicGUI):
         self.master.bind("<Button-4>", self.scroll)
         self.master.bind("<Button-5>", self.scroll)
         
-    def getRunName(self):
-        return self.variablesDict['RunName'].getValue()
+    def hasVar(self, varName):
+        return varName in self.variablesDict.keys()
     
-    def setRunName(self, value):
-        self.variablesDict['RunName'].setValue(value)
+    def getVarValue(self, varName):
+        if self.hasVar(varName):
+            return self.variablesDict[varName].getValue()
+        return None
+    
+    def setVarValue(self, varName, value):
+        if self.hasVar(varName):
+            self.variablesDict[varName].setValue(value)   
         
     def createGUI(self, project, run, master=None, saveCallback=None, visualize_mode=False):
         try:
@@ -951,7 +986,7 @@ class ProtocolGUI(BasicGUI):
             #Set the run_name
             if self.run:
                 self.inRunName = run['run_name']
-                self.setRunName(self.inRunName)
+                self.setVarValue('RunName', self.inRunName)
                 
             self.visualize_mode = visualize_mode
             self.fillGUI()
@@ -967,8 +1002,7 @@ class ProtocolGUI(BasicGUI):
         self.fillButtons()
         self.addBindings()    
         self.master.update_idletasks()  
-        self.expert_mode = 'ShowExpertOptions'in self.variablesDict and \
-                            self.variablesDict['ShowExpertOptions'].getValue() == 'True'
+        self.expert_mode = self.hasVar('ShowExpertOptions') and self.getVarValue('ShowExpertOptions') == 'True'
         self.checkVisibility()
         
     def launchGUI(self):
@@ -1010,6 +1044,17 @@ class ProtocolGUI(BasicGUI):
         msg = msg.strip()
         if len(msg) > 0:
             var.tkvar.set(os.path.relpath(msg.replace('\n', ',')))
+            
+    #This wizard is specific for preprocess_micrographs protocol
+    def wizardBrowseJCTF(self, var):
+        
+        dir = self.getVarValue('DirMicrographs')
+        filter = self.getVarValue('ExtMicrographs')
+        msg = runImageJPluginWithResponse("512m", "XmippFileListCTF.txt", 
+                                          "-dir %(dir)s -filter %(filter)s" % locals())
+        msg = msg.strip()
+        if len(msg) > 0:
+            var.tkvar.set(os.path.relpath(msg.strip()))            
         
 # This group of functions are called Validator, and should serve
 # for validation of user input for each variable
