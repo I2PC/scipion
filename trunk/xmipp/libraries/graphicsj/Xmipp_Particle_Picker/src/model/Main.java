@@ -10,16 +10,16 @@ import ij.ImagePlus;
 
 
 
-class MyRunnable implements Runnable
+class Main implements Runnable
 {
 	public static void main(String[] args)
 	{
-		SwingUtilities.invokeLater(new MyRunnable(args[0], args[1]));
+		SwingUtilities.invokeLater(new Main(args[0], args[1]));
 	}
 	private String rundir;
 	private String xmd;
 	
-	MyRunnable(String rundir, String xmd)
+	Main(String rundir, String xmd)
 	{
 		this.rundir = rundir;
 		this.xmd = xmd;
