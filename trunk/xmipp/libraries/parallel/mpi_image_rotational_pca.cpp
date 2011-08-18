@@ -197,7 +197,7 @@ void ProgImageRotationalPCA::applyT()
 
             // Locate the corresponding index in Matrix H
             // and copy a block in memory to speed up calculations
-            size_t Hidx=(idx-1)*Nangles*Nshifts;
+            size_t Hidx=idx*Nangles*Nshifts;
             memcpy(&MAT_ELEM(Hblock,0,0),&MAT_ELEM(H,Hidx,0),MAT_XSIZE(Hblock)*MAT_YSIZE(Hblock)*sizeof(double));
 
             // For each rotation and shift
@@ -294,6 +294,9 @@ void ProgImageRotationalPCA::applyTt()
 
                         // Rotate and shift image
                         applyGeometry(1,Iaux,mI,A,IS_INV,true);
+                        Image<double> save;
+                        save()=Iaux;
+                        save.write("PPPI.xmp");
 
                         // Update Hblock
                         for (int j=0; j<MAT_XSIZE(Hblock); j++)
@@ -332,7 +335,7 @@ void ProgImageRotationalPCA::applyTt()
 
             // Locate the corresponding index in Matrix H
             // and copy block to disk
-            size_t Hidx=(idx-1)*Nangles*Nshifts;
+            size_t Hidx=idx*Nangles*Nshifts;
             writeToHBuffer(&MAT_ELEM(H,Hidx,0));
         }
         if (node->isMaster())
@@ -435,6 +438,8 @@ void ProgImageRotationalPCA::run()
     }
     node->barrierWait(fnSync,10);
     MPI_Bcast(&qrDim,1,MPI_INT,0,MPI_COMM_WORLD);
+    if (qrDim==0)
+    	REPORT_ERROR(ERR_VALUE_INCORRECT,"No subspace have been found");
 
     // Load the first qrDim columns of F in matrix H
     if (node->isMaster())
