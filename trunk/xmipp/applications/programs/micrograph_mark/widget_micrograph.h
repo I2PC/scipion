@@ -50,7 +50,7 @@
 #include "image_overview_micrograph.h"
 #include "file_menu.h"
 
-#include <reconstruction/micrograph_automatic_picking.h>
+#include <reconstruction/micrograph_automatic_picking_for_qt.h>
 
 #include <vector>
 
@@ -89,7 +89,7 @@ public:
     float                      __gamma;
     float                      __ellipse_radius;
     int                        __ellipse_type;
-    AutoParticlePicking       *__autoPicking;
+    AutoParticlePickingQt       *__autoPicking;
 public:
     // Constructor
     QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
@@ -132,10 +132,10 @@ public:
     }
 
     // Set Automatic Particle Picking
-    void setAutoParticlePicking(AutoParticlePicking *_autoPicking);
+    void setAutoParticlePicking(AutoParticlePickingQt *_autoPicking);
 
     // Set Automatic Particle Picking
-    AutoParticlePicking * getAutoParticlePicking() const;
+    AutoParticlePickingQt * getAutoParticlePicking() const;
 
     // Get filters controller
     QtFiltersController *getFiltersController()
@@ -204,7 +204,7 @@ public:
 
     // Add family.
     // The family label is returned
-    int add_family(std::vector<Particle> &_list,
+    int add_family(std::vector<ParticleQt> &_list,
                    const std::string &_family_name);
 
     // Learn particles

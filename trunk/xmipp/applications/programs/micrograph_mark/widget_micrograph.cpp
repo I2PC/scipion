@@ -178,7 +178,7 @@ void QtWidgetMicrograph::setOutputRoot(const FileName& outputRoot)
 
 /* Set the class for automatic particle picking ---------------------------- */
 void QtWidgetMicrograph::setAutoParticlePicking(
-    AutoParticlePicking *_autoPicking)
+    AutoParticlePickingQt *_autoPicking)
 {
     __autoPicking=_autoPicking;
     if (_autoPicking!=NULL)
@@ -188,7 +188,7 @@ void QtWidgetMicrograph::setAutoParticlePicking(
     }
 }
 
-AutoParticlePicking * QtWidgetMicrograph::getAutoParticlePicking() const
+AutoParticlePickingQt * QtWidgetMicrograph::getAutoParticlePicking() const
 {
     return __autoPicking;
 }
@@ -223,7 +223,7 @@ void QtWidgetMicrograph::openMenus()
 }
 
 /* Add family -------------------------------------------------------------- */
-int QtWidgetMicrograph::add_family(std::vector<Particle> &_list,
+int QtWidgetMicrograph::add_family(std::vector<ParticleQt> &_list,
                                    const std::string &_family_name)
 {
     int ilabel = __m->add_label(_family_name);

@@ -160,9 +160,9 @@ public:
         }
 
         // Configure application .............................................
-        AutoParticlePicking *autoPicking=NULL;
+        AutoParticlePickingQt *autoPicking=NULL;
         if (fnAutomaticModel!="")
-            autoPicking=new AutoParticlePicking(&m);
+            autoPicking=new AutoParticlePickingQt(&m);
 
         QApplication *app=NULL;
         QtMainWidgetMark *mainWidget=NULL;
