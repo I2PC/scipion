@@ -595,6 +595,8 @@ bool ParamDef::parse()
         consume(TOK_OR);
         orBefore = true;
     }
+    prog->addParamExclusiveGroup(this);
+
     consume(TOK_OPT);
     name = token.lexeme;
     visible = token.visibility;
@@ -826,6 +828,7 @@ ProgramDef::ProgramDef() :
 {
     pLexer = new ArgLexer();
     singleOption = false;
+    exclusiveGroup = NULL;
 }
 
 ProgramDef::~ProgramDef()
@@ -934,6 +937,14 @@ void ProgramDef::addParamName(const String &name, ParamDef * param)
 void ProgramDef::addParamRequires(const String &name)
 {
     pendingRequires.push_back(name);
+}
+
+void ProgramDef::addParamExclusiveGroup(ParamDef * param)
+{
+    if (exclusiveGroup == NULL || param->orBefore == false)
+        exclusiveGroup = new std::vector<ParamDef*>();
+    exclusiveGroup->push_back(param);
+    param->exclusiveGroup = exclusiveGroup;
 }
 
 void ProgramDef::clear()

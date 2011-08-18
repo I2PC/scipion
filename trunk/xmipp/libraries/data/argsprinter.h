@@ -111,7 +111,7 @@ public:
   virtual void printSection(const SectionDef &section, int v = 0);
   virtual void printParam(const ParamDef &param, int v = 0);
   virtual void printArgument(const ArgumentDef & argument, int v = 0);
-  virtual void printCommentList(const CommentList &comments, int v = 0){};
+  virtual void printCommentList(const CommentList &comments, int v = 0);
   void addCondition(const String &newcondition);
 };
 

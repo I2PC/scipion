@@ -493,10 +493,7 @@ void printBegin(FILE * output, const ProgramDef &program)
     fprintf(output, "# Protocol header automatically generated for program: %s\n", program.name.c_str());
     size_t numberOfComments = program.usageComments.size();
     for (size_t i = 0; i < numberOfComments; ++i)
-    {
         fprintf(output, "#   %s\n", program.usageComments.comments[i].c_str());
-        printf("#   %s\n", program.usageComments.comments[i].c_str());
-    }
     fprintf(output,
             "# -------------------------------------------------------------------------------\n"
             "# {begin_of_header}\n"
@@ -541,14 +538,17 @@ void ProtPrinter::printProgram(const ProgramDef &program, int v)
 void ProtPrinter::printSection(const SectionDef &section, int v)
 {
     //Just ignore in the GUI this section
-    if (section.name == " Common options ")
+    if (section.name.find("Common options") != String::npos ||
+        section.name.find("Internal section") != String::npos)
         return;
 
     bool expert = section.visible > v;
     fprintf(output,
             "#------------------------------------------------------------------------------------------\n"
             "# {section}{has_question} %s %s\n", (expert ? "{expert}" : ""), section.name.c_str());
-    fprintf(output, "# Show\nshow_%s = True", section.name.c_str());
+    String sn = findAndReplace(section.name, " ", "_");
+    fprintf(output, "# Show\nshow_%s = True\n", sn.c_str());
+
     for (size_t i = 0; i < section.params.size(); ++i)
         printParam(*section.params[i], v);
 }
@@ -561,20 +561,43 @@ void ProtPrinter::printParam(const ParamDef &param, int v)
     bool expert = param.visible > v;
     label = param.name;
     parent_name = removeChar(param.name, '-');
-
     size_t n_args = param.arguments.size();
+
+    std::vector<ParamDef*> &exclusive = *(param.exclusiveGroup);
+    if (exclusive.size() > 1)
+    {
+        if (param.name == exclusive[0]->name)
+        {
+            fprintf(output, "# {list} (%s", param.name.c_str());
+            for (size_t i = 1; i < exclusive.size(); ++i)
+                fprintf(output, ",%s", exclusive[i]->name.c_str());
+            fprintf(output, ")Select option\n__%s_exclusiveGroup = \"%s\"\n",
+                    parent_name.c_str(), param.name.c_str());
+        }
+        String aux = removeChar(exclusive[0]->name, '-');
+        condition = formatString("__%s_exclusiveGroup=%s", aux.c_str(), param.name.c_str());
+    }
+    else
+    {
+        if (n_args == 0)
+        {
+            fprintf(output, "# %s\n", param.name.c_str());
+            printCommentList(param.comments);
+            fprintf(output, "__%s = False\n", parent_name.c_str());
+        }
+        condition = "";
+    }
     for (size_t i = 0; i < n_args; ++i)
     {
         printArgument(*param.arguments[i], v);
-        condition = "";
     }
 }
 
 void ProtPrinter::addCondition(const String &newcondition)
 {
-  if (!condition.empty())
-    condition += ",";
-  condition += newcondition;
+    if (!condition.empty())
+        condition += ",";
+    condition += newcondition;
 }
 
 void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
@@ -589,40 +612,43 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
     }
     if (!condition.empty())
     {
-      tags += formatString("{condition}(%s)", condition.c_str());
+        tags += formatString("{condition}(%s)", condition.c_str());
     }
 
     label += "   " + argument.name;
     fprintf(output, "# %s %s\n", tags.c_str(), label.c_str());
     String tmp = parent_name;
     parent_name = formatString("%s_%s", parent_name.c_str(), argument.name.c_str());
-    std::cerr << "DEBUG_JM: label: " << label << std::endl;
 
     if (label.find('-') == 0) //In this case is the first argument of the param and should print help
     {
         ParamDef * parent = (ParamDef*)argument.parent;
-        fprintf(output, "\"\"\"\n", parent->name.c_str());
-        for (size_t i = 0; i < parent->comments.size(); ++i)
-            fprintf(output, "%s\n", parent->comments.comments[i].c_str());
-        fprintf(output, "\"\"\"\n");
+        printCommentList(parent->comments);
     }
-    fprintf(output, "%s = \"%s\"\n\n",
-            parent_name.c_str(), argument.argDefault.c_str());
+    fprintf(output, "__%s = \"%s\"\n\n", parent_name.c_str(), argument.argDefault.c_str());
 
     if (argument.subParams.size() > 0)
     {
         for (size_t j = 1; j < argument.subParams.size(); ++j)
         {
             String condBackup = condition;
-            addCondition(formatString("%s=%s", parent_name.c_str(), argument.subParams[j]->name.c_str()));
+            addCondition(formatString("__%s=%s", parent_name.c_str(), argument.subParams[j]->name.c_str()));
             for (size_t k = 0; k < argument.subParams[j]->arguments.size(); ++k)
             {
                 label = argument.subParams[j]->name;
                 printArgument(*(argument.subParams[j]->arguments[k]));
             }
+            condition = condBackup;
         }
     }
     parent_name = tmp;
     label = "";
 }
 
+void ProtPrinter::printCommentList(const CommentList &comments, int v)
+{
+    fprintf(output, "\"\"\"\n");
+    for (size_t i = 0; i < comments.size(); ++i)
+        fprintf(output, "%s\n", comments.comments[i].c_str());
+    fprintf(output, "\"\"\"\n");
+}

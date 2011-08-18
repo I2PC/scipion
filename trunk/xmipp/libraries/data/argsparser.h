@@ -221,6 +221,7 @@ public:
     bool independent;
     std::vector<ArgumentDef*> arguments;
     std::vector<const char *> cmdArguments;
+    std::vector<ParamDef*> *exclusiveGroup;
     int counter; ///< for count the number of times it appears in command line
 
     CommentList comments;
@@ -258,6 +259,8 @@ public:
 
 class ProgramDef: public ASTNode
 {
+private:
+  std::vector<ParamDef*> *exclusiveGroup;
 public:
     std::vector<SectionDef*> sections;
     CommentList usageComments; ///< comments of usage
@@ -281,6 +284,7 @@ public:
     const char * getParam(const char * paramName, const char * subParam, int paramNumber = 0);
     void addParamName(const String & name, ParamDef *param);
     void addParamRequires(const String &name);
+    void addParamExclusiveGroup(ParamDef * param);
     ///clear read arguments
     void clear();
     /// Read and validate commmand line
