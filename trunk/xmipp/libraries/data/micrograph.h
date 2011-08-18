@@ -381,7 +381,7 @@ public:
     /** Pixel access for reading.
         These coordinates follow the physical Xmipp convention
         {../../../Extra_Docs/Conventions.html} for coordinates */
-    float operator()(int y, int x) const
+    double operator()(int y, int x) const
     {
         if (y < 0 || y >= Ydim || x < 0 || x >= Xdim)
             // COSS: REPORT_ERROR(1, "Micrograph::(): index out of range");
