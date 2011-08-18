@@ -193,6 +193,7 @@ class XmippProjectGUI():
     def launchProgramsGUI(self, event=None):
         db = ProgramDb()
         root = tk.Toplevel()
+        root.withdraw()
         root.title('Xmipp Programs')
         detailsSection = ProjectSection(root, 'Details')
         txt = tk.Text(detailsSection.frameContent, width=60, height=10,
@@ -201,8 +202,8 @@ class XmippProjectGUI():
         detailsSection.grid(row=1, column=1)
         #Create programs panel
         progSection = ProjectSection(root, 'Programs')
-        lb = tk.Listbox(progSection.frameContent, width=60, height=15,
-                        bg=BgColor, bd=1, relief=tk.RIDGE)
+        lb = tk.Listbox(progSection.frameContent, width=50, height=14,
+                        bg=BgColor, bd=1, relief=tk.RIDGE, font=Fonts['button'])
 
         def runClick(event=None):
             program_name = lb.get(int(lb.curselection()[0]))
@@ -239,23 +240,9 @@ class XmippProjectGUI():
                 return command
             section.addButton(c['name'], command=fillProgramsListBox(c, lb))
         toolbar.grid(row=0, column=0, rowspan=2)
-        
-        
-        
-        
+        centerWindows(root, refWindows=self.root)
+        root.deiconify()
         root.mainloop() 
-        
-#        self.Frames['history'] = history
-#        list = [('Edit', 'edit.gif'), ('Copy', 'copy.gif'), ('Delete', 'delete.gif')]
-#        for k, v in list:
-#            btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k))
-#            ToolTip(btn, k, 500)
-#            self.runButtonsDict[k] = btn
-            
-#        self.lbHist.SelectCallback = self.runSelectCallback
-#        self.lbHist.DoubleClickCallback = lambda:self.runButtonClick("Edit")
-#        self.lbHist.AllowSort = False   
-#        return history  
 
     def launchProtocolGUI(self, run, visualizeMode=False):
         run['group_name'] = self.lastSelected
@@ -508,7 +495,6 @@ class XmippProjectGUI():
     
     def launchGUI(self, center=True):
         if center:
-            self.root.update_idletasks()
             centerWindows(self.root)
         self.root.deiconify()
         self.root.mainloop()
@@ -519,10 +505,13 @@ class XmippProjectGUI():
     def showOutput(self, event=''):
         prot = getProtocolFromModule(self.lastRunSelected['script'], self.project)
         root = tk.Toplevel()
+        root.withdraw()
         root.title("Output Console - %s" % self.lastRunSelected['script'])
         from protlib_gui_ext import OutputTextArea
         l = OutputTextArea(root, prot.LogPrefix)
         l.pack(side=tk.TOP)
+        centerWindows(root, refWindows=self.root)
+        root.deiconify()
         root.mainloop() 
         
     def visualizeRun(self, event=''):
