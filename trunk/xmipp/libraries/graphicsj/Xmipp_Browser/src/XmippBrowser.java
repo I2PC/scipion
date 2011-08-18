@@ -176,16 +176,17 @@ public class XmippBrowser implements PlugIn {
             // Input.
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE)) {
                 String filenames[] = cmdLine.getOptionValues(COMMAND_PARAMETERS.OPTION_INPUT_FILE);
-                LinkedList<String> list = new LinkedList<String>();
-
-                String workdir = System.getProperty("user.dir");
-                for (int i = 0; i < filenames.length; i++) {
-                    if (!filenames[i].trim().isEmpty()) {
-                        list.add(Filename.fixPath(workdir, filenames[i]));
-                    }
-                }
-
-                INPUT = list.toArray(new String[list.size()]);
+//                LinkedList<String> list = new LinkedList<String>();
+//
+//                String workdir = System.getProperty("user.dir");
+//                for (int i = 0; i < filenames.length; i++) {
+//                    if (!filenames[i].trim().isEmpty()) {
+//                        list.add(Filename.fixPath(workdir, filenames[i]));
+//                    }
+//                }
+//
+//                INPUT = list.toArray(new String[list.size()]);
+                INPUT = filenames;
             }
 
             // Mode.
