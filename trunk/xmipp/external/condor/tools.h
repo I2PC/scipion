@@ -100,7 +100,7 @@ inline double sqr( const double& t )
 	return t*t;
 }
 
-inline double round (double a)
+inline double CondorRound (double a)
 {
     return (int)(a+.5);
 }
