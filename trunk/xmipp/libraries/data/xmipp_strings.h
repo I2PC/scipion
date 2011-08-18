@@ -397,7 +397,7 @@ void * _memmem ( const void *haystack, size_t haystack_len, const void *needle, 
 //@}
 
 /** Obtain an string from a format in the way of printf works
- *
+ * Example: formatString("vectorHeader@%s",fn_out.c_str())
  */
 String formatString(const char * format, ...);
 
