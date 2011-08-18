@@ -26,7 +26,7 @@
 #ifndef PROGRAM_H_
 #define PROGRAM_H_
 
-#include "argsparser.h"
+#include "argsprinter.h"
 #include "xmipp_error.h"
 #include "xmipp_strings.h"
 #include "metadata.h"
