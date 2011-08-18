@@ -11,7 +11,7 @@ public class PPConfiguration {
 	private static Logger logger;
 	private static String outputdir = ".";
 	private static String mgxmd = "micrographs.sel";
-	private static String rundir;
+	private static String rundir = ".";
 	
 	public static Logger getLogger()
 	{
@@ -60,15 +60,11 @@ public class PPConfiguration {
 		mgxmd = xmd;
 	}
 	
-	public static void setRunDir(String dir)
+	public static void setOutputDir(String dir)
 	{
-		rundir = dir;
+		outputdir = dir;
 	}
 	
-	public static String getRunDir()
-	{
-		return rundir;
-	}
 	
 
 }

@@ -16,20 +16,20 @@ class Main implements Runnable
 	{
 		SwingUtilities.invokeLater(new Main(args[0], args[1]));
 	}
-	private String rundir;
+	private String outputdir;
 	private String xmd;
 	
-	Main(String rundir, String xmd)
+	Main(String xmd, String outputdir)
 	{
-		this.rundir = rundir;
 		this.xmd = xmd;
+		this.outputdir = outputdir;
 	}
 	
 	@Override
 	public void run() {
 		try {
-			PPConfiguration.setRunDir(rundir);
 			PPConfiguration.setMicrographsXMD(xmd);
+			PPConfiguration.setOutputDir(outputdir);
 			XmippParticlePickerJFrame frame = new XmippParticlePickerJFrame();
 		} catch (Exception e) {
 			PPConfiguration.getLogger().log(Level.SEVERE, e.getMessage(), e);
