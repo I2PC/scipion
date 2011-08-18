@@ -189,6 +189,8 @@ def AddXmippMPIProgram(name, libs=[]):
     finalLibs = libs + ['XmippData', 'XmippExternal', 'XmippParallel'] + FFTWLibs + SQLiteLibs + TIFFLibs
     if int(env["arpack"]):
         finalLibs+=['arpack++','arpack','lapack','blas']
+    if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
+        finalLibs.append('XmippClassif')
     for i in range(len(libs)):
        if libs[i] == 'XmippRecons':
           finalLibPath += ['libraries/reconstruction']
