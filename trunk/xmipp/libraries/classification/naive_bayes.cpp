@@ -213,7 +213,7 @@ int LeafNode::getNumberOfLevels()
 /* Assign probability ------------------------------------------------------ */
 double LeafNode::assignProbability(double value, int k) const
 {
-	const IrregularHistogram1D& hist=__leafPDF[k];
+    const IrregularHistogram1D& hist=__leafPDF[k];
     int index = hist.val2Index(value);
     return DIRECT_A1D_ELEM(hist.__hist,index);
 }
@@ -308,8 +308,8 @@ int NaiveBayes::doInference(const MultidimArray<double> &newFeatures,
     classesProbs = __priorProbsLog10;
     for(int f=0; f<Nfeatures; f++)
     {
-    	const LeafNode &leaf_f=*(__leafs[f]);
-    	double newFeatures_f=DIRECT_A1D_ELEM(newFeatures,f);
+        const LeafNode &leaf_f=*(__leafs[f]);
+        double newFeatures_f=DIRECT_A1D_ELEM(newFeatures,f);
         for (int k=0; k<K; k++)
         {
             double p = leaf_f.assignProbability(newFeatures_f, k);
@@ -320,6 +320,7 @@ int NaiveBayes::doInference(const MultidimArray<double> &newFeatures,
                 VEC_ELEM(classesProbs,k) += DIRECT_A1D_ELEM(__weights,f)*std::log10(p);
 
 #ifdef DEBUG_FINE_CLASSIFICATION
+
             if(debugging == true)
             {
                 std::cout << "Feature " << f
@@ -412,27 +413,31 @@ EnsembleNaiveBayes::EnsembleNaiveBayes(
         FOR_ALL_ELEMENTS_IN_ARRAY1D(subFeatures)
         {
 #ifdef WEIGHTED_SAMPLING
-        	double random_sum_weight=rnd_unif(0,sumWeights);
-        	int j=0;
-        	do {
-        		double wj=DIRECT_A1D_ELEM(weights,j);
-        		if (wj<random_sum_weight)
-        		{
-        			random_sum_weight-=wj;
-        			j++;
-        			if (j==NFeatures)
-        			{
-        				j=NFeatures-1;
-        				break;
-        			}
-        		}
-        		else
-        			break;
-        	} while (true);
-        	DIRECT_A1D_ELEM(subFeatures,i)=j;
+            double random_sum_weight=rnd_unif(0,sumWeights);
+            int j=0;
+            do
+            {
+                double wj=DIRECT_A1D_ELEM(weights,j);
+                if (wj<random_sum_weight)
+                {
+                    random_sum_weight-=wj;
+                    j++;
+                    if (j==NFeatures)
+                    {
+                        j=NFeatures-1;
+                        break;
+                    }
+                }
+                else
+                    break;
+            }
+            while (true);
+            DIRECT_A1D_ELEM(subFeatures,i)=j;
 #else
-        	DIRECT_A1D_ELEM(subFeatures,i)=ROUND(rnd_unif(0,NFeatures-1));
+
+            DIRECT_A1D_ELEM(subFeatures,i)=ROUND(rnd_unif(0,NFeatures-1));
 #endif
+
         }
 
         // Container for the new training sample
@@ -482,10 +487,9 @@ void EnsembleNaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 }
 
 /* Do inference ------------------------------------------------------------ */
-int EnsembleNaiveBayes::doInference(const MultidimArray<double> &newFeatures,
+int EnsembleNaiveBayes::doInference(const Matrix1D<double> &newFeatures,
                                     double &cost, MultidimArray<int> &votes)
 {
-
     int nmax=ensemble.size();
     MultidimArray<double> minCost, maxCost;
     votes.initZeros(K);
@@ -521,4 +525,41 @@ int EnsembleNaiveBayes::doInference(const MultidimArray<double> &newFeatures,
     else
         cost=minCost(bestClass);
     return bestClass;
+}
+
+/* Do inference for class ------------------------------------------------- */
+int EnsembleNaiveBayes::doInferenceForClass(int classNumber, const Matrix1D<double> &newFeatures, double &cost)
+{
+    int nmax=ensemble.size();
+    double minCost=1, maxCost=1;
+    int votes=0;
+    MultidimArray<double> newFeaturesn;
+    for (int n=0; n<nmax; n++)
+    {
+        double costn;
+        const MultidimArray<int> &ensembleFeatures_n=ensembleFeatures[n];
+        newFeaturesn.resizeNoCopy(XSIZE(ensembleFeatures_n));
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(newFeaturesn)
+        {
+            int idx=A1D_ELEM(ensembleFeatures_n,i);
+            A1D_ELEM(newFeaturesn,i)=VEC_ELEM(newFeatures,idx);
+        }
+
+        int k=ensemble[n]->doInference(newFeaturesn, costn);
+        if (k==classNumber)
+        {
+            votes++;
+            if (minCost>0 || minCost>costn)
+                minCost=costn;
+            if (maxCost>0 || maxCost<costn)
+                maxCost=costn;
+        }
+    }
+    if      (judgeCombination[classNumber]=='m')
+        cost=minCost;
+    else if (judgeCombination[classNumber]=='M')
+        cost=maxCost;
+    else
+        cost=minCost;
+    return votes;
 }

@@ -162,8 +162,13 @@ public:
     void setCostMatrix(const Matrix2D<double> &cost);
 
     // Returns the class with the largest probability given a set of features
-    int doInference(const MultidimArray<double> &newFeatures, double &cost,
+    int doInference(const Matrix1D<double> &newFeatures, double &cost,
         MultidimArray<int> &votes);
+
+    /** Do inference for a given class.
+     * It returns the number of votes for that class and the associated cost.
+     */
+    int doInferenceForClass(int classNumber, const Matrix1D<double> &newFeatures, double &cost);
 };
 //@}
 #endif

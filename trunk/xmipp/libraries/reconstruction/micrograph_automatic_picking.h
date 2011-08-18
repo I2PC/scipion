@@ -38,12 +38,12 @@
 class Particle
 {
 public:
-    int x, y;             // position in micrograph
-    int idx;              // Index of this particle within the micrograph
-                          // list of coordinates
-    char status;          // rejected=0, selected=1 or moved=2
-    Matrix1D<double> vec; // vector of that particle
-    double cost;          // Associated cost
+    int x, y;                  // position in micrograph
+    int idx;                   // Index of this particle within the micrograph
+                               // list of coordinates
+    char status;               // rejected=0, selected=1 or moved=2
+    Matrix1D<double> vec;      // vector of that particle
+    double cost;               // Associated cost
 
     // Print
     friend std::ostream & operator << (std::ostream &_out, const Particle &_p);
@@ -68,67 +68,47 @@ public:
     std::vector<int>                              __falsePositives;
 
 public:
-    NaiveBayes *                                  __bayesNet;
     EnsembleNaiveBayes *                          __bayesEnsembleNet;
-    int                                           __bayesClassifier;
 
 public:
     /// Constructor
-    Classification_model(int _classNo=3, int _maxTrainingVectors=20000)
-    {
-        __maxTrainingVectors=_maxTrainingVectors;
-        init(_classNo);
-    }
+    Classification_model(int _classNo=3, int _maxTrainingVectors=20000);
 
     // Clear
     void clear();
 
     /// Is empty
-    bool isEmpty()
+    inline bool isEmpty()
     {
         return __micrographs_number==0;
     }
 
     /// Initialize
-    void init(int _classNo=3)
-    {
-        __classNo = _classNo;
-        __training_particles.resize(__classNo);
-        __micrographs_number = 0;
-        __falsePositives.resize(0);
-    }
+    void init(int _classNo=3);
 
     /// Different additions
-    void addMicrographScanned(int micrographScanned)
+    inline void addMicrographScanned(int micrographScanned)
     {
         __micrographs_scanned.push_back(micrographScanned);
     }
 
     /// Add training particle
-    bool addParticleTraining(const Particle &p, int classIdx)
-    {
-    	if (__training_particles[classIdx].size()<__maxTrainingVectors)
-    	{
-    		__training_particles[classIdx].push_back(p);
-    		return true;
-    	}
-    	return false;
-    }
+    bool addParticleTraining(const Particle &p, int classIdx);
 
     /// Add number of particles picked
-    void addParticlePicked(int particlePicked)
+    inline void addParticlePicked(int particlePicked)
     {
         __particles_picked.push_back(particlePicked);
     }
 
     /// Add number of false positives
-    void addFalsePositives(int falsePositives)
+    inline void addFalsePositives(int falsePositives)
     {
         __falsePositives.push_back(falsePositives);
     }
 
     /// Add micrograph
-    void addMicrographItem()
+    inline void addMicrographItem()
     {
         __micrographs_number++;
     }
@@ -137,30 +117,10 @@ public:
     void import_model(const Classification_model &_model);
 
     /// Is a particle?
-    int isParticle(const Matrix1D<double> &new_features, double &cost)
+    inline int isParticle(const Matrix1D<double> &new_features, double &cost)
     {
-
-        MultidimArray<double> features(new_features);
-
-        int retval;
-        if (__bayesClassifier==0)
-        {
-            if (__bayesNet->doInference(features,cost)==0)
-                retval=1;
-        }
-        else
-        {
-            MultidimArray<int> votes;
-            __bayesEnsembleNet->doInference(features,cost,votes);
-            retval=votes(0);
-        }
-        return retval;
+        return __bayesEnsembleNet->doInferenceForClass(0,new_features,cost);
     }
-
-    /// Init the naive bayesian network
-    void initNaiveBayes(const std::vector < MultidimArray<double> >
-                        &features, const Matrix1D<double> &probs,
-                        int discreteLevels, double penalization);
 
     /// Init the naive bayesian network
     void initNaiveBayesEnsemble(const std::vector < MultidimArray<double> >
@@ -173,9 +133,6 @@ public:
     /// Print
     friend std::ostream & operator << (std::ostream &_out,
                                        const Classification_model &_m);
-
-    /// Print Shape
-    void printShape() const;
 
     /// Read
     friend std::istream & operator >> (std::istream &_in,
@@ -227,18 +184,20 @@ public:
     /// Empty constructor
     AutoParticlePicking(Micrograph *_m);
 
-    /// Configure auto
-    void configure_auto(int _ellipse_radius);
-
     /// Set the number of threads
-    void setNumThreads(int _numThreads);
+    inline void setNumThreads(int _numThreads)
+    {
+        __numThreads=_numThreads;
+    }
+
+    /// Set output directory
+    inline void setOutputRoot(const FileName &outputRoot)
+    {
+        __outputRoot=outputRoot;
+    }
 
     /// Learn particles
     void learnParticles(int _ellipse_radius);
-
-    /** Build Selection model. The selection model is made up of the training
-        and the automatically selected particles. */
-    void buildSelectionModel();
 
     /// Create mask for learning particles
     void createMask();
@@ -247,7 +206,7 @@ public:
     void classifyMask();
 
     /// Build vectors
-    void buildVectors(std::vector<int> &_idx, Classification_model &_model);
+    void buildPositiveVectors(std::vector<int> &_idx, Classification_model &_model);
 
     /** Build vector from non particles */
     void buildNegativeVectors(Classification_model &__model,
@@ -280,7 +239,7 @@ public:
     bool get_corner_piece(MultidimArray<double> &piece,
                           int _top, int _left, int _skip_y,
                           int &_next_skip_x, int &_next_skip_y, int &_next_top,
-                          int &_next_left, int overlap, bool copyPiece);
+                          int &_next_left, int overlap, bool copyPiece) const;
 
     /** Filter, denoise, reject outliers and equalize histogram.
         Returns true, if successful. False if unsuccessful (skip this piece)
@@ -308,6 +267,9 @@ public:
     /// check if there are any particles in the actual scanning position
     bool anyParticle(int posx, int posy, int rect_size);
 
+    /** Count the number of scanning positions */
+    int count_scanning_pos() const;
+
     /** Given a current scanning position, this function returns
         the next scanning position whithin the current piece.
         The skips are given by get_corner_piece.
@@ -318,7 +280,7 @@ public:
         */
     bool get_next_scanning_pos(
         const MultidimArray<double> &piece,
-        int &_x, int &_y, int _skip_x, int _skip_y, int overlap);
+        int &_x, int &_y, int _skip_x, int _skip_y, int overlap) const;
 
     /** Run over the list sorted by distances.
      * If two particles are within
@@ -333,17 +295,23 @@ public:
     void loadModels(const FileName &fn);
 
     /// Save models
-    void saveModels(const FileName &fn);
+    void saveModels(const FileName &fn) const;
 
     /// Save automatically selected particles
-    void saveAutoParticles();
+    void saveAutoParticles() const;
+
+    /// Save the feature vectors of the automatically selected particles
+    void saveAutoFeatureVectors(const FileName &fn) const;
+
+    /// Load the feature vectors of the automatically selected particles
+    void loadAutoFeatureVectors(const FileName &fn);
 
     /// Get Features of the classification model
-    void produceFeatures(const Classification_model &_model,
+    void getFeatures(const Classification_model &_model,
                          std::vector < MultidimArray<double> > &_features);
 
     /// Get classes probabilities
-    void produceClassesProbabilities(const Classification_model &_model,
+    void getClassesProbabilities(const Classification_model &_model,
                                      Matrix1D<double> &probabilities);
 
     /// Get false positives automatically selected
@@ -362,9 +330,6 @@ public:
     /** Delete particle.
         The input index is the index of the moved particle in the micrograph list */
     void delete_particle(int _idx);
-
-    // Set output directory
-    void setOutputRoot(const FileName &outputRoot);
 };
 
 /// AutomaticallySelectThreadParams
@@ -384,6 +349,8 @@ public:
     FileName fn_micrograph;
     /// Model rootname
     FileName fn_model;
+    /// Training coordinates
+    FileName fn_train;
     /// Particle size
     int size;
     /// Mode
@@ -392,6 +359,8 @@ public:
     int Nthreads;
     /// Output rootname
     FileName fn_root;
+    /// Write features
+    bool writeFeatures;
 public:
     /// Read parameters
     void readParams();
