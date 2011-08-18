@@ -1,0 +1,20 @@
+package model;
+
+public class Constants {
+	
+
+	public static String getIllegalDeleteMsg(String item)
+	{
+		return String.format("There it must be at least one %s defined", item);
+
+	}
+	
+	public static String getAlreadyExistsGroupNameMsg(String name)
+	{
+		return "Group " + name 	+ " already exists";
+	}
+
+	public static String getEmptyFieldMsg(String field) {
+		return String.format("Must specify a %s", field);
+	}
+}

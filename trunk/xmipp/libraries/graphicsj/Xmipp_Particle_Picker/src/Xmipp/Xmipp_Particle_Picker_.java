@@ -2,8 +2,8 @@ package Xmipp;
 
 import javax.swing.SwingUtilities;
 
-import ppicker.XmippParticlePickerJFrame;
 
+import gui.XmippParticlePickerJFrame;
 import ij.plugin.PlugIn;
 
 public class Xmipp_Particle_Picker_ implements PlugIn {
