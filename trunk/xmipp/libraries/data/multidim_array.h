@@ -2176,8 +2176,7 @@ public:
             REPORT_ERROR(ERR_MULTIDIM_SIZE,
                          "setRow: Vector dimension different from matrix one");
 
-        for (int j = 0; j < xdim; j++)
-            (*this)(i, j) = v(j);
+        memcpy(&A2D_ELEM(*this,i,0),&A1D_ELEM(v,0),xdim*sizeof(double));
     }
 
     /** 3D Logical to physical index translation.
