@@ -54,7 +54,7 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
         for (int l = 0; l < XSIZE(histaux); l++)
             if (l < l0 || l > lF)
                 DIRECT_A1D_ELEM(histaux,l) = 0;
-        histaux /= histaux.sum();
+        histaux *= 1.0/histaux.sum();
         histNorm.push_back(histaux);
     }
 
@@ -118,7 +118,7 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
     // If the point giving the maximum entropy is too much on the extreme,
     // substitute it by the middle point
     if (lmaxEntropy<=2 || lmaxEntropy>=lF-2)
-        lmaxEntropy = (int) CEIL((lF + l0)/2.0);
+        lmaxEntropy = (int)ceil((lF + l0)/2.0);
 
     return lmaxEntropy;
 }
