@@ -290,12 +290,11 @@ void IrregularHistogram1D::init(const Histogram1D &hist,
 	__hist.initZeros(steps_no);
 
 	int k = 0;
-	for (int i = 0; i < steps_no; i++) {
-		hist.index2val(bins(i), __binsRightLimits(i));
-		__hist(i) = 0;
-		for (int j = k; j <= bins(i); j++)
-			__hist(i) += hist(j);
-		k = bins(i) + 1;
+	for (int i = 0; i < steps_no; ++i) {
+		hist.index2val(A1D_ELEM(bins,i), A1D_ELEM(__binsRightLimits,i));
+		for (int j = k; j <= A1D_ELEM(bins,i); ++j)
+			A1D_ELEM(__hist,i) += A1D_ELEM(hist,j);
+		k = A1D_ELEM(bins,i) + 1;
 	}
 }
 
@@ -340,7 +339,7 @@ int IrregularHistogram1D::val2Index(double value) const {
 
 /* Normalization ----------------------------------------------------------- */
 void IrregularHistogram1D::selfNormalize() {
-	__hist /= __hist.sum();
+	__hist *= 1.0/__hist.sum();
 }
 
 /* Show -------------------------------------------------------------------- */
