@@ -7,6 +7,8 @@
 #include <data/metadata_extension.h>
 #include "xmipp_InternalData.h"
 
+int debug=0;
+
 JNIEXPORT void JNICALL Java_xmipp_MetaData_storeIds
 (JNIEnv *env, jclass cls) {
 	peerId = env->GetFieldID(cls, "peer", "J");
@@ -885,4 +887,10 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_addLabel(JNIEnv *env, jobject jobj, j
 	if(!msg.empty()) {
 		handleXmippException(env, msg);
 	}
+}
+
+JNIEXPORT void JNICALL Java_xmipp_MetaData_enableDebug
+  (JNIEnv *, jobject){
+	extern int debug;
+	debug=1;
 }

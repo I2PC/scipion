@@ -145,6 +145,8 @@ public class MetaData {
     public native long addObject();
 
     public native void addLabel(int label);
+    
+    public native void enableDebug();
 
     //non-native functions
     //constructor

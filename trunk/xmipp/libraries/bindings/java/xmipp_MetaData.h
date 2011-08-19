@@ -283,6 +283,14 @@ JNIEXPORT jlong JNICALL Java_xmipp_MetaData_addObject
 JNIEXPORT void JNICALL Java_xmipp_MetaData_addLabel
   (JNIEnv *, jobject, jint);
 
+/*
+ * Class:     xmipp_MetaData
+ * Method:    enableDebug
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_xmipp_MetaData_enableDebug
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif
