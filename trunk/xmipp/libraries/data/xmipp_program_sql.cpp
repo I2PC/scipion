@@ -92,17 +92,16 @@ bool ProgramDb::createProgramTables()
     return execStmt(cmdStr, "Couldn't create Program table:  ");
 }
 
-String getSqliteStr(const String & str)
+String& escapeStr(String & str)
 {
     size_t pos = 0;
-    String temp = str;
-    while ((pos = temp.find_first_of("'", pos)) != String::npos)
+    while ((pos = str.find_first_of("'", pos)) != String::npos)
     {
-        temp.replace(pos, 1, "''");
+        str.replace(pos, 1, "''");
         pos += 2;
     }
-
-    return formatString("'%s'", temp.c_str());
+    str = "'" + str + "'";
+    return str;
 }
 
 /** Insert program into db, the id field will be filled */
@@ -111,11 +110,14 @@ bool ProgramDb::insertProgram(DictDB &program)
     ///Delete first the program if exist
     //deleteProgramByName(program["name"]);
     std::stringstream ss;
-    ss << "INSERT INTO Program VALUES(NULL, NULL,"
-    << getSqliteStr(program["name"]) << ","
-    << getSqliteStr(program["usage"]) << ", "
-    << getSqliteStr(program["examples"]) << ", "
-    << getSqliteStr(program["keywords"]) << ");";
+    String &progName = escapeStr(program["name"]);
+    ss
+    << "DELETE FROM Program WHERE name=" << progName
+    << ";INSERT INTO Program VALUES(NULL, NULL,"
+    << progName << ","
+    << escapeStr(program["usage"]) << ", "
+    << escapeStr(program["examples"]) << ", "
+    << escapeStr(program["keywords"]) << ");";
     bool result = execStmt(ss.str(), "Couldn't insert program");
     //program["id"] = sqlite3_last_insert_rowid(db);
     return result;
