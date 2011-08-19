@@ -21,7 +21,6 @@ public class Micrograph {
 	public Micrograph(String filename, String name) {
 		this.filename = filename;
 		this.name = name;
-		image  = new ImagePlus(filename);
 		particles = new ArrayList<Particle>();
 		this.xmd = name + ".xmd";
 	}
@@ -33,6 +32,8 @@ public class Micrograph {
 	
 	public ImagePlus getImage()
 	{
+		if(image == null)
+			image = new ImagePlus(filename);
 		return image;
 	}
 	

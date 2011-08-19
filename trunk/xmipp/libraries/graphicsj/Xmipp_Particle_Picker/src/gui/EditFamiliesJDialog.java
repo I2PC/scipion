@@ -118,10 +118,10 @@ public class EditFamiliesJDialog extends JDialog {
 					return;
 				}
 				int index = groupstb.getSelectedRow();
-				groups.remove(index);
+				parent.removeFamily(groups.get(index));
 				model.fireTableStructureChanged();
 				EditFamiliesJDialog.this.deletebt.setEnabled(false);
-				parent.updateFamilies();
+				
 			}
 		});
 	}

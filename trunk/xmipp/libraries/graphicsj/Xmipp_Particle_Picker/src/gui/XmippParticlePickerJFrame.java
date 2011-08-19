@@ -1,6 +1,7 @@
 package gui;
 
 import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
@@ -13,6 +14,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -38,10 +41,14 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import browser.windows.ImagesWindowFactory;
+
 import model.Constants;
 import model.Family;
 import model.Micrograph;
 import model.PPData;
+import model.Particle;
+import model.XmippJ;
 
 enum Tool {
 	IMAGEJ, PICKER
@@ -77,6 +84,8 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 	private String activemacro;
 	private JPanel micrographpn;
 	private JList mglist;
+	private ImageWindow iw;
+	private boolean changed;
 
 	public Shape getShape() {
 		return shape;
@@ -103,6 +112,11 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		initComponents();
 		initializeCanvas();
 	}
+	
+	public Micrograph getMicrograph()
+	{
+		return (Micrograph)mglist.getSelectedValue();
+	}
 
 
 
@@ -116,6 +130,9 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent winEvt) {
+				int result = JOptionPane.showConfirmDialog(XmippParticlePickerJFrame.this, "Save changes before closing?", "Message", JOptionPane.YES_NO_OPTION);
+				if(result == JOptionPane.OK_OPTION)
+					XmippParticlePickerJFrame.this.saveChanges();
 				System.exit(0);
 			}
 
@@ -204,60 +221,6 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 
 
 
-	public void saveParticles() {
-//		JFileChooser fc = new JFileChooser();
-//		int returnVal = fc.showSaveDialog(this);
-//
-//		try {
-//			if (returnVal == JFileChooser.APPROVE_OPTION) {
-//				String filename = fc.getSelectedFile().getAbsolutePath();
-//				ppdata.saveFamilyData(filename);
-//			}
-//		} catch (Exception e) {
-//			JOptionPane.showMessageDialog(this, e.getMessage());
-//		}
-		ppdata.saveFamilyData();
-		ppdata.saveParticles(getMicrograph());
-
-	}
-
-//	public void loadParticles() {
-//		JFileChooser fc = new JFileChooser();
-//		int returnVal = fc.showOpenDialog(this);
-//
-//		try {
-//			if (returnVal == JFileChooser.APPROVE_OPTION) {
-//				String filename = fc.getSelectedFile().getAbsolutePath();
-//				ppdata.loadFamilyData(filename);
-//				canvas.repaint();
-//				updateFamilies();
-//			}
-//		} catch (Exception e) {
-//			JOptionPane.showMessageDialog(this, e.getMessage());
-//		}
-//	}
-
-	public void updateFamilies() {
-		Family item = (Family) familiescb.getSelectedItem();
-		DefaultComboBoxModel model = new DefaultComboBoxModel(ppdata
-				.getFamilies().toArray());
-		familiescb.setModel(model);
-		familiescb.setSelectedItem(item);
-		color = item.getColor();
-		colorlb.setIcon(new ColorIcon(color));
-		sizesl.setValue(item.getSize());
-		pack();
-		canvas.repaint();
-	}
-
-	public void addGroup(Family g) {
-		if (ppdata.existsFamilyName(g.getName()))
-			throw new IllegalArgumentException(
-					Constants.getAlreadyExistsGroupNameMsg(g.getName()));
-		ppdata.getFamilies().add(g);
-		updateFamilies();
-	}
-
 	private void initFamilyPane() {
 		familypn = new JPanel();
 
@@ -342,7 +305,7 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		// Setting menu items
 		JMenuItem savemi = new JMenuItem("Save");
 		filemn.add(savemi);
-		JMenuItem stackmi = new JMenuItem("Generate Stack ...");
+		JMenuItem stackmi = new JMenuItem("Generate Stack...");
 		filemn.add(stackmi);
 
 		JMenuItem bcmi = new JMenuItem("Brightness/Contrast...");
@@ -365,19 +328,30 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		filtersmn.add(gbmi);
 		gbmi.addActionListener(this);
 
-		JMenuItem particlesmn = new JMenuItem("Particles ...");
+		JMenuItem particlesmn = new JMenuItem("Particles");
 		windowmn.add(particlesmn);
+		JMenuItem ijmi = new JMenuItem("ImageJ");
+		windowmn.add(ijmi);
 
-		JMenuItem hcontentsmi = new JMenuItem("Help Contents ...");
+		JMenuItem hcontentsmi = new JMenuItem("Help Contents...");
 		helpmn.add(hcontentsmi);
 
 		// Setting menu item listeners
 
+		ijmi.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(IJ.getInstance() == null)
+					new ImageJ();
+				IJ.getInstance().setVisible(true);
+			}
+		});
 		savemi.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				saveParticles();
+				saveChanges();
 
 			}
 		});
@@ -397,12 +371,11 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				//new FamilyParticlesJDialog(XmippParticlePickerJFrame.this, getFamily().getParticles());
-//				List<ImagePlus> imgs = new ArrayList<ImagePlus>();
-//				for(Particle p: getFamily().getParticles())
-//					imgs.add(p.getImage(img, getFamily().getSize()));
-//				String filename = XmippJ.saveTempImageStack(imgs);
-//				ImagesWindowFactory.openFileAsImage(filename);
+				List<ImagePlus> imgs = new ArrayList<ImagePlus>();
+				for(Particle p: getMicrograph().getParticles())
+					imgs.add(p.getImage(getMicrograph().getImage(), getFamily().getSize()));
+				String filename = XmippJ.saveTempImageStack(imgs);
+				ImagesWindowFactory.openFileAsImage(filename);
 			}
 		});
 
@@ -460,17 +433,59 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 
 	}
 	
-	public Micrograph getMicrograph()
-	{
-		return (Micrograph)mglist.getSelectedValue();
-	}
-
 	
 
 	void initializeCanvas() {
 		Micrograph micrograph = getMicrograph();
-		canvas = new PPCanvas(this, micrograph);
-		new ImageWindow(micrograph.getImage(), canvas);
+		if(iw == null)
+		{
+			canvas = new PPCanvas(this, micrograph);
+			iw = new ImageWindow(micrograph.getImage(), canvas);
+		}
+		else
+			canvas.setMicrograph(micrograph);
+		iw.setTitle(micrograph.getName());
+	}
+	
+
+
+	public void saveChanges() {
+
+		ppdata.saveFamilyData();
+		ppdata.saveParticles(getMicrograph());
+	}
+
+
+	public void updateFamilies() {
+		Family item = (Family) familiescb.getSelectedItem();
+		DefaultComboBoxModel model = new DefaultComboBoxModel(ppdata
+				.getFamilies().toArray());
+		familiescb.setModel(model);
+		familiescb.setSelectedItem(item);
+		color = item.getColor();
+		colorlb.setIcon(new ColorIcon(color));
+		sizesl.setValue(item.getSize());
+		pack();
+		canvas.repaint();
+		changed = true;
+	}
+
+	public void addGroup(Family g) {
+		if (ppdata.existsFamilyName(g.getName()))
+			throw new IllegalArgumentException(
+					Constants.getAlreadyExistsGroupNameMsg(g.getName()));
+		ppdata.getFamilies().add(g);
+		updateFamilies();
+	}
+
+	public void removeFamily(Family family) {
+		ppdata.getFamilies().remove(family);
+		updateFamilies();
+	}
+
+	public void setChanged(boolean b) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	

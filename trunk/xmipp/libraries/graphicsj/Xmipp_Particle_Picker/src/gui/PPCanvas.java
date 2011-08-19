@@ -26,6 +26,7 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 		this.micrograph = micrograph;
 		this.frame = frame;
 		addMouseWheelListener(this);
+		
 		// TODO Auto-generated constructor stub
 	}
 
@@ -94,6 +95,7 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 			return;
 		p.setX(x);
 		p.setY(y);
+		frame.setChanged(true);
 		repaint();
 	}
 	
@@ -128,7 +130,7 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 		int radius; 
 		int count = 0;
 		int x, y;
-			
+		
 		for(Particle p: micrograph.getParticles())
 		{
 			g2.setColor(p.getFamily().getColor());
@@ -143,6 +145,14 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 				g2.drawOval(x - radius , y - radius, radius * 2, radius * 2);
 			
 		}
+	}
+	
+	public void setMicrograph(Micrograph micrograph)
+	{
+		this.micrograph = micrograph;
+		imp = micrograph.getImage();
+		setImageUpdated();
+		repaint();
 	}
 
 	@Override

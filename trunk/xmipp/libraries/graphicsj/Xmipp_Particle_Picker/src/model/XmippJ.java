@@ -15,6 +15,8 @@ public class XmippJ {
 	
 	public static String saveTempImageStack(List<ImagePlus> imgs)
 	{
+		if(imgs.size() == 0)
+			throw new IllegalArgumentException("No images provided");
 			try {
 				ImageStack stack = null;
 				for (ImagePlus iplus :imgs) {
@@ -22,6 +24,7 @@ public class XmippJ {
 						stack = new ImageStack(iplus.getWidth(), iplus.getHeight());
 					stack.addSlice("", iplus.getProcessor().convertToFloat());
 				}
+				
 				ImagePlus ipstack = new ImagePlus("", stack);
 				
 				ImageDouble idouble = new ImageDouble();
