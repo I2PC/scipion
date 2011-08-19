@@ -26,7 +26,8 @@ class ProtParticlePicking(XmippProtocol):
         print "Defining steps"
         self.Db.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
                            MicrographSelfile=self.micrographSelfile, WorkingDir=self.WorkingDir,
-                           AutomaticPicking=self.AutomaticPicking, NumberOfThreads=self.NumberOfThreads)       
+                           AutomaticPicking=self.AutomaticPicking, NumberOfThreads=self.NumberOfThreads,
+                           Fast=self.Fast,InCore=self.InCore)       
 
     def summary(self):
         summary = []
@@ -95,15 +96,14 @@ class ProtParticlePicking(XmippProtocol):
         return errors
     
     def visualize(self):
-        launchParticlePickingGUI(None, self.micrographSelfile, self.WorkingDir, self.AutomaticPicking, self.NumberOfThreads)
+        launchParticlePickingGUI(None, self.micrographSelfile, self.WorkingDir)
 
 # Execute protocol in the working directory
-def launchParticlePickingGUI(log,MicrographSelfile,WorkingDir,AutomaticPicking,NumberOfThreads):
+def launchParticlePickingGUI(log,MicrographSelfile,WorkingDir,
+                             AutomaticPicking=False,NumberOfThreads=1,Fast=True,InCore=False):
     params="-i %s -o %s"%(MicrographSelfile,WorkingDir)
-    #if AutomaticPicking:
-    #    params+=" -auto"
-    #    if NumberOfThreads>1:
-    #        params+=" -thr %d"%NumberOfThreads
+    if AutomaticPicking:
+        params+=" --auto %d %s %s"%(NumberOfThreads,Fast,InCore)
     runJob(log,"xmipp_micrograph_particle_picking",params,RunInBackground=True)
 
 #		
