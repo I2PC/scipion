@@ -82,7 +82,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * (tipically start disabled, enable it when user can click it)
 	 */
 	
-	// TODO: progress bar that monitors commands stdout / log file / etc. Implement with SwingWorker? (@see example in Swingworker documentation)
+	// TODO: monitor progress of commands stdout / log file inside workflowview / etc.
+	// 		Implement with SwingWorker? (@see example in Swingworker documentation)
 	// TODO: font antialiasing - @see ZZZZ
 	// TODO: zoom, scroll... (quite buggy right now...)
 	// TODO: remove load canceling (in the new approach with a cache, slices will be loaded one by one)
@@ -95,8 +96,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	// MVC Controller. Controller Should not be needed here (passive window)
 	private TomoController controller;
-	// Workflow model
-	private Workflow workflow;
+
 	
 	// total number of digits to display as a String
 	private static int MAX_DIGITS = 9;
@@ -216,8 +216,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	private JPanel imagePanel, stackPanel, viewControlsPanel,controlPanel, statusPanel;
 	private JPanel viewsPanel;
 
-	private JScrollPane projectPanel;
-	private WorkflowView projectView; // other tree views: Prefuse
+	private WorkflowView projectView; // alternative tree-like views: Prefuse
 	
 	// hack for reusing ImageJ ImageWindow
 	private JFrame realWindow;
@@ -292,8 +291,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		realWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		WindowManager.addWindow(this);
 		realWindow.setTitle(getTitle());
-		setWorkflow(new Workflow());
-		addMainPanels();
+		addMainPanels(getController().getWorkflow());
 	}
 
 	public TomoWindow(int windowId) {
@@ -335,7 +333,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	}
 
 
-	private void addMainPanels() {
+	private void addMainPanels(Workflow workflow) {
 		realWindow.setLayout(new BoxLayout(getContentPane(),
 				BoxLayout.PAGE_AXIS));
 
@@ -355,12 +353,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		getContentPane().add(menuPanel);
 
 		// VIEW & CONTROLS PANELS
-		// TODO: - CURRENT - viewsPanel uses only 1/2 of the available space...
-		/* viewsPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-		viewsPanel.setMinimumSize(new Dimension(MENUPANEL_MINWIDTH,100));
-		imagePanel = new JPanel();
-		imagePanel.setMinimumSize(new Dimension(MENUPANEL_MINWIDTH/2,100));
-		viewsPanel.setLeftComponent(imagePanel); */
 		viewsPanel = new JPanel();
 		viewsPanel.setLayout(new BorderLayout());
 		viewControlsPanel = new JPanel();
@@ -374,23 +366,11 @@ public class TomoWindow extends ImageWindow implements WindowListener,
         stackPanel.add(viewControlsPanel);
 		viewsPanel.add(stackPanel,BorderLayout.CENTER);
 		
-		
-		/*projectView = new JTree(Xmipp_Tomo.getWorkflow());
-		projectView.setShowsRootHandles(true);
-		projectView.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-		projectPanel = new JScrollPane(projectView);
-		projectPanel.setMinimumSize(new Dimension(MENUPANEL_MINWIDTH/2,TiltSeriesIO.resizeThreshold.height));
-		*/
-		projectView=new WorkflowView(getWorkflow(),null);
+		projectView=new WorkflowView(workflow,null);
 		
 		viewsPanel.add(projectView,BorderLayout.EAST);
-		// viewsPanel.setDividerLocation(MENUPANEL_MINWIDTH / 2); 
-		// viewsPanel.setPreferredSize(new Dimension(MENUPANEL_MINWIDTH, 100));
 		getContentPane().add(viewsPanel);
 		
-        //imagePanel.setPreferredSize(new Dimension(MENUPANEL_MINWIDTH/2,projectView.getMinimumSize().height));
-        //imagePanel.setMaximumSize(new Dimension(MENUPANEL_MINWIDTH/2,projectView.getPreferredSize().height));
-
 		controlPanel = new JPanel();
 		getContentPane().add(controlPanel);
 
@@ -423,14 +403,14 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * @param model
 	 */
 	public void addView() {
-		if (getModel() == null)
+		if (getStackModel() == null)
 			return;
 
 		// remove previous canvas if any
 		for (int i = 0; i < imagePanel.getComponentCount(); i++)
 			imagePanel.remove(i);
 
-		setCanvas(new TomoImageCanvas(getModel()));
+		setCanvas(new TomoImageCanvas(getStackModel()));
 		imagePanel.setLayout(new ImageLayout(getCanvas()));
 		imagePanel.add(getCanvas());
 		getCanvas().addMouseMotionListener(this);
@@ -450,7 +430,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	public void addControls() {
 		// only add controls if they are not available already
 		if (projectionScrollbar != null){
-			projectionScrollbar.setMaximum(getModel().getNumberOfProjections());
+			projectionScrollbar.setMaximum(getStackModel().getNumberOfProjections());
 			return;
 		}
 		
@@ -471,7 +451,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		viewControlsPanel.add(tiltTextLabel);
 		viewControlsPanel.add(tiltTextField);
 
-		projectionScrollbar = new LabelScrollbar(1, getModel()
+		projectionScrollbar = new LabelScrollbar(1, getStackModel()
 				.getNumberOfProjections());
 		projectionScrollbar.setText("Projection #");
 		projectionScrollbar.addAdjustmentListener(getController());
@@ -553,9 +533,10 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	private void updateStatusText() {
 		// current/total projections are shown in the projection scrollbar
 		// itself
+		//TODO: getCursorValueAsString()
 		if (getModel() != null)
 			setStatus("x = " + getCursorX() + ", y = " + getCursorY()
-					+ ", value = " + getCursorValueAsString());
+					+ ", value = "); // + getCursorValueAsString());
 	}
 
 	int getCursorDistance(int x, int y) {
@@ -564,6 +545,9 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	public void refreshImageCanvas() {
 		if (getCanvas() != null) {	
+			ImagePlus img=getStackModel().getCurrentImage();
+			if(img != null)
+				setImage(img);
 			getCanvas().setImageUpdated();
 			getCanvas().repaint();
 			
@@ -826,12 +810,12 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 						+ getStatusChar((Integer) (event.getNewValue())));
 			else
 				setNumberOfProjections((Integer) (event.getNewValue()));
-		}else if(TomoData.Properties.CURRENT_PROJECTION_NUMBER.name().equals(event.getPropertyName())){
+		}else if(StackModel.Properties.CURRENT_PROJECTION_NUMBER.name().equals(event.getPropertyName())){
 			updateCurrentTiltAngleText();
-			getProjectionScrollbar().setValue(getModel().getCurrentProjectionNumber());
-			refreshImageCanvas();
+			getProjectionScrollbar().setValue(getStackModel().getCurrentProjectionNumber());
+			refreshImageCanvas();		
 			// Discard button label
-			if(getModel().isCurrentEnabled())
+			if(getStackModel().isCurrentEnabled())
 				changeLabel(XmippTomoCommands.DISCARD_PROJECTION.getId(), XmippTomoCommands.DISCARD_PROJECTION.getLabel());
 			else
 				changeLabel(XmippTomoCommands.DISCARD_PROJECTION.getId(), XmippTomoCommands.UNDO_DISCARD_PROJECTION.getLabel());
@@ -872,6 +856,9 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return getController().getModel();
 	}
 
+	private StackModel getStackModel() {
+		return getController().getStackModel();
+	}
 
 	private JLabel getStatusLabel() {
 		return statusLabel;
@@ -986,23 +973,16 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		 */
 	}
 
-	private void layoutTest() {
-		addMainPanels();
-		setVisible(true);
-	}
-
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		TomoWindow w = new TomoWindow();
 		/*
 		 * frame.setSize(400, 400); frame.setLocationRelativeTo(null);
 		 * frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		 */
 
 		// w.gridBagLayoutTest();
-		w.layoutTest();
 
 	}
 
@@ -1133,11 +1113,5 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		ic = canvas;
 	}
 	
-	public Workflow getWorkflow() {
-		return workflow;
-	}
 
-	public void setWorkflow(Workflow workflow) {
-		this.workflow = workflow;
-	}
 }

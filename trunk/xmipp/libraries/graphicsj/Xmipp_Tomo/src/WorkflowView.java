@@ -99,17 +99,12 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 		expandAll();
 		tree.setSelectionPath(new TreePath(model.getRoot()));
 		
-		/*tree.setAlignmentX(Component.TOP_ALIGNMENT);
-      tree.setAlignmentY(Component.TOP_ALIGNMENT);*/
-
-
 		// Put tree in a scrollable pane
 		JScrollPane sp = new JScrollPane(tree);
 		sp.setPreferredSize(TREE_PANEL_PREF_SIZE);
 
 		add(sp, BorderLayout.CENTER);
 		formPanel=new Form("form",2);
-		//formPanel.setLayout(new GridBagLayout());
 		add(formPanel,BorderLayout.SOUTH);
 		Action a = new Action(controller, new Command("workflow.print","Print Workflow","printWorkflow",true,null));
 		Action b = new Action(controller, new Command("workflow.discardop","Discard Operation","discardOperation",true,null));      
@@ -197,6 +192,7 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 		if(ua != null){
 			setDetails(ua.getCommandDetails());
 			setCommentsDocument(ua.getCommentsDocument());
+			model.setSelectedUserAction(ua);
 		}
 	}
 	

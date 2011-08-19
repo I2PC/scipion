@@ -23,6 +23,10 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+/**
+ * Why?
+ * Workflow is the model for WorkflowView, a DefaultTreeModel capable of handling UserActions
+ */
 
 import java.util.Enumeration;
 import java.util.LinkedList;
@@ -32,7 +36,20 @@ import javax.swing.tree.DefaultTreeModel;
 
 public class Workflow extends DefaultTreeModel{
 	
+	// TODO: check what protocol workflow code (from python) can be reused around here...
 	
+	private UserAction selectedUserAction;
+	
+	public UserAction getSelectedUserAction() {
+		return selectedUserAction;
+	}
+
+
+	public void setSelectedUserAction(UserAction selectedUserAction) {
+		this.selectedUserAction = selectedUserAction;
+	}
+
+
 	public DefaultMutableTreeNode getRoot() {
 		return (DefaultMutableTreeNode)super.getRoot();
 	}
@@ -91,4 +108,10 @@ public class Workflow extends DefaultTreeModel{
 		}
 		return result;
 	}
+	
+	public UserActionIO getCurrentUserActionIO(){
+		return getSelectedUserAction().getIoDetails();
+	}
+	
+
 }

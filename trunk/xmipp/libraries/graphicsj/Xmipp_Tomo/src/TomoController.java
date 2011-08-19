@@ -68,7 +68,22 @@ public class TomoController implements AdjustmentListener{
 	private TomoWindow window;
 	// modelToLoad: to avoid passing parameters in load BackgroundMethods
 	private TomoData modelToLoad,model,modelToSave;
+	private StackModel stackModel;
+	public StackModel getStackModel() {
+		return stackModel;
+	}
+
+	public void setStackModel(StackModel stackModel) {
+		this.stackModel = stackModel;
+	}
+
+	// Workflow model
+	private Workflow workflow;
 	
+	public Workflow getWorkflow() {
+		return workflow;
+	}
+
 	public TomoData getModelToSave() {
 		return modelToSave;
 	}
@@ -101,6 +116,7 @@ public class TomoController implements AdjustmentListener{
 	
 	TomoController(TomoWindow window) {
 		this.window = window;
+		workflow = new Workflow();
 	}
 
 	/**
@@ -191,15 +207,15 @@ public class TomoController implements AdjustmentListener{
 			int nextProjection = 0;
 
 			if (isPlayLoop())
-				nextProjection = getModel().getNextProjection();
+				nextProjection = getStackModel().getNextProjection();
 			else {
-				if ( getModel().getCurrentProjectionNumber() == getModel().getNumberOfProjections())
+				if ( getStackModel().getCurrentProjectionNumber() == getStackModel().getNumberOfProjections())
 					setPlayDirection(-1);
-				else if( getModel().getCurrentProjectionNumber() == 1)
+				else if( getStackModel().getCurrentProjectionNumber() == 1)
 					setPlayDirection(1);
-				nextProjection = getModel().getCurrentProjectionNumber() + getPlayDirection();
+				nextProjection = getStackModel().getCurrentProjectionNumber() + getPlayDirection();
 			}
-			getModel().setCurrentProjectionNumber(nextProjection);
+			getStackModel().setCurrentProjectionNumber(nextProjection);
 			try {
 				Thread.sleep(50);
 			} catch (InterruptedException ex) {
@@ -212,7 +228,7 @@ public class TomoController implements AdjustmentListener{
 	}
 	
 	public void printWorkflow() {
-		Logger.debug(window.getWorkflow().toString());
+		Logger.debug(getWorkflow().toString());
 	}
 
 	// TODO: reset workflow after loading a stack
@@ -230,7 +246,10 @@ public class TomoController implements AdjustmentListener{
 				return;
 			// free previous model (if any) ??
 			// setModel(null);
-			setModelToLoad(new TomoData(path));
+			setModel(new TomoData(path));
+			setStackModel(new StackModel(getWorkflow()));
+			getStackModel().addPropertyChangeListener(window);
+			/* setModelToLoad(new TomoData(path));
 			try {
 				new BackgroundMethod(this, getClass().getMethod("loadEMBackground"), getClass().getMethod("loadedEM")).execute();
 				getModelToLoad().waitForFirstImage();
@@ -240,22 +259,34 @@ public class TomoController implements AdjustmentListener{
 			
 			setModel(getModelToLoad());
 			
-			if (getModel().getNumberOfProjections() > 0) {
+			if (getStackModel().getNumberOfProjections() > 0) {
 				window.setImagePlusWindow();
 
 				window.setTitle(window.getTitle());
 				window.addView();
 				window.addControls();
 				window.addUserAction(new UserAction(window.getWindowId(),
-						"Load", "Load", getModel().getFileName()));
+						"Load", "Load", getStackModel().getFileName()));
 				window.enableButtonsAfterLoad();
-			}
+			}*/
+
+			UserAction ua= new UserAction(window.getWindowId(),"Load", "Load", path);
+			ua.getIoDetails().setInputFile(path);
+			// TODO: move addUserAction to workflow model (instead of the window). Right now it's inside window because
+			// insertion depends on the workflowview selected node
+			window.addUserAction(ua);
+			getWorkflow().setSelectedUserAction(ua);
+			window.addView();
+			window.addControls();
+			window.enableButtonsAfterLoad();
+			
+
 
 		}
 	}
 	
 	/** TODO: new approach: load only single projections on demand and
-	 * store them in a cache (with prefetch)
+	 * store them in a cache (with prefetch) - see Xmipp_Tomo.java
 	 */
 	
 	public void loadEMBackground(){
@@ -350,7 +381,7 @@ public class TomoController implements AdjustmentListener{
 	 * Apply this window's workflow 
 	 * TODO: apply the selected "workflow path" in the workflow view
 	 */
-	// TODO: - CURRENT - in write actions, handle writeSel
+	// TODO: in write actions, handle writeSel
 	// TODO: in write actions, if the file exists delete it first (to avoid overwrite problems)
 	// TODO: progress bar while applying filters - or at least update status bar
 	// TODO: update file name (model) in window title (once saved)
@@ -375,7 +406,7 @@ public class TomoController implements AdjustmentListener{
 	// original image must be scaled too
 	private ImagePlus applyWorkflowTo(ImagePlus image){
 		// iterate through the user actions that make sense
-		Enumeration e = window.getWorkflow().getRoot().breadthFirstEnumeration();
+		Enumeration e = getWorkflow().getRoot().breadthFirstEnumeration();
 		while(e.hasMoreElements()){
 			UserAction currentAction=(UserAction) (((DefaultMutableTreeNode)e.nextElement()).getUserObject());
 			if (currentAction.isNeededForFile()) {
@@ -702,8 +733,8 @@ public class TomoController implements AdjustmentListener{
 		// TODO: AdjustmentListener - verify "projectionScrollbar")
 		//if (e.getSource().toString().equals("projectionScrollbar")) {
 			// scrollbar range is 1..N, like projections array
-		if(getModel() != null)
-			getModel().setCurrentProjectionNumber(e.getValue());
+		if(getStackModel() != null)
+			getStackModel().setCurrentProjectionNumber(e.getValue());
 		// }
 		notify();
 	}
@@ -714,8 +745,8 @@ public class TomoController implements AdjustmentListener{
 
 	public void setModel(TomoData model) {
 		this.model = model;
-		if(window != null && model != null)
-			model.addPropertyChangeListener(window);
+	/*	if(window != null && model != null)
+			model.addPropertyChangeListener(window);*/
 	}
 	
 	private boolean isPlayLoop() {

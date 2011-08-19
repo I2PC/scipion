@@ -87,7 +87,6 @@ public class TomoData{
 	// 0.. N-1
 	//List <Long> ids=new Vector<Long>();
 	
-	// TODO: use native Xmipp metadata class
 	MetaData imageMetadata;
 
 	// allow Views to wait(lock) while the first (or last) image loads

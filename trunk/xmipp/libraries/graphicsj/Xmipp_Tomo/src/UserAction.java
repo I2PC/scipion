@@ -38,9 +38,19 @@ public class UserAction {
 	private String command=null,parameters=null,name=null;
 	private Plugin plugin;
 	private boolean neededForFile=false;
-	private String inputFile,outputFile;
 	private PlainDocument comments;
+	private UserActionIO ioDetails;
 	
+	public UserActionIO getIoDetails() {
+		if(ioDetails == null)
+			ioDetails = new UserActionIO();
+		return ioDetails;
+	}
+
+	public void setIoDetails(UserActionIO ioDetails) {
+		this.ioDetails = ioDetails;
+	}
+
 	public String getComments() {
 		String result="";
 		try{

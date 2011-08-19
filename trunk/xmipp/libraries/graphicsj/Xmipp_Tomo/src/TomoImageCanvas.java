@@ -35,10 +35,10 @@ import java.awt.geom.Line2D;
 import ij.gui.ImageCanvas;
 
 public class TomoImageCanvas extends ImageCanvas {
-	private TomoData model;
+	private StackModel model;
 
-	public TomoImageCanvas(TomoData model) {
-		super(model.getImage());
+	public TomoImageCanvas(StackModel model) {
+		super(model.getCurrentImage());
 		this.model = model;
 	}
 
