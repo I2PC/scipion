@@ -46,8 +46,8 @@ Behavior = "Resume"
 """
 PreprocessingRun = ""
 
-# Perform automatic particle picking
-""" Perform automatic particle picking """
+# Perform training for automatic particle picking
+""" Perform training for automatic particle picking """
 AutomaticPicking = False
 
 # {condition}(AutomaticPicking=True) Number of threads
@@ -55,6 +55,19 @@ AutomaticPicking = False
 It does not require any additional software, other than xmipp.
 """
 NumberOfThreads = 2
+
+# {condition}(AutomaticPicking=True) Fast picking
+""" The fast version includes a Fourier filter while the non-fast version 
+    uses the Fourier filter and a Wavelet denoising. The fast version takes half the
+    time of the non-fast version.
+"""
+Fast = True
+
+# {condition}(AutomaticPicking=True){expert} In-core picking
+""" If you can afford to load the micrographs in memory while picking, this option
+    makes the program faster.
+"""
+InCore = False
 
 # {hidden} Show expert options
 """If True, expert options will be displayed

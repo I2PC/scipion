@@ -10,6 +10,7 @@ from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import runJob
 import xmipp
+import glob
 
 # Create a GUI automatically from a selfile of micrographs
 class ProtParticlePicking(XmippProtocol):
@@ -29,33 +30,35 @@ class ProtParticlePicking(XmippProtocol):
 
     def summary(self):
         summary = []
-
+        
         mD=xmipp.MetaData(self.micrographSelfile)
         isPairList = mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1) and not xmipp.FileName(self.micrographSelfile).isStar1()
 
-        if self.isPairList:
-            summary=["Input: "+self.micrographSelfile+" (Tilt pairs)"]
+        if isPairList:
+            summary=["Input: "+self.micrographSelfile+" with "+str(mD.size())+" tilt pairs"]
         else:
-            summary=["Input: "+self.micrographSelfile]
+            summary=["Input: "+self.micrographSelfile+" with "+str(mD.size())+" micrographs"]
         
         total_manual = 0
-        total_auto = 0
         N_manual = 0
-        N_auto = 0
-        for id in mD:
-             micrograph = mD.getValue(xmipp.MDL_IMAGE,id)
-             manual=CountPicked(self.WorkingDir,micrograph,"Common")
-             if manual>0:
-                 total_manual+=manual
-                 N_manual+=1
-             if AutomaticPicking:
-                 auto=CountPicked(self.WorkingDir,micrograph,"Common.auto")
-                 if auto>0:
-                     total_auto+=auto
-                     N_auto+=1
-        summary.append("# Manually picked: %d (from %d micrographs)" % (total_manual, N_manual))
-        if AutomaticPicking:
-            summary.append("# Automatically picked: %d (from %d micrographs) " % (total_auto, N_auto))
+        for posfile in glob.glob(self.WorkingDir+"/*.pos"):
+            blockList=xmipp.getBlocksInMetaDataFile(posfile)
+            manual=0
+            for block in blockList:
+                mD=xmipp.MetaData(posfile);
+                manual+=mD.size()
+            if manual>0:
+                total_manual+=manual
+                N_manual+=1
+        msg="Number of particles picked: %d (from %d micrographs" % (total_manual, N_manual)
+        fnFamilies=os.path.join(self.WorkingDir,"families.xmd")
+        if os.path.exists(fnFamilies):
+            mD=xmipp.MetaData(fnFamilies)
+            Nfamilies=mD.size()
+            if Nfamilies>1:
+                msg+=" and %d families"
+        msg+=")"
+        summary.append(msg)
         return summary
     
     def validate(self):
@@ -90,22 +93,17 @@ class ProtParticlePicking(XmippProtocol):
             errors.append("Automatic particle picking cannot be done on tilt pairs")
         
         return errors
-
-def CountPicked(WorkingDir,micrograph,label):
-    posfile=WorkingDir+"/"+str(micrograph)+'.'+label+'.pos'
-    if os.path.exists(posfile):
-        mD=xmipp.MetaData(posfile);
-        return mD.size()
-    return 0
     
+    def visualize(self):
+        launchParticlePickingGUI(None, self.micrographSelfile, self.WorkingDir, self.AutomaticPicking, self.NumberOfThreads)
+
 # Execute protocol in the working directory
 def launchParticlePickingGUI(log,MicrographSelfile,WorkingDir,AutomaticPicking,NumberOfThreads):
-    print "in launch"
     params="-i %s -o %s"%(MicrographSelfile,WorkingDir)
-    if AutomaticPicking:
-        params+=" -auto"
-        if NumberOfThreads>1:
-            params+=" -thr %d"%NumberOfThreads
+    #if AutomaticPicking:
+    #    params+=" -auto"
+    #    if NumberOfThreads>1:
+    #        params+=" -thr %d"%NumberOfThreads
     runJob(log,"xmipp_micrograph_particle_picking",params,RunInBackground=True)
 
 #		
