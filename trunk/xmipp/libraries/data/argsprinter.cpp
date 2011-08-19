@@ -567,12 +567,13 @@ void ProtPrinter::printParam(const ParamDef &param, int v)
         return;
     bool expert = param.visible > v;
     label = param.name;
-    parentName = (String)"P_" + removeChar(param.name, '-');
+
     size_t n_args = param.arguments.size();
 
     std::vector<ParamDef*> &exclusive = *(param.exclusiveGroup);
     if (exclusive.size() > 1)
     {
+    	parentName = (String)"P_L_" + removeChar(param.name, '-');
         if (param.name == exclusive[0]->name)
         {
             exclusiveGroupName = KEY_PREFIX("L_");
@@ -586,6 +587,7 @@ void ProtPrinter::printParam(const ParamDef &param, int v)
     }
     else
     {
+    	parentName = (String)"P_" + removeChar(param.name, '-');
         if (n_args == 0)
         {
             String varName = KEY_PREFIX(parentName.c_str());
@@ -613,10 +615,11 @@ void ProtPrinter::addCondition(const String &newcondition)
 void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
 {
     String tags = "";
-    if (argument.subParams.size() > 0)
+    size_t argSubParamsSize = argument.subParams.size();
+    if (argSubParamsSize > 0)
     {
         tags = "{list_combo}(" + argument.subParams[0]->name;
-        for (size_t j = 1; j < argument.subParams.size(); ++j)
+        for (size_t j = 1; j < argSubParamsSize; ++j)
             tags += "," + argument.subParams[j]->name;
         tags += ")";
     }
@@ -639,9 +642,9 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
     }
     fprintf(output, "%s = \"%s\"\n\n", varName.c_str(), argument.argDefault.c_str());
 
-    if (argument.subParams.size() > 0)
+    if (argSubParamsSize > 0)
     {
-        for (size_t j = 1; j < argument.subParams.size(); ++j)
+        for (size_t j = 0; j < argSubParamsSize; ++j)
         {
             String condBackup = condition;
             addCondition(formatString("%s=%s", varName.c_str(), argument.subParams[j]->name.c_str()));

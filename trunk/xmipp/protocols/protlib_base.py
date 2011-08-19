@@ -213,7 +213,8 @@ class XmippProtocol(object):
         self.projectDir = project.projectDir  
         #Setup the Log for the Protocol
         self.LogDir = project.logsDir
-        self.uniquePrefix = self.WorkingDir.replace('/', '_')
+        runName = self.RunName
+        self.uniquePrefix = "%(protocolName)s_%(runName)s" % locals()
         self.LogPrefix = os.path.join(self.LogDir, self.uniquePrefix)       
         self.Err = self.LogPrefix+".err"
         self.Out = self.LogPrefix+".out"
@@ -292,6 +293,7 @@ class XmippProtocol(object):
         #Redirecting standard output and error to files
         self.fOut = open(self.Out, 'a')
         self.fErr = open(self.Err, 'a')
+        self.stderr = sys.stderr # backup stderr
         sys.stdout = self.fOut
         sys.stderr = self.fErr
         self.Log = XmippLog(self.LogPrefix + ".log")
@@ -332,7 +334,8 @@ class XmippProtocol(object):
             self.postRun()
         except Exception, e:
             retcode = 1;
-            print e
+            print >> sys.stderr, failStr("ERROR: %s" %  msg)
+            print >> self.stderr, failStr("ERROR: %s" %  msg)
         finally:
             self.fOut.close()
             self.fErr.close()  

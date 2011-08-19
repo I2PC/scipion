@@ -32,6 +32,7 @@
 
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
+from protlib_utils import greenStr, redStr, blueStr
 
 class ProtXmippProgram(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -48,29 +49,35 @@ class ProtXmippProgram(XmippProtocol):
                 ]
         
     def buildCommandLine(self):
-        params = ""
         paramsLine = ""
+        lastListValue = None
         for k in dir(self):
             if k.startswith('_K_'):
+                value = self.__dict__[k]
                 if '_P_' in k:
-                    key, suffix = k.split('_P_')
+                    if '_L_' in k: sep = '_P_L_'
+                    else: sep = '_P_'
+                    myLine = ""
+                    key, suffix = k.split(sep)
                     if '_A_' in suffix:
-                        paramId, suffix = suffix.split('_A_')
-                        paramName = getParamName(paramId)
-                        value = self.__dict__[k]
+                        args = suffix.split('_A_')
+                        paramName = getParamName(args[0])
                         if  value != "":
                             if paramName not in paramsLine:
-                                paramsLine += ' ' + paramName
-                            paramsLine += ' ' + value
+                                myLine = paramName
+                            myLine += ' ' + value
                     else: #Param without args, True or False value
-                        paramId = suffix
-                        if self.__dict__[k]:
-                            paramsLine += ' ' + getParamName(paramId) 
-                    params += '\n' + getParamName(paramId)
-        print 'params:', params
-        print 'paramsLine: ', paramsLine
+                        paramName = getParamName(suffix)
+                        if value:
+                            myLine = paramName
+                    if sep != '_P_L_' or paramName == lastListValue:
+                        paramsLine += " " + myLine
+                elif '_L_' in k: #exclusive list of some params
+                    lastListValue = value
+                    
+        print 'PARAMS LINE: ', greenStr(paramsLine)
         
-        return params
+        return paramsLine
     
     def defineSteps(self):
         program = self.ProgramName
