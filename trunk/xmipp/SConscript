@@ -819,7 +819,7 @@ AddBatch('classify_CL2D_core_analysis', 'applications/scripts/classify_CL2D_core
 protocols_main = AddBatch('protocols', 'protocols', '.py')
 env.Alias('protocols', protocols_main)
 AddBatch('showj', 'applications/scripts/showj', '.py')
-AddBatch('particle_picker', 'applications/scripts/particle_picker', '.py')
+AddBatch('micrograph_particle_picking', 'applications/scripts/micrograph_particle_picking', '.py')
 AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', '.py')
 AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
 AddBatch('browserj', 'applications/scripts/browserj', '.py')
