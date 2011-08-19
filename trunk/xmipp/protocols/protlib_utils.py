@@ -229,13 +229,15 @@ def runJob(log,
                NumberOfMpi,
                NumberOfThreads,
                RunInBackground)
-    printLog("Running command: %s" % greenStr(command),log)
+    if log:
+        printLog("Running command: %s" % greenStr(command),log)
 
     from subprocess import call
     retcode = 1000
     try:
         retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
-        printLog("Process returned with code %d" % retcode,log)
+        if log:
+            printLog("Process returned with code %d" % retcode,log)
     except OSError, e:
         raise xmipp.XmippError("Execution failed %s, command: %s" % (e, command))
 
