@@ -186,6 +186,9 @@ enum MDLabel
     MDL_ORIGINX, ///< Origin for the image in the X axis (double)
     MDL_ORIGINY, ///< Origin for the image in the Y axis (double)
     MDL_ORIGINZ, ///< Origin for the image in the Z axis (double)
+    MDL_PICKING_FAMILY, ///< Family for particle picking
+    MDL_PICKING_COLOR, ///< Color for particle picking
+    MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
     MDL_PRJ_DIMENSIONS, // X,Y dimensions for the generated projections
     MDL_PRJ_TILT_RANGE, // Vector with the initial and final tilt angle values, and step size
@@ -673,6 +676,9 @@ private:
         MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
         MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
+        MDL::addLabel(MDL_PICKING_FAMILY, LABEL_STRING, "family");
+        MDL::addLabel(MDL_PICKING_COLOR, LABEL_INT, "color");
+        MDL::addLabel(MDL_PICKING_PARTICLE_SIZE, LABEL_INT, "particleSize");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax", TAGLABEL_NOTAG, "Pmax", "sumP");
         MDL::addLabel(MDL_PRJ_DIMENSIONS, LABEL_VECTOR, "projDimensions");
         MDL::addLabel(MDL_PRJ_TILT_RANGE, LABEL_VECTOR, "projTiltRange");
