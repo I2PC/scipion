@@ -12,7 +12,11 @@ public class PPConfiguration {
 	private static String outputdir = ".";
 	private static String mgselfile = "micrographs.sel";
 	private static String rundir = ".";
-	
+	private static int threads;
+	private static boolean fastMode;
+	private static boolean incore;
+	private static boolean auto;
+	private static int minparticles = 100;
 	
 	public static Logger getLogger()
 	{
@@ -35,6 +39,15 @@ public class PPConfiguration {
 		return null;
 	}
 	
+	public static boolean getIsAuto()
+	{
+		return auto;
+	}
+	
+	public static int getMinParticles()
+	{
+		return minparticles;
+	}
 	
 	public static String getOutputDir()
 	{
@@ -65,6 +78,28 @@ public class PPConfiguration {
 	public static String getOutputPath(String file)
 	{
 		return outputdir + File.separator + file;
+	}
+
+
+	public static void setThreads(int threads) {
+		PPConfiguration.threads = threads;
+		
+	}
+
+
+	public static void setFastMode(boolean fastMode) {
+		PPConfiguration.fastMode = fastMode;
+	}
+
+
+	public static void setIncore(boolean incore) {
+		PPConfiguration.incore = incore;
+	}
+
+
+	public static void setIsAuto(boolean automatic) {
+		PPConfiguration.auto = automatic;
+		
 	}
 
 }

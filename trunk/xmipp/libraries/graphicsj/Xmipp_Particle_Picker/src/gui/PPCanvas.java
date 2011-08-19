@@ -44,6 +44,7 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 			super.mousePressed(e);
 			return;
 		}
+		
 		Particle p = null;
 		Family family;
 		for(Particle p2: micrograph.getParticles())
@@ -60,6 +61,7 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 				else if((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0)
 				{
 					micrograph.removeParticle(p);
+					frame.updateMicrographsModel();
 					break;
 				}
 			}
@@ -69,8 +71,9 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 			p = new Particle(x, y, frame.getFamily(), micrograph);
 			micrograph.addParticle(p);
 			dragged = p;
+			frame.updateMicrographsModel();
 		}
-		
+		frame.setChanged(true);
 		repaint();
 	}
 
@@ -118,6 +121,7 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 			return;
 		dragged.setX(x);
 		dragged.setY(y);
+		frame.setChanged(true);
 		repaint();
 	}
 

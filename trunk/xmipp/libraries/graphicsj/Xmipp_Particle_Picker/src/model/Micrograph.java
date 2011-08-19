@@ -1,5 +1,6 @@
 package model;
 
+import gui.ColorIcon;
 import ij.ImagePlus;
 
 import java.awt.Color;
@@ -7,6 +8,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 
 import xmipp.MDLabel;
 import xmipp.MetaData;
@@ -19,13 +23,18 @@ public class Micrograph {
 	private ImagePlus image;
 	private String ofilename;
 	private static String ext = ".pos";
+	private String ctf;
+	private ImageIcon ctficon;
 	
-	public Micrograph(String filename, String name) {
+	public Micrograph(String filename, String ctf) {
 		this.filename = filename;
 		this.name = getName(filename);
 		particles = new ArrayList<Particle>();
 		this.ofilename = PPConfiguration.getOutputPath(name + ext);
+		this.ctf = ctf;
 	}
+	
+	
 	
 	public static String getName(String filename)
 	{
@@ -51,6 +60,17 @@ public class Micrograph {
 		if(image == null)
 			image = new ImagePlus(filename);
 		return image;
+	}
+	
+	public Icon getCTFIcon()
+	{
+		if(ctficon == null)
+		{
+			ImagePlus ip = new ImagePlus(ctf);
+			//ip.getProcessor().scale(80, 80);
+			ctficon = new ImageIcon(ip.getImage());
+		}
+		return ctficon;
 	}
 	
 	public String getFilename() {

@@ -115,7 +115,7 @@ public class PPData {
 		String xmd = Micrograph.getIFilename();
 		micrographs.clear();
 		Micrograph micrograph;
-		String name, filename;		
+		String ctf, filename;		
 		try {
 			MetaData md = new MetaData(xmd);
 			int count = 1; 
@@ -123,8 +123,8 @@ public class PPData {
 			for (long id: ids) {
 				
 				filename = PPConfiguration.getMicrographPath(md.getValueString(MDLabel.MDL_IMAGE, id));
-				name = Micrograph.getName(filename);
-				micrograph = new Micrograph(filename, name);
+				ctf = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
+				micrograph = new Micrograph(filename, ctf);
 				loadParticles(micrograph);
 				micrographs.add(micrograph);
 				count ++;
@@ -141,19 +141,25 @@ public class PPData {
 	public void saveParticles(Micrograph micrograph) {
 		long id;
 		try {
-
+				int count = 0;
 				MetaData md;
+				String block = null;
 				for(Family f: families)
 				{
 					md = new MetaData();
 					for (Particle p: micrograph.getParticles()) {
 						if(!f.equals(p.getFamily()))
 							continue;
-					id = md.addObject();
-					md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
-					md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
+						id = md.addObject();
+						md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
+						md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
+						block = f.getName() + "@" + micrograph.getOFilename();
 					}
-					md.writeBlock(f.getName() + "@" + micrograph.getOFilename());
+					if(count == 0)
+						md.write(block);
+					else
+						md.writeBlock(block);
+					count ++;
 				}
 				
 		} catch (Exception e) {

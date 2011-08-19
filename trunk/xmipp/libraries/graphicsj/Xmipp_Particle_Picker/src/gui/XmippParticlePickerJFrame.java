@@ -7,9 +7,11 @@ import ij.WindowManager;
 import ij.gui.ImageWindow;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -20,6 +22,8 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -34,7 +38,9 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -46,6 +52,7 @@ import browser.windows.ImagesWindowFactory;
 import model.Constants;
 import model.Family;
 import model.Micrograph;
+import model.PPConfiguration;
 import model.PPData;
 import model.Particle;
 import model.XmippJ;
@@ -83,9 +90,15 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 	private JPanel symbolpn;
 	private String activemacro;
 	private JPanel micrographpn;
-	private JList mglist;
+	private JTable mgtb;
 	private ImageWindow iw;
 	private boolean changed;
+	private JMenuItem savemi;
+	private MicrographsTableModel micrographsmd;
+	Micrograph micrograph;
+	private JPanel buttonspn;
+	private JButton trainbt;
+	private JButton autopickbt;
 
 	public Shape getShape() {
 		return shape;
@@ -115,7 +128,7 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 	
 	public Micrograph getMicrograph()
 	{
-		return (Micrograph)mglist.getSelectedValue();
+		return micrograph;
 	}
 
 
@@ -171,6 +184,11 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		initMicrographsPane();
 		add(micrographpn, WindowUtils.updateConstraints(constraints, 0, 2, 3));
 
+		if(PPConfiguration.getIsAuto())
+		{
+			initButtonsPane();
+			add(buttonspn, WindowUtils.updateConstraints(constraints, 0, 3, 3));
+		}
 		pack();
 		WindowUtils.centerScreen(0.9, this);
 		setVisible(true);
@@ -308,7 +326,8 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		mb.add(helpmn);
 
 		// Setting menu items
-		JMenuItem savemi = new JMenuItem("Save");
+		savemi = new JMenuItem("Save");
+		savemi.setEnabled(false);
 		filemn.add(savemi);
 		JMenuItem stackmi = new JMenuItem("Generate Stack...");
 		filemn.add(stackmi);
@@ -357,7 +376,8 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				saveChanges();
-				
+				JOptionPane.showMessageDialog(XmippParticlePickerJFrame.this, "Data saved successfully");
+				((JMenuItem)e.getSource()).setEnabled(false);
 			}
 		});
 		stackmi.addActionListener(new ActionListener() {
@@ -389,6 +409,39 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		return mb;
 	}
 	
+	
+	
+	private void initButtonsPane()
+	{
+		buttonspn = new JPanel();
+		trainbt = new JButton("Train");
+		buttonspn.add(trainbt);
+		trainbt.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				saveChanges();
+				
+			}
+		});
+		autopickbt = new JButton("Auto Pick");
+		buttonspn.add(autopickbt);
+		autopickbt.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(getParticlesNumber() < PPConfiguration.getMinParticles());
+				int result = JOptionPane.showConfirmDialog(XmippParticlePickerJFrame.this,
+						"It is recommended to have at least " + PPConfiguration.getMinParticles() + " particles\nProceed anyway?",
+						"Warning",
+						JOptionPane.YES_NO_OPTION);
+				if(result == JOptionPane.NO_OPTION)
+					return;
+				
+			}
+		});
+	}
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		try
@@ -406,24 +459,42 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 	
 	private void initMicrographsPane()
 	{
-		micrographpn = new JPanel();
+		GridBagConstraints constraints = new GridBagConstraints();
+		constraints.insets = new Insets(0, 5, 0, 5);
+		constraints.anchor = GridBagConstraints.WEST;
+		micrographpn = new JPanel(new GridBagLayout());
 		micrographpn.setBorder(BorderFactory.createTitledBorder("Micrograph"));
 		JScrollPane sp = new JScrollPane();
-		
-		mglist = new JList(ppdata.getMicrographs().toArray());
-		mglist.setSelectedIndex(0);
-		mglist.addListSelectionListener(new ListSelectionListener() {
+		micrographsmd = new MicrographsTableModel(ppdata.getMicrographs());
+		mgtb = new JTable(micrographsmd);
+		//mgtb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		mgtb.getColumnModel().getColumn(1).setWidth(10);
+		mgtb.setPreferredScrollableViewportSize(new Dimension(400, 200));
+		mgtb.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+		mgtb.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
 			
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				//XmippParticlePickerJFrame.this.iw.close();
+				if(e.getValueIsAdjusting())
+					return;
+				int index = e.getLastIndex();
+				
+				micrograph = (Micrograph)ppdata.getMicrographs().get(index);
 				initializeCanvas();
 				
 			}
 		});
-		sp.setViewportView(mglist);
-		micrographpn.add(sp);
-		
+		mgtb.getSelectionModel().setSelectionInterval(0, 0);
+		sp.setViewportView(mgtb);
+		micrographpn.add(sp, WindowUtils.updateConstraints(constraints, 0, 0, 1));
+		JPanel ctfpn = new JPanel();
+		ctfpn.setBorder(BorderFactory.createTitledBorder("CTF"));
+		Icon icon = micrograph.getCTFIcon();
+		JLabel iconlb = new JLabel(icon);
+		ctfpn.add(iconlb);
+		micrographpn.add(ctfpn, WindowUtils.updateConstraints(constraints, 1, 0, 1));
 	}
 	
 	private void switchSize(int size) {
@@ -450,6 +521,7 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		else
 			canvas.setMicrograph(micrograph);
 		iw.setTitle(micrograph.getName());
+		canvas.setName(micrograph.getName());
 	}
 	
 
@@ -458,7 +530,7 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 
 		ppdata.saveFamilyData();
 		ppdata.saveParticles(getMicrograph());
-		changed = false;
+		setChanged(false);
 	}
 
 
@@ -473,7 +545,7 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		sizesl.setValue(item.getSize());
 		pack();
 		canvas.repaint();
-		changed = true;
+		setChanged(true);
 	}
 
 	public void addGroup(Family g) {
@@ -491,8 +563,20 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 
 	public void setChanged(boolean changed) {
 		this.changed = changed;
-		
+		savemi.setEnabled(changed);
+	}
+	
+	public void updateMicrographsModel()
+	{
+		micrographsmd.fireTableDataChanged();
 	}
 
+	public int getParticlesNumber()
+	{
+		int count = 0;
+		for(Micrograph m: ppdata.getMicrographs())
+			count += m.getParticles().size();
+		return count;
+	}
 	
 }
