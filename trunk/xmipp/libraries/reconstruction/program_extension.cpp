@@ -32,8 +32,8 @@
 #include "volume_from_pdb.h"
 #include "pdb_nma_deform.h"
 #include "angular_continuous_assign.h"
+#include "micrograph_automatic_picking.h"
 #include "data/mask.h"
-
 
 int runProgram(XmippProgram * program, const String &arguments, bool destroy)
 {
@@ -74,6 +74,9 @@ XmippProgram * getProgramByName(const String &programName)
 
   if (programName == "xmipp_pdb_nma_deform")
     return new ProgPdbNmaDeform();
+
+  if (programName == "xmipp_micrograph_automatic_picking")
+    return new ProgMicrographAutomaticPicking();
 
 
     return NULL;
