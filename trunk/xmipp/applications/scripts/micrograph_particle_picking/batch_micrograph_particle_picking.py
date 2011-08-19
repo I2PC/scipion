@@ -37,7 +37,7 @@ class ScriptParticlePicking(XmippScript):
         jar = "Xmipp_PP.jar"
         cmd = "java -Xmx%(memory)s -cp %(plugins_dir)s: Xmipp.Main %(input)s %(output)s" % locals()
         if auto:
-            cmd+=" auto %(numberOfThreads)d %(fastMode)s %(incore)s"%locals()
+            cmd+=" %(numberOfThreads)d %(fastMode)s %(incore)s"%locals()
         os.system(cmd)
     
 if __name__ == '__main__':

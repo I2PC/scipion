@@ -101,5 +101,10 @@ public class PPConfiguration {
 		PPConfiguration.auto = automatic;
 		
 	}
+	
+	public static int getThreds()
+	{
+		return threads;
+	}
 
 }

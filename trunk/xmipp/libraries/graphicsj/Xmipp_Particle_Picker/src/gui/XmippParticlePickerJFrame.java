@@ -11,25 +11,23 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
+import xmipp.Program;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -421,7 +419,19 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				saveChanges();
-				
+				String args = String.format("-i %s --particleSize %s --model model --thr %s --outputRoot %s --mode train %s", 
+						PPConfiguration.getMicrographsSelFile(),//-i
+						getFamily().getSize(), //--particleSize
+						PPConfiguration.getThreds(), //--thr
+						PPConfiguration.getOutputDir(), //--outputRoot
+						micrograph.getOFilename());//train parameter
+				System.out.println(args);
+				try {
+					Program.runByName("xmipp_micrograph_automatic_picking", args);
+				} catch (Exception e1) {
+					PPConfiguration.getLogger().log(Level.SEVERE, e1.getMessage(), e);
+					JOptionPane.showMessageDialog(XmippParticlePickerJFrame.this, "Training failed. See log for details");
+				}
 			}
 		});
 		autopickbt = new JButton("Auto Pick");
