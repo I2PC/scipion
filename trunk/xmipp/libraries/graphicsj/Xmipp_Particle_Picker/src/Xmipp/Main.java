@@ -1,7 +1,9 @@
-package model;
+package Xmipp;
 
 import java.util.logging.Level;
 import javax.swing.SwingUtilities;
+
+import model.PPConfiguration;
 
 import gui.XmippParticlePickerJFrame;
 import ij.ImagePlus;
