@@ -51,7 +51,11 @@ public class MetaData {
         read_(filename);
     }
 
+    /**
+     * @return Number of projections of the stack
+     */
     public native int size();
+    
     public native void setColumnFormat(boolean format);
 
     public native void write(String filename) throws Exception;
