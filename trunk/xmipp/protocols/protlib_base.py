@@ -31,7 +31,7 @@ import shutil
 import ConfigParser
 from config_protocols import projectDefaults, sections, protDict
 from protlib_sql import SqliteDb, XmippProjectDb, XmippProtocolDb
-from protlib_utils import XmippLog, loadModule, reportError
+from protlib_utils import XmippLog, loadModule, reportError, getScriptPrefix
 from protlib_filesystem import deleteDir, deleteFiles
 
 
@@ -81,6 +81,7 @@ class XmippProject():
         #===== CREATE DATABASE
         self.projectDb  = XmippProjectDb(self.dbName)
         #===== POPULATE SOME TABLES
+        groupName = ""
         for section, groupList in sections:
             for group in groupList:
                 groupName = group[0]
@@ -88,6 +89,9 @@ class XmippProject():
                 self.projectDb.insertGroup(groupName)
                 for p in prots:
                     self.projectDb.insertProtocol(groupName, p)
+        #Hard coded insertion of xmipp_program protocol
+        #this is an special case of protocols
+        self.projectDb.insertProtocol(protDict.xmipp_program.title, protDict.xmipp_program.name)
         # commit changes
         self.projectDb.connection.commit()
         
@@ -147,9 +151,11 @@ class XmippProject():
     def getRunScriptFileName(self, protocol_name, runName):
         return os.path.join(self.runsDir, '%s_%s.py' % (protocol_name, runName))
     
-    def createRunFromScript(self, protocol_name, script):
-        #suggest a new run_name        
-        runName = self.projectDb.suggestRunName(protocol_name)
+    def createRunFromScript(self, protocol_name, script, prefix=None):
+        if prefix: #Remove protocol_name from prefix if present
+            prefix = prefix.replace(protocol_name+"_", '')      
+        #suggest a new run_name  
+        runName = self.projectDb.suggestRunName(protocol_name, prefix)
         dstAbsPath = self.getRunScriptFileName(protocol_name, runName)
         run = {
                'protocol_name':protocol_name, 
@@ -167,7 +173,8 @@ class XmippProject():
         return self.createRunFromScript(protocol_name, srcProtAbsPath)
     
     def copyProtocol(self, protocol_name, script):
-        return self.createRunFromScript(protocol_name, script)
+        prefix, suffix  = getScriptPrefix(script)
+        return self.createRunFromScript(protocol_name, script, prefix)
         
     def loadProtocol(self, protocol_name, runName):
         run = self.projectDb.selectRunByName(self, protocol_name, runName)

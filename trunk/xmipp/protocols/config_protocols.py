@@ -27,7 +27,7 @@ class ProtocolDictionary(dict):
         self.projmatch = self.addProtocol('projmatch', 'Projection Matching', '3D/ProjMatch') 
         self.projsubs = self.addProtocol('subtraction', 'Partial Projection Subtraction', '3D/ProjSubs')
         self.dummy = self.addProtocol('dummy', 'Dummy', 'Dummy')
-
+        self.xmipp_program = self.addProtocol('xmipp', 'Xmipp Programs', 'XmippPrograms')
 protDict=ProtocolDictionary()
 
 #--------------------------------------------------------------------------------

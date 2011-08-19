@@ -207,11 +207,15 @@ class XmippProjectDb(SqliteDb):
         run['run_id'] = self.cur.lastrowid
         self.connection.commit()
         
-    def suggestRunName(self, protName):
+    def suggestRunName(self, protName, prefix=None):
+        if not prefix:
+            prefix = self.sqlDict['RunsPrefix']
+        self.sqlDict['prefix'] = prefix
         self.sqlDict['protocol_name'] = protName
-        _sqlCommand = """SELECT COALESCE(MAX(run_name), '%(RunsPrefix)s') AS run_name 
+        _sqlCommand = """SELECT COALESCE(MAX(run_name), '%(prefix)s') AS run_name 
                          FROM %(TableRuns)s NATURAL JOIN %(TableProtocols)s
-                         WHERE protocol_name = '%(protocol_name)s'""" % self.sqlDict
+                         WHERE run_name LIKE '%(prefix)s%%' 
+                           AND protocol_name = '%(protocol_name)s'""" % self.sqlDict
         self.cur.execute(_sqlCommand)         
         lastRunName = self.cur.fetchone()[0]    
         prefix, suffix  = getScriptPrefix(lastRunName)

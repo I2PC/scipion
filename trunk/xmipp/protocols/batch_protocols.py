@@ -191,10 +191,12 @@ class XmippProjectGUI():
     
             
     def launchProgramsGUI(self, event=None):
+        text = protDict.xmipp_program.title
+        self.selectToolbarButton(text, False)
         db = ProgramDb()
         root = tk.Toplevel()
         root.withdraw()
-        root.title('Xmipp Programs')
+        root.title(text)
         detailsSection = ProjectSection(root, 'Details')
         txt = tk.Text(detailsSection.frameContent, width=60, height=10,
                         bg=BgColor, bd=1, relief=tk.RIDGE)
@@ -207,7 +209,10 @@ class XmippProjectGUI():
 
         def runClick(event=None):
             program_name = lb.get(int(lb.curselection()[0]))
-            os.system(program_name + " --gui")
+            tmp_script = 'protocol_program_header.py'
+            os.system(program_name + " --xmipp_write_protocol %(tmp_script)s " % locals())
+            self.launchProtocolGUI(self.project.createRunFromScript(protDict.xmipp_program.name, 
+                                                                    tmp_script, program_name))            
         
         def showSelection(event):
             #lb = event.widget
@@ -277,8 +282,8 @@ class XmippProjectGUI():
                     stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
                 self.lbHist.insert(tk.END, (run_name, stateStr, run['last_modified']))   
             self.lbHist.selection_set(index)
-            #Generate an automatic refresh after 3000 ms 
-            self.historyRefresh = self.lbHist.after(1000, self.updateRunHistory, protGroup, False)
+            #Generate an automatic refresh after 5000 ms 
+            self.historyRefresh = self.lbHist.after(5000, self.updateRunHistory, protGroup, False)
         else:
             self.updateRunSelection(-1)
 
@@ -306,7 +311,8 @@ class XmippProjectGUI():
         if self.lastSelected and self.lastSelected != text:
             lastBtn, lastMenu = self.lastPair()
             lastBtn.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
-            lastMenu.unpost()            
+            if lastMenu:
+                lastMenu.unpost()            
         
         if self.lastSelected != text:
             self.project.config.set('project', 'lastselected', text)
@@ -391,7 +397,9 @@ class XmippProjectGUI():
                 btn = section.addButton(text, command=btn_command(text))
                 menu = self.createToolbarMenu(section, opts)
                 self.ToolbarButtonsDict[text] = (btn, menu)
-        btn = section.addButton('Xmipp Programs', command=self.launchProgramsGUI)
+        text = protDict.xmipp_program.title
+        btn = section.addButton(text, command=self.launchProgramsGUI)
+        self.ToolbarButtonsDict[text] = (btn, None)
         return toolbar
                 
     def addRunButton(self, frame, text, col, imageFilename=None):
@@ -419,10 +427,12 @@ class XmippProjectGUI():
         history = ProjectSection(parent, 'History')
         self.Frames['history'] = history
         list = [('Edit', 'edit.gif'), ('Copy', 'copy.gif'), ('Delete', 'delete.gif')]
-        for k, v in list:
+        def setupButton(k, v):
             btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k))
             ToolTip(btn, k, 500)
             self.runButtonsDict[k] = btn
+        for k, v in list:
+            setupButton(k, v)
             
         self.lbHist = MultiListbox(history.frameContent, (('Run', 35), ('State', 15), ('Modified', 15)))
         self.lbHist.SelectCallback = self.runSelectCallback
