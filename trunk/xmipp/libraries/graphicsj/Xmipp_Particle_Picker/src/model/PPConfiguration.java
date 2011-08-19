@@ -13,6 +13,7 @@ public class PPConfiguration {
 	private static String mgxmd = "micrographs.sel";
 	private static String rundir = ".";
 	
+	
 	public static Logger getLogger()
 	{
 		try {
@@ -65,6 +66,9 @@ public class PPConfiguration {
 		outputdir = dir;
 	}
 	
-	
+	public static String getOutputPath(String file)
+	{
+		return outputdir + File.separator + file;
+	}
 
 }

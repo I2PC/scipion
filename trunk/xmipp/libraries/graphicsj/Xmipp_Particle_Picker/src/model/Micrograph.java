@@ -3,6 +3,7 @@ package model;
 import ij.ImagePlus;
 
 import java.awt.Color;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -16,18 +17,30 @@ public class Micrograph {
 	private String name;
 	private List<Particle> particles;
 	private ImagePlus image;
-	private String xmd;
+	private String ofilename;
+	private static String ext = ".pos";
 	
 	public Micrograph(String filename, String name) {
 		this.filename = filename;
-		this.name = name;
+		this.name = getName(filename);
 		particles = new ArrayList<Particle>();
-		this.xmd = name + ".xmd";
+		this.ofilename = PPConfiguration.getOutputPath(name + ext);
 	}
 	
-	public String getXMD()
+	public static String getName(String filename)
 	{
-		return xmd;
+		String[] tokens = filename.split(File.separator);
+		if(tokens.length < 2)
+			throw new IllegalArgumentException("Name for micrograph" +
+					"is taken from parent dir, invalid path " + filename);
+		return  tokens[tokens.length - 2];
+	}
+	
+	
+	
+	public String getOFilename()
+	{
+		return ofilename;
 	}
 	
 	public ImagePlus getImage()

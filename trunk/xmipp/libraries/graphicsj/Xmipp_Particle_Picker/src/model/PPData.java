@@ -123,7 +123,7 @@ public class PPData {
 			for (long id: ids) {
 				
 				filename = PPConfiguration.getMicrographPath(md.getValueString(MDLabel.MDL_IMAGE, id));
-				name = "micrograph" + count;
+				name = Micrograph.getName(filename);
 				micrograph = new Micrograph(filename, name);
 				loadParticles(micrograph);
 				micrographs.add(micrograph);
@@ -142,14 +142,20 @@ public class PPData {
 		long id;
 		try {
 
-				MetaData md = new MetaData();
-				for (Particle p: micrograph.getParticles()) {
+				MetaData md;
+				for(Family f: families)
+				{
+					md = new MetaData();
+					for (Particle p: micrograph.getParticles()) {
+						if(!f.equals(p.getFamily()))
+							continue;
 					id = md.addObject();
 					md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
 					md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
-					md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, p.getFamily().getName(), id);
+					}
+					md.writeBlock(f.getName() + "@" + micrograph.getOFilename());
 				}
-				md.write("particles@" + micrograph.getXMD());
+				
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -164,19 +170,21 @@ public class PPData {
 			String fname;
 			Family family;
 			Particle particle;
-			if(!new File(micrograph.getXMD()).exists())
+			MetaData md;
+			if(!new File(micrograph.getOFilename()).exists())
 				return;
-			MetaData md = new MetaData("particles@" + micrograph.getXMD());
-			long[] ids = md.findObjects();
-			for (long id: ids) {				
-				
-				x = md.getValueInt(MDLabel.MDL_XINT, id);
-				y = md.getValueInt(MDLabel.MDL_YINT, id);
-				fname = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, id);
-				family = getFamily(fname);
-				particle = new Particle(x, y, family, micrograph);
-				micrograph.addParticle(particle);
-			}				
+			for(Family f: families)
+			{
+				md = new MetaData(f.getName() +"@" + micrograph.getOFilename());
+				long[] ids = md.findObjects();
+				for (long id: ids) {				
+					
+					x = md.getValueInt(MDLabel.MDL_XINT, id);
+					y = md.getValueInt(MDLabel.MDL_YINT, id);
+					particle = new Particle(x, y, f, micrograph);
+					micrograph.addParticle(particle);
+				}
+			}
 		} catch (Exception e) {
 			PPConfiguration.getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());

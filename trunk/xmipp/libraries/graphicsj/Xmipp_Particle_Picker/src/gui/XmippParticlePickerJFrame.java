@@ -130,9 +130,12 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent winEvt) {
-				int result = JOptionPane.showConfirmDialog(XmippParticlePickerJFrame.this, "Save changes before closing?", "Message", JOptionPane.YES_NO_OPTION);
-				if(result == JOptionPane.OK_OPTION)
-					XmippParticlePickerJFrame.this.saveChanges();
+				if(changed)
+				{
+					int result = JOptionPane.showConfirmDialog(XmippParticlePickerJFrame.this, "Save changes before closing?", "Message", JOptionPane.YES_NO_OPTION);
+					if(result == JOptionPane.OK_OPTION)
+						XmippParticlePickerJFrame.this.saveChanges();
+				}
 				System.exit(0);
 			}
 
@@ -229,7 +232,7 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		familypn.add(familiescb);
 
 		// Setting color
-		color = Family.getDefaultFamily().getColor();
+		color = getFamily().getColor();
 		familypn.add(new JLabel("Color:"));
 		coloricon = new ColorIcon(color);
 		colorlb = new JLabel(coloricon);
@@ -352,7 +355,7 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				saveChanges();
-
+				
 			}
 		});
 		stackmi.addActionListener(new ActionListener() {
@@ -453,6 +456,7 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 
 		ppdata.saveFamilyData();
 		ppdata.saveParticles(getMicrograph());
+		changed = false;
 	}
 
 
@@ -483,8 +487,8 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		updateFamilies();
 	}
 
-	public void setChanged(boolean b) {
-		// TODO Auto-generated method stub
+	public void setChanged(boolean changed) {
+		this.changed = changed;
 		
 	}
 
