@@ -28,7 +28,7 @@ class Main implements Runnable
 	@Override
 	public void run() {
 		try {
-			PPConfiguration.setMicrographsXMD(xmd);
+			PPConfiguration.setMicrographsSelFile(xmd);
 			PPConfiguration.setOutputDir(outputdir);
 			XmippParticlePickerJFrame frame = new XmippParticlePickerJFrame();
 		} catch (Exception e) {

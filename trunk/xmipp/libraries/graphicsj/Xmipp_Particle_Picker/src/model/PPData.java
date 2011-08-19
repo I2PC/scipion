@@ -45,7 +45,7 @@ public class PPData {
 	public void saveFamilyData()
 	{
 		long id;
-		String filename = PPConfiguration.getFamiliesXMD();
+		String filename = Family.getOFilename();
 		try {
 			MetaData md = new MetaData();
 			for(Family f: families)
@@ -68,8 +68,8 @@ public class PPData {
 	public void loadFamilyData()
 	{
 		families.clear();
-		String xmd = PPConfiguration.getFamiliesXMD();
-		if(!new File(xmd).exists())
+		String filename = Family.getOFilename();
+		if(!new File(filename).exists())
 		{
 			families.add(Family.getDefaultFamily());
 			return;
@@ -79,7 +79,7 @@ public class PPData {
 		int rgb, size;
 		String gname;		
 		try {
-			MetaData md = new MetaData("families@" + xmd);
+			MetaData md = new MetaData("families@" + filename);
 			long[] ids = md.findObjects();
 			for (long id: ids) {				
 				gname = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, id);
@@ -89,7 +89,7 @@ public class PPData {
 				families.add(family);
 			}				
 			if(families.size() == 0)
-				throw new IllegalArgumentException(String.format("No families specified on %s", xmd));
+				throw new IllegalArgumentException(String.format("No families specified on %s", filename));
 		} catch (Exception e) {
 			PPConfiguration.getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
@@ -112,7 +112,7 @@ public class PPData {
 	
 	public void loadMicrographsData()
 	{
-		String xmd = PPConfiguration.getMicrographsXMD();
+		String xmd = Micrograph.getIFilename();
 		micrographs.clear();
 		Micrograph micrograph;
 		String name, filename;		
@@ -167,8 +167,6 @@ public class PPData {
 	public void loadParticles(Micrograph micrograph) {
 		try {
 			int x, y;
-			String fname;
-			Family family;
 			Particle particle;
 			MetaData md;
 			if(!new File(micrograph.getOFilename()).exists())

@@ -226,6 +226,10 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 
 	private void initFamilyPane() {
 		familypn = new JPanel();
+		
+		// Setting edit button
+		geditbt = new JButton("Edit");
+		familypn.add(geditbt);
 
 		// Setting combo
 		familiescb = new JComboBox(ppdata.getFamilies().toArray());
@@ -247,9 +251,7 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		sizetf.setText(Integer.toString(size));
 		familypn.add(sizetf);
 
-		// Setting edit button
-		geditbt = new JButton("Edit");
-		familypn.add(geditbt);
+		
 
 		// Setting pane listeners
 

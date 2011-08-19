@@ -38,6 +38,10 @@ public class Family {
 		
 	}
 	
+	public static String getOFilename()
+	{
+		return PPConfiguration.getOutputPath("families.xmd");
+	}
 	
 	public int getSize() {
 		return size;

@@ -10,7 +10,7 @@ public class PPConfiguration {
 	
 	private static Logger logger;
 	private static String outputdir = ".";
-	private static String mgxmd = "micrographs.sel";
+	private static String mgselfile = "micrographs.sel";
 	private static String rundir = ".";
 	
 	
@@ -41,24 +41,20 @@ public class PPConfiguration {
 		return outputdir;
 	}
 	
-	public static String getFamiliesXMD()
-	{
-		return "families.xmd";
-	}
-	
-	public static String getMicrographsXMD()
-	{
-		return getMicrographPath(mgxmd);
-	}
 	
 	public static String getMicrographPath(String rpath)
 	{
 		return rundir + File.separator + rpath;
 	}
 	
-	public static void setMicrographsXMD(String xmd)
+	public static void setMicrographsSelFile(String file)
 	{
-		mgxmd = xmd;
+		mgselfile = file;
+	}
+	
+	public static String getMicrographsSelFile()
+	{
+		return mgselfile;
 	}
 	
 	public static void setOutputDir(String dir)

@@ -36,7 +36,10 @@ public class Micrograph {
 		return  tokens[tokens.length - 2];
 	}
 	
-	
+	public static String getIFilename()
+	{
+		return PPConfiguration.getMicrographsSelFile();
+	}
 	
 	public String getOFilename()
 	{
