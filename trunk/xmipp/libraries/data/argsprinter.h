@@ -100,12 +100,13 @@ class ProtPrinter: public Printer
 {
 protected:
   FILE * output;
-  String label, condition, parent_name;
+  String label, condition, parentName, exclusiveGroupName;
+  size_t keyCounter;
 public:
   /** buffer to read the command line output */
   char readbuffer[1024];
   /** Constructor */
-  ProtPrinter();
+  ProtPrinter(const char * scriptfile);
   ~ProtPrinter();
   virtual void printProgram(const ProgramDef &program, int v = 0);
   virtual void printSection(const SectionDef &section, int v = 0);

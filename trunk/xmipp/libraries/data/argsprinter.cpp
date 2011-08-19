@@ -474,12 +474,13 @@ void WikiPrinter::printCommentList(const CommentList &comments, int v)
 }
 
 //-------------------   PROTOCOL PRINTER IMPLEMENTATIONS   --------------------------------
+#define KEY_PREFIX(suffix) formatString("_K_%04u_%s", ++keyCounter, suffix)
+#define PARAM_PREFIX(paramName) formatString("_K_%04u_P_%s", ++keyCounter, paramName.c_str())
 
-ProtPrinter::ProtPrinter()
+ProtPrinter::ProtPrinter(const char * scriptfile)
 {
-    FileName dir = xmippBaseDir();
-    dir.append("/test_header.py");
-    output = fopen(dir.c_str(), "w+");
+    output = fopen(scriptfile, "w+");
+    keyCounter = 1;
 }
 
 ProtPrinter::~ProtPrinter()
@@ -513,18 +514,24 @@ void printBegin(FILE * output, const ProgramDef &program)
             "RunName = \"run_001\"\n\n");
 }
 
-void printEnd(FILE * output)
+void printEnd(FILE * output, const char *progName)
 {
     fprintf(output,
             "# {hidden} Show expert options"
             "\"\"\"If True, expert options will be displayed\"\"\"\n"
             "ShowExpertOptions = False\n"
+            "# {hidden} Program name"
+            "\"\"\"This is the name of the program to be executed, dont change this!!!\"\"\"\n"
+            "ProgramName = \"%s\"\n"
+            "# {hidden} Run behavior"
+            "\"\"\"For programs this have not much sense\"\"\"\n"
+            "Behavior = \"Resume\"\n"
             "#------------------------------------------------------------------------------------------\n"
             "# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE\n"
             "#------------------------------------------------------------------------------------------------\n\n"
-            "from protocol_dummy import *\n\n"
+            "from protocol_program import *\n\n"
             "if __name__ == '__main__':\n"
-            "    protocolMain(ProtDummy)\n");
+            "    protocolMain(ProtXmippProgram)\n", progName);
 }
 
 void ProtPrinter::printProgram(const ProgramDef &program, int v)
@@ -532,7 +539,7 @@ void ProtPrinter::printProgram(const ProgramDef &program, int v)
     printBegin(output, program);
     for (size_t i = 0; i < program.sections.size(); ++i)
         printSection(*program.sections[i], v);
-    printEnd(output);
+    printEnd(output, program.name.c_str());
 }
 
 void ProtPrinter::printSection(const SectionDef &section, int v)
@@ -546,7 +553,7 @@ void ProtPrinter::printSection(const SectionDef &section, int v)
     fprintf(output,
             "#------------------------------------------------------------------------------------------\n"
             "# {section}{has_question} %s %s\n", (expert ? "{expert}" : ""), section.name.c_str());
-    String sn = findAndReplace(section.name, " ", "_");
+    String sn = KEY_PREFIX("Show");
     fprintf(output, "# Show\nshow_%s = True\n", sn.c_str());
 
     for (size_t i = 0; i < section.params.size(); ++i)
@@ -560,7 +567,7 @@ void ProtPrinter::printParam(const ParamDef &param, int v)
         return;
     bool expert = param.visible > v;
     label = param.name;
-    parent_name = removeChar(param.name, '-');
+    parentName = (String)"P_" + removeChar(param.name, '-');
     size_t n_args = param.arguments.size();
 
     std::vector<ParamDef*> &exclusive = *(param.exclusiveGroup);
@@ -568,22 +575,23 @@ void ProtPrinter::printParam(const ParamDef &param, int v)
     {
         if (param.name == exclusive[0]->name)
         {
+            exclusiveGroupName = KEY_PREFIX("L_");
             fprintf(output, "# {list} (%s", param.name.c_str());
             for (size_t i = 1; i < exclusive.size(); ++i)
                 fprintf(output, ",%s", exclusive[i]->name.c_str());
-            fprintf(output, ")Select option\n__%s_exclusiveGroup = \"%s\"\n",
-                    parent_name.c_str(), param.name.c_str());
+            fprintf(output, ")Select option\n%s = \"%s\"\n",
+                   exclusiveGroupName.c_str(), param.name.c_str());
         }
-        String aux = removeChar(exclusive[0]->name, '-');
-        condition = formatString("__%s_exclusiveGroup=%s", aux.c_str(), param.name.c_str());
+        condition = formatString("%s=%s", exclusiveGroupName.c_str(), param.name.c_str());
     }
     else
     {
         if (n_args == 0)
         {
+            String varName = KEY_PREFIX(parentName.c_str());
             fprintf(output, "# %s\n", param.name.c_str());
             printCommentList(param.comments);
-            fprintf(output, "__%s = False\n", parent_name.c_str());
+            fprintf(output, "%s = False\n", varName.c_str());
         }
         condition = "";
     }
@@ -599,6 +607,8 @@ void ProtPrinter::addCondition(const String &newcondition)
         condition += ",";
     condition += newcondition;
 }
+
+
 
 void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
 {
@@ -617,22 +627,24 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
 
     label += "   " + argument.name;
     fprintf(output, "# %s %s\n", tags.c_str(), label.c_str());
-    String tmp = parent_name;
-    parent_name = formatString("%s_%s", parent_name.c_str(), argument.name.c_str());
+    String tmp = parentName;
+    parentName = formatString("%s_A_%s", parentName.c_str(), argument.name.c_str());
+    String varName = KEY_PREFIX(parentName.c_str());
+
 
     if (label.find('-') == 0) //In this case is the first argument of the param and should print help
     {
         ParamDef * parent = (ParamDef*)argument.parent;
         printCommentList(parent->comments);
     }
-    fprintf(output, "__%s = \"%s\"\n\n", parent_name.c_str(), argument.argDefault.c_str());
+    fprintf(output, "%s = \"%s\"\n\n", varName.c_str(), argument.argDefault.c_str());
 
     if (argument.subParams.size() > 0)
     {
         for (size_t j = 1; j < argument.subParams.size(); ++j)
         {
             String condBackup = condition;
-            addCondition(formatString("__%s=%s", parent_name.c_str(), argument.subParams[j]->name.c_str()));
+            addCondition(formatString("%s=%s", varName.c_str(), argument.subParams[j]->name.c_str()));
             for (size_t k = 0; k < argument.subParams[j]->arguments.size(); ++k)
             {
                 label = argument.subParams[j]->name;
@@ -641,7 +653,7 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
             condition = condBackup;
         }
     }
-    parent_name = tmp;
+    parentName = tmp;
     label = "";
 }
 
