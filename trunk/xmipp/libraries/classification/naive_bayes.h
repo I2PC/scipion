@@ -108,6 +108,9 @@ public:
 
     // Auxiliary variable for the probability of the classes
     Matrix1D<double> classesProbs;
+
+    // Dummy leaf for non-classificatory features
+    LeafNode *dummyLeaf;
 public:	
     // Constructor
     NaiveBayes(

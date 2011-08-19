@@ -129,78 +129,102 @@ LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures,
 {
     __discreteLevels = discrete_levels;
     K = leafFeatures.size();
-
-    // Compute the minimum and maximum of each class
-    double minval, maxval;
-    for(int k=0; k<K; k++)
+    if (__discreteLevels==0)
     {
-        double minvalk, maxvalk;
-        leafFeatures[k].computeDoubleMinMax(minvalk, maxvalk);
-        if (k==0)
-        {
-            minval=minvalk;
-            maxval=maxvalk;
-        }
-        else
-        {
-            minval=XMIPP_MIN(minval,minvalk);
-            maxval=XMIPP_MAX(maxval,maxvalk);
-        }
-    }
-
-    // Compute the PDF of each class
-    std::vector<Histogram1D> hist(K);
-    for (int k=0; k<K; k++)
-    {
-        compute_hist(leafFeatures[k], hist[k], minval, maxval, 100);
-        hist[k] += 1; // Apply Laplace correction
-    }
-
-    // Split the histograms into discrete_level (power of 2) bins
-    std::queue< Matrix1D<int> > intervals, splittedIntervals;
-    Matrix1D<int> limits(2);
-    VECTOR_R2(limits,0,99);
-    intervals.push(limits);
-    int imax=ROUND(log2(__discreteLevels));
-    for (int i=0; i<imax; i++)
-    {
-        // Split all the intervals in the queue
-        while (!intervals.empty())
-        {
-            Matrix1D<int> currentInterval = intervals.front();
-            intervals.pop();
-            int lsplit = splitHistogramsUsingEntropy(hist,
-                         currentInterval(0), currentInterval(1));
-            VECTOR_R2(limits,currentInterval(0),lsplit);
-            splittedIntervals.push(limits);
-            VECTOR_R2(limits,lsplit+1, currentInterval(1));
-            splittedIntervals.push(limits);
-        }
-
-        // Copy the splitted intervals to the interval list
-        while (!splittedIntervals.empty())
-        {
-            intervals.push(splittedIntervals.front());
-            splittedIntervals.pop();
-        }
-    }
-
-    // Compute the bins of the split
-    MultidimArray<int> newBins(__discreteLevels);
-    imax=intervals.size();
-    for (int i=0; i<imax; i++)
-    {
-        newBins(i) = intervals.front()(1);
-        intervals.pop();
-    }
-
-    // Compute now the irregular histograms
-    for (int k=0; k<K; k++)
-    {
+    	// This is a dummy node for features that cannot classify
+        MultidimArray<int> newBins(1);
+        A1D_ELEM(newBins,0)=0;
+        Histogram1D hist;
+        hist.resize(1);
+        A1D_ELEM(hist,0)=1;
         IrregularHistogram1D irregHist;
-        irregHist.init(hist[k], newBins);
-        irregHist.selfNormalize();
-        __leafPDF.push_back(irregHist);
+        for (int k=0; k<K; k++)
+        {
+            irregHist.init(hist, newBins);
+            irregHist.selfNormalize();
+            __leafPDF.push_back(irregHist);
+        }
+    }
+    else
+    {
+        // Compute the minimum and maximum of each class
+        double minval, maxval;
+        for(int k=0; k<K; k++)
+        {
+            double minvalk, maxvalk;
+            leafFeatures[k].computeDoubleMinMax(minvalk, maxvalk);
+            if (minvalk==maxvalk)
+            {
+                __discreteLevels=0;
+                return;
+            }
+            if (k==0)
+            {
+                minval=minvalk;
+                maxval=maxvalk;
+            }
+            else
+            {
+                minval=XMIPP_MIN(minval,minvalk);
+                maxval=XMIPP_MAX(maxval,maxvalk);
+            }
+        }
+
+        // Compute the PDF of each class
+        std::vector<Histogram1D> hist(K);
+        for (int k=0; k<K; k++)
+        {
+            // There is variation of this feature for this class
+            compute_hist(leafFeatures[k], hist[k], minval, maxval, 100);
+            hist[k] += 1; // Apply Laplace correction
+        }
+
+        // Split the histograms into discrete_level (power of 2) bins
+        std::queue< Matrix1D<int> > intervals, splittedIntervals;
+        Matrix1D<int> limits(2);
+        VECTOR_R2(limits,0,99);
+        intervals.push(limits);
+        int imax=ROUND(log2(__discreteLevels));
+        for (int i=0; i<imax; i++)
+        {
+            // Split all the intervals in the queue
+            while (!intervals.empty())
+            {
+                Matrix1D<int> currentInterval = intervals.front();
+                intervals.pop();
+                int lsplit = splitHistogramsUsingEntropy(hist,
+                             currentInterval(0), currentInterval(1));
+                VECTOR_R2(limits,currentInterval(0),lsplit);
+                splittedIntervals.push(limits);
+                VECTOR_R2(limits,lsplit+1, currentInterval(1));
+                splittedIntervals.push(limits);
+            }
+
+            // Copy the splitted intervals to the interval list
+            while (!splittedIntervals.empty())
+            {
+                intervals.push(splittedIntervals.front());
+                splittedIntervals.pop();
+            }
+        }
+
+        // Compute the bins of the split
+        MultidimArray<int> newBins(__discreteLevels);
+        imax=intervals.size();
+        for (int i=0; i<imax; i++)
+        {
+            A1D_ELEM(newBins,i) = intervals.front()(1);
+            intervals.pop();
+        }
+
+        // Compute now the irregular histograms
+        IrregularHistogram1D irregHist;
+        for (int k=0; k<K; k++)
+        {
+            irregHist.init(hist[k], newBins);
+            irregHist.selfNormalize();
+            __leafPDF.push_back(irregHist);
+        }
     }
 }
 
@@ -258,26 +282,39 @@ NaiveBayes::NaiveBayes(
     FOR_ALL_ELEMENTS_IN_MATRIX1D(__priorProbsLog10)
     VEC_ELEM(__priorProbsLog10,i)=log10(VEC_ELEM(priorProbs,i));
 
+    // Create a dummy leaf for features that cannot classify
+    std::vector < MultidimArray<double> > aux(K);
+    dummyLeaf=new LeafNode(aux,0);
+
     // Build a leafnode for each feature and assign a weight
     __weights.initZeros(Nfeatures);
-    std::vector < MultidimArray<double> > aux(K);
     for (int f=0; f<Nfeatures; f++)
     {
         for (int k=0; k<K; k++)
             features[k].getCol(f, aux[k]);
-        __leafs.push_back(new LeafNode(aux,discreteLevels));
-        DIRECT_A1D_ELEM(__weights,f)=__leafs[f]->computeWeight();
+        LeafNode *leaf=new LeafNode(aux,discreteLevels);
+        if (leaf->__discreteLevels>0)
+        {
+            __leafs.push_back(leaf);
+            DIRECT_A1D_ELEM(__weights,f)=__leafs[f]->computeWeight();
+        }
+        else
+        {
+            __leafs.push_back(dummyLeaf);
+            DIRECT_A1D_ELEM(__weights,f)=0;
+            delete leaf;
+        }
 #ifdef DEBUG_WEIGHTS
 
         if(debugging == true)
         {
-            std::cout << "Node " << f << std::endl
-            << *(__leafs[f]) << std::endl;
+            std::cout << "Node " << f << std::endl;
+            std::cout << *(__leafs[f]) << std::endl;
         }
 #endif
 
     }
-    __weights /= __weights.computeMax();
+    __weights *= 1.0/__weights.computeMax();
 
     // Set default cost matrix
     __cost.resizeNoCopy(K,K);
@@ -289,8 +326,11 @@ NaiveBayes::NaiveBayes(
 /* Destructor -------------------------------------------------------------- */
 NaiveBayes::~NaiveBayes()
 {
-    for (int i = 0; i < __leafs.size(); i++)
-        delete __leafs[i];
+    int imax=__leafs.size();
+    for (int i = 0; i < imax; i++)
+    	if (__leafs[i]!=dummyLeaf)
+    		delete __leafs[i];
+    delete dummyLeaf;
 }
 
 /* Set cost matrix --------------------------------------------------------- */
@@ -314,7 +354,7 @@ int NaiveBayes::doInference(const MultidimArray<double> &newFeatures,
         {
             double p = leaf_f.assignProbability(newFeatures_f, k);
 
-            if (ABS(p) < 1e-2)
+            if (fabs(p) < 1e-2)
                 VEC_ELEM(classesProbs,k) += -2*DIRECT_A1D_ELEM(__weights,f);
             else
                 VEC_ELEM(classesProbs,k) += DIRECT_A1D_ELEM(__weights,f)*std::log10(p);
@@ -341,7 +381,7 @@ int NaiveBayes::doInference(const MultidimArray<double> &newFeatures,
 
     for (int k=0; k<K; k++)
         VEC_ELEM(classesProbs,k)=pow(10.0,VEC_ELEM(classesProbs,k));
-    classesProbs/=classesProbs.sum();
+    classesProbs*=1.0/classesProbs.sum();
     //    std::cout << "classesProbs norm " << classesProbs.transpose() << std::endl;
 
     allCosts=__cost*classesProbs;
@@ -379,13 +419,15 @@ int NaiveBayes::doInference(const MultidimArray<double> &newFeatures,
 std::ostream & operator << (std::ostream &_out, const NaiveBayes &naive)
 {
     for (int f=0; f<naive.Nfeatures; f++)
-        _out << "Node " << f << std::endl
-        << *(naive.__leafs[f]) << std::endl;
+    {
+        _out << "Node " << f << std::endl;
+        _out << *(naive.__leafs[f]) << std::endl;
+    }
     return _out;
 }
 
 /* Ensemble constructor ---------------------------------------------------- */
-//#define WEIGHTED_SAMPLING
+#define WEIGHTED_SAMPLING
 EnsembleNaiveBayes::EnsembleNaiveBayes(
     const std::vector < MultidimArray<double> >  &features,
     const Matrix1D<double> &priorProbs,
@@ -435,7 +477,7 @@ EnsembleNaiveBayes::EnsembleNaiveBayes(
             DIRECT_A1D_ELEM(subFeatures,i)=j;
 #else
 
-            DIRECT_A1D_ELEM(subFeatures,i)=ROUND(rnd_unif(0,NFeatures-1));
+            DIRECT_A1D_ELEM(subFeatures,i)=round(rnd_unif(0,NFeatures-1));
 #endif
 
         }
