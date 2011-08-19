@@ -421,6 +421,9 @@ void AutoParticlePicking::buildPositiveVectors()
     MultidimArray<double> piece, original_piece;
     MultidimArray<int> ipiece;
     Particle p;
+    p.status = 1;
+    p.cost = 1.0;
+    p.micrograph=__fn_micrograph;
     while (visited.sum() < num_part)
     {
         // get the first un-visited particle in the array
@@ -451,8 +454,6 @@ void AutoParticlePicking::buildPositiveVectors()
             p.y = y;
             p.idx = part_i;
             p.vec = v;
-            p.status = 1;
-            p.cost = 1.0;
             if (__selection_model.addParticleTraining(p, 0))
                 numParticles++;
         }
@@ -556,6 +557,7 @@ void AutoParticlePicking::buildNegativeVectors(bool checkForPalsePostives)
         P.idx = -1;
         P.status = 1;
         P.cost = -1;
+        P.micrograph = __fn_micrograph;
         while (get_next_scanning_pos(piece, next_posx, next_posy, skip_x,
                                      skip_y, __learn_overlap))
         {
@@ -880,6 +882,10 @@ void * automaticallySelectParticlesThread(void * args)
     MultidimArray<int> ipiece;
     const MultidimArray<int> &mask = autoPicking->__mask.get_binary_mask();
     std::vector<Particle> threadCandidates;
+    Particle p;
+    p.micrograph=autoPicking->__fn_micrograph;
+    p.idx = -1;
+    p.status = 1;
     do
     {
         bool isMine = (N % autoPicking->__numThreads == idThread);
@@ -958,14 +964,11 @@ void * automaticallySelectParticlesThread(void * args)
 #endif
 
                         // Build the Particle structure
-                        Particle P;
-                        P.x = left + posx * autoPicking->__reduction;
-                        P.y = top + posy * autoPicking->__reduction;
-                        P.idx = -1;
-                        P.status = 1;
-                        P.vec = v;
-                        P.cost = cost;
-                        threadCandidates.push_back(P);
+                        p.x = left + posx * autoPicking->__reduction;
+                        p.y = top + posy * autoPicking->__reduction;
+                        p.vec = v;
+                        p.cost = cost;
+                        threadCandidates.push_back(p);
                     }
                     Nscanned++;
                 }
@@ -1451,9 +1454,10 @@ void Classification_model::initNaiveBayesEnsemble(
     __bayesEnsembleNet->setCostMatrix(cost);
 }
 
-AutoParticlePicking::AutoParticlePicking(Micrograph *_m, bool _fast)
+AutoParticlePicking::AutoParticlePicking(const FileName &fn, Micrograph *_m, bool _fast)
 {
     __m = _m;
+    __fn_micrograph = fn;
     __numThreads = 1;
     __piece_xsize = 512;
     __particle_radius = 0;
@@ -1464,9 +1468,9 @@ AutoParticlePicking::AutoParticlePicking(Micrograph *_m, bool _fast)
     __incore=false;
 }
 
-void AutoParticlePicking::readMicrograph(const FileName &fn)
+void AutoParticlePicking::readMicrograph()
 {
-    __I.read(fn);
+    __I.read(__fn_micrograph);
     __incore=true;
 }
 
@@ -1552,7 +1556,7 @@ bool Classification_model::addParticleTraining(const Particle &p, int classIdx)
 /* Show -------------------------------------------------------------------- */
 std::ostream & operator <<(std::ostream &_out, const Particle &_p)
 {
-    _out << _p.x << " " << _p.y << " " << _p.idx << " " << (int) _p.status
+    _out << _p.micrograph << " " << _p.x << " " << _p.y << " " << _p.idx << " " << (int) _p.status
     << " " << _p.cost << " ";
     FOR_ALL_ELEMENTS_IN_MATRIX1D(_p.vec)
     _out << VEC_ELEM(_p.vec,i) << " ";
@@ -1563,7 +1567,7 @@ std::ostream & operator <<(std::ostream &_out, const Particle &_p)
 /* Read--------------------------------------------------------------------- */
 void Particle::read(std::istream &_in, int _vec_size)
 {
-    _in >> x >> y >> idx >> status >> cost;
+    _in >> micrograph >> x >> y >> idx >> status >> cost;
     status -= '0';
     vec.resize(_vec_size);
     _in >> vec;
@@ -1649,12 +1653,16 @@ std::istream & operator >>(std::istream &_in, Classification_model &_m)
 
 void AutoParticlePicking::loadModels(const FileName &fn_root)
 {
+	FileName fn_training=fn_root + "_training.txt";
+    if (!exists(fn_training))
+        return;
+
     // Load training vectors
     std::string dummy;
     std::ifstream fh_training;
-    fh_training.open((fn_root + "_training.txt").c_str());
+    fh_training.open(fn_training.c_str());
     if (!fh_training)
-        REPORT_ERROR(ERR_IO_NOTOPEN, fn_root + "_training.txt");
+        REPORT_ERROR(ERR_IO_NOTOPEN, fn_training);
     fh_training
     >> dummy >> __piece_xsize
     >> dummy >> __particle_radius;
@@ -1664,8 +1672,6 @@ void AutoParticlePicking::loadModels(const FileName &fn_root)
     // Load the mask
     __mask.type = READ_MASK;
     __mask.fn_mask = fn_root + "_mask.xmp";
-    if (!exists(__mask.fn_mask))
-        return;
     __mask.generate_mask();
     __mask.get_binary_mask().setXmippOrigin();
     classifyMask();
@@ -1804,11 +1810,11 @@ void ProgMicrographAutomaticPicking::run()
 {
     Micrograph m;
     m.open_micrograph(fn_micrograph);
-    AutoParticlePicking *autoPicking = new AutoParticlePicking(&m,fast);
+    AutoParticlePicking *autoPicking = new AutoParticlePicking(fn_micrograph,&m,fast);
     autoPicking->setNumThreads(Nthreads);
     autoPicking->loadModels(fn_model);
     if (incore)
-    	autoPicking->readMicrograph(fn_micrograph);
+    	autoPicking->readMicrograph();
     if (mode == "autoselect" || mode=="try")
     {
         autoPicking->automaticallySelectParticles();

@@ -38,6 +38,7 @@
 class Particle
 {
 public:
+	FileName micrograph;       // Micrograph
     int x, y;                  // position in micrograph
     int idx;                   // Index of this particle within the micrograph
                                // list of coordinates
@@ -143,6 +144,7 @@ public:
 
 	Micrograph                *__m;
 	Image<double>		       __I;
+	FileName                   __fn_micrograph;
     int                        __numThreads;
     Mask                       __mask;
     Classification_model       __selection_model;
@@ -162,10 +164,10 @@ public:
     std::vector < MultidimArray<int> * >    __Nsector;
 public:
     /// Empty constructor
-    AutoParticlePicking(Micrograph *_m, bool __fast);
+    AutoParticlePicking(const FileName &fn, Micrograph *_m, bool __fast);
 
     /// Read the micrograph in memory
-    void readMicrograph(const FileName &fn);
+    void readMicrograph();
 
     /// Set the number of threads
     inline void setNumThreads(int _numThreads)
