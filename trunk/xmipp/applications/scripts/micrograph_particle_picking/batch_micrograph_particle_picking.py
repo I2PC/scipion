@@ -31,5 +31,5 @@ class ScriptParticlePicking(XmippScript):
 		os.system(cmd)
 	
 if __name__ == '__main__':
-	ScriptParticlePick().tryRun()
+	ScriptParticlePicking().tryRun()
 
