@@ -27,7 +27,7 @@ class ScriptParticlePicking(XmippScript):
 			memory = "1024m"
 			print "No memory size provided. Using default: " + memory
 		jar = "Xmipp_PP.jar"
-		cmd = " java -Xmx%(memory)s -cp %(plugins_dir)s: model.Main %(input)s %(output)s " % locals()
+		cmd = " java -Xmx%(memory)s -cp %(plugins_dir)s: Xmipp.Main %(input)s %(output)s " % locals()
 		os.system(cmd)
 	
 if __name__ == '__main__':
