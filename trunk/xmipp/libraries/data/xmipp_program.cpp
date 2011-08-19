@@ -60,7 +60,7 @@ void XmippProgram::defineCommons()
     addParamsLine("==+++++ Internal section ==");
     addParamsLine("[--xmipp_write_definition* <dbname>] : Print metadata info about the program to sqlite database");
     addParamsLine("[--xmipp_write_wiki* ] : Print metadata info about the program in wiki format");
-    addParamsLine("[--xmipp_write_protocol* ] : Generate protocol header file");
+    addParamsLine("[--xmipp_write_protocol* <scriptfile>] : Generate protocol header file");
 }
 
 void XmippProgram::init()
@@ -124,7 +124,8 @@ void XmippProgram::writeToDB()
 
 void XmippProgram::writeToProtocol( )
 {
-    ProtPrinter pp;
+    String scriptfile = getParam("--xmipp_write_protocol");
+    ProtPrinter pp(scriptfile.c_str());
     pp.printProgram(*progDef);
 }
 
