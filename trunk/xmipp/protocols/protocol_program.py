@@ -47,14 +47,47 @@ class ProtXmippProgram(XmippProtocol):
                 "Need a real summary here..."
                 ]
         
+    def buildCommandLine(self):
+        params = ""
+        paramsLine = ""
+        for k in dir(self):
+            if k.startswith('_K_'):
+                if '_P_' in k:
+                    key, suffix = k.split('_P_')
+                    if '_A_' in suffix:
+                        paramId, suffix = suffix.split('_A_')
+                        paramName = getParamName(paramId)
+                        value = self.__dict__[k]
+                        if  value != "":
+                            if paramName not in paramsLine:
+                                paramsLine += ' ' + paramName
+                            paramsLine += ' ' + value
+                    else: #Param without args, True or False value
+                        paramId = suffix
+                        if self.__dict__[k]:
+                            paramsLine += ' ' + getParamName(paramId) 
+                    params += '\n' + getParamName(paramId)
+        print 'params:', params
+        print 'paramsLine: ', paramsLine
+        
+        return params
+    
     def defineSteps(self):
         program = self.ProgramName
-        params = "--more"
+        params = self.buildCommandLine()
         self.NumberOfMpi = 1
         self.NumberOfThreads = 1
-        self.Db.insertStep('runJob', 
-                             programname=program, 
-                             params=params,
-                             NumberOfMpi = self.NumberOfMpi,
-                             NumberOfThreads = self.NumberOfThreads)
+        self.Db.insertStep('printCommandLine', programname=program, params=params)
+#        self.Db.insertStep('runJob', 
+#                             programname=program, 
+#                             params=params,
+#                             NumberOfMpi = self.NumberOfMpi,
+#                             NumberOfThreads = self.NumberOfThreads)
 
+def getParamName(paramId):
+    if len(paramId) > 1: return '--' + paramId
+    return '-' + paramId
+
+def printCommandLine(log, programname, params):
+    print "Running program: ", programname
+    print "         params: ", params
