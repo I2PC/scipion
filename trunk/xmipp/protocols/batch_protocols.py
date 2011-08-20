@@ -339,7 +339,9 @@ class XmippProjectGUI():
             self.DetailsLabelsDict['Protocol:'].config(text=run['protocol_name'])
             self.DetailsLabelsDict['Created:'].config(text=run['init'])
             self.DetailsLabelsDict['Modified:'].config(text=run['last_modified'])
+            self.DetailsLabelsDict['Script:'].config(text=run['script'])
             prot = getProtocolFromModule(run['script'], self.project)
+            self.DetailsLabelsDict['Directory:'].config(text=prot.WorkingDir)
             if os.path.exists(prot.WorkingDir):
                 summary = '\n'.join(prot.summary())
                 showButtons = True
@@ -462,9 +464,11 @@ class XmippProjectGUI():
         registerFont('details_bold', family=FontName, size=FontSize-1)
         self.addDetailsLabel(content, 'Run:', 0, 0)
         self.addDetailsLabel(content, 'Protocol:', 1, 0)
+        self.addDetailsLabel(content, 'Script:', 2, 0)
         self.addDetailsLabel(content, 'Created:', 0, 2)
         self.addDetailsLabel(content, 'Modified:', 1, 2)
-        self.addDetailsLabel(content, 'Summary:', 2, 0, 3)
+        self.addDetailsLabel(content, 'Directory:', 2, 2)
+        self.addDetailsLabel(content, 'Summary:', 3, 0, 3)
         return details
 
     def createGUI(self, root=None):
