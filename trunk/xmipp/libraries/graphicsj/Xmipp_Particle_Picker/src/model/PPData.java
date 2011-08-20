@@ -51,9 +51,9 @@ public class PPData {
 			for(Family f: families)
 			{
 				id = md.addObject();
-				md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, f.getName(), id);
-				md.setValueInt(MDLabel.MDL_XINT, f.getColor().getRGB(), id);
-				md.setValueInt(MDLabel.MDL_YINT, f.getSize(), id);
+				md.setValueString(MDLabel.MDL_PICKING_FAMILY, f.getName(), id);
+				md.setValueInt(MDLabel.MDL_PICKING_COLOR, f.getColor().getRGB(), id);
+				md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, f.getSize(), id);
 			}
 			md.write("families@" + filename);
 		} catch (Exception e) {
@@ -82,9 +82,9 @@ public class PPData {
 			MetaData md = new MetaData("families@" + filename);
 			long[] ids = md.findObjects();
 			for (long id: ids) {				
-				gname = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, id);
-				rgb = md.getValueInt(MDLabel.MDL_XINT, id);
-				size = md.getValueInt(MDLabel.MDL_YINT, id);
+				gname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
+				rgb = md.getValueInt(MDLabel.MDL_PICKING_COLOR, id);
+				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
 				family = new Family(gname, new Color(rgb), size);
 				families.add(family);
 			}				
