@@ -9,6 +9,7 @@
 from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import runJob
+from protlib_filesystem import copyFile
 import xmipp
 import glob
 
@@ -23,7 +24,8 @@ class ProtParticlePicking(XmippProtocol):
         self.micrographSelfile = os.path.join(protDict.preprocess_micrographs.dir,self.preprocessingRunname, "micrographs.sel")
 
     def defineSteps(self):
-        print "Defining steps"
+        self.Db.insertStep('createLink',execution_mode=SqliteDb.MAIN_LOOP,
+                           source=self.micrographSelfile,dest=os.path.join(self.WorkingDir,"micrographs.sel"))
         self.Db.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
                            MicrographSelfile=self.micrographSelfile, WorkingDir=self.WorkingDir,
                            AutomaticPicking=self.AutomaticPicking, NumberOfThreads=self.NumberOfThreads,
