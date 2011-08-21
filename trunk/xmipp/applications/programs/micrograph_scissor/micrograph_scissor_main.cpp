@@ -115,7 +115,6 @@ protected:
 public:
     void run()
     {
-
         if (!pair_mode)
         {
             Micrograph m;
