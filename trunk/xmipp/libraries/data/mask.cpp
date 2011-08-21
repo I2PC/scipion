@@ -177,13 +177,24 @@ void BinaryCircularMask(MultidimArray<int> &mask,
 {
     mask.initZeros();
     double radius2 = radius * radius;
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
+    for (int k=STARTINGZ(mask); k<=FINISHINGZ(mask); ++k)
     {
-        double r2 = (k - z0) * (k - z0) + (i - y0) * (i - y0) + (j - x0) * (j - x0);
-        if (r2 <= radius2 && mode == INNER_MASK)
-            A3D_ELEM(mask, k, i, j) = 1;
-        else if (r2 >= radius2 && mode == OUTSIDE_MASK)
-            A3D_ELEM(mask, k, i, j) = 1;
+    	double diff=k - z0;
+    	double z2=diff*diff;
+    	for (int i=STARTINGY(mask); i<=FINISHINGY(mask); ++i)
+        {
+    		diff=i - y0;
+    		double z2y2=z2+diff*diff;
+            for (int j=STARTINGX(mask); j<=FINISHINGX(mask); ++j)
+            {
+            	diff=j - x0;
+                double r2 = z2y2+diff*diff;
+                if (r2 <= radius2 && mode == INNER_MASK)
+                    A3D_ELEM(mask, k, i, j) = 1;
+                else if (r2 >= radius2 && mode == OUTSIDE_MASK)
+                    A3D_ELEM(mask, k, i, j) = 1;
+            }
+        }
     }
 }
 
@@ -481,7 +492,7 @@ void BinaryConeMask(MultidimArray<int> &mask, double theta, int mode,bool center
 }
 
 void BinaryWedgeMask(MultidimArray<int> &mask, double theta0, double thetaF,
-                       const Matrix2D<double> &A, bool centerOrigin)
+                     const Matrix2D<double> &A, bool centerOrigin)
 {
     int halfX, halfY,halfZ;
     int minX,minY,minZ;
@@ -547,7 +558,7 @@ void BinaryWedgeMask(MultidimArray<int> &mask, double theta0, double thetaF,
         {
             if (xp <= limxF || xp >= limx0)
             {
-            	A3D_ELEM(mask, kpp, ipp, jpp) = 1.;
+                A3D_ELEM(mask, kpp, ipp, jpp) = 1.;
             }
             else
                 A3D_ELEM(mask, kpp, ipp, jpp) = 0.;
@@ -1664,12 +1675,12 @@ void ProgMask::defineParams()
 
     addUsageLine("Create or Apply a mask. Count pixels/voxels within a mask");
     addUsageLine("+ ");
-    addUsageLine("+You don´t need to give the dimensions of the mask but you simply provide ");
+    addUsageLine("+You do not need to give the dimensions of the mask but you simply provide ");
     addUsageLine("+an example of image/volume you are going to apply the mask to, then the dimensions ");
     addUsageLine("+are taken from this file and the mask is created. In the creation of the mask, ");
     addUsageLine("+a file with the mask is written to disk but it is not applied to the input file.");
     addUsageLine("+ ");
-    addUsageLine("+You can generate blank images/volumes with the size of the sample one if you don´t ");
+    addUsageLine("+You can generate blank images/volumes with the size of the sample one if you do not ");
     addUsageLine("+supply any mask type.You may also apply masks without having to generate the corresponding");
     addUsageLine("+files (but you also can save them)");
     addUsageLine("+ ");
