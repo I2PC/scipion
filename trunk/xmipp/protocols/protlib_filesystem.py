@@ -34,7 +34,7 @@ from shutil import copyfile
 #from xmipp import *
 
 # The following are Wrappers to be used from Protocols
-# provinding filesystem utitities
+# providing filesystem utilities
 
 def createDir(log, path):
     """ Create directory, does not add workingdir"""
@@ -82,7 +82,15 @@ def copyFile(log, source, dest):
 def deleteFiles(log, filelist, verbose):
     for file in filelist:
         deleteFile(log, file, verbose)
-        
+
+def createLink(log, source, dest):
+    try:
+        destDir=os.path.split(dest)[0]
+        os.symlink(os.path.relpath(source,destDir),dest)
+        printLog("Linked '%s' to '%s'" % (source, dest))
+    except Exception, e:
+        printLog("Could not link '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
+
 #--------------------------- Xmipp specific tools ---------------------------------
 def getXmippPath(subfolder=''):
     '''Return the path the the Xmipp installation folder
