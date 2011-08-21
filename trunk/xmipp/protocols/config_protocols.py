@@ -14,10 +14,11 @@ class ProtocolDictionary(dict):
         return p
     
     def __init__(self):
-        self.preprocess_micrographs = self.addProtocol('preprocess_micrographs', 'Preprocess Micrograph', 'Preprocess')
-        self.particle_pick = self.addProtocol('particle_pick',  'Particle picking', 'ParticlePicking')
-        self.particle_pick_auto = self.addProtocol('particle_pick_automatic',  'Automatic particle picking', 'ParticlePickingAuto')
-        self.preprocess_particles = self.addProtocol('preprocess_particles',  'Preprocess Particles', 'Images')
+        self.preprocess_micrographs = self.addProtocol('preprocess_micrographs', 'Preprocess Micrograph', 'PreprocessMicrographs')
+        self.particle_pick = self.addProtocol('particle_pick',  'Particle picking', 'ParticlePicking/Manual')
+        self.particle_pick_auto = self.addProtocol('particle_pick_automatic',  'Automatic particle picking', 'ParticlePicking/Auto')
+        self.extract_particles = self.addProtocol('extract_particles',  'Extract Particles', 'Images/Extracted')
+        self.preprocess_particles = self.addProtocol('preprocess_particles',  'Preprocess Particles', 'Images/Preprocessed')
         self.ml2d = self.addProtocol('ml2d', 'ML2D', '2D/ML2D')
         self.cl2d = self.addProtocol('cl2d', 'CL2D', '2D/CL2D')
         self.kerdensom = self.addProtocol('kerdensom', 'KerDenSOM',  '2D/KerDenSOM')
@@ -53,8 +54,9 @@ projectDefaults = {
 
 sections = [
 ('Preprocessing', 
-   [['Preprocess Micrograph', protDict.preprocess_micrographs.name], 
+   [['Preprocess Micrographs', protDict.preprocess_micrographs.name], 
     ['Particle picking', protDict.particle_pick.name], 
+    ['Extract Particles', protDict.extract_particles.name],
     ['Preprocess Particles', protDict.preprocess_particles.name]]),
 ('2D', 
    [['Align+Classify', protDict.ml2d.name, protDict.cl2d.name], 
