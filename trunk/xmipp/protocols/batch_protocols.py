@@ -192,20 +192,27 @@ class XmippProjectGUI():
             
     def launchProgramsGUI(self, event=None):
         text = protDict.xmipp_program.title
+        last = self.lastSelected
         self.selectToolbarButton(text, False)
+        if text != last:
+            return
         db = ProgramDb()
         root = tk.Toplevel()
         root.withdraw()
         root.title(text)
+        root.columnconfigure(1, weight=1)
+        root.rowconfigure(0, weight=1)
+        root.rowconfigure(1, weight=1)
         detailsSection = ProjectSection(root, 'Details')
         txt = tk.Text(detailsSection.frameContent, width=60, height=10,
                         bg=BgColor, bd=1, relief=tk.RIDGE)
-        txt.pack()
-        detailsSection.grid(row=1, column=1)
+        txt.pack(fill=tk.BOTH)
+        detailsSection.grid(row=1, column=1, sticky='nsew', 
+                            padx=5, pady=5)
         #Create programs panel
         progSection = ProjectSection(root, 'Programs')
         lb = tk.Listbox(progSection.frameContent, width=50, height=14,
-                        bg=BgColor, bd=1, relief=tk.RIDGE, font=Fonts['button'])
+                        bg=BgColor, bd=1, relief=tk.RIDGE, font=Fonts['normal'])
 
         def runClick(event=None):
             program_name = lb.get(int(lb.curselection()[0]))
@@ -227,9 +234,9 @@ class XmippProjectGUI():
         
             
         lb.bind('<ButtonRelease-1>', showSelection)
-        #lb.bind('<Double-Button-1>', self._doubleClick)
-        lb.pack()
-        progSection.grid(row=0, column=1, sticky='n', padx=5, pady=5)
+        lb.bind('<Double-Button-1>', runClick)
+        lb.pack(fill=tk.BOTH)
+        progSection.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
         #Create toolbar
         toolbar = tk.Frame(root, bd=2, relief=tk.RIDGE)
         section = ProjectButtonMenu(toolbar, 'Categories')
@@ -244,7 +251,8 @@ class XmippProjectGUI():
                         lb.insert(tk.END, p['name'])
                 return command
             section.addButton(c['name'], command=fillProgramsListBox(c, lb))
-        toolbar.grid(row=0, column=0, rowspan=2)
+        toolbar.grid(row=0, column=0, rowspan=2, sticky='nw'
+                     , padx=5, pady=5)
         centerWindows(root, refWindows=self.root)
         root.deiconify()
         root.mainloop() 

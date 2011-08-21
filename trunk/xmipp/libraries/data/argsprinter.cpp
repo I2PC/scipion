@@ -474,8 +474,11 @@ void WikiPrinter::printCommentList(const CommentList &comments, int v)
 }
 
 //-------------------   PROTOCOL PRINTER IMPLEMENTATIONS   --------------------------------
+
 #define KEY_PREFIX(suffix) formatString("_K_%04u_%s", ++keyCounter, suffix)
 #define PARAM_PREFIX(paramName) formatString("_K_%04u_P_%s", ++keyCounter, paramName.c_str())
+#define BACKUP(str) stringBackup.push_back(str)
+#define RESTORE(str) str = stringBackup.back(); stringBackup.pop_back()
 
 ProtPrinter::ProtPrinter(const char * scriptfile)
 {
@@ -610,12 +613,34 @@ void ProtPrinter::addCondition(const String &newcondition)
     condition += newcondition;
 }
 
-
+bool matchArgInList(const String &argName, int n, const char** list)
+{
+	for (size_t i = 0; i < n; ++i)
+		if (argName.find(list[i]) != String::npos)
+			return true;
+	return false;
+}
+bool isArgFile(const String &argName)
+{
+	const char* list[3] = {"file", "metadata", "selfile"};
+	return matchArgInList(argName, 3,
+			list);
+}
+bool isArgDir(const String &argName)
+{
+	const char* list[3] = {"directory"};
+	return matchArgInList(argName, 1, list);
+}
 
 void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
 {
     String tags = "";
     size_t argSubParamsSize = argument.subParams.size();
+    if (isArgFile(argument.name))
+    	tags += "{file}";
+    if (isArgDir(argument.name))
+    	tags += "{dir}";
+
     if (argSubParamsSize > 0)
     {
         tags = "{list_combo}(" + argument.subParams[0]->name;
@@ -630,7 +655,7 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
 
     label += "   " + argument.name;
     fprintf(output, "# %s %s\n", tags.c_str(), label.c_str());
-    String tmp = parentName;
+    BACKUP(parentName);
     parentName = formatString("%s_A_%s", parentName.c_str(), argument.name.c_str());
     String varName = KEY_PREFIX(parentName.c_str());
 
@@ -646,17 +671,20 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
     {
         for (size_t j = 0; j < argSubParamsSize; ++j)
         {
-            String condBackup = condition;
+            BACKUP(condition);
             addCondition(formatString("%s=%s", varName.c_str(), argument.subParams[j]->name.c_str()));
+            BACKUP(parentName);
+            parentName = formatString("%s_A_%s", parentName.c_str(), argument.subParams[j]->name.c_str());
             for (size_t k = 0; k < argument.subParams[j]->arguments.size(); ++k)
             {
                 label = argument.subParams[j]->name;
                 printArgument(*(argument.subParams[j]->arguments[k]));
             }
-            condition = condBackup;
+            RESTORE(parentName);
+            RESTORE(condition);
         }
     }
-    parentName = tmp;
+    RESTORE(parentName);
     label = "";
 }
 
@@ -667,3 +695,4 @@ void ProtPrinter::printCommentList(const CommentList &comments, int v)
         fprintf(output, "%s\n", comments.comments[i].c_str());
     fprintf(output, "\"\"\"\n");
 }
+

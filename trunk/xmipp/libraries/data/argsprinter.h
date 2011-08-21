@@ -101,6 +101,7 @@ class ProtPrinter: public Printer
 protected:
   FILE * output;
   String label, condition, parentName, exclusiveGroupName;
+  StringVector stringBackup;
   size_t keyCounter;
 public:
   /** buffer to read the command line output */
@@ -114,6 +115,7 @@ public:
   virtual void printArgument(const ArgumentDef & argument, int v = 0);
   virtual void printCommentList(const CommentList &comments, int v = 0);
   void addCondition(const String &newcondition);
+
 };
 
 #endif /* ARGSPRINTER_H_ */

@@ -48,6 +48,8 @@ def registerFont(name, **opts):
     Fonts[name] = tkFont.Font(**opts)
 
 def registerCommonFonts():
+    if 'normal' not in Fonts.keys():
+        registerFont('normal', family=FontName, size=FontSize)
     if 'button' not in Fonts.keys():
         registerFont('button', family=FontName, size=FontSize, weight=tkFont.BOLD)
     if 'label' not in Fonts.keys():
@@ -157,6 +159,7 @@ class BasicGUI():
         width = min(self.frame.winfo_reqwidth() + 25, MaxWidth)
         x = self.master.winfo_x()
         y = self.master.winfo_y()
+        print "geometry: %dx%d%+d%+d" % (width, height, x, y)
         self.master.geometry("%dx%d%+d%+d" % (width, height, x, y))
         return (width, height)
 
@@ -172,7 +175,7 @@ class BasicGUI():
     def launchGUI(self):
         self.launchCanvas() 
         centerWindows(self.master, self.resize() )
-        self.master.deiconify()     
+        self.master.deiconify()  
         self.master.mainloop() 
 
     def currentRow(self, parent=None):
@@ -278,7 +281,7 @@ class ProtocolVariable():
     def getValue(self):
         if self.tktext:
             return self.tktext.get(1.0, tk.END)
-        return self.tkvar.get() 
+        return self.tkvar.get().replace('"', '\\"')
 
     def setValue(self, value):
         self.tkvar.set(value)
@@ -298,6 +301,8 @@ class ProtocolVariable():
             template = '%s = %s\n\n'  
         if self.tkvar:   
             lines.append(template % (self.name, self.getValue()))
+        if self.name and  'label' in self.name:
+            print lines
         return lines
     
 class ProtocolWidget():

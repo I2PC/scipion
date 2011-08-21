@@ -51,6 +51,7 @@ class ProtXmippProgram(XmippProtocol):
     def buildCommandLine(self):
         paramsLine = ""
         lastListValue = None
+        lastSubParamValue = None
         for k in dir(self):
             if k.startswith('_K_'):
                 value = self.__dict__[k]
@@ -62,10 +63,17 @@ class ProtXmippProgram(XmippProtocol):
                     if '_A_' in suffix:
                         args = suffix.split('_A_')
                         paramName = getParamName(args[0])
-                        if  value != "":
+                        if len(args) > 2:
+                            allowArg = lastSubParamValue == args[2]
+                        else:
+                            allowArg = True
+                            lastSubParamValue = value
+                            
+                        if  allowArg and value != "":
                             if paramName not in paramsLine:
                                 myLine = paramName
                             myLine += ' ' + value
+                            
                     else: #Param without args, True or False value
                         paramName = getParamName(suffix)
                         if value:
@@ -75,8 +83,6 @@ class ProtXmippProgram(XmippProtocol):
                 elif '_L_' in k: #exclusive list of some params
                     lastListValue = value
                     
-        print 'PARAMS LINE: ', greenStr(paramsLine)
-        
         return paramsLine
     
     def defineSteps(self):
@@ -84,12 +90,12 @@ class ProtXmippProgram(XmippProtocol):
         params = self.buildCommandLine()
         self.NumberOfMpi = 1
         self.NumberOfThreads = 1
-        self.Db.insertStep('printCommandLine', programname=program, params=params)
-#        self.Db.insertStep('runJob', 
-#                             programname=program, 
-#                             params=params,
-#                             NumberOfMpi = self.NumberOfMpi,
-#                             NumberOfThreads = self.NumberOfThreads)
+        #self.Db.insertStep('printCommandLine', programname=program, params=params)
+        self.Db.insertStep('runJob', 
+                             programname=program, 
+                             params=params,
+                             NumberOfMpi = self.NumberOfMpi,
+                             NumberOfThreads = self.NumberOfThreads)
 
 def getParamName(paramId):
     if len(paramId) > 1: return '--' + paramId
