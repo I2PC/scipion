@@ -204,10 +204,10 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_NZYX_ELEMENTS_IN_MULTIDIMARRAY(V) \
-    for (size_t l=0; l<NSIZE(V); l++) \
-        for (int k=0; k<ZSIZE(V); k++) \
-            for (int i=0; i<YSIZE(V); i++)      \
-                for (int j=0; j<XSIZE(V); j++)
+    for (size_t l=0; l<NSIZE(V); ++l) \
+        for (int k=0; k<ZSIZE(V); ++k) \
+            for (int i=0; i<YSIZE(V); ++i)      \
+                for (int j=0; j<XSIZE(V); ++j)
 
 /** For all direct elements in the array
  *
@@ -223,10 +223,10 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_NZYX_ELEMENTS_IN_MULTIDIMARRAY(V) \
-    for (size_t l=0; l<NSIZE(V); l++) \
-        for (int k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
-            for (int i=STARTINGY(V); i<=FINISHINGY(V); i++)     \
-                for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
+    for (size_t l=0; l<NSIZE(V); ++l) \
+        for (int k=STARTINGZ(V); k<=FINISHINGZ(V); ++k) \
+            for (int i=STARTINGY(V); i<=FINISHINGY(V); ++i)     \
+                for (int j=STARTINGX(V); j<=FINISHINGX(V); ++j)
 
 /** For all direct elements in the array, pointer version
  *
@@ -281,9 +281,9 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_ARRAY3D(V) \
-    for (int k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
-        for (int i=STARTINGY(V); i<=FINISHINGY(V); i++) \
-            for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
+    for (int k=STARTINGZ(V); k<=FINISHINGZ(V); ++k) \
+        for (int i=STARTINGY(V); i<=FINISHINGY(V); ++i) \
+            for (int j=STARTINGX(V); j<=FINISHINGX(V); ++j)
 
 /** For all elements in common.
  *
@@ -316,9 +316,9 @@ extern String floatToString(float F, int _width, int _prec);
     ispduptmp3 = XMIPP_MIN(FINISHINGY(V1),FINISHINGY(V2)); \
     ispduptmp4 = XMIPP_MAX(STARTINGX(V1), STARTINGX(V2)); \
     ispduptmp5 = XMIPP_MIN(FINISHINGX(V1),FINISHINGX(V2)); \
-    for (int k=ispduptmp0; k<=ispduptmp1; k++) \
-        for (int i=ispduptmp2; i<=ispduptmp3; i++) \
-            for (int j=ispduptmp4; j<=ispduptmp5; j++)
+    for (int k=ispduptmp0; k<=ispduptmp1; ++k) \
+        for (int i=ispduptmp2; i<=ispduptmp3; ++i) \
+            for (int j=ispduptmp4; j<=ispduptmp5; ++j)
 
 /** For all direct elements in the array.
  *
@@ -334,9 +334,9 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V) \
-    for (int k=0; k<ZSIZE(V); k++) \
-        for (int i=0; i<YSIZE(V); i++) \
-            for (int j=0; j<XSIZE(V); j++)
+    for (int k=0; k<ZSIZE(V); ++k) \
+        for (int i=0; i<YSIZE(V); ++i) \
+            for (int j=0; j<XSIZE(V); ++j)
 
 /** Access to a direct element of a matrix.
  * v is the array, i and j define the element v_ij.
@@ -402,8 +402,8 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_ARRAY2D(m) \
-    for (int i=STARTINGY(m); i<=FINISHINGY(m); i++) \
-        for (int j=STARTINGX(m); j<=FINISHINGX(m); j++)
+    for (int i=STARTINGY(m); i<=FINISHINGY(m); ++i) \
+        for (int j=STARTINGX(m); j<=FINISHINGX(m); ++j)
 
 /** For all elements in common
  *
@@ -430,8 +430,8 @@ extern String floatToString(float F, int _width, int _prec);
     ispduptmp3 = XMIPP_MIN(FINISHINGY(m1), FINISHINGY(m2)); \
     ispduptmp4 = XMIPP_MAX(STARTINGX(m1), STARTINGX(m2)); \
     ispduptmp5 = XMIPP_MIN(FINISHINGX(m1), FINISHINGX(m2)); \
-    for (int i=ispduptmp2; i<=ispduptmp3; i++) \
-        for (int j=ispduptmp4; j<=ispduptmp5; j++)
+    for (int i=ispduptmp2; i<=ispduptmp3; ++i) \
+        for (int j=ispduptmp4; j<=ispduptmp5; ++j)
 
 /** For all elements in the array between corners.
  *
@@ -457,9 +457,9 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_ARRAY3D_BETWEEN(corner1, corner2) \
-    for (ZZ(r)=ZZ((corner1)); ZZ(r)<=ZZ((corner2)); ZZ(r)++) \
-        for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
-            for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
+    for (ZZ(r)=ZZ((corner1)); ZZ(r)<=ZZ((corner2)); ++ZZ(r)) \
+        for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); ++YY(r)) \
+            for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); ++XX(r))
 
 /** For all elements in the array between corners
  *
@@ -484,8 +484,8 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2) \
-    for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
-        for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
+    for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); ++YY(r)) \
+        for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); ++XX(r))
 
 /** For all elements in the array between corners
  *
@@ -505,7 +505,7 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_ARRAY1D_BETWEEN(corner1, corner2) \
-    for (XX(r)=(int) XX((corner1)); XX(r)<=(int) XX((corner2)); XX(r)++)
+    for (XX(r)=(int) XX((corner1)); XX(r)<=(int) XX((corner2)); ++XX(r))
 
 /** For all elements in the array, accessed physically
  *
@@ -521,8 +521,8 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(m) \
-    for (int i=0; i<YSIZE(m); i++) \
-        for (int j=0; j<XSIZE(m); j++)
+    for (int i=0; i<YSIZE(m); ++i) \
+        for (int j=0; j<XSIZE(m); ++j)
 
 /** Vector element: Physical access
  *
@@ -566,7 +566,7 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_ARRAY1D(v) \
-    for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
+    for (int i=STARTINGX(v); i<=FINISHINGX(v); ++i)
 
 /** For all elements in common
  *
@@ -589,7 +589,7 @@ extern String floatToString(float F, int _width, int _prec);
 #define FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY1D(v1, v2) \
     ispduptmp4 = XMIPP_MAX(STARTINGX(v1), STARTINGX(v2)); \
     ispduptmp5 = XMIPP_MIN(FINISHINGX(v1), FINISHINGX(v2)); \
-    for (int i=ispduptmp4; i<=ispduptmp5; i++)
+    for (int i=ispduptmp4; i<=ispduptmp5; ++i)
 
 /** For all elements in the array, accessed physically
  *
@@ -605,7 +605,7 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v) \
-    for (int i=0; i<v.xdim; i++)
+    for (int i=0; i<v.xdim; ++i)
 
 /** Macro to check whether a point is inside or outside a given matrix. */
 #define OUTSIDE(i,j) \
