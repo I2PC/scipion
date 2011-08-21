@@ -100,17 +100,17 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
         double Npiece=0;
         for (int ii=i-L; ii<=i+L; ii++)
         {
-        	if (INSIDEY(I,ii))
-            for (int jj=j-L; jj<=j+L; jj++)
-            {
-                if (INSIDEX(I,jj))
+            if (INSIDEY(I,ii))
+                for (int jj=j-L; jj<=j+L; jj++)
                 {
-                	double pixval=A2D_ELEM(I,ii,jj);
-                    meanPiece+=pixval;
-                    variancePiece+=pixval*pixval;
-                    ++Npiece;
+                    if (INSIDEX(I,jj))
+                    {
+                        double pixval=A2D_ELEM(I,ii,jj);
+                        meanPiece+=pixval;
+                        variancePiece+=pixval*pixval;
+                        ++Npiece;
+                    }
                 }
-            }
         }
         meanPiece/=Npiece;
         variancePiece=variancePiece/(Npiece-1)-
@@ -277,7 +277,7 @@ void normalize_ramp(MultidimArray<double> &I, MultidimArray<int> &bg_mask)
     }
     size_t N = allpoints.size();
     if (N<=1)
-    	return;
+        return;
 
     double pA, pB, pC;
     least_squares_plane_fit(allpoints, pA, pB, pC);
@@ -285,21 +285,25 @@ void normalize_ramp(MultidimArray<double> &I, MultidimArray<int> &bg_mask)
     // Substract the plane from the image and compute stddev within mask
     double sum1 = 0;
     double sum2 = 0;
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
+    for (int i=STARTINGY(I); i<=FINISHINGY(I); i++)
     {
-        A2D_ELEM(I, i, j) -= pA * j + pB * i + pC;
-        if (A2D_ELEM(bg_mask, i, j))
+        double aux=pB * i + pC;
+        for (int j=STARTINGX(I); j<=FINISHINGX(I); j++)
         {
-            double aux=A2D_ELEM(I,i,j);
-            sum1 += aux;
-            sum2 += aux*aux;
+            A2D_ELEM(I, i, j) -= pA * j + aux;
+            if (A2D_ELEM(bg_mask, i, j))
+            {
+                double aux=A2D_ELEM(I,i,j);
+                sum1 += aux;
+                sum2 += aux*aux;
+            }
         }
     }
 
     double avgbg  = sum1 / N;
     double stddevbg = sqrt(fabs(sum2 / N - avgbg * avgbg) * N / (N - 1));
     if (stddevbg>1e-6)
-    	I *= 1.0/stddevbg;
+        I *= 1.0/stddevbg;
 }
 
 void normalize_remove_neighbours(MultidimArray<double> &I,
@@ -390,25 +394,25 @@ void ProgNormalize::defineParams()
     allow_apply_geo=true;
     addUsageLine("Change the range of intensity values of pixels.");
     addUsageLine("In general, most of the methods requires a background to separate "
-    		     "particles from noise");
+                 "particles from noise");
     addKeywords("mask,normalization,normalize");
     XmippMetadataProgram::defineParams();
-    addParamsLine(" [--method <mth=NewXmipp>]   	 : Normalizing method.");
+    addParamsLine(" [--method <mth=NewXmipp>]     : Normalizing method.");
     addParamsLine("           where <mth>");
-    addParamsLine("           OldXmipp          	 : I=(I-m(I))/stddev(I)");
-    addParamsLine("                             	 : Avg(I)=0, Stddev(I)=1, does not need background");
-    addParamsLine("           Near_OldXmipp     	 : I=(I-m(I))/stddev(bg)");
-    addParamsLine("           NewXmipp          	 : I=(I-m(bg))/stddev(bg)");
-    addParamsLine("                             	 : Avg(bg)=0, Stddev(I)=1");
-    addParamsLine("                             	 : Positivity constraints can be added in reconstruction");
-    addParamsLine("           Tomography        	 : I=(I-mean(I))/(stddev(I)*cos(tilt))");
-    addParamsLine("                             	 : does not need background, it assumes the tilt series is vertically aligned");
-    addParamsLine("                             	 : Similar to OldXmipp but with an extra division by the cos(tilt)");
-    addParamsLine("           Tomography0       	 : I=(I-mean(I(0 degrees)))/(stddev(I)*cos(tilt))");
-    addParamsLine("                             	 : does not need background");
-    addParamsLine("                             	 : Similar to Tomography but the average at 0 degrees is used for all images");
-    addParamsLine("           NewXmipp2         	 : I=(I-m(bg))/(m(I)-m(bg))");
-    addParamsLine("           Michael           	 : I=(I-m(bg))/stddev(bg)");
+    addParamsLine("           OldXmipp            : I=(I-m(I))/stddev(I)");
+    addParamsLine("                               : Avg(I)=0, Stddev(I)=1, does not need background");
+    addParamsLine("           Near_OldXmipp       : I=(I-m(I))/stddev(bg)");
+    addParamsLine("           NewXmipp            : I=(I-m(bg))/stddev(bg)");
+    addParamsLine("                               : Avg(bg)=0, Stddev(I)=1");
+    addParamsLine("                               : Positivity constraints can be added in reconstruction");
+    addParamsLine("           Tomography          : I=(I-mean(I))/(stddev(I)*cos(tilt))");
+    addParamsLine("                               : does not need background, it assumes the tilt series is vertically aligned");
+    addParamsLine("                               : Similar to OldXmipp but with an extra division by the cos(tilt)");
+    addParamsLine("           Tomography0         : I=(I-mean(I(0 degrees)))/(stddev(I)*cos(tilt))");
+    addParamsLine("                               : does not need background");
+    addParamsLine("                               : Similar to Tomography but the average at 0 degrees is used for all images");
+    addParamsLine("           NewXmipp2           : I=(I-m(bg))/(m(I)-m(bg))");
+    addParamsLine("           Michael             : I=(I-m(bg))/stddev(bg)");
     addParamsLine("           None                   : Used for removing only dust");
     addParamsLine("           Random                 : I=aI+b");
     addParamsLine("           Ramp                   : Substract ramp and then NewXmipp");
@@ -617,7 +621,7 @@ void ProgNormalize::preProcess()
 
     if (!enable_mask)
     {
-        bg_mask.resize(Zdim, Ydim, Xdim);
+        bg_mask.resizeNoCopy(Zdim, Ydim, Xdim);
         bg_mask.setXmippOrigin();
 
         switch (background_mode)
@@ -710,8 +714,8 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
         I.getTransformationMatrix(A);
         selfApplyGeometry(BSPLINE3, tmp, A, IS_NOT_INV, DONT_WRAP, outside);
 
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(bg_mask)
-        dAij(bg_mask,i,j)=ROUND(dAij(tmp,i,j));
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(bg_mask)
+        dAi(bg_mask,n)=round(dAi(tmp,n));
     }
 
     double a, b;
