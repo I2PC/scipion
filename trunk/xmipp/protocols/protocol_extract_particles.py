@@ -45,18 +45,19 @@ class ProtExtractParticles(XmippProtocol):
             micrographName=os.path.split(os.path.split(micrograph)[0])[1]
             posFile=os.path.join(self.pickingDir,micrographName+".pos")
             if os.path.exists(posFile):
-                parent_id=None
+                parent_id=XmippProjectDb.FIRST_STEP
                 micrographToExtract=micrograph
                 if self.DoFlip:
                     ctf=mD.getValue(xmipp.MDL_CTFMODEL,id)
                     micrographToExtract=os.path.join(self.TmpDir,micrographName+"_flipped.xmp")
-                    parent_id=self.Db.insertStep('phaseFlip',verifyfiles=[micrographToExtract],execution_mode=SqliteDb.EXEC_GAP,
-                                      micrograph=micrograph,ctf=ctf,fnOut=micrographToExtract)
+                    parent_id=self.Db.insertStep('phaseFlip',parent_step_id=XmippProjectDb.FIRST_STEP,
+                                                 verifyfiles=[micrographToExtract],execution_mode=SqliteDb.EXEC_GAP,
+                                                 micrograph=micrograph,ctf=ctf,fnOut=micrographToExtract)
                 (tasks,outputFiles)=self.whichTasks(posFile,micrographName)
                 verifyFiles+=outputFiles
                 parent_id=self.Db.insertStep('extractTasks',verifyfiles=outputFiles,execution_mode=SqliteDb.EXEC_GAP,parent_step_id=parent_id,
                                       micrographToExtract=micrographToExtract,tasks=tasks,
-                                      doNorm=self.doNorm,doLog=self.DoLog,doInvert=self.DoInvert,
+                                      doNorm=self.DoNorm,doLog=self.DoLog,doInvert=self.DoInvert,
                                       bgRadius=self.BackGroundRadius, doRemoveDust=self.DoRemoveDust,
                                       dustRemovalThreshold=self.DustRemovalThreshold)
                 if self.DoFlip:
