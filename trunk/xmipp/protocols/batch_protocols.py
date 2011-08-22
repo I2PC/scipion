@@ -254,8 +254,20 @@ class XmippProjectGUI():
             progRank = ProgramKeywordsRank(keywords)
             programs = db.selectPrograms()
             # Calculate ranks
-            programs = [p for p in programs if progRank.getRank(p) > 0]
-            fillListBox(programs)
+            results = []
+            for p in programs:
+                rank = progRank.getRank(p)
+                #Order by insertion sort
+                if rank > 0:
+                    name = p['name']
+                    #self.maxlen = max(self.maxlen, len(name))
+                    pos = len(results)
+                    for i, e in reversed(list(enumerate(results))):
+                        if e['rank'] < rank:
+                            pos = i
+                        else: break
+                    results.insert(pos, {'rank': rank, 'name': name, 'usage': p['usage']})
+            fillListBox(results)
             
         for c in categories:
             def addButton(c):
