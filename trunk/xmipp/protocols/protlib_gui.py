@@ -1042,7 +1042,7 @@ class ProtocolGUI(BasicGUI):
             seltype="file"
         else:
             seltype="dir"
-        msg = runImageJPluginWithResponse("512m", "XmippFileList.txt", "-seltype %(seltype)s"%locals())
+        msg = runImageJPluginWithResponse("512m", "XmippFileListBrowser.txt", "-seltype %(seltype)s"%locals())
         msg = msg.strip()
         if len(msg) > 0:
             var.tkvar.set(os.path.relpath(msg.replace('\n', ',')))
@@ -1052,7 +1052,7 @@ class ProtocolGUI(BasicGUI):
         dir = self.getVarValue('DirMicrographs')
         filter = self.getVarValue('ExtMicrographs')
         value = var.tkvar.get()
-        msg = runImageJPluginWithResponse("512m", "XmippFileListCTF.txt", 
+        msg = runImageJPluginWithResponse("512m", "XmippFileListCTFBrowser.txt", 
                                           "-dir %(dir)s -filter %(filter)s -downsampling %(value)s" % locals())
         msg = msg.strip()
         if len(msg) > 0:
@@ -1062,7 +1062,7 @@ class ProtocolGUI(BasicGUI):
     def wizardBrowseJCTFMeasure(self, var):
         dir = self.getVarValue('DirMicrographs')
         filter = self.getVarValue('ExtMicrographs')
-        runImageJPlugin("512m", "XmippFileListMeasureFreqBrowser.txt", 
+        runImageJPlugin("512m", "XmippFileListMeasureFreqsBrowser.txt", 
                                 "-dir %(dir)s -filter %(filter)s -downsampling %(value)s" % locals(),True)
 
 # This group of functions are called Validator, and should serve
