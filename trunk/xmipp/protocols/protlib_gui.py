@@ -320,7 +320,6 @@ class ProtocolWidget():
         tokens = re.split('\W+', condition)
         for t in tokens:
             if self.master.hasVar(t):
-                self.master.
                 condition = condition.replace(t, self.master.getVarLiteralValue(t))
         return eval(condition)
      
@@ -590,7 +589,8 @@ class ProtocolGUI(BasicGUI):
                     o = o.strip()
                     self.addRadioButton(w, var, o, o, row, var_column, frame)
                     row = self.getRow()
-                                           
+                var.tkvar.trace('w', self.checkVisibility)
+          
             elif 'text' in keys:
                 scrollbar = tk.Scrollbar(frame)
                 scrollbar.grid(row=label_row+1, column=1, sticky='ns')
@@ -954,7 +954,7 @@ class ProtocolGUI(BasicGUI):
              if var.isString:
                  value = '"%s"' % value
              return value
-        return None       
+         return None       
     
     def setVarValue(self, varName, value):
         if self.hasVar(varName):
