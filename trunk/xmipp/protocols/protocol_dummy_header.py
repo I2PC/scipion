@@ -47,6 +47,17 @@ Behavior = "Resume"
 """
 InputMd = "all_images.xmd"
 
+# Randomize metadata before split?
+""" Perform randomization of items before split
+"""
+Randomize = True
+
+# {condition}(Randomize)
+# Random seed
+""" Just testing conditions
+"""
+RandomSeed = 3
+
 # {validate}(IsInt) Number of part
 """ Number of new metadatas splitted from the input one
 """
@@ -72,12 +83,12 @@ NumberOfMpi = 3
 """
 SubmitToQueue = True
 
-# {expert}{condition}(SubmitToQueue = True) Queue name
+# {expert}{condition}(SubmitToQueue) Queue name
 """Name of the queue to submit the job
 """
 QueueName = "default"
 
-# {condition}(SubmitToQueue = True) {wizard}(wizardBrowse) Queue hours
+# {condition}(SubmitToQueue or NumberOfThreads>1) {wizard}(wizardBrowse) Queue hours
 """This establish a maximum number of hours the job will
 be running, after that time it will be killed by the
 queue system

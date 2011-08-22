@@ -313,12 +313,15 @@ class ProtocolWidget():
         self.variable = var
        
     def satisfiesCondition(self):
-        if not (self.variable and self.variable.conditions):
+        if not (self.variable and 'condition' in self.variable.tags.keys()):
             return True
-        for k, v in self.variable.conditions.iteritems():
-            if self.master.getVarValue(k) != v:
-                return False
-        return True
+        import re
+        condition = self.variable.tags['condition']
+        tokens = re.split('\W+', condition)
+        for t in tokens:
+            if self.master.hasVar(t):
+                condition = condition.replace(t, self.master.getVarValue(t))
+        return eval(condition)
      
     def checkVisibility(self):
         show = self.variable.isVisualize() == self.master.visualize_mode
@@ -463,7 +466,7 @@ class ProtocolGUI(BasicGUI):
         return btn
     
     def addRadioButton(self, w, var, text, value, row, col, parent):
-        rb = tk.Radiobutton(parent, text=text, variable=var.tkvar, value=value, bg=self.style.LabelBgColor, command=self.checkVisibility)
+        rb = tk.Radiobutton(parent, text=text, variable=var.tkvar, value=value, bg=self.style.LabelBgColor)
         rb.grid(row=row, column=col, sticky='w')
         w.widgetslist.append(rb)
         return rb
@@ -506,8 +509,8 @@ class ProtocolGUI(BasicGUI):
             if section.variable.isVisualize():
                 self.hasVisualizeOptions = True
                 var.tags['visualize'] = section.variable.tags['visualize']
-            for k, v in section.variable.conditions.iteritems():
-                var.conditions[k] = v
+#            for k, v in section.variable.conditions.iteritems():
+#                var.conditions[k] = v
                 
         
         keys = var.tags.keys()
@@ -515,11 +518,11 @@ class ProtocolGUI(BasicGUI):
         if 'expert' in keys:
             label_bgcolor = self.style.ExpertLabelBgColor
            
-        if 'condition' in keys:
-            conditions = var.tags['condition'].split(',')
-            for cond in conditions:
-                cond_name, cond_value = cond.split('=')
-                var.conditions[cond_name.strip()] = cond_value.strip()
+#        if 'condition' in keys:
+#            conditions = var.tags['condition'].split(',')
+#            for cond in conditions:
+#                cond_name, cond_value = cond.split('=')
+#                var.conditions[cond_name.strip()] = cond_value.strip()
         
         if 'validate' in keys:
             var.validators = ['validator' + v.strip() for v in var.tags['validate'].split(',')]
@@ -571,15 +574,14 @@ class ProtocolGUI(BasicGUI):
                 else:
                     self.addRadioButton(w, var, 'Yes', 'True', row, var_column, frame)  
                     self.addRadioButton(w, var, 'No', 'False', row, var_column + 1, frame) 
+                    var.tkvar.trace('w', self.checkVisibility)
             elif 'list_combo' in keys:
                 opts = [o.strip() for o in var.tags['list_combo'].split(',')]
                 optMenu = tk.OptionMenu(frame, var.tkvar, *opts)
                 optMenu.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
                 optMenu.grid(row=row, column=var_column, sticky='ew', columnspan=2)
-                def checkChange(*args):
-                    self.checkVisibility()
                 w.widgetslist.append(optMenu)
-                var.tkvar.trace('w', checkChange)
+                var.tkvar.trace('w', self.checkVisibility)
                 
             elif 'list' in keys:
                 opts = var.tags['list'].split(',')
@@ -639,7 +641,7 @@ class ProtocolGUI(BasicGUI):
                 w.widgetslist.append(btn)
             if var.name == 'RunName':
                 label_text += ' %s_' % self.run['protocol_name']
-                    
+                
             label = tk.Label(frame, text=label_text, fg=label_color, bg=label_bgcolor)
             label.grid(row=label_row, column=0, sticky='e', padx=(5, 10))
             self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_reqwidth())
@@ -905,7 +907,7 @@ class ProtocolGUI(BasicGUI):
                 var.tags['hidden'] = True
                 
         
-    def checkVisibility(self, event=""):
+    def checkVisibility(self, *args):
         for s in self.sectionslist:
             if s.has_question:
                 self.expandCollapseSection(s)
