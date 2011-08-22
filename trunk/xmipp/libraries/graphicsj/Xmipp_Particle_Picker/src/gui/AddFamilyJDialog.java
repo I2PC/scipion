@@ -8,11 +8,13 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.NumberFormat;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -22,6 +24,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
 
 import model.Family;
 
@@ -37,7 +40,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 	private JColorChooser colorChooser;
 	EditFamiliesJDialog parent;
 	private JSlider sizesl;
-	private JTextField sizetf;
+	private JFormattedTextField sizetf;
 
 	public AddFamilyJDialog(EditFamiliesJDialog parent, boolean modal) {
 		super(parent, modal);
@@ -57,9 +60,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 		add(new JLabel("Color"),
 				WindowUtils.updateConstraints(constraints, 0, 1, 1));
 		colorbt = new JButton();
-		Color[] colors = Family.getSampleColors();
-		int index = (int) (Math.random() * colors.length);
-		color = colors[index];
+		color = Family.getNextColor();
 		colorbt.setIcon(new ColorIcon(color));
 		colorbt.setBorderPainted(false);
 		add(colorbt, WindowUtils.updateConstraints(constraints, 1, 1, 1));
@@ -68,7 +69,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 		JPanel sizepn = new JPanel();
 		sizesl = new JSlider(0, 500, size);
 		sizepn.add(sizesl);
-		sizetf = new JTextField(3);
+		sizetf = new JFormattedTextField(NumberFormat.getIntegerInstance());;
 		sizetf.setText(Integer.toString(size));
 		sizepn.add(sizetf);
 		add(new JLabel("Size"),
@@ -95,7 +96,13 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String name = nametf.getText();
-				int size = (Integer) sizesl.getValue();
+				if(sizetf.getValue() == null)
+				{
+					JOptionPane.showMessageDialog(AddFamilyJDialog.this,
+							model.Constants.getEmptyFieldMsg("Size"));
+					return;
+				}
+				int size = ((Number)sizetf.getValue()).intValue();
 				try {
 					Family g = new Family(name, color, size);
 

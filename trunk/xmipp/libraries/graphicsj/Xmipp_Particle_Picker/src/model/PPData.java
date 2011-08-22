@@ -1,7 +1,5 @@
 package model;
 
-import gui.PPCanvas;
-
 import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
@@ -153,8 +151,9 @@ public class PPData {
 						id = md.addObject();
 						md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
 						md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
-						block = f.getName() + "@" + micrograph.getOFilename();
+						
 					}
+					block = f.getName() + "@" + micrograph.getOFilename();
 					if(count == 0)
 						md.write(block);
 					else

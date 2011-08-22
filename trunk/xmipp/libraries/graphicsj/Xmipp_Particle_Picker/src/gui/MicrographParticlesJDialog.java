@@ -1,10 +1,5 @@
 package gui;
 
-import ij.ImagePlus;
-
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.LayoutManager;
 import java.util.List;
 
 import javax.swing.AbstractListModel;
@@ -41,6 +36,7 @@ public class MicrographParticlesJDialog extends JDialog {
 		JList list = new JList();
 		list.setOpaque(true);
 		list.setModel(new ParticlesTableModel(micrograph.getParticles(), parent));
+		list.setCellRenderer(new ParticleCellRenderer());
 		//list.setPreferredSize(new Dimension(1000, 500));
 		sp.setViewportView(list);
 		add(sp);
@@ -63,11 +59,12 @@ public class MicrographParticlesJDialog extends JDialog {
 			this.frame = frame;
 		}
 
+	
 		
 		@Override
 		public Object getElementAt(int index) {
 			Particle p = particles.get(index);
-			return p.getImageIcon(micrograph.getImage(), p.getFamily().getSize());
+			return p.getImageCanvas();
 		}
 
 		@Override

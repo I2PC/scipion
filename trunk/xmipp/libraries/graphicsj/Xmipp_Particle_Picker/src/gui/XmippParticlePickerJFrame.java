@@ -154,7 +154,7 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		setResizable(false);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setTitle("Particle Picker");
-		mb = getPPMenuBar();
+		initPPMenuBar();
 		setJMenuBar(mb);
 
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -310,8 +310,8 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		});
 	}
 
-	public JMenuBar getPPMenuBar() {
-		JMenuBar mb = new JMenuBar();
+	public void initPPMenuBar() {
+		mb = new JMenuBar();
 
 		// Setting menus
 		JMenu filemn = new JMenu("File");
@@ -365,7 +365,10 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(IJ.getInstance() == null)
-					new ImageJ();
+				{
+					new ImageJ(ImageJ.EMBEDDED);
+					IJ.getInstance();
+				}
 				IJ.getInstance().setVisible(true);
 			}
 		});
@@ -396,15 +399,13 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 			public void actionPerformed(ActionEvent e) {
 				List<ImagePlus> imgs = new ArrayList<ImagePlus>();
 				for(Particle p: getMicrograph().getParticles())
-					imgs.add(p.getImage(getMicrograph().getImage(), getFamily().getSize()));
+					imgs.add(p.getImage());
 				String filename = XmippJ.saveTempImageStack(imgs);
 				ImagesWindowFactory.openFileAsImage(filename);
+//				new MicrographParticlesJDialog(XmippParticlePickerJFrame.this, XmippParticlePickerJFrame.this.micrograph);
 			}
 		});
 
-		
-
-		return mb;
 	}
 	
 	
@@ -420,7 +421,7 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 			public void actionPerformed(ActionEvent e) {
 				saveChanges();
 				String args = String.format("-i %s --particleSize %s --model model --thr %s --outputRoot %s --mode train %s", 
-						PPConfiguration.getMicrographsSelFile(),//-i
+						XmippParticlePickerJFrame.this.micrograph.getFilename(),//-i
 						getFamily().getSize(), //--particleSize
 						PPConfiguration.getThreds(), //--thr
 						PPConfiguration.getOutputDir(), //--outputRoot
@@ -523,7 +524,7 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 
 	void initializeCanvas() {
 		Micrograph micrograph = getMicrograph();
-		if(iw == null)
+		if(iw == null || iw.isClosed())
 		{
 			canvas = new PPCanvas(this, micrograph);
 			iw = new ImageWindow(micrograph.getImage(), canvas);

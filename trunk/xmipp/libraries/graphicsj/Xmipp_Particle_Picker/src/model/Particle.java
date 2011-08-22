@@ -1,5 +1,6 @@
 package model;
 
+import gui.ParticleImageCanvas;
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
@@ -16,6 +17,8 @@ public class Particle {
 	private boolean dragged;
 	private Family family;
 	private Micrograph micrograph;
+	private ImagePlus img;
+	private ParticleImageCanvas canvas;
 	
 	
 	public Particle(int x, int y, Family family, Micrograph micrograph)
@@ -61,9 +64,9 @@ public class Particle {
 		this.y = y;
 	}
 	
-	public boolean contains(int size, int x2, int y2 )
+	public boolean contains(int x2, int y2 )
 	{
-		int radius = size/2;
+		int radius = family.getSize()/2;
 			if(x2 < x - radius || x2 > x + radius)
 				return false;
 			if(y2 < y - radius || y2 > y + radius)
@@ -79,18 +82,24 @@ public class Particle {
 		this.dragged = dragged;
 	}
 	
-	public ImagePlus getImage(ImagePlus container, int size)
+	public ImagePlus getImage()
 	{
-		int radius = size/2;
-		Rectangle r = new Rectangle(x - radius , y - radius, radius * 2, radius * 2);
-		container.setRoi(r);
-		ImageProcessor processor = container.getProcessor().crop();
-		return new ImagePlus("", processor);
+		if(img == null)
+		{
+			int size = family.getSize();
+			ImagePlus mimage = micrograph.getImage();
+			int radius = size/2;
+			Rectangle r = new Rectangle(x - radius , y - radius, radius * 2, radius * 2);
+			mimage.setRoi(r);
+			ImageProcessor processor = mimage.getProcessor().crop();
+			img = new ImagePlus("", processor);
+		}
+		return img;
 	}
 	
-	public ImageIcon getImageIcon(ImagePlus container, int size)
+	public ImageIcon getImageIcon()
 	{
-		ImagePlus img = getImage(container, size);
+		
 		ImageIcon icon = new ImageIcon(img.getImage());
 		return icon;
 	}
@@ -113,5 +122,22 @@ public class Particle {
 			
 	}
 
+	
+	public ParticleImageCanvas getImageCanvas()
+	{
+		if(canvas == null)
+		{
+			canvas = new ParticleImageCanvas(getImage());
+		}
+		return canvas;
+		
+	}
+
+
+	public void setPosition(int x, int y) {
+		this.x = x;
+		this.y = y;
+		
+	}
 	
 }

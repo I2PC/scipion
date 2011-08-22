@@ -5,11 +5,16 @@ import ij.gui.ImageCanvas;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.List;
+
+import javax.swing.SwingUtilities;
+
+import browser.windows.iPollImageWindow;
 
 import model.Family;
 import model.Micrograph;
@@ -30,6 +35,18 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 		// TODO Auto-generated constructor stub
 	}
 
+
+	
+	public Particle getParticle(int x, int y)
+	{
+		for(Particle p: micrograph.getParticles())
+		{
+			if (p.contains(x, y)) 
+			return p;
+		}
+		return null;
+	}
+	
 	/**
 	 * Adds particle or updates its position if onpick.
 	 * If ondeletepick removes particle. Considers owner for
@@ -44,30 +61,27 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 			super.mousePressed(e);
 			return;
 		}
-		
-		Particle p = null;
-		Family family;
-		for(Particle p2: micrograph.getParticles())
+		if(SwingUtilities.isRightMouseButton(e))
 		{
-			family = p2.getFamily();
-			if (p2.contains(family.getSize(), x, y)) {
-				p = p2;
-				if((e.getModifiers() & InputEvent.BUTTON1_MASK) != 0)
-				{
-					p.setX(x);
-					p.setY(y);
-					dragged = p;
-				}
-				else if((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0)
-				{
-					micrograph.removeParticle(p);
-					frame.updateMicrographsModel();
-					break;
-				}
+			setupScroll(x, y);
+			return;
+		}
+		Particle p = getParticle(x, y);
+		if (p != null)
+		{
+			if(SwingUtilities.isLeftMouseButton(e) && e.isControlDown())
+			{
+				micrograph.removeParticle(p);
+				frame.updateMicrographsModel();
+			}
+			else if(SwingUtilities.isLeftMouseButton(e))
+			{
+				p.setPosition(x, y);
+				dragged = p;
 			}
 		}
-		if (((e.getModifiers() & InputEvent.BUTTON1_MASK) != 0) 
-				&& p == null && Particle.boxContainedOnImage(x, y, frame.getFamily().getSize(), imp)) {
+		else if (SwingUtilities.isLeftMouseButton(e)
+				&& Particle.boxContainedOnImage(x, y, frame.getFamily().getSize(), imp)) {
 			p = new Particle(x, y, frame.getFamily(), micrograph);
 			micrograph.addParticle(p);
 			dragged = p;
@@ -77,6 +91,8 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 		repaint();
 	}
 
+	
+	
 	/**
 	 * Updates particle position and repaints. 
 	 * Sets dragged to null at the end
@@ -87,6 +103,7 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 			super.mouseReleased(e);
 			return;
 		}
+		
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 		if (dragged == null)//not onpick
@@ -96,8 +113,7 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 		dragged = null;
 		if(!Particle.boxContainedOnImage(x, y, p.getFamily().getSize(), imp))
 			return;
-		p.setX(x);
-		p.setY(y);
+		p.setPosition(x, y);
 		frame.setChanged(true);
 		repaint();
 	}
@@ -108,19 +124,24 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 	 */
 	@Override
 	public void mouseDragged(MouseEvent e) {
+		int x = super.offScreenX(e.getX());
+		int y = super.offScreenY(e.getY());
 		if(frame.getTool() != Tool.PICKER)
 		{
 			super.mouseDragged(e);
 			return;
 		}
+		if(SwingUtilities.isRightMouseButton(e))
+		{
+			scroll(e.getX(), e.getY());
+			return;
+		}
 		if(dragged == null)
 			return;
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
+		
 		if(!Particle.boxContainedOnImage(x, y, dragged.getFamily().getSize(), imp))
 			return;
-		dragged.setX(x);
-		dragged.setY(y);
+		dragged.setPosition(x, y);
 		frame.setChanged(true);
 		repaint();
 	}

@@ -17,12 +17,22 @@ public class Family {
 										Color.GREEN,
 										Color.MAGENTA, Color.ORANGE, 
 										Color.PINK, Color.RED, Color.YELLOW};
+	private static int nextcolor;
+	
+	public static Color getNextColor()
+	{
+		Color next = colors[nextcolor];
+		nextcolor ++;
+		if(nextcolor == colors.length)
+			nextcolor = 0;
+		return next;
+	}
 	
 	
 	public Family(String name, Color color, int size)
 	{
-		if(size > sizemax)
-			throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed", sizemax, size));
+		if(size < 0 || size > sizemax)
+			throw new IllegalArgumentException(String.format("Size should be between 0 and %s, %s not allowed", sizemax, size));
 		if (name == null || name.equals(""))
 			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("name"));
 		this.name = name;
