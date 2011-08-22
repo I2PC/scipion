@@ -43,13 +43,6 @@ WaveletFilter::WaveletFilter()
     SNR0 = 1.0 / 10;
     SNRF = 1.0 / 5;
     white_noise = false;
-    Shah_outer = 10;
-    Shah_inner = 1;
-    Shah_refinement = 1;
-    Shah_weight.initZeros(4);
-    Shah_weight(1) = Shah_weight(2) = 50;
-    Shah_weight(3) = 0.02;
-    Shah_edge = false;
     adjust_range = true;
     verbose = 0;
     dont_denoise = false;
@@ -68,20 +61,12 @@ void WaveletFilter::defineParams(XmippProgram *program)
     program->addParamsLine("       soft_thresholding");
     program->addParamsLine("       adaptive_soft");
     program->addParamsLine("       central");
-    program->addParamsLine("       difussion");
     program->addParamsLine("    alias -w;");
     program->addParamsLine("  [--scale+ <s=0>]             : scale");
     program->addParamsLine("  [--output_scale+ <s=0>]      : output_scale");
     program->addParamsLine("  [--th+ <th=50>]              : threshold of values (%) to remove");
     program->addParamsLine("  [-R+ <r=-1>]                 : Radius to keep, by default half the size");
     program->addParamsLine("  [--white_noise+]             : Select if the noise is white");
-    program->addParamsLine("  [--shah_iter+ <outer=10> <inner=1> <refinement=1>]  : Diffusion outer, inner and refinement iterations");
-    program->addParamsLine("  [--shah_weight+ <w0=0> <w1=50> <w2=50> <w3=0.02>]:Diffusion weights");
-    program->addParamsLine("                             :  w0 = data matching ");
-    program->addParamsLine("                             :  w1 = 1st derivative smooth ");
-    program->addParamsLine("                             :  w2 = edge strength ");
-    program->addParamsLine("                             :  w3 = edge smoothness ");
-    program->addParamsLine("  [--shah_only_edge+]         : Produce the edge image of the diffusion");
 }
 
 // Read from command line --------------------------------------------------
@@ -105,18 +90,6 @@ void WaveletFilter::readParams(XmippProgram *program)
         denoising_type = ADAPTIVE_SOFT;
     else if (mode == "central")
         denoising_type = CENTRAL;
-    else if (mode == "difussion")
-    {
-        denoising_type = SHAH;
-        Shah_outer = program->getIntParam( "--shah_iter", 0);
-        Shah_inner = program->getIntParam( "--shah_iter", 1);
-        Shah_refinement = program->getIntParam("--shah_iter", 2);
-        Shah_weight(0) = program->getDoubleParam("--shah_weight", 0);
-        Shah_weight(1) = program->getDoubleParam("--shah_weight", 1);
-        Shah_weight(2) = program->getDoubleParam("--shah_weight", 2);
-        Shah_weight(3) = program->getDoubleParam("--shah_weight", 3);
-        Shah_edge = program->checkParam("--shah_only_edge");
-    }
     else
         REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "Bad argument type, this couldn't happens, check arguments parser!!!");
 
@@ -145,11 +118,10 @@ void WaveletFilter::produceSideInfo()
 // Show --------------------------------------------------------------------
 void WaveletFilter::show()
 {
-  if (!verbose)
-    return;
+    if (!verbose)
+        return;
     ///Show specific options
-    if (denoising_type != SHAH)
-        std::cout << "DWT type: " << DWT_type << std::endl;
+    std::cout << "DWT type: " << DWT_type << std::endl;
     std::cout << "Denoising: ";
     switch (denoising_type)
     {
@@ -172,18 +144,8 @@ void WaveletFilter::show()
     case CENTRAL:
         std::cout << " Keeping central part " << R << " pixels\n";
         break;
-    case SHAH:
-        std::cout << " Shah difussion\n"
-        << " Outer iterations " << Shah_outer << std::endl
-        << " Inner iterations " << Shah_inner << std::endl
-        << " Refinement interations " << Shah_refinement << std::endl
-        << " Weight " << Shah_weight.transpose() << std::endl;
-        if (Shah_edge)
-            std::cout << " Generating edge image\n";
-        break;
     }
-    if (denoising_type != SHAH)
-        std::cout << "Output scale: " << output_scale << std::endl;
+    std::cout << "Output scale: " << output_scale << std::endl;
 }
 
 // Denoise volume ----------------------------------------------------------
@@ -194,18 +156,15 @@ void WaveletFilter::apply(MultidimArray<double> &img)
         // 2D image denoising
         if (denoising_type == BAYESIAN && adjust_range)
             img.rangeAdjust(0, 1);
-        if (denoising_type != SHAH)
-        {
-            double size2 = log10((double)XSIZE(img)) / log10(2.0);
-            if (ABS(size2 - ROUND(size2)) > 1e-6)
-                REPORT_ERROR(ERR_MULTIDIM_SIZE, "Input image must be of a size power of 2");
-            size2 = log10((double)YSIZE(img)) / log10(2.0);
-            if (ABS(size2 - ROUND(size2)) > 1e-6)
-                REPORT_ERROR(ERR_MULTIDIM_SIZE, "Input image must be of a size power of 2");
-            DWT(img, img);
-        }
+
+        double size2 = log10((double)XSIZE(img)) / log10(2.0);
+        if (ABS(size2 - ROUND(size2)) > 1e-6)
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Input image must be of a size power of 2");
+        size2 = log10((double)YSIZE(img)) / log10(2.0);
+        if (ABS(size2 - ROUND(size2)) > 1e-6)
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Input image must be of a size power of 2");
+        DWT(img, img);
         double th;
-        MultidimArray<double> surface_strength, edge_strength;
         Histogram1D hist;
         switch (denoising_type)
         {
@@ -228,36 +187,17 @@ void WaveletFilter::apply(MultidimArray<double> &img)
         case CENTRAL:
             DWT_keep_central_part(img, R);
             break;
-        case SHAH:
-            smoothingShah(img, surface_strength, edge_strength,
-                           Shah_weight, Shah_outer, Shah_inner,
-                           Shah_refinement, adjust_range);
-            if (Shah_edge)
-                img = edge_strength;
-            else
-                img = surface_strength;
-            break;
         }
-        if (denoising_type != SHAH)
-        {
             if (output_scale != 0)
             {
                 int reduction = (int)pow(2.0, output_scale);
                 img.resize(YSIZE(img) / reduction, XSIZE(img) / reduction);
             }
             IDWT(img, img);
-        }
-
-
     }
     else
     {
         // 3D image denoising
-        if (denoising_type == SHAH)
-        {
-            std::cerr << "Shah denoising is not implemented for volumes\n";
-            return;
-        }
         double size2 = log10((double)XSIZE(img)) / log10(2.0);
         if (ABS(size2 - ROUND(size2)) > 1e-6)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "Input volume must be of a size power of 2");
@@ -295,9 +235,6 @@ void WaveletFilter::apply(MultidimArray<double> &img)
             break;
         case CENTRAL:
             std::cout << "Keep central part not implemented for volumes\n";
-            break;
-        case SHAH:
-            std::cout << "Shah Difussion not implemented for volumes\n";
             break;
         }
 

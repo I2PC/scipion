@@ -41,6 +41,7 @@ void ProgFilter::defineParams()
     FourierFilter::defineParams(this);
     WaveletFilter::defineParams(this);
     BadPixelFilter::defineParams(this);
+    DiffusionFilter::defineParams(this);
     MeanShiftFilter::defineParams(this);
     BackgroundFilter::defineParams(this);
     MedianFilter::defineParams(this);
@@ -77,6 +78,8 @@ void ProgFilter::readParams()
         filter = new BackgroundFilter();
     else if (checkParam("--median"))
         filter = new MedianFilter();
+    else if (checkParam("--diffusion"))
+        filter = new DiffusionFilter();
     else
         REPORT_ERROR(ERR_ARG_MISSING, "You should provide some filter");
     //Read params
@@ -96,7 +99,3 @@ void ProgFilter::processImage(const FileName &fnImg, const FileName &fnImgOut, s
     filter->apply(img());
     img.write(fnImgOut);
 }
-
-
-
-

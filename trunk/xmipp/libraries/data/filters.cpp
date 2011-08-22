@@ -193,7 +193,7 @@ void detectBackground(const MultidimArray<double> &vol, MultidimArray<double> &m
     bg.initConstant(-1);      // -2:in the list
 
     // Ponemos las seis caras de esta variable como visitadas e inicializamos
-    // la cola de p�xeles por visitar
+    // la cola de pixeles por visitar
     std::queue<int> list_for_compute;  // Lista del modo [x1,y1,z1,...,xi,yi,zi]
     // que contiene los pixeles por procesar
     std::vector<double> bg_values; // Vector con los valores del background
@@ -1306,24 +1306,36 @@ double Shah_energy(const MultidimArray<double> &img,
 
     /* Calculate surface energy */
     double E1 = 0.0, E2 = 0.0, E3 = 0.0, E4 = 0.0;
+    double w0=VEC_ELEM(W,0);
+    double w1=VEC_ELEM(W,1);
+    double w2=VEC_ELEM(W,2);
+    double w3=VEC_ELEM(W,3);
     for (int i = 1; i < Ydim1; i++)
+    {
+    	int ip1=i+1;
+    	int im1=i-1;
         for (int j = 1; j < Xdim1; j++)
         {
+        	int jp1=j+1;
+        	int jm1=j-1;
             /* Calculate data matching terms */
             double D = dAij(img, i, j);
             double F = dAij(surface_strength, i, j);
             double S = dAij(edge_strength, i, j);
-            E1 += W(0) * (D - F) * (D - F);
-            E3 += W(2) * K * S * S;
+            double diff=D-F;
+            E1 += w0 * diff*diff;
+            E3 += w2 * K * S * S;
 
             /* Calculate first derivative terms */
-            double Fx = (dAij(surface_strength, i, j + 1) - dAij(surface_strength, i, j - 1)) / 2;
-            double Fy = (dAij(surface_strength, i + 1, j) - dAij(surface_strength, i - 1, j)) / 2;
-            double Sx = (dAij(edge_strength, i, j + 1)    - dAij(edge_strength, i, j - 1)) / 2;
-            double Sy = (dAij(edge_strength, i + 1, j)    - dAij(edge_strength, i - 1, j)) / 2;
-            E2 += W(1) * (1 - S) * (1 - S) * (Fx * Fx + Fy * Fy);
-            E4 += W(3) * Kinv * (Sx * Sx + Sy * Sy);
+            double Fx = 0.5*(dAij(surface_strength, i, jp1) - dAij(surface_strength, i, jm1));
+            double Fy = 0.5*(dAij(surface_strength, ip1, j) - dAij(surface_strength, im1, j));
+            double Sx = 0.5*(dAij(edge_strength, i, jp1)    - dAij(edge_strength, i, jm1));
+            double Sy = 0.5*(dAij(edge_strength, ip1, j)    - dAij(edge_strength, im1, j));
+            double S_1=1-S;
+            E2 += w1 * S_1*S_1 * (Fx * Fx + Fy * Fy);
+            E4 += w3 * Kinv * (Sx * Sx + Sy * Sy);
         }
+    }
 
     return E1 + E2 + E3 + E4; // Total energy
 }
@@ -1345,13 +1357,22 @@ double Update_surface_Shah(MultidimArray<double> &img,
     int Xdim1 = XSIZE(img) - 1;
 
     /* Update surface estimate */
+    double w0=VEC_ELEM(W,0);
+    double w1=VEC_ELEM(W,1);
+    double w2=VEC_ELEM(W,2);
+    double w3=VEC_ELEM(W,3);
     for (int i = 1; i < Ydim1; i++)
+    {
+    	int ip1=i+1;
+    	int im1=i-1;
         for (int j = 1; j < Xdim1; j++)
         {
+        	int jp1=j+1;
+        	int jm1=j-1;
             /* Calculate edge partial derivative terms */
             double S  =  dAij(edge_strength, i, j);
-            double Sx = (dAij(edge_strength, i, j + 1)    - dAij(edge_strength, i, j - 1)) / 2;
-            double Sy = (dAij(edge_strength, i + 1, j)    - dAij(edge_strength, i - 1, j)) / 2;
+            double Sx = 0.5*(dAij(edge_strength, i, jp1)    - dAij(edge_strength, i, jm1));
+            double Sy = 0.5*(dAij(edge_strength, ip1, j)    - dAij(edge_strength, im1, j));
 
             double nS  = 1 - S;
             double nS2 = nS * nS;
@@ -1359,20 +1380,24 @@ double Update_surface_Shah(MultidimArray<double> &img,
             /* Calculate surface partial derivative terms (excluding central pixel) */
             double F, D;
             F = D = dAij(img, i, j);
-            double Fx = (dAij(surface_strength, i, j + 1) - dAij(surface_strength, i, j - 1)) / 2;
-            double Fy = (dAij(surface_strength, i + 1, j) - dAij(surface_strength, i - 1, j)) / 2;
-            double Fxx =  dAij(surface_strength, i, j + 1) + dAij(surface_strength, i, j - 1);
-            double Fyy =  dAij(surface_strength, i + 1, j) + dAij(surface_strength, i - 1, j);
+            double SS_i_jp1=dAij(surface_strength, i, jp1);
+            double SS_i_jm1=dAij(surface_strength, i, jm1);
+            double SS_ip1_j=dAij(surface_strength, ip1, j);
+            double SS_im1_j=dAij(surface_strength, im1, j);
+            double Fx = 0.5*(SS_i_jp1 - SS_i_jm1);
+            double Fy = 0.5*(SS_ip1_j - SS_im1_j);
+            double Fxx =  SS_i_jp1 + SS_i_jm1;
+            double Fyy =  SS_ip1_j + SS_im1_j;
 
             /* Calculate surface partial derivative weights */
-            double wFx = 4 * W(1) * nS * Sx;
-            double wFy = 4 * W(1) * nS * Sy;
-            double wFxx = -2 * W(1) * nS2;
-            double wFyy = -2 * W(1) * nS2;
+            double wFx = 4 * w1 * nS * Sx;
+            double wFy = 4 * w1 * nS * Sy;
+            double wFxx = -2 * w1 * nS2;
+            double wFyy = -2 * w1 * nS2;
 
             /* Calculate new surface value */
-            double Constant = -2 * W(0) * D;
-            double Central  = -2 * W(0) + 2 * wFxx + 2 * wFyy;
+            double Constant = -2 * w0 * D;
+            double Central  = -2 * w0 + 2 * wFxx + 2 * wFyy;
             double Neighbors = wFx * Fx + wFy * Fy + wFxx * Fxx + wFyy * Fyy;
 
             if (fabs(Central) > XMIPP_EQUAL_ACCURACY)
@@ -1380,12 +1405,14 @@ double Update_surface_Shah(MultidimArray<double> &img,
             F = CLIP(F, 0, 1);
 
             // Compute the difference.
-            Diff += fabs(dAij(surface_strength, i, j) - F);
-            Norm += fabs(dAij(surface_strength, i, j));
+            double SS_i_j=dAij(surface_strength, i, j);
+            Diff += fabs(SS_i_j - F);
+            Norm += fabs(SS_i_j);
 
             // Update the new value.
             dAij(surface_strength, i, j) = F;
         }
+    }
     return Diff / Norm; // Return the relative difference.
 }
 
@@ -1407,27 +1434,37 @@ double Update_edge_Shah(MultidimArray<double> &img,
     double Kinv = 1.0 / K;
 
     /* Update edge estimate */
+    double w0=VEC_ELEM(W,0);
+    double w1=VEC_ELEM(W,1);
+    double w2=VEC_ELEM(W,2);
+    double w3=VEC_ELEM(W,3);
     for (int i = 1; i < Ydim1; i++)
+    {
+    	int ip1=i+1;
+    	int im1=i-1;
         for (int j = 1; j < Xdim1; j++)
         {
+        	int jp1=j+1;
+        	int jm1=j-1;
+
             /* Calculate first and second derivative terms */
-            double Fx = (dAij(surface_strength, i, j + 1) - dAij(surface_strength, i, j - 1)) / 2;
-            double Fy = (dAij(surface_strength, i + 1, j) - dAij(surface_strength, i - 1, j)) / 2;
-            double Constant = W(1) * (Fx * Fx + Fy * Fy);
+            double Fx = 0.5*(dAij(surface_strength, i, jp1) - dAij(surface_strength, i, jm1));
+            double Fy = 0.5*(dAij(surface_strength, ip1, j) - dAij(surface_strength, im1, j));
+            double Constant = w1 * (Fx * Fx + Fy * Fy);
 
             /* Calculate weights for central pixel and neighbors */
-            double Central   = W(2) * K + W(3) * Kinv * 4;
-            double Neighbors = W(3) * Kinv * (
-                                   dAij(edge_strength, i - 1, j) + dAij(edge_strength, i + 1, j)
-                                   + dAij(edge_strength, i, j - 1) + dAij(edge_strength, i, j + 1));
+            double Central   = w2 * K + w3 * Kinv * 4;
+            double Neighbors = w3 * Kinv * (
+                                   dAij(edge_strength, im1, j) + dAij(edge_strength, ip1, j)
+                                   + dAij(edge_strength, i, jm1) + dAij(edge_strength, i, jp1));
 
             /* Calculate new S value */
             double Old_edge_strength = dAij(edge_strength, i, j);
             double S = (Constant + Neighbors) / (Constant + Central);
             if (S < 0)
-                dAij(edge_strength, i, j) /= 2;
+                dAij(edge_strength, i, j) *= 0.5;
             else if (S > 1)
-                dAij(edge_strength, i, j) = (dAij(edge_strength, i, j) + 1) / 2;
+                dAij(edge_strength, i, j) = 0.5*(dAij(edge_strength, i, j) + 1);
             else
                 dAij(edge_strength, i, j) = S;
 
@@ -1435,6 +1472,7 @@ double Update_edge_Shah(MultidimArray<double> &img,
             Diff += fabs(dAij(edge_strength, i, j) - Old_edge_strength);
             Norm += fabs(Old_edge_strength);
         }
+    }
     return Diff / Norm; // Return the relative difference.
 }
 
@@ -1455,7 +1493,7 @@ void smoothingShah(MultidimArray<double> &img,
     typeCast(img, surface_strength);
     if (adjust_range)
         surface_strength.rangeAdjust(0, 1);
-    edge_strength.resize(img);
+    edge_strength.resizeNoCopy(img);
 
     for (int k = 1; k <= RefinementLoops; k++)
     {
@@ -2190,13 +2228,13 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
 /** Force positive -------------------------------------------------------- */
 void forcePositive(MultidimArray<double> &V)
 {
-  MultidimArray<char> mask(ZSIZE(V), YSIZE(V), XSIZE(V));
-  FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
-  {
-      double x = DIRECT_MULTIDIM_ELEM(V, n);
-      DIRECT_MULTIDIM_ELEM(mask, n) = (x <= 0);
-  }
-  boundMedianFilter(V, mask);
+    MultidimArray<char> mask(ZSIZE(V), YSIZE(V), XSIZE(V));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
+    {
+        double x = DIRECT_MULTIDIM_ELEM(V, n);
+        DIRECT_MULTIDIM_ELEM(mask, n) = (x <= 0);
+    }
+    boundMedianFilter(V, mask);
 }
 
 void computeEdges (const MultidimArray <double>& vol, MultidimArray<double> &vol_edge)
@@ -2331,9 +2369,63 @@ void MedianFilter::readParams(XmippProgram * program)
 /** Apply the filter to an image or volume*/
 void MedianFilter::apply(MultidimArray<double> &img)
 {
-  static MultidimArray<double> tmp;
-  tmp = img;
-  medianFilter3x3(tmp, img);
+    static MultidimArray<double> tmp;
+    tmp = img;
+    medianFilter3x3(tmp, img);
 }
 
+/** Define the parameters for use inside an Xmipp program */
+void DiffusionFilter::defineParams(XmippProgram * program)
+{
+    program->addParamsLine("== Anisotropic diffusion ==");
+    program->addParamsLine("  [--diffusion]              : Use anisotropic diffusion filter.");
+    program->addParamsLine("  [--shah_iter+ <outer=10> <inner=1> <refinement=1>]  : Diffusion outer, inner and refinement iterations");
+    program->addParamsLine("     requires --diffusion;");
+    program->addParamsLine("  [--shah_weight+ <w0=0> <w1=50> <w2=50> <w3=0.02>]:Diffusion weights");
+    program->addParamsLine("                             :  w0 = data matching ");
+    program->addParamsLine("                             :  w1 = 1st derivative smooth ");
+    program->addParamsLine("                             :  w2 = edge strength ");
+    program->addParamsLine("                             :  w3 = edge smoothness ");
+    program->addParamsLine("     requires --diffusion;");
+    program->addParamsLine("  [--shah_only_edge+]        : Produce the edge image of the diffusion");
+    program->addParamsLine("     requires --diffusion;");
+}
 
+/** Read from program command line */
+void DiffusionFilter::readParams(XmippProgram * program)
+{
+	Shah_weight.resizeNoCopy(4);
+    Shah_outer = program->getIntParam( "--shah_iter", 0);
+    Shah_inner = program->getIntParam( "--shah_iter", 1);
+    Shah_refinement = program->getIntParam("--shah_iter", 2);
+    Shah_weight(0) = program->getDoubleParam("--shah_weight", 0);
+    Shah_weight(1) = program->getDoubleParam("--shah_weight", 1);
+    Shah_weight(2) = program->getDoubleParam("--shah_weight", 2);
+    Shah_weight(3) = program->getDoubleParam("--shah_weight", 3);
+    Shah_edge = program->checkParam("--shah_only_edge");
+}
+
+void DiffusionFilter::show()
+{
+    std::cout << " Shah difussion\n"
+    << " Outer iterations " << Shah_outer << std::endl
+    << " Inner iterations " << Shah_inner << std::endl
+    << " Refinement interations " << Shah_refinement << std::endl
+    << " Weight " << Shah_weight.transpose() << std::endl;
+    if (Shah_edge)
+        std::cout << " Generating edge image\n";
+
+}
+
+/** Apply the filter to an image or volume*/
+void DiffusionFilter::apply(MultidimArray<double> &img)
+{
+    MultidimArray<double> surface_strength, edge_strength;
+    smoothingShah(img, surface_strength, edge_strength,
+                  Shah_weight, Shah_outer, Shah_inner,
+                  Shah_refinement);
+    if (Shah_edge)
+        img = edge_strength;
+    else
+        img = surface_strength;
+}

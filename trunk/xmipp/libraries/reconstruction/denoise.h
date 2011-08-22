@@ -43,8 +43,7 @@ public:
         SOFT_THRESHOLDING,
         BAYESIAN,
         ADAPTIVE_SOFT,
-        CENTRAL,
-        SHAH
+        CENTRAL
     } DenoisingType;
 
     /** Wavelet type.
@@ -56,7 +55,7 @@ public:
     /** Denoising type.
      *
      * Valid types are REMOVE_SCALE, SOFT_THRESHOLDING, BAYESIAN, ADAPTIVE_SOFT,
-     * CENTRAL, SHAH.
+     * CENTRAL.
      */
     DenoisingType denoising_type;
 
@@ -96,32 +95,7 @@ public:
      */
     bool white_noise;
 
-    /** Shah number of outer iterations
-     */
-    int Shah_outer;
-
-    /** Shah number of inner iterations
-     */
-    int Shah_inner;
-
-    /** Shah number of refinement iterations
-     */
-    int Shah_refinement;
-
-    /** Shah weight.
-     *
-     * w0 = data matching (=0)
-     * w1 = 1st derivative smooth (=50)
-     * w2 = edge strength (=50)
-     * w3 = edge smoothness (=0.02)
-     */
-    Matrix1D< double > Shah_weight;
-
-    /** Produce Shah edge instead of Shah smooth.
-     */
-    bool Shah_edge;
-
-    /** Adjust range in Shah or Bayesian denoising.
+    /** Adjust range in Bayesian denoising.
      */
     bool adjust_range;
 

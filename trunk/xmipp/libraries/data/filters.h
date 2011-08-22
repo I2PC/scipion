@@ -58,10 +58,10 @@ void substractBackgroundRollingBall(MultidimArray<double> &I, int radius);
 
 /** Detect background
  * @ingroup Filters
- * This function recieves a Matrix3D vol, and try to find the background
+ * This function receives a Matrix3D vol, and try to find the background
  * assuming that all the outside planes contain background, and apply
  * interval confidence, were alpha is the probabity to fail.
- * Mask is of the same size of vol, and is the soluti�n, mask have
+ * Mask is of the same size of vol, and is the solution, mask have
  * value 1 if background else value 0
 */
 void detectBackground(const MultidimArray<double> &vol, MultidimArray<double> &mask, double alpha,
@@ -1360,6 +1360,43 @@ public:
     static void defineParams(XmippProgram * program);
     /** Read from program command line */
     void readParams(XmippProgram * program);
+    /** Apply the filter to an image or volume*/
+    void apply(MultidimArray<double> &img);
+};
+
+class DiffusionFilter: public XmippFilter
+{
+    /** Shah number of outer iterations
+     */
+    int Shah_outer;
+
+    /** Shah number of inner iterations
+     */
+    int Shah_inner;
+
+    /** Shah number of refinement iterations
+     */
+    int Shah_refinement;
+
+    /** Shah weight.
+     *
+     * w0 = data matching (=0)
+     * w1 = 1st derivative smooth (=50)
+     * w2 = edge strength (=50)
+     * w3 = edge smoothness (=0.02)
+     */
+    Matrix1D< double > Shah_weight;
+
+    /** Produce Shah edge instead of Shah smooth.
+     */
+    bool Shah_edge;
+public:
+    /** Define the parameters for use inside an Xmipp program */
+    static void defineParams(XmippProgram * program);
+    /** Read from program command line */
+    void readParams(XmippProgram * program);
+    /** Show parameters */
+    void show();
     /** Apply the filter to an image or volume*/
     void apply(MultidimArray<double> &img);
 };
