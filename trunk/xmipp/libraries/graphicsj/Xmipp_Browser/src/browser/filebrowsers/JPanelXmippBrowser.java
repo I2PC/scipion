@@ -10,6 +10,7 @@
  */
 package browser.filebrowsers;
 
+import browser.InfiniteProgressPanel;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.filebrowsers.model.FileBrowser;
@@ -23,6 +24,7 @@ import browser.imageitems.listitems.AbstractImageItem;
 import browser.imageitems.listitems.FileItem;
 import browser.windows.ImagesWindowFactory;
 import ij.IJ;
+import java.awt.Component;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.LinkedList;
@@ -37,6 +39,8 @@ public class JPanelXmippBrowser extends JPanel {
 
     // Creates icons manager so icons will be ready to be used.
     protected boolean SHOW_PREVIEWS = true;
+    int previewWidth = ICONS_MANAGER.DEFAULT_PREVIEW_WIDTH;
+    int previewHeight = ICONS_MANAGER.DEFAULT_PREVIEW_HEIGHT;
     protected ListModelFilesBrowser listModelFilesList;
     protected FileListRenderer fileListRenderer = new FileListRenderer();
     protected JSearchBox searchBox = new JSearchBox(LABELS.LABEL_FILTER);
@@ -89,28 +93,51 @@ public class JPanelXmippBrowser extends JPanel {
     public void updatePreview() {
         clearPreview();
 
-        if (SHOW_PREVIEWS) {
-            if (jlFileFilter.getSelectedIndex() >= 0) {  // To avoid exceptions...
-                Object item = jlFileFilter.getSelectedValue();
-                if (item instanceof AbstractImageItem) {
-                    AbstractImageItem imageItem = (AbstractImageItem) item;
-                    ImagePlus preview = getPreview(imageItem);
+        final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("Calculating preview...");
+        final Component previousGlassPane = getRootPane().getGlassPane();
+        getRootPane().setGlassPane(glassPane);
+        glassPane.start();
 
-                    if (preview != null) {
-                        jpImageInfo.setPreview(preview.getImage(), imageItem.getImageInfo());
-                    } else {
-                        jpImageInfo.clearPreview();
+        Thread t = new Thread(new Runnable() {
+
+            public void run() {
+
+                if (SHOW_PREVIEWS) {
+                    if (jlFileFilter.getSelectedIndex() >= 0) {  // To avoid exceptions...
+                        Object item = jlFileFilter.getSelectedValue();
+                        if (item instanceof AbstractImageItem) {
+                            AbstractImageItem imageItem = (AbstractImageItem) item;
+                            ImagePlus preview = getPreview(imageItem);
+
+                            if (preview != null) {
+                                jpImageInfo.setPreview(preview.getImage(), imageItem.getImageInfo());
+                            } else {
+                                jpImageInfo.clearPreview();
+                            }
+                        }
                     }
                 }
-            }
-        }
 
-        // Shows / Hide preview panel.
-        jpImageInfo.setVisible(SHOW_PREVIEWS);
+                // Shows / Hide preview panel.
+                jpImageInfo.setVisible(SHOW_PREVIEWS);
+
+                glassPane.stop();
+                getRootPane().setGlassPane(previousGlassPane);
+            }
+        });
+
+        t.start();
+    }
+
+    public void setPreviewSize(int width, int height) {
+        previewWidth = width;
+        previewHeight = height;
+
+        jpImageInfo.setPreviewSize(width, height);
     }
 
     protected ImagePlus getPreview(AbstractImageItem item) {
-        return item.getPreview(ICONS_MANAGER.DEFAULT_PREVIEW_WIDTH, ICONS_MANAGER.DEFAULT_PREVIEW_HEIGHT);
+        return item.getPreview(previewWidth, previewHeight);
     }
 
     protected void clearPreview() {
@@ -296,7 +323,7 @@ public class JPanelXmippBrowser extends JPanel {
     javax.swing.JLabel jlFiltering;
     javax.swing.JPanel jpCenter;
     javax.swing.JPanel jpFileBrowser;
-    private browser.filebrowsers.JPanelImageInfo jpImageInfo;
+    browser.filebrowsers.JPanelImageInfo jpImageInfo;
     javax.swing.JPanel jpPreview;
     private javax.swing.JScrollPane jspFilesFiltering;
     // End of variables declaration//GEN-END:variables

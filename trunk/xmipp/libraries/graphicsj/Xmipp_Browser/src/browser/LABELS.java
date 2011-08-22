@@ -20,6 +20,8 @@ public class LABELS {
     public final static String TITLE_XMIPP_FILE_SELECTOR_ANY = "Select...";
     public final static String TITLE_XMIPP_FILE_SELECTOR_FILE = "Select file(s)";
     public final static String TITLE_XMIPP_FILE_SELECTOR_DIR = "Select dir(s)";
+    public final static String TITLE_XMIPP_WIZARD_PSD = "Wizard PSD";
+    public final static String TITLE_XMIPP_WIZARD_MEASURE_FREQS = "Wizard Measure Freqs.";
     public final static String TITLE_ERROR = "Memory error";
     public final static String TITLE_GO_TO_SLICE = "Go to slice";
     public final static String TITLE_PREVIEW = "Preview:";
@@ -48,6 +50,7 @@ public class LABELS {
     public final static String BUTTON_OPEN_AS_IMAGE = "Open as Image";
     public final static String BUTTON_OPEN_AS_TABLE = "Open as table";
     public final static String BUTTON_OK = "Ok";
+    public final static String BUTTON_CLOSE = "Close";
     public final static String BUTTON_PARENT_DIRECTORY = "Parent";
     public final static String BUTTON_RELOAD_TABLE = "Reload";
     public final static String BUTTON_REFRESH = "Refresh";

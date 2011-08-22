@@ -1,5 +1,0 @@
-// This macro allows to run plugins from command line passing parameters to them.
-
- macro "XmippFileListCTF" {
-    run("Xmipp File List PSD Browser", getArgument);
- }

@@ -11,6 +11,7 @@
 package browser.filebrowsers;
 
 import browser.COMMAND_PARAMETERS;
+import browser.DEBUG;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.imageitems.listitems.FileItem;
@@ -248,6 +249,6 @@ public class JDialogXmippFilesList extends javax.swing.JDialog {//Frame {
     javax.swing.JButton jbOk;
     javax.swing.JButton jbParent;
     javax.swing.JButton jbRefresh;
-    private javax.swing.JPanel jpButtons;
+    javax.swing.JPanel jpButtons;
     // End of variables declaration//GEN-END:variables
 }

@@ -33,4 +33,6 @@ public class COMMAND_PARAMETERS {
     public final static String OPTION_FILTER_DESCRIPTION = "Regular expression to filter";
     public final static String OPTION_SOCKET_PORT = "port";
     public final static String OPTION_SOCKET_PORT_DESCRIPTION = "Communications Socket";
+    public final static String OPTION_DOWNSAMPLING = "downsampling";
+    public final static String OPTION_DOWNSAMPLING_DESCRIPTION = "Downsampling value";
 }

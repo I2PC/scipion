@@ -1,6 +1,8 @@
 
 import browser.COMMAND_PARAMETERS;
-import browser.filebrowsers.JDialogXmippFilesList;
+import browser.LABELS;
+import browser.filebrowsers.JDialogXmippFilesListCTF;
+import browser.filebrowsers.JDialogXmippFilesListMeasureFreqsBrowser;
 import ij.IJ;
 import ij.Macro;
 import ij.plugin.PlugIn;
@@ -16,13 +18,12 @@ import org.apache.commons.cli.Options;
  *
  * @author Juanjo Vega
  */
-public class XmippFileList implements PlugIn {
+public class XmippFileListMeasureFreqsBrowser implements PlugIn {
 
     // Browser
     private String DIR;
-    private boolean SINGLE_SELECTION = false;
-    private String SELECTION_TYPE = COMMAND_PARAMETERS.SELECTION_TYPE_ANY;
     private String FILTER = "";
+    double DOWNSAMPLING = 1.0;
     int PORT;
 
     @Override
@@ -37,14 +38,15 @@ public class XmippFileList implements PlugIn {
             DIR = System.getProperty("user.dir");
         }
 
-        runBrowser(DIR, PORT, FILTER, SINGLE_SELECTION, SELECTION_TYPE);
+        runBrowser(DIR, PORT, FILTER, DOWNSAMPLING);
     }
 
-    void runBrowser(String directory, int port, String expression, boolean singleSelection, String seltype) {
+    void runBrowser(String directory, int port, String expression, double downsampling) {
 //        IJ.getInstance().setExtendedState(Frame.ICONIFIED);
 //        IJ.getInstance().setVisible(false);
 
-        JDialogXmippFilesList frameBrowser = new JDialogXmippFilesList(directory, port, expression, singleSelection, seltype);
+        JDialogXmippFilesListMeasureFreqsBrowser frameBrowser = new JDialogXmippFilesListMeasureFreqsBrowser(
+                directory, port, expression, downsampling);
         frameBrowser.setVisible(true);
 
 //        IJ.getInstance().setVisible(true);
@@ -56,9 +58,7 @@ public class XmippFileList implements PlugIn {
 
         options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, COMMAND_PARAMETERS.OPTION_INPUT_DIR_DESCRIPTION);
         options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, COMMAND_PARAMETERS.OPTION_FILTER);
-        options.addOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION, false, COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_SELECTION_TYPE, true, COMMAND_PARAMETERS.OPTION_SELECTION_TYPE_DESCRIPTION);
-
+        options.addOption(COMMAND_PARAMETERS.OPTION_DOWNSAMPLING, true, COMMAND_PARAMETERS.OPTION_DOWNSAMPLING);
         options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, COMMAND_PARAMETERS.OPTION_SOCKET_PORT_DESCRIPTION);
 
         try {
@@ -81,12 +81,8 @@ public class XmippFileList implements PlugIn {
                 }
             }
 
-            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION)) {
-                SINGLE_SELECTION = true;
-            }
-
-            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SELECTION_TYPE)) {
-                SELECTION_TYPE = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_SELECTION_TYPE);
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_DOWNSAMPLING)) {
+                DOWNSAMPLING = Double.valueOf(cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_DOWNSAMPLING));
             }
 
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT)) {

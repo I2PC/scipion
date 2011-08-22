@@ -23,14 +23,21 @@ import javax.swing.JLabel;
  */
 public class JPanelImageInfo extends javax.swing.JPanel {
 
+    final static int MARGIN_W = 10;
+    final static int MARGIN_H = 25;
+
     /** Creates new form JPanelImageInfo */
     public JPanelImageInfo() {
         initComponents();
 
-        jlPreview.setPreferredSize(new Dimension(ICONS_MANAGER.DEFAULT_PREVIEW_WIDTH * 4 / 3, ICONS_MANAGER.DEFAULT_PREVIEW_HEIGHT * 4 / 3));
+        setPreviewSize(ICONS_MANAGER.DEFAULT_PREVIEW_WIDTH, ICONS_MANAGER.DEFAULT_PREVIEW_HEIGHT);
         jlPreview.setHorizontalAlignment(JLabel.CENTER);
 
         setImageInfo(null);
+    }
+
+    public void setPreviewSize(int width, int height) {
+        jlPreview.setPreferredSize(new Dimension(width + MARGIN_W, height + MARGIN_H));
     }
 
     // Updates preview with current item.

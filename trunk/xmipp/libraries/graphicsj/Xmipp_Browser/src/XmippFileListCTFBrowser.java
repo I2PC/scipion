@@ -1,6 +1,6 @@
 
 import browser.COMMAND_PARAMETERS;
-import browser.filebrowsers.JDialogXmippFilesListPSD;
+import browser.filebrowsers.JDialogXmippFilesListCTF;
 import ij.IJ;
 import ij.Macro;
 import ij.plugin.PlugIn;
@@ -16,11 +16,10 @@ import org.apache.commons.cli.Options;
  *
  * @author Juanjo Vega
  */
-public class XmippFileListPSD implements PlugIn {
+public class XmippFileListCTFBrowser implements PlugIn {
 
     // Browser
     private String DIR;
-    private boolean SINGLE_SELECTION = false;
     private String FILTER = "";
     int PORT;
 
@@ -36,14 +35,14 @@ public class XmippFileListPSD implements PlugIn {
             DIR = System.getProperty("user.dir");
         }
 
-        runBrowser(DIR, PORT, FILTER, SINGLE_SELECTION);
+        runBrowser(DIR, PORT, FILTER);
     }
 
-    void runBrowser(String directory, int port, String expression, boolean singleSelection) {
+    void runBrowser(String directory, int port, String expression) {
 //        IJ.getInstance().setExtendedState(Frame.ICONIFIED);
 //        IJ.getInstance().setVisible(false);
 
-        JDialogXmippFilesListPSD frameBrowser = new JDialogXmippFilesListPSD(directory, port, expression, singleSelection);
+        JDialogXmippFilesListCTF frameBrowser = new JDialogXmippFilesListCTF(directory, port, expression);
         frameBrowser.setVisible(true);
 
 //        IJ.getInstance().setVisible(true);
@@ -55,9 +54,6 @@ public class XmippFileListPSD implements PlugIn {
 
         options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, COMMAND_PARAMETERS.OPTION_INPUT_DIR_DESCRIPTION);
         options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, COMMAND_PARAMETERS.OPTION_FILTER);
-        options.addOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION, false, COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_SELECTION_TYPE, true, COMMAND_PARAMETERS.OPTION_SELECTION_TYPE_DESCRIPTION);
-
         options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, COMMAND_PARAMETERS.OPTION_SOCKET_PORT_DESCRIPTION);
 
         try {
@@ -78,10 +74,6 @@ public class XmippFileListPSD implements PlugIn {
                         FILTER += " ";
                     }
                 }
-            }
-
-            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION)) {
-                SINGLE_SELECTION = true;
             }
 
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT)) {
