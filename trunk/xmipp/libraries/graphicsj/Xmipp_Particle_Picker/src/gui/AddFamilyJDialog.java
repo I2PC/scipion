@@ -9,6 +9,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.NumberFormat;
+import java.util.Hashtable;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -41,6 +42,11 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 	EditFamiliesJDialog parent;
 	private JSlider sizesl;
 	private JFormattedTextField sizetf;
+	private JPanel sizepn;
+	private JPanel thresholdpn;
+	private JSlider thresholdsl;
+	private JFormattedTextField thresholdtf;
+	private int range;
 
 	public AddFamilyJDialog(EditFamiliesJDialog parent, boolean modal) {
 		super(parent, modal);
@@ -65,27 +71,27 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 		colorbt.setBorderPainted(false);
 		add(colorbt, WindowUtils.updateConstraints(constraints, 1, 1, 1));
 
-		int size = Family.getDefaultSize();
-		JPanel sizepn = new JPanel();
-		sizesl = new JSlider(0, 500, size);
-		sizepn.add(sizesl);
-		sizetf = new JFormattedTextField(NumberFormat.getIntegerInstance());;
-		sizetf.setText(Integer.toString(size));
-		sizepn.add(sizetf);
+		
 		add(new JLabel("Size"),
 				WindowUtils.updateConstraints(constraints, 0, 2, 1));
+		initSizePane();
+		add(new JLabel("Threshold"),
+				WindowUtils.updateConstraints(constraints, 0, 3, 1));
 		add(sizepn, WindowUtils.updateConstraints(constraints, 1, 2, 1));
+		initThresholdPane();
+		add(thresholdpn, WindowUtils.updateConstraints(constraints, 1, 3, 1));
 		addbt = new JButton("Add");
 		getRootPane().setDefaultButton(addbt);
 		cancelbt = new JButton("Cancel");
 
-		add(addbt, WindowUtils.updateConstraints(constraints, 0, 3, 1));
-		add(cancelbt, WindowUtils.updateConstraints(constraints, 1, 3, 1));
+		add(addbt, WindowUtils.updateConstraints(constraints, 0, 4, 1));
+		add(cancelbt, WindowUtils.updateConstraints(constraints, 1, 4, 1));
 		setListeners();
 		pack();
 		WindowUtils.centerScreen(position, this);
 		setVisible(true);
 	}
+
 
 	private void setListeners() {
 
@@ -126,6 +132,18 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 			}
 		});
 
+		
+	}
+	
+	private void initSizePane()
+	{
+		int size = Family.getDefaultSize();
+		sizepn = new JPanel();
+		sizesl = new JSlider(0, 500, size);
+		sizepn.add(sizesl);
+		sizetf = new JFormattedTextField(NumberFormat.getIntegerInstance());;
+		sizetf.setText(Integer.toString(size));
+		sizepn.add(sizetf);
 		sizetf.addActionListener(new ActionListener() {
 
 			@Override
@@ -144,6 +162,45 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 			}
 		});
 	}
+	
+	private void initThresholdPane() {
+		int threshold = 0;
+		range = 100;
+		thresholdpn = new JPanel();
+		thresholdsl = new JSlider(threshold);
+		Hashtable labelTable = new Hashtable();
+		labelTable.put( new Integer( 0 ), new JLabel("0.0") );
+		labelTable.put( new Integer( range/2 ), new JLabel("0.5") );
+		labelTable.put( new Integer( range ), new JLabel("1.0") );
+		thresholdsl.setLabelTable( labelTable );
+		thresholdpn.add(thresholdsl);
+		thresholdtf = new JFormattedTextField(NumberFormat.getNumberInstance());;
+		thresholdtf.setColumns(3);
+		thresholdtf.setText(Integer.toString(threshold));
+		thresholdpn.add(thresholdtf);
+		thresholdtf.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				double threshold = Double.parseDouble(thresholdtf.getText());
+				int range = AddFamilyJDialog.this.range;
+				if(Math.abs(threshold) <= range)
+					thresholdsl.setValue((int)threshold * range);
+			}
+		});
+
+		thresholdsl.addChangeListener(new ChangeListener() {
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				int range = AddFamilyJDialog.this.range;
+				double threshold = (double)thresholdsl.getValue()/range;
+				thresholdtf.setText(String.format("%.2f", threshold));
+			}
+		});
+		
+	}
+
 
 	@Override
 	public void actionPerformed(ActionEvent e) {

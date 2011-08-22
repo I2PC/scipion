@@ -1,19 +1,13 @@
 package model;
 
-import gui.ColorIcon;
 import ij.ImagePlus;
 
-import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-
-import xmipp.MDLabel;
-import xmipp.MetaData;
 
 public class Micrograph {
 	
@@ -21,20 +15,32 @@ public class Micrograph {
 	private String name;
 	private List<Particle> particles;
 	private ImagePlus image;
-	private String ofilename;
+	private String outputfname;
 	private static String ext = ".pos";
 	private String ctf;
 	private ImageIcon ctficon;
+	private String aoutputfname;
+	private boolean autopicking = false;
+	
 	
 	public Micrograph(String filename, String ctf) {
 		this.filename = filename;
 		this.name = getName(filename);
 		particles = new ArrayList<Particle>();
-		this.ofilename = PPConfiguration.getOutputPath(name + ext);
+		this.outputfname = PPConfiguration.getOutputPath(name + ext);
+		this.aoutputfname = PPConfiguration.getOutputPath(name + "_auto" + ext);
 		this.ctf = ctf;
 	}
 	
+	public boolean isAutopicking()
+	{
+		return autopicking;
+	}
 	
+	public void setAutopicking(boolean autopicking)
+	{
+		this.autopicking = autopicking;
+	}
 	
 	public static String getName(String filename)
 	{
@@ -50,9 +56,13 @@ public class Micrograph {
 		return PPConfiguration.getMicrographsSelFile();
 	}
 	
-	public String getOFilename()
+	public String getOutputFName()
 	{
-		return ofilename;
+		return outputfname;
+	}
+	public String getAutoOutputFName()
+	{
+		return aoutputfname;
 	}
 	
 	public ImagePlus getImage()
@@ -95,7 +105,7 @@ public class Micrograph {
 		particles.add(p);
 	}
 	
-
+	
 	public void removeParticle(Particle p)
 	{
 		particles.remove(p);

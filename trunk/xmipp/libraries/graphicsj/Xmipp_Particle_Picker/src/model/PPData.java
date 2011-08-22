@@ -53,7 +53,7 @@ public class PPData {
 				md.setValueInt(MDLabel.MDL_PICKING_COLOR, f.getColor().getRGB(), id);
 				md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, f.getSize(), id);
 			}
-			md.write("families@" + filename);
+			md.write(filename);
 		} catch (Exception e) {
 			PPConfiguration.getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
@@ -77,7 +77,7 @@ public class PPData {
 		int rgb, size;
 		String gname;		
 		try {
-			MetaData md = new MetaData("families@" + filename);
+			MetaData md = new MetaData(filename);
 			long[] ids = md.findObjects();
 			for (long id: ids) {				
 				gname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
@@ -153,7 +153,7 @@ public class PPData {
 						md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
 						
 					}
-					block = f.getName() + "@" + micrograph.getOFilename();
+					block = f.getName() + "@" + micrograph.getOutputFName();
 					if(count == 0)
 						md.write(block);
 					else
@@ -174,11 +174,11 @@ public class PPData {
 			int x, y;
 			Particle particle;
 			MetaData md;
-			if(!new File(micrograph.getOFilename()).exists())
+			if(!new File(micrograph.getOutputFName()).exists())
 				return;
 			for(Family f: families)
 			{
-				md = new MetaData(f.getName() +"@" + micrograph.getOFilename());
+				md = new MetaData(f.getName() +"@" + micrograph.getOutputFName());
 				long[] ids = md.findObjects();
 				for (long id: ids) {				
 					
@@ -186,6 +186,42 @@ public class PPData {
 					y = md.getValueInt(MDLabel.MDL_YINT, id);
 					particle = new Particle(x, y, f, micrograph);
 					micrograph.addParticle(particle);
+				}
+			}
+		} catch (Exception e) {
+			PPConfiguration.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+		
+	}
+	
+	public void loadAutomaticParticles(Micrograph micrograph) {
+		try {
+			int x, y;
+			double cost;
+			Particle particle;
+			MetaData md;
+			Family f;
+			String filename = micrograph.getAutoOutputFName();
+			if(!new File(filename).exists())
+				return;
+			
+			String[] blocks = MetaData.getBlocksInMetaDataFile(filename);
+			for(String block: blocks)
+			{
+				md = new MetaData(block + "@" + filename);
+				long[] ids = md.findObjects();
+				for (long id: ids) {				
+					
+					x = md.getValueInt(MDLabel.MDL_XINT, id);
+					y = md.getValueInt(MDLabel.MDL_YINT, id);
+					cost = md.getValueDouble(MDLabel.MDL_COST, id);
+					f = getFamily(block);
+					if(cost >= f.getThreshold())
+					{
+						particle = new Particle(x, y, f, micrograph, true);
+						micrograph.addParticle(particle);
+					}
 				}
 			}
 		} catch (Exception e) {

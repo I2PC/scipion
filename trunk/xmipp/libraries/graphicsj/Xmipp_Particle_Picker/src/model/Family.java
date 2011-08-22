@@ -10,7 +10,10 @@ public class Family {
 	private String name;
 	private Color color;
 	private int size;
+	private float threshold = 0;
 	
+
+
 	private static int sizemax = 1000;
 	private static Family dfamily = new Family("Any", Color.green);
 	private static Color[] colors = new Color[]{Color.BLUE, Color.CYAN, 
@@ -18,6 +21,10 @@ public class Family {
 										Color.MAGENTA, Color.ORANGE, 
 										Color.PINK, Color.RED, Color.YELLOW};
 	private static int nextcolor;
+	
+	public float getThreshold() {
+		return threshold;
+	}
 	
 	public static Color getNextColor()
 	{

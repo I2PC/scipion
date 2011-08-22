@@ -3,9 +3,11 @@ package gui;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
 
+import java.awt.BasicStroke;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.Stroke;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
@@ -25,6 +27,12 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 	private XmippParticlePickerJFrame frame;
 	private Micrograph micrograph;
 	private Particle dragged;
+	final static BasicStroke dashedst = new BasicStroke(1.0f,
+            BasicStroke.CAP_BUTT,
+            BasicStroke.JOIN_MITER,
+            10.0f, new float[]{10.0f}, 0.0f);
+	final static BasicStroke continuousst = new BasicStroke();
+	
 
 	public PPCanvas(XmippParticlePickerJFrame frame, Micrograph micrograph) {
 		super(micrograph.getImage());
@@ -149,7 +157,6 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 	public void paint(Graphics g) {
 		super.paint(g);
 		Graphics2D g2 = (Graphics2D) g;
-		
 		int x0 = (int) getSrcRect().getX();
 		int y0 = (int) getSrcRect().getY();
 		int radius; 
@@ -159,6 +166,10 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 		for(Particle p: micrograph.getParticles())
 		{
 			g2.setColor(p.getFamily().getColor());
+			if(p.isAuto())
+				g2.setStroke(dashedst);
+			else
+				g2.setStroke(continuousst);
 			radius = (int)(p.getFamily().getSize()/ 2 * magnification);
 			count++;
 			x = (int) ((p.getX() - x0) * magnification);

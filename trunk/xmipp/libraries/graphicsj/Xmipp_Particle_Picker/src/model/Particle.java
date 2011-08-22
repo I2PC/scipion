@@ -19,6 +19,7 @@ public class Particle {
 	private Micrograph micrograph;
 	private ImagePlus img;
 	private ParticleImageCanvas canvas;
+	private boolean auto;
 	
 	
 	public Particle(int x, int y, Family family, Micrograph micrograph)
@@ -27,8 +28,22 @@ public class Particle {
 		this.y = y;
 		this.family = family;
 		this.micrograph = micrograph;
+		auto = false;
+	}
+	
+	public Particle(int x, int y, Family family, Micrograph micrograph, boolean auto)
+	{
+		this.x = x;
+		this.y = y;
+		this.family = family;
+		this.micrograph = micrograph;
+		this.auto = auto;
 	}
 
+	public boolean isAuto()
+	{
+		return auto;
+	}
 
 	public Micrograph getMicrograph() {
 		return micrograph;

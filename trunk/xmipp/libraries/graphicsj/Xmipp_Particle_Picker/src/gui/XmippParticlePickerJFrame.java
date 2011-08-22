@@ -410,48 +410,6 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 	
 	
 	
-	private void initButtonsPane()
-	{
-		buttonspn = new JPanel();
-		trainbt = new JButton("Train");
-		buttonspn.add(trainbt);
-		trainbt.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				saveChanges();
-				String args = String.format("-i %s --particleSize %s --model model --thr %s --outputRoot %s --mode train %s", 
-						XmippParticlePickerJFrame.this.micrograph.getFilename(),//-i
-						getFamily().getSize(), //--particleSize
-						PPConfiguration.getThreds(), //--thr
-						PPConfiguration.getOutputDir(), //--outputRoot
-						micrograph.getOFilename());//train parameter
-				System.out.println(args);
-				try {
-					Program.runByName("xmipp_micrograph_automatic_picking", args);
-				} catch (Exception e1) {
-					PPConfiguration.getLogger().log(Level.SEVERE, e1.getMessage(), e);
-					JOptionPane.showMessageDialog(XmippParticlePickerJFrame.this, "Training failed. See log for details");
-				}
-			}
-		});
-		autopickbt = new JButton("Auto Pick");
-		buttonspn.add(autopickbt);
-		autopickbt.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(getParticlesNumber() < PPConfiguration.getMinParticles());
-				int result = JOptionPane.showConfirmDialog(XmippParticlePickerJFrame.this,
-						"It is recommended to have at least " + PPConfiguration.getMinParticles() + " particles\nProceed anyway?",
-						"Warning",
-						JOptionPane.YES_NO_OPTION);
-				if(result == JOptionPane.NO_OPTION)
-					return;
-				
-			}
-		});
-	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -508,6 +466,75 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 		micrographpn.add(ctfpn, WindowUtils.updateConstraints(constraints, 1, 0, 1));
 	}
 	
+	private void initButtonsPane()
+	{
+		buttonspn = new JPanel();
+		trainbt = new JButton("Train");
+		buttonspn.add(trainbt);
+		trainbt.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				saveChanges();
+				Micrograph micrograph = XmippParticlePickerJFrame.this.micrograph;
+				String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train %s", 
+						micrograph.getFilename(),//-i
+						getFamily().getSize(), //--particleSize
+						PPConfiguration.getOutputPath(getFamily().getName()),//--model
+						PPConfiguration.getOutputPath(micrograph.getName()), //--outputRoot
+						getFamily().getName()+ "@"+ micrograph.getOutputFName());//train parameter
+				if (PPConfiguration.isFastMode())
+					args+= " --fast";
+				if(PPConfiguration.isIncore())
+					args += " --in_core";
+				executeProgram("xmipp_micrograph_automatic_picking", args);
+			}
+		});
+		autopickbt = new JButton("Auto Pick");
+		buttonspn.add(autopickbt);
+		autopickbt.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(getParticlesNumber() < PPConfiguration.getMinParticles());
+				int result = JOptionPane.showConfirmDialog(XmippParticlePickerJFrame.this,
+						"It is recommended to have at least " + PPConfiguration.getMinParticles() + " particles\nProceed anyway?",
+						"Warning",
+						JOptionPane.YES_NO_OPTION);
+				if(result == JOptionPane.NO_OPTION)
+					return;
+				Micrograph micrograph = XmippParticlePickerJFrame.this.micrograph;
+				String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s", 
+						micrograph.getFilename(),//-i
+						getFamily().getSize(), //--particleSize
+						PPConfiguration.getOutputPath(getFamily().getName()),//--model
+						PPConfiguration.getOutputPath(micrograph.getName()),//--outputRoot
+						PPConfiguration.getThreads()//--thr
+						); 
+				
+				if (PPConfiguration.isFastMode())
+					args+= " --fast";
+				if(PPConfiguration.isIncore())
+					args += " --in_core";
+				executeProgram("xmipp_micrograph_automatic_picking", args);
+				ppdata.loadAutomaticParticles(micrograph);
+				canvas.repaint();
+			}
+		});
+	}
+	
+	private void executeProgram(String name, String args)
+	{
+		System.out.println(args);
+		try {
+			Program.runByName(name, args);
+		} catch (Exception e) {
+			PPConfiguration.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			JOptionPane.showMessageDialog(XmippParticlePickerJFrame.this, "Program failed. See log for details");
+		}
+	}
+	
+	
 	private void switchSize(int size) {
 		sizetf.setText(Integer.toString(size));
 		sizesl.setValue(size);
@@ -524,13 +551,15 @@ public class XmippParticlePickerJFrame extends JFrame implements ActionListener 
 
 	void initializeCanvas() {
 		Micrograph micrograph = getMicrograph();
-		if(iw == null || iw.isClosed())
+		if(iw == null )
 		{
 			canvas = new PPCanvas(this, micrograph);
 			iw = new ImageWindow(micrograph.getImage(), canvas);
 		}
 		else
+		{
 			canvas.setMicrograph(micrograph);
+		}
 		iw.setTitle(micrograph.getName());
 		canvas.setName(micrograph.getName());
 	}

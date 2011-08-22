@@ -72,6 +72,8 @@ public class PPConfiguration {
 	
 	public static void setOutputDir(String dir)
 	{
+		if(!new File(dir).exists())
+			throw new IllegalArgumentException("Output dir " + dir + " does not exist");
 		outputdir = dir;
 	}
 	
@@ -90,19 +92,30 @@ public class PPConfiguration {
 	public static void setFastMode(boolean fastMode) {
 		PPConfiguration.fastMode = fastMode;
 	}
-
-
+	
 	public static void setIncore(boolean incore) {
 		PPConfiguration.incore = incore;
 	}
 
+	public static boolean isFastMode() {
+		return fastMode;
+	}
+
+	public static boolean isIncore() {
+		return incore;
+	}
+	
+	public static boolean getFastMode()
+	{
+		return fastMode;
+	}
 
 	public static void setIsAuto(boolean automatic) {
 		PPConfiguration.auto = automatic;
 		
 	}
 	
-	public static int getThreds()
+	public static int getThreads()
 	{
 		return threads;
 	}
