@@ -17,10 +17,10 @@ from protlib_utils import which, runJob
 from protlib_filesystem import *
 import xmipp
 
-class ProtPreprocessMicrographs(XmippProtocol):
+class ProtImportMicrographs(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.preprocess_micrographs.name, scriptname, project)
-        self.Import="from protocol_preprocess_micrographs import *"
+        XmippProtocol.__init__(self, protDict.import_micrographs.name, scriptname, project)
+        self.Import="from protocol_import_micrographs import *"
         self.CtffindExec =  which('ctffind3.exe')
 
     def defineSteps(self):
