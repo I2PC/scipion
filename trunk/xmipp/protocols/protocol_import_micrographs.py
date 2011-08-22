@@ -80,6 +80,7 @@ class ProtImportMicrographs(XmippProtocol):
         
         # Gather results after external actions
         self.Db.insertStep('gatherResults',verifyfiles=[os.path.join(self.WorkingDir,"micrographs.sel")],
+                           parent_step_id=idMPI,
                            WorkingDir=self.WorkingDir,DirMicrographs=self.DirMicrographs,
                            ExtMicrographs=self.ExtMicrographs, DoCtfEstimate=self.DoCtfEstimate,DoCtffind=self.DoCtffind)
                
