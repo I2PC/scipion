@@ -1038,22 +1038,33 @@ class ProtocolGUI(BasicGUI):
         runImageJPlugin("512m", "xmippBrowser.txt", "-i %s" % var.tkvar.get())
         
     def wizardBrowseJ(self, var):
-        msg = runImageJPluginWithResponse("512m", "XmippFileList.txt", "")
+        if 'file' in var.tags.keys():
+            seltype="file"
+        else:
+            seltype="dir"
+        msg = runImageJPluginWithResponse("512m", "XmippFileList.txt", "-seltype %(seltype)s"%locals())
         msg = msg.strip()
         if len(msg) > 0:
             var.tkvar.set(os.path.relpath(msg.replace('\n', ',')))
             
     #This wizard is specific for preprocess_micrographs protocol
     def wizardBrowseJCTF(self, var):
-        
         dir = self.getVarValue('DirMicrographs')
         filter = self.getVarValue('ExtMicrographs')
+        value = var.tkvar.get()
         msg = runImageJPluginWithResponse("512m", "XmippFileListCTF.txt", 
-                                          "-dir %(dir)s -filter %(filter)s" % locals())
+                                          "-dir %(dir)s -filter %(filter)s -downsampling %(value)s" % locals())
         msg = msg.strip()
         if len(msg) > 0:
             var.tkvar.set(os.path.relpath(msg.strip()))            
         
+    #This wizard is specific for preprocess_micrographs protocol
+    def wizardBrowseJCTFMeasure(self, var):
+        dir = self.getVarValue('DirMicrographs')
+        filter = self.getVarValue('ExtMicrographs')
+        runImageJPlugin("512m", "XmippFileListMeasureFreqBrowser.txt", 
+                                "-dir %(dir)s -filter %(filter)s -downsampling %(value)s" % locals(),True)
+
 # This group of functions are called Validator, and should serve
 # for validation of user input for each variable
 # The return value of each validator should be an error message string 
