@@ -14,6 +14,7 @@ import java.util.Hashtable;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
@@ -165,14 +166,15 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 	
 	private void initThresholdPane() {
 		int threshold = 0;
-		range = 100;
+		range = 10;
 		thresholdpn = new JPanel();
-		thresholdsl = new JSlider(threshold);
-		Hashtable labelTable = new Hashtable();
+		thresholdsl = new JSlider(0, range);
+		Hashtable<Integer, JComponent> labelTable = new Hashtable<Integer, JComponent>();
 		labelTable.put( new Integer( 0 ), new JLabel("0.0") );
+		labelTable.put( new Integer( range/4 ), new JLabel("0.25") );
 		labelTable.put( new Integer( range/2 ), new JLabel("0.5") );
+		labelTable.put( new Integer( 3*range/4 ), new JLabel("0.75") );
 		labelTable.put( new Integer( range ), new JLabel("1.0") );
-		thresholdsl.setLabelTable( labelTable );
 		thresholdpn.add(thresholdsl);
 		thresholdtf = new JFormattedTextField(NumberFormat.getNumberInstance());;
 		thresholdtf.setColumns(3);
@@ -182,10 +184,10 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				double threshold = Double.parseDouble(thresholdtf.getText());
+				double threshold = Double.parseDouble(thresholdtf.getText() ) * range;
 				int range = AddFamilyJDialog.this.range;
 				if(Math.abs(threshold) <= range)
-					thresholdsl.setValue((int)threshold * range);
+					thresholdsl.setValue((int)threshold );
 			}
 		});
 
