@@ -513,11 +513,11 @@ void XmippMetadataProgram::readParams()
         apply_geo = !checkParam("--dont_apply_geo");
 
     if (delete_output_stack)
-        delete_output_stack = fn_out != fn_in && oroot.empty();
+        delete_output_stack = fn_out != fn_in && oroot.empty() && !fn_out.empty();
 
     // If the output is a stack, create empty stack file in advance to avoid concurrent access to the header
     create_empty_stackfile = (each_image_produces_an_output &&
-                              mdInSize > 1 && oroot.empty());
+                              mdInSize > 1 && oroot.empty() && !fn_out.empty());
 }
 
 void XmippMetadataProgram::show()
