@@ -1709,7 +1709,7 @@ void AutoParticlePicking::saveAutoParticles(const FileName &fn) const
         MD.setValue(MDL_YINT, p.y, id);
         MD.setValue(MDL_COST, p.cost, id);
     }
-    MD.write(fn);
+    MD.write(fn,MD_APPEND);
 }
 
 void AutoParticlePicking::saveAutoFeatureVectors(const FileName &fn) const
@@ -1790,7 +1790,7 @@ void ProgMicrographAutomaticPicking::defineParams()
     addParamsLine("         where <mode>");
     addParamsLine("                    try              : Try to autoselect within the training phase.");
     addParamsLine("                    train <posfile>  : posfile contains the coordinates of manually picked particles");
-    addParamsLine("                                     : <rootname>_auto_feature_vectors.xmd contains the particle structure created by this program when used in automatic selection mode");
+    addParamsLine("                                     : <rootname>_auto_feature_vectors.txt contains the particle structure created by this program when used in automatic selection mode");
     addParamsLine("                                     : <rootname>_false_positives.xmd contains the list of false positives among the automatically picked particles");
     addParamsLine("                    autoselect  : Autoselect");
     addParamsLine("  --model <model_rootname>      : Bayesian model of the particles to pick");
@@ -1815,12 +1815,13 @@ void ProgMicrographAutomaticPicking::run()
     autoPicking->loadModels(fn_model);
     if (incore)
     	autoPicking->readMicrograph();
+    FileName familyName=fn_model.removeDirectories();
     if (mode == "autoselect" || mode=="try")
     {
         autoPicking->automaticallySelectParticles();
-        autoPicking->saveAutoParticles(fn_root + "_" + fn_model.removeDirectories() + ".pos");
+        autoPicking->saveAutoParticles(familyName+"@"+fn_root+"_auto.pos");
         if (mode=="try")
-            autoPicking->saveAutoFeatureVectors(fn_root + "_auto_feature_vectors.xmd");
+            autoPicking->saveAutoFeatureVectors(fn_root + "_auto_feature_vectors_"+familyName+".txt");
     }
     else
     {
@@ -1839,11 +1840,11 @@ void ProgMicrographAutomaticPicking::run()
         FileName fnFalsePositives = fn_root + "_false_positives.xmd";
         if (exists(fnFalsePositives))
         {
-            MD.read(fnFalsePositives);
+            MD.read(familyName+"@"+fnFalsePositives);
             if (MD.size() > 0)
             {
                 autoPicking->loadAutoFeatureVectors(
-                    fn_root + "_auto_feature_vectors.xmd");
+                		fn_root + "_auto_feature_vectors_"+familyName+".txt");
                 int idx;
                 FOR_ALL_OBJECTS_IN_METADATA(MD)
                 {
