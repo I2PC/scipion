@@ -41,29 +41,29 @@ Behavior = "Resume"
 #------------------------------------------------------------------------------------------
 # {section} Picking parameters
 #------------------------------------------------------------------------------------------
-# {run}(preprocess_micrographs) Preprocessing Micrographs run
+# {run}(import_micrographs) Import Micrographs run
 """ Directory with the preprocessing (output of the Preprocessing Micrographs protocol)
 """
-PreprocessingRun = ""
+ImportRun = ""
 
 # Perform training for automatic particle picking
 """ Perform training for automatic particle picking """
 AutomaticPicking = False
 
-# {condition}(AutomaticPicking=True) Number of threads
+# {condition}(AutomaticPicking) Number of threads
 """ This option provides shared-memory parallelization on multi-core machines.
 It does not require any additional software, other than xmipp.
 """
 NumberOfThreads = 2
 
-# {condition}(AutomaticPicking=True) Fast picking
+# {condition}(AutomaticPicking) Fast picking
 """ The fast version includes a Fourier filter while the non-fast version 
     uses the Fourier filter and a Wavelet denoising. The fast version takes half the
     time of the non-fast version.
 """
 Fast = True
 
-# {condition}(AutomaticPicking=True){expert} In-core picking
+# {condition}(AutomaticPicking){expert} In-core picking
 """ If you can afford to load the micrographs in memory while picking, this option
     makes the program faster.
 """

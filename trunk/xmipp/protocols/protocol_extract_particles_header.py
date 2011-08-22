@@ -69,11 +69,11 @@ DoNorm=True
    If this value is 0, then the same as the particle radius is used. """
 BackGroundRadius=0
 
-# Perform dust particles removal?
+# Dust particles removal
 """ Sets pixels with unusually large values to random values from a Gaussian with zero-mean and unity-standard deviation.
     It requires a previous normalization, i.e., Normalization must be set to Yes.
 """
-DoRemoveDust=True
+DoRemoveDust=False
 
 # {expert} Threshold for dust removal:
 """ Pixels with a signal higher or lower than this value times the standard deviation of the image will be affected. For cryo, 3.5 is a good value.
@@ -93,12 +93,12 @@ NumberOfMpi = 8
 """
 SubmitToQueue = False
 
-# {condition}(SubmitToQueue=True) Queue name
+# {condition}(SubmitToQueue) Queue name
 """Name of the queue to submit the job
 """
 QueueName = "default"
 
-# {condition}(SubmitToQueue=True) Queue hours
+# {condition}(SubmitToQueue) Queue hours
 """This establish a maximum number of hours the job will
 be running, after that time it will be killed by the
 queue system
@@ -115,11 +115,11 @@ ShowExpertOptions = False
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
-from protocol_preprocess_particles import *
+from protocol_extract_particles import *
 #        
 # Main
 #     
  
 if __name__ == '__main__':
        # create preprocess_particles_class object
-    protocolMain(ProtPreprocessParticles)
+    protocolMain(ProtExtractParticles)

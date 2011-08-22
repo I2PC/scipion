@@ -49,12 +49,15 @@ DirMicrographs = 'Micrographs'
 """
 ExtMicrographs = '*.mrc'
 
-#------------------------------------------------------------------------------------------------
-# {section}{has_question} Preprocess
-#------------------------------------------------------------------------------------------------
 # Do preprocess
 DoPreprocess = False
 
+# Perform CTF estimation
+DoCtfEstimate=True
+
+#------------------------------------------------------------------------------------------------
+# {section}{condition}(DoPreprocess) Preprocess
+#------------------------------------------------------------------------------------------------
 # Crop borders
 """ Crop a given amount of pixels from each border.
     Set this option to -1 for not applying it."""
@@ -71,10 +74,8 @@ Stddev = -1
 Down = 1
 
 #------------------------------------------------------------------------------------------------
-# {section}{has_question} CTF estimation
+# {section}{condition}(DoCtfEstimate) CTF estimation
 #------------------------------------------------------------------------------------------------
-# Perform CTF estimation
-DoCtfEstimate=True
 
 # Microscope voltage (in kV)
 Voltage = 200
@@ -88,10 +89,10 @@ Magnification = 70754
 # {list}(From image, From scanner) Sampling rate mode
 SamplingRateMode="From image"
 
-# {condition}(SamplingRateMode=From image) Sampling rate (A/pixel)
+# {condition}(SamplingRateMode=="From image") Sampling rate (A/pixel)
 SamplingRate = 1
 
-# {condition}(SamplingRateMode=From scanner) Scanned pixel size (in um/pixel)
+# {condition}(SamplingRateMode=="From scanner") Scanned pixel size (in um/pixel)
 ScannedPixelSize = 15
 
 # Amplitude Contrast
@@ -134,13 +135,13 @@ WinSize = 256
 """
 DoCtffind = False
 
-# {condition}(DoCtffind=True){expert} Defocus step for CTFFIND (in microns)
+# {condition}(DoCtffind){expert} Defocus step for CTFFIND (in microns)
 """ Step size for defocus search (in microns)
 """
 StepFocus = 0.1
 
 #------------------------------------------------------------------------------------------
-# {section} Parallelization issues
+# {section}{condition}(DoCtfEstimate or DoPreprocess) Parallelization
 #------------------------------------------------------------------------------------------
 # Number of MPI processes
 """ Set to 1 if you do not have MPI installed"""
@@ -151,12 +152,12 @@ NumberOfMpi = 8
 """
 SubmitToQueue = False
 
-# {condition}(SubmitToQueue=True) Queue name
+# {condition}(SubmitToQueue) Queue name
 """Name of the queue to submit the job
 """
 QueueName = "default"
 
-# {condition}(SubmitToQueue=True) Queue hours
+# {condition}(SubmitToQueue) Queue hours
 """This establish a maximum number of hours the job will
 be running, after that time it will be killed by the
 queue system
