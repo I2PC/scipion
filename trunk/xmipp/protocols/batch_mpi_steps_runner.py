@@ -40,11 +40,8 @@ if __name__ == '__main__':
     db = protocol.Db
     #Create database and other output files
     try:
-        print "Running step gaps"
         runStepGaps(db)
-        print "After Running step gaps"
     except Exception, e:
-        print "Stopping MPI process because of error"
         printLog("Stopping MPI process because of error %s"%e, db.Log, out=True, err=True, isError=True)
         db.updateRunState(db.RUN_FAILED)
         exit(1)
