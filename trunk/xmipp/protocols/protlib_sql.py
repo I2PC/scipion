@@ -482,6 +482,7 @@ class XmippProtocolDb(SqliteDb):
                           AND (parent.finish IS NOT NULL)
                           AND (child.execution_mode = %(execution_gap)d)
                           AND (child.run_id=%(run_id)d)
+                          AND (parent.run_id =%(run_id)d) 
                         LIMIT 1""" % self.sqlDict
             cursor.execute(sqlCommand)
             row = cursor.fetchone()
