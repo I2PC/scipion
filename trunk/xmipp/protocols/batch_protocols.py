@@ -189,14 +189,14 @@ class XmippProjectGUI():
         return None
 
     
-            
+    #GUI for launching Xmipp Programs as Protocols        
     def launchProgramsGUI(self, event=None):
         text = protDict.xmipp_program.title
         last = self.lastSelected
         self.selectToolbarButton(text, False)
-        if text != last:
+        if text != last and len(self.runs)>0:
             return
-        db = ProgramDb()
+        db = ProgramDb()        
         root = tk.Toplevel()
         root.withdraw()
         root.title(text)
@@ -204,8 +204,8 @@ class XmippProjectGUI():
         root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
         detailsSection = ProjectSection(root, 'Details')
-        txt = tk.Text(detailsSection.frameContent, width=60, height=10,
-                        bg=BgColor, bd=1, relief=tk.RIDGE)
+        txt = tk.Text(detailsSection.frameContent, width=50, height=10,
+                        bg=BgColor, bd=1, relief=tk.RIDGE, font=Fonts['normal'])
         txt.pack(fill=tk.BOTH)
         detailsSection.grid(row=1, column=1, sticky='nsew', 
                             padx=5, pady=5)
@@ -231,28 +231,45 @@ class XmippProjectGUI():
                 txt.insert(tk.END, line)
                 
         detailsSection.addButton('Run', command=runClick)
-        
-            
         lb.bind('<ButtonRelease-1>', showSelection)
         lb.bind('<Double-Button-1>', runClick)
         lb.pack(fill=tk.BOTH)
         progSection.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
         #Create toolbar
-        toolbar = tk.Frame(root, bd=2, relief=tk.RIDGE)
+        leftFrame = tk.Frame(root)
+        leftFrame.grid(row=0, column=0, rowspan=2, sticky='nw', padx=5, pady=5)
+        toolbar = tk.Frame(leftFrame, bd=2, relief=tk.RIDGE)
         section = ProjectButtonMenu(toolbar, 'Categories')
         section.pack(fill=tk.X, pady=5)
         categories = db.selectCategories()
+        
+        def fillListBox(programs):
+            lb.delete(0, tk.END)
+            for p in programs:
+                lb.insert(tk.END, p['name'])
+            
+        def searchByKeywords(event=None):
+            from protlib_xmipp import ProgramKeywordsRank
+            keywords = searchVar.get().split()
+            progRank = ProgramKeywordsRank(keywords)
+            programs = db.selectPrograms()
+            # Calculate ranks
+            programs = [p for p in programs if progRank.getRank(p) > 0]
+            fillListBox(programs)
+            
         for c in categories:
-            def fillProgramsListBox(category, lb):
-                def command():
-                    programs = db.selectPrograms(category)
-                    lb.delete(0, tk.END)
-                    for p in programs:
-                        lb.insert(tk.END, p['name'])
-                return command
-            section.addButton(c['name'], command=fillProgramsListBox(c, lb))
-        toolbar.grid(row=0, column=0, rowspan=2, sticky='nw'
-                     , padx=5, pady=5)
+            def addButton(c):
+                section.addButton(c['name'], command=lambda:fillListBox(db.selectPrograms(c)))
+            addButton(c)  
+        toolbar.grid(row=0)
+        ProjectLabel(leftFrame, text="Search").grid(row=1, pady=(10,5))
+        searchVar = tk.StringVar()
+        searchEntry = tk.Entry(leftFrame, textvariable=searchVar, bg=LabelBgColor)
+        searchEntry.grid(row=2, sticky='ew')
+        searchEntry.bind('<Return>', searchByKeywords)
+            
+            
+        
         centerWindows(root, refWindows=self.root)
         root.deiconify()
         root.mainloop() 

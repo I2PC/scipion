@@ -26,8 +26,10 @@
 # ***************************************************************************
  '''
 
+import os
 from xmipp import Program
-from protlib_utils import runImageJPlugin
+from protlib_utils import runImageJPlugin, failStr
+from protlib_filesystem import getXmippPath
 
 
 class XmippScript():
@@ -117,7 +119,10 @@ class ScriptPluginIJ(XmippScript):
         
     def run(self):
         runImageJPlugin(self.memory, self.macro, self.args)
-            
+     
+#------------- FUNCTION TO WORK WITH PROGRAMS META-INFORMATION -----------------
+
+#This function will take programs from bin/ folder     
 def getXmippPrograms():
     import os
     from glob import glob
@@ -125,6 +130,73 @@ def getXmippPrograms():
     programs = [os.path.basename(p) for p in glob(os.path.join(getXmippPath(), 'bin', 'xmipp_*'))]
     programs.sort()
     return programs
+
+#FIXME: this is only while development
+def skipProgram(programName):
+    if programName in ['xmipp_sqlite3',
+                    'xmipp_classify_CL2D_core_analysis',
+                    'xmipp_transform_threshold']:
+        return True
+    for p in ['xmipp_test', 'xmipp_template', 'mpi_']:
+        if programName.find(p) != -1:
+            return True
+    return False
+
+def getProgramsDbName():
+    return os.path.join(getXmippPath(), 'programs.sqlite')
+
+#Some helper functions
+def createProgramsDb(dbName=None):
+    from protlib_sql import ProgramDb
+    if not dbName:
+        dbName = getProgramsDbName()
+    db = ProgramDb(dbName)
+    print 'Created db with name: %(dbName)s' % locals()
+    db.create()
+    #Create categories dictionary to classify programs
+    #looking in program name and category prefixes
+    categories = db.selectCategories()
+    categoryDict = {}
+    for c in categories:
+        prefixes = c['prefixes'].split()
+        for p in prefixes:
+            categoryDict[p] = c
+            
+    programs = getXmippPrograms()
+    for p in programs:
+        try:
+            if not skipProgram(p):
+                if p.find('_mpi') != -1:
+                    p = "mpirun -np 2 %s" % p                    
+                cmd = [p, "--xmipp_write_definition"]
+                from subprocess import Popen, PIPE
+                ps = Popen(cmd, stdout=PIPE, stderr=PIPE)
+                stderrdata = ps.communicate()[1]
+                if stderrdata != '':
+                    raise Exception(stderrdata)
+                for prefix, category in categoryDict.iteritems():
+                    if prefix in p:
+                        db.updateProgramCategory(p, category)
+                        break
+        except Exception, e:
+            print failStr("PROGRAM: " + p)
+            print failStr("ERROR: " + str(e)) 
+    return db
+
+class ProgramKeywordsRank():
+    def __init__(self, keywords=None):
+        self.keywords = keywords
+        self.weights = {'name': 5, 'keywords': 3, 'usage': 1}
+        
+    def getRank(self, program):
+        if not self.keywords:
+            return 1 
+        rank = 0
+        for k in self.keywords:
+            for wkey, wvalue in self.weights.iteritems():
+                if program[wkey].find(k) != -1:
+                    rank += wvalue
+        return rank
 
 
         
