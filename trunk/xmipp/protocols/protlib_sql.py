@@ -80,8 +80,7 @@ class SqliteDb:
     def updateRunState(self, runState, cursor=None, connection=None):
         self.sqlDict['run_state'] = runState
         _sqlCommand = """UPDATE %(TableRuns)s SET
-                            run_state = %(run_state)d,
-                            last_modified = datetime('now')
+                            run_state = %(run_state)d
                         WHERE run_id = %(run_id)d"""  % self.sqlDict
         if cursor is None:
             cursor = self.cur
@@ -205,6 +204,7 @@ class XmippProjectDb(SqliteDb):
                             '%(comment)s');"""  % self.sqlDict
         self.cur.execute(_sqlCommand)
         run['run_id'] = self.cur.lastrowid
+        run['run_state'] = SqliteDb.RUN_SAVED
         self.connection.commit()
         
     def suggestRunName(self, protName, prefix=None):

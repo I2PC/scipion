@@ -130,7 +130,7 @@ class XmippProjectGUI():
             tkMessageBox.showerror("Operation error ", str(e))
     
     def browseFiles(self):
-        runImageJPlugin("512m", "XmippBrowser.txt", "")
+        runImageJPlugin("512m", "XmippBrowser.txt", "", True)
         
     def initVariables(self):
         self.ToolbarButtonsDict = {}

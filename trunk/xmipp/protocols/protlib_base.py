@@ -27,12 +27,14 @@
  '''
  
 import os
+import sys
 import shutil
 import ConfigParser
 from config_protocols import projectDefaults, sections, protDict
 from protlib_sql import SqliteDb, XmippProjectDb, XmippProtocolDb
-from protlib_utils import XmippLog, loadModule, reportError, getScriptPrefix
-from protlib_filesystem import deleteDir, deleteFiles
+from protlib_utils import XmippLog, loadModule, reportError, getScriptPrefix, failStr
+from protlib_filesystem import deleteFiles
+
 
 
 class XmippProject():
@@ -218,6 +220,7 @@ class XmippProtocol(object):
         self.LogPrefix = os.path.join(self.LogDir, self.uniquePrefix)       
         self.Err = self.LogPrefix+".err"
         self.Out = self.LogPrefix+".out"
+        self.LogFile = self.LogPrefix + ".log"
         self.SystemFlavour = project.SystemFlavour
         
     def getProjectId(self):
@@ -289,14 +292,14 @@ class XmippProtocol(object):
         pass
     
     def runSetup(self, isMainLoop=True):
-        import sys
+
         #Redirecting standard output and error to files
         self.fOut = open(self.Out, 'a')
         self.fErr = open(self.Err, 'a')
         self.stderr = sys.stderr # backup stderr
         sys.stdout = self.fOut
         sys.stderr = self.fErr
-        self.Log = XmippLog(self.LogPrefix + ".log")
+        self.Log = XmippLog(self.LogFile)
         self.Db  = XmippProtocolDb(self, isMainLoop)
 
     def run(self):
@@ -334,8 +337,12 @@ class XmippProtocol(object):
             self.postRun()
         except Exception, e:
             retcode = 1;
-            print >> sys.stderr, failStr("ERROR: %s" %  msg)
-            print >> self.stderr, failStr("ERROR: %s" %  msg)
+            print >> sys.stderr, failStr("ERROR: %s" %  e)
+            #THIS IS DURING DEVELOPMENT ONLY
+            print >> self.stderr, failStr("ERROR: %s" %  e)
+            import traceback
+            traceback.print_exc(file=self.stderr)
+            
         finally:
             self.fOut.close()
             self.fErr.close()  
@@ -382,7 +389,6 @@ def protocolMain(ProtocolClass, script=None):
     no_confirm = False
     
     if script is None:
-        import sys
         script  = sys.argv[0]
         options = command_line_options()
         gui = options.gui

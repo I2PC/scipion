@@ -85,9 +85,9 @@ class XmippScript():
             if doRun:
                 self.readParams()
                 self.run()
-        except Exception, e:
+        except Exception:
             import traceback
-            traceback.print_exc(file=sys.stdout)
+            traceback.print_exc(file=sys.stderr)
             
 class ScriptPluginIJ(XmippScript):
     def __init__(self, macro):

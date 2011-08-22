@@ -587,25 +587,6 @@ class ProtocolGUI(BasicGUI):
                     o = o.strip()
                     self.addRadioButton(w, var, o, o, row, var_column, frame)
                     row = self.getRow()
-#            self.menuTextVar = StringVar()
-#            self.maxWidth = 6;    
-#            self.menuSelectionVar = IntVar()
-#            self.menuSelectionVar.set(-1)
-#            self.menuButton = Menubutton(self,
-#                                         relief=RAISED,
-#                                         textvariable=self.menuTextVar)            
-#            self.menuButton.menu = Menu(self.menuButton)
-#            self.menuButton["menu"] = self.menuButton.menu;
-#            self.menuButton.pack(side=LEFT)                    
-#        param.isSubparam = True;
-#        self.subparams.append(param)
-#        self.maxWidth = max(self.maxWidth, len(param.paramName))
-#        self.menuButton.config(width=self.maxWidth)
-#        index = len(self.subparams) - 1;
-#        self.menuButton.menu.add_radiobutton(label=param.paramName,
-#                                             variable=self.menuSelectionVar,
-#                                             value=index,
-#                                             command=self.selectionChanged)
                                            
             elif 'text' in keys:
                 scrollbar = tk.Scrollbar(frame)
@@ -816,20 +797,6 @@ class ProtocolGUI(BasicGUI):
             if runName != self.inRunName:
                 self.run['run_name'] = runName
                 self.run['script'] = self.project.getRunScriptFileName(self.run['protocol_name'], runName)
-            #update database
-            if self.run['script'] != self.run['source']:
-                self.project.projectDb.insertRun(self.run)
-                self.run['source'] = self.run['script']
-                self.inRunName = runName
-            else:
-                if self.run['run_state'] in [SqliteDb.RUN_STARTED, SqliteDb.RUN_LAUNCHED]:
-                    tkMessageBox.showerror('Save not allowed', 
-                                           "This run appears to be RUNNING or LAUNCHED, so you can't save it",
-                                           parent=self.master)
-                    return False 
-                self.run['run_state'] = SqliteDb.RUN_SAVED
-                self.project.projectDb.updateRun(self.run)
-    
             #print "* Saving script: %s" % self.run['script']
             f = open(self.run['script'], 'w')
             #f = sys.stdout
@@ -845,11 +812,25 @@ class ProtocolGUI(BasicGUI):
             f.writelines(self.post_header_lines)
             f.close()
             os.chmod(self.run['script'], 0755)
+            #update database
+            if self.run['script'] != self.run['source']:
+                self.project.projectDb.insertRun(self.run)
+                self.run['source'] = self.run['script']
+                self.inRunName = runName
+            else:
+                if self.run['run_state'] in [SqliteDb.RUN_STARTED, SqliteDb.RUN_LAUNCHED]:
+                    tkMessageBox.showerror('Save not allowed', 
+                                           "This run appears to be RUNNING or LAUNCHED, so you can't save it",
+                                           parent=self.master)
+                    return False 
+                self.run['run_state'] = SqliteDb.RUN_SAVED
+                self.project.projectDb.updateRun(self.run)
+    
             if self.saveCallback:
                 self.saveCallback()
         except Exception, e:
             tkMessageBox.showerror("Error saving run parameters", str(e), parent=self.master)
-            return False
+            raise e
         return True
     
     def validateInput(self):
