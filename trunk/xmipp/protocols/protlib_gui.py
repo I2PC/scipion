@@ -320,7 +320,8 @@ class ProtocolWidget():
         tokens = re.split('\W+', condition)
         for t in tokens:
             if self.master.hasVar(t):
-                condition = condition.replace(t, self.master.getVarValue(t))
+                self.master.
+                condition = condition.replace(t, self.master.getVarLiteralValue(t))
         return eval(condition)
      
     def checkVisibility(self):
@@ -945,6 +946,15 @@ class ProtocolGUI(BasicGUI):
         if self.hasVar(varName):
             return self.variablesDict[varName].getValue()
         return None
+    
+    def getVarLiteralValue(self, varName):
+         if self.hasVar(varName):
+             var = self.variablesDict[varName]
+             value = var.getValue()
+             if var.isString:
+                 value = '"%s"' % value
+             return value
+        return None       
     
     def setVarValue(self, varName, value):
         if self.hasVar(varName):
