@@ -8,7 +8,7 @@ from xmipp import XmippError
 #The following imports are not directly used, but are common operations
 #that will be performed by running steps on database
 from protlib_utils import runJob
-from protlib_filesystem import createDir, deleteDir
+from protlib_filesystem import *
 
 runColumns = ['run_id',
               'run_name',
