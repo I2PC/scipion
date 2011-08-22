@@ -242,8 +242,8 @@ class XmippProtocol(object):
             if self.NumberOfThreads<1:
                 errors.append("Number of threads has to be >=1")
         if 'NumberOfMpi' in dir(self):
-            if self.NumberOfMpi<2:
-                errors.append("Number of MPI processes has to be >=2")
+            if self.NumberOfMpi<1:
+                errors.append("Number of MPI processes has to be >=1")
         
         #specific protocols validations
         errors += self.validate()
