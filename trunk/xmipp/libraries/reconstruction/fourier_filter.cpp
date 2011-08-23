@@ -53,30 +53,27 @@ FourierFilter::FourierFilter()
 void FourierFilter::defineParams(XmippProgram *program)
 {
     program->addParamsLine("== Fourier ==");
-    program->addParamsLine("  [ --fourier <cuttoff_type> <mask_type=raised_cosine>]    : Filter in Fourier space");
-    program->addParamsLine("         where <cuttoff_type>");
-    program->addParamsLine("            low_pass  <w1>                   : Cutoff freq (<1/2 or A)");
-    program->addParamsLine("            high_pass <w1>                   : Cutoff freq (<1/2 or A)");
-    program->addParamsLine("            band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)");
-    program->addParamsLine("            stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)");
+    program->addParamsLine("  [ --fourier <filter_type>]    : Filter in Fourier space");
+    program->addParamsLine("         where <filter_type>");
+    program->addParamsLine("            low_pass  <w1> <raisedw=0.02>      : Cutoff freq (<1/2 or A)");
+    program->addParamsLine("            high_pass <w1> <raisedw=0.02>      : Cutoff freq (<1/2 or A)");
+    program->addParamsLine("            band_pass <w1> <w2> <raisedw=0.02> : Cutoff freq (<1/2 or A)");
+    program->addParamsLine("            stop_band <w1> <w2> <raisedw=0.02> : Cutoff freq (<1/2 or A)");
     program->addParamsLine("            wedge <th0> <thF> <rot=0> <tilt=0> <psi=0>  : Missing wedge (along y) for data between th0-thF ");
     program->addParamsLine("                                             : y is rotated by euler angles degrees");
     program->addParamsLine("            cone <th0>                       : Missing cone for tilt angles up to th0 ");
     program->addParamsLine("                                             : do not use mask type for wedge or cone filters");
-    program->addParamsLine("         where <mask_type>");
-    program->addParamsLine("            raised_cosine <raisedw=0.02>     : Use raised cosine edges (in dig.freq.)");
-    program->addParamsLine("            gaussian                         : Gaussian with sigma = w1");
-    program->addParamsLine("            real_gaussian                    : Convolution with a Gaussian in real-space with sigma = w1");
+    program->addParamsLine("            gaussian <w1>                    : Gaussian with sigma = w1");
     program->addParamsLine("            ctf <ctfile>                     : Provide a .ctfparam file");
     program->addParamsLine("            ctfpos <ctfile>                  : Provide a .ctfparam file");
     program->addParamsLine("                                             : The CTF phase will be corrected before applying");
     program->addParamsLine("            bfactor <B>                      : Exponential filter (positive values for decay) ");
     program->addParamsLine("               requires --sampling;                                                         ");
     program->addParamsLine("         alias -f;");
-    program->addParamsLine("  [--sampling <sampling_rate>]        : If provided pass frequencies are taken in Ang ");
+    program->addParamsLine("  [--sampling <sampling_rate>]               : If provided pass frequencies are taken in Ang ");
     program->addParamsLine("         alias -s;");
     program->addParamsLine("         requires --fourier;");
-    program->addParamsLine("  [--save <filename=\"\"> ]             : do not apply just save the mask");
+    program->addParamsLine("  [--save <filename=\"\"> ]                  : Do not apply just save the mask");
     program->addParamsLine("         requires --fourier;");
 }
 
@@ -87,36 +84,41 @@ void FourierFilter::readParams(XmippProgram *program)
     if (program->checkParam("--save"))
         maskFn = program->getParam("--save");
     // Filter shape .........................................................
-    String cuttoff, mask;
-    int maskPos = 2;
-    cuttoff = program->getParam("--fourier");
+    String filter_type;
+    filter_type = program->getParam("--fourier");
 
     // Read frequencies cuttoff options
-    if (cuttoff == "low_pass")
+    if (filter_type == "low_pass")
     {
         w1 = program->getDoubleParam("--fourier", "low_pass");
+        raised_w = program->getDoubleParam("--fourier", "low_pass",1);
         FilterBand = LOWPASS;
+        FilterShape = RAISED_COSINE;
     }
-    else if (cuttoff == "high_pass")
+    else if (filter_type == "high_pass")
     {
         w1 = program->getDoubleParam("--fourier", "high_pass");
+        raised_w = program->getDoubleParam("--fourier", "high_pass",1);
         FilterBand = HIGHPASS;
+        FilterShape = RAISED_COSINE;
     }
-    else if (cuttoff == "band_pass")
+    else if (filter_type == "band_pass")
     {
         w1 = program->getDoubleParam("--fourier", "band_pass");
         w2 = program->getDoubleParam("--fourier", "band_pass", 1);
-        maskPos = 3;
+        raised_w = program->getDoubleParam("--fourier", "band_pass",2);
         FilterBand = BANDPASS;
+        FilterShape = RAISED_COSINE;
     }
-    else if (cuttoff == "stop_band")
+    else if (filter_type == "stop_band")
     {
         w1 = program->getDoubleParam("--fourier", "stop_band");
         w2 = program->getDoubleParam("--fourier", "stop_band", 1);
-        maskPos = 3;
+        raised_w = program->getDoubleParam("--fourier", "stop_band",2);
         FilterShape = FilterBand = STOPBAND;
+        FilterShape = RAISED_COSINE;
     }
-    else if (cuttoff == "wedge")
+    else if (filter_type == "wedge")
     {
         t1 = program->getDoubleParam("--fourier", "wedge", 0);
         t2 = program->getDoubleParam("--fourier", "wedge", 1);
@@ -125,11 +127,46 @@ void FourierFilter::readParams(XmippProgram *program)
         psi  = program->getDoubleParam("--fourier", "wedge", 4);
         FilterShape = FilterBand = WEDGE;
     }
-    else if (cuttoff == "cone")
+    else if (filter_type == "cone")
     {
         t1 = program->getDoubleParam("--fourier", "cone", 0);
         FilterShape = FilterBand = CONE;
     }
+    else if (filter_type == "gaussian")
+    {
+        w1 = program->getDoubleParam("--fourier", "gaussian");
+        FilterShape = GAUSSIAN;
+        FilterBand = LOWPASS;
+    }
+    else if (filter_type == "real_gaussian")
+    {
+        w1 = program->getDoubleParam("--fourier", "real_gaussian");
+        FilterShape = REALGAUSSIAN;
+        FilterBand = LOWPASS;
+    }
+    else if (filter_type == "ctf")
+    {
+        FilterShape = FilterBand = CTF;
+        ctf.enable_CTFnoise = false;
+        ctf.read( program->getParam("--fourier", "ctf") );
+        ctf.Produce_Side_Info();
+    }
+    else if (filter_type == "ctfpos")
+    {
+        FilterShape = FilterBand = CTFPOS;
+        ctf.enable_CTFnoise = false;
+        ctf.read( program->getParam("--fourier", "ctfpos") );
+        ctf.Produce_Side_Info();
+        do_correct_phase = true;
+    }
+    else if (filter_type == "bfactor")
+    {
+        FilterShape = FilterBand = BFACTOR;
+        w1 = program->getDoubleParam("--fourier", "bfactor");
+        w2 = program->getDoubleParam("--sampling");
+    }
+    else
+        REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This couldn't happen, check argument parser or params definition");
 
     if (!(FilterBand == BFACTOR) && program->checkParam("--sampling"))
     {
@@ -139,50 +176,6 @@ void FourierFilter::readParams(XmippProgram *program)
         if (w2 != 0)
             w2 = sampling_rate / w2;
     }
-
-    //Read mask options
-    mask = program->getParam("--fourier", maskPos);
-
-    if(FilterBand == WEDGE || FilterBand == CONE)
-    {}
-    else if (mask == "raised_cosine")
-    {
-        raised_w = program->getDoubleParam("--fourier", "raised_cosine");
-        FilterShape = RAISED_COSINE;
-    }
-    else if (mask == "gaussian")
-    {
-        FilterShape = GAUSSIAN;
-        FilterBand = LOWPASS;
-    }
-    else if (mask == "real_gaussian")
-    {
-        FilterShape = REALGAUSSIAN;
-        FilterBand = LOWPASS;
-    }
-    else if (mask == "ctf")
-    {
-        FilterShape = FilterBand = CTF;
-        ctf.enable_CTFnoise = false;
-        ctf.read( program->getParam("--fourier", "ctf") );
-        ctf.Produce_Side_Info();
-    }
-    else if (mask == "ctfpos")
-    {
-        FilterShape = FilterBand = CTFPOS;
-        ctf.enable_CTFnoise = false;
-        ctf.read( program->getParam("--fourier", "ctfpos") );
-        ctf.Produce_Side_Info();
-        do_correct_phase = true;
-    }
-    else if (mask == "bfactor")
-    {
-        FilterShape = FilterBand = BFACTOR;
-        w1 = program->getDoubleParam("--fourier", "bfactor");
-        w2 = program->getDoubleParam("--sampling");
-    }
-    else
-        REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This couldn't happen, check argument parser or params definition");
 }
 
 /* Show -------------------------------------------------------------------- */
