@@ -94,6 +94,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	private JPanel buttonspn;
 	private JButton trainbt;
 	private JButton autopickbt;
+	private JLabel iconlb;
 
 	public Shape getShape() {
 		return shape;
@@ -429,6 +430,10 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		micrographpn = new JPanel(new GridBagLayout());
 		micrographpn.setBorder(BorderFactory.createTitledBorder("Micrograph"));
 		JScrollPane sp = new JScrollPane();
+		JPanel ctfpn = new JPanel();
+		ctfpn.setBorder(BorderFactory.createTitledBorder("CTF"));
+		iconlb = new JLabel();
+		ctfpn.add(iconlb);
 		micrographsmd = new MicrographsTableModel(ppicker.getMicrographs());
 		micrographstb = new JTable(micrographsmd);
 		//mgtb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -447,17 +452,13 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 					return;//Probably from fireTableDataChanged raised by me.
 				micrograph = (Micrograph)ppicker.getMicrographs().get(index);
 				initializeCanvas();
-				
+				ParticlePickerJFrame.this.iconlb.setIcon(micrograph.getCTFIcon());
 			}
 		});
 		micrographstb.getSelectionModel().setSelectionInterval(0, 0);
 		sp.setViewportView(micrographstb);
 		micrographpn.add(sp, WindowUtils.updateConstraints(constraints, 0, 0, 1));
-		JPanel ctfpn = new JPanel();
-		ctfpn.setBorder(BorderFactory.createTitledBorder("CTF"));
-		Icon icon = micrograph.getCTFIcon();
-		JLabel iconlb = new JLabel(icon);
-		ctfpn.add(iconlb);
+		
 		micrographpn.add(ctfpn, WindowUtils.updateConstraints(constraints, 1, 0, 1));
 	}
 	
