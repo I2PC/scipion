@@ -248,7 +248,7 @@ sepLine = "#--------------------------------------------------------------------
         
 class ProtocolVariable():
     '''Store information about Protocols variables.'''
-    def __init__(self):
+    def __init__(self, protocol):
         self.name = None
         self.value = None
         self.tkvar = None
@@ -260,7 +260,8 @@ class ProtocolVariable():
         self.isString = False
         self.isBoolean = False
         self.isNumber = False    
-        self.tktext = None #special text widget                       
+        self.tktext = None #special text widget     
+        self.protocol = protocol                  
     
     def setTags(self, tags):
         for k, v in tags:
@@ -305,6 +306,17 @@ class ProtocolVariable():
             print lines
         return lines
     
+    def satisfiesCondition(self):
+        if not 'condition' in self.tags.keys():
+            return True
+        import re
+        condition = self.tags['condition']
+        tokens = re.split('\W+', condition)
+        for t in tokens:
+            if self.protocol.hasVar(t):
+                condition = condition.replace(t, self.protocol.getVarLiteralValue(t))
+        return eval(condition) 
+       
 class ProtocolWidget():
     def __init__(self, master, var):
         self.master = master
@@ -313,15 +325,10 @@ class ProtocolWidget():
         self.variable = var
        
     def satisfiesCondition(self):
-        if not (self.variable and 'condition' in self.variable.tags.keys()):
+        if self.variable:
+            return self.variable.satisfiesCondition()
+        else:
             return True
-        import re
-        condition = self.variable.tags['condition']
-        tokens = re.split('\W+', condition)
-        for t in tokens:
-            if self.master.hasVar(t):
-                condition = condition.replace(t, self.master.getVarLiteralValue(t))
-        return eval(condition)
      
     def checkVisibility(self):
         show = self.variable.isVisualize() == self.master.visualize_mode
@@ -722,7 +729,7 @@ class ProtocolGUI(BasicGUI):
             index += 1
             match = reComment.search(line) #Parse the comment line
             if match:
-                v = ProtocolVariable()
+                v = ProtocolVariable(self)
                 v.comment = match.group(2)
                 v.commentline = line
                 
@@ -1089,6 +1096,8 @@ def validatorNonEmpty(var):
     return None
     
 def validatorPathExists(var):
+    if not var.satisfiesCondition():
+        return None
     err = validatorNonEmpty(var)
     if not err:
         path = var.tkvar.get()

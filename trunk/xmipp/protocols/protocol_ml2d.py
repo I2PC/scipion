@@ -7,6 +7,7 @@
 #  Updated:  J. M. de la Rosa Trevin July 2011
 #
 
+from xmipp import MetaData
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 
@@ -20,9 +21,9 @@ class ProtML2D(XmippProtocol):
         #return ["Protocol not implemented yet..."]
     
     def summary(self):
-        return ["This is a test summary",
-                "Need a real summary here..."
-                ]
+        input = self.ImgMd
+        return ["Input images                 : %s (%u)" % (self.ImgMd, MetaData(self.ImgMd).size()),
+                "Reference image              : %s" % self.RefMd ]
         
     def defineSteps(self):
         print '*********************************************************************'
@@ -31,21 +32,17 @@ class ProtML2D(XmippProtocol):
             progId += "f"  
         
         program = "xmipp_%s_align2d" % progId
-#        action = "Executing"
-#        if (restart):
-#            action = "Restarting"
-#            
-#        print '*  %s %s program :' % (action, program)
+
         restart = False
         if (restart):
             pass 
             #Not yet implemented
             #params= ' --restart ' + utils_xmipp.composeFileName('ml2d_it', RestartIter,'log')
         else: 
-            params = ' -i %s --oroot %s/%s2d' % (self.InSelFile, self.WorkingDir, progId)
+            params = ' -i %s --oroot %s/%s2d' % (self.ImgMd, self.WorkingDir, progId)
             # Number of references will be ignored if -ref is passed as expert option
-            if self.ExtraParams.find("--ref") == -1:
-                params += ' --nref %i' % self.NumberOfReferences
+            if self.DoGenerateReferences:
+                params += ' --nref %d' % self.NumberOfReferences
             params += ' ' + self.ExtraParams
             if (self.DoFast and not self.DoMlf):
                 params += ' --fast'
