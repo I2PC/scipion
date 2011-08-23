@@ -103,7 +103,15 @@ QueueName = "default"
 be running, after that time it will be killed by the
 queue system
 """
-QueueHours = 4
+QueueHours = 12
+
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Visualization
+#------------------------------------------------------------------------------------------------
+# Visualize micrograph summary
+DoShowSummary=True
+# Visualize families
+DoShowFamilies=True
 
 # {hidden} Show expert options
 """If True, expert options will be displayed
