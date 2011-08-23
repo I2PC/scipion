@@ -22,8 +22,8 @@ public class JDialogXmippFilesListMeasureFreqsBrowser extends JDialogXmippFilesL
 
         setTitle(LABELS.TITLE_XMIPP_WIZARD_MEASURE_FREQS);
 
-        jbOk.setText(LABELS.BUTTON_CLOSE);
-        jpButtons.remove(jbCancel);
+        jpButtons.remove(jbOk);
+        jbCancel.setText(LABELS.BUTTON_CLOSE);
 
         // Hack: Replaces panel.
         remove(panelXmippBrowser);
@@ -33,11 +33,6 @@ public class JDialogXmippFilesListMeasureFreqsBrowser extends JDialogXmippFilesL
 
         add(panelXmippBrowser, BorderLayout.CENTER);
         pack();
-    }
-
-    @Override
-    protected void button1Clicked() {
-        cancel();
     }
 
     @Override
