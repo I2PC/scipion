@@ -37,6 +37,11 @@ public class JDialogXmippFilesListMeasureFreqsBrowser extends JDialogXmippFilesL
 
     @Override
     protected void button1Clicked() {
+        cancel();
+    }
+
+    @Override
+    void cancel() {
         dispose();
     }
 }
