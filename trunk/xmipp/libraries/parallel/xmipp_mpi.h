@@ -254,8 +254,6 @@ public:\
     void read(int argc, char **argv, bool reportErrors = true)\
     {\
         MpiMetadataProgram::read(argc,argv);\
-        if (verbose)\
-         std::cerr << "mpi reading.." << std::endl;\
         baseClassName::read(argc, argv, reportErrors);\
     }\
     void preProcess()\
