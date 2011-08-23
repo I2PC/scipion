@@ -382,7 +382,16 @@ def getProtocolFromModule(script, project):
         if isclass(v) and issubclass(v, XmippProtocol) and v != XmippProtocol:
             return v(script, project)
     reportError("Can load protocol from " + script)
-            
+
+def getWorkingDirFromRunName(extendedRunName):
+    # The extended run name has the name of the protocol in front
+    from config_protocols import protDict
+    for k in protDict.keys():
+        if extendedRunName.startswith(k):
+            runName=extendedRunName.replace(k+"_","")
+            return os.path.join(protDict[k].dir,runName)
+    return None
+
 def protocolMain(ProtocolClass, script=None):
     gui = False
     no_check = False
