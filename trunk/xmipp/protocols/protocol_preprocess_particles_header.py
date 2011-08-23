@@ -50,7 +50,7 @@ Freq_low=0.02
 
 #{condition}(DoFourier) Freq_high (0<f<0.5)
 """ Set it to 0.5 for high pass filters """
-Freq_low=0.35
+Freq_high=0.35
 
 # Fourier Gaussian
 """ Gaussian filter defined in Fourier space"""
@@ -81,7 +81,7 @@ DoNorm=False
 """ OldXmipp (mean(Image)=0, stddev(Image)=1). NewXmipp (mean(background)=0, stddev(background)=1), Ramp (subtract background+NewXmipp)"""
 NormType="Ramp"
 
-# {condition}(DoNorm) Background radius
+# {condition}(DoNorm and NormType!="OldXmipp") Background radius
 """Pixels outside this circle are assumed to be noise and their stddev is set to 1.
    Radius for background circle definition (in pix.).
    If this value is 0, then the same as the particle radius is used. """
