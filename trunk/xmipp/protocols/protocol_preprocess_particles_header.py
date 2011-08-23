@@ -52,6 +52,10 @@ Freq_low=0.02
 """ Set it to 0.5 for high pass filters """
 Freq_high=0.35
 
+#{condition}(DoFourier){expert} Freq_decay (0<f<0.5)
+""" It describes the length of the amplitude decay in a raised cosine """
+Freq_decay=0.02
+
 # Fourier Gaussian
 """ Gaussian filter defined in Fourier space"""
 DoGaussian=False

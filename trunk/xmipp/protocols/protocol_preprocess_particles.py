@@ -2,10 +2,6 @@
 #------------------------------------------------------------------------------------------------
 #
 # General script for Xmipp-based pre-processing of single-particles: 
-#  - phase flipping
-#  - extraction of particles
-#  - normalization
-#  - sort_junk
 
 # Author: Carlos Oscar, August 2011
 #
@@ -14,110 +10,80 @@ import xmipp
 import os
 from protlib_utils import runJob
 from protlib_filesystem import deleteFile
+import glob
 
 class ProtPreprocessParticles(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.preprocess_particles.name, scriptname, project)
         self.Import = 'from protocol_preprocess_particles import *'
-        # COSS: Falta incluir una ejecucion de automaticos
-        # COSS: Falta tiltpairs
-        self.pickingRunname=self.PickingRun.replace(protDict.particle_pick.name,"")
-        if self.pickingRunname[0]=="_":
-            self.pickingRunname=self.pickingRunname[1:]
-        self.pickingDir= os.path.join(protDict.particle_pick.dir,self.pickingRunname)
-        self.familyFile = os.path.join(self.pickingDir, "families.xmd")
+        self.extractionDir=getWorkingDirFromRunName(self.ExtractionRun)
 
     def defineSteps(self):
-        families=xmipp.MetaData(self.familyFile)
-        self.familyList=[]
-        for id in families:
-            familyName=families.getValue(xmipp.MDL_PICKING_FAMILY,id)
-            particleSize=families.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE,id)
-            self.familyList.append((familyName,particleSize))
-            familyDir=os.path.join(self.WorkingDir,familyName)
-            self.Db.insertStep('createDir',verifyfiles=[familyDir],path=familyDir)
-        
-        idMPI=self.Db.insertStep('runStepGapsMpi',passDb=True, script=self.scriptName, NumberOfMpi=self.NumberOfMpi)
-        verifyFiles=[]        
-        mD=xmipp.MetaData(os.path.join(self.pickingDir,"micrographs.sel"))
-        for id in mD:
-            micrograph=mD.getValue(xmipp.MDL_IMAGE,id)
-            micrographName=os.path.split(os.path.split(micrograph)[0])[1]
-            posFile=os.path.join(self.pickingDir,micrographName+".pos")
-            if os.path.exists(posFile):
-                parent_id=None
-                micrographToExtract=micrograph
-                if self.DoFlip:
-                    ctf=mD.getValue(xmipp.MDL_CTFMODEL,id)
-                    micrographToExtract=os.path.join(self.TmpDir,micrographName+"_flipped.xmp")
-                    parent_id=self.Db.insertStep('phaseFlip',verifyfiles=[micrographToExtract],execution_mode=SqliteDb.EXEC_GAP,
-                                      micrograph=micrograph,ctf=ctf,fnOut=micrographToExtract)
-                (tasks,outputFiles)=self.whichTasks(posFile,micrographName)
-                verifyFiles+=outputFiles
-                parent_id=self.Db.insertStep('preprocessTasks',verifyfiles=outputFiles,execution_mode=SqliteDb.EXEC_GAP,parent_step_id=parent_id,
-                                      micrographToExtract=micrographToExtract,tasks=tasks,
-                                      doNorm=self.doNorm,doLog=self.DoLog,doInvert=self.DoInvert,
-                                      bgRadius=self.BackGroundRadius, doRemoveDust=self.DoRemoveDust,
-                                      dustRemovalThreshold=self.DustRemovalThreshold)
-                if self.DoFlip:
-                    self.Db.insertStep('deleteFile',execution_mode=SqliteDb.EXEC_GAP,parent_step_id=parent_id,filename=micrographToExtract,verbose=True)
-        self.Db.updateVerifyFiles(idMPI,verifyFiles)
+        fnOut=os.path.join(self.WorkingDir,"micrographs.sel")
+        self.Db.insertStep('createLink',verifyfiles=[fnOut],source=os.path.join(self.extractionDir,"micrographs.sel"),dest=fnOut)
 
-        # COSS Falta unir en un unico selfile (por familia) y sort_junk
-                
+        fnIn=os.path.join(self.extractionDir,self.Family)
+        fnOut=os.path.join(self.WorkingDir,self.Family)
+        self.Db.insertStep('copyDir',verifyfiles=[fnOut],source=fnIn,dest=fnOut)
+        fnIn+=".sel"
+        fnOut+=".sel"
+        self.Db.insertStep('transposeMetadata',verifyfiles=[fnOut],source=fnIn,sourceWorkingDir=self.extractionDir,
+                           destWorkingDir=self.WorkingDir,dest=fnOut)
+
+        if self.DoFourier:
+            self.Db.insertStep('doFourier',stack=fnOut,freq_low=self.Freq_low,freq_high=self.Freq_high,freq_decay=self.Freq_decay,
+                               Nproc=self.NumberOfMpi)
+        if self.DoGaussian:
+            self.Db.insertStep('doGaussian',stack=fnOut,freq_sigma=self.Freq_sigma,Nproc=self.NumberOfMpi)
+        if self.DoRemoveDust:
+            self.Db.insertStep('doRemoveDust',stack=fnOut,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
+        if self.DoNorm:
+            self.Db.insertStep('doNorm',stack=fnOut,normType=self.NormType,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
+        
     def validate(self):
         errors = []
-        if not os.path.exists(self.familyFile):
-            errors.append("Cannot find "+self.familyFile)
-        fnMicrographs=os.path.join(self.pickingDir,"micrographs.sel")
-        if not os.path.exists(fnMicrographs):
-            errors.append("Cannot find "+fnMicrographs)
-        else:
-            mD=xmipp.MetaData(fnMicrographs)
-            if self.DoFlip and not mD.containsLabel(xmipp.MDL_CTFMODEL):
-                errors.append(fnMicrographs+" does not contain CTF information for phase flipping")
+        fnSel=os.path.join(self.extractionDir,self.Family+".sel")
+        if not os.path.exists(fnSel):
+            errors.append("Cannot find "+fnSel)
         return errors
 
-    def whichTasks(self,posFile,micrographName):
-        fileList=[]
-        tasks=[]
-        for family in self.familyList:
-            familyName=family[0]
-            particleSize=family[1]
-            blockName="%s@%s"%(familyName,posFile)
-            mD=xmipp.MetaData(blockName)
-            if mD.size()>0:
-                fnOut=os.path.join(self.WorkingDir,familyName,micrographName+".stk")
-                tasks.append((blockName,fnOut,particleSize))
-                fileList.append(fnOut)
-        return (tasks,fileList)
+    def summary(self):
+        message=[]
+        message.append("Still to do")
+        return message
 
-def phaseFlip(log,micrograph,ctf,fnOut):
-    runJob(log,"xmipp_ctf_phase_flip"," -i "+micrograph+" --ctf "+ctf+" -o "+fnOut)
 
-def preprocessTasks(log,micrographToExtract,tasks,
-                    doNorm,doLog,doInvert,bgRadius,doRemoveDust,dustRemovalThreshold):
-    for task in tasks:
-        (blockName,fnOut,particleSize)=task
-        preprocess(log,micrographToExtract,blockName,particleSize,fnOut,
-                   doNorm,doLog,doInvert,bgRadius,doRemoveDust,dustRemovalThreshold)
+    def visualize(self):
+        selfile=os.path.join(self.WorkingDir,self.Family+".sel")
+        if not os.path.exists(selfile):
+            import tkMessageBox
+            tkMessageBox.showerror("Error", "There is no result yet")                    
+        os.system("xmipp_showj -i "+selfile+" --memory 1024m &")
 
-def preprocess(log,micrographToExtract,blockName,particleSize,fnOut,
-               doNorm,doLog,doInvert,bgRadius,doRemoveDust,dustRemovalThreshold):
-        # Extract 
-        rootname=os.path.splitext(fnOut)[0]
-        arguments="-i "+micrographToExtract+" --pos "+blockName+" --oroot "+rootname+" --Xdim "+str(particleSize)
-        if doInvert:
-            arguments+=" --invert"
-        if doLog:
-            arguments+=" --log"
-        runJob(log,"xmipp_micrograph_scissor",arguments)
-        
-        # Normalize 
-        if doNorm:
-            if bgRadius==0:
-                bgRadius=int(particleSize/2)
-            arguments="-i "+fnOut+' --method Ramp --background circle '+str(bgRadius)
-            if doRemoveDust:
-                arguments+=' --thr_black_dust -' + str(dustRemovalThreshold)+' --thr_white_dust ' + str(dustRemovalThreshold)
-            runJob(log,"xmipp_transform_normalize",arguments)
+def transposeMetadata(log,source,sourceWorkingDir,destWorkingDir,dest):
+    mD=xmipp.MetaData(source)
+    mD.removeLabel(xmipp.MDL_ZSCORE)
+    mD.operate("image=replace(image,'%s','%s')"%(sourceWorkingDir,destWorkingDir))
+    mD.write(dest)
+
+def doFourier(log,stack,freq_low,freq_high,freq_decay,Nproc):
+    if freq_low==0:
+        runJob(log,"xmipp_transform_filter","-i %(stack)s --fourier low_pass %(freq_high)f %(freq_decay)f"%locals(),Nproc)
+    elif freq_high==0.5:
+        runJob(log,"xmipp_transform_filter","-i %(stack)s --fourier high_pass %(freq_low)f %(freq_decay)f"%locals(),Nproc)
+    else:
+        runJob(log,"xmipp_transform_filter","-i %(stack)s --fourier band_pass %(freq_low)f %(freq_high)f %(freq_decay)f"%locals(),Nproc)
+
+def doGaussian(log,stack,freq_sigma,Nproc):
+    runJob(log,"xmipp_transform_filter","-i %(stack)s --fourier gaussian %(freq_sigma)f"%locals(),Nproc)
+
+def doRemoveDust(log,stack,threshold,Nproc):
+    runJob(log,"xmipp_transform_filter","-i %(stack)s --bad_pixels outliers %(threshold)f"%locals(),Nproc)
+
+def doNorm(log,stack,normType,bgRadius,Nproc):
+    if normType=="OldXmipp":
+        runJob(log,"xmipp_transform_normalize","-i %(stack)s --method OldXmipp"%locals(),Nproc)
+    elif normType=="NewXmipp":
+        runJob(log,"xmipp_transform_normalize","-i %(stack)s --method NewXmipp --background circle %(bgRadius)d"%locals(),Nproc)
+    else:
+        runJob(log,"xmipp_transform_normalize","-i %(stack)s --method Ramp --background circle %(bgRadius)d"%locals(),Nproc)
