@@ -139,9 +139,6 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
     if (!original_piece.sameShape(piece))
         selfScaleToSize(LINEAR, original_piece, YSIZE(piece), XSIZE(piece));
 
-    // Reject 5% of the outliers
-    reject_outliers(original_piece, 2.0);
-
 #ifdef DEBUG_PREPARE
 
     save() = original_piece;
