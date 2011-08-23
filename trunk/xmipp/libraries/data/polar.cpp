@@ -38,8 +38,11 @@ void fourierTransformRings(Polar<double > & in,
         (plans.transformers[iring]).FourierTransform();
         (plans.transformers[iring]).getFourierAlias(Fring);
         if (conjugated)
-            for (int i = 0; i < XSIZE(Fring); i++)
-                DIRECT_A1D_ELEM(Fring,i) = conj(DIRECT_A1D_ELEM(Fring,i));
+        {
+        	double *ptrFring_i=(double*)&DIRECT_A1D_ELEM(Fring,0);
+            for (int i = 0; i < XSIZE(Fring); ++i,ptrFring_i+=2)
+            	(*ptrFring_i) *=-1;
+        }
         out.rings.push_back(Fring);
     }
     out.mode = in.mode;

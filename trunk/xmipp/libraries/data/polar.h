@@ -494,10 +494,11 @@ public:
             REPORT_ERROR(ERR_VALUE_INCORRECT,"Incorrect mode for computeAverageAndStddev");
 
         int imax=rings.size();
-        for (int i = 0; i < imax; i++)
+        const double *ptrRing_radius=&ring_radius[0];
+        for (int i = 0; i < imax; ++i, ++ptrRing_radius)
         {
             // take varying sampling into account
-            w = (twopi * ring_radius[i]) / (double) XSIZE(rings[i]);
+            w = (twopi * (*ptrRing_radius)) / (double) XSIZE(rings[i]);
             const MultidimArray<T> &rings_i=rings[i];
             for (int j = 0; j < XSIZE(rings_i); j++)
             {
@@ -512,12 +513,12 @@ public:
         {
             sum2 = sum2 / N;
             avg = sum / N;
-            stddev=sqrt(sum2-avg*avg);
+            stddev=sqrt(fabs(sum2-avg*avg));
         }
         else if (N != 0.)
         {
             avg = sum;
-            stddev=sqrt(sum2-average*average);
+            stddev=sqrt(fabs(sum2-average*average));
         }
         else
         	stddev=avg=0;
@@ -682,6 +683,10 @@ public:
         minyp = FIRST_XMIPP_INDEX(YSIZE(M1));
         maxxp = LAST_XMIPP_INDEX(XSIZE(M1));
         maxyp = LAST_XMIPP_INDEX(YSIZE(M1));
+        double minxp_e=minxp-XMIPP_EQUAL_ACCURACY;
+        double minyp_e=minyp-XMIPP_EQUAL_ACCURACY;
+        double maxxp_e=maxxp+XMIPP_EQUAL_ACCURACY;
+        double maxyp_e=maxyp+XMIPP_EQUAL_ACCURACY;
 
         // Loop over all polar coordinates
         for (int iring = first_ring; iring <= last_ring; iring++)
@@ -706,18 +711,16 @@ public:
                 yp += yoff;
 
                 // Wrap coordinates
-                if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                    xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                if (xp < minxp_e || xp > maxxp_e)
                     xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
-                if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                    yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                if (yp < minyp_e || yp > maxyp_e)
                     yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
 
                 // Perform the convolution interpolation
                 if (BsplineOrder==1)
-                    DIRECT_A1D_ELEM(Mring,iphi) = (T) M1.interpolatedElement2D(xp,yp);
+                    DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElement2D(xp,yp);
                 else
-                	DIRECT_A1D_ELEM(Mring,iphi) = (T) M1.interpolatedElementBSpline2D(xp,yp,BsplineOrder);
+                	DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElementBSpline2D(xp,yp,BsplineOrder);
             }
             rings.push_back(Mring);
             ring_radius.push_back(radius);
