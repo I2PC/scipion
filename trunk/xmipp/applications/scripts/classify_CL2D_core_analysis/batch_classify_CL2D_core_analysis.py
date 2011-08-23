@@ -4,11 +4,12 @@ import os
 import sys
 from operator import itemgetter
 from threading import Thread
+from protlib_utils import reportError
 xmippdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]
 sys.path.append(xmippdir+'/lib') # add default search path
 sys.path.append(xmippdir+'/protocols') # add default search path
 import xmipp
-import launch_job
+#import launch_job
 
 # --------------------------------------------------------------------
 def removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,thZscore,thPCAZscore,
@@ -508,4 +509,4 @@ class ScriptCL2DCoreAnalysis(XmippScript):
         print "NOT-IMPLEMENTED: This programs needs to be re-written with new libs utilities"
          
 if __name__ == "__main__":
-    ScriptCL2DCoreAnalysis.run()
+    ScriptCL2DCoreAnalysis().run()
