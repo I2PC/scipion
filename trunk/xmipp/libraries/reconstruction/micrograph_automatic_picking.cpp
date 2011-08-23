@@ -28,7 +28,6 @@
 #include <data/rotational_spectrum.h>
 #include <reconstruction/denoise.h>
 #include <data/xmipp_fft.h>
-#include <reconstruction/fourier_filter.h>
 #include <algorithm>
 
 //#define DEBUG_PREPARE
@@ -78,14 +77,36 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
 
     // Band pass filter
     pthread_mutex_lock(&preparePieceMutex);
-    FourierFilter Filter;
-    Filter.FilterShape = RAISED_COSINE;
-    Filter.FilterBand = BANDPASS;
-    Filter.w1 = __highpass_cutoff;
-    Filter.w2 = 1.0 / (__particle_radius / (__reduction * 4));
-    Filter.raised_w = XMIPP_MIN(0.02, __highpass_cutoff);
-    Filter.generateMask(piece);
-    Filter.applyMaskSpace(piece);
+    if (__filter==NULL)
+    {
+        // Band pass filter
+        __filter=new FourierFilter();
+        __filter->FilterShape = RAISED_COSINE;
+        __filter->FilterBand = BANDPASS;
+        __filter->w1 = __highpass_cutoff;
+        __filter->w2 = 1.0 / (__particle_radius / (__reduction * 4));
+        __filter->raised_w = XMIPP_MIN(0.02, __highpass_cutoff);
+        __filter->generateMask(piece);
+
+        // Plus Gaussian filter
+        double w1=__filter->w2/2;
+        double K2=-0.5/(w1*w1);
+        double K1=1/sqrt(2*PI*w1);
+        for (int i=0; i<YSIZE(__filter->maskFourierd); i++)
+        {
+        	double wy;
+            FFT_IDX2DIGFREQ(i,YSIZE(piece),wy);
+            double wy2=wy*wy;
+            for (int j=0; j<XSIZE(__filter->maskFourierd); j++)
+            {
+            	double wx;
+                FFT_IDX2DIGFREQ(j,XSIZE(piece),wx);
+                double w2=wy2+wx*wx;
+                DIRECT_A2D_ELEM(__filter->maskFourierd,i,j)*=K1*exp(K2*w2);
+            }
+        }
+    }
+    __filter->applyMaskSpace(piece);
     STARTINGX(piece) = STARTINGY(piece) = 0;
 #ifdef DEBUG_PREPARE
 
@@ -1359,7 +1380,7 @@ void AutoParticlePicking::get_centered_piece(MultidimArray<double> &piece,
         size_t rowLength=__piece_xsize*sizeof(double);
         for (int i = 0; i < __piece_xsize; i++)
             memcpy(&DIRECT_A2D_ELEM(piece, i, 0),&DIRECT_A2D_ELEM(micrograph,starty + i, startx),rowLength);
-        }
+    }
     else
     {
         const Micrograph &micrograph = *__m;
@@ -1466,6 +1487,12 @@ AutoParticlePicking::AutoParticlePicking(const FileName &fn, Micrograph *_m, boo
     __learn_overlap = 0;
     __fast=_fast;
     __incore=false;
+    __filter=NULL;
+}
+
+AutoParticlePicking::~AutoParticlePicking()
+{
+    delete __filter;
 }
 
 void AutoParticlePicking::readMicrograph()
@@ -1653,7 +1680,7 @@ std::istream & operator >>(std::istream &_in, Classification_model &_m)
 
 void AutoParticlePicking::loadModels(const FileName &fn_root)
 {
-	FileName fn_training=fn_root + "_training.txt";
+    FileName fn_training=fn_root + "_training.txt";
     if (!exists(fn_training))
         return;
 
@@ -1814,7 +1841,7 @@ void ProgMicrographAutomaticPicking::run()
     autoPicking->setNumThreads(Nthreads);
     autoPicking->loadModels(fn_model);
     if (incore)
-    	autoPicking->readMicrograph();
+        autoPicking->readMicrograph();
     FileName familyName=fn_model.removeDirectories();
     if (mode == "autoselect" || mode=="try")
     {
@@ -1844,7 +1871,7 @@ void ProgMicrographAutomaticPicking::run()
             if (MD.size() > 0)
             {
                 autoPicking->loadAutoFeatureVectors(
-                		fn_root + "_auto_feature_vectors_"+familyName+".txt");
+                    fn_root + "_auto_feature_vectors_"+familyName+".txt");
                 int idx;
                 FOR_ALL_OBJECTS_IN_METADATA(MD)
                 {

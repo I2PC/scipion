@@ -29,6 +29,7 @@
 #include <data/micrograph.h>
 #include <data/mask.h>
 #include <data/xmipp_program.h>
+#include <reconstruction/fourier_filter.h>
 #include <classification/naive_bayes.h>
 
 /// @defgroup AutomaticPicking Image denoising
@@ -162,9 +163,13 @@ public:
     std::vector < MultidimArray<double> * > __sector;
     std::vector < MultidimArray<double> * > __ring;
     std::vector < MultidimArray<int> * >    __Nsector;
+    FourierFilter             *__filter;
 public:
     /// Empty constructor
     AutoParticlePicking(const FileName &fn, Micrograph *_m, bool __fast);
+
+    /// Destructor
+    ~AutoParticlePicking();
 
     /// Read the micrograph in memory
     void readMicrograph();
