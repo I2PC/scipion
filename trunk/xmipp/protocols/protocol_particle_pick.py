@@ -47,9 +47,15 @@ class ProtParticlePicking(XmippProtocol):
         for posfile in glob.glob(self.WorkingDir+"/*.pos"):
             blockList=xmipp.getBlocksInMetaDataFile(posfile)
             manual=0
+            Nblock={}
             for block in blockList:
-                mD=xmipp.MetaData(posfile);
-                manual+=mD.size()
+                mD=xmipp.MetaData(block+"@"+posfile);
+                Nparticles=mD.size()
+                manual+=Nparticles
+                if block in Nblock.keys():
+                     Nblock[block]+=Nparticles
+                else:
+                     Nblock[block]=Nparticles
             if manual>0:
                 total_manual+=manual
                 N_manual+=1
@@ -62,6 +68,8 @@ class ProtParticlePicking(XmippProtocol):
                 msg+=" and %d families"
         msg+=")"
         summary.append(msg)
+        for block in Nblock.keys():
+            summary.append(block+" : "+str(Nblock[block])+" particles")
         return summary
     
     def validate(self):
