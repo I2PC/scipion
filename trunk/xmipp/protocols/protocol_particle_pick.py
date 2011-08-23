@@ -18,10 +18,7 @@ class ProtParticlePicking(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.particle_pick.name, scriptname, project)
         self.Import="from protocol_particle_pick import *"
-        self.importRunname=self.ImportRun.replace(protDict.import_micrographs.name,"")
-        if self.importRunname[0]=="_":
-            self.importRunname=self.importRunname[1:]
-        self.micrographSelfile = os.path.join(protDict.import_micrographs.dir,self.importRunname, "micrographs.sel")
+        self.micrographSelfile = os.path.join(getWorkingDirFromRunName(self.ImportRun), "micrographs.sel")
 
     def defineSteps(self):
         self.Db.insertStep('createLink',execution_mode=SqliteDb.EXEC_MAINLOOP,

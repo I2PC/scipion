@@ -22,10 +22,7 @@ class ProtExtractParticles(XmippProtocol):
         self.Import = 'from protocol_extract_particles import *'
         # COSS: Falta incluir una ejecucion de automaticos
         # COSS: Falta tiltpairs
-        self.pickingRunname=self.PickingRun.replace(protDict.particle_pick.name,"")
-        if self.pickingRunname[0]=="_":
-            self.pickingRunname=self.pickingRunname[1:]
-        self.pickingDir= os.path.join(protDict.particle_pick.dir,self.pickingRunname)
+        self.pickingDir= getWorkingDirFromRunName(self.PickingRun)
         self.familyFile = os.path.join(self.pickingDir, "families.xmd")
 
     def defineSteps(self):

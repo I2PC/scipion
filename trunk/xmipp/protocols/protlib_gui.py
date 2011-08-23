@@ -1069,16 +1069,11 @@ class ProtocolGUI(BasicGUI):
     #Select family from extraction run
     def wizardChooseFamily(self, var):
         import glob
-        extractionRun = self.getVarValue('ExtractionRun')
-        extractionRunname=extractionRun.replace(protDict.extract_particles.name,"")
-        if extractionRunname[0]=="_":
-            extractionRunname=extractionRunname[1:]
-        extractionDir= os.path.join(protDict.extract_particles.dir,extractionRunname)
+        from protlib_base import getWorkingDirFromRunName
+        extractionDir= getWorkingDirFromRunName(self.getVarValue('ExtractionRun'))
         familyList=[]
-        print "extractionDir=",extractionDir
         for file in glob.glob(extractionDir+"/*_sorted.sel"):
             familyList.append(os.path.split(file)[1].replace("_sorted.sel",""))
-        print "familyList=",familyList
         if len(familyList)==1:
             var.tkvar.set(familyList[0])
         else:
