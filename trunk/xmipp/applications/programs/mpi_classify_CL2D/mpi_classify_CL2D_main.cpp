@@ -283,11 +283,11 @@ double fastCorrentropy(const MultidimArray<double> &x, const MultidimArray<doubl
     double retvalxy=0;
     double isigma=1.0/sigma;
     int maskSum=0;
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(x)
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(x)
     {
-        if (DIRECT_A2D_ELEM(mask,i,j))
+        if (DIRECT_MULTIDIM_ELEM(mask,n))
         {
-            retvalxy+=G.getValue(isigma*(DIRECT_A2D_ELEM(x,i,j)-DIRECT_A2D_ELEM(y,i,j)));
+            retvalxy+=G.getValue(isigma*(DIRECT_MULTIDIM_ELEM(x,n)-DIRECT_MULTIDIM_ELEM(y,n)));
             ++maskSum;
         }
     }
