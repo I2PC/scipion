@@ -1,14 +1,10 @@
 package model;
 
-import gui.ParticlePickerJFrame;
-
 import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-
-import javax.swing.JOptionPane;
 
 import xmipp.MDLabel;
 import xmipp.MetaData;
@@ -18,7 +14,7 @@ public class ParticlePicker {
 
 	private List<Family> families;
 	private List<Micrograph> micrographs;
-	private static ParticlePicker ppdata;
+	private static ParticlePicker ppicker;
 
 	private ParticlePicker() {
 		this.families = new ArrayList<Family>();
@@ -61,12 +57,7 @@ public class ParticlePicker {
 		}
 	}
 
-	public int getParticlesNumber() {
-		int count = 0;
-		for (Micrograph m : micrographs)
-			count += m.getParticles().size();
-		return count;
-	}
+	
 
 	public void classify() {
 		String args;
@@ -92,9 +83,9 @@ public class ParticlePicker {
 	}
 
 	public static ParticlePicker getInstance() {
-		if (ppdata == null)
-			ppdata = new ParticlePicker();
-		return ppdata;
+		if (ppicker == null)
+			ppicker = new ParticlePicker();
+		return ppicker;
 	}
 
 	public List<Family> getFamilies() {
@@ -105,7 +96,7 @@ public class ParticlePicker {
 		return micrographs;
 	}
 
-	public void saveFamilyData() {
+	public void persistFamilies() {
 		long id;
 		String filename = Family.getOFilename();
 		try {
@@ -199,7 +190,7 @@ public class ParticlePicker {
 
 	}
 
-	public void saveParticles() {
+	public void persistMicrographs() {
 		long id;
 		try {
 			int count;
@@ -209,12 +200,10 @@ public class ParticlePicker {
 				count = 0;
 				for (Family f : families) {
 					md = new MetaData();
-					for (Particle p : m.getParticles()) {
-						if (f.equals(p.getFamily())) {
+					for (Particle p : m.getFamilyData(f).getParticles()) {
 							id = md.addObject();
 							md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
 							md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
-						}
 					}
 					block = f.getName() + "@" + m.getOutputFName();
 					if (count == 0)

@@ -4,7 +4,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-enum State
+enum Step
 {
 	MANUAL, SUPERVISED
 }
@@ -14,7 +14,13 @@ public class Family {
 	private String name;
 	private Color color;
 	private int size;
-	private State state;
+	private Step step;
+	static int particles = 0;
+	
+	public int getParticlesNumber()
+	{
+		return particles;
+	}
 
 
 	private static int sizemax = 1000;
@@ -24,6 +30,8 @@ public class Family {
 										Color.MAGENTA, Color.ORANGE, 
 										Color.PINK, Color.RED, Color.YELLOW};
 	private static int nextcolor;
+	
+	
 	
 	
 	
@@ -39,10 +47,10 @@ public class Family {
 	
 	public Family(String name, Color color, int size)
 	{
-		this(name, color, size, State.MANUAL);
+		this(name, color, size, Step.MANUAL);
 	}
 	
-	public Family(String name, Color color, int size, State state)
+	public Family(String name, Color color, int size, Step state)
 	{
 		if(size < 0 || size > sizemax)
 			throw new IllegalArgumentException(String.format("Size should be between 0 and %s, %s not allowed", sizemax, size));
@@ -51,24 +59,24 @@ public class Family {
 		this.name = name;
 		this.color = color;
 		this.size = size;
-		this.state = state;
+		this.step = state;
 	}
 	
 	
 	
 	public Family(String name, Color color)
 	{
-		this(name, color, getDefaultSize(), State.MANUAL);
+		this(name, color, getDefaultSize(), Step.MANUAL);
 	}
 	
-	public State getState()
+	public Step getStep()
 	{
-		return state;
+		return step;
 	}
 	
-	public void setState(State state)
+	public void setStep(Step state)
 	{
-		this.state = state;
+		this.step = state;
 	}
 	
 	public static String getOFilename()

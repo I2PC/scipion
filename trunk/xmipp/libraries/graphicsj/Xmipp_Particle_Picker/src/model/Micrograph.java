@@ -2,6 +2,7 @@ package model;
 
 import ij.ImagePlus;
 
+import java.awt.Image;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +14,6 @@ public class Micrograph {
 	
 	private String filename;
 	private String name;
-	private List<Particle> particles;
 	private ImagePlus image;
 	private String outputfname;
 	private static String ext = ".pos";
@@ -21,12 +21,13 @@ public class Micrograph {
 	private ImageIcon ctficon;
 	private String aoutputfname;
 	private boolean autopicking = false;
+	private List<MicrographFamilyData> mfdatas;
 	
 	
 	public Micrograph(String filename, String ctf) {
 		this.filename = filename;
 		this.name = getName(filename);
-		particles = new ArrayList<Particle>();
+		mfdatas = new ArrayList<MicrographFamilyData>();
 		this.outputfname = ExecutionEnvironment.getOutputPath(name + ext);
 		this.aoutputfname = ExecutionEnvironment.getOutputPath(name + "_auto" + ext);
 		this.ctf = ctf;
@@ -77,8 +78,9 @@ public class Micrograph {
 		if(ctficon == null)
 		{
 			ImagePlus ip = new ImagePlus(ctf);
-			//ip.getProcessor().scale(80, 80);
-			ctficon = new ImageIcon(ip.getImage());
+			Image i = ip.getImage();//.getScaledInstance(200, 200, Image.SCALE_SMOOTH);
+			ctficon = new ImageIcon(i);
+			
 		}
 		return ctficon;
 	}
@@ -96,19 +98,41 @@ public class Micrograph {
 		this.name = name;
 	}
 	
-	public List<Particle> getParticles() {
-		return particles;
+	public List<MicrographFamilyData> getFamiliesData()
+	{
+		return mfdatas;
+	}
+
+	public Particle getParticle(int x, int y)
+	{
+		for(MicrographFamilyData mfd: mfdatas)
+			for(Particle p: mfd.getParticles())
+			{
+				if (p.contains(x, y)) 
+				return p;
+			}
+			return null;
+	}
+	
+	public MicrographFamilyData getFamilyData(Family f)
+	{
+		for(MicrographFamilyData fp: mfdatas)
+			if(f.equals(fp.getFamily()))
+				return fp;
+		MicrographFamilyData mfd = new MicrographFamilyData(f); 
+		mfdatas.add(mfd);
+		return mfd;
 	}
 
 	public void addParticle(Particle p)
 	{
-		particles.add(p);
+		getFamilyData(p.getFamily()).addParticle(p);
 	}
 	
 	
 	public void removeParticle(Particle p)
 	{
-		particles.remove(p);
+		getFamilyData(p.getFamily()).removeParticle(p);
 	}
 	
 	public String toString()

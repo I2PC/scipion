@@ -1,9 +1,11 @@
 package gui;
 
+import java.awt.Frame;
 import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
+import model.Family;
 import model.Micrograph;
 
 public class MicrographsTableModel extends AbstractTableModel {
@@ -12,10 +14,12 @@ public class MicrographsTableModel extends AbstractTableModel {
 	
 	private List<Micrograph> micrographs;
 	private String[] columns = new String[]{"Name", "Particles"};
+	private ParticlePickerJFrame frame;
 
-	public MicrographsTableModel(List<Micrograph> micrographs)
+	public MicrographsTableModel(ParticlePickerJFrame frame)
 	{
-		this.micrographs = micrographs;
+		this.micrographs = frame.getParticlePicker().getMicrographs();
+		this.frame = frame;
 	}
 	
 	@Override
@@ -39,7 +43,7 @@ public class MicrographsTableModel extends AbstractTableModel {
 		if(columnIndex == 0)
 			return m.getName();
 		if(columnIndex == 1)
-			return m.getParticles().size();
+			return m.getFamilyData(frame.getFamily()).getParticles().size();
 		return null;
 	}
 
