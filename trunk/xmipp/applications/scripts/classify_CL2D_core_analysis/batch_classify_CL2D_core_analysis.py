@@ -437,8 +437,8 @@ def sortImages(fnRoot,Nproc,systemFlavour):
                True,Nproc,1,systemFlavour))
 
 # --------------------------------------------------------------------
-if __name__ == "__main__":
 
+def oldMain():
     if not sys.argv[1:] or len(sys.argv)<=5:
         print "Usage: xmipp_classify_CL2D_core_analysis <rootname> <thGoodClass> <thJunkZscore> <thPCAZscore> <Nproc> <system-flavour=''>"
         sys.exit()
@@ -493,3 +493,19 @@ if __name__ == "__main__":
     
     # Sort images
     sortImages(fnRoot,Nproc,systemFlavour)
+   
+
+from protlib_xmipp import XmippScript
+
+class ScriptCL2DCoreAnalysis(XmippScript):
+    def __init__(self):
+        XmippScript.__init__(self)
+
+    def defineParams(self):
+        self.addUsageLine("This programs needs to be re-written with new libs utilities")
+        
+    def run(self):
+        print "NOT-IMPLEMENTED: This programs needs to be re-written with new libs utilities"
+         
+if __name__ == "__main__":
+    ScriptCL2DCoreAnalysis.run()
