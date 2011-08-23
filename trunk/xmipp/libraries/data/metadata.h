@@ -485,6 +485,8 @@ public:
     bool addLabel(const MDLabel label, int pos = -1);
 
     /** Remove a label from the metadata.
+     * The data is still in the table. If you want to remove the data,
+     * make a copy of the MetaData.
      */
     bool removeLabel(const MDLabel label);
 
