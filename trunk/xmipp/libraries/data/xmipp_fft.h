@@ -390,7 +390,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                         dAkij(v, k+2, i, j) = *(ptrAux+2);
                         dAkij(v, k+3, i, j) = *(ptrAux+3);
                     }
-                    for (int k = kmax; k < l; ++k, ++ptrAux)
+                    for (int k = lmax; k < l; ++k, ++ptrAux)
                         dAkij(v, k, i, j) = *ptrAux;
                 }
         }
