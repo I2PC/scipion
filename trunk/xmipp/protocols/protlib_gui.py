@@ -1051,7 +1051,7 @@ class ProtocolGUI(BasicGUI):
     def wizardBrowseJCTF(self, var):
         dir = self.getVarValue('DirMicrographs')
         filter = self.getVarValue('ExtMicrographs')
-        value = var.tkvar.get()
+        value = self.getVarValue('Down')
         msg = runImageJPluginWithResponse("512m", "XmippFileListCTFBrowser.txt", 
                                           "-dir %(dir)s -filter %(filter)s -downsampling %(value)s" % locals())
         msg = msg.strip()
@@ -1062,6 +1062,7 @@ class ProtocolGUI(BasicGUI):
     def wizardBrowseJCTFMeasure(self, var):
         dir = self.getVarValue('DirMicrographs')
         filter = self.getVarValue('ExtMicrographs')
+        value = self.getVarValue('Down')
         runImageJPlugin("512m", "XmippFileListMeasureFreqsBrowser.txt", 
                                 "-dir %(dir)s -filter %(filter)s -downsampling %(value)s" % locals(),True)
 
