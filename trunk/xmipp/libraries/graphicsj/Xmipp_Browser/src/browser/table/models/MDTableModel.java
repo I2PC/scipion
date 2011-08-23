@@ -5,6 +5,7 @@
 package browser.table.models;
 
 import browser.LABELS;
+import browser.imageitems.tableitems.AbstractTableImageItem;
 import browser.imageitems.tableitems.MDTableItem;
 import ij.IJ;
 import java.io.File;
@@ -120,8 +121,14 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     @Override
     public String getTitle() {
+        String strImageSize = "";
+        if (getSize() > 0) {
+            AbstractTableImageItem item = getAllItems().get(0);
+            strImageSize = " (" + item.getWidth() + " x " + item.getHeight() + ")";
+        }
+
         String title = md.getFilename();
-        return (title == null ? LABELS.TITLE_UNTITLED : title) + ": " + getSize() + " images.";
+        return (title == null ? LABELS.TITLE_UNTITLED : title) + ": " + getSize() + " images." + strImageSize;
     }
 
     @Override

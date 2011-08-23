@@ -5,6 +5,7 @@
 package browser.table.models;
 
 import browser.DEBUG;
+import browser.imageitems.tableitems.AbstractTableImageItem;
 import browser.imageitems.tableitems.VolumeTableItem;
 import xmipp.ImageDouble;
 import xmipp.ImageGeneric;
@@ -78,7 +79,13 @@ public class VolumeTableModel extends AbstractXmippTableModel {
     }
 
     public String getTitle() {
-        return filename + ": " + getSize() + " slices.";
+        String strImageSize = "";
+        if (getSize() > 0) {
+            AbstractTableImageItem item = getAllItems().get(0);
+            strImageSize = " (" + item.getWidth() + " x " + item.getHeight() + ")";
+        }
+
+        return filename + ": " + getSize() + " slices." + strImageSize;
     }
 
     @Override

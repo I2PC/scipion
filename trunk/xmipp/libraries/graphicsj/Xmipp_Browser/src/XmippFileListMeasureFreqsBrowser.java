@@ -1,7 +1,5 @@
 
 import browser.COMMAND_PARAMETERS;
-import browser.LABELS;
-import browser.filebrowsers.JDialogXmippFilesListCTF;
 import browser.filebrowsers.JDialogXmippFilesListMeasureFreqsBrowser;
 import ij.IJ;
 import ij.Macro;

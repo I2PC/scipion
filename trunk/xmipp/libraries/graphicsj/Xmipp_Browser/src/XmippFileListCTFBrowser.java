@@ -21,6 +21,7 @@ public class XmippFileListCTFBrowser implements PlugIn {
     // Browser
     private String DIR;
     private String FILTER = "";
+    double DOWNSAMPLING = 1.0;
     int PORT;
 
     @Override
@@ -35,14 +36,15 @@ public class XmippFileListCTFBrowser implements PlugIn {
             DIR = System.getProperty("user.dir");
         }
 
-        runBrowser(DIR, PORT, FILTER);
+        runBrowser(DIR, PORT, FILTER, DOWNSAMPLING);
     }
 
-    void runBrowser(String directory, int port, String expression) {
+    void runBrowser(String directory, int port, String expression, double downsampling) {
 //        IJ.getInstance().setExtendedState(Frame.ICONIFIED);
 //        IJ.getInstance().setVisible(false);
 
-        JDialogXmippFilesListCTF frameBrowser = new JDialogXmippFilesListCTF(directory, port, expression);
+        JDialogXmippFilesListCTF frameBrowser = new JDialogXmippFilesListCTF(
+                directory, port, expression, downsampling);
         frameBrowser.setVisible(true);
 
 //        IJ.getInstance().setVisible(true);
@@ -54,6 +56,7 @@ public class XmippFileListCTFBrowser implements PlugIn {
 
         options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, COMMAND_PARAMETERS.OPTION_INPUT_DIR_DESCRIPTION);
         options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, COMMAND_PARAMETERS.OPTION_FILTER);
+        options.addOption(COMMAND_PARAMETERS.OPTION_DOWNSAMPLING, true, COMMAND_PARAMETERS.OPTION_DOWNSAMPLING);
         options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, COMMAND_PARAMETERS.OPTION_SOCKET_PORT_DESCRIPTION);
 
         try {
@@ -74,6 +77,10 @@ public class XmippFileListCTFBrowser implements PlugIn {
                         FILTER += " ";
                     }
                 }
+            }
+
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_DOWNSAMPLING)) {
+                DOWNSAMPLING = Double.valueOf(cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_DOWNSAMPLING));
             }
 
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT)) {

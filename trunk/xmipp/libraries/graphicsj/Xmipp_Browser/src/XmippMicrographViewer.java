@@ -44,18 +44,12 @@ public class XmippMicrographViewer implements PlugIn {
 
     public static void openFile(String fileName) {
         try {
-            String path = "";
-            if (!fileName.startsWith(File.separator)) {
-                path = System.getProperty("user.dir") + File.separator;
-            }
-
-            path += fileName;
-
-            JFrameMicrographs frameMicrographs = new JFrameMicrographs(path);
+            JFrameMicrographs frameMicrographs = new JFrameMicrographs(fileName);
             frameMicrographs.setLocationRelativeTo(null);
             frameMicrographs.setVisible(true);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
+            ex.printStackTrace();
             throw new RuntimeException(ex);
         }
     }
