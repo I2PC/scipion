@@ -586,7 +586,7 @@ void ProtPrinter::printParam(const ParamDef &param, int v)
             fprintf(output, ")Select option\n%s = \"%s\"\n",
                    exclusiveGroupName.c_str(), param.name.c_str());
         }
-        condition = formatString("%s=%s", exclusiveGroupName.c_str(), param.name.c_str());
+        condition = formatString("%s==\"%s\"", exclusiveGroupName.c_str(), param.name.c_str());
     }
     else
     {
@@ -609,7 +609,7 @@ void ProtPrinter::printParam(const ParamDef &param, int v)
 void ProtPrinter::addCondition(const String &newcondition)
 {
     if (!condition.empty())
-        condition += ",";
+        condition += " and ";
     condition += newcondition;
 }
 
@@ -672,7 +672,7 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
         for (size_t j = 0; j < argSubParamsSize; ++j)
         {
             BACKUP(condition);
-            addCondition(formatString("%s=%s", varName.c_str(), argument.subParams[j]->name.c_str()));
+            addCondition(formatString("%s==\"%s\"", varName.c_str(), argument.subParams[j]->name.c_str()));
             BACKUP(parentName);
             parentName = formatString("%s_A_%s", parentName.c_str(), argument.subParams[j]->name.c_str());
             for (size_t k = 0; k < argument.subParams[j]->arguments.size(); ++k)
