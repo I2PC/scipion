@@ -6,7 +6,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-public class PPConfiguration {
+public class ExecutionEnvironment {
 	
 	private static Logger logger;
 	private static String outputdir = ".";
@@ -84,17 +84,17 @@ public class PPConfiguration {
 
 
 	public static void setThreads(int threads) {
-		PPConfiguration.threads = threads;
+		ExecutionEnvironment.threads = threads;
 		
 	}
 
 
 	public static void setFastMode(boolean fastMode) {
-		PPConfiguration.fastMode = fastMode;
+		ExecutionEnvironment.fastMode = fastMode;
 	}
 	
 	public static void setIncore(boolean incore) {
-		PPConfiguration.incore = incore;
+		ExecutionEnvironment.incore = incore;
 	}
 
 	public static boolean isFastMode() {
@@ -111,7 +111,7 @@ public class PPConfiguration {
 	}
 
 	public static void setIsAuto(boolean automatic) {
-		PPConfiguration.auto = automatic;
+		ExecutionEnvironment.auto = automatic;
 		
 	}
 	

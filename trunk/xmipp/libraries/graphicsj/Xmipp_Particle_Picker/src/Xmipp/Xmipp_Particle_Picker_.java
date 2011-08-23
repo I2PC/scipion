@@ -3,7 +3,7 @@ package Xmipp;
 import javax.swing.SwingUtilities;
 
 
-import gui.XmippParticlePickerJFrame;
+import gui.ParticlePickerJFrame;
 import ij.plugin.PlugIn;
 
 public class Xmipp_Particle_Picker_ implements PlugIn {
@@ -16,7 +16,7 @@ public class Xmipp_Particle_Picker_ implements PlugIn {
 				@Override
 				public void run() {
 					try {
-					XmippParticlePickerJFrame frame = new XmippParticlePickerJFrame();
+					ParticlePickerJFrame frame = new ParticlePickerJFrame();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

@@ -13,7 +13,7 @@ public class ParticleCellRenderer implements ListCellRenderer {
 	@Override
 	public Component getListCellRendererComponent(JList list, Object o,
 			int arg2, boolean arg3, boolean arg4) {
-		ParticleImageCanvas c = (ParticleImageCanvas)o;
+		ParticleCanvas c = (ParticleCanvas)o;
 		return c;
 	}
 	

@@ -14,12 +14,12 @@ import model.Particle;
 
 public class MicrographParticlesJDialog extends JDialog {
 	
-	private XmippParticlePickerJFrame parent;
+	private ParticlePickerJFrame parent;
 	private Micrograph micrograph;
 	
 	
 	
-	public MicrographParticlesJDialog(XmippParticlePickerJFrame parent,
+	public MicrographParticlesJDialog(ParticlePickerJFrame parent,
 			Micrograph micrograph)
 	{
 		super(parent);
@@ -52,9 +52,9 @@ public class MicrographParticlesJDialog extends JDialog {
 	{
 
 		private List<Particle> particles;
-		private XmippParticlePickerJFrame frame;
+		private ParticlePickerJFrame frame;
 
-		public ParticlesTableModel(List<Particle> particles, XmippParticlePickerJFrame frame) {
+		public ParticlesTableModel(List<Particle> particles, ParticlePickerJFrame frame) {
 			this.particles = particles;
 			this.frame = frame;
 		}

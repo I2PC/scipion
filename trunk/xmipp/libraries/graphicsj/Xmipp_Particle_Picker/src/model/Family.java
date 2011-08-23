@@ -4,14 +4,17 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+enum State
+{
+	MANUAL, SUPERVISED
+}
 
 public class Family {
 	
 	private String name;
 	private Color color;
 	private int size;
-	private float threshold = 0;
-	
+	private State state;
 
 
 	private static int sizemax = 1000;
@@ -22,9 +25,7 @@ public class Family {
 										Color.PINK, Color.RED, Color.YELLOW};
 	private static int nextcolor;
 	
-	public float getThreshold() {
-		return threshold;
-	}
+	
 	
 	public static Color getNextColor()
 	{
@@ -38,6 +39,11 @@ public class Family {
 	
 	public Family(String name, Color color, int size)
 	{
+		this(name, color, size, State.MANUAL);
+	}
+	
+	public Family(String name, Color color, int size, State state)
+	{
 		if(size < 0 || size > sizemax)
 			throw new IllegalArgumentException(String.format("Size should be between 0 and %s, %s not allowed", sizemax, size));
 		if (name == null || name.equals(""))
@@ -45,19 +51,29 @@ public class Family {
 		this.name = name;
 		this.color = color;
 		this.size = size;
+		this.state = state;
 	}
+	
+	
 	
 	public Family(String name, Color color)
 	{
-		this.name = name;
-		this.color = color;
-		this.size = getDefaultSize();
-		
+		this(name, color, getDefaultSize(), State.MANUAL);
+	}
+	
+	public State getState()
+	{
+		return state;
+	}
+	
+	public void setState(State state)
+	{
+		this.state = state;
 	}
 	
 	public static String getOFilename()
 	{
-		return PPConfiguration.getOutputPath("families.xmd");
+		return ExecutionEnvironment.getOutputPath("families.xmd");
 	}
 	
 	public int getSize() {

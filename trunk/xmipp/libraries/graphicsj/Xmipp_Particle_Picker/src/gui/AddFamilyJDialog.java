@@ -76,17 +76,18 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 		add(new JLabel("Size"),
 				WindowUtils.updateConstraints(constraints, 0, 2, 1));
 		initSizePane();
-		add(new JLabel("Threshold"),
-				WindowUtils.updateConstraints(constraints, 0, 3, 1));
+		
 		add(sizepn, WindowUtils.updateConstraints(constraints, 1, 2, 1));
-		initThresholdPane();
-		add(thresholdpn, WindowUtils.updateConstraints(constraints, 1, 3, 1));
+//		add(new JLabel("Threshold"),
+//				WindowUtils.updateConstraints(constraints, 0, 3, 1));
+//		initThresholdPane();
+//		add(thresholdpn, WindowUtils.updateConstraints(constraints, 1, 3, 1));
 		addbt = new JButton("Add");
 		getRootPane().setDefaultButton(addbt);
 		cancelbt = new JButton("Cancel");
 
-		add(addbt, WindowUtils.updateConstraints(constraints, 0, 4, 1));
-		add(cancelbt, WindowUtils.updateConstraints(constraints, 1, 4, 1));
+		add(addbt, WindowUtils.updateConstraints(constraints, 0, 3, 1));
+		add(cancelbt, WindowUtils.updateConstraints(constraints, 1, 3, 1));
 		setListeners();
 		pack();
 		WindowUtils.centerScreen(position, this);
@@ -164,44 +165,44 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 		});
 	}
 	
-	private void initThresholdPane() {
-		int threshold = 0;
-		range = 10;
-		thresholdpn = new JPanel();
-		thresholdsl = new JSlider(0, range);
-		Hashtable<Integer, JComponent> labelTable = new Hashtable<Integer, JComponent>();
-		labelTable.put( new Integer( 0 ), new JLabel("0.0") );
-		labelTable.put( new Integer( range/4 ), new JLabel("0.25") );
-		labelTable.put( new Integer( range/2 ), new JLabel("0.5") );
-		labelTable.put( new Integer( 3*range/4 ), new JLabel("0.75") );
-		labelTable.put( new Integer( range ), new JLabel("1.0") );
-		thresholdpn.add(thresholdsl);
-		thresholdtf = new JFormattedTextField(NumberFormat.getNumberInstance());;
-		thresholdtf.setColumns(3);
-		thresholdtf.setText(Integer.toString(threshold));
-		thresholdpn.add(thresholdtf);
-		thresholdtf.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				double threshold = Double.parseDouble(thresholdtf.getText() ) * range;
-				int range = AddFamilyJDialog.this.range;
-				if(Math.abs(threshold) <= range)
-					thresholdsl.setValue((int)threshold );
-			}
-		});
-
-		thresholdsl.addChangeListener(new ChangeListener() {
-
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				int range = AddFamilyJDialog.this.range;
-				double threshold = (double)thresholdsl.getValue()/range;
-				thresholdtf.setText(String.format("%.2f", threshold));
-			}
-		});
-		
-	}
+//	private void initThresholdPane() {
+//		int threshold = 0;
+//		range = 10;
+//		thresholdpn = new JPanel();
+//		thresholdsl = new JSlider(0, range);
+//		Hashtable<Integer, JComponent> labelTable = new Hashtable<Integer, JComponent>();
+//		labelTable.put( new Integer( 0 ), new JLabel("0.0") );
+//		labelTable.put( new Integer( range/4 ), new JLabel("0.25") );
+//		labelTable.put( new Integer( range/2 ), new JLabel("0.5") );
+//		labelTable.put( new Integer( 3*range/4 ), new JLabel("0.75") );
+//		labelTable.put( new Integer( range ), new JLabel("1.0") );
+//		thresholdpn.add(thresholdsl);
+//		thresholdtf = new JFormattedTextField(NumberFormat.getNumberInstance());;
+//		thresholdtf.setColumns(3);
+//		thresholdtf.setText(Integer.toString(threshold));
+//		thresholdpn.add(thresholdtf);
+//		thresholdtf.addActionListener(new ActionListener() {
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				double threshold = Double.parseDouble(thresholdtf.getText() ) * range;
+//				int range = AddFamilyJDialog.this.range;
+//				if(Math.abs(threshold) <= range)
+//					thresholdsl.setValue((int)threshold );
+//			}
+//		});
+//
+//		thresholdsl.addChangeListener(new ChangeListener() {
+//
+//			@Override
+//			public void stateChanged(ChangeEvent e) {
+//				int range = AddFamilyJDialog.this.range;
+//				double threshold = (double)thresholdsl.getValue()/range;
+//				thresholdtf.setText(String.format("%.2f", threshold));
+//			}
+//		});
+//		
+//	}
 
 
 	@Override

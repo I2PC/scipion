@@ -1,6 +1,6 @@
 package model;
 
-import gui.ParticleImageCanvas;
+import gui.ParticleCanvas;
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
@@ -18,8 +18,9 @@ public class Particle {
 	private Family family;
 	private Micrograph micrograph;
 	private ImagePlus img;
-	private ParticleImageCanvas canvas;
+	private ParticleCanvas canvas;
 	private boolean auto;
+	private double cost;
 	
 	
 	public Particle(int x, int y, Family family, Micrograph micrograph)
@@ -29,17 +30,24 @@ public class Particle {
 		this.family = family;
 		this.micrograph = micrograph;
 		auto = false;
+		cost = 1;
 	}
 	
-	public Particle(int x, int y, Family family, Micrograph micrograph, boolean auto)
+	public Particle(int x, int y, Family family, Micrograph micrograph, boolean auto, double cost)
 	{
 		this.x = x;
 		this.y = y;
 		this.family = family;
 		this.micrograph = micrograph;
 		this.auto = auto;
+		this.cost = cost;
 	}
 
+	public double getCost()
+	{
+		return cost;
+	}
+	
 	public boolean isAuto()
 	{
 		return auto;
@@ -138,11 +146,11 @@ public class Particle {
 	}
 
 	
-	public ParticleImageCanvas getImageCanvas()
+	public ParticleCanvas getImageCanvas()
 	{
 		if(canvas == null)
 		{
-			canvas = new ParticleImageCanvas(getImage());
+			canvas = new ParticleCanvas(getImage());
 		}
 		return canvas;
 		

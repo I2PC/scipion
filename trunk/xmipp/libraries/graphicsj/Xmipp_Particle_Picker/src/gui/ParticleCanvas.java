@@ -5,9 +5,9 @@ import ij.gui.ImageCanvas;
 
 import java.awt.event.MouseEvent;
 
-public class ParticleImageCanvas extends ImageCanvas {
+public class ParticleCanvas extends ImageCanvas {
 
-	public ParticleImageCanvas(ImagePlus imp) {
+	public ParticleCanvas(ImagePlus imp) {
 		super(imp);
 		
 		// TODO Auto-generated constructor stub

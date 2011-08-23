@@ -27,8 +27,8 @@ public class Micrograph {
 		this.filename = filename;
 		this.name = getName(filename);
 		particles = new ArrayList<Particle>();
-		this.outputfname = PPConfiguration.getOutputPath(name + ext);
-		this.aoutputfname = PPConfiguration.getOutputPath(name + "_auto" + ext);
+		this.outputfname = ExecutionEnvironment.getOutputPath(name + ext);
+		this.aoutputfname = ExecutionEnvironment.getOutputPath(name + "_auto" + ext);
 		this.ctf = ctf;
 	}
 	
@@ -53,7 +53,7 @@ public class Micrograph {
 	
 	public static String getIFilename()
 	{
-		return PPConfiguration.getMicrographsSelFile();
+		return ExecutionEnvironment.getMicrographsSelFile();
 	}
 	
 	public String getOutputFName()

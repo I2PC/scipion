@@ -22,9 +22,9 @@ import model.Family;
 import model.Micrograph;
 import model.Particle;
 
-public class PPCanvas extends ImageCanvas implements MouseWheelListener{
+public class ParticlePickerCanvas extends ImageCanvas implements MouseWheelListener{
 
-	private XmippParticlePickerJFrame frame;
+	private ParticlePickerJFrame frame;
 	private Micrograph micrograph;
 	private Particle dragged;
 	final static BasicStroke dashedst = new BasicStroke(1.0f,
@@ -34,7 +34,7 @@ public class PPCanvas extends ImageCanvas implements MouseWheelListener{
 	final static BasicStroke continuousst = new BasicStroke();
 	
 
-	public PPCanvas(XmippParticlePickerJFrame frame, Micrograph micrograph) {
+	public ParticlePickerCanvas(ParticlePickerJFrame frame, Micrograph micrograph) {
 		super(micrograph.getImage());
 		this.micrograph = micrograph;
 		this.frame = frame;

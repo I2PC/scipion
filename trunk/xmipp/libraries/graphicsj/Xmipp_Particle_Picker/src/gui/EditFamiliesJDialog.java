@@ -27,14 +27,14 @@ import model.Family;
 
 public class EditFamiliesJDialog extends JDialog {
 
-	private XmippParticlePickerJFrame parent;
+	private ParticlePickerJFrame parent;
 	private JTable groupstb;
 	private JButton addbt;
 	private JButton deletebt;
 	private JButton okbt;
 	private FamiliesTableModel model;
 
-	public EditFamiliesJDialog(XmippParticlePickerJFrame parent, boolean modal) {
+	public EditFamiliesJDialog(ParticlePickerJFrame parent, boolean modal) {
 		super(parent, modal);
 		this.parent = parent;
 		initComponents();
@@ -111,7 +111,7 @@ public class EditFamiliesJDialog extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				List<Family> groups = EditFamiliesJDialog.this.parent
-						.getPPData().getFamilies();
+						.getParticlePicker().getFamilies();
 				if (groups.size() == 1) {
 					JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
 							Constants.getIllegalDeleteMsg("group"));
@@ -129,9 +129,9 @@ public class EditFamiliesJDialog extends JDialog {
 	class FamiliesTableModel extends AbstractTableModel {
 
 		private String[] columns = new String[] { "Name", "Color", "Size" };
-		private XmippParticlePickerJFrame frame;
+		private ParticlePickerJFrame frame;
 
-		public FamiliesTableModel(XmippParticlePickerJFrame frame) {
+		public FamiliesTableModel(ParticlePickerJFrame frame) {
 
 			this.frame = frame;
 		}
@@ -153,7 +153,7 @@ public class EditFamiliesJDialog extends JDialog {
 
 		@Override
 		public int getRowCount() {
-			return frame.getPPData().getFamilies().size();
+			return frame.getParticlePicker().getFamilies().size();
 		}
 
 		@Override
@@ -164,12 +164,12 @@ public class EditFamiliesJDialog extends JDialog {
 		@Override
 		public void setValueAt(Object value, int row, int column) {
 			try {
-				Family g = frame.getPPData().getFamilies().get(row);
+				Family g = frame.getParticlePicker().getFamilies().get(row);
 				if (column == 0) {
 					String name = (String) value;
 					if (name.equals(g.getName()))
 						return;
-					else if (parent.getPPData().existsFamilyName(name))
+					else if (parent.getParticlePicker().existsFamilyName(name))
 						JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
 								Constants.getAlreadyExistsGroupNameMsg(name));
 					g.setName(name);
@@ -189,7 +189,7 @@ public class EditFamiliesJDialog extends JDialog {
 
 		@Override
 		public Object getValueAt(int row, int column) {
-			Family f = frame.getPPData().getFamilies().get(row);
+			Family f = frame.getParticlePicker().getFamilies().get(row);
 			if (column == 0)
 				return f.getName();
 			if (column == 1)
