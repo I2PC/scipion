@@ -126,8 +126,7 @@ public:
         if (x>xmax) return 0;
         else
         {
-            double aux=x*ixstep;
-            int iaux=ROUND(aux);
+            int iaux=round(x*ixstep);
             return DIRECT_A1D_ELEM(v,iaux);
         }
     }
