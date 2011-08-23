@@ -706,6 +706,12 @@ public:
      */
     void operate(const String &expression);
 
+    /** Replace an string in some column(label).
+     * The type of the column should be string. This function is a shortcut
+     * of the more genereal function operate
+     */
+    void replace(const MDLabel label, const String &oldStr, const String &newStr);
+
     /** Randomize a metadata.
      * MDin is input and the "randomized"
      * result will be in the "calling" Metadata.

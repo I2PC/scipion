@@ -26,6 +26,7 @@
 #include "metadata.h"
 #include "xmipp_image.h"
 #include <regex.h>
+#include "xmipp_program_sql.h"
 
 // Get the blocks available
 void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
@@ -1280,6 +1281,15 @@ void MetaData::operate(const String &expression)
 {
     if (!myMDSql->operate(expression))
         REPORT_ERROR(ERR_MD, "MetaData::operate: error doing operation");
+}
+
+void MetaData::replace(const MDLabel label, const String &oldStr, const String &newStr)
+{
+  const char * labelStr = MDL::label2Str(label).c_str();
+  String expression = formatString("%s=replace(%s,'%s', '%s')",
+      labelStr, labelStr, oldStr.c_str(), newStr.c_str());
+  if (!myMDSql->operate(expression))
+        REPORT_ERROR(ERR_MD, "MetaData::replace: error doing operation");
 }
 
 void MetaData::randomize(MetaData &MDin)

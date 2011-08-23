@@ -32,6 +32,8 @@
 
 typedef std::map<char*, String> DictDB;
 
+String& escapeSqliteStr(String & str);
+
 /** Class that will encapsulate the Xmipp objects representation
  * on Sqlite db. Program are a kind of this objects.
  * Programas db storing will be useful for handle meta-info.

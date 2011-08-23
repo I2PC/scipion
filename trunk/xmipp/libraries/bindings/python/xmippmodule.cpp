@@ -1244,6 +1244,8 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_operate(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
+MetaData_replace(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
 MetaData_readPlain(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_setComment(PyObject *obj, PyObject *args, PyObject *kwargs);
@@ -2101,6 +2103,8 @@ MetaData_methods[] =
         { "setComment", (PyCFunction) MetaData_setComment,
           METH_VARARGS, "Set comment in Metadata." },
         { "operate", (PyCFunction) MetaData_operate,
+          METH_VARARGS, "Replace strings values in some column." },
+          { "replace", (PyCFunction) MetaData_replace,
           METH_VARARGS, "Basic operations on columns data." },
         { "removeDuplicates", (PyCFunction) MetaData_removeDuplicates,
           METH_VARARGS, "Remove duplicate rows" },
@@ -2463,6 +2467,28 @@ MetaData_operate(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/*Replace string values in some label. */
+static PyObject *
+MetaData_replace(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+    char *oldStr = "";
+    char *newStr = "";
+    if (PyArg_ParseTuple(args, "iss", &label, &oldStr, &newStr))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*) obj;
+            self->metadata->replace((MDLabel)label, oldStr, newStr);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
 
 MDObject *
 createMDObject(int label, PyObject *pyValue)
