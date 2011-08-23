@@ -14,7 +14,6 @@ import browser.DEBUG;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.imageitems.MicrographsTableImageItem;
-import browser.table.micrographs.MicrographsTableModel;
 import browser.table.models.ImagesRowHeaderModel;
 import browser.table.renderers.RowHeaderRenderer;
 import browser.windows.ImagesWindowFactory;

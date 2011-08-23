@@ -155,6 +155,12 @@ public class Filename {
 
             if (!name.startsWith(File.separator)) { // In 'image@name', is name absolute?
                 String aux = getAbsPath(workdir, name);
+
+                File f = new File(aux);
+                if (!f.exists()) {
+                    aux = getAbsPath(System.getProperty("user.dir"), name);
+                }
+
                 fixed = strimage + aux;
             }
         }

@@ -4,11 +4,11 @@
  */
 package micrographs.renderers;
 
-import browser.table.micrographs.MicrographsTableModel;
 import java.awt.Component;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
+import micrographs.MicrographsTableModel;
 
 /**
  *

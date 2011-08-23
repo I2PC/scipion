@@ -4,9 +4,9 @@
  */
 package micrographs.filters;
 
-import browser.table.micrographs.MicrographsTableModel;
 import javax.swing.RowFilter;
 import javax.swing.RowFilter.Entry;
+import micrographs.MicrographsTableModel;
 
 /**
  *

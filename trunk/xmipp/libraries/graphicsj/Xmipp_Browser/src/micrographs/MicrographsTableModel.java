@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package browser.table.micrographs;
+package micrographs;
 
 import ij.IJ;
 import java.io.File;
@@ -41,7 +41,8 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         MDLabel.MDL_CTF_CRITERION_PSDCORRELATION90,
         MDLabel.MDL_CTF_CRITERION_PSDRADIALINTEGRAL,
         MDLabel.MDL_CTF_CRITERION_PSDVARIANCE,
-        MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST
+        MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST,
+        MDLabel.MDL_ZSCORE
     };
     private static final String COLUMNS_NAMES[] = new String[]{
         "ID",
@@ -60,7 +61,8 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         "PSD Correlation At 90 degree",
         "PSD Radial Integral",
         "PSD Variance",
-        "PSD PCA Runs Test"
+        "PSD PCA Runs Test",
+        "Z Score"
     };
     private static final int EXTRA_COLUMNS_LABELS[] = {
         MDLabel.MDL_CTF_DEFOCUSU,
@@ -101,6 +103,8 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
     private void load(String filename) {
         try {
             clear();    // Clear the whole data.
+
+            System.out.println(" !!! Loading: " + filename);
 
             md = new MetaData(filename);
 
@@ -172,6 +176,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
                             case MDLabel.MDL_CTF_CRITERION_PSDRADIALINTEGRAL:
                             case MDLabel.MDL_CTF_CRITERION_PSDVARIANCE:
                             case MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST:
+                            case MDLabel.MDL_ZSCORE:
                                 //case MDLabel.MDL_CTF_CRITERION_COMBINED:
                                 row[col] = md.getValueDouble(label, id);
                                 break;
