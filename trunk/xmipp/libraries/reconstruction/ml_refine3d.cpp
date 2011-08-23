@@ -377,6 +377,8 @@ void ProgMLRefine3D::run()
 
     //Local image to read data
     Image<double> img;
+    FileName fn;
+
     // Loop over all iterations
     for (ml2d->iter = ml2d->istart; !converged && ml2d->iter <= ml2d->Niter; ml2d->iter++)
     {
@@ -384,52 +386,52 @@ void ProgMLRefine3D::run()
 
         if (verbose)
             std::cout << formatString("--> 3D-EM volume refinement:  iteration %d of %d", iter, Niter) << std::endl;
-        // Project volumes, already done for first iteration, first block
-        if (ml2d->iter > ml2d->istart)// || ml2d->current_block > 0)
-        {
-            projectVolumes(ml2d->MDref);
-            size_t refno = 0;
-            FileName fn;
-            // Read new references from disc (I could just as well keep them in memory, maybe...)
-            FOR_ALL_OBJECTS_IN_METADATA(ml2d->MDref)
-            {
-                ml2d->MDref.getValue(MDL_IMAGE, fn, __iter.objId);
-                img.read(fn);
-                img().setXmippOrigin();
-                ml2d->model.Iref[refno]() = img();
-                if (++refno == ml2d->model.n_ref) //avoid reading noise and c_ref projections
-                    break;
-            }
-        }
         for (ml2d->current_block = 0; ml2d->current_block < ml2d->blocks; ml2d->current_block++)
         {
+            // Project volumes, already done for first iteration, first block
+            if (ml2d->iter > ml2d->istart)// || ml2d->current_block > 0)
+            {
+                projectVolumes(ml2d->MDref);
+                size_t refno = 0;
+
+                // Read new references from disc (I could just as well keep them in memory, maybe...)
+                FOR_ALL_OBJECTS_IN_METADATA(ml2d->MDref)
+                {
+                    ml2d->MDref.getValue(MDL_IMAGE, fn, __iter.objId);
+                    img.read(fn);
+                    img().setXmippOrigin();
+                    ml2d->model.Iref[refno]() = img();
+                    if (++refno == ml2d->model.n_ref) //avoid reading noise and c_ref projections
+                        break;
+                }
+            }
 
             // Integrate over all images
             ml2d->expectation();
 
             ml2d->maximization();
 
+            // Write out 2D reference images (to be used in reconstruction)
+            ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
+
+            // Jump out before 3D reconstruction
+            // (Useful for some parallelization protocols)
+            if (skip_reconstruction)
+                exit(1);
+
+            if (fourier_mode)
+                makeNoiseImages();
+            // Reconstruct new volumes from the reference images
+            //update the base name for current iteration
+            reconsOutFnBase[0] = FN_ITER_BASE(iter);
+            reconsMdFn[0] = ml2d->outRefsMd;
+            reconstructVolumes();
+            // Update the reference volume selection file
+            updateVolumesMetadata();
+            // post-process the volumes
+            postProcessVolumes();
 
         } // end loop blocks
-        // Write out 2D reference images (to be used in reconstruction)
-        ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
-
-        // Jump out before 3D reconstruction
-        // (Useful for some parallelization protocols)
-        if (skip_reconstruction)
-            exit(1);
-
-        if (fourier_mode)
-            makeNoiseImages();
-        // Reconstruct new volumes from the reference images
-        //update the base name for current iteration
-        reconsOutFnBase[0] = FN_ITER_BASE(iter);
-        reconsMdFn[0] = ml2d->outRefsMd;
-        reconstructVolumes();
-        // Update the reference volume selection file
-        updateVolumesMetadata();
-        // post-process the volumes
-        postProcessVolumes();
 
         if (fourier_mode)
             calculate3DSSNR(ml2d->spectral_signal);
@@ -662,8 +664,8 @@ void ProgMLRefine3D::reconstructVolumes()
 
     for (int i = 0; i < reconsOutFnBase.size(); ++i)
     {
-      //std::cerr << "DEBUG_JM: rank: " << rank << std::endl;
-      //std::cerr << "DEBUG_JM: reconsMdFn[i]: " << reconsMdFn[i] << std::endl;
+        //std::cerr << "DEBUG_JM: rank: " << rank << std::endl;
+        //std::cerr << "DEBUG_JM: reconsMdFn[i]: " << reconsMdFn[i] << std::endl;
         mdProj.read(reconsMdFn[i]);
         String &fn_base = reconsOutFnBase[i];
         for (int volno = 1; volno <= Nvols; ++volno)
