@@ -9,7 +9,7 @@
 from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import runJob
-from protlib_filesystem import copyFile
+from protlib_filesystem import createLink
 import xmipp
 import glob
 
@@ -18,13 +18,13 @@ class ProtParticlePicking(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.particle_pick.name, scriptname, project)
         self.Import="from protocol_particle_pick import *"
-        self.preprocessingRunname=self.PreprocessingRun.replace(protDict.preprocess_micrographs.name,"")
-        if self.preprocessingRunname[0]=="_":
-            self.preprocessingRunname=self.preprocessingRunname[1:]
-        self.micrographSelfile = os.path.join(protDict.preprocess_micrographs.dir,self.preprocessingRunname, "micrographs.sel")
+        self.importRunname=self.ImportRun.replace(protDict.import_micrographs.name,"")
+        if self.importRunname[0]=="_":
+            self.importRunname=self.importRunname[1:]
+        self.micrographSelfile = os.path.join(protDict.import_micrographs.dir,self.importRunname, "micrographs.sel")
 
     def defineSteps(self):
-        self.Db.insertStep('createLink',execution_mode=SqliteDb.MAIN_LOOP,
+        self.Db.insertStep('createLink',execution_mode=SqliteDb.EXEC_MAINLOOP,
                            source=self.micrographSelfile,dest=os.path.join(self.WorkingDir,"micrographs.sel"))
         self.Db.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
                            MicrographSelfile=self.micrographSelfile, WorkingDir=self.WorkingDir,
