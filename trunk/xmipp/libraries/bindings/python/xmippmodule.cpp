@@ -1671,6 +1671,31 @@ MetaData_setValueCol(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* drop column */
+static PyObject *
+MetaData_removeLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+    PyObject *pyValue; //Only used to skip label and value
+
+    if (PyArg_ParseTuple(args, "i", &label))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*) obj;
+            if (self->metadata->removeLabel((MDLabel) label))
+            	Py_RETURN_TRUE;
+            else
+            	Py_RETURN_FALSE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /* getValue */
 static PyObject *
 MetaData_getValue(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -2020,6 +2045,9 @@ MetaData_methods[] =
         { "setValueCol", (PyCFunction) MetaData_setValueCol,
           METH_VARARGS,
           "Set the value for column(label) for all objects" },
+        { "removeLabel", (PyCFunction) MetaData_removeLabel,
+            METH_VARARGS,
+            "Remove a label if exists. The values are still in the table." },
         { "getValue", (PyCFunction) MetaData_getValue,
           METH_VARARGS, "Get the value for column(label)" },
         { "getActiveLabels",
