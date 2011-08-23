@@ -78,6 +78,15 @@ def copyFile(log, source, dest):
     except Exception, e:
         printLog("Could not copy '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
     
+def copyDir(log, source, dest):
+    try:
+        from shutil import copytree
+        if os.path.exists(dest):
+            deleteDir(log,dest)
+        copytree(source, dest, symlinks=True)
+        printLog("Copied '%s' to '%s'" % (source, dest))
+    except Exception, e:
+        printLog("Could not copy '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
 
 def deleteFiles(log, filelist, verbose):
     for file in filelist:
