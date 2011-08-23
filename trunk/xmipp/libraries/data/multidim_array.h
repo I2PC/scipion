@@ -2306,12 +2306,12 @@ public:
      *
      * Bilinear interpolation. (x,y) are in logical coordinates.
      */
-    inline T interpolatedElement2D(double x, double y, T outside_value = (T) 0) const
+    T interpolatedElement2D(double x, double y, T outside_value = (T) 0) const
     {
-        int x0 = FLOOR(x);
+        int x0 = floor(x);
         double fx = x - x0;
         int x1 = x0 + 1;
-        int y0 = FLOOR(y);
+        int y0 = floor(y);
         double fy = y - y0;
         int y1 = y0 + 1;
 
@@ -2508,9 +2508,9 @@ public:
         y -= STARTINGY(*this);
         x -= STARTINGX(*this);
 
-        int l1 = CEIL(x - SplineDegree_1);
+        int l1 = ceil(x - SplineDegree_1);
         int l2 = l1 + SplineDegree;
-        int m1 = CEIL(y - SplineDegree_1);
+        int m1 = ceil(y - SplineDegree_1);
         int m2 = m1 + SplineDegree;
 
         double columns = 0.0;
@@ -2531,7 +2531,7 @@ public:
                     equivalent_l=-l-1;
                 else if (l>=XSIZE(*this))
                     equivalent_l=2*XSIZE(*this)-l-1;
-                double Coeff = (double) DIRECT_A2D_ELEM(*this, equivalent_m,equivalent_l);
+                double Coeff = DIRECT_A2D_ELEM(*this, equivalent_m,equivalent_l);
                 switch (SplineDegree)
                 {
                 case 2:
@@ -4974,6 +4974,8 @@ void MultidimArray<double>::computeAvgStdev(double& avg, double& stddev) const;
 template<>
 bool operator==(const MultidimArray< std::complex< double > >& op1,
                 const MultidimArray< std::complex< double > >& op2);
+template<>
+double MultidimArray<double>::interpolatedElement2D(double x, double y, double outside_value) const;
 
 //@}
 #endif
