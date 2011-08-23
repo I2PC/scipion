@@ -451,12 +451,25 @@ void compute_hist(const MultidimArray<T>& v, Histogram1D& hist,
                   double min, double max, int no_steps)
 {
     hist.init(min, max, no_steps);
-    T* ptr=NULL;
-    unsigned long int n;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
+    T* ptr=&DIRECT_MULTIDIM_ELEM(v,0);
+    size_t nmax=(MULTIDIM_SIZE(v)/4)*4;
+
+    double value;
+    for (size_t n=0; n<nmax; n+=4, ptr+=4)
     {
-    	double value=*ptr;
+    	value=*ptr;
     	INSERT_VALUE(hist,value);
+    	value=*(ptr+1);
+    	INSERT_VALUE(hist,value);
+    	value=*(ptr+2);
+    	INSERT_VALUE(hist,value);
+    	value=*(ptr+3);
+    	INSERT_VALUE(hist,value);
+    }
+    for (size_t n=nmax; n<MULTIDIM_SIZE(v); ++n, ptr+=1)
+    {
+    	value=*ptr;
+     	INSERT_VALUE(hist,value);
     }
 }
 
@@ -638,7 +651,7 @@ void histogram_equalization(MultidimArray<T>
  * this 2D histograms can be used to plot the projection distribution over the
  * topological sphere, in such situation only the first two Euler angles are
  * interesting and we could plot how many projections are there with first angle
- * equal to 45º and second equal to 0º, and so on covering the whole range for
+ * equal to 45 degrees and second equal to 0 degrees, and so on covering the whole range for
  * each angle.
  *
  * The 2D histogram is defined, as in the 1D case, by the respective ranges for
