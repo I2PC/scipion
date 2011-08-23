@@ -228,7 +228,19 @@ void FourierTransformer::Transform(int sign)
 
             double isize=1.0/size;
             double *ptr=(double*)MULTIDIM_ARRAY(fFourier);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fFourier)
+            size_t nmax=(fFourier.nzyxdim/4)*4;
+            for (size_t n=0; n<nmax; n+=4)
+            {
+            	*ptr++ *= isize;
+            	*ptr++ *= isize;
+            	*ptr++ *= isize;
+            	*ptr++ *= isize;
+            	*ptr++ *= isize;
+            	*ptr++ *= isize;
+            	*ptr++ *= isize;
+            	*ptr++ *= isize;
+            }
+            for (size_t n=nmax; n<fFourier.nzyxdim; ++n)
             {
             	*ptr++ *= isize;
             	*ptr++ *= isize;
