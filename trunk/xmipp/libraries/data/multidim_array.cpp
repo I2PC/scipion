@@ -87,11 +87,28 @@ void MultidimArray<double>::computeAvgStdev(double& avg, double& stddev) const
     avg = 0;
     stddev = 0;
 
-    double* ptr=NULL;
-    size_t n;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+    double* ptr=&DIRECT_MULTIDIM_ELEM(*this,0);
+    size_t nmax=(nzyxdim/4)*4;
+
+    double val;
+    for (size_t n=0; n<nmax; n+=4, ptr+=4)
     {
-        double val=*ptr;
+        val=*ptr;
+        avg += val;
+        stddev += val * val;
+        val=*(ptr+1);
+        avg += val;
+        stddev += val * val;
+        val=*(ptr+2);
+        avg += val;
+        stddev += val * val;
+        val=*(ptr+3);
+        avg += val;
+        stddev += val * val;
+    }
+    for (size_t n=nmax; n<nzyxdim; ++n, ptr+=1)
+    {
+        val=*ptr;
         avg += val;
         stddev += val * val;
     }

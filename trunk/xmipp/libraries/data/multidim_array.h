@@ -3327,10 +3327,17 @@ public:
 
         b = avgF - a * avg0;
 
-        T* ptr=NULL;
-        size_t n;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-        *ptr = static_cast< T >(a * static_cast< double > (*ptr) + b);
+        T* ptr=&DIRECT_MULTIDIM_ELEM(*this,0);
+        size_t nmax=(nzyxdim/4)*4;
+        for (size_t n=0; n<nmax; n+=4, ptr+=4)
+        {
+            *(ptr  )= static_cast< T >(a * (*(ptr  )) + b);
+            *(ptr+1)= static_cast< T >(a * (*(ptr+1)) + b);
+            *(ptr+2)= static_cast< T >(a * (*(ptr+2)) + b);
+            *(ptr+3)= static_cast< T >(a * (*(ptr+3)) + b);
+        }
+        for (size_t n=nmax; n<nzyxdim; ++n, ptr+=1)
+            *(ptr  )= static_cast< T >(a * (*(ptr  )) + b);
     }
     //@}
 
