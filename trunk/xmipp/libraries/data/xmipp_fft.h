@@ -289,7 +289,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
         // Shift in the X direction
         if ((l = XSIZE(v)) > 1)
         {
-            aux.resize(l);
+            aux.resizeNoCopy(l);
             shift = (int)(l / 2);
 
             if (!forward)
@@ -320,12 +320,13 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
         // Shift in the Y direction
         if ((l = YSIZE(v)) > 1)
         {
-            aux.resize(l);
+            aux.resizeNoCopy(l);
             shift = (int)(l / 2);
 
             if (!forward)
                 shift = -shift;
 
+            int lmax=(l/4)*4;
             for (int k = 0; k < ZSIZE(v); k++)
                 for (int j = 0; j < XSIZE(v); j++)
                 {
@@ -343,20 +344,28 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                     }
 
                     // Copy the vector
-                    for (int i = 0; i < l; i++)
-                        dAkij(v, k, i, j) = dAi(aux, i);
+                    const T* ptrAux=&dAi(aux,0);
+                    for (int i = 0; i < lmax; i+=4,ptrAux+=4)
+                    {
+                        dAkij(v, k, i  , j) = *ptrAux;
+                        dAkij(v, k, i+1, j) = *(ptrAux+1);
+                        dAkij(v, k, i+2, j) = *(ptrAux+2);
+                        dAkij(v, k, i+3, j) = *(ptrAux+3);
+                    }
+                    for (int i = lmax; i < l; ++i, ++ptrAux)
+                        dAkij(v, k, i, j) = *ptrAux;
                 }
         }
 
         // Shift in the Z direction
         if ((l = ZSIZE(v)) > 1)
         {
-            aux.resize(l);
+            aux.resizeNoCopy(l);
             shift = (int)(l / 2);
 
             if (!forward)
                 shift = -shift;
-
+            int lmax=(l/4)*4;
             for (int i = 0; i < YSIZE(v); i++)
                 for (int j = 0; j < XSIZE(v); j++)
                 {
@@ -373,8 +382,16 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                     }
 
                     // Copy the vector
-                    for (int k = 0; k < l; k++)
-                        dAkij(v, k, i, j) = dAi(aux, k);
+                    const T* ptrAux=&dAi(aux,0);
+                    for (int k = 0; k < lmax; k+=4,ptrAux+=4)
+                    {
+                        dAkij(v, k,   i, j) = *ptrAux;
+                        dAkij(v, k+1, i, j) = *(ptrAux+1);
+                        dAkij(v, k+2, i, j) = *(ptrAux+2);
+                        dAkij(v, k+3, i, j) = *(ptrAux+3);
+                    }
+                    for (int k = kmax; k < l; ++k, ++ptrAux)
+                        dAkij(v, k, i, j) = *ptrAux;
                 }
         }
     }
