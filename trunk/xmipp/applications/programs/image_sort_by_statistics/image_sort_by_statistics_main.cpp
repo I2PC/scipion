@@ -37,7 +37,7 @@ class ProgSortByStatistics: public XmippProgram
 {
 public:
     FileName fn, fn_out, fn_train;
-    bool multivariate;
+    bool multivariate,addToInput;
 
 public:
     double cutoff;
@@ -55,6 +55,7 @@ public:
         SF.read(fn);
         fn_out = getParam("-o");
         multivariate = checkParam("--multivariate");
+        addToInput = checkParam("--addToInput");
         fn_train = getParam("--train");
         if (fn_train != "")
             SFtrain.read(fn_train);
@@ -86,7 +87,8 @@ public:
         addParamsLine(" [--zcut <float=-1>]     : Cut-off for Z-scores (negative for no cut-off) ");
         addParamsLine("                         : Images whose Z-score is larger than the cutoff are disabled");
         addParamsLine(" [--multivariate]        : Identify also multivariate outliers");
-    }
+        addParamsLine(" [--addToInput]          : Add columns also to input MetaData");
+}
 
     void process_selfile(MetaData &SF, bool do_prepare, bool multivariate, bool quiet)
     {
@@ -132,19 +134,20 @@ public:
                         continue;
                 }
                 img.readApplyGeo(SF,__iter.objId);
-                img().setXmippOrigin();
-                img().statisticsAdjust(0,1);
+                MultidimArray<double> &mI=img();
+                mI.setXmippOrigin();
+                mI.statisticsAdjust(0,1);
 
                 // Overall statistics
                 Histogram1D hist;
-                compute_hist(img(),hist,-4,4,31);
+                compute_hist(mI,hist,-4,4,31);
 
                 // Radial profile
-                img2.resizeNoCopy(img());
-                FOR_ALL_ELEMENTS_IN_ARRAY2D(img2)
+                img2.resizeNoCopy(mI);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img2)
                 {
-                    double val=IMGPIXEL(img,i,j);
-                    A2D_ELEM(img2,i,j)=val*val;
+                    double val=DIRECT_MULTIDIM_ELEM(mI,n);
+                    DIRECT_MULTIDIM_ELEM(img2,n)=val*val;
                 }
                 if (first)
                 {
@@ -239,25 +242,38 @@ public:
         finalZscore.indexSort(sorted);
         int nr_imgs = SF.size();
         bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
+        FileName fnImg;
         for (int imgno = 0; imgno < nr_imgs; imgno++)
         {
-            int isort = sorted(imgno) - 1;
-            FileName fnImg;
+            int isort_1 = DIRECT_A1D_ELEM(sorted,imgno);
+            int isort = isort_1 - 1;
             SF.getValue(MDL_IMAGE,fnImg,isort+1);
+
             if (thereIsEnable)
             {
                 int enabled;
-                SF.getValue(MDL_ENABLED,enabled,isort+1);
+                SF.getValue(MDL_ENABLED,enabled,isort_1);
                 if (enabled==-1)
                     continue;
             }
             size_t objId=SFout.addObject();
             SFout.setValue(MDL_IMAGE,fnImg,objId);
-            if (finalZscore(isort)>cutoff && cutoff>0)
+            double zscore=DIRECT_A1D_ELEM(finalZscore,isort);
+            if (zscore>cutoff && cutoff>0)
+            {
             	SFout.setValue(MDL_ENABLED,-1,objId);
+            	if (addToInput)
+            		SF.setValue(MDL_ENABLED,-1,isort_1);
+            }
             else
+            {
             	SFout.setValue(MDL_ENABLED,1,objId);
-            SFout.setValue(MDL_ZSCORE,finalZscore(isort),objId);
+            	if (addToInput)
+            		SF.setValue(MDL_ENABLED,1,isort_1);
+            }
+            SFout.setValue(MDL_ZSCORE,zscore,objId);
+        	if (addToInput)
+        		SF.setValue(MDL_ZSCORE,zscore,isort_1);
             if (verbose==2)
             {
                 fh_zind << fnImg << " : ";
@@ -268,6 +284,8 @@ public:
         if (verbose==2)
             fh_zind.close();
         SFout.write(fn_out + ".sel");
+        if (addToInput)
+        	SF.write(fn);
     }
 };
 
