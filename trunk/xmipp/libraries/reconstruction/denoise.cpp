@@ -66,7 +66,7 @@ void WaveletFilter::defineParams(XmippProgram *program)
     program->addParamsLine("  [--output_scale+ <s=0>]      : output_scale");
     program->addParamsLine("  [--th+ <th=50>]              : threshold of values (%) to remove");
     program->addParamsLine("  [-R+ <r=-1>]                 : Radius to keep, by default half the size");
-    program->addParamsLine("  [--white_noise+]             : Select if the noise is white");
+    program->addParamsLine("  [--white_noise+]             : Select if the noise is white. Used by Bayesian filter.");
 }
 
 // Read from command line --------------------------------------------------
@@ -82,8 +82,8 @@ void WaveletFilter::readParams(XmippProgram *program)
         denoising_type = SOFT_THRESHOLDING;
     else if (mode == "bayesian")
     {
-        SNR0 = program->getDoubleParam("-d", "bayesian", 0);
-        SNRF = program->getDoubleParam("-d", "bayesian", 1);
+        SNR0 = program->getDoubleParam("--wavelet", 2);
+        SNRF = program->getDoubleParam("--wavelet", 3);
         denoising_type = BAYESIAN;
     }
     else if (mode == "adaptive_soft")
@@ -179,7 +179,7 @@ void WaveletFilter::apply(MultidimArray<double> &img)
             break;
         case BAYESIAN:
             estimatedS = bayesian_wiener_filtering2D(img, scale, SNR0, SNRF,
-                         white_noise, verbose, !dont_denoise);
+                         white_noise, 0, !dont_denoise);
             break;
         case ADAPTIVE_SOFT:
             adaptive_soft_thresholding2D(img, scale);
