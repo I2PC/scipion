@@ -69,11 +69,19 @@ class ProtExtractParticles(XmippProtocol):
                 if self.DoFlip:
                     self.Db.insertStep('deleteFile',execution_mode=SqliteDb.EXEC_GAP,parent_step_id=parent_id,filename=micrographToExtract,verbose=True)
         self.Db.updateVerifyFiles(idMPI,verifyFiles)
-        self.Db.insertStep('gatherSelfiles',parent_step_id=idMPI,
+        id=self.Db.insertStep('gatherSelfiles',parent_step_id=idMPI,
                            WorkingDir=self.WorkingDir,familyList=self.familyList)
-        # Poner cada familia en un GAP
-        self.Db.insertStep('sortImages',WorkingDir=self.WorkingDir,familyList=self.familyList)
-        self.Db.insertStep('avgZscore',micrographSelfile=os.path.join(self.pickingDir,"micrographs.sel"))
+        idMPI=self.Db.insertStep('runStepGapsMpi',passDb=True, script=self.scriptName, NumberOfMpi=self.NumberOfMpi)
+        verifyFiles=[]        
+        for family in self.familyList:
+            selfileRoot=os.path.join(self.WorkingDir,family[0])
+            fnOut=selfileRoot+"_sorted.sel"
+            self.Db.insertStep('sortImageInFamily',parent_step_id=XmippProjectDb.FIRST_STEP,execution_mode=SqliteDb.EXEC_GAP,
+                               verifyfiles=[fnOut],selfileRoot=selfileRoot)
+            verifyFiles.append(fnOut)
+        self.Db.updateVerifyFiles(idMPI,verifyFiles)
+        self.Db.insertStep('avgZscore',parent_step_id=idMPI,
+                           WorkingDir=self.WorkingDir,familyList=self.familyList,micrographSelfile=os.path.join(self.WorkingDir,"micrographs.sel"))
                 
     def validate(self):
         errors = []
@@ -177,17 +185,26 @@ def gatherSelfiles(log,WorkingDir,familyList):
     for family in familyList:
         familyName=family[0]
         selfiles=glob.glob(os.path.join(WorkingDir,familyName)+"/*.sel")
+        selfiles.sort()
         familySelfile=xmipp.MetaData()
         for selfile in selfiles:
             mD=xmipp.MetaData(selfile)
             familySelfile.unionAll(mD)
         familySelfile.write(os.path.join(WorkingDir,familyName+".sel"))
 
-def sortImages(log,WorkingDir,familyList):
-    for family in familyList:
-        familyName=family[0]
-        selfileRoot=os.path.join(WorkingDir,familyName)
-        runJob(log,"xmipp_image_sort_by_statistics","-i "+selfileRoot+".sel --multivariate --addToInput -o "+selfileRoot+"_sorted")
+def sortImageInFamily(log,selfileRoot):
+    runJob(log,"xmipp_image_sort_by_statistics","-i "+selfileRoot+".sel --multivariate --addToInput -o "+selfileRoot+"_sorted")
 
-def avgZscore(log,micrographSelfile):
-    pass
+def avgZscore(log,WorkingDir,familyList,micrographSelfile):
+    allParticles=xmipp.MetaData()
+    for family in familyList:
+        allParticles.unionAll(xmipp.MetaData(os.path.join(WorkingDir,family[0]+".sel")))
+    mDavgZscore=xmipp.MetaData()
+    mDavgZscore.aggregate(allParticles, xmipp.AGGR_AVG, xmipp.MDL_MICROGRAPH, xmipp.MDL_ZSCORE, xmipp.MDL_ZSCORE)
+    oldMicrographsSel=xmipp.MetaData(micrographSelfile)
+    oldMicrographsSel.removeLabel(xmipp.MDL_ZSCORE)
+    newMicrographsSel=xmipp.MetaData()
+    # Make copy of metadata because removeLabel leaves the values in the table
+    newMicrographsSel.join(xmipp.MetaData(oldMicrographsSel),mDavgZscore,xmipp.MDL_IMAGE,xmipp.MDL_MICROGRAPH,xmipp.LEFT)
+    newMicrographsSel.write(micrographSelfile)
+
