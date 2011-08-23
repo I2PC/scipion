@@ -144,3 +144,29 @@ bool operator==(const MultidimArray< std::complex< double > >& op1, const Multid
     return true;
 }
 
+template<>
+double MultidimArray<double>::interpolatedElement2D(double x, double y, double outside_value) const
+{
+    int x0 = floor(x);
+    double fx = x - x0;
+    int x1 = x0 + 1;
+    int y0 = floor(y);
+    double fy = y - y0;
+    int y1 = y0 + 1;
+
+    int i0=STARTINGY(*this);
+    int j0=STARTINGX(*this);
+    int iF=FINISHINGY(*this);
+    int jF=FINISHINGX(*this);
+
+    double d00, d10, d11, d01;
+    ASSIGNVAL(d00,y0,x0);
+    ASSIGNVAL(d01,y0,x1);
+    ASSIGNVAL(d10,y1,x0);
+    ASSIGNVAL(d11,y1,x1);
+
+    double d0 = LIN_INTERP(fx, d00, d01);
+    double d1 = LIN_INTERP(fx, d10, d11);
+    return LIN_INTERP(fy, d0, d1);
+}
+
