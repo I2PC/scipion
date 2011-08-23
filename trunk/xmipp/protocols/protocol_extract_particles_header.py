@@ -82,7 +82,7 @@ DoRemoveDust=False
 DustRemovalThreshold=3.5
 
 #------------------------------------------------------------------------------------------
-# {section} Parallelization issues
+# {section} Parallelization
 #------------------------------------------------------------------------------------------
 # Number of MPI processes
 """ Set to 1 if you do not have MPI installed"""
