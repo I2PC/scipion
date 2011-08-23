@@ -133,11 +133,11 @@ def getXmippPrograms():
 
 #FIXME: this is only while development
 def skipProgram(programName):
-    if programName in ['xmipp_sqlite3',
-                    'xmipp_classify_CL2D_core_analysis',
+    if programName in ['xmipp_sqlite3','xmipp_mpi_steps_runner',
+                       'xmipp_angular_commonline',
                     'xmipp_transform_threshold']:
         return True
-    for p in ['xmipp_test', 'xmipp_template', 'mpi_']:
+    for p in ['xmipp_test', 'xmipp_template']:
         if programName.find(p) != -1:
             return True
     return False
@@ -164,11 +164,13 @@ def createProgramsDb(dbName=None):
             
     programs = getXmippPrograms()
     for p in programs:
+        p = os.path.basename(p)
         try:
             if not skipProgram(p):
-                if p.find('_mpi') != -1:
-                    p = "mpirun -np 2 %s" % p                    
                 cmd = [p, "--xmipp_write_definition"]
+                if p.find('_mpi') != -1:                    
+                    cmd = ['mpirun', '-np', '1'] + cmd
+                print ' '.join(cmd)
                 from subprocess import Popen, PIPE
                 ps = Popen(cmd, stdout=PIPE, stderr=PIPE)
                 stderrdata = ps.communicate()[1]
