@@ -23,7 +23,8 @@ class ProtExtractParticles(XmippProtocol):
         # COSS: Falta incluir una ejecucion de automaticos
         # COSS: Falta tiltpairs
         self.pickingDir= getWorkingDirFromRunName(self.PickingRun)
-        self.familyFile = os.path.join(self.pickingDir, "families.xmd")
+        if self.pickingDir:
+            self.familyFile = os.path.join(self.pickingDir, "families.xmd")
 
     def defineSteps(self):
         families=xmipp.MetaData(self.familyFile)
@@ -82,15 +83,18 @@ class ProtExtractParticles(XmippProtocol):
                 
     def validate(self):
         errors = []
-        if not os.path.exists(self.familyFile):
-            errors.append("Cannot find "+self.familyFile)
-        fnMicrographs=os.path.join(self.pickingDir,"micrographs.sel")
-        if not os.path.exists(fnMicrographs):
-            errors.append("Cannot find "+fnMicrographs)
+        if self.pickingDir:
+            if not os.path.exists(self.familyFile):
+                errors.append("Cannot find "+self.familyFile)
+            fnMicrographs=os.path.join(self.pickingDir,"micrographs.sel")
+            if not os.path.exists(fnMicrographs):
+                errors.append("Cannot find "+fnMicrographs)
+            else:
+                mD=xmipp.MetaData(fnMicrographs)
+                if self.DoFlip and not mD.containsLabel(xmipp.MDL_CTFMODEL):
+                    errors.append(fnMicrographs+" does not contain CTF information for phase flipping")
         else:
-            mD=xmipp.MetaData(fnMicrographs)
-            if self.DoFlip and not mD.containsLabel(xmipp.MDL_CTFMODEL):
-                errors.append(fnMicrographs+" does not contain CTF information for phase flipping")
+            errors.append("Picking run is not valid")
         return errors
 
     def summary(self):
