@@ -6,27 +6,37 @@ import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
 
+import java.awt.CheckboxGroup;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
 import xmipp.Program;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.Icon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -45,6 +55,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
 
 import browser.windows.ImagesWindowFactory;
 
@@ -61,26 +72,21 @@ enum Tool {
 }
 
 enum Shape {
-	CIRCLE, RECTANGLE, BOTH
+	Circle, Rectangle, Center
 }
 
 public class ParticlePickerJFrame extends JFrame implements ActionListener {
 
 	private JSlider sizesl;
-	private JRadioButton circlerbt;
-	private JRadioButton rectanglerbt;
-	private ButtonGroup shapebg;
+	private JCheckBox circlerbt;
+	private JCheckBox rectanglerbt;
 	private ParticlePickerCanvas canvas;
-	private JTextField sizetf;
+	private JFormattedTextField sizetf;
 	private Tool tool = Tool.PICKER;
-	private JRadioButton bothrbt;
-	private Shape shape;
+	private JCheckBox centerrbt;
 	private JMenuBar mb;
 	private JComboBox familiescb;
-	private JButton geditbt;
 	private ParticlePicker ppicker;
-	private JLabel colorlb;
-	private ColorIcon coloricon;
 	private Color color;
 	private JPanel familypn;
 	private JPanel symbolpn;
@@ -92,16 +98,22 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	private JMenuItem savemi;
 	private MicrographsTableModel micrographsmd;
 	Micrograph micrograph;
-	private JPanel buttonspn;
-	private JButton trainbt;
-	private JButton autopickbt;
-	private JLabel iconlb;
-	private JPanel steppn;
-	private JButton resetbt;
 	private JButton nextbt;
+	private JButton colorbt;
+	private double position;
+	private JLabel iconlb;
 
-	public Shape getShape() {
-		return shape;
+	public boolean isShapeSelected(Shape s) {
+		switch(s)
+		{
+		case Rectangle:
+			return rectanglerbt.isSelected();
+		case Circle:
+			return circlerbt.isSelected();
+		case Center:
+			return centerrbt.isSelected();
+		}
+		return false;
 	}
 
 	public Tool getTool() {
@@ -164,15 +176,9 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		constraints.anchor = GridBagConstraints.WEST;
 		setLayout(new GridBagLayout());
 
-		initStepPane();
-		add(steppn, WindowUtils.updateConstraints(constraints, 0, 0, 3));
-		
-
 		initFamilyPane();
-		add(new JLabel("Family:"),
-				WindowUtils.updateConstraints(constraints, 0, 1, 1));
 		add(familypn,
-				WindowUtils.updateConstraints(constraints, 1, 1, 1));
+				WindowUtils.updateConstraints(constraints, 0, 1, 3));
 		
 		initSymbolPane();
 		add(symbolpn,
@@ -183,147 +189,13 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		initMicrographsPane();
 		add(micrographpn, WindowUtils.updateConstraints(constraints, 0, 3, 3));
 
-			initButtonsPane();
-			add(buttonspn, WindowUtils.updateConstraints(constraints, 0, 4, 3));
+			
 		pack();
-		WindowUtils.centerScreen(0.9, this);
+		position = 0.9;
+		WindowUtils.centerScreen(position, this);
 		setVisible(true);
 	}
 	
-	
-
-	private void initStepPane()
-	{
-		steppn = new JPanel();
-		JLabel manuallb = new JLabel("Manual");
-		manuallb.setFont(new Font(manuallb.getFont().getName(), Font.BOLD, manuallb.getFont().getSize()));
-		JLabel supervisedlb = new JLabel("Supervised");
-		steppn.add(manuallb);
-		steppn.add(new JLabel(" >> "));
-		steppn.add(supervisedlb);
-		
-	}
-
-
-	private void initFamilyPane() {
-		familypn = new JPanel();
-		
-		// Setting edit button
-		geditbt = new JButton("Edit");
-		familypn.add(geditbt);
-
-		// Setting combo
-		familiescb = new JComboBox(ppicker.getFamilies().toArray());
-		familypn.add(familiescb);
-
-		// Setting color
-		color = getFamily().getColor();
-		familypn.add(new JLabel("Color:"));
-		coloricon = new ColorIcon(color);
-		colorlb = new JLabel(coloricon);
-		familypn.add(colorlb);
-
-		// Setting slider
-		int size = getFamily().getSize();
-		familypn.add(new JLabel("Size:"));
-		sizesl = new JSlider(0, 500, size);
-		int height = (int)sizesl.getPreferredSize().getHeight();
-		sizesl.setPreferredSize(new Dimension(150, height));
-		
-		familypn.add(sizesl);
-		sizetf = new JTextField(3);
-		sizetf.setText(Integer.toString(size));
-		familypn.add(sizetf);
-
-		// Setting pane listeners
-
-		geditbt.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				new EditFamiliesJDialog(ParticlePickerJFrame.this, true);
-				
-			}
-		});
-
-		sizetf.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int size = Integer.parseInt(sizetf.getText());
-				switchSize(size);
-
-			}
-		});
-
-		sizesl.addChangeListener(new ChangeListener() {
-
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				int size = sizesl.getValue();
-				switchSize(size);
-			}
-		});
-
-		familiescb.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				color = (getFamily().getColor());
-				colorlb.setIcon(new ColorIcon(color));
-				sizesl.setValue(getFamily().getSize());
-				ParticlePickerJFrame.this.micrographsmd.fireTableDataChanged();
-			}
-		});
-	}
-	
-	private void initSymbolPane() {
-
-		symbolpn = new JPanel();
-		symbolpn.setBorder(BorderFactory.createTitledBorder("Symbol"));
-		shapebg = new ButtonGroup();
-		circlerbt = new JRadioButton("Circle");
-		shapebg.add(circlerbt);
-		rectanglerbt = new JRadioButton("Rectangle");
-		shapebg.add(rectanglerbt);
-		bothrbt = new JRadioButton("Both");
-		bothrbt.getModel().setSelected(true);
-		shape = shape.BOTH;
-		shapebg.add(bothrbt);
-
-		symbolpn.add(bothrbt);
-		symbolpn.add(circlerbt);
-		symbolpn.add(rectanglerbt);
-
-		circlerbt.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				canvas.repaint();
-				shape = Shape.CIRCLE;
-			}
-		});
-
-		rectanglerbt.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				canvas.repaint();
-				shape = Shape.RECTANGLE;
-			}
-		});
-
-		bothrbt.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				canvas.repaint();
-				shape = Shape.BOTH;
-			}
-		});
-	}
-
-
 	public void initPPMenuBar() {
 		mb = new JMenuBar();
 
@@ -368,6 +240,8 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		windowmn.add(particlesmn);
 		JMenuItem ijmi = new JMenuItem("ImageJ");
 		windowmn.add(ijmi);
+		JMenuItem editfamiliesmn = new JMenuItem("Edit Families");
+		windowmn.add(editfamiliesmn);
 
 		JMenuItem hcontentsmi = new JMenuItem("Help Contents...");
 		helpmn.add(hcontentsmi);
@@ -420,11 +294,160 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 //				new MicrographParticlesJDialog(XmippParticlePickerJFrame.this, XmippParticlePickerJFrame.this.micrograph);
 			}
 		});
+		
+		editfamiliesmn.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new EditFamiliesJDialog(ParticlePickerJFrame.this, true);
+				
+			}
+		});
 
 	}
 	
+
+	private void initFamilyPane() {
+		familypn = new JPanel();
+		familypn.setLayout(new BoxLayout(familypn, BoxLayout.Y_AXIS));
+		familypn.setBorder(BorderFactory.createTitledBorder("Family"));
+		
+		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+		// Setting combo
+		fieldspn.add(new JLabel("Family:"));
+		familiescb = new JComboBox(ppicker.getFamilies().toArray());
+		fieldspn.add(familiescb);
+
+		// Setting color
+		color = getFamily().getColor();
+		fieldspn.add(new JLabel("Color:"));
+		colorbt = new JButton();
+		colorbt.setIcon(new ColorIcon(color));
+		colorbt.setBorderPainted(false);
+		fieldspn.add(colorbt);
+
+		// Setting slider
+		int size = getFamily().getSize();
+		fieldspn.add(new JLabel("Size:"));
+		sizesl = new JSlider(0, 500, size);
+		int height = (int)sizesl.getPreferredSize().getHeight();
+		sizesl.setPreferredSize(new Dimension(100, height));
+		
+		fieldspn.add(sizesl);
+		sizetf = new JFormattedTextField(NumberFormat.getNumberInstance());
+		sizetf.setText(Integer.toString(size));
+		sizetf.setColumns(3);
+		fieldspn.add(sizetf);
+		
+		familypn.add(fieldspn, 0);
+		JPanel steppn = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		steppn.add(new JLabel("Step: " + getFamily().getStep()));
+		nextbt = new JButton("Go To Supervised");
+		steppn.add(nextbt);
+		
+		colorbt.addActionListener(new ColorActionListener());
+		nextbt.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		familypn.add(steppn, 1);
+		sizetf.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int size = ((Number)sizetf.getValue()).intValue();
+				switchSize(size);
+
+			}
+		});
+
+		sizesl.addChangeListener(new ChangeListener() {
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				int size = sizesl.getValue();
+				switchSize(size);
+			}
+		});
+
+		familiescb.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Family f = getFamily();
+				color = (f.getColor());
+				colorbt.setIcon(new ColorIcon(color));
+				sizesl.setValue(f.getSize());
+				//ParticlePickerJFrame.this.micrographsmd.fireTableStructureChanged();
+				ParticlePickerJFrame.this.micrographsmd.fireTableDataChanged();
+				ParticlePickerJFrame.this.micrographstb.getColumnModel().getColumn(1).setHeaderValue(f.getName());
+				
+			}
+		});
+	}
 	
+	class ColorActionListener implements ActionListener
+	{
+		JColorChooser colorChooser;
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// Set up the dialog that the button brings up.
+			colorChooser = new JColorChooser();
+			JDialog dialog = JColorChooser.createDialog(colorbt, "Pick a Color",
+					true, // modal
+					colorChooser, new ActionListener() {
+
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							getFamily().setColor(ColorActionListener.this.colorChooser.getColor());
+							updateFamilies();
+						}
+					}, // OK button handler
+					null); // no CANCEL button handler
+			WindowUtils.centerScreen(position, dialog);
+			dialog.setVisible(true);
+		}
+	}
 	
+	private void initSymbolPane() {
+
+		symbolpn = new JPanel();
+		symbolpn.setBorder(BorderFactory.createTitledBorder("Symbol"));
+		ShapeItemListener shapelistener = new ShapeItemListener();
+		
+		circlerbt = new JCheckBox(Shape.Circle.toString());
+		circlerbt.getModel().setSelected(true);
+		circlerbt.addItemListener(shapelistener);
+		
+		rectanglerbt = new JCheckBox(Shape.Rectangle.toString());
+		rectanglerbt.getModel().setSelected(true);
+		rectanglerbt.addItemListener(shapelistener);
+		
+		centerrbt = new JCheckBox(Shape.Center.toString());
+		centerrbt.getModel().setSelected(true);
+		centerrbt.addItemListener(shapelistener);
+		
+		symbolpn.add(circlerbt);
+		symbolpn.add(rectanglerbt);
+		symbolpn.add(centerrbt);
+		
+	}
+
+	
+	class ShapeItemListener implements ItemListener
+	{
+
+		@Override
+		public void itemStateChanged(ItemEvent e) {
+			canvas.repaint();
+		}
+		
+	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -458,7 +481,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(180);
 		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(70);
-		micrographstb.setPreferredScrollableViewportSize(new Dimension(250, 200));
+		micrographstb.setPreferredScrollableViewportSize(new Dimension(250, 150));
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 		micrographstb.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
@@ -482,28 +505,6 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		micrographpn.add(ctfpn, WindowUtils.updateConstraints(constraints, 1, 0, 1));
 	}
 	
-	private void initButtonsPane()
-	{
-		buttonspn = new JPanel();
-		nextbt = new JButton("Next");
-		buttonspn.add(nextbt);
-		resetbt = new JButton("Reset");
-		buttonspn.add(resetbt);
-		nextbt.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-			}
-		});
-		resetbt.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-			}
-		});
-	}
 	
 
 	
@@ -550,7 +551,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		familiescb.setModel(model);
 		familiescb.setSelectedItem(item);
 		color = item.getColor();
-		colorlb.setIcon(new ColorIcon(color));
+		colorbt.setIcon(new ColorIcon(color));
 		sizesl.setValue(item.getSize());
 		pack();
 		canvas.repaint();
@@ -566,7 +567,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	}
 
 	public void removeFamily(Family family) {
-		ppicker.getFamilies().remove(family);
+		ppicker.removeFamily(family);
 		updateFamilies();
 	}
 

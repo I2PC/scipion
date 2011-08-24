@@ -108,6 +108,7 @@ public class ParticlePicker {
 						f.getColor().getRGB(), id);
 				md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, f.getSize(),
 						id);
+				md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, f.getStep().toString(), id);
 			}
 			md.write(filename);
 		} catch (Exception e) {
@@ -128,6 +129,7 @@ public class ParticlePicker {
 
 		Family family;
 		int rgb, size;
+		Step step;
 		String gname;
 		try {
 			MetaData md = new MetaData(filename);
@@ -136,6 +138,7 @@ public class ParticlePicker {
 				gname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				rgb = md.getValueInt(MDLabel.MDL_PICKING_COLOR, id);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
+				step = Step.valueOf(md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, id));
 				family = new Family(gname, new Color(rgb), size);
 				families.add(family);
 			}
@@ -282,6 +285,14 @@ public class ParticlePicker {
 			throw new IllegalArgumentException(e.getMessage());
 		}
 
+	}
+
+	public void removeFamily(Family family) {
+		if(family.particles > 0)
+			throw new IllegalArgumentException(Constants.getAssociatedDataMsg("family"));
+		if(families.size() == 1)
+			throw new IllegalArgumentException(Constants.getIllegalDeleteMsg("family"));
+		families.remove(family);
 	}
 
 }

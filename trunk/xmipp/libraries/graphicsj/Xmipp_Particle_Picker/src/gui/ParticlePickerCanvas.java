@@ -3,6 +3,7 @@ package gui;
 import ij.gui.ImageCanvas;
 
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
@@ -143,16 +144,24 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 				count++;
 				x = (int) ((p.getX() - x0) * magnification);
 				y = (int) ((p.getY() - y0) * magnification);
-				g2.drawString(Integer.toString(count), x, y - radius - 2);
-				if (frame.getShape() == Shape.RECTANGLE
-						|| frame.getShape() == Shape.BOTH)
-					g2.drawRect(x - radius, y - radius, radius * 2, radius * 2);
-				if (frame.getShape() == Shape.CIRCLE
-						|| frame.getShape() == Shape.BOTH)
-					g2.drawOval(x - radius, y - radius, radius * 2, radius * 2);
-
+				
+				drawShape(g2, x, y, radius, count);
 			}
 		}
+	}
+	
+	void drawShape(Graphics2D g2, int x, int y, int radius, int label)
+	{
+		if (frame.isShapeSelected(Shape.Rectangle))
+			g2.drawRect(x - radius, y - radius, radius * 2, radius * 2);
+		if (frame.isShapeSelected(Shape.Circle))
+			g2.drawOval(x - radius, y - radius, radius * 2, radius * 2);
+		if (frame.isShapeSelected(Shape.Center))
+		{
+			g2.drawLine(x - 2, y - 2, x + 2, y + 2);
+			g2.drawLine(x + 2, y - 2, x - 2, y + 2);
+		}
+		g2.drawString(Integer.toString(label), x, y - radius);
 	}
 
 	public void updateMicrograph() {

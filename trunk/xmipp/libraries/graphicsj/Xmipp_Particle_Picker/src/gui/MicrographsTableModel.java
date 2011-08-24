@@ -29,6 +29,8 @@ public class MicrographsTableModel extends AbstractTableModel {
 	@Override
 	public String getColumnName(int c)
 	{
+		if(c == 1)
+			return frame.getFamily().getName();
 		return columns[c];
 	}
 

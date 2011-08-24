@@ -17,4 +17,8 @@ public class Constants {
 	public static String getEmptyFieldMsg(String field) {
 		return String.format("Must specify a %s", field);
 	}
+
+	public static String getAssociatedDataMsg(String field) {
+		return field + " has associated data. Can not be removed";
+	}
 }

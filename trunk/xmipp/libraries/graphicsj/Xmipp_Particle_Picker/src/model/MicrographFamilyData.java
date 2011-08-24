@@ -24,12 +24,12 @@ public class MicrographFamilyData {
 
 	public void addParticle(Particle p) {
 		particles.add(p);
-		Family.particles ++;
+		family.particles ++;
 	}
 
 	public void removeParticle(Particle p) {
 		particles.remove(p);
-		Family.particles --;
+		family.particles --;
 	}
 
 

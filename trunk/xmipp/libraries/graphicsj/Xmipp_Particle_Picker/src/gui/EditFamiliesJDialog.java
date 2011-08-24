@@ -110,18 +110,21 @@ public class EditFamiliesJDialog extends JDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				List<Family> groups = EditFamiliesJDialog.this.parent
+				List<Family> families = EditFamiliesJDialog.this.parent
 						.getParticlePicker().getFamilies();
-				if (groups.size() == 1) {
-					JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
-							Constants.getIllegalDeleteMsg("group"));
-					return;
-				}
+				try
+				{
 				int index = groupstb.getSelectedRow();
-				parent.removeFamily(groups.get(index));
+				parent.removeFamily(families.get(index));
 				model.fireTableStructureChanged();
 				EditFamiliesJDialog.this.deletebt.setEnabled(false);
+				}
+				catch(Exception ex)
+				{
+					JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
+							ex.getMessage());
 				
+				}
 			}
 		});
 	}

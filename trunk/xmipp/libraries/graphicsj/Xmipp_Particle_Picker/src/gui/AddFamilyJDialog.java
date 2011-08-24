@@ -105,11 +105,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 			public void actionPerformed(ActionEvent e) {
 				String name = nametf.getText();
 				if(sizetf.getValue() == null)
-				{
-					JOptionPane.showMessageDialog(AddFamilyJDialog.this,
-							model.Constants.getEmptyFieldMsg("Size"));
-					return;
-				}
+					sizetf.setValue(sizesl.getValue());
 				int size = ((Number)sizetf.getValue()).intValue();
 				try {
 					Family g = new Family(name, color, size);

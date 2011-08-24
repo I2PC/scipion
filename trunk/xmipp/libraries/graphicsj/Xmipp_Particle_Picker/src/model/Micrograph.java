@@ -78,7 +78,7 @@ public class Micrograph {
 		if(ctficon == null)
 		{
 			ImagePlus ip = new ImagePlus(ctf);
-			Image i = ip.getImage();//.getScaledInstance(200, 200, Image.SCALE_SMOOTH);
+			Image i = ip.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
 			ctficon = new ImageIcon(i);
 			
 		}
