@@ -163,7 +163,7 @@ class XmippProjectGUI():
         self.menuProject = tk.Menu(self.root, tearoff=0)
         self.menubar.add_cascade(label="Project", menu=self.menuProject)
         self.menuProject.add_command(label="Browse files", command=self.browseFiles)
-        self.menuProject.add_command(label="Remove temporaly files", command=self.deleteTmpFiles)        
+        self.menuProject.add_command(label="Remove temporary files", command=self.deleteTmpFiles)        
         self.menuProject.add_command(label="Clean project", command=self.cleanProject)
         
     def selectRunUpDown(self, event):
