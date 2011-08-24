@@ -254,12 +254,14 @@ class XmippProjectDb(SqliteDb):
                          FROM %(TableRuns)s NATURAL JOIN %(TableProtocolsGroups)s """ % self.sqlDict
         return sqlCommand
                          
-    def selectRuns(self, groupName):
+    def selectRuns(self, groupName=None):
         self.connection.commit()
         self.sqlDict['group'] = groupName
-        sqlCommand = self.selectRunsCommand() + """WHERE group_name = '%(group)s'
-                                                   ORDER BY last_modified DESC """ % self.sqlDict
-        self.cur.execute(sqlCommand) 
+        sqlCommand = self.selectRunsCommand()
+        if groupName:
+            sqlCommand += "WHERE group_name = '%(group)s'"
+        sqlCommand += " ORDER BY last_modified DESC "
+        self.cur.execute(sqlCommand % self.sqlDict) 
         return self.cur.fetchall()
     
     def selectRunByName(self, protocol_name, runName):

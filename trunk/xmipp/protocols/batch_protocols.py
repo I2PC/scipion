@@ -308,7 +308,10 @@ class XmippProjectGUI():
         if not selectFirst:
             index = self.lbHist.selectedIndex()
         self.lbHist.delete(0, tk.END)
-        self.runs = self.project.projectDb.selectRuns(protGroup)
+        if protGroup == 'All':
+            self.runs = self.project.projectDb.selectRuns()
+        else:
+            self.runs = self.project.projectDb.selectRuns(protGroup)
         if len(self.runs) > 0:
             for run in self.runs:
                 run_name = '%s_%s' % (run['protocol_name'], run['run_name'])
@@ -439,6 +442,9 @@ class XmippProjectGUI():
         text = protDict.xmipp_program.title
         btn = section.addButton(text, command=self.launchProgramsGUI)
         self.ToolbarButtonsDict[text] = (btn, None)
+        text = "All"
+        btn = section.addButton(text, command=lambda: self.selectToolbarButton(text, False))
+        self.ToolbarButtonsDict[text] = (btn, None)        
         return toolbar
                 
     def addRunButton(self, frame, text, col, imageFilename=None):
