@@ -154,6 +154,7 @@ protected:
         addExampleLine(" You can also modify your data using SQLite syntax expression", false);
         addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"angleRot=(angleRot*3.1416/180.)\" -o b.doc");
         addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"image=replace(image, 'xmp','spi')\" -o b.doc");
+        addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"image='new_prefix_dir/'||image\" -o b.doc");
         addExampleLine(" Count number of images per CTF", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -q count CTFModel -o out.doc");
         addExampleLine(" images asigned a ctfgroup", false);
