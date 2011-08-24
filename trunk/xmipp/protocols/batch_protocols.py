@@ -298,8 +298,7 @@ class XmippProjectGUI():
         self.selectToolbarButton(run['group_name'], False)
         if self.lastSelected == run['group_name']:
             self.updateRunHistory(self.lastSelected)
-          
-        
+
     def updateRunHistory(self, protGroup, selectFirst=True):
         #Cancel if there are pending refresh
         if self.historyRefresh:
