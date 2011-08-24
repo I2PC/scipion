@@ -579,9 +579,10 @@ class ScriptProtocols(XmippScript):
                 answer = raw_input('Do you want to create a new xmipp_protocols PROJECT in this folder? [Y/n]:')
                 if not answer or answer.lower() == 'y':
                     project.create()
-                else: return
+                else: 
+                    launch = False
             else:
-                launch = False
+                project.load()
         if launch:
             gui = XmippProjectGUI(project)
             gui.createGUI()
