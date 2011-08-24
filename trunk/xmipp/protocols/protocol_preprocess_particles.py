@@ -42,16 +42,34 @@ class ProtPreprocessParticles(XmippProtocol):
         
     def validate(self):
         errors = []
-        fnSel=os.path.join(self.extractionDir,self.Family+".sel")
-        if not os.path.exists(fnSel):
-            errors.append("Cannot find "+fnSel)
+        if self.extractionDir:
+            fnSel=os.path.join(self.extractionDir,self.Family+".sel")
+            if not os.path.exists(fnSel):
+                errors.append("Cannot find "+fnSel)
+        else:
+            errors.append("Extraction run is not valid")
         return errors
 
     def summary(self):
         message=[]
-        message.append("Still to do")
+        step=1
+        message.append("Steps applied to %s"%os.path.join(self.extractionDir,self.Family+".sel"))
+        if self.DoFourier:
+            message.append("Step %d -> Fourier filter applied: freq_low=%f freq_high=%f freq_decay=%f"%(step,self.Freq_low,self.Freq_high,self.Freq_decay))
+            step+=1
+        if self.DoGaussian:
+            message.append("Step %d -> Gaussian filter applied: freq_sigma=%f"%(step,self.Freq_sigma))
+            step+=1
+        if self.DoRemoveDust:
+            message.append("Step %d -> Dust removal filter applied: threshold=%f"%(step,self.DustRemovalThreshold))
+            step+=1
+        if self.DoNorm:
+            if self.NormType=="OldXmipp":
+                message.append("Step %d -> Normalization applied: type=%s"%(step,self.NormType))
+            else:
+                message.append("Step %d -> Normalization applied: type=%s backgroundRadius=%d"%(step,self.NormType,self.BackGroundRadius))
+            step+=1
         return message
-
 
     def visualize(self):
         selfile=os.path.join(self.WorkingDir,self.Family+".sel")
