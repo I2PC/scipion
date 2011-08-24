@@ -3,16 +3,14 @@ package gui;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
-import ij.WindowManager;
 import ij.gui.ImageWindow;
 
-import java.awt.CheckboxGroup;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -23,14 +21,10 @@ import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
-import xmipp.Program;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
@@ -44,28 +38,23 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
-import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.event.TableModelEvent;
-
-import browser.windows.ImagesWindowFactory;
 
 import model.Constants;
 import model.Family;
 import model.Micrograph;
-import model.ExecutionEnvironment;
-import model.ParticlePicker;
 import model.Particle;
+import model.ParticlePicker;
+import model.Step;
 import model.XmippJ;
+import browser.windows.ImagesWindowFactory;
 
 enum Tool {
 	IMAGEJ, PICKER
@@ -73,6 +62,11 @@ enum Tool {
 
 enum Shape {
 	Circle, Rectangle, Center
+}
+
+enum Action
+{
+	Train, Autopic
 }
 
 public class ParticlePickerJFrame extends JFrame implements ActionListener {
@@ -102,6 +96,8 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	private JButton colorbt;
 	private double position;
 	private JLabel iconlb;
+	private JLabel steplb;
+	private JButton actionsbt;
 
 	public boolean isShapeSelected(Shape s) {
 		switch(s)
@@ -146,12 +142,12 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 
 
 	private void initComponents() {
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent winEvt) {
@@ -309,7 +305,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 
 	private void initFamilyPane() {
 		familypn = new JPanel();
-		familypn.setLayout(new BoxLayout(familypn, BoxLayout.Y_AXIS));
+		familypn.setLayout(new GridLayout(3, 1));
 		familypn.setBorder(BorderFactory.createTitledBorder("Family"));
 		
 		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -342,17 +338,52 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		
 		familypn.add(fieldspn, 0);
 		JPanel steppn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		steppn.add(new JLabel("Step: " + getFamily().getStep()));
-		nextbt = new JButton("Go To Supervised");
+		steppn.add(new JLabel("Step:"));
+		Step step = getFamily().getStep();
+		steplb = new JLabel(step.toString());
+		steppn.add(steplb);
+		nextbt = new JButton("Go To " + ppicker.nextStep(step).toString());
 		steppn.add(nextbt);
+		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		actionsbt = new JButton(Action.Autopic.toString());
+		actionsbt.setVisible(step == Step.Supervised);
+		micrograph = ppicker.getMicrographs().get(0);
 		
+		buttonspn.add(actionsbt);
+		familypn.add(buttonspn);
 		colorbt.addActionListener(new ColorActionListener());
 		nextbt.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				
+				if(getFamily().getStep() == Step.Manual)
+				{
+						int result = JOptionPane.showConfirmDialog(
+								ParticlePickerJFrame.this, 
+								"Data provided from manual picking will be used to train software and start Supervised mode." +
+								"\nManual mode will be disabled. Are you sure you want to continue?",
+								"Message",
+								JOptionPane.YES_NO_OPTION);
+						
+						if(result == JOptionPane.NO_OPTION)
+							return;
+						saveChanges();
+						setStep(Step.Supervised);
+						ppicker.train(getFamily());
+				}
+				else if(getFamily().getStep() == Step.Supervised)
+				{
+						int result = JOptionPane.showConfirmDialog(
+								ParticlePickerJFrame.this, 
+								"Model generated during Supervised mode will be dismissed." +
+								"\nAre you sure you want to continue?",
+								"Message",
+								JOptionPane.YES_NO_OPTION);
+						
+						if(result == JOptionPane.NO_OPTION)
+							return;
+						setStep(Step.Manual);
+				}
 			}
 		});
 		familypn.add(steppn, 1);
@@ -389,6 +420,23 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 				
 			}
 		});
+		actionsbt.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				ppicker.classify(getFamily(), micrograph);
+				
+			}
+		});
+	}
+	
+	private void setStep(Step step)
+	{
+		nextbt.setText("Go To " + ParticlePicker.nextStep(step).toString());
+		getFamily().setStep(step);
+		steplb.setText(step.toString());
+		updateFamilies();
+		actionsbt.setVisible(step == Step.Supervised);
 	}
 	
 	class ColorActionListener implements ActionListener
@@ -429,7 +477,6 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		rectanglerbt.addItemListener(shapelistener);
 		
 		centerrbt = new JCheckBox(Shape.Center.toString());
-		centerrbt.getModel().setSelected(true);
 		centerrbt.addItemListener(shapelistener);
 		
 		symbolpn.add(circlerbt);
@@ -480,8 +527,9 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		micrographstb = new JTable(micrographsmd);
 		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(180);
-		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(70);
-		micrographstb.setPreferredScrollableViewportSize(new Dimension(250, 150));
+		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(50);
+		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(70);
+		micrographstb.setPreferredScrollableViewportSize(new Dimension(300, 150));
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 		micrographstb.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
@@ -496,6 +544,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 				micrograph = (Micrograph)ppicker.getMicrographs().get(index);
 				initializeCanvas();
 				ParticlePickerJFrame.this.iconlb.setIcon(micrograph.getCTFIcon());
+				actionsbt.setEnabled(micrograph.isEmpty());//only necesary on Supervised mode
 			}
 		});
 		micrographstb.getSelectionModel().setSelectionInterval(0, 0);
@@ -539,7 +588,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	public void saveChanges() {
 
 		ppicker.persistFamilies();
-		ppicker.persistMicrographs();
+		ppicker.persistMicrographsData();
 		setChanged(false);
 	}
 
@@ -553,6 +602,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		color = item.getColor();
 		colorbt.setIcon(new ColorIcon(color));
 		sizesl.setValue(item.getSize());
+		
 		pack();
 		canvas.repaint();
 		setChanged(true);

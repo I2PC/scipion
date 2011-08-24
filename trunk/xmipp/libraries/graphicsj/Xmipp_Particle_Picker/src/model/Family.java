@@ -1,13 +1,8 @@
 package model;
 import java.awt.Color;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
 
-enum Step
-{
-	MANUAL, SUPERVISED
-}
+
 
 public class Family {
 	
@@ -47,7 +42,7 @@ public class Family {
 	
 	public Family(String name, Color color, int size)
 	{
-		this(name, color, size, Step.MANUAL);
+		this(name, color, size, Step.Manual);
 	}
 	
 	public Family(String name, Color color, int size, Step state)
@@ -66,7 +61,7 @@ public class Family {
 	
 	public Family(String name, Color color)
 	{
-		this(name, color, getDefaultSize(), Step.MANUAL);
+		this(name, color, getDefaultSize(), Step.Manual);
 	}
 	
 	public Step getStep()

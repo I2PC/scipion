@@ -15,6 +15,7 @@ import javax.swing.SwingUtilities;
 import model.Micrograph;
 import model.MicrographFamilyData;
 import model.Particle;
+import model.Step;
 
 public class ParticlePickerCanvas extends ImageCanvas implements
 		MouseWheelListener {
@@ -41,43 +42,57 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 	 * particle. Considers owner for selection to the first particle containing
 	 * point. Sets dragged if onpick
 	 */
+
 	public void mousePressed(MouseEvent e) {
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
 		if (frame.getTool() != Tool.PICKER) {
 			super.mousePressed(e);
 			return;
 		}
+		int x = super.offScreenX(e.getX());
+		int y = super.offScreenY(e.getY());
+
 		if (SwingUtilities.isRightMouseButton(e)) {
 			setupScroll(x, y);
 			return;
 		}
-		Particle p = micrograph.getParticle(x, y);
-		if (p != null) {
-			if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown()) {
-				micrograph.removeParticle(p);
-				frame.updateMicrographsModel();
-			} else if (SwingUtilities.isLeftMouseButton(e)) {
-				p.setPosition(x, y);
+		if (isPickingAvailable()) {
+			Particle p = micrograph.getParticle(x, y);
+			if (p != null) {
+				if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown()) {
+					micrograph.removeParticle(p);
+					frame.updateMicrographsModel();
+				} else if (SwingUtilities.isLeftMouseButton(e)) {
+					p.setPosition(x, y);
+					dragged = p;
+				}
+			} else if (SwingUtilities.isLeftMouseButton(e)
+					&& Particle.boxContainedOnImage(x, y, frame.getFamily()
+							.getSize(), imp)) {
+				p = new Particle(x, y, frame.getFamily(), micrograph);
+				micrograph.addParticle(p);
 				dragged = p;
+				frame.updateMicrographsModel();
 			}
-		} else if (SwingUtilities.isLeftMouseButton(e)
-				&& Particle.boxContainedOnImage(x, y, frame.getFamily()
-						.getSize(), imp)) {
-			p = new Particle(x, y, frame.getFamily(), micrograph);
-			micrograph.addParticle(p);
-			dragged = p;
-			frame.updateMicrographsModel();
+			frame.setChanged(true);
+			repaint();
 		}
-		frame.setChanged(true);
-		repaint();
+	}
+	
+	public boolean isPickingAvailable()
+	{
+		if(micrograph.isReadOnly(frame.getFamily()))
+				return false;
+		if(micrograph.isEmpty() && frame.getFamily().getStep() == Step.Supervised)
+			return false;
+		return true;
 	}
 
 	/**
 	 * Updates particle position and repaints. Sets dragged to null at the end
 	 */
 	public void mouseReleased(MouseEvent e) {
-		if (frame.getTool() != Tool.PICKER) {
+		if (!isPickingAvailable()
+				|| frame.getTool() != Tool.PICKER) {
 			super.mouseReleased(e);
 			return;
 		}
@@ -101,25 +116,28 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 	 */
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
+
 		if (frame.getTool() != Tool.PICKER) {
 			super.mouseDragged(e);
 			return;
 		}
+		int x = super.offScreenX(e.getX());
+		int y = super.offScreenY(e.getY());
 		if (SwingUtilities.isRightMouseButton(e)) {
 			scroll(e.getX(), e.getY());
 			return;
 		}
-		if (dragged == null)
-			return;
+		if (isPickingAvailable()) {
+			if (dragged == null)
+				return;
 
-		if (!Particle.boxContainedOnImage(x, y, dragged.getFamily().getSize(),
-				imp))
-			return;
-		dragged.setPosition(x, y);
-		frame.setChanged(true);
-		repaint();
+			if (!Particle.boxContainedOnImage(x, y, dragged.getFamily()
+					.getSize(), imp))
+				return;
+			dragged.setPosition(x, y);
+			frame.setChanged(true);
+			repaint();
+		}
 	}
 
 	public void paint(Graphics g) {
@@ -144,20 +162,18 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 				count++;
 				x = (int) ((p.getX() - x0) * magnification);
 				y = (int) ((p.getY() - y0) * magnification);
-				
+
 				drawShape(g2, x, y, radius, count);
 			}
 		}
 	}
-	
-	void drawShape(Graphics2D g2, int x, int y, int radius, int label)
-	{
+
+	void drawShape(Graphics2D g2, int x, int y, int radius, int label) {
 		if (frame.isShapeSelected(Shape.Rectangle))
 			g2.drawRect(x - radius, y - radius, radius * 2, radius * 2);
 		if (frame.isShapeSelected(Shape.Circle))
 			g2.drawOval(x - radius, y - radius, radius * 2, radius * 2);
-		if (frame.isShapeSelected(Shape.Center))
-		{
+		if (frame.isShapeSelected(Shape.Center)) {
 			g2.drawLine(x - 2, y - 2, x + 2, y + 2);
 			g2.drawLine(x + 2, y - 2, x - 2, y + 2);
 		}
@@ -177,6 +193,7 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 		int y = super.offScreenY(e.getY());
 
 		int rotation = e.getWheelRotation();
+		System.out.println(rotation);
 		if (rotation < 0)
 			zoomIn(x, y);
 		else

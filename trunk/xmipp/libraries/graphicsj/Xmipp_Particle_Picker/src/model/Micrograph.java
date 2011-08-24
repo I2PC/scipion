@@ -32,6 +32,19 @@ public class Micrograph {
 		this.aoutputfname = ExecutionEnvironment.getOutputPath(name + "_auto" + ext);
 		this.ctf = ctf;
 	}
+	public Micrograph(String filename, String ctf, List<MicrographFamilyData> mfd) {
+		this.filename = filename;
+		this.name = getName(filename);
+		mfdatas = mfd;
+		this.outputfname = ExecutionEnvironment.getOutputPath(name + ext);
+		this.aoutputfname = ExecutionEnvironment.getOutputPath(name + "_auto" + ext);
+		this.ctf = ctf;
+	}
+	
+	void setFamiliesData(List<MicrographFamilyData> mfdatas)
+	{
+		this.mfdatas = mfdatas;
+	}
 	
 	public boolean isAutopicking()
 	{
@@ -78,7 +91,7 @@ public class Micrograph {
 		if(ctficon == null)
 		{
 			ImagePlus ip = new ImagePlus(ctf);
-			Image i = ip.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
+			Image i = ip.getImage().getScaledInstance(110, 110, Image.SCALE_SMOOTH);
 			ctficon = new ImageIcon(i);
 			
 		}
@@ -140,6 +153,17 @@ public class Micrograph {
 		return name;
 	}
 
+	public boolean isEmpty()
+	{
+		for(MicrographFamilyData fp: mfdatas)
+			if(fp != null && fp.getParticles().size() > 0)
+				return false;
+		return true;
+	}
 	
+	public boolean isReadOnly(Family f)
+	{
+		return getFamilyData(f).isReadOnly();
+	}
 
 }

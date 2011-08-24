@@ -1,19 +1,18 @@
 package gui;
 
-import java.awt.Frame;
 import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import model.Family;
 import model.Micrograph;
+import model.MicrographFamilyData;
 
 public class MicrographsTableModel extends AbstractTableModel {
 	
 	
 	
 	private List<Micrograph> micrographs;
-	private String[] columns = new String[]{"Name", "Particles"};
+	private String[] columns = new String[]{"Name", "Particles", "Step"};
 	private ParticlePickerJFrame frame;
 
 	public MicrographsTableModel(ParticlePickerJFrame frame)
@@ -44,8 +43,11 @@ public class MicrographsTableModel extends AbstractTableModel {
 		Micrograph m = micrographs.get(rowIndex);
 		if(columnIndex == 0)
 			return m.getName();
+		MicrographFamilyData mfd = m.getFamilyData(frame.getFamily()); 
 		if(columnIndex == 1)
-			return m.getFamilyData(frame.getFamily()).getParticles().size();
+			return mfd.getParticles().size();
+		if(columnIndex == 2)
+			return mfd.getStep();
 		return null;
 	}
 
