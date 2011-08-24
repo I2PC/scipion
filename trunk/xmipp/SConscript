@@ -836,6 +836,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
     AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_image_operate')
     AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
     AddXmippMPIProgram('mpi_image_sort', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
