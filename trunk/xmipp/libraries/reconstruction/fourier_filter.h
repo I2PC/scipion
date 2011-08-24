@@ -38,14 +38,14 @@
    Example of use for highpass filtering
    @code
       ImageXmipp I("image.xmp");
-      FourierMask Filter;
+      FourierFilter Filter;
       Filter.FilterBand=HIGHPASS;
       Filter.w1=w_cutoff;
       Filter.raised_w=slope;
       I().setXmippOrigin();
       Filter.generate_mask(I()); // Should not be used with filters
                                  // other than WEDGE or CONE
-      Filter.apply_mask_Space(I());
+      Filter.applyMaskSpace(I());
       I.write("filtered_image.xmp");
    @endcode
    
@@ -149,5 +149,13 @@ public:
     // Transformer
     FourierTransformer transformer;
 };
+
+/** Fast access to bandpass filter.
+ * Frequencies are normalized to 0.5 */
+void bandpassFilter(MultidimArray<double> &img, double w1, double w2, double raised_w);
+
+/** Fast access to Gaussian filter.
+ * Frequencies are normalized to 0.5 */
+void gaussianFilter(MultidimArray<double> &img, double w1);
 //@}
 #endif
