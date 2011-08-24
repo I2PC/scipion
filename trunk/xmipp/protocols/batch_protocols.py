@@ -369,22 +369,24 @@ class XmippProjectGUI():
             details.grid_remove()
         else:
             state = tk.NORMAL
-            #Show details
             run = self.lastRunSelected
-            self.DetailsLabelsDict['Run:'].config(text=run['run_name'])
-            self.DetailsLabelsDict['Protocol:'].config(text=run['protocol_name'])
-            self.DetailsLabelsDict['Created:'].config(text=run['init'])
-            self.DetailsLabelsDict['Modified:'].config(text=run['last_modified'])
-            self.DetailsLabelsDict['Script:'].config(text=run['script'])
             prot = getProtocolFromModule(run['script'], self.project)
-            self.DetailsLabelsDict['Directory:'].config(text=prot.WorkingDir)
             if os.path.exists(prot.WorkingDir):
                 summary = '\n'.join(prot.summary())
                 showButtons = True
             else:
                 summary = "This protocol run has not been executed yet"
                 showButtons = False
-            self.DetailsLabelsDict['Summary:'].config(text=summary)
+            labels = [('Run', '%s_%s' % (run['protocol_name'], run['run_name'])),
+                      ('\nCreated', run['init']),('   Modified', run['last_modified']), 
+                      ('\nScript ', run['script']),('\nDirectory', prot.WorkingDir),
+                      ('\nSummary', summary)      ]
+            self.detailsText.config(state=tk.NORMAL)
+            self.detailsText.delete(1.0, tk.END)
+            for k, v in labels:
+                self.detailsText.insert(tk.END, '%s:   ' % k, 'tag_bold')
+                self.detailsText.insert(tk.END, '%s' % v, 'tag_normal')
+            self.detailsText.config(state=tk.DISABLED)
             details.displayButtons(showButtons)
             details.grid()
         for btn in self.runButtonsDict.values():
@@ -414,7 +416,6 @@ class XmippProjectGUI():
         elif event == "Visualize":
             pass
         
-
     def createToolbarFrame(self, parent):
         #Configure toolbar frame
         toolbar = tk.Frame(parent, bd=2, relief=tk.RIDGE)
@@ -471,20 +472,11 @@ class XmippProjectGUI():
             self.runButtonsDict[k] = btn
         for k, v in list:
             setupButton(k, v)
-            
         self.lbHist = MultiListbox(history.frameContent, (('Run', 35), ('State', 15), ('Modified', 15)))
         self.lbHist.SelectCallback = self.runSelectCallback
         self.lbHist.DoubleClickCallback = lambda:self.runButtonClick("Edit")
         self.lbHist.AllowSort = False   
         return history     
-        
-    def addDetailsLabel(self, parent, text, row, col, colspan=1):
-        label = tk.Label(parent, text=text, font=Fonts['details'], bg=BgColor)
-        label.grid(row=row, column=col, sticky='ne', padx=5)
-        label = tk.Label(parent,text="", font=Fonts['details_bold'],
-                      bg=BgColor, justify=tk.LEFT)
-        label.grid(row=row, column=col+1, sticky='nw', padx=5, columnspan=colspan)
-        self.DetailsLabelsDict[text] = label
         
     def createDetailsFrame(self, parent):
         details = ProjectSection(parent, 'Details')
@@ -495,16 +487,11 @@ class XmippProjectGUI():
         content = details.frameContent
         content.config(bg=BgColor, bd=1, relief=tk.RIDGE)
         content.grid_configure(pady=(5, 0))
-        self.DetailsLabelsDict = {}
-        registerFont('details', family=FontName, size=FontSize-1, weight=tkFont.BOLD)
-        registerFont('details_bold', family=FontName, size=FontSize-1)
-        self.addDetailsLabel(content, 'Run:', 0, 0)
-        self.addDetailsLabel(content, 'Protocol:', 1, 0)
-        self.addDetailsLabel(content, 'Script:', 2, 0)
-        self.addDetailsLabel(content, 'Created:', 0, 2)
-        self.addDetailsLabel(content, 'Modified:', 1, 2)
-        self.addDetailsLabel(content, 'Directory:', 2, 2)
-        self.addDetailsLabel(content, 'Summary:', 3, 0, 3)
+        self.detailsText = tk.Text(content, height=15, width=70, border=0, 
+                                   background='white', fg="black")
+        self.detailsText.pack(fill=tk.BOTH)
+        self.detailsText.tag_config('tag_normal', font=tkFont.Font(family=FontName, size=FontSize))
+        self.detailsText.tag_config('tag_bold', font=tkFont.Font(family=FontName, size=FontSize, weight=tkFont.BOLD))
         return details
 
     def createGUI(self, root=None):
