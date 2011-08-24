@@ -311,10 +311,12 @@ class ProtocolVariable():
             return True
         import re
         condition = self.tags['condition']
+        #print "Checking condition-> var: %s, cond: %s" %(self, condition)
         tokens = re.split('\W+', condition)
         for t in tokens:
             if self.protocol.hasVar(t):
                 condition = condition.replace(t, self.protocol.getVarLiteralValue(t))
+        #print "condition after: ", condition,  eval(condition)
         return eval(condition) 
        
 class ProtocolWidget():
@@ -944,6 +946,7 @@ class ProtocolGUI(BasicGUI):
         self.master.bind('<Alt_L><r>', self.saveExecute)
         self.master.bind('<Alt_L><plus>', self.changeFont)
         self.master.bind('<Alt_L><minus>', self.changeFont)
+        self.master.bind('<Return>', self.checkVisibility)
         # with Windows OS
         self.master.bind("<MouseWheel>", self.scroll)
         # with Linux OS
