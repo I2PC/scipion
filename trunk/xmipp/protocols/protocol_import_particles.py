@@ -23,17 +23,23 @@ class ProtImportParticles(XmippProtocol):
     def defineSteps(self):
         fnOut=os.path.join(self.WorkingDir,"micrographs.sel")
         self.Db.insertStep('createEmptyMicrographSel',verifyfiles=[fnOut],fnOut=fnOut)
-        fnOut=os.path.join(self.WorkingDir,self.Family+".sel")
+        selfileRoot=os.path.join(self.WorkingDir,self.Family)
+        fnOut=selfileRoot+".sel"
         self.Db.insertStep('linkOrCopy', verifyfiles=[fnOut],
                            Family=self.Family,InputFile=self.InputFile, WorkingDir=self.WorkingDir, DoCopy=self.DoCopy,
                            TmpDir=self.TmpDir)
         if self.DoInvert:
-            self.Db.insertStep('invert', FamilySel=fnOut)
+            self.Db.insertStep('invert', FamilySel=fnOut,Nproc=self.NumberOfMpi)
+        if self.DoRemoveDust:
+            self.Db.insertStep('removeDust', FamilySel=fnOut,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
+        if self.DoNorm:
+            self.Db.insertStep('normalize', FamilySel=fnOut,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
+        self.Db.insertStep('sortImageInFamily', verifyfiles=[selfileRoot],selfileRoot=selfileRoot)
             
     def validate(self):
         errors = []
         inputExt=os.path.splitext(self.InputFile)[1]
-        if not inputExt in ['.mrc','.stk','.sel','.xmd']:
+        if not inputExt in ['.mrc','.stk','.sel','.xmd','hed','img']:
             error.append("Input file must be stack or metadata")
         else:
             if inputExt in ['.sel','.xmd']:
@@ -44,10 +50,23 @@ class ProtImportParticles(XmippProtocol):
 
     def summary(self):
         message=[]
+        message.append("Stack imported from: "+self.InputFile)
+        if self.DoCopy:
+            message.append("Copied into "+self.WorkingDir)
+        steps=[]
+        if self.DoInvert:
+            steps.append("Constrast inversion")
+        if self.DoRemoveDust:
+            steps.append("Dust removal")
+        if self.DoNorm:
+            steps.append("Ramp normalization")
+        if len(steps)>0:
+            message.append("Steps applied: "+",".join(steps))
+            
         return message
 
     def visualize(self):
-        pass
+        os.system("xmipp_showj -i "+os.path.join(self.WorkingDir,self.Family+".sel")+" --memory 1024m &")
 
 def createEmptyMicrographSel(log,fnOut):
     mD=xmipp.MetaData()
@@ -78,10 +97,27 @@ def linkOrCopy(log,Family,InputFile,WorkingDir,DoCopy,TmpDir):
             fileName=os.path.split(InputFile)[1]
             destination=os.path.join(familyDir,fileName)
             copyFile(log,InputFile,destination)
+            (inputRoot,inputExt)=os.path.splitext(fileName)
+            if inputExt=='hed':
+                copyFile(log,InputFile.replace(".hed",".img"),destination.replace(".hed",".img"))
+            elif inputExt=="img":
+                copyFile(log,InputFile.replace(".img",".hed"),destination.replace(".img",".hed"))
         else:
             destination=InputFile
         mD=xmipp.MetaData(destination)
         mD.write(familySel)
 
-def invert(log,FamilySel):
-    runJob()
+def invert(log,FamilySel,Nproc):
+    runJob(log,'xmipp_image_operate','-i '+FamilySel+" --mult -1",Nproc)
+
+def removeDust(log,FamilySel,threshold,Nproc):
+    runJob(log,'xmipp_transform_filter','-i '+FamilySel+" --bad_pixels outliers %f"%threshold,Nproc)
+
+def normalize(log,FamilySel,bgRadius,Nproc):
+    if bgRadius==0:
+        particleSize=xmipp.ImgSize(FamilySel)[0]
+        bgRadius=int(particleSize/2)
+    runJob(log,"xmipp_transform_normalize","-i "+FamilySel+' --method Ramp --background circle '+str(bgRadius),Nproc)
+
+def sortImageInFamily(log,selfileRoot):
+    runJob(log,"xmipp_image_sort_by_statistics","-i "+selfileRoot+".sel --multivariate --addToInput -o "+selfileRoot+"_sorted")
