@@ -26,7 +26,7 @@
 # ***************************************************************************
  '''
  
-import os
+import os, glob
 import Tkinter as tk
 import tkMessageBox
 import tkFont
@@ -492,6 +492,21 @@ class ProtocolGUI(BasicGUI):
             section.content.grid(row=1, column=0, columnspan=5, sticky='nsew')
         self.updateScrollRegion()
             
+    def autocompleteEntry(self, var):
+        keys = var.tags.keys()
+        if 'file' in keys:
+            args = ['Browse', lambda: self.wizardBrowseJ(var), 'fileopen.gif', 'Browse file']
+        elif 'dir' in keys:
+            args = ['Browse', lambda: self.wizardBrowseJ(var), 'folderopen.gif', 'Browse folder']
+        elif 'run' in keys:
+            protocols = var.tags['run'].split(',')
+            runs = []
+            for p in protocols:
+                runs += self.project.projectDb.selectRunsByProtocol(p)
+            list = ["%s_%s" % (r['protocol_name'], r['run_name']) for r in runs]
+            if len(list)==1:
+                var.tkvar.set(list[0])
+    
     def createWidget(self, var):
         w = ProtocolWidget(self, var)  
         self.widgetslist.append(w)  
@@ -526,25 +541,13 @@ class ProtocolGUI(BasicGUI):
                 
         if 'expert' in keys:
             label_bgcolor = self.style.ExpertLabelBgColor
-           
-#        if 'condition' in keys:
-#            conditions = var.tags['condition'].split(',')
-#            for cond in conditions:
-#                cond_name, cond_value = cond.split('=')
-#                var.conditions[cond_name.strip()] = cond_value.strip()
-        
         if 'validate' in keys:
             var.validators = ['validator' + v.strip() for v in var.tags['validate'].split(',')]
-         
         if 'text' in keys:
-            #scrollbar = AutoScrollbar(frame)
-            #scrollbar.grid(row=label_row, column=6, sticky=NS)
             var.tktext = tk.Text(frame, width=66, height=10, wrap=tk.WORD, bg=EntryBgColor)#, yscrollcommand=scrollbar.set, bg=EntryBgColor)
-            #scrollbar.config(command=var.tktext.yview)
             var.tktext.grid(row=label_row, column=0, columnspan=5, sticky='ew', padx=(10, 0), pady=(10, 0))
             var.tktext.insert(tk.END, var.help)
             w.widgetslist.append(var.tktext)
-            #w.widgetslist.append(scrollbar)
             return w
         # Treat variables
         if var.value:
@@ -609,20 +612,37 @@ class ProtocolGUI(BasicGUI):
                 w.widgetslist.append(var.tktext)
                 var.tktext.insert(tk.END, var.value)            
             else: #Add a text Entry
-                entry = tk.Entry(frame, textvariable=var.tkvar, bg=EntryBgColor)
+                from protlib_gui_ext import AutoCompleteEntry
+                entry = AutoCompleteEntry(frame, textvariable=var.tkvar, bg=EntryBgColor)
                 entry.grid(row=row, column=var_column, columnspan=2, sticky='ew')
                 w.widgetslist.append(entry)
                 args = None
-                if 'file' in keys:
-                    args = ['Browse', lambda: self.wizardBrowseJ(var), 'fileopen.gif', 'Browse file']
-                elif 'dir' in keys:
-                    args = ['Browse', lambda: self.wizardBrowseJ(var), 'folderopen.gif', 'Browse folder']
-                elif 'run' in keys:
+                
+                def getEntries(var, onlyDir=False):
+                    cwd = os.getcwd()
+                    pattern = os.path.join(cwd, var.tkvar.get()) + '*'
+                    entries = [os.path.relpath(p, cwd) for p in glob.glob(pattern)]
+                    if onlyDir:
+                        entries = [e for e in entries if os.path.isdir(e)]
+                    return entries
+                
+                def getRuns(var):
                     protocols = var.tags['run'].split(',')
                     runs = []
                     for p in protocols:
                         runs += self.project.projectDb.selectRunsByProtocol(p)
                     list = ["%s_%s" % (r['protocol_name'], r['run_name']) for r in runs]
+                    return list                    
+                
+                if 'file' in keys:
+                    entry.setBuildListFunction(lambda: getEntries(var), refreshOnTab=True)
+                    args = ['Browse', lambda: self.wizardBrowseJ(var), 'fileopen.gif', 'Browse file']
+                elif 'dir' in keys:
+                    entry.setBuildListFunction(lambda: getEntries(var,onlyDir=True), refreshOnTab=True)
+                    args = ['Browse', lambda: self.wizardBrowseJ(var), 'folderopen.gif', 'Browse folder']
+                elif 'run' in keys:
+                    entry.setBuildListFunction(lambda: getRuns(var))
+                    list = getRuns(var)
                     if len(list)==1:
                         var.tkvar.set(list[0])
                     args = ['Select Run', lambda: self.selectFromList(var, list), 'wizard.gif', 'Select run']
@@ -1082,7 +1102,6 @@ class ProtocolGUI(BasicGUI):
 
     #Select family from extraction run
     def wizardChooseFamily(self, var):
-        import glob
         from protlib_base import getWorkingDirFromRunName
         extractionDir = getWorkingDirFromRunName(self.getVarValue('ExtractionRun'))
         if not extractionDir:

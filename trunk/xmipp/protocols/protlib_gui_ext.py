@@ -428,7 +428,9 @@ class ListboxDialog(Dialog):
         self.result = map(int, self.lb.curselection())
 
 from protlib_utils import colorMap, colorStr, findColor
+import os
 
+'''Implement a Text that will show file content'''
 class FilePollTextArea(tk.Frame):
     def __init__(self, master, filename):
         tk.Frame.__init__(self, master)
@@ -455,7 +457,6 @@ class FilePollTextArea(tk.Frame):
     def fillTextArea(self, goEnd=False):
         self.text.config(state=tk.NORMAL)
         self.text.delete(1.0, tk.END)
-        import os
         if os.path.exists(self.filename):
             file = open(self.filename)
             lineNo=1
@@ -618,6 +619,53 @@ class OutputTextArea(tk.Frame):
         text.tag_add('found_current', idx, lastidx)
         text.see(idx)
          
+'''Implement an Entry that support autocomplete on <Tab>
+it will have a list of choices, that will be updated
+through an update function everytime the entry get the focus'''
+class AutoCompleteEntry(tk.Entry):
+    def __init__(self, master, **opts):
+        tk.Entry.__init__(self, master, **opts)
+        
+    def setBuildListFunction(self, listFunc, refreshOnTab=False):
+        self.listFunc = listFunc
+        self.refreshOnTab = refreshOnTab
+        self.bind('<FocusIn>', self.refreshList)
+        self.bind('<Tab>', self.handle_tab)   
+        
+    def refreshList(self, event=None):
+        self.choices = self.listFunc()
+        
+    def handle_tab(self, event):
+        if self.refreshOnTab:
+            self.choices = self.listFunc()
+        hits = []
+        for e in self.choices:
+            if e.startswith(self.get()):
+                hits.append(e)
+        prefix = os.path.commonprefix(hits)
+        if len(prefix):
+            self.delete(0, tk.END)
+            self.insert(0, prefix)
+            #self.position = self.index(Tkinter.END)
+            #self.update_idletasks()
+            #self.select_range(Tkinter.END,Tkinter.END)
+            self.select_clear()
+            self.icursor(tk.END)
+        return "break"
+    
+def demoAutoComplete():
+        def buildList():
+            import glob
+            test_list = [os.path.basename(p) for p in glob.glob(os.path.join(os.getcwd(), '*'))]
+            return test_list
+        """Run a mini application to test the AutocompleteEntry Widget."""
+        root = tk.Tk(className=' AutocompleteEntry demo')
+        entry = AutoCompleteEntry(root, width=50, bg='white')
+        entry.setBuildListFunction(buildList)
+        entry.pack()
+        entry.focus_set()
+        root.mainloop()
+    
 def demo():
     root = tk.Tk(className='ToolTip-demo')
     l = tk.Listbox(root)
@@ -640,5 +688,5 @@ def demo2():
     root.mainloop()    
 
 if __name__ == '__main__':
-    demo2() 
+    demoAutoComplete() 
 
