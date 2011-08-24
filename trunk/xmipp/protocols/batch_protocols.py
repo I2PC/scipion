@@ -570,7 +570,7 @@ class ScriptProtocols(XmippScript):
     def run(self):
         dir = os.getcwd()
         project = XmippProject(dir)
-
+        launch = True
         if self.checkParam('--clean'):
             project.clean()
         else: #lauch project     
@@ -579,8 +579,10 @@ class ScriptProtocols(XmippScript):
                 answer = raw_input('Do you want to create a new xmipp_protocols PROJECT in this folder? [Y/n]:')
                 if not answer or answer.lower() == 'y':
                     project.create()
+                else: return
             else:
-                project.load()
+                launch = False
+        if launch:
             gui = XmippProjectGUI(project)
             gui.createGUI()
             gui.launchGUI()
