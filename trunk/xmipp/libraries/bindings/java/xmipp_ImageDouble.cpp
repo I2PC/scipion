@@ -2,10 +2,12 @@
 #include "xmipp_ImageDouble.h"
 #include "xmipp_InternalData.h"
 #include "xmipp_ExceptionsHandler.h"
+#include <data/filters.h>
 #include <data/xmipp_image.h>
 #include <data/xmipp_fft.h>
 #include <data/transformations.h>
 #include <reconstruction/ctf_estimate_from_micrograph.h>
+#include <reconstruction/fourier_filter.h>
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_storeIds
 (JNIEnv *env, jclass class_) {
@@ -379,6 +381,111 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD
 		size_t size = enhancedPSD.getSize();
 		jdoubleArray array = env->NewDoubleArray(size);
 		env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(enhancedPSD));
+
+		return array;
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return NULL;
+}
+
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_bandPassFilter
+  (JNIEnv *env, jclass class_, jstring filename, jdouble w1, jdouble w2, jdouble raised_w, jint w, jint h) {
+	std::string msg = "";
+
+	try {
+		const char *fnStr = env->GetStringUTFChars(filename, false);
+		Image<double> I;
+		I.read(fnStr);
+
+		bandpassFilter(I(), w1, w2, raised_w);
+
+		selfScaleToSize(LINEAR, I(), (int)w, (int)h);
+
+		size_t size = I().getSize();
+		jdoubleArray array = env->NewDoubleArray(size);
+		env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(I()));
+
+		return array;
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return NULL;
+}
+
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_gaussianFilter
+  (JNIEnv *env, jclass class_, jstring filename, jdouble w1, jint w, jint h) {
+	std::string msg = "";
+
+	try {
+		const char *fnStr = env->GetStringUTFChars(filename, false);
+		Image<double> I;
+		I.read(fnStr);
+
+		gaussianFilter(I(), w1);
+
+		selfScaleToSize(LINEAR, I(), (int)w, (int)h);
+
+		size_t size = I().getSize();
+		jdoubleArray array = env->NewDoubleArray(size);
+		env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(I()));
+
+		return array;
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return NULL;
+}
+
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_badpixelsFilter
+  (JNIEnv *env, jclass class_, jstring filename, jdouble factor, jint w, jint h) {
+	std::string msg = "";
+
+	try {
+		const char *fnStr = env->GetStringUTFChars(filename, false);
+		Image<double> I;
+		I.read(fnStr);
+
+		BadPixelFilter filter;
+		filter.type=BadPixelFilter::OUTLIER;
+		filter.factor=factor;
+		filter.apply(I());
+
+		selfScaleToSize(LINEAR, I(), (int)w, (int)h);
+
+		size_t size = I().getSize();
+		jdoubleArray array = env->NewDoubleArray(size);
+		env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(I()));
 
 		return array;
 	} catch (XmippError xe) {
