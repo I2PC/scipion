@@ -41,7 +41,6 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 import metadata.models.XTableColumnModel;
-import micrographs.ctf.profile.CTFViewImageWindow;
 import micrographs.ctf.tasks.TasksEngine;
 import micrographs.ctf.tasks.iCTFGUI;
 import micrographs.filters.EnableFilter;
@@ -620,7 +619,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
             ImagePlus ip = IJ.openImage(displayFilename);
 
-            CTFViewImageWindow frame = new CTFViewImageWindow(ip, CTFFilename, PSDFilename);
+            CTFProfileWindow frame = new CTFProfileWindow(ip, CTFFilename, PSDFilename);
             frame.setVisible(true);
         }
 

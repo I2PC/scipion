@@ -23,7 +23,7 @@ import java.io.File;
 import java.util.ArrayList;
 import micrographs.JFrameMicrographs;
 import micrographs.ctf.CTFRecalculateImageWindow;
-import micrographs.ctf.profile.CTFViewImageWindow;
+import micrographs.CTFProfileWindow;
 import micrographs.ctf.tasks.TasksEngine;
 import xmipp.Filename;
 import xmipp.ImageDouble;
@@ -266,7 +266,7 @@ public class ImagesWindowFactory {
     }
 
     public static void openCTFView(ImagePlus imp, String CTFFilename, String PSDFilename) {
-        CTFViewImageWindow ctfView = new CTFViewImageWindow(imp, CTFFilename, PSDFilename);
+        CTFProfileWindow ctfView = new CTFProfileWindow(imp, CTFFilename, PSDFilename);
         ctfView.setVisible(true);
     }
 

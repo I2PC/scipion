@@ -59,14 +59,15 @@ public class LABELS {
     public final static String BUTTON_SELECT_ALL = "Select All";
     public final static String BUTTON_STD_DEVIATION = "Std. Deviation";
     public final static String BUTTON_TO_STACK = "To Stack";
-    public final static String BUTTON_EXTRACT_PROFILE = "Extract Profiles";
-    public final static String BUTTON_EXTRACT_RADIAL_AVERAGE = "Extract Radial AVG.";
+    public final static String BUTTON_EXPORT_PROFILE = "Export Profiles";
+    public final static String BUTTON_EXPORT_RADIAL_AVERAGE = "Export Radial AVG.";
+    public final static String CB_PLOT_PROFILE = "Profile";
     public final static String CB_PLOT_BGNOISE = "BGNoise";
     public final static String CB_PLOT_ENVELOPE = "Envelope";
     public final static String CB_PLOT_PSD = "PSD";
     public final static String CB_PLOT_CTF = "CTF";
-    public final static String SAMPLING_DIRECT = "A";
-    public final static String SAMPLING_INVERSE = "1/A";
+//    public final static String SAMPLING_DIRECT = "A";
+//    public final static String SAMPLING_INVERSE = "1/A";
     /**
      * Operations
      */
@@ -201,10 +202,11 @@ public class LABELS {
     public final static String LABEL_TABLE_SAVE_AS_SELFILE = "Save as selfile";
     public final static String LABEL_CTF = "CTF";
     public final static String LABEL_PSD = "PSD";
+    public final static String LABEL_SAMPLING = "1/A";
     public final static String LABEL_PROFILES = "Profiles";
     public final static String LABEL_RADIAL_AVERAGE = "Radial Average";
-    public final static String LABEL_RADIAL_FREQ_DIRECT = "freq. (A)";
-    public final static String LABEL_RADIAL_FREQ_INVERSE = "freq. (1/A)";
+    //public final static String LABEL_RADIAL_FREQ_DIRECT = "freq. (A)";
+    //public final static String LABEL_RADIAL_FREQ_INVERSE = "freq. (1/A)";
     public final static String LABEL_RADIAL_AVG = "Radial Average";
     public final static String LABEL_TAB_PROFILE = "Profiles";
     public final static String LABEL_TAB_RADIAL_AVERAGE = "Radial Average";
@@ -219,7 +221,7 @@ public class LABELS {
     public final static String LABEL_RESLICE = "Reslice: ";
     public final static String LABEL_OPEN_AS = "Open as: ";
     public final static String LABEL_UNKNOWN = "Unknown label";
-    public final static String LABEL_SAMPLING = "Sampling: ";
+    //public final static String LABEL_SAMPLING = "Sampling: ";
     public final static String LABEL_DOWNSAMPLING = "Downsampling: ";
     //public final static String LABEL_MISSING_INFO = "Missing info";
 
