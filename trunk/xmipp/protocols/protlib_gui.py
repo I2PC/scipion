@@ -833,7 +833,8 @@ class ProtocolGUI(BasicGUI):
                                            "This run appears to be RUNNING or LAUNCHED, so you can't save it",
                                            parent=self.master)
                     return False 
-                self.run['run_state'] = SqliteDb.RUN_SAVED
+                if not self.visualize_mode:
+                    self.run['run_state'] = SqliteDb.RUN_SAVED
                 self.project.projectDb.updateRun(self.run)
     
             if self.saveCallback:
@@ -880,6 +881,9 @@ class ProtocolGUI(BasicGUI):
         tkMessageBox.showinfo("Visualize", "This should open ImageJ plugin to display files", parent=self.master)
         
     def selectFromList(self, var, list):
+        if len(list) == 0:
+            tkMessageBox.showwarning("Warning", "No elements to select", parent=self.master)
+            return
         from protlib_gui_ext import ListboxDialog
         d = ListboxDialog(self.frame, list, selectmode=tk.SINGLE)
         if len(d.result) > 0:
@@ -1077,9 +1081,12 @@ class ProtocolGUI(BasicGUI):
     def wizardChooseFamily(self, var):
         import glob
         from protlib_base import getWorkingDirFromRunName
-        extractionDir= getWorkingDirFromRunName(self.getVarValue('ExtractionRun'))
-        familyList=[]
-        for file in glob.glob(extractionDir+"/*_sorted.sel"):
+        extractionDir = getWorkingDirFromRunName(self.getVarValue('ExtractionRun'))
+        if not extractionDir:
+            tkMessageBox.showwarning("Warning", "No extraction Run has been found", parent=self.master)
+            return
+        familyList = []
+        for file in glob.glob(os.path.join(extractionDir, "*_sorted.sel")):
             familyList.append(os.path.split(file)[1].replace("_sorted.sel",""))
         if len(familyList)==1:
             var.tkvar.set(familyList[0])
