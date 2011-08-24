@@ -489,3 +489,41 @@ void FourierFilter::correctPhase()
     if (DIRECT_MULTIDIM_ELEM(maskFourierd,n)< 0)
         DIRECT_MULTIDIM_ELEM(maskFourierd,n)*= -1;
 }
+
+// Bandpass -----------------------------------------------------------------
+void bandpassFilter(MultidimArray<double> &img, double w1, double w2, double raised_w)
+{
+    FourierFilter Filter;
+    if (w1==0)
+    {
+        Filter.FilterBand=LOWPASS;
+        Filter.w1=w2;
+    }
+    else if (w2==0.5)
+    {
+        Filter.FilterBand=HIGHPASS;
+        Filter.w1=w1;
+    }
+    else
+    {
+        Filter.FilterBand=BANDPASS;
+        Filter.w1=w1;
+        Filter.w2=w2;
+    }
+    Filter.FilterShape = RAISED_COSINE;
+    Filter.raised_w=raised_w;
+    img.setXmippOrigin();
+    Filter.generateMask(img);
+    Filter.applyMaskSpace(img);
+}
+
+void gaussianFilter(MultidimArray<double> &img, double w1)
+{
+    FourierFilter Filter;
+    Filter.FilterShape = GAUSSIAN;
+    Filter.FilterBand = LOWPASS;
+    Filter.w1=w1;
+    img.setXmippOrigin();
+    Filter.generateMask(img);
+    Filter.applyMaskSpace(img);
+}
