@@ -209,12 +209,13 @@ void ProgML2D::show()
         }
 
         std::cout    << "--> Maximum-likelihood multi-reference refinement " << std::endl
-        << formatString("  Input images            : %s (%lu)", fn_img.c_str(), nr_images_global) << std::endl;
+        << formatString("  Input images            : %s (%lu)\n", fn_img.c_str(), nr_images_global);
 
         if (fn_ref != "")
-            std::cout << "  Reference image(s)      : " << fn_ref << std::endl;
-        else
-            std::cout << "  Number of references:   : " << model.n_ref * factor_nref << std::endl;
+            std::cout << formatString("  Reference image(s)      : %s (%d)\n", fn_ref.c_str(), model.n_ref);
+        if (factor_nref > 1)
+            std::cout << "  Reference expanding factor   : " << factor_nref << std::endl;
+        std::cout << "  Number of references:   : " << model.n_ref * factor_nref << std::endl;
 
         std::cout
         << "  Output rootname         : " << fn_root << std::endl
@@ -290,8 +291,7 @@ void ProgML2D::produceSideInfo()
     // and set some global variables
     MDimg.read(fn_img);
     // Remove disabled images
-    if (MDimg.containsLabel(MDL_ENABLED))
-        MDimg.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    MDimg.removeDisabled();
     nr_images_global = MDimg.size();
     // By default set myFirst and myLast equal to 0 and N
     // respectively, this should be changed when using MPI
@@ -355,6 +355,7 @@ void ProgML2D::produceSideInfo2()
 
     // Read in all reference images in memory
     MDref.read(fn_ref);
+    MDref.removeDisabled();
 
     model.setNRef(MDref.size());
     int refno = 0;
@@ -396,6 +397,7 @@ void ProgML2D::produceSideInfo2()
 
     //Some vectors and matrixes initialization
     int num_output_refs = model.n_ref * factor_nref;
+    std::cerr << "DEBUG_JM: num_output_refs: " << num_output_refs << std::endl;
     refw.resize(num_output_refs);
     refw2.resize(num_output_refs);
     refwsc2.resize(num_output_refs);
@@ -529,6 +531,9 @@ void ProgML2D::produceSideInfo2()
             }
             MDref.unionAll(MDaux);
         }
+
+        std::cerr << "DEBUG_JM: MDref: " << std::endl;
+        MDref.write(std::cerr);
     }
 
     //--------Setup for Docfile -----------
@@ -870,7 +875,7 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
               - ddim2 * log(sqrt(PI * df * sigma_noise2)) + gammln(-df2)
               - gammln(df / 2.);
 
-//#define DEBUG_JM1
+    //#define DEBUG_JM1
 #ifdef DEBUG_JM1
 
     //if (iter>1)
@@ -1126,6 +1131,7 @@ void ProgML2D::doThreadReverseRotateReferenceRefno()
             // The construction with Faux and Maux3 should perhaps not be necessary,
             // but I am having irreproducible segmentation faults for the iFFT
             Faux = wsumimgs[refnoipsi];
+
             local_transformer.inverseFourierTransform(Faux, Maux);
             Maux3 = Maux;
             //CenterFFT(Maux3, true);
@@ -1300,9 +1306,14 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
     // This will speed-up things because we will find Pmax probably right away,
     // and this will make the if-statement that checks SIGNIFICANT_WEIGHT_LOW
     // effective right from the start
+    std::cerr << "DEBUG_JM: doThreadExpectationSingleImageRefno: " << std::endl;
     FOR_ALL_THREAD_REFNO()
     {
+
         int output_refno = mygroup * model.n_ref + refno;
+        std::cerr << "DEBUG_JM:           refno: " << refno << std::endl;
+        std::cerr << "DEBUG_JM:     model.n_ref: " <<    model.n_ref << std::endl;
+        std::cerr << "DEBUG_JM:    output_refno: " <<    output_refno << std::endl;
         refw[output_refno] = refw2[output_refno] = refw_mirror[output_refno] = 0.;
         local_maxweight = -99.e99;
         local_mindiff = 99.e99;
@@ -1768,15 +1779,16 @@ void ProgML2D::expectation()
             Xi2 = img().sum2();
             Mimg = img();
 
-            //#define DEBUG_JM2
+#define DEBUG_JM2
 #ifdef DEBUG_JM2
 
-            if (iter >= 2 && current_image == myFirstImg)
-                std::cerr << std::endl
-                << "   ====================>>> ITER_IMAGE: " << iter << "_" << imgno << std::endl
-                << "                          fn_img: " << fn_img << std::endl
-                << "                           mygroup: " <<                            mygroup << std::endl;
+            //if (iter >= 2 && current_image == myFirstImg)
+            std::cerr << std::endl
+            << "   ====================>>> ITER_IMAGE: " << iter << "_" << imgno << std::endl
+            << "                          fn_img: " << fn_img << std::endl
+            << "                           mygroup: " <<                            mygroup << std::endl;
 #endif
+#undef DEBUG_JM2
 
             // These two parameters speed up expectationSingleImage
             opt_refno = imgs_optrefno[IMG_LOCAL_INDEX];
@@ -1964,6 +1976,9 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
                 local_model.sumw_allrefs2 += sumw2[refno];
             }
 
+            double avg, stddev, min, max;
+            wsum_Mref[refno].computeStats(avg, stddev, min, max);
+            std::cerr << formatString("DEBUG_JM: avg %f, stddev %f, min %f, max %f", avg, stddev, min, max) <<std::endl;
             local_model.WsumMref[refno]() = wsum_Mref[refno];
             //local_model.Iref[refno]() *= 1/weight;//fixme: sumwsc2[refno];
             local_model.sumw_allrefs += sumw[refno];
@@ -2124,6 +2139,7 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
 
 void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 {
+    std::cerr << "DEBUG_JM: writeOutputFiles, type: " << outputType <<std::endl;
     FileName fn_tmp, fn_prefix;
     Image<double> Itmp;
     MetaData MDo;
@@ -2208,12 +2224,13 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         else
             fn_tmp = formatString("%s_%s_refs.stk", rootStr, prefixStr);
 
+        std::cerr << "DEBUG_JM: MDref.size(): " << MDref.size() << std::endl;
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
             objId = __iter.objId;
             select_img = refno + 1;
-            Itmp = (*ptrImages)[refno];
             //Itmp = model.Iref[refno];
+            Itmp = (*ptrImages)[refno];
             Itmp.write(fn_tmp, select_img, true, WRITE_REPLACE);
             //MDref.setValue(MDL_ITER, iter, objId);//write out iteration number
             MDref.setValue(MDL_REF, select_img, objId); //Also write reference number
@@ -2240,7 +2257,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         MDref.write(fn_ref, mode);
         if (outputType == OUT_REFS)
             outRefsMd = fn_ref;
-//std::cerr << "DEBUG_JM: outRefsMd: " << outRefsMd << std::endl;
+        //std::cerr << "DEBUG_JM: outRefsMd: " << outRefsMd << std::endl;
         // Write out log-file
         MetaData mdLog;
         objId = mdLog.addObject();

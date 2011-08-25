@@ -215,15 +215,15 @@ void ML2DBaseProgram::defineBasicParams(XmippProgram * prog)
 {
     prog->addParamsLine("   -i <input_file>                : Metadata or stack with input images ");
 
-    String orStr = "or", lb = "", rb = "";
+    String orStr = "", lb = "", rb = "";
     if (!referenceExclusive)
     {
         orStr = "";
         lb = "[";
         rb = "]";
     }
-    prog->addParamsLine( lb + "  --nref <int=1> " + rb + "     : Number of references to generate automatically (recommended)");
-    prog->addParamsLine(orStr + " --ref <reference_file=\"\">  : Image, stack or metadata with initial(s) references(s)");
+    prog->addParamsLine(" [ --nref <int=1> ]                  : Number of references to generate automatically (recommended)");
+    prog->addParamsLine(" [ --ref <reference_file=\"\">  ]    : Image, stack or metadata with initial(s) references(s)");
 
     prog->addParamsLine(formatString(" [ --oroot <rootname=%s> ]    : Output rootname", defaultRoot.c_str()));
     prog->addParamsLine(" [ --mirror ]                   : Also check mirror image of each reference ");
