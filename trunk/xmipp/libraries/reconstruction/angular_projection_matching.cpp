@@ -93,8 +93,8 @@ void ProgAngularProjectionMatching::defineParams()
     addParamsLine("  [--Ri <ri=1>]               : Inner radius to limit rotational search");
     addParamsLine("  [--Ro <ro=-1>]              : Outer radius to limit rotational search");
     addParamsLine("                        : ro = -1 -> dim/2-1");
-    addParamsLine("  [-s <step=1> <n_steps=3>]    : scale step factor (1 means 0.01 in/de-crements) and number of steps arround 1.");
-    addParamsLine("                               : with default values: 1 ±0.01 | ±0.02 | ±0.03");
+    addParamsLine("  [-s <step=1> <n_steps=3>]    : scale step factor (1 means 0.01 in/de-crements) and number of steps around 1.");
+    addParamsLine("                               : with default values: 1 0.01 | 0.02 | 0.03");
     addParamsLine("    alias --scale;");
     addParamsLine("==+Extra parameters==");
     addParamsLine("  [--mem <mem=1>]             : Available memory for reference library (Gb)");
@@ -388,7 +388,7 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
     // Calculate FTs of polar rings and its stddev
     produceSplineCoefficients(BSPLINE3,Maux,img());
     P.getPolarFromCartesianBSpline(Maux,Ri,Ro);
-    P.computeAverageAndStddev(mean,stddev,true);
+    P.computeAverageAndStddev(mean,stddev);
     P -= mean;
     fourierTransformRings(P,fP,local_plans,true);
 
@@ -466,7 +466,7 @@ void * threadRotationallyAlignOneImage( void * data )
         P.getPolarFromCartesianBSpline(Maux,prm->Ri,prm->Ro,3,
                                        (double)prm->search5d_xoff[itrans],
                                        (double)prm->search5d_yoff[itrans]);
-        P.computeAverageAndStddev(mean,stddev,true);
+        P.computeAverageAndStddev(mean,stddev);
         P -= mean; // for normalized cross-correlation coefficient
         if (itrans == myinit)
             P.calculateFftwPlans(local_plans);
@@ -776,7 +776,7 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
     opt_scale = 1;
     maxcorr = 0;
 
-    // 1 ±(0.01 * scale_step * scale_nsteps)
+    // 1 (0.01 * scale_step * scale_nsteps)
     for(double scale = 1 - 0.01 * scale_step * scale_nsteps ;
         scale <= 1 + 0.01 * scale_step * (scale_nsteps + 1) ;
         scale += 0.01 * scale_step)

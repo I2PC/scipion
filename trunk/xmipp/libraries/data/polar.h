@@ -38,8 +38,6 @@
 
 #define FULL_CIRCLES 0
 #define HALF_CIRCLES 1
-#define DONT_AVERAGE false
-#define AVERAGE true
 #define DONT_CONJUGATE false
 #define CONJUGATE true
 #define DONT_KEEP_TRANSFORM false
@@ -481,7 +479,7 @@ public:
      *
      */
     void computeAverageAndStddev(double &avg, double &stddev,
-    		bool average = DONT_AVERAGE, int mode = FULL_CIRCLES) const
+    							 int mode = FULL_CIRCLES) const
     {
         double aux, sum = 0., sum2=0.;
         double twopi, w, N = 0;
@@ -509,16 +507,11 @@ public:
                 N += w;
             }
         }
-        if (N != 0. && average)
+        if (N>0)
         {
             sum2 = sum2 / N;
             avg = sum / N;
             stddev=sqrt(fabs(sum2-avg*avg));
-        }
-        else if (N != 0.)
-        {
-            avg = sum;
-            stddev=sqrt(fabs(sum2-average*average));
         }
         else
         	stddev=avg=0;
@@ -534,40 +527,6 @@ public:
             for (int j = 0; j < XSIZE(rings_i); j++)
             	DIRECT_A1D_ELEM(rings_i,j) = (DIRECT_A1D_ELEM(rings_i,j)-average)*istddev;
         }
-    }
-
-    /** Compute sum or average of all pixels in polar rings.
-     *
-     */
-    T computeSum(bool average = DONT_AVERAGE, int mode = FULL_CIRCLES) const
-    {
-        T aux, sum = 0.;
-        double twopi, w, N = 0;
-
-        if (mode == FULL_CIRCLES)
-            twopi = 2.*PI;
-        else if (mode == HALF_CIRCLES)
-            twopi = PI;
-        else
-            REPORT_ERROR(ERR_VALUE_INCORRECT,"Incorrect mode for computeSum");
-
-        int imax=rings.size();
-        for (int i = 0; i < imax; i++)
-        {
-            // take varying sampling into account
-            w = (twopi * ring_radius[i]) / (double) XSIZE(rings[i]);
-            const MultidimArray<T> &rings_i=rings[i];
-            for (int j = 0; j < XSIZE(rings_i); j++)
-            {
-                aux = DIRECT_A1D_ELEM(rings_i,j);
-                sum += w * aux;
-                N += w;
-            }
-        }
-        if (N != 0. && average)
-            sum = sum / N;
-
-        return sum;
     }
 
     /** Get Cartesian Coordinates of the Polar sampling

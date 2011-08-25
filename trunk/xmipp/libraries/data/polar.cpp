@@ -126,7 +126,7 @@ void normalizedPolarFourierTransform(const MultidimArray<double> &in,
         polarIn.getPolarFromCartesianBSpline(Maux,first_ring,last_ring,BsplineOrder);
     }
     double mean, stddev;
-    polarIn.computeAverageAndStddev(mean,stddev,true);
+    polarIn.computeAverageAndStddev(mean,stddev);
     polarIn.normalize(mean,stddev);
     if (plans==NULL)
     {
