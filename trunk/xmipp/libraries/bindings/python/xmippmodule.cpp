@@ -1251,6 +1251,10 @@ static PyObject *
 MetaData_setComment(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
+MetaData_randomize(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
+MetaData_selectPart(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 static int MetaData_print(PyObject *obj, FILE *fp, int flags)
 {
@@ -2106,6 +2110,14 @@ MetaData_methods[] =
           METH_VARARGS, "Replace strings values in some column." },
           { "replace", (PyCFunction) MetaData_replace,
           METH_VARARGS, "Basic operations on columns data." },
+          {"randomize",
+           (PyCFunction) MetaData_randomize,
+           METH_VARARGS,
+           "Randomize another metadata and keep in self." },
+           {"selectPart",
+            (PyCFunction) MetaData_selectPart,
+            METH_VARARGS,
+            "select a part of another metadata starting from start and with a number of objects" },
         { "removeDuplicates", (PyCFunction) MetaData_removeDuplicates,
           METH_VARARGS, "Remove duplicate rows" },
         {
@@ -2480,6 +2492,65 @@ MetaData_replace(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             MetaDataObject *self = (MetaDataObject*) obj;
             self->metadata->replace((MDLabel)label, oldStr, newStr);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+/* Randomize */
+static PyObject *
+MetaData_randomize(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+    PyObject *pyMd = NULL;
+
+    if (PyArg_ParseTuple(args, "O", &pyMd))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMd))
+            {
+                PyErr_SetString(PyExc_TypeError,
+                                "MetaData::randomize: Expecting MetaData as first argument");
+                return NULL;
+            }
+            MetaDataObject *self = (MetaDataObject*) obj;
+            self->metadata->randomize(MetaData_Value(pyMd));
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+/* Select Part */
+static PyObject *
+MetaData_selectPart(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label=(int)MDL_OBJID;
+    size_t start, numberOfObjects;
+    PyObject *pyMd = NULL;
+
+    if (PyArg_ParseTuple(args, "Okk|i", &pyMd, &start, &numberOfObjects, &label))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMd))
+            {
+                PyErr_SetString(PyExc_TypeError,
+                                "MetaData::selectPart: Expecting MetaData as first argument");
+                return NULL;
+            }
+            MetaDataObject *self = (MetaDataObject*) obj;
+            self->metadata->selectPart(MetaData_Value(pyMd), start, numberOfObjects, (MDLabel) label);
             Py_RETURN_NONE;
         }
         catch (XmippError xe)
