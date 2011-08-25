@@ -1258,6 +1258,12 @@ void MetaData::removeDuplicates(MetaData &MDin)
     _setOperates(MDin, MDL_UNDEFINED, REMOVE_DUPLICATE);
 }
 
+void MetaData::removeDisabled()
+{
+  if (containsLabel(MDL_ENABLED))
+      removeObjects(MDValueEQ(MDL_ENABLED, -1));
+}
+
 void MetaData::subtraction(const MetaData &mdIn, const MDLabel label)
 {
     if(mdIn.isEmpty())

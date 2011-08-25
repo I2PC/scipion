@@ -719,9 +719,12 @@ public:
     void randomize(MetaData &MDin);
 
     /**Remove duplicate entries for attribute in label
-     *
      */
     void removeDuplicates(MetaData &MDin);
+
+    /**Remove rows with MDL_ENABLED = -1 if this labe is present
+     */
+    void removeDisabled();
 
     /*
     * Sort a Metadata by a label.
