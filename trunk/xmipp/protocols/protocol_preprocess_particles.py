@@ -16,18 +16,18 @@ class ProtPreprocessParticles(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.preprocess_particles.name, scriptname, project)
         self.Import = 'from protocol_preprocess_particles import *'
-        self.extractionDir=getWorkingDirFromRunName(self.ExtractionRun)
+        self.particlesDir=getWorkingDirFromRunName(self.PreviousRun)
 
     def defineSteps(self):
         fnOut=os.path.join(self.WorkingDir,"micrographs.sel")
-        self.Db.insertStep('createLink',verifyfiles=[fnOut],source=os.path.join(self.extractionDir,"micrographs.sel"),dest=fnOut)
+        self.Db.insertStep('createLink',verifyfiles=[fnOut],source=os.path.join(self.particlesDir,"micrographs.sel"),dest=fnOut)
 
-        fnIn=os.path.join(self.extractionDir,self.Family)
+        fnIn=os.path.join(self.particlesDir,self.Family)
         fnOut=os.path.join(self.WorkingDir,self.Family)
         self.Db.insertStep('copyDir',verifyfiles=[fnOut],source=fnIn,dest=fnOut)
         fnIn+=".sel"
         fnOut+=".sel"
-        self.Db.insertStep('transposeMetadata',verifyfiles=[fnOut],source=fnIn,sourceWorkingDir=self.extractionDir,
+        self.Db.insertStep('transposeMetadata',verifyfiles=[fnOut],source=fnIn,sourceWorkingDir=self.particlesDir,
                            destWorkingDir=self.WorkingDir,dest=fnOut)
 
         if self.DoFourier:
@@ -42,8 +42,8 @@ class ProtPreprocessParticles(XmippProtocol):
         
     def validate(self):
         errors = []
-        if self.extractionDir:
-            fnSel=os.path.join(self.extractionDir,self.Family+".sel")
+        if self.particlesDir:
+            fnSel=os.path.join(self.particlesDir,self.Family+".sel")
             if not os.path.exists(fnSel):
                 errors.append("Cannot find "+fnSel)
         else:
@@ -53,7 +53,7 @@ class ProtPreprocessParticles(XmippProtocol):
     def summary(self):
         message=[]
         step=1
-        message.append("Steps applied to %s"%os.path.join(self.extractionDir,self.Family+".sel"))
+        message.append("Steps applied to %s"%os.path.join(self.particlesDir,self.Family+".sel"))
         if self.DoFourier:
             message.append("Step %d -> Fourier filter applied: freq_low=%f freq_high=%f freq_decay=%f"%(step,self.Freq_low,self.Freq_high,self.Freq_decay))
             step+=1

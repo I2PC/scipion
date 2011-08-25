@@ -33,8 +33,9 @@ Behavior = "Restart"
 #-----------------------------------------------------------------------------
 # {section} Filter parameters
 #-----------------------------------------------------------------------------
-# {run}(extract_particles) Particle extraction run
-ExtractionRun=''
+# {run}(extract_particles,import_particles) Previous run
+"""The previous run can be either a 'Extract particles' step or 'Import particles' step"""
+PreviousRun=''
 
 # {wizard}(wizardChooseFamily) Family to preprocess
 Family=''
