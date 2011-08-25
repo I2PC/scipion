@@ -1732,6 +1732,7 @@ void AutoParticlePicking::saveAutoParticles(const FileName &fn) const
         MD.setValue(MDL_XINT, p.x, id);
         MD.setValue(MDL_YINT, p.y, id);
         MD.setValue(MDL_COST, p.cost, id);
+        MD.setValue(MDL_ENABLED,1,id);
     }
     MD.write(fn,MD_APPEND);
 }
