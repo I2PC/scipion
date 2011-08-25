@@ -45,6 +45,12 @@ Family="Imported"
 """ Copy images from their original location """
 DoCopy=False
 
+# Import all images in input
+ImportAll=True
+
+#-----------------------------------------------------------------------------
+# {section}{condition}(ImportAll) Preprocessing parameters
+#-----------------------------------------------------------------------------
 # Invert contrast
 """ Invert the contrast if your particles are black over a white background. """
 DoInvert=False
@@ -72,8 +78,18 @@ DoNorm=True
    If this value is 0, then the same as the particle radius is used. """
 BackGroundRadius=0
 
+#-----------------------------------------------------------------------------
+# {section}{condition}(ImportAll==False) Subset parameters
+#-----------------------------------------------------------------------------
+# {list_combo}(Random subset,First particles) Subset mode
+SubsetMode="First particles"
+
+# Import the first N particles
+""" A subset with the first N particles will be generated """
+Nsubset=500
+
 #------------------------------------------------------------------------------------------
-# {section} Parallelization
+# {section}{condition}(ImportAll) Parallelization
 #------------------------------------------------------------------------------------------
 # Number of MPI processes
 """ Set to 1 if you do not have MPI installed"""

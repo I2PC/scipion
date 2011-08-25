@@ -27,14 +27,14 @@ class ProtImportParticles(XmippProtocol):
         fnOut=selfileRoot+".sel"
         self.Db.insertStep('linkOrCopy', verifyfiles=[fnOut],
                            Family=self.Family,InputFile=self.InputFile, WorkingDir=self.WorkingDir, DoCopy=self.DoCopy,
-                           TmpDir=self.TmpDir)
+                           ImportAll=self.ImportAll, SubsetMode=self.SubsetMode, Nsubset=self.Nsubset, TmpDir=self.TmpDir)
         if self.DoInvert:
             self.Db.insertStep('invert', FamilySel=fnOut,Nproc=self.NumberOfMpi)
         if self.DoRemoveDust:
             self.Db.insertStep('removeDust', FamilySel=fnOut,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
         if self.DoNorm:
             self.Db.insertStep('normalize', FamilySel=fnOut,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
-        self.Db.insertStep('sortImageInFamily', verifyfiles=[selfileRoot],selfileRoot=selfileRoot)
+        self.Db.insertStep('sortImageInFamily', verifyfiles=[selfileRoot+".sel"],selfileRoot=selfileRoot)
             
     def validate(self):
         errors = []
@@ -74,18 +74,46 @@ def createEmptyMicrographSel(log,fnOut):
     mD.setValue(xmipp.MDL_IMAGE,"ImportedImages",id)
     mD.write(fnOut)
 
-def linkOrCopy(log,Family,InputFile,WorkingDir,DoCopy,TmpDir):
+def fixPath(file,possiblePath1,possiblePath2,possiblePath3=None):
+    if file[0]=='/':
+        return file
+    file1=os.path.join(possiblePath1,file)
+    if os.path.exists(file1):
+        return file1
+    file2=os.path.join(possiblePath2,file)
+    if os.path.exists(file2):
+        return file2
+    if possiblePath3:
+        file3=os.path.join(possiblePath3,file)
+        if os.path.exists(file3):
+            return file3
+    return file
+
+def linkOrCopy(log,Family,InputFile,WorkingDir,DoCopy,ImportAll,SubsetMode,Nsubset,TmpDir):
     familySel=os.path.join(WorkingDir,Family+".sel")
     if DoCopy:
         familyDir=os.path.join(WorkingDir,Family)
         createDir(log,familyDir)
     if xmipp.FileName.isMetaData(xmipp.FileName(InputFile)):
         mD=xmipp.MetaData(InputFile)
-        imageName=mD.getValue(xmipp.MDL_IMAGE,mD.firstObject())
-        if imageName[0]!='/':
-            # They are relative paths
-            relativeDir=os.path.split(os.path.relpath(InputFile,'.'))[0]
-            mD.operate("image='%s'||image"%(relativeDir+"/"))
+        inputRelativePath=os.path.split(os.path.relpath(InputFile,'.'))[0]
+        print "inputRelativePath=",inputRelativePath
+        for id in mD:
+            file=mD.getValue(xmipp.MDL_IMAGE,id)
+            if '@' in file:
+                (num,file)=file.split('@')
+                file=os.path.relpath(fixPath(file,'.',inputRelativePath),'.')
+                file='%(num)s@%(file)s'%locals()
+            else:
+                file=os.path.relpath(fixPath(file,'.',inputRelativePath),'.')
+            mD.setValue(xmipp.MDL_IMAGE,file,id)
+        if not ImportAll:
+            if SubsetMode=="Random subset":
+                mDaux=xmipp.MetaData()
+                mDaux.randomize(mD)
+            else:
+                mDaux=xmipp.MetaData(mD)
+            mD.selectPart(mDaux,0,Nsubset)
         mD.write(familySel)
         if DoCopy:
             newStack=os.path.join(familyDir,Family+".stk")
@@ -93,19 +121,30 @@ def linkOrCopy(log,Family,InputFile,WorkingDir,DoCopy,TmpDir):
             mD=xmipp.MetaData(newStack)
             mD.write(familySel)
     else:
-        if DoCopy:
-            fileName=os.path.split(InputFile)[1]
-            destination=os.path.join(familyDir,fileName)
-            copyFile(log,InputFile,destination)
-            (inputRoot,inputExt)=os.path.splitext(fileName)
-            if inputExt=='hed':
-                copyFile(log,InputFile.replace(".hed",".img"),destination.replace(".hed",".img"))
-            elif inputExt=="img":
-                copyFile(log,InputFile.replace(".img",".hed"),destination.replace(".img",".hed"))
-        else:
-            destination=InputFile
-        mD=xmipp.MetaData(destination)
+        mD=xmipp.MetaData(InputFile)
+        if not ImportAll:
+            if SubsetMode=="Random subset":
+                mDaux=xmipp.MetaData()
+                mDaux.randomize(mD)
+            else:
+                mDaux=xmipp.MetaData(mD)
+            mD.selectPart(mDaux,0,Nsubset)
         mD.write(familySel)
+        if DoCopy:
+            if ImportAll:
+                fileName=os.path.split(InputFile)[1]
+                destination=os.path.join(familyDir,fileName)
+                copyFile(log,InputFile,destination)
+                (inputRoot,inputExt)=os.path.splitext(fileName)
+                if inputExt=='hed':
+                    copyFile(log,InputFile.replace(".hed",".img"),destination.replace(".hed",".img"))
+                elif inputExt=="img":
+                    copyFile(log,InputFile.replace(".img",".hed"),destination.replace(".img",".hed"))
+            else:
+                destination=os.path.join(familyDir,Family+".stk")
+                runJob(log,"xmipp_image_convert","-i "+familySel+" -o "+destination)
+            mD=xmipp.MetaData(destination)
+            mD.write(familySel)
 
 def invert(log,FamilySel,Nproc):
     runJob(log,'xmipp_image_operate','-i '+FamilySel+" --mult -1",Nproc)
