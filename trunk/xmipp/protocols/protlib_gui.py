@@ -1103,9 +1103,9 @@ class ProtocolGUI(BasicGUI):
     #Select family from extraction run
     def wizardChooseFamily(self, var):
         from protlib_base import getWorkingDirFromRunName
-        extractionDir = getWorkingDirFromRunName(self.getVarValue('ExtractionRun'))
+        extractionDir = getWorkingDirFromRunName(self.getVarValue('PreviousRun'))
         if not extractionDir:
-            tkMessageBox.showwarning("Warning", "No extraction Run has been found", parent=self.master)
+            tkMessageBox.showwarning("Warning", "No previous Run has been found", parent=self.master)
             return
         familyList = []
         for file in glob.glob(os.path.join(extractionDir, "*_sorted.sel")):
