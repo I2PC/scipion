@@ -61,6 +61,7 @@ void ProgImageRotationalPCA::readParams()
     max_shift_change = getDoubleParam("--max_shift_change");
     psi_step = getDoubleParam("--psi_step");
     shift_step = getDoubleParam("--shift_step");
+    maxNimgs = getIntParam("--maxImages");
 }
 
 // Show ====================================================================
@@ -75,6 +76,7 @@ void ProgImageRotationalPCA::show()
     << "Number iterations:   " << Nits << std::endl
     << "Psi step:            " << psi_step << std::endl
     << "Max shift change:    " << max_shift_change << " step: " << shift_step << std::endl
+    << "Max images:          " << maxNimgs << std::endl
     ;
 }
 
@@ -89,6 +91,7 @@ void ProgImageRotationalPCA::defineParams()
     addParamsLine("  [--max_shift_change <r=0>]   : Maximum change allowed in shift");
     addParamsLine("  [--psi_step <ang=1>]         : Step in psi in degrees");
     addParamsLine("  [--shift_step <r=1>]         : Step in shift in pixels");
+    addParamsLine("  [--maxImages <N=-1>]         : Maximum number of images");
     addExampleLine("Typical use:",false);
     addExampleLine("xmipp_mpi_image_rotational_pca -i images.stk --oroot images_eigen");
 }
@@ -99,6 +102,12 @@ void ProgImageRotationalPCA::produceSideInfo()
     time_config();
 
     MD.read(fnIn);
+    if (maxNimgs>0)
+    {
+        MetaData MDaux;
+        MDaux.randomize(MD);
+        MD.selectPart(MDaux,0,maxNimgs);
+    }
     Nimg=MD.size();
     int Ydim, Zdim;
     size_t Ndim;
@@ -120,9 +129,9 @@ void ProgImageRotationalPCA::produceSideInfo()
     if (node->isMaster())
     {
         // F (#images*#shifts*#angles) x (#eigenvectors+2)*(its+1)
-        createEmptyFileWithGivenLength(fnRoot+"_matrixF.raw",Nimg*Nshifts*Nangles*(Neigen+2)*(Nits+1)*sizeof(double));
+        createEmptyFileWithGivenLength(fnRoot+"_matrixF.raw",Nimg*2*Nangles*Nshifts*(Neigen+2)*(Nits+1)*sizeof(double));
         // H (#images*#shifts*#angles) x (#eigenvectors+2)
-        createEmptyFileWithGivenLength(fnRoot+"_matrixH.raw",Nimg*Nshifts*Nangles*(Neigen+2)*sizeof(double));
+        createEmptyFileWithGivenLength(fnRoot+"_matrixH.raw",Nimg*2*Nangles*Nshifts*(Neigen+2)*sizeof(double));
 
         // Initialize with random numbers between -1 and 1
         FOR_ALL_ELEMENTS_IN_MATRIX2D(W)
@@ -134,9 +143,9 @@ void ProgImageRotationalPCA::produceSideInfo()
     else
         // Receive W
         MPI_Bcast(&MAT_ELEM(W,0,0),MAT_XSIZE(W)*MAT_YSIZE(W),MPI_DOUBLE,0,MPI_COMM_WORLD);
-    F.mapToFile(fnRoot+"_matrixF.raw",(Neigen+2)*(Nits+1),Nimg*Nshifts*Nangles);
-    H.mapToFile(fnRoot+"_matrixH.raw",Nimg*Nshifts*Nangles,Neigen+2);
-    Hblock.resizeNoCopy(Nangles*Nshifts,Neigen+2);
+    F.mapToFile(fnRoot+"_matrixF.raw",(Neigen+2)*(Nits+1),Nimg*2*Nangles*Nshifts);
+    H.mapToFile(fnRoot+"_matrixH.raw",Nimg*2*Nangles*Nshifts,Neigen+2);
+    Hblock.resizeNoCopy(2*Nangles*Nshifts,Neigen+2);
 
     // Prepare buffer
     fileMutex = new MpiFileMutex(node);
@@ -183,8 +192,8 @@ void ProgImageRotationalPCA::applyT()
     size_t first, last;
     if (node->isMaster())
     {
-    	std::cerr << "Applying T ...\n";
-    	init_progress_bar(objId.size());
+        std::cerr << "Applying T ...\n";
+        init_progress_bar(objId.size());
     }
     while (taskDistributor->getTasks(first, last))
     {
@@ -193,63 +202,71 @@ void ProgImageRotationalPCA::applyT()
             // Read image
             MD.getValue(MDL_IMAGE,fnImg,objId[idx]);
             I.read(fnImg);
-            const MultidimArray<double> &mI=I();
+            MultidimArray<double> &mI=I();
 
             // Locate the corresponding index in Matrix H
             // and copy a block in memory to speed up calculations
-            size_t Hidx=idx*Nangles*Nshifts;
+            size_t Hidx=idx*2*Nangles*Nshifts;
             memcpy(&MAT_ELEM(Hblock,0,0),&MAT_ELEM(H,Hidx,0),MAT_XSIZE(Hblock)*MAT_YSIZE(Hblock)*sizeof(double));
 
-            // For each rotation and shift
+            // For each rotation, shift and mirror
             int block_idx=0;
-            for (double psi=0; psi<360; psi+=psi_step)
+            for (int mirror=0; mirror<2; ++mirror)
             {
-                rotation2DMatrix(psi,A,true);
-                for (double y=-max_shift_change; y<=max_shift_change; y+=shift_step)
+                if (mirror)
                 {
-                    MAT_ELEM(A,1,2)=y;
-                    for (double x=-max_shift_change; x<=max_shift_change; x+=shift_step, ++block_idx)
+                    mI.selfReverseX();
+                    mI.setXmippOrigin();
+                }
+                for (double psi=0; psi<360; psi+=psi_step)
+                {
+                    rotation2DMatrix(psi,A,true);
+                    for (double y=-max_shift_change; y<=max_shift_change; y+=shift_step)
                     {
-                        MAT_ELEM(A,0,2)=x;
-
-                        // Rotate and shift image
-                        applyGeometry(1,Iaux,mI,A,IS_INV,true);
-
-                        // Update Wnode
-                        int i=0;
-                        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Iaux)
+                        MAT_ELEM(A,1,2)=y;
+                        for (double x=-max_shift_change; x<=max_shift_change; x+=shift_step, ++block_idx)
                         {
-                            if (DIRECT_MULTIDIM_ELEM(mask,n)==0)
-                                continue;
-                            double pixval=DIRECT_MULTIDIM_ELEM(Iaux,n);
-                            double *ptrWnode=&MAT_ELEM(Wnode,i,0);
-                            double *ptrHblock=&MAT_ELEM(Hblock,block_idx,0);
-                            for (int j=0; j<jmax; j+=unroll, ptrHblock+=unroll, ptrWnode+=unroll)
+                            MAT_ELEM(A,0,2)=x;
+
+                            // Rotate and shift image
+                            applyGeometry(1,Iaux,mI,A,IS_INV,true);
+
+                            // Update Wnode
+                            int i=0;
+                            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Iaux)
                             {
-                                (*(ptrWnode  )) +=pixval*(*ptrHblock  );
-                                (*(ptrWnode+1)) +=pixval*(*(ptrHblock+1));
-                                (*(ptrWnode+2)) +=pixval*(*(ptrHblock+2));
-                                (*(ptrWnode+3)) +=pixval*(*(ptrHblock+3));
-                                (*(ptrWnode+4)) +=pixval*(*(ptrHblock+4));
-                                (*(ptrWnode+5)) +=pixval*(*(ptrHblock+5));
-                                (*(ptrWnode+6)) +=pixval*(*(ptrHblock+6));
-                                (*(ptrWnode+7)) +=pixval*(*(ptrHblock+7));
+                                if (DIRECT_MULTIDIM_ELEM(mask,n)==0)
+                                    continue;
+                                double pixval=DIRECT_MULTIDIM_ELEM(Iaux,n);
+                                double *ptrWnode=&MAT_ELEM(Wnode,i,0);
+                                double *ptrHblock=&MAT_ELEM(Hblock,block_idx,0);
+                                for (int j=0; j<jmax; j+=unroll, ptrHblock+=unroll, ptrWnode+=unroll)
+                                {
+                                    (*(ptrWnode  )) +=pixval*(*ptrHblock  );
+                                    (*(ptrWnode+1)) +=pixval*(*(ptrHblock+1));
+                                    (*(ptrWnode+2)) +=pixval*(*(ptrHblock+2));
+                                    (*(ptrWnode+3)) +=pixval*(*(ptrHblock+3));
+                                    (*(ptrWnode+4)) +=pixval*(*(ptrHblock+4));
+                                    (*(ptrWnode+5)) +=pixval*(*(ptrHblock+5));
+                                    (*(ptrWnode+6)) +=pixval*(*(ptrHblock+6));
+                                    (*(ptrWnode+7)) +=pixval*(*(ptrHblock+7));
+                                }
+                                for (int j=jmax; j<MAT_XSIZE(Wnode); ++j, ptrHblock+=1, ptrWnode+=1)
+                                    (*(ptrWnode  )) +=pixval*(*ptrHblock  );
+                                ++i;
                             }
-                            for (int j=jmax; j<MAT_XSIZE(Wnode); ++j, ptrHblock+=1, ptrWnode+=1)
-                                (*(ptrWnode  )) +=pixval*(*ptrHblock  );
-                            ++i;
                         }
                     }
                 }
             }
         }
         if (node->isMaster())
-        	progress_bar(last);
+            progress_bar(last);
     }
     MPI_Allreduce(MATRIX2D_ARRAY(Wnode), MATRIX2D_ARRAY(W), MAT_XSIZE(W)*MAT_YSIZE(W),
                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     if (node->isMaster())
-    	progress_bar(objId.size());
+        progress_bar(objId.size());
 }
 
 // Apply T ================================================================
@@ -268,8 +285,8 @@ void ProgImageRotationalPCA::applyTt()
     size_t first, last;
     if (node->isMaster())
     {
-    	std::cerr << "Applying Tt ...\n";
-    	init_progress_bar(objId.size());
+        std::cerr << "Applying Tt ...\n";
+        init_progress_bar(objId.size());
     }
     while (taskDistributor->getTasks(first, last))
     {
@@ -278,53 +295,61 @@ void ProgImageRotationalPCA::applyTt()
             // Read image
             MD.getValue(MDL_IMAGE,fnImg,objId[idx]);
             I.read(fnImg);
-            const MultidimArray<double> &mI=I();
+            MultidimArray<double> &mI=I();
 
             // For each rotation and shift
             int block_idx=0;
-            for (double psi=0; psi<360; psi+=psi_step)
+            for (int mirror=0; mirror<2; ++mirror)
             {
-                rotation2DMatrix(psi,A,true);
-                for (double y=-max_shift_change; y<=max_shift_change; y+=shift_step)
+                if (mirror)
                 {
-                    MAT_ELEM(A,1,2)=y;
-                    for (double x=-max_shift_change; x<=max_shift_change; x+=shift_step, ++block_idx)
+                    mI.selfReverseX();
+                    mI.setXmippOrigin();
+                }
+                for (double psi=0; psi<360; psi+=psi_step)
+                {
+                    rotation2DMatrix(psi,A,true);
+                    for (double y=-max_shift_change; y<=max_shift_change; y+=shift_step)
                     {
-                        MAT_ELEM(A,0,2)=x;
-
-                        // Rotate and shift image
-                        applyGeometry(1,Iaux,mI,A,IS_INV,true);
-
-                        // Update Hblock
-                        for (int j=0; j<MAT_XSIZE(Hblock); j++)
+                        MAT_ELEM(A,1,2)=y;
+                        for (double x=-max_shift_change; x<=max_shift_change; x+=shift_step, ++block_idx)
                         {
-                            double dotproduct=0;
-                            const double *ptrIaux=MULTIDIM_ARRAY(Iaux);
-                            unsigned char *ptrMask=&DIRECT_MULTIDIM_ELEM(mask,0);
-                            const double *ptrWtranspose=&MAT_ELEM(Wtranspose,j,0);
-                            for (size_t n=0; n<nmax; n+=unroll, ptrIaux+=unroll, ptrMask+=unroll)
+                            MAT_ELEM(A,0,2)=x;
+
+                            // Rotate and shift image
+                            applyGeometry(1,Iaux,mI,A,IS_INV,true);
+
+                            // Update Hblock
+                            for (int j=0; j<MAT_XSIZE(Hblock); j++)
                             {
-                                if (*(ptrMask  ))
-                                    dotproduct+=(*(ptrIaux  ))*(*ptrWtranspose++);
-                                if (*(ptrMask+1))
-                                    dotproduct+=(*(ptrIaux+1))*(*ptrWtranspose++);
-                                if (*(ptrMask+2))
-                                    dotproduct+=(*(ptrIaux+2))*(*ptrWtranspose++);
-                                if (*(ptrMask+3))
-                                    dotproduct+=(*(ptrIaux+3))*(*ptrWtranspose++);
-                                if (*(ptrMask+4))
-                                    dotproduct+=(*(ptrIaux+4))*(*ptrWtranspose++);
-                                if (*(ptrMask+5))
-                                    dotproduct+=(*(ptrIaux+5))*(*ptrWtranspose++);
-                                if (*(ptrMask+6))
-                                    dotproduct+=(*(ptrIaux+6))*(*ptrWtranspose++);
-                                if (*(ptrMask+7))
-                                    dotproduct+=(*(ptrIaux+7))*(*ptrWtranspose++);
+                                double dotproduct=0;
+                                const double *ptrIaux=MULTIDIM_ARRAY(Iaux);
+                                unsigned char *ptrMask=&DIRECT_MULTIDIM_ELEM(mask,0);
+                                const double *ptrWtranspose=&MAT_ELEM(Wtranspose,j,0);
+                                for (size_t n=0; n<nmax; n+=unroll, ptrIaux+=unroll, ptrMask+=unroll)
+                                {
+                                    if (*(ptrMask  ))
+                                        dotproduct+=(*(ptrIaux  ))*(*ptrWtranspose++);
+                                    if (*(ptrMask+1))
+                                        dotproduct+=(*(ptrIaux+1))*(*ptrWtranspose++);
+                                    if (*(ptrMask+2))
+                                        dotproduct+=(*(ptrIaux+2))*(*ptrWtranspose++);
+                                    if (*(ptrMask+3))
+                                        dotproduct+=(*(ptrIaux+3))*(*ptrWtranspose++);
+                                    if (*(ptrMask+4))
+                                        dotproduct+=(*(ptrIaux+4))*(*ptrWtranspose++);
+                                    if (*(ptrMask+5))
+                                        dotproduct+=(*(ptrIaux+5))*(*ptrWtranspose++);
+                                    if (*(ptrMask+6))
+                                        dotproduct+=(*(ptrIaux+6))*(*ptrWtranspose++);
+                                    if (*(ptrMask+7))
+                                        dotproduct+=(*(ptrIaux+7))*(*ptrWtranspose++);
+                                }
+                                for (size_t n=nmax; n<MAT_XSIZE(Wtranspose); ++n, ++ptrMask, ++ptrIaux)
+                                    if (*ptrMask)
+                                        dotproduct+=(*ptrIaux)*(*ptrWtranspose++);
+                                MAT_ELEM(Hblock,block_idx,j)=dotproduct;
                             }
-                            for (size_t n=nmax; n<MAT_XSIZE(Wtranspose); ++n, ++ptrMask, ++ptrIaux)
-                                if (*ptrMask)
-                                    dotproduct+=(*ptrIaux)*(*ptrWtranspose++);
-                            MAT_ELEM(Hblock,block_idx,j)=dotproduct;
                         }
                     }
                 }
@@ -332,15 +357,15 @@ void ProgImageRotationalPCA::applyTt()
 
             // Locate the corresponding index in Matrix H
             // and copy block to disk
-            size_t Hidx=idx*Nangles*Nshifts;
+            size_t Hidx=idx*2*Nangles*Nshifts;
             writeToHBuffer(&MAT_ELEM(H,Hidx,0));
         }
         if (node->isMaster())
-        	progress_bar(last);
+            progress_bar(last);
     }
     flushHBuffer();
     if (node->isMaster())
-    	progress_bar(objId.size());
+        progress_bar(objId.size());
 }
 
 // QR =====================================================================
@@ -429,19 +454,19 @@ void ProgImageRotationalPCA::run()
     FileName fnSync=fnRoot+".sync";
     if (node->isMaster())
     {
-    	std::cerr << "Performing QR decomposition ..." << std::endl;
+        std::cerr << "Performing QR decomposition ..." << std::endl;
         qrDim=QR();
         createEmptyFileWithGivenLength(fnSync);
     }
     node->barrierWait(fnSync,10);
     MPI_Bcast(&qrDim,1,MPI_INT,0,MPI_COMM_WORLD);
     if (qrDim==0)
-    	REPORT_ERROR(ERR_VALUE_INCORRECT,"No subspace have been found");
+        REPORT_ERROR(ERR_VALUE_INCORRECT,"No subspace have been found");
 
     // Load the first qrDim columns of F in matrix H
     if (node->isMaster())
     {
-        createEmptyFileWithGivenLength(fnRoot+"_matrixH.raw",Nimg*Nshifts*Nangles*qrDim*sizeof(double));
+        createEmptyFileWithGivenLength(fnRoot+"_matrixH.raw",Nimg*2*Nangles*Nshifts*qrDim*sizeof(double));
         H.mapToFile(fnRoot+"_matrixH.raw",MAT_XSIZE(F),qrDim);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
         MAT_ELEM(H,i,j)=MAT_ELEM(F,j,i);
@@ -455,13 +480,13 @@ void ProgImageRotationalPCA::run()
     }
 
     // Apply T
-    Hblock.resizeNoCopy(Nangles*Nshifts,qrDim);
+    Hblock.resizeNoCopy(2*Nangles*Nshifts,qrDim);
     applyT();
 
     // Apply SVD and extract the basis
     if (node->isMaster())
     {
-    	std::cerr << "Performing SVD decomposition ..." << std::endl;
+        std::cerr << "Performing SVD decomposition ..." << std::endl;
         // SVD of W
         Matrix2D<double> U,V;
         Matrix1D<double> S;

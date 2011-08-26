@@ -50,6 +50,8 @@ public:
     double max_shift_change;
     /** Shift step */
     double shift_step;
+    /** Maximum number of images */
+    int maxNimgs;
 public:
     // Input metadata
     MetaData MD;
