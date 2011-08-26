@@ -140,7 +140,7 @@ public class MicrographFamilyData {
 		if (mystep == Step.Manual)
 			return null;
 		if (mystep == Step.Available)
-			return State.Autopic.toString();
+			return State.Autopick.toString();
 		return state.toString();
 	}
 

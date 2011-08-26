@@ -1,5 +1,5 @@
 package model;
 
 public enum State {
-	Manual, Autopic, Correct, ReadOnly, Available
+	Manual, Autopick, Correct, ReadOnly, Available
 }

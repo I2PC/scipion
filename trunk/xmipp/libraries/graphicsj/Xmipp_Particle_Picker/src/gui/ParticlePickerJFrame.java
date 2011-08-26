@@ -373,10 +373,14 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 					if (result == JOptionPane.NO_OPTION)
 						return;
 					setStep(Step.Supervised, true);
-					actionsbt.setText(getFamilyData().getState().toString());
-					actionsbt.setVisible(getFamilyData().isActionAvailable());
 					saveChanges();
 					ppicker.train(family);
+					int next = ppicker.getNextFreeMicrograph(family);
+					if(next != -1 )
+						micrographstb.setRowSelectionInterval(next, next);
+					actionsbt.setText(getFamilyData().getState().toString());
+					actionsbt.setVisible(getFamilyData().isActionAvailable());
+					
 				} else if (family.getStep() == Step.Supervised) {
 					int result = JOptionPane.showConfirmDialog(
 							ParticlePickerJFrame.this,
@@ -444,7 +448,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (actionsbt.getText().equals(State.Autopic.toString())) {
+				if (actionsbt.getText().equals(State.Autopick.toString())) {
 					ppicker.classify(family, micrograph);
 					ppicker.loadAutomaticParticles(micrograph);
 					getFamilyData().setState(State.Correct);
@@ -456,7 +460,11 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 					saveChanges();
 					ppicker.persistAutomaticParticles(getFamilyData());
 					ppicker.correct(family, micrograph);
-					actionsbt.setVisible(false);
+					int next = ppicker.getNextFreeMicrograph(family);
+					if(next != -1 )
+						micrographstb.setRowSelectionInterval(next, next);
+					else
+						actionsbt.setVisible(false);
 					
 				}
 				actionsbt.setText(getFamilyData().getAction());

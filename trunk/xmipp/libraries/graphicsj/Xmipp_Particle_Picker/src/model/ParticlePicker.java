@@ -60,6 +60,16 @@ public class ParticlePicker {
 		return null;
 	}
 	
+	public static String getXmippPath()
+	{
+		return "/home/airen/xmipp";
+	}
+	
+	public static String getXmippPath(String relpath)
+	{
+		return getXmippPath() + File.separator + relpath;
+	}
+	
 	public static String getTrainingFilename()
 	{
 		return trainingfn;
@@ -170,6 +180,8 @@ public class ParticlePicker {
 		this.micrographs = new ArrayList<Micrograph>();
 		loadFamilyData();
 		loadMicrographsData();
+		for(Micrograph m: micrographs)
+			loadAutomaticParticles(m);
 	}
 
 	public static Step nextStep(Step step) {
@@ -516,6 +528,18 @@ public class ParticlePicker {
 			args += " --in_core";
 		executeProgram("xmipp_micrograph_automatic_picking", args);
 		
+	}
+	
+	public int getNextFreeMicrograph(Family f)
+	{
+		int count = 0;
+		for(Micrograph m: micrographs)
+		{
+			if(m.getFamilyData(f).getState() == State.Available)
+					return count;
+			count ++;
+		}
+		return -1;
 	}
 
 }

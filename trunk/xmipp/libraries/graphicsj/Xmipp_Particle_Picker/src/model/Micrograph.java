@@ -93,13 +93,15 @@ public class Micrograph {
 	
 	public Icon getCTFIcon()
 	{
+		String file;
 		if(ctficon == null)
 		{
 			if(ctf == null || !(new File(ctf).exists()))
-				return new ImageIcon();
-			ImagePlus ip = new ImagePlus(ctf);
-			Image i = ip.getImage().getScaledInstance(110, 110, Image.SCALE_SMOOTH);
-			ctficon = new ImageIcon(i);
+				file = (ParticlePicker.getXmippPath("resources" + File.separator + "no-image.jpg"));
+			else
+				file = ctf;
+			Image image = new ImagePlus(file).getImage().getScaledInstance(110, 110, Image.SCALE_SMOOTH);
+			ctficon = new ImageIcon(image);
 			
 		}
 		return ctficon;
