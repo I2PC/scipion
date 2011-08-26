@@ -14,13 +14,10 @@ public class Particle {
 	
 	private int x;
 	private int y;
-	private boolean dragged;
 	private Family family;
 	private Micrograph micrograph;
 	private ImagePlus img;
 	private ParticleCanvas canvas;
-	private boolean auto;
-	private double cost;
 	
 	
 	public Particle(int x, int y, Family family, Micrograph micrograph)
@@ -29,30 +26,11 @@ public class Particle {
 		this.y = y;
 		this.family = family;
 		this.micrograph = micrograph;
-		auto = false;
-		cost = 1;
 	}
 	
-	public Particle(int x, int y, Family family, Micrograph micrograph, boolean auto, double cost)
-	{
-		this.x = x;
-		this.y = y;
-		this.family = family;
-		this.micrograph = micrograph;
-		this.auto = auto;
-		this.cost = cost;
-	}
-
-	public double getCost()
-	{
-		return cost;
-	}
 	
-	public boolean isAuto()
-	{
-		return auto;
-	}
 
+	
 	public Micrograph getMicrograph() {
 		return micrograph;
 	}
@@ -97,13 +75,8 @@ public class Particle {
 			return true;
 	}
 
-	public boolean isDragged() {
-		return dragged;
-	}
 
-	public void setDragged(boolean dragged) {
-		this.dragged = dragged;
-	}
+
 	
 	public ImagePlus getImage()
 	{
@@ -162,5 +135,12 @@ public class Particle {
 		this.y = y;
 		
 	}
+	
+	public String toString()
+	{
+		return String.format("x = %s; y = %s", x, y); 
+	}
+
+
 	
 }

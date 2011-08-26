@@ -176,14 +176,18 @@ public class EditFamiliesJDialog extends JDialog {
 						JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
 								Constants.getAlreadyExistsGroupNameMsg(name));
 					g.setName(name);
+					frame.updateFamilyComboBox();
 				} else if (column == 1)
+				{
 					g.setColor((Color) value);
+					frame.updateFamilyColor();
+				}
 				else if (column == 2) {
 					int size = (Integer) value;
 					g.setSize(size);
+					frame.switchSize(size);
 				}
 
-				frame.updateFamilies();
 			} catch (IllegalArgumentException e) {
 				JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
 						e.getMessage());

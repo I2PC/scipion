@@ -3,7 +3,7 @@ package Xmipp;
 import java.util.logging.Level;
 import javax.swing.SwingUtilities;
 
-import model.ExecutionEnvironment;
+import model.ParticlePicker;
 
 import gui.ParticlePickerJFrame;
 import ij.ImagePlus;
@@ -39,20 +39,20 @@ class Main implements Runnable
 	
 	Main(String mgselfile, String outputdir)
 	{
-		ExecutionEnvironment.setMicrographsSelFile(mgselfile);
-		ExecutionEnvironment.setOutputDir(outputdir);
-		ExecutionEnvironment.setIsAuto(false);
+		ParticlePicker.setMicrographsSelFile(mgselfile);
+		ParticlePicker.setOutputDir(outputdir);
+		ParticlePicker.setIsAuto(false);
 	}
 	
 	Main(String mgselfile, String outputdir, int threads, boolean fastMode, boolean incore)
 	{
 		
-		ExecutionEnvironment.setMicrographsSelFile(mgselfile);
-		ExecutionEnvironment.setOutputDir(outputdir);
-		ExecutionEnvironment.setThreads(threads);
-		ExecutionEnvironment.setFastMode(fastMode);
-		ExecutionEnvironment.setIncore(incore);
-		ExecutionEnvironment.setIsAuto(true);
+		ParticlePicker.setMicrographsSelFile(mgselfile);
+		ParticlePicker.setOutputDir(outputdir);
+		ParticlePicker.setThreads(threads);
+		ParticlePicker.setFastMode(fastMode);
+		ParticlePicker.setIncore(incore);
+		ParticlePicker.setIsAuto(true);
 	}
 	
 	@Override
@@ -62,7 +62,7 @@ class Main implements Runnable
 			ParticlePickerJFrame frame = new ParticlePickerJFrame();
 			
 		} catch (Exception e) {
-			ExecutionEnvironment.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 }

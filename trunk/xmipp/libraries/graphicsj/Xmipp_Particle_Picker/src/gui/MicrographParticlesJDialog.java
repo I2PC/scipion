@@ -35,7 +35,7 @@ public class MicrographParticlesJDialog extends JDialog {
 		JScrollPane sp = new JScrollPane();
 		JList list = new JList();
 		list.setOpaque(true);
-		list.setModel(new ParticlesTableModel(micrograph.getFamilyData(parent.getFamily()).getParticles(), parent));
+		list.setModel(new ParticlesTableModel(micrograph.getFamilyData(parent.getFamily()).getManualParticles(), parent));
 		list.setCellRenderer(new ParticleCellRenderer());
 		//list.setPreferredSize(new Dimension(1000, 500));
 		sp.setViewportView(list);

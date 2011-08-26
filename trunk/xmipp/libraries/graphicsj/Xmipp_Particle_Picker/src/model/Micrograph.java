@@ -24,20 +24,22 @@ public class Micrograph {
 	private List<MicrographFamilyData> mfdatas;
 	
 	
+	
+	
 	public Micrograph(String filename, String ctf) {
 		this.filename = filename;
 		this.name = getName(filename);
 		mfdatas = new ArrayList<MicrographFamilyData>();
-		this.outputfname = ExecutionEnvironment.getOutputPath(name + ext);
-		this.aoutputfname = ExecutionEnvironment.getOutputPath(name + "_auto" + ext);
+		this.outputfname = ParticlePicker.getOutputPath(name + ext);
+		this.aoutputfname = ParticlePicker.getOutputPath(name + "_auto" + ext);
 		this.ctf = ctf;
 	}
 	public Micrograph(String filename, String ctf, List<MicrographFamilyData> mfd) {
 		this.filename = filename;
 		this.name = getName(filename);
 		mfdatas = mfd;
-		this.outputfname = ExecutionEnvironment.getOutputPath(name + ext);
-		this.aoutputfname = ExecutionEnvironment.getOutputPath(name + "_auto" + ext);
+		this.outputfname = ParticlePicker.getOutputPath(name + ext);
+		this.aoutputfname = ParticlePicker.getOutputPath(name + "_auto" + ext);
 		this.ctf = ctf;
 	}
 	
@@ -67,14 +69,15 @@ public class Micrograph {
 	
 	public static String getIFilename()
 	{
-		return ExecutionEnvironment.getMicrographsSelFile();
+		return ParticlePicker.getMicrographsSelFile();
 	}
 	
-	public String getOutputFName()
+	public String getOFilename()
 	{
 		return outputfname;
 	}
-	public String getAutoOutputFName()
+	
+	public String getAutoOFilename()
 	{
 		return aoutputfname;
 	}
@@ -98,6 +101,11 @@ public class Micrograph {
 		return ctficon;
 	}
 	
+	public String getOutputRoot()
+	{
+		return ParticlePicker.getOutputPath(name);
+	}
+	
 	public String getFilename() {
 		return filename;
 	}
@@ -119,12 +127,15 @@ public class Micrograph {
 	public Particle getParticle(int x, int y)
 	{
 		for(MicrographFamilyData mfd: mfdatas)
-			for(Particle p: mfd.getParticles())
-			{
+		{
+			for(Particle p: mfd.getManualParticles())
 				if (p.contains(x, y)) 
-				return p;
-			}
-			return null;
+					return p;
+			for(AutomaticParticle p: mfd.getAutomaticParticles())
+				if (p.contains(x, y) && !p.isDeleted()) 
+					return p;
+		}
+		return null;
 	}
 	
 	public MicrographFamilyData getFamilyData(Family f)
@@ -132,14 +143,14 @@ public class Micrograph {
 		for(MicrographFamilyData fp: mfdatas)
 			if(f.equals(fp.getFamily()))
 				return fp;
-		MicrographFamilyData mfd = new MicrographFamilyData(f); 
+		MicrographFamilyData mfd = new MicrographFamilyData(this, f); 
 		mfdatas.add(mfd);
 		return mfd;
 	}
 
-	public void addParticle(Particle p)
+	public void addManualParticle(Particle p)
 	{
-		getFamilyData(p.getFamily()).addParticle(p);
+		getFamilyData(p.getFamily()).addManualParticle(p);
 	}
 	
 	
@@ -147,6 +158,12 @@ public class Micrograph {
 	{
 		getFamilyData(p.getFamily()).removeParticle(p);
 	}
+	
+	public void addAutomaticParticle(AutomaticParticle p)
+	{
+		getFamilyData(p.getFamily()).addAutomaticParticle(p);
+	}
+	
 	
 	public String toString()
 	{
@@ -156,14 +173,14 @@ public class Micrograph {
 	public boolean isEmpty()
 	{
 		for(MicrographFamilyData fp: mfdatas)
-			if(fp != null && fp.getParticles().size() > 0)
+			if(fp != null && fp.getManualParticles().size() > 0)
 				return false;
 		return true;
 	}
 	
-	public boolean isReadOnly(Family f)
-	{
-		return getFamilyData(f).isReadOnly();
+	public boolean isPickingAvailable(Family f) {
+			return getFamilyData(f).isPickingAvailable();
 	}
+
 
 }

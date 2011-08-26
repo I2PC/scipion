@@ -12,7 +12,7 @@ public class MicrographsTableModel extends AbstractTableModel {
 	
 	
 	private List<Micrograph> micrographs;
-	private String[] columns = new String[]{"Name", "Particles", "Step"};
+	private String[] columns = new String[]{"Name", "Particles", "State"};
 	private ParticlePickerJFrame frame;
 
 	public MicrographsTableModel(ParticlePickerJFrame frame)
@@ -45,9 +45,9 @@ public class MicrographsTableModel extends AbstractTableModel {
 			return m.getName();
 		MicrographFamilyData mfd = m.getFamilyData(frame.getFamily()); 
 		if(columnIndex == 1)
-			return mfd.getParticles().size();
+			return mfd.getManualParticles().size();
 		if(columnIndex == 2)
-			return mfd.getStep();
+			return mfd.getState();
 		return null;
 	}
 

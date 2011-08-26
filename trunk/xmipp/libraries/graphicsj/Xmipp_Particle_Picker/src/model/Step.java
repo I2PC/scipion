@@ -1,5 +1,5 @@
 package model;
 public enum Step {
-	Manual, Supervised
+	Manual, Supervised, Available
 
 }

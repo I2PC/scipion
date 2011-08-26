@@ -21,6 +21,10 @@ public class Constants {
 	public static String getAssociatedDataMsg(String field) {
 		return field + " has associated data. Can not be removed";
 	}
+
+	public static String getNoSuchFieldValueMsg(String field, String value) {
+		return String.format("No such %s %s exists", field, value);
+	}
 	
 	
 }

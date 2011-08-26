@@ -9,9 +9,12 @@ import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.util.List;
 
 import javax.swing.SwingUtilities;
 
+import model.State;
+import model.AutomaticParticle;
 import model.Micrograph;
 import model.MicrographFamilyData;
 import model.Particle;
@@ -33,8 +36,13 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 		this.micrograph = frame.getMicrograph();
 		this.frame = frame;
 		addMouseWheelListener(this);
-
-		// TODO Auto-generated constructor stub
+	}
+	
+	public void updateMicrograph() {
+		this.micrograph = frame.getMicrograph();
+		imp = micrograph.getImage();
+		setImageUpdated();
+		repaint();
 	}
 
 	/**
@@ -55,21 +63,20 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 			setupScroll(x, y);
 			return;
 		}
-		if (isPickingAvailable()) {
+		if (frame.getFamilyData().isPickingAvailable()) {
 			Particle p = micrograph.getParticle(x, y);
 			if (p != null) {
 				if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown()) {
 					micrograph.removeParticle(p);
 					frame.updateMicrographsModel();
 				} else if (SwingUtilities.isLeftMouseButton(e)) {
-					p.setPosition(x, y);
 					dragged = p;
 				}
 			} else if (SwingUtilities.isLeftMouseButton(e)
 					&& Particle.boxContainedOnImage(x, y, frame.getFamily()
 							.getSize(), imp)) {
 				p = new Particle(x, y, frame.getFamily(), micrograph);
-				micrograph.addParticle(p);
+				micrograph.addManualParticle(p);
 				dragged = p;
 				frame.updateMicrographsModel();
 			}
@@ -77,38 +84,17 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 			repaint();
 		}
 	}
-	
-	public boolean isPickingAvailable()
-	{
-		if(micrograph.isReadOnly(frame.getFamily()))
-				return false;
-		if(micrograph.isEmpty() && frame.getFamily().getStep() == Step.Supervised)
-			return false;
-		return true;
-	}
 
+	
 	/**
 	 * Updates particle position and repaints. Sets dragged to null at the end
 	 */
 	public void mouseReleased(MouseEvent e) {
-		if (!isPickingAvailable()
-				|| frame.getTool() != Tool.PICKER) {
+		if (!frame.getFamilyData().isPickingAvailable() || frame.getTool() != Tool.PICKER) {
 			super.mouseReleased(e);
 			return;
 		}
-
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
-		if (dragged == null)// not onpick
-			return;
-		Particle p = null;
-		p = dragged;
 		dragged = null;
-		if (!Particle.boxContainedOnImage(x, y, p.getFamily().getSize(), imp))
-			return;
-		p.setPosition(x, y);
-		frame.setChanged(true);
-		repaint();
 	}
 
 	/**
@@ -127,66 +113,26 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 			scroll(e.getX(), e.getY());
 			return;
 		}
-		if (isPickingAvailable()) {
+		if (frame.getFamilyData().isPickingAvailable()) {
 			if (dragged == null)
 				return;
 
 			if (!Particle.boxContainedOnImage(x, y, dragged.getFamily()
 					.getSize(), imp))
 				return;
-			dragged.setPosition(x, y);
+			if(dragged instanceof AutomaticParticle)
+			{
+				micrograph.removeParticle(dragged);
+				dragged = new Particle(dragged.getX(), dragged.getY(), dragged.getFamily(), micrograph);
+				micrograph.addManualParticle(dragged);
+			}
+			else
+				dragged.setPosition(x, y);
 			frame.setChanged(true);
 			repaint();
 		}
 	}
-
-	public void paint(Graphics g) {
-		super.paint(g);
-		Graphics2D g2 = (Graphics2D) g;
-		int x0 = (int) getSrcRect().getX();
-		int y0 = (int) getSrcRect().getY();
-		int radius;
-		int count = 0;
-		int x, y;
-
-		for (MicrographFamilyData mfdata : micrograph.getFamiliesData()) {
-			g2.setColor(mfdata.getFamily().getColor());
-			radius = (int) (mfdata.getFamily().getSize() / 2 * magnification);
-			for (Particle p : mfdata.getParticles()) {
-
-				if (p.isAuto())
-					g2.setStroke(dashedst);
-				else
-					g2.setStroke(continuousst);
-
-				count++;
-				x = (int) ((p.getX() - x0) * magnification);
-				y = (int) ((p.getY() - y0) * magnification);
-
-				drawShape(g2, x, y, radius, count);
-			}
-		}
-	}
-
-	void drawShape(Graphics2D g2, int x, int y, int radius, int label) {
-		if (frame.isShapeSelected(Shape.Rectangle))
-			g2.drawRect(x - radius, y - radius, radius * 2, radius * 2);
-		if (frame.isShapeSelected(Shape.Circle))
-			g2.drawOval(x - radius, y - radius, radius * 2, radius * 2);
-		if (frame.isShapeSelected(Shape.Center)) {
-			g2.drawLine(x - 2, y - 2, x + 2, y + 2);
-			g2.drawLine(x + 2, y - 2, x - 2, y + 2);
-		}
-		g2.drawString(Integer.toString(label), x, y - radius);
-	}
-
-	public void updateMicrograph() {
-		this.micrograph = frame.getMicrograph();
-		imp = micrograph.getImage();
-		setImageUpdated();
-		repaint();
-	}
-
+	
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		int x = super.offScreenX(e.getX());
@@ -200,5 +146,61 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 			zoomOut(x, y);
 
 	}
+
+	public void paint(Graphics g) {
+		super.paint(g);
+		Graphics2D g2 = (Graphics2D) g;
+		if(frame.getFamily().getStep() == Step.Manual)
+			for (MicrographFamilyData mfdata : micrograph.getFamiliesData()) 
+				drawFamily(g2, mfdata);
+		else
+			drawFamily(g2, micrograph.getFamilyData(frame.getFamily()));
+		
+	}
+	
+	private void drawFamily(Graphics2D g2, MicrographFamilyData mfdata)
+	{
+		int x0 = (int) getSrcRect().getX();
+		int y0 = (int) getSrcRect().getY();
+		
+		int radius;
+		List<Particle> particles;
+		int index;
+		if(!mfdata.isEmpty())
+		{
+			particles = mfdata.getManualParticles();
+			g2.setColor(mfdata.getFamily().getColor());
+			radius = (int) (mfdata.getFamily().getSize() / 2 * magnification);
+			g2.setStroke(continuousst);
+			for (index = 0; index < particles.size(); index ++) 
+				drawShape(g2, particles.get(index), x0, y0, radius, index + 1);
+			g2.setStroke(dashedst);
+			List<AutomaticParticle> autoparticles = mfdata.getAutomaticParticles();
+			for (int i = 0; i < autoparticles.size(); i ++)
+				if(!autoparticles.get(i).isDeleted())
+					drawShape(g2, autoparticles.get(i), x0, y0, radius, index + i);
+		}
+	
+	}
+
+	private void drawShape(Graphics2D g2, Particle p, int x0, int y0, int radius,
+			int label) {
+		
+		int x = (int) ((p.getX() - x0) * magnification);
+		int y = (int) ((p.getY() - y0) * magnification);
+		if (frame.isShapeSelected(Shape.Rectangle))
+			g2.drawRect(x - radius, y - radius, radius * 2, radius * 2);
+		if (frame.isShapeSelected(Shape.Circle))
+			g2.drawOval(x - radius, y - radius, radius * 2, radius * 2);
+		if (frame.isShapeSelected(Shape.Center)) {
+			g2.drawLine(x - 2, y - 2, x + 2, y + 2);
+			g2.drawLine(x + 2, y - 2, x - 2, y + 2);
+		}
+		g2.drawString(Integer.toString(label), x, y - radius);
+	}
+
+
+
+
 
 }

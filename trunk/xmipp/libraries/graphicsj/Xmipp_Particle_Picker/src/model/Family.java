@@ -1,5 +1,6 @@
 package model;
 import java.awt.Color;
+import java.io.File;
 import java.lang.reflect.Field;
 
 
@@ -57,6 +58,15 @@ public class Family {
 		this.step = state;
 	}
 	
+	public String getTrainingFilename()
+	{
+		return String.format("%s_%s", name, ParticlePicker.getTrainingFilename());
+	}
+	
+	public String getTrainingMaskFilename()
+	{
+		return String.format("%s_%s", name, ParticlePicker.getTrainingMaskFilename());
+	}
 	
 	
 	public Family(String name, Color color)
@@ -64,19 +74,39 @@ public class Family {
 		this(name, color, getDefaultSize(), Step.Manual);
 	}
 	
+	
 	public Step getStep()
 	{
 		return step;
 	}
 	
-	public void setStep(Step state)
+	public String getOutputRoot()
 	{
-		this.step = state;
+		return ParticlePicker.getOutputPath(name);
+	}
+	
+	public void goToNextStep()
+	{
+		validateNextStep();
+		new File(getTrainingFilename()).delete();
+		new File(getTrainingMaskFilename()).delete();
+		this.step = ParticlePicker.nextStep(step);
+	}
+	
+	public void validateNextStep()
+	{
+		int min = ParticlePicker.getMinForTraining();
+		Step next = ParticlePicker.nextStep(step);
+		if(next == Step.Supervised && particles < min)
+			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", min, Step.Supervised));
+		if(!ParticlePicker.getInstance().hasEmptyMicrographs(this))
+			throw new IllegalArgumentException(String.format("There are no available micrographs for %s step", Step.Supervised));
+		
 	}
 	
 	public static String getOFilename()
 	{
-		return ExecutionEnvironment.getOutputPath("families.xmd");
+		return ParticlePicker.getOutputPath("families.xmd");
 	}
 	
 	public int getSize() {
