@@ -1250,6 +1250,8 @@ MetaData_readPlain(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_setComment(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
+MetaData_getComment(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
 MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_randomize(PyObject *obj, PyObject *args, PyObject *kwargs);
@@ -2106,6 +2108,8 @@ MetaData_methods[] =
          "Intersection of two metadatas using a common label. The results is stored in self." },
         { "setComment", (PyCFunction) MetaData_setComment,
           METH_VARARGS, "Set comment in Metadata." },
+        { "getComment", (PyCFunction) MetaData_getComment,
+            METH_VARARGS, "Get comment in Metadata." },
         { "operate", (PyCFunction) MetaData_operate,
           METH_VARARGS, "Replace strings values in some column." },
           { "replace", (PyCFunction) MetaData_replace,
@@ -2386,6 +2390,14 @@ MetaData_setComment(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
+}
+
+/* getComment */
+static PyObject *
+MetaData_getComment(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    MetaDataObject *self = (MetaDataObject*) obj;
+    return PyString_FromString(self->metadata->getComment().c_str());
 }
 
 /* join */
