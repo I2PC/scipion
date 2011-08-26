@@ -90,8 +90,6 @@ public:
     std::vector< Matrix2D<double> > A;
     // H block
     std::vector< Matrix2D<double> > Hblock;
-    // W
-    Matrix2D<double> W;
     // W node
     std::vector< Matrix2D<double> > Wnode;
     // W transpose
@@ -128,6 +126,9 @@ public:
 
     /** Flush buffer */
     void flushHBuffer();
+
+    /** Clear H buffer */
+    void clearHbuffer();
 
     /** Copy H to F.
      */

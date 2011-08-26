@@ -44,13 +44,19 @@ ProgImageRotationalPCA::ProgImageRotationalPCA(int argc, char **argv)
 // MPI destructor
 ProgImageRotationalPCA::~ProgImageRotationalPCA()
 {
+	clearHbuffer();
     delete fileMutex;
     delete taskDistributor;
     delete thMgr;
     delete node;
+}
+
+void ProgImageRotationalPCA::clearHbuffer()
+{
     int nmax=Hbuffer.size();
     for (int n=0; n<nmax; n++)
         delete [] Hbuffer[n];
+    Hbuffer.clear();
 }
 
 // Read arguments ==========================================================
@@ -128,8 +134,23 @@ void ProgImageRotationalPCA::produceSideInfo()
     A2D_ELEM(mask,i,j)=(i*i+j*j<R2);
     Npixels=(int)mask.sum();
 
-    W.resizeNoCopy(Npixels, Neigen+2);
+    // Thread Manager
+    thMgr = new ThreadManager(Nthreads,this);
+    Image<double> dummy;
+    Matrix2D<double> dummyMatrix, dummyHblock, dummyW;
+    dummyW.resizeNoCopy(Npixels, Neigen+2);
+    dummyHblock.resizeNoCopy(2*Nangles*Nshifts,Neigen+2);
+    for (int n=0; n<Nthreads; ++n)
+    {
+        Wnode.push_back(dummyW);
+        Hblock.push_back(dummyHblock);
+        A.push_back(dummyMatrix);
+        I.push_back(dummy);
+        Iaux.push_back(dummy());
+        MD.push_back(MDin);
+    }
 
+    Matrix2D<double> &W=Wnode[0];
     if (node->isMaster())
     {
         // F (#images*#shifts*#angles) x (#eigenvectors+2)*(its+1)
@@ -149,22 +170,6 @@ void ProgImageRotationalPCA::produceSideInfo()
         MPI_Bcast(&MAT_ELEM(W,0,0),MAT_XSIZE(W)*MAT_YSIZE(W),MPI_DOUBLE,0,MPI_COMM_WORLD);
     F.mapToFile(fnRoot+"_matrixF.raw",(Neigen+2)*(Nits+1),Nimg*2*Nangles*Nshifts);
     H.mapToFile(fnRoot+"_matrixH.raw",Nimg*2*Nangles*Nshifts,Neigen+2);
-
-    // Thread Manager
-    thMgr = new ThreadManager(Nthreads,this);
-    Image<double> dummy;
-    Matrix2D<double> dummyMatrix;
-    Matrix2D<double> dummyHblock;
-    dummyHblock.resizeNoCopy(2*Nangles*Nshifts,Neigen+2);
-    for (int n=0; n<Nthreads; ++n)
-    {
-    	Wnode.push_back(dummyMatrix);
-    	Hblock.push_back(dummyHblock);
-    	A.push_back(dummyMatrix);
-    	I.push_back(dummy);
-    	Iaux.push_back(dummy());
-    	MD.push_back(MDin);
-    }
 
     // Prepare buffer
     fileMutex = new MpiFileMutex(node);
@@ -202,19 +207,19 @@ void ProgImageRotationalPCA::flushHBuffer()
 // Apply T ================================================================
 void threadApplyT(ThreadArgument &thArg)
 {
-	ProgImageRotationalPCA *self=(ProgImageRotationalPCA *) thArg.workClass;
-	MpiNode *node=self->node;
-	FileTaskDistributor *taskDistributor=self->taskDistributor;
-	std::vector<size_t> &objId=self->objId;
-	MetaData &MD=self->MD[thArg.thread_id];
+    ProgImageRotationalPCA *self=(ProgImageRotationalPCA *) thArg.workClass;
+    MpiNode *node=self->node;
+    FileTaskDistributor *taskDistributor=self->taskDistributor;
+    std::vector<size_t> &objId=self->objId;
+    MetaData &MD=self->MD[thArg.thread_id];
 
-	Image<double> &I=self->I[thArg.thread_id];
-	MultidimArray<double> &Iaux=self->Iaux[thArg.thread_id];
-	Matrix2D<double> &Wnode=self->Wnode[thArg.thread_id];
-	Matrix2D<double> &Hblock=self->Hblock[thArg.thread_id];
-	Matrix2D<double> &A=self->A[thArg.thread_id];
-	Matrix2D<double> &H=self->H;
-	MultidimArray< unsigned char > &mask=self->mask;
+    Image<double> &I=self->I[thArg.thread_id];
+    MultidimArray<double> &Iaux=self->Iaux[thArg.thread_id];
+    Matrix2D<double> &Wnode=self->Wnode[thArg.thread_id];
+    Matrix2D<double> &Hblock=self->Hblock[thArg.thread_id];
+    Matrix2D<double> &A=self->A[thArg.thread_id];
+    Matrix2D<double> &H=self->H;
+    MultidimArray< unsigned char > &mask=self->mask;
     Wnode.initZeros(self->Npixels,MAT_XSIZE(H));
 
     FileName fnImg;
@@ -299,16 +304,16 @@ void threadApplyT(ThreadArgument &thArg)
 
 void ProgImageRotationalPCA::applyT()
 {
-    W.initZeros(Npixels,MAT_XSIZE(H));
+    Matrix2D<double> &Wnode_0=Wnode[0];
+    Wnode_0.initZeros(Npixels,MAT_XSIZE(H));
     taskDistributor->reset();
     thMgr->run(threadApplyT);
 
     // Gather all Wnodes from all threads
-    Matrix2D<double> &Wnode_0=Wnode[0];
     for (int n=1; n<Nthreads; ++n)
-    	Wnode_0+=Wnode[n];
+        Wnode_0+=Wnode[n];
     // and from all MPI processes
-    MPI_Allreduce(MATRIX2D_ARRAY(Wnode_0), MATRIX2D_ARRAY(W), MAT_XSIZE(W)*MAT_YSIZE(W),
+    MPI_Allreduce(MPI_IN_PLACE, MATRIX2D_ARRAY(Wnode_0), MAT_XSIZE(Wnode_0)*MAT_YSIZE(Wnode_0),
                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     if (node->isMaster())
         progress_bar(objId.size());
@@ -317,21 +322,21 @@ void ProgImageRotationalPCA::applyT()
 // Apply T ================================================================
 void threadApplyTt(ThreadArgument &thArg)
 {
-	ProgImageRotationalPCA *self=(ProgImageRotationalPCA *) thArg.workClass;
-	MpiNode *node=self->node;
-	FileTaskDistributor *taskDistributor=self->taskDistributor;
-	std::vector<size_t> &objId=self->objId;
-	MetaData &MD=self->MD[thArg.thread_id];
+    ProgImageRotationalPCA *self=(ProgImageRotationalPCA *) thArg.workClass;
+    MpiNode *node=self->node;
+    FileTaskDistributor *taskDistributor=self->taskDistributor;
+    std::vector<size_t> &objId=self->objId;
+    MetaData &MD=self->MD[thArg.thread_id];
 
-	Image<double> &I=self->I[thArg.thread_id];
-	MultidimArray<double> &Iaux=self->Iaux[thArg.thread_id];
-	Matrix2D<double> &A=self->A[thArg.thread_id];
-	Matrix2D<double> &Hblock=self->Hblock[thArg.thread_id];
-	Matrix2D<double> &H=self->H;
-	Matrix2D<double> &Wtranspose=self->Wtranspose;
-	MultidimArray< unsigned char > &mask=self->mask;
+    Image<double> &I=self->I[thArg.thread_id];
+    MultidimArray<double> &Iaux=self->Iaux[thArg.thread_id];
+    Matrix2D<double> &A=self->A[thArg.thread_id];
+    Matrix2D<double> &Hblock=self->Hblock[thArg.thread_id];
+    Matrix2D<double> &H=self->H;
+    Matrix2D<double> &Wtranspose=self->Wtranspose;
+    MultidimArray< unsigned char > &mask=self->mask;
 
-	const size_t unroll=8;
+    const size_t unroll=8;
     const size_t nmax=(MAT_XSIZE(Wtranspose)/unroll)*unroll;
 
     FileName fnImg;
@@ -421,6 +426,7 @@ void threadApplyTt(ThreadArgument &thArg)
 void ProgImageRotationalPCA::applyTt()
 {
     // Compute W transpose to accelerate memory access
+    Matrix2D<double> &W=Wnode[0];
     Wtranspose.resizeNoCopy(MAT_XSIZE(W),MAT_YSIZE(W));
     FOR_ALL_ELEMENTS_IN_MATRIX2D(Wtranspose)
     MAT_ELEM(Wtranspose,i,j) = MAT_ELEM(W,j,i);
@@ -512,6 +518,7 @@ void ProgImageRotationalPCA::run()
         copyHtoF(it+1);
     }
     H.clear();
+    clearHbuffer();
 
     // QR decomposition of matrix F
     int qrDim;
@@ -542,11 +549,16 @@ void ProgImageRotationalPCA::run()
         node->barrierWait(fnSync,2);
         H.mapToFile(fnRoot+"_matrixH.raw",MAT_XSIZE(F),qrDim);
     }
+    F.clear();
 
     // Apply T
     for (int n=0; n<Nthreads; ++n)
-    	Hblock[n].resizeNoCopy(2*Nangles*Nshifts,qrDim);
+        Hblock[n].resizeNoCopy(2*Nangles*Nshifts,qrDim);
     applyT();
+
+    // Free memory
+    H.clear();
+    Hblock.clear();
 
     // Apply SVD and extract the basis
     if (node->isMaster())
@@ -555,7 +567,7 @@ void ProgImageRotationalPCA::run()
         // SVD of W
         Matrix2D<double> U,V;
         Matrix1D<double> S;
-        svdcmp(W,U,S,V);
+        svdcmp(Wnode[0],U,S,V);
 
         // Keep the first Neigen images from U
         Image<double> I;
