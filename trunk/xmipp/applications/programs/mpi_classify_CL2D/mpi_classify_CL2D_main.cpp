@@ -31,7 +31,7 @@
 
 /* CL2DClass basics ---------------------------------------------------- */
 void CL2DClass::updateProjection(const MultidimArray<double> &I,
-                                    double corrCode, int idx)
+                                 double corrCode, int idx)
 {
     Pupdate+=I;
     nextListImg.push_back(idx);
@@ -296,7 +296,7 @@ double fastCorrentropy(const MultidimArray<double> &x, const MultidimArray<doubl
 
 //#define DEBUG
 void CL2DClass::fitBasic(MultidimArray<double> &I,
-                            double sigma, double &corrCode)
+                         double sigma, double &corrCode)
 {
     Matrix2D<double> ARS, ASR, R(3,3);
     ARS.initIdentity(3);
@@ -410,7 +410,7 @@ void CL2DClass::fitBasic(MultidimArray<double> &I,
 #undef DEBUG
 
 void CL2DClass::fit(MultidimArray<double> &I,
-                       double sigma, bool noMirror, double &corrCode, double &likelihood)
+                    double sigma, bool noMirror, double &corrCode, double &likelihood)
 {
     // Try this image
     MultidimArray<double> Iaux=I;
@@ -462,7 +462,7 @@ void CL2DClass::fit(MultidimArray<double> &I,
 /* Look for K neighbours in a list ----------------------------------------- */
 //#define DEBUG
 void CL2DClass::lookForNeighbours(const std::vector<CL2DClass *> listP,
-                                     double sigma, bool noMirror, int K)
+                                  double sigma, bool noMirror, int K)
 {
     int Q=listP.size();
     neighboursIdx.clear();
@@ -511,10 +511,10 @@ void CL2DClass::lookForNeighbours(const std::vector<CL2DClass *> listP,
 /* CL2D initialization ------------------------------------------------ */
 //#define DEBUG
 void CL2D::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
-                    double _PminSize, std::vector< MultidimArray<double> > _codes0, int _Ncodes0,
-                    bool _noMirror, bool _verbose, bool _corrSplit, bool _useCorrelation,
-                    bool _useFixedCorrentropy, bool _classicalMultiref,
-                    bool _fast, int rank)
+                      double _PminSize, std::vector< MultidimArray<double> > _codes0, int _Ncodes0,
+                      bool _noMirror, bool _verbose, bool _corrSplit, bool _useCorrelation,
+                      bool _useFixedCorrentropy, bool _classicalMultiref,
+                      bool _fast, int rank)
 {
     // Only "parent" worker prints
     if( rank == 0 )
@@ -910,7 +910,7 @@ void CL2D::write(const FileName &fnRoot, String iteration, bool final) const
 }
 
 void CL2D::lookNode(MultidimArray<double> &I, int idx, int oldnode,
-                  int &newnode, double &corrCode, double &likelihood)
+                    int &newnode, double &corrCode, double &likelihood)
 {
     MultidimArray<double> Ibackup;
     Ibackup=I;
@@ -1042,6 +1042,7 @@ void CL2D::run(const FileName &fnOut, int level, int rank)
     bool goOn=true;
 
     int mpi_size;
+    MetaData MDChanges;
 
     MPI_Comm_size( MPI_COMM_WORLD, &mpi_size );
 
@@ -1167,11 +1168,15 @@ void CL2D::run(const FileName &fnOut, int level, int rank)
 
         }
 
+        size_t idMdChanges;
         if( rank == 0 )
         {
             progress_bar(N);
-            std::cout << "\nAverage correlation with input vectors="
-            << corrCodeSum/N << std::endl;
+            double avgSimilarity=corrCodeSum/N;
+            std::cout << "\nAverage correlation with input vectors=" << avgSimilarity << std::endl;
+            idMdChanges=MDChanges.addObject();
+            MDChanges.setValue(MDL_ITER,n,idMdChanges);
+            MDChanges.setValue(MDL_CL2D_SIMILARITY,avgSimilarity,idMdChanges);
         }
 
         MPI_Allreduce( MATRIX1D_ARRAY(newAssignment), MATRIX1D_ARRAY(auxAssignment),
@@ -1180,14 +1185,18 @@ void CL2D::run(const FileName &fnOut, int level, int rank)
         newAssignment = auxAssignment;
 
         int Nchanges=0;
-        if (n>0)
+        if (n>1)
         {
             FOR_ALL_ELEMENTS_IN_MATRIX1D(newAssignment)
-            if (newAssignment(i)!=oldAssignment(i))
+            if (VEC_ELEM(newAssignment,i)!=VEC_ELEM(oldAssignment,i))
                 Nchanges++;
-            if( rank == 0 )
-                std::cout << "Number of assignment changes=" << Nchanges
-                << std::endl;
+        }
+        if( rank == 0 )
+        {
+            std::cout << "Number of assignment changes=" << Nchanges << std::endl;
+            MDChanges.setValue(MDL_CL2D_CHANGES,Nchanges,idMdChanges);
+            MDChanges.write(formatString("level_%02d@%s_iterations_info.xmd",level,fnOut.c_str()),MD_APPEND);
+            std::cout << "Writing on " << formatString("level_%02d@%s_iterations_info.xmd",level,fnOut.c_str()) << std::endl;
         }
 
         oldAssignment=newAssignment;
@@ -1365,8 +1374,8 @@ int CL2D::cleanEmptyNodes()
 /* Split ------------------------------------------------------------------- */
 //#define DEBUG
 void CL2D::splitNode(CL2DClass *node,
-                   CL2DClass *&node1, CL2DClass *&node2, int rank,
-                   std::vector<int> &finalAssignment) const
+                     CL2DClass *&node1, CL2DClass *&node2, int rank,
+                     std::vector<int> &finalAssignment) const
 {
     bool finish=true;
     std::vector<CL2DClass *> toDelete;
@@ -1681,11 +1690,7 @@ void CL2D::splitNode(CL2DClass *node,
                 if( rank == 0 && verbose)
                 {
                     std::cout
-                    << "  Split iteration " << it << std::endl
-                    << "  node1 Nq=" << node1->currentListImg.size()
-                    << std::endl
-                    << "  node2 Nq=" << node2->currentListImg.size()
-                    << std::endl;
+                    << "  Split iteration " << it << std::endl;
                 }
 
                 if (it>=2 || (!corrSplit && it>=1))
@@ -1788,15 +1793,15 @@ void CL2D::splitFirstNode(int rank)
 /* MPI constructor --------------------------------------------------------- */
 ProgClassifyCL2D::ProgClassifyCL2D(int argc, char** argv)
 {
-	node=new MpiNode(argc,argv);
+    node=new MpiNode(argc,argv);
     if (!node->isMaster())
-    	verbose=0;
+        verbose=0;
 }
 
 /* Destructor -------------------------------------------------------------- */
 ProgClassifyCL2D::~ProgClassifyCL2D()
 {
-	delete node;
+    delete node;
 }
 
 /* VQPrm I/O --------------------------------------------------------------- */
@@ -1822,8 +1827,8 @@ void ProgClassifyCL2D::readParams()
 
 void ProgClassifyCL2D::show() const
 {
-	if (!verbose)
-		return;
+    if (!verbose)
+        return;
     std::cout
     << "Input images:            " << fnSel               << std::endl
     << "Output images:           " << fnOut               << std::endl
@@ -1844,16 +1849,16 @@ void ProgClassifyCL2D::show() const
 
 void ProgClassifyCL2D::defineParams()
 {
-	addUsageLine("Divide a selfile into the desired number of classes. ");
-	addUsageLine("+Vector quantization with correntropy and a probabilistic criterion is used for creating the subdivisions.");
-	addUsageLine("+Correlation and the standard maximum correlation criterion can also be used and normally produce good results.");
-	addUsageLine("+Correntropy and the probabilistic clustering criterion are recommended for images with very low SNR or cases in which the correlation have clear difficulties to converge.");
-	addUsageLine("+");
-	addUsageLine("+The algorithm is fully described in [[http://www.ncbi.nlm.nih.gov/pubmed/20362059][this article]].");
-	addUsageLine("+");
-	addUsageLine("+An interesting convergence criterion is the number of images changing classes between iterations. If a low percentage of the image change class, then the clustering is rather stable and clear.");
-	addUsageLine("+If many images change class, it is likely that there is not enough SNR to determine so many classes. It is recommended to reduce the number of classes");
-	addSeeAlsoLine("mpi_image_sort");
+    addUsageLine("Divide a selfile into the desired number of classes. ");
+    addUsageLine("+Vector quantization with correntropy and a probabilistic criterion is used for creating the subdivisions.");
+    addUsageLine("+Correlation and the standard maximum correlation criterion can also be used and normally produce good results.");
+    addUsageLine("+Correntropy and the probabilistic clustering criterion are recommended for images with very low SNR or cases in which the correlation have clear difficulties to converge.");
+    addUsageLine("+");
+    addUsageLine("+The algorithm is fully described in [[http://www.ncbi.nlm.nih.gov/pubmed/20362059][this article]].");
+    addUsageLine("+");
+    addUsageLine("+An interesting convergence criterion is the number of images changing classes between iterations. If a low percentage of the image change class, then the clustering is rather stable and clear.");
+    addUsageLine("+If many images change class, it is likely that there is not enough SNR to determine so many classes. It is recommended to reduce the number of classes");
+    addSeeAlsoLine("mpi_image_sort");
     addParamsLine("    -i <selfile>             : Selfile with the input images");
     addParamsLine("   [--oroot <root=class>]    : Output rootname, by default, class");
     addParamsLine("   [--iter <N=20>]           : Number of iterations");
