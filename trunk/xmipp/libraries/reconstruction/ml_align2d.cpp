@@ -397,7 +397,7 @@ void ProgML2D::produceSideInfo2()
 
     //Some vectors and matrixes initialization
     int num_output_refs = model.n_ref * factor_nref;
-    std::cerr << "DEBUG_JM: num_output_refs: " << num_output_refs << std::endl;
+    //std::cerr << "DEBUG_JM: num_output_refs: " << num_output_refs << std::endl;
     refw.resize(num_output_refs);
     refw2.resize(num_output_refs);
     refwsc2.resize(num_output_refs);
@@ -532,8 +532,8 @@ void ProgML2D::produceSideInfo2()
             MDref.unionAll(MDaux);
         }
 
-        std::cerr << "DEBUG_JM: MDref: " << std::endl;
-        MDref.write(std::cerr);
+        //std::cerr << "DEBUG_JM: MDref: " << std::endl;
+        //MDref.write(std::cerr);
     }
 
     //--------Setup for Docfile -----------
@@ -1306,14 +1306,14 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
     // This will speed-up things because we will find Pmax probably right away,
     // and this will make the if-statement that checks SIGNIFICANT_WEIGHT_LOW
     // effective right from the start
-    std::cerr << "DEBUG_JM: doThreadExpectationSingleImageRefno: " << std::endl;
+    //std::cerr << "DEBUG_JM: doThreadExpectationSingleImageRefno: " << std::endl;
     FOR_ALL_THREAD_REFNO()
     {
 
         int output_refno = mygroup * model.n_ref + refno;
-        std::cerr << "DEBUG_JM:           refno: " << refno << std::endl;
-        std::cerr << "DEBUG_JM:     model.n_ref: " <<    model.n_ref << std::endl;
-        std::cerr << "DEBUG_JM:    output_refno: " <<    output_refno << std::endl;
+//        std::cerr << "DEBUG_JM:           refno: " << refno << std::endl;
+//        std::cerr << "DEBUG_JM:     model.n_ref: " <<    model.n_ref << std::endl;
+//        std::cerr << "DEBUG_JM:    output_refno: " <<    output_refno << std::endl;
         refw[output_refno] = refw2[output_refno] = refw_mirror[output_refno] = 0.;
         local_maxweight = -99.e99;
         local_mindiff = 99.e99;
@@ -1779,7 +1779,7 @@ void ProgML2D::expectation()
             Xi2 = img().sum2();
             Mimg = img();
 
-#define DEBUG_JM2
+//#define DEBUG_JM2
 #ifdef DEBUG_JM2
 
             //if (iter >= 2 && current_image == myFirstImg)
@@ -1978,7 +1978,7 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
 
             double avg, stddev, min, max;
             wsum_Mref[refno].computeStats(avg, stddev, min, max);
-            std::cerr << formatString("DEBUG_JM: avg %f, stddev %f, min %f, max %f", avg, stddev, min, max) <<std::endl;
+            //std::cerr << formatString("DEBUG_JM: avg %f, stddev %f, min %f, max %f", avg, stddev, min, max) <<std::endl;
             local_model.WsumMref[refno]() = wsum_Mref[refno];
             //local_model.Iref[refno]() *= 1/weight;//fixme: sumwsc2[refno];
             local_model.sumw_allrefs += sumw[refno];
@@ -2139,7 +2139,7 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
 
 void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 {
-    std::cerr << "DEBUG_JM: writeOutputFiles, type: " << outputType <<std::endl;
+//std::cerr << "DEBUG_JM: writeOutputFiles, type: " << outputType <<std::endl;
     FileName fn_tmp, fn_prefix;
     Image<double> Itmp;
     MetaData MDo;
@@ -2224,7 +2224,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         else
             fn_tmp = formatString("%s_%s_refs.stk", rootStr, prefixStr);
 
-        std::cerr << "DEBUG_JM: MDref.size(): " << MDref.size() << std::endl;
+        //std::cerr << "DEBUG_JM: MDref.size(): " << MDref.size() << std::endl;
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
             objId = __iter.objId;
