@@ -451,12 +451,12 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 				if (actionsbt.getText().equals(State.Autopick.toString())) {
 					ppicker.classify(family, micrograph);
 					ppicker.loadAutomaticParticles(micrograph);
-					getFamilyData().setState(State.Correct);
+					setState(State.Correct);
 					canvas.repaint();
 				}
 				else if(actionsbt.getText().equals(State.Correct.toString())) 
 				{
-					getFamilyData().setState(State.ReadOnly);
+					setState(State.ReadOnly);
 					saveChanges();
 					ppicker.persistAutomaticParticles(getFamilyData());
 					ppicker.correct(family, micrograph);
@@ -470,6 +470,13 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 				actionsbt.setText(getFamilyData().getAction());
 			}
 		});
+	}
+	
+	private void setState(State state)
+	{
+		getFamilyData().setState(state);
+		micrographsmd.fireTableDataChanged();
+		setChanged(true);
 	}
 	
 	MicrographFamilyData getFamilyData()
