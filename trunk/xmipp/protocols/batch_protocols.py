@@ -383,7 +383,7 @@ class XmippProjectGUI():
             labels = [('Run', '%s_%s' % (run['protocol_name'], run['run_name'])),
                       ('\nCreated', run['init']),('   Modified', run['last_modified']), 
                       ('\nScript ', run['script']),('\nDirectory', prot.WorkingDir),
-                      ('\nSummary', summary)      ]
+                      ('\nSummary', "\n"+summary)      ]
             self.detailsText.config(state=tk.NORMAL)
             self.detailsText.delete(1.0, tk.END)
             for k, v in labels:
