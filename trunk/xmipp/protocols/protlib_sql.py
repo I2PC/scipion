@@ -333,13 +333,13 @@ class XmippProtocolDb(SqliteDb):
     def setIteration(self,iter):
         self.iter=iter
 
-    def getRunState(self):
+    def getRunState(self,cursor):
         sqlCommand = "SELECT run_state FROM %(TableRuns)s WHERE run_id = %(run_id)d" % self.sqlDict
         cursor.execute(sqlCommand)
         return cursor.fetchone()[0]
 
     def checkRunOk(self, cursor):
-        return self.getRunState() == SqliteDb.RUN_STARTED 
+        return self.getRunState(cursor) == SqliteDb.RUN_STARTED 
         
     def insertStep(self, command,
                            verifyfiles=[],
