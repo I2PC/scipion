@@ -840,7 +840,7 @@ void CL2D::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
 #undef DEBUG
 
 /* CL2D write --------------------------------------------------------- */
-void CL2D::write(const FileName &fnRoot, bool final) const
+void CL2D::write(const FileName &fnRoot, String iteration, bool final) const
 {
     int Q=P.size();
     int Nimg=SFv.size();
@@ -866,6 +866,7 @@ void CL2D::write(const FileName &fnRoot, bool final) const
         SFout.setValue(MDL_IMAGE_CLASS_COUNT,(int)VEC_ELEM(Nq,q), id);
     }
     FileName fnSFout=fnRoot+".sel";
+    SFout.setComment((String)"Iteration "+iteration);
     SFout.write(fnSFout);
 
     // Replicate the input data into an aligned stack
@@ -1036,7 +1037,7 @@ void CL2D::run(const FileName &fnOut, int level, int rank)
     auxAssignment.resize(N);
 
     MultidimArray<double> aux_matrix;
-    int n=0;
+    int n=1;
 
     bool goOn=true;
 
@@ -1050,11 +1051,6 @@ void CL2D::run(const FileName &fnOut, int level, int rank)
         {
             std::cout << "Iteration " << n << " ...\n";
             std::cerr << "Iteration " << n << " ...\n";
-            if (verbose)
-                for (int q=0; q<Q; q++)
-                    std::cout << "Before q=" << q
-                    << " Nq=" << P[q]->currentListImg.size()
-                    << std::endl;
             init_progress_bar(N);
         }
 
@@ -1198,14 +1194,6 @@ void CL2D::run(const FileName &fnOut, int level, int rank)
 
         transferUpdates();
 
-        if (rank == 0 && verbose)
-            for (int q=0; q<Q; q++)
-            {
-                std::cout << "After q=" << q << " Nq="
-                << P[q]->currentListImg.size()
-                << std::endl;
-            }
-
         // Check if there are empty nodes
         bool smallNodes;
         do
@@ -1348,7 +1336,7 @@ void CL2D::run(const FileName &fnOut, int level, int rank)
 
         currentAssignment=newAssignment;
         if (rank==0)
-            write(fnOut+"_level_"+integerToString(level,2));
+            write(fnOut+"_level_"+integerToString(level,2),integerToString(n));
 
         if (n>0 && Nchanges<0.005*N && Q>1 || n>=(Niter-1))
             goOn=false;
@@ -1815,18 +1803,20 @@ ProgClassifyCL2D::~ProgClassifyCL2D()
 void ProgClassifyCL2D::readParams()
 {
     fnSel=getParam("-i");
-    fnOut=getParam("-o");
-    fnCodes0=getParam("--codesSel0");
+    fnOut=getParam("--oroot");
+    fnCodes0=getParam("--ref0");
     Niter=getIntParam("--iter");
     Nneighbours=getIntParam("--neigh");
-    Ncodes0=getIntParam("--codes0");
-    Ncodes=getIntParam("--codes");
+    Ncodes0=getIntParam("--nref0");
+    Ncodes=getIntParam("--nref");
     PminSize=getDoubleParam("--minsize");
     noMirror=checkParam("--noMirror");
     corrSplit=checkParam("--corrSplit");
     fast=!checkParam("--dontDoFast");
-    useCorrelation=checkParam("--useCorrelation");
-    useFixedCorrentropy=checkParam("--useFixedCorrentropy");
+    String aux;
+    aux=getParam("--distance");
+    useCorrelation=aux=="correlation";
+    useFixedCorrentropy=aux=="fixedCorrentropy";
     classicalMultiref=checkParam("--classicalMultiref");
 }
 
@@ -1864,22 +1854,23 @@ void ProgClassifyCL2D::defineParams()
 	addUsageLine("+An interesting convergence criterion is the number of images changing classes between iterations. If a low percentage of the image change class, then the clustering is rather stable and clear.");
 	addUsageLine("+If many images change class, it is likely that there is not enough SNR to determine so many classes. It is recommended to reduce the number of classes");
 	addSeeAlsoLine("mpi_image_sort");
-    addParamsLine("    -i <selfile>           : Selfile with the input images");
-    addParamsLine("   [-o <root=class>]       : Output rootname, by default, class");
-    addParamsLine("   [--iter <N=20>]          : Number of iterations");
-    addParamsLine("   [--codes0 <N=2>]         : Initial number of code vectors");
-    addParamsLine("   [--codesSel0 <selfile=\"\">]: Selfile with initial code vectors");
-    addParamsLine("   [--codes <N=16>]         : Final number of code vectors");
+    addParamsLine("    -i <selfile>             : Selfile with the input images");
+    addParamsLine("   [--oroot <root=class>]    : Output rootname, by default, class");
+    addParamsLine("   [--iter <N=20>]           : Number of iterations");
+    addParamsLine("   [--nref0 <N=2>]           : Initial number of code vectors");
+    addParamsLine("or  --ref0 <selfile=\"\">    : Selfile with initial code vectors");
+    addParamsLine("   [--nref <N=16>]           : Final number of code vectors");
     addParamsLine("   [--neigh+ <N=4>]          : Number of neighbour code vectors");
-    addParamsLine("                           : Set -1 for all");
+    addParamsLine("                             : Set -1 for all");
     addParamsLine("   [--minsize+ <N=20>]       : Percentage minimum node size");
     addParamsLine("   [--noMirror+]             : Do not check mirrors");
     addParamsLine("   [--corrSplit+]            : Split by correlation instead of randomly");
     addParamsLine("   [--dontDoFast+]           : Don't do suboptimal, fast calculations");
-    addParamsLine("   [--useCorrelation]       : Instead of correntropy");
-    addParamsLine("   [--useFixedCorrentropy]  : Instead of correntropy. Fixed correntropy corrects the variance of the noise by the number of images assigned to the class.");
+    addParamsLine("   [--distance <type=correntropy>]       : Distance type");
+    addParamsLine("            where <type>");
+    addParamsLine("                       correntropy correlation fixedCorrentropy: Fixed correntropy corrects the variance of the noise by the number of images assigned to the class.");
     addParamsLine("   [--classicalMultiref]    : Instead of enhanced clustering");
-    addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL2D` -i images.stk --codes 256 -o class --iter 10");
+    addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL2D` -i images.stk --nref 256 --oroot class --iter 10");
 }
 
 void ProgClassifyCL2D::produceSideInfo(int rank)
@@ -1942,7 +1933,7 @@ void ProgClassifyCL2D::runWorker(int rank)
     if (rank==0)
     {
         std::sort(vq.P.begin(),vq.P.end(),SDescendingClusterSort());
-        vq.write(fnOut,true);
+        vq.write(fnOut,"Final",true);
     }
 }
 
