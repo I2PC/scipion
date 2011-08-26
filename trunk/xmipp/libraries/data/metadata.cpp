@@ -558,7 +558,7 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
                     target2 = (char *) _memmem(target+1, size - (target - map), "\ndata_", 6);
 
                     if (target2==NULL)//truncate file at target
-                        ftruncate(fd, target - map);
+                        ftruncate(fd, target - map+1);
                     else//copy file from target2 to target and truncate
                     {
                         memmove(target,target2, (map + size) - target2);
