@@ -52,9 +52,11 @@ public:
     double shift_step;
     /** Maximum number of images */
     int maxNimgs;
+    /** Number of threads */
+    int Nthreads;
 public:
     // Input metadata
-    MetaData MD;
+    std::vector<MetaData> MD;
     // Number of images
     size_t Nimg;
     // Number of angles
@@ -81,23 +83,25 @@ public:
     Matrix2D<double> F;
 public:
     // Input image
-    Image<double> I;
+    std::vector< Image<double> > I;
     // Rotated and shifted image
-    MultidimArray<double> Iaux;
+    std::vector< MultidimArray<double> > Iaux;
     // Geometric transformation
-    Matrix2D<double> A;
+    std::vector< Matrix2D<double> > A;
     // H block
-    Matrix2D<double> Hblock;
+    std::vector< Matrix2D<double> > Hblock;
     // W
     Matrix2D<double> W;
     // W node
-    Matrix2D<double> Wnode;
+    std::vector< Matrix2D<double> > Wnode;
     // W transpose
     Matrix2D<double> Wtranspose;
     // Mask
     MultidimArray< unsigned char > mask;
     // FileTaskDistributor
     FileTaskDistributor *taskDistributor;
+    // Thread Manager
+    ThreadManager *thMgr;
     // Vector of object ids
     std::vector<size_t> objId;
 public:
@@ -120,7 +124,7 @@ public:
     void produceSideInfo();
 
     /** Write to H buffer */
-    void writeToHBuffer(double *dest);
+    void writeToHBuffer(int idx, double *dest);
 
     /** Flush buffer */
     void flushHBuffer();

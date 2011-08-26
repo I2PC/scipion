@@ -38,6 +38,7 @@ ProgImageRotationalPCA::ProgImageRotationalPCA(int argc, char **argv)
         verbose=0;
     fileMutex=NULL;
     taskDistributor=NULL;
+    thMgr = NULL;
 }
 
 // MPI destructor
@@ -45,6 +46,7 @@ ProgImageRotationalPCA::~ProgImageRotationalPCA()
 {
     delete fileMutex;
     delete taskDistributor;
+    delete thMgr;
     delete node;
     int nmax=Hbuffer.size();
     for (int n=0; n<nmax; n++)
@@ -62,6 +64,7 @@ void ProgImageRotationalPCA::readParams()
     psi_step = getDoubleParam("--psi_step");
     shift_step = getDoubleParam("--shift_step");
     maxNimgs = getIntParam("--maxImages");
+    Nthreads = getIntParam("--thr");
 }
 
 // Show ====================================================================
@@ -77,6 +80,7 @@ void ProgImageRotationalPCA::show()
     << "Psi step:            " << psi_step << std::endl
     << "Max shift change:    " << max_shift_change << " step: " << shift_step << std::endl
     << "Max images:          " << maxNimgs << std::endl
+    << "Number of threads:   " << Nthreads << std::endl
     ;
 }
 
@@ -92,26 +96,26 @@ void ProgImageRotationalPCA::defineParams()
     addParamsLine("  [--psi_step <ang=1>]         : Step in psi in degrees");
     addParamsLine("  [--shift_step <r=1>]         : Step in shift in pixels");
     addParamsLine("  [--maxImages <N=-1>]         : Maximum number of images");
-    addExampleLine("Typical use:",false);
-    addExampleLine("xmipp_mpi_image_rotational_pca -i images.stk --oroot images_eigen");
+    addParamsLine("  [--thr <N=1>]                : Number of threads");
+    addExampleLine("Typical use (4 nodes with 4 processors):",false);
+    addExampleLine("mpirun -np 4 `which xmipp_mpi_image_rotational_pca` -i images.stk --oroot images_eigen --thr 4");
 }
 
 // Produce side info =====================================================
 void ProgImageRotationalPCA::produceSideInfo()
 {
     time_config();
-
-    MD.read(fnIn);
+    MetaData MDin(fnIn);
     if (maxNimgs>0)
     {
         MetaData MDaux;
-        MDaux.randomize(MD);
-        MD.selectPart(MDaux,0,maxNimgs);
+        MDaux.randomize(MDin);
+        MDin.selectPart(MDaux,0,maxNimgs);
     }
-    Nimg=MD.size();
+    Nimg=MDin.size();
     int Ydim, Zdim;
     size_t Ndim;
-    ImgSize(MD, Xdim, Ydim, Zdim, Ndim);
+    ImgSize(MDin, Xdim, Ydim, Zdim, Ndim);
     Nangles=floor(360.0/psi_step);
     Nshifts=(2*max_shift_change+1)/shift_step;
     Nshifts*=Nshifts;
@@ -145,24 +149,40 @@ void ProgImageRotationalPCA::produceSideInfo()
         MPI_Bcast(&MAT_ELEM(W,0,0),MAT_XSIZE(W)*MAT_YSIZE(W),MPI_DOUBLE,0,MPI_COMM_WORLD);
     F.mapToFile(fnRoot+"_matrixF.raw",(Neigen+2)*(Nits+1),Nimg*2*Nangles*Nshifts);
     H.mapToFile(fnRoot+"_matrixH.raw",Nimg*2*Nangles*Nshifts,Neigen+2);
-    Hblock.resizeNoCopy(2*Nangles*Nshifts,Neigen+2);
+
+    // Thread Manager
+    thMgr = new ThreadManager(Nthreads,this);
+    Image<double> dummy;
+    Matrix2D<double> dummyMatrix;
+    Matrix2D<double> dummyHblock;
+    dummyHblock.resizeNoCopy(2*Nangles*Nshifts,Neigen+2);
+    for (int n=0; n<Nthreads; ++n)
+    {
+    	Wnode.push_back(dummyMatrix);
+    	Hblock.push_back(dummyHblock);
+    	A.push_back(dummyMatrix);
+    	I.push_back(dummy);
+    	Iaux.push_back(dummy());
+    	MD.push_back(MDin);
+    }
 
     // Prepare buffer
     fileMutex = new MpiFileMutex(node);
     for (int n=0; n<HbufferMax; n++)
-        Hbuffer.push_back(new double[MAT_XSIZE(Hblock)*MAT_YSIZE(Hblock)]);
+        Hbuffer.push_back(new double[MAT_XSIZE(dummyHblock)*MAT_YSIZE(dummyHblock)]);
 
     // Construct a FileTaskDistributor
-    MD.findObjects(objId);
+    MDin.findObjects(objId);
     size_t Nimgs=objId.size();
     taskDistributor=new FileTaskDistributor(Nimgs,XMIPP_MAX(1,Nimgs/(5*node->size)),node);
 }
 
 // Buffer =================================================================
-void ProgImageRotationalPCA::writeToHBuffer(double *dest)
+void ProgImageRotationalPCA::writeToHBuffer(int idx, double *dest)
 {
     int n=HbufferDestination.size();
-    memcpy(Hbuffer[n],&MAT_ELEM(Hblock,0,0),MAT_XSIZE(Hblock)*MAT_YSIZE(Hblock)*sizeof(double));
+    const Matrix2D<double> &Hblock_idx=Hblock[idx];
+    memcpy(Hbuffer[n],&MAT_ELEM(Hblock_idx,0,0),MAT_XSIZE(Hblock_idx)*MAT_YSIZE(Hblock_idx)*sizeof(double));
     HbufferDestination.push_back(dest);
     if (n==(HbufferMax-1))
         flushHBuffer();
@@ -171,26 +191,38 @@ void ProgImageRotationalPCA::writeToHBuffer(double *dest)
 void ProgImageRotationalPCA::flushHBuffer()
 {
     int nmax=HbufferDestination.size();
+    const Matrix2D<double> &Hblock_0=Hblock[0];
     fileMutex->lock();
     for (int n=0; n<nmax; ++n)
-        memcpy(HbufferDestination[n],Hbuffer[n],MAT_XSIZE(Hblock)*MAT_YSIZE(Hblock)*sizeof(double));
+        memcpy(HbufferDestination[n],Hbuffer[n],MAT_XSIZE(Hblock_0)*MAT_YSIZE(Hblock_0)*sizeof(double));
     fileMutex->unlock();
     HbufferDestination.clear();
 }
 
 // Apply T ================================================================
-void ProgImageRotationalPCA::applyT()
+void threadApplyT(ThreadArgument &thArg)
 {
-    W.initZeros(Npixels,MAT_XSIZE(H));
-    Wnode.initZeros(Npixels,MAT_XSIZE(H));
+	ProgImageRotationalPCA *self=(ProgImageRotationalPCA *) thArg.workClass;
+	MpiNode *node=self->node;
+	FileTaskDistributor *taskDistributor=self->taskDistributor;
+	std::vector<size_t> &objId=self->objId;
+	MetaData &MD=self->MD[thArg.thread_id];
+
+	Image<double> &I=self->I[thArg.thread_id];
+	MultidimArray<double> &Iaux=self->Iaux[thArg.thread_id];
+	Matrix2D<double> &Wnode=self->Wnode[thArg.thread_id];
+	Matrix2D<double> &Hblock=self->Hblock[thArg.thread_id];
+	Matrix2D<double> &A=self->A[thArg.thread_id];
+	Matrix2D<double> &H=self->H;
+	MultidimArray< unsigned char > &mask=self->mask;
+    Wnode.initZeros(self->Npixels,MAT_XSIZE(H));
 
     FileName fnImg;
     const int unroll=8;
     const int jmax=(MAT_XSIZE(Wnode)/unroll)*unroll;
 
-    taskDistributor->reset();
     size_t first, last;
-    if (node->isMaster())
+    if (node->isMaster() && thArg.thread_id==0)
     {
         std::cerr << "Applying T ...\n";
         init_progress_bar(objId.size());
@@ -206,7 +238,7 @@ void ProgImageRotationalPCA::applyT()
 
             // Locate the corresponding index in Matrix H
             // and copy a block in memory to speed up calculations
-            size_t Hidx=idx*2*Nangles*Nshifts;
+            size_t Hidx=idx*2*self->Nangles*self->Nshifts;
             memcpy(&MAT_ELEM(Hblock,0,0),&MAT_ELEM(H,Hidx,0),MAT_XSIZE(Hblock)*MAT_YSIZE(Hblock)*sizeof(double));
 
             // For each rotation, shift and mirror
@@ -218,13 +250,13 @@ void ProgImageRotationalPCA::applyT()
                     mI.selfReverseX();
                     mI.setXmippOrigin();
                 }
-                for (double psi=0; psi<360; psi+=psi_step)
+                for (double psi=0; psi<360; psi+=self->psi_step)
                 {
                     rotation2DMatrix(psi,A,true);
-                    for (double y=-max_shift_change; y<=max_shift_change; y+=shift_step)
+                    for (double y=-self->max_shift_change; y<=self->max_shift_change; y+=self->shift_step)
                     {
                         MAT_ELEM(A,1,2)=y;
-                        for (double x=-max_shift_change; x<=max_shift_change; x+=shift_step, ++block_idx)
+                        for (double x=-self->max_shift_change; x<=self->max_shift_change; x+=self->shift_step, ++block_idx)
                         {
                             MAT_ELEM(A,0,2)=x;
 
@@ -260,10 +292,23 @@ void ProgImageRotationalPCA::applyT()
                 }
             }
         }
-        if (node->isMaster())
+        if (node->isMaster() && thArg.thread_id==0)
             progress_bar(last);
     }
-    MPI_Allreduce(MATRIX2D_ARRAY(Wnode), MATRIX2D_ARRAY(W), MAT_XSIZE(W)*MAT_YSIZE(W),
+}
+
+void ProgImageRotationalPCA::applyT()
+{
+    W.initZeros(Npixels,MAT_XSIZE(H));
+    taskDistributor->reset();
+    thMgr->run(threadApplyT);
+
+    // Gather all Wnodes from all threads
+    Matrix2D<double> &Wnode_0=Wnode[0];
+    for (int n=1; n<Nthreads; ++n)
+    	Wnode[0]+=Wnode[n];
+    // and from all MPI processes
+    MPI_Allreduce(MATRIX2D_ARRAY(Wnode_0), MATRIX2D_ARRAY(W), MAT_XSIZE(W)*MAT_YSIZE(W),
                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     if (node->isMaster())
         progress_bar(objId.size());
@@ -288,14 +333,19 @@ void ProgImageRotationalPCA::applyTt()
         std::cerr << "Applying Tt ...\n";
         init_progress_bar(objId.size());
     }
+    Matrix2D<double> &Hblock_0=Hblock[0];
+    Matrix2D<double> &A_0=A[0];
+    Image<double> &I_0=I[0];
+    MultidimArray<double> &Iaux_0=Iaux[0];
+    MetaData &MD_0=MD[0];
     while (taskDistributor->getTasks(first, last))
     {
         for (size_t idx=first; idx<=last; ++idx)
         {
             // Read image
-            MD.getValue(MDL_IMAGE,fnImg,objId[idx]);
-            I.read(fnImg);
-            MultidimArray<double> &mI=I();
+            MD_0.getValue(MDL_IMAGE,fnImg,objId[idx]);
+            I_0.read(fnImg);
+            MultidimArray<double> &mI=I[0]();
 
             // For each rotation and shift
             int block_idx=0;
@@ -308,22 +358,22 @@ void ProgImageRotationalPCA::applyTt()
                 }
                 for (double psi=0; psi<360; psi+=psi_step)
                 {
-                    rotation2DMatrix(psi,A,true);
+                    rotation2DMatrix(psi,A_0,true);
                     for (double y=-max_shift_change; y<=max_shift_change; y+=shift_step)
                     {
-                        MAT_ELEM(A,1,2)=y;
+                        MAT_ELEM(A_0,1,2)=y;
                         for (double x=-max_shift_change; x<=max_shift_change; x+=shift_step, ++block_idx)
                         {
-                            MAT_ELEM(A,0,2)=x;
+                            MAT_ELEM(A_0,0,2)=x;
 
                             // Rotate and shift image
-                            applyGeometry(1,Iaux,mI,A,IS_INV,true);
+                            applyGeometry(1,Iaux_0,mI,A_0,IS_INV,true);
 
                             // Update Hblock
-                            for (int j=0; j<MAT_XSIZE(Hblock); j++)
+                            for (int j=0; j<MAT_XSIZE(Hblock_0); j++)
                             {
                                 double dotproduct=0;
-                                const double *ptrIaux=MULTIDIM_ARRAY(Iaux);
+                                const double *ptrIaux=MULTIDIM_ARRAY(Iaux_0);
                                 unsigned char *ptrMask=&DIRECT_MULTIDIM_ELEM(mask,0);
                                 const double *ptrWtranspose=&MAT_ELEM(Wtranspose,j,0);
                                 for (size_t n=0; n<nmax; n+=unroll, ptrIaux+=unroll, ptrMask+=unroll)
@@ -348,7 +398,7 @@ void ProgImageRotationalPCA::applyTt()
                                 for (size_t n=nmax; n<MAT_XSIZE(Wtranspose); ++n, ++ptrMask, ++ptrIaux)
                                     if (*ptrMask)
                                         dotproduct+=(*ptrIaux)*(*ptrWtranspose++);
-                                MAT_ELEM(Hblock,block_idx,j)=dotproduct;
+                                MAT_ELEM(Hblock_0,block_idx,j)=dotproduct;
                             }
                         }
                     }
@@ -358,7 +408,7 @@ void ProgImageRotationalPCA::applyTt()
             // Locate the corresponding index in Matrix H
             // and copy block to disk
             size_t Hidx=idx*2*Nangles*Nshifts;
-            writeToHBuffer(&MAT_ELEM(H,Hidx,0));
+            writeToHBuffer(0,&MAT_ELEM(H,Hidx,0));
         }
         if (node->isMaster())
             progress_bar(last);
@@ -480,7 +530,8 @@ void ProgImageRotationalPCA::run()
     }
 
     // Apply T
-    Hblock.resizeNoCopy(2*Nangles*Nshifts,qrDim);
+    for (int n=0; n<Nthreads; ++n)
+    	Hblock[n].resizeNoCopy(2*Nangles*Nshifts,qrDim);
     applyT();
 
     // Apply SVD and extract the basis
