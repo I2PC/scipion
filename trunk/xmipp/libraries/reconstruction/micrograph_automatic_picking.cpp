@@ -1814,7 +1814,7 @@ void ProgMicrographAutomaticPicking::defineParams()
     addParamsLine("  --mode <mode>                 : Operation mode");
     addParamsLine("         where <mode>");
     addParamsLine("                    try              : Try to autoselect within the training phase.");
-    addParamsLine("                    train <posfile>  : posfile contains the coordinates of manually picked particles");
+    addParamsLine("                    train <posfile=\"\">  : posfile contains the coordinates of manually picked particles");
     addParamsLine("                                     : <rootname>_auto_feature_vectors.txt contains the particle structure created by this program when used in automatic selection mode");
     addParamsLine("                                     : <rootname>_false_positives.xmd contains the list of false positives among the automatically picked particles");
     addParamsLine("                    autoselect  : Autoselect");
@@ -1853,13 +1853,16 @@ void ProgMicrographAutomaticPicking::run()
     {
         MetaData MD;
         // Insert all true positives
-        MD.read(fn_train);
-        int x, y;
-        FOR_ALL_OBJECTS_IN_METADATA(MD)
+        if (fn_train!="")
         {
-            MD.getValue(MDL_XINT, x, __iter.objId);
-            MD.getValue(MDL_YINT, y, __iter.objId);
-            m.add_coord(x, y, 0, 1);
+            MD.read(fn_train);
+            int x, y;
+            FOR_ALL_OBJECTS_IN_METADATA(MD)
+            {
+                MD.getValue(MDL_XINT, x, __iter.objId);
+                MD.getValue(MDL_YINT, y, __iter.objId);
+                m.add_coord(x, y, 0, 1);
+            }
         }
 
         // Insert all false positives
