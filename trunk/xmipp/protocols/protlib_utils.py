@@ -238,6 +238,8 @@ def runJob(log,
         retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
         if log:
             printLog("Process returned with code %d" % retcode,log)
+            if retcode!=0:
+                raise xmipp.XmippError("Process returned with code %d" % retcode)
     except OSError, e:
         raise xmipp.XmippError("Execution failed %s, command: %s" % (e, command))
 
