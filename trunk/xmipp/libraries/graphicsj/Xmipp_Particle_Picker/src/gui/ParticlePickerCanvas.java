@@ -3,7 +3,6 @@ package gui;
 import ij.gui.ImageCanvas;
 
 import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
@@ -177,7 +176,7 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 			g2.setStroke(dashedst);
 			List<AutomaticParticle> autoparticles = mfdata.getAutomaticParticles();
 			for (int i = 0; i < autoparticles.size(); i ++)
-				if(!autoparticles.get(i).isDeleted())
+				if(!autoparticles.get(i).isDeleted() || autoparticles.get(i).getCost() < 0)
 					drawShape(g2, autoparticles.get(i), x0, y0, radius, index + i);
 		}
 	

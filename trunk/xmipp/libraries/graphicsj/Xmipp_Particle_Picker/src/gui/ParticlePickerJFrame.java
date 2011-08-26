@@ -456,6 +456,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 				{
 					getFamilyData().setState(State.ReadOnly);
 					saveChanges();
+					ppicker.persistAutomaticParticles(getFamilyData());
 					ppicker.correct(family, micrograph);
 					actionsbt.setVisible(false);
 					

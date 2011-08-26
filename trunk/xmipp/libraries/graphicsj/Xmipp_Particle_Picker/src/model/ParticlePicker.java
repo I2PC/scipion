@@ -217,7 +217,7 @@ public class ParticlePicker {
 						f.getColor().getRGB(), id);
 				md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, f.getSize(),
 						id);
-				md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, f.getStep()
+				md.setValueString(MDLabel.MDL_PICKING_FAMILY_STATE, f.getStep()
 						.toString(), id);
 			}
 			md.write(filename);
@@ -249,7 +249,7 @@ public class ParticlePicker {
 				rgb = md.getValueInt(MDLabel.MDL_PICKING_COLOR, id);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
 				step = Step.valueOf(md.getValueString(
-						MDLabel.MDL_ASSOCIATED_IMAGE1, id));
+						MDLabel.MDL_PICKING_FAMILY_STATE, id));
 				family = new Family(gname, new Color(rgb), size, step);
 				families.add(family);
 			}
@@ -278,15 +278,18 @@ public class ParticlePicker {
 		String xmd = Micrograph.getIFilename();
 		micrographs.clear();
 		Micrograph micrograph;
-		String ctf, filename;
+		String ctf = null, filename;
 		try {
 			MetaData md = new MetaData(xmd);
+			boolean existsctf = md.containsLabel(MDLabel.MDL_PSD_ENHANCED);
 			long[] ids = md.findObjects();
 			for (long id : ids) {
 
 				filename = getMicrographPath(md
 						.getValueString(MDLabel.MDL_IMAGE, id));
-				ctf = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
+				System.out.println(filename);
+				if(existsctf)
+					ctf = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
 				micrograph = new Micrograph(filename, ctf);
 				loadMicrographData(micrograph);
 				micrographs.add(micrograph);
@@ -310,7 +313,7 @@ public class ParticlePicker {
 			String fname;
 			Family family;
 			Step step;
-			State action;
+			State state;
 			MicrographFamilyData mfd;
 			List<MicrographFamilyData> mfdatas = new ArrayList<MicrographFamilyData>();
 			if (!new File(filename).exists())
@@ -319,10 +322,10 @@ public class ParticlePicker {
 			MetaData md2;
 			for (long id : md.findObjects()) {
 				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
-				step = Step.valueOf(md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, id));
-				action = State.valueOf(md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id));
+				step = Step.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
+				state = State.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, id));
 				family = getFamily(fname);
-				mfd = new MicrographFamilyData(micrograph, family, step, action);
+				mfd = new MicrographFamilyData(micrograph, family, step, state);
 				md2 = new MetaData(fname + "@" + filename);
 				for (long id2 : md2.findObjects()) {
 
@@ -357,9 +360,9 @@ public class ParticlePicker {
 					id = md.addObject();
 					md.setValueString(MDLabel.MDL_PICKING_FAMILY, mfd
 							.getFamily().getName(), id);
-					md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, mfd
+					md.setValueString(MDLabel.MDL_PICKING_FAMILY_STATE, mfd
 							.getStep().toString(), id);
-					md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, mfd.getState().toString(), id);
+					md.setValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, mfd.getState().toString(), id);
 				}
 				md.write("families@" + m.getOFilename());
 				for (MicrographFamilyData mfd : m.getFamiliesData()) {
@@ -394,9 +397,9 @@ public class ParticlePicker {
 			MetaData md;
 			Family f;
 			String filename = micrograph.getAutoOFilename();
+			System.out.println(filename);
 			if (!new File(filename).exists())
 				return;
-
 			String[] blocks = MetaData.getBlocksInMetaDataFile(filename);
 			for (String blockname : blocks) {
 				md = new MetaData(blockname + "@" + filename);
@@ -406,20 +409,11 @@ public class ParticlePicker {
 					x = md.getValueInt(MDLabel.MDL_XINT, id);
 					y = md.getValueInt(MDLabel.MDL_YINT, id);
 					cost = md.getValueDouble(MDLabel.MDL_COST, id);
-					if(cost < 0)
-						continue;
-//					try
-//					{
-//					deleted = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1)? false:true;
-//					}
-//					catch(Exception e)
-//					{
-//						deleted = false;
-//					}
 					f = getFamily(blockname);
 					if (f == null)
 						throw new IllegalArgumentException("Unknown family "
 								+ blockname);
+					deleted = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1)? false:true;					
 					particle = new AutomaticParticle(x, y, f, micrograph, cost, deleted);
 					micrograph.addAutomaticParticle(particle);
 				}
@@ -506,7 +500,21 @@ public class ParticlePicker {
 	}
 
 	public void correct(Family family, Micrograph micrograph) {
-		// TODO Auto-generated method stub
+		String args;
+		args = String
+				.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train",
+						micrograph.getFilename(),// -i
+						family.getSize(), // --particleSize
+						family.getOutputRoot(),// --model
+						micrograph.getOutputRoot()// --outputRoot
+						);
+		if(micrograph.getFamilyData(family).getManualParticles().size() > 0)
+			args += family.getName() + "@" + micrograph.getOFilename();
+		if (isFastMode())
+			args += " --fast";
+		if (isIncore())
+			args += " --in_core";
+		executeProgram("xmipp_micrograph_automatic_picking", args);
 		
 	}
 

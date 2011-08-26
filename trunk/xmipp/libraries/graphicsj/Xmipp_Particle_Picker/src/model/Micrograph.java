@@ -34,6 +34,8 @@ public class Micrograph {
 		this.aoutputfname = ParticlePicker.getOutputPath(name + "_auto" + ext);
 		this.ctf = ctf;
 	}
+	
+
 	public Micrograph(String filename, String ctf, List<MicrographFamilyData> mfd) {
 		this.filename = filename;
 		this.name = getName(filename);
@@ -93,6 +95,8 @@ public class Micrograph {
 	{
 		if(ctficon == null)
 		{
+			if(ctf == null || !(new File(ctf).exists()))
+				return new ImageIcon();
 			ImagePlus ip = new ImagePlus(ctf);
 			Image i = ip.getImage().getScaledInstance(110, 110, Image.SCALE_SMOOTH);
 			ctficon = new ImageIcon(i);
@@ -132,7 +136,7 @@ public class Micrograph {
 				if (p.contains(x, y)) 
 					return p;
 			for(AutomaticParticle p: mfd.getAutomaticParticles())
-				if (p.contains(x, y) && !p.isDeleted()) 
+				if (p.contains(x, y) && !p.isDeleted() || p.getCost() < 0) 
 					return p;
 		}
 		return null;
@@ -181,6 +185,8 @@ public class Micrograph {
 	public boolean isPickingAvailable(Family f) {
 			return getFamilyData(f).isPickingAvailable();
 	}
+	
+	
 
 
 }
