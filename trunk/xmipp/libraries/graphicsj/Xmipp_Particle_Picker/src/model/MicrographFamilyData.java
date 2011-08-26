@@ -7,11 +7,10 @@ public class MicrographFamilyData {
 
 	private List<Particle> particles;
 	private Family family;
-	private Step step;
+	private Step mystep;
 	private List<AutomaticParticle> autoparticles;
 	private Micrograph micrograph;
 	private State state;
-	private List<AutomaticParticle> wrongautoparticles;
 
 	public MicrographFamilyData(Micrograph micrograph, Family family) {
 		this.family = family;
@@ -19,13 +18,13 @@ public class MicrographFamilyData {
 		this.autoparticles = new ArrayList<AutomaticParticle>();
 		this.micrograph = micrograph;
 		state = State.Available;
-		step = Step.Available;
+		mystep = Step.Available;
 	}
 
 	public MicrographFamilyData(Micrograph micrograph, Family family,
 			Step step, State state) {
 		this(micrograph, family);
-		this.step = step;
+		this.mystep = step;
 		this.state = state;
 	}
 
@@ -34,6 +33,8 @@ public class MicrographFamilyData {
 	}
 
 	public void setState(State state) {
+		if(state == State.Correct)
+			this.setStep(Step.Supervised);
 		this.state = state;
 	}
 
@@ -42,11 +43,11 @@ public class MicrographFamilyData {
 	}
 
 	public Step getStep() {
-		return step;
+		return mystep;
 	}
 
 	public void setStep(Step step) {
-		this.step = step;
+		this.mystep = step;
 	}
 
 	public List<Particle> getManualParticles() {
@@ -65,19 +66,14 @@ public class MicrographFamilyData {
 
 		particles.add(p);
 		family.particles++;
-		if (step == Step.Available)
-			step = family.getStep();
-		if (step == Step.Manual)
+		if (mystep == Step.Available)
+			mystep = family.getStep();
+		if (mystep == Step.Manual)
 			state = State.Manual;
 
 	}
 
-	public void addWrongAutoParticle(AutomaticParticle p) {
-		if (p.getCost() > 0)
-			throw new IllegalArgumentException();
-		wrongautoparticles.add(p);
-	}
-
+	
 	public void removeParticle(Particle p) {
 		if (p == null)
 			throw new IllegalArgumentException(
@@ -88,7 +84,7 @@ public class MicrographFamilyData {
 			particles.remove(p);
 			family.particles--;
 			if (particles.size() == 0)
-				step = Step.Available;
+				state = State.Available;
 		}
 	}
 
@@ -103,35 +99,36 @@ public class MicrographFamilyData {
 
 	public boolean isPickingAvailable() {
 		if (family.getStep() == Step.Supervised) {
-			if (step == Step.Available)
+			if (mystep == Step.Available)
 				return false;
-			if (step == Step.Manual)
+			if (mystep == Step.Manual)
 				return false;
-			if (step == Step.Supervised)
+			if (mystep == Step.Supervised)
 				if (state != State.Correct)
 					return false;
 			return true;
 		}
 		if (family.getStep() == Step.Manual) {
-			if (step == Step.Available)
+			if (mystep == Step.Available)
 				return true;
-			if (step == Step.Manual)
+			if (mystep == Step.Manual)
 				return true;
-			if (step == Step.Supervised)
+			if (mystep == Step.Supervised)
 				return false;
 		}
 		return true;
 	}
 
 	public boolean isActionAvailable() {
+		
 		if (family.getStep() == Step.Manual)
 			return false;
 		if (family.getStep() == Step.Supervised) {
-			if (step == Step.Available)
+			if (mystep == Step.Available)
 				return (state == State.Available);
-			if (step == Step.Manual)
+			if (mystep == Step.Manual)
 				return false;
-			if (step == Step.Supervised) {
+			if (mystep == Step.Supervised) {
 				if (state == State.Manual || state == State.ReadOnly)
 					return false;
 			}
@@ -140,9 +137,9 @@ public class MicrographFamilyData {
 	}
 
 	public String getAction() {
-		if (step == Step.Manual)
+		if (mystep == Step.Manual)
 			return null;
-		if (step == Step.Available)
+		if (mystep == Step.Available)
 			return State.Autopic.toString();
 		return state.toString();
 	}

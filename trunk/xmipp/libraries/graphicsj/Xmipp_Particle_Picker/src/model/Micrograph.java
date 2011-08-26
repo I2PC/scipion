@@ -136,7 +136,7 @@ public class Micrograph {
 				if (p.contains(x, y)) 
 					return p;
 			for(AutomaticParticle p: mfd.getAutomaticParticles())
-				if (p.contains(x, y) && !p.isDeleted() || p.getCost() < 0) 
+				if (p.contains(x, y) && !p.isDeleted() && p.getCost() >= 0) 
 					return p;
 		}
 		return null;

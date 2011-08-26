@@ -502,7 +502,7 @@ public class ParticlePicker {
 	public void correct(Family family, Micrograph micrograph) {
 		String args;
 		args = String
-				.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train",
+				.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train ",
 						micrograph.getFilename(),// -i
 						family.getSize(), // --particleSize
 						family.getOutputRoot(),// --model

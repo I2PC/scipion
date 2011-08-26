@@ -89,7 +89,7 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 	 * Updates particle position and repaints. Sets dragged to null at the end
 	 */
 	public void mouseReleased(MouseEvent e) {
-		if (!frame.getFamilyData().isPickingAvailable() || frame.getTool() != Tool.PICKER) {
+		if (frame.getTool() != Tool.PICKER) {
 			super.mouseReleased(e);
 			return;
 		}
@@ -176,7 +176,7 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 			g2.setStroke(dashedst);
 			List<AutomaticParticle> autoparticles = mfdata.getAutomaticParticles();
 			for (int i = 0; i < autoparticles.size(); i ++)
-				if(!autoparticles.get(i).isDeleted() || autoparticles.get(i).getCost() < 0)
+				if(!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= 0)
 					drawShape(g2, autoparticles.get(i), x0, y0, radius, index + i);
 		}
 	

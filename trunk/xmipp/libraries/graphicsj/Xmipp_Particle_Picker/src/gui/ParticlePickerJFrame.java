@@ -447,10 +447,8 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 				if (actionsbt.getText().equals(State.Autopic.toString())) {
 					ppicker.classify(family, micrograph);
 					ppicker.loadAutomaticParticles(micrograph);
-					canvas.repaint();
 					getFamilyData().setState(State.Correct);
-					
-					
+					canvas.repaint();
 				}
 				else if(actionsbt.getText().equals(State.Correct.toString())) 
 				{
@@ -461,7 +459,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 					actionsbt.setVisible(false);
 					
 				}
-				actionsbt.setText(getFamilyData().getState().toString());
+				actionsbt.setText(getFamilyData().getAction());
 			}
 		});
 	}
