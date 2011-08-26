@@ -286,6 +286,13 @@ class XmippProjectDb(SqliteDb):
         steps_total = self.cur.execute(sqlCommand).fetchone()[0]
         steps_done = self.cur.execute(sqlCommand + ' AND finish IS NOT NULL').fetchone()[0]
         return (steps_done, steps_total)
+
+    def getRunStateByName(self,protocol_name, runName):
+        run=self.selectRunByName(protocol_name, runName)
+        self.sqlDict['run_id'] = run['run_id']
+        sqlCommand = "SELECT run_state FROM %(TableRuns)s WHERE run_id = %(run_id)d" % self.sqlDict
+        self.cur.execute(sqlCommand)
+        return self.cur.fetchone()[0]
      
 class XmippProtocolDb(SqliteDb):
     def __init__(self, protocol, isMainLoop=True):
@@ -325,6 +332,14 @@ class XmippProtocolDb(SqliteDb):
 
     def setIteration(self,iter):
         self.iter=iter
+
+    def getRunState(self):
+        sqlCommand = "SELECT run_state FROM %(TableRuns)s WHERE run_id = %(run_id)d" % self.sqlDict
+        cursor.execute(sqlCommand)
+        return cursor.fetchone()[0]
+
+    def checkRunOk(self, cursor):
+        return self.getRunState() == SqliteDb.RUN_STARTED 
         
     def insertStep(self, command,
                            verifyfiles=[],
@@ -496,12 +511,6 @@ class XmippProtocolDb(SqliteDb):
             result = (NO_MORE_GAPS, None)
         return result
     
-    def checkRunOk(self, cursor):
-        sqlCommand = "SELECT run_state FROM %(TableRuns)s WHERE run_id = %(run_id)d" % self.sqlDict
-        cursor.execute(sqlCommand)
-        runState = cursor.fetchone()[0]
-        return runState == SqliteDb.RUN_STARTED 
-        
     def countStepGaps(self, cursor):
         #Select first the next step id in main loop to limit the gaps
         sqlCommand = """SELECT COALESCE(MIN(step_id), 99999) 

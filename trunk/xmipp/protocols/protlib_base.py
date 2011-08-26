@@ -35,8 +35,6 @@ from protlib_sql import SqliteDb, XmippProjectDb, XmippProtocolDb
 from protlib_utils import XmippLog, loadModule, reportError, getScriptPrefix, failStr
 from protlib_filesystem import deleteFiles
 
-
-
 class XmippProject():
     def __init__(self, projectDir=None):
         if not projectDir:
@@ -226,6 +224,10 @@ class XmippProtocol(object):
     def getProjectId(self):
         pass
         #self.project = project.getId(launchDict['Projection Matching'],runName,)
+
+    def getRunState(self):
+        return self.project.projectDb.getRunStateByName(self.Name, self.RunName)
+    
     def validateBase(self):
         '''Validate if the protocols is ready to be run
         in this function will be implemented all common

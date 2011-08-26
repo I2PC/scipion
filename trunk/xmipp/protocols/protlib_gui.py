@@ -621,9 +621,15 @@ class ProtocolGUI(BasicGUI):
                 def getEntries(var, onlyDir=False):
                     cwd = os.getcwd()
                     pattern = os.path.join(cwd, var.tkvar.get()) + '*'
-                    entries = [os.path.relpath(p, cwd) for p in glob.glob(pattern)]
-                    if onlyDir:
-                        entries = [e for e in entries if os.path.isdir(e)]
+                    entries = []
+                    for p in glob.glob(pattern):
+                        p = os.path.relpath(p, cwd)
+                        if os.path.isdir(p):
+                            p+="/"
+                            entries.append(p)
+                        else:
+                            if not onlyDir:
+                                entries.append(p)
                     return entries
                 
                 def getRuns(var):
