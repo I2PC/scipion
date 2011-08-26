@@ -94,12 +94,12 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
         double K1=1/sqrt(2*PI*w1);
         for (int i=0; i<YSIZE(__filter->maskFourierd); i++)
         {
-        	double wy;
+            double wy;
             FFT_IDX2DIGFREQ(i,YSIZE(piece),wy);
             double wy2=wy*wy;
             for (int j=0; j<XSIZE(__filter->maskFourierd); j++)
             {
-            	double wx;
+                double wx;
                 FFT_IDX2DIGFREQ(j,XSIZE(piece),wx);
                 double w2=wy2+wx*wx;
                 DIRECT_A2D_ELEM(__filter->maskFourierd,i,j)*=K1*exp(K2*w2);
@@ -1841,10 +1841,11 @@ void ProgMicrographAutomaticPicking::run()
     if (incore)
         autoPicking->readMicrograph();
     FileName familyName=fn_model.removeDirectories();
+    FileName fnAutoParticles=familyName+"@"+fn_root+"_auto.pos";
     if (mode == "autoselect" || mode=="try")
     {
         autoPicking->automaticallySelectParticles();
-        autoPicking->saveAutoParticles(familyName+"@"+fn_root+"_auto.pos");
+        autoPicking->saveAutoParticles(fnAutoParticles);
         if (mode=="try")
             autoPicking->saveAutoFeatureVectors(fn_root + "_auto_feature_vectors_"+familyName+".txt");
     }
@@ -1862,22 +1863,22 @@ void ProgMicrographAutomaticPicking::run()
         }
 
         // Insert all false positives
-        FileName fnFalsePositives = fn_root + "_false_positives.xmd";
-        if (exists(fnFalsePositives))
+        MD.read(fnAutoParticles);
+        if (MD.size() > 0)
         {
-            MD.read(familyName+"@"+fnFalsePositives);
-            if (MD.size() > 0)
+            autoPicking->loadAutoFeatureVectors(
+                fn_root + "_auto_feature_vectors_"+familyName+".txt");
+            int idx;
+            FOR_ALL_OBJECTS_IN_METADATA(MD)
             {
-                autoPicking->loadAutoFeatureVectors(
-                    fn_root + "_auto_feature_vectors_"+familyName+".txt");
-                int idx;
-                FOR_ALL_OBJECTS_IN_METADATA(MD)
+                int enabled;
+                MD.getValue(MDL_ENABLED,enabled,__iter.objId);
+                if (enabled==-1)
                 {
                     MD.getValue(MDL_IDX, idx, __iter.objId);
                     autoPicking->__auto_candidates[idx].status = 0;
                     autoPicking->__auto_candidates[idx].cost = -1;
-                    autoPicking->__rejected_particles.push_back(
-                        autoPicking->__auto_candidates[idx]);
+                    autoPicking->__rejected_particles.push_back(autoPicking->__auto_candidates[idx]);
                 }
             }
         }
