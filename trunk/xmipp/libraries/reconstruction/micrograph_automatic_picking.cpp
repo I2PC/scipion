@@ -1871,18 +1871,18 @@ void ProgMicrographAutomaticPicking::run()
         {
             autoPicking->loadAutoFeatureVectors(
                 fn_root + "_auto_feature_vectors_"+familyName+".txt");
-            int idx;
+            int idx=0;
             FOR_ALL_OBJECTS_IN_METADATA(MD)
             {
                 int enabled;
                 MD.getValue(MDL_ENABLED,enabled,__iter.objId);
                 if (enabled==-1)
                 {
-                    MD.getValue(MDL_IDX, idx, __iter.objId);
                     autoPicking->__auto_candidates[idx].status = 0;
                     autoPicking->__auto_candidates[idx].cost = -1;
                     autoPicking->__rejected_particles.push_back(autoPicking->__auto_candidates[idx]);
                 }
+                ++idx;
             }
         }
         autoPicking->learnParticles(size / 2);
