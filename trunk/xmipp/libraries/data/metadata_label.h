@@ -68,6 +68,8 @@ enum MDLabel
     MDL_BLOCK, ///< Current block number (for incremental EM)
     MDL_CELLX, ///< Cell location for crystals
     MDL_CELLY, ///< Cell location for crystals
+    MDL_CL2D_CHANGES, ///< Number of changes between iterations
+    MDL_CL2D_SIMILARITY, ///< Average cross-correlation for the image (double)
     MDL_CLASSIFICATION_DATA, ///< Data vector for classification (vector double)
     MDL_CLASSIFICATION_DATA_SIZE, ///< Size of data vectors for classification (int)
     MDL_CLASSIFICATION_INTRACLASS_DISTANCE, ///< Average intraclass distance (double)
@@ -162,7 +164,7 @@ enum MDLabel
     MDL_LL, ///< contribution of an image to log-likelihood value
     MDL_MAPTOPOLOGY, ///< Map topology (KerDenSOM, ...)
     MDL_MASK, ///< Name of a mask associated to image
-    MDL_MAXCC, ///< Cross-correlation for the image (double)
+    MDL_MAXCC, ///< Maximum cross-correlation for the image (double)
     MDL_MAX, ///<maximum value (double)
     MDL_MICROGRAPH, ///< Name of a micrograph (std::string)
     MDL_MICROGRAPH_TILTED, ///< Name of the corresponding tilted micrograph (std::string)
@@ -558,6 +560,8 @@ private:
         MDL::addLabel(MDL_BLOCK, LABEL_INT, "blockNumber");
         MDL::addLabel(MDL_CELLX, LABEL_INT, "cellX");
         MDL::addLabel(MDL_CELLY, LABEL_INT, "cellY");
+        MDL::addLabel(MDL_CL2D_CHANGES, LABEL_INT, "cl2d_changes");
+        MDL::addLabel(MDL_CL2D_SIMILARITY, LABEL_DOUBLE, "cl2dsimilarity");
         MDL::addLabel(MDL_CLASSIFICATION_DATA, LABEL_VECTOR, "ClassificationData");
         MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_INT, "ClassificationDataSize");
         MDL::addLabel(MDL_CLASSIFICATION_INTRACLASS_DISTANCE, LABEL_DOUBLE, "ClassificationIntraclassDistance");
