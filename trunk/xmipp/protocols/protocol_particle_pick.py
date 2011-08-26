@@ -41,10 +41,10 @@ class ProtParticlePicking(XmippProtocol):
         
         total_manual = 0
         N_manual = 0
+        Nblock={}
         for posfile in glob.glob(self.WorkingDir+"/*.pos"):
             blockList=xmipp.getBlocksInMetaDataFile(posfile)
             manual=0
-            Nblock={}
             for block in blockList:
                 mD=xmipp.MetaData(block+"@"+posfile);
                 Nparticles=mD.size()
