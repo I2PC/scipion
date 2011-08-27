@@ -37,6 +37,7 @@ ProgImageRotationalPCA::ProgImageRotationalPCA(int argc, char **argv)
     if (!node->isMaster())
         verbose=0;
     fileMutex=NULL;
+    threadMutex=NULL;
     taskDistributor=NULL;
     thMgr = NULL;
 }
@@ -46,6 +47,7 @@ ProgImageRotationalPCA::~ProgImageRotationalPCA()
 {
 	clearHbuffer();
     delete fileMutex;
+    delete threadMutex;
     delete taskDistributor;
     delete thMgr;
     delete node;
@@ -173,6 +175,7 @@ void ProgImageRotationalPCA::produceSideInfo()
 
     // Prepare buffer
     fileMutex = new MpiFileMutex(node);
+    threadMutex = new Mutex();
     for (int n=0; n<HbufferMax; n++)
         Hbuffer.push_back(new double[MAT_XSIZE(dummyHblock)*MAT_YSIZE(dummyHblock)]);
 
@@ -185,12 +188,15 @@ void ProgImageRotationalPCA::produceSideInfo()
 // Buffer =================================================================
 void ProgImageRotationalPCA::writeToHBuffer(int idx, double *dest)
 {
+	threadMutex->lock();
     int n=HbufferDestination.size();
     const Matrix2D<double> &Hblock_idx=Hblock[idx];
+    // COSS std::cout << "Copying block " << idx << " into " << n << "(" << Hbuffer.size() << ")" << std::endl;
     memcpy(Hbuffer[n],&MAT_ELEM(Hblock_idx,0,0),MAT_XSIZE(Hblock_idx)*MAT_YSIZE(Hblock_idx)*sizeof(double));
     HbufferDestination.push_back(dest);
     if (n==(HbufferMax-1))
         flushHBuffer();
+	threadMutex->unlock();
 }
 
 void ProgImageRotationalPCA::flushHBuffer()
@@ -416,6 +422,8 @@ void threadApplyTt(ThreadArgument &thArg)
             // Locate the corresponding index in Matrix H
             // and copy block to disk
             size_t Hidx=idx*2*self->Nangles*self->Nshifts;
+            // COSS std::cout << "idx=" << idx << " Hidx=" << Hidx << std::endl;
+            // COSS std::cout << "H shape " << MAT_YSIZE(H) << " x " << MAT_XSIZE(H) << std::endl;
             self->writeToHBuffer(thArg.thread_id,&MAT_ELEM(H,Hidx,0));
         }
         if (node->isMaster() && thArg.thread_id==0)

@@ -77,6 +77,8 @@ public:
     static const int HbufferMax=20;
     // Mpi file lock
     MpiFileMutex *fileMutex;
+    // Thread mutex
+    Mutex *threadMutex;
     // SVD matrix
     Matrix2D<double> H;
     // SVD matrix
