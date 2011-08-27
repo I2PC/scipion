@@ -326,8 +326,8 @@ protected:
             if (!(doDelete = operation == "delete"))//copy or move
             {
                 path = getParam("--file", 1);
-                if (!exists(path))
-                    if (mkpath(path, 0755) != 0)
+                if (!path.exists())
+                    if (path.makePath() != 0)
                         REPORT_ERROR(ERR_IO_NOPERM, (String)"Cannot create directory "+ path);
             }
             label = MDL::str2Label(getParam("--file", doDelete ? 1 : 2));

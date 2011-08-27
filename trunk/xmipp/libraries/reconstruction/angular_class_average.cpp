@@ -140,7 +140,7 @@ void ProgAngularClassAverage::run()
     if (do_add)
     {
         FileName fn_tmp=fn_out+".doc";
-        if (exists(fn_tmp))
+        if (fn_tmp.exists())
         {
             MetaData DFaux = DF;
             // Don't do any fancy merging or sorting because those functions are really slow...
@@ -753,7 +753,7 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
         // Write class average to disc
         //fn_tmp.compose(dirno,fn,oext);
         fn_tmp = fn + "." + oext;
-        if (do_add && exists(fn_tmp) )
+        if (do_add && fn_tmp.exists() )
         {
             old.read(fn_tmp);
             w_old = old.weight();
@@ -776,7 +776,7 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
         if (write_selfile)
         {
             fn_tmp.compose(fn,dirno,"sel");
-            if (do_add && exists(fn_tmp) )
+            if (do_add && fn_tmp.exists() )
             {
                 SF.merge(fn_tmp);
                 MetaData SFaux;
@@ -871,25 +871,25 @@ void ProgAngularClassAverage::finalWriteToDisc()
 
     // Write selfiles containing all classes
     fn_tmp=fn_out+"_classes.sel";
-    if (do_add && exists(fn_tmp))
+    if (do_add && fn_tmp.exists())
         SFclasses.merge(fn_tmp);
     auxSF.sort(SFclasses,MDL_IMAGE);
     auxSF.write(fn_tmp);
     if (do_split)
     {
         fn_tmp=fn_out1+"_classes.sel";
-        if (do_add && exists(fn_tmp))
+        if (do_add && fn_tmp.exists())
             SFclasses1.merge(fn_tmp);
         SFclasses1.write(fn_tmp);
         fn_tmp=fn_out2+"_classes.sel";
-        if (do_add && exists(fn_tmp))
+        if (do_add && fn_tmp.exists())
             SFclasses2.merge(fn_tmp);
         SFclasses2.write(fn_tmp);
     }
 
     // Write docfiles with angles and weights of all classes
     fn_tmp=fn_out+"_classes.doc";
-    if (do_add && exists(fn_tmp))
+    if (do_add && fn_tmp.exists())
     {
         MetaData MDaux;
         MDaux.read(fn_tmp);
@@ -900,7 +900,7 @@ void ProgAngularClassAverage::finalWriteToDisc()
     if (do_split)
     {
         fn_tmp=fn_out1+"_classes.doc";
-        if (do_add && exists(fn_tmp))
+        if (do_add && fn_tmp.exists())
         {
             MetaData MDaux;
             MDaux.read(fn_tmp);
@@ -909,7 +909,7 @@ void ProgAngularClassAverage::finalWriteToDisc()
         }
         SFclasses1.write(fn_tmp);
         fn_tmp=fn_out2+"_classes.doc";
-        if (do_add && exists(fn_tmp))
+        if (do_add && fn_tmp.exists())
         {
             MetaData MDaux;
             MDaux.read(fn_tmp);
@@ -923,7 +923,7 @@ void ProgAngularClassAverage::finalWriteToDisc()
     if (nr_iter > 0)
     {
         fn_tmp=fn_out+"_realigned.doc";
-        if (do_add && exists(fn_tmp))
+        if (do_add && fn_tmp.exists())
             DF.merge(fn_tmp);
         DF.write(fn_tmp);
     }

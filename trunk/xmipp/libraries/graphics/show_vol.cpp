@@ -76,7 +76,7 @@ void ShowVol::readFile(const FileName &_fn,
     }
     else slices = 'Z';
 
-    wait_until_stable_size(aux_fn);
+    aux_fn.waitUntilStableSize();
     V.read(aux_fn);
     setCaption(fn.c_str());
     annotateTime(aux_fn);

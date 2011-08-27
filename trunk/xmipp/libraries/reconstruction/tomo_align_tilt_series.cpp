@@ -887,13 +887,13 @@ void ProgTomographAlignment::produceSideInfo()
     }
 
     // Check if there are transformations already calculated
-    if (exists(fnRoot+"_transformations.txt"))
+    FileName fn_tmp = fnRoot+"_transformations.txt";
+    if (fn_tmp.exists())
     {
         std::ifstream fhIn;
-        fhIn.open((fnRoot+"_transformations.txt").c_str());
+        fhIn.open(fn_tmp.c_str());
         if (!fhIn)
-            REPORT_ERROR(ERR_IO_NOTEXIST,(std::string)"Cannot open "+
-                         fnRoot+"_transformations.txt");
+            REPORT_ERROR(ERR_IO_NOTEXIST,(String)"Cannot open "+ fn_tmp);
         int linesRead=0;
         while (!fhIn.eof())
         {
@@ -947,7 +947,7 @@ void ProgTomographAlignment::produceSideInfo()
                     {
                         affineTransformations[i][i+1].clear();
                         affineTransformations[i+1][i].clear();
-                        writeTransformations(fnRoot+"_transformations.txt");
+                        writeTransformations(fn_tmp);
                     }
                 }
             }
@@ -1626,7 +1626,8 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
 
 void ProgTomographAlignment::generateLandmarkSet()
 {
-    if (!exists(fnRoot+"_landmarks.txt"))
+  FileName fn_tmp = fnRoot+"_landmarks.txt";
+    if (!fn_tmp.exists())
     {
         pthread_t * th_ids = new pthread_t[numThreads];
         ThreadGenerateLandmarkSetParams * th_args=

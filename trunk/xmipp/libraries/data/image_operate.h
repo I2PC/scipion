@@ -60,7 +60,7 @@ private:
     Image<double> img2;
     bool isValue;
     double value;
-    String file_or_value;
+    FileName file_or_value;
 protected:
     /// Define parameters
     void defineParams();

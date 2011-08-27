@@ -421,7 +421,7 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
     if (found!=String::npos)
         fileName = fileName.substr(0, found) ;
 
-    hFile->exist = exists(fileName);
+    hFile->exist = fileName.exists();
     hFile->mode = mode;
 
     String wmChar;
@@ -463,7 +463,7 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
         }
         else if (ext_name.contains("raw"))
         {
-            if (mode != WRITE_READONLY || exists(fileName.addExtension("inf")) )
+            if (mode != WRITE_READONLY || fileName.addExtension("inf").exists() )
             {
                 headName = fileName.addExtension("inf");
                 ext_name = "inf";

@@ -93,7 +93,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
     fn_inf  = _fn_root + ".inf";
 
     // Read histogram
-    if (exists(fn_his))
+    if (fn_his.exists())
     {
         std::ifstream fh_his(fn_his.c_str());
         if (fh_his)
@@ -109,7 +109,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
     }
 
     // Read errors
-    if (exists(fn_err))
+    if (fn_err.exists())
     {
         std::ifstream fh_err(fn_err.c_str());
         if (fh_err)
@@ -125,7 +125,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
     }
 
     // Read inf file
-    if (exists(fn_inf))
+    if (fn_inf.exists())
     {
         std::ifstream fh_inf(fn_inf.c_str());
         if (fh_inf)
@@ -145,7 +145,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
     }
 
     // Read codevectors
-    if (exists(fn_class))
+    if (fn_class.exists())
     {
         std::ifstream fh_class(fn_class.c_str());
         if (fh_class)

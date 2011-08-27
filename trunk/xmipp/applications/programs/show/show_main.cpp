@@ -181,7 +181,7 @@ protected:
         for (StringVector::const_iterator it = files.begin(); it < files.end(); ++it)
         {
             fn = *it;
-            if (!existsTrim(fn))
+            if (!fn.existsTrim())
             {
                 switch (mode)
                 {

@@ -81,7 +81,7 @@ void ProgAngularGCARCommonLines::produceSideInfo()
 {
 	if (node->isMaster())
 	{
-		createEmptyFileWithGivenLength(fnRoot+"_matrix.raw",100*100*sizeof(double));
+		FileName(fnRoot+"_matrix.raw").createEmptyFileWithGivenLength(100*100*sizeof(double));
 	}
 	node->barrierWait();
 	W.mapToFile(fnRoot+"_matrix.raw",100,100);

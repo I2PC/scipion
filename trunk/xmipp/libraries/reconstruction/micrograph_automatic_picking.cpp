@@ -1458,7 +1458,7 @@ void Classification_model::initNaiveBayesEnsemble(
     const std::vector<MultidimArray<double> > &features,
     const Matrix1D<double> &probs, int discreteLevels, double penalization,
     int numberOfClassifiers, double samplingFeatures,
-    double samplingIndividuals, const std::string &newJudgeCombination)
+    double samplingIndividuals, const String &newJudgeCombination)
 {
     __bayesEnsembleNet = new EnsembleNaiveBayes(features, probs,
                          discreteLevels, numberOfClassifiers, samplingFeatures,
@@ -1637,7 +1637,7 @@ std::ostream & operator <<(std::ostream &_out, const Classification_model &_m)
 /* Read -------------------------------------------------------------------- */
 std::istream & operator >>(std::istream &_in, Classification_model &_m)
 {
-    std::string dummy;
+    String dummy;
     int classNo, vec_size;
     _in >> dummy;
     _in >> dummy >> _m.__micrographs_number;
@@ -1677,12 +1677,12 @@ std::istream & operator >>(std::istream &_in, Classification_model &_m)
 
 void AutoParticlePicking::loadModels(const FileName &fn_root)
 {
-    FileName fn_training=fn_root + "_training.txt";
-    if (!exists(fn_training))
+    FileName fn_training = fn_root + "_training.txt";
+    if (!fn_training.exists())
         return;
 
     // Load training vectors
-    std::string dummy;
+    String dummy;
     std::ifstream fh_training;
     fh_training.open(fn_training.c_str());
     if (!fh_training)

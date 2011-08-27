@@ -851,8 +851,7 @@ void CL2D::write(const FileName &fnRoot, String iteration, bool final) const
     Image<double> I;
     FileName fnOut=fnRoot+".stk";
     FileName fnAux, fnClass;
-    if (exists(fnOut))
-        unlink(fnOut.c_str());
+    fnOut.deleteFile();
     size_t id;
     for (int q=0; q<Q; q++)
     {
@@ -873,8 +872,7 @@ void CL2D::write(const FileName &fnRoot, String iteration, bool final) const
     FileName fnAligned=fnRoot+"_aligned.stk";
     if (final)
     {
-        if (exists(fnAligned))
-            unlink(fnAligned.c_str());
+      fnAligned.deleteFile();
         Image<double> I;
         for (int i=0; i<Nimg; i++)
         {

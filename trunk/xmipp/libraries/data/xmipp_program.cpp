@@ -547,8 +547,7 @@ void XmippMetadataProgram::startProcessing()
     if (delete_output_stack)
     {
         FileName fn_stack_plain = fn_out.removeFileFormat();
-        if (exists(fn_stack_plain))
-            unlink(fn_stack_plain.c_str());
+        fn_stack_plain.deleteFile();
     }
 
     if (create_empty_stackfile)

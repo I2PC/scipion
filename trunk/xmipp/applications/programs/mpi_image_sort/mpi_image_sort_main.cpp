@@ -115,9 +115,10 @@ public:
     /// Produce side info
     void produceSideInfo(int rank)
     {
-        fnStack=fnRoot+".stk";
-        if (exists(fnStack) && rank==0)
-            unlink(fnStack.c_str());
+        fnStack = fnRoot + ".stk";
+
+        if (rank == 0)
+          fnStack.deleteFile();
 
         // Read input selfile and reference
         MetaData SF;

@@ -255,9 +255,9 @@ void ProgTomoAlignRefinement::run()
     FileName fnMaskOut, fnImgOut;
     Projection theo;
     Image<double> Imask, I;
-
-    if (adjustGray && exists(fn_out+".stk"))
-        unlink((fn_out+".stk").c_str());
+    FileName fn_tmp(fn_out + ".stk");
+    if (adjustGray)
+      fn_tmp.deleteFile();
 
     for (int i=0; i<list_of_assigned.size(); i++)
     {

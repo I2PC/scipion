@@ -235,8 +235,7 @@ void ProgAnalyzeCluster::run()
     SFout.write(fnOut);
     if (basis && Ngood>0)
     {
-        if (exists(fnOutBasis))
-            unlink(fnOutBasis.c_str());
+        fnOutBasis.deleteFile();
         double iNgood=1.0/Ngood;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(IalignedAvg)
         {

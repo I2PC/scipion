@@ -340,7 +340,7 @@ void ProgOperate::readParams()
         REPORT_ERROR(ERR_VALUE_INCORRECT, "No valid operation specified");
     if (binaryOperator != NULL)
     {
-        if (!exists(file_or_value))
+        if (!file_or_value.exists())
         {
             isValue = true;
             value = textToFloat(file_or_value);

@@ -173,12 +173,16 @@ void ML2DBaseProgram::run()
 {
     bool converged = false;
 
+    std::cerr << "DEBUG_JM: starting produceSideInfo" <<std::endl;
     produceSideInfo();
     //Do some initialization work
+    std::cerr << "DEBUG_JM: starting produceSideInfo2" <<std::endl;
     produceSideInfo2();
     //Create threads to be ready for work
+    std::cerr << "DEBUG_JM: createThreads" <<std::endl;
     createThreads();
 
+    std::cerr << "DEBUG_JM: starting iterations" <<std::endl;
     // Loop over all iterations
     for (iter = istart; !converged && iter <= Niter; iter++)
     {

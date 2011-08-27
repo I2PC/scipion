@@ -51,6 +51,8 @@
 
 #define FILENAMENUMBERLENGTH 6
 
+typedef struct stat Stat;
+
 //@{
 /** Filenames.
  *
@@ -556,9 +558,88 @@ public:
     //     */
     //    void copyImage(const FileName & target) const;
 
+    /** True if the filename exists, check from current directory if is relative
+     *
+     * @code
+     * FileName fn("g1ta0001");
+     * if (fn.exists())
+     *     std::cout << "The file exists" << std::endl;
+     * @endcode
+     */
+    bool exists() const;
+
+    /** Delete the file if exists */
+    void deleteFile() const;
+
+    /** True if the file exists in the current directory
+     *  Remove leading xx@ and tailing :xx
+     *
+     * @code
+     * if (exists("g1ta00001"))
+     *     std::cout << "The file exists" << std::endl;
+     * @endcode
+     */
+    bool existsTrim() const;
+
+    /** True if the path is a directory */
+    bool isDir() const;
+
+    /** Return the list of files if this filename is a directory*/
+    void getFiles(std::vector<FileName> &files) const;
+
+    /** Waits until the given filename has a stable size
+     *
+     * The stable size is defined as having the same size within two samples
+     * separated by time_step (microsecs).
+     *
+     * An exception is throw if the file exists but its size cannot be stated.
+     */
+    void waitUntilStableSize(size_t time_step = 250000);
+
+    /** Write a zero filled file with the desired size.
+     *
+     * The file is written by blocks to speed up, you can modify the block size.
+     * An exception is thrown if any error happens
+     */
+    void createEmptyFile(size_t size, size_t block_size = 102400);
+
+    /** Create empty file with a given length. */
+    void createEmptyFileWithGivenLength(size_t length = 0);
+
+    /**
+     * makePath - ensure all directories in path exist
+     * Algorithm takes the pessimistic view and works top-down to ensure
+     * each directory in path exists, rather than optimistically creating
+     * the last element and working backwards. Return null if fails
+     */
+    int makePath(mode_t mode = 0755);
+
+    /** This function raised an ERROR if the filename if not empty and if
+     * the corresponding file does not exist.
+     * This may be useful to have a better (killing) control on (mpi-regulated) jobs
+     *
+     * @code
+     *   exit_if_not_exists("control_file.txt");
+     * @endcode
+     *
+     * This function is not ported to Python.
+     */
+    void assertExists();
+
+    /** Returns the base directory of the Xmipp installation
+     */
+    static FileName getXmippPath();
+
     //@}
 };
 
+/** Check if the file exists using the stat function
+ */
+bool fileExists( const char *filename );
+
+/** Copy one image
+ */
+void copyImage(const FileName & source,const FileName & target);
 /** This class is used for comparing filenames.
  *
  * Example: "g0ta00001.xmp" is less than "g0ta00002.xmp"
@@ -577,75 +658,6 @@ public:
     }
 };
 
-/** True if the file exists in the current directory
- *
- * @code
- * if (exists("g1ta00001"))
- *     std::cout << "The file exists" << std::endl;
- * @endcode
- */
-bool exists(const FileName& fn);
-
-/** True if the file exists in the current directory
- *  Remove leading xx@ and tailing :xx
- *
- * @code
- * if (exists("g1ta00001"))
- *     std::cout << "The file exists" << std::endl;
- * @endcode
- */
-bool existsTrim(const FileName& fn);
-
-/** True if the path is a directory */
-bool isDirectory (const FileName &fn);
-
-/** Return the list of files within a directory. */
-void getdir(const String &dir, std::vector<FileName> &files);
-
-/** This function raised an ERROR if the filename if not empty and if
- * the corresponding file does not exist.
- * This may be useful to have a better (killing) control on (mpi-regulated) jobs
- *
- * @code
- *   exit_if_not_exists("control_file.txt");
- * @endcode
- *
- * This function is not ported to Python.
- */
-void exit_if_not_exists(const FileName &fn);
-
-/** Waits until the given filename has a stable size
- *
- * The stable size is defined as having the same size within two samples
- * separated by time_step (microsecs).
- *
- * An exception is throw if the file exists but its size cannot be stated.
- */
-void wait_until_stable_size(const FileName& fn,
-                            unsigned long time_step = 250000);
-
-/** Write a zero filled file with the desired size.
- *
- * The file is written by blocks to speed up, you can modify the block size.
- * An exception is thrown if any error happens
- */
-void create_empty_file(const FileName& fn,
-                       unsigned long long size,
-                       unsigned long long block_size = 102400);
-
-/** Returns the base directory of the Xmipp installation
- */
-FileName xmippBaseDir();
-
-/** Auxiliary function used to create a tree of directories
- *
- */
-int do_mkdir(const char *path, mode_t mode);
-
-/** mkpath - create directory tree.
-* Ensure all directories in path exist
-*/
-int mkpath(const FileName &path, mode_t mode);
 //@}
 
 #endif /* FILENAME_H_ */

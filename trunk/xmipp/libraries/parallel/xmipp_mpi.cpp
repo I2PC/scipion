@@ -268,7 +268,7 @@ void MpiNode::prepareFileBarrierWaiting(FileName &fnToWaitOn)
 
 void MpiNode::barrierWait(const FileName &fnToWaitOn, int sleepTime)
 {
-	while (!exists(fnToWaitOn))
+	while (!fnToWaitOn.exists())
 		sleep(sleepTime);
 	barrierWait();
 	if (isMaster())

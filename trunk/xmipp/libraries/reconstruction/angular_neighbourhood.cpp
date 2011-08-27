@@ -78,9 +78,7 @@ void ProgAngularNeighbourhood::defineParams()
 void ProgAngularNeighbourhood::run()
 {
     show();
-    if (exists(fn_out))
-    	unlink(fn_out.c_str());
-
+    fn_out.deleteFile();
     MetaData SF_out;
     FileName fn2, fn1;
 

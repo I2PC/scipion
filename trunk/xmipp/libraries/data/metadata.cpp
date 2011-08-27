@@ -250,7 +250,7 @@ void MetaData::setColumnFormat(bool column)
 {
     isColumnFormat = column;
 }
-std::string MetaData::getPath()   const
+String MetaData::getPath()   const
 {
     return path;
 }
@@ -262,7 +262,7 @@ void MetaData::setPath(const String &newPath)
     path = (newPath == "") ? String(getcwd(_buffer, length)) : newPath;
 }
 
-std::string MetaData::getComment() const
+String MetaData::getComment() const
 {
     return  comment;
 }
@@ -497,7 +497,7 @@ bool MetaData::containsObject(const MDQuery &query)
 
 void MetaData::write(const FileName &_outFile, WriteModeMetaData mode) const
 {
-    std::string blockName;
+    String blockName;
     FileName outFile;
 
     blockName=_outFile.getBlockName();
@@ -516,10 +516,8 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
     //in our format no two identical data_xxx strings may exists
     if(mode==MD_OVERWRITE)
         ;
-    else if (blockName=="")
-        mode=MD_OVERWRITE;
-    else if(!exists(outFile))
-        mode=MD_OVERWRITE;
+    else if (blockName.empty() || !outFile.exists())
+        mode = MD_OVERWRITE;
     else
     {
         //does blockname exists?
@@ -547,7 +545,7 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
             else
             {
                 //block name
-                std::string _szBlockName = (std::string)("\ndata_") + blockName;
+                String _szBlockName = (String)("\ndata_") + blockName;
                 size_t blockNameSize = _szBlockName.size();
 
                 //search for the string
@@ -589,7 +587,7 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
 
 void MetaData::append(const FileName &outFile)
 {
-    if (exists(outFile))
+    if (outFile.exists())
     {
         std::ofstream ofs(outFile.data(), std::ios_base::app);
         _writeRows(ofs);
@@ -627,7 +625,7 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
         << std::endl //write wich type of format (column or row) and the path
         << "# " << comment << std::endl;     //write md comment in the 2nd comment line of header
     //write data block
-    std::string _szBlockName = (std::string)("data_") + blockName;
+    String _szBlockName = (String)("data_") + blockName;
 
     if (isColumnFormat)
     {
@@ -690,11 +688,11 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
 void MetaData::_readColumns(std::istream& is, std::vector<MDObject*> & columnValues,
                             const std::vector<MDLabel>* desiredLabels)
 {
-    std::string token;
+    String token;
     MDLabel label;
 
     while (is >> token)
-        if (token.find('(') == std::string::npos)
+        if (token.find('(') == String::npos)
         {
             //label is not reconized, the MDValue will be created
             //with MDL_UNDEFINED, wich will be ignored while reading data
@@ -717,7 +715,7 @@ void MetaData::_parseObject(std::istream &is, MDObject &object, size_t id)
     is >> object;
     if (is.fail())
     {
-        REPORT_ERROR(ERR_MD_BADLABEL, (std::string)"read: Error parsing data column, expecting " + MDL::label2Str(object.label));
+        REPORT_ERROR(ERR_MD_BADLABEL, (String)"read: Error parsing data column, expecting " + MDL::label2Str(object.label));
     }
     else
         if (object.label != MDL_UNDEFINED)
@@ -798,7 +796,7 @@ char * MetaData::_readColumnsStar(char * pStart,
  */
 void MetaData::_readRows(std::istream& is, std::vector<MDObject*> & columnValues, bool useCommentAsImage)
 {
-    std::string line = "";
+    String line = "";
     while (!is.eof() && !is.fail())
     {
         //Move until the ';' or the first alphanumeric character
@@ -859,7 +857,7 @@ void MetaData::_readRowsStar(std::vector<MDObject*> & columnValues, char * pchSt
 /*This function will read the md data if is in row format */
 void MetaData::_readRowFormat(std::istream& is)
 {
-    std::string line, token;
+    String line, token;
     MDLabel label;
 
     size_t objectID = addObject();
@@ -975,14 +973,14 @@ void MetaData::_read(const FileName &filename,
 
     std::ifstream is(filename.data(), std::ios_base::in);
     std::stringstream ss;
-    std::string line, token;
+    String line, token;
     std::vector<MDObject*> columnValues;
 
     getline(is, line); //get first line to identify the type of file
 
     if (is.fail())
     {
-        REPORT_ERROR(ERR_IO_NOTEXIST, (std::string) "MetaData::read: File " + filename + " does not exists" );
+        REPORT_ERROR(ERR_IO_NOTEXIST, formatString("MetaData::read: File doesn't exists: %s", filename.c_str()) );
     }
 
     bool useCommentAsImage = false;
@@ -991,7 +989,7 @@ void MetaData::_read(const FileName &filename,
 
     is.seekg(0, std::ios::beg);//reset the stream position to the beginning to start parsing
 
-    if (line.find("XMIPP_STAR_1") != std::string::npos)
+    if (line.find("XMIPP_STAR_1") != String::npos)
     {
         oldFormat=false;
 
@@ -1011,14 +1009,15 @@ void MetaData::_read(const FileName &filename,
         char * firstData=NULL, *secondData=NULL, *firstloop=NULL;
 	    regex_t re;
 	    if (regcomp(&re, blockRegExp.c_str(), REG_EXTENDED|REG_NOSUB) != 0)
-	    	REPORT_ERROR(ERR_ARG_INCORRECT,(String)"Pattern cannot be parsed:"+blockRegExp);
+	    	REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Pattern '%s' cannot be parsed: %s",
+	    	    blockRegExp.c_str(), filename.c_str()));
 	    char *startingPoint=map;
 	    size_t remainingSize=size;
 	    bool oneBlockRead=false;
-		bool singleBlock=blockRegExp.find(".")==std::string::npos &&
-				         blockRegExp.find("[")==std::string::npos &&
-				         blockRegExp.find("*")==std::string::npos &&
-				         blockRegExp.find("+")==std::string::npos;
+		bool singleBlock=blockRegExp.find(".")==String::npos &&
+				         blockRegExp.find("[")==String::npos &&
+				         blockRegExp.find("*")==String::npos &&
+				         blockRegExp.find("+")==String::npos;
 		String blockName;
         while (nextBlockToRead(re, startingPoint, remainingSize, isColumnFormat,
         					   blockName, &firstData, &secondData, &firstloop))
@@ -1048,9 +1047,10 @@ void MetaData::_read(const FileName &filename,
         unmapFile(map,size,fd);
 	    regfree(&re);
 	    if (!oneBlockRead)
-	    	REPORT_ERROR(ERR_MD_WRONGDATABLOCK,blockRegExp);
+	    	REPORT_ERROR(ERR_MD_WRONGDATABLOCK, formatString("Block: '%s': %s",
+	    	    blockRegExp.c_str(), filename.c_str()));
     }
-    else if (line.find("Headerinfo columns:") != std::string::npos)
+    else if (line.find("Headerinfo columns:") != String::npos)
     {
         //This looks like an old DocFile, parse header
         std::cerr << "WARNING: ** You are using an old file format (DOCFILE) which is going "
@@ -1330,14 +1330,14 @@ void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc)
     // Check if the label has semicolon
     int ipos=sortLabel.find(':');
     MDLabelType type = MDL::labelType(sortLabel);
-    if (ipos!=std::string::npos || type == LABEL_VECTOR || type == LABEL_VECTOR_LONG)
+    if (ipos!=String::npos || type == LABEL_VECTOR || type == LABEL_VECTOR_LONG)
     {
         MDLabel label;
         int column;
-        if (ipos!=std::string::npos)
+        if (ipos!=String::npos)
         {
             // Check that the label is a vector field
-            std::vector< std::string > results;
+            std::vector< String > results;
             splitString(sortLabel,":",results);
             column=textToInteger(results[1]);
             MDLabelType type = MDL::labelType(results[0]);
@@ -1436,12 +1436,12 @@ void MetaData::selectPart(const MetaData &mdIn, size_t startPosition, size_t num
 void MetaData::makeAbsPath(const MDLabel label)
 {
 
-    std::string aux_string;
-    std::string aux_string_path;
+    String aux_string;
+    String aux_string_path;
     char buffer[1024];
 
     getcwd(buffer, 1023);
-    std::string path_str(buffer);
+    String path_str(buffer);
     path_str += "/";
     getValue(label, aux_string, firstObject());
 

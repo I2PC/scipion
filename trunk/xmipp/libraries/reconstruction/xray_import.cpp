@@ -134,7 +134,7 @@ void ProgXrayImport::readAndCrop(const FileName &fn, Image<double> &I) const
                      fnBase+"-positions.txt");
     if (cropSize>0)
         I().selfWindow(cropSize,cropSize,
-        (int)(YSIZE(I())-cropSize-1),(int)(XSIZE(I())-cropSize-1));
+                       (int)(YSIZE(I())-cropSize-1),(int)(XSIZE(I())-cropSize-1));
     STARTINGX(I())=STARTINGY(I())=0;
     I.setTilt(tiltAngle);
 }
@@ -183,15 +183,17 @@ void ProgXrayImport::getDarkfield(const FileName &fnDir, Image<double> &IavgDark
 {
     IavgDark.clear();
     std::vector<FileName> listDir;
-    getdir(fnDir,listDir);
-    bool found=false;
+    fnDir.getFiles(listDir);
+    bool found = false;
+
     for (int i=0; i<listDir.size(); i++)
         if (listDir[i]=="darkfields")
         {
             found=true;
             std::vector<FileName> listDirDark;
-            getdir(fnDir+"/darkfields",listDirDark);
-            int N=0;
+            FileName(fnDir+"/darkfields").getFiles(listDirDark);
+            int N = 0;
+
             for (int j=0; j<listDirDark.size(); j++)
             {
                 FileName extension=((FileName)listDirDark[j]).getExtension();
@@ -227,7 +229,7 @@ void ProgXrayImport::getFlatfield(const FileName &fnDir,
 
     // Process the rest of the images
     std::vector<FileName> listDir;
-    getdir(fnDir,listDir);
+    fnDir.getFiles(listDir);
     int N=0;
     Image<double> Iaux;
     for (int i=0; i<listDir.size(); i++)
@@ -318,8 +320,7 @@ void runThread(ThreadArgument &thArg)
 void ProgXrayImport::run()
 {
     // Delete output stack if it exists
-    if (exists((fnRoot+".mrcs").c_str()))
-        unlink((fnRoot+".mrcs").c_str());
+    FileName(fnRoot+".mrcs").deleteFile();
 
     // Reading bad pixels mask
     if (fnBPMask != "")
@@ -328,7 +329,7 @@ void ProgXrayImport::run()
         bpMask.read(fnBPMask);
         if (cropSize>0)
             bpMask().selfWindow(cropSize,cropSize,
-            (int)(YSIZE(bpMask())-cropSize-1),(int)(XSIZE(bpMask())-cropSize-1));
+                                (int)(YSIZE(bpMask())-cropSize-1),(int)(XSIZE(bpMask())-cropSize-1));
         STARTINGX(bpMask())=STARTINGY(bpMask())=0;
     }
 
@@ -349,7 +350,7 @@ void ProgXrayImport::run()
 
     // Count the number of images
     std::vector<FileName> listDir;
-    getdir(fnDirData,listDir);
+    fnDirData.getFiles(listDir);
     int N=0;
     for (int i=0; i<listDir.size(); i++)
     {

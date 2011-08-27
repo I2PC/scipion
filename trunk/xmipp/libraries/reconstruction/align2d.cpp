@@ -80,8 +80,7 @@ void ProgAlign2d::alignPairs(MetaData &MDin, MetaData &MDout, int level)
     if (Zdim!=1 || Ndim!=1)
         REPORT_ERROR(ERR_MATRIX_DIM,"Files in metadata are not 2D images");
     FileName fnOutputStack=fnRoot+"_level_"+integerToString(level,2)+".stk";
-    if (exists(fnOutputStack))
-    	unlink(fnOutputStack.c_str());
+    fnOutputStack.deleteFile();
     createEmptyFile(fnOutputStack,Xdim,Ydim,1,imax+remaining,true,WRITE_REPLACE);
 
     // Align all pairs

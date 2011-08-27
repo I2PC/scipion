@@ -37,6 +37,8 @@
 #include <fstream>
 #include <typeinfo>
 #include <dirent.h>
+#include <fcntl.h>
+#include <sys/mman.h>
 
 /* Numerical functions ----------------------------------------------------- */
 // Kaiser-Bessel constructor
@@ -577,178 +579,7 @@ double log2(double value)
 }
 #endif
 
-/* Check if a file exists -------------------------------------------------- */
-bool exists(const FileName &fn)
-{
-    // Consider the filename can be an image inside a stack
-    size_t idx;
-    FileName basicName;
-    fn.decompose(idx, basicName);
 
-    FILE *aux;
-    if ((aux = fopen(basicName.c_str(), "r")) == NULL)
-        return 0;
-    fclose(aux);
-    return 1;
-}
-
-/* Check if a file exists remove leading @ and tailing : */
-bool existsTrim(const FileName &fn)
-{
-    FILE *aux;
-    FileName auxF;
-    size_t found;
-    found=fn.find_first_of("@");
-    if (found!=std::string::npos)
-        auxF       =       fn.substr(found+1) ;
-    else
-        auxF=fn;
-    found=auxF.find_first_of("#");
-    if ( found!=std::string::npos)
-        auxF = auxF.substr(0, found);
-    found=auxF.find_first_of(":");
-    if ( found!=std::string::npos)
-        auxF = auxF.substr(0, found);
-    if ((aux = fopen(auxF.c_str(), "r")) == NULL)
-        return 0;
-    fclose(aux);
-    return 1;
-}
-
-/* List of files within a directory ---------------------------------------- */
-void getdir(const std::string &dir, std::vector<FileName> &files)
-{
-    files.clear();
-
-    DIR *dp;
-    struct dirent *dirp;
-    if ((dp  = opendir(dir.c_str())) == NULL)
-        REPORT_ERROR(ERR_IO_NOTEXIST,dir);
-
-    while ((dirp = readdir(dp)) != NULL)
-        if (strcmp(dirp->d_name,".")!=0 && strcmp(dirp->d_name,"..")!=0)
-            files.push_back(FileName(dirp->d_name));
-    closedir(dp);
-    std::sort(files.begin(),files.end());
-}
-
-/* Is directory ------------------------------------------------------------ */
-bool isDirectory (const FileName &fn)
-{
-    struct stat st_buf;
-    int status = stat (fn.c_str(), &st_buf);
-    if (status != 0)
-        REPORT_ERROR(ERR_UNCLASSIFIED,(std::string)"Cannot determine status of "+fn);
-    return (S_ISDIR (st_buf.st_mode));
-}
-
-/* Exit program if filename is not empry and file does not exist ----------- */
-void exit_if_not_exists(const FileName &fn)
-{
-    if (fn != "")
-    {
-        if (!exists(fn))
-        {
-            std::cerr << "Control file " << fn << " does not exist: exiting...";
-            exit(1);
-        }
-    }
-}
-
-/* Wait until file has a stable size --------------------------------------- */
-void wait_until_stable_size(const FileName &fn,
-                            unsigned long time_step)
-{
-    size_t idx;
-    FileName basicName;
-    fn.decompose(idx, basicName);
-
-    if (!exists(fn))
-        return;
-    struct stat info1, info2;
-    if (stat(basicName.c_str(), &info1))
-        REPORT_ERROR(ERR_UNCLASSIFIED,
-                     (std::string)"wait_until_stable_size: Cannot get size of file " + fn);
-    off_t size1 = info1.st_size;
-    do
-    {
-        usleep(time_step);
-        if (stat(basicName.c_str(), &info2))
-            REPORT_ERROR(ERR_UNCLASSIFIED,
-                         (std::string)"wait_until_stable_size: Cannot get size of file " + fn);
-        off_t size2 = info2.st_size;
-        if (size1 == size2)
-            break;
-        size1 = size2;
-    }
-    while (true);
-    return;
-}
-
-/* Create empty file ------------------------------------------------------- */
-void create_empty_file(const FileName &fn, unsigned long long size,
-                       unsigned long long block_size)
-{
-    unsigned char * buffer = (unsigned char*) calloc(sizeof(unsigned char),
-                             block_size);
-    if (buffer == NULL)
-        REPORT_ERROR(ERR_MEM_NOTENOUGH, "create_empty_file: No memory left");
-    FILE * fd = fopen(fn.c_str(), "w");
-    if (fd == NULL)
-        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"create_empty_file: Cannot open file" + fn);
-    for (unsigned long i = 0; i < size / block_size; i++)
-        fwrite(buffer, sizeof(unsigned char), block_size, fd);
-    fwrite(buffer, sizeof(unsigned char), size % block_size, fd);
-    fclose(fd);
-}
-
-/* Get the Xmipp Base directory -------------------------------------------- */
-FileName xmippBaseDir()
-{
-    std::string path = getenv("PATH");
-    std::vector<std::string> directories;
-    int number_directories = splitString(path, ":", directories);
-    if (number_directories == 0)
-        REPORT_ERROR(ERR_IO_NOPATH, "xmippBaseDir::Cannot find Xmipp Base directory");
-    bool found = false;
-    int i;
-    for (i = 0; i < number_directories; i++)
-    {
-        FileName fn = directories[i] + "/xmipp_reconstruct_art";
-        FILE *aux;
-        if ((aux = fopen(fn.c_str(), "r")) != NULL)
-        {
-            fclose(aux);
-            found = true;
-            break;
-        }
-    }
-    if (found)
-        return directories[i].substr(0, directories[i].length() - 4);
-    else
-        REPORT_ERROR(ERR_IO_NOPATH, "xmippBaseDir::Cannot find Xmipp Base directory");
-}
-#include "xmipp_image_generic.h"
-
-void copyImage(const FileName & source, const FileName & target)
-{
-	ImageGeneric img(source);
-	img.write(target);
-}
-
-void createEmptyFileWithGivenLength(const FileName &fn, size_t length)
-{
-    FILE* fMap = fopen(fn.c_str(),"wb");
-    if (!fMap)
-    	REPORT_ERROR(ERR_IO_NOWRITE,fn);
-    if (length>0)
-    {
-		char c=0;
-		if ((fseek(fMap, length-1, SEEK_SET) == -1) || (fwrite(&c,1,1,fMap) != 1))
-			REPORT_ERROR(ERR_IO_NOWRITE,"Cannot create empty file");
-    }
-    fclose(fMap);
-}
 
 /* Time managing ----------------------------------------------------------- */
 #ifdef _NO_TIME
@@ -1174,10 +1005,8 @@ size_t divide_equally_group(size_t N, size_t size, size_t myself)
     return -1;
 
 }
-/**Compare two files **/
-#import <fcntl.h>
-#import <sys/mman.h>
 
+/**Compare two files **/
 bool compareTwoFiles(const FileName &fn1, const FileName &fn2, size_t offset)
 {
     //map files

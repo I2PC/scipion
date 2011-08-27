@@ -136,7 +136,7 @@ void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
 /* Preprocess ------------------------------------------------------------- */
 void ProgSymmetrize::preProcess()
 {
-    if (!exists(fn_sym) && isdigit(fn_sym[0]))
+    if (!fn_sym.exists() && isdigit(fn_sym[0]))
         symorder=textToInteger(fn_sym);
     else
     {

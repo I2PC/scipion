@@ -376,11 +376,9 @@ void Micrograph::produce_all_images(int label, double minCost, const FileName &f
         << "   applying appropriate rotation\n";
     int nmax = ParticleNo();
     FileName fn_aux;
-    FileName fn_out = fn_root+".stk";
-    if(exists(fn_out) && rmStack)
-    {
-        unlink(fn_out.c_str());
-    }
+    FileName fn_out = fn_root + ".stk";
+    if (rmStack)
+      fn_out.deleteFile();
     size_t ii=0;
     size_t id;
     for (int n = 0; n < nmax; n++)

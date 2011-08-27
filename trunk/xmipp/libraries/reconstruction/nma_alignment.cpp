@@ -126,9 +126,10 @@ void ProgNmaAlignment::createWorkFiles()
 {
     MetaData mdTodo, mdDone;
     mdTodo = mdIn;
-    if (exists("nmaDone.xmd") && resume)
+    FileName fn("nmaDone.xmd");
+    if (fn.exists() && resume)
     {
-        mdDone.read("nmaDone.xmd");
+        mdDone.read(fn);
         mdTodo.subtraction(mdDone, MDL_IMAGE);
     }
     else//if not exists create metadata only with headers
@@ -142,7 +143,7 @@ void ProgNmaAlignment::createWorkFiles()
         mdDone.addLabel(MDL_SHIFTY);
         mdDone.addLabel(MDL_NMA);
         mdDone.addLabel(MDL_COST);
-        mdDone.write("nmaDone.xmd");
+        mdDone.write(fn);
     }
     mdIn = mdTodo;
 }

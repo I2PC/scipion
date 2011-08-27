@@ -137,7 +137,7 @@ int translate_randomness(char * str)
     if (strcmp(str, "even") == 0)
         return ANGLE_EVENLY;
     REPORT_ERROR(ERR_PARAM_INCORRECT,
-                 (std::string)"Prog_Project_Parameters::read: Not recognized randomness: "
+                 (String)"Prog_Project_Parameters::read: Not recognized randomness: "
                  + str);
 }
 
@@ -150,7 +150,7 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
 
     if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
         REPORT_ERROR(ERR_IO_NOTOPEN,
-                     (std::string)"Prog_Project_Parameters::read: There is a problem "
+                     (String)"Prog_Project_Parameters::read: There is a problem "
                      "opening the file " + fn_proj_param);
     while (fgets(line, 200, fh_param) != NULL)
     {
@@ -172,8 +172,8 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
             fn_angle = firstWord(line);
             if (fn_angle == "NULL")
                 ;
-            else if (!exists(fn_angle))
-                REPORT_ERROR(ERR_IO_NOTEXIST, (std::string)"Prog_Project_Parameters::read: "
+            else if (!fn_angle.exists())
+                REPORT_ERROR(ERR_IO_NOTEXIST, (String)"Prog_Project_Parameters::read: "
                              "file " + fn_angle + " doesn't exist");
             lineNo = 2;
             break;
@@ -663,7 +663,7 @@ void PROJECT_Side_Info::produce_Side_Info(Projection_Parameters &prm,
 }
 
 /* Effectively project ===================================================== */
-int PROJECT_Effectively_project(const std::string &fnOut,
+int PROJECT_Effectively_project(const String &fnOut,
                                 bool singleProjection,
                                 bool shears,
                                 const Projection_Parameters &prm,
@@ -673,8 +673,7 @@ int PROJECT_Effectively_project(const std::string &fnOut,
 {
     int NumProjs = 0;
     SF.clear();
-    if (exists(fnOut))
-        unlink(fnOut.c_str());
+    FileName(fnOut).deleteFile();
     std::cerr << "Projecting ...\n";
     init_progress_bar(side.DF.size());
     SF.setComment("First set of angles=actual angles; Second set of angles=noisy angles");

@@ -170,9 +170,10 @@ void QtWidgetMicrograph::setMicrograph(Micrograph *_m)
 void QtWidgetMicrograph::setOutputRoot(const FileName& outputRoot)
 {
     __outputRoot=outputRoot;
-    if (exists(__outputRoot+".Common.pos"))
+    FileName fn1(__outputRoot+".Common.pos"), fn2(__outputRoot+".Common.auto.pos");
+    if (fn1.exists())
     	__file_menu->loadCoords(__outputRoot+".Common.pos");
-    if (exists(__outputRoot+".Common.auto.pos"))
+    if (fn2.exists())
     	__file_menu->loadCoords(__outputRoot+".Common.auto.pos");
 }
 

@@ -71,7 +71,8 @@ void ShowCL2D::readFile(const FileName &_fn_root,
     clear();
     fn = _fn_root;
     setCaption(fn.c_str()+filterSuffix);
-    if (exists(_fn_root+"_info.txt"))
+    FileName _fn(_fn_root+"_info.txt");
+    if (_fn.exists())
     {
         readSelFile(_fn_root + "_aligned.sel");
         MetaData mD(_fn_root+"_info.txt");
@@ -100,7 +101,8 @@ void ShowCL2D::readFile(const FileName &_fn_root,
         {
             FileName fnCV=imgnames[i].withoutExtension();
             originalImages[i]=imgnames[i];
-            if (exists(fnCV+filterSuffix+".sel"))
+            _fn = fnCV+filterSuffix+".sel";
+            if (_fn.exists())
             {
         	    SFcv[i].read(fnCV+filterSuffix+".sel");
 	            hisAssigned[i]=integerToString(SFcv[i].size());
@@ -148,9 +150,11 @@ void ShowCL2D::initRightclickMenubar()
     options->insertItem("View assigned images",  this,  SLOT(showAssigned()));
     options->insertItem("Show this image separately", this, SLOT(showThisImage()));
     options->insertItem("Show this class separately", this, SLOT(showThisClass()));
-    if (exists(originalImages[0].withoutExtension()+"_pcabasis_00.xmp"))
+    FileName _fn = originalImages[0].withoutExtension()+"_pcabasis_00.xmp";
+    if (_fn.exists())
     	options->insertItem("Show PCA basis for this class", this, SLOT(showThisPCA()));
-    if (exists(originalImages[0].withoutExtension()+"_outliers.sel"))
+    _fn = originalImages[0].withoutExtension()+"_outliers.sel";
+    if (_fn.exists())
     	options->insertItem("Show outliers for this class", this, SLOT(showThisOutliers()));
     options->insertSeparator();
 
@@ -274,7 +278,7 @@ void ShowCL2D::showThisPCA()
     while (!finish)
     {
 		FileName fnPCA=originalImages[i].withoutExtension()+"_pcabasis_"+integerToString(n,2)+".xmp";
-        if (exists(fnPCA))
+        if (fnPCA.exists())
         {
 			ImageViewer *showimg = new ImageViewer(fnPCA.c_str(),false);
 			showimg->loadImage(fnPCA.c_str());

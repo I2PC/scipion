@@ -239,8 +239,7 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
     getBlocksInMetaDataFile(fn, blocks);
 
     // Delete the output file if it exists
-    if (exists(fnOut))
-        unlink(fnOut.c_str());
+    fnOut.deleteFile();
 
     // Process each block
     for (int b=0; b<blocks.size(); b++)

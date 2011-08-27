@@ -104,8 +104,8 @@ public:
         // Only for do_add: append input docfile to add_to docfile
         if (rank == 0 && do_add)
         {
-            FileName fn_tmp=fn_out+".doc";
-            if (exists(fn_tmp))
+            FileName fn_tmp = fn_out+".doc";
+            if (fn.exists())
             {
                 MetaData DFaux = DF;
                 // Don't do any fancy merging or sorting because those functions are really slow...

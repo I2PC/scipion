@@ -45,7 +45,7 @@ ProgImageRotationalPCA::ProgImageRotationalPCA(int argc, char **argv)
 // MPI destructor
 ProgImageRotationalPCA::~ProgImageRotationalPCA()
 {
-	clearHbuffer();
+    clearHbuffer();
     delete fileMutex;
     delete threadMutex;
     delete taskDistributor;
@@ -153,16 +153,19 @@ void ProgImageRotationalPCA::produceSideInfo()
     }
 
     Matrix2D<double> &W=Wnode[0];
+    FileName fnMatrixF(fnRoot + "_matrixF.raw");
+    FileName fnMatrixH(fnRoot + "_matrixH.raw");
+
     if (node->isMaster())
     {
         // F (#images*#shifts*#angles) x (#eigenvectors+2)*(its+1)
-        createEmptyFileWithGivenLength(fnRoot+"_matrixF.raw",Nimg*2*Nangles*Nshifts*(Neigen+2)*(Nits+1)*sizeof(double));
+        fnMatrixF.createEmptyFileWithGivenLength(Nimg*2*Nangles*Nshifts*(Neigen+2)*(Nits+1)*sizeof(double));
         // H (#images*#shifts*#angles) x (#eigenvectors+2)
-        createEmptyFileWithGivenLength(fnRoot+"_matrixH.raw",Nimg*2*Nangles*Nshifts*(Neigen+2)*sizeof(double));
+        fnMatrixH.createEmptyFileWithGivenLength(Nimg*2*Nangles*Nshifts*(Neigen+2)*sizeof(double));
 
         // Initialize with random numbers between -1 and 1
         FOR_ALL_ELEMENTS_IN_MATRIX2D(W)
-        MAT_ELEM(W,i,j)=rnd_unif(-1.0,1.0);
+            MAT_ELEM(W,i,j)=rnd_unif(-1.0,1.0);
 
         // Send to workers
         MPI_Bcast(&MAT_ELEM(W,0,0),MAT_XSIZE(W)*MAT_YSIZE(W),MPI_DOUBLE,0,MPI_COMM_WORLD);
@@ -170,8 +173,8 @@ void ProgImageRotationalPCA::produceSideInfo()
     else
         // Receive W
         MPI_Bcast(&MAT_ELEM(W,0,0),MAT_XSIZE(W)*MAT_YSIZE(W),MPI_DOUBLE,0,MPI_COMM_WORLD);
-    F.mapToFile(fnRoot+"_matrixF.raw",(Neigen+2)*(Nits+1),Nimg*2*Nangles*Nshifts);
-    H.mapToFile(fnRoot+"_matrixH.raw",Nimg*2*Nangles*Nshifts,Neigen+2);
+    F.mapToFile(fnMatrixF,(Neigen+2)*(Nits+1),Nimg*2*Nangles*Nshifts);
+    H.mapToFile(fnMatrixH,Nimg*2*Nangles*Nshifts,Neigen+2);
 
     // Prepare buffer
     fileMutex = new MpiFileMutex(node);
@@ -188,7 +191,7 @@ void ProgImageRotationalPCA::produceSideInfo()
 // Buffer =================================================================
 void ProgImageRotationalPCA::writeToHBuffer(int idx, double *dest)
 {
-	threadMutex->lock();
+    threadMutex->lock();
     int n=HbufferDestination.size();
     const Matrix2D<double> &Hblock_idx=Hblock[idx];
     // COSS std::cout << "Copying block " << idx << " into " << n << "(" << Hbuffer.size() << ")" << std::endl;
@@ -196,7 +199,7 @@ void ProgImageRotationalPCA::writeToHBuffer(int idx, double *dest)
     HbufferDestination.push_back(dest);
     if (n==(HbufferMax-1))
         flushHBuffer();
-	threadMutex->unlock();
+    threadMutex->unlock();
 }
 
 void ProgImageRotationalPCA::flushHBuffer()
@@ -498,13 +501,13 @@ int ProgImageRotationalPCA::QR()
 // Copy H to F ============================================================
 void ProgImageRotationalPCA::copyHtoF(int block)
 {
-    FileName fnSync=fnRoot+".sync";
+    FileName fnSync = fnRoot + ".sync";
     if (node->isMaster())
     {
         size_t Hidx=block*MAT_XSIZE(H);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
         MAT_ELEM(F,Hidx+j,i)=MAT_ELEM(H,i,j);
-        createEmptyFileWithGivenLength(fnSync);
+        fnSync.createEmptyFileWithGivenLength();
     }
     node->barrierWait(fnSync,1);
 }
@@ -535,7 +538,7 @@ void ProgImageRotationalPCA::run()
     {
         std::cerr << "Performing QR decomposition ..." << std::endl;
         qrDim=QR();
-        createEmptyFileWithGivenLength(fnSync);
+        fnSync.createEmptyFileWithGivenLength();
     }
     node->barrierWait(fnSync,10);
     MPI_Bcast(&qrDim,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -545,11 +548,11 @@ void ProgImageRotationalPCA::run()
     // Load the first qrDim columns of F in matrix H
     if (node->isMaster())
     {
-        createEmptyFileWithGivenLength(fnRoot+"_matrixH.raw",Nimg*2*Nangles*Nshifts*qrDim*sizeof(double));
+        FileName(fnRoot+"_matrixH.raw").createEmptyFileWithGivenLength(Nimg*2*Nangles*Nshifts*qrDim*sizeof(double));
         H.mapToFile(fnRoot+"_matrixH.raw",MAT_XSIZE(F),qrDim);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
         MAT_ELEM(H,i,j)=MAT_ELEM(F,j,i);
-        createEmptyFileWithGivenLength(fnSync);
+        fnSync.createEmptyFileWithGivenLength();
         node->barrierWait(fnSync,2);
     }
     else
@@ -596,7 +599,7 @@ void ProgImageRotationalPCA::run()
             MD.setValue(MDL_WEIGHT,VEC_ELEM(S,eig),id);
         }
         MD.write(fnRoot+".xmd");
-        createEmptyFileWithGivenLength(fnSync);
+        fnSync.createEmptyFileWithGivenLength();
     }
     node->barrierWait(fnSync,15);
 

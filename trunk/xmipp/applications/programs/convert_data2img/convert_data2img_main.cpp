@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <data/args.h>
-#include <data/image.h>
+#include <data/xmipp_image.h>
 #include <classification/training_vector.h>
 
 #include <cstdio>
@@ -32,6 +32,7 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <data/xmipp_filename.h>
 
 int main(int argc, char **argv)
 {
@@ -40,7 +41,7 @@ int main(int argc, char **argv)
     float tmpR;
 //  char *fname, *iname, *bmname, *imgName, *ext;
     FileName fname, iname, bmname, ext;
-    std::string selname, basename;
+    FileName selname, basename;
     Image<int> mask;
     std::vector < std::vector <float> > dataPoints;
     std::vector < std::string > labels;
@@ -97,8 +98,7 @@ int main(int argc, char **argv)
 //  if (!noBB)
 //     std::cout << "Generated images will be inside the mask's bounding box" << std::endl;
     std::cout << "input = " << fname << std::endl;
-    if (exists(selname))
-    	unlink(selname.c_str());
+    selname.deleteFile();
 
     // Read spider mask
     if (!nomask)

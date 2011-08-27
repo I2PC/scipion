@@ -155,8 +155,7 @@ public:
         else
         {
             // Vector -> Image
-            if (exists(fnOut))
-                unlink(fnOut.c_str());
+            fnOut.deleteFile();
 
             MetaData vectorHeader(formatString("vectorHeader@%s",fnIn.c_str()));
             MetaData vectorContent(formatString("vectorContent@%s",fnIn.c_str()));
