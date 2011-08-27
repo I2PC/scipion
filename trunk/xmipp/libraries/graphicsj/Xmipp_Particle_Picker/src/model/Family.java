@@ -60,12 +60,12 @@ public class Family {
 	
 	public String getTrainingFilename()
 	{
-		return String.format("%s_%s", name, ParticlePicker.getTrainingFilename());
+		return String.format("%s_%s", name, ParticlePicker.getTrainingFilenameGeneric());
 	}
 	
 	public String getTrainingMaskFilename()
 	{
-		return String.format("%s_%s", name, ParticlePicker.getTrainingMaskFilename());
+		return String.format("%s_%s", name, ParticlePicker.getTrainingMaskFilenameGeneric());
 	}
 	
 	
@@ -88,10 +88,12 @@ public class Family {
 	public void goToNextStep()
 	{
 		validateNextStep();
-		new File(getTrainingFilename()).delete();
-		new File(getTrainingMaskFilename()).delete();
 		this.step = ParticlePicker.nextStep(step);
+		ParticlePicker.getInstance().resetModel(this);
+		
 	}
+	
+	
 	
 	public void validateNextStep()
 	{

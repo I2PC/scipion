@@ -176,12 +176,20 @@ public class Micrograph {
 		return name;
 	}
 
-	public boolean isEmpty()
+	public boolean hasManualParticles()
 	{
 		for(MicrographFamilyData fp: mfdatas)
 			if(fp != null && fp.getManualParticles().size() > 0)
 				return false;
 		return true;
+	}
+	
+	public boolean hasAutomaticParticles()
+	{
+		for(MicrographFamilyData fp: mfdatas)
+			if(fp != null && fp.getAutomaticParticles().size() > 0)
+				return true;
+		return false;
 	}
 	
 	public boolean isPickingAvailable(Family f) {

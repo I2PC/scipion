@@ -342,11 +342,8 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		micrograph = ppicker.getMicrographs().get(0);
 		
 		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		actionsbt = new JButton(getFamilyData().getAction());
-		actionsbt.setVisible(getFamilyData().isActionAvailable());
-		setStep(step, false);
-		actionsbt.setText(getFamilyData().getState().toString());
-		actionsbt.setVisible(getFamilyData().isActionAvailable());
+		actionsbt = new JButton();
+		setStep(step);
 		buttonspn.add(actionsbt);
 		familypn.add(buttonspn);
 
@@ -372,14 +369,12 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 
 					if (result == JOptionPane.NO_OPTION)
 						return;
-					setStep(Step.Supervised, true);
-					saveChanges();
+					family.goToNextStep();
+					setStep(Step.Supervised);
 					ppicker.train(family);
 					int next = ppicker.getNextFreeMicrograph(family);
 					if(next != -1 )
 						micrographstb.setRowSelectionInterval(next, next);
-					actionsbt.setText(getFamilyData().getState().toString());
-					actionsbt.setVisible(getFamilyData().isActionAvailable());
 					
 				} else if (family.getStep() == Step.Supervised) {
 					int result = JOptionPane.showConfirmDialog(
@@ -390,7 +385,8 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 
 					if (result == JOptionPane.NO_OPTION)
 						return;
-					setStep(Step.Manual, true);
+					family.goToNextStep();
+					setStep(Step.Manual);
 				}
 			}
 		});
@@ -430,7 +426,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 							JOptionPane.YES_NO_OPTION);
 					if (result == JOptionPane.NO_OPTION)
 						return;
-					setStep(family2.getStep(), false);
+					setStep(family2.getStep());
 				}
 				family = family2;
 				color = (family.getColor());
@@ -440,8 +436,6 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 				ParticlePickerJFrame.this.micrographsmd.fireTableDataChanged();
 				ParticlePickerJFrame.this.micrographstb.getColumnModel()
 						.getColumn(1).setHeaderValue(family.getName());
-				actionsbt.setText(getFamilyData().getAction());
-				actionsbt.setVisible(getFamilyData().isActionAvailable());
 			}
 		});
 		actionsbt.addActionListener(new ActionListener() {
@@ -470,32 +464,6 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 				actionsbt.setText(getFamilyData().getAction());
 			}
 		});
-	}
-	
-	private void setState(State state)
-	{
-		getFamilyData().setState(state);
-		micrographsmd.fireTableDataChanged();
-		setChanged(true);
-	}
-	
-	MicrographFamilyData getFamilyData()
-	{
-		return micrograph.getFamilyData(family);
-	}
-
-	private void setStep(Step step, boolean update) {
-		nextbt.setText("Go To " + ParticlePicker.nextStep(step).toString());
-		steplb.setText(step.toString());
-		if (update) {
-			family.goToNextStep();
-			setChanged(true);
-			canvas.repaint();
-		}
-		sizesl.setEnabled(step == Step.Manual);
-		sizetf.setEnabled(step == Step.Manual);
-		editfamiliesmn.setEnabled(step == Step.Manual);
-
 	}
 	
 	
@@ -619,6 +587,33 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		micrographpn.add(ctfpn,
 				WindowUtils.updateConstraints(constraints, 1, 0, 1));
 	}
+	
+	private void setState(State state)
+	{
+		getFamilyData().setState(state);
+		micrographsmd.fireTableDataChanged();
+		setChanged(true);
+	}
+	
+	MicrographFamilyData getFamilyData()
+	{
+		return micrograph.getFamilyData(family);
+	}
+
+	private void setStep(Step step) {
+		if(micrographsmd != null)
+		{
+			micrographsmd.fireTableDataChanged();//micrographs on Supervised mode will be reseted
+			canvas.repaint();//paints only current class in supervised mode
+		}
+		nextbt.setText("Go To " + ParticlePicker.nextStep(step).toString());
+		steplb.setText(step.toString());
+		sizesl.setEnabled(step == Step.Manual);
+		sizetf.setEnabled(step == Step.Manual);
+		editfamiliesmn.setEnabled(step == Step.Manual);
+		actionsbt.setText(getFamilyData().getAction());
+		actionsbt.setVisible(getFamilyData().isActionAvailable());
+	}
 
 	void initializeCanvas() {
 		Micrograph micrograph = getMicrograph();
@@ -633,11 +628,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	}
 
 	private void saveChanges() {
-
-		ppicker.persistFamilies();
-		ppicker.persistMicrographsData();
-		if(family.getStep() == Step.Supervised)
-			ppicker.persistAutomaticParticles(getFamilyData());
+		ppicker.saveData();
 		setChanged(false);
 	}
 

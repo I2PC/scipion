@@ -192,8 +192,8 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 		if (frame.isShapeSelected(Shape.Circle))
 			g2.drawOval(x - radius, y - radius, radius * 2, radius * 2);
 		if (frame.isShapeSelected(Shape.Center)) {
-			g2.drawLine(x - 2, y - 2, x + 2, y + 2);
-			g2.drawLine(x + 2, y - 2, x - 2, y + 2);
+			g2.drawLine(x, y - 2, x, y + 2);
+			g2.drawLine(x + 2, y, x - 2, y);
 		}
 		g2.drawString(Integer.toString(label), x, y - radius);
 	}

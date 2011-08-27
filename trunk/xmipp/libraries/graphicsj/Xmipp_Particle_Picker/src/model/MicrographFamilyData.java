@@ -143,5 +143,13 @@ public class MicrographFamilyData {
 			return State.Autopick.toString();
 		return state.toString();
 	}
+	
+	public void reset()
+	{
+		setStep(Step.Available);
+		setState(State.Available);
+		autoparticles.clear();
+		particles.clear();
+	}
 
 }
