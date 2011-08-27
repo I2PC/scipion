@@ -180,8 +180,8 @@ public class Micrograph {
 	{
 		for(MicrographFamilyData fp: mfdatas)
 			if(fp != null && fp.getManualParticles().size() > 0)
-				return false;
-		return true;
+				return true;
+		return false;
 	}
 	
 	public boolean hasAutomaticParticles()
