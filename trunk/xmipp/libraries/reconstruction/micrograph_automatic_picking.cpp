@@ -1889,7 +1889,6 @@ void ProgMicrographAutomaticPicking::run()
         if (fnAutoParticles.existsTrim())
         {
             MD.read(fnAutoParticles);
-            std::cout << MD << std::endl;
             if (MD.size() > 0)
             {
                 autoPicking->loadAutoFeatureVectors(fnVectors);
@@ -1903,7 +1902,6 @@ void ProgMicrographAutomaticPicking::run()
                         autoPicking->__auto_candidates[idx].status = 0;
                         autoPicking->__auto_candidates[idx].cost = -1;
                         autoPicking->__rejected_particles.push_back(autoPicking->__auto_candidates[idx]);
-                        std::cout << "False positive at: " << autoPicking->__auto_candidates[idx].x << "," << autoPicking->__auto_candidates[idx].y << std::endl;
                     }
                     else
                     {
@@ -1912,7 +1910,6 @@ void ProgMicrographAutomaticPicking::run()
                         if (cost>0)
                         {
                         	autoPicking->__auto_candidates[idx].status = 1;
-                        	std::cout << "True positive at: " << autoPicking->__auto_candidates[idx].x << "," << autoPicking->__auto_candidates[idx].y << std::endl;
                         }
                         else
                             autoPicking->__auto_candidates[idx].status = 0;
