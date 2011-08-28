@@ -268,7 +268,7 @@ public:
     bool anyParticle(int posx, int posy, int rect_size);
 
     /** Count the number of scanning positions */
-    int count_scanning_pos() const;
+    int count_scanning_pos();
 
     /** Given a current scanning position, this function returns
         the next scanning position whithin the current piece.
