@@ -427,7 +427,7 @@ std::ostream & operator << (std::ostream &_out, const NaiveBayes &naive)
 }
 
 /* Ensemble constructor ---------------------------------------------------- */
-#define WEIGHTED_SAMPLING
+//#define WEIGHTED_SAMPLING
 EnsembleNaiveBayes::EnsembleNaiveBayes(
     const std::vector < MultidimArray<double> >  &features,
     const Matrix1D<double> &priorProbs,
