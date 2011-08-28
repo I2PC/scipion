@@ -131,7 +131,7 @@ LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures,
     K = leafFeatures.size();
     if (__discreteLevels==0)
     {
-    	// This is a dummy node for features that cannot classify
+        // This is a dummy node for features that cannot classify
         MultidimArray<int> newBins(1);
         A1D_ELEM(newBins,0)=0;
         Histogram1D hist;
@@ -328,8 +328,8 @@ NaiveBayes::~NaiveBayes()
 {
     int imax=__leafs.size();
     for (int i = 0; i < imax; i++)
-    	if (__leafs[i]!=dummyLeaf)
-    		delete __leafs[i];
+        if (__leafs[i]!=dummyLeaf)
+            delete __leafs[i];
     delete dummyLeaf;
 }
 
@@ -342,10 +342,10 @@ void NaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 }
 
 /* Do inference ------------------------------------------------------------ */
-int NaiveBayes::doInference(const MultidimArray<double> &newFeatures,
-                            double &cost)
+int NaiveBayes::doInference(const MultidimArray<double> &newFeatures, double &cost,
+                            Matrix1D<double> &classesProbs, Matrix1D<double> &allCosts)
 {
-    classesProbs = __priorProbsLog10;
+    classesProbs=__priorProbsLog10;
     for(int f=0; f<Nfeatures; f++)
     {
         const LeafNode &leaf_f=*(__leafs[f]);
@@ -530,7 +530,8 @@ void EnsembleNaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 
 /* Do inference ------------------------------------------------------------ */
 int EnsembleNaiveBayes::doInference(const Matrix1D<double> &newFeatures,
-                                    double &cost, MultidimArray<int> &votes)
+                                    double &cost, MultidimArray<int> &votes,
+                                    Matrix1D<double> &classesProbs, Matrix1D<double> &allCosts)
 {
     int nmax=ensemble.size();
     MultidimArray<double> minCost, maxCost;
@@ -548,7 +549,7 @@ int EnsembleNaiveBayes::doInference(const Matrix1D<double> &newFeatures,
         newFeaturesn.initZeros(XSIZE(ensembleFeatures[n]));
         FOR_ALL_ELEMENTS_IN_ARRAY1D(newFeaturesn)
         newFeaturesn(i)=newFeatures(ensembleFeatures[n](i));
-        int k=ensemble[n]->doInference(newFeaturesn, costn);
+        int k=ensemble[n]->doInference(newFeaturesn, costn, classesProbs, allCosts);
         votes(k)++;
         if (minCost(k)>0 || minCost(k)>costn)
             minCost(k)=costn;
@@ -570,7 +571,8 @@ int EnsembleNaiveBayes::doInference(const Matrix1D<double> &newFeatures,
 }
 
 /* Do inference for class ------------------------------------------------- */
-int EnsembleNaiveBayes::doInferenceForClass(int classNumber, const Matrix1D<double> &newFeatures, double &cost)
+int EnsembleNaiveBayes::doInferenceForClass(int classNumber, const Matrix1D<double> &newFeatures, double &cost,
+        Matrix1D<double> &classesProbs, Matrix1D<double> &allCosts)
 {
     int nmax=ensemble.size();
     double minCost=1, maxCost=1;
@@ -587,7 +589,7 @@ int EnsembleNaiveBayes::doInferenceForClass(int classNumber, const Matrix1D<doub
             A1D_ELEM(newFeaturesn,i)=VEC_ELEM(newFeatures,idx);
         }
 
-        int k=ensemble[n]->doInference(newFeaturesn, costn);
+        int k=ensemble[n]->doInference(newFeaturesn, costn, classesProbs, allCosts);
         if (k==classNumber)
         {
             votes++;

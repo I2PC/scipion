@@ -117,9 +117,10 @@ public:
     void import_model(const Classification_modelQt &_model);
 
     /// Is a particle?
-    inline int isParticle(const Matrix1D<double> &new_features, double &cost)
+    inline int isParticle(const Matrix1D<double> &new_features, double &cost,
+    					  Matrix1D<double> &aux1, Matrix1D<double> &aux2)
     {
-        return __bayesEnsembleNet->doInferenceForClass(0,new_features,cost);
+        return __bayesEnsembleNet->doInferenceForClass(0,new_features,cost,aux1,aux2);
     }
 
     /// Init the naive bayesian network

@@ -28,6 +28,7 @@
 #include <data/rotational_spectrum.h>
 #include <reconstruction/denoise.h>
 #include <data/xmipp_fft.h>
+#include <data/xmipp_filename.h>
 #include <algorithm>
 
 //#define DEBUG_PREPARE
@@ -475,7 +476,6 @@ void AutoParticlePicking::buildPositiveVectors()
         {
             p.x = x;
             p.y = y;
-            p.idx = part_i;
             p.vec = v;
             if (__selection_model.addParticleTraining(p, 0))
                 numParticles++;
@@ -498,7 +498,6 @@ void AutoParticlePicking::buildPositiveVectors()
             {
                 p.x = __m->coord(part_i).X;
                 p.y = __m->coord(part_i).Y;
-                p.idx = part_i;
                 p.vec = v;
                 p.status = 1;
                 p.cost = 1.0;
@@ -521,7 +520,7 @@ void AutoParticlePicking::buildNegativeVectors(bool checkForPalsePostives)
 
     // Setup a classification model with the already known data
     std::vector<MultidimArray<double> > features;
-    Matrix1D<double> probs;
+    Matrix1D<double> probs, aux1, aux2;
     if (checkForPalsePostives)
     {
         // Prepare data to be classified
@@ -577,12 +576,11 @@ void AutoParticlePicking::buildNegativeVectors(bool checkForPalsePostives)
         // the process of automatic selecting we will want an overlap so we
         // do not miss any particle.
         Particle P;
-        P.idx = -1;
         P.status = 1;
         P.cost = -1;
         P.micrograph = __fn_micrograph;
         while (get_next_scanning_pos(piece, next_posx, next_posy, skip_x,
-                                     skip_y, __learn_overlap))
+                                     skip_y, 0))
         {
             // Check if there is any particle around
             if (!anyParticle(left + posx * __reduction,
@@ -602,7 +600,7 @@ void AutoParticlePicking::buildNegativeVectors(bool checkForPalsePostives)
                     else
                     {
                         double cost;
-                        int votes = __selection_model.isParticle(v, cost);
+                        int votes = __selection_model.isParticle(v, cost, aux1, aux2);
                         if (votes > 5)
                         {
                             if (__selection_model.addParticleTraining(P, 2))
@@ -715,6 +713,7 @@ int AutoParticlePicking::automaticallySelectParticles()
     // and false positive. For that, remove the middle class (background)
     if (features.size() == 3)
     {
+    	Matrix1D<double> aux1, aux2;
         Classification_model selection_model2(2);
         int imax;
         if (Nalive > 0)
@@ -739,7 +738,7 @@ int AutoParticlePicking::automaticallySelectParticles()
                 if (__auto_candidates[i].status == 1)
                 {
                     double p;
-                    int votes = selection_model2.isParticle(__auto_candidates[i].vec, p);
+                    int votes = selection_model2.isParticle(__auto_candidates[i].vec, p, aux1, aux2);
                     if (votes < 8)
                     {
                         __auto_candidates[i].status = 0;
@@ -753,7 +752,10 @@ int AutoParticlePicking::automaticallySelectParticles()
 
                     }
                     else
+                    {
+                    	__auto_candidates[i].cost = p;
                         Nalive++;
+                    }
                 }
         }
 
@@ -772,7 +774,7 @@ int AutoParticlePicking::automaticallySelectParticles()
             for (int i = 0; i < YSIZE(features_1); i++)
             {
                 memcpy(&VEC_ELEM(trialFeatures,0), &A2D_ELEM(features_1,i,0),rowLength);
-                int votes = selection_model2.isParticle(trialFeatures, cost);
+                int votes = selection_model2.isParticle(trialFeatures, cost, aux1, aux2);
                 if (votes < 8)
                     toKeep.push_back(i);
             }
@@ -804,8 +806,7 @@ int AutoParticlePicking::automaticallySelectParticles()
                     if (__auto_candidates[i].status == 1)
                     {
                         double p;
-                        int votes = selection_model3.isParticle(
-                                        __auto_candidates[i].vec, p);
+                        int votes = selection_model3.isParticle(__auto_candidates[i].vec, p, aux1, aux2);
                         if (votes < 8)
                         {
                             __auto_candidates[i].status = 0;
@@ -819,7 +820,10 @@ int AutoParticlePicking::automaticallySelectParticles()
 
                         }
                         else
-                            Nalive++;
+                        {
+                        	__auto_candidates[i].cost=p;
+                        	Nalive++;
+                        }
                     }
             }
         }
@@ -850,11 +854,9 @@ int AutoParticlePicking::automaticallySelectParticles()
             }
 
         // Insert selected particles in the result
-        int idxMicrograph = 0;
         for (int i = 0; i < imax; i++)
             if (__auto_candidates[i].status == 1)
             {
-                __auto_candidates[i].idx = idxMicrograph;
 #ifdef DEBUG_AUTO
 
                 std::cout << "Particle coords " << __auto_candidates[i].x << ", "
@@ -866,7 +868,6 @@ int AutoParticlePicking::automaticallySelectParticles()
                 else
                     __auto_candidates[i].cost = (__auto_candidates[i].cost
                                                  - maxCost) / (minCost - maxCost);
-                idxMicrograph++;
             }
             else
                 __auto_candidates[i].status = 0;
@@ -900,7 +901,7 @@ void * automaticallySelectParticlesThread(void * args)
     // because we need bigger image for denoising but for scanning
     // particles we skip the already scanned part
     int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
-    Matrix1D<double> v;
+    Matrix1D<double> v,aux1,aux2;
     int N = 1, particle_idx = 0, Nscanned = 0;
     MultidimArray<double> piece, original_piece;
     MultidimArray<int> ipiece;
@@ -908,7 +909,6 @@ void * automaticallySelectParticlesThread(void * args)
     std::vector<Particle> threadCandidates;
     Particle p;
     p.micrograph=autoPicking->__fn_micrograph;
-    p.idx = -1;
     p.status = 1;
     do
     {
@@ -972,8 +972,7 @@ void * automaticallySelectParticlesThread(void * args)
                                               posy, v))
                 {
                     double cost;
-                    int votes = autoPicking->__selection_model.isParticle(v,
-                                cost);
+                    int votes = autoPicking->__selection_model.isParticle(v,cost,aux1,aux2);
                     if (votes > thVotes)
                     {
 #ifdef DEBUG_MORE_AUTO
@@ -1587,8 +1586,7 @@ bool Classification_model::addParticleTraining(const Particle &p, int classIdx)
 /* Show -------------------------------------------------------------------- */
 std::ostream & operator <<(std::ostream &_out, const Particle &_p)
 {
-    _out << _p.micrograph << " " << _p.x << " " << _p.y << " " << _p.idx << " " << (int) _p.status
-    << " " << _p.cost << " ";
+    _out << _p.micrograph << " " << _p.x << " " << _p.y << " " << _p.cost << " ";
     FOR_ALL_ELEMENTS_IN_MATRIX1D(_p.vec)
     _out << VEC_ELEM(_p.vec,i) << " ";
     _out << std::endl;
@@ -1598,8 +1596,11 @@ std::ostream & operator <<(std::ostream &_out, const Particle &_p)
 /* Read--------------------------------------------------------------------- */
 void Particle::read(std::istream &_in, int _vec_size)
 {
-    _in >> micrograph >> x >> y >> idx >> status >> cost;
-    status -= '0';
+    _in >> micrograph >> x >> y >> cost;
+    if (cost>=0)
+    	status=1;
+    else
+    	status=0;
     vec.resize(_vec_size);
     _in >> vec;
 }
@@ -1730,16 +1731,16 @@ void AutoParticlePicking::saveModels(const FileName &fn_root) const
 }
 
 /* Save particles ---------------------------------------------------------- */
-void AutoParticlePicking::saveAutoParticles(const FileName &fn) const
+int AutoParticlePicking::saveAutoParticles(const FileName &fn) const
 {
     MetaData MD;
     size_t nmax = __auto_candidates.size();
     for (size_t n = 0; n < nmax; ++n)
     {
-        size_t id = MD.addObject();
         const Particle &p = __auto_candidates[n];
         if (p.cost>0 && p.status==1)
         {
+            size_t id = MD.addObject();
 			MD.setValue(MDL_XINT, p.x, id);
 			MD.setValue(MDL_YINT, p.y, id);
 			MD.setValue(MDL_COST, p.cost, id);
@@ -1747,24 +1748,25 @@ void AutoParticlePicking::saveAutoParticles(const FileName &fn) const
         }
     }
     MD.write(fn,MD_APPEND);
+    return MD.size();
 }
 
-void AutoParticlePicking::saveAutoFeatureVectors(const FileName &fn) const
+void AutoParticlePicking::saveAutoFeatureVectors(const FileName &fn, int Nvectors) const
 {
     std::ofstream fh_auto;
     fh_auto.open(fn.c_str());
     if (!fh_auto)
         REPORT_ERROR(ERR_IO_NOWRITE,fn);
-    size_t Nauto = __auto_candidates.size();
-    fh_auto << Nauto << " ";
-    if (Nauto == 0)
+    fh_auto << Nvectors << " ";
+    if (Nvectors == 0)
         fh_auto << "0\n";
     else
         fh_auto << VEC_XSIZE(__auto_candidates[0].vec) << std::endl;
+    size_t Nauto = __auto_candidates.size();
     for (size_t i = 0; i < Nauto; i++)
     {
         const Particle &p = __auto_candidates[i];
-        if (p.cost>0 && p.status==1)
+        if (p.cost>0)
         	fh_auto << p;
     }
     fh_auto.close();
@@ -1859,16 +1861,16 @@ void ProgMicrographAutomaticPicking::run()
         autoPicking->readMicrograph();
     FileName familyName=fn_model.removeDirectories();
     FileName fnAutoParticles=familyName+"@"+fn_root+"_auto.pos";
+    FileName fnVectors=fn_root + "_auto_feature_vectors_"+familyName+".txt";
     if (mode == "autoselect" || mode=="try")
     {
         autoPicking->automaticallySelectParticles();
-        autoPicking->saveAutoParticles(fnAutoParticles);
+        int Nparticles=autoPicking->saveAutoParticles(fnAutoParticles);
         if (mode=="try")
-            autoPicking->saveAutoFeatureVectors(fn_root + "_auto_feature_vectors_"+familyName+".txt");
+            autoPicking->saveAutoFeatureVectors(fnVectors,Nparticles);
     }
     else
     {
-        FileName fnVectors=fn_root + "_auto_feature_vectors_"+familyName+".txt";
         MetaData MD;
         // Insert all true positives
         if (fn_train!="")
@@ -1884,8 +1886,7 @@ void ProgMicrographAutomaticPicking::run()
         }
 
         // Insert all false positives
-        std::cout << "Checking for " << fnAutoParticles << std::endl;
-        if (existsTrim(fnAutoParticles))
+        if (fnAutoParticles.existsTrim())
         {
             MD.read(fnAutoParticles);
             std::cout << MD << std::endl;
@@ -1922,9 +1923,9 @@ void ProgMicrographAutomaticPicking::run()
         }
         autoPicking->learnParticles(size / 2);
         autoPicking->saveModels(fn_model);
-        if (exists(fnVectors))
+        if (fileExists(fnVectors))
         	unlink(fnVectors.c_str());
-        if (existsTrim(fnAutoParticles))
+        if (fnAutoParticles.existsTrim())
         	autoPicking->saveAutoParticles(fnAutoParticles);
     }
 }

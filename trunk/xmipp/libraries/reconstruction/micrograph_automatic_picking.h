@@ -41,8 +41,6 @@ class Particle
 public:
 	FileName micrograph;       // Micrograph
     int x, y;                  // position in micrograph
-    int idx;                   // Index of this particle within the micrograph
-                               // list of coordinates
     char status;               // rejected=0, selected=1 or moved=2
     Matrix1D<double> vec;      // vector of that particle
     double cost;               // Associated cost
@@ -110,9 +108,10 @@ public:
     }
 
     /// Is a particle?
-    inline int isParticle(const Matrix1D<double> &new_features, double &cost)
+    inline int isParticle(const Matrix1D<double> &new_features, double &cost,
+    					  Matrix1D<double> &aux1, Matrix1D<double> &aux2)
     {
-        return __bayesEnsembleNet->doInferenceForClass(0,new_features,cost);
+        return __bayesEnsembleNet->doInferenceForClass(0,new_features,cost,aux1,aux2);
     }
 
     /// Init the naive bayesian network
@@ -280,11 +279,15 @@ public:
     /// Save models
     void saveModels(const FileName &fn_root) const;
 
-    /// Save automatically selected particles
-    void saveAutoParticles(const FileName &fn) const;
+    /** Save automatically selected particles.
+     * Returns the number of particles saved.
+     */
+    int saveAutoParticles(const FileName &fn) const;
 
-    /// Save the feature vectors of the automatically selected particles
-    void saveAutoFeatureVectors(const FileName &fn) const;
+    /** Save the feature vectors of the automatically selected particles.
+     * Nvectors is the number of vectors to save, given by saveAutoParticles.
+     */
+    void saveAutoFeatureVectors(const FileName &fn, int Nvectors) const;
 
     /// Load the feature vectors of the automatically selected particles
     void loadAutoFeatureVectors(const FileName &fn);

@@ -586,7 +586,7 @@ void AutoParticlePickingQt::buildNegativeVectors(Classification_modelQt &_model,
     // because we need bigger image for denoising but for scanning
     // particles we skip the already scanned part
     int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
-    Matrix1D<double> v;
+    Matrix1D<double> v, aux1, aux2;
 
     int N = 1, Nnonparticles=0, Nfalsepositives=0;
 
@@ -649,7 +649,7 @@ void AutoParticlePickingQt::buildNegativeVectors(Classification_modelQt &_model,
                     }
                     else
                     {
-                        int votes=__selection_model.isParticle(v,cost);
+                        int votes=__selection_model.isParticle(v,cost,aux1,aux2);
                         if (votes>5)
                         {
                             if (_model.addParticleTraining(P, 2))
@@ -763,6 +763,7 @@ int AutoParticlePickingQt::automaticallySelectParticles()
     if (features.size()==3)
     {
         int imax;
+    	Matrix1D<double> aux1, aux2;
         if (Nalive > 0)
         {
             __selection_model2.clear();
@@ -787,7 +788,7 @@ int AutoParticlePickingQt::automaticallySelectParticles()
                 if (__auto_candidates[i].status == 1)
                 {
                     double p;
-                    int votes=__selection_model2.isParticle(__auto_candidates[i].vec,p);
+                    int votes=__selection_model2.isParticle(__auto_candidates[i].vec,p,aux1,aux2);
                     if (votes<8)
                     {
                         __auto_candidates[i].status=0;
@@ -821,7 +822,7 @@ int AutoParticlePickingQt::automaticallySelectParticles()
             for (int i=0; i<YSIZE(features_1); i++)
             {
                 memcpy(&VEC_ELEM(trialFeatures,0),&A2D_ELEM(features_1,i,0),rowLength);
-                int votes=__selection_model2.isParticle(trialFeatures,cost);
+                int votes=__selection_model2.isParticle(trialFeatures,cost, aux1, aux2);
                 if (votes<8)
                     toKeep.push_back(i);
             }
@@ -851,7 +852,7 @@ int AutoParticlePickingQt::automaticallySelectParticles()
                     if (__auto_candidates[i].status == 1)
                     {
                         double p;
-                        int votes=__selection_model3.isParticle(__auto_candidates[i].vec,p);
+                        int votes=__selection_model3.isParticle(__auto_candidates[i].vec,p, aux1, aux2);
                         if (votes<8)
                         {
                             __auto_candidates[i].status=0;
@@ -969,7 +970,7 @@ void * automaticallySelectParticlesThreadQt(void * args)
     // because we need bigger image for denoising but for scanning
     // particles we skip the already scanned part
     int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
-    Matrix1D<double> v;
+    Matrix1D<double> v,aux1,aux2;
     int N = 1, particle_idx = 0, Nscanned=0;
     MultidimArray<double> piece, original_piece;
     MultidimArray<int> ipiece;
@@ -1037,7 +1038,7 @@ void * automaticallySelectParticlesThreadQt(void * args)
                 if (autoPicking->build_vector(ipiece, original_piece, posx, posy, v))
                 {
                     double cost;
-                    int votes=autoPicking->__selection_model.isParticle(v,cost);
+                    int votes=autoPicking->__selection_model.isParticle(v,cost,aux1,aux2);
                     if (votes>thVotes)
                     {
 #ifdef DEBUG_MORE_AUTO

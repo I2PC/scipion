@@ -103,12 +103,6 @@ public:
     Matrix2D<double> __cost;
 
 public:
-    // Auxiliary variable for all costs
-    Matrix1D<double> allCosts;
-
-    // Auxiliary variable for the probability of the classes
-    Matrix1D<double> classesProbs;
-
     // Dummy leaf for non-classificatory features
     LeafNode *dummyLeaf;
 public:	
@@ -124,8 +118,11 @@ public:
     // Set cost matrix
     void setCostMatrix(const Matrix2D<double> &cost);
 
-    // Returns the class with the largest probability given a set of features
-    int doInference(const MultidimArray<double> &newFeatures, double &cost);
+    /** Returns the class with the largest probability given a set of features.
+     * classesProbs and allCosts are auxiliary vectors to avoid continuous allocating of memory.
+     */
+    int doInference(const MultidimArray<double> &newFeatures, double &cost,
+    				Matrix1D<double> &classesProbs, Matrix1D<double> &allCosts);
     
     /// Show
     friend std::ostream & operator << (std::ostream &_out,
@@ -166,12 +163,14 @@ public:
 
     // Returns the class with the largest probability given a set of features
     int doInference(const Matrix1D<double> &newFeatures, double &cost,
-        MultidimArray<int> &votes);
+        MultidimArray<int> &votes,
+		Matrix1D<double> &classesProbs, Matrix1D<double> &allCosts);
 
     /** Do inference for a given class.
      * It returns the number of votes for that class and the associated cost.
      */
-    int doInferenceForClass(int classNumber, const Matrix1D<double> &newFeatures, double &cost);
+    int doInferenceForClass(int classNumber, const Matrix1D<double> &newFeatures, double &cost,
+    						Matrix1D<double> &classesProbs, Matrix1D<double> &allCosts);
 };
 //@}
 #endif
