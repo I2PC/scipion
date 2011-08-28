@@ -383,9 +383,9 @@ void AutoParticlePickingQt::learnParticles(int _ellipse_radius)
         __mask_size = 2*__particle_radius;
         __min_distance_between_particles = __particle_radius/2;
         __scan_overlap = ROUND(__mask_size*0.9);
-        __learn_overlap = __particle_radius;
         __reduction=(int)std::pow(2.0, __output_scale);
     }
+    __learn_overlap=0;
 
     std::cerr << "\n------------------Learning Phase-----------------------\n";
     createMask();
@@ -962,6 +962,7 @@ void * automaticallySelectParticlesThreadQt(void * args)
         (autoPicking->__selection_model.__training_particles.size()==3 &&
          autoPicking->__selection_model.__training_particles[2].size()==0))
         thVotes=8;
+
     //top,left corner of the piece
     int top = 0, left = 0, next_top = 0, next_left = 0;
     // If the piece available is small then include the scanned part
@@ -1254,9 +1255,10 @@ void AutoParticlePickingQt::classifyMask()
 // Section: Scanning and pieces =============================================
 // ==========================================================================
 /* Count the number of points scanned in a micrograph --------------------- */
-int AutoParticlePickingQt::count_scanning_pos() const
+int AutoParticlePickingQt::count_scanning_pos()
 {
-    const MultidimArray<int> &mask = __mask.get_binary_mask();
+	__piece_overlap=2*__particle_radius;
+	const MultidimArray<int> &mask = __mask.get_binary_mask();
     int top = 0, left = 0, next_top = 0, next_left = 0;
     int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
     int Nscanned=0;
