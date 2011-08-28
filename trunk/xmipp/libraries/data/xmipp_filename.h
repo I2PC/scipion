@@ -637,6 +637,13 @@ public:
  */
 bool fileExists( const char *filename );
 
+/** Check if the file exists using the stat function
+ */
+inline bool fileExists( const FileName &filename )
+{
+	return fileExists(filename.c_str());
+}
+
 /** Copy one image
  */
 void copyImage(const FileName & source,const FileName & target);
