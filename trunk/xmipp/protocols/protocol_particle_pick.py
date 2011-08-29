@@ -41,32 +41,40 @@ class ProtParticlePicking(XmippProtocol):
         
         total_manual = 0
         N_manual = 0
+        total_auto = 0
+        N_auto = 0
         Nblock={}
         for posfile in glob.glob(self.WorkingDir+"/*.pos"):
             blockList=xmipp.getBlocksInMetaDataFile(posfile)
-            manual=0
+            if 'families' in blockList:
+                blockList.remove('families')
+            particles=0
             for block in blockList:
                 mD=xmipp.MetaData(block+"@"+posfile);
                 Nparticles=mD.size()
-                manual+=Nparticles
+                particles+=Nparticles
                 if block in Nblock.keys():
                      Nblock[block]+=Nparticles
                 else:
                      Nblock[block]=Nparticles
-            if manual>0:
-                total_manual+=manual
-                N_manual+=1
-        msg="Number of particles picked: %d (from %d micrographs" % (total_manual, N_manual)
+            if particles>0:
+                if 'auto' in posfile:
+                    total_auto+=particles
+                    N_auto+=1
+                else:
+                    total_manual+=particles
+                    N_manual+=1
+        summary.append("Number of particles manually picked: %d (from %d micrographs)" % (total_manual, N_manual))
+        if N_auto>0:
+            summary.append("Number of particles automatically picked: %d (from %d micrographs)" % (total_auto, N_auto))
         fnFamilies=os.path.join(self.WorkingDir,"families.xmd")
         if os.path.exists(fnFamilies):
             mD=xmipp.MetaData(fnFamilies)
             Nfamilies=mD.size()
             if Nfamilies>1:
-                msg+=" and %d families"
-        msg+=")"
-        summary.append(msg)
+                summary.append("Number of families: "+Nfamilies)
         for block in Nblock.keys():
-            summary.append(block+" : "+str(Nblock[block])+" particles")
+            summary.append("Family "+block+" : "+str(Nblock[block])+" particles")
         return summary
     
     def validate(self):
