@@ -556,7 +556,7 @@ void FileName::copyFile(const FileName & target) const
 }
 
 
-inline bool fileExists( const char *filename )
+bool fileExists( const char *filename )
 {
     Stat buffer ;
     return ( stat(filename, &buffer) == 0 ? true : false );
