@@ -51,9 +51,19 @@ def AddLastSlash(string):
 
 def SymLink(target, source, env):
     #As the link will be in bin/ directory we need to move up
-    source = '../%s' % str(source[0])
     link = str(target[0])
+    source = os.path.relpath(str(source[0]),os.path.split(link)[0])
     os.symlink(source, link)
+
+def AddProgramLink(target,source):
+    binprefix = os.path.join(env['prefix'], 'bin')
+    bintarget = os.path.join(binprefix, env['prepend']+target)
+    binsource = os.path.join(binprefix, env['prepend']+source)
+    command = env.Command(bintarget, binsource,  
+        [Chmod('$SOURCE', 0755), SymLink])
+    alias = env.Alias(target, command)
+    env.Default(alias)
+    return command
 
 def AddBatch(name, basedir, extension=''):
     # setup
@@ -835,6 +845,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
     AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
+    AddProgramLink('classify_CL2D','mpi_classify_CL2D')
     AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
     AddXmippMPIProgram('mpi_image_operate')
     AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
