@@ -568,7 +568,7 @@ void ProtPrinter::printParam(const ParamDef &param, int v)
     //Independent params are some kind of special ones
     if (param.independent)
         return;
-    bool expert = param.visible > v;
+    param_expert = param.visible > v;
     label = param.name;
 
     size_t n_args = param.arguments.size();
@@ -580,7 +580,7 @@ void ProtPrinter::printParam(const ParamDef &param, int v)
         if (param.name == exclusive[0]->name)
         {
             exclusiveGroupName = KEY_PREFIX("L_");
-            fprintf(output, "# {list} (%s", param.name.c_str());
+            fprintf(output, "#  %s{list} (%s", (param_expert ? "{expert}" : ""), param.name.c_str());
             for (size_t i = 1; i < exclusive.size(); ++i)
                 fprintf(output, ",%s", exclusive[i]->name.c_str());
             fprintf(output, ")Select option\n%s = \"%s\"\n",
@@ -634,7 +634,8 @@ bool isArgDir(const String &argName)
 
 void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
 {
-    String tags = "";
+    String tags = (param_expert ? "{expert}" : "");
+
     size_t argSubParamsSize = argument.subParams.size();
     if (isArgFile(argument.name))
     	tags += "{file}";
@@ -643,7 +644,7 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
 
     if (argSubParamsSize > 0)
     {
-        tags = "{list_combo}(" + argument.subParams[0]->name;
+        tags += "{list_combo}(" + argument.subParams[0]->name;
         for (size_t j = 1; j < argSubParamsSize; ++j)
             tags += "," + argument.subParams[j]->name;
         tags += ")";

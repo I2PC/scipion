@@ -103,6 +103,8 @@ protected:
   String label, condition, parentName, exclusiveGroupName;
   StringVector stringBackup;
   size_t keyCounter;
+  bool param_expert; //this will be used for arguments or expert parameters
+
 public:
   /** buffer to read the command line output */
   char readbuffer[1024];
