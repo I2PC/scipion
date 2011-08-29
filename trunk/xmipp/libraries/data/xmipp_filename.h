@@ -635,7 +635,11 @@ public:
 
 /** Check if the file exists using the stat function
  */
-bool fileExists( const char *filename );
+inline bool fileExists( const char *filename )
+{
+    Stat buffer ;
+    return ( stat(filename, &buffer) == 0 ? true : false );
+}
 
 /** Check if the file exists using the stat function
  */

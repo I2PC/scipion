@@ -28,6 +28,7 @@
 #include "xmipp_filename.h"
 #include "xmipp_funcs.h"
 #include "xmipp_image_macros.h"
+#include "xmipp_image_generic.h"
 
 // Constructor with root, number and extension .............................
 void FileName::compose(const String &str, size_t no, const String &ext)
@@ -555,13 +556,6 @@ void FileName::copyFile(const FileName & target) const
     f2 << f1.rdbuf();
 }
 
-
-bool fileExists( const char *filename )
-{
-    Stat buffer ;
-    return ( stat(filename, &buffer) == 0 ? true : false );
-}
-
 /* Check if a file exists -------------------------------------------------- */
 bool FileName::exists() const
 {
@@ -586,7 +580,7 @@ bool FileName::existsTrim() const
     size_t found = find_first_of("@");
 
     if (found != String::npos)
-      auxF =  substr(found+1);
+        auxF =  substr(found+1);
 
     found = auxF.find_first_of("#");
 
@@ -740,14 +734,13 @@ void FileName::assertExists()
 {
     if (!empty() && !exists())
     {
-      std::cerr << "FileName::assertExists: control file" << *this
-          << " doesn't exist, exiting..." << std::endl;
-      exit(ERR_IO_NOTEXIST);
+        std::cerr << "FileName::assertExists: control file" << *this
+        << " doesn't exist, exiting..." << std::endl;
+        exit(ERR_IO_NOTEXIST);
     }
     //TODO: Maybe change to report error???
     //REPORT_ERROR(ERR_IO_NOTEXIST, (String)"FileName::assertExists: control file" + *this " doesn't exist, exiting...");
 }
-
 
 /* Get the Xmipp Base directory -------------------------------------------- */
 FileName FileName::getXmippPath()
@@ -761,24 +754,17 @@ FileName FileName::getXmippPath()
     int i;
     for (i = 0; i < number_directories; i++)
     {
-        FileName fn = directories[i] + "/xmipp_reconstruct_art";
-        FILE *aux;
-        if ((aux = fopen(fn.c_str(), "r")) != NULL)
+        if (fileExists(directories[i] + "/xmipp_reconstruct_art"))
         {
-            fclose(aux);
             found = true;
             break;
         }
-        //exists()
     }
     if (found)
-        return directories[i].substr(0, directories[i].length() - 4);
+        return directories[i].substr(0, directories[i].length() - 4); //Remove '/bin'
     else
         REPORT_ERROR(ERR_IO_NOPATH, "FileName::getXmippPath::Cannot find Xmipp Base directory");
 }
-
-
-#include "xmipp_image_generic.h"
 
 void copyImage(const FileName & source, const FileName & target)
 {
