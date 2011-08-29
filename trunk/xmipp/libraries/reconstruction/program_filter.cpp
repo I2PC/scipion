@@ -45,6 +45,7 @@ void ProgFilter::defineParams()
     MeanShiftFilter::defineParams(this);
     BackgroundFilter::defineParams(this);
     MedianFilter::defineParams(this);
+    BasisFilter::defineParams(this);
 
     //examples
     addExampleLine("Filter a volume using a mask =volumeMask.vol= to remove bad pixels:", false);
@@ -80,6 +81,8 @@ void ProgFilter::readParams()
         filter = new MedianFilter();
     else if (checkParam("--diffusion"))
         filter = new DiffusionFilter();
+    else if (checkParam("--basis"))
+        filter = new BasisFilter();
     else
         REPORT_ERROR(ERR_ARG_MISSING, "You should provide some filter");
     //Read params

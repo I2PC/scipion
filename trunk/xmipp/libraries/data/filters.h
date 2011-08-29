@@ -1401,4 +1401,26 @@ public:
     void apply(MultidimArray<double> &img);
 };
 
+class BasisFilter: public XmippFilter
+{
+	/** Stack with the basis */
+	FileName fnBasis;
+
+	/// Number of basis to use.
+	int Nbasis;
+
+	// Stack with the basis
+	Image<double> basis;
+public:
+    /** Define the parameters for use inside an Xmipp program */
+    static void defineParams(XmippProgram * program);
+    /** Read from program command line */
+    void readParams(XmippProgram * program);
+    /** Show parameters */
+    void show();
+    /** Apply the filter to an image or volume*/
+    void apply(MultidimArray<double> &img);
+};
+
+
 #endif

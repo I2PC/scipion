@@ -1312,12 +1312,12 @@ double Shah_energy(const MultidimArray<double> &img,
     double w3=VEC_ELEM(W,3);
     for (int i = 1; i < Ydim1; i++)
     {
-    	int ip1=i+1;
-    	int im1=i-1;
+        int ip1=i+1;
+        int im1=i-1;
         for (int j = 1; j < Xdim1; j++)
         {
-        	int jp1=j+1;
-        	int jm1=j-1;
+            int jp1=j+1;
+            int jm1=j-1;
             /* Calculate data matching terms */
             double D = dAij(img, i, j);
             double F = dAij(surface_strength, i, j);
@@ -1363,12 +1363,12 @@ double Update_surface_Shah(MultidimArray<double> &img,
     double w3=VEC_ELEM(W,3);
     for (int i = 1; i < Ydim1; i++)
     {
-    	int ip1=i+1;
-    	int im1=i-1;
+        int ip1=i+1;
+        int im1=i-1;
         for (int j = 1; j < Xdim1; j++)
         {
-        	int jp1=j+1;
-        	int jm1=j-1;
+            int jp1=j+1;
+            int jm1=j-1;
             /* Calculate edge partial derivative terms */
             double S  =  dAij(edge_strength, i, j);
             double Sx = 0.5*(dAij(edge_strength, i, jp1)    - dAij(edge_strength, i, jm1));
@@ -1440,12 +1440,12 @@ double Update_edge_Shah(MultidimArray<double> &img,
     double w3=VEC_ELEM(W,3);
     for (int i = 1; i < Ydim1; i++)
     {
-    	int ip1=i+1;
-    	int im1=i-1;
+        int ip1=i+1;
+        int im1=i-1;
         for (int j = 1; j < Xdim1; j++)
         {
-        	int jp1=j+1;
-        	int jm1=j-1;
+            int jp1=j+1;
+            int jm1=j-1;
 
             /* Calculate first and second derivative terms */
             double Fx = 0.5*(dAij(surface_strength, i, jp1) - dAij(surface_strength, i, jm1));
@@ -2394,7 +2394,7 @@ void DiffusionFilter::defineParams(XmippProgram * program)
 /** Read from program command line */
 void DiffusionFilter::readParams(XmippProgram * program)
 {
-	Shah_weight.resizeNoCopy(4);
+    Shah_weight.resizeNoCopy(4);
     Shah_outer = program->getIntParam( "--shah_iter", 0);
     Shah_inner = program->getIntParam( "--shah_iter", 1);
     Shah_refinement = program->getIntParam("--shah_iter", 2);
@@ -2429,3 +2429,52 @@ void DiffusionFilter::apply(MultidimArray<double> &img)
     else
         img = surface_strength;
 }
+
+/** Define the parameters for use inside an Xmipp program */
+void BasisFilter::defineParams(XmippProgram * program)
+{
+    program->addParamsLine("== Basis filter ==");
+    program->addParamsLine("  [--basis <file> <N=-1>]           : Stack file with the basis, N is the number of elements to consider");
+}
+
+/** Read from program command line */
+void BasisFilter::readParams(XmippProgram * program)
+{
+    fnBasis=program->getParam("--basis");
+    Nbasis=program->getIntParam("--basis",1);
+    basis.read(fnBasis);
+    if (Nbasis>0)
+        basis().resize(Nbasis,1,YSIZE(basis()),XSIZE(basis()));
+}
+
+void BasisFilter::show()
+{
+    std::cout
+    << " Basis filter\n"
+    << " Basis file " << fnBasis << std::endl
+    << " Number of basis " << Nbasis << std::endl
+    ;
+}
+
+/** Apply the filter to an image or volume*/
+void BasisFilter::apply(MultidimArray<double> &img)
+{
+    const MultidimArray<double> &mBasis=basis();
+    if (XSIZE(img)!=XSIZE(mBasis) || YSIZE(img)!=YSIZE(mBasis))
+        REPORT_ERROR(ERR_MULTIDIM_SIZE,"Images and basis are of different size");
+
+    MultidimArray<double> result;
+    result.initZeros(img);
+    for (int nn=0; nn<NSIZE(mBasis); ++nn)
+    {
+        double cnn=0;
+        double *ptrBasis=&NZYX_ELEM(mBasis,nn,0,0,0);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img)
+        cnn+=DIRECT_MULTIDIM_ELEM(img,n)*(*ptrBasis++);
+        ptrBasis=&NZYX_ELEM(mBasis,nn,0,0,0);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img)
+        DIRECT_MULTIDIM_ELEM(result,n)+=cnn*(*ptrBasis++);
+    }
+    img=result;
+}
+
