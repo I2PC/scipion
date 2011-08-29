@@ -399,8 +399,8 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         imgStart = replaceNsize;
         header->ifn = replaceNsize + Ndim - 1 ;
     }
-    else if( mode == WRITE_REPLACE && select_img + Ndim - 1 > replaceNsize)
-        header->ifn = select_img + Ndim - 1;
+    else if( mode == WRITE_REPLACE && imgStart + Ndim > replaceNsize)
+        header->ifn = imgStart + Ndim - 1;
     else if (Ndim > replaceNsize)
         header->ifn = Ndim - 1;
 
@@ -417,8 +417,19 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
     fcntl(fileno(fimg),       F_SETLKW, &fl); /* locked */
     fcntl(fileno(fhed), F_SETLKW, &fl); /* locked */
 
-    // Update number of images when needed
-    if(replaceNsize - 1 < header->ifn && imgStart > 0)
+
+    if (replaceNsize == 0) // Header written first time
+    {
+        if ( swapWrite )
+        {
+            IMAGIChead * headTemp = new IMAGIChead;
+            *headTemp = *header;
+            swapPage((char *) headTemp, IMAGICSIZE - 916, Float);
+            fwrite( headTemp, IMAGICSIZE, 1, fhed );
+        }
+        fwrite( header, IMAGICSIZE, 1, fhed );
+    }
+    else if( header->ifn + 1 > replaceNsize && imgStart > 0 ) // Update number of images when needed
     {
         fseek( fhed, sizeof(int), SEEK_SET);
         if ( swapWrite )
@@ -427,7 +438,8 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
             swapPage((char *) ifnswp, SIZEOF_INT, Int);
             fwrite(&(ifnswp),SIZEOF_INT,1,fhed);
         }
-        fwrite(&(header->ifn),SIZEOF_INT,1,fhed);
+        else
+            fwrite(&(header->ifn),SIZEOF_INT,1,fhed);
     }
 
     // Jump to the selected imgStart position

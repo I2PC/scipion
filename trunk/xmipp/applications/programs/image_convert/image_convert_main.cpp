@@ -169,13 +169,15 @@ protected:
         // Check output type
         if (!checkParam("--type"))
         {
-            // if is stack
-            if (fn_out.getExtension() == "stk" || fn_out.getExtension() == "mrcs" ||
-                oext == "stk" || oext == "mrcs")
+            // if it is stack
+            if (fn_out.getExtension() == "stk"  || oext == "stk" ||
+                fn_out.getExtension() == "mrcs" || oext == "mrcs" ||
+                mdInSize > 1)
                 type = "stk";
-            // if is volume, even if not is stack and --oroot is not set
-            if (fn_out.getExtension() == "vol" || oext == "vol" ||
-                (type != "stk" && !checkParam("--oroot")) )
+            else if (fn_out.getExtension() == "vol" || oext == "vol" ||
+                     fn_out.getExtension() == "inf" || oext == "inf" ||
+                     fn_out.getExtension() == "raw" || oext == "raw" ||
+                     zdimOut > 1) // if it is volume
                 type = "vol";
         }
 
@@ -200,9 +202,16 @@ protected:
 
     void preProcess()
     {
-    	create_empty_stackfile = !appendToStack;
+        if (delete_output_stack)
+        {
+            FileName fn_stack_plain = fn_out.removeFileFormat();
+            fn_stack_plain.deleteFile();
+            delete_output_stack = false;
+        }
 
-    	convMode = MD2MD;
+        create_empty_stackfile = !appendToStack;
+
+        convMode = MD2MD;
 
         if (!single_image && type == "vol")
         {
