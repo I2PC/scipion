@@ -12,12 +12,12 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 
-import model.State;
+import model.MicrographFamilyState;
 import model.AutomaticParticle;
 import model.Micrograph;
 import model.MicrographFamilyData;
 import model.Particle;
-import model.Step;
+import model.FamilyState;
 
 public class ParticlePickerCanvas extends ImageCanvas implements
 		MouseWheelListener {
@@ -149,7 +149,7 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 	public void paint(Graphics g) {
 		super.paint(g);
 		Graphics2D g2 = (Graphics2D) g;
-		if(frame.getFamily().getStep() == Step.Manual)
+		if(frame.getFamily().getStep() == FamilyState.Manual)
 			for (MicrographFamilyData mfdata : micrograph.getFamiliesData()) 
 				drawFamily(g2, mfdata);
 		else

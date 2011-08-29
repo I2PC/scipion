@@ -1,5 +1,5 @@
 package model;
-public enum Step {
+public enum FamilyState {
 	Manual, Supervised, Available
 
 }

@@ -1,5 +1,5 @@
 package model;
 
-public enum State {
+public enum MicrographFamilyState {
 	Manual, Autopick, Correct, ReadOnly, Available
 }

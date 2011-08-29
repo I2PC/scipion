@@ -45,7 +45,7 @@ public class Micrograph {
 		this.ctf = ctf;
 	}
 	
-	void setFamiliesData(List<MicrographFamilyData> mfdatas)
+	void setFamiliesState(List<MicrographFamilyData> mfdatas)
 	{
 		this.mfdatas = mfdatas;
 	}
@@ -196,6 +196,13 @@ public class Micrograph {
 			return getFamilyData(f).isPickingAvailable();
 	}
 	
+	public boolean hasData()
+	{
+		for(MicrographFamilyData mfd: mfdatas)
+			if(mfd.getState() != MicrographFamilyState.Available)
+				return true;
+		return false;
+	}
 	
 
 

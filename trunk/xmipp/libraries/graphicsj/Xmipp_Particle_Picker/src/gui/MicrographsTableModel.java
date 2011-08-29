@@ -6,6 +6,7 @@ import javax.swing.table.AbstractTableModel;
 
 import model.Micrograph;
 import model.MicrographFamilyData;
+import model.FamilyState;
 
 public class MicrographsTableModel extends AbstractTableModel {
 	
@@ -45,7 +46,14 @@ public class MicrographsTableModel extends AbstractTableModel {
 			return m.getName();
 		MicrographFamilyData mfd = m.getFamilyData(frame.getFamily()); 
 		if(columnIndex == 1)
-			return mfd.getManualParticles().size();
+		{
+			if(mfd.getStep() == FamilyState.Manual)
+				return Integer.toString(mfd.getManualParticles().size());
+			if(mfd.getStep() == FamilyState.Available)
+				return "0";
+			if(mfd.getStep() == FamilyState.Supervised)
+				return String.format("%s + %s", mfd.getManualParticles().size(), mfd.getAutomaticParticlesCount());
+		}
 		if(columnIndex == 2)
 			return mfd.getState();
 		return null;

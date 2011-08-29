@@ -10,7 +10,7 @@ public class Family {
 	private String name;
 	private Color color;
 	private int size;
-	private Step step;
+	private FamilyState step;
 	int particles = 0;
 	
 	public int getParticlesNumber()
@@ -43,10 +43,10 @@ public class Family {
 	
 	public Family(String name, Color color, int size)
 	{
-		this(name, color, size, Step.Manual);
+		this(name, color, size, FamilyState.Manual);
 	}
 	
-	public Family(String name, Color color, int size, Step state)
+	public Family(String name, Color color, int size, FamilyState state)
 	{
 		if(size < 0 || size > sizemax)
 			throw new IllegalArgumentException(String.format("Size should be between 0 and %s, %s not allowed", sizemax, size));
@@ -58,24 +58,24 @@ public class Family {
 		this.step = state;
 	}
 	
-	public String getTrainingFilename()
+	public String getOTrainingFilename()
 	{
-		return String.format("%s_%s", name, ParticlePicker.getTrainingFilenameGeneric());
+		return ParticlePicker.getOutputPath(String.format("%s_%s", name, ParticlePicker.getTrainingFilenameGeneric()));
 	}
 	
-	public String getTrainingMaskFilename()
+	public String getOTrainingMaskFilename()
 	{
-		return String.format("%s_%s", name, ParticlePicker.getTrainingMaskFilenameGeneric());
+		return ParticlePicker.getOutputPath(String.format("%s_%s", name, ParticlePicker.getTrainingMaskFilenameGeneric()));
 	}
 	
 	
 	public Family(String name, Color color)
 	{
-		this(name, color, getDefaultSize(), Step.Manual);
+		this(name, color, getDefaultSize(), FamilyState.Manual);
 	}
 	
 	
-	public Step getStep()
+	public FamilyState getStep()
 	{
 		return step;
 	}
@@ -98,11 +98,11 @@ public class Family {
 	public void validateNextStep()
 	{
 		int min = ParticlePicker.getMinForTraining();
-		Step next = ParticlePicker.nextStep(step);
-		if(next == Step.Supervised && particles < min)
-			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", min, Step.Supervised));
+		FamilyState next = ParticlePicker.nextStep(step);
+		if(next == FamilyState.Supervised && particles < min)
+			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", min, FamilyState.Supervised));
 		if(!ParticlePicker.getInstance().hasEmptyMicrographs(this))
-			throw new IllegalArgumentException(String.format("There are no available micrographs for %s step", Step.Supervised));
+			throw new IllegalArgumentException(String.format("There are no available micrographs for %s step", FamilyState.Supervised));
 		
 	}
 	

@@ -7,34 +7,29 @@ public class MicrographFamilyData {
 
 	private List<Particle> particles;
 	private Family family;
-	private Step mystep;
 	private List<AutomaticParticle> autoparticles;
 	private Micrograph micrograph;
-	private State state;
+	private MicrographFamilyState state;
 
 	public MicrographFamilyData(Micrograph micrograph, Family family) {
 		this.family = family;
 		this.particles = new ArrayList<Particle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
 		this.micrograph = micrograph;
-		state = State.Available;
-		mystep = Step.Available;
+		state = MicrographFamilyState.Available;
 	}
 
 	public MicrographFamilyData(Micrograph micrograph, Family family,
-			Step step, State state) {
+			MicrographFamilyState state) {
 		this(micrograph, family);
-		this.mystep = step;
 		this.state = state;
 	}
 
-	public State getState() {
+	public MicrographFamilyState getState() {
 		return state;
 	}
 
-	public void setState(State state) {
-		if(state == State.Correct)
-			this.setStep(Step.Supervised);
+	public void setState(MicrographFamilyState state) {
 		this.state = state;
 	}
 
@@ -42,13 +37,7 @@ public class MicrographFamilyData {
 		return micrograph;
 	}
 
-	public Step getStep() {
-		return mystep;
-	}
 
-	public void setStep(Step step) {
-		this.mystep = step;
-	}
 
 	public List<Particle> getManualParticles() {
 		return particles;
@@ -66,11 +55,13 @@ public class MicrographFamilyData {
 
 		particles.add(p);
 		family.particles++;
-		if (mystep == Step.Available)
-			mystep = family.getStep();
-		if (mystep == Step.Manual)
-			state = State.Manual;
-
+		if (state == MicrographFamilyState.Available)
+		{
+			if(family.getStep() == FamilyState.Manual)
+				state = MicrographFamilyState.Manual;
+			if(family.getStep() == FamilyState.Supervised)
+				state = MicrographFamilyState.Correct;
+		}
 	}
 
 	
@@ -83,9 +74,19 @@ public class MicrographFamilyData {
 		else {
 			particles.remove(p);
 			family.particles--;
-			if (particles.size() == 0)
-				state = State.Available;
+			if (particles.size() == 0 && getAutomaticParticlesCount() == 0)
+				state = MicrographFamilyState.Available;
 		}
+	}
+	
+	public boolean hasManualParticles()
+	{
+		return particles.size() != 0;
+	}
+	
+	public boolean hasAutomaticParticles()
+	{
+		return autoparticles.size() != 0;
 	}
 
 	public boolean isEmpty() {
@@ -98,58 +99,71 @@ public class MicrographFamilyData {
 	}
 
 	public boolean isPickingAvailable() {
-		if (family.getStep() == Step.Supervised) {
-			if (mystep == Step.Available)
+		if (family.getStep() == FamilyState.Supervised) {
+			if (state == MicrographFamilyState.Available)
 				return false;
-			if (mystep == Step.Manual)
+			if (state == MicrographFamilyState.Manual)
 				return false;
-			if (mystep == Step.Supervised)
-				if (state != State.Correct)
+			if (state != MicrographFamilyState.Correct)
 					return false;
 			return true;
 		}
-		if (family.getStep() == Step.Manual) {
-			if (mystep == Step.Available)
+		if (family.getStep() == FamilyState.Manual) {
+			if (state == MicrographFamilyState.Available)
 				return true;
-			if (mystep == Step.Manual)
+			if (state == MicrographFamilyState.Manual)
 				return true;
-			if (mystep == Step.Supervised)
-				return false;
+			return false;
 		}
-		return true;
+		return false;
 	}
 
 	public boolean isActionAvailable() {
 		
-		if (family.getStep() == Step.Manual)
+		if (family.getStep() == FamilyState.Manual)
 			return false;
-		if (family.getStep() == Step.Supervised) {
-			if (mystep == Step.Available)
-				return (state == State.Available);
-			if (mystep == Step.Manual)
+		if (family.getStep() == FamilyState.Supervised) {
+			if (state == MicrographFamilyState.Available)
+				return true;
+			if (state == MicrographFamilyState.Manual)
 				return false;
-			if (mystep == Step.Supervised) {
-				if (state == State.Manual || state == State.ReadOnly)
-					return false;
-			}
+			if (state == MicrographFamilyState.ReadOnly)
+				return false;
+			return true;
 		}
-		return true;
+		return false;
 	}
 
 	public String getAction() {
-		if (mystep == Step.Manual)
+		if (state == MicrographFamilyState.Manual)
 			return null;
-		if (mystep == Step.Available)
-			return State.Autopick.toString();
+		if (state == MicrographFamilyState.Available)
+			return MicrographFamilyState.Autopick.toString();
 		return state.toString();
 	}
 	
 	public void reset()
 	{
-		setStep(Step.Available);
-		setState(State.Available);
+		setState(MicrographFamilyState.Available);
 		autoparticles.clear();
 		particles.clear();
 	}
-
+	
+	public FamilyState getStep()
+	{
+		if(state == MicrographFamilyState.Manual)
+			return FamilyState.Manual;
+		if(state == MicrographFamilyState.Available)
+			return FamilyState.Available;
+		return FamilyState.Supervised;
+	}
+	
+	public int getAutomaticParticlesCount()
+	{
+		int count = 0;
+		for(AutomaticParticle p: autoparticles)
+			if(!p.isDeleted())
+				count ++;
+		return count;
+	}
 }
