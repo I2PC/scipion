@@ -22,6 +22,7 @@ public class MicrographFamilyData {
 	public MicrographFamilyData(Micrograph micrograph, Family family,
 			MicrographFamilyState state) {
 		this(micrograph, family);
+		
 		this.state = state;
 	}
 
@@ -70,7 +71,10 @@ public class MicrographFamilyData {
 			throw new IllegalArgumentException(
 					Constants.getEmptyFieldMsg("particle"));
 		if (p instanceof AutomaticParticle)
+		{
 			((AutomaticParticle) p).setDeleted(true);
+			family.autoparticles--;
+		}
 		else {
 			particles.remove(p);
 			family.particles--;
@@ -94,7 +98,10 @@ public class MicrographFamilyData {
 	}
 
 	public void addAutomaticParticle(AutomaticParticle p) {
+		if(state == MicrographFamilyState.Available)
+			throw new IllegalStateException();
 		autoparticles.add(p);
+		family.autoparticles++;
 
 	}
 
@@ -166,4 +173,11 @@ public class MicrographFamilyData {
 				count ++;
 		return count;
 	}
+	
+	public String getOTrainingAutoFeaturesVectorFilename()
+	{
+		return ParticlePicker.getOutputPath(String.format("%s_%s_%s.txt", micrograph.getName(), ParticlePicker.getTrainingAutoFeatureVectorsFilenameGeneric(), family.getName()));
+	}
+	
+	
 }

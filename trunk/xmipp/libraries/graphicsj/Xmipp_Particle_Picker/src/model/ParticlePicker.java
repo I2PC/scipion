@@ -25,9 +25,10 @@ public class ParticlePicker {
 	private static boolean incore;
 	private static boolean auto;
 	private static int minparticles = 100;
-	private static int mintraining = 20;
+	private static int mintraining = 70;
 	private static String trainingfn = "training.txt";
 	private static String trainingmaskfn = "mask.xmp";
+	private static String autofeaturesvectorfn = "auto_feature_vectors";
 	private static double mincost = 0;
 
 	private List<Family> families;
@@ -64,6 +65,10 @@ public class ParticlePicker {
 
 	public static String getTrainingMaskFilenameGeneric() {
 		return trainingmaskfn;
+	}
+
+	public static String getTrainingAutoFeatureVectorsFilenameGeneric() {
+		return autofeaturesvectorfn;
 	}
 
 	public static int getMinForTraining() {
@@ -273,7 +278,7 @@ public class ParticlePicker {
 			if (micrographs.size() == 0)
 				throw new IllegalArgumentException(String.format(
 						"No micrographs specified on %s", xmd));
-			for(Micrograph m: micrographs)
+			for (Micrograph m : micrographs)
 				loadAutomaticParticles(m);
 
 		} catch (Exception e) {
@@ -339,7 +344,7 @@ public class ParticlePicker {
 			MetaData md;
 			String block = null;
 			for (Micrograph m : micrographs) {
-				if (!m.hasData() )
+				if (!m.hasData())
 					new File(m.getOFilename()).delete();
 				else {
 					persistMicrographFamilies(m);
@@ -368,7 +373,7 @@ public class ParticlePicker {
 	}
 
 	public void persistAutomaticParticles(Micrograph m) {
-		if(!m.hasAutomaticParticles())
+		if (!m.hasAutomaticParticles())
 			new File(m.getAutoOFilename()).delete();
 		else
 			for (MicrographFamilyData mfd : m.getFamiliesData())
@@ -544,21 +549,34 @@ public class ParticlePicker {
 			MicrographFamilyData mfd;
 			for (Micrograph m : micrographs) {
 				mfd = m.getFamilyData(family);
-				if (mfd.getStep() == FamilyState.Supervised) {
-					// Resetting family data
-					mfd.reset();
-					if (m.hasAutomaticParticles()) {
-						// removing automatic particles
-						block = String.format("%s@%s", family.getName(),
-								m.getAutoOFilename());
-						emptymd.writeBlock(block);
-					}
-				}
 			}
 			saveData();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 		}
+	}
+
+	public void resetFamilyData(MicrographFamilyData mfd) {
+		String block;
+		MetaData emptymd = new MetaData();
+		try {
+			//just in case of user reset
+			new File(mfd.getOTrainingAutoFeaturesVectorFilename()).delete();
+			if (mfd.getStep() == FamilyState.Supervised) {
+				mfd.reset();// Resetting family data
+				if (mfd.getMicrograph().hasAutomaticParticles()) {
+					// removing automatic particles
+					block = String.format("%s@%s", mfd.getFamily().getName(),
+							mfd.getMicrograph().getAutoOFilename());
+
+					emptymd.writeBlock(block);
+				}
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 	public void loadData() {

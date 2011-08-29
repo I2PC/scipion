@@ -12,13 +12,24 @@ public class Family {
 	private int size;
 	private FamilyState step;
 	int particles = 0;
+	int autoparticles = 0;
 	
-	public int getParticlesNumber()
+	public String getParticles()
+	{
+		return String.format("Particles:%s+%s", particles, autoparticles);
+	}
+	
+	public int getManualNumber()
 	{
 		return particles;
 	}
 
 
+	public int getAutomaticNumber()
+	{
+		return autoparticles;
+	}
+	
 	private static int sizemax = 1000;
 	private static Family dfamily = new Family("Default", Color.green);
 	private static Color[] colors = new Color[]{Color.BLUE, Color.CYAN, 

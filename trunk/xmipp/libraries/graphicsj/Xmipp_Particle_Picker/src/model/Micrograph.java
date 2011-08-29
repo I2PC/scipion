@@ -204,6 +204,12 @@ public class Micrograph {
 		return false;
 	}
 	
+	public void reset()
+	{
+		for(MicrographFamilyData mfd: mfdatas)
+			if(mfd != null)
+				mfd.reset();
+	}
 
 
 }
