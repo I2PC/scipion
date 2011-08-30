@@ -577,16 +577,15 @@ void ShowSel::changeLabels()
 void ShowSel::showStats()
 {
     MetaData SFnew;
-    size_t id;
-
+    MDRow row;
     for (int i = 0; i < listSize; i++)
     {
-        id = SFnew.addObject();
-        SFnew.setValue(MDL_IMAGE,imgnames[i], id);
         if (cellMarks[i])
+        {
+            mdInput.getRow(row,imgids[i]);
+            size_t id=SFnew.addRow(row);
             SFnew.setValue(MDL_ENABLED,1, id);
-        else
-            SFnew.setValue(MDL_ENABLED,-1, id);
+        }
     }
     if (SFnew.size())
         ShowTable::showStats(SFnew, apply_geo);
