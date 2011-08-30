@@ -32,7 +32,7 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         if (apply_geo)
-            image.readApplyGeo(MD,__iter.objId, HEADER);
+            image.readApplyGeo(MD,__iter.objId);
         else
         {
             MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
@@ -63,7 +63,7 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         if (apply_geo)
-            image.readApplyGeo(MD,__iter.objId, HEADER);
+            image.readApplyGeo(MD,__iter.objId);
         else
         {
             MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
