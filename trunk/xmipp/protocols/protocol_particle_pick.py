@@ -72,7 +72,7 @@ class ProtParticlePicking(XmippProtocol):
             mD=xmipp.MetaData(fnFamilies)
             Nfamilies=mD.size()
             if Nfamilies>1:
-                summary.append("Number of families: "+Nfamilies)
+                summary.append("Number of families: "+str(Nfamilies))
         for block in Nblock.keys():
             summary.append("Family "+block+" : "+str(Nblock[block])+" particles")
         return summary
