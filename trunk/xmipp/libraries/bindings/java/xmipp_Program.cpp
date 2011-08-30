@@ -7,7 +7,7 @@
 
 JNIEXPORT jint JNICALL Java_xmipp_Program_runByName
 (JNIEnv *env, jclass jc, jstring progName, jstring args) {
-    std::string msg = "";
+    String msg = "";
 
 	try {
 		String progNameStr = env->GetStringUTFChars(progName, false);
@@ -27,10 +27,10 @@ JNIEXPORT jint JNICALL Java_xmipp_Program_runByName
     }
 }
 
-JNIEXPORT jstring JNICALL Java_xmipp_getXmippPath
+JNIEXPORT jstring JNICALL Java_xmipp_Program_getXmippPath
 (JNIEnv *env, jclass jc)
 {
-    std::string msg = "";
+    String msg = "";
 
 	try {
 		return env->NewStringUTF(FileName::getXmippPath().data());

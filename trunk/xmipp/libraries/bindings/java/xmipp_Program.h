@@ -16,11 +16,11 @@ JNIEXPORT jint JNICALL Java_xmipp_Program_runByName
   (JNIEnv *, jclass, jstring, jstring);
 
 /*
- * Class:     getXmippPath
+ * Class:     xmipp_Program
  * Method:    getXmippPath
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT jstring JNICALL Java_xmipp_getXmippPath
+JNIEXPORT jstring JNICALL Java_xmipp_Program_getXmippPath
   (JNIEnv *, jclass);
 
 #ifdef __cplusplus
