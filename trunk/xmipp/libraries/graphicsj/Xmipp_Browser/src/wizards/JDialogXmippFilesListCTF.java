@@ -2,9 +2,11 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package browser.filebrowsers;
+package wizards;
 
+import browser.COMMAND_PARAMETERS;
 import browser.LABELS;
+import browser.filebrowsers.JDialogXmippFilesList;
 import java.awt.BorderLayout;
 
 /**
@@ -13,25 +15,14 @@ import java.awt.BorderLayout;
  */
 public class JDialogXmippFilesListCTF extends JDialogXmippFilesList {
 
-    /** Creates new form JDialogXmippFilesList */
-//    public JDialogXmippFilesListCTF(String directory, int port) {
-//        this(directory, port, false);
-//    }
-//
-//    public JDialogXmippFilesListCTF(String directory, int port, String expression) {
-//        this(directory, port, expression, false);
-//    }
-//    public JDialogXmippFilesListCTF(String directory, int port, boolean singleSelection) {
-//        this(directory, port, "", singleSelection);
-//    }
     public JDialogXmippFilesListCTF(String directory, int port, String expression) {
         this(directory, port, expression, 1.0);
     }
 
     public JDialogXmippFilesListCTF(String directory, int port, String expression, double downsampling) {
-        super(directory, port, expression);
+        super(directory, port, false, COMMAND_PARAMETERS.SELECTION_TYPE_ANY, expression);
 
-        setTitle(LABELS.TITLE_XMIPP_WIZARD_PSD);
+        setTitle(LABELS.TITLE_WIZARD_PSD);
 
         // Hack: Replaces panel.
         remove(panelXmippBrowser);

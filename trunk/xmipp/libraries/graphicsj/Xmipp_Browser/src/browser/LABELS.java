@@ -20,8 +20,11 @@ public class LABELS {
     public final static String TITLE_XMIPP_FILE_SELECTOR_ANY = "Select...";
     public final static String TITLE_XMIPP_FILE_SELECTOR_FILE = "Select file(s)";
     public final static String TITLE_XMIPP_FILE_SELECTOR_DIR = "Select dir(s)";
-    public final static String TITLE_XMIPP_WIZARD_PSD = "Wizard PSD";
-    public final static String TITLE_XMIPP_WIZARD_MEASURE_FREQS = "Wizard Measure Freqs.";
+    public final static String TITLE_WIZARD_PSD = "Wizard PSD";
+    public final static String TITLE_WIZARD_MEASURE_FREQS = "Wizard Measure Freqs.";
+    public final static String TITLE_WIZARD_BAD_PIXELS_FILTER = "Wizard Bad Pixels Filter";
+    public final static String TITLE_WIZARD_BAND_PASS_FILTER = "Wizard Band Pass Filter";
+    public final static String TITLE_WIZARD_GAUSSIAN_FILTER = "Wizard Gaussian Filter";
     public final static String TITLE_ERROR = "Memory error";
     public final static String TITLE_GO_TO_SLICE = "Go to slice";
     public final static String TITLE_PREVIEW = "Preview:";
@@ -223,7 +226,10 @@ public class LABELS {
     public final static String LABEL_UNKNOWN = "Unknown label";
     //public final static String LABEL_SAMPLING = "Sampling: ";
     public final static String LABEL_DOWNSAMPLING = "Downsampling: ";
-    //public final static String LABEL_MISSING_INFO = "Missing info";
+    public final static String LABEL_BAD_PIXELS_FACTOR = "Bad pixels factor: ";
+    public final static String LABEL_W1 = "W1: ";
+    public final static String LABEL_W2 = "W2: ";
+    public final static String LABEL_RAISED_W = "Raised W: ";
 
     public static String LABEL_FILES_SHOWING(int elements, int total) {
         return total != elements ? " Showing " + elements + " / " + total + " elements." : "";

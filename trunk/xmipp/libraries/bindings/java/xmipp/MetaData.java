@@ -22,9 +22,9 @@ public class MetaData {
 //        // (It's executed just for the first time)
 //        Arrays.sort(PATHS_FIELDS);
 //    }
-	public static final int MD_OVERWRITE = 0;
-	public static final int MD_APPEND = 1; 
 
+    public static final int MD_OVERWRITE = 0;
+    public static final int MD_APPEND = 1;
     private String filename;
     //hold pointer to Image class in C++ space
     private long peer;
@@ -55,10 +55,11 @@ public class MetaData {
      * @return Number of projections of the stack
      */
     public native int size();
-    
+
     public native void setColumnFormat(boolean format);
 
     public native void write(String filename) throws Exception;
+
     public native void writeBlock(String filename) throws Exception;
 
     public native void print();
@@ -149,7 +150,7 @@ public class MetaData {
     public native long addObject();
 
     public native void addLabel(int label);
-    
+
     public native void enableDebug();
 
     //non-native functions

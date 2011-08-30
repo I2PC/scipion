@@ -39,8 +39,8 @@ public class JPanelXmippBrowser extends JPanel {
 
     // Creates icons manager so icons will be ready to be used.
     protected boolean SHOW_PREVIEWS = true;
-    int previewWidth = ICONS_MANAGER.DEFAULT_PREVIEW_WIDTH;
-    int previewHeight = ICONS_MANAGER.DEFAULT_PREVIEW_HEIGHT;
+    protected int previewWidth = ICONS_MANAGER.DEFAULT_PREVIEW_WIDTH;
+    protected int previewHeight = ICONS_MANAGER.DEFAULT_PREVIEW_HEIGHT;
     protected ListModelFilesBrowser listModelFilesList;
     protected FileListRenderer fileListRenderer = new FileListRenderer();
     protected JSearchBox searchBox = new JSearchBox(LABELS.LABEL_FILTER);
@@ -318,13 +318,13 @@ public class JPanelXmippBrowser extends JPanel {
         updatePreview();
     }//GEN-LAST:event_jcbPreviewActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    javax.swing.JCheckBox jcbPreview;
-    browser.filebrowsers.JListFileFilter jlFileFilter;
-    javax.swing.JLabel jlFiltering;
-    javax.swing.JPanel jpCenter;
-    javax.swing.JPanel jpFileBrowser;
+    protected javax.swing.JCheckBox jcbPreview;
+    protected browser.filebrowsers.JListFileFilter jlFileFilter;
+    protected javax.swing.JLabel jlFiltering;
+    protected javax.swing.JPanel jpCenter;
+    protected javax.swing.JPanel jpFileBrowser;
     browser.filebrowsers.JPanelImageInfo jpImageInfo;
-    javax.swing.JPanel jpPreview;
+    protected javax.swing.JPanel jpPreview;
     private javax.swing.JScrollPane jspFilesFiltering;
     // End of variables declaration//GEN-END:variables
 }

@@ -126,7 +126,8 @@ public class XmippBrowser implements PlugIn {
     }
 
     void runBrowser(String directory, String expression, boolean singleSelection) {
-        JDialogXmippBrowser frameBrowser = new JDialogXmippBrowser(directory, expression, singleSelection);
+        JDialogXmippBrowser frameBrowser = new JDialogXmippBrowser(
+                directory, singleSelection, expression);
         frameBrowser.setVisible(true);
     }
 

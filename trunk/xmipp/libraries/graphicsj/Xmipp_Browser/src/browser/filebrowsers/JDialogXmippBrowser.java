@@ -4,6 +4,7 @@
  */
 package browser.filebrowsers;
 
+import browser.COMMAND_PARAMETERS;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.windows.ImageWindowOperations;
@@ -16,6 +17,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import javax.swing.JButton;
+import javax.swing.JToolBar;
 
 /**
  *
@@ -23,29 +25,71 @@ import javax.swing.JButton;
  */
 public class JDialogXmippBrowser extends JDialogXmippFilesList {
 
-    protected JButton jbCaptureWindow;
+    JButton jbParent, jbRefresh, jbCaptureWindow;
+    JToolBar jToolBar;
 
     public JDialogXmippBrowser(String directory) {
         this(directory, "");
     }
 
     public JDialogXmippBrowser(String directory, String expression) {
-        this(directory, expression, false);
+        this(directory, false, COMMAND_PARAMETERS.SELECTION_TYPE_ANY, expression);
     }
 
     public JDialogXmippBrowser(String directory, boolean singleSelection) {
-        this(directory, "", singleSelection);
+        this(directory, singleSelection, COMMAND_PARAMETERS.SELECTION_TYPE_ANY, "");
     }
 
-    public JDialogXmippBrowser(String directory, String expression, boolean singleSelection) {
-        super(directory, 0, expression, singleSelection);   // Port won't be used as method is overriden.
+    public JDialogXmippBrowser(String directory, boolean singleSelection, String expression) {
+        this(directory, singleSelection, COMMAND_PARAMETERS.SELECTION_TYPE_ANY, expression);
+    }
+
+    public JDialogXmippBrowser(String directory, boolean singleSelection, String selType, String expression) {
+        super(directory, 0, singleSelection, selType, expression);   // Port won't be used as method is overriden.
 
 //        setModal(false);
 //        setAlwaysOnTop(false);
         toFront();
         setTitle(LABELS.TITLE_XMIPP_BROWSER);
 
-        // Toolbar buttons.
+        setToolbar();
+
+        jbOk.setText(LABELS.BUTTON_OPEN_AS_IMAGE);
+        jbCancel.setText(LABELS.BUTTON_OPEN_AS_TABLE);
+    }
+
+    void setToolbar() {
+        jToolBar = new javax.swing.JToolBar();
+        jbParent = new javax.swing.JButton();
+        jbRefresh = new javax.swing.JButton();
+
+        jToolBar.setFloatable(false);
+        jToolBar.setRollover(true);
+
+        jbParent.setIcon(ICONS_MANAGER.PARENT_DIRECTORY);
+        jbParent.setText(LABELS.BUTTON_PARENT_DIRECTORY);
+        jbParent.setFocusable(false);
+        jbParent.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jbParent.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jbParent.addActionListener(new java.awt.event.ActionListener() {
+
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                goParent();
+            }
+        });
+
+        jbRefresh.setIcon(ICONS_MANAGER.REFRESH_DIRECTORY);
+        jbRefresh.setText(LABELS.BUTTON_REFRESH_DIRECTORY);
+        jbRefresh.setFocusable(false);
+        jbRefresh.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jbRefresh.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jbRefresh.addActionListener(new java.awt.event.ActionListener() {
+
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                refresh();
+            }
+        });
+
         jbCaptureWindow = new JButton(LABELS.BUTTON_CAPTURE_WINDOW, ICONS_MANAGER.CAPTURE_WINDOW);
         jbCaptureWindow.setFocusable(false);
         jbCaptureWindow.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
@@ -57,14 +101,23 @@ public class JDialogXmippBrowser extends JDialogXmippFilesList {
             }
         });
 
+        jToolBar.add(jbParent);
+        jToolBar.add(jbRefresh);
         jToolBar.add(jbCaptureWindow);
 
-        jbOk.setText(LABELS.BUTTON_OPEN_AS_IMAGE);
-        jbCancel.setText(LABELS.BUTTON_OPEN_AS_TABLE);
+        getContentPane().add(jToolBar, java.awt.BorderLayout.NORTH);
+    }
+
+    void refresh() {
+        panelXmippBrowser.refreshCurrentDirectory();
+    }
+
+    protected void goParent() {
+        panelXmippBrowser.goParent();
     }
 
     @Override
-    void cancel() {
+    protected void cancel() {
     }
 
     @Override

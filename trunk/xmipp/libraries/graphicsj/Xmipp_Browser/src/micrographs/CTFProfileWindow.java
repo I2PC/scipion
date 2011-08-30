@@ -8,6 +8,7 @@ import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.gui.Line;
 import ij.gui.ProfilePlot;
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Checkbox;
@@ -56,6 +57,7 @@ import xmipp.MetaData;
  */
 public class CTFProfileWindow extends ImageWindow implements ItemListener, ActionListener {
 
+    private final static BasicStroke plotsStroke = new BasicStroke(2.0f);
     private final static int MAX_VALUE = 360;
     private final static Color COLOR_PROFILE = Color.BLACK;
     private final static Color COLOR_BACKGROUND_NOISE = Color.RED;
@@ -78,21 +80,21 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
     private double xValues[];
     private double Tm;
 
-    /*public static void main(String args[]) {
-    String dir = "/home/juanjo/MicrographPreprocessing/ImportedMicrographs/run_001/01nov26b.001.002.001.002/";
-    String CTFFilename = dir + "xmipp_ctf.ctfparam";
-    String displayFilename = dir + "xmipp_ctf_ctfmodel_halfplane.xmp";
-    String PSDFilename = dir + "xmipp_ctf.psd";
-    
-    try {
-    ImageDouble img = new ImageDouble(displayFilename);
-    ImagePlus ip = ImageConverter.convertToImagej(img, displayFilename);
-    
-    CTFProfileWindow frame = new CTFProfileWindow(ip, CTFFilename, PSDFilename);
-    frame.setVisible(true);
-    } catch (Exception ex) {
-    }
-    }*/
+//    public static void main(String args[]) {
+//        String dir = "/home/juanjo/MicrographPreprocessing/ImportedMicrographs/run_001/01nov26b.001.002.001.002/";
+//        String CTFFilename = dir + "xmipp_ctf.ctfparam";
+//        String displayFilename = dir + "xmipp_ctf_ctfmodel_halfplane.xmp";
+//        String PSDFilename = dir + "xmipp_ctf.psd";
+//
+//        try {
+//            ImageDouble img = new ImageDouble(displayFilename);
+//            ImagePlus ip = ImageConverter.convertToImagej(img, displayFilename);
+//
+//            CTFProfileWindow frame = new CTFProfileWindow(ip, CTFFilename, PSDFilename);
+//            frame.setVisible(true);
+//        } catch (Exception ex) {
+//        }
+//    }
     public CTFProfileWindow(ImagePlus imp, String CTFFilename, String PSDFilename) {
         super(imp);
 
@@ -274,10 +276,19 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             plot.setDataset(0, datasetProfile);
             plot.getRangeAxis().setLabel(show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD);
         } else {
-            JFreeChart chart = createChart("",
+//            JFreeChart chart = createChart("",
+//                    LABELS.LABEL_SAMPLING,
+//                    show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD,
+//                    datasetProfile);
+
+            JFreeChart chart = ChartFactory.createXYLineChart(
+                    "",
                     LABELS.LABEL_SAMPLING,
                     show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD,
-                    datasetProfile);
+                    datasetProfile,
+                    PlotOrientation.VERTICAL,
+                    true, true, false);
+
             chartPanelProfile = createChartPanel(chart);
 
 //            chartPanelProfile.setPreferredSize(new Dimension(chartPanelProfile.getPreferredSize().width, getImagePlus().getHeight()));
@@ -286,7 +297,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
 //            pack();
         }
 
-        setSeriesColors((XYPlot) chartPanelProfile.getChart().getPlot(),
+        customizeSeriesRenderes((XYPlot) chartPanelProfile.getChart().getPlot(),
                 showBGNoise(), showEnvelope(), showPSD(), show_ctf);
     }
 
@@ -300,10 +311,17 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             plot.setDataset(0, datasetAVG);
             plot.getRangeAxis().setLabel(show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD);
         } else {
-            JFreeChart chart = createChart("",
+//            JFreeChart chart = createChart("",
+//                    LABELS.LABEL_SAMPLING,
+//                    show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD,
+//                    datasetAVG);
+            JFreeChart chart = ChartFactory.createXYLineChart(
+                    "",
                     LABELS.LABEL_SAMPLING,
                     show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD,
-                    datasetAVG);
+                    datasetAVG, PlotOrientation.VERTICAL,
+                    true, true, false);
+
             chartPanelAVG = createChartPanel(chart);
 
 //            chartPanelAVG.setPreferredSize(new Dimension(chartPanelAVG.getPreferredSize().width, getImagePlus().getHeight()));
@@ -312,7 +330,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
 //            pack();
         }
 
-        setSeriesColors((XYPlot) chartPanelAVG.getChart().getPlot(),
+        customizeSeriesRenderes((XYPlot) chartPanelAVG.getChart().getPlot(),
                 showBGNoise(), showEnvelope(), showPSD(), show_ctf);
     }
 
@@ -331,50 +349,57 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
         return new ChartPanel(chart);
     }
 
-    private static JFreeChart createChart(String title, String xLabel, String yLabel, XYDataset dataset) {
-        JFreeChart chart = ChartFactory.createXYLineChart(
-                title, xLabel, yLabel, dataset, PlotOrientation.VERTICAL,
-                true, true, false);
-
-        XYPlot plot = (XYPlot) chart.getPlot();
-        plot.setDomainPannable(true);
-        plot.setRangePannable(true);
-
-        java.util.List list = Arrays.asList(new Integer[]{
-                    new Integer(0), new Integer(1)
-                });
-        plot.mapDatasetToDomainAxes(0, list);
-        plot.mapDatasetToRangeAxes(0, list);
-        ChartUtilities.applyCurrentTheme(chart);
-
-        return chart;
-    }
-
-    private void setSeriesColors(XYPlot plot, boolean show_bgnoise, boolean show_envelope,
+//    private static JFreeChart createChart(String title, String xLabel, String yLabel, XYDataset dataset) {
+//        JFreeChart chart = ChartFactory.createXYLineChart(
+//                title, xLabel, yLabel, dataset, PlotOrientation.VERTICAL,
+//                true, true, false);
+//
+//        XYPlot plot = (XYPlot) chart.getPlot();
+//        plot.setDomainPannable(true);
+//        plot.setRangePannable(true);
+//
+//        java.util.List list = Arrays.asList(new Integer[]{
+//                    new Integer(0), new Integer(1)
+//                });
+//        plot.mapDatasetToDomainAxes(0, list);
+//        plot.mapDatasetToRangeAxes(0, list);
+//        ChartUtilities.applyCurrentTheme(chart);
+//
+//        return chart;
+//    }
+    private void customizeSeriesRenderes(XYPlot plot, boolean show_bgnoise, boolean show_envelope,
             boolean show_psd, boolean show_ctf) {
 
         XYItemRenderer renderer = plot.getRenderer();
 
         if (show_ctf) {
             renderer.setSeriesPaint(0, COLOR_CTF);
+            plot.getRenderer().setSeriesStroke(0, plotsStroke);
         } else {
             // 0: Profile.
             renderer.setSeriesPaint(0, COLOR_PROFILE);
+            plot.getRenderer().setSeriesStroke(0, plotsStroke);
 
             int index = 1;
             // 1: BGNoise.
             if (show_bgnoise) {
-                renderer.setSeriesPaint(index++, COLOR_BACKGROUND_NOISE);
+                renderer.setSeriesPaint(index, COLOR_BACKGROUND_NOISE);
+                plot.getRenderer().setSeriesStroke(index, plotsStroke);
+                index++;
             }
 
             // 2: BGNoise.
             if (show_envelope) {
-                renderer.setSeriesPaint(index++, COLOR_ENVELOPE);
+                renderer.setSeriesPaint(index, COLOR_ENVELOPE);
+                plot.getRenderer().setSeriesStroke(index, plotsStroke);
+                index++;
             }
 
             // 3: PSD.
             if (show_psd) {
-                renderer.setSeriesPaint(index++, COLOR_PSD);
+                renderer.setSeriesPaint(index, COLOR_PSD);
+                plot.getRenderer().setSeriesStroke(index, plotsStroke);
+                index++;
             }
         }
     }

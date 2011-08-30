@@ -163,8 +163,8 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD
 
 /*
  * Class:     xmipp_ImageDouble
- * Method:    bandpassFilter
- * Signature: (Ljava/lang/String;DII)[D
+ * Method:    bandPassFilter
+ * Signature: (Ljava/lang/String;DDDII)[D
  */
 JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_bandPassFilter
   (JNIEnv *, jclass, jstring, jdouble, jdouble, jdouble, jint, jint);
@@ -179,10 +179,10 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_gaussianFilter
 
 /*
  * Class:     xmipp_ImageDouble
- * Method:    badpixelsFilter
+ * Method:    badPixelsFilter
  * Signature: (Ljava/lang/String;DII)[D
  */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_badpixelsFilter
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_badPixelsFilter
   (JNIEnv *, jclass, jstring, jdouble, jint, jint);
 
 #ifdef __cplusplus

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package browser.filebrowsers;
+package wizards;
 
 import browser.LABELS;
 import java.awt.BorderLayout;
@@ -20,7 +20,7 @@ public class JDialogXmippFilesListMeasureFreqsBrowser extends JDialogXmippFilesL
     public JDialogXmippFilesListMeasureFreqsBrowser(String directory, int port, String expression, double downsampling) {
         super(directory, port, expression);
 
-        setTitle(LABELS.TITLE_XMIPP_WIZARD_MEASURE_FREQS);
+        setTitle(LABELS.TITLE_WIZARD_MEASURE_FREQS);
 
         jpButtons.remove(jbOk);
         jbCancel.setText(LABELS.BUTTON_CLOSE);
@@ -36,7 +36,7 @@ public class JDialogXmippFilesListMeasureFreqsBrowser extends JDialogXmippFilesL
     }
 
     @Override
-    void cancel() {
+    protected void cancel() {
         dispose();
     }
 }

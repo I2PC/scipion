@@ -467,7 +467,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_gaussianFilter
 	return NULL;
 }
 
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_badpixelsFilter
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_badPixelsFilter
   (JNIEnv *env, jclass class_, jstring filename, jdouble factor, jint w, jint h) {
 	std::string msg = "";
 
