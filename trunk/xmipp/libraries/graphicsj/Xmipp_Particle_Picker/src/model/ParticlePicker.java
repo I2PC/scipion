@@ -52,7 +52,7 @@ public class ParticlePicker {
 	}
 
 	public static String getXmippPath() {
-		return "/home/airen/xmipp";
+		return Program.getXmippPath();
 	}
 
 	public static String getXmippPath(String relpath) {
