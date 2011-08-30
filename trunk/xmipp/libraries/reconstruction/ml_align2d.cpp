@@ -518,7 +518,7 @@ void ProgML2D::produceSideInfo2()
     // Call the first iteration 0 if generating initial references from random subsets
     else if (factor_nref > 1)
     {
-        istart = 0;
+        istart = SPECIAL_ITER;
 
         //Expand MDref because it will be re-used in writeOutputFiles
         MetaData MDaux(MDref);
@@ -2139,7 +2139,6 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
 
 void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 {
-//std::cerr << "DEBUG_JM: writeOutputFiles, type: " << outputType <<std::endl;
     FileName fn_tmp, fn_prefix;
     Image<double> Itmp;
     MetaData MDo;
@@ -2224,13 +2223,15 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         else
             fn_tmp = formatString("%s_%s_refs.stk", rootStr, prefixStr);
 
-        //std::cerr << "DEBUG_JM: MDref.size(): " << MDref.size() << std::endl;
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
             objId = __iter.objId;
             select_img = refno + 1;
             //Itmp = model.Iref[refno];
+            //std::cerr << "DEBUG_JM: refno: " << refno << std::endl;
             Itmp = (*ptrImages)[refno];
+            //std::cerr << "DEBUG_JM: fn_tmp: " << fn_tmp << std::endl;
+            //std::cerr << "DEBUG_JM: select_img: " << select_img << std::endl;
             Itmp.write(fn_tmp, select_img, true, WRITE_REPLACE);
             //MDref.setValue(MDL_ITER, iter, objId);//write out iteration number
             MDref.setValue(MDL_REF, select_img, objId); //Also write reference number
@@ -2243,9 +2244,8 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
                 MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000, objId);
             if (write_norm)
                 MDref.setValue(MDL_INTSCALE, model.scale[refno], objId);
-            refno++;
+            ++refno;
         }
-
         //fn_tmp.copyFile(formatString("%s_output_block%d.stk", fn_tmp.c_str(), current_block));
 
         fn_tmp = formatString("%s_%s", rootStr, prefixStr);
@@ -2253,11 +2253,11 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 
         if (!fn_prefix.contains("block"))
             fn_ref = formatString("iter%06d@%s", iter, fn_ref.c_str());
-
         MDref.write(fn_ref, mode);
+
         if (outputType == OUT_REFS)
             outRefsMd = fn_ref;
-        //std::cerr << "DEBUG_JM: outRefsMd: " << outRefsMd << std::endl;
+
         // Write out log-file
         MetaData mdLog;
         objId = mdLog.addObject();

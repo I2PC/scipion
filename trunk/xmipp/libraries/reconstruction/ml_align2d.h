@@ -48,6 +48,8 @@ typedef struct
 }
 structThreadTasks;
 
+#define SPECIAL_ITER 0
+
 void * doThreadsTasks(void * data);
 
 /**@defgroup MLalign2D ml_align2d (Maximum likelihood in 2D)

@@ -25,9 +25,4 @@
 
 #include <reconstruction/ml_align2d.h>
 
-int main(int argc, char **argv)
-{
-    ProgML2D program;
-    program.read(argc, argv);
-    return program.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgML2D);

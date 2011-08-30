@@ -378,6 +378,7 @@ void ProgMLRefine3D::run()
     //Local image to read data
     Image<double> img;
     FileName fn;
+    bool doProject = false;
 
     // Loop over all iterations
     for (ml2d->iter = ml2d->istart; !converged && ml2d->iter <= ml2d->Niter; ml2d->iter++)
@@ -389,7 +390,7 @@ void ProgMLRefine3D::run()
         for (ml2d->current_block = 0; ml2d->current_block < ml2d->blocks; ml2d->current_block++)
         {
             // Project volumes, already done for first iteration, first block
-            if (ml2d->iter > ml2d->istart)// || ml2d->current_block > 0)
+            if (doProject)// || ml2d->current_block > 0)
             {
                 projectVolumes(ml2d->MDref);
                 size_t refno = 0;
@@ -411,25 +412,30 @@ void ProgMLRefine3D::run()
 
             ml2d->maximization();
 
-            // Write out 2D reference images (to be used in reconstruction)
-            ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
+            //do not reconstruction on special iteration 0 until last block
+            if (iter > SPECIAL_ITER || ml2d->current_block == ml2d->blocks - 1)//last block
+            {
+                // Write out 2D reference images (to be used in reconstruction)
+                ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
 
-            // Jump out before 3D reconstruction
-            // (Useful for some parallelization protocols)
-            if (skip_reconstruction)
-                exit(1);
+                // Jump out before 3D reconstruction
+                // (Useful for some parallelization protocols)
+                if (skip_reconstruction)
+                    exit(1);
 
-            if (fourier_mode)
-                makeNoiseImages();
-            // Reconstruct new volumes from the reference images
-            //update the base name for current iteration
-            reconsOutFnBase[0] = FN_ITER_BASE(iter);
-            reconsMdFn[0] = ml2d->outRefsMd;
-            reconstructVolumes();
-            // Update the reference volume selection file
-            updateVolumesMetadata();
-            // post-process the volumes
-            postProcessVolumes();
+                if (fourier_mode)
+                    makeNoiseImages();
+                // Reconstruct new volumes from the reference images
+                //update the base name for current iteration
+                reconsOutFnBase[0] = FN_ITER_BASE(iter);
+                reconsMdFn[0] = ml2d->outRefsMd;
+                reconstructVolumes();
+                // Update the reference volume selection file
+                updateVolumesMetadata();
+                // post-process the volumes
+                postProcessVolumes();
+                doProject = true;
+            }
 
         } // end loop blocks
 
