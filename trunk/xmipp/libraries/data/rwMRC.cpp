@@ -132,8 +132,6 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         return(-2);
 
     // Determine byte order and swap bytes if from little-endian machine
-    char*       b = (char *) header;
-    int         i;
     if ( swap = (( abs( header->mode ) > SWAPTRIG ) || ( abs(header->nz) > SWAPTRIG )) )
     {
 #ifdef DEBUG
@@ -227,33 +225,35 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
 
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
-    double aux;
-    for ( i = 0; i < imgEnd - imgStart; ++i )
+
+    /* As MRC does not support stacks, we use the geometry stored in the header
+    for any image when we simulate the file is a stack.*/
+    if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
     {
-        MD[i].setValue(MDL_SHIFTX, (double) -header->nxStart);
-        MD[i].setValue(MDL_SHIFTY, (double) -header->nyStart);
-        MD[i].setValue(MDL_SHIFTZ, (double) -header->nzStart);
-
-        //FIXME: Check if this conversion is right
-        if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
+        double aux;
+        for ( size_t i = 0; i < imgEnd - imgStart; ++i )
         {
-            aux = -header->xOrigin/aux;
-            MD[i].setValue(MDL_ORIGINX, aux);
-        }
+            MD[i].setValue(MDL_SHIFTX, (double) -header->nxStart);
+            MD[i].setValue(MDL_SHIFTY, (double) -header->nyStart);
+            MD[i].setValue(MDL_SHIFTZ, (double) -header->nzStart);
 
-        if(MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
-        {
-            aux = -header->yOrigin/aux;
-            MD[i].setValue(MDL_ORIGINY, aux);
-        }
+            // We include auto detection of MRC2000 or CCP4 style origin based on http://situs.biomachina.org/fmap.pdf
+            if (header->xOrigin != 0)
+                MD[i].setValue(MDL_ORIGINX, -header->xOrigin);
+            else if (header->nxStart != 0 && MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
+                MD[i].setValue(MDL_ORIGINX, -header->nxStart/aux);
 
-        if(MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux))
-        {
-            aux = -header->zOrigin/aux;
-            MD[i].setValue(MDL_ORIGINZ, aux);
+            if (header->yOrigin !=0)
+                MD[i].setValue(MDL_ORIGINY, -header->yOrigin);
+            else if(header->nyStart !=0 && MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
+                MD[i].setValue(MDL_ORIGINY, -header->nyStart/aux);
+
+            if (header->zOrigin != 0)
+                MD[i].setValue(MDL_ORIGINY, -header->zOrigin);
+            else if(header->nzStart !=0 && MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux))
+                MD[i].setValue(MDL_ORIGINZ, -header->nzStart/aux);
         }
     }
-
     //#define DEBUG
 #ifdef DEBUG
     MDMainHeader.write("/dev/stderr");
@@ -275,7 +275,6 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
 */
 int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String &bitDepth, bool adjust)
 {
-
     MRChead*  header = (MRChead *) askMemory(sizeof(MRChead));
 
     // Cast T to datatype
