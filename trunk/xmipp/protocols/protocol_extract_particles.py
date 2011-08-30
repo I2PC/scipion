@@ -14,7 +14,7 @@ import xmipp
 import glob
 import os
 from protlib_utils import runJob
-from protlib_filesystem import deleteFile
+from protlib_filesystem import deleteFile, deleteDir, createLink
 
 class ProtExtractParticles(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -114,15 +114,17 @@ class ProtExtractParticles(XmippProtocol):
     def whichTasks(self,posFile,micrographName):
         fileList=[]
         tasks=[]
+        blocksInFile=xmipp.getBlocksInMetaDataFile(posFile)
         for family in self.familyList:
             familyName=family[0]
             particleSize=family[1]
-            blockName="%s@%s"%(familyName,posFile)
-            mD=xmipp.MetaData(blockName)
-            if mD.size()>0:
-                fnOut=os.path.join(self.WorkingDir,familyName,micrographName+".stk")
-                tasks.append((blockName,fnOut,particleSize))
-                fileList.append(fnOut)
+            if familyName in blocksInFile:
+                blockName="%s@%s"%(familyName,posFile)
+                mD=xmipp.MetaData(blockName)
+                if mD.size()>0:
+                    fnOut=os.path.join(self.WorkingDir,familyName,micrographName+".stk")
+                    tasks.append((blockName,fnOut,particleSize))
+                    fileList.append(fnOut)
         return (tasks,fileList)
 
     def visualize(self):
@@ -194,7 +196,11 @@ def gatherSelfiles(log,WorkingDir,familyList):
         familySelfile.write(os.path.join(WorkingDir,familyName+".sel"))
 
 def sortImageInFamily(log,selfileRoot):
-    runJob(log,"xmipp_image_sort_by_statistics","-i "+selfileRoot+".sel --multivariate --addToInput -o "+selfileRoot+"_sorted")
+    mD=xmipp.MetaData(selfileRoot+".sel")
+    if mD.size()>0:
+        runJob(log,"xmipp_image_sort_by_statistics","-i "+selfileRoot+".sel --multivariate --addToInput -o "+selfileRoot+"_sorted")
+    else:
+        createLink(log,selfileRoot+".sel",selfileRoot+"_sorted.sel")
 
 def avgZscore(log,WorkingDir,familyList,micrographSelfile):
     allParticles=xmipp.MetaData()
