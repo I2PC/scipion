@@ -38,6 +38,6 @@ public class Xmipp_MetaDataReader extends Xmipp_Reader {
 
     @Override
     protected String getOpenDialogTitle() {
-        return "Load xmipp SEL file...";
+        return "Load xmipp MetaData file...";
     }
 }

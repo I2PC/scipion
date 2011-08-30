@@ -94,7 +94,7 @@ public class JPanelXmippBrowser extends JPanel {
         clearPreview();
 
         final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("Calculating preview...");
-        final Component previousGlassPane = getRootPane().getGlassPane();
+        //final Component previousGlassPane = getRootPane().getGlassPane();
         getRootPane().setGlassPane(glassPane);
         glassPane.start();
 
@@ -121,8 +121,9 @@ public class JPanelXmippBrowser extends JPanel {
                 // Shows / Hide preview panel.
                 jpImageInfo.setVisible(SHOW_PREVIEWS);
 
+                glassPane.setVisible(false);
                 glassPane.stop();
-                getRootPane().setGlassPane(previousGlassPane);
+                //getRootPane().setGlassPane(previousGlassPane);
             }
         });
 

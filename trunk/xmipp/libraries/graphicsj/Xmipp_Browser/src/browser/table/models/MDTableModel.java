@@ -148,4 +148,16 @@ public class MDTableModel extends AbstractXmippTableModel {
     public boolean isVolume() {
         return false;
     }
+
+    @Override
+    public boolean saveAsMetadata(String path) {
+        try {
+            md.write(path);
+
+            return true;
+        } catch (Exception ex) {
+        }
+
+        return false;
+    }
 }

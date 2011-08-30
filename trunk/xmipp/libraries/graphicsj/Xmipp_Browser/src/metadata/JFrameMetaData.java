@@ -27,6 +27,7 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 import browser.DEBUG;
+import browser.LABELS;
 import browser.windows.ImagesWindowFactory;
 import java.awt.event.KeyListener;
 import javax.swing.JTextField;
@@ -298,7 +299,7 @@ public class JFrameMetaData extends JFrame {
 
     private void save(String fileName) {
         if (tableModel.save(fileName)) {
-            IJ.showMessage("File saved: " + fileName);
+            IJ.showMessage(LABELS.MESSAGE_FILE_SAVED + fileName);
         } else {
             IJ.error("File NOT saved: " + fileName);
         }

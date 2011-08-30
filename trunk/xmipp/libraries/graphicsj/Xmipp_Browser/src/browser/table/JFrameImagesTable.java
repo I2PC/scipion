@@ -34,13 +34,16 @@ import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.JSpinner;
@@ -69,6 +72,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     private boolean autoAdjustColumns = false;
     private JPopUpMenuTable jpopUpMenuTable;
     private JMenuBarTable jMenuBarTable;
+    JFileChooser fc = new JFileChooser();
 
     /** Creates new form JFrameImagesTable */
     public JFrameImagesTable(String filename) {
@@ -340,6 +344,56 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
     private void openAs3D() {
         ImagesWindowFactory.openTableAs3D(tableModel);
+    }
+
+    private void saveAsMetadata() {
+        // Sets path and filename automatically.
+        String file = tableModel.getFilename() != null ? tableModel.getFilename() : "";
+        fc.setSelectedFile(new File(file));
+
+        if (fc.showSaveDialog(this) != JFileChooser.CANCEL_OPTION) {
+            boolean response = true;
+            if (fc.getSelectedFile().exists()) {
+                response = JOptionPane.showConfirmDialog(null,
+                        LABELS.MESSAGE_OVERWRITE_FILE,
+                        LABELS.MESSAGE_OVERWRITE_FILE_TITLE,
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION;
+            }
+
+            if (response) {
+                String path = fc.getSelectedFile().getAbsolutePath();
+                if (tableModel.saveAsMetadata(path)) {
+                    JOptionPane.showMessageDialog(this, LABELS.MESSAGE_FILE_SAVED + path,
+                            LABELS.MESSAGE_FILE_SAVED_TITLE, JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+        }
+    }
+
+    private void saveAsStack() {
+        // Sets path and filename automatically.
+        String file = tableModel.getFilename() != null ? tableModel.getFilename() : "";
+        fc.setSelectedFile(new File(file));
+
+        if (fc.showSaveDialog(this) != JFileChooser.CANCEL_OPTION) {
+            boolean response = true;
+            if (fc.getSelectedFile().exists()) {
+                response = JOptionPane.showConfirmDialog(null,
+                        LABELS.MESSAGE_OVERWRITE_FILE,
+                        LABELS.MESSAGE_OVERWRITE_FILE_TITLE,
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION;
+            }
+
+            if (response) {
+                String path = fc.getSelectedFile().getAbsolutePath();
+                if (tableModel.saveAsStack(path)) {
+                    JOptionPane.showMessageDialog(this, LABELS.MESSAGE_FILE_SAVED + path,
+                            LABELS.MESSAGE_FILE_SAVED_TITLE, JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+        }
     }
 
     /** This method is called from within the constructor to
@@ -675,47 +729,27 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     class JMenuBarTable extends JMenuBar {
 
         protected JMenu jmiSave = new JMenu(LABELS.LABEL_TABLE_SAVE);
-        protected JMenuItem jmiSaveAsImages = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_IMAGES);
+        protected JMenuItem jmiSaveAsSelfile = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_METADATA);
         protected JMenuItem jmiSaveAsStack = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_STACK);
-        protected JMenuItem jmiSaveAsSelfile = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_SELFILE);
 
         public JMenuBarTable() {
             super();
 
             add(jmiSave);
-            jmiSave.add(jmiSaveAsImages);
-            jmiSave.add(jmiSaveAsStack);
             jmiSave.add(jmiSaveAsSelfile);
-
-            jmiSaveAsImages.addActionListener(new ActionListener() {
-
-                public void actionPerformed(ActionEvent e) {
-                    /*                    if (!saveAsImages()) {
-                    IJ.error(LABELS.MESSAGE_NO_ITEMS_SELECTED);
-                    //                    JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
-                    }*/
-                    System.out.println("@TODO Save as IMAGES file");
-                }
-            });
-
-            jmiSaveAsStack.addActionListener(
-                    new ActionListener() {
-
-                        public void actionPerformed(ActionEvent e) {
-                            /*                    if (!saveAsStack()) {
-                            JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
-                            }*/
-                            System.out.println("@TODO Save as STACK file");
-                        }
-                    });
+            jmiSave.add(jmiSaveAsStack);
 
             jmiSaveAsSelfile.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
-                    /*                    if (!saveAsSelFile()) {
-                    JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
-                    }*/
-                    System.out.println("@TODO Save as SEL file");
+                    saveAsMetadata();
+                }
+            });
+
+            jmiSaveAsStack.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    saveAsStack();
                 }
             });
         }

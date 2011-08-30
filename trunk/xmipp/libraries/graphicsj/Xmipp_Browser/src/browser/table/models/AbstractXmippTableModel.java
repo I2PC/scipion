@@ -7,6 +7,7 @@ package browser.table.models;
 import browser.Cache;
 import browser.DEBUG;
 import browser.ICONS_MANAGER;
+import browser.imageitems.ImageConverter;
 import browser.imageitems.tableitems.AbstractTableImageItem;
 import ij.IJ;
 import ij.ImagePlus;
@@ -462,4 +463,18 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     public abstract boolean isStack();
 
     public abstract boolean isVolume();
+
+    public abstract boolean saveAsMetadata(String path);
+
+    public boolean saveAsStack(String path) {
+        try {
+            ImagePlus imp = ImageConverter.convertToImagePlus(data);
+            IJ.run(imp, "Xmipp writer", "save=" + path);
+
+            return true;
+        } catch (Exception ex) {
+        }
+
+        return false;
+    }
 }

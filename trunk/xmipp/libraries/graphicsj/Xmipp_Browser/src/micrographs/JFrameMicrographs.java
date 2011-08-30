@@ -307,7 +307,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
     private void save(String fileName) {
         if (tableModel.save(fileName)) {
-            IJ.showMessage("File saved: " + fileName);
+            IJ.showMessage(LABELS.MESSAGE_FILE_SAVED + fileName);
         }
     }
 

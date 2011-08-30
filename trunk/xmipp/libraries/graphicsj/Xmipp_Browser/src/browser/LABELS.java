@@ -200,9 +200,9 @@ public class LABELS {
     public final static String LABEL_TABLE_HIDE_DISABLED = "Hide disabled";
     public final static String LABEL_TABLE_DISABLE_ALL = "Disable All";
     public final static String LABEL_TABLE_SAVE = "Save";
-    public final static String LABEL_TABLE_SAVE_AS_IMAGES = "Save as images";
+    //public final static String LABEL_TABLE_SAVE_AS_IMAGES = "Save as images";
     public final static String LABEL_TABLE_SAVE_AS_STACK = "Save as stack";
-    public final static String LABEL_TABLE_SAVE_AS_SELFILE = "Save as selfile";
+    public final static String LABEL_TABLE_SAVE_AS_METADATA = "Save as metadata";
     public final static String LABEL_CTF = "CTF";
     public final static String LABEL_PSD = "PSD";
     public final static String LABEL_SAMPLING = "1/A";
@@ -240,4 +240,8 @@ public class LABELS {
     }
     public final static String MESSAGE_NO_ITEMS_SELECTED = "No items selected (or not enabled)";
     //public final static String FILE_SELECTED_OUTPUT_PREFIX = "File selected: ";
+    public final static String MESSAGE_OVERWRITE_FILE = "Overwrite existing file?";
+    public final static String MESSAGE_OVERWRITE_FILE_TITLE = "Confirm Overwrite";
+    public final static String MESSAGE_FILE_SAVED = "File saved: ";
+    public final static String MESSAGE_FILE_SAVED_TITLE = "Saved!";
 }

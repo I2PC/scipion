@@ -97,4 +97,33 @@ public class VolumeTableModel extends AbstractXmippTableModel {
     public boolean isVolume() {
         return true;
     }
+
+    @Override
+    public boolean saveAsMetadata(String path) {
+        MetaData md = new MetaData();
+
+        md.addLabel(MDLabel.MDL_ENABLED);
+        md.addLabel(MDLabel.MDL_IMAGE);
+
+        try {
+            for (int i = 0; i < data.size(); i++) {
+                AbstractTableImageItem item = data.get(i);
+
+                long id = md.addObject();
+
+                String image = (String) item.getLabelValue(MDLabel.MDL_IMAGE);
+                int enabled = item.isEnabled() ? 1 : 0;
+
+                md.setValueInt(MDLabel.MDL_ENABLED, enabled, id);
+                md.setValueString(MDLabel.MDL_IMAGE, image, id);
+            }
+
+            md.write(path);
+
+            return true;
+        } catch (Exception ex) {
+        }
+
+        return false;
+    }
 }
