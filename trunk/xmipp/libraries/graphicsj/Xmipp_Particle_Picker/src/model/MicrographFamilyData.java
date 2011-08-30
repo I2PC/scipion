@@ -152,6 +152,8 @@ public class MicrographFamilyData {
 	public void reset()
 	{
 		setState(MicrographFamilyState.Available);
+		family.particles -= particles.size();
+		family.autoparticles -= autoparticles.size();
 		autoparticles.clear();
 		particles.clear();
 	}

@@ -492,14 +492,13 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		ShapeItemListener shapelistener = new ShapeItemListener();
 
 		circlechb = new JCheckBox(Shape.Circle.toString());
-		circlechb.getModel().setSelected(true);
 		circlechb.addItemListener(shapelistener);
 
 		rectanglechb = new JCheckBox(Shape.Rectangle.toString());
-		rectanglechb.getModel().setSelected(true);
 		rectanglechb.addItemListener(shapelistener);
 
 		centerchb = new JCheckBox(Shape.Center.toString());
+		centerchb.setSelected(true);
 		centerchb.addItemListener(shapelistener);
 
 		// onlylastchb = new JCheckBox(Shape.OnlyLast.toString());

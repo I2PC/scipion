@@ -491,6 +491,7 @@ public class ParticlePicker {
 			MicrographFamilyData mfd;
 			for (Micrograph m : micrographs) {
 				mfd = m.getFamilyData(family);
+				resetFamilyData(mfd);
 			}
 			saveData();
 		} catch (Exception e) {
