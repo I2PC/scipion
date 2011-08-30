@@ -128,6 +128,18 @@ def getScriptPrefix(script):
 #---------------------------------------------------------------------------
 # Parsing of arguments
 #---------------------------------------------------------------------------
+def getRangeValuesFromString(str):
+    import re
+    elements=re.compile(r'[, ]').split(str)
+    values=[]
+    for element in elements:
+        if element.isdigit():
+            values.append(int(element))
+        else:
+            limits=element.split('-')
+            values+=range(int(limits[0]),int(limits[1])+1)
+    return values
+
 def getComponentFromVector(__vector, _iteration):
     ''' Convert a string to a vector of parameters'''
     _vector = __vector.strip()
@@ -331,9 +343,7 @@ def submitProtocol(protocolPath, **params):
     print "** Submiting to queue: '%s'" % command
     os.system(command)
     
- 
-def runImageJPlugin(memory, macro, args, batchMode=False):
-    '''Launch an ImageJPlugin '''
+def getImageJPluginCmd(memory, macro, args, batchMode=False):
     from protlib_filesystem import getXmippPath
     if len(memory) == 0:
         memory = "512m"
@@ -345,17 +355,22 @@ def runImageJPlugin(memory, macro, args, batchMode=False):
     cmd = """ java -Xmx%s -Dplugins.dir=%s -jar %s -macro %s "%s" """ % (memory, plugins_dir, imagej_jar, macro, args)
     if batchMode:
         cmd += " &"
-    #$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$IMG $SEL $VOL $POLL"
-    print cmd
-    os.system(cmd)
-    
-def runImageJPluginWithResponse(memory, macro, args):
+    return cmd
+
+def runImageJPlugin(memory, macro, args, batchMode=False):
+    os.system(getImageJPluginCmd(memory, macro, args, batchMode))
+
+def runExternalAppWithResponse(cmd):
     #Create a simple socket server to wait for response
     HOST = ''                 # Symbolic name meaning the local host
     PORT = 54321
-    args += " -port %d -dir ." % PORT
+    if cmd[-1]=="&":
+        cmd=cmd.replace("&"," -port %d &" % PORT)
+    else:
+        cmd += " -port %d" % PORT
     #Launch the plugin that will send the data response over a socket
-    runImageJPlugin(memory, macro, args, batchMode=True)
+    print cmd
+    os.system(cmd)
     #os.system('java SocketsTest 54321 &')
     #Create the socket server
     msg = ''
@@ -377,8 +392,29 @@ def runImageJPluginWithResponse(memory, macro, args):
         tkMessageBox.showerror("Error waiting for response", "No reponse, returning empty string. ERROR: " + str(e))
     
     return msg.replace('__END__', '')
+ 
+def runImageJPluginWithResponse(memory, macro, args, batchMode=True):
+    return runExternalAppWithResponse(getImageJPluginCmd(memory, macro, args, batchMode))
     
+def getJavaIJappCmd(memory, appName, args, batchMode=False):
+    '''Launch an Java application based on ImageJ '''
+    from protlib_filesystem import getXmippPath
+    if len(memory) == 0:
+        memory = "512m"
+        print "No memory size provided. Using default: " + memory
+    imagej_home = getXmippPath("external/imagej")
+    plugins_dir = os.path.join(imagej_home, "plugins", "*")
+
+    cmd = "java -classpath %(plugins_dir)s: %(appName)s %(args)s"%locals()
+    if batchMode:
+        cmd += " &"
+    return cmd
     
+def runJavaIJapp(memory, appName, args, batchMode=True):
+    os.system(getJavaIJappCmd(memory, appName, args, batchMode))
+
+def runJavaIJappWithResponse(memory, appName, args, batchMode=True):
+    return runExternalAppWithResponse(getJavaIJappCmd(memory, appName, args, batchMode))
 
 #---------------------------------------------------------------------------
 # Metadata stuff
