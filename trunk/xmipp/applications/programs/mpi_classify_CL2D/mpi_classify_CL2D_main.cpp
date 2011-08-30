@@ -840,7 +840,7 @@ void CL2D::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
 #undef DEBUG
 
 /* CL2D write --------------------------------------------------------- */
-void CL2D::write(const FileName &fnRoot, String iteration, bool final) const
+void CL2D::write(const FileName &fnRoot, const String &iteration) const
 {
     int Q=P.size();
     int Nimg=SFv.size();
@@ -864,22 +864,8 @@ void CL2D::write(const FileName &fnRoot, String iteration, bool final) const
         VEC_ELEM(aux,1)=VEC_ELEM(aux,0)/Nimg;
         SFout.setValue(MDL_IMAGE_CLASS_COUNT,(int)VEC_ELEM(Nq,q), id);
     }
-    FileName fnSFout=fnRoot+".sel";
-    SFout.setComment((String)"Iteration "+iteration);
-    SFout.write(fnSFout);
-
-    // Replicate the input data into an aligned stack
-    FileName fnAligned=fnRoot+"_aligned.stk";
-    if (final)
-    {
-      fnAligned.deleteFile();
-        Image<double> I;
-        for (int i=0; i<Nimg; i++)
-        {
-            I.read(SFv[i]);
-            I.write(fnAligned,i,true,WRITE_APPEND);
-        }
-    }
+    FileName fnSFout=fnRoot+".xmd";
+    SFout._write(fnSFout,"class_representatives",MD_APPEND);
 
     // Make the selfiles of each class
     for (int q=0; q<Q; q++)
@@ -893,17 +879,9 @@ void CL2D::write(const FileName &fnRoot, String iteration, bool final) const
         {
             id = SFq.addObject();
             int idx=P[q]->currentListImg[i];
-            if (final)
-            {
-                fnAux.compose(idx+1,fnAligned);
-                SFq.setValue(MDL_IMAGE,fnAux, id);
-                SFq.setValue(MDL_IMAGE_ORIGINAL,SFv[idx], id);
-                SFq.setValue(MDL_IMAGE_CLASS,fnClass, id);
-            }
-            else
-                SFq.setValue(MDL_IMAGE,SFv[idx], id);
+            SFq.setValue(MDL_IMAGE,SFv[idx], id);
         }
-        SFq._write(fnSFout,"class_"+integerToString(q,6),MD_APPEND);
+        SFq._write(fnSFout,"class_"+integerToString(q+1,6),MD_APPEND);
     }
 }
 
@@ -1075,10 +1053,7 @@ void CL2D::run(const FileName &fnOut, int level, int rank)
         {
             if( i % mpi_size == rank )
             {
-                FileName fnImg;
-                SF->getValue(MDL_IMAGE,fnImg, __iter.objId);
-                //TODO: CHECK THIS readApply
-                I.read(fnImg);
+                I.readApplyGeo(*SF,__iter.objId);
                 I().setXmippOrigin();
                 I().statisticsAdjust(0,1);
 
@@ -1172,6 +1147,7 @@ void CL2D::run(const FileName &fnOut, int level, int rank)
             progress_bar(N);
             double avgSimilarity=corrCodeSum/N;
             std::cout << "\nAverage correlation with input vectors=" << avgSimilarity << std::endl;
+            MDChanges.setComment((String)"Iteration "+integerToString(n));
             idMdChanges=MDChanges.addObject();
             MDChanges.setValue(MDL_ITER,n,idMdChanges);
             MDChanges.setValue(MDL_CL2D_SIMILARITY,avgSimilarity,idMdChanges);
@@ -1193,8 +1169,9 @@ void CL2D::run(const FileName &fnOut, int level, int rank)
         {
             std::cout << "Number of assignment changes=" << Nchanges << std::endl;
             MDChanges.setValue(MDL_CL2D_CHANGES,Nchanges,idMdChanges);
-            MDChanges.write(formatString("level_%02d@%s_iterations_info.xmd",level,fnOut.c_str()),MD_APPEND);
-            std::cout << "Writing on " << formatString("level_%02d@%s_iterations_info.xmd",level,fnOut.c_str()) << std::endl;
+            std::cout << "Writing on " << formatString("iterations_info@%s_level_%02d.xmd",fnOut.c_str(),level) << std::endl;
+            std::cout << MDChanges;
+            MDChanges.write(formatString("iterations_info@%s_level_%02d.xmd",fnOut.c_str(),level));
         }
 
         oldAssignment=newAssignment;
@@ -1890,7 +1867,6 @@ void ProgClassifyCL2D::produceSideInfo(int rank)
         {
 
             SFCodes.getValue(MDL_IMAGE,fnImg,__iter.objId);
-            //TODO: CHECK readApply
             I.read(fnImg);
             I().setXmippOrigin();
             codes0.push_back(I());
@@ -1908,7 +1884,7 @@ void ProgClassifyCL2D::run()
     produceSideInfo(node->rank);
     runWorker(node->rank);
     node->barrierWait();
-    alignInputImages(fnOut+".sel",node->rank,node->size);
+    alignInputImages(fnOut+".xmd",node->rank,node->size);
 }
 
 void ProgClassifyCL2D::runWorker(int rank)
@@ -1936,7 +1912,7 @@ void ProgClassifyCL2D::runWorker(int rank)
     if (rank==0)
     {
         std::sort(vq.P.begin(),vq.P.end(),SDescendingClusterSort());
-        vq.write(fnOut,"Final",true);
+        vq.write(fnOut,"Final");
     }
 }
 
@@ -1947,31 +1923,37 @@ void ProgClassifyCL2D::alignInputImages(const FileName &fnSF, int rank, int Npro
     getBlocksInMetaDataFile(fnSF,blockList);
     int bmax=blockList.size();
     int currentIdx=0;
-    FileName fnImgIn, fnImgOut, fnClass;
+    FileName fnImg;
     Image<double> Iclass, I;
     Matrix2D<double> M;
+    std::cout << "Aligning final images ..." << std::endl;
     for (int b=0; b<bmax; b++)
     {
-        if (blockList[b]=="")
+        if (blockList[b]=="class_representatives" || blockList[b]=="iterations_info")
             continue;
-        SFBlock._read(fnSF,NULL,blockList[b]);
-        SFBlock.getValue(MDL_IMAGE_CLASS,fnClass, SFBlock.firstObject());
-        Iclass.read(fnClass);
+        SFBlock.read(blockList[b]+"@"+fnSF);
+        Iclass.read(blockList[b].substr(6,6)+"@"+fnOut+".stk");
         Iclass().setXmippOrigin();
         FOR_ALL_OBJECTS_IN_METADATA(SFBlock)
         {
             if ((currentIdx+1)%Nprocessors==rank)
             {
-                SFBlock.getValue(MDL_IMAGE,fnImgOut,__iter.objId);
-                SFBlock.getValue(MDL_IMAGE_ORIGINAL,fnImgIn, __iter.objId);
-
-                I.read(fnImgIn);
+                SFBlock.getValue(MDL_IMAGE,fnImg,__iter.objId);
+                I.read(fnImg);
                 I().setXmippOrigin();
                 alignImagesConsideringMirrors(Iclass(), I(), M);
-                I.write(fnImgOut);
+                bool flip;
+                double scale, shiftX, shiftY, psi;
+                transformationMatrix2Parameters2D(M, flip, scale, shiftX, shiftY, psi);
+                SFBlock.setValue(MDL_FLIP,flip,__iter.objId);
+                SFBlock.setValue(MDL_SHIFTX,shiftX,__iter.objId);
+                SFBlock.setValue(MDL_SHIFTY,shiftY,__iter.objId);
+                SFBlock.setValue(MDL_ANGLEPSI,psi,__iter.objId);
+                //I.write(fnImgOut);
             }
             ++currentIdx;
         }
+        SFBlock.write(blockList[b]+"@"+fnSF,MD_APPEND);
     }
 }
 

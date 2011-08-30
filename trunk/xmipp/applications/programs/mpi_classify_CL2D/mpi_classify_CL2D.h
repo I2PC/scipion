@@ -202,7 +202,7 @@ public:
         bool _classicalMultiref, bool _fast, int rank);
     
     /// Write the nodes
-    void write(const FileName &fnRoot, String iteration, bool final=false) const;
+    void write(const FileName &fnRoot, const String& iteration) const;
 
     /** Look for a node suitable for this image.
         The image is rotationally and translationally aligned with
