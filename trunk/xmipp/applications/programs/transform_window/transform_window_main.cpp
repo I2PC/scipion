@@ -127,7 +127,6 @@ public:
                 REPORT_ERROR(ERR_ARG_INCORRECT,"Incorrect number of arguments after --corners");
             physical_coords = checkParam("--physical");
             mode=CORNERMODE;
-            // TODO Chequear el número de parámetros
         }
         else if (checkParam("--size"))
         {
@@ -182,6 +181,11 @@ public:
             << "," << xF << ")\n"
             << "Physical: " << physical_coords << std::endl;
         }
+    }
+
+    void preProcess()
+    {
+        create_empty_stackfile=false;
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
