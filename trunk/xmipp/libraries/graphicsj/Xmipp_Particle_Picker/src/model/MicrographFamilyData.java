@@ -99,7 +99,7 @@ public class MicrographFamilyData {
 
 	public void addAutomaticParticle(AutomaticParticle p) {
 		if(state == MicrographFamilyState.Available)
-			throw new IllegalStateException();
+			throw new IllegalArgumentException(String.format("Invalid state %s on micrograph %s and family %s for adding automatic particles", state, micrograph.getName(), family.getName()));
 		autoparticles.add(p);
 		family.autoparticles++;
 

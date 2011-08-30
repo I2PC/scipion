@@ -10,7 +10,7 @@ public class Family {
 	private String name;
 	private Color color;
 	private int size;
-	private FamilyState step;
+	private FamilyState state;
 	int particles = 0;
 	int autoparticles = 0;
 	
@@ -66,7 +66,10 @@ public class Family {
 		this.name = name;
 		this.color = color;
 		this.size = size;
-		this.step = state;
+		if(state == FamilyState.Supervised)
+			if(!new File(getOTrainingFilename()).exists())
+				throw new IllegalArgumentException(String.format("Training file does not exist. Family can not be in %s mode", state));
+		this.state = state;
 	}
 	
 	public String getOTrainingFilename()
@@ -88,7 +91,7 @@ public class Family {
 	
 	public FamilyState getStep()
 	{
-		return step;
+		return state;
 	}
 	
 	public String getOutputRoot()
@@ -99,7 +102,7 @@ public class Family {
 	public void goToNextStep()
 	{
 		validateNextStep();
-		this.step = ParticlePicker.nextStep(step);
+		this.state = ParticlePicker.nextStep(state);
 		ParticlePicker.getInstance().resetModel(this);
 		
 	}
@@ -109,7 +112,7 @@ public class Family {
 	public void validateNextStep()
 	{
 		int min = ParticlePicker.getMinForTraining();
-		FamilyState next = ParticlePicker.nextStep(step);
+		FamilyState next = ParticlePicker.nextStep(state);
 		if(next == FamilyState.Supervised && particles < min)
 			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", min, FamilyState.Supervised));
 		if(!ParticlePicker.getInstance().hasEmptyMicrographs(this))

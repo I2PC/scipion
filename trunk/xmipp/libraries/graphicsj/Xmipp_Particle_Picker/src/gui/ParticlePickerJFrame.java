@@ -6,6 +6,7 @@ import ij.ImagePlus;
 import ij.gui.ImageWindow;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -21,6 +22,7 @@ import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -46,6 +48,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
+import xmipp.Program;
 
 import model.MicrographFamilyState;
 import model.Constants;
@@ -134,7 +138,6 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	public ParticlePickerJFrame() {
 
 		ppicker = ParticlePicker.getInstance();
-
 		initComponents();
 		initializeCanvas();
 	}
@@ -167,8 +170,8 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		});
 		setResizable(false);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		setTitle("Particle Picker");
-		initPPMenuBar();
+		setTitle("Xmipp Particle Picker");
+		initMenuBar();
 		setJMenuBar(mb);
 
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -191,7 +194,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		setVisible(true);
 	}
 
-	public void initPPMenuBar() {
+	public void initMenuBar() {
 		mb = new JMenuBar();
 
 		// Setting menus
@@ -296,6 +299,13 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 
 			}
 		});
+		hcontentsmi.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				WindowUtils.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome");				
+			}
+		});
 
 	}
 
@@ -374,12 +384,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 
 					if (result == JOptionPane.NO_OPTION)
 						return;
-					family.goToNextStep();
-					setStep(FamilyState.Supervised);
-					ppicker.train(family);
-					int next = ppicker.getNextFreeMicrograph(family);
-					if(next != -1 )
-						micrographstb.setRowSelectionInterval(next, next);
+					train();
 					
 				} else if (family.getStep() == FamilyState.Supervised) {
 					int result = JOptionPane.showConfirmDialog(
@@ -439,33 +444,17 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 				sizesl.setValue(family.getSize());
 				updateMicrographsModel();
 				micrographstb.getColumnModel()
-						.getColumn(1).setHeaderValue(family.getName());
+						.getColumn(micrographsmd.getParticlesPosition()).setHeaderValue(family.getName());
 			}
 		});
 		actionsbt.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (actionsbt.getText().equals(MicrographFamilyState.Autopick.toString())) {
-					setState(MicrographFamilyState.Autopick);
-					ppicker.classify(family, micrograph);
-					ppicker.loadAutomaticParticles(micrograph);
-					setState(MicrographFamilyState.Correct);
-					canvas.repaint();
-				}
+				if (actionsbt.getText().equals(MicrographFamilyState.Autopick.toString())) 
+					autopick();
 				else if(actionsbt.getText().equals(MicrographFamilyState.Correct.toString())) 
-				{
-					setState(MicrographFamilyState.ReadOnly);
-					saveChanges();
-					ppicker.persistAutomaticParticles(getFamilyData());
-					ppicker.correct(family, micrograph);
-					int next = ppicker.getNextFreeMicrograph(family);
-					if(next != -1 )
-						micrographstb.setRowSelectionInterval(next, next);
-					else
-						actionsbt.setVisible(false);
-					
-				}
+					correct();
 				actionsbt.setText(getFamilyData().getAction());
 			}
 		});
@@ -555,9 +544,10 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		micrographsmd = new MicrographsTableModel(this);
 		micrographstb = new JTable(micrographsmd);
 		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(180);
-		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(70);
+		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(20);
+		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(160);
 		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(70);
+		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(70);
 		micrographstb
 				.setPreferredScrollableViewportSize(new Dimension(320, 160));
 		micrographstb
@@ -575,6 +565,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 						index = ParticlePickerJFrame.this.micrographstb
 								.getSelectedRow();
 									// by me.
+						micrograph.releaseImage();
 						micrograph = (Micrograph) ppicker.getMicrographs().get(
 								index);
 						
@@ -708,8 +699,195 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	void updateMicrographsModel() {
 		micrographsmd.fireTableDataChanged();
 		micrographstb.setRowSelectionInterval(index, index);
+		
 		manuallb.setText(Integer.toString(family.getManualNumber()));
 		autolb.setText(Integer.toString(family.getAutomaticNumber()));
 	}
+	
+	public ImageWindow getImageWindow()
+	{
+		return iw;
+	}
+
+	public ParticlePickerCanvas getCanvas() {
+		return canvas;
+	}
+	
+	private void train() {
+		family.goToNextStep();
+		setStep(FamilyState.Supervised);
+		
+		String args;
+		for (Micrograph micrograph : ParticlePicker.getInstance()
+				.getMicrographs()) {
+			if (!micrograph.getFamilyData(family).isEmpty()) {
+
+				args = String
+						.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train %s",
+								micrograph.getFilename(),// -i
+								family.getSize(), // --particleSize
+								family.getOutputRoot(),// --model
+								micrograph.getOutputRoot(), // --outputRoot
+								family.getName() + "@" + micrograph.getOFilename());// train
+																				// parameter
+				if (ParticlePicker.isFastMode())
+					args += " --fast";
+				if (ParticlePicker.isIncore())
+					args += " --in_core";
+				final String fargs = args;
+				try {
+					final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("training picker...");
+					final Component previousGlassPane = ParticlePickerJFrame.this.getRootPane().getGlassPane();
+					canvas.setEnabled(false);
+					ParticlePickerJFrame.this.getRootPane().setGlassPane(glassPane);
+					glassPane.start();
+					
+					Thread t = new Thread(new Runnable() {
+
+						public void run() {
+
+						    try {
+						    
+								
+								Program.runByName("xmipp_micrograph_automatic_picking", fargs);
+							} 
+						    catch (Exception e) {
+								ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+								throw new IllegalArgumentException(e);
+							}
+
+							glassPane.stop();
+							ParticlePickerJFrame.this.getRootPane().setGlassPane(previousGlassPane);
+							canvas.setEnabled(true);
+							int next = ppicker.getNextFreeMicrograph(family);
+							if(next != -1 )
+								micrographstb.setRowSelectionInterval(next, next);
+						}
+					});
+					t.start();
+
+				} catch (Exception e) {
+					ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+					throw new IllegalArgumentException(e.getMessage());
+				}
+			}
+		}
+	}
+
+	private void autopick() {
+		setState(MicrographFamilyState.Autopick);
+		String args;
+		args = String
+				.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s",
+						micrograph.getFilename(),// -i
+						family.getSize(), // --particleSize
+						family.getOutputRoot(),// --model
+						micrograph.getOutputRoot(),// --outputRoot
+						ParticlePicker.getThreads()// --thr
+				);
+
+		if (ParticlePicker.isFastMode())
+			args += " --fast";
+		if (ParticlePicker.isIncore())
+			args += " --in_core";
+		final String fargs = args;
+		try {
+			final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("autopicking...");
+			final Component previousGlassPane = ParticlePickerJFrame.this.getRootPane().getGlassPane();
+			canvas.setEnabled(false);
+			ParticlePickerJFrame.this.getRootPane().setGlassPane(glassPane);
+			glassPane.start();
+			
+			Thread t = new Thread(new Runnable() {
+
+				public void run() {
+
+				    try {
+				    
+						
+						Program.runByName("xmipp_micrograph_automatic_picking", fargs);
+					} 
+				    catch (Exception e) {
+						ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+						throw new IllegalArgumentException(e);
+					}
+
+					glassPane.stop();
+					ParticlePickerJFrame.this.getRootPane().setGlassPane(previousGlassPane);
+					canvas.setEnabled(true);
+					ppicker.loadAutomaticParticles(micrograph);
+					setState(MicrographFamilyState.Correct);
+					canvas.repaint();
+				}
+			});
+			t.start();
+
+		} catch (Exception e) {
+			ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
+
+	private void correct() {
+		setState(MicrographFamilyState.ReadOnly);
+		saveChanges();
+		ppicker.persistAutomaticParticles(getFamilyData());
+		
+		String args = String
+				.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train ",
+						micrograph.getFilename(),// -i
+						family.getSize(), // --particleSize
+						family.getOutputRoot(),// --model
+						micrograph.getOutputRoot()// --outputRoot
+				);
+		
+		if (micrograph.getFamilyData(family).getManualParticles().size() > 0)
+			args += family.getName() + "@" + micrograph.getOFilename();
+		if (ParticlePicker.isFastMode())
+			args += " --fast";
+		if (ParticlePicker.isIncore())
+			args += " --in_core";
+		final String fargs = args;
+		try {
+			final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("correcting...");
+			final Component previousGlassPane = ParticlePickerJFrame.this.getRootPane().getGlassPane();
+			canvas.setEnabled(false);
+			ParticlePickerJFrame.this.getRootPane().setGlassPane(glassPane);
+			glassPane.start();
+			
+			Thread t = new Thread(new Runnable() {
+
+				public void run() {
+
+				    try {
+				    
+						
+						Program.runByName("xmipp_micrograph_automatic_picking", fargs);
+					} 
+				    catch (Exception e) {
+						ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+						throw new IllegalArgumentException(e);
+					}
+
+					glassPane.stop();
+					ParticlePickerJFrame.this.getRootPane().setGlassPane(previousGlassPane);
+					canvas.setEnabled(true);
+					int next = ppicker.getNextFreeMicrograph(family);
+					if(next != -1 )
+						micrographstb.setRowSelectionInterval(next, next);
+					else
+						actionsbt.setVisible(false);
+				}
+			});
+			t.start();
+
+		} catch (Exception e) {
+			ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+
+	}
+
+	
 
 }

@@ -5,25 +5,54 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.Rectangle;
 import java.awt.Window;
+import java.net.URI;
+import java.awt.Desktop;
 
 public class WindowUtils {
-	
+
 	public static void centerScreen(double position, Container w) {
 		Dimension dim = w.getToolkit().getScreenSize();
 		Rectangle abounds = w.getBounds();
-		int x = (int)(position * (dim.width - abounds.width)) ;
+		int x = (int) (position * (dim.width - abounds.width));
 		int y = (dim.height - abounds.height) / 2;
 		w.setLocation(x, y);
-		
+
 	}
-	
-	public static GridBagConstraints updateConstraints(GridBagConstraints constraints, int x, int y, int columns)
-	{
+
+	public static GridBagConstraints updateConstraints(
+			GridBagConstraints constraints, int x, int y, int columns) {
 		constraints.gridx = x;
 		constraints.gridy = y;
 		constraints.gridwidth = columns;
-		constraints.fill = (columns > 1)? GridBagConstraints.HORIZONTAL: GridBagConstraints.NONE;
+		constraints.fill = (columns > 1) ? GridBagConstraints.HORIZONTAL
+				: GridBagConstraints.NONE;
 		return constraints;
 	}
 
+	public static void openURI(String uri) {
+
+		if (!java.awt.Desktop.isDesktopSupported())
+			throw new IllegalArgumentException(
+					"Desktop is not supported (fatal)");
+
+		if (uri == null)
+			throw new IllegalArgumentException(
+					"Usage: OpenURI [URI [URI ... ]]");
+
+		java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
+
+		if (!desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
+
+			System.err
+					.println("Desktop doesn't support the browse action (fatal)");
+			System.exit(1);
+		}
+		try {
+
+			java.net.URI myuri = new java.net.URI(uri);
+			desktop.browse(myuri);
+		} catch (Exception e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
 }

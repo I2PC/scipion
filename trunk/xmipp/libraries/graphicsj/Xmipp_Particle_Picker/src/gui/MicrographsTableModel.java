@@ -13,13 +13,14 @@ public class MicrographsTableModel extends AbstractTableModel {
 	
 	
 	private List<Micrograph> micrographs;
-	private String[] columns = new String[]{"Name", "Particles", "State"};
+	private String[] columns = new String[]{"", "Name", "Particles", "State"};
 	private ParticlePickerJFrame frame;
 
 	public MicrographsTableModel(ParticlePickerJFrame frame)
 	{
 		this.micrographs = frame.getParticlePicker().getMicrographs();
 		this.frame = frame;
+		columns[getParticlesPosition()] = frame.getFamily().getName();
 	}
 	
 	@Override
@@ -29,8 +30,6 @@ public class MicrographsTableModel extends AbstractTableModel {
 	@Override
 	public String getColumnName(int c)
 	{
-		if(c == 1)
-			return frame.getFamily().getName();
 		return columns[c];
 	}
 
@@ -43,9 +42,11 @@ public class MicrographsTableModel extends AbstractTableModel {
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		Micrograph m = micrographs.get(rowIndex);
 		if(columnIndex == 0)
+			return rowIndex + 1;
+		if(columnIndex == 1)
 			return m.getName();
 		MicrographFamilyData mfd = m.getFamilyData(frame.getFamily()); 
-		if(columnIndex == 1)
+		if(columnIndex == 2)
 		{
 			if(mfd.getStep() == FamilyState.Manual)
 				return Integer.toString(mfd.getManualParticles().size());
@@ -54,9 +55,14 @@ public class MicrographsTableModel extends AbstractTableModel {
 			if(mfd.getStep() == FamilyState.Supervised)
 				return String.format("%s + %s", mfd.getManualParticles().size(), mfd.getAutomaticParticlesCount());
 		}
-		if(columnIndex == 2)
+		if(columnIndex == 3)
 			return mfd.getState();
 		return null;
+	}
+	
+	public int getParticlesPosition()
+	{
+		return 2;
 	}
 
 }

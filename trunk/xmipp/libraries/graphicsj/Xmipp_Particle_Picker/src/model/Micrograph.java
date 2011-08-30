@@ -91,6 +91,11 @@ public class Micrograph {
 		return image;
 	}
 	
+	public void releaseImage()
+	{
+		image = null;
+	}
+	
 	public Icon getCTFIcon()
 	{
 		String file;
