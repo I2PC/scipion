@@ -93,16 +93,17 @@ public class JPanelXmippBrowser extends JPanel {
     public void updatePreview() {
         clearPreview();
 
-        final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("Calculating preview...");
-        //final Component previousGlassPane = getRootPane().getGlassPane();
-        getRootPane().setGlassPane(glassPane);
-        glassPane.start();
+        if (SHOW_PREVIEWS) {
+            final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("Calculating preview...");
+            //final Component previousGlassPane = getRootPane().getGlassPane();
+            getRootPane().setGlassPane(glassPane);
+            glassPane.start();
 
-        Thread t = new Thread(new Runnable() {
+            Thread t = new Thread(new Runnable() {
 
-            public void run() {
+                public void run() {
 
-                if (SHOW_PREVIEWS) {
+//                if (SHOW_PREVIEWS) {
                     if (jlFileFilter.getSelectedIndex() >= 0) {  // To avoid exceptions...
                         Object item = jlFileFilter.getSelectedValue();
                         if (item instanceof AbstractImageItem) {
@@ -115,19 +116,20 @@ public class JPanelXmippBrowser extends JPanel {
                                 jpImageInfo.clearPreview();
                             }
                         }
+//                    }
                     }
+
+                    // Shows / Hide preview panel.
+                    jpImageInfo.setVisible(SHOW_PREVIEWS);
+
+                    glassPane.setVisible(false);
+                    glassPane.stop();
+                    //getRootPane().setGlassPane(previousGlassPane);
                 }
+            });
 
-                // Shows / Hide preview panel.
-                jpImageInfo.setVisible(SHOW_PREVIEWS);
-
-                glassPane.setVisible(false);
-                glassPane.stop();
-                //getRootPane().setGlassPane(previousGlassPane);
-            }
-        });
-
-        t.start();
+            t.start();
+        }
     }
 
     public void setPreviewSize(int width, int height) {
@@ -269,6 +271,11 @@ public class JPanelXmippBrowser extends JPanel {
                 jlFileFilterMouseClicked(evt);
             }
         });
+        jlFileFilter.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                jlFileFilterValueChanged(evt);
+            }
+        });
         jlFileFilter.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 jlFileFilterKeyReleased(evt);
@@ -303,7 +310,7 @@ public class JPanelXmippBrowser extends JPanel {
             openSelectedFile();
         }
 
-        updatePreview();
+        //updatePreview();
     }//GEN-LAST:event_jlFileFilterKeyReleased
 
     private void jlFileFilterMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jlFileFilterMouseClicked
@@ -311,13 +318,17 @@ public class JPanelXmippBrowser extends JPanel {
             openSelectedFile();
         }
 
-        updatePreview();
+        //updatePreview();
     }//GEN-LAST:event_jlFileFilterMouseClicked
 
     private void jcbPreviewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbPreviewActionPerformed
         SHOW_PREVIEWS = jcbPreview.isSelected();
         updatePreview();
     }//GEN-LAST:event_jcbPreviewActionPerformed
+
+private void jlFileFilterValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jlFileFilterValueChanged
+    updatePreview();
+}//GEN-LAST:event_jlFileFilterValueChanged
     // Variables declaration - do not modify//GEN-BEGIN:variables
     protected javax.swing.JCheckBox jcbPreview;
     protected browser.filebrowsers.JListFileFilter jlFileFilter;
