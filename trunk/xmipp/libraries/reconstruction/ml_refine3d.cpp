@@ -405,11 +405,11 @@ void ProgMLRefine3D::run()
 
 	for (ml2d->current_block = 0; ml2d->current_block < ml2d->blocks; ml2d->current_block++)
         {
-	     LOG(formatString("ML3D: BLOCK %d of %d", ml2d->current_block, ml2d->blocks).c_str());
+	     LOG(formatString("ML3D: BEGIN BLOCK %d of %d", ml2d->current_block, ml2d->blocks).c_str());
             // Project volumes, already done for first iteration, first block
             if (doProject)// || ml2d->current_block > 0)
             {
-	        LOG("ML3D: Projecting volumes");
+	        LOG("   ML3D: Projecting volumes");
                 projectVolumes(ml2d->MDref);
                 size_t refno = 0;
 
@@ -424,7 +424,7 @@ void ProgMLRefine3D::run()
                         break;
                 }
             }
-            LOG("ML3D: Calling ML2D E-M");
+            LOG("   ML3D: Calling ML2D E-M");
             // Integrate over all images
             ml2d->expectation();
 
@@ -433,7 +433,7 @@ void ProgMLRefine3D::run()
             //do not reconstruction on special iteration 0 until last block
             if (iter > SPECIAL_ITER || ml2d->current_block == ml2d->blocks - 1)//last block
             {
-	    	LOG("ML3D: Writing ML2D references");
+	    	LOG("   ML3D: Writing ML2D references");
                 // Write out 2D reference images (to be used in reconstruction)
                 ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
 
@@ -444,18 +444,21 @@ void ProgMLRefine3D::run()
 
                 if (fourier_mode)
                     makeNoiseImages();
-                LOG("ML3D: Reconstructing volumes");
+                LOG("   ML3D: Reconstructing volumes");
                 // Reconstruct new volumes from the reference images
                 //update the base name for current iteration
                 reconsOutFnBase[0] = FN_ITER_BASE(iter);
                 reconsMdFn[0] = ml2d->outRefsMd;
                 reconstructVolumes();
+		LOG("   ML3D: updateVolumesMetadata");
                 // Update the reference volume selection file
                 updateVolumesMetadata();
                 // post-process the volumes
+		LOG("   ML3D: postProcessVolumes");
                 postProcessVolumes();
                 doProject = true;
             }
+	    LOG(formatString("ML3D: END BLOCK %d of %d", ml2d->current_block, ml2d->blocks).c_str());
 
         } // end loop blocks
 
