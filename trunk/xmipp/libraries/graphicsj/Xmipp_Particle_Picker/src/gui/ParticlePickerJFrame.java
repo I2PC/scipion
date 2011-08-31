@@ -310,7 +310,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					WindowUtils
-							.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome");
+							.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParticlePicker");
 				} catch (Exception ex) {
 					JOptionPane.showMessageDialog(ParticlePickerJFrame.this,
 							ex.getMessage());
