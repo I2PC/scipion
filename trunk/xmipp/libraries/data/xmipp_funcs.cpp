@@ -616,12 +616,12 @@ void annotate_processor_time(ProcessorTimeStamp *time)
 
 void annotate_time(TimeStamp *time)
 {
-	struct timeval  tv;
-	gettimeofday(&tv, NULL);
-	struct tm tm;
-	localtime_r(&tv.tv_sec,&tm);
-	*time = tm.tm_hour * 3600 * 1000 + tm.tm_min * 60 * 1000 + tm.tm_sec * 1000 +
-			tv.tv_usec / 1000;
+    struct timeval  tv;
+    gettimeofday(&tv, NULL);
+    struct tm tm;
+    localtime_r(&tv.tv_sec,&tm);
+    *time = tm.tm_hour * 3600 * 1000 + tm.tm_min * 60 * 1000 + tm.tm_sec * 1000 +
+            tv.tv_usec / 1000;
 }
 
 // Acumulative time
@@ -651,19 +651,19 @@ void print_elapsed_time(ProcessorTimeStamp &time, bool _IN_SECS)
 
 void print_elapsed_time(TimeStamp& time, bool _IN_SECS)
 {
-	struct timeval  tv;
-	gettimeofday(&tv, NULL);
-	struct tm tm;
-	localtime_r(&tv.tv_sec,&tm);
-	TimeStamp now = tm.tm_hour * 3600 * 1000 + tm.tm_min * 60 * 1000 + tm.tm_sec * 1000 +
-			        tv.tv_usec / 1000;
-	TimeStamp diff=now-time;
+    struct timeval  tv;
+    gettimeofday(&tv, NULL);
+    struct tm tm;
+    localtime_r(&tv.tv_sec,&tm);
+    TimeStamp now = tm.tm_hour * 3600 * 1000 + tm.tm_min * 60 * 1000 + tm.tm_sec * 1000 +
+                    tv.tv_usec / 1000;
+    TimeStamp diff=now-time;
 
-	std::cout << "Elapsed time: ";
-	if (_IN_SECS)
-		std::cout << diff/1000.0 << " secs." << std::endl;
-	else
-		std::cout << diff << " msecs." << std::endl;
+    std::cout << "Elapsed time: ";
+    if (_IN_SECS)
+        std::cout << diff/1000.0 << " secs." << std::endl;
+    else
+        std::cout << diff << " msecs." << std::endl;
 }
 
 // Calculate elapsed time since last annotation .............................
@@ -782,6 +782,12 @@ void progress_bar(long rlen)
     }
 }
 
+char * getCurrentTimeString()
+{
+  time_t rawtime;
+  time ( &rawtime );
+  return  ctime (&rawtime);
+}
 
 // Initialize progress bar.
 
@@ -1022,7 +1028,7 @@ bool compareTwoFiles(const FileName &fn1, const FileName &fn2, size_t offset)
         REPORT_ERROR(ERR_IO_NOPATH,"compareTwoFiles:write can not get filesize for file "+fn2);
     size_t size2 = file_status.st_size;
     if(size1!=size2)
-    	return false;
+        return false;
     size = size1;
     int fd1 = open(fn1.c_str(),  O_RDWR, S_IREAD | S_IWRITE);
     if (fd1 == -1)
@@ -1040,6 +1046,7 @@ bool compareTwoFiles(const FileName &fn1, const FileName &fn2, size_t offset)
         REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
 
 #include <string.h>
+
     int result=memcmp(map1+offset,map2+offset,size-offset);
     if (munmap(map1, size) == -1)
     {

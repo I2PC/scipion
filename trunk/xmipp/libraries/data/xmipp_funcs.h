@@ -977,6 +977,12 @@ void init_progress_bar(long total);
  */
 void progress_bar(long act_time);
 
+/** Function to get current time as string
+ *
+ */
+char * getCurrentTimeString();
+
+
 /** BaseListener
  *
  * This class implements the xmipp listener class for notification of progress
