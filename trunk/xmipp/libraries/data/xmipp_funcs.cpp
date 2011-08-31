@@ -786,7 +786,11 @@ char * getCurrentTimeString()
 {
   time_t rawtime;
   time ( &rawtime );
-  return  ctime (&rawtime);
+  char * str = ctime (&rawtime);
+  char * pos = strrchr(str, '\n');
+  pos[0] = '\0'; //Remove \n end character
+  return str;
+  
 }
 
 // Initialize progress bar.
