@@ -118,6 +118,7 @@ public:
 class ML2DBaseProgram: public XmippProgram
 {
 public:
+FILE * _logML; //DEBUG LOGGING
     /** Filenames reference selfile/image, fraction docfile & output rootname */
     FileName fn_img, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_oext, fn_scratch, fn_control;
     /** Command line */

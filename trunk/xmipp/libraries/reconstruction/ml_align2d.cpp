@@ -287,8 +287,10 @@ void ProgML2D::printModel(const String &msg, const ModelML2D & model)
 // Trying to merge produceSideInfo 1 y 2
 void ProgML2D::produceSideInfo()
 {
+	LOG("      ProgML2D::produceSideInfo: start");
     // Read selfile with experimental images
     // and set some global variables
+    LOG("      ProgML2D::produceSideInfo: reading MDimg");
     MDimg.read(fn_img);
     // Remove disabled images
     MDimg.removeDisabled();
@@ -307,6 +309,7 @@ void ProgML2D::produceSideInfo()
     // Get original image size
     int idum;
     size_t idumLong;
+    LOG("      ProgML2D::produceSideInfo: setting dimensions");
     ImgSize(MDimg, dim, idum, idum, idumLong);
     model.dim = dim;
     hdim = dim / 2;
@@ -323,6 +326,7 @@ void ProgML2D::produceSideInfo()
     if (fn_ref.empty())
     {
         //generate an initial reference just by averaging the experimental images
+	LOG("      ProgML2D::produceSideInfo: generate an initial reference just by averaging the experimental images");
         FileName fn_tmp;
         Image<double> img, avg(dim, dim);
         avg().initZeros();
@@ -344,7 +348,9 @@ void ProgML2D::produceSideInfo()
     }
 
     // Print some output to screen
+    LOG("      ProgML2D::produceSideInfo show");
     show();
+    LOG("      ProgML2D::produceSideInfo end");
 }
 
 void ProgML2D::produceSideInfo2()
@@ -1694,7 +1700,8 @@ void ProgML2D::expectation()
 {
     MultidimArray<std::complex<double> > Fdzero(dim, hdim + 1);
     int num_output_refs = factor_nref * model.n_ref;
-
+    
+    LOG("      ProgML2D::expectation BEGIN");
 #ifdef DEBUG
 
     std::cerr<<"entering expectation"<<std::endl;
@@ -1912,6 +1919,7 @@ void ProgML2D::expectation()
     reverseRotateReference();
     //Restore back the model.n_ref
     model.n_ref /= factor_nref;
+    LOG("      ProgML2D::expectation END");
 
 }//close function expectation
 
@@ -2008,7 +2016,7 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
 
 void ProgML2D::maximization()
 {
-
+	LOG("      ProgML2D::maximization BEGIN");
     if (blocks == 1) //ie not IEM, normal maximization
     {
         maximizeModel(model);
@@ -2057,6 +2065,8 @@ void ProgML2D::maximization()
 
     if (model.do_norm)
         correctScaleAverage();
+	
+	LOG("      ProgML2D::maximization BEGIN");
 }//close function maximizationBlocks
 
 void ProgML2D::correctScaleAverage()

@@ -345,34 +345,47 @@ void ProgMLRefine3D::createSampling()
 void ProgMLRefine3D::produceSideInfo()
 {
     //Create sampling
+    LOG("   ProgMLRefine3D::produceSideInfo: createSampling");
     createSampling();
+    LOG("   ProgMLRefine3D::produceSideInfo: show");
     show();
     // Write starting volume(s) to disc with correct name for iteration loop
+        LOG("   ProgMLRefine3D::produceSideInfo: copyVolumes");
     copyVolumes();
     // Project volumes and store projections in a metadata
+    LOG("   ProgMLRefine3D::produceSideInfo: projectVolumes");
     projectVolumes(ml2d->MDref);
+    FileName myImg = fn_root + formatString("img%02d.xmd", rank);
+    fn_sel.copyFile(myImg);
+    ml2d->fn_img = myImg;
     //2d initialization
+    LOG("   ProgMLRefine3D::produceSideInfo: ml2d->produceSideInfo");
     ml2d->produceSideInfo();
+    LOG("   ProgMLRefine3D::produceSideInfo2: end");
 }
 
 void ProgMLRefine3D::produceSideInfo2()
 {
+    LOG("   ProgMLRefine3D::produceSideInfo2: ml2d->produceSideInfo2");
     ml2d->produceSideInfo2();
     ml2d->refs_per_class = nr_projections;
     ml2d->show();
     Nvols *= ml2d->factor_nref;
     ml2d->Iold.clear(); // To save memory
+    LOG("   ProgMLRefine3D::produceSideInfo2: end");
 }
 
 void ProgMLRefine3D::run()
 {
     bool converged = false;
+    CREATE_LOG(fn_root); ml2d->_logML = _logML;
 
     // Get input parameters
+    LOG("ML3D: before produceSideInfo");
     produceSideInfo();
-
+    LOG("ML3D: before produceSideInfo2");
     produceSideInfo2();
-
+    LOG("ML3D: before ml2d->createThreads");
     ml2d->createThreads();
 
     //Local image to read data
@@ -387,11 +400,16 @@ void ProgMLRefine3D::run()
 
         if (verbose)
             std::cout << formatString("--> 3D-EM volume refinement:  iteration %d of %d", iter, Niter) << std::endl;
-        for (ml2d->current_block = 0; ml2d->current_block < ml2d->blocks; ml2d->current_block++)
+
+        LOG(formatString("ML3D: BEGIN Iteration %d of %d", iter, Niter).c_str());
+
+	for (ml2d->current_block = 0; ml2d->current_block < ml2d->blocks; ml2d->current_block++)
         {
+	     LOG(formatString("ML3D: BLOCK %d of %d", ml2d->current_block, ml2d->blocks).c_str());
             // Project volumes, already done for first iteration, first block
             if (doProject)// || ml2d->current_block > 0)
             {
+	        LOG("ML3D: Projecting volumes");
                 projectVolumes(ml2d->MDref);
                 size_t refno = 0;
 
@@ -406,7 +424,7 @@ void ProgMLRefine3D::run()
                         break;
                 }
             }
-
+            LOG("ML3D: Calling ML2D E-M");
             // Integrate over all images
             ml2d->expectation();
 
@@ -415,6 +433,7 @@ void ProgMLRefine3D::run()
             //do not reconstruction on special iteration 0 until last block
             if (iter > SPECIAL_ITER || ml2d->current_block == ml2d->blocks - 1)//last block
             {
+	    	LOG("ML3D: Writing ML2D references");
                 // Write out 2D reference images (to be used in reconstruction)
                 ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
 
@@ -425,6 +444,7 @@ void ProgMLRefine3D::run()
 
                 if (fourier_mode)
                     makeNoiseImages();
+                LOG("ML3D: Reconstructing volumes");
                 // Reconstruct new volumes from the reference images
                 //update the base name for current iteration
                 reconsOutFnBase[0] = FN_ITER_BASE(iter);
@@ -447,6 +467,7 @@ void ProgMLRefine3D::run()
 
         // End 2D iteration
         ml2d->endIteration();
+	LOG(formatString("ML3D: END Iteration %d of %d", iter, Niter).c_str());
     } // end loop iterations
 
     if (verbose)
