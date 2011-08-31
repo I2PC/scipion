@@ -197,8 +197,12 @@ public class LABELS {
     public final static String LABEL_TABLE_DISABLE = "Disable";
     public final static String LABEL_TABLE_ENABLE = "Enable";
     public final static String LABEL_TABLE_ENABLE_ALL = "Enable All";
+    public final static String LABEL_TABLE_ENABLE_FROM = "Enable from here";
+    public final static String LABEL_TABLE_ENABLE_TO = "Enable to here";
     public final static String LABEL_TABLE_HIDE_DISABLED = "Hide disabled";
     public final static String LABEL_TABLE_DISABLE_ALL = "Disable All";
+    public final static String LABEL_TABLE_DISABLE_FROM = "Disable from here";
+    public final static String LABEL_TABLE_DISABLE_TO = "Disable to here";
     public final static String LABEL_TABLE_SAVE = "Save";
     //public final static String LABEL_TABLE_SAVE_AS_IMAGES = "Save as images";
     public final static String LABEL_TABLE_SAVE_AS_STACK = "Save as stack";

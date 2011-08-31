@@ -257,7 +257,32 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     public abstract String getTitle();
 
-    // Selected items:
+    public void setEnabledFrom(int row, int col, boolean enable) {
+    }
+
+    public void setEnabledTo(int row, int col, boolean enable) {
+    }
+
+    public void selectRange(int initial_row, int initial_col, int final_row, int final_col) {
+        int row0 = Math.min(initial_row, final_row);
+        int row1 = Math.max(initial_row, final_row);
+        int col0 = Math.min(initial_col, final_col);
+        int col1 = Math.max(initial_col, final_col);
+
+        System.out.println(" *** SELECT RANGE: "
+                + row0 + " -> " + row1 + " / "
+                + col0 + " -> " + col1);
+
+        System.out.println(" +++ SELECTING: ");
+        for (int i = row0; i <= row1; i++) {
+            for (int j = col0; j <= col1; j++) {
+                //System.out.println(i + ", " + j + ": " + getValueAt(i, j).toString());
+                //((AbstractTableImageItem) getValueAt(i, j)).setSelected(true);
+                setSelected(i, j, true);
+            }
+        }
+    }
+
     public void setSelected(int row, int col, boolean selected) {
         AbstractTableImageItem item = (AbstractTableImageItem) getValueAt(row, col);
 
@@ -274,6 +299,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
                 }
             }
         }
+        //fireTableCellUpdated(row, col);
     }
 
     public void toggleSelected(int row, int col) {
@@ -379,10 +405,8 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         if (cols > 0) {
             this.cols = cols;
 
-            // Calculates necessary rows for desired number of cols.
+            // Calculates necessary rows for the desired number of cols.
             rows = (int) Math.ceil((double) data.size() / (double) cols);
-
-//            DEBUG.printMessage("R:" + rows + " / C:" + cols + " > S: " + (rows * cols));
 
             fireTableStructureChanged();
         }
@@ -393,8 +417,10 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         int i = 0;
 
         for (i = 0; i < getSize(); i++) {
-            if (data.get(i).exists()) {
-                scale = (double) (width - getSize() * (2 * intercellWidth)) / (double) data.get(i).getWidth();
+            AbstractTableImageItem item = data.get(i);
+
+            if (item.exists()) {
+                scale = (double) width / (double) (item.getWidth() - 2 * intercellWidth);
                 break;
             }
         }
@@ -404,7 +430,13 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     public void autoAdjustColumns(int width, int intercellWidth) {
         int displayableColumns = (int) Math.floor(
-                (double) (width - getSize() * (2 * intercellWidth)) / (double) getCellWidth());
+                (double) width / (double) (getCellWidth() - 2 * intercellWidth));
+
+        double ddisplayableColumns =
+                (double) width / (double) (getCellWidth() - 2 * intercellWidth);
+
+        DEBUG.printMessage(" *** Displayable  columns: " + displayableColumns);
+        DEBUG.printMessage(" *** DDisplayable columns: " + ddisplayableColumns);
 
         if (getColumnCount() != displayableColumns) {
             setColumns(displayableColumns);

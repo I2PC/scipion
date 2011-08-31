@@ -51,6 +51,7 @@ import javax.swing.KeyStroke;
 import javax.swing.LookAndFeel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SpringLayout;
+import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import xmipp.Filename;
 
@@ -64,6 +65,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     private AbstractXmippTableModel tableModel;
     private ImagesTableColumnModel columnModel;
     private ImagesRowHeaderModel rowHeaderModel;
+    private int previousSelectedRow, previousSelectedCol;
     private JList rowHeader;
     private ImageRenderer renderer = new ImageRenderer();
     private Timer updateTimer = new Timer(true);    // Timer for zoom.
@@ -229,9 +231,23 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         updateTable();
     }
 
+//    @Override
+//    public void paint(Graphics grphcs) {
+//        super.paint(grphcs);
+//
+//        Rectangle original_r = jsPanel.getViewport().getVisibleRect();
+//        //Rectangle r = new Rectangle(0, 80, rowHeader.getWidth(), original_r.height);
+//        Rectangle r = original_r;
+//        tempGlassPanel glassPanel = new tempGlassPanel(r);
+//        setGlassPane(glassPanel);
+//        glassPanel.setVisible(true);
+//    }
     private void autoAdjustColumns() {
+        //System.out.println("rowHeader.getWidth(): " + rowHeader.getWidth());
         tableModel.autoAdjustColumns(
-                jsPanel.getVisibleRect().width,
+                //jsPanel.getVisibleRect().width - rowHeader.getWidth(),
+                //jsPanel.getViewportBorderBounds().width - rowHeader.getWidth(),
+                jsPanel.getViewport().getWidth() - rowHeader.getWidth(),
                 table.getIntercellSpacing().width);
 
         jsRows.setValue(tableModel.getRowCount());
@@ -259,6 +275,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     }
 
     private void setZoom(int zoom) {
+        System.out.println(" *** Setting scale to: " + zoom / 100.0);
         isUpdating = true;
         tableModel.setZoomScale(zoom / 100.0);
 
@@ -293,16 +310,12 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         jcbAutoAdjustColumns.setSelected(autoAdjustColumns);
 
         this.autoAdjustColumns = autoAdjustColumns;
-//
-//        if (autoAdjustColumns) {
-//            autoAdjustColumns();
-//        }
 
         jsColumns.setEnabled(!jcbAutoAdjustColumns.isSelected());
         jsRows.setEnabled(!jcbAutoAdjustColumns.isSelected());
 
         startUpdater();
-        //updateTable();
+
         isUpdating = false;
     }
 
@@ -640,25 +653,39 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
                     tableModel.clearSelection();
                 }
 
-                // Right click selects an item (but doesn't deselect it)
-                tableModel.toggleSelected(view_row, view_col);
+                if (evt.isShiftDown()) {
+                    tableModel.selectRange(
+                            previousSelectedRow, previousSelectedCol,
+                            view_row, view_col);
+                } else {
+                    tableModel.setSelected(view_row, view_col, true);
+                }
 
                 table.repaint();
             }
-        } else if (evt.getButton() == MouseEvent.BUTTON3) {  // Right click.
-            if (tableModel.getSelectedItems().isEmpty()) {
-                tableModel.setSelected(view_row, view_col, true);
-            }
-//            table.setRowSelectionInterval(view_row, view_row);
-//            table.setColumnSelectionInterval(view_col, view_col);
-//
-//            if (!evt.isControlDown()) {
-//                tableModel.clearSelection();
-//            }
-//
-//            tableModel.setSelected(view_row, view_col, true);
 
-            jpopUpMenuTable.show(evt.getComponent(), evt.getX(), evt.getY());
+            if (!evt.isShiftDown()) {
+                previousSelectedRow = view_row;
+                previousSelectedCol = view_col;
+            }
+        } else if (evt.getButton() == MouseEvent.BUTTON3) {  // Right click.
+            if (tableModel.getSelectedItems().size() < 2) {
+                tableModel.clearSelection();
+                tableModel.setSelected(view_row, view_col, true);
+
+                table.setRowSelectionInterval(view_row, view_row);
+                table.setColumnSelectionInterval(view_col, view_col);
+
+                table.repaint();
+            }
+
+            final MouseEvent me = evt;
+            SwingUtilities.invokeLater(new Runnable() {
+
+                public void run() {
+                    jpopUpMenuTable.show(me.getComponent(), me.getX(), me.getY());
+                }
+            });
         }
     }//GEN-LAST:event_tableMouseClicked
 
@@ -761,6 +788,10 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         protected JMenuItem jmiDisable = new JMenuItem(LABELS.LABEL_TABLE_DISABLE);
         protected JMenuItem jmiEnableAll = new JMenuItem(LABELS.LABEL_TABLE_ENABLE_ALL);
         protected JMenuItem jmiDisableAll = new JMenuItem(LABELS.LABEL_TABLE_DISABLE_ALL);
+        protected JMenuItem jmiEnableFrom = new JMenuItem(LABELS.LABEL_TABLE_ENABLE_FROM);
+        protected JMenuItem jmiEnableTo = new JMenuItem(LABELS.LABEL_TABLE_ENABLE_TO);
+        protected JMenuItem jmiDisableFrom = new JMenuItem(LABELS.LABEL_TABLE_DISABLE_FROM);
+        protected JMenuItem jmiDisableTo = new JMenuItem(LABELS.LABEL_TABLE_DISABLE_TO);
 
         public JPopUpMenuTable() {
             add(jmiEnable);
@@ -769,11 +800,21 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
             add(jmiEnableAll);
             add(jmiDisableAll);
             add(new JSeparator());
+            add(jmiEnableFrom);
+            add(jmiDisableFrom);
+            add(new JSeparator());
+            add(jmiEnableTo);
+            add(jmiDisableTo);
 
             jmiEnable.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK));
             jmiDisable.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_DOWN_MASK));
             jmiEnableAll.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK));
             jmiDisableAll.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
+
+//            jmiEnableFrom.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.SHIFT_DOWN_MASK));
+//            jmiDisableFrom.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK));
+//            jmiEnableTo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.SHIFT_DOWN_MASK));
+//            jmiDisableTo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK));
 
             table.addKeyListener(new KeyListener() {
 
@@ -829,6 +870,49 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
                 }
             });
 
+            jmiEnableFrom.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    Point location = getLocation();
+                    int row = table.rowAtPoint(location);
+                    int col = table.columnAtPoint(location);
+
+                    tableModel.setEnabledFrom(row, col, true);
+                }
+            });
+
+            jmiEnableTo.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    Point location = getLocation();
+                    int row = table.rowAtPoint(location);
+                    int col = table.columnAtPoint(location);
+
+                    tableModel.setEnabledTo(row, col, true);
+                }
+            });
+
+            jmiDisableFrom.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    Point location = getLocation();
+                    int row = table.rowAtPoint(location);
+                    int col = table.columnAtPoint(location);
+
+                    tableModel.setEnabledFrom(row, col, false);
+                }
+            });
+
+            jmiDisableTo.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    Point location = getLocation();
+                    int row = table.rowAtPoint(location);
+                    int col = table.columnAtPoint(location);
+
+                    tableModel.setEnabledFrom(row, col, false);
+                }
+            });
         }
     }
 }
