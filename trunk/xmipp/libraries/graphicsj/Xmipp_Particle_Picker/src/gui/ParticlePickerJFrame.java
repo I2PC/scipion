@@ -687,6 +687,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 
 	private void setState(MicrographFamilyState state) {
 		getFamilyData().setState(state);
+		saveChanges();//to keep consistence between files of automatic picker and mines
 		thresholdpn.setVisible(state == MicrographFamilyState.Correct);
 		updateMicrographsModel();
 		setChanged(true);
@@ -918,7 +919,6 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	private void correct() {
 		getFamilyData().deleteBelowThreshold(getThreshold());
 		setState(MicrographFamilyState.ReadOnly);
-		saveChanges();
 		ppicker.persistAutomaticParticles(getFamilyData());
 
 		String args = String
@@ -944,13 +944,9 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 			canvas.setEnabled(false);
 			ParticlePickerJFrame.this.getRootPane().setGlassPane(glassPane);
 			glassPane.start();
-
 			Thread t = new Thread(new Runnable() {
-
 				public void run() {
-
 					try {
-
 						Program.runByName("xmipp_micrograph_automatic_picking",
 								fargs);
 					} catch (Exception e) {
