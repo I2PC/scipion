@@ -21,6 +21,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -31,6 +32,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
@@ -44,6 +46,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
@@ -69,7 +72,6 @@ enum Tool {
 enum Shape {
 	Circle, Rectangle, Center
 }
-
 
 public class ParticlePickerJFrame extends JFrame implements ActionListener {
 
@@ -106,6 +108,9 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	private JButton resetbt;
 	private JLabel manuallb;
 	private JLabel autolb;
+	private JSlider thresholdsl;
+	private JPanel thresholdpn;
+	private JFormattedTextField thresholdtf;
 
 	// private JCheckBox onlylastchb;
 
@@ -147,12 +152,12 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	}
 
 	private void initComponents() {
-		// try {
-		// UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		// } catch (Exception e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
+//		 try {
+//		 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//		 } catch (Exception e) {
+//		 // TODO Auto-generated catch block
+//		 e.printStackTrace();
+//		 }
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent winEvt) {
@@ -300,10 +305,16 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 			}
 		});
 		hcontentsmi.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				WindowUtils.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome");				
+				try {
+					WindowUtils
+							.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome");
+				} catch (Exception ex) {
+					JOptionPane.showMessageDialog(ParticlePickerJFrame.this,
+							ex.getMessage());
+				}
 			}
 		});
 
@@ -311,7 +322,9 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 
 	private void initFamilyPane() {
 		familypn = new JPanel();
-		familypn.setLayout(new GridLayout(2, 1));
+		GridLayout gl = new GridLayout(2, 1);
+		familypn.setLayout(gl);
+		
 		familypn.setBorder(BorderFactory.createTitledBorder("Family"));
 
 		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -319,9 +332,9 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		// Setting combo
 		fieldspn.add(new JLabel("Family:"));
 		familiescb = new JComboBox(ppicker.getFamilies().toArray());
-		
+
 		family = (Family) familiescb.getSelectedItem();
-		
+
 		fieldspn.add(familiescb);
 
 		// Setting color
@@ -336,8 +349,12 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		int size = family.getSize();
 		fieldspn.add(new JLabel("Size:"));
 		sizesl = new JSlider(0, 500, size);
+		sizesl.setMajorTickSpacing(250);
+		sizesl.setPaintTicks(true);
+		sizesl.setPaintLabels(true);
 		int height = (int) sizesl.getPreferredSize().getHeight();
 		sizesl.setPreferredSize(new Dimension(100, height));
+		
 
 		fieldspn.add(sizesl);
 		sizetf = new JFormattedTextField(NumberFormat.getNumberInstance());
@@ -351,17 +368,20 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		FamilyState step = family.getStep();
 		steplb = new JLabel();
 		steppn.add(steplb);
+
 		nextbt = new JButton();
 		steppn.add(nextbt);
+
 		index = ppicker.getNextFreeMicrograph(family);
-		if(index == -1)
+		if (index == -1)
 			index = 0;
 		micrograph = ppicker.getMicrographs().get(index);
-		
+
+		initThresholdPane();
+		steppn.add(thresholdpn);
 		actionsbt = new JButton();
 		setStep(step);
 		steppn.add(actionsbt);
-
 
 		colorbt.addActionListener(new ColorActionListener());
 		nextbt.addActionListener(new ActionListener() {
@@ -376,7 +396,8 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 					return;
 				}
 				if (family.getStep() == FamilyState.Manual) {
-					int result = JOptionPane.showConfirmDialog(
+					int result = JOptionPane
+							.showConfirmDialog(
 									ParticlePickerJFrame.this,
 									"Data provided from manual picking will be used to train software and start Supervised mode."
 											+ "\nManual mode will be disabled. Are you sure you want to continue?",
@@ -385,7 +406,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 					if (result == JOptionPane.NO_OPTION)
 						return;
 					train();
-					
+
 				} else if (family.getStep() == FamilyState.Supervised) {
 					int result = JOptionPane.showConfirmDialog(
 							ParticlePickerJFrame.this,
@@ -444,23 +465,25 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 				sizesl.setValue(family.getSize());
 				updateMicrographsModel();
 				micrographstb.getColumnModel()
-						.getColumn(micrographsmd.getParticlesPosition()).setHeaderValue(family.getName());
+						.getColumn(micrographsmd.getParticlesPosition())
+						.setHeaderValue(family.getName());
 			}
 		});
 		actionsbt.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (actionsbt.getText().equals(MicrographFamilyState.Autopick.toString())) 
+				if (actionsbt.getText().equals(
+						MicrographFamilyState.Autopick.toString()))
 					autopick();
-				else if(actionsbt.getText().equals(MicrographFamilyState.Correct.toString())) 
+				else if (actionsbt.getText().equals(
+						MicrographFamilyState.Correct.toString()))
 					correct();
 				actionsbt.setText(getFamilyData().getAction());
 			}
 		});
 	}
-	
-	
+
 	class ColorActionListener implements ActionListener {
 		JColorChooser colorChooser;
 
@@ -483,6 +506,54 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 			WindowUtils.centerScreen(position, dialog);
 			dialog.setVisible(true);
 		}
+	}
+
+	private void initThresholdPane() {
+		thresholdpn = new JPanel();
+		thresholdpn.add(new JLabel("Threshold:"));
+		thresholdsl = new JSlider(0, 100, 0);
+		thresholdsl.setPaintTicks(true);
+		thresholdsl.setMajorTickSpacing(50);
+		java.util.Hashtable<Integer, JLabel> labelTable = new java.util.Hashtable<Integer, JLabel>();
+		labelTable.put(new Integer(100), new JLabel("1"));
+		labelTable.put(new Integer(50), new JLabel("0.5"));
+		labelTable.put(new Integer(0), new JLabel("0"));
+		thresholdsl.setLabelTable(labelTable);
+		thresholdsl.setPaintLabels(true);
+		int height = (int) thresholdsl.getPreferredSize().getHeight();
+
+		thresholdsl.setPreferredSize(new Dimension(100, height));
+		thresholdpn.add(thresholdsl);
+		
+		thresholdtf = new JFormattedTextField(NumberFormat.getNumberInstance());;
+		thresholdtf.setColumns(3);
+		thresholdtf.setText(Integer.toString(0));
+		thresholdpn.add(thresholdtf);
+		thresholdpn
+				.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
+		thresholdtf.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				double threshold = Double.parseDouble(thresholdtf.getText() ) * 100;
+				if(Math.abs(threshold) <= 100)
+				{
+					thresholdsl.setValue((int)threshold );
+					canvas.repaint();
+				}
+				
+			}
+		});
+
+		thresholdsl.addChangeListener(new ChangeListener() {
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				double threshold = (double)thresholdsl.getValue()/100;
+				thresholdtf.setText(String.format("%.2f", threshold));
+				canvas.repaint();
+			}
+		});
 	}
 
 	private void initSymbolPane() {
@@ -537,18 +608,20 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		micrographpn.setBorder(BorderFactory.createTitledBorder("Micrograph"));
 		JScrollPane sp = new JScrollPane();
 		JPanel ctfpn = new JPanel();
-		ctfpn.setBorder(BorderFactory.createTitledBorder(null, "CTF", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.BELOW_BOTTOM));
+		ctfpn.setBorder(BorderFactory.createTitledBorder(null, "CTF",
+				javax.swing.border.TitledBorder.CENTER,
+				javax.swing.border.TitledBorder.BELOW_BOTTOM));
 		iconlb = new JLabel();
 		ctfpn.add(iconlb);
 		micrographsmd = new MicrographsTableModel(this);
 		micrographstb = new JTable(micrographsmd);
 		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(20);
-		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(160);
+		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(220);
 		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(70);
 		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(70);
 		micrographstb
-				.setPreferredScrollableViewportSize(new Dimension(320, 160));
+				.setPreferredScrollableViewportSize(new Dimension(380, 304));
 		micrographstb
 				.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 		micrographstb.getSelectionModel().addListSelectionListener(
@@ -563,16 +636,20 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 							return;// Probably from fireTableDataChanged raised
 						index = ParticlePickerJFrame.this.micrographstb
 								.getSelectedRow();
-									// by me.
+						// by me.
 						micrograph.releaseImage();
 						micrograph = (Micrograph) ppicker.getMicrographs().get(
 								index);
-						
+
 						initializeCanvas();
 						ParticlePickerJFrame.this.iconlb.setIcon(micrograph
 								.getCTFIcon());
 						actionsbt.setText(getFamilyData().getAction());
-						actionsbt.setVisible(getFamilyData().isActionAvailable());
+						actionsbt.setVisible(getFamilyData()
+								.isActionAvailable());
+						thresholdpn
+								.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
+						pack();
 					}
 				});
 		micrographstb.getSelectionModel().setSelectionInterval(index, index);
@@ -583,19 +660,20 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 				WindowUtils.updateConstraints(constraints, 1, 0, 1));
 		JPanel infopn = new JPanel();
 		manuallb = new JLabel(Integer.toString(family.getManualNumber()));
-		autolb = new JLabel(Integer.toString(family.getAutomaticNumber()));
+		autolb = new JLabel(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
 		infopn.add(new JLabel("Manual:"));
 		infopn.add(manuallb);
 		infopn.add(new JLabel("Automatic:"));
 		infopn.add(autolb);
-		micrographpn.add(infopn, WindowUtils.updateConstraints(constraints, 0, 1, 1));
+		micrographpn.add(infopn,
+				WindowUtils.updateConstraints(constraints, 0, 1, 1));
 		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		resetbt = new JButton("Reset"); 
+		resetbt = new JButton("Reset");
 		buttonspn.add(resetbt);
 		micrographpn.add(buttonspn,
 				WindowUtils.updateConstraints(constraints, 0, 2, 2));
 		resetbt.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				ppicker.resetFamilyData(getFamilyData());
@@ -604,26 +682,25 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 				setChanged(true);
 			}
 		});
-		
+
 	}
-	
-	private void setState(MicrographFamilyState state)
-	{
+
+	private void setState(MicrographFamilyState state) {
 		getFamilyData().setState(state);
+		thresholdpn.setVisible(state == MicrographFamilyState.Correct);
 		updateMicrographsModel();
 		setChanged(true);
+		pack();
 	}
-	
-	MicrographFamilyData getFamilyData()
-	{
+
+	MicrographFamilyData getFamilyData() {
 		return micrograph.getFamilyData(family);
 	}
 
 	private void setStep(FamilyState step) {
-		if(micrographsmd != null)
-		{
+		if (micrographsmd != null) {
 			updateMicrographsModel();
-			canvas.repaint();//paints only current class in supervised mode
+			canvas.repaint();// paints only current class in supervised mode
 		}
 		nextbt.setText("Go To " + ParticlePicker.nextStep(step).toString());
 		steplb.setText(step.toString());
@@ -632,16 +709,17 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		editfamiliesmn.setEnabled(step == FamilyState.Manual);
 		actionsbt.setText(getFamilyData().getAction());
 		actionsbt.setVisible(getFamilyData().isActionAvailable());
+
 		pack();
 	}
 
 	void initializeCanvas() {
-		Micrograph micrograph = getMicrograph();
 		if (iw == null) {
 			canvas = new ParticlePickerCanvas(this);
 			iw = new ImageWindow(micrograph.getImage(), canvas);
 		} else {
 			canvas.updateMicrograph();
+			micrograph.getImage().setWindow(iw);
 		}
 		iw.setTitle(micrograph.getName());
 		canvas.setName(micrograph.getName());
@@ -698,24 +776,23 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	void updateMicrographsModel() {
 		micrographsmd.fireTableDataChanged();
 		micrographstb.setRowSelectionInterval(index, index);
-		
+
 		manuallb.setText(Integer.toString(family.getManualNumber()));
-		autolb.setText(Integer.toString(family.getAutomaticNumber()));
+		autolb.setText(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
 	}
-	
-	public ImageWindow getImageWindow()
-	{
+
+	public ImageWindow getImageWindow() {
 		return iw;
 	}
 
 	public ParticlePickerCanvas getCanvas() {
 		return canvas;
 	}
-	
+
 	private void train() {
 		family.goToNextStep();
 		setStep(FamilyState.Supervised);
-		
+
 		String args;
 		for (Micrograph micrograph : ParticlePicker.getInstance()
 				.getMicrographs()) {
@@ -727,46 +804,54 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 								family.getSize(), // --particleSize
 								family.getOutputRoot(),// --model
 								micrograph.getOutputRoot(), // --outputRoot
-								family.getName() + "@" + micrograph.getOFilename());// train
-																				// parameter
+								family.getName() + "@"
+										+ micrograph.getOFilename());// train
+				// parameter
 				if (ParticlePicker.isFastMode())
 					args += " --fast";
 				if (ParticlePicker.isIncore())
 					args += " --in_core";
 				final String fargs = args;
 				try {
-					final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("training picker...");
-					final Component previousGlassPane = ParticlePickerJFrame.this.getRootPane().getGlassPane();
+					final InfiniteProgressPanel glassPane = new InfiniteProgressPanel(
+							"training picker...");
+					final Component previousGlassPane = ParticlePickerJFrame.this
+							.getRootPane().getGlassPane();
 					canvas.setEnabled(false);
-					ParticlePickerJFrame.this.getRootPane().setGlassPane(glassPane);
+					ParticlePickerJFrame.this.getRootPane().setGlassPane(
+							glassPane);
 					glassPane.start();
-					
+
 					Thread t = new Thread(new Runnable() {
 
 						public void run() {
 
-						    try {
-						    
-								
-								Program.runByName("xmipp_micrograph_automatic_picking", fargs);
-							} 
-						    catch (Exception e) {
-								ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+							try {
+
+								Program.runByName(
+										"xmipp_micrograph_automatic_picking",
+										fargs);
+							} catch (Exception e) {
+								ParticlePicker.getLogger().log(Level.SEVERE,
+										e.getMessage(), e);
 								throw new IllegalArgumentException(e);
 							}
 
 							glassPane.stop();
-							ParticlePickerJFrame.this.getRootPane().setGlassPane(previousGlassPane);
+							ParticlePickerJFrame.this.getRootPane()
+									.setGlassPane(previousGlassPane);
 							canvas.setEnabled(true);
 							int next = ppicker.getNextFreeMicrograph(family);
-							if(next != -1 )
-								micrographstb.setRowSelectionInterval(next, next);
+							if (next != -1)
+								micrographstb.setRowSelectionInterval(next,
+										next);
 						}
 					});
 					t.start();
 
 				} catch (Exception e) {
-					ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+					ParticlePicker.getLogger().log(Level.SEVERE,
+							e.getMessage(), e);
 					throw new IllegalArgumentException(e.getMessage());
 				}
 			}
@@ -791,28 +876,31 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 			args += " --in_core";
 		final String fargs = args;
 		try {
-			final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("autopicking...");
-			final Component previousGlassPane = ParticlePickerJFrame.this.getRootPane().getGlassPane();
+			final InfiniteProgressPanel glassPane = new InfiniteProgressPanel(
+					"autopicking...");
+			final Component previousGlassPane = ParticlePickerJFrame.this
+					.getRootPane().getGlassPane();
 			canvas.setEnabled(false);
 			ParticlePickerJFrame.this.getRootPane().setGlassPane(glassPane);
 			glassPane.start();
-			
+
 			Thread t = new Thread(new Runnable() {
 
 				public void run() {
 
-				    try {
-				    
-						
-						Program.runByName("xmipp_micrograph_automatic_picking", fargs);
-					} 
-				    catch (Exception e) {
-						ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+					try {
+
+						Program.runByName("xmipp_micrograph_automatic_picking",
+								fargs);
+					} catch (Exception e) {
+						ParticlePicker.getLogger().log(Level.SEVERE,
+								e.getMessage(), e);
 						throw new IllegalArgumentException(e);
 					}
 
 					glassPane.stop();
-					ParticlePickerJFrame.this.getRootPane().setGlassPane(previousGlassPane);
+					ParticlePickerJFrame.this.getRootPane().setGlassPane(
+							previousGlassPane);
 					canvas.setEnabled(true);
 					ppicker.loadAutomaticParticles(micrograph);
 					setState(MicrographFamilyState.Correct);
@@ -828,10 +916,11 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	}
 
 	private void correct() {
+		getFamilyData().deleteBelowThreshold(getThreshold());
 		setState(MicrographFamilyState.ReadOnly);
 		saveChanges();
 		ppicker.persistAutomaticParticles(getFamilyData());
-		
+
 		String args = String
 				.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train ",
 						micrograph.getFilename(),// -i
@@ -839,7 +928,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 						family.getOutputRoot(),// --model
 						micrograph.getOutputRoot()// --outputRoot
 				);
-		
+
 		if (micrograph.getFamilyData(family).getManualParticles().size() > 0)
 			args += family.getName() + "@" + micrograph.getOFilename();
 		if (ParticlePicker.isFastMode())
@@ -848,31 +937,34 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 			args += " --in_core";
 		final String fargs = args;
 		try {
-			final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("correcting...");
-			final Component previousGlassPane = ParticlePickerJFrame.this.getRootPane().getGlassPane();
+			final InfiniteProgressPanel glassPane = new InfiniteProgressPanel(
+					"correcting...");
+			final Component previousGlassPane = ParticlePickerJFrame.this
+					.getRootPane().getGlassPane();
 			canvas.setEnabled(false);
 			ParticlePickerJFrame.this.getRootPane().setGlassPane(glassPane);
 			glassPane.start();
-			
+
 			Thread t = new Thread(new Runnable() {
 
 				public void run() {
 
-				    try {
-				    
-						
-						Program.runByName("xmipp_micrograph_automatic_picking", fargs);
-					} 
-				    catch (Exception e) {
-						ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+					try {
+
+						Program.runByName("xmipp_micrograph_automatic_picking",
+								fargs);
+					} catch (Exception e) {
+						ParticlePicker.getLogger().log(Level.SEVERE,
+								e.getMessage(), e);
 						throw new IllegalArgumentException(e);
 					}
 
 					glassPane.stop();
-					ParticlePickerJFrame.this.getRootPane().setGlassPane(previousGlassPane);
+					ParticlePickerJFrame.this.getRootPane().setGlassPane(
+							previousGlassPane);
 					canvas.setEnabled(true);
 					int next = ppicker.getNextFreeMicrograph(family);
-					if(next != -1 )
+					if (next != -1)
 						micrographstb.setRowSelectionInterval(next, next);
 					else
 						actionsbt.setVisible(false);
@@ -886,7 +978,10 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		}
 
 	}
-
 	
+	public double getThreshold()
+	{
+		return thresholdsl.getValue()/100.0;
+	}
 
 }

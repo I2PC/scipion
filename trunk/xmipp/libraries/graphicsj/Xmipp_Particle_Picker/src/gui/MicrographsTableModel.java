@@ -53,7 +53,7 @@ public class MicrographsTableModel extends AbstractTableModel {
 			if(mfd.getStep() == FamilyState.Available)
 				return "0";
 			if(mfd.getStep() == FamilyState.Supervised)
-				return String.format("%s + %s", mfd.getManualParticles().size(), mfd.getAutomaticParticlesCount());
+				return String.format("%s + %s", mfd.getManualParticles().size(), mfd.getAutomaticParticlesCount(frame.getThreshold()));
 		}
 		if(columnIndex == 3)
 			return mfd.getState();

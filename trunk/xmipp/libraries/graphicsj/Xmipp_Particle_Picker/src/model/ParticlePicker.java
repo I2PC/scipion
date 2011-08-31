@@ -533,4 +533,16 @@ public class ParticlePicker {
 		ppicker.persistMicrographsData();
 
 	}
+	
+	public int getAutomaticNumber(Family f, double threshold)
+	{
+		MicrographFamilyData mfd;
+		int count = 0;
+		for(Micrograph m: micrographs)
+		{
+			mfd = m.getFamilyData(f);
+			count += mfd.getAutomaticParticles(threshold);
+		}
+		return count;
+	}
 }

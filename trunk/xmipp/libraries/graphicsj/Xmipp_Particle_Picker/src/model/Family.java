@@ -12,12 +12,7 @@ public class Family {
 	private int size;
 	private FamilyState state;
 	int particles = 0;
-	int autoparticles = 0;
 	
-	public String getParticles()
-	{
-		return String.format("Particles:%s+%s", particles, autoparticles);
-	}
 	
 	public int getManualNumber()
 	{
@@ -25,10 +20,7 @@ public class Family {
 	}
 
 
-	public int getAutomaticNumber()
-	{
-		return autoparticles;
-	}
+
 	
 	private static int sizemax = 1000;
 	private static Family dfamily = new Family("Default", Color.green);

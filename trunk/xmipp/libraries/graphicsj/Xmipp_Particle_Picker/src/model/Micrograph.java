@@ -142,10 +142,17 @@ public class Micrograph {
 			for(Particle p: mfd.getManualParticles())
 				if (p.contains(x, y)) 
 					return p;
-			for(AutomaticParticle p: mfd.getAutomaticParticles())
-				if (p.contains(x, y) && !p.isDeleted() && p.getCost() >= 0) 
-					return p;
+			
 		}
+		return null;
+	}
+	
+	public AutomaticParticle getAutomaticParticle(int x, int y, double threshold)
+	{
+		for(MicrographFamilyData mfd: mfdatas)
+			for(AutomaticParticle p: mfd.getAutomaticParticles())
+				if (!p.isDeleted() && p.getCost() >= threshold && p.contains(x, y)) 
+					return p;
 		return null;
 	}
 	

@@ -71,14 +71,11 @@ public class MicrographFamilyData {
 			throw new IllegalArgumentException(
 					Constants.getEmptyFieldMsg("particle"));
 		if (p instanceof AutomaticParticle)
-		{
 			((AutomaticParticle) p).setDeleted(true);
-			family.autoparticles--;
-		}
 		else {
 			particles.remove(p);
 			family.particles--;
-			if (particles.size() == 0 && getAutomaticParticlesCount() == 0)
+			if (particles.size() == 0 && autoparticles.size() - getAutomaticParticlesDeleted() == 0)
 				state = MicrographFamilyState.Available;
 		}
 	}
@@ -96,12 +93,16 @@ public class MicrographFamilyData {
 	public boolean isEmpty() {
 		return particles.size() == 0 && autoparticles.size() == 0;
 	}
+	
+	public int getAutomaticParticles(double threshold)
+	{
+		return autoparticles.size() - getAutomaticParticlesDeleted(threshold);
+	}
 
 	public void addAutomaticParticle(AutomaticParticle p) {
 		if(state == MicrographFamilyState.Available)
 			throw new IllegalArgumentException(String.format("Invalid state %s on micrograph %s and family %s for adding automatic particles", state, micrograph.getName(), family.getName()));
 		autoparticles.add(p);
-		family.autoparticles++;
 
 	}
 
@@ -153,7 +154,6 @@ public class MicrographFamilyData {
 	{
 		setState(MicrographFamilyState.Available);
 		family.particles -= particles.size();
-		family.autoparticles -= autoparticles.size();
 		autoparticles.clear();
 		particles.clear();
 	}
@@ -167,11 +167,25 @@ public class MicrographFamilyData {
 		return FamilyState.Supervised;
 	}
 	
-	public int getAutomaticParticlesCount()
+	public int getAutomaticParticlesDeleted()
 	{
 		int count = 0;
 		for(AutomaticParticle p: autoparticles)
-			if(!p.isDeleted())
+			if(p.isDeleted())
+				count ++;
+		return count;
+	}
+	
+	public int getAutomaticParticlesCount(double threshold)
+	{
+		return autoparticles.size() - getAutomaticParticlesDeleted(threshold);
+	}
+	
+	public int getAutomaticParticlesDeleted(double threshold)
+	{
+		int count = 0;
+		for(AutomaticParticle p: autoparticles)
+			if(p.isDeleted() || p.getCost() < threshold)
 				count ++;
 		return count;
 	}
@@ -181,5 +195,11 @@ public class MicrographFamilyData {
 		return ParticlePicker.getOutputPath(String.format("%s_%s_%s.txt", micrograph.getName(), ParticlePicker.getTrainingAutoFeatureVectorsFilenameGeneric(), family.getName()));
 	}
 	
+	public void deleteBelowThreshold(double threshold)
+	{
+		for(AutomaticParticle p: autoparticles)
+			if(p.getCost() < threshold)
+				p.setDeleted(true);
+	}
 	
 }

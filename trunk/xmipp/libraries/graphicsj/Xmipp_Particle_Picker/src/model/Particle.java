@@ -12,12 +12,12 @@ import javax.swing.ImageIcon;
 
 public class Particle {
 	
-	private int x;
-	private int y;
-	private Family family;
-	private Micrograph micrograph;
-	private ImagePlus img;
-	private ParticleCanvas canvas;
+	protected int x;
+	protected int y;
+	protected Family family;
+	protected Micrograph micrograph;
+	protected ImagePlus img;
+	protected ParticleCanvas canvas;
 	
 	
 	public Particle(int x, int y, Family family, Micrograph micrograph)

@@ -6,7 +6,10 @@ import java.awt.GridBagConstraints;
 import java.awt.Rectangle;
 import java.awt.Window;
 import java.net.URI;
+import java.util.logging.Level;
 import java.awt.Desktop;
+
+import model.ParticlePicker;
 
 public class WindowUtils {
 
@@ -43,9 +46,7 @@ public class WindowUtils {
 
 		if (!desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
 
-			System.err
-					.println("Desktop doesn't support the browse action (fatal)");
-			System.exit(1);
+			throw new IllegalArgumentException("Desktop doesn't support the browse action (fatal)");
 		}
 		try {
 

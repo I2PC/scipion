@@ -64,6 +64,8 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 		}
 		if (frame.getFamilyData().isPickingAvailable()) {
 			Particle p = micrograph.getParticle(x, y);
+			if(p == null)
+				p = micrograph.getAutomaticParticle(x, y, frame.getThreshold());
 			if (p != null) {
 				if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown()) {
 					micrograph.removeParticle(p);
@@ -170,29 +172,31 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 			particles = mfdata.getManualParticles();
 			g2.setColor(mfdata.getFamily().getColor());
 			radius = (int) (mfdata.getFamily().getSize() / 2 * magnification);
-			g2.setStroke(continuousst);
+			Graphics2D cg2 = (Graphics2D)g2.create();
+			cg2.setStroke(continuousst);
 			for (index = 0; index < particles.size(); index ++) 
-				drawShape(g2, particles.get(index), x0, y0, radius, index == particles.size() - 1);
+				drawShape(g2, cg2, particles.get(index), x0, y0, radius, index == particles.size() - 1);
 			g2.setStroke(dashedst);
 			List<AutomaticParticle> autoparticles = mfdata.getAutomaticParticles();
 			for (int i = 0; i < autoparticles.size(); i ++)
-				if(!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= 0)
-					drawShape(g2, autoparticles.get(i), x0, y0, radius, false);
+				if(!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= frame.getThreshold())
+					drawShape(g2, cg2, autoparticles.get(i), x0, y0, radius, false);
 		}
 	
 	}
 
-	private void drawShape(Graphics2D g2, Particle p, int x0, int y0, int radius, boolean all) {
+	private void drawShape(Graphics2D g2, Graphics2D cg2, Particle p, int x0, int y0, int radius, boolean all) {
 		
 		int x = (int) ((p.getX() - x0) * magnification);
 		int y = (int) ((p.getY() - y0) * magnification);
+		int distance = (int)(10 * magnification);
 		if (frame.isShapeSelected(Shape.Rectangle) || all)
 			g2.drawRect(x - radius, y - radius, radius * 2, radius * 2);
 		if (frame.isShapeSelected(Shape.Circle) || all)
 			g2.drawOval(x - radius, y - radius, radius * 2, radius * 2);
 		if (frame.isShapeSelected(Shape.Center) || all) {
-			g2.drawLine(x, y - 2, x, y + 2);
-			g2.drawLine(x + 2, y, x - 2, y);
+			cg2.drawLine(x, y - distance, x, y + distance);
+			cg2.drawLine(x + distance, y, x - distance, y);
 		}
 	}
 
