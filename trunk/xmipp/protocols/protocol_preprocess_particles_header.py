@@ -61,7 +61,7 @@ Freq_decay=0.02
 """ Gaussian filter defined in Fourier space"""
 DoGaussian=False
 
-#{condition}(DoGaussian) Frequency sigma
+#{condition}(DoGaussian){wizard}(wizardChooseGaussianFilter) Frequency sigma
 """ Remind that the Fourier frequency is normalized between 0 and 0.5"""
 Freq_sigma=0.04
 
