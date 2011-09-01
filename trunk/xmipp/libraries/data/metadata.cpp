@@ -1103,6 +1103,13 @@ void MetaData::fillExpand(MDLabel label)
     generator.fill(*this);
 }
 
+void MetaData::fillConstant(MDLabel label, const String &value)
+{
+    MDConstGenerator generator(value);
+    generator.label=label;
+    generator.fill(*this);
+}
+
 void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
                                MDLabel aggregateLabel)
 

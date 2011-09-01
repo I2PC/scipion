@@ -115,8 +115,42 @@ void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList);
 
 class MDQuery;
 class MDSql;
-class MDIterator;
 class MDValueGenerator;
+
+////////////////////////////// MetaData Iterator ////////////////////////////
+/** Iterates over metadatas */
+class MDIterator
+{
+protected:
+    size_t * objects;
+    size_t size;
+
+    /** Internal function to initialize the iterator */
+    void init(const MetaData &md, const MDQuery * pQuery=NULL);
+public:
+
+    /** Empty constructor */
+    MDIterator();
+    /** Empty constructor, creates an iterator from metadata */
+    MDIterator(const MetaData &md);
+    /** Same as before but iterating over a query */
+    MDIterator(const MetaData &md, const MDQuery &query);
+    /** Destructor */
+    ~MDIterator();
+
+    /** This is the object ID in the metadata, usually starts at 1 */
+    size_t objId;
+    /** This is the index of the object, starts at 0 */
+    size_t objIndex;
+    /** Function to move to next element.
+     * return false if there aren't more elements to iterate.
+     */
+    bool moveNext();
+    /** Function to check if exist next element
+     */
+    bool hasNext();
+}
+;//class MDIterator
 
 /** Class to manage data files.
  *
@@ -192,10 +226,10 @@ protected:
      */
     void _setOperates(const MetaData &mdIn, const MDLabel label, SetOperation operation);
     void _setOperates(const MetaData &mdInLeft,
-    		          const MetaData &mdInRight,
-    		          const MDLabel labelLeft,
-    		          const MDLabel labelRight,
-    		          SetOperation operation);
+                      const MetaData &mdInRight,
+                      const MDLabel labelLeft,
+                      const MDLabel labelRight,
+                      SetOperation operation);
     /** clear data and table structure */
     void _clear(bool onlyData=false);
 
@@ -282,9 +316,9 @@ public:
      *  returns pointer do first two data_entries and firts loop
      */
     bool nextBlockToRead(regex_t &re,
-    					 char * map, size_t mapSize,
-    					 bool &isCColumnFormat,
-    					 String &blockName,
+                         char * map, size_t mapSize,
+                         bool &isCColumnFormat,
+                         String &blockName,
                          char ** firstData,
                          char ** secondData,
                          char ** firstloop);
@@ -445,7 +479,19 @@ public:
             mdValueOut.getValue(value);
             valuesOut[i] = value;
         }
+    }
 
+    /** Set all values of a column as a vector.
+     * The input vector must have the same size as the Metadata.
+     */
+    template<class T>
+    void setColumnValues(const MDLabel label, std::vector<T> &valuesIn)
+    {
+        if (valuesIn.size()!=size())
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER,"Input vector must be of the same size as the metadata");
+        size_t n=0;
+        FOR_ALL_OBJECTS_IN_METADATA(*this)
+        setValue(label,valuesIn[n++],__iter.objId);
     }
 
     /** Get all values of an MetaData row of an specified objId*/
@@ -785,16 +831,19 @@ public:
     /** @} */
     friend class MDSql;
     friend class MDIterator;
+
     /** Expand Metadata with metadata pointed by label
      * Given a metadata md1, with a column containing the name of another column metdata file mdxx
      * add the columns in mdxx to md1
      */
     void fillExpand(MDLabel label);
+
+    /** Fill column with constant value
+     */
+    void fillConstant(MDLabel label, const String &value);
+
     /** 'is equal to' (equality).*/
     bool operator==(const MetaData& op) const;
-
-
-
 }
 ;//class MetaData
 
@@ -802,42 +851,6 @@ public:
  *
  */
 std::ostream& operator<<(std::ostream& o, const MetaData & mD);
-
-
-////////////////////////////// MetaData Iterator ////////////////////////////
-/** Iterates over metadatas */
-class MDIterator
-{
-protected:
-    size_t * objects;
-    size_t size;
-
-    /** Internal function to initialize the iterator */
-    void init(const MetaData &md, const MDQuery * pQuery=NULL);
-public:
-
-    /** Empty constructor */
-    MDIterator();
-    /** Empty constructor, creates an iterator from metadata */
-    MDIterator(const MetaData &md);
-    /** Same as before but iterating over a query */
-    MDIterator(const MetaData &md, const MDQuery &query);
-    /** Destructor */
-    ~MDIterator();
-
-    /** This is the object ID in the metadata, usually starts at 1 */
-    size_t objId;
-    /** This is the index of the object, starts at 0 */
-    size_t objIndex;
-    /** Function to move to next element.
-     * return false if there aren't more elements to iterate.
-     */
-    bool moveNext();
-    /** Function to check if exist next element
-     */
-    bool hasNext();
-}
-;//class MDIterator
 
 ////////////////////////////// MetaData Value Generator ////////////////////////
 /** Class to generate values for columns of a metadata*/
