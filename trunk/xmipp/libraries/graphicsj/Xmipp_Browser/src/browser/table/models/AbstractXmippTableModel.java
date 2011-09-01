@@ -24,7 +24,8 @@ import xmipp.MDLabel;
  */
 public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
-    protected String filename;
+    protected String filename;  // Filename (specified by user).
+    protected String path;  // Normalized path.
     protected ArrayList<AbstractTableImageItem> data = new ArrayList<AbstractTableImageItem>();
     protected LinkedList<AbstractTableImageItem> selectedItems = new LinkedList<AbstractTableImageItem>();
     protected int rows, cols;
@@ -45,12 +46,13 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         super();
 
         this.filename = filename;
+        path = new File(new File(filename).toURI().normalize()).getAbsolutePath();
 
         String message = null;
 
-        File f = new File(filename);
+        File f = new File(path);
         if (f.exists()) {
-            message = populateTable(filename);
+            message = populateTable(path);
         } else {
             message = "File not found: " + filename;
         }
@@ -258,9 +260,27 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     public abstract String getTitle();
 
     public void setEnabledFrom(int row, int col, boolean enable) {
+        int from = getDataIndex(row, col);
+
+        ArrayList<AbstractTableImageItem> items = new ArrayList<AbstractTableImageItem>();
+
+        for (int i = from; i < data.size(); i++) {
+            items.add(data.get(i));
+        }
+
+        enableItems(items, enable);
     }
 
     public void setEnabledTo(int row, int col, boolean enable) {
+        int to = getDataIndex(row, col);
+
+        ArrayList<AbstractTableImageItem> items = new ArrayList<AbstractTableImageItem>();
+
+        for (int i = 0; i <= to; i++) {
+            items.add(data.get(i));
+        }
+
+        enableItems(items, enable);
     }
 
     public void selectRange(int initial_row, int initial_col, int final_row, int final_col) {
@@ -432,11 +452,11 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         int displayableColumns = (int) Math.floor(
                 (double) width / (double) (getCellWidth() - 2 * intercellWidth));
 
-        double ddisplayableColumns =
-                (double) width / (double) (getCellWidth() - 2 * intercellWidth);
-
-        DEBUG.printMessage(" *** Displayable  columns: " + displayableColumns);
-        DEBUG.printMessage(" *** DDisplayable columns: " + ddisplayableColumns);
+//        double ddisplayableColumns =
+//                (double) width / (double) (getCellWidth() - 2 * intercellWidth);
+//
+//        DEBUG.printMessage(" *** Displayable  columns: " + displayableColumns);
+//        DEBUG.printMessage(" *** DDisplayable columns: " + ddisplayableColumns);
 
         if (getColumnCount() != displayableColumns) {
             setColumns(displayableColumns);

@@ -15,7 +15,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Image;
 import javax.swing.BorderFactory;
-import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
 import javax.swing.table.DefaultTableCellRenderer;
 
@@ -25,13 +24,9 @@ import javax.swing.table.DefaultTableCellRenderer;
  */
 public class ImageRenderer extends DefaultTableCellRenderer {
 
-//    protected final static String COLOR_FILL = "#3aff35";
-//    protected final static String COLOR_OUTLINE = "#2aa430";
-    protected Border BORDER_SELECTED = BorderFactory.createLineBorder(Color.MAGENTA, 1);
-    protected Border BORDER_FOCUSED = BorderFactory.createLineBorder(Color.RED, 3);
+    Border BORDER_SELECTED = new StrokeBorder(Color.RED, 3);
+    Border BORDER_FOCUSED = BorderFactory.createLineBorder(Color.RED, 3);
 
-//    protected Image image; <- Check if will use it again: Defined below.
-//    protected Polygon triangleMark;
     @Override
     public Component getTableCellRendererComponent(JTable table, Object object, boolean isSelected, boolean hasFocus, int row, int column) {
         AbstractTableImageItem item = (AbstractTableImageItem) object;
@@ -105,7 +100,7 @@ public class ImageRenderer extends DefaultTableCellRenderer {
     }
 
     protected String cutString(String string, int columnWidth) {
-        StringBuffer sb = new StringBuffer(string);
+        StringBuilder sb = new StringBuilder(string);
         String str = sb.toString();
 
         Font font = getFont();
@@ -119,35 +114,4 @@ public class ImageRenderer extends DefaultTableCellRenderer {
 
         return str;
     }
-    /*
-    @Override
-    public void paint(Graphics g) {
-    super.paint(g);
-    
-    boolean mark = Math.random() < 0.5;
-    
-    if (mark) {
-    //if (triangleMark == null) {
-    triangleMark = createPolygon(getWidth(), getHeight());
-    //}
-    
-    // Area and...
-    g.setColor(Color.decode(COLOR_FILL));
-    g.fillPolygon(triangleMark);
-    
-    // ...outline.
-    g.setColor(Color.decode(COLOR_OUTLINE));
-    g.drawPolygon(triangleMark);
-    }
-    }
-    
-    public static Polygon createPolygon(int w, int h) {
-    Polygon t = new Polygon();
-    
-    t.addPoint(w - w / 5, h - 1);
-    t.addPoint(w - 1, h - h / 5);
-    t.addPoint(w - 1, h - 1);
-    
-    return t;
-    }*/
 }

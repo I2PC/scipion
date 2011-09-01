@@ -120,14 +120,8 @@ public class ImagesWindowFactory {
     }
 
     public static void openFileAsTable(String filename) {
-        File f = new File(filename);
-
-        if (f.exists()) {
-            JFrameImagesTable table = new JFrameImagesTable(filename);
-            table.setVisible(true);
-        } else {
-            IJ.error("File not found: " + filename);
-        }
+        JFrameImagesTable table = new JFrameImagesTable(filename);
+        table.setVisible(true);
     }
 
     public static void openFilesAsTable(String filenames[]) {

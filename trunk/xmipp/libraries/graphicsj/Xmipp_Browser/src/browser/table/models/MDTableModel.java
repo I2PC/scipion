@@ -127,7 +127,7 @@ public class MDTableModel extends AbstractXmippTableModel {
             strImageSize = " (" + item.getWidth() + " x " + item.getHeight() + ")";
         }
 
-        String title = md.getFilename();
+        String title = filename;//md.getFilename();
         return (title == null ? LABELS.TITLE_UNTITLED : title) + ": " + getSize() + " images." + strImageSize;
     }
 

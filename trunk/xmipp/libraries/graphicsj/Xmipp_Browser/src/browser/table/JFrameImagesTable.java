@@ -23,6 +23,7 @@ import browser.SpringUtilities;
 import browser.table.models.AbstractXmippTableModel;
 import browser.table.models.VolumeTableModel;
 import ij.IJ;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Point;
@@ -683,7 +684,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
             SwingUtilities.invokeLater(new Runnable() {
 
                 public void run() {
-                    jpopUpMenuTable.show(me.getComponent(), me.getX(), me.getY());
+                    jpopUpMenuTable.show(me.getComponent(), me.getPoint());
                 }
             });
         }
@@ -784,6 +785,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
     class JPopUpMenuTable extends JPopupMenu {
 
+        protected Point location;
         protected JMenuItem jmiEnable = new JMenuItem(LABELS.LABEL_TABLE_ENABLE);
         protected JMenuItem jmiDisable = new JMenuItem(LABELS.LABEL_TABLE_DISABLE);
         protected JMenuItem jmiEnableAll = new JMenuItem(LABELS.LABEL_TABLE_ENABLE_ALL);
@@ -801,9 +803,9 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
             add(jmiDisableAll);
             add(new JSeparator());
             add(jmiEnableFrom);
-            add(jmiDisableFrom);
-            add(new JSeparator());
             add(jmiEnableTo);
+            add(new JSeparator());
+            add(jmiDisableFrom);
             add(jmiDisableTo);
 
             jmiEnable.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK));
@@ -873,7 +875,6 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
             jmiEnableFrom.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
-                    Point location = getLocation();
                     int row = table.rowAtPoint(location);
                     int col = table.columnAtPoint(location);
 
@@ -884,7 +885,6 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
             jmiEnableTo.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
-                    Point location = getLocation();
                     int row = table.rowAtPoint(location);
                     int col = table.columnAtPoint(location);
 
@@ -895,7 +895,6 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
             jmiDisableFrom.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
-                    Point location = getLocation();
                     int row = table.rowAtPoint(location);
                     int col = table.columnAtPoint(location);
 
@@ -906,13 +905,17 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
             jmiDisableTo.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
-                    Point location = getLocation();
                     int row = table.rowAtPoint(location);
                     int col = table.columnAtPoint(location);
 
-                    tableModel.setEnabledFrom(row, col, false);
+                    tableModel.setEnabledTo(row, col, false);
                 }
             });
+        }
+
+        public void show(Component cmpnt, Point location) {
+            this.location = location;
+            show(cmpnt, location.x, location.y);
         }
     }
 }
