@@ -1256,7 +1256,8 @@ void ImageViewer::runEnhancePSD(std::vector<float> &enhance_prms)
     I.read(filename);
     int Xdim = XSIZE(I());
     int Ydim = YSIZE(I());
-    prm.apply(I());
+    //TODO: Check the following, fixed for compilation
+    prm.applyFilter(I());
     I().setXmippOrigin();
     xmipp2Qt(I);
     showImage();
