@@ -30,8 +30,8 @@ import os, glob
 import Tkinter as tk
 import tkMessageBox
 import tkFont
-from protlib_base import protocolMain, getProtocolFromModule, XmippProtocol
-from protlib_utils import loadModule, runJob, runImageJPlugin, which, runImageJPluginWithResponse
+from protlib_base import protocolMain, getProtocolFromModule, XmippProtocol, getWorkingDirFromRunName
+from protlib_utils import loadModule, runJob, runImageJPlugin, which, runImageJPluginWithResponse, runJavaIJappWithResponse 
 from protlib_gui_ext import centerWindows, changeFontSize
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
@@ -1108,7 +1108,6 @@ class ProtocolGUI(BasicGUI):
 
     #Select family from extraction run
     def wizardChooseFamily(self, var):
-        from protlib_base import getWorkingDirFromRunName
         extractionDir = getWorkingDirFromRunName(self.getVarValue('PreviousRun'))
         if not extractionDir:
             tkMessageBox.showwarning("Warning", "No previous Run has been found", parent=self.master)
@@ -1120,6 +1119,20 @@ class ProtocolGUI(BasicGUI):
             var.tkvar.set(familyList[0])
         else:
             self.selectFromList(var, familyList)        
+
+    #Select family from extraction run
+    def wizardChooseGaussianFilter(self, var):
+        particlesDir = getWorkingDirFromRunName(self.getVarValue('PreviousRun'))
+        if not particlesDir:
+            tkMessageBox.showwarning("Warning", "No previous Run has been found", parent=self.master)
+            return
+        Freq_sigma = self.getVarValue('Freq_sigma')
+        Family = self.getVarValue('Family')
+        selfile=os.path.join(particlesDir,Family+".sel")
+        msg = runJavaIJappWithResponse("512m", "XmippGaussianFilterWizard", "-i %(selfile)s -w1 %(Freq_sigma)s" % locals(),True)
+        msg = msg.strip()
+        if len(msg) > 0:
+            var.tkvar.set(msg)            
 
 # This group of functions are called Validator, and should serve
 # for validation of user input for each variable
