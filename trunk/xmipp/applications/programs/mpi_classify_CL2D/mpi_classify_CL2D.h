@@ -38,24 +38,34 @@
 /**@defgroup VQforProjections Vector Quantization for Projections
    @ingroup ClassificationLibrary */
 //@{
+/** AssignedImage */
+class CL2DAssignment
+{
+public:
+	double corr;   // Negative corrCodes indicate invalid particles
+	double likelihood; // Only valid if robust criterion
+	double shiftx;
+	double shifty;
+	double psi;
+	size_t objId;
+	bool flip;
+
+	/// Empty constructor
+	CL2DAssignment();
+
+	/// Read alignment parameters
+	void readAlignment(const Matrix2D<double> &M);
+
+	/// Copy alignment
+	void copyAlignment(const CL2DAssignment &alignment);
+};
+
+/// Show
+std::ostream & operator << (std::ostream &out, const CL2DAssignment& assigned);
+
 /** CL2DClass class */
 class CL2DClass {
 public:
-    // Use correlation instead of correntropy
-    bool useCorrelation;
-
-    // Use fixed correntropy
-    bool useFixedCorrentropy;
-
-    // Classical Multiref
-    bool classicalMultiref;
-    
-    // Gaussian interpolator
-    const GaussianInterpolator *gaussianInterpolator;
-
-    // Mask of the background
-    const MultidimArray<int> *mask;
-
     // Projection
     MultidimArray<double> P;
     
@@ -75,13 +85,10 @@ public:
     Polar_fftw_plans *plans;
 
     // List of images assigned
-    std::vector<int> currentListImg;
+    std::vector<CL2DAssignment> currentListImg;
 
     // List of images assigned
-    std::vector<int> nextListImg;
-
-    // Correlations of the next class members
-    std::vector<double> nextClassCorr;
+    std::vector<CL2DAssignment> nextListImg;
 
     // Correlations of the next non-class members
     std::vector<double> nextNonClassCorr;
@@ -95,42 +102,35 @@ public:
     // List of neighbour indexes
     std::vector<int> neighboursIdx;
 public:
+    /** Empty constructor */
+    CL2DClass();
 
-    int sendMPI(int d_rank);
-    
-    int receiveMPI(int s_rank);
+    /** Destructor */
+    ~CL2DClass();
 
     /** Update projection. */
-    void updateProjection(const MultidimArray<double> &I,
-        double corrCode, int idx);
+    void updateProjection(const MultidimArray<double> &I, const CL2DAssignment &assigned);
 
     /** Update non-projection */
-    inline void updateNonProjection(double corrCode)
+    inline void updateNonProjection(double corr)
     {
-        nextNonClassCorr.push_back(corrCode);
+    	if (corr>0)
+    		nextNonClassCorr.push_back(corr);
     }
 
     /** Transfer update */
     void transferUpdate();
 
-    /** Compute different transforms */
-    void computeTransforms();
-    
     /** Compute the fit of the input image with this node.
-        The input image is rotationally and translationally aligned
+        The input image is rotationally and traslationally aligned
         (2 iterations), to make it fit with the node. */
-    void fitBasic(MultidimArray<double> &I, double sigma, double &corrCode);
+    void fitBasic(MultidimArray<double> &I, CL2DAssignment &result,  bool reverse=false);
 
     /** Compute the fit of the input image with this node (check mirrors). */
-    void fit(MultidimArray<double> &I,
-        double sigma, bool noMirror, double &corrCode, double &likelihood);
+    void fit(MultidimArray<double> &I, CL2DAssignment &result);
 
     /// Look for K-nearest neighbours
-    void lookForNeighbours(const std::vector<CL2DClass *> listP,
-        double sigma, bool noMirror, int K);
-    
-    /// Show
-    void show() const;
+    void lookForNeighbours(const std::vector<CL2DClass *> listP, int K);
 };
 
 struct SDescendingClusterSort
@@ -144,80 +144,43 @@ struct SDescendingClusterSort
 /** Class for a CL2D */
 class CL2D {
 public:
-    /// Mask for the background
-	MultidimArray<int> mask;
+	/// Number of images
+	size_t Nimgs;
+
+	/// Pointer to input metadata
+	MetaData *SF;
 
     /// List of nodes
     std::vector<CL2DClass *> P;
     
-    /// Number of neighbours
-    int Nneighbours;
-    
-    /// Minimum size of a node
-    double PminSize;
-
-    /// No mirror
-    bool noMirror;
-
-    /// Verbose
-    bool verbose;
-
-    /// Corr split
-    bool corrSplit;
-
-    /// Fast
-    bool fast;
-
-    /// Use correlation instead of correntropy
-    bool useCorrelation;
-
-    /// Use fixed correntropy
-    bool useFixedCorrentropy;
-
-    /// Classical Multiref
-    bool classicalMultiref;
-    
-    /// Maximum number of iterations
-    int Niter;
-
-    /// Noise in the images
-    double sigma;
-
-    // SelFile with the images
-    MetaData *SF;
-
-    std::vector< FileName > SFv;
-    
-    // Current assignment
-    Matrix1D<int> currentAssignment;
-    
-    // Gaussian interpolator
-    GaussianInterpolator gaussianInterpolator;
 public:
+    /// Read Image
+    void readImage(Image<double> &I, size_t objId, bool applyGeo) const;
+
     /// Initialize
-    void initialize(MetaData &_SF, int _Niter,  int _Nneighbours,
-        double _PminSize, std::vector< MultidimArray<double> > _codes0,
-        int _Ncodes0, bool _noMirror, bool verbose, bool _corrSplit, 
-        bool _useCorrelation, bool _useFixedCorrentropy, 
-        bool _classicalMultiref, bool _fast, int rank);
+    void initialize(MetaData &_SF,
+    		        std::vector< MultidimArray<double> > &_codes0);
     
+    /// Share assignments
+    void shareAssignments(bool shareAssignment, bool shareUpdates, bool shareNonCorr);
+
+    /// Share split assignment
+    void shareSplitAssignments(Matrix1D<int> &assignment, CL2DClass *node1, CL2DClass *node2) const;
+
     /// Write the nodes
-    void write(const FileName &fnRoot, const String& iteration) const;
+    void write(const FileName &fnRoot) const;
 
     /** Look for a node suitable for this image.
         The image is rotationally and translationally aligned with
         the best node. */
-    void lookNode(MultidimArray<double> &I, int idx, int oldnode, int &newnode,
-        double &corrCode, double &likelihood);
+    void lookNode(MultidimArray<double> &I, int oldnode,
+    			  int &newnode, CL2DAssignment &bestAssignment);
     
-    /** Update non codes. */
-    void updateNonCode(MultidimArray<double> &I, int newnode);
-
     /** Transfer all updates */
     void transferUpdates();
 
     /** Quantize with the current number of codevectors */
-    void run(const FileName &fnOut, int level, int rank);
+    void run(const FileName &fnOut, int level);
 
     /** Clean empty nodes.
         The number of nodes removed is returned. */
@@ -225,11 +188,11 @@ public:
 
     /** Split node */
     void splitNode(CL2DClass *node,
-        CL2DClass *&node1, CL2DClass *&node2, int rank,
-	std::vector<int> &finalAssignment) const;
+        CL2DClass *&node1, CL2DClass *&node2,
+        std::vector<size_t> &finalAssignment) const;
 
     /** Split the widest node */
-    void splitFirstNode(int rank);
+    void splitFirstNode();
 };
 
 /** CL2D parameters. */
@@ -262,20 +225,11 @@ public:
     /// Use Correlation instead of Correntropy
     bool useCorrelation;
 
-    /// Use fixed correntropy
-    bool useFixedCorrentropy;
-
     /// Classical Multiref
     bool classicalMultiref;
     
-    /// Fast
-    bool fast;
-    
-    /// CorrSplit
-    bool corrSplit;
-    
-    /// No mirror
-    bool noMirror;
+    /// Maximum shift
+    double maxShift;
 
     /// MPI constructor
     ProgClassifyCL2D(int argc, char** argv);
@@ -293,25 +247,40 @@ public:
     void defineParams();
     
     /// Produce side info
-    void produceSideInfo(int rank);
+    void produceSideInfo();
     
     /// Run
-    void runWorker(int rank);
-
-    /// Run
     void run();
-
-    /// Align the input images with respect to their respective class
-    void alignInputImages(const FileName &fnSF, int rank, int Nprocessors);
 public:
     // Selfile with all the input images
     MetaData SF;
     
+    // Task distributor
+    FileTaskDistributor *taskDistributor;
+
+    // Object Ids
+    std::vector<size_t> objId;
+
     // Structure for the classes
     CL2D vq;
 
     // Mpi node
     MpiNode *node;
+
+    // Maxshift squared
+    double maxShift2;
+
+    // Gaussian interpolator
+    GaussianInterpolator gaussianInterpolator;
+
+    // Image dimensions
+    int Ydim, Xdim;
+
+    /// Mask for the background
+	MultidimArray<int> mask;
+
+	/// Noise in the images
+    double sigma;
 };
 //@}
 #endif

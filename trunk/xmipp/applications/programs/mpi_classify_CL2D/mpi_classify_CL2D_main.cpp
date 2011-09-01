@@ -29,164 +29,60 @@
 #include <data/polar.h>
 #include <data/xmipp_image_generic.h>
 
+// Pointer to parameters
+ProgClassifyCL2D *prm=NULL;
+
+/* CL2D Assigned basics ------------------------------------------------ */
+std::ostream & operator << (std::ostream &out, const CL2DAssignment& assigned)
+{
+    out << "(" << assigned.objId << ", " << assigned.corr << ")";
+    return out;
+}
+
+CL2DAssignment::CL2DAssignment()
+{
+    flip=false;
+    likelihood=corr=psi=shiftx=shifty=0;
+    objId=BAD_OBJID;
+}
+
+void CL2DAssignment::readAlignment(const Matrix2D<double> &M)
+{
+    double scale;
+    transformationMatrix2Parameters2D(M, flip, scale, shiftx, shifty, psi);
+}
+
+void CL2DAssignment::copyAlignment(const CL2DAssignment &alignment)
+{
+    corr=alignment.corr;
+    likelihood=alignment.likelihood;
+    flip=alignment.flip;
+    psi=alignment.psi;
+    shiftx=alignment.shiftx;
+    shifty=alignment.shifty;
+}
+
 /* CL2DClass basics ---------------------------------------------------- */
-void CL2DClass::updateProjection(const MultidimArray<double> &I,
-                                 double corrCode, int idx)
+CL2DClass::CL2DClass()
 {
-    Pupdate+=I;
-    nextListImg.push_back(idx);
-    if (!classicalMultiref)
-        nextClassCorr.push_back(corrCode);
-}
-
-int CL2DClass::sendMPI(int d_rank)
-{
-    // Projection
-    // MultidimArray<double> P;
-    MPI_Send( &(P.xdim), 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &(P.ydim), 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( P.data, P.yxdim, MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
-
-    // Update for next iteration
-    // Matrix2D<double> Pupdate;
-    MPI_Send( &(Pupdate.xdim), 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &(Pupdate.ydim), 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( Pupdate.data, Pupdate.yxdim, MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
-
-    MPI_Send( &(rotationalCorr.xdim), 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &rotationalCorr.data,rotationalCorr.xdim , MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
-
-    int size = currentListImg.size();
-    MPI_Send( &size, 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &currentListImg[0], size, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-
-    size = nextListImg.size();
-    MPI_Send( &size, 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &nextListImg[0], size, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-
-    // Correlations of the next class members
-    // std::vector<double> nextClassCorr;
-    size = nextClassCorr.size();
-    MPI_Send( &size, 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &nextClassCorr[0], size, MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
-
-    // Correlations of the next non-class members
-    // std::vector<double> nextNonClassCorr;
-    size = nextNonClassCorr.size();
-    MPI_Send( &size, 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &nextNonClassCorr[0], size, MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
-
-    // Histogram of the correlations of the current class members
-    MPI_Send( &(histClass.xdim), 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &(histClass.hmin), 1, MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &(histClass.hmax), 1, MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &(histClass.step_size), 1, MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &(histClass.no_samples), 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( histClass.data, histClass.xdim, MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
-
-    // Histogram of the correlations of the current non-class members
-    MPI_Send( &(histNonClass.xdim), 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &(histNonClass.hmin), 1, MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &(histNonClass.hmax), 1, MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &(histNonClass.step_size), 1, MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &(histNonClass.no_samples), 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( histNonClass.data, histNonClass.xdim, MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
-
-    // List of neighbour indexes
-    // std::vector<int> neighboursIdx;
-    size = neighboursIdx.size();
-    MPI_Send( &size, 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-    MPI_Send( &neighboursIdx[0], neighboursIdx.size(), MPI_INT, d_rank, 0, MPI_COMM_WORLD );
-}
-
-int CL2DClass::receiveMPI(int s_rank)
-{
-    // Projection
-    // Matrix2D<double> P;
-    int sizex,sizey,size;
-    MPI_Recv( &sizex, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    MPI_Recv( &sizey, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    P.resize( sizey, sizex );
+    plans=NULL;
+    P.initZeros(prm->Ydim,prm->Xdim);
     P.setXmippOrigin();
-    MPI_Recv( P.data, sizey*sizex, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL );
+    Pupdate=P;
+}
 
-    // Update for next iteration
-    // Matrix2D<double> Pupdate;
-    MPI_Recv( &sizex, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    MPI_Recv( &sizey, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    Pupdate.resize( sizey, sizex );
-    Pupdate.setXmippOrigin();
-    MPI_Recv( Pupdate.data, sizey*sizex, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL );
+CL2DClass::~CL2DClass()
+{
+    delete plans;
+}
 
-    // Rotational correlation for best_rotation
-    // Matrix1D<double> rotationalCorr;
-    MPI_Recv( &size, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    rotationalCorr.resize( size );
-    rotationalCorr.setXmippOrigin();
-    MPI_Recv( rotationalCorr.data, size, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL );
-
-    // local_transformer depends on rotationalCorr
-    normalizedPolarFourierTransform(P,polarFourierP,false,XSIZE(P)/5,XSIZE(P)/2,plans,1);
-    local_transformer.setReal(rotationalCorr);
-
-    // List of images assigned
-    // std::vector<int> currentListImg;
-    MPI_Recv( &size, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    currentListImg.resize( size );
-    MPI_Recv( &currentListImg[0], size, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-
-    // List of images assigned
-    // std::vector<int> nextListImg;
-    MPI_Recv( &size, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    nextListImg.resize( size );
-    MPI_Recv( &nextListImg[0], size, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-
-    // Correlations of the next class members
-    // std::vector<double> nextClassCorr;
-    MPI_Recv( &size, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    nextClassCorr.resize( size );
-    MPI_Recv( &nextClassCorr[0], size, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL );
-
-    // Correlations of the next non-class members
-    // std::vector<double> nextNonClassCorr;
-    MPI_Recv( &size, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    nextNonClassCorr.resize( size );
-    MPI_Recv( &nextNonClassCorr[0], size, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL );
-
-    double d_value;
-    int i_value;
-
-    // Histogram of the correlations of the current class members
-    MPI_Recv( &size, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    MPI_Recv( &d_value, 1, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL);
-    histClass.hmin = d_value;
-    MPI_Recv( &d_value, 1, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL );
-    histClass.hmax = d_value;
-    MPI_Recv( &d_value, 1, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL );
-    histClass.step_size = d_value;
-    MPI_Recv( &i_value, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    histClass.no_samples = i_value;
-    histClass.resize( size );
-    MPI_Recv( histClass.data, size, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL );
-
-    // Histogram of the correlations of the current non-class members
-    MPI_Recv( &size, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    MPI_Recv( &d_value, 1, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL );
-    histNonClass.hmin = d_value;
-    MPI_Recv( &d_value, 1, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL );
-    histNonClass.hmax = d_value;
-    MPI_Recv( &d_value, 1, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL );
-    histNonClass.step_size = d_value;
-    MPI_Recv( &i_value, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    histNonClass.no_samples = i_value;
-    histNonClass.resize( size );
-    MPI_Recv( histNonClass.data, size, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL );
-
-    // List of neighbour indexes
-    // std::vector<int> neighboursIdx;
-    MPI_Recv( &size, 1, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
-    neighboursIdx.resize( size );
-    MPI_Recv( &neighboursIdx[0], size, MPI_INT, s_rank, 0, MPI_COMM_WORLD, NULL );
+void CL2DClass::updateProjection(const MultidimArray<double> &I, const CL2DAssignment &assigned)
+{
+    if (assigned.corr>0)
+    {
+        Pupdate+=I;
+        nextListImg.push_back(assigned);
+    }
 }
 
 //#define DEBUG
@@ -194,30 +90,45 @@ void CL2DClass::transferUpdate()
 {
     if (nextListImg.size()>0)
     {
+        // Take from Pupdate
         double iNq=1.0/nextListImg.size();
         Pupdate*=iNq;
         Pupdate.statisticsAdjust(0,1);
         P=Pupdate;
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(P)
-        if (!DIRECT_A2D_ELEM(*mask,i,j))
+        if (!DIRECT_A2D_ELEM(prm->mask,i,j))
             DIRECT_A2D_ELEM(P,i,j)=0;
         Pupdate.initZeros(P);
-        computeTransforms();
-        std::sort(nextListImg.begin(),nextListImg.end() );
+
+        // Make sure the image is centered
+        centerImage(P);
+
+        // Compute the polar Fourier transform of the full image
+        normalizedPolarFourierTransform(P,polarFourierP,false,
+                                        XSIZE(P)/5,XSIZE(P)/2,plans,1);
+        int finalSize=2*polarFourierP.getSampleNoOuterRing()-1;
+        if (XSIZE(rotationalCorr)!=finalSize)
+            rotationalCorr.resize(finalSize);
+        local_transformer.setReal(rotationalCorr);
+
+        // Take the list of images
         currentListImg=nextListImg;
         nextListImg.clear();
 
-        if (!classicalMultiref)
+        // Update the histogram of corrs of elements inside and outside the class
+        if (!prm->classicalMultiref)
         {
             MultidimArray<double> classCorr, nonClassCorr;
-            classCorr.initZeros(nextClassCorr.size());
-            nonClassCorr.initZeros(nextNonClassCorr.size());
+
+            classCorr.resizeNoCopy(currentListImg.size());
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(classCorr)
-            DIRECT_A1D_ELEM(classCorr,i)=nextClassCorr[i];
+            DIRECT_A1D_ELEM(classCorr,i)=currentListImg[i].corr;
+
+            nonClassCorr.resizeNoCopy(nextNonClassCorr.size());
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(nonClassCorr)
             DIRECT_A1D_ELEM(nonClassCorr,i)=nextNonClassCorr[i];
-            nextClassCorr.clear();
             nextNonClassCorr.clear();
+
             double minC, maxC;
             classCorr.computeDoubleMinMax(minC,maxC);
             double minN, maxN;
@@ -249,64 +160,24 @@ void CL2DClass::transferUpdate()
 }
 #undef DEBUG
 
-void CL2DClass::computeTransforms()
-{
-    // Make sure the image is centered
-    centerImage(P);
-
-    // Compute the polar Fourier transform of the full image
-    normalizedPolarFourierTransform(P,polarFourierP,false,
-                                    XSIZE(P)/5,XSIZE(P)/2,plans,1);
-    int finalSize=2*polarFourierP.getSampleNoOuterRing()-1;
-    if (XSIZE(rotationalCorr)!=finalSize)
-        rotationalCorr.resize(finalSize);
-    local_transformer.setReal(rotationalCorr);
-}
-
-/* Show -------------------------------------------------------------------- */
-void CL2DClass::show() const
-{
-    Image<double> save;
-    save()=P;
-    save.write("PPPcode.xmp");
-    for (int i=0; i<10; i++)
-        std::cout << nextListImg[i] << " ";
-    std::cout << std::endl;
-    std::cout << "Images have been saved. Press any key\n";
-    char c;
-    std::cin >> c;
-}
-
-double fastCorrentropy(const MultidimArray<double> &x, const MultidimArray<double> &y,
-                       double sigma, const GaussianInterpolator &G, const MultidimArray<int> &mask)
-{
-    double retvalxy=0;
-    double isigma=1.0/sigma;
-    int maskSum=0;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(x)
-    {
-        if (DIRECT_MULTIDIM_ELEM(mask,n))
-        {
-            retvalxy+=G.getValue(isigma*(DIRECT_MULTIDIM_ELEM(x,n)-DIRECT_MULTIDIM_ELEM(y,n)));
-            ++maskSum;
-        }
-    }
-    return (retvalxy/maskSum);
-}
-
 //#define DEBUG
-void CL2DClass::fitBasic(MultidimArray<double> &I,
-                         double sigma, double &corrCode)
+void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result, bool reverse)
 {
+    if (reverse)
+    {
+        I.selfReverseX();
+        I.setXmippOrigin();
+    }
+
     Matrix2D<double> ARS, ASR, R(3,3);
     ARS.initIdentity(3);
-    ASR.initIdentity(3);
+    ASR=ARS;
     MultidimArray<double> IauxSR=I, IauxRS=I;
 
     // Align the image with the node
     for (int i=0; i<2; i++)
     {
-        double shiftX, shiftY;
+        double shiftX, shiftY, bestRot;
 
         // Shift then rotate
         bestShift(P,IauxSR,shiftX,shiftY);
@@ -315,33 +186,19 @@ void CL2DClass::fitBasic(MultidimArray<double> &I,
         applyGeometry(LINEAR,IauxSR,I,ASR,IS_NOT_INV,WRAP);
 
         Polar< std::complex<double> > polarFourierI;
-        normalizedPolarFourierTransform(
-            IauxSR,
-            polarFourierI,
-            true,
-            XSIZE(P)/5,
-            XSIZE(P)/2,
-            plans,
-            1);
+        normalizedPolarFourierTransform(IauxSR, polarFourierI, true,
+                                        XSIZE(P)/5, XSIZE(P)/2, plans, 1);
 
-        double bestRot = best_rotation(polarFourierP,polarFourierI,
-                                       local_transformer);
+        bestRot = best_rotation(polarFourierP,polarFourierI, local_transformer);
         rotation2DMatrix(bestRot, R);
         SPEED_UP_temps;
         M3x3_BY_M3x3(ASR,R,ASR);
         applyGeometry(LINEAR,IauxSR,I,ASR,IS_NOT_INV,WRAP);
 
         // Rotate then shift
-        normalizedPolarFourierTransform(
-            IauxRS,
-            polarFourierI,
-            true,
-            XSIZE(P)/5,
-            XSIZE(P)/2,
-            plans,
-            1);
-        bestRot = best_rotation(polarFourierP,polarFourierI,
-                                local_transformer);
+        normalizedPolarFourierTransform(IauxRS, polarFourierI, true,
+                                        XSIZE(P)/5, XSIZE(P)/2, plans, 1);
+        bestRot = best_rotation(polarFourierP,polarFourierI, local_transformer);
         rotation2DMatrix(bestRot, R);
         M3x3_BY_M3x3(ARS,R,ARS);
         applyGeometry(LINEAR,IauxRS,I,ARS,IS_NOT_INV,WRAP);
@@ -353,47 +210,66 @@ void CL2DClass::fitBasic(MultidimArray<double> &I,
     }
 
     // Compute the correntropy
-    double corrCodeRS, corrCodeSR;
-    if (useCorrelation)
+    double corrRS, corrSR;
+    const MultidimArray<int> &imask=prm->mask;
+    if (prm->useCorrelation)
     {
-        corrCodeRS=corrCodeSR=0;
+        corrRS=corrSR=0;
         long N = 0;
-        const MultidimArray<int> &imask=*mask;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(P)
         {
             if (DIRECT_MULTIDIM_ELEM(imask,n))
             {
                 double Pval=DIRECT_MULTIDIM_ELEM(P, n);
-                corrCodeRS += Pval * DIRECT_MULTIDIM_ELEM(IauxRS, n);
-                corrCodeSR += Pval * DIRECT_MULTIDIM_ELEM(IauxSR, n);
+                corrRS += Pval * DIRECT_MULTIDIM_ELEM(IauxRS, n);
+                corrSR += Pval * DIRECT_MULTIDIM_ELEM(IauxSR, n);
                 ++N;
             }
         }
-        corrCodeRS/=N;
-        corrCodeSR/=N;
+        corrRS/=N;
+        corrSR/=N;
     }
     else
     {
-        double sigmaPI=sigma;
-        if (useFixedCorrentropy)
-            sigmaPI*=sqrt(1+1.0/currentListImg.size());
-        corrCodeRS=fastCorrentropy(P,IauxRS,sigmaPI,
-                                   *gaussianInterpolator,*mask);
-        corrCodeSR=fastCorrentropy(P,IauxSR,sigmaPI,
-                                   *gaussianInterpolator,*mask);
-    }
-    if (corrCodeRS>corrCodeSR)
-    {
-        I=IauxRS;
-        corrCode=corrCodeRS;
-    }
-    else
-    {
-        I=IauxSR;
-        corrCode=corrCodeSR;
+        corrRS=fastCorrentropy(P,IauxRS,prm->sigma,prm->gaussianInterpolator,imask);
+        corrSR=fastCorrentropy(P,IauxSR,prm->sigma,prm->gaussianInterpolator,imask);
     }
 
+    // Prepare result
+    if (reverse)
+    {
+        // COSS: Check that this is correct
+        MAT_ELEM(ARS,0,0)*=-1;
+        MAT_ELEM(ASR,0,0)*=-1;
+    }
+
+    CL2DAssignment candidateRS, candidateSR;
+    candidateRS.readAlignment(ARS);
+    candidateSR.readAlignment(ASR);
+    if (candidateRS.shiftx*candidateRS.shiftx+candidateRS.shifty*candidateRS.shifty>prm->maxShift2)
+        candidateRS.corr=0;
+    else
+        candidateRS.corr=corrRS;
+    if (candidateSR.shiftx*candidateSR.shiftx+candidateSR.shifty*candidateSR.shifty>prm->maxShift2)
+        candidateSR.corr=0;
+    else
+        candidateSR.corr=corrSR;
+
+    if (corrRS>corrSR)
+    {
+        I=IauxRS;
+        result.copyAlignment(candidateRS);
+    }
+    else if (corrSR>corrRS)
+    {
+        I=IauxSR;
+        result.copyAlignment(candidateSR);
+    }
+    else
+        result.corr=0;
+
 #ifdef DEBUG
+
     Image<double> save;
     save()=P;
     save.write("PPPI1.xmp");
@@ -401,7 +277,7 @@ void CL2DClass::fitBasic(MultidimArray<double> &I,
     save.write("PPPI2.xmp");
     save()=P-I;
     save.write("PPPdiff.xmp");
-    std::cout << "sigma=" << sigma << " corr=" << corrCode
+    std::cout << "sigma=" << sigma << " corr=" << corr
     << ". Press" << std::endl;
     char c;
     std::cin >> c;
@@ -409,65 +285,59 @@ void CL2DClass::fitBasic(MultidimArray<double> &I,
 }
 #undef DEBUG
 
-void CL2DClass::fit(MultidimArray<double> &I,
-                    double sigma, bool noMirror, double &corrCode, double &likelihood)
+void CL2DClass::fit(MultidimArray<double> &I, CL2DAssignment &result)
 {
     // Try this image
-    MultidimArray<double> Iaux=I;
-    double corrCodeAux;
-    fitBasic(Iaux,sigma,corrCodeAux);
-
-    MultidimArray<double> bestImg=Iaux;
-    double bestCorrCode=corrCodeAux;
+    MultidimArray<double> Idirect=I;
+    CL2DAssignment resultDirect;
+    fitBasic(Idirect,resultDirect);
 
     // Try its mirror
-    if (!noMirror)
+    MultidimArray<double> Imirror=I;
+    CL2DAssignment resultMirror;
+    fitBasic(Imirror,resultMirror,true);
+
+    if (resultMirror.corr>resultDirect.corr)
     {
-        Iaux=I;
-        Iaux.selfReverseX();
-        Iaux.setXmippOrigin();
-
-        fitBasic(Iaux,sigma,corrCodeAux);
-
-        if (corrCodeAux>bestCorrCode)
-        {
-            bestImg=Iaux;
-            bestCorrCode=corrCodeAux;
-        }
+        I=Imirror;
+        result.copyAlignment(resultMirror);
     }
-    I=bestImg;
-    corrCode=bestCorrCode;
+    else
+    {
+        I=Idirect;
+        result.copyAlignment(resultDirect);
+    }
 
-    likelihood=0;
-    if (!classicalMultiref)
+    result.likelihood=0;
+    if (!prm->classicalMultiref)
     {
         // Find the likelihood
         int idx;
-        histClass.val2index(corrCode,idx);
+        histClass.val2index(result.corr,idx);
         if (idx<0)
             return;
         double likelihoodClass=0;
         for (int i=0; i<=idx; i++)
             likelihoodClass+=DIRECT_A1D_ELEM(histClass,i);
-        histNonClass.val2index(corrCode,idx);
+        histNonClass.val2index(result.corr,idx);
         if (idx<0)
             return;
         double likelihoodNonClass=0;
         for (int i=0; i<=idx; i++)
             likelihoodNonClass+=DIRECT_A1D_ELEM(histNonClass,i);
-        likelihood=likelihoodClass*likelihoodNonClass;
+        result.likelihood=likelihoodClass*likelihoodNonClass;
     }
 }
 
 /* Look for K neighbours in a list ----------------------------------------- */
 //#define DEBUG
-void CL2DClass::lookForNeighbours(const std::vector<CL2DClass *> listP,
-                                  double sigma, bool noMirror, int K)
+void CL2DClass::lookForNeighbours(const std::vector<CL2DClass *> listP, int K)
 {
     int Q=listP.size();
     neighboursIdx.clear();
     if (K==Q)
     {
+        // As many neighbours as codes
         for (int q=0; q<Q; q++)
             neighboursIdx.push_back(q);
     }
@@ -475,15 +345,17 @@ void CL2DClass::lookForNeighbours(const std::vector<CL2DClass *> listP,
     {
         MultidimArray<double> distanceCode;
         distanceCode.initZeros(Q);
-        double likelihood;
+        CL2DAssignment assignment;
+        MultidimArray<double> I;
         for (int q=0; q<Q; q++)
         {
             if (listP[q]==this)
                 distanceCode(q)=1;
             else
             {
-                MultidimArray<double> I=listP[q]->P;
-                fit(I,sigma,noMirror,distanceCode(q),likelihood);
+                I=listP[q]->P;
+                fit(I,assignment);
+                distanceCode(q)=assignment.corr;
             }
         }
 
@@ -508,401 +380,364 @@ void CL2DClass::lookForNeighbours(const std::vector<CL2DClass *> listP,
 }
 #undef DEBUG
 
+/* Share assignments and classes -------------------------------------- */
+void CL2D::shareAssignments(bool shareAssignment, bool shareUpdates, bool shareNonCorr)
+{
+    if (shareAssignment)
+    {
+        // Put assignment in common
+        std::vector<int> nodeRef;
+        SF->getColumnValues(MDL_REF,nodeRef);
+        MPI_Allreduce( MPI_IN_PLACE, &(nodeRef[0]), nodeRef.size(), MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+        SF->setColumnValues(MDL_REF,nodeRef);
+    }
+
+    // Share code updates
+    if (shareUpdates)
+    {
+        std::vector<CL2DAssignment> auxList;
+        std::vector<double> auxList2;
+        int Q=P.size();
+        for (int q=0; q<Q; q++)
+        {
+            MPI_Allreduce( MPI_IN_PLACE, MULTIDIM_ARRAY(P[q]->Pupdate), MULTIDIM_SIZE(P[q]->Pupdate), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+
+            // Share nextClassCorr and nextNonClassCorr
+            std::vector<double> receivedNonClassCorr;
+            std::vector<CL2DAssignment> receivedNextListImage;
+            int listSize;
+            for (int rank=0; rank<prm->node->size; rank++)
+            {
+                if (rank==prm->node->rank)
+                {
+                    listSize=P[q]->nextListImg.size();
+                    MPI_Bcast( &listSize, 1, MPI_INT, rank, MPI_COMM_WORLD);
+                    MPI_Bcast( &(P[q]->nextListImg[0]),P[q]->nextListImg.size()*sizeof(CL2DAssignment), MPI_CHAR, rank, MPI_COMM_WORLD);
+                    if (shareNonCorr)
+                    {
+                        listSize=P[q]->nextNonClassCorr.size();
+                        MPI_Bcast( &listSize, 1, MPI_INT, rank, MPI_COMM_WORLD);
+                        MPI_Bcast( &(P[q]->nextNonClassCorr[0]),P[q]->nextNonClassCorr.size(), MPI_DOUBLE, rank, MPI_COMM_WORLD);
+                    }
+                }
+                else
+                {
+                    MPI_Bcast( &listSize, 1, MPI_INT ,rank, MPI_COMM_WORLD);
+                    auxList.resize(listSize);
+                    MPI_Bcast( &(auxList[0]), listSize*sizeof(CL2DAssignment), MPI_CHAR, rank, MPI_COMM_WORLD);
+                    receivedNextListImage.reserve(receivedNextListImage.size()+listSize);
+                    for( int j=0; j<listSize; j++)
+                        receivedNextListImage.push_back(auxList[j]);
+                    if (shareNonCorr)
+                    {
+                        MPI_Bcast( &listSize, 1, MPI_INT ,rank, MPI_COMM_WORLD);
+                        auxList2.resize(listSize);
+                        MPI_Bcast( &(auxList2[0]), listSize, MPI_DOUBLE, rank, MPI_COMM_WORLD);
+                        receivedNonClassCorr.reserve(receivedNonClassCorr.size()+listSize);
+                        for( int j=0; j<listSize; j++)
+                            receivedNonClassCorr.push_back(auxList2[j]);
+                    }
+                }
+            }
+            // Copy the received elements
+            listSize=receivedNextListImage.size();
+            P[q]->nextListImg.reserve(P[q]->nextListImg.size()+listSize);
+            for( int j=0; j<listSize; j++)
+                P[q]->nextListImg.push_back(receivedNextListImage[j]);
+            listSize=receivedNonClassCorr.size();
+            P[q]->nextNonClassCorr.reserve(P[q]->nextNonClassCorr.size()+listSize);
+            for( int j=0; j<listSize; j++)
+                P[q]->nextNonClassCorr.push_back(receivedNonClassCorr[j]);
+        }
+
+        transferUpdates();
+    }
+}
+
+void CL2D::shareSplitAssignments(Matrix1D<int> &assignment, CL2DClass *node1, CL2DClass *node2) const
+{
+    // Share assignment
+    int imax=VEC_XSIZE(assignment);
+    MPI_Allreduce( MPI_IN_PLACE, MATRIX1D_ARRAY(assignment), imax , MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+
+    // Share code updates
+    std::vector<CL2DAssignment> auxList;
+    std::vector<double> auxList2;
+    CL2DClass *node=NULL;
+    for (int q=0; q<2; q++)
+    {
+        if (q==0)
+            node=node1;
+        else
+            node=node2;
+        MPI_Allreduce( MPI_IN_PLACE, MULTIDIM_ARRAY(node->Pupdate), MULTIDIM_SIZE(node->Pupdate), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+
+        // Share nextClassCorr and nextNonClassCorr
+        std::vector<double> receivedNonClassCorr;
+        std::vector<CL2DAssignment> receivedNextListImage;
+        int listSize;
+        for (int rank=0; rank<prm->node->size; rank++)
+        {
+            if (rank==prm->node->rank)
+            {
+                // Transmit node 1 next list of images
+                listSize=node->nextListImg.size();
+                MPI_Bcast( &listSize, 1, MPI_INT, rank, MPI_COMM_WORLD);
+                MPI_Bcast( &(node->nextListImg[0]),node->nextListImg.size()*sizeof(CL2DAssignment), MPI_CHAR, rank, MPI_COMM_WORLD);
+                // Transmit node 1 non class corr
+                listSize=node->nextNonClassCorr.size();
+                MPI_Bcast( &listSize, 1, MPI_INT, rank, MPI_COMM_WORLD);
+                MPI_Bcast( &(node->nextNonClassCorr[0]),node->nextNonClassCorr.size(), MPI_DOUBLE, rank, MPI_COMM_WORLD);
+            }
+            else
+            {
+                // Receive node 1 next list of images
+                MPI_Bcast( &listSize, 1, MPI_INT ,rank, MPI_COMM_WORLD);
+                auxList.resize(listSize);
+                MPI_Bcast( &(auxList[0]), listSize*sizeof(CL2DAssignment), MPI_CHAR, rank, MPI_COMM_WORLD);
+                receivedNextListImage.reserve(receivedNextListImage.size()+listSize);
+                for( int j=0; j<listSize; j++)
+                    receivedNextListImage.push_back(auxList[j]);
+                // Receive node 1 non class corr
+                MPI_Bcast( &listSize, 1, MPI_INT ,rank, MPI_COMM_WORLD);
+                auxList2.resize(listSize);
+                MPI_Bcast( &(auxList2[0]), listSize, MPI_DOUBLE, rank, MPI_COMM_WORLD);
+                receivedNonClassCorr.reserve(receivedNonClassCorr.size()+listSize);
+                for( int j=0; j<listSize; j++)
+                    receivedNonClassCorr.push_back(auxList2[j]);
+            }
+        }
+        // Copy the received elements
+        listSize=receivedNextListImage.size();
+        node->nextListImg.reserve(node->nextListImg.size()+listSize);
+        for( int j=0; j<listSize; j++)
+            node->nextListImg.push_back(receivedNextListImage[j]);
+        listSize=receivedNonClassCorr.size();
+        node->nextNonClassCorr.reserve(node->nextNonClassCorr.size()+listSize);
+        for( int j=0; j<listSize; j++)
+            node->nextNonClassCorr.push_back(receivedNonClassCorr[j]);
+    }
+
+    node1->transferUpdate();
+    node2->transferUpdate();
+}
+
+/* Read image --------------------------------------------------------- */
+void CL2D::readImage(Image<double> &I, size_t objId, bool applyGeo) const
+{
+    if (applyGeo)
+        I.readApplyGeo(*SF,objId);
+    else
+    {
+        FileName fnImg;
+        SF->getValue(MDL_IMAGE,fnImg,objId);
+        I.read(fnImg);
+    }
+    I().setXmippOrigin();
+    I().statisticsAdjust(0,1);
+}
+
 /* CL2D initialization ------------------------------------------------ */
 //#define DEBUG
-void CL2D::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
-                      double _PminSize, std::vector< MultidimArray<double> > _codes0, int _Ncodes0,
-                      bool _noMirror, bool _verbose, bool _corrSplit, bool _useCorrelation,
-                      bool _useFixedCorrentropy, bool _classicalMultiref,
-                      bool _fast, int rank)
+void CL2D::initialize(MetaData &_SF,
+                      std::vector< MultidimArray<double> > &_codes0)
 {
-    // Only "parent" worker prints
-    if( rank == 0 )
+    if( prm->node->rank == 0 )
         std::cout << "Initializing ...\n";
 
-    gaussianInterpolator.initialize(6,60000,false);
     SF=&_SF;
-    Niter=_Niter;
-    Nneighbours=_Nneighbours;
-    PminSize=_PminSize;
-    noMirror=_noMirror;
-    verbose=_verbose;
-    corrSplit=_corrSplit;
-    useCorrelation=_useCorrelation;
-    useFixedCorrentropy=_useFixedCorrentropy;
-    classicalMultiref=_classicalMultiref;
-    fast=_fast;
-    int mpi_size;
-
-    MPI_Comm_size( MPI_COMM_WORLD, &mpi_size );
-    int Zdim, Ydim, Xdim;
-    size_t Ndim;
-    ImgSize(*SF,Xdim,Ydim,Zdim,Ndim);
-
-    // Prepare mask for evaluating the noise outside
-    mask.resize(Ydim,Xdim);
-    mask.setXmippOrigin();
-    BinaryCircularMask(mask,Xdim/2, INNER_MASK);
+    Nimgs=SF->size();
 
     // Start with _Ncodes0 codevectors
-    for (int q=0; q<_Ncodes0; q++)
+    CL2DAssignment assignment;
+    assignment.corr=1;
+    bool initialCodesGiven=_codes0.size()>0;
+    for (int q=0; q<prm->Ncodes0; q++)
     {
         P.push_back(new CL2DClass());
-        P[q]->gaussianInterpolator=&gaussianInterpolator;
-        P[q]->plans=NULL;
-        P[q]->mask=&mask;
-        P[q]->useCorrelation=useCorrelation;
-        P[q]->useFixedCorrentropy=useFixedCorrentropy;
-        P[q]->classicalMultiref=classicalMultiref;
-        if (_codes0.size()!=0)
+        if (initialCodesGiven)
         {
             P[q]->Pupdate=_codes0[q];
-            P[q]->nextListImg.push_back(-1);
-        }
-        else
-            P[q]->Pupdate.initZeros(Ydim,Xdim);
-        P[q]->Pupdate.setXmippOrigin();
-        if (_codes0.size()!=0)
+            P[q]->nextListImg.push_back(assignment);
             P[q]->transferUpdate();
+        }
     }
 
     // Estimate sigma and if no previous classes have been given,
     // assign randomly
-    sigma = 0;
-    int N=SF->size();
-    std::vector<int> initNodeAssign( N, -1 );
-
-    if( rank == 0 )
-        init_progress_bar(N);
-
-    SF->firstObject();
-    for( int n=0; n < N ; n++ )
+    prm->sigma = 0;
+    if( prm->node->rank == 0 )
+        init_progress_bar(Nimgs);
+    Image<double> I;
+    MultidimArray<double> Iaux, Ibest;
+    bool oldUseCorrelation=prm->useCorrelation;
+    prm->useCorrelation=true; // Since we cannot make the assignment before calculating sigma
+    CL2DAssignment bestAssignment;
+    size_t first, last;
+    while (prm->taskDistributor->getTasks(first, last))
     {
-        Image<double> I;
-        FileName auxFN;
-        SF->getValue(MDL_IMAGE,auxFN,n+1);
-        SFv.push_back( auxFN );
-
-        if( n % mpi_size == rank )
+        for (size_t idx=first; idx<=last; ++idx)
         {
-            I.read( auxFN );
-            I().setXmippOrigin();
-            I().statisticsAdjust(0,1);
+            int q=-1;
+            if (!initialCodesGiven)
+                q=idx%(prm->Ncodes0);
+            size_t objId=prm->objId[idx];
+            readImage(I,objId,true);
 
             // Measure the variance of the signal outside a circular mask
-            double min_val, max_val, avg, stddev;
-            computeStats_within_binary_mask(mask,I(),
-                                            min_val, max_val, avg, stddev);
-            sigma+=stddev;
+            double avg, stddev;
+            computeAvgStdev_within_binary_mask(prm->mask, I(), avg, stddev);
+            prm->sigma+=stddev;
 
             // Put it randomly in one of the classes
-            if (_codes0.size()==0)
+            bestAssignment.objId=assignment.objId=objId;
+            if (!initialCodesGiven)
             {
-                //int q=ROUND(rnd_unif(0,_Ncodes0-1));
-                int q = n%_Ncodes0;
-
-                initNodeAssign[n] = q;
-                P[q]->updateProjection(I(),0,n);
+                bestAssignment.corr=1;
+                P[q]->updateProjection(I(),bestAssignment);
             }
-
-            if (n%100==0 && rank==0)
-                progress_bar(n);
-        }
-    }
-    if( rank == 0 )
-        progress_bar(N);
-
-    // Put sigma in common
-    double sigmaAux=0;
-    MPI_Allreduce( &sigma, &sigmaAux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-    sigma=sigmaAux;
-    sigma/=N;
-    sigma*=sqrt(2.0);
-
-    // Really make the assignment if some initial images were given
-    if (_codes0.size()!=0)
-    {
-        // Really make the assignment once sigma is known
-        if( rank == 0 )
-        {
-            std::cout << "Making assignment ...\n";
-            init_progress_bar(N);
-        }
-        Image<double> I;
-        MultidimArray<double> Iaux, Ibest;
-        for( int n=0; n < N ; n++ )
-        {
-            if( n % mpi_size == rank )
+            else
             {
-                I.read( SFv[n] );
-                I().setXmippOrigin();
-                I().statisticsAdjust(0,1);
-
-                double bestCorr=-2;
-                int q;
-                for (int qp=0; qp<_Ncodes0; qp++)
+                bestAssignment.corr=0;
+                q=-1;
+                for (int qp=0; qp<prm->Ncodes0; qp++)
                 {
-                    double corrCode, likelihood;
                     Iaux=I();
-                    P[qp]->fit(Iaux, sigma, noMirror, corrCode, likelihood);
-                    if (corrCode>bestCorr)
+                    P[qp]->fit(Iaux, assignment);
+                    if (assignment.corr>bestAssignment.corr)
                     {
-                        bestCorr=corrCode;
+                        bestAssignment=assignment;
                         Ibest=Iaux;
                         q=qp;
                     }
                 }
-
-                initNodeAssign[n] = q;
-                P[q]->updateProjection(Ibest,0,n);
+                if (q!=-1)
+                    P[q]->updateProjection(Ibest,bestAssignment);
             }
-            if (n%100==0 && rank==0)
-                progress_bar(n);
-        }
-        if( rank == 0 )
-            progress_bar(N);
-    }
-
-    // Put assignment in common
-    std::vector<int> auxNodeAssign( N, -1);
-    MPI_Allreduce( &(initNodeAssign[0]), &(auxNodeAssign[0]), N, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-    initNodeAssign = auxNodeAssign;
-
-    // Update for next iteration
-    // Matrix2D<double> Pupdate;
-    MultidimArray<double> PupdateAux;
-    PupdateAux.resize( P[0]->Pupdate.ydim, P[0]->Pupdate.xdim );
-    PupdateAux.setXmippOrigin( );
-
-    for (int q=0; q<_Ncodes0; q++)
-    {
-        PupdateAux.initZeros();
-        MPI_Allreduce( P[q]->Pupdate.data, PupdateAux.data, P[q]->Pupdate.yxdim, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-        P[q]->Pupdate = PupdateAux;
-
-        // Share nextClassCorr and nextNonClassCorr
-        int oldSizeClassCorr =  P[q]->nextClassCorr.size();
-        int oldSizeNextListImg = P[q]->nextListImg.size();
-
-        std::vector<double> oldListClassCorr = P[q]->nextClassCorr;
-        std::vector<int> oldListNextListImg = P[q]->nextListImg;
-
-        for( int ranks = 0 ; ranks < mpi_size ; ranks ++ )
-        {
-            if( ranks == rank )
-            {
-                MPI_Bcast( &oldSizeClassCorr, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                MPI_Bcast( &(oldListClassCorr[0]), oldSizeClassCorr, MPI_DOUBLE, rank, MPI_COMM_WORLD );
-
-                MPI_Bcast( &oldSizeNextListImg, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                MPI_Bcast( &(oldListNextListImg[0]),oldSizeNextListImg, MPI_INT, rank, MPI_COMM_WORLD );
-            }
-            else
-            {
-                int size;
-                MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                std::vector<double> aux(size, 0);
-                MPI_Bcast( &(aux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-
-                for( int element = 0; element < size; element ++ )
-                {
-                    P[q]->nextClassCorr.push_back(aux[element]);
-                }
-
-                MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                std::vector<int> aux2(size, 0);
-                MPI_Bcast( &(aux2[0]), size, MPI_INT, ranks, MPI_COMM_WORLD );
-
-                for( int element = 0; element < size; element ++ )
-                {
-                    P[q]->nextListImg.push_back(aux2[element]);
-                }
-            }
+            SF->setValue(MDL_REF,q+1,objId);
+            if (idx%100==0 && prm->node->rank==0)
+                progress_bar(idx);
         }
     }
+    if( prm->node->rank == 0 )
+        progress_bar(Nimgs);
+    prm->useCorrelation=oldUseCorrelation;
 
-    for (int q=0; q<_Ncodes0; q++)
-        P[q]->transferUpdate();
+    // Put sigma in common
+    MPI_Allreduce( MPI_IN_PLACE, &(prm->sigma), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    prm->sigma*=sqrt(2.0)/Nimgs;
+
+    // Share all assignments
+    shareAssignments(true,true,false);
 
     // Now compute the histogram of corr values
-    if (!classicalMultiref)
+    if (!prm->classicalMultiref)
     {
-        if( rank == 0 )
+        if (prm->node->rank==0)
         {
             std::cout << "Computing histogram of correlation values\n";
-            init_progress_bar(N);
+            init_progress_bar(Nimgs);
         }
 
-        Image<double> I;
-        MultidimArray<double> Iaux;
-        for (int n=0; n<N; n++)
+        CL2DAssignment inClass, outClass;
+        prm->taskDistributor->reset();
+        while (prm->taskDistributor->getTasks(first, last))
         {
-            if( n % mpi_size == rank )
+            for (size_t idx=first; idx<=last; ++idx)
             {
-                I.read( SFv[n] );
-                I().setXmippOrigin();
-                I().statisticsAdjust(0,1);
+            	size_t objId=prm->objId[idx];
+                readImage(I,objId,false);
 
-                int q=initNodeAssign[n];
+                int q;
+                SF->getValue(MDL_REF,q,objId);
+                if (q==-1)
+                    continue;
+                q-=1;
 
-                double corrCode, likelihood;
+                outClass.objId=inClass.objId=objId;
                 Iaux=I();
-                P[q]->fit(Iaux, sigma, noMirror, corrCode, likelihood);
-                P[q]->updateProjection(Iaux,corrCode,n);
-                if (_Ncodes0>1)
-                {
-                    updateNonCode(I(),q);
-                    for (int qp=0; qp<_Ncodes0; qp++)
+                P[q]->fit(Iaux, inClass);
+                P[q]->updateProjection(Iaux,inClass);
+                if (prm->Ncodes0>1)
+                    for (int qp=0; qp<prm->Ncodes0; qp++)
                     {
-                        if (q==qp)
+                        if (qp==q)
                             continue;
-                        MultidimArray<double> Iaux=I();
-                        double corrNonCode, nonCodeLikelihood;
-                        P[qp]->fit(Iaux,sigma,noMirror,corrNonCode,nonCodeLikelihood);
-                        P[qp]->updateNonProjection(corrNonCode);
+                        Iaux=I();
+                        P[qp]->fit(Iaux,outClass);
+                        P[qp]->updateNonProjection(outClass.corr);
                     }
-                }
-                if( rank == 0 )
-                    if (n%100==0)
-                        progress_bar(n);
+                if (prm->node->rank==0 && idx%100==0)
+                    progress_bar(idx);
             }
         }
+        if (prm->node->rank==0)
+            progress_bar(Nimgs);
 
-        if( rank == 0 )
-            progress_bar(N);
-
-        for (int q=0; q<_Ncodes0; q++)
-        {
-            PupdateAux.initZeros();
-            MPI_Allreduce( P[q]->Pupdate.data, PupdateAux.data, P[q]->Pupdate.yxdim, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-            P[q]->Pupdate = PupdateAux;
-
-            // Share nextClassCorr and nextNonClassCorr
-            int oldSizeClassCorr =  P[q]->nextClassCorr.size();
-            int oldSizeNextListImg = P[q]->nextListImg.size();
-            int oldSizeNextNonClassCorr = P[q]->nextNonClassCorr.size();
-
-            std::vector<double> oldListClassCorr = P[q]->nextClassCorr;
-            std::vector<int> oldListNextListImg = P[q]->nextListImg;
-            std::vector<double> oldListNextNonClassCorr = P[q]->nextNonClassCorr;
-
-            for( int ranks = 0 ; ranks < mpi_size ; ranks ++ )
-            {
-                if( ranks == rank )
-                {
-                    MPI_Bcast( &oldSizeClassCorr, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                    MPI_Bcast( &(oldListClassCorr[0]), oldSizeClassCorr, MPI_DOUBLE, rank, MPI_COMM_WORLD );
-
-                    MPI_Bcast( &oldSizeNextListImg, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                    MPI_Bcast( &(oldListNextListImg[0]),oldSizeNextListImg, MPI_INT, rank, MPI_COMM_WORLD );
-
-                    MPI_Bcast( &oldSizeNextNonClassCorr, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                    MPI_Bcast( &(oldListNextNonClassCorr[0]), oldSizeNextNonClassCorr, MPI_DOUBLE, rank, MPI_COMM_WORLD );
-                }
-                else
-                {
-                    int size;
-                    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                    std::vector<double> aux(size, 0);
-                    MPI_Bcast( &(aux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-
-                    for( int element = 0; element < size; element ++ )
-                    {
-                        P[q]->nextClassCorr.push_back(aux[element]);
-                    }
-
-                    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                    std::vector<int> aux2(size, 0);
-                    MPI_Bcast( &(aux2[0]), size, MPI_INT, ranks, MPI_COMM_WORLD );
-
-                    for( int element = 0; element < size; element ++ )
-                    {
-                        P[q]->nextListImg.push_back(aux2[element]);
-                    }
-
-                    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                    std::vector<double> aux3(size, 0);
-                    MPI_Bcast( &(aux3[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-
-                    for( int element = 0; element < size; element ++ )
-                    {
-                        P[q]->nextNonClassCorr.push_back(aux3[element]);
-                    }
-                }
-            }
-        }
-
-        for (int q=0; q<_Ncodes0; q++)
-            P[q]->transferUpdate();
+        shareAssignments(false,true,true);
     }
 }
 #undef DEBUG
 
 /* CL2D write --------------------------------------------------------- */
-void CL2D::write(const FileName &fnRoot, const String &iteration) const
+void CL2D::write(const FileName &fnRoot) const
 {
     int Q=P.size();
-    int Nimg=SFv.size();
     MetaData SFout;
-    Matrix1D<double> aux, Nq;
-    aux.resizeNoCopy(2);
-    Nq.resizeNoCopy(Q);
     Image<double> I;
-    FileName fnOut=fnRoot+".stk";
-    FileName fnAux, fnClass;
+    FileName fnOut=fnRoot+"_classes.stk", fnClass;
     fnOut.deleteFile();
-    size_t id;
     for (int q=0; q<Q; q++)
     {
         fnClass.compose(q+1,fnOut);
         I()=P[q]->P;
-        id = SFout.addObject();
-        SFout.setValue(MDL_IMAGE,fnClass, id);
         I.write(fnClass,q,true,WRITE_APPEND);
-        VEC_ELEM(Nq,q)=VEC_ELEM(aux,0)=P[q]->currentListImg.size();
-        VEC_ELEM(aux,1)=VEC_ELEM(aux,0)/Nimg;
-        SFout.setValue(MDL_IMAGE_CLASS_COUNT,(int)VEC_ELEM(Nq,q), id);
+        size_t id = SFout.addObject();
+        SFout.setValue(MDL_REF,q+1, id);
+        SFout.setValue(MDL_IMAGE,fnClass, id);
+        SFout.setValue(MDL_IMAGE_CLASS_COUNT,(int)P[q]->currentListImg.size(), id);
     }
-    FileName fnSFout=fnRoot+".xmd";
-    SFout._write(fnSFout,"class_representatives",MD_APPEND);
+    FileName fnSFout=fnRoot+"_classes.xmd";
+    SFout._write(fnSFout,"classes",MD_APPEND);
 
     // Make the selfiles of each class
+    FileName fnImg;
     for (int q=0; q<Q; q++)
     {
-        fnClass.compose(q+1,fnOut);
         MetaData SFq;
-        int imax=P[q]->currentListImg.size();
-        size_t id;
-
+        std::vector<CL2DAssignment> &currentListImg=P[q]->currentListImg;
+        int imax=currentListImg.size();
         for (int i=0; i<imax; i++)
         {
-            id = SFq.addObject();
-            int idx=P[q]->currentListImg[i];
-            SFq.setValue(MDL_IMAGE,SFv[idx], id);
+            const CL2DAssignment &assignment=currentListImg[i];
+            SF->getValue(MDL_IMAGE,fnImg,assignment.objId);
+            size_t id=SFq.addObject();
+            SFq.setValue(MDL_IMAGE,fnImg,id);
+            SFq.setValue(MDL_FLIP,assignment.flip,id);
+            SFq.setValue(MDL_SHIFTX,assignment.shiftx,id);
+            SFq.setValue(MDL_SHIFTY,assignment.shifty,id);
+            SFq.setValue(MDL_ANGLEPSI,assignment.psi,id);
         }
-        SFq._write(fnSFout,"class_"+integerToString(q+1,6),MD_APPEND);
+        MetaData SFq_sorted;
+        SFq_sorted.sort(SFq,MDL_IMAGE);
+        SFq_sorted._write(fnSFout,"class_"+integerToString(q+1,6),MD_APPEND);
     }
 }
 
-void CL2D::lookNode(MultidimArray<double> &I, int idx, int oldnode,
-                    int &newnode, double &corrCode, double &likelihood)
+void CL2D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode, CL2DAssignment &bestAssignment)
 {
-    MultidimArray<double> Ibackup;
-    Ibackup=I;
-
     int Q=P.size();
-    double bestCorrCode=-1, bestLikelihood=-1;
     int bestq=-1;
-    MultidimArray<double> bestImg;
-    Matrix1D<double> corrCodeList;
-    corrCodeList.initZeros(Q);
-    int Nimg=SFv.size();
+    MultidimArray<double> bestImg, Iaux;
+    Matrix1D<double> corrList;
+    corrList.resizeNoCopy(Q);
+    CL2DAssignment assignment;
+    bestAssignment.likelihood=bestAssignment.corr=0;
+    size_t objId=bestAssignment.objId;
     for (int q=0; q<Q; q++)
     {
         // Check if q is neighbour of the oldnode
         bool proceed=false;
-        bool neighbour=false;
         if (oldnode!=-1)
         {
             int imax=P[oldnode]->neighboursIdx.size();
@@ -911,61 +746,50 @@ void CL2D::lookNode(MultidimArray<double> &I, int idx, int oldnode,
                 if (P[oldnode]->neighboursIdx[i]==q)
                 {
                     proceed=true;
-                    neighbour=true;
                     break;
                 }
             }
-            if (!proceed && fast)
+            if (!proceed)
             {
                 double threshold=3.0*P[oldnode]->currentListImg.size();
                 threshold=XMIPP_MAX(threshold,1000);
-                threshold=(double)(XMIPP_MIN(threshold,Nimg))/Nimg;
+                threshold=(double)(XMIPP_MIN(threshold,Nimgs))/Nimgs;
                 proceed=(rnd_unif(0,1)<threshold);
             }
-            else
-                proceed=true;
         }
         else
-        {
             proceed=true;
-            neighbour=true;
-        }
 
         if (proceed)
         {
             // Try this image
-            MultidimArray<double> Iaux=I;
-            double likelihood;
-            P[q]->fit(Iaux,sigma,noMirror,corrCodeList(q),likelihood);
-            if ((!classicalMultiref &&
-                 ((likelihood>ABS(bestLikelihood)) ||
-                  (ABS(likelihood)>ABS(bestLikelihood) && bestLikelihood<0)))
-                || (classicalMultiref && corrCodeList(q)>bestCorrCode)
-                || bestCorrCode<0)
+            Iaux=I;
+            P[q]->fit(Iaux,assignment);
+            corrList(q)=assignment.corr;
+            if (!prm->classicalMultiref && assignment.likelihood>bestAssignment.likelihood ||
+                prm->classicalMultiref && assignment.corr>bestAssignment.corr)
             {
-                if (neighbour)
-                {
-                    bestq=q;
-                    bestImg=Iaux;
-                    bestCorrCode=corrCodeList(q);
-                    bestLikelihood=likelihood;
-                }
+                bestq=q;
+                bestImg=Iaux;
+                bestAssignment=assignment;
             }
         }
     }
 
     I=bestImg;
     newnode=bestq;
-    corrCode=bestCorrCode;
-    likelihood=bestLikelihood;
+    bestAssignment.objId=objId;
 
     // Assign it to the new node and remove it from the rest
     // of nodes if it was among the best
-    P[newnode]->updateProjection(I,corrCode,idx);
-    if (!classicalMultiref)
-        for (int q=0; q<Q; q++)
-            if (q!=newnode && corrCodeList(q)>0)
-                P[q]->updateNonProjection(corrCodeList(q));
+    if (newnode!=-1)
+    {
+        P[newnode]->updateProjection(I,bestAssignment);
+        if (!prm->classicalMultiref)
+            for (int q=0; q<Q; q++)
+                if (q!=newnode && corrList(q)>0)
+                    P[q]->updateNonProjection(corrList(q));
+    }
 }
 
 void CL2D::transferUpdates()
@@ -975,356 +799,174 @@ void CL2D::transferUpdates()
         P[q]->transferUpdate();
 }
 
-void CL2D::updateNonCode(MultidimArray<double> &I, int newnode)
-{
-    int Q=P.size();
-
-    for (int q=0; q<Q; q++)
-    {
-        if (q==newnode)
-            continue;
-
-        // Try this image
-        MultidimArray<double> Iaux=I;
-        double corrNonCode, nonCodeLikelihood;
-        P[q]->fit(Iaux,sigma,noMirror,corrNonCode,nonCodeLikelihood);
-        P[q]->updateNonProjection(corrNonCode);
-    }
-}
-
 /* Run CL2D ------------------------------------------------------------------ */
 //#define DEBUG
-void CL2D::run(const FileName &fnOut, int level, int rank)
+void CL2D::run(const FileName &fnOut, int level)
 {
-    int N=SF->size();
     int Q=P.size();
 
-    if( rank == 0 )
+    if( prm->node->rank == 0 )
         std::cout << "Quantizing with " << Q << " codes...\n";
 
-    Matrix1D<int> oldAssignment;
-    oldAssignment.resize(N);
-    oldAssignment.initConstant(-1);
+    std::vector<int> oldAssignment, newAssignment;
 
-    Matrix1D<int> newAssignment;
-    newAssignment.resize(N);
-
-    Matrix1D<int> auxAssignment;
-    auxAssignment.resize(N);
-
-    MultidimArray<double> aux_matrix;
-    int n=1;
-
+    int iter=1;
     bool goOn=true;
-
-    int mpi_size;
     MetaData MDChanges;
-
-    MPI_Comm_size( MPI_COMM_WORLD, &mpi_size );
-
+    Image<double> I;
+    int progressStep=XMIPP_MAX(1,Nimgs/60);
+    CL2DAssignment assignment;
     while (goOn)
     {
-        if( rank == 0 )
+        if( prm->node->rank == 0 )
         {
-            std::cout << "Iteration " << n << " ...\n";
-            std::cerr << "Iteration " << n << " ...\n";
-            init_progress_bar(N);
+            std::cout << "Iteration " << iter << " ...\n";
+            std::cerr << "Iteration " << iter << " ...\n";
+            init_progress_bar(Nimgs);
         }
 
-        SF->firstObject();
-
-        newAssignment.initConstant(-1);
-        int K=XMIPP_MIN(Nneighbours+1,Q);
+        int K=XMIPP_MIN(prm->Nneighbours+1,Q);
         if (K==0)
             K=Q;
         for (int q=0; q<Q; q++)
-        {
-            P[q]->nextListImg.clear();
-            P[q]->lookForNeighbours(P, sigma, noMirror, K);
-        }
+            P[q]->lookForNeighbours(P, K);
 
-        Image<double> I;
         int node;
-        double corrCode, likelihood;
-        double corrCodeSum=0;
-        int progressStep=XMIPP_MAX(1,N/60);
-        int i=0;
-        FOR_ALL_OBJECTS_IN_METADATA(*SF)
+        double corrSum=0;
+        SF->getColumnValues(MDL_REF,oldAssignment);
+        int *ptrOld=&(oldAssignment[0]);
+        for (size_t n=0; n<Nimgs; ++n, ++ptrOld)
+            *ptrOld-=1;
+        SF->fillConstant(MDL_REF,"-1");
+        prm->taskDistributor->reset();
+        size_t first, last;
+        while (prm->taskDistributor->getTasks(first, last))
         {
-            if( i % mpi_size == rank )
+            for (size_t idx=first; idx<=last; ++idx)
             {
-                I.readApplyGeo(*SF,__iter.objId);
-                I().setXmippOrigin();
-                I().statisticsAdjust(0,1);
+            	size_t objId=prm->objId[idx];
+                readImage(I,objId,false);
 
-                lookNode(I(),i,oldAssignment(i),node,corrCode,likelihood);
-                newAssignment(i)=node;
-                corrCodeSum+=corrCode;
-
-                if( rank == 0 && (i%progressStep==0))
-                    progress_bar(i);
+                assignment.objId=objId;
+                lookNode(I(),oldAssignment[idx],node,assignment);
+                SF->setValue(MDL_REF,node+1,objId);
+                corrSum+=assignment.corr;
+                if( prm->node->rank == 0 && idx%progressStep==0)
+                    progress_bar(idx);
             }
-            i++;
         }
 
-        // All nodes need to know the "global" value for corrSum in order to proceed correctly
-        double corrCodeAux=0;
+        // Gather all pieces computed by nodes
+        MPI_Allreduce( MPI_IN_PLACE, &corrSum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        shareAssignments(true,true,true);
 
-        MPI_Allreduce( &corrCodeSum, &corrCodeAux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-        corrCodeSum = corrCodeAux;
-
-        double aux_double;
-
-        for (int q=0; q<Q; q++)
-        {
-            aux_matrix.initZeros( YSIZE(I()), XSIZE(I()) );
-
-            MPI_Allreduce( P[q]->Pupdate.data, aux_matrix.data, P[q]->Pupdate.yxdim, MPI_DOUBLE , MPI_SUM, MPI_COMM_WORLD );
-            P[q]->Pupdate = aux_matrix;
-            P[q]->Pupdate.setXmippOrigin();
-
-            // Share nextClassCorr and nextNonClassCorr
-            int oldSizeClassCorr =  P[q]->nextClassCorr.size();
-            int oldSizeNonClassCorr = P[q]->nextNonClassCorr.size();
-            int oldSizeNextListImg = P[q]->nextListImg.size();
-
-            std::vector<double> oldListClassCorr = P[q]->nextClassCorr;
-            std::vector<double> oldListNonClassCorr = P[q]->nextNonClassCorr;
-            std::vector<int> oldListNextListImg = P[q]->nextListImg;
-
-            for( int ranks = 0 ; ranks < mpi_size ; ranks ++ )
-            {
-                if( ranks == rank )
-                {
-                    MPI_Bcast( &oldSizeClassCorr, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                    MPI_Bcast( &(oldListClassCorr[0]), oldSizeClassCorr, MPI_DOUBLE, rank, MPI_COMM_WORLD );
-
-                    MPI_Bcast( &oldSizeNonClassCorr, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                    MPI_Bcast( &(oldListNonClassCorr[0]), oldSizeNonClassCorr, MPI_DOUBLE, rank, MPI_COMM_WORLD );
-
-                    MPI_Bcast( &oldSizeNextListImg, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                    MPI_Bcast( &(oldListNextListImg[0]),oldSizeNextListImg, MPI_INT, rank, MPI_COMM_WORLD );
-                }
-                else
-                {
-                    int size;
-                    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                    std::vector<double> aux(size, 0);
-                    MPI_Bcast( &(aux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-
-                    for( int element = 0; element < size; element ++ )
-                    {
-                        P[q]->nextClassCorr.push_back(aux[element]);
-                    }
-
-                    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                    std::vector<double> aux2(size, 0);
-                    MPI_Bcast( &(aux2[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-
-                    for( int element = 0; element < size; element ++ )
-                    {
-                        P[q]->nextNonClassCorr.push_back(aux2[element]);
-                    }
-
-                    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                    std::vector<int> auxint(size, 0);
-                    MPI_Bcast( &(auxint[0]), size, MPI_INT, ranks, MPI_COMM_WORLD );
-
-                    for( int i = 0 ; i < size ; i++ )
-                    {
-                        P[q]->nextListImg.push_back( auxint[i] );
-                    }
-                }
-            }
-
-
-        }
-
+        // Some report
         size_t idMdChanges;
-        if( rank == 0 )
+        if (prm->node->rank==0)
         {
-            progress_bar(N);
-            double avgSimilarity=corrCodeSum/N;
+            progress_bar(Nimgs);
+            double avgSimilarity=corrSum/Nimgs;
             std::cout << "\nAverage correlation with input vectors=" << avgSimilarity << std::endl;
-            MDChanges.setComment((String)"Iteration "+integerToString(n));
             idMdChanges=MDChanges.addObject();
-            MDChanges.setValue(MDL_ITER,n,idMdChanges);
+            MDChanges.setValue(MDL_ITER,iter,idMdChanges);
             MDChanges.setValue(MDL_CL2D_SIMILARITY,avgSimilarity,idMdChanges);
         }
 
-        MPI_Allreduce( MATRIX1D_ARRAY(newAssignment), MATRIX1D_ARRAY(auxAssignment),
-                       N , MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-
-        newAssignment = auxAssignment;
-
+        // Count changes
+        SF->getColumnValues(MDL_REF,newAssignment);
+        int *ptrNew=&(newAssignment[0]);
+        for (size_t n=0; n<Nimgs; ++n, ++ptrNew)
+            *ptrNew-=1;
         int Nchanges=0;
-        if (n>1)
+        if (iter>1)
         {
-            FOR_ALL_ELEMENTS_IN_MATRIX1D(newAssignment)
-            if (VEC_ELEM(newAssignment,i)!=VEC_ELEM(oldAssignment,i))
-                Nchanges++;
+            int *ptrNew=&(newAssignment[0]);
+            ptrOld=&(oldAssignment[0]);
+            for (size_t n=0; n<Nimgs; ++n, ++ptrNew, ++ptrOld)
+                if (*ptrNew!=*ptrOld)
+                    ++Nchanges;
         }
-        if( rank == 0 )
+        if( prm->node->rank == 0 )
         {
             std::cout << "Number of assignment changes=" << Nchanges << std::endl;
             MDChanges.setValue(MDL_CL2D_CHANGES,Nchanges,idMdChanges);
-            std::cout << "Writing on " << formatString("iterations_info@%s_level_%02d.xmd",fnOut.c_str(),level) << std::endl;
-            std::cout << MDChanges;
-            MDChanges.write(formatString("iterations_info@%s_level_%02d.xmd",fnOut.c_str(),level));
+            MDChanges.write(formatString("info@%s_level_%02d_classes.xmd",fnOut.c_str(),level));
         }
-
-        oldAssignment=newAssignment;
-
-        transferUpdates();
 
         // Check if there are empty nodes
-        bool smallNodes;
-        do
+        if (Q>1)
         {
-            smallNodes=false;
-            int largestNode=-1, sizeLargestNode=-1,
-                                                smallNode=-1, sizeSmallestNode=N+1;
-            for (int q=0; q<Q; q++)
+            bool smallNodes;
+            do
             {
-                if (P[q]->currentListImg.size()<sizeSmallestNode)
+                smallNodes=false;
+                int largestNode=-1, sizeLargestNode=-1, smallNode=-1, sizeSmallestNode=Nimgs+1;
+                for (int q=0; q<Q; q++)
                 {
-                    smallNode=q;
-                    sizeSmallestNode=P[q]->currentListImg.size();
-                }
-                if ((int)(P[q]->currentListImg.size())>sizeLargestNode)
-                {
-                    sizeLargestNode=P[q]->currentListImg.size();
-                    largestNode=q;
-                }
-            }
-            if (sizeSmallestNode<PminSize*N/Q*0.01 )
-            {
-                if (rank==0 && verbose)
-                    std::cout << "Splitting node " << largestNode
-                    << " by overwriting " << smallNode << std::endl;
-                smallNodes=true;
-
-                // Clear the old assignment of the images in the small node
-                for (int ii=0; ii<P[smallNode]->currentListImg.size(); ii++)
-                    oldAssignment(P[smallNode]->currentListImg[ii])=-1;
-                std::vector<int> toReassign;
-                for (int ii=0; ii<P[largestNode]->currentListImg.size(); ii++)
-                {
-                    newAssignment(P[largestNode]->currentListImg[ii])=-1;
-                    toReassign.push_back(
-                        P[largestNode]->currentListImg[ii]);
-                }
-
-                // Now split the largest node
-#ifdef DEBUG
-                if (rank==0)
-                {
-                    std::cout << "Largest node address: " << P[largestNode] << std::endl;
-                    std::cout << "Small node address: " << P[smallNode] << std::endl;
-                }
-#endif
-                CL2DClass *node1=new CL2DClass;
-                CL2DClass *node2=new CL2DClass;
-                node1->useCorrelation=useCorrelation;
-                node2->useCorrelation=useCorrelation;
-                node1->useFixedCorrentropy=useFixedCorrentropy;
-                node2->useFixedCorrentropy=useFixedCorrentropy;
-                node1->classicalMultiref=classicalMultiref;
-                node2->classicalMultiref=classicalMultiref;
-#ifdef DEBUG
-
-                if (rank==0)
-                {
-                    std::cout << "Node1 address: " << node1 << std::endl;
-                    std::cout << "Node2 address: " << node2 << std::endl;
-                }
-#endif
-                std::vector<int> finalAssignment;
-                splitNode(P[largestNode],node1,node2,rank, finalAssignment);
-#ifdef DEBUG
-
-                if (rank==0)
-                {
-                    std::cout << "Deleting Largest node address: " << P[largestNode] << std::endl;
-                    std::cout << "Deleting Small node address: " << P[smallNode] << std::endl;
-                }
-#endif
-                delete P[largestNode];
-                delete P[smallNode];
-                P[largestNode]=node1;
-                P[smallNode]=node2;
-
-                for (int i=0; i<toReassign.size(); i++)
-                {
-                    newAssignment(toReassign[i]) = -1;
-
-                    for( int j=0; j<finalAssignment.size(); j+=2)
+                    if (P[q]->currentListImg.size()<sizeSmallestNode)
                     {
-                        if( finalAssignment[j] == toReassign[i])
-                        {
-                            if (finalAssignment[j+1]==1)
-                                newAssignment(toReassign[i])=largestNode;
-                            else
-                                newAssignment(toReassign[i])=smallNode;
-                            break;
-                        }
+                        smallNode=q;
+                        sizeSmallestNode=P[q]->currentListImg.size();
+                    }
+                    if ((int)(P[q]->currentListImg.size())>sizeLargestNode)
+                    {
+                        sizeLargestNode=P[q]->currentListImg.size();
+                        largestNode=q;
+                    }
+                }
+                if (sizeSmallestNode<prm->PminSize*Nimgs/Q*0.01 )
+                {
+                    if (prm->node->rank==0 && prm->verbose)
+                        std::cout << "Splitting node " << largestNode << " by overwriting " << smallNode << std::endl;
+                    smallNodes=true;
+
+                    // Clear the old assignment of the images in the small node
+                    std::vector<CL2DAssignment> &currentListImg=P[smallNode]->currentListImg;
+                    size_t iimax=currentListImg.size();
+                    for (size_t ii=0; ii<iimax; ii++)
+                        SF->setValue(MDL_REF,-1,currentListImg[ii].objId);
+                    delete P[smallNode];
+
+                    // Clear the old assignment of the images in the large node
+                    std::vector<size_t> toReassign;
+                    currentListImg=P[largestNode]->currentListImg;
+                    iimax=currentListImg.size();
+                    toReassign.resize(iimax);
+                    for (size_t ii=0; ii<iimax; ii++)
+                    {
+                        SF->setValue(MDL_REF,-1,currentListImg[ii].objId);
+                        toReassign[ii]=currentListImg[ii].objId;
                     }
 
-                    // If not assigned yet, reassign it to any of the two
-                    // outcoming nodes
-                    if (newAssignment(toReassign[i])==-1)
+                    // Now split the largest node
+                    CL2DClass *node1=new CL2DClass();
+                    CL2DClass *node2=new CL2DClass();
+                    std::vector<size_t> splitAssignment;
+                    splitNode(P[largestNode],node1,node2,splitAssignment);
+                    delete P[largestNode];
+
+                    // Keep the results of the split
+                    P[largestNode]=node1;
+                    P[smallNode]=node2;
+                    iimax=splitAssignment.size();
+                    for (size_t ii=0; ii<iimax; ii+=2)
                     {
-                        Image<double> I;
-                        I.read(SFv[toReassign[i]]);
-                        I().setXmippOrigin();
-
-                        MultidimArray<double> Iaux1;
-                        Iaux1=I();
-                        double corrCode1, likelihood1;
-                        P[largestNode]->fit(Iaux1, sigma, noMirror,
-                                            corrCode1, likelihood1);
-
-                        MultidimArray<double> Iaux2;
-                        Iaux2=I();
-                        double corrCode2, likelihood2;
-                        P[smallNode]->fit(Iaux2, sigma, noMirror,
-                                          corrCode2, likelihood2);
-
-                        if ((!classicalMultiref &&
-                             (likelihood1>likelihood2 && likelihood1>0 ||
-                              likelihood1<0 && likelihood2<0 &&
-                              ABS(likelihood1)>ABS(likelihood2)))
-                            || (classicalMultiref && corrCode1>corrCode2)
-                           )
-                        {
-                            P[largestNode]->updateProjection(Iaux1,
-                                                             corrCode1,toReassign[i]);
-                            newAssignment(toReassign[i])=largestNode;
-                            if (!classicalMultiref)
-                                P[smallNode]->updateNonProjection(corrCode2);
-                        }
+                        if (splitAssignment[ii+1]==1)
+                            SF->setValue(MDL_REF,largestNode+1,splitAssignment[ii]);
                         else
-                        {
-                            P[smallNode]->updateProjection(Iaux2,corrCode2,
-                                                           toReassign[i]);
-                            newAssignment(toReassign[i])=smallNode;
-                            if (!classicalMultiref)
-                                P[largestNode]->updateNonProjection(corrCode1);
-                        }
+                            SF->setValue(MDL_REF,smallNode+1,splitAssignment[ii]);
                     }
                 }
             }
+            while (smallNodes);
         }
-        while (smallNodes);
 
-        currentAssignment=newAssignment;
-        if (rank==0)
-            write(fnOut+"_level_"+integerToString(level,2),integerToString(n));
+        if (prm->node->rank==0)
+            write(fnOut+"_level_"+integerToString(level,2));
 
-        if (n>0 && Nchanges<0.005*N && Q>1 || n>=(Niter-1))
+        if (iter>1 && Nchanges<0.005*Nimgs && Q>1 || iter>=prm->Niter)
             goOn=false;
-        n++;
+        iter++;
     }
 
     std::sort(P.begin(),P.end(),SDescendingClusterSort());
@@ -1349,385 +991,165 @@ int CL2D::cleanEmptyNodes()
 /* Split ------------------------------------------------------------------- */
 //#define DEBUG
 void CL2D::splitNode(CL2DClass *node,
-                     CL2DClass *&node1, CL2DClass *&node2, int rank,
-                     std::vector<int> &finalAssignment) const
+                     CL2DClass *&node1, CL2DClass *&node2,
+                     std::vector<size_t> &splitAssignment) const
 {
-    bool finish=true;
     std::vector<CL2DClass *> toDelete;
-    Matrix1D<int> newAssignment;
-
-    int mpi_size;
-    MPI_Comm_size( MPI_COMM_WORLD, &mpi_size );
-
+    Matrix1D<int> newAssignment, oldAssignment;
+    Image<double> I;
+    MultidimArray<double> Iaux1, Iaux2, corrList;
+    Histogram1D hist;
+    CL2DAssignment assignment, assignment1, assignment2;
     int Ninitial=node->currentListImg.size();
 
+    bool oldclassicalMultiref=prm->classicalMultiref;
+    prm->classicalMultiref=false;
+    bool finish;
     do
     {
         finish=true;
-
-        node1->gaussianInterpolator=&gaussianInterpolator;
-        node1->plans=NULL;
-        node1->mask=&mask;
-        node1->Pupdate.initZeros(YSIZE(node->Pupdate),
-                                 XSIZE(node->Pupdate));
-        node1->Pupdate.setXmippOrigin();
-        node1->neighboursIdx=node->neighboursIdx;
-        node1->P=node->P;
-        node1->classicalMultiref=false;
-
-        node2->gaussianInterpolator=&gaussianInterpolator;
-        node2->plans=NULL;
-        node2->mask=&mask;
-        node2->Pupdate.initZeros(YSIZE(node->Pupdate),
-                                 XSIZE(node->Pupdate));
-        node2->Pupdate.setXmippOrigin();
-        node2->neighboursIdx=node->neighboursIdx;
-        node2->P=node->P;
-        node2->classicalMultiref=false;
+        node2->neighboursIdx=node1->neighboursIdx=node->neighboursIdx;
+        node2->P=node1->P=node->P;
 
         int imax=node->currentListImg.size();
 
-        Matrix1D<int> oldAssignment;
-        oldAssignment.resize(imax);
-        oldAssignment.initConstant(-1);
-        newAssignment.resize(imax);
-        Matrix1D<int> auxAssignment;
-        auxAssignment.resize(imax);
-        MultidimArray<double> corrList;
+        // Compute the corr histogram
+        if( prm->node->rank == 0 && prm->verbose>=2)
+            std::cerr << "Calculating corr distribution at split ..." << std::endl;
         corrList.initZeros(imax);
-
-        for (int it=0; it<Niter; it++)
+        for (int i=0; i<imax; i++)
         {
-            node1->nextListImg.clear();
-            node2->nextListImg.clear();
+            if( (i+1) % (prm->node->size) == prm->node->rank )
+            {
+                readImage(I,node->currentListImg[i].objId,false);
+                node->fit(I(), assignment);
+                corrList(i)=assignment.corr;
+            }
+            if (prm->node->rank==0 && i%25==0 && prm->verbose>=2)
+                progress_bar(i);
+        }
+        if (prm->node->rank==0 && prm->verbose>=2)
+            progress_bar(imax);
+        MPI_Allreduce( MPI_IN_PLACE, MULTIDIM_ARRAY(corrList), imax , MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 
-            if( rank == 0 )
+        // Compute threshold
+        compute_hist(corrList,hist,200);
+        double corrThreshold=hist.percentil(50);
+
+        // Split according to corr
+        newAssignment.initZeros(imax);
+        if (prm->node->rank == 0 && prm->verbose>=2)
+            std::cerr << "Splitting by corr threshold ..." << std::endl;
+        for (int i=0; i<imax; i++)
+        {
+            if( (i+1) % (prm->node->size) == prm->node->rank )
+            {
+                readImage(I,node->currentListImg[i].objId,false);
+                node->fit(I(), assignment);
+                if (assignment.corr<corrThreshold)
+                {
+                    node1->updateProjection(I(),assignment);
+                    newAssignment(i)=1;
+                    node2->updateNonProjection(assignment.corr);
+                }
+                else
+                {
+                    node2->updateProjection(I(),assignment);
+                    newAssignment(i)=2;
+                    node1->updateNonProjection(assignment.corr);
+                }
+            }
+            if (prm->node->rank==0 && i%25==0 && prm->verbose>=2)
+                progress_bar(i);
+        }
+        if (prm->node->rank==0 && prm->verbose>=2)
+            progress_bar(imax);
+        shareSplitAssignments(newAssignment,node1,node2);
+
+        // Split iterations
+        for (int it=0; it<prm->Niter; it++)
+        {
+            if (prm->node->rank==0 && prm->verbose>=2)
             {
                 std::cerr << "Split iteration " << it << std::endl;
                 init_progress_bar(imax);
             }
 
-            double corrThreshold;
-            if (it==1 && (corrSplit || imax<0.5*Ninitial))
-            {
-                Histogram1D hist;
-                compute_hist(corrList,hist,100);
-                corrThreshold=hist.percentil(50);
-            }
-
+            oldAssignment=newAssignment;
             newAssignment.initZeros();
-
             for (int i=0; i<imax; i++)
             {
-                if( i % mpi_size == rank )
+                if( (i+1) % (prm->node->size) == prm->node->rank )
                 {
                     // Read image
-                    Image<double> I;
-                    I.read(SFv[node->currentListImg[i]]);
-                    I().setXmippOrigin();
-                    I().statisticsAdjust(0,1);
+                    assignment1.objId=assignment2.objId=assignment.objId=node->currentListImg[i].objId;
+                    readImage(I,assignment.objId,false);
 
-                    if (it==0 && corrSplit)
+                    Iaux1=I();
+                    node1->fit(Iaux1, assignment1);
+                    Iaux2=I();
+                    node2->fit(Iaux2, assignment2);
+
+                    if (assignment1.likelihood>assignment2.likelihood)
                     {
-                        double corrCode, likelihood;
-                        node->fit(I(), sigma, noMirror, corrCode, likelihood);
-                        corrList(i)=corrCode;
+                        node1->updateProjection(Iaux1,assignment1);
+                        newAssignment(i)=1;
+                        node2->updateNonProjection(assignment2.corr);
                     }
-                    else if (it==0 && !corrSplit)
+                    else if (assignment2.likelihood>assignment1.likelihood)
                     {
-                        double corrCode, likelihood;
-                        node->fit(I(), sigma, noMirror, corrCode, likelihood);
-                        if( rnd_unif(0,1) < 0.5 )
-                        {
-                            node1->updateProjection(I(),corrCode,
-                                                    node->currentListImg[i]);
-                            newAssignment(i)=1;
-                            node2->updateNonProjection(corrCode);
-                        }
-                        else
-                        {
-                            node2->updateProjection(I(),corrCode,
-                                                    node->currentListImg[i]);
-                            newAssignment(i)=2;
-                            node1->updateNonProjection(corrCode);
-                        }
+                        node2->updateProjection(Iaux2,assignment2);
+                        newAssignment(i)=2;
+                        node1->updateNonProjection(assignment1.corr);
                     }
-                    else if (it==1 && (corrSplit || imax<0.5*Ninitial))
-                    {
-                        double corrCode, likelihood;
-                        node->fit(I(), sigma, noMirror, corrCode, likelihood);
-                        if( corrCode < corrThreshold )
-                        {
-                            node1->updateProjection(I(),corrCode,
-                                                    node->currentListImg[i]);
-                            newAssignment(i)=1;
-                            node2->updateNonProjection(corrCode);
-                        }
-                        else
-                        {
-                            node2->updateProjection(I(),corrCode,
-                                                    node->currentListImg[i]);
-                            newAssignment(i)=2;
-                            node1->updateNonProjection(corrCode);
-                        }
-                    }
-                    else
-                    {
-                        MultidimArray<double> Iaux1;
-                        Iaux1=I();
-                        double corrCode1, likelihood1;
-                        node1->fit(Iaux1, sigma, noMirror, corrCode1, likelihood1);
-
-                        MultidimArray<double> Iaux2;
-                        Iaux2=I();
-                        double corrCode2, likelihood2;
-                        node2->fit(Iaux2, sigma, noMirror, corrCode2, likelihood2);
-
-#ifdef DEBUG
-
-                        if (rank==0 && false)
-                            std::cout << "Previously Assigned to " << newAssignment(i) << std::endl;
-#endif
-
-                        if (likelihood1>likelihood2 && likelihood1>0 ||
-                            likelihood1<0 && likelihood2<0 &&
-                            ABS(likelihood1)>ABS(likelihood2))
-                        {
-                            node1->updateProjection(Iaux1,corrCode1,node->currentListImg[i]);
-                            newAssignment(i)=1;
-                            node2->updateNonProjection(corrCode2);
-                        }
-                        else
-                        {
-                            node2->updateProjection(Iaux2,corrCode2,node->currentListImg[i]);
-                            newAssignment(i)=2;
-                            node1->updateNonProjection(corrCode1);
-                        }
-
-#ifdef DEBUG
-                        if (rank==0 && false)
-                        {
-                            std::cout << "Lik1=" << likelihood1 << " Lik2="
-                            << likelihood2 << std::endl;
-                            std::cout << "Cor1=" << corrCode1 << " Cor2="
-                            << corrCode2 << std::endl;
-                            std::cout << "Assigned to " << newAssignment(i) << std::endl;
-                            Image<double> save;
-                            save()=I();
-                            save.write("PPPI.xmp");
-                            save()=Iaux1;
-                            save.write("PPPIaux1.xmp");
-                            save()=Iaux2;
-                            save.write("PPPIaux2.xmp");
-                            std::cout << "Press any key\n";
-                            char c;
-                            std::cin >> c;
-                        }
-#endif
-
-                    }
-                    if (rank==0 && i%25==0)
-                        progress_bar(i);
                 }
+                if (prm->node->rank==0 && i%25==0 && prm->verbose>=2)
+                    progress_bar(i);
             }
-
-            // Share among other mpi workers
-            MPI_Allreduce( MATRIX1D_ARRAY(newAssignment), MATRIX1D_ARRAY(auxAssignment),
-                           imax , MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-
-            if (it==0 && corrSplit)
-            {
-                MultidimArray<double> corrListAux;
-                corrListAux.initZeros(imax);
-
-                MPI_Allreduce( MULTIDIM_ARRAY(corrList), MULTIDIM_ARRAY(corrListAux),
-                               imax, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-                corrList = corrListAux;
-            }
-
-            newAssignment = auxAssignment;
-            MultidimArray<double> PupdateAux;
-            PupdateAux.resize( node1->Pupdate.ydim, node1->Pupdate.xdim );
-            PupdateAux.setXmippOrigin( );
-
-            PupdateAux.initZeros();
-            MPI_Allreduce( node1->Pupdate.data, PupdateAux.data, node1->Pupdate.yxdim,
-                           MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-            node1->Pupdate = PupdateAux;
-
-            PupdateAux.initZeros();
-            MPI_Allreduce( node2->Pupdate.data, PupdateAux.data, node2->Pupdate.yxdim,
-                           MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-            node2->Pupdate = PupdateAux;
-
-            // Share nextClassCorr and nextNonClassCorr
-            int oldSizeNonClassCorr1 = node1->nextNonClassCorr.size();
-            int oldSizeNonClassCorr2 = node2->nextNonClassCorr.size();
-            int oldSizeClassCorr1 =  node1->nextClassCorr.size();
-            int oldSizeClassCorr2 =  node2->nextClassCorr.size();
-            int oldSizeNextListImg1 = node1->nextListImg.size();
-            int oldSizeNextListImg2 = node2->nextListImg.size();
-
-            std::vector<double> oldListNonClassCorr1 = node1->nextNonClassCorr;
-            std::vector<double> oldListNonClassCorr2 = node2->nextNonClassCorr;
-            std::vector<double> oldListClassCorr1 = node1->nextClassCorr;
-            std::vector<double> oldListClassCorr2 = node2->nextClassCorr;
-            std::vector<int> oldListNextListImg1 = node1->nextListImg;
-            std::vector<int> oldListNextListImg2 = node2->nextListImg;
-
-            for( int ranks = 0 ; ranks < mpi_size ; ranks ++ )
-            {
-                if( ranks == rank )
-                {
-                    MPI_Bcast( &oldSizeNonClassCorr1, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                    MPI_Bcast( &(oldListNonClassCorr1[0]), oldSizeNonClassCorr1, MPI_DOUBLE, rank, MPI_COMM_WORLD );
-
-                    MPI_Bcast( &oldSizeNonClassCorr2, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                    MPI_Bcast( &(oldListNonClassCorr2[0]), oldSizeNonClassCorr2, MPI_DOUBLE, rank, MPI_COMM_WORLD );
-
-                    MPI_Bcast( &oldSizeClassCorr1, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                    MPI_Bcast( &(oldListClassCorr1[0]), oldSizeClassCorr1, MPI_DOUBLE, rank, MPI_COMM_WORLD );
-
-                    MPI_Bcast( &oldSizeClassCorr2, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                    MPI_Bcast( &(oldListClassCorr2[0]), oldSizeClassCorr2, MPI_DOUBLE, rank, MPI_COMM_WORLD );
-
-                    MPI_Bcast( &oldSizeNextListImg1, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                    MPI_Bcast( &(oldListNextListImg1[0]), oldSizeNextListImg1, MPI_INT, rank, MPI_COMM_WORLD );
-
-                    MPI_Bcast( &oldSizeNextListImg2, 1, MPI_INT, rank, MPI_COMM_WORLD );
-                    MPI_Bcast( &(oldListNextListImg2[0]), oldSizeNextListImg2, MPI_INT, rank, MPI_COMM_WORLD );
-                }
-                else
-                {
-                    int size, element;
-                    std::vector<double> daux;
-                    std::vector<int> iaux;
-
-                    // Receive and gather nextNonClassCorr values
-                    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                    daux.resize(size, 0);
-                    MPI_Bcast( &(daux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-
-                    for( element = 0; element < size; element ++ )
-                        node1->nextNonClassCorr.push_back(daux[element]);
-
-                    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                    daux.resize(size, 0);
-                    MPI_Bcast( &(daux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-
-                    for( element = 0; element < size; element ++ )
-                        node2->nextNonClassCorr.push_back(daux[element]);
-
-                    // Receive and gather nextClassCorr values
-                    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                    daux.resize(size, 0);
-                    MPI_Bcast( &(daux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-
-                    for( element = 0; element < size; element ++ )
-                        node1->nextClassCorr.push_back(daux[element]);
-
-                    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                    daux.resize(size, 0);
-                    MPI_Bcast( &(daux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-
-                    for( element = 0; element < size; element ++ )
-                        node2->nextClassCorr.push_back(daux[element]);
-
-                    // Receive and gather nextListImg values
-                    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                    iaux.resize(size, 0);
-                    MPI_Bcast( &(iaux[0]), size, MPI_INT, ranks, MPI_COMM_WORLD );
-
-                    for( element = 0; element < size; element ++ )
-                        node1->nextListImg.push_back(iaux[element]);
-
-                    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-                    iaux.resize(size, 0);
-                    MPI_Bcast( &(iaux[0]), size, MPI_INT, ranks, MPI_COMM_WORLD );
-
-                    for( element = 0; element < size; element ++ )
-                        node2->nextListImg.push_back(iaux[element]);
-                }
-            }
-
-            if( rank == 0 )
+            if (prm->node->rank==0 && prm->verbose>=2)
                 progress_bar(imax);
+            shareSplitAssignments(newAssignment,node1,node2);
 
-            if (imax<0.5*Ninitial && it==1)
-                break;
+            int Nchanges=0;
+            FOR_ALL_ELEMENTS_IN_MATRIX1D(newAssignment)
+            if (newAssignment(i)!=oldAssignment(i))
+                Nchanges++;
+            if (prm->node->rank==0 && prm->verbose>=2)
+                std::cout << "Number of assignment split changes=" << Nchanges << std::endl;
 
-            int Nchanges;
-            if (it>=1 || !corrSplit)
-            {
-                node1->transferUpdate();
-                node2->transferUpdate();
-
-                if( rank == 0 && verbose)
-                {
-                    std::cout
-                    << "  Split iteration " << it << std::endl;
-                }
-
-                if (it>=2 || (!corrSplit && it>=1))
-                {
-                    Nchanges=0;
-                    FOR_ALL_ELEMENTS_IN_MATRIX1D(newAssignment)
-                    if (newAssignment(i)!=oldAssignment(i))
-                        Nchanges++;
-                    if( rank == 0 && verbose)
-                        std::cout << "Number of assignment split changes=" << Nchanges << std::endl;
-                }
-
-                // Check if one of the nodes is too small
-                if (node1->currentListImg.size()<PminSize*0.01*imax/2 ||
-                    node2->currentListImg.size()<PminSize*0.01*imax/2)
-                    if (it>1 || (!corrSplit && it>0))
-                        break;
-
-                oldAssignment=newAssignment;
-            }
-            if (Nchanges<0.005*imax && it>1)
+            // Check if one of the nodes is too small
+            if (node1->currentListImg.size()<prm->PminSize*0.01*imax/2 ||
+                node2->currentListImg.size()<prm->PminSize*0.01*imax/2 ||
+                Nchanges<0.005*imax)
                 break;
         }
 
-        if (node1->currentListImg.size()<(PminSize*0.01*imax/2))
+        if (node1->currentListImg.size()<(prm->PminSize*0.01*imax/2))
         {
-            if( rank == 0 && verbose)
+            if (prm->node->rank==0 && prm->verbose>=2)
                 std::cout << "Removing node1, it's too small "
                 << node1->currentListImg.size() << " "
-                << PminSize*0.01*imax/2 << "...\n";
+                << prm->PminSize*0.01*imax/2 << "...\n";
             if (node1!=node)
                 delete node1;
             node1=new CL2DClass();
-            node1->useCorrelation=useCorrelation;
-            node1->useFixedCorrentropy=useFixedCorrentropy;
-            node1->classicalMultiref=false;
             toDelete.push_back(node2);
             node=node2;
             node2=new CL2DClass();
-            node2->useCorrelation=useCorrelation;
-            node2->useFixedCorrentropy=useFixedCorrentropy;
-            node2->classicalMultiref=false;
             finish=false;
         }
-        else if (node2->currentListImg.size()<(PminSize*0.01*imax/2))
+        else if (node2->currentListImg.size()<(prm->PminSize*0.01*imax/2))
         {
-            if( rank == 0 && verbose)
+            if (prm->node->rank==0 && prm->verbose>=2)
                 std::cout << "Removing node2, it's too small "
                 << node2->currentListImg.size() << " "
-                << PminSize*0.01*imax/2 << "...\n";
+                << prm->PminSize*0.01*imax/2 << "...\n";
             if (node2!=node)
                 delete node2;
             node2=new CL2DClass();
-            node2->useCorrelation=useCorrelation;
-            node2->useFixedCorrentropy=useFixedCorrentropy;
-            node2->classicalMultiref=false;
             toDelete.push_back(node1);
             node=node1;
             node1=new CL2DClass();
-            node1->useCorrelation=useCorrelation;
-            node1->useFixedCorrentropy=useFixedCorrentropy;
-            node1->classicalMultiref=false;
             finish=false;
         }
     }
@@ -1736,30 +1158,29 @@ void CL2D::splitNode(CL2DClass *node,
         if (toDelete[i]!=node)
             delete toDelete[i];
 
-    for (int i=0; i<node->currentListImg.size(); i++)
+    for (int i=0; i<node1->currentListImg.size(); i++)
     {
-        finalAssignment.push_back( node->currentListImg[i] );
-        finalAssignment.push_back( newAssignment(i) );
+        splitAssignment.push_back( node1->currentListImg[i].objId );
+        splitAssignment.push_back( 1);
     }
-    node1->classicalMultiref=classicalMultiref;
-    node2->classicalMultiref=classicalMultiref;
+    for (int i=0; i<node2->currentListImg.size(); i++)
+    {
+        splitAssignment.push_back( node2->currentListImg[i].objId );
+        splitAssignment.push_back( 2);
+    }
+    prm->classicalMultiref=oldclassicalMultiref;
 }
 #undef DEBUG
 
-void CL2D::splitFirstNode(int rank)
+void CL2D::splitFirstNode()
 {
     std::sort(P.begin(),P.end(),SDescendingClusterSort());
     int Q=P.size();
+    std::cout << std::endl;
     P.push_back(new CL2DClass());
     P.push_back(new CL2DClass());
-    P[Q]->useCorrelation=useCorrelation;
-    P[Q]->useFixedCorrentropy=useFixedCorrentropy;
-    P[Q]->classicalMultiref=classicalMultiref;
-    P[Q+1]->useCorrelation=useCorrelation;
-    P[Q+1]->useFixedCorrentropy=useFixedCorrentropy;
-    P[Q+1]->classicalMultiref=classicalMultiref;
-    std::vector<int> finalAssignment;
-    splitNode(P[0],P[Q],P[Q+1],rank, finalAssignment);
+    std::vector<size_t> splitAssignment;
+    splitNode(P[0],P[Q],P[Q+1],splitAssignment);
     delete P[0];
     P[0]=NULL;
     P.erase(P.begin());
@@ -1771,12 +1192,14 @@ ProgClassifyCL2D::ProgClassifyCL2D(int argc, char** argv)
     node=new MpiNode(argc,argv);
     if (!node->isMaster())
         verbose=0;
+    taskDistributor=NULL;
 }
 
 /* Destructor -------------------------------------------------------------- */
 ProgClassifyCL2D::~ProgClassifyCL2D()
 {
     delete node;
+    delete taskDistributor;
 }
 
 /* VQPrm I/O --------------------------------------------------------------- */
@@ -1790,14 +1213,11 @@ void ProgClassifyCL2D::readParams()
     Ncodes0=getIntParam("--nref0");
     Ncodes=getIntParam("--nref");
     PminSize=getDoubleParam("--minsize");
-    noMirror=checkParam("--noMirror");
-    corrSplit=checkParam("--corrSplit");
-    fast=!checkParam("--dontDoFast");
     String aux;
     aux=getParam("--distance");
     useCorrelation=aux=="correlation";
-    useFixedCorrentropy=aux=="fixedCorrentropy";
     classicalMultiref=checkParam("--classicalMultiref");
+    maxShift=getDoubleParam("--maxShift");
 }
 
 void ProgClassifyCL2D::show() const
@@ -1813,12 +1233,9 @@ void ProgClassifyCL2D::show() const
     << "Codes:                   " << Ncodes              << std::endl
     << "Neighbours:              " << Nneighbours         << std::endl
     << "Minimum node size:       " << PminSize            << std::endl
-    << "No mirror:               " << noMirror            << std::endl
-    << "Corr Split:              " << corrSplit           << std::endl
-    << "Fast:                    " << fast                << std::endl
     << "Use Correlation:         " << useCorrelation      << std::endl
-    << "Use Fixed Correntropy:   " << useFixedCorrentropy << std::endl
     << "Classical Multiref:      " << classicalMultiref   << std::endl
+    << "Maximum shift:           " << maxShift            << std::endl
     ;
 }
 
@@ -1843,124 +1260,91 @@ void ProgClassifyCL2D::defineParams()
     addParamsLine("   [--neigh+ <N=4>]          : Number of neighbour code vectors");
     addParamsLine("                             : Set -1 for all");
     addParamsLine("   [--minsize+ <N=20>]       : Percentage minimum node size");
-    addParamsLine("   [--noMirror+]             : Do not check mirrors");
-    addParamsLine("   [--corrSplit+]            : Split by correlation instead of randomly");
-    addParamsLine("   [--dontDoFast+]           : Don't do suboptimal, fast calculations");
     addParamsLine("   [--distance <type=correntropy>]       : Distance type");
     addParamsLine("            where <type>");
-    addParamsLine("                       correntropy correlation fixedCorrentropy: Fixed correntropy corrects the variance of the noise by the number of images assigned to the class.");
-    addParamsLine("   [--classicalMultiref]    : Instead of enhanced clustering");
+    addParamsLine("                       correntropy correlation: See CL2D paper for the definition of correntropy");
+    addParamsLine("   [--classicalMultiref]     : Instead of enhanced clustering");
+    addParamsLine("   [--maxShift <d=10>]       : Maximum allowed shift");
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL2D` -i images.stk --nref 256 --oroot class --iter 10");
 }
 
-void ProgClassifyCL2D::produceSideInfo(int rank)
+void ProgClassifyCL2D::produceSideInfo()
 {
+    maxShift2=maxShift*maxShift;
+
+    gaussianInterpolator.initialize(6,60000,false);
+
+    // Get image dimensions
     SF.read(fnSel);
+    int Zdim;
+    size_t Ndim;
+    ImgSize(SF,Xdim,Ydim,Zdim,Ndim);
+
+    // Prepare the Task distributor
+    SF.findObjects(objId);
+    size_t Nimgs=objId.size();
+    taskDistributor=new FileTaskDistributor(Nimgs,XMIPP_MAX(1,Nimgs/(5*node->size)),node);
+
+    // Prepare mask for evaluating the noise outside
+    mask.resize(prm->Ydim,prm->Xdim);
+    mask.setXmippOrigin();
+    BinaryCircularMask(mask,prm->Xdim/2, INNER_MASK);
+
+    // Read input code vectors if available
     std::vector< MultidimArray<double> > codes0;
     if (fnCodes0!="")
     {
-        FileName fnImg;
         Image<double> I;
         MetaData SFCodes(fnCodes0);
 
         FOR_ALL_OBJECTS_IN_METADATA(SFCodes)
         {
-
-            SFCodes.getValue(MDL_IMAGE,fnImg,__iter.objId);
-            I.read(fnImg);
+            I.readApplyGeo(SFCodes,__iter.objId);
             I().setXmippOrigin();
             codes0.push_back(I());
         }
         Ncodes0=codes0.size();
     }
-    vq.initialize(SF,Niter,Nneighbours,PminSize,
-                  codes0,Ncodes0,noMirror,verbose>=1,corrSplit,useCorrelation,
-                  useFixedCorrentropy,classicalMultiref,fast,rank);
+    vq.initialize(SF,codes0);
 }
 
 void ProgClassifyCL2D::run()
 {
     show();
-    produceSideInfo(node->rank);
-    runWorker(node->rank);
-    node->barrierWait();
-    alignInputImages(fnOut+".xmd",node->rank,node->size);
-}
+    produceSideInfo();
 
-void ProgClassifyCL2D::runWorker(int rank)
-{
+    // Run all iterations
     int level=0;
-    vq.run(fnOut,level,rank);
+    vq.run(fnOut,level);
 
     int Q=vq.P.size();
-
     while (Q<Ncodes)
     {
-        if( rank == 0 )
+        if( node->rank == 0 )
             std::cout << "Spliting nodes ...\n";
 
         int Nclean=vq.cleanEmptyNodes();
         int Nsplits=XMIPP_MIN(Q,Ncodes-Q)+Nclean;
 
         for (int i=0; i<Nsplits; i++)
-            vq.splitFirstNode(rank);
+            vq.splitFirstNode();
 
         Q=vq.P.size();
         level++;
-        vq.run(fnOut,level,rank);
+        vq.run(fnOut,level);
     }
-    if (rank==0)
+    if (node->rank==0)
     {
         std::sort(vq.P.begin(),vq.P.end(),SDescendingClusterSort());
-        vq.write(fnOut,"Final");
-    }
-}
-
-void ProgClassifyCL2D::alignInputImages(const FileName &fnSF, int rank, int Nprocessors)
-{
-    MetaData SFBlock;
-    StringVector blockList;
-    getBlocksInMetaDataFile(fnSF,blockList);
-    int bmax=blockList.size();
-    int currentIdx=0;
-    FileName fnImg;
-    Image<double> Iclass, I;
-    Matrix2D<double> M;
-    std::cout << "Aligning final images ..." << std::endl;
-    for (int b=0; b<bmax; b++)
-    {
-        if (blockList[b]=="class_representatives" || blockList[b]=="iterations_info")
-            continue;
-        SFBlock.read(blockList[b]+"@"+fnSF);
-        Iclass.read(blockList[b].substr(6,6)+"@"+fnOut+".stk");
-        Iclass().setXmippOrigin();
-        FOR_ALL_OBJECTS_IN_METADATA(SFBlock)
-        {
-            if ((currentIdx+1)%Nprocessors==rank)
-            {
-                SFBlock.getValue(MDL_IMAGE,fnImg,__iter.objId);
-                I.read(fnImg);
-                I().setXmippOrigin();
-                alignImagesConsideringMirrors(Iclass(), I(), M);
-                bool flip;
-                double scale, shiftX, shiftY, psi;
-                transformationMatrix2Parameters2D(M, flip, scale, shiftX, shiftY, psi);
-                SFBlock.setValue(MDL_FLIP,flip,__iter.objId);
-                SFBlock.setValue(MDL_SHIFTX,shiftX,__iter.objId);
-                SFBlock.setValue(MDL_SHIFTY,shiftY,__iter.objId);
-                SFBlock.setValue(MDL_ANGLEPSI,psi,__iter.objId);
-                //I.write(fnImgOut);
-            }
-            ++currentIdx;
-        }
-        SFBlock.write(blockList[b]+"@"+fnSF,MD_APPEND);
+        SF.write(fnOut+"_images.xmd");
     }
 }
 
 /* Main -------------------------------------------------------------------- */
 int main(int argc, char** argv)
 {
-    ProgClassifyCL2D prm(argc,argv);
-    prm.read(argc,argv);
-    return prm.tryRun();
+    ProgClassifyCL2D progprm(argc,argv);
+    progprm.read(argc,argv);
+    prm=&progprm;
+    return progprm.tryRun();
 }
