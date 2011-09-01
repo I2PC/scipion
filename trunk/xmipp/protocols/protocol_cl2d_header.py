@@ -55,7 +55,7 @@ ComparisonMethod='correlation'
 ClusteringMethod='classical'
 
 # {expert} Additional parameters for classify_CL2D
-""" -verbose, -corrSplit, ...
+""" --verbose, --corrSplit, ...
 """
 AdditionalParameters=''
 
@@ -108,6 +108,16 @@ be running, after that time it will be killed by the
 queue system
 """
 QueueHours = 96
+
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Visualization
+#------------------------------------------------------------------------------------------------
+# Visualize last level
+DoShowLast=True
+
+# {condition}(DoShowLast==False) Visualize several levels
+"""Create a  list of levels like: 0,1,3 or 0-3 """
+LevelsToShow=""
 
 # {hidden} Show expert options
 """If True, expert options will be displayed
