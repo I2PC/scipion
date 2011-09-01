@@ -77,7 +77,7 @@ public:
     	VEC_ELEM(coefs,3)=1;
     	VEC_ELEM(coefs,4)=1;
     	VEC_ELEM(coefs,5)=1;
-    	VEC_ELEM(coefs,6)=1;
+    	//VEC_ELEM(coefs,6)=1;
     	//VEC_ELEM(coefs,7)=1;
     	//VEC_ELEM(coefs,8)=1;
     	//VEC_ELEM(coefs,9)=1;
