@@ -387,6 +387,16 @@ void computeAvgStddev(const std::vector<T> &V, double& avg, double& stddev)
         stddev = 0;
 }
 
+/** Initialize std::vector with constant value */
+template <class T>
+void initConstant(std::vector<T> &V, T &value)
+{
+    const T* ptr=&V[0];
+    size_t nmax=V.size();
+    for(size_t n=0; n<nmax; ++n, ++ptr)
+    	*ptr=value;
+}
+
 /** Compute the logarithm in base 2
  */
 // Does not work with xlc compiler
