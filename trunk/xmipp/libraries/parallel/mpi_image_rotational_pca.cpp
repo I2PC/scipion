@@ -116,9 +116,22 @@ void ProgImageRotationalPCA::produceSideInfo()
     MetaData MDin(fnIn);
     if (maxNimgs>0)
     {
-        MetaData MDaux;
-        MDaux.randomize(MDin);
-        MDin.selectPart(MDaux,0,maxNimgs);
+    	if (node->rank==0)
+    	{
+    		MetaData MDaux;
+    		MDaux.randomize(MDin);
+    		MDin.selectPart(MDaux,0,maxNimgs);
+    		MDin.write(fnRoot+"_temp.xmd");
+    		node->barrierWait();
+    		node->barrierWait();
+    		unlink((fnRoot+"_temp.xmd").c_str());
+    	}
+    	else
+    	{
+    		node->barrierWait();
+    		MDin.read(fnRoot+"_temp.xmd");
+    		node->barrierWait();
+    	}
     }
     Nimg=MDin.size();
     int Ydim, Zdim;
