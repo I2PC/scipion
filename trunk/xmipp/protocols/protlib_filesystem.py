@@ -62,7 +62,7 @@ def deleteDir(log, path):
         remove_tree(path, True)
         printLog("Deleted directory " + path, log)
            
-def deleteFile(log, filename, verbose):
+def deleteFile(log, filename, verbose=True):
     if os.path.exists(filename):
         os.remove(filename)
         if verbose:
@@ -77,6 +77,13 @@ def copyFile(log, source, dest):
         printLog("Copied '%s' to '%s'" % (source, dest))
     except Exception, e:
         printLog("Could not copy '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
+    
+def renameFile(log, source, dest):
+    try:
+        os.rename(source, dest)
+        printLog("Renamed '%s' to '%s'" % (source, dest))
+    except Exception, e:
+        printLog("Could not rename '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
     
 def copyDir(log, source, dest):
     try:
