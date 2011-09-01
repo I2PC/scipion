@@ -2049,7 +2049,7 @@ public:
 
     /** Slice access for writing.
      *
-     * This function sets a 2D matrix corresponding to the choosen slice inside the nth
+     * This function sets a 2D matrix corresponding to the chosen slice inside the nth
      * volume, the numbering of the slices is also logical not physical.
      *
      * @code
