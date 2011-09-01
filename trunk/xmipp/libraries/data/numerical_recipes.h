@@ -88,6 +88,25 @@ inline double sinc(double x)
         return sin(arg)/arg;
     }
 }
+inline size_t fact(int num)
+{
+    size_t value = 1;
+    if (num !=1 && num != 0)
+    {
+        for (int i = num; i > 0; --i)
+            value *= i;
+    }
+    return value;
+
+}
+
+inline double binom(int n, int k)
+{
+    size_t factor=1;
+    for (size_t i = n; i > (n-k); --i)
+        factor *= i;
+    return double(factor)/double(fact(k));
+}
 
 // Singular value descomposition of matrix a (numerical recipes, chapter 2-6 for details)
 void svdcmp(double *a, int m, int n, double *w, double *v);
@@ -106,7 +125,7 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
             bool show);
 
 void amebsa(double **p, double y[], int ndim, double pb[], double *yb,
-    double ftol, double (*funk)(double []), int *iter, double temptr);
+            double ftol, double (*funk)(double []), int *iter, double temptr);
 
 // These two routines have been taken from
 // http://users.utu.fi/vesoik/userdocs/programs/libpet
