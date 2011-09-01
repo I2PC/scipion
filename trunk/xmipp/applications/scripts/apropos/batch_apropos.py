@@ -14,7 +14,7 @@ class ScriptApropos(XmippScript):
 		
 	def defineParams(self):
 		self.addUsageLine("Search for Xmipp programs that are related to some keywords.")
-		self.addUsageLine("Useful for when does not remeber a program name. gaussian noise header")
+		self.addUsageLine("Useful for when does not remember a program name.")
 		## params
 		self.addParamsLine(" -i <...>          : Keyword list to search programs matching")
 		self.addParamsLine("   alias --input;")

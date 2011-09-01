@@ -615,7 +615,7 @@ class ProgramDb():
                                prefixes TEXT);
                             INSERT INTO Category VALUES(NULL, 'Classification', NULL, 'classify_ ml_ mlf_');
                             INSERT INTO Category VALUES(NULL, 'CTF', NULL, 'ctf_');
-                            INSERT INTO Category VALUES(NULL, 'Images', NULL, 'image_');
+                            INSERT INTO Category VALUES(NULL, 'Images', NULL, 'image_ micrograph_');
                             INSERT INTO Category VALUES(NULL, 'Metadatas', NULL, 'metadata_');
                             INSERT INTO Category VALUES(NULL, 'Phantoms', NULL, 'phantom_ pdb_');
                             INSERT INTO Category VALUES(NULL, 'Angular assignment', NULL, 'angular_');
