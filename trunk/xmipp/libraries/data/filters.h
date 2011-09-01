@@ -401,6 +401,10 @@ double fastCorrentropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
     return retval;
 }
 
+/** Correntropy with mask. */
+double fastCorrentropy(const MultidimArray<double> &x, const MultidimArray<double> &y,
+                       double sigma, const GaussianInterpolator &G, const MultidimArray<int> &mask);
+
 /** Correntropy nD
  * @ingroup Filters
  */

@@ -854,6 +854,24 @@ void EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil)
     V.binarize(x);
 }
 
+/* Fast correntropy -------------------------------------------------------- */
+double fastCorrentropy(const MultidimArray<double> &x, const MultidimArray<double> &y,
+                       double sigma, const GaussianInterpolator &G, const MultidimArray<int> &mask)
+{
+    double retvalxy=0;
+    double isigma=1.0/sigma;
+    int maskSum=0;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(x)
+    {
+        if (DIRECT_MULTIDIM_ELEM(mask,n))
+        {
+            retvalxy+=G.getValue(isigma*(DIRECT_MULTIDIM_ELEM(x,n)-DIRECT_MULTIDIM_ELEM(y,n)));
+            ++maskSum;
+        }
+    }
+    return (retvalxy/maskSum);
+}
+
 /* Best shift -------------------------------------------------------------- */
 void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
                double &shiftX, double &shiftY, const MultidimArray<int> *mask)
