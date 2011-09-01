@@ -44,8 +44,8 @@
 #define SWITCHDATATYPE(datatype,OP) \
     switch (datatype)\
         {\
-    	case Double:\
-    	    {OP(double)};\
+     case Double:\
+         {OP(double)};\
             break;\
         case Float:\
             {OP(float)};\
@@ -79,7 +79,7 @@
  *
  * This macros gives you access to the array (T **)
  */
- //@{
+//@{
 #ifndef MULTIDIM_ARRAY_BASE
 #define MULTIDIM_ARRAY_BASE(v) (*((v).data->im))
 #endif
@@ -107,7 +107,7 @@ public:
     /* Empty constructor */
     MultidimArrayGeneric()
     {
-      init();
+        init();
     }
 
     /**
@@ -188,6 +188,18 @@ public:
         SWITCHDATATYPE(datatype,WINDOW)
 #undef WINDOW
 
+    }
+
+    void selfWindow(int z0, int y0, int x0,
+                    int zF, int yF, int xF,
+                    double init_value = 0.)
+    {
+        if (im->mmapOn)
+            REPORT_ERROR(ERR_MMAP, "Cannot resize the image when it is mapped to file.");
+
+#define WINDOW(type) ((MultidimArray<type>*)im)->selfWindow(z0,y0,x0,zF,yF,xF,(type)init_value);
+        SWITCHDATATYPE(datatype,WINDOW)
+#undef WINDOW
     }
 
     /**
@@ -302,6 +314,18 @@ public:
 #undef COMPUTESDOUBLEMINMAX
 
     }
+
+    /** Assignment **/
+    MultidimArrayGeneric& operator=(const MultidimArrayGeneric& input)
+    {
+        if (&input != this && input.datatype != Unknown_Type)
+        {
+            setDatatype(input.datatype);
+            *im = *input.im;
+        }
+        return *this;
+    }
+
     /** Get constant access */
     double operator()(size_t n, int k, int i, int j) const
     {
