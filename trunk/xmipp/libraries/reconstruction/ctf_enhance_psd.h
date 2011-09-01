@@ -35,6 +35,9 @@
 class ProgCTFEnhancePSD: public XmippMetadataProgram
 {
 public:
+	/// Method
+	String method;
+
     /// Bandpass filter low frequency (in Fourier space, max 0.5)
     double filter_w1;
 
@@ -43,6 +46,12 @@ public:
 
     /// Decay width (raised cosine)
     double decay_width;
+
+    /// Minimum number of fringes
+    int N0;
+
+    /// Maximum number of fringes
+    int NF;
 
     /// Lower frequency for the mask (in Fourier space, max 0.5)
     double mask_w1;
@@ -62,10 +71,13 @@ public:
     /** Process one image */
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
 
-    /** Apply to a single PSD.
+    /** Apply filter method to a single PSD.
         The steps are basically: outlier removal, band pass filtration, masking
         and normalization. */
-    void apply(MultidimArray<double> &PSD);
+    void applyFilter(MultidimArray<double> &PSD);
+
+    /** Apply SPHT to a single PSD.*/
+    void applySPHT(MultidimArray<double> &PSD);
 };
 //@}
 #endif

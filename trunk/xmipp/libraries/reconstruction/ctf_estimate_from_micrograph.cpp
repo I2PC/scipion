@@ -656,7 +656,7 @@ void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
 
     Image<double> PSD;
     PSD.read(prog1.fn_root+".psd");
-    prog2.apply(PSD());
+    prog2.applyFilter(PSD());
     enhancedPSD=PSD();
     unlink(PSD.name().c_str());
 

@@ -144,7 +144,7 @@ double ProgPSDSort::evaluate(const FileName &fnMicrograph,
     enhancePSD.decay_width = decay_width;
     enhancePSD.mask_w1 = mask_w1;
     enhancePSD.mask_w2 = mask_w2;
-    enhancePSD.apply(PSD());
+    enhancePSD.applyFilter(PSD());
 
     // Evaluate the radial integral
     PSD().setXmippOrigin();

@@ -651,7 +651,7 @@ void ProgCTFEstimateFromPSD::produce_side_info()
     prm.mask_w1 = 0.01;
     prm.mask_w2 = 0.5;
     enhanced_ctftomodel() = ctftomodel();
-    prm.apply(enhanced_ctftomodel());
+    prm.applyFilter(enhanced_ctftomodel());
     enhanced_ctftomodel.write(fn_psd.withoutExtension()+"_enhanced_psd.xmp");
     CenterFFT(enhanced_ctftomodel(), false);
     enhanced_ctftomodel_fullsize() = enhanced_ctftomodel();
@@ -660,7 +660,7 @@ void ProgCTFEstimateFromPSD::produce_side_info()
     prm.filter_w1 = f1;
     prm.filter_w2 = f2;
     enhanced_ctftomodel() = ctftomodel();
-    prm.apply(enhanced_ctftomodel());
+    prm.applyFilter(enhanced_ctftomodel());
     CenterFFT(enhanced_ctftomodel(), false);
     enhanced_ctftomodel().resize(global_w_digfreq);
 
