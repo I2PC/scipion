@@ -42,7 +42,7 @@ void FileName::compose(const String &str, size_t no, const String &ext)
     if (no != ALL_IMAGES)
         this->append(formatString("%06lu", no));
 
-    if (ext != "")
+    if (!ext.empty())
         *this += (String) "." + ext;
 }
 
@@ -109,7 +109,7 @@ void FileName::decompose(size_t &no, String &str) const
 }
 
 // Get decomposed filename .......................................
-String FileName::getDecomposedFileName() const
+FileName FileName::getDecomposedFileName() const
 {
     String str;
     size_t no;
@@ -118,24 +118,25 @@ String FileName::getDecomposedFileName() const
 }
 
 // Get the root name of a filename .........................................
+// TODO: Check if it is really needed
 FileName FileName::getRoot() const
 {
-    int skip_directories = find_last_of("/") + 1;
-    int point = find_first_of(".", skip_directories);
-    if (point == -1)
+    size_t skip_directories = find_last_of("/") + 1;
+    size_t point = find_first_of(".", skip_directories);
+    if (point == npos)
         point = length();
-    int root_end = find_last_not_of("0123456789", point - 1);
+    size_t root_end = find_last_not_of("0123456789", point - 1);
     if (root_end + 1 != point)
         if (point - root_end > FILENAMENUMBERLENGTH)
             root_end = point - FILENAMENUMBERLENGTH - 1;
-    return (FileName) substr(0, root_end + 1);
+    return substr(0, root_end + 1);
 }
 
 // Convert to lower case characters .........................................
 FileName FileName::toLowercase() const
 {
     FileName result = *this;
-    for (unsigned int i = 0; i < result.length(); i++)
+    for (size_t i = 0; i < result.length(); i++)
         result[i] = tolower(result[i]);
     return result;
 }
@@ -144,7 +145,7 @@ FileName FileName::toLowercase() const
 FileName FileName::toUppercase() const
 {
     FileName result = *this;
-    for (unsigned int i = 0; i < result.length(); i++)
+    for (size_t i = 0; i < result.length(); i++)
         result[i] = toupper(result[i]);
     return result;
 }
@@ -152,83 +153,71 @@ FileName FileName::toUppercase() const
 // Is substring present?
 bool FileName::contains(const String& str) const
 {
-    int point = rfind(str);
-    if (point > -1)
-        return true;
-    else
-        return false;
+    return find(str) != npos;
 }
 
 // Get substring before first instance of str
+//TODO: Check behaviour
 FileName FileName::beforeFirstOf(const String& str) const
 {
-    int point = find_first_of(str);
-    if (point > -1)
-        return substr(0, point);
-    else
-        return *this;
+    size_t point = find_first_of(str);
+    return (point != npos ? (FileName)substr(0, point) : *this);
 }
 
 // Get substring before last instance of str
+//TODO: Check behaviour
 FileName FileName::beforeLastOf(const String& str) const
 {
-    int point = find_last_of(str);
-    if (point > -1)
-        return substr(0, point);
-    else
-        return *this;
+    size_t point = find_last_of(str);
+    return point != npos ? (FileName)substr(0, point) : *this;
 }
 
 // Get substring after first instance of str
+//TODO: Check behaviour
 FileName FileName::afterFirstOf(const String& str) const
 {
-    int point = find_first_of(str);
-    if (point > -1)
-        return substr(point + 1);
-    else
-        return *this;
+    size_t point = find_first_of(str);
+    return point != npos ? (FileName)substr(point + 1) : *this;
 }
 
 // Get substring after last instance of str
+//TODO: Check behaviour
 FileName FileName::afterLastOf(const String& str) const
 {
-    int point = find_last_of(str);
-    if (point > -1)
-        return substr(point + 1);
-    else
-        return *this;
+  size_t point = find_last_of(str);
+  return point != npos ? (FileName)substr(point + 1) : *this;
 }
 
 // Get the base name of a filename .........................................
-String FileName::getBaseName() const
+FileName FileName::getBaseName() const
 {
-    String basename = "";
-    String myname = *this;
-    int myindex = 0;
-    for (int p = myname.size() - 1; p >= 0; p--)
-    {
-        if (myname[p] == '/')
-        {
-            myindex = p + 1;
-            break;
-        }
-    }
-    for (int p = myindex; p < myname.size(); p++)
-    {
-        if (myname[p] != '.')
-            basename += myname[p];
-        else
-            break;
-    }
-    return basename;
+    FileName baseName = removeLastExtension();
+    return baseName.afterLastOf("/");
+}
+
+
+// Get the dir of a filename .........................................
+FileName FileName::getDir() const
+{
+    size_t pos = find_last_of("/");
+    return (FileName)( pos != npos ? substr(0, pos) : "");
+}
+
+// Get the extension of a filename .........................................
+String FileName::getExtension() const
+{
+    size_t posA = find_last_of("/");
+    size_t posB = find_first_of(".", posA+1);
+    return (posA != npos && posB != npos ) ? substr(posB+1) : "";
+
 }
 
 // Get number from file ....................................................
 int FileName::getNumber() const
 {
-    int skip_directories = find_last_of("/") + 1;
-    int point = find_first_of(".", skip_directories);
-    if (point == -1)
+    size_t skip_directories = find_last_of("/") + 1;
+    size_t point = find_first_of(".", skip_directories);
+    if (point == npos)
         point = length();
     int root_end = find_last_not_of("0123456789", point - 1);
     if (root_end + 1 != point)
@@ -250,17 +239,6 @@ size_t FileName::getStackNumber() const
     decompose(no, str);
 
     return no;
-}
-
-// Get the extension of a filename .........................................
-String FileName::getExtension() const
-{
-    int skip_directories = find_last_of("/") + 1;
-    int first_point = find_first_of(".", skip_directories);
-    if (first_point == -1)
-        return "";
-    else
-        return substr(first_point + 1);
 }
 
 // Init random .............................................................

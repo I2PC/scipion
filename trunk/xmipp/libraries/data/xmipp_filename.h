@@ -209,7 +209,7 @@ public:
          *                                          // filename = "g1ta000001.xmp"
          * @endcode
          */
-    String getDecomposedFileName() const;
+    FileName getDecomposedFileName() const;
 
     /** Get the root from a filename
      *
@@ -222,7 +222,7 @@ public:
 
     /** Get the base name from a filename
      */
-    String getBaseName() const;
+    FileName getBaseName() const;
 
     /** Get the number from a filename
      *
@@ -245,6 +245,8 @@ public:
         * @endcode
         */
     size_t getStackNumber() const;
+
+    FileName getDir() const;
 
     /** Get the last extension from filename
      *
@@ -645,7 +647,7 @@ inline bool fileExists( const char *filename )
  */
 inline bool fileExists( const FileName &filename )
 {
-	return fileExists(filename.c_str());
+    return fileExists(filename.c_str());
 }
 
 /** Copy one image
