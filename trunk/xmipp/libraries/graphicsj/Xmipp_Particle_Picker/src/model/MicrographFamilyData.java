@@ -16,7 +16,7 @@ public class MicrographFamilyData {
 		this.particles = new ArrayList<Particle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
 		this.micrograph = micrograph;
-		state = MicrographFamilyState.Available;
+		setState(MicrographFamilyState.Available);
 	}
 
 	public MicrographFamilyData(Micrograph micrograph, Family family,
@@ -31,6 +31,9 @@ public class MicrographFamilyData {
 	}
 
 	public void setState(MicrographFamilyState state) {
+		if(state == MicrographFamilyState.Available && 
+			!(particles.isEmpty() || autoparticles.isEmpty()))
+			throw new IllegalArgumentException("Micrograph has data. Can not be " + MicrographFamilyState.Available);
 		this.state = state;
 	}
 
@@ -60,8 +63,10 @@ public class MicrographFamilyData {
 		{
 			if(family.getStep() == FamilyState.Manual)
 				state = MicrographFamilyState.Manual;
-			if(family.getStep() == FamilyState.Supervised)
+			else if(family.getStep() == FamilyState.Supervised && state == MicrographFamilyState.Autopick)
 				state = MicrographFamilyState.Correct;
+			else
+				throw new IllegalArgumentException(String.format("Micrograph could not update its state and can't keep previous state %s and have particles", MicrographFamilyState.Available));
 		}
 	}
 
@@ -126,7 +131,7 @@ public class MicrographFamilyData {
 		return false;
 	}
 
-	public boolean isActionAvailable() {
+	public boolean isActionAvailable(double threshold) {
 		
 		if (family.getStep() == FamilyState.Manual)
 			return false;
@@ -137,6 +142,8 @@ public class MicrographFamilyData {
 				return false;
 			if (state == MicrographFamilyState.ReadOnly)
 				return false;
+			if(state == state.Correct)
+				return !particles.isEmpty() || getAutomaticParticlesDeleted(threshold) > 0;
 			return true;
 		}
 		return false;

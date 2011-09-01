@@ -25,12 +25,11 @@ public class ParticlePicker {
 	private static boolean incore;
 	private static boolean auto;
 	private static int minparticles = 100;
-	private static int mintraining = 70;
+	private static int mintraining = 10;
 	private static String trainingfn = "training.txt";
 	private static String trainingmaskfn = "mask.xmp";
 	private static String autofeaturesvectorfn = "auto_feature_vectors";
 	private static double mincost = 0;
-
 
 	public static String getTrainingFilenameGeneric() {
 		return trainingfn;
@@ -89,7 +88,6 @@ public class ParticlePicker {
 	public static int getThreads() {
 		return threads;
 	}
-	
 
 	protected List<Family> families;
 	protected List<Micrograph> micrographs;
@@ -110,7 +108,7 @@ public class ParticlePicker {
 		}
 		return null;
 	}
-	
+
 	public static String getOutputPath(String file) {
 		return outputdir + File.separator + file;
 	}
@@ -122,8 +120,6 @@ public class ParticlePicker {
 	public static String getXmippPath(String relpath) {
 		return getXmippPath() + File.separator + relpath;
 	}
-
-
 
 	public static String getOutputDir() {
 		return outputdir;
@@ -148,8 +144,6 @@ public class ParticlePicker {
 		outputdir = dir;
 	}
 
-
-
 	public boolean hasEmptyMicrographs(Family f) {
 		for (Micrograph m : micrographs)
 			if (m.getFamilyData(f).isEmpty())
@@ -164,8 +158,6 @@ public class ParticlePicker {
 			return FamilyState.Manual;
 		return null;
 	}
-
-	
 
 	protected ParticlePicker() {
 		this.families = new ArrayList<Family>();
@@ -217,7 +209,6 @@ public class ParticlePicker {
 			families.add(Family.getDefaultFamily());
 			return;
 		}
-		
 
 		Family family;
 		int rgb, size;
@@ -470,8 +461,6 @@ public class ParticlePicker {
 		families.remove(family);
 	}
 
-
-
 	public int getNextFreeMicrograph(Family f) {
 		int count = 0;
 		for (Micrograph m : micrographs) {
@@ -486,12 +475,11 @@ public class ParticlePicker {
 		try {
 			new File(family.getOTrainingFilename()).delete();
 			new File(family.getOTrainingMaskFilename()).delete();
-			MetaData emptymd = new MetaData();
-			String block;
 			MicrographFamilyData mfd;
 			for (Micrograph m : micrographs) {
 				mfd = m.getFamilyData(family);
-				resetFamilyData(mfd);
+				if(mfd.getStep() == FamilyState.Supervised)
+					resetFamilyData(mfd);
 			}
 			saveData();
 		} catch (Exception e) {
@@ -504,24 +492,32 @@ public class ParticlePicker {
 		String block;
 		MetaData emptymd = new MetaData();
 		try {
-			//just in case of user reset
+			// just in case of user reset
 			new File(mfd.getOTrainingAutoFeaturesVectorFilename()).delete();
-			if (mfd.getStep() == FamilyState.Supervised) {
-				mfd.reset();// Resetting family data
-				if (mfd.getMicrograph().hasAutomaticParticles()) {
-					// removing automatic particles
-					block = String.format("%s@%s", mfd.getFamily().getName(),
-							mfd.getMicrograph().getAutoOFilename());
+			
+			if (!mfd.getAutomaticParticles().isEmpty()) {
+				// removing automatic particles
+				block = String.format("%s@%s", mfd.getFamily().getName(), mfd
+						.getMicrograph().getAutoOFilename());
 
-					emptymd.writeBlock(block);
-				}
+				emptymd.writeBlock(block);
 			}
+			if (!mfd.getManualParticles().isEmpty()) {
+				// removing manual particles
+				block = String.format("%s@%s", mfd.getFamily().getName(), mfd
+						.getMicrograph().getOFilename());
+				emptymd.writeBlock(block);
+			}
+			mfd.reset();// Resetting family data
+
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
 
 	}
+	
+	
 
 	public void loadData() {
 		loadFamilyData();
@@ -533,13 +529,11 @@ public class ParticlePicker {
 		ppicker.persistMicrographsData();
 
 	}
-	
-	public int getAutomaticNumber(Family f, double threshold)
-	{
+
+	public int getAutomaticNumber(Family f, double threshold) {
 		MicrographFamilyData mfd;
 		int count = 0;
-		for(Micrograph m: micrographs)
-		{
+		for (Micrograph m : micrographs) {
 			mfd = m.getFamilyData(f);
 			count += mfd.getAutomaticParticles(threshold);
 		}

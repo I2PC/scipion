@@ -95,8 +95,6 @@ public class Family {
 	{
 		validateNextStep();
 		this.state = ParticlePicker.nextStep(state);
-		ParticlePicker.getInstance().resetModel(this);
-		
 	}
 	
 	

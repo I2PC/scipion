@@ -28,6 +28,8 @@ public class Micrograph {
 	
 	public Micrograph(String filename, String ctf) {
 		this.filename = filename;
+		if(!new File(filename).exists())
+			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("file", filename));
 		this.name = getName(filename);
 		mfdatas = new ArrayList<MicrographFamilyData>();
 		this.outputfname = ParticlePicker.getOutputPath(name + ext);
@@ -105,7 +107,7 @@ public class Micrograph {
 				file = (ParticlePicker.getXmippPath("resources" + File.separator + "no-image.jpg"));
 			else
 				file = ctf;
-			Image image = new ImagePlus(file).getImage().getScaledInstance(110, 110, Image.SCALE_SMOOTH);
+			Image image = new ImagePlus(file).getImage().getScaledInstance(120, 110, Image.SCALE_SMOOTH);
 			ctficon = new ImageIcon(image);
 			
 		}
@@ -199,7 +201,7 @@ public class Micrograph {
 	public boolean hasAutomaticParticles()
 	{
 		for(MicrographFamilyData fp: mfdatas)
-			if(fp != null && fp.getAutomaticParticles().size() > 0)
+			if(fp != null && !fp.getAutomaticParticles().isEmpty())
 				return true;
 		return false;
 	}

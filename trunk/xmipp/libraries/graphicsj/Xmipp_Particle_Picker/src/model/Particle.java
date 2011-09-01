@@ -10,7 +10,7 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 
-public class Particle {
+public class Particle implements Comparable<Particle>{
 	
 	protected int x;
 	protected int y;
@@ -139,6 +139,24 @@ public class Particle {
 	public String toString()
 	{
 		return String.format("x = %s; y = %s", x, y); 
+	}
+
+
+
+
+	@Override
+	public int compareTo(Particle p) {
+		if(p.x > x)
+			return 1;
+		if(p.x == x)
+		{
+			if(p.y > y)
+				return 1;
+			if(p.y == y)
+				return 0;
+			return -1;
+		}
+		return -1;
 	}
 
 
