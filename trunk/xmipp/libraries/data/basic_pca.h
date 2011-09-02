@@ -74,6 +74,15 @@ public:
     // Indexes to access in a sorted way
     MultidimArray<int> idx;
 public:
+    /// Clear
+    inline void clear()
+    {
+    	v.clear();
+    	PCAbasis.clear();
+    	Zscore.clear();
+    	idx.clear();
+    }
+
     /// Resize
     inline void reserve(int newSize)
     {
