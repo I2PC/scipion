@@ -13,13 +13,13 @@ import java.awt.BorderLayout;
  *
  * @author Juanjo Vega
  */
-public class JDialogXmippFilesListCTF extends JDialogXmippFilesList {
+public class JFrameXmippFilesListCTF extends JDialogXmippFilesList {
 
-    public JDialogXmippFilesListCTF(String directory, int port, String expression) {
+    public JFrameXmippFilesListCTF(String directory, int port, String expression) {
         this(directory, port, expression, 1.0);
     }
 
-    public JDialogXmippFilesListCTF(String directory, int port, String expression, double downsampling) {
+    public JFrameXmippFilesListCTF(String directory, int port, String expression, double downsampling) {
         super(directory, port, false, COMMAND_PARAMETERS.SELECTION_TYPE_ANY, expression);
 
         setTitle(LABELS.TITLE_WIZARD_PSD);

@@ -11,13 +11,13 @@ import java.awt.BorderLayout;
  *
  * @author Juanjo Vega
  */
-public class JDialogXmippFilesListMeasureFreqsBrowser extends JDialogXmippFilesListCTF {
+public class JFrameXmippFilesListMeasureFreqs extends JFrameXmippFilesListCTF {
 
-    public JDialogXmippFilesListMeasureFreqsBrowser(String directory, int port, String expression) {
+    public JFrameXmippFilesListMeasureFreqs(String directory, int port, String expression) {
         this(directory, port, expression, 1.0);
     }
 
-    public JDialogXmippFilesListMeasureFreqsBrowser(String directory, int port, String expression, double downsampling) {
+    public JFrameXmippFilesListMeasureFreqs(String directory, int port, String expression, double downsampling) {
         super(directory, port, expression);
 
         setTitle(LABELS.TITLE_WIZARD_MEASURE_FREQS);
@@ -34,9 +34,9 @@ public class JDialogXmippFilesListMeasureFreqsBrowser extends JDialogXmippFilesL
         add(panelXmippBrowser, BorderLayout.CENTER);
         pack();
     }
-
-    @Override
-    protected void cancel() {
-        dispose();
-    }
+//
+//    @Override
+//    protected void cancel() {
+//        dispose();
+//    }
 }

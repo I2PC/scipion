@@ -6,7 +6,7 @@ import browser.DEBUG;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import wizards.JDialogXmippBadPixelsFilter;
+import wizards.JFrameXmippBadPixelsFilter;
 
 /*
  * To change this template, choose Tools | Templates
@@ -30,7 +30,7 @@ public class XmippBadPixelsFilterWizard {
         int port = Integer.parseInt(parameters[PORT]);
         double factor = Double.parseDouble(parameters[FACTOR]);
 
-        JDialogXmippBadPixelsFilter frameBrowser = new JDialogXmippBadPixelsFilter(
+        JFrameXmippBadPixelsFilter frameBrowser = new JFrameXmippBadPixelsFilter(
                 metadata, port, factor);
         frameBrowser.setVisible(true);
     }

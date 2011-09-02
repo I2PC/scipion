@@ -6,7 +6,7 @@ import browser.DEBUG;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import wizards.JDialogXmippBandPassFilter;
+import wizards.JFrameXmippBandPassFilter;
 
 /*
  * To change this template, choose Tools | Templates
@@ -34,7 +34,7 @@ public class XmippBandPassFilterWizard {
         double w2 = Double.parseDouble(parameters[W2]);
         double raised_w = Double.parseDouble(parameters[RAISED_W]);
 
-        JDialogXmippBandPassFilter frameBrowser = new JDialogXmippBandPassFilter(
+        JFrameXmippBandPassFilter frameBrowser = new JFrameXmippBandPassFilter(
                 metadata, port, w1, w2, raised_w);
         frameBrowser.setVisible(true);
     }

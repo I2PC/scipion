@@ -11,6 +11,7 @@
 package browser.filebrowsers;
 
 import browser.COMMAND_PARAMETERS;
+import browser.DEBUG;
 import browser.LABELS;
 import browser.imageitems.listitems.FileItem;
 import ij.IJ;
@@ -64,6 +65,21 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
         if (sendSelectedFiles()) {
             dispose();
         }
+
+//        DEBUG.printMessage("Exiting...");
+        System.exit(0);
+    }
+
+    protected void button2Clicked() {
+        cancel();
+    }
+
+    protected void cancel() {
+        send(null);
+        dispose();
+
+//        DEBUG.printMessage("Exiting...");
+        System.exit(0);
     }
 
     protected boolean sendSelectedFiles() {
@@ -118,16 +134,6 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
         }
 
         return false;
-    }
-
-    protected void button2Clicked() {
-        cancel();
-    }
-
-    protected void cancel() {
-        if (send(null)) {
-            dispose();
-        }
     }
 
     /** This method is called from within the constructor to

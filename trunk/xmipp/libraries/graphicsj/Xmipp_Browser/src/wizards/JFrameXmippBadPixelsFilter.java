@@ -12,13 +12,13 @@ import java.awt.BorderLayout;
  *
  * @author Juanjo Vega
  */
-public class JDialogXmippBadPixelsFilter extends JDialogXmippFilesList {
+public class JFrameXmippBadPixelsFilter extends JDialogXmippFilesList {
 
-    public JDialogXmippBadPixelsFilter(String metadata, int port) {
+    public JFrameXmippBadPixelsFilter(String metadata, int port) {
         this(metadata, port, 1.0);
     }
 
-    public JDialogXmippBadPixelsFilter(String metadata, int port, double factor) {
+    public JFrameXmippBadPixelsFilter(String metadata, int port, double factor) {
         super(metadata, port);
 
         setTitle(LABELS.TITLE_WIZARD_BAD_PIXELS_FILTER);

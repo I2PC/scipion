@@ -5,7 +5,7 @@ import browser.DEBUG;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import wizards.JDialogXmippFilesListMeasureFreqsBrowser;
+import wizards.JFrameXmippFilesListMeasureFreqs;
 
 /*
  * To change this template, choose Tools | Templates
@@ -31,7 +31,7 @@ public class XmippFileListMeasureFreqsWizard {
         String expression = parameters[FILTER];
         double downsampling = Double.parseDouble(parameters[DOWNSAMPLING]);
 
-        JDialogXmippFilesListMeasureFreqsBrowser frameBrowser = new JDialogXmippFilesListMeasureFreqsBrowser(
+        JFrameXmippFilesListMeasureFreqs frameBrowser = new JFrameXmippFilesListMeasureFreqs(
                 dir, port, expression, downsampling);
         frameBrowser.setVisible(true);
 

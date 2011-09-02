@@ -4,7 +4,7 @@ import browser.DEBUG;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import wizards.JDialogXmippGaussianFilter;
+import wizards.JFrameXmippGaussianFilter;
 
 /*
  * To change this template, choose Tools | Templates
@@ -28,7 +28,7 @@ public class XmippGaussianFilterWizard {
         int port = Integer.parseInt(parameters[PORT]);
         double w1 = Double.parseDouble(parameters[W1]);
 
-        JDialogXmippGaussianFilter frameBrowser = new JDialogXmippGaussianFilter(
+        JFrameXmippGaussianFilter frameBrowser = new JFrameXmippGaussianFilter(
                 metadata, port, w1);
         frameBrowser.setVisible(true);
     }

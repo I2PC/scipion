@@ -5,7 +5,7 @@ import browser.DEBUG;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import wizards.JDialogXmippFilesListCTF;
+import wizards.JFrameXmippFilesListCTF;
 
 /*
  * To change this template, choose Tools | Templates
@@ -35,7 +35,7 @@ public class XmippFileListCTFWizard {
         String expression = parameters[FILTER];
         double downsampling = Double.parseDouble(parameters[DOWNSAMPLING]);
 
-        JDialogXmippFilesListCTF frameBrowser = new JDialogXmippFilesListCTF(
+        JFrameXmippFilesListCTF frameBrowser = new JFrameXmippFilesListCTF(
                 dir, port, expression, downsampling);
         frameBrowser.setVisible(true);
     }

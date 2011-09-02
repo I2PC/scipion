@@ -12,13 +12,13 @@ import java.awt.BorderLayout;
  *
  * @author Juanjo Vega
  */
-public class JDialogXmippBandPassFilter extends JDialogXmippFilesList {
+public class JFrameXmippBandPassFilter extends JDialogXmippFilesList {
 
-    public JDialogXmippBandPassFilter(String metadata, int port) {
+    public JFrameXmippBandPassFilter(String metadata, int port) {
         this(metadata, port, 1.0, 1.0, 1.0);
     }
 
-    public JDialogXmippBandPassFilter(String metadata, int port, double w1, double w2, double raised_w) {
+    public JFrameXmippBandPassFilter(String metadata, int port, double w1, double w2, double raised_w) {
         super(metadata, port);
 
         setTitle(LABELS.TITLE_WIZARD_BAND_PASS_FILTER);

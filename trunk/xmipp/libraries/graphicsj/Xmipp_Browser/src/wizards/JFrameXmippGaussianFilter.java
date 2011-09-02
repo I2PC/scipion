@@ -12,9 +12,9 @@ import java.awt.BorderLayout;
  *
  * @author Juanjo Vega
  */
-public class JDialogXmippGaussianFilter extends JDialogXmippFilesList {
+public class JFrameXmippGaussianFilter extends JDialogXmippFilesList {
 
-    public JDialogXmippGaussianFilter(String metadata, int port, double w1) {
+    public JFrameXmippGaussianFilter(String metadata, int port, double w1) {
         super("", port);
 
         setTitle(LABELS.TITLE_WIZARD_GAUSSIAN_FILTER);
