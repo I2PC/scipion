@@ -24,7 +24,7 @@ import java.util.ArrayList;
  *
  * @author Juanjo Vega
  */
-public class JDialogXmippFilesList extends javax.swing.JDialog {
+public class JDialogXmippFilesList extends javax.swing.JFrame {
 
     final static String EOT = "__END__";
     String seltype;
