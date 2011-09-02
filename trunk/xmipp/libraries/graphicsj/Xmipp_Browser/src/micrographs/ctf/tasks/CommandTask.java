@@ -39,14 +39,14 @@ public class CommandTask implements Runnable {
 
     public void run() {
         try {
-            /*            int total = 5000;
-            int delay = 1000;
-            while (total > 0) {
-            System.out.println(total + " seconds to finish: "
-            + command.substring(0, 20) + (row >= 0 ? "/ row=" + row : ""));
-            Thread.sleep(delay);
-            total -= delay;
-            }*/
+//            int total = 3000;
+//            int delay = 1000;
+//            while (total > 0) {
+//                System.out.println(total + " ms to finish: "
+//                        + command.substring(0, 20) + (row >= 0 ? "/ row=" + row : ""));
+//                Thread.sleep(delay);
+//                total -= delay;
+//            }
             runTask();
         } catch (Exception ex) {
             IJ.error("Error running command: " + ex.getMessage());

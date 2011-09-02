@@ -40,16 +40,16 @@ public class ImageConverter {
         int d = image.getZsize();
         long n = image.getNsize();
 
-        ImagePlus ip = convertToImagej(image.getData(), w, h, d, n, title);
+        ImagePlus imp = convertToImagej(image.getData(), w, h, d, n, title);
 
         // Sets associated file info.
         File f = new File(title);
         FileInfo fi = new FileInfo();
         fi.directory = f.getParent();
         fi.fileName = f.getName();
-        ip.setFileInfo(fi);
+        imp.setFileInfo(fi);
 
-        return ip;
+        return imp;
     }
 
     public static ImagePlus convertToImagej(Projection projection, String title) {
@@ -77,18 +77,12 @@ public class ImageConverter {
             }
         }
 
-        ImagePlus ip = new ImagePlus(title, is);
-
-        // Normalize by default
-        StackStatistics ss = new StackStatistics(ip);
-        ip.getProcessor().setMinAndMax(ss.min, ss.max);
-
-        return ip;
+        return new ImagePlus(title, is);
     }
 
     public static ImagePlus convertToImagej(MetaData md) {
         LinkedList<String> missing = new LinkedList<String>();
-        ImagePlus ip = null;
+        ImagePlus imp = null;
 
         if (md.containsLabel(MDLabel.MDL_IMAGE)) {
             ImageStack is = null;
@@ -113,18 +107,17 @@ public class ImageConverter {
                 }
             }
 
-            ip = new ImagePlus(md.getFilename(), is);
+            imp = new ImagePlus(md.getFilename(), is);
 
             // Sets associated file info.
             File f = new File(md.getFilename());
             FileInfo fi = new FileInfo();
             fi.directory = f.getParent();
             fi.fileName = f.getName();
-            ip.setFileInfo(fi);
+            imp.setFileInfo(fi);
 
             // Normalize by default
-            StackStatistics ss = new StackStatistics(ip);
-            ip.getProcessor().setMinAndMax(ss.min, ss.max);
+            normalizeStack(imp);
         }
 
         // Tells user about missing files.
@@ -137,21 +130,8 @@ public class ImageConverter {
             IJ.error(message);
         }
 
-        return ip;
+        return imp;
     }
-    /*
-    public static ImagePlus convertToImagePlus(Vector<TableImageItem> items, String path) {
-    ImagePlus imp = convertToImagePlus(items);
-
-    // Sets associated file info.
-    File f = new File(path);
-    FileInfo fi = new FileInfo();
-    fi.directory = f.getParent();
-    fi.fileName = f.getName();
-    imp.setFileInfo(fi);
-
-    return imp;
-    }*/
 
     public static ImagePlus convertToImagePlus(ArrayList<AbstractTableImageItem> items) {
         ImageStack is = null;
@@ -173,7 +153,12 @@ public class ImageConverter {
         return new ImagePlus("", is);
     }
 
-    public static void revert(ImagePlus ip, String path) throws Exception {
+    public static void normalizeStack(ImagePlus imp) {
+        StackStatistics ss = new StackStatistics(imp);
+        imp.getProcessor().setMinAndMax(ss.min, ss.max);
+    }
+
+    public static void revert(ImagePlus imp, String path) throws Exception {
         ImageDouble image = new ImageDouble(path);
         int w = image.getXsize();
         int h = image.getYsize();
@@ -196,19 +181,19 @@ public class ImageConverter {
             }
         }
 
-        ip.setStack(is);
+        imp.setStack(is);
     }
 
-    public static ImageDouble convertToXmipp(ImagePlus ip) {
+    public static ImageDouble convertToXmipp(ImagePlus imp) {
         ImageDouble image = new ImageDouble();
 
-        int w = ip.getWidth();
-        int h = ip.getHeight();
-        int d = ip.getStackSize();
+        int w = imp.getWidth();
+        int h = imp.getHeight();
+        int d = imp.getStackSize();
 
         double data[] = new double[w * h * d];
         for (int i = 0; i < d; i++) {
-            float slice[] = (float[]) ip.getStack().getProcessor(i + 1).getPixels();
+            float slice[] = (float[]) imp.getStack().getProcessor(i + 1).getPixels();
             System.arraycopy(Tools.toDouble(slice), 0, data, i * w * h, w * h);
         }
         try {
@@ -222,13 +207,13 @@ public class ImageConverter {
     /*
     public static ImagePlus toImagePlus(Vector<TableImageItem> items, String title) {
     TableImageItem item = items.elementAt(0);
-
+    
     ImageStack is = new ImageStack(item.getWidth(), item.getHeight());
-
+    
     for (int i = 0; i < items.size(); i++) {
     is.addSlice(String.valueOf(i), items.elementAt(i).getPreview().getProcessor());
     }
-
+    
     return new ImagePlus(title, is);
     }*/
 }

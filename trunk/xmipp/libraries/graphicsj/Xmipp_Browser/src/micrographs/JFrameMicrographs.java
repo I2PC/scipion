@@ -12,6 +12,7 @@ package micrographs;
 
 import browser.DEBUG;
 import browser.ICONS_MANAGER;
+import browser.InfiniteProgressPanel;
 import browser.LABELS;
 import browser.imageitems.MicrographsTableImageItem;
 import browser.table.models.ImagesRowHeaderModel;
@@ -203,15 +204,6 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
                 setCellRenderer(fileNameRenderer);
     }
 
-    private synchronized void updateTableStructure() {
-        DEBUG.printMessage(" *** Updating table... " + System.currentTimeMillis());
-        packColumns();
-        packRows();
-
-        rowHeader.repaint();
-        table.getTableHeader().repaint();
-    }
-
     private void packColumns() {
         for (int i = 0; i < table.getColumnCount(); i++) {
             packColumn(table, i);
@@ -347,37 +339,6 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
         refreshTableData();
     }
-    /*
-    private void refreshTable(final boolean auto) {
-    /*        SwingUtilities.invokeLater(new Runnable() {
-    
-    public void run() {*/
-    /*        String autoStr = auto ? "AUTO" : "MANUAL";
-    DEBUG.printMessage(" *** Refreshing table [" + autoStr + "]: " + System.currentTimeMillis());
-    
-    boolean enabled[] = null;
-    
-    if (auto) {
-    enabled = tableModel.getEnabledRows();   // Gets currently enabled rows...
-    }
-    
-    tableModel.reload();
-    
-    if (auto) {
-    tableModel.setEnabledRows(enabled);    // ...sets previously enabled.
-    }
-    
-    table.setColumnModel(columnModel);  // Re sets column model to hide columns.
-    
-    if (!auto) {
-    setNewTableRowSorter();
-    }
-    
-    updateTableStructure();
-    /*            }
-    });*//*
-    }*/
-
 
     private void refreshTableData() {
         DEBUG.printMessage(" *** Refreshing table [AUTO]: " + System.currentTimeMillis());
@@ -398,6 +359,28 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         setNewTableRowSorter();
 
         updateTableStructure();
+    }
+
+    private synchronized void updateTableStructure() {
+        final InfiniteProgressPanel progressPanel = new InfiniteProgressPanel("Updating table...");
+        getRootPane().setGlassPane(progressPanel);
+        progressPanel.start();
+
+        Thread t = new Thread(new Runnable() {
+
+            public void run() {
+                packColumns();
+                packRows();
+
+                rowHeader.repaint();
+                table.getTableHeader().repaint();
+
+                progressPanel.stop();
+                progressPanel.setVisible(false);
+            }
+        });
+
+        t.start();
     }
 
     /** This method is called from within the constructor to
@@ -521,7 +504,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     class JPopUpMenuMicrograph extends JPopupMenu {
 
         private int row, col;   // Current cell where menu is displayed.
-        private JMenuItem jmiShowCTF = new JMenuItem(LABELS.LABEL_SHOW_CTF);
+        private JMenuItem jmiShowCTF = new JMenuItem(LABELS.LABEL_SHOW_CTF_INFO);
         private JMenuItem jmiExtractColumnEnabled = new JMenuItem(LABELS.LABEL_EXTRACT_COLUMN_ENABLED);
         private JMenuItem jmiExtractColumnAll = new JMenuItem(LABELS.LABEL_EXTRACT_COLUMN_ALL);
         private JMenuItem jmiRecalculateCTF = new JMenuItem(LABELS.LABEL_RECALCULATE_CTF);
@@ -604,7 +587,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
         private void extractColumn(int column, boolean onlyenabled) {
             if (onlyenabled) {
-                ImagesWindowFactory.openFilesAsTable(tableModel.extractColumn(column, onlyenabled));
+                ImagesWindowFactory.openFilesAsTable(tableModel.extractColumn(column, onlyenabled), true);
             } else {
                 ImagesWindowFactory.openTable(
                         tableModel.extractColumn(column, onlyenabled),

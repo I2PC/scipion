@@ -98,6 +98,9 @@ public class ImagesWindowFactory {
                 imp = ImageConverter.convertToImagej(id, path);
             }
 
+            // Normalize image stack.
+            ImageConverter.normalizeStack(imp);
+
             openXmippImageWindow(imp, poll);
         } catch (Exception ex) {
             IJ.error(ex.getMessage() + ": " + path);

@@ -24,7 +24,6 @@ import browser.imageitems.listitems.AbstractImageItem;
 import browser.imageitems.listitems.FileItem;
 import browser.windows.ImagesWindowFactory;
 import ij.IJ;
-import java.awt.Component;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.LinkedList;
@@ -94,10 +93,10 @@ public class JPanelXmippBrowser extends JPanel {
         clearPreview();
 
         if (SHOW_PREVIEWS) {
-            final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("Calculating preview...");
+            final InfiniteProgressPanel progressPanel = new InfiniteProgressPanel("Calculating preview...");
             //final Component previousGlassPane = getRootPane().getGlassPane();
-            getRootPane().setGlassPane(glassPane);
-            glassPane.start();
+            getRootPane().setGlassPane(progressPanel);
+            progressPanel.start();
 
             Thread t = new Thread(new Runnable() {
 
@@ -122,8 +121,8 @@ public class JPanelXmippBrowser extends JPanel {
                     // Shows / Hide preview panel.
                     jpImageInfo.setVisible(SHOW_PREVIEWS);
 
-                    glassPane.setVisible(false);
-                    glassPane.stop();
+                    progressPanel.setVisible(false);
+                    progressPanel.stop();
                     //getRootPane().setGlassPane(previousGlassPane);
                 }
             });

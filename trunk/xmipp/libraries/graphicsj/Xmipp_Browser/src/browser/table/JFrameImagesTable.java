@@ -28,6 +28,7 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -619,6 +620,13 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     }//GEN-LAST:event_jcbAutoAdjustColumnsActionPerformed
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         pack();
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int w = screenSize.width * 2 / 3;
+        int h = screenSize.height * 2 / 3;
+
+        setSize(w, h);
+        setLocationRelativeTo(null);
+
         setInitialValues();
     }//GEN-LAST:event_formWindowOpened
     private void jsRowsStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jsRowsStateChanged

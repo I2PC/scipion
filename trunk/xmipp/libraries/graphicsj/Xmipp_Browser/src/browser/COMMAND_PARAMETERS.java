@@ -36,7 +36,7 @@ public class COMMAND_PARAMETERS {
     public final static String OPTION_SOCKET_PORT_DESCRIPTION = "Communications Socket";
     public final static String OPTION_FILTER_DOWNSAMPLING = "downsampling";
     public final static String OPTION_FILTER_DOWNSAMPLING_DESCRIPTION = "Downsampling value";
-    public final static String OPTION_FILTER_BAD_PIXELS_FACTOR = "bad_pixels_factor";
+    public final static String OPTION_FILTER_BAD_PIXELS_FACTOR = "factor";
     public final static String OPTION_FILTER_W1 = "w1";
     public final static String OPTION_FILTER_W1_DESCRIPTION = "w1";
     public final static String OPTION_FILTER_W2 = "w2";

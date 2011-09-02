@@ -276,7 +276,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
         ArrayList<AbstractTableImageItem> items = new ArrayList<AbstractTableImageItem>();
 
-        for (int i = 0; i <= to; i++) {
+        for (int i = 0; i < getSize() && i <= to; i++) {
             items.add(data.get(i));
         }
 
@@ -289,15 +289,8 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         int col0 = Math.min(initial_col, final_col);
         int col1 = Math.max(initial_col, final_col);
 
-        System.out.println(" *** SELECT RANGE: "
-                + row0 + " -> " + row1 + " / "
-                + col0 + " -> " + col1);
-
-        System.out.println(" +++ SELECTING: ");
         for (int i = row0; i <= row1; i++) {
             for (int j = col0; j <= col1; j++) {
-                //System.out.println(i + ", " + j + ": " + getValueAt(i, j).toString());
-                //((AbstractTableImageItem) getValueAt(i, j)).setSelected(true);
                 setSelected(i, j, true);
             }
         }

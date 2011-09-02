@@ -1,5 +1,4 @@
 
-
 import browser.COMMAND_PARAMETERS;
 import browser.DEBUG;
 import browser.filebrowsers.JDialogXmippFilesList;
@@ -17,7 +16,7 @@ import org.apache.commons.cli.Options;
  */
 public class XmippFileListWizard {
 
-    final static int N_ARGS = 4;
+    final static int N_ARGS = 5;
     final static int DIR = 0;
     final static int PORT = 1;
     final static int SINGLESEL = 2;
@@ -44,7 +43,9 @@ public class XmippFileListWizard {
 
         options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, COMMAND_PARAMETERS.OPTION_INPUT_DIR_DESCRIPTION);
         options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, COMMAND_PARAMETERS.OPTION_SOCKET_PORT_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER_BAD_PIXELS_FACTOR, true, COMMAND_PARAMETERS.OPTION_FILTER_BAD_PIXELS_FACTOR);
+        options.addOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION, false, COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION_DESCRIPTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_SELECTION_TYPE, true, COMMAND_PARAMETERS.OPTION_SELECTION_TYPE_DESCRIPTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, COMMAND_PARAMETERS.OPTION_FILTER_DESCRIPTION);
 
         try {
             BasicParser parser = new BasicParser();

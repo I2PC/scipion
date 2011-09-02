@@ -21,14 +21,14 @@ public class XmippBadPixelsFilterWizard {
     final static int N_ARGS = 3;
     final static int METADATA = 0;
     final static int PORT = 1;
-    final static int BAD_PIXELS_FACTOR = 2;
+    final static int FACTOR = 2;
 
     public static void main(String args[]) {
         String parameters[] = processArgs(args);
 
         String metadata = parameters[METADATA];
         int port = Integer.parseInt(parameters[PORT]);
-        double factor = Double.parseDouble(parameters[BAD_PIXELS_FACTOR]);
+        double factor = Double.parseDouble(parameters[FACTOR]);
 
         JDialogXmippBadPixelsFilter frameBrowser = new JDialogXmippBadPixelsFilter(
                 metadata, port, factor);
@@ -56,7 +56,7 @@ public class XmippBadPixelsFilterWizard {
             }
 
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_FILTER_BAD_PIXELS_FACTOR)) {
-                parameters[BAD_PIXELS_FACTOR] = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_FILTER_BAD_PIXELS_FACTOR);
+                parameters[FACTOR] = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_FILTER_BAD_PIXELS_FACTOR);
             }
 
         } catch (Exception ex) {

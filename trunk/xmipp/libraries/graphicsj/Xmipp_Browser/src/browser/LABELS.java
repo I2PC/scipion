@@ -177,7 +177,7 @@ public class LABELS {
     //public final static String OPERATION_FLOWJ = "FlowJ";
     //public final static String OPERATION_FLOW3J = "Flow3J";
     //public final static String OPERATION_OBJECTJ = "ObjectJ";
-    public final static String LABEL_SHOW_CTF = "Show CTF";
+    public final static String LABEL_SHOW_CTF_INFO = "Show CTF info";
     public final static String LABEL_EXTRACT_COLUMN_ENABLED = "Extract Column (enabled)";
     public final static String LABEL_EXTRACT_COLUMN_ALL = "Extract Column (all)";
     public final static String LABEL_RECALCULATE_CTF = "Recalculate CTF";
