@@ -209,14 +209,13 @@ protected:
             delete_output_stack = false;
         }
 
-        create_empty_stackfile = !appendToStack;
+        create_empty_stackfile = (create_empty_stackfile && !appendToStack);
 
         convMode = MD2MD;
 
         if (!single_image && type == "vol")
         {
             convMode = MD2VOL;
-            delete_output_stack = false;
 
             int Xdim, Ydim, Zdim;
             size_t Ndim;
@@ -240,7 +239,8 @@ protected:
 
                 FileName fnTemp;
 
-                //Fill mdIn to allow XmippMetaDataProgram create the fnImgOut
+                /* Fill mdIn to allow XmippMetaDataProgram create the fnImgOut,
+                but not used to read input images. Input volume is read here. */
                 for (k = 1;k <= zdimOut; k++)
                 {
                     fnTemp.compose(k, fn_in);

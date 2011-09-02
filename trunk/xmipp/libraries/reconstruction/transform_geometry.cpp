@@ -100,7 +100,6 @@ void ProgTransformGeometry::readParams()
     else if (degree == "linear")
         splineDegree = LINEAR;
     flip = checkParam("--flip");
-    output_is_stack = (!checkParam("--oroot") && checkParam("-o")) ? true : input_is_stack;
     scale_type = SCALE_NONE;
     disableMetadata = checkParam("--disable_metadata");
 }

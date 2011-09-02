@@ -425,7 +425,7 @@ XmippMetadataProgram::XmippMetadataProgram()
     save_metadata_stack = false;
     delete_output_stack = true;
     remove_disabled = true;
-    single_image = input_is_stack = false;
+    single_image = input_is_stack = output_is_stack = false;
     iter = NULL;
 }
 
@@ -498,7 +498,10 @@ void XmippMetadataProgram::readParams()
         else
             input_is_stack = true;
     }
-    //    single_image = !fn_in.isMetaData() && (mdIn.size() == 1);
+    /* Output is stack if, given a filename in fn_out, mdIn has multiple images.
+     * In case no output name is given, then input is overwritten and we have to
+     * check if it is stack. */
+    output_is_stack = mdInSize > 1 && oroot.empty() && (!fn_out.empty() || input_is_stack);
 
     if (mdIn.containsLabel(MDL_ENABLED) && remove_disabled)
         mdIn.removeObjects(MDValueEQ(MDL_ENABLED, -1));
@@ -512,12 +515,12 @@ void XmippMetadataProgram::readParams()
     if (allow_apply_geo && zdimOut == 1)
         apply_geo = !checkParam("--dont_apply_geo");
 
-    if (delete_output_stack)
-        delete_output_stack = fn_out != fn_in && oroot.empty() && !fn_out.empty();
+    // Only delete output stack in case we are not overwritting input
+    delete_output_stack = (output_is_stack && delete_output_stack) ?
+                          fn_out != fn_in : false;
 
     // If the output is a stack, create empty stack file in advance to avoid concurrent access to the header
-    create_empty_stackfile = (each_image_produces_an_output &&
-                              mdInSize > 1 && oroot.empty() && !fn_out.empty());
+    create_empty_stackfile = (each_image_produces_an_output && output_is_stack);
 }
 
 void XmippMetadataProgram::show()
@@ -618,7 +621,7 @@ void XmippMetadataProgram::run()
         oextBaseName   = oext;
         fullBaseName   = oroot.removeFileFormat();
         baseName       = fullBaseName.getBaseName();
-        pathBaseName   = fullBaseName.getRoot();
+        pathBaseName   = fullBaseName.getDir();
     }
 
     //FOR_ALL_OBJECTS_IN_METADATA(mdIn)
@@ -636,7 +639,7 @@ void XmippMetadataProgram::run()
         {
             if (!oroot.empty()) // Compose out name to save as independent images
             {
-                if (oext.empty())
+                if (oext.empty()) // If oext is still empty, then use ext of indep input images
                     oextBaseName = fnImg.getFileFormat();
 
                 if (!baseName.empty() )
@@ -669,15 +672,14 @@ void XmippMetadataProgram::run()
     //free iterator memory
     delete iter;
 
-    /* Generate name to save mdOut when output are independent images. If baseName is set it is used,
-     * otherwise, input name is used. Then, the suffix _oext is added.*/
-    if ( fn_out.empty() && !oroot.empty() )
-    {
-        if ( !baseName.empty() )
-            fn_out = baseName + "_" + oextBaseName + ".xmd";
-        else
-            fn_out = fn_in.withoutExtension() + "_" + oextBaseName + ".xmd";
-    }
+    /* Generate name to save mdOut when output are independent images. It uses as prefix
+     * the dirBaseName in order not overwriting files when repeating same command on
+     * different directories. If baseName is set it is used, otherwise, input name is used.
+     * Then, the suffix _oext is added.*/
+    if ( fn_out.empty() && !oroot.empty() && !baseName.empty() )
+        fn_out = findAndReplace(pathBaseName,"/","_") + baseName + "_" + oextBaseName + ".xmd";
+    else
+        fn_out = findAndReplace(pathBaseName,"/","_") + fn_in.getBaseName() + "_" + oextBaseName + ".xmd";
 
     finishProcessing();
 

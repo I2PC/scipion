@@ -28,7 +28,6 @@ protected:
     Matrix1D<double>          shiftV, rotV, scaleV;
     MDRow            input, transformation;
     ImageGeneric img, imgOut;
-    bool          output_is_stack;
 
     void defineParams();
     void readParams();

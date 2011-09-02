@@ -200,7 +200,7 @@ FileName FileName::getBaseName() const
 FileName FileName::getDir() const
 {
     size_t pos = find_last_of("/");
-    return (FileName)( pos != npos ? substr(0, pos) : "");
+    return (FileName)( pos != npos ? substr(0, pos+1) : "");
 }
 
 // Get the extension of a filename .........................................
