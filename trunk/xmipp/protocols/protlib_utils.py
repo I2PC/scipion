@@ -393,8 +393,8 @@ def runExternalAppWithResponse(cmd):
     
     return msg.replace('__END__', '')
  
-def runImageJPluginWithResponse(memory, macro, args, batchMode=True):
-    return runExternalAppWithResponse(getImageJPluginCmd(memory, macro, args, batchMode))
+def runImageJPluginWithResponse(memory, macro, args):
+    return runExternalAppWithResponse(getImageJPluginCmd(memory, macro, args, True))
     
 def getJavaIJappCmd(memory, appName, args, batchMode=False):
     '''Launch an Java application based on ImageJ '''
@@ -405,7 +405,7 @@ def getJavaIJappCmd(memory, appName, args, batchMode=False):
     imagej_home = getXmippPath("external/imagej")
     plugins_dir = os.path.join(imagej_home, "plugins", "*")
 
-    cmd = "java -classpath %(plugins_dir)s: %(appName)s %(args)s"%locals()
+    cmd = "java -classpath %(plugins_dir)s: %(appName)s %(args)s" % locals()
     if batchMode:
         cmd += " &"
     return cmd
@@ -413,8 +413,8 @@ def getJavaIJappCmd(memory, appName, args, batchMode=False):
 def runJavaIJapp(memory, appName, args, batchMode=True):
     os.system(getJavaIJappCmd(memory, appName, args, batchMode))
 
-def runJavaIJappWithResponse(memory, appName, args, batchMode=True):
-    return runExternalAppWithResponse(getJavaIJappCmd(memory, appName, args, batchMode))
+def runJavaIJappWithResponse(memory, appName, args):
+    return runExternalAppWithResponse(getJavaIJappCmd(memory, appName, args, True))
 
 #---------------------------------------------------------------------------
 # Metadata stuff
@@ -502,9 +502,10 @@ def compute_histogram(mD,bin,col,min,max):
        
     return allMD
 
-#########################
-# FileName Handling
-###########################
+#---------------------------------------------------------------------------
+#  FileName Handling
+#--------------------------------------------------------------------------- 
+
 def unique_filename(file_name):
     ''' Create a unique filename (not file handler)
        this approach is unsecure but good enought for most purposes'''
@@ -547,6 +548,12 @@ def findColor(str):
     It does not make sense to apply the Bfactor to the firsts iterations
     see http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
 """
+
+#---------------------------------------------------------------------------
+# Process Manipulation
+#--------------------------------------------------------------------------- 
+#create a metadata file with original image name, and two other 
+#lines with variation over the original name
 
 def apply_bfactor(_DisplayReference_list,\
         bFactorExtension,\
@@ -602,8 +609,6 @@ whichgen(command, path=None, verbose=0, exts=None)
 
 
 import stat
-
-
 #---- exceptions
 
 class WhichError(Exception):

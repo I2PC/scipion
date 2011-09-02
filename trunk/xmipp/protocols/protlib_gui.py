@@ -30,6 +30,7 @@ import os, glob
 import Tkinter as tk
 import tkMessageBox
 import tkFont
+
 from protlib_base import protocolMain, getProtocolFromModule, XmippProtocol, getWorkingDirFromRunName
 from protlib_utils import loadModule, runJob, runImageJPlugin, which, runImageJPluginWithResponse, runJavaIJappWithResponse 
 from protlib_gui_ext import centerWindows, changeFontSize
@@ -988,13 +989,13 @@ class ProtocolGUI(BasicGUI):
         return None
     
     def getVarLiteralValue(self, varName):
-         if self.hasVar(varName):
-             var = self.variablesDict[varName]
-             value = var.getValue()
-             if var.isString:
-                 value = '"%s"' % value
-             return value
-         return None       
+        if self.hasVar(varName):
+            var = self.variablesDict[varName]
+            value = var.getValue()
+            if var.isString:
+                value = '"%s"' % value
+            return value
+        return None       
     
     def setVarValue(self, varName, value):
         if self.hasVar(varName):
@@ -1082,7 +1083,8 @@ class ProtocolGUI(BasicGUI):
             seltype="file"
         else:
             seltype="dir"
-        msg = runImageJPluginWithResponse("512m", "XmippFileListBrowser.txt", "-seltype %(seltype)s"%locals())
+        msg = runJavaIJappWithResponse("512m", "XmippFileListWizard", "-seltype %(seltype)s -dir ." % locals())
+        #msg = runJavaIJappWithResponse("512m", "XmippFileListWizard", "-dir .")
         msg = msg.strip()
         if len(msg) > 0:
             var.tkvar.set(os.path.relpath(msg.replace('\n', ',')))
@@ -1092,7 +1094,7 @@ class ProtocolGUI(BasicGUI):
         dir = self.getVarValue('DirMicrographs')
         filter = self.getVarValue('ExtMicrographs')
         value = self.getVarValue('Down')
-        msg = runImageJPluginWithResponse("512m", "XmippFileListCTFBrowser.txt", 
+        msg = runJavaIJappWithResponse("512m", "XmippFileListCTFWizard", 
                                           "-dir %(dir)s -filter %(filter)s -downsampling %(value)s" % locals())
         msg = msg.strip()
         if len(msg) > 0:
@@ -1101,10 +1103,12 @@ class ProtocolGUI(BasicGUI):
     #This wizard is specific for preprocess_micrographs protocol
     def wizardBrowseJCTFMeasure(self, var):
         dir = self.getVarValue('DirMicrographs')
+        if len(dir.strip()) == 0:
+            dir = "."
         filter = self.getVarValue('ExtMicrographs')
         value = self.getVarValue('Down')
-        runImageJPlugin("512m", "XmippFileListMeasureFreqsBrowser.txt", 
-                                "-dir %(dir)s -filter %(filter)s -downsampling %(value)s" % locals(),True)
+        runJavaIJappWithResponse("512m", "XmippFileListMeasureFreqsWizard", 
+                                "-dir %(dir)s -filter %(filter)s -downsampling %(value)s" % locals())
 
     #Select family from extraction run
     def wizardChooseFamily(self, var):
