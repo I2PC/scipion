@@ -350,7 +350,7 @@ void ProgMLRefine3D::produceSideInfo()
     LOG("   ProgMLRefine3D::produceSideInfo: show");
     show();
     // Write starting volume(s) to disc with correct name for iteration loop
-        LOG("   ProgMLRefine3D::produceSideInfo: copyVolumes");
+    LOG("   ProgMLRefine3D::produceSideInfo: copyVolumes");
     copyVolumes();
     // Project volumes and store projections in a metadata
     LOG("   ProgMLRefine3D::produceSideInfo: projectVolumes");
@@ -378,7 +378,8 @@ void ProgMLRefine3D::produceSideInfo2()
 void ProgMLRefine3D::run()
 {
     bool converged = false;
-    CREATE_LOG(fn_root); ml2d->_logML = _logML;
+    CREATE_LOG(fn_root);
+    ml2d->_logML = _logML;
 
     // Get input parameters
     LOG("ML3D: before produceSideInfo");
@@ -403,13 +404,13 @@ void ProgMLRefine3D::run()
 
         LOG(formatString("ML3D: BEGIN Iteration %d of %d", iter, Niter).c_str());
 
-	for (ml2d->current_block = 0; ml2d->current_block < ml2d->blocks; ml2d->current_block++)
+        for (ml2d->current_block = 0; ml2d->current_block < ml2d->blocks; ml2d->current_block++)
         {
-	     LOG(formatString("ML3D: BEGIN BLOCK %d of %d", ml2d->current_block, ml2d->blocks).c_str());
+            LOG(formatString("ML3D: BEGIN BLOCK %d of %d", ml2d->current_block, ml2d->blocks).c_str());
             // Project volumes, already done for first iteration, first block
             if (doProject)// || ml2d->current_block > 0)
             {
-	        LOG("   ML3D: Projecting volumes");
+                LOG("   ML3D: Projecting volumes");
                 projectVolumes(ml2d->MDref);
                 size_t refno = 0;
 
@@ -433,7 +434,8 @@ void ProgMLRefine3D::run()
             //do not reconstruction on special iteration 0 until last block
             if (iter > SPECIAL_ITER || ml2d->current_block == ml2d->blocks - 1)//last block
             {
-	    	LOG("   ML3D: Writing ML2D references");
+
+                LOG("   ML3D: Writing ML2D references");
                 // Write out 2D reference images (to be used in reconstruction)
                 ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
 
@@ -450,15 +452,15 @@ void ProgMLRefine3D::run()
                 reconsOutFnBase[0] = FN_ITER_BASE(iter);
                 reconsMdFn[0] = ml2d->outRefsMd;
                 reconstructVolumes();
-		LOG("   ML3D: updateVolumesMetadata");
+                LOG("   ML3D: updateVolumesMetadata");
                 // Update the reference volume selection file
                 updateVolumesMetadata();
                 // post-process the volumes
-		LOG("   ML3D: postProcessVolumes");
+                LOG("   ML3D: postProcessVolumes");
                 postProcessVolumes();
                 doProject = true;
             }
-	    LOG(formatString("ML3D: END BLOCK %d of %d", ml2d->current_block, ml2d->blocks).c_str());
+            LOG(formatString("ML3D: END BLOCK %d of %d", ml2d->current_block, ml2d->blocks).c_str());
 
         } // end loop blocks
 
@@ -470,7 +472,7 @@ void ProgMLRefine3D::run()
 
         // End 2D iteration
         ml2d->endIteration();
-	LOG(formatString("ML3D: END Iteration %d of %d", iter, Niter).c_str());
+        LOG(formatString("ML3D: END Iteration %d of %d", iter, Niter).c_str());
     } // end loop iterations
 
     if (verbose)

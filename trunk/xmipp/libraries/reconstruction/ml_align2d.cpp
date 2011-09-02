@@ -2029,15 +2029,17 @@ void ProgML2D::maximization()
         bool special_first = (!do_restart && iter == istart);
         ModelML2D block_model(model.n_ref);
 
+        LOG("      ProgML2D::maximization:   readModel and substractModel");
         if (!special_first)
         {
             readModel(block_model, current_block);
             model.substractModel(block_model);
         }
-
+        LOG("      ProgML2D::maximization:   maximizeModel");
         maximizeModel(block_model);
+        LOG("      ProgML2D::maximization:   maximizeModel");
         writeOutputFiles(block_model, OUT_BLOCK);
-
+        LOG("      ProgML2D::maximization:   addModels");
         if (!special_first)
         {
             model.addModel(block_model);
@@ -2066,7 +2068,7 @@ void ProgML2D::maximization()
     if (model.do_norm)
         correctScaleAverage();
 	
-	LOG("      ProgML2D::maximization BEGIN");
+	LOG("      ProgML2D::maximization END");
 }//close function maximizationBlocks
 
 void ProgML2D::correctScaleAverage()
