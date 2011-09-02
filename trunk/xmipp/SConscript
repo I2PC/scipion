@@ -524,6 +524,7 @@ ReconsSources = [
     'directions.cpp',
     'fourier_filter.cpp',
     'image_rotational_spectra.cpp',
+    'image_sort_by_statistics.cpp',
     'micrograph_automatic_picking.cpp',
     'micrograph_automatic_picking_for_qt.cpp',
     'ml_align2d.cpp',
@@ -725,7 +726,7 @@ AddXmippProgram('image_header')
 AddXmippProgram('image_histogram')
 AddXmippProgram('image_operate')
 AddXmippProgram('image_rotational_spectra', ['XmippRecons'])
-AddXmippProgram('image_sort_by_statistics', ['XmippClassif'])
+AddXmippProgram('image_sort_by_statistics', ['XmippRecons'])
 AddXmippProgram('image_separate_objects')
 AddXmippProgram('image_statistics')
 AddXmippProgram('image_vectorize')
@@ -845,6 +846,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
     AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
     AddProgramLink('classify_CL2D','mpi_classify_CL2D')
     AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
     AddXmippMPIProgram('mpi_image_operate')
