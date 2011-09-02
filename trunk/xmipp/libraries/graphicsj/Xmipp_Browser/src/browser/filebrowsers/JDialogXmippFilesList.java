@@ -24,7 +24,7 @@ import java.util.ArrayList;
  *
  * @author Juanjo Vega
  */
-public class JDialogXmippFilesList extends javax.swing.JDialog {//Frame {
+public class JDialogXmippFilesList extends javax.swing.JDialog {
 
     final static String EOT = "__END__";
     String seltype;
@@ -143,7 +143,7 @@ public class JDialogXmippFilesList extends javax.swing.JDialog {//Frame {
         jbOk = new javax.swing.JButton();
         jbCancel = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
