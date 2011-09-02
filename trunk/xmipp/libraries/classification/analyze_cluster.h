@@ -41,20 +41,11 @@ public:
     /** Filename selection file containing the images */
     FileName fnSel;
 
-    /** Block within that sel */
-    String block;
-
-    /** Filename reference image */
-    FileName fnRef;
-
     /**  Output metadata */
     FileName fnOut;
 
     /**  Output basis stack */
     FileName fnOutBasis;
-
-    /** Quiet */
-    bool quiet;
 
     /** PCA dimension */
     int NPCA;
@@ -79,9 +70,6 @@ public:
 
     // PCA Analyzer
     PCAMahalanobisAnalyzer pcaAnalyzer;
-
-    // Set of basis functions
-    std::vector< MultidimArray<float> > Ialigned;
 
 public:
     /// Read argument from command line

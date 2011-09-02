@@ -33,10 +33,8 @@ void ProgAnalyzeCluster::readParams()
 {
     fnSel = getParam("-i");
     fnOut = getParam("-o");
-    fnRef = getParam("--ref");
     if (checkParam("--basis"))
         fnOutBasis = getParam("--basis");
-    quiet = checkParam("--quiet");
     NPCA  = getIntParam("--NPCA");
     Niter  = getIntParam("--iter");
     distThreshold = getDoubleParam("--maxDist");
@@ -46,10 +44,9 @@ void ProgAnalyzeCluster::readParams()
 // Show ====================================================================
 void ProgAnalyzeCluster::show()
 {
-    if (!quiet)
+    if (verbose>0)
         std::cerr
         << "Input metadata file:    " << fnSel         << std::endl
-        << "Reference:              " << fnRef         << std::endl
         << "Output metadata:        " << fnOut         << std::endl
         << "Output basis stack:     " << fnOutBasis    << std::endl
         << "PCA dimension:          " << NPCA          << std::endl
@@ -63,9 +60,9 @@ void ProgAnalyzeCluster::show()
 void ProgAnalyzeCluster::defineParams()
 {
     addUsageLine("Score the images in a cluster according to their PCA projection");
+    addUsageLine("It is assumed that the cluster is aligned as is the case of the output of CL2D or ML2D");
     addParamsLine("   -i <metadatafile>             : metadata file  with images assigned to the cluster");
     addParamsLine("   -o <metadatafile>             : output metadata");
-    addParamsLine("   --ref <image>                 : class representative");
     addParamsLine("  [--basis <stackName>]          : write the average (image 1), standard deviation (image 2)");
     addParamsLine("                                 : and basis of the PCA in a stack");
     addParamsLine("  [--NPCA <dim=2>]               : PCA dimension");
@@ -73,7 +70,6 @@ void ProgAnalyzeCluster::defineParams()
     addParamsLine("  [--maxDist <d=3>]              : Maximum distance");
     addParamsLine("                                 : Set to -1 if you don't want to filter images");
     addParamsLine("  [--dontMask]                   : Don't use a circular mask");
-    addParamsLine("  [--quiet]                      : Don't show anything on screen");
     addExampleLine("xmipp_classify_analyze_cluster -i images.sel --ref referenceImage.xmp -o sortedImages.xmd --basis basis.stk");
 }
 
@@ -90,102 +86,41 @@ void ProgAnalyzeCluster::produceSideInfo()
     if (SFin.containsLabel(MDL_ENABLED))
         SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
-    // Image holding current reference
-    Image<double> Iref;
-    Iref.read(fnRef);
-    Iref().setXmippOrigin();
-
     // Prepare mask
-    mask.resize(Iref());
+    int Xdim,Ydim,Zdim;
+    size_t Ndim;
+    ImgSize(SFin,Xdim,Ydim,Zdim,Ndim);
+    mask.resize(Ydim,Xdim);
     mask.setXmippOrigin();
     if (dontMask)
         mask.initConstant(1);
     else
-        BinaryCircularMask(mask,XSIZE(Iref())/2, INNER_MASK);
+        BinaryCircularMask(mask,Xdim/2, INNER_MASK);
     int Npixels=(int)mask.sum();
 
     // Read all images in the class and subtract the mean
     // once aligned
-    Image<double> Iaux;
-    FileName auxFn, fnOutIdx;
-    Matrix2D<double> M, Mmirror;
-    int idxStk=1;
+    Image<double> I;
+    pcaAnalyzer.clear();
     pcaAnalyzer.reserve(SFin.size());
-    if (basis)
-        Ialigned.reserve(SFin.size());
     if (verbose>0)
     {
         std::cerr << "Processing cluster ...\n";
         init_progress_bar(SFin.size());
     }
-    int i=0;
-    MultidimArray<float> v;
+    int n=0;
+    MultidimArray<float> v(Npixels);
     FOR_ALL_OBJECTS_IN_METADATA(SFin)
     {
-        SFin.getValue( MDL_IMAGE, auxFn, __iter.objId);
-        Iaux.readApplyGeo( auxFn, SFin, __iter.objId );
-        Iaux().setXmippOrigin();
-
-        // Choose between this image and its mirror
-        MultidimArray<double> I, Imirror;
-        I=Iaux();
-        Imirror=I;
-        Imirror.selfReverseX();
-        Imirror.setXmippOrigin();
-#ifdef DEBUG
-
-        Iref.write("PPPref.xmp");
-        Iaux->write("PPPclass.xmp");
-#endif
-
-        alignImages(Iref(),I,M);
-        alignImages(Iref(),Imirror,Mmirror);
-        double corr=correlationIndex(Iref(),I,&mask);
-        double corrMirror=correlationIndex(Iref(),Imirror,&mask);
-
-        if (corr>corrMirror)
-            Iaux()=I;
-        else
-        {
-            corr=corrMirror;
-            Iaux()=Imirror;
-            M=Mmirror;
-        }
-        bool flip;
-        double scale, shiftX, shiftY, psi;
-        transformationMatrix2Parameters2D(M, flip, scale, shiftX, shiftY, psi);
-
-        // Produce alignment parameters
-        size_t id = SFout.addObject();
-        SFout.setValue(MDL_IMAGE, auxFn, id);
-        SFout.setValue(MDL_SHIFTX,shiftX,id);
-        SFout.setValue(MDL_SHIFTY,shiftY,id);
-        SFout.setValue(MDL_ANGLEPSI,psi,id);
-        SFout.setValue(MDL_FLIP,flip,id);
-        SFout.setValue(MDL_MAXCC,corr,id);
-
-        v.initZeros(Npixels);
+        I.readApplyGeo( SFin, __iter.objId );
+        I().setXmippOrigin();
         int idx=0;
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
         if (A2D_ELEM(mask,i,j))
-            A1D_ELEM(v,idx++)=IMGPIXEL(Iaux,i,j);
+            A1D_ELEM(v,idx++)=IMGPIXEL(I,i,j);
         pcaAnalyzer.addVector(v);
-        if (basis)
-            Ialigned.push_back(v); // The vector is duplicated because
-        // the pcaAnalyzer normalizes the input vectors
-        // and then, they cannot be reused
-#ifdef DEBUG
-
-        std::cout << "Correlation=" << corr << " mirror=" << corrMirror
-        << std::endl;
-        Iaux.write("PPPclassAligned.xmp");
-        std::cout << "Press any key\n";
-        char c;
-        std::cin >> c;
-#endif
-
-        if ((++i)%10==0 && verbose>0)
-            progress_bar(i);
+        if ((++n)%10==0 && verbose>0)
+            progress_bar(n);
     }
     if (verbose>0)
         progress_bar(SFin.size());
@@ -201,74 +136,28 @@ void ProgAnalyzeCluster::run()
     pcaAnalyzer.evaluateZScore(NPCA, Niter);
 
     // Output
-    MultidimArray<double> IalignedAvg, Istddev;
-    int N=SFin.size();
-    if (N>0 && basis)
-    {
-        IalignedAvg.initZeros(XSIZE(Ialigned[0]));
-        Istddev.initZeros(XSIZE(Ialigned[0]));
-    }
+    size_t N=SFin.size();
     double Ngood=0;
-    for (int n=0; n<N; n++)
+    SFout=SFin;
+    for (size_t n=0; n<N; n++)
     {
         int trueIdx=pcaAnalyzer.getSorted(n);
         double zscore=pcaAnalyzer.getSortedZscore(n);
         SFout.setValue(MDL_ZSCORE, zscore, trueIdx+1);
         if (zscore<distThreshold || distThreshold<0)
-        {
             SFout.setValue(MDL_ENABLED,1, trueIdx+1);
-            if (basis)
-            {
-                const MultidimArray<float> &Ialigned_trueIdx=Ialigned[trueIdx];
-                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(IalignedAvg)
-                {
-                    double pixval=DIRECT_MULTIDIM_ELEM(Ialigned_trueIdx,n);
-                    DIRECT_MULTIDIM_ELEM(IalignedAvg,n)+=pixval;
-                    DIRECT_MULTIDIM_ELEM(Istddev,n)+=pixval*pixval;
-                }
-                Ngood++;
-            }
-        }
         else
             SFout.setValue(MDL_ENABLED,-1, trueIdx+1);
     }
-    SFout.write(fnOut);
-    if (basis && Ngood>0)
+    SFout.write(fnOut,MD_APPEND);
+    if (basis)
     {
         fnOutBasis.deleteFile();
-        double iNgood=1.0/Ngood;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(IalignedAvg)
-        {
-            DIRECT_MULTIDIM_ELEM(IalignedAvg,n)*=iNgood;
-            DIRECT_MULTIDIM_ELEM(Istddev,n)*=iNgood;
-            DIRECT_MULTIDIM_ELEM(Istddev,n)=sqrt(DIRECT_MULTIDIM_ELEM(Istddev,n)-
-                                                 DIRECT_MULTIDIM_ELEM(IalignedAvg,n)*DIRECT_MULTIDIM_ELEM(IalignedAvg,n));
-        }
-
         Image<double> save;
-        save().initZeros(mask);
-        int idx=0;
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-        {
-            if (A2D_ELEM(mask,i,j))
-                IMGPIXEL(save,i,j)=A1D_ELEM(IalignedAvg,idx++);
-        }
-        save.write(fnOutBasis,0,true,WRITE_APPEND);
-        idx=0;
-        double avgStd=Istddev.computeAvg();
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-        {
-            if (A2D_ELEM(mask,i,j))
-                IMGPIXEL(save,i,j)=A1D_ELEM(Istddev,idx++);
-            else
-                IMGPIXEL(save,i,j)=avgStd;
-        }
-        save.write(fnOutBasis,1,true,WRITE_APPEND);
-
         for (int ii=0; ii<pcaAnalyzer.PCAbasis.size(); ii++)
         {
             save().initZeros(mask);
-            idx=0;
+            int idx=0;
             FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
             if (A2D_ELEM(mask,i,j))
                 IMGPIXEL(save,i,j)=A1D_ELEM(pcaAnalyzer.PCAbasis[ii],idx++);
