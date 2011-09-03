@@ -8,10 +8,9 @@
 import glob,os,sys,shutil,time
 from protlib_base import *
 from config_protocols import protDict
-from protlib_utils import runJob,getRangeValuesFromString
+from protlib_utils import runJob, getRangeValuesFromString
 from protlib_filesystem import createLink
 from xmipp import MetaData
-from protocol_particle_pick_auto import createLinkToMicrographs
 
 class ProtCL2D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -19,21 +18,23 @@ class ProtCL2D(XmippProtocol):
         self.Import = 'from protocol_cl2d import *'    
 
     def defineSteps(self):
-        fnClasses=os.path.join(self.WorkingDir,"results_classes.xmd")
         fnImages=os.path.join(self.WorkingDir,"results_images.xmd")
-        self.Db.insertStep('cl2d',verifyfiles=[fnClasses,fnImages],Selfile=self.InSelFile,WorkingDir=self.WorkingDir,
+        self.Db.insertStep('cl2d',verifyfiles=[fnImages],Selfile=self.InSelFile,WorkingDir=self.WorkingDir,
                            NumberOfReferences=self.NumberOfReferences,NumberOfInitialReferences=self.NumberOfInitialReferences,
                            NumberOfIterations=self.NumberOfIterations,ComparisonMethod=self.ComparisonMethod,
                            ClusteringMethod=self.ClusteringMethod,AdditionalParameters=self.AdditionalParameters,
                            Nproc=self.NumberOfMpi)
         if self.NumberOfReferences>self.NumberOfInitialReferences:
-            self.Db.insertStep('core_analysis',verifyfiles=[],WorkingDir=self.WorkingDir,
-                               thGoodClass=self.thGoodClass,thZscore=self.thZscore,thPCAZscore=self.thPCAZscore,
-                               Nproc=self.NumberOfMpi)
+            self.Db.insertStep('core_analysis',verifyfiles=[os.path.join(self.WorkingDir,"results_level_00_classes_core.xmd")],
+                               WorkingDir=self.WorkingDir,thZscore=self.thZscore,thPCAZscore=self.thPCAZscore,Nproc=self.NumberOfMpi)
+            self.Db.insertStep('stable_core_analysis',
+                               verifyfiles=[os.path.join(self.WorkingDir,"results_level_%02d_classes_stable_core.xmd"%(self.Tolerance+1))],
+                               WorkingDir=self.WorkingDir,tolerance=self.Tolerance,Nproc=self.NumberOfMpi)
     
     def summary(self):
         message=[]
-        levelFiles=glob.glob(self.WorkingDir+"/results_level_*.xmd")
+        message.append("Classification of "+self.InSelFile+" into "+str(self.NumberOfReferences)+" classes")
+        levelFiles=glob.glob(self.WorkingDir+"/results_level_??_classes.xmd")
         if not levelFiles:
             message.append("No class file has been generated")
         else:
@@ -52,23 +53,29 @@ class ProtCL2D(XmippProtocol):
         errors = []
         if self.NumberOfInitialReferences>self.NumberOfReferences:
             errors.append("The number of initial classes cannot be larger than the number of final classes")
-        if self.thGoodClass<0 or self.thGoodClass>100:
-            errors.append("The good class threshold must be between 0 and 100")
+        if self.Tolerance<0:
+            errors.append("Tolerance must be larger than 0")
         return errors
     
     def visualize(self):
-        levelFiles=glob.glob(os.path.join(self.WorkingDir,"results_level_*.xmd"))
+        if self.WhatToShow=="Classes":
+            levelFiles=glob.glob(os.path.join(self.WorkingDir,"results_level_??_classes.xmd"))
+        elif self.WhatToShow=="Class Cores":
+            levelFiles=glob.glob(os.path.join(self.WorkingDir,"results_level_??_classes_core.xmd"))
+        elif self.WhatToShow=="Class Stable Cores":
+            levelFiles=glob.glob(os.path.join(self.WorkingDir,"results_level_??_classes_stable_core.xmd"))
         if levelFiles:
             levelFiles.sort()
             if self.DoShowLast:
                 lastLevelFile=levelFiles[-1]
                 os.system("xmipp_metadata_viewerj -i "+lastLevelFile+"&")
             else:
-                listOfLevels=getRangeValuesFromString(LevelsToShow)
+                listOfLevels=getRangeValuesFromString(self.LevelsToShow)
                 files=""
                 for level in listOfLevels:
-                    files+=os.path.join(self.WorkingDir,"results_level_%02d_classes.xmd"%level)
+                    files+=levelFiles[level]+" "
                 if files!="":
+                    print "xmipp_metadata_viewerj -i "+files+" &"
                     os.system("xmipp_metadata_viewerj -i "+files+" &")
     
 def cl2d(log,Selfile,WorkingDir,NumberOfReferences,NumberOfInitialReferences,NumberOfIterations,
@@ -86,18 +93,16 @@ def cl2d(log,Selfile,WorkingDir,NumberOfReferences,NumberOfInitialReferences,Num
     runJob(log,"xmipp_classify_CL2D",params,Nproc)
     levelFiles=glob.glob(WorkingDir+"/results_level_*.xmd")
     if not levelFiles:
-        import re
         levelFiles.sort()
         lastLevelFile=levelFiles[-1]
         mD=xmipp.MetaData("classes@"+lastLevelFile)
         if mD.size()==NumberOfReferences:
             createLink(log, lastLevelFile, WorkingDir+"results_classes.sel")
 
-def core_analysis(log,WorkingDir,thGoodClass,thZscore,thPCAZscore,Nproc):
-    return
-    params= WorkingDir+'/results '+\
-            str(thGoodClass)+' '+\
-            str(thZscore)+' '+\
-            str(thPCAZscore)
+def core_analysis(log,WorkingDir,thZscore,thPCAZscore,Nproc):
+    params= "-i "+WorkingDir+'/results --computeCore '+str(thZscore)+' '+str(thPCAZscore)
     runJob(log,"xmipp_classify_CL2D_core_analysis",params,Nproc)
-    
+
+def stable_core_analysis(log,WorkingDir,tolerance,Nproc):
+    params= "-i "+WorkingDir+'/results --computeStableCore '+str(tolerance)
+    runJob(log,"xmipp_classify_CL2D_core_analysis",params,Nproc)

@@ -60,15 +60,8 @@ ClusteringMethod='classical'
 AdditionalParameters=''
 
 #------------------------------------------------------------------------------------------------
-# {section}{condition}(NumberOfReferences>NumberOfInitialReferences) Core analysis
+# {section}{expert}{condition}(NumberOfReferences>NumberOfInitialReferences) Core analysis
 #------------------------------------------------------------------------------------------------
-# Good class core size (%)
-""" A class is a good class if at least this percentage (around 50%) of the
-    images assigned to it have been together in all the previous levels.
-    Larger values of this parameter tend to keep few good classes. Smaller
-    values of this parameter tend to consider more classes as good ones."""
-thGoodClass=50
-
 # Junk Zscore
 """ Which is the average Z-score to be considered as junk. Typical values
     go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is
@@ -84,6 +77,13 @@ thZscore=3
     
     This Z-score is measured after projecting onto the PCA space."""
 thPCAZscore=3
+
+# Tolerance
+""" An image belongs to the stable core if it has been with other images in the same class
+in all the previous levels except possibly a few of them. Tolerance defines how few is few.
+Tolerance=0 means that an image must be in all previous levels with the rest of images in
+the core."""
+Tolerance=1
 
 #------------------------------------------------------------------------------------------
 # {section} Parallelization
@@ -112,6 +112,9 @@ QueueHours = 96
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Visualization
 #------------------------------------------------------------------------------------------------
+# {list_combo}(Classes,Class Cores,Class Stable Cores) What to show
+WhatToShow="Class Cores"
+
 # Visualize last level
 DoShowLast=True
 
