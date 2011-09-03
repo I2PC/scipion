@@ -191,6 +191,7 @@ void ProgSortByStatistics::run()
 {
     // Process input selfile ..............................................
     SF.read(fn);
+    pcaAnalyzer.clear();
     if (fn_train != "")
     {
         SFtrain.read(fn_train);
@@ -262,7 +263,7 @@ void ProgSortByStatistics::run()
     if (verbose==2)
         fh_zind.close();
     if (fn_out!="")
-        SFout.write(fn_out + ".xmd");
+        SFout.write(fn_out + ".xmd",MD_APPEND);
     if (addToInput)
-        SF.write(fn);
+        SF.write(fn,MD_APPEND);
 }
