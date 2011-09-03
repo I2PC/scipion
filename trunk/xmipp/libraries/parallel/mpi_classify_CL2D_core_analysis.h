@@ -37,7 +37,17 @@ class CL2DBlock {
 public:
 	String   block;
 	FileName fnLevel;
+	FileName fnLevelCore;
 	int      level;
+};
+
+/// Show CL2Dblock
+std::ostream & operator << (std::ostream &out, const CL2DBlock &block);
+
+enum ClassifyCL2DCoreAction
+{
+	COMPUTE_CORE,
+	COMPUTE_STABLE_CORE
 };
 
 /** Core analysis parameters. */
@@ -46,12 +56,14 @@ class ProgClassifyCL2DCore: public XmippProgram
 public:
 	/** CL2D rootname */
 	FileName fnRoot;
-	/** Threshold for a good class (%) */
-	double thGoodClass;
 	/** Threshold junk Zscore */
 	double thZscore;
 	/** Threshold PCA Zscore */
 	double thPCAZscore;
+	/** Tolerance: How many levels before are allowed two images not to coincide */
+	int tolerance;
+	/** Action */
+	ClassifyCL2DCoreAction action;
 public:
     // Mpi node
     MpiNode *node;
@@ -61,6 +73,8 @@ public:
 	std::vector<CL2DBlock> blocks;
     // MaxLevel
     int maxLevel;
+    // Projection size
+    int Ydim, Xdim;
 public:
     /// Empty constructor
     ProgClassifyCL2DCore(int argc, char **argv);
@@ -81,7 +95,13 @@ public:
     void produceSideInfo();
 
     /// Remove outliers
-    void removeOutliers();
+    void computeCores();
+
+    /// Compute cores
+    void computeStableCores();
+
+    /// Gather results
+    void gatherResults(int firstLevel, const String &suffix);
 
     /** Run. */
     void run();
