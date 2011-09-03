@@ -642,7 +642,7 @@ void FileName::createEmptyFile(size_t size, size_t block_size)
     fclose(fd);
 }
 
-void FileName::createEmptyFileWithGivenLength(size_t length)
+void FileName::createEmptyFileWithGivenLength(size_t length) const
 {
     FILE* fMap = fopen(c_str(),"wb");
     if (!fMap)

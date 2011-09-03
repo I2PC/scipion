@@ -606,7 +606,7 @@ public:
     void createEmptyFile(size_t size, size_t block_size = 102400);
 
     /** Create empty file with a given length. */
-    void createEmptyFileWithGivenLength(size_t length = 0);
+    void createEmptyFileWithGivenLength(size_t length = 0) const;
 
     /**
      * makePath - ensure all directories in path exist
