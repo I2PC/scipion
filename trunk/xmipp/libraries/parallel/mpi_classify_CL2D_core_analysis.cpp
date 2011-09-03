@@ -309,7 +309,7 @@ void ProgClassifyCL2DCore::gatherResults(int firstLevel, const String &suffix)
                     classes.setValue(MDL_MODELFRAC,((double)classSize)/MDoriginal.size(),id);
                 }
             }
-            classes.write(fnSummary+".xmd");
+            classes.write((String)"classes@"+fnSummary+".xmd");
         }
 
         // Write the rest of blocks
