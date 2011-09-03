@@ -1176,7 +1176,6 @@ void CL2D::splitFirstNode()
 {
     std::sort(P.begin(),P.end(),SDescendingClusterSort());
     int Q=P.size();
-    std::cout << std::endl;
     P.push_back(new CL2DClass());
     P.push_back(new CL2DClass());
     std::vector<size_t> splitAssignment;
@@ -1327,7 +1326,11 @@ void ProgClassifyCL2D::run()
         int Nsplits=XMIPP_MIN(Q,Ncodes-Q)+Nclean;
 
         for (int i=0; i<Nsplits; i++)
+        {
             vq.splitFirstNode();
+            if (node->rank==0)
+            	std::cout << "Currently there are " << vq.P.size() << " nodes" << std::endl;
+        }
 
         Q=vq.P.size();
         level++;
@@ -1336,6 +1339,15 @@ void ProgClassifyCL2D::run()
     if (node->rank==0)
     {
         std::sort(vq.P.begin(),vq.P.end(),SDescendingClusterSort());
+        Q=vq.P.size();
+        MetaData SFq,SFaux;
+        for (int q=0; q<Q; q++)
+        {
+        	SFq.read(formatString("class_%06d@%s_level_%02d_classes.xmd",q+1,fnOut.c_str(),level));
+        	SFq.fillConstant(MDL_REF,integerToString(q+1));
+        	SFaux.join(SF,SFq,MDL_IMAGE,INNER); // COSS
+        	SF=SFaux;
+        }
         SF.write(fnOut+"_images.xmd");
     }
 }
