@@ -26,30 +26,28 @@ class ProtCL2DAlignment(XmippProtocol):
                            WorkingDir=self.WorkingDir)
     
     def summary(self):
-        return ["Alignment of "+self.InSelFile]
-        # Agnadir la iteracion por la que va
+        message=["Alignment of "+self.InSelFile]
+        fnAlignment=os.path.join(self.WorkingDir,"results_level_00_classes.xmd")
+        if os.path.exists(fnAlignment):
+            mD=MetaData("info@"+fnAlignment)
+            date=time.ctime(os.path.getmtime(fnAlignment))
+            message.append("Iteration "+str(mD.size())+" at "+date)
+        return message
     
     def validate(self):
         return []
     
     def visualize(self):
-        levelFiles=glob.glob(os.path.join(self.WorkingDir,"results_level_*.xmd"))
-        if levelFiles:
-            levelFiles.sort()
-            if self.DoShowLast:
-                lastLevelFile=levelFiles[-1]
-                os.system("xmipp_metadata_viewerj -i "+lastLevelFile+"&")
-            else:
-                listOfLevels=getRangeValuesFromString(LevelsToShow)
-                files=""
-                for level in listOfLevels:
-                    files+=os.path.join(self.WorkingDir,"results_level_%02d_classes.xmd"%level)
-                if files!="":
-                    os.system("xmipp_metadata_viewerj -i "+files+" &")
+        if self.getRunState==SqliteDb.RUN_FINISHED:
+            os.system("xmipp_showj -i %s %s &"
+                      %(os.path.join(self.WorkingDir,"average.xmp"),os.path.join(self.WorkingDir,"alignment.xmd")))
+        else:
+            if os.path.exists(os.path.join(self.WorkingDir,"results_level_00_classes.stk")):
+                os.system("xmipp_showj -i %s %s &"
+                          %(os.path.join(self.WorkingDir,"results_level_00_classes.stk"),os.path.join(self.WorkingDir,"results_level_00_classes.xmd")))
     
 def cl2d(log,Selfile,WorkingDir,NumberOfIterations,Nproc):
-    params= '-i '+str(Selfile)+' --oroot '+WorkingDir+'/results --nref 1 --nref0 1'+\
-            ' --iter '+str(NumberOfIterations)
+    params= '-i '+str(Selfile)+' --oroot '+WorkingDir+'/results --nref 1 --nref0 1 --iter '+str(NumberOfIterations)
     runJob(log,"xmipp_classify_CL2D",params,Nproc)
 
 def gatherResults(log,WorkingDir):
