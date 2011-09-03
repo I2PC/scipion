@@ -21,6 +21,11 @@
 void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, double& _min,
                     double& _max, bool apply_geo);
 
+/** Get the average of a Metadata applying the header.
+ * The MD is not cleaned from disabled images (this option makes the call faster).
+ */
+void getAverageApplyGeo(const MetaData &MD, MultidimArray<double> & _ave);
+
 /** Get the image statistics of a metadata.
  */
 void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,

@@ -77,6 +77,31 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
     _sd().selfSQRT();
 }
 
+void getAverageApplyGeo(const MetaData &MD, MultidimArray<double> & _ave)
+{
+    bool first = true;
+    int n = 0;
+    // Calculate Mean
+    if (MD.isEmpty())
+        return;
+
+    Image<double> image;
+    FOR_ALL_OBJECTS_IN_METADATA(MD)
+    {
+        image.readApplyGeo(MD,__iter.objId);
+        if (first)
+        {
+            _ave = image();
+            first = false;
+        }
+        _ave += image();
+        n++;
+    }
+
+    if (n > 0)
+        _ave /= n;
+}
+
 /*----------   Statistics --------------------------------------- */
 void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
                    double& _max, bool apply_geo)
