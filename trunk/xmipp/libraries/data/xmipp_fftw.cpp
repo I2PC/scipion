@@ -415,6 +415,8 @@ void frc_dpr(MultidimArray< double > & m1,
 #endif
 
     int sizeZ_2 = m1sizeZ/2;
+    if (sizeZ_2==0)
+    	sizeZ_2=1;
     double isizeZ = 1.0/m1sizeZ;
     int sizeY_2 = m1sizeY/2;
     double iysize = 1.0/m1sizeY;
@@ -439,41 +441,42 @@ void frc_dpr(MultidimArray< double > & m1,
                     continue;
 
                 double R = sqrt(R2);
-                int idx = ROUND(R * m1sizeX);
+                int idx = round(R * m1sizeX);
                 std::complex<double> &z1 = dAkij(FT1, k, i, j);
                 std::complex<double> &z2 = dAkij(FT2, k, i, j);
                 double absz1 = abs(z1);
                 double absz2 = abs(z2);
-                num(idx) += real(conj(z1) * z2);
-                den1(idx) += absz1*absz1;
-                den2(idx) += absz2*absz2;
-                error_l2(idx) += abs(z1-z2);
+                dAi(num,idx) += real(conj(z1) * z2);
+                dAi(den1,idx) += absz1*absz1;
+                dAi(den2,idx) += absz2*absz2;
+                dAi(error_l2,idx) += abs(z1-z2);
                 if (dodpr) //this takes to long for a huge volume
                 {
-                    double phaseDiff = realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
-                                                        (atan2(z2.imag(), z2.real()))),-180, 180);
-                    dpr(idx) += ((absz1+absz2)*phaseDiff*phaseDiff);
-                    den_dpr(idx) += (absz1+absz2);
+                	double phaseDiff=atan2(z1.imag(),z1.real()) - atan2(z2.imag(),z2.real());
+                	phaseDiff = RAD2DEG(phaseDiff);
+                    phaseDiff = realWRAP(phaseDiff,-180, 180);
+                    dAi(dpr,idx) += ((absz1+absz2)*phaseDiff*phaseDiff);
+                    dAi(den_dpr,idx) += (absz1+absz2);
 #ifdef SAVE_REAL_PART
 
                     realPart[idx].push_back(z1.real());
 #endif
 
                 }
-                radial_count(idx)++;
+                dAi(radial_count,idx)++;
             }
         }
     }
 
     FOR_ALL_ELEMENTS_IN_ARRAY1D(freq)
     {
-        freq(i) = (double) i / (m1sizeX * sampling_rate);
-        frc(i) = num(i)/sqrt(den1(i)*den2(i));
-        frc_noise(i) = 2 / sqrt((double) radial_count(i));
-        error_l2(i) /= radial_count(i);
+        dAi(freq,i) = (double) i / (m1sizeX * sampling_rate);
+        dAi(frc,i) = dAi(num,i)/sqrt(dAi(den1,i)*dAi(den2,i));
+        dAi(frc_noise,i) = 2 / sqrt((double) dAi(radial_count,i));
+        dAi(error_l2,i) /= dAi(radial_count,i);
 
         if (dodpr)
-            dpr(i) = sqrt(dpr(i) / den_dpr(i));
+        	dAi(dpr,i) = sqrt(dAi(dpr,i) / dAi(den_dpr,i));
 #ifdef SAVE_REAL_PART
 
         std::ofstream fhOut;
