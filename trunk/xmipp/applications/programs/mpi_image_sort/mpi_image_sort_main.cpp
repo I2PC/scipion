@@ -105,11 +105,11 @@ public:
         addParamsLine("   -i <selfile>        : selfile of images");
         addParamsLine("   --oroot <rootname>  : output rootname");
         addParamsLine("                       : rootname.stk contains the list of aligned images.");
-        addParamsLine("                       : rootname.sel contains the correspondence between aligned images ");
+        addParamsLine("                       : rootname.xmd contains the correspondence between aligned images ");
         addParamsLine("                       : and the original images as well as the correlation coefficient ");
         addParamsLine("                       : between the aligned image and its predecessor in the list of ");
         addParamsLine("                       : aligned images.");
-        addExampleLine("mpirun -np 8 `which xmipp_mpi_image_sort` -i images.sel --oroot sorted");
+        addExampleLine("mpirun -np 8 `which xmipp_mpi_image_sort` -i images.xmd --oroot sorted");
     }
 
     /// Produce side info
@@ -260,7 +260,7 @@ public:
         while (stillToDo.sum()>0)
             chooseNextImage(node->rank,node->size);
         if (node->rank==0)
-            SFout.write(fnRoot+".sel");
+            SFout.write(fnRoot+".xmd");
     }
 };
 
