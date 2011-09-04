@@ -72,7 +72,9 @@ enum MDLabel
     MDL_CL2D_SIMILARITY, ///< Average cross-correlation for the image (double)
     MDL_CLASSIFICATION_DATA, ///< Data vector for classification (vector double)
     MDL_CLASSIFICATION_DATA_SIZE, ///< Size of data vectors for classification (int)
+    MDL_CLASSIFICATION_DPR_05, ///< Differential Phase Residual evaluated at FRC=0.5
     MDL_CLASSIFICATION_INTRACLASS_DISTANCE, ///< Average intraclass distance (double)
+    MDL_CLASSIFICATION_FRC_05, ///< Digital frequency at which the FRC drops below 0.5 (double)
     MDL_COMMENT, ///< A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
     MDL_COST, ///< Cost for the image (double)
     MDL_COUNT, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
@@ -564,7 +566,9 @@ private:
         MDL::addLabel(MDL_CL2D_SIMILARITY, LABEL_DOUBLE, "cl2dsimilarity");
         MDL::addLabel(MDL_CLASSIFICATION_DATA, LABEL_VECTOR, "ClassificationData");
         MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_INT, "ClassificationDataSize");
+        MDL::addLabel(MDL_CLASSIFICATION_DPR_05, LABEL_DOUBLE, "ClassificationDPR05");
         MDL::addLabel(MDL_CLASSIFICATION_INTRACLASS_DISTANCE, LABEL_DOUBLE, "ClassificationIntraclassDistance");
+        MDL::addLabel(MDL_CLASSIFICATION_FRC_05, LABEL_DOUBLE, "ClassificationFRC05");
         MDL::addLabel(MDL_COMMENT, LABEL_STRING, "comment");
         MDL::addLabel(MDL_COST, LABEL_DOUBLE, "cost");
         MDL::addLabel(MDL_COUNT, LABEL_LONG, "count");
