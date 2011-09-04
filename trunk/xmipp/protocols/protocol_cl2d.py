@@ -9,8 +9,8 @@ import glob,os,sys,shutil,time
 from protlib_base import *
 from config_protocols import protDict
 from protlib_utils import runJob, getRangeValuesFromString
-from protlib_filesystem import createLink
-from xmipp import MetaData
+from protlib_filesystem import createLink, deleteFile
+from xmipp import MetaData, MD_APPEND
 
 class ProtCL2D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -24,12 +24,16 @@ class ProtCL2D(XmippProtocol):
                            NumberOfIterations=self.NumberOfIterations,ComparisonMethod=self.ComparisonMethod,
                            ClusteringMethod=self.ClusteringMethod,AdditionalParameters=self.AdditionalParameters,
                            Nproc=self.NumberOfMpi)
+        self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,pattern="results_level_??_classes.xmd")
         if self.NumberOfReferences>self.NumberOfInitialReferences:
             self.Db.insertStep('core_analysis',verifyfiles=[os.path.join(self.WorkingDir,"results_level_00_classes_core.xmd")],
                                WorkingDir=self.WorkingDir,thZscore=self.thZscore,thPCAZscore=self.thPCAZscore,Nproc=self.NumberOfMpi)
+            self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,pattern="results_level_??_classes_core.xmd")
             self.Db.insertStep('stable_core_analysis',
                                verifyfiles=[os.path.join(self.WorkingDir,"results_level_%02d_classes_stable_core.xmd"%(self.Tolerance+1))],
                                WorkingDir=self.WorkingDir,tolerance=self.Tolerance,Nproc=self.NumberOfMpi)
+            self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,pattern="results_level_??_classes_stable_core.xmd")
+        self.Db.insertStep('sortClasses',WorkingDir=self.WorkingDir,Nproc=self.NumberOfMpi)
     
     def summary(self):
         message=[]
@@ -99,6 +103,17 @@ def cl2d(log,Selfile,WorkingDir,NumberOfReferences,NumberOfInitialReferences,Num
         if mD.size()==NumberOfReferences:
             createLink(log, lastLevelFile, WorkingDir+"results_classes.sel")
 
+def sortClasses(log,WorkingDir,Nproc):
+    import re
+    for file in glob.glob(os.path.join(WorkingDir,"results_level_??_classes.xmd")):
+        level=int(re.search('level_(\d\d)',file).group(1))
+        fnRoot=os.path.join(WorkingDir,"results_level_%02d_classes_sorted"%level)
+        params= "-i classes@"+file+" --oroot "+fnRoot
+        runJob(log,"xmipp_image_sort",params,Nproc)
+        mD=MetaData(fnRoot+".xmd")
+        mD.write("classes_sorted@"+file,MD_APPEND)
+        deleteFile(log,fnRoot+".xmd")
+
 def core_analysis(log,WorkingDir,thZscore,thPCAZscore,Nproc):
     params= "-i "+WorkingDir+'/results --computeCore '+str(thZscore)+' '+str(thPCAZscore)
     runJob(log,"xmipp_classify_CL2D_core_analysis",params,Nproc)
@@ -106,3 +121,8 @@ def core_analysis(log,WorkingDir,thZscore,thPCAZscore,Nproc):
 def stable_core_analysis(log,WorkingDir,tolerance,Nproc):
     params= "-i "+WorkingDir+'/results --computeStableCore '+str(tolerance)
     runJob(log,"xmipp_classify_CL2D_core_analysis",params,Nproc)
+
+def evaluateClasses(log,WorkingDir,pattern):
+    levelFiles=glob.glob(os.path.join(WorkingDir,pattern))
+    for file in levelFiles:
+        runJob(log,"xmipp_classify_evaluate_classes","-i "+file)
