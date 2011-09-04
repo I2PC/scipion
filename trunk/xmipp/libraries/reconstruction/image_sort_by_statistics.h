@@ -22,8 +22,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/xmipp_program.h>
-
 #ifndef _PROG_IMAGE_SORT
 #define _PROG_IMAGE_SORT
 
