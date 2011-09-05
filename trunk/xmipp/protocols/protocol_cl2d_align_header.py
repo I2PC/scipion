@@ -11,6 +11,17 @@
 
 # {begin_of_header}
 
+#------------------------------------------------------------------------------------------
+# {section}{has_question} Comment
+#------------------------------------------------------------------------------------------
+# Display comment
+DisplayComment = False
+
+# {text} Write a comment:
+""" 
+Describe your run here...
+"""
+
 #-----------------------------------------------------------------------------
 # {section} Run parameters
 #-----------------------------------------------------------------------------
@@ -32,6 +43,10 @@ Behavior = "Restart"
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
 InSelFile=''
+
+# Maximum shift:
+""" In pixels"""
+MaxShift=10
 
 # {expert} Number of iterations
 """ Maximum number of iterations within each level
