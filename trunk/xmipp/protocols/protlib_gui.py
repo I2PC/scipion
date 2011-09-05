@@ -33,7 +33,8 @@ import tkFont
 
 from protlib_base import protocolMain, getProtocolFromModule, XmippProtocol, getWorkingDirFromRunName
 from protlib_utils import loadModule, runJob, runImageJPlugin, which, runImageJPluginWithResponse, runJavaIJappWithResponse 
-from protlib_gui_ext import centerWindows, changeFontSize
+from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, registerFont,\
+    showError, showInfo
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
@@ -42,19 +43,7 @@ from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor
 from protlib_sql import SqliteDb
 from xmipp import XmippError
 
-Fonts = {}
 
-def registerFont(name, **opts):
-    global Fonts
-    Fonts[name] = tkFont.Font(**opts)
-
-def registerCommonFonts():
-    if 'normal' not in Fonts.keys():
-        registerFont('normal', family=FontName, size=FontSize)
-    if 'button' not in Fonts.keys():
-        registerFont('button', family=FontName, size=FontSize, weight=tkFont.BOLD)
-    if 'label' not in Fonts.keys():
-        registerFont('label', family=FontName, size=FontSize+1, weight=tkFont.BOLD)
     
 class ProtocolStyle():
     ''' Class to define some style settings like font, colors, etc '''
@@ -858,7 +847,7 @@ class ProtocolGUI(BasicGUI):
                 self.inRunName = runName
             else:
                 if self.run['run_state'] in [SqliteDb.RUN_STARTED, SqliteDb.RUN_LAUNCHED]:
-                    tkMessageBox.showerror('Save not allowed', 
+                    showError('Save not allowed', 
                                            "This run appears to be RUNNING or LAUNCHED, so you can't save it",
                                            parent=self.master)
                     return False 
@@ -869,7 +858,7 @@ class ProtocolGUI(BasicGUI):
             if self.saveCallback:
                 self.saveCallback()
         except Exception, e:
-            tkMessageBox.showerror("Error saving run parameters", str(e), parent=self.master)
+            showError("Error saving run parameters", str(e), parent=self.master)
             raise e
         return True
     
@@ -879,14 +868,14 @@ class ProtocolGUI(BasicGUI):
             for w in s.childwidgets:
                 errors += w.validate()
         if len(errors) > 0:
-            tkMessageBox.showerror("Validation ERRORS", '\n'.join(errors), parent=self.master)
+            showError("Validation ERRORS", '\n'.join(errors), parent=self.master)
             return False
         return True
         
     def validateProtocol(self, prot):
         errors = prot.validateBase()        
         if len(errors) > 0:
-            tkMessageBox.showerror("Validation ERRORS", '\n'.join(errors), parent=self.master)
+            showError("Validation ERRORS", '\n'.join(errors), parent=self.master)
             return False
         return True
     
@@ -902,12 +891,12 @@ class ProtocolGUI(BasicGUI):
         else:
             if self.validateProtocol(prot):
                 warnings = prot.warningsBase()
-                if len(warnings)==0 or tkMessageBox.askyesno("Confirm execution",'\n'.join(warnings), parent=self.master):
+                if len(warnings)==0 or askYesNo("Confirm execution",'\n'.join(warnings), self.master):
                     os.system('python %s --no_confirm &' % self.run['script'] )
                     self.master.destroy() 
     
     def viewFiles(self):
-        tkMessageBox.showinfo("Visualize", "This should open ImageJ plugin to display files", parent=self.master)
+        showInfo("Visualize", "This should open ImageJ plugin to display files", parent=self.master)
         
     def selectFromList(self, var, list):
         if len(list) == 0:
@@ -920,7 +909,7 @@ class ProtocolGUI(BasicGUI):
             var.setValue(list[index])
         
     def showHelp(self, helpmsg):
-        tkMessageBox.showinfo("Help", helpmsg, parent=self.master)
+        showInfo("Help", helpmsg, parent=self.master)
     
     def getRow(self):
         row = self.lastrow
@@ -1031,7 +1020,7 @@ class ProtocolGUI(BasicGUI):
             self.fillGUI()
         except Exception, e:
             errMsg = "Couldn't create GUI. ERROR: %s\n" % e
-            tkMessageBox.showerror("GUI Creation Error", errMsg)
+            showError("GUI Creation Error", errMsg)
             self.Error = e
             raise
         
@@ -1059,11 +1048,11 @@ class ProtocolGUI(BasicGUI):
 # if not, can be used as viewers
 
     def wizardNotFound(self, var):
-        tkMessageBox.showerror("Wizard not found", "The wizard '%s' for this parameter has not been found" % var.tags['wizard']
+        showError("Wizard not found", "The wizard '%s' for this parameter has not been found" % var.tags['wizard']
                                , parent=self.master)
         
     def wizardDummy(self, var):
-        tkMessageBox.showinfo("Wizard test", "This is only a test on wizards setup", parent=self.master)
+        showInfo("Wizard test", "This is only a test on wizards setup", parent=self.master)
         
     def wizardBrowse(self, var):
         import tkFileDialog

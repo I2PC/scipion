@@ -394,6 +394,47 @@ class ToolTip:
 ##---------demo code-----------------------------------##
 
 from tkSimpleDialog import Dialog
+ButtonBgColor = "LightBlue"
+ButtonActiveBgColor = "LightSkyBlue"
+ButtonSelectedColor = "DeepSkyBlue2"
+
+Fonts = {}
+
+def registerFont(name, **opts):
+    global Fonts
+    Fonts[name] = tkFont.Font(**opts)
+
+def registerCommonFonts():
+    if 'normal' not in Fonts.keys():
+        registerFont('normal', family=FontName, size=FontSize)
+    if 'button' not in Fonts.keys():
+        registerFont('button', family=FontName, size=FontSize, weight=tkFont.BOLD)
+    if 'label' not in Fonts.keys():
+        registerFont('label', family=FontName, size=FontSize+1, weight=tkFont.BOLD)
+        
+def configDefaults(opts, defaults):
+    for key in defaults.keys():
+        if not opts.has_key(key):
+            opts[key] = defaults[key]
+            
+def MyButton(master, text, imagePath=None, **opts):
+    configDefaults(opts, {'activebackground': ButtonActiveBgColor})
+    btnImage = None
+    if imagePath:
+        try:
+            from protlib_filesystem import getXmippPath
+            imgPath = os.path.join(getXmippPath('resources'), imagePath)
+            btnImage = tk.PhotoImage(file=imgPath)
+        except tk.TclError:
+            pass
+    
+    if btnImage:
+        btn = tk.Button(master, image=btnImage, bd=0, height=28, width=28, **opts)
+        btn.image = btnImage
+    else:
+        btn = tk.Button(master, text=text, font=Fonts['button'], bg=ButtonBgColor, **opts)
+    return btn
+
 '''Implement a Listbox Dialog, it will return
 the index selected in the lisbox or -1 on Cancel'''
 class ListboxDialog(Dialog):
@@ -419,14 +460,107 @@ class ListboxDialog(Dialog):
 
     def buttonbox(self):
         box = tk.Frame(self)
-        w = tk.Button(box, text="OK", width=7, command=self.ok, default=tk.ACTIVE)
+        w = MyButton(box, text="OK", width=7, command=self.ok)
         w.pack(side=tk.RIGHT, padx=5, pady=5)
         self.bind("<Return>", self.ok)
         box.pack()
         
     def apply(self):
         self.result = map(int, self.lb.curselection())
+        
+'''Implementation of our own version of Yes/No dialog'''
+class YesNoDialog(Dialog):
+    def __init__(self, master, title, msg, DefaultNo=True):
+        self.msg = msg
+        self.defaultNo = DefaultNo
+        self.result = False
+        Dialog.__init__(self, master, title)        
+        
+    def body(self, master):
+        try:
+            from protlib_filesystem import getXmippPath
+            image = tk.PhotoImage(file=os.path.join(getXmippPath('resources'), 'warning.gif'))
+        except tk.TclError:
+            image = None
+        self.result = []
+        self.frame = tk.Frame(master, bg="white", bd=2)
+        self.label = tk.Label(self.frame, text=self.msg, bg="white")
+        if image:
+            self.label.config(image=image, bd=0, compound=tk.LEFT)
+            self.label.image = image 
+        self.label.pack()
+        self.frame.pack()
+        
+    def buttonbox(self):
+        box = tk.Frame(self)    
+        self.btnYes = MyButton(box, text="Yes", width=7, command=self.ok)
+        self.btnYes.pack(side=tk.LEFT, padx=5, pady=5, anchor='e')
+        self.btnNo = MyButton(box, text="No", width=7, command=self.cancel)
+        self.btnNo.pack(side=tk.LEFT, padx=5, pady=5, anchor='e')
+        box.pack()
+        if self.defaultNo:
+            self.btnNo.focus_set()
+        else: 
+            self.btnYes.focus_set()
+        self.bind("<Return>", self.handleReturn)
+        self.bind("<Escape>", self.cancel)
+        self.bind("<Left>", lambda e: self.btnYes.focus_set())
+        self.bind("<Right>", lambda e: self.btnNo.focus_set())
 
+    def apply(self):
+        self.result = True
+        
+    def handleReturn(self, event=None):
+        w = self.focus_get()
+        if w is self.btnYes:
+            self.ok()
+        else:
+            self.cancel()
+        
+'''Implementation of our own version of Yes/No dialog'''
+class ShowDialog(Dialog):
+    def __init__(self, master, title, msg, type):
+        self.msg = msg
+        self.type = type
+        Dialog.__init__(self, master, title)        
+        
+    def body(self, master):
+        try:
+            from protlib_filesystem import getXmippPath
+            image = tk.PhotoImage(file=os.path.join(getXmippPath('resources'), self.type + '.gif'))
+        except tk.TclError:
+            image = None
+        self.result = []
+        self.frame = tk.Frame(master, bg="white", bd=2)
+        self.label = tk.Label(self.frame, text=self.msg, bg="white")
+        if image:
+            self.label.config(image=image, bd=0, compound=tk.LEFT)
+            self.label.image = image 
+        self.label.pack()
+        self.frame.pack()
+        
+    def buttonbox(self):
+        box = tk.Frame(self)    
+        self.btnNo = MyButton(box, text="Ok", width=7, command=self.cancel)
+        self.btnNo.pack(side=tk.LEFT, padx=5, pady=5, anchor='e')
+        box.pack()
+        self.bind("<Return>", self.cancel)
+        self.bind("<Escape>", self.cancel)
+
+''' Functions to display dialogs '''
+def askYesNo(title, msg, parent):
+    d = YesNoDialog(parent, title, msg)
+    return d.result
+
+def showInfo(title, msg, parent):
+    ShowDialog(parent, title, msg, 'warning')
+
+def showWarning(title, msg, parent):
+    ShowDialog(parent, title, msg, 'warning')
+    
+def showError(title, msg, parent):
+    ShowDialog(parent, title, msg, 'error')
+    
 from protlib_utils import colorMap, colorStr, findColor
 import os
 

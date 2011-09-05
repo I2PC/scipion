@@ -31,7 +31,7 @@ import Tkinter as tk
 import tkMessageBox
 import tkFont
 from protlib_gui import ProtocolGUI, Fonts, registerFont, registerCommonFonts
-from protlib_gui_ext import ToolTip, MultiListbox, centerWindows
+from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, configDefaults
 from config_protocols import protDict, sections
 from config_protocols import FontName, FontSize
 from protlib_base import getProtocolFromModule, XmippProject
@@ -50,11 +50,6 @@ ButtonBgColor = "LightBlue"
 ButtonActiveBgColor = "LightSkyBlue"
 ButtonSelectedColor = "DeepSkyBlue2"
 
-def configDefaults(opts, defaults):
-    for key in defaults.keys():
-        if not opts.has_key(key):
-            opts[key] = defaults[key]
-            
 def ProjectButton(master, text, imagePath=None, **opts):
     configDefaults(opts, {'activebackground': ButtonActiveBgColor})
     btnImage = None
@@ -118,7 +113,7 @@ class XmippProjectGUI():
         self.project = project
         
     def cleanProject(self):
-        if tkMessageBox.askyesno("DELETE confirmation", "You are going to DELETE all project data (runs, logs, results...Do you want to continue?"):
+        if askYesNo("DELETE confirmation", "You are going to DELETE all project data (runs, logs, results...Do you want to continue?", self.root):
             self.project.clean()
             self.close()
             
@@ -413,7 +408,7 @@ class XmippProjectGUI():
         elif event == 'Copy':
             self.launchProtocolGUI(self.project.copyProtocol(run['protocol_name'], run['script']))
         elif event == "Delete":
-            if tkMessageBox.askyesno("Confirm DELETE", "All data related to this run will be DELETED. Do you want to continue?"):
+            if askYesNo("Confirm DELETE", "All data related to this run will be DELETED. Do you want to continue?", self.root):
                 self.project.deleteRun(run)
                 self.updateRunHistory(self.lastSelected)
         elif event == "Visualize":
