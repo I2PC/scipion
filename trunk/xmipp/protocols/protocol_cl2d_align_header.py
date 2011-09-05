@@ -44,6 +44,10 @@ Behavior = "Restart"
 """
 InSelFile=''
 
+# {file} Reference image:
+""" The reference is optional. If no reference is provided the algorithm computes one of its own. """
+ReferenceImage=""
+
 # Maximum shift:
 """ In pixels"""
 MaxShift=10

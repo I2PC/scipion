@@ -19,7 +19,7 @@ class ProtCL2DAlignment(XmippProtocol):
 
     def defineSteps(self):
         self.Db.insertStep('cl2d',verifyfiles=[os.path.join(self.WorkingDir,"results_images.xmd")],
-                           Selfile=self.InSelFile,WorkingDir=self.WorkingDir,
+                           Selfile=self.InSelFile,WorkingDir=self.WorkingDir,ReferenceImage=self.ReferenceImage,
                            MaxShift=self.MaxShift,NumberOfIterations=self.NumberOfIterations,Nproc=self.NumberOfMpi)
         self.Db.insertStep('gatherResults',
                            verifyfiles=[os.path.join(self.WorkingDir,"average.xmp"),os.path.join(self.WorkingDir,"alignment.xmd")],
@@ -35,7 +35,11 @@ class ProtCL2DAlignment(XmippProtocol):
         return message
     
     def validate(self):
-        return []
+        errors=[]
+        if self.ReferenceImage!="":
+            if not os.path.exists(self.ReferenceImage):
+                errors.append("Cannot find the file "+self.ReferenceImage)
+        return errors
     
     def visualize(self):
         if self.getRunState()==SqliteDb.RUN_FINISHED:
@@ -46,8 +50,12 @@ class ProtCL2DAlignment(XmippProtocol):
                 os.system("xmipp_showj -i %s %s &"
                           %(os.path.join(self.WorkingDir,"results_level_00_classes.stk"),os.path.join(self.WorkingDir,"results_level_00_classes.xmd")))
     
-def cl2d(log,Selfile,WorkingDir,MaxShift,NumberOfIterations,Nproc):
-    params= '-i '+str(Selfile)+' --oroot '+WorkingDir+'/results --nref 1 --nref0 1 --iter '+str(NumberOfIterations)+" --maxShift "+str(MaxShift)
+def cl2d(log,Selfile,WorkingDir,ReferenceImage,MaxShift,NumberOfIterations,Nproc):
+    params= '-i '+str(Selfile)+' --oroot '+WorkingDir+'/results --nref 1 --iter '+str(NumberOfIterations)+" --maxShift "+str(MaxShift)
+    if ReferenceImage!="":
+        params+=" --ref0 "+ReferenceImage
+    else:
+        params+=" --nref0 1"
     runJob(log,"xmipp_classify_CL2D",params,Nproc)
 
 def gatherResults(log,WorkingDir):
