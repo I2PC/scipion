@@ -20,8 +20,6 @@ PluginResources = {}
 javaEnumDict = {'ImageWriteMode': ['libraries/data/xmipp_image_base.h', 'WRITE_'],
             'CastWriteMode': ['libraries/data/xmipp_image_base.h', 'CW_'],
             'MDLabel': ['libraries/data/metadata_label.h', 'MDL_']}
-javaEnumFiles = []
-headerEnumFiles = []
 
 copyJar = None
 
@@ -613,17 +611,19 @@ def WriteJavaEnum(class_name, header_file, pattern, log):
     for line in f:
         l = line.strip();
         if l.startswith(pattern):
-
+            if '///' in l:
+                l, comment = l.split('///')
+            else:
+                comment = ''
             if l.startswith(last_label_pattern):
                 l = l.replace(last_label_pattern, last_label_pattern + " = " + str(counter) + ";")
             if (l.find("=") == -1):
-                l = l.replace(",", " = " + str(counter) + "; ")
+                l = l.replace(",", " = %d;" % counter)
                 counter = counter + 1;
             else:
                 l = l.replace(",", ";")
 
-            fOut.write("   public static final int %s\n" % l)
-
+            fOut.write("   public static final int %s ///%s\n" % (l, comment))
     fOut.write("}\n")
     fOut.close()
     f.close()
