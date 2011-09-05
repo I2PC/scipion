@@ -22,7 +22,7 @@ class ProtocolDictionary(dict):
         self.preprocess_particles = self.addProtocol('preprocess_particles',  'Preprocess Particles', 'Images/Preprocessed')
         self.ml2d = self.addProtocol('ml2d', 'ML2D', '2D/ML2D')
         self.cl2d = self.addProtocol('cl2d', 'CL2D', '2D/CL2D')
-        self.cl2d_alignment = self.addProtocol('cl2d_align', 'CL2D', '2D/Alignment')
+        self.cl2d_alignment = self.addProtocol('cl2d_align', 'Only align', '2D/Alignment')
         self.kerdensom = self.addProtocol('kerdensom', 'KerDenSOM',  '2D/KerDenSOM')
         self.rotspectra = self.addProtocol('rotspectra', 'Rotational Spectra', '2D/RotSpectra')
         self.commonlines = self.addProtocol('commonlines', 'Common Lines', '3D/CommonLines')
@@ -57,11 +57,10 @@ projectDefaults = {
 sections = [
 ('Preprocessing', 
    [['Import Micrographs', protDict.import_micrographs.name], 
-    ['Particle picking', protDict.particle_pick.name, protDict.extract_particles.name, protDict.import_particles.name], 
+    ['Particle picking', protDict.particle_pick.name, protDict.particle_pick_auto.name, protDict.extract_particles.name, protDict.import_particles.name], 
     ['Preprocess Particles', protDict.preprocess_particles.name]]),
 ('2D', 
-   [['Align+Classify', protDict.ml2d.name, protDict.cl2d.name], 
-    ['Align', protDict.ml2d.name, protDict.cl2d_alignment.name], 
+   [['Align+Classify', protDict.ml2d.name, protDict.cl2d.name, protDict.cl2d_alignment.name], 
     ['Classify', protDict.kerdensom.name, protDict.rotspectra.name]]),
 ('3D', 
    [['Initial Model', protDict.commonlines.name, protDict.rct.name], 
