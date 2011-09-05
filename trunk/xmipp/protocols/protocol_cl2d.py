@@ -49,8 +49,11 @@ class ProtCL2D(XmippProtocol):
             lastLevel=int(re.search('level_(\d\d)',lastLevelFile).group(1))
             mD=MetaData("info@"+lastLevelFile)
             iteration=mD.size()
-            mD=MetaData("classes@"+lastLevelFile)
-            message.append("Last iteration is %s from level %d with %d classes (at %s)"%(iteration,lastLevel,mD.size(),date))
+            try:
+                mD=MetaData("classes@"+lastLevelFile)
+                message.append("Last iteration is %s from level %d with %d classes (at %s)"%(iteration,lastLevel,mD.size(),date))
+            except:
+                pass
         return message
     
     def validate(self):
