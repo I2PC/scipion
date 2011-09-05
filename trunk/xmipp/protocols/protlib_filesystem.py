@@ -29,7 +29,7 @@
 # Filesystem utilities
 #---------------------------------------------------------------------------
 import os
-from protlib_utils import printLog
+from protlib_utils import printLog, failStr
 from shutil import copyfile
 #from xmipp import *
 
@@ -45,7 +45,7 @@ def createDir(log, path):
             mkpath(path, 0777, True)
             printLog("Created dir " + path, log)
     except DistutilsFileError, e:
-        printLog(redStr("Couldn't create dir: '%(path)s': %(e)s" % locals()), 
+        printLog(failStr("Couldn't create dir: '%(path)s': %(e)s" % locals()), 
                  log, err=True, isError=True)
 
 def changeDir(log, path):
