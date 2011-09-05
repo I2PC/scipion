@@ -1340,15 +1340,23 @@ void ProgClassifyCL2D::run()
     {
         std::sort(vq.P.begin(),vq.P.end(),SDescendingClusterSort());
         Q=vq.P.size();
-        MetaData SFq,SFaux;
+        MetaData SFq,SFclassified,SFaux,SFaux2;
         for (int q=0; q<Q; q++)
         {
         	SFq.read(formatString("class_%06d@%s_level_%02d_classes.xmd",q+1,fnOut.c_str(),level));
         	SFq.fillConstant(MDL_REF,integerToString(q+1));
-        	SFaux.join(SF,SFq,MDL_IMAGE,INNER); // COSS
-        	SF=SFaux;
+        	SFq.fillConstant(MDL_ENABLED,"1");
+            SFclassified.unionAll(SFq);
         }
-        SF.write(fnOut+"_images.xmd");
+        SFaux=SF;
+        SFaux.subtraction(SFclassified,MDL_IMAGE);
+        SFaux.fillConstant(MDL_ENABLED,"-1");
+        SFaux2.join(SFclassified,SF,MDL_IMAGE,LEFT);
+        SFclassified.clear();
+        SFaux2.unionAll(SFaux);
+        SFaux.clear();
+        SFaux.sort(SFaux2,MDL_IMAGE);
+        SFaux.write(fnOut+"_images.xmd");
     }
 }
 
