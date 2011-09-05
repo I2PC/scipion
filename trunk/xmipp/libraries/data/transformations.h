@@ -296,6 +296,9 @@ void applyGeometry(int SplineDegree,
     }
     const Matrix2D<double> &Aref=*Aptr;
 
+
+
+
     // For scalings the output matrix is resized outside to the final
     // size instead of being resized inside the routine with the
     // same size as the input matrix
@@ -384,29 +387,23 @@ void applyGeometry(int SplineDegree,
                 // If the point is outside the image, apply a periodic extension
                 // of the image, what exits by one side enters by the other
                 interp = true;
+                bool x_isOut = XMIPP_RANGE_OUTSIDE(xp, minxp, maxxp);
+                bool y_isOut = XMIPP_RANGE_OUTSIDE(yp, minyp, maxyp);
+
                 if (wrap)
                 {
-                    if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                    if (x_isOut)
                         xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
 
-                    if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
-
+                    if (y_isOut)
                         yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
-                }
-                else
-                {
-                    if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
-                        interp = false;
 
-                    if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
-                        interp = false;
                 }
+                else if (x_isOut || y_isOut)
+                    interp = false;
 
 #ifdef DEBUG_APPLYGEO
+
                 std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
                 << std::endl;
                 std::cout << "   Interp = " << interp << std::endl;
@@ -586,34 +583,23 @@ void applyGeometry(int SplineDegree,
                     // extension of the volume, what exits by one side enters by
                     // the other
                     interp  = true;
+                    bool x_isOut = XMIPP_RANGE_OUTSIDE(xp, minxp, maxxp);
+                    bool y_isOut = XMIPP_RANGE_OUTSIDE(yp, minyp, maxyp);
+                    bool z_isOut = XMIPP_RANGE_OUTSIDE(zp, minzp, maxzp);
+
                     if (wrap)
                     {
-                        if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                            xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                        if (x_isOut)
                             xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
 
-                        if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                            yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                        if (y_isOut)
                             yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
 
-                        if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
-                            zp > maxzp + XMIPP_EQUAL_ACCURACY)
+                        if (z_isOut)
                             zp = realWRAP(zp, minzp - 0.5, maxzp + 0.5);
                     }
-                    else
-                    {
-                        if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                            xp > maxxp + XMIPP_EQUAL_ACCURACY)
-                            interp = false;
-
-                        if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                            yp > maxyp + XMIPP_EQUAL_ACCURACY)
-                            interp = false;
-
-                        if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
-                            zp > maxzp + XMIPP_EQUAL_ACCURACY)
-                            interp = false;
-                    }
+                    else if (x_isOut || y_isOut || z_isOut)
+                        interp = false;
 
                     if (interp)
                     {

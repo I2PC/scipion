@@ -64,6 +64,10 @@
  */
 #define XMIPP_EQUAL_REAL(x, y) (ABS((ABS(x) - ABS(y))) < XMIPP_EQUAL_ACCURACY)
 #define XMIPP_EQUAL_ZERO(x) (ABS(x) < XMIPP_EQUAL_ACCURACY)
+#define XMIPP_RANGE_INSIDE(x,min,max)    ((x) >= (min) - XMIPP_EQUAL_ACCURACY && \
+										  (x) <= (max) + XMIPP_EQUAL_ACCURACY)
+#define XMIPP_RANGE_OUTSIDE(x,min,max)   ((x) < (min) - XMIPP_EQUAL_ACCURACY || \
+										  (x) > (max) + XMIPP_EQUAL_ACCURACY)
 //@}
 
 /// @name Numerical functions
