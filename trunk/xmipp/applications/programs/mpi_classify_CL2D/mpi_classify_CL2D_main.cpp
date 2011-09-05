@@ -355,7 +355,7 @@ void CL2DClass::lookForNeighbours(const std::vector<CL2DClass *> listP, int K)
             {
                 I=listP[q]->P;
                 fit(I,assignment);
-                distanceCode(q)=assignment.corr;
+              	A1D_ELEM(distanceCode,q)=assignment.corr;
             }
         }
 
@@ -645,7 +645,7 @@ void CL2D::initialize(MetaData &_SF,
         {
             for (size_t idx=first; idx<=last; ++idx)
             {
-            	size_t objId=prm->objId[idx];
+                size_t objId=prm->objId[idx];
                 readImage(I,objId,false);
 
                 int q;
@@ -655,18 +655,21 @@ void CL2D::initialize(MetaData &_SF,
                 q-=1;
 
                 outClass.objId=inClass.objId=objId;
-                Iaux=I();
-                P[q]->fit(Iaux, inClass);
-                P[q]->updateProjection(Iaux,inClass);
-                if (prm->Ncodes0>1)
-                    for (int qp=0; qp<prm->Ncodes0; qp++)
-                    {
-                        if (qp==q)
-                            continue;
-                        Iaux=I();
-                        P[qp]->fit(Iaux,outClass);
-                        P[qp]->updateNonProjection(outClass.corr);
-                    }
+                if (q!=-1)
+                {
+                    Iaux=I();
+                    P[q]->fit(Iaux, inClass);
+                    P[q]->updateProjection(Iaux,inClass);
+                    if (prm->Ncodes0>1)
+                        for (int qp=0; qp<prm->Ncodes0; qp++)
+                        {
+                            if (qp==q)
+                                continue;
+                            Iaux=I();
+                            P[qp]->fit(Iaux,outClass);
+                            P[qp]->updateNonProjection(outClass.corr);
+                        }
+                }
                 if (prm->node->rank==0 && idx%100==0)
                     progress_bar(idx);
             }
@@ -765,7 +768,7 @@ void CL2D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode, CL2DAss
             // Try this image
             Iaux=I;
             P[q]->fit(Iaux,assignment);
-            corrList(q)=assignment.corr;
+            VEC_ELEM(corrList,q)=assignment.corr;
             if (!prm->classicalMultiref && assignment.likelihood>bestAssignment.likelihood ||
                 prm->classicalMultiref && assignment.corr>bestAssignment.corr)
             {
@@ -844,7 +847,7 @@ void CL2D::run(const FileName &fnOut, int level)
         {
             for (size_t idx=first; idx<=last; ++idx)
             {
-            	size_t objId=prm->objId[idx];
+                size_t objId=prm->objId[idx];
                 readImage(I,objId,false);
 
                 assignment.objId=objId;
@@ -914,6 +917,8 @@ void CL2D::run(const FileName &fnOut, int level)
                         largestNode=q;
                     }
                 }
+                if (largestNode==-1 || smallNode==-1)
+                	break;
                 if (sizeSmallestNode<prm->PminSize*Nimgs/Q*0.01 )
                 {
                     if (prm->node->rank==0 && prm->verbose)
@@ -1023,7 +1028,7 @@ void CL2D::splitNode(CL2DClass *node,
             {
                 readImage(I,node->currentListImg[i].objId,false);
                 node->fit(I(), assignment);
-                corrList(i)=assignment.corr;
+                A1D_ELEM(corrList,i)=assignment.corr;
             }
             if (prm->node->rank==0 && i%25==0 && prm->verbose>=2)
                 progress_bar(i);
@@ -1049,13 +1054,13 @@ void CL2D::splitNode(CL2DClass *node,
                 if (assignment.corr<corrThreshold)
                 {
                     node1->updateProjection(I(),assignment);
-                    newAssignment(i)=1;
+                    VEC_ELEM(newAssignment,i)=1;
                     node2->updateNonProjection(assignment.corr);
                 }
                 else
                 {
                     node2->updateProjection(I(),assignment);
-                    newAssignment(i)=2;
+                    VEC_ELEM(newAssignment,i)=2;
                     node1->updateNonProjection(assignment.corr);
                 }
             }
@@ -1093,13 +1098,13 @@ void CL2D::splitNode(CL2DClass *node,
                     if (assignment1.likelihood>assignment2.likelihood)
                     {
                         node1->updateProjection(Iaux1,assignment1);
-                        newAssignment(i)=1;
+                        VEC_ELEM(newAssignment,i)=1;
                         node2->updateNonProjection(assignment2.corr);
                     }
                     else if (assignment2.likelihood>assignment1.likelihood)
                     {
                         node2->updateProjection(Iaux2,assignment2);
-                        newAssignment(i)=2;
+                        VEC_ELEM(newAssignment,i)=2;
                         node1->updateNonProjection(assignment1.corr);
                     }
                 }
@@ -1329,7 +1334,7 @@ void ProgClassifyCL2D::run()
         {
             vq.splitFirstNode();
             if (node->rank==0)
-            	std::cout << "Currently there are " << vq.P.size() << " nodes" << std::endl;
+                std::cout << "Currently there are " << vq.P.size() << " nodes" << std::endl;
         }
 
         Q=vq.P.size();
@@ -1343,9 +1348,9 @@ void ProgClassifyCL2D::run()
         MetaData SFq,SFclassified,SFaux,SFaux2;
         for (int q=0; q<Q; q++)
         {
-        	SFq.read(formatString("class_%06d@%s_level_%02d_classes.xmd",q+1,fnOut.c_str(),level));
-        	SFq.fillConstant(MDL_REF,integerToString(q+1));
-        	SFq.fillConstant(MDL_ENABLED,"1");
+            SFq.read(formatString("class_%06d@%s_level_%02d_classes.xmd",q+1,fnOut.c_str(),level));
+            SFq.fillConstant(MDL_REF,integerToString(q+1));
+            SFq.fillConstant(MDL_ENABLED,"1");
             SFclassified.unionAll(SFq);
         }
         SFaux=SF;
