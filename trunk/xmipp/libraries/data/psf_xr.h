@@ -224,7 +224,7 @@ public:
 
     /* Definition of params to be read from command line
      */
-    void defineParams(XmippProgram * program);
+    static void defineParams(XmippProgram * program);
 
     /* Read of params from command line
      */

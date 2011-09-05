@@ -53,7 +53,7 @@ void XRayPSF::readParams(XmippProgram * program)
     Nzp     = program->getDoubleParam("--zones");
     Ms      = program->getDoubleParam("--mag");
     dxoPSF  = program->getDoubleParam("--sampling",0)*1e-9;
-    dzoPSF  = STR_EQUAL(program->getParam("--sampling", 1), "dxy") ? dxoPSF : program->getDoubleParam("-sampling", 1)*1e-9;
+    dzoPSF  = STR_EQUAL(program->getParam("--sampling", 1), "dxy") ? dxoPSF : program->getDoubleParam("--sampling", 1)*1e-9;
     DeltaZo = program->getDoubleParam("--zshift")*1e-6;
     Nox     = program->getIntParam("--size",0);
     Noy     = STR_EQUAL(program->getParam("--size", 1),"x") ? Nox : program->getIntParam("--size", 1);
@@ -83,7 +83,7 @@ void XRayPSF::read(const FileName &fn)
         if (MD.getValue(MDL_IMAGE,fnPSF, id))
         {
             mode = PSF_FROM_FILE;
-            PSFGen.read(fnPSF);
+            PSFGen.read(fn.getDir()+fnPSF);
             PSFGen.getDimensions(Nox, Noy, Noz);
             MULTIDIM_ARRAY_GENERIC(PSFGen).setXmippOrigin();
         }
@@ -243,7 +243,7 @@ void XRayPSF::init()
 /* Default values ---------------------------------------------------------- */
 void XRayPSF::clear()
 {
-	PSFGen.clear();
+    PSFGen.clear();
     init();
 }
 
@@ -358,21 +358,19 @@ void XRayPSF::generateOTF()
         }
     case PSF_FROM_FILE:
         {
-            dMij(T, 2, 3) = (Z-Zo)/dzoPSF;
+            dMij(T, 2, 3) = (Zo + DeltaZo - Z)/dzoPSF;
 
             PSFi.resizeNoCopy(Niy, Nix);
             PSFi.setXmippOrigin();
             applyGeometry(LINEAR, PSFi, MULTIDIM_ARRAY_GENERIC(PSFGen), T,
-                          IS_NOT_INV, DONT_WRAP);
+                          IS_INV, DONT_WRAP, PSFGen.getPixel(1,1,1,1));
+
 
             CenterFFT(PSFi, true);
 
             break;
         }
     }
-
-    //    OTF.resizeNoCopy(PSFi.ydim, PSFi.xdim/2+1);
-
 
     ftGenOTF.FourierTransform(PSFi, OTF, false);
 
@@ -412,7 +410,7 @@ void XRayPSF::generatePSF()
     //    VOLMATRIX(*PSF).setXmippOrigin();
 
     PSFGen.setDatatype(Float);
-    MULTIDIM_ARRAY_GENERIC(PSFGen).resize(1,Noz, Noy, Nox, false);
+    MULTIDIM_ARRAY_GENERIC(PSFGen).resize(1,Noz, Niy, Nix, false);
     MULTIDIM_ARRAY_GENERIC(PSFGen).setXmippOrigin();
 
     MultidimArray<double> PSFi;
@@ -422,12 +420,12 @@ void XRayPSF::generatePSF()
     int k2;
     for (int k = STARTINGZ(MULTIDIM_ARRAY_BASE(PSFGen)), k2 = 0; k <= FINISHINGZ(MULTIDIM_ARRAY_BASE(PSFGen)); k++, k2++)
     {
-        /* We keep sign of Z and Zo positives in object space for the sake of simplicity in calculations,
-         * it is, they increase opposite to Zdim in Xmipp reference system, so this is why to calculate
-         * the plane Z we subtract  DeltaZo and k*dzoPSF.
+        /* We keep sign of Z, Zo and DeltaZo positives in object space for the sake of simplicity in calculations,
+         * it is, they increase opposite to Zdim in Xmipp reference system, so this is the reason to calculate
+         * the plane Z by subtracting k*dzoPSF which keeps positive in XMIPP system.
          */
 
-        Z = Zo - ( DeltaZo + k*dzoPSF );
+        Z = Zo + DeltaZo - k*dzoPSF;
 
         switch (type)
         {
@@ -448,6 +446,11 @@ void XRayPSF::generatePSF()
 
         progress_bar(k2+1);
     }
+    if (Nix != Nox || Niy != Noy)
+        MULTIDIM_ARRAY_GENERIC(PSFGen).selfWindow(STARTINGZ(MULTIDIM_ARRAY_BASE(PSFGen)),
+                FIRST_XMIPP_INDEX(Noy),FIRST_XMIPP_INDEX(Nox),
+                FINISHINGZ(MULTIDIM_ARRAY_BASE(PSFGen)),
+                FIRST_XMIPP_INDEX(Noy)+Noy-1,FIRST_XMIPP_INDEX(Nox)+Nox-1);
 }
 
 /* Generate the PSF for a ideal lens --------------------------------------- */
@@ -672,7 +675,7 @@ void XRayPSF::adjustParam()
     }
     else
     {
-        if (verbose > 1) // It is only to calculate the first time
+        if (verbose > 1) // Verbose param is used to calculate Matrix T the first time only
         {
             T.initIdentity(4);
             double scaleFactor = dxo/dxoPSF;
@@ -684,9 +687,8 @@ void XRayPSF::adjustParam()
 
     }
 
-
     if (verbose > 1)
-        verbose--;
+        --verbose;
 }
 
 /* Generate the quadratic phase distribution of an ideal lens ------------- */
@@ -699,25 +701,19 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
 
     double K = (-PI / (lambda * Flens));
 
-    for (int i=0; i<((Im).ydim); i++)
+    for (int i=0; i < YSIZE(Im); ++i)
     {
         y = (double) i * dy + (dy - Ly0) * 0.5;
         double y2 =  y * y;
 
-        for (int j=0; j<((Im).xdim); j++)
+        for (int j=0; j < XSIZE(Im); ++j)
         {
             /// For indices in standard fashion
             x = (double) j * dx + (dx - Lx0) *0.5;
 
             phase = K * (x * x + y2);
 
-            //#ifndef _AIX
-            //
-            //            dAij(Im,i,j).real() = cos(phase);
-            //            dAij(Im,i,j).imag() = sin(phase);
-            //#else
             dAij(Im,i,j) = std::complex<double>(cos(phase),sin(phase));
-            //#endif
         }
     }
 }
