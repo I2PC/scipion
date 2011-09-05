@@ -102,7 +102,7 @@ def cl2d(log,Selfile,WorkingDir,NumberOfReferences,NumberOfInitialReferences,Num
     if not levelFiles:
         levelFiles.sort()
         lastLevelFile=levelFiles[-1]
-        mD=xmipp.MetaData("classes@"+lastLevelFile)
+        mD = MetaData("classes@"+lastLevelFile)
         if mD.size()==NumberOfReferences:
             createLink(log, lastLevelFile, WorkingDir+"results_classes.sel")
 
