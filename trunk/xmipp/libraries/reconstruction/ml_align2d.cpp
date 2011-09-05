@@ -283,7 +283,7 @@ void ProgML2D::printModel(const String &msg, const ModelML2D & model)
 }
 
 
-
+#define LOG(str)
 // Trying to merge produceSideInfo 1 y 2
 void ProgML2D::produceSideInfo()
 {
@@ -1964,7 +1964,7 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
 
     ASSIGN(dim);
     ASSIGN(sumfracweight);
-    ASSIGN(LL);
+    local_model.LL = LL;
     // Update sigma of the origin offsets
     if (!fix_sigma_offset)
         ASSIGN(wsum_sigma_offset);

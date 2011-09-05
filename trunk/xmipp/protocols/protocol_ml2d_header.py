@@ -119,100 +119,63 @@ after the completely finished iteration. (Use zero to start from the beginning)
 """
 RestartIter = 0
 
-#------------------------------------------------------------------------------------------
-# {section}{has_question} {expert}  Additional options 
-# Show
-show__K_0012_Show = True
-#  --eps   float
+# {expert} --eps   float
 """
  Stopping criterium 
 """
-_K_0013_P_eps_A_float = "5e-5"
+Eps = 5e-5
 
-#  --iter   int
+# {expert} --iter   int
 """
  Maximum number of iterations to perform  
 """
-_K_0014_P_iter_A_int = "100"
+MaxIters = 100
 
-#  --psi_step   float
+#{expert}  --psi_step   float
 """
  In-plane rotation sampling interval [deg] 
 """
-_K_0015_P_psi_step_A_float = "5."
+PsiStep = 5.0
 
-#  --noise   float
+#{expert}  --noise   float
 """
  Expected standard deviation for pixel noise  
 """
-_K_0016_P_noise_A_float = "1"
+StdNoise = 1
 
-#  --offset   float
+# {expert} --offset   float
 """
  Expected standard deviation for origin offset [pix] 
 """
-_K_0017_P_offset_A_float = "3."
+StdOffset = 3.0
 
-# {file} --frac   docfile
-"""
- Docfile with expected model fractions (default: even distr.) 
-"""
-_K_0018_P_frac_A_docfile = ""
-
-#  -C   double
+# {expert} -C   double
 """
  Significance criterion for fast approach  
 """
-_K_0019_P_C_A_double = "1e-12"
+CFast = 1e-12
 
-# --zero_offsets
+# {expert} --zero_offsets
 """
  Kick-start the fast algorithm from all-zero offsets  
 """
-_K_0020_P_zero_offsets = False
-#  --restart   iter
-"""
- restart a run with all parameters as in the logfile  
-"""
-_K_0021_P_restart_A_iter = "1"
+ZeroOffsets = False
 
-# --fix_sigma_noise
+# {expert} --fix_sigma_noise
 """
  Do not re-estimate the standard deviation in the pixel noise  
 """
-_K_0022_P_fix_sigma_noise = False
-# --fix_sigma_offset
+FixSigmaNoise = False
+# {expert}--fix_sigma_offset
 """
  Do not re-estimate the standard deviation in the origin offsets  
 """
-_K_0023_P_fix_sigma_offset = False
-# --fix_fractions
+FixSigmaOffset = False
+# {expert} --fix_fractions
 """
  Do not re-estimate the model fractions  
 """
-_K_0024_P_fix_fractions = False
-#  --student   df
-"""
- Use t-distributed instead of Gaussian model for the noise  
- df = Degrees of freedom for the t-distribution  
-"""
-_K_0025_P_student_A_df = "6"
-
-# --norm
-"""
- Refined normalization parameters for each particle  
-"""
-_K_0026_P_norm = False
-# --save_memA
-"""
- Save memory A(deprecated) 
-"""
-_K_0027_P_save_memA = False
-# --save_memB
-"""
- Save memory B(deprecated) 
-"""
-_K_0028_P_save_memB = False
+FixFractions = False
 
 #------------------------------------------------------------------------------------------
 # {section} Parallelization 
