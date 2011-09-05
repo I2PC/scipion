@@ -1,202 +1,81 @@
 #!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
-# Xmipp protocol for image classification using self-organizing maps
-#
-# Example use:
-# ./xmipp_protocol_kerdensom.py
-#
-# Author:Carlos Oscar Sorzano, January 2011
-#
+# Protocol for Xmipp-based classification with KerDenSOM
+# Author: Carlos Oscar Sanchez Sorzano, September 2011
 #
 
-import os,shutil,sys,time
+import glob,os,sys,shutil,time
 from protlib_base import *
-
-def stepPerformed(step,filename):
-    import re
-    f = open(filename, 'r')
-    lines=f.readlines()
-    f.close()
-    expr = re.compile(step)
-    return len(filter(expr.search,lines))>0
+from config_protocols import protDict
+from protlib_utils import runJob
+from protlib_filesystem import deleteFiles
+from protlib_sql import SqliteDb
+from xmipp import MetaData, MDL_IMAGE, MD_APPEND
 
 class ProtKerdensom(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.kerdensom.name, scriptname, project)
-        self.Import = 'from protocol_kerdensom import *'
+        self.Import = 'from protocol_kerdensom import *'    
+
+    def defineSteps(self):
+        self.Db.insertStep('img2vector',[os.path.join(self.WorkingDir,"vectors.xmd")],
+                           Selfile=self.InSelFile,Mask=self.Mask,WorkingDir=self.WorkingDir)
+        self.Db.insertStep('kerdensom',[os.path.join(self.WorkingDir,"results_vectors.xmd"),
+                                        os.path.join(self.WorkingDir,"results_classes.xmd"),
+                                        os.path.join(self.WorkingDir,"results_images.xmd")],
+                           WorkingDir=self.WorkingDir,SomXdim=self.SomXdim,SomYdim=self.SomYdim,
+                           SomReg0=self.SomReg0,SomReg1=self.SomReg1,SomSteps=self.SomSteps,
+                           KerdensomExtraCommand=self.KerdensomExtraCommand)
+        self.Db.insertStep('vector2img',[os.path.join(self.WorkingDir,"results_classes.stk")],Mask=self.Mask,WorkingDir=self.WorkingDir)
+        self.Db.insertStep('rewriteClassBlock',WorkingDir=self.WorkingDir)
+
+    def summary(self):
+        message=[]
+        message.append("Classification of "+self.InSelFile+" into a map of size "+str(self.SomYdim)+"x"+str(self.SomXdim))
+        if self.getRunState()==SqliteDb.RUN_STARTED:
+            lines=[]
+            for line in open(self.LogPrefix+".err").readlines():
+                if "Training Deterministic Annealing" in line:
+                    lines.append(line)
+            message.append("Currently at iteration "+str(len(lines))+" out of "+str(self.SomSteps))
+        return message
     
-    def saveAndCompareParameters(self, listOfParameters):
-        fnOut=self.WorkingDir + "/protocolParameters.txt"
-        linesNew=[];
-        for prm in listOfParameters:
-            eval("linesNew.append('"+prm +"='+str("+prm+")+'\\n')")
-        if os.path.exists(fnOut):
-            f = open(fnOut, 'r')
-            linesOld=f.readlines()
-            f.close()
-            same=True;
-            if len(linesOld)==len(linesNew):
-                for i in range(len(linesNew)):
-                    if not linesNew[i]==linesOld[i]:
-                        same=False
-                        break;
-            else:
-                same=False
-            if not same:
-                print("Deleting")
-                self.log.info("Deleting working directory since it is run with different parameters")
-                shutil.rmtree(self.WorkingDir)
-                os.makedirs(self.WorkingDir)
-        f = open(fnOut, 'w')
-        f.writelines(linesNew)
-        f.close()
-
-   #init variables
-#   def __init__(self,
-#                SelFileName,
-#                WorkingDir,
-#                ProjectDir,
-#                DoXmask,
-#                MaskFileName,
-#                SomXdim,
-#                SomYdim,
-#                SomReg0,
-#                SomReg1,
-#                SomSteps,                
-#                KerdensomExtraCommand):
-#       import log
-#
-#       self.SelFileName=SelFileName
-#       self.WorkingDir=WorkingDir
-#       self.ProjectDir=ProjectDir
-#       self.DoXmask=DoXmask
-#       self.MaskFileName=MaskFileName
-#       self.SomXdim=SomXdim
-#       self.SomYdim=SomYdim
-#       self.SomReg0=SomReg0
-#       self.SomReg1=SomReg1
-#       self.SomSteps=SomSteps              
-#       self.KerdensomExtraCommand=KerdensomExtraCommand
-#       self.log=log.init_log_system(ProjectDir,
-#                                      LogDir,
-#                                      sys.argv[0],
-#                                      WorkingDir)
-#       
-#       # Create directory if does not exist
-#       if not os.path.exists(self.WorkingDir):
-#           os.makedirs(self.WorkingDir)
-#
-#       # Save parameters and compare to possible previous runs
-#       self.saveAndCompareParameters([
-#                 "SelFileName",
-#                 "DoXmask",
-#                 "MaskFileName",
-#                 "SomXdim",
-#                 "SomYdim",
-#                 "SomReg0",
-#                 "SomReg1",
-#                 "SomSteps",
-#                 "KerdensomExtraCommand"]);
-#
-#       #made backup of this script
-#       log.make_backup_of_script_file(sys.argv[0],self.WorkingDir)
-#
-#       # Update status
-#       fh=open(self.WorkingDir + "/status.txt", "a")
-#       fh.write("Step 0: Process started at " + time.asctime() + "\n")
-#       fh.close()
-#
-#       # Effectively run
-#       if (self.DoXmask):
-#            self.execute_xmask()
-#       self.execute_img2data()
-#       self.execute_kerdensom()
-#       self.execute_data2img()
-#  
-#       fh=open(self.WorkingDir + "/status.txt", "a")
-#       fh.write("Step F: Process finished at " + time.asctime() + "\n")
-#       fh.close()
-#       
-   #------------------------------------------------------------------------
-   #Auxiliary functions
-   #------------------------------------------------------------------------
-    def execute_xmask(self):
-        import os
-        import launch_job
-        self.MaskFileName=self.WorkingDir+'/mask_design.msk'
-        command=' -sel '+self.SelFileName + ' -save_as '+self.MaskFileName
-        launchJob("xmipp_mask_design",
-                              command,
-                              self.log,
-                              False,1,1,'')
-
-    def execute_img2data(self):
-        import os
-        import launch_job
-        command=' -i '+ self.SelFileName + \
-                ' -o ' + self.WorkingDir+"/data.txt"
-        if self.MaskFileName=='':
-            command+=' -nomask '
-        else:
-            command+=' -mask '+ self.MaskFileName
-        launchJob("xmipp_convert_img2data",
-                              command,
-                              self.log,
-                              False,1,1,'')
-
-    def execute_data2img(self):
-        import os
-        import launch_job
-        command=' -i '+ self.WorkingDir+"/som.cod" + \
-                ' -o '+ self.WorkingDir+"/som.stk" + \
-                ' -rows ' + str(self.SomXdim) + \
-                ' -cols ' + str(self.SomYdim)
-        if self.MaskFileName=='':
-            command+=' -nomask '
-        else:
-            command+=' -mask '+ self.MaskFileName
-        launchJob("xmipp_convert_data2img",
-                              command,
-                              self.log,
-                              False,1,1,'')
-
-   #------------------------------------------------------------------------
-   #execute_KerDenSOM
-   #------------------------------------------------------------------------
-    def execute_kerdensom(self):
-      import launch_job
-
-      if stepPerformed("Step 1",self.WorkingDir + "/status.txt"):
-         return
-      print '*********************************************************************'
-      print '* Computing kerdensom ...'
-      command=' -v 1 -i '  + self.WorkingDir+"/data.txt" + \
-              ' -o '    + self.WorkingDir+"/som"  + \
-              ' --xdim ' + str(self.SomXdim) + \
-              ' --ydim ' + str(self.SomYdim) + \
-              ' --reg0 ' + str(self.SomReg0) + \
-              ' --reg1 ' + str(self.SomReg1) + \
-              ' --steps ' + str(self.SomSteps) + \
-              ' '  + str(self.KerdensomExtraCommand)
-      launchJob("xmipp_classify_kerdensom",
-                            command,
-                            self.log,
-                            False,1,1,'')
-      os.system("rm -f "+self.WorkingDir+"/som_*")
-      if os.path.exists(self.WorkingDir+"/som.cod"):
-          fh=open(self.WorkingDir + "/status.txt", "a")
-          fh.write("Step 1: KerDenSOM finished at " + time.asctime() + "\n")
-          fh.close()
-
-    # Preconditions
-    def validate():
+    def validate(self):
         errors = []
-        # Check if there is workingdir
-        if WorkingDir == "":
-            errors.append("No working directory given")
-        # Check that there are any micrograph to process
-        if not os.path.exists(SelFileName):
-            errors.append("The input selfile is not valid")
-        
+        if self.SomReg0<self.SomReg1:
+            errors.append("Regularization must decrease over iterations: Initial regularization must be larger than final")
         return errors
+    
+def img2vector(log,Selfile,Mask,WorkingDir):
+     args=' -i '+ Selfile + ' -o ' + os.path.join(WorkingDir,"vectors.xmd")
+     if Mask!='':
+         args+=' --mask binary_file '+Mask
+     runJob(log,"xmipp_image_vectorize", args)
 
+def kerdensom(log,WorkingDir,SomXdim,SomYdim,SomReg0,SomReg1,SomSteps,KerdensomExtraCommand):
+    args='-i '+os.path.join(WorkingDir,"vectors.xmd")+\
+         ' --oroot '+os.path.join(WorkingDir,"results")+\
+         ' --xdim ' + str(SomXdim) + \
+         ' --ydim ' + str(SomYdim) + \
+         ' --deterministic_annealing %f %f %f'%(SomSteps,SomReg0,SomReg1) + \
+         ' '+ str(KerdensomExtraCommand)
+    runJob(log,"xmipp_classify_kerdensom",args)
+    deleteFiles(log, [os.path.join(WorkingDir,"vectors.xmd"),os.path.join(WorkingDir,"vectors.xmd.raw")], True)
+   
+def vector2img(log,Mask,WorkingDir):
+    args=' -i '+os.path.join(WorkingDir,"results_vectors.xmd")+\
+         ' -o '+os.path.join(WorkingDir,"results_classes.stk")
+    if Mask!='':
+         args+=' --mask binary_file '+Mask
+    runJob(log,"xmipp_image_vectorize", args)
+    deleteFiles(log, [os.path.join(WorkingDir,"results_vectors.xmd"),os.path.join(WorkingDir,"results_vectors.xmd.raw")], True)
+
+def rewriteClassBlock(log,WorkingDir):
+    fnClass="classes@%s"%os.path.join(WorkingDir,"results_classes.xmd")
+    fnClassStack=os.path.join(WorkingDir,"results_classes.stk")
+    mD=MetaData(fnClass)
+    counter=1
+    for id in mD:
+        mD.setValue(MDL_IMAGE,"%06d@%s"%(counter,fnClassStack),id)
+        counter+=1
+    mD.write(fnClass,MD_APPEND)

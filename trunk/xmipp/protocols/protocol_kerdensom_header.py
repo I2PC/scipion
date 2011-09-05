@@ -9,19 +9,8 @@
 #
 #
 # {begin_of_header}
-#------------------------------------------------------------------------------------------
-# {section}{has_question} Comment
-#------------------------------------------------------------------------------------------
-# Display comment
-DisplayComment = False
-
-# {text} Write a comment:
-""" 
-Describe your run here...
-"""
-
 #-----------------------------------------------------------------------------
-# {section} Global parameters
+# {section} Run parameters
 #-----------------------------------------------------------------------------
 # Run name:
 """ This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
@@ -29,39 +18,28 @@ run1 for it. This name together with the protocol output folder will determine t
 """
 RunName = "run_001"
 
-# Delete working directory?
-""" If TRUE the working directory will be deleted before run.
-Set this option to TRUE if you want to start from scratch the same run
-with previous parameters
+# {list}(Resume, Restart) Run behavior
+""" Resume from the last step, restart the whole process
 """
-DoDeleteWorkingDir = False
+Behavior = "Restart"
 
-# {file} Selfile or stack with the input images:
+#------------------------------------------------------------------------------------------------
+# {section} KerdenSOM parameters
+#------------------------------------------------------------------------------------------------
+# {file}{validate}(PathExists) Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName='CL2D/classes4/class_core_classes/class_core_00000.stk'
+InSelFile=''
 
-#------------------------------------------------------------------------------------------------
-# {section} Mask parameters
-#------------------------------------------------------------------------------------------------
-#{list}(graphical,file) Choose mask type:
-"""
-Choose the type of mask you want to use. You can design it graphically
-or use an existing mask from a file.
-The first option will launch a graphical program to design your own mask.
-Be careful NOT to submit your job via a queueing system!
-"""
-MaskType='graphical'
-# {file}{condition}(MaskType=file) Mask file 
-MaskFileName=''
+# {file} Mask file 
+Mask=''
 
-#-----------------------------------------------------------------------------
-# {section} Classification: classify_kerdensom 
-#-----------------------------------------------------------------------------
 # X-dimension of the map:
 SomXdim=7
+
 # Y-dimension of the map:
 SomYdim=7
+
 # {expert} Initial regularization factor:
 """ The kerdenSOM algorithm anneals from an initial high regularization factor
     to a final lower one, in a user-defined number of steps.
@@ -70,16 +48,39 @@ SomYdim=7
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
 """
 SomReg0=1000
+
 # {expert} Final regularization factor:
 SomReg1=200
+
 # {expert} Regularization steps
 """Number of steps to lower the regularization factor"""
 SomSteps=5
+
 # {expert} Additional kerdenSOM parameters:
 """ For a complete description 
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
 """
 KerdensomExtraCommand=''
+
+#------------------------------------------------------------------------------------------
+# {section} Parallelization
+#------------------------------------------------------------------------------------------
+# Submit to queue
+"""Submit to queue
+"""
+SubmitToQueue = False
+
+# {condition}(SubmitToQueue) Queue name
+"""Name of the queue to submit the job
+"""
+QueueName = "default"
+
+# {condition}(SubmitToQueue) Queue hours
+"""This establish a maximum number of hours the job will
+be running, after that time it will be killed by the
+queue system
+"""
+QueueHours = 96
 
 #------------------------------------------------------------------------------------------------
 # {end_of_header} do not change anything bellow this line unless you know what you are doing
