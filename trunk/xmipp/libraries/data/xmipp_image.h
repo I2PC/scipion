@@ -103,6 +103,17 @@ public:
         MD.resize(Ndim);
     }
 
+    /** Constructor with MultidimArray alias
+     *
+     *  An image is created directly with its multidimarray aliased to im.
+     *  This function is useful when debugging and you want to save multidimarrays.
+     */
+    Image(const MultidimArray<T> &im)
+    {
+        init();
+        data.alias(im);
+    }
+
     /** Destructor.
         */
     ~Image()
