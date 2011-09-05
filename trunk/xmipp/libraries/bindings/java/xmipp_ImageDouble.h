@@ -51,14 +51,6 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1image
 
 /*
  * Class:     xmipp_ImageDouble
- * Method:    readApplyGeo
- * Signature: (Lxmipp/MetaData;J)V
- */
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readApplyGeo
-  (JNIEnv *, jobject, jobject, jlong);
-
-/*
- * Class:     xmipp_ImageDouble
  * Method:    read_preview
  * Signature: (Ljava/lang/String;IIIJ)V
  */
@@ -67,18 +59,18 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1preview
 
 /*
  * Class:     xmipp_ImageDouble
- * Method:    setData
- * Signature: (III[D)V
+ * Method:    readApplyGeo
+ * Signature: (Lxmipp/MetaData;JII)V
  */
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData__III_3D
-  (JNIEnv *, jobject, jint, jint, jint, jdoubleArray);
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readApplyGeo
+  (JNIEnv *, jobject, jobject, jlong, jint, jint);
 
 /*
  * Class:     xmipp_ImageDouble
  * Method:    setData
  * Signature: (IIII[D)V
  */
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData__IIII_3D
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData
   (JNIEnv *, jobject, jint, jint, jint, jint, jdoubleArray);
 
 /*

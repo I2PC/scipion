@@ -56,7 +56,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1image
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readApplyGeo(
-		JNIEnv *env, jobject jimage, jobject jmetadata, jlong id) {
+		JNIEnv *env, jobject jimage, jobject jmetadata, jlong id, jint w, jint h) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jimage);
 	MetaData *metadata = GET_INTERNAL_METADATA(jmetadata);
@@ -64,7 +64,10 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readApplyGeo(
 	if (image != NULL) {
 		if (metadata != NULL) {
 			try {
+                                std::cout << "MD=" << metadata << std::endl;
 				image->readApplyGeo(*metadata, (size_t) id);
+
+                                selfScaleToSize(LINEAR, (*image)(), (int)w, (int)h);
 			} catch (XmippError xe) {
 				msg = xe.getDefaultMessage();
 			} catch (std::exception& e) {
@@ -112,34 +115,8 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1preview
 	}
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData__III_3D
-(JNIEnv *env, jobject jobj, jint w, jint h, jint d, jdoubleArray data) {
-	std::string msg = "";
-	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
-
-	if (image != NULL) {
-		try {
-			image->data.resizeNoCopy((int) d, (int) h, (int) w);
-			env->GetDoubleArrayRegion(data, 0, w * h * d, MULTIDIM_ARRAY(image->data));
-		} catch (XmippError xe) {
-			msg = xe.getDefaultMessage();
-		} catch (std::exception& e) {
-			msg = e.what();
-		} catch (...) {
-			msg = "Unhandled exception";
-		}
-	} else {
-		msg = "Image is null";
-	}
-
-	// If there was an exception, sends it to java environment.
-	if(!msg.empty()) {
-		handleXmippException(env, msg);
-	}
-}
-
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData__IIII_3D
-(JNIEnv *env, jobject jobj, jint width, jint height, jint depth, jint numberOfSlices, jdoubleArray data) {
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData
+  (JNIEnv *env, jobject jobj, jint width, jint height, jint depth, jint numberOfSlices, jdoubleArray data) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 

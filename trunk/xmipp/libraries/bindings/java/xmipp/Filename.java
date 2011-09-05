@@ -168,6 +168,14 @@ public class Filename {
         return fixed;
     }
 
+    public static String getFilename(String filename) {
+        if (filename.contains(SEPARATOR)) {
+            return filename.split(SEPARATOR)[1];
+        }
+
+        return filename;
+    }
+
     public static long getNimage(String filename) {
         long nimage = ImageDouble.ALL_IMAGES;
 
@@ -175,7 +183,7 @@ public class Filename {
             String str = filename.split(SEPARATOR)[0];
             if (!str.isEmpty()) {
                 // str may have a string prefix before the number, so
-                // grab the rightmost part
+                // grab the leftmost part
                 int i = str.length() - 1;
                 while (i >= 0) {
                     if (Character.isDigit(str.charAt(i)) == false) {
@@ -192,12 +200,27 @@ public class Filename {
         return nimage;
     }
 
-    public static String getFilename(String filename) {
+    public static String getBlock(String filename) {
+        String block = "";
+
         if (filename.contains(SEPARATOR)) {
-            return filename.split(SEPARATOR)[1];
+            String str = filename.split(SEPARATOR)[0];
+            if (!str.isEmpty()) {
+                // str may have a string prefix before the number, so
+                // grab the leftmost part
+                int i = str.length() - 1;
+                while (i >= 0) {
+                    if (str.charAt(i) == File.separatorChar) {
+                        break;
+                    }
+                    i--;
+                }
+
+                block = str.substring(i + 1, str.length());
+            }
         }
 
-        return filename;
+        return block;
     }
 
     private static String getAbsPath(String baseDir, String filename) {

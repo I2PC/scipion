@@ -122,11 +122,16 @@ public class MetaData {
     public native boolean getValueBoolean(int label, long objId);
 
     public String getFilename() {
-        return filename;//Filename.getFilename(filename);
+        return Filename.getFilename(filename);
+    }
+
+    public String getBlock() {
+        return Filename.getBlock(filename);
     }
 
     public String getBaseDir() {
-        File f = new File(filename);
+        File f = new File(getFilename());
+        f.toURI().normalize();
         f = new File(f.getAbsolutePath());
 
         return f.getParent();

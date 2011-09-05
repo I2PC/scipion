@@ -51,13 +51,19 @@ public class ImageDouble {
     // Reading.
     private native void read_image(String filename, boolean readData, long nimage) throws Exception;
 
-    private native void readApplyGeo(MetaData metadata, long id) throws Exception;
-
     private native void read_preview(String filename,
             int w, int h, int slice, long nimage) throws Exception;
 
+    private void readApplyGeo(MetaData metadata, long id) throws Exception {
+        readApplyGeo(metadata, id, getXsize(), getYsize());
+    }
+
+    private native void readApplyGeo(MetaData metadata, long id, int w, int h) throws Exception;
+
     // Set data.
-    public native void setData(int w, int h, int d, double data[]) throws Exception;
+    public void setData(int width, int height, int depth, double data[]) throws Exception {
+        setData(width, height, depth, 1, data);
+    }
 
     /**
      * Important: if you don't use some dimension (for example, depth) set it to 1
@@ -178,6 +184,14 @@ public class ImageDouble {
     public void readPreview(String filename, int w, int h, int slice, long nimage) throws Exception {
         read_preview(filename, w, h, slice, nimage);
         setFilename(filename);
+    }
+
+    public void readPreview(MetaData metadata, long id, int w, int h) throws Exception {
+        readApplyGeo(metadata, id, w, h);
+
+        if (metadata.containsLabel(MDLabel.MDL_IMAGE)) {
+            setFilename(metadata.getValueString(MDLabel.MDL_IMAGE, id));
+        }
     }
 
     public void setFilename(String filename) {
