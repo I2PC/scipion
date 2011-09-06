@@ -126,3 +126,31 @@ def getProtocolTemplate(prot):
     #srcProtDir = getXmippPath('protocols')
     srcProtAbsPath = os.path.join(protDir, srcProtName)
     return srcProtAbsPath
+
+def findProjectInPathTree(file):
+    found=False
+    file=os.path.abspath(file)
+    while file!="/" and not found:
+        if os.path.exists(os.path.join(file,".project.sqlite")):
+            found=True
+        else:
+            file=os.path.split(file)[0]
+    if found:
+        return file
+    else:
+        return None
+
+def fixPath(file,possiblePath1,possiblePath2,possiblePath3=None):
+    if file[0]=='/':
+        return file
+    file1=os.path.join(possiblePath1,file)
+    if os.path.exists(file1):
+        return file1
+    file2=os.path.join(possiblePath2,file)
+    if os.path.exists(file2):
+        return file2
+    if possiblePath3:
+        file3=os.path.join(possiblePath3,file)
+        if os.path.exists(file3):
+            return file3
+    return file
