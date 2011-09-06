@@ -3,6 +3,7 @@ package gui;
 import ij.gui.ImageCanvas;
 
 import java.awt.BasicStroke;
+import java.awt.Cursor;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
@@ -42,6 +43,23 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 		imp = micrograph.getImage();
 		setImageUpdated();
 		repaint();
+	}
+	
+	
+	public void mouseEntered(MouseEvent e) {
+		if (frame.getTool() != Tool.PICKER) {
+			super.mouseEntered(e);
+			return;
+		}
+		setCursor(crosshairCursor);
+	}
+	
+	public void mouseMoved(MouseEvent e) {
+		if (frame.getTool() != Tool.PICKER) {
+			super.mouseMoved(e);
+			return;
+		}
+		setCursor(crosshairCursor);
 	}
 
 	/**

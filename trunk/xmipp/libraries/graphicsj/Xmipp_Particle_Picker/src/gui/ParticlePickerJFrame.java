@@ -4,6 +4,7 @@ import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
+import ij.gui.Toolbar;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -15,24 +16,23 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
@@ -45,8 +45,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
+import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
-import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
@@ -54,7 +54,6 @@ import javax.swing.event.ListSelectionListener;
 
 import xmipp.Program;
 
-import model.AutomaticParticle;
 import model.MicrographFamilyState;
 import model.Constants;
 import model.Family;
@@ -81,7 +80,6 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	private JCheckBox rectanglechb;
 	private ParticlePickerCanvas canvas;
 	private JFormattedTextField sizetf;
-	private Tool tool = Tool.PICKER;
 	private JCheckBox centerchb;
 	private JMenuBar mb;
 	private JComboBox familiescb;
@@ -112,6 +110,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	private JSlider thresholdsl;
 	private JPanel thresholdpn;
 	private JFormattedTextField thresholdtf;
+	private String tool = "Particle Picker Tool";
 
 	// private JCheckBox onlylastchb;
 
@@ -130,7 +129,12 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 	}
 
 	public Tool getTool() {
-		return tool;
+		
+		if(IJ.getInstance() == null)
+			return Tool.PICKER;
+		if(IJ.getToolName().equalsIgnoreCase(tool ))
+			return Tool.PICKER;
+		return Tool.IMAGEJ;
 	}
 
 	public ParticlePicker getParticlePicker() {
@@ -159,7 +163,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		// // TODO Auto-generated catch block
 		// e.printStackTrace();
 		// }
-
+		
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent winEvt) {
 				if (changed) {
@@ -217,6 +221,9 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		savemi = new JMenuItem("Save");
 		savemi.setEnabled(false);
 		filemn.add(savemi);
+		savemi.setMnemonic('S');
+		savemi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+		
 		JMenuItem stackmi = new JMenuItem("Generate Stack...");
 		filemn.add(stackmi);
 
@@ -257,10 +264,12 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (IJ.getInstance() == null) {
-					new ImageJ(ImageJ.EMBEDDED);
-					IJ.getInstance();
+					
+					new ImageJ();
+					IJ.run("Install...", "install=" + ParticlePicker.getXmippPath("external/imagej/macros/ParticlePicker.txt"));
+					IJ.setTool(tool);
 				}
-				IJ.getInstance().setVisible(true);
+				//IJ.getInstance().setVisible(true);
 			}
 		});
 		savemi.addActionListener(new ActionListener() {
@@ -318,6 +327,18 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 				}
 			}
 		});
+
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		try {
+			activemacro = ((JMenuItem) e.getSource()).getText();
+			IJ.run(activemacro);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			JOptionPane.showMessageDialog(this, ex.getMessage());
+		}
 
 	}
 
@@ -593,17 +614,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		}
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		try {
-			activemacro = ((JMenuItem) e.getSource()).getText();
-			IJ.run(activemacro);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			JOptionPane.showMessageDialog(this, ex.getMessage());
-		}
-
-	}
+	
 
 	private void initMicrographsPane() {
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -628,7 +639,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		micrographstb
 				.setPreferredScrollableViewportSize(new Dimension(420, 304));
 		micrographstb
-				.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		sp.setViewportView(micrographstb);
 		micrographpn.add(sp,

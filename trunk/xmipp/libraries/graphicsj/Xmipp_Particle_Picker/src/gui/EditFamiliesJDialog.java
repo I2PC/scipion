@@ -167,24 +167,26 @@ public class EditFamiliesJDialog extends JDialog {
 		@Override
 		public void setValueAt(Object value, int row, int column) {
 			try {
-				Family g = frame.getParticlePicker().getFamilies().get(row);
+				if(value == null)
+					throw new IllegalArgumentException(Constants.getEmptyFieldMsg(columns[column]));
+				Family f = frame.getParticlePicker().getFamilies().get(row);
 				if (column == 0) {
 					String name = (String) value;
-					if (name.equals(g.getName()))
+					if (name.equals(f.getName()))
 						return;
 					else if (parent.getParticlePicker().existsFamilyName(name))
 						JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
 								Constants.getAlreadyExistsGroupNameMsg(name));
-					g.setName(name);
+					f.setName(name);
 					frame.updateFamilyComboBox();
 				} else if (column == 1)
 				{
-					g.setColor((Color) value);
+					f.setColor((Color) value);
 					frame.updateFamilyColor();
 				}
 				else if (column == 2) {
 					int size = (Integer) value;
-					g.setSize(size);
+					f.setSize(size);
 					frame.switchSize(size);
 				}
 

@@ -159,10 +159,10 @@ public class MicrographFamilyData {
 	
 	public void reset()
 	{
-		setState(MicrographFamilyState.Available);
 		family.particles -= particles.size();
 		autoparticles.clear();
 		particles.clear();
+		setState(MicrographFamilyState.Available);
 	}
 	
 	public FamilyState getStep()
