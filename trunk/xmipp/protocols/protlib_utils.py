@@ -225,8 +225,71 @@ def printLog(msg, log=None, out=True, err=False, isError=False):
             sys.stderr.flush()
     
 #---------------------------------------------------------------------------
-# Jobs launching
+# Jobs launching and management
 #---------------------------------------------------------------------------    
+from subprocess import Popen, PIPE
+
+class Process():
+    keys = ['pid','ppid','cputime','etime','state','pcpu','pmem','args']
+    def __init__(self, values):
+        self.info = dict(zip(Process.keys, values))
+        self.__dict__.update(self.info) 
+        self.type = 0
+        
+    def __repr__(self):
+        line = """%(pid)s,%(ppid)s,%(cputime)s,%(etime)s,%(state)s,%(pcpu)s,%(pmem)s,%(args)s""" % self.info
+        return line
+        
+    ''' Retrieve the list of child process'''
+    def getChilds(self):
+        list = getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % self.info)
+        childs = []
+        for p in list:
+            if p.ppid == self.pid:
+                childs.append(p)
+                childs += p.getChilds()
+        return childs 
+    
+    ''' Terminate process '''
+    def terminate(self):
+        p = Popen('kill %s' % self.pid, shell=True, stdout=PIPE)
+        os.waitpid(p.pid, 0)
+        
+    ''' Terminate process and all its childs '''
+    def terminateTree(self):
+        childs = self.getChilds()
+        self.terminate()
+        for c in childs:
+            c.terminate()
+        
+        
+''' Return process data from previous built command'''
+def getProcessFromCmd(cmd):
+    ps = Popen(cmd, shell=True, stdout=PIPE)
+    out = ps.communicate()[0]
+    if out:
+        # return list of processes
+        return [Process(l.split()) for l in out.splitlines()]
+    return None
+
+''' Return process data from previous built command'''
+def getUniqueProcessFromCmd(cmd):
+    list = getProcessFromCmd(cmd)
+    if not list:
+        reportError("No process found matching query, expecting one")
+    if len(list) > 1:
+        msg = [str(p) for p in list]
+        reportError("More than one process match query, only one expected\n" + "\n".join(msg))
+    return list[0]
+
+''' Return the process data, using its arguments to match'''
+def getProcessFromScript(script):
+    return getUniqueProcessFromCmd('ps -C python -o pid,ppid,cputime,etime,state,pcpu,pmem,args | grep %s' % script)
+
+''' Return the process data, using its arguments to match'''
+def getProcessFromPid(pid):
+    return getUniqueProcessFromCmd('ps -p %(pid)s -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % locals())
+
 # The job should be launched from the working directory!
 def runJob(log, 
            programname,
@@ -257,7 +320,6 @@ def runJob(log,
 
     return retcode
 
-from config_launch import SystemFlavour
 def buildRunCommand(
                log,
                programname,
@@ -271,6 +333,7 @@ def buildRunCommand(
     if not DoParallel:
         command = programname + ' ' + params
     else:
+        from config_launch import SystemFlavour
         paramsDict['prog'] = programname.replace('xmipp', 'xmipp_mpi')
         paramsDict['jobs'] = NumberOfMpi
         paramsDict['params'] = params

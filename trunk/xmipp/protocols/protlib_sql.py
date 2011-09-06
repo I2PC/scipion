@@ -18,7 +18,7 @@ runColumns = ['run_id',
               'last_modfied',
               'protocol_name',
               'comment',
-              'group_name']
+              'group_name', 'pid', 'pid_type']
 
 NO_MORE_GAPS = 0 #no more gaps to work on
 NO_AVAIL_GAP = 1 #no available gaps now, retry later
@@ -45,12 +45,16 @@ class SqliteDb:
     RUN_STARTED = 2
     RUN_FINISHED = 3
     RUN_FAILED = 4
+    RUN_ABORTED = 5
     
     EXEC_GAP = 0
     EXEC_MAINLOOP = 1
     EXEC_ALWAYS = 2
     
-    StateNames = ['Saved', 'Launched', 'Running', 'Finish', 'Failed']
+    PID_POSIX = 0
+    PID_QUEUE = 1
+    
+    StateNames = ['Saved', 'Launched', 'Running', 'Finish', 'Failed', 'Aborted']
     
     def execSqlCommand(self, sqlCmd, errMsg):
         """Helper function to execute sqlite commands"""
@@ -77,7 +81,9 @@ class SqliteDb:
             result = result['run_id']
         return result
     
-    def updateRunState(self, runState, cursor=None, connection=None):
+    def updateRunState(self, runState, runId=None, cursor=None, connection=None):
+        if runId:
+            self.sqlDict['run_id'] = runId
         self.sqlDict['run_state'] = runState
         _sqlCommand = """UPDATE %(TableRuns)s SET
                             run_state = %(run_state)d
@@ -87,6 +93,14 @@ class SqliteDb:
             connection = self.connection
         cursor.execute(_sqlCommand)
         connection.commit()
+        
+    def updateRunPid(self, run):
+        self.sqlDict.update(run)
+        _sqlCommand = """UPDATE %(TableRuns)s SET
+                            pid = %(pid)s, pid_type = %(pid_type)d
+                        WHERE run_id = %(run_id)d"""  % self.sqlDict
+        self.cur.execute(_sqlCommand)
+        self.connection.commit()
     
 class XmippProjectDb(SqliteDb):
     LAST_STEP  = -1
@@ -128,11 +142,14 @@ class XmippProjectDb(SqliteDb):
                                           -- 2 - Running (Directly or from queue)
                                           -- 3 - Finished (Run finish correctly)
                                           -- 4 - Failed (Run produced an error)
+                                          -- 5 - Aborted
                           script TEXT,    -- strip full name
                           init DATE,      -- run started at
                           last_modified DATE, --last modification (edition usually)
                           protocol_name TEXT REFERENCES %(TableProtocols)s(protocol_name), -- protocol name
-                          comment TEXT, -- user defined comment
+                          comment TEXT,       -- user defined comment
+                          pid TEXT,           -- process id
+                          pid_type INTEGER,   -- this tell if the process if POSIX or launched to QUEUE SYSTEM
                           CONSTRAINT unique_workingdir UNIQUE(run_name, protocol_name));""" % self.sqlDict
             self.execSqlCommand(_sqlCommand, "Error creating '%(TableRuns)s' table: " % self.sqlDict)
             
@@ -201,7 +218,9 @@ class XmippProjectDb(SqliteDb):
                             datetime('now'), 
                             datetime('now'), 
                             '%(protocol_name)s',
-                            '%(comment)s');"""  % self.sqlDict
+                            '%(comment)s',
+                            -1, 0 --pid and type                            
+                            ); """  % self.sqlDict
         self.cur.execute(_sqlCommand)
         run['run_id'] = self.cur.lastrowid
         run['run_state'] = SqliteDb.RUN_SAVED
@@ -250,7 +269,8 @@ class XmippProjectDb(SqliteDb):
                                datetime(init, 'localtime') as init, 
                                datetime(last_modified, 'localtime') as last_modified,
                                protocol_name, comment,
-                               group_name 
+                               group_name, 
+                               pid, pid_type 
                          FROM %(TableRuns)s NATURAL JOIN %(TableProtocolsGroups)s """ % self.sqlDict
         return sqlCommand
                          
@@ -588,7 +608,7 @@ class ThreadStepGap(Thread):
             runThreadLoop(self.db, conn, cur)
         except Exception, e:
             printLog("Stopping threads because of error %s"%e,self.db.Log,out=True,err=True,isError=True)
-            self.db.updateRunState(SqliteDb.RUN_FAILED, cur, conn)
+            self.db.updateRunState(SqliteDb.RUN_FAILED, cursor=cur, connection=conn)
             
 def escapeStr(str):
     return "'%s'" % str.replace("'", "''") 

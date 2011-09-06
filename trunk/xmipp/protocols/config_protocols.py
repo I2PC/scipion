@@ -31,7 +31,7 @@ class ProtocolDictionary(dict):
         self.projsubs = self.addProtocol('subtraction', 'Partial Projection Subtraction', '3D/ProjSubs')
         self.dummy = self.addProtocol('dummy', 'Dummy', 'Dummy')
         self.xmipp_program = self.addProtocol('xmipp', 'Xmipp Programs', 'XmippPrograms')
-protDict=ProtocolDictionary()
+protDict = ProtocolDictionary()
 
 #--------------------------------------------------------------------------------
 # Project default settings

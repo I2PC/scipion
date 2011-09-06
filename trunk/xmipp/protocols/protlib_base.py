@@ -117,6 +117,10 @@ class XmippProject():
             os.remove(self.cfgName)
         if os.path.exists(self.dbName):
             os.remove(self.dbName)
+            
+        for p in protDict.values():
+            if os.path.exists(p.dir):
+                shutil.rmtree(p.dir)
         self.create()
             
     
@@ -448,6 +452,7 @@ def protocolMain(ProtocolClass, script=None):
                       ,'script'  : script 
                       }
                 project.projectDb.insertRun(_run)
+                run_id = _run['run_id']
             if 'SubmitToQueue' in dir(mod) and mod.SubmitToQueue:
                 from protlib_utils import submitProtocol
                 NumberOfThreads = 1
@@ -461,7 +466,7 @@ def protocolMain(ProtocolClass, script=None):
                                hours = mod.QueueHours,
                                command = 'python %s --no_check' % script
                                )
-                project.projectDb.updateRunState(SqliteDb.RUN_LAUNCHED)
+                project.projectDb.updateRunState(SqliteDb.RUN_LAUNCHED, run_id)
                 exit(0)
         
         return p.run()

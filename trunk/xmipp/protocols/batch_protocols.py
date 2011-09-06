@@ -31,11 +31,12 @@ import Tkinter as tk
 import tkMessageBox
 import tkFont
 from protlib_gui import ProtocolGUI, Fonts, registerFont, registerCommonFonts
-from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, configDefaults
+from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, configDefaults,\
+    showInfo
 from config_protocols import protDict, sections
 from config_protocols import FontName, FontSize
 from protlib_base import getProtocolFromModule, XmippProject
-from protlib_utils import reportError, runImageJPlugin
+from protlib_utils import reportError, runImageJPlugin, getProcessFromPid
 from protlib_sql import SqliteDb, ProgramDb
 
 #TextColor
@@ -134,6 +135,7 @@ class XmippProjectGUI():
         self.lastRunSelected = None
         self.Frames = {}
         self.historyRefresh = None
+        self.historyRefreshRate = 4 # Refresh rate will be 1, 2, 4 or 8 seconds
               
     def addBindings(self):
         self.root.bind('<Configure>', self.unpostMenu)
@@ -274,13 +276,51 @@ class XmippProjectGUI():
         searchEntry = tk.Entry(leftFrame, textvariable=searchVar, bg=LabelBgColor)
         searchEntry.grid(row=2, sticky='ew')
         searchEntry.bind('<Return>', searchByKeywords)
-            
-            
-        
         centerWindows(root, refWindows=self.root)
         root.deiconify()
         root.mainloop() 
 
+    def launchRunJobMonitorGUI(self, run):
+        text = run['script']
+        root = tk.Toplevel()
+        root.withdraw()
+        root.title(text)
+        root.columnconfigure(1, weight=1)
+        root.rowconfigure(0, weight=1)
+        root.rowconfigure(1, weight=1)
+        
+        def stopRun():
+            if askYesNo("Confirm action", "Are you sure to stop run execution?" , parent=root):
+                p = getProcessFromPid(run['pid'])
+                p.terminateTree()
+                self.project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, run['run_id'])
+                root.destroy()
+                self.historyRefreshRate = 1
+                self.updateRunHistory(self.lastSelected)
+        
+        detailsSection = ProjectSection(root, 'Process monitor')
+        detailsSection.addButton("Stop run", command=stopRun)
+        txt = tk.Text(detailsSection.frameContent, width=50, height=10,
+                        bg=BgColor, bd=1, relief=tk.RIDGE, font=Fonts['normal'])
+        txt.pack(fill=tk.BOTH)
+        detailsSection.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
+        
+        def refreshInfo():
+            p = getProcessFromPid(run['pid'])
+            line = "Process id    : %(pid)s\nElapsed time  : %(etime)s\n\nSubprocess:\n" % p.info
+            txt.delete(1.0, tk.END)
+            txt.insert(tk.END, line)
+            childs = p.getChilds()
+            for c in childs:
+                txt.insert(tk.END, str(c))
+            txt.after(3000, refreshInfo)
+            
+        refreshInfo()
+        centerWindows(root, refWindows=self.root)
+        root.deiconify()
+        root.mainloop()
+        
+        
     def launchProtocolGUI(self, run, visualizeMode=False):
         run['group_name'] = self.lastSelected
         top = tk.Toplevel()
@@ -292,6 +332,7 @@ class XmippProjectGUI():
     def protocolSaveCallback(self, run):
         self.selectToolbarButton(run['group_name'], False)
         if self.lastSelected == run['group_name']:
+            self.historyRefreshRate = 1
             self.updateRunHistory(self.lastSelected)
 
     def updateRunHistory(self, protGroup, selectFirst=True):
@@ -316,8 +357,9 @@ class XmippProjectGUI():
                     stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
                 self.lbHist.insert(tk.END, (run_name, stateStr, run['last_modified']))   
             self.lbHist.selection_set(index)
-            #Generate an automatic refresh after 5000 ms 
-            self.historyRefresh = self.lbHist.after(5000, self.updateRunHistory, protGroup, False)
+            #Generate an automatic refresh after x ms, with x been 1, 2, 4 or 8 ms 
+            self.historyRefresh = self.lbHist.after(self.historyRefreshRate*1000, self.updateRunHistory, protGroup, False)
+            self.historyRefreshRate = min(2*self.historyRefreshRate, 8)
         else:
             self.updateRunSelection(-1)
 
@@ -403,8 +445,13 @@ class XmippProjectGUI():
     
     def runButtonClick(self, event=None):
         run = self.getLastRunDict()
+        state = run['run_state']
         if event == 'Edit':
-            self.launchProtocolGUI(run)
+            if state == SqliteDb.RUN_STARTED:
+                self.launchRunJobMonitorGUI(run)
+            else:
+                self.launchProtocolGUI(run)
+            #self.launchRunJobMonitorGUI(run)
         elif event == 'Copy':
             self.launchProtocolGUI(self.project.copyProtocol(run['protocol_name'], run['script']))
         elif event == "Delete":

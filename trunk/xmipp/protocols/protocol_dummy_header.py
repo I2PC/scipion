@@ -67,7 +67,7 @@ NumberOfParts = 2
 Prefix = "part"
 
 #------------------------------------------------------------------------------------------
-# {section} Parallelization 
+# {section}{condition}(NumberOfParts>3)Parallelization 
 #------------------------------------------------------------------------------------------
 # Number of threads
 """ This option provides shared-memory parallelization on multi-core machines.
@@ -88,7 +88,7 @@ SubmitToQueue = True
 """
 QueueName = "default"
 
-# {condition}(SubmitToQueue or NumberOfThreads>1) {wizard}(wizardBrowse) Queue hours
+# {condition}(SubmitToQueue) {wizard}(wizardBrowse) Queue hours
 """This establish a maximum number of hours the job will
 be running, after that time it will be killed by the
 queue system

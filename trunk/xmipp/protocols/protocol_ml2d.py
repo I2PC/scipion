@@ -80,6 +80,8 @@ class ProtML2D(XmippProtocol):
                     params += ' --not_phase_flipped'
                 if (self.HighResLimit > 0):
                     params += ' --high %f' % self.HighResLimit
+            if self.MaxIters != 100:
+                params += " --iter %d" % self.MaxIters
             #Add all boolean options if true
             for k, v in booleanDict.iteritems():
                 if self.__dict__[k]:

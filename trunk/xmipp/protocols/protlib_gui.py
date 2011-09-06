@@ -43,6 +43,7 @@ from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
 from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor, ButtonActiveBgColor, ButtonBgColor                         
 from protlib_sql import SqliteDb
 from xmipp import XmippError
+from subprocess import Popen
 
 class ProtocolStyle():
     ''' Class to define some style settings like font, colors, etc '''
@@ -848,10 +849,10 @@ class ProtocolGUI(BasicGUI):
                 self.run['source'] = self.run['script']
                 self.inRunName = runName
             else:
-                if self.run['run_state'] in [SqliteDb.RUN_STARTED, SqliteDb.RUN_LAUNCHED]:
+                if self.run['run_state'] in [SqliteDb.RUN_STARTED, SqliteDb.RUN_LAUNCHED] and not self.visualize_mode:
                     showError('Save not allowed', 
-                                           "This run appears to be RUNNING or LAUNCHED, so you can't save it",
-                                           parent=self.master)
+                              "This run appears to be RUNNING or LAUNCHED, so you can't save it",
+                              parent=self.master)
                     return False 
                 if not self.visualize_mode:
                     self.run['run_state'] = SqliteDb.RUN_SAVED
@@ -894,7 +895,14 @@ class ProtocolGUI(BasicGUI):
             if self.validateProtocol(prot):
                 warnings = prot.warningsBase()
                 if len(warnings)==0 or askYesNo("Confirm execution",'\n'.join(warnings), self.master):
-                    os.system('python %s --no_confirm &' % self.run['script'] )
+                    #os.system('python %s --no_confirm &' % self.run['script'] )
+                    args = 'python %s --no_confirm &' % self.run['script']
+                    Popen(args, shell=True)
+                    from protlib_utils import getProcessFromScript
+                    p = getProcessFromScript(self.run['script'])
+                    self.run['pid'] = p.pid
+                    self.run['pid_type'] = SqliteDb.PID_POSIX
+                    self.project.projectDb.updateRunPid(self.run)
                     self.master.destroy() 
     
     def viewFiles(self):
