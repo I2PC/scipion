@@ -40,7 +40,7 @@ Behavior = "Restart"
 # {section} Alignment parameters
 #------------------------------------------------------------------------------------------------
 # {file}{validate}(PathExists) Selfile with the input images:
-""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
+""" This selfile points to the stack or metadata containing your images 
 """
 InSelFile=''
 
