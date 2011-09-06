@@ -3428,6 +3428,8 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_PICKING_FAMILY", (long) MDL_PICKING_FAMILY);
     addIntConstant(dict, "MDL_PICKING_COLOR", (long) MDL_PICKING_COLOR);
     addIntConstant(dict, "MDL_PICKING_PARTICLE_SIZE", (long) MDL_PICKING_PARTICLE_SIZE);
+    addIntConstant(dict, "MDL_PICKING_FAMILY_STATE", (long) MDL_PICKING_FAMILY_STATE);
+    addIntConstant(dict, "MDL_PICKING_MICROGRAPH_FAMILY_STATE", (long) MDL_PICKING_MICROGRAPH_FAMILY_STATE);
     addIntConstant(dict, "MDL_PMAX", (long) MDL_PMAX);
     addIntConstant(dict, "MDL_PSD", (long) MDL_PSD);
     addIntConstant(dict, "MDL_PSD_ENHANCED", (long) MDL_PSD_ENHANCED);
