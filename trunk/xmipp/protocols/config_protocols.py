@@ -16,7 +16,7 @@ class ProtocolDictionary(dict):
     def __init__(self):
         self.import_micrographs = self.addProtocol('import_micrographs', 'Import Micrographs', 'ImportedMicrographs')
         self.particle_pick = self.addProtocol('particle_pick',  'Manual picking', 'ParticlePicking/Manual')
-        self.particle_pick_auto = self.addProtocol('particle_pick_automatic',  'Automatic picking', 'ParticlePicking/Auto')
+        self.particle_pick_auto = self.addProtocol('particle_pick_auto',  'Automatic picking', 'ParticlePicking/Auto')
         self.extract_particles = self.addProtocol('extract_particles',  'Extract Particles', 'Images/Extracted')
         self.import_particles = self.addProtocol('import_particles',  'Import Particles', 'Images/Imported')
         self.preprocess_particles = self.addProtocol('preprocess_particles',  'Preprocess Particles', 'Images/Preprocessed')
