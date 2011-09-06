@@ -32,7 +32,8 @@ import tkMessageBox
 import tkFont
 
 from protlib_base import protocolMain, getProtocolFromModule, XmippProtocol, getWorkingDirFromRunName
-from protlib_utils import loadModule, runJob, runImageJPlugin, which, runImageJPluginWithResponse, runJavaIJappWithResponse 
+from protlib_utils import loadModule, runJob, runImageJPlugin, which, runImageJPluginWithResponse, runJavaIJappWithResponse ,\
+    showWarnings
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, registerFont,\
     showError, showInfo
 from protlib_filesystem import getXmippPath
@@ -43,8 +44,6 @@ from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor
 from protlib_sql import SqliteDb
 from xmipp import XmippError
 
-
-    
 class ProtocolStyle():
     ''' Class to define some style settings like font, colors, etc '''
     def __init__(self, configModuleName=None):        
@@ -496,7 +495,15 @@ class ProtocolGUI(BasicGUI):
             list = ["%s_%s" % (r['protocol_name'], r['run_name']) for r in runs]
             if len(list)==1:
                 var.tkvar.set(list[0])
-    
+
+    def getRunsList(self,protocols):
+        #protocols = var.tags['run'].split(',')
+        runs = []
+        for p in protocols:
+            runs += self.project.projectDb.selectRunsByProtocol(p)
+        list = ["%s_%s" % (r['protocol_name'], r['run_name']) for r in runs]
+        return list
+           
     def createWidget(self, var):
         w = ProtocolWidget(self, var)  
         self.widgetslist.append(w)  
@@ -623,13 +630,8 @@ class ProtocolGUI(BasicGUI):
                     return entries
                 
                 def getRuns(var):
-                    protocols = var.tags['run'].split(',')
-                    runs = []
-                    for p in protocols:
-                        runs += self.project.projectDb.selectRunsByProtocol(p)
-                    list = ["%s_%s" % (r['protocol_name'], r['run_name']) for r in runs]
-                    return list                    
-                
+                    return self.getRunsList(var.tags['run'].split(','))
+
                 if 'file' in keys:
                     entry.setBuildListFunction(lambda: getEntries(var), refreshOnTab=True)
                     args = ['Browse', lambda: self.wizardBrowseJ(var), 'fileopen.gif', 'Browse file']
@@ -1020,7 +1022,7 @@ class ProtocolGUI(BasicGUI):
             self.fillGUI()
         except Exception, e:
             errMsg = "Couldn't create GUI. ERROR: %s\n" % e
-            showError("GUI Creation Error", errMsg)
+            showError("GUI Creation Error", errMsg,self.master)
             self.Error = e
             raise
         
@@ -1126,6 +1128,31 @@ class ProtocolGUI(BasicGUI):
         msg = msg.strip()
         if len(msg) > 0:
             var.tkvar.set(msg)            
+
+    #Select family from extraction run
+    def wizardChooseFamilyToExtract(self, var):
+        from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE
+        from protlib_gui_ext import ListboxDialog
+
+        pickingDir = getWorkingDirFromRunName(self.getVarValue('PickingRun'))
+        fnFamilies=os.path.join(pickingDir,"families.xmd")
+        if not os.path.exists(fnFamilies):
+            showWarnings("Warning", "No elements to select", parent=self.master)
+            return
+        print fnFamilies
+        mD=MetaData()
+        mD.read(fnFamilies)
+        families=[]
+        for id in mD:
+            families.append(mD.getValue(MDL_PICKING_FAMILY,id))
+        d = ListboxDialog(self.frame, families, selectmode=tk.SINGLE)
+        if len(d.result) > 0:
+            selectedFamily=families[d.result[0]]
+            var.setValue(selectedFamily)
+            for id in mD:
+                if mD.getValue(MDL_PICKING_FAMILY,id)==selectedFamily:
+                    particleSize=mD.getValue(MDL_PICKING_PARTICLE_SIZE,id)
+                    self.setVarValue("ParticleSize", str(particleSize))
 
 # This group of functions are called Validator, and should serve
 # for validation of user input for each variable
