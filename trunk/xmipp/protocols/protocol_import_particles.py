@@ -12,7 +12,7 @@ import xmipp
 import glob
 import os
 from protlib_utils import runJob
-from protlib_filesystem import deleteFile, createDir, copyFile
+from protlib_filesystem import deleteFile, createDir, copyFile, fixPath, findProjectInPathTree
 from httplib import CREATED
 
 class ProtImportParticles(XmippProtocol):
@@ -74,21 +74,6 @@ def createEmptyMicrographSel(log,fnOut):
     mD.setValue(xmipp.MDL_IMAGE,"ImportedImages",id)
     mD.write(fnOut)
 
-def fixPath(file,possiblePath1,possiblePath2,possiblePath3=None):
-    if file[0]=='/':
-        return file
-    file1=os.path.join(possiblePath1,file)
-    if os.path.exists(file1):
-        return file1
-    file2=os.path.join(possiblePath2,file)
-    if os.path.exists(file2):
-        return file2
-    if possiblePath3:
-        file3=os.path.join(possiblePath3,file)
-        if os.path.exists(file3):
-            return file3
-    return file
-
 def linkOrCopy(log,Family,InputFile,WorkingDir,DoCopy,ImportAll,SubsetMode,Nsubset,TmpDir):
     familySel=os.path.join(WorkingDir,Family+".sel")
     if DoCopy:
@@ -97,7 +82,7 @@ def linkOrCopy(log,Family,InputFile,WorkingDir,DoCopy,ImportAll,SubsetMode,Nsubs
     if xmipp.FileName.isMetaData(xmipp.FileName(InputFile)):
         mD=xmipp.MetaData(InputFile)
         inputRelativePath=os.path.split(os.path.relpath(InputFile,'.'))[0]
-        print "inputRelativePath=",inputRelativePath
+        projectDir=findProjectInPathTree(InputFile)
         for id in mD:
             file=mD.getValue(xmipp.MDL_IMAGE,id)
             if '@' in file:
