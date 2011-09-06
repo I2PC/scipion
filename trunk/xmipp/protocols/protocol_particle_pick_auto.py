@@ -10,7 +10,8 @@ from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import runJob
 from protlib_filesystem import createLink
-from xmipp import MetaData, MDL_IMAGE, MDL_PICKING_FAMILY, MDL_PICKING_MICROGRAPH_FAMILY_STATE, MDL_PICKING_PARTICLE_SIZE
+from xmipp import MetaData, MD_APPEND,MDL_IMAGE, MDL_PICKING_FAMILY, \
+                  MDL_PICKING_MICROGRAPH_FAMILY_STATE, MDL_PICKING_PARTICLE_SIZE
 import glob
 
 # Create a GUI automatically from a selfile of micrographs
@@ -81,7 +82,10 @@ class ProtParticlePickingAuto(XmippProtocol):
                                           ParticleSize=particleSize,Fast=fast,InCore=incore)
                     verifyFiles.append(fnAuto)
         self.Db.updateVerifyFiles(idMPI,verifyFiles)
-        self.Db.insertStep('adiosAdios')
+        parent_id=idMPI
+        for familyIdx in range(len(self.familiesForAuto)):
+            family=self.familiesForAuto[familyIdx]
+            parent_id=self.Db.insertStep('gatherResults',parent_id=parent_id,Family=family,WorkingDir=self.WorkingDir,PickingDir=self.pickingDir)
 
     def summary(self):
         summary = []
@@ -120,8 +124,39 @@ def autoPick(log,WorkingDir,ModelRoot,MicrographFullPath,MicrographName,Particle
          " --outputRoot "+os.path.join(WorkingDir,MicrographName)+" --mode autoselect"
     runJob(log,"xmipp_micrograph_automatic_picking",args)
 
-def adiosAdios(log):
-    print "Me voy"
+def gatherResults(log,Family,WorkingDir,PickingDir):
+    mD=MetaData(os.path.join(WorkingDir,"micrographs.sel"))
+    mDpos=MetaData()
+    mDposAux=MetaData()
+    fnExtractList=os.path.join(WorkingDir,Family+"_extract_list.xmd")
+    for id in mD:
+        micrographFullName=mD.getValue(MDL_IMAGE,id)
+        micrographName=os.path.split(os.path.split(micrographFullName)[0])[1]
+        
+        fnManual=os.path.join(PickingDir,micrographName+".pos")
+        fnAuto1=os.path.join(PickingDir,micrographName+"_auto.pos")
+        fnAuto2=os.path.join(WorkingDir,micrographName+"_auto.pos")
+        
+        print micrographFullName
+        mDpos.clear()
+        if os.path.exists(fnManual):
+            try:            
+                mDpos.read(Family+"@"+fnManual)
+            except:
+                pass
+        if os.path.exists(fnAuto1):
+            try:
+                mDposAux.read(Family+"@"+fnAuto1)
+                mDpos.unionAll(mDposAux) 
+            except:
+                pass
+        if os.path.exists(fnAuto2):
+            try:
+                mDposAux.read(Family+"@"+fnAuto2)
+                mDpos.unionAll(mDposAux) 
+            except:
+                pass
+        mDpos.write("mic_"+micrographName+"@"+fnExtractList,MD_APPEND)
 
 #		
 # Main
