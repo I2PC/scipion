@@ -6,7 +6,7 @@ package browser.table.models;
 
 import browser.LABELS;
 import browser.imageitems.tableitems.AbstractTableImageItem;
-import browser.imageitems.tableitems.MDTableItem;
+import browser.imageitems.tableitems.TableImageItem;
 import ij.IJ;
 import java.io.File;
 import xmipp.MDLabel;
@@ -18,7 +18,7 @@ import xmipp.MetaData;
  */
 public class MDTableModel extends AbstractXmippTableModel {
 
-    protected MetaData md;
+    MetaData md;
 
     public MDTableModel(String filename) {
         super(filename);
@@ -71,9 +71,11 @@ public class MDTableModel extends AbstractXmippTableModel {
     }
 
     @Override
-    protected String populateTable(String filename) {
+    protected String populateTable(String path) {
+        String message = "";
+
         try {
-            md = new MetaData(filename);
+            md = new MetaData(path);
 
             // Adds enabled field if not present.
             if (!md.containsLabel(MDLabel.MDL_ENABLED)) {
@@ -87,10 +89,10 @@ public class MDTableModel extends AbstractXmippTableModel {
 
             populateTable();
         } catch (Exception ex) {
-            return ex.getMessage();
+            message = ex.getMessage();
         }
 
-        return null;
+        return message;
     }
 
     private void populateTable() {
@@ -98,8 +100,15 @@ public class MDTableModel extends AbstractXmippTableModel {
         long ids[] = md.findObjects();
 
         for (long id : ids) {
-            data.add(new MDTableItem(id, md, cache));
+            data.add(new TableImageItem(id, md, MDLabel.MDL_IMAGE, cache));
         }
+    }
+
+    public void setApplyGeometry(boolean apply) {
+        for (int i = 0; i < getSize(); i++) {
+            ((TableImageItem) data.get(i)).setReadGeo(apply);
+        }
+        cache.clear();
     }
 
     @Override
@@ -116,7 +125,7 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     @Override
     public String getFilename() {
-        return md.getFilename();
+        return md.getPath();
     }
 
     @Override
@@ -141,6 +150,11 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     @Override
     public boolean isStack() {
+        return true;
+    }
+
+    @Override
+    public boolean isMetaData() {
         return true;
     }
 

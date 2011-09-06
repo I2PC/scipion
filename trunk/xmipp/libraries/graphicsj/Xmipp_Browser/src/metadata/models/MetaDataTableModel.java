@@ -7,8 +7,9 @@ package metadata.models;
 import ij.IJ;
 import javax.swing.table.DefaultTableModel;
 import browser.Cache;
+import browser.DEBUG;
+import browser.imageitems.tableitems.TableImageItem;
 import metadata.images.TableFileItem;
-import metadata.images.TableImageItem;
 import xmipp.Filename;
 import xmipp.MDLabel;
 import xmipp.MetaData;
@@ -27,7 +28,6 @@ public class MetaDataTableModel extends DefaultTableModel {
     private int selectedBlock = 0;
     private long ids[];
     protected static Cache cache = new Cache();
-//    private MetaData md;
 
     public MetaDataTableModel(String filename) {
         super();
@@ -36,27 +36,30 @@ public class MetaDataTableModel extends DefaultTableModel {
         loadBlocks(filename);
     }
 
-//    public void print() {
-//        System.out.println(" -------------------------------- ");
-//
-//        int rows = getRowCount();
-//        int columns = getColumnCount();
-//        for (int i = 0; i < rows; i++) {
-//            System.out.print(i + ": ");
-//            for (int j = 0; j < columns; j++) {
-//                //Object item = getValueAt(i, j);
-//                System.out.print(getValueAt(i, j) + "\t");
-//            }
-//            System.out.println();
-//        }
-//        System.out.println(" -------------------------------- ");
-//    }
     public void selectBlock(int selectedBlock) {
         this.selectedBlock = selectedBlock;
     }
 
+    public int getSelectedBlockIndex() {
+        return selectedBlock;
+    }
+
+    public String getSelectedBlock() {
+        return blocks[getSelectedBlockIndex()];
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public String getPath() {
+        String block = getSelectedBlock();
+
+        return (!block.isEmpty() ? block + Filename.SEPARATOR : "") + filename;
+    }
+
     public void reload() {
-        loadBlock(selectedBlock);    // ...restore data...
+        load(getPath());
     }
 
     private void clear() {
@@ -65,6 +68,7 @@ public class MetaDataTableModel extends DefaultTableModel {
         getDataVector().removeAllElements();
 
         setColumnCount(0);
+        ENABLED_COLUMN_INDEX = -1;
     }
 
     public String[] getBlocks() {
@@ -75,26 +79,26 @@ public class MetaDataTableModel extends DefaultTableModel {
         try {
             blocks = MetaData.getBlocksInMetaDataFile(filename);
         } catch (Exception ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            throw new RuntimeException(ex);
+            DEBUG.printException(ex);
         }
     }
 
-    public void loadBlock(int index) {
-        load(getFilename(), blocks[index]);
-    }
-
-    public void load(String filename, String block) {
+    public void load(String path) {
         try {
             clear();    // Clear the whole data.
 
-            block += !block.isEmpty() ? Filename.SEPARATOR : "";
-            MetaData md = new MetaData(block + filename);
+            MetaData md = new MetaData(path);
+//            System.out.println("filename->" + block + filename);
+//            System.out.println("MDfilename->" + md.getFilename());
+//            System.out.println("Block->" + md.getBlock());
+//            System.out.println("------------------------------");
 
             // Contains field enabled ?
             boolean hasEnabledField = true;
             if (!md.containsLabel(MDLabel.MDL_ENABLED)) {
-                md.addLabel(MDLabel.MDL_ENABLED);
+                if (md.containsLabel(MDLabel.MDL_IMAGE)) {
+                    md.addLabel(MDLabel.MDL_ENABLED);
+                }
                 hasEnabledField = false;
             }
 
@@ -126,14 +130,15 @@ public class MetaDataTableModel extends DefaultTableModel {
                         String value = md.getValueString(label, id);
 
                         if (MetaData.isImage(label)) {
-                            String path = md.getValueString(label, id, true);
-                            row[i] = new TableImageItem(path, value, cache);
+//                            String path = md.getValueString(label, id, true);
+//                            row[i] = new TableImageItem(path, value, cache);
+                            row[i] = new TableImageItem(id, md, label, cache);
                         } else if (MetaData.isMetadata(label)) {
-                            String path = md.getValueString(label, id, true);
-                            row[i] = new TableFileItem(path, value);
+                            String path_ = md.getValueString(label, id, true);
+                            row[i] = new TableFileItem(path_, value);
                         } else if (MetaData.isTextFile(label)) {
-                            String path = md.getValueString(label, id, true);
-                            row[i] = new TableFileItem(path, value);
+                            String path_ = md.getValueString(label, id, true);
+                            row[i] = new TableFileItem(path_, value);
                         } else {
                             row[i] = value;
                         }
@@ -159,13 +164,9 @@ public class MetaDataTableModel extends DefaultTableModel {
                 addRow(row);
             }
         } catch (Exception ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            throw new RuntimeException(ex);
+            DEBUG.printException(ex);
+            IJ.error(ex.getMessage());
         }
-    }
-
-    private long getID(int row) {
-        return ids[row];
     }
 
     public String[] getLabels() {
@@ -186,49 +187,18 @@ public class MetaDataTableModel extends DefaultTableModel {
 
         return item != null ? item.getClass() : Object.class;
     }
-//
-//    @Override
-//    public boolean isCellEditable(int row, int column) {
-//        //return MD_LABELS[column] == MDLabel.MDL_ENABLED;
-//        return column == ENABLED_COLUMN_INDEX;
-//    }
 
     @Override
     public int getColumnCount() {
         return MD_LABELS != null ? MD_LABELS.length : 0;
     }
 
-    public String getFilename() {
-        return filename;//md.getFilename();
-    }
-
     public boolean isRowEnabled(int row) {
-        return ((Boolean) getValueAt(row, ENABLED_COLUMN_INDEX)).booleanValue();
+        Object value = ENABLED_COLUMN_INDEX >= 0 ? getValueAt(row, ENABLED_COLUMN_INDEX) : null;
+
+        return value == null || ((Boolean) value).booleanValue();
     }
 
-//
-//    public void setValueAtMetaData(int row, int col, Object value) {
-//        int label = MD_LABELS[col];
-//        long id = getID(row);
-//
-//        Class class_ = MetaData.getLabelType(label);
-//
-//        if (class_ == String.class) {
-//            md.setValueString(label, value.toString(), id);
-//        } else if (class_ == Double.class) {
-//            md.setValueDouble(label, Double.parseDouble(value.toString()), id);
-//        } else if (class_ == Integer.class) {
-//            if (col == ENABLED_COLUMN_INDEX) {
-//                boolean enabled = Boolean.parseBoolean(value.toString());
-//                md.setValueInt(label, enabled ? 1 : 0, id);
-//                fireTableRowsUpdated(row, row);
-//            } else {
-//                md.setValueInt(label, Integer.parseInt(value.toString()), id);
-//            }
-//        } else if (class_ == Boolean.class) {
-//            md.setValueBoolean(label, Boolean.parseBoolean(value.toString()), id);
-//        }
-//    }
     public void enableAllRows(boolean enabled) {
         // Updates table.
         for (int i = 0; i < getRowCount(); i++) {
@@ -241,7 +211,6 @@ public class MetaDataTableModel extends DefaultTableModel {
         try {
             MetaData md = new MetaData();
 
-            // @TODO Build.
             for (int i = 0; i < MD_LABELS.length; i++) {
                 md.addLabel(MD_LABELS[i]);
             }
@@ -256,6 +225,7 @@ public class MetaDataTableModel extends DefaultTableModel {
 
                     if (class_ == TableFileItem.class) {
                         md.setValueString(label, ((TableFileItem) item).getOriginalValue(), id);
+                        //} else if (class_ == TableImageItem.class) {
                     } else if (class_ == TableImageItem.class) {
                         md.setValueString(label, ((TableImageItem) item).getOriginalValue(), id);
                     } else if (class_ == String.class) {
@@ -278,7 +248,7 @@ public class MetaDataTableModel extends DefaultTableModel {
 
             return true;
         } catch (Exception ex) {
-            ex.printStackTrace();
+            DEBUG.printException(ex);
             IJ.error(ex.getMessage());
         }
 

@@ -4,7 +4,7 @@
  */
 package metadata.renderers;
 
-import metadata.images.TableImageItem;
+import browser.imageitems.tableitems.TableImageItem;
 import ij.ImagePlus;
 import java.awt.Component;
 import java.awt.Font;
@@ -18,8 +18,10 @@ import javax.swing.JTable;
  */
 public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
 
-    private static final int CELL_WIDTH = 128;
-    private static final int CELL_HEIGHT = 128;
+    private static int DEFAULT_CELL_WIDTH = 128;
+    private static int DEFAULT_CELL_HEIGHT = 128;
+    private final static int BORDER_WIDTH = 5;
+    private final static int BORDER_HEIGHT = 5;
     private boolean renderImages;
     private Font font;
 
@@ -27,19 +29,20 @@ public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
         super();
 
         setHorizontalAlignment(JLabel.CENTER);
+        setVerticalAlignment(JLabel.CENTER);
 
         font = getFont();
     }
 
     public int getCellWidth() {
-        return CELL_WIDTH;
+        return DEFAULT_CELL_WIDTH + 2 * BORDER_WIDTH;
     }
 
     public int getCellHeight() {
         int height;
 
         if (renderImages) {
-            height = CELL_HEIGHT;
+            height = DEFAULT_CELL_HEIGHT + 2 * BORDER_HEIGHT;
         } else {
             height = font.getSize();
             height += height * 0.5; // Extra gap.
@@ -62,7 +65,14 @@ public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
         ImageIcon icon = null;
 
         if (renderImages) {
-            ImagePlus preview = item.getPreview(CELL_WIDTH, CELL_HEIGHT);
+            // Check size. If bigger, resize it, otherwise size remains the same.
+            int itemW = item.getWidth();
+            int itemH = item.getHeight();
+
+            DEFAULT_CELL_WIDTH = itemW > DEFAULT_CELL_WIDTH ? DEFAULT_CELL_WIDTH : itemW;
+            DEFAULT_CELL_HEIGHT = itemH > DEFAULT_CELL_HEIGHT ? DEFAULT_CELL_HEIGHT : itemH;
+
+            ImagePlus preview = item.getPreview(DEFAULT_CELL_WIDTH, DEFAULT_CELL_HEIGHT);
             icon = new ImageIcon(preview.getImage());
         } else {
             label = getShortLabel(item.getOriginalValue(), table.getColumnModel().getColumn(column).getWidth());

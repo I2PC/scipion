@@ -27,6 +27,8 @@ public class VolumeTableModel extends AbstractXmippTableModel {
     }
 
     protected String populateTable(String filename) {
+        String message = "";
+
         try {
             ImageDouble image = new ImageDouble();
 
@@ -41,10 +43,10 @@ public class VolumeTableModel extends AbstractXmippTableModel {
                 }
             }
         } catch (Exception ex) {
-            return ex.getMessage();
+            message = ex.getMessage();
         }
 
-        return null;
+        return message;
     }
 
     @Override
@@ -90,6 +92,11 @@ public class VolumeTableModel extends AbstractXmippTableModel {
 
     @Override
     public boolean isStack() {
+        return false;
+    }
+
+    @Override
+    public boolean isMetaData() {
         return false;
     }
 

@@ -188,6 +188,7 @@ public class LABELS {
     public final static String LABEL_AUTO_AJUST_COLUMNS = "Auto adjust columns";
     public final static String LABEL_SHOW_LABELS = "Show label: ";
     public final static String LABEL_SORT_BY_LABEL = "Sort by label";
+    public final static String LABEL_APPLY_GEOMETRY = "Apply geometry";
     public final static String LABEL_FILTER = "Filter: ";
     public final static String LABEL_WIDTH = "Width: ";
     public final static String LABEL_HEIGHT = "Height: ";

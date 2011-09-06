@@ -15,23 +15,30 @@ import xmipp.ImageDouble;
  *
  * @author Juanjo Vega
  */
-public class MDTableItem extends AbstractTableImageItem {
+public class TableImageItem extends AbstractTableImageItem {
 
-    protected MetaData md;
     protected long id;
+    protected MetaData md;
+    protected int label;
     protected String originalValue;
     protected String path;
     protected long nimage;
+    protected boolean readGeo;
+//
+//    public TableImageItem(long id, MetaData md, Cache cache) {
+//        this(id, md, MDLabel.MDL_IMAGE, cache);
+//    }
 
-    public MDTableItem(long id, MetaData md, Cache cache) {
+    public TableImageItem(long id, MetaData md, int label, Cache cache) {
         super(cache);
 
         this.id = id;
         this.md = md;
+        this.label = label;
 
-        originalValue = md.getValueString(MDLabel.MDL_IMAGE, id);
-        String field = md.getValueString(MDLabel.MDL_IMAGE, id, true);
-        this.path = Filename.getFilename(field);
+        originalValue = md.getValueString(label, id);
+        String field = md.getValueString(label, id, true);
+        path = Filename.getFilename(field);
         nimage = Filename.getNimage(field);
 
         setEnabled(true);
@@ -39,12 +46,36 @@ public class MDTableItem extends AbstractTableImageItem {
         loadImageData();
     }
 
+//
+//    @Override
+//    protected ImagePlus loadPreview(int w, int h) {
+//        ImagePlus imp = null;
+//
+//        if (readGeo) {
+//            try {
+//                ImageDouble image = new ImageDouble();
+//                image.readPreview(md, id, w, h);
+//
+//                imp = ImageConverter.convertToImagej(image, (String) getLabelValue(MDLabel.MDL_IMAGE));
+//            } catch (Exception ex) {
+//                DEBUG.printException(ex);
+//            }
+//        } else {
+//            imp = super.loadPreview(w, h);
+//        }
+//
+//        return imp;
+//    }
     public boolean isEnabled() {
         return getValueInt(MDLabel.MDL_ENABLED) == 1;
     }
 
     public void setEnabled(boolean enabled) {
         md.setValueInt(MDLabel.MDL_ENABLED, enabled ? 1 : 0, id);
+    }
+
+    public void setReadGeo(boolean readGeo) {
+        this.readGeo = readGeo;
     }
 
     public String getAbsoluteFileName() {
@@ -60,6 +91,10 @@ public class MDTableItem extends AbstractTableImageItem {
         return path;
     }
 
+    public void setPath(String path) {
+        this.path = path;
+    }
+
     @Override
     public int getNSlice() {
         return ImageDouble.FIRST_SLICE;
@@ -68,6 +103,14 @@ public class MDTableItem extends AbstractTableImageItem {
     @Override
     public String getTitle() {
         return originalValue;
+    }
+
+    public String getOriginalValue() {
+        return originalValue;
+    }
+
+    public void setOriginalValue(String value) {
+        originalValue = value;
     }
 
     public String getTooltipText() {

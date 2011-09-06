@@ -5,6 +5,7 @@
 package browser.imageitems.listitems;
 
 import browser.Cache;
+import browser.DEBUG;
 import browser.imageitems.ImageConverter;
 import ij.IJ;
 import ij.ImagePlus;
@@ -40,9 +41,8 @@ public class MetadataFileItem extends XmippImageItem {
 
             dimension.setNImages(md.size());
         } catch (Exception ex) {
-            ex.printStackTrace();
+            DEBUG.printException(ex);
             IJ.error(ex.getMessage());
-            throw new RuntimeException(ex);
         }
     }
 

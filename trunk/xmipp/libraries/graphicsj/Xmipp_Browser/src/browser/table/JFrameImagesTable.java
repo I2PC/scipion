@@ -28,7 +28,6 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -55,6 +54,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
+import metadata.METADATA_LABELS;
 import xmipp.Filename;
 
 /**
@@ -94,6 +94,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
                 jcbMDLabels.addItem(labels[i]);
             }
         } catch (Exception e) {
+            DEBUG.printException(e);
             IJ.error(e.getMessage());
         }
     }
@@ -116,6 +117,8 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         columnModel = new ImagesTableColumnModel();
 
         initComponents();
+
+        jtbApplyGeo.setEnabled(tableModel.isMetaData());    // Not aplicable for volumes.
 
         table.setColumnModel(columnModel);
         table.setDefaultRenderer(AbstractTableImageItem.class, renderer);
@@ -422,10 +425,13 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
         toolBar = new javax.swing.JToolBar();
         jtbNormalize = new javax.swing.JToggleButton();
+        jtbApplyGeo = new javax.swing.JToggleButton();
+        jSeparator1 = new javax.swing.JToolBar.Separator();
         jbMean = new javax.swing.JButton();
         jbStdDev = new javax.swing.JButton();
         jbToStack = new javax.swing.JButton();
         jbTo3D = new javax.swing.JButton();
+        bSend2MD = new javax.swing.JButton();
         jpCenter = new javax.swing.JPanel();
         jpDisplay = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
@@ -467,6 +473,18 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
             }
         });
         toolBar.add(jtbNormalize);
+
+        jtbApplyGeo.setText(LABELS.LABEL_APPLY_GEOMETRY);
+        jtbApplyGeo.setFocusable(false);
+        jtbApplyGeo.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jtbApplyGeo.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jtbApplyGeo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jtbApplyGeoActionPerformed(evt);
+            }
+        });
+        toolBar.add(jtbApplyGeo);
+        toolBar.add(jSeparator1);
 
         jbMean.setText(LABELS.BUTTON_MEAN);
         jbMean.setFocusable(false);
@@ -511,6 +529,17 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
             }
         });
         toolBar.add(jbTo3D);
+
+        bSend2MD.setText(METADATA_LABELS.OPEN_AS_METADATA);
+        bSend2MD.setFocusable(false);
+        bSend2MD.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        bSend2MD.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        bSend2MD.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bSend2MDActionPerformed(evt);
+            }
+        });
+        toolBar.add(bSend2MD);
 
         getContentPane().add(toolBar, java.awt.BorderLayout.NORTH);
 
@@ -620,12 +649,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     }//GEN-LAST:event_jcbAutoAdjustColumnsActionPerformed
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         pack();
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int w = screenSize.width * 2 / 3;
-        int h = screenSize.height * 2 / 3;
-
-        setSize(w, h);
-        setLocationRelativeTo(null);
+        ImagesWindowFactory.setConvenientSize(this);
 
         setInitialValues();
     }//GEN-LAST:event_formWindowOpened
@@ -728,11 +752,22 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         tableModel.setSorting(jcbSortByLabel.isSelected());
         updateTable();
     }//GEN-LAST:event_jcbSortByLabelActionPerformed
+
+private void jtbApplyGeoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtbApplyGeoActionPerformed
+    ((MDTableModel) tableModel).setApplyGeometry(jtbApplyGeo.isSelected());
+    updateTable();
+}//GEN-LAST:event_jtbApplyGeoActionPerformed
+
+private void bSend2MDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bSend2MDActionPerformed
+    ImagesWindowFactory.openFileAsMetadata(tableModel.getFilename());
+}//GEN-LAST:event_bSend2MDActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton bSend2MD;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JToolBar.Separator jSeparator1;
     private javax.swing.JButton jbMean;
     private javax.swing.JButton jbStdDev;
     private javax.swing.JButton jbTo3D;
@@ -749,6 +784,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     private javax.swing.JScrollPane jsPanel;
     protected javax.swing.JSpinner jsRows;
     protected javax.swing.JSpinner jsZoom;
+    private javax.swing.JToggleButton jtbApplyGeo;
     private javax.swing.JToggleButton jtbNormalize;
     private javax.swing.JTable table;
     private javax.swing.JToolBar toolBar;

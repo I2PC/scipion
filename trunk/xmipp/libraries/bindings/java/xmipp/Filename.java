@@ -1,9 +1,12 @@
 package xmipp;
 
 import java.io.File;
+import java.io.FilenameFilter;
+import java.net.URI;
 
 public class Filename {
 
+    public final static String PROJECT_FILE = ".project.sqlite";
     public final static String SEPARATOR = "@";
     private final static String EXTENSION_XMP = ".xmp";
     private final static String EXTENSION_IMG = ".img";
@@ -141,31 +144,74 @@ public class Filename {
     }
 
     // Auxiliary methods.
-    public static String fixPath(String workdir, String filename) {
+    public static String fixPath(String filename, String MDdir) {
+        MDdir += !MDdir.endsWith(File.separator) ? File.separator : "";
         String fixed = filename;
 
         if (!filename.startsWith(File.separator)) { // Absolute path?
-            String name = getFilename(filename);
-            String strimage = "";
+            String name = Filename.getFilename(filename);
+            String strprefix = "";
 
-            if (filename.contains(SEPARATOR)) { // Has #image?
-                long image = getNimage(filename);
-                strimage = image + SEPARATOR;
+            if (filename.contains(Filename.SEPARATOR)) { // Has #image?
+                String prefix = Filename.getBlock(filename);
+                strprefix = prefix + Filename.SEPARATOR;
             }
 
-            if (!name.startsWith(File.separator)) { // In 'image@name', is name absolute?
-                String aux = getAbsPath(workdir, name);
-
+            // Checks if path is absolute...
+            if (!name.startsWith(File.separator)) {
+                // ...if not: tries to build the absolute path:
+                // 1st case: Relative to metadata file (metadata_path + file)
+                String aux = URI.create(MDdir + name).normalize().getPath();
                 File f = new File(aux);
                 if (!f.exists()) {
-                    aux = getAbsPath(System.getProperty("user.dir"), name);
+                    // 2nd case: Relative to current dir.
+                    aux = URI.create(System.getProperty("user.dir") + File.separatorChar + name).normalize().getPath();
+                    f = new File(aux);
+                    if (!f.exists()) {
+                        // 3rd case: find "project dir" (the one containing a file called ".project.sqlite")
+                        String projectdir = Filename.findProjectDir(MDdir, Filename.PROJECT_FILE);
+                        if (projectdir != null) {
+                            aux = URI.create(projectdir + name).normalize().getPath();
+                        }
+                    }
                 }
 
-                fixed = strimage + aux;
+                fixed = strprefix + aux;
             }
         }
 
         return fixed;
+    }
+
+    public String findProjectDir(String metadata) {
+        File f = new File(metadata);
+        String startingdir = f.isDirectory() ? metadata : f.getParent();
+
+        return findProjectDir(startingdir, PROJECT_FILE);
+    }
+
+    private static String findProjectDir(String current, final String PROJECT_FILE) {
+        FilenameFilter filter = new FilenameFilter() {
+
+            public boolean accept(File dir, String name) {
+                return name.compareTo(PROJECT_FILE) == 0;
+            }
+        };
+
+        File dir = new File(current);
+        String files[] = dir.list(filter);
+
+        if (files == null || files.length == 0) {
+            String parentdir = dir.getParent();
+
+            if (parentdir != null) {
+                return findProjectDir(dir.getParent(), PROJECT_FILE);
+            } else {
+                return null;
+            }
+        }
+
+        return dir.toURI().normalize().getPath();
     }
 
     public static String getFilename(String filename) {
@@ -221,27 +267,5 @@ public class Filename {
         }
 
         return block;
-    }
-
-    private static String getAbsPath(String baseDir, String filename) {
-        baseDir += !baseDir.endsWith(File.separator) ? File.separator : "";
-        String[] tokensFile = filename.split(File.separator);
-
-        StringBuffer token = new StringBuffer();
-
-        int i = 0;
-        do {
-            token.append(tokensFile[i]);
-            token.append(File.separator);
-            i++;
-        } while (i < tokensFile.length && baseDir.contains(token + tokensFile[i]));
-
-        String left = baseDir.split(token.toString())[0];
-
-        String aux[] = filename.split(token.toString());
-        String center = aux.length > 1 ? token.toString() : "";
-        String right = aux.length > 1 ? aux[1] : filename;
-
-        return left + center + right;
     }
 }

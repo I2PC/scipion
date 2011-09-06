@@ -403,6 +403,11 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         jsPanel = new javax.swing.JScrollPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowOpened(java.awt.event.WindowEvent evt) {
+                formWindowOpened(evt);
+            }
+        });
 
         toolBar.setRollover(true);
 
@@ -489,6 +494,10 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     private void bReloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bReloadActionPerformed
         reloadTableData();
 }//GEN-LAST:event_bReloadActionPerformed
+
+private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
+    ImagesWindowFactory.setConvenientSize(this);
+}//GEN-LAST:event_formWindowOpened
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bReload;
     private javax.swing.JButton bSave;

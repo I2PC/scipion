@@ -28,11 +28,11 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 import browser.DEBUG;
 import browser.LABELS;
+import browser.imageitems.tableitems.TableImageItem;
 import browser.windows.ImagesWindowFactory;
 import java.awt.event.KeyListener;
 import javax.swing.JTextField;
 import javax.swing.event.ListSelectionListener;
-import metadata.images.TableImageItem;
 import metadata.renderers.MetaDataStringRenderer;
 import metadata.renderers.MetaDataNumberRenderer;
 import metadata.renderers.MetaDataImageRenderer;
@@ -171,10 +171,6 @@ public class JFrameMetaData extends JFrame {
         return prefix + newtitle;
     }
 
-    public String getFilename() {
-        return tableModel.getFilename();
-    }
-
     private void setRowHeader() {
         rowHeaderModel = new ImagesRowHeaderModel(table);
 
@@ -281,7 +277,7 @@ public class JFrameMetaData extends JFrame {
     }
 
     private void openXmippImage(TableImageItem item) {
-        ImagesWindowFactory.openFileAsImage(item.getPath());
+        ImagesWindowFactory.captureFrame(item.getImagePlus());
     }
 
     private void openXmippTextFile(TableFileItem item) {
@@ -379,6 +375,7 @@ public class JFrameMetaData extends JFrame {
         toolBar = new javax.swing.JToolBar();
         bSave = new javax.swing.JButton();
         bReload = new javax.swing.JButton();
+        bSend2Gallery = new javax.swing.JButton();
         jpCenter = new javax.swing.JPanel();
         jpControls = new javax.swing.JPanel();
         jlBlock = new javax.swing.JLabel();
@@ -415,6 +412,17 @@ public class JFrameMetaData extends JFrame {
             }
         });
         toolBar.add(bReload);
+
+        bSend2Gallery.setText(METADATA_LABELS.OPEN_AS_GALLERY);
+        bSend2Gallery.setFocusable(false);
+        bSend2Gallery.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        bSend2Gallery.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        bSend2Gallery.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bSend2GalleryActionPerformed(evt);
+            }
+        });
+        toolBar.add(bSend2Gallery);
 
         getContentPane().add(toolBar, java.awt.BorderLayout.PAGE_START);
 
@@ -518,10 +526,15 @@ public class JFrameMetaData extends JFrame {
             setColumnsVisible(frameColumnsSelector.getStates());
         }
     }//GEN-LAST:event_bHideColumnsActionPerformed
+
+private void bSend2GalleryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bSend2GalleryActionPerformed
+    ImagesWindowFactory.openFileAsTable(tableModel.getPath());
+}//GEN-LAST:event_bSend2GalleryActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bHideColumns;
     private javax.swing.JButton bReload;
     private javax.swing.JButton bSave;
+    private javax.swing.JButton bSend2Gallery;
     private javax.swing.JComboBox jcbBlock;
     private javax.swing.JCheckBox jcbEnableAll;
     private javax.swing.JCheckBox jcbHideDisabled;

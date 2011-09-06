@@ -18,4 +18,6 @@ public class METADATA_LABELS {
     public final static String SELECT_COLUMNS = "Select Columns";
     public final static String BLOCK = "Block:";
     public final static String TITLE_COLUMNS_SELECTOR = "Select columns to show...";
+    public final static String OPEN_AS_GALLERY = "Open as Gallery";
+    public final static String OPEN_AS_METADATA = "Open as MetaData";
 }

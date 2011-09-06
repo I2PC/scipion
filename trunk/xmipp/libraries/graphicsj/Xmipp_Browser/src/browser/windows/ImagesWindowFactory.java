@@ -18,9 +18,13 @@ import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FontMetrics;
+import java.awt.Toolkit;
 import java.io.File;
 import java.util.ArrayList;
+import javax.swing.JFrame;
+import metadata.JFrameMetaData;
 import micrographs.JFrameMicrographs;
 import micrographs.ctf.CTFRecalculateImageWindow;
 import micrographs.CTFProfileWindow;
@@ -120,6 +124,12 @@ public class ImagesWindowFactory {
         }
 
         return iw;
+    }
+
+    public static void openFileAsMetadata(String filename) {
+        JFrameMetaData frameMetaData = new JFrameMetaData(filename);
+        frameMetaData.setLocationRelativeTo(null);
+        frameMetaData.setVisible(true);
     }
 
     public static void openFileAsTable(String filename) {
@@ -279,5 +289,14 @@ public class ImagesWindowFactory {
         }
 
         return sort;
+    }
+
+    public static void setConvenientSize(JFrame frame) {
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int w = screenSize.width * 2 / 3;
+        int h = screenSize.height * 2 / 3;
+
+        frame.setSize(w, h);
+        frame.setLocationRelativeTo(null);
     }
 }

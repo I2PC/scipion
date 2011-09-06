@@ -4,11 +4,11 @@
  */
 package metadata.renderers.editors;
 
+import browser.imageitems.tableitems.TableImageItem;
 import java.awt.Component;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import metadata.images.TableImageItem;
 
 /**
  *

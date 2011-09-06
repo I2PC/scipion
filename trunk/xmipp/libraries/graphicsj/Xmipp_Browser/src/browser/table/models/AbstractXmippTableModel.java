@@ -11,7 +11,6 @@ import browser.imageitems.ImageConverter;
 import browser.imageitems.tableitems.AbstractTableImageItem;
 import ij.IJ;
 import ij.ImagePlus;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,7 +24,7 @@ import xmipp.MDLabel;
 public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     protected String filename;  // Filename (specified by user).
-    protected String path;  // Normalized path.
+//    protected String path;  // Normalized path.
     protected ArrayList<AbstractTableImageItem> data = new ArrayList<AbstractTableImageItem>();
     protected LinkedList<AbstractTableImageItem> selectedItems = new LinkedList<AbstractTableImageItem>();
     protected int rows, cols;
@@ -46,22 +45,11 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         super();
 
         this.filename = filename;
-        path = new File(new File(filename).toURI().normalize()).getAbsolutePath();
 
-        String message = null;
-
-        File f = new File(path);
-        if (f.exists()) {
-            message = populateTable(path);
-        } else {
-            message = "File not found: " + filename;
+        String message = populateTable(filename);
+        if (!message.isEmpty()) {
+            IJ.showMessage(message);
         }
-
-        if (message != null) {
-            IJ.error(message);
-        }
-
-//        printMD(md);
     }
 
     public void setShowLabels(boolean showLabels) {
@@ -84,23 +72,6 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     protected abstract String populateTable(String filename);
 
-//    private static void printMD(MetaData md) {
-//        int labels[] = md.getActiveLabels();
-//
-//        for (int i : labels) {
-//            String label = MetaData.label2Str(i);
-//            System.out.println(i + ": " + label);
-//        }
-//
-//        long ids[] = md.findObjects();
-//        for (long id : ids) {
-//            System.out.println(id + ": "
-//                    + md.getValueString(MDLabel.MDL_IMAGE, id, true) + " / "
-//                    + md.getValueInt(MDLabel.MDL_ENABLED, id));
-//        }
-//
-//        System.out.println("++++++++++++++++++++++++++++++++++++++++");
-//    }
     protected abstract void getMinAndMax();
 
     public abstract String getFilename();
@@ -508,6 +479,8 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     public abstract boolean isStack();
 
     public abstract boolean isVolume();
+
+    public abstract boolean isMetaData();
 
     public abstract boolean saveAsMetadata(String path);
 

@@ -23,6 +23,14 @@ public class MetaData {
 //        Arrays.sort(PATHS_FIELDS);
 //    }
 
+    private final static int GEOMETRY_LABELS[] = {
+        MDLabel.MDL_FLIP,
+        MDLabel.MDL_ANGLEPSI,
+        //        MDLabel.MDL_ANGLEROT,
+        //        MDLabel.MDL_ANGLETILT,
+        MDLabel.MDL_SHIFTX,
+        MDLabel.MDL_SHIFTY, //        MDLabel.MDL_SHIFTZ
+    };
     public static final int MD_OVERWRITE = 0;
     public static final int MD_APPEND = 1;
     private String filename;
@@ -65,6 +73,15 @@ public class MetaData {
     public native void print();
 
     public native boolean containsLabel(int label);
+
+    public boolean containsGeometryInfo() {
+        for (int i = 0; i < GEOMETRY_LABELS.length; i++) {
+            if (containsLabel(GEOMETRY_LABELS[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static native String label2Str(int label);
 
@@ -116,7 +133,7 @@ public class MetaData {
 //        return Arrays.binarySearch(PATHS_FIELDS, label) >= 0;
 //    }
     public String fixPath(String value) {
-        return Filename.fixPath(getBaseDir(), value);
+        return Filename.fixPath(value, getBaseDir());
     }
 
     public native boolean getValueBoolean(int label, long objId);
@@ -129,10 +146,13 @@ public class MetaData {
         return Filename.getBlock(filename);
     }
 
+    public String getPath() {
+        return filename;
+    }
+
     public String getBaseDir() {
         File f = new File(getFilename());
-        f.toURI().normalize();
-        f = new File(f.getAbsolutePath());
+        f = new File(f.toURI().normalize().getPath());
 
         return f.getParent();
     }

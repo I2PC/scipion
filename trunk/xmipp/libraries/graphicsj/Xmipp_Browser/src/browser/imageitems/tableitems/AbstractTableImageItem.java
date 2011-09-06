@@ -87,9 +87,9 @@ public abstract class AbstractTableImageItem {
         return dimension != null && dimension.getDepth() > 1;
     }
 
-    public double getZoomScale_() {
-        return scale;
-    }
+//    public double getZoomScale_() {
+//        return scale;
+//    }
 
     public void setZoomScale(double scale) {
         this.scale = scale;
@@ -195,10 +195,7 @@ public abstract class AbstractTableImageItem {
             image.readPreview(getPath(), w_, h_, getNSlice(), getNImage());
             ip = ImageConverter.convertToImagej(image, getTitle());
         } catch (Exception ex) {
-//            System.err.println(" >>> Error loading preview: " + getKey());
             ip = ICONS_MANAGER.MISSING_ITEM;
-            //ex.printStackTrace();
-            //throw new RuntimeException(ex);
         }
 
         return ip;
