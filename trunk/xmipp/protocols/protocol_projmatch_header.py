@@ -609,7 +609,6 @@ DoCenterVolume = False
 #------------------------------------------------------------------------------------------
 # {section} Parallelization 
 #------------------------------------------------------------------------------------------
-#  {condition}(not DoMlf) Number of threads
 """ This option provides shared-memory parallelization on multi-core machines.
 It does not require any additional software, other than xmipp
 """
