@@ -244,7 +244,6 @@ void threadApplyT(ThreadArgument &thArg)
     MultidimArray< unsigned char > &mask=self->mask;
     Wnode.initZeros(self->Npixels,MAT_XSIZE(H));
 
-    FileName fnImg;
     const int unroll=8;
     const int jmax=(MAT_XSIZE(Wnode)/unroll)*unroll;
 
@@ -259,8 +258,7 @@ void threadApplyT(ThreadArgument &thArg)
         for (size_t idx=first; idx<=last; ++idx)
         {
             // Read image
-            MD.getValue(MDL_IMAGE,fnImg,objId[idx]);
-            I.read(fnImg);
+        	I.readApplyGeo(MD,objId[idx]);
             MultidimArray<double> &mI=I();
 
             // Locate the corresponding index in Matrix H
@@ -361,7 +359,6 @@ void threadApplyTt(ThreadArgument &thArg)
     const size_t unroll=8;
     const size_t nmax=(MAT_XSIZE(Wtranspose)/unroll)*unroll;
 
-    FileName fnImg;
     size_t first, last;
     if (node->isMaster() && thArg.thread_id==0)
     {
@@ -373,8 +370,7 @@ void threadApplyTt(ThreadArgument &thArg)
         for (size_t idx=first; idx<=last; ++idx)
         {
             // Read image
-            MD.getValue(MDL_IMAGE,fnImg,objId[idx]);
-            I.read(fnImg);
+        	I.readApplyGeo(MD,objId[idx]);
             MultidimArray<double> &mI=I();
 
             // For each rotation and shift
