@@ -114,7 +114,7 @@ public class TableImageItem extends AbstractTableImageItem {
     }
 
     public String getTooltipText() {
-        return path + (isStack() ? " [" + getNImage() + "]" : "");
+        return originalValue;//path + (isStack() ? " [" + getNImage() + "]" : "");
     }
 
     public Object getLabelValue(int label) {

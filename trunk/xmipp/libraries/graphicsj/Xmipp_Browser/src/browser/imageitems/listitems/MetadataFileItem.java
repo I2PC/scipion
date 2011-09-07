@@ -6,6 +6,7 @@ package browser.imageitems.listitems;
 
 import browser.Cache;
 import browser.DEBUG;
+import browser.ICONS_MANAGER;
 import browser.imageitems.ImageConverter;
 import ij.IJ;
 import ij.ImagePlus;
@@ -37,9 +38,9 @@ public class MetadataFileItem extends XmippImageItem {
             previewFile = getPreviewFile(md);
             if (previewFile != null) {
                 loadPreviewFileData();
-            }
 
-            dimension.setNImages(md.size());
+                dimension.setNImages(md.size());
+            }
         } catch (Exception ex) {
             DEBUG.printException(ex);
             IJ.error(ex.getMessage());
@@ -84,13 +85,17 @@ public class MetadataFileItem extends XmippImageItem {
 
     @Override
     public ImagePlus getPreview(int w, int h) {
-        // Tricky way to get preview.
-        File originalFile = file;
-        file = new File(Filename.getFilename(previewFile)); // skips image@filename format
+        ImagePlus ip = ICONS_MANAGER.MISSING_ITEM;
 
-        ImagePlus ip = super.getPreview(w, h);
+        if (previewFile != null) {
+            // Tricky way to get preview.
+            File originalFile = file;
+            file = new File(Filename.getFilename(previewFile)); // skips image@filename format
 
-        file = originalFile;
+            ip = super.getPreview(w, h);
+
+            file = originalFile;
+        }
 
         return ip;
     }

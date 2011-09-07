@@ -143,7 +143,7 @@ public class MetaData {
     }
 
     public String getBlock() {
-        return Filename.getBlock(filename);
+        return Filename.getPrefix(filename);
     }
 
     public String getPath() {

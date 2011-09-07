@@ -332,8 +332,8 @@ public class JFrameMetaData extends JFrame {
     }
 
     private void selectBlock(int block) {
-        DEBUG.printMessage(" *** Selecting block: " + block);
         tableModel.selectBlock(block);
+        DEBUG.printMessage(" *** Selecting block: " + block + " > " + tableModel.getSelectedBlock());
         reloadTableData();
     }
 

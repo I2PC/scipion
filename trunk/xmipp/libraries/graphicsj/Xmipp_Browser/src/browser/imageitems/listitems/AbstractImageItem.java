@@ -5,7 +5,6 @@
 package browser.imageitems.listitems;
 
 import browser.Cache;
-import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.imageitems.ImageDimension;
 import ij.ImagePlus;
@@ -53,7 +52,7 @@ public abstract class AbstractImageItem extends FileItem {
     public abstract ImagePlus getImagePlus();
 
     public ImagePlus getPreview(int w, int h) {
-        ImagePlus preview;
+        ImagePlus preview = null;
 
         if (getWidth() > 0 && getHeight() > 0) {
             // Tries to load from cache.
@@ -78,8 +77,6 @@ public abstract class AbstractImageItem extends FileItem {
                 int moptions = ImageStatistics.MIN_MAX + ImageStatistics.MEAN + ImageStatistics.STD_DEV;
                 statistics = ImageStatistics.getStatistics(preview.getProcessor(), moptions, preview.getCalibration());
             }
-        } else {    // Null preview.
-            preview = ICONS_MANAGER.MISSING_ITEM;
         }
 
         return preview;

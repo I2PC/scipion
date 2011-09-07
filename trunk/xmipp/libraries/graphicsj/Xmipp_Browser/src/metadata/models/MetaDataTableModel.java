@@ -49,13 +49,13 @@ public class MetaDataTableModel extends DefaultTableModel {
     }
 
     public String getFilename() {
-        return filename;
+        return Filename.getFilename(filename);
     }
 
     public String getPath() {
         String block = getSelectedBlock();
 
-        return (!block.isEmpty() ? block + Filename.SEPARATOR : "") + filename;
+        return (!block.isEmpty() ? block + Filename.SEPARATOR : "") + getFilename();
     }
 
     public void reload() {
@@ -77,17 +77,21 @@ public class MetaDataTableModel extends DefaultTableModel {
 
     private void loadBlocks(String filename) {
         try {
-            blocks = MetaData.getBlocksInMetaDataFile(filename);
+            if (Filename.hasPrefix(filename)) {
+                blocks = new String[]{Filename.getPrefix(filename)};
+            } else {
+                blocks = MetaData.getBlocksInMetaDataFile(filename);
+            }
         } catch (Exception ex) {
             DEBUG.printException(ex);
         }
     }
 
-    public void load(String path) {
+    public void load(String filename) {
         try {
             clear();    // Clear the whole data.
 
-            MetaData md = new MetaData(path);
+            MetaData md = new MetaData(filename);
 //            System.out.println("filename->" + block + filename);
 //            System.out.println("MDfilename->" + md.getFilename());
 //            System.out.println("Block->" + md.getBlock());

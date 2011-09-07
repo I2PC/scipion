@@ -153,7 +153,7 @@ public class Filename {
             String strprefix = "";
 
             if (filename.contains(Filename.SEPARATOR)) { // Has #image?
-                String prefix = Filename.getBlock(filename);
+                String prefix = Filename.getPrefix(filename);
                 strprefix = prefix + Filename.SEPARATOR;
             }
 
@@ -223,33 +223,39 @@ public class Filename {
     }
 
     public static long getNimage(String filename) {
-        long nimage = ImageDouble.ALL_IMAGES;
+        String prefix = getPrefix(filename);
 
-        if (filename.contains(SEPARATOR)) {
-            String str = filename.split(SEPARATOR)[0];
-            if (!str.isEmpty()) {
-                // str may have a string prefix before the number, so
-                // grab the leftmost part
-                int i = str.length() - 1;
-                while (i >= 0) {
-                    if (Character.isDigit(str.charAt(i)) == false) {
-                        break;
-                    }
-                    i--;
-                }
-                String rightPart = str.substring(i + 1, str.length());
-
-                nimage = Long.valueOf(rightPart);
-            }
-        }
-
-        return nimage;
+        return prefix != null ? Long.valueOf(prefix).longValue() : ImageDouble.ALL_IMAGES;
+//        long nimage = ImageDouble.ALL_IMAGES;
+//
+//        if (hasPrefix(SEPARATOR)) {
+//            String str = filename.split(SEPARATOR)[0];
+//            if (!str.isEmpty()) {
+//                // str may have a string prefix before the number, so
+//                // grab the leftmost part
+//                int i = str.length() - 1;
+//                while (i >= 0) {
+//                    if (Character.isDigit(str.charAt(i)) == false) {
+//                        break;
+//                    }
+//                    i--;
+//                }
+//                String rightPart = str.substring(i + 1, str.length());
+//
+//                nimage = Long.valueOf(rightPart);
+//            }
+//        }
+//
+//        return nimage;
     }
 
-    public static String getBlock(String filename) {
-        String block = "";
+    public static boolean hasPrefix(String filename) {
+        return filename.contains(SEPARATOR);
+    }
 
-        if (filename.contains(SEPARATOR)) {
+    public static String getPrefix(String filename) {
+        if (hasPrefix(filename)) {
+            String prefix = "";
             String str = filename.split(SEPARATOR)[0];
             if (!str.isEmpty()) {
                 // str may have a string prefix before the number, so
@@ -262,10 +268,11 @@ public class Filename {
                     i--;
                 }
 
-                block = str.substring(i + 1, str.length());
+                prefix = str.substring(i + 1, str.length());
             }
+            return prefix;
         }
 
-        return block;
+        return null;
     }
 }
