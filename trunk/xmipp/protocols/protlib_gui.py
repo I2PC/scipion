@@ -31,7 +31,8 @@ import Tkinter as tk
 import tkMessageBox
 import tkFont
 
-from protlib_base import protocolMain, getProtocolFromModule, XmippProtocol, getWorkingDirFromRunName
+from protlib_base import protocolMain, getProtocolFromModule, XmippProtocol, getWorkingDirFromRunName,\
+    getExtRunName
 from protlib_utils import loadModule, runJob, runImageJPlugin, which, runImageJPluginWithResponse, runJavaIJappWithResponse ,\
     showWarnings
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, registerFont,\
@@ -493,7 +494,7 @@ class ProtocolGUI(BasicGUI):
             runs = []
             for p in protocols:
                 runs += self.project.projectDb.selectRunsByProtocol(p)
-            list = ["%s_%s" % (r['protocol_name'], r['run_name']) for r in runs]
+            list = [getExtRunName(r) for r in runs]
             if len(list)==1:
                 var.tkvar.set(list[0])
 
@@ -502,7 +503,7 @@ class ProtocolGUI(BasicGUI):
         runs = []
         for p in protocols:
             runs += self.project.projectDb.selectRunsByProtocol(p)
-        list = ["%s_%s" % (r['protocol_name'], r['run_name']) for r in runs]
+        list = [getExtRunName(r) for r in runs]
         return list
            
     def createWidget(self, var):

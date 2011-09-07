@@ -247,7 +247,6 @@ class Process():
         for p in list:
             if p.ppid == self.pid:
                 childs.append(p)
-                childs += p.getChilds()
         return childs 
     
     ''' Terminate process '''
@@ -289,6 +288,10 @@ def getProcessFromScript(script):
 ''' Return the process data, using its arguments to match'''
 def getProcessFromPid(pid):
     return getUniqueProcessFromCmd('ps -p %(pid)s -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % locals())
+
+'''Return a list of process using the same working dir'''
+def getRelatedProcess(workingDir):
+    return getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%s" | grep -v grep' % workingDir)
 
 # The job should be launched from the working directory!
 def runJob(log, 

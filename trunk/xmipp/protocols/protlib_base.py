@@ -389,6 +389,10 @@ def getProtocolFromModule(script, project):
             return v(script, project)
     reportError("Can load protocol from " + script)
 
+''' Return the extended run name, ie: protocol_runName '''
+def getExtRunName(run):
+    return "%s_%s" % (run['protocol_name'], run['run_name'])
+    
 def getWorkingDirFromRunName(extendedRunName):
     # The extended run name has the name of the protocol in front
     from config_protocols import protDict

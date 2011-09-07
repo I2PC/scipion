@@ -35,8 +35,10 @@ from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, conf
     showInfo
 from config_protocols import protDict, sections
 from config_protocols import FontName, FontSize
-from protlib_base import getProtocolFromModule, XmippProject
-from protlib_utils import reportError, runImageJPlugin, getProcessFromPid
+from protlib_base import getProtocolFromModule, XmippProject,\
+    getWorkingDirFromRunName, getExtRunName
+from protlib_utils import reportError, runImageJPlugin, getProcessFromPid,\
+    getRelatedProcess
 from protlib_sql import SqliteDb, ProgramDb
 
 #TextColor
@@ -281,6 +283,7 @@ class XmippProjectGUI():
         root.mainloop() 
 
     def launchRunJobMonitorGUI(self, run):
+        runName = getExtRunName(run)
         text = run['script']
         root = tk.Toplevel()
         root.withdraw()
@@ -300,7 +303,7 @@ class XmippProjectGUI():
         
         detailsSection = ProjectSection(root, 'Process monitor')
         detailsSection.addButton("Stop run", command=stopRun)
-        txt = tk.Text(detailsSection.frameContent, width=50, height=10,
+        txt = tk.Text(detailsSection.frameContent, width=80, height=15,
                         bg=BgColor, bd=1, relief=tk.RIDGE, font=Fonts['normal'])
         txt.pack(fill=tk.BOTH)
         detailsSection.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
@@ -310,9 +313,12 @@ class XmippProjectGUI():
             line = "Process id    : %(pid)s\nElapsed time  : %(etime)s\n\nSubprocess:\n" % p.info
             txt.delete(1.0, tk.END)
             txt.insert(tk.END, line)
-            childs = p.getChilds()
+            txt.insert(tk.END, "PID\t ARGS\t CPU(%)\t MEM(%)\n")
+            childs = getRelatedProcess(getWorkingDirFromRunName(runName))
             for c in childs:
-                txt.insert(tk.END, str(c))
+                c.info['pname'] = p.args.split()[0]
+                line = "%(pid)s\t %(args)s\t %(pcpu)s\t %(pmem)s\n" % c.info
+                txt.insert(tk.END, line)
             txt.after(3000, refreshInfo)
             
         refreshInfo()
@@ -350,12 +356,11 @@ class XmippProjectGUI():
             self.runs = self.project.projectDb.selectRuns(protGroup)
         if len(self.runs) > 0:
             for run in self.runs:
-                run_name = '%s_%s' % (run['protocol_name'], run['run_name'])
                 state = run['run_state']
                 stateStr = SqliteDb.StateNames[state]
                 if state == SqliteDb.RUN_STARTED:
                     stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
-                self.lbHist.insert(tk.END, (run_name, stateStr, run['last_modified']))   
+                self.lbHist.insert(tk.END, (getExtRunName(run), stateStr, run['last_modified']))   
             self.lbHist.selection_set(index)
             #Generate an automatic refresh after x ms, with x been 1, 2, 4 or 8 ms 
             self.historyRefresh = self.lbHist.after(self.historyRefreshRate*1000, self.updateRunHistory, protGroup, False)
@@ -417,7 +422,7 @@ class XmippProjectGUI():
             else:
                 summary = "This protocol run has not been executed yet"
                 showButtons = False
-            labels = [('Run', '%s_%s' % (run['protocol_name'], run['run_name'])),
+            labels = [('Run', getExtRunName(run)),
                       ('\nCreated', run['init']),('   Modified', run['last_modified']), 
                       ('\nScript ', run['script']),('\nDirectory', prot.WorkingDir),
                       ('\nSummary', "\n"+summary)      ]
