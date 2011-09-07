@@ -606,16 +606,16 @@ ConstantToAddToFiltration ='0.1'
 """ Center volume after each iteration """
 DoCenterVolume = False
 
-#------------------------------------------------------------------------------------------------
-# {section} Parallelization issues
-#------------------------------------------------------------------------------------------------
-# Number of (shared-memory) threads?
-""" This option provides shared-memory parallelization on multi-core machines. 
-    It does not require any additional software, other than xmipp
+#------------------------------------------------------------------------------------------
+# {section} Parallelization 
+#------------------------------------------------------------------------------------------
+#  {condition}(not DoMlf) Number of threads
+""" This option provides shared-memory parallelization on multi-core machines.
+It does not require any additional software, other than xmipp
 """
 NumberOfThreads = 1
 
-# Number of MPI processes to use
+# Number of MPI processes
 NumberOfMpi = 3
 
 #MPI job size 
@@ -623,25 +623,23 @@ NumberOfMpi = 3
 """
 MpiJobSize ='1'
 
-#------------------------------------------------------------------------------------------
-# {section}{has_question} Queue
-#------------------------------------------------------------------------------------------
-# Submmit to queue
-"""Submmit to queue
+# Submit to queue ? 
+"""Submit to queue
 """
-SubmmitToQueue = False
+SubmitToQueue = True
 
-# Queue name
+# {expert}{condition}(SubmitToQueue) Queue name
 """Name of the queue to submit the job
 """
 QueueName = "default"
 
-# Queue hours
+# {condition}(SubmitToQueue) Queue hours
 """This establish a maximum number of hours the job will
 be running, after that time it will be killed by the
 queue system
 """
 QueueHours = 72
+
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
