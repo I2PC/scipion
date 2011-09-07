@@ -30,12 +30,10 @@ run1 for it. This name together with the protocol output folder will determine t
 """
 RunName = "run_001"
 
-# Delete working directory?
-""" If TRUE the working directory will be deleted before run.
-Set this option to TRUE if you want to start from scratch the same run
-with previous parameters
+# {list}(Resume, Restart) Run behavior
+""" Resume from the last step, restart the whole process or continue at a given step or iteration
 """
-DoDeleteWorkingDir = False
+Behavior = "Resume"
 
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up 
@@ -76,7 +74,7 @@ IsIter =False
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =1
+ContinueAtIteration =23
 
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, 
@@ -180,12 +178,12 @@ DoMask =True
 """
 DoSphericalMask =True
 
-# {condition}(DoSphericalMask=True) Radius of spherical mask
+# {condition}(DoSphericalMask) Radius of spherical mask
 """ This is the radius (in pixels) of the spherical mask 
 """
 MaskRadius = 64
 
-# {file} {condition}(DoSphericalMask=False)  Binary mask file
+# {file} {condition}(not DoSphericalMask)  Binary mask file
 """ This should be a binary (only 0/1-valued) Xmipp volume of equal dimension as your reference
     The protein region should be white (1) and the solvent should be black (0).
     Note that this entry is only relevant if no spherical mask is used.
@@ -316,10 +314,10 @@ Search5DStep ='2'
 # {expert} Restrict tilt angle search?
 DoRestricSearchbyTiltAngle = False
 
-# {expert} {condition}(DoRestricSearchbyTiltAngle=True) Lower-value for restricted tilt angle search
+# {expert} {condition}(DoRestricSearchbyTiltAngle) Lower-value for restricted tilt angle search
 Tilt0 = -91
 
-# {expert} {condition}(DoRestricSearchbyTiltAngle=True) Higher-value for restricted tilt angle search
+# {expert} {condition}(DoRestricSearchbyTiltAngle) Higher-value for restricted tilt angle search
 TiltF = 91
 
 # Symmetry group
@@ -378,12 +376,12 @@ DiscardPercentage ='10'
 """
 DoScale = False
 
-# {condition}(DoScale=True) Step scale factors size
+# {condition}(DoScale) Step scale factors size
 """ Scale step factor size (1 means 0.01 in/de-crements arround 1)
 """
 ScaleStep ='1'
 
-# {condition}(DoScale=True) Number of scale steps
+# {condition}(DoScale) Number of scale steps
 """ Number of scale steps.
     With default values (ScaleStep='1' and ScaleNumberOfSteps='3'): 1 +/-0.01 | +/-0.02 | +/-0.03.    
     With values ScaleStep='2' and ScaleNumberOfSteps='4' it performs a scale search over:
@@ -476,7 +474,7 @@ Align2dMaxChangeRot ='2x1000 2x20'
 """
 ReconstructionMethod ='fourier'
 
-# {expert}{condition}(ReconstructionMethod=art) Values of lambda for art
+# {expert}{condition}(ReconstructionMethod=="art") Values of lambda for art
 """ IMPORTANT: ou must specify a value of lambda for each iteration even
     if art has not been selected.
     IMPORTANT: NOte that we are using the WLS version of ART that 
@@ -494,26 +492,26 @@ ReconstructionMethod ='fourier'
 """
 ARTLambda ='0.2'
 
-# {expert}{condition}(ReconstructionMethod=art) Additional reconstruction parameters for ART
+# {expert}{condition}(ReconstructionMethod=="art") Additional reconstruction parameters for ART
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
         for details
 """
 ARTReconstructionExtraCommand ='-k 0.5 -n 10 '
 
-# {condition}(ReconstructionMethod=fourier) Initial maximum frequency
+# {condition}(ReconstructionMethod=="fourier") Initial maximum frequency
 """ This number os only used in the first iteration. 
     From then on, it will be set to resolution computed in the resolution section
 """
 FourierMaxFrequencyOfInterest =0.25
 
-# {expert}{condition}(ReconstructionMethod=wbp) Additional reconstruction parameters for WBP
+# {expert}{condition}(ReconstructionMethod=="wbp") Additional reconstruction parameters for WBP
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp and
         for details
 """
 WBPReconstructionExtraCommand =''
 
-# {expert} {condition}(ReconstructionMethod=fourier)Additional reconstruction parameters for Fourier
+# {expert} {condition}(ReconstructionMethod=="fourier")Additional reconstruction parameters for Fourier
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_Fourier and
         for details
@@ -573,7 +571,7 @@ ResolSam=5.6
 # Low-pass filter the reference?
 DoLowPassFilter = True
 
-# {condition}(DoLowPassFilter=True) Use estimated resolution for low-pass filtering?
+# {condition}(DoLowPassFilter) Use estimated resolution for low-pass filtering?
 """If set to true, the volume will be filtered at a frecuency equal to
    the  resolution computed with a FSC=0.5 threshold, possibly 
    plus a constant provided by the user in the next input box. 
@@ -584,7 +582,7 @@ DoLowPassFilter = True
 """
 UseFscForFilter = True
 
-# {condition}(DoLowPassFilter=True) Constant to by add to the estimated resolution
+# {condition}(DoLowPassFilter) Constant to by add to the estimated resolution
 """ The meaning of this field depends on the previous flag.
     If set to true, then the volume will be filtered at a frecuency equal to
     the  resolution computed with resolution_fsc (FSC=0.5) plus the value 
@@ -658,12 +656,6 @@ AnalysisScript ='visualize_projmatch.py'
 """Check that some output files are created. 
 """
 Verify=True
-
-# {expert} print wrapper name
-PrintWrapperCommand=True
-
-# {expert} print wrapper parameters
-PrintWrapperParameters=True
 
 # {expert} show file verification
 ViewVerifyedFiles=True 

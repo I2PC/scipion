@@ -97,8 +97,8 @@ def executeCtfGroups (_log,
             print '* ', message
             _log.info(message)
             sys.exit()
-
-    if runJob(_log,"xmipp_ctf_group",command,False, 1, 1, ''):
+    
+    if runJob(_log,"xmipp_ctf_group",command):
         return 1
     fn = CtfGroupDirectory + '/'+\
                   CtfGroupRootName+\

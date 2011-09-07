@@ -27,9 +27,7 @@ def executeMask(_log,
         else:
             command += ' --mask ' + userSuppliedMask
 
-        runJob(_log,"xmipp_transform_mask",
-                              command,
-                              False, 1, 1, '')
+        runJob(_log,"xmipp_transform_mask", command)
 
     else:
         shutil.copy(reconstructedFileName, maskedFileName)
@@ -102,16 +100,11 @@ def angular_project_library(_log
 
     runJob(_log,'xmipp_angular_project_library',
                          parameters,
-                         _DoParallel,
-                         NumberOfMpi*NumberOfThreads,
-                         1,
-                         SystemFlavour)
+                         NumberOfMpi*NumberOfThreads)
     if (not DoCtfCorrection):
         print "a1"
         src=ProjectLibraryRootName.replace(".stk",'_sampling.xmd')
-        dst = src.replace('sampling.xmd','group'+
-                              str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+
-                              '_sampling.xmd')
+        dst = src.replace('sampling.xmd','group%06d_sampling.xmd' % 1)
         shutil.copy(src, dst)
 
 
@@ -200,10 +193,9 @@ def projection_matching(_log
         
         runJob(_log,'xmipp_angular_projection_matching',
                             parameters,
-                            DoParallel,
                             NumberOfMpi,
-                            NumberOfThreads,
-                            SystemFlavour)
+                            NumberOfThreads
+                            )
         
 def assign_images_to_references(_log
                          , DocFileInputAngles
@@ -226,7 +218,7 @@ def assign_images_to_references(_log
     MD1    = MetaData()
     MDout  = MetaData()
     MDout.setComment("metadata with  images, the winner reference as well as the ctf group")
-
+    print "one"
     mycounter=0L
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         auxInputdocfile = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@'
@@ -238,15 +230,19 @@ def assign_images_to_references(_log
                 t=MD.getValue(MDL_REF,id)
                 i=MDSort.addObject()
                 MDSort.setValue(MDL_REF,t,i)
+    print "two"
     MDSort.removeDuplicates()
     for id in MDSort:
         MDSort.setValue(MDL_ORDER,mycounter,id)
         mycounter += 1
+    print "three"
     #print "bbb",ProjMatchRootName[1], DocFileInputAngles
     outputdocfile =  DocFileInputAngles
     if os.path.exists(outputdocfile):
         os.remove(outputdocfile)
+    print "four"
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
+        print "five",iCTFGroup
         MDaux.clear()
         auxInputdocfile = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
@@ -264,8 +260,8 @@ def assign_images_to_references(_log
         #if a single image is assigned to two references with the same 
         #CC use it in both reconstruction
         #recover atribbutes after aggregate function
-        MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)
-        MDout.join(MD1,MDSort,MDL_UNDEFINED,NATURAL)        
+        MD1.join  (MD,  MDaux,  MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
+        MDout.join(MD1, MDSort, MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
         MDout.write(auxInputdocfile+outputdocfile,MD_APPEND)
     #we are done but for the future it is convenient to create more blocks
     #with the pairs ctf_group reference    
@@ -353,8 +349,5 @@ def angular_class_average(_log
         runJob(_log,
                'xmipp_angular_class_average',
                parameters,
-               DoParallel,
-               NumberOfMpi * NumberOfThreads,
-               1,
-               SystemFlavour)
+               NumberOfMpi * NumberOfThreads)
 

@@ -184,10 +184,8 @@ class ProtProjMatch(XmippProtocol):
         self.SymmetryGroup          = [-1]+getListFromVector(self.SymmetryGroup,self.NumberOfIterations)
          
         # Configure dabase
-        self.Db.setPrintWrapperParameters(self.PrintWrapperParameters)
-        self.Db.setPrintWrapperCommand(self.PrintWrapperCommand)
-        self.Db.setVerify(self.Verify,self.ViewVerifyedFiles)
-        self.Db.setParentDefault(XmippProjectDb.lastStep)
+        ###############self.Db.setVerify(self.Verify,self.ViewVerifyedFiles)
+        ###############self.Db.setParentDefault(XmippProjectDb.lastStep)
 
     def otherActionsToBePerformedBeforeLoop(self):
         print "in otherActionsToBePerformedBeforeLoop"
@@ -405,9 +403,6 @@ class ProtProjMatch(XmippProtocol):
             command = "shutil.copy('%s','%s');dummy" % (self.ReferenceFileNames[0], self.reconstructedFileNamesIters[iterN][refN])
             id = _dataBase.insertStep(command, self.reconstructedFileNamesIters[iterN][refN])
         command = "print 'ALL DONE';dummy"
-        self.Db.setIteration(XmippProjectDb.doAlways)
-        _dataBase.setIteration(XmippProjectDb.doAlways)
-        self.Db.setIteration(iterN)
 
         id = _dataBase.insertStep(command)
     
