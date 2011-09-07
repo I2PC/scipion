@@ -517,10 +517,10 @@ void XmippMetadataProgram::readParams()
 
     // Only delete output stack in case we are not overwritting input
     delete_output_stack = (output_is_stack && delete_output_stack) ?
-                          fn_out != fn_in : false;
+                          !(fn_out.empty() && oroot.empty()) : false;
 
     // If the output is a stack, create empty stack file in advance to avoid concurrent access to the header
-    create_empty_stackfile = (each_image_produces_an_output && output_is_stack);
+    create_empty_stackfile = (each_image_produces_an_output && output_is_stack && !fn_out.empty());
 }
 
 void XmippMetadataProgram::show()
