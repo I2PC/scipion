@@ -705,23 +705,10 @@ bool MDSql::execSingleStmt(const std::stringstream &ss)
 
 bool MDSql::execSingleStmt(sqlite3_stmt * &stmt, const std::stringstream *ss)
 {
-    bool r = true;
     rc = sqlite3_step(stmt);
-
-
-    //if (ss != NULL)
-    //    char * sqlStr = new char[1024];
-    //    sqlStr = sqlite3_sql(stmt);
-    //            std::cerr << "   " << sqlStr << std::endl;
-    //    delete sqlStr[];
     if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE)
-    {
-        std::cerr << "MDSql::execSingleStmt: " << std::endl;
-        std::cerr <<"    CCCcode: " << rc << " error: " << sqlite3_errmsg(db) << std::endl;
-        r = false;
-        exit(1);
-    }
-    return r;
+        REPORT_ERROR(ERR_MD_SQL,formatString("Error code: %d message: %s",rc,sqlite3_errmsg(db)));
+    return true;
 }
 
 size_t MDSql::execSingleIntStmt(const std::stringstream &ss)
