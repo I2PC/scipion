@@ -790,17 +790,17 @@ Program_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         PyObject * runWithoutArgs = Py_False;
         if (PyArg_ParseTuple(args, "|O", &runWithoutArgs))
         {
-          try
-          {
-              if (PyBool_Check(runWithoutArgs))
-                  self->program->runWithoutArgs = (runWithoutArgs == Py_True);
-              else
-                  PyErr_SetString(PyExc_TypeError, "MetaData::new: Expecting boolean value");
-          }
-          catch (XmippError xe)
-          {
-              PyErr_SetString(PyXmippError, xe.msg.c_str());
-          }
+            try
+            {
+                if (PyBool_Check(runWithoutArgs))
+                    self->program->runWithoutArgs = (runWithoutArgs == Py_True);
+                else
+                    PyErr_SetString(PyExc_TypeError, "MetaData::new: Expecting boolean value");
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
         }
     }
     return (PyObject *) self;
@@ -817,20 +817,20 @@ Program_addUsageLine(PyObject *obj, PyObject *args, PyObject *kwargs)
         char * line = NULL;
         if (PyArg_ParseTuple(args, "s|O", &line, &verbatim))
         {
-          try
-          {
-              if (PyBool_Check(verbatim))
-              {
-                self->program->addUsageLine(line, verbatim == Py_True);
-                Py_RETURN_NONE;
-              }
-              else
-                  PyErr_SetString(PyExc_TypeError, "MetaData::setColumnFormat: Expecting boolean value");
-          }
-          catch (XmippError xe)
-          {
-              PyErr_SetString(PyXmippError, xe.msg.c_str());
-          }
+            try
+            {
+                if (PyBool_Check(verbatim))
+                {
+                    self->program->addUsageLine(line, verbatim == Py_True);
+                    Py_RETURN_NONE;
+                }
+                else
+                    PyErr_SetString(PyExc_TypeError, "MetaData::setColumnFormat: Expecting boolean value");
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
         }
     }
     return NULL;
@@ -847,20 +847,20 @@ Program_addExampleLine(PyObject *obj, PyObject *args, PyObject *kwargs)
         char * line = NULL;
         if (PyArg_ParseTuple(args, "s|O", &line, &verbatim))
         {
-          try
-          {
-              if (PyBool_Check(verbatim))
-              {
-                self->program->addExampleLine(line, verbatim == Py_True);
-                Py_RETURN_NONE;
-              }
-              else
-                  PyErr_SetString(PyExc_TypeError, "MetaData::setColumnFormat: Expecting boolean value");
-          }
-          catch (XmippError xe)
-          {
-              PyErr_SetString(PyXmippError, xe.msg.c_str());
-          }
+            try
+            {
+                if (PyBool_Check(verbatim))
+                {
+                    self->program->addExampleLine(line, verbatim == Py_True);
+                    Py_RETURN_NONE;
+                }
+                else
+                    PyErr_SetString(PyExc_TypeError, "MetaData::setColumnFormat: Expecting boolean value");
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
         }
     }
     return NULL;
@@ -876,15 +876,15 @@ Program_addParamsLine(PyObject *obj, PyObject *args, PyObject *kwargs)
         char * line = NULL;
         if (PyArg_ParseTuple(args, "s", &line))
         {
-          try
-          {
-              self->program->addParamsLine(line);
-              Py_RETURN_NONE;
-          }
-          catch (XmippError xe)
-          {
-              PyErr_SetString(PyXmippError, xe.msg.c_str());
-          }
+            try
+            {
+                self->program->addParamsLine(line);
+                Py_RETURN_NONE;
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
         }
     }
     return NULL;
@@ -900,15 +900,15 @@ Program_usage(PyObject *obj, PyObject *args, PyObject *kwargs)
         int verbose = 0;
         if (PyArg_ParseTuple(args, "|i", &verbose))
         {
-          try
-          {
-              self->program->usage(verbose);
-              Py_RETURN_NONE;
-          }
-          catch (XmippError xe)
-          {
-              PyErr_SetString(PyXmippError, xe.msg.c_str());
-          }
+            try
+            {
+                self->program->usage(verbose);
+                Py_RETURN_NONE;
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
         }
     }
     return NULL;
@@ -921,7 +921,7 @@ Program_endDefinition(PyObject *obj, PyObject *args, PyObject *kwargs)
     ProgramObject *self = (ProgramObject*) obj;
     if (self != NULL)
     {
-      int verbose = 1;
+        int verbose = 1;
         try
         {
             self->program->endDefinition();
@@ -942,33 +942,33 @@ Program_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     ProgramObject *self = (ProgramObject*) obj;
     if (self != NULL)
     {
-      PyObject *list = NULL;
-      if (PyArg_ParseTuple(args, "O", &list))
-      {
-        if (PyList_Check(list))
+        PyObject *list = NULL;
+        if (PyArg_ParseTuple(args, "O", &list))
         {
-            size_t size = PyList_Size(list);
-            PyObject * item = NULL;
-            char ** argv = new char*[size];
-            std::vector<double> vValue(size);
-            for (size_t i = 0; i < size; ++i)
+            if (PyList_Check(list))
             {
-                item = PyList_GetItem(list, i);
-                if (!PyString_Check(item))
+                size_t size = PyList_Size(list);
+                PyObject * item = NULL;
+                char ** argv = new char*[size];
+                std::vector<double> vValue(size);
+                for (size_t i = 0; i < size; ++i)
                 {
-                    PyErr_SetString(PyExc_TypeError,
-                                    "Program arguments should be of type string");
-                    return NULL;
+                    item = PyList_GetItem(list, i);
+                    if (!PyString_Check(item))
+                    {
+                        PyErr_SetString(PyExc_TypeError,
+                                        "Program arguments should be of type string");
+                        return NULL;
+                    }
+                    argv[i] = PyString_AsString(item);
                 }
-                argv[i] = PyString_AsString(item);
+                self->program->read((int)size, argv);
+                if (self->program->doRun)
+                    Py_RETURN_TRUE;
+                else
+                    Py_RETURN_FALSE;
             }
-            self->program->read((int)size, argv);
-            if (self->program->doRun)
-              Py_RETURN_TRUE;
-            else
-              Py_RETURN_FALSE;
         }
-      }
     }
     return NULL;
 }
@@ -977,26 +977,26 @@ Program_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 Program_checkParam(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  ProgramObject *self = (ProgramObject*) obj;
-  if (self != NULL)
-  {
-      char * param = NULL;
-      if (PyArg_ParseTuple(args, "s", &param))
-      {
-        try
+    ProgramObject *self = (ProgramObject*) obj;
+    if (self != NULL)
+    {
+        char * param = NULL;
+        if (PyArg_ParseTuple(args, "s", &param))
         {
-            if (self->program->checkParam(param))
-              Py_RETURN_TRUE;
-            else
-              Py_RETURN_FALSE;
+            try
+            {
+                if (self->program->checkParam(param))
+                    Py_RETURN_TRUE;
+                else
+                    Py_RETURN_FALSE;
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
         }
-        catch (XmippError xe)
-        {
-            PyErr_SetString(PyXmippError, xe.msg.c_str());
-        }
-      }
-  }
-  return NULL;
+    }
+    return NULL;
 }
 
 /* getParam */
@@ -1010,15 +1010,15 @@ Program_getParam(PyObject *obj, PyObject *args, PyObject *kwargs)
         int arg = 0;
         if (PyArg_ParseTuple(args, "s|i", &param, &arg))
         {
-          try
-          {
-              const char * value = self->program->getParam(param, arg);
-              return PyString_FromString(value);
-          }
-          catch (XmippError xe)
-          {
-              PyErr_SetString(PyXmippError, xe.msg.c_str());
-          }
+            try
+            {
+                const char * value = self->program->getParam(param, arg);
+                return PyString_FromString(value);
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
         }
     }
     return NULL;
@@ -1034,21 +1034,21 @@ Program_getListParam(PyObject *obj, PyObject *args, PyObject *kwargs)
         char * param = NULL;
         if (PyArg_ParseTuple(args, "s", &param))
         {
-          try
-          {
-              StringVector list;
-              self->program->getListParam(param, list);
-              size_t size = list.size();
-              PyObject * pylist = PyList_New(size);
+            try
+            {
+                StringVector list;
+                self->program->getListParam(param, list);
+                size_t size = list.size();
+                PyObject * pylist = PyList_New(size);
 
-              for (int i = 0; i < size; ++i)
-                  PyList_SetItem(pylist, i, PyString_FromString(list[i].c_str()));
-              return pylist;
-          }
-          catch (XmippError xe)
-          {
-              PyErr_SetString(PyXmippError, xe.msg.c_str());
-          }
+                for (int i = 0; i < size; ++i)
+                    PyList_SetItem(pylist, i, PyString_FromString(list[i].c_str()));
+                return pylist;
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
         }
     }
     return NULL;
@@ -1692,9 +1692,9 @@ MetaData_removeLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             MetaDataObject *self = (MetaDataObject*) obj;
             if (self->metadata->removeLabel((MDLabel) label))
-            	Py_RETURN_TRUE;
+                Py_RETURN_TRUE;
             else
-            	Py_RETURN_FALSE;
+                Py_RETURN_FALSE;
         }
         catch (XmippError xe)
         {
@@ -1895,6 +1895,26 @@ MetaData_removeObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+
+/* removeObjects */
+static PyObject *
+MetaData_removeDisabled(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *pyQuery = NULL;
+
+    try
+    {
+        MetaDataObject *self = (MetaDataObject*) obj;
+        self->metadata->removeDisabled();
+        Py_RETURN_NONE;
+    }
+    catch (XmippError xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
+}
+
 /* Make absolute path */
 static PyObject *
 MetaData_makeAbsPath(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -2054,8 +2074,8 @@ MetaData_methods[] =
           METH_VARARGS,
           "Set the value for column(label) for all objects" },
         { "removeLabel", (PyCFunction) MetaData_removeLabel,
-            METH_VARARGS,
-            "Remove a label if exists. The values are still in the table." },
+          METH_VARARGS,
+          "Remove a label if exists. The values are still in the table." },
         { "getValue", (PyCFunction) MetaData_getValue,
           METH_VARARGS, "Get the value for column(label)" },
         { "getActiveLabels",
@@ -2082,6 +2102,9 @@ MetaData_methods[] =
         { "removeObjects",
           (PyCFunction) MetaData_removeObjects,
           METH_VARARGS, "Remove objects from metadata" },
+        { "removeDisabled",
+            (PyCFunction) MetaData_removeDisabled,
+            METH_VARARGS, "Remove disabled objects from metadata" },
         { "aggregateSingle",
           (PyCFunction) MetaData_aggregateSingle,
           METH_VARARGS,
@@ -2109,19 +2132,19 @@ MetaData_methods[] =
         { "setComment", (PyCFunction) MetaData_setComment,
           METH_VARARGS, "Set comment in Metadata." },
         { "getComment", (PyCFunction) MetaData_getComment,
-            METH_VARARGS, "Get comment in Metadata." },
+          METH_VARARGS, "Get comment in Metadata." },
         { "operate", (PyCFunction) MetaData_operate,
           METH_VARARGS, "Replace strings values in some column." },
-          { "replace", (PyCFunction) MetaData_replace,
+        { "replace", (PyCFunction) MetaData_replace,
           METH_VARARGS, "Basic operations on columns data." },
-          {"randomize",
-           (PyCFunction) MetaData_randomize,
-           METH_VARARGS,
-           "Randomize another metadata and keep in self." },
-           {"selectPart",
-            (PyCFunction) MetaData_selectPart,
-            METH_VARARGS,
-            "select a part of another metadata starting from start and with a number of objects" },
+        {"randomize",
+         (PyCFunction) MetaData_randomize,
+         METH_VARARGS,
+         "Randomize another metadata and keep in self." },
+        {"selectPart",
+         (PyCFunction) MetaData_selectPart,
+         METH_VARARGS,
+         "select a part of another metadata starting from start and with a number of objects" },
         { "removeDuplicates", (PyCFunction) MetaData_removeDuplicates,
           METH_VARARGS, "Remove duplicate rows" },
         {
