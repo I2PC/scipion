@@ -1268,7 +1268,10 @@ void MetaData::removeDuplicates(MetaData &MDin)
 void MetaData::removeDisabled()
 {
   if (containsLabel(MDL_ENABLED))
+  {
       removeObjects(MDValueEQ(MDL_ENABLED, -1));
+      removeObjects(MDValueEQ(MDL_ENABLED,  0));
+  }
 }
 
 void MetaData::subtraction(const MetaData &mdIn, const MDLabel label)
