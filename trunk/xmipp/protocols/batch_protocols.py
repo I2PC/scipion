@@ -226,6 +226,7 @@ class XmippProjectGUI():
             program = db.selectProgram(program_name)
             txt.delete(1.0, tk.END)
             desc = program['usage'].splitlines()
+            desc = desc[:5]# show max of 5 lines
             for line in desc:
                 txt.insert(tk.END, line)
                 
