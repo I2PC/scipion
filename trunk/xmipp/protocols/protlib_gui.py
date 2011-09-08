@@ -1124,19 +1124,45 @@ class ProtocolGUI(BasicGUI):
         else:
             self.selectFromList(var, familyList)        
 
-    #Select family from extraction run
+    #Choose Gaussian Filter
     def wizardChooseGaussianFilter(self, var):
-        particlesDir = getWorkingDirFromRunName(self.getVarValue('PreviousRun'))
-        if not particlesDir:
-            tkMessageBox.showwarning("Warning", "No previous Run has been found", parent=self.master)
+        selfile = self.getVarValue('InSelFile')
+        if not os.path.exists(selfile):
+            tkMessageBox.showwarning("Warning", "The input selfile is not a valid file", parent=self.master)
             return
         Freq_sigma = self.getVarValue('Freq_sigma')
-        Family = self.getVarValue('Family')
-        selfile=os.path.join(particlesDir,Family+".sel")
-        msg = runJavaIJappWithResponse("512m", "XmippGaussianFilterWizard", "-i %(selfile)s -w1 %(Freq_sigma)s" % locals(),True)
+        msg = runJavaIJappWithResponse("512m", "XmippGaussianFilterWizard", "-i %(selfile)s -w1 %(Freq_sigma)s" % locals())
         msg = msg.strip()
         if len(msg) > 0:
             var.tkvar.set(msg)            
+
+    #Choose Bad pixels wizard
+    def wizardChooseBadPixelsFilter(self, var):
+        selfile = self.getVarValue('InSelFile')
+        if not os.path.exists(selfile):
+            tkMessageBox.showwarning("Warning", "The input selfile is not a valid file", parent=self.master)
+            return
+        DustRemovalThreshold = self.getVarValue('DustRemovalThreshold')
+        msg = runJavaIJappWithResponse("512m", "XmippBadPixelsFilterWizard", "-i %(selfile)s -factor %(DustRemovalThreshold)s" % locals())
+        msg = msg.strip()
+        if len(msg) > 0:
+            var.tkvar.set(msg)            
+
+    #Choose Bandpass filter wizard
+    def wizardChooseBandPassFilter(self, var):
+        selfile = self.getVarValue('InSelFile')
+        if not os.path.exists(selfile):
+            tkMessageBox.showwarning("Warning", "The input selfile is not a valid file", parent=self.master)
+            return
+        Freq_low = self.getVarValue('Freq_low')
+        Freq_high = self.getVarValue('Freq_high')
+        Freq_decay = self.getVarValue('Freq_decay')
+        msg = runJavaIJappWithResponse("512m", "XmippBandPassFilterWizard", "-i %(selfile)s -w1 %(Freq_low)s  -w2 %(Freq_high)s  -raised_w %(Freq_decay)s" % locals())
+        msg = msg.strip().splitlines()
+        if len(msg)>0:
+            self.setVarValue('Freq_low',msg[0])
+            self.setVarValue('Freq_high',msg[1])
+            self.setVarValue('Freq_decay',msg[2])
 
     #Select family from extraction run
     def wizardChooseFamilyToExtract(self, var):

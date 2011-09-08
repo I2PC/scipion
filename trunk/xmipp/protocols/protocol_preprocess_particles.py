@@ -16,44 +16,28 @@ class ProtPreprocessParticles(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.preprocess_particles.name, scriptname, project)
         self.Import = 'from protocol_preprocess_particles import *'
-        self.particlesDir=getWorkingDirFromRunName(self.PreviousRun)
+        file=os.path.split(self.InSelFile)[1]
+        self.OutSelFile=os.path.join(self.WorkingDir,os.path.splitext(file)[0]+".stk")
 
     def defineSteps(self):
-        fnOut=os.path.join(self.WorkingDir,"micrographs.sel")
-        self.Db.insertStep('createLink',verifyfiles=[fnOut],source=os.path.join(self.particlesDir,"micrographs.sel"),dest=fnOut)
-
-        fnIn=os.path.join(self.particlesDir,self.Family)
-        fnOut=os.path.join(self.WorkingDir,self.Family)
-        self.Db.insertStep('copyDir',verifyfiles=[fnOut],source=fnIn,dest=fnOut)
-        fnIn+=".sel"
-        fnOut+=".sel"
-        self.Db.insertStep('transposeMetadata',verifyfiles=[fnOut],source=fnIn,sourceWorkingDir=self.particlesDir,
-                           destWorkingDir=self.WorkingDir,dest=fnOut)
-
+        self.Db.insertStep('copyFiles',verifyfiles=[self.OutSelFile],InputFile=self.InSelFile,OutputFile=self.OutSelFile)
         if self.DoFourier:
-            self.Db.insertStep('doFourier',stack=fnOut,freq_low=self.Freq_low,freq_high=self.Freq_high,freq_decay=self.Freq_decay,
-                               Nproc=self.NumberOfMpi)
+            self.Db.insertStep('doFourier',stack=self.OutSelFile,freq_low=self.Freq_low,freq_high=self.Freq_high,freq_decay=self.Freq_decay,Nproc=self.NumberOfMpi)
         if self.DoGaussian:
-            self.Db.insertStep('doGaussian',stack=fnOut,freq_sigma=self.Freq_sigma,Nproc=self.NumberOfMpi)
+            self.Db.insertStep('doGaussian',stack=self.OutSelFile,freq_sigma=self.Freq_sigma,Nproc=self.NumberOfMpi)
         if self.DoRemoveDust:
-            self.Db.insertStep('doRemoveDust',stack=fnOut,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
+            self.Db.insertStep('doRemoveDust',stack=self.OutSelFile,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
         if self.DoNorm:
-            self.Db.insertStep('doNorm',stack=fnOut,normType=self.NormType,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
+            self.Db.insertStep('doNorm',stack=self.OutSelFile,normType=self.NormType,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
         
     def validate(self):
         errors = []
-        if self.particlesDir:
-            fnSel=os.path.join(self.particlesDir,self.Family+".sel")
-            if not os.path.exists(fnSel):
-                errors.append("Cannot find "+fnSel)
-        else:
-            errors.append("Extraction run is not valid")
         return errors
 
     def summary(self):
         message=[]
         step=1
-        message.append("Steps applied to %s"%os.path.join(self.particlesDir,self.Family+".sel"))
+        message.append("Steps applied to "+self.InSelFile)
         if self.DoFourier:
             message.append("Step %d -> Fourier filter applied: freq_low=%f freq_high=%f freq_decay=%f"%(step,self.Freq_low,self.Freq_high,self.Freq_decay))
             step+=1
@@ -72,17 +56,21 @@ class ProtPreprocessParticles(XmippProtocol):
         return message
 
     def visualize(self):
-        selfile=os.path.join(self.WorkingDir,self.Family+".sel")
-        if not os.path.exists(selfile):
+        if not os.path.exists(self.OutSelFile):
             import tkMessageBox
             tkMessageBox.showerror("Error", "There is no result yet")                    
-        os.system("xmipp_showj -i "+selfile+" --memory 1024m &")
+        os.system("xmipp_showj -i "+self.OutSelFile+" --memory 1024m &")
 
-def transposeMetadata(log,source,sourceWorkingDir,destWorkingDir,dest):
-    mD=xmipp.MetaData(source)
-    mD.removeLabel(xmipp.MDL_ZSCORE)
-    mD.operate("image=replace(image,'%s','%s')"%(sourceWorkingDir,destWorkingDir))
-    mD.write(dest)
+def copyFiles(log,InputFile,OutputFile):
+    runJob(log,"xmipp_image_convert","-i "+InputFile+" -o "+OutputFile)
+    if xmipp.FileName.isMetaData(xmipp.FileName(InputFile)):
+        mDin=xmipp.MetaData(InputFile)
+        mDin.removeLabel(xmipp.MDL_IMAGE)
+        mDin.removeLabel(xmipp.MDL_ZSCORE)
+        mDaux=xmipp.MetaData(mDin)
+        mDstack=xmipp.MetaData(OutputFile)
+        mDaux.merge(mDstack)
+        mDaux.write(os.path.splitext(OutputFile)[0]+".xmd")
 
 def doFourier(log,stack,freq_low,freq_high,freq_decay,Nproc):
     if freq_low==0:
