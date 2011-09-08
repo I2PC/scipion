@@ -2,7 +2,8 @@
 
 import os
 
-from protlib_xmipp import XmippScript, createProgramsDb, skipProgram, ProgramKeywordsRank, getProgramsDbName
+from protlib_xmipp import XmippScript, createProgramsDb, skipProgram, ProgramKeywordsRank, getProgramsDbName,\
+	getXmippLabels
 from protlib_filesystem import getXmippPath
 from protlib_utils import blueStr, redStr
 
@@ -20,9 +21,11 @@ class ScriptApropos(XmippScript):
 		self.addParamsLine("   alias --input;")
 		self.addParamsLine("or -u		       : Update the database with programs info")
 		self.addParamsLine("   alias --update;")
-		self.addParamsLine("or -l <list=programs>		          : List all Xmipp programs or categories")
-		self.addParamsLine("    where <list> programs categories both")		
+		self.addParamsLine("or -l           : List all Xmipp programs or categories")
 		self.addParamsLine("   alias --list;")	
+		self.addParamsLine(" [-t <type=programs>]      : Type of operations")
+		self.addParamsLine("    where <type> programs categories both labels")
+		self.addParamsLine("   alias --type;")	
 		## examples
 		self.addExampleLine("Search for program containing the keyword 'header'", False)
 		self.addExampleLine("   xmipp_apropos -i header")
@@ -34,12 +37,26 @@ class ScriptApropos(XmippScript):
 	def readParams(self):
 		self.keywords = []
 		if self.checkParam('-i'):
-			self.keywords = self.getListParam('-i')
+			self.keywords = [k.lower() for k in self.getListParam('-i')]
 		self.progRank = ProgramKeywordsRank(self.keywords)
-	
+		self.type = self.getParam('--type')
+		
+	def hasKeywords(self, label):
+		for key in self.keywords:
+			for v in label.values():
+				if key in v.lower():
+					return True
+		return False 
+			
 	def run(self):
 		if self.checkParam('-u'):
 			db = createProgramsDb()
+		elif self.type == 'labels':
+			labels = getXmippLabels()
+			if self.checkParam("-i"):
+				labels = [l for l in labels if self.hasKeywords(l)]
+			for l in labels:
+				print '{name:<30} {type:<30} {enum:<30}'.format(**l)
 		else:
 			dbName = getProgramsDbName()
 			if not os.path.exists(dbName):
@@ -50,9 +67,9 @@ class ScriptApropos(XmippScript):
 
 			onlyList = self.checkParam('--list')
 			
-			if onlyList and self.getParam('--list') != 'programs':
+			if onlyList and self.type != 'programs':
 				categories = db.selectCategories()
-				doBoth = self.getParam('--list') == 'both'
+				doBoth = self.type == 'both'
 				for c in categories:
 					print blueStr(c['name'])
 					if doBoth:

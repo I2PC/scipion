@@ -121,12 +121,26 @@ class ScriptPluginIJ(XmippScript):
         runImageJPlugin(self.memory, self.macro, self.args)
      
 #------------- FUNCTION TO WORK WITH PROGRAMS META-INFORMATION -----------------
+class LabelData():
+    def __init__(self):
+        pass
+    
+def getXmippLabels():
+    labelHeader = getXmippPath(os.path.join('libraries', 'data', 'metadata_label.h'))
+    f = open(labelHeader)
+    labels = []
+    for line in f:
+        line = line.strip()
+        if line.startswith('MDL::addLabel(MDL_'):
+            l = line.find('(')
+            r = line.find(')')
+            parts = line[l+1:r].split(',')
+            labels.append({'name':parts[2].replace('"', ''), 'type':parts[1], 'enum':parts[0]})
+    return labels
 
-#This function will take programs from bin/ folder     
+'''Return the list of Xmipp's programs, taken from from bin/ folder'''     
 def getXmippPrograms():
-    import os
     from glob import glob
-    from protlib_filesystem import getXmippPath
     programs = [os.path.basename(p) for p in glob(os.path.join(getXmippPath(), 'bin', 'xmipp_*'))]
     programs.sort()
     return programs
