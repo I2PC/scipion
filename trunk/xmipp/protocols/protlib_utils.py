@@ -275,7 +275,7 @@ def getProcessFromCmd(cmd):
 def getUniqueProcessFromCmd(cmd):
     list = getProcessFromCmd(cmd)
     if not list:
-        reportError("No process found matching query, expecting one")
+        return None
     if len(list) > 1:
         msg = [str(p) for p in list]
         reportError("More than one process match query, only one expected\n" + "\n".join(msg))

@@ -359,7 +359,13 @@ class XmippProjectGUI():
                 state = run['run_state']
                 stateStr = SqliteDb.StateNames[state]
                 if state == SqliteDb.RUN_STARTED:
-                    stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
+                    p = getProcessFromPid(run['pid'])
+                    if p:
+                        stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
+                    else:
+                        self.project.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
+                        stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
+                        
                 self.lbHist.insert(tk.END, (getExtRunName(run), stateStr, run['last_modified']))   
             self.lbHist.selection_set(index)
             #Generate an automatic refresh after x ms, with x been 1, 2, 4 or 8 ms 
@@ -518,7 +524,8 @@ class XmippProjectGUI():
     def createHistoryFrame(self, parent):
         history = ProjectSection(parent, 'History')
         self.Frames['history'] = history
-        list = [('Edit', 'edit.gif'), ('Copy', 'copy.gif'), ('Delete', 'delete.gif')]
+        list = [('Edit', 'edit.gif'), 
+                ('Copy', 'copy.gif'), ('Delete', 'delete.gif')]
         def setupButton(k, v):
             btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k))
             ToolTip(btn, k, 500)
