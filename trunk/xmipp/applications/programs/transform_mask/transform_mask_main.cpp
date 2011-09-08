@@ -24,17 +24,6 @@
  ***************************************************************************/
 
 #include <data/mask.h>
-#include <data/metadata.h>
-#include <data/metadata_extension.h>
-#include <data/xmipp_program.h>
 
-#include <cstdio>
-
-/* MAIN -------------------------------------------------------------------- */
-int main(int argc, char **argv)
-{
-	ProgMask program;
-	program.read(argc, argv);
-	return program.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgMask);
 
