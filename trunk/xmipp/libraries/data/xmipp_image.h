@@ -827,7 +827,7 @@ protected:
         //This implementation does not handle stacks,
         //read in a block
         if (data.ndim != 1)
-            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Header overwriting not available for stacks!!!");
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Hgeometric transformation cannot be applied to stacks!!!");
         if (MD.size()==0)
             MD.push_back(MDL::emptyHeader);
         MDRow &rowAux = MD[0];
@@ -928,7 +928,7 @@ private:
             }
             //            fclose(fimg);
             mappedOffset = selectImgOffset;
-            mappedSize = mappedOffset + pagesize;
+            mappedSize   = mappedOffset + pagesize;
             mmapFile();
         }
         else
@@ -1001,10 +1001,10 @@ private:
                    CastWriteMode castMode=CW_CAST)
     {
         size_t dTypeSize = gettypesize(wDType);
-        size_t datasize = datasize_n * dTypeSize;
-        size_t ds2Write = rw_max_page_size;
+        size_t datasize  = datasize_n * dTypeSize;
+        size_t ds2Write  = rw_max_page_size;
         size_t dsN2Write = rw_max_page_size/dTypeSize;
-        size_t rw_max_n = dsN2Write;
+        size_t rw_max_n  = dsN2Write;
 
         char* fdata;
         double min0 = 0, max0 = 0;
