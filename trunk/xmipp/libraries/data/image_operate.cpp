@@ -129,6 +129,14 @@ double sqrt(Image<double> &op)
     }
 }
 
+double abs(Image<double> &op)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
+    {
+        dAi(op(), n) = ABS(dAi(op(), n));
+    }
+}
+
 double log10(Image<double> &op)
 {
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
@@ -200,6 +208,7 @@ void ProgOperate::defineParams()
     addParamsLine("== Unary operations: ==");
     addParamsLine("or --log10                   :Computes the logarithm of an image");
     addParamsLine("or --sqrt                    :Computes the square root of an image");
+    addParamsLine("or --abs                     :Computes the absolute value of an image");
     addParamsLine("or --pow <value=2>           :Computes the power of an image");
     addParamsLine("or --slice  <value>          :Extracts a given slice from a volume");
     addParamsLine("or --column <value>          :Extracts a given column from a image or volume");
@@ -306,6 +315,8 @@ void ProgOperate::readParams()
         unaryOperator = log10;
     else if (checkParam("--sqrt"))
         unaryOperator = sqrt;
+    else if (checkParam("--abs"))
+        unaryOperator = abs;
     else if (checkParam("--pow"))
     {
         powerExp = getDoubleParam("--pow");
