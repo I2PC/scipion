@@ -1205,7 +1205,7 @@ void Mask::defineParams(XmippProgram * program, int allowed_data_types, const ch
         program->addParamsLine("   [ -m <blob_order=2>]       : Order of blob");
         program->addParamsLine("   [ -a <blob_alpha=10.4>]    : Alpha of blob");
     }
-    program->addParamsLine("   [--center <x0=0> <y0=0> <z0=0>]: Center of the mask");
+    program->addParamsLine("   [--center <x0=0> <y0=0> <z0=0>]: mask center");
 }
 
 void Mask::readParams(XmippProgram * program)
