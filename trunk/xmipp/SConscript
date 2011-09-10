@@ -867,6 +867,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_run', ['XmippRecons'])
     AddXmippMPIProgram('mpi_tomo_extract_subvolume', ['XmippRecons'])
     AddXmippMPIProgram('mpi_transform_filter', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_transform_symmetrize', ['XmippRecons'])
     AddXmippMPIProgram('mpi_transform_geometry', ['XmippRecons'])
     AddXmippMPIProgram('mpi_transform_mask', ['XmippRecons'])
     AddXmippMPIProgram('mpi_transform_normalize', ['XmippRecons'])
