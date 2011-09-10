@@ -37,37 +37,59 @@ class ProgStatistics: public XmippMetadataProgram
 protected:
     MetaData        DF_stats;
     ImageGeneric    image;
+    MultidimArray<double>    averageArray;
+    MultidimArray<double>    stdArray;
+    MultidimArray<double>    dummyArray;
+
     Mask            mask;
     int             short_format;     // True if a short line is to be shown
     int             save_mask;        // True if the masks must be saved
     int             repair;           // True if headers are initialized
     bool            show_angles;      // True if angles are to be shown in stats
+    bool            save_image_stats; // True if average and std images must be computed
     bool            apply_mask;       // True if a mask must be applied
 
     double min_val, max_val, avg, stddev;
     double mean_min_val, mean_max_val, mean_avg, mean_stddev;
-    int N;
+    size_t N;
     int max_length;
+
+    int xDim, yDim, zDim;
+    size_t nDim;
+
+    FileName maskFileName, statFileNameRoot;
 
     void defineParams()
     {
         each_image_produces_an_output = false;
         allow_apply_geo = true;
         allow_time_bar = false;
-        addUsageLine("Display statistics of images or volumes. A mask can be applied.");
+        addUsageLine("Display statistics of 2D/3Dimages. A mask can be applied. Average Images may be computed");
+        addUsageLine("All images must have same size");
         XmippMetadataProgram::defineParams();
         addParamsLine("[-o <metadata>]   : Save the statistics in this metadata file.");
-        addParamsLine("[--short_format]   : Do not show labels for statistics.");
-        addParamsLine("[--show_angles]    : Also show angles in the image header.");
-        addParamsLine("[--save_mask]      : Save 2D and 3D masks (as \"mask2D\" or \"mask3D\").");
+        addParamsLine("[--short_format]  : Do not show labels for statistics.");
+        addParamsLine("[--show_angles]   : Also show angles in the image header.");
+        addParamsLine("[--save_mask        <maskFileName>] : Save 2D and 3D masks.");
+        addParamsLine("[--save_image_stats <statFilename>]: Save average and standard deviation images");
+        addUsageLine ("           Mask is ignored  for this operation");
         mask.defineParams(this,INT_MASK,NULL,"Statistics restricted to the mask area.");
+        addUsageLine ("NOTE: Geometry will NOT be applied to volumes even if apply_geo flag is on");
     }
 
     void readParams()
     {
         XmippMetadataProgram::readParams();
         short_format = checkParam("--short_format");
-        save_mask    = checkParam("--save_mask");
+
+        save_mask           = checkParam("--save_mask");
+        if(save_mask)
+            maskFileName    =  getParam("--save_mask");
+
+        save_image_stats    = checkParam("--save_image_stats");
+        if(save_image_stats)
+            statFileNameRoot =  getParam("--save_image_stats");
+
         show_angles  = checkParam("--show_angles");
         fn_out = (checkParam("-o"))? getParam("-o"): "";
 
@@ -99,13 +121,17 @@ protected:
             std::cout << '>' << std::endl;
         }
 
-        //        // if input is volume do not apply geo
-        //        int xDim, yDim, zDim;
-        //        size_t nDim;
-        //        ImgSize(mdIn, xDim, yDim, zDim, nDim);
-        //
-        //        if (zDim > 1)
-        //            apply_geo = false;
+        // get xdim, ydim,zdim
+        ImgSize(mdIn, xDim, yDim, zDim, nDim);
+        averageArray.resize(nDim,zDim,yDim,xDim);
+        stdArray.resize(nDim,zDim,yDim,xDim);
+        averageArray.setXmippOrigin();
+        stdArray.setXmippOrigin();
+
+        // Generate mask if necessary
+        if (apply_mask)
+            mask.generate_mask(zDim, yDim, xDim);
+
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
@@ -117,21 +143,25 @@ protected:
 
         image().setXmippOrigin();
 
-        int xDim,yDim,zDim;
         double rot, tilt, psi;
-        image.getDimensions(xDim,yDim,zDim);
-        image.getEulerAngles(rot,tilt,psi);
+        if (show_angles)
+            image.getEulerAngles(rot,tilt,psi);
 
-        // Generate mask if necessary
         if (apply_mask)
         {
-            mask.generate_mask(zDim, yDim, xDim);
             computeStats_within_binary_mask(mask.get_binary_mask(), image(), min_val, max_val,
                                             avg, stddev);
         }
         else
             image().computeStats(avg, stddev, min_val, max_val);
 
+        if(save_image_stats)
+        {
+            //copy image from imageGeneric
+            image().getImage( dummyArray );
+            averageArray     += dummyArray;
+            stdArray         += dummyArray * dummyArray;
+        }
 
         // Show information
         std::cout << stringToString(fnImg, max_length + 1);
@@ -186,19 +216,41 @@ protected:
             std::cout << stringToString(" ", max_length + 13);
             if (!short_format)
                 std::cout << formatString("min=%10f max=%10f avg=%10f stddev=%10f",
-                    mean_min_val, mean_max_val, mean_avg, mean_stddev);
+                                          mean_min_val, mean_max_val, mean_avg, mean_stddev);
             else
                 std::cout << formatString("%10f %10f %10f %10f", mean_min_val, mean_max_val, mean_avg, mean_stddev);
             std::cout << std::endl;
+            if(save_image_stats)
+            {
+                averageArray /= N;
+                if (N > 1)
+                {
+                    stdArray= stdArray / N - averageArray * averageArray;
+                    stdArray *= N / (N - 1);
+                    //Do this as an image since it is not define for arrays
+                    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(stdArray)
+                    DIRECT_MULTIDIM_ELEM(stdArray,n) = sqrt(fabs(DIRECT_MULTIDIM_ELEM(stdArray,n)));
+                }
+                else
+                    stdArray = 0.;
+            }
         }
 
         // Save masks -----------------------------------------------------------
         if (save_mask)
-            mask.write_mask("mask");
-
+            mask.write_mask(maskFileName);
         // Save statistics ------------------------------------------------------
         if (fn_out != "")
             DF_stats.write(fn_out);
+        //save average and std images
+        if(save_image_stats)
+        {
+            Image<double> dummyImage;
+            dummyImage()=averageArray;
+            dummyImage.write((String)"avg_"+statFileNameRoot);
+            dummyImage()=stdArray;
+            dummyImage.write((String)"stdDev_"+statFileNameRoot);
+        }
     }
 }
 ;// end of class ProgStatistics
