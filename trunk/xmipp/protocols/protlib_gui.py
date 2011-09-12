@@ -1164,6 +1164,17 @@ class ProtocolGUI(BasicGUI):
             self.setVarValue('Freq_high',msg[1])
             self.setVarValue('Freq_decay',msg[2])
 
+    #Design mask wizard
+    def wizardDesignMask(self, var):
+        selfile = self.getVarValue('InSelFile')
+        if not os.path.exists(selfile):
+            tkMessageBox.showwarning("Warning", "The input selfile is not a valid file", parent=self.master)
+            return
+        msg = runJavaIJappWithResponse("512m", "XmippMaskDesignWizard", "-i %(selfile)s" % locals())
+        msg = msg.strip().splitlines()
+        if len(msg)>0:
+            var.tkvar.set(msg)            
+
     #Select family from extraction run
     def wizardChooseFamilyToExtract(self, var):
         from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE
@@ -1180,9 +1191,16 @@ class ProtocolGUI(BasicGUI):
         families=[]
         for id in mD:
             families.append(mD.getValue(MDL_PICKING_FAMILY,id))
-        d = ListboxDialog(self.frame, families, selectmode=tk.SINGLE)
-        if len(d.result) > 0:
-            selectedFamily=families[d.result[0]]
+        if len(families)==1:
+            d=0
+        else:  
+            d = ListboxDialog(self.frame, families, selectmode=tk.SINGLE)
+            if len(d.result) > 0:
+                d=d.result[0]
+            else:
+                d=None
+        if d is not None:
+            selectedFamily=families[d]
             var.setValue(selectedFamily)
             for id in mD:
                 if mD.getValue(MDL_PICKING_FAMILY,id)==selectedFamily:
