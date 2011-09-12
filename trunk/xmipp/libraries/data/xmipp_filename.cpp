@@ -207,9 +207,14 @@ FileName FileName::getDir() const
 String FileName::getExtension() const
 {
     size_t posA = find_last_of("/");
-    size_t posB = find_first_of(".", posA+1);
-    return (posA != npos && posB != npos ) ? substr(posB+1) : "";
-
+    size_t posB = find_last_of(".");
+    if (posB==npos)
+    	return "";
+    if (posA==npos)
+    	return substr(posB+1);
+    if (posB>posA)
+    	return substr(posB+1);
+    return "";
 }
 
 // Get number from file ....................................................
