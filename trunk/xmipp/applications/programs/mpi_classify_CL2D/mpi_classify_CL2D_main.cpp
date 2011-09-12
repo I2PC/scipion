@@ -741,7 +741,7 @@ void CL2D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode, CL2DAss
     {
         // Check if q is neighbour of the oldnode
         bool proceed=false;
-        if (oldnode!=-1)
+        if (oldnode>=0)
         {
             int imax=P[oldnode]->neighboursIdx.size();
             for (int i=0; i<imax; i++)
@@ -926,21 +926,21 @@ void CL2D::run(const FileName &fnOut, int level)
                     smallNodes=true;
 
                     // Clear the old assignment of the images in the small node
-                    std::vector<CL2DAssignment> &currentListImg=P[smallNode]->currentListImg;
-                    size_t iimax=currentListImg.size();
+                    std::vector<CL2DAssignment> &currentListImgSmall=P[smallNode]->currentListImg;
+                    size_t iimax=currentListImgSmall.size();
                     for (size_t ii=0; ii<iimax; ii++)
-                        SF->setValue(MDL_REF,-1,currentListImg[ii].objId);
+                        SF->setValue(MDL_REF,-1,currentListImgSmall[ii].objId);
                     delete P[smallNode];
 
                     // Clear the old assignment of the images in the large node
                     std::vector<size_t> toReassign;
-                    currentListImg=P[largestNode]->currentListImg;
-                    iimax=currentListImg.size();
+                    std::vector<CL2DAssignment> &currentListImgLargest=P[largestNode]->currentListImg;
+                    iimax=currentListImgLargest.size();
                     toReassign.resize(iimax);
                     for (size_t ii=0; ii<iimax; ii++)
                     {
-                        SF->setValue(MDL_REF,-1,currentListImg[ii].objId);
-                        toReassign[ii]=currentListImg[ii].objId;
+                        SF->setValue(MDL_REF,-1,currentListImgLargest[ii].objId);
+                        toReassign[ii]=currentListImgLargest[ii].objId;
                     }
 
                     // Now split the largest node
