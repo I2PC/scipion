@@ -396,11 +396,19 @@ def getExtRunName(run):
 def getWorkingDirFromRunName(extendedRunName):
     # The extended run name has the name of the protocol in front
     from config_protocols import protDict
+    dirName=""
+    bestLength=0
     for k in protDict.keys():
         if extendedRunName.startswith(k):
-            runName=extendedRunName.replace(k+"_","")
-            return os.path.join(protDict[k].dir,runName)
-    return None
+            len_k=len(k)
+            if len_k>bestLength:
+                runName=extendedRunName.replace(k+"_","")
+                dirName=os.path.join(protDict[k].dir,runName)
+                bestLength=len_k
+    if bestLength==0:
+        return None
+    else:
+        return dirName
 
 def protocolMain(ProtocolClass, script=None):
     gui = False
