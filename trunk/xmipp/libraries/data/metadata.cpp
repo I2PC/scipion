@@ -951,7 +951,8 @@ void MetaData::_read(const FileName &filename,
     {
         Image<char> image;
         image.read(filename, HEADER);
-        if (image().ndim == 1 || !decomposeStack) //single image
+        String ext=filename.getExtension();
+        if (image().ndim == 1 && (ext!="stk" && ext!="mrcs") || !decomposeStack) //single image
         {
             id = addObject();
             setValue(MDL_IMAGE, filename, id);

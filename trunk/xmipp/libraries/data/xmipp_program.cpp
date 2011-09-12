@@ -493,7 +493,8 @@ void XmippMetadataProgram::readParams()
 
     if (!fn_in.isMetaData())
     {
-        if (mdInSize == 1)
+    	String ext=fn_in.getExtension();
+        if (mdInSize == 1 && ext!="stk" && ext!="mrcs")
             single_image = true;
         else
             input_is_stack = true;
@@ -501,7 +502,15 @@ void XmippMetadataProgram::readParams()
     /* Output is stack if, given a filename in fn_out, mdIn has multiple images.
      * In case no output name is given, then input is overwritten and we have to
      * check if it is stack. */
-    output_is_stack = mdInSize > 1 && oroot.empty() && (!fn_out.empty() || input_is_stack);
+    if (!oroot.empty())
+    	output_is_stack=false;
+    else
+    {
+    	if (fn_out.empty())
+    		output_is_stack = input_is_stack;
+    	else
+    		output_is_stack = mdInSize > 1;
+    }
 
     if (mdIn.containsLabel(MDL_ENABLED) && remove_disabled)
         mdIn.removeObjects(MDValueEQ(MDL_ENABLED, -1));
