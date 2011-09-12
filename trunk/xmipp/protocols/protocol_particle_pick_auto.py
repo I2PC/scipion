@@ -11,7 +11,8 @@ from protlib_base import *
 from protlib_utils import runJob
 from protlib_filesystem import createLink
 from xmipp import MetaData, MD_APPEND,MDL_IMAGE, MDL_PICKING_FAMILY, \
-                  MDL_PICKING_MICROGRAPH_FAMILY_STATE, MDL_PICKING_PARTICLE_SIZE
+                  MDL_PICKING_MICROGRAPH_FAMILY_STATE, MDL_PICKING_PARTICLE_SIZE,\
+                  MDL_ENABLED
 import glob
 
 # Create a GUI automatically from a selfile of micrographs
@@ -85,7 +86,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         parent_id=idMPI
         for familyIdx in range(len(self.familiesForAuto)):
             family=self.familiesForAuto[familyIdx]
-            parent_id=self.Db.insertStep('gatherResults',parent_id=parent_id,Family=family,WorkingDir=self.WorkingDir,PickingDir=self.pickingDir)
+            parent_id=self.Db.insertStep('gatherResults',parent_step_id=parent_id,Family=family,WorkingDir=self.WorkingDir,PickingDir=self.pickingDir)
 
     def summary(self):
         summary = []
@@ -137,7 +138,6 @@ def gatherResults(log,Family,WorkingDir,PickingDir):
         fnAuto1=os.path.join(PickingDir,micrographName+"_auto.pos")
         fnAuto2=os.path.join(WorkingDir,micrographName+"_auto.pos")
         
-        print micrographFullName
         mDpos.clear()
         if os.path.exists(fnManual):
             try:            
@@ -147,15 +147,20 @@ def gatherResults(log,Family,WorkingDir,PickingDir):
         if os.path.exists(fnAuto1):
             try:
                 mDposAux.read(Family+"@"+fnAuto1)
+                mDposAux.removeDisabled();
+                mDposAux.removeLabel(MDL_ENABLED)
                 mDpos.unionAll(mDposAux) 
             except:
                 pass
         if os.path.exists(fnAuto2):
             try:
                 mDposAux.read(Family+"@"+fnAuto2)
+                mDposAux.removeDisabled();
+                mDposAux.removeLabel(MDL_ENABLED)
                 mDpos.unionAll(mDposAux) 
             except:
                 pass
+        # Append alphanumeric prefix to help identifying the block 
         mDpos.write("mic_"+micrographName+"@"+fnExtractList,MD_APPEND)
 
 #		
