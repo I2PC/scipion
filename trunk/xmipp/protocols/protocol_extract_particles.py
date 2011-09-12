@@ -31,7 +31,7 @@ class ProtExtractParticles(XmippProtocol):
 
         fnExtractList=os.path.join(self.pickingDir,self.Family+"_extract_list.xmd")
         if os.path.exists(fnExtractList):
-            self.Db.insertStep("createLink",source=fnExtractList,target=os.path.join(self.WorkingDir,self.Family+"_extract_list.xmd"))
+            self.Db.insertStep("createLink",source=fnExtractList,dest=os.path.join(self.WorkingDir,self.Family+"_extract_list.xmd"))
             micrographs=getBlocksInMetaDataFile(fnExtractList)
         else:
             self.Db.insertStep("createExtractList",Family=self.Family,fnMicrographsSel=fnMicrographsSel,pickingDir=self.pickingDir,
@@ -40,7 +40,6 @@ class ProtExtractParticles(XmippProtocol):
             micrographs=self.createBlocksInExtractFile(fnMicrographsSel)
         
         idMPI=self.Db.insertStep('runStepGapsMpi',passDb=True, script=self.scriptName, NumberOfMpi=self.NumberOfMpi)
-        verifyFiles=[]        
 
         for micrograph in micrographs:
             parent_id=XmippProjectDb.FIRST_STEP
@@ -54,8 +53,7 @@ class ProtExtractParticles(XmippProtocol):
                                              micrograph=micrographToExtract,ctf=ctf,fnOut=micrographFlipped)
                 micrographToExtract=micrographFlipped
             fnOut=os.path.join(self.WorkingDir,micrographName+".stk")
-            verifyFiles.append(fnOut)
-            parent_id=self.Db.insertStep('extractParticles',verifyfiles=[fnOut],execution_mode=SqliteDb.EXEC_GAP,parent_step_id=parent_id,
+            parent_id=self.Db.insertStep('extractParticles',execution_mode=SqliteDb.EXEC_GAP,parent_step_id=parent_id,
                                   WorkingDir=self.WorkingDir,
                                   micrographName=micrographName,ctf=ctf,
                                   originalMicrograph=originalMicrograph,micrographToExtract=micrographToExtract,
@@ -65,7 +63,6 @@ class ProtExtractParticles(XmippProtocol):
                                   dustRemovalThreshold=self.DustRemovalThreshold)
             if self.DoFlip:
                 self.Db.insertStep('deleteFile',execution_mode=SqliteDb.EXEC_GAP,parent_step_id=parent_id,filename=micrographToExtract,verbose=True)
-        self.Db.updateVerifyFiles(idMPI,verifyFiles)
         self.Db.insertStep('gatherSelfiles',parent_step_id=idMPI,WorkingDir=self.WorkingDir,family=self.Family)
 
         selfileRoot=os.path.join(self.WorkingDir,self.Family)
@@ -159,9 +156,14 @@ def phaseFlip(log,micrograph,ctf,fnOut):
 
 def extractParticles(log,WorkingDir,micrographName,ctf,originalMicrograph,micrographToExtract,fnExtractList,
                      particleSize,doFlip,doNorm,doLog,doInvert,bgRadius,doRemoveDust,dustRemovalThreshold):
+    fnBlock="mic_"+micrographName+"@"+fnExtractList
+    mD=MetaData(fnBlock)
+    if mD.size()==0:
+        return
+    
     # Extract 
     rootname=os.path.join(WorkingDir,micrographName)
-    arguments="-i "+micrographToExtract+" --pos mic_"+micrographName+"@"+fnExtractList+" --oroot "+rootname+" --Xdim "+str(particleSize)
+    arguments="-i "+micrographToExtract+" --pos "+fnBlock+" --oroot "+rootname+" --Xdim "+str(particleSize)
     if doInvert:
         arguments+=" --invert"
     if doLog:
