@@ -210,13 +210,13 @@ QueueHours = 72
 # {section}{visualize} Visualization
 #------------------------------------------------------------------------------------------------
 # Visualize the class averages of all iterations in matrix-view?
-DoMatrixAllIter = True
+#DoMatrixAllIter = True
 # Separately visualize class averages of the last iteration?
-DoShowLastIter = True
+#DoShowLastIter = True
 # Plot model (and mirror) fractions of the last iteration?
-DoShowFractions = True
+#DoShowFractions = True
 # Plot convergence statistics for all iterations?
-DoShowStatsAllIter = True
+#DoShowStatsAllIter = True
 
 
 # {hidden} Show expert options
