@@ -41,8 +41,15 @@ Behavior = "Resume"
 #-----------------------------------------------------------------------------
 # {section} Extracting parameters
 #-----------------------------------------------------------------------------
-# {run}(particle_pick) Particle picking run
+# {run}(particle_pick,particle_pick_auto) Particle picking run
 PickingRun=''
+
+# {wizard}(wizardChooseFamilyToExtract) Family 
+Family=''
+
+# Particle size
+""" In pixels """
+ParticleSize=0
 
 # Take Logarithm
 """ Depending on your acquisition system you may have to take the logarithm
@@ -104,14 +111,6 @@ be running, after that time it will be killed by the
 queue system
 """
 QueueHours = 12
-
-#------------------------------------------------------------------------------------------------
-# {section}{visualize} Visualization
-#------------------------------------------------------------------------------------------------
-# Visualize micrograph summary
-DoShowSummary=True
-# Visualize families
-DoShowFamilies=True
 
 # {hidden} Show expert options
 """If True, expert options will be displayed
