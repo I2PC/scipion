@@ -1183,7 +1183,7 @@ class ProtocolGUI(BasicGUI):
         pickingDir = getWorkingDirFromRunName(self.getVarValue('PickingRun'))
         fnFamilies=os.path.join(pickingDir,"families.xmd")
         if not os.path.exists(fnFamilies):
-            showWarnings("Warning", "No elements to select", parent=self.master)
+            tkMessageBox.showwarning("Warning", "No elements to select", parent=self.master)
             return
         print fnFamilies
         mD=MetaData()
