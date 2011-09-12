@@ -414,6 +414,7 @@ def protocolMain(ProtocolClass, script=None):
     gui = False
     no_check = False
     no_confirm = False
+    doRun = True
     
     if script is None:
         script  = sys.argv[0]
@@ -465,6 +466,9 @@ def protocolMain(ProtocolClass, script=None):
                       }
                 project.projectDb.insertRun(_run)
                 run_id = _run['run_id']
+            else:
+                _run = {'run_id': run_id}
+                
             if 'SubmitToQueue' in dir(mod) and mod.SubmitToQueue:
                 from protlib_utils import submitProtocol
                 NumberOfThreads = 1
@@ -479,6 +483,15 @@ def protocolMain(ProtocolClass, script=None):
                                command = 'python %s --no_check' % script
                                )
                 project.projectDb.updateRunState(SqliteDb.RUN_LAUNCHED, run_id)
-                exit(0)
+                doRun = False
+                _run['pid'] = os.getpid()
+                _run['pid_type'] = SqliteDb.PID_POSIX                
+            else:
+                _run['pid'] = os.getpid()
+                _run['pid_type'] = SqliteDb.PID_POSIX
+            
+            # Update run's process info in DB
+            project.projectDb.updateRunPid(_run)
         
-        return p.run()
+        if doRun:
+            return p.run()

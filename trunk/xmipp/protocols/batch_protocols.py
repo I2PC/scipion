@@ -30,15 +30,13 @@ import os
 import Tkinter as tk
 import tkMessageBox
 import tkFont
-from protlib_gui import ProtocolGUI, Fonts, registerFont, registerCommonFonts
-from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, configDefaults,\
-    showInfo
+from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
+from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, configDefaults,showInfo
 from config_protocols import protDict, sections
 from config_protocols import FontName, FontSize
 from protlib_base import getProtocolFromModule, XmippProject,\
     getWorkingDirFromRunName, getExtRunName
-from protlib_utils import reportError, runImageJPlugin, getProcessFromPid,\
-    getRelatedProcess
+from protlib_utils import reportError, runImageJPlugin, Process, ProcessManager
 from protlib_sql import SqliteDb, ProgramDb
 
 #TextColor
@@ -114,6 +112,7 @@ class ProjectButtonMenu(tk.Frame):
 class XmippProjectGUI():  
     def __init__(self, project):
         self.project = project
+        self.pm = ProcessManager()
         
     def cleanProject(self):
         if askYesNo("DELETE confirmation", "You are going to DELETE all project data (runs, logs, results...Do you want to continue?", self.root):
@@ -285,6 +284,7 @@ class XmippProjectGUI():
 
     def launchRunJobMonitorGUI(self, run):
         runName = getExtRunName(run)
+        pm = self.pm
         text = run['script']
         root = tk.Toplevel()
         root.withdraw()
@@ -295,7 +295,7 @@ class XmippProjectGUI():
         
         def stopRun():
             if askYesNo("Confirm action", "Are you sure to stop run execution?" , parent=root):
-                p = getProcessFromPid(run['pid'])
+                p = pm.getProcessFromPid(run['pid'])
                 p.terminateTree()
                 self.project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, run['run_id'])
                 root.destroy()
@@ -310,12 +310,12 @@ class XmippProjectGUI():
         detailsSection.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
         
         def refreshInfo():
-            p = getProcessFromPid(run['pid'])
+            p = pm.getProcessFromPid(run['pid'])
             line = "Process id    : %(pid)s\nElapsed time  : %(etime)s\n\nSubprocess:\n" % p.info
             txt.delete(1.0, tk.END)
             txt.insert(tk.END, line)
             txt.insert(tk.END, "PID\t ARGS\t CPU(%)\t MEM(%)\n")
-            childs = getRelatedProcess(getWorkingDirFromRunName(runName))
+            childs = pm.getRelatedProcess(getWorkingDirFromRunName(runName))
             for c in childs:
                 c.info['pname'] = p.args.split()[0]
                 line = "%(pid)s\t %(args)s\t %(pcpu)s\t %(pmem)s\n" % c.info
@@ -360,7 +360,7 @@ class XmippProjectGUI():
                 state = run['run_state']
                 stateStr = SqliteDb.StateNames[state]
                 if state == SqliteDb.RUN_STARTED:
-                    p = getProcessFromPid(run['pid'])
+                    p = self.pm.getProcessFromPid(run['pid'])
                     if p:
                         stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
                     else:

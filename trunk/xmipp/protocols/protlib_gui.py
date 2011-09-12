@@ -899,11 +899,11 @@ class ProtocolGUI(BasicGUI):
                     #os.system('python %s --no_confirm &' % self.run['script'] )
                     args = 'python %s --no_confirm &' % self.run['script']
                     Popen(args, shell=True)
-                    from protlib_utils import getProcessFromScript
-                    p = getProcessFromScript(self.run['script'])
-                    self.run['pid'] = p.pid
-                    self.run['pid_type'] = SqliteDb.PID_POSIX
-                    self.project.projectDb.updateRunPid(self.run)
+#                    from protlib_utils import ProcessManager
+#                    p = ProcessManager().getProcessFromScript(self.run['script'])
+#                    self.run['pid'] = p.pid
+#                    self.run['pid_type'] = SqliteDb.PID_POSIX
+#                    self.project.projectDb.updateRunPid(self.run)
                     self.master.destroy() 
     
     def viewFiles(self):
