@@ -582,7 +582,7 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
     /* Setting initial volumes ------------------------------------------------- */
     if (level >= FULL)
     {
-        if (fn_start != "")
+        if ( !fn_start.empty() )
             vol_basis0.read(fn_start, basis.basisName());
         else
         {

@@ -38,6 +38,13 @@ void ARTReconsBase::produceSideInfo(GridVolume &vol_basis0, int level, int rank)
     artPrm.produceSideInfo(vol_basis0, level, rank);
 }
 
+void ARTReconsBase::preSingleStep()
+{}
+
+
+void ARTReconsBase::postSingleStep()
+{}
+
 void ARTReconsBase::singleStep(GridVolume &vol_in, GridVolume *vol_out,
                                Projection &theo_proj, Projection &read_proj,
                                int sym_no,
@@ -250,7 +257,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
     Projection      theo_proj;          // Projection from the
     // reconstruction
     Projection      alig_proj;          // Projection with the correlation
-    // maps needed for translation aligment
+    // maps needed for translation alignment
     Projection      corr_proj;          // Image with the correction
     // factors for unitary basis
     Projection      diff_proj;          // Difference between the
@@ -507,7 +514,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
             }
 
             // Apply the reconstruction algorithm ............................
-            // Notice that the following function is especific for each art type
+            // Notice that the following function is specific for each art type
             singleStep(vol_basis, ptr_vol_out,
                        theo_proj, read_proj, imgInfo.sym , diff_proj,
                        corr_proj, alig_proj,

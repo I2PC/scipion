@@ -28,6 +28,7 @@
 #define BASE_ART_RECONS_H_
 
 #include "basic_art.h"
+#include <data/xmipp_program.h>
 
 /**@defgroup common ART Reconstruction stuff
    @ingroup ReconsLibrary
@@ -66,7 +67,7 @@ public:
      */
     virtual void readParams(XmippProgram * program);
 
-    /* Show crystal reconstrution information
+    /* Show reconstruction information
      */
     virtual void print(std::ostream &o)const;
 
@@ -94,6 +95,10 @@ public:
                             const FileName &fn_ctf, const MultidimArray<int> *maskPtr,
                             bool refine);
 
+    virtual void preSingleStep();
+
+    virtual void postSingleStep();
+
     /** Finish iterations.
         For WLS: delete residual images
         Else: do nothing. */
@@ -103,7 +108,7 @@ public:
         for crystals.*/
     virtual void applySymmetry(GridVolume &vol_in, GridVolume *vol_out,int grid_type);
 
-    /* --- Methods than do not have to be implemented by chidren --- */
+    /* --- Methods that do not have to be implemented by children --- */
 
     /** Write first part of ART history.
         This function writes all ART parameters, projection angles, symmetry
@@ -140,5 +145,13 @@ public:
     friend std::ostream & operator<< (std::ostream &o, const ARTReconsBase& artRecons);
 
 };
+
+
+
+
+
+
+
+
 //@}
 #endif /* BASE_ART_RECONS_H_ */

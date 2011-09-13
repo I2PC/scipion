@@ -395,7 +395,7 @@ public:
 #define FULL  1
     /** Produce Initial and Side information for ART.
         This function computes from the ART parameters things like
-        the pojection size, projection order, symmetry matrices
+        the projection size, projection order, symmetry matrices
         list, history handler (don't forget to close it at the end), number
         of images, basis side information and initial basis volume.
 
@@ -418,7 +418,7 @@ public:
         Otherwise nothing is printed (this is the suggested debugging level
         for parallel processing). */
     void computeCAVWeights(GridVolume &vol_basis0,
-                             int numProjs_node, int debug_level = 0);
+                           int numProjs_node, int debug_level = 0);
 
     /** Lambda for iteration n (first one is iteration 0).
         If the iteration requested is greater than the number of lambdas
@@ -451,10 +451,10 @@ public:
     }
 
     /** Returns X dimension for projections under use. */
-    int ProjXdim();
+    inline int ProjXdim();
 
     /** Returns Y dimension for projections under use. */
-    int ProjYdim();
+    inline int ProjYdim();
 
 };
 //@}

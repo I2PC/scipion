@@ -472,7 +472,7 @@ void threadXrayProject(ThreadArgument &thArg)
         //        std::cerr << "th" << thread_id << ": Finished work from " << first << " to " << last <<std::endl;
     }
 
-    //Lock to update the total summatory
+    //Lock to update the total addition
     mutex.lock();
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imOut)
     dAij(MULTIDIM_ARRAY(imOutGlobal),i,j) += dAij(imOut,i,j);
