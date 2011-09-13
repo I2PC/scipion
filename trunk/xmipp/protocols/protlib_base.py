@@ -213,7 +213,7 @@ class XmippProtocol(object):
         self.project = project
         self.Import = '' # this can be used by database for import modules
         self.WorkingDir = project.getWorkingDir(protocolName, self.RunName)
-        self.TmpDir = os.path.join(self.WorkingDir, 'tmp')
+        self.TmpDir = self.workingDirPath('tmp')
         self.projectDir = project.projectDir  
         #Setup the Log for the Protocol
         self.LogDir = project.logsDir
@@ -228,6 +228,9 @@ class XmippProtocol(object):
     def getProjectId(self):
         pass
         #self.project = project.getId(launchDict['Projection Matching'],runName,)
+        
+    def workingDirPath(self, path):
+        self.workingDirPath( path)
 
     def getRunState(self):
         return self.project.projectDb.getRunStateByName(self.Name, self.RunName)
@@ -488,7 +491,7 @@ def protocolMain(ProtocolClass, script=None):
                 NumberOfThreads = 1
                 if 'NumberOfThreads' in dir(mod):
                     NumberOfThreads=mod.NumberOfThreads
-                submitProtocol(script,
+                pbsPid = submitProtocol(script,
                                jobId = p.uniquePrefix,
                                queueName = mod.QueueName,
                                nodes = mod.NumberOfMpi,
@@ -499,11 +502,12 @@ def protocolMain(ProtocolClass, script=None):
                 project.projectDb.updateRunState(SqliteDb.RUN_LAUNCHED, run_id)
                 doRun = False
                 _run['pid'] = os.getpid()
-                _run['pid_type'] = SqliteDb.PID_POSIX                
+                _run['pid_type'] = pbsPid              
             else:
                 _run['pid'] = os.getpid()
                 _run['pid_type'] = SqliteDb.PID_POSIX
             
+            print _run
             # Update run's process info in DB
             project.projectDb.updateRunPid(_run)
         

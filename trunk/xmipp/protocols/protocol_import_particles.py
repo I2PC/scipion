@@ -21,9 +21,9 @@ class ProtImportParticles(XmippProtocol):
         self.Import = 'from protocol_import_particles import *'
 
     def defineSteps(self):
-        fnOut=os.path.join(self.WorkingDir,"micrographs.sel")
+        fnOut=self.workingDirPath("micrographs.sel")
         self.Db.insertStep('createEmptyMicrographSel',verifyfiles=[fnOut],fnOut=fnOut)
-        selfileRoot=os.path.join(self.WorkingDir,self.Family)
+        selfileRoot=self.workingDirPath(self.Family)
         fnOut=selfileRoot+".sel"
         self.Db.insertStep('linkOrCopy', verifyfiles=[fnOut],
                            Family=self.Family,InputFile=self.InputFile, WorkingDir=self.WorkingDir, DoCopy=self.DoCopy,
@@ -66,7 +66,7 @@ class ProtImportParticles(XmippProtocol):
         return message
 
     def visualize(self):
-        os.system("xmipp_showj -i "+os.path.join(self.WorkingDir,self.Family+".sel")+" --memory 1024m &")
+        os.system("xmipp_showj -i "+self.workingDirPath(self.Family+".sel")+" --memory 1024m &")
 
 def createEmptyMicrographSel(log,fnOut):
     mD=xmipp.MetaData()

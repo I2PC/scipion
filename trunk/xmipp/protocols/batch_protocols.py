@@ -382,7 +382,7 @@ class XmippProjectGUI():
         return None
         
     def unpostMenu(self, event=None):
-        try: #I'm getting here an weird Tk exception
+        try: #I'm getting here a weird Tk exception
             menu = self.lastPair()[1]
             menu.unpost()
         except Exception:

@@ -25,18 +25,18 @@ class ProtExtractParticles(XmippProtocol):
 
     def defineSteps(self):
         fnMicrographsSel=os.path.join(self.pickingDir,"micrographs.sel")
-        self.Db.insertStep('copyFile',source=fnMicrographsSel,dest=os.path.join(self.WorkingDir,"micrographs.sel"))
+        self.Db.insertStep('copyFile',source=fnMicrographsSel,dest=self.workingDirPath("micrographs.sel"))
         mD=MetaData(fnMicrographsSel)
         self.containsCTF=mD.containsLabel(MDL_CTFMODEL)
 
         fnExtractList=os.path.join(self.pickingDir,self.Family+"_extract_list.xmd")
         if os.path.exists(fnExtractList):
-            self.Db.insertStep("createLink",source=fnExtractList,dest=os.path.join(self.WorkingDir,self.Family+"_extract_list.xmd"))
+            self.Db.insertStep("createLink",source=fnExtractList,dest=self.workingDirPath(self.Family+"_extract_list.xmd"))
             micrographs=getBlocksInMetaDataFile(fnExtractList)
         else:
             self.Db.insertStep("createExtractList",Family=self.Family,fnMicrographsSel=fnMicrographsSel,pickingDir=self.pickingDir,
-                               fnExtractList=os.path.join(self.WorkingDir,self.Family+"_extract_list.xmd"))
-            fnExtractList=os.path.join(self.WorkingDir,self.Family+"_extract_list.xmd")
+                               fnExtractList=self.workingDirPath(self.Family+"_extract_list.xmd"))
+            fnExtractList=self.workingDirPath(self.Family+"_extract_list.xmd")
             micrographs=self.createBlocksInExtractFile(fnMicrographsSel)
         
         idMPI=self.Db.insertStep('runStepGapsMpi',passDb=True, script=self.scriptName, NumberOfMpi=self.NumberOfMpi)
@@ -52,7 +52,7 @@ class ProtExtractParticles(XmippProtocol):
                                              verifyfiles=[micrographFlipped],execution_mode=SqliteDb.EXEC_GAP,
                                              micrograph=micrographToExtract,ctf=ctf,fnOut=micrographFlipped)
                 micrographToExtract=micrographFlipped
-            fnOut=os.path.join(self.WorkingDir,micrographName+".stk")
+            fnOut=self.workingDirPath(micrographName+".stk")
             parent_id=self.Db.insertStep('extractParticles',execution_mode=SqliteDb.EXEC_GAP,parent_step_id=parent_id,
                                   WorkingDir=self.WorkingDir,
                                   micrographName=micrographName,ctf=ctf,
@@ -65,11 +65,11 @@ class ProtExtractParticles(XmippProtocol):
                 self.Db.insertStep('deleteFile',execution_mode=SqliteDb.EXEC_GAP,parent_step_id=parent_id,filename=micrographToExtract,verbose=True)
         self.Db.insertStep('gatherSelfiles',parent_step_id=idMPI,WorkingDir=self.WorkingDir,family=self.Family)
 
-        selfileRoot=os.path.join(self.WorkingDir,self.Family)
+        selfileRoot=self.workingDirPath(self.Family)
         fnOut=selfileRoot+"_sorted.xmd"
         self.Db.insertStep('sortImagesInFamily',verifyfiles=[fnOut],selfileRoot=selfileRoot)
         self.Db.insertStep('avgZscore',WorkingDir=self.WorkingDir,family=self.Family,
-                           micrographSelfile=os.path.join(self.WorkingDir,"micrographs.sel"))
+                           micrographSelfile=self.workingDirPath("micrographs.sel"))
                 
     def validate(self):
         errors = []
@@ -88,7 +88,7 @@ class ProtExtractParticles(XmippProtocol):
     def summary(self):
         message=[]
         message.append("Picking "+self.Family+" with size "+str(self.ParticleSize))
-        selfile=os.path.join(self.WorkingDir,self.Family+".sel")
+        selfile=self.workingDirPath(self.Family+".sel")
         if os.path.exists(selfile):
             mD=MetaData(selfile)
             message.append(str(mD.size())+" particles extracted")            
@@ -105,12 +105,12 @@ class ProtExtractParticles(XmippProtocol):
                 return (micrographFullName,ctfFile)
 
     def visualize(self):
-        summaryFile=os.path.join(self.WorkingDir,"micrographs.sel")
+        summaryFile=self.workingDirPath("micrographs.sel")
         if not os.path.exists(summaryFile):
             import tkMessageBox
             tkMessageBox.showerror("Error", "There is no result yet")                    
         os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --memory 2048m &")
-        fnSelFile=os.path.join(self.WorkingDir,self.Family+".sel")
+        fnSelFile=self.workingDirPath(self.Family+".sel")
         if os.path.exists(fnSelFile):
             os.system("xmipp_showj -i "+fnSelFile+" --memory 1024m &")
     

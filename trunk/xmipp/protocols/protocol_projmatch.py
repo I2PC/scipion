@@ -98,12 +98,12 @@ class ProtProjMatch(XmippProtocol):
     def preRun(self):
         print "in PRERUN"
         #Convert directories/files  to absolute path from projdir
-        self.CtfGroupDirectory = os.path.join(self.WorkingDir, self.CtfGroupDirectory)
+        self.CtfGroupDirectory = self.workingDirPath( self.CtfGroupDirectory)
         self.CtfGroupSubsetFileName = os.path.join(self.CtfGroupDirectory, self.CtfGroupSubsetFileName)
     #vector for iterations??????
     #    global ProjMatchDir
     #    ProjMatchDir = WorkingDir +'/' + ProjMatchDir
-        self.DocFileWithOriginalAngles = os.path.join(self.WorkingDir, self.DocFileWithOriginalAngles)
+        self.DocFileWithOriginalAngles = self.workingDirPath( self.DocFileWithOriginalAngles)
     
         
         # Convert vectors to list

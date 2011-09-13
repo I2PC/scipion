@@ -18,15 +18,15 @@ class ProtKerdensom(XmippProtocol):
         self.Import = 'from protocol_kerdensom import *'    
 
     def defineSteps(self):
-        self.Db.insertStep('img2vector',[os.path.join(self.WorkingDir,"vectors.xmd")],
+        self.Db.insertStep('img2vector',[self.workingDirPath("vectors.xmd")],
                            Selfile=self.InSelFile,Mask=self.Mask,WorkingDir=self.WorkingDir)
-        self.Db.insertStep('kerdensom',[os.path.join(self.WorkingDir,"results_vectors.xmd"),
-                                        os.path.join(self.WorkingDir,"results_classes.xmd"),
-                                        os.path.join(self.WorkingDir,"results_images.xmd")],
+        self.Db.insertStep('kerdensom',[self.workingDirPath("results_vectors.xmd"),
+                                        self.workingDirPath("results_classes.xmd"),
+                                        self.workingDirPath("results_images.xmd")],
                            WorkingDir=self.WorkingDir,SomXdim=self.SomXdim,SomYdim=self.SomYdim,
                            SomReg0=self.SomReg0,SomReg1=self.SomReg1,SomSteps=self.SomSteps,
                            KerdensomExtraCommand=self.KerdensomExtraCommand)
-        self.Db.insertStep('vector2img',[os.path.join(self.WorkingDir,"results_classes.stk")],Mask=self.Mask,WorkingDir=self.WorkingDir)
+        self.Db.insertStep('vector2img',[self.workingDirPath("results_classes.stk")],Mask=self.Mask,WorkingDir=self.WorkingDir)
         self.Db.insertStep('rewriteClassBlock',WorkingDir=self.WorkingDir)
 
     def summary(self):

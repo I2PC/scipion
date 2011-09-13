@@ -17,8 +17,8 @@ class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.ml2d.name, scriptname, project)
         self.Import = 'from protocol_ml2d import *'
-        self.fnIterLogs = os.path.join(self.WorkingDir, 'ml2d_iter_logs.xmd')
-        self.fnIterRefs = os.path.join(self.WorkingDir, 'ml2d_iter_refs.xmd')
+        self.fnIterLogs = self.workingDirPath('ml2d_iter_logs.xmd')
+        self.fnIterRefs = self.workingDirPath('ml2d_iter_refs.xmd')
         
     def validate(self):
         return []
@@ -63,7 +63,7 @@ class ProtML2D(XmippProtocol):
                            'FixFractions': '--fix_fractions'}
             
             prefix = '%s2d' % progId
-            oroot = os.path.join(self.WorkingDir, prefix)
+            oroot = self.workingDirPath(prefix)
             params = ' -i %s --oroot %s' % (self.ImgMd, oroot)
             # Number of references will be ignored if -ref is passed as expert option
             if self.DoGenerateReferences:
@@ -98,7 +98,7 @@ class ProtML2D(XmippProtocol):
                              NumberOfThreads = self.NumberOfThreads)
         
         self.Db.insertStep('collectResults', WorkingDir=self.WorkingDir, Prefix=prefix,
-                           verifyfiles=[os.path.join(self.WorkingDir, f) for f in ['result_images.xmd', 'result_classes.xmd']])
+                           verifyfiles=[self.workingDirPath(f) for f in ['result_images.xmd', 'result_classes.xmd']])
 
     def visualize(self):
         if os.path.exists(self.fnIterRefs):

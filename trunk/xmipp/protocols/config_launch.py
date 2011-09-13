@@ -33,7 +33,7 @@ FileTemplate = """
 ### Job name
 #PBS -N %(jobId)s
 ### Queue name
-#PBS -q %(queueName)s
+###PBS -q %(queueName)s
 ### Standard output and standard error messages
 #PBS -k eo
 ### Specify the number of nodes and thread (ppn) for your job.

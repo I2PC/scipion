@@ -10,7 +10,7 @@
 # Updated:  J. M. de la Rosa Trevin July 2011
 #
 # {begin_of_header}
-#{please_cite}
+#   {please_cite}
 """
 for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149
 for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
@@ -45,7 +45,7 @@ Behavior = "Resume"
 # {file}{validate}(PathExists) Input images metadata:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR.
 """
-ImgMd = "results_images.xmd"
+ImgMd = "all_images.xmd"
 
 # Generate references (or classes) ?
 """ If you set to No, you should provide a metadata with the references images. 
@@ -72,7 +72,7 @@ DoMlf = False
 """
 DoCorrectAmplitudes = True
 
-# {file}{condition}(DoCorrectAmplitudes) CTFdat file with the input images:
+# {file}{validate}(PathExists){condition}(DoCorrectAmplitudes) CTFdat file with the input images:
 """ The names of both the images and the ctf-parameter files should be with absolute paths.
 """
 InCtfDatFile = "all_images.ctfdat"
@@ -205,19 +205,6 @@ be running, after that time it will be killed by the
 queue system
 """
 QueueHours = 72
-
-#------------------------------------------------------------------------------------------------
-# {section}{visualize} Visualization
-#------------------------------------------------------------------------------------------------
-# Visualize the class averages of all iterations in matrix-view?
-#DoMatrixAllIter = True
-# Separately visualize class averages of the last iteration?
-#DoShowLastIter = True
-# Plot model (and mirror) fractions of the last iteration?
-#DoShowFractions = True
-# Plot convergence statistics for all iterations?
-#DoShowStatsAllIter = True
-
 
 # {hidden} Show expert options
 """If True, expert options will be displayed

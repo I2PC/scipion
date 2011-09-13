@@ -17,7 +17,7 @@ class ProtPreprocessParticles(XmippProtocol):
         XmippProtocol.__init__(self, protDict.preprocess_particles.name, scriptname, project)
         self.Import = 'from protocol_preprocess_particles import *'
         file=os.path.split(self.InSelFile)[1]
-        self.OutSelFile=os.path.join(self.WorkingDir,os.path.splitext(file)[0]+".stk")
+        self.OutSelFile=self.workingDirPath(os.path.splitext(file)[0]+".stk")
 
     def defineSteps(self):
         self.Db.insertStep('copyFiles',verifyfiles=[self.OutSelFile],InputFile=self.InSelFile,OutputFile=self.OutSelFile)

@@ -18,16 +18,16 @@ class ProtCL2DAlignment(XmippProtocol):
         self.Import = 'from protocol_cl2d_align import *'    
 
     def defineSteps(self):
-        self.Db.insertStep('cl2d',verifyfiles=[os.path.join(self.WorkingDir,"results_images.xmd")],
+        self.Db.insertStep('cl2d',verifyfiles=[self.workingDirPath("results_images.xmd")],
                            Selfile=self.InSelFile,WorkingDir=self.WorkingDir,ReferenceImage=self.ReferenceImage,
                            MaxShift=self.MaxShift,NumberOfIterations=self.NumberOfIterations,Nproc=self.NumberOfMpi)
         self.Db.insertStep('gatherResults',
-                           verifyfiles=[os.path.join(self.WorkingDir,"average.xmp"),os.path.join(self.WorkingDir,"alignment.xmd")],
+                           verifyfiles=[self.workingDirPath("average.xmp"),self.workingDirPath("alignment.xmd")],
                            WorkingDir=self.WorkingDir)
     
     def summary(self):
         message=["Alignment of "+self.InSelFile]
-        fnAlignment=os.path.join(self.WorkingDir,"results_level_00_classes.xmd")
+        fnAlignment=self.workingDirPath("results_level_00_classes.xmd")
         if os.path.exists(fnAlignment):
             mD=MetaData("info@"+fnAlignment)
             date=time.ctime(os.path.getmtime(fnAlignment))
@@ -44,11 +44,11 @@ class ProtCL2DAlignment(XmippProtocol):
     def visualize(self):
         if self.getRunState()==SqliteDb.RUN_FINISHED:
             os.system("xmipp_showj -i %s %s &"
-                      %(os.path.join(self.WorkingDir,"average.xmp"),os.path.join(self.WorkingDir,"alignment.xmd")))
+                      %(self.workingDirPath("average.xmp"),self.workingDirPath("alignment.xmd")))
         else:
-            if os.path.exists(os.path.join(self.WorkingDir,"results_level_00_classes.stk")):
+            if os.path.exists(self.workingDirPath("results_level_00_classes.stk")):
                 os.system("xmipp_showj -i %s %s &"
-                          %(os.path.join(self.WorkingDir,"results_level_00_classes.stk"),os.path.join(self.WorkingDir,"results_level_00_classes.xmd")))
+                          %(self.workingDirPath("results_level_00_classes.stk"),self.workingDirPath("results_level_00_classes.xmd")))
     
 def cl2d(log,Selfile,WorkingDir,ReferenceImage,MaxShift,NumberOfIterations,Nproc):
     params= '-i '+str(Selfile)+' --oroot '+WorkingDir+'/results --nref 1 --iter '+str(NumberOfIterations)+" --maxShift "+str(MaxShift)

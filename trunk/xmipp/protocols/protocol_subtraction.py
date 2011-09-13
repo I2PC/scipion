@@ -94,11 +94,11 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.ImportProtocol()
         
         self.Iteration_Working_Directory = os.path.join(self.pmprotWorkingDir,'Iter_'+ str(self.iterationNo))
-        self.subtractionDir = os.path.join(self.WorkingDir,self.RunName)
-        self.volsDir = os.path.join(self.WorkingDir,self.volsDir)
-        self.referenceDir = os.path.join(self.WorkingDir,self.referenceDir)
-        self.subImgsDir = os.path.join(self.WorkingDir,self.subImgsDir)
-        self.scaledImages = os.path.join(self.WorkingDir,self.scaledImages)
+        self.subtractionDir = self.workingDirPath(self.RunName)
+        self.volsDir = self.workingDirPath(self.volsDir)
+        self.referenceDir = self.workingDirPath(self.referenceDir)
+        self.subImgsDir = self.workingDirPath(self.subImgsDir)
+        self.scaledImages = self.workingDirPath(self.scaledImages)
                 
         if(self.MaxChangeInAngles > 100):
             self.MaxChangeInAngles=-1

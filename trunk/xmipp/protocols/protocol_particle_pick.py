@@ -22,7 +22,7 @@ class ProtParticlePicking(XmippProtocol):
 
     def defineSteps(self):
         self.Db.insertStep('createLink',execution_mode=SqliteDb.EXEC_MAINLOOP,
-                           source=self.micrographSelfile,dest=os.path.join(self.WorkingDir,"micrographs.sel"))
+                           source=self.micrographSelfile,dest=self.workingDirPath("micrographs.sel"))
         self.Db.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
                            MicrographSelfile=self.micrographSelfile, WorkingDir=self.WorkingDir,
                            AutomaticPicking=self.AutomaticPicking, NumberOfThreads=self.NumberOfThreads,
@@ -67,7 +67,7 @@ class ProtParticlePicking(XmippProtocol):
         summary.append("Number of particles manually picked: %d (from %d micrographs)" % (total_manual, N_manual))
         if N_auto>0:
             summary.append("Number of particles automatically picked: %d (from %d micrographs)" % (total_auto, N_auto))
-        fnFamilies=os.path.join(self.WorkingDir,"families.xmd")
+        fnFamilies=self.workingDirPath("families.xmd")
         if os.path.exists(fnFamilies):
             mD=xmipp.MetaData(fnFamilies)
             Nfamilies=mD.size()

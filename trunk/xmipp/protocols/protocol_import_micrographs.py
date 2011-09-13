@@ -31,7 +31,7 @@ class ProtImportMicrographs(XmippProtocol):
             # Get the shortname and extension
             micrographName = os.path.split(filename)[1]
             (shortname, extension)=os.path.splitext(micrographName)
-            micrographDir=os.path.join(self.WorkingDir,shortname)                    
+            micrographDir=self.workingDirPath(shortname)                    
             finalname='micrograph'
             if self.DoPreprocess and (not self.Stddev == -1 or not self.Crop == -1 or not self.Down == 1):
                 finalname += ".mrc"
@@ -79,7 +79,7 @@ class ProtImportMicrographs(XmippProtocol):
         self.Db.updateVerifyFiles(idMPI,verifyFiles)
         
         # Gather results after external actions
-        self.Db.insertStep('gatherResults',verifyfiles=[os.path.join(self.WorkingDir,"micrographs.sel")],
+        self.Db.insertStep('gatherResults',verifyfiles=[self.workingDirPath("micrographs.sel")],
                            parent_step_id=idMPI,
                            WorkingDir=self.WorkingDir,DirMicrographs=self.DirMicrographs,
                            ExtMicrographs=self.ExtMicrographs, DoCtfEstimate=self.DoCtfEstimate,DoCtffind=self.DoCtffind)
@@ -115,7 +115,7 @@ class ProtImportMicrographs(XmippProtocol):
         return message
     
     def visualize(self):
-        summaryFile=os.path.join(self.WorkingDir,"micrographs.sel")
+        summaryFile=self.workingDirPath("micrographs.sel")
         if os.path.exists(summaryFile):
             os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --memory 2048m &")
         else:

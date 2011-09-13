@@ -330,6 +330,7 @@ class PBSProcess():
 class PBSProcessManager():       
     ''' Return process data from previous built command'''
     def getProcessFromCmd(self, cmd):
+        print "getProcessFromCmd, cmd: ", cmd
         ps = Popen(cmd, shell=True, stdout=PIPE)
         out = ps.communicate()[0]
         if out:
@@ -477,7 +478,7 @@ def submitProtocol(protocolPath, **params):
     print "** Submiting to queue: '%s'" % command
     ps = Popen(command, shell=True, stdout=PIPE)
     out = ps.communicate()[0]
-    print out
+    return int(out.split('.')[0])
     
 def getImageJPluginCmd(memory, macro, args, batchMode=False):
     from protlib_filesystem import getXmippPath

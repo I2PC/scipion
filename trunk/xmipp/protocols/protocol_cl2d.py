@@ -18,7 +18,7 @@ class ProtCL2D(XmippProtocol):
         self.Import = 'from protocol_cl2d import *'    
 
     def defineSteps(self):
-        fnImages=os.path.join(self.WorkingDir,"results_images.xmd")
+        fnImages=self.workingDirPath("results_images.xmd")
         self.Db.insertStep('cl2d',verifyfiles=[fnImages],Selfile=self.InSelFile,WorkingDir=self.WorkingDir,
                            NumberOfReferences=self.NumberOfReferences,NumberOfInitialReferences=self.NumberOfInitialReferences,
                            NumberOfIterations=self.NumberOfIterations,ComparisonMethod=self.ComparisonMethod,
@@ -26,11 +26,11 @@ class ProtCL2D(XmippProtocol):
                            Nproc=self.NumberOfMpi)
         self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,pattern="results_level_??_classes.xmd")
         if self.NumberOfReferences>self.NumberOfInitialReferences:
-            self.Db.insertStep('core_analysis',verifyfiles=[os.path.join(self.WorkingDir,"results_level_00_classes_core.xmd")],
+            self.Db.insertStep('core_analysis',verifyfiles=[self.workingDirPath("results_level_00_classes_core.xmd")],
                                WorkingDir=self.WorkingDir,thZscore=self.thZscore,thPCAZscore=self.thPCAZscore,Nproc=self.NumberOfMpi)
             self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,pattern="results_level_??_classes_core.xmd")
             self.Db.insertStep('stable_core_analysis',
-                               verifyfiles=[os.path.join(self.WorkingDir,"results_level_%02d_classes_stable_core.xmd"%(self.Tolerance+1))],
+                               verifyfiles=[self.workingDirPath("results_level_%02d_classes_stable_core.xmd"%(self.Tolerance+1))],
                                WorkingDir=self.WorkingDir,tolerance=self.Tolerance,Nproc=self.NumberOfMpi)
             self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,pattern="results_level_??_classes_stable_core.xmd")
         self.Db.insertStep('sortClasses',WorkingDir=self.WorkingDir,Nproc=self.NumberOfMpi)
@@ -66,11 +66,11 @@ class ProtCL2D(XmippProtocol):
     
     def visualize(self):
         if self.WhatToShow=="Classes":
-            levelFiles=glob.glob(os.path.join(self.WorkingDir,"results_level_??_classes.xmd"))
+            levelFiles=glob.glob(self.workingDirPath("results_level_??_classes.xmd"))
         elif self.WhatToShow=="Class Cores":
-            levelFiles=glob.glob(os.path.join(self.WorkingDir,"results_level_??_classes_core.xmd"))
+            levelFiles=glob.glob(self.workingDirPath("results_level_??_classes_core.xmd"))
         elif self.WhatToShow=="Class Stable Cores":
-            levelFiles=glob.glob(os.path.join(self.WorkingDir,"results_level_??_classes_stable_core.xmd"))
+            levelFiles=glob.glob(self.workingDirPath("results_level_??_classes_stable_core.xmd"))
         if levelFiles:
             levelFiles.sort()
             if self.DoShowLast:

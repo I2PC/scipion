@@ -37,12 +37,12 @@ class ProtParticlePickingAuto(XmippProtocol):
 
     def defineSteps(self):
         self.Db.insertStep('createLink',execution_mode=SqliteDb.EXEC_MAINLOOP,
-                           source=self.micrographSelfile,dest=os.path.join(self.WorkingDir,"micrographs.sel"))
+                           source=self.micrographSelfile,dest=self.workingDirPath("micrographs.sel"))
         self.Db.insertStep('createLink',execution_mode=SqliteDb.EXEC_MAINLOOP,
-                           source=self.familiesFile,dest=os.path.join(self.WorkingDir,"families.xmd"))
+                           source=self.familiesFile,dest=self.workingDirPath("families.xmd"))
         for familyIdx in range(len(self.familiesForAuto)):
             family=self.familiesForAuto[familyIdx]
-            modelRoot=os.path.join(self.WorkingDir,family)
+            modelRoot=self.workingDirPath(family)
             self.Db.insertStep('createLink',execution_mode=SqliteDb.EXEC_MAINLOOP,
                                source=os.path.join(self.pickingDir,family+"_training.txt"),dest=modelRoot+"_training.txt")
             self.Db.insertStep('createLink',execution_mode=SqliteDb.EXEC_MAINLOOP,
@@ -54,7 +54,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         for familyIdx in range(len(self.familiesForAuto)):
             family=self.familiesForAuto[familyIdx]
             particleSize=self.particleSizeForAuto[familyIdx]
-            modelRoot=os.path.join(self.WorkingDir,family)
+            modelRoot=self.workingDirPath(family)
             for id in mDmicrographs:
                 # Get Micrograph name
                 micrographFullPath=mDmicrographs.getValue(MDL_IMAGE,id)
@@ -74,7 +74,7 @@ class ProtParticlePickingAuto(XmippProtocol):
                                 proceed=False
                                 break
                 if proceed:
-                    fnAuto=os.path.join(self.WorkingDir,micrographName+"_auto.pos")
+                    fnAuto=self.workingDirPath(micrographName+"_auto.pos")
                     fast=True # Coger mejor
                     incore=True
                     id=self.Db.insertStep('autoPick',verifyfiles=[fnAuto],parent_step_id=XmippProjectDb.FIRST_STEP,
@@ -92,7 +92,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         summary = []
         summary.append("Manual picking run: "+self.PickingRun)
         summary.append("Automatic picking of the following models: "+",".join(self.familiesForAuto))
-        autoFiles = glob.glob(os.path.join(self.WorkingDir,"*auto.pos"))
+        autoFiles = glob.glob(self.workingDirPath("*auto.pos"))
         Nparticles=0
         Nmicrographs=len(autoFiles)
         first=True
