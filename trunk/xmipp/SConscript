@@ -507,6 +507,7 @@ ReconsSources = [
     'angular_class_average.cpp',
     'angular_project_library.cpp',
     'art_crystal.cpp',
+    'art_xray.cpp',
     'base_art_recons.cpp',
     'basic_art.cpp',
     'classify_evaluate_classes.cpp',

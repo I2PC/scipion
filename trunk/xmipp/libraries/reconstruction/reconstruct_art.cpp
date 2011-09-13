@@ -25,6 +25,7 @@
 
 #include "reconstruct_art.h"
 #include "art_crystal.h"
+#include "art_xray.h"
 #include "denoise.h"
 #include "fourier_filter.h"
 #include <data/wavelet.h>
@@ -50,6 +51,9 @@ void ProgReconsART::defineParams()
     addUsageLine("+different grids (BCC (by default), FCC or CC).");
 
     ARTReconsBase::defineParams(this, isMpi);
+
+    addParamsLine(" == Special Parameters for X-rays == ");
+    XrayARTRecons::defineParams(this);
 
     //    addParamsLine(" == Special Parameters for crystals == ");
     //    CrystalARTRecons::defineParams(this);
@@ -112,7 +116,10 @@ void ProgReconsART::readParams()
     //    if (checkParam("--crystal"))
     //        artRecons = new CrystalARTRecons;
     //    else
-    artRecons = new ARTReconsBase;
+    if (checkParam("--xray"))
+        artRecons = new XrayARTRecons;
+    else
+        artRecons = new ARTReconsBase;
 
     artRecons->readParams(this);
 
