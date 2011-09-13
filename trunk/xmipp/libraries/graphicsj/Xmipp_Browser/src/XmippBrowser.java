@@ -67,7 +67,7 @@ public class XmippBrowser implements PlugIn {
         frameBrowser.setVisible(true);
     }
 
-    static void openFiles(String input[], String mode, boolean poll, int rows, int cols) {
+    static void openFiles(String input[], String mode, boolean poll, int rows, int columns) {
         int m = 0;
         if (mode.trim().toLowerCase().compareTo(COMMAND_PARAMETERS.MODE_DEFAULT) == 0) {
             m = 0;
@@ -80,7 +80,7 @@ public class XmippBrowser implements PlugIn {
         if (input != null) {
             switch (m) {
                 case MODE_TYPE_DEFAULT:
-                    ImagesWindowFactory.openFilesAsDefault(input, poll);
+                    ImagesWindowFactory.openFilesAsDefault(input, poll, rows, columns);
                     break;
                 case MODE_TYPE_IMAGE:
                     ImagesWindowFactory.openFilesAsImages(input, poll);
@@ -91,12 +91,12 @@ public class XmippBrowser implements PlugIn {
 
                     // Single images are opened in the same table...
                     if (filesList[0] != null) {
-                        ImagesWindowFactory.openFilesAsTable(filesList[0], true);
+                        ImagesWindowFactory.openFilesAsTable(filesList[0], true, rows, columns);
                     }
 
                     // ...while rest of files are opened in separated ones.
                     if (filesList[1] != null) {
-                        ImagesWindowFactory.openFilesAsTable(filesList[1]);
+                        ImagesWindowFactory.openFilesAsTable(filesList[1], rows, columns);
                     }
                     break;
             }
@@ -143,15 +143,15 @@ public class XmippBrowser implements PlugIn {
         options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, "");
         options.addOption(COMMAND_PARAMETERS.OPTION_MODE, true, "");
         options.addOption(COMMAND_PARAMETERS.OPTION_POLL, false, "");
-        options.addOption(COMMAND_PARAMETERS.OPTION_TABLE_W, true, "");
-        options.addOption(COMMAND_PARAMETERS.OPTION_TABLE_H, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_TABLE_ROWS, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_TABLE_COLUMNS, true, "");
 
         // It should be able to handle multiple files.
         options.getOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE).setOptionalArg(true);
         options.getOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE).setArgs(Integer.MAX_VALUE);
 
-        options.getOption(COMMAND_PARAMETERS.OPTION_MODE).setOptionalArg(true);
-        options.getOption(COMMAND_PARAMETERS.OPTION_MODE).setArgs(Integer.MAX_VALUE);
+//        options.getOption(COMMAND_PARAMETERS.OPTION_MODE).setOptionalArg(true);
+//        options.getOption(COMMAND_PARAMETERS.OPTION_MODE).setArgs(Integer.MAX_VALUE);
 
         try {
             BasicParser parser = new BasicParser();
@@ -193,14 +193,14 @@ public class XmippBrowser implements PlugIn {
             }
 
             // Table height.
-            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_TABLE_H)) {
-                String str = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_TABLE_H);
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_TABLE_ROWS)) {
+                String str = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_TABLE_ROWS);
                 ROWS = Integer.valueOf(str).intValue();
             }
 
             // Table width.
-            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_TABLE_W)) {
-                String str = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_TABLE_W);
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_TABLE_COLUMNS)) {
+                String str = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_TABLE_COLUMNS);
                 COLUMNS = Integer.valueOf(str).intValue();
             }
         } catch (Exception ex) {

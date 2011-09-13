@@ -45,12 +45,6 @@ public class XmippMetaDataViewer implements PlugIn {
         }
     }
 
-    public static void main(String args[]) {
-        String filename = "/home/juanjo/results_level_00_classes.xmd";
-        
-        openFile(filename, false);
-    }
-
     public static void openFile(String fileName, boolean render_images) {
         try {
             String path = "";

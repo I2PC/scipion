@@ -43,18 +43,30 @@ public class ImagesWindowFactory {
 //    private final static String TEMPDIR_PATH = System.getProperty("java.io.tmpdir");
 
     public static void openFilesAsDefault(String filenames[], boolean poll) {
+        openFilesAsDefault(filenames, poll, -1, -1);
+    }
+
+    public static void openFilesAsDefault(String filenames[], int rows, int columns) {
+        openFilesAsDefault(filenames, false, rows, columns);
+    }
+
+    public static void openFilesAsDefault(String filenames[], boolean poll, int rows, int columns) {
         for (int i = 0; i < filenames.length; i++) {
-            openFileAsDefault(filenames[i], poll);
+            openFileAsDefault(filenames[i], poll, rows, columns);
         }
     }
 
-    public static void openFileAsDefault(String filename) {
-        openFileAsDefault(filename, false);
+    public static void openFileAsDefault(String filenames) {
+        openFileAsDefault(filenames, -1, -1);
     }
 
-    public static void openFileAsDefault(String filename, boolean poll) {
+    public static void openFileAsDefault(String filename, int rows, int columns) {
+        openFileAsDefault(filename, false, rows, columns);
+    }
+
+    public static void openFileAsDefault(String filename, boolean poll, int rows, int columns) {
         if (Filename.isMetadata(filename)) {
-            openFileAsTable(filename);
+            openFileAsTable(filename, rows, columns);
         } else {
             try {
                 ImageDouble img = new ImageDouble();
@@ -63,7 +75,7 @@ public class ImagesWindowFactory {
                 if (img.isSingleImage()) {
                     openFileAsImage(filename, poll);
                 } else if (img.isStackOrVolume()) {
-                    openFileAsTable(filename);
+                    openFileAsTable(filename, rows, columns);
                 } else {
                     openFileAsImage(filename, poll);
                 }
@@ -133,45 +145,43 @@ public class ImagesWindowFactory {
         frameMetaData.setVisible(true);
     }
 
-    public static JFrameImagesTable openFileAsTable(String filename, int rows, int columns) {
+    public static void openFileAsTable(String filename) {
+        openFileAsTable(filename, -1, -1);
+    }
+
+    public static void openFileAsTable(String filename, int rows, int columns) {
         JFrameImagesTable table = new JFrameImagesTable(filename);
         setConvenientSize(table);
 
-        table.setDimensions(rows, columns);
-        table.setVisible(true);
-
-        return table;
-    }
-
-    public static JFrameImagesTable openFileAsTable(String filename) {
-        JFrameImagesTable table = new JFrameImagesTable(filename);
-        setConvenientSize(table);
-
-        table.setAutoAdjustColumns(true);
-        table.setVisible(true);
-
-        return table;
-    }
-
-    public static JFrameImagesTable openFilesAsTable(String filenames[]) {
-        return openFilesAsTable(filenames, false);
-    }
-
-    public static JFrameImagesTable openFilesAsTable(String filenames[], boolean useSameTable) {
-        JFrameImagesTable table = null;
-
-        if (useSameTable) {
-            table = new JFrameImagesTable(filenames);
+        if (rows < 0 && columns < 0) {
             table.setAutoAdjustColumns(true);
-            table.setVisible(true);
-
         } else {
-            for (int i = 0; i < filenames.length; i++) {
-                table = openFileAsTable(filenames[i]);
-            }
+            table.setDimensions(rows, columns);
         }
 
-        return table;
+        table.setVisible(true);
+    }
+
+    public static void openFilesAsTable(String filenames[], boolean poll) {
+        openFilesAsTable(filenames, poll);
+    }
+
+    public static void openFilesAsTable(String filenames[], int rows, int columns) {
+        openFilesAsTable(filenames, false, rows, columns);
+    }
+
+    public static void openFilesAsTable(String filenames[],
+            boolean useSameTable, int rows, int columns) {
+        if (useSameTable) {
+//            table = new JFrameImagesTable(filenames);
+//            table.setAutoAdjustColumns(true);
+//            table.setVisible(true);
+            openFileAsTable(null, rows, columns);
+        } else {
+            for (int i = 0; i < filenames.length; i++) {
+                openFileAsTable(filenames[i], rows, columns);
+            }
+        }
     }
 
     // Used by micrographs table, to load items marked as selected/unselected.
@@ -251,7 +261,7 @@ public class ImagesWindowFactory {
 //                System.err.println(" +++ EXISTS");
             }
 
-            openFileAsTable(file.getAbsolutePath());
+            openFileAsTable(file.getAbsolutePath(), -1, -1);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
             ex.printStackTrace();

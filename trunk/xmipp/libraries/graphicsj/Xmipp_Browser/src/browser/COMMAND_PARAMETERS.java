@@ -14,8 +14,8 @@ public class COMMAND_PARAMETERS {
     public final static String OPTION_INPUT_FILE = "i";
     public final static String OPTION_INPUT_DIR = "dir";
     public final static String OPTION_POLL = "poll";
-    public final static String OPTION_TABLE_W = "w";
-    public final static String OPTION_TABLE_H = "h";
+    public final static String OPTION_TABLE_ROWS = "rows";
+    public final static String OPTION_TABLE_COLUMNS = "columns";
     public final static String OPTION_MODE = "mode";
     public final static String MODE_DEFAULT = "default";
     public final static String MODE_IMAGE = "image";
