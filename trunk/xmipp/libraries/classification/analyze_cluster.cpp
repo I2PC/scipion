@@ -80,11 +80,14 @@ void ProgAnalyzeCluster::produceSideInfo()
     basis = fnOutBasis!="";
 
     // Read input selfile and reference
-    SFin.read(fnSel);
     if (SFin.size()==0)
-        return;
-    if (SFin.containsLabel(MDL_ENABLED))
-        SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    {
+    	SFin.read(fnSel);
+    	if (SFin.size()==0)
+        	return;
+    	if (SFin.containsLabel(MDL_ENABLED))
+			SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    }
 
     // Prepare mask
     int Xdim,Ydim,Zdim;
@@ -127,6 +130,22 @@ void ProgAnalyzeCluster::produceSideInfo()
 }
 #undef DEBUG
 
+// Produce basis  ==========================================================
+void ProgAnalyzeCluster::produceBasis(MultidimArray<double> &basis)
+{
+	int iimax=pcaAnalyzer.PCAbasis.size();
+	basis.initZeros(iimax,1,YSIZE(mask),XSIZE(mask));
+    for (int ii=0; ii<pcaAnalyzer.PCAbasis.size(); ii++)
+    {
+        int idx=0;
+        double *ptrBasis=&DIRECT_NZYX_ELEM(basis, ii, 0, 0, 0);
+        const MultidimArray<double> &PCAbasis_ii=pcaAnalyzer.PCAbasis[ii];
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
+        if (A2D_ELEM(mask,i,j))
+        	ptrBasis[i*XSIZE(mask)+j]=A1D_ELEM(PCAbasis_ii,idx++);
+    }
+}
+
 // Run  ====================================================================
 void ProgAnalyzeCluster::run()
 {
@@ -153,15 +172,8 @@ void ProgAnalyzeCluster::run()
     if (basis)
     {
         fnOutBasis.deleteFile();
-        Image<double> save;
-        for (int ii=0; ii<pcaAnalyzer.PCAbasis.size(); ii++)
-        {
-            save().initZeros(mask);
-            int idx=0;
-            FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-            if (A2D_ELEM(mask,i,j))
-                IMGPIXEL(save,i,j)=A1D_ELEM(pcaAnalyzer.PCAbasis[ii],idx++);
-            save.write(fnOutBasis,ii+2,true,WRITE_APPEND);
-        }
+        Image<double> basis;
+        produceBasis(basis());
+        basis.write(fnOutBasis);
     }
 }

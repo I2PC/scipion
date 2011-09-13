@@ -84,6 +84,9 @@ public:
     /// Produce side info
     void produceSideInfo();
 
+    /// Produce basis
+    void produceBasis(MultidimArray<double> &basis);
+
     /// Main routine
     void run();
 };
