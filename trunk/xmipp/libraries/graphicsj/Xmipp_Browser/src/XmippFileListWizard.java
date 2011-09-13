@@ -41,11 +41,11 @@ public class XmippFileListWizard {
         String parameters[] = new String[N_ARGS];
         Options options = new Options();
 
-        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, COMMAND_PARAMETERS.OPTION_INPUT_DIR_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, COMMAND_PARAMETERS.OPTION_SOCKET_PORT_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION, false, COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_SELECTION_TYPE, true, COMMAND_PARAMETERS.OPTION_SELECTION_TYPE_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, COMMAND_PARAMETERS.OPTION_FILTER_DESCRIPTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION, false, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_SELECTION_TYPE, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, "");
 
         try {
             BasicParser parser = new BasicParser();
@@ -61,6 +61,8 @@ public class XmippFileListWizard {
 
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION)) {
                 parameters[SINGLESEL] = "true";
+            } else {
+                parameters[SINGLESEL] = "false";
             }
 
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION)) {

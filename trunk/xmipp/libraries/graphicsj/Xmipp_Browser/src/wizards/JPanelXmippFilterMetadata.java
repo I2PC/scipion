@@ -5,8 +5,6 @@
 package wizards;
 
 import browser.filebrowsers.model.ImageStackListModel;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseListener;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.ListSelectionModel;
 
@@ -24,10 +22,5 @@ public abstract class JPanelXmippFilterMetadata extends JPanelXmippFilter {
         jlFileFilter.setCellRenderer(new DefaultListCellRenderer());
 
         jlFileFilter.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-    }
-
-    @Override
-    protected void openSelectedFile() {
-        // Do nothing.
     }
 }

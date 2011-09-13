@@ -128,33 +128,56 @@ public class ImagesWindowFactory {
 
     public static void openFileAsMetadata(String filename) {
         JFrameMetaData frameMetaData = new JFrameMetaData(filename);
+        setConvenientSize(frameMetaData);
         frameMetaData.setLocationRelativeTo(null);
         frameMetaData.setVisible(true);
     }
 
-    public static void openFileAsTable(String filename) {
+    public static JFrameImagesTable openFileAsTable(String filename, int rows, int columns) {
         JFrameImagesTable table = new JFrameImagesTable(filename);
+        setConvenientSize(table);
+
+        table.setDimensions(rows, columns);
         table.setVisible(true);
+
+        return table;
     }
 
-    public static void openFilesAsTable(String filenames[]) {
-        openFilesAsTable(filenames, false);
+    public static JFrameImagesTable openFileAsTable(String filename) {
+        JFrameImagesTable table = new JFrameImagesTable(filename);
+        setConvenientSize(table);
+
+        table.setAutoAdjustColumns(true);
+        table.setVisible(true);
+
+        return table;
     }
 
-    public static void openFilesAsTable(String filenames[], boolean useSameTable) {
+    public static JFrameImagesTable openFilesAsTable(String filenames[]) {
+        return openFilesAsTable(filenames, false);
+    }
+
+    public static JFrameImagesTable openFilesAsTable(String filenames[], boolean useSameTable) {
+        JFrameImagesTable table = null;
+
         if (useSameTable) {
-            JFrameImagesTable table = new JFrameImagesTable(filenames);
+            table = new JFrameImagesTable(filenames);
+            table.setAutoAdjustColumns(true);
             table.setVisible(true);
+
         } else {
             for (int i = 0; i < filenames.length; i++) {
-                openFileAsTable(filenames[i]);
+                table = openFileAsTable(filenames[i]);
             }
         }
+
+        return table;
     }
 
     // Used by micrographs table, to load items marked as selected/unselected.
     public static void openTable(String filenames[], boolean enabled[]) {
         JFrameImagesTable table = new JFrameImagesTable(filenames, enabled);
+        table.setAutoAdjustColumns(true);
         table.setVisible(true);
     }
 

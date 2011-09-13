@@ -32,6 +32,6 @@ public class JFrameXmippGaussianFilter extends JDialogXmippFilesList {
     protected boolean sendSelectedFiles() {
         JPanelXmippGaussianFilter panel = (JPanelXmippGaussianFilter) panelXmippBrowser;
 
-        return send(new Object[]{panel.getW1()});
+        return send(new Object[]{panel.getW1()}, true);
     }
 }

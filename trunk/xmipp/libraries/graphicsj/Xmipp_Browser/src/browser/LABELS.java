@@ -25,9 +25,11 @@ public class LABELS {
     public final static String TITLE_WIZARD_BAD_PIXELS_FILTER = "Wizard Bad Pixels Filter";
     public final static String TITLE_WIZARD_BAND_PASS_FILTER = "Wizard Band Pass Filter";
     public final static String TITLE_WIZARD_GAUSSIAN_FILTER = "Wizard Gaussian Filter";
+    public final static String TITLE_WIZARD_MASK_DESIGN = "Wizard Mask Design";
     public final static String TITLE_ERROR = "Memory error";
     public final static String TITLE_GO_TO_SLICE = "Go to slice";
     public final static String TITLE_PREVIEW = "Preview:";
+    public final static String TITLE_PREVIEW_FILTER = "Filter:";
     public final static String TITLE_SEND2WINDOW = "Send image to window";
     public final static String TITLE_UNTITLED = "Untitled";
 
@@ -188,7 +190,7 @@ public class LABELS {
     public final static String LABEL_AUTO_AJUST_COLUMNS = "Auto adjust columns";
     public final static String LABEL_SHOW_LABELS = "Show label: ";
     public final static String LABEL_SORT_BY_LABEL = "Sort by label";
-    public final static String LABEL_APPLY_GEOMETRY = "Apply geometry";
+    public final static String LABEL_USE_GEOMETRY = "Use geometry";
     public final static String LABEL_FILTER = "Filter: ";
     public final static String LABEL_WIDTH = "Width: ";
     public final static String LABEL_HEIGHT = "Height: ";

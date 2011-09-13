@@ -39,8 +39,8 @@ public class XmippBadPixelsFilterWizard {
         String parameters[] = new String[N_ARGS];
         Options options = new Options();
 
-        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, COMMAND_PARAMETERS.OPTION_INPUT_FILE_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, COMMAND_PARAMETERS.OPTION_SOCKET_PORT_DESCRIPTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, "");
         options.addOption(COMMAND_PARAMETERS.OPTION_FILTER_BAD_PIXELS_FACTOR, true, COMMAND_PARAMETERS.OPTION_FILTER_BAD_PIXELS_FACTOR);
 
         try {

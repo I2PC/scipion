@@ -20,20 +20,23 @@ import org.apache.commons.cli.Options;
  */
 public class XmippMetaDataViewer implements PlugIn {
 
+    String INPUT[];
+    boolean RENDER_IMAGES;
+
     public void run(String args) {
         if (IJ.isMacro() && Macro.getOptions() != null && !Macro.getOptions().trim().isEmpty()) { // From macro.
             // "args" is used when called from another plugin or installed command.
             // "Macro.getOptions()" used when called from a run("command", arg) macro function.
-            String FILES[] = processArgs(Macro.getOptions().trim());
+            processArgs(Macro.getOptions().trim());
 
-            if (FILES != null) {
-                for (int i = 0; i < FILES.length; i++) {
-                    if (!FILES[i].isEmpty()) {
-                        final String fileName = FILES[i];
+            if (INPUT != null) {
+                for (int i = 0; i < INPUT.length; i++) {
+                    if (!INPUT[i].isEmpty()) {
+                        final String fileName = INPUT[i];
                         java.awt.EventQueue.invokeLater(new Runnable() {
 
                             public void run() {
-                                openFile(fileName);
+                                openFile(fileName, RENDER_IMAGES);
                             }
                         });
                     }
@@ -42,7 +45,13 @@ public class XmippMetaDataViewer implements PlugIn {
         }
     }
 
-    public static void openFile(String fileName) {
+    public static void main(String args[]) {
+        String filename = "/home/juanjo/results_level_00_classes.xmd";
+        
+        openFile(filename, false);
+    }
+
+    public static void openFile(String fileName, boolean render_images) {
         try {
             String path = "";
             if (!fileName.startsWith(File.separator)) {
@@ -52,6 +61,7 @@ public class XmippMetaDataViewer implements PlugIn {
             path += fileName;
 
             JFrameMetaData frameMetaData = new JFrameMetaData(path);
+            frameMetaData.setRenderImages(render_images);
             frameMetaData.setLocationRelativeTo(null);
             frameMetaData.setVisible(true);
         } catch (Exception ex) {
@@ -60,11 +70,12 @@ public class XmippMetaDataViewer implements PlugIn {
         }
     }
 
-    private static String[] processArgs(String args) {
+    void processArgs(String args) {
         String argsList[] = args.split(" ");
         Options options = new Options();
 
-        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, COMMAND_PARAMETERS.OPTION_INPUT_FILE_DESCRIPTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_RENDER_IMAGES, false, "");
 
         // It should be able to handle multiple files.
         options.getOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE).setOptionalArg(true);
@@ -74,13 +85,17 @@ public class XmippMetaDataViewer implements PlugIn {
             BasicParser parser = new BasicParser();
             CommandLine cmdLine = parser.parse(options, argsList);
 
+            // Input.
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE)) {
-                return cmdLine.getOptionValues(COMMAND_PARAMETERS.OPTION_INPUT_FILE);
+                INPUT = cmdLine.getOptionValues(COMMAND_PARAMETERS.OPTION_INPUT_FILE);
+            }
+
+            // Input.
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_RENDER_IMAGES)) {
+                RENDER_IMAGES = true;
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-
-        return null;
     }
 }

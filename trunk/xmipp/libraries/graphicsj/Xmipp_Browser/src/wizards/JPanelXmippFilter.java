@@ -5,6 +5,8 @@
 package wizards;
 
 import browser.Cache;
+import browser.ICONS_MANAGER;
+import browser.LABELS;
 import browser.filebrowsers.JPanelXmippBrowser;
 import browser.imageitems.listitems.AbstractImageItem;
 import browser.imageitems.listitems.FileItem;
@@ -14,6 +16,10 @@ import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.Toolbar;
 import ij.measure.Calibration;
+import java.awt.Image;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 
 /**
  *
@@ -21,6 +27,7 @@ import ij.measure.Calibration;
  */
 abstract public class JPanelXmippFilter extends JPanelXmippBrowser {
 
+    JLabel jlFilter;
     Cache<String, ImagePlus> cache = new Cache<String, ImagePlus>();
     final static int W = 512, H = 512;
 
@@ -36,62 +43,67 @@ abstract public class JPanelXmippFilter extends JPanelXmippBrowser {
         jpCenter.remove(jlFiltering);   // Hide filter stuff.
         jpFileBrowser.remove(searchBox);
         jpPreview.remove(jcbPreview);
+
+        jlFilter = new JLabel();
+        jlFilter.setBorder(BorderFactory.createTitledBorder(LABELS.TITLE_PREVIEW_FILTER));
+        jlFilter.setPreferredSize(jpPreview.getPreferredSize());
+
+        jpPreview.add(jlFilter, java.awt.BorderLayout.NORTH);
     }
 
     @Override
-    protected ImagePlus getPreview(AbstractImageItem item) {
-        String filename = item.getAbsoluteFileName();
+    protected void setPreview(AbstractImageItem imageItem) {
+        super.setPreview(imageItem);
 
-        ImagePlus imp = (ImagePlus) cache.get(filename);
+        Image filteredPreview = null;
 
-        if (imp == null) {
-            try {
-                imp = getFilteredPreview(item);
-
-                cache.put(filename, imp);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                IJ.error(ex.getMessage());
-            }
+        try {
+            filteredPreview = getFilteredPreview(imageItem).getImage();
+        } catch (Exception e) {
+            filteredPreview = ICONS_MANAGER.MISSING_ITEM.getImage();
         }
 
-        return imp;
+        jlFilter.setIcon(new ImageIcon(filteredPreview));
     }
 
     abstract ImagePlus getFilteredPreview(AbstractImageItem item) throws Exception;
 
     @Override
     protected void openFileAsDefault(FileItem item) {
-        if (item instanceof AbstractImageItem) {
-            ImagePlus preview = getPreview((AbstractImageItem) item);
+        try {
+            if (item instanceof AbstractImageItem) {
+                ImagePlus preview = getFilteredPreview((AbstractImageItem) item);
 
-            ImagePlus imp = new ImagePlus(preview.getTitle(),
-                    preview.getProcessor().resize(W, H));
+                ImagePlus imp = new ImagePlus(preview.getTitle(),
+                        preview.getProcessor().resize(W, H));
 
-            Calibration c = new Calibration();
-            c.pixelWidth = c.pixelHeight = 1. / imp.getWidth();
-            imp.setCalibration(c);
+                Calibration c = new Calibration();
+                c.pixelWidth = c.pixelHeight = 1. / imp.getWidth();
+                imp.setCalibration(c);
 
-            // Check if ImageJ is opened.
-            if (IJ.getInstance() == null) {
-                ImageJ ij = new ImageJ();
+                // Check if ImageJ is opened.
+                if (IJ.getInstance() == null) {
+                    ImageJ ij = new ImageJ();
+                }
+                // ...to set line tool beforehand.
+                IJ.setTool(Toolbar.LINE);
+
+                ImagesWindowFactory.captureFrame(imp);
             }
-            // ...to set line tool beforehand.
-            IJ.setTool(Toolbar.LINE);
-
-            ImagesWindowFactory.captureFrame(imp);
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
         }
     }
 
     @Override
     protected void openSelectedFile() {
-        if (jlFileFilter.getSelectedIndex() > 0) {  // Avoid parent...
+        //if (jlFileFilter.getSelectedIndex() > 0) {  // Avoid parent...
             FileItem item = (FileItem) jlFileFilter.getSelectedValue();
 
             if (!item.isDirectory()) {  // ...and directories.
                 openFileAsDefault(item);
             }
-        }
+        //}
     }
 
     @Override

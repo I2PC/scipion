@@ -20,9 +20,6 @@ public class XmippImageItem extends AbstractImageItem {
     public int nslice = ImageDouble.MID_SLICE;
     public long nimage = ImageDouble.FIRST_IMAGE;
 
-    public XmippImageItem() {
-    }
-
     public XmippImageItem(File file, Cache cache) {
         super(file, cache);
     }
@@ -62,7 +59,7 @@ public class XmippImageItem extends AbstractImageItem {
         return ip;
     }
 
-    private static double getFactor(int W, int H, int w, int h) {
+    public static double getFactor(int W, int H, int w, int h) {
         double factor;
 
         if (W > H) {

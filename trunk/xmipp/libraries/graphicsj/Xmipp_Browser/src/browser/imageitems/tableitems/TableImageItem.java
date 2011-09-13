@@ -8,7 +8,10 @@ import xmipp.Filename;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 import browser.Cache;
+import browser.DEBUG;
 import browser.LABELS;
+import browser.imageitems.ImageConverter;
+import ij.ImagePlus;
 import xmipp.ImageDouble;
 
 /**
@@ -46,26 +49,26 @@ public class TableImageItem extends AbstractTableImageItem {
         loadImageData();
     }
 
-//
-//    @Override
-//    protected ImagePlus loadPreview(int w, int h) {
-//        ImagePlus imp = null;
-//
-//        if (readGeo) {
-//            try {
-//                ImageDouble image = new ImageDouble();
-//                image.readPreview(md, id, w, h);
-//
-//                imp = ImageConverter.convertToImagej(image, (String) getLabelValue(MDLabel.MDL_IMAGE));
-//            } catch (Exception ex) {
-//                DEBUG.printException(ex);
-//            }
-//        } else {
-//            imp = super.loadPreview(w, h);
-//        }
-//
-//        return imp;
-//    }
+    @Override
+    protected ImagePlus loadPreview(int w, int h) {
+        ImagePlus imp = null;
+
+        if (readGeo) {
+            try {
+                ImageDouble image = new ImageDouble();
+                image.readPreview(getAbsoluteFileName(), md, id, w, h);
+
+                imp = ImageConverter.convertToImagej(image, (String) getLabelValue(MDLabel.MDL_IMAGE));
+            } catch (Exception ex) {
+                DEBUG.printException(ex);
+            }
+        } else {
+            imp = super.loadPreview(w, h);
+        }
+
+        return imp;
+    }
+
     public boolean isEnabled() {
         return getValueInt(MDLabel.MDL_ENABLED) == 1;
     }

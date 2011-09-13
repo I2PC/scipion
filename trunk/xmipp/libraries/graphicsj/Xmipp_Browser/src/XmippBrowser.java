@@ -32,6 +32,7 @@ public class XmippBrowser implements PlugIn {
     private final static int MODE_TYPE_DEFAULT = 0;
     private final static int MODE_TYPE_IMAGE = 1;
     private final static int MODE_TYPE_TABLE = 2;
+    private int ROWS = -1, COLUMNS = -1;
 
     @Override
     public void run(String string) {
@@ -44,7 +45,7 @@ public class XmippBrowser implements PlugIn {
         }
 
         if (INPUT != null) {
-            openFiles(INPUT, MODE, POLL);
+            openFiles(INPUT, MODE, POLL, ROWS, COLUMNS);
         }
 
         if (DIR != null) {
@@ -52,7 +53,21 @@ public class XmippBrowser implements PlugIn {
         }
     }
 
-    private static void openFiles(String input[], String mode, boolean poll) {
+    void runBrowser(String directory) {
+        runBrowser(directory, false);
+    }
+
+    void runBrowser(String directory, boolean singleSelection) {
+        runBrowser(directory, "", singleSelection);
+    }
+
+    void runBrowser(String directory, String expression, boolean singleSelection) {
+        JDialogXmippBrowser frameBrowser = new JDialogXmippBrowser(
+                directory, singleSelection, expression);
+        frameBrowser.setVisible(true);
+    }
+
+    static void openFiles(String input[], String mode, boolean poll, int rows, int cols) {
         int m = 0;
         if (mode.trim().toLowerCase().compareTo(COMMAND_PARAMETERS.MODE_DEFAULT) == 0) {
             m = 0;
@@ -88,7 +103,7 @@ public class XmippBrowser implements PlugIn {
         }
     }
 
-    private static String[][] getSeparatedFiles(String items[]) {
+    static String[][] getSeparatedFiles(String items[]) {
         LinkedList<String> images = new LinkedList<String>();
         LinkedList<String> files = new LinkedList<String>();
         LinkedList<String> storeTo;
@@ -117,31 +132,19 @@ public class XmippBrowser implements PlugIn {
         return result;
     }
 
-    void runBrowser(String directory) {
-        runBrowser(directory, false);
-    }
-
-    void runBrowser(String directory, boolean singleSelection) {
-        runBrowser(directory, "", singleSelection);
-    }
-
-    void runBrowser(String directory, String expression, boolean singleSelection) {
-        JDialogXmippBrowser frameBrowser = new JDialogXmippBrowser(
-                directory, singleSelection, expression);
-        frameBrowser.setVisible(true);
-    }
-
     void processArgs(String args) {
         String argsList[] = args.split(" ");
         Options options = new Options();
 
-        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, COMMAND_PARAMETERS.OPTION_INPUT_DIR_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, COMMAND_PARAMETERS.OPTION_FILTER);
-        options.addOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION, false, COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION, false, "");
 
-        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, COMMAND_PARAMETERS.OPTION_INPUT_FILE_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_MODE, true, COMMAND_PARAMETERS.OPTION_MODE_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_POLL, false, COMMAND_PARAMETERS.OPTION_POLL_DESCRIPTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_MODE, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_POLL, false, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_TABLE_W, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_TABLE_H, true, "");
 
         // It should be able to handle multiple files.
         options.getOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE).setOptionalArg(true);
@@ -176,18 +179,7 @@ public class XmippBrowser implements PlugIn {
 
             // Input.
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE)) {
-                String filenames[] = cmdLine.getOptionValues(COMMAND_PARAMETERS.OPTION_INPUT_FILE);
-//                LinkedList<String> list = new LinkedList<String>();
-//
-//                String workdir = System.getProperty("user.dir");
-//                for (int i = 0; i < filenames.length; i++) {
-//                    if (!filenames[i].trim().isEmpty()) {
-//                        list.add(Filename.fixPath(workdir, filenames[i]));
-//                    }
-//                }
-//
-//                INPUT = list.toArray(new String[list.size()]);
-                INPUT = filenames;
+                INPUT = cmdLine.getOptionValues(COMMAND_PARAMETERS.OPTION_INPUT_FILE);
             }
 
             // Mode.
@@ -198,6 +190,18 @@ public class XmippBrowser implements PlugIn {
             // Poll.
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_POLL)) {
                 POLL = true;
+            }
+
+            // Table height.
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_TABLE_H)) {
+                String str = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_TABLE_H);
+                ROWS = Integer.valueOf(str).intValue();
+            }
+
+            // Table width.
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_TABLE_W)) {
+                String str = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_TABLE_W);
+                COLUMNS = Integer.valueOf(str).intValue();
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);

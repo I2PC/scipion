@@ -51,19 +51,6 @@ public class FileBrowser {
         }
     }
 
-//    public File getCurrentRoot() {
-//        File roots[] = File.listRoots();
-//
-//        for (int i = 0; i < roots.length; i++) {
-//            String root = roots[i].getAbsolutePath();
-//            if (currentDirectory.getAbsolutePath().toUpperCase().startsWith(root.toUpperCase())) {
-//                return roots[i];
-//            }
-//        }
-//
-//        return null;
-//    }
-
     public void refresh() {
         changeDirectory(currentDirectory);
     }

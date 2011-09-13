@@ -30,6 +30,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     protected int rows, cols;
     protected Cache<String, ImagePlus> cache = new Cache<String, ImagePlus>();
     protected boolean normalize = false;
+    protected boolean containsGeometryInfo = false;
     protected double min = Double.POSITIVE_INFINITY, max = Double.NEGATIVE_INFINITY;
     protected boolean showLabels = false;
     protected int selectedLabel = MDLabel.MDL_IMAGE;
@@ -481,6 +482,10 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     public abstract boolean isVolume();
 
     public abstract boolean isMetaData();
+
+    public boolean containsGeometryInfo() {
+        return containsGeometryInfo;
+    }
 
     public abstract boolean saveAsMetadata(String path);
 

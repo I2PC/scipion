@@ -5,10 +5,10 @@
  * and open the template in the editor.
  */
 import browser.COMMAND_PARAMETERS;
+import browser.DEBUG;
 import ij.IJ;
 import ij.Macro;
 import ij.plugin.PlugIn;
-import java.io.File;
 import micrographs.JFrameMicrographs;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -49,8 +49,7 @@ public class XmippMicrographViewer implements PlugIn {
             frameMicrographs.setVisible(true);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            DEBUG.printException(ex);
         }
     }
 
@@ -58,7 +57,7 @@ public class XmippMicrographViewer implements PlugIn {
         String argsList[] = args.split(" ");
         Options options = new Options();
 
-        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, COMMAND_PARAMETERS.OPTION_INPUT_FILE_DESCRIPTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, "");
 
         // It should be able to handle multiple files.
         options.getOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE).setOptionalArg(true);

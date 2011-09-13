@@ -4,7 +4,7 @@ import browser.DEBUG;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import wizards.JFrameXmippGaussianFilter;
+import wizards.JFrameXmippMaskDesign;
 
 /*
  * To change this template, choose Tools | Templates
@@ -14,22 +14,32 @@ import wizards.JFrameXmippGaussianFilter;
  *
  * @author Juanjo Vega
  */
-public class XmippGaussianFilterWizard {
+public class XmippMaskDesignWizard {
 
     final static int N_ARGS = 3;
     final static int METADATA = 0;
     final static int PORT = 1;
-    final static int W1 = 2;
+    final static int MASKSFILENAME = 2;
 
     public static void main(String args[]) {
+        String metadata = "/home/juanjo/temp/angles_save.sel";
+        int port = 12345;
+        String maskfilename = "/home/juanjo/Desktop/mask_filename_from_wizard.xmp";
+
+        JFrameXmippMaskDesign frameBrowser = new JFrameXmippMaskDesign(metadata,
+                port, maskfilename);
+        frameBrowser.setVisible(true);
+    }
+
+    public static void main_(String args[]) {
         String parameters[] = processArgs(args);
 
         String metadata = parameters[METADATA];
         int port = Integer.parseInt(parameters[PORT]);
-        double w1 = Double.parseDouble(parameters[W1]);
+        String maskfilename = parameters[MASKSFILENAME];
 
-        JFrameXmippGaussianFilter frameBrowser = new JFrameXmippGaussianFilter(
-                metadata, port, w1);
+        JFrameXmippMaskDesign frameBrowser = new JFrameXmippMaskDesign(metadata,
+                port, maskfilename);
         frameBrowser.setVisible(true);
     }
 
@@ -39,7 +49,7 @@ public class XmippGaussianFilterWizard {
 
         options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, "");
         options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, "");
-        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER_W1, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER_BAD_PIXELS_FACTOR, true, "");
 
         try {
             BasicParser parser = new BasicParser();
@@ -53,10 +63,9 @@ public class XmippGaussianFilterWizard {
                 parameters[PORT] = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_SOCKET_PORT);
             }
 
-            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_FILTER_W1)) {
-                parameters[W1] = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_FILTER_W1);
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_MASKFILENAME)) {
+                parameters[MASKSFILENAME] = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_MASKFILENAME);
             }
-
         } catch (Exception ex) {
             DEBUG.printException(ex);
         }

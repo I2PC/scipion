@@ -77,6 +77,8 @@ public class MDTableModel extends AbstractXmippTableModel {
         try {
             md = new MetaData(path);
 
+            containsGeometryInfo = md.containsGeometryInfo();
+
             // Adds enabled field if not present.
             if (!md.containsLabel(MDLabel.MDL_ENABLED)) {
                 md.addLabel(MDLabel.MDL_ENABLED);
@@ -104,9 +106,9 @@ public class MDTableModel extends AbstractXmippTableModel {
         }
     }
 
-    public void setApplyGeometry(boolean apply) {
+    public void setUseGeometry(boolean use) {
         for (int i = 0; i < getSize(); i++) {
-            ((TableImageItem) data.get(i)).setReadGeo(apply);
+            ((TableImageItem) data.get(i)).setReadGeo(use);
         }
         cache.clear();
     }
@@ -154,13 +156,13 @@ public class MDTableModel extends AbstractXmippTableModel {
     }
 
     @Override
-    public boolean isMetaData() {
-        return true;
+    public boolean isVolume() {
+        return false;
     }
 
     @Override
-    public boolean isVolume() {
-        return false;
+    public boolean isMetaData() {
+        return true;
     }
 
     @Override

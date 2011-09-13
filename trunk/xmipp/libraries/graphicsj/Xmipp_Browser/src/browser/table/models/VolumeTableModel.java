@@ -96,13 +96,13 @@ public class VolumeTableModel extends AbstractXmippTableModel {
     }
 
     @Override
-    public boolean isMetaData() {
-        return false;
+    public boolean isVolume() {
+        return true;
     }
 
     @Override
-    public boolean isVolume() {
-        return true;
+    public boolean isMetaData() {
+        return false;
     }
 
     @Override

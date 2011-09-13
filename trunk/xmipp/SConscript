@@ -836,7 +836,7 @@ AddBatch('micrograph_particle_picking', 'applications/scripts/micrograph_particl
 AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', '.py')
 AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
 AddBatch('browserj', 'applications/scripts/browserj', '.py')
-AddBatch('metadata_viewerj', 'applications/scripts/metadata_viewerj', '.py')
+AddBatch('metadata_showj', 'applications/scripts/metadata_showj', '.py')
 AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
 AddBatch('mpi_steps_runner', 'protocols', '.py')
 

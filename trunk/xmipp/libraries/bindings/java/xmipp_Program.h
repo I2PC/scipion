@@ -10,7 +10,7 @@ extern "C" {
 /*
  * Class:     xmipp_Program
  * Method:    runByName
- * Signature: (Ljava/lang/String;)V
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_xmipp_Program_runByName
   (JNIEnv *, jclass, jstring, jstring);
@@ -18,7 +18,7 @@ JNIEXPORT jint JNICALL Java_xmipp_Program_runByName
 /*
  * Class:     xmipp_Program
  * Method:    getXmippPath
- * Signature: (Ljava/lang/String;)V
+ * Signature: ()Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_xmipp_Program_getXmippPath
   (JNIEnv *, jclass);

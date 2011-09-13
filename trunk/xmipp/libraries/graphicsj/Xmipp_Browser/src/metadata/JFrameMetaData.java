@@ -58,6 +58,7 @@ public class JFrameMetaData extends JFrame {
     private MetaDataTableModel tableModel;
     private ImagesRowHeaderModel rowHeaderModel;
     private XTableColumnModel columnModel = new XTableColumnModel();
+    private boolean canRender;
     private JFileChooser fc;
     private JList rowHeader;
     private RowHeaderRenderer rowHeaderRenderer = new RowHeaderRenderer();
@@ -144,6 +145,7 @@ public class JFrameMetaData extends JFrame {
         setRenderers();
         enableEditors(true);
 
+        jcbBlock.setSelectedIndex(tableModel.getSelectedBlockIndex());
         jcbBlock.addItemListener(new java.awt.event.ItemListener() {
 
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
@@ -154,8 +156,7 @@ public class JFrameMetaData extends JFrame {
         });
 
         pack();
-
-        selectBlock(0);
+        reloadTableData();
     }
 
     private String getTitle(String title) {
@@ -180,7 +181,7 @@ public class JFrameMetaData extends JFrame {
         LookAndFeel.installColorsAndFont(rowHeader, "TableHeader.background",
                 "TableHeader.foreground", "TableHeader.font");
 
-        rowHeader.setFixedCellHeight(imageRenderer.getCellHeight());
+//        rowHeader.setFixedCellHeight(imageRenderer.getCellHeight());
 
         rowHeader.setCellRenderer(rowHeaderRenderer);
 
@@ -232,8 +233,8 @@ public class JFrameMetaData extends JFrame {
     }
 
     private void packColumns() {
-        for (int i = 0; i < columnModel.getColumnCount(/*true*/); i++) {
-            TableColumn tcolumn = columnModel.getColumn(i);/*(i, true);*/
+        for (int i = 0; i < columnModel.getColumnCount(); i++) {
+            TableColumn tcolumn = columnModel.getColumn(i);
 
             tcolumn.setPreferredWidth(imageRenderer.getCellWidth());
         }
@@ -326,6 +327,13 @@ public class JFrameMetaData extends JFrame {
         columnModel.clear();
         tableModel.reload();
 
+        canRender = tableModel.containsImages();
+        if (!canRender) {
+            jcbRenderImages.setSelected(false);
+        }
+        jcbRenderImages.setEnabled(canRender);
+        jbSend2Gallery.setEnabled(canRender);
+
         setRowHeader();
 
         updateTableStructure();
@@ -333,7 +341,7 @@ public class JFrameMetaData extends JFrame {
 
     private void selectBlock(int block) {
         tableModel.selectBlock(block);
-        DEBUG.printMessage(" *** Selecting block: " + block + " > " + tableModel.getSelectedBlock());
+        jbSend2Gallery.setEnabled(tableModel.containsImageLabel());
         reloadTableData();
     }
 
@@ -363,6 +371,12 @@ public class JFrameMetaData extends JFrame {
         updateTableStructure();
     }
 
+    public void setRenderImages(boolean render_images) {
+        if (canRender) {
+            jcbRenderImages.setSelected(render_images);
+        }
+    }
+
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -373,9 +387,9 @@ public class JFrameMetaData extends JFrame {
     private void initComponents() {
 
         toolBar = new javax.swing.JToolBar();
-        bSave = new javax.swing.JButton();
-        bReload = new javax.swing.JButton();
-        bSend2Gallery = new javax.swing.JButton();
+        jbSave = new javax.swing.JButton();
+        jbReload = new javax.swing.JButton();
+        jbSend2Gallery = new javax.swing.JButton();
         jpCenter = new javax.swing.JPanel();
         jpControls = new javax.swing.JPanel();
         jlBlock = new javax.swing.JLabel();
@@ -391,38 +405,38 @@ public class JFrameMetaData extends JFrame {
 
         toolBar.setRollover(true);
 
-        bSave.setText(METADATA_LABELS.SAVE);
-        bSave.setFocusable(false);
-        bSave.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        bSave.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        bSave.addActionListener(new java.awt.event.ActionListener() {
+        jbSave.setText(METADATA_LABELS.SAVE);
+        jbSave.setFocusable(false);
+        jbSave.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jbSave.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jbSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bSaveActionPerformed(evt);
+                jbSaveActionPerformed(evt);
             }
         });
-        toolBar.add(bSave);
+        toolBar.add(jbSave);
 
-        bReload.setText(METADATA_LABELS.RELOAD);
-        bReload.setFocusable(false);
-        bReload.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        bReload.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        bReload.addActionListener(new java.awt.event.ActionListener() {
+        jbReload.setText(METADATA_LABELS.RELOAD);
+        jbReload.setFocusable(false);
+        jbReload.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jbReload.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jbReload.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bReloadActionPerformed(evt);
+                jbReloadActionPerformed(evt);
             }
         });
-        toolBar.add(bReload);
+        toolBar.add(jbReload);
 
-        bSend2Gallery.setText(METADATA_LABELS.OPEN_AS_GALLERY);
-        bSend2Gallery.setFocusable(false);
-        bSend2Gallery.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        bSend2Gallery.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        bSend2Gallery.addActionListener(new java.awt.event.ActionListener() {
+        jbSend2Gallery.setText(METADATA_LABELS.OPEN_AS_GALLERY);
+        jbSend2Gallery.setFocusable(false);
+        jbSend2Gallery.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jbSend2Gallery.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jbSend2Gallery.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bSend2GalleryActionPerformed(evt);
+                jbSend2GalleryActionPerformed(evt);
             }
         });
-        toolBar.add(bSend2Gallery);
+        toolBar.add(jbSend2Gallery);
 
         getContentPane().add(toolBar, java.awt.BorderLayout.PAGE_START);
 
@@ -478,7 +492,7 @@ public class JFrameMetaData extends JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void bSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bSaveActionPerformed
+    private void jbSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSaveActionPerformed
         if (fc == null) {
             // Sets path and filename automatically.
             fc = new JFileChooser();
@@ -498,7 +512,7 @@ public class JFrameMetaData extends JFrame {
                 save(fc.getSelectedFile().getAbsolutePath());
             }
         }
-    }//GEN-LAST:event_bSaveActionPerformed
+    }//GEN-LAST:event_jbSaveActionPerformed
 
     private void jcbEnableAllItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jcbEnableAllItemStateChanged
         enableAll(jcbEnableAll.isSelected());
@@ -508,9 +522,9 @@ public class JFrameMetaData extends JFrame {
         hideDisabled(jcbHideDisabled.isSelected());
 }//GEN-LAST:event_jcbHideDisabledItemStateChanged
 
-    private void bReloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bReloadActionPerformed
+    private void jbReloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbReloadActionPerformed
         reloadTableData();
-}//GEN-LAST:event_bReloadActionPerformed
+}//GEN-LAST:event_jbReloadActionPerformed
 
     private void jcbRenderImagesItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jcbRenderImagesItemStateChanged
         enableImagesRendering(jcbRenderImages.isSelected());
@@ -527,14 +541,14 @@ public class JFrameMetaData extends JFrame {
         }
     }//GEN-LAST:event_bHideColumnsActionPerformed
 
-private void bSend2GalleryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bSend2GalleryActionPerformed
+private void jbSend2GalleryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSend2GalleryActionPerformed
     ImagesWindowFactory.openFileAsTable(tableModel.getPath());
-}//GEN-LAST:event_bSend2GalleryActionPerformed
+}//GEN-LAST:event_jbSend2GalleryActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bHideColumns;
-    private javax.swing.JButton bReload;
-    private javax.swing.JButton bSave;
-    private javax.swing.JButton bSend2Gallery;
+    private javax.swing.JButton jbReload;
+    private javax.swing.JButton jbSave;
+    private javax.swing.JButton jbSend2Gallery;
     private javax.swing.JComboBox jcbBlock;
     private javax.swing.JCheckBox jcbEnableAll;
     private javax.swing.JCheckBox jcbHideDisabled;

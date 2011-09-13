@@ -1,6 +1,4 @@
 
-
-
 import browser.COMMAND_PARAMETERS;
 import browser.DEBUG;
 import org.apache.commons.cli.BasicParser;
@@ -43,11 +41,11 @@ public class XmippBandPassFilterWizard {
         String parameters[] = new String[N_ARGS];
         Options options = new Options();
 
-        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, COMMAND_PARAMETERS.OPTION_INPUT_FILE_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, COMMAND_PARAMETERS.OPTION_SOCKET_PORT_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER_W1, true, COMMAND_PARAMETERS.OPTION_FILTER_W1_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER_W2, true, COMMAND_PARAMETERS.OPTION_FILTER_W2_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER_RAISED_W, true, COMMAND_PARAMETERS.OPTION_FILTER_RAISED_W_DESCRIPTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER_W1, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER_W2, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER_RAISED_W, true, "");
 
         try {
             BasicParser parser = new BasicParser();

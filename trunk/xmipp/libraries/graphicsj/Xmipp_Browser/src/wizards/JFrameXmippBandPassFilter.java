@@ -36,6 +36,6 @@ public class JFrameXmippBandPassFilter extends JDialogXmippFilesList {
     protected boolean sendSelectedFiles() {
         JPanelXmippBandPassFilter panel = (JPanelXmippBandPassFilter) panelXmippBrowser;
 
-        return send(new Object[]{panel.getW1(), panel.getW2(), panel.getRaisedW()});
+        return send(new Object[]{panel.getW1(), panel.getW2(), panel.getRaisedW()}, true);
     }
 }

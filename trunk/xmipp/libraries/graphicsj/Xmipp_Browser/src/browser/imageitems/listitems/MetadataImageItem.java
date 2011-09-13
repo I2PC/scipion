@@ -5,7 +5,13 @@
 package browser.imageitems.listitems;
 
 import browser.Cache;
+import browser.imageitems.ImageConverter;
+import ij.IJ;
 import ij.ImagePlus;
+import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
+import java.io.File;
+import xmipp.ImageDouble;
 
 /**
  *
@@ -13,18 +19,16 @@ import ij.ImagePlus;
  */
 public class MetadataImageItem extends AbstractImageItem {
 
-    String absoluteFilename;
     String originalFilename;
 
-    public MetadataImageItem(String absoluteFilename, String originalFilename, Cache cache) {
-        super();
+    public MetadataImageItem(File file, String originalFilename, Cache cache) {
+        super(file, cache);
 
-        this.absoluteFilename = absoluteFilename;
         this.originalFilename = originalFilename;
     }
 
     public String getValue() {
-        return absoluteFilename;
+        return originalFilename;
     }
 
     @Override
@@ -33,22 +37,34 @@ public class MetadataImageItem extends AbstractImageItem {
     }
 
     @Override
-    public String getAbsoluteFileName() {
-        return absoluteFilename;
-    }
-
-    @Override
-    public String getFileName() {
-        return absoluteFilename;
-    }
-
-    @Override
     public ImagePlus getImagePlus() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return IJ.openImage(file.getAbsolutePath());
     }
 
     @Override
     protected ImagePlus loadPreview(int w, int h) {
-        throw new UnsupportedOperationException("Not supported yet.");
+//        System.out.println(" >>> Loading preview: " + getKey());
+        ImagePlus ip = null;
+
+        try {
+            String path = file.getAbsolutePath();
+            //String fileName = file.getName();
+            ImageDouble image = new ImageDouble();
+            //System.out.println(" *** Loading preview: " + path + " / w=" + w + " / h=" + h + " / d=" + nslice + " n=" + nimage);
+
+            double factor = XmippImageItem.getFactor(getWidth(), getHeight(), w, h);
+
+            int w_ = (int) Math.ceil(getWidth() / factor);
+            int h_ = (int) Math.ceil(getHeight() / factor);
+
+            image.readPreview(path, w_, h_);
+            ip = ImageConverter.convertToImagej(image, path);
+        } catch (Exception ex) {
+            System.err.println(" >>> Error loading preview: " + getKey());
+//            ex.printStackTrace();
+            //throw new RuntimeException(ex);
+        }
+
+        return ip;
     }
 }

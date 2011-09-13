@@ -194,7 +194,7 @@ public class Filename {
         FilenameFilter filter = new FilenameFilter() {
 
             public boolean accept(File dir, String name) {
-                return name.compareTo(PROJECT_FILE) == 0;
+                return PROJECT_FILE.compareTo(name) == 0;
             }
         };
 

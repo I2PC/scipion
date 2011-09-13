@@ -78,7 +78,6 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     private JMenuBarTable jMenuBarTable;
     JFileChooser fc = new JFileChooser();
 
-    /** Creates new form JFrameImagesTable */
     public JFrameImagesTable(String filename) {
         super();
 
@@ -118,7 +117,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
         initComponents();
 
-        jtbApplyGeo.setEnabled(tableModel.isMetaData());    // Not aplicable for volumes.
+        jtbUseGeometry.setEnabled(tableModel.isMetaData());    // Not aplicable for volumes.
 
         table.setColumnModel(columnModel);
         table.setDefaultRenderer(AbstractTableImageItem.class, renderer);
@@ -146,6 +145,12 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
         // Stacks will be "auto-normalized".
         setNormalized(tableModel.isVolume());
+
+        // Geometry info is used if present, otherwise button is disabled.
+        boolean containsGeometry = tableModel.containsGeometryInfo();
+        setUseGeometry(containsGeometry);
+        jtbUseGeometry.setSelected(containsGeometry);
+        jtbUseGeometry.setEnabled(containsGeometry);
     }
 
     private void setRowHeader() {
@@ -160,6 +165,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         rowHeader.setCellRenderer(new RowHeaderRenderer());
 
         jsPanel.setRowHeaderView(rowHeader);
+        rowHeader.repaint();
     }
 
     private void updateTable() {
@@ -236,16 +242,14 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         updateTable();
     }
 
-//    @Override
-//    public void paint(Graphics grphcs) {
-//        super.paint(grphcs);
+//    public void setDimensions(int rows, int columns) {
+//        if (rows > 0) {
+//            setRows(rows);            
+//        }
 //
-//        Rectangle original_r = jsPanel.getViewport().getVisibleRect();
-//        //Rectangle r = new Rectangle(0, 80, rowHeader.getWidth(), original_r.height);
-//        Rectangle r = original_r;
-//        tempGlassPanel glassPanel = new tempGlassPanel(r);
-//        setGlassPane(glassPanel);
-//        glassPanel.setVisible(true);
+//        if (columns > 0) {
+//            setColumns(columns);
+//        }
 //    }
     private void autoAdjustColumns() {
         //System.out.println("rowHeader.getWidth(): " + rowHeader.getWidth());
@@ -265,8 +269,6 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
                     jsPanel.getVisibleRect().width,
                     table.getIntercellSpacing().width);
             setZoom((int) (scale * 100));
-
-            setAutoAdjustColumns(true);
         } else {
             jsZoom.setEnabled(false);
             jcbAutoAdjustColumns.setEnabled(false);
@@ -292,9 +294,8 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
     private void setRows(int rows) {
         isUpdating = true;
-        tableModel.setRows(rows);
 
-        jsColumns.setValue(tableModel.getColumnCount());
+        setRowsValue(rows);
 
         startUpdater();
         isUpdating = false;
@@ -302,26 +303,59 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
     private void setColumns(int columns) {
         isUpdating = true;
-        tableModel.setColumns(columns);
 
-        jsRows.setValue(tableModel.getRowCount());
+        setColumnsValue(columns);
 
         startUpdater();
         isUpdating = false;
     }
 
-    private void setAutoAdjustColumns(boolean autoAdjustColumns) {
+    public void setDimensions(int rows, int columns) {
         isUpdating = true;
-        jcbAutoAdjustColumns.setSelected(autoAdjustColumns);
 
-        this.autoAdjustColumns = autoAdjustColumns;
+        setAutoAdjustColumns(false);
 
-        jsColumns.setEnabled(!jcbAutoAdjustColumns.isSelected());
-        jsRows.setEnabled(!jcbAutoAdjustColumns.isSelected());
+        setRowsValue(rows);
+        setColumnsValue(columns);
 
         startUpdater();
-
         isUpdating = false;
+    }
+
+    void setRowsValue(int rows) {
+        if (rows > 0) {
+            tableModel.setRows(rows);
+            jsColumns.setValue(tableModel.getColumnCount());
+        }
+    }
+
+    void setColumnsValue(int columns) {
+        if (columns > 0) {
+            tableModel.setColumns(columns);
+            jsRows.setValue(tableModel.getRowCount());
+        }
+    }
+
+    public void enableAutoadjustColumns(boolean enable) {
+        jcbAutoAdjustColumns.setSelected(enable);
+    }
+
+    public void setAutoAdjustColumns(boolean autoAdjustColumns) {
+//        if (!isUpdating) {
+            isUpdating = true;
+
+            this.autoAdjustColumns = autoAdjustColumns;
+
+            jcbAutoAdjustColumns.setSelected(autoAdjustColumns);
+            jsColumns.setEnabled(!autoAdjustColumns);
+            jsRows.setEnabled(!autoAdjustColumns);
+
+            if (autoAdjustColumns) {
+                startUpdater();
+            }
+
+            isUpdating = false;
+//        }
     }
 
     private void goToImage(int index) {
@@ -354,6 +388,11 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         tableModel.setNormalized(normalize);
 
         startUpdater();
+    }
+
+    private void setUseGeometry(boolean useGeometry) {
+        ((MDTableModel) tableModel).setUseGeometry(useGeometry);
+        updateTable();
     }
 
     private void send2stack() {
@@ -425,7 +464,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
         toolBar = new javax.swing.JToolBar();
         jtbNormalize = new javax.swing.JToggleButton();
-        jtbApplyGeo = new javax.swing.JToggleButton();
+        jtbUseGeometry = new javax.swing.JToggleButton();
         jSeparator1 = new javax.swing.JToolBar.Separator();
         jbMean = new javax.swing.JButton();
         jbStdDev = new javax.swing.JButton();
@@ -474,16 +513,16 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         });
         toolBar.add(jtbNormalize);
 
-        jtbApplyGeo.setText(LABELS.LABEL_APPLY_GEOMETRY);
-        jtbApplyGeo.setFocusable(false);
-        jtbApplyGeo.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jtbApplyGeo.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jtbApplyGeo.addActionListener(new java.awt.event.ActionListener() {
+        jtbUseGeometry.setText(LABELS.LABEL_USE_GEOMETRY);
+        jtbUseGeometry.setFocusable(false);
+        jtbUseGeometry.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jtbUseGeometry.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jtbUseGeometry.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jtbApplyGeoActionPerformed(evt);
+                jtbUseGeometryActionPerformed(evt);
             }
         });
-        toolBar.add(jtbApplyGeo);
+        toolBar.add(jtbUseGeometry);
         toolBar.add(jSeparator1);
 
         jbMean.setText(LABELS.BUTTON_MEAN);
@@ -604,9 +643,9 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         jpCenter.add(jsPanel, java.awt.BorderLayout.CENTER);
 
         jcbAutoAdjustColumns.setText(LABELS.LABEL_AUTO_AJUST_COLUMNS);
-        jcbAutoAdjustColumns.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jcbAutoAdjustColumnsActionPerformed(evt);
+        jcbAutoAdjustColumns.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                jcbAutoAdjustColumnsStateChanged(evt);
             }
         });
         jpStructure.add(jcbAutoAdjustColumns);
@@ -644,9 +683,6 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     private void jcbShowLabelsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbShowLabelsActionPerformed
         setShowLabels(jcbShowLabels.isSelected());
     }//GEN-LAST:event_jcbShowLabelsActionPerformed
-    private void jcbAutoAdjustColumnsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbAutoAdjustColumnsActionPerformed
-        setAutoAdjustColumns(jcbAutoAdjustColumns.isSelected());
-    }//GEN-LAST:event_jcbAutoAdjustColumnsActionPerformed
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         pack();
         ImagesWindowFactory.setConvenientSize(this);
@@ -753,14 +789,17 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         updateTable();
     }//GEN-LAST:event_jcbSortByLabelActionPerformed
 
-private void jtbApplyGeoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtbApplyGeoActionPerformed
-    ((MDTableModel) tableModel).setApplyGeometry(jtbApplyGeo.isSelected());
-    updateTable();
-}//GEN-LAST:event_jtbApplyGeoActionPerformed
+private void jtbUseGeometryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtbUseGeometryActionPerformed
+    setUseGeometry(jtbUseGeometry.isSelected());
+}//GEN-LAST:event_jtbUseGeometryActionPerformed
 
 private void bSend2MDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bSend2MDActionPerformed
     ImagesWindowFactory.openFileAsMetadata(tableModel.getFilename());
 }//GEN-LAST:event_bSend2MDActionPerformed
+
+private void jcbAutoAdjustColumnsStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jcbAutoAdjustColumnsStateChanged
+    setAutoAdjustColumns(jcbAutoAdjustColumns.isSelected());
+}//GEN-LAST:event_jcbAutoAdjustColumnsStateChanged
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bSend2MD;
     private javax.swing.JLabel jLabel1;
@@ -784,8 +823,8 @@ private void bSend2MDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
     private javax.swing.JScrollPane jsPanel;
     protected javax.swing.JSpinner jsRows;
     protected javax.swing.JSpinner jsZoom;
-    private javax.swing.JToggleButton jtbApplyGeo;
     private javax.swing.JToggleButton jtbNormalize;
+    private javax.swing.JToggleButton jtbUseGeometry;
     private javax.swing.JTable table;
     private javax.swing.JToolBar toolBar;
     // End of variables declaration//GEN-END:variables

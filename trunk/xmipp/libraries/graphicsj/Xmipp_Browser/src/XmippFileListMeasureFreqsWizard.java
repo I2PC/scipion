@@ -41,10 +41,10 @@ public class XmippFileListMeasureFreqsWizard {
         String parameters[] = new String[N_ARGS];
         Options options = new Options();
 
-        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, COMMAND_PARAMETERS.OPTION_INPUT_DIR_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, COMMAND_PARAMETERS.OPTION_SOCKET_PORT_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, COMMAND_PARAMETERS.OPTION_FILTER_DESCRIPTION);
-        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER_DOWNSAMPLING, true, COMMAND_PARAMETERS.OPTION_FILTER_DOWNSAMPLING_DESCRIPTION);
+        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_SOCKET_PORT, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER_DOWNSAMPLING, true, "");
 
         try {
             BasicParser parser = new BasicParser();

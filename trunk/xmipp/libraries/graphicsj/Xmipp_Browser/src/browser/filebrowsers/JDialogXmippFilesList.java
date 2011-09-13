@@ -11,7 +11,6 @@
 package browser.filebrowsers;
 
 import browser.COMMAND_PARAMETERS;
-import browser.DEBUG;
 import browser.LABELS;
 import browser.imageitems.listitems.FileItem;
 import ij.IJ;
@@ -27,6 +26,7 @@ import java.util.ArrayList;
  */
 public class JDialogXmippFilesList extends javax.swing.JFrame {
 
+    final static String SOT = "__STARTED__";
     final static String EOT = "__END__";
     String seltype;
     protected JPanelXmippBrowser panelXmippBrowser;
@@ -59,6 +59,8 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
 
         pack();
         setLocationRelativeTo(null);
+
+        send(new Object[]{SOT}, false);
     }
 
     protected void button1Clicked() {
@@ -75,7 +77,7 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
     }
 
     protected void cancel() {
-        send(null);
+        send(null, true);
         dispose();
 
 //        DEBUG.printMessage("Exiting...");
@@ -94,7 +96,7 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
             }
         }
 
-        return send(list.toArray());
+        return send(list.toArray(), true);
     }
 
     boolean acceptFile(FileItem item) {
@@ -107,7 +109,7 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
         }
     }
 
-    protected boolean send(Object items[]) {
+    protected boolean send(Object items[], boolean end) {
         try {
             Socket socket = new Socket(InetAddress.getByName("127.0.0.1"), port);
 
@@ -121,7 +123,10 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
                 }
             }
 
-            output.write(EOT);
+            if (end) {
+                output.write(EOT + "\n");
+            }
+
             output.flush();
 
             // Closes connection.

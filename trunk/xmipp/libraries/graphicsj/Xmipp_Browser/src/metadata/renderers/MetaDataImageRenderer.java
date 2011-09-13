@@ -11,6 +11,7 @@ import java.awt.Font;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
+import metadata.models.MetaDataTableModel;
 
 /**
  *
@@ -34,23 +35,6 @@ public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
         font = getFont();
     }
 
-    public int getCellWidth() {
-        return DEFAULT_CELL_WIDTH + 2 * BORDER_WIDTH;
-    }
-
-    public int getCellHeight() {
-        int height;
-
-        if (renderImages) {
-            height = DEFAULT_CELL_HEIGHT + 2 * BORDER_HEIGHT;
-        } else {
-            height = font.getSize();
-            height += height * 0.5; // Extra gap.
-        }
-
-        return height;
-    }
-
     public void setRenderImages(boolean renderImages) {
         this.renderImages = renderImages;
     }
@@ -65,14 +49,7 @@ public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
         ImageIcon icon = null;
 
         if (renderImages) {
-            // Check size. If bigger, resize it, otherwise size remains the same.
-            int itemW = item.getWidth();
-            int itemH = item.getHeight();
-
-            DEFAULT_CELL_WIDTH = itemW > DEFAULT_CELL_WIDTH ? DEFAULT_CELL_WIDTH : itemW;
-            DEFAULT_CELL_HEIGHT = itemH > DEFAULT_CELL_HEIGHT ? DEFAULT_CELL_HEIGHT : itemH;
-
-            ImagePlus preview = item.getPreview(DEFAULT_CELL_WIDTH, DEFAULT_CELL_HEIGHT);
+            ImagePlus preview = item.getPreview(DEFAULT_CELL_WIDTH,DEFAULT_CELL_HEIGHT);
             icon = new ImageIcon(preview.getImage());
         } else {
             label = getShortLabel(item.getOriginalValue(), table.getColumnModel().getColumn(column).getWidth());
@@ -84,6 +61,23 @@ public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
         setEnabled(isRowEnabled(table, row));
 
         return this;
+    }
+
+    public int getCellWidth() {
+        return DEFAULT_CELL_WIDTH;
+    }
+
+    public int getCellHeight() {
+        int height;
+
+        if (renderImages) {
+            height = DEFAULT_CELL_HEIGHT;
+        } else {
+            height = font.getSize();
+            height += height * 0.5; // Extra gap.
+        }
+
+        return height;
     }
 
     private String getShortLabel(String label, int width) {

@@ -25,7 +25,7 @@ public abstract class AbstractTableImageItem {
     protected ImageDimension dimension;
     protected ImageStatistics statistics;
     protected boolean selected;
-    protected double scale;
+    protected double scale = 1.0;
 
     public AbstractTableImageItem(Cache cache) {
         this.cache = cache;
@@ -90,7 +90,6 @@ public abstract class AbstractTableImageItem {
 //    public double getZoomScale_() {
 //        return scale;
 //    }
-
     public void setZoomScale(double scale) {
         this.scale = scale;
     }

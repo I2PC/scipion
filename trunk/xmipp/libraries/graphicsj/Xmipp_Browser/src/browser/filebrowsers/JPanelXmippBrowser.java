@@ -102,20 +102,11 @@ public class JPanelXmippBrowser extends JPanel {
 
                 public void run() {
 
-//                if (SHOW_PREVIEWS) {
                     if (jlFileFilter.getSelectedIndex() >= 0) {  // To avoid exceptions...
                         Object item = jlFileFilter.getSelectedValue();
                         if (item instanceof AbstractImageItem) {
-                            AbstractImageItem imageItem = (AbstractImageItem) item;
-                            ImagePlus preview = getPreview(imageItem);
-
-                            if (preview != null) {
-                                jpImageInfo.setPreview(preview.getImage(), imageItem.getImageInfo());
-                            } else {
-                                jpImageInfo.clearPreview();
-                            }
+                            setPreview((AbstractImageItem) item);
                         }
-//                    }
                     }
 
                     // Shows / Hide preview panel.
@@ -123,11 +114,20 @@ public class JPanelXmippBrowser extends JPanel {
 
                     progressPanel.setVisible(false);
                     progressPanel.stop();
-                    //getRootPane().setGlassPane(previousGlassPane);
                 }
             });
 
             t.start();
+        }
+    }
+
+    protected void setPreview(AbstractImageItem imageItem) {
+        ImagePlus preview = getPreview(imageItem);
+
+        if (preview != null) {
+            jpImageInfo.setPreview(preview.getImage(), imageItem.getImageInfo());
+        } else {
+            jpImageInfo.clearPreview();
         }
     }
 

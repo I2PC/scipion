@@ -36,6 +36,6 @@ public class JFrameXmippBadPixelsFilter extends JDialogXmippFilesList {
     protected boolean sendSelectedFiles() {
         JPanelXmippBadPixelsFilter panel = (JPanelXmippBadPixelsFilter) panelXmippBrowser;
 
-        return send(new Object[]{panel.getFactor()});
+        return send(new Object[]{panel.getFactor()}, true);
     }
 }

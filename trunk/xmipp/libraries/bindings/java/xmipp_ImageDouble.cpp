@@ -56,7 +56,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1image
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readApplyGeo(
-		JNIEnv *env, jobject jimage, jobject jmetadata, jlong id, jint w, jint h) {
+		JNIEnv *env, jobject jimage, jstring filename, jobject jmetadata, jlong id, jint w, jint h) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jimage);
 	MetaData *metadata = GET_INTERNAL_METADATA(jmetadata);
@@ -64,8 +64,8 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readApplyGeo(
 	if (image != NULL) {
 		if (metadata != NULL) {
 			try {
-                                std::cout << "MD=" << metadata << std::endl;
-				image->readApplyGeo(*metadata, (size_t) id);
+                                const char *fnStr = env->GetStringUTFChars(filename, false);
+				image->readApplyGeo(fnStr, *metadata, (size_t) id);
 
                                 selfScaleToSize(LINEAR, (*image)(), (int)w, (int)h);
 			} catch (XmippError xe) {

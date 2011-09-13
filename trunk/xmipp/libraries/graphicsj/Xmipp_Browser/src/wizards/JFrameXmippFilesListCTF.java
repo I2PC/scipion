@@ -36,6 +36,6 @@ public class JFrameXmippFilesListCTF extends JDialogXmippFilesList {
     @Override
     protected boolean sendSelectedFiles() {
         return send(new Object[]{
-                    ((JPanelXmippFileListCTF) panelXmippBrowser).getDownsampling()});
+                    ((JPanelXmippFileListCTF) panelXmippBrowser).getDownsampling()}, true);
     }
 }

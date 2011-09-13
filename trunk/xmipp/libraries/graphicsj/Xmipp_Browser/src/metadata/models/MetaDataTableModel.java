@@ -28,12 +28,29 @@ public class MetaDataTableModel extends DefaultTableModel {
     private int selectedBlock = 0;
     private long ids[];
     protected static Cache cache = new Cache();
+    protected boolean containsImageLabel = false;
+    protected boolean containsImages = false;
 
     public MetaDataTableModel(String filename) {
         super();
 
         this.filename = filename;
+
         loadBlocks(filename);
+        selectBlock(Filename.getPrefix(filename));
+    }
+
+    private void selectBlock(String selectedBlock) {
+        if (selectedBlock != null) {
+            for (int i = 0; i < blocks.length; i++) {
+                if (selectedBlock.compareTo(blocks[i]) == 0) {
+                    selectBlock(i);
+                    return;
+                }
+            }
+        }
+
+        selectBlock(0);
     }
 
     public void selectBlock(int selectedBlock) {
@@ -48,6 +65,14 @@ public class MetaDataTableModel extends DefaultTableModel {
         return blocks[getSelectedBlockIndex()];
     }
 
+    public boolean containsImageLabel() {
+        return containsImageLabel;
+    }
+
+    public boolean containsImages() {
+        return containsImages;
+    }
+
     public String getFilename() {
         return Filename.getFilename(filename);
     }
@@ -57,8 +82,25 @@ public class MetaDataTableModel extends DefaultTableModel {
 
         return (!block.isEmpty() ? block + Filename.SEPARATOR : "") + getFilename();
     }
+//
+//    public int getRowHeigth(int row) {
+//        int height = 0;
+//
+//        for (int i = 0; i < getColumnCount(); i++) {
+//            Object item = getValueAt(row, i);
+//            if (item instanceof TableImageItem) {
+//                int h = ((TableImageItem) item).getHeight();
+//                if (h > height) {
+//                    height = h;
+//                }
+//            }
+//        }
+//
+//        return height;
+//    }
 
     public void reload() {
+        System.out.println("path: " + getPath());
         load(getPath());
     }
 
@@ -77,10 +119,11 @@ public class MetaDataTableModel extends DefaultTableModel {
 
     private void loadBlocks(String filename) {
         try {
-            if (Filename.hasPrefix(filename)) {
-                blocks = new String[]{Filename.getPrefix(filename)};
-            } else {
-                blocks = MetaData.getBlocksInMetaDataFile(filename);
+            blocks = MetaData.getBlocksInMetaDataFile(Filename.getFilename(filename));
+
+            // No blocks, so set at least one item for the dropdown list.
+            if (blocks.length < 1) {
+                blocks = new String[]{""};
             }
         } catch (Exception ex) {
             DEBUG.printException(ex);
@@ -104,6 +147,11 @@ public class MetaDataTableModel extends DefaultTableModel {
                     md.addLabel(MDLabel.MDL_ENABLED);
                 }
                 hasEnabledField = false;
+            }
+
+            // Contains image (for gallery)?
+            if (md.containsLabel(MDLabel.MDL_IMAGE)) {
+                containsImageLabel = true;
             }
 
             // Store ids.
@@ -137,6 +185,7 @@ public class MetaDataTableModel extends DefaultTableModel {
 //                            String path = md.getValueString(label, id, true);
 //                            row[i] = new TableImageItem(path, value, cache);
                             row[i] = new TableImageItem(id, md, label, cache);
+                            containsImages = true;
                         } else if (MetaData.isMetadata(label)) {
                             String path_ = md.getValueString(label, id, true);
                             row[i] = new TableFileItem(path_, value);

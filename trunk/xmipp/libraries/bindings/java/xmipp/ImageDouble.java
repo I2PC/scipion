@@ -54,11 +54,11 @@ public class ImageDouble {
     private native void read_preview(String filename,
             int w, int h, int slice, long nimage) throws Exception;
 
-    private void readApplyGeo(MetaData metadata, long id) throws Exception {
-        readApplyGeo(metadata, id, getXsize(), getYsize());
+    private void readApplyGeo(String filename, MetaData metadata, long id) throws Exception {
+        readApplyGeo(filename, metadata, id, getXsize(), getYsize());
     }
 
-    private native void readApplyGeo(MetaData metadata, long id, int w, int h) throws Exception;
+    private native void readApplyGeo(String filename, MetaData metadata, long id, int w, int h) throws Exception;
 
     // Set data.
     public void setData(int width, int height, int depth, double data[]) throws Exception {
@@ -124,7 +124,14 @@ public class ImageDouble {
 
     public ImageDouble(MetaData metadata, long id) throws Exception {
         this();
-        read(metadata, id);
+
+        String imgFilename = metadata.getValueString(MDLabel.MDL_IMAGE, id, true);
+        read(imgFilename, metadata, id);
+    }
+
+    public ImageDouble(String filename, MetaData metadata, long id) throws Exception {
+        this();
+        read(filename, metadata, id);
     }
 
     // Should be called by GarbageCollector before destroying
@@ -165,8 +172,8 @@ public class ImageDouble {
         setFilename(filename);
     }
 
-    private void read(MetaData metadata, long id) throws Exception {
-        readApplyGeo(metadata, id);
+    private void read(String filename, MetaData metadata, long id) throws Exception {
+        readApplyGeo(filename, metadata, id);
 
         if (metadata.containsLabel(MDLabel.MDL_IMAGE)) {
             setFilename(metadata.getValueString(MDLabel.MDL_IMAGE, id));
@@ -186,8 +193,8 @@ public class ImageDouble {
         setFilename(filename);
     }
 
-    public void readPreview(MetaData metadata, long id, int w, int h) throws Exception {
-        readApplyGeo(metadata, id, w, h);
+    public void readPreview(String filename, MetaData metadata, long id, int w, int h) throws Exception {
+        readApplyGeo(filename, metadata, id, w, h);
 
         if (metadata.containsLabel(MDLabel.MDL_IMAGE)) {
             setFilename(metadata.getValueString(MDLabel.MDL_IMAGE, id));

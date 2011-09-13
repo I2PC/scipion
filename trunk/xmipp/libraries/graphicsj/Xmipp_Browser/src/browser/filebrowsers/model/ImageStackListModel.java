@@ -8,6 +8,7 @@ import browser.Cache;
 import browser.imageitems.listitems.MetadataImageItem;
 import ij.IJ;
 import ij.ImagePlus;
+import java.io.File;
 import java.util.ArrayList;
 import javax.swing.AbstractListModel;
 import xmipp.MDLabel;
@@ -38,7 +39,8 @@ public class ImageStackListModel extends AbstractListModel {
                 String original = md.getValueString(MDLabel.MDL_IMAGE, ids[i]);
                 String absolute = md.getValueString(MDLabel.MDL_IMAGE, ids[i], true);
 
-                MetadataImageItem item = new MetadataImageItem(absolute, original, cache);
+                File file = new File(absolute);
+                MetadataImageItem item = new MetadataImageItem(file, original, cache);
 
                 items.add(item);
             }

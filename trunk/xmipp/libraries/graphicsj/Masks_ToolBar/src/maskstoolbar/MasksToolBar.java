@@ -1,3 +1,7 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package maskstoolbar;
 
 import ij.IJ;
@@ -10,6 +14,7 @@ import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 import java.lang.reflect.Method;
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -17,16 +22,13 @@ import javax.swing.JToggleButton;
 import maskstoolbar.constants.ICONS;
 import maskstoolbar.constants.LABELS;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 /**
  *
  * @author Juanjo Vega
  */
 public class MasksToolBar extends PlugInFrame implements ActionListener {
 
+    private static MasksToolBar instance = null;    // To have an unique bar.
     private ImagePlus mask = null;
     private JButton jbSetBrushSize = new JButton();
     private JButton jbCreateMask = new JButton();
@@ -123,7 +125,7 @@ public class MasksToolBar extends PlugInFrame implements ActionListener {
         setResizable(false);
     }
 
-    private static void setTool(String tool) {
+    static void setTool(String tool) {
         IJ.setTool(tool);
     }
 
@@ -139,7 +141,7 @@ public class MasksToolBar extends PlugInFrame implements ActionListener {
      * ij.gui.ToolBar.showBrushDialog() is protected.
      * Using java reflection it becomes accessible.
      */
-    private static void showBrushDialog() {
+    void showBrushDialog() {
         try {
             Toolbar toolbar = Toolbar.getInstance();
 
@@ -150,7 +152,7 @@ public class MasksToolBar extends PlugInFrame implements ActionListener {
             Object[] arguments = {};
             m.invoke(toolbar, arguments);
         } catch (Exception e) {
-            e.printStackTrace();
+            IJ.error(e.getMessage());
         }
     }
 
@@ -178,7 +180,7 @@ public class MasksToolBar extends PlugInFrame implements ActionListener {
         }
     }
 
-    private static void createSelection() {
+    void createSelection() {
         ImagePlus ip = IJ.getImage();
 
         if (ip != null) {
@@ -192,7 +194,7 @@ public class MasksToolBar extends PlugInFrame implements ActionListener {
         }
     }
 
-    private static void invertSelection() {
+    void invertSelection() {
         ImagePlus ip = IJ.getImage();
 
         if (ip != null) {
@@ -236,11 +238,6 @@ public class MasksToolBar extends PlugInFrame implements ActionListener {
         }
     }
 
-    @Override
-    public void run(String args) {
-        setVisible(true);
-    }
-
     public void actionPerformed(ActionEvent ae) {
         if (ae.getSource() == jtbRectangle) {
             setTool("rectangle");
@@ -279,5 +276,22 @@ public class MasksToolBar extends PlugInFrame implements ActionListener {
         } else if (ae.getSource() == jbSpecifySelection) {
             specifySelection();
         }
+    }
+
+    @Override
+    public void windowClosed(WindowEvent e) {
+        instance = null;
+    }
+
+    public static MasksToolBar getInstance() {
+        if (instance == null) {
+            createInstance();
+        }
+
+        return instance;
+    }
+
+    private static void createInstance() {
+        instance = new MasksToolBar();
     }
 }

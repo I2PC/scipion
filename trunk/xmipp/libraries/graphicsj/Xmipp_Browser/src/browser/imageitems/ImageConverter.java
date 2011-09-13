@@ -1,5 +1,6 @@
 package browser.imageitems;
 
+import browser.DEBUG;
 import browser.imageitems.tableitems.AbstractTableImageItem;
 import ij.IJ;
 import ij.ImagePlus;
@@ -204,16 +205,17 @@ public class ImageConverter {
 
         return image;
     }
-    /*
-    public static ImagePlus toImagePlus(Vector<TableImageItem> items, String title) {
-    TableImageItem item = items.elementAt(0);
-    
-    ImageStack is = new ImageStack(item.getWidth(), item.getHeight());
-    
-    for (int i = 0; i < items.size(); i++) {
-    is.addSlice(String.valueOf(i), items.elementAt(i).getPreview().getProcessor());
+
+    public static boolean saveImage(ImagePlus imp, String filename) {
+        try {
+            ImageDouble image = convertToXmipp(imp);
+
+            image.write(filename);
+            return true;
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
+        }
+
+        return false;
     }
-    
-    return new ImagePlus(title, is);
-    }*/
 }
