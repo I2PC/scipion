@@ -451,10 +451,10 @@ public:
     }
 
     /** Returns X dimension for projections under use. */
-    inline int ProjXdim();
+    int ProjXdim();
 
     /** Returns Y dimension for projections under use. */
-    inline int ProjYdim();
+    int ProjYdim();
 
 };
 //@}
