@@ -1,11 +1,12 @@
 package model;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MicrographFamilyData {
 
-	private List<Particle> particles;
+	private List<Particle> manualparticles;
 	private Family family;
 	private List<AutomaticParticle> autoparticles;
 	private Micrograph micrograph;
@@ -13,7 +14,7 @@ public class MicrographFamilyData {
 
 	public MicrographFamilyData(Micrograph micrograph, Family family) {
 		this.family = family;
-		this.particles = new ArrayList<Particle>();
+		this.manualparticles = new ArrayList<Particle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
 		this.micrograph = micrograph;
 		setState(MicrographFamilyState.Available);
@@ -32,7 +33,7 @@ public class MicrographFamilyData {
 
 	public void setState(MicrographFamilyState state) {
 		if(state == MicrographFamilyState.Available && 
-			!(particles.isEmpty() || autoparticles.isEmpty()))
+			!(manualparticles.isEmpty() || autoparticles.isEmpty()))
 			throw new IllegalArgumentException("Micrograph has data. Can not be " + MicrographFamilyState.Available);
 		this.state = state;
 	}
@@ -44,7 +45,7 @@ public class MicrographFamilyData {
 
 
 	public List<Particle> getManualParticles() {
-		return particles;
+		return manualparticles;
 	}
 
 	public List<AutomaticParticle> getAutomaticParticles() {
@@ -57,7 +58,7 @@ public class MicrographFamilyData {
 
 	public void addManualParticle(Particle p) {
 
-		particles.add(p);
+		manualparticles.add(p);
 		family.particles++;
 		if (state == MicrographFamilyState.Available)
 		{
@@ -65,7 +66,9 @@ public class MicrographFamilyData {
 				state = MicrographFamilyState.Manual;
 			else if(family.getStep() == FamilyState.Supervised && state == MicrographFamilyState.Autopick)
 				state = MicrographFamilyState.Correct;
-			else
+			else if(family.getStep() == FamilyState.Review)
+				state = MicrographFamilyState.Review;
+			else 
 				throw new IllegalArgumentException(String.format("Micrograph could not update its state and can't keep previous state %s and have particles", MicrographFamilyState.Available));
 		}
 	}
@@ -78,16 +81,16 @@ public class MicrographFamilyData {
 		if (p instanceof AutomaticParticle)
 			((AutomaticParticle) p).setDeleted(true);
 		else {
-			particles.remove(p);
+			manualparticles.remove(p);
 			family.particles--;
-			if (particles.size() == 0 && autoparticles.size() - getAutomaticParticlesDeleted() == 0)
+			if (manualparticles.size() == 0 && autoparticles.size() - getAutomaticParticlesDeleted() == 0)
 				state = MicrographFamilyState.Available;
 		}
 	}
 	
 	public boolean hasManualParticles()
 	{
-		return particles.size() != 0;
+		return manualparticles.size() != 0;
 	}
 	
 	public boolean hasAutomaticParticles()
@@ -96,7 +99,7 @@ public class MicrographFamilyData {
 	}
 
 	public boolean isEmpty() {
-		return particles.size() == 0 && autoparticles.size() == 0;
+		return manualparticles.size() == 0 && autoparticles.size() == 0;
 	}
 	
 	public int getAutomaticParticles(double threshold)
@@ -128,12 +131,14 @@ public class MicrographFamilyData {
 				return true;
 			return false;
 		}
+		if(family.getStep() == FamilyState.Review)
+			return true;
 		return false;
 	}
 
 	public boolean isActionAvailable(double threshold) {
 		
-		if (family.getStep() == FamilyState.Manual)
+		if (family.getStep() != FamilyState.Supervised)
 			return false;
 		if (family.getStep() == FamilyState.Supervised) {
 			if (state == MicrographFamilyState.Available)
@@ -143,7 +148,7 @@ public class MicrographFamilyData {
 			if (state == MicrographFamilyState.ReadOnly)
 				return false;
 			if(state == MicrographFamilyState.Correct)
-				return !particles.isEmpty() || getAutomaticParticlesDeleted(threshold) > 0;
+				return !manualparticles.isEmpty() || getAutomaticParticlesDeleted(threshold) > 0;
 			return true;
 		}
 		return false;
@@ -159,9 +164,9 @@ public class MicrographFamilyData {
 	
 	public void reset()
 	{
-		family.particles -= particles.size();
+		family.particles -= manualparticles.size();
 		autoparticles.clear();
-		particles.clear();
+		manualparticles.clear();
 		setState(MicrographFamilyState.Available);
 	}
 	
@@ -197,16 +202,21 @@ public class MicrographFamilyData {
 		return count;
 	}
 	
-	public String getOTrainingAutoFeaturesVectorFilename()
-	{
-		return ParticlePicker.getOutputPath(String.format("%s_%s_%s.txt", micrograph.getName(), ParticlePicker.getTrainingAutoFeatureVectorsFilenameGeneric(), family.getName()));
-	}
+
 	
 	public void deleteBelowThreshold(double threshold)
 	{
 		for(AutomaticParticle p: autoparticles)
 			if(p.getCost() < threshold)
 				p.setDeleted(true);
+	}
+	
+	public List<Particle> getParticles()
+	{
+		ArrayList<Particle> result = new ArrayList<Particle>();
+		result.addAll(manualparticles);
+		result.addAll(autoparticles);
+		return result;
 	}
 	
 }

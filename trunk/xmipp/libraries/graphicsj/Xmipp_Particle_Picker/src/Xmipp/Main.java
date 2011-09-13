@@ -4,48 +4,58 @@ import gui.ParticlePickerJFrame;
 
 import javax.swing.SwingUtilities;
 
+import model.FamilyState;
+import model.ManualParticlePicker;
+import model.SupervisedParticlePicker;
+import model.ReviewParticlePicker;
 import model.ParticlePicker;
 
 class Main {
 	// 0 --> input metadata
 	// 1 --> output dir
-	// 2 --> number of threads for automatic picking
-	// 3 --> fast mode for automatic picking
-	// 4 --> incore for automatic picking
+	// 2 --> mode
+	
+	//On Supervised
+	// 3 --> number of threads for supervised mode
+	// 4 --> fast mode for supervised mode
+	// 5 --> incore for supervised mode
+	
+	//On Review
+	//3 -->external auto dir
 	public static void main(String[] args) {
-		String mgselfile = args[0];
-		String outputdir = args[1];
-		ParticlePicker.setMicrographsSelFile(mgselfile);
-		ParticlePicker.setOutputDir(outputdir);
 
-		if (args.length == 2) {
-			ParticlePicker.setIsAuto(false);
-			SwingUtilities.invokeLater(new Runnable() {
+		final String[] myargs = args;
+		
+		
+		SwingUtilities.invokeLater(new Runnable() {
 
-				@Override
-				public void run() {
-					new ParticlePickerJFrame();
-
+			@Override
+			public void run() {
+				ParticlePicker ppicker = null;
+				String selfile = myargs[0];
+				String outputdir = myargs[1];
+				FamilyState mode = FamilyState.getFamilyState(myargs[2]);
+		
+				if(mode == FamilyState.Manual)
+					ppicker = new ManualParticlePicker(selfile, outputdir, mode);
+				
+				if (mode == FamilyState.Supervised) {
+					int threads = Integer.parseInt(myargs[3]);
+					boolean fastmode = Boolean.parseBoolean(myargs[4]);
+					boolean incore = Boolean.parseBoolean(myargs[5]);
+					ppicker = new SupervisedParticlePicker(selfile, outputdir, threads, fastmode, incore);
 				}
-			});
-		} else {
-			int threads = Integer.parseInt(args[2]);
-			boolean fastMode = Boolean.parseBoolean(args[3]);
-			boolean incore = Boolean.parseBoolean(args[4]);
-			ParticlePicker.setThreads(threads);
-			ParticlePicker.setFastMode(fastMode);
-			ParticlePicker.setIncore(incore);
-			ParticlePicker.setIsAuto(true);
-			SwingUtilities.invokeLater(new Runnable() {
-
-				@Override
-				public void run() {
-					new ParticlePickerJFrame();
-
+				
+				
+				else if(mode == FamilyState.Review)
+				{
+					String reviewfile = myargs[3];
+					ppicker = new ReviewParticlePicker(selfile, outputdir, reviewfile);
 				}
-			});
-		}
+				new ParticlePickerJFrame(ppicker);
 
+			}
+		});
 	}
 
 }

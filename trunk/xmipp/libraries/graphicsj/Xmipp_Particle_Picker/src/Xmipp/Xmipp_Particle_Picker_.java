@@ -16,7 +16,7 @@ public class Xmipp_Particle_Picker_ implements PlugIn {
 				@Override
 				public void run() {
 					try {
-					ParticlePickerJFrame frame = new ParticlePickerJFrame();
+					//ParticlePickerJFrame frame = new ParticlePickerJFrame();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

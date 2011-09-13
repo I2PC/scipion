@@ -1,4 +1,5 @@
 package model;
+
 import java.awt.Color;
 import java.io.File;
 import java.lang.reflect.Field;
@@ -46,10 +47,10 @@ public class Family {
 	
 	public Family(String name, Color color, int size)
 	{
-		this(name, color, size, FamilyState.Manual);
+		this(name, color, size, FamilyState.Manual, null);
 	}
 	
-	public Family(String name, Color color, int size, FamilyState state)
+	public Family(String name, Color color, int size, FamilyState state, ParticlePicker ppicker)
 	{
 		if(size < 0 || size > sizemax)
 			throw new IllegalArgumentException(String.format("Size should be between 0 and %s, %s not allowed", sizemax, size));
@@ -58,26 +59,15 @@ public class Family {
 		this.name = name;
 		this.color = color;
 		this.size = size;
-		if(state == FamilyState.Supervised)
-			if(!new File(getOTrainingFilename()).exists())
-				throw new IllegalArgumentException(String.format("Training file does not exist. Family can not be in %s mode", state));
 		this.state = state;
 	}
 	
-	public String getOTrainingFilename()
-	{
-		return ParticlePicker.getOutputPath(String.format("%s_%s", name, ParticlePicker.getTrainingFilenameGeneric()));
-	}
-	
-	public String getOTrainingMaskFilename()
-	{
-		return ParticlePicker.getOutputPath(String.format("%s_%s", name, ParticlePicker.getTrainingMaskFilenameGeneric()));
-	}
+
 	
 	
 	public Family(String name, Color color)
 	{
-		this(name, color, getDefaultSize(), FamilyState.Manual);
+		this(name, color, getDefaultSize(), FamilyState.Manual, null);
 	}
 	
 	
@@ -85,35 +75,36 @@ public class Family {
 	{
 		return state;
 	}
+
 	
-	public String getOutputRoot()
+	public void goToNextStep(ParticlePicker ppicker)
 	{
-		return ParticlePicker.getOutputPath(name);
-	}
-	
-	public void goToNextStep()
-	{
-		validateNextStep();
+		validateNextStep(ppicker);
 		this.state = ParticlePicker.nextStep(state);
 	}
 	
-	
-	
-	public void validateNextStep()
+	public void goToPreviousStep()
 	{
-		int min = ParticlePicker.getMinForTraining();
+		this.state = ParticlePicker.previousStep(state);
+	}
+	
+	
+	
+	public void validateNextStep(ParticlePicker ppicker)
+	{
+		int min = SupervisedParticlePicker.getMinForTraining();
 		FamilyState next = ParticlePicker.nextStep(state);
 		if(next == FamilyState.Supervised && particles < min)
 			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", min, FamilyState.Supervised));
-		if(!ParticlePicker.getInstance().hasEmptyMicrographs(this))
+		if(!ppicker.hasEmptyMicrographs(this) && next != FamilyState.Review)
 			throw new IllegalArgumentException(String.format("There are no available micrographs for %s step", FamilyState.Supervised));
 		
 	}
 	
-	public static String getOFilename()
-	{
-		return ParticlePicker.getOutputPath("families.xmd");
-	}
+//	public static String getOFilename()
+//	{
+//		return ParticlePicker.getInstance().getOutputPath("families.xmd");
+//	}
 	
 	public int getSize() {
 		return size;
@@ -180,5 +171,11 @@ public class Family {
 	public static int getDefaultSize()
 	{
 		return 100;
+	}
+
+
+	public void setReviewState() {
+		state = FamilyState.Review;
+		
 	}
 }

@@ -29,8 +29,6 @@ public class Particle implements Comparable<Particle>{
 	}
 	
 	
-
-	
 	public Micrograph getMicrograph() {
 		return micrograph;
 	}

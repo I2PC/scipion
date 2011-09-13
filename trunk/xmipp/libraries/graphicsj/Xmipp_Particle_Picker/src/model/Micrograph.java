@@ -15,37 +15,37 @@ public class Micrograph {
 	private String filename;
 	private String name;
 	private ImagePlus image;
-	private String outputfname;
+	private String outputfilename;
 	private static String ext = ".pos";
 	private String ctf;
 	private ImageIcon ctficon;
-	private String aoutputfname;
 	private boolean autopicking = false;
 	private List<MicrographFamilyData> mfdatas;
+	private String autofilename;
 	
+	public Micrograph(String filename, String ctf, List<Family> families, FamilyState mode) {
+		this(filename, ctf, families, new ArrayList<MicrographFamilyData>(), mode);
+	}
 	
-	
-	
-	public Micrograph(String filename, String ctf) {
+
+	public Micrograph(String filename, String ctf, List<Family> families, List<MicrographFamilyData> mfd, FamilyState mode) {
+		
 		this.filename = filename;
 		if(!new File(filename).exists())
 			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("file", filename));
 		this.name = getName(filename);
-		mfdatas = new ArrayList<MicrographFamilyData>();
-		this.outputfname = ParticlePicker.getOutputPath(name + ext);
-		this.aoutputfname = ParticlePicker.getOutputPath(name + "_auto" + ext);
 		this.ctf = ctf;
+		mfdatas = mfd;
+		this.outputfilename = name + ext;
+		autofilename = name + "_auto" + ext;
+		MicrographFamilyState state = (mode == FamilyState.Review)? MicrographFamilyState.Review : MicrographFamilyState.Available;
+		for(Family f: families)
+			mfdatas.add(new MicrographFamilyData(this, f, state));
+
 	}
 	
 
-	public Micrograph(String filename, String ctf, List<MicrographFamilyData> mfd) {
-		this.filename = filename;
-		this.name = getName(filename);
-		mfdatas = mfd;
-		this.outputfname = ParticlePicker.getOutputPath(name + ext);
-		this.aoutputfname = ParticlePicker.getOutputPath(name + "_auto" + ext);
-		this.ctf = ctf;
-	}
+	
 	
 	void setFamiliesState(List<MicrographFamilyData> mfdatas)
 	{
@@ -71,20 +71,19 @@ public class Micrograph {
 		return  tokens[tokens.length - 2];
 	}
 	
-	public static String getIFilename()
+
+	
+	public String getAutoFilename()
 	{
-		return ParticlePicker.getMicrographsSelFile();
+		return autofilename;
 	}
 	
 	public String getOFilename()
 	{
-		return outputfname;
+		return outputfilename;
 	}
 	
-	public String getAutoOFilename()
-	{
-		return aoutputfname;
-	}
+	
 	
 	public ImagePlus getImage()
 	{
@@ -114,10 +113,6 @@ public class Micrograph {
 		return ctficon;
 	}
 	
-	public String getOutputRoot()
-	{
-		return ParticlePicker.getOutputPath(name);
-	}
 	
 	public String getFilename() {
 		return filename;
@@ -163,9 +158,7 @@ public class Micrograph {
 		for(MicrographFamilyData fp: mfdatas)
 			if(f.equals(fp.getFamily()))
 				return fp;
-		MicrographFamilyData mfd = new MicrographFamilyData(this, f); 
-		mfdatas.add(mfd);
-		return mfd;
+		return null;
 	}
 
 	public void addManualParticle(Particle p)
