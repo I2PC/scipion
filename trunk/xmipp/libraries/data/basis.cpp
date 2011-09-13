@@ -25,6 +25,11 @@
 
 #include "basis.h"
 
+Basis::Basis()
+{
+    set_default();
+}
+
 // Set default -------------------------------------------------------------
 void Basis::set_default()
 {
@@ -38,7 +43,7 @@ void Basis::set_default()
 }
 
 // Basis name --------------------------------------------------------------
-std::string Basis::basisName() const
+String Basis::basisName() const
 {
     switch (type)
     {
@@ -53,53 +58,6 @@ std::string Basis::basisName() const
         break;
     }
 }
-
-// Read params -------------------------------------------------------------
-#define GET_PARAM_WITH_DEF(flag,default_value) \
-    getParameter(argc,argv,"-"flag,default_value)
-#define CHECK_PARAM(flag) \
-    checkParameter(argc,argv,"-"flag)
-
-#define GET_BASIS_PARAMS \
-    blob.radius        = textToFloat(GET_PARAM_WITH_DEF("r",         "2"         )); \
-    blob.order         = textToInteger(GET_PARAM_WITH_DEF("m",         "2"         )); \
-    blob.alpha         = textToFloat(GET_PARAM_WITH_DEF("a",         "10.4"      )); \
-    if (CHECK_PARAM("voxels")) type=voxels; \
-    if (CHECK_PARAM("splines")) type=splines; \
-    if (CHECK_PARAM("small_blobs")) { \
-        blob.alpha=10.4; blob.radius=2; blob.order=2; \
-    } \
-    if (CHECK_PARAM("big_blobs")) { \
-        blob.alpha=3.6; blob.radius=2; blob.order=2; \
-    } \
-    if (CHECK_PARAM("visual_blobs")) { \
-        blob.alpha=13.3633; blob.radius=2.4; blob.order=2; \
-    }
-
-void Basis::read(int argc, char **argv)
-{
-    GET_BASIS_PARAMS;
-}
-#undef GET_PARAM_WITH_DEF
-#undef CHECK_PARAM
-
-#define GET_PARAM_WITH_DEF(flag,default_value) \
-    getParameter(fh,flag,0,default_value)
-#define CHECK_PARAM(flag) \
-    checkParameter(fh,flag)
-void Basis::read(const FileName &fn)
-{
-    FILE *fh;
-    if ((fh = fopen(fn.c_str(), "r")) == NULL)
-        REPORT_ERROR(ERR_IO_NOTOPEN,
-                     (std::string)"Basis::read: There is a problem "
-                     "opening the file " + fn);
-
-    GET_BASIS_PARAMS;
-    fclose(fh);
-}
-
-
 
 void Basis::defineParams(XmippProgram * program, const char* prefix, const char* comment)
 {

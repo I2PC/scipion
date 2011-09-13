@@ -65,16 +65,13 @@ public:
     Matrix2D<double> *D;
 public:
     /// Empty constructor. By default, blobs
-    Basis()
-    {
-        set_default();
-    }
+    Basis();
 
     /// Default values
     void set_default();
 
     /// Basis name
-    std::string basisName() const;
+    String basisName() const;
 
     /** Read parameters from a command line.
         This function reads the parameters from a command line
@@ -228,5 +225,9 @@ public:
     /// Sum of the basis on the grid points
     double          sum_on_grid;
 };
+
+
+
+
 //@}
 #endif
