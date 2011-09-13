@@ -275,7 +275,7 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
     {
         for (int i=0; i<NPCA; i++)
             for (int j=0; j<NPCA; j++)
-                cov(i,j)+=proj(i,ii)*proj(j,ii);
+                MAT_ELEM(cov,i,j)+=MAT_ELEM(proj,i,ii)*MAT_ELEM(proj,j,ii);
     }
     cov/=N;
 #ifdef DEBUG
