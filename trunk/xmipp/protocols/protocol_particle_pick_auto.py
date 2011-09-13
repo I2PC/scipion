@@ -49,7 +49,6 @@ class ProtParticlePickingAuto(XmippProtocol):
                                source=os.path.join(self.pickingDir,family+"_mask.xmp"),dest=modelRoot+"_mask.xmp")
 
         idMPI=self.Db.insertStep('runStepGapsMpi',passDb=True, script=self.scriptName, NumberOfMpi=self.NumberOfMpi)
-        verifyFiles=[]        
         mDmicrographs=MetaData(self.micrographSelfile)
         for familyIdx in range(len(self.familiesForAuto)):
             family=self.familiesForAuto[familyIdx]
@@ -74,15 +73,12 @@ class ProtParticlePickingAuto(XmippProtocol):
                                 proceed=False
                                 break
                 if proceed:
-                    fnAuto=self.workingDirPath(micrographName+"_auto.pos")
-                    fast=True # Coger mejor
-                    incore=True
-                    id=self.Db.insertStep('autoPick',verifyfiles=[fnAuto],parent_step_id=XmippProjectDb.FIRST_STEP,
+                    script=getScriptFromRunName(self.PickingRun)
+                    protPicking=getProtocolFromModule(script, self.project)
+                    id=self.Db.insertStep('autoPick',parent_step_id=XmippProjectDb.FIRST_STEP,
                                           execution_mode=SqliteDb.EXEC_GAP,WorkingDir=self.WorkingDir,
                                           ModelRoot=modelRoot,MicrographFullPath=micrographFullPath,MicrographName=micrographName,
-                                          ParticleSize=particleSize,Fast=fast,InCore=incore)
-                    verifyFiles.append(fnAuto)
-        self.Db.updateVerifyFiles(idMPI,verifyFiles)
+                                          ParticleSize=particleSize,Fast=protPicking.Fast,InCore=protPicking.InCore)
         parent_id=idMPI
         for familyIdx in range(len(self.familiesForAuto)):
             family=self.familiesForAuto[familyIdx]
