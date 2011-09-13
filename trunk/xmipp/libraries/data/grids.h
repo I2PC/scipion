@@ -1383,7 +1383,7 @@ public:
             while (sli < ZSIZE(V()))
             {
                 int pos, ii, jj;           // Position inside the control slice
-                int k, i, j;               // Auxiliar counters
+                int k, i, j;               // Auxiliary counters
                 int            Zdim, Ydim, Xdim;
                 int            Zinit, Yinit, Xinit;
 
