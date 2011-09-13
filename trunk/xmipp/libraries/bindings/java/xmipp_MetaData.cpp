@@ -5,6 +5,7 @@
 #include <data/metadata.h>
 #include <data/metadata_label.h>
 #include <data/metadata_extension.h>
+#include <classification/analyze_cluster.h>
 #include "xmipp_InternalData.h"
 
 int debug=0;
@@ -893,6 +894,39 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_enableDebug
   (JNIEnv *, jobject){
 	extern int debug;
 	debug=1;
+}
+
+JNIEXPORT void JNICALL Java_xmipp_MetaData_getPCAbasis
+(JNIEnv *env, jobject jmetadata, jobject jbasis) {
+	std::string msg = "";
+	MetaData * MDin = GET_INTERNAL_METADATA(jmetadata);
+	Image<double> *basis= GET_INTERNAL_IMAGE(jbasis);
+
+	if (MDin != NULL && basis!=NULL) {
+		try {
+		    ProgAnalyzeCluster program;
+		    program.NPCA=4;
+		    program.Niter=10;
+		    program.dontMask=false;
+		    program.SFin=*MDin;
+		    program.produceSideInfo();
+		    program.pcaAnalyzer.evaluateZScore(program.NPCA, program.Niter);
+	        program.produceBasis((*basis)());
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Metadata is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty()) {
+		handleXmippException(env, msg);
+	}
 }
 
 JNIEXPORT void JNICALL Java_xmipp_MetaData_computeFourierStatistics
