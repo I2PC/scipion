@@ -19,7 +19,7 @@
 /** Get the image statistics of a metadata.
  * Note that the mean and stddev are images, not values.*/
 void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, double& _min,
-                    double& _max, bool apply_geo);
+                   double& _max, bool apply_geo);
 
 /** Get the average of a Metadata applying the header.
  * The MD is not cleaned from disabled images (this option makes the call faster).
@@ -29,7 +29,11 @@ void getAverageApplyGeo(const MetaData &MD, MultidimArray<double> & _ave);
 /** Get the image statistics of a metadata.
  */
 void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
-                    double& _max, bool apply_geo);
+                   double& _max, bool apply_geo);
+
+/** Get Fourier statistics */
+void getFourierStatistics(MetaData &MDin, double sam, MetaData &Mdout,
+                          bool do_dpr, double max_sam);
 
 /** Get image size
  */
@@ -61,7 +65,7 @@ void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD);
  *  by processing the original images. The substitution is performed in all blocks.
  */
 void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const FileName &fnOut,
-		MDLabel label, bool skipFirstBlock);
+                              MDLabel label, bool skipFirstBlock);
 //@}
 
 #endif /* METADATA_EXTENSION_H_ */

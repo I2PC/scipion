@@ -168,23 +168,11 @@ public:
 
     bool process_sel()
     {
-        MetaData     SFaux,SF, SF1, SF2;
-        std::vector<MetaData> vMD;
-        Image<double>       I1, I2, Id;
-        double      dummy;
-        MultidimArray<double> freq, frc, dpr, frc_noise, ssnr, error_l2, pixel;
-
-        SFaux.read(fn_sel);
-        SF.randomize(SFaux);
-        SF.split(2,vMD,MDL_IMAGE);
-        SF1 = vMD.at(0);
-        SF2 = vMD.at(1);
-        getStatistics(SF1,I1,Id,dummy,dummy,true);
-        getStatistics(SF2,I2,Id,dummy,dummy,true);
-        I1().setXmippOrigin();
-        I2().setXmippOrigin();
-        frc_dpr(I1(), I2(), sam, freq, frc, frc_noise, dpr,error_l2,do_dpr);
-        writeFiles((fn_root.empty())?fn_sel:fn_root, freq, frc, frc_noise, dpr,error_l2,max_sam,do_dpr);
+    	MetaData MD(fn_sel), MDout;
+        MultidimArray<double> freq, frc, dpr, frc_noise, ssnr, error_l2;
+    	getFourierStatistics(MD, sam, MDout, do_dpr, max_sam);
+    	FileName fnRoot=(fn_root.empty())?fn_sel:fn_root;
+    	MDout.write(fnRoot+".frc");
     }
 
     void run()

@@ -291,6 +291,14 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_addLabel
 JNIEXPORT void JNICALL Java_xmipp_MetaData_enableDebug
   (JNIEnv *, jobject);
 
+/*
+ * Class:     xmipp_MetaData
+ * Method:    computeFourierStatistics
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_xmipp_MetaData_computeFourierStatistics
+(JNIEnv *env, jobject jobj, jstring filename);
+
 #ifdef __cplusplus
 }
 #endif

@@ -894,3 +894,29 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_enableDebug
 	extern int debug;
 	debug=1;
 }
+
+JNIEXPORT void JNICALL Java_xmipp_MetaData_computeFourierStatistics
+(JNIEnv *env, jobject jobj, jstring filename) {
+	std::string msg = "";
+	MetaData * MDout = GET_INTERNAL_METADATA(jobj);
+
+	if (MDout != NULL) {
+		try {
+			MetaData MDin(env->GetStringUTFChars(filename, false));
+	    	getFourierStatistics(MDin, 1, *MDout, true, 2);
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Metadata is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+}

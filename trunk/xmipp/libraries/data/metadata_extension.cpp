@@ -5,6 +5,7 @@
  *      Author: roberto
  */
 #include "metadata_extension.h"
+#include "xmipp_fftw.h"
 
 #ifndef __linux__
 #define MAXDOUBLE __DBL_MAX__
@@ -144,6 +145,50 @@ void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
 
     _ave /= n;
     _sd /= n;
+}
+
+/* Get Fourier statistics ------------------------------------------------- */
+void getFourierStatistics(MetaData &MDin, double sam, MetaData &MDout,
+		                  bool do_dpr, double max_sam)
+{
+    MetaData MDaux;
+    std::vector<MetaData> vMD;
+    MDaux.randomize(MDin);
+    MDaux.split(2,vMD,MDL_IMAGE);
+    MetaData &MD1 = vMD.at(0);
+    MetaData &MD2 = vMD.at(1);
+
+    Image<double> I1, I2, Id;
+    double dummy;
+    getStatistics(MD1,I1,Id,dummy,dummy,true);
+    getStatistics(MD2,I2,Id,dummy,dummy,true);
+    I1().setXmippOrigin();
+    I2().setXmippOrigin();
+
+    MultidimArray<double> freq, frc, dpr, frc_noise, ssnr, error_l2;
+    frc_dpr(I1(), I2(), sam, freq, frc, frc_noise, dpr,error_l2,do_dpr);
+
+    MDout.clear();
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(freq)
+    {
+        if (i>0)
+        {
+            size_t id=MDout.addObject();
+            if(max_sam >=0 && ((1./dAi(freq, i))<max_sam) )
+            {
+                if(do_dpr)
+                    dAi(dpr, i)=0.;
+                dAi(frc, i)=0.;
+            }
+            MDout.setValue(MDL_RESOLUTION_FREQ,dAi(freq, i),id);
+            MDout.setValue(MDL_RESOLUTION_FRC,dAi(frc, i),id);
+            if(do_dpr)
+                MDout.setValue(MDL_RESOLUTION_DPR,dAi(dpr, i),id);
+            MDout.setValue(MDL_RESOLUTION_ERRORL2,dAi(error_l2, i),id);
+            MDout.setValue(MDL_RESOLUTION_FRCRANDOMNOISE,dAi(frc_noise, i),id);
+            MDout.setValue(MDL_RESOLUTION_FREQREAL,1./dAi(freq, i),id);
+        }
+    }
 }
 
 void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
