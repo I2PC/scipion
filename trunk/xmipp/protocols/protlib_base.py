@@ -213,7 +213,7 @@ class XmippProtocol(object):
         self.project = project
         self.Import = '' # this can be used by database for import modules
         self.WorkingDir = project.getWorkingDir(protocolName, self.RunName)
-        self.TmpDir = self.workingDirPath('tmp')
+        self.TmpDir = os.path.join(self.WorkingDir, 'tmp')
         self.projectDir = project.projectDir  
         #Setup the Log for the Protocol
         self.LogDir = project.logsDir
@@ -230,7 +230,7 @@ class XmippProtocol(object):
         #self.project = project.getId(launchDict['Projection Matching'],runName,)
         
     def workingDirPath(self, path):
-        self.workingDirPath( path)
+        os.path.join(self.WorkingDir, path)
 
     def getRunState(self):
         return self.project.projectDb.getRunStateByName(self.Name, self.RunName)
