@@ -35,7 +35,7 @@ from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, conf
 from config_protocols import protDict, sections
 from config_protocols import FontName, FontSize
 from protlib_base import getProtocolFromModule, XmippProject,\
-    getWorkingDirFromRunName, getExtRunName
+    getWorkingDirFromRunName, getExtendedRunName
 from protlib_utils import reportError, runImageJPlugin, Process, ProcessManager
 from protlib_sql import SqliteDb, ProgramDb
 
@@ -283,7 +283,7 @@ class XmippProjectGUI():
         root.mainloop() 
 
     def launchRunJobMonitorGUI(self, run):
-        runName = getExtRunName(run)
+        runName = getExtendedRunName(run)
         pm = self.pm
         text = run['script']
         root = tk.Toplevel()
@@ -367,7 +367,7 @@ class XmippProjectGUI():
                         self.project.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
                         stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
                         
-                self.lbHist.insert(tk.END, (getExtRunName(run), stateStr, run['last_modified']))   
+                self.lbHist.insert(tk.END, (getExtendedRunName(run), stateStr, run['last_modified']))   
             self.lbHist.selection_set(index)
             #Generate an automatic refresh after x ms, with x been 1, 2, 4 or 8 ms 
             self.historyRefresh = self.lbHist.after(self.historyRefreshRate*1000, self.updateRunHistory, protGroup, False)
@@ -429,7 +429,7 @@ class XmippProjectGUI():
             else:
                 summary = "This protocol run has not been executed yet"
                 showButtons = False
-            labels = [('Run', getExtRunName(run)),
+            labels = [('Run', getExtendedRunName(run)),
                       ('\nCreated', run['init']),('   Modified', run['last_modified']), 
                       ('\nScript ', run['script']),('\nDirectory', prot.WorkingDir),
                       ('\nSummary', "\n"+summary)      ]
