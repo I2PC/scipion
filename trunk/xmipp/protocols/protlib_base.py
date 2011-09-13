@@ -389,26 +389,40 @@ def getProtocolFromModule(script, project):
             return v(script, project)
     reportError("Can load protocol from " + script)
 
-''' Return the extended run name, ie: protocol_runName '''
-def getExtRunName(run):
+def getExtendedRunName(run):
+    ''' Return the extended run name, ie: protocol_runName '''
     return "%s_%s" % (run['protocol_name'], run['run_name'])
-    
-def getWorkingDirFromRunName(extendedRunName):
-    # The extended run name has the name of the protocol in front
+
+def splitExtendedRunName(extendedRunName):
+    ''' Take an extended runname of the form protocol_runName and returns (protocol,runName).
+    If no protocol can be matched, then None is returned '''
     from config_protocols import protDict
-    dirName=""
+    runName=""
+    protocolName=""
     bestLength=0
     for k in protDict.keys():
         if extendedRunName.startswith(k):
             len_k=len(k)
             if len_k>bestLength:
                 runName=extendedRunName.replace(k+"_","")
-                dirName=os.path.join(protDict[k].dir,runName)
+                protocolName=k
                 bestLength=len_k
     if bestLength==0:
         return None
     else:
-        return dirName
+        return (protocolName,runName)
+
+def getWorkingDirFromRunName(extendedRunName):
+    # The extended run name has the name of the protocol in front
+    tuple=splitExtendedRunName(extendedRunName)
+    if tuple is None:
+        return None
+    protocolName=tuple[0]
+    runName=tuple[1]
+    return os.path.join(protDict[protocolName].dir,runName)
+
+def getScriptFromRunName(extendedRunName):
+    return os.path.join(projectDefaults['RunsDir'],extendedRunName+".py")
 
 def protocolMain(ProtocolClass, script=None):
     gui = False
