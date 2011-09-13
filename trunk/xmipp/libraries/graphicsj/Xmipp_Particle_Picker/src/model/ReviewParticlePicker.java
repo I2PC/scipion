@@ -1,5 +1,6 @@
 package model;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -17,8 +18,13 @@ public class ReviewParticlePicker extends ParticlePicker {
 		return reviewfile;
 	}
 	
+	public Family getReviewFamily() {
+		return reviewfamily;
+	}
+	
 
-	public ReviewParticlePicker(String selfile, String outputdir, String reviewfile) {
+	public ReviewParticlePicker(String selfile, String outputdir, String reviewfile) 
+	{
 		super(selfile, outputdir, FamilyState.Review);
 		if (!new File(reviewfile).exists())
 			throw new IllegalArgumentException(
@@ -30,7 +36,10 @@ public class ReviewParticlePicker extends ParticlePicker {
 		if (reviewfamily == null)
 			throw new IllegalArgumentException(
 					Constants.getNoSuchFieldValueMsg("family", familyname));
+		
 		loadMicrographs();
+		families.clear();
+		families.add(reviewfamily);
 	}
 	
 	@Override
