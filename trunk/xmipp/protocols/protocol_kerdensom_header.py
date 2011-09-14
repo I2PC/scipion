@@ -93,6 +93,11 @@ queue system
 """
 QueueHours = 96
 
+# {hidden} Show expert options
+"""If True, expert options will be displayed
+"""
+ShowExpertOptions = False
+
 #------------------------------------------------------------------------------------------------
 # {end_of_header} do not change anything bellow this line unless you know what you are doing
 #-----------------------------------------------------------------------------
