@@ -37,7 +37,7 @@
  * - Why "package" may be used?
  * Because then the plugin is shown on its own submenu in ImageJ
  */
-
+// TODO: start the plugin from the command line as xmipptomo
 // TODO: Project management. Nodes of graph are the results (Series, alignment Parameters, Landmarks, Volumes...)
 // Transitions are actions (crop, align...)
 // Now all the results are in disk, so it goes like this:
@@ -48,7 +48,6 @@
 // TODO: organize a directory tree that replicates the graph structure (each subdirectory stores the results of 1 action)
 // TODO: visualization - add a "Thumbnail" checkbox. When enabled, display the scaled series from memory (faster).
 // When disabled, display the original from disk (slower)
-// TODO: Project management - workflow import/export to disk (SQLite format?)
 // TODO: Project management - action to delete the results file of a node (to save disk space)
 // Objects of same type (for example, Landmarks) share the same Color.
 // Compact view: display nodes as Type-Sequence # (action). For example:
@@ -59,6 +58,7 @@
 // notifies the view of a change)
 // - TODO: basic cache: just load every image (double) requested
 // - TODO -CURRENT-: tests to verify the proper path is returned from StackModel (after running loadEM). Current views disabled to simplify
+// - TODO: write each step to disk so there is a file from which to load on every current step
 /**
  * TODO: changes in MVC design
  * - WindowModel: not needed (no relevant window data other than menus)

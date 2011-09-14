@@ -26,7 +26,7 @@
  * - Why XmippTomoCommand?
  * To provide a central repository of all the app commands 
  * - Alternatives:
- * A configuration file parsed at runtime before GUI construction
+ * A configuration file (or database) parsed at runtime before GUI construction
  */
 
 
@@ -53,7 +53,8 @@ public class XmippTomoCommands {
 	CROP = new Command("proc.crop","Crop","crop",false,null),
 	BANDPASS = new Command("proc.bandpass","Bandpass Filter","bandpass",false,null),
 	MEASURE = new Command("controls.measure","Measure","measure",false,null),
-	APPLY = new Command("proc.apply","Apply&Save","apply",false,null),
+	// Apply now does not make sense, every step is written to disk
+	// APPLY = new Command("proc.apply","Apply&Save","apply",false,null),
 	ALIGN_AUTO = new Command("align.auto","Auto","alignAuto",false,null),
 	ALIGN_MANUAL = new Command("align.manual","Manual","alignManual",false,null),
 	ALIGN_CORRELATION = new Command("align.correlation","Quick","alignCorrelation",false,null),

@@ -30,6 +30,25 @@ import javax.swing.text.PlainDocument;
  * - Why?
  * A simple data structure to save user action's info (for the user action workflow)
  */
+/* TODO: map user actions to a SQLite database 
+ * Define the parameters each action may use, and when they may or may not use them
+ * (for instance, some operations produce volumes, other need alignedstacks as input...).
+ * In short, define the rules of (in)compatibility between parameters and actions/steps
+ *  Ana action can have one or many inputs. By now an action has only one output
+ * Then, once all the posibilities are defined, a user can build a specific workflow, choosing among the steps and setting 
+ * the parameters
+ * The database may also hold the user interface definition
+ * 
+ * STATIC TEMPLATES (possibilities definition, always the same for every project)
+ * Action: id, name, label, method, iconName, enabled (at startup), panel (where to place the button), panelOrder
+ * Parameter: paramId, name, type {Volume, Stack, AlignedStack, Float, String}
+ * ActionParameters: actionId, paramId, defaultParamValue, paramType{input/output}
+ * 
+ * DYNAMIC STEPS (workflow, changes from project to project)
+ * StepParameters: wsId, paramId, paramValue
+ * Step: wsId, order, stepId, workingDir (each project has its working dir where the workflow database
+ * is stored as .project.sqlite, and all the files are stored too there), comments 
+ */
 public class UserAction {
 	public static int ROOT_WINDOWID=0;
 	private static String WORKFLOW_ROOT_NAME="Start";

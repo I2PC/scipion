@@ -32,8 +32,7 @@
 import javax.swing.ImageIcon;
 
 public class Command {
-	// TODO: get out this static commands to a better place (XmippTomoCommands?)
-	
+
 	/* Complex commands may transit through some states.
 	 * For example, loading a file takes time - the command may be canceled.
 	 * Furthermore, the results of other commands may change depending upon the load command is still running,

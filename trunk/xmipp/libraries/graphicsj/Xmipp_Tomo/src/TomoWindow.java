@@ -142,7 +142,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(XmippTomoCommands.BANDPASS);
 			add(XmippTomoCommands.HISTOGRAM_EQUALIZATION);
 			add(XmippTomoCommands.CROP);
-			add(XmippTomoCommands.APPLY);
+			// add(XmippTomoCommands.APPLY);
 		}
 	};
 
@@ -178,8 +178,9 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(XmippTomoCommands.HISTOGRAM_EQUALIZATION);
 			add(XmippTomoCommands.CROP);
 			//add(Command.HOTSPOT_REMOVAL);
-			add(XmippTomoCommands.APPLY);
-			add(XmippTomoCommands.CONVERT);
+			// add(XmippTomoCommands.APPLY);
+			// TODO: convert needs to be adapted to the new image-by-image I/O model
+			// add(XmippTomoCommands.CONVERT);
 			add(XmippTomoCommands.PRINT_WORKFLOW);
 			add(XmippTomoCommands.CURRENT_PROJECTION_INFO);
 			add(XmippTomoCommands.MEASURE);
@@ -926,6 +927,9 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return cursorValue.substring(0, limit);
 	}
 
+	
+	// TODO: now that the models changed, adapt getTitle so it shows indeed the filename and the size 
+	// (instead of "ImageDouble"
 	public String getTitle() {
 		String title = TITLE;
 		if (getModel() != null)

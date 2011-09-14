@@ -56,6 +56,7 @@ public class TomoImageCanvas extends ImageCanvas {
 	 * Overlay a cross (X) in the canvas
 	 * @param g
 	 */
+	// TODO: keep the ROI displayed in the StackViewer when the user changes the slice (for instance, clicking "Play")
 	private void drawDiscardedMark(Graphics g){
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setColor(Color.RED);

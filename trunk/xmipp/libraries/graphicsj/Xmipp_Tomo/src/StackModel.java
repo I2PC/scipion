@@ -73,7 +73,6 @@ public class StackModel extends AbstractModel{
 		if(filePath == null)
 			return null;
 		
-		Logger.debug("getCurrentImage" + filePath);
 		ImageDouble image = getCache().get(filePath);
 		if(image == null){
 			// cache miss
@@ -157,7 +156,13 @@ public class StackModel extends AbstractModel{
 	 * @return 1..N, cyclic (next to last is 1)
 	 */
 	public int getNextProjection(){
-		return (getCurrentProjectionNumber() % getNumberOfProjections()) + 1;
+		int ret= getCurrentProjectionNumber();
+		try{
+			ret= (getCurrentProjectionNumber() % getNumberOfProjections()) + 1;
+		}catch (ArithmeticException ex){
+			Logger.debug("Error: ", ex);
+		}
+		return ret;
 	}
 	
 }

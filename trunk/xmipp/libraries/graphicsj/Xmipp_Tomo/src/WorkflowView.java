@@ -54,6 +54,9 @@ import javax.swing.tree.*;
 
 // TODO: change default icons - actions are not folders nor files
 // TODO: change details text field appeareance so it does not promote changing its contents
+// TODO: simplify user's life: the workflow is autosaved every time a step is introduced or changed, and is autoloaded
+// (or created if there is none yet) from the current dir. The user does not need to worry about loading/saving
+// workflows, and hence does not need import/export neither
 public class WorkflowView extends JPanel implements TreeSelectionListener{
 	public static int PREFERED_WIDTH = 350;
 	private static Dimension BUTTONS_PANEL_PREF_SIZE = new Dimension(PREFERED_WIDTH,150),
@@ -107,6 +110,7 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 		formPanel=new Form("form",2);
 		add(formPanel,BorderLayout.SOUTH);
 		Action a = new Action(controller, new Command("workflow.print","Print Workflow","printWorkflow",true,null));
+		// TODO: discard should delete the selected node and its children, with all the corresponding files
 		Action b = new Action(controller, new Command("workflow.discardop","Discard Operation","discardOperation",true,null));      
 		Action c = new Action(controller, new Command("workflow.load","Load Workflow","loadWorkflow",false,null));
 		Action d = new Action(controller, new Command("workflow.save","Save Workflow","saveWorkflow",false,null));

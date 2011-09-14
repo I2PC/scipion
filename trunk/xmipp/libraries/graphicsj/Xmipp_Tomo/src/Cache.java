@@ -51,6 +51,7 @@ public class Cache<K, T> extends LinkedHashMap<K, T> {
         if (object != null) {   // Object has been referenced, so place it at higher position.
             remove((K) key);
             put((K) key, (T) object);
+            Logger.debug("cache hit: " + key.toString());
         }
 
         return object;
