@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
 # Xmipp protocol for rotational spectra classification
 # using self-organizing maps

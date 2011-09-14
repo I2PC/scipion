@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
 # Protocol for Xmipp-based 2D alignment and classification,
 # using maximum-likelihood principles
@@ -21,10 +21,13 @@ class ProtML2D(XmippProtocol):
         self.fnIterRefs = self.workingDirPath('ml2d_iter_refs.xmd')
         
     def validate(self):
-        return []
-        #return ["Protocol not implemented yet..."]
+        errors = []
+        if self.DoCorrectAmplitudes and not os.path.exists(self.InCtfDatFile):
+            errors.append("Missing '%s' file for correcting amplitudes" % self.InCtfDatFile)
+        return errors
     
     def summary(self):
+        return []
         input = self.ImgMd
         lines = [('Input images            ', "%s (%u)" % (input, MetaData(input).size())),
                  ('Reference image', self.RefMd)]

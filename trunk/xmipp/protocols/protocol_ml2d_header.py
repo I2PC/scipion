@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
 # Protocol for Xmipp-based 2D alignment and classification,
 # using maximum-likelihood principles, according to:
@@ -72,7 +72,7 @@ DoMlf = False
 """
 DoCorrectAmplitudes = True
 
-# {file}{validate}(PathExists){condition}(DoCorrectAmplitudes) CTFdat file with the input images:
+# {file}{condition}(DoCorrectAmplitudes) CTFdat file with the input images:
 """ The names of both the images and the ctf-parameter files should be with absolute paths.
 """
 InCtfDatFile = "all_images.ctfdat"

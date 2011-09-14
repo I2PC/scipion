@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
 # Xmipp protocol for image classification using self-organizing maps
 #

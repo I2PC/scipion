@@ -1,4 +1,4 @@
-from pysqlite2 import dbapi2 as sqlite
+from sqlite3 import dbapi2 as sqlite
 import pickle
 import os, sys
 from config_protocols import projectDefaults

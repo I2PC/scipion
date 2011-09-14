@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
 # Protocol for Xmipp-based classification with KerDenSOM
 # Author: Carlos Oscar Sanchez Sorzano, September 2011

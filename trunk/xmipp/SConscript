@@ -13,7 +13,11 @@ ARPACKppDir = "external/arpack++-2.3"
 ARPACKppLibs = ['arpack++']
 SQliteDir = "external/sqlite-3.6.23"
 SQLiteLibs = ['sqlite3']
-PYSQliteDir = "external/pysqlite-2.6.3"
+
+#PYSQliteDir = "external/pysqlite-2.6.3"
+
+PythonDir = "external/Python-2.7.2"
+PythonLibs = []
 
 PluginLibs = {}
 PluginResources = {}
@@ -53,10 +57,13 @@ def SymLink(target, source, env):
     source = os.path.relpath(str(source[0]),os.path.split(link)[0])
     os.symlink(source, link)
 
-def AddProgramLink(target,source):
+def AddProgramLink(target, source, PrependXmipp=True):
     binprefix = os.path.join(env['prefix'], 'bin')
     bintarget = os.path.join(binprefix, env['prepend']+target)
-    binsource = os.path.join(binprefix, env['prepend']+source)
+    if PrependXmipp:
+        binsource = os.path.join(binprefix, env['prepend']+source)
+    else:
+        binsource = source
     command = env.Command(bintarget, binsource,  
         [Chmod('$SOURCE', 0755), SymLink])
     alias = env.Alias(target, command)
@@ -405,7 +412,9 @@ def AddExternalLibrary(libname, libs, libpath, suffix):
     for lib in libs:
         lib_name = lib + lib_ext
         target_libs.append(os.path.join(libpath, lib_name))
-        target_libs.append(os.path.join(libpath, lib + '.la'))
+        #FIXME: 
+        if libname != 'python':
+            target_libs.append(os.path.join(libpath, lib + '.la'))
         if not int(env['static']) and env['PLATFORM'] != 'darwin':
             target_libs.append(os.path.join(libpath, lib_name + suffix))
 
@@ -418,49 +427,95 @@ def AddExternalLibrary(libname, libs, libpath, suffix):
     env.Default(libAlias)
     return libInstall
 
-def AddSQLiteLibrary():
-    libInstall = AddExternalLibrary('sqlite', ['.libs/libsqlite3'], SQliteDir, '.0')
-    progName = os.path.join(SQliteDir, 'sqlite3')
-    Depends(progName, libInstall)
-    progXmippName = os.path.join(env['prefix'], 'bin', 'xmipp_sqlite3')
-    progInstall = env.InstallAs(progXmippName, progName)
-    progAlias = env.Alias('sqlite', progInstall)
-    env.Default(progAlias)
-    return progAlias
+def AddExternalLibraryAndBinary(libname, libs, libpath, suffix):
+    lib = AddExternalLibrary(libname, libs, libpath, suffix)
+    binName = os.path.join(libpath, libname)
+    bin = AddProgramLink(libname, binName, PrependXmipp=False)
+    Depends(bin, lib)
+    env.Default(bin)
+    return lib
 
-def AddPySqliteLibrary():
+#def AddSQLiteLibrary():
+#    libInstall = AddExternalLibrary('sqlite', ['.libs/libsqlite3'], SQliteDir, '.0')
+#    
+#    progName = os.path.join(SQliteDir, 'sqlite3')
+#    Depends(progName, libInstall)
+#    progXmippName = os.path.join(env['prefix'], 'bin', 'xmipp_sqlite3')
+#    progInstall = env.InstallAs(progXmippName, progName)
+#    progAlias = env.Alias('sqlite', progInstall)
+#    env.Default(progAlias)
+#    return progAlias
+#
+#def AddXmippPython():
+#    logFile = os.path.join("..", "..", "build", "python_make.log")
+#    pyExe = os.path.join(PythonDir, 'python')
+#    pySource = os.path.join(PythonDir, 'Python' )
+#    pyBin = env.Command(pyExe, Glob(pySource, "*.c", []),
+#                         'cd %s; make clean > /dev/null; make > %s;'
+#                         % (PythonDir, logFile))
+#    Depends(pyBin, sqlite)
+#    xmippPython = AddProgramLink('python', pyExe, PrependXmipp=False)
+#    env.Default(xmippPython)
+#    return xmippPython
+    
+
+#def AddPySqliteLibrary():
+#    libprefix = os.path.join(env['prefix'], 'lib')
+#    pysqlite2Target = libprefix + '/pysqlite2/'
+#    pysqlite2Build = env.Command(pysqlite2Target, PYSQliteDir, \
+#                          'cd  $SOURCE ; python ./setup.py build ' + \
+#			  ' ; python ./setup.py install --install-lib ' + libprefix + \
+#			  ' --install-data ' + libprefix + '/pysqlite2')
+#    Depends(pysqlite2Build, env.Alias('sqlite'))
+#    alias = env.Alias('pysqlite2', pysqlite2Target)
+#    env.Default(alias)
+
+def AddPythonModule(modname, moddir):
     libprefix = os.path.join(env['prefix'], 'lib')
-    pysqlite2Target = libprefix + '/pysqlite2/'
-    pysqlite2Build = env.Command(pysqlite2Target, PYSQliteDir, \
-                          'cd  $SOURCE ; python ./setup.py build ' + \
-			  ' ; python ./setup.py install --install-lib ' + libprefix + \
-			  ' --install-data ' + libprefix + '/pysqlite2')
-    Depends(pysqlite2Build, env.Alias('sqlite'))
-    alias = env.Alias('pysqlite2', pysqlite2Target)
+    modTarget = os.path.join(libprefix, modname)
+#    modBuild = env.Command(modTarget, moddir, \
+#                          'cd  $SOURCE ; xmipp_python ./setup.py build ' + \
+#              ' ; xmipp_python ./setup.py install --install-lib ' + libprefix + \
+#              ' --install-data $TARGET')
+    modBuild = env.Command(modTarget, moddir, \
+                          'cd  $SOURCE ; ../../%s ./setup.py install --prefix %s' % (PythonAbsPath, env['prefix']))
+    Depends(modBuild, env.Alias('python'))
+    alias = env.Alias(modname, modTarget)
     env.Default(alias)
+    return modBuild
 
 
 # --- Libraries
 
 # SQLite
-sqlite = AddSQLiteLibrary()
+#sqlite3 = AddExternalLibraryAndBinary('sqlite3', ['.libs/libsqlite3'], SQliteDir, '.0')
+#
+#
+#python = AddExternalLibraryAndBinary('python', ['libpython2.7'], PythonDir, '.1.0')
+#PythonAbsPath = os.path.join(PythonDir, 'python')
+##Compilation of python depends on sqlite3
+#Depends(python, sqlite3)
+
+numpy = AddPythonModule('numpy', 'external/numpy-1.6.1')
+matplotlib = AddPythonModule('matplotlib', 'external/matplotlib-1.0.1')
+Depends(matplotlib, numpy)
 
 # PYSQLITE
-PYSQliteDir = "external/pysqlite-2.6.3"
-AddPySqliteLibrary()
+#PYSQliteDir = "external/pysqlite-2.6.3"
+#AddPySqliteLibrary()
 
 # FFTW
-FFTWLibsPaths = ['.libs/libfftw3', 'threads/.libs/libfftw3_threads']
-fftw = AddExternalLibrary('fftw', FFTWLibsPaths, FFTWDir, '.3')
+#FFTWLibsPaths = ['.libs/libfftw3', 'threads/.libs/libfftw3_threads']
+#fftw = AddExternalLibrary('fftw', FFTWLibsPaths, FFTWDir, '.3')
 
 # TIFF
-TIFFLibsPaths = ['libtiff/.libs/libtiff']
-tiff = AddExternalLibrary('tiff', TIFFLibsPaths, TIFFDir, '.3')
+#TIFFLibsPaths = ['libtiff/.libs/libtiff']
+#tiff = AddExternalLibrary('tiff', TIFFLibsPaths, TIFFDir, '.3')
 
 # ARPACK
-if int(env["arpack"]):
-    ARPACKppLibsPaths = ['src/.libs/libarpack++']
-    arpackpp = AddExternalLibrary('arpack++', ARPACKppLibsPaths, ARPACKppDir, '.2')
+#if int(env["arpack"]):
+#    ARPACKppLibsPaths = ['src/.libs/libarpack++']
+#    arpackpp = AddExternalLibrary('arpack++', ARPACKppLibsPaths, ARPACKppDir, '.2')
 
 # Gtest
 if int(env['gtest']):

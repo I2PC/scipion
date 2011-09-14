@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
 # Xmipp protocol for building initial references by common lines
 # This protocol is based on EMAN 1

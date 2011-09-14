@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 '''
 #/***************************************************************************
 # * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -301,7 +301,6 @@ class XmippProtocol(object):
         pass
     
     def runSetup(self, isMainLoop=True):
-
         #Redirecting standard output and error to files
         self.fOut = open(self.Out, 'a')
         self.fErr = open(self.Err, 'a')
@@ -315,10 +314,8 @@ class XmippProtocol(object):
         '''Run of the protocols
         if the other functions have been correctly implemented, this not need to be
         touched in derived class, since the run of protocols should be the same'''
-        
         #Change to project dir
         os.chdir(self.projectDir)
-
         errors = self.validateBase()
         if len(errors) > 0:
             raise Exception('\n'.join(errors))
@@ -339,8 +336,8 @@ class XmippProtocol(object):
         retcode = 0
         try:
             self.runSetup()
-            self.Db.insertStep('createDir', path = self.WorkingDir)
-            self.Db.insertStep('createDir', path = self.TmpDir)
+            self.Db.insertStep('createDir', [self.WorkingDir], path = self.WorkingDir)
+            self.Db.insertStep('createDir', [self.TmpDir], path = self.TmpDir)
             self.defineSteps()
             self.Db.runSteps()
             self.postRun()

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 """/***************************************************************************
  *
  * Authors:     Roberto Marabini
@@ -24,7 +24,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 """
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 
 import os
 from protlib_xmipp import XmippScript

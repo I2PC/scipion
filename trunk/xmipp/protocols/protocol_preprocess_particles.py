@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
 #
 # General script for Xmipp-based pre-processing of single-particles: 
@@ -8,7 +8,7 @@
 from protlib_base import *
 import xmipp
 import os
-from protlib_utils import runJob
+from protlib_utils import runJob, runImageJPlugin
 from protlib_filesystem import deleteFile
 import glob
 
@@ -59,7 +59,7 @@ class ProtPreprocessParticles(XmippProtocol):
         if not os.path.exists(self.OutSelFile):
             import tkMessageBox
             tkMessageBox.showerror("Error", "There is no result yet")                    
-        os.system("xmipp_showj -i "+self.OutSelFile+" --memory 1024m &")
+        runImageJPlugin(memory="1024m", macro="XmippBrowser.txt", args=" -i " + self.OutSelFile)
 
 def copyFiles(log,InputFile,OutputFile):
     runJob(log,"xmipp_image_convert","-i "+InputFile+" -o "+OutputFile)

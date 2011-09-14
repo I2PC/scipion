@@ -80,6 +80,9 @@ opts.Add('ARPACKFLAGS', 'Additional flags for ARPACK++ configure', '')
 opts.Add(BoolVariable('verbose_sqlite', 'Verbose configuring of SQLite libraries?', 'no'))
 opts.Add('SQLITEFLAGS', 'Additional flags for SQLite configure', 'CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1')
 
+opts.Add(BoolVariable('verbose_python', 'Verbose configuring of Python compilation?', 'no'))
+opts.Add('PYTHONFLAGS', 'Additional flags for Python configure', '')
+
 opts.Add('JNI_CPPPATH', 'Directory of jni.h', '')
 opts.Add('JAVAC', 'Java compiler', 'javac')
 
@@ -262,7 +265,7 @@ if (ARGUMENTS['mode'] == 'configure'):
         libpath = os.path.join('external', libpath)
         if not GetOption("help"):
             if os.path.exists(os.path.join(libpath, 'Makefile')):
-                command = 'cd %s ; make distclean>/dev/null' % libpath
+                command = 'cd %s ; make distclean > /dev/null' % libpath
                 print command
                 os.system(command)
     
@@ -284,17 +287,20 @@ if (ARGUMENTS['mode'] == 'configure'):
         print "   command:  ", cmd
         os.system(cmd)        
     
-    ConfigureExternalLibrary('sqlite', env['SQLITEFLAGS'], 
-                             'sqlite-3.6.23', int(env['verbose_sqlite']))
+#    ConfigureExternalLibrary('sqlite', env['SQLITEFLAGS'], 
+#                             'sqlite-3.6.23', int(env['verbose_sqlite']))
+#    
+#    ConfigureExternalLibrary('python', env['PYTHONFLAGS'], 
+#                             'Python-2.7.2', int(env['verbose_python']))
                          
-    ConfigureExternalLibrary('fftw', env['FFTWFLAGS'], 
-                         'fftw-3.2.2', int(env['verbose_fftw']))
-    
-    ConfigureExternalLibrary('tiff', env['TIFFFLAGS'], 
-                     'tiff-3.9.4', int(env['verbose_tiff']))
-
-    ConfigureExternalLibrary('arpack++', env['ARPACKFLAGS'], 
-                     'arpack++-2.3', int(env['verbose_arpack']))
+#    ConfigureExternalLibrary('fftw', env['FFTWFLAGS'], 
+#                         'fftw-3.2.2', int(env['verbose_fftw']))
+#    
+#    ConfigureExternalLibrary('tiff', env['TIFFFLAGS'], 
+#                     'tiff-3.9.4', int(env['verbose_tiff']))
+#
+#    ConfigureExternalLibrary('arpack++', env['ARPACKFLAGS'], 
+#                     'arpack++-2.3', int(env['verbose_arpack']))
 
     # Finish configuration
     env = conf.Finish()

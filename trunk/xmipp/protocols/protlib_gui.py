@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 '''
 #/***************************************************************************
 # * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -897,7 +897,7 @@ class ProtocolGUI(BasicGUI):
                 warnings = prot.warningsBase()
                 if len(warnings)==0 or askYesNo("Confirm execution",'\n'.join(warnings), self.master):
                     #os.system('python %s --no_confirm &' % self.run['script'] )
-                    args = 'python %s --no_confirm &' % self.run['script']
+                    args = 'xmipp_python %s --no_confirm &' % self.run['script']
                     Popen(args, shell=True)
 #                    from protlib_utils import ProcessManager
 #                    p = ProcessManager().getProcessFromScript(self.run['script'])

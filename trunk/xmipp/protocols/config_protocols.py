@@ -28,6 +28,7 @@ class ProtocolDictionary(dict):
         self.commonlines = self.addProtocol('commonlines', 'Common Lines', '3D/CommonLines')
         self.rct = self.addProtocol('rct', 'Random Conical Tilt', '3D/RCT')
         self.projmatch = self.addProtocol('projmatch', 'Projection Matching', '3D/ProjMatch') 
+        self.ml3d = self.addProtocol('ml3d', 'ML3D', '3D/ML3D')
         self.projsubs = self.addProtocol('subtraction', 'Partial Projection Subtraction', '3D/ProjSubs')
         self.dummy = self.addProtocol('dummy', 'Dummy', 'Dummy')
         self.xmipp_program = self.addProtocol('xmipp', 'Xmipp Programs', 'XmippPrograms')
@@ -64,7 +65,7 @@ sections = [
     ['Classify', protDict.kerdensom.name, protDict.rotspectra.name]]),
 ('3D', 
    [['Initial Model', protDict.commonlines.name, protDict.rct.name], 
-    ['Model Refinement', protDict.projmatch.name]])
+    ['Model Refinement', protDict.projmatch.name, protDict.ml3d.name]])
 ,
 ('Other',
  [['Extra',protDict.projsubs.name, protDict.dummy.name]])

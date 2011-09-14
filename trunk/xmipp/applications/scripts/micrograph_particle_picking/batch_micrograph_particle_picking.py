@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 
 import os
 from protlib_xmipp import XmippScript

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 
 from protlib_xmipp import ScriptPluginIJ
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
 # Protocol for Xmipp-based ML-refinement of subtomograms or RCT reconstructions, according to:
 # {please cite} Scheres et al. (2009) Structure, 17, 1563-1572

@@ -80,12 +80,6 @@ public:
     }
 
 }
-;//end of class ProgMetadataOperate
+;//end of class ProgMetadataImport
 
-/* MAIN -------------------------------------------------------------------- */
-int main(int argc, char *argv[])
-{
-    ProgMetadataImport program;
-    program.read(argc, argv);
-    return program.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgMetadataImport);

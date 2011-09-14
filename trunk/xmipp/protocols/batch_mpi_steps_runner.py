@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 '''
 /***************************************************************************
  * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)

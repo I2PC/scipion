@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 import unittest, os, sys
 """
 @summary: This pyUnit test module defines the unit tests for the Xmipp Python Interface

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 
 from protlib_utils import runImageJPlugin
 from protlib_xmipp import XmippScript
