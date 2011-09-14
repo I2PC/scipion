@@ -1,10 +1,10 @@
 #!/bin/sh
 
 #Some flags variables
-DO_UNTAR=false
-DO_SQLITE=false
-DO_TCLTK=false
-DO_PYTHON=false
+DO_UNTAR=true
+DO_SQLITE=true
+DO_TCLTK=true
+DO_PYTHON=true
 DO_FFTW=true
 DO_TIFF=true
 DO_ARPACK=true
