@@ -46,6 +46,13 @@ class ProtKerdensom(XmippProtocol):
             errors.append("Regularization must decrease over iterations: Initial regularization must be larger than final")
         return errors
     
+    def visualize(self):
+        if self.getRunState()==SqliteDb.RUN_FINISHED:
+            os.system("xmipp_showj -i "+self.workingDirPath("results_classes.stk")+" --columns "+str(self.SomXdim)+" &")
+            os.system("xmipp_metadata_showj -i "+self.workingDirPath("results_classes.xmd")+" &")
+        else:
+            tkMessageBox.showwarning("Warning", "The algorithm has not finished yet", parent=self.master)
+
 def img2vector(log,Selfile,Mask,WorkingDir):
      args=' -i '+ Selfile + ' -o ' + os.path.join(WorkingDir,"vectors.xmd")
      if Mask!='':
