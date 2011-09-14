@@ -59,6 +59,7 @@ public class ReviewParticlePicker extends ParticlePicker {
 						id = md.addObject();
 						md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
 						md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
+						md.setValueDouble(MDLabel.MDL_COST, p.getCost(), id);
 					}
 					md.writeBlock("mic_" + m.getName() + "@" + reviewfile);
 				}
@@ -91,6 +92,7 @@ public class ReviewParticlePicker extends ParticlePicker {
 				throw new IllegalArgumentException(String.format(
 						"No micrographs specified on %s", getMicrographsSelFile()));
 			int x, y;
+			double cost;
 			Particle particle;
 			List<String> blocks = Arrays.asList(MetaData
 					.getBlocksInMetaDataFile(reviewfile));
@@ -105,8 +107,11 @@ public class ReviewParticlePicker extends ParticlePicker {
 
 						x = md.getValueInt(MDLabel.MDL_XINT, id);
 						y = md.getValueInt(MDLabel.MDL_YINT, id);
-						particle = new Particle(x, y, reviewfamily, m);
-						m.addManualParticle(particle);
+						cost = md.getValueDouble(MDLabel.MDL_COST, id);
+						if(cost > 1)
+							m.addManualParticle(new Particle(x, y, reviewfamily, m, cost));
+						else
+							m.addAutomaticParticle(new AutomaticParticle(x, y, reviewfamily, m, cost, false));
 					}
 				}
 			}

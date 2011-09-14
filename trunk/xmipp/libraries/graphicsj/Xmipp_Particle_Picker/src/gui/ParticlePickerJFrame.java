@@ -359,6 +359,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		// Setting combo
 		fieldspn.add(new JLabel("Name:"));
 		familiescb = new JComboBox(ppicker.getFamilies().toArray());
+		familiescb.setEnabled(ppicker.getMode() != FamilyState.Review);
 
 		family = (Family) familiescb.getSelectedItem();
 		if (ppicker.getMode() == FamilyState.Manual

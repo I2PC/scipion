@@ -22,7 +22,7 @@ public class Constants {
 		return field + " has associated data. Can not be removed";
 	}
 
-	public static String getNoSuchFieldValueMsg(String field, String value) {
+	public static String getNoSuchFieldValueMsg(String field, Object value) {
 		return String.format("No such %s %s exists", field, value);
 	}
 	

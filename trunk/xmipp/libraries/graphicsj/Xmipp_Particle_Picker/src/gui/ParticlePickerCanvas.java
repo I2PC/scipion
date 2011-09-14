@@ -173,7 +173,6 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 				drawFamily(g2, mfdata);
 		else
 			drawFamily(g2, micrograph.getFamilyData(frame.getFamily()));
-		
 	}
 	
 	private void drawFamily(Graphics2D g2, MicrographFamilyData mfdata)
@@ -197,7 +196,7 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 				if(!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= frame.getThreshold())
 					drawShape(g2, autoparticles.get(i), x0, y0, radius, false);
 		}
-	
+		
 	}
 
 	private void drawShape(Graphics2D g2, Particle p, int x0, int y0, int radius, boolean all) {
@@ -212,7 +211,8 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 		if (frame.isShapeSelected(Shape.Circle) || all)
 			g2.drawOval(x - radius, y - radius, radius * 2, radius * 2);
 		g2.setStroke(continuousst);
-		if (frame.isShapeSelected(Shape.Center) || all) {
+		if (frame.isShapeSelected(Shape.Center) || all) 
+		{
 			g2.drawLine(x, y - distance, x, y + distance);
 			g2.drawLine(x + distance, y, x - distance, y);
 		}

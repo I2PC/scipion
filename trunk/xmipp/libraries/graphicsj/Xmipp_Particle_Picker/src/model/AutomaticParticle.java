@@ -3,12 +3,12 @@ package model;
 public class AutomaticParticle extends Particle {
 	
 	private boolean deleted;
-	private double cost;
 
 	public AutomaticParticle(int x, int y, Family family, Micrograph micrograph, double cost, boolean deleted) {
-		super(x, y, family, micrograph);
+		super(x, y, family, micrograph, cost);
+		if(cost> 1)
+			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("cost", cost));
 		this.deleted = deleted;
-		this.cost = cost;
 	}
 	
 	public void setDeleted(boolean deleted)
@@ -21,9 +21,6 @@ public class AutomaticParticle extends Particle {
 		return deleted;
 	}
 	
-	public double getCost()
-	{
-		return cost;
-	}
+
 
 }

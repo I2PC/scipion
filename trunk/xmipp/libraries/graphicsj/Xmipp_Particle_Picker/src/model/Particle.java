@@ -18,14 +18,26 @@ public class Particle implements Comparable<Particle>{
 	protected Micrograph micrograph;
 	protected ImagePlus img;
 	protected ParticleCanvas canvas;
+	protected double cost = 2;
 	
 	
 	public Particle(int x, int y, Family family, Micrograph micrograph)
+	{
+		this(x, y, family, micrograph, 2);
+	}
+	
+	public Particle(int x, int y, Family family, Micrograph micrograph, double cost)
 	{
 		this.x = x;
 		this.y = y;
 		this.family = family;
 		this.micrograph = micrograph;
+		this.cost = cost;
+	}
+	
+	public double getCost()
+	{
+		return cost;
 	}
 	
 	
