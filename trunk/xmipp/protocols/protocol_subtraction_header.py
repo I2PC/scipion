@@ -18,16 +18,32 @@ Comment='Describe your project here...'
 #Comment
 """ Subtraction subdirectory. 'run_001' will create 'subtraction/run_001' directory
 """
-RunName='run_008_exp_small'
+#RunName='run_008_exp_small'
+RunName='run_009_exp_small'
+
+# {list}(Resume, Restart) Run behavior
+""" Resume from the last step, restart the whole process or continue at a given step or iteration
+"""
+Behavior = "Restart"
+#Behavior = "Resume"
+#Behavior = "Continue"
 
 # {file} Protocol Name
-ProtocolName='ProjMatch/xmipp2.4_exp_small/xmipp_protocol_projmatch_backup.py'
+ProtocolName='ProjMatch/xmipp2.4_exp_small/xmipp_protocol_projmatch_backup_test.py'
 #ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy/xmipp_protocol_projmatch_backup.py'
 
 #Show results for iteration
 """ Use data coming from iteration
 """
 iterationNo=1
+
+# {expert} Resume at Iter (vs Step)
+"""This option control how to resume a previously performed run.
+    Set to TRUE to restart at the beginning of iteration N
+    or FALSE to continue at step N. (N is set in the next parameter).
+    NOTE:If you do not know what are you doing make it equal to False
+"""
+IsIter =False
 
 # Resume at iteration
 """ Set to 1 to start a new run, set to -1 to continue the process (where you left it),
@@ -38,13 +54,6 @@ iterationNo=1
 """
 ContinueAtIteration =1
 
-# {expert} Resume at Iter (vs Step)
-"""This option control how to resume a previously performed run.
-    Set to TRUE to restart at the beginning of iteration N
-    or FALSE to continue at step N. (N is set in the next parameter).
-    NOTE:If you do not know what are you doing make it equal to False
-"""
-IsIter =False
 
 #{expert}{file} Select the input volume
 """{expert DELETE THIS ENTRY}Name of the reference volume by default Iter_X_reconstruction.vol
@@ -137,7 +146,7 @@ SubmitToQueue=False
 
 # Queue name
 """Name of the queue to submit the job"""
-QueueName="default"
+QueueName="high"
 
 # Queue hours
 """This establish a maximum number of hours the job will
@@ -182,4 +191,4 @@ from protocol_subtraction import *
            
 if __name__ == '__main__':
     protocolMain(ProtPartialProjectionSubtraction)
-    
+        

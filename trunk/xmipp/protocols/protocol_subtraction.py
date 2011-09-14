@@ -40,6 +40,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.tempFileName=''
         self.current_angles='current_angles.doc'
         self.scaledImages = 'scaled'
+        self.resultsImagesName = 'results_images'
         
         # Check these params
         self.DoDeleteWorkingDir = False
@@ -90,7 +91,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         return summary
     
     def preRun(self):
-
+        
         self.ImportProtocol()
         
         self.Iteration_Working_Directory = os.path.join(self.pmprotWorkingDir,'Iter_'+ str(self.iterationNo))
@@ -99,6 +100,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.referenceDir = self.workingDirPath(self.referenceDir)
         self.subImgsDir = self.workingDirPath(self.subImgsDir)
         self.scaledImages = self.workingDirPath(self.scaledImages)
+        self.resultsImagesName = self.workingDirPath(self.resultsImagesName)
                 
         if(self.MaxChangeInAngles > 100):
             self.MaxChangeInAngles=-1
@@ -180,24 +182,23 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
         sys.path.append(scriptdir)
 
-        #from pysqlite2 import dbapi2 as sqlite
-        self.Db.setPrintWrapperParameters(self.PrintWrapperParameters)
-        self.Db.setPrintWrapperCommand(self.PrintWrapperCommand)
-        self.Db.setVerify(self.Verify,self.ViewVerifyedFiles)
+        # Configure dabase
+        ##self.Db.setVerify(self.Verify,self.ViewVerifyedFiles)
+        ##self.Db.setParentDefault(XmippProjectDb.lastStep)
         
         
     def otherActionsToBePerformedBeforeLoop(self):
         _log = self.Log
         _dataBase = self.Db
         #Create directories
-        _dataBase.insertAction('createDir', path = self.volsDir)
-        _dataBase.insertAction('createDir', path = self.referenceDir)
-        _dataBase.insertAction('createDir', path = self.subImgsDir)
+        _dataBase.insertStep('createDir', path = self.volsDir)
+        _dataBase.insertStep('createDir', path = self.referenceDir)
+        _dataBase.insertStep('createDir', path = self.subImgsDir)
         
         if(self.doScaleImages):
             _VerifyFiles = [self.scaledImages+".stk"]
             _VerifyFiles.append(self.scaledImages+".xmd")
-            id = _dataBase.insertAction('scaleImages', verifyfiles = _VerifyFiles
+            id = _dataBase.insertStep('scaleImages', verifyfiles = _VerifyFiles
                                        , dimX = self.dimX
                                        , dimY = self.dimY
                                        , filename_currentAngles = self.filename_currentAngles
@@ -205,8 +206,10 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                                        , NumberOfMpi = self.NumberOfMpi
                                        , NumberOfThreads = self.NumberOfThreads
                                        , scaledImages = self.scaledImages
-                                       , SystemFlavour = self.SystemFlavour
                                        )            
+        _dataBase.connection.commit()
+
+
     def actionsToBePerformedInsideLoop(self):
         _log = self.Log
         _dataBase = self.Db
@@ -221,7 +224,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                 _VerifyFiles = []
                 auxFilename = FileName(self.DocFileExp[iterN])
                 _VerifyFiles.append(auxFilename.removeBlockName())
-                id = self.Db.insertAction('joinImageCTFscale', verifyfiles = _VerifyFiles
+                id = self.Db.insertStep('joinImageCTFscale', verifyfiles = _VerifyFiles
                                         , CTFgroupName = self.defGroups[iterN]
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , inputSelfile = inputSelfile
@@ -230,7 +233,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                 _VerifyFiles = []
                 auxFilename = FileName(self.DocFileExp[iterN])
                 _VerifyFiles.append(auxFilename.removeBlockName())
-                id = self.Db.insertAction('joinImageCTF', verifyfiles = _VerifyFiles
+                id = self.Db.insertStep('joinImageCTF', verifyfiles = _VerifyFiles
                                         , CTFgroupName = self.defGroups[iterN]
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , inputSelfile = inputSelfile
@@ -240,24 +243,25 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             #reconstruct each CTF group
             _VerifyFiles = []
             _VerifyFiles.append(self.reconstructedVolume[iterN])
-            id = self.Db.insertAction('reconstructVolume', verifyfiles = _VerifyFiles
+            id = self.Db.insertStep('reconstructVolume', verifyfiles = _VerifyFiles
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , MpiJobSize = self.MpiJobSize
                                         , NumberOfMpi = self.NumberOfMpi
                                         , NumberOfThreads = self.NumberOfThreads
                                         , reconstructedVolume = self.reconstructedVolume[iterN]
-                                        , SymmetryGroup = self.SymmetryGroup
-                                        , SystemFlavour = self.SystemFlavour)
+                                        , SymmetryGroup = self.SymmetryGroup)
             
             #mask volume before projection
             _VerifyFiles = []
             auxFilename = FileName(self.DocFileExp[iterN])
             _VerifyFiles.append(self.maskReconstructedVolume[iterN])
-            id = self.Db.insertAction('maskVolume', verifyfiles = _VerifyFiles
+            id = self.Db.insertStep('maskVolume', verifyfiles = _VerifyFiles
                                         , dRradiusMax = self.dRradiusMax
                                         , dRradiusMin = self.dRradiusMin
                                         , maskReconstructedVolume = self.maskReconstructedVolume[iterN]
-                                        , reconstructedVolume = self.reconstructedVolume[iterN])
+                                        , reconstructedVolume = self.reconstructedVolume[iterN]
+                                        , NumberOfMpi = self.NumberOfMpi
+                                        , NumberOfThreads = self.NumberOfThreads)
     
             #project reconstructe4d volumes
             _VerifyFiles = []
@@ -266,7 +270,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles.append(tmp.replace('.stk','.doc'))
             _VerifyFiles.append(tmp.replace('.stk','_sampling.xmd'))
             
-            id = self.Db.insertAction('createProjections', verifyfiles = _VerifyFiles
+            id = self.Db.insertStep('createProjections', verifyfiles = _VerifyFiles
                                         , AngSamplingRateDeg = self.AngSamplingRateDeg
                                         , DocFileExp = self.DocFileExp[iterN]
                                         , maskReconstructedVolume = self.maskReconstructedVolume[iterN]
@@ -275,8 +279,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                                         , NumberOfMpi = self.NumberOfMpi
                                         , NumberOfThreads = self.NumberOfThreads
                                         , referenceStack = self.referenceStack[iterN]
-                                        , SymmetryGroup = self.SymmetryGroup
-                                        , SystemFlavour = self.SystemFlavour)
+                                        , SymmetryGroup = self.SymmetryGroup)
                           
                      
                      
@@ -292,12 +295,16 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles.append(self.subtractedStack[iterN]+'ref')
             _VerifyFiles.append(self.subtractedStack[iterN]+'exp')
             
-            id = self.Db.insertAction('subtractionScript', verifyfiles = _VerifyFiles
+            id = self.Db.insertStep('subtractionScript', verifyfiles = _VerifyFiles
                                         , DocFileExp = self.DocFileExp[iterN] 
                                         , referenceStackDoc = self.referenceStackDoc[iterN]
-                                        , subtractedStack = self.subtractedStack[iterN])
+                                        , subtractedStack = self.subtractedStack[iterN]
+                                        , resultsImagesName = self.resultsImagesName)
                           
-    def defineActions(self):
+            self.Db.connection.commit()
+
+#    def defineActions(self):
+    def defineSteps(self):
         self.preRun()
         self.otherActionsToBePerformedBeforeLoop()
         self.actionsToBePerformedInsideLoop()

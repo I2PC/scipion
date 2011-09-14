@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+#------------------------------------------------------------------------------------------------
+# Xmipp protocol for subtraction
+#
+# Example use:
+# ./protocol_subtraction_header.py
+#
+# Authors: Roberto Marabini,
+#          Alejandro Echeverria Rey.
+#
 from xmipp import *
 import os
 from protlib_utils import runJob
@@ -9,9 +19,7 @@ def scaleImages(_log
                     , MpiJobSize
                     , NumberOfMpi
                     , NumberOfThreads
-                    , scaledImages
-                    , SystemFlavour
-                    ):
+                    , scaledImages):
 
     outFileName=scaledImages + ".stk"
     if os.path.exists(outFileName):
@@ -29,9 +37,9 @@ def scaleImages(_log
 
     runJob(_log,'xmipp_transform_geometry',
                      parameters,
-                     NumberOfMpi * NumberOfThreads,
-                     1, # Threads go in --scale option
-                     SystemFlavour)
+                     NumberOfMpi * NumberOfThreads)
+                     # Threads go in --scale option
+                     
 
     #merge new scaled metadata with original metadata
     fnScaledImages = scaledImages+".xmd"

@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+#------------------------------------------------------------------------------------------------
+# Xmipp protocol for subtraction
+#
+# Example use:
+# ./protocol_subtraction_header.py
+#
+# Authors: Roberto Marabini,
+#          Alejandro Echeverria Rey.
+#
 from xmipp import *
 import os
 from protlib_utils import runJob
@@ -26,7 +36,6 @@ def reconstructVolume(_log
                      , NumberOfThreads
                      , reconstructedVolume
                      , SymmetryGroup
-                     , SystemFlavour
                      ):
     #xmipp_reconstruct_fourier -i ctfgroup_1@ctfgroups_Iter_13_current_angles.doc -o rec_ctfg01.vol --sym i3 --weight
     parameters  = ' -i ' +  DocFileExp 
@@ -39,14 +48,15 @@ def reconstructVolume(_log
     runJob(_log,'xmipp_reconstruct_fourier',
                              parameters,
                              NumberOfMpi,
-                             NumberOfThreads,
-                             SystemFlavour)
+                             NumberOfThreads)
 
 def maskVolume(_log
               ,dRradiusMax
               ,dRradiusMin
               ,maskReconstructedVolume
               ,reconstructedVolume
+              ,NumberOfMpi
+              ,NumberOfThreads
 ):
     parameters  = ' -i ' +  reconstructedVolume 
     parameters += ' -o ' +  maskReconstructedVolume 
@@ -54,7 +64,7 @@ def maskVolume(_log
 
     runJob( _log,"xmipp_transform_mask",
                              parameters,
-                             False,1,1,'')
+                             NumberOfMpi *NumberOfThreads)
     
     #project
 def createProjections(_log
@@ -67,7 +77,6 @@ def createProjections(_log
                       ,NumberOfThreads
                       ,referenceStack
                       ,SymmetryGroup
-                      ,SystemFlavour
 ):
 
     parameters  = ' -i ' +  maskReconstructedVolume 
@@ -83,9 +92,7 @@ def createProjections(_log
 
     runJob(_log,'xmipp_angular_project_library',
                              parameters,
-                             NumberOfMpi *NumberOfThreads,
-                             1,
-                             SystemFlavour)
+                             NumberOfMpi *NumberOfThreads)
                 
 
 
@@ -93,6 +100,7 @@ def subtractionScript(_log
                       ,DocFileExp
                       ,referenceStackDoc
                       ,subtractedStack
+                      ,resultsImagesName
                       ):
     md = MetaData(DocFileExp)#experimental images
     mdRotations = MetaData(md) #rotations
@@ -139,7 +147,14 @@ def subtractionScript(_log
         
         mdRotations.setValue(MDL_IMAGE, '%06d@%s'%(id,subtractedStack), id)
         
+        # write protocols results
+        #imgSub.write('%06d@%s'%(id,resultsStack),)
+        imgSub.write(resultsImagesName+'.stk')
+        
     
     mdRotations.operate('anglePsi=0')
     mdRotations.write(subtractedStack.replace('.stk','.xmd'))
+    
+    mdRotations.write(resultsImagesName+'.xmd')
+        
 
