@@ -350,7 +350,7 @@ double GaussianKerDenSOM::codeDens(const FuzzyMap* _som, const FeatureVector* _e
             t = exp(t);
         s += t;
     }
-    return pow((double)(2*PI*_sigma), -dim *0.5)*s / numNeurons;
+    return std::pow(2*PI*_sigma, -0.5*dim)*s / numNeurons;
 }
 
 //-----------------------------------------------------------------------------
@@ -418,7 +418,6 @@ double GaussianKerDenSOM::functional(const TS* _examples, const FuzzyMap* _som,
         }
         _penalty = _reg * _penalty / (2.0 * _sigma);
     }
-
     return (_likelihood + _penalty);
 }
 
