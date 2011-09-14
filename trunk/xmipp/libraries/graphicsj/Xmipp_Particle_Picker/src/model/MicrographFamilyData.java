@@ -74,12 +74,17 @@ public class MicrographFamilyData {
 	}
 
 	
-	public void removeParticle(Particle p) {
+	public void removeParticle(Particle p, ParticlePicker ppicker) {
 		if (p == null)
 			throw new IllegalArgumentException(
 					Constants.getEmptyFieldMsg("particle"));
 		if (p instanceof AutomaticParticle)
-			((AutomaticParticle) p).setDeleted(true);
+		{
+			 if(ppicker.getMode() != FamilyState.Review)
+				 ((AutomaticParticle) p).setDeleted(true);
+			 else
+				 autoparticles.remove(p);
+		}
 		else {
 			manualparticles.remove(p);
 			family.particles--;

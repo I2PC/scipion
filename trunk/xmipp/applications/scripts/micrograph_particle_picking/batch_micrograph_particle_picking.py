@@ -11,33 +11,49 @@ class ScriptParticlePicking(XmippScript):
     def defineParams(self):
         self.addUsageLine("Particles picking utility.")
         ## params
-        self.addParamsLine(" -i <metadata>          : Input metadata containing micrographs information")
-        self.addParamsLine("   alias --input;")
-        self.addParamsLine(" -o <directory>            : Output directory for load/save picking results")
-        self.addParamsLine("   alias --output;")
-        self.addParamsLine('  [--memory <mem="1024m">]              : Memory ammount for JVM');
-        self.addParamsLine('         alias -m;');
-        self.addParamsLine(' == Automatic picking == ')
-        self.addParamsLine(' [--auto <thr=1> <fast=True> <incore=False>]  : Activates auto mode with a given number of threads')    
-        self.addParamsLine('                                              : fast and incore modes')    
+        self.addParamsLine(" -i <metadata>                                        : Input metadata containing micrographs information");
+        self.addParamsLine("    alias --input;")
+        self.addParamsLine(" -o <directory>                                       : Output directory for load/save session data");
+        self.addParamsLine("    alias --output;")
+        self.addParamsLine(' == Picking mode == ')
+        self.addParamsLine(" --mode <pick_mode=manual>                            : Mode in wich Particle Picker will be used");
+        self.addParamsLine("    where <pick_mode>");
+        self.addParamsLine("       manual                                         : Enables manual mode. User will pick particles manually.");
+        self.addParamsLine("       supervised <thr=1> <fast=True> <incore=False>  : Enables supervised mode. User will use autopicking. Then review/correct particles selected."); 
+        self.addParamsLine("                                                      : Particles from manual mode can be used to train software and switch to supervised mode");
+        self.addParamsLine("                                                      : Autopicker will use number of threads and fast and incore modes provided");
+        self.addParamsLine("       review <file>                                  : Enables review mode. User reviews/corrects particles set provided on file");
+        self.addParamsLine("                                                      : without updating model. ");
+        self.addParamsLine(' == Java options == ')
+        self.addParamsLine(' [-m <mem="1024m">]                                   : Memory amount for JVM');
+        self.addParamsLine('    alias --memory;');
+        
+            
     
     def run(self):
         input = self.getParam('-i')
         output = self.getParam('-o')
         plugins_dir = getXmippPath("external/imagej/plugins/*")
-        memory = self.getParam('--memory')
+        memory = self.getParam('-m')
+        mode = self.getParam('--mode')
         if len(memory) == 0:
             memory = "1024m"
             print "No memory size provided. Using default: " + memory
-        auto = self.checkParam('--auto')
-        if auto:
-            numberOfThreads = self.getIntParam('--auto',0)
-            fastMode=self.getParam('--auto',1)
-            incore=self.getParam('--auto',2)
+        supervised = (mode == 'supervised')
+        if supervised:
+            numberOfThreads = self.getIntParam('--mode', 1)
+            fastMode=self.getParam('--mode', 2)
+            incore=self.getParam('--mode', 3)
+        review = (mode == 'review')
+        if review:
+            file = self.getParam('--mode', 1)
+
         jar = "Xmipp_PP.jar"
-        cmd = "java -Xmx%(memory)s -Dplugins.dir=%(plugins_dir)s -cp %(plugins_dir)s: Xmipp.Main %(input)s %(output)s" % locals()
-        if auto:
+        cmd = "java -Xmx%(memory)s -Dplugins.dir=%(plugins_dir)s -cp %(plugins_dir)s: Main %(input)s %(output)s %(mode)s" % locals()
+        if supervised:
             cmd+=" %(numberOfThreads)d %(fastMode)s %(incore)s"%locals()
+        if review:
+            cmd+=" %(file)s"%locals()
         os.system(cmd)
     
 if __name__ == '__main__':

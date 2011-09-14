@@ -167,9 +167,9 @@ public class Micrograph {
 	}
 	
 	
-	public void removeParticle(Particle p)
+	public void removeParticle(Particle p, ParticlePicker ppicker)
 	{
-		getFamilyData(p.getFamily()).removeParticle(p);
+		getFamilyData(p.getFamily()).removeParticle(p, ppicker);
 	}
 	
 	public void addAutomaticParticle(AutomaticParticle p)

@@ -19,6 +19,7 @@ import model.Micrograph;
 import model.MicrographFamilyData;
 import model.Particle;
 import model.FamilyState;
+import model.ParticlePicker;
 
 public class ParticlePickerCanvas extends ImageCanvas implements
 		MouseWheelListener {
@@ -26,6 +27,7 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 	private ParticlePickerJFrame frame;
 	private Micrograph micrograph;
 	private Particle dragged;
+	private ParticlePicker ppicker;
 	final static BasicStroke dashedst = new BasicStroke(1.0f,
 			BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f,
 			new float[] { 10.0f }, 0.0f);
@@ -36,6 +38,7 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 		this.micrograph = frame.getMicrograph();
 		this.frame = frame;
 		addMouseWheelListener(this);
+		this.ppicker = frame.getParticlePicker();
 	}
 	
 	public void updateMicrograph() {
@@ -86,7 +89,7 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 				p = micrograph.getAutomaticParticle(x, y, frame.getThreshold());
 			if (p != null) {
 				if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown()) {
-					micrograph.removeParticle(p);
+					micrograph.removeParticle(p, ppicker);
 					frame.updateMicrographsModel();
 				} else if (SwingUtilities.isLeftMouseButton(e)) {
 					dragged = p;
@@ -141,7 +144,7 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 				return;
 			if(dragged instanceof AutomaticParticle)
 			{
-				micrograph.removeParticle(dragged);
+				micrograph.removeParticle(dragged, ppicker);
 				dragged = new Particle(dragged.getX(), dragged.getY(), dragged.getFamily(), micrograph);
 				micrograph.addManualParticle(dragged);
 			}

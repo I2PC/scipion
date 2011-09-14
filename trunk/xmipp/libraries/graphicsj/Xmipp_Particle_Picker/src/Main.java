@@ -1,4 +1,4 @@
-package Xmipp;
+
 
 import gui.ParticlePickerJFrame;
 
