@@ -1,0 +1,138 @@
+#!/bin/sh
+
+#Some flags variables
+DO_UNTAR=false
+DO_SQLITE=false
+DO_TCLTK=false
+DO_PYTHON=false
+DO_FFTW=true
+DO_TIFF=true
+DO_ARPACK=true
+
+#Some path variables
+EXT_PATH=$PWD/external
+BUILD_PATH=$PWD/build
+# Some other vars
+
+GREEN="\033[32m"
+ENDC="\033[0m"
+#Enter to external dir
+cd $EXT_PATH
+
+#################### DECOMPRESSING EXTERNAL LIBRARIES ###########################
+if $DO_UNTAR; then
+  dirs=(. python)
+  echo
+  echo -e "$GREEN*** Decompressing external libraries ...$ENDC"
+  for d in ${dirs[@]} 
+  do
+    echo "--> cd $d"
+    cd $d 
+    for file in $(ls *.tgz) 
+    do
+      echo "--> tar -xvzf $file > /dev/null"
+      tar -xvzf $file > /dev/null
+    done
+    echo "--> cd -"
+    cd - > /dev/null
+  done
+fi
+
+#################### SQLITE ###########################
+if $DO_SQLITE; then
+  SQLITE=sqlite-3.6.23
+  CONFIGFLAGS=--enable-shared
+  export CPPFLAGS=-w 
+  export CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1
+  echo
+  echo -e "$GREEN*** Compiling $SQLITE ...$ENDC"
+  echo "--> cd $EXT_PATH/$SQLITE"
+  cd $EXT_PATH/$SQLITE
+  make distclean &> /dev/null
+  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${SQLITE}_configure.log"
+  ./configure $CONFIGFLAGS > $BUILD_PATH/${SQLITE}_configure.log
+  echo "--> make $@ > $BUILD_PATH/${SQLITE}_make.log"
+  make $@ > $BUILD_PATH/${SQLITE}_make.log
+fi
+
+#################### TCL/TK ###########################
+if $DO_TCLTK; then
+  TKVER=8.5.10
+  TCL=tcl$TKVER
+  TK=tk$TKVER
+  echo
+  echo -e "$GREEN*** Compiling $TCL ...$ENDC"
+  echo "--> cd $EXT_PATH/python/$TCL/unix"
+  cd $EXT_PATH/python/$TCL/unix
+  make distclean &> /dev/null
+  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${TCL}_configure.log"
+  ./configure $CONFIGFLAGS > $BUILD_PATH/${TCL}_configure.log
+  echo "--> make $@ > $BUILD_PATH/${TCL}_make.log"
+  make $@ > $BUILD_PATH/${TCL}_make.log
+  echo
+  echo -e "$GREEN*** Compiling $TK ...$ENDC"
+  echo "--> $EXT_PATH/python/$TK/unix"
+  cd $EXT_PATH/python/$TK/unix
+  make distclean &> /dev/null
+  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${TK}_configure.log"
+  ./configure $CONFIGFLAGS > $BUILD_PATH/${TK}_configure.log
+  echo "--> make $@ > $BUILD_PATH/${TK}_make.log"
+  make $@ > $BUILD_PATH/${TK}_make.log
+fi
+
+#################### PYTHON ###########################
+if $DO_PYTHON; then
+  PYTHON=Python-2.7.2
+  export CPPFLAGS='' 
+  export XMIPP_INCLUDE_PATH=../../$SQLITE/:../../$TK
+  echo
+  echo -e "$GREEN*** Compiling $PYTHON ...$ENDC"
+  cd $EXT_PATH/python/$PYTHON
+  make distclean &> /dev/null
+  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${PYTHON}_configure.log"
+  ./configure $CONFIGFLAGS > $BUILD_PATH/${PYTHON}_configure.log
+  echo "--> make $@ > $BUILD_PATH/${PYTHON}_make.log"
+  make $@ > $BUILD_PATH/${PYTHON}_make.log
+fi
+
+#################### FFTW ###########################
+if $DO_FFTW; then
+  FFTW=fftw-3.2.2
+  echo
+  echo -e "$GREEN*** Compiling $FFTW ...$ENDC"
+  echo "--> cd $EXT_PATH/$FFTW"
+  cd $EXT_PATH/$FFTW
+  make distclean &> /dev/null
+  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${FFTW}_configure.log"
+  ./configure $CONFIGFLAGS > $BUILD_PATH/${FFTW}_configure.log
+  echo "--> make $@ > $BUILD_PATH/${FFTW}_make.log"
+  make $@ > $BUILD_PATH/${FFTW}_make.log
+fi
+
+#################### TIFF ###########################
+if $DO_TIFF; then
+  TIFF=tiff-3.9.4
+  echo
+  echo -e "$GREEN*** Compiling $TIFF ...$ENDC"
+  echo "--> cd $EXT_PATH/$TIFF"
+  cd $EXT_PATH/$TIFF
+  make distclean &> /dev/null
+  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${TIFF}_configure.log"
+  ./configure $CONFIGFLAGS > $BUILD_PATH/${TIFF}_configure.log
+  echo "--> make $@ > $BUILD_PATH/${TIFF}_make.log"
+  make $@ > $BUILD_PATH/${TIFF}_make.log
+fi
+
+#################### ARPACK ###########################
+if $DO_ARPACK; then
+  ARPACK=arpack++-2.3
+  echo
+  echo -e "$GREEN*** Compiling $ARPACK ...$ENDC"
+  echo "--> cd $EXT_PATH/$ARPACK"
+  cd $EXT_PATH/$ARPACK
+  make distclean &> /dev/null
+  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${ARPACK}_configure.log"
+  ./configure $CONFIGFLAGS > $BUILD_PATH/${ARPACK}_configure.log
+  echo "--> make $@ > $BUILD_PATH/${ARPACK}_make.log"
+  make $@ > $BUILD_PATH/${ARPACK}_make.log
+fi
