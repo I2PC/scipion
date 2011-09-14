@@ -1,14 +1,16 @@
+package picker;
 
 
-import gui.ParticlePickerJFrame;
 
 import javax.swing.SwingUtilities;
 
-import model.FamilyState;
-import model.ManualParticlePicker;
-import model.SupervisedParticlePicker;
-import model.ReviewParticlePicker;
-import model.ParticlePicker;
+import picker.gui.ParticlePickerJFrame;
+import picker.model.FamilyState;
+import picker.model.ManualParticlePicker;
+import picker.model.ParticlePicker;
+import picker.model.ReviewParticlePicker;
+import picker.model.SupervisedParticlePicker;
+
 
 class Main {
 	// 0 --> input metadata
