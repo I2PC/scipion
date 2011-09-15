@@ -5,7 +5,7 @@ import java.awt.Component;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
-import trainingpicker.model.Particle;
+import trainingpicker.model.TrainingParticle;
 
 
 

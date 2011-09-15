@@ -7,8 +7,8 @@ import javax.swing.JDialog;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
-import trainingpicker.model.Micrograph;
-import trainingpicker.model.Particle;
+import trainingpicker.model.TrainingMicrograph;
+import trainingpicker.model.TrainingParticle;
 
 
 
@@ -16,12 +16,12 @@ import trainingpicker.model.Particle;
 public class MicrographParticlesJDialog extends JDialog {
 	
 	private ParticlePickerJFrame parent;
-	private Micrograph micrograph;
+	private TrainingMicrograph micrograph;
 	
 	
 	
 	public MicrographParticlesJDialog(ParticlePickerJFrame parent,
-			Micrograph micrograph)
+			TrainingMicrograph micrograph)
 	{
 		super(parent);
 		this.parent = parent;
@@ -52,10 +52,10 @@ public class MicrographParticlesJDialog extends JDialog {
 	class ParticlesTableModel extends AbstractListModel
 	{
 
-		private List<Particle> particles;
+		private List<TrainingParticle> particles;
 		private ParticlePickerJFrame frame;
 
-		public ParticlesTableModel(List<Particle> particles, ParticlePickerJFrame frame) {
+		public ParticlesTableModel(List<TrainingParticle> particles, ParticlePickerJFrame frame) {
 			this.particles = particles;
 			this.frame = frame;
 		}
@@ -64,7 +64,7 @@ public class MicrographParticlesJDialog extends JDialog {
 		
 		@Override
 		public Object getElementAt(int index) {
-			Particle p = particles.get(index);
+			TrainingParticle p = particles.get(index);
 			return p.getImageCanvas();
 		}
 

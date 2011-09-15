@@ -28,7 +28,7 @@ public abstract class ParticlePicker {
 	private FamilyState mode;
 	private boolean changed;
 	protected List<Family> families;
-	protected List<Micrograph> micrographs;
+	protected List<TrainingMicrograph> micrographs;
 
 	public static FamilyState previousStep(FamilyState step) {
 		if (step == FamilyState.Manual)
@@ -44,7 +44,7 @@ public abstract class ParticlePicker {
 		this.outputdir = outputdir;
 		this.mode = mode;
 		this.families = new ArrayList<Family>();
-		this.micrographs = new ArrayList<Micrograph>();
+		this.micrographs = new ArrayList<TrainingMicrograph>();
 		this.familiesfile = getOutputPath("families.xmd");
 		loadFamilies();
 
@@ -108,7 +108,7 @@ public abstract class ParticlePicker {
 	}
 
 	public boolean hasEmptyMicrographs(Family f) {
-		for (Micrograph m : micrographs)
+		for (TrainingMicrograph m : micrographs)
 			if (m.getFamilyData(f).isEmpty())
 				return true;
 		return false;
@@ -126,7 +126,7 @@ public abstract class ParticlePicker {
 		return families;
 	}
 
-	public List<Micrograph> getMicrographs() {
+	public List<TrainingMicrograph> getMicrographs() {
 		return micrographs;
 	}
 
@@ -201,8 +201,8 @@ public abstract class ParticlePicker {
 		return null;
 	}
 
-	public Micrograph getMicrograph(String name) {
-		for (Micrograph m : getMicrographs())
+	public TrainingMicrograph getMicrograph(String name) {
+		for (TrainingMicrograph m : getMicrographs())
 			if (m.getName().equalsIgnoreCase(name))
 				return m;
 		return null;
@@ -216,7 +216,7 @@ public abstract class ParticlePicker {
 	public void loadMicrographs() {
 
 		micrographs.clear();
-		Micrograph micrograph;
+		TrainingMicrograph micrograph;
 		String ctf = null, file;
 		try {
 			MetaData md = new MetaData(selfile);
@@ -228,14 +228,14 @@ public abstract class ParticlePicker {
 						MDLabel.MDL_IMAGE, id));
 				if (existsctf)
 					ctf = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
-				micrograph = new Micrograph(file, ctf, families, getMode());
+				micrograph = new TrainingMicrograph(file, ctf, families, getMode());
 				loadMicrographData(micrograph);
 				micrographs.add(micrograph);
 			}
 			if (micrographs.size() == 0)
 				throw new IllegalArgumentException(String.format(
 						"No micrographs specified on %s", selfile));
-			for (Micrograph m : micrographs)
+			for (TrainingMicrograph m : micrographs)
 				loadAutomaticParticles(m);
 
 		} catch (Exception e) {
@@ -245,10 +245,10 @@ public abstract class ParticlePicker {
 
 	}
 
-	public void loadMicrographData(Micrograph micrograph) {
+	public void loadMicrographData(TrainingMicrograph micrograph) {
 		try {
 			int x, y;
-			Particle particle;
+			TrainingParticle particle;
 			String filename = micrograph.getOFilename();
 			String fname;
 			Family family;
@@ -277,7 +277,7 @@ public abstract class ParticlePicker {
 
 						x = md2.getValueInt(MDLabel.MDL_XINT, id2);
 						y = md2.getValueInt(MDLabel.MDL_YINT, id2);
-						particle = new Particle(x, y, family, micrograph);
+						particle = new TrainingParticle(x, y, family, micrograph);
 						mfd.addManualParticle(particle);
 					}
 				}
@@ -307,7 +307,7 @@ public abstract class ParticlePicker {
 		try {
 			MetaData md;
 			String block = null;
-			for (Micrograph m : micrographs) {
+			for (TrainingMicrograph m : micrographs) {
 				if (!m.hasData())
 					new File(m.getOFilename()).delete();
 				else {
@@ -316,7 +316,7 @@ public abstract class ParticlePicker {
 						if (!mfd.hasManualParticles())
 							continue;
 						md = new MetaData();
-						for (Particle p : mfd.getManualParticles()) {
+						for (TrainingParticle p : mfd.getManualParticles()) {
 							id = md.addObject();
 							md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
 							md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
@@ -336,7 +336,7 @@ public abstract class ParticlePicker {
 
 	}
 
-	public void persistAutomaticParticles(Micrograph m) {
+	public void persistAutomaticParticles(TrainingMicrograph m) {
 
 		if (!m.hasAutomaticParticles())
 			new File(getOutputPath(m.getAutoFilename())).delete();
@@ -345,7 +345,7 @@ public abstract class ParticlePicker {
 				persistAutomaticParticles(mfd);
 	}
 
-	public void loadAutomaticParticles(Micrograph micrograph) {
+	public void loadAutomaticParticles(TrainingMicrograph micrograph) {
 		try {
 			int x, y;
 			double cost;
@@ -408,7 +408,7 @@ public abstract class ParticlePicker {
 		}
 	}
 
-	public void persistMicrographFamilies(Micrograph m) {
+	public void persistMicrographFamilies(TrainingMicrograph m) {
 		long id;
 		try {
 			MetaData md = new MetaData();
@@ -439,7 +439,7 @@ public abstract class ParticlePicker {
 
 	public int getNextFreeMicrograph(Family f) {
 		int count = 0;
-		for (Micrograph m : micrographs) {
+		for (TrainingMicrograph m : micrographs) {
 			if (m.getFamilyData(f).getState() == MicrographFamilyState.Available)
 				return count;
 			count++;
@@ -488,7 +488,7 @@ public abstract class ParticlePicker {
 	public int getAutomaticNumber(Family f, double threshold) {
 		MicrographFamilyData mfd;
 		int count = 0;
-		for (Micrograph m : micrographs) {
+		for (TrainingMicrograph m : micrographs) {
 			mfd = m.getFamilyData(f);
 			count += mfd.getAutomaticParticles(threshold);
 		}

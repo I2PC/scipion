@@ -122,7 +122,8 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 
 		this.pppicker = pppicker;
 		initComponents();
-		initializeCanvas();
+		//initializeCanvas();
+		
 	}
 
 	
@@ -149,6 +150,7 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 			}
 
 		});
+		
 		setResizable(false);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setTitle("Xmipp Particle Pair Picker");
@@ -522,7 +524,8 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 	}
 
 	void initializeCanvas() {
-		if (canvas == null) {
+		if (canvas == null) 
+		{
 			canvas = new UntiltedMicrographCanvas(this);
 		} else 
 			canvas.updateMicrograph();
@@ -534,5 +537,10 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 
 	public UntiltedMicrograph getUntiltedMicrograph() {
 		return untiltedmic;
+	}
+	
+	public int getParticleSize()
+	{
+		return sizesl.getValue();
 	}
 }

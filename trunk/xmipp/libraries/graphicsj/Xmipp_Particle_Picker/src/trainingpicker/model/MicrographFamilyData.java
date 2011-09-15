@@ -6,21 +6,21 @@ import java.util.List;
 
 public class MicrographFamilyData {
 
-	private List<Particle> manualparticles;
+	private List<TrainingParticle> manualparticles;
 	private Family family;
 	private List<AutomaticParticle> autoparticles;
-	private Micrograph micrograph;
+	private TrainingMicrograph micrograph;
 	private MicrographFamilyState state;
 
-	public MicrographFamilyData(Micrograph micrograph, Family family) {
+	public MicrographFamilyData(TrainingMicrograph micrograph, Family family) {
 		this.family = family;
-		this.manualparticles = new ArrayList<Particle>();
+		this.manualparticles = new ArrayList<TrainingParticle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
 		this.micrograph = micrograph;
 		setState(MicrographFamilyState.Available);
 	}
 
-	public MicrographFamilyData(Micrograph micrograph, Family family,
+	public MicrographFamilyData(TrainingMicrograph micrograph, Family family,
 			MicrographFamilyState state) {
 		this(micrograph, family);
 		
@@ -38,13 +38,13 @@ public class MicrographFamilyData {
 		this.state = state;
 	}
 
-	public Micrograph getMicrograph() {
+	public TrainingMicrograph getMicrograph() {
 		return micrograph;
 	}
 
 
 
-	public List<Particle> getManualParticles() {
+	public List<TrainingParticle> getManualParticles() {
 		return manualparticles;
 	}
 
@@ -56,7 +56,7 @@ public class MicrographFamilyData {
 		return family;
 	}
 
-	public void addManualParticle(Particle p) {
+	public void addManualParticle(TrainingParticle p) {
 
 		manualparticles.add(p);
 		family.particles++;
@@ -74,7 +74,7 @@ public class MicrographFamilyData {
 	}
 
 	
-	public void removeParticle(Particle p, ParticlePicker ppicker) {
+	public void removeParticle(TrainingParticle p, ParticlePicker ppicker) {
 		if (p == null)
 			throw new IllegalArgumentException(
 					Constants.getEmptyFieldMsg("particle"));
@@ -216,9 +216,9 @@ public class MicrographFamilyData {
 				p.setDeleted(true);
 	}
 	
-	public List<Particle> getParticles()
+	public List<TrainingParticle> getParticles()
 	{
-		ArrayList<Particle> result = new ArrayList<Particle>();
+		ArrayList<TrainingParticle> result = new ArrayList<TrainingParticle>();
 		result.addAll(manualparticles);
 		result.addAll(autoparticles);
 		return result;

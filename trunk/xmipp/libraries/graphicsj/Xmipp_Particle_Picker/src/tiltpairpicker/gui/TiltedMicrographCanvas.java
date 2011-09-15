@@ -13,14 +13,14 @@ import javax.swing.SwingUtilities;
 import tiltpairpicker.model.ParticlePairPicker;
 import tiltpairpicker.model.TiltedMicrograph;
 import trainingpicker.gui.WindowUtils;
-import trainingpicker.model.Particle;
+import trainingpicker.model.TrainingParticle;
 
 
 public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener{
 
 	private ParticlePairPickerJFrame frame;
 	private TiltedMicrograph tiltedmicrograph;
-	private Particle dragged;
+	private TrainingParticle dragged;
 	private ParticlePairPicker pppicker;
 	private ImageWindow iw;
 	
@@ -107,8 +107,38 @@ public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener
 		
 	}
 	
+	public void mousePressed(MouseEvent e) {
+		if (frame.getTool() != Tool.PICKER) {
+			super.mousePressed(e);
+			return;
+		}
+		int x = super.offScreenX(e.getX());
+		int y = super.offScreenY(e.getY());
 
-	private void drawShape(Graphics2D g2, Particle p, int x0, int y0, int radius, boolean all) {
+		if (SwingUtilities.isRightMouseButton(e)) {
+			setupScroll(x, y);
+		}
+		
+	}
+	
+	@Override
+	public void mouseDragged(MouseEvent e) {
+
+		if (frame.getTool() != Tool.PICKER) {
+			super.mouseDragged(e);
+			return;
+		}
+		int x = super.offScreenX(e.getX());
+		int y = super.offScreenY(e.getY());
+		if (SwingUtilities.isRightMouseButton(e)) {
+			scroll(e.getX(), e.getY());
+			return;
+		}
+		
+	}
+	
+
+	private void drawShape(Graphics2D g2, TrainingParticle p, int x0, int y0, int radius, boolean all) {
 		
 		int x = (int) ((p.getX() - x0) * magnification);
 		int y = (int) ((p.getY() - y0) * magnification);
@@ -123,6 +153,8 @@ public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener
 			g2.drawLine(x + distance, y, x - distance, y);
 		}
 	}
+
+
 
 	
 

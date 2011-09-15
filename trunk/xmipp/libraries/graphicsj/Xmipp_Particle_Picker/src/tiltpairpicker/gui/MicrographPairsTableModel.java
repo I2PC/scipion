@@ -7,7 +7,7 @@ import javax.swing.table.AbstractTableModel;
 
 import tiltpairpicker.model.UntiltedMicrograph;
 import trainingpicker.model.FamilyState;
-import trainingpicker.model.Micrograph;
+import trainingpicker.model.TrainingMicrograph;
 import trainingpicker.model.MicrographFamilyData;
 
 

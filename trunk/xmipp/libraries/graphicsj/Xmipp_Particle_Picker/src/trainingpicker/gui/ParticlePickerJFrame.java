@@ -55,10 +55,10 @@ import javax.swing.event.ListSelectionListener;
 import trainingpicker.model.Constants;
 import trainingpicker.model.Family;
 import trainingpicker.model.FamilyState;
-import trainingpicker.model.Micrograph;
+import trainingpicker.model.TrainingMicrograph;
 import trainingpicker.model.MicrographFamilyData;
 import trainingpicker.model.MicrographFamilyState;
-import trainingpicker.model.Particle;
+import trainingpicker.model.TrainingParticle;
 import trainingpicker.model.ParticlePicker;
 import trainingpicker.model.SupervisedParticlePicker;
 import trainingpicker.model.XmippJ;
@@ -96,7 +96,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 
 	private JMenuItem savemi;
 	private MicrographsTableModel micrographsmd;
-	Micrograph micrograph;
+	TrainingMicrograph micrograph;
 	private JButton nextbt;
 	private JButton colorbt;
 	private double position;
@@ -151,10 +151,9 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 
 		this.ppicker = ppicker;
 		initComponents();
-		initializeCanvas();
 	}
 
-	public Micrograph getMicrograph() {
+	public TrainingMicrograph getMicrograph() {
 		return micrograph;
 	}
 
@@ -301,7 +300,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				List<ImagePlus> imgs = new ArrayList<ImagePlus>();
-				for (Particle p : getMicrograph().getFamilyData(family)
+				for (TrainingParticle p : getMicrograph().getFamilyData(family)
 						.getManualParticles())
 					imgs.add(p.getImage());
 				String filename = XmippJ.saveTempImageStack(imgs);
@@ -712,7 +711,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 								.getSelectedRow();
 						// by me.
 						micrograph.releaseImage();
-						micrograph = (Micrograph) ppicker.getMicrographs().get(
+						micrograph = (TrainingMicrograph) ppicker.getMicrographs().get(
 								index);
 
 						initializeCanvas();
@@ -853,7 +852,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 		setStep(FamilyState.Supervised);
 
 		String args;
-		for (Micrograph micrograph : ppicker.getMicrographs()) {
+		for (TrainingMicrograph micrograph : ppicker.getMicrographs()) {
 			if (!micrograph.getFamilyData(family).isEmpty()) {
 
 				args = String

@@ -5,7 +5,7 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import trainingpicker.model.FamilyState;
-import trainingpicker.model.Micrograph;
+import trainingpicker.model.TrainingMicrograph;
 import trainingpicker.model.MicrographFamilyData;
 
 
@@ -13,7 +13,7 @@ public class MicrographsTableModel extends AbstractTableModel {
 	
 	
 	
-	private List<Micrograph> micrographs;
+	private List<TrainingMicrograph> micrographs;
 	private String[] columns = new String[]{"", "Name", "Particles", "State"};
 	private ParticlePickerJFrame frame;
 
@@ -41,7 +41,7 @@ public class MicrographsTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		Micrograph m = micrographs.get(rowIndex);
+		TrainingMicrograph m = micrographs.get(rowIndex);
 		if(columnIndex == 0)
 			return rowIndex + 1;
 		if(columnIndex == 1)

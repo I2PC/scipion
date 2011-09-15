@@ -10,59 +10,35 @@ import javax.swing.Icon;
 import trainingpicker.model.Constants;
 import trainingpicker.model.Family;
 import trainingpicker.model.FamilyState;
+import trainingpicker.model.Micrograph;
 import trainingpicker.model.MicrographFamilyData;
 import trainingpicker.model.MicrographFamilyState;
 import trainingpicker.model.Particle;
+import trainingpicker.model.TrainingParticle;
 
-public class TiltedMicrograph {
+public class TiltedMicrograph extends Micrograph{
 	
-	private String imagefile;
-	private String name;
-	private ImagePlus image;
 	
-	public TiltedMicrograph(String image) {
-		
-		this.imagefile = image;
-		if(!new File(image).exists())
-			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("image", image));
-		this.name = getName(image);
+	public TiltedMicrograph(String file) {
+		super(file);
 
 	}
 
-	
-	public String getImageFile() {
-		return imagefile;
+	public TiltedParticle getParticle(int x, int y, int size) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
-
-	public String getName() {
-		return name;
-	}
-	
-	public static String getName(String file)
-	{
-		String[] tokens = file.split(File.separator);
-		return  tokens[tokens.length - 1];
-	}
-	
-	
-
-	public boolean isEmpty() {
+	@Override
+	public boolean hasData() {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	
-	public ImagePlus getImage()
-	{
-		if(image == null)
-			image = new ImagePlus(imagefile);
-		return image;
-	}
-	
-	public void releaseImage()
-	{
-		image = null;
+	@Override
+	public void reset() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

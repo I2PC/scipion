@@ -15,10 +15,10 @@ import javax.swing.SwingUtilities;
 
 import trainingpicker.model.AutomaticParticle;
 import trainingpicker.model.FamilyState;
-import trainingpicker.model.Micrograph;
+import trainingpicker.model.TrainingMicrograph;
 import trainingpicker.model.MicrographFamilyData;
 import trainingpicker.model.MicrographFamilyState;
-import trainingpicker.model.Particle;
+import trainingpicker.model.TrainingParticle;
 import trainingpicker.model.ParticlePicker;
 
 
@@ -26,8 +26,8 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 		MouseWheelListener {
 
 	private ParticlePickerJFrame frame;
-	private Micrograph micrograph;
-	private Particle dragged;
+	private TrainingMicrograph micrograph;
+	private TrainingParticle dragged;
 	private ParticlePicker ppicker;
 	final static BasicStroke dashedst = new BasicStroke(1.0f,
 			BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f,
@@ -85,7 +85,7 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 			return;
 		}
 		if (frame.getFamilyData().isPickingAvailable()) {
-			Particle p = micrograph.getParticle(x, y);
+			TrainingParticle p = micrograph.getParticle(x, y);
 			if(p == null)
 				p = micrograph.getAutomaticParticle(x, y, frame.getThreshold());
 			if (p != null) {
@@ -96,9 +96,9 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 					dragged = p;
 				}
 			} else if (SwingUtilities.isLeftMouseButton(e)
-					&& Particle.boxContainedOnImage(x, y, frame.getFamily()
+					&& TrainingParticle.boxContainedOnImage(x, y, frame.getFamily()
 							.getSize(), imp)) {
-				p = new Particle(x, y, frame.getFamily(), micrograph);
+				p = new TrainingParticle(x, y, frame.getFamily(), micrograph);
 				micrograph.addManualParticle(p);
 				dragged = p;
 				frame.updateMicrographsModel();
@@ -140,13 +140,13 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 			if (dragged == null)
 				return;
 
-			if (!Particle.boxContainedOnImage(x, y, dragged.getFamily()
+			if (!TrainingParticle.boxContainedOnImage(x, y, dragged.getFamily()
 					.getSize(), imp))
 				return;
 			if(dragged instanceof AutomaticParticle)
 			{
 				micrograph.removeParticle(dragged, ppicker);
-				dragged = new Particle(dragged.getX(), dragged.getY(), dragged.getFamily(), micrograph);
+				dragged = new TrainingParticle(dragged.getX(), dragged.getY(), dragged.getFamily(), micrograph);
 				micrograph.addManualParticle(dragged);
 			}
 			else
@@ -185,7 +185,7 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 		int y0 = (int) getSrcRect().getY();
 		
 		int radius;
-		List<Particle> particles;
+		List<TrainingParticle> particles;
 		int index;
 		if(!mfdata.isEmpty())
 		{
@@ -203,7 +203,7 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 		
 	}
 
-	private void drawShape(Graphics2D g2, Particle p, int x0, int y0, int radius, boolean all) {
+	private void drawShape(Graphics2D g2, TrainingParticle p, int x0, int y0, int radius, boolean all) {
 		
 		int x = (int) ((p.getX() - x0) * magnification);
 		int y = (int) ((p.getY() - y0) * magnification);

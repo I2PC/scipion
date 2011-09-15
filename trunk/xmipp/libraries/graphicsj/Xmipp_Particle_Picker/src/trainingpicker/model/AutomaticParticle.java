@@ -1,10 +1,10 @@
 package trainingpicker.model;
 
-public class AutomaticParticle extends Particle {
+public class AutomaticParticle extends TrainingParticle {
 	
 	private boolean deleted;
 
-	public AutomaticParticle(int x, int y, Family family, Micrograph micrograph, double cost, boolean deleted) {
+	public AutomaticParticle(int x, int y, Family family, TrainingMicrograph micrograph, double cost, boolean deleted) {
 		super(x, y, family, micrograph, cost);
 		if(cost> 1)
 			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("cost", cost));

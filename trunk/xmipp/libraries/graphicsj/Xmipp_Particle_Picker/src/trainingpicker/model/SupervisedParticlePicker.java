@@ -78,7 +78,7 @@ public class SupervisedParticlePicker extends ParticlePicker {
 			new File(getOTrainingFilename(family.getName())).delete();
 			new File(getOTrainingMaskFilename(family.getName())).delete();
 			MicrographFamilyData mfd;
-			for (Micrograph m : micrographs) {
+			for (TrainingMicrograph m : micrographs) {
 				mfd = m.getFamilyData(family);
 				if (mfd.getStep() == FamilyState.Supervised)
 					resetFamilyData(mfd);

@@ -1,7 +1,6 @@
 package trainingpicker.model;
 
 import ij.ImagePlus;
-import ij.gui.Roi;
 import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
@@ -11,34 +10,17 @@ import javax.swing.ImageIcon;
 
 import trainingpicker.gui.ParticleCanvas;
 
-public class Particle implements Comparable<Particle>{
-	
+public class Particle {
 	protected int x;
 	protected int y;
-	protected Family family;
 	protected Micrograph micrograph;
-	protected ImagePlus img;
-	protected ParticleCanvas canvas;
-	protected double cost = 2;
 	
 	
-	public Particle(int x, int y, Family family, Micrograph micrograph)
-	{
-		this(x, y, family, micrograph, 2);
-	}
-	
-	public Particle(int x, int y, Family family, Micrograph micrograph, double cost)
+	public Particle(int x, int y, Micrograph micrograph)
 	{
 		this.x = x;
 		this.y = y;
-		this.family = family;
 		this.micrograph = micrograph;
-		this.cost = cost;
-	}
-	
-	public double getCost()
-	{
-		return cost;
 	}
 	
 	
@@ -47,17 +29,8 @@ public class Particle implements Comparable<Particle>{
 	}
 
 
-	public void setMicrograph(Micrograph micrograph) {
+	public void setMicrograph(TrainingMicrograph micrograph) {
 		this.micrograph = micrograph;
-	}
-
-
-	public Family getFamily() {
-		return family;
-	}
-
-	public void setFamily(Family family) {
-		this.family = family;
 	}
 
 	public int getX() {
@@ -76,9 +49,9 @@ public class Particle implements Comparable<Particle>{
 		this.y = y;
 	}
 	
-	public boolean contains(int x2, int y2 )
+	public boolean contains(int x2, int y2, int size )
 	{
-		int radius = family.getSize()/2;
+		int radius = size/2;
 			if(x2 < x - radius || x2 > x + radius)
 				return false;
 			if(y2 < y - radius || y2 > y + radius)
@@ -86,30 +59,6 @@ public class Particle implements Comparable<Particle>{
 			return true;
 	}
 
-
-
-	
-	public ImagePlus getImage()
-	{
-		if(img == null)
-		{
-			int size = family.getSize();
-			ImagePlus mimage = micrograph.getImage();
-			int radius = size/2;
-			Rectangle r = new Rectangle(x - radius , y - radius, radius * 2, radius * 2);
-			mimage.setRoi(r);
-			ImageProcessor processor = mimage.getProcessor().crop();
-			img = new ImagePlus("", processor);
-		}
-		return img;
-	}
-	
-	public ImageIcon getImageIcon()
-	{
-		
-		ImageIcon icon = new ImageIcon(img.getImage());
-		return icon;
-	}
 
 	public static boolean boxContainedOnImage(int x, int y, int size, ImagePlus img) {
 		if(img == null)
@@ -129,18 +78,6 @@ public class Particle implements Comparable<Particle>{
 			
 	}
 
-	
-	public ParticleCanvas getImageCanvas()
-	{
-		if(canvas == null)
-		{
-			canvas = new ParticleCanvas(getImage());
-		}
-		return canvas;
-		
-	}
-
-
 	public void setPosition(int x, int y) {
 		this.x = x;
 		this.y = y;
@@ -151,25 +88,9 @@ public class Particle implements Comparable<Particle>{
 	{
 		return String.format("x = %s; y = %s", x, y); 
 	}
-
-
-
-
-	@Override
-	public int compareTo(Particle p) {
-		if(p.x > x)
-			return 1;
-		if(p.x == x)
-		{
-			if(p.y > y)
-				return 1;
-			if(p.y == y)
-				return 0;
-			return -1;
-		}
-		return -1;
-	}
-
+	
 
 	
+
+
 }

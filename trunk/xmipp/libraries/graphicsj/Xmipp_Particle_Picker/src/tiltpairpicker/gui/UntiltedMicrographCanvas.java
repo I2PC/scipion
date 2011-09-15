@@ -15,13 +15,15 @@ import javax.swing.SwingUtilities;
 
 import tiltpairpicker.model.ParticlePairPicker;
 import tiltpairpicker.model.UntiltedMicrograph;
+import tiltpairpicker.model.UntiltedParticle;
 import trainingpicker.gui.WindowUtils;
 import trainingpicker.model.AutomaticParticle;
 import trainingpicker.model.FamilyState;
-import trainingpicker.model.Micrograph;
+import trainingpicker.model.TrainingMicrograph;
 import trainingpicker.model.MicrographFamilyData;
 import trainingpicker.model.MicrographFamilyState;
 import trainingpicker.model.Particle;
+import trainingpicker.model.TrainingParticle;
 import trainingpicker.model.ParticlePicker;
 
 
@@ -30,7 +32,7 @@ public class UntiltedMicrographCanvas extends ImageCanvas implements
 
 	private ParticlePairPickerJFrame frame;
 	private TiltedMicrographCanvas tiltedcanvas;
-	private Particle dragged;
+	private UntiltedParticle dragged;
 	private ParticlePairPicker pppicker;
 	private UntiltedMicrograph untiltedmicrograph;
 	private ImageWindow iw;
@@ -92,6 +94,23 @@ public class UntiltedMicrographCanvas extends ImageCanvas implements
 			setupScroll(x, y);
 			tiltedcanvas.mousePressed(x, y);
 		}
+		UntiltedParticle p = untiltedmicrograph.getParticle(x, y, frame.getParticleSize());
+		if (p != null) {
+			if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown()) {
+				untiltedmicrograph.removeParticle(p);
+				frame.updateMicrographsModel();
+			} else if (SwingUtilities.isLeftMouseButton(e)) {
+				dragged = p;
+			}
+		} else if (SwingUtilities.isLeftMouseButton(e)
+				&& TrainingParticle.boxContainedOnImage(x, y, frame.getParticleSize(), imp)) {
+			p = new UntiltedParticle(x, y, untiltedmicrograph);
+			untiltedmicrograph.addParticle(p);
+			dragged = p;
+			frame.updateMicrographsModel();
+		}
+		frame.setChanged(true);
+		repaint();
 		
 	}
 
@@ -141,16 +160,29 @@ public class UntiltedMicrographCanvas extends ImageCanvas implements
 
 	}
 
+	
+	
+	public TiltedMicrographCanvas getTiltedCanvas()
+	{
+		return tiltedcanvas;
+	}
+	
 	public void paint(Graphics g) {
 		super.paint(g);
 		Graphics2D g2 = (Graphics2D) g;
-		
+		int x0 = (int) getSrcRect().getX();
+		int y0 = (int) getSrcRect().getY();
+		int index = 0;
+		for (Particle p: untiltedmicrograph.getParticles())
+		{
+			drawShape(g2, p, x0, y0, index == untiltedmicrograph.getParticles().size() - 1);
+			index ++;
+		}
 	}
 	
-	
 
-	private void drawShape(Graphics2D g2, Particle p, int x0, int y0, int radius, boolean all) {
-		
+	private void drawShape(Graphics2D g2, Particle p, int x0, int y0, boolean all) {
+		int radius = frame.getParticleSize()/2;
 		int x = (int) ((p.getX() - x0) * magnification);
 		int y = (int) ((p.getY() - y0) * magnification);
 		int distance = (int)(10 * magnification);

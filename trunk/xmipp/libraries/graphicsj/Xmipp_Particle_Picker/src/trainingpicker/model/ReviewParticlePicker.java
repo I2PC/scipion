@@ -50,12 +50,12 @@ public class ReviewParticlePicker extends ParticlePicker {
 			long id;
 			new File(reviewfile).delete();// to ensure I clean file and can
 											// append later
-			for (Micrograph m : micrographs) {
+			for (TrainingMicrograph m : micrographs) {
 
 				mfd = m.getFamilyData(reviewfamily);
 				if (!mfd.isEmpty()) {
 					md = new MetaData();
-					for (Particle p : mfd.getParticles()) {
+					for (TrainingParticle p : mfd.getParticles()) {
 						id = md.addObject();
 						md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
 						md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
@@ -73,7 +73,7 @@ public class ReviewParticlePicker extends ParticlePicker {
 	@Override
 	public void loadMicrographs() {
 		micrographs.clear();
-		Micrograph micrograph;
+		TrainingMicrograph micrograph;
 		String ctf = null, filename;
 		try {
 			MetaData md = new MetaData(getMicrographsSelFile());
@@ -85,7 +85,7 @@ public class ReviewParticlePicker extends ParticlePicker {
 						MDLabel.MDL_IMAGE, id));
 				if (existsctf)
 					ctf = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
-				micrograph = new Micrograph(filename, ctf, families, getMode());
+				micrograph = new TrainingMicrograph(filename, ctf, families, getMode());
 				micrographs.add(micrograph);
 			}
 			if (micrographs.size() == 0)
@@ -93,11 +93,11 @@ public class ReviewParticlePicker extends ParticlePicker {
 						"No micrographs specified on %s", getMicrographsSelFile()));
 			int x, y;
 			double cost;
-			Particle particle;
+			TrainingParticle particle;
 			List<String> blocks = Arrays.asList(MetaData
 					.getBlocksInMetaDataFile(reviewfile));
 			String block;
-			for (Micrograph m : micrographs) {
+			for (TrainingMicrograph m : micrographs) {
 				block = "mic_" + m.getName();
 				if (blocks.contains(block)) {
 					md = new MetaData(block + "@" + reviewfile);
@@ -109,7 +109,7 @@ public class ReviewParticlePicker extends ParticlePicker {
 						y = md.getValueInt(MDLabel.MDL_YINT, id);
 						cost = md.getValueDouble(MDLabel.MDL_COST, id);
 						if(cost > 1)
-							m.addManualParticle(new Particle(x, y, reviewfamily, m, cost));
+							m.addManualParticle(new TrainingParticle(x, y, reviewfamily, m, cost));
 						else
 							m.addAutomaticParticle(new AutomaticParticle(x, y, reviewfamily, m, cost, false));
 					}
