@@ -1,4 +1,4 @@
-package pairpicker.model;
+package tiltpairpicker.model;
 
 import java.awt.Color;
 import java.io.File;
@@ -25,13 +25,13 @@ public class ParticlePairPicker {
 	private static String rundir = ".";
 	private boolean changed;
 	private int size;
-	protected List<MicrographPair> micrographs;
+	protected List<UntiltedMicrograph> micrographs;
 	private Color color = Color.green;
 	
 	public ParticlePairPicker(String pairsfile, String outputdir) {
 		
 		this.outputdir = outputdir;
-		this.micrographs = new ArrayList<MicrographPair>();
+		this.micrographs = new ArrayList<UntiltedMicrograph>();
 		loadData(pairsfile);
 	}
 	
@@ -39,7 +39,7 @@ public class ParticlePairPicker {
 		MetaData md = new MetaData();
 		md.readPlain(pairsfile, "image tilted_image");
 		micrographs.clear();
-		MicrographPair micrograph;
+		UntiltedMicrograph micrograph;
 		String image, tiltedimage;
 		try {
 			long[] ids = md.findObjects();
@@ -47,7 +47,7 @@ public class ParticlePairPicker {
 
 				image = md.getValueString(MDLabel.MDL_IMAGE, id);
 				tiltedimage = md.getValueString(MDLabel.MDL_IMAGE_TILTED, id);
-				micrograph = new MicrographPair(image, tiltedimage);
+				micrograph = new UntiltedMicrograph(image, new TiltedMicrograph(tiltedimage));
 				micrographs.add(micrograph);
 			}
 			if (micrographs.size() == 0)
@@ -99,7 +99,7 @@ public class ParticlePairPicker {
 
 	public int getNextFreeMicrograph() {
 		int count = 0;
-		for (MicrographPair m : micrographs) {
+		for (UntiltedMicrograph m : micrographs) {
 			if (m.isEmpty())
 				return count;
 			count++;
@@ -107,7 +107,7 @@ public class ParticlePairPicker {
 		return -1;
 	}
 	
-	public List<MicrographPair> getMicrographs() {
+	public List<UntiltedMicrograph> getMicrographs() {
 		return micrographs;
 	}
 

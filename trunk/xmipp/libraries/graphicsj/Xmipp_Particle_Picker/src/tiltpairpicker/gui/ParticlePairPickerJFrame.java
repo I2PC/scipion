@@ -1,13 +1,9 @@
-package pairpicker.gui;
+package tiltpairpicker.gui;
 
 import ij.IJ;
 import ij.ImageJ;
-import ij.ImagePlus;
-import ij.gui.ImageWindow;
-import ij.gui.Toolbar;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -23,16 +19,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
 
 import javax.swing.BorderFactory;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
@@ -52,25 +43,11 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import pairpicker.model.ParticlePairPicker;
-import pairpicker.model.MicrographPair;
 import picker.gui.ColorIcon;
-import picker.gui.ParticlePickerCanvas;
 import picker.gui.WindowUtils;
-import picker.model.Constants;
-import picker.model.Family;
-import picker.model.FamilyState;
-import picker.model.Micrograph;
-import picker.model.MicrographFamilyData;
-import picker.model.MicrographFamilyState;
-import picker.model.Particle;
 import picker.model.ParticlePicker;
-import picker.model.SupervisedParticlePicker;
-import picker.model.XmippJ;
-
-import xmipp.Program;
-
-import browser.windows.ImagesWindowFactory;
+import tiltpairpicker.model.ParticlePairPicker;
+import tiltpairpicker.model.UntiltedMicrograph;
 
 enum Tool {
 	IMAGEJ, PICKER
@@ -86,7 +63,6 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 	private JSlider sizesl;
 	private JCheckBox circlechb;
 	private JCheckBox rectanglechb;
-	private ParticlePickerCanvas canvas;
 	private JFormattedTextField sizetf;
 	private JCheckBox centerchb;
 	private JMenuBar mb;
@@ -97,11 +73,11 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 	private String activemacro;
 	private JPanel micrographpn;
 	private JTable micrographstb;
-	private ImageWindow iw;
+	private UntiltedMicrographCanvas canvas;
 
 	private JMenuItem savemi;
 	private MicrographPairsTableModel micrographsmd;
-	private MicrographPair micrograph;
+	private UntiltedMicrograph untiltedmic;
 	private JButton colorbt;
 	private double position;
 	private JLabel iconlb;
@@ -109,6 +85,7 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 	private JButton resetbt;
 	private JLabel particleslb;
 	private String tool = "Particle Picker Tool";
+	
 
 	// private JCheckBox onlylastchb;
 
@@ -148,9 +125,7 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 		initializeCanvas();
 	}
 
-	public MicrographPair getMicrograph() {
-		return micrograph;
-	}
+	
 
 	private void initComponents() {
 		// try {
@@ -187,13 +162,11 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 
 		initParticlesPane();
 		add(particlespn, WindowUtils.updateConstraints(constraints, 0, 1, 3));
-
-
 		initMicrographsPane();
 		add(micrographpn, WindowUtils.updateConstraints(constraints, 0, 2, 3));
 
 		pack();
-		position = 0.9;
+		position = 0.95;
 		WindowUtils.centerScreen(position, this);
 		setVisible(true);
 	}
@@ -352,11 +325,13 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 		particlespn.add(fieldspn, 0);
 		initSymbolPane();
 		particlespn.add(symbolpn, 1);
+		
+		
 
 		index = pppicker.getNextFreeMicrograph();
 		if (index == -1)
 			index = 0;
-		micrograph = pppicker.getMicrographs().get(index);
+		untiltedmic = pppicker.getMicrographs().get(index);
 
 		
 
@@ -414,8 +389,9 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 
 	private void initSymbolPane() {
 
-		symbolpn = new JPanel();
-		symbolpn.setBorder(BorderFactory.createTitledBorder("Symbol"));
+		symbolpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		symbolpn.add(new JLabel("Symbol:"));
+		//symbolpn.setBorder(BorderFactory.createTitledBorder("Symbol"));
 		ShapeItemListener shapelistener = new ShapeItemListener();
 
 		circlechb = new JCheckBox(Shape.Circle.toString());
@@ -453,11 +429,11 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 		micrographstb = new JTable(micrographsmd);
 		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
-		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(150);
-		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(150);
-		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(70);
+		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(120);
+		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(120);
+		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(60);
 		micrographstb
-				.setPreferredScrollableViewportSize(new Dimension(405, 304));
+				.setPreferredScrollableViewportSize(new Dimension(335, 304));
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		sp.setViewportView(micrographstb);
@@ -497,8 +473,8 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 						index = ParticlePairPickerJFrame.this.micrographstb
 								.getSelectedRow();
 						// by me.
-						micrograph.releaseImage();
-						micrograph = pppicker.getMicrographs().get(
+						untiltedmic.releaseImage();
+						untiltedmic = pppicker.getMicrographs().get(
 								index);
 
 						initializeCanvas();
@@ -511,17 +487,6 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 	}
 
 
-	void initializeCanvas() {
-//		if (iw == null) {
-//			canvas = new ParticlePickerCanvas(this);
-//			iw = new ImageWindow(micrograph.getImage(), canvas);
-//		} else {
-//			canvas.updateMicrograph();
-//			micrograph.getImage().setWindow(iw);
-//		}
-//		iw.setTitle(micrograph.getName());
-//		canvas.setName(micrograph.getName());
-	}
 
 	private void saveChanges() {
 		pppicker.saveData();
@@ -536,7 +501,6 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 //	}
 
 
-
 	void switchSize(int size) {
 		sizetf.setText(Integer.toString(size));
 		sizesl.setValue(size);
@@ -544,8 +508,6 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 		pppicker.setSize(size);
 		setChanged(true);
 	}
-
-
 
 
 	void setChanged(boolean changed) {
@@ -559,11 +521,18 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 		particleslb.setText(Integer.toString(pppicker.getParticlesNumber()));
 	}
 
-	public ImageWindow getImageWindow() {
-		return iw;
+	void initializeCanvas() {
+		if (canvas == null) {
+			canvas = new UntiltedMicrographCanvas(this);
+		} else 
+			canvas.updateMicrograph();
 	}
 
-	public ParticlePickerCanvas getCanvas() {
+	public UntiltedMicrographCanvas getCanvas() {
 		return canvas;
+	}
+
+	public UntiltedMicrograph getUntiltedMicrograph() {
+		return untiltedmic;
 	}
 }

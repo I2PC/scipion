@@ -1,20 +1,21 @@
-package pairpicker.gui;
+package tiltpairpicker.gui;
 
 import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import pairpicker.model.MicrographPair;
+
 import picker.model.FamilyState;
 import picker.model.Micrograph;
 import picker.model.MicrographFamilyData;
+import tiltpairpicker.model.UntiltedMicrograph;
 
 
 public class MicrographPairsTableModel extends AbstractTableModel {
 	
 	
 	
-	private List<MicrographPair> micrographs;
+	private List<UntiltedMicrograph> micrographs;
 	private String[] columns = new String[]{"", "Name", "Pair Name", "Particles"};
 	private ParticlePairPickerJFrame frame;
 
@@ -41,17 +42,13 @@ public class MicrographPairsTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		MicrographPair m = micrographs.get(rowIndex);
+		UntiltedMicrograph m = micrographs.get(rowIndex);
 		if(columnIndex == 0)
 			return rowIndex + 1;
 		if(columnIndex == 1)
 			return m.getName();
 		if(columnIndex == 2)
-		{
-			return m.getTiltedName();
-		}
-			
-		
+			return m.getTiltedMicrograph().getName();
 		return null;
 	}
 	
