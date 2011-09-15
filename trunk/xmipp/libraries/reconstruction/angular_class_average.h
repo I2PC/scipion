@@ -51,6 +51,8 @@ public:
 
     /** Input and library docfiles */
     MetaData         DF, DFlib;
+    /** metadata with classes which have experimental images applied to them */
+    MetaData         DFclassesExp;
     /** Output rootnames */
     FileName         fn_out, fn_out1, fn_out2, fn_wien;
     /** Column numbers */
@@ -59,7 +61,7 @@ public:
     double           limit0, limitF, limitR;
     /** Flags wether to use limit0, limitF and limitR selection */
     bool             do_limit0, do_limitF, do_limitR0, do_limitRF;
-    /** Flag whether to apply mirror operations */
+    /** Flag whether to apply mirror operations. By default set to True */
     bool             do_mirrors;
     /** Flag whether also to write out class averages of random halves of the data */
     bool             do_split;
@@ -69,8 +71,8 @@ public:
     double           pad;
     /** One empty image with correct dimensions */
     Image<double>    Iempty;
-    /** Skip writing of selfiles */
-    bool             dont_write_selfiles;
+    /** Do NOT skip writing of selfiles */
+    bool             write_selfiles;
     /** Add output to existing files */
     bool             do_add;
     /** Wiener filter image */
@@ -80,6 +82,8 @@ public:
 
     /** Re-alignment of classes */
 
+    /** Input file */
+    FileName inFile;
     /** Inner and outer radius for rotational alignment */
     int Ri, Ro;
     /** Number of iterations */
@@ -121,26 +125,26 @@ public:
                       std::vector< Image<double> > imgs,
                       std::vector<int> splits,
                       std::vector<int> numbers,
-                      int dirno,
+                      size_t dirno,
                       double * my_output);
 
     /** Apply Wiener filter */
     void applyWienerFilter(MultidimArray<double> &img);
 
     /** Process a single class */
-    void processOneClass(int &dirno,
+    void processOneClass(size_t &dirno,
                          double * my_output);
 
     /** Write average and selfiles to disc */
     void writeToDisc(Image<double> avg,
-                     int        dirno,
+                     size_t     dirno,
                      MetaData   SF,
                      FileName   fn,
                      bool       write_selfile,
                      FileName   oext="xmp");
 
     /** Add an image to the selfile and docfile of all class averages */
-    void addClassAverage(int dirno,
+    void addClassAverage(size_t dirno,
                          double w,
                          double w1,
                          double w2);

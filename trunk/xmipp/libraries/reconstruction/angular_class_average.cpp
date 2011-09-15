@@ -29,7 +29,8 @@
 void ProgAngularClassAverage::readParams()
 {
     // Read command line
-    DF.read(getParam("-i"));
+    inFile = getParam("-i");
+    DF.read(inFile);
     DFlib.read(getParam("--lib"));
     if (checkParam("--add_to"))
     {
@@ -75,7 +76,7 @@ void ProgAngularClassAverage::readParams()
     pad = XMIPP_MAX(1.,getDoubleParam("--pad"));
 
     // Skip writing selfiles?
-    dont_write_selfiles = checkParam("--dont_write_selfiles");
+    write_selfiles = !checkParam("--write_selfiles");
 
     // Internal re-alignment of the class averages
     Ri      = getIntParam("--Ri");
@@ -84,6 +85,7 @@ void ProgAngularClassAverage::readParams()
     max_shift        = getDoubleParam("--max_shift");
     max_shift_change = getDoubleParam("--max_shift_change");
     max_psi_change   = getDoubleParam("--max_psi_change");
+    do_mirrors=true;
 }
 
 
@@ -100,11 +102,11 @@ void ProgAngularClassAverage::defineParams()
     addParamsLine("or --add_to <root_name>    : Add output to existing files");
     addParamsLine("   [--split ]              : Also output averages of random halves of the data");
     addParamsLine("   [--wien <img=\"\"> ]    : Apply this Wiener filter to the averages");
-    addParamsLine("   [--pad <factor=1.> ]     : Padding factor for Wiener correction");
-    addParamsLine("   [--dont_write_selfiles]   : Do not write class selfiles to disc");
+    addParamsLine("   [--pad <factor=1.> ]    : Padding factor for Wiener correction");
+    addParamsLine("   [--write_selfiles]      : Write class selfiles to disc");
 
-    addParamsLine("==+ IMAGE SELECTION BASED ON INPUT DOCFILE ==");
-    addParamsLine("   [--select <col=\"\">]     : Column to use for image selection (limit0, limitF or limitR)");
+    addParamsLine("==+ IMAGE SELECTION BASED ON INPUT DOCFILE (select one between: limit 0, F and R ==");
+    addParamsLine("   [--select <col=\"maxCC\">]     : Column to use for image selection (limit0, limitF or limitR)");
     addParamsLine("   [--limit0 <l0>]        : Discard images below <l0>");
     addParamsLine("   [--limitF <lF>]        : Discard images above <lF>");
     addParamsLine("   [--limitR <lR>]        : if (lR>0 && lR< 100): discard lowest  <lR> % in each class");
@@ -160,16 +162,22 @@ void ProgAngularClassAverage::run()
         reserve = DF.size();
     else
         reserve = 0;
+    //output_values looks horrible but it is usefull for the MPI version
     double output_values[AVG_OUPUT_SIZE*reserve+1];
 
     nr_ref = DFlib.size();
     init_progress_bar(nr_ref);
 
     // Loop over all classes
-
-    for (int dirno = 1; dirno <= nr_ref; dirno++)
+    //FIXME
+    //What for, better check which classes has experimental images
+    //most of the classes are empty!!!!!ROB
+    //for (int dirno = 1; dirno <= nr_ref; dirno++)
+    size_t dirno;
+    FOR_ALL_OBJECTS_IN_METADATA(DFclassesExp)
     {
         // Do the actual work
+        DFclassesExp.getValue(MDL_ORDER,dirno,__iter.objId);
         processOneClass(dirno, output_values);
 
         // Output classes sel and doc files
@@ -212,7 +220,7 @@ void ProgAngularClassAverage::run()
             }
         }
 
-        progress_bar(dirno);
+        progress_bar((long)dirno);
 
     }
     progress_bar(nr_ref);
@@ -226,7 +234,32 @@ void ProgAngularClassAverage::run()
 // Side info stuff ===================================================================
 void ProgAngularClassAverage::produceSideInfo()
 {
-    FileName fn_img;
+
+    //create metadata with classes that has experimental images applied to them.
+    //experimental images are already in DF
+    //get all blocks, select those without '_'
+    //perform an aggregation fuction over the reference and store the result in DFclassesExp
+    StringVector blockList;
+    FileName auxFn        = inFile.removeBlockName();
+    getBlocksInMetaDataFile(auxFn,blockList);
+    MetaData auxMD;
+    for (StringVector::iterator it = blockList.begin(); it!=blockList.end(); ++it)
+    {
+        if ((*it).find("_")!=std::string::npos)
+            continue;
+        auxMD.read(*it +'@' + auxFn);
+        DFclassesExp.unionAll(auxMD);
+    }
+    auxMD.aggregate(DFclassesExp, AGGR_COUNT,MDL_REF,MDL_REF,MDL_COUNT);
+    //number DFclassesExp
+    auxMD.addLabel(MDL_ORDER);
+    DFclassesExp.sort(auxMD,MDL_REF);
+    size_t counter=FIRST_IMAGE;
+    FOR_ALL_OBJECTS_IN_METADATA(DFclassesExp)
+    	DFclassesExp.setValue(MDL_ORDER,counter++,__iter.objId);
+    //add class number to original metadata with experimentali images
+    //auxMD.join(DF,DFclassesExp,MDL_REF);
+    //DF=auxMD;
 
     // Set up output rootnames
     if (do_split)
@@ -235,29 +268,25 @@ void ProgAngularClassAverage::produceSideInfo()
         fn_out2 = fn_out+"_split_2";
     }
 
-    // get column numbers from NewXmipp-type docfile header
-    bool auxflip;
-    size_t id = DF.firstObject();
-    do_mirrors = DF.getValue(MDL_FLIP, auxflip, id);
-
-    // Read empty image with the correct dimensions
-    DF.getValue(MDL_IMAGE,fn_img, id);
-    Iempty.read(fn_img);
+    int dummyI;
+    size_t dummyT;
+    ImgSize(DF,dim,dummyI,dummyI,dummyT);
+    //init with 0 by default through memset
+    Iempty().resizeNoCopy(dim,dim);
     Iempty().setXmippOrigin();
-    Iempty().initZeros();
-    dim = XSIZE(Iempty());
 
-    // Read Wiener filter image
+    // check Wiener filter image has correct size and store the filter, we will use it later
     if (fn_wien!="")
     {
         // Get padding dimensions
         paddim = ROUND(pad * dim);
-        Image<double> It;
-        It.read(fn_wien);
-        Mwien=It();
+        Image<double> auxImg;
+        auxImg.read(fn_wien);
+        Mwien=auxImg();
         if (XSIZE(Mwien) != paddim)
         {
-            std::cerr<<"image size= "<<dim<<" padding factor= "<<pad<<" padded image size= "<<paddim<<" Wiener filter size= "<<XSIZE(Mwien)<<std::endl;
+            std::cerr<<"image size= "         <<dim    << " padding factor= "<<pad
+            <<" padded image size= " <<paddim << " Wiener filter size= "<< XSIZE(Mwien)<<std::endl;
             REPORT_ERROR(ERR_VALUE_INCORRECT,
                          "Incompatible padding factor for this Wiener filter");
         }
@@ -271,6 +300,7 @@ void ProgAngularClassAverage::produceSideInfo()
     // Set limitR
     if (do_limitR0 || do_limitRF)
     {
+    	MetaData tmpMT(DF);
         std::vector<double> vals;
         MDLabel codifyLabel=MDL::str2Label(col_select);
         FOR_ALL_OBJECTS_IN_METADATA(DF)
@@ -310,6 +340,8 @@ void ProgAngularClassAverage::produceSideInfo()
         randomize_random_generator();
 
     // Set up FFTW transformers
+    //FIXME
+    //Is this needed if  no alignment is required?
     MultidimArray<double> Maux;
     Polar<double> P;
     Polar<std::complex<double> > fP;
@@ -342,7 +374,7 @@ void ProgAngularClassAverage::reAlignClass(Image<double> &avg1,
         std::vector< Image<double> > imgs,
         std::vector<int> splits,
         std::vector<int> numbers,
-        int dirno,
+        size_t dirno,
         double * my_output)
 {
     Polar<std::complex <double> >   fPref, fPrefm, fPimg;
@@ -359,9 +391,9 @@ void ProgAngularClassAverage::reAlignClass(Image<double> &avg1,
     //#define DEBUG
 #ifdef DEBUG
 
-    Image<double> It;
-    It() = Mref;
-    It.write("ref.xmp");
+    Image<double> auxImg;
+    auxImg() = Mref;
+    auxImg.write("ref.xmp");
 #endif
 
 
@@ -504,11 +536,7 @@ void ProgAngularClassAverage::reAlignClass(Image<double> &avg1,
             }
         }
         Mref = avg1() + avg2();
-#ifdef DEBUG
-        //It() = Mref;
-        //It.weight()=w1+w2;
-        //It.write("ref.xmp");
-#endif
+
 
     }
 
@@ -528,7 +556,7 @@ void ProgAngularClassAverage::reAlignClass(Image<double> &avg1,
         my_output[imgno * AVG_OUPUT_SIZE + 8]  = imgs[imgno].psi();
         my_output[imgno * AVG_OUPUT_SIZE + 9]  = imgs[imgno].Xoff();
         my_output[imgno * AVG_OUPUT_SIZE + 10] = imgs[imgno].Yoff();
-        my_output[imgno * AVG_OUPUT_SIZE + 11] = dirno;
+        my_output[imgno * AVG_OUPUT_SIZE + 11] = (double)dirno;
         my_output[imgno * AVG_OUPUT_SIZE + 12] = imgs[imgno].flip();
         my_output[imgno * AVG_OUPUT_SIZE + 13] = ccfs[imgno];
 
@@ -568,7 +596,7 @@ void ProgAngularClassAverage::applyWienerFilter(MultidimArray<double> &img)
     }
 }
 
-void ProgAngularClassAverage::processOneClass(int &dirno,
+void ProgAngularClassAverage::processOneClass(size_t &dirno,
         double * my_output)
 {
     Image<double> img, avg, avg1, avg2;
@@ -578,10 +606,32 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
     bool mirror;
     int        ref_number, this_image;
     int        isplit;
+    MetaData _DF;
+
+    w = 0.;
+    w1 = 0.;
+    w2 = 0.;
+    this_image=0;
+    _DF.importObjects(DF,MDValueEQ(MDL_REF,(int)dirno));
+    if (_DF.size()==0)
+    {//no images assigned to this class
+        //this is possible because the input metadta contains
+        //several blocks
+        my_output[0] = (double)dirno;
+        my_output[1] = w;
+        my_output[2] = w1;
+        my_output[3] = w2;
+        return;
+    }
+    else
+    {
+        std::cerr << "ROB Images assigned to class: " << dirno <<std::endl;
+    }
+
     Matrix2D<double> A(3,3);
     std::vector<int> exp_number, exp_split;
     std::vector< Image<double> > exp_imgs;
-//CHECK ANGLE REFS
+    //CHECK ANGLE REFS
     // Get reference angles and preset to averages
     DFlib.getValue(MDL_ANGLEROT,rot,dirno);
     DFlib.getValue(MDL_ANGLETILT,tilt,dirno);
@@ -593,20 +643,6 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
     avg2=Iempty;
 
     // Loop over all images in the input docfile
-    w = 0.;
-    w1 = 0.;
-    w2 = 0.;
-    this_image=0;
-    MetaData _DF;
-    _DF.importObjects(DF,MDValueEQ(MDL_REF,dirno));
-    if (_DF.size()==0)
-    {//no images asigned to this class
-        my_output[0] = (double)dirno;
-        my_output[1] = w;
-        my_output[2] = w1;
-        my_output[3] = w2;
-        return;
-    }
     FOR_ALL_OBJECTS_IN_METADATA(_DF)
     {
         _DF.getValue(MDL_IMAGE,fn_img, __iter.objId);
@@ -678,14 +714,16 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
             }
         }
     }
-    if (SFclass1.size()==0 && SFclass2.size()==0)
-    {//no images asigned to this class
-        my_output[0] = (double)dirno;
-        my_output[1] = w;
-        my_output[2] = w1;
-        my_output[3] = w2;
-        return;
-    }
+    std::cerr << "Images assigned end" <<std::endl;
+    //this if is impossible
+    //    if (SFclass1.size()==0 && SFclass2.size()==0)
+    //    {//no images assigned to this class
+    //        my_output[0] = (double)dirno;
+    //        my_output[1] = w;
+    //        my_output[2] = w1;
+    //        my_output[3] = w2;
+    //        return;
+    //    }
 
     // Re-alignment of the class
     if (nr_iter > 0)
@@ -702,12 +740,13 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
         w1 = avg1.weight();
         w2 = avg2.weight();
     }
-
     // Apply Wiener filters
     if (fn_wien != "")
     {
-        applyWienerFilter(avg1());
-        applyWienerFilter(avg2());
+        if (w1>0)
+            applyWienerFilter(avg1());
+        if(w2>0)
+            applyWienerFilter(avg2());
     }
 
     // Output total and split averages and selfiles to disc
@@ -721,22 +760,24 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
     avg1.setWeight(w1);
     avg2.setWeight(w2);
     //ROB WRITE DISK
-    writeToDisc(avg,dirno,SFclass,fn_out+"_class",!dont_write_selfiles);
+    std::cerr << "ROB WRITE DISK" <<std::endl;
+    writeToDisc(avg,dirno,SFclass,fn_out+"_class",write_selfiles);
     if (do_split)
     {
-        writeToDisc(avg1,dirno,SFclass1,fn_out1+"_class",!dont_write_selfiles);
-        writeToDisc(avg2,dirno,SFclass2,fn_out2+"_class",!dont_write_selfiles);
+        if (w1>0)
+            writeToDisc(avg1,dirno,SFclass1,fn_out1+"_class",write_selfiles);
+        if (w2>0)
+            writeToDisc(avg2,dirno,SFclass2,fn_out2+"_class",write_selfiles);
     }
 
     my_output[0] = (double)dirno;
     my_output[1] = w;
     my_output[2] = w1;
     my_output[3] = w2;
-
 }
 
 void ProgAngularClassAverage::writeToDisc(Image<double> avg,
-        int        dirno,
+        size_t        dirno,
         MetaData    SF,
         FileName   fn,
         bool       write_selfile,
@@ -746,15 +787,18 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
     double     w = avg.weight(), w_old;
     Image<double> old;
     MetaData    SFold;
+    std::cerr << "w = " << w <<std::endl;
 
     if (w > 0.)
     {
-        avg()/=w;
-        // Write class average to disc
-        //fn_tmp.compose(dirno,fn,oext);
+        std::cerr << "w >0 " <<std::endl;
+        if(w!=1.)
+            avg()/=w;
+        // Write class average to disc//fn_tmp.compose(dirno,fn,oext);
         fn_tmp = fn + "." + oext;
         if (do_add && fn_tmp.exists() )
         {
+            std::cerr << "here1 " <<std::endl;
             old.read(fn_tmp);
             w_old = old.weight();
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(old())
@@ -769,7 +813,7 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
         else
         {
             std::cerr << "avg before fn_tmp" << fn_tmp << std::endl;
-            old.write(fn_tmp,dirno,true,WRITE_REPLACE);
+            avg.write(fn_tmp,dirno,true,WRITE_REPLACE);
             std::cerr << "avg after fn_tmp" << fn_tmp << std::endl;
         }
         // Write class selfile to disc
@@ -795,7 +839,7 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
 }
 
 
-void ProgAngularClassAverage::addClassAverage(int dirno,
+void ProgAngularClassAverage::addClassAverage(size_t dirno,
         double w,
         double w1,
         double w2)
