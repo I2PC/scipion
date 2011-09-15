@@ -1,6 +1,7 @@
 #!/bin/sh
 
 #Some flags variables
+
 DO_UNTAR=true
 DO_SQLITE=true
 DO_TCLTK=true
@@ -9,27 +10,32 @@ DO_FFTW=true
 DO_TIFF=true
 DO_ARPACK=false
 
+DO_STATIC=false
+CPU=$@
+
 #Some path variables
-EXT_PATH=$PWD/external
-BUILD_PATH=$PWD/build
+XMIPP_HOME=$PWD
+EXT_PATH=$XMIPP_HOME/external
+BUILD_PATH=$XMIPP_HOME/build
 # Some other vars
 
 GREEN="\033[32m"
+RED="\033[31m"
 ENDC="\033[0m"
-#Enter to external dir
-cd $EXT_PATH
+
 
 #################### DECOMPRESSING EXTERNAL LIBRARIES ###########################
-if $DO_UNTAR; then
+if $DO_UNTAR; then  
   dirs=(. python)
   echo
   echo -e "$GREEN*** Decompressing external libraries ...$ENDC"
-  for d in ${dirs[@]} 
-  do
+  #Enter to external dir
+  echo "--> cd $EXT_PATH"
+  cd $EXT_PATH
+  for d in ${dirs[@]}; do
     echo "--> cd $d"
     cd $d 
-    for file in $(ls *.tgz) 
-    do
+    for file in $(ls *.tgz); do
       echo "--> tar -xvzf $file > /dev/null"
       tar -xvzf $file > /dev/null
     done
@@ -38,101 +44,89 @@ if $DO_UNTAR; then
   done
 fi
 
+if ! $DO_STATIC; then
+  echo "--> Enabling shared libraries..."
+   CONFIGFLAGS=--enable-shared
+fi
+
+compile_library()
+{
+   LIB=$1
+   PREFIX_PATH=$2
+   SUFFIX_PATH=$3
+   FLAGS=$4
+   LIBS_PATH=$5
+   _PATH=$EXT_PATH/$PREFIX_PATH/$LIB/$SUFFIX_PATH
+  echo
+  echo -e "$GREEN*** Compiling $LIB ...$ENDC"
+  echo "--> cd $_PATH"
+  cd $_PATH
+  #make distclean &> /dev/null
+  echo "--> ./configure $CONFIGFLAGS $FLAGS &> $BUILD_PATH/${LIB}_configure.log"
+  ./configure $CONFIGFLAGS $FLAGS &> $BUILD_PATH/${LIB}_configure.log
+  echo "--> make $CPU &> $BUILD_PATH/${LIB}_make.log"
+  make $CPU &> $BUILD_PATH/${LIB}_make.log
+
+}
+
+#This function should be called from XMIPP_HOME
+install_libs()
+{
+  cd $XMIPP_HOME
+  LIBPATH=../external/$1; shift
+  COMMON=$1; shift
+  SUFFIXES=$@
+  for suffix in $SUFFIXES; do
+     LIBNAME=$COMMON$suffix
+     echo "--> ln -s $LIBPATH/$LIBNAME lib/$LIBNAME"
+     ln -s $LIBPATH/$LIBNAME lib/$LIBNAME  
+  done
+}
+
+install_bin()
+{
+  cd $XMIPP_HOME
+  BINPATH=../external/$1
+  LINKNAME=bin/$2
+  echo "--> ln -s $BINPATH $LINKNAME"
+  ln -s $BINPATH $LINKNAME
+}
+
 #################### SQLITE ###########################
 if $DO_SQLITE; then
-  SQLITE=sqlite-3.6.23
-  CONFIGFLAGS=--enable-shared
-  export CPPFLAGS=-w 
-  export CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1
-  echo
-  echo -e "$GREEN*** Compiling $SQLITE ...$ENDC"
-  echo "--> cd $EXT_PATH/$SQLITE"
-  cd $EXT_PATH/$SQLITE
-  make distclean &> /dev/null
-  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${SQLITE}_configure.log"
-  ./configure $CONFIGFLAGS > $BUILD_PATH/${SQLITE}_configure.log
-  echo "--> make $@ > $BUILD_PATH/${SQLITE}_make.log"
-  make $@ > $BUILD_PATH/${SQLITE}_make.log
+  compile_library sqlite-3.6.23 "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+  install_bin sqlite-3.6.23/sqlite3 xmipp_sqlite3
+  install_libs sqlite-3.6.23/.libs libsqlite3. a la so so.0
 fi
 
 #################### TCL/TK ###########################
 if $DO_TCLTK; then
-  TKVER=8.5.10
-  TCL=tcl$TKVER
-  TK=tk$TKVER
-  echo
-  echo -e "$GREEN*** Compiling $TCL ...$ENDC"
-  echo "--> cd $EXT_PATH/python/$TCL/unix"
-  cd $EXT_PATH/python/$TCL/unix
-  make distclean &> /dev/null
-  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${TCL}_configure.log"
-  ./configure $CONFIGFLAGS > $BUILD_PATH/${TCL}_configure.log
-  echo "--> make $@ > $BUILD_PATH/${TCL}_make.log"
-  make $@ > $BUILD_PATH/${TCL}_make.log
-  echo
-  echo -e "$GREEN*** Compiling $TK ...$ENDC"
-  echo "--> $EXT_PATH/python/$TK/unix"
-  cd $EXT_PATH/python/$TK/unix
-  make distclean &> /dev/null
-  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${TK}_configure.log"
-  ./configure $CONFIGFLAGS > $BUILD_PATH/${TK}_configure.log
-  echo "--> make $@ > $BUILD_PATH/${TK}_make.log"
-  make $@ > $BUILD_PATH/${TK}_make.log
+  compile_library tcl8.5.10 python unix ""
+  compile_library tk8.5.10 python unix ""
 fi
 
 #################### PYTHON ###########################
 if $DO_PYTHON; then
-  PYTHON=Python-2.7.2
-  export CPPFLAGS='' 
-  export XMIPP_INCLUDE_PATH=../../$SQLITE/:../../$TK
-  echo
-  echo -e "$GREEN*** Compiling $PYTHON ...$ENDC"
-  cd $EXT_PATH/python/$PYTHON
-  make distclean &> /dev/null
-  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${PYTHON}_configure.log"
-  ./configure $CONFIGFLAGS > $BUILD_PATH/${PYTHON}_configure.log
-  echo "--> make $@ > $BUILD_PATH/${PYTHON}_make.log"
-  make $@ > $BUILD_PATH/${PYTHON}_make.log
+  #compile_library Python-2.7.2 python "." ""
+  install_bin python/Python-2.7.2/python xmipp_python
+  install_libs python/Python-2.7.2 libpython2.7. a so so.1.0
 fi
 
 #################### FFTW ###########################
 if $DO_FFTW; then
-  FFTW=fftw-3.2.2
-  echo
-  echo -e "$GREEN*** Compiling $FFTW ...$ENDC"
-  echo "--> cd $EXT_PATH/$FFTW"
-  cd $EXT_PATH/$FFTW
-  make distclean &> /dev/null
-  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${FFTW}_configure.log"
-  ./configure $CONFIGFLAGS > $BUILD_PATH/${FFTW}_configure.log
-  echo "--> make $@ > $BUILD_PATH/${FFTW}_make.log"
-  make $@ > $BUILD_PATH/${FFTW}_make.log
+  compile_library fftw-3.2.2 "." "." "--enable-threads"
+  install_libs fftw-3.2.2/.libs libfftw3. a la so so.3
+  install_libs fftw-3.2.2/threads/.libs libfftw3_threads. a la so so.3
 fi
 
 #################### TIFF ###########################
 if $DO_TIFF; then
-  TIFF=tiff-3.9.4
-  echo
-  echo -e "$GREEN*** Compiling $TIFF ...$ENDC"
-  echo "--> cd $EXT_PATH/$TIFF"
-  cd $EXT_PATH/$TIFF
-  make distclean &> /dev/null
-  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${TIFF}_configure.log"
-  ./configure $CONFIGFLAGS > $BUILD_PATH/${TIFF}_configure.log
-  echo "--> make $@ > $BUILD_PATH/${TIFF}_make.log"
-  make $@ > $BUILD_PATH/${TIFF}_make.log
+  compile_library tiff-3.9.4 "." "." "CPPFLAGS=-w"
+  install_libs tiff-3.9.4/libtiff/.libs libtiff. a la so so.3
 fi
 
 #################### ARPACK ###########################
 if $DO_ARPACK; then
-  ARPACK=arpack++-2.3
-  echo
-  echo -e "$GREEN*** Compiling $ARPACK ...$ENDC"
-  echo "--> cd $EXT_PATH/$ARPACK"
-  cd $EXT_PATH/$ARPACK
-  make distclean &> /dev/null
-  echo "--> ./configure $CONFIGFLAGS > $BUILD_PATH/${ARPACK}_configure.log"
-  ./configure $CONFIGFLAGS > $BUILD_PATH/${ARPACK}_configure.log
-  echo "--> make $@ > $BUILD_PATH/${ARPACK}_make.log"
-  make $@ > $BUILD_PATH/${ARPACK}_make.log
+  compile_library arpack++-2.3 "." "." ""
+  install_libs arpack++-2.3/src/.libs libarpack++. a la so
 fi

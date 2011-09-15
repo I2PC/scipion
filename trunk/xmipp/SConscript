@@ -395,45 +395,45 @@ def AddImageJPlugin(name, pluginDir, outDir):
     env.Alias('copyMacros', env.Install(outMacrosDir, Glob(macrosDir, "*?.???", [])))
     return pluginAlias
 
-def AddExternalLibrary(libname, libs, libpath, suffix):
-    libprefix = os.path.join(env['prefix'], 'lib')
-    numJobs = env.GetOption('num_jobs')
+#def AddExternalLibrary(libname, libs, libpath, suffix):
+#    libprefix = os.path.join(env['prefix'], 'lib')
+#    numJobs = env.GetOption('num_jobs')
+#
+#    target_libs = []
+#
+#    if int(env['static']):
+#        lib_ext = ".a"
+#    else:
+#        if env['PLATFORM'] == 'darwin':
+#            lib_ext = ".dylib"
+#        else:
+#            lib_ext = ".so"
+#
+#    for lib in libs:
+#        lib_name = lib + lib_ext
+#        target_libs.append(os.path.join(libpath, lib_name))
+#        #FIXME: 
+#        if libname != 'python':
+#            target_libs.append(os.path.join(libpath, lib + '.la'))
+#        if not int(env['static']) and env['PLATFORM'] != 'darwin':
+#            target_libs.append(os.path.join(libpath, lib_name + suffix))
+#
+#    logFile = os.path.join("..", "..", "build", libname + "_make.log")
+##    env.Command(target_libs, Glob(libpath, "*/*.c", []),
+##                         'cd %s; make clean > /dev/null; make > %s;'
+##                         % (libpath, logFile))
+#    libInstall = env.Install(libprefix, target_libs)
+#    libAlias = env.Alias(libname, libInstall)
+#    env.Default(libAlias)
+#    return libInstall
 
-    target_libs = []
-
-    if int(env['static']):
-        lib_ext = ".a"
-    else:
-        if env['PLATFORM'] == 'darwin':
-            lib_ext = ".dylib"
-        else:
-            lib_ext = ".so"
-
-    for lib in libs:
-        lib_name = lib + lib_ext
-        target_libs.append(os.path.join(libpath, lib_name))
-        #FIXME: 
-        if libname != 'python':
-            target_libs.append(os.path.join(libpath, lib + '.la'))
-        if not int(env['static']) and env['PLATFORM'] != 'darwin':
-            target_libs.append(os.path.join(libpath, lib_name + suffix))
-
-    logFile = os.path.join("..", "..", "build", libname + "_make.log")
-    env.Command(target_libs, Glob(libpath, "*/*.c", []),
-                         'cd %s; make clean > /dev/null; make > %s;'
-                         % (libpath, logFile))
-    libInstall = env.Install(libprefix, target_libs)
-    libAlias = env.Alias(libname, libInstall)
-    env.Default(libAlias)
-    return libInstall
-
-def AddExternalLibraryAndBinary(libname, libs, libpath, suffix):
-    lib = AddExternalLibrary(libname, libs, libpath, suffix)
-    binName = os.path.join(libpath, libname)
-    bin = AddProgramLink(libname, binName, PrependXmipp=False)
-    Depends(bin, lib)
-    env.Default(bin)
-    return lib
+#def AddExternalLibraryAndBinary(libname, libs, libpath, suffix):
+#    lib = AddExternalLibrary(libname, libs, libpath, suffix)
+#    binName = os.path.join(libpath, libname)
+#    bin = AddProgramLink(libname, binName, PrependXmipp=False)
+#    Depends(bin, lib)
+#    env.Default(bin)
+#    return lib
 
 #def AddSQLiteLibrary():
 #    libInstall = AddExternalLibrary('sqlite', ['.libs/libsqlite3'], SQliteDir, '.0')
