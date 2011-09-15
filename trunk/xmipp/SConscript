@@ -478,7 +478,7 @@ def AddPythonModule(modname, moddir):
 #              ' ; xmipp_python ./setup.py install --install-lib ' + libprefix + \
 #              ' --install-data $TARGET')
     modBuild = env.Command(modTarget, moddir, \
-                          'cd  $SOURCE ; ../../../%s ./setup.py install --prefix %s > ../../../build/%s.log' % (PythonAbsPath, env['prefix'],modname))
+                          'cd  $SOURCE ; ../../../%s ./setup.py install --prefix %s &> ../../../build/%s.log' % (PythonAbsPath, env['prefix'],modname))
     Depends(modBuild, env.Alias('python'))
     alias = env.Alias(modname, modTarget)
     env.Default(alias)
@@ -543,9 +543,10 @@ AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],
 
 #Xmipp Python Extension
 PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
-import distutils.sysconfig
+#import distutils.sysconfig
+pythonIncludes = ["#" +os.path.join(PythonDir,dir) for dir in [".","Include"]]
 pythonbinding = AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources,
-           ['#libraries', "#", distutils.sysconfig.get_python_inc()],
+           ['#libraries', "#"] + pythonIncludes,
            ['lib'], ['XmippData'], '')
 
 # Reconstruction
