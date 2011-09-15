@@ -6,8 +6,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import picker.model.Constants;
-import picker.model.Particle;
+import trainingpicker.model.Constants;
+import trainingpicker.model.Particle;
 
 public class UntiltedMicrograph {
 	

@@ -7,7 +7,7 @@ DO_TCLTK=true
 DO_PYTHON=true
 DO_FFTW=true
 DO_TIFF=true
-DO_ARPACK=true
+DO_ARPACK=false
 
 #Some path variables
 EXT_PATH=$PWD/external

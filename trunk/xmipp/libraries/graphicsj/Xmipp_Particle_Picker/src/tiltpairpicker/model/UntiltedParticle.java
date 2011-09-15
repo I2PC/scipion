@@ -1,7 +1,7 @@
 package tiltpairpicker.model;
 
 import ij.ImagePlus;
-import picker.model.Micrograph;
+import trainingpicker.model.Micrograph;
 
 
 public class UntiltedParticle{

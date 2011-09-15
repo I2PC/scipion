@@ -7,12 +7,12 @@ import java.util.List;
 
 import javax.swing.Icon;
 
-import picker.model.Constants;
-import picker.model.Family;
-import picker.model.FamilyState;
-import picker.model.MicrographFamilyData;
-import picker.model.MicrographFamilyState;
-import picker.model.Particle;
+import trainingpicker.model.Constants;
+import trainingpicker.model.Family;
+import trainingpicker.model.FamilyState;
+import trainingpicker.model.MicrographFamilyData;
+import trainingpicker.model.MicrographFamilyState;
+import trainingpicker.model.Particle;
 
 public class TiltedMicrograph {
 	

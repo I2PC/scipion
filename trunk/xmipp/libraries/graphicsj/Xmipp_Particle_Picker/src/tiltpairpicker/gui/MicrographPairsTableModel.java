@@ -5,10 +5,10 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 
-import picker.model.FamilyState;
-import picker.model.Micrograph;
-import picker.model.MicrographFamilyData;
 import tiltpairpicker.model.UntiltedMicrograph;
+import trainingpicker.model.FamilyState;
+import trainingpicker.model.Micrograph;
+import trainingpicker.model.MicrographFamilyData;
 
 
 public class MicrographPairsTableModel extends AbstractTableModel {

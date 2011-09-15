@@ -195,4 +195,8 @@ public class MetaData {
         super.finalize();
         destroy();
     }
+    
+    
+    
+    public native void readPlain(String file, String columns);
 }

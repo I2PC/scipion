@@ -293,19 +293,11 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_enableDebug
 
 /*
  * Class:     xmipp_MetaData
- * Method:    computeFourierStatistics
- * Signature: ()V
+ * Method:    readPlain
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_computeFourierStatistics
-(JNIEnv *env, jobject jobj, jstring filename);
-
-/*
- * Class:     xmipp_MetaData
- * Method:    getPCAbasis
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_getPCAbasis
-(JNIEnv *env, jobject jmetadata, jobject jbasis);
+JNIEXPORT void JNICALL Java_xmipp_MetaData_readPlain
+  (JNIEnv *, jobject, jstring, jstring);
 
 #ifdef __cplusplus
 }

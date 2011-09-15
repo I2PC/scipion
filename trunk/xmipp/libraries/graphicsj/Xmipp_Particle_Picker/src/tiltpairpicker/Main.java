@@ -5,14 +5,14 @@ package tiltpairpicker;
 import javax.swing.SwingUtilities;
 
 
-import picker.gui.ParticlePickerJFrame;
-import picker.model.FamilyState;
-import picker.model.ManualParticlePicker;
-import picker.model.ParticlePicker;
-import picker.model.ReviewParticlePicker;
-import picker.model.SupervisedParticlePicker;
 import tiltpairpicker.gui.ParticlePairPickerJFrame;
 import tiltpairpicker.model.ParticlePairPicker;
+import trainingpicker.gui.ParticlePickerJFrame;
+import trainingpicker.model.FamilyState;
+import trainingpicker.model.ManualParticlePicker;
+import trainingpicker.model.ParticlePicker;
+import trainingpicker.model.ReviewParticlePicker;
+import trainingpicker.model.SupervisedParticlePicker;
 
 
 class Main {

@@ -43,11 +43,11 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import picker.gui.ColorIcon;
-import picker.gui.WindowUtils;
-import picker.model.ParticlePicker;
 import tiltpairpicker.model.ParticlePairPicker;
 import tiltpairpicker.model.UntiltedMicrograph;
+import trainingpicker.gui.ColorIcon;
+import trainingpicker.gui.WindowUtils;
+import trainingpicker.model.ParticlePicker;
 
 enum Tool {
 	IMAGEJ, PICKER

@@ -9,7 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import picker.model.Micrograph;
+import trainingpicker.model.Micrograph;
 
 import xmipp.MDLabel;
 import xmipp.MetaData;

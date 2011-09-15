@@ -49,7 +49,7 @@ class ScriptParticlePicking(XmippScript):
             file = self.getParam('--mode', 1)
 
         jar = "Xmipp_PP.jar"
-        cmd = "java -Xmx%(memory)s -Dplugins.dir=%(plugins_dir)s -cp %(plugins_dir)s: Main %(input)s %(output)s %(mode)s" % locals()
+        cmd = "java -Xmx%(memory)s -Dplugins.dir=%(plugins_dir)s -cp %(plugins_dir)s: trainingpicker.Main %(input)s %(output)s %(mode)s" % locals()
         if supervised:
             cmd+=" %(numberOfThreads)d %(fastMode)s %(incore)s"%locals()
         if review:

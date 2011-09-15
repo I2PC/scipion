@@ -10,10 +10,10 @@ import java.awt.event.MouseListener;
 
 import javax.swing.SwingUtilities;
 
-import picker.gui.WindowUtils;
-import picker.model.Particle;
 import tiltpairpicker.model.ParticlePairPicker;
 import tiltpairpicker.model.TiltedMicrograph;
+import trainingpicker.gui.WindowUtils;
+import trainingpicker.model.Particle;
 
 
 public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener{

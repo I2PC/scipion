@@ -954,3 +954,27 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_computeFourierStatistics
 		handleXmippException(env, msg);
 	}
 }
+
+JNIEXPORT void JNICALL Java_xmipp_MetaData_readPlain
+  (JNIEnv * env, jobject jobj, jstring jfile, jstring jcolumns)
+{
+	std::string msg = "", nfile, ncolumns;
+		try
+		{
+			nfile = env->GetStringUTFChars(jfile, false);
+			ncolumns = env->GetStringUTFChars(jcolumns, false);
+			MetaData * metadata = GET_INTERNAL_METADATA(jobj);
+			metadata->readPlain(nfile, ncolumns);
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+
+	    // If there was an exception, sends it to java environment.
+	    if(!msg.empty()) {
+	        handleXmippException(env, msg);
+	    }
+}
