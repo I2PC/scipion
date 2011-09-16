@@ -24,7 +24,7 @@
  ***************************************************************************/
 #include "ml_tomo.h"
 
-#define DEBUG_JM
+#define JM_DEBUG
 
 // For blocking of threads
 pthread_mutex_t mltomo_weightedsum_update_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -279,6 +279,7 @@ void ProgMLTomo::run()
 
     produceSideInfo();
     show();
+    std::cerr << "DEBUG_JM: before produceSideInfo2" <<std::endl;
     produceSideInfo2();
     Maux.resize(dim, dim, dim);
     Maux.setXmippOrigin();
@@ -816,6 +817,10 @@ void  ProgMLTomo::setNumberOfLocalImages()
 void ProgMLTomo::produceSideInfo2(int nr_vols)
 {
 
+#ifdef  JM_DEBUG
+
+    std::cerr<<"Start produceSideInfo2"<<std::endl;
+#endif
     int                       c;
     MetaData                   DF, DFsub;
     double                   DL[10];//old docfile
@@ -823,10 +828,6 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
     Image<double>               img, Vaux;
     std::vector<Matrix1D<double> > Vdm;
 
-#ifdef  JM_DEBUG
-
-    std::cerr<<"Start produceSideInfo2"<<std::endl;
-#endif
 
     setNumberOfLocalImages();
     // Store tomogram angles, offset vectors and missing wedge parameters
