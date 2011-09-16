@@ -3,13 +3,13 @@
 #Some flags variables
 
 DO_UNTAR=true
-DO_SQLITE=true
-DO_TCLTK=true
-DO_PYTHON=true
-DO_FFTW=true
-DO_TIFF=true
+DO_SQLITE=false
+DO_TCLTK=false
+DO_PYTHON=false
+DO_FFTW=false
+DO_TIFF=false
 DO_ARPACK=false
-DO_CLEAN=true
+DO_CLEAN=false
 
 DO_STATIC=false
 CPU=$@
@@ -166,3 +166,4 @@ if $DO_ARPACK; then
   compile_library $VARPACK "." "." ""
   install_libs $VARPACK/src/.libs libarpack++. a la so
 fi
+

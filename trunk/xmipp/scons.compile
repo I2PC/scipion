@@ -3,4 +3,4 @@
 echo "** Use scons.compile --help to show a help message"
 
 # Call local SCONS to compile
-xmipp_python scons/scons.py mode=compile "$@"
+xmipp_python external/scons/scons.py mode=compile "$@"
