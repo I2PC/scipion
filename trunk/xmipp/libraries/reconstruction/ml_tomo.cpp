@@ -24,7 +24,7 @@
  ***************************************************************************/
 #include "ml_tomo.h"
 
-//#define DEBUG_JM
+#define DEBUG_JM
 
 // For blocking of threads
 pthread_mutex_t mltomo_weightedsum_update_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -823,7 +823,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
     Image<double>               img, Vaux;
     std::vector<Matrix1D<double> > Vdm;
 
-#ifdef  DEBUG
+#ifdef  JM_DEBUG
 
     std::cerr<<"Start produceSideInfo2"<<std::endl;
 #endif
@@ -982,7 +982,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
 
 
 
-#ifdef DEBUG_SAMPLING
+#ifdef JM_DEBUG
     MetaData DFt;
     for (int angno = 0; angno < nr_ang; angno++)
     {
@@ -1091,7 +1091,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
         regularize(istart-1);
 
     //#define DEBUG_GENERAL
-#ifdef DEBUG_GENERAL
+#ifdef JM_DEBUG
 
     std::cerr<<"nr images= "<<SF.ImgNo()<<std::endl;
     std::cerr<<"do_generate_refs ="<<do_generate_refs<<std::endl;
@@ -1103,7 +1103,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
     std::cerr<<"nr_psi= "<<nr_psi<<std::endl;
 #endif
 
-#ifdef DEBUG
+#ifdef JM_DEBUG
 
     std::cerr<<"Finished produceSideInfo2"<<std::endl;
 #endif
@@ -2092,7 +2092,7 @@ void ProgMLTomo::expectationSingleImage(MultidimArray<double> &Mimg, int imgno, 
 
     std::cerr << "   DEBUG_JM: my_mindiff: " << my_mindiff << std::endl;
     std::cerr << "   DEBUG_JM: sigma_noise2: " << sigma_noise2 << std::endl;
-    std::cerr << "   DEBUG_JM: miss_nr_pixels[missno]: " << miss_nr_pixels[missno] << std::endl;
+    //std::cerr << "   DEBUG_JM: miss_nr_pixels[missno]: " << miss_nr_pixels[missno] << std::endl;
 
     std::cerr << "   DEBUG_JM: sum_refw: " << sum_refw << std::endl;
     std::cerr << "   DEBUG_JM: wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
