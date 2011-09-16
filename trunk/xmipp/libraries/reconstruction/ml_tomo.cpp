@@ -1040,18 +1040,19 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
             img.read(fn_img);
             img().setXmippOrigin();
 
-            // std::cerr << "DEBUG_JM: fn_img: " << fn_img << std::endl;
-            // std::cerr << "DEBUG_JM: img(): " << img() << std::endl;
+            std::cerr << "DEBUG_JM: 13.1 fn_img: " << fn_img << std::endl;
+            std::cerr << "DEBUG_JM: 13.2 img(): " << img() << std::endl;
 
             if (do_mask)
             {
                 img() *= Imask();
             }
+            std::cerr << "DEBUG_JM: 13.3 reScaleVolume: " << std::endl;
             reScaleVolume(img(),true);
-
+            std::cerr << "DEBUG_JM: 13.4 maskSphericalAverageOutside" <<std::endl;
             // From now on we will assume that all references are omasked, so enforce this here
             maskSphericalAverageOutside(img());
-
+            std::cerr << "DEBUG_JM: 13.5 selfApplyGeometryselfApplyGeometry: " << std::endl;
             // Rotate some arbitrary (off-axis) angle and rotate back again to remove high frequencies
             // that will be affected by the interpolation due to rotation
             // This makes that the A2 values of the rotated references are much less sensitive to rotation
@@ -1064,7 +1065,7 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
             Iref.push_back(img);
             Iold.push_back(img);
 
-            //std::cerr << "DEBUG_JM: Iref[0]: " << Iref[0]() << std::endl;
+            std::cerr << "DEBUG_JM: 13.6 Iref[0]: " << Iref[0]() << std::endl;
         }
     }
 
