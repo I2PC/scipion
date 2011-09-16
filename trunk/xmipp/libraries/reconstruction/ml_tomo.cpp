@@ -1097,14 +1097,14 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
     //#define DEBUG_GENERAL
 #ifdef JM_DEBUG
 
-    std::cerr<<"nr images= "<<SF.ImgNo()<<std::endl;
+//    std::cerr<<"nr images= "<<SF.ImgNo()<<std::endl;
     std::cerr<<"do_generate_refs ="<<do_generate_refs<<std::endl;
     std::cerr<<"nr_ref= "<<nr_ref<<std::endl;
     std::cerr<<"nr_miss= "<<nr_miss<<std::endl;
     std::cerr<<"dim= "<<dim<<std::endl;
     std::cerr<<"Finished produceSideInfo"<<std::endl;
     std::cerr<<"nr_ang= "<<nr_ang<<std::endl;
-    std::cerr<<"nr_psi= "<<nr_psi<<std::endl;
+//    std::cerr<<"nr_psi= "<<nr_psi<<std::endl;
 #endif
 
 #ifdef JM_DEBUG
