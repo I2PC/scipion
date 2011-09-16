@@ -2443,28 +2443,35 @@ void * threadMLTomoExpectationSingleImage( void * data )
                 //TODO: Check if really needed the mutexes
                 //only for read from MetaData
                 pthread_mutex_lock(  &mltomo_selfile_access_mutex );
+                std::cerr<<"threadMLTomoExpectationSingleImage 2.1 " << imgno<<std::endl;
 
                 MDimg->getValue(MDL_IMAGE, fn_img, (*imgs_id)[imgno + prm->myFirstImg]);
 
                 pthread_mutex_unlock(  &mltomo_selfile_access_mutex );
+                std::cerr<<"threadMLTomoExpectationSingleImage 2.2 " << imgno<<std::endl;
 
                 img.read(fn_img);
                 img().setXmippOrigin();
+                std::cerr<<"threadMLTomoExpectationSingleImage 2.3 " << imgno<<std::endl;
 
                 if (prm->dont_align || prm->do_only_average)
                 {
                     selfTranslate(LINEAR, img(), prm->imgs_optoffsets[imgno], DONT_WRAP);
                 }
+                std::cerr<<"threadMLTomoExpectationSingleImage 2.4 " << imgno<<std::endl;
 
                 prm->reScaleVolume(img(),true);
+                std::cerr<<"threadMLTomoExpectationSingleImage 2.5 " << imgno<<std::endl;
 
                 missno = (prm->do_missing) ? prm->imgs_missno[imgno] : -1;
+                std::cerr<<"threadMLTomoExpectationSingleImage 2.6 " << imgno<<std::endl;
 
                 // These three parameters speed up expectationSingleImage
                 trymindiff = prm->imgs_trymindiff[imgno];
                 opt_refno = prm->imgs_optrefno[imgno];
                 opt_angno = prm->imgs_optangno[imgno];
                 old_psi = prm->imgs_optpsi[imgno];
+                std::cerr<<"threadMLTomoExpectationSingleImage 2.7 " << imgno<<std::endl;
 
                 if (prm->do_ml)
                 {
@@ -2481,11 +2488,13 @@ void * threadMLTomoExpectationSingleImage( void * data )
                                                        *wsumimgs, *wsumweds, *sumw, fracweight, *sumfracweight,
                                                        opt_refno, opt_angno, opt_offsets);
                 }
+                std::cerr<<"threadMLTomoExpectationSingleImage 2.8 " << imgno<<std::endl;
 
                 // Store for next iteration
                 prm->imgs_trymindiff[imgno] = trymindiff;
                 prm->imgs_optrefno[imgno] = opt_refno;
                 prm->imgs_optangno[imgno] = opt_angno;
+                std::cerr<<"threadMLTomoExpectationSingleImage 2.9 " << imgno<<std::endl;
 
                 // Output MetaData
                 //FIXME: THIS ALSO LIKE JoseMiguel did ML2D
@@ -2513,6 +2522,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
                 if (prm->verbose && thread_id==0)
                     progress_bar(cc);
                 cc++;
+                std::cerr<<"threadMLTomoExpectationSingleImage 2.1 " << imgno<<std::endl;
             }
         }
         std::cerr<<"threadMLTomoExpectationSingleImage finish " <<std::endl;
