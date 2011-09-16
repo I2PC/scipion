@@ -993,7 +993,7 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
 
 
 #ifdef JM_DEBUG
-    std::cerr << "DEBUG_JM: eight" <<std::endl;
+    std::cerr << "DEBUG_JM: nine" <<std::endl;
 
     MetaData DFt;
     for (int angno = 0; angno < nr_ang; angno++)
@@ -1010,7 +1010,7 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
     fnt = fn_root + "_angles.doc";
     DFt.write(fnt);
 #endif
-    std::cerr << "DEBUG_JM: nine" <<std::endl;
+    std::cerr << "DEBUG_JM: ten" <<std::endl;
 
     // Prepare reference images
     if (do_only_average)
