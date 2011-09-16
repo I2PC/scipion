@@ -990,7 +990,10 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
         double rot=all_angle_info[angno].rot;
         double tilt=all_angle_info[angno].tilt;
         double psi=all_angle_info[angno].psi;
-        DFt.append_angles(rot,tilt,psi,"rot","tilt","psi");
+        DFt.setValue(MDL_ANGLEROT,rot);
+        DFt.setValue(MDL_ANGLETILT,tilt);
+        DFt.setValue(MDL_ANGLEPSI,psi);
+//        DFt.append_angles(rot,tilt,psi,"rot","tilt","psi");
     }
     FileName fnt;
     fnt = fn_root + "_angles.doc";
