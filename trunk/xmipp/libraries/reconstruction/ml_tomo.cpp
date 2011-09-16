@@ -983,6 +983,7 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
     // Copy all rot, tilr, psi and A into _ori equivalents
     for (int angno = 0; angno < nr_ang; angno++)
     {
+      std::cerr << "DEBUG_JM: eight" <<std::endl;
         all_angle_info[angno].rot_ori = all_angle_info[angno].rot;
         all_angle_info[angno].tilt_ori = all_angle_info[angno].tilt;
         all_angle_info[angno].psi_ori = all_angle_info[angno].psi;
@@ -992,6 +993,8 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
 
 
 #ifdef JM_DEBUG
+    std::cerr << "DEBUG_JM: eight" <<std::endl;
+
     MetaData DFt;
     for (int angno = 0; angno < nr_ang; angno++)
     {
@@ -1007,6 +1010,7 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
     fnt = fn_root + "_angles.doc";
     DFt.write(fnt);
 #endif
+    std::cerr << "DEBUG_JM: nine" <<std::endl;
 
     // Prepare reference images
     if (do_only_average)
