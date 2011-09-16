@@ -23,6 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "ml_tomo.h"
+#include <data/metadata_extension.h>
 
 #define JM_DEBUG
 
@@ -197,7 +198,9 @@ void ProgMLTomo::readParams()
     fn_sel = getParam("-i");
     nr_ref = getIntParam("--nref");
     fn_ref = getParam("--ref");
-    //fn_doc = getParam("--doc");
+    if (!fn_ref.empty() && ImgCompareSize(fn_sel, fn_ref))
+      REPORT_ERROR(ERR_GRID_SIZE, "Reference and images aren't of same size");
+        //fn_doc = getParam("--doc");
 
     fn_root = getParam("--oroot");
     fn_sym = getParam("--sym");
@@ -1456,15 +1459,22 @@ void ProgMLTomo::calculatePdfTranslations()
 void ProgMLTomo::maskSphericalAverageOutside(MultidimArray<double> &Min)
 {
     double outside_density = 0., sumdd = 0.;
+    real_omask.printShape(std::cerr);
+    Min.printShape(std::cerr);
+
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(real_omask)
     {
+      std::cerr << "DEBUG_JM: loop1 n: " << n << std::endl;
         outside_density += DIRECT_MULTIDIM_ELEM(Min,n)*DIRECT_MULTIDIM_ELEM(real_omask,n);
         sumdd += DIRECT_MULTIDIM_ELEM(real_omask,n);
+      std::cerr << "DEBUG_JM:    outside_density: " << outside_density << std::endl;
+      std::cerr << "DEBUG_JM:    sumdd: " << sumdd << std::endl;
     }
     outside_density /= sumdd;
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(real_omask)
     {
+      std::cerr << "DEBUG_JM: loop2 n: " << n << std::endl;
         DIRECT_MULTIDIM_ELEM(Min,n) *= DIRECT_MULTIDIM_ELEM(real_mask,n);
         DIRECT_MULTIDIM_ELEM(Min,n) += (outside_density)*DIRECT_MULTIDIM_ELEM(real_omask,n);
     }

@@ -231,6 +231,15 @@ bool ImgCompare(const FileName &filename1, const FileName &filename2)
     return( result);
 }
 
+bool ImgCompareSize(const FileName &filename1, const FileName &filename2)
+{
+  int x,y,z, X, Y, Z;
+  size_t n, N;
+  ImgSize(filename1,x,y,z,n);
+  ImgSize(filename2,X,Y,Z,N);
+  return (x==X && y == Y && z == Z && n == N);
+}
+
 int MaxFileNameLength(MetaData &MD)
 {
     int maxLength=0;

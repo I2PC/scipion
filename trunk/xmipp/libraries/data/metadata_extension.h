@@ -48,6 +48,9 @@ void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &
 /// compare two image files
 bool ImgCompare(const FileName &filename1, const FileName &filename2);
 
+/// compare if same dimensions
+bool ImgCompareSize(const FileName &filename1, const FileName &filename2);
+
 /** Maximum length of the filenames inside */
 int MaxFileNameLength(MetaData &MD);
 
