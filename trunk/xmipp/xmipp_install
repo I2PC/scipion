@@ -26,13 +26,13 @@ ENDC="\033[0m"
 
 #################### DECOMPRESSING EXTERNAL LIBRARIES ###########################
 if $DO_UNTAR; then  
-  dirs=(. python)
+  dirs=". python"
   echo
   echo -e "$GREEN*** Decompressing external libraries ...$ENDC"
   #Enter to external dir
   echo "--> cd $EXT_PATH"
   cd $EXT_PATH
-  for d in ${dirs[@]}; do
+  for d in $dirs; do
     echo "--> cd $d"
     cd $d 
     for file in $(ls *.tgz); do
@@ -107,7 +107,7 @@ fi
 
 #################### PYTHON ###########################
 if $DO_PYTHON; then
-  #compile_library Python-2.7.2 python "." ""
+  compile_library Python-2.7.2 python "." ""
   install_bin python/Python-2.7.2/python xmipp_python
   install_libs python/Python-2.7.2 libpython2.7. a so so.1.0
 fi
