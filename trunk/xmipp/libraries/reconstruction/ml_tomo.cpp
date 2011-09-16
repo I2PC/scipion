@@ -996,14 +996,16 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
     std::cerr << "DEBUG_JM: nine" <<std::endl;
 
     MetaData DFt;
+    size_t _id;
     for (int angno = 0; angno < nr_ang; angno++)
     {
+        DFt.addObject();
         double rot=all_angle_info[angno].rot;
         double tilt=all_angle_info[angno].tilt;
         double psi=all_angle_info[angno].psi;
-        DFt.setValue(MDL_ANGLEROT,rot);
-        DFt.setValue(MDL_ANGLETILT,tilt);
-        DFt.setValue(MDL_ANGLEPSI,psi);
+        DFt.setValue(MDL_ANGLEROT,rot,_id);
+        DFt.setValue(MDL_ANGLETILT,tilt,_id);
+        DFt.setValue(MDL_ANGLEPSI,psi,_id);
 //        DFt.append_angles(rot,tilt,psi,"rot","tilt","psi");
     }
     FileName fnt;
