@@ -3,4 +3,4 @@
 echo "** Use scons.configure --help to show a help message"
 
 # Call local SCONS to configure
-xmipp_python external/scons/scons.py mode=configure --config=force "$@"
+./bin/xmipp_python external/scons/scons.py mode=configure --config=force "$@"

@@ -135,8 +135,8 @@ fi
 
 #################### TCL/TK ###########################
 if $DO_TCLTK; then
-  compile_library tcl$VTCKTK python unix ""
-  compile_library tk$VTCKTK python unix ""
+  compile_library tcl$VTCLTK python unix ""
+  compile_library tk$VTCLTK python unix ""
 fi
 
 #################### PYTHON ###########################
