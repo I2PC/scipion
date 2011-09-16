@@ -2436,8 +2436,10 @@ void * threadMLTomoExpectationSingleImage( void * data )
         //Work while there are tasks to do
         while (distributor->getTasks(firstIndex, lastIndex))
         {
+            std::cerr<<"threadMLTomoExpectationSingleImage 1"<<std::endl;
             for (size_t imgno = firstIndex; imgno <= lastIndex; ++imgno)
             {
+              std::cerr<<"threadMLTomoExpectationSingleImage 2 " << imgno<<std::endl;
                 //TODO: Check if really needed the mutexes
                 //only for read from MetaData
                 pthread_mutex_lock(  &mltomo_selfile_access_mutex );
@@ -2513,6 +2515,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
                 cc++;
             }
         }
+        std::cerr<<"threadMLTomoExpectationSingleImage finish " << imgno<<std::endl;
         if (prm->verbose && thread_id==0)
             progress_bar(myNum);
     }
