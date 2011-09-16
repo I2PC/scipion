@@ -831,7 +831,6 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
     Image<double>               img, Vaux;
     std::vector<Matrix1D<double> > Vdm;
 
-std::cerr << "DEBUG_JM: one" <<std::endl;
     setNumberOfLocalImages();
     // Store tomogram angles, offset vectors and missing wedge parameters
     imgs_optrefno.assign(nr_images_local, 0.);
@@ -839,7 +838,6 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
     imgs_optpsi.assign(nr_images_local, 0.);
     imgs_trymindiff.assign(nr_images_local, -1.);
     Matrix1D<double> dum(3);
-    std::cerr << "DEBUG_JM: two" <<std::endl;
     if (do_missing)
         imgs_missno.assign(nr_images_local, -1);
     if (dont_align || dont_rotate || do_only_average)
@@ -852,7 +850,6 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
     MetaData MDsub;
     MDRow row;
     double rot, tilt, psi;
-    std::cerr << "DEBUG_JM: three" <<std::endl;
 
     //FOR_ALL_OBJECTS_IN_METADATA(MDimg)
     for (size_t img = myFirstImg; img <= myLastImg; ++img)
@@ -909,13 +906,11 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
             mysampling.computeNeighbors();
         }
     }
-    std::cerr << "DEBUG_JM: four" <<std::endl;
 
     // Calculate angular sampling
     // A. from MetaData entries (MDsub) only
     if (dont_align || dont_rotate || do_only_average)
     {
-      std::cerr << "DEBUG_JM: five" <<std::endl;
 
         AnglesInfo myinfo;
         all_angle_info.clear();
@@ -943,7 +938,6 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
     // B. from mysampling
     else
     {
-      std::cerr << "DEBUG_JM: six" <<std::endl;
 
         int nr_psi = CEIL(360. / psi_sampling);
         AnglesInfo myinfo;
@@ -981,12 +975,10 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
             }
         }
     }
-    std::cerr << "DEBUG_JM: seven" <<std::endl;
 
     // Copy all rot, tilr, psi and A into _ori equivalents
     for (int angno = 0; angno < nr_ang; angno++)
     {
-      std::cerr << "DEBUG_JM: eight " << angno << " " << nr_ang<<std::endl;
         all_angle_info[angno].rot_ori = all_angle_info[angno].rot;
         all_angle_info[angno].tilt_ori = all_angle_info[angno].tilt;
         all_angle_info[angno].psi_ori = all_angle_info[angno].psi;
@@ -996,7 +988,6 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
 
 
 #ifdef JM_DEBUG
-    std::cerr << "DEBUG_JM: nine" <<std::endl;
 
     MetaData DFt;
     size_t _id;
@@ -1015,12 +1006,10 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
     fnt = fn_root + "_angles.doc";
     DFt.write(fnt);
 #endif
-    std::cerr << "DEBUG_JM: ten" <<std::endl;
 
     // Prepare reference images
     if (do_only_average)
     {
-      std::cerr << "DEBUG_JM: once" <<std::endl;
         img().initZeros(dim,dim,dim);
         img().setXmippOrigin();
         for (int refno = 0; refno < nr_ref; refno++)
@@ -1031,31 +1020,23 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
     }
     else
     {
-      std::cerr << "DEBUG_JM: twelve" <<std::endl;
         // Read in all reference images in memory
         MDref.read(fn_ref);
         nr_ref = MDref.size();
         FileName fn_img;
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
-          std::cerr << "DEBUG_JM: 13 id:" <<  __iter.objId<<std::endl;
             MDref.getValue(MDL_IMAGE, fn_img, __iter.objId);
             img.read(fn_img);
             img().setXmippOrigin();
-
-            std::cerr << "DEBUG_JM: 13.1 fn_img: " << fn_img << std::endl;
-            std::cerr << "DEBUG_JM: 13.2 img(): " << img() << std::endl;
 
             if (do_mask)
             {
                 img() *= Imask();
             }
-            std::cerr << "DEBUG_JM: 13.3 reScaleVolume: " << std::endl;
             reScaleVolume(img(),true);
-            std::cerr << "DEBUG_JM: 13.4 maskSphericalAverageOutside" <<std::endl;
             // From now on we will assume that all references are omasked, so enforce this here
             maskSphericalAverageOutside(img());
-            std::cerr << "DEBUG_JM: 13.5 selfApplyGeometryselfApplyGeometry: " << std::endl;
             // Rotate some arbitrary (off-axis) angle and rotate back again to remove high frequencies
             // that will be affected by the interpolation due to rotation
             // This makes that the A2 values of the rotated references are much less sensitive to rotation
@@ -1068,7 +1049,6 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
             Iref.push_back(img);
             Iold.push_back(img);
 
-            std::cerr << "DEBUG_JM: 13.6 Iref[0]: " << Iref[0]() << std::endl;
         }
     }
 
@@ -1464,22 +1444,16 @@ void ProgMLTomo::maskSphericalAverageOutside(MultidimArray<double> &Min)
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(real_omask)
     {
-      std::cerr << "DEBUG_JM: loop1 n: " << n << std::endl;
         outside_density += DIRECT_MULTIDIM_ELEM(Min,n)*DIRECT_MULTIDIM_ELEM(real_omask,n);
         sumdd += DIRECT_MULTIDIM_ELEM(real_omask,n);
-      std::cerr << "DEBUG_JM:    outside_density: " << outside_density << std::endl;
-      std::cerr << "DEBUG_JM:    sumdd: " << sumdd << std::endl;
     }
     outside_density /= sumdd;
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(real_omask)
     {
-      std::cerr << "DEBUG_JM: loop2 n: " << n << std::endl;
         DIRECT_MULTIDIM_ELEM(Min,n) *= DIRECT_MULTIDIM_ELEM(real_mask,n);
         DIRECT_MULTIDIM_ELEM(Min,n) += (outside_density)*DIRECT_MULTIDIM_ELEM(real_omask,n);
     }
-
-
 }
 
 
