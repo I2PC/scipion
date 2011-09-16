@@ -912,6 +912,8 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
     // A. from MetaData entries (MDsub) only
     if (dont_align || dont_rotate || do_only_average)
     {
+      std::cerr << "DEBUG_JM: five" <<std::endl;
+
         AnglesInfo myinfo;
         all_angle_info.clear();
         nr_ang = 0;
@@ -938,6 +940,8 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
     // B. from mysampling
     else
     {
+      std::cerr << "DEBUG_JM: six" <<std::endl;
+
         int nr_psi = CEIL(360. / psi_sampling);
         AnglesInfo myinfo;
         all_angle_info.clear();
@@ -974,6 +978,7 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
             }
         }
     }
+    std::cerr << "DEBUG_JM: seven" <<std::endl;
 
     // Copy all rot, tilr, psi and A into _ori equivalents
     for (int angno = 0; angno < nr_ang; angno++)
