@@ -293,27 +293,33 @@ void ProgMLTomo::run()
 
         if (verbose)
             std::cout << "  Multi-reference refinement:  iteration " << iter << " of " << Niter << std::endl;
-
+std::cerr << "DEBUG_JM: one" <<std::endl;
         // Save old reference images
         for (int refno = 0;refno < nr_ref; refno++)
             Iold[refno]() = Iref[refno]();
+        std::cerr << "DEBUG_JM: 2" <<std::endl;
 
         // Integrate over all images
         expectation(MDimg, Iref, iter,
                     LL, sumcorr, wsumimgs, wsumweds,
                     wsum_sigma_noise, wsum_sigma_offset, sumw);
+        std::cerr << "DEBUG_JM: 3" <<std::endl;
 
         // Update model parameters
         maximization(wsumimgs, wsumweds,
                      wsum_sigma_noise, wsum_sigma_offset,
                      sumw, sumcorr, sumw_allrefs, fsc, iter);
+        std::cerr << "DEBUG_JM: 4" <<std::endl;
 
         // Check convergence
         converged = checkConvergence(conv);
+        std::cerr << "DEBUG_JM: 5" <<std::endl;
 
         addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
+        std::cerr << "DEBUG_JM: 6" <<std::endl;
 
         writeOutputFiles(iter, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
+        std::cerr << "DEBUG_JM: 7" <<std::endl;
 
         if (converged)
         {
@@ -321,8 +327,10 @@ void ProgMLTomo::run()
                 std::cout << " Optimization converged!" << std::endl;
             break;
         }
+        std::cerr << "DEBUG_JM: 8" <<std::endl;
 
     } // end loop iterations
+    std::cerr << "DEBUG_JM: 9" <<std::endl;
     writeOutputFiles(-1, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
 
 }
