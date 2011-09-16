@@ -2537,7 +2537,7 @@ void ProgMLTomo::expectation(
     double &wsum_sigma_noise, double &wsum_sigma_offset,
     MultidimArray<double> &sumw)
 {
-
+#define DEBUG
 #ifdef DEBUG
     std::cerr<<"start expectation"<<std::endl;
 #endif
@@ -2548,6 +2548,7 @@ void ProgMLTomo::expectation(
     // (Note that each mpi process will have a different random perturbation)
     if (do_perturb)
         perturbAngularSampling();
+    std::cerr<<"expectation 1"<<std::endl;
 
     if (do_ml)
     {
@@ -2557,6 +2558,7 @@ void ProgMLTomo::expectation(
         // Pre-calculate pdf of all in-plane transformations
         calculatePdfTranslations();
     }
+    std::cerr<<"expectation 2"<<std::endl;
 
     // Initialize weighted sums
     LL = 0.;
@@ -2573,6 +2575,7 @@ void ProgMLTomo::expectation(
     Mzero2.setXmippOrigin();
     wsumimgs.assign(2*nr_ref, Mzero2);
     wsumweds.assign(2*nr_ref, Mzero);
+    std::cerr<<"expectation 3"<<std::endl;
 
     // Call threads to calculate the expectation of each image in the selfile
     pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
@@ -2596,6 +2599,7 @@ void ProgMLTomo::expectation(
         threads_d[c].distributor = distributor;
         pthread_create( (th_ids+c), NULL, threadMLTomoExpectationSingleImage, (void *)(threads_d+c) );
     }
+    std::cerr<<"expectation 4"<<std::endl;
 
 
 
@@ -2604,6 +2608,7 @@ void ProgMLTomo::expectation(
     {
         pthread_join(*(th_ids+c),NULL);
     }
+    std::cerr<<"expectation 5"<<std::endl;
 
     //Free some memory
     delete distributor;
@@ -2622,7 +2627,7 @@ void ProgMLTomo::expectation(
 
     std::cerr<<"finished expectation"<<std::endl;
 #endif
-
+#undef DEBUG
 }
 
 // Update all model parameters
