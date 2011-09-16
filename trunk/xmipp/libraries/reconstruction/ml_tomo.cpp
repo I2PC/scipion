@@ -828,7 +828,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
     Image<double>               img, Vaux;
     std::vector<Matrix1D<double> > Vdm;
 
-
+std::cerr << "DEBUG_JM: one" <<std::endl;
     setNumberOfLocalImages();
     // Store tomogram angles, offset vectors and missing wedge parameters
     imgs_optrefno.assign(nr_images_local, 0.);
@@ -836,6 +836,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
     imgs_optpsi.assign(nr_images_local, 0.);
     imgs_trymindiff.assign(nr_images_local, -1.);
     Matrix1D<double> dum(3);
+    std::cerr << "DEBUG_JM: two" <<std::endl;
     if (do_missing)
         imgs_missno.assign(nr_images_local, -1);
     if (dont_align || dont_rotate || do_only_average)
@@ -848,6 +849,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
     MetaData MDsub;
     MDRow row;
     double rot, tilt, psi;
+    std::cerr << "DEBUG_JM: three" <<std::endl;
 
     //FOR_ALL_OBJECTS_IN_METADATA(MDimg)
     for (size_t img = myFirstImg; img <= myLastImg; ++img)
@@ -904,6 +906,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
             mysampling.computeNeighbors();
         }
     }
+    std::cerr << "DEBUG_JM: four" <<std::endl;
 
     // Calculate angular sampling
     // A. from MetaData entries (MDsub) only
