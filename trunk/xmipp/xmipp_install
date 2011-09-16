@@ -78,8 +78,8 @@ install_libs()
   SUFFIXES=$@
   for suffix in $SUFFIXES; do
      LIBNAME=$COMMON$suffix
-     echo "--> ln -s $LIBPATH/$LIBNAME lib/$LIBNAME"
-     ln -s $LIBPATH/$LIBNAME lib/$LIBNAME  
+     echo "--> ln -sf $LIBPATH/$LIBNAME lib/$LIBNAME"
+     ln -sf $LIBPATH/$LIBNAME lib/$LIBNAME  
   done
 }
 
@@ -88,8 +88,8 @@ install_bin()
   cd $XMIPP_HOME
   BINPATH=../external/$1
   LINKNAME=bin/$2
-  echo "--> ln -s $BINPATH $LINKNAME"
-  ln -s $BINPATH $LINKNAME
+  echo "--> ln -sf $BINPATH $LINKNAME"
+  ln -sf $BINPATH $LINKNAME
 }
 
 #################### SQLITE ###########################
