@@ -1017,6 +1017,7 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
     // Prepare reference images
     if (do_only_average)
     {
+      std::cerr << "DEBUG_JM: once" <<std::endl;
         img().initZeros(dim,dim,dim);
         img().setXmippOrigin();
         for (int refno = 0; refno < nr_ref; refno++)
@@ -1027,12 +1028,14 @@ std::cerr << "DEBUG_JM: one" <<std::endl;
     }
     else
     {
+      std::cerr << "DEBUG_JM: twelve" <<std::endl;
         // Read in all reference images in memory
         MDref.read(fn_ref);
         nr_ref = MDref.size();
         FileName fn_img;
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
+          std::cerr << "DEBUG_JM: 13 id:" <<  __iter.objId<<std::endl;
             MDref.getValue(MDL_IMAGE, fn_img, __iter.objId);
             img.read(fn_img);
             img().setXmippOrigin();
