@@ -7,6 +7,7 @@ package browser.table.models;
 import browser.DEBUG;
 import browser.imageitems.tableitems.AbstractTableImageItem;
 import browser.imageitems.tableitems.VolumeTableItem;
+import java.util.ArrayList;
 import xmipp.ImageDouble;
 import xmipp.ImageGeneric;
 import xmipp.MDLabel;
@@ -106,15 +107,22 @@ public class VolumeTableModel extends AbstractXmippTableModel {
     }
 
     @Override
-    public boolean saveAsMetadata(String path) {
+    public boolean containsGeometryInfo() {
+        return false;
+    }
+
+    @Override
+    public boolean saveAsMetadata(String path, boolean all) {
         MetaData md = new MetaData();
 
         md.addLabel(MDLabel.MDL_ENABLED);
         md.addLabel(MDLabel.MDL_IMAGE);
 
         try {
-            for (int i = 0; i < data.size(); i++) {
-                AbstractTableImageItem item = data.get(i);
+            ArrayList<AbstractTableImageItem> items = all ? data : getSelectedItems();
+            
+            for (int i = 0; i < items.size(); i++) {
+                AbstractTableImageItem item = items.get(i);
 
                 long id = md.addObject();
 

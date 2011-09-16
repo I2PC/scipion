@@ -9,6 +9,7 @@ import browser.imageitems.tableitems.AbstractTableImageItem;
 import browser.imageitems.tableitems.TableImageItem;
 import ij.IJ;
 import java.io.File;
+import java.util.ArrayList;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -19,6 +20,7 @@ import xmipp.MetaData;
 public class MDTableModel extends AbstractXmippTableModel {
 
     MetaData md;
+    boolean containsGeometryInfo = false;
 
     public MDTableModel(String filename) {
         super(filename);
@@ -166,8 +168,21 @@ public class MDTableModel extends AbstractXmippTableModel {
     }
 
     @Override
-    public boolean saveAsMetadata(String path) {
+    public boolean containsGeometryInfo() {
+        return containsGeometryInfo;
+    }
+
+    @Override
+    public boolean saveAsMetadata(String path, boolean all) {
         try {
+            ArrayList<AbstractTableImageItem> items = getSelectedItems();
+            for (int i = 0; i < items.size(); i++) {
+                TableImageItem item = (TableImageItem) items.get(i);
+                item.getID();
+            }
+            
+            // md.copyRow(md2, id) ?
+            
             md.write(path);
 
             return true;

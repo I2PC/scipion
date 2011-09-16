@@ -342,19 +342,19 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
     public void setAutoAdjustColumns(boolean autoAdjustColumns) {
 //        if (!isUpdating) {
-            isUpdating = true;
+        isUpdating = true;
 
-            this.autoAdjustColumns = autoAdjustColumns;
+        this.autoAdjustColumns = autoAdjustColumns;
 
-            jcbAutoAdjustColumns.setSelected(autoAdjustColumns);
-            jsColumns.setEnabled(!autoAdjustColumns);
-            jsRows.setEnabled(!autoAdjustColumns);
+        jcbAutoAdjustColumns.setSelected(autoAdjustColumns);
+        jsColumns.setEnabled(!autoAdjustColumns);
+        jsRows.setEnabled(!autoAdjustColumns);
 
-            if (autoAdjustColumns) {
-                startUpdater();
-            }
+        if (autoAdjustColumns) {
+            startUpdater();
+        }
 
-            isUpdating = false;
+        isUpdating = false;
 //        }
     }
 
@@ -391,8 +391,11 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     }
 
     private void setUseGeometry(boolean useGeometry) {
-        ((MDTableModel) tableModel).setUseGeometry(useGeometry);
-        updateTable();
+        if (tableModel.containsGeometryInfo()) {
+            ((MDTableModel) tableModel).setUseGeometry(useGeometry);
+
+            updateTable();
+        }
     }
 
     private void send2stack() {
@@ -403,10 +406,10 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         ImagesWindowFactory.openTableAs3D(tableModel);
     }
 
-    private void saveAsMetadata() {
+    private void saveAsMetadata(boolean all) {
         // Sets path and filename automatically.
-        String file = tableModel.getFilename() != null ? tableModel.getFilename() : "";
-        fc.setSelectedFile(new File(file));
+        String filename = tableModel.getFilename() != null ? tableModel.getFilename() : "";
+        fc.setSelectedFile(new File(forceExtension(filename, ".xmd")));
 
         if (fc.showSaveDialog(this) != JFileChooser.CANCEL_OPTION) {
             boolean response = true;
@@ -420,7 +423,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
             if (response) {
                 String path = fc.getSelectedFile().getAbsolutePath();
-                if (tableModel.saveAsMetadata(path)) {
+                if (tableModel.saveAsMetadata(path, all)) {
                     JOptionPane.showMessageDialog(this, LABELS.MESSAGE_FILE_SAVED + path,
                             LABELS.MESSAGE_FILE_SAVED_TITLE, JOptionPane.INFORMATION_MESSAGE);
                 }
@@ -428,10 +431,10 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         }
     }
 
-    private void saveAsStack() {
+    private void saveAsStack(boolean all) {
         // Sets path and filename automatically.
-        String file = tableModel.getFilename() != null ? tableModel.getFilename() : "";
-        fc.setSelectedFile(new File(file));
+        String filename = tableModel.getFilename() != null ? tableModel.getFilename() : "";
+        fc.setSelectedFile(new File(forceExtension(filename, ".stk")));
 
         if (fc.showSaveDialog(this) != JFileChooser.CANCEL_OPTION) {
             boolean response = true;
@@ -445,12 +448,17 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
             if (response) {
                 String path = fc.getSelectedFile().getAbsolutePath();
-                if (tableModel.saveAsStack(path)) {
+                if (tableModel.saveAsStack(path, all)) {
                     JOptionPane.showMessageDialog(this, LABELS.MESSAGE_FILE_SAVED + path,
                             LABELS.MESSAGE_FILE_SAVED_TITLE, JOptionPane.INFORMATION_MESSAGE);
                 }
             }
         }
+    }
+
+    static String forceExtension(String filename, String ext) {
+        int dot = filename.lastIndexOf(".");
+        return filename.substring(0, dot) + ext;
     }
 
     /** This method is called from within the constructor to
@@ -840,27 +848,45 @@ private void jcbAutoAdjustColumnsStateChanged(javax.swing.event.ChangeEvent evt)
     class JMenuBarTable extends JMenuBar {
 
         protected JMenu jmiSave = new JMenu(LABELS.LABEL_TABLE_SAVE);
-        protected JMenuItem jmiSaveAsSelfile = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_METADATA);
+        protected JMenuItem jmiSaveAsMetadata = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_METADATA);
         protected JMenuItem jmiSaveAsStack = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_STACK);
+        protected JMenuItem jmiSaveSelectionAsMetadata = new JMenuItem(LABELS.LABEL_TABLE_SAVE_SELECTION_AS_METADATA);
+        protected JMenuItem jmiSaveSelectionAsStack = new JMenuItem(LABELS.LABEL_TABLE_SAVE_SELECTION_AS_STACK);
 
         public JMenuBarTable() {
             super();
 
             add(jmiSave);
-            jmiSave.add(jmiSaveAsSelfile);
+            jmiSave.add(jmiSaveAsMetadata);
             jmiSave.add(jmiSaveAsStack);
+            jmiSave.add(jmiSaveSelectionAsMetadata);
+            jmiSave.add(jmiSaveSelectionAsStack);
 
-            jmiSaveAsSelfile.addActionListener(new ActionListener() {
+            jmiSaveAsMetadata.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
-                    saveAsMetadata();
+                    saveAsMetadata(true);
+                }
+            });
+
+            jmiSaveSelectionAsMetadata.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    saveAsMetadata(false);
                 }
             });
 
             jmiSaveAsStack.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
-                    saveAsStack();
+                    saveAsStack(true);
+                }
+            });
+
+            jmiSaveSelectionAsStack.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    saveAsStack(false);
                 }
             });
         }

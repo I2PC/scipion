@@ -232,7 +232,6 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_MetaData_getBlocksInMetaDataFile(
 
 	try {
 		std::vector < std::string > blocks;
-		//StringVector blocks;
 
 		const char * fnStr = env->GetStringUTFChars(filename, false);
 
@@ -276,14 +275,15 @@ JNIEXPORT jintArray JNICALL Java_xmipp_MetaData_getActiveLabels(JNIEnv *env,
 			std::vector < MDLabel > labels = md->getActiveLabels();
 
 			// Copies vector into array.
-			jint *body = new jint[labels.size()];
-			for (int i = 0; i < labels.size(); i++) {
+                        size_t size = labels.size();
+			jint *body = new jint[size];
+			for (int i = 0; i < size; i++) {
 				body[i] = labels[i];
 			}
 
 			// Sets array value
-			jintArray array = env->NewIntArray(labels.size());
-			env->SetIntArrayRegion(array, 0, labels.size(), body);
+			jintArray array = env->NewIntArray(size);
+			env->SetIntArrayRegion(array, 0, size, body);
 
 			return array;
 		} catch (XmippError xe) {
@@ -771,6 +771,46 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_MetaData_getStatistics(JNIEnv *env,
 	return NULL;
 }
 
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_MetaData_getColumnValues
+  (JNIEnv *env, jobject jobj, jint label){
+	std::string msg = "";
+	MetaData *md = GET_INTERNAL_METADATA(jobj);
+
+	if (md != NULL) {
+		try {
+                        std::vector<double> values;
+                        md->getColumnValues((MDLabel)label, values);
+
+			// Copies vector into array.
+			size_t size = values.size();
+			jdouble *body = new jdouble[size];
+			for (int i = 0; i < size; i++) {
+				body[i] = values[i];
+			}
+
+			jdoubleArray array = env->NewDoubleArray(size);
+			env->SetDoubleArrayRegion(array, 0, size, body);
+
+			return array;
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Metadata is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return NULL;
+}
+
 JNIEXPORT jlongArray JNICALL Java_xmipp_MetaData_findObjects(JNIEnv *env,
 		jobject jobj) {
 	std::string msg = "";
@@ -781,15 +821,16 @@ JNIEXPORT jlongArray JNICALL Java_xmipp_MetaData_findObjects(JNIEnv *env,
 			std::vector < size_t > ids;
 			md->findObjects(ids);
 
-			// Copies vetor into array.
-			jlong *body = new jlong[ids.size()];
-			for (int i = 0; i < ids.size(); i++) {
+			// Copies vector into array.
+                        size_t size = ids.size();
+			jlong *body = new jlong[size];
+			for (int i = 0; i < size; i++) {
 				body[i] = ids[i];
 			}
 
 			// Sets array value
-			jlongArray array = env->NewLongArray(ids.size());
-			env->SetLongArrayRegion(array, 0, ids.size(), body);
+			jlongArray array = env->NewLongArray(size);
+			env->SetLongArrayRegion(array, 0, size, body);
 
 			return array;
 		} catch (XmippError xe) {
@@ -890,12 +931,6 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_addLabel(JNIEnv *env, jobject jobj, j
 	}
 }
 
-JNIEXPORT void JNICALL Java_xmipp_MetaData_enableDebug
-  (JNIEnv *, jobject){
-	extern int debug;
-	debug=1;
-}
-
 JNIEXPORT void JNICALL Java_xmipp_MetaData_getPCAbasis
 (JNIEnv *env, jobject jmetadata, jobject jbasis) {
 	std::string msg = "";
@@ -911,7 +946,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_getPCAbasis
 		    program.SFin=*MDin;
 		    program.produceSideInfo();
 		    program.pcaAnalyzer.evaluateZScore(program.NPCA, program.Niter);
-	        program.produceBasis((*basis)());
+                    program.produceBasis((*basis)());
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {
@@ -937,7 +972,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_computeFourierStatistics
 	if (MDout != NULL) {
 		try {
 			MetaData MDin(env->GetStringUTFChars(filename, false));
-	    	getFourierStatistics(MDin, 1, *MDout, true, 2);
+                        getFourierStatistics(MDin, 1, *MDout, true, 2);
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {
@@ -955,26 +990,8 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_computeFourierStatistics
 	}
 }
 
-JNIEXPORT void JNICALL Java_xmipp_MetaData_readPlain
-  (JNIEnv * env, jobject jobj, jstring jfile, jstring jcolumns)
-{
-	std::string msg = "", nfile, ncolumns;
-		try
-		{
-			nfile = env->GetStringUTFChars(jfile, false);
-			ncolumns = env->GetStringUTFChars(jcolumns, false);
-			MetaData * metadata = GET_INTERNAL_METADATA(jobj);
-			metadata->readPlain(nfile, ncolumns);
-		} catch (XmippError xe) {
-			msg = xe.getDefaultMessage();
-		} catch (std::exception& e) {
-			msg = e.what();
-		} catch (...) {
-			msg = "Unhandled exception";
-		}
-
-	    // If there was an exception, sends it to java environment.
-	    if(!msg.empty()) {
-	        handleXmippException(env, msg);
-	    }
+JNIEXPORT void JNICALL Java_xmipp_MetaData_enableDebug
+  (JNIEnv *, jobject){
+	extern int debug;
+	debug=1;
 }

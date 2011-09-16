@@ -192,6 +192,7 @@ public abstract class AbstractTableImageItem {
             int h_ = (int) Math.ceil(getHeight() / factor);
 
             image.readPreview(getPath(), w_, h_, getNSlice(), getNImage());
+            System.out.println(" *** path: " + getPath() + " w=" + w_ + " h=" + h_ + " s=" + getNSlice() + " n=" + getNImage());
             ip = ImageConverter.convertToImagej(image, getTitle());
         } catch (Exception ex) {
             ip = ICONS_MANAGER.MISSING_ITEM;

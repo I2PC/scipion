@@ -141,8 +141,9 @@ void ProgAnalyzeCluster::produceBasis(MultidimArray<double> &basis)
         double *ptrBasis=&DIRECT_NZYX_ELEM(basis, ii, 0, 0, 0);
         const MultidimArray<double> &PCAbasis_ii=pcaAnalyzer.PCAbasis[ii];
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-        if (A2D_ELEM(mask,i,j))
+        if (A2D_ELEM(mask,i,j)){
         	ptrBasis[i*XSIZE(mask)+j]=A1D_ELEM(PCAbasis_ii,idx++);
+	}
     }
 }
 

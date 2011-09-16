@@ -221,6 +221,14 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_MetaData_getStatistics
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    getColumnValues
+ * Signature: (I)[D
+ */
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_MetaData_getColumnValues
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    setValueInt
  * Signature: (IIJ)Z
  */
@@ -285,19 +293,27 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_addLabel
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    getPCAbasis
+ * Signature: (Lxmipp/ImageDouble;)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_MetaData_getPCAbasis
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    computeFourierStatistics
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_MetaData_computeFourierStatistics
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    enableDebug
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_xmipp_MetaData_enableDebug
   (JNIEnv *, jobject);
-
-/*
- * Class:     xmipp_MetaData
- * Method:    readPlain
- * Signature: (Ljava/lang/String;Ljava/lang/String;)V
- */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_readPlain
-  (JNIEnv *, jobject, jstring, jstring);
 
 #ifdef __cplusplus
 }

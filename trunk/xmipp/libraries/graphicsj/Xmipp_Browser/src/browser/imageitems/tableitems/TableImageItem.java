@@ -81,6 +81,10 @@ public class TableImageItem extends AbstractTableImageItem {
         this.readGeo = readGeo;
     }
 
+    public long getID() {
+        return id;
+    }
+
     public String getAbsoluteFileName() {
         return Filename.getFilename(path);
     }

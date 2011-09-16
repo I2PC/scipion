@@ -159,6 +159,8 @@ public class MetaData {
 
     public native double[] getStatistics(boolean applyGeo);
 
+    public native double[] getColumnValues(int label) throws Exception;
+
     //set values
     public native boolean setValueInt(int label, int value, long objId);
 
@@ -175,6 +177,10 @@ public class MetaData {
     public native long addObject();
 
     public native void addLabel(int label);
+
+    public native void getPCAbasis(ImageDouble basis);
+
+    public native void computeFourierStatistics(String filename);
 
     public native void enableDebug();
 

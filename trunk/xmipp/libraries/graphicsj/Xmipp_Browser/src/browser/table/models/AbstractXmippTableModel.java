@@ -30,7 +30,6 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     protected int rows, cols;
     protected Cache<String, ImagePlus> cache = new Cache<String, ImagePlus>();
     protected boolean normalize = false;
-    protected boolean containsGeometryInfo = false;
     protected double min = Double.POSITIVE_INFINITY, max = Double.NEGATIVE_INFINITY;
     protected boolean showLabels = false;
     protected int selectedLabel = MDLabel.MDL_IMAGE;
@@ -81,8 +80,9 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         return data;
     }
 
-    public LinkedList<AbstractTableImageItem> getSelectedItems() {
-        return selectedItems;
+    public ArrayList<AbstractTableImageItem> getSelectedItems() {
+        return new ArrayList<AbstractTableImageItem>(selectedItems);
+        //return selectedItems.toArray(new AbstractTableImageItem[selectedItems.size()]);
     }
 
     @Override
@@ -483,15 +483,13 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     public abstract boolean isMetaData();
 
-    public boolean containsGeometryInfo() {
-        return containsGeometryInfo;
-    }
+    public abstract boolean containsGeometryInfo();
 
-    public abstract boolean saveAsMetadata(String path);
+    public abstract boolean saveAsMetadata(String path, boolean all);
 
-    public boolean saveAsStack(String path) {
+    public boolean saveAsStack(String path, boolean all) {
         try {
-            ImagePlus imp = ImageConverter.convertToImagePlus(data);
+            ImagePlus imp = ImageConverter.convertToImagePlus(all ? data : getSelectedItems());
             IJ.run(imp, "Xmipp writer", "save=" + path);
 
             return true;

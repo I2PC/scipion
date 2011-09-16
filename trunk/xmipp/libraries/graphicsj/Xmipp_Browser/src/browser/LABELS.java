@@ -208,8 +208,10 @@ public class LABELS {
     public final static String LABEL_TABLE_DISABLE_TO = "Disable to here";
     public final static String LABEL_TABLE_SAVE = "Save";
     //public final static String LABEL_TABLE_SAVE_AS_IMAGES = "Save as images";
-    public final static String LABEL_TABLE_SAVE_AS_STACK = "Save as stack";
     public final static String LABEL_TABLE_SAVE_AS_METADATA = "Save as metadata";
+    public final static String LABEL_TABLE_SAVE_SELECTION_AS_METADATA = "Save selection as metadata";
+    public final static String LABEL_TABLE_SAVE_AS_STACK = "Save as stack";
+    public final static String LABEL_TABLE_SAVE_SELECTION_AS_STACK = "Save selection as stack";
     public final static String LABEL_CTF = "CTF";
     public final static String LABEL_PSD = "PSD";
     public final static String LABEL_SAMPLING = "1/A";
