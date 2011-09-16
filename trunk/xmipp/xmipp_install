@@ -9,6 +9,7 @@ DO_PYTHON=true
 DO_FFTW=true
 DO_TIFF=true
 DO_ARPACK=false
+DO_CLEAN=true
 
 DO_STATIC=false
 CPU=$@
@@ -17,11 +18,29 @@ CPU=$@
 XMIPP_HOME=$PWD
 EXT_PATH=$XMIPP_HOME/external
 BUILD_PATH=$XMIPP_HOME/build
+
+#External libraries versions
+VSQLITE=sqlite-3.6.23
+VTCLTK=8.5.10
+VPYTHON=Python-2.7.2
+VFFTW=fftw-3.2.2
+VTIFF=tiff-3.9.4
+VARPACK=arpack++-2.3
+VNUMPY=numpy-1.6.1
+VMATLIBPLOT=matplotlib-1.0.1
+
 # Some other vars
 
 GREEN="\033[32m"
 RED="\033[31m"
 ENDC="\033[0m"
+
+#################### PARSING PARAMETERS ###########################
+
+#for p in $@; do
+#   echo "param: $p" 
+#done
+#exit 1
 
 
 #################### DECOMPRESSING EXTERNAL LIBRARIES ###########################
@@ -61,12 +80,27 @@ compile_library()
   echo -e "$GREEN*** Compiling $LIB ...$ENDC"
   echo "--> cd $_PATH"
   cd $_PATH
-  #make distclean &> /dev/null
-  echo "--> ./configure $CONFIGFLAGS $FLAGS &> $BUILD_PATH/${LIB}_configure.log"
-  ./configure $CONFIGFLAGS $FLAGS &> $BUILD_PATH/${LIB}_configure.log
-  echo "--> make $CPU &> $BUILD_PATH/${LIB}_make.log"
-  make $CPU &> $BUILD_PATH/${LIB}_make.log
 
+  if $DO_CLEAN; then
+    echo "make distclean > /dev/null 2>&1"
+    make distclean > /dev/null 2>&1
+  fi
+
+  echo "--> ./configure $CONFIGFLAGS $FLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1"
+  ./configure $CONFIGFLAGS $FLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1
+  echo "--> make $CPU >$BUILD_PATH/${LIB}_make.log 2>&1"
+  make $CPU >$BUILD_PATH/${LIB}_make.log 2>&1
+
+}
+
+compile_pymodule()
+{
+   MOD=$1
+   _PATH=$EXT_PATH/python/$MOD
+   _PYTHON=$EXT_PATH/python/$VPYTHON/python
+   cd $_PATH
+   $_PYTHON setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1 
+   
 }
 
 #This function should be called from XMIPP_HOME
@@ -94,39 +128,41 @@ install_bin()
 
 #################### SQLITE ###########################
 if $DO_SQLITE; then
-  compile_library sqlite-3.6.23 "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
-  install_bin sqlite-3.6.23/sqlite3 xmipp_sqlite3
-  install_libs sqlite-3.6.23/.libs libsqlite3. a la so so.0
+  compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+  install_bin $VSQLITE/sqlite3 xmipp_sqlite3
+  install_libs $VSQLITE/.libs libsqlite3. a la so so.0
 fi
 
 #################### TCL/TK ###########################
 if $DO_TCLTK; then
-  compile_library tcl8.5.10 python unix ""
-  compile_library tk8.5.10 python unix ""
+  compile_library tcl$VTCKTK python unix ""
+  compile_library tk$VTCKTK python unix ""
 fi
 
 #################### PYTHON ###########################
 if $DO_PYTHON; then
-  compile_library Python-2.7.2 python "." ""
-  install_bin python/Python-2.7.2/python xmipp_python
-  install_libs python/Python-2.7.2 libpython2.7. a so so.1.0
+  compile_library $VPYTHON python "." ""
+  install_bin python/$VPYTHON/python xmipp_python
+  install_libs python/$VPYTHON libpython2.7. a so so.1.0
+  compile_pymodule $VNUMPY
+  compile_pymodule $VMATLIBPLOT
 fi
 
 #################### FFTW ###########################
 if $DO_FFTW; then
-  compile_library fftw-3.2.2 "." "." "--enable-threads"
-  install_libs fftw-3.2.2/.libs libfftw3. a la so so.3
-  install_libs fftw-3.2.2/threads/.libs libfftw3_threads. a la so so.3
+  compile_library $VFFTW "." "." "--enable-threads"
+  install_libs $VFFTW/.libs libfftw3. a la so so.3
+  install_libs $VFFTW/threads/.libs libfftw3_threads. a la so so.3
 fi
 
 #################### TIFF ###########################
 if $DO_TIFF; then
-  compile_library tiff-3.9.4 "." "." "CPPFLAGS=-w"
-  install_libs tiff-3.9.4/libtiff/.libs libtiff. a la so so.3
+  compile_library $VTIFF "." "." "CPPFLAGS=-w"
+  install_libs $VTIFF/libtiff/.libs libtiff. a la so so.3
 fi
 
 #################### ARPACK ###########################
 if $DO_ARPACK; then
-  compile_library arpack++-2.3 "." "." ""
-  install_libs arpack++-2.3/src/.libs libarpack++. a la so
+  compile_library $VARPACK "." "." ""
+  install_libs $VARPACK/src/.libs libarpack++. a la so
 fi

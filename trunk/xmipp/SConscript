@@ -470,19 +470,19 @@ def AddImageJPlugin(name, pluginDir, outDir):
 #    alias = env.Alias('pysqlite2', pysqlite2Target)
 #    env.Default(alias)
 
-def AddPythonModule(modname, moddir):
-    libprefix = os.path.join(env['prefix'], 'lib')
-    modTarget = os.path.join(libprefix, modname)
+#def AddPythonModule(modname, moddir):
+#    libprefix = os.path.join(env['prefix'], 'lib')
+#    modTarget = os.path.join(libprefix, modname)
+##    modBuild = env.Command(modTarget, moddir, \
+##                          'cd  $SOURCE ; xmipp_python ./setup.py build ' + \
+##              ' ; xmipp_python ./setup.py install --install-lib ' + libprefix + \
+##              ' --install-data $TARGET')
 #    modBuild = env.Command(modTarget, moddir, \
-#                          'cd  $SOURCE ; xmipp_python ./setup.py build ' + \
-#              ' ; xmipp_python ./setup.py install --install-lib ' + libprefix + \
-#              ' --install-data $TARGET')
-    modBuild = env.Command(modTarget, moddir, \
-                          'cd  $SOURCE ; ../../../%s ./setup.py install --prefix %s &> ../../../build/%s.log' % (PythonAbsPath, env['prefix'],modname))
-    Depends(modBuild, env.Alias('python'))
-    alias = env.Alias(modname, modTarget)
-    env.Default(alias)
-    return modBuild
+#                          'cd  $SOURCE ; ../../../%s ./setup.py install --prefix %s &> ../../../build/%s.log' % (PythonAbsPath, env['prefix'],modname))
+#    Depends(modBuild, env.Alias('python'))
+#    alias = env.Alias(modname, modTarget)
+#    env.Default(alias)
+#    return modBuild
 
 
 # --- Libraries
@@ -492,13 +492,13 @@ def AddPythonModule(modname, moddir):
 #
 #
 #python = AddExternalLibraryAndBinary('python', ['libpython2.7'], PythonDir, '.1.0')
-PythonAbsPath = os.path.join(PythonDir, 'python')
-##Compilation of python depends on sqlite3
-#Depends(python, sqlite3)
-
-numpy = AddPythonModule('numpy', 'external/python/numpy-1.6.1')
-matplotlib = AddPythonModule('matplotlib', 'external/python/matplotlib-1.0.1')
-Depends(matplotlib, numpy)
+#PythonAbsPath = os.path.join(PythonDir, 'python')
+###Compilation of python depends on sqlite3
+##Depends(python, sqlite3)
+#
+#numpy = AddPythonModule('numpy', 'external/python/numpy-1.6.1')
+#matplotlib = AddPythonModule('matplotlib', 'external/python/matplotlib-1.0.1')
+#Depends(matplotlib, numpy)
 
 # PYSQLITE
 #PYSQliteDir = "external/pysqlite-2.6.3"
