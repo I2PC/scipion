@@ -237,6 +237,7 @@ bool ImgCompareSize(const FileName &filename1, const FileName &filename2)
   size_t n, N;
   ImgSize(filename1,x,y,z,n);
   ImgSize(filename2,X,Y,Z,N);
+  std::cerr << "DEBUG_JM: " << x << " " << X << " " << y << " " << Y<< " " << z << " " << Z <<std::endl;
   return (x==X && y == Y && z == Z && n == N);
 }
 
