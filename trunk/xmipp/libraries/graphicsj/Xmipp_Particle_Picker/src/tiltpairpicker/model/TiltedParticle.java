@@ -5,7 +5,7 @@ import trainingpicker.model.Particle;
 
 public class TiltedParticle extends Particle {
 	
-	public TiltedParticle(int x, int y, TrainingMicrograph micrograph)
+	public TiltedParticle(int x, int y, TiltedMicrograph micrograph)
 	{
 		super(x, y, micrograph);
 	}

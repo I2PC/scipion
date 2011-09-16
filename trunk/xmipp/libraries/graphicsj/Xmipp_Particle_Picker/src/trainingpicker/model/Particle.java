@@ -8,9 +8,10 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 
+import tiltpairpicker.model.TiltedParticle;
 import trainingpicker.gui.ParticleCanvas;
 
-public class Particle {
+public class Particle implements Comparable<TrainingParticle> {
 	protected int x;
 	protected int y;
 	protected Micrograph micrograph;
@@ -75,7 +76,6 @@ public class Particle {
 		if(y + radius > height)
 			return false;
 		return true;
-			
 	}
 
 	public void setPosition(int x, int y) {
@@ -90,6 +90,21 @@ public class Particle {
 	}
 	
 
+	@Override
+	public int compareTo(TrainingParticle p) {
+		if(p.x > x)
+			return 1;
+		if(p.x == x)
+		{
+			if(p.y > y)
+				return 1;
+			if(p.y == y)
+				return 0;
+			return -1;
+		}
+		return -1;
+	}
+	
 	
 
 

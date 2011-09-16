@@ -11,7 +11,7 @@ import javax.swing.ImageIcon;
 
 import trainingpicker.gui.ParticleCanvas;
 
-public class TrainingParticle extends Particle implements Comparable<TrainingParticle> {
+public class TrainingParticle extends Particle {
 	
 	protected Family family;
 	protected ImagePlus img;
@@ -96,20 +96,7 @@ public class TrainingParticle extends Particle implements Comparable<TrainingPar
 
 
 
-	@Override
-	public int compareTo(TrainingParticle p) {
-		if(p.x > x)
-			return 1;
-		if(p.x == x)
-		{
-			if(p.y > y)
-				return 1;
-			if(p.y == y)
-				return 0;
-			return -1;
-		}
-		return -1;
-	}
+
 
 
 	

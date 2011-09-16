@@ -200,7 +200,6 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 				if(!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= frame.getThreshold())
 					drawShape(g2, autoparticles.get(i), x0, y0, radius, false);
 		}
-		
 	}
 
 	private void drawShape(Graphics2D g2, TrainingParticle p, int x0, int y0, int radius, boolean all) {

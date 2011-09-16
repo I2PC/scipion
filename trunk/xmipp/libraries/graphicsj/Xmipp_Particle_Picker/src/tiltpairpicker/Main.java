@@ -4,8 +4,8 @@ package tiltpairpicker;
 
 import javax.swing.SwingUtilities;
 
-import tiltpairpicker.gui.ParticlePairPickerJFrame;
-import tiltpairpicker.model.ParticlePairPicker;
+import tiltpairpicker.gui.TiltPairPickerJFrame;
+import tiltpairpicker.model.TiltPairPicker;
 
 
 class Main {
@@ -33,8 +33,8 @@ class Main {
 				String selfile = myargs[0];
 				String outputdir = myargs[1];
 				
-				ParticlePairPicker pppicker = new ParticlePairPicker(selfile, outputdir);
-				ParticlePairPickerJFrame frame = new ParticlePairPickerJFrame(pppicker);
+				TiltPairPicker pppicker = new TiltPairPicker(selfile, outputdir);
+				TiltPairPickerJFrame frame = new TiltPairPickerJFrame(pppicker);
 
 			}
 		});

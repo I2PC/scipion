@@ -18,17 +18,17 @@ import xmipp.MetaData;
 
 
 
-public class ParticlePairPicker {
+public class TiltPairPicker {
 	
 	private static Logger logger;
 	private String outputdir = ".";
 	private static String rundir = ".";
 	private boolean changed;
-	private int size;
+	private int size = 100;
 	protected List<UntiltedMicrograph> micrographs;
 	private Color color = Color.green;
 	
-	public ParticlePairPicker(String pairsfile, String outputdir) {
+	public TiltPairPicker(String pairsfile, String outputdir) {
 		
 		this.outputdir = outputdir;
 		this.micrographs = new ArrayList<UntiltedMicrograph>();

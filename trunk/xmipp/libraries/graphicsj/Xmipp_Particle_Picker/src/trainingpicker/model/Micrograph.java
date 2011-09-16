@@ -17,18 +17,26 @@ public abstract class Micrograph {
 		this.file = file;
 		if(!new File(file).exists())
 			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("file", file));
-		this.name = getName(file);
+		this.name = getName(file, 2);
 		this.outputfilename = name + ext;
 		
 	}
 	
-	public static String getName(String file)
+	public Micrograph(String file, String name) {
+		this.file = file;
+		if(!new File(file).exists())
+			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("file", file));
+		this.name = name;
+		this.outputfilename = name + ext;
+		
+	}
+	
+	public static String getName(String file, int level)
 	{
 		String[] tokens = file.split(File.separator);
-		if(tokens.length < 2)
-			throw new IllegalArgumentException("Name for micrograph" +
-					"is taken from parent dir, invalid path " + file);
-		return  tokens[tokens.length - 2];
+		if(tokens.length < level )
+			throw new IllegalArgumentException(String.format("Name for micrograph is taken from level %s, invalid path ", level, file));
+		return  tokens[tokens.length - level];
 	}
 
 	public String getOFilename()

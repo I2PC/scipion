@@ -12,7 +12,7 @@ public class UntiltedMicrograph extends Micrograph {
 	private List<UntiltedParticle> particles;
 
 	public UntiltedMicrograph(String file, TiltedMicrograph tiltedmicrograph) {
-		super(file);
+		super(file, getName(file, 1));
 		this.tiltedmicrograph = tiltedmicrograph;
 		particles = new ArrayList<UntiltedParticle>();
 	}

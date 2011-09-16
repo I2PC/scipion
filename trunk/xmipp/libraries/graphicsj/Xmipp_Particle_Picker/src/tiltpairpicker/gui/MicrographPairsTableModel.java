@@ -17,9 +17,9 @@ public class MicrographPairsTableModel extends AbstractTableModel {
 	
 	private List<UntiltedMicrograph> micrographs;
 	private String[] columns = new String[]{"", "Name", "Pair Name", "Particles"};
-	private ParticlePairPickerJFrame frame;
+	private TiltPairPickerJFrame frame;
 
-	public MicrographPairsTableModel(ParticlePairPickerJFrame frame)
+	public MicrographPairsTableModel(TiltPairPickerJFrame frame)
 	{
 		this.micrographs = frame.getParticlePairPicker().getMicrographs();
 		this.frame = frame;

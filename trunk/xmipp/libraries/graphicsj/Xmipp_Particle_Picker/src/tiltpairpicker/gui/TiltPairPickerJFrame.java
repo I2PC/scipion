@@ -2,6 +2,7 @@ package tiltpairpicker.gui;
 
 import ij.IJ;
 import ij.ImageJ;
+import ij.gui.ColorChooser;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -43,7 +44,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import tiltpairpicker.model.ParticlePairPicker;
+import tiltpairpicker.model.TiltPairPicker;
 import tiltpairpicker.model.UntiltedMicrograph;
 import trainingpicker.gui.ColorIcon;
 import trainingpicker.gui.WindowUtils;
@@ -57,9 +58,9 @@ enum Shape {
 	Circle, Rectangle, Center
 }
 
-public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
+public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 
-	private ParticlePairPicker pppicker;
+	private TiltPairPicker pppicker;
 	private JSlider sizesl;
 	private JCheckBox circlechb;
 	private JCheckBox rectanglechb;
@@ -112,13 +113,13 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 		return Tool.IMAGEJ;
 	}
 
-	public ParticlePairPicker getParticlePairPicker() {
+	public TiltPairPicker getParticlePairPicker() {
 		return pppicker;
 	}
 
 
 
-	public ParticlePairPickerJFrame(ParticlePairPicker pppicker) {
+	public TiltPairPickerJFrame(TiltPairPicker pppicker) {
 
 		this.pppicker = pppicker;
 		initComponents();
@@ -140,11 +141,11 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 			public void windowClosing(WindowEvent winEvt) {
 				if (pppicker.isChanged()) {
 					int result = JOptionPane.showConfirmDialog(
-							ParticlePairPickerJFrame.this,
+							TiltPairPickerJFrame.this,
 							"Save changes before closing?", "Message",
 							JOptionPane.YES_NO_OPTION);
 					if (result == JOptionPane.OK_OPTION)
-						ParticlePairPickerJFrame.this.saveChanges();
+						TiltPairPickerJFrame.this.saveChanges();
 				}
 				System.exit(0);
 			}
@@ -247,7 +248,7 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				saveChanges();
-				JOptionPane.showMessageDialog(ParticlePairPickerJFrame.this,
+				JOptionPane.showMessageDialog(TiltPairPickerJFrame.this,
 						"Data saved successfully");
 				((JMenuItem) e.getSource()).setEnabled(false);
 			}
@@ -271,7 +272,7 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 					WindowUtils
 							.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParticlePicker");
 				} catch (Exception ex) {
-					JOptionPane.showMessageDialog(ParticlePairPickerJFrame.this,
+					JOptionPane.showMessageDialog(TiltPairPickerJFrame.this,
 							ex.getMessage());
 				}
 			}
@@ -469,10 +470,10 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 					public void valueChanged(ListSelectionEvent e) {
 						if (e.getValueIsAdjusting())
 							return;
-						if (ParticlePairPickerJFrame.this.micrographstb
+						if (TiltPairPickerJFrame.this.micrographstb
 								.getSelectedRow() == -1)
 							return;// Probably from fireTableDataChanged raised
-						index = ParticlePairPickerJFrame.this.micrographstb
+						index = TiltPairPickerJFrame.this.micrographstb
 								.getSelectedRow();
 						// by me.
 						untiltedmic.releaseImage();
@@ -525,9 +526,8 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 
 	void initializeCanvas() {
 		if (canvas == null) 
-		{
 			canvas = new UntiltedMicrographCanvas(this);
-		} else 
+		else 
 			canvas.updateMicrograph();
 	}
 
@@ -542,5 +542,10 @@ public class ParticlePairPickerJFrame extends JFrame implements ActionListener {
 	public int getParticleSize()
 	{
 		return sizesl.getValue();
+	}
+	
+	public Color getColor()
+	{
+		return pppicker.getColor();
 	}
 }
