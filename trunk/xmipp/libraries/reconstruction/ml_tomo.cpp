@@ -418,7 +418,7 @@ void ProgMLTomo::show()
         std::cout << " -----------------------------------------------------------------" << std::endl;
 
     }
-
+std::cerr << "DEBUG_JM: leaving show" <<std::endl;
 }
 
 
