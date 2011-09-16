@@ -2515,7 +2515,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
                 cc++;
             }
         }
-        std::cerr<<"threadMLTomoExpectationSingleImage finish " << imgno<<std::endl;
+        std::cerr<<"threadMLTomoExpectationSingleImage finish " <<std::endl;
         if (prm->verbose && thread_id==0)
             progress_bar(myNum);
     }
