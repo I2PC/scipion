@@ -3020,7 +3020,7 @@ bool ProgMLTomo::regularize(int iter)
 // Check convergence
 bool ProgMLTomo::checkConvergence(std::vector<double> &conv)
 {
-
+#define DEBUG
 #ifdef DEBUG
     std::cerr<<"started checkConvergence"<<std::endl;
 #endif
@@ -3055,7 +3055,7 @@ bool ProgMLTomo::checkConvergence(std::vector<double> &conv)
 #ifdef DEBUG
     std::cerr<<"finished checkConvergence"<<std::endl;
 #endif
-
+#undef DEBUG
     return converged;
 }
 
