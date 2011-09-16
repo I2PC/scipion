@@ -198,7 +198,7 @@ void ProgMLTomo::readParams()
     fn_sel = getParam("-i");
     nr_ref = getIntParam("--nref");
     fn_ref = getParam("--ref");
-    if (!fn_ref.empty() && ImgCompareSize(fn_sel, fn_ref))
+    if (!fn_ref.empty() && (!ImgCompareSize(fn_sel, fn_ref)) )
       REPORT_ERROR(ERR_GRID_SIZE, "Reference and images aren't of same size");
         //fn_doc = getParam("--doc");
 
