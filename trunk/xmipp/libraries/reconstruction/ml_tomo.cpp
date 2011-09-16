@@ -450,7 +450,7 @@ void ProgMLTomo::produceSideInfo()
 
     // Read metadatafile with experimental images
     MDimg.read(fn_sel);
-    MDimg.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    MDimg.removeDisabled();
     nr_images_global = MDimg.size();
     //Get all images id for threads work on it
     MDimg.findObjects(imgs_id);
