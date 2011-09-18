@@ -9625,7 +9625,7 @@ double gammp(double a, double x)
 void choldc(double *a, int n, double *p)
 {
     int i, j, k;
-    float sum;
+    double sum;
 
     for (i = 1;i <= n;i++)
     {
@@ -9648,7 +9648,7 @@ void choldc(double *a, int n, double *p)
 void cholsl(double *a, int n, double *p, double *b, double *x)
 {
     int i, k;
-    float sum;
+    double sum;
 
     for (i = 1;i <= n;i++)
     {
