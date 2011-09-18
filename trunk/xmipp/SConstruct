@@ -5,7 +5,7 @@ import os
 import SCons.Script
 env = Environment(ENV=os.environ,
       tools=['default', 'disttar'],
-      toolpath=['scons/ToolsFromWiki'])
+      toolpath=['external/scons/ToolsFromWiki'])
 
 # avoid cruft in top dir
 base_dir = 'build'
@@ -56,6 +56,7 @@ opts.Add(BoolVariable('arpack', 'Build the arpack programs?', 'no'))
 opts.Add(BoolVariable('gtest', 'Build tests?', 'no'))
 
 opts.Add(BoolVariable('mpi', 'Build the MPI programs?', 'yes'))
+
 opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
 opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
 opts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
@@ -242,7 +243,7 @@ if (ARGUMENTS['mode'] == 'configure'):
     # Java
     if int(env['java']) == 1: 
         import sys
-        sys.path.append("scons/ToolsFromWiki")
+        sys.path.append("external/scons/ToolsFromWiki")
         import ConfigureJNI
         if not ConfigureJNI.ConfigureJNI(env):
             env['java'] = 0
@@ -260,32 +261,32 @@ if (ARGUMENTS['mode'] == 'configure'):
         else:
             print 'yes'
 
-    def ConfigureExternalLibrary(libName, libFlags, libpath, verbose):
-            
-        libpath = os.path.join('external', libpath)
-        if not GetOption("help"):
-            if os.path.exists(os.path.join(libpath, 'Makefile')):
-                command = 'cd %s ; make distclean > /dev/null' % libpath
-                print command
-                os.system(command)
-    
-        if not int(env['static']):
-            libFlags += " --enable-shared"
-    
-        if env['PLATFORM'] == 'darwin':
-            libFlags += " CFLAGS='-m64'"
-        
-        msg = "* Configuring " + libName
-        cmd = "cd %s;./configure %s" % (libpath, libFlags)
-        
-        logFile = os.path.join("..", "..", "build", libName + "_configure.log")
-        if not verbose:
-            msg += "(see log file '%s' for details)" % logFile
-            cmd += " > " + logFile
-            
-        print msg, "..."
-        print "   command:  ", cmd
-        os.system(cmd)        
+#    def ConfigureExternalLibrary(libName, libFlags, libpath, verbose):
+#            
+#        libpath = os.path.join('external', libpath)
+#        if not GetOption("help"):
+#            if os.path.exists(os.path.join(libpath, 'Makefile')):
+#                command = 'cd %s ; make distclean > /dev/null' % libpath
+#                print command
+#                os.system(command)
+#    
+#        if not int(env['static']):
+#            libFlags += " --enable-shared"
+#    
+#        if env['PLATFORM'] == 'darwin':
+#            libFlags += " CFLAGS='-m64'"
+#        
+#        msg = "* Configuring " + libName
+#        cmd = "cd %s;./configure %s" % (libpath, libFlags)
+#        
+#        logFile = os.path.join("..", "..", "build", libName + "_configure.log")
+#        if not verbose:
+#            msg += "(see log file '%s' for details)" % logFile
+#            cmd += " > " + logFile
+#            
+#        print msg, "..."
+#        print "   command:  ", cmd
+#        os.system(cmd)        
     
 #    ConfigureExternalLibrary('sqlite', env['SQLITEFLAGS'], 
 #                             'sqlite-3.6.23', int(env['verbose_sqlite']))

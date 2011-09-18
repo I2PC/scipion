@@ -743,7 +743,7 @@ if int(env['java']):
     javaPlugins.append(AddJavaApp('Java3DInstaller', 'libraries/graphicsj/Java3DInstaller', 'external/Java3DInstaller'))
 
     import sys
-    sys.path.append("scons/ToolsFromWiki")
+    sys.path.append("external/scons/ToolsFromWiki")
     import install
     install.TOOL_INSTALL(env)
     javaExtPlugins = env.InstallFiles('external/imagej/plugins', 'libraries/graphicsj/plugins', exclude='.svn')

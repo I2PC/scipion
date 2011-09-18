@@ -9,10 +9,36 @@ DO_PYTHON=true
 DO_FFTW=true
 DO_TIFF=true
 DO_ARPACK=false
-DO_CLEAN=false
+DO_JAVA=false
 
+DO_CLEAN=false
 DO_STATIC=false
+DO_DOWNLOAD=true
+
 CPU=$@
+
+
+
+# Some other vars
+
+GREEN="\033[32m"
+RED="\033[31m"
+ENDC="\033[0m"
+
+#################### PARSING PARAMETERS ###########################
+
+#for p in $@; do
+#   echo "param: $p" 
+#done
+#exit 1
+
+#################### DOWNLOADING SOURCE CODE ###########################
+
+if $DO_DOWNLOAD; then
+  INSTALL_DIR=$1
+  svn co http://newxmipp.svn.sourceforge.net/svnroot/newxmipp/trunk/xmipp $INSTALL_DIR
+  cd $INSTALL_DIR
+fi
 
 #Some path variables
 XMIPP_HOME=$PWD
@@ -28,20 +54,6 @@ VTIFF=tiff-3.9.4
 VARPACK=arpack++-2.3
 VNUMPY=numpy-1.6.1
 VMATLIBPLOT=matplotlib-1.0.1
-
-# Some other vars
-
-GREEN="\033[32m"
-RED="\033[31m"
-ENDC="\033[0m"
-
-#################### PARSING PARAMETERS ###########################
-
-#for p in $@; do
-#   echo "param: $p" 
-#done
-#exit 1
-
 
 #################### DECOMPRESSING EXTERNAL LIBRARIES ###########################
 if $DO_UNTAR; then  
@@ -98,7 +110,9 @@ compile_pymodule()
    MOD=$1
    _PATH=$EXT_PATH/python/$MOD
    _PYTHON=$EXT_PATH/python/$VPYTHON/python
+   echo "cd $_PATH"
    cd $_PATH
+   echo "$_PYTHON setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1"
    $_PYTHON setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1 
    
 }
@@ -125,6 +139,24 @@ install_bin()
   echo "--> ln -sf $BINPATH $LINKNAME"
   ln -sf $BINPATH $LINKNAME
 }
+
+create_dir()
+{
+   $DIR=$1
+  if [ -d $DIR ]; then 
+      echo "--> Dir $DIR exists."
+  else
+    echo "--> Creating dir $DIR ..."
+    mkdir $DIR
+  fi
+
+}
+
+#################### NEEDED FOLDERS: bin lib build ##############
+echo -e "$GREEN*** Checking needed folders ...$ENDC"
+create_dir build
+create_dir bin
+create_dir lib
 
 #################### SQLITE ###########################
 if $DO_SQLITE; then
@@ -167,3 +199,12 @@ if $DO_ARPACK; then
   install_libs $VARPACK/src/.libs libarpack++. a la so
 fi
 
+#################### JAVA ###########################
+if $DO_JAVA; then
+  JAVAC=$(readlink -f `which javac`)
+  if [ -e $JAVAC ]; then 
+      echo "Java found at: $JAVAC"
+  else
+    echo "Java jdk folder not found"
+  fi
+fi
