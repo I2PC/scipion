@@ -1480,7 +1480,7 @@ public:
     void selfNormalize()
     {
         double m = module();
-        if (ABS(m) > XMIPP_EQUAL_ACCURACY)
+        if (fabs(m) > XMIPP_EQUAL_ACCURACY)
         {
             T im=(T) (1.0/m);
             *this *= im;
