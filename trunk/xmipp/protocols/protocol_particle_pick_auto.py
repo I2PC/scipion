@@ -9,10 +9,10 @@
 from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import runJob
-from protlib_filesystem import createLink
+from protlib_filesystem import createLink, deleteFiles
 from xmipp import MetaData, MD_APPEND,MDL_IMAGE, MDL_PICKING_FAMILY, \
                   MDL_PICKING_MICROGRAPH_FAMILY_STATE, MDL_PICKING_PARTICLE_SIZE,\
-                  MDL_ENABLED
+                  MDL_ENABLED, MDL_COST
 import glob
 
 # Create a GUI automatically from a selfile of micrographs
@@ -83,6 +83,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         for familyIdx in range(len(self.familiesForAuto)):
             family=self.familiesForAuto[familyIdx]
             parent_id=self.Db.insertStep('gatherResults',parent_step_id=parent_id,Family=family,WorkingDir=self.WorkingDir,PickingDir=self.pickingDir)
+        self.Db.insertStep('deleteTempFiles',parent_step_id=parent_id,WorkingDir=self.WorkingDir)
 
     def summary(self):
         summary = []
@@ -113,8 +114,10 @@ class ProtParticlePickingAuto(XmippProtocol):
         return errors
     
     def visualize(self):
-        params="-i %s "%self.WorkingDir
-        runJob(log,"xmipp_micrograph_particle_picking",params,RunInBackground=True)
+        mD=MetaData(self.familiesFile)
+        for file in glob.glob(self.workingDirPath("*extract_list.xmd")):
+            params="-i %s -o %s --mode review %s"%(self.micrographSelfile,self.WorkingDir,file)
+            runJob(None,"xmipp_micrograph_particle_picking",params,RunInBackground=True)
 
 def autoPick(log,WorkingDir,ModelRoot,MicrographFullPath,MicrographName,ParticleSize,Fast,InCore):
     args="-i "+MicrographFullPath+" --particleSize "+str(ParticleSize)+" --model "+ModelRoot+\
@@ -138,6 +141,7 @@ def gatherResults(log,Family,WorkingDir,PickingDir):
         if os.path.exists(fnManual):
             try:            
                 mDpos.read(Family+"@"+fnManual)
+                mDpos.setValueCol(MDL_COST,2.0)
             except:
                 pass
         if os.path.exists(fnAuto1):
@@ -158,6 +162,9 @@ def gatherResults(log,Family,WorkingDir,PickingDir):
                 pass
         # Append alphanumeric prefix to help identifying the block 
         mDpos.write("mic_"+micrographName+"@"+fnExtractList,MD_APPEND)
+
+def deleteTempFiles(log,WorkingDir):
+    deleteFiles(log,glob.glob(os.path.join(WorkingDir,"*_auto.pos")),True)
 
 #		
 # Main
