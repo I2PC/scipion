@@ -11,7 +11,7 @@ DO_TIFF=true
 DO_ARPACK=false
 DO_JAVA=false
 
-DO_CLEAN=false
+DO_CLEAN=true
 DO_STATIC=false
 DO_DOWNLOAD=true
 
@@ -47,33 +47,22 @@ VARPACK=arpack++-2.3
 VNUMPY=numpy-1.6.1
 VMATLIBPLOT=matplotlib-1.0.1
 
-#################### DECOMPRESSING EXTERNAL LIBRARIES ###########################
-if $DO_UNTAR; then  
-  dirs=". python"
-  echo
-  echo -e "$GREEN*** Decompressing external libraries ...$ENDC"
-  #Enter to external dir
-  echo "--> cd $EXT_PATH"
-  cd $EXT_PATH
-  for d in $dirs; do
-    echo "--> cd $d"
-    cd $d 
-    for file in $(ls *.tgz); do
-      echo "--> tar -xvzf $file > /dev/null"
-      tar -xvzf $file > /dev/null
-    done
-    echo "--> cd -"
-    cd - > /dev/null
-  done
-fi
-
-if ! $DO_STATIC; then
-  echo "--> Enabling shared libraries..."
-   CONFIGFLAGS=--enable-shared
-fi
+################# HELPER FUNCTIONS ##################
+TIMESTAMP=""
+tic()
+{
+   TIMESTAMP="$(date +%s)"
+}
+toc()
+{
+   NOW="$(date +%s)"
+   ELAPSED="$(expr $NOW - $TIMESTAMP)"
+   echo "*** Elapsed time: $ELAPSED seconds"
+}
 
 compile_library()
 {
+   tic
    LIB=$1
    PREFIX_PATH=$2
    SUFFIX_PATH=$3
@@ -94,7 +83,7 @@ compile_library()
   ./configure $CONFIGFLAGS $FLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1
   echo "--> make $CPU >$BUILD_PATH/${LIB}_make.log 2>&1"
   make $CPU >$BUILD_PATH/${LIB}_make.log 2>&1
-
+  toc
 }
 
 compile_pymodule()
@@ -138,10 +127,9 @@ create_dir()
   if [ -d $DIR ]; then 
       echo "--> Dir $DIR exists."
   else
-    echo "--> Creating dir $DIR ..."
+    echo "--> mkdir $DIR"
     mkdir $DIR
   fi
-
 }
 
 #################### NEEDED FOLDERS: bin lib build ##############
@@ -149,6 +137,33 @@ echo -e "$GREEN*** Checking needed folders ...$ENDC"
 create_dir build
 create_dir bin
 create_dir lib
+
+#################### DECOMPRESSING EXTERNAL LIBRARIES ###########################
+if $DO_UNTAR; then  
+  tic
+  dirs=". python"
+  echo
+  echo -e "$GREEN*** Decompressing external libraries ...$ENDC"
+  #Enter to external dir
+  echo "--> cd $EXT_PATH"
+  cd $EXT_PATH
+  for d in $dirs; do
+    echo "--> cd $d"
+    cd $d 
+    for file in $(ls *.tgz); do
+      echo "--> tar -xvzf $file > /dev/null"
+      tar -xvzf $file > /dev/null
+    done
+    echo "--> cd -"
+    cd - > /dev/null
+  done
+  toc
+fi
+
+if ! $DO_STATIC; then
+  echo "--> Enabling shared libraries..."
+   CONFIGFLAGS=--enable-shared
+fi
 
 #################### SQLITE ###########################
 if $DO_SQLITE; then
@@ -198,5 +213,6 @@ if $DO_JAVA; then
       echo "Java found at: $JAVAC"
   else
     echo "Java jdk folder not found"
+    read -p "Do you want to install java-jdk(inside xmipp, doesn't require admin privileges)? (Y/n)" $
   fi
 fi
