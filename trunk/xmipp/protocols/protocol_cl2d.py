@@ -75,15 +75,14 @@ class ProtCL2D(XmippProtocol):
             levelFiles.sort()
             if self.DoShowLast:
                 lastLevelFile=levelFiles[-1]
-                os.system("xmipp_metadata_viewerj -i "+lastLevelFile+"&")
+                os.system("xmipp_metadata_showj -i "+lastLevelFile+"&")
             else:
                 listOfLevels=getRangeValuesFromString(self.LevelsToShow)
                 files=""
                 for level in listOfLevels:
                     files+=levelFiles[level]+" "
                 if files!="":
-                    print "xmipp_metadata_viewerj -i "+files+" &"
-                    os.system("xmipp_metadata_viewerj -i "+files+" &")
+                    os.system("xmipp_metadata_showj -i "+files+" &")
     
 def cl2d(log,Selfile,WorkingDir,NumberOfReferences,NumberOfInitialReferences,NumberOfIterations,
          ComparisonMethod,ClusteringMethod,AdditionalParameters,Nproc):
