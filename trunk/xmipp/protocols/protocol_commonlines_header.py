@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
 # Xmipp protocol for building initial references by common lines
 # This protocol is based on EMAN 1
@@ -11,8 +11,19 @@
 
 # {begin_of_header}
 
+#------------------------------------------------------------------------------------------
+# {section}{has_question} Comment
+#------------------------------------------------------------------------------------------
+# Display comment
+DisplayComment = False
+
+# {text} Write a comment:
+""" 
+Describe your run here...
+"""
+
 #-----------------------------------------------------------------------------
-# {section} Global parameters
+# {section} Run parameters
 #-----------------------------------------------------------------------------
 # Run name:
 """ This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
@@ -20,21 +31,19 @@ run1 for it. This name together with the protocol output folder will determine t
 """
 RunName = "run_001"
 
-# Delete working directory?
-""" If TRUE the working directory will be deleted before run.
-Set this option to TRUE if you want to start from scratch the same run
-with previous parameters
+# {list}(Resume, Restart) Run behavior
+""" Resume from the last step, restart the whole process
 """
-DoDeleteWorkingDir = False
-
-# {file} Selfile or stack with the input images:
-""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
-"""
-SelFileName='CL2D/classes8/class_level_00.stk'
+Behavior = "Restart"
 
 #------------------------------------------------------------------------------------------------
-# {section} Common lines parameters
+# {section} Common line parameters
 #------------------------------------------------------------------------------------------------
+# {file}{validate}(PathExists) Selfile with the input class averages:
+""" This selfile points to the stack or metadata containing your images 
+"""
+InSelFile=''
+
 # Particle radius
 Radius=25
 """ Maximum radius of the particle
@@ -45,36 +54,32 @@ Radius=25
 Symmetry='c1'
 
 #------------------------------------------------------------------------------------------
-# {section} Parallelization issues
+# {section} Parallelization
 #------------------------------------------------------------------------------------------
-# Number of (shared-memory) threads?
-""" This option provides shared-memory parallelization on multi-core machines.
-It does not require any additional software, other than xmipp
+# Submit to queue
+"""Submit to queue
 """
-NumberOfThreads = 1
+SubmitToQueue = False
 
-# Number of MPI processes to use
-NumberOfMpi = 3
-
-#------------------------------------------------------------------------------------------
-# {section}{has_question} Queue
-#------------------------------------------------------------------------------------------
-# Submmit to queue
-"""Submmit to queue
-"""
-SubmmitToQueue = True
-
-# Queue name
+# {condition}(SubmitToQueue) Queue name
 """Name of the queue to submit the job
 """
 QueueName = "default"
 
-# Queue hours
+# {condition}(SubmitToQueue) Queue hours
 """This establish a maximum number of hours the job will
 be running, after that time it will be killed by the
 queue system
 """
-QueueHours = 72
+QueueHours = 96
+
+# {hidden} Show expert options
+"""If True, expert options will be displayed
+"""
+ShowExpertOptions = False
+
+# Number of MPI processes to use
+NumberOfMpi = 3
 
 # {hidden} Show expert options
 """If True, expert options will be displayed
@@ -85,9 +90,6 @@ ShowExpertOptions = False
 #-----------------------------------------------------------------------------
 
 from protocol_commonlines import *
-
-#
-# Main
-#     
+  
 if __name__ == '__main__':
    protocolMain(ProtCommonLines)
