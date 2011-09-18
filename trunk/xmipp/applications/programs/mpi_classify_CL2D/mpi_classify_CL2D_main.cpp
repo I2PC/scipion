@@ -102,6 +102,9 @@ void CL2DClass::transferUpdate()
 
         // Make sure the image is centered
         centerImage(P);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(P)
+        if (!DIRECT_A2D_ELEM(prm->mask,i,j))
+            DIRECT_A2D_ELEM(P,i,j)=0;
 
         // Compute the polar Fourier transform of the full image
         normalizedPolarFourierTransform(P,polarFourierP,false,
