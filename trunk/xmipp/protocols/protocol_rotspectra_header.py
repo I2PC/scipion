@@ -23,8 +23,9 @@ DisplayComment = False
 """ 
 Describe your run here...
 """
+
 #-----------------------------------------------------------------------------
-# {section} Global parameters
+# {section} Run parameters
 #-----------------------------------------------------------------------------
 # Run name:
 """ This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
@@ -32,29 +33,30 @@ run1 for it. This name together with the protocol output folder will determine t
 """
 RunName = "run_001"
 
-# Delete working directory?
-""" If TRUE the working directory will be deleted before run.
-Set this option to TRUE if you want to start from scratch the same run
-with previous parameters
+# {list}(Resume, Restart) Run behavior
+""" Resume from the last step, restart the whole process
 """
-DoDeleteWorkingDir = False
+Behavior = "Restart"
 
-""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
+#------------------------------------------------------------------------------------------------
+# {section} Rotational spectra parameters
+#------------------------------------------------------------------------------------------------
+# {file}{validate}(PathExists) Selfile with the input images:
+""" This selfile points to the stack or metadata containing your images 
 """
-SelFileName='all_images.sel'
+InSelFile=''
 
-#-----------------------------------------------------------------------------
-# {section} Rotational spectra calculation
-#-----------------------------------------------------------------------------
-# {list}(Use the middle of the image,Minimize first harmonic, How to find the center of rotation?)
+# {list_combo}(Use the middle of the image,Minimize first harmonic)How to find the center of rotation?
 HowCenter='Use the middle of the image'
-# Inner radius for rotational harmonics calculation:
-""" These values are in pixels from the image center
-    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Makespectra
-"""
-SpectraInnerRadius=7
-# Outer radius for rotational harmonics calculation:
-SpectraOuterRadius=32
+
+# {expert} Inner radius for rotational harmonics calculation (%):
+""" A percentage of the image radius """
+SpectraInnerRadius=15
+
+# {expert} Outer radius for rotational harmonics calculation (%):
+""" A percentage of the image radius """
+SpectraOuterRadius=80
+
 # {expert} Lowest harmonic to calculate
 SpectraLowHarmonic=1
 # {expert} Highest harmonic to calculate
@@ -84,10 +86,31 @@ SomSteps=5
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
 """
 KerdensomExtraCommand=''
-#------------------------------------------------------------------------------------------------
-# {hidden} Analysis of results
-AnalysisScript='visualize_rotspectra.py'
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
+# {section} Parallelization
+#------------------------------------------------------------------------------------------
+# Submit to queue
+"""Submit to queue
+"""
+SubmitToQueue = False
+
+# {condition}(SubmitToQueue) Queue name
+"""Name of the queue to submit the job
+"""
+QueueName = "default"
+
+# {condition}(SubmitToQueue) Queue hours
+"""This establish a maximum number of hours the job will
+be running, after that time it will be killed by the
+queue system
+"""
+QueueHours = 96
+
+# {hidden} Show expert options
+"""If True, expert options will be displayed
+"""
+ShowExpertOptions = False
+
 #-----------------------------------------------------------------------------
 # {end_of_header} do not change anything bellow this line unless you know what you are doing
 #-----------------------------------------------------------------------------
