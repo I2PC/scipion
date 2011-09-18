@@ -29,7 +29,7 @@
 # Filesystem utilities
 #---------------------------------------------------------------------------
 import os
-from protlib_utils import printLog, failStr
+from protlib_utils import printLog, failStr, which
 from shutil import copyfile
 #from xmipp import *
 
@@ -110,9 +110,8 @@ def createLink(log, source, dest):
 #--------------------------- Xmipp specific tools ---------------------------------
 def getXmippPath(subfolder=''):
     '''Return the path the the Xmipp installation folder
-    if a subfoder is provided, will be concatenated to the path'''
-    protdir = os.popen('which xmipp_protocols', 'r').read()
-    xmippdir = os.path.dirname(os.path.dirname(protdir))
+    if a subfolder is provided, will be concatenated to the path'''
+    xmippdir = os.path.dirname(os.path.dirname(which('xmipp_protocols')))
     return os.path.join(xmippdir, subfolder)
 
 def includeProtocolsDir():
