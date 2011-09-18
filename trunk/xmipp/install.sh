@@ -32,14 +32,6 @@ ENDC="\033[0m"
 #done
 #exit 1
 
-#################### DOWNLOADING SOURCE CODE ###########################
-
-if $DO_DOWNLOAD; then
-  INSTALL_DIR=$1
-  svn co http://newxmipp.svn.sourceforge.net/svnroot/newxmipp/trunk/xmipp $INSTALL_DIR
-  cd $INSTALL_DIR
-fi
-
 #Some path variables
 XMIPP_HOME=$PWD
 EXT_PATH=$XMIPP_HOME/external
@@ -142,7 +134,7 @@ install_bin()
 
 create_dir()
 {
-   $DIR=$1
+  DIR=$1
   if [ -d $DIR ]; then 
       echo "--> Dir $DIR exists."
   else
