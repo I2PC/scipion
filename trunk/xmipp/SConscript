@@ -361,7 +361,7 @@ def AddJavaApp(name, appDir, outDir):
 
     return pluginAlias
 
-def AddImageJPlugin(name, pluginDir, outDir):
+def AddImageJPlugin(name, pluginDir, outDir, requiredPlugins=[]):
     import shutil
     sourceDir = os.path.join(pluginDir, 'src')
     resourcesDir = os.path.join(sourceDir, 'resources')
@@ -375,6 +375,7 @@ def AddImageJPlugin(name, pluginDir, outDir):
         os.mkdir(buildResourcesDir)
     # Copies 'plugins.config' to build dir...
     buildClasses = env.Java(buildDir, sourceDir, JAVAVERSION='1.6')
+    env.Depends(buildClasses, requiredPlugins)
     copyPluginConfig = env.Install(buildDir, os.path.join(sourceDir, 'plugins.config'))#Glob(sourceDir, 'plugins.config', []))
     buildJar = env.Jar(os.path.join(outDir, name + '.jar'), buildDir, JARCHDIR=buildDir)
 
@@ -732,15 +733,16 @@ if int(env['java']):
     javaPlugins = []
     javaPlugins.append(AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins'))
-    javaPlugins.append(AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins'))
+    jbrowser = AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
+    javaPlugins.append(jbrowser)
     #javaPlugins.append(AddImageJPlugin('Xmipp_MetaData_Browser', 'libraries/graphicsj/Xmipp_MetaData_Browser', 'external/imagej/plugins'))
     #env.Depends('Xmipp_MetaData_Browser', 'Xmipp_Browser')
     javaPlugins.append(AddImageJPlugin('Masks_ToolBar', 'libraries/graphicsj/Masks_ToolBar', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
-    javaPlugins.append(AddImageJPlugin('XmippPP_', 'libraries/graphicsj/Xmipp_Particle_Picker', 'external/imagej/plugins'))
-    javaPlugins.append(AddImageJPlugin('Xmipp_Stitching', 'libraries/graphicsj/Xmipp_Stitching', 'external/imagej/plugins'))
+    javaPlugins.append(AddImageJPlugin('XmippPP_', 'libraries/graphicsj/Xmipp_Particle_Picker', 'external/imagej/plugins', [jbrowser]))
+    #javaPlugins.append(AddImageJPlugin('Xmipp_Stitching', 'libraries/graphicsj/Xmipp_Stitching', 'external/imagej/plugins'))
     # Java apps
-    javaPlugins.append(AddJavaApp('Java3DInstaller', 'libraries/graphicsj/Java3DInstaller', 'external/Java3DInstaller'))
+    #javaPlugins.append(AddJavaApp('Java3DInstaller', 'libraries/graphicsj/Java3DInstaller', 'external/Java3DInstaller'))
 
     import sys
     sys.path.append("external/scons/ToolsFromWiki")
@@ -893,7 +895,7 @@ AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', 
 AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
 AddBatch('browserj', 'applications/scripts/browserj', '.py')
 AddBatch('metadata_showj', 'applications/scripts/metadata_showj', '.py')
-AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
+#AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
 AddBatch('mpi_steps_runner', 'protocols', '.py')
 
 # MPI
