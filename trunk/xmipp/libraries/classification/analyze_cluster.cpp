@@ -82,11 +82,11 @@ void ProgAnalyzeCluster::produceSideInfo()
     // Read input selfile and reference
     if (SFin.size()==0)
     {
-    	SFin.read(fnSel);
-    	if (SFin.size()==0)
-        	return;
-    	if (SFin.containsLabel(MDL_ENABLED))
-			SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+        SFin.read(fnSel);
+        if (SFin.size()==0)
+            return;
+        if (SFin.containsLabel(MDL_ENABLED))
+            SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     }
 
     // Prepare mask
@@ -134,16 +134,15 @@ void ProgAnalyzeCluster::produceSideInfo()
 void ProgAnalyzeCluster::produceBasis(MultidimArray<double> &basis)
 {
 	int iimax=pcaAnalyzer.PCAbasis.size();
-	basis.initZeros(iimax,1,YSIZE(mask),XSIZE(mask));
+    basis.initZeros(iimax,1,YSIZE(mask),XSIZE(mask));
     for (int ii=0; ii<pcaAnalyzer.PCAbasis.size(); ii++)
     {
         int idx=0;
         double *ptrBasis=&DIRECT_NZYX_ELEM(basis, ii, 0, 0, 0);
         const MultidimArray<double> &PCAbasis_ii=pcaAnalyzer.PCAbasis[ii];
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-        if (A2D_ELEM(mask,i,j)){
-        	ptrBasis[i*XSIZE(mask)+j]=A1D_ELEM(PCAbasis_ii,idx++);
-	}
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(mask)
+        if (DIRECT_A2D_ELEM(mask,i,j))
+            ptrBasis[i*XSIZE(mask)+j]=A1D_ELEM(PCAbasis_ii,idx++);
     }
 }
 
