@@ -2,18 +2,18 @@
 
 #Some flags variables
 
-DO_UNTAR=true
-DO_SQLITE=true
-DO_TCLTK=true
+DO_UNTAR=false
+DO_SQLITE=false
+DO_TCLTK=false
 DO_PYTHON=true
-DO_FFTW=true
-DO_TIFF=true
+DO_FFTW=false
+DO_TIFF=false
 DO_ARPACK=true
 DO_JAVA=false
 
 DO_CLEAN=false
 DO_STATIC=false
-DO_DOWNLOAD=true
+DO_DOWNLOAD=false
 
 CPU=$@
 
@@ -62,11 +62,12 @@ toc()
 
 compile_library()
 {
+
    tic
    LIB=$1
    PREFIX_PATH=$2
    SUFFIX_PATH=$3
-   FLAGS=$4
+   CONFIGFLAGS=$4
    LIBS_PATH=$5
    _PATH=$EXT_PATH/$PREFIX_PATH/$LIB/$SUFFIX_PATH
   echo
@@ -74,13 +75,18 @@ compile_library()
   echo "--> cd $_PATH"
   cd $_PATH
 
+ if ! $DO_STATIC; then
+	echo "--> Enabling shared libraries..."
+	CONFIGFLAGS="--enable-shared $CONFIGFLAGS"
+ fi
+
   if $DO_CLEAN; then
-    echo "make distclean > /dev/null 2>&1"
+    echo "--> make distclean > /dev/null 2>&1"
     make distclean > /dev/null 2>&1
   fi
 
-  echo "--> ./configure $CONFIGFLAGS $FLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1"
-  ./configure $CONFIGFLAGS $FLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1
+  echo "--> ./configure $CONFIGFLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1"
+  ./configure $CONFIGFLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1
   echo "--> make $CPU >$BUILD_PATH/${LIB}_make.log 2>&1"
   make $CPU >$BUILD_PATH/${LIB}_make.log 2>&1
   toc
@@ -91,9 +97,9 @@ compile_pymodule()
    MOD=$1
    _PATH=$EXT_PATH/python/$MOD
    _PYTHON=$EXT_PATH/python/$VPYTHON/python
-   echo "cd $_PATH"
+   echo "--> cd $_PATH"
    cd $_PATH
-   echo "$_PYTHON setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1"
+   echo "--> $_PYTHON setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1"
    $_PYTHON setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1 
    
 }
@@ -160,11 +166,6 @@ if $DO_UNTAR; then
   toc
 fi
 
-if ! $DO_STATIC; then
-  echo "--> Enabling shared libraries..."
-   CONFIGFLAGS=--enable-shared
-fi
-
 #################### SQLITE ###########################
 if $DO_SQLITE; then
   compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
@@ -176,13 +177,19 @@ fi
 if $DO_TCLTK; then
   compile_library tcl$VTCLTK python unix ""
   compile_library tk$VTCLTK python unix ""
+install_libs python/tcl$VTCLTK/unix libtcl8.5. so
+install_libs python/tk$VTCLTK/unix libtk8.5. so
 fi
 
 #################### PYTHON ###########################
 if $DO_PYTHON; then
-  compile_library $VPYTHON python "." ""
+	STATIC_BACKUP=$DO_STATIC
+	DO_STATIC=true
+ export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
+ compile_library $VPYTHON python "." ""
   install_bin python/$VPYTHON/python xmipp_python
-  install_libs python/$VPYTHON libpython2.7. a so so.1.0
+DO_STATIC=$STATIC_BACKUP
+#  install_libs python/$VPYTHON libpython2.7. a so so.1.0
   compile_pymodule $VNUMPY
   compile_pymodule $VMATLIBPLOT
 fi
@@ -205,7 +212,7 @@ if $DO_ARPACK; then
   compile_library $VARPACK "." "." ""
   install_libs $VARPACK/src/.libs libarpack++. a la so so.2
 fi
-
+exit 0
 #################### JAVA ###########################
 if $DO_JAVA; then
   JAVAC=$(readlink -f `which javac`)
