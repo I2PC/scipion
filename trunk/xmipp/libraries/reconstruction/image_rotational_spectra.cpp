@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "image_rotational_spectra.h"
+#include <data/metadata_extension.h>
 
 // Usage -------------------------------------------------------------------
 void ProgMakeSpectra::defineParams()
@@ -43,8 +44,8 @@ void ProgMakeSpectra::defineParams()
 	addSeeAlsoLine("classify_kerdensom, image_vectorize");
 	addParamsLine("   -i <file>                   : Input image, selfile or stack");
 	addParamsLine("   -o <metadata>               : Output vector metadata");
-	addParamsLine("   --r1 <lowRadius>            : Lowest Integration radius");
-    addParamsLine("   --r2 <highRadius>           : Highest Integration radius");
+	addParamsLine("  [--r1 <lowRadius=15>]        : Lowest Integration radius (as a percentage of the total radius)");
+    addParamsLine("  [--r2 <highRadius=80>]       : Highest Integration radius (as a percentage of the total radius)");
     addParamsLine("  [--x0 <xcenter=-1>]          : In physical units.");
     addParamsLine("  [--y0 <ycenter=-1>]          : By default, the Xmipp origin");
     addParamsLine("  [--low  <lowerHarmonic=  1>] : Lower harmonic to compute");
@@ -89,17 +90,27 @@ void ProgMakeSpectra::run()
     Image<double> I;
     MetaData MD;
     MD.read(fn_in);
+    std::ofstream fhOutRaw;
+    MultidimArray<float> spectrum;
+    FileName fnOutRaw=fn_out+".raw";
+    fnOutRaw.deleteFile();
+
+    // Convert the radii from percentages to actual pixels
+    int Xdim, Ydim, Zdim;
+    size_t Ndim;
+    ImgSize(MD,Xdim,Ydim,Zdim,Ndim);
+    rot_spt.rl=(int)((rot_spt.rl/100.0)*Xdim/2);
+    rot_spt.rh=(int)((rot_spt.rh/100.0)*Xdim/2);
+
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
     	I.readApplyGeo(fnImg,MD,__iter.objId);
         rot_spt.compute_rotational_spectrum(I(), rot_spt.rl, rot_spt.rh,
                                             rot_spt.dr, rot_spt.rh - rot_spt.rl);
-        std::ofstream fhOutRaw;
-        fhOutRaw.open((fn_out+".raw").c_str(),std::ios::app | std::ios::binary);
+        fhOutRaw.open(fnOutRaw.c_str(),std::ios::app | std::ios::binary);
         if (!fhOutRaw)
-        	REPORT_ERROR(ERR_IO_NOWRITE,fn_out+".raw");
-        MultidimArray<float> spectrum;
+        	REPORT_ERROR(ERR_IO_NOWRITE,fnOutRaw);
         typeCast(rot_spt.rot_spectrum,spectrum);
         fhOutRaw.write((char*)MULTIDIM_ARRAY(spectrum),XSIZE(spectrum)*sizeof(float));
         fhOutRaw.close();
