@@ -171,6 +171,8 @@ public class MetaData {
     public native boolean setValueBoolean(int label, boolean value, long objId);
 
     public native long[] findObjects();
+    
+    public native void importObjects(MetaData from, long ids[]) throws Exception;
 
     public native long firstObject();
 
@@ -178,9 +180,9 @@ public class MetaData {
 
     public native void addLabel(int label);
 
-    public native void getPCAbasis(ImageDouble basis);
+    public native void getPCAbasis(ImageDouble basis) throws Exception;
 
-    public native void computeFourierStatistics(String filename);
+    public native void computeFourierStatistics(String filename) throws Exception;
 
     public native void enableDebug();
 

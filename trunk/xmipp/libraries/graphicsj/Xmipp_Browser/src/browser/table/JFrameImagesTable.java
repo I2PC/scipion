@@ -859,6 +859,7 @@ private void jcbAutoAdjustColumnsStateChanged(javax.swing.event.ChangeEvent evt)
             add(jmiSave);
             jmiSave.add(jmiSaveAsMetadata);
             jmiSave.add(jmiSaveAsStack);
+            jmiSave.addSeparator();
             jmiSave.add(jmiSaveSelectionAsMetadata);
             jmiSave.add(jmiSaveSelectionAsStack);
 

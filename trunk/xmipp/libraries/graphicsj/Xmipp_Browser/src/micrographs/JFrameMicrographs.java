@@ -611,8 +611,7 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
 
             ImagePlus ip = IJ.openImage(displayFilename);
 
-            CTFProfileWindow frame = new CTFProfileWindow(ip, CTFFilename, PSDFilename);
-            frame.setVisible(true);
+            ImagesWindowFactory.openCTFWindow(ip, CTFFilename, PSDFilename);
         }
 
         private void showRecalculateCTFWindow() {

@@ -4,6 +4,7 @@
  */
 package browser.table.models;
 
+import browser.DEBUG;
 import browser.LABELS;
 import browser.imageitems.tableitems.AbstractTableImageItem;
 import browser.imageitems.tableitems.TableImageItem;
@@ -175,18 +176,23 @@ public class MDTableModel extends AbstractXmippTableModel {
     @Override
     public boolean saveAsMetadata(String path, boolean all) {
         try {
+            // Copies items into the new MetaData.
             ArrayList<AbstractTableImageItem> items = getSelectedItems();
+            long ids[] = new long[items.size()];
+
             for (int i = 0; i < items.size(); i++) {
-                TableImageItem item = (TableImageItem) items.get(i);
-                item.getID();
+                long id = ((TableImageItem) items.get(i)).getID();
+                ids[i] = id;
             }
-            
-            // md.copyRow(md2, id) ?
-            
-            md.write(path);
+
+            MetaData output = new MetaData();
+            output.importObjects(md, ids);
+
+            output.write(path);
 
             return true;
         } catch (Exception ex) {
+            DEBUG.printException(ex);
         }
 
         return false;

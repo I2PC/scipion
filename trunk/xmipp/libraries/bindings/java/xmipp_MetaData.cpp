@@ -275,7 +275,7 @@ JNIEXPORT jintArray JNICALL Java_xmipp_MetaData_getActiveLabels(JNIEnv *env,
 			std::vector < MDLabel > labels = md->getActiveLabels();
 
 			// Copies vector into array.
-                        size_t size = labels.size();
+			size_t size = labels.size();
 			jint *body = new jint[size];
 			for (int i = 0; i < size; i++) {
 				body[i] = labels[i];
@@ -778,8 +778,8 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_MetaData_getColumnValues
 
 	if (md != NULL) {
 		try {
-                        std::vector<double> values;
-                        md->getColumnValues((MDLabel)label, values);
+			std::vector<double> values;
+			md->getColumnValues((MDLabel)label, values);
 
 			// Copies vector into array.
 			size_t size = values.size();
@@ -822,7 +822,7 @@ JNIEXPORT jlongArray JNICALL Java_xmipp_MetaData_findObjects(JNIEnv *env,
 			md->findObjects(ids);
 
 			// Copies vector into array.
-                        size_t size = ids.size();
+			size_t size = ids.size();
 			jlong *body = new jlong[size];
 			for (int i = 0; i < size; i++) {
 				body[i] = ids[i];
@@ -850,6 +850,37 @@ JNIEXPORT jlongArray JNICALL Java_xmipp_MetaData_findObjects(JNIEnv *env,
 	}
 
 	return NULL;
+}
+
+JNIEXPORT void JNICALL Java_xmipp_MetaData_importObjects
+  (JNIEnv *env, jobject jobj, jobject from, jlongArray jids){
+	std::string msg = "";
+	MetaData * md = GET_INTERNAL_METADATA(jobj);
+	MetaData * mdfrom = GET_INTERNAL_METADATA(from);
+
+	if (md != NULL && mdfrom != NULL) {
+		try {
+			 jlong *ids = env->GetLongArrayElements(jids, 0);
+			 int size = env->GetArrayLength(jids);
+
+			 for(int i=0;i<size; i++){
+				  md->importObject(*mdfrom, ids[i]);
+			 }
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Metadata is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
 }
 
 JNIEXPORT jlong JNICALL Java_xmipp_MetaData_firstObject

@@ -28,6 +28,7 @@ import metadata.JFrameMetaData;
 import micrographs.JFrameMicrographs;
 import micrographs.ctf.CTFRecalculateImageWindow;
 import micrographs.CTFProfileWindow;
+import micrographs.FSCWindow;
 import micrographs.ctf.tasks.TasksEngine;
 import xmipp.Filename;
 import xmipp.ImageDouble;
@@ -305,9 +306,14 @@ public class ImagesWindowFactory {
         frameCTF.setVisible(true);
     }
 
-    public static void openCTFView(ImagePlus imp, String CTFFilename, String PSDFilename) {
+    public static void openCTFWindow(ImagePlus imp, String CTFFilename, String PSDFilename) {
         CTFProfileWindow ctfView = new CTFProfileWindow(imp, CTFFilename, PSDFilename);
         ctfView.setVisible(true);
+    }
+
+    public static void openFSCWindow(MetaData md, String filename) {
+        FSCWindow frame = new FSCWindow(md, filename);
+        frame.setVisible(true);
     }
 
     public static String getSortTitle(String title, int width, FontMetrics fontMetrics) {

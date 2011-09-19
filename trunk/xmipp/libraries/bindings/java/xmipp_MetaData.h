@@ -269,6 +269,14 @@ JNIEXPORT jlongArray JNICALL Java_xmipp_MetaData_findObjects
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    importObjects
+ * Signature: (Lxmipp/MetaData;[J)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_MetaData_importObjects
+  (JNIEnv *, jobject, jobject, jlongArray);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    firstObject
  * Signature: ()J
  */
@@ -314,6 +322,14 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_computeFourierStatistics
  */
 JNIEXPORT void JNICALL Java_xmipp_MetaData_enableDebug
   (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    readPlain
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_MetaData_readPlain
+  (JNIEnv *, jobject, jstring, jstring);
 
 #ifdef __cplusplus
 }

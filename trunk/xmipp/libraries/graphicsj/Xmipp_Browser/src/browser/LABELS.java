@@ -63,6 +63,8 @@ public class LABELS {
     public final static String BUTTON_SAVE = "Save";
     public final static String BUTTON_SELECT_ALL = "Select All";
     public final static String BUTTON_STD_DEVIATION = "Std. Deviation";
+    public final static String BUTTON_PCA = "PCA";
+    public final static String BUTTON_FSC = "FSC";
     public final static String BUTTON_TO_STACK = "To Stack";
     public final static String BUTTON_EXPORT_PROFILE = "Export Profiles";
     public final static String BUTTON_EXPORT_RADIAL_AVERAGE = "Export Radial AVG.";
