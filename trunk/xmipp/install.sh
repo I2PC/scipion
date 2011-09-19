@@ -8,10 +8,10 @@ DO_TCLTK=true
 DO_PYTHON=true
 DO_FFTW=true
 DO_TIFF=true
-DO_ARPACK=false
+DO_ARPACK=true
 DO_JAVA=false
 
-DO_CLEAN=true
+DO_CLEAN=false
 DO_STATIC=false
 DO_DOWNLOAD=true
 
@@ -203,7 +203,7 @@ fi
 #################### ARPACK ###########################
 if $DO_ARPACK; then
   compile_library $VARPACK "." "." ""
-  install_libs $VARPACK/src/.libs libarpack++. a la so
+  install_libs $VARPACK/src/.libs libarpack++. a la so so.2
 fi
 
 #################### JAVA ###########################
