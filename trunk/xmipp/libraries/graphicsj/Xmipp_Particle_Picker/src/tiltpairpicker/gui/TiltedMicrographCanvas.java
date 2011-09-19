@@ -3,6 +3,7 @@ package tiltpairpicker.gui;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -21,27 +22,29 @@ import trainingpicker.gui.WindowUtils;
 import trainingpicker.model.Particle;
 import trainingpicker.model.TrainingParticle;
 
-
-public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener{
+public class TiltedMicrographCanvas extends ImageCanvas implements
+		MouseListener
+{
 
 	private TiltPairPickerJFrame frame;
 	private UntiltedMicrograph untiltedmicrograph;
 	private TiltedParticle dragged;
 	private TiltPairPicker pppicker;
 	private ImageWindow iw;
-	
 
-	public TiltedMicrographCanvas(TiltPairPickerJFrame frame) {
+	public TiltedMicrographCanvas(TiltPairPickerJFrame frame)
+	{
 		super(frame.getUntiltedMicrograph().getTiltedMicrograph().getImage());
 		this.untiltedmicrograph = frame.getUntiltedMicrograph();
 		this.frame = frame;
 		this.pppicker = frame.getParticlePairPicker();
 		iw = new ImageWindow(imp, this);
 		WindowUtils.centerScreen(0.7, iw);
-		
+
 	}
-	
-	public void updateMicrograph() {
+
+	public void updateMicrograph()
+	{
 		this.untiltedmicrograph = frame.getUntiltedMicrograph();
 		imp = untiltedmicrograph.getTiltedMicrograph().getImage();
 		iw.setImage(imp);
@@ -49,18 +52,21 @@ public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener
 		setImageUpdated();
 		repaint();
 	}
-	
-	
-	public void mouseEntered(MouseEvent e) {
-		if (frame.getTool() != Tool.PICKER) {
+
+	public void mouseEntered(MouseEvent e)
+	{
+		if (frame.getTool() != Tool.PICKER)
+		{
 			super.mouseEntered(e);
 			return;
 		}
 		setCursor(crosshairCursor);
 	}
-	
-	public void mouseMoved(MouseEvent e) {
-		if (frame.getTool() != Tool.PICKER) {
+
+	public void mouseMoved(MouseEvent e)
+	{
+		if (frame.getTool() != Tool.PICKER)
+		{
 			super.mouseMoved(e);
 			return;
 		}
@@ -73,16 +79,19 @@ public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener
 	 * point. Sets dragged if onpick
 	 */
 
-	public void mousePressed(int x, int y) {
+	public void mousePressed(int x, int y)
+	{
 		setupScroll(x, y);
-		
+
 	}
-	
+
 	/**
 	 * Updates particle position and repaints. Sets dragged to null at the end
 	 */
-	public void mouseReleased(MouseEvent e) {
-		if (frame.getTool() != Tool.PICKER) {
+	public void mouseReleased(MouseEvent e)
+	{
+		if (frame.getTool() != Tool.PICKER)
+		{
 			super.mouseReleased(e);
 			return;
 		}
@@ -92,20 +101,21 @@ public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener
 	/**
 	 * Updates particle position and repaints if onpick.
 	 */
-	public void mouseDragged(int x, int y) {
-			scroll(x, y);
-		
+	public void mouseDragged(int x, int y)
+	{
+		scroll(x, y);
+
 	}
-	
-	public void mouseWheelMoved(int x, int y, int rotation) {
-		
+
+	public void mouseWheelMoved(int x, int y, int rotation)
+	{
+
 		if (rotation < 0)
 			zoomIn(x, y);
 		else
 			zoomOut(x, y);
 
 	}
-	
 
 	public void paint(Graphics g)
 	{
@@ -115,18 +125,26 @@ public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener
 		int x0 = (int) getSrcRect().getX();
 		int y0 = (int) getSrcRect().getY();
 		int index = 0;
-		List<TiltedParticle> particles = untiltedmicrograph.getTiltedMicrograph().getParticles();
+		List<TiltedParticle> particles = untiltedmicrograph
+				.getTiltedMicrograph().getParticles();
 		for (TiltedParticle p : particles)
 		{
 			drawShape(g2, p, x0, y0, index == (particles.size() - 1));
 			index++;
 		}
+		if (untiltedmicrograph.getActiveTiltedParticle() != null)
+		{
+			g2.setColor(Color.red);
+			drawShape(g2, untiltedmicrograph.getActiveParticle()
+					.getTiltedParticle(), x0, y0, true);
+		}
 	}
 
-	private void drawShape(Graphics2D g2, Particle p, int x0, int y0, boolean all)
+	private void drawShape(Graphics2D g2, Particle p, int x0, int y0,
+			boolean all)
 	{
-		int size = (int)(frame.getParticleSize() * magnification);
-		int radius = (int)(frame.getParticleSize() / 2 * magnification);
+		int size = (int) (frame.getParticleSize() * magnification);
+		int radius = (int) (frame.getParticleSize() / 2 * magnification);
 		int x = (int) ((p.getX() - x0) * magnification);
 		int y = (int) ((p.getY() - y0) * magnification);
 		int distance = (int) (5 * magnification);
@@ -141,18 +159,21 @@ public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener
 			g2.drawLine(x + distance, y, x - distance, y);
 		}
 	}
-	
-	public void mousePressed(MouseEvent e) {
-		if (frame.getTool() != Tool.PICKER) {
+
+	public void mousePressed(MouseEvent e)
+	{
+		if (frame.getTool() != Tool.PICKER)
+		{
 			super.mousePressed(e);
 			return;
 		}
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 
-		if (SwingUtilities.isRightMouseButton(e)) 
+		if (SwingUtilities.isRightMouseButton(e))
 			setupScroll(x, y);
-		TiltedParticle p = untiltedmicrograph.getTiltedMicrograph().getParticle(x, y, (int)(frame.getParticleSize()));
+		TiltedParticle p = untiltedmicrograph.getTiltedMicrograph()
+				.getParticle(x, y, (int) (frame.getParticleSize()));
 		if (p != null)
 		{
 			if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown())
@@ -165,33 +186,58 @@ public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener
 				dragged = p;
 			}
 		}
-		else if (SwingUtilities.isLeftMouseButton(e) && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
+		else if (untiltedmicrograph.hasActiveParticle()
+				&& SwingUtilities.isLeftMouseButton(e)
+				&& Particle.boxContainedOnImage(x, y, frame.getParticleSize(),
+						imp))
 		{
-			p = new TiltedParticle(x, y, untiltedmicrograph.getTiltedMicrograph());
-			
-			untiltedmicrograph.getTiltedMicrograph().addParticle(p);
+			UntiltedParticle activeparticle = untiltedmicrograph
+					.getActiveParticle();
+			if (activeparticle.getTiltedParticle() != null)
+			{
+				p = activeparticle.getTiltedParticle();
+				p.setX(x);
+				p.setY(y);
+			}
+			else
+			{
+				p = new TiltedParticle(x, y,
+						untiltedmicrograph.getTiltedMicrograph(),
+						untiltedmicrograph.getActiveParticle());
+
+				untiltedmicrograph.getActiveParticle().setTiltedParticle(p);
+				untiltedmicrograph.getTiltedMicrograph().addParticle(p);
+			}
 			dragged = p;
 			frame.updateMicrographsModel();
 		}
 		frame.setChanged(true);
 		repaint();
-		
-	}
-	
-	@Override
-	public void mouseDragged(MouseEvent e) {
 
-		if (frame.getTool() != Tool.PICKER) {
+	}
+
+	@Override
+	public void mouseDragged(MouseEvent e)
+	{
+
+		if (frame.getTool() != Tool.PICKER)
+		{
 			super.mouseDragged(e);
 			return;
 		}
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
-		if (SwingUtilities.isRightMouseButton(e)) {
+		if (SwingUtilities.isRightMouseButton(e))
+		{
 			scroll(e.getX(), e.getY());
 			return;
 		}
-		
+		if (dragged != null
+				&& Particle.boxContainedOnImage(x, y, frame.getParticleSize(),
+						imp))
+			dragged.setPosition(x, y);
+		frame.setChanged(true);
+		repaint();
 	}
 
 }

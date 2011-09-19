@@ -20,7 +20,7 @@ import trainingpicker.model.TrainingParticle;
 public class TiltedMicrograph extends Micrograph{
 	
 	private List<TiltedParticle> particles;
-	
+	private UntiltedMicrograph untiltedmicrograph;
 	
 	public TiltedMicrograph(String file) {
 		super(file, getName(file, 1));
@@ -57,8 +57,6 @@ public class TiltedMicrograph extends Micrograph{
 		
 	}
 
-
-
 	public TiltedParticle getParticle(int x, int y, int size)
 	{
 		for (TiltedParticle p : particles)
@@ -72,7 +70,13 @@ public class TiltedMicrograph extends Micrograph{
 	public void removeParticle(TiltedParticle p)
 	{
 		particles.remove(p);
+		p.getUntiltedParticle().setTiltedParticle(null);
 		
+	}
+	
+	public void setUntiltedMicrograph(UntiltedMicrograph untiltedmicrograph)
+	{
+		this.untiltedmicrograph = untiltedmicrograph;
 	}
 
 }

@@ -3,6 +3,7 @@ package tiltpairpicker.gui;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
@@ -98,11 +99,14 @@ public class UntiltedMicrographCanvas extends ImageCanvas implements
 			if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown())
 			{
 				untiltedmicrograph.removeParticle(p);
+				tiltedcanvas.repaint();
 				frame.updateMicrographsModel();
 			}
 			else if (SwingUtilities.isLeftMouseButton(e))
 			{
 				dragged = p;
+				untiltedmicrograph.setActiveParticle(dragged);
+				tiltedcanvas.repaint();
 			}
 		}
 		else if (SwingUtilities.isLeftMouseButton(e) && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
@@ -192,6 +196,11 @@ public class UntiltedMicrographCanvas extends ImageCanvas implements
 		{
 			drawShape(g2, p, x0, y0, index == (untiltedmicrograph.getParticles().size() - 1));
 			index++;
+		}
+		if(untiltedmicrograph.getActiveParticle() != null)
+		{
+			g2.setColor(Color.red);
+			drawShape(g2, untiltedmicrograph.getActiveParticle(), x0, y0, true);
 		}
 	}
 

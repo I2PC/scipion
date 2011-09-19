@@ -4,7 +4,6 @@ import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
-import ij.gui.Toolbar;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -65,7 +64,6 @@ import trainingpicker.model.XmippJ;
 
 import xmipp.Program;
 
-import browser.windows.ImagesWindowFactory;
 
 enum Tool {
 	IMAGEJ, PICKER
@@ -304,7 +302,6 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener {
 						.getManualParticles())
 					imgs.add(p.getImage());
 				String filename = XmippJ.saveTempImageStack(imgs);
-				ImagesWindowFactory.openFileAsImage(filename);
 				// new
 				// MicrographParticlesJDialog(XmippParticlePickerJFrame.this,
 				// XmippParticlePickerJFrame.this.micrograph);

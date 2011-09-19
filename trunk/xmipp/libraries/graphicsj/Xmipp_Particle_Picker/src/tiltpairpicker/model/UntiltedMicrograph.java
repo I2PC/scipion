@@ -10,6 +10,7 @@ public class UntiltedMicrograph extends Micrograph {
 
 	private TiltedMicrograph tiltedmicrograph;
 	private List<UntiltedParticle> particles;
+	private UntiltedParticle activeparticle;
 
 	public UntiltedMicrograph(String file, TiltedMicrograph tiltedmicrograph) {
 		super(file, getName(file, 1));
@@ -48,17 +49,40 @@ public class UntiltedMicrograph extends Micrograph {
 
 	public void removeParticle(UntiltedParticle p) {
 		particles.remove(p);
-		
+		tiltedmicrograph.removeParticle(p.getTiltedParticle());
 	}
 
 	public void addParticle(UntiltedParticle p) {
 		particles.add(p);
-		
+		activeparticle = p;
 	}
 	
 	public List<UntiltedParticle> getParticles()
 	{
 		return particles;
+	}
+	
+	public void setActiveParticle(UntiltedParticle p)
+	{
+		this.activeparticle = p;
+	}
+
+	public UntiltedParticle getActiveParticle()
+	{
+		return activeparticle;
+	}
+
+	public boolean hasActiveParticle()
+	{
+		return particles.size() > getTiltedMicrograph().getParticles().size();
+	}
+
+	public TiltedParticle getActiveTiltedParticle()
+	{
+		if(getActiveParticle() == null)
+			return null;
+		return activeparticle.getTiltedParticle();
+			
 	}
 
 }

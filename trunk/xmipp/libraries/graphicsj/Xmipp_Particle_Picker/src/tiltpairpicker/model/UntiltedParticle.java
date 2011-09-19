@@ -21,7 +21,10 @@ public class UntiltedParticle extends Particle{
 		this.tiltedparticle = tiltedparticle;
 	}
 	
-
+	public TiltedParticle getTiltedParticle()
+	{
+		return tiltedparticle;
+	}
 	
 
 }

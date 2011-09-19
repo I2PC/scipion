@@ -496,18 +496,12 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 		setChanged(false);
 	}
 
-//	void updateFamilyColor() {
-//		setChanged(true);
-//		color = family.getColor();
-//		colorbt.setIcon(new ColorIcon(color));
-//		canvas.repaint();
-//	}
-
 
 	void switchSize(int size) {
 		sizetf.setText(Integer.toString(size));
 		sizesl.setValue(size);
 		canvas.repaint();
+		canvas.getTiltedCanvas().repaint();
 		pppicker.setSize(size);
 		setChanged(true);
 	}

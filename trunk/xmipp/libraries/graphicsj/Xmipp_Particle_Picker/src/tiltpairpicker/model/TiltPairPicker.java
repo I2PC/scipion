@@ -39,7 +39,8 @@ public class TiltPairPicker {
 		MetaData md = new MetaData();
 		md.readPlain(pairsfile, "image tilted_image");
 		micrographs.clear();
-		UntiltedMicrograph micrograph;
+		UntiltedMicrograph untiltedmicrograph;
+		TiltedMicrograph tiltedmicrograph;
 		String image, tiltedimage;
 		try {
 			long[] ids = md.findObjects();
@@ -47,8 +48,10 @@ public class TiltPairPicker {
 
 				image = md.getValueString(MDLabel.MDL_IMAGE, id);
 				tiltedimage = md.getValueString(MDLabel.MDL_IMAGE_TILTED, id);
-				micrograph = new UntiltedMicrograph(image, new TiltedMicrograph(tiltedimage));
-				micrographs.add(micrograph);
+				tiltedmicrograph = new TiltedMicrograph(tiltedimage);
+				untiltedmicrograph = new UntiltedMicrograph(image, tiltedmicrograph);
+				tiltedmicrograph.setUntiltedMicrograph(untiltedmicrograph);
+				micrographs.add(untiltedmicrograph);
 			}
 			if (micrographs.size() == 0)
 				throw new IllegalArgumentException(String.format(
