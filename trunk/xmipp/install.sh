@@ -2,13 +2,14 @@
 
 #Some flags variables
 
-DO_UNTAR=false
-DO_SQLITE=false
-DO_TCLTK=false
+DO_UNTAR=true
+DO_SQLITE=true
+DO_TCLTK=true
 DO_PYTHON=true
-DO_FFTW=false
-DO_TIFF=false
-DO_ARPACK=true
+DO_FFTW=true
+DO_TIFF=true
+DO_ARPACK=false
+
 DO_JAVA=false
 
 DO_CLEAN=false
@@ -214,12 +215,45 @@ if $DO_ARPACK; then
 fi
 exit 0
 #################### JAVA ###########################
+install_jdk()
+{
+  LINUX="http://download.oracle.com/otn-pub/java/jdk/6u27-b07/jdk-6u27-linux-i586.bin"
+  LINUX64="http://download.oracle.com/otn-pub/java/jdk/6u27-b07/jdk-6u27-linux-x64.bin"
+  MACOSX="PENDING"
+
+  # Which is our OS?
+  case "$(uname -s)" in
+  Darwin)
+	  JDK_URL=$MACOSX;;
+  Linux)
+	  case "$(uname -m)" in
+		  x86_64) JDK_URL=$LINUX64;;
+		  *) JDK_URL=$LINUX;;
+	  esac;;
+  esac
+  # Download jdk from Oracle site
+  echo "wget $JDK_URL -o /dev/null -O $EXT_PATH/java/jdk.bin"
+  wget $JDK_URL -o /dev/null -O $EXT_PATH/java/jdk.bin
+  # Install jdk
+  $EXT_PATH/java/jdk.bin
+}
+
+exit 0
 if $DO_JAVA; then
-  JAVAC=$(readlink -f `which javac`)
-  if [ -e $JAVAC ]; then 
+  echo -e "$GREEN*** Checking jdk ...$ENDC"  
+  JAVA_HOME=$EXT_PATH/java/jvm
+  
+  if [ `which java`) ]; then 
+      JAVAC=$(readlink -f `which javac`)
       echo "Java found at: $JAVAC"
+      JDK_PATH=$(dirname `dirname $JAVAC`)
   else
     echo "Java jdk folder not found"
-    read -p "Do you want to install java-jdk(inside xmipp, doesn't require admin privileges)? (Y/n)" $
+    read -p "Do you want to install java-jdk(inside xmipp, doesn't require admin privileges)? (Y/n)" ANSWER
+    if [ $ANSWER -eq 'y' ]; then
+       install_jdk
+       JDK_PATH=$EXT_PATH/java/jdk1.6.0_27
+    fi
+    ln -sf $JDK_PATH $JAVA_HOME 
   fi
 fi
