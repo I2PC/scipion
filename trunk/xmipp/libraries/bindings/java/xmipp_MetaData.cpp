@@ -1003,7 +1003,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_computeFourierStatistics
 	if (MDout != NULL) {
 		try {
 			MetaData MDin(env->GetStringUTFChars(filename, false));
-                        getFourierStatistics(MDin, 1, *MDout, true, 2);
+            getFourierStatistics(MDin, 1, *MDout, true, 2);
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {
