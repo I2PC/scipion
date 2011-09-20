@@ -582,7 +582,7 @@ public:
 	/// Clear set of coordinates
 	void clear();
 
-	/// Add coordinate pair
+	/// Add coordinates pair
 	void addCoordinatePair(int _muX, int _muY, int _mtX, int _mtY);
 
 	/// Adjust passing matrix
