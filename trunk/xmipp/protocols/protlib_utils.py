@@ -500,7 +500,7 @@ def runImageJPlugin(memory, macro, args, batchMode=False):
 def runExternalAppWithResponse(cmd):
     #Create a simple socket server to wait for response
     HOST = ''                 # Symbolic name meaning the local host
-    PORT = 54321
+    PORT = 14321
     if cmd[-1]=="&":
         cmd=cmd.replace("&"," -port %d &" % PORT)
     else:
@@ -515,19 +515,28 @@ def runExternalAppWithResponse(cmd):
         import  socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        #s.settimeout(0.0)
+        s.settimeout(5.0)
         s.bind((HOST, PORT))
         s.listen(1)
         conn, addr = s.accept()
+        #Read the awake message
+        data = conn.recv(256)
+        if not data or data.strip() != '__STARTED__':
+            raise Exception('Invalid START message received')
+        else:
+            conn.close() 
+            s.settimeout(None) # reset timeout
+            conn, addr = s.accept()
         #Read len of message (max 4 bytes)
         while True:
             data = conn.recv(1024)
             msg += data
             if not data or msg.find('__END__') !=-1: break      
-        conn.close()
     except Exception, e:
         tkMessageBox.showerror("Error waiting for response", "No reponse, returning empty string. ERROR: " + str(e))
-    
+    finally:
+        conn.close()
+
     return msg.replace('__END__', '')
  
 def runImageJPluginWithResponse(memory, macro, args):
@@ -540,9 +549,9 @@ def getJavaIJappCmd(memory, appName, args, batchMode=False):
         memory = "512m"
         print "No memory size provided. Using default: " + memory
     imagej_home = getXmippPath("external/imagej")
-    plugins_dir = os.path.join(imagej_home, "plugins", "*")
+    plugins_dir = os.path.join(imagej_home, "plugins")
 
-    cmd = "java -classpath %(plugins_dir)s: %(appName)s %(args)s" % locals()
+    cmd = "java -classpath %(plugins_dir)s/*:%(imagej_home)s/*: %(appName)s %(args)s" % locals()
     if batchMode:
         cmd += " &"
     return cmd
