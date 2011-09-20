@@ -8,9 +8,6 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-
-import trainingpicker.model.TrainingMicrograph;
-
 import xmipp.MDLabel;
 import xmipp.MetaData;
 import xmipp.TiltPairAligner;
