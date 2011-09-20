@@ -555,3 +555,224 @@ void Micrograph::write(const FileName &fileName, CastWriteMode castMode)
         REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
 
 }
+
+/* Tilt pair aligner ------------------------------------------------------ */
+TiltPairAligner::TiltPairAligner()
+{
+	clear();
+}
+
+void TiltPairAligner::clear()
+{
+	coordU.clear();
+	coordT.clear();
+	Au.clear();
+	Bt.clear();
+	Put.clear();
+	Ptu.clear();
+	Nu=0;
+	m.resizeNoCopy(3);
+}
+
+void TiltPairAligner::addCoordinatePair(int _muX, int _muY, int _mtX, int _mtY)
+{
+	coordU.push_back(_muX);
+	coordU.push_back(_muY);
+	coordT.push_back(_mtX);
+	coordT.push_back(_mtY);
+
+    Nu++; // Number of particles
+
+#ifdef _DEBUG
+
+    std::cout << "Adding point U(" << U.X << "," << U.Y << ") T(" << T.X << ","
+    << T.Y << ")\n";
+    std::cout << "A at input" << Au << "B at input" << Bt;
+#endif
+    // Adjust untilted dependent matrix
+    MAT_ELEM(Au,0, 0) += _muX * _muX  ;
+    MAT_ELEM(Au,0, 1) += _muX * _muY  ;
+    MAT_ELEM(Au,0, 2) += _muX;
+    MAT_ELEM(Au,1, 0) = MAT_ELEM(Au,0, 1);
+    MAT_ELEM(Au,1, 1) += _muY * _muY  ;
+    MAT_ELEM(Au,1, 2) += _muY;
+    MAT_ELEM(Au,2, 0) = MAT_ELEM(Au,0, 2);
+    MAT_ELEM(Au,2, 1) = MAT_ELEM(Au,1, 2);
+    MAT_ELEM(Au,2, 2) = Nu;
+
+    // Adjust tilted dependent matrix
+    MAT_ELEM(Bt,0, 0) += _mtX * _muX  ;
+    MAT_ELEM(Bt,0, 1) += _mtY * _muX  ;
+    MAT_ELEM(Bt,0, 2) = MAT_ELEM(Au,0, 2);
+    MAT_ELEM(Bt,1, 0) += _mtX * _muY  ;
+    MAT_ELEM(Bt,1, 1) += _mtY * _muY  ;
+    MAT_ELEM(Bt,1, 2) = MAT_ELEM(Au,1, 2);
+    MAT_ELEM(Bt,2, 0) += _mtX      ;
+    MAT_ELEM(Bt,2, 1) += _mtY      ;
+    MAT_ELEM(Bt,2, 2) = MAT_ELEM(Au,2, 2);
+
+#ifdef _DEBUG
+
+    std::cout << "A at output" << Au << "B at output" << Bt;
+#endif
+}
+
+/* Adjust passing matrix --------------------------------------------------- */
+void TiltPairAligner::adjust_passing_matrix(int _muX, int _muY, int _mtX, int _mtY)
+{
+	addCoordinatePair(_muX, _muY, _mtX, _mtY);
+    if (Nu>3)
+    {
+        solve(Au, Bt, Put);
+        Put = Put.transpose();
+        Ptu = Put.inv();
+    }
+}
+
+/* Passing to tilted ------------------------------------------------------- */
+void TiltPairAligner::pass_to_tilted(int _muX, int _muY, int &_mtX, int &_mtY)
+{
+    if (Nu>3)
+    {
+        SPEED_UP_temps;
+
+        VECTOR_R3(m, _muX, _muY, 1);
+        M3x3_BY_V3x1(m, Put, m);
+
+        _mtX = (int)XX(m);
+        _mtY = (int)YY(m);
+    }
+    else
+    {
+        _mtX = _muX;
+        _mtY = _muY;
+    }
+}
+
+/* Passing to tilted ------------------------------------------------------- */
+void TiltPairAligner::pass_to_untilted(int _mtX, int _mtY, int &_muX, int &_muY)
+{
+    if (Nu>3)
+    {
+        SPEED_UP_temps;
+
+        VECTOR_R3(m, _mtX, _mtY, 1);
+        M3x3_BY_V3x1(m, Ptu, m);
+        _muX = (int)XX(m);
+        _muY = (int)YY(m);
+    }
+    else
+    {
+        _muX = _mtX;
+        _muY = _mtY;
+    }
+}
+
+/* Compute tilting angle --------------------------------------------------- */
+void TiltPairAligner::compute_gamma()
+{
+#define TRIANGLE_NO 15000
+#define MIN_AREA       15
+#define MAX_AREA   250000
+    gamma = 0;
+    int step = CEIL(pow((double)Nu *Nu *Nu / TRIANGLE_NO, 1.0 / 3));
+    Matrix1D<int> iju(2), iku(2), ijt(2), ikt(2); // From i to j in untilted
+    // From i to k in untilted
+    // From i to j in tilted
+    // From i to k in tilted
+    int triang = 0; // Number of triangles considered
+    int i, j, k, counter1;
+    counter1 = 0;
+    randomize_random_generator();
+    long noCombinations;
+    noCombinations = Nu * (Nu - 1) * (Nu - 2) / 6;
+    while (triang < TRIANGLE_NO && counter1 < noCombinations)
+    {
+        counter1++;
+        i = round(rnd_unif(0, Nu - 1));
+        j = round(rnd_unif(0, Nu - 1));
+        k = round(rnd_unif(0, Nu - 1));
+
+        // Compute area of triangle in untilted micrograph
+        VECTOR_R2(iju, coordU[j] - coordU[i], coordU[j+1] - coordU[i+1]);
+        VECTOR_R2(iku, coordU[k] - coordU[i], coordU[k+1] - coordU[i+1]);
+        double untilted_area = fabs(dotProduct(iju, iku)/*/2*/);
+        if (untilted_area < MIN_AREA)
+            continue; // For numerical stability
+
+        // Compute area of the same triangle in the tilted micrograph
+        VECTOR_R2(ijt, coordT[j] - coordT[i], coordT[j+1] - coordT[i+1]);
+        VECTOR_R2(ikt, coordT[k] - coordT[i], coordT[k+1] - coordT[i+1]);
+        double tilted_area = fabs(dotProduct(ijt, ikt)/*/2*/);
+        if (tilted_area < MIN_AREA)
+            continue; // For numerical stability
+        if (tilted_area > MAX_AREA)
+            continue; // micrograph are not perfect
+        // sheets so avoid
+        // very far away particles
+
+        // Now we know that tilted_area=untilted_area*cos(gamma)
+        if (tilted_area > untilted_area)
+            continue; // There are user errors
+        // In the point selection
+        gamma += acos(tilted_area / untilted_area);
+        triang++;
+    }
+    gamma /= triang;
+    gamma = RAD2DEG(gamma);
+    if (triang < 100)
+        std::cout << "Not many particles, tilt angle may not be accurate" << std::endl;
+}
+
+/* Compute alphas ---------------------------------------------------------- */
+double matrix_fitness(double *p, void *prm)
+{
+	TiltPairAligner *aligner=(TiltPairAligner *) prm;
+    Euler_angles2matrix(p[1], p[3], -p[2], aligner->pair_E);
+    double retval = 0;
+    for (int i = 0; i < 2; i++)
+        for (int j = 0; j < 2; j++)
+        {
+            double error = fabs(MAT_ELEM(aligner->pair_E,i, j) - MAT_ELEM(aligner->Put, i, j));
+            retval += error * error;
+        }
+    return retval;
+}
+
+void TiltPairAligner::compute_alphas()
+{
+    alpha_u = alpha_t = 0;
+    Matrix1D<double> angles(3);
+    angles.initZeros();
+    double fitness;
+    int iter;
+
+    // Coarse search
+    double *aux = angles.adaptForNumericalRecipes();
+    double best_alpha_u = 0, best_alpha_t = 0, best_fit = 1e8;
+    aux[3] = gamma;
+    for (aux[1] = 0; aux[1] < 180; aux[1] += 10)
+        for (aux[2] = 0; aux[2] < 180; aux[2] += 10)
+        {
+            double fit = matrix_fitness(aux, NULL);
+            if (fit < best_fit)
+            {
+                best_fit = fit;
+                best_alpha_u = aux[1];
+                best_alpha_t = aux[2];
+            }
+        }
+    angles.killAdaptationForNumericalRecipes(aux);
+    angles(0) = best_alpha_u;
+    angles(1) = best_alpha_t;
+    angles(2) = gamma;
+
+    // Fine search
+    Matrix1D<double> steps(3);
+    steps.initConstant(1);
+    powellOptimizer(angles, 1, 3, &matrix_fitness, this,
+                    0.001, fitness, iter, steps, false);
+    alpha_u = angles(0);
+    alpha_t = angles(1);
+    gamma = angles(2);
+}
