@@ -69,20 +69,20 @@ opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
 opts.Add(BoolVariable('matlab', 'Build the Matlab bindings?', 'no'))
 opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/matlab')
 
-opts.Add(BoolVariable('verbose_fftw', 'Verbose configuring of FFTW libraries?', 'no'))
-opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '--enable-threads')
-
-opts.Add(BoolVariable('verbose_tiff', 'Verbose configuring of TIFF libraries?', 'no'))
-opts.Add('TIFFFLAGS', 'Additional flags for TIFF configure', 'CPPFLAGS=-w')
-
-opts.Add(BoolVariable('verbose_arpack', 'Verbose configuring of ARPACK++ libraries?', 'no'))
-opts.Add('ARPACKFLAGS', 'Additional flags for ARPACK++ configure', '')
-
-opts.Add(BoolVariable('verbose_sqlite', 'Verbose configuring of SQLite libraries?', 'no'))
-opts.Add('SQLITEFLAGS', 'Additional flags for SQLite configure', 'CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1')
-
-opts.Add(BoolVariable('verbose_python', 'Verbose configuring of Python compilation?', 'no'))
-opts.Add('PYTHONFLAGS', 'Additional flags for Python configure', '')
+#opts.Add(BoolVariable('verbose_fftw', 'Verbose configuring of FFTW libraries?', 'no'))
+#opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '--enable-threads')
+#
+#opts.Add(BoolVariable('verbose_tiff', 'Verbose configuring of TIFF libraries?', 'no'))
+#opts.Add('TIFFFLAGS', 'Additional flags for TIFF configure', 'CPPFLAGS=-w')
+#
+#opts.Add(BoolVariable('verbose_arpack', 'Verbose configuring of ARPACK++ libraries?', 'no'))
+#opts.Add('ARPACKFLAGS', 'Additional flags for ARPACK++ configure', '')
+#
+#opts.Add(BoolVariable('verbose_sqlite', 'Verbose configuring of SQLite libraries?', 'no'))
+#opts.Add('SQLITEFLAGS', 'Additional flags for SQLite configure', 'CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1')
+#
+#opts.Add(BoolVariable('verbose_python', 'Verbose configuring of Python compilation?', 'no'))
+#opts.Add('PYTHONFLAGS', 'Additional flags for Python configure', '')
 
 opts.Add('JNI_CPPPATH', 'Directory of jni.h', '')
 opts.Add('JAVAC', 'Java compiler', 'javac')
