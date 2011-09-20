@@ -12,7 +12,7 @@ DO_ARPACK=false
 
 DO_JAVA=false
 
-DO_CLEAN=false
+DO_CLEAN=true
 DO_STATIC=false
 DO_DOWNLOAD=false
 
@@ -81,10 +81,10 @@ compile_library()
 	CONFIGFLAGS="--enable-shared $CONFIGFLAGS"
  fi
 
-  if $DO_CLEAN; then
+ if $DO_CLEAN; then
     echo "--> make distclean > /dev/null 2>&1"
     make distclean > /dev/null 2>&1
-  fi
+ fi
 
   echo "--> ./configure $CONFIGFLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1"
   ./configure $CONFIGFLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1
@@ -145,6 +145,7 @@ create_dir build
 create_dir bin
 create_dir lib
 
+
 #################### DECOMPRESSING EXTERNAL LIBRARIES ###########################
 if $DO_UNTAR; then  
   tic
@@ -176,23 +177,24 @@ fi
 
 #################### TCL/TK ###########################
 if $DO_TCLTK; then
-  compile_library tcl$VTCLTK python unix ""
-  compile_library tk$VTCLTK python unix ""
-install_libs python/tcl$VTCLTK/unix libtcl8.5. so
-install_libs python/tk$VTCLTK/unix libtk8.5. so
+    compile_library tcl$VTCLTK python unix ""
+    compile_library tk$VTCLTK python unix ""
+    install_libs python/tcl$VTCLTK/unix libtcl8.5. so
+    install_libs python/tk$VTCLTK/unix libtk8.5. so
 fi
 
 #################### PYTHON ###########################
 if $DO_PYTHON; then
 	STATIC_BACKUP=$DO_STATIC
 	DO_STATIC=true
- export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
- compile_library $VPYTHON python "." ""
-  install_bin python/$VPYTHON/python xmipp_python
-DO_STATIC=$STATIC_BACKUP
-#  install_libs python/$VPYTHON libpython2.7. a so so.1.0
-  compile_pymodule $VNUMPY
-  compile_pymodule $VMATLIBPLOT
+    export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
+    export LDFLAGS="-L$XMIPP_HOME/lib"
+    compile_library $VPYTHON python "." ""
+    install_bin python/$VPYTHON/python xmipp_python
+    DO_STATIC=$STATIC_BACKUP
+    install_libs python/$VPYTHON libpython2.7. a so so.1.0
+    compile_pymodule $VNUMPY
+    compile_pymodule $VMATLIBPLOT
 fi
 
 #################### FFTW ###########################
