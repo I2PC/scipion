@@ -2,12 +2,12 @@
 
 #Some flags variables
 
-DO_UNTAR=true
-DO_SQLITE=true
-DO_TCLTK=true
+DO_UNTAR=false
+DO_SQLITE=false
+DO_TCLTK=false
 DO_PYTHON=true
-DO_FFTW=true
-DO_TIFF=true
+DO_FFTW=false
+DO_TIFF=false
 DO_ARPACK=false
 
 DO_JAVA=false
@@ -187,12 +187,14 @@ fi
 if $DO_PYTHON; then
 	STATIC_BACKUP=$DO_STATIC
 	DO_STATIC=true
+    #export CPPFLAGS="-static -I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
+    #export LDFLAGS="-static -static-libgcc -L$XMIPP_HOME/lib"
     export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
     export LDFLAGS="-L$XMIPP_HOME/lib"
     compile_library $VPYTHON python "." ""
     install_bin python/$VPYTHON/python xmipp_python
     DO_STATIC=$STATIC_BACKUP
-    install_libs python/$VPYTHON libpython2.7. a so so.1.0
+    #install_libs python/$VPYTHON libpython2.7. a so so.1.0
     compile_pymodule $VNUMPY
     compile_pymodule $VMATLIBPLOT
 fi
