@@ -10,9 +10,6 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-
-import browser.imageitems.listitems.MetadataFileItem;
-
 import xmipp.MDLabel;
 import xmipp.MetaData;
 import xmipp.Program;

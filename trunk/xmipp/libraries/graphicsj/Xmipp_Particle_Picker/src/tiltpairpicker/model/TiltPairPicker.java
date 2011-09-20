@@ -13,6 +13,7 @@ import trainingpicker.model.TrainingMicrograph;
 
 import xmipp.MDLabel;
 import xmipp.MetaData;
+import xmipp.TiltPairAligner;
 
 
 
@@ -27,12 +28,14 @@ public class TiltPairPicker {
 	private int size = 100;
 	protected List<UntiltedMicrograph> micrographs;
 	private Color color = Color.green;
+	private TiltPairAligner tpa;
 	
 	public TiltPairPicker(String pairsfile, String outputdir) {
 		
 		this.outputdir = outputdir;
 		this.micrographs = new ArrayList<UntiltedMicrograph>();
 		loadData(pairsfile);
+		tpa = new TiltPairAligner();
 	}
 	
 	private void loadData(String pairsfile) {
@@ -134,9 +137,16 @@ public class TiltPairPicker {
 		
 	}
 
-	public void setSize(int size2) {
-		// TODO Auto-generated method stub
+	public void setSize(int size) {
+		this.size = size;
 		
+	}
+	
+	public void alignMicrograph(UntiltedMicrograph micrograph)
+	{
+		for(UntiltedParticle up: micrograph.getParticles())
+			if(up.getTiltedParticle() != null)
+				tpa.addCoordinatePair(up.getX(), up.getY(), up.getTiltedParticle().getX(), up.getTiltedParticle().getY());
 	}
 	
 	

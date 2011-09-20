@@ -5,6 +5,7 @@ import java.util.List;
 
 import trainingpicker.model.Micrograph;
 import trainingpicker.model.Particle;
+import xmipp.TiltPairAligner;
 
 public class UntiltedMicrograph extends Micrograph {
 
@@ -50,6 +51,10 @@ public class UntiltedMicrograph extends Micrograph {
 	public void removeParticle(UntiltedParticle p) {
 		particles.remove(p);
 		tiltedmicrograph.removeParticle(p.getTiltedParticle());
+		if(!particles.isEmpty())
+			activeparticle = particles.get(particles.size() - 1);
+		else
+			activeparticle = null;
 	}
 
 	public void addParticle(UntiltedParticle p) {
@@ -74,7 +79,7 @@ public class UntiltedMicrograph extends Micrograph {
 
 	public boolean hasActiveParticle()
 	{
-		return particles.size() > getTiltedMicrograph().getParticles().size();
+		return activeparticle != null;
 	}
 
 	public TiltedParticle getActiveTiltedParticle()
@@ -84,5 +89,7 @@ public class UntiltedMicrograph extends Micrograph {
 		return activeparticle.getTiltedParticle();
 			
 	}
+	
+	
 
 }

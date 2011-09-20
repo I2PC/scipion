@@ -74,6 +74,11 @@ public class TiltedMicrograph extends Micrograph{
 		
 	}
 	
+	public UntiltedMicrograph getUntiltedMicrograph()
+	{
+		return untiltedmicrograph;
+	}
+	
 	public void setUntiltedMicrograph(UntiltedMicrograph untiltedmicrograph)
 	{
 		this.untiltedmicrograph = untiltedmicrograph;
