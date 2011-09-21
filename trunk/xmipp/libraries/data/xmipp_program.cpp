@@ -493,7 +493,7 @@ void XmippMetadataProgram::readParams()
 
     if (!fn_in.isMetaData())
     {
-    	String ext=fn_in.getExtension();
+        String ext=fn_in.getExtension();
         if (mdInSize == 1 && ext!="stk" && ext!="mrcs")
             single_image = true;
         else
@@ -503,13 +503,13 @@ void XmippMetadataProgram::readParams()
      * In case no output name is given, then input is overwritten and we have to
      * check if it is stack. */
     if (!oroot.empty())
-    	output_is_stack=false;
+        output_is_stack=false;
     else
     {
-    	if (fn_out.empty())
-    		output_is_stack = input_is_stack;
-    	else
-    		output_is_stack = mdInSize > 1;
+        if (fn_out.empty())
+            output_is_stack = input_is_stack;
+        else
+            output_is_stack = mdInSize > 1;
     }
 
     if (mdIn.containsLabel(MDL_ENABLED) && remove_disabled)
@@ -685,10 +685,12 @@ void XmippMetadataProgram::run()
      * the dirBaseName in order not overwriting files when repeating same command on
      * different directories. If baseName is set it is used, otherwise, input name is used.
      * Then, the suffix _oext is added.*/
-    if ( fn_out.empty() && !oroot.empty() && !baseName.empty() )
-        fn_out = findAndReplace(pathBaseName,"/","_") + baseName + "_" + oextBaseName + ".xmd";
-    else
-        fn_out = findAndReplace(pathBaseName,"/","_") + fn_in.getBaseName() + "_" + oextBaseName + ".xmd";
+
+    if (!oroot.empty())
+        if (!baseName.empty() )
+            fn_out = findAndReplace(pathBaseName,"/","_") + baseName + "_" + oextBaseName + ".xmd";
+        else
+            fn_out = findAndReplace(pathBaseName,"/","_") + fn_in.getBaseName() + "_" + oextBaseName + ".xmd";
 
     finishProcessing();
 
