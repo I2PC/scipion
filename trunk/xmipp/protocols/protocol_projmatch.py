@@ -303,7 +303,6 @@ class ProtProjMatch(XmippProtocol):
                                     , OnlyWinner = self.OnlyWinner[iterN]
                                     , PerturbProjectionDirections = self.PerturbProjectionDirections[iterN]
                                     , ProjectLibraryRootName = self.ProjectLibraryRootNames[iterN][refN]
-                                    , SystemFlavour = self.SystemFlavour
                                     , SymmetryGroup = self.SymmetryGroup[iterN]
                                     , SymmetryGroupNeighbourhood = self.SymmetryGroupNeighbourhood
                                     , Tilt0  = self.Tilt0
@@ -337,7 +336,7 @@ class ProtProjMatch(XmippProtocol):
                                     , ScaleNumberOfSteps =self.ScaleNumberOfSteps[iterN]
                                     , Search5DShift=self.Search5DShift[iterN]
                                     , Search5DStep=self.Search5DStep[iterN]
-                                    , SystemFlavour=self.SystemFlavour)
+                                    )
 
             
             #assign the images to the different references based on the crosscorrelation coheficient
@@ -376,7 +375,6 @@ class ProtProjMatch(XmippProtocol):
                          , ProjectLibraryRootName =self.ProjectLibraryRootNames[iterN][refN]#
                          , ProjMatchRootName =self.ProjMatchRootNames[iterN][refN]#
                          , refN =refN
-                         , SystemFlavour =self.SystemFlavour#
                          )
                 
                 ##############REMOVE SHUTIL.COPY
