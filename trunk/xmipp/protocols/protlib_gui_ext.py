@@ -561,22 +561,22 @@ def showWarning(title, msg, parent):
 def showError(title, msg, parent):
     ShowDialog(parent, title, msg, 'error')
     
-from protlib_utils import colorMap, colorStr, findColor
+from protlib_utils import colorMap, findColor
 import os
 
 '''Implement a Text that will show file content'''
 class FilePollTextArea(tk.Frame):
-    def __init__(self, master, filename):
+    def __init__(self, master, filename, height=30, width=100):
         tk.Frame.__init__(self, master)
         self.filename = filename
-        self.createWidgets()
+        self.createWidgets(height, width)
         self.fillTextArea()
         self.refreshAlarm = None
 
-    def createWidgets(self):        
+    def createWidgets(self, h, w):        
         #define a new frame and put a text area in it
         textfr = tk.Frame(self)
-        self.text = tk.Text(textfr,height=30,width=100,background='black', fg="white")
+        self.text = tk.Text(textfr, height=h, width=w, background='black', fg="white")
         
         # put a scroll bar in the frame
         yscroll = tk.Scrollbar(textfr)

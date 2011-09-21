@@ -674,18 +674,18 @@ greenStr = lambda s: colorStr(XMIPP_GREEN, s)
 failStr = redStr = lambda s: colorStr(XMIPP_RED, s)
 headerStr = magentaStr = lambda s: colorStr(XMIPP_MAGENTA, s)
 yellowStr = lambda s: colorStr(XMIPP_YELLOW, s)
-warnStr = cyanStr = lambda s: colorStr(XMIPP_CYAN, s)
+cyanStr = warnStr = cyanStr = lambda s: colorStr(XMIPP_CYAN, s)
 
-def findColor(str):
+def findColor(color):
     '''This function will search if there are color characters present
     on string and return the color and positions on string'''
     for k, v in colorMap.iteritems():
         x, y = colorStr(v, "_..._").split("_..._")
-        fx=str.find(x)
-        fy=str.find(y)
+        fx = color.find(x)
+        fy = color.find(y)
         if fx != -1 and fy != -1:
-            str = str.replace(x, '').replace(y, '')
-            return (k, fx, fy, str)
+            color = color.replace(x, '').replace(y, '')
+            return (k, fx, fy, color)
     return None
     
 #apply bfactor to a vector of volumes
