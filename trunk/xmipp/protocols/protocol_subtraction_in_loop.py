@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
 # Xmipp protocol for subtraction
 #
@@ -110,15 +110,31 @@ def subtractionScript(_log
     mdRotations.setValueCol(MDL_SHIFTY, 0.)
     mdRotations.operate('anglePsi=-anglePsi')
     
+    mdResults = MetaData(mdRotations)
+    mdResults.operate('anglePsi=0')
+    
     #reference projection for a given defocus group
     mdRef = MetaData(referenceStackDoc) #reference library
     
     imgExp = Image()
     imgRef = Image()
     imgSub = Image()
-    #apply ctf to a temporary reference    
+    
+    stackResults = resultsImagesName+'.stk'
+    
+    if (os.path.exists(stackResults)):
+        mdTmpResults = MetaData(stackResults)
+        idResults = mdTmpResults.size()
+    else:
+        idResults = 0
+        
+    xmdResults = resultsImagesName+'.xmd'
+    if (os.path.exists(xmdResults)):
+        xmdOldResults = MetaData(xmdResults)
+        xmdOldResults.unionAll(mdResults)
+        mdResults = MetaData(xmdOldResults)
+    
     for id in md:
-        #refNum = md.getValue(MDL_REF, id)
         angRot = md.getValue(MDL_ANGLEROT, id)
         angTilt = md.getValue(MDL_ANGLETILT, id)
         psi = md.getValue(MDL_ANGLEPSI, id)
@@ -148,13 +164,13 @@ def subtractionScript(_log
         mdRotations.setValue(MDL_IMAGE, '%06d@%s'%(id,subtractedStack), id)
         
         # write protocols results
-        #imgSub.write('%06d@%s'%(id,resultsStack),)
-        imgSub.write(resultsImagesName+'.stk')
+        imgSub.write('%06d@%s'%(id + idResults, stackResults))
+        mdResults.setValue(MDL_IMAGE, '%06d@%s'%(id + idResults, xmdResults), id + idResults)
         
     
     mdRotations.operate('anglePsi=0')
     mdRotations.write(subtractedStack.replace('.stk','.xmd'))
     
-    mdRotations.write(resultsImagesName+'.xmd')
+    mdResults.write(xmdResults)
         
 
