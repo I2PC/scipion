@@ -126,6 +126,9 @@ QueueHours = 96
 # {list_combo}(Classes,Class Cores,Class Stable Cores) What to show
 WhatToShow="Class Cores"
 
+# Visualize class hierarchy
+DoShowHierarchy=True
+
 # Visualize last level
 DoShowLast=True
 
