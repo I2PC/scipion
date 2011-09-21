@@ -571,6 +571,7 @@ class FilePollTextArea(tk.Frame):
         self.filename = filename
         self.createWidgets()
         self.fillTextArea()
+        self.refreshAlarm = None
 
     def createWidgets(self):        
         #define a new frame and put a text area in it
@@ -592,26 +593,39 @@ class FilePollTextArea(tk.Frame):
         self.text.config(state=tk.NORMAL)
         self.text.delete(1.0, tk.END)
         if os.path.exists(self.filename):
-            file = open(self.filename)
-            lineNo=1
-            for line in file:
-                tuple = findColor(line)
+            textfile = open(self.filename)
+            lineNo = 1
+            for line in textfile:
+                ctuple = findColor(line)
                 self.text.insert(tk.END, "%05d:   "%lineNo,"tag_cyan")  
-                if tuple is None:
+                if ctuple is None:
                     self.text.insert(tk.END, line[line.rfind("\r")+1:])  
                 else:
-                    color,idxInitColor,idxFinishColor,cleanText=tuple
+                    color,idxInitColor,idxFinishColor,cleanText=ctuple
                     if idxInitColor>0:
                         self.text.insert(tk.END, cleanText[:(idxInitColor-1)]+" ")
                     self.text.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + color)
                     self.text.insert(tk.END, cleanText[idxFinishColor:])
-                lineNo+=1
-            file.close()
+                lineNo += 1
+            textfile.close()
         else:
             self.text.insert(tk.END, "File '%s' doesn't exist" % self.filename) 
         self.text.config(state=tk.DISABLED)
         if goEnd:
-            self.text.see(tk.END)
+            self.goEnd()
+          
+    def goEnd(self):
+        self.text.see(tk.END)
+          
+    def doRefresh(self, seconds):
+        self.stopRefresh() #Stop pending refreshes
+        self.fillTextArea(goEnd=True)
+        self.refreshAlarm = self.after(seconds*1000, self.doRefresh, seconds)
+    
+    def stopRefresh(self):
+        if self.refreshAlarm:
+            self.after_cancel(self.refreshAlarm)
+            self.refreshAlarm = None
         
 def changeFontSizeByDeltha(font, deltha, min=-999, max=999):
         size = font['size']
