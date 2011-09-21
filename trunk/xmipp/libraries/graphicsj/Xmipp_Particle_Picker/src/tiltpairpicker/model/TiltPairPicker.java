@@ -8,6 +8,8 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+
+import trainingpicker.model.Constants;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 import xmipp.TiltPairAligner;
@@ -139,14 +141,18 @@ public class TiltPairPicker {
 		
 	}
 	
-	public void alignMicrograph(UntiltedMicrograph micrograph)
+		
+	public void addParticleToAligner(UntiltedParticle up)
 	{
-		for(UntiltedParticle up: micrograph.getParticles())
-			if(up.getTiltedParticle() != null)
-				tpa.addCoordinatePair(up.getX(), up.getY(), up.getTiltedParticle().getX(), up.getTiltedParticle().getY());
+		if(up.getTiltedParticle() == null)
+			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("TiltedParticle"));
+		tpa.addParticleToAligner(up.getX(), up.getY(), up.getTiltedParticle().getX(), up.getTiltedParticle().getY());
 	}
 	
-	
+	public TiltedParticle getTiltedParticle(UntiltedParticle up)
+	{
+		return null;
+	}
 
 
 

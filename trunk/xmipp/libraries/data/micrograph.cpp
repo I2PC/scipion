@@ -570,6 +570,8 @@ void TiltPairAligner::clear()
 	Bt.clear();
 	Put.clear();
 	Ptu.clear();
+    Au.initZeros(3, 3);
+    Bt.initZeros(3, 3);
 	Nu=0;
 	m.resizeNoCopy(3);
 }

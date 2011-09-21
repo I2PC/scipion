@@ -9,10 +9,10 @@ extern "C" {
 #endif
 /*
  * Class:     xmipp_TiltPairAligner
- * Method:    addCoordinatePair
+ * Method:    addParticleToAligner
  * Signature: (IIII)V
  */
-JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_addCoordinatePair
+JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_addParticleToAligner
   (JNIEnv *, jobject, jint, jint, jint, jint);
 
 #ifdef __cplusplus

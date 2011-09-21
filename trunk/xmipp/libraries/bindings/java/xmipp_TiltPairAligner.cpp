@@ -9,7 +9,7 @@
 #include "data/micrograph.h"
 #include "xmipp_ExceptionsHandler.h"
 
-JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_addCoordinatePair(JNIEnv * env,
+JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_addParticleToAligner(JNIEnv * env,
 		jobject jobj, jint jx1, jint jy1, jint jx2, jint jy2) {
 
 	String msg;
@@ -17,7 +17,7 @@ JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_addCoordinatePair(JNIEnv * env
 	try {
 
 		TiltPairAligner tpa;
-		tpa.addCoordinatePair(jx1, jx2, jy1, jy2);
+		tpa.adjust_passing_matrix(jx1, jx2, jy1, jy2);
 	} catch (XmippError xe) {
 		msg = xe.getDefaultMessage();
 	} catch (std::exception& e) {

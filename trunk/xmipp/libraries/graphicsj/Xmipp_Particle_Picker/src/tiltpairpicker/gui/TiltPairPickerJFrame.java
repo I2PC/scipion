@@ -86,7 +86,6 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 	private JButton resetbt;
 	private JLabel particleslb;
 	private String tool = "Particle Picker Tool";
-	private JButton alignbt;
 	
 
 	// private JCheckBox onlylastchb;
@@ -452,8 +451,6 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		resetbt = new JButton("Reset");
 		buttonspn.add(resetbt);
-		alignbt = new JButton("Align");
-		buttonspn.add(alignbt);
 		micrographpn.add(buttonspn,
 				WindowUtils.updateConstraints(constraints, 0, 2, 2));
 		resetbt.addActionListener(new ActionListener() {
@@ -489,15 +486,6 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 					}
 				});
 		micrographstb.getSelectionModel().setSelectionInterval(index, index);
-		alignbt.addActionListener(new ActionListener()
-		{
-			
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				pppicker.alignMicrograph(untiltedmic);	
-			}
-		});
 
 	}
 
