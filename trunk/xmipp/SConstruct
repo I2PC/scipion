@@ -41,7 +41,7 @@ opts.Add(BoolVariable('warn', 'Show warnings?', 'no'))
 opts.Add(BoolVariable('fast', 'Fast?', 'no'))
 opts.Add(BoolVariable('static', 'Prevent dynamic linking?', 'no'))
 
-opts.Add(BoolVariable('gui', 'Build the GUI (qt) programs?', 'yes'))
+opts.Add(BoolVariable('qt', 'Build the GUI (qt) programs?', 'yes'))
 opts.Add('QTDIR', 'Where is QT installed', '/usr/share/qt3')
 opts.Add('QT_LIB', 'QT library to use', 'qt-mt')
 opts.Add(BoolVariable('QT4', 'Use Qt4 instead of Qt3?', 'no'))
@@ -49,7 +49,7 @@ opts.Add(BoolVariable('QT4', 'Use Qt4 instead of Qt3?', 'no'))
 opts.Add('prepend', 'What to prepend to executable names', 'xmipp')
 opts.Add(BoolVariable('quiet', 'Hide command line?', 'yes'))
 
-opts.Add(BoolVariable('java', 'Build the java programs?', 'no'))
+opts.Add(BoolVariable('java', 'Build the java programs?', 'yes'))
 
 opts.Add(BoolVariable('arpack', 'Build the arpack programs?', 'no'))
 
@@ -62,7 +62,7 @@ opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
 opts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
 opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
 opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
-opts.Add('MPI_LIB', 'MPI library', 'mpich')
+opts.Add('MPI_LIB', 'MPI library', 'mpi')
 
 opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
 
@@ -176,7 +176,7 @@ if (ARGUMENTS['mode'] == 'configure'):
         env.Append(LINKFLAGS='-m64')
 
     # QT
-    if int(env['gui']):
+    if int(env['qt']):
         if int(env['QT4']):
             print '* QT4 selected!'
             # FIXME /usr/lib/qt4
@@ -212,7 +212,7 @@ if (ARGUMENTS['mode'] == 'configure'):
                 envQT.EnableQt4Modules(['QtCore', 'QtGui', 'Qt3Support'], debug=False)
             except:
                 print "*QT4 not found! Disabling..."
-                env['gui'] = 0
+                env['qt'] = 0
         else:
             envQT.Tool('qt')
 
@@ -226,7 +226,7 @@ if (ARGUMENTS['mode'] == 'configure'):
                                          'c++', 'QApplication qapp(0,0);',
                                          0):
             print '* Did not find QT. Disabling ...'
-            env['gui'] = 0
+            env['qt'] = 0
 
         envQT = confQT.Finish()
 

@@ -814,7 +814,7 @@ if int(env['mpi']):
 #    AddXmippMPIProgram('template_threads', ['XmippRecons'])
 #    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
 # QT
-if int(env['gui']):
+if int(env['qt']):
     envQT = env.Clone()
 
     if int(env['QT4']):
