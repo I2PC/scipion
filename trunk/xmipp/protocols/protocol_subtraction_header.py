@@ -18,24 +18,20 @@ Comment='Describe your project here...'
 #Comment
 """ Subtraction subdirectory. 'run_001' will create 'subtraction/run_001' directory
 """
-#RunName='run_008_exp_small'
-RunName='run_009_exp_small'
+RunName='v3_010_ctfgroups_test'
 
 # {list}(Resume, Restart) Run behavior
 """ Resume from the last step, restart the whole process or continue at a given step or iteration
 """
 Behavior = "Restart"
-#Behavior = "Resume"
-#Behavior = "Continue"
 
 # {file} Protocol Name
-ProtocolName='ProjMatch/xmipp2.4_exp_small/xmipp_protocol_projmatch_backup_test.py'
-#ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy/xmipp_protocol_projmatch_backup.py'
+ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy/xmipp_protocol_projmatch_backup.py'
 
 #Show results for iteration
 """ Use data coming from iteration
 """
-iterationNo=1
+iterationNo=3
 
 # {expert} Resume at Iter (vs Step)
 """This option control how to resume a previously performed run.
