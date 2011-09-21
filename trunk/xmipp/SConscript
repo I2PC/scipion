@@ -445,6 +445,7 @@ ReconsSources = [
     'art_xray.cpp',
     'base_art_recons.cpp',
     'basic_art.cpp',
+    'classify_compare_classes.cpp',
     'classify_evaluate_classes.cpp',
     'ctf_correct_wiener3d.cpp',
     'ctf_correct_idr.cpp',
@@ -645,6 +646,7 @@ AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 AddXmippProgram('angular_project_library', ['XmippRecons'])
 AddXmippProgram('angular_rotate')
 AddXmippProgram('classify_analyze_cluster', ['XmippClassif'])
+AddXmippProgram('classify_compare_classes', ['XmippRecons'])
 AddXmippProgram('classify_evaluate_classes', ['XmippRecons'])
 AddXmippProgram('classify_kerdensom', ['XmippClassif'])
 AddXmippProgram('ctf_correct_wiener3d', ['XmippRecons'])
