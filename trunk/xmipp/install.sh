@@ -2,19 +2,16 @@
 
 #Some flags variables
 
-DO_UNTAR=false
-DO_SQLITE=false
-DO_TCLTK=false
+DO_UNTAR=true
+DO_SQLITE=true
+DO_TCLTK=true
 DO_PYTHON=true
-DO_FFTW=false
-DO_TIFF=false
+DO_FFTW=true
+DO_TIFF=true
 DO_ARPACK=false
 
-DO_JAVA=false
-
-DO_CLEAN=true
+DO_CLEAN=false
 DO_STATIC=false
-DO_DOWNLOAD=false
 
 CPU=$@
 
@@ -50,10 +47,12 @@ VMATLIBPLOT=matplotlib-1.0.1
 
 ################# HELPER FUNCTIONS ##################
 TIMESTAMP=""
+
 tic()
 {
    TIMESTAMP="$(date +%s)"
 }
+
 toc()
 {
    NOW="$(date +%s)"
@@ -189,8 +188,8 @@ if $DO_PYTHON; then
 	DO_STATIC=true
     #export CPPFLAGS="-static -I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
     #export LDFLAGS="-static -static-libgcc -L$XMIPP_HOME/lib"
-    export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
-    export LDFLAGS="-L$XMIPP_HOME/lib"
+    export CPPFLAGS="-static -I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
+    export LDFLAGS="-static -static-libgcc -L$XMIPP_HOME/lib"
     compile_library $VPYTHON python "." ""
     install_bin python/$VPYTHON/python xmipp_python
     DO_STATIC=$STATIC_BACKUP
@@ -217,7 +216,9 @@ if $DO_ARPACK; then
   compile_library $VARPACK "." "." ""
   install_libs $VARPACK/src/.libs libarpack++. a la so so.2
 fi
+
 exit 0
+
 #################### JAVA ###########################
 install_jdk()
 {
