@@ -42,6 +42,7 @@ projectDefaults = {
                    'Db': '.project.sqlite',
                    'LogsDir': 'Logs',
                    'RunsDir': 'Runs',
+                   'TmpDir': 'Tmp',
                    'RunsPrefix': 'run',
                    'TableGroups': 'groups',
                    'TableParams': 'params',
