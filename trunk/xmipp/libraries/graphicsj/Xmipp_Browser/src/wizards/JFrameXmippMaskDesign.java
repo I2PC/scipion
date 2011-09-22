@@ -39,10 +39,14 @@ public class JFrameXmippMaskDesign extends JDialogXmippFilesList {
     @Override
     protected boolean sendSelectedFiles() {
         ImagePlus imp = IJ.getImage();
-        IJ.run(imp, "32-bit", "");
+        if (imp != null) {
+            IJ.run(imp, "32-bit", "");
 
-        if (ImageConverter.saveImage(imp, maskfilename)) {
-            IJ.showMessage("Mask saved!: " + maskfilename);
+            if (ImageConverter.saveImage(imp, maskfilename)) {
+                IJ.showMessage("Mask saved!: " + maskfilename);
+            }
+        } else {
+            IJ.showMessage("There are no images. Mask can't be saved.");
         }
 
         return send(null, true);

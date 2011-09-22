@@ -20,6 +20,7 @@ import browser.windows.ImagesWindowFactory;
 import browser.DEBUG;
 import browser.LABELS;
 import browser.SpringUtilities;
+import browser.imageitems.ImageConverter;
 import browser.table.models.AbstractXmippTableModel;
 import browser.table.models.VolumeTableModel;
 import ij.IJ;
@@ -54,8 +55,9 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
-import metadata.METADATA_LABELS;
 import xmipp.Filename;
+import xmipp.ImageDouble;
+import xmipp.MetaData;
 
 /**
  *
@@ -398,7 +400,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         }
     }
 
-    private void send2stack() {
+    private void openAsStack() {
         ImagesWindowFactory.openTableAsImagePlus(tableModel);
     }
 
@@ -461,6 +463,33 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         return filename.substring(0, dot) + ext;
     }
 
+    public void pca() {
+        String filename = tableModel.getFilename();
+
+        try {
+            MetaData md = new MetaData(filename);
+            ImageDouble image = new ImageDouble();
+
+            md.getPCAbasis(image);
+
+            ImagesWindowFactory.captureFrame(ImageConverter.convertToImagej(image, "PCA: " + filename));
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
+        }
+    }
+
+    public void fsc() {
+        String filename = tableModel.getFilename();
+
+        try {
+            MetaData md = new MetaData(filename);
+
+            ImagesWindowFactory.openFSCWindow(filename);
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
+        }
+    }
+
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -473,12 +502,6 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         toolBar = new javax.swing.JToolBar();
         jtbNormalize = new javax.swing.JToggleButton();
         jtbUseGeometry = new javax.swing.JToggleButton();
-        jSeparator1 = new javax.swing.JToolBar.Separator();
-        jbMean = new javax.swing.JButton();
-        jbStdDev = new javax.swing.JButton();
-        jbToStack = new javax.swing.JButton();
-        jbTo3D = new javax.swing.JButton();
-        bSend2MD = new javax.swing.JButton();
         jpCenter = new javax.swing.JPanel();
         jpDisplay = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
@@ -531,62 +554,6 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
             }
         });
         toolBar.add(jtbUseGeometry);
-        toolBar.add(jSeparator1);
-
-        jbMean.setText(LABELS.BUTTON_MEAN);
-        jbMean.setFocusable(false);
-        jbMean.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jbMean.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jbMean.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jbMeanActionPerformed(evt);
-            }
-        });
-        toolBar.add(jbMean);
-
-        jbStdDev.setText(LABELS.BUTTON_STD_DEVIATION);
-        jbStdDev.setFocusable(false);
-        jbStdDev.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jbStdDev.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jbStdDev.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jbStdDevActionPerformed(evt);
-            }
-        });
-        toolBar.add(jbStdDev);
-
-        jbToStack.setText(LABELS.BUTTON_TO_STACK);
-        jbToStack.setFocusable(false);
-        jbToStack.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jbToStack.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jbToStack.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jbToStackActionPerformed(evt);
-            }
-        });
-        toolBar.add(jbToStack);
-
-        jbTo3D.setText(LABELS.OPERATION_OPEN_AS_3D);
-        jbTo3D.setFocusable(false);
-        jbTo3D.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jbTo3D.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jbTo3D.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jbTo3DActionPerformed(evt);
-            }
-        });
-        toolBar.add(jbTo3D);
-
-        bSend2MD.setText(METADATA_LABELS.OPEN_AS_METADATA);
-        bSend2MD.setFocusable(false);
-        bSend2MD.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        bSend2MD.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        bSend2MD.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bSend2MDActionPerformed(evt);
-            }
-        });
-        toolBar.add(bSend2MD);
 
         getContentPane().add(toolBar, java.awt.BorderLayout.NORTH);
 
@@ -766,25 +733,9 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         }
     }//GEN-LAST:event_tableMouseClicked
 
-    private void jbMeanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbMeanActionPerformed
-        avgImage();
-    }//GEN-LAST:event_jbMeanActionPerformed
-
-    private void jbStdDevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbStdDevActionPerformed
-        stdDevImage();
-    }//GEN-LAST:event_jbStdDevActionPerformed
-
     private void jtbNormalizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtbNormalizeActionPerformed
         setNormalized(jtbNormalize.isSelected());
     }//GEN-LAST:event_jtbNormalizeActionPerformed
-
-    private void jbTo3DActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbTo3DActionPerformed
-        openAs3D();
-    }//GEN-LAST:event_jbTo3DActionPerformed
-
-    private void jbToStackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbToStackActionPerformed
-        send2stack();
-    }//GEN-LAST:event_jbToStackActionPerformed
 
     private void jcbMDLabelsItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jcbMDLabelsItemStateChanged
         if (evt.getStateChange() == ItemEvent.DESELECTED) {
@@ -797,28 +748,18 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         updateTable();
     }//GEN-LAST:event_jcbSortByLabelActionPerformed
 
-private void jtbUseGeometryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtbUseGeometryActionPerformed
-    setUseGeometry(jtbUseGeometry.isSelected());
+    private void jtbUseGeometryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtbUseGeometryActionPerformed
+        setUseGeometry(jtbUseGeometry.isSelected());
 }//GEN-LAST:event_jtbUseGeometryActionPerformed
 
-private void bSend2MDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bSend2MDActionPerformed
-    ImagesWindowFactory.openFileAsMetadata(tableModel.getFilename());
-}//GEN-LAST:event_bSend2MDActionPerformed
-
-private void jcbAutoAdjustColumnsStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jcbAutoAdjustColumnsStateChanged
-    setAutoAdjustColumns(jcbAutoAdjustColumns.isSelected());
+    private void jcbAutoAdjustColumnsStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jcbAutoAdjustColumnsStateChanged
+        setAutoAdjustColumns(jcbAutoAdjustColumns.isSelected());
 }//GEN-LAST:event_jcbAutoAdjustColumnsStateChanged
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton bSend2MD;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JToolBar.Separator jSeparator1;
-    private javax.swing.JButton jbMean;
-    private javax.swing.JButton jbStdDev;
-    private javax.swing.JButton jbTo3D;
-    private javax.swing.JButton jbToStack;
     private javax.swing.JCheckBox jcbAutoAdjustColumns;
     private javax.swing.JComboBox jcbMDLabels;
     private javax.swing.JCheckBox jcbShowLabels;
@@ -847,21 +788,30 @@ private void jcbAutoAdjustColumnsStateChanged(javax.swing.event.ChangeEvent evt)
 
     class JMenuBarTable extends JMenuBar {
 
-        protected JMenu jmiSave = new JMenu(LABELS.LABEL_TABLE_SAVE);
+        protected JMenu jmSave = new JMenu(LABELS.LABEL_TABLE_SAVE);
         protected JMenuItem jmiSaveAsMetadata = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_METADATA);
         protected JMenuItem jmiSaveAsStack = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_STACK);
         protected JMenuItem jmiSaveSelectionAsMetadata = new JMenuItem(LABELS.LABEL_TABLE_SAVE_SELECTION_AS_METADATA);
         protected JMenuItem jmiSaveSelectionAsStack = new JMenuItem(LABELS.LABEL_TABLE_SAVE_SELECTION_AS_STACK);
+        protected JMenu jmStatistics = new JMenu(LABELS.LABEL_MENU_STATISTICS);
+        protected JMenuItem jmiAVG = new JMenuItem(LABELS.BUTTON_MEAN);
+        protected JMenuItem jmiSTDEV = new JMenuItem(LABELS.BUTTON_STD_DEVIATION);
+        protected JMenuItem jmiPCA = new JMenuItem(LABELS.BUTTON_PCA);
+        protected JMenuItem jmiFSC = new JMenuItem(LABELS.BUTTON_FSC);
+        protected JMenu jmOpenAs = new JMenu(LABELS.LABEL_MENU_OPEN_AS);
+        protected JMenuItem jmiOpenAsStack = new JMenuItem(LABELS.BUTTON_TO_STACK);
+        protected JMenuItem jmiOpenAsMetadata = new JMenuItem(LABELS.BUTTON_OPEN_AS_TABLE);
+        protected JMenuItem jmiOpenAs3D = new JMenuItem(LABELS.OPERATION_OPEN_AS_3D);
 
         public JMenuBarTable() {
             super();
 
-            add(jmiSave);
-            jmiSave.add(jmiSaveAsMetadata);
-            jmiSave.add(jmiSaveAsStack);
-            jmiSave.addSeparator();
-            jmiSave.add(jmiSaveSelectionAsMetadata);
-            jmiSave.add(jmiSaveSelectionAsStack);
+            add(jmSave);
+            jmSave.add(jmiSaveAsMetadata);
+            jmSave.add(jmiSaveAsStack);
+            jmSave.addSeparator();
+            jmSave.add(jmiSaveSelectionAsMetadata);
+            jmSave.add(jmiSaveSelectionAsStack);
 
             jmiSaveAsMetadata.addActionListener(new ActionListener() {
 
@@ -888,6 +838,66 @@ private void jcbAutoAdjustColumnsStateChanged(javax.swing.event.ChangeEvent evt)
 
                 public void actionPerformed(ActionEvent e) {
                     saveAsStack(false);
+                }
+            });
+
+            add(jmStatistics);
+            jmStatistics.add(jmiAVG);
+            jmStatistics.add(jmiSTDEV);
+            jmStatistics.add(jmiPCA);
+            jmStatistics.add(jmiFSC);
+
+            jmiAVG.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    avgImage();
+                }
+            });
+
+            jmiSTDEV.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    stdDevImage();
+                }
+            });
+
+            jmiPCA.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    pca();
+                }
+            });
+
+            jmiFSC.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    fsc();
+                }
+            });
+
+            add(jmOpenAs);
+            jmOpenAs.add(jmiOpenAs3D);
+            jmOpenAs.add(jmiOpenAsMetadata);
+            jmOpenAs.add(jmiOpenAsStack);
+
+            jmiOpenAs3D.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    openAs3D();
+                }
+            });
+
+            jmiOpenAsMetadata.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    ImagesWindowFactory.openFileAsMetadata(tableModel.getFilename());
+                }
+            });
+
+            jmiOpenAsStack.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    openAsStack();
                 }
             });
         }

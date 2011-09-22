@@ -311,8 +311,8 @@ public class ImagesWindowFactory {
         ctfView.setVisible(true);
     }
 
-    public static void openFSCWindow(MetaData md, String filename) {
-        FSCWindow frame = new FSCWindow(md, filename);
+    public static void openFSCWindow(String filename) {
+        FSCWindow frame = new FSCWindow(filename);
         frame.setVisible(true);
     }
 

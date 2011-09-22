@@ -28,7 +28,6 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 import browser.DEBUG;
 import browser.LABELS;
-import browser.imageitems.ImageConverter;
 import browser.imageitems.tableitems.TableImageItem;
 import browser.windows.ImagesWindowFactory;
 import java.awt.event.KeyListener;
@@ -48,8 +47,6 @@ import metadata.renderers.FileItemRenderer;
 import metadata.renderers.RowHeaderRenderer;
 import metadata.renderers.editors.TableFileItemEditor;
 import metadata.renderers.editors.TableImageItemEditor;
-import xmipp.ImageDouble;
-import xmipp.MetaData;
 
 /**
  *
@@ -380,33 +377,6 @@ public class JFrameMetaData extends JFrame {
         }
     }
 
-    public void pca() {
-        String filename = tableModel.getFilename();
-
-        try {
-            MetaData md = new MetaData(filename);
-            ImageDouble image = new ImageDouble();
-
-            md.getPCAbasis(image);
-
-            ImagesWindowFactory.captureFrame(ImageConverter.convertToImagej(image, "PCA: " + filename));
-        } catch (Exception ex) {
-            DEBUG.printException(ex);
-        }
-    }
-
-    public void fsc() {
-        String filename = tableModel.getFilename();
-
-        try {
-            MetaData md = new MetaData(filename);
-
-            ImagesWindowFactory.openFSCWindow(md, filename);
-        } catch (Exception ex) {
-            DEBUG.printException(ex);
-        }
-    }
-
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -420,8 +390,6 @@ public class JFrameMetaData extends JFrame {
         jbSave = new javax.swing.JButton();
         jbReload = new javax.swing.JButton();
         jbSend2Gallery = new javax.swing.JButton();
-        jbPCA = new javax.swing.JButton();
-        jbFSC = new javax.swing.JButton();
         jpCenter = new javax.swing.JPanel();
         jpControls = new javax.swing.JPanel();
         jlBlock = new javax.swing.JLabel();
@@ -469,28 +437,6 @@ public class JFrameMetaData extends JFrame {
             }
         });
         toolBar.add(jbSend2Gallery);
-
-        jbPCA.setText(LABELS.BUTTON_PCA);
-        jbPCA.setFocusable(false);
-        jbPCA.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jbPCA.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jbPCA.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jbPCAActionPerformed(evt);
-            }
-        });
-        toolBar.add(jbPCA);
-
-        jbFSC.setText(LABELS.BUTTON_FSC);
-        jbFSC.setFocusable(false);
-        jbFSC.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jbFSC.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jbFSC.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jbFSCActionPerformed(evt);
-            }
-        });
-        toolBar.add(jbFSC);
 
         getContentPane().add(toolBar, java.awt.BorderLayout.PAGE_START);
 
@@ -598,17 +544,8 @@ public class JFrameMetaData extends JFrame {
 private void jbSend2GalleryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSend2GalleryActionPerformed
     ImagesWindowFactory.openFileAsTable(tableModel.getPath());
 }//GEN-LAST:event_jbSend2GalleryActionPerformed
-
-    private void jbPCAActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbPCAActionPerformed
-        pca();
-    }//GEN-LAST:event_jbPCAActionPerformed
-
-    private void jbFSCActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbFSCActionPerformed
-        fsc();    }//GEN-LAST:event_jbFSCActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bHideColumns;
-    private javax.swing.JButton jbFSC;
-    private javax.swing.JButton jbPCA;
     private javax.swing.JButton jbReload;
     private javax.swing.JButton jbSave;
     private javax.swing.JButton jbSend2Gallery;

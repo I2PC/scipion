@@ -863,9 +863,12 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_importObjects
 			 jlong *ids = env->GetLongArrayElements(jids, 0);
 			 int size = env->GetArrayLength(jids);
 
-			 for(int i=0;i<size; i++){
-				  md->importObject(*mdfrom, ids[i]);
+		     std::vector<size_t> out_ids(size);
+			 for(int i=0; i<size; i++){
+				 out_ids[i] = ids[i];
 			 }
+
+			 md->importObjects(*mdfrom, out_ids);
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {

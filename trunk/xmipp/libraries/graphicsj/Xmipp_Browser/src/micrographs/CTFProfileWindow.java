@@ -282,8 +282,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
 //                    datasetProfile);
 
             JFreeChart chart = ChartFactory.createXYLineChart(
-                    "",
-                    LABELS.LABEL_SAMPLING,
+                    "", LABELS.LABEL_SAMPLING,
                     show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD,
                     datasetProfile,
                     PlotOrientation.VERTICAL,

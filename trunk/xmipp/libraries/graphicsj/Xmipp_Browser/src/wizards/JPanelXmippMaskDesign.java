@@ -7,6 +7,7 @@ package wizards;
 import browser.imageitems.listitems.AbstractImageItem;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.gui.Toolbar;
 
 /**
  *
@@ -27,7 +28,11 @@ public class JPanelXmippMaskDesign extends JPanelXmippFilterMetadata {
 
     @Override
     protected void openSelectedFile() {
+        int currentTool = Toolbar.getToolId();
+
         super.openSelectedFile();
+
+        IJ.setTool(currentTool);
 
         //IJ.showMessage("...::SHOW MASKS TOOLBAR::...");
         IJ.run("Masks Tool Bar");

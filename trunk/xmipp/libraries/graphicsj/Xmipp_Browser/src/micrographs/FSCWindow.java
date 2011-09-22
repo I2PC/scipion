@@ -1,5 +1,6 @@
 package micrographs;
 
+import browser.DEBUG;
 import browser.LABELS;
 import java.awt.BorderLayout;
 import java.awt.Button;
@@ -12,9 +13,11 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.data.xy.XYDataset;
+import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import xmipp.MDLabel;
@@ -29,42 +32,59 @@ import xmipp.MetaData;
  * @author Juanjo Vega
  */
 public class FSCWindow extends JFrame {
-//
+
 //    public static void main(String args[]) {
 //        String filename = "/home/juanjo/temp/angles_save.sel";
 //
 //        try {
-//            MetaData md = new MetaData(filename);
-//            FSCWindow frame = new FSCWindow(md, filename);
-//
+//            FSCWindow frame = new FSCWindow(filename);
 //            frame.setVisible(true);
 //        } catch (Exception ex) {
 //            ex.printStackTrace();
 //        }
 //    }
-
-    public FSCWindow(MetaData md, String filename) {
-        super("FSC: " + md.getFilename());
+    public FSCWindow(String filename) {
+        super(LABELS.TITLE_FSC + filename);
 
         try {
             setLayout(new BorderLayout());
 
-            md.computeFourierStatistics(filename);
+            MetaData mdout = new MetaData();
+            mdout.computeFourierStatistics(filename);
 
-            double xValues[] = md.getColumnValues(MDLabel.MDL_RESOLUTION_FREQ);
-            double y1s[] = md.getColumnValues(MDLabel.MDL_RESOLUTION_FRC);
-            double y2s[] = md.getColumnValues(MDLabel.MDL_RESOLUTION_DPR);
+            double xValues[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FREQ);
+            double y1s[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FRC);
+            double y2s[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_DPR);
 
-            String labelX = MetaData.label2Str(MDLabel.MDL_RESOLUTION_FREQ);
+            //String labelX = MetaData.label2Str(MDLabel.MDL_RESOLUTION_FREQ);
             String labelY1 = MetaData.label2Str(MDLabel.MDL_RESOLUTION_FRC);
             String labelY2 = MetaData.label2Str(MDLabel.MDL_RESOLUTION_DPR);
 
-            XYDataset dataset = createSeriesCollection(xValues, y1s, y2s, labelY1, labelY2);
+            XYSeriesCollection dataset1 = new XYSeriesCollection(
+                    createSeries(labelY1, xValues, y1s));
+            XYSeriesCollection dataset2 = new XYSeriesCollection(
+                    createSeries(labelY2, xValues, y2s));
 
             JFreeChart chart = ChartFactory.createXYLineChart(
-                    "", "?", labelX,
-                    dataset, PlotOrientation.VERTICAL,
+                    "", LABELS.LABEL_DIGITAL_FREQUENCY, "",
+                    dataset1, PlotOrientation.VERTICAL,
                     true, true, false);
+
+            // Sets second axis.
+            XYPlot plot = chart.getXYPlot();
+            ValueAxis axisDPR = plot.getRangeAxis();
+            axisDPR.setLabel(labelY1);
+
+            NumberAxis axisFSC = new NumberAxis();
+            axisFSC.setLabel(labelY2);
+            axisFSC.setAutoRangeIncludesZero(false);
+
+            plot.setRangeAxis(1, axisFSC);
+            plot.setDataset(1, dataset2);
+            plot.mapDatasetToRangeAxis(1, 1);
+
+            // Sets a new renderer, so series color will be different.
+            plot.setRenderer(1, new StandardXYItemRenderer());
 
             add(createChartPanel(chart), BorderLayout.CENTER);
 
@@ -83,27 +103,9 @@ public class FSCWindow extends JFrame {
             pack();
             setLocationRelativeTo(null);
         } catch (Exception e) {
-            e.printStackTrace();
+            DEBUG.printException(e);
         }
     }
-//
-//    public void actionPerformed(ActionEvent ae) {
-//        if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-//            File file = fc.getSelectedFile();
-//            if (file != null) {
-//                JFreeChart chart = null;
-//                if (ae.getSource() == bExportProfile) {
-//                    chart = chartPanelProfile.getChart();
-//                } else if (ae.getSource() == bExportAVG) {
-//                    chart = chartPanelAVG.getChart();
-//                }
-//
-//                if (export(file.getAbsolutePath(), chart)) {
-//                    IJ.showMessage("Save", "File saved sucesfully.");
-//                }
-//            }
-//        }
-//    }
 
     private static ChartPanel createChartPanel(JFreeChart chart) {
         XYPlot plot = (XYPlot) chart.getPlot();
@@ -119,54 +121,22 @@ public class FSCWindow extends JFrame {
 
         return new ChartPanel(chart);
     }
-//    private void customizeSeriesRenderes(XYPlot plot, boolean show_bgnoise, boolean show_envelope,
-//            boolean show_psd, boolean show_ctf) {
+
+//    private static XYSeriesCollection[] createSeriesCollection(
+//            double[] xs, double ys1[], double ys2[],
+//            String y1Label, String y2Label) {
 //
-//        XYItemRenderer renderer = plot.getRenderer();
+//        XYSeries series1 = createSeries(y1Label, xs, ys1);
+//        XYSeries series2 = createSeries(y2Label, xs, ys2);
 //
-//        if (show_ctf) {
-//            renderer.setSeriesPaint(0, COLOR_CTF);
-//            plot.getRenderer().setSeriesStroke(0, plotsStroke);
-//        } else {
-//            // 0: Profile.
-//            renderer.setSeriesPaint(0, COLOR_PROFILE);
-//            plot.getRenderer().setSeriesStroke(0, plotsStroke);
+//        XYSeriesCollection collection1 = new XYSeriesCollection();
+//        collection1.addSeries(series1);
 //
-//            int index = 1;
-//            // 1: BGNoise.
-//            if (show_bgnoise) {
-//                renderer.setSeriesPaint(index, COLOR_BACKGROUND_NOISE);
-//                plot.getRenderer().setSeriesStroke(index, plotsStroke);
-//                index++;
-//            }
+//        XYSeriesCollection collection2 = new XYSeriesCollection();
+//        collection1.addSeries(series2);
 //
-//            // 2: BGNoise.
-//            if (show_envelope) {
-//                renderer.setSeriesPaint(index, COLOR_ENVELOPE);
-//                plot.getRenderer().setSeriesStroke(index, plotsStroke);
-//                index++;
-//            }
-//
-//            // 3: PSD.
-//            if (show_psd) {
-//                renderer.setSeriesPaint(index, COLOR_PSD);
-//                plot.getRenderer().setSeriesStroke(index, plotsStroke);
-//                index++;
-//            }
-//        }
+//        return new XYSeriesCollection[]{collection1, collection2};
 //    }
-
-    private static XYSeriesCollection createSeriesCollection(
-            double[] xs, double ys1[], double ys2[],
-            String y1Label, String y2Label) {
-        XYSeriesCollection collection = new XYSeriesCollection();
-
-        collection.addSeries(createSeries(y1Label, xs, ys1));
-        collection.addSeries(createSeries(y2Label, xs, ys2));
-
-        return collection;
-    }
-
     private static XYSeries createSeries(String name, double[] xs, double[] values) {
         XYSeries series = new XYSeries(name);
 

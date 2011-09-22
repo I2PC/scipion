@@ -31,6 +31,7 @@ public class LABELS {
     public final static String TITLE_PREVIEW = "Preview:";
     public final static String TITLE_PREVIEW_FILTER = "Filter:";
     public final static String TITLE_SEND2WINDOW = "Send image to window";
+    public final static String TITLE_FSC = "FSC: ";
     public final static String TITLE_UNTITLED = "Untitled";
 
     // @TODO Remove
@@ -189,6 +190,7 @@ public class LABELS {
     /**
      * Labels
      */
+    public final static String LABEL_DIGITAL_FREQUENCY = "Digital frequency";
     public final static String LABEL_AUTO_AJUST_COLUMNS = "Auto adjust columns";
     public final static String LABEL_SHOW_LABELS = "Show label: ";
     public final static String LABEL_SORT_BY_LABEL = "Sort by label";
@@ -241,6 +243,8 @@ public class LABELS {
     public final static String LABEL_W1 = "W1: ";
     public final static String LABEL_W2 = "W2: ";
     public final static String LABEL_RAISED_W = "Raised W: ";
+    public final static String LABEL_MENU_STATISTICS = "Statistics";
+    public final static String LABEL_MENU_OPEN_AS = "Open as...";
 
     public static String LABEL_FILES_SHOWING(int elements, int total) {
         return total != elements ? " Showing " + elements + " / " + total + " elements." : "";
