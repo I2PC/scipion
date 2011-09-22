@@ -19,7 +19,7 @@ class ProtCommonLines(XmippProtocol):
         self.Import = 'from protocol_commonlines import *'
     
     def defineSteps(self):
-        fnOut=os.path.join(self.WorkingDir,"inputImages.mrcs")
+        fnOut=os.path.join(self.WorkingDir,"inputImages.hed")
         self.Db.insertStep('convertImages', [fnOut], Selfile=self.InSelFile, OutStack=fnOut)
         fnOut=os.path.join(self.WorkingDir,"ali.hed")
         self.Db.insertStep('centerImages', [fnOut], WorkingDir=self.WorkingDir, Radius=self.Radius)
@@ -47,7 +47,7 @@ def convertImages(log,Selfile,OutStack):
 def centerImages(log,WorkingDir,Radius):
     currentDir=os.getcwd()
     changeDir(log,WorkingDir)
-    runJob(log,"cenalignint",'inputImages.mrcs mask='+str(Radius))
+    runJob(log,"cenalignint",'inputImages.hed mask='+str(Radius))
     deleteFiles(log,['avg.hed','avg.img'],True)
     changeDir(log,currentDir)
 
