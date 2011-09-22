@@ -45,7 +45,7 @@ class XmippProject():
         self.dbName =  projectDefaults['Db']
         self.logsDir = projectDefaults['LogsDir']
         self.runsDir = projectDefaults['RunsDir']
-        
+        self.tmpDir = projectDefaults['TmpDir']
     
     def exists(self):
         ''' a project exists if the data base can be opened and directories Logs and Runs
@@ -55,6 +55,8 @@ class XmippProject():
         if not os.path.exists(self.logsDir):
             status = False
         elif not os.path.exists(self.runsDir):
+            status = False
+        elif not os.path.exists(self.tmpDir):
             status = False
         elif not os.path.exists(self.cfgName):
             status = False
@@ -78,6 +80,8 @@ class XmippProject():
             os.mkdir(self.logsDir)
         if not os.path.exists(self.runsDir):
             os.mkdir(self.runsDir)
+        if not os.path.exists(self.tmpDir):
+            os.mkdir(self.tmpDir)
         #===== CREATE DATABASE
         self.projectDb  = XmippProjectDb(self.dbName)
         #===== POPULATE SOME TABLES
@@ -113,6 +117,8 @@ class XmippProject():
             shutil.rmtree(self.logsDir)
         if os.path.exists(self.runsDir):
             shutil.rmtree(self.runsDir)
+        if os.path.exists(self.tmpDir):
+            shutil.rmtree(self.tmpDir)
         if os.path.exists(self.cfgName):
             os.remove(self.cfgName)
         if os.path.exists(self.dbName):
