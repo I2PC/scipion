@@ -368,6 +368,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		viewsPanel.add(stackPanel,BorderLayout.CENTER);
 		
 		projectView=new WorkflowView(workflow,null);
+		projectView.addPropertyChangeListener(this);
 		
 		viewsPanel.add(projectView,BorderLayout.EAST);
 		getContentPane().add(viewsPanel);
@@ -739,7 +740,9 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 *            windowclosing event (unused)
 	 */
 	public void windowClosing(WindowEvent e) {
-		// TODO: windowClosing - stop running threads (file load, for example)
+		// TODO: windowClosing - stop running threads (file load, for example) ??
+		// TODO: now that each step is automatically written to disk, it makes not a lot of sense to ask the user
+		// if he wants to save changes...
 		if (closed)
 			return;
 		if (isChangeSaved()) {
@@ -811,6 +814,9 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 						+ getStatusChar((Integer) (event.getNewValue())));
 			else
 				setNumberOfProjections((Integer) (event.getNewValue()));
+		}else if (WorkflowView.ACTION_SELECTED.equals(event.getPropertyName()) ||
+				StackModel.Properties.CURRENT_PROJECTION.name().equals(event.getPropertyName())){
+			refreshImageCanvas();
 		}else if(StackModel.Properties.CURRENT_PROJECTION_NUMBER.name().equals(event.getPropertyName())){
 			updateCurrentTiltAngleText();
 			getProjectionScrollbar().setValue(getStackModel().getCurrentProjectionNumber());

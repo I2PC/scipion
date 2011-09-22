@@ -1,3 +1,6 @@
+import java.util.Date;
+
+
 import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
 
@@ -41,12 +44,12 @@ import javax.swing.text.PlainDocument;
  * 
  * STATIC TEMPLATES (possibilities definition, always the same for every project)
  * Action: id, name, label, method, iconName, enabled (at startup), panel (where to place the button), panelOrder
- * Parameter: paramId, name, type {Volume, Stack, AlignedStack, Float, String}
+ * Parameter: id, name, type {Volume, Stack, AlignedStack, Float, String}
  * ActionParameters: actionId, paramId, defaultParamValue, paramType{input/output}
  * 
  * DYNAMIC STEPS (workflow, changes from project to project)
- * StepParameters: wsId, paramId, paramValue
- * Step: wsId, order, stepId, workingDir (each project has its working dir where the workflow database
+ * StepParameters: stepId, paramId, paramValue
+ * Step: id, order, stepId, workingDir (each project has its working dir where the workflow database
  * is stored as .project.sqlite, and all the files are stored too there), comments 
  */
 public class UserAction {
@@ -55,6 +58,8 @@ public class UserAction {
 	
 	private int windowId;
 	private String command=null,parameters=null,name=null;
+	private String workingDir=null;
+	String progress=null;
 	private Plugin plugin;
 	private boolean neededForFile=false;
 	private PlainDocument comments;
@@ -92,6 +97,7 @@ public class UserAction {
 
 	public UserAction(int windowId){
 		setWindowId(windowId);
+		
 	}
 	
 	public UserAction(int windowId,String cmd){
@@ -195,6 +201,17 @@ public class UserAction {
 	public String getName() {
 		return name;
 	}
+	
+	public String getId(){
+		//TODO: get the id from the project SQLite DB
+		return String.valueOf(new Date().getTime());
+	}
+	
+	public String getWorkingDir(){
+		if(workingDir == null)
+			workingDir = getId();
+		return workingDir;
+	}
 
 	public void setName(String name) {
 		this.name = name;
@@ -203,8 +220,15 @@ public class UserAction {
 	public String getProgress(){
 		if(WORKFLOW_ROOT_NAME.equals(getName()))
 			return null;
-		int p = (getCommand().length() % 4) * 25;
-		return String.valueOf(p) + "%";
+		String ret = progress;
+		if (ret == null){
+			int p = (getCommand().length() % 4) * 25;
+			ret = String.valueOf(p) + "%";
+		}
+		return ret;
 	}
 	
+	public void setProgress(String progress){
+		this.progress = progress;
+	}
 }

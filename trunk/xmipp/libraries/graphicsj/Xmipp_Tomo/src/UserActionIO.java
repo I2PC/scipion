@@ -1,3 +1,5 @@
+import java.io.File;
+
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -31,29 +33,31 @@ import xmipp.MetaData;
  */
 
 public class UserActionIO {
-	private String inputFile,outputFile;
+	private String inputFilePath;
 	MetaData imageMetadata;
 	
-	public String getInputFile() {
-		return inputFile;
+	public String getInputFilePath() {
+		return inputFilePath;
 	}
 
 	// TODO: import more code details from Tomodata.readMetadata()
-	public void setInputFile(String inputFile) {
-		this.inputFile = inputFile;
-		try{
-			getMetadata().read(inputFile);
-		}catch (Exception ex){
-			Logger.debug("readMetadata - problem with "+inputFile+". Please check that the file exists and its permissions", ex);
-		}
+	public void setInputFilePath(String f) {
+		this.inputFilePath = f;
 	}
 	
-	public MetaData getMetadata(){
+	private MetaData getMetadata(){
 		// metadata is initialized on metadata.read()
+		if (getInputFilePath() == null)
+			return null;
 		
 		if(imageMetadata==null){
 			imageMetadata = new MetaData();
 			imageMetadata.enableDebug();
+			try{
+				imageMetadata.read(getInputFilePath());
+			}catch (Exception ex){
+				imageMetadata = null;
+			}
 		}
 		return imageMetadata;
 	}
@@ -64,17 +68,30 @@ public class UserActionIO {
 	 * @return
 	 */
 	public String getFilePath(int projection){
-		if(!initialized())
-			return null;
-		long projectionId = getStackIds()[projection-1];
-		String filename= getMetadata().getValueString(MDLabel.MDL_IMAGE,projectionId);
+		String filename= null;
+		if(getMetadata() != null)
+			filename = getMetadata().getValueString(MDLabel.MDL_IMAGE,getProjectionId(projection));
 		return filename;
 	}
 	
-	// TODO: improve the test to check if metadata has been read
-	private boolean initialized(){
-		return inputFile != null;
+	public long getProjectionId(int projection){
+		return getStackIds()[projection-1];
 	}
+	
+	public String getInputFileName(){
+		String ret = null;
+		if(getInputFilePath() != null)
+			ret = new File(getInputFilePath()).getName();
+		return ret;
+	}
+	
+	public int getNumberOfProjections(){
+		int ret=0;
+		if(getMetadata() != null)
+			ret = getMetadata().size();
+		return ret;
+	}
+	
 	
 	private long[] getStackIds(){
 		long [] result=new long[1];

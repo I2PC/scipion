@@ -38,12 +38,13 @@ public class StackModel extends AbstractModel{
 	// must be kept as the workflow progresses. For example, keep in the Workflow model
 	// the filepath and MetaData of each node
 	
-	private Cache <String,ImageDouble> cache;
+	private Cache <String,ImageDouble> imageDoubleCache;
+	private Cache <String,ImagePlus> imagePlusCache;
 	
 	private Workflow workflow;
 	
 	public static enum Properties {
-		NUMBER_OF_PROJECTIONS,CURRENT_PROJECTION_NUMBER,CURRENT_TILT_ANGLE,CURRENT_PROJECTION_ENABLED;
+		NUMBER_OF_PROJECTIONS,CURRENT_PROJECTION_NUMBER,CURRENT_TILT_ANGLE,CURRENT_PROJECTION_ENABLED, CURRENT_PROJECTION;
 	};
 	
 	// maybe it's better to move currentProjection to the viewer - in case different views can show different slices
@@ -62,18 +63,41 @@ public class StackModel extends AbstractModel{
 	}
 
 
-	private Cache <String,ImageDouble> getCache() {
-		if(cache == null)
-			cache = new Cache<String,ImageDouble>();
-		return cache;
+	private Cache <String,ImageDouble> getImageDoubleCache() {
+		if(imageDoubleCache == null)
+			imageDoubleCache = new Cache<String,ImageDouble>();
+		return imageDoubleCache;
 	}
 
-	public ImagePlus getCurrentImage(){
-		String filePath = getCurrentIO().getFilePath(getCurrentProjectionNumber());
-		if(filePath == null)
-			return null;
+	private Cache <String,ImagePlus> getImagePlusCache() {
+		if(imagePlusCache == null)
+			imagePlusCache = new Cache<String,ImagePlus>();
+		return imagePlusCache;
+	}
+	
+	private String getCurrentImageFilePath(){
+		String ret = null;
+		UserActionIO currentIo=getCurrentIO();
+		if(currentIo==null)
+			return ret;
 		
-		ImageDouble image = getCache().get(filePath);
+		ret = currentIo.getFilePath(getCurrentProjectionNumber());
+		
+		return ret;
+	}
+	
+	public ImagePlus getCurrentImage(){
+		ImagePlus ret = new ImagePlus();
+
+		String filePath = getCurrentImageFilePath();
+		if(filePath == null)
+			return ret;
+		
+		ret= getImagePlusCache().get(filePath);
+		if(ret != null)
+			return ret;
+		
+		ImageDouble image = getImageDoubleCache().get(filePath);
 		if(image == null){
 			// cache miss
 			image = new ImageDouble();
@@ -91,12 +115,45 @@ public class StackModel extends AbstractModel{
 				Logger.debug("loadEMBackground - unexpected exception",
 						ex);
 			}
-			getCache().put(filePath, image);
+			getImageDoubleCache().put(filePath, image);
 		}
-		return Converter.convertToImagePlus(image);
+		ret= Converter.convertToImagePlus(image);
+		getImagePlusCache().put(filePath, ret);
+		return ret;
 	}
 	
-	public UserActionIO getCurrentIO(){
+	public void updateCurrentImage(ImagePlus image){
+		updateImage(getCurrentImageFilePath(),image);
+	}
+	
+	public void updateImage(String filePath,ImagePlus image){
+		if( (filePath == null) || (image == null))
+			return;
+		if(getImagePlusCache().get(filePath) == null)
+			return;
+		getImagePlusCache().put(filePath, image);
+		if(filePath.equals(getCurrentImageFilePath()))
+			firePropertyChange(Properties.CURRENT_PROJECTION.name(), false, true);
+	}
+
+	public void updateImage(String filePath,ImageDouble image){
+		updateImage(filePath,image,null);
+	}
+	
+	public void updateImage(String filePath,ImageDouble image, ImagePlus ip){
+		if( (filePath == null) || (image == null))
+			return;
+		if(getImageDoubleCache().get(filePath) != null)
+			getImageDoubleCache().put(filePath, image);
+		
+		if (getImagePlusCache().get(filePath) != null){
+			if(ip == null)
+				ip= Converter.convertToImagePlus(image);
+			updateImage(filePath,ip);
+		}
+	}
+	
+	private UserActionIO getCurrentIO(){
 		return getWorkflow().getCurrentUserActionIO();
 	}
 
@@ -136,7 +193,7 @@ public class StackModel extends AbstractModel{
 	 */
 	public int getNumberOfProjections(){
 		// get the number from the metadata
-		return getCurrentIO().getMetadata().size();
+		return getCurrentIO().getNumberOfProjections();
 	}
 	
 	private void setNumberOfProjections(int n){

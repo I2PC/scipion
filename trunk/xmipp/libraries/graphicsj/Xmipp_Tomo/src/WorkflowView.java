@@ -62,6 +62,7 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 	private static Dimension BUTTONS_PANEL_PREF_SIZE = new Dimension(PREFERED_WIDTH,150),
 		TREE_PANEL_PREF_SIZE= new Dimension(PREFERED_WIDTH,350);
 	private static String DETAILS_LABEL="Details", COMMENTS_LABEL="Comments";
+	public static String ACTION_SELECTED="ActionSelected";
 
 	// the controller must have access to the model. By default, this class acts as
 	// a controller
@@ -197,6 +198,7 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 			setDetails(ua.getCommandDetails());
 			setCommentsDocument(ua.getCommentsDocument());
 			model.setSelectedUserAction(ua);
+			firePropertyChange(ACTION_SELECTED, false, true);
 		}
 	}
 	
