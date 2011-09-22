@@ -105,6 +105,9 @@ public:
     /** Empty constructor */
     CL2DClass();
 
+    /** Copy constructor */
+    CL2DClass(const CL2DClass &other);
+
     /** Destructor */
     ~CL2DClass();
 

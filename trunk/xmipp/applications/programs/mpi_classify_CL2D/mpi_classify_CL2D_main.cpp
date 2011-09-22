@@ -71,6 +71,22 @@ CL2DClass::CL2DClass()
     Pupdate=P;
 }
 
+CL2DClass::CL2DClass(const CL2DClass &other)
+{
+    plans=NULL;
+
+    CL2DAssignment assignment;
+    assignment.corr=1;
+    Pupdate=other.P;
+    nextListImg.push_back(assignment);
+    transferUpdate();
+
+    currentListImg=other.currentListImg;
+    histClass=other.histClass;
+    histNonClass=other.histNonClass;
+    neighboursIdx=other.neighboursIdx;
+}
+
 CL2DClass::~CL2DClass()
 {
     delete plans;
@@ -358,7 +374,7 @@ void CL2DClass::lookForNeighbours(const std::vector<CL2DClass *> listP, int K)
             {
                 I=listP[q]->P;
                 fit(I,assignment);
-              	A1D_ELEM(distanceCode,q)=assignment.corr;
+                A1D_ELEM(distanceCode,q)=assignment.corr;
             }
         }
 
@@ -921,7 +937,7 @@ void CL2D::run(const FileName &fnOut, int level)
                     }
                 }
                 if (largestNode==-1 || smallNode==-1)
-                	break;
+                    break;
                 if (sizeSmallestNode<prm->PminSize*Nimgs/Q*0.01 )
                 {
                     if (prm->node->rank==0 && prm->verbose)
@@ -936,15 +952,10 @@ void CL2D::run(const FileName &fnOut, int level)
                     delete P[smallNode];
 
                     // Clear the old assignment of the images in the large node
-                    std::vector<size_t> toReassign;
                     std::vector<CL2DAssignment> &currentListImgLargest=P[largestNode]->currentListImg;
                     iimax=currentListImgLargest.size();
-                    toReassign.resize(iimax);
                     for (size_t ii=0; ii<iimax; ii++)
-                    {
                         SF->setValue(MDL_REF,-1,currentListImgLargest[ii].objId);
-                        toReassign[ii]=currentListImgLargest[ii].objId;
-                    }
 
                     // Now split the largest node
                     CL2DClass *node1=new CL2DClass();
@@ -1003,16 +1014,19 @@ void CL2D::splitNode(CL2DClass *node,
                      std::vector<size_t> &splitAssignment) const
 {
     std::vector<CL2DClass *> toDelete;
-    Matrix1D<int> newAssignment, oldAssignment;
+    Matrix1D<int> newAssignment, oldAssignment, firstSplitAssignment;
     Image<double> I;
     MultidimArray<double> Iaux1, Iaux2, corrList;
     Histogram1D hist;
     CL2DAssignment assignment, assignment1, assignment2;
-    int Ninitial=node->currentListImg.size();
+    CL2DClass *firstSplitNode1=NULL;
+    CL2DClass *firstSplitNode2=NULL;
+    int minAllowedSize=prm->PminSize*0.01*node->currentListImg.size();
 
     bool oldclassicalMultiref=prm->classicalMultiref;
     prm->classicalMultiref=false;
     bool finish;
+    bool success=true;
     do
     {
         finish=true;
@@ -1020,6 +1034,13 @@ void CL2D::splitNode(CL2DClass *node,
         node2->P=node1->P=node->P;
 
         int imax=node->currentListImg.size();
+        if (imax<minAllowedSize)
+        {
+            toDelete.push_back(node1);
+            toDelete.push_back(node2);
+            success=false;
+            break;
+        }
 
         // Compute the corr histogram
         if( prm->node->rank == 0 && prm->verbose>=2)
@@ -1073,6 +1094,14 @@ void CL2D::splitNode(CL2DClass *node,
         if (prm->node->rank==0 && prm->verbose>=2)
             progress_bar(imax);
         shareSplitAssignments(newAssignment,node1,node2);
+
+        // Backup the first split in case it fails
+        if (firstSplitNode1==NULL)
+        {
+            firstSplitAssignment=newAssignment;
+            firstSplitNode1=new CL2DClass(*node1);
+            firstSplitNode2=new CL2DClass(*node2);
+        }
 
         // Split iterations
         for (int it=0; it<prm->Niter; it++)
@@ -1165,16 +1194,28 @@ void CL2D::splitNode(CL2DClass *node,
     for (int i=0; i<toDelete.size(); i++)
         if (toDelete[i]!=node)
             delete toDelete[i];
-
-    for (int i=0; i<node1->currentListImg.size(); i++)
+    if (success)
     {
-        splitAssignment.push_back( node1->currentListImg[i].objId );
-        splitAssignment.push_back( 1);
+        for (int i=0; i<node1->currentListImg.size(); i++)
+        {
+            splitAssignment.push_back( node1->currentListImg[i].objId );
+            splitAssignment.push_back( 1);
+        }
+        for (int i=0; i<node2->currentListImg.size(); i++)
+        {
+            splitAssignment.push_back( node2->currentListImg[i].objId );
+            splitAssignment.push_back( 2);
+        }
+        delete firstSplitNode1;
+        delete firstSplitNode2;
     }
-    for (int i=0; i<node2->currentListImg.size(); i++)
+    else
     {
-        splitAssignment.push_back( node2->currentListImg[i].objId );
-        splitAssignment.push_back( 2);
+        node1=firstSplitNode1;
+        node2=firstSplitNode2;
+        splitAssignment.reserve(VEC_XSIZE(firstSplitAssignment));
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(firstSplitAssignment)
+        splitAssignment.push_back(VEC_ELEM(firstSplitAssignment,i));
     }
     prm->classicalMultiref=oldclassicalMultiref;
 }
