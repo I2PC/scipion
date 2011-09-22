@@ -597,7 +597,7 @@ if int(env['java']):
     if int(env['arpack']):
         JavaDependLibraries+=['arpack++','arpack','lapack','blas']
     javaJni = AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,
-    ['#libraries', '#external', '#']+env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
+    ['#libraries', '#external', '#']+[env['JNI_CPPPATH']], ['lib'],JavaDependLibraries)
 
     env.Append(JAVACLASSPATH='external/imagej/ij.jar:external/imagej/plugins/*:libraries/bindings/java')
     env['ENV']['LANG'] = 'en_GB.UTF-8'
