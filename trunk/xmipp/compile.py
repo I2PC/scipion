@@ -49,7 +49,7 @@ class OptionsTab(Frame):
         self.normal = font.Font(family='Helvetica', size=10)
         self.bold = font.Font(family='Helvetica', size=10, weight='bold')
         
-    def addOption(self, name, comment, default=''):
+    def addOption(self, name, comment, default='', cond=None):
         r = self.lastRow
         var = StringVar()
         var.set(default)
@@ -64,15 +64,18 @@ class OptionsTab(Frame):
             w.grid(column=2, row=r, padx=5, pady=5, sticky=W)
         else:
             w = ttk.Entry(self, width=20, textvariable=var)
+            if cond:
+                if self.optionsDict[cond].get() == "no":
+                    w['state'] = 'disabled'
             w.grid(column=2, row=r, sticky=(W, E), padx=5, pady=5)
-        self.options.append((name, default, var, w))
+        self.options.append((name, default, var, w, cond))
         self.optionsDict[name] = var
         self.lastRow += 1
         
     def setValue(self, name, value):
         self.optionsDict[name].set(value)
         
-    def getValue(self, name, value):
+    def getValue(self, name):
         return self.optionsDict[name].get()
         
     def checked(self, name, var):
@@ -80,10 +83,9 @@ class OptionsTab(Frame):
         if value == 'yes':
             state = 'normal'
         else:
-            state = 'disabled'
-        name = name.lower()
-        for n, d, v, w in self.options:
-            if v != var and n.lower().startswith(name):
+            state = 'disabled'        
+        for n, d, v, w, cond in self.options:
+            if name == cond:
                 w['state'] = state
                 
     def addSeparator(self):
@@ -94,7 +96,7 @@ class OptionsTab(Frame):
         
     def getConfigOptions(self):
         optStr = ""
-        for n, d, v, w in self.options:
+        for n, d, v, w, cond in self.options:
             if v.get() != d:
                 optStr += ' %s="%s"' % (n, v.get())
         return optStr
@@ -115,6 +117,15 @@ class ConfigNotebook(ttk.Notebook):
         return ' '.join([t.getConfigOptions() for t in self.tabs])
 
 
+def find(file, pathlist):
+  import os
+  from os.path import join, getsize
+  for path in pathlist:
+      for root, dirs, files in os.walk(path):
+        if file in files:
+          return root
+  return None
+  
 def detectJava():
     from subprocess import Popen, PIPE
     cmd = "readlink -f `which javac`"
@@ -129,7 +140,12 @@ def detectJava():
         return java_home
     
 def detectMpi():
-    pass
+    inc_dirs = ['/usr/include', 'usr/local/include']
+    lib_dirs = ['/usr/lib64', 'usr/lib']
+    inc_mpi = find('mpi.h', inc_dirs + lib_dirs)
+    lib_mpi = find('libmpi.so', lib_dirs)
+    
+    return (inc_mpi, lib_mpi)
 
 def detectQt():
     pass
@@ -150,24 +166,29 @@ tab.addOption('CXXFLAGS', 'The C++ compiler flags', '')
 
 tab = nb.addTab("  MPI  ")
 tab.addOption('mpi', 'Build the MPI programs?', 'no')
-tab.addOption('MPI_CC', 'MPI C compiler', 'mpicc')
-tab.addOption('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
-tab.addOption('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
-tab.addOption('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
-tab.addOption('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
-tab.addOption('MPI_LIB', 'MPI library', 'mpi')
+tab.addOption('MPI_CC', 'MPI C compiler', 'mpicc', cond='mpi')
+tab.addOption('MPI_CXX', 'MPI C++ compiler', 'mpiCC', cond='mpi')
+tab.addOption('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC', cond='mpi')
+tab.addOption('MPI_INCLUDE', 'MPI headers dir ', '/usr/include', cond='mpi')
+tab.addOption('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib', cond='mpi')
+tab.addOption('MPI_LIB', 'MPI library', 'mpi', cond='mpi')
+inc_mpi, lib_mpi = detectMpi()
+if inc_mpi:
+    tab.setValue('MPI_INCLUDE', inc_mpi)
+if lib_mpi:
+    tab.setValue('MPI_LIBDIR', lib_mpi)
 
 tab = nb.addTab("Java & QT")
 tab.addOption('java', 'Build the java programs?', 'no')
-tab.addOption('JAVAC', 'Java compiler', 'javac')
-tab.addOption('JAVA_HOME', 'Java installation directory', '')
+tab.addOption('JAVAC', 'Java compiler', 'javac', cond='java')
+tab.addOption('JAVA_HOME', 'Java installation directory', '', cond='java')
 java_home = detectJava()
 tab.setValue('JAVA_HOME', java_home)
 tab.addSeparator()
 tab.addOption('qt', 'Build the GUI (qt) programs?', 'yes')
-tab.addOption('QTDIR', 'Where is QT installed', '/usr/share/qt3')
-tab.addOption('QT_LIB', 'QT library to use', 'qt-mt')
-tab.addOption('QT4', 'Use Qt4 instead of Qt3?', 'no')
+tab.addOption('QTDIR', 'Where is QT installed', '/usr/share/qt3', cond='qt')
+tab.addOption('QT_LIB', 'QT library to use', 'qt-mt', cond='qt')
+tab.addOption('QT4', 'Use Qt4 instead of Qt3?', 'no', cond='qt')
 tabJava = tab
 
 tab = nb.addTab("Advanced")
@@ -183,7 +204,7 @@ tab = nb.addTab("Configure")
 output = 'build/scons_output.log'
 if os.path.exists(output):
     os.remove(output)
-text = FilePollTextArea(tab, output, 20, 80)
+text = FilePollTextArea(tab, output, 20, 80, colorOn=False)
 text.goEnd()
 text.grid(column=0, row=0, sticky=(N, S, E, W), padx=10, pady=10)
 
@@ -197,42 +218,69 @@ label['image'] = img
 label.grid(column=0, row=0)
 leftFrame.grid(column=0, row=0, sticky=(N, S), padx=5, pady=5, rowspan=2)
 nb.grid(column=1, row=0, sticky=(N,W,E,S), padx=5, pady=5)
-btn = ttk.Button(root, text='Compile')
-btn.grid(column=1, row=1, padx=5, pady=5, sticky=E)
+
+panel = ttk.Frame(root)
+panel.grid(column=1, row=1, padx=5, pady=5, sticky=[W,E])
+progressVar = IntVar()
+progressVar.set(0)
+progress = ttk.Progressbar(panel, orient=HORIZONTAL, length=300, mode='determinate', variable=progressVar, maximum="500")
+progress.pack(side=LEFT, padx=(0, 30))
+from protlib_gui_ext import MyButton, registerCommonFonts
+registerCommonFonts()
+btn = MyButton(panel, text='Compile')
+btn.pack(side=RIGHT,padx=(15, 0))
+procVar = IntVar()
+procVar.set(2)
+procEntry = ttk.Entry(panel, width="5", textvariable=procVar)
+procEntry.pack(side=RIGHT,padx=5)
+Label(panel, text="Processors").pack(side=RIGHT,padx=5)
+
 proc = None
 
+def setState(compiling):
+    if compiling:
+        btn.config(command=stopCompile, text="Stop")
+    else:
+        btn.config(command=runCompile, text="Compile") 
+        
 def checkProcess():
+    print proc.pid
     if proc.poll() is not None:
         text.stopRefresh()
         text.fillTextArea(goEnd=True)
-        btn.config(command=runCompile, text="Compile")
+        setState(compiling=False)
+        progressVar.set(0)
     else:
         root.after(3000, checkProcess)
+        lines = 0
+        for line in open(output):
+            lines += 1
+        progressVar.set(lines)
     
 def runCompile(event=None):
     out = output
+    procs = procVar.get()
     opts = nb.getConfigOptions()
-    from protlib_utils import cyanStr, greenStr
-    msg1 = cyanStr("RUNNING SCONS.CONFIGURE...")     
-    cmd = 'echo -e "%(msg1)s" > %(out)s \n'
+    cmd = 'echo "*** RUNNING SCONS.CONFIGURE..." > %(out)s \n'
     cmd1 = "./scons.configure %(opts)s >> %(out)s 2>&1 \n" % locals()
+    cmd += 'echo "%(cmd1)s" >> %(out)s \n'
     cmd += cmd1
-    msg2 = cyanStr("RUNNING SCONS.COMPILE...")
-    cmd += 'echo "%(msg2)s" >> %(out)s \n'
-    cmd2 = "./scons.compile >> %(out)s 2>&1 " % locals()
+    cmd += 'echo "*** RUNNING SCONS.COMPILE..." >> %(out)s \n'
+    cmd2 = "./scons.compile -j %(procs)d >> %(out)s 2>&1 "% locals()
+    cmd += 'echo "%(cmd2)s" >> %(out)s \n'
     cmd += cmd2
     #os.system(cmd % locals())
     global proc
-    os.environ['JAVA_HOME'] = javaTab.getValue('JAVA_HOME')
+    os.environ['JAVA_HOME'] = tabJava.getValue('JAVA_HOME')
     proc = Popen(cmd % locals(), shell=True)    
     text.fillTextArea()
     text.doRefresh(3)
     checkProcess()    
-    btn.config(command=stopCompile, text="Stop")
+    setState(compiling=True)
     
 def stopCompile(event=None):
     proc.terminate()
-    btn.config(command=runCompile, text="Compile")
+    setState(compiling=False)
     
 btn.config(command=runCompile)
 centerWindows(root)

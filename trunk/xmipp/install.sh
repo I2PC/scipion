@@ -10,7 +10,7 @@ DO_FFTW=true
 DO_TIFF=true
 DO_ARPACK=false
 
-DO_CLEAN=false
+DO_CLEAN=true
 DO_STATIC=false
 
 CPU=$@
@@ -188,8 +188,8 @@ if $DO_PYTHON; then
 	DO_STATIC=true
     #export CPPFLAGS="-static -I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
     #export LDFLAGS="-static -static-libgcc -L$XMIPP_HOME/lib"
-    export CPPFLAGS="-static -I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
-    export LDFLAGS="-static -static-libgcc -L$XMIPP_HOME/lib"
+    export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
+    export LDFLAGS="-L$XMIPP_HOME/lib"
     compile_library $VPYTHON python "." ""
     install_bin python/$VPYTHON/python xmipp_python
     DO_STATIC=$STATIC_BACKUP
@@ -216,6 +216,9 @@ if $DO_ARPACK; then
   compile_library $VARPACK "." "." ""
   install_libs $VARPACK/src/.libs libarpack++. a la so so.2
 fi
+
+# Launch the configure/compile python script 
+./compile.py
 
 exit 0
 

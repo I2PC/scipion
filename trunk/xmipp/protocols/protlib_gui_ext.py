@@ -561,14 +561,16 @@ def showWarning(title, msg, parent):
 def showError(title, msg, parent):
     ShowDialog(parent, title, msg, 'error')
     
-from protlib_utils import colorMap, findColor
+
 import os
 
 '''Implement a Text that will show file content'''
 class FilePollTextArea(tk.Frame):
-    def __init__(self, master, filename, height=30, width=100):
+    def __init__(self, master, filename, height=30, width=100, colorOn=True):
         tk.Frame.__init__(self, master)
         self.filename = filename
+        #Allow not to use color, avoiding dependency with xmipp lib
+        self.colorOn = colorOn
         self.createWidgets(height, width)
         self.fillTextArea()
         self.refreshAlarm = None
@@ -577,7 +579,6 @@ class FilePollTextArea(tk.Frame):
         #define a new frame and put a text area in it
         textfr = tk.Frame(self)
         self.text = tk.Text(textfr, height=h, width=w, background='black', fg="white")
-        
         # put a scroll bar in the frame
         yscroll = tk.Scrollbar(textfr)
         self.text.configure(yscrollcommand=yscroll.set)
@@ -586,8 +587,10 @@ class FilePollTextArea(tk.Frame):
         self.text.pack(side=tk.LEFT)
         yscroll.pack(side=tk.RIGHT,fill=tk.Y)
         textfr.pack(side=tk.TOP)
-        for color in colorMap.keys():
-            self.text.tag_config("tag_" + color, foreground=color)
+        if self.colorOn:
+            from protlib_utils import colorMap
+            for color in colorMap.keys():
+                self.text.tag_config("tag_" + color, foreground=color)
 
     def fillTextArea(self, goEnd=False):
         self.text.config(state=tk.NORMAL)
@@ -596,16 +599,21 @@ class FilePollTextArea(tk.Frame):
             textfile = open(self.filename)
             lineNo = 1
             for line in textfile:
-                ctuple = findColor(line)
-                self.text.insert(tk.END, "%05d:   "%lineNo,"tag_cyan")  
-                if ctuple is None:
-                    self.text.insert(tk.END, line[line.rfind("\r")+1:])  
+                if self.colorOn:
+                    from protlib_utils import findColor
+                    ctuple = findColor(line)
+                    self.text.insert(tk.END, "%05d:   " % lineNo,"tag_cyan")  
+                    if ctuple is None:
+                        self.text.insert(tk.END, line[line.rfind("\r")+1:])  
+                    else:
+                        color,idxInitColor,idxFinishColor,cleanText=ctuple
+                        if idxInitColor>0:
+                            self.text.insert(tk.END, cleanText[:(idxInitColor-1)]+" ")
+                        self.text.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + color)
+                        self.text.insert(tk.END, cleanText[idxFinishColor:])
                 else:
-                    color,idxInitColor,idxFinishColor,cleanText=ctuple
-                    if idxInitColor>0:
-                        self.text.insert(tk.END, cleanText[:(idxInitColor-1)]+" ")
-                    self.text.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + color)
-                    self.text.insert(tk.END, cleanText[idxFinishColor:])
+                    self.text.insert(tk.END, "%05d:   " % lineNo)
+                    self.text.insert(tk.END, line)   
                 lineNo += 1
             textfile.close()
         else:
