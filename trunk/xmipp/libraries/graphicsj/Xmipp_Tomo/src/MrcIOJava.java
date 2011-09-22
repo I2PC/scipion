@@ -32,7 +32,6 @@ import java.awt.image.ColorModel;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,7 +49,12 @@ import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
 
-
+/**
+ * @deprecated
+ * TODO: remove when not needed anymore
+ * @author jcuenca
+ *
+ */
 public class MrcIOJava {
 	public static int MRC_HEADER_SIZE = 1024;
 	

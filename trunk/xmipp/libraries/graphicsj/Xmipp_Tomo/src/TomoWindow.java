@@ -60,7 +60,7 @@ import javax.swing.tree.TreeSelectionModel;
  * - Why?
  * MVC paradigm -> you need a View. Hence TomoWindow
  * 
- * TODO: refactor Swing code to a superclass
+ * TODO: -low- refactor Swing code to a superclass
  * 
  * implements: 
  * - WindowListener: windowclosing and the like
@@ -87,8 +87,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	// TODO: font antialiasing - @see ZZZZ
 	// TODO: zoom, scroll... (quite buggy right now...)
 	// TODO: remove load canceling (in the new approach with a cache, slices will be loaded one by one)
-	// TODO: preprocessing - non-blocking previews
-	// TODO: Undo - begin with preproc Undo
+	// TODO: preprocessing - non-blocking previews, i.e., allow the user to change the current slice with the preproc dialog open
 	// TODO: preproc.export or option in save dialog - write a file without the disabled (discarded) projections, not simply setting enable in selfile
 
 	// for serialization only - just in case
@@ -178,7 +177,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(XmippTomoCommands.HISTOGRAM_EQUALIZATION);
 			add(XmippTomoCommands.CROP);
 			//add(Command.HOTSPOT_REMOVAL);
-			// add(XmippTomoCommands.APPLY);
 			// TODO: convert needs to be adapted to the new image-by-image I/O model
 			// add(XmippTomoCommands.CONVERT);
 			add(XmippTomoCommands.PRINT_WORKFLOW);
@@ -205,6 +203,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	private boolean closed = true;
 	private Command.State lastCommandState=Command.State.IDLE;
+	// TODO: not needed - remove changeSaved
 	// true if changes are saved (so you can close the window without pain)
 	private boolean changeSaved = true;
 	
@@ -220,6 +219,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	private WorkflowView projectView; // alternative tree-like views: Prefuse
 	
 	// hack for reusing ImageJ ImageWindow
+	// TODO: verify if the hack is still needed
 	private JFrame realWindow;
 
 	// Text fields and labels
@@ -232,11 +232,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 
 	Point cursorLocation = new Point();
-
-	// action history hints - so we can navigate the workflow
-	// with the new Workflow approach, we'll only need a reference to the current action
-	// TODO: adapt to new approach (class Workflow)
-	private DefaultMutableTreeNode firstAction, lastAction;
 
 	// for window resizing
 	Timer timer;
@@ -376,6 +371,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		controlPanel = new JPanel();
 		getContentPane().add(controlPanel);
 
+		// TODO: update to Stackmodel approach
 		if (getModel() != null) {
 			addView();
 			addControls();
@@ -532,10 +528,11 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		getStatusLabel().setText(text);
 	}
 
+	// TODO: update to Stackmodel approach
 	private void updateStatusText() {
 		// current/total projections are shown in the projection scrollbar
 		// itself
-		//TODO: getCursorValueAsString()
+		//TODO:  include getCursorValueAsString() once updated
 		if (getModel() != null)
 			setStatus("x = " + getCursorX() + ", y = " + getCursorY()
 					+ ", value = "); // + getCursorValueAsString());
@@ -563,6 +560,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		}
 	}
 
+	// TODO: update to Stackmodel approach
 	public void setImagePlusWindow() {
 		imp = getModel().getImage();
 		imp.setWindow(this);
@@ -585,8 +583,11 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	} // actionPerformed end
 
 	/* -------------------------- Action management -------------------- */
-
-	public void addUserAction(UserAction action) {
+/**
+ * @deprecated
+ */
+ 	public void addUserAction(UserAction action) {
+ 
 		projectView.newOperation(action);
 	}
 
@@ -656,7 +657,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * aspect ratio
 	 */
 	public void resizeView() {
-		// TODO: resizeView - window resizing - call pack() with Timers?
+		// TODO: resizeView does not work... - for window resizing, call pack() with Timers?
 		if ((imagePanel == null) || (getCanvas() == null))
 			return;
 
@@ -701,6 +702,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		 * canvas.setDrawingSize((int)w, (int)h); realWindow.pack();
 		 * canvas.repaint();
 		 */
+		// TODO: update to Stackmodel approach
 		WindowManager.setTempCurrentImage(getModel().getImage());
 		// Xmipp_Tomo.debug("Set... " + "zoom="+ ((int) (factor * 100)));
 		IJ.run("Set... ", "zoom=" + ((int) (factor * 100)));
@@ -786,6 +788,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	}
 
+	// TODO: remove mouse handling events if not needed
 	public void mouseExited(MouseEvent e) {
 	}
 
@@ -829,6 +832,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		}else if(TomoData.Properties.CURRENT_TILT_ANGLE.name().equals(event.getPropertyName())){
 			updateCurrentTiltAngleText();
 		}else if(TomoData.Properties.CURRENT_PROJECTION_ENABLED.name().equals(event.getPropertyName())){
+			// TODO: update to Stackmodel approach
 			if(getModel().isCurrentEnabled())
 				changeLabel(XmippTomoCommands.DISCARD_PROJECTION.getId(), XmippTomoCommands.DISCARD_PROJECTION.getLabel());
 			else
@@ -837,6 +841,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		}
 	}
 
+	// TODO: update to Stackmodel approach
 	private void updateCurrentTiltAngleText(){
 		String text="";
 		Double tilt=getModel().getCurrentTiltAngle();
@@ -916,6 +921,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return cursorLocation.y;
 	}
 
+	// TODO: update to Stackmodel approach
 	private double getCursorValue() {
 		return getModel().getPixelValue(getCursorX(), getCursorY());
 	}
@@ -923,6 +929,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	/*
 	 * It requires that the model has been set (with setModel() )
 	 */
+	// TODO: update to StackModel approach
 	public String getCursorValueAsString() {
 		if (getModel() == null)
 			return "";
@@ -936,6 +943,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	
 	// TODO: now that the models changed, adapt getTitle so it shows indeed the filename and the size 
 	// (instead of "ImageDouble"
+	// TODO: update to Stackmodel approach
 	public String getTitle() {
 		String title = TITLE;
 		if (getModel() != null)
@@ -996,24 +1004,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	}
 
-	public DefaultMutableTreeNode getFirstAction() {
-		return firstAction;
-	}
-
-	public void setFirstAction(DefaultMutableTreeNode firstAction) {
-		this.firstAction = firstAction;
-	}
-
-	public DefaultMutableTreeNode getLastAction() {
-		if (lastAction == null)
-			lastAction = firstAction;
-		return lastAction;
-	}
-
-	public void setLastAction(DefaultMutableTreeNode lastAction) {
-		this.lastAction = lastAction;
-	}
-
 	public int getWindowId() {
 		return windowId;
 	}
@@ -1024,6 +1014,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		this.windowId = windowId;
 	}
 
+	// TODO: move to background method as a local variable
 	public Plugin getPlugin() {
 		return plugin;
 	}
@@ -1111,6 +1102,10 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		getImagePlus().setWindow(this);
 	}
 	
+	/**
+	 * @deprecated
+	 * @return
+	 */
 	public boolean isLoadCanceled(){
 		return(getLastCommandState() == Command.State.CANCELED);
 	}

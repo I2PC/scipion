@@ -118,7 +118,7 @@ public class Workflow extends DefaultTreeModel{
 	 * @return the base directory for all of this workflow steps subdirectories
 	 */
 	public String getWorkingDir(){
-		// TODO: it should be the directory from which the user started us
+		// TODO: it should return the directory from which the user started us
 		return "./test";
 	}
 	

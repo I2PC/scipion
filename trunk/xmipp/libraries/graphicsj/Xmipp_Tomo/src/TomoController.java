@@ -60,6 +60,12 @@ import xmipp.MetaData;
  // Stack: ask only for stack file path (same overwrite warning), then save both stack and tlt [OK]
  */
 
+// TODO: in write actions, handle writeSel
+// TODO: in write actions, if the file exists delete it first (to avoid
+// overwrite problems)
+// TODO: progress bar while applying filters - or at least update status bar
+// TODO: update file name (model) in window title (once saved)
+
 /**
  * - Why? I opted for Model-View-Controller as the overall UI paradigm, hence
  * the Controller: here we handle the interactive application workflow
@@ -295,10 +301,6 @@ public class TomoController implements AdjustmentListener {
 	}
 
 	/**
-	 * TODO: new approach: load only single projections on demand and store them
-	 * in a cache (with prefetch) - see Xmipp_Tomo.java
-	 */
-	/**
 	 *  @deprecated
 	 */
 	public void loadEMBackground() {
@@ -360,7 +362,12 @@ public class TomoController implements AdjustmentListener {
 		}
 	}
 
-	// TODO: shouldResize - maybe there's a better place for this method?
+	/**
+	 * @deprecated
+	 * @param width
+	 * @param height
+	 * @return
+	 */
 	public static boolean shouldResize(int width, int height) {
 
 		return (width > resizeThreshold.width)
@@ -381,30 +388,35 @@ public class TomoController implements AdjustmentListener {
 		}
 	}
 
+	/**
+	 * TODO: implement manual alignment
+	 */
 	public void alignManual() {
 
 	}
 
+	/**
+	 * TODO: implement automatic alignment reusing native Xmipp code
+	 */
 	public void alignAuto() {
 
 	}
 
+	/**
+	 * TODO: implement quick alignment
+	 */
 	public void alignCorrelation() {
 
 	}
 
 	/**
-	 * Apply this window's workflow TODO: apply the selected "workflow path" in
+	 * Apply this window's workflow 
 	 * the workflow view
 	 */
 	/**
 	 * @deprecated
 	 */
-	// TODO: in write actions, handle writeSel
-	// TODO: in write actions, if the file exists delete it first (to avoid
-	// overwrite problems)
-	// TODO: progress bar while applying filters - or at least update status bar
-	// TODO: update file name (model) in window title (once saved)
+
 	// TODO: enhance contrast seems to not be applied...
 	public void apply() {
 
@@ -489,26 +501,6 @@ public class TomoController implements AdjustmentListener {
 		window.setStatus("Done");
 	}
 
-	private TomoData reOpenIfResized(TomoData originalModel) {
-		TomoData modelToSave = originalModel;
-		if (originalModel.isResized()) {
-			modelToLoad = new TomoData(getModel().getFilePath());
-			modelToSave = modelToLoad;
-			// modelToLoad.addPropertyChangeListener(window);
-			try {
-				window.setLastCommandState(Command.State.RELOADING);
-				new BackgroundMethod(this, getClass().getMethod("readImage"),
-						null).execute();
-				modelToLoad.waitForLastImage();
-			} catch (Exception ex) {
-				Logger.debug("actionApply - unexpected exception", ex);
-			}
-
-			window.setLastCommandState(Command.State.LOADED);
-		}
-		return modelToSave;
-	}
-
 	public void gaussian() {
 		Plugin plugin = new GaussianPlugin();
 		window.setPlugin(plugin);
@@ -551,7 +543,8 @@ public class TomoController implements AdjustmentListener {
 		runIjCmd(XmippTomoCommands.BANDPASS, plugin);
 	}
 
-	// TODO: image viewer pops out
+	// TODO: image viewer pops out (verify)
+	// TODO: adapt to new approach (stackmodel replaces tomodata)
 	public void histogramEqualization() {
 		// convert to 8 bit
 		getModel().convertTo(8);
@@ -575,12 +568,12 @@ public class TomoController implements AdjustmentListener {
 		window.refreshImageCanvas();
 	}
 
-	// TODO: hotspotRemoval
+	// TODO: implemnent hotspotRemoval
 	public void hotspotRemoval() {
 
 	}
 
-	// TODO: adjustbc
+	// TODO: implement adjust brightness contrast
 	public void adjustbc() {
 
 	}
@@ -661,7 +654,6 @@ public class TomoController implements AdjustmentListener {
 		window.setPlugin(null);
 	}
 
-	// TODO:-current- applyIJplugin & runIjcmd
 	private void applyIJPlugin(String command, UserAction currentAction,UserAction newAction) {
 		String outputFile = newAction.getIoDetails().getInputFilePath();
 		Plugin plugin = newAction.getPlugin();
@@ -679,7 +671,8 @@ public class TomoController implements AdjustmentListener {
 					plugin.run(ip);
 					
 					image = Converter.convertToImageDouble(ip);
-					
+
+					// TODO : get the @ path with the help of the Filename xmipp
 					String outputFullPath = String.valueOf(projectionId) + "@"+ outputFile;
 					Logger.debug(outputFullPath);
 					image.write(outputFullPath);
@@ -692,6 +685,7 @@ public class TomoController implements AdjustmentListener {
 		}
 	}
 
+	// TODO: update to new approach (stackmodel replaces tomodata)
 	public void convert() {
 		String destinationPath = TomoFileDialog
 				.saveDialog("Convert...", window);
@@ -763,6 +757,7 @@ public class TomoController implements AdjustmentListener {
 
 	}
 
+	// TODO: update to new approach (stackmodel replaces tomodata)
 	public void setTilt() {
 		GenericDialog gd = new GenericDialog("Tilt angles");
 		gd
@@ -787,6 +782,7 @@ public class TomoController implements AdjustmentListener {
 	 * must be on $PATH)
 	 */
 	// TODO: progress bar while running xmipp_xray_import
+	// TODO: update to new approach (stackmodel replaces tomodata)
 	public void loadXray() {
 		XrayImportDialog d = new XrayImportDialog("X-Ray import", window);
 		// d.setup();
@@ -813,10 +809,12 @@ public class TomoController implements AdjustmentListener {
 
 	}
 
+	// TODO: update to new approach (stackmodel replaces tomodata)
 	public void normalize() {
 		getModel().normalize();
 	}
 
+	// TODO: update to new approach (stackmodel replaces tomodata)
 	public void discardProjection() {
 		if (getModel().isCurrentEnabled()) {
 			getModel().discardCurrentProjection();
@@ -835,6 +833,7 @@ public class TomoController implements AdjustmentListener {
 		}
 	}
 
+	// TODO: update to new approach (stackmodel replaces tomodata)
 	public void currentProjectionInfo() {
 		Logger.debug(getModel().getCurrentProjectionInfo());
 	}
@@ -855,10 +854,18 @@ public class TomoController implements AdjustmentListener {
 		notify();
 	}
 
+	/**
+	 * @deprecated
+	 * @return
+	 */
 	public TomoData getModel() {
 		return model;
 	}
 
+	/** 
+	 * @deprecated
+	 * @param model
+	 */
 	public void setModel(TomoData model) {
 		this.model = model;
 		/*
@@ -891,6 +898,12 @@ public class TomoController implements AdjustmentListener {
 		this.projectionsPlaying = playing;
 	}
 
+	/**
+	 * @deprecated
+	 * @param tomoWindow
+	 * @param model
+	 * @param path
+	 */
 	public void saveFile(TomoWindow tomoWindow, TomoData model, String path) {
 		tomoWindow.setStatus("Saving...");
 		model.setFile(path);
@@ -899,10 +912,18 @@ public class TomoController implements AdjustmentListener {
 		tomoWindow.setChangeSaved(true);
 	}
 
+	/**
+	 * @deprecated
+	 * @return
+	 */
 	public TomoData getModelToLoad() {
 		return modelToLoad;
 	}
 
+	/**
+	 * @deprecated
+	 * @param modelToLoad
+	 */
 	public void setModelToLoad(TomoData modelToLoad) {
 		this.modelToLoad = modelToLoad;
 	}

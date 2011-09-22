@@ -46,7 +46,7 @@ import java.util.concurrent.Semaphore;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
-// TODO: refactor propertyChangeSupport into AbstractModel?
+// TODO: remove this class when not needed
 public class TomoData{
 	// As a general rule, this class should not interact directly with View components: it should fire a propertyChange
 	// that the View processes (modifying the required component)
@@ -405,7 +405,9 @@ public class TomoData{
 		firstLoaded.release();
 	}
 	
-	// TODO: loadCanceled - no need for load canceling with the cache approach... 
+	/**
+	 * @deprecated
+	 */
 	public void loadCanceled(){
 		firstImageLoaded();
 	}
@@ -461,7 +463,10 @@ public class TomoData{
 		return resized;
 	}
 	
-	// TODO: deprecated - no need for load canceling with the cache approach... isLoadCanceled - manage with thread.cancel
+	/**
+	 * @deprecated
+	 * @return
+	 */
 	public boolean isLoadCanceled(){
 //		return(window.getLastCommandState() == Command.State.CANCELED);
 		return false;
@@ -565,7 +570,7 @@ public class TomoData{
 		return imageMetadata;
 	}
 	
-	// TODO: first tilt is not displayed automatically (requires scrolling). Only happens with selfiles
+	// TODO: verify possible bug: first tilt is not displayed automatically (requires scrolling). Only happens with selfiles
 	/**
 	 * Warning: metadata.read raises an exception when reading .sel files for which you don't have write permission
 	 */

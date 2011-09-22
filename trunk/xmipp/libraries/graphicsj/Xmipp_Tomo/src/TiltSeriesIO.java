@@ -44,10 +44,16 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Enumeration;
-import java.util.Iterator;
+
 
 import xmipp.*;
 
+/**
+ * @deprecated
+ * TODO: remove when not needed anymore...
+ * @author jcuenca
+ *
+ */
 public class TiltSeriesIO {
 	// this class uses JNI mechanisms to call C++ code through the xmipp package
 
@@ -148,8 +154,12 @@ public class TiltSeriesIO {
 		}
 	}
 	
-	// TODO: for memory performance (and because in memory we only keep a scaled version of the original file),
-	// projections should be (re)read/written one by one
+	/**
+	 * @deprecated
+	 * @param absolutePath
+	 * @param model
+	 * @throws Exception
+	 */
 	private static void writeStack(String absolutePath, TomoData model) throws Exception{	
 		ImageDouble img = convert(model.getImage());
 		img.setFilename(absolutePath);
@@ -319,7 +329,7 @@ private static String buildAbsolutePath(String selFilePath, String path){
 	}
 
 	/**
-	 * TODO: writeTiltAngles - test
+	 * TODO: writeTiltAngles - test to ensure the .tlt file is written correctly
 	 */
 	public static void writeTiltAngles(String tltFilePath, TomoData model)
 			throws IllegalArgumentException {

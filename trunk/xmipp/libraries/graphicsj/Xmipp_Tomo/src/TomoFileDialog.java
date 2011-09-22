@@ -37,8 +37,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-
-// TODO: reuse FileDialog code by extending it
+// TODO: -low-means low priority task
+// TODO: -low- reuse FileDialog code by extending it
 public class TomoFileDialog {
 	private JFileChooser fileChooser;
 	private static File lastChosenDirectory;

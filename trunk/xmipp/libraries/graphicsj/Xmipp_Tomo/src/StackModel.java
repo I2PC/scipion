@@ -29,6 +29,9 @@ import ij.ImagePlus;
 import xmipp.ImageDouble;
 import xmipp.MetaData;
 
+
+// TODO: import tilt angles features from Tomodata
+
 /**
  * Why? Model the active stack that will be displayed, isolating the viewer from the
  * gory details (current slice, current stack, cache, etc)
@@ -176,15 +179,7 @@ public class StackModel extends AbstractModel{
 		}
 		int oldProjectionNumber=currentProjectionNumber;
 		this.currentProjectionNumber = newProjectionNumber;
-	// possible dependencies on currentProjectionNumber should be handled by the View, not by this model
-		// Unluckily, ImagePlus mixes data and presentation, so it's better to keep ImagePlus related operations here
-		// TODO: update image displayed?
-		/*
-		try{
-			getImage().setSlice(getCurrentProjectionNumber());
-		} catch (IllegalArgumentException ex){
-			Logger.debug("setCurrentProjection - ", ex);
-		}*/
+
 		firePropertyChange(Properties.CURRENT_PROJECTION_NUMBER.name(), oldProjectionNumber, currentProjectionNumber);
 	}
 	
@@ -204,7 +199,7 @@ public class StackModel extends AbstractModel{
 
 	}
 	
-	// TODO: complete (from Tomodata)
+	// TODO: complete (from Tomodata) to restore the enable/disable feature
 	public boolean isCurrentEnabled(){
 		return true;
 	}

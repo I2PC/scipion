@@ -52,8 +52,9 @@ import javax.swing.text.Document;
 import javax.swing.text.PlainDocument;
 import javax.swing.tree.*;
 
-// TODO: change default icons - actions are not folders nor files
-// TODO: change details text field appeareance so it does not promote changing its contents
+// TODO: change default icons - actions are neither folders nor files
+// TODO: change details text field appeareance so it does not promote changing its contents,or
+// display the parameters with a different look - maybe a table?
 // TODO: simplify user's life: the workflow is autosaved every time a step is introduced or changed, and is autoloaded
 // (or created if there is none yet) from the current dir. The user does not need to worry about loading/saving
 // workflows, and hence does not need import/export neither
@@ -112,8 +113,10 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 		add(formPanel,BorderLayout.SOUTH);
 		Action a = new Action(controller, new Command("workflow.print","Print Workflow","printWorkflow",true,null));
 		// TODO: discard should delete the selected node and its children, with all the corresponding files
-		Action b = new Action(controller, new Command("workflow.discardop","Discard Operation","discardOperation",true,null));      
+		Action b = new Action(controller, new Command("workflow.discardop","Discard Operation","discardOperation",true,null));
+		// TODO: workflow autoload (from ./.project) then remove this button
 		Action c = new Action(controller, new Command("workflow.load","Load Workflow","loadWorkflow",false,null));
+		// TODO: workflow autosave, then remove the save button
 		Action d = new Action(controller, new Command("workflow.save","Save Workflow","saveWorkflow",false,null));
 		formPanel.addButton(a);
 		formPanel.addButton(b);
@@ -125,7 +128,10 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 		formPanel.setPreferredSize(BUTTONS_PANEL_PREF_SIZE);
 	}
 
-	// TODO: warn the user when no node is selected
+/**
+ * @deprecated
+ * @param action
+ */
 	public void newOperation(UserAction action){
 		if(getSelectedNode() != null){
 			DefaultMutableTreeNode n1=model.addUserAction(getSelectedNode(), action);

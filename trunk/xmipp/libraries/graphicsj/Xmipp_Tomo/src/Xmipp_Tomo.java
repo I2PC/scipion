@@ -53,24 +53,7 @@
 // Compact view: display nodes as Type-Sequence # (action). For example:
 // - S0
 // - S1 (crop S0)
-// bigTODO: load ImageDoubles into a cache on demand (cache miss)
-// - TODO: StackView: simply display stackmodel.getCurrentImage() (every time the model
-// notifies the view of a change)
-// - TODO: basic cache: just load every image (double) requested
-// - TODO -CURRENT-: tests to verify the proper path is returned from StackModel (after running loadEM). Current views disabled to simplify
-// - TODO: write each step to disk so there is a file from which to load on every current step
-/**
- * TODO: changes in MVC design
- * - WindowModel: not needed (no relevant window data other than menus)
- * - StackModel: knows how to get the current projection to display,
- * metadata (tilt), # of projections... No need to store data in the model
- * - StackView: display single projection image, tilt, and player controls
- * - WorkflowModel: stores all the user operations
- * - WorkflowOperation: input and output files, command, parameters, status (progress)...
- * - WorkflowView: displays the workflow + buttons (load,save,discard)
- * - ImageDoubleCache: get("003@F2")
- */
-
+// TODO: remove deprecated methods (once they are not needed anymore)
 import ij.*;
 import java.io.*;
 import ij.plugin.PlugIn;
