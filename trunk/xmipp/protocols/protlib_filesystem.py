@@ -118,11 +118,11 @@ def findFilePath(filename, *pathList):
     return None
 
 #--------------------------- Xmipp specific tools ---------------------------------
-def getXmippPath(subfolder=''):
+def getXmippPath(*subpath):
     '''Return the path the the Xmipp installation folder
     if a subfolder is provided, will be concatenated to the path'''
     if os.environ.has_key('XMIPP_HOME'):
-        return join(os.environ['XMIPP_HOME'], subfolder)  
+        return join(os.environ['XMIPP_HOME'], *subpath)  
     else:
         raise Exception('XMIPP_HOME environment variable not set') 
 

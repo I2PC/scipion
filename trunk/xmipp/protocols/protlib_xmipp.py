@@ -149,7 +149,7 @@ def getXmippPrograms():
 #FIXME: this is only while development
 def skipProgram(programName):
     if programName in ['xmipp_sqlite3','xmipp_mpi_steps_runner',
-                       'xmipp_angular_commonline',
+                       'xmipp_angular_commonline', 'xmipp_python'
                     'xmipp_transform_threshold']:
         return True
     for p in ['xmipp_test', 'xmipp_template']:
