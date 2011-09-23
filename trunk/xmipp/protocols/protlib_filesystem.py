@@ -159,3 +159,13 @@ def fixPath(filename, *pathList):
         if exists(filepath):
             return filepath
     return None
+
+def findRealFile(path, recursive=True):
+    '''This function behaves like readlink with -f in shell'''
+    from os import readlink
+    if not recursive:
+        return readlink(path) 
+    from os.path import islink
+    while islink(path):
+        path = readlink(path)
+    return path

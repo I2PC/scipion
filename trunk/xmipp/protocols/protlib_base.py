@@ -32,7 +32,8 @@ import shutil
 import ConfigParser
 from config_protocols import projectDefaults, sections, protDict
 from protlib_sql import SqliteDb, XmippProjectDb, XmippProtocolDb
-from protlib_utils import XmippLog, loadModule, reportError, getScriptPrefix, failStr
+from protlib_utils import XmippLog, loadModule, reportError, getScriptPrefix
+from protlib_xmipp import failStr
 from protlib_filesystem import deleteFiles
 
 class XmippProject():

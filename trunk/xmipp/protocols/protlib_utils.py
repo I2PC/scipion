@@ -51,7 +51,7 @@ class XmippLog:
             self._logfile = open(filename, 'a')
             self.is_basic = True
         # append a line with user, machine and date
-        import socket, pwd, os
+        import socket, pwd
         myusername = pwd.getpwuid( os.getuid() )[ 0 ] # str(os.environ.get('USERNAME'))
         myhost = str(socket.gethostname())
         mypwd = str(os.environ.get('PWD'))
@@ -127,9 +127,9 @@ def getScriptPrefix(script):
 #---------------------------------------------------------------------------
 # Parsing of arguments
 #---------------------------------------------------------------------------
-def getRangeValuesFromString(str):
+def getRangeValuesFromString(rangeStr):
     import re
-    elements=re.compile(r'[, ]').split(str)
+    elements=re.compile(r'[, ]').split(rangeStr)
     values=[]
     for element in elements:
         if element.isdigit():
@@ -186,6 +186,7 @@ def getBoolListFromVector(_vector,numberIteration=None):
 # Error handling
 #---------------------------------------------------------------------------
 def reportError(msg):
+    from protlib_xmipp import failStr
     '''Function to write error message to stderr and raise an Exception'''
     print >> sys.stderr, failStr("ERROR: %s" %  msg)
     raise Exception(msg)
@@ -195,6 +196,7 @@ def showWarnings(warningList, notConfirm=False):
     if not warningList or len(warningList) == 0:
         return True
     for warning in warningList:
+        from protlib_xmipp import warnStr 
         print >> sys.stderr, warnStr("WARNING: %s"% warning)
     if notConfirm:
         return True
@@ -205,16 +207,17 @@ def showWarnings(warningList, notConfirm=False):
         
 def printLog(msg, log=None, out=True, err=False, isError=False):
     '''Just print a msg in the log'''
+    from protlib_xmipp import failStr, findColor
     if not log is None:
-        if isError: log.error(redStr(msg))
+        if isError: log.error(failStr(msg))
         else:       log.info(msg)
         
     if out or err:
         if isError:
-            tuple = findColor(msg)
-            if not tuple is None:
-                msg=tuple[3]
-            msg = redStr("ERROR: "+ msg)
+            color_tuple = findColor(msg)
+            if not color_tuple is None:
+                msg = color_tuple[3]
+            msg = failStr("ERROR: "+ msg)
         msg = getLogMessage(msg)
         if out:
             print msg
@@ -242,9 +245,9 @@ class Process():
     ''' Retrieve the list of child process'''
     def getChilds(self):
         pm = ProcessManager()
-        list = pm.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % self.info)
+        childList = pm.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % self.info)
         childs = []
-        for p in list:
+        for p in childList:
             if p.ppid == self.pid:
                 childs.append(p)
         return childs 
@@ -273,13 +276,13 @@ class ProcessManager():
     
     ''' Return process data from previous built command'''
     def getUniqueProcessFromCmd(self, cmd):
-        list = self.getProcessFromCmd(cmd)
-        if not list:
+        procList = self.getProcessFromCmd(cmd)
+        if not procList:
             return None
-        if len(list) > 1:
-            msg = [str(p) for p in list]
+        if len(procList) > 1:
+            msg = [str(p) for p in procList]
             reportError("More than one process match query, only one expected\n" + "\n".join(msg))
-        return list[0]
+        return procList[0]
     
     ''' Return the process data, using its arguments to match'''
     def getProcessFromScript(self, script):
@@ -307,9 +310,9 @@ class PBSProcess():
     ''' Retrieve the list of child process'''
     def getChilds(self):
         pm = ProcessManager()
-        list = pm.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % self.info)
+        childsList = pm.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % self.info)
         childs = []
-        for p in list:
+        for p in childsList:
             if p.ppid == self.pid:
                 childs.append(p)
         return childs 
@@ -339,11 +342,11 @@ class PBSProcessManager():
     
     ''' Return process data from previous built command'''
     def getUniqueProcessFromCmd(self, cmd):
-        list = self.getProcessFromCmd(cmd)
-        if not list:
+        procList = self.getProcessFromCmd(cmd)
+        if not procList:
             return None
-        if len(list) > 1:
-            msg = [str(p) for p in list]
+        if len(procList) > 1:
+            msg = [str(p) for p in procList]
             reportError("More than one process match query, only one expected\n" + "\n".join(msg))
         return list[0]
     
@@ -430,19 +433,20 @@ def buildRunCommand(
         elif (SystemFlavour == ''):
             mpicommand = 'mpirun -mca mpi_yield_when_idle 1 -np %(jobs)d'
         else:
-            printLog(redStr('Unrecognized SystemFlavour %s' % SystemFlavour),log,err=True,isError=True)
+            from protlib_xmipp import failStr
+            printLog(failStr('Unrecognized SystemFlavour %s' % SystemFlavour),log,err=True,isError=True)
         command = (mpicommand + ' `which %(prog)s` %(params)s') % paramsDict
     if RunInBackground:
         command+=" &"
     return command
 
 def loadModule(modulePath, report=True):
-    dir,moduleName=os.path.split(modulePath)
+    directory , moduleName = os.path.split(modulePath)
     moduleName = moduleName.replace('.py', '')
-    if dir=='':
-        sys.path.insert(0,'.')
+    if directory=='':
+        sys.path.insert(0, '.')
     else:
-        sys.path.insert(0,dir)
+        sys.path.insert(0, directory)
     try:
         if moduleName in sys.modules:
             module = sys.modules[moduleName]
@@ -460,9 +464,9 @@ def createQueueLaunchFile(outFilename, fileTemplate, params):
     '''Create the final file to launch the job to queue
     using a platform specific template (fileTemplate)
     '''
-    file = open(outFilename, 'w')
-    file.write(fileTemplate % params)
-    file.close()
+    launchfile = open(outFilename, 'w')
+    launchfile.write(fileTemplate % params)
+    launchfile.close()
     
 def submitProtocol(protocolPath, **params):
     '''Launch a protocol, to a queue or executing directly.
@@ -472,8 +476,8 @@ def submitProtocol(protocolPath, **params):
     '''
     #Load the config module
     launch = loadModule('config_launch.py')
-    file = protocolPath.replace('.py', '.job')
-    createQueueLaunchFile(file, launch.FileTemplate, params)
+    launchfile = protocolPath.replace('.py', '.job')
+    createQueueLaunchFile(launchfile, launch.FileTemplate, params)
     command = "%s %s" % (launch.Program, launch.ArgsTemplate % {'file': file})
     print "** Submiting to queue: '%s'" % command
     ps = Popen(command, shell=True, stdout=PIPE)
@@ -518,7 +522,7 @@ def runExternalAppWithResponse(cmd):
         s.settimeout(5.0)
         s.bind((HOST, PORT))
         s.listen(1)
-        conn, addr = s.accept()
+        conn = s.accept()[0]
         #Read the awake message
         data = conn.recv(256)
         if not data or data.strip() != '__STARTED__':
@@ -526,7 +530,7 @@ def runExternalAppWithResponse(cmd):
         else:
             conn.close() 
             s.settimeout(None) # reset timeout
-            conn, addr = s.accept()
+            conn = s.accept()[0]
         #Read len of message (max 4 bytes)
         while True:
             data = conn.recv(1024)
