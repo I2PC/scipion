@@ -562,6 +562,13 @@ def runJavaIJapp(memory, appName, args, batchMode=True):
 def runJavaIJappWithResponse(memory, appName, args):
     return runExternalAppWithResponse(getJavaIJappCmd(memory, appName, args, True))
 
+def runShowJ(inputFiles,memory="512m"):
+    runImageJPlugin(memory, "XmippBrowser.txt", "-i "+inputFiles, True)
+    
+def runChimera(inputFile):
+    if which("chimera") and os.path.exists(inputFile):
+        os.system("chimera "+inputFile+" &")
+    
 #---------------------------------------------------------------------------
 #  FileName Handling
 #--------------------------------------------------------------------------- 
@@ -625,7 +632,7 @@ def apply_bfactor(_DisplayReference_list,\
 # Home:
 #   http://trentm.com/projects/which/
 
-r"""Find the full path to commands.
+"""Find the full path to commands.
 
 which(command, path=None, verbose=0, exts=None)
     Return the full path to the first match of the given command on the
@@ -795,7 +802,7 @@ def which(command, path=None, verbose=0, exts=None):
     the path.
     
     "command" is a the name of the executable to search for.
-    "path" is an optional alternate path list to search. The default it
+    "path" is an optional alternate path list to search. The default is
         to use the PATH environment variable.
     "verbose", if true, will cause a 2-tuple to be returned. The second
         element is a textual description of where the match was found.
