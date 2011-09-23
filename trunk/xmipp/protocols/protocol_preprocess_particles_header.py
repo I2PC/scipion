@@ -33,19 +33,24 @@ Behavior = "Restart"
 #-----------------------------------------------------------------------------
 # {section} Filter parameters
 #-----------------------------------------------------------------------------
-# {run}(extract_particles,import_particles) Previous run
-"""The previous run can be either a 'Extract particles' step or 'Import particles' step"""
-PreviousRun=''
+# {file}{validate}(PathExists) Selfile with the input images:
+""" This selfile points to the stack or metadata containing your images 
+"""
+InSelFile=''
 
-# {wizard}(wizardChooseFamily) Family to preprocess
-Family=''
+# Scale
+""" Change the scale of the input images """
+DoScale=False
+
+#{condition}(DoScale) New image size
+NewSize=0
 
 # Fourier bandpass filter
 """ You may do a lowpass filter by setting Freq_low to 0. You may do a high pass filter
     by setting Freq_high to 0.5."""
 DoFourier=False 
 
-#{condition}(DoFourier) Freq_low (0<f<0.5)
+#{condition}(DoFourier){wizard}(wizardChooseBandPassFilter) Freq_low (0<f<0.5)
 """ Set it to 0 for low pass filters """
 Freq_low=0.02
 
@@ -71,7 +76,7 @@ Freq_sigma=0.04
 """
 DoRemoveDust=False
 
-# {condition}(DoRemoveDust)  Threshold for dust removal:
+# {condition}(DoRemoveDust){wizard}(wizardChooseBadPixelsFilter)  Threshold for dust removal:
 """ Pixels with a signal higher or lower than this value times the standard deviation of the image will be affected. For cryo, 3.5 is a good value.
     For high-contrast negative stain, the signal itself may be affected so that a higher value may be preferable.
 """
@@ -91,6 +96,17 @@ NormType="Ramp"
    Radius for background circle definition (in pix.).
    If this value is 0, then the same as the particle radius is used. """
 BackGroundRadius=0
+
+# Apply mask
+""" Apply mask from file """
+DoMask=False
+
+# {condition}(DoMask){wizard}(wizardDesignMask) Mask file
+MaskFile=""
+
+# {condition}(DoMask) Substitute value
+"""Valid values are a number, min, max and avg """
+Substitute="0"
 
 #------------------------------------------------------------------------------------------
 # {section} Parallelization
