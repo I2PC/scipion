@@ -233,9 +233,7 @@ def setState(compiling):
     if compiling:
         btn.config(command=stopCompile, text="Stop")
         nb.select(nb.index('end') - 1)
-        print "setState: compiling true"
     else:
-        print "setState: compiling false"
         btn.config(command=runCompile, text="Compile") 
         
 def checkProcess():
@@ -264,13 +262,12 @@ def runCompile(event=None):
     cmd2 = "./scons.compile -j %(procs)d >> %(out)s 2>&1 "% locals()
     cmd += 'echo "%(cmd2)s" >> %(out)s \n'
     cmd += cmd2
-    #os.system(cmd % locals())
     global proc
     os.environ['JAVA_HOME'] = tabJava.getValue('JAVA_HOME')
-    #proc = Popen(cmd % locals(), shell=True)    
-    #text.fillTextArea()
-    #text.doRefresh(3)
-    #checkProcess()    
+    proc = Popen(cmd % locals(), shell=True)    
+    text.fillTextArea()
+    text.doRefresh(3)
+    checkProcess()    
     setState(compiling=True)
     
 def stopCompile(event=None):
