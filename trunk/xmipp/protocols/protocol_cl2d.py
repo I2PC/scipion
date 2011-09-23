@@ -122,7 +122,7 @@ def sortClasses(log,WorkingDir,Nproc):
         deleteFile(log,fnRoot+".xmd")
 
 def core_analysis(log,WorkingDir,thZscore,thPCAZscore,Nproc):
-    params= "-i "+WorkingDir+'/results --comre '+str(thZscore)+' '+str(thPCAZscore)
+    params= "-i "+WorkingDir+'/results --computeCore '+str(thZscore)+' '+str(thPCAZscore)
     runJob(log,"xmipp_classify_CL2D_core_analysis",params,Nproc)
 
 def stable_core_analysis(log,WorkingDir,tolerance,Nproc):
