@@ -117,14 +117,6 @@ class ConfigNotebook(ttk.Notebook):
         return ' '.join([t.getConfigOptions() for t in self.tabs])
 
 
-def find(file, pathlist):
-  import os
-  from os.path import join, getsize
-  for path in pathlist:
-      for root, dirs, files in os.walk(path):
-        if file in files:
-          return root
-  return None
   
 def detectJava():
     from subprocess import Popen, PIPE
@@ -134,16 +126,16 @@ def detectJava():
     if err:
         return ''
     else:
-        import os
-        dirname = os.path.dirname        
+        from os.path import dirname        
         java_home = dirname(dirname(out.strip()))
         return java_home
     
 def detectMpi():
+    from protlib_filesystem import findFilePath
     inc_dirs = ['/usr/include', 'usr/local/include']
     lib_dirs = ['/usr/lib64', 'usr/lib']
-    inc_mpi = find('mpi.h', inc_dirs + lib_dirs)
-    lib_mpi = find('libmpi.so', lib_dirs)
+    inc_mpi = findFilePath('mpi.h', *(inc_dirs + lib_dirs))
+    lib_mpi = findFilePath('libmpi.so', *lib_dirs)
     
     return (inc_mpi, lib_mpi)
 
@@ -240,11 +232,13 @@ proc = None
 def setState(compiling):
     if compiling:
         btn.config(command=stopCompile, text="Stop")
+        nb.select(nb.index('end') - 1)
+        print "setState: compiling true"
     else:
+        print "setState: compiling false"
         btn.config(command=runCompile, text="Compile") 
         
 def checkProcess():
-    print proc.pid
     if proc.poll() is not None:
         text.stopRefresh()
         text.fillTextArea(goEnd=True)
@@ -252,10 +246,11 @@ def checkProcess():
         progressVar.set(0)
     else:
         root.after(3000, checkProcess)
-        lines = 0
-        for line in open(output):
-            lines += 1
-        progressVar.set(lines)
+        if os.path.exists(output):
+            lines = 0
+            for line in open(output):
+                lines += 1
+            progressVar.set(lines)
     
 def runCompile(event=None):
     out = output
@@ -272,10 +267,10 @@ def runCompile(event=None):
     #os.system(cmd % locals())
     global proc
     os.environ['JAVA_HOME'] = tabJava.getValue('JAVA_HOME')
-    proc = Popen(cmd % locals(), shell=True)    
-    text.fillTextArea()
-    text.doRefresh(3)
-    checkProcess()    
+    #proc = Popen(cmd % locals(), shell=True)    
+    #text.fillTextArea()
+    #text.doRefresh(3)
+    #checkProcess()    
     setState(compiling=True)
     
 def stopCompile(event=None):

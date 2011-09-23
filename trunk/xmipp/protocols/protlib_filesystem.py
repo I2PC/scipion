@@ -29,6 +29,7 @@
 # Filesystem utilities
 #---------------------------------------------------------------------------
 import os
+from os.path import join, exists, dirname
 from protlib_utils import printLog, failStr, which
 from shutil import copyfile
 #from xmipp import *
@@ -41,7 +42,7 @@ def createDir(log, path):
     from distutils.dir_util import mkpath
     from distutils.errors import DistutilsFileError
     try:
-        if not os.path.exists(path):
+        if not exists(path):
             mkpath(path, 0777, True)
             printLog("Created dir " + path, log)
     except DistutilsFileError, e:
@@ -58,12 +59,12 @@ def changeDir(log, path):
 
 def deleteDir(log, path):
     from distutils.dir_util import remove_tree
-    if os.path.exists(path):
+    if exists(path):
         remove_tree(path, True)
         printLog("Deleted directory " + path, log)
            
 def deleteFile(log, filename, verbose=True):
-    if os.path.exists(filename):
+    if exists(filename):
         os.remove(filename)
         if verbose:
             printLog('Deleted file %s' % filename,log)
@@ -88,7 +89,7 @@ def renameFile(log, source, dest):
 def copyDir(log, source, dest):
     try:
         from shutil import copytree
-        if os.path.exists(dest):
+        if exists(dest):
             deleteDir(log,dest)
         copytree(source, dest, symlinks=True)
         printLog("Copied '%s' to '%s'" % (source, dest))
@@ -107,12 +108,23 @@ def createLink(log, source, dest):
     except Exception, e:
         printLog("Could not link '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
 
+def findFilePath(filename, *pathList):
+    '''Search recursively in path to find filename path(excluding filename)
+    None is returned if not found'''
+    for path in pathList:
+        for root, dirs, files in os.walk(path):
+            if filename in files:
+                return root
+    return None
+
 #--------------------------- Xmipp specific tools ---------------------------------
 def getXmippPath(subfolder=''):
     '''Return the path the the Xmipp installation folder
     if a subfolder is provided, will be concatenated to the path'''
-    xmippdir = os.path.dirname(os.path.dirname(which('xmipp_protocols')))
-    return os.path.join(xmippdir, subfolder)
+    if os.environ.has_key('XMIPP_HOME'):
+        return join(os.environ['XMIPP_HOME'], subfolder)  
+    else:
+        raise Exception('XMIPP_HOME environment variable not set') 
 
 def includeProtocolsDir():
     protDir = getXmippPath('protocols')
@@ -123,33 +135,27 @@ def getProtocolTemplate(prot):
     protDir = getXmippPath('protocols')
     srcProtName = '%s.py' % prot.key
     #srcProtDir = getXmippPath('protocols')
-    srcProtAbsPath = os.path.join(protDir, srcProtName)
+    srcProtAbsPath = join(protDir, srcProtName)
     return srcProtAbsPath
 
-def findProjectInPathTree(file):
+def findProjectInPathTree(filename):
     found=False
-    file=os.path.abspath(file)
-    while file!="/" and not found:
-        if os.path.exists(os.path.join(file,".project.sqlite")):
+    filename = os.path.abspath(filename)
+    while filename!="/" and not found:
+        if exists(join(filename,".project.sqlite")):
             found=True
         else:
-            file=os.path.split(file)[0]
+            filename = dirname(filename)
     if found:
-        return file
+        return filename
     else:
         return None
 
-def fixPath(file,possiblePath1,possiblePath2,possiblePath3=None):
-    if file[0]=='/':
-        return file
-    file1=os.path.join(possiblePath1,file)
-    if os.path.exists(file1):
-        return file1
-    file2=os.path.join(possiblePath2,file)
-    if os.path.exists(file2):
-        return file2
-    if possiblePath3:
-        file3=os.path.join(possiblePath3,file)
-        if os.path.exists(file3):
-            return file3
-    return file
+def fixPath(filename, *pathList):
+    if os.path.isabs(filename):
+        return filename
+    for path in pathList:
+        filepath = join(path, filename)
+        if exists(filepath):
+            return filepath
+    return None
