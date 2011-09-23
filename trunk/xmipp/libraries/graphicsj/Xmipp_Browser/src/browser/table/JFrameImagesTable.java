@@ -4,7 +4,7 @@
  */
 
 /*
- * JFrameImagesTable.java
+ * JFrameRotSpectra.java
  *
  * Created on 22-abr-2010, 12:35:07
  */

@@ -7,8 +7,8 @@ package browser.windows;
 import browser.DEBUG;
 import browser.imageitems.ImageConverter;
 import browser.imageitems.tableitems.AbstractTableImageItem;
-import browser.table.models.AbstractXmippTableModel;
 import browser.table.JFrameImagesTable;
+import browser.table.models.AbstractXmippTableModel;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
@@ -174,7 +174,7 @@ public class ImagesWindowFactory {
     public static void openFilesAsTable(String filenames[],
             boolean useSameTable, int rows, int columns) {
         if (useSameTable) {
-//            table = new JFrameImagesTable(filenames);
+//            table = new JFrameRotSpectra(filenames);
 //            table.setAutoAdjustColumns(true);
 //            table.setVisible(true);
             openFileAsTable(null, rows, columns);
