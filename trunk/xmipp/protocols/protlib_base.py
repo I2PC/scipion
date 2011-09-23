@@ -335,9 +335,9 @@ class XmippProtocol(object):
                'source': self.scriptName
                }
             self.project.cleanRun(run)
-        #Remove temporaly files
-        if os.path.exists(self.TmpDir):
-            shutil.rmtree(self.TmpDir)
+            #Remove temporaly files
+            if os.path.exists(self.TmpDir):
+                shutil.rmtree(self.TmpDir)
         #Initialization of log and db
         retcode = 0
         try:

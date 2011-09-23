@@ -941,6 +941,9 @@ class ProtocolGUI(BasicGUI):
             var.value = '"Resume"'
             if not os.path.exists(self.run['script']) or not os.path.exists(self.getProtocol().WorkingDir):
                 var.tags['hidden'] = True
+        elif var.name == 'ContinueAtStep':
+            if not os.path.exists(self.run['script']) or not os.path.exists(self.getProtocol().WorkingDir):
+                var.tags['hidden'] = True
         elif var.name == "NumberOfMpi":
             launch = loadModule('config_launch.py')         
             if which(launch.MpiProgram) == '':

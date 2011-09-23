@@ -316,7 +316,14 @@ class XmippProjectDb(SqliteDb):
      
 class XmippProtocolDb(SqliteDb):
     def __init__(self, protocol, isMainLoop=True):
-        self.runBehavior = protocol.Behavior
+        try:
+            self.ContinueAtStep = protocol.ContinueAtStep
+        except NameError:
+            self.ContinueAtStep=0
+        try:
+            self.runBehavior = protocol.Behavior
+        except NameError:
+            self.runBehavior=Behavior
         self.dbName = protocol.project.dbName
         self.Import = protocol.Import  
         self.Log = protocol.Log             
@@ -372,12 +379,15 @@ class XmippProtocolDb(SqliteDb):
 
         parameters = pickle.dumps(_Parameters, 0)
         verifyfilesString = pickle.dumps(verifyfiles, 0)
+        
         if not self.insertStatus:
             #This will use previous select query in constructor
             row = self.cur.fetchone()
             if row is None:
                 self.insertStatus = True
             else:
+                if self.runBehavior=="Continue" and row['step_id']>=self.ContinueAtStep:
+                    self.insertStatus = True
                 if row['parameters'] != parameters or row['verifyFiles'] != verifyfilesString:
                     self.insertStatus = True
                 else:
@@ -388,7 +398,9 @@ class XmippProtocolDb(SqliteDb):
                 self.lastStepId=row['step_id']
                 if self.insertStatus:
                     self.sqlDict['step_id'] = row['step_id']
-                    sqlCommand = """DELETE FROM %(TableSteps)s WHERE run_id = %(run_id)d AND step_id>=%(step_id)d""" % self.sqlDict
+                    sqlCommand = """DELETE FROM %(TableSteps)s 
+                                           WHERE run_id = %(run_id)d 
+                                             AND step_id>=%(step_id)d""" % self.sqlDict
                     self.cur.execute(sqlCommand)
                     self.connection.commit()
         if self.insertStatus:
@@ -398,7 +410,9 @@ class XmippProtocolDb(SqliteDb):
                                      VALUES (?,?,?,?,?,?,?,?)""" % self.sqlDict,
                                      [command, parameters, verifyfilesString, self.iter,execution_mode,passDb,self.sqlDict['run_id'], parent_step_id])
                 #select the last step_id inserted for this run
-                self.cur_aux.execute("""SELECT MAX(step_id) FROM %(TableSteps)s WHERE run_id = %(run_id)d""" % self.sqlDict)
+                self.cur_aux.execute("""SELECT MAX(step_id) 
+                                        FROM %(TableSteps)s 
+                                        WHERE run_id = %(run_id)d""" % self.sqlDict)
                 self.lastStepId = self.cur_aux.fetchone()[0]
             except sqlite.Error, e:
                 reportError( "Cannot insert command: %s" % e.args[0])
