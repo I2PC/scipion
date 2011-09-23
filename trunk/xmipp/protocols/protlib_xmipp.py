@@ -29,7 +29,7 @@
 import os
 import xmipp
 from xmipp import Program
-from protlib_utils import runImageJPlugin, failStr
+from protlib_utils import runImageJPlugin
 from protlib_filesystem import getXmippPath
 
 
