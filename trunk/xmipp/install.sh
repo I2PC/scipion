@@ -13,7 +13,7 @@ DO_ARPACK=false
 DO_CLEAN=true
 DO_STATIC=false
 
-CPU=$@
+export NUMBER_OF_CPU=$@
 
 
 
@@ -24,11 +24,45 @@ RED="\033[31m"
 ENDC="\033[0m"
 
 #################### PARSING PARAMETERS ###########################
+TAKE_CPU=false
 
-#for p in $@; do
-#   echo "param: $p" 
-#done
-#exit 1
+for param in $@; do
+ if $TAKE_CPU; then
+    NUMBER_OF_CPU=$param
+    TAKE_CPU=false
+ else
+    case $param in
+        "disable_all")
+			DO_UNTAR=false
+			DO_SQLITE=false
+			DO_TCLTK=false
+			DO_PYTHON=false
+			DO_FFTW=false
+			DO_TIFF=false
+			DO_ARPACK=false;;        
+        "-j")             TAKE_CPU=true;;
+        "untar=true")   DO_UNTAR=true;;
+        "untar=false")   DO_UNTAR=false;;
+        "sqlite=true")   DO_SQLITE=true;;
+        "sqlite=false")   DO_SQLITE=false;;
+        "tcltk=true")   DO_TCLTK=true;;
+        "tcltk=false")   DO_TCLTK=false;;
+        "python=true")   DO_PYTHON=true;;
+        "python=false")   DO_PYTHON=false;;
+        "fftw=true")   DO_FFTW=true;;
+        "fftw=false")   DO_FFTW=false;;
+        "tiff=true")   DO_TIFF=true;;
+        "tiff=false")   DO_TIFF=false;;
+        "arpack=true")   DO_ARPACK=true;;
+        "arpack=false")   DO_ARPACK=false;;
+        "clean=true")   DO_CLEAN=true;;
+        "clean=false")   DO_CLEAN=false;;
+        "static=true")   DO_STATIC=true;;
+        "static=false")   DO_STATIC=false;;
+         *)              echo "Unrecognized option $param, exiting..."; exit 1
+    esac
+ fi 
+done
 
 #Some path variables
 export XMIPP_HOME=$PWD
@@ -100,8 +134,8 @@ compile_library()
 
   echo "--> ./configure $CONFIGFLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1"
   ./configure $CONFIGFLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1
-  echo "--> make $CPU >$BUILD_PATH/${LIB}_make.log 2>&1"
-  make $CPU >$BUILD_PATH/${LIB}_make.log 2>&1
+  echo "--> make $NUMBER_OF_CPU >$BUILD_PATH/${LIB}_make.log 2>&1"
+  make $NUMBER_OF_CPU >$BUILD_PATH/${LIB}_make.log 2>&1
   toc
 }
 
