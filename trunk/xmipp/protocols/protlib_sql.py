@@ -3,8 +3,7 @@ import pickle
 import os, sys
 from config_protocols import projectDefaults
 from protlib_utils import reportError, getScriptPrefix, printLog
-from protlib_utils import blueStr, headerStr, greenStr
-from xmipp import XmippError
+from protlib_xmipp import blueStr, headerStr, greenStr
 #The following imports are not directly used, but are common operations
 #that will be performed by running steps on database
 from protlib_utils import runJob
@@ -467,7 +466,7 @@ class XmippProtocolDb(SqliteDb):
                 missingFilesStr += ' ' + file
 
         if len(missingFilesStr) > 0:
-            raise XmippError("Missing result files: " + missingFilesStr)
+            raise Exception("Missing result files: " + missingFilesStr)
         
     def runSingleStep(self, _connection, _cursor, stepRow):
         exec(self.Import)
@@ -572,7 +571,7 @@ def runStepGapsMpi(db, script, NumberOfMpi=1):
     if NumberOfMpi > 1:
         retcode = runJob(db.Log, "xmipp_steps_runner",  script, NumberOfMpi)
         if retcode != 0:
-            raise XmippError('xmipp_mpi_steps_runner execution failed')
+            raise Exception('xmipp_mpi_steps_runner execution failed')
     else:
         runThreadLoop(db, db.connection, db.cur) 
            

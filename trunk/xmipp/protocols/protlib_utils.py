@@ -27,7 +27,6 @@
 
 import os
 import sys
-import xmipp
 import tkMessageBox
 
 #---------------------------------------------------------------------------
@@ -377,6 +376,7 @@ def runJob(log,
                NumberOfThreads,
                RunInBackground)
     if log:
+        from protlib_xmipp import greenStr
         printLog("Running command: %s" % greenStr(command),log)
 
     from subprocess import call
@@ -386,9 +386,9 @@ def runJob(log,
         if log:
             printLog("Process returned with code %d" % retcode,log)
             if retcode!=0:
-                raise xmipp.XmippError("Process returned with code %d" % retcode)
+                raise Exception("Process returned with code %d" % retcode)
     except OSError, e:
-        raise xmipp.XmippError("Execution failed %s, command: %s" % (e, command))
+        raise Exception("Execution failed %s, command: %s" % (e, command))
 
     return retcode
 
@@ -563,92 +563,6 @@ def runJavaIJappWithResponse(memory, appName, args):
     return runExternalAppWithResponse(getJavaIJappCmd(memory, appName, args, True))
 
 #---------------------------------------------------------------------------
-# Metadata stuff
-#--------------------------------------------------------------------------- 
-#create a metadata file with original image name, and two other 
-#lines with variation over the original name
-def intercalate_union_3(inFileName,outFileName, src1,targ1,src2,targ2):
-    mD = xmipp.MetaData(inFileName)
-    mDout = xmipp.MetaData()   
-    for id in mD:       
-        idOut = mDout.addObject()
-        sIn = mD.getValue(xmipp.MDL_IMAGE,id)
-        mDout.setValue(xmipp.MDL_IMAGE, sIn, idOut)
-        enabled= mD.containsLabel(xmipp.MDL_ENABLED)
-       
-        if  (enabled):       
-            i = int(mD.getValue(xmipp.MDL_ENABLED,id))
-            mDout.setValue(xmipp.MDL_ENABLED, i, idOut)
-       
-        idOut = mDout.addObject()
-
-        ss = sIn.replace(src1,targ1)
-        mDout.setValue(xmipp.MDL_IMAGE, ss, idOut)
-        
-        if  (enabled):
-            mDout.setValue(xmipp.MDL_ENABLED, i, idOut)
-            
-        idOut = mDout.addObject()
-       
-        ss = sIn.replace(src2,targ2)
-        mDout.setValue(xmipp.MDL_IMAGE, ss, idOut)
-        
-        if  (enabled):
-            mDout.setValue(xmipp.MDL_ENABLED, i, idOut)
-       
-    mDout.write(outFileName)
-
-#set rot and tilt between -180,180 and -90,90
-def check_angle_range(inFileName,outFileName):
-    import xmipp
-    mD    = xmipp.MetaData(inFileName)
-    doWrite=False
-    
-    for id in mD: 
-        doWrite2=False
-        rot = mD.getValue(xmipp.MDL_ANGLEROT,id)
-        tilt = mD.getValue(xmipp.MDL_ANGLETILT,id)
-        if tilt > 90.: 
-            tilt = -(int(tilt)-180)
-            rot  += 180.
-            doWrite=True
-            doWrite2=True
-        if tilt < -90.: 
-            tilt = -(int(tilt)+180)
-            rot  -= 180. 
-            doWrite=True
-            doWrite2=True
-        if (doWrite2):
-            mD.setValue(xmipp.MDL_ANGLEROT , rot, id)
-            mD.setValue(xmipp.MDL_ANGLETILT, tilt, id)
-        
-    if(doWrite or inFileName != outFileName):
-        mD.write(outFileName)
-
-
-#compute histogram
-def compute_histogram(mD,bin,col,min,max):
-    allMD = xmipp.MetaData()
-    outMD = xmipp.MetaData()   
-    _bin = (max-min)/bin
-   
-    for h in range(0,bin):
-        outMD.removeObjects(xmipp.MDQuery("*"))
-        if (h==0):
-            outMD.importObjects(mD, xmipp.MDValueRange(col, float(min), float(_bin*(h + 1)+min)))
-        if (h>0 and h<(bin-1)):
-            outMD.importObjects(mD, xmipp.MDValueRange(col, float(_bin * h + min), float(_bin*(h + 1)+min)))
-        if (h==(bin-1)):
-            outMD.importObjects(mD, xmipp.MDValueRange(col, float(_bin * h + min), float(max)))
-       
-        _sum=float(outMD.aggregateSingle(xmipp.AGGR_SUM, xmipp.MDL_WEIGHT))
-        outMD.addLabel(xmipp.MDL_COUNT)
-        outMD.setValueCol(xmipp.MDL_COUNT, int(_sum+0.1))
-        allMD.unionAll(outMD)
-       
-    return allMD
-
-#---------------------------------------------------------------------------
 #  FileName Handling
 #--------------------------------------------------------------------------- 
 
@@ -662,32 +576,6 @@ def unique_filename(file_name):
         counter += 1
     return file_name 
 
-# Colors ########################
-from xmipp import XMIPP_MAGENTA, XMIPP_BLUE, XMIPP_GREEN, XMIPP_RED, XMIPP_YELLOW, XMIPP_CYAN, colorStr
-
-colorMap = {'red': XMIPP_RED, 'blue': XMIPP_BLUE, 
-            'green': XMIPP_GREEN, 'magenta': XMIPP_MAGENTA,
-            'yellow': XMIPP_YELLOW, 'cyan': XMIPP_CYAN}
-
-blueStr = lambda s: colorStr(XMIPP_BLUE, s)
-greenStr = lambda s: colorStr(XMIPP_GREEN, s)
-failStr = redStr = lambda s: colorStr(XMIPP_RED, s)
-headerStr = magentaStr = lambda s: colorStr(XMIPP_MAGENTA, s)
-yellowStr = lambda s: colorStr(XMIPP_YELLOW, s)
-cyanStr = warnStr = cyanStr = lambda s: colorStr(XMIPP_CYAN, s)
-
-def findColor(color):
-    '''This function will search if there are color characters present
-    on string and return the color and positions on string'''
-    for k, v in colorMap.iteritems():
-        x, y = colorStr(v, "_..._").split("_..._")
-        fx = color.find(x)
-        fy = color.find(y)
-        if fx != -1 and fy != -1:
-            color = color.replace(x, '').replace(y, '')
-            return (k, fx, fy, color)
-    return None
-    
 #apply bfactor to a vector of volumes
 """ This utility boost up the high frequencies. Do not use the automated
     mode [default] for maps with resolutions lower than 12-15 Angstroms.

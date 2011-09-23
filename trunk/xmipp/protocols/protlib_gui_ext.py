@@ -588,7 +588,7 @@ class FilePollTextArea(tk.Frame):
         yscroll.pack(side=tk.RIGHT,fill=tk.Y)
         textfr.pack(side=tk.TOP)
         if self.colorOn:
-            from protlib_utils import colorMap
+            from protlib_xmipp import colorMap
             for color in colorMap.keys():
                 self.text.tag_config("tag_" + color, foreground=color)
 
@@ -600,7 +600,7 @@ class FilePollTextArea(tk.Frame):
             lineNo = 1
             for line in textfile:
                 if self.colorOn:
-                    from protlib_utils import findColor
+                    from protlib_xmipp import findColor
                     ctuple = findColor(line)
                     self.text.insert(tk.END, "%05d:   " % lineNo,"tag_cyan")  
                     if ctuple is None:

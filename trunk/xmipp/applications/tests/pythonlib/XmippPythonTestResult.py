@@ -1,5 +1,5 @@
 from unittest import TestResult, _TextTestResult
-from protlib_utils import greenStr, failStr
+from protlib_xmipp import greenStr, failStr
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
 except ImportError:
