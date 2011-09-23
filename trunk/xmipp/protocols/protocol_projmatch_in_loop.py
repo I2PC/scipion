@@ -52,7 +52,6 @@ def angular_project_library(_log
                                 ,OnlyWinner
                                 ,PerturbProjectionDirections
                                 ,ProjectLibraryRootName
-                                ,SystemFlavour
                                 ,SymmetryGroup
                                 ,SymmetryGroupNeighbourhood
                                 ,Tilt0
@@ -131,7 +130,7 @@ def projection_matching(_log
                             , ScaleNumberOfSteps
                             , Search5DShift
                             , Search5DStep
-                            , SystemFlavour):
+                            ):
     # Loop over all CTF groups
     # Use reverse order to have same order in add_to docfiles from angular_class_average
     # get all ctf groups
@@ -256,6 +255,8 @@ def assign_images_to_references(_log
             #MD.setValueCol(MDL_CTFMODEL,auxInputdocfile[:-1])
             MDaux.unionAll(MD)
         MDaux.sort()
+        MD.write("md_test.xmd")
+        MDaux.write("mdaux_test.xmd")
         MD.aggregate(MDaux,AGGR_MAX,MDL_IMAGE,MDL_MAXCC,MDL_MAXCC)
         #if a single image is assigned to two references with the same 
         #CC use it in both reconstruction
@@ -301,8 +302,7 @@ def angular_class_average(_log
                          , ProjectLibraryRootName
                          , ProjMatchRootName
                          , refN
-                         , SystemFlavour
-                          ):
+                         ):
     # Now make the class averages
     CtfGroupName        = CtfGroupDirectory + '/' +\
                           CtfGroupRootName

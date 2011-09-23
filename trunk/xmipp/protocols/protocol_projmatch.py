@@ -68,9 +68,10 @@ class ProtProjMatch(XmippProtocol):
             , 'SelFileName':self.SelFileName
             }
         from protocol_projmatch_before_loop import checkVolumeProjSize
-        _retval, _error_message = checkVolumeProjSize(None,**_Parameters)
-        if(not _retval):
-            errors.append(_error_message)
+        # a!!!
+        #_retval, _error_message = checkVolumeProjSize(None,**_Parameters)
+        #if(not _retval):
+        #    errors.append(_error_message)
     
     
         # 3 Never allow DoAlign2D and DoCtfCorrection together

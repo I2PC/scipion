@@ -30,10 +30,16 @@ run1 for it. This name together with the protocol output folder will determine t
 """
 RunName = "run_001"
 
-# {list}(Resume, Restart) Run behavior
+# {list}(Restart, Continue, Resume) Run behavior
 """ Resume from the last step, restart the whole process or continue at a given step or iteration
 """
-Behavior = "Resume"
+Behavior ='Restart'
+
+# Resume at iteration:
+""" set to a positive number N to continue the protocol at step N. This option is only 
+active when Behavior=Continue
+"""
+ContinueAtStep =1
 
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up 
@@ -59,29 +65,11 @@ ReferenceFileNames ='ico1.vol ico2.vol ico3.vol'
 # Number of iterations to perform
 NumberOfIterations = 4
 
-# {expert} Resume at Iter (vs Step)
-"""This option control how to resume a previously performed run.
-    Set to TRUE to restart at the beginning of iteration N
-    or FALSE to continue at step N. (N is set in the next parameter).
-    NOTE:If you do not know what are you doing make it equal to False
-"""
-IsIter =False
-
-# Resume at iteration
-""" Set to 1 to start a new run, set to -1 to continue the process (where you left it),
-    set to a positive number N to restart at the begining of iteration N
-    Note1: Do NOT delete working directory if this option is not set to 1
-    Note2: Set this option to -1 if you want to perform extra iterations after
-           successfully finish an execution
-"""
-ContinueAtIteration =23
-
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, 
     since all class averages, selfiles etc will be deleted.
 """
 CleanUpFiles =False
-
 
 #-----------------------------------------------------------------------------
 # {section}{has_question} CTF correction

@@ -2,7 +2,7 @@ from distutils.errors   import DistutilsInternalError
 from types              import StringTypes
 import os
 from xmipp import *
-from protlib_utils import unique_filename
+from protlib_utils import unique_filename, printLog
 
 def checkVolumeProjSize(_log, ReferenceFileNames, SelFileName):
     """ check references and projection size match"""
@@ -29,12 +29,11 @@ def checkVolumeProjSize(_log, ReferenceFileNames, SelFileName):
             result = False
     #exit(1)
     #print message
-    if (_log):
-        _log.debug("checkVolumeProjSize")
-        if (not result):
-            print message
-            exit(1)
-    return (result,message)
+
+    printLog("checkVolumeProjSize", _log)
+    if (not result):
+        printLog (message,_log,False,True)
+        exit(1)
 
 
 #------------------------------------------------------------------------
@@ -107,14 +106,15 @@ def executeCtfGroups (_log,
 
 def checkOptionsCompatibility(_log, DoAlign2D, DoCtfCorrection):
     # Never allow DoAlign2D and DoCtfCorrection together
+    printLog("checkOptionsCompatibility", _log)
     if (DoAlign2D and int (DoCtfCorrection)):
         error_message = "You cannot realign classes AND perform CTF-correction. Switch either of them off!"
-        _log.error(error_message)
-        print error_message
+        printLog(error_message, _log,False,True)
         exit(1)
 
 def initAngularReferenceFile(_log, DocFileName, DocFileWithOriginalAngles, SelFileName):
     '''Create Initial angular file. Either fill it with zeros or copy input'''
+    printLog("initAngularReferenceFile", _log)
     import shutil
     if len(DocFileName)>1:
         shutil.copy(DocFileName,DocFileWithOriginalAngles)
