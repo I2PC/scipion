@@ -500,7 +500,7 @@ def protocolMain(ProtocolClass, script=None):
                                nodes = mod.NumberOfMpi,
                                threads = NumberOfThreads,
                                hours = mod.QueueHours,
-                               command = 'python %s --no_check' % script
+                               command = 'xmipp_python %s --no_check' % script
                                )
                 project.projectDb.updateRunState(SqliteDb.RUN_LAUNCHED, run_id)
                 doRun = False
