@@ -32,7 +32,7 @@
 
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
-from protlib_utils import greenStr, redStr, blueStr
+from protlib_xmipp import greenStr, redStr, blueStr
 
 class ProtXmippProgram(XmippProtocol):
     def __init__(self, scriptname, project):

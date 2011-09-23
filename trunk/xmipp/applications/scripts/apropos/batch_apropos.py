@@ -3,9 +3,8 @@
 import os
 
 from protlib_xmipp import XmippScript, createProgramsDb, skipProgram, ProgramKeywordsRank, getProgramsDbName,\
-	getXmippLabels
+	getXmippLabels, blueStr, redStr
 from protlib_filesystem import getXmippPath
-from protlib_utils import blueStr, redStr
 
 
 class ScriptApropos(XmippScript):
