@@ -10,7 +10,7 @@
 #
 from protlib_base import *
 from config_protocols import protDict
-from protlib_utils import runJob
+from protlib_utils import runJob, runShowJ, runChimera
 from protlib_filesystem import changeDir, deleteFiles
 
 class ProtCommonLines(XmippProtocol):
@@ -40,6 +40,12 @@ class ProtCommonLines(XmippProtocol):
         message.append("Initial volume by common lines constructed from " + self.InSelFile)
         message.append("Symmetry=" + self.Symmetry+" Radius="+str(self.Radius))
         return message
+    
+    def visualize(self):
+        fnOut=self.workingDirPath("threed.0a.mrc")
+        if os.path.exists(fnOut):
+            runShowJ(fnOut)
+            runChimera(fnOut)
 
 def convertImages(log,Selfile,OutStack):
     runJob(log,"xmipp_image_convert",' -i '+Selfile+' -o '+OutStack);
