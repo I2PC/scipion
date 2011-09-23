@@ -31,7 +31,20 @@ ENDC="\033[0m"
 #exit 1
 
 #Some path variables
-XMIPP_HOME=$PWD
+export XMIPP_HOME=$PWD
+export PATH=$XMIPP_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH
+
+#create file to include from BASH this Xmipp installation
+echo "export XMIPP_HOME=$PWD" > xmipp.bashrc
+echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> xmipp.bashrc
+echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> xmipp.bashrc
+
+# for CSH or TCSH
+echo "setenv XMIPP_HOME $PWD" > xmipp.csh
+echo 'setenv PATH $XMIPP_HOME/bin:$PATH' >> xmipp.csh
+echo 'setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> xmipp.csh
+
 EXT_PATH=$XMIPP_HOME/external
 BUILD_PATH=$XMIPP_HOME/build
 
@@ -186,10 +199,12 @@ fi
 if $DO_PYTHON; then
 	STATIC_BACKUP=$DO_STATIC
 	DO_STATIC=true
-    #export CPPFLAGS="-static -I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
-    #export LDFLAGS="-static -static-libgcc -L$XMIPP_HOME/lib"
     export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
     export LDFLAGS="-L$XMIPP_HOME/lib"
+    # Copy or custom python files:
+    cd $EXT_PATH/python
+    cp ./xmipp_setup.py $VPYTHON/setup.py
+    cp ./xmipp_site.py $VPYTHON/Lib/site.py
     compile_library $VPYTHON python "." ""
     install_bin python/$VPYTHON/python xmipp_python
     DO_STATIC=$STATIC_BACKUP
