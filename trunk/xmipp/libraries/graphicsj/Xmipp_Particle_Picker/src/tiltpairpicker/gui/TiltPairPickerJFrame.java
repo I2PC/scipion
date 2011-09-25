@@ -50,15 +50,18 @@ import trainingpicker.gui.ColorIcon;
 import trainingpicker.gui.WindowUtils;
 import trainingpicker.model.ParticlePicker;
 
-enum Tool {
+enum Tool
+{
 	IMAGEJ, PICKER
 }
 
-enum Shape {
+enum Shape
+{
 	Circle, Rectangle, Center
 }
 
-public class TiltPairPickerJFrame extends JFrame implements ActionListener {
+public class TiltPairPickerJFrame extends JFrame implements ActionListener
+{
 
 	private TiltPairPicker pppicker;
 	private JSlider sizesl;
@@ -67,7 +70,7 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 	private JFormattedTextField sizetf;
 	private JCheckBox centerchb;
 	private JMenuBar mb;
-	
+
 	private Color color;
 	private JPanel particlespn;
 	private JPanel symbolpn;
@@ -84,14 +87,16 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 	private JLabel iconlb;
 	private int index;
 	private JButton resetbt;
-	private JLabel particleslb;
+	private JLabel upslb;
 	private String tool = "Particle Picker Tool";
-	
+	private JLabel tpslb;
 
 	// private JCheckBox onlylastchb;
 
-	public boolean isShapeSelected(Shape s) {
-		switch (s) {
+	public boolean isShapeSelected(Shape s)
+	{
+		switch (s)
+		{
 		case Rectangle:
 			return rectanglechb.isSelected();
 		case Circle:
@@ -104,7 +109,8 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 		return false;
 	}
 
-	public Tool getTool() {
+	public Tool getTool()
+	{
 
 		if (IJ.getInstance() == null)
 			return Tool.PICKER;
@@ -113,23 +119,22 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 		return Tool.IMAGEJ;
 	}
 
-	public TiltPairPicker getParticlePairPicker() {
+	public TiltPairPicker getParticlePairPicker()
+	{
 		return pppicker;
 	}
 
-
-
-	public TiltPairPickerJFrame(TiltPairPicker pppicker) {
+	public TiltPairPickerJFrame(TiltPairPicker pppicker)
+	{
 
 		this.pppicker = pppicker;
 		initComponents();
-		//initializeCanvas();
-		
+		// initializeCanvas();
+
 	}
 
-	
-
-	private void initComponents() {
+	private void initComponents()
+	{
 		// try {
 		// UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		// } catch (Exception e) {
@@ -137,13 +142,13 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 		// e.printStackTrace();
 		// }
 
-		addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent winEvt) {
-				if (pppicker.isChanged()) {
-					int result = JOptionPane.showConfirmDialog(
-							TiltPairPickerJFrame.this,
-							"Save changes before closing?", "Message",
-							JOptionPane.YES_NO_OPTION);
+		addWindowListener(new WindowAdapter()
+		{
+			public void windowClosing(WindowEvent winEvt)
+			{
+				if (pppicker.isChanged())
+				{
+					int result = JOptionPane.showConfirmDialog(TiltPairPickerJFrame.this, "Save changes before closing?", "Message", JOptionPane.YES_NO_OPTION);
 					if (result == JOptionPane.OK_OPTION)
 						TiltPairPickerJFrame.this.saveChanges();
 				}
@@ -151,7 +156,7 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 			}
 
 		});
-		
+
 		setResizable(false);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setTitle("Xmipp Particle Pair Picker");
@@ -174,7 +179,8 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 		setVisible(true);
 	}
 
-	public void initMenuBar() {
+	public void initMenuBar()
+	{
 		mb = new JMenuBar();
 
 		// Setting menus
@@ -192,8 +198,7 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 		savemi.setEnabled(pppicker.isChanged());
 		filemn.add(savemi);
 		savemi.setMnemonic('S');
-		savemi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S,
-				InputEvent.CTRL_DOWN_MASK));
+		savemi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
 
 		JMenuItem stackmi = new JMenuItem("Generate Stack...");
 		filemn.add(stackmi);
@@ -220,60 +225,62 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 
 		JMenuItem ijmi = new JMenuItem("ImageJ");
 		windowmn.add(ijmi);
-		
 
 		JMenuItem hcontentsmi = new JMenuItem("Help Contents...");
 		helpmn.add(hcontentsmi);
 
 		// Setting menu item listeners
 
-		ijmi.addActionListener(new ActionListener() {
+		ijmi.addActionListener(new ActionListener()
+		{
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (IJ.getInstance() == null) {
+			public void actionPerformed(ActionEvent e)
+			{
+				if (IJ.getInstance() == null)
+				{
 
 					new ImageJ();
-					IJ.run("Install...",
-							"install="
-									+ ParticlePicker
-											.getXmippPath("external/imagej/macros/ParticlePicker.txt"));
+					IJ.run("Install...", "install=" + ParticlePicker.getXmippPath("external/imagej/macros/ParticlePicker.txt"));
 					IJ.setTool(tool);
 				}
 				// IJ.getInstance().setVisible(true);
 			}
 		});
-		savemi.addActionListener(new ActionListener() {
+		savemi.addActionListener(new ActionListener()
+		{
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e)
+			{
 				saveChanges();
-				JOptionPane.showMessageDialog(TiltPairPickerJFrame.this,
-						"Data saved successfully");
+				JOptionPane.showMessageDialog(TiltPairPickerJFrame.this, "Data saved successfully");
 				((JMenuItem) e.getSource()).setEnabled(false);
 			}
 		});
-		stackmi.addActionListener(new ActionListener() {
+		stackmi.addActionListener(new ActionListener()
+		{
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e)
+			{
 
 			}
 		});
 
-		
-
-		
-		hcontentsmi.addActionListener(new ActionListener() {
+		hcontentsmi.addActionListener(new ActionListener()
+		{
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					WindowUtils
-							.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParticlePicker");
-				} catch (Exception ex) {
-					JOptionPane.showMessageDialog(TiltPairPickerJFrame.this,
-							ex.getMessage());
+			public void actionPerformed(ActionEvent e)
+			{
+				try
+				{
+					WindowUtils.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParticlePicker");
+				}
+				catch (Exception ex)
+				{
+					JOptionPane.showMessageDialog(TiltPairPickerJFrame.this, ex.getMessage());
 				}
 			}
 		});
@@ -281,18 +288,23 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		try {
+	public void actionPerformed(ActionEvent e)
+	{
+		try
+		{
 			activemacro = ((JMenuItem) e.getSource()).getText();
 			IJ.run(activemacro);
-		} catch (Exception ex) {
+		}
+		catch (Exception ex)
+		{
 			ex.printStackTrace();
 			JOptionPane.showMessageDialog(this, ex.getMessage());
 		}
 
 	}
 
-	private void initParticlesPane() {
+	private void initParticlesPane()
+	{
 		particlespn = new JPanel();
 		GridLayout gl = new GridLayout(2, 1);
 		particlespn.setLayout(gl);
@@ -300,7 +312,7 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 		particlespn.setBorder(BorderFactory.createTitledBorder("Particles"));
 
 		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		
+
 		// Setting color
 		color = pppicker.getColor();
 		fieldspn.add(new JLabel("Color:"));
@@ -328,58 +340,57 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 		particlespn.add(fieldspn, 0);
 		initSymbolPane();
 		particlespn.add(symbolpn, 1);
-		
-		
 
 		index = pppicker.getNextFreeMicrograph();
 		if (index == -1)
 			index = 0;
 		untiltedmic = pppicker.getMicrographs().get(index);
 
-		
-
 		colorbt.addActionListener(new ColorActionListener());
-		
-		sizetf.addActionListener(new ActionListener() {
+
+		sizetf.addActionListener(new ActionListener()
+		{
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e)
+			{
 				int size = ((Number) sizetf.getValue()).intValue();
 				switchSize(size);
 
 			}
 		});
 
-		sizesl.addChangeListener(new ChangeListener() {
+		sizesl.addChangeListener(new ChangeListener()
+		{
 
 			@Override
-			public void stateChanged(ChangeEvent e) {
+			public void stateChanged(ChangeEvent e)
+			{
 				int size = sizesl.getValue();
 				switchSize(size);
 			}
 		});
 
-	
-		
-
 	}
 
-	class ColorActionListener implements ActionListener {
+	class ColorActionListener implements ActionListener
+	{
 		JColorChooser colorChooser;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent e)
+		{
 			// Set up the dialog that the button brings up.
 			colorChooser = new JColorChooser();
-			JDialog dialog = JColorChooser.createDialog(colorbt,
-					"Pick a Color", true, // modal
-					colorChooser, new ActionListener() {
+			JDialog dialog = JColorChooser.createDialog(colorbt, "Pick a Color", true, // modal
+					colorChooser, new ActionListener()
+					{
 
 						@Override
-						public void actionPerformed(ActionEvent e) {
-							pppicker.setColor(ColorActionListener.this.colorChooser
-									.getColor());
-//							updateFamilyColor();
+						public void actionPerformed(ActionEvent e)
+						{
+							pppicker.setColor(ColorActionListener.this.colorChooser.getColor());
+							// updateFamilyColor();
 						}
 					}, // OK button handler
 					null); // no CANCEL button handler
@@ -388,13 +399,12 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 		}
 	}
 
-	
-
-	private void initSymbolPane() {
+	private void initSymbolPane()
+	{
 
 		symbolpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		symbolpn.add(new JLabel("Symbol:"));
-		//symbolpn.setBorder(BorderFactory.createTitledBorder("Symbol"));
+		// symbolpn.setBorder(BorderFactory.createTitledBorder("Symbol"));
 		ShapeItemListener shapelistener = new ShapeItemListener();
 
 		circlechb = new JCheckBox(Shape.Circle.toString());
@@ -414,14 +424,17 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 		symbolpn.add(centerchb);
 	}
 
-	class ShapeItemListener implements ItemListener {
+	class ShapeItemListener implements ItemListener
+	{
 		@Override
-		public void itemStateChanged(ItemEvent e) {
+		public void itemStateChanged(ItemEvent e)
+		{
 			canvas.repaint();
 		}
 	}
 
-	private void initMicrographsPane() {
+	private void initMicrographsPane()
+	{
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.insets = new Insets(0, 5, 0, 5);
 		constraints.anchor = GridBagConstraints.NORTHWEST;
@@ -435,69 +448,67 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(120);
 		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(120);
 		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(60);
-		micrographstb
-				.setPreferredScrollableViewportSize(new Dimension(335, 304));
+		micrographstb.setPreferredScrollableViewportSize(new Dimension(335, 304));
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		sp.setViewportView(micrographstb);
-		micrographpn.add(sp,
-				WindowUtils.updateConstraints(constraints, 0, 0, 1));
+		micrographpn.add(sp, WindowUtils.updateConstraints(constraints, 0, 0, 1));
 		JPanel infopn = new JPanel();
-		particleslb = new JLabel(Integer.toString(pppicker.getParticlesNumber()));
-		infopn.add(new JLabel("Particles:"));
-		infopn.add(particleslb);
-		micrographpn.add(infopn,
-				WindowUtils.updateConstraints(constraints, 0, 1, 1));
+		upslb = new JLabel(Integer.toString(pppicker.getUntiltedNumber()));
+		tpslb = new JLabel(Integer.toString(pppicker.getTiltedNumber()));
+		infopn.add(new JLabel("Untilted:"));
+		infopn.add(upslb);
+		infopn.add(new JLabel("Tilted:"));
+		infopn.add(tpslb);
+		micrographpn.add(infopn, WindowUtils.updateConstraints(constraints, 0, 1, 1));
 		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		resetbt = new JButton("Reset");
 		buttonspn.add(resetbt);
-		micrographpn.add(buttonspn,
-				WindowUtils.updateConstraints(constraints, 0, 2, 2));
-		resetbt.addActionListener(new ActionListener() {
+		micrographpn.add(buttonspn, WindowUtils.updateConstraints(constraints, 0, 2, 2));
+		resetbt.addActionListener(new ActionListener()
+		{
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e)
+			{
 				pppicker.resetMicrograph();
 				canvas.repaint();
 				updateMicrographsModel();
 				setChanged(true);
 			}
 		});
-		micrographstb.getSelectionModel().addListSelectionListener(
-				new ListSelectionListener() {
+		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
+		{
 
-					@Override
-					public void valueChanged(ListSelectionEvent e) {
-						if (e.getValueIsAdjusting())
-							return;
-						if (TiltPairPickerJFrame.this.micrographstb
-								.getSelectedRow() == -1)
-							return;// Probably from fireTableDataChanged raised
-						index = TiltPairPickerJFrame.this.micrographstb
-								.getSelectedRow();
-						// by me.
-						untiltedmic.releaseImage();
-						untiltedmic = pppicker.getMicrographs().get(
-								index);
+			@Override
+			public void valueChanged(ListSelectionEvent e)
+			{
+				if (e.getValueIsAdjusting())
+					return;
+				if (TiltPairPickerJFrame.this.micrographstb.getSelectedRow() == -1)
+					return;// Probably from fireTableDataChanged raised
+				index = TiltPairPickerJFrame.this.micrographstb.getSelectedRow();
+				// by me.
+				untiltedmic.releaseImage();
+				untiltedmic = pppicker.getMicrographs().get(index);
 
-						initializeCanvas();
-						
-						pack();
-					}
-				});
+				initializeCanvas();
+				saveChanges();
+				pack();
+			}
+		});
 		micrographstb.getSelectionModel().setSelectionInterval(index, index);
 
 	}
 
-
-
-	private void saveChanges() {
+	private void saveChanges()
+	{
 		pppicker.saveData();
 		setChanged(false);
 	}
 
-
-	void switchSize(int size) {
+	void switchSize(int size)
+	{
 		sizetf.setText(Integer.toString(size));
 		sizesl.setValue(size);
 		canvas.repaint();
@@ -506,38 +517,43 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener {
 		setChanged(true);
 	}
 
-
-	void setChanged(boolean changed) {
+	void setChanged(boolean changed)
+	{
 		pppicker.setChanged(changed);
 		savemi.setEnabled(changed);
 	}
 
-	void updateMicrographsModel() {
+	void updateMicrographsModel()
+	{
 		micrographsmd.fireTableRowsUpdated(index, index);
 		micrographstb.setRowSelectionInterval(index, index);
-		particleslb.setText(Integer.toString(pppicker.getParticlesNumber()));
+		upslb.setText(Integer.toString(pppicker.getUntiltedNumber()));
+		tpslb.setText(Integer.toString(pppicker.getTiltedNumber()));
 	}
 
-	void initializeCanvas() {
-		if (canvas == null) 
+	void initializeCanvas()
+	{
+		if (canvas == null)
 			canvas = new UntiltedMicrographCanvas(this);
-		else 
+		else
 			canvas.updateMicrograph();
 	}
 
-	public UntiltedMicrographCanvas getCanvas() {
+	public UntiltedMicrographCanvas getCanvas()
+	{
 		return canvas;
 	}
 
-	public UntiltedMicrograph getUntiltedMicrograph() {
+	public UntiltedMicrograph getUntiltedMicrograph()
+	{
 		return untiltedmic;
 	}
-	
+
 	public int getParticleSize()
 	{
 		return sizesl.getValue();
 	}
-	
+
 	public Color getColor()
 	{
 		return pppicker.getColor();

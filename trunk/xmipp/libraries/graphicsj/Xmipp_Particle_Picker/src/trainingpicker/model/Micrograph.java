@@ -36,7 +36,10 @@ public abstract class Micrograph {
 		String[] tokens = file.split(File.separator);
 		if(tokens.length < level )
 			throw new IllegalArgumentException(String.format("Name for micrograph is taken from level %s, invalid path ", level, file));
-		return  tokens[tokens.length - level];
+		String name = tokens[tokens.length - level];
+		int pos = name.lastIndexOf('.');
+		name = name.substring(0, pos);
+		return  name;
 	}
 
 	public String getOFilename()

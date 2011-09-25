@@ -3,8 +3,10 @@ package tiltpairpicker.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import trainingpicker.model.Constants;
 import trainingpicker.model.Micrograph;
-import trainingpicker.model.Particle;
+import trainingpicker.model.MicrographParticle;
+import xmipp.Particle;
 import xmipp.TiltPairAligner;
 
 public class UntiltedMicrograph extends Micrograph {
@@ -12,17 +14,22 @@ public class UntiltedMicrograph extends Micrograph {
 	private TiltedMicrograph tiltedmicrograph;
 	private List<UntiltedParticle> particles;
 	private UntiltedParticle activeparticle;
+	private TiltPairAligner tpa;
+	private int added;
 
 	public UntiltedMicrograph(String file, TiltedMicrograph tiltedmicrograph) {
 		super(file, getName(file, 1));
 		this.tiltedmicrograph = tiltedmicrograph;
 		particles = new ArrayList<UntiltedParticle>();
+		tpa = new TiltPairAligner();
 	}
 
-	public boolean isEmpty() {
-		// TODO Auto-generated method stub
-		return false;
+	public int getAddedCount()
+	{
+		return added;
 	}
+
+	
 
 	public TiltedMicrograph getTiltedMicrograph() {
 		return tiltedmicrograph;
@@ -38,13 +45,11 @@ public class UntiltedMicrograph extends Micrograph {
 
 	@Override
 	public boolean hasData() {
-		// TODO Auto-generated method stub
-		return false;
+		return !particles.isEmpty();
 	}
 
 	@Override
 	public void reset() {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -90,6 +95,33 @@ public class UntiltedMicrograph extends Micrograph {
 			
 	}
 	
+	public void addParticleToAligner(UntiltedParticle up)
+	{
+		if(up.getTiltedParticle() == null)
+			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("TiltedParticle"));
+		tpa.addParticleToAligner(up.getX(), up.getY(), up.getTiltedParticle().getX(), up.getTiltedParticle().getY());
+		up.setAdded(true);
+		added ++;
+	}
 	
+	
+	public void initAligner()
+	{
+		System.out.println("Initializing aligner");
+		tpa.clear();
+		added = 0;
+		for(UntiltedParticle p: particles)
+			if(p.getTiltedParticle() != null)
+				addParticleToAligner(p);
+	}
+	
+	public void setAlignerTiltedParticle(UntiltedParticle up)
+	{
+		Particle p = tpa.getTiltedParticle(up.getX(), up.getY()); 
+		System.out.println(p);
+		TiltedParticle tp = new TiltedParticle(p.getX(), p.getY(), up);
+		getTiltedMicrograph().addParticle(tp);
+		up.setTiltedParticle(tp);
+	}
 
 }

@@ -49,6 +49,8 @@ public class MicrographPairsTableModel extends AbstractTableModel {
 			return m.getName();
 		if(columnIndex == 2)
 			return m.getTiltedMicrograph().getName();
+		if(columnIndex == 3)
+			return m.getParticles().size() + "+" + m.getTiltedMicrograph().getParticles().size();
 		return null;
 	}
 	

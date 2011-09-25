@@ -20,6 +20,7 @@ import trainingpicker.model.MicrographFamilyData;
 import trainingpicker.model.MicrographFamilyState;
 import trainingpicker.model.TrainingParticle;
 import trainingpicker.model.ParticlePicker;
+import xmipp.Particle;
 
 
 public class ParticlePickerCanvas extends ImageCanvas implements

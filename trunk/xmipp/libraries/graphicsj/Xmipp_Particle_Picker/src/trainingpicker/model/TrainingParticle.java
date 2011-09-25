@@ -1,17 +1,15 @@
 package trainingpicker.model;
 
 import ij.ImagePlus;
-import ij.gui.Roi;
 import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
-import java.util.List;
 
 import javax.swing.ImageIcon;
 
 import trainingpicker.gui.ParticleCanvas;
 
-public class TrainingParticle extends Particle {
+public class TrainingParticle extends MicrographParticle {
 	
 	protected Family family;
 	protected ImagePlus img;

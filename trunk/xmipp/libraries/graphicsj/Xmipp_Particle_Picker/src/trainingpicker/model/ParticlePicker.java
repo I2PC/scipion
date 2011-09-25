@@ -13,6 +13,7 @@ import java.util.logging.SimpleFormatter;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 import xmipp.Program;
+import xmipp.Particle;
 
 public abstract class ParticlePicker {
 
