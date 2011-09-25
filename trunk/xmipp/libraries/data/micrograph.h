@@ -586,19 +586,19 @@ public:
 	void addCoordinatePair(int _muX, int _muY, int _mtX, int _mtY);
 
 	/// Adjust passing matrix
-	void adjust_passing_matrix(int _muX, int _muY, int _mtX, int _mtY);
+	void adjustPassingMatrix(int _muX, int _muY, int _mtX, int _mtY);
 
 	/// Pass to tilted
-	void pass_to_tilted(int _muX, int _muY, int &_mtX, int &_mtY);
+	void passToTilted(int _muX, int _muY, int &_mtX, int &_mtY);
 
 	/// Pass to untilted
-	void pass_to_untilted(int _mtX, int _mtY, int &_muX, int &_muY);
+	void passToUntilted(int _mtX, int _mtY, int &_muX, int &_muY);
 
 	/// Compute gamma
-	void compute_gamma();
+	void computeGamma();
 
 	/// Compute alphas
-	void compute_alphas();
+	void computeAlphas();
 public:
     // For tilted-untilted correspondance
     Matrix2D<double>    Au;     // Untilted "positions"
