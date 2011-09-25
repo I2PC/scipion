@@ -84,8 +84,9 @@ opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/matlab')
 #opts.Add(BoolVariable('verbose_python', 'Verbose configuring of Python compilation?', 'no'))
 #opts.Add('PYTHONFLAGS', 'Additional flags for Python configure', '')
 
-opts.Add('JNI_CPPPATH', 'Directory of jni.h', '')
 opts.Add('JAVAC', 'Java compiler', 'javac')
+opts.Add('JAVA_HOME', 'Java installation directory', '')
+opts.Add('JNI_CPPPATH', 'Directory of jni.h', '')
 
 opts.Update(env)
 

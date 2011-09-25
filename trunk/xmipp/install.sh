@@ -70,14 +70,18 @@ export PATH=$XMIPP_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH
 
 #create file to include from BASH this Xmipp installation
-echo "export XMIPP_HOME=$PWD" > xmipp.bashrc
-echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> xmipp.bashrc
-echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> xmipp.bashrc
+INC_FILE=xmipp.bashrc
+echo "export XMIPP_HOME=$PWD" > $INC_FILE
+echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
+echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+chmod u+x $INC_FILE
 
 # for CSH or TCSH
-echo "setenv XMIPP_HOME $PWD" > xmipp.csh
-echo 'setenv PATH $XMIPP_HOME/bin:$PATH' >> xmipp.csh
-echo 'setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> xmipp.csh
+INC_FILE=xmipp.csh
+echo "setenv XMIPP_HOME $PWD" > $INC_FILE
+echo 'setenv PATH $XMIPP_HOME/bin:$PATH' >> $INC_FILE
+echo 'setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+chmod u+x $INC_FILE
 
 EXT_PATH=$XMIPP_HOME/external
 BUILD_PATH=$XMIPP_HOME/build

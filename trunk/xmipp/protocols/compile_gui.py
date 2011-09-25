@@ -31,9 +31,22 @@ from Tkinter import *
 import tkFont as font
 import ttk  
 
-from protlib_gui_ext import FilePollTextArea, centerWindows
+from protlib_gui_ext import FilePollTextArea, centerWindows, \
+                            MyButton, registerCommonFonts, showInfo, showError
 from protlib_filesystem import getXmippPath
     
+############### Helper functions ######################
+def browseDir(var, parent):
+    import tkFileDialog
+    path = tkFileDialog.askdirectory(title="Choose directory", parent=parent)
+    if len(path) > 0:
+        var.set(os.path.abspath(path))
+        
+def detectDir(tab, detectFunc):
+    errors = detectFunc(tab)
+    if len(errors) > 0:
+        showError("Errors", errors, tab)
+
 ################ Classes for a GUI based configuration ######################
 class OptionsTab(Frame):
     def __init__(self, master, text, **opts):
@@ -50,7 +63,7 @@ class OptionsTab(Frame):
         self.normal = font.Font(family='Helvetica', size=10)
         self.bold = font.Font(family='Helvetica', size=10, weight='bold')
         
-    def addOption(self, name, comment, default='', cond=None):
+    def addOption(self, name, comment, default='', cond=None, wiz=None, browse=False):
         r = self.lastRow
         var = StringVar()
         var.set(default)
@@ -65,10 +78,22 @@ class OptionsTab(Frame):
             w.grid(column=2, row=r, padx=5, pady=5, sticky=W)
         else:
             w = ttk.Entry(self, width=20, textvariable=var)
+            
             if cond:
                 if self.optionsDict[cond].get() == "no":
                     w['state'] = 'disabled'
             w.grid(column=2, row=r, sticky=(W, E), padx=5, pady=5)
+            
+            if browse:
+                btn = MyButton(self, 'Browse', 'folderopen.gif', 
+                               command=lambda: browseDir(var, self))
+                btn.grid(column=3, row=r)
+                
+            if wiz:
+                btn = MyButton(self, 'Find', 'wizard.gif',
+                               command=lambda: detectDir(self, wiz))
+                btn.grid(column=4, row=r)
+                
         self.options.append((name, default, var, w, cond))
         self.optionsDict[name] = var
         self.lastRow += 1
@@ -138,7 +163,6 @@ class ConfigNotebook(ttk.Notebook):
     def notifyStopCompile(self, msg, isError=False):
         runFunc = self.run
         self.btn.config(command=lambda:runFunc(self, 3), text="Compile")
-        print msg
         
     def createConfigTab(self):
         tab = self.addTab("Configure")
@@ -151,7 +175,11 @@ class ConfigNotebook(ttk.Notebook):
             self.text.stopRefresh()
             self.text.fillTextArea(goEnd=True)
             self.progressVar.set(0)
-            self.notifyStopCompile("blabla")
+            if self.proc.returncode != 0:
+                showError("Errors", "Errors on Xmipp compilation, see '%s' for more details" % self.OUTPUT, self)
+            else:
+                showInfo("Compilation finished.", "Xmipp has been successfully installed\nInclude file xmipp.bashrc or xmipp.csh to your startup shell file", self)
+                self.master.destroy()
         else:
             self.master.after(3000, self.checkProcess)
             if os.path.exists(self.OUTPUT):
@@ -175,9 +203,9 @@ class ConfigNotebook(ttk.Notebook):
         panel.grid(column=1, row=1, padx=5, pady=5, sticky=[W,E])
         self.progressVar = IntVar()
         self.progressVar.set(0)
-        progress = ttk.Progressbar(panel, orient=HORIZONTAL, length=300, mode='determinate', variable=self.progressVar, maximum="500")
+        progress = ttk.Progressbar(panel, orient=HORIZONTAL, length=300, mode='determinate', variable=self.progressVar, maximum="700")
         progress.pack(side=LEFT, padx=(0, 30))
-        from protlib_gui_ext import MyButton, registerCommonFonts
+        
         registerCommonFonts()
         self.btn = MyButton(panel, text='Compile')
         self.btn.pack(side=RIGHT,padx=(15, 0))

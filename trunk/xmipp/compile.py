@@ -101,50 +101,88 @@ def detectMpi():
 def detectQt():
     pass
 
-def addTabs(nb):
-    tab = nb.addTab("Compiler")
-    tab.addOption('CC', 'The C compiler', 'gcc')
-    tab.addOption('CXX', 'The C++ compiler', 'g++')
-    tab.addOption('LINKERFORPROGRAMS', 'Linker for programs', 'g++')
-    tab.addOption('CCFLAGS', 'The C compiler flags', '')
-    tab.addOption('CXXFLAGS', 'The C++ compiler flags', '')
-    
-    tab = nb.addTab("  MPI  ")
-    tab.addOption('mpi', 'Build the MPI programs?', 'no')
-    tab.addOption('MPI_CC', 'MPI C compiler', 'mpicc', cond='mpi')
-    tab.addOption('MPI_CXX', 'MPI C++ compiler', 'mpiCC', cond='mpi')
-    tab.addOption('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC', cond='mpi')
-    tab.addOption('MPI_INCLUDE', 'MPI headers dir ', '/usr/include', cond='mpi')
-    tab.addOption('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib', cond='mpi')
-    tab.addOption('MPI_LIB', 'MPI library', 'mpi', cond='mpi')
-    
+
+def addTabOption(tab, option, comment, default, cond=None, wiz=None, browse=False):
+    defaultsDic = globals()
+    if defaultsDic.has_key(option):
+        value = defaultsDic[option]
+        if (value == 1 or value == True):
+            default = 'yes'
+        elif (value == 0 or value == False):
+            default = 'no'
+        elif isinstance(value, list):
+            default = ' '.join(value)
+        else:
+            default = value
+    tab.addOption(option, comment, default, cond, wiz, browse) 
+   
+''' Following wizards functions will try to detect
+some values automatically, and return a list with
+errors if can't found the desired files''' 
+def wizardMpi(tab_mpi):   
     inc_mpi, lib_mpi = detectMpi()
+    errors = ""
     
     if inc_mpi:
-        tab.setValue('MPI_INCLUDE', inc_mpi)
+        tab_mpi.setValue('MPI_INCLUDE', inc_mpi)
+    else: errors = "Header mpi.h not found in include dirs"
+    
     if lib_mpi:
-        tab.setValue('MPI_LIBDIR', lib_mpi)
+        tab_mpi.setValue('MPI_LIBDIR', lib_mpi)
+    else: errors += "\nLibrary libmpi.so not found in libraries dirs"
+    
+    return errors
+    
+def wizardJava(tab_java):
+    java_home = detectJava()
+    if java_home:
+        tab_java.setValue('JAVA_HOME', java_home)  
+        return ""
+    return "JAVA_HOME could not be found."  
+    
+def addTabs(nb):
+    tab = nb.addTab("Compiler")
+    addTabOption(tab,'CC', 'The C compiler', 'gcc')
+    addTabOption(tab,'CXX', 'The C++ compiler', 'g++')
+    addTabOption(tab,'LINKERFORPROGRAMS', 'Linker for programs', 'g++')
+    addTabOption(tab,'CCFLAGS', 'The C compiler flags', '')
+    addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '')
+    
+    tab = nb.addTab("  MPI  ")
+    addTabOption(tab,'mpi', 'Build the MPI programs?', 'yes')
+    addTabOption(tab,'MPI_CC', 'MPI C compiler', 'mpicc', cond='mpi')
+    addTabOption(tab,'MPI_CXX', 'MPI C++ compiler', 'mpiCC', cond='mpi')
+    addTabOption(tab,'MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC', cond='mpi')
+    addTabOption(tab,'MPI_INCLUDE', 'MPI headers dir ', '/usr/include', cond='mpi', browse=True, wiz=wizardMpi)
+    addTabOption(tab,'MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib', cond='mpi', browse=True)
+    addTabOption(tab,'MPI_LIB', 'MPI library', 'mpi', cond='mpi')
+    tab_mpi = tab
     
     tab = nb.addTab("Java & QT")
-    tab.addOption('java', 'Build the java programs?', 'no')
-    tab.addOption('JAVAC', 'Java compiler', 'javac', cond='java')
-    tab.addOption('JAVA_HOME', 'Java installation directory', '', cond='java')
-    java_home = detectJava()
-    tab.setValue('JAVA_HOME', java_home)
+    addTabOption(tab,'java', 'Build the java programs?', 'yes')
+    addTabOption(tab,'JAVAC', 'Java compiler', 'javac', cond='java')
+    addTabOption(tab,'JAVA_HOME', 'Java installation directory', '', cond='java', wiz=wizardJava, browse=True)
     tab.addSeparator()
-    tab.addOption('qt', 'Build the GUI (qt) programs?', 'yes')
-    tab.addOption('QTDIR', 'Where is QT installed', '/usr/share/qt3', cond='qt')
-    tab.addOption('QT_LIB', 'QT library to use', 'qt-mt', cond='qt')
-    tab.addOption('QT4', 'Use Qt4 instead of Qt3?', 'no', cond='qt')
-    tabJava = tab
+    addTabOption(tab,'qt', 'Build the GUI (qt) programs?', 'yes')
+    addTabOption(tab,'QTDIR', 'Where is QT installed', '/usr/share/qt3', cond='qt', browse=True)
+    addTabOption(tab,'QT_LIB', 'QT library to use', 'qt-mt', cond='qt', browse=True)
+    addTabOption(tab,'QT4', 'Use Qt4 instead of Qt3?', 'no', cond='qt', browse=True)
+    tab_java = tab
     
     tab = nb.addTab("Advanced")
-    tab.addOption('debug', 'Build debug version?', 'no')
-    tab.addOption('profile', 'Build profile version?', 'no')
-    tab.addOption('warn', 'Show warnings?', 'no')
-    tab.addOption('fast', 'Fast?', 'no')
-    tab.addOption('static', 'Prevent dynamic linking?', 'no')
-    tab.addOption('prepend', 'What to prepend to executable names', 'xmipp')
+    addTabOption(tab,'debug', 'Build debug version?', 'no')
+    addTabOption(tab,'profile', 'Build profile version?', 'no')
+    addTabOption(tab,'warn', 'Show warnings?', 'no')
+    addTabOption(tab,'fast', 'Fast?', 'no')
+    addTabOption(tab,'static', 'Prevent dynamic linking?', 'no')
+    addTabOption(tab,'prepend', 'What to prepend to executable names', 'xmipp')
+    addTabOption(tab, 'gtest', 'Build tests?', 'no')
+    addTabOption(tab, 'release', 'Release mode', 'yes')
+   
+    if not os.path.exists(CONFIG):
+        wizardJava(tab_java)
+        wizardMpi(tab_mpi)
+        
         
 def runCompile(notebook, numberOfCpu):
     out = OUTPUT
@@ -160,7 +198,7 @@ def runCompile(notebook, numberOfCpu):
     cmd += cmd2
     os.environ['JAVA_HOME'] = notebook.getValue('Java & QT', 'JAVA_HOME')
     proc = Popen(cmd % locals(), shell=True)    
-    notebook.notifyCompile(proc)    
+    notebook.notifyCompile(proc)   
     
 def stopCompile(notebook, proc):
     proc.terminate()
@@ -171,18 +209,30 @@ def stopCompile(notebook, proc):
 OUTPUT = 'build/scons_output.log'
 if os.path.exists(OUTPUT):
     os.remove(OUTPUT)
+# TRY TO READ CONFIG FILE
+CONFIG = 'options.cache'
+if os.path.exists(CONFIG):
+    for line in open(CONFIG):
+        exec(line) # We need to be carefull with this
+    
 # Number of CPU
 if os.environ.has_key('NUMBER_OF_CPU'):
     numberOfCpu = int(os.environ['NUMBER_OF_CPU'])
 else: 
     numberOfCpu = 2
     
-# Display Tkinter GUI
 GUI = True
+# Check if Tkinter is available
+try:
+    import Tkinter
+except ImportError, e:
+    print "*** Could not import Tkinter, disabling GUI..."
+    GUI = False
 
 if GUI:
     from compile_gui import createGUINotebook
     nb = createGUINotebook(OUTPUT, numberOfCpu, addTabs, runCompile, stopCompile)
 else:
     nb = ConsoleConfigNotebook()
+    runCompile(nb, numberOfCpu)
     
