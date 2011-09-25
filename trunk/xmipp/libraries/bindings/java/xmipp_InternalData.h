@@ -11,17 +11,13 @@ static jfieldID ImageGeneric_peerId;
 static jfieldID Projection_peerId;
 static jfieldID MetaData_peerId;
 static jfieldID CTFDescription_peerId;
+static jfieldID TiltPairAligner_peerId;
 
-#define peerId ImageDouble_peerId
-#define peerId ImageGeneric_peerId
-#define peerId Projection_peerId
-#define peerId MetaData_peerId
-#define peerId CTFDescription_peerId
-
-#define GET_INTERNAL_IMAGE(obj) ((Image<double> *)(env->GetLongField(obj, peerId)))
-#define GET_INTERNAL_IMAGE_GENERIC(obj) ((ImageGeneric *)(env->GetLongField(obj, peerId)))
-#define GET_INTERNAL_PROJECTION(obj) ((Projection *)(env->GetLongField(obj, peerId)))
-#define GET_INTERNAL_METADATA(obj) ((MetaData *)(env->GetLongField(obj, peerId)))
-#define GET_INTERNAL_CTFDESCRIPTION(obj) ((CTFDescription *)(env->GetLongField(obj, peerId)))
+#define GET_INTERNAL_IMAGE(obj) ((Image<double> *)(env->GetLongField(obj, ImageDouble_peerId)))
+#define GET_INTERNAL_IMAGE_GENERIC(obj) ((ImageGeneric *)(env->GetLongField(obj, ImageGeneric_peerId)))
+#define GET_INTERNAL_PROJECTION(obj) ((Projection *)(env->GetLongField(obj, Projection_peerId)))
+#define GET_INTERNAL_METADATA(obj) ((MetaData *)(env->GetLongField(obj, MetaData_peerId)))
+#define GET_INTERNAL_CTFDESCRIPTION(obj) ((CTFDescription *)(env->GetLongField(obj, CTFDescription_peerId)))
+#define GET_INTERNAL_TPA(obj) ((TiltPairAligner *)(env->GetLongField(obj, TiltPairAligner_peerId)))
 
 #endif

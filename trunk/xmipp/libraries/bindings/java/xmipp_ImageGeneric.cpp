@@ -7,13 +7,13 @@
 
 JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_storeIds
 (JNIEnv *env, jclass cls) {
-	peerId = env->GetFieldID(cls, "peer", "J");
+	ImageGeneric_peerId = env->GetFieldID(cls, "peer", "J");
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_create
 (JNIEnv *env, jobject jobj) {
 	ImageGeneric *image = new ImageGeneric();
-	env->SetLongField(jobj, peerId, (long)image);
+	env->SetLongField(jobj, ImageGeneric_peerId, (long)image);
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_destroy
@@ -21,7 +21,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_destroy
 	ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 	delete image;
 	image = NULL;
-	env->SetLongField(jobj, peerId, (long)image);
+	env->SetLongField(jobj, ImageGeneric_peerId, (long)image);
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_read

@@ -6,13 +6,13 @@
 
 JNIEXPORT void JNICALL Java_xmipp_CTFDescription_storeIds
 (JNIEnv *env, jclass cls) {
-	peerId = env->GetFieldID(cls, "peer", "J");
+	CTFDescription_peerId = env->GetFieldID(cls, "peer", "J");
 }
 
 JNIEXPORT void JNICALL Java_xmipp_CTFDescription_create
 (JNIEnv *env, jobject jobj) {
 	CTFDescription *ctfDescription = new CTFDescription();
-	env->SetLongField(jobj, peerId, (long)ctfDescription);
+	env->SetLongField(jobj, CTFDescription_peerId, (long)ctfDescription);
 }
 
 JNIEXPORT void JNICALL Java_xmipp_CTFDescription_destroy
@@ -20,7 +20,7 @@ JNIEXPORT void JNICALL Java_xmipp_CTFDescription_destroy
 	CTFDescription *ctfDescription = GET_INTERNAL_CTFDESCRIPTION(jobj);
 	delete ctfDescription;
 	ctfDescription = NULL;
-	env->SetLongField(jobj, peerId, (long)ctfDescription);
+	env->SetLongField(jobj, CTFDescription_peerId, (long)ctfDescription);
 }
 
 JNIEXPORT void JNICALL Java_xmipp_CTFDescription_read_1
