@@ -415,7 +415,7 @@ void applyGeometry(int SplineDegree,
                 {
                     if (SplineDegree==0)
                     {
-                        dAij(V2, i, j) = (T) A2D_ELEM(V1,ROUND(yp),ROUND(xp));
+                        dAij(V2, i, j) = (T) A2D_ELEM(V1,(int)nearbyint(yp),(int)nearbyint(xp));
                     }
                     else if (SplineDegree==1)
                     {
@@ -605,7 +605,7 @@ void applyGeometry(int SplineDegree,
                     {
                         if (SplineDegree==0)
                         {
-                            dAkij(V2, k, i, j)=A3D_ELEM(V1,ROUND(zp),ROUND(yp),ROUND(xp));
+                            dAkij(V2, k, i, j)=A3D_ELEM(V1,(int)nearbyint(zp),(int)nearbyint(yp),(int)nearbyint(xp));
                         }
                         else if (SplineDegree == 1)
                         {

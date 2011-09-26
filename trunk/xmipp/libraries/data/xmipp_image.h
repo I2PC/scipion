@@ -116,7 +116,7 @@ public:
 
     /** Destructor.
         */
-    ~Image()
+    virtual ~Image()
     {
         if (mmapOnRead || mmapOnWrite)
             munmapFile();
@@ -681,17 +681,19 @@ public:
         im.getDimensions(imXdim, imYdim, imZdim);
         im().setXmippOrigin();
 
-        if (select_slice > ALL_SLICES)
+        int mode = (Xdim <= imXdim)? NEAREST : LINEAR; // If scale factor is higher than 1, LINEAR mode is used to avoid artifacts
+
+        if (select_slice > ALL_SLICES) // In this case a specific slice number has been chosen (Not central slice)
         {
             MultidimArrayGeneric array(im(), select_slice - 1);
             array.setXmippOrigin();
 
-            scaleToSize(0,IMGMATRIX(*this), array ,Xdim, Ydim);
+            scaleToSize(mode, IMGMATRIX(*this), array ,Xdim, Ydim);
         }
-        else
+        else // Otherwise, All slices or Central slice is selected
         {
             Zdim = (select_slice == ALL_SLICES)? imZdim: 1;
-            scaleToSize(0,IMGMATRIX(*this),im(), Xdim, Ydim, Zdim);
+            scaleToSize(mode, IMGMATRIX(*this), im(), Xdim, Ydim, Zdim);
         }
         return err;
     }
