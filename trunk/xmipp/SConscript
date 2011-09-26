@@ -752,7 +752,7 @@ if int(env['gtest']):
      AddXmippCTest('test_polar')
      AddXmippCTest('test_sampling')
      AddXmippCTest('test_transformation')
-     env.Depends('run_tests', [fftw, tiff, sqlite])
+     #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests
      test = AddXmippPythonTest('test_pythoninterface')
      #AddXmippPythonTest('test_projectionmatching')
