@@ -77,23 +77,23 @@ public class Family {
 	}
 
 	
-	public void goToNextStep(ParticlePicker ppicker)
+	public void goToNextStep(TrainingPicker ppicker)
 	{
 		validateNextStep(ppicker);
-		this.state = ParticlePicker.nextStep(state);
+		this.state = TrainingPicker.nextStep(state);
 	}
 	
 	public void goToPreviousStep()
 	{
-		this.state = ParticlePicker.previousStep(state);
+		this.state = TrainingPicker.previousStep(state);
 	}
 	
 	
 	
-	public void validateNextStep(ParticlePicker ppicker)
+	public void validateNextStep(TrainingPicker ppicker)
 	{
 		int min = SupervisedParticlePicker.getMinForTraining();
-		FamilyState next = ParticlePicker.nextStep(state);
+		FamilyState next = TrainingPicker.nextStep(state);
 		if(next == FamilyState.Supervised && particles < min)
 			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", min, FamilyState.Supervised));
 		if(!ppicker.hasEmptyMicrographs(this) && next != FamilyState.Review)

@@ -43,7 +43,6 @@ public class TrainingParticle extends MicrographParticle {
 		this.family = family;
 	}
 
-
 	
 	public boolean contains(int x2, int y2 )
 	{
@@ -54,8 +53,6 @@ public class TrainingParticle extends MicrographParticle {
 				return false;
 			return true;
 	}
-
-
 
 	
 	public ImagePlus getImage()
@@ -79,23 +76,6 @@ public class TrainingParticle extends MicrographParticle {
 		ImageIcon icon = new ImageIcon(img.getImage());
 		return icon;
 	}
-
-
-	
-	public ParticleCanvas getImageCanvas()
-	{
-		if(canvas == null)
-		{
-			canvas = new ParticleCanvas(getImage());
-		}
-		return canvas;
-		
-	}
-
-
-
-
-
 
 	
 }

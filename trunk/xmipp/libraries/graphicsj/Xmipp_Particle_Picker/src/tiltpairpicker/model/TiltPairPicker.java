@@ -9,25 +9,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import trainingpicker.model.Family;
+import trainingpicker.model.FamilyState;
+import trainingpicker.model.ParticlePicker;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
-public class TiltPairPicker
+public class TiltPairPicker extends ParticlePicker
 {
 
-	private static Logger logger;
-	private String outputdir = ".";
-	private static String rundir = ".";
-	private boolean changed;
-	private int size = 100;
 	protected List<UntiltedMicrograph> micrographs;
-	private Color color = Color.green;
+	private Family family;
 
 	public TiltPairPicker(String pairsfile, String outputdir)
 	{
-
-		this.outputdir = outputdir;
+		super(outputdir, FamilyState.Manual);
 		this.micrographs = new ArrayList<UntiltedMicrograph>();
+		family = families.get(0);
 		loadData(pairsfile);
 
 	}
@@ -110,51 +108,19 @@ public class TiltPairPicker
 
 	}
 
-	public void setChanged(boolean changed)
-	{
-		this.changed = changed;
-	}
-
-	public boolean isChanged()
-	{
-		return changed;
-	}
+	
 
 	public int getSize()
 	{
-		return size;
+		return family.getSize();
 	}
 
 	public Color getColor()
 	{
-		return color;
+		return family.getColor();
 	}
 
-	public static Logger getLogger()
-	{
-		try
-		{
-			if (logger == null)
-			{
-				FileHandler fh = new FileHandler("PPicker.log", true);
-				fh.setFormatter(new SimpleFormatter());
-				logger = Logger.getLogger("PPickerLogger");
-				logger.addHandler(fh);
-			}
-			return logger;
-		}
-		catch (Exception e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	public String getOutputPath(String file)
-	{
-		return outputdir + File.separator + file;
-	}
+	
 
 	public int getNextFreeMicrograph()
 	{
@@ -175,14 +141,14 @@ public class TiltPairPicker
 
 	public void setColor(Color color)
 	{
-		this.color = color;
-
+		family.setColor(color);
+		setChanged(true);
 	}
 
-	public void resetMicrograph()
+	public void resetMicrograph(UntiltedMicrograph m)
 	{
-		// TODO Auto-generated method stub
-
+		m.getParticles().clear();
+		setChanged(true);
 	}
 
 	public int getUntiltedNumber()
@@ -203,6 +169,7 @@ public class TiltPairPicker
 
 	public void saveData()
 	{
+		persistFamilies();
 		long id;
 		try
 		{
@@ -246,8 +213,9 @@ public class TiltPairPicker
 
 	public void setSize(int size)
 	{
-		this.size = size;
-
+		family.setSize(size);
+		setChanged(true);
 	}
-
+	
+	
 }

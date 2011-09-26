@@ -5,7 +5,7 @@ import java.util.logging.Level;
 
 
 
-public class SupervisedParticlePicker extends ParticlePicker {
+public class SupervisedParticlePicker extends TrainingPicker {
 	
 	private static int mintraining = 10;
 	private static String trainingfn = "training.txt";

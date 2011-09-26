@@ -74,7 +74,7 @@ public class MicrographFamilyData {
 	}
 
 	
-	public void removeParticle(TrainingParticle p, ParticlePicker ppicker) {
+	public void removeParticle(TrainingParticle p, TrainingPicker ppicker) {
 		if (p == null)
 			throw new IllegalArgumentException(
 					Constants.getEmptyFieldMsg("particle"));

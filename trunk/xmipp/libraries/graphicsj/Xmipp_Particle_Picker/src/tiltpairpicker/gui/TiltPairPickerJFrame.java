@@ -48,7 +48,7 @@ import tiltpairpicker.model.TiltPairPicker;
 import tiltpairpicker.model.UntiltedMicrograph;
 import trainingpicker.gui.ColorIcon;
 import trainingpicker.gui.WindowUtils;
-import trainingpicker.model.ParticlePicker;
+import trainingpicker.model.TrainingPicker;
 
 enum Tool
 {
@@ -89,7 +89,6 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener
 	private JButton resetbt;
 	private JLabel upslb;
 	private String tool = "Particle Picker Tool";
-	private JLabel tpslb;
 
 	// private JCheckBox onlylastchb;
 
@@ -169,9 +168,9 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener
 		setLayout(new GridBagLayout());
 
 		initParticlesPane();
-		add(particlespn, WindowUtils.updateConstraints(constraints, 0, 1, 3));
+		add(particlespn, WindowUtils.getConstraints(constraints, 0, 1, 3));
 		initMicrographsPane();
-		add(micrographpn, WindowUtils.updateConstraints(constraints, 0, 2, 3));
+		add(micrographpn, WindowUtils.getConstraints(constraints, 0, 2, 3));
 
 		pack();
 		position = 0.95;
@@ -241,7 +240,7 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener
 				{
 
 					new ImageJ();
-					IJ.run("Install...", "install=" + ParticlePicker.getXmippPath("external/imagej/macros/ParticlePicker.txt"));
+					IJ.run("Install...", "install=" + TrainingPicker.getXmippPath("external/imagej/macros/ParticlePicker.txt"));
 					IJ.setTool(tool);
 				}
 				// IJ.getInstance().setVisible(true);
@@ -452,26 +451,23 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		sp.setViewportView(micrographstb);
-		micrographpn.add(sp, WindowUtils.updateConstraints(constraints, 0, 0, 1));
+		micrographpn.add(sp, WindowUtils.getConstraints(constraints, 0, 0, 1));
 		JPanel infopn = new JPanel();
 		upslb = new JLabel(Integer.toString(pppicker.getUntiltedNumber()));
-		tpslb = new JLabel(Integer.toString(pppicker.getTiltedNumber()));
-		infopn.add(new JLabel("Untilted:"));
+		infopn.add(new JLabel("Particles:"));
 		infopn.add(upslb);
-		infopn.add(new JLabel("Tilted:"));
-		infopn.add(tpslb);
-		micrographpn.add(infopn, WindowUtils.updateConstraints(constraints, 0, 1, 1));
+		micrographpn.add(infopn, WindowUtils.getConstraints(constraints, 0, 1, 1));
 		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		resetbt = new JButton("Reset");
 		buttonspn.add(resetbt);
-		micrographpn.add(buttonspn, WindowUtils.updateConstraints(constraints, 0, 2, 2));
+		micrographpn.add(buttonspn, WindowUtils.getConstraints(constraints, 0, 2, 2));
 		resetbt.addActionListener(new ActionListener()
 		{
 
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				pppicker.resetMicrograph();
+				pppicker.resetMicrograph(untiltedmic);
 				canvas.repaint();
 				updateMicrographsModel();
 				setChanged(true);
@@ -528,7 +524,6 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener
 		micrographsmd.fireTableRowsUpdated(index, index);
 		micrographstb.setRowSelectionInterval(index, index);
 		upslb.setText(Integer.toString(pppicker.getUntiltedNumber()));
-		tpslb.setText(Integer.toString(pppicker.getTiltedNumber()));
 	}
 
 	void initializeCanvas()
@@ -544,7 +539,7 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener
 		return canvas;
 	}
 
-	public UntiltedMicrograph getUntiltedMicrograph()
+	public UntiltedMicrograph getMicrograph()
 	{
 		return untiltedmic;
 	}

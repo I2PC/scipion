@@ -17,12 +17,10 @@ public class MicrographPairsTableModel extends AbstractTableModel {
 	
 	private List<UntiltedMicrograph> micrographs;
 	private String[] columns = new String[]{"", "Name", "Pair Name", "Particles"};
-	private TiltPairPickerJFrame frame;
 
 	public MicrographPairsTableModel(TiltPairPickerJFrame frame)
 	{
 		this.micrographs = frame.getParticlePairPicker().getMicrographs();
-		this.frame = frame;
 	}
 	
 	@Override
@@ -50,7 +48,7 @@ public class MicrographPairsTableModel extends AbstractTableModel {
 		if(columnIndex == 2)
 			return m.getTiltedMicrograph().getName();
 		if(columnIndex == 3)
-			return m.getParticles().size() + "+" + m.getTiltedMicrograph().getParticles().size();
+			return m.getParticles().size();
 		return null;
 	}
 	

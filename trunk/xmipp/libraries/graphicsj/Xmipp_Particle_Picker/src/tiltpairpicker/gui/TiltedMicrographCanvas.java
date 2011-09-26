@@ -33,8 +33,8 @@ public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener
 
 	public TiltedMicrographCanvas(TiltPairPickerJFrame frame)
 	{
-		super(frame.getUntiltedMicrograph().getTiltedMicrograph().getImage());
-		this.untiltedmicrograph = frame.getUntiltedMicrograph();
+		super(frame.getMicrograph().getTiltedMicrograph().getImage());
+		this.untiltedmicrograph = frame.getMicrograph();
 		this.frame = frame;
 		iw = new ImageWindow(imp, this);
 		WindowUtils.centerScreen(0.7, iw);
@@ -43,7 +43,7 @@ public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener
 
 	public void updateMicrograph()
 	{
-		this.untiltedmicrograph = frame.getUntiltedMicrograph();
+		this.untiltedmicrograph = frame.getMicrograph();
 		iw.setImage(untiltedmicrograph.getTiltedMicrograph().getImage());
 		iw.updateImage(untiltedmicrograph.getTiltedMicrograph().getImage());
 		dragged = null;
@@ -170,20 +170,21 @@ public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener
 		{
 			if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown())
 			{
-				untiltedmicrograph.getTiltedMicrograph().removeParticle(p);
+				untiltedmicrograph.removeParticle(p.getUntiltedParticle());
 				frame.updateMicrographsModel();
 				if(p.getUntiltedParticle().isAdded())
 					reload = true;
+				frame.getCanvas().repaint();
 			}
 			else if (SwingUtilities.isLeftMouseButton(e))
 				dragged = p;
 		}
 		else if (untiltedmicrograph.hasActiveParticle() && SwingUtilities.isLeftMouseButton(e) && MicrographParticle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
 		{
-			UntiltedParticle activeparticle = untiltedmicrograph.getActiveParticle();
-			if (activeparticle.getTiltedParticle() != null)
+			UntiltedParticle active = untiltedmicrograph.getActiveParticle();
+			if (active.getTiltedParticle() != null)
 			{
-				p = activeparticle.getTiltedParticle();
+				p = active.getTiltedParticle();
 				p.setX(x);
 				p.setY(y);
 			}

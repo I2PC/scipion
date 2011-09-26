@@ -77,7 +77,7 @@ public class TrainingMicrograph extends Micrograph{
 		if(ctficon == null)
 		{
 			if(ctf == null || !(new File(ctf).exists()))
-				file = (ParticlePicker.getXmippPath("resources" + File.separator + "no-image.jpg"));
+				file = (TrainingPicker.getXmippPath("resources" + File.separator + "no-image.jpg"));
 			else
 				file = ctf;
 			Image image = new ImagePlus(file).getImage().getScaledInstance(120, 110, Image.SCALE_SMOOTH);
@@ -129,7 +129,7 @@ public class TrainingMicrograph extends Micrograph{
 	}
 	
 	
-	public void removeParticle(TrainingParticle p, ParticlePicker ppicker)
+	public void removeParticle(TrainingParticle p, TrainingPicker ppicker)
 	{
 		getFamilyData(p.getFamily()).removeParticle(p, ppicker);
 	}

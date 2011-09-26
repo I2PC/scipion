@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.awt.Desktop;
 
-import trainingpicker.model.ParticlePicker;
+import trainingpicker.model.TrainingPicker;
 
 
 public class WindowUtils {
@@ -24,7 +24,7 @@ public class WindowUtils {
 	}
 	
 
-	public static GridBagConstraints updateConstraints(
+	public static GridBagConstraints getConstraints(
 			GridBagConstraints constraints, int x, int y, int columns) {
 		constraints.gridx = x;
 		constraints.gridy = y;

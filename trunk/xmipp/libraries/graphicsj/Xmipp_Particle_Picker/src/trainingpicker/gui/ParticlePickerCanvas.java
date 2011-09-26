@@ -1,6 +1,7 @@
 package trainingpicker.gui;
 
 import ij.gui.ImageCanvas;
+import ij.gui.ImageWindow;
 
 import java.awt.BasicStroke;
 import java.awt.Cursor;
@@ -19,17 +20,18 @@ import trainingpicker.model.TrainingMicrograph;
 import trainingpicker.model.MicrographFamilyData;
 import trainingpicker.model.MicrographFamilyState;
 import trainingpicker.model.TrainingParticle;
-import trainingpicker.model.ParticlePicker;
+import trainingpicker.model.TrainingPicker;
 import xmipp.Particle;
 
 
 public class ParticlePickerCanvas extends ImageCanvas implements
 		MouseWheelListener {
 
+
 	private ParticlePickerJFrame frame;
 	private TrainingMicrograph micrograph;
 	private TrainingParticle dragged;
-	private ParticlePicker ppicker;
+	private TrainingPicker ppicker;
 	final static BasicStroke dashedst = new BasicStroke(1.0f,
 			BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f,
 			new float[] { 10.0f }, 0.0f);
@@ -41,13 +43,16 @@ public class ParticlePickerCanvas extends ImageCanvas implements
 		this.frame = frame;
 		addMouseWheelListener(this);
 		this.ppicker = frame.getParticlePicker();
+		
 	}
 	
 	public void updateMicrograph() {
 		this.micrograph = frame.getMicrograph();
+		ImageWindow iw = (ImageWindow)getParent();
+		iw.setImage(micrograph.getImage());
+		iw.updateImage(micrograph.getImage());
+		iw.setTitle(micrograph.getName());
 		imp = micrograph.getImage();
-		setImageUpdated();
-		repaint();
 	}
 	
 	

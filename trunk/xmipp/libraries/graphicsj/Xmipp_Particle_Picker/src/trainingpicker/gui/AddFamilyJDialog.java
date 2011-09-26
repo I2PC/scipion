@@ -62,23 +62,23 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 		constraints.anchor = GridBagConstraints.WEST;
 
 		add(new JLabel("Name"),
-				WindowUtils.updateConstraints(constraints, 0, 0, 1));
+				WindowUtils.getConstraints(constraints, 0, 0, 1));
 		nametf = new JTextField(20);
-		add(nametf, WindowUtils.updateConstraints(constraints, 1, 0, 1));
+		add(nametf, WindowUtils.getConstraints(constraints, 1, 0, 1));
 		add(new JLabel("Color"),
-				WindowUtils.updateConstraints(constraints, 0, 1, 1));
+				WindowUtils.getConstraints(constraints, 0, 1, 1));
 		colorbt = new JButton();
 		color = Family.getNextColor();
 		colorbt.setIcon(new ColorIcon(color));
 		colorbt.setBorderPainted(false);
-		add(colorbt, WindowUtils.updateConstraints(constraints, 1, 1, 1));
+		add(colorbt, WindowUtils.getConstraints(constraints, 1, 1, 1));
 
 		
 		add(new JLabel("Size"),
-				WindowUtils.updateConstraints(constraints, 0, 2, 1));
+				WindowUtils.getConstraints(constraints, 0, 2, 1));
 		initSizePane();
 		
-		add(sizepn, WindowUtils.updateConstraints(constraints, 1, 2, 1));
+		add(sizepn, WindowUtils.getConstraints(constraints, 1, 2, 1));
 //		add(new JLabel("Threshold"),
 //				WindowUtils.updateConstraints(constraints, 0, 3, 1));
 //		initThresholdPane();
@@ -87,8 +87,8 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 		getRootPane().setDefaultButton(addbt);
 		cancelbt = new JButton("Cancel");
 
-		add(addbt, WindowUtils.updateConstraints(constraints, 0, 3, 1));
-		add(cancelbt, WindowUtils.updateConstraints(constraints, 1, 3, 1));
+		add(addbt, WindowUtils.getConstraints(constraints, 0, 3, 1));
+		add(cancelbt, WindowUtils.getConstraints(constraints, 1, 3, 1));
 		setListeners();
 		pack();
 		WindowUtils.centerScreen(position, this);

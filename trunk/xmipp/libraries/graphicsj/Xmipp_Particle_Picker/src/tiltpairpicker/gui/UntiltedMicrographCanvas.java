@@ -36,8 +36,8 @@ public class UntiltedMicrographCanvas extends ImageCanvas implements MouseWheelL
 
 	public UntiltedMicrographCanvas(TiltPairPickerJFrame frame)
 	{
-		super(frame.getUntiltedMicrograph().getImage());
-		this.untiltedmicrograph = frame.getUntiltedMicrograph();
+		super(frame.getMicrograph().getImage());
+		this.untiltedmicrograph = frame.getMicrograph();
 	
 		this.frame = frame;
 		addMouseWheelListener(this);
@@ -49,7 +49,7 @@ public class UntiltedMicrographCanvas extends ImageCanvas implements MouseWheelL
 
 	public void updateMicrograph()
 	{
-		this.untiltedmicrograph = frame.getUntiltedMicrograph();
+		this.untiltedmicrograph = frame.getMicrograph();
 		iw.setImage(untiltedmicrograph.getImage());
 		iw.updateImage(untiltedmicrograph.getImage());
 		tiltedcanvas.updateMicrograph();

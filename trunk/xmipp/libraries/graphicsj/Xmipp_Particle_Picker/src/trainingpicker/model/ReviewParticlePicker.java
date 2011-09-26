@@ -9,7 +9,7 @@ import xmipp.MDLabel;
 import xmipp.MetaData;
 
 
-public class ReviewParticlePicker extends ParticlePicker {
+public class ReviewParticlePicker extends TrainingPicker {
 	
 	private String reviewfile;
 	private Family reviewfamily;
@@ -42,33 +42,15 @@ public class ReviewParticlePicker extends ParticlePicker {
 		families.add(reviewfamily);
 	}
 	
+	
+	
+	
 	@Override
 	public void persistMicrographs() {
-		try {
-			MetaData md;
-			MicrographFamilyData mfd;
-			long id;
-			new File(reviewfile).delete();// to ensure I clean file and can
-											// append later
-			for (TrainingMicrograph m : micrographs) {
-
-				mfd = m.getFamilyData(reviewfamily);
-				if (!mfd.isEmpty()) {
-					md = new MetaData();
-					for (TrainingParticle p : mfd.getParticles()) {
-						id = md.addObject();
-						md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
-						md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
-						md.setValueDouble(MDLabel.MDL_COST, p.getCost(), id);
-					}
-					md.writeBlock("mic_" + m.getName() + "@" + reviewfile);
-				}
-			}
-		} catch (Exception e) {
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
+		exportData(reviewfamily);
 	}
+	
+	
 
 	@Override
 	public void loadMicrographs() {
@@ -81,8 +63,7 @@ public class ReviewParticlePicker extends ParticlePicker {
 			long[] ids = md.findObjects();
 			for (long id : ids) {
 
-				filename = getMicrographPath(md.getValueString(
-						MDLabel.MDL_IMAGE, id));
+				filename = md.getValueString(MDLabel.MDL_IMAGE, id);
 				if (existsctf)
 					ctf = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
 				micrograph = new TrainingMicrograph(filename, ctf, families, getMode());

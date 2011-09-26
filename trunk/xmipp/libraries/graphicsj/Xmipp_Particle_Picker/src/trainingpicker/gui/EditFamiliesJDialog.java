@@ -63,15 +63,15 @@ public class EditFamiliesJDialog extends JDialog {
 		groupstb.setDefaultRenderer(Color.class, new ColorRenderer());
 		groupstb.setDefaultEditor(Color.class, new ColorEditor(position));
 		sp.setViewportView(groupstb);
-		add(groupstbpn, WindowUtils.updateConstraints(constraints, 0, 0, 3));
+		add(groupstbpn, WindowUtils.getConstraints(constraints, 0, 0, 3));
 		addbt = new JButton("Add");
 		deletebt = new JButton("Delete");
 		deletebt.setEnabled(false);
 		okbt = new JButton("Ok");
 
-		add(addbt, WindowUtils.updateConstraints(constraints, 0, 1, 1));
-		add(deletebt, WindowUtils.updateConstraints(constraints, 1, 1, 1));
-		add(okbt, WindowUtils.updateConstraints(constraints, 2, 1, 1));
+		add(addbt, WindowUtils.getConstraints(constraints, 0, 1, 1));
+		add(deletebt, WindowUtils.getConstraints(constraints, 1, 1, 1));
+		add(okbt, WindowUtils.getConstraints(constraints, 2, 1, 1));
 		getRootPane().setDefaultButton(addbt);
 		setListeners();
 		pack();
