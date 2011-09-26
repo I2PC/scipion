@@ -13,7 +13,7 @@ DO_ARPACK=false
 DO_CLEAN=true
 DO_STATIC=false
 
-export NUMBER_OF_CPU=$@
+export NUMBER_OF_CPU=1
 
 
 
@@ -138,8 +138,8 @@ compile_library()
 
   echo "--> ./configure $CONFIGFLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1"
   ./configure $CONFIGFLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1
-  echo "--> make $NUMBER_OF_CPU >$BUILD_PATH/${LIB}_make.log 2>&1"
-  make $NUMBER_OF_CPU >$BUILD_PATH/${LIB}_make.log 2>&1
+  echo "--> make -j $NUMBER_OF_CPU >$BUILD_PATH/${LIB}_make.log 2>&1"
+  make -j $NUMBER_OF_CPU >$BUILD_PATH/${LIB}_make.log 2>&1
   toc
 }
 

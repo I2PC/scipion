@@ -225,14 +225,10 @@ GUI = True
 # Check if Tkinter is available
 try:
     import Tkinter
-except ImportError, e:
-    print "*** Could not import Tkinter, disabling GUI..."
-    GUI = False
-
-if GUI:
     from compile_gui import createGUINotebook
     nb = createGUINotebook(OUTPUT, numberOfCpu, addTabs, runCompile, stopCompile)
-else:
+except Exception, e:
+    print "*** Could not create GUI.", e.msg
     nb = ConsoleConfigNotebook()
     OUTPUT = '/dev/stdout'
     runCompile(nb, numberOfCpu)
