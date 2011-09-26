@@ -72,7 +72,7 @@ class OptionsTab(Frame):
         ttk.Label(self, text=name, font=self.bold).\
         grid(column=1, row=r, padx=5, pady=5, sticky=E)
         if default in ['yes', 'no']: # Boolean option
-            w = ttk.Checkbutton(self, textvariable=var, variable=var, 
+            w = ttk.Checkbutton(self, textvariable=var, variable=var,
                             onvalue='yes', offvalue='no',
                             command=lambda:self.checked(name, var))
             w.grid(column=2, row=r, padx=5, pady=5, sticky=W)
@@ -85,7 +85,7 @@ class OptionsTab(Frame):
             w.grid(column=2, row=r, sticky=(W, E), padx=5, pady=5)
             
             if browse:
-                btn = MyButton(self, 'Browse', 'folderopen.gif', 
+                btn = MyButton(self, 'Browse', 'folderopen.gif',
                                command=lambda: browseDir(var, self))
                 btn.grid(column=3, row=r)
                 
@@ -116,15 +116,14 @@ class OptionsTab(Frame):
                 
     def addSeparator(self):
         ttk.Separator(self, orient=HORIZONTAL).\
-        grid(column=0, row=self.lastRow, columnspan=3, 
-             sticky=(W,E), padx=10, pady=5)
+        grid(column=0, row=self.lastRow, columnspan=3,
+             sticky=(W, E), padx=10, pady=5)
         self.lastRow += 1
         
     def getConfigOptions(self):
         optStr = ""
         for n, d, v, w, cond in self.options:
-            if v.get() != d:
-                optStr += ' %s="%s"' % (n, v.get())
+            optStr += ' %s="%s"' % (n, v.get())
         return optStr
         
 class ConfigNotebook(ttk.Notebook):
@@ -197,10 +196,10 @@ class ConfigNotebook(ttk.Notebook):
         label = ttk.Label(leftFrame, image=self.img)
         label.grid(column=0, row=0)
         leftFrame.grid(column=0, row=0, sticky=(N, S), padx=5, pady=5, rowspan=2)
-        self.grid(column=1, row=0, sticky=(N,W,E,S), padx=5, pady=5)
+        self.grid(column=1, row=0, sticky=(N, W, E, S), padx=5, pady=5)
         #bottom panel
         panel = ttk.Frame(root)
-        panel.grid(column=1, row=1, padx=5, pady=5, sticky=[W,E])
+        panel.grid(column=1, row=1, padx=5, pady=5, sticky=[W, E])
         self.progressVar = IntVar()
         self.progressVar.set(0)
         progress = ttk.Progressbar(panel, orient=HORIZONTAL, length=300, mode='determinate', variable=self.progressVar, maximum="700")
@@ -208,12 +207,12 @@ class ConfigNotebook(ttk.Notebook):
         
         registerCommonFonts()
         self.btn = MyButton(panel, text='Compile')
-        self.btn.pack(side=RIGHT,padx=(15, 0))
+        self.btn.pack(side=RIGHT, padx=(15, 0))
         procVar = IntVar()
         procVar.set(numberOfCpu)
         procEntry = ttk.Entry(panel, width="5", textvariable=procVar)
-        procEntry.pack(side=RIGHT,padx=5)
-        Label(panel, text="Processors").pack(side=RIGHT,padx=5)
+        procEntry.pack(side=RIGHT, padx=5)
+        Label(panel, text="Processors").pack(side=RIGHT, padx=5)
         self.btn.config(command=lambda:runCompileFunc(self, procVar.get()))
 
    
