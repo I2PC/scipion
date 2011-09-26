@@ -468,28 +468,85 @@ class ListboxDialog(Dialog):
     def apply(self):
         self.result = map(int, self.lb.curselection())
         
+def openLink(link):
+    ''' Open a link in default web browser '''
+    from  webbrowser import open
+    open(link)      
+
 '''Implementation of our own version of Yes/No dialog'''
-class YesNoDialog(Dialog):
-    def __init__(self, master, title, msg, DefaultNo=True):
+class ShowDialog(Dialog):
+    def __init__(self, master, title, msg, type):
         self.msg = msg
-        self.defaultNo = DefaultNo
-        self.result = False
+        self.type = type
         Dialog.__init__(self, master, title)        
+        
+    def getTaggedParts(self, parts):
+        tagsDict = {'[': 'link', '<': 'bold'}
+        tagged_parts = []
+        for p in parts:
+            if len(p) > 0:
+                if p[0] in tagsDict.keys():
+                    tagged_parts.append((p[1:-1], tagsDict[p[0]]))
+                else:
+                    tagged_parts.append((p, 'normal'))
+        return tagged_parts
         
     def body(self, master):
         try:
             from protlib_filesystem import getXmippPath
-            image = tk.PhotoImage(file=os.path.join(getXmippPath('resources'), 'warning.gif'))
+            self.image = tk.PhotoImage(file=os.path.join(getXmippPath('resources'), self.type + '.gif'))
         except tk.TclError:
-            image = None
+            self.image = None
         self.result = []
         self.frame = tk.Frame(master, bg="white", bd=2)
-        self.label = tk.Label(self.frame, text=self.msg, bg="white")
-        if image:
-            self.label.config(image=image, bd=0, compound=tk.LEFT)
-            self.label.image = image 
-        self.label.pack()
+        self.text = tk.Text(self.frame, bg="white", bd=0, font=Fonts['normal'])
+        self.text.tag_config('normal', justify=tk.LEFT)
+        self.text.tag_config('bold', justify=tk.LEFT, font=Fonts['button'])
+        
+        # Insert image
+        if self.image:
+            self.label = tk.Label(self.frame, image=self.image, bg='white', bd=0)
+            self.label.pack(side=tk.LEFT)
+
+        # Insert lines of text
+        # Find some tags to pretty text presentation
+        import re
+        r = re.compile('((?:\[[^]]+\])|(?:<[^>]+>))')
+        mylines = self.msg.splitlines()
+        m = 0
+        hm = HyperlinkManager(self.text)
+                
+        for l in mylines:
+            m = max(m, len(l))
+            parts = self.getTaggedParts(r.split(l))
+            for p, t in parts:
+                if t == 'link':
+                    def insertLink(link):
+                        self.text.insert(tk.INSERT, link, hm.add(lambda: openLink(link)))
+                    insertLink(p)
+                else:
+                    self.text.insert(tk.END, p, t)
+            self.text.insert(tk.END, '\n')
+        m = min(m, 80)
+        self.text.config(height=len(mylines)+3, width=m-7)
+        self.text.insert(tk.END, '\n')
+        self.text.pack()
         self.frame.pack()
+        
+    def buttonbox(self):
+        box = tk.Frame(self)    
+        self.btnNo = MyButton(box, text="Ok", width=7, command=self.cancel)
+        self.btnNo.pack(side=tk.LEFT, padx=5, pady=5, anchor='e')
+        box.pack()
+        self.bind("<Return>", self.cancel)
+        self.bind("<Escape>", self.cancel)
+
+'''Implementation of our own version of Yes/No dialog'''
+class YesNoDialog(ShowDialog):
+    def __init__(self, master, title, msg, DefaultNo=True):
+        self.defaultNo = DefaultNo
+        self.result = False
+        ShowDialog.__init__(self, master, title, msg, 'warning')        
         
     def buttonbox(self):
         box = tk.Frame(self)    
@@ -516,36 +573,6 @@ class YesNoDialog(Dialog):
             self.ok()
         else:
             self.cancel()
-        
-'''Implementation of our own version of Yes/No dialog'''
-class ShowDialog(Dialog):
-    def __init__(self, master, title, msg, type):
-        self.msg = msg
-        self.type = type
-        Dialog.__init__(self, master, title)        
-        
-    def body(self, master):
-        try:
-            from protlib_filesystem import getXmippPath
-            image = tk.PhotoImage(file=os.path.join(getXmippPath('resources'), self.type + '.gif'))
-        except tk.TclError:
-            image = None
-        self.result = []
-        self.frame = tk.Frame(master, bg="white", bd=2)
-        self.label = tk.Label(self.frame, text=self.msg, bg="white")
-        if image:
-            self.label.config(image=image, bd=0, compound=tk.LEFT)
-            self.label.image = image 
-        self.label.pack()
-        self.frame.pack()
-        
-    def buttonbox(self):
-        box = tk.Frame(self)    
-        self.btnNo = MyButton(box, text="Ok", width=7, command=self.cancel)
-        self.btnNo.pack(side=tk.LEFT, padx=5, pady=5, anchor='e')
-        box.pack()
-        self.bind("<Return>", self.cancel)
-        self.bind("<Escape>", self.cancel)
 
 ''' Functions to display dialogs '''
 def askYesNo(title, msg, parent):
@@ -809,6 +836,40 @@ class AutoCompleteEntry(tk.Entry):
             self.icursor(tk.END)
         return "break"
     
+# Tkinter Text Widget Hyperlink Manager
+# taken from:
+# http://effbot.org/zone/tkinter-text-hyperlink.htm
+class HyperlinkManager:
+    def __init__(self, text):
+        self.text = text
+        self.text.tag_config("hyper", foreground="blue", underline=1)
+        self.text.tag_bind("hyper", "<Enter>", self._enter)
+        self.text.tag_bind("hyper", "<Leave>", self._leave)
+        self.text.tag_bind("hyper", "<Button-1>", self._click)
+        self.reset()
+
+    def reset(self):
+        self.links = {}
+
+    def add(self, action):
+        # add an action to the manager.  returns tags to use in
+        # associated text widget
+        tag = "hyper-%d" % len(self.links)
+        self.links[tag] = action
+        return "hyper", tag
+
+    def _enter(self, event):
+        self.text.config(cursor="hand2")
+
+    def _leave(self, event):
+        self.text.config(cursor="")
+
+    def _click(self, event):
+        for tag in self.text.tag_names(tk.CURRENT):
+            if tag[:6] == "hyper-":
+                self.links[tag]()
+                return
+            
 def demoAutoComplete():
         def buildList():
             import glob

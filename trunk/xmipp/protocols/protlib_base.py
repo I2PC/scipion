@@ -210,7 +210,8 @@ class XmippProtocol(object):
         '''
         #Import all variables in the protocol header
         self.Header = loadModule(scriptname)
-        for k, v in self.Header.__dict__.iteritems():
+        self.ParamsDict = self.Header.__dict__
+        for k, v in self.ParamsDict.iteritems():
             self.__dict__[k] = v
             
         self.DoParallel = 'NumberOfMpi' in dir() and self.NumberOfMpi > 1
@@ -236,8 +237,8 @@ class XmippProtocol(object):
         pass
         #self.project = project.getId(launchDict['Projection Matching'],runName,)
         
-    def workingDirPath(self, path):
-        return os.path.join(self.WorkingDir, path)
+    def workingDirPath(self, *paths):
+        return os.path.join(self.WorkingDir, *paths)
 
     def getRunState(self):
         return self.project.projectDb.getRunStateByName(self.Name, self.RunName)
@@ -316,6 +317,7 @@ class XmippProtocol(object):
         sys.stderr = self.fErr
         self.Log = XmippLog(self.LogFile)
         self.Db  = XmippProtocolDb(self, isMainLoop)
+        self.insertStep = self.Db.insertStep
 
     def run(self):
         '''Run of the protocols
@@ -343,8 +345,8 @@ class XmippProtocol(object):
         retcode = 0
         try:
             self.runSetup()
-            self.Db.insertStep('createDir', [self.WorkingDir], path = self.WorkingDir)
-            self.Db.insertStep('createDir', [self.TmpDir], path = self.TmpDir)
+            self.Db.insertStep('createDir', [self.WorkingDir], path=self.WorkingDir)
+            self.Db.insertStep('createDir', [self.TmpDir], path=self.TmpDir)
             self.defineSteps()
             self.Db.runSteps()
             self.postRun()

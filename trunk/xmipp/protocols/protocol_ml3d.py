@@ -8,6 +8,7 @@
 #
 
 import os
+from os.path import join
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 from protlib_filesystem import copyFile, createDir, deleteDir, deleteFile
@@ -19,6 +20,7 @@ class ProtML3D(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.ml3d.name, scriptname, project)
         self.Import = 'from protocol_ml3d import *'
+        self.ParamsStr = ''
         
     def defineSteps(self):        
         restart = False
@@ -30,37 +32,92 @@ class ProtML3D(XmippProtocol):
 #            os.chdir(self.WorkingDir)
 #            self.restart_MLrefine3D(RestartIter)
         else:
+            
+            if self.DoMlf:
+                self.ParamsDict['ORoot'] = 'mlf3d'
+            else:
+                self.ParamsDict['ORoot'] = 'ml3d'
+                
             if (self.DoMlf and self.DoCorrectAmplitudes):
                 ctfFile = self.workingDirPath('my.ctfdat')
                 # Copy CTFdat to the workingdir as well
-                self.Db.insertStep('copyFile', [ctfFile], 
+                self.insertStep('copyFile', [ctfFile], 
                                    source=self.InCtfDatFile, dest=ctfFile )
             
-            initRefs = self.workingDirPath('initial_refs.stk')
-            self.Db.insertStep('copyInputReferences', [],  workingDir=self.WorkingDir,
-                               referenceMd=self.RefMd, outRefs=initRefs)
+            self.ParamsDict['InitialVols'] = initVols = self.workingDirPath('initial_volumes.stk')
+            self.insertStep('copyInputReferences', [initVols],  workingDir=self.WorkingDir,
+                               referenceMd=self.RefMd, outRefs=initVols)
         
             if self.DoCorrectGreyScale:
-                self.Db.insertStep('correctGreyScale', [],
-                                    workingDir=self.WorkingDir, imgMd=self.ImgMd, initRefs=self.RefMd, 
-                                    samplingRate=self.ProjMatchSampling, sym=self.Symmetry, 
-                                    numberOfMpi=self.NumberOfMpi, numberOfThreads=self.NumberOfThreads )
+                self.insertCorrectGreyScaleSteps()
+#                self.insertStep('correctGreyScale', [],
+#                                    workingDir=self.WorkingDir, imgMd=self.ImgMd, initRefs=self.RefMd, 
+#                                    samplingRate=self.ProjMatchSampling, sym=self.Symmetry, 
+#                                    numberOfMpi=self.NumberOfMpi, numberOfThreads=self.NumberOfThreads )
 
-#            if DoLowPassFilterReference:
-#                self.filter_reference()
-#
-#            if DoGenerateSeeds:
-#                self.generate_seeds()
-#
-#            if DoML3DClassification:
-#                self.execute_ML3D_classification()
+    # Insert the step of launch some program
+    def insertRunJob(self, prog, vf=[]): 
+        self.insertStep('runJob', verifyfiles=[self.ParamsDict[k] for k in vf],
+                        programname=prog, params=self.ParamsStr % self.ParamsDict(),
+                        NumberOfMpi=self.NumberOfMpi, NumberOfThreads=self.NumberOfThreads)
+    # Crude correction of grey-scale, by performing a single iteration of 
+    # projection matching and fourier reconstruction
+    def insertCorrectGreyScaleSteps(self):
+    #    print '*********************************************************************'
+    #    print '*  Correcting absolute grey scale of initial reference:'
+        cgsDir = self.workingDirPath('CorrectGreyscale')
+        self.insertStep('createDir', path=cgsDir)
+        volStack = self.ParamsDict['InitialVols'] = self.workingDirPath(cgsDir, 'corrected_volumes.stk')
+        md  = MetaData(self.RefMd)
+        index = 1
+        for idx in md:
+            volDir = join(cgsDir, 'vol%03d' % index)
+            projs = join(volDir, 'projections')
+            self.insertStep('createDir', path=volDir)
+            self.ParamsDict.update({
+                'InputVol': md.getValue(MDL_IMAGE, idx),
+                'OutputVol': "%(index)d@%(volStack)s" % locals(),
+                'projRefs': projs + ".stk",
+                'docRefs': projs + ".doc",
+                'corrRefs': join(volDir, 'corrected_refs.stk'),
+                'projMatch': join(volDir, "proj_match.doc")
+                })
+            
+            self.ParamsStr = ' -i %(InputVol)s --experimental_images %(ImgMd)s -o %(projRefs)s' + \
+                    ' --sampling_rate %(ProjMatchSampling)d --sym %(Symmetry)sh' + \
+                    ' --compute_neighbors --angular_distance -1' 
+                       
+            self.insertRunJob('xmipp_angular_project_library', ['projRefs', 'docRefs'])
 
+            self.params = '-i %(imgMd)s -o %(projMatch)s --ref %(projRefs)s' 
+            self.insertRunJob('xmipp_angular_projection_matching', ['projMatch'])
+ 
+#FIXME: COMMENTED THIS STEP UNTIL COMPLETION BY ROBERTO    
+#            params = '-i %(projMatch)s --lib %(docRefs)s -o %(corrRefs)s'
+#            insertRunJob('xmipp_angular_class_average', [corrRefs])
+
+            self.params = '-i %(projMatch)s -o %(outputVol)s --sym %(Symmetry)s --weight --thr %(NumberOfThreads)'
+            self.insertRunJob('xmipp_reconstruct_fourier')
         
-        # Return to parent dir
-        # os.chdir(os.pardir)
-
+    def insertFilterStep(self):
+        self.ParamsDict['FilteredVols'] = 'filtered_volumes.stk'
+        self.ParamsStr = '-i %(InitialVols)s -o %(FilteredVols)s --fourier low_pass %(LowPassFilter) --sampling %(PixelSize)s'
+        self.insertRunJob('xmipp_transform_filter', ['FilteredVols'])
+        self.ParamsDict['InitialVols'] = self.ParamsDict['FilteredVols']
+        
+    def insertML3DStep(self):
+        self.ParamsStr = "-i %(InitialVols)s --oroot %(ORoot)s --ref %(InitialVols)s --iter %(NumberOfIterations) " + \
+                         "--sym %(Symmetry) --ang %(AngularSampling)s %(ExtraParams)s"
+        if self.NumberOfThreads > 1:
+            self.ParamsStr += " --thr %(NumberOfThreads)d"
+        if self.DoNorm:
+            self.ParamsStr += " --norm"
+        
+        if self.DoMlf:
+            self.ParamsStr += ""
+    
 def initRefsFileName(workingDir):
-    return os.path.join(workingDir, 'initial_refs.stk')
+    return join(workingDir, 'initial_refs.stk')
 
 ''' This function will copy input references into a stack in working directory'''
 def copyInputReferences(log, workingDir, referenceMd, outRefs):
@@ -68,183 +125,11 @@ def copyInputReferences(log, workingDir, referenceMd, outRefs):
     md = MetaData(referenceMd)
     img = Image()
     i = 1
-    for id in md:
-        img.read(md.getValue(MDL_IMAGE, id))
+    for idx in md:
+        img.read(md.getValue(MDL_IMAGE, idx))
         img.write('%d@%s' % (i, outRefs))
         i += 1
-        
-# Crude correction of grey-scale, by performing a single iteration of 
-# projection matching and fourier reconstruction
-def correctGreyScale(log, workingDir, imgMd, initRefs, samplingRate, sym, 
-                      numberOfMpi, numberOfThreads):
-#    print '*********************************************************************'
-#    print '*  Correcting absolute grey scale of initial reference:'
-    dir = os.path.join(workingDir, 'CorrectGreyscale')
-    createDir(log, dir)
-    md  = MetaData(initRefs)
-    index = 1
-    for id in md:
-        dir = os.path.join(dir, 'vol%03d' % index)
-        createDir(log, dir)
-        inputVol = md.getValue(MDL_IMAGE, id)
-        projs = os.path.join(dir, 'projections')
-        projRefs = projs + ".stk"
-        docRefs = projs + ".doc"
-        avgs = os.path.join(dir, 'averages.stk')
-        corrRefs = os.path.join(dir, 'corrected_refs.stk')
-        projMatch = os.path.join(dir, "proj_match.doc")
-        
-        print locals()
-    
-#    basename='corrected_reference'
-#    docfile='original_angles.doc'
-#    refname='ref'
-#    if not os.path.exists(dirname):
-#        os.makedirs(dirname)
-    
-    # Grey-scale correction always leads to an amplitude uncorrected map
-#    self.RefForSeedsIsAmplitudeCorrected=False
-        
-#    print '*********************************************************************'
-#    print '* Create initial docfile'
-#    params= ' -i ' + str(self.InSelFile) + \
-#            ' -o ' + dirname + docfile
-#    launchJob("xmipp_header_extract",
-#                          params,
-#                          self.log,
-#                          False,1,1,'')
-    
-#    print '*********************************************************************'
-#    print '* Create projection library'
-        def myRunJob(prog, params): 
-            runJob(log, prog, params % locals(), numberOfMpi, numberOfThreads)
-        
-        params= ' -i %(inputVol)s --experimental_images %(imgMd)s -o %(projRefs)s' + \
-                ' --sampling_rate %(samplingRate)d --sym %(sym)sh' + \
-                ' -compute_neighbors -angular_distance -1' 
-                   
-        myRunJob('xmipp_angular_project_library', params)
-    
-    
-#    print '*********************************************************************'
-#    print '* Perform projection matching'
-#    parameters= ' -i '              + dirname + docfile + \
-#                ' -o '              + dirname + basename + \
-#                ' -ref '            + dirname + refname
-#    
-#    launchJob('xmipp_angular_projection_matching',
-#                          parameters,
-#                          self.log,
-#                          self.DoParallel,
-#                          self.NumberOfMpi,
-#                          self.NumberOfThreads,
-#                          self.SystemFlavour)
-        params = '-i %(imgMd)s -o %(projMatch)s -r %(projRefs)s' 
-        myRunJob('xmipp_angular_projection_matching', params)
-    
-#    print '*********************************************************************'
-#    print '* Make the class averages '
-#    parameters =  ' -i %(projMatch)s'      + dirname + basename + '.doc'  + \
-#                  ' -lib '    + dirname + refname  + '_angles.doc' + \
-#                  ' -o '      + dirname + basename 
-#    
-#    launchJob('xmipp_angular_class_average',
-#                          parameters,
-#                          self.log,
-#                          self.DoParallel,
-#                          self.NumberOfMpi,
-#                          self.NumberOfThreads,
-#                          self.SystemFlavour)
-        params = '-i %(projMatch)s --lib %(docRefs)s -o %(avgs)s'
-        myRunJob('xmipp_angular_class_average', params)
-#    
-#    
-#    print '*********************************************************************'
-#    print '* Perform Fourier-interpolation reconstruction '
-#    iname=dirname+basename+'_classes.sel'
-#    outname=basename+'.vol'
-#    parameters= ' -i '    + str(iname) + \
-#                ' -o '    + str(outname) + \
-#                ' --sym '+ self.Symmetry + \
-#                '  -weight '
-#    if (self.NumberOfThreads>1):
-#        parameters += ' -thr ' + str(self.NumberOfThreads)
-#       
-#    launchJob("xmipp_reconstruct_fourier",
-#                          parameters,
-#                          self.log,
-#                          self.DoParallel,
-#                          self.NumberOfMpi,
-#                          self.NumberOfThreads,
-#                          self.SystemFlavour)
-    
 
-## Low-pass filter
-#def filterReference(self):
-#    print '*********************************************************************'
-#    print '*  Low-pass filtering of the initial reference:'
-#
-#
-#    if os.path.exists('corrected_reference.vol'):
-#        reference='corrected_reference.vol'
-#    else:
-#        reference=self.InitialReference
-#    params=' -o filtered_reference.vol' + \
-#           ' -i ' + reference  + \
-#           ' -sampling ' + str(self.PixelSize) + \
-#           ' -low_pass ' + str(self.LowPassFilter)
-#    launchJob("xmipp_fourier_filter",
-#                          params,
-#                          self.log,
-#                          False,1,1,'')
-#
-## Splits selfile and performs a single cycle of ML3D-classification for each subset
-#def generate_seeds(self):
-#    import os
-#    import launch_job
-#    import selfile, utils_xmipp
-#    print '*********************************************************************'
-#    print '*  Generating seeds:' 
-#    newsel=selfile.selfile()
-#
-#    # Split selfiles
-#    params=' -o seeds_split'+ \
-#           ' -i ' + str(self.InSelFile) + \
-#           ' -n ' + str(self.NumberOfReferences) +' \n'
-#    launchJob("xmipp_selfile_split",
-#                          params,
-#                          self.log,
-#                          False,1,1,'')
-#
-#    if os.path.exists('filtered_reference.vol'):
-#        reference='filtered_reference.vol'
-#    elif os.path.exists('corrected_reference.vol'):
-#        reference='corrected_reference.vol'
-#    else:
-#        reference='initial_reference.vol'
-#
-#    # Launch MLrefine3D with output to subdirectories
-#    for i in range(self.NumberOfReferences):
-#        inselfile='seeds_split_'+str(i+1)+'.sel'
-#        dirname='GenerateSeed_'+str(i+1)+'/'
-#        if not os.path.exists(dirname):
-#            os.makedirs(dirname)
-#        outname=dirname+'seeds_split_'+str(i+1)
-#        self.execute_MLrefine3D(inselfile,
-#                                outname,
-#                                reference,
-#                                self.AngularSampling,
-#                                1,
-#                                self.Symmetry,
-#                                self.ImagesArePhaseFlipped,
-#                                self.RefForSeedsIsAmplitudeCorrected,
-#                                self.ExtraParamsMLrefine3D)
-#        seedname=utils_xmipp.composeFileName(outname+'_it',1,'vol')
-#        newsel.insert(seedname,'1')
-#    newsel.write('ml3d_seeds.sel')
-#
-#    # Seed generation with MLF always does amplitude correction
-#    self.SeedsAreAmplitudeCorrected=True
 #
 ## Perform the actual classification
 #def execute_ML3D_classification(self):
