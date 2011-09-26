@@ -189,13 +189,13 @@ def runCompile(notebook, numberOfCpu):
     procs = numberOfCpu
     opts = notebook.getConfigOptions()
     cmd = 'echo "*** RUNNING SCONS.CONFIGURE..." > %(out)s \n'
-    cmd1 = "./scons.configure %(opts)s >> %(out)s 2>&1 \n" % locals()
+    cmd1 = "./scons.configure %(opts)s >> %(out)s 2>&1 " % locals()
     cmd += 'echo "%(cmd1)s" >> %(out)s \n'
-    cmd += cmd1
+    cmd += cmd1 + '\n'
     cmd += 'echo "*** RUNNING SCONS.COMPILE..." >> %(out)s \n'
     cmd2 = "./scons.compile -j %(numberOfCpu)d >> %(out)s 2>&1 "% locals()
     cmd += 'echo "%(cmd2)s" >> %(out)s \n'
-    cmd += cmd2
+    cmd += cmd2 + '\n'
     os.environ['JAVA_HOME'] = notebook.getValue('Java & QT', 'JAVA_HOME')
     proc = Popen(cmd % locals(), shell=True)    
     notebook.notifyCompile(proc)   
@@ -220,7 +220,7 @@ if os.environ.has_key('NUMBER_OF_CPU'):
     numberOfCpu = int(os.environ['NUMBER_OF_CPU'])
 else: 
     numberOfCpu = 2
-    
+     
 GUI = True
 # Check if Tkinter is available
 try:
@@ -234,5 +234,10 @@ if GUI:
     nb = createGUINotebook(OUTPUT, numberOfCpu, addTabs, runCompile, stopCompile)
 else:
     nb = ConsoleConfigNotebook()
+    OUTPUT = '/dev/stdout'
     runCompile(nb, numberOfCpu)
+    if self.proc.returncode != 0:
+        print "Errors on Xmipp compilation, see '%s' for more details" % self.OUTPUT
+    else:
+        print "Xmipp has been successfully installed\nInclude file xmipp.bashrc or xmipp.csh to your startup shell file"
     
