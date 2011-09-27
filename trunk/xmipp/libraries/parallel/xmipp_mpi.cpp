@@ -335,8 +335,8 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
         fn = formatString("%s_node%d.xmd", rootname.c_str(), 1);
         fn = fn.removeBlockName();
         remove(fn.c_str());
-        if (MD.containsLabel(sortLabel))
-            MD.sort(mdAll, sortLabel);
+
+        MD.sort(mdAll, sortLabel);
     }
 }
 
