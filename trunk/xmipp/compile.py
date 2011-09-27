@@ -36,8 +36,8 @@ class ConsoleOptionsTab():
         self.optionsDict = {}
         self.optionsValue = {}
         
-    def addOption(self, name, comment, default='', cond=None):
-        self.optionsDict[name] = (comment, default, cond)
+    def addOption(self, name, comment, default='', cond=None, wiz=None, browse=False):
+        self.optionsDict[name] = (name, comment, default, cond)
         self.optionsValue[name] = default
         
     def setValue(self, name, value):
@@ -48,11 +48,14 @@ class ConsoleOptionsTab():
         
     def getConfigOptions(self):
         optStr = ""
-        for key, comment, default, cond in self.optionsDict.iteritems():
+        for key, comment, default, cond in self.optionsDict.values():
             value = self.optionsValue[key]
             if (cond is None or self.getValue(cond) == 'yes') and default != value: 
                 optStr += ' %s="%s"' % (k, value)
         return optStr
+	
+    def addSeparator(self):
+        pass
     
 
 class ConsoleConfigNotebook():
@@ -196,6 +199,9 @@ def runCompile(notebook, numberOfCpu):
     cmd2 = "./scons.compile -j %(numberOfCpu)d >> %(out)s 2>&1 "% locals()
     cmd += 'echo "%(cmd2)s" >> %(out)s \n'
     cmd += cmd2 + '\n'
+    import pprint
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(notebook.tabs)
     os.environ['JAVA_HOME'] = notebook.getValue('Java & QT', 'JAVA_HOME')
     proc = Popen(cmd % locals(), shell=True)    
     notebook.notifyCompile(proc)   
@@ -228,8 +234,9 @@ try:
     from compile_gui import createGUINotebook
     nb = createGUINotebook(OUTPUT, numberOfCpu, addTabs, runCompile, stopCompile)
 except Exception, e:
-    print "*** Could not create GUI.", e.msg
+    print "*** Could not create GUI.", e
     nb = ConsoleConfigNotebook()
+    addTabs(nb)
     OUTPUT = '/dev/stdout'
     runCompile(nb, numberOfCpu)
     if self.proc.returncode != 0:
