@@ -228,14 +228,14 @@ public class JPanelXmippBrowser extends JPanel {
                 if (abstractItem.isSingleImage()) {
                     images.add(abstractItem.getAbsoluteFileName());
                 } else {
-                    ImagesWindowFactory.openFileAsTable(abstractItem.getAbsoluteFileName());
+                    ImagesWindowFactory.openFileAsGallery(abstractItem.getAbsoluteFileName());
                 }
             }
         }
 
         if (!images.isEmpty()) {
             String imagesArray[] = images.toArray(new String[images.size()]);
-            ImagesWindowFactory.openFilesAsTable(imagesArray, true);
+            ImagesWindowFactory.openFilesAsGallery(imagesArray, true);
         }
     }
 

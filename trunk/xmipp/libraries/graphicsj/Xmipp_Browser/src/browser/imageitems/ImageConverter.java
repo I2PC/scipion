@@ -1,7 +1,7 @@
 package browser.imageitems;
 
 import browser.DEBUG;
-import browser.imageitems.tableitems.AbstractTableImageItem;
+import browser.imageitems.tableitems.AbstractGalleryImageItem;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -134,11 +134,11 @@ public class ImageConverter {
         return imp;
     }
 
-    public static ImagePlus convertToImagePlus(ArrayList<AbstractTableImageItem> items) {
+    public static ImagePlus convertToImagePlus(ArrayList<AbstractGalleryImageItem> items) {
         ImageStack is = null;
 
         for (int i = 0; i < items.size(); i++) {
-            AbstractTableImageItem item = items.get(i);
+            AbstractGalleryImageItem item = items.get(i);
 
             if (item.isEnabled() && item.exists()) {
                 ImagePlus ipslice = item.getImagePlus();

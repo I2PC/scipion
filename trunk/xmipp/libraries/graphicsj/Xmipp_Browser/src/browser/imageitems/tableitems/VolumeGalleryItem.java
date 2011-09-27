@@ -14,13 +14,13 @@ import xmipp.MDLabel;
  *
  * @author Juanjo Vega
  */
-public class VolumeTableItem extends AbstractTableImageItem {
+public class VolumeGalleryItem extends AbstractGalleryImageItem {
 
     protected String filename;
     protected int slice;
     protected boolean enabled = true;
 
-    public VolumeTableItem(String filename, int slice, Cache cache) {
+    public VolumeGalleryItem(String filename, int slice, Cache cache) {
         super(cache);
 
         this.filename = filename;

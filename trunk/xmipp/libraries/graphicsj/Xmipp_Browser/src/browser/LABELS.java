@@ -35,12 +35,12 @@ public class LABELS {
     public final static String TITLE_UNTITLED = "Untitled";
 
     // @TODO Remove
-    public static String TITLE_TABLE_WINDOW(int items) {
+    public static String TITLE_GALLERY_WINDOW(int items) {
         return items + " images";
     }
 
     // @TODO Remove
-    public static String TITLE_TABLE_WINDOW(XmippImageItem item) {
+    public static String TITLE_GALLERY_WINDOW(XmippImageItem item) {
         return item.getFileName()
                 + (item.isVolume() ? " / " + item.getDepth() + " slices" : "")
                 + (item.isStack() ? " / " + item.getNImages() + " images" : "");
@@ -54,11 +54,11 @@ public class LABELS {
     public final static String BUTTON_INVERT_SELECTION = "Invert Selection";
     public final static String BUTTON_NORMALIZE = "Normalize";
     public final static String BUTTON_OPEN_AS_IMAGE = "Open as Image";
-    public final static String BUTTON_OPEN_AS_TABLE = "Open as table";
+    public final static String BUTTON_OPEN_AS_GALLERY = "Open as gallery";
     public final static String BUTTON_OK = "Ok";
     public final static String BUTTON_CLOSE = "Close";
     public final static String BUTTON_PARENT_DIRECTORY = "Parent";
-    public final static String BUTTON_RELOAD_TABLE = "Reload";
+    public final static String BUTTON_RELOAD_GALLERY = "Reload";
     public final static String BUTTON_REFRESH = "Refresh";
     public final static String BUTTON_REFRESH_DIRECTORY = "Refresh";
     public final static String BUTTON_SAVE = "Save";
@@ -80,7 +80,7 @@ public class LABELS {
      * Operations
      */
     public final static String OPERATION_MENU_TRANSFORM = "Transform";
-    public final static String OPERATION_TO_TABLE = "To Table";
+    public final static String OPERATION_TO_GALLERY = "To Gallery";
     public final static String OPERATION_MENU_FLIP = "Flip";
     public final static String OPERATION_MENU_ROTATE = "Rotate";
     public final static String OPERATION_CROP = "Crop";
@@ -193,6 +193,7 @@ public class LABELS {
     public final static String LABEL_DIGITAL_FREQUENCY = "Digital frequency";
     public final static String LABEL_AUTO_AJUST_COLUMNS = "Auto adjust columns";
     public final static String LABEL_SHOW_LABELS = "Show label: ";
+    public final static String LABEL_ROTSPECTRA_SHOW_LABELS = "Show label.";
     public final static String LABEL_SORT_BY_LABEL = "Sort by label";
     public final static String LABEL_USE_GEOMETRY = "Use geometry";
     public final static String LABEL_FILTER = "Filter: ";
@@ -201,21 +202,21 @@ public class LABELS {
     public final static String LABEL_DEPTH = "Depth: ";
     public final static String LABEL_NIMAGES = "#Images: ";
     public final static String LABEL_LOAD_PREVIEW = "Load preview";
-    public final static String LABEL_TABLE_DISABLE = "Disable";
-    public final static String LABEL_TABLE_ENABLE = "Enable";
-    public final static String LABEL_TABLE_ENABLE_ALL = "Enable All";
-    public final static String LABEL_TABLE_ENABLE_FROM = "Enable from here";
-    public final static String LABEL_TABLE_ENABLE_TO = "Enable to here";
-    public final static String LABEL_TABLE_HIDE_DISABLED = "Hide disabled";
-    public final static String LABEL_TABLE_DISABLE_ALL = "Disable All";
-    public final static String LABEL_TABLE_DISABLE_FROM = "Disable from here";
-    public final static String LABEL_TABLE_DISABLE_TO = "Disable to here";
-    public final static String LABEL_TABLE_SAVE = "Save";
-    //public final static String LABEL_TABLE_SAVE_AS_IMAGES = "Save as images";
-    public final static String LABEL_TABLE_SAVE_AS_METADATA = "Save as metadata";
-    public final static String LABEL_TABLE_SAVE_SELECTION_AS_METADATA = "Save selection as metadata";
-    public final static String LABEL_TABLE_SAVE_AS_STACK = "Save as stack";
-    public final static String LABEL_TABLE_SAVE_SELECTION_AS_STACK = "Save selection as stack";
+    public final static String LABEL_GALLERY_DISABLE = "Disable";
+    public final static String LABEL_GALLERY_ENABLE = "Enable";
+    public final static String LABEL_GALLERY_ENABLE_ALL = "Enable All";
+    public final static String LABEL_GALLERY_ENABLE_FROM = "Enable from here";
+    public final static String LABEL_GALLERY_ENABLE_TO = "Enable to here";
+    public final static String LABEL_GALLERY_HIDE_DISABLED = "Hide disabled";
+    public final static String LABEL_GALLERY_DISABLE_ALL = "Disable All";
+    public final static String LABEL_GALLERY_DISABLE_FROM = "Disable from here";
+    public final static String LABEL_GALLERY_DISABLE_TO = "Disable to here";
+    public final static String LABEL_GALLERY_SAVE = "Save";
+    //public final static String LABEL_GALLERY_SAVE_AS_IMAGES = "Save as images";
+    public final static String LABEL_GALLERY_SAVE_AS_METADATA = "Save as metadata";
+    public final static String LABEL_GALLERY_SAVE_SELECTION_AS_METADATA = "Save selection as metadata";
+    public final static String LABEL_GALLERY_SAVE_AS_STACK = "Save as stack";
+    public final static String LABEL_GALLERY_SAVE_SELECTION_AS_STACK = "Save selection as stack";
     public final static String LABEL_CTF = "CTF";
     public final static String LABEL_PSD = "PSD";
     public final static String LABEL_SAMPLING = "1/A";

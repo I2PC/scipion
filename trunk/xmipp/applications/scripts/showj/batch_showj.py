@@ -8,7 +8,7 @@ class ScriptShowJ(ScriptPluginIJ):
 		
 	def defineOtherParams(self):
 		self.addParamsLine('  [--mode <mode_value=image>]           : List of params ');
-		self.addParamsLine('     where <mode_value> image table')
+		self.addParamsLine('     where <mode_value> image gallery')
 		self.addParamsLine('         alias -o;');
 		self.addParamsLine('  [--poll ]                            : Keep checking for changes on input files');
 		self.addParamsLine('         alias -p;');

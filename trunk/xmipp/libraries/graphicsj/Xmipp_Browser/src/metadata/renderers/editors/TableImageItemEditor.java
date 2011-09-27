@@ -4,7 +4,7 @@
  */
 package metadata.renderers.editors;
 
-import browser.imageitems.tableitems.TableImageItem;
+import browser.imageitems.tableitems.GalleryImageItem;
 import java.awt.Component;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JTable;
@@ -16,7 +16,7 @@ import javax.swing.JTextField;
  */
 public class TableImageItemEditor extends DefaultCellEditor {
 
-    private TableImageItem item;
+    private GalleryImageItem item;
     private String previousValue;
 
     public TableImageItemEditor() {
@@ -25,7 +25,7 @@ public class TableImageItemEditor extends DefaultCellEditor {
 
     @Override
     public Component getTableCellEditorComponent(JTable jtable, Object o, boolean bln, int i, int i1) {
-        item = (TableImageItem) o;
+        item = (GalleryImageItem) o;
 
         previousValue = item.getOriginalValue();
 

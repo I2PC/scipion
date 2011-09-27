@@ -55,7 +55,7 @@ public class JDialogXmippBrowser extends JDialogXmippFilesList {
         setToolbar();
 
         jbOk.setText(LABELS.BUTTON_OPEN_AS_IMAGE);
-        jbCancel.setText(LABELS.BUTTON_OPEN_AS_TABLE);
+        jbCancel.setText(LABELS.BUTTON_OPEN_AS_GALLERY);
     }
 
     void setToolbar() {

@@ -23,21 +23,27 @@ public class RotSpectraTableModel extends AbstractTableModel {
     int w, h;
     int vectorsSize;
     LinkedList<RotSpectraVector> data = new LinkedList<RotSpectraVector>();
+    String filenameClasses, filenameVectors, filenameData;
+    boolean showLabels;
 
     public RotSpectraTableModel(String filenameClasses, String filenameVectors, String filenameData) throws Exception {
+        this.filenameClasses = filenameClasses;
+        this.filenameVectors = filenameVectors;
+        this.filenameData = filenameData;
+
         load(filenameClasses, filenameVectors, filenameData);
 
         //int size = data.size();
         //System.out.println(size);
 //        for (int i = 0; i < data.size(); i++) {
 //            RotSpectraVector rsv = data.get(i);
-//            Image plot = rsv.getPlotImage(128, 128);
+//            Image plot = rsv.getPreview(128, 128);
 //            ImagePlus imp = new ImagePlus(filenameData, plot);
 //            imp.show();
 //        }
     }
 
-    public void load(String filenameClasses, String filenameVectors, String filenameData) throws Exception {
+    void load(String filenameClasses, String filenameVectors, String filenameData) throws Exception {
         MetaData mdClasses = new MetaData(blockKerDenSOM + filenameClasses);
         MetaData mdVectors = new MetaData(filenameVectors);
 
@@ -56,7 +62,7 @@ public class RotSpectraTableModel extends AbstractTableModel {
         for (int i = 0; i < vectors.length; i++) {
             double vector[] = vectors[i];
             data.add(new RotSpectraVector(
-                    blocks[i], filenameData, vector));
+                    blocks[i], filenameClasses, vector));
         }
     }
 
@@ -116,5 +122,13 @@ public class RotSpectraTableModel extends AbstractTableModel {
         int index = row * getColumnCount() + column;
 
         return data.get(index);
+    }
+
+    public void setShowLabels(boolean showLabels) {
+        this.showLabels = showLabels;
+    }
+
+    public boolean isShowingLabels() {
+        return showLabels;
     }
 }

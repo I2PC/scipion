@@ -4,7 +4,7 @@
  */
 package metadata.renderers;
 
-import browser.imageitems.tableitems.TableImageItem;
+import browser.imageitems.tableitems.GalleryImageItem;
 import ij.ImagePlus;
 import java.awt.Component;
 import java.awt.Font;
@@ -43,7 +43,7 @@ public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         super.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column);
 
-        TableImageItem item = (TableImageItem) value;
+        GalleryImageItem item = (GalleryImageItem) value;
 
         String label = null;
         ImageIcon icon = null;

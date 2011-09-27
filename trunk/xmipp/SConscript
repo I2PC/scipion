@@ -775,6 +775,7 @@ AddBatch('micrograph_tiltpair_picking', 'applications/scripts/micrograph_tiltpai
 AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', '.py')
 AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
 AddBatch('browserj', 'applications/scripts/browserj', '.py')
+AddBatch('rot_spectraj', 'applications/scripts/rot_spectraj', '.py')
 AddBatch('metadata_showj', 'applications/scripts/metadata_showj', '.py')
 #AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
 AddBatch('mpi_steps_runner', 'protocols', '.py')

@@ -10,16 +10,18 @@ package browser;
  */
 public class COMMAND_PARAMETERS {
 
-    // @TODO Remove descriptions (?)
     public final static String OPTION_INPUT_FILE = "i";
     public final static String OPTION_INPUT_DIR = "dir";
+    public final static String OPTION_INPUT_VECTORSFILE = "vectors";
+    public final static String OPTION_INPUT_CLASSESFILE = "classes";
+    public final static String OPTION_INPUT_DATAFILE = "data";
     public final static String OPTION_POLL = "poll";
     public final static String OPTION_TABLE_ROWS = "rows";
     public final static String OPTION_TABLE_COLUMNS = "columns";
     public final static String OPTION_MODE = "mode";
     public final static String MODE_DEFAULT = "default";
     public final static String MODE_IMAGE = "image";
-    public final static String MODE_TABLE = "table";
+    public final static String MODE_GALLERY = "gallery";
     public final static String OPTION_RENDER_IMAGES = "render";
     public final static String OPTION_SINGLE_SELECTION = "singlesel";
     public final static String OPTION_SELECTION_TYPE = "seltype";

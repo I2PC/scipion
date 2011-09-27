@@ -8,7 +8,7 @@ import ij.IJ;
 import javax.swing.table.DefaultTableModel;
 import browser.Cache;
 import browser.DEBUG;
-import browser.imageitems.tableitems.TableImageItem;
+import browser.imageitems.tableitems.GalleryImageItem;
 import metadata.images.TableFileItem;
 import xmipp.Filename;
 import xmipp.MDLabel;
@@ -88,8 +88,8 @@ public class MetaDataTableModel extends DefaultTableModel {
 //
 //        for (int i = 0; i < getColumnCount(); i++) {
 //            Object item = getValueAt(row, i);
-//            if (item instanceof TableImageItem) {
-//                int h = ((TableImageItem) item).getHeight();
+//            if (item instanceof GalleryImageItem) {
+//                int h = ((GalleryImageItem) item).getHeight();
 //                if (h > height) {
 //                    height = h;
 //                }
@@ -183,8 +183,8 @@ public class MetaDataTableModel extends DefaultTableModel {
 
                         if (MetaData.isImage(label)) {
 //                            String path = md.getValueString(label, id, true);
-//                            row[i] = new TableImageItem(path, value, cache);
-                            row[i] = new TableImageItem(id, md, label, cache);
+//                            row[i] = new GalleryImageItem(path, value, cache);
+                            row[i] = new GalleryImageItem(id, md, label, cache);
                             containsImages = true;
                         } else if (MetaData.isMetadata(label)) {
                             String path_ = md.getValueString(label, id, true);
@@ -278,9 +278,9 @@ public class MetaDataTableModel extends DefaultTableModel {
 
                     if (class_ == TableFileItem.class) {
                         md.setValueString(label, ((TableFileItem) item).getOriginalValue(), id);
-                        //} else if (class_ == TableImageItem.class) {
-                    } else if (class_ == TableImageItem.class) {
-                        md.setValueString(label, ((TableImageItem) item).getOriginalValue(), id);
+                        //} else if (class_ == GalleryImageItem.class) {
+                    } else if (class_ == GalleryImageItem.class) {
+                        md.setValueString(label, ((GalleryImageItem) item).getOriginalValue(), id);
                     } else if (class_ == String.class) {
                         md.setValueString(label, ((String) item), id);
                     } else if (class_ == Double.class) {

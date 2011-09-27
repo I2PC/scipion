@@ -6,9 +6,9 @@ package browser.windows;
 
 import browser.DEBUG;
 import browser.imageitems.ImageConverter;
-import browser.imageitems.tableitems.AbstractTableImageItem;
-import browser.table.JFrameImagesTable;
-import browser.table.models.AbstractXmippTableModel;
+import browser.imageitems.tableitems.AbstractGalleryImageItem;
+import browser.gallery.JFrameGallery;
+import browser.gallery.models.AbstractXmippTableModel;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
@@ -30,6 +30,7 @@ import micrographs.ctf.CTFRecalculateImageWindow;
 import micrographs.CTFProfileWindow;
 import micrographs.FSCWindow;
 import micrographs.ctf.tasks.TasksEngine;
+import rotspectra.JFrameRotSpectra;
 import xmipp.Filename;
 import xmipp.ImageDouble;
 import xmipp.MetaData;
@@ -67,7 +68,7 @@ public class ImagesWindowFactory {
 
     public static void openFileAsDefault(String filename, boolean poll, int rows, int columns) {
         if (Filename.isMetadata(filename)) {
-            openFileAsTable(filename, rows, columns);
+            openFileAsGallery(filename, rows, columns);
         } else {
             try {
                 ImageDouble img = new ImageDouble();
@@ -76,7 +77,7 @@ public class ImagesWindowFactory {
                 if (img.isSingleImage()) {
                     openFileAsImage(filename, poll);
                 } else if (img.isStackOrVolume()) {
-                    openFileAsTable(filename, rows, columns);
+                    openFileAsGallery(filename, rows, columns);
                 } else {
                     openFileAsImage(filename, poll);
                 }
@@ -146,70 +147,81 @@ public class ImagesWindowFactory {
         frameMetaData.setVisible(true);
     }
 
-    public static void openFileAsTable(String filename) {
-        openFileAsTable(filename, -1, -1);
+    public static void openFileAsGallery(String filename) {
+        openFileAsGallery(filename, -1, -1);
     }
 
-    public static void openFileAsTable(String filename, int rows, int columns) {
-        JFrameImagesTable table = new JFrameImagesTable(filename);
-        setConvenientSize(table);
+    public static JFrameGallery openFileAsGallery(String filename, int rows, int columns) {
+        JFrameGallery gallery = new JFrameGallery(filename);
+        setConvenientSize(gallery);
 
         if (rows < 0 && columns < 0) {
-            table.setAutoAdjustColumns(true);
+            gallery.setAutoAdjustColumns(true);
         } else {
-            table.setDimensions(rows, columns);
+            gallery.setDimensions(rows, columns);
         }
 
-        table.setVisible(true);
+        gallery.setVisible(true);
+
+        return gallery;
     }
 
-    public static void openFilesAsTable(String filenames[], boolean poll) {
-        openFilesAsTable(filenames, poll);
+    public static JFrameGallery openFilesAsGallery(String filenames[], boolean useSameTable) {
+        return openFilesAsGallery(filenames, useSameTable, -1, -1);
     }
 
-    public static void openFilesAsTable(String filenames[], int rows, int columns) {
-        openFilesAsTable(filenames, false, rows, columns);
+    public static JFrameGallery openFilesAsGallery(String filenames[], int rows, int columns) {
+        return openFilesAsGallery(filenames, false, rows, columns);
     }
 
-    public static void openFilesAsTable(String filenames[],
+    public static JFrameGallery openFilesAsGallery(String filenames[],
             boolean useSameTable, int rows, int columns) {
+        JFrameGallery gallery = null;
+
         if (useSameTable) {
-//            table = new JFrameRotSpectra(filenames);
-//            table.setAutoAdjustColumns(true);
-//            table.setVisible(true);
-            openFileAsTable(null, rows, columns);
+            gallery = new JFrameGallery(filenames);
+            setConvenientSize(gallery);
+
+            if (rows < 1 && columns < 1) {
+                gallery.setAutoAdjustColumns(true);
+            } else {
+                gallery.setDimensions(rows, columns);
+            }
+            gallery.setVisible(true);
         } else {
             for (int i = 0; i < filenames.length; i++) {
-                openFileAsTable(filenames[i], rows, columns);
+                gallery = openFileAsGallery(filenames[i], rows, columns);
             }
         }
+
+        return gallery;
     }
 
     // Used by micrographs table, to load items marked as selected/unselected.
-    public static void openTable(String filenames[], boolean enabled[]) {
-        JFrameImagesTable table = new JFrameImagesTable(filenames, enabled);
-        table.setAutoAdjustColumns(true);
-        table.setVisible(true);
+    public static void openGallery(String filenames[], boolean enabled[]) {
+        JFrameGallery gallery = new JFrameGallery(filenames, enabled);
+        gallery.setAutoAdjustColumns(true);
+        gallery.setVisible(true);
     }
 
     public static void captureFrame(ImagePlus ip) {
         openXmippImageWindow(ip, false);
     }
 
-    public static void openTableAs3D(AbstractXmippTableModel tableModel) {
+    public static void openGalleryAs3D(AbstractXmippTableModel tableModel) {
         try {
-            ArrayList<AbstractTableImageItem> items = tableModel.getAllItems();
+            ArrayList<AbstractGalleryImageItem> items = tableModel.getAllItems();
             ImagePlus ip = ImageConverter.convertToImagePlus(items);
             ip.setTitle(tableModel.getFilename());
 
             openImagePlusAs3D(ip);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
-            ex.printStackTrace();
+            DEBUG.printException(ex);
         }
     }
 
-    public static void openTableAsImagePlus(AbstractXmippTableModel tableModel) {
+    public static void openGalleryAsImagePlus(AbstractXmippTableModel tableModel) {
         try {
             String path = tableModel.getFilename();
 
@@ -224,7 +236,7 @@ public class ImagesWindowFactory {
                 File tempFile = File.createTempFile("tableToStack_", ".stk");
                 tempFile.deleteOnExit();
 
-                ArrayList<AbstractTableImageItem> items = tableModel.getAllItems();
+                ArrayList<AbstractGalleryImageItem> items = tableModel.getAllItems();
                 ImagePlus imp = ImageConverter.convertToImagePlus(items);
                 IJ.run(imp, "Xmipp writer", "save=" + tempFile.getAbsolutePath());
 
@@ -236,11 +248,11 @@ public class ImagesWindowFactory {
             }
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
-            ex.printStackTrace();
+            DEBUG.printException(ex);
         }
     }
 
-    public static void openImagePlusAsTable(ImagePlus imp) {
+    public static void openImagePlusAsGallery(ImagePlus imp) {
         try {
             FileInfo fi = imp.getOriginalFileInfo();
 //            System.out.println(" +++ FileInfo: " + fi);
@@ -262,10 +274,10 @@ public class ImagesWindowFactory {
 //                System.err.println(" +++ EXISTS");
             }
 
-            openFileAsTable(file.getAbsolutePath(), -1, -1);
+            openFileAsGallery(file.getAbsolutePath(), -1, -1);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
-            ex.printStackTrace();
+            DEBUG.printException(ex);
         }
     }
 
@@ -298,6 +310,14 @@ public class ImagesWindowFactory {
         } else {
             IJ.error("File is missing", filename + " not found.");
         }
+    }
+
+    public static void openRotSpectrasWindow(String filenameVectors,
+            String filenameClasses, String filenameData) {
+        JFrameRotSpectra frame = new JFrameRotSpectra(filenameVectors, filenameClasses, filenameData);
+        ImagesWindowFactory.setConvenientSize(frame);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
 
     public static void openFileAsText(String filename, Component parent) {

@@ -15,8 +15,8 @@ import browser.ICONS_MANAGER;
 import browser.InfiniteProgressPanel;
 import browser.LABELS;
 import browser.imageitems.MicrographsTableImageItem;
-import browser.table.models.ImagesRowHeaderModel;
-import browser.table.renderers.RowHeaderRenderer;
+import browser.gallery.models.GalleryRowHeaderModel;
+import browser.gallery.renderers.RowHeaderRenderer;
 import browser.windows.ImagesWindowFactory;
 import ij.IJ;
 import ij.ImagePlus;
@@ -58,7 +58,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     private final static int CTF_IMAGE_COLUMN = 3;
     private JTable table;
     private MicrographsTableModel tableModel;
-    private ImagesRowHeaderModel rowHeaderModel;
+    private GalleryRowHeaderModel rowHeaderModel;
     private XTableColumnModel columnModel = new XTableColumnModel();
     private JPopUpMenuMicrograph jPopupMenu = new JPopUpMenuMicrograph();
     private JFileChooser fc = new JFileChooser();
@@ -180,7 +180,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     }
 
     private void setRowHeader() {
-        rowHeaderModel = new ImagesRowHeaderModel(table);
+        rowHeaderModel = new GalleryRowHeaderModel(table);
 
         rowHeader = new JList();
         rowHeader.setModel(rowHeaderModel);
@@ -422,7 +422,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         });
         toolBar.add(bSave);
 
-        bReload.setText(LABELS.BUTTON_RELOAD_TABLE);
+        bReload.setText(LABELS.BUTTON_RELOAD_GALLERY);
         bReload.setFocusable(false);
         bReload.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         bReload.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -439,7 +439,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
         jpCheckAll.setLayout(new javax.swing.BoxLayout(jpCheckAll, javax.swing.BoxLayout.LINE_AXIS));
 
-        jcbEnableAll.setText(LABELS.LABEL_TABLE_ENABLE_ALL);
+        jcbEnableAll.setText(LABELS.LABEL_GALLERY_ENABLE_ALL);
         jcbEnableAll.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 jcbEnableAllItemStateChanged(evt);
@@ -447,7 +447,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         });
         jpCheckAll.add(jcbEnableAll);
 
-        jcbFilterEnabled.setText(LABELS.LABEL_TABLE_HIDE_DISABLED);
+        jcbFilterEnabled.setText(LABELS.LABEL_GALLERY_HIDE_DISABLED);
         jcbFilterEnabled.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 jcbFilterEnabledItemStateChanged(evt);
@@ -596,9 +596,9 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
 
         private void extractColumn(int column, boolean onlyenabled) {
             if (onlyenabled) {
-                ImagesWindowFactory.openFilesAsTable(tableModel.extractColumn(column, onlyenabled), true);
+                ImagesWindowFactory.openFilesAsGallery(tableModel.extractColumn(column, onlyenabled), true);
             } else {
-                ImagesWindowFactory.openTable(
+                ImagesWindowFactory.openGallery(
                         tableModel.extractColumn(column, onlyenabled),
                         tableModel.getEnabledRows());
             }

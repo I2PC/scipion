@@ -73,7 +73,7 @@ public class XmippBrowser implements PlugIn {
             m = 0;
         } else if (mode.trim().toLowerCase().compareTo(COMMAND_PARAMETERS.MODE_IMAGE) == 0) {
             m = 1;
-        } else if (mode.trim().toLowerCase().compareTo(COMMAND_PARAMETERS.MODE_TABLE) == 0) {
+        } else if (mode.trim().toLowerCase().compareTo(COMMAND_PARAMETERS.MODE_GALLERY) == 0) {
             m = 2;
         }
 
@@ -91,12 +91,12 @@ public class XmippBrowser implements PlugIn {
 
                     // Single images are opened in the same table...
                     if (filesList[0] != null) {
-                        ImagesWindowFactory.openFilesAsTable(filesList[0], true, rows, columns);
+                        ImagesWindowFactory.openFilesAsGallery(filesList[0], true, rows, columns);
                     }
 
                     // ...while rest of files are opened in separated ones.
                     if (filesList[1] != null) {
-                        ImagesWindowFactory.openFilesAsTable(filesList[1], rows, columns);
+                        ImagesWindowFactory.openFilesAsGallery(filesList[1], rows, columns);
                     }
                     break;
             }

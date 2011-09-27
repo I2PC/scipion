@@ -18,7 +18,7 @@ import xmipp.ImageDouble;
  *
  * @author Juanjo Vega
  */
-public class TableImageItem extends AbstractTableImageItem {
+public class GalleryImageItem extends AbstractGalleryImageItem {
 
     protected long id;
     protected MetaData md;
@@ -28,11 +28,11 @@ public class TableImageItem extends AbstractTableImageItem {
     protected long nimage;
     protected boolean readGeo;
 //
-//    public TableImageItem(long id, MetaData md, Cache cache) {
+//    public GalleryImageItem(long id, MetaData md, Cache cache) {
 //        this(id, md, MDLabel.MDL_IMAGE, cache);
 //    }
 
-    public TableImageItem(long id, MetaData md, int label, Cache cache) {
+    public GalleryImageItem(long id, MetaData md, int label, Cache cache) {
         super(cache);
 
         this.id = id;

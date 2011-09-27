@@ -19,7 +19,7 @@ import xmipp.ImageDouble;
  *
  * @author Juanjo Vega
  */
-public abstract class AbstractTableImageItem {
+public abstract class AbstractGalleryImageItem {
 
     protected Cache cache;
     protected ImageDimension dimension;
@@ -27,12 +27,12 @@ public abstract class AbstractTableImageItem {
     protected boolean selected;
     protected double scale = 1.0;
 
-    public AbstractTableImageItem(Cache cache) {
+    public AbstractGalleryImageItem(Cache cache) {
         this.cache = cache;
     }
 
     // CompareTo for mergesort algorithm.
-    public int compareToByLabel(AbstractTableImageItem item, int label) {
+    public int compareToByLabel(AbstractGalleryImageItem item, int label) {
         String a = String.valueOf(getLabelValue(label));
         String b = String.valueOf(item.getLabelValue(label));
 

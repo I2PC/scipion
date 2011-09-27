@@ -41,7 +41,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
     boolean binarized = false;
     // *** Transform ***
     private Menu menuTransform = new Menu(LABELS.OPERATION_MENU_TRANSFORM);
-    private MenuItem itemToTable = new MenuItem(LABELS.OPERATION_TO_TABLE);
+    private MenuItem itemToTable = new MenuItem(LABELS.OPERATION_TO_GALLERY);
     private Menu menuFlip = new Menu(LABELS.OPERATION_MENU_FLIP);
     private MenuItem itemFlipV = new MenuItem(LABELS.OPERATION_FLIP_VERTICAL);
     private MenuItem itemFlipH = new MenuItem(LABELS.OPERATION_FLIP_HORIZONTAL);
@@ -436,7 +436,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
         try {
             if (e.getSource() == itemToTable) {
-                ImagesWindowFactory.openImagePlusAsTable(imp);
+                ImagesWindowFactory.openImagePlusAsGallery(imp);
             } else if (e.getSource() == itemFlipV) {
                 imp.getProcessor().flipVertical();
             } else if (e.getSource() == itemFlipH) {

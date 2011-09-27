@@ -28,7 +28,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 import browser.DEBUG;
 import browser.LABELS;
-import browser.imageitems.tableitems.TableImageItem;
+import browser.imageitems.tableitems.GalleryImageItem;
 import browser.windows.ImagesWindowFactory;
 import java.awt.event.KeyListener;
 import javax.swing.JTextField;
@@ -206,7 +206,7 @@ public class JFrameMetaData extends JFrame {
     }
 
     private void setRenderers() {
-        table.setDefaultRenderer(TableImageItem.class, imageRenderer);
+        table.setDefaultRenderer(GalleryImageItem.class, imageRenderer);
         table.setDefaultRenderer(TableMetaDataItem.class, fileRenderer);
         table.setDefaultRenderer(TableFileItem.class, fileRenderer);
         table.setDefaultRenderer(String.class, stringRenderer);
@@ -215,7 +215,7 @@ public class JFrameMetaData extends JFrame {
     }
 
     private void enableEditors(boolean enable) {
-        table.setDefaultEditor(TableImageItem.class, enable ? imageEditor : null);
+        table.setDefaultEditor(GalleryImageItem.class, enable ? imageEditor : null);
         table.setDefaultEditor(TableMetaDataItem.class, enable ? metadataEditor : null);
         table.setDefaultEditor(TableFileItem.class, enable ? fileEditor : null);
     }
@@ -260,8 +260,8 @@ public class JFrameMetaData extends JFrame {
                     if (evt.getClickCount() > 1) {
                         Object item = table.getValueAt(view_row, view_col);
 
-                        if (item instanceof TableImageItem) {
-                            openXmippImage((TableImageItem) item);
+                        if (item instanceof GalleryImageItem) {
+                            openXmippImage((GalleryImageItem) item);
                         } else if (item instanceof TableMetaDataItem) {
                             openMetaDataFile((TableMetaDataItem) item);
                         } else if (item instanceof TableFileItem) {
@@ -277,7 +277,7 @@ public class JFrameMetaData extends JFrame {
         updateTableStructure();
     }
 
-    private void openXmippImage(TableImageItem item) {
+    private void openXmippImage(GalleryImageItem item) {
         ImagesWindowFactory.captureFrame(item.getImagePlus());
     }
 
@@ -542,7 +542,7 @@ public class JFrameMetaData extends JFrame {
     }//GEN-LAST:event_bHideColumnsActionPerformed
 
 private void jbSend2GalleryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSend2GalleryActionPerformed
-    ImagesWindowFactory.openFileAsTable(tableModel.getPath());
+    ImagesWindowFactory.openFileAsGallery(tableModel.getPath());
 }//GEN-LAST:event_jbSend2GalleryActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bHideColumns;
