@@ -524,10 +524,10 @@ bool MDSql::equals(const MDSql &op)
 }
 
 void MDSql::setOperate(const MetaData *mdInLeft,
-		               const MetaData *mdInRight,
-		               MDLabel columnLeft,
-		               MDLabel columnRight,
-		               SetOperation operation)
+                       const MetaData *mdInRight,
+                       MDLabel columnLeft,
+                       MDLabel columnRight,
+                       SetOperation operation)
 {
     std::stringstream ss, ss2, ss3;
     int size;
@@ -545,7 +545,8 @@ void MDSql::setOperate(const MetaData *mdInLeft,
         join_type = " OUTER ";
         break;
     case NATURAL_JOIN:
-        join_type = " NATURAL ";
+        /* WE do not want natural join but natural join except for the obj-ID column */
+        join_type = " INNER ";
         columnLeft = columnRight = MDL_UNDEFINED;
         break;
     }
@@ -573,8 +574,26 @@ void MDSql::setOperate(const MetaData *mdInLeft,
     if (operation != NATURAL_JOIN)
         ss << " ON " << tableName(mdInLeft->myMDSql->tableId) << "." << MDL::label2Str(columnLeft)
         << "=" << tableName(mdInRight->myMDSql->tableId) << "." << MDL::label2Str(columnRight) ;
+    else
+    {
+        sep = " ";
+        ss << " WHERE ";
+        for (int i = 0; i < mdInRight->activeLabels.size(); i++)
+            for (int j = 0; j < sizeLeft; j++)
+            {
+                if(mdInRight->activeLabels[i] == mdInLeft->activeLabels[j])
+                {
+                    ss << sep
+                    << tableName(mdInRight->myMDSql->tableId) << "."
+                    << MDL::label2Str(mdInRight->activeLabels[i])
+                    << " = "
+                    << tableName(mdInLeft->myMDSql->tableId) << "."
+                    << MDL::label2Str(mdInLeft->activeLabels[j]);
+                    sep = " AND ";
+                }
+            }
+    }
     ss << ";";
-
     execSingleStmt(ss);
 }
 
