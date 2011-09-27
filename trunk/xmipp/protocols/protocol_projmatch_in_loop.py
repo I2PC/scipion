@@ -205,10 +205,12 @@ def assign_images_to_references(_log
     ''' assign the images to the different references based on the crosscorrelation coeficient
         #if only one reference it just copy the docfile generated in the previous step
         '''
-    DocFileInputAngles  = DocFileInputAngles
-    ProjMatchRootName   = ProjMatchRootName#
-    NumberOfCtfGroups   = NumberOfCtfGroups
-    NumberOfReferences  = NumberOfReferences
+    #!a
+    #DocFileInputAngles  = DocFileInputAngles
+    #ProjMatchRootName   = ProjMatchRootName#
+    #NumberOfCtfGroups   = NumberOfCtfGroups
+    #NumberOfReferences  = NumberOfReferences
+    
     #first we need a list with the references used. That is,
     #read all docfiles and map referecendes to a mdl_order
     MDaux  = MetaData()
@@ -218,24 +220,36 @@ def assign_images_to_references(_log
     MDout  = MetaData()
     MDout.setComment("metadata with  images, the winner reference as well as the ctf group")
     print "one"
+    """ compute auxiliary index order, it may become handy to match projections and
+    projection directions
+    """
     mycounter=0L
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         auxInputdocfile = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
             inputFileName = ProjMatchRootName[iRef3D]
+            print "[",iCTFGroup," ", iRef3D, "] inputFileName:", inputFileName
             inputdocfile    = auxInputdocfile+ inputFileName
+            print "inputdocfile: ", inputdocfile 
             MD.read(inputdocfile)
             for id in MD:
                 t=MD.getValue(MDL_REF,id)
                 i=MDSort.addObject()
                 MDSort.setValue(MDL_REF,t,i)
     print "two"
+    MDSort.write("mdsort_wt_duplicates.xmd")
+    
     MDSort.removeDuplicates()
+    
+    MDSort.write("mdsort_wo_duplicates.xmd")
+    
     for id in MDSort:
         MDSort.setValue(MDL_ORDER,mycounter,id)
         mycounter += 1
+    MDSort.write("mdsort_wo_duplicates_sorted.xmd")
+    ####################
     print "three"
-    #print "bbb",ProjMatchRootName[1], DocFileInputAngles
+    print "bbb",ProjMatchRootName[1], DocFileInputAngles
     outputdocfile =  DocFileInputAngles
     if os.path.exists(outputdocfile):
         os.remove(outputdocfile)
@@ -258,12 +272,18 @@ def assign_images_to_references(_log
         MD.write("md_test.xmd")
         MDaux.write("mdaux_test.xmd")
         MD.aggregate(MDaux,AGGR_MAX,MDL_IMAGE,MDL_MAXCC,MDL_MAXCC)
+        MD.write("md_test_afteraggregate.xmd")
+        MDaux.write("mdaux_test_afteraggregate.xmd")
         #if a single image is assigned to two references with the same 
         #CC use it in both reconstruction
         #recover atribbutes after aggregate function
+        
         MD1.join  (MD,  MDaux,  MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
+        MD1.write("md1.xmd")
         MDout.join(MD1, MDSort, MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
+        MDout.write("mdout.xmd")
         MDout.write(auxInputdocfile+outputdocfile,MD_APPEND)
+        
     #we are done but for the future it is convenient to create more blocks
     #with the pairs ctf_group reference    
     for iCTFGroup in range(1,NumberOfCtfGroups+1):

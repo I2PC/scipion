@@ -197,9 +197,10 @@ class ProtProjMatch(XmippProtocol):
             auxMD2 = MetaData()
             auxMD2.aggregate(auxMD1, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT)
             self.NumberOfCtfGroups = auxMD2.size()
+            print "self.NumberOfCtfGroups: ",  self.NumberOfCtfGroups
             
         #create dir for iteration 1 (This need to be 0 or 1? ROB FIXME
-        _dataBase.insertStep('createDir', path = self.getIterDirName(0))
+        #!a _dataBase.insertStep('createDir', path = self.getIterDirName(0))
     
         #Check references and projections size match
         #Is already done in preconditions but I like to
@@ -248,7 +249,7 @@ class ProtProjMatch(XmippProtocol):
         _dataBase.connection.commit()
     
     def getIterDirName(self, iterN):
-        return os.path.join(self.projectDir, self.WorkingDir, 'Iter%02d' % iterN)
+        return os.path.join(self.projectDir, self.WorkingDir, 'Iter_%02d' % iterN)
     
     def actionsToBePerformedInsideLoop(self):
         _log = self.Log
