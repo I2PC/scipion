@@ -28,6 +28,7 @@
 import os
 import sys
 import tkMessageBox
+from protlib_filesystem import getXmippPath
 
 #---------------------------------------------------------------------------
 # Logging utilities
@@ -552,7 +553,7 @@ def getJavaIJappCmd(memory, appName, args, batchMode=False):
     if len(memory) == 0:
         memory = "512m"
         print "No memory size provided. Using default: " + memory
-    imagej_home = getXmippPath("external/imagej")
+    imagej_home = getXmippPath("external", "imagej")
     plugins_dir = os.path.join(imagej_home, "plugins")
 
     cmd = "java -classpath %(plugins_dir)s/*:%(imagej_home)s/*: %(appName)s %(args)s" % locals()
@@ -562,6 +563,12 @@ def getJavaIJappCmd(memory, appName, args, batchMode=False):
     
 def runJavaIJapp(memory, appName, args, batchMode=True):
     os.system(getJavaIJappCmd(memory, appName, args, batchMode))
+    
+def runJavaJar(memory, jarName, args, batchMode=True):
+    jarPath = getXmippPath(jarName)
+    runJavaIJapp(memory, '-jar %s' % jarPath, args, batchMode)
+    
+    
 
 def runJavaIJappWithResponse(memory, appName, args):
     return runExternalAppWithResponse(getJavaIJappCmd(memory, appName, args, True))
