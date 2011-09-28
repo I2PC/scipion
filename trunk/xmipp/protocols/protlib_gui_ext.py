@@ -506,7 +506,7 @@ class ShowDialog(Dialog):
         # Insert image
         if self.image:
             self.label = tk.Label(self.frame, image=self.image, bg='white', bd=0)
-            self.label.pack(side=tk.LEFT)
+            self.label.pack(side=tk.LEFT, anchor=tk.N)
 
         # Insert lines of text
         # Find some tags to pretty text presentation

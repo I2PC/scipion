@@ -27,15 +27,14 @@
  '''
  
 import os, glob
+from os.path import join
 import Tkinter as tk
 import tkMessageBox
 import tkFont
 
-from protlib_base import protocolMain, getProtocolFromModule, XmippProtocol, getWorkingDirFromRunName,\
-    getExtendedRunName
-from protlib_utils import loadModule, runJob, runImageJPlugin, which, runImageJPluginWithResponse, runJavaIJappWithResponse ,\
-    showWarnings
-from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, registerFont,\
+from protlib_base import getProtocolFromModule, getWorkingDirFromRunName, getExtendedRunName
+from protlib_utils import loadModule, runImageJPlugin, which, runJavaIJappWithResponse
+from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
@@ -43,7 +42,6 @@ from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
 from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
 from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor, ButtonActiveBgColor, ButtonBgColor                         
 from protlib_sql import SqliteDb
-from xmipp import XmippError
 from subprocess import Popen
 
 class ProtocolStyle():
@@ -150,7 +148,7 @@ class BasicGUI():
         width = min(self.frame.winfo_reqwidth() + 25, MaxWidth)
         x = self.master.winfo_x()
         y = self.master.winfo_y()
-        print "geometry: %dx%d%+d%+d" % (width, height, x, y)
+        #print "geometry: %dx%d%+d%+d" % (width, height, x, y)
         self.master.geometry("%dx%d%+d%+d" % (width, height, x, y))
         return (width, height)
 
@@ -445,7 +443,7 @@ class ProtocolGUI(BasicGUI):
             parent = self.frame
         if imageFilename:
             try:
-                imgPath = os.path.join(getXmippPath('resources'), imageFilename)
+                imgPath = join(getXmippPath('resources'), imageFilename)
                 helpImage = tk.PhotoImage(file=imgPath)
             except tk.TclError:
                 pass
@@ -619,7 +617,7 @@ class ProtocolGUI(BasicGUI):
                 
                 def getEntries(var, onlyDir=False):
                     cwd = os.getcwd()
-                    pattern = os.path.join(cwd, var.tkvar.get()) + '*'
+                    pattern = join(cwd, var.tkvar.get()) + '*'
                     entries = []
                     for p in glob.glob(pattern):
                         p = os.path.relpath(p, cwd)
@@ -707,7 +705,7 @@ class ProtocolGUI(BasicGUI):
         try:   
             f = open(script, 'r')
         except Exception, e:
-            raise XmippError("Script read failed", "Couldn't read from script file '%s'" % script)
+            raise Exception("Script read failed", "Couldn't read from script file '%s'" % script)
         
         for line in f:
             #print "LINE: ", line
@@ -715,13 +713,24 @@ class ProtocolGUI(BasicGUI):
                 self.pre_header_lines.append(line)
             elif not end_of_header:
                 #print "LINE: ", line
-                self.header_lines.append(line)
+                #check for include
+                if '{include}' in line:
+                    inc_file = getXmippPath('protocols', line.split('{include}')[1].strip())
+                    inc_f = open(inc_file, 'r')
+                    self.header_lines += inc_f.readlines()
+                    inc_f.close()
+                else:
+                    self.header_lines.append(line)
             else:
                 self.post_header_lines.append(line)                
-            if line.find('{begin_of_header}') != -1:
+            if '{begin_of_header}' in line:
                 begin_of_header = True
-            if line.find('{end_of_header}') != -1:
+            if '{end_of_header}' in line:
                 end_of_header = True
+        f.close()
+        
+        f = open('kk.py', 'w')
+        f.writelines(self.header_lines)
         f.close()
         
         if not begin_of_header:
@@ -852,7 +861,7 @@ class ProtocolGUI(BasicGUI):
             else:
                 if self.run['run_state'] in [SqliteDb.RUN_STARTED, SqliteDb.RUN_LAUNCHED] and not self.visualize_mode:
                     showError('Save not allowed', 
-                              "This run appears to be RUNNING or LAUNCHED, so you can't save it",
+                              "This run appears to be <RUNNING> or <LAUNCHED>, so you can't save it",
                               parent=self.master)
                     return False 
                 if not self.visualize_mode:
@@ -1120,7 +1129,7 @@ class ProtocolGUI(BasicGUI):
             tkMessageBox.showwarning("Warning", "No previous Run has been found", parent=self.master)
             return
         familyList = []
-        for file in glob.glob(os.path.join(extractionDir, "*_sorted.sel")):
+        for file in glob.glob(join(extractionDir, "*_sorted.sel")):
             familyList.append(os.path.split(file)[1].replace("_sorted.sel",""))
         if len(familyList)==1:
             var.tkvar.set(familyList[0])
@@ -1184,12 +1193,12 @@ class ProtocolGUI(BasicGUI):
         from protlib_gui_ext import ListboxDialog
 
         pickingDir = getWorkingDirFromRunName(self.getVarValue('PickingRun'))
-        fnFamilies=os.path.join(pickingDir,"families.xmd")
+        fnFamilies = join(pickingDir,"families.xmd")
         if not os.path.exists(fnFamilies):
             tkMessageBox.showwarning("Warning", "No elements to select", parent=self.master)
             return
         print fnFamilies
-        mD=MetaData()
+        mD = MetaData()
         mD.read(fnFamilies)
         families=[]
         for id in mD:
@@ -1203,7 +1212,7 @@ class ProtocolGUI(BasicGUI):
             else:
                 d=None
         if d is not None:
-            selectedFamily=families[d]
+            selectedFamily = families[d]
             var.setValue(selectedFamily)
             for id in mD:
                 if mD.getValue(MDL_PICKING_FAMILY,id)==selectedFamily:
