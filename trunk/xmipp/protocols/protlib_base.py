@@ -27,6 +27,7 @@
  '''
  
 import os
+from os.path import join
 import sys
 import shutil
 import ConfigParser
@@ -129,7 +130,9 @@ class XmippProject():
             if os.path.exists(p.dir):
                 shutil.rmtree(p.dir)
         self.create()
-            
+
+    def projectTmpPath(self, *paths):
+        return join(self.tmpDir, *paths)           
     
     def cleanRun(self, run):
         script = run['script']
@@ -152,15 +155,15 @@ class XmippProject():
                 groupName = group[0]
                 runs = self.projectDb.selectRuns(groupName)
                 for run in runs:
-                    tmpDir = os.path.join(self.getWorkingDir(run['protocol_name'], run['run_name']), 'tmp')
+                    tmpDir = join(self.getWorkingDir(run['protocol_name'], run['run_name']), 'tmp')
                     if os.path.exists(tmpDir):
                         shutil.rmtree(tmpDir)
 
     def getWorkingDir(self,protocol_name,run_name):
-        return os.path.join(protDict[protocol_name].dir,run_name)
+        return join(protDict[protocol_name].dir,run_name)
             
     def getRunScriptFileName(self, protocol_name, runName):
-        return os.path.join(self.runsDir, '%s_%s.py' % (protocol_name, runName))
+        return join(self.runsDir, '%s_%s.py' % (protocol_name, runName))
     
     def createRunFromScript(self, protocol_name, script, prefix=None):
         if prefix: #Remove protocol_name from prefix if present
@@ -179,7 +182,7 @@ class XmippProject():
     
     def newProtocol(self, protocol_name):
         from protlib_filesystem import getXmippPath
-        srcProtAbsPath = os.path.join(getXmippPath('protocols'),
+        srcProtAbsPath = join(getXmippPath('protocols'),
                                        'protocol_%s_header.py' % protocol_name)
         return self.createRunFromScript(protocol_name, srcProtAbsPath)
     
@@ -227,7 +230,7 @@ class XmippProtocol(object):
         self.LogDir = project.logsDir
         runName = self.RunName
         self.uniquePrefix = "%(protocolName)s_%(runName)s" % locals()
-        self.LogPrefix = os.path.join(self.LogDir, self.uniquePrefix)       
+        self.LogPrefix = join(self.LogDir, self.uniquePrefix)       
         self.Err = self.LogPrefix+".err"
         self.Out = self.LogPrefix+".out"
         self.LogFile = self.LogPrefix + ".log"
@@ -238,7 +241,7 @@ class XmippProtocol(object):
         #self.project = project.getId(launchDict['Projection Matching'],runName,)
         
     def workingDirPath(self, *paths):
-        return os.path.join(self.WorkingDir, *paths)
+        return join(self.WorkingDir, *paths)
 
     def getRunState(self):
         return self.project.projectDb.getRunStateByName(self.Name, self.RunName)
@@ -428,10 +431,10 @@ def getWorkingDirFromRunName(extendedRunName):
         return None
     protocolName=tuple[0]
     runName=tuple[1]
-    return os.path.join(protDict[protocolName].dir,runName)
+    return join(protDict[protocolName].dir,runName)
 
 def getScriptFromRunName(extendedRunName):
-    return os.path.join(projectDefaults['RunsDir'],extendedRunName+".py")
+    return join(projectDefaults['RunsDir'],extendedRunName+".py")
 
 def protocolMain(ProtocolClass, script=None):
     gui = False
