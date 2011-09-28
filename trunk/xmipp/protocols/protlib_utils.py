@@ -28,7 +28,6 @@
 import os
 import sys
 import tkMessageBox
-from protlib_filesystem import getXmippPath
 
 #---------------------------------------------------------------------------
 # Logging utilities
@@ -565,6 +564,7 @@ def runJavaIJapp(memory, appName, args, batchMode=True):
     os.system(getJavaIJappCmd(memory, appName, args, batchMode))
     
 def runJavaJar(memory, jarName, args, batchMode=True):
+    from protlib_filesystem import getXmippPath
     jarPath = getXmippPath(jarName)
     runJavaIJapp(memory, '-jar %s' % jarPath, args, batchMode)
     

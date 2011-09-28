@@ -619,9 +619,9 @@ if int(env['java']):
     javaPlugins.append(AddImageJPlugin('Masks_ToolBar', 'libraries/graphicsj/Masks_ToolBar', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('XmippPP_', 'libraries/graphicsj/Xmipp_Particle_Picker', 'external/imagej/plugins', [jbrowser]))
-    #javaPlugins.append(AddImageJPlugin('Xmipp_Stitching', 'libraries/graphicsj/Xmipp_Stitching', 'external/imagej/plugins'))
     # Java apps
     #javaPlugins.append(AddJavaApp('Java3DInstaller', 'libraries/graphicsj/Java3DInstaller', 'external/Java3DInstaller'))
+    javaPlugins.append(AddJavaApp('Stitching', 'libraries/graphicsj/Stitching', 'external/Stitching'))
 
     import sys
     sys.path.append("external/scons/ToolsFromWiki")
@@ -777,7 +777,7 @@ AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_
 AddBatch('browserj', 'applications/scripts/browserj', '.py')
 AddBatch('rot_spectraj', 'applications/scripts/rot_spectraj', '.py')
 AddBatch('metadata_showj', 'applications/scripts/metadata_showj', '.py')
-#AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
+AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
 AddBatch('mpi_steps_runner', 'protocols', '.py')
 
 # MPI

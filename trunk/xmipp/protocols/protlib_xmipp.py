@@ -118,16 +118,16 @@ class ScriptIJBase(XmippScript):
         self.args = "-i %s" % ' '.join(self.getListParam('-i'))
         self.readOtherParams()
  
-class ScriptPluginIJ(XmippScript):
+class ScriptPluginIJ(ScriptIJBase):
     def __init__(self, macro):
-        ScriptIJBase.__init__(self)
+        ScriptIJBase.__init__(self, macro)
                   
     def run(self):
         runImageJPlugin(self.memory, self.name, self.args)
      
-class ScriptAppIJ(XmippScript):
+class ScriptAppIJ(ScriptIJBase):
     def __init__(self, name):
-        ScriptIJBase.__init__(self)
+        ScriptIJBase.__init__(self, name)
                   
     def run(self):
         runJavaIJapp(self.memory, self.name, self.args)

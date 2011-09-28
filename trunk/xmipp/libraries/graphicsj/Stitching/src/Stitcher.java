@@ -1,5 +1,6 @@
 
 import ij.IJ;
+//import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import ij.io.Opener;
@@ -26,15 +27,25 @@ import mpicbg.trakem2.align.AlignTask;
  * @author Juanjo Vega
  */
 public class Stitcher implements Runnable {
+/*    static {
+        System.setProperty("plugins.dir", "/gpfs/fs1/home/bioinfo/jvega/xmipp/external/imagej/plugins");
+    }*/
 
+    String propertiesFile;
     String filenames[];
-    boolean auto = true;
+    String outputfilename;
+    Parameters parameters;
 
-    public Stitcher(String filenames[]) {
+    public Stitcher(String filenames[], String propertiesFile, String outputfilename) {
         this.filenames = fixFilenamesPaths(filenames);
-        auto = false;
+        this.outputfilename = outputfilename;
+
+        if (propertiesFile != null) {
+            parameters = new Parameters(propertiesFile);
+        }
     }
 
+    // This method is needed 
     static String[] fixFilenamesPaths(String filenames[]) {
         String fixed[] = new String[filenames.length];
 
@@ -52,6 +63,11 @@ public class Stitcher implements Runnable {
     }
 
     public void run() {
+/*	ImageJ ij = IJ.getInstance();
+        if (ij == null) {
+        	ij = new ImageJ();
+        }*/
+
         // 0 - Disable GUI if headless desired
         ControlWindow.setGUIEnabled(false);
 
@@ -71,6 +87,7 @@ public class Stitcher implements Runnable {
         double y = 0;
 
         for (int i = 0; i < filenames.length; i++) {
+	    System.out.println(">>> Filename["+i+"]: "+filenames[i]);
             ImagePlus imp = opener.openImage(filenames[i]);
             Patch patch = project.getLoader().addNewImage(imp, x, y);
             layer.add(patch);
@@ -80,7 +97,7 @@ public class Stitcher implements Runnable {
         // 5 - Register/Montage images
         List<Patch> fixedPatches = new LinkedList<Patch>();
 
-        alignPatches(patches, fixedPatches, auto);
+        alignPatches(patches, fixedPatches, parameters);
 
         // @TODO Check!
         // 6 - Adjust brightness and contrast
@@ -122,13 +139,13 @@ public class Stitcher implements Runnable {
         boolean quality = true; // use max possible rendering quality
         ArrayList list = null; // null means all. You can define a subset of Displayable objects
         //  of that layer (such as Patch objects) to be rendered instead.
-        ImagePlus snapshot = project.getLoader().getFlatImage(layer, box, scale, c_alphas, type, Patch.class, list, quality);
+//        ImagePlus snapshot = project.getLoader().getFlatImage(layer, box, scale, c_alphas, type, Patch.class, list, quality);
         //new ij.io.FileSaver(snapshot).saveAsTiff("/Volumes/Data/jvega/Desktop/snapshot.tif");
 
         // Done!
         System.out.println("Done!!");
-        snapshot.setTitle("Montage [TrakEM2]");
-        snapshot.show();
+//        snapshot.setTitle("Montage [TrakEM2]");
+//        snapshot.show();
 
         // @TMP: Print results.
         System.out.println("----------------------");
@@ -144,11 +161,15 @@ public class Stitcher implements Runnable {
 
         ImagePlus ip = StackBuilder.buildStack(patches, box);
         ip.setTitle("Montage [Stack]");
-        ip.show();
+        if (outputfilename != null) {
+            IJ.save(ip, outputfilename);
+        } else {
+            ip.show();
+        }
 
-        ImagePlus sum = StackBuilder.sumStack(ip);
+        /*        ImagePlus sum = StackBuilder.sumStack(ip);
         sum.setTitle("Montage [Sum]");
-        sum.show();
+        sum.show();*/
 
         // 10 - Close the project
         project.destroy();
@@ -156,19 +177,22 @@ public class Stitcher implements Runnable {
         ControlWindow.setGUIEnabled(true);
     }
 
-    // @TODO Parametrize.
     /**
      * Copied from @see mpicbg.trakem2.align.AlignTask to remove parameters window.
      * @param patches: the list of Patch instances to align, all belonging to the same Layer.
-     * @param fixed: the list of Patch instances to keep locked in place, if any.
+     * @param fixedPatches: the list of Patch instances to keep locked in place, if any.
+     * @param parameters: parameters for alignment. If null, it will ask user for them.
      */
-    public static void alignPatches(final List< Patch> patches, final List< Patch> fixedPatches, boolean auto) {
+    public static void alignPatches(final List<Patch> patches, final List<Patch> fixedPatches, Parameters parameters) {
         boolean tilesAreInPlace = false;
         boolean largestGraphOnly = false;
         boolean hideDisconnectedTiles = false;
         boolean deleteDisconnectedTiles = false;
 
-        if (!auto) {
+        Align.ParamOptimize p;
+
+        // If alignment parameters are provided, it runs in auto mode. Otherwise, it will ask user for them.
+        if (parameters == null) {
 //        if (patches.size() < 2) {
 //            Utils.log("No images to align.");
 //            return;
@@ -181,9 +205,9 @@ public class Stitcher implements Runnable {
 //            }
 //        }
 
-            final Align.ParamOptimize p = Align.paramOptimize;
-            final GenericDialog gd = new GenericDialog("Align Tiles");
-            Align.paramOptimize.addFields(gd);
+            p = Align.paramOptimize.clone();
+            GenericDialog gd = new GenericDialog("Align Tiles");
+            p.addFields(gd);
 
             gd.addMessage("Miscellaneous:");
             gd.addCheckbox("tiles are rougly in place", tilesAreInPlace);
@@ -196,15 +220,14 @@ public class Stitcher implements Runnable {
                 return;
             }
 
-            Align.paramOptimize.readFields(gd);
+            p.readFields(gd);
             tilesAreInPlace = gd.getNextBoolean();
             largestGraphOnly = gd.getNextBoolean();
             hideDisconnectedTiles = gd.getNextBoolean();
             deleteDisconnectedTiles = gd.getNextBoolean();
+        } else {
+            p = parameters.getAlignParameters();
         }
-
-//        Align.paramOptimize.sift.maxOctaveSize = 2024;
-        final Align.ParamOptimize p = Align.paramOptimize.clone();
 
         AlignTask.alignPatches(p, patches, fixedPatches, tilesAreInPlace, largestGraphOnly, hideDisconnectedTiles, deleteDisconnectedTiles);
     }

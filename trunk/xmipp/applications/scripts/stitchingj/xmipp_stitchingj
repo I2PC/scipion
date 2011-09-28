@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+
+import optparse, os
+from protlib_filesystem import getXmippPath
+#from protlib_utils import runImageJPlugin
+
+def runJavaApp(memory, jarFile, args):
+    '''Launch a Java App '''
+    if len(memory) == 0:
+        memory = "512m"
+        print "No memory size provided. Using default: " + memory
+    imagej_home = getXmippPath("external/imagej")
+    imagej_jar = os.path.join(imagej_home, "ij.jar")
+    baseDir = os.path.dirname(jarFile);
+    libsDir = os.path.join(baseDir, 'libs');
+    libs = os.path.join(libsDir, '*')
+    cmd = """ java -Xmx%s -cp %s:%s -jar %s %s """ % (memory, imagej_jar, libs, jarFile, args)
+    print cmd
+    os.system(cmd)
+
+def command_line_options():
+	""" add command line options here"""
+	_usage="""Usage: stitchingj [--mem <memory_ammount>] [-i file1 [-i file2 [..]]>"""
+	parser = optparse.OptionParser(_usage)
+	parser.add_option("-m", "--memory",  dest="memory", default="", help="Memory ammount for JVM")        
+	parser.add_option("-i", "--input", action="append", dest="inputFiles", help="input files to stitch")
+
+	(options, args) = parser.parse_args()
+
+	return (options.memory,options.inputFiles)
+
+memory, files = command_line_options();
+
+args = ""
+if files:
+	args = "-i"
+	for i in range(len(files)):
+		args += " " + files[i]
+
+runJavaApp(memory, getXmippPath("external/Stitching/Stitching.jar"), args)
