@@ -537,11 +537,47 @@ void printEnd(FILE * output, const char *progName)
             "    protocolMain(ProtXmippProgram)\n", progName);
 }
 
+void printParallel(FILE * output)
+{
+  fprintf(output,
+          "#------------------------------------------------------------------------------------------\n"
+          "# {section} Parallelization\n"
+          "#------------------------------------------------------------------------------------------\n"
+          "#  Number of threads\n"
+          "\"\"\" This option provides shared-memory parallelization on multi-core machines.\n"
+          "It does not require any additional software, other than xmipp\n"
+          "\"\"\"\n"
+          "NumberOfThreads = 1\n"
+          "\n"
+          "# Number of MPI processes\n"
+          "NumberOfMpi = 3\n"
+          "\n"
+          "# Submit to queue ?\n"
+          "\"\"\"Submit to queue\n"
+          "\"\"\"\n"
+          "SubmitToQueue = True\n"
+          "\n"
+          "# {expert}{condition}(SubmitToQueue) Queue name\n"
+          "\"\"\"Name of the queue to submit the job\n"
+          "\"\"\"\n"
+          "QueueName = \"default\"\n"
+          "\n"
+          "# {condition}(SubmitToQueue) Queue hours\n"
+          "\"\"\"This establish a maximum number of hours the job will\n"
+          "be running, after that time it will be killed by the\n"
+          "queue system\n"
+          "\"\"\"\n"
+          "QueueHours = 72\n"
+          "\"\"\"");
+}
+
 void ProtPrinter::printProgram(const ProgramDef &program, int v)
 {
     printBegin(output, program);
     for (size_t i = 0; i < program.sections.size(); ++i)
         printSection(*program.sections[i], v);
+    if (program.name.find("mpi") != String::npos)
+      printParallel(output);
     printEnd(output, program.name.c_str());
 }
 
