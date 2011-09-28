@@ -25,8 +25,11 @@ Describe your run here...
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # Run name:
-""" This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
-run1 for it. This name together with the protocol output folder will determine the working dir for this run.
+""" 
+This will identify your protocol run. It need to be unique for each protocol. 
+You could have <run1>, <run2> for protocol X, but not two run1 for same protocol. 
+This name together with the protocol output folder will determine the working
+directory for this run.
 """
 RunName = "run_001"
 
@@ -39,7 +42,7 @@ Behavior ='Restart'
 """ set to a positive number N to continue the protocol at step N. This option is only 
 active when Behavior=Continue
 """
-ContinueAtStep =1
+ContinueAtStep = 1
 
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up 
@@ -112,7 +115,7 @@ CtfGroupMaxResol = 5.6
 
 # {file} {expert} Docfile with defocus values where to split into groups
 """ This field is obligatory if you do not want to make the CTF groups automatically.
-    Note that the requested docfile can be made initially with the xmipp_ctf_group program,
+    Note that the requested docfile can be made initially with the <xmipp_ctf_group> program,
     and then it can be edited manually to suit your needs. 
 """
 SplitDefocusDocFile =''
@@ -143,9 +146,9 @@ DataArePhaseFlipped =True
     dont. an alternative compact notation is 
     is ("2x1 2x0", i.e.,
     2 iterations with value 1, and 2 with value 0).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
-    IMPORTANT: if you set this variable to 0 the output  of the projection
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
+    <IMPORTANT:> if you set this variable to 0 the output  of the projection
     muching step will be copied as output of align2d
 """
 ReferenceIsCtfCorrected ='1'
@@ -156,7 +159,7 @@ ReferenceIsCtfCorrected ='1'
 # Mask reference volume
 """ Masking the reference volume will increase the signal to noise ratio.
     Do not provide a very tight mask.
-    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mask for details
+    See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mask] for details
 """
 DoMask =True
 
@@ -189,22 +192,22 @@ MaskFileName ='mask.vol'
     and the last two to 2. An alternative compact notation 
     is ("2x8 2x0", i.e.,
     2 iterations with value 8, and 2 with value 2).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note>: if there are less values than iterations the last value is reused
+    <Note>: if there are more values than iterations the extra value are ignored
 """
 InnerRadius = '0'
 
 # Outer radius for rotational correlation
 """ In pixels from the image center. Use a negative number to use the entire image.
-    WARNING: this radius will be use for masking before computing resolution
+    <WARNING>: this radius will be use for masking before computing resolution
     You may specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "8 8 2 2 " 
     specifies 4 iterations, the first two set the value to 8 
     and the last two to 2. An alternative compact notation 
     is ("2x8 2x0", i.e.,
     2 iterations with value 8, and 2 with value 2).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note>: if there are less values than iterations the last value is reused
+    <Note>: if there are more values than iterations the extra value are ignored
 """
 OuterRadius = '64'
 
@@ -225,8 +228,8 @@ AvailableMemory = 2
     and the last two to 2. An alternative compact notation 
     is ("2x8 2x0", i.e.,
     2 iterations with value 8, and 2 with value 2).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
 """
 AngSamplingRateDeg='1 3 2 1'
 
@@ -238,8 +241,8 @@ AngSamplingRateDeg='1 3 2 1'
     and the last two to 10degrees. An alternative compact notation 
     is ("2x1000 2x10", i.e.,
     2 iterations with value 1000, and 2 with value 10).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
 """
 MaxChangeInAngles='1000 10 4 2'
 
@@ -253,8 +256,8 @@ MaxChangeInAngles='1000 10 4 2'
     and the last to 0. An alternative compact notation 
     is ("2x1 0", i.e.,
     2 iterations with value 1, and 1 with value 0).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
 """
 PerturbProjectionDirections ='0'
 
@@ -267,8 +270,8 @@ PerturbProjectionDirections ='0'
     and the last two to 10degrees. An alternative compact notation 
     is ("2x1000 2x10", i.e.,
     2 iterations with value 1000, and 2 with value 10).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
 """
 MaxChangeOffset='1000 10 5'
 
@@ -282,8 +285,8 @@ MaxChangeOffset='1000 10 5'
     the first two set the value to 5, then one with 3, resp 0 pixels.
     An alternative compact notation is ("3x5 2x3 0", i.e.,
     3 iterations with value 5, and 2 with value 3 and the rest with 0).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
     
 """
 Search5DShift ='4x5 0'
@@ -293,8 +296,8 @@ Search5DShift ='4x5 0'
     the first two set the value to 2, then two with 1 pixel.
     An alternative compact notation is ("2x2 2x1", i.e.,
     2 iterations with value 2, and 2 with value 1).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
     
 """
 Search5DStep ='2'
@@ -309,7 +312,7 @@ Tilt0 = -91
 TiltF = 91
 
 # Symmetry group
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+""" See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry]
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
@@ -319,7 +322,7 @@ SymmetryGroup ='i3'
 """ If you do not know what this is leave it blank.
     This symmetry will be using for compute neighboring points,
     but not for sampling or reconstruction
-    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+    See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry]
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
@@ -334,8 +337,8 @@ SymmetryGroupNeighbourhood =''
     and the last to 0. An alternative compact notation 
     is ("2x1 0", i.e.,
     2 iterations with value 1, and 1 with value 0).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
 """
 OnlyWinner ='0'
 
@@ -343,8 +346,8 @@ OnlyWinner ='0'
 """ Provide a sequence of numbers (for instance, "0.3 0.3 0.5 0.5" specifies 4 iterations,
     the first two set the value to 0.3, then two with 0.5.
     An alternative compact notation would be ("2x0.3 2x0.5").
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
     Set to -1 to prevent discarding any images
 """
 MinimumCrossCorrelation ='-1'
@@ -353,8 +356,8 @@ MinimumCrossCorrelation ='-1'
 """ Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
     the first two set the value to 20%, then two with 10%
     An alternative compact notation would be ("2x20 2x10").
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
     Set to zero to prevent discarding any images
 """
 DiscardPercentage ='10'
@@ -379,8 +382,9 @@ ScaleNumberOfSteps ='3'
 
 
 # {expert} Additional options for Projection_Matching
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Projection_matching and
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_projection_matching for details
+""" For details see:
+    [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Projection_matching] and
+    [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_projection_matching]
     try -Ri xx -Ro yy for restricting angular search (xx and yy are
     the particle inner and outter radius)
     
@@ -398,7 +402,8 @@ PerformAlign2D = False
     subsets of images assigned to one of the library projections is
     re-aligned using a 2D-alignment protocol.
     This may serve to remove model bias.
-    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d for details
+    For details see:
+    [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d]
     Note that you cannot combine this option with CTF-correction!
     You may specify this option for each iteration. 
     This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
@@ -406,9 +411,9 @@ PerformAlign2D = False
     dont. an alternative compact notation is 
     is ("2x1 2x0", i.e.,
     2 iterations with value 1, and 2 with value 0).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
-    IMPORTANT: if you set this variable to 0 the output  of the projection
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
+    <IMPORTANT:> if you set this variable to 0 the output  of the projection
     muching step will be copied as output of align2d
 """
 DoAlign2D ='0'
@@ -422,8 +427,8 @@ DoAlign2D ='0'
      An alternative compact notation 
     is ("2x4 2x3", i.e.,
     2 iterations with value 4, and 2 with value 3).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
 """
 Align2DIterNr ='4'
 
@@ -435,8 +440,8 @@ Align2DIterNr ='4'
     and the last two to 10degrees. An alternative compact notation 
     is ("2x1000 2x10", i.e.,
     2 iterations with value 1000, and 2 with value 10).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
 """
 Align2dMaxChangeOffset ='2x1000 2x10'
 
@@ -448,8 +453,8 @@ Align2dMaxChangeOffset ='2x1000 2x10'
     and the last two to 10degrees. An alternative compact notation 
     is ("2x1000 2x10", i.e.,
     2 iterations with value 1000, and 2 with value 10).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
 """
 Align2dMaxChangeRot ='2x1000 2x20'
 
@@ -463,26 +468,26 @@ Align2dMaxChangeRot ='2x1000 2x20'
 ReconstructionMethod ='fourier'
 
 # {expert}{condition}(ReconstructionMethod=="art") Values of lambda for art
-""" IMPORTANT: ou must specify a value of lambda for each iteration even
+""" <IMPORTANT>: ou must specify a value of lambda for each iteration even
     if art has not been selected.
-    IMPORTANT: NOte that we are using the WLS version of ART that 
+    <IMPORTANT:> NOte that we are using the WLS version of ART that 
     uses geater lambdas than the plain art.
-    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
-        for details
+    See for details:
+    [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art]
     You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, ".1 .1 .3 .3" 
     specifies 4 iterations, the first two set the value to 0.1 
     (no restriction)
     and the last  two to .3. An alternative compact notation 
     is ("2x.1 2x.3").
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
 """
 ARTLambda ='0.2'
 
 # {expert}{condition}(ReconstructionMethod=="art") Additional reconstruction parameters for ART
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
-        for details
+""" For details see:
+    [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art]
 """
 ARTReconstructionExtraCommand ='-k 0.5 -n 10 '
 
@@ -493,16 +498,16 @@ ARTReconstructionExtraCommand ='-k 0.5 -n 10 '
 FourierMaxFrequencyOfInterest =0.25
 
 # {expert}{condition}(ReconstructionMethod=="wbp") Additional reconstruction parameters for WBP
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp and
-        for details
+""" For details see:
+    [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp] and
+    [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp]
 """
 WBPReconstructionExtraCommand =''
 
 # {expert} {condition}(ReconstructionMethod=="fourier")Additional reconstruction parameters for Fourier
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier and
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_Fourier and
-        for details
+""" For details see:
+    [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier] and
+    [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_Fourier] and
     -thr_width 
 """
 FourierReconstructionExtraCommand =''
@@ -511,15 +516,16 @@ FourierReconstructionExtraCommand =''
 # {section} Compute Resolution
 #-----------------------------------------------------------------------------
 # Compute resolution?
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution for details
+""" For details see:
+    [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution]
     You may specify this option for each iteration. 
     This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
     specifies 4 iterations, the first two applied alig2d while the last 2
     dont. an alternative compact notation is 
     is ("2x1 2x0", i.e.,
     2 iterations with value 1, and 2 with value 0).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
 """
 DoComputeResolution ='1'
 
@@ -533,7 +539,7 @@ DoComputeResolution ='1'
    recomend the first approach for small volumes and the second for
    large volumes (especially when using small angular
    sampling rates.
-   IMPORTANT: the second option has ONLY been implemented for FOURIER
+   <IMPORTANT:> the second option has ONLY been implemented for FOURIER
    reconstruction method. Other reconstruction methods require this
    flag to be set to True
     You may specify this option for each iteration. 
@@ -542,8 +548,8 @@ DoComputeResolution ='1'
     don't. an alternative compact notation is 
     is ("2x1 2x0", i.e.,
     2 iterations with value 1, and 2 with value 0).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more vapplications/scripts/protocols/new_protocol_projmatch.pyalues than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more vapplications/scripts/protocols/new_protocol_projmatch.pyalues than iterations the extra value are ignored
 """
 DoSplitReferenceImages ="1"
 
@@ -585,8 +591,8 @@ UseFscForFilter = True
     and the last two to 0.1. An alternative compact notation 
     is ("2x.15 2x0.1", i.e.,
     4 iterations with value 0.15, and three with value .1).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
 """
 ConstantToAddToFiltration ='0.1'
 
@@ -597,6 +603,7 @@ DoCenterVolume = False
 #------------------------------------------------------------------------------------------
 # {section} Parallelization 
 #------------------------------------------------------------------------------------------
+# Number of threads
 """ This option provides shared-memory parallelization on multi-core machines.
 It does not require any additional software, other than xmipp
 """
@@ -621,9 +628,8 @@ SubmitToQueue = True
 QueueName = "default"
 
 # {condition}(SubmitToQueue) Queue hours
-"""This establish a maximum number of hours the job will
-be running, after that time it will be killed by the
-queue system
+"""This establish a maximum number of hours the job will be
+   running, after that time it will be killed by the queue system
 """
 QueueHours = 72
 
