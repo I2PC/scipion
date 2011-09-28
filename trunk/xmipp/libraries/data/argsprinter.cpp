@@ -498,27 +498,14 @@ void printBegin(FILE * output, const ProgramDef &program)
     size_t numberOfComments = program.usageComments.size();
     for (size_t i = 0; i < numberOfComments; ++i)
         fprintf(output, "#   %s\n", program.usageComments.comments[i].c_str());
-    fprintf(output,
-            "# -------------------------------------------------------------------------------\n"
-            "# {begin_of_header}\n"
-            "#------------------------------------------------------------------------------------------\n"
-            "# {section}{has_question} Comment\n"
-            "#------------------------------------------------------------------------------------------\n"
-            "# Display comment\n"
-            "DisplayComment = False\n\n"
-            "# {text} Write a comment:\n"
-            "\"\"\"\nDescribe your run here...\n\"\"\"\n"
-            "#-----------------------------------------------------------------------------\n"
-            "# {section} Run parameters\n"
-            "#-----------------------------------------------------------------------------\n"
-            "# Run name:\n"
-            "\"\"\" This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two\n"
-            "run1 for it. This name together with the protocol output folder will determine the working dir for this run.\n\"\"\"\n"
-            "RunName = \"run_001\"\n\n");
+    fprintf(output, "#{begin_of_header}\n\n#{include} inc_comment_run.py\n\n");
 }
 
-void printEnd(FILE * output, const char *progName)
+void printEnd(FILE * output, const String &progName)
 {
+  if (progName.find("mpi") != String::npos)
+    fprintf(output, "#{include} inc_parallel.py\n\n");
+
     fprintf(output,
             "# {hidden} Show expert options"
             "\"\"\"If True, expert options will be displayed\"\"\"\n"
@@ -534,41 +521,7 @@ void printEnd(FILE * output, const char *progName)
             "#------------------------------------------------------------------------------------------------\n\n"
             "from protocol_program import *\n\n"
             "if __name__ == '__main__':\n"
-            "    protocolMain(ProtXmippProgram)\n", progName);
-}
-
-void printParallel(FILE * output)
-{
-  fprintf(output,
-          "#------------------------------------------------------------------------------------------\n"
-          "# {section} Parallelization\n"
-          "#------------------------------------------------------------------------------------------\n"
-          "#  Number of threads\n"
-          "\"\"\" This option provides shared-memory parallelization on multi-core machines.\n"
-          "It does not require any additional software, other than xmipp\n"
-          "\"\"\"\n"
-          "NumberOfThreads = 1\n"
-          "\n"
-          "# Number of MPI processes\n"
-          "NumberOfMpi = 3\n"
-          "\n"
-          "# Submit to queue ?\n"
-          "\"\"\"Submit to queue\n"
-          "\"\"\"\n"
-          "SubmitToQueue = True\n"
-          "\n"
-          "# {expert}{condition}(SubmitToQueue) Queue name\n"
-          "\"\"\"Name of the queue to submit the job\n"
-          "\"\"\"\n"
-          "QueueName = \"default\"\n"
-          "\n"
-          "# {condition}(SubmitToQueue) Queue hours\n"
-          "\"\"\"This establish a maximum number of hours the job will\n"
-          "be running, after that time it will be killed by the\n"
-          "queue system\n"
-          "\"\"\"\n"
-          "QueueHours = 72\n"
-          "\"\"\"");
+            "    protocolMain(ProtXmippProgram)\n", progName.c_str());
 }
 
 void ProtPrinter::printProgram(const ProgramDef &program, int v)
@@ -576,8 +529,6 @@ void ProtPrinter::printProgram(const ProgramDef &program, int v)
     printBegin(output, program);
     for (size_t i = 0; i < program.sections.size(); ++i)
         printSection(*program.sections[i], v);
-    if (program.name.find("mpi") != String::npos)
-      printParallel(output);
     printEnd(output, program.name.c_str());
 }
 
