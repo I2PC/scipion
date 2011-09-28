@@ -21,8 +21,9 @@ DisplayComment = False
 """ 
 Describe your run here...
 """
+
 #-----------------------------------------------------------------------------
-# {section} Global parameters
+# {section} Run
 #-----------------------------------------------------------------------------
 # Run name:
 """ 
@@ -38,12 +39,13 @@ RunName = "run_001"
 """
 Behavior ='Restart'
 
-# Resume at iteration:
-""" set to a positive number N to continue the protocol at step N. This option is only 
-active when Behavior=Continue
-"""
+# {condition}(Behavior=="Continue") Resume at iteration:
+""" Set to a positive number N to continue the protocol run at step N. """
 ContinueAtStep = 1
 
+#-----------------------------------------------------------------------------
+# {section} Input
+#-----------------------------------------------------------------------------
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up 
 your data set. The filenames can have relative or absolute paths, but it is 
@@ -600,39 +602,7 @@ ConstantToAddToFiltration ='0.1'
 """ Center volume after each iteration """
 DoCenterVolume = False
 
-#------------------------------------------------------------------------------------------
-# {section} Parallelization 
-#------------------------------------------------------------------------------------------
-# Number of threads
-""" This option provides shared-memory parallelization on multi-core machines.
-It does not require any additional software, other than xmipp
-"""
-NumberOfThreads = 1
-
-# Number of MPI processes
-NumberOfMpi = 3
-
-#MPI job size 
-"""Minimum size of jobs in mpi processes. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
-"""
-MpiJobSize ='1'
-
-# Submit to queue ? 
-"""Submit to queue
-"""
-SubmitToQueue = True
-
-# {expert}{condition}(SubmitToQueue) Queue name
-"""Name of the queue to submit the job
-"""
-QueueName = "default"
-
-# {condition}(SubmitToQueue) Queue hours
-"""This establish a maximum number of hours the job will be
-   running, after that time it will be killed by the queue system
-"""
-QueueHours = 72
-
+# {include} inc_parallel.py 
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
