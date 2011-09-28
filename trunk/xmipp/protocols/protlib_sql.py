@@ -1,6 +1,7 @@
 from sqlite3 import dbapi2 as sqlite
 import pickle
 import os, sys
+from os.path import exists
 from config_protocols import projectDefaults
 from protlib_utils import reportError, getScriptPrefix, printLog
 from protlib_xmipp import blueStr, headerStr, greenStr
@@ -315,14 +316,8 @@ class XmippProjectDb(SqliteDb):
      
 class XmippProtocolDb(SqliteDb):
     def __init__(self, protocol, isMainLoop=True):
-        try:
-            self.ContinueAtStep = protocol.ContinueAtStep
-        except NameError:
-            self.ContinueAtStep=0
-        try:
-            self.runBehavior = protocol.Behavior
-        except NameError:
-            self.runBehavior=Behavior
+        self.ContinueAtStep = getattr(protocol, 'ContinueAtStep', 0) 
+        self.runBehavior = getattr(protocol, 'Behaviour', 'Resume')
         self.dbName = protocol.project.dbName
         self.Import = protocol.Import  
         self.Log = protocol.Log             
@@ -356,8 +351,8 @@ class XmippProtocolDb(SqliteDb):
                 self.cur.execute(sqlCommand)
                 self.insertStatus = False
 
-    def setIteration(self,iter):
-        self.iter=iter
+    def setIteration(self,iteration):
+        self.iter=iteration
 
     def getRunState(self,cursor):
         sqlCommand = "SELECT run_state FROM %(TableRuns)s WHERE run_id = %(run_id)d" % self.sqlDict
@@ -390,8 +385,8 @@ class XmippProtocolDb(SqliteDb):
                 if row['parameters'] != parameters or row['verifyFiles'] != verifyfilesString:
                     self.insertStatus = True
                 else:
-                    for file in verifyfiles:
-                        if not os.path.exists(file):
+                    for f in verifyfiles:
+                        if not exists(f):
                             self.insertStatus = True
                             break
                 self.lastStepId=row['step_id']
@@ -461,9 +456,9 @@ class XmippProtocolDb(SqliteDb):
 
     def verifyStepFiles(self, fileList):
         missingFilesStr = ''
-        for file in fileList:
-            if not os.path.exists(file):
-                missingFilesStr += ' ' + file
+        for f in fileList:
+            if not exists(f):
+                missingFilesStr += ' ' + f
 
         if len(missingFilesStr) > 0:
             raise Exception("Missing result files: " + missingFilesStr)
