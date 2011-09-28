@@ -79,6 +79,7 @@ public class RotSpectraVector {
     public JFrame getChart() {
         ChartPanel panel = new ChartPanel(chart);
         JFrame frame = new JFrame();
+        frame.setTitle(block + Filename.SEPARATOR + filename);
         frame.getContentPane().add(panel);
         frame.pack();
 

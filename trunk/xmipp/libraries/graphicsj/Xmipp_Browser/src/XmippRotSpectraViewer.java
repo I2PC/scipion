@@ -5,6 +5,7 @@
  * and open the template in the editor.
  */
 import browser.COMMAND_PARAMETERS;
+import browser.DEBUG;
 import browser.windows.ImagesWindowFactory;
 import ij.IJ;
 import ij.Macro;
@@ -63,6 +64,7 @@ public class XmippRotSpectraViewer implements PlugIn {
             }
 
         } catch (Exception ex) {
+            DEBUG.printException(ex);
             throw new RuntimeException(ex);
         }
     }

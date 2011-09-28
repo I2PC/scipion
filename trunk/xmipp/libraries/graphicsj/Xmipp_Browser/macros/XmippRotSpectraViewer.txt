@@ -1,5 +1,5 @@
 // This macro allows to run plugins from command line passing parameters to them.
 
- macro "XmippRotSpectra" {
-    run("Xmipp Rot Spectra", getArgument);
+ macro "XmippRotSpectraViewer" {
+    run("Xmipp Rot Spectra Viewer", getArgument);
  }
