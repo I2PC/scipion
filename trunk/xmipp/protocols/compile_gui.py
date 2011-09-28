@@ -175,9 +175,9 @@ class ConfigNotebook(ttk.Notebook):
             self.text.fillTextArea(goEnd=True)
             self.progressVar.set(0)
             if self.proc.returncode != 0:
-                showError("Errors", "Errors on Xmipp compilation, see '%s' for more details" % self.OUTPUT, self)
+                showError("Errors", "Errors on Xmipp compilation, see <%s> for more details" % self.OUTPUT, self)
             else:
-                showInfo("Compilation finished.", "Xmipp has been successfully installed\nInclude file xmipp.bashrc or xmipp.csh to your startup shell file", self)
+                showInfo("Compilation finished.", "Xmipp has been successfully installed\nInclude file <xmipp.bashrc> or <xmipp.csh> to your startup shell file", self)
                 self.master.destroy()
         else:
             self.master.after(3000, self.checkProcess)

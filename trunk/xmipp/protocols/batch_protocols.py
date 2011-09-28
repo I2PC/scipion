@@ -37,6 +37,7 @@ from config_protocols import FontName, FontSize
 from protlib_base import getProtocolFromModule, XmippProject,\
     getWorkingDirFromRunName, getExtendedRunName
 from protlib_utils import reportError, runImageJPlugin, Process, ProcessManager
+from protlib_xmipp import greenStr
 from protlib_sql import SqliteDb, ProgramDb
 
 #TextColor
@@ -214,7 +215,7 @@ class XmippProjectGUI():
 
         def runClick(event=None):
             program_name = lb.get(int(lb.curselection()[0]))
-            tmp_script = 'protocol_program_header.py'
+            tmp_script = self.project.projectTmpPath('protocol_program_header.py')
             os.system(program_name + " --xmipp_write_protocol %(tmp_script)s " % locals())
             self.launchProtocolGUI(self.project.createRunFromScript(protDict.xmipp_program.name, 
                                                                     tmp_script, program_name))            
@@ -467,7 +468,7 @@ class XmippProjectGUI():
         elif event == 'Copy':
             self.launchProtocolGUI(self.project.copyProtocol(run['protocol_name'], run['script']))
         elif event == "Delete":
-            if askYesNo("Confirm DELETE", "All data related to this run will be DELETED. Do you want to continue?", self.root):
+            if askYesNo("Confirm DELETE", "<ALL DATA> related to this run will be <DELETED>. Do you want to continue?", self.root):
                 self.project.deleteRun(run)
                 self.updateRunHistory(self.lastSelected)
         elif event == "Visualize":
@@ -626,22 +627,32 @@ class ScriptProtocols(XmippScript):
         self.addUsageLine("Create Xmipp project on this folder.");
         ## params
         self.addParamsLine("[ -c  ]            : Clean project");
-        self.addParamsLine("   alias --clean;");    
+        self.addParamsLine("   alias --clean;"); 
+        
+    def confirm(self, msg):
+        answer = raw_input(msg + ' [Y/n]:')
+        if not answer or answer.lower() == 'y':
+            return True
+        return False           
     
     def run(self):
-        dir = os.getcwd()
-        project = XmippProject(dir)
+        proj_dir = os.getcwd()
+        project = XmippProject(proj_dir)
         launch = True
         if self.checkParam('--clean'):
-            project.clean()
+            msg = 'You are in project: %s\n' % greenStr(proj_dir)
+            msg += 'ALL RESULTS will be DELETED, are you sure to CLEAN?'
+            launch = self.confirm(msg)
+            if launch:
+                project.clean()
+                
         else: #lauch project     
             if not project.exists():
-                print 'You are in directory: ', dir
-                answer = raw_input('Do you want to create a new xmipp_protocols PROJECT in this folder? [Y/n]:')
-                if not answer or answer.lower() == 'y':
+                msg = 'You are in directory: %s\n' % greenStr(proj_dir)
+                msg += 'Do you want to CREATE a NEW PROJECT in this folder?'
+                launch = self.confirm(msg)
+                if launch:
                     project.create()
-                else: 
-                    launch = False
             else:
                 project.load()
         if launch:
