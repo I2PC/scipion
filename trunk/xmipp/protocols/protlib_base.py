@@ -214,7 +214,7 @@ class XmippProtocol(object):
         for k, v in self.ParamsDict.iteritems():
             self.__dict__[k] = v
             
-        self.DoParallel = 'NumberOfMpi' in dir() and self.NumberOfMpi > 1
+        self.DoParallel = hasattr(self, 'NumberOfMpi') and self.NumberOfMpi > 1
         self.Name = protocolName
         self.scriptName = scriptname
         #A protocol must be able to find its own project
@@ -289,8 +289,8 @@ class XmippProtocol(object):
     def warningsBase(self):
         '''Output some warnings that can be errors and require user confirmation to proceed'''
         warningList=[]
-        if self.Behavior=="Restart":
-            warningList.append("Restarting a protocol will delete previous results")
+        if self.Behavior == "Restart":
+            warningList.append("Restarting a protocol will <DELETE> previous results")
         warningList += self.warnings()
         return warningList
 
@@ -474,7 +474,7 @@ def protocolMain(ProtocolClass, script=None):
         
         if no_check: 
             if not run_id:
-                reportError("Protocol run '%s' has not been registered in project database" % mod.RunName)
+                reportError("Protocol run <%s> has not been registered in project database" % mod.RunName)
         else:
             from protlib_utils import showWarnings
             if not showWarnings(p.warningsBase(), no_confirm):
@@ -513,7 +513,6 @@ def protocolMain(ProtocolClass, script=None):
                 _run['pid'] = os.getpid()
                 _run['pid_type'] = SqliteDb.PID_POSIX
             
-            print _run
             # Update run's process info in DB
             project.projectDb.updateRunPid(_run)
         
