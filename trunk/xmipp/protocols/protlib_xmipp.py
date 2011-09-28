@@ -29,7 +29,7 @@
 import os
 import xmipp
 from xmipp import Program
-from protlib_utils import runImageJPlugin
+from protlib_utils import runImageJPlugin, runJavaIJapp
 from protlib_filesystem import getXmippPath
 
 
@@ -92,10 +92,10 @@ class XmippScript():
             import traceback
             traceback.print_exc(file=sys.stderr)
             
-class ScriptPluginIJ(XmippScript):
-    def __init__(self, macro):
+class ScriptIJBase(XmippScript):
+    def __init__(self, name):
         XmippScript.__init__(self)
-        self.macro = macro
+        self.name = name
         
     def defineOtherParams(self):
         pass
@@ -117,10 +117,21 @@ class ScriptPluginIJ(XmippScript):
 
         self.args = "-i %s" % ' '.join(self.getListParam('-i'))
         self.readOtherParams()
-        
+ 
+class ScriptPluginIJ(XmippScript):
+    def __init__(self, macro):
+        ScriptIJBase.__init__(self)
+                  
     def run(self):
-        runImageJPlugin(self.memory, self.macro, self.args)
+        runImageJPlugin(self.memory, self.name, self.args)
      
+class ScriptAppIJ(XmippScript):
+    def __init__(self, name):
+        ScriptIJBase.__init__(self)
+                  
+    def run(self):
+        runJavaIJapp(self.memory, self.name, self.args)
+        
 #------------- FUNCTION TO WORK WITH PROGRAMS META-INFORMATION -----------------
 class LabelData():
     def __init__(self):
