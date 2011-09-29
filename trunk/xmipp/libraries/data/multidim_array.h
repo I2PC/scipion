@@ -1314,11 +1314,11 @@ public:
      * @endcode
      */
     template<typename T1>
-    void resize(const MultidimArray<T1> &v)
+    void resize(const MultidimArray<T1> &v, bool copy = true)
     {
         if (NSIZE(*this) != NSIZE(v) || XSIZE(*this) != XSIZE(v) ||
             YSIZE(*this) != YSIZE(v) || ZSIZE(*this) != ZSIZE(v) || data==NULL)
-            resize(NSIZE(v), ZSIZE(v), YSIZE(v), XSIZE(v));
+            resize(NSIZE(v), ZSIZE(v), YSIZE(v), XSIZE(v), copy);
 
         STARTINGX(*this) = STARTINGX(v);
         STARTINGY(*this) = STARTINGY(v);
