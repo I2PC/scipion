@@ -231,19 +231,19 @@ void FourierTransformer::Transform(int sign)
             size_t nmax=(fFourier.nzyxdim/4)*4;
             for (size_t n=0; n<nmax; n+=4)
             {
-            	*ptr++ *= isize;
-            	*ptr++ *= isize;
-            	*ptr++ *= isize;
-            	*ptr++ *= isize;
-            	*ptr++ *= isize;
-            	*ptr++ *= isize;
-            	*ptr++ *= isize;
-            	*ptr++ *= isize;
+                *ptr++ *= isize;
+                *ptr++ *= isize;
+                *ptr++ *= isize;
+                *ptr++ *= isize;
+                *ptr++ *= isize;
+                *ptr++ *= isize;
+                *ptr++ *= isize;
+                *ptr++ *= isize;
             }
             for (size_t n=nmax; n<fFourier.nzyxdim; ++n)
             {
-            	*ptr++ *= isize;
-            	*ptr++ *= isize;
+                *ptr++ *= isize;
+                *ptr++ *= isize;
             }
         }
     }
@@ -268,8 +268,8 @@ void FourierTransformer::Transform(int sign)
                 double *ptr=(double*)MULTIDIM_ARRAY(*fComplex);
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(*fComplex)
                 {
-                	*ptr++ *= isize;
-                	*ptr++ *= isize;
+                    *ptr++ *= isize;
+                    *ptr++ *= isize;
                 }
             }
             else
@@ -362,6 +362,34 @@ void FFT_phase(const MultidimArray< std::complex<double> > &v,
     DIRECT_MULTIDIM_ELEM(phase, n) = atan2(DIRECT_MULTIDIM_ELEM(v,n).imag(), DIRECT_MULTIDIM_ELEM(v, n).real());
 }
 
+
+void convolutionFFT(const MultidimArray<double> &img,
+                    const MultidimArray<double> &kernel,
+                    MultidimArray<double> &result)
+{
+    if (&result != &img)
+        result = img;
+
+    MultidimArray<double> imgTemp;
+    MultidimArray< std::complex< double> > FFTIm, FFTK;
+    FourierTransformer transformer1(FFTW_BACKWARD), transformer2(FFTW_BACKWARD);
+
+    transformer2.FourierTransform((MultidimArray<double> &)kernel, FFTK, false);
+
+    for (int n = 0; n < ZSIZE(result); n++)
+    {
+        imgTemp.aliasSlice(result, n);
+        transformer1.FourierTransform(imgTemp, FFTIm, false);
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFTIm)
+        DIRECT_MULTIDIM_ELEM(FFTIm,n) *= DIRECT_MULTIDIM_ELEM(FFTK,n);
+
+        transformer1.inverseFourierTransform();
+    }
+
+}
+
+
 // Fourier ring correlation -----------------------------------------------
 //#define SAVE_REAL_PART
 void frc_dpr(MultidimArray< double > & m1,
@@ -416,7 +444,7 @@ void frc_dpr(MultidimArray< double > & m1,
 
     int sizeZ_2 = m1sizeZ/2;
     if (sizeZ_2==0)
-    	sizeZ_2=1;
+        sizeZ_2=1;
     double isizeZ = 1.0/m1sizeZ;
     int sizeY_2 = m1sizeY/2;
     double iysize = 1.0/m1sizeY;
@@ -452,8 +480,8 @@ void frc_dpr(MultidimArray< double > & m1,
                 dAi(error_l2,idx) += abs(z1-z2);
                 if (dodpr) //this takes to long for a huge volume
                 {
-                	double phaseDiff=atan2(z1.imag(),z1.real()) - atan2(z2.imag(),z2.real());
-                	phaseDiff = RAD2DEG(phaseDiff);
+                    double phaseDiff=atan2(z1.imag(),z1.real()) - atan2(z2.imag(),z2.real());
+                    phaseDiff = RAD2DEG(phaseDiff);
                     phaseDiff = realWRAP(phaseDiff,-180, 180);
                     dAi(dpr,idx) += ((absz1+absz2)*phaseDiff*phaseDiff);
                     dAi(den_dpr,idx) += (absz1+absz2);
@@ -476,7 +504,7 @@ void frc_dpr(MultidimArray< double > & m1,
         dAi(error_l2,i) /= dAi(radial_count,i);
 
         if (dodpr)
-        	dAi(dpr,i) = sqrt(dAi(dpr,i) / dAi(den_dpr,i));
+            dAi(dpr,i) = sqrt(dAi(dpr,i) / dAi(den_dpr,i));
 #ifdef SAVE_REAL_PART
 
         std::ofstream fhOut;

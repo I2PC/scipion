@@ -494,8 +494,8 @@ void correlation_matrix(const MultidimArray< T > & m1,
     double *ptrFFT2=(double*)MULTIDIM_ARRAY(FFT2);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT1)
     {
-    	*ptrAux=(*ptrFFT2++)*dSize;
-    	*ptrAux_1=(*ptrFFT2++)*mdSize;
+        *ptrAux=(*ptrFFT2++)*dSize;
+        *ptrAux_1=(*ptrFFT2++)*mdSize;
         DIRECT_MULTIDIM_ELEM(FFT1,n) *= aux;
     }
 
@@ -538,6 +538,11 @@ void auto_correlation_matrix(const MultidimArray< T > & Img, MultidimArray< doub
     // Center the resulting image to obtain a centered autocorrelation
     CenterFFT(R, true);
 }
+
+
+void convolutionFFT(const MultidimArray<double> &img,
+                    const MultidimArray<double> &kernel,
+                    MultidimArray<double> &result);
 
 /** Fourier-Ring-Correlation between two multidimArrays using FFT
  * @ingroup FourierOperations
