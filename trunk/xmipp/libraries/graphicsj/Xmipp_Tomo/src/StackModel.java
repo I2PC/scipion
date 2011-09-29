@@ -93,6 +93,7 @@ public class StackModel extends AbstractModel{
 		ImagePlus ret = new ImagePlus();
 
 		String filePath = getCurrentImageFilePath();
+		Logger.debug(filePath);
 		if(filePath == null)
 			return ret;
 		
@@ -107,16 +108,20 @@ public class StackModel extends AbstractModel{
 			try{
 				image.readSlice(filePath);
 			} catch (FileNotFoundException ex) {
-				Logger.debug("loadEMBackground - ", ex);
+				Logger.debug("File not found ", ex);
+				return null;
 			} catch (IOException ex) {
-				Logger.debug("loadEMBackground - Error opening file ",
+				Logger.debug("Error opening file ",
 						ex);
+				return null;				
 			} catch (OutOfMemoryError err) {
-				Logger.debug("loadEMBackground - Out of memory"
+				Logger.debug("Out of memory"
 						+ err.toString());
+				return null;				
 			} catch (Exception ex) {
-				Logger.debug("loadEMBackground - unexpected exception",
+				Logger.debug("unexpected exception",
 						ex);
+				return null;				
 			}
 			getImageDoubleCache().put(filePath, image);
 		}

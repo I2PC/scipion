@@ -56,6 +56,8 @@
 // TODO: remove deprecated methods (once they are not needed anymore)
 import ij.*;
 import java.io.*;
+
+import ij.plugin.Options;
 import ij.plugin.PlugIn;
 
 /**
@@ -78,6 +80,8 @@ public class Xmipp_Tomo implements PlugIn{
 
 	// UI elements
 	private static TomoWindow tw=null;
+	private final static String COMMAND_OPTION_INPUT = "i";
+
 	
 	private int lastWindowId=0;
 	
@@ -89,11 +93,34 @@ public class Xmipp_Tomo implements PlugIn{
 		
 		// IJ.debugMode = true;
 		
+        if (IJ.isMacro() && Macro.getOptions() != null && !Macro.getOptions().trim().isEmpty()) { // From macro.
+            // "string" is used when called from another plugin or installed command.
+            // "Macro.getOptions()" used when called from a run("command", arg) macro function.
+            String file = processArgs(Macro.getOptions().trim());
+            if (file != null)
+            	tw.getController().loadEM(file);
+        }
+		
 		if(tw != null)
 			tw.display();
 	}
 	
+/**
+ * Basic parsing of args: "-i file"
+ * @param args
+ * @return
+ */
+	 private String processArgs(String args) {
+	        String argsList[] = args.split(" ");
 
+	        String ret=null;
+	        
+	        if("-i".equals(argsList[0]))
+	        	ret=argsList[1];
+	        return ret;
+	    }
+
+	
 
 	/** Run cmdline in a shell and show standard output & error via debug()
 	 * @param cmdline

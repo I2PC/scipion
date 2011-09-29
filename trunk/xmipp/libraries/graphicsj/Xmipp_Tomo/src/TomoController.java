@@ -247,8 +247,12 @@ public class TomoController implements AdjustmentListener {
 		Logger.debug(getWorkflow().toString());
 	}
 
+	public void loadEM(){
+		loadEM(null);
+	}
+	
 	// TODO: reset workflow after loading a stack
-	public void loadEM() {
+	public void loadEM(String path) {
 		if (window.getLastCommandState() == Command.State.LOADING) {
 			// if the button was pressed while loading, it means user wants to
 			// cancel
@@ -257,7 +261,9 @@ public class TomoController implements AdjustmentListener {
 					XmippTomoCommands.LOAD.getLabel());
 			Logger.debug("loadEM - cancelled");
 		} else {
-			String path = TomoFileDialog.openDialog("Load EM", window);
+			if(path == null)
+				path = TomoFileDialog.openDialog("Load EM", window);
+			
 			if (path == null)
 				return;
 			// free previous model (if any) ??
