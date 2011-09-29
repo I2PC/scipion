@@ -131,7 +131,7 @@ void SimpleGrid::prepare_grid()
     {
         inv_basis = basis.inv();
     }
-    catch (XmippError error)
+    catch (XmippError &error)
     {
         REPORT_ERROR(ERR_UNCLASSIFIED, "The grid vectors are not a true 3D coordinate system");
     }
