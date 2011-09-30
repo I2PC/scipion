@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 #Some flags variables
 
@@ -19,9 +19,6 @@ export NUMBER_OF_CPU=1
 
 # Some other vars
 
-GREEN="\033[32m"
-RED="\033[31m"
-ENDC="\033[0m"
 
 #################### PARSING PARAMETERS ###########################
 TAKE_CPU=false
@@ -111,6 +108,17 @@ toc()
    echo "*** Elapsed time: $ELAPSED seconds"
 }
 
+
+GREEN="\033[32m"
+RED="\033[31m"
+ENDC="\033[0m"
+
+# Print a green msg using terminal escaped color sequence
+echoGreen()
+{
+    printf "$GREEN %b $ENDC\n" "$1"
+}
+
 compile_library()
 {
 
@@ -122,7 +130,7 @@ compile_library()
    LIBS_PATH=$5
    _PATH=$EXT_PATH/$PREFIX_PATH/$LIB/$SUFFIX_PATH
   echo
-  echo -e "$GREEN*** Compiling $LIB ...$ENDC"
+  echoGreen "*** Compiling $LIB ..."
   echo "--> cd $_PATH"
   cd $_PATH
 
@@ -190,7 +198,7 @@ create_dir()
 }
 
 #################### NEEDED FOLDERS: bin lib build ##############
-echo -e "$GREEN*** Checking needed folders ...$ENDC"
+echoGreen "*** Checking needed folders ..."
 create_dir build
 create_dir bin
 create_dir lib
@@ -201,7 +209,7 @@ if $DO_UNTAR; then
   tic
   dirs=". python"
   echo
-  echo -e "$GREEN*** Decompressing external libraries ...$ENDC"
+  echoGreen "*** Decompressing external libraries ..."
   #Enter to external dir
   echo "--> cd $EXT_PATH"
   cd $EXT_PATH
@@ -235,18 +243,27 @@ fi
 
 #################### PYTHON ###########################
 if $DO_PYTHON; then
-	STATIC_BACKUP=$DO_STATIC
-	DO_STATIC=true
     export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
     export LDFLAGS="-L$XMIPP_HOME/lib"
     # Copy or custom python files:
     cd $EXT_PATH/python
     cp ./xmipp_setup.py $VPYTHON/setup.py
-    cp ./xmipp_site.py $VPYTHON/Lib/site.py
     compile_library $VPYTHON python "." ""
-    install_bin python/$VPYTHON/python xmipp_python
-    DO_STATIC=$STATIC_BACKUP
-    #install_libs python/$VPYTHON libpython2.7. a so so.1.0
+
+    # Create the python launch script with necessary environment variable settings
+    PYTHON_BIN=$XMIPP_HOME/bin/xmipp_python
+    EXT_PYTHON=$XMIPP_HOME/external/python
+    printf "#!/bin/sh\n\n" > $PYTHON_BIN
+    printf 'VPYTHON=%b \n' "$VPYTHON" >> $PYTHON_BIN
+    printf 'VTCLTK=%b \n\n' "$VTCLTK" >> $PYTHON_BIN
+    printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
+    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
+    printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
+    printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
+    printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
+    printf '$EXT_PYTHON/$VPYTHON/python "$@" \n ' >> $PYTHON_BIN
+    chmod u+x $PYTHON_BIN
+    
     compile_pymodule $VNUMPY
     compile_pymodule $VMATLIBPLOT
 fi
@@ -271,6 +288,7 @@ if $DO_ARPACK; then
 fi
 
 # Launch the configure/compile python script 
+cd $XMIPP_HOME
 ./compile.py
 
 exit 0
