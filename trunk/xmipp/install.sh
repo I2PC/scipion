@@ -237,8 +237,6 @@ fi
 if $DO_TCLTK; then
     compile_library tcl$VTCLTK python unix ""
     compile_library tk$VTCLTK python unix ""
-    install_libs python/tcl$VTCLTK/unix libtcl8.5. so
-    install_libs python/tk$VTCLTK/unix libtk8.5. so
 fi
 
 #################### PYTHON ###########################
