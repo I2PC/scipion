@@ -1,5 +1,7 @@
 package trainingpicker.model;
 
+import java.awt.Point;
+
 public class Constants {
 	
 
@@ -24,6 +26,11 @@ public class Constants {
 
 	public static String getNoSuchFieldValueMsg(String field, Object value) {
 		return String.format("No such %s %s exists", field, value);
+	}
+
+	public static String getOutOfBoundException(Object o)
+	{
+		return String.format("%s out of bounds", o);
 	}
 	
 	

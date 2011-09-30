@@ -3,6 +3,7 @@ package trainingpicker.model;
 import ij.ImagePlus;
 import ij.process.ImageProcessor;
 
+import java.awt.Point;
 import java.awt.Rectangle;
 
 import javax.swing.ImageIcon;
@@ -42,6 +43,17 @@ public class TrainingParticle extends MicrographParticle {
 	public void setFamily(Family family) {
 		this.family = family;
 	}
+	
+	public int getX0()
+	{
+		return getX() - family.getRadius();
+	}
+	
+	public int getY0()
+	{
+		return getY() - family.getRadius();
+	}
+	
 
 	
 	public boolean contains(int x2, int y2 )
@@ -55,7 +67,7 @@ public class TrainingParticle extends MicrographParticle {
 	}
 
 	
-	public ImagePlus getImage()
+	public ImagePlus getImagePlus()
 	{
 		if(img == null)
 		{
@@ -70,10 +82,21 @@ public class TrainingParticle extends MicrographParticle {
 		return img;
 	}
 	
+	@Override
+	public void setPosition(int x, int y)
+	{
+		int radius = family.getSize()/2;
+		if(x - radius < 0 || y - radius < 0 || x + radius > micrograph.getImage().getWidth() || y + radius > micrograph.getImage().getHeight())
+			throw new IllegalArgumentException(Constants.getOutOfBoundException(String.format(" particle center: %s %s", x, y)));
+		super.setPosition(x, y);
+		
+		img = null;
+	}
+	
 	public ImageIcon getImageIcon()
 	{
 		
-		ImageIcon icon = new ImageIcon(img.getImage());
+		ImageIcon icon = new ImageIcon(getImagePlus().getImage());
 		return icon;
 	}
 

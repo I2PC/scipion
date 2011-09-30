@@ -178,4 +178,10 @@ public class Family {
 		state = FamilyState.Review;
 		
 	}
+
+
+	public int getRadius()
+	{
+		return size/2;
+	}
 }

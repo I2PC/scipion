@@ -319,7 +319,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 //				for (TrainingParticle p : getMicrograph().getFamilyData(family).getManualParticles())
 //					imgs.add(p.getImage());
 //				//String filename = XmippJ.saveTempImageStack(imgs);
-				 new MicrographParticlesJDialog(ParticlePickerJFrame.this, micrograph);
+				 new ParticlesJDialog(ParticlePickerJFrame.this, micrograph);
 			}
 		});
 
@@ -1059,6 +1059,11 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 	public double getThreshold()
 	{
 		return thresholdsl.getValue() / 100.0;
+	}
+
+	public double getMagnification()
+	{
+		return 0.5;
 	}
 
 }
