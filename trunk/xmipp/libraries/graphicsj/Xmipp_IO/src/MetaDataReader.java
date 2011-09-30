@@ -1,7 +1,7 @@
 
+import ij.IJ;
 import ij.ImagePlus;
-import xmipp.Filename;
-import xmipp.ImageDouble;
+import xmipp.MetaData;
 
 /*
  * To change this template, choose Tools | Templates
@@ -11,17 +11,19 @@ import xmipp.ImageDouble;
  *
  * @author Juanjo Vega
  */
-public class Xmipp_ImageReader extends Xmipp_Reader {
+public class MetaDataReader extends Reader {
 
     @Override
     protected void read(String path) throws Exception {
-        ImageDouble image = new ImageDouble(filename);
+        IJ.showStatus("Reading: " + path);
 
-        ImagePlus imp = ImageConverter.convertToImagej(image, filename);
+        MetaData md = new MetaData(path);
+
+        ImagePlus imp = ImageConverter.convertToImagej(md);
 
         // Sets stack...
-        String name = Filename.getFilename(filename);
-        setStack(name, imp.getStack());
+        //String name = Filename.getFilename(filename);
+        setStack(getTitle(), imp.getStack());
 
         // ...and copies scale info.
         copyScale(imp);
@@ -29,6 +31,6 @@ public class Xmipp_ImageReader extends Xmipp_Reader {
 
     @Override
     protected String getOpenDialogTitle() {
-        return "Load xmipp file...";
+        return "Open MetaData...";
     }
 }
