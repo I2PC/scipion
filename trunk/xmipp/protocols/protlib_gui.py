@@ -705,7 +705,7 @@ class ProtocolGUI(BasicGUI):
         try:   
             f = open(script, 'r')
         except Exception, e:
-            raise Exception("Script read failed", "Couldn't read from script file '%s'" % script)
+            raise Exception("Script read failed", "Couldn't read from script file <%s>" % script)
         
         for line in f:
             #print "LINE: ", line
@@ -1060,6 +1060,7 @@ class ProtocolGUI(BasicGUI):
         if self.Error:
             return
         if self.visualize_mode and not self.hasVisualizeOptions:
+            print "Calling visualize from protlib_gui"
             self.getProtocol().visualize()
         else:
             BasicGUI.launchGUI(self)
@@ -1071,7 +1072,7 @@ class ProtocolGUI(BasicGUI):
 # if not, can be used as viewers
 
     def wizardNotFound(self, var):
-        showError("Wizard not found", "The wizard '%s' for this parameter has not been found" % var.tags['wizard']
+        showError("Wizard not found", "The wizard <%s> for this parameter has not been found" % var.tags['wizard']
                                , parent=self.master)
         
     def wizardDummy(self, var):
@@ -1225,7 +1226,7 @@ class ProtocolGUI(BasicGUI):
 # or None if not error
 def validatorNonEmpty(var):
     if len(var.tkvar.get().strip()) == 0:
-        return "Input for '%s' is empty" % var.comment
+        return "Input for <%s> is empty" % var.comment
     return None
     
 def validatorPathExists(var):
@@ -1235,7 +1236,7 @@ def validatorPathExists(var):
     if not err:
         path = var.tkvar.get()
         if not os.path.exists(path):
-            err = "Input path: '%s' for '%s' doesn't exist" % (path, var.comment)
+            err = "Input path: <%s> for <%s> doesn't exist" % (path, var.comment)
     return err  
 
 def validatorIsFloat(var):
@@ -1245,7 +1246,7 @@ def validatorIsFloat(var):
             value = var.tkvar.get()
             float(value)
         except ValueError:
-            err = "Input value: '%s' for '%s' isn't a valid number" % (value, var.comment)
+            err = "Input value: <%s> for <%s> isn't a valid number" % (value, var.comment)
     return err    
 
 def validatorIsInt(var):
@@ -1255,5 +1256,5 @@ def validatorIsInt(var):
         try:
             int(value)
         except ValueError:
-            err = "Input value: '%s' for '%s' isn't a valid integer" % (value, var.comment)
+            err = "Input value: <%s> for <%s> isn't a valid integer" % (value, var.comment)
     return err 
