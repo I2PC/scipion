@@ -2138,8 +2138,8 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
         Iaux.initZeros();
         applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-        if (!mask(i,j))
-            Iaux(i,j)=0;
+        if (!A2D_ELEM(mask,i,j))
+            A2D_ELEM(Iaux,i,j)=0;
 
 #ifdef DEBUG
 
@@ -2179,8 +2179,8 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
         Iaux.initZeros();
         applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-        if (!mask(i,j))
-            Iaux(i,j)=0;
+        if (!A2D_ELEM(mask,i,j))
+            A2D_ELEM(Iaux,i,j)=0;
 
 #ifdef DEBUG
 
