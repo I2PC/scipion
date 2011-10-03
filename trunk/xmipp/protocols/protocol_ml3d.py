@@ -19,6 +19,10 @@ class ProtML3D(XmippProtocol):
         self.ParamsStr = ''
         
     def defineSteps(self):        
+        if self.DoMlf:
+            self.progId = 'mlf'
+        else:
+            self.progId = 'ml'
         restart = False
         if restart:            #Not yet implemented
             pass
@@ -28,11 +32,8 @@ class ProtML3D(XmippProtocol):
 #            os.chdir(self.WorkingDir)
 #            self.restart_MLrefine3D(RestartIter)
         else:
-            
-            if self.DoMlf:
-                self.ParamsDict['ORoot'] = 'mlf3d'
-            else:
-                self.ParamsDict['ORoot'] = 'ml3d'
+                
+            self.ParamsDict['ORoot'] = self.workingDirPath('%s3d' % self.progId)
                 
             if self.DoMlf and self.DoCorrectAmplitudes:
                 ctfFile = self.ParamsDict['ctfFile'] = self.workingDirPath('my.ctfdat')
@@ -107,8 +108,10 @@ class ProtML3D(XmippProtocol):
         self.ParamsDict['InitialVols'] = self.ParamsDict['FilteredVols']
         
     def insertML3DStep(self):
-        self.ParamsStr = "-i %(InitialVols)s --oroot %(ORoot)s --ref %(InitialVols)s --iter %(NumberOfIterations) " + \
-                         "--sym %(Symmetry) --ang %(AngularSampling)s %(ExtraParams)s"
+        self.ParamsStr = "-i %(ImgMd)s --oroot %(ORoot)s --ref %(InitialVols)s --iter %(NumberOfIterations)d " + \
+                         "--sym %(Symmetry)s --ang %(AngularSampling)s %(ExtraParams)s"
+        if self.NumberOfReferences > 1:
+            self.ParamsStr += " --nref %(NumberOfReferences)s"
         if self.NumberOfThreads > 1:
             self.ParamsStr += " --thr %(NumberOfThreads)d"
         if self.DoNorm:
@@ -119,9 +122,15 @@ class ProtML3D(XmippProtocol):
                 self.ParamsStr += ' --ctfdat %(ctfFile)d'
             else:
                 self.ParamsStr += ' --no_ctf --pixel_size %(PixelSize)f'
-            self.ParamsStr += ""
             if not self.ImagesArePhaseFlipped:
                 self.ParamsStr += " --not_phase_flipped"
+
+        self.ParamsStr += " --recons %(ReconstructionMethod)s "
+        if self.ReconstructionMethod == 'wslART':
+            self.ParamsStr += " %(ARTExtraParams)s"
+        else:
+            self.ParamsStr += " %(FourierExtraParams)s" 
+        self.insertRunJob('xmipp_%s_refine3d' % self.progId, [])
                 
 ''' This function will copy input references into a stack in working directory'''
 def copyVolumes(log, inputMd, outputStack):

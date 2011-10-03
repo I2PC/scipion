@@ -26,68 +26,23 @@ for MLF3D: Scheres et al. (2007) Structure, 15, 1167-1177
 """ 
 Provide a list of images from a stack or metadata file that make up your data set.
 The filenames should be relative to the <ProjectDir> where you are running the <Protocols>
-If you have images outside the <Project> you should import them first.
+If you have images outside the <ProjectDir> you should import them first.
 """
 ImgMd = "all_images.xmd"
 
 # {file}{validate}(PathExists) Initial 3D reference volumes:
-""" Initial 3D density maps with the same dimensions as your particles.
+"""Initial 3D density maps with the same dimensions as your particles.
 """
 RefMd = "result_classes.xmd"
 
 # Number of seeds per reference
-'''
+"""
 The total number of seeds generated will be the number of provided
 reference volumes times the number of seeds per reference.
 If you provide 2 initial volumes and 3 seeds per referece you will
 produce 6 3D maps.
-'''
+"""
 NumberOfReferences = 1
-
-#------------------------------------------------------------------------------------------------
-# {section}{has_question} MLF parameters
-#------------------------------------------------------------------------------------------------
-
-# Perform MLF3D instead of ML3D
-DoMlf = False
-
-# Use CTF-amplitude correction inside MLF?
-""" If set to true, provide the ctfdat file in the field below. 
-If set to false, the ctfdat field will be ignored.
-"""
-DoCorrectAmplitudes = True
-
-# {file}{validate}(PathExists){condition}(DoCorrectAmplitudes) CTFdat file with the input images:
-""" The names of both the images and the ctf-parameter files should be 
-relative path from <ProjectDir>. You can import data from other projects.
-"""
-InCtfDatFile='all_images.ctfdat'
-
-# High-resolution limit (in Angstroms)
-""" No frequencies higher than this limit will be taken into account. 
-If zero is given, no limit is imposed.
-"""
-HighResLimit = 20
-
-# Are the images CTF phase flipped?
-""" You can run MLF with or without having phase flipped the images.
-"""
-ImagesArePhaseFlipped = True
-
-# Are initial references CTF-amplitude corrected?
-""" If coming from programs other than <xmipp_mlf_refine3d> this is 
-usually not the case. If you will perform a grey-scale correction, 
-this parameter becomes irrelevant as the output maps never have the
- CTF-amplitudes corrected.
-"""
-InitialMapIsAmplitudeCorrected = False
-
-# {expert} Are the seeds CTF-amplitude corrected?
-""" This option is only relevant if you provide your own seeds! 
-If the seeds are generated automatically, this parameter becomes 
-irrelevant as they will always be amplitude-corrected
-"""
-SeedsAreAmplitudeCorrected = False
 
 # Correct the absolute grey-scale of initial references?
 """ The probabilities are based on squared differences, so that the 
@@ -107,16 +62,16 @@ ProjMatchSampling = 15
 volume as much as you can.
 """
 DoLowPassFilterReference = True
-# {condition}(DoLowPassFilterReference) Resolution of the low-pass filter (in Angstroms):
+# {condition}(DoLowPassFilterReference) Resolution of the low-pass filter (Ang):
 LowPassFilter = 50
-# {condition}(DoLowPassFilterReference) Pixel size (in Angstroms):
+# {condition}(DoLowPassFilterReference) Pixel size (Ang):
 PixelSize = 5.6
 
 #------------------------------------------------------------------------------------------------
 # {section}{has_question} ML3D classification
 #------------------------------------------------------------------------------------------------
 # Perform ML(F)3D classification
-DoML3DClassification=True
+DoML3DClassification = True
 
 # Angular sampling for classification:
 """ 
@@ -143,12 +98,13 @@ Symmetry = 'c1'
 DoNorm = False
 
 # {expert} Restart after iteration:
-""" For previous runs that stopped before convergence,
-    resume the calculations after the completely finished iteration,
-    i.e. including all 3D reconstructions.
-    Note that all flags about grey-scale correction, filtering and
-    seed generation will be ignored if a value larger than 0 is given,
-    since this option only concerns the ML3D classification part
+""" 
+For previous runs that stopped before convergence,
+resume the calculations after the completely finished iteration,
+i.e. including all 3D reconstructions.
+Note that all flags about grey-scale correction, filtering and
+seed generation will be ignored if a value larger than 0 is given,
+since this option only concerns the ML3D classification part
 """
 RestartIter=0
 # {expert} Additional parameters:
@@ -159,13 +115,62 @@ For a complete description see the manual pages:
 """
 ExtraParams=''
 
+
+#------------------------------------------------------------------------------------------------
+# {section}{has_question} MLF parameters
+#------------------------------------------------------------------------------------------------
+
+# Perform MLF3D instead of ML3D
+DoMlf = False
+
+# Use CTF-amplitude correction inside MLF?
+""" 
+If set to true, provide the ctfdat file in the field below. 
+If set to false, the ctfdat field will be ignored.
+"""
+DoCorrectAmplitudes = True
+
+# {file}{validate}(PathExists){condition}(DoCorrectAmplitudes) CTFdat file with the input images:
+"""
+The names of both the images and the ctf-parameter files should be 
+relative path from <ProjectDir>. You can import data from other projects.
+"""
+InCtfDatFile='all_images.ctfdat'
+
+# High-resolution limit (in Angstroms)
+"""
+No frequencies higher than this limit will be taken into account. 
+If zero is given, no limit is imposed.
+"""
+HighResLimit = 20
+
+# Are the images CTF phase flipped?
+""" You can run MLF with or without having phase flipped the images."""
+ImagesArePhaseFlipped = True
+
+# Are initial references CTF-amplitude corrected?
+"""
+If coming from programs other than <xmipp_mlf_refine3d> this is 
+usually not the case. If you will perform a grey-scale correction, 
+this parameter becomes irrelevant as the output maps never have the
+CTF-amplitudes corrected.
+"""
+InitialMapIsAmplitudeCorrected = False
+
+# {expert} Are the seeds CTF-amplitude corrected?
+"""
+This option is only relevant if you provide your own seeds! 
+If the seeds are generated automatically, this parameter becomes 
+irrelevant as they will always be amplitude-corrected
+"""
+SeedsAreAmplitudeCorrected = False
+
 #-----------------------------------------------------------------------------
 # {section}{expert} 3D Reconstruction
 #-----------------------------------------------------------------------------
 
 # {list}(wslART, fourier) Reconstruction method
-""" Choose between wslART or fourier
-"""
+""" Choose between wslART or fourier """
 ReconstructionMethod ='wslART'
 
 # {expert}{condition}(ReconstructionMethod=="wslART") Extra parameters

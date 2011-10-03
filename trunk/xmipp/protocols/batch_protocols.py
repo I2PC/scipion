@@ -116,7 +116,7 @@ class XmippProjectGUI():
         self.pm = ProcessManager()
         
     def cleanProject(self):
-        if askYesNo("DELETE confirmation", "You are going to DELETE all project data (runs, logs, results...Do you want to continue?", self.root):
+        if askYesNo("DELETE confirmation", "You are going to <DELETE ALL> project data (runs, logs, results...)\nDo you really want to continue?", self.root):
             self.project.clean()
             self.close()
             
@@ -295,7 +295,7 @@ class XmippProjectGUI():
         root.rowconfigure(1, weight=1)
         
         def stopRun():
-            if askYesNo("Confirm action", "Are you sure to stop run execution?" , parent=root):
+            if askYesNo("Confirm action", "Are you sure to <STOP> run execution?" , parent=root):
                 p = pm.getProcessFromPid(run['pid'])
                 p.terminateTree()
                 self.project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, run['run_id'])
@@ -468,7 +468,7 @@ class XmippProjectGUI():
         elif event == 'Copy':
             self.launchProtocolGUI(self.project.copyProtocol(run['protocol_name'], run['script']))
         elif event == "Delete":
-            if askYesNo("Confirm DELETE", "<ALL DATA> related to this run will be <DELETED>. Do you want to continue?", self.root):
+            if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \nDo you really want to continue?", self.root):
                 self.project.deleteRun(run)
                 self.updateRunHistory(self.lastSelected)
         elif event == "Visualize":
