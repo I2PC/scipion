@@ -241,16 +241,21 @@ fi
 
 #################### PYTHON ###########################
 if $DO_PYTHON; then
-    export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
-    export LDFLAGS="-L$XMIPP_HOME/lib -L$EXT_PATH/python/tk$VTCLTK/unix -L$EXT_PATH/python/tcl$VTCLTK/unix"
-    # Copy or custom python files:
+    EXT_PYTHON=$EXT_PATH/external/python
+    export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
+    export LDFLAGS="-L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
+    export LD_LIBRARY_PATH="$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
+    echo "--> export CPPFLAGS=$CPPFLAGS"
+    echo "--> export LDFLAGS=$LDFLAGS"
+    # Copy our custom python files:
     cd $EXT_PATH/python
+    echo "-->  cd $EXT_PYTHON"
     cp ./xmipp_setup.py $VPYTHON/setup.py
+    echo "--> cp ./xmipp_setup.py $VPYTHON/setup.py"
     compile_library $VPYTHON python "." ""
 
     # Create the python launch script with necessary environment variable settings
     PYTHON_BIN=$XMIPP_HOME/bin/xmipp_python
-    EXT_PYTHON=$XMIPP_HOME/external/python
     printf "#!/bin/sh\n\n" > $PYTHON_BIN
     printf 'VPYTHON=%b \n' "$VPYTHON" >> $PYTHON_BIN
     printf 'VTCLTK=%b \n\n' "$VTCLTK" >> $PYTHON_BIN

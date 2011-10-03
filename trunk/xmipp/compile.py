@@ -234,13 +234,14 @@ try:
     from compile_gui import createGUINotebook
     nb = createGUINotebook(OUTPUT, numberOfCpu, addTabs, runCompile, stopCompile)
 except Exception, e:
-    print "*** Could not create GUI.", e
-    nb = ConsoleConfigNotebook()
-    addTabs(nb)
-    OUTPUT = '/dev/stdout'
-    runCompile(nb, numberOfCpu)
-    if self.proc.returncode != 0:
-        print "Errors on Xmipp compilation, see '%s' for more details" % self.OUTPUT
-    else:
-        print "Xmipp has been successfully installed\nInclude file xmipp.bashrc or xmipp.csh to your startup shell file"
-    
+    answer = raw_input("*** Could not create GUI.\nDo you want to proceed from command line? [Y/n]:")
+    if not answer or answer.lower() == 'y':
+        nb = ConsoleConfigNotebook()
+        addTabs(nb)
+        OUTPUT = '/dev/stdout'
+        runCompile(nb, numberOfCpu)
+        if self.proc.returncode != 0:
+            print "Errors on Xmipp compilation, see '%s' for more details" % self.OUTPUT
+        else:
+            print "Xmipp has been successfully installed\nInclude file xmipp.bashrc or xmipp.csh to your startup shell file"
+        
