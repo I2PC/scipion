@@ -155,10 +155,10 @@ compile_pymodule()
 {
    MOD=$1
    _PATH=$EXT_PATH/python/$MOD
-   _PYTHON=$EXT_PATH/python/$VPYTHON/python
+   #_PYTHON=$EXT_PATH/python/$VPYTHON/python
    echo "--> cd $_PATH"
    cd $_PATH
-   echo "--> $_PYTHON setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1"
+   echo "--> xmipp_python setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1"
    $_PYTHON setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1 
    
 }
