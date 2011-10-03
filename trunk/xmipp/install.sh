@@ -159,7 +159,7 @@ compile_pymodule()
    echo "--> cd $_PATH"
    cd $_PATH
    echo "--> xmipp_python setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1"
-   $_PYTHON setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1 
+   xmipp_python setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1 
    
 }
 
@@ -241,14 +241,14 @@ fi
 
 #################### PYTHON ###########################
 if $DO_PYTHON; then
-    EXT_PYTHON=$EXT_PATH/external/python
+    EXT_PYTHON=$EXT_PATH/python
     export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
     export LDFLAGS="-L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
     export LD_LIBRARY_PATH="$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
     echo "--> export CPPFLAGS=$CPPFLAGS"
     echo "--> export LDFLAGS=$LDFLAGS"
     # Copy our custom python files:
-    cd $EXT_PATH/python
+    cd $EXT_PYTHON
     echo "-->  cd $EXT_PYTHON"
     cp ./xmipp_setup.py $VPYTHON/setup.py
     echo "--> cp ./xmipp_setup.py $VPYTHON/setup.py"
