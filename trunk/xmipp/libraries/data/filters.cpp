@@ -947,8 +947,11 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
                 sumcorr += A2D_ELEM(Mcorr, i_actual, j_actual);
             }
         }
-    shiftX = xmax / sumcorr;
-    shiftY = ymax / sumcorr;
+    if (sumcorr!=0)
+    {
+    	shiftX = xmax / sumcorr;
+    	shiftY = ymax / sumcorr;
+    }
 }
 
 /* Best non-wrapping shift ------------------------------------------------- */
@@ -2055,8 +2058,8 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
     {
         // Mask Iaux
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-        if (!mask(i,j))
-            Iaux(i,j)=0;
+        if (!A2D_ELEM(mask,i,j))
+            A2D_ELEM(Iaux,i,j)=0;
 
         // Center translationally
         Ix  = Iaux;
@@ -2191,7 +2194,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
         lineY.initZeros();
         FOR_ALL_ELEMENTS_IN_ARRAY2D(Iaux)
         {
-            double val=Iaux(i,j);
+            double val=A2D_ELEM(Iaux,i,j);
             if (j==0)
                 lineY(i)=val;
             else if (lineY(i)<val)
