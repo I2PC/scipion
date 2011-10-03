@@ -242,7 +242,7 @@ fi
 #################### PYTHON ###########################
 if $DO_PYTHON; then
     export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PATH/python/tk$VTCLTK/generic -I$EXT_PATH/python/tcl$VTCLTK/generic"
-    export LDFLAGS="-L$XMIPP_HOME/lib"
+    export LDFLAGS="-L$XMIPP_HOME/lib -L$EXT_PATH/python/tk$VTCLTK/unix -L$EXT_PATH/python/tcl$VTCLTK/unix"
     # Copy or custom python files:
     cd $EXT_PATH/python
     cp ./xmipp_setup.py $VPYTHON/setup.py
@@ -287,7 +287,7 @@ fi
 
 # Launch the configure/compile python script 
 cd $XMIPP_HOME
-./compile.py
+xmipp_python compile.py
 
 exit 0
 
