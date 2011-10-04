@@ -169,13 +169,11 @@ def skipProgram(programName):
     return False
 
 def getProgramsDbName():
-    return os.path.join(getXmippPath(), 'programs.sqlite')
+    return os.path.join(getXmippPath(), '.xmipp_programs.sqlite')
 
 #Some helper functions
 def createProgramsDb(dbName=None):
     from protlib_sql import ProgramDb
-    if not dbName:
-        dbName = getProgramsDbName()
     db = ProgramDb(dbName)
     print 'Created db with name: %(dbName)s' % locals()
     db.create()

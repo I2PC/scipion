@@ -624,8 +624,8 @@ def escapeStr(str):
 class ProgramDb():
     def __init__(self, dbName=None):
         if dbName is None:
-            from protlib_filesystem import getXmippPath
-            dbName = os.path.join(getXmippPath(), 'programs.sqlite')
+            from protlib_xmipp import getProgramsDbName
+            dbName = getProgramsDbName()
         self.dbName = dbName
         self.connection = sqlite.Connection(dbName)
         self.connection.row_factory = sqlite.Row
