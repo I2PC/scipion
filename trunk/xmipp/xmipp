@@ -58,7 +58,7 @@ class ConsoleOptionsTab():
         for key, comment, default, cond in self.optionsDict.values():
             value = self.optionsValue[key]
             if (cond is None or self.getValue(cond) == 'yes') and default != value: 
-                optStr += ' %s="%s"' % (k, value)
+                optStr += ' %s="%s"' % (key, value)
         return optStr
 	
     def addSeparator(self):
@@ -114,6 +114,9 @@ def detectQt():
 
 def addTabOption(tab, option, comment, default, cond=None, wiz=None, browse=False):
     defaultsDic = globals()
+    import pprint
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(defaultsDic)  
     if defaultsDic.has_key(option):
         value = defaultsDic[option]
         if (value == 1 or value == True):
@@ -214,6 +217,7 @@ def run(notebook):
         
     if options.hasOption('configure'):        
         opts = notebook.getConfigOptions()
+        print "opt: ", opts
         cmd += 'echo "*** RUNNING SCONS.CONFIGURE..." >> %(out)s 2>&1 \n'
         cmd1 = "xmipp_python %(scons)s mode=configure -j %(procs)s --config=force %(opts)s >> %(out)s 2>&1 " % locals()
         cmd += 'echo "%(cmd1)s" >> %(out)s \n'
@@ -222,7 +226,7 @@ def run(notebook):
     if options.hasOption('compile'):
         opts = ' '.join(options.getOption('compile'))
         cmd += 'echo "*** RUNNING SCONS.COMPILE..." >> %(out)s \n'
-        cmd2 = "./scons.compile -j %(procs)s  %(opts)s >> %(out)s 2>&1 "% locals()
+        cmd2 = "xmipp_python %(scons)s mode=compile -j %(procs)s  %(opts)s >> %(out)s 2>&1 "% locals()
         cmd += 'echo "%(cmd2)s" >> %(out)s \n'
         cmd += cmd2 + '\n'
         
@@ -288,7 +292,8 @@ if os.path.exists(OUTPUT):
     os.remove(OUTPUT)
 # TRY TO READ CONFIG FILE
 CONFIG = '.xmipp_scons.options'
-if os.path.exists(CONFIG):
+
+ if os.path.exists(CONFIG):
     for line in open(CONFIG):
         exec(line) # Take options from options file, be carefull with exec
 
@@ -296,7 +301,9 @@ if options.hasOption('configure'):
     for arg in options.getOption('configure'):
         parts = arg.split('=')
         if len(parts) == 2:
-            exec('%s = "%s"' % (parts[0], parts[1])) # Take options from command line, override options file, be carefull with exec
+            assign = '%s = "%s"' % (parts[0], parts[1])
+            print "exec: ", assign
+            exec(assign) # Take options from command line, override options file, be carefull with exec
     
 GUI = options.hasOption('gui')
 # Check if Tkinter is available
@@ -319,7 +326,7 @@ OUTPUT = '/dev/stdout'
 run(nb)
 nb.proc.wait()
 if nb.proc.returncode != 0:
-    print "Errors on Xmipp compilation, see '%s' for more details" % self.OUTPUT
+    print "Errors on Xmipp compilation, see '%s' for more details" % OUTPUT
 else:
     print "Xmipp has been successfully compiled"
     if options.hasOption('install'):

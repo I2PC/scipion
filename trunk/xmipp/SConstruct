@@ -20,7 +20,7 @@ env.SConsignFile(base_dir + 'SCons.dblite')
 if (ARGUMENTS['mode'] == 'configure'):
     opts = Variables(None, ARGUMENTS)
 else:
-    opts = Variables('options.cache', ARGUMENTS)
+    opts = Variables('.xmipp_scons.options', ARGUMENTS)
 
 opts.Add('CC', 'The C compiler', 'gcc')
 opts.Add('CXX', 'The C++ compiler', 'g++')
@@ -306,7 +306,7 @@ if (ARGUMENTS['mode'] == 'configure'):
 
     # Finish configuration
     env = conf.Finish()
-    opts.Save('options.cache', env)
+    opts.Save('.xmipp_scons.options', env)
 
 
 elif (ARGUMENTS['mode'] == 'compile'):

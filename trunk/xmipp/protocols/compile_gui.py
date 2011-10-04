@@ -127,11 +127,12 @@ class OptionsTab(Frame):
         return optStr
         
 class ConfigNotebook(ttk.Notebook):
-    def __init__(self, master, OUTPUT, runCompileFunc, stopCompileFunc):
+    def __init__(self, master, OUTPUT, options, runFunc, stopCompileFunc):
         ttk.Notebook.__init__(self, master)
         self.tabs = {}
         self.master = master
-        self.run = runCompileFunc
+        self.options = options
+        self.run = runFunc
         self.stop = stopCompileFunc
         self.OUTPUT = OUTPUT
         
@@ -151,17 +152,17 @@ class ConfigNotebook(ttk.Notebook):
     def getValue(self, tab, option):
         return self.tabs[tab].getValue(option)
     
-    def notifyCompile(self, process):
+    def notifyRun(self, process):
         self.proc = process
         self.text.fillTextArea()
-        self.text.doRefresh(3)
+        self.text.doRefresh(1)
         self.checkProcess()    
         self.btn.config(command=self.notifyStopCompile, text="Stop")
         self.select(self.index('end') - 1)
         
     def notifyStopCompile(self, msg, isError=False):
         runFunc = self.run
-        self.btn.config(command=lambda:runFunc(self, 3), text="Compile")
+        self.btn.config(command=lambda:launchRun(self, runFunc), text="Compile")
         
     def createConfigTab(self):
         tab = self.addTab("Configure")
@@ -177,7 +178,11 @@ class ConfigNotebook(ttk.Notebook):
             if self.proc.returncode != 0:
                 showError("Errors", "Errors on Xmipp compilation, see <%s> for more details" % self.OUTPUT, self)
             else:
-                showInfo("Compilation finished.", "Xmipp has been successfully installed\nInclude file <xmipp.bashrc> or <xmipp.csh> to your startup shell file", self)
+                infoMsg = "<Xmipp> has been successfully compiled     \n"
+                if self.options.hasOption('install'):
+                    infoMsg += "<INSTALLATION FINISHED!!!>\n"
+                    infoMsg += "Include file <.xmipp.bashrc> or <.xmipp.csh> to your startup shell file"
+                showInfo("Compilation FINISHED", infoMsg, self)
                 self.master.destroy()
         else:
             self.master.after(3000, self.checkProcess)
@@ -187,7 +192,7 @@ class ConfigNotebook(ttk.Notebook):
                     lines += 1
                 self.progressVar.set(lines)
                 
-    def createPanels(self, numberOfCpu, runCompileFunc):
+    def createPanels(self, runFunc):
         root = self.master
         #left panel
         leftFrame = ttk.Frame(root)
@@ -208,26 +213,33 @@ class ConfigNotebook(ttk.Notebook):
         registerCommonFonts()
         self.btn = MyButton(panel, text='Compile')
         self.btn.pack(side=RIGHT, padx=(15, 0))
-        procVar = IntVar()
-        procVar.set(numberOfCpu)
+        procVar = StringVar()
+        procVar.set(self.options.getNumberOfCpu())
+        self.procVar = procVar
         procEntry = ttk.Entry(panel, width="5", textvariable=procVar)
         procEntry.pack(side=RIGHT, padx=5)
         Label(panel, text="Processors").pack(side=RIGHT, padx=5)
-        self.btn.config(command=lambda:runCompileFunc(self, procVar.get()))
+        btnFunc = lambda:launchRun(self, runFunc)
+        self.btn.config(command=btnFunc)
+        self.btn.bind('<Return>', func=lambda e:btnFunc())
+        self.btn.focus_set()
 
+def launchRun(nb, runFunc):
+    nb.options.setNumberOfCpu(nb.procVar.get())
+    runFunc(nb)
    
-def createGUINotebook(OUTPUT, numberOfCpu, addTabsFunc, runCompileFunc, stopCompileFunc):
+def createGUINotebook(OUTPUT, options, addTabsFunc, runFunc, stopCompileFunc):
     root = Tk()
     root.withdraw()
     root.title("Xmipp Install")
     root.minsize(width=600, height=350)
-    nb = ConfigNotebook(root, OUTPUT, runCompileFunc, stopCompileFunc)
+    nb = ConfigNotebook(root, OUTPUT, options, runFunc, stopCompileFunc)
     addTabsFunc(nb)
     nb.createConfigTab()
     root.columnconfigure(0, weight=1)
     root.columnconfigure(1, weight=5)
     root.rowconfigure(0, weight=1)
-    nb.createPanels(numberOfCpu, runCompileFunc)
+    nb.createPanels(runFunc)
     centerWindows(root)
     root.deiconify()
     root.mainloop()

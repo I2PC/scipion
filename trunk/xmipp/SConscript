@@ -84,6 +84,8 @@ def AddBatch(name, basedir, extension=''):
 
     # alias
     alias = env.Alias(fullname, command)
+    # Consider batch also as xmipp_programs
+    env.Alias('xmipp_programs', command)
     #install = env.Install(binprefix, command)
     #env.Alias(fullname, install)
     env.Default(alias)
@@ -165,8 +167,11 @@ def AddXmippProgram(name, libs=[], folder='programs'):
         finalLibs.append('XmippClassif')
     if int(env["arpack"]):
         finalLibs+=['arpack++','arpack','lapack','blas']
-    return AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
+    program = AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
+    env.Alias('xmipp_programs', program)
+    return program
+	
 # Add a program integrated in the Xmipp structure
 def AddXmippTest(name, testprog, command):
     #testprog = AddXmippProgram(name, ['gtest'], 'tests')
@@ -739,25 +744,6 @@ AddXmippProgram('xray_project', ['XmippRecons'])
 if int(env['arpack']):
     AddXmippProgram('angular_gcar', ['XmippRecons'])
 
-#---- Test
-if int(env['gtest']):
-     AddXmippCTest('test_fftw')
-     AddXmippCTest('test_filters')
-     AddXmippCTest('test_funcs')
-     AddXmippCTest('test_image')
-     AddXmippCTest('test_image_generic')
-     AddXmippCTest('test_matrix')
-     AddXmippCTest('test_metadata')
-     AddXmippCTest('test_multidim')
-     AddXmippCTest('test_polar')
-     AddXmippCTest('test_sampling')
-     AddXmippCTest('test_transformation')
-     #env.Depends('run_tests', [fftw, tiff, sqlite])
-     #python tests
-     test = AddXmippPythonTest('test_pythoninterface')
-     #AddXmippPythonTest('test_projectionmatching')
-     env.Depends(test, pythonbinding)
-     #env.Default('run_tests'     )
 
 # --- Scripts
 
@@ -815,6 +801,27 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_transform_normalize', ['XmippRecons'])
 #    AddXmippMPIProgram('template_threads', ['XmippRecons'])
 #    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
+
+#---- Tests
+if int(env['gtest']):
+     AddXmippCTest('test_fftw')
+     AddXmippCTest('test_filters')
+     AddXmippCTest('test_funcs')
+     AddXmippCTest('test_image')
+     AddXmippCTest('test_image_generic')
+     AddXmippCTest('test_matrix')
+     AddXmippCTest('test_metadata')
+     AddXmippCTest('test_multidim')
+     AddXmippCTest('test_polar')
+     AddXmippCTest('test_sampling')
+     AddXmippCTest('test_transformation')
+     #env.Depends('run_tests', [fftw, tiff, sqlite])
+     #python tests
+     test = AddXmippPythonTest('test_pythoninterface')
+     #AddXmippPythonTest('test_projectionmatching')
+     env.Depends(test, pythonbinding)
+     env.Depends('run_tests', 'xmipp_programs')
+     #env.Default('run_tests'     )
 # QT
 if int(env['qt']):
     envQT = env.Clone()
