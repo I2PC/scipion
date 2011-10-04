@@ -489,12 +489,15 @@ void XmippMetadataProgram::readParams()
     }
 
     mdIn.read(fn_in, NULL, decompose_stacks);
+
+    if (mdIn.isEmpty())
+        REPORT_ERROR(ERR_MD_NOOBJ, "Empty input Metadata.");
+
     mdInSize = mdIn.size();
 
     if (!fn_in.isMetaData())
     {
-        String ext=fn_in.getExtension();
-        if (mdInSize == 1 && ext!="stk" && ext!="mrcs")
+        if (mdInSize == 1)
             single_image = true;
         else
             input_is_stack = true;
@@ -502,21 +505,10 @@ void XmippMetadataProgram::readParams()
     /* Output is stack if, given a filename in fn_out, mdIn has multiple images.
      * In case no output name is given, then input is overwritten and we have to
      * check if it is stack. */
-    if (!oroot.empty())
-        output_is_stack=false;
-    else
-    {
-        if (fn_out.empty())
-            output_is_stack = input_is_stack;
-        else
-            output_is_stack = mdInSize > 1;
-    }
+    output_is_stack = mdInSize > 1 && oroot.empty() && (!fn_out.empty() || input_is_stack);
 
-    if (mdIn.containsLabel(MDL_ENABLED) && remove_disabled)
-        mdIn.removeObjects(MDValueEQ(MDL_ENABLED, -1));
-
-    if (mdIn.isEmpty())
-        REPORT_ERROR(ERR_MD_NOOBJ, "");
+    if (remove_disabled)
+        mdIn.removeDisabled();
 
     // if input is volume do not apply geo
     ImgSize(mdIn, xdimOut, ydimOut, zdimOut, ndimOut);
@@ -584,7 +576,7 @@ void XmippMetadataProgram::finishProcessing()
     {
         if (produces_an_output || !oroot.empty()) // Out as independent images
             mdOut.write(fn_out);
-        else if (save_metadata_stack) // Out as stack
+        else if (save_metadata_stack) // Output is stack and also save its associated metadata
         {
             FileName outFileName;
 
@@ -686,7 +678,7 @@ void XmippMetadataProgram::run()
      * different directories. If baseName is set it is used, otherwise, input name is used.
      * Then, the suffix _oext is added.*/
 
-    if (!oroot.empty())
+    if (fn_out.empty() && !oroot.empty())
         if (!baseName.empty() )
             fn_out = findAndReplace(pathBaseName,"/","_") + baseName + "_" + oextBaseName + ".xmd";
         else

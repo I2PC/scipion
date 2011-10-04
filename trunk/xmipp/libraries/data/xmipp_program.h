@@ -272,9 +272,10 @@ protected:
     size_t time_bar_step, time_bar_size, time_bar_done;
     /// Flag to know when input is a single image or stack
     bool single_image;
-    bool input_is_stack, create_empty_stackfile;
-    bool output_is_stack;
+    bool input_is_stack;
+    bool output_is_stack;     // Used to manage whether delete output stack file and/or create output stack empty file
     bool delete_output_stack; // Delete previous output stack file
+    bool create_empty_stackfile; // Create empty output stack file
     /// Flag to treat a stack file as a set of images instead of a unique file
     bool decompose_stacks;
     /// Flag to save the output metadata when output file is a stack

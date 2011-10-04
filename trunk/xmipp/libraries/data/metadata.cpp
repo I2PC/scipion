@@ -31,7 +31,7 @@
 // Get the blocks available
 void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
 {
-	MetaData MDaux;
+    MetaData MDaux;
     blockList.clear();
     if (!inFile.isMetaData())
         return;
@@ -45,19 +45,19 @@ void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
     char * firstData=NULL, *secondData=NULL, *firstloop=NULL;
     regex_t re;
     if (regcomp(&re, ".*", REG_EXTENDED|REG_NOSUB) != 0)
-    	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot construct regular expression");
+        REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot construct regular expression");
     char *startingPoint=map;
     size_t remainingSize=size;
-	String blockName;
-	bool isColumnFormat;
+    String blockName;
+    bool isColumnFormat;
     while (MDaux.nextBlockToRead(re, startingPoint, remainingSize, isColumnFormat,
-    					         blockName, &firstData, &secondData, &firstloop))
+                                 blockName, &firstData, &secondData, &firstloop))
     {
-		if(secondData ==NULL)
-			secondData = map + size;
-    	blockList.push_back(blockName);
-		startingPoint=secondData;
-		remainingSize=size-(startingPoint-map);
+        if(secondData ==NULL)
+            secondData = map + size;
+        blockList.push_back(blockName);
+        startingPoint=secondData;
+        remainingSize=size-(startingPoint-map);
     }
     unmapFile(map,size,fd);
     regfree(&re);
@@ -778,7 +778,7 @@ char * MetaData::_readColumnsStar(char * pStart,
                 addLabel(label);
             MDObject * _mdObject = new MDObject(label);
             if (addColumns)
-            	columnValues.push_back(_mdObject);//add the value here with a char
+                columnValues.push_back(_mdObject);//add the value here with a char
             if(!isColumnFormat)
                 _parseObject(ss, *_mdObject, id);
             pchStart = pchEnd + 1;//go to next line character
@@ -951,8 +951,7 @@ void MetaData::_read(const FileName &filename,
     {
         Image<char> image;
         image.read(filename, HEADER);
-        String ext=filename.getExtension();
-        if (image().ndim == 1 && (ext!="stk" && ext!="mrcs") || !decomposeStack) //single image
+        if (image().ndim == 1 || !decomposeStack) //single image
         {
             id = addObject();
             setValue(MDL_IMAGE, filename, id);
@@ -994,7 +993,7 @@ void MetaData::_read(const FileName &filename,
     {
         oldFormat=false;
 
-    	// Read comment
+        // Read comment
         is.ignore(256,'#');
         is.ignore(256,'#');
         getline(is, line);
@@ -1008,48 +1007,48 @@ void MetaData::_read(const FileName &filename,
         mapFile(filename,map,size,fd);
 
         char * firstData=NULL, *secondData=NULL, *firstloop=NULL;
-	    regex_t re;
-	    if (regcomp(&re, blockRegExp.c_str(), REG_EXTENDED|REG_NOSUB) != 0)
-	    	REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Pattern '%s' cannot be parsed: %s",
-	    	    blockRegExp.c_str(), filename.c_str()));
-	    char *startingPoint=map;
-	    size_t remainingSize=size;
-	    bool oneBlockRead=false;
-		bool singleBlock=blockRegExp.find(".")==String::npos &&
-				         blockRegExp.find("[")==String::npos &&
-				         blockRegExp.find("*")==String::npos &&
-				         blockRegExp.find("+")==String::npos;
-		String blockName;
+        regex_t re;
+        if (regcomp(&re, blockRegExp.c_str(), REG_EXTENDED|REG_NOSUB) != 0)
+            REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Pattern '%s' cannot be parsed: %s",
+                         blockRegExp.c_str(), filename.c_str()));
+        char *startingPoint=map;
+        size_t remainingSize=size;
+        bool oneBlockRead=false;
+        bool singleBlock=blockRegExp.find(".")==String::npos &&
+                         blockRegExp.find("[")==String::npos &&
+                         blockRegExp.find("*")==String::npos &&
+                         blockRegExp.find("+")==String::npos;
+        String blockName;
         while (nextBlockToRead(re, startingPoint, remainingSize, isColumnFormat,
-        					   blockName, &firstData, &secondData, &firstloop))
+                               blockName, &firstData, &secondData, &firstloop))
         {
-			if(secondData ==NULL)
-				secondData = map + size;
+            if(secondData ==NULL)
+                secondData = map + size;
 
-			//Read column labels from the datablock that starts at firstData
-			//Label ends at firstloop
-			if (isColumnFormat)
-			{
-				char * aux = _readColumnsStar(firstloop, secondData, columnValues, desiredLabels, !oneBlockRead);
-				_readRowsStar(columnValues, aux, secondData);
-			}
-			else
-			{
-				id = addObject();
-				_readColumnsStar(firstData,secondData, columnValues, desiredLabels, !oneBlockRead, id);
-			}
-			oneBlockRead=true;
-			startingPoint=secondData;
-			remainingSize=size-(startingPoint-map);
+            //Read column labels from the datablock that starts at firstData
+            //Label ends at firstloop
+            if (isColumnFormat)
+            {
+                char * aux = _readColumnsStar(firstloop, secondData, columnValues, desiredLabels, !oneBlockRead);
+                _readRowsStar(columnValues, aux, secondData);
+            }
+            else
+            {
+                id = addObject();
+                _readColumnsStar(firstData,secondData, columnValues, desiredLabels, !oneBlockRead, id);
+            }
+            oneBlockRead=true;
+            startingPoint=secondData;
+            remainingSize=size-(startingPoint-map);
 
-			if (singleBlock)
-				break;
+            if (singleBlock)
+                break;
         }
         unmapFile(map,size,fd);
-	    regfree(&re);
-	    if (!oneBlockRead)
-	    	REPORT_ERROR(ERR_MD_WRONGDATABLOCK, formatString("Block: '%s': %s",
-	    	    blockRegExp.c_str(), filename.c_str()));
+        regfree(&re);
+        if (!oneBlockRead)
+            REPORT_ERROR(ERR_MD_WRONGDATABLOCK, formatString("Block: '%s': %s",
+                         blockRegExp.c_str(), filename.c_str()));
     }
     else if (line.find("Headerinfo columns:") != String::npos)
     {
@@ -1119,42 +1118,44 @@ void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
 }
 
 bool MetaData::nextBlockToRead(regex_t &re,
-		                       char * map, size_t mapSize,
-		                       bool &isCColumnFormat,
-		                       String &strBlockName,
+                               char * map, size_t mapSize,
+                               bool &isCColumnFormat,
+                               String &strBlockName,
                                char ** firstData,
                                char ** secondData,
                                char ** firstloop)
 {
-	size_t remainingSize=mapSize;
-	char *startingPoint=map;
-	do {
-		*firstData  = (char *) _memmem(startingPoint,  remainingSize, "\ndata_", 6);
-	    if (*firstData!=NULL)
-	    {
-	    	// Get block name
-		    (*firstData)++;
-		    remainingSize = mapSize - (*firstData - map) - 1;
-		    char *newLine=(char *) _memmem(*firstData,  remainingSize, "\n", 1);
-		    size_t blockNameSize=newLine-*firstData;
-		    char blockName[blockNameSize+1];
-		    memcpy(blockName,*firstData,blockNameSize);
-		    blockName[blockNameSize]='\0';
+    size_t remainingSize=mapSize;
+    char *startingPoint=map;
+    do
+    {
+        *firstData  = (char *) _memmem(startingPoint,  remainingSize, "\ndata_", 6);
+        if (*firstData!=NULL)
+        {
+            // Get block name
+            (*firstData)++;
+            remainingSize = mapSize - (*firstData - map) - 1;
+            char *newLine=(char *) _memmem(*firstData,  remainingSize, "\n", 1);
+            size_t blockNameSize=newLine-*firstData;
+            char blockName[blockNameSize+1];
+            memcpy(blockName,*firstData,blockNameSize);
+            blockName[blockNameSize]='\0';
 
-		    // Check if block name meets the regular expression
-		    if (regexec(&re, blockName, (size_t) 0, NULL, 0)==0)
-		    {
-		    	strBlockName=blockName+5;
-		    	break; // We found a block following the regular expression
-		    }
-		    startingPoint=*firstData;
-	    }
-	} while (*firstData!=NULL);
-	if (*firstData==NULL)
-	{
-		*secondData=*firstloop=NULL;
-		return false;
-	}
+            // Check if block name meets the regular expression
+            if (regexec(&re, blockName, (size_t) 0, NULL, 0)==0)
+            {
+                strBlockName=blockName+5;
+                break; // We found a block following the regular expression
+            }
+            startingPoint=*firstData;
+        }
+    }
+    while (*firstData!=NULL);
+    if (*firstData==NULL)
+    {
+        *secondData=*firstloop=NULL;
+        return false;
+    }
     *secondData = (char *)  _memmem(*firstData, remainingSize,"\ndata_", 6);
     *firstloop  = (char *)  _memmem(*firstData, remainingSize, "\nloop_", 6);
     //#define DEBUG
@@ -1170,9 +1171,9 @@ bool MetaData::nextBlockToRead(regex_t &re,
     isColumnFormat=false;
     if (*firstloop!=NULL)
     {
-		(*firstloop)++;
-		if(*secondData == NULL || (*secondData) > (*firstloop))
-			isColumnFormat=true;
+        (*firstloop)++;
+        if(*secondData == NULL || (*secondData) > (*firstloop))
+            isColumnFormat=true;
 
     }
     return true;
@@ -1268,11 +1269,8 @@ void MetaData::removeDuplicates(MetaData &MDin)
 
 void MetaData::removeDisabled()
 {
-  if (containsLabel(MDL_ENABLED))
-  {
-      removeObjects(MDValueEQ(MDL_ENABLED, -1));
-      removeObjects(MDValueEQ(MDL_ENABLED,  0));
-  }
+    if (containsLabel(MDL_ENABLED))
+        removeObjects(MDValueLE(MDL_ENABLED, 0)); // Remove values -1 and 0 on MDL_ENABLED label
 }
 
 void MetaData::subtraction(const MetaData &mdIn, const MDLabel label)
@@ -1302,10 +1300,10 @@ void MetaData::operate(const String &expression)
 
 void MetaData::replace(const MDLabel label, const String &oldStr, const String &newStr)
 {
-  const char * labelStr = MDL::label2Str(label).c_str();
-  String expression = formatString("%s=replace(%s,'%s', '%s')",
-      labelStr, labelStr, oldStr.c_str(), newStr.c_str());
-  if (!myMDSql->operate(expression))
+    const char * labelStr = MDL::label2Str(label).c_str();
+    String expression = formatString("%s=replace(%s,'%s', '%s')",
+                                     labelStr, labelStr, oldStr.c_str(), newStr.c_str());
+    if (!myMDSql->operate(expression))
         REPORT_ERROR(ERR_MD, "MetaData::replace: error doing operation");
 }
 
