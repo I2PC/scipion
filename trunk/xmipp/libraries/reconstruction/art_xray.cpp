@@ -51,12 +51,17 @@ void XrayARTRecons::readParams(XmippProgram * program)
     //    psf.readParams(program);
 }
 
-void XrayARTRecons::produceSideInfo(GridVolume &vol_basis0)
+void XrayARTRecons::preIterations(GridVolume &vol_basis0, int level, int rank)
 {
-    ARTReconsBase::produceSideInfo(vol_basis0);
     psf.calculateParams(artPrm.sampling*1.e-10); // sampling is read in angstrom
 
+    if (artPrm.basis.VolPSF != NULL)
+        artPrm.basis.VolPSF = new MultidimArray<double>;
+    psf.PSFGen().getImage(*artPrm.basis.VolPSF);
 
+    SinPartARTRecons::preIterations(vol_basis0);
+
+    //TODO: If Start volume is not loaded, then vol_basis (our mu in x-ray) must be estimated
 }
 
 void XrayARTRecons::print(std::ostream &o) const
@@ -91,84 +96,84 @@ void XrayARTRecons::singleStep(
 
 
 
-	 // Only works for blob volumes .............................................
-	    if (artPrm.basis.type != Basis::voxels)
-	        REPORT_ERROR(ERR_VALUE_INCORRECT,
-	                     "This function only works with volxel volumes");
+    // Only works for blob volumes .............................................
+    if (artPrm.basis.type != Basis::voxels)
+        REPORT_ERROR(ERR_VALUE_INCORRECT,
+                     "This function only works with volxel volumes");
 
-	    // Project structure .......................................................
-	    // The correction image is reused in this call to store the normalizing
-	    // projection, ie, the projection of an all-1 volume
+    // Project structure .......................................................
+    // The correction image is reused in this call to store the normalizing
+    // projection, ie, the projection of an all-1 volume
 
-//	    project_Crystal_Volume(vol_in, artPrm.basis, theo_proj,
-//	                           corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-//	                           read_proj.rot(), read_proj.tilt(), read_proj.psi(), shift,
-//	                           aint, bint, *(artPrm.D), *(artPrm.Dinv), this->unit_cell_mask,
-//	                           FORWARD, artPrm.eq_mode);
-	    double shift_X, shift_Y;
+    //     project_Crystal_Volume(vol_in, artPrm.basis, theo_proj,
+    //                            corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+    //                            read_proj.rot(), read_proj.tilt(), read_proj.psi(), shift,
+    //                            aint, bint, *(artPrm.D), *(artPrm.Dinv), this->unit_cell_mask,
+    //                            FORWARD, artPrm.eq_mode);
+    double shift_X, shift_Y;
 
-	    //   #define DEBUG_SHIFT
-	#ifdef DEBUG_SHIFT
+    //   #define DEBUG_SHIFT
+#ifdef DEBUG_SHIFT
 
-	    Matrix2D<double> A(3, 3);
-	    A.initIdentity();
-	    dMij(A, 0, 2) =  8;
-	    dMij(A, 1, 2) =  -5;
-	    std::cout << "A" << A;
-	    //move read_proj
-	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(theo_proj())
-	    dMij(theo_proj(), i, j) = dMij(read_proj(), i, j);
-	    applyGeometry(IMGMATRIX(read_proj), A, IMGMATRIX(theo_proj), IS_NOT_INV, WRAP);
-	#endif
-	#undef DEBUG_SHIFT
+    Matrix2D<double> A(3, 3);
+    A.initIdentity();
+    dMij(A, 0, 2) =  8;
+    dMij(A, 1, 2) =  -5;
+    std::cout << "A" << A;
+    //move read_proj
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(theo_proj())
+    dMij(theo_proj(), i, j) = dMij(read_proj(), i, j);
+    applyGeometry(IMGMATRIX(read_proj), A, IMGMATRIX(theo_proj), IS_NOT_INV, WRAP);
+#endif
+ #undef DEBUG_SHIFT
 
-	    if (artPrm.ref_trans_after != -1    &&
-	        imagen_no > artPrm.ref_trans_after && imagen_no != 0)
-	    {
-//	        calculate_and_find_correlation_max_proj(read_proj, theo_proj,
-//	                                                alig_proj,
-//	                                                shift_X, shift_Y,
-//	                                                artPrm.ref_trans_step,
-//	                                                artPrm.ref_trans_after,
-//	                                                imagen_no);
+    if (artPrm.ref_trans_after != -1    &&
+        imagen_no > artPrm.ref_trans_after && imagen_no != 0)
+    {
+        //         calculate_and_find_correlation_max_proj(read_proj, theo_proj,
+        //                                                 alig_proj,
+        //                                                 shift_X, shift_Y,
+        //                                                 artPrm.ref_trans_step,
+        //                                                 artPrm.ref_trans_after,
+        //                                                 imagen_no);
 
-	        // Apply correction
-	        Matrix2D<double> Correction(3, 3);
-	        alig_proj().resize(read_proj());
-	        Correction.initIdentity();
+        // Apply correction
+        Matrix2D<double> Correction(3, 3);
+        alig_proj().resize(read_proj());
+        Correction.initIdentity();
 
-	        dMij(Correction, 0, 2) =  - shift_X;
-	        dMij(Correction, 1, 2) =  - shift_Y;
-	        //copy theo_proj to a temporal matrix
-	        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(theo_proj())
-	        dAij(alig_proj(), i, j) = dAij(read_proj(), i, j);
-	        applyGeometry(LINEAR, IMGMATRIX(alig_proj), IMGMATRIX(read_proj), Correction,
-	                      IS_NOT_INV, WRAP);
-	    }
-	    // Now compute differences .................................................
-	    double applied_lambda = lambda / numIMG; // In ART mode, numIMG=1
-	    mean_error = 0;
-	    diff_proj().resize(read_proj());
+        dMij(Correction, 0, 2) =  - shift_X;
+        dMij(Correction, 1, 2) =  - shift_Y;
+        //copy theo_proj to a temporal matrix
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(theo_proj())
+        dAij(alig_proj(), i, j) = dAij(read_proj(), i, j);
+        applyGeometry(LINEAR, IMGMATRIX(alig_proj), IMGMATRIX(read_proj), Correction,
+                      IS_NOT_INV, WRAP);
+    }
+    // Now compute differences .................................................
+    double applied_lambda = lambda / numIMG; // In ART mode, numIMG=1
+    mean_error = 0;
+    diff_proj().resize(read_proj());
 
-	    FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
-	    {
-	        // Compute difference image and error
-	        IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
-	        mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
+    {
+        // Compute difference image and error
+        IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
+        mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
 
-	        // Compute the correction image
-	        if (ABS(IMGPIXEL(corr_proj, i, j)) < 1)
-	            IMGPIXEL(corr_proj, i, j) = SGN(IMGPIXEL(corr_proj, i, j));
-	        IMGPIXEL(corr_proj, i, j) =
-	            applied_lambda * IMGPIXEL(diff_proj, i, j) / IMGPIXEL(corr_proj, i, j);
-	    }
-	    mean_error /= XSIZE(diff_proj()) * YSIZE(diff_proj());
+        // Compute the correction image
+        if (ABS(IMGPIXEL(corr_proj, i, j)) < 1)
+            IMGPIXEL(corr_proj, i, j) = SGN(IMGPIXEL(corr_proj, i, j));
+        IMGPIXEL(corr_proj, i, j) =
+            applied_lambda * IMGPIXEL(diff_proj, i, j) / IMGPIXEL(corr_proj, i, j);
+    }
+    mean_error /= XSIZE(diff_proj()) * YSIZE(diff_proj());
 
-	    // Backprojection of correction plane ......................................
-//	    project_Crystal_Volume(*vol_out, artPrm.basis, theo_proj,
-//	                           corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-//	                           read_proj.rot(), read_proj.tilt(), read_proj.psi(), shift,
-//	                           aint, bint, *(artPrm.D), *(artPrm.Dinv), this->unit_cell_mask,
-//	                           BACKWARD, artPrm.eq_mode);
+    // Backprojection of correction plane ......................................
+    //     project_Crystal_Volume(*vol_out, artPrm.basis, theo_proj,
+    //                            corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+    //                            read_proj.rot(), read_proj.tilt(), read_proj.psi(), shift,
+    //                            aint, bint, *(artPrm.D), *(artPrm.Dinv), this->unit_cell_mask,
+    //                            BACKWARD, artPrm.eq_mode);
 }
 

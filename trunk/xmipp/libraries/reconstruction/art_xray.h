@@ -37,35 +37,33 @@
     parameters common with normal ART should be looked up in
     \ref BasicARTParameters */
 
-class XrayARTRecons : public ARTReconsBase
+class XrayARTRecons : public SinPartARTRecons
 {
-	FileName fnPSF;
-	XRayPSF psf;
+    FileName fnPSF;
+    XRayPSF psf;
 
 public:
     XrayARTRecons()
     {
-
     }
     virtual ~XrayARTRecons()
-    {
-    }
+    {}
 
     static void defineParams(XmippProgram * program, const char* prefix=NULL, const char* comment=NULL);
     /** Read special parameters from command line. */
     void readParams(XmippProgram * proram);
 
-    void produceSideInfo(GridVolume &vol_basis0);
+    void preIterations(GridVolume &vol_basis0, int level = FULL, int rank = -1);
 
     void print(std::ostream &o)const;
 
     void singleStep(GridVolume &vol_in, GridVolume *vol_out,
-            Projection &theo_proj, Projection &read_proj,
-            int sym_no,
-            Projection &diff_proj, Projection &corr_proj, Projection &alig_proj,
-            double &mean_error, int numIMG, double lambda, int act_proj,
-            const FileName &fn_ctf, const MultidimArray<int> *maskPtr,
-            bool refine);
+                    Projection &theo_proj, Projection &read_proj,
+                    int sym_no,
+                    Projection &diff_proj, Projection &corr_proj, Projection &alig_proj,
+                    double &mean_error, int numIMG, double lambda, int act_proj,
+                    const FileName &fn_ctf, const MultidimArray<int> *maskPtr,
+                    bool refine);
 
 };
 
