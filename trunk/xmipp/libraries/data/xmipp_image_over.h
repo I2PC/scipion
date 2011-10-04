@@ -104,17 +104,17 @@
  * }
  * @endcode
  *
- * Note: for this class the X axis has been renamed as U, and Y as V.
+ * Note: for this class the X axis has been renamed as U, Y as V, and Z as W.
  */
 class ImageOver : public Image<double>
 {
 public:
-    int uistep, vistep; // number of samples per
+    int uistep, vistep, wistep; // number of samples per
     // one sample on normal image (50)
-    // in u,v directions
+    // in u,v,w directions
 
-    int overumax, overvmax; // table borders in normal units (-2,2)
-    int overumin, overvmin; // table borders in normal units (-2,2)
+    int overumax, overvmax, overwmax; // table borders in normal units (-2,2)
+    int overumin, overvmin, overwmin; // table borders in normal units (-2,2)
     // They should be an integer number
 
 public:
@@ -130,8 +130,9 @@ public:
      * IO.init(-2, 2, 51, -2, 2, 51);
      * @endcode
      */
-    void init(int _vmin, int _vmax, int _vistep,
-              int _umin, int _umax, int _uistep);
+    void init(int _umin, int _umax, int _uistep,
+              int _vmin, int _vmax, int _vistep,
+              int _wmin=0, int _wmax=0, int _wistep=1);
 
     /** Window
      *
@@ -201,16 +202,14 @@ public:
      * IO.img2over(iv, iu, v, u);
      * @endcode
      */
-    void img2over(int iv, int iu, double &v, double &u) const
+    void img2over(int iv, int iu, double & v, double & u) const
     {
         if (iu < 0 || iu > XSIZE(data))
             REPORT_ERROR(ERR_VALUE_INCORRECT, "ImageOver::img2over: iu out of range");
-
         if (iv < 0 || iv > YSIZE(data))
             REPORT_ERROR(ERR_VALUE_INCORRECT, "ImageOver::img2over: iv out of range");
-
-        u = (double) overumin + iu / (double) uistep;
-        v = (double) overvmin + iv / (double) vistep;
+        u = (double)(overumin) + iu / (double)(uistep);
+        v = (double)(overvmin) + iv / (double)(vistep);
     }
 
     /** Speed up pixel index macro
@@ -237,17 +236,14 @@ public:
      * std::cout << IO(1.34,-0.56) << std::endl;
      * @endcode
      */
-    double operator()(double v, double u) const
+    double operator ()(double v, double u) const
     {
         if (v < overvmin || v > overvmax)
             REPORT_ERROR(ERR_VALUE_INCORRECT, "ImgeOver::over2img: v out of range");
-
         if (u < overumin || u > overumax)
             REPORT_ERROR(ERR_VALUE_INCORRECT, "ImgeOver::over2img: u out of range");
-
         int iu, iv;
         OVER2IMG(*this, v, u, iv, iu);
-
         return A2D_ELEM(data, iv, iu);
     }
 
@@ -261,11 +257,10 @@ public:
      * IO(1.34, -0.56) = 1;
      * @endcode
      */
-    double& operator()(double v, double u)
+    double & operator ()(double v, double u)
     {
         int iu, iv;
         OVER2IMG(*this, v, u, iv, iu);
-
         return A2D_ELEM(data, iv, iu);
     }
 
