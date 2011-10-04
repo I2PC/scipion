@@ -293,7 +293,7 @@ if os.path.exists(OUTPUT):
 # TRY TO READ CONFIG FILE
 CONFIG = '.xmipp_scons.options'
 
- if os.path.exists(CONFIG):
+if os.path.exists(CONFIG):
     for line in open(CONFIG):
         exec(line) # Take options from options file, be carefull with exec
 
