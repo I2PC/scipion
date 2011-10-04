@@ -80,7 +80,7 @@ public class TiltPairPicker extends ParticlePicker
 			{
 				x = md.getValueInt(MDLabel.MDL_XINT, id);
 				y = md.getValueInt(MDLabel.MDL_YINT, id);
-				up = new UntiltedParticle(x, y, micrograph);
+				up = new UntiltedParticle(x, y, micrograph, family);
 				micrograph.addParticle(up);
 			}
 			filename = micrograph.getTiltedMicrograph().getOFilename();
@@ -215,6 +215,11 @@ public class TiltPairPicker extends ParticlePicker
 	{
 		family.setSize(size);
 		setChanged(true);
+	}
+
+	public Family getFamily()
+	{
+		return family;
 	}
 	
 	

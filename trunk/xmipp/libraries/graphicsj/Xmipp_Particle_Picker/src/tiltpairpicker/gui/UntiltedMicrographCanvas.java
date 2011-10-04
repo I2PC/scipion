@@ -13,14 +13,10 @@ import java.awt.event.MouseWheelListener;
 import javax.swing.SwingUtilities;
 
 import tiltpairpicker.model.TiltPairPicker;
-import tiltpairpicker.model.TiltedParticle;
 import tiltpairpicker.model.UntiltedMicrograph;
 import tiltpairpicker.model.UntiltedParticle;
 import trainingpicker.gui.WindowUtils;
-import trainingpicker.model.Constants;
-import trainingpicker.model.MicrographParticle;
 import xmipp.Particle;
-import xmipp.TiltPairAligner;
 
 public class UntiltedMicrographCanvas extends ImageCanvas implements MouseWheelListener
 {
@@ -113,9 +109,9 @@ public class UntiltedMicrographCanvas extends ImageCanvas implements MouseWheelL
 			else if (SwingUtilities.isLeftMouseButton(e))
 				setActive(p);
 		}
-		else if (SwingUtilities.isLeftMouseButton(e) && MicrographParticle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
+		else if (SwingUtilities.isLeftMouseButton(e) && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
 		{
-			p = new UntiltedParticle(x, y, untiltedmicrograph);
+			p = new UntiltedParticle(x, y, untiltedmicrograph, pppicker.getFamily());
 			untiltedmicrograph.addParticle(p);
 			setActive(p);
 			frame.updateMicrographsModel();
@@ -170,7 +166,7 @@ public class UntiltedMicrographCanvas extends ImageCanvas implements MouseWheelL
 			tiltedcanvas.mouseDragged(e.getX(), e.getY());
 			return;
 		}
-		if (active != null && MicrographParticle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
+		if (active != null && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
 		{
 			active.setPosition(x, y);
 			if(active.isAdded())
@@ -211,7 +207,7 @@ public class UntiltedMicrographCanvas extends ImageCanvas implements MouseWheelL
 		int y0 = (int) getSrcRect().getY();
 		int index = 0;
 
-		for (MicrographParticle p : untiltedmicrograph.getParticles())
+		for (Particle p : untiltedmicrograph.getParticles())
 		{
 			drawShape(g2, p, x0, y0, index == (untiltedmicrograph.getParticles().size() - 1));
 			index++;
@@ -223,7 +219,7 @@ public class UntiltedMicrographCanvas extends ImageCanvas implements MouseWheelL
 		}
 	}
 
-	private void drawShape(Graphics2D g2, MicrographParticle p, int x0, int y0, boolean all)
+	private void drawShape(Graphics2D g2, Particle p, int x0, int y0, boolean all)
 	{
 		int size = (int) (frame.getParticleSize() * magnification);
 		int radius = (int) (frame.getParticleSize() / 2 * magnification);

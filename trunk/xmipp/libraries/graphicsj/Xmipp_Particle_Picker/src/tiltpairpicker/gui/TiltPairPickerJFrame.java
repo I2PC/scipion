@@ -47,6 +47,8 @@ import javax.swing.event.ListSelectionListener;
 import tiltpairpicker.model.TiltPairPicker;
 import tiltpairpicker.model.UntiltedMicrograph;
 import trainingpicker.gui.ColorIcon;
+import trainingpicker.gui.ParticlePickerJFrame;
+import trainingpicker.gui.ParticlesJDialog;
 import trainingpicker.gui.WindowUtils;
 import trainingpicker.model.TrainingPicker;
 
@@ -222,6 +224,8 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener
 		filtersmn.add(gbmi);
 		gbmi.addActionListener(this);
 
+		JMenuItem particlesmn = new JMenuItem("Particles");
+		windowmn.add(particlesmn);
 		JMenuItem ijmi = new JMenuItem("ImageJ");
 		windowmn.add(ijmi);
 
@@ -281,6 +285,14 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener
 				{
 					JOptionPane.showMessageDialog(TiltPairPickerJFrame.this, ex.getMessage());
 				}
+			}
+		});
+		particlesmn.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
 			}
 		});
 

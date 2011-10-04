@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import trainingpicker.model.Constants;
+import trainingpicker.model.Family;
 import trainingpicker.model.Micrograph;
-import trainingpicker.model.MicrographParticle;
+import trainingpicker.model.TrainingParticle;
 import xmipp.Particle;
 import xmipp.TiltPairAligner;
 
@@ -123,5 +124,6 @@ public class UntiltedMicrograph extends Micrograph {
 		getTiltedMicrograph().addParticle(tp);
 		up.setTiltedParticle(tp);
 	}
+
 
 }

@@ -12,7 +12,7 @@ public abstract class Micrograph
 	private String name;
 	private ImagePlus image;
 	private String outputfilename;
-	private static String ext = ".pos";
+	public static final String ext = ".pos";
 
 	public Micrograph(String file)
 	{
@@ -23,6 +23,8 @@ public abstract class Micrograph
 		this.outputfilename = name + ext;
 
 	}
+	
+	
 
 	public Micrograph(String file, String name)
 	{

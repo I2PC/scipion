@@ -12,11 +12,6 @@ import javax.swing.ImageIcon;
 
 public class TrainingMicrograph extends Micrograph{
 	
-	private String file;
-	private String name;
-	private ImagePlus image;
-	private String outputfilename;
-	private static String ext = ".pos";
 	private String ctf;
 	private ImageIcon ctficon;
 	private boolean autopicking = false;
@@ -32,7 +27,7 @@ public class TrainingMicrograph extends Micrograph{
 		super(file);
 		this.ctf = ctf;
 		mfdatas = mfd;
-		autofilename = name + "_auto" + ext;
+		autofilename = getName() + "_auto" + ext;
 		MicrographFamilyState state = (mode == FamilyState.Review)? MicrographFamilyState.Review : MicrographFamilyState.Available;
 		for(Family f: families)
 			mfdatas.add(new MicrographFamilyData(this, f, state));
@@ -175,6 +170,9 @@ public class TrainingMicrograph extends Micrograph{
 			if(mfd != null)
 				mfd.reset();
 	}
+
+
+	
 
 
 }

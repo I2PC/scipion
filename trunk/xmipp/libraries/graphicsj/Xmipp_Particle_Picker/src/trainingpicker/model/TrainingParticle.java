@@ -9,25 +9,36 @@ import java.awt.Rectangle;
 import javax.swing.ImageIcon;
 
 import trainingpicker.gui.ParticleCanvas;
+import xmipp.Particle;
 
-public class TrainingParticle extends MicrographParticle {
+public class TrainingParticle extends Particle{
 	
 	protected Family family;
 	protected ImagePlus img;
-	protected ParticleCanvas canvas;
 	protected double cost = 2;
+	protected Micrograph micrograph;
 	
-	
-	public TrainingParticle(int x, int y, Family family, TrainingMicrograph micrograph)
+
+	public TrainingParticle(int x, int y, Family family, Micrograph micrograph)
 	{
 		this(x, y, family, micrograph, 2);
 	}
 	
-	public TrainingParticle(int x, int y, Family family, TrainingMicrograph micrograph, double cost)
+	public TrainingParticle(int x, int y, Family family, Micrograph micrograph, double cost)
 	{
-		super(x, y, micrograph);
+		super(x, y);
+		this.micrograph = micrograph;
 		this.family = family;
 		this.cost = cost;
+	}
+	
+	public Micrograph getMicrograph() {
+		return micrograph;
+	}
+
+
+	public void setMicrograph(Micrograph micrograph) {
+		this.micrograph = micrograph;
 	}
 	
 	public double getCost()

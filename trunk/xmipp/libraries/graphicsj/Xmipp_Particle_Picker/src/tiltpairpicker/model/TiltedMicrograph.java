@@ -3,7 +3,9 @@ package tiltpairpicker.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import trainingpicker.model.Family;
 import trainingpicker.model.Micrograph;
+import trainingpicker.model.TrainingParticle;
 
 public class TiltedMicrograph extends Micrograph
 {
@@ -73,5 +75,7 @@ public class TiltedMicrograph extends Micrograph
 	{
 		this.untiltedmicrograph = untiltedmicrograph;
 	}
+
+	
 
 }

@@ -315,10 +315,6 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-//				List<ImagePlus> imgs = new ArrayList<ImagePlus>();
-//				for (TrainingParticle p : getMicrograph().getFamilyData(family).getManualParticles())
-//					imgs.add(p.getImage());
-//				//String filename = XmippJ.saveTempImageStack(imgs);
 				 new ParticlesJDialog(ParticlePickerJFrame.this, micrograph);
 			}
 		});
@@ -1063,7 +1059,9 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 
 	public double getMagnification()
 	{
-		return 0.5;
+		if(family.getSize() > 100)
+			return 0.5;
+		return 1;
 	}
 
 }

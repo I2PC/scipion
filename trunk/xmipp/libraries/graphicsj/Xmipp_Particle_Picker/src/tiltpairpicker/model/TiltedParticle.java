@@ -1,15 +1,14 @@
 package tiltpairpicker.model;
 
-import trainingpicker.model.TrainingMicrograph;
-import trainingpicker.model.MicrographParticle;
+import trainingpicker.model.TrainingParticle;
 
-public class TiltedParticle extends MicrographParticle {
+public class TiltedParticle extends TrainingParticle {
 	
 	private UntiltedParticle untiltedparticle;
 	
 	public TiltedParticle(int x, int y, UntiltedParticle untiltedparticle)
 	{
-		super(x, y, ((UntiltedMicrograph)untiltedparticle.getMicrograph()).getTiltedMicrograph());
+		super(x, y, untiltedparticle.getFamily(), ((UntiltedMicrograph)untiltedparticle.getMicrograph()).getTiltedMicrograph());
 		this.untiltedparticle = untiltedparticle;
 	}
 	

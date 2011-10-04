@@ -1,34 +1,17 @@
 package trainingpicker.gui;
 
-import ij.ImagePlus;
-import ij.gui.ImageCanvas;
-import ij.gui.ImageWindow;
-
-import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Panel;
 import java.awt.ScrollPane;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.AbstractListModel;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
 
 import trainingpicker.model.TrainingMicrograph;
 import trainingpicker.model.TrainingParticle;
-import xmipp.Particle;
 
 public class ParticlesJDialog extends JDialog
 {
@@ -43,7 +26,7 @@ public class ParticlesJDialog extends JDialog
 	{
 		super(parent);
 		this.parent = parent;
-		particles = micrograph.getFamilyData(parent.getFamily()).getParticles();
+		particles = parent.getFamilyData().getParticles();
 		side = (int)(parent.getFamily().getSize() * parent.getMagnification());
 		columns = 800 / side;
 		rows = particles.size() / columns + 1;
