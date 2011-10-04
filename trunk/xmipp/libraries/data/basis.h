@@ -46,10 +46,13 @@ class Basis
 {
 public:
     /// Type of basis function
-    typedef enum {blobs, voxels, splines} t_basis_function;
+    typedef enum {blobs, voxels, splines} tBasisFunction;
 
     /// Basis function to use
-    t_basis_function type;
+    tBasisFunction type;
+
+    /// Footprint is convolved with a volume PSF
+    MultidimArray<double> *VolPSF;
 
     /// Sampling rate
     double Tm;
@@ -63,12 +66,22 @@ public:
     /** Volume deformation matrix.
         See the documentation of BasicARTParameters for further explanation. */
     Matrix2D<double> *D;
+
+    /// Blob footprint
+    ImageOver       blobprint;
+
+    /// Square of the footprint
+    ImageOver       blobprint2;
+
+    /// Sum of the basis on the grid points
+    double          sum_on_grid;
+
 public:
     /// Empty constructor. By default, blobs
     Basis();
 
     /// Default values
-    void set_default();
+    void setDefault();
 
     /// Basis name
     String basisName() const;
@@ -84,28 +97,27 @@ public:
         An exception is thrown if the file cannot be open */
     void read(const FileName &fn);
 
-
+    /**  Definition of paramaters
+     */
     static void defineParams(XmippProgram * program, const char* prefix=NULL, const char* comment=NULL);
+
+    /** Read the parameters from the command line
+     */
     void readParams(XmippProgram * program);
-
-
 
     /** Produce side information.
         You must provide the grid in which this basis function will live */
-    void produce_side_info(const Grid &grid);
-
-    /// Usage
-    void usage() const;
+    void produceSideInfo(const Grid &grid);
 
     /// Show
     friend std::ostream & operator << (std::ostream &out, const Basis &basis);
 
     /** Set sampling rate. */
-    void set_sampling_rate(double _Tm);
+    void setSamplingRate(double _Tm);
 
     /** Set D.
         D is the deformation matrix used for crystals. */
-    void set_D(Matrix2D<double> *_D)
+    void setD(Matrix2D<double> *_D)
     {
         D = _D;
     }
@@ -113,22 +125,7 @@ public:
     /** Max length of the basis.
         This is the maximum distance between the center of the basis and
         its further point. */
-    double max_length() const
-    {
-        switch (type)
-        {
-        case blobs:
-            return blob.radius;
-            break;
-        case voxels:
-            return sqrt(3.0) * 0.5;
-            break;
-        case splines:
-            return sqrt(3.0) * 2.0;
-            break;
-        }
-        return 0.0;
-    }
+    double maxLength() const;
 
     /** Change basis to voxels.
         This function takes a grid volume in the basis indicated in this object
@@ -148,86 +145,12 @@ public:
                           const Matrix2D<double> *D, double R,int threads=1) const;
 
     /** Basis value at a given point. */
-    double value_at(const Matrix1D<double> &r) const
-    {
-        double module_r;
-        switch (type)
-        {
-        case (blobs):
-                        module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
-            return blob_val(module_r, blob);
-            break;
-        case (voxels):
-                        if (-0.5 <= XX(r) && XX(r) < 0.5 &&
-                            -0.5 <= YY(r) && YY(r) < 0.5 &&
-                            -0.5 <= ZZ(r) && ZZ(r) < 0.5)
-                            return 1.0;
-                else
-                    return 0.0;
-            break;
-        case (splines):
-                        if (-2 <= XX(r) && XX(r) < 2 &&
-                            -2 <= YY(r) && YY(r) < 2 &&
-                            -2 <= ZZ(r) && ZZ(r) < 2)
-                            return spatial_Bspline03LUT(r);
-                else
-                    return 0.0;
-            break;
-        }
-        return 0.0;
-    }
+    double valueAt(const Matrix1D<double> &r) const;
 
     /** Projection at a given direction (u) with a given point (r). */
-    double projection_at(const Matrix1D<double> &u, const Matrix1D<double> &r)
-    const
-{
-        const double p0 = 1.0 / (2 * PIXEL_SUBSAMPLING) - 0.5;
-        const double pStep = 1.0 / PIXEL_SUBSAMPLING;
-        const double pAvg = 1.0 / (PIXEL_SUBSAMPLING * PIXEL_SUBSAMPLING);
-        double module_r, px, py;
-        Matrix1D<double> aux(3);
-        int i, j;
-        switch (type)
-        {
-        case (blobs):
-                        module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
-            return blob_proj(module_r, blob);
-            break;
-        case (voxels):
-            {
-                double retval = 0;
-                ZZ(aux) = ZZ(r);
-                for (i = 0, px = p0; i < PIXEL_SUBSAMPLING; i++, px += pStep)
-                {
-                    XX(aux) = XX(r) + px;
-                    for (j = 0, py = p0; j < PIXEL_SUBSAMPLING; j++, py += pStep)
-                    {
-                        YY(aux) = YY(r) + py;
-                        retval += intersection_unit_cube(u, aux);
-                    }
-                }
-                return retval*pAvg;
-                break;
-            }
-        case (splines):
-                        return spatial_Bspline03_proj(r, u);
-            break;
-        }
-        return 0.0;
-    }
-public:
-    /// Blob footprint
-    ImageOver       blobprint;
-
-    /// Square of the footprint
-    ImageOver       blobprint2;
-
-    /// Sum of the basis on the grid points
-    double          sum_on_grid;
+    double projectionAt(const Matrix1D<double> &u, const Matrix1D<double> &r)
+    const;
 };
-
-
-
 
 //@}
 #endif

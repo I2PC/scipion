@@ -24,19 +24,21 @@
  ***************************************************************************/
 
 #include "basis.h"
+#include "xmipp_fftw.h"
 
 Basis::Basis()
 {
-    set_default();
+    setDefault();
 }
 
 // Set default -------------------------------------------------------------
-void Basis::set_default()
+void Basis::setDefault()
 {
     type        = blobs;
     blob.radius = 2;
     blob.order  = 2;
     blob.alpha  = 10.4;
+    VolPSF   = NULL;
     D           = NULL;
     blobprint.clear();
     blobprint2.clear();
@@ -125,27 +127,8 @@ void Basis::readParams(XmippProgram * program)
     }
 }
 
-
-// Usage -------------------------------------------------------------------
-void Basis::usage() const
-{
-    std::cerr << "\nBasis parameters"
-    << "\nFor blobs:"
-    << "\n   [-r blrad=2]          blob radius"
-    << "\n   [-m blord=2]          order of Bessel function in blob"
-    << "\n   [-a blalpha=10.4]     blob parameter alpha"
-    << "\n   [-big_blobs]          blob parameters and grid relative size adjusted"
-    << "\n   [-small_blobs]           for using big, small blobs"
-    << "\n   [-visual_blobs]          or blobs optimal for direct visualization"
-    << "\nFor voxels"
-    << "\n   [-voxels]\n"
-    << "\nFor splines"
-    << "\n   [-splines]\n"
-    ;
-}
-
 // Set sampling rate -------------------------------------------------------
-void Basis::set_sampling_rate(double _Tm)
+void Basis::setSamplingRate(double _Tm)
 {
     if (_Tm == 0)
         REPORT_ERROR(ERR_VALUE_INCORRECT, "Basis::set_sampling_rate: Sampling rate cannot be 0");
@@ -154,17 +137,43 @@ void Basis::set_sampling_rate(double _Tm)
 }
 
 // Produce side information ------------------------------------------------
-void Basis::produce_side_info(const Grid &grid)
+void Basis::produceSideInfo(const Grid &grid)
 {
     switch (type)
     {
     case (blobs):
-                    footprint_blob(blobprint, blob, BLOB_SUBSAMPLING);
-        sum_on_grid = sum_blob_Grid(blob, grid, D);
-        blobprint()  /= sum_on_grid;
-        blobprint2()  = blobprint();
-        blobprint2() *= blobprint();
-        break;
+        {
+            footprint_blob(blobprint, blob, BLOB_SUBSAMPLING);
+            sum_on_grid = sum_blob_Grid(blob, grid, D);
+            blobprint()  /= sum_on_grid;
+
+            if (VolPSF != NULL)
+            { // let adjust to the same size both blobprint and VolPSF
+                selfScaleToSize(LINEAR, *VolPSF, XSIZE(*VolPSF)*BLOB_SUBSAMPLING,
+                                YSIZE(*VolPSF)*BLOB_SUBSAMPLING, ZSIZE(*VolPSF));
+
+                if (XSIZE(blobprint()) < XSIZE(*VolPSF))
+                    blobprint().selfWindow(STARTINGY(*VolPSF),
+                                           STARTINGY(*VolPSF)+YSIZE(*VolPSF)-1,
+                                           STARTINGX(*VolPSF),
+                                           STARTINGX(*VolPSF)+XSIZE(*VolPSF)-1);
+                else if (XSIZE(blobprint()) > XSIZE(*VolPSF))
+                    VolPSF->selfWindow(STARTINGY(blobprint()),
+                                       STARTINGY(blobprint())+YSIZE(blobprint())-1,
+                                       STARTINGX(blobprint()),
+                                       STARTINGX(blobprint())+XSIZE(blobprint())-1);
+
+
+                // creation of blobprint 3D from convolution of blobprint and PSF
+                ImageOver footprintT = blobprint;
+
+                convolutionFFT(*VolPSF, blobprint(), footprintT());
+            }
+
+            blobprint2()  = blobprint();
+            blobprint2() *= blobprint();
+            break;
+        }
     case (voxels):  sum_on_grid = 1;
         break;
     case (splines): sum_on_grid = sum_spatial_Bspline03_Grid(grid);
@@ -200,6 +209,24 @@ std::ostream & operator << (std::ostream & out, const Basis &basis)
     }
     return out;
 }
+
+double Basis::maxLength() const
+{
+    switch (type)
+    {
+    case blobs:
+        return blob.radius;
+        break;
+    case voxels:
+        return sqrt(3.0) * 0.5;
+        break;
+    case splines:
+        return sqrt(3.0) * 2.0;
+        break;
+    }
+    return 0.0;
+}
+
 
 // Change to voxels --------------------------------------------------------
 void Basis::changeToVoxels(GridVolume &vol_basis, MultidimArray<double> *vol_voxels,
@@ -264,7 +291,80 @@ void Basis::changeFromVoxels(const MultidimArray<double> &vol_voxels,
                 vol_basis(0)()(k, i, j) = 0;
         break;
     case splines:
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"");
         /* TODO */
         break;
     }
+}
+
+double Basis::valueAt(const Matrix1D<double> & r) const
+{
+    double module_r;
+    switch (type)
+    {
+    case (blobs):
+        {
+            module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
+            return blob_val(module_r, blob);
+            break;
+        }
+    case (voxels):
+        {
+            if (-0.5 <= XX(r) && XX(r) < 0.5 &&
+                -0.5 <= YY(r) && YY(r) < 0.5 &&
+                -0.5 <= ZZ(r) && ZZ(r) < 0.5)
+                return 1.0;
+            else
+                return 0.0;
+            break;
+        }
+    case (splines):
+        {
+            if (-2 <= XX(r) && XX(r) < 2 &&
+                -2 <= YY(r) && YY(r) < 2 &&
+                -2 <= ZZ(r) && ZZ(r) < 2)
+                return spatial_Bspline03LUT(r);
+            else
+                return 0.0;
+            break;
+        }
+    }
+    return 0.0;
+}
+
+double Basis::projectionAt(const Matrix1D<double> & u, const Matrix1D<double> & r) const
+{
+    const double p0 = 1.0 / (2 * PIXEL_SUBSAMPLING) - 0.5;
+    const double pStep = 1.0 / PIXEL_SUBSAMPLING;
+    const double pAvg = 1.0 / (PIXEL_SUBSAMPLING * PIXEL_SUBSAMPLING);
+    double module_r, px, py;
+    Matrix1D<double> aux(3);
+    int i, j;
+    switch (type)
+    {
+    case (blobs):
+                    module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
+        return blob_proj(module_r, blob);
+        break;
+    case (voxels):
+        {
+            double retval = 0;
+            ZZ(aux) = ZZ(r);
+            for (i = 0, px = p0; i < PIXEL_SUBSAMPLING; i++, px += pStep)
+            {
+                XX(aux) = XX(r) + px;
+                for (j = 0, py = p0; j < PIXEL_SUBSAMPLING; j++, py += pStep)
+                {
+                    YY(aux) = YY(r) + py;
+                    retval += intersection_unit_cube(u, aux);
+                }
+            }
+            return retval*pAvg;
+            break;
+        }
+    case (splines):
+                    return spatial_Bspline03_proj(r, u);
+        break;
+    }
+    return 0.0;
 }
