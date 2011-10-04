@@ -56,44 +56,12 @@ public abstract class Writer implements PlugIn {
                     IJ.showMessage("File sucessfully saved!");
                 }
             } catch (Exception ex) {
-                ex.printStackTrace();
+                ex.printStackTrace(System.err);
                 IJ.error(ex.getMessage());
             }
         }
     }
 
-//
-//    public void run(ImageProcessor ip) {
-//        String path = basedir + filename;
-//
-//        System.out.println("Rootdir: " + basedir);
-//        System.out.println("Filename: " + filename);
-//
-//        IJ.showStatus("Saving: " + filename);
-//
-//        try {
-//            write(imp, path);
-//
-//            IJ.showMessage("File successfully saved!");
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//            IJ.error(ex.getMessage());
-//        }
-//    }
-//
-//    public int showDialog(ImagePlus ip, String string, PlugInFilterRunner pifr) {
-//        if (filename == null || filename.isEmpty()) {
-//            SaveDialog sd = new SaveDialog(getSaveDialogTitle(), System.getProperty("user.dir"), "");
-//            rootdir = sd.getDirectory();
-//            filename = sd.getFileName();
-//            System.out.println("rootdir: " + rootdir + " > " + System.currentTimeMillis());
-//            if (filename == null) {
-//                return DONE;
-//            }
-//        }
-//
-//        return 0;
-//    }
     String getPath() {
         String fullpath = null;
 
@@ -105,11 +73,7 @@ public abstract class Writer implements PlugIn {
             basedir = od.getDirectory();
             prefix = Filename.getPrefix(path);
             filename = Filename.getFilename(path);
-            System.out.println("basedir : " + basedir);
-            System.out.println("prefix  : " + prefix);
-            System.out.println("fn      : " + filename);
             fullpath = prefix + Filename.SEPARATOR + basedir + filename;
-            System.out.println("fullpath: " + fullpath);
         }
 
         return fullpath;

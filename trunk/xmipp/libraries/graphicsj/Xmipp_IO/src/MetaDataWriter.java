@@ -1,6 +1,4 @@
 
-import ij.IJ;
-import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.FileInfo;
@@ -19,46 +17,17 @@ import xmipp.MetaData;
  */
 public class MetaDataWriter extends Writer {
 
-    public static void main(String args[]) {
-        new ImageJ();
-
-        String filename = "class_000002@/data2/MicrographPreprocessing/2D/CL2D/run_001/results_level_00_classes.xmd";
-
-        try {
-            MetaDataReader xr = new MetaDataReader();
-            xr.run(filename);
-            xr.show();
-
-            String output = "/home/juanjo/Desktop/stackfull.xmd";
-            MetaDataWriter iw = new MetaDataWriter();
-            iw.write(xr, output);
-
-            // Reload.
-//            ImageReader ir = new ImageReader();
-//            ir.run(output);
-//            ir.show();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            IJ.error(ex.getMessage());
-        }
-    }
-
     @Override
     protected void write(ImagePlus imp, String path) throws Exception {
-        FileInfo fi = imp.getFileInfo();
-        String directory = fi.directory;
-        String filename = fi.fileName;
+        FileInfo fi = imp.getOriginalFileInfo();
+        File f = new File(fi.directory, fi.fileName);
 
-        System.out.println(" > directory: " + directory);
-        System.out.println(" > fileName: " + filename);
+        String stackfilename = f.getAbsolutePath();
+        boolean isMD = Filename.isMetadata(stackfilename);
 
-        // @TODO @TODO @TODO @TODO @TODO @TODO
-        // If file !exists
-        // Write as stack: path(-ext)+".stk"
-        String stackfilename = "";
-        File f = new File(directory, filename);
-        if (!f.exists()) {
-            stackfilename = f.getPath();
+        if (!f.exists() && !isMD) {
+            f = new File(Filename.getFilename(path));
+            stackfilename = f.getAbsolutePath();
 
             stackfilename = stackfilename.substring(0, stackfilename.lastIndexOf("."));
             stackfilename += ".stk";
@@ -67,10 +36,10 @@ public class MetaDataWriter extends Writer {
             iw.writeStack(imp, stackfilename);
         }
 
-        writeMetaData(imp, stackfilename, path);
+        writeMetaData(imp, stackfilename, isMD, path);
     }
 
-    protected void writeMetaData(ImagePlus imp, String stackFilename, String path) throws Exception {
+    protected void writeMetaData(ImagePlus imp, String stackFilename, boolean isMD, String path) throws Exception {
         // Builds metadata.
         MetaData md = new MetaData();
         md.addLabel(MDLabel.MDL_IMAGE);
@@ -78,7 +47,9 @@ public class MetaDataWriter extends Writer {
         // Saves each slice and adds its name to metadata to save it later.
         ImageStack stack = imp.getStack();
         for (int i = 1; i <= stack.getSize(); i++) {
-            String imageName = i + Filename.SEPARATOR + stackFilename;
+            // If MD: getSlice label.
+            // Otherwise, builds it.
+            String imageName = isMD ? imp.getStack().getSliceLabel(i) : i + Filename.SEPARATOR + stackFilename;
 
             // Adds imagename to metadata.
             long id = md.addObject();

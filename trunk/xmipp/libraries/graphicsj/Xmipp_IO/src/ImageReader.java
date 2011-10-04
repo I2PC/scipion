@@ -1,6 +1,8 @@
 
 import ij.IJ;
 import ij.ImagePlus;
+import ij.io.FileInfo;
+import java.io.File;
 import xmipp.Filename;
 import xmipp.ImageDouble;
 
@@ -27,6 +29,12 @@ public class ImageReader extends Reader {
         }
 
         ImagePlus imp = ImageConverter.convertToImagej(image, getTitle());
+
+        File f = new File(path);
+        FileInfo fi = new FileInfo();
+        fi.directory = f.getParent();
+        fi.fileName = f.getName();
+        setFileInfo(fi);
 
         // Sets stack...
         String name = Filename.getFilename(path);

@@ -40,7 +40,7 @@ public abstract class Reader extends ImagePlus implements PlugIn {
                     show();
                 }
             } catch (Exception ex) {
-                ex.printStackTrace();
+                ex.printStackTrace(System.err);
                 IJ.error(ex.getMessage());
             }
         }
@@ -56,11 +56,7 @@ public abstract class Reader extends ImagePlus implements PlugIn {
             basedir = od.getDirectory();
             prefix = Filename.getPrefix(path);
             filename = Filename.getFilename(path);
-            System.out.println("basedir : " + basedir);
-            System.out.println("prefix  : " + prefix);
-            System.out.println("fn      : " + filename);
             fullpath = prefix + Filename.SEPARATOR + basedir + filename;
-            System.out.println("fullpath: " + fullpath);
         }
 
         return fullpath;

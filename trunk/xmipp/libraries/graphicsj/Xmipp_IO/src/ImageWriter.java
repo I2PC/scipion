@@ -25,8 +25,9 @@ public class ImageWriter extends Writer {
         int h = imp.getHeight();
         int d = imp.getStackSize();
 
-        for (int i = 0; i < d; i++) {
-            float slice[] = (float[]) imp.getStack().getProcessor(i + 1).getPixels();
+        // Writes slice by slice to avoid creating a big array to write in just one step.
+        for (int i = 1; i <= d; i++) {
+            float slice[] = (float[]) imp.getStack().getProcessor(i).getPixels();
 
             ImageDouble image = new ImageDouble();
             image.setData(w, h, 1, toDouble(slice));

@@ -1,6 +1,8 @@
 
 import ij.IJ;
 import ij.ImagePlus;
+import ij.io.FileInfo;
+import java.io.File;
 import xmipp.MetaData;
 
 /*
@@ -21,8 +23,13 @@ public class MetaDataReader extends Reader {
 
         ImagePlus imp = ImageConverter.convertToImagej(md);
 
+        File f = new File(path);
+        FileInfo fi = new FileInfo();
+        fi.directory = f.getParent();
+        fi.fileName = f.getName();
+        setFileInfo(fi);
+
         // Sets stack...
-        //String name = Filename.getFilename(filename);
         setStack(getTitle(), imp.getStack());
 
         // ...and copies scale info.
