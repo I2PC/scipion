@@ -56,7 +56,7 @@ void BasicARTParameters::defaultValues()
     lambda_list.resize(1);
     lambda_list.initConstant(0.01);
     stop_at            = 0;
-    basis.set_default();
+    basis.setDefault();
     grid_relative_size = 1.41;
     grid_type          = BCC;
     proj_ext           = 0;
@@ -440,7 +440,7 @@ void BasicARTParameters::readParams(XmippProgram * program)
     //divide by the sampling rate
     if (sampling != 1.)
     {
-        basis.set_sampling_rate(sampling);
+        basis.setSamplingRate(sampling);
         grid_relative_size /= sampling;
         if (R != -1.)
             R /= sampling;
@@ -583,7 +583,17 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
     if (level >= FULL)
     {
         if ( !fn_start.empty() )
-            vol_basis0.read(fn_start, basis.basisName());
+        {
+            if (fn_start.contains("basis")) // A basis file
+                vol_basis0.read(fn_start, basis.basisName());
+            else // If it is a volume of voxels
+            {
+                Image<double> imTemp;
+                imTemp.read(fn_start);
+                basis.changeFromVoxels(imTemp(), vol_basis0, grid_type, grid_relative_size,
+                                       NULL, NULL, R, threads);
+            }
+        }
         else
         {
             Grid grid_basis;
@@ -651,13 +661,13 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
     /* Basis side info --------------------------------------------------------- */
     if (level >= BASIC)
 {
-        basis.set_D(D);
-        basis.produce_side_info(vol_basis0.grid());
+        basis.setD(D);
+        basis.produceSideInfo(vol_basis0.grid());
     }
 
     /* Express the ray length in basis units ----------------------------------- */
     if (ray_length != -1)
-        ray_length *= basis.max_length();
+        ray_length *= basis.maxLength();
 
     /* With CAV equalization mode weights must be calculated, but for the parallel cases
        where weights are calculated in a parallel manner.*/
