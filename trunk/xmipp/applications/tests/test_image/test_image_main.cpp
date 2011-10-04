@@ -73,6 +73,21 @@ TEST_F( ImageTest, readApplyGeo)
     EXPECT_TRUE(auxImage == auxImage2);
 }
 
+TEST_F( ImageTest, readImageFromStackMetadata)
+{
+    FileName stackSliceFn, auxFn;
+    stackSliceFn.compose(2, stackName);
+    Image<double> img1;
+    img1.read(stackSliceFn);
+    MetaData md(stackSliceFn);
+    size_t id = md.firstObject();
+    md.getValue(MDL_IMAGE, auxFn, id);
+    Image<double> img2;
+    img2.read(auxFn);
+
+    EXPECT_TRUE(img1 == img2);
+}
+
 TEST_F( ImageTest, writeIMAGICimage)
 {
     FileName auxFilename(imageName);
@@ -150,6 +165,8 @@ TEST_F( ImageTest, writeRAWimage)
     auxImage.read(auxFilename);
     EXPECT_EQ(myImage,auxImage);
 }
+
+
 
 GTEST_API_ int main(int argc, char **argv)
 {
