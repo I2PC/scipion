@@ -1,4 +1,4 @@
-#!bin/xmipp_python
+#!/usr/bin/env xmipp_python
 '''
 /***************************************************************************
  * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -25,6 +25,13 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
  '''
+
+###########################################################################
+#                                                                         #
+#     This script will serve to update, configure and compile             #
+#     It should run from the $XMIPP_HOME directory                        #
+#                                                                         #
+###########################################################################
 
 import os
 from subprocess import Popen
@@ -56,11 +63,11 @@ class ConsoleOptionsTab():
 	
     def addSeparator(self):
         pass
-    
 
 class ConsoleConfigNotebook():
-    def __init__(self):
+    def __init__(self, options):
         self.tabs = {}
+        self.options = options
         
     def addTab(self, text):
         tab = ConsoleOptionsTab(self, text)
@@ -77,8 +84,8 @@ class ConsoleConfigNotebook():
     def getValue(self, tab, option):
         return self.tabs[tab].getValue(option)
     
-    def notifyCompile(self, process):
-        pass
+    def notifyRun(self, process):
+        self.proc = process
 
 
 ################### Helper functions ####################
@@ -182,33 +189,97 @@ def addTabs(nb):
     addTabOption(tab, 'gtest', 'Build tests?', 'no')
     addTabOption(tab, 'release', 'Release mode', 'yes')
    
-    if not os.path.exists(CONFIG):
+
+    defaultsDic = globals()
+    
+    if not defaultsDic.has_key('JAVA_HOME'):
         wizardJava(tab_java)
+    
+    if not defaultsDic.has_key('MPI_INCLUDE'):
         wizardMpi(tab_mpi)
         
         
-def runCompile(notebook, numberOfCpu):
+def run(notebook):
+    options = notebook.options
     out = OUTPUT
-    procs = numberOfCpu
-    opts = notebook.getConfigOptions()
-    cmd = 'echo "*** RUNNING SCONS.CONFIGURE..." > %(out)s \n'
-    cmd1 = "./scons.configure %(opts)s >> %(out)s 2>&1 " % locals()
-    cmd += 'echo "%(cmd1)s" >> %(out)s \n'
-    cmd += cmd1 + '\n'
-    cmd += 'echo "*** RUNNING SCONS.COMPILE..." >> %(out)s \n'
-    cmd2 = "./scons.compile -j %(numberOfCpu)d >> %(out)s 2>&1 "% locals()
-    cmd += 'echo "%(cmd2)s" >> %(out)s \n'
-    cmd += cmd2 + '\n'
-    import pprint
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(notebook.tabs)
+    procs = options.getNumberOfCpu()
+    scons = os.path.join("external", "scons", "scons.py")
     os.environ['JAVA_HOME'] = notebook.getValue('Java & QT', 'JAVA_HOME')
+    cmd = ''    
+    if os.path.isfile(out) and os.path.exists(out):
+        os.remove(out)
+    
+    if options.hasOption('update'):
+        cmd += 'echo "*** RUNNING SVN UPDATE..." >> %(out)s 2>&1\n svn up >> %(out)s 2>&1\n' 
+        
+    if options.hasOption('configure'):        
+        opts = notebook.getConfigOptions()
+        cmd += 'echo "*** RUNNING SCONS.CONFIGURE..." >> %(out)s 2>&1 \n'
+        cmd1 = "xmipp_python %(scons)s mode=configure -j %(procs)s --config=force %(opts)s >> %(out)s 2>&1 " % locals()
+        cmd += 'echo "%(cmd1)s" >> %(out)s \n'
+        cmd += cmd1 + '\n'
+    
+    if options.hasOption('compile'):
+        opts = ' '.join(options.getOption('compile'))
+        cmd += 'echo "*** RUNNING SCONS.COMPILE..." >> %(out)s \n'
+        cmd2 = "./scons.compile -j %(procs)s  %(opts)s >> %(out)s 2>&1 "% locals()
+        cmd += 'echo "%(cmd2)s" >> %(out)s \n'
+        cmd += cmd2 + '\n'
+        
     proc = Popen(cmd % locals(), shell=True)    
-    notebook.notifyCompile(proc)   
+    notebook.notifyRun(proc)   
     
 def stopCompile(notebook, proc):
     proc.terminate()
     notebook.notifyStopCompile("Compilation aborted by user")
+
+
+####### Simple parsing of arguments ###########
+# Acepted options:
+# configure arg1 arg2 ... 
+# compile arg1 arg2 ...
+# update arg1 arg2 ...    
+# clean 
+class ArgDict():
+    def __init__(self, argv):
+        self.options = {}
+        self.setOption('default')
+        
+        for arg in argv:
+            if arg in ['configure', 'compile', 'update', 'clean', 'gui', 'install', '-j']:
+                self.setOption(arg)
+            else:
+                self.addArgument(arg)
+        
+    def hasOption(self, option):
+        return self.options.has_key(option)
+    
+    def setOption(self, option):
+        self.arguments = []
+        self.options[option] = self.arguments
+        
+    def getOption(self, option):
+        if self.hasOption(option):
+            return self.options[option]
+        return None
+    
+    def getNumberOfCpu(self):
+        if self.hasOption('-j'):
+            return self.getOption('-j')[0]
+        return '1'
+        
+    def setNumberOfCpu(self, cpu):
+        self.options['-j'] = [cpu]
+        
+    def addArgument(self, argument):
+        self.arguments.append(argument)
+
+import sys
+options = ArgDict(sys.argv)
+
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
+pp.pprint(options.options)    
 
 
 # Output file
@@ -216,32 +287,42 @@ OUTPUT = 'build/scons_output.log'
 if os.path.exists(OUTPUT):
     os.remove(OUTPUT)
 # TRY TO READ CONFIG FILE
-CONFIG = 'options.cache'
+CONFIG = '.xmipp_scons.options'
 if os.path.exists(CONFIG):
     for line in open(CONFIG):
-        exec(line) # We need to be carefull with this
+        exec(line) # Take options from options file, be carefull with exec
+
+if options.hasOption('configure'):
+    for arg in options.getOption('configure'):
+        parts = arg.split('=')
+        if len(parts) == 2:
+            exec('%s = "%s"' % (parts[0], parts[1])) # Take options from command line, override options file, be carefull with exec
     
-# Number of CPU
-if os.environ.has_key('NUMBER_OF_CPU'):
-    numberOfCpu = int(os.environ['NUMBER_OF_CPU'])
-else: 
-    numberOfCpu = 2
-     
-GUI = True
+GUI = options.hasOption('gui')
 # Check if Tkinter is available
-try:
-    import Tkinter
-    from compile_gui import createGUINotebook
-    nb = createGUINotebook(OUTPUT, numberOfCpu, addTabs, runCompile, stopCompile)
-except Exception, e:
-    answer = raw_input("*** Could not create GUI.\nDo you want to proceed from command line? [Y/n]:")
-    if not answer or answer.lower() == 'y':
-        nb = ConsoleConfigNotebook()
-        addTabs(nb)
-        OUTPUT = '/dev/stdout'
-        runCompile(nb, numberOfCpu)
-        if self.proc.returncode != 0:
-            print "Errors on Xmipp compilation, see '%s' for more details" % self.OUTPUT
-        else:
-            print "Xmipp has been successfully installed\nInclude file xmipp.bashrc or xmipp.csh to your startup shell file"
+if GUI:    
+    try:
+        import Tkinter
+        from compile_gui import createGUINotebook
+        nb = createGUINotebook(OUTPUT, options, addTabs, run, stopCompile)
+        exit(0)
+    except Exception, e:
+        print "*** Could not create GUI. Error ", e
+        answer = raw_input("Do you want to proceed from command line? [Y/n]:")
+        if answer.lower() != 'y':
+            exit(0)
+
+# Run configuration and compile from command line
+nb = ConsoleConfigNotebook(options)
+addTabs(nb)
+OUTPUT = '/dev/stdout'
+run(nb)
+nb.proc.wait()
+if nb.proc.returncode != 0:
+    print "Errors on Xmipp compilation, see '%s' for more details" % self.OUTPUT
+else:
+    print "Xmipp has been successfully compiled"
+    if options.hasOption('install'):
+        print "INSTALLATION FINISHED!!!"
+        print "Include file .xmipp.bashrc or .xmipp.csh to your startup shell file"
         
