@@ -1,12 +1,13 @@
 from unittest import TestResult, _TextTestResult
 from protlib_xmipp import greenStr, failStr
+
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
 except ImportError:
    from unittest import _WritelnDecorator # Python <2.6
 
 import sys
-from bcolors import *
+
 class XmippPythonTestResult(TestResult):
     xml = None
     testFailed = 0
