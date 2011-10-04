@@ -119,7 +119,7 @@ void ProgReconsART::readParams()
     if (checkParam("--xray"))
         artRecons = new XrayARTRecons;
     else
-        artRecons = new ARTReconsBase;
+        artRecons = new SinPartARTRecons;
 
     artRecons->readParams(this);
 
@@ -163,7 +163,7 @@ void ProgReconsART::run()
 
     show();
     // Produce side information and initial volume
-    artRecons->produceSideInfo(vol_basis);
+    artRecons->preIterations(vol_basis);
     if (verbose > 0)
     {
         std::cout << " ---------------------------------------------------------------------" << std::endl;
@@ -189,7 +189,7 @@ void ProgReconsART::run()
     gettimeofday(&start_time,NULL);
 
     // Finish iterations
-    artRecons->finishIterations(vol_basis);
+    artRecons->postIterations(vol_basis);
 
     // Write final volume
     int Xoutput_volume_size=(artPrm.Xoutput_volume_size==0) ?

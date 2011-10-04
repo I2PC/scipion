@@ -114,8 +114,6 @@ void CrystalARTRecons::print(std::ostream &o) const
 //#define DEBUG_A_LOT
 void CrystalARTRecons::produceSideInfo(GridVolume &vol_basis0)
 {
-    ARTReconsBase::produceSideInfo(vol_basis0);
-
     // Lattice vectors in BCC units
     a = avox / artPrm.grid_relative_size;
     b = bvox / artPrm.grid_relative_size;
@@ -144,7 +142,7 @@ void CrystalARTRecons::produceSideInfo(GridVolume &vol_basis0)
     MAT_ELEM(*(artPrm.D), 2, 2) = 1;
     artPrm.Dinv = new Matrix2D<double>;
     *(artPrm.Dinv) = artPrm.D->inv();
-    artPrm.basis.set_D(artPrm.D);
+    artPrm.basis.setD(artPrm.D);
 
     // Unit cell mask within volume -----------------------------------------
     // Compute the 4 parallelogram corners
@@ -234,6 +232,9 @@ void CrystalARTRecons::produceSideInfo(GridVolume &vol_basis0)
                 break;
             }
     }
+
+    // Now calculate side info of basel class
+    ARTReconsBase::preIterations(vol_basis0);
 
     // Show all parameters --------------------------------------------------
 #ifdef DEBUG
@@ -378,7 +379,7 @@ void CrystalARTRecons::singleStep(
 }
 
 
-void CrystalARTRecons::finishIterations(GridVolume &vol_basis)
+void CrystalARTRecons::postIterations(GridVolume &vol_basis)
 {
     if (fill_space)
         expandToFillSpace(artPrm, *this, vol_basis);

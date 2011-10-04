@@ -125,7 +125,7 @@ public:
 
     /* Finish ART iterations.
        Expand output volume to fill space if necessary. */
-    void finishIterations(GridVolume &vol_basis);
+    void postIterations(GridVolume &vol_basis);
 
     /** Force the trial volume to be symmetric. */
     void applySymmetry(GridVolume &vol_in, GridVolume *vol_out,int grid_type);

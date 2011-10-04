@@ -33,212 +33,9 @@ void ARTReconsBase::readParams(XmippProgram * program)
     artPrm.readParams(program);
 }
 
-void ARTReconsBase::produceSideInfo(GridVolume &vol_basis0, int level, int rank)
+void ARTReconsBase::preIterations(GridVolume &vol_basis0, int level, int rank)
 {
     artPrm.produceSideInfo(vol_basis0, level, rank);
-}
-
-void ARTReconsBase::preSingleStep()
-{}
-
-
-void ARTReconsBase::postSingleStep()
-{}
-
-void ARTReconsBase::singleStep(GridVolume &vol_in, GridVolume *vol_out,
-                               Projection &theo_proj, Projection &read_proj,
-                               int sym_no,
-                               Projection &diff_proj, Projection &corr_proj, Projection &alig_proj,
-                               double &mean_error, int numIMG, double lambda, int act_proj,
-                               const FileName &fn_ctf, const MultidimArray<int> *maskPtr,
-                               bool refine)
-{
-    // Prepare to work with CTF ................................................
-    FourierFilter ctf;
-    ImageOver *footprint = (ImageOver *) & artPrm.basis.blobprint;
-    ImageOver *footprint2 = (ImageOver *) & artPrm.basis.blobprint2;
-    bool remove_footprints = false;
-    double weight, sqrtweight;
-
-    if (fn_ctf != "" && !artPrm.unmatched)
-    {
-        if (artPrm.basis.type != Basis::blobs)
-            REPORT_ERROR(ERR_VALUE_INCORRECT, "ART_single_step: This way of correcting for the CTF "
-                         "only works with blobs");
-        // It is a description of the CTF
-        ctf.FilterShape = ctf.FilterBand = CTF;
-        ctf.ctf.enable_CTFnoise = false;
-        ctf.ctf.read(fn_ctf);
-        ctf.ctf.Tm /= BLOB_SUBSAMPLING;
-        ctf.ctf.Produce_Side_Info();
-
-        // Create new footprints
-        footprint = new ImageOver;
-        footprint2 = new ImageOver;
-        remove_footprints = true;
-
-        // Enlarge footprint, bigger than necessary to avoid
-        // aliasing
-        *footprint = artPrm.basis.blobprint;
-        (*footprint)().setXmippOrigin();
-        double blob_radius = artPrm.basis.blob.radius;
-        int finalsize = 2 * CEIL(30 + blob_radius) + 1;
-        footprint->window(
-            FIRST_XMIPP_INDEX(finalsize), FIRST_XMIPP_INDEX(finalsize),
-            LAST_XMIPP_INDEX(finalsize), LAST_XMIPP_INDEX(finalsize));
-
-        // Generate mask to the size of the footprint, correct phase
-        // and apply CTF
-        ctf.generateMask((*footprint)());
-        ctf.correctPhase();
-        ctf.applyMaskSpace((*footprint)());
-
-        // Remove unnecessary regions
-        finalsize = 2 * CEIL(15 + blob_radius) + 1;
-        footprint->window(
-            FIRST_XMIPP_INDEX(finalsize), FIRST_XMIPP_INDEX(finalsize),
-            LAST_XMIPP_INDEX(finalsize), LAST_XMIPP_INDEX(finalsize));
-#ifdef DEBUG
-
-        Image<double> save;
-        save() = (*footprint)();
-        save.write("PPPfootprint.xmp");
-#endif
-
-        // Create footprint2
-        *footprint2 = *footprint;
-        (*footprint2)() *= (*footprint2)();
-    }
-
-    // Project structure .......................................................
-    // The correction image is reused in this call to store the normalising
-    // projection, ie, the projection of an all-1 volume
-    Matrix2D<double> *A = NULL;
-    if (artPrm.print_system_matrix)
-        A = new Matrix2D<double>;
-    corr_proj().initZeros();
-
-    project_GridVolume(vol_in, artPrm.basis, theo_proj,
-                       corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-                       read_proj.rot(), read_proj.tilt(), read_proj.psi(), FORWARD, artPrm.eq_mode,
-                       artPrm.GVNeq, A, maskPtr, artPrm.ray_length, artPrm.threads);
-
-    if (fn_ctf != "" && artPrm.unmatched)
-    {
-        ctf.generateMask(theo_proj());
-        ctf.applyMaskSpace(theo_proj());
-    }
-
-    // Print system matrix
-    if (artPrm.print_system_matrix)
-    {
-        std::cout << "Equation system (Ax=b) ----------------------\n";
-        std::cout << "Size: "<< (*A).mdimx <<"x"<<(*A).mdimy<< std::endl;
-        for (int i = 0; i < (*A).mdimy; i++)
-        {
-            bool null_row = true;
-            for (int j = 0; j < (*A).mdimy; j++)
-                if (MAT_ELEM(*A, i, j) != 0)
-                {
-                    null_row = false;
-                    break;
-                }
-            if (!null_row)
-            {
-                std::cout << "pixel=" << integerToString(i, 3) << " --> "
-                << DIRECT_MULTIDIM_ELEM(read_proj(), i) << " = ";
-                for (int j = 0; j < (*A).mdimx; j++)
-                    std::cout << MAT_ELEM(*A, i, j) << " ";
-                std::cout << std::endl;
-            }
-        }
-        std::cout << "---------------------------------------------\n";
-        delete A;
-    }
-
-    // Refine ..............................................................
-    if (refine)
-    {
-        Matrix2D<double> M;
-        /*
-        Image<double> save;
-        save()=theo_proj(); save.write("PPPtheo.xmp");
-        save()=read_proj(); save.write("PPPread.xmp");
-        */
-        alignImages(theo_proj(),read_proj(),M);
-        //save()=read_proj(); save.write("PPPread_aligned.xmp");
-        std::cout << M << std::endl;
-        read_proj().rangeAdjust(theo_proj());
-        //save()=read_proj(); save.write("PPPread_aligned_grey.xmp");
-        //std::cout << "Press any key\n";
-        //char c; std::cin >> c;
-    }
-
-    // Now compute differences .................................................
-    double applied_lambda = lambda / numIMG; // In ART mode, numIMG=1
-
-    mean_error = 0;
-    diff_proj().resize(read_proj());
-
-    // Weighted least-squares ART for Maximum-Likelihood refinement
-    if (artPrm.WLS)
-    {
-        weight = read_proj.weight() / artPrm.sum_weight;
-        sqrtweight = sqrt(weight);
-
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
-        {
-            // Compute difference image and error
-            IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
-            mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
-
-            // Subtract the residual image (stored in alig_proj!)
-            IMGPIXEL(diff_proj, i, j) = sqrtweight * IMGPIXEL(diff_proj, i, j) - IMGPIXEL(alig_proj, i, j);
-
-            // Calculate the correction and the updated residual images
-            IMGPIXEL(corr_proj, i, j) =
-                applied_lambda * IMGPIXEL(diff_proj, i, j) / (weight * IMGPIXEL(corr_proj, i, j) + 1.);
-            IMGPIXEL(alig_proj, i, j) += IMGPIXEL(corr_proj, i, j);
-            IMGPIXEL(corr_proj, i, j) *= sqrtweight;
-
-        }
-        mean_error /= XSIZE(diff_proj()) * YSIZE(diff_proj());
-        mean_error *= weight;
-
-    }
-    else
-    {
-        long int Nmean=0;
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
-        {
-            if (maskPtr!=NULL)
-                if ((*maskPtr)(i,j)<0.5)
-                    continue;
-            // Compute difference image and error
-            IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
-            mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
-            Nmean++;
-
-            // Compute the correction image
-            IMGPIXEL(corr_proj, i, j) = XMIPP_MAX(IMGPIXEL(corr_proj, i, j), 1);
-            IMGPIXEL(corr_proj, i, j) =
-                applied_lambda * IMGPIXEL(diff_proj, i, j) / IMGPIXEL(corr_proj, i, j);
-        }
-        mean_error /= Nmean;
-    }
-
-    // Backprojection of correction plane ......................................
-    project_GridVolume(*vol_out, artPrm.basis, theo_proj,
-                       corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-                       read_proj.rot(), read_proj.tilt(), read_proj.psi(), BACKWARD, artPrm.eq_mode,
-                       artPrm.GVNeq, NULL, maskPtr, artPrm.ray_length, artPrm.threads);
-
-    // Remove footprints if necessary
-    if (remove_footprints)
-    {
-        delete footprint;
-        delete footprint2;
-    }
 }
 
 void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
@@ -263,33 +60,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
     Projection      diff_proj;          // Difference between the
     // theoretical and real image
 
-    // As this is a threaded implementation, create structures for threads, and
-    // create threads
-    pthread_t * th_ids;
-
-    if( artPrm.threads > 1 )
-    {
-        th_ids = (pthread_t *)malloc( artPrm.threads * sizeof( pthread_t));
-
-        // Initialize the structures which will contain the parameters passed to different
-        // threads
-        project_threads = (project_thread_params *) malloc ( artPrm.threads * sizeof( project_thread_params ) );
-
-        // Initialize barrier to wait for working threads and the master thread.
-        barrier_init( &project_barrier, (artPrm.threads+1) );
-
-        // Threads are created in a waiting state. They can only run when master thread unlocks them by calling
-        // barrier_wait()
-
-        for( int c = 0 ; c < artPrm.threads ; c++ )
-        {
-            project_threads[c].thread_id = c;
-            project_threads[c].threads_count = artPrm.threads;
-            project_threads[c].destroy = false;
-
-            pthread_create( (th_ids+c), NULL, project_SimpleGridThread<double>, (void *)(project_threads+c) );
-        }
-    }
+    preIterations(vol_basis);
 
     // Reconstruction results ...............................................
     double          mean_error,mean_error_1stblock;
@@ -836,36 +607,12 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
         SF_signal.write(artPrm.fn_root+"_signal_proj.sel");
     }
 
-    // Destroy created threads. This is done in a tricky way. At this point, threads
-    // are "slept" waiting for a barrier to be reached by the master thread to continue
-    // projecting/backprojecting a new projection. Here we set the flag destroy=true so
-    // the threads won't process a projections but will return.
-    if( artPrm.threads > 1 )
-    {
-        for( int c = 0 ; c < artPrm.threads ; c++ )
-        {
-            project_threads[c].destroy = true;
-        }
-
-        // Trigger threads "self-destruction"
-        barrier_wait( &project_barrier );
-
-        // Wait for effective threads death
-        for( int c = 0 ; c < artPrm.threads ; c++ )
-        {
-            pthread_join(*(th_ids+c),NULL);
-        }
-
-        // Destroy barrier and mutex, as they are no longer needed.
-        // Sjors, 27march2009
-        // NO, dont do this, because running a second threaded-ART
-        // in a single program will not have mutexes anymore...
-        //pthread_mutex_destroy( &project_mutex );
-        //barrier_destroy( &project_barrier );
-    }
 }
 
-void ARTReconsBase::finishIterations(GridVolume &vol_basis)
+void ARTReconsBase::singleStep(GridVolume & vol_in, GridVolume *vol_out, Projection & theo_proj, Projection & read_proj, int sym_no, Projection & diff_proj, Projection & corr_proj, Projection & alig_proj, double & mean_error, int numIMG, double lambda, int act_proj, const FileName & fn_ctf, const MultidimArray<int> *maskPtr, bool refine)
+{}
+
+void ARTReconsBase::postIterations(GridVolume &vol_basis)
 {}
 
 void ARTReconsBase::initHistory(const GridVolume &vol_basis0)
@@ -1055,4 +802,267 @@ void ARTReconsBase::applySymmetry(GridVolume &vol_in, GridVolume *vol_out,int gr
 {
     REPORT_ERROR(ERR_NOT_IMPLEMENTED, "ARTReconsBase::applySymmetry: Function not implemented for single particles");
 }
+
+
+void SinPartARTRecons::preIterations(GridVolume & vol_basis0, int level, int rank)
+{
+    ARTReconsBase::preIterations(vol_basis0, level, rank);
+
+    // As this is a threaded implementation, create structures for threads, and
+    // create threads
+    if( artPrm.threads > 1 )
+    {
+        th_ids = (pthread_t *)malloc( artPrm.threads * sizeof( pthread_t));
+
+        // Initialize the structures which will contain the parameters passed to different
+        // threads
+        project_threads = (project_thread_params *) malloc ( artPrm.threads * sizeof( project_thread_params ) );
+
+        // Initialize barrier to wait for working threads and the master thread.
+        barrier_init( &project_barrier, (artPrm.threads+1) );
+
+        // Threads are created in a waiting state. They can only run when master thread unlocks them by calling
+        // barrier_wait()
+
+        for( int c = 0 ; c < artPrm.threads ; c++ )
+        {
+            project_threads[c].thread_id = c;
+            project_threads[c].threads_count = artPrm.threads;
+            project_threads[c].destroy = false;
+
+            pthread_create( (th_ids+c), NULL, project_SimpleGridThread<double>, (void *)(project_threads+c) );
+        }
+    }
+}
+
+
+void SinPartARTRecons::singleStep(GridVolume &vol_in, GridVolume *vol_out,
+                                  Projection &theo_proj, Projection &read_proj,
+                                  int sym_no,
+                                  Projection &diff_proj, Projection &corr_proj, Projection &alig_proj,
+                                  double &mean_error, int numIMG, double lambda, int act_proj,
+                                  const FileName &fn_ctf, const MultidimArray<int> *maskPtr,
+                                  bool refine)
+{
+    // Prepare to work with CTF ................................................
+    FourierFilter ctf;
+    ImageOver *footprint = (ImageOver *) & artPrm.basis.blobprint;
+    ImageOver *footprint2 = (ImageOver *) & artPrm.basis.blobprint2;
+    bool remove_footprints = false;
+    double weight, sqrtweight;
+
+    if (fn_ctf != "" && !artPrm.unmatched)
+    {
+        if (artPrm.basis.type != Basis::blobs)
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "ART_single_step: This way of correcting for the CTF "
+                         "only works with blobs");
+        // It is a description of the CTF
+        ctf.FilterShape = ctf.FilterBand = CTF;
+        ctf.ctf.enable_CTFnoise = false;
+        ctf.ctf.read(fn_ctf);
+        ctf.ctf.Tm /= BLOB_SUBSAMPLING;
+        ctf.ctf.Produce_Side_Info();
+
+        // Create new footprints
+        footprint = new ImageOver;
+        footprint2 = new ImageOver;
+        remove_footprints = true;
+
+        // Enlarge footprint, bigger than necessary to avoid
+        // aliasing
+        *footprint = artPrm.basis.blobprint;
+        (*footprint)().setXmippOrigin();
+        double blob_radius = artPrm.basis.blob.radius;
+        int finalsize = 2 * CEIL(30 + blob_radius) + 1;
+        footprint->window(
+            FIRST_XMIPP_INDEX(finalsize), FIRST_XMIPP_INDEX(finalsize),
+            LAST_XMIPP_INDEX(finalsize), LAST_XMIPP_INDEX(finalsize));
+
+        // Generate mask to the size of the footprint, correct phase
+        // and apply CTF
+        ctf.generateMask((*footprint)());
+        ctf.correctPhase();
+        ctf.applyMaskSpace((*footprint)());
+
+        // Remove unnecessary regions
+        finalsize = 2 * CEIL(15 + blob_radius) + 1;
+        footprint->window(
+            FIRST_XMIPP_INDEX(finalsize), FIRST_XMIPP_INDEX(finalsize),
+            LAST_XMIPP_INDEX(finalsize), LAST_XMIPP_INDEX(finalsize));
+#ifdef DEBUG
+
+        Image<double> save;
+        save() = (*footprint)();
+        save.write("PPPfootprint.xmp");
+#endif
+
+        // Create footprint2
+        *footprint2 = *footprint;
+        (*footprint2)() *= (*footprint2)();
+    }
+
+    // Project structure .......................................................
+    // The correction image is reused in this call to store the normalising
+    // projection, ie, the projection of an all-1 volume
+    Matrix2D<double> *A = NULL;
+    if (artPrm.print_system_matrix)
+        A = new Matrix2D<double>;
+    corr_proj().initZeros();
+
+    project_GridVolume(vol_in, artPrm.basis, theo_proj,
+                       corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+                       read_proj.rot(), read_proj.tilt(), read_proj.psi(), FORWARD, artPrm.eq_mode,
+                       artPrm.GVNeq, A, maskPtr, artPrm.ray_length, artPrm.threads);
+
+    if (fn_ctf != "" && artPrm.unmatched)
+    {
+        ctf.generateMask(theo_proj());
+        ctf.applyMaskSpace(theo_proj());
+    }
+
+    // Print system matrix
+    if (artPrm.print_system_matrix)
+    {
+        std::cout << "Equation system (Ax=b) ----------------------\n";
+        std::cout << "Size: "<< (*A).mdimx <<"x"<<(*A).mdimy<< std::endl;
+        for (int i = 0; i < (*A).mdimy; i++)
+        {
+            bool null_row = true;
+            for (int j = 0; j < (*A).mdimy; j++)
+                if (MAT_ELEM(*A, i, j) != 0)
+                {
+                    null_row = false;
+                    break;
+                }
+            if (!null_row)
+            {
+                std::cout << "pixel=" << integerToString(i, 3) << " --> "
+                << DIRECT_MULTIDIM_ELEM(read_proj(), i) << " = ";
+                for (int j = 0; j < (*A).mdimx; j++)
+                    std::cout << MAT_ELEM(*A, i, j) << " ";
+                std::cout << std::endl;
+            }
+        }
+        std::cout << "---------------------------------------------\n";
+        delete A;
+    }
+
+    // Refine ..............................................................
+    if (refine)
+    {
+        Matrix2D<double> M;
+        /*
+        Image<double> save;
+        save()=theo_proj(); save.write("PPPtheo.xmp");
+        save()=read_proj(); save.write("PPPread.xmp");
+        */
+        alignImages(theo_proj(),read_proj(),M);
+        //save()=read_proj(); save.write("PPPread_aligned.xmp");
+        std::cout << M << std::endl;
+        read_proj().rangeAdjust(theo_proj());
+        //save()=read_proj(); save.write("PPPread_aligned_grey.xmp");
+        //std::cout << "Press any key\n";
+        //char c; std::cin >> c;
+    }
+
+    // Now compute differences .................................................
+    double applied_lambda = lambda / numIMG; // In ART mode, numIMG=1
+
+    mean_error = 0;
+    diff_proj().resize(read_proj());
+
+    // Weighted least-squares ART for Maximum-Likelihood refinement
+    if (artPrm.WLS)
+    {
+        weight = read_proj.weight() / artPrm.sum_weight;
+        sqrtweight = sqrt(weight);
+
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
+        {
+            // Compute difference image and error
+            IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
+            mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
+
+            // Subtract the residual image (stored in alig_proj!)
+            IMGPIXEL(diff_proj, i, j) = sqrtweight * IMGPIXEL(diff_proj, i, j) - IMGPIXEL(alig_proj, i, j);
+
+            // Calculate the correction and the updated residual images
+            IMGPIXEL(corr_proj, i, j) =
+                applied_lambda * IMGPIXEL(diff_proj, i, j) / (weight * IMGPIXEL(corr_proj, i, j) + 1.);
+            IMGPIXEL(alig_proj, i, j) += IMGPIXEL(corr_proj, i, j);
+            IMGPIXEL(corr_proj, i, j) *= sqrtweight;
+
+        }
+        mean_error /= XSIZE(diff_proj()) * YSIZE(diff_proj());
+        mean_error *= weight;
+
+    }
+    else
+    {
+        long int Nmean=0;
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
+        {
+            if (maskPtr!=NULL)
+                if ((*maskPtr)(i,j)<0.5)
+                    continue;
+            // Compute difference image and error
+            IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
+            mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
+            Nmean++;
+
+            // Compute the correction image
+            IMGPIXEL(corr_proj, i, j) = XMIPP_MAX(IMGPIXEL(corr_proj, i, j), 1);
+            IMGPIXEL(corr_proj, i, j) =
+                applied_lambda * IMGPIXEL(diff_proj, i, j) / IMGPIXEL(corr_proj, i, j);
+        }
+        mean_error /= Nmean;
+    }
+
+    // Backprojection of correction plane ......................................
+    project_GridVolume(*vol_out, artPrm.basis, theo_proj,
+                       corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
+                       read_proj.rot(), read_proj.tilt(), read_proj.psi(), BACKWARD, artPrm.eq_mode,
+                       artPrm.GVNeq, NULL, maskPtr, artPrm.ray_length, artPrm.threads);
+
+    // Remove footprints if necessary
+    if (remove_footprints)
+    {
+        delete footprint;
+        delete footprint2;
+    }
+}
+
+
+void SinPartARTRecons::postIterations(GridVolume & vol_basis)
+{
+    // Destroy created threads. This is done in a tricky way. At this point, threads
+    // are "slept" waiting for a barrier to be reached by the master thread to continue
+    // projecting/backprojecting a new projection. Here we set the flag destroy=true so
+    // the threads won't process a projections but will return.
+    if( artPrm.threads > 1 )
+    {
+        for( int c = 0 ; c < artPrm.threads ; c++ )
+        {
+            project_threads[c].destroy = true;
+        }
+
+        // Trigger threads "self-destruction"
+        barrier_wait( &project_barrier );
+
+        // Wait for effective threads death
+        for( int c = 0 ; c < artPrm.threads ; c++ )
+        {
+            pthread_join(*(th_ids+c),NULL);
+        }
+
+        // Destroy barrier and mutex, as they are no longer needed.
+        // Sjors, 27march2009
+        // NO, dont do this, because running a second threaded-ART
+        // in a single program will not have mutexes anymore...
+        //pthread_mutex_destroy( &project_mutex );
+        //barrier_destroy( &project_barrier );
+    }
+}
+
+
 
