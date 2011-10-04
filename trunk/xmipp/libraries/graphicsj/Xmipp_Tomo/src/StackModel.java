@@ -28,198 +28,241 @@ import java.io.IOException;
 import ij.ImagePlus;
 import xmipp.ImageDouble;
 import xmipp.MetaData;
-
+import xmipp.MDLabel;
 
 // TODO: import tilt angles features from Tomodata
 
 /**
- * Why? Model the active stack that will be displayed, isolating the viewer from the
- * gory details (current slice, current stack, cache, etc)
+ * Why? Model the active stack that will be displayed, isolating the viewer from
+ * the gory details (current slice, current stack, cache, etc)
  */
-public class StackModel extends AbstractModel{
-	// each file is accessed through its MetaData, hence somewhere every MetaData in use
-	// must be kept as the workflow progresses. For example, keep in the Workflow model
+public class StackModel extends AbstractModel {
+	// each file is accessed through its MetaData, hence somewhere every
+	// MetaData in use
+	// must be kept as the workflow progresses. For example, keep in the
+	// Workflow model
 	// the filepath and MetaData of each node
-	
-	private Cache <String,ImageDouble> imageDoubleCache;
-	private Cache <String,ImagePlus> imagePlusCache;
-	
+
+	private Cache<String, ImageDouble> imageDoubleCache;
+	private Cache<String, ImagePlus> imagePlusCache;
+
 	private Workflow workflow;
-	
+
 	public static enum Properties {
-		NUMBER_OF_PROJECTIONS,CURRENT_PROJECTION_NUMBER,CURRENT_TILT_ANGLE,CURRENT_PROJECTION_ENABLED, CURRENT_PROJECTION;
+		NUMBER_OF_PROJECTIONS, CURRENT_PROJECTION_NUMBER, CURRENT_TILT_ANGLE, CURRENT_PROJECTION_ENABLED, CURRENT_PROJECTION;
 	};
-	
-	// maybe it's better to move currentProjection to the viewer - in case different views can show different slices
-	// TODO: strictly speaking, the order of the projections is not specified by the sequence of the images in the
-	// stack file, it is specified by the tilt angle. It's just a coincidence that the first image in the sequence is
+
+	// maybe it's better to move currentProjection to the viewer - in case
+	// different views can show different slices
+	// TODO: strictly speaking, the order of the projections is not specified by
+	// the sequence of the images in the
+	// stack file, it is specified by the tilt angle. It's just a coincidence
+	// that the first image in the sequence is
 	// the one with the smallest tilt angle.
-	private int currentProjectionNumber=1;
-	private int numberOfProjections=0;
-	
-	public StackModel(Workflow workflow){
-		this.workflow=workflow;
+	private int currentProjectionNumber = 1;
+	private int numberOfProjections = 0;
+
+	public StackModel(Workflow workflow) {
+		this.workflow = workflow;
 	}
-	
+
 	private Workflow getWorkflow() {
 		return workflow;
 	}
 
-
-	private Cache <String,ImageDouble> getImageDoubleCache() {
-		if(imageDoubleCache == null)
-			imageDoubleCache = new Cache<String,ImageDouble>();
+	private Cache<String, ImageDouble> getImageDoubleCache() {
+		if (imageDoubleCache == null)
+			imageDoubleCache = new Cache<String, ImageDouble>();
 		return imageDoubleCache;
 	}
 
-	private Cache <String,ImagePlus> getImagePlusCache() {
-		if(imagePlusCache == null)
-			imagePlusCache = new Cache<String,ImagePlus>();
+	private Cache<String, ImagePlus> getImagePlusCache() {
+		if (imagePlusCache == null)
+			imagePlusCache = new Cache<String, ImagePlus>();
 		return imagePlusCache;
 	}
-	
-	private String getCurrentImageFilePath(){
+
+	private String getCurrentImageFilePath() {
 		String ret = null;
-		UserActionIO currentIo=getCurrentIO();
-		if(currentIo==null)
+		UserActionIO currentIo = getCurrentIO();
+		if (currentIo == null)
 			return ret;
-		
+
 		ret = currentIo.getFilePath(getCurrentProjectionNumber());
-		
+
 		return ret;
 	}
-	
-	public ImagePlus getCurrentImage(){
+
+	public ImagePlus getCurrentImage() {
 		ImagePlus ret = new ImagePlus();
 
 		String filePath = getCurrentImageFilePath();
 		Logger.debug(filePath);
-		if(filePath == null)
+		if (filePath == null)
 			return ret;
-		
-		ret= getImagePlusCache().get(filePath);
-		if(ret != null)
+
+		ret = getImagePlusCache().get(filePath);
+		if (ret != null)
 			return ret;
-		
+
 		ImageDouble image = getImageDoubleCache().get(filePath);
-		if(image == null){
+		if (image == null) {
 			// cache miss
 			image = new ImageDouble();
-			try{
+			try {
 				image.readSlice(filePath);
 			} catch (FileNotFoundException ex) {
 				Logger.debug("File not found ", ex);
 				return null;
 			} catch (IOException ex) {
-				Logger.debug("Error opening file ",
-						ex);
-				return null;				
+				Logger.debug("Error opening file ", ex);
+				return null;
 			} catch (OutOfMemoryError err) {
-				Logger.debug("Out of memory"
-						+ err.toString());
-				return null;				
+				Logger.debug("Out of memory" + err.toString());
+				return null;
 			} catch (Exception ex) {
-				Logger.debug("unexpected exception",
-						ex);
-				return null;				
+				Logger.debug("unexpected exception", ex);
+				return null;
 			}
 			getImageDoubleCache().put(filePath, image);
 		}
-		ret= Converter.convertToImagePlus(image);
+		ret = Converter.convertToImagePlus(image);
 		getImagePlusCache().put(filePath, ret);
 		return ret;
 	}
-	
-	public void updateCurrentImage(ImagePlus image){
-		updateImage(getCurrentImageFilePath(),image);
-	}
-	
-	public void updateImage(String filePath,ImagePlus image){
-		if( (filePath == null) || (image == null))
-			return;
-		if(getImagePlusCache().get(filePath) == null)
-			return;
-		getImagePlusCache().put(filePath, image);
-		if(filePath.equals(getCurrentImageFilePath()))
-			firePropertyChange(Properties.CURRENT_PROJECTION.name(), false, true);
+
+	public void updateCurrentImage(ImagePlus image) {
+		updateImage(getCurrentImageFilePath(), image);
 	}
 
-	public void updateImage(String filePath,ImageDouble image){
-		updateImage(filePath,image,null);
-	}
-	
-	public void updateImage(String filePath,ImageDouble image, ImagePlus ip){
-		if( (filePath == null) || (image == null))
+	public void updateImage(String filePath, ImagePlus image) {
+		if ((filePath == null) || (image == null))
 			return;
-		if(getImageDoubleCache().get(filePath) != null)
+		if (getImagePlusCache().get(filePath) == null)
+			return;
+		getImagePlusCache().put(filePath, image);
+		if (filePath.equals(getCurrentImageFilePath()))
+			firePropertyChange(Properties.CURRENT_PROJECTION.name(), false,
+					true);
+	}
+
+	public void updateImage(String filePath, ImageDouble image) {
+		updateImage(filePath, image, null);
+	}
+
+	public void updateImage(String filePath, ImageDouble image, ImagePlus ip) {
+		if ((filePath == null) || (image == null))
+			return;
+		if (getImageDoubleCache().get(filePath) != null)
 			getImageDoubleCache().put(filePath, image);
-		
-		if (getImagePlusCache().get(filePath) != null){
-			if(ip == null)
-				ip= Converter.convertToImagePlus(image);
-			updateImage(filePath,ip);
+
+		if (getImagePlusCache().get(filePath) != null) {
+			if (ip == null)
+				ip = Converter.convertToImagePlus(image);
+			updateImage(filePath, ip);
 		}
 	}
-	
-	private UserActionIO getCurrentIO(){
+
+	private UserActionIO getCurrentIO() {
 		return getWorkflow().getCurrentUserActionIO();
 	}
 
-	
 	/**
 	 * @return range 1..numberProjections
 	 */
 	public int getCurrentProjectionNumber() {
 		return currentProjectionNumber;
 	}
-	
-	/**
-	 * @param newProjectionNumber range 1..numberProjections
-	 */
-	public void setCurrentProjectionNumber(int newProjectionNumber) {
-		
-		if((newProjectionNumber<1) || (newProjectionNumber > getNumberOfProjections())){
-			Logger.debug("setCurrentProjection("+newProjectionNumber+") - out of bounds");		
-			return;
-		}
-		int oldProjectionNumber=currentProjectionNumber;
-		this.currentProjectionNumber = newProjectionNumber;
 
-		firePropertyChange(Properties.CURRENT_PROJECTION_NUMBER.name(), oldProjectionNumber, currentProjectionNumber);
+	public String getCurrentProjectionInfo(){
+		return "Projection #" + getCurrentProjectionNumber() + " ("+ getCurrentMetadata();
 	}
 	
+	
+	private String getCurrentMetadata(){
+		return getCurrentIO().getInfo(getCurrentProjectionNumber());
+	}
+	
+	private long getCurrentProjectionId(){
+		return getCurrentIO().getProjectionId(getCurrentProjectionNumber());
+	}
+	
+	/**
+	 * @param newProjectionNumber
+	 *            range 1..numberProjections
+	 */
+	public void setCurrentProjectionNumber(int newProjectionNumber) {
+
+		if ((newProjectionNumber < 1)
+				|| (newProjectionNumber > getNumberOfProjections())) {
+			Logger.debug("setCurrentProjection(" + newProjectionNumber
+					+ ") - out of bounds");
+			return;
+		}
+		int oldProjectionNumber = currentProjectionNumber;
+		this.currentProjectionNumber = newProjectionNumber;
+
+		firePropertyChange(Properties.CURRENT_PROJECTION_NUMBER.name(),
+				oldProjectionNumber, currentProjectionNumber);
+	}
+
 	/**
 	 * @return range 0..N
 	 */
-	public int getNumberOfProjections(){
+	public int getNumberOfProjections() {
 		// get the number from the metadata
 		return getCurrentIO().getNumberOfProjections();
 	}
-	
-	private void setNumberOfProjections(int n){
-		int oldNumberOfProjections=numberOfProjections;
-		numberOfProjections=n;
-		if(n > 1)
-			firePropertyChange(Properties.NUMBER_OF_PROJECTIONS.name(), oldNumberOfProjections, n);
+
+	private void setNumberOfProjections(int n) {
+		int oldNumberOfProjections = numberOfProjections;
+		numberOfProjections = n;
+		if (n > 1)
+			firePropertyChange(Properties.NUMBER_OF_PROJECTIONS.name(),
+					oldNumberOfProjections, n);
 
 	}
-	
-	// TODO: complete (from Tomodata) to restore the enable/disable feature
-	public boolean isCurrentEnabled(){
-		return true;
-	}
-	
+
+
 	/**
 	 * @return 1..N, cyclic (next to last is 1)
 	 */
-	public int getNextProjection(){
-		int ret= getCurrentProjectionNumber();
-		try{
-			ret= (getCurrentProjectionNumber() % getNumberOfProjections()) + 1;
-		}catch (ArithmeticException ex){
+	public int getNextProjection() {
+		int ret = getCurrentProjectionNumber();
+		try {
+			ret = (getCurrentProjectionNumber() % getNumberOfProjections()) + 1;
+		} catch (ArithmeticException ex) {
 			Logger.debug("Error: ", ex);
 		}
 		return ret;
 	}
-	
+
+	public void discardCurrentProjection() {
+		if (getNumberOfProjections() > 1) {
+			setEnabled(getCurrentProjectionNumber(), false);
+
+		}
+		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), true,
+				false);
+	}
+
+	private void setEnabled(long id, boolean e) {
+		// getEnabledProjections().set(i-1, new Boolean(e));
+		int enabled = 0;
+		if (e)
+			enabled = 1;
+
+		getCurrentIO().setEnabled(id, enabled);
+	}
+
+	void enableCurrentProjection() {
+		if (getNumberOfProjections() > 1) {
+			setEnabled(getCurrentProjectionNumber(), true);
+		}
+		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), false,	true);
+	}
+
+	public boolean isCurrentEnabled() {
+		return getCurrentIO().isEnabled(getCurrentProjectionId());
+	}
 }

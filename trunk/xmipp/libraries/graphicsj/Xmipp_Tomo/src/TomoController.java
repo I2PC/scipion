@@ -247,10 +247,10 @@ public class TomoController implements AdjustmentListener {
 		Logger.debug(getWorkflow().toString());
 	}
 
-	public void loadEM(){
+	public void loadEM() {
 		loadEM(null);
 	}
-	
+
 	// TODO: reset workflow after loading a stack
 	public void loadEM(String path) {
 		if (window.getLastCommandState() == Command.State.LOADING) {
@@ -261,14 +261,15 @@ public class TomoController implements AdjustmentListener {
 					XmippTomoCommands.LOAD.getLabel());
 			Logger.debug("loadEM - cancelled");
 		} else {
-			if(path == null)
+			if (path == null)
 				path = TomoFileDialog.openDialog("Load EM", window);
-			
+
 			if (path == null)
 				return;
 			// free previous model (if any) ??
 			// setModel(null);
-			// TODO: old tomodata model will be unnecesary with StackModel, hence remove next line when that moment arrives
+			// TODO: old tomodata model will be unnecesary with StackModel,
+			// hence remove next line when that moment arrives
 			setModel(new TomoData(path));
 			setStackModel(new StackModel(getWorkflow()));
 			getStackModel().addPropertyChangeListener(window);
@@ -307,7 +308,7 @@ public class TomoController implements AdjustmentListener {
 	}
 
 	/**
-	 *  @deprecated
+	 * @deprecated
 	 */
 	public void loadEMBackground() {
 		// setModel(getModelToLoad());
@@ -416,8 +417,7 @@ public class TomoController implements AdjustmentListener {
 	}
 
 	/**
-	 * Apply this window's workflow 
-	 * the workflow view
+	 * Apply this window's workflow the workflow view
 	 */
 	/**
 	 * @deprecated
@@ -441,11 +441,11 @@ public class TomoController implements AdjustmentListener {
 
 	}
 
-/**
- * @deprecated
- * @param image
- * @return
- */
+	/**
+	 * @deprecated
+	 * @param image
+	 * @return
+	 */
 	private ImagePlus applyWorkflowTo(ImagePlus image) {
 		// iterate through the user actions that make sense
 		Enumeration e = getWorkflow().getRoot().breadthFirstEnumeration();
@@ -598,7 +598,7 @@ public class TomoController implements AdjustmentListener {
 		window.setChangeSaved(false);
 
 		ImagePlus originalImage = getStackModel().getCurrentImage().duplicate();
-		
+
 		WindowManager.setTempCurrentImage(getStackModel().getCurrentImage());
 		try {
 			IJ.run(command);
@@ -632,12 +632,14 @@ public class TomoController implements AdjustmentListener {
 		if (plugin != null) {
 			UserAction currentAction = getWorkflow().getSelectedUserAction();
 			UserActionIO currentIo = currentAction.getIoDetails();
-			
-			UserAction newAction = new UserAction(window.getWindowId(), label,cmd,plugin);
+
+			UserAction newAction = new UserAction(window.getWindowId(), label,
+					cmd, plugin);
 			window.addUserAction(newAction);
 
-			// TODO: find a better place for this  2 lines (maybe UserActionIO?)
-			String newActionDir = getWorkflow().getWorkingDir() + "/" + newAction.getWorkingDir();
+			// TODO: find a better place for this 2 lines (maybe UserActionIO?)
+			String newActionDir = getWorkflow().getWorkingDir() + "/"
+					+ newAction.getWorkingDir();
 			new File(newActionDir).mkdirs();
 
 			String output = newActionDir + "/" + currentIo.getInputFileName();
@@ -660,14 +662,18 @@ public class TomoController implements AdjustmentListener {
 		window.setPlugin(null);
 	}
 
-	private void applyIJPlugin(String command, UserAction currentAction,UserAction newAction) {
+	private void applyIJPlugin(String command, UserAction currentAction,
+			UserAction newAction) {
 		String outputFile = newAction.getIoDetails().getInputFilePath();
 		Plugin plugin = newAction.getPlugin();
-		int numberOfProjections = currentAction.getIoDetails().getNumberOfProjections();
-		for (int i=1; i < numberOfProjections; i++) {
+		int numberOfProjections = currentAction.getIoDetails()
+				.getNumberOfProjections();
+		for (int i = 1; i < numberOfProjections; i++) {
 			long projectionId = currentAction.getIoDetails().getProjectionId(i);
-			newAction.setProgress("Converting..." + projectionId + "/"	+ numberOfProjections);
-			String sourceProjectionPath = currentAction.getIoDetails().getFilePath(i);
+			newAction.setProgress("Converting..." + projectionId + "/"
+					+ numberOfProjections);
+			String sourceProjectionPath = currentAction.getIoDetails()
+					.getFilePath(i);
 			try {
 				if (sourceProjectionPath != null) {
 					ImageDouble image = new ImageDouble();
@@ -675,18 +681,20 @@ public class TomoController implements AdjustmentListener {
 
 					ImagePlus ip = Converter.convertToImagePlus(image);
 					plugin.run(ip);
-					
+
 					image = Converter.convertToImageDouble(ip);
 
 					// TODO : get the @ path with the help of the Filename xmipp
-					String outputFullPath = String.valueOf(projectionId) + "@"+ outputFile;
+					String outputFullPath = String.valueOf(projectionId) + "@"
+							+ outputFile;
 					Logger.debug(outputFullPath);
 					image.write(outputFullPath);
-					
+
 					getStackModel().updateImage(outputFullPath, image, ip);
 				}
 			} catch (Exception ex) {
-				Logger.debug("Problem applying plugin to img " + projectionId,ex);
+				Logger.debug("Problem applying plugin to img " + projectionId,
+						ex);
 			}
 		}
 	}
@@ -822,15 +830,15 @@ public class TomoController implements AdjustmentListener {
 
 	// TODO: update to new approach (stackmodel replaces tomodata)
 	public void discardProjection() {
-		if (getModel().isCurrentEnabled()) {
-			getModel().discardCurrentProjection();
+		if (getStackModel().isCurrentEnabled()) {
+			getStackModel().discardCurrentProjection();
 			/*
 			 * window.refreshImageCanvas();
 			 * window.changeLabel(Command.DISCARD_PROJECTION.getId(),
 			 * Command.UNDO_DISCARD_PROJECTION.getLabel());
 			 */
 		} else {
-			getModel().enableCurrentProjection();
+			getStackModel().enableCurrentProjection();
 			/*
 			 * window.refreshImageCanvas();
 			 * window.changeLabel(Command.DISCARD_PROJECTION.getId(),
@@ -841,7 +849,7 @@ public class TomoController implements AdjustmentListener {
 
 	// TODO: update to new approach (stackmodel replaces tomodata)
 	public void currentProjectionInfo() {
-		Logger.debug(getModel().getCurrentProjectionInfo());
+		Logger.debug(getStackModel().getCurrentProjectionInfo());
 	}
 
 	/**
@@ -868,7 +876,7 @@ public class TomoController implements AdjustmentListener {
 		return model;
 	}
 
-	/** 
+	/**
 	 * @deprecated
 	 * @param model
 	 */

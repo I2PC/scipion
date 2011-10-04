@@ -832,8 +832,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		}else if(TomoData.Properties.CURRENT_TILT_ANGLE.name().equals(event.getPropertyName())){
 			updateCurrentTiltAngleText();
 		}else if(TomoData.Properties.CURRENT_PROJECTION_ENABLED.name().equals(event.getPropertyName())){
-			// TODO: update to Stackmodel approach
-			if(getModel().isCurrentEnabled())
+		
+			if(getStackModel().isCurrentEnabled())
 				changeLabel(XmippTomoCommands.DISCARD_PROJECTION.getId(), XmippTomoCommands.DISCARD_PROJECTION.getLabel());
 			else
 				changeLabel(XmippTomoCommands.DISCARD_PROJECTION.getId(), XmippTomoCommands.UNDO_DISCARD_PROJECTION.getLabel());

@@ -99,4 +99,20 @@ public class UserActionIO {
 			result= getMetadata().findObjects();
 		return result;
 	}
+
+	public boolean isEnabled(long id) {
+		boolean enabled = true;
+		if (getMetadata().getValueInt(MDLabel.MDL_ENABLED, id) != 1)
+			enabled = false;
+		return enabled;
+	}
+	
+	public void setEnabled(long id,int enabled){
+		getMetadata().setValueInt(MDLabel.MDL_ENABLED, enabled, id);
+	}
+	
+	public String getInfo(int projectionNumber){
+			long id=getProjectionId(projectionNumber);
+			return "(" + getMetadata().getValueString(MDLabel.MDL_IMAGE, id) + "). Enabled: " + getMetadata().getValueInt(MDLabel.MDL_ENABLED, id);
+	}
 }
