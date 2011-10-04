@@ -12,6 +12,7 @@ DO_ARPACK=false
 
 DO_CLEAN=true
 DO_STATIC=false
+DO_GUI=true
 
 export NUMBER_OF_CPU=1
 
@@ -22,11 +23,21 @@ export NUMBER_OF_CPU=1
 
 #################### PARSING PARAMETERS ###########################
 TAKE_CPU=false
+TAKE_CONFIGURE=false
+TAKE_COMPILE=false
+CONFIGURE_ARGS=""
+COMPILE_ARGS=""
+GUI_ARGS="gui"
 
 for param in $@; do
  if $TAKE_CPU; then
     NUMBER_OF_CPU=$param
     TAKE_CPU=false
+ elif $TAKE_CONFIGURE && [ "$param" != "compile" ]; then
+     echo "param: $param"
+     CONFIGURE_ARGS="$CONFIGURE_ARGS $param"
+ elif $TAKE_COMPILE && [ "$param" != "configure" ]; then
+     COMPILE_ARGS="$COMPILE_ARGS $param"
  else
     case $param in
         "disable_all")
@@ -56,7 +67,14 @@ for param in $@; do
         "clean=false")   DO_CLEAN=false;;
         "static=true")   DO_STATIC=true;;
         "static=false")   DO_STATIC=false;;
-         *)              echo "Unrecognized option $param, exiting..."; exit 1
+        "gui=false")   GUI_ARGS="";;
+        # This two if passed should be at the end and 
+        # will setup arguments for configure and compilation steps
+        "configure") TAKE_CONFIGURE=true;
+                     TAKE_COMPILE=false;;
+        "compile")   TAKE_CONFIGURE=false;
+                     TAKE_COMPILE=true;;
+         *)          echo "Unrecognized option $param, exiting..."; exit 1
     esac
  fi 
 done
@@ -241,6 +259,7 @@ fi
 
 #################### PYTHON ###########################
 if $DO_PYTHON; then
+    echoGreen "PYTHON SETUP"
     EXT_PYTHON=$EXT_PATH/python
     export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
     export LDFLAGS="-L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
@@ -292,7 +311,14 @@ fi
 
 # Launch the configure/compile python script 
 cd $XMIPP_HOME
-xmipp_python xmipp configure compile -j $NUMBER_OF_CPU
+
+echoGreen "Compiling XMIPP ..."
+echoGreen "CONFIGURE: $CONFIGURE_ARGS"
+echoGreen "COMPILE: $COMPILE_ARGS"
+echoGreen "GUI: $GUI_ARGS"
+
+echo "--> ./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS"
+./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS
 
 exit 0
 

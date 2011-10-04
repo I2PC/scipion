@@ -57,7 +57,7 @@ class ConsoleOptionsTab():
         optStr = ""
         for key, comment, default, cond in self.optionsDict.values():
             value = self.optionsValue[key]
-            if (cond is None or self.getValue(cond) == 'yes') and default != value: 
+            if (cond is None or self.getValue(cond) == 'yes'): 
                 optStr += ' %s="%s"' % (key, value)
         return optStr
 	
@@ -114,9 +114,6 @@ def detectQt():
 
 def addTabOption(tab, option, comment, default, cond=None, wiz=None, browse=False):
     defaultsDic = globals()
-    import pprint
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(defaultsDic)  
     if defaultsDic.has_key(option):
         value = defaultsDic[option]
         if (value == 1 or value == True):
@@ -281,9 +278,9 @@ class ArgDict():
 import sys
 options = ArgDict(sys.argv)
 
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
-pp.pprint(options.options)    
+#import pprint
+#pp = pprint.PrettyPrinter(indent=4)
+#pp.pprint(options.options)    
 
 
 # Output file
@@ -302,7 +299,6 @@ if options.hasOption('configure'):
         parts = arg.split('=')
         if len(parts) == 2:
             assign = '%s = "%s"' % (parts[0], parts[1])
-            print "exec: ", assign
             exec(assign) # Take options from command line, override options file, be carefull with exec
     
 GUI = options.hasOption('gui')
