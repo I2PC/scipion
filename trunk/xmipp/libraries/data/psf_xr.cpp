@@ -25,6 +25,17 @@
 
 #include "psf_xr.h"
 
+
+XRayPSF::XRayPSF()
+{
+    init();
+}
+
+XRayPSF::~XRayPSF()
+{
+    clear();
+}
+
 /* Definition of command line parameters
  */
 void XRayPSF::defineParams(XmippProgram * program)
@@ -270,6 +281,19 @@ void XRayPSF::calculateParams(double _dxo, double _dzo)
         show();
         verbose++; // Show only once the param adjust info
     }
+
+    if (mode == PSF_FROM_FILE)
+    {
+        T.initIdentity(4);
+        double scaleFactor = dxo/dxoPSF;
+        dMij(T, 0, 0) = scaleFactor;
+        dMij(T, 1, 1) = scaleFactor;
+
+    }
+    else // Mask is used when creating PSF on demand
+    {
+        mask = new MultidimArray<double>;
+    }
 }
 
 /* Apply the OTF to an image ----------------------------------------------- */
@@ -363,7 +387,10 @@ void XRayPSF::generateOTF()
             PSFi.resizeNoCopy(Niy, Nix);
             PSFi.setXmippOrigin();
             applyGeometry(LINEAR, PSFi, MULTIDIM_ARRAY_GENERIC(PSFGen), T,
-                          IS_INV, DONT_WRAP, PSFGen.getPixel(1,1,1,1));
+                          IS_INV, DONT_WRAP, PSFGen.getPixel(1,
+                                                             STARTINGZ(MULTIDIM_ARRAY_BASE(PSFGen)),
+                                                             STARTINGY(MULTIDIM_ARRAY_BASE(PSFGen)),
+                                                             STARTINGX(MULTIDIM_ARRAY_BASE(PSFGen))));
 
 
             CenterFFT(PSFi, true);
@@ -466,7 +493,7 @@ void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
     // Apply the Shape mask
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(OTFTemp)
     {
-        if (dAi(mask,n) == 0)
+        if (dAi(*mask,n) == 0)
             dAi(OTFTemp,n) = 0;
     }
 
@@ -644,22 +671,22 @@ void XRayPSF::adjustParam()
 
                 // Calculate the mask to be applied when generating PSFIdealLens
 
-                mask.initZeros(Niy,Nix);
+                mask->initZeros(Niy,Nix);
 
                 double Rlens2=Rlens*Rlens;
                 double auxY = dyl*(1 - Niy);
                 double auxX = dxl*(1 - Nix);
 
-                for (int i=0; i<YSIZE(mask); i++)
+                for (int i=0; i<YSIZE(*mask); i++)
                 {
                     double y = (double) i * dyl + auxY * 0.5;
                     double y2 = y * y;
-                    for (int j=0; j<XSIZE(mask); j++)// Circular mask
+                    for (int j=0; j<XSIZE(*mask); j++)// Circular mask
                     {
                         /// For indices in standard fashion
                         double x = (double) j * dxl + auxX * 0.5;
                         if (x*x + y2 <= Rlens2)
-                            dAij(mask,i,j) = 1;
+                            dAij(*mask,i,j) = 1;
                     }
                 }
 
@@ -675,16 +702,7 @@ void XRayPSF::adjustParam()
     }
     else
     {
-        if (verbose > 1) // Verbose param is used to calculate Matrix T the first time only
-        {
-            T.initIdentity(4);
-            double scaleFactor = dxo/dxoPSF;
-            dMij(T, 0, 0) = scaleFactor;
-            dMij(T, 1, 1) = scaleFactor;
-        }
-
         OTF.clear(); // Only for each projection
-
     }
 
     if (verbose > 1)

@@ -120,11 +120,13 @@ public:
     MultidimArray< std::complex<double> > OTF;
     /// 3D PSF
     ImageGeneric  PSFGen;
+    /// Axial intensity
+    MultidimArray<float> axialInt;
     // Transformation Matrix when reading PSF from file
     Matrix2D<double>  T;
 
     /// Lens shape Mask
-    MultidimArray<double> mask;
+    MultidimArray<double> *mask;
 
     /* RX Microscope configuration */
     /// Lens Aperture Radius
@@ -203,17 +205,11 @@ public:
 
 public:
     /** Empty constructor. */
-    XRayPSF()
-    {
-        init();
-    }
+    XRayPSF();
 
     /* Destructor
      */
-    ~XRayPSF()
-    {
-        clear();
-    }
+    ~XRayPSF();
 
     /* Initialization of parameters
      */
@@ -267,6 +263,29 @@ protected:
 
 /// Generate the quadratic phase distribution of a ideal lens
 void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //@}
 #endif
