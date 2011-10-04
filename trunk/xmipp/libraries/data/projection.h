@@ -259,8 +259,8 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     Set it to NULL if you don't want to use it
  */
 void projectVolume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
-                    double rot, double tilt, double psi,
-                    const Matrix1D<double> *roffset=NULL);
+                   double rot, double tilt, double psi,
+                   const Matrix1D<double> *roffset=NULL);
 
 /** From voxel volumes, off-centered tilt axis.
     This routine projects a volume that is rotating (angle) degrees
@@ -561,7 +561,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     }
     else if (basis->type == Basis::voxels || basis->type == Basis::splines)
     {
-        YY_footprint_size = XX_footprint_size = CEIL(basis->max_length());
+        YY_footprint_size = XX_footprint_size = CEIL(basis->maxLength());
         Usampling = Vsampling = 0;
     }
     XX_footprint_size += XMIPP_EQUAL_ACCURACY;
@@ -593,7 +593,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     beginZ = XX_lowest * prjX + YY_lowest * prjY + ZZ_lowest * prjZ + prjOrigin;
 
     // Check if in VSSNR
-    bool VSSNR_mode = (ray_length == basis->max_length());
+    bool VSSNR_mode = (ray_length == basis->maxLength());
 
 #ifdef DEBUG_LITTLE
 
@@ -720,11 +720,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                             foot_U = foot_U1;
                             for (int x = XX_corner1; x <= XX_corner2; x++)
                             {
-                                bool proceed=true;
-                                if (mask!=NULL)
-                                    if ((*mask)(y,x)<0.5)
-                                        proceed=false;
-                                if (proceed)
+                                if (!((mask != NULL) && A2D_ELEM(*mask,y,x)<0.5))
                                 {
 #ifdef DEBUG
                                     if (condition)
@@ -753,7 +749,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                         VECTOR_R3(prjPix, x, y, 0);
                                         M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
                                         V3_MINUS_V3(prjPix, prjPix, univ_position);
-                                        a = basis->value_at(prjPix);
+                                        a = basis->valueAt(prjPix);
                                         a2 = a * a;
                                     }
                                     else
@@ -796,7 +792,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                                     << prjPix.transpose() << ")";
 #endif
 
-                                                a = basis->projection_at(prjDir, prjPix);
+                                                a = basis->projectionAt(prjDir, prjPix);
                                                 a2 = a * a;
                                             }
                                             else
@@ -845,12 +841,12 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                                             << prjPix.transpose() << ")";
 #endif
 
-                                                        a += basis->projection_at(prjDir, prjPix);
+                                                        a += basis->projectionAt(prjDir, prjPix);
 #ifdef DEBUG
 
                                                         if (condition)
                                                             std::cout << " partial a="
-                                                            << basis->projection_at(prjDir, prjPix)
+                                                            << basis->projectionAt(prjDir, prjPix)
                                                             << std::endl;
 #endif
 
@@ -884,7 +880,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                                 int py, px;
                                                 (*proj)().toPhysical(y, x, py, px);
                                                 int number_of_pixel = py * XSIZE((*proj)()) + px;
-                                                (*M)(number_of_pixel, number_of_basis) = a;
+                                                dMij(*M, number_of_pixel, number_of_basis) = a;
                                             }
                                             break;
                                         case CAVK:
