@@ -189,7 +189,7 @@ def addTabs(nb):
     addTabOption(tab,'QTDIR', 'Where is QT installed', '/usr/share/qt3', cond='qt', wiz=wizardQt, browse=True)
     addTabOption(tab,'QT_LIB', 'QT library to use', 'qt-mt', cond='qt', browse=True)
     addTabOption(tab,'QT4', 'Use Qt4 instead of Qt3?', 'no', cond='qt', browse=True)
-    tab_java = tab
+    tab_gui = tab
     
     tab = nb.addTab("Advanced")
     addTabOption(tab,'debug', 'Build debug version?', 'no')
@@ -205,10 +205,13 @@ def addTabs(nb):
     defaultsDic = globals()
     
     if not defaultsDic.has_key('JAVA_HOME'):
-        wizardJava(tab_java)
+        wizardJava(tab_gui)
     
     if not defaultsDic.has_key('MPI_INCLUDE'):
         wizardMpi(tab_mpi)
+        
+    if not defaultsDic.has_key('QTDIR'):
+        wizardQt(tab_gui)
         
         
 def run(notebook):
@@ -289,10 +292,10 @@ class ArgDict():
 
 import sys
 options = ArgDict(sys.argv)
-
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
-pp.pprint(options.options)    
+#
+#import pprint
+#pp = pprint.PrettyPrinter(indent=4)
+#pp.pprint(options.options)    
 
 
 # Output file

@@ -312,13 +312,13 @@ fi
 # Launch the configure/compile python script 
 cd $XMIPP_HOME
 
-echoGreen "Compiling XMIPP ..."
-echoGreen "CONFIGURE: $CONFIGURE_ARGS"
-echoGreen "COMPILE: $COMPILE_ARGS"
-echoGreen "GUI: $GUI_ARGS"
+#echoGreen "Compiling XMIPP ..."
+#echoGreen "CONFIGURE: $CONFIGURE_ARGS"
+#echoGreen "COMPILE: $COMPILE_ARGS"
+#echoGreen "GUI: $GUI_ARGS"
 
-echo "--> ./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS"
-./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS
+echo "--> ./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS" install
+./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS install
 
 exit 0
 
