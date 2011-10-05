@@ -31,6 +31,8 @@ public class Projection {
     // Data.
     public native double[] getData();
 
+    public native double[] getData(long nimage, int slice);
+
     public native int getXsize();
 
     public native int getYsize();
@@ -48,7 +50,7 @@ public class Projection {
     // Should be called by GarbageCollector before destroying
     @Override
     protected void finalize() throws Throwable {
-		super.finalize();
+        super.finalize();
         destroy();
     }
 }

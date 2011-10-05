@@ -64,10 +64,10 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readApplyGeo(
 	if (image != NULL) {
 		if (metadata != NULL) {
 			try {
-                                const char *fnStr = env->GetStringUTFChars(filename, false);
+				const char *fnStr = env->GetStringUTFChars(filename, false);
 				image->readApplyGeo(fnStr, *metadata, (size_t) id);
 
-                                selfScaleToSize(LINEAR, (*image)(), (int)w, (int)h);
+				selfScaleToSize(LINEAR, (*image)(), (int)w, (int)h);
 			} catch (XmippError xe) {
 				msg = xe.getDefaultMessage();
 			} catch (std::exception& e) {
@@ -116,7 +116,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1preview
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData
-  (JNIEnv *env, jobject jobj, jint width, jint height, jint depth, jint numberOfSlices, jdoubleArray data) {
+(JNIEnv *env, jobject jobj, jint width, jint height, jint depth, jint numberOfSlices, jdoubleArray data) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
@@ -150,7 +150,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write
 		try {
 			const char * fnStr = env->GetStringUTFChars(filename, false);
 
-			image->write(fnStr,select_img,istack,mode,(CastWriteMode)castWriteMode);
+			image->write(fnStr, select_img, istack, mode, (CastWriteMode) castWriteMode);
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {
@@ -168,7 +168,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write
 	}
 }
 
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData(JNIEnv *env,
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData__(JNIEnv *env,
 		jobject jobj) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
@@ -179,6 +179,43 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData(JNIEnv *env,
 			jdoubleArray array = env->NewDoubleArray(size);
 			env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(
 					image->data));
+			return array;
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Image is NULL";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return (jdoubleArray) NULL;
+}
+
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData__JI(JNIEnv *env,
+		jobject jobj, jlong nimage, jint nslice) {
+	std::string msg = "";
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
+
+	if (image != NULL) {
+		try {
+			int w = XSIZE(image->data);
+			int h = YSIZE(image->data);
+			size_t size = w * h;
+
+			MultidimArray<double> mdarray(size);
+			image->data.getSlice(nslice, mdarray, 'Z', false, (size_t) nimage);
+
+			jdoubleArray array = env->NewDoubleArray(size);
+			env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(mdarray));
+
 			return array;
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
@@ -343,8 +380,9 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_printShape
 	std::cout << (*image) << std::endl;
 }
 
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD
-  (JNIEnv *env, jclass class_, jstring filename, jdouble downsampling, jint w, jint h) {
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD(
+		JNIEnv *env, jclass class_, jstring filename, jdouble downsampling,
+		jint w, jint h) {
 	std::string msg = "";
 
 	try {
@@ -353,7 +391,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD
 
 		fastEstimateEnhancedPSD(fnStr, downsampling, enhancedPSD);
 
-		selfScaleToSize(LINEAR, enhancedPSD, (int)w, (int)h);
+		selfScaleToSize(LINEAR, enhancedPSD, (int) w, (int) h);
 
 		size_t size = enhancedPSD.getSize();
 		jdoubleArray array = env->NewDoubleArray(size);
@@ -376,8 +414,9 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD
 	return NULL;
 }
 
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_bandPassFilter
-  (JNIEnv *env, jclass class_, jstring filename, jdouble w1, jdouble w2, jdouble raised_w, jint w, jint h) {
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_bandPassFilter(
+		JNIEnv *env, jclass class_, jstring filename, jdouble w1, jdouble w2,
+		jdouble raised_w, jint w, jint h) {
 	std::string msg = "";
 
 	try {
@@ -387,7 +426,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_bandPassFilter
 
 		bandpassFilter(I(), w1, w2, raised_w);
 
-		selfScaleToSize(LINEAR, I(), (int)w, (int)h);
+		selfScaleToSize(LINEAR, I(), (int) w, (int) h);
 
 		size_t size = I().getSize();
 		jdoubleArray array = env->NewDoubleArray(size);
@@ -410,8 +449,9 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_bandPassFilter
 	return NULL;
 }
 
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_gaussianFilter
-  (JNIEnv *env, jclass class_, jstring filename, jdouble w1, jint w, jint h) {
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_gaussianFilter(
+		JNIEnv *env, jclass class_, jstring filename, jdouble w1, jint w,
+		jint h) {
 	std::string msg = "";
 
 	try {
@@ -421,7 +461,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_gaussianFilter
 
 		gaussianFilter(I(), w1);
 
-		selfScaleToSize(LINEAR, I(), (int)w, (int)h);
+		selfScaleToSize(LINEAR, I(), (int) w, (int) h);
 
 		size_t size = I().getSize();
 		jdoubleArray array = env->NewDoubleArray(size);
@@ -444,8 +484,9 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_gaussianFilter
 	return NULL;
 }
 
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_badPixelsFilter
-  (JNIEnv *env, jclass class_, jstring filename, jdouble factor, jint w, jint h) {
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_badPixelsFilter(
+		JNIEnv *env, jclass class_, jstring filename, jdouble factor, jint w,
+		jint h) {
 	std::string msg = "";
 
 	try {
@@ -454,11 +495,11 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_badPixelsFilter
 		I.read(fnStr);
 
 		BadPixelFilter filter;
-		filter.type=BadPixelFilter::OUTLIER;
-		filter.factor=factor;
+		filter.type = BadPixelFilter::OUTLIER;
+		filter.factor = factor;
 		filter.apply(I());
 
-		selfScaleToSize(LINEAR, I(), (int)w, (int)h);
+		selfScaleToSize(LINEAR, I(), (int) w, (int) h);
 
 		size_t size = I().getSize();
 		jdoubleArray array = env->NewDoubleArray(size);

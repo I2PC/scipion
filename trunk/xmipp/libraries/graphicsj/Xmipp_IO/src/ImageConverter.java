@@ -37,7 +37,7 @@ public class ImageConverter {
         int d = image.getZsize();
         long n = image.getNsize();
 
-        ImagePlus imp = convertToImagej(image.getData(), w, h, d, n, title);
+        ImagePlus imp = convertToImagej(image, w, h, d, n, title);
 
         // Sets associated file info.
         File f = new File(title);
@@ -55,21 +55,32 @@ public class ImageConverter {
         int h = projection.getYsize();
         int d = projection.getZsize();
 
-        return convertToImagej(projection.getData(), w, h, d, 1, title);
+        return convertToImagej(projection, w, h, d, 1, title);
     }
 
-    private static ImagePlus convertToImagej(double array[], int w, int h, int d, long n, String title) {
-        int sliceSize = w * h;
-        int imageSize = sliceSize * d;
-        double out[] = new double[sliceSize];
+    private static ImagePlus convertToImagej(ImageDouble image, int w, int h, int d, long n, String title) {
+        ImageStack is = new ImageStack(w, h);
+
+        for (long i = 0; i < n; i++) {
+            for (int j = 0; j < d; j++) {
+                double slice[] = image.getData(i, j);
+
+                FloatProcessor processor = new FloatProcessor(w, h, slice);
+                is.addSlice(String.valueOf(i), processor);
+            }
+        }
+
+        return new ImagePlus(title, is);
+    }
+
+    private static ImagePlus convertToImagej(Projection projection, int w, int h, int d, long n, String title) {
         ImageStack is = new ImageStack(w, h);
 
         for (int i = 0; i < n; i++) {
-            int offset = i * imageSize;
             for (int j = 0; j < d; j++) {
-                System.arraycopy(array, offset + j * sliceSize, out, 0, sliceSize);
+                double slice[] = projection.getData(i, j);
 
-                FloatProcessor processor = new FloatProcessor(w, h, out);
+                FloatProcessor processor = new FloatProcessor(w, h, slice);
                 is.addSlice(String.valueOf(i), processor);
             }
         }

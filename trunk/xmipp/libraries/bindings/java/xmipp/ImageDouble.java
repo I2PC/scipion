@@ -80,6 +80,8 @@ public class ImageDouble {
     // Acess to data.
     public native double[] getData();
 
+    public native double[] getData(long image, int slice);
+
     public native void convertPSD(boolean useLogarithm);
 
     public native int getXsize();

@@ -111,44 +111,148 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_write
 
 JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_getData(JNIEnv *env,
 		jobject jobj) {
+	std::string msg = "";
 	Projection *projection = GET_INTERNAL_PROJECTION(jobj);
 
 	if (projection != NULL) {
-		size_t size = projection->getSize();
-		jdoubleArray array = env->NewDoubleArray(size);
-		env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(
-				projection->data));
-		return array;
+		try {
+			size_t size = projection->getSize();
+			jdoubleArray array = env->NewDoubleArray(size);
+			env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(
+					projection->data));
+
+			return array;
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Projection is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return (jdoubleArray) NULL;
+}
+
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_getData__JI(JNIEnv *env,
+		jobject jobj, jlong nimage, jint nslice) {
+	std::string msg = "";
+	Projection *projection = GET_INTERNAL_PROJECTION(jobj);
+
+	if (projection != NULL) {
+		try {
+			int w = XSIZE(projection->data);
+			int h = YSIZE(projection->data);
+			size_t size = w * h;
+
+			MultidimArray<double> mdarray(size);
+			projection->data.getSlice(nslice, mdarray, nimage);
+
+			jdoubleArray array = env->NewDoubleArray(size);
+			env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(mdarray));
+
+			return array;
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Projection is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
 	}
 
 	return (jdoubleArray) NULL;
 }
 
 JNIEXPORT jint JNICALL Java_xmipp_Projection_getXsize(JNIEnv *env, jobject jobj) {
+	std::string msg = "";
 	Projection *projection = GET_INTERNAL_PROJECTION(jobj);
 
 	if (projection != NULL) {
-		return XSIZE(projection->data);
+		try {
+			return XSIZE(projection->data);
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Projection is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
 	}
 
 	return 0;
 }
 
 JNIEXPORT jint JNICALL Java_xmipp_Projection_getYsize(JNIEnv *env, jobject jobj) {
+	std::string msg = "";
 	Projection *projection = GET_INTERNAL_PROJECTION(jobj);
 
 	if (projection != NULL) {
-		return YSIZE(projection->data);
+		try {
+			return YSIZE(projection->data);
+
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Projection is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
 	}
 
 	return 0;
 }
 
 JNIEXPORT jint JNICALL Java_xmipp_Projection_getZsize(JNIEnv *env, jobject jobj) {
+	std::string msg = "";
 	Projection *projection = GET_INTERNAL_PROJECTION(jobj);
 
 	if (projection != NULL) {
-		return ZSIZE(projection->data);
+		try {
+			return ZSIZE(projection->data);
+
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Projection is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
 	}
 
 	return 0;
@@ -156,6 +260,26 @@ JNIEXPORT jint JNICALL Java_xmipp_Projection_getZsize(JNIEnv *env, jobject jobj)
 
 JNIEXPORT void JNICALL Java_xmipp_Projection_printShape
 (JNIEnv *env, jobject jobj) {
+	std::string msg = "";
 	Projection *projection = GET_INTERNAL_PROJECTION(jobj);
-	std::cout << (*projection) << std::endl;
+
+	if (projection != NULL) {
+		try {
+			std::cout << (*projection) << std::endl;
+
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Projection is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty()) {
+		handleXmippException(env, msg);
+	}
 }

@@ -1,6 +1,5 @@
 
 import ij.IJ;
-import ij.gui.GenericDialog;
 import java.io.FileInputStream;
 import java.util.Properties;
 import mpicbg.trakem2.align.Align;

@@ -8,7 +8,10 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.List;
+import xmipp.Filename;
+import xmipp.ImageDouble;
 
 /*
  * To change this template, choose Tools | Templates
@@ -40,7 +43,53 @@ public class StackBuilder {
         return ip;
     }
 
-    private static float[] buildSlice(Patch patch, Rectangle box) throws Exception {
+    public static boolean saveStack(List<Patch> patches, Rectangle box, String path) {
+        System.err.println(" +++ Saving file: " + path);
+        File f = new File(path);
+        if (f.exists()) {
+            System.err.println(" <<< Removing previous file: " + path);
+            f.delete();
+        }
+
+        for (int i = 1; i <= patches.size(); i++) {
+            Patch patch = patches.get(i - 1);
+
+            try {
+                float slice[] = buildSlice(patch, box);
+
+                ImageDouble image = new ImageDouble();
+                image.setData(box.width, box.height, 1, convertFloatsToDoubles(slice));
+//System.err.println(" -> X: " + image.getXsize()+ " --> "+box.width);
+//System.err.println(" -> Y: " + image.getYsize()+ " --> "+box.height);
+//System.err.println(" -> Z: " + image.getNsize()+ " / "+patches.size());
+
+                // Writes slice to disk.
+                System.err.println(" >>> Saving slice: " + i + Filename.SEPARATOR + path);
+                image.write(i + Filename.SEPARATOR + path);
+            } catch (Exception ex) {
+                ex.printStackTrace(System.err);
+                IJ.error("Exception: " + ex.getMessage());
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static double[] convertFloatsToDoubles(float[] input) {
+        double output[] = null;
+
+        if (input != null) {
+            output = new double[input.length];
+            for (int i = 0; i < input.length; i++) {
+                output[i] = input[i];
+            }
+        }
+
+        return output;
+    }
+
+    static float[] buildSlice(Patch patch, Rectangle box) throws Exception {
         ImagePlus ip = patch.getImagePlus();
         AffineTransform translation = new AffineTransform();
         translation.translate(box.x, box.y);
@@ -60,13 +109,13 @@ public class StackBuilder {
 
         int w = box.width;
         int h = box.height;
-        float slice[] = (float[]) imp.getProcessor().convertToFloat().getPixels();//new float[w * h];
+        float slice[] = (float[]) imp.getProcessor().convertToFloat().getPixels();
 
         Point p = new Point();
 
-        for (int j = 0; j < h; j++) {
+        for (int j = 0; j < h; j++) {   // Rows
             p.y = j;
-            for (int i = 0; i < w; i++) {
+            for (int i = 0; i < w; i++) {   // Columns
                 p.x = i;
 
                 Point p_ = new Point();
@@ -79,7 +128,7 @@ public class StackBuilder {
                     float value = Interpolator.bilinear(pixels, ip.getWidth(), ip.getHeight(), p_.getX(), p_.getY());
 
                     // Store point.
-                    slice[j * w + i] = value;//pixels[y * ip.getWidth() + x];
+                    slice[j * w + i] = value;
                 }
             }
         }
