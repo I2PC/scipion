@@ -101,16 +101,21 @@ def detectJava():
     
 def detectMpi():
     from protlib_filesystem import findFilePath
-    inc_dirs = ['/usr/include', 'usr/local/include']
-    lib_dirs = ['/usr/lib64', 'usr/lib']
+    inc_dirs = ['/usr/include', '/usr/local/include']
+    lib_dirs = ['/usr/lib64', '/usr/lib']
     inc_mpi = findFilePath('mpi.h', *(inc_dirs + lib_dirs))
     lib_mpi = findFilePath('libmpi.so', *lib_dirs)
     
     return (inc_mpi, lib_mpi)
 
 def detectQt():
-    pass
-
+    from os.path import dirname
+    possible_dirs = [s+'/qt3/include' for s in ['/usr/lib', '/usr/lib64','/usr/share']]
+    inc_qt = findFilePath('qt.h', *possible_dirs)
+    if inc_qt:
+    	return dirname(dirname(inc_qt))
+    else:
+    	return None
 
 def addTabOption(tab, option, comment, default, cond=None, wiz=None, browse=False):
     defaultsDic = globals()
@@ -150,6 +155,13 @@ def wizardJava(tab_java):
         return ""
     return "JAVA_HOME could not be found."  
     
+def wizardQt(tab_qt):
+    qtdir = detectQt()
+    if qtdir:
+        tab_qt.setValue('QTDIR', qtdir)  
+        return ""
+    return "QTDIR could not be found."  
+
 def addTabs(nb):
     tab = nb.addTab("Compiler")
     addTabOption(tab,'CC', 'The C compiler', 'gcc')
@@ -174,7 +186,7 @@ def addTabs(nb):
     addTabOption(tab,'JAVA_HOME', 'Java installation directory', '', cond='java', wiz=wizardJava, browse=True)
     tab.addSeparator()
     addTabOption(tab,'qt', 'Build the GUI (qt) programs?', 'yes')
-    addTabOption(tab,'QTDIR', 'Where is QT installed', '/usr/share/qt3', cond='qt', browse=True)
+    addTabOption(tab,'QTDIR', 'Where is QT installed', '/usr/share/qt3', cond='qt', wiz=wizardQt, browse=True)
     addTabOption(tab,'QT_LIB', 'QT library to use', 'qt-mt', cond='qt', browse=True)
     addTabOption(tab,'QT4', 'Use Qt4 instead of Qt3?', 'no', cond='qt', browse=True)
     tab_java = tab
@@ -285,6 +297,7 @@ pp.pprint(options.options)
 
 # Output file
 OUTPUT = 'build/scons_output.log'
+STDOUT = '/dev/stdout'
 if os.path.exists(OUTPUT):
     os.remove(OUTPUT)
 # TRY TO READ CONFIG FILE
@@ -318,7 +331,6 @@ if GUI:
 # Run configuration and compile from command line
 nb = ConsoleConfigNotebook(options)
 addTabs(nb)
-STDOUT = '/dev/stdout'
 OUTPUT = STDOUT
 run(nb)
 nb.proc.wait()
