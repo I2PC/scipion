@@ -206,7 +206,7 @@ def run(notebook):
     scons = os.path.join("external", "scons", "scons.py")
     os.environ['JAVA_HOME'] = notebook.getValue('Java & QT', 'JAVA_HOME')
     cmd = ''    
-    if os.path.isfile(out) and os.path.exists(out):
+    if out != STDOUT and os.path.exists(out):
         os.remove(out)
     
     if options.hasOption('update'):
@@ -278,9 +278,9 @@ class ArgDict():
 import sys
 options = ArgDict(sys.argv)
 
-#import pprint
-#pp = pprint.PrettyPrinter(indent=4)
-#pp.pprint(options.options)    
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
+pp.pprint(options.options)    
 
 
 # Output file
@@ -318,7 +318,8 @@ if GUI:
 # Run configuration and compile from command line
 nb = ConsoleConfigNotebook(options)
 addTabs(nb)
-OUTPUT = '/dev/stdout'
+STDOUT = '/dev/stdout'
+OUTPUT = STDOUT
 run(nb)
 nb.proc.wait()
 if nb.proc.returncode != 0:
