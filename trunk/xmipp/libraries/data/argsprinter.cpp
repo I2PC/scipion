@@ -363,7 +363,7 @@ void WikiPrinter::printProgram(const ProgramDef &program, int v)
                     verbatim = false;
                 }
             }
-            *pOut << "   " << program.examples.comments[i] << std::endl;
+            *pOut << program.examples.comments[i] << std::endl;
         }
         if (verbatim)
             *pOut << "</pre>" << std::endl;
