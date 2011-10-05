@@ -109,6 +109,7 @@ def detectMpi():
     return (inc_mpi, lib_mpi)
 
 def detectQt():
+    from protlib_filesystem import findFilePath
     from os.path import dirname
     possible_dirs = [s+'/qt3/include' for s in ['/usr/lib', '/usr/lib64','/usr/share']]
     inc_qt = findFilePath('qt.h', *possible_dirs)
