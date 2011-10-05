@@ -31,6 +31,11 @@
 
 // Pointer to parameters
 ProgClassifyCL2D *prm=NULL;
+FILE * _logCL2D=NULL;
+
+#define CREATE_LOG() _logCL2D = fopen(formatString("nodo%02d.log", node->rank).c_str(), "w+")
+#define LOG(msg) do{fprintf(_logCL2D, "%s\t%s\n", getCurrentTimeString(), msg); fflush(_logCL2D); }while(0)
+#define CLOSE_LOG() fclose(_logCL2D)
 
 /* CL2D Assigned basics ------------------------------------------------ */
 std::ostream & operator << (std::ostream &out, const CL2DAssignment& assigned)
@@ -73,7 +78,7 @@ CL2DClass::CL2DClass()
 
 CL2DClass::CL2DClass(const CL2DClass &other)
 {
-    plans=NULL;
+	plans=NULL;
 
     CL2DAssignment assignment;
     assignment.corr=1;
@@ -94,7 +99,7 @@ CL2DClass::~CL2DClass()
 
 void CL2DClass::updateProjection(const MultidimArray<double> &I, const CL2DAssignment &assigned)
 {
-    if (assigned.corr>0)
+    if (assigned.corr>0 && assigned.objId!=BAD_OBJID)
     {
         Pupdate+=I;
         nextListImg.push_back(assigned);
@@ -106,7 +111,7 @@ void CL2DClass::transferUpdate()
 {
     if (nextListImg.size()>0)
     {
-        // Take from Pupdate
+    	// Take from Pupdate
         double iNq=1.0/nextListImg.size();
         Pupdate*=iNq;
         Pupdate.statisticsAdjust(0,1);
@@ -306,6 +311,9 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result, bool 
 
 void CL2DClass::fit(MultidimArray<double> &I, CL2DAssignment &result)
 {
+	if (currentListImg.size()==0)
+		return;
+
     // Try this image
     MultidimArray<double> Idirect=I;
     CL2DAssignment resultDirect;
@@ -1042,7 +1050,7 @@ void CL2D::splitNode(CL2DClass *node,
             break;
         }
 
-        // Compute the corr histogram
+    	// Compute the corr histogram
         if( prm->node->rank == 0 && prm->verbose>=2)
             std::cerr << "Calculating corr distribution at split ..." << std::endl;
         corrList.initZeros(imax);
@@ -1060,20 +1068,55 @@ void CL2D::splitNode(CL2DClass *node,
         if (prm->node->rank==0 && prm->verbose>=2)
             progress_bar(imax);
         MPI_Allreduce( MPI_IN_PLACE, MULTIDIM_ARRAY(corrList), imax , MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+        newAssignment.initZeros(imax);
 
         // Compute threshold
         compute_hist(corrList,hist,200);
         double corrThreshold=hist.percentil(50);
+        if (corrThreshold==0)
+        {
+        	if (firstSplitNode1!=NULL)
+        	{
+				toDelete.push_back(node1);
+				toDelete.push_back(node2);
+				success=false;
+				break;
+        	}
+        	else
+        	{
+        		// Split at random
+                for (int i=0; i<imax; i++)
+                {
+                    assignment.objId=node->currentListImg[i].objId;
+                    readImage(I,assignment.objId,false);
+                    node->fit(I(), assignment);
+                    if( (i+1) % 2 == 0 )
+                    {
+						node1->updateProjection(I(),assignment);
+						VEC_ELEM(newAssignment,i)=1;
+						node2->updateNonProjection(assignment.corr);
+					}
+					else
+					{
+						node2->updateProjection(I(),assignment);
+						VEC_ELEM(newAssignment,i)=2;
+						node1->updateNonProjection(assignment.corr);
+					}
+                }
+    			success=true;
+    			break;
+        	}
+        }
 
         // Split according to corr
-        newAssignment.initZeros(imax);
         if (prm->node->rank == 0 && prm->verbose>=2)
             std::cerr << "Splitting by corr threshold ..." << std::endl;
         for (int i=0; i<imax; i++)
         {
             if( (i+1) % (prm->node->size) == prm->node->rank )
             {
-                readImage(I,node->currentListImg[i].objId,false);
+            	assignment.objId=node->currentListImg[i].objId;
+                readImage(I,assignment.objId,false);
                 node->fit(I(), assignment);
                 if (assignment.corr<corrThreshold)
                 {
@@ -1155,18 +1198,18 @@ void CL2D::splitNode(CL2DClass *node,
                 std::cout << "Number of assignment split changes=" << Nchanges << std::endl;
 
             // Check if one of the nodes is too small
-            if (node1->currentListImg.size()<prm->PminSize*0.01*imax/2 ||
-                node2->currentListImg.size()<prm->PminSize*0.01*imax/2 ||
+            if (node1->currentListImg.size()<minAllowedSize ||
+                node2->currentListImg.size()<minAllowedSize ||
                 Nchanges<0.005*imax)
                 break;
         }
 
-        if (node1->currentListImg.size()<(prm->PminSize*0.01*imax/2))
+        if (node1->currentListImg.size()<minAllowedSize)
         {
             if (prm->node->rank==0 && prm->verbose>=2)
                 std::cout << "Removing node1, it's too small "
                 << node1->currentListImg.size() << " "
-                << prm->PminSize*0.01*imax/2 << "...\n";
+                << minAllowedSize << "...\n";
             if (node1!=node)
                 delete node1;
             node1=new CL2DClass();
@@ -1175,12 +1218,12 @@ void CL2D::splitNode(CL2DClass *node,
             node2=new CL2DClass();
             finish=false;
         }
-        else if (node2->currentListImg.size()<(prm->PminSize*0.01*imax/2))
+        else if (node2->currentListImg.size()<minAllowedSize)
         {
             if (prm->node->rank==0 && prm->verbose>=2)
                 std::cout << "Removing node2, it's too small "
                 << node2->currentListImg.size() << " "
-                << prm->PminSize*0.01*imax/2 << "...\n";
+                << minAllowedSize << "...\n";
             if (node2!=node)
                 delete node2;
             node2=new CL2DClass();
@@ -1194,6 +1237,7 @@ void CL2D::splitNode(CL2DClass *node,
     for (int i=0; i<toDelete.size(); i++)
         if (toDelete[i]!=node)
             delete toDelete[i];
+
     if (success)
     {
         for (int i=0; i<node1->currentListImg.size(); i++)
@@ -1223,7 +1267,7 @@ void CL2D::splitNode(CL2DClass *node,
 
 void CL2D::splitFirstNode()
 {
-    std::sort(P.begin(),P.end(),SDescendingClusterSort());
+	std::sort(P.begin(),P.end(),SDescendingClusterSort());
     int Q=P.size();
     P.push_back(new CL2DClass());
     P.push_back(new CL2DClass());
