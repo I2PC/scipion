@@ -489,7 +489,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     public boolean saveAsStack(String path, boolean all) {
         try {
-            ImagePlus imp = ImageConverter.convertToImagePlus(all ? data : getSelectedItems());
+            ImagePlus imp = ImageConverter.convertToImageJ(all ? data : getSelectedItems());
             IJ.run(imp, "Xmipp writer", "save=" + path);
 
             return true;

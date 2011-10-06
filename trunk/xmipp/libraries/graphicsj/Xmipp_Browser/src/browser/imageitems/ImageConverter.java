@@ -1,6 +1,5 @@
 package browser.imageitems;
 
-import browser.DEBUG;
 import browser.imageitems.tableitems.AbstractGalleryImageItem;
 import ij.IJ;
 import ij.ImagePlus;
@@ -15,7 +14,6 @@ import java.util.LinkedList;
 import xmipp.ImageDouble;
 import xmipp.MDLabel;
 import xmipp.MetaData;
-import xmipp.Projection;
 
 /*
  * To change this template, choose Tools | Templates
@@ -41,7 +39,18 @@ public class ImageConverter {
         int d = image.getZsize();
         long n = image.getNsize();
 
-        ImagePlus imp = convertToImagej(image.getData(), w, h, d, n, title);
+        ImageStack is = new ImageStack(w, h);
+
+        for (long i = 0; i < n; i++) {
+            for (int j = 0; j < d; j++) {
+                double slice[] = image.getData(i, j);
+
+                FloatProcessor processor = new FloatProcessor(w, h, slice);
+                is.addSlice(String.valueOf(i), processor);
+            }
+        }
+
+        ImagePlus imp = new ImagePlus(title, is);
 
         // Sets associated file info.
         File f = new File(title);
@@ -53,34 +62,14 @@ public class ImageConverter {
         return imp;
     }
 
-    public static ImagePlus convertToImagej(Projection projection, String title) {
-
-        int w = projection.getXsize();
-        int h = projection.getYsize();
-        int d = projection.getZsize();
-
-        return convertToImagej(projection.getData(), w, h, d, 1, title);
-    }
-
-    private static ImagePlus convertToImagej(double array[], int w, int h, int d, long n, String title) {
-        int sliceSize = w * h;
-        int imageSize = sliceSize * d;
-        double out[] = new double[sliceSize];
-        ImageStack is = new ImageStack(w, h);
-
-        for (int i = 0; i < n; i++) {
-            int offset = i * imageSize;
-            for (int j = 0; j < d; j++) {
-                System.arraycopy(array, offset + j * sliceSize, out, 0, sliceSize);
-
-                FloatProcessor processor = new FloatProcessor(w, h, out);
-                is.addSlice(String.valueOf(i), processor);
-            }
-        }
-
-        return new ImagePlus(title, is);
-    }
-
+    /*    public static ImagePlus convertToImagej(Projection projection, String title) {
+    int w = projection.getXsize();
+    int h = projection.getYsize();
+    
+    FloatProcessor processor = new FloatProcessor(w, h, projection.getData());
+    
+    return new ImagePlus(title, processor);
+    }*/
     public static ImagePlus convertToImagej(MetaData md) {
         LinkedList<String> missing = new LinkedList<String>();
         ImagePlus imp = null;
@@ -94,8 +83,9 @@ public class ImageConverter {
                 String filename = md.getValueString(MDLabel.MDL_IMAGE, id, true);
 
                 try {
-                    ImageDouble img = new ImageDouble(filename);
-                    ImagePlus slice = ImageConverter.convertToImagej(img, filename);
+                    ImagePlus slice = new ImagePlus(filename);
+                    //ImageReader slice = new ImageReader();
+                    //slice.read(filename);
 
                     if (is == null) {
                         is = new ImageStack(slice.getWidth(), slice.getHeight());
@@ -103,8 +93,8 @@ public class ImageConverter {
 
                     is.addSlice(filename, slice.getProcessor());
                 } catch (Exception ex) {
+                    ex.printStackTrace(System.err);
                     missing.add(filename);
-                    //ex.printStackTrace();
                 }
             }
 
@@ -134,7 +124,7 @@ public class ImageConverter {
         return imp;
     }
 
-    public static ImagePlus convertToImagePlus(ArrayList<AbstractGalleryImageItem> items) {
+    public static ImagePlus convertToImageJ(ArrayList<AbstractGalleryImageItem> items) {
         ImageStack is = null;
 
         for (int i = 0; i < items.size(); i++) {
@@ -200,7 +190,8 @@ public class ImageConverter {
         try {
             image.setData(w, h, d, data);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            ex.printStackTrace(System.err);
+            IJ.error(ex.getMessage());
         }
 
         return image;
@@ -213,7 +204,8 @@ public class ImageConverter {
             image.write(filename);
             return true;
         } catch (Exception ex) {
-            DEBUG.printException(ex);
+            ex.printStackTrace(System.err);
+            IJ.error(ex.getMessage());
         }
 
         return false;

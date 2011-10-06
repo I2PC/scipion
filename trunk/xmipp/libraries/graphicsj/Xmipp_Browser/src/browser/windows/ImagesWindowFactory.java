@@ -211,7 +211,7 @@ public class ImagesWindowFactory {
     public static void openGalleryAs3D(AbstractXmippTableModel tableModel) {
         try {
             ArrayList<AbstractGalleryImageItem> items = tableModel.getAllItems();
-            ImagePlus ip = ImageConverter.convertToImagePlus(items);
+            ImagePlus ip = ImageConverter.convertToImageJ(items);
             ip.setTitle(tableModel.getFilename());
 
             openImagePlusAs3D(ip);
@@ -237,7 +237,7 @@ public class ImagesWindowFactory {
                 tempFile.deleteOnExit();
 
                 ArrayList<AbstractGalleryImageItem> items = tableModel.getAllItems();
-                ImagePlus imp = ImageConverter.convertToImagePlus(items);
+                ImagePlus imp = ImageConverter.convertToImageJ(items);
                 IJ.run(imp, "Xmipp writer", "save=" + tempFile.getAbsolutePath());
 
 //                System.err.println(" >>> TMP Saved at: " + file.getAbsolutePath());
