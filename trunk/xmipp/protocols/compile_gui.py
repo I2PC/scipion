@@ -127,13 +127,12 @@ class OptionsTab(Frame):
         return optStr
         
 class ConfigNotebook(ttk.Notebook):
-    def __init__(self, master, OUTPUT, options, runFunc, stopCompileFunc):
+    def __init__(self, master, OUTPUT, options, runFunc):
         ttk.Notebook.__init__(self, master)
         self.tabs = {}
         self.master = master
         self.options = options
         self.run = runFunc
-        self.stop = stopCompileFunc
         self.OUTPUT = OUTPUT
         
     def addTab(self, text):
@@ -157,15 +156,18 @@ class ConfigNotebook(ttk.Notebook):
         self.text.fillTextArea()
         self.text.doRefresh(1)
         self.checkProcess()    
-        self.btn.config(command=self.notifyStopCompile, text="Stop")
+        self.btn.config(command=lambda:self.stopCompile(), text="Stop")
         self.select(self.index('end') - 1)
         
-    def notifyStopCompile(self, msg, isError=False):
+    def stopCompile(self):
+        self.master.after_cancel(self.checkRefresh)
+        self.proc.terminate()
         runFunc = self.run
         self.btn.config(command=lambda:launchRun(self, runFunc), text="Compile")
+        showInfo("Compilation STOPPED", "Compilation has been aborted.     ", self)
         
     def createConfigTab(self):
-        tab = self.addTab("Configure")
+        tab = self.addTab("  Output  ")
         self.text = FilePollTextArea(tab, self.OUTPUT, 20, 80, colorOn=False)
         self.text.goEnd()
         self.text.grid(column=0, row=0, sticky=(N, S, E, W), padx=10, pady=10)
@@ -176,7 +178,9 @@ class ConfigNotebook(ttk.Notebook):
             self.text.fillTextArea(goEnd=True)
             self.progressVar.set(0)
             if self.proc.returncode != 0:
-                showError("Errors", "Errors on Xmipp compilation, see <%s> for more details" % self.OUTPUT, self)
+                runFunc = self.run
+                self.btn.config(command=lambda:launchRun(self, runFunc), text="Compile")
+                showError("Errors", "Errors on <Xmipp> compilation, see <%s> for more details" % self.OUTPUT, self)
             else:
                 infoMsg = "<Xmipp> has been successfully compiled     \n"
                 if self.options.hasOption('install'):
@@ -185,7 +189,7 @@ class ConfigNotebook(ttk.Notebook):
                 showInfo("Compilation FINISHED", infoMsg, self)
                 self.master.destroy()
         else:
-            self.master.after(3000, self.checkProcess)
+            self.checkRefresh = self.master.after(3000, self.checkProcess)
             if os.path.exists(self.OUTPUT):
                 lines = 0
                 for line in open(self.OUTPUT):
@@ -228,12 +232,13 @@ def launchRun(nb, runFunc):
     nb.options.setNumberOfCpu(nb.procVar.get())
     runFunc(nb)
    
-def createGUINotebook(OUTPUT, options, addTabsFunc, runFunc, stopCompileFunc):
+def createGUINotebook(OUTPUT, options, addTabsFunc, runFunc):
+    from protlib_utils import getHostname
     root = Tk()
     root.withdraw()
-    root.title("Xmipp Install")
+    root.title("Xmipp Install on " + getHostname())
     root.minsize(width=600, height=350)
-    nb = ConfigNotebook(root, OUTPUT, options, runFunc, stopCompileFunc)
+    nb = ConfigNotebook(root, OUTPUT, options, runFunc)
     addTabsFunc(nb)
     nb.createConfigTab()
     root.columnconfigure(0, weight=1)

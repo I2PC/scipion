@@ -600,13 +600,6 @@ def unique_filename(file_name):
     It does not make sense to apply the Bfactor to the firsts iterations
     see http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
 """
-
-#---------------------------------------------------------------------------
-# Process Manipulation
-#--------------------------------------------------------------------------- 
-#create a metadata file with original image name, and two other 
-#lines with variation over the original name
-
 def apply_bfactor(_DisplayReference_list,\
         bFactorExtension,\
         _SamplingRate,\
@@ -636,6 +629,10 @@ def apply_bfactor(_DisplayReference_list,\
             os.system(xmipp_command)
 
 
+""" Return the machine name """
+def getHostname():
+    import socket
+    return socket.gethostname()
 # Copyright (c) 2002-2005 ActiveState Corp.
 # See LICENSE.txt for license details.
 # Author:

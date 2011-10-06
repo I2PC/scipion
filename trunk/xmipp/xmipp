@@ -111,10 +111,10 @@ def detectMpi():
 def detectQt():
     from protlib_filesystem import findFilePath
     from os.path import dirname
-    possible_dirs = [s+'/qt3/include' for s in ['/usr/lib', '/usr/lib64','/usr/share']]
+    possible_dirs = [s+'/qt3/include' for s in ['/usr/lib64', '/usr/lib', '/usr/share']]
     inc_qt = findFilePath('qt.h', *possible_dirs)
     if inc_qt:
-    	return dirname(dirname(inc_qt))
+    	return dirname(inc_qt)
     else:
     	return None
 
@@ -230,7 +230,7 @@ def run(notebook):
         
     if options.hasOption('configure'):        
         opts = notebook.getConfigOptions()
-        print "opt: ", opts
+        #print "opt: ", opts
         cmd += 'echo "*** RUNNING SCONS.CONFIGURE..." >> %(out)s 2>&1 \n'
         cmd1 = "xmipp_python %(scons)s mode=configure -j %(procs)s --config=force %(opts)s >> %(out)s 2>&1 " % locals()
         cmd += 'echo "%(cmd1)s" >> %(out)s \n'
@@ -246,11 +246,6 @@ def run(notebook):
     proc = Popen(cmd % locals(), shell=True)    
     notebook.notifyRun(proc)   
     
-def stopCompile(notebook, proc):
-    proc.terminate()
-    notebook.notifyStopCompile("Compilation aborted by user")
-
-
 ####### Simple parsing of arguments ###########
 # Acepted options:
 # configure arg1 arg2 ... 
@@ -324,7 +319,7 @@ if GUI:
     try:
         import Tkinter
         from compile_gui import createGUINotebook
-        nb = createGUINotebook(OUTPUT, options, addTabs, run, stopCompile)
+        nb = createGUINotebook(OUTPUT, options, addTabs, run)
         exit(0)
     except Exception, e:
         print "*** Could not create GUI. Error ", e
