@@ -9,6 +9,7 @@ import java.awt.Rectangle;
 import javax.swing.ImageIcon;
 
 import trainingpicker.gui.ParticleCanvas;
+import trainingpicker.gui.ParticlePickerJFrame;
 import xmipp.Particle;
 
 public class TrainingParticle extends Particle{
@@ -17,6 +18,7 @@ public class TrainingParticle extends Particle{
 	protected ImagePlus img;
 	protected double cost = 2;
 	protected Micrograph micrograph;
+	private ParticleCanvas canvas;
 	
 
 	public TrainingParticle(int x, int y, Family family, Micrograph micrograph)
@@ -109,6 +111,18 @@ public class TrainingParticle extends Particle{
 		
 		ImageIcon icon = new ImageIcon(getImagePlus().getImage());
 		return icon;
+	}
+	
+	public ParticleCanvas getParticleCanvas(ParticlePickerJFrame frame)
+	{
+		if(canvas == null)
+			canvas = new ParticleCanvas(this, frame);
+		return canvas; 
+	}
+	
+	public void resetParticleCanvas()
+	{
+		canvas = null;
 	}
 
 	

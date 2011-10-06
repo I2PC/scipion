@@ -176,7 +176,7 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener
 
 		pack();
 		position = 0.95;
-		WindowUtils.centerScreen(position, this);
+		WindowUtils.centerScreen(position, 0.5, this);
 		setVisible(true);
 	}
 
@@ -405,7 +405,7 @@ public class TiltPairPickerJFrame extends JFrame implements ActionListener
 						}
 					}, // OK button handler
 					null); // no CANCEL button handler
-			WindowUtils.centerScreen(position, dialog);
+			WindowUtils.centerScreen(position, 0.5, dialog);
 			dialog.setVisible(true);
 		}
 	}

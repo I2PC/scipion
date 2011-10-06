@@ -13,6 +13,8 @@ public class MicrographFamilyData {
 	private MicrographFamilyState state;
 
 	public MicrographFamilyData(TrainingMicrograph micrograph, Family family) {
+		if(family == null)
+			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("family"));
 		this.family = family;
 		this.manualparticles = new ArrayList<TrainingParticle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
@@ -109,6 +111,8 @@ public class MicrographFamilyData {
 	
 	public int getAutomaticParticles(double threshold)
 	{
+		if(autoparticles.isEmpty())
+			return 0;
 		return autoparticles.size() - getAutomaticParticlesDeleted(threshold);
 	}
 

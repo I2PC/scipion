@@ -37,7 +37,7 @@ public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener
 		this.untiltedmicrograph = frame.getMicrograph();
 		this.frame = frame;
 		iw = new ImageWindow(imp, this);
-		WindowUtils.centerScreen(0.7, iw);
+		WindowUtils.centerScreen(0.7, 0, iw);
 
 	}
 

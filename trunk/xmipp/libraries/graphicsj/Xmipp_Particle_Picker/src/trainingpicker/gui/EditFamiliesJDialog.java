@@ -75,7 +75,7 @@ public class EditFamiliesJDialog extends JDialog {
 		getRootPane().setDefaultButton(addbt);
 		setListeners();
 		pack();
-		WindowUtils.centerScreen(position, this);
+		WindowUtils.centerScreen(position, 0.5, this);
 		setVisible(true);
 	}
 

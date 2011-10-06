@@ -126,10 +126,12 @@ public abstract class TrainingPicker extends ParticlePicker
 			MetaData md2;
 			for (long id : md.findObjects())
 			{
+				
 				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				state = MicrographFamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, id));
 				family = getFamily(fname);
 				mfd = new MicrographFamilyData(micrograph, family, state);
+				System.out.println(fname);
 				if (getMode() == FamilyState.Review && mfd.getStep() != FamilyState.Review)
 				{
 					mfd.setState(MicrographFamilyState.Review);
@@ -167,10 +169,12 @@ public abstract class TrainingPicker extends ParticlePicker
 		{
 			MetaData md;
 			String block = null;
+			String file;
 			for (TrainingMicrograph m : micrographs)
 			{
+				file = getOutputPath(m.getOFilename());
 				if (!m.hasData())
-					new File(getOutputPath(m.getOFilename())).delete();
+					new File(file).delete();
 				else
 				{
 					persistMicrographFamilies(m);
@@ -185,7 +189,7 @@ public abstract class TrainingPicker extends ParticlePicker
 							md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
 							md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
 						}
-						block = mfd.getFamily().getName() + "@" + m.getOFilename();
+						block = mfd.getFamily().getName() + "@" + file;
 						md.writeBlock(block);
 					}
 				}
@@ -260,7 +264,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			long id;
 			if (mfd.getMicrograph().hasAutomaticParticles())
 			{
-				String filename = getOutputPath(mfd.getMicrograph().getOFilename());
+				String file = getOutputPath(mfd.getMicrograph().getOFilename());
 				MetaData md = new MetaData();
 				for (AutomaticParticle p : mfd.getAutomaticParticles())
 				{
@@ -270,7 +274,7 @@ public abstract class TrainingPicker extends ParticlePicker
 					md.setValueDouble(MDLabel.MDL_COST, p.getCost(), id);
 					md.setValueInt(MDLabel.MDL_ENABLED, (!p.isDeleted()) ? 1 : -1, id);
 				}
-				md.write(mfd.getFamily().getName() + "@" + filename);
+				md.write(mfd.getFamily().getName() + "@" + file);
 			}
 
 		}
@@ -286,6 +290,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		long id;
 		try
 		{
+			String file = getOutputPath(m.getOFilename());
 			MetaData md = new MetaData();
 			for (MicrographFamilyData mfd : m.getFamiliesData())
 			{
@@ -293,7 +298,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY, mfd.getFamily().getName(), id);
 				md.setValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, mfd.getState().toString(), id);
 			}
-			md.writeBlock("families@" + m.getOFilename());
+			md.writeBlock("families@" + file);
 
 		}
 		catch (Exception e)

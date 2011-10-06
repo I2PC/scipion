@@ -40,7 +40,7 @@ public class UntiltedMicrographCanvas extends ImageCanvas implements MouseWheelL
 		this.pppicker = frame.getParticlePairPicker();
 		tiltedcanvas = new TiltedMicrographCanvas(frame);
 		iw = new ImageWindow(imp, this);
-		WindowUtils.centerScreen(0, iw);
+		WindowUtils.centerScreen(0, 0, iw);
 	}
 
 	public void updateMicrograph()

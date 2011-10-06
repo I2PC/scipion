@@ -14,11 +14,11 @@ import trainingpicker.model.TrainingPicker;
 
 public class WindowUtils {
 
-	public static void centerScreen(double position, Container w) {
+	public static void centerScreen(double positionx, double positiony, Container w) {
 		Dimension dim = w.getToolkit().getScreenSize();
 		Rectangle abounds = w.getBounds();
-		int x = (int) (position * (dim.width - abounds.width));
-		int y = (dim.height - abounds.height) / 2;
+		int x = (int) (positionx * (dim.width - abounds.width));
+		int y = (int) (positiony * (dim.height - abounds.height));
 		w.setLocation(x, y);
 
 	}

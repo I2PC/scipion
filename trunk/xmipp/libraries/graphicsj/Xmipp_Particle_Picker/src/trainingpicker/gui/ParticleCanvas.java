@@ -14,6 +14,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import trainingpicker.model.TrainingParticle;
 
@@ -22,7 +23,6 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 
 	private TrainingParticle particle;
 	private int size;
-	private Dimension dimension;
 	private int lastx, lasty;
 	private boolean dragged;
 	private ParticlePickerJFrame frame;
@@ -40,6 +40,8 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		addMouseMotionListener(this);
 		addMouseListener(this);
 	}
+	
+	
 
 	public void paint(Graphics g)
 	{
@@ -47,7 +49,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		setSourceRect(source);
 		super.paint(g);
 		g.setColor(Color.black);
-		g.drawRect(0, 0, side, side);
+		g.drawRect(0, 0, side - 1, side - 1);
 	}
 
 	@Override
@@ -57,9 +59,11 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		{
 			int movex = lastx - e.getX();
 			int movey = lasty - e.getY();
+			int x = particle.getX() + movex;
+			int y = particle.getY() + movey;
 			try
 			{
-				particle.setPosition(particle.getX() + movex, particle.getY() + movey);
+				particle.setPosition(x, y);
 				repaint();
 				frame.getCanvas().repaint();
 			}
@@ -80,7 +84,17 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		dragged = true;
 		lastx = e.getX();
 		lasty = e.getY();
-
+		
+		if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown()) 
+		{
+			frame.getMicrograph().removeParticle(particle, frame.getParticlePicker());
+			frame.getCanvas().repaint();
+			frame.updateMicrographsModel();
+			frame.loadParticles();
+		}
+		else
+			frame.getCanvas().moveTo(particle);
+			
 	}
 
 	@Override

@@ -100,7 +100,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 	TrainingMicrograph micrograph;
 	private JButton nextbt;
 	private JButton colorbt;
-	private double position;
+	private double positionx;
 	private JLabel iconlb;
 	private JLabel steplb;
 	private JButton actionsbt;
@@ -115,6 +115,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 	private JFormattedTextField thresholdtf;
 	private String tool = "Particle Picker Tool";
 	private JMenuItem exportmi;
+	ParticlesJDialog particlesdialog;
 
 	// private JCheckBox onlylastchb;
 
@@ -210,8 +211,8 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 		add(micrographpn, WindowUtils.getConstraints(constraints, 0, 3, 3));
 
 		pack();
-		position = 0.9;
-		WindowUtils.centerScreen(position, this);
+		positionx = 0.9;
+		WindowUtils.centerScreen(positionx, 0.25, this);
 		setVisible(true);
 	}
 
@@ -312,10 +313,12 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 		particlesmn.addActionListener(new ActionListener()
 		{
 
+			
+
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				 new ParticlesJDialog(ParticlePickerJFrame.this, micrograph);
+				loadParticles();
 			}
 		});
 
@@ -350,6 +353,17 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 	
 	
 
+	protected void loadParticles()
+	{
+		if(particlesdialog == null)
+			particlesdialog = new ParticlesJDialog(ParticlePickerJFrame.this);
+		else
+		{
+			particlesdialog.loadParticles();
+			particlesdialog.setVisible(true);
+		}
+	}
+
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
@@ -382,8 +396,8 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 		familiescb.setEnabled(ppicker.getMode() != FamilyState.Review);
 
 		family = (Family) familiescb.getSelectedItem();
-		if (ppicker.getMode() == FamilyState.Manual && family.getStep() == FamilyState.Supervised)
-			throw new IllegalArgumentException(String.format("Application not enabled for %s mode. Family %s could not be loaded", FamilyState.Supervised, family.getName()));
+		if (ppicker.getMode() == FamilyState.Manual && family.getStep() != FamilyState.Manual)
+			throw new IllegalArgumentException(String.format("Application not enabled for %s mode. Family %s could not be loaded", family.getStep(), family.getName()));
 
 		fieldspn.add(familiescb);
 
@@ -427,7 +441,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 			index = 0;
 		micrograph = ppicker.getMicrographs().get(index);
 
-		initThresholdPane();
+		initSizePane();
 		steppn.add(thresholdpn);
 		actionsbt = new JButton();
 		setStep(step);
@@ -562,12 +576,12 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 						}
 					}, // OK button handler
 					null); // no CANCEL button handler
-			WindowUtils.centerScreen(position, dialog);
+			WindowUtils.centerScreen(positionx, 0.25, dialog);
 			dialog.setVisible(true);
 		}
 	}
 
-	private void initThresholdPane()
+	private void initSizePane()
 	{
 		thresholdpn = new JPanel();
 		thresholdpn.add(new JLabel("Threshold:"));
@@ -733,6 +747,8 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 				pack();
 				saveChanges();// Saving changes when switching micrographs, by
 								// Coss suggestion
+				if(particlesdialog != null)
+					loadParticles();
 			}
 		});
 		micrographstb.getSelectionModel().setSelectionInterval(index, index);
@@ -823,6 +839,12 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 		sizesl.setValue(size);
 		canvas.repaint();
 		family.setSize(size);
+		if(particlesdialog != null)
+		{
+			for(TrainingParticle p: getFamilyData().getParticles())
+				p.resetParticleCanvas();
+			loadParticles();
+		}			
 		setChanged(true);
 	}
 
@@ -853,6 +875,8 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 		manuallb.setText(Integer.toString(family.getManualNumber()));
 		autolb.setText(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
 		actionsbt.setVisible(getFamilyData().isActionAvailable(getThreshold()));
+		if(particlesdialog != null)
+			loadParticles();
 	}
 
 	public ParticlePickerCanvas getCanvas()
@@ -1060,8 +1084,15 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 	public double getMagnification()
 	{
 		if(family.getSize() > 100)
-			return 0.5;
+			return 0.4;
 		return 1;
 	}
+
+	ParticlesJDialog getParticlesJDialog()
+	{
+		return particlesdialog;
+	}
+
+	
 
 }
