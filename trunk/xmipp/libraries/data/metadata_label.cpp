@@ -95,6 +95,10 @@ bool MDL::isInt(const MDLabel label)
 {
     return (data[(int)label]->type == LABEL_INT);
 }
+bool MDL::isLong(const MDLabel label)
+{
+    return (data[(int)label]->type == LABEL_LONG);
+}
 bool MDL::isBool(const MDLabel label)
 {
     return (data[(int)label]->type == LABEL_BOOL);
@@ -469,6 +473,9 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
 {
     String c = (isSql) ? "'" : "";
     size_t size;
+    double v;
+    std::vector<size_t> &vector = *(data.vectorValueLong);
+    std::vector<double> &vectorDouble = *(data.vectorValue);
 
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
         os << data.stringValue;
@@ -492,22 +499,20 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
             break;
         case LABEL_VECTOR:
             os << "[ ";
-            size = data.vectorValue->size();
+            size = vectorDouble.size();
             for (int i = 0; i < size; i++)
             {
-                DOUBLE2STREAM(data.vectorValue->at(i));
+                v = vectorDouble[i];
+                DOUBLE2STREAM(v);
                 os << " ";
             }
             os << "]";
             break;
         case LABEL_VECTOR_LONG:
             os << "[ ";
-            size = data.vectorValueLong->size();
+            size = vector.size();
             for (int i = 0; i < size; i++)
-            {
-                INT2STREAM(data.vectorValueLong->at(i));
-                os << " ";
-            }
+                os << vector[i] << " ";
             os << "]";
             break;
 

@@ -3443,6 +3443,8 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_MISSINGREGION_THXF",
                    (long) MDL_MISSINGREGION_THXF);
     addIntConstant(dict, "MDL_MODELFRAC", (long) MDL_MODELFRAC);
+    addIntConstant(dict, "MDL_NEIGHBORS", (long)LABEL_VECTOR_LONG);
+    addIntConstant(dict, "MDL_NEIGHBORHOOD_RADIUS", (long)LABEL_DOUBLE);
     addIntConstant(dict, "MDL_NMA", (long) MDL_NMA);
     addIntConstant(dict, "MDL_ORDER", (long) MDL_ORDER);
     addIntConstant(dict, "MDL_ORIGINX", (long) MDL_ORIGINX);

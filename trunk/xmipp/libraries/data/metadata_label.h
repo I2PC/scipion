@@ -497,6 +497,7 @@ public:
      * @{
      */
     static bool isInt(const MDLabel label);
+    static bool isLong(const MDLabel label);
     static bool isBool(const MDLabel label);
     static bool isString(const MDLabel label);
     static bool isDouble(const MDLabel label);
