@@ -803,7 +803,7 @@ void MetaData::_readRows(std::istream& is, std::vector<MDObject*> & columnValues
         while (is.peek() != ';' && isspace(is.peek()) && !is.eof())
             is.ignore(1);
         if (!is.eof())
-
+        {
             if (is.peek() == ';')//is a comment
             {
                 is.ignore(1); //ignore the ';'
@@ -824,7 +824,7 @@ void MetaData::_readRows(std::istream& is, std::vector<MDObject*> & columnValues
                 for (int i = 0; i < nCol; ++i)
                     _parseObject(is, *(columnValues[i]), id);
             }
-
+        }
     }
 }
 
@@ -836,12 +836,17 @@ void MetaData::_readRowsStar(std::vector<MDObject*> & columnValues, char * pchSt
     String line;
     std::stringstream ss;
     int nCol = columnValues.size();
-    size_t id;
+    size_t id, n = pEnd - pchStart;
 
-    while (pchStart < pEnd)//while there are data lines
+    char * buffer = new char[n];
+    memcpy(buffer, pchStart, n);
+    pchStart = buffer;
+    pEnd = pchStart + n;
+
+    while (pchStart < pEnd) //while there are data lines
     {
         pchEnd = END_OF_LINE();
-        line.assign(pchStart, pchEnd-pchStart);
+        line.assign(pchStart, pchEnd - pchStart);
         trim(line);
         if (!line.empty())
         {
@@ -850,8 +855,9 @@ void MetaData::_readRowsStar(std::vector<MDObject*> & columnValues, char * pchSt
             for (int i = 0; i < nCol; ++i)
                 _parseObject(ss, *(columnValues[i]), id);
         }
-        pchStart = pchEnd + 1;//go to next line
+        pchStart = pchEnd + 1; //go to next line
     }
+    delete[] buffer;
 }
 
 /*This function will read the md data if is in row format */
