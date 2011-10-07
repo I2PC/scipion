@@ -72,14 +72,13 @@ void ProgCtfCorrectIdr::defineParams()
 
 /* IDR correction ---------------------------------------------------------- */
 //#define DEBUG
-void ProgCtfCorrectIdr::processImage(const FileName &fnImg,
-                                     const FileName &fnImgOut, size_t objId)
+void ProgCtfCorrectIdr::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     FileName fn_ctf;
-    mdIn.getValue(MDL_CTFMODEL,fn_ctf, objId);
+    rowIn.getValue(MDL_CTFMODEL,fn_ctf);
 
     // Read current input image
-    Ireal.readApplyGeo(mdIn,objId);
+    Ireal.readApplyGeo(fnImg, rowIn);
     int Ydim = YSIZE(Ireal());
     int Xdim = XSIZE(Ireal());
 

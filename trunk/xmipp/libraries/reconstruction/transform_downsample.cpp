@@ -79,8 +79,7 @@ void ProgTransformDownsample::defineParams()
 }
 
 // Downsample micrograph ---------------------------------------------------
-void ProgTransformDownsample::processImage(const FileName &fnImg, const FileName &fnImgOut,
-        size_t objId)
+void ProgTransformDownsample::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     // Open input data
     ImageGeneric M_in;

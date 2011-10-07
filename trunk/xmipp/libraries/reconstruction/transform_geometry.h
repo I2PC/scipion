@@ -26,13 +26,12 @@ protected:
     bool            applyTransform, inverse, wrap, isVol, flip, disableMetadata;
     Matrix2D<double> R, T, S, A, B;
     Matrix1D<double>          shiftV, rotV, scaleV;
-    MDRow            input, transformation;
     ImageGeneric img, imgOut;
 
     void defineParams();
     void readParams();
     void preProcess();
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 
 };
 #endif TRANSFORMGEOMETRY_H

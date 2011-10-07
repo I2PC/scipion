@@ -147,11 +147,11 @@ void ProgSymmetrize::preProcess()
 }
 
 /* Process image ------------------------------------------------------------- */
-void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     Image<double> Iin;
     Image<double> Iout;
-    Iin.readApplyGeo(fnImg, mdIn, objId);
+    Iin.readApplyGeo(fnImg, rowIn);
     Iin().setXmippOrigin();
     if (ZSIZE(Iin())==1)
     {

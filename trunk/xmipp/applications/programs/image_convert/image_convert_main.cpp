@@ -55,6 +55,7 @@ protected:
     {
         each_image_produces_an_output = true;
         save_metadata_stack = false;
+        keep_input_columns = true;
         delete_output_stack = false;
         CommentList &comments = defaultComments["-i"];
         comments.addComment("++ Supported read formats are:");
@@ -261,7 +262,7 @@ protected:
         create_empty_stackfile = false;
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
     {
         switch(convMode)
         {
@@ -297,7 +298,6 @@ protected:
                 break;
             }
         }
-        mdIn.setValue(MDL_IMAGE,fnImgOut, objId); // to keep info in output metadata
     }
 
     void finishProcessing()
@@ -313,8 +313,6 @@ protected:
             break;
         }
 
-        // To keep the mdIn info we overwrite the mdOut done by XmippMetadataProgram
-        mdOut = mdIn;
         XmippMetadataProgram::finishProcessing();
     }
 

@@ -173,7 +173,7 @@ public:
         An exception is thrown if any of the files is not found*/
     virtual void preProcess();
     /** Assign NMA and Alignment parameters to an image */
-    virtual void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+    virtual void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 
     /** Write the final parameters. */
     virtual void finishProcessing();

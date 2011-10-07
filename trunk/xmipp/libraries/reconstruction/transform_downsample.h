@@ -58,7 +58,7 @@ public:
     void defineParams();
 
     /** Really downsample.*/
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 };
 
 /** Downsample a micrograph using a rectangular kernel.

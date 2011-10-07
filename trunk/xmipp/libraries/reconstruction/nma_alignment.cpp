@@ -294,18 +294,18 @@ double ProgNmaAlignment::performContinuousAssignment(
     runSystem(program, arguments, false);
 
     // Pick up results
-    MetaData DF;
-    DF.read("anglecont_"+fnRandom+".txt");
-    size_t objId = DF.firstObject();
-    DF.getValue(MDL_ANGLEROT,trial(VEC_XSIZE(trial)-5),objId);
-    DF.getValue(MDL_ANGLETILT,trial(VEC_XSIZE(trial)-4),objId);
-    DF.getValue(MDL_ANGLEPSI,trial(VEC_XSIZE(trial)-3),objId);
-    DF.getValue(MDL_SHIFTX,trial(VEC_XSIZE(trial)-2),objId);
+    MetaData DF(formatString("anglecont_%s.txt", randStr));
+    MDRow row;
+    DF.getRow(row, DF.firstObject());
+    row.getValue(MDL_ANGLEROT,trial(VEC_XSIZE(trial)-5));
+    row.getValue(MDL_ANGLETILT,trial(VEC_XSIZE(trial)-4));
+    row.getValue(MDL_ANGLEPSI,trial(VEC_XSIZE(trial)-3));
+    row.getValue(MDL_SHIFTX,trial(VEC_XSIZE(trial)-2));
     trial(VEC_XSIZE(trial)-2)*=pow(2.0,(double)pyramidLevel);
-    DF.getValue(MDL_SHIFTY,trial(VEC_XSIZE(trial)-1),objId);
+    row.getValue(MDL_SHIFTY,trial(VEC_XSIZE(trial)-1));
     trial(VEC_XSIZE(trial)-1)*=pow(2.0,(double)pyramidLevel);
     double tempvar;
-    DF.getValue(MDL_COST,tempvar,objId);
+    row.getValue(MDL_COST,tempvar);
     return tempvar;
 }
 
@@ -374,8 +374,11 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
 ObjFunc_nma_alignment::ObjFunc_nma_alignment(int _t, int _n)
 {}
 
-void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
+	static size_t imageCounter = 0;
+	++imageCounter;
+
     double rhoStart=1e-0, rhoEnd=1e-3;
 
     int niter=1000;
@@ -386,7 +389,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
 
     parameters.initZeros(dim+5);
     currentImgName = fnImg;
-    sprintf(nameTemplate, "_node%d_img%ld_XXXXXX", rangen, objId);
+    sprintf(nameTemplate, "_node%d_img%ld_XXXXXX", rangen, imageCounter);
 
     trial.initZeros(dim+5);
     trial_best.initZeros(dim+5);

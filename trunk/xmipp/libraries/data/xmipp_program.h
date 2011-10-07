@@ -259,38 +259,48 @@ protected:
     //FileName        fnImg, fnImgOut;
     /// Output extension and root
     FileName oext, oroot;
-    /// Set this true to allow the option
-    /// of applying the transformation as stored in the header
-    bool allow_apply_geo;
-    /// Use this flag for not writing at every image and when the program produces an unique output
-    bool produces_an_output;
-    /// Set this flag true when the program produces a metadata/stack result
-    bool each_image_produces_an_output;
-    /// Use this flag for not producing a time bar
-    bool allow_time_bar;
+
+    // BEHAVIOR CONTROL FLAGS //
+
+    /// Indicate that a unique final output is produced
+    bool produces_an_output; // Default false (only -o param is used)
+    /// Indicate that an output is produced for each image in the input
+    bool each_image_produces_an_output; // Default false (both -o --oroot params are used)
+    /// Provide the program with the param --dont_apply_geo to allow the user deciding whether
+    /// or not applying the transformation info as stored in the input metadata
+    bool allow_apply_geo; // Default false
+    /// Input Metadata will treat a stack file as a set of images instead of a unique file
+    bool decompose_stacks; // Default true
+    // Delete previous output stack file prior to process images
+    bool delete_output_stack; // Default true
+    /// Save the associated output metadata when output file is a stack
+    bool save_metadata_stack; // Default false
+    /// Keep input metadata columns
+    bool keep_input_columns; // Default false
+    /// Remove disabled images from the input selfile
+    bool remove_disabled; // Default true
+    /// Show process time bar
+    bool allow_time_bar; // Default true
+
+    // DEDUCED FLAGS
+    /// Input is a single image
+    bool single_image;
+    /// Input is a stack
+    bool input_is_stack;
+    /// Output is a stack
+    bool output_is_stack;
+    // Create empty output stack file prior to process images
+    bool create_empty_stackfile; //
+
     /// Some time bar related counters
     size_t time_bar_step, time_bar_size, time_bar_done;
-    /// Flag to know when input is a single image or stack
-    bool single_image;
-    bool input_is_stack;
-    bool output_is_stack;     // Used to manage whether delete output stack file and/or create output stack empty file
-    bool delete_output_stack; // Delete previous output stack file
-    bool create_empty_stackfile; // Create empty output stack file
-    /// Flag to treat a stack file as a set of images instead of a unique file
-    bool decompose_stacks;
-    /// Flag to save the output metadata when output file is a stack
-    bool save_metadata_stack;
-    /// Remove disabled images from the input selfile
-    bool remove_disabled;
-    /// Object id of the output metadata
-    size_t newId;
 
     virtual void initComments();
     virtual void defineParams();
     virtual void readParams();
     virtual void preProcess();
     virtual void postProcess();
-    virtual void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId) = 0;
+    virtual void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut) = 0;
     virtual void show();
     /** Do some stuff before starting processing
      * in a parallel environment usually this only be executed
@@ -322,11 +332,11 @@ public:
 class XmippProgramGeneric: public XmippProgram
 {
 public:
-  bool definitionComplete;
-   ///Constructor
-  XmippProgramGeneric();
-  void endDefinition();
-  virtual void read(int argc, char ** argv, bool reportErrors = true);
+    bool definitionComplete;
+    ///Constructor
+    XmippProgramGeneric();
+    void endDefinition();
+    virtual void read(int argc, char ** argv, bool reportErrors = true);
 
 protected:
     void defineParams();

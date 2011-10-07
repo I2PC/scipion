@@ -33,6 +33,7 @@ void ProgTransformGeometry::defineParams()
 {
     each_image_produces_an_output = true;
     save_metadata_stack = true;
+    keep_input_columns = true;
     XmippMetadataProgram::defineParams();
     //usage
     addUsageLine("Apply geometric transformations to images. You can shift, rotate and scale");
@@ -265,16 +266,13 @@ void ProgTransformGeometry::preProcess()
         A = A.inv();
 }
 
-void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
 
     B.initIdentity(dim + 1);
 
     if (!disableMetadata)
-    {
-        mdIn.getRow(input, objId);//Get geometric transformation for image
-        geo2TransformationMatrix(input, B);
-    }
+        geo2TransformationMatrix(rowOut, B);
 
     T = A * B;
 
@@ -291,12 +289,6 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
     {
         imgOut.setDatatype(img.getDatatype());
 
-        /*FIXME: Little tiny gunny Cuban!! it is mandatory to assign the size to the image
-         * in order to really be scaled when applyGeometry is run. If not, then
-         * the old size remains.
-         *
-         * It would be interesting to put a boolean flag to decide when to map
-         */
         /* if special scale do not resize output just rotate image */
         if(scale_type!=SCALE_PYRAMID_EXPAND &&
            scale_type!=SCALE_PYRAMID_REDUCE &&
@@ -325,9 +317,7 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
     }
     else
     {
-        transformationMatrix2Geo(T, input);
-        //input.setValue(MDL_IMAGE, fnImgOut);
-        mdOut.setRow(input, newId);
+        transformationMatrix2Geo(T, rowOut);
         if (fnImg != fnImgOut )
             img.write(fnImgOut);
     }

@@ -1670,6 +1670,7 @@ void ProgMask::defineParams()
 {
     each_image_produces_an_output = true;
     save_metadata_stack = true;
+    keep_input_columns = true;
     XmippMetadataProgram::defineParams();
     Mask::defineParams(this);
 
@@ -1748,10 +1749,12 @@ void ProgMask::postProcess()
 }
 
 /* Process image ------------------------------------------------------------- */
-void ProgMask::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgMask::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
+	static size_t imageCount = 0;
+	++imageCount;
     Image<double> image;
-    image.readApplyGeo(fnImg,mdIn,objId);
+    image.readApplyGeo(fnImg, rowIn);
     image().setXmippOrigin();
 
     // Generate mask
@@ -1823,7 +1826,7 @@ void ProgMask::processImage(const FileName &fnImg, const FileName &fnImgOut, siz
             std::cerr << "Cannot count pixels with a continuous mask\n";
     }
 
-    if (objId % 25 == 0 && !count)
-        progress_bar(objId);
+    if (imageCount % 25 == 0 && !count)
+        progress_bar(imageCount);
 }
 

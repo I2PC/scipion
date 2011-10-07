@@ -95,10 +95,10 @@ void ProgFilter::preProcess()
     filter->show();
 }
 
-void ProgFilter::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgFilter::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     Image<double> img;
-    img.readApplyGeo(fnImg, mdIn, objId);
+    img.readApplyGeo(fnImg, rowIn);
     filter->apply(img());
     img.write(fnImgOut);
 }

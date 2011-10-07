@@ -746,7 +746,7 @@ void MDRow::copy(const MDRow &row)
         }
     }
     //copy the order of labels
-    memcpy(order, row.order, sizeof(short int)*_size);
+    memcpy(order, row.order, sizeof(int)*_size);
 }
 
 std::ostream& operator << (std::ostream &out, const MDRow &row)

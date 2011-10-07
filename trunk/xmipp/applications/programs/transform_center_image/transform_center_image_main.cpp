@@ -65,10 +65,10 @@ public:
         std::cout << "limit shift = " << limitShift << std::endl;
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
     {
         Image<double> img;
-        img.readApplyGeo(fnImg, mdIn, objId);
+        img.readApplyGeo(fnImg, rowIn);
         img().checkDimensionWithDebug(2,__FILE__,__LINE__);
         centerImage(img(), Niter, limitShift);
         img.write(fnImgOut);

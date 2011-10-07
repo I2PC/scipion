@@ -62,14 +62,14 @@ void ProgSimulateMicroscope::readParams()
     }
     else if (checkParam("--noNoise"))
     {
-    	estimateSNR=0;
-    	sigma=0;
-    	low_pass_before_CTF=0.5;
+        estimateSNR=0;
+        sigma=0;
+        low_pass_before_CTF=0.5;
     }
     else
     {
         targetSNR = getDoubleParam("--targetSNR");
-    	low_pass_before_CTF=0.5;
+        low_pass_before_CTF=0.5;
         estimateSNR=true;
     }
 }
@@ -219,7 +219,7 @@ void ProgSimulateMicroscope::updateCtfs()
     }
     else
     {
-    	sigma_before_CTF=sigma_after_CTF=0;
+        sigma_before_CTF=sigma_after_CTF=0;
     }
 }
 
@@ -241,15 +241,14 @@ void ProgSimulateMicroscope::preProcess()
         estimateSigma();
 }
 
-void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName &fnImgOut,
-        size_t objId)
+void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     static Image<double> img;
     static FileName last_ctf;
     last_ctf = fn_ctf;
-    img.readApplyGeo(fnImg, mdIn, objId);
+    img.readApplyGeo(fnImg, rowIn);
 
-    mdIn.getValue(MDL_CTFMODEL, fn_ctf, objId);
+    rowIn.getValue(MDL_CTFMODEL, fn_ctf);
     if (fn_ctf != last_ctf)
         updateCtfs();
 
@@ -287,8 +286,6 @@ void ProgSimulateMicroscope::apply(MultidimArray<double> &I)
         ctf.ctf.DeltafV *= rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
         aux.initZeros(2*Ydim, 2*Xdim);
         ctf.generateMask(aux);
-        ctf.ctf.DeltafU = ctf.ctf.DeltafU;
-        ctf.ctf.DeltafV = ctf.ctf.DeltafV;
     }
 
     // Apply CTF

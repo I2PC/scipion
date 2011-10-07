@@ -59,7 +59,7 @@ public:
         mask_prm.show();
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
     {
         // Read input volume
         Image<double> volume;

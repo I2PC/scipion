@@ -99,14 +99,14 @@ public:
         }
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
     {
         if (action=="extract_selfile")
         {
             bool store = true;
             int enabled;
             Matrix1D<double> aux(1); // Auxiliary vector to be added to the docfile
-            if (!mdIn.getValue( MDL_ENABLED, enabled, objId))
+            if (!rowIn.getValue( MDL_ENABLED, enabled))
             	enabled=1;
             if (enabled == 1)
                 aux(0) = (new_style) ? currentImage : 1;
@@ -123,7 +123,7 @@ public:
         else if (action=="extract_angles")
         {
             Image<double> img;
-            img.readApplyGeo(fnImg,mdIn,objId, false, HEADER);
+            img.readApplyGeo(fnImg,rowIn, false, HEADER);
             DF_out.append_angles(img.rot(), img.tilt(), img.psi(),
                                  ang1, ang2, ang3);
 

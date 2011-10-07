@@ -92,7 +92,7 @@ protected:
         << "Noise: " << sigma   << std::endl;
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
     {
         double amin = rnd_gaus(0, sigma);
         double amax = rnd_gaus(0, sigma);

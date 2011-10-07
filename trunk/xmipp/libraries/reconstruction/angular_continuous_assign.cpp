@@ -190,13 +190,13 @@ void ProgAngularContinuousAssign::preProcess()
 }
 
 // Predict =================================================================
-void ProgAngularContinuousAssign::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgAngularContinuousAssign::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     // Read the image and take its angles from the Metadata
     // if they are available. If not, take them from the header.
     // If not, set them to 0.
     Image<double> img;
-    img.readApplyGeo(fnImg, mdIn, objId);
+    img.readApplyGeo(fnImg, rowIn);
 
     double old_rot=img.rot();
     double old_tilt=img.tilt();
@@ -242,14 +242,12 @@ void ProgAngularContinuousAssign::processImage(const FileName &fnImg, const File
     else
         cost=-1;
 
-    newId = mdOut.addObject();
-    mdOut.setValue(MDL_IMAGE,     fnImg,newId);
-    mdOut.setValue(MDL_ANGLEROT,  new_rot,newId);
-    mdOut.setValue(MDL_ANGLETILT, new_tilt,newId);
-    mdOut.setValue(MDL_ANGLEPSI,  new_psi,newId);
-    mdOut.setValue(MDL_SHIFTX,    new_shiftX,newId);
-    mdOut.setValue(MDL_SHIFTY,    new_shiftY,newId);
-    mdOut.setValue(MDL_COST,      cost,newId);
+    rowOut.setValue(MDL_ANGLEROT,  new_rot);
+    rowOut.setValue(MDL_ANGLETILT, new_tilt);
+    rowOut.setValue(MDL_ANGLEPSI,  new_psi);
+    rowOut.setValue(MDL_SHIFTX,    new_shiftX);
+    rowOut.setValue(MDL_SHIFTY,    new_shiftY);
+    rowOut.setValue(MDL_COST,      cost);
 }
 
 /* ------------------------------------------------------------------------- */

@@ -76,7 +76,7 @@ protected:
     void show();
     void defineParams();
     void readParams();
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 
 public:
 

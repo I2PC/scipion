@@ -108,7 +108,7 @@ public:
     /// Setup lots of stuff
     void produceSideInfo();
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 
     void postProcess();
     void preProcess();

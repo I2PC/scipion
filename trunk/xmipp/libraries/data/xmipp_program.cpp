@@ -417,10 +417,10 @@ XmippMetadataProgram::XmippMetadataProgram()
 {
     oroot = oext = fn_out = fn_in = "";
     apply_geo=false;
+    allow_apply_geo = false;
     produces_an_output = false;
     each_image_produces_an_output = false;
     allow_time_bar = true;
-    allow_apply_geo = false;
     decompose_stacks = true;
     save_metadata_stack = false;
     delete_output_stack = true;
@@ -495,7 +495,9 @@ void XmippMetadataProgram::readParams()
 
     mdInSize = mdIn.size();
 
-    if (!fn_in.isMetaData())
+    bool inputIsMetaData = fn_in.isMetaData();
+
+    if (!inputIsMetaData)
     {
         if (mdInSize == 1)
             single_image = true;
@@ -507,12 +509,12 @@ void XmippMetadataProgram::readParams()
      * check if it is stack. */
     output_is_stack = mdInSize > 1 && oroot.empty() && (!fn_out.empty() || input_is_stack);
 
+    save_metadata_stack = save_metadata_stack && inputIsMetaData && output_is_stack;
+
     if (remove_disabled)
         mdIn.removeDisabled();
 
     // if input is volume do not apply geo
-    ImgSize(mdIn, xdimOut, ydimOut, zdimOut, ndimOut);
-
     if (allow_apply_geo && zdimOut == 1)
         apply_geo = !checkParam("--dont_apply_geo");
 
@@ -522,6 +524,10 @@ void XmippMetadataProgram::readParams()
 
     // If the output is a stack, create empty stack file in advance to avoid concurrent access to the header
     create_empty_stackfile = (each_image_produces_an_output && output_is_stack && !fn_out.empty());
+
+    // if create, then we need to read the dimensions of the input stack
+    ImgSize(mdIn, xdimOut, ydimOut, zdimOut, ndimOut);
+
 }
 
 void XmippMetadataProgram::show()
@@ -607,7 +613,9 @@ bool XmippMetadataProgram::getImageToProcess(size_t &objId, size_t &objIndex)
 void XmippMetadataProgram::run()
 {
     FileName fnImg, fnImgOut, baseName, pathBaseName, fullBaseName, oextBaseName;
-    size_t objId;
+    size_t objId , outId;
+    MDRow rowIn, rowOut;
+
     //Perform particular preprocessing
     preProcess();
 
@@ -629,7 +637,9 @@ void XmippMetadataProgram::run()
     while (getImageToProcess(objId, objIndex))
     {
         ++objIndex; //increment for composing starting at 1
-        mdIn.getValue(MDL_IMAGE, fnImg, objId);
+
+        mdIn.getRow(rowIn, objId);
+        rowIn.getValue(MDL_IMAGE, fnImg);
 
         if (fnImg.empty())
             break;
@@ -660,12 +670,20 @@ void XmippMetadataProgram::run()
             else
                 fnImgOut = fnImg;
 
-            newId = mdOut.addObject();
-            mdOut.setValue(MDL_IMAGE, fnImgOut, newId);
-            mdOut.setValue(MDL_ENABLED, 1, newId);
+            if (keep_input_columns)
+                rowOut = rowIn;
+            else
+                rowOut.clear();
+
+            rowOut.setValue(MDL_IMAGE, fnImgOut);
+            rowOut.setValue(MDL_ENABLED, 1);
+
         }
 
-        processImage(fnImg, fnImgOut, objId);
+        processImage(fnImg, fnImgOut, rowIn, rowOut);
+
+        if (each_image_produces_an_output)
+            mdOut.addRow(rowOut);
 
         showProgress();
     }

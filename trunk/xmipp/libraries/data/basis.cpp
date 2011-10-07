@@ -148,7 +148,7 @@ void Basis::produceSideInfo(const Grid &grid)
             blobprint()  /= sum_on_grid;
 
             if (VolPSF != NULL)
-            { // let adjust to the same size both blobprint and VolPSF
+            { // let adjust to the same resolution and size both blobprint and VolPSF
                 selfScaleToSize(LINEAR, *VolPSF, XSIZE(*VolPSF)*BLOB_SUBSAMPLING,
                                 YSIZE(*VolPSF)*BLOB_SUBSAMPLING, ZSIZE(*VolPSF));
 

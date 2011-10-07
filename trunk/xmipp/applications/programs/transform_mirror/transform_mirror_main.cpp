@@ -55,7 +55,7 @@ public:
         flipZ = checkParam("--flipZ");
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
     {
         img.read(fnImg);
         if (flipX)

@@ -37,7 +37,7 @@ protected:
     void defineParams();
     void readParams();
     void preProcess();
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 
 public:
     ProgFilter();

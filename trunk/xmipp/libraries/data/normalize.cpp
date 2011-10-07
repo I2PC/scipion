@@ -391,7 +391,9 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
 void ProgNormalize::defineParams()
 {
     each_image_produces_an_output = true;
-    allow_apply_geo=true;
+    allow_apply_geo = true;
+    save_metadata_stack = true;
+    keep_input_columns = true;
     addUsageLine("Change the range of intensity values of pixels.");
     addUsageLine("In general, most of the methods requires a background to separate "
                  "particles from noise");
@@ -615,19 +617,15 @@ void ProgNormalize::show()
 
 void ProgNormalize::preProcess()
 {
-    int Zdim, Ydim, Xdim;
-    size_t Ndim;
-    ImgSize(mdIn, Xdim, Ydim, Zdim, Ndim);
-
     if (!enable_mask)
     {
-        bg_mask.resizeNoCopy(Zdim, Ydim, Xdim);
+        bg_mask.resizeNoCopy(zdimOut, ydimOut, xdimOut);
         bg_mask.setXmippOrigin();
 
         switch (background_mode)
         {
         case FRAME:
-            BinaryFrameMask(bg_mask, Xdim - 2 * r, Ydim - 2 * r, Zdim - 2 * r,
+            BinaryFrameMask(bg_mask, xdimOut - 2 * r, ydimOut - 2 * r, zdimOut - 2 * r,
                             OUTSIDE_MASK);
             break;
         case CIRCLE:
@@ -637,7 +635,7 @@ void ProgNormalize::preProcess()
     }
     else
     {
-        mask_prm.generate_mask(Zdim, Ydim, Xdim);
+        mask_prm.generate_mask(zdimOut, ydimOut, xdimOut);
         bg_mask = mask_prm.imask;
     }
     // backup a copy of the mask for apply_geo mode
@@ -686,11 +684,11 @@ void ProgNormalize::preProcess()
     }
 }
 
-void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     Image<double> I;
     if (apply_geo)
-        I.readApplyGeo(fnImg, mdIn, objId);
+        I.readApplyGeo(fnImg, rowIn);
     else
         I.read(fnImg);
     I().setXmippOrigin();
@@ -789,4 +787,3 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
 
     I.write(fnImgOut);
 }
-

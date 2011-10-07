@@ -93,7 +93,7 @@ void ProgThreshold::show()
 }
 
 /* Process image ------------------------------------------------------------- */
-void ProgThreshold::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgThreshold::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     Image<double> I;
     I.read(fnImg);

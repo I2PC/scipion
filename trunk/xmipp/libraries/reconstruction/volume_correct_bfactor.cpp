@@ -117,7 +117,7 @@ void ProgVolumeCorrectBfactor::show()
         std::cout << "Use signal-to-noise weight based on "<< fn_fsc <<std::endl;
 }
 
-void ProgVolumeCorrectBfactor::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgVolumeCorrectBfactor::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     Image<double> vol;
     vol.read(fnImg);

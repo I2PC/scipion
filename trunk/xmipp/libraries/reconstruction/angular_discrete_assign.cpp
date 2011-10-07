@@ -95,14 +95,14 @@ void ProgAngularDiscreteAssign::defineParams()
     addUsageLine("+variables, the best correlating ideal projection is sought using a fast ");
     addUsageLine("+multirresolution algorithm.");
     addUsageLine("+The method is fully described at http://www.ncbi.nlm.nih.gov/pubmed/15099579");
-	defaultComments["-i"].clear();
-	defaultComments["-i"].addComment("List of images to align");
-	defaultComments["-i"].addComment("+ Alignment parameters can be provided ");
-	defaultComments["-i"].addComment("+ Only the shifts are taken in consideration ");
-	defaultComments["-i"].addComment("+ in global searches; in local searches, all ");
-	defaultComments["-i"].addComment("+ parameters in the initial docfile are considered.");
-	defaultComments["-o"].clear();
-	defaultComments["-o"].addComment("Metadata with output alignment");
+    defaultComments["-i"].clear();
+    defaultComments["-i"].addComment("List of images to align");
+    defaultComments["-i"].addComment("+ Alignment parameters can be provided ");
+    defaultComments["-i"].addComment("+ Only the shifts are taken in consideration ");
+    defaultComments["-i"].addComment("+ in global searches; in local searches, all ");
+    defaultComments["-i"].addComment("+ parameters in the initial docfile are considered.");
+    defaultComments["-o"].clear();
+    defaultComments["-o"].addComment("Metadata with output alignment");
     XmippMetadataProgram::defineParams();
     addParamsLine("   --ref <selfile>             : Metadata with the reference images and their angles");
     addParamsLine("                               :+Must be created with [[angular_project_library_v3][angular_project_library]]");
@@ -279,6 +279,7 @@ void ProgAngularDiscreteAssign::build_ref_candidate_list(const Image<double> &I,
             std::cout << "(" << I.rot() << "," << I.tilt() << ") and ("
             << rot[i] << "," << tilt[i] << ") --> " << ang_distance << std::endl;
 #endif
+
         }
     }
 }
@@ -306,9 +307,9 @@ void ProgAngularDiscreteAssign::refine_candidate_list_with_correlation(
             unsigned long jmax=4*(dimp/4);
             for (int j = 0; j < dimp; j+=4)
             {
-            	int j_1=j+1;
-            	int j_2=j+2;
-            	int j_3=j+3;
+                int j_1=j+1;
+                int j_2=j+2;
+                int j_3=j+3;
                 sumxyp += VEC_ELEM(dwt,j)   * DIRECT_A2D_ELEM(library_m,i, j) +
                           VEC_ELEM(dwt,j_1) * DIRECT_A2D_ELEM(library_m,i, j_1) +
                           VEC_ELEM(dwt,j_2) * DIRECT_A2D_ELEM(library_m,i, j_2) +
@@ -320,7 +321,7 @@ void ProgAngularDiscreteAssign::refine_candidate_list_with_correlation(
             sumxy[i] += sumxyp;
 
             double corr = sumxy[i] / sqrt(DIRECT_A2D_ELEM(library_power,i, m) *
-            		                      VEC_ELEM(x_power,m));
+                                          VEC_ELEM(x_power,m));
             cumulative_corr[i] = corr;
             INSERT_VALUE(hist,corr);
 
@@ -336,7 +337,7 @@ void ProgAngularDiscreteAssign::refine_candidate_list_with_correlation(
     // Remove all those projections below the threshold
     for (int i = 0; i < imax; i++)
         if (candidate_list[i])
-        	candidate_list[i] = (cumulative_corr[i] >= corr_th);
+            candidate_list[i] = (cumulative_corr[i] >= corr_th);
 
     // Show the percentil used
     if (tell & TELL_ROT_TILT)
@@ -690,13 +691,13 @@ int ProgAngularDiscreteAssign::pick_view(int method,
 // Run ---------------------------------------------------------------------
 // Predict shift and psi ---------------------------------------------------
 //#define DEBUG
-void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     // Read the image and take its angles from the Metadata
     // if they are available. If not, take them from the header.
     // If not, set them to 0.
     Image<double> img;
-    img.readApplyGeo(fnImg, mdIn, objId);
+    img.readApplyGeo(fnImg, rowIn);
 
     double best_rot, best_tilt, best_psi, best_shiftX, best_shiftY,
     best_score = 0, best_rate;
@@ -1043,14 +1044,12 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     }
 
     // Save results
-    newId = mdOut.addObject();
-    mdOut.setValue(MDL_IMAGE,     fnImg,newId);
-    mdOut.setValue(MDL_ANGLEROT,  best_rot, newId);
-    mdOut.setValue(MDL_ANGLETILT, best_tilt, newId);
-    mdOut.setValue(MDL_ANGLEPSI,  best_psi, newId);
-    mdOut.setValue(MDL_SHIFTX,    best_shiftX, newId);
-    mdOut.setValue(MDL_SHIFTY,    best_shiftY, newId);
-    mdOut.setValue(MDL_MAXCC,     best_score, newId);
+    rowOut.setValue(MDL_ANGLEROT,  best_rot);
+    rowOut.setValue(MDL_ANGLETILT, best_tilt);
+    rowOut.setValue(MDL_ANGLEPSI,  best_psi);
+    rowOut.setValue(MDL_SHIFTX,    best_shiftX);
+    rowOut.setValue(MDL_SHIFTY,    best_shiftY);
+    rowOut.setValue(MDL_MAXCC,     best_score);
 }
 #undef DEBUG
 

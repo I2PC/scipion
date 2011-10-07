@@ -134,10 +134,10 @@ protected:
 
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
     {
         if (apply_geo)
-            image.readApplyGeo(fnImg, mdIn, objId);
+            image.readApplyGeo(fnImg, rowIn);
         else
             image.read(fnImg, DATA, ALL_IMAGES, true);
 

@@ -384,10 +384,10 @@ void ProgOperate::readParams()
     }
 }
 
-void ProgOperate::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgOperate::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     Image<double> img;
-    img.readApplyGeo(fnImg, mdIn, objId);
+    img.readApplyGeo(fnImg, rowIn);
 
     if (unaryOperator != NULL)
         unaryOperator(img);

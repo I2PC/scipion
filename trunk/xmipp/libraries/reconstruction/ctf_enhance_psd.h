@@ -69,7 +69,7 @@ public:
     void show();
 
     /** Process one image */
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 
     /** Apply filter method to a single PSD.
         The steps are basically: outlier removal, band pass filtration, masking

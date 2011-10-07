@@ -111,7 +111,7 @@ protected:
 
     }
 
-    void roundShifts()
+    void roundShifts(MDRow &row)
     {
         double aux = 0.;
         if (row.getValue(MDL_SHIFTX, aux))
@@ -126,7 +126,7 @@ protected:
         }
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
     {
 
         ImageGeneric img;
@@ -139,16 +139,16 @@ protected:
             break;
         case HEADER_EXTRACT:
             img.read(fnImg, _HEADER_ALL);
-            row = img.getGeometry();
+            rowOut = img.getGeometry();
             if (round_shifts)
-                roundShifts();
-            mdIn.setRow(row, objId);
+                roundShifts(rowOut);
+            rowOut.setValue(MDL_IMAGE, fnImgOut);
             break;
         case HEADER_ASSIGN:
-            mdIn.getRow(row, objId);
+        	rowOut = rowIn;
             if (round_shifts)
-                roundShifts();
-            img.readApplyGeo(fnImg, row, HEADER);
+                roundShifts(rowOut);
+            img.readApplyGeo(fnImg, rowOut, HEADER);
             img.setDataMode(_HEADER_ALL);
             img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
             break;
@@ -163,10 +163,7 @@ protected:
     void finishProcessing()
     {
         if (operation ==HEADER_EXTRACT)
-        {
-            mdOut = mdIn;
             single_image = false;
-        }
         XmippMetadataProgram::finishProcessing();
     }
 }

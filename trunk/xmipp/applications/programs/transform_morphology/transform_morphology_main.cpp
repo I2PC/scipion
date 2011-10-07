@@ -1,3 +1,4 @@
+
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
@@ -155,10 +156,10 @@ public:
             << "Neighbourhood3D=" << neig3D << std::endl
             << "Count=" << count << std::endl;
     }
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
     {
         Image<double> img, imgOut;
-        img.readApplyGeo(fnImg, mdIn, objId);
+        img.readApplyGeo(fnImg, rowIn);
         imgOut().resizeNoCopy(img());
 
         if (binaryOperation)

@@ -60,7 +60,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
     Projection      diff_proj;          // Difference between the
     // theoretical and real image
 
-    preIterations(vol_basis);
+//    preIterations(vol_basis);
 
     // Reconstruction results ...............................................
     double          mean_error,mean_error_1stblock;

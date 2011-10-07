@@ -221,29 +221,27 @@ void ProgTomoExtractSubvolume::produceSideInfo()
 #endif
 
 }
-void ProgTomoExtractSubvolume::processImage(const FileName &fn_img,
-        const FileName &fnImgOut,
-        size_t objId)
+void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
 #ifdef  DEBUG
     std::cerr<<"Start processImages"<<std::endl;
 #endif
 
     //    for (int imgno=imgno_start; imgno <imgno_end; imgno++)
-    mdIn.getValue(MDL_ANGLEROT,rot,objId);
-    mdIn.getValue(MDL_ANGLETILT,tilt,objId);
-    mdIn.getValue(MDL_ANGLEPSI,psi,objId);
+    rowIn.getValue(MDL_ANGLEROT,rot);
+    rowIn.getValue(MDL_ANGLETILT,tilt);
+    rowIn.getValue(MDL_ANGLEPSI,psi);
 
     double auxD;
-    mdIn.getValue(MDL_ORIGINX,auxD,objId);
+    rowIn.getValue(MDL_ORIGINX,auxD);
     XX(doccenter) = auxD;
-    mdIn.getValue(MDL_ORIGINY,auxD,objId);
+    rowIn.getValue(MDL_ORIGINY,auxD);
     YY(doccenter) = auxD;
-    mdIn.getValue(MDL_ORIGINZ,auxD,objId);
+    rowIn.getValue(MDL_ORIGINZ,auxD);
     ZZ(doccenter) = auxD;
 
     // Read volume
-    vol.read(fn_img);
+    vol.read(fnImg);
     vol().setXmippOrigin();
 
     x0 = FIRST_XMIPP_INDEX(size);
@@ -267,7 +265,7 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fn_img,
         //vol().translate(-center, volout(), DONT_WRAP);
         //4. Window operation and write subvolume to disc
         volout().selfWindow(x0,x0,x0,xF,xF,xF);
-        fn_aux=fn_img.removeLastExtension();
+        fn_aux=fnImg.removeLastExtension();
         fn_aux+="_sub";
         fn_aux.compose(fn_aux,i+1,"vol");
         volout.write(fn_aux);

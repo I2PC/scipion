@@ -188,12 +188,12 @@ public:
         create_empty_stackfile=false;
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
     {
         ImageGeneric Iin;
         bool createTempFile = (fnImg == fnImgOut);
         if (apply_geo)
-            Iin.readApplyGeo(fnImg, mdIn, objId);
+            Iin.readApplyGeo(fnImg, rowIn);
         else
             Iin.read(fnImg, DATA, ALL_IMAGES, true);
 
