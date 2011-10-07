@@ -1,6 +1,5 @@
 package trainingpicker.model;
 
-import java.awt.Point;
 
 public class Constants {
 	
@@ -8,7 +7,6 @@ public class Constants {
 	public static String getIllegalDeleteMsg(String item)
 	{
 		return String.format("There it must be at least one %s defined", item);
-
 	}
 	
 	public static String getAlreadyExistsGroupNameMsg(String name)
@@ -17,7 +15,7 @@ public class Constants {
 	}
 
 	public static String getEmptyFieldMsg(String field) {
-		return String.format("Must specify a %s", field);
+		return String.format("Must specify %s", field);
 	}
 
 	public static String getAssociatedDataMsg(String field) {
@@ -28,7 +26,7 @@ public class Constants {
 		return String.format("No such %s %s exists", field, value);
 	}
 
-	public static String getOutOfBoundException(Object o)
+	public static String getOutOfBoundMsg(Object o)
 	{
 		return String.format("%s out of bounds", o);
 	}

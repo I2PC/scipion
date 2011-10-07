@@ -100,7 +100,7 @@ public class TrainingParticle extends Particle{
 	{
 		int radius = family.getSize()/2;
 		if(x - radius < 0 || y - radius < 0 || x + radius > micrograph.getImage().getWidth() || y + radius > micrograph.getImage().getHeight())
-			throw new IllegalArgumentException(Constants.getOutOfBoundException(String.format(" particle center: %s %s", x, y)));
+			throw new IllegalArgumentException(Constants.getOutOfBoundMsg(String.format(" particle center: %s %s", x, y)));
 		super.setPosition(x, y);
 		
 		img = null;

@@ -15,36 +15,55 @@ import java.util.List;
 
 import javax.swing.JDialog;
 
+import trainingpicker.model.Constants;
 import trainingpicker.model.TrainingParticle;
 
 public class ParticlesJDialog extends JDialog
 {
 
 	private ParticlePickerJFrame frame;
-	private List<TrainingParticle> particles;
-	private int rows, columns;
-	private int side;
 	private Panel particlespn;
 	private ScrollPane sp;
 	private GridBagConstraints constraints;
-	private int width;
-	private int height;
 
 	public ParticlesJDialog(ParticlePickerJFrame frame)
 	{
+		
 		super(frame);
 		this.frame = frame;
 		initComponents();
-		
+
 	}
-	
-	public void loadParticles()
+
+	public void loadParticles(boolean resize)
 	{
-		side = (int)(frame.getFamily().getSize() * frame.getMagnification());
-		columns = Math.min(800, frame.getFamilyData().getParticles().size() * side) / side;
-		rows = (int)Math.ceil((frame.getFamilyData().getParticles().size()/(float)columns));
-		width = side * columns;
-		height = (side * Math.min(3, rows));
+		int side, rows, columns, width = 0, height = 0;
+		List<TrainingParticle> particles = frame.getFamilyData().getParticles();
+		side = (int) (frame.getFamily().getSize() * frame.getMagnification());
+		
+		if(particles.isEmpty())
+			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("particles"));
+		if(side == 0)
+			throw new IllegalArgumentException(Constants.getOutOfBoundMsg("side"));
+		
+		if(resize)
+		{
+			
+			columns = Math.min(200, particles.size() * side) / side;
+			rows = (int) Math.ceil(particles.size() / (float) columns);
+			width = side * columns;
+			height = (side * Math.min(10, rows));
+			boolean scroll = (height < rows * side);
+			width = width + (scroll? 40: 20);
+			height = height + (scroll? 0: 20);
+			sp.setPreferredSize(new Dimension(width, height));
+		}
+		else
+		{
+			Dimension d = sp.getSize();
+			columns = (int) d.getWidth() / side;
+			rows = (int) Math.ceil((particles.size() / (float) columns));
+		}
 		particlespn.removeAll();
 		particles = frame.getFamilyData().getParticles();
 		int index = 0;
@@ -55,76 +74,40 @@ public class ParticlesJDialog extends JDialog
 					break;
 				particlespn.add(particles.get(index).getParticleCanvas(frame), WindowUtils.getConstraints(constraints, j, i, 1));
 			}
-		sp.setPreferredSize(new Dimension(width + 20, height));
-		pack();
+		if (resize)
+			pack();
 	}
 
 	private void initComponents()
 	{
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setTitle("Particles");
-		setResizable(false);
+		// setResizable(false);
 		constraints = new GridBagConstraints();
 		sp = new ScrollPane();
 		particlespn = new Panel(new GridBagLayout());
 		sp.add(particlespn);
 		add(sp);
-		
-		loadParticles();
-//		addComponentListener(new ComponentListener()
-//		{
-//			
-//			@Override
-//			public void componentShown(ComponentEvent e)
-//			{
-//				// TODO Auto-generated method stub
-//				
-//			}
-//			
-//			@Override
-//			public void componentResized(ComponentEvent e)
-//			{
-//				
-//				Dimension d = sp.getSize();
-//				columns = (int)d.getWidth()/side;
-//				rows = (int)Math.ceil((particles.size()/(float)columns));
-//				width = (int)d.getWidth();
-//				height = (int)d.getHeight();
-//				loadParticles();
-//			}
-//			
-//			@Override
-//			public void componentMoved(ComponentEvent e)
-//			{
-//				// TODO Auto-generated method stub
-//				
-//			}
-//			
-//			@Override
-//			public void componentHidden(ComponentEvent e)
-//			{
-//				// TODO Auto-generated method stub
-//				
-//			}
-//		});
-		addWindowListener(new WindowAdapter()
-		{
-			public void windowClosing(WindowEvent winEvt)
-		    {
-				frame.particlesdialog = null;
-		    }
-		});
-		WindowUtils.centerScreen(0, 0.9, this);
+
+		loadParticles(true);
+		WindowUtils.centerScreen(0.6, 0, this);
 		setVisible(true);
+
+		this.addComponentListener(new java.awt.event.ComponentAdapter()
+		{
+			public void componentResized(ComponentEvent e)
+			{
+				loadParticles(false);
+			}
+		});
+
 	}
 
 	public void close()
 	{
 		setVisible(false);
 		dispose();
-		
-	}
 
-	
+	}
 
 }

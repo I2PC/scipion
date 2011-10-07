@@ -203,6 +203,8 @@ public class ParticlePickerCanvas extends ImageCanvas implements MouseWheelListe
 				drawFamily(g2, mfdata);
 		else
 			drawFamily(g2, micrograph.getFamilyData(frame.getFamily()));
+		Rectangle r = getSrcRect();
+        g2.drawRect(0, 0, (int)(r.getWidth() * magnification - 1), (int)(r.getHeight() * magnification - 1));					
 	}
 
 	private void drawFamily(Graphics2D g2, MicrographFamilyData mfdata)
@@ -252,10 +254,16 @@ public class ParticlePickerCanvas extends ImageCanvas implements MouseWheelListe
 	{
 		int width = (int) getSrcRect().getWidth();
 		int height = (int) getSrcRect().getHeight();
-		int x0 = Math.max(0, p.getX() - width / 2);
-		int y0 = Math.max(0, p.getY() - height / 2);
-		width = Math.min(width, getWidth() - x0);
-		height = Math.min(width, getWidth() - x0);
+		int x0 = p.getX() - width / 2;
+		if(x0 < 0)
+			x0 = 0;
+		if(x0 + width > imp.getWidth())
+			x0 = imp.getWidth() - width;
+		int y0 = p.getY() - height / 2;
+		if(y0 < 0)
+			y0 = 0;
+		if(y0 + height > imp.getHeight())
+			y0 = imp.getHeight() - height;
 		Rectangle r = new Rectangle(x0, y0, width, height);
 		if (!getSrcRect().contains(r))
 		{

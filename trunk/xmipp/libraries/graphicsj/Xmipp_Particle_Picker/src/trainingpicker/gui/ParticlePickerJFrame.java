@@ -211,7 +211,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 		add(micrographpn, WindowUtils.getConstraints(constraints, 0, 3, 3));
 
 		pack();
-		positionx = 0.9;
+		positionx = 0.995;
 		WindowUtils.centerScreen(positionx, 0.25, this);
 		setVisible(true);
 	}
@@ -236,7 +236,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 		filemn.add(savemi);
 		savemi.setMnemonic('S');
 		savemi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
-		
+
 		exportmi = new JMenuItem("Export Particles");
 		filemn.add(exportmi);
 
@@ -313,8 +313,6 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 		particlesmn.addActionListener(new ActionListener()
 		{
 
-			
-
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
@@ -350,17 +348,24 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 		});
 
 	}
-	
-	
 
 	protected void loadParticles()
 	{
-		if(particlesdialog == null)
+		if (particlesdialog == null)
 			particlesdialog = new ParticlesJDialog(ParticlePickerJFrame.this);
 		else
 		{
-			particlesdialog.loadParticles();
-			particlesdialog.setVisible(true);
+			try
+			{
+				particlesdialog.loadParticles(true);
+				particlesdialog.setVisible(true);
+			}
+			catch (Exception ex)
+			{
+				JOptionPane.showMessageDialog(ParticlePickerJFrame.this, ex.getMessage());
+				particlesdialog.close();
+				particlesdialog = null;
+			}
 		}
 	}
 
@@ -747,7 +752,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 				pack();
 				saveChanges();// Saving changes when switching micrographs, by
 								// Coss suggestion
-				if(particlesdialog != null)
+				if (particlesdialog != null)
 					loadParticles();
 			}
 		});
@@ -839,12 +844,12 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 		sizesl.setValue(size);
 		canvas.repaint();
 		family.setSize(size);
-		if(particlesdialog != null)
+		if (particlesdialog != null)
 		{
-			for(TrainingParticle p: getFamilyData().getParticles())
+			for (TrainingParticle p : getFamilyData().getParticles())
 				p.resetParticleCanvas();
 			loadParticles();
-		}			
+		}
 		setChanged(true);
 	}
 
@@ -875,7 +880,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 		manuallb.setText(Integer.toString(family.getManualNumber()));
 		autolb.setText(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
 		actionsbt.setVisible(getFamilyData().isActionAvailable(getThreshold()));
-		if(particlesdialog != null)
+		if (particlesdialog != null)
 			loadParticles();
 	}
 
@@ -1083,7 +1088,7 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 
 	public double getMagnification()
 	{
-		if(family.getSize() > 100)
+		if (family.getSize() > 100)
 			return 0.4;
 		return 1;
 	}
@@ -1092,7 +1097,5 @@ public class ParticlePickerJFrame extends JFrame implements ActionListener
 	{
 		return particlesdialog;
 	}
-
-	
 
 }
