@@ -1015,6 +1015,7 @@ public:
      */
     void alias(const MultidimArray<T> &m)
     {
+    	coreDeallocate();
         copyShape(m);
         this->data=m.data;
         this->nzyxdimAlloc = this->nzyxdim;
@@ -1034,6 +1035,7 @@ public:
         if (select_slice >= ZSIZE(m))
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "aliasSlice: Selected slice cannot be higher than Z size.");
 
+        coreDeallocate();
         setDimensions(XSIZE(m), YSIZE(m), 1, 1);
         this->data = m.data + XSIZE(m)*YSIZE(m)*(select_slice);
         this->nzyxdimAlloc = this->nzyxdim;
