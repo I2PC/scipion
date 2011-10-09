@@ -527,7 +527,7 @@ class ShowDialog(Dialog):
                 else:
                     self.text.insert(tk.END, p, t)
             self.text.insert(tk.END, '\n')
-        m = min(m, 80)
+        m = min(m + 5, 80)
         self.text.config(height=len(mylines)+3, width=m-7)
         self.text.insert(tk.END, '\n')
         self.text.pack()

@@ -52,19 +52,10 @@ class XmippProject():
     def exists(self):
         ''' a project exists if the data base can be opened and directories Logs and Runs
         exists'''
-        from protlib_sql import existsDB
-        status = True
-        if not os.path.exists(self.logsDir):
-            status = False
-        elif not os.path.exists(self.runsDir):
-            status = False
-        elif not os.path.exists(self.tmpDir):
-            status = False
-        elif not os.path.exists(self.cfgName):
-            status = False
-        elif not existsDB(self.dbName):
-            status = False
-        return status
+        for filename in [self.logsDir, self.runsDir, self.tmpDir, self.cfgName, self.dbName]:
+            if not os.path.exists(filename):
+                return False
+        return True        
     
     def create(self):
         os.chdir(self.projectDir)
@@ -131,6 +122,9 @@ class XmippProject():
                 shutil.rmtree(p.dir)
         self.create()
 
+    ''' Return file paths inside the temporal folder
+        Path are relative to ProjectDir
+    '''
     def projectTmpPath(self, *paths):
         return join(self.tmpDir, *paths)           
     
@@ -201,6 +195,13 @@ class XmippProject():
         if run is None:
             run = self.newProtocol(protocol_name)
         return run
+    
+    '''This will return a string with an unique identifier for each run
+    It will be also unique from diferent projects
+    '''
+    def getUniqueRunPrefix(self, run_id):
+        return self.projectDir.replace(os.path.sep, '_') + "_%d" % run_id
+        
             
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
@@ -520,4 +521,5 @@ def protocolMain(ProtocolClass, script=None):
             project.projectDb.updateRunPid(_run)
         
         if doRun:
+            print project.getUniqueRunPrefix(run_id)
             return p.run()
