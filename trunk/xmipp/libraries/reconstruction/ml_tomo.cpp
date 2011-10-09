@@ -156,7 +156,7 @@ ProgMLTomo::defineParams()
 
   addExampleLine("+++---+++Input images file", false);
   addExampleLine(
-      "+++ In the input metadata are two required columns: =image= and =missingRegionNumber=, "
+      "+++ The input metadata should contain the =image= column = and =missingRegionNumber=, "
           "indicating the subtomogran filename and the missing region number, respectively. It can"
           "also contains columns with angles and shift information. The output will be a metadata"
           "with the same format. Follow is an example:", false);
@@ -614,8 +614,7 @@ ProgMLTomo::produceSideInfo()
 //      && MDimg.containsLabel(MDL_SHIFTX) && MDimg.containsLabel(MDL_SHIFTY)
 //      && MDimg.containsLabel(MDL_SHIFTZ));
   // Check angles and shifts are not present on input metadata, fill it with 0 value
-  MDLabel labels[6] = { MDL_ANGLEROT, MDL_ANGLETILT, MDL_ANGLEPSI, MDL_SHIFTX,
-      MDL_SHIFTY, MDL_SHIFTZ };
+  MDLabel labels[6] = { MDL_ANGLEROT, MDL_ANGLETILT, MDL_ANGLEPSI, MDL_SHIFTX, MDL_SHIFTY, MDL_SHIFTZ };
   String labelStr = "WARNING: Labels ";
   for (int i = 0; i < 6; ++i)
   {
