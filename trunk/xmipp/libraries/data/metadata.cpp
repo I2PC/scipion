@@ -31,36 +31,25 @@
 // Get the blocks available
 void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
 {
-    MetaData MDaux;
-    blockList.clear();
     if (!inFile.isMetaData())
         return;
 
+    MetaData MDaux;
+    blockList.clear();
     //map file
     int fd;
-    char *map=NULL;
-    size_t size;
-    mapFile(inFile,map,size,fd);
-
-    char * firstData=NULL, *secondData=NULL, *firstloop=NULL;
-    regex_t re;
-    if (regcomp(&re, ".*", REG_EXTENDED|REG_NOSUB) != 0)
-        REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot construct regular expression");
-    char *startingPoint=map;
-    size_t remainingSize=size;
+    BUFFER_CREATE(bufferMap);
+    mapFile(inFile, bufferMap.begin, bufferMap.size, fd);
+    BUFFER_COPY(bufferMap, buffer);
+    BLOCK_CREATE(block);
     String blockName;
-    bool isColumnFormat;
-    while (MDaux.nextBlockToRead(re, startingPoint, remainingSize, isColumnFormat,
-                                 blockName, &firstData, &secondData, &firstloop))
+    while (MDaux.nextBlock(buffer, block))
     {
-        if(secondData ==NULL)
-            secondData = map + size;
+        BLOCK_NAME(block, blockName);
         blockList.push_back(blockName);
-        startingPoint=secondData;
-        remainingSize=size-(startingPoint-map);
     }
-    unmapFile(map,size,fd);
-    regfree(&re);
+
+    unmapFile(bufferMap.begin, bufferMap.size, fd);
 }
 
 //-----Constructors and related functions ------------
@@ -712,7 +701,7 @@ void MetaData::_readColumns(std::istream& is, std::vector<MDObject*> & columnVal
  */
 void MetaData::_parseObject(std::istream &is, MDObject &object, size_t id)
 {
-    is >> object;
+    object.fromStream(is);
     if (is.fail())
     {
         REPORT_ERROR(ERR_MD_BADLABEL, (String)"read: Error parsing data column, expecting " + MDL::label2Str(object.label));
@@ -722,71 +711,70 @@ void MetaData::_parseObject(std::istream &is, MDObject &object, size_t id)
             setValue(object, id);
 }//end of function parseObject
 
-#define END_OF_LINE() ((char*) memchr (pchStart, '\n', pEnd-pchStart+1))
+#define END_OF_LINE() ((char*) memchr (iter, '\n', end-iter+1))
+
 /* This function will read the posible columns from the file
  * and mark as MDL_UNDEFINED those who aren't valid labels
  * or those who appears in the IgnoreLabels vector
  * also set the activeLabels (for new STAR files)
  */
-char * MetaData::_readColumnsStar(char * pStart,
-                                  char * pEnd,
+char * MetaData::_readColumnsStar(mdBlock &block,
                                   std::vector<MDObject*> & columnValues,
                                   const std::vector<MDLabel>* desiredLabels,
                                   bool addColumns,
                                   size_t id)
 {
-    char * pchStart, *pchEnd;
-    pchStart =pStart;
-    pchStart = END_OF_LINE() + 1;//skip _loop line
+    char * end = block.end;
+    char * newline = NULL;
+    bool found_column;
     MDLabel label;
-    while(1)
+    char * iter = block.loop;
+
+    if (!isColumnFormat)
     {
-        //Next char should be _ or we are done
-        //if((pchStart+1)[0]!='_')
-        //{
-        if( isspace((pchStart)[0]))//trim spaces and newlines at the beginning
-        {
-            ++pchStart;
-            continue;
-        }
-        if((pchStart)[0]=='#')//this is a comment
-        {
-            pchStart = END_OF_LINE() + 1;
-            continue;
-        }
-        if( (pchStart)[0] !='_')
-        {
-            break;
-        }
+        iter = block.begin;
+        iter = END_OF_LINE() + 1; //this should point at first label, after data_XXX
+    }
 
-        ++pchStart;//skip '_'
+    do
+    {
+        found_column = false;
+        if (iter[0] == '#') //Skip comment
+            iter = END_OF_LINE() + 1;
 
-        if(pchStart < pEnd /*&& pchStart !=NULL*/)
+        //trim spaces and newlines at the beginning
+        while ( isspace(iter[0]))
+            ++iter;
+
+        if (iter < end && iter[0] == '_')
         {
+            found_column = true;
+            ++iter; //shift _
             std::stringstream ss;
-            pchEnd = END_OF_LINE();
-            String s(pchStart, pchEnd-pchStart);//get string line
+            newline = END_OF_LINE();
+            String s(iter, newline - iter);//get current line
             ss.str(s);//set the string of the stream
+            //Take the first token wich is the label
+            //if the label contain spaces will fail
             ss >> s; //get the first token, the label
-            //will fail is string label has spaces, tabs or newlines
             label = MDL::str2Label(s);
-            if (desiredLabels != NULL && !vectorContainsLabel(*desiredLabels, label))
-            {
-                label = MDL_UNDEFINED; //ignore if not present in desiredLabels
-            }
+            if (label == MDL_UNDEFINED)
+                std::cout << "WARNING: Ignoring unknown column: " + s << std::endl;
             else
-                addLabel(label);
+                if (desiredLabels != NULL && !vectorContainsLabel(*desiredLabels, label))
+                    label = MDL_UNDEFINED; //ignore if not present in desiredLabels
+                else
+                    addLabel(label);
             MDObject * _mdObject = new MDObject(label);
             if (addColumns)
                 columnValues.push_back(_mdObject);//add the value here with a char
             if(!isColumnFormat)
                 _parseObject(ss, *_mdObject, id);
-            pchStart = pchEnd + 1;//go to next line character
+            iter = newline + 1;//go to next line character
         }
-        else
-            break;
     }
-    return pchStart;
+    while (found_column);
+    block.loop = iter; //Move loop pointer to position of data
 }
 
 /* This function will be used to parse the rows data
@@ -830,23 +818,23 @@ void MetaData::_readRows(std::istream& is, std::vector<MDObject*> & columnValues
 
 /* This function will be used to parse the rows data in START format
  */
-void MetaData::_readRowsStar(std::vector<MDObject*> & columnValues, char * pchStart, char * pEnd)
+void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValues)
 {
-    char * pchEnd;
     String line;
     std::stringstream ss;
-    int nCol = columnValues.size();
-    size_t id, n = pEnd - pchStart;
+    size_t nCol = columnValues.size();
+    size_t id, n = block.end - block.loop;
 
     char * buffer = new char[n];
-    memcpy(buffer, pchStart, n);
-    pchStart = buffer;
-    pEnd = pchStart + n;
+    memcpy(buffer, block.loop, n);
+    char *iter = buffer, *end = iter + n, * newline = NULL;
 
-    while (pchStart < pEnd) //while there are data lines
+    while (iter < end) //while there are data lines
     {
-        pchEnd = END_OF_LINE();
-        line.assign(pchStart, pchEnd - pchStart);
+        //Assing \n position and check if NULL at the same time
+        if (!(newline = END_OF_LINE()))
+            newline = end;
+        line.assign(iter, newline - iter);
         trim(line);
         if (!line.empty())
         {
@@ -855,7 +843,7 @@ void MetaData::_readRowsStar(std::vector<MDObject*> & columnValues, char * pchSt
             for (int i = 0; i < nCol; ++i)
                 _parseObject(ss, *(columnValues[i]), id);
         }
-        pchStart = pchEnd + 1; //go to next line
+        iter = newline + 1; //go to next line
     }
     delete[] buffer;
 }
@@ -1008,51 +996,48 @@ void MetaData::_read(const FileName &filename,
 
         //map file
         int fd;
-        char *map=NULL;
-        size_t size;
-        mapFile(filename,map,size,fd);
+        BUFFER_CREATE(bufferMap);
+        mapFile(filename, bufferMap.begin, bufferMap.size, fd);
 
-        char * firstData=NULL, *secondData=NULL, *firstloop=NULL;
+        BLOCK_CREATE(block);
         regex_t re;
         if (regcomp(&re, blockRegExp.c_str(), REG_EXTENDED|REG_NOSUB) != 0)
             REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Pattern '%s' cannot be parsed: %s",
                          blockRegExp.c_str(), filename.c_str()));
-        char *startingPoint=map;
-        size_t remainingSize=size;
-        bool oneBlockRead=false;
-        bool singleBlock=blockRegExp.find(".")==String::npos &&
-                         blockRegExp.find("[")==String::npos &&
-                         blockRegExp.find("*")==String::npos &&
-                         blockRegExp.find("+")==String::npos;
+        BUFFER_COPY(bufferMap, buffer);
+        bool firstBlock = true;
+        bool singleBlock = blockRegExp.find_first_of(".[*+")==String::npos;
         String blockName;
-        while (nextBlockToRead(re, startingPoint, remainingSize, isColumnFormat,
-                               blockName, &firstData, &secondData, &firstloop))
+
+        while (nextBlock(buffer, block))
+            //startingPoint, remainingSize, firstData, secondData, firstloop))
         {
-            if(secondData ==NULL)
-                secondData = map + size;
-
-            //Read column labels from the datablock that starts at firstData
-            //Label ends at firstloop
-            if (isColumnFormat)
+            BLOCK_NAME(block, blockName);
+            if (regexec(&re, blockName.c_str(), (size_t) 0, NULL, 0)==0)
             {
-                char * aux = _readColumnsStar(firstloop, secondData, columnValues, desiredLabels, !oneBlockRead);
-                _readRowsStar(columnValues, aux, secondData);
-            }
-            else
-            {
-                id = addObject();
-                _readColumnsStar(firstData,secondData, columnValues, desiredLabels, !oneBlockRead, id);
-            }
-            oneBlockRead=true;
-            startingPoint=secondData;
-            remainingSize=size-(startingPoint-map);
 
-            if (singleBlock)
-                break;
+                //Read column labels from the datablock that starts at firstData
+                //Label ends at firstloop
+                if ((isColumnFormat = (block.loop != NULL)))
+                {
+                    _readColumnsStar(block, columnValues, desiredLabels, firstBlock);
+                    _readRowsStar(block, columnValues);
+                }
+                else
+                {
+                    id = addObject();
+                    _readColumnsStar(block, columnValues, desiredLabels, firstBlock, id);
+                }
+                firstBlock = false;
+
+                if (singleBlock)
+                    break;
+            }
         }
-        unmapFile(map,size,fd);
+
+        unmapFile(bufferMap.begin, bufferMap.size, fd);
         regfree(&re);
-        if (!oneBlockRead)
+        if (firstBlock)
             REPORT_ERROR(ERR_MD_WRONGDATABLOCK, formatString("Block: '%s': %s",
                          blockRegExp.c_str(), filename.c_str()));
     }
@@ -1123,71 +1108,48 @@ void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
     mdValueOut.setValue(myMDSql->aggregateSingleDouble(op,aggregateLabel));
 }
 
-bool MetaData::nextBlockToRead(regex_t &re,
-                               char * map, size_t mapSize,
-                               bool &isCColumnFormat,
-                               String &strBlockName,
-                               char ** firstData,
-                               char ** secondData,
-                               char ** firstloop)
+bool MetaData::nextBlock(mdBuffer &buffer, mdBlock &block)
 {
-    size_t remainingSize=mapSize;
-    char *startingPoint=map;
-    do
+    BLOCK_INIT(block);
+    if (buffer.size == 0)
+      return false;
+    // Search for data_ after a newline
+    block.begin = BUFFER_FIND(buffer, "\ndata_", 6);
+
+    if (block.begin) // data_ FOUND!!!
     {
-        *firstData  = (char *) _memmem(startingPoint,  remainingSize, "\ndata_", 6);
-        if (*firstData!=NULL)
+        block.begin += 6; //Shift \ndata_
+        size_t n = block.begin - buffer.begin;
+        BUFFER_MOVE(buffer, n);
+        //Search for the end of line
+        char *newLine = BUFFER_FIND(buffer, "\n", 1);
+        //Calculate lenght of block name, counting after data_
+        block.nameSize = newLine - buffer.begin;
+        //Search for next block if exists one
+        //use assign and check if not NULL at same time
+        if (!(block.end = BUFFER_FIND(buffer, "\ndata_", 6)))
+            block.end = block.begin + buffer.size;
+        block.loop = BUFFER_FIND(buffer, "\nloop_", 6);
+        //If loop_ is not found or is found outside block
+        //scope, the block is in column format
+        if (block.loop)
         {
-            // Get block name
-            (*firstData)++;
-            remainingSize = mapSize - (*firstData - map) - 1;
-            char *newLine=(char *) _memmem(*firstData,  remainingSize, "\n", 1);
-            size_t blockNameSize=newLine-*firstData;
-            char blockName[blockNameSize+1];
-            memcpy(blockName,*firstData,blockNameSize);
-            blockName[blockNameSize]='\0';
-
-            // Check if block name meets the regular expression
-            if (regexec(&re, blockName, (size_t) 0, NULL, 0)==0)
-            {
-                strBlockName=blockName+5;
-                break; // We found a block following the regular expression
-            }
-            startingPoint=*firstData;
+            if (block.loop < block.end)
+                block.loop += 6; // Shift \nloop_
+            else
+                block.loop = NULL;
         }
+        //Move buffer to end of block
+        n = block.end - buffer.begin;
+        BUFFER_MOVE(buffer, n);
+        return true;
     }
-    while (*firstData!=NULL);
-    if (*firstData==NULL)
-    {
-        *secondData=*firstloop=NULL;
-        return false;
-    }
-    *secondData = (char *)  _memmem(*firstData, remainingSize,"\ndata_", 6);
-    *firstloop  = (char *)  _memmem(*firstData, remainingSize, "\nloop_", 6);
-    //#define DEBUG
-#ifdef DEBUG
 
-    std::cerr << "in_map:  "         << (void *) map  << std::endl;
-    std::cerr << "in_firstData:  "   << (void *) *firstData  << std::endl;
-    std::cerr << "in_secondData: "   << (void *) *secondData << std::endl;
-    std::cerr << "in_firstLoop:  "   << (void *) *firstloop  << std::endl;
-#endif
-#undef DEBUG
-
-    isColumnFormat=false;
-    if (*firstloop!=NULL)
-    {
-        (*firstloop)++;
-        if(*secondData == NULL || (*secondData) > (*firstloop))
-            isColumnFormat=true;
-
-    }
-    return true;
+    return false;
 }
 
 void MetaData::aggregate(const MetaData &mdIn, AggregateOperation op,
                          MDLabel aggregateLabel, MDLabel operateLabel, MDLabel resultLabel)
-
 {
     std::vector<MDLabel> labels(2);
     std::vector<MDLabel> operateLabels(1);

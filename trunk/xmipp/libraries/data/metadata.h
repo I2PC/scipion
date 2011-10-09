@@ -117,6 +117,33 @@ class MDQuery;
 class MDSql;
 class MDValueGenerator;
 
+/** Struct to hold a char * pointer and a size
+ * this will be useful for parsing metadata
+ */
+typedef struct
+{
+  char * begin;
+  size_t size;
+} mdBuffer;
+
+/// Some macros to use the buffer
+#define BUFFER_CREATE(b) mdBuffer b; b.begin = NULL; b.size = 0
+#define BUFFER_COPY(b1, b2) mdBuffer b2; b2.begin = b1.begin; b2.size = b1.size
+#define BUFFER_MOVE(b, n) b.begin += n; b.size -= n
+#define BUFFER_FIND(b, str, n) (char*) _memmem(b.begin, b.size, str, n)
+
+typedef struct
+{
+  char * begin; //Position of _dataXXX on buffer
+  size_t nameSize; //Number of charater of block name, counting after _data
+  char * end; //Position just before next _dataXXX or end of buffer
+  char * loop; //Position of _loop if exists, NULL otherwise
+}mdBlock;
+/// Some macros to use the block pointers
+#define BLOCK_CREATE(b) mdBlock b; b.begin = b.end = b.loop = NULL; b.nameSize = 0
+#define BLOCK_INIT(b) b.begin = b.end = b.loop = NULL; b.nameSize = 0
+#define BLOCK_NAME(b, s) s.assign(b.begin, b.nameSize)
+
 ////////////////////////////// MetaData Iterator ////////////////////////////
 /** Iterates over metadatas */
 class MDIterator
@@ -242,7 +269,7 @@ protected:
      * @param pchStart pointer to the position of '_loop' in memory
      * @param pEnd  pointer to the position of the next '_data' in memory
      */
-    void _readRowsStar(std::vector<MDObject*> & columnValues, char * pchStart, char * pEnd);
+    void _readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValues);
     void _readRowFormat(std::istream& is);
 
 public:
@@ -303,7 +330,7 @@ public:
      */
     bool setPrecission(int _precision)
     {
-        precision= pow (10,_precision);
+        precision = pow (10,_precision);
     }
 
     /** Set to false for row format (parameter files).
@@ -311,17 +338,19 @@ public:
      */
     void setColumnFormat(bool column);
 
+    bool nextBlock(mdBuffer &buffer, mdBlock &block);
+
     /** Check if there is any other block to read with the name
      * given by the regular expression.
      *  returns pointer do first two data_entries and firts loop
      */
     bool nextBlockToRead(regex_t &re,
-                         char * map, size_t mapSize,
-                         bool &isCColumnFormat,
+                         char * startingPoint,
+                         size_t remainingSize,
                          String &blockName,
-                         char ** firstData,
-                         char ** secondData,
-                         char ** firstloop);
+                         char *& firstData,
+                         char *& secondData,
+                         char *& firstloop);
     /** Export medatada to xml file.
      *
      */
@@ -336,11 +365,10 @@ public:
     /** Get Metadata labels for the block defined by start
      * and end loop pointers. Return pointer to newline after last label
      */
-    char * _readColumnsStar(char * start,
-                            char * end,
+    char * _readColumnsStar(mdBlock &block,
                             std::vector<MDObject*> & columnValues,
                             const std::vector<MDLabel>* desiredLabels,
-                            bool addColumns=true,
+                            bool addColumns = true,
                             size_t id = BAD_OBJID);
     /**Get path.
      */
