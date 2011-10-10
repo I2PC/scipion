@@ -51,8 +51,7 @@ class SqliteDb:
     EXEC_MAINLOOP = 1
     EXEC_ALWAYS = 2
     
-    PID_POSIX = 0
-    PID_QUEUE = 1
+    PID_QUEUE_WAITING = -1
     
     StateNames = ['Saved', 'Launched', 'Running', 'Finish', 'Failed', 'Aborted']
     
@@ -97,7 +96,7 @@ class SqliteDb:
     def updateRunPid(self, run):
         self.sqlDict.update(run)
         _sqlCommand = """UPDATE %(TableRuns)s SET
-                            pid = %(pid)s, pid_type = %(pid_type)d
+                            pid = %(pid)s
                         WHERE run_id = %(run_id)d"""  % self.sqlDict
         self.cur.execute(_sqlCommand)
         self.connection.commit()

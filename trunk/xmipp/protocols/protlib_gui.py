@@ -1060,7 +1060,7 @@ class ProtocolGUI(BasicGUI):
         if self.Error:
             return
         if self.visualize_mode and not self.hasVisualizeOptions:
-            print "Calling visualize from protlib_gui"
+            #print "Calling visualize from protlib_gui"
             self.getProtocol().visualize()
         else:
             BasicGUI.launchGUI(self)

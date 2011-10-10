@@ -159,9 +159,9 @@ def getXmippPrograms():
 
 #FIXME: this is only while development
 def skipProgram(programName):
-    if programName in ['xmipp_sqlite3','xmipp_mpi_steps_runner',
-                       'xmipp_angular_commonline', 'xmipp_python'
-                    'xmipp_transform_threshold']:
+    if programName in ['xmipp_sqlite3','xmipp_mpi_steps_runner', 
+                       'xmipp_angular_commonline', 'xmipp_python', 
+                       'xmipp_transform_threshold']:
         return True
     for p in ['xmipp_test', 'xmipp_template']:
         if programName.find(p) != -1:
@@ -190,6 +190,8 @@ def createProgramsDb(dbName=None):
     for p in programs:
         p = os.path.basename(p)
         try:
+            print greenStr(p), skipProgram(p)
+            
             if not skipProgram(p):
                 cmd = [p, "--xmipp_write_definition"]
                 if p.find('_mpi') != -1:                    

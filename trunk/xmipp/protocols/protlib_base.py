@@ -512,7 +512,7 @@ def protocolMain(ProtocolClass, script=None):
             else:
                 _run = {'run_id': run_id}
                 
-            if 'SubmitToQueue' in dir(mod) and mod.SubmitToQueue:
+            if getattr(mod, 'SubmitToQueue', False):
                 from protlib_utils import submitProtocol
                 NumberOfThreads = getattr(mod, 'NumberOfThreads', 1)
                 pbsPid = submitProtocol(script,
@@ -525,15 +525,11 @@ def protocolMain(ProtocolClass, script=None):
                                )
                 project.projectDb.updateRunState(SqliteDb.RUN_LAUNCHED, run_id)
                 doRun = False
-                _run['pid'] = os.getpid()
-                _run['pid_type'] = pbsPid              
-            else:
-                _run['pid'] = os.getpid()
-                _run['pid_type'] = SqliteDb.PID_POSIX
-            
-            # Update run's process info in DB
-            project.projectDb.updateRunPid(_run)
+                #_run['pid'] = SqliteDb.PID_QUEUE_WAITING
         
         if doRun:
+            _run['pid'] = os.getpid()
+            # Update run's process info in DB
+            project.projectDb.updateRunPid(_run)
             os.environ['PROTOCOL_SCRIPT'] = script
             return p.run()
