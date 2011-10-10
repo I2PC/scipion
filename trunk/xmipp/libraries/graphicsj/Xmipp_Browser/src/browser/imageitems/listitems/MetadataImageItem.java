@@ -8,8 +8,6 @@ import browser.Cache;
 import browser.imageitems.ImageConverter;
 import ij.IJ;
 import ij.ImagePlus;
-import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
 import java.io.File;
 import xmipp.ImageDouble;
 
@@ -58,7 +56,7 @@ public class MetadataImageItem extends AbstractImageItem {
             int h_ = (int) Math.ceil(getHeight() / factor);
 
             image.readPreview(path, w_, h_);
-            ip = ImageConverter.convertToImagej(image, path);
+            ip = ImageConverter.convertToImageJ(image, path);
         } catch (Exception ex) {
             System.err.println(" >>> Error loading preview: " + getKey());
 //            ex.printStackTrace();

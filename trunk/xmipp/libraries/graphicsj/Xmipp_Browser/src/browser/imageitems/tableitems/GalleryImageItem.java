@@ -58,7 +58,7 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
                 ImageDouble image = new ImageDouble();
                 image.readPreview(getAbsoluteFileName(), md, id, w, h);
 
-                imp = ImageConverter.convertToImagej(image, (String) getLabelValue(MDLabel.MDL_IMAGE));
+                imp = ImageConverter.convertToImageJ(image, (String) getLabelValue(MDLabel.MDL_IMAGE));
             } catch (Exception ex) {
                 DEBUG.printException(ex);
             }

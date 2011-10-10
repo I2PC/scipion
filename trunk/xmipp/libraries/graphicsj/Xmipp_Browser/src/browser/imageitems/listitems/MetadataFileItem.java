@@ -102,6 +102,6 @@ public class MetadataFileItem extends XmippImageItem {
 
     @Override
     public ImagePlus getImagePlus() {
-        return ImageConverter.convertToImagej(md);
+        return ImageConverter.convertToImageJ(md);
     }
 }

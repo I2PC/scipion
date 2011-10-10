@@ -110,10 +110,10 @@ public class ImagesWindowFactory {
             if (Filename.isMetadata(path)) {
                 MetaData md = new MetaData(path);
 
-                imp = ImageConverter.convertToImagej(md);
+                imp = ImageConverter.convertToImageJ(md);
             } else {
                 ImageDouble id = new ImageDouble(path);
-                imp = ImageConverter.convertToImagej(id, path);
+                imp = ImageConverter.convertToImageJ(id, path);
             }
 
             // Normalize image stack.

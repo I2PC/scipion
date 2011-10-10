@@ -197,6 +197,8 @@ public class MetaDataTableModel extends DefaultTableModel {
                         }
                     } else if (class_ == Double.class) {
                         row[i] = md.getValueDouble(label, id);
+                    } else if (class_ == Long.class) {
+                        row[i] = md.getValueLong(label, id);
                     } else if (class_ == Integer.class) {
                         int value = md.getValueInt(label, id);
 

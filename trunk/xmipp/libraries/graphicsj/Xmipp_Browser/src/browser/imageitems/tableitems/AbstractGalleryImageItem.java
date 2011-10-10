@@ -129,7 +129,7 @@ public abstract class AbstractGalleryImageItem {
                 ImageDouble image = new ImageDouble();
 
                 image.readPreview(getPath(), getWidth(), getHeight(), getNSlice(), getNImage());
-                ip = ImageConverter.convertToImagej(image, getTitle());
+                ip = ImageConverter.convertToImageJ(image, getTitle());
 
                 ip.setTitle(getTitle());
             } catch (Exception ex) {
@@ -193,7 +193,7 @@ public abstract class AbstractGalleryImageItem {
 
             image.readPreview(getPath(), w_, h_, getNSlice(), getNImage());
             System.out.println(" *** path: " + getPath() + " w=" + w_ + " h=" + h_ + " s=" + getNSlice() + " n=" + getNImage());
-            ip = ImageConverter.convertToImagej(image, getTitle());
+            ip = ImageConverter.convertToImageJ(image, getTitle());
         } catch (Exception ex) {
             ip = ICONS_MANAGER.MISSING_ITEM;
         }

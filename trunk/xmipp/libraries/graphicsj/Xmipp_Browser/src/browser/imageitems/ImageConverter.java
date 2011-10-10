@@ -25,11 +25,11 @@ import xmipp.MetaData;
  */
 public class ImageConverter {
 
-    public static ImagePlus convertToImagej(ImageDouble image, String title) {
-        return convertToImagej(image, title, true);
+    public static ImagePlus convertToImageJ(ImageDouble image, String title) {
+        return convertToImageJ(image, title, true);
     }
 
-    public static ImagePlus convertToImagej(ImageDouble image, String title, boolean useLogarithm) {
+    public static ImagePlus convertToImageJ(ImageDouble image, String title, boolean useLogarithm) {
         if (image.isPSD()) {
             image.convertPSD(useLogarithm);
         }
@@ -62,7 +62,7 @@ public class ImageConverter {
         return imp;
     }
 
-    /*    public static ImagePlus convertToImagej(Projection projection, String title) {
+    /*    public static ImagePlus convertToImageJ(Projection projection, String title) {
     int w = projection.getXsize();
     int h = projection.getYsize();
     
@@ -70,7 +70,7 @@ public class ImageConverter {
     
     return new ImagePlus(title, processor);
     }*/
-    public static ImagePlus convertToImagej(MetaData md) {
+    public static ImagePlus convertToImageJ(MetaData md) {
         LinkedList<String> missing = new LinkedList<String>();
         ImagePlus imp = null;
 
@@ -83,9 +83,8 @@ public class ImageConverter {
                 String filename = md.getValueString(MDLabel.MDL_IMAGE, id, true);
 
                 try {
-                    ImagePlus slice = new ImagePlus(filename);
-                    //ImageReader slice = new ImageReader();
-                    //slice.read(filename);
+                    ImageDouble image = new ImageDouble(filename);
+                    ImagePlus slice = ImageConverter.convertToImageJ(image, filename);
 
                     if (is == null) {
                         is = new ImageStack(slice.getWidth(), slice.getHeight());

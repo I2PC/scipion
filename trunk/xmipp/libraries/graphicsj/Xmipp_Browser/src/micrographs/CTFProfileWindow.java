@@ -107,7 +107,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             ctfmodel = new CTFDescription(CTFFilename);
             ImageDouble image = new ImageDouble(PSDFilename);
 
-            psdimage = ImageConverter.convertToImagej(image, PSDFilename, false);
+            psdimage = ImageConverter.convertToImageJ(image, PSDFilename, false);
 
             removeAll();
             setLayout(new FlowLayout());

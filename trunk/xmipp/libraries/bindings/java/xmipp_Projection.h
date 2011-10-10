@@ -13,7 +13,7 @@ extern "C" {
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_xmipp_Projection_storeIds
-(JNIEnv *, jclass);
+  (JNIEnv *, jclass);
 
 /*
  * Class:     xmipp_Projection
@@ -21,7 +21,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_storeIds
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_xmipp_Projection_create
-(JNIEnv *, jobject);
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_Projection
@@ -29,7 +29,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_create
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_xmipp_Projection_destroy
-(JNIEnv *, jobject);
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_Projection
@@ -37,7 +37,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_destroy
  * Signature: (II)V
  */
 JNIEXPORT void JNICALL Java_xmipp_Projection_reset
-(JNIEnv *, jobject, jint, jint);
+  (JNIEnv *, jobject, jint, jint);
 
 /*
  * Class:     xmipp_Projection
@@ -45,7 +45,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_reset
  * Signature: (Lxmipp/ImageDouble;Lxmipp/Projection;DDD)V
  */
 JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
-(JNIEnv *, jclass, jobject, jobject, jdouble, jdouble, jdouble);
+  (JNIEnv *, jclass, jobject, jobject, jdouble, jdouble, jdouble);
 
 /*
  * Class:     xmipp_Projection
@@ -53,44 +53,47 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_xmipp_Projection_write
-(JNIEnv *, jobject, jstring);
+  (JNIEnv *, jobject, jstring);
 
 /*
  * Class:     xmipp_Projection
  * Method:    getData
  * Signature: ()[D
  */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_getData__(JNIEnv *,
-		jobject);
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_getData__
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_Projection
  * Method:    getData
  * Signature: (JI)[D
  */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_getData__JI(JNIEnv *,
-		jobject, jlong, jint);
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_getData__JI
+  (JNIEnv *, jobject, jlong, jint);
 
 /*
  * Class:     xmipp_Projection
  * Method:    getXsize
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_xmipp_Projection_getXsize(JNIEnv *, jobject);
+JNIEXPORT jint JNICALL Java_xmipp_Projection_getXsize
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_Projection
  * Method:    getYsize
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_xmipp_Projection_getYsize(JNIEnv *, jobject);
+JNIEXPORT jint JNICALL Java_xmipp_Projection_getYsize
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_Projection
  * Method:    getZsize
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_xmipp_Projection_getZsize(JNIEnv *, jobject);
+JNIEXPORT jint JNICALL Java_xmipp_Projection_getZsize
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_Projection
@@ -98,7 +101,7 @@ JNIEXPORT jint JNICALL Java_xmipp_Projection_getZsize(JNIEnv *, jobject);
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_xmipp_Projection_printShape
-(JNIEnv *, jobject);
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

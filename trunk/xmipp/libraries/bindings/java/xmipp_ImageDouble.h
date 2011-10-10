@@ -23,7 +23,7 @@ extern "C" {
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_storeIds
-(JNIEnv *, jclass);
+  (JNIEnv *, jclass);
 
 /*
  * Class:     xmipp_ImageDouble
@@ -31,7 +31,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_storeIds
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_create
-(JNIEnv *, jobject);
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_ImageDouble
@@ -39,7 +39,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_create
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_destroy
-(JNIEnv *, jobject);
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_ImageDouble
@@ -47,7 +47,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_destroy
  * Signature: (Ljava/lang/String;ZJ)V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1image
-(JNIEnv *, jobject, jstring, jboolean, jlong);
+  (JNIEnv *, jobject, jstring, jboolean, jlong);
 
 /*
  * Class:     xmipp_ImageDouble
@@ -55,7 +55,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1image
  * Signature: (Ljava/lang/String;IIIJ)V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1preview
-(JNIEnv *, jobject, jstring, jint, jint, jint, jlong);
+  (JNIEnv *, jobject, jstring, jint, jint, jint, jlong);
 
 /*
  * Class:     xmipp_ImageDouble
@@ -63,7 +63,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1preview
  * Signature: (Ljava/lang/String;Lxmipp/MetaData;JII)V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readApplyGeo
-(JNIEnv *, jobject, jstring, jobject, jlong, jint, jint);
+  (JNIEnv *, jobject, jstring, jobject, jlong, jint, jint);
 
 /*
  * Class:     xmipp_ImageDouble
@@ -71,7 +71,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readApplyGeo
  * Signature: (IIII[D)V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData
-(JNIEnv *, jobject, jint, jint, jint, jint, jdoubleArray);
+  (JNIEnv *, jobject, jint, jint, jint, jint, jdoubleArray);
 
 /*
  * Class:     xmipp_ImageDouble
@@ -79,23 +79,23 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData
  * Signature: (Ljava/lang/String;IZII)V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write
-(JNIEnv *, jobject, jstring, jint, jboolean, jint, jint);
+  (JNIEnv *, jobject, jstring, jint, jboolean, jint, jint);
 
 /*
  * Class:     xmipp_ImageDouble
  * Method:    getData
  * Signature: ()[D
  */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData__(JNIEnv *,
-		jobject);
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData__
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_ImageDouble
  * Method:    getData
  * Signature: (JI)[D
  */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData__JI(JNIEnv *,
-		jobject, jlong, jint);
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData__JI
+  (JNIEnv *, jobject, jlong, jint);
 
 /*
  * Class:     xmipp_ImageDouble
@@ -103,35 +103,39 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData__JI(JNIEnv *,
  * Signature: (Z)V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_convertPSD
-(JNIEnv *, jobject, jboolean);
+  (JNIEnv *, jobject, jboolean);
 
 /*
  * Class:     xmipp_ImageDouble
  * Method:    getXsize
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getXsize(JNIEnv *, jobject);
+JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getXsize
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_ImageDouble
  * Method:    getYsize
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getYsize(JNIEnv *, jobject);
+JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getYsize
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_ImageDouble
  * Method:    getZsize
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getZsize(JNIEnv *, jobject);
+JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getZsize
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_ImageDouble
  * Method:    getNsize
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize(JNIEnv *, jobject);
+JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_ImageDouble
@@ -139,7 +143,7 @@ JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize(JNIEnv *, jobject);
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setXmippOrigin
-(JNIEnv *, jobject);
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_ImageDouble
@@ -147,39 +151,39 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setXmippOrigin
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_printShape
-(JNIEnv *, jobject);
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_ImageDouble
  * Method:    fastEstimateEnhancedPSD
  * Signature: (Ljava/lang/String;DII)[D
  */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD(
-		JNIEnv *, jclass, jstring, jdouble, jint, jint);
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD
+  (JNIEnv *, jclass, jstring, jdouble, jint, jint);
 
 /*
  * Class:     xmipp_ImageDouble
  * Method:    bandPassFilter
  * Signature: (Ljava/lang/String;DDDII)[D
  */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_bandPassFilter(JNIEnv *,
-		jclass, jstring, jdouble, jdouble, jdouble, jint, jint);
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_bandPassFilter
+  (JNIEnv *, jclass, jstring, jdouble, jdouble, jdouble, jint, jint);
 
 /*
  * Class:     xmipp_ImageDouble
  * Method:    gaussianFilter
  * Signature: (Ljava/lang/String;DII)[D
  */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_gaussianFilter(JNIEnv *,
-		jclass, jstring, jdouble, jint, jint);
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_gaussianFilter
+  (JNIEnv *, jclass, jstring, jdouble, jint, jint);
 
 /*
  * Class:     xmipp_ImageDouble
  * Method:    badPixelsFilter
  * Signature: (Ljava/lang/String;DII)[D
  */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_badPixelsFilter(JNIEnv *,
-		jclass, jstring, jdouble, jint, jint);
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_badPixelsFilter
+  (JNIEnv *, jclass, jstring, jdouble, jint, jint);
 
 #ifdef __cplusplus
 }

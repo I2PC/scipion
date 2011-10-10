@@ -318,6 +318,9 @@ JNIEXPORT jclass JNICALL Java_xmipp_MetaData_getLabelType(JNIEnv *env,
 		case LABEL_INT:
 			class_ = env->FindClass("java/lang/Integer");
 			break;
+		case LABEL_LONG:
+			class_ = env->FindClass("java/lang/Long");
+			break;
 		case LABEL_DOUBLE:
 			class_ = env->FindClass("java/lang/Double");
 			break;
@@ -514,6 +517,35 @@ JNIEXPORT jint JNICALL Java_xmipp_MetaData_getValueInt(JNIEnv *env,
 	if (md != NULL) {
 		try {
 			int value;
+			if (md->getValue((MDLabel) label, value, objId))
+				return value;
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Metadata is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return 0;
+}
+
+JNIEXPORT jlong JNICALL Java_xmipp_MetaData_getValueLong
+  (JNIEnv *env, jobject jobj, jint label, jlong objId){
+	std::string msg = "";
+	MetaData * md = GET_INTERNAL_METADATA(jobj);
+
+	if (md != NULL) {
+		try {
+			size_t value;
 			if (md->getValue((MDLabel) label, value, objId))
 				return value;
 		} catch (XmippError xe) {

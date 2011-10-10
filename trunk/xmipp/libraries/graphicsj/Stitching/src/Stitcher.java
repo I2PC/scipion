@@ -2,6 +2,7 @@
 import ij.IJ;
 import ij.ImagePlus;
 import ij.io.Opener;
+import ij.process.ImageStatistics;
 import ini.trakem2.ControlWindow;
 import ini.trakem2.Project;
 import ini.trakem2.display.Layer;
@@ -30,13 +31,15 @@ public class Stitcher implements Runnable {
     int x, y;
     String propertiesFile;
     String outputfilename;
+    String stackfilename;
     Parameters parameters;
 
-    public Stitcher(String filenames[], int x, int y, String propertiesFile, String outputfilename) {
+    public Stitcher(String filenames[], String propertiesFile, String outputfilename, int x, int y, String stackfilename) {
         this.filenames = fixFilenamesPaths(filenames);
+        this.outputfilename = outputfilename;
+        this.stackfilename = stackfilename;
         this.x = x;
         this.y = y;
-        this.outputfilename = outputfilename;
 
         if (propertiesFile != null) {
             parameters = new Parameters(propertiesFile);
@@ -93,11 +96,19 @@ public class Stitcher implements Runnable {
 
         // @TODO Check!
         // 6 - Adjust brightness and contrast
+/*        double min = Double.MIN_VALUE, max = Double.MAX_VALUE;
+        for (int i = 0; i < patches.size(); i++) {
+        ImageStatistics is = patches.get(i).getImageProcessor().getStatistics();
+        if (is.min < min) {
+        min = is.min;
+        }
+        if (is.max < max) {
+        max = is.max;
+        }
+        }
+        System.out.println(" ++++++++++++++++++++ min: " + min);
+        System.out.println(" ++++++++++++++++++++ max: " + max);*/
 
-        // ... add all other images
-        // WARNING: must all be of the same dimensions.
-        //          Will refuse to work otherwise.
-        //
         // Strategy A: set same min and max for all images,
         //   but shifting the histogram's peak to compensate a bit.
         double min = 15600; // for 16-bit TEM images
@@ -110,18 +121,6 @@ public class Stitcher implements Runnable {
                 IJ.log("Exception: " + e.getMessage());
             }
         }
-
-        // @TODO Try this approach!
-        // Strategy B: order all tiles by the stdDev of their histograms, and then
-        // use the central 50% to obtain average values to apply to all tiles.
-/*        Thread task2 = project.getLoader().homogenizeContrast(al, null);
-        if (null != task2) {
-        try {
-        task2.join();
-        } catch (Exception e) {
-        e.printStackTrace();
-        }
-        }*/
 
         // 9 - Take a snapshot of the registered images
         Rectangle box = layer.getMinimalBoundingBox(Patch.class); // or any other ROI you like
@@ -150,18 +149,26 @@ public class Stitcher implements Runnable {
         }*/
 
 //        System.err.println(" >>> Saving to: " + outputfilename);
-//        ImagePlus ip = StackBuilder.buildStack(patches, box);
+//        ImagePlus ip = ImagesBuilder.buildStack(patches, box);
 //        ip.setTitle("Montage [Stack]");
 //        IJ.save(ip, outputfilename);
-        if (StackBuilder.saveStack(patches, box, outputfilename)) {
-            IJ.showMessage(" >>> File sucessfully saved: " + outputfilename);
-        } else {
-            System.err.println(" xxx ERROR: saving to: " + outputfilename);
+        if (outputfilename != null) {
+            if (ImagesBuilder.saveResult(patches, box, outputfilename)) {
+                IJ.showMessage(" >>> Results sucessfully saved: " + outputfilename);
+            } else {
+                IJ.error(" xxx ERROR: saving to: " + outputfilename);
+            }
         }
 
-        ImagePlus imp = new ImagePlus(outputfilename);
-        imp.show();
-        /*        ImagePlus sum = StackBuilder.sumStack(ip);
+        if (stackfilename != null) {
+            if (ImagesBuilder.saveStack(patches, box, stackfilename)) {
+                IJ.showMessage(" >>> Stack sucessfully saved: " + stackfilename);
+            } else {
+                IJ.error(" xxx ERROR: saving to: " + stackfilename);
+            }
+        }
+
+        /*        ImagePlus sum = ImagesBuilder.sumStack(ip);
         sum.setTitle("Montage [Sum]");
         sum.show();*/
 

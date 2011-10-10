@@ -472,7 +472,7 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
 
             md.getPCAbasis(image);
 
-            ImagesWindowFactory.captureFrame(ImageConverter.convertToImagej(image, "PCA: " + filename));
+            ImagesWindowFactory.captureFrame(ImageConverter.convertToImageJ(image, "PCA: " + filename));
         } catch (Exception ex) {
             DEBUG.printException(ex);
         }

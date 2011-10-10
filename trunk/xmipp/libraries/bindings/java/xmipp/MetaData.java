@@ -107,6 +107,8 @@ public class MetaData {
 
     //get values from metadata
     public native int getValueInt(int label, long objId);
+    
+    public native long getValueLong(int label, long objId);
 
     public native double getValueDouble(int label, long objId);
 
