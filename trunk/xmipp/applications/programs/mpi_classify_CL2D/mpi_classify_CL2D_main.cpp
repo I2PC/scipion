@@ -833,6 +833,7 @@ void CL2D::transferUpdates()
 //#define DEBUG
 void CL2D::run(const FileName &fnOut, int level)
 {
+	LOG("run0");
     int Q=P.size();
 
     if( prm->node->rank == 0 )
@@ -848,6 +849,7 @@ void CL2D::run(const FileName &fnOut, int level)
     CL2DAssignment assignment;
     while (goOn)
     {
+    	LOG("run1");
         if( prm->node->rank == 0 )
         {
             std::cout << "Iteration " << iter << " ...\n";
@@ -916,12 +918,14 @@ void CL2D::run(const FileName &fnOut, int level)
                 if (*ptrNew!=*ptrOld)
                     ++Nchanges;
         }
+    	LOG("run2");
         if( prm->node->rank == 0 )
         {
             std::cout << "Number of assignment changes=" << Nchanges << std::endl;
             MDChanges.setValue(MDL_CL2D_CHANGES,Nchanges,idMdChanges);
             MDChanges.write(formatString("info@%s_level_%02d_classes.xmd",fnOut.c_str(),level));
         }
+    	LOG("run3");
 
         // Check if there are empty nodes
         if (Q>1)
@@ -987,6 +991,7 @@ void CL2D::run(const FileName &fnOut, int level)
             }
             while (smallNodes);
         }
+    	LOG("run4");
 
         if (prm->node->rank==0)
             write(fnOut+"_level_"+integerToString(level,2));
@@ -994,9 +999,12 @@ void CL2D::run(const FileName &fnOut, int level)
         if (iter>1 && Nchanges<0.005*Nimgs && Q>1 || iter>=prm->Niter)
             goOn=false;
         iter++;
+    	LOG("run5");
     }
+	LOG("run6");
 
     std::sort(P.begin(),P.end(),SDescendingClusterSort());
+	LOG("runF");
 }
 
 /* Clean ------------------------------------------------------------------- */
@@ -1290,8 +1298,11 @@ ProgClassifyCL2D::ProgClassifyCL2D(int argc, char** argv)
 /* Destructor -------------------------------------------------------------- */
 ProgClassifyCL2D::~ProgClassifyCL2D()
 {
+std::cout << "Destroying CL2D 1" << std::endl;
     delete node;
+std::cout << "Destroying CL2D 2" << std::endl;
     delete taskDistributor;
+std::cout << "Destroying CL2D 3" << std::endl;
 }
 
 /* VQPrm I/O --------------------------------------------------------------- */
@@ -1362,7 +1373,8 @@ void ProgClassifyCL2D::defineParams()
 
 void ProgClassifyCL2D::produceSideInfo()
 {
-    maxShift2=maxShift*maxShift;
+	CREATE_LOG();
+	maxShift2=maxShift*maxShift;
 
     gaussianInterpolator.initialize(6,60000,false);
 
@@ -1412,25 +1424,29 @@ void ProgClassifyCL2D::run()
     int Q=vq.P.size();
     while (Q<Ncodes)
     {
+    	LOG("RUN1");
         if( node->rank == 0 )
-            std::cout << "Spliting nodes ...\n";
+		std::cout << "Spliting nodes ...\n";
 
-        int Nclean=vq.cleanEmptyNodes();
-        int Nsplits=XMIPP_MIN(Q,Ncodes-Q)+Nclean;
+	int Nclean=vq.cleanEmptyNodes();
+	int Nsplits=XMIPP_MIN(Q,Ncodes-Q)+Nclean;
 
-        for (int i=0; i<Nsplits; i++)
-        {
-            vq.splitFirstNode();
-            if (node->rank==0)
-                std::cout << "Currently there are " << vq.P.size() << " nodes" << std::endl;
-        }
+	for (int i=0; i<Nsplits; i++)
+	{
+		vq.splitFirstNode();
+		if (node->rank==0)
+			std::cout << "Currently there are " << vq.P.size() << " nodes" << std::endl;
+	}
+	LOG("RUN2");
 
-        Q=vq.P.size();
-        level++;
-        vq.run(fnOut,level);
+	Q=vq.P.size();
+	level++;
+	vq.run(fnOut,level);
+    	LOG("RUN3");
     }
     if (node->rank==0)
     {
+    	LOG("RUN4");
         std::sort(vq.P.begin(),vq.P.end(),SDescendingClusterSort());
         Q=vq.P.size();
         MetaData SFq,SFclassified,SFaux,SFaux2;
@@ -1441,6 +1457,7 @@ void ProgClassifyCL2D::run()
             SFq.fillConstant(MDL_ENABLED,"1");
             SFclassified.unionAll(SFq);
         }
+    	LOG("RUN4");
         SFaux=SF;
         SFaux.subtraction(SFclassified,MDL_IMAGE);
         SFaux.fillConstant(MDL_ENABLED,"-1");
@@ -1450,7 +1467,10 @@ void ProgClassifyCL2D::run()
         SFaux.clear();
         SFaux.sort(SFaux2,MDL_IMAGE);
         SFaux.write(fnOut+"_images.xmd");
+    	LOG("RUN5");
     }
+	LOG("RUNF");
+    CLOSE_LOG();
 }
 
 /* Main -------------------------------------------------------------------- */
@@ -1459,5 +1479,7 @@ int main(int argc, char** argv)
     ProgClassifyCL2D progprm(argc,argv);
     progprm.read(argc,argv);
     prm=&progprm;
-    return progprm.tryRun();
+    int e=progprm.tryRun();
+    std::cout << "Retval=" << e << std::endl;
+    return e;
 }
