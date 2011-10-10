@@ -61,7 +61,7 @@ void XmippProgram::defineCommons()
     addParamsLine("[--xmipp_write_definition* <dbname>] : Print metadata info about the program to sqlite database");
     addParamsLine("[--xmipp_write_wiki* ] : Print metadata info about the program in wiki format");
     addParamsLine("[--xmipp_write_protocol* <scriptfile>] : Generate protocol header file");
-    addParamsLine("[--xmipp_run_id <run_id>] : This is only meanful when execute throught protocols");
+    addParamsLine("[--xmipp_protocol_script <script>] : This is only meanful when execute throught protocols");
 }
 
 void XmippProgram::init()
