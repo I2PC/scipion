@@ -2,7 +2,7 @@
 
 import os
 
-from protlib_xmipp import XmippScript, createProgramsDb, skipProgram, ProgramKeywordsRank, getProgramsDbName,\
+from protlib_xmipp import XmippScript, createProgramsDb, ProgramKeywordsRank, getProgramsDbName,\
 	getXmippLabels, blueStr, redStr
 from protlib_filesystem import getXmippPath
 
