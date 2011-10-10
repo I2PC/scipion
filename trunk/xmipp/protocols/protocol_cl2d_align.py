@@ -8,19 +8,16 @@
 import glob,os,sys,shutil,time
 from protlib_base import *
 from config_protocols import protDict
-from protlib_utils import runJob
 from protlib_filesystem import renameFile, deleteFile
 from xmipp import MetaData, Image
 
 class ProtCL2DAlignment(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.cl2d_alignment.name, scriptname, project)
+        XmippProtocol.__init__(self, protDict.cl2d_align.name, scriptname, project)
         self.Import = 'from protocol_cl2d_align import *'    
 
     def defineSteps(self):
-        self.Db.insertStep('cl2d',verifyfiles=[self.workingDirPath("results_images.xmd")],
-                           Selfile=self.InSelFile,WorkingDir=self.WorkingDir,ReferenceImage=self.ReferenceImage,
-                           MaxShift=self.MaxShift,NumberOfIterations=self.NumberOfIterations,Nproc=self.NumberOfMpi)
+        self.insertCl2dStep()
         self.Db.insertStep('gatherResults',
                            verifyfiles=[self.workingDirPath("average.xmp"),self.workingDirPath("alignment.xmd")],
                            WorkingDir=self.WorkingDir)
@@ -50,18 +47,22 @@ class ProtCL2DAlignment(XmippProtocol):
                 os.system("xmipp_showj -i %s %s &"
                           %(self.workingDirPath("results_level_00_classes.stk"),self.workingDirPath("results_level_00_classes.xmd")))
     
-def cl2d(log,Selfile,WorkingDir,ReferenceImage,MaxShift,NumberOfIterations,Nproc):
-    params= '-i '+str(Selfile)+' --oroot '+WorkingDir+'/results --nref 1 --iter '+str(NumberOfIterations)+" --maxShift "+str(MaxShift)
-    if ReferenceImage!="":
-        params+=" --ref0 "+ReferenceImage
-    else:
-        params+=" --nref0 1"
-    runJob(log,"xmipp_classify_CL2D",params,Nproc)
+    def insertCl2dStep(self):
+    #log,Selfile,WorkingDir,ReferenceImage,MaxShift,NumberOfIterations,Nproc):
+        params= '-i %s --oroot %s/results --nref 1 --iter %d --maxShift %d' % 
+                (self.InSelFile, self.WorkingDir, self.NumberOfIterations, self.MaxShift)
+                
+        if self.ReferenceImage!="":
+            params += " --ref0 " + self.ReferenceImage
+        else:
+            params += " --nref0 1"
+        self.insertRunJobStep("xmipp_classify_CL2D", params, [self.workingDirPath("results_images.xmd"))
 
-def gatherResults(log,WorkingDir):
-    renameFile(log, os.path.join(WorkingDir,"results_images.xmd"), os.path.join(WorkingDir,"alignment.xmd"))
-    fnStack=os.path.join(WorkingDir,"results_level_00_classes.stk")
+def gatherResults(log, WorkingDir):
+    wdPath = lambda path: os.path.join(WorkingDir, path)
+    renameFile(log, wdPath("results_images.xmd"), wdPath("alignment.xmd"))
+    fnStack=wdPath("results_level_00_classes.stk")
     I=Image("1@"+fnStack)
-    I.write(os.path.join(WorkingDir,"average.xmp"))
+    I.write(wdPath("average.xmp"))
     deleteFile(log,fnStack)
-    deleteFile(log,os.path.join(WorkingDir,"results_level_00_classes.xmd"))
+    deleteFile(log,wdPath("results_level_00_classes.xmd"))
