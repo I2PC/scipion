@@ -497,6 +497,9 @@ void MetaData::write(const FileName &_outFile, WriteModeMetaData mode) const
 
 void MetaData::_write(const FileName &outFile,const String &blockName, WriteModeMetaData mode) const
 {
+    if (outFile.hasImageExtension())
+        REPORT_ERROR(ERR_IO,"Trying to write metadata with image extension");
+
     struct stat file_status;
     int fd;
     char *map;
@@ -1112,7 +1115,7 @@ bool MetaData::nextBlock(mdBuffer &buffer, mdBlock &block)
 {
     BLOCK_INIT(block);
     if (buffer.size == 0)
-      return false;
+        return false;
     // Search for data_ after a newline
     block.begin = BUFFER_FIND(buffer, "\ndata_", 6);
 
