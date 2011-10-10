@@ -174,9 +174,9 @@ ShowExpertOptions = False
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
-from protocol_import_micrographs import *
+from protocol_screen_micrographs import *
 #        
 # Main
 #     
 if __name__ == '__main__':
-    protocolMain(ProtImportMicrographs)
+    protocolMain(ProtScreenMicrographs)

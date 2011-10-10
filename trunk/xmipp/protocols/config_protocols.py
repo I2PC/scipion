@@ -14,7 +14,7 @@ class ProtocolDictionary(dict):
         return p
     
     def __init__(self):
-        self.import_micrographs = self.addProtocol('import_micrographs', 'Import Micrographs', 'ImportedMicrographs')
+        self.screen_micrographs = self.addProtocol('screen_micrographs', 'Screen Micrographs', 'ImportedMicrographs')
         self.particle_pick = self.addProtocol('particle_pick',  'Manual picking', 'ParticlePicking/Manual')
         self.particle_pick_auto = self.addProtocol('particle_pick_auto',  'Automatic picking', 'ParticlePicking/Auto')
         self.extract_particles = self.addProtocol('extract_particles',  'Extract Particles', 'Images/Extracted')
@@ -58,12 +58,12 @@ projectDefaults = {
 
 sections = [
 ('Preprocessing', 
-   [['Import Micrographs', protDict.import_micrographs.name], 
-    ['Particle picking', protDict.particle_pick.name, protDict.particle_pick_auto.name, protDict.extract_particles.name, protDict.import_particles.name], 
-    ['Preprocess Particles', protDict.preprocess_particles.name]]),
+   [['Micrographs', protDict.screen_micrographs.name], 
+    ['Particle picking', protDict.particle_pick.name, protDict.particle_pick_auto.name, protDict.extract_particles.name], 
+    ['Tools', protDict.import_particles.name, protDict.preprocess_particles.name]]),
 ('2D', 
    [['Align+Classify', protDict.ml2d.name, protDict.cl2d.name, protDict.cl2d_alignment.name], 
-    ['Classify', protDict.kerdensom.name, protDict.rotspectra.name]]),
+    ['Tools2', protDict.kerdensom.name, protDict.rotspectra.name]]),
 ('3D', 
    [['Initial Model', protDict.commonlines.name, protDict.rct.name], 
     ['Model Refinement', protDict.projmatch.name, protDict.ml3d.name]])

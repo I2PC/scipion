@@ -17,11 +17,12 @@ from protlib_utils import which, runJob
 from protlib_filesystem import *
 import xmipp
 
-class ProtImportMicrographs(XmippProtocol):
+class ProtScreenMicrographs(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.import_micrographs.name, scriptname, project)
-        self.Import="from protocol_import_micrographs import *"
+        XmippProtocol.__init__(self, protDict.screen_micrographs.name, scriptname, project)
+        self.Import="from protocol_screen_micrographs import *"
         self.CtffindExec =  which('ctffind3.exe')
+        self.ContinueAtStep=1
 
     def defineSteps(self):
         CtfFindActions=[]
@@ -33,7 +34,7 @@ class ProtImportMicrographs(XmippProtocol):
             (shortname, extension)=os.path.splitext(micrographName)
             micrographDir=self.workingDirPath(shortname)                    
             finalname='micrograph'
-            if self.DoPreprocess and (not self.Stddev == -1 or not self.Crop == -1 or not self.Down == 1):
+            if self.DoPreprocess and (not self.Stddev == -1 and not self.Crop == -1 and not self.Down == 1):
                 finalname += ".mrc"
             else:
                 finalname += extension
@@ -47,7 +48,7 @@ class ProtImportMicrographs(XmippProtocol):
             id=self.Db.insertStep('createDir',path=micrographDir,parent_step_id=XmippProjectDb.FIRST_STEP,execution_mode=SqliteDb.EXEC_GAP)
             fnOut=os.path.join(micrographDir,"micrograph"+extension)
             verifyFiles.append(fnOut)
-            id=self.Db.insertStep('preprocessMicrograph',verifyfiles=[fnOut],
+            id=self.Db.insertStep('preprocessMicrograph',#COSS verifyfiles=[fnOut],
                                     parent_step_id=id, execution_mode=SqliteDb.EXEC_GAP,
                                     micrograph=filename,micrographDir=micrographDir,DoPreprocess=self.DoPreprocess,
                                     Crop=self.Crop,Stddev=self.Stddev,Down=self.Down)
