@@ -94,12 +94,8 @@ class ProtML2D(XmippProtocol):
             
             #Add extra options
             #params += ' ' + self.ExtraParams
-        self.Db.insertStep('runJob', 
-                             programname=program, 
-                             params=params,
-                             NumberOfMpi = self.NumberOfMpi,
-                             NumberOfThreads = self.NumberOfThreads)
-        
+        self.insertRunJobStep(program, params)
+
         self.Db.insertStep('collectResults', WorkingDir=self.WorkingDir, Prefix=prefix,
                            verifyfiles=[self.workingDirPath(f) for f in ['result_images.xmd', 'result_classes.xmd']])
 

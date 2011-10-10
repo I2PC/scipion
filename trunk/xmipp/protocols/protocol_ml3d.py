@@ -55,10 +55,9 @@ class ProtML3D(XmippProtocol):
                 self.insertML3DStep()
             
     # Insert the step of launch some program
-    def insertRunJob(self, prog, vf=[]): 
-        self.insertStep('runJob', verifyfiles=[self.ParamsDict[k] for k in vf],
-                        programname=prog, params=self.ParamsStr % self.ParamsDict,
-                        NumberOfMpi=self.NumberOfMpi, NumberOfThreads=self.NumberOfThreads)
+    def insertRunJob(self, prog, vf=[]):
+        self.insertRunJobStep(prog, self.ParamsStr % self.ParamsDict, 
+                              [self.ParamsDict[k] for k in vf]) 
     # Crude correction of grey-scale, by performing a single iteration of 
     # projection matching and fourier reconstruction
     def insertCorrectGreyScaleSteps(self):
