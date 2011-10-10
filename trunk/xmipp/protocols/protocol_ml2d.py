@@ -101,7 +101,11 @@ class ProtML2D(XmippProtocol):
 
     def visualize(self):
         if os.path.exists(self.fnIterRefs):
-            runImageJPlugin("512m", "XmippMetaDataViewer.txt", "-i %s" % self.fnIterRefs, batchMode=True)
+            from xmipp import getBlocksInMetaDataFile
+            blocks = getBlocksInMetaDataFile(self.fnIterRefs)
+            lastBlock = blocks[-1]
+            runImageJPlugin("512m", "XmippMetaDataViewer.txt", "-i %s@%s --mode metadata --render" 
+                            % (lastBlock, self.fnIterRefs), batchMode=True)
             launchML2DPlots(self)
         
 def collectResults(log, WorkingDir, Prefix):
