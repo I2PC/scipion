@@ -238,31 +238,31 @@ class Process():
         self.__dict__.update(self.info) 
         self.type = 0
         
-    def __repr__(self):
-        line = """%(pid)s,%(ppid)s,%(cputime)s,%(etime)s,%(state)s,%(pcpu)s,%(pmem)s,%(args)s""" % self.info
-        return line
+#    def __repr__(self):
+#        line = """%(pid)s,%(ppid)s,%(cputime)s,%(etime)s,%(state)s,%(pcpu)s,%(pmem)s,%(args)s""" % self.info
+#        return line
         
-    ''' Retrieve the list of child process'''
-    def getChilds(self):
-        pm = ProcessManager()
-        childList = pm.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % self.info)
-        childs = []
-        for p in childList:
-            if p.ppid == self.pid:
-                childs.append(p)
-        return childs 
+#    ''' Retrieve the list of child process'''
+#    def getChilds(self):
+#        pm = ProcessManager()
+#        childList = pm.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % self.info)
+#        childs = []
+#        for p in childList:
+#            if p.ppid == self.pid:
+#                childs.append(p)
+#        return childs 
     
     ''' Terminate process '''
     def terminate(self):
-        p = Popen('kill %s' % self.pid, shell=True, stdout=PIPE)
+        p = Popen('kill %s > "/dev/null" 2>&1' % self.pid, shell=True, stdout=PIPE)
         os.waitpid(p.pid, 0)
         
-    ''' Terminate process and all its childs '''
-    def terminateTree(self):
-        childs = self.getChilds()
-        self.terminate()
-        for c in childs:
-            c.terminate()
+#    ''' Terminate process and all its childs '''
+#    def terminateTree(self):
+#        childs = self.getChilds()
+#        self.terminate()
+#        for c in childs:
+#            c.terminate()
         
 class ProcessManager():       
     ''' Return process data from previous built command'''
@@ -283,18 +283,19 @@ class ProcessManager():
             msg = [str(p) for p in procList]
             reportError("More than one process match query, only one expected\n" + "\n".join(msg))
         return procList[0]
-    
-    ''' Return the process data, using its arguments to match'''
-    def getProcessFromScript(self, script):
-        return self.getUniqueProcessFromCmd('ps -C python -o pid,ppid,cputime,etime,state,pcpu,pmem,args | grep %s' % script)
-    
+#    
+#    ''' Return the process data, using its arguments to match'''
+#    def getProcessFromScript(self, script):
+#        return self.getUniqueProcessFromCmd('ps -C python -o pid,ppid,cputime,etime,state,pcpu,pmem,args | grep %s' % script)
+#    
     ''' Return the process data, using its arguments to match'''
     def getProcessFromPid(self, pid):
         return self.getUniqueProcessFromCmd('ps -p %(pid)s -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % locals())
     
     '''Return a list of process using the same working dir'''
-    def getRelatedProcess(self, workingDir):
-        return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%s" | grep -v grep' % workingDir)
+    def getProcessGroup(self, uniqueFilename):
+        return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%s" ' % uniqueFilename)
+
 
 class PBSProcess():
     keys = ['pid','ppid','cputime','etime','state','pcpu','pmem','args']
@@ -479,8 +480,11 @@ def submitProtocol(protocolPath, **params):
     '''
     #Load the config module
     launch = loadModule('config_launch.py')
-    launchfile = protocolPath.replace('.py', '.job')
-    createQueueLaunchFile(launchfile, launch.FileTemplate, params)
+    launchFile = protocolPath.replace('.py', '.job')
+    # This is for make a copy of nodes files
+    nodesFile = protocolPath.replace('.py', '.nodes')
+    params['pbsNodeBackup']= nodesFile
+    createQueueLaunchFile(launchFile, launch.FileTemplate, params)
     command = "%s %s" % (launch.Program, launch.ArgsTemplate % {'file': file})
     print "** Submiting to queue: '%s'" % command
     ps = Popen(command, shell=True, stdout=PIPE)
@@ -499,6 +503,7 @@ def getImageJPluginCmd(memory, macro, args, batchMode=False):
     cmd = """ java -Xmx%s -Dplugins.dir=%s -jar %s -macro %s "%s" """ % (memory, plugins_dir, imagej_jar, macro, args)
     if batchMode:
         cmd += " &"
+    print "getImageJPluginCmd:", cmd
     return cmd
 
 def runImageJPlugin(memory, macro, args, batchMode=False):

@@ -286,18 +286,21 @@ class XmippProjectGUI():
     def launchRunJobMonitorGUI(self, run):
         runName = getExtendedRunName(run)
         pm = self.pm
-        text = run['script']
+        script = run['script']
         root = tk.Toplevel()
         root.withdraw()
-        root.title(text)
+        root.title(script)
         root.columnconfigure(1, weight=1)
         root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
         
         def stopRun():
             if askYesNo("Confirm action", "Are you sure to <STOP> run execution?" , parent=root):
-                p = pm.getProcessFromPid(run['pid'])
-                p.terminateTree()
+                #p = pm.getProcessFromPid(run['pid'])
+                childs = pm.getProcessGroup(script)
+                #p.terminate()
+                for c in childs:
+                    c.terminate()
                 self.project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, run['run_id'])
                 root.destroy()
                 self.historyRefreshRate = 1
@@ -316,11 +319,12 @@ class XmippProjectGUI():
             txt.delete(1.0, tk.END)
             txt.insert(tk.END, line)
             txt.insert(tk.END, "PID\t ARGS\t CPU(%)\t MEM(%)\n")
-            childs = pm.getRelatedProcess(getWorkingDirFromRunName(runName))
+            childs = pm.getProcessGroup(script)
             for c in childs:
-                c.info['pname'] = p.args.split()[0]
-                line = "%(pid)s\t %(args)s\t %(pcpu)s\t %(pmem)s\n" % c.info
-                txt.insert(tk.END, line)
+                c.info['pname'] = pname = os.path.basename(c.args.split()[0])
+                if pname not in ['grep', 'python', 'sh']:
+                    line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n" % c.info
+                    txt.insert(tk.END, line)
             txt.after(3000, refreshInfo)
             
         refreshInfo()

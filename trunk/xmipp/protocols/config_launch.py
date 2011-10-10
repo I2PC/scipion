@@ -44,6 +44,8 @@ FileTemplate = """
 ### Switch to the working directory;
 cd $PBS_O_WORKDIR
 echo Working directory is $PBS_O_WORKDIR
+# Make a copy of PBS_NODEFILE 
+cp $PBS_NODEFILE %(pbsNodeBackup)s
 # Calculate the number of processors allocated to this run.
 NPROCS=`wc -l < $PBS_NODEFILE`
 # Calculate the number of nodes allocated.
