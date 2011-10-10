@@ -27,7 +27,6 @@ class ProtML2D(XmippProtocol):
         return errors
     
     def summary(self):
-        return []
         input = self.ImgMd
         lines = [('Input images            ', "%s (%u)" % (input, MetaData(input).size())),
                  ('Reference image', self.RefMd)]
@@ -41,10 +40,6 @@ class ProtML2D(XmippProtocol):
             lines.append(('LogLikelihood          ', str(LL)))
         
         output = ["%s : %s" % (k.ljust(20),  v) for k, v in lines]
-        #for k, v in lines:
-        #    output.append("%s : %s" % (k.ljust(20),  v))
-        #return ["Input images                 : %s (%u)" % (input, MetaData(input).size()),
-        #        "Reference image              : %s" % self.RefMd ]
         return output
     
     def defineSteps(self):
@@ -104,8 +99,12 @@ class ProtML2D(XmippProtocol):
             from xmipp import getBlocksInMetaDataFile
             blocks = getBlocksInMetaDataFile(self.fnIterRefs)
             lastBlock = blocks[-1]
-            runImageJPlugin("512m", "XmippMetaDataViewer.txt", "-i %s@%s --mode metadata --render" 
+            try:
+                runImageJPlugin("512m", "XmippMetaDataViewer.txt", "-i %s@%s --mode metadata --render" 
                             % (lastBlock, self.fnIterRefs), batchMode=True)
+            except Exception, e:
+                from protlib_gui_ext import showError
+                showError("Error launching java app", str(e))
             launchML2DPlots(self)
         
 def collectResults(log, WorkingDir, Prefix):
@@ -124,6 +123,8 @@ def collectResults(log, WorkingDir, Prefix):
 
 ''' Launch some plot for an ML2D protocol run '''
 def launchML2DPlots(prot):
+    import matplotlib
+    matplotlib.use('TkAgg') # do this before importing pylab
     import matplotlib.ticker as ticker
     import matplotlib.gridspec as gridspec
     import matplotlib.pyplot as plt
