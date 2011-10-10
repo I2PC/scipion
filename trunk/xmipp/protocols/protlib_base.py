@@ -200,7 +200,7 @@ class XmippProject():
     It will be also unique from diferent projects
     '''
     def getUniqueRunPrefix(self, run_id):
-        return self.projectDir.replace(os.path.sep, '_') + "_%d" % run_id
+        return self.projectDir.replace(os.path.sep, '_') + "_%s" % run_id
         
             
 class XmippProtocol(object):
@@ -218,13 +218,16 @@ class XmippProtocol(object):
         for k, v in self.ParamsDict.iteritems():
             self.__dict__[k] = v
             
-        self.DoParallel = hasattr(self, 'NumberOfMpi') and self.NumberOfMpi > 1
+        self.NumberOfMpi = getattr(self, 'NumberOfMpi', 1)
+        self.NumberOfThreads = getattr(self, 'NumberOfThreads', 1)
+        self.DoParallel = self.NumberOfMpi > 1
         self.Name = protocolName
         self.scriptName = scriptname
         #A protocol must be able to find its own project
         self.project = project
         self.Import = '' # this can be used by database for import modules
         self.WorkingDir = project.getWorkingDir(protocolName, self.RunName)
+        self.ParamsDict['WorkingDir'] = self.WorkingDir
         self.TmpDir = self.workingDirPath('tmp')
         self.projectDir = project.projectDir  
         #Setup the Log for the Protocol
@@ -349,8 +352,8 @@ class XmippProtocol(object):
         retcode = 0
         try:
             self.runSetup()
-            self.Db.insertStep('createDir', [self.WorkingDir], path=self.WorkingDir)
-            self.Db.insertStep('createDir', [self.TmpDir], path=self.TmpDir)
+            self.insertStep('createDir', [self.WorkingDir], path=self.WorkingDir)
+            self.insertStep('createDir', [self.TmpDir], path=self.TmpDir)
             self.defineSteps()
             self.Db.runSteps()
             self.postRun()
@@ -368,31 +371,16 @@ class XmippProtocol(object):
                             
         return retcode
     
-def command_line_options():
-    '''process protocol command line'''
-    import optparse
-    parser = optparse.OptionParser()
-    parser.add_option('-g', '--gui',
-                              dest="gui",
-                              default=False,
-                              action="store_true",
-                              help="use graphic interface to launch protocol "
-                              )
-    parser.add_option('-c', '--no_check',
-                              dest="no_check",
-                              default=False,
-                              action="store_true",
-                              help="do NOT check run checks before execute protocols"
-                              )
-    parser.add_option('-n', '--no_confirm',
-                          dest="no_confirm",
-                          default=False,
-                          action="store_true",
-                          help="do NOT ask confirmation for warnings"
-                          )
+    def insertRunJobStep(self, program, params, verifyFiles=[]):
+        ''' This function is a shortcut to insert a runJob step into database
+        it will pass threads and mpi info, and also the unique run id'''
+        self.insertStep('runJob', 
+                     programname=program, 
+                     params=params,
+                     verifyfiles = verifyFiles,
+                     NumberOfMpi = self.NumberOfMpi,
+                     NumberOfThreads = self.NumberOfThreads)
         
-    options = parser.parse_args()[0]
-    return options
 
 def getProtocolFromModule(script, project):
     mod = loadModule(script)
@@ -437,6 +425,32 @@ def getWorkingDirFromRunName(extendedRunName):
 def getScriptFromRunName(extendedRunName):
     return join(projectDefaults['RunsDir'],extendedRunName+".py")
 
+def command_line_options():
+    '''process protocol command line'''
+    import optparse
+    parser = optparse.OptionParser()
+    parser.add_option('-g', '--gui',
+                              dest="gui",
+                              default=False,
+                              action="store_true",
+                              help="use graphic interface to launch protocol "
+                              )
+    parser.add_option('-c', '--no_check',
+                              dest="no_check",
+                              default=False,
+                              action="store_true",
+                              help="do NOT check run checks before execute protocols"
+                              )
+    parser.add_option('-n', '--no_confirm',
+                          dest="no_confirm",
+                          default=False,
+                          action="store_true",
+                          help="do NOT ask confirmation for warnings"
+                          )
+        
+    options = parser.parse_args()[0]
+    return options
+
 def protocolMain(ProtocolClass, script=None):
     gui = False
     no_check = False
@@ -449,6 +463,8 @@ def protocolMain(ProtocolClass, script=None):
         gui = options.gui
         no_check = options.no_check
         no_confirm = options.no_confirm
+    
+    script = os.path.abspath(script)
     
     mod = loadModule(script)
     #init project
@@ -498,9 +514,7 @@ def protocolMain(ProtocolClass, script=None):
                 
             if 'SubmitToQueue' in dir(mod) and mod.SubmitToQueue:
                 from protlib_utils import submitProtocol
-                NumberOfThreads = 1
-                if 'NumberOfThreads' in dir(mod):
-                    NumberOfThreads=mod.NumberOfThreads
+                NumberOfThreads = getattr(mod, 'NumberOfThreads', 1)
                 pbsPid = submitProtocol(script,
                                jobId = p.uniquePrefix,
                                queueName = mod.QueueName,
@@ -521,5 +535,5 @@ def protocolMain(ProtocolClass, script=None):
             project.projectDb.updateRunPid(_run)
         
         if doRun:
-            print project.getUniqueRunPrefix(run_id)
+            os.environ['PROTOCOL_SCRIPT'] = script
             return p.run()

@@ -405,6 +405,8 @@ def buildRunCommand(
 
     DoParallel = NumberOfMpi > 1
     paramsDict={}
+    params += ' --xmipp_protocol_script ' + os.environ['PROTOCOL_SCRIPT']
+    
     if not DoParallel:
         command = programname + ' ' + params
     else:
@@ -438,6 +440,7 @@ def buildRunCommand(
         command = (mpicommand + ' `which %(prog)s` %(params)s') % paramsDict
     if RunInBackground:
         command+=" &"
+
     return command
 
 def loadModule(modulePath, report=True):
