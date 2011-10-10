@@ -260,6 +260,7 @@ int XmippProgram::tryRun()
         std::cerr << xe;
         errorCode = xe.__errno;
     }
+        std::cout << "Finished run" << std::endl;
     return errorCode;
 }
 
