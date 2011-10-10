@@ -217,6 +217,18 @@ String FileName::getExtension() const
     return "";
 }
 
+// Has image extension .....................................................
+bool FileName::hasImageExtension() const
+{
+	String ext=getExtension();
+	if (ext=="img" || ext=="hed" || ext=="inf" || ext=="raw" || ext=="mrc" ||
+		ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" || ext=="spe" ||
+		ext=="ser" || ext=="stk" || ext=="mrcs")
+		return true;
+	else
+		return false;
+}
+
 // Get number from file ....................................................
 int FileName::getNumber() const
 {

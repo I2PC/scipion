@@ -259,6 +259,10 @@ public:
      */
     String getExtension() const;
 
+    /** True if the extension of this filename is of an image type
+     */
+    bool hasImageExtension() const;
+
     /** Get image format identifier (as in Bsoft)
      *
      * @code
