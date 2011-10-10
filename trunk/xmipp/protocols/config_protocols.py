@@ -1,38 +1,77 @@
+
 #--------------------------------------------------------------------------------
-# Protocol information
+# Protocols info (name, title, path)
+#--------------------------------------------------------------------------------
+protocols = {
+        'screen_micrographs': ('Screen Micrographs', 'ImportedMicrographs'),
+        'particle_pick': ('Manual picking', 'ParticlePicking/Manual'),
+        'particle_pick_auto': ('Automatic picking', 'ParticlePicking/Auto'),
+        'extract_particles': ('Extract Particles', 'Images/Extracted'),
+        'import_particles': ('Import Particles', 'Images/Imported'),
+        'preprocess_particles': ('Preprocess Particles', 'Images/Preprocessed'),
+        'screen_particles': ('Screen Particles', 'Images/Screening'),
+        'ml2d': ('ML2D', '2D/ML2D'),
+        'cl2d': ('CL2D', '2D/CL2D'),
+        'cl2d_align': ('Only align', '2D/Alignment'),
+        'kerdensom': ('KerDenSOM',  '2D/KerDenSOM'),
+        'rotspectra': ('Rotational Spectra', '2D/RotSpectra'),
+        'commonlines': ('Common Lines', '3D/CommonLines'),
+        'rct': ('Random Conical Tilt', '3D/RCT'),
+        'projmatch': ('Projection Matching', '3D/ProjMatch'), 
+        'ml3d': ('ML3D', '3D/ML3D'),
+        'subtraction': ('Partial Projection Subtraction', '3D/ProjSubs'),
+        'dummy': ('Dummy', 'Dummy'),
+        'xmipp_program': ('Xmipp Programs', 'XmippPrograms')            
+        }
+
+#--------------------------------------------------------------------------------
+# Protocols sections and groups
+#--------------------------------------------------------------------------------
+sections = [
+('Preprocessing', 
+   [['Micrographs', 'screen_micrographs'], 
+    ['Particle picking', 'particle_pick', 'particle_pick_auto', 'extract_particles'], 
+    ['Tools', 'import_particles', 'preprocess_particles', 'screen_particles']]),
+('2D', 
+   [['Align+Classify', 'ml2d', 'cl2d', 'cl2d_align'], 
+    ['Tools', 'kerdensom', 'rotspectra']]),
+('3D', 
+   [['Initial Model', 'commonlines', 'rct'], 
+    ['Model Refinement', 'projmatch', 'ml3d']])
+,
+('Other',
+ [['Extra','subtraction', 'dummy']])
+]
+
+#--------------------------------------------------------------------------------
+# Protocol data support
 #--------------------------------------------------------------------------------
 class ProtocolData:
-    def __init__(self,name,title,dir):
-        self.name=name
-        self.title=title
-        self.dir=dir
+    def __init__(self, section, group, name, title, path):
+        self.section = section
+        self.group = group
+        self.name = name
+        self.title = title
+        self.dir = path
 
 class ProtocolDictionary(dict):
-    def addProtocol(self,name,title,dir):
-        p = ProtocolData(name,title,dir)
-        self[name]=p
-        return p
-    
     def __init__(self):
-        self.screen_micrographs = self.addProtocol('screen_micrographs', 'Screen Micrographs', 'ImportedMicrographs')
-        self.particle_pick = self.addProtocol('particle_pick',  'Manual picking', 'ParticlePicking/Manual')
-        self.particle_pick_auto = self.addProtocol('particle_pick_auto',  'Automatic picking', 'ParticlePicking/Auto')
-        self.extract_particles = self.addProtocol('extract_particles',  'Extract Particles', 'Images/Extracted')
-        self.screen_particles = self.addProtocol('screen_particles',  'Screen Particles', 'Images/Screening')
-        self.import_particles = self.addProtocol('import_particles',  'Import Particles', 'Images/Imported')
-        self.preprocess_particles = self.addProtocol('preprocess_particles',  'Preprocess Particles', 'Images/Preprocessed')
-        self.ml2d = self.addProtocol('ml2d', 'ML2D', '2D/ML2D')
-        self.cl2d = self.addProtocol('cl2d', 'CL2D', '2D/CL2D')
-        self.cl2d_alignment = self.addProtocol('cl2d_align', 'Only align', '2D/Alignment')
-        self.kerdensom = self.addProtocol('kerdensom', 'KerDenSOM',  '2D/KerDenSOM')
-        self.rotspectra = self.addProtocol('rotspectra', 'Rotational Spectra', '2D/RotSpectra')
-        self.commonlines = self.addProtocol('commonlines', 'Common Lines', '3D/CommonLines')
-        self.rct = self.addProtocol('rct', 'Random Conical Tilt', '3D/RCT')
-        self.projmatch = self.addProtocol('projmatch', 'Projection Matching', '3D/ProjMatch') 
-        self.ml3d = self.addProtocol('ml3d', 'ML3D', '3D/ML3D')
-        self.projsubs = self.addProtocol('subtraction', 'Partial Projection Subtraction', '3D/ProjSubs')
-        self.dummy = self.addProtocol('dummy', 'Dummy', 'Dummy')
-        self.xmipp_program = self.addProtocol('xmipp', 'Xmipp Programs', 'XmippPrograms')
+        for section, sectionList in sections:
+            for groupList in sectionList:
+                group = groupList[0]
+                protocolList = groupList[1:]
+                for protocol in protocolList:
+                    self.addProtocol(section, group, protocol)
+        # Add special 'xmipp_program'
+        self.addProtocol(None, None, 'xmipp_program')
+
+    def addProtocol(self, section, group, protocol):
+        title, path = protocols[protocol]
+        p = ProtocolData(section, group, protocol, title, path)
+        setattr(self, protocol, p)
+        self[protocol] = p
+        
+
 protDict = ProtocolDictionary()
 
 #--------------------------------------------------------------------------------
@@ -52,37 +91,6 @@ projectDefaults = {
                    'TableRuns': 'runs',
                    'TableSteps': 'steps'
                    } 
-
-#--------------------------------------------------------------------------------
-# GUI Menus
-#--------------------------------------------------------------------------------
-
-sections = [
-('Preprocessing', 
-   [['Micrographs', protDict.screen_micrographs.name], 
-    ['Particle picking', protDict.particle_pick.name, protDict.particle_pick_auto.name, protDict.extract_particles.name], 
-    ['Tools', protDict.import_particles.name, protDict.preprocess_particles.name, protDict.screen_particles.name]]),
-('2D', 
-   [['Align+Classify', protDict.ml2d.name, protDict.cl2d.name, protDict.cl2d_alignment.name], 
-    ['Tools2', protDict.kerdensom.name, protDict.rotspectra.name]]),
-('3D', 
-   [['Initial Model', protDict.commonlines.name, protDict.rct.name], 
-    ['Model Refinement', protDict.projmatch.name, protDict.ml3d.name]])
-,
-('Other',
- [['Extra',protDict.projsubs.name, protDict.dummy.name]])
-]
-
-def getSectionByName(prot): 
-    for s, list in sections:
-        ss = []
-        for subList in list:
-            if prot.name in subList:
-                ss.append(subList[0])
-        if len(ss) > 0:
-            return (s, ss)
-    return None
-
 
 #--------------------------------------------------------------------------------
 # GUI Properties

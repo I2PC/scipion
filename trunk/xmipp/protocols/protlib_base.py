@@ -81,7 +81,7 @@ class XmippProject():
         groupName = ""
         for section, groupList in sections:
             for group in groupList:
-                groupName = group[0]
+                groupName = "%s_%s" % (section, group[0])
                 prots = group[1:]
                 self.projectDb.insertGroup(groupName)
                 for p in prots:

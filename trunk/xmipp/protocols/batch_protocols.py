@@ -394,20 +394,20 @@ class XmippProjectGUI():
         xroot, yroot = self.root.winfo_x() + btn.master.winfo_x(), self.root.winfo_y()+ btn.master.winfo_y()
         menu.post(xroot + x + w + 10, yroot + y)
         
-    def selectToolbarButton(self, text, showMenu=True):
-        btn, menu = self.ToolbarButtonsDict[text]
+    def selectToolbarButton(self, key, showMenu=True):
+        btn, menu = self.ToolbarButtonsDict[key]
 
-        if self.lastSelected and self.lastSelected != text:
+        if self.lastSelected and self.lastSelected != key:
             lastBtn, lastMenu = self.lastPair()
             lastBtn.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
             if lastMenu:
                 lastMenu.unpost()            
         
-        if self.lastSelected != text:
-            self.project.config.set('project', 'lastselected', text)
+        if self.lastSelected != key:
+            self.project.config.set('project', 'lastselected', key)
             self.project.writeConfig()
-            self.updateRunHistory(text)            
-            self.lastSelected = text  
+            self.updateRunHistory(key)            
+            self.lastSelected = key  
             btn.config(bg=ButtonSelectedColor, activebackground=ButtonSelectedColor)
             
         if self.lastSelected and showMenu:
@@ -486,14 +486,15 @@ class XmippProjectGUI():
             section.pack(fill=tk.X, pady=5)
             for o in v:
                 text = o[0]
+                key = "%s_%s" % (k, text)
                 opts = o[1:]
-                def btn_command(text): 
+                def btn_command(key): 
                     def new_command(): 
-                        self.selectToolbarButton(text)
+                        self.selectToolbarButton(key)
                     return new_command 
-                btn = section.addButton(text, command=btn_command(text))
+                btn = section.addButton(text, command=btn_command(key))
                 menu = self.createToolbarMenu(section, opts)
-                self.ToolbarButtonsDict[text] = (btn, menu)
+                self.ToolbarButtonsDict[key] = (btn, menu)
         text = protDict.xmipp_program.title
         btn = section.addButton(text, command=self.launchProgramsGUI)
         self.ToolbarButtonsDict[text] = (btn, None)
