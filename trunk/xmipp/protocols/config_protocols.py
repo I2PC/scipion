@@ -18,6 +18,7 @@ class ProtocolDictionary(dict):
         self.particle_pick = self.addProtocol('particle_pick',  'Manual picking', 'ParticlePicking/Manual')
         self.particle_pick_auto = self.addProtocol('particle_pick_auto',  'Automatic picking', 'ParticlePicking/Auto')
         self.extract_particles = self.addProtocol('extract_particles',  'Extract Particles', 'Images/Extracted')
+        self.screen_particles = self.addProtocol('screen_particles',  'Screen Particles', 'Images/Screening')
         self.import_particles = self.addProtocol('import_particles',  'Import Particles', 'Images/Imported')
         self.preprocess_particles = self.addProtocol('preprocess_particles',  'Preprocess Particles', 'Images/Preprocessed')
         self.ml2d = self.addProtocol('ml2d', 'ML2D', '2D/ML2D')
@@ -60,7 +61,7 @@ sections = [
 ('Preprocessing', 
    [['Micrographs', protDict.screen_micrographs.name], 
     ['Particle picking', protDict.particle_pick.name, protDict.particle_pick_auto.name, protDict.extract_particles.name], 
-    ['Tools', protDict.import_particles.name, protDict.preprocess_particles.name]]),
+    ['Tools', protDict.import_particles.name, protDict.preprocess_particles.name, protDict.screen_particles.name]]),
 ('2D', 
    [['Align+Classify', protDict.ml2d.name, protDict.cl2d.name, protDict.cl2d_alignment.name], 
     ['Tools2', protDict.kerdensom.name, protDict.rotspectra.name]]),
