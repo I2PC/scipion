@@ -22,6 +22,7 @@ public class COMMAND_PARAMETERS {
     public final static String MODE_DEFAULT = "default";
     public final static String MODE_IMAGE = "image";
     public final static String MODE_GALLERY = "gallery";
+    public final static String MODE_METADATA = "metadata";
     public final static String OPTION_RENDER_IMAGES = "render";
     public final static String OPTION_SINGLE_SELECTION = "singlesel";
     public final static String OPTION_SELECTION_TYPE = "seltype";

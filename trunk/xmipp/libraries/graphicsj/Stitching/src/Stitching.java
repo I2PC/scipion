@@ -44,7 +44,7 @@ public class Stitching {
             "-" + OPTION_INPUT_FILE, files[0], files[1],
             "-" + OPTION_PROPERTIES_FILE, properties,
             "-" + OPTION_OUTPUT_FILE, output,
-            "-" + OPTION_GENERATESTACK, stackfile,
+            //"-" + OPTION_GENERATESTACK, stackfile,
             //"-" + OPTION_X, "100",
             //"-" + OPTION_Y, "-50"
         };

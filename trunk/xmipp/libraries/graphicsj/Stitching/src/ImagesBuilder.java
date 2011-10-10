@@ -1,7 +1,6 @@
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.process.FloatProcessor;
 import ini.trakem2.display.Patch;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -41,35 +40,119 @@ public class ImagesBuilder {
     
     return ip;
     }*/
-    
-    public static boolean saveResult(List<Patch> patches, Rectangle box, String path) {
-        
-        try {
-            // Creates a new ImagePlus big enough.
-            float slice[] = buildSlice(patches.get(0), box);
-            FloatProcessor fp = new FloatProcessor(box.width, box.height, toDouble(slice));
-            ImagePlus result = new ImagePlus(path, fp);
 
-            // @TODO
-            for (int i = 1; i <= patches.size(); i++) {
-                Patch patch = patches.get(i - 1);
-                
+    public static boolean saveResult(List<Patch> patches, Rectangle box, String path) {
+
+        try {
+            // Translation to the top left corner.
+            AffineTransform translation = new AffineTransform();
+            translation.translate(box.x, box.y);
+
+            // Creates a new ImagePlus big enough.
+            int w = box.width;
+            int h = box.height;
+
+            float result[] = new float[w * h];//buildSlice(patches.get(0), box);
+
+            // Puts images, pixels, translations in arrays, a much convenient way to use them later.
+            Patch patch0 = patches.get(0);
+            Patch patch1 = patches.get(1);
+
+            ImagePlus images[] = new ImagePlus[]{
+                patch0.getImagePlus(),
+                patch1.getImagePlus()
+            };
+
+            float pixels[][] = new float[][]{
+                (float[]) images[0].getProcessor().convertToFloat().getPixels(),
+                (float[]) images[1].getProcessor().convertToFloat().getPixels()
+            };
+
+            int sourceW[] = new int[]{
+                images[0].getWidth(),
+                images[1].getWidth()
+            };
+
+            int sourceH[] = new int[]{
+                images[0].getHeight(),
+                images[1].getHeight()
+            };
+
+            Rectangle rectangles[] = new Rectangle[]{
+                new Rectangle(sourceW[0], sourceH[0]),
+                new Rectangle(sourceW[1], sourceH[1])
+            };
+
+            // Transforms concatenated with translation to the box top left corner.
+            AffineTransform transforms[] = new AffineTransform[]{
+                patch0.getAffineTransform().createInverse(),
+                patch1.getAffineTransform().createInverse()
+            };
+
+            transforms[0].concatenate(translation);
+            transforms[1].concatenate(translation);
+
+            for (int j = 0; j < h; j++) {
+                for (int i = 0; i < w; i++) {
+                    int imageIndex = 0;
+                    boolean done = false;
+                    Point currentPoint = new Point(i, j);
+
+                    do {
+                        Point sourcePoint = new Point();
+
+                        transforms[imageIndex].transform(currentPoint, sourcePoint);
+
+                        int index = getRectangleIndexContaining(rectangles, sourcePoint);
+
+                        //if (rectangles[imageIndex].contains(sourcePoint)) {
+                        if (index == imageIndex) {
+                            //assign value...
+                            result[j * w + i] = pixels[imageIndex][sourcePoint.y * sourceW[imageIndex] + sourcePoint.x];
+
+                            done = true;
+                        } else {
+                            result[j * w + i] = Float.MIN_VALUE;
+                        }
+
+                        imageIndex++;
+                    } while (!done && imageIndex < pixels.length);
+                }
             }
 
             // Writes slice to disk.            
             System.err.println(" >>> Saving result: " + path);
             ImageDouble image = new ImageDouble();
-            image.setData(box.width, box.height, 1, toDouble((float[]) result.getProcessor().getPixels()));
+            image.setData(box.width, box.height, 1, toDouble(result));
             image.write(path);
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
             IJ.error("Exception: " + ex.getMessage());
+
             return false;
         }
-        
+
         return true;
     }
-    
+
+    static int getRectangleIndexContaining(Rectangle rectangles[], Point point) {
+        int contains = -1;
+        int i = 0;
+
+        for (; i < rectangles.length; i++) {
+            Rectangle rectangle = rectangles[i];
+            if (rectangle.contains(point)) {
+                if (contains >= 0) {    // More than one rectangle contains the point.
+                    return -1;
+                }
+
+                contains = i;
+            }
+        }
+
+        return contains;
+    }
+
     public static boolean saveStack(List<Patch> patches, Rectangle box, String path) {
         File f = new File(path);
 
@@ -77,13 +160,13 @@ public class ImagesBuilder {
         if (f.exists()) {
             f.delete();
         }
-        
+
         for (int i = 1; i <= patches.size(); i++) {
             Patch patch = patches.get(i - 1);
-            
+
             try {
                 float slice[] = buildSlice(patch, box);
-                
+
                 ImageDouble image = new ImageDouble();
                 image.setData(box.width, box.height, 1, toDouble(slice));
 //System.err.println(" -> X: " + image.getXsize()+ " --> "+box.width);
@@ -99,52 +182,52 @@ public class ImagesBuilder {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     static double[] toDouble(float[] input) {
         double output[] = null;
-        
+
         if (input != null) {
             output = new double[input.length];
             for (int i = 0; i < input.length; i++) {
                 output[i] = input[i];
             }
         }
-        
+
         return output;
     }
-    
+
     static float[] buildSlice(Patch patch, Rectangle box) throws Exception {
         ImagePlus ip = patch.getImagePlus();
         AffineTransform translation = new AffineTransform();
         translation.translate(box.x, box.y);
-        
+
         AffineTransform impT = patch.getAffineTransform();
         impT.invert(); // Inverts transformation.
 
         AffineTransform T = new AffineTransform(impT);
         T.concatenate(translation);
-        
+
         float pixels[] = (float[]) ip.getProcessor().convertToFloat().getPixels();
         Rectangle r = new Rectangle(ip.getWidth(), ip.getHeight());
-        
+
         BufferedImage bimage = new BufferedImage(box.width, box.height,
                 BufferedImage.TYPE_INT_ARGB);
         ImagePlus imp = new ImagePlus("tmp", bimage);
-        
+
         int w = box.width;
         int h = box.height;
         float slice[] = (float[]) imp.getProcessor().convertToFloat().getPixels();
-        
+
         Point p = new Point();
-        
+
         for (int j = 0; j < h; j++) {   // Rows
             p.y = j;
             for (int i = 0; i < w; i++) {   // Columns
                 p.x = i;
-                
+
                 Point p_ = new Point();
                 T.transform(p, p_);
 
@@ -159,7 +242,7 @@ public class ImagesBuilder {
                 }
             }
         }
-        
+
         return slice;
     }
     /*

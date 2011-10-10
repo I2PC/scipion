@@ -13,7 +13,7 @@ class ScriptRotSpectraJ(ScriptPluginIJ):
 		self.addParamsLine('         alias -f;');
 		self.addParamsLine('  [--classes <classesfile>]                            : Classes file');
 		self.addParamsLine('         alias -c;');
-		self.addParamsLine('  [--data <datafile>]                            : Vectros data file');
+		self.addParamsLine('  [--data <datafile>]                            : Vectors data file');
 		self.addParamsLine('         alias -d;');
 
 	def readParams(self):

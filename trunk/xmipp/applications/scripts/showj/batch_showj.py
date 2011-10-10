@@ -8,10 +8,12 @@ class ScriptShowJ(ScriptPluginIJ):
 		
 	def defineOtherParams(self):
 		self.addParamsLine('  [--mode <mode_value=image>]           : List of params ');
-		self.addParamsLine('     where <mode_value> image gallery')
+		self.addParamsLine('     where <mode_value> image gallery metadata')
 		self.addParamsLine('         alias -o;');
-		self.addParamsLine('  [--poll ]                            : Keep checking for changes on input files');
+		self.addParamsLine('  [--poll]                            : Keeps checking for changes on input files  (for image mode only!)');
 		self.addParamsLine('         alias -p;');
+		self.addParamsLine('  [--render]	: Activates images rendering (for metadata mode only!)');
+		self.addParamsLine('         alias -e;');
 		self.addParamsLine('  [--rows <rows>]                            : number of rows in table');
 		self.addParamsLine('         alias -r;');
 		self.addParamsLine('  [--columns <columns>]                            : number of columns in table');
@@ -22,6 +24,8 @@ class ScriptShowJ(ScriptPluginIJ):
 			self.args += " --mode %s" % self.getParam('--mode')
 		if self.checkParam('--poll'):
 			self.args += " --poll"
+		if self.checkParam('--render'):
+			self.args += " --render"
 		if self.checkParam('--rows'):
 			self.args += " --rows %s" % self.getParam('--rows') 
 		if self.checkParam('--columns'):

@@ -29,9 +29,11 @@ public class XmippBrowser implements PlugIn {
     private String INPUT[];
     private String MODE = COMMAND_PARAMETERS.MODE_DEFAULT;
     private boolean POLL = false;
+    boolean RENDER_IMAGES = false;
     private final static int MODE_TYPE_DEFAULT = 0;
     private final static int MODE_TYPE_IMAGE = 1;
     private final static int MODE_TYPE_TABLE = 2;
+    private final static int MODE_TYPE_METADATA = 3;
     private int ROWS = -1, COLUMNS = -1;
 
     @Override
@@ -45,7 +47,7 @@ public class XmippBrowser implements PlugIn {
         }
 
         if (INPUT != null) {
-            openFiles(INPUT, MODE, POLL, ROWS, COLUMNS);
+            openFiles(INPUT, MODE, POLL, RENDER_IMAGES, ROWS, COLUMNS);
         }
 
         if (DIR != null) {
@@ -67,7 +69,7 @@ public class XmippBrowser implements PlugIn {
         frameBrowser.setVisible(true);
     }
 
-    static void openFiles(String input[], String mode, boolean poll, int rows, int columns) {
+    static void openFiles(String input[], String mode, boolean poll, boolean render, int rows, int columns) {
         int m = 0;
         if (mode.trim().toLowerCase().compareTo(COMMAND_PARAMETERS.MODE_DEFAULT) == 0) {
             m = 0;
@@ -75,6 +77,8 @@ public class XmippBrowser implements PlugIn {
             m = 1;
         } else if (mode.trim().toLowerCase().compareTo(COMMAND_PARAMETERS.MODE_GALLERY) == 0) {
             m = 2;
+        } else if (mode.trim().toLowerCase().compareTo(COMMAND_PARAMETERS.MODE_METADATA) == 0) {
+            m = 3;
         }
 
         if (input != null) {
@@ -98,6 +102,9 @@ public class XmippBrowser implements PlugIn {
                     if (filesList[1] != null) {
                         ImagesWindowFactory.openFilesAsGallery(filesList[1], rows, columns);
                     }
+                    break;
+                case MODE_TYPE_METADATA:
+                    ImagesWindowFactory.openFilesAsMetadata(input, render);
                     break;
             }
         }
@@ -143,6 +150,7 @@ public class XmippBrowser implements PlugIn {
         options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, "");
         options.addOption(COMMAND_PARAMETERS.OPTION_MODE, true, "");
         options.addOption(COMMAND_PARAMETERS.OPTION_POLL, false, "");
+        options.addOption(COMMAND_PARAMETERS.OPTION_RENDER_IMAGES, false, "");
         options.addOption(COMMAND_PARAMETERS.OPTION_TABLE_ROWS, true, "");
         options.addOption(COMMAND_PARAMETERS.OPTION_TABLE_COLUMNS, true, "");
 
@@ -190,6 +198,11 @@ public class XmippBrowser implements PlugIn {
             // Poll.
             if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_POLL)) {
                 POLL = true;
+            }
+
+            // Input.
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_RENDER_IMAGES)) {
+                RENDER_IMAGES = true;
             }
 
             // Table height.

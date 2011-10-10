@@ -140,8 +140,23 @@ public class ImagesWindowFactory {
         return iw;
     }
 
+    public static void openFilesAsMetadata(String filenames[]) {
+        openFilesAsMetadata(filenames, false);
+    }
+
+    public static void openFilesAsMetadata(String filenames[], boolean render) {
+        for (int i = 0; i < filenames.length; i++) {
+            openFileAsMetadata(filenames[i], render);
+        }
+    }
+
     public static void openFileAsMetadata(String filename) {
+        openFileAsMetadata(filename, false);
+    }
+
+    public static void openFileAsMetadata(String filename, boolean render) {
         JFrameMetaData frameMetaData = new JFrameMetaData(filename);
+        frameMetaData.setRenderImages(render);
         setConvenientSize(frameMetaData);
         frameMetaData.setLocationRelativeTo(null);
         frameMetaData.setVisible(true);
