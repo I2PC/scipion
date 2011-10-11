@@ -9,7 +9,11 @@ import java.awt.event.ComponentEvent;
 import java.util.List;
 
 import javax.swing.JDialog;
+import javax.swing.JPanel;
 
+import particlepicker.tiltpair.model.TiltedParticle;
+import particlepicker.tiltpair.model.UntiltedParticle;
+import particlepicker.training.gui.ParticleCanvas;
 import particlepicker.training.gui.TrainingPickerJFrame;
 import particlepicker.training.model.Constants;
 import particlepicker.training.model.TrainingParticle;
@@ -17,10 +21,10 @@ import particlepicker.training.model.TrainingParticle;
 public class ParticlesJDialog extends JDialog
 {
 
-	private ParticlePickerJFrame frame;
-	private Panel particlespn;
-	private ScrollPane sp;
-	private GridBagConstraints constraints;
+	protected ParticlePickerJFrame frame;
+	protected Panel particlespn;
+	protected ScrollPane sp;
+	protected GridBagConstraints constraints;
 
 	public ParticlesJDialog(ParticlePickerJFrame frame)
 	{
@@ -40,11 +44,10 @@ public class ParticlesJDialog extends JDialog
 		if(particles.isEmpty())
 			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("particles"));
 		if(side == 0)
-			throw new IllegalArgumentException(Constants.getOutOfBoundMsg("side"));
+			throw new IllegalArgumentException(Constants.getOutOfBoundsMsg("side"));
 		
 		if(resize)
 		{
-			
 			columns = Math.min(200, particles.size() * side) / side;
 			rows = (int) Math.ceil(particles.size() / (float) columns);
 			width = side * columns;
@@ -63,12 +66,17 @@ public class ParticlesJDialog extends JDialog
 		particlespn.removeAll();
 		particles = frame.getParticles();
 		int index = 0;
+		ParticleCanvas c;
+		TrainingParticle p;
+		UntiltedParticle up;
 		for (int i = 0; i < rows; i++)
 			for (int j = 0; j < columns; j++, index++)
 			{
 				if (index == particles.size())
 					break;
-				particlespn.add(particles.get(index).getParticleCanvas(frame), WindowUtils.getConstraints(constraints, j, i, 1));
+				p = particles.get(index);
+				c = p.getParticleCanvas(frame);
+				particlespn.add(c, WindowUtils.getConstraints(constraints, j, i, 1));
 			}
 		if (resize)
 			pack();

@@ -87,7 +87,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 	private UntiltedMicrograph untiltedmic;
 	private JButton colorbt;
 	private double position;
-	private JLabel iconlb;
 	private int index;
 	private JButton resetbt;
 	private JLabel upslb;
@@ -225,8 +224,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 		filtersmn.add(gbmi);
 		gbmi.addActionListener(this);
 
-		JMenuItem particlesmn = new JMenuItem("Particles");
-		windowmn.add(particlesmn);
+		JMenuItem upmi = new JMenuItem("Particles");
+		windowmn.add(upmi);
+
 		JMenuItem ijmi = new JMenuItem("ImageJ");
 		windowmn.add(ijmi);
 
@@ -288,7 +288,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 				}
 			}
 		});
-		particlesmn.addActionListener(new ActionListener()
+		upmi.addActionListener(new ActionListener()
 		{
 
 			@Override
@@ -297,6 +297,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 				loadParticles();
 			}
 		});
+
 
 	}
 

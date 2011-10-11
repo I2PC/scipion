@@ -15,6 +15,7 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 
+import particlepicker.ParticlePickerCanvas;
 import particlepicker.WindowUtils;
 import particlepicker.tiltpair.model.TiltedParticle;
 import particlepicker.tiltpair.model.UntiltedMicrograph;
@@ -22,7 +23,7 @@ import particlepicker.tiltpair.model.UntiltedParticle;
 import particlepicker.training.model.TrainingParticle;
 import xmipp.Particle;
 
-public class TiltedMicrographCanvas extends ImageCanvas implements MouseListener, MouseWheelListener
+public class TiltedMicrographCanvas extends ParticlePickerCanvas implements MouseListener, MouseWheelListener
 {
 
 	private TiltPairPickerJFrame frame;

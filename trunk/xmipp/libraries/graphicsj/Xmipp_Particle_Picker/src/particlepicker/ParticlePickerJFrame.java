@@ -5,6 +5,7 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import particlepicker.training.gui.TrainingPickerJFrame;
 import particlepicker.training.model.Family;
 import particlepicker.training.model.Micrograph;
@@ -17,9 +18,8 @@ public abstract class ParticlePickerJFrame extends JFrame
 
 	public double getMagnification()
 	{
-		if (getFamily().getSize() > 100)
-			return 0.9;
-		return 1;
+		double scaled = getFamily().getSize()/500.f;
+		return 1 - scaled;
 	}
 
 	public abstract Family getFamily();
@@ -31,7 +31,10 @@ public abstract class ParticlePickerJFrame extends JFrame
 		try
 		{
 			if (particlesdialog == null)
-				particlesdialog = new ParticlesJDialog(ParticlePickerJFrame.this);
+				if(ParticlePickerJFrame.this instanceof TrainingPickerJFrame)
+					particlesdialog = new ParticlesJDialog(ParticlePickerJFrame.this);
+				else
+					particlesdialog = new TiltPairParticlesJDialog(ParticlePickerJFrame.this);
 			else
 			{
 

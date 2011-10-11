@@ -4,6 +4,7 @@ import ij.gui.ImageCanvas;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Label;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -12,8 +13,10 @@ import java.awt.event.MouseMotionListener;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
 import particlepicker.tiltpair.gui.TiltPairPickerJFrame;
+import particlepicker.tiltpair.gui.UntiltedMicrographCanvas;
 import particlepicker.tiltpair.model.TiltedMicrograph;
 import particlepicker.tiltpair.model.TiltedParticle;
 import particlepicker.tiltpair.model.UntiltedMicrograph;
@@ -30,12 +33,14 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 	private boolean dragged;
 	private ParticlePickerJFrame frame;
 	private int side;
+	private ParticlePickerCanvas canvas;
 
 	public ParticleCanvas(TrainingParticle particle, ParticlePickerJFrame frame)
 	{
 		super(particle.getMicrograph().getImage());
 		this.particle = particle;
 		this.frame = frame;
+		this.canvas = (particle instanceof TiltedParticle)? ((UntiltedMicrographCanvas)frame.getCanvas()).getTiltedCanvas(): frame.getCanvas();
 		setMagnification(frame.getMagnification());
 		this.size = (int)(frame.getFamily().getSize());
 		side = (int)(size * magnification);
@@ -68,7 +73,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 			{
 				particle.setPosition(x, y);
 				repaint();
-				frame.getCanvas().repaint();
+				canvas.repaint();
 			}
 			catch (Exception ex)
 			{
@@ -99,12 +104,12 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 				else if(frame.getMicrograph() instanceof TiltedMicrograph)
 					((TiltedMicrograph)frame.getMicrograph()).removeParticle((TiltedParticle)particle);
 			}
-			frame.getCanvas().repaint();
+			canvas.repaint();
 			frame.updateMicrographsModel();
 			frame.loadParticles();
 		}
 		else
-			frame.getCanvas().moveTo(particle);
+			canvas.moveTo(particle);
 			
 	}
 

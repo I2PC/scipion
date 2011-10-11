@@ -26,7 +26,7 @@ public class Constants {
 		return String.format("No such %s %s exists", field, value);
 	}
 
-	public static String getOutOfBoundMsg(Object o)
+	public static String getOutOfBoundsMsg(Object o)
 	{
 		return String.format("%s out of bounds", o);
 	}
