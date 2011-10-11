@@ -193,7 +193,7 @@ public class LABELS {
     public final static String LABEL_DIGITAL_FREQUENCY = "Digital frequency";
     public final static String LABEL_AUTO_AJUST_COLUMNS = "Auto adjust columns";
     public final static String LABEL_SHOW_LABELS = "Show label: ";
-    public final static String LABEL_ROTSPECTRA_SHOW_LABELS = "Show label.";
+    public final static String LABEL_ROTSPECTRA_SHOW_NIMAGES = "Show #images";
     public final static String LABEL_SORT_BY_LABEL = "Sort by label";
     public final static String LABEL_USE_GEOMETRY = "Use geometry";
     public final static String LABEL_FILTER = "Filter: ";

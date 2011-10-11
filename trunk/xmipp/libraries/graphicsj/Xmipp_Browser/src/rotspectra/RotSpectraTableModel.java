@@ -6,6 +6,7 @@ package rotspectra;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import javax.swing.table.AbstractTableModel;
 import xmipp.Filename;
@@ -23,6 +24,7 @@ public class RotSpectraTableModel extends AbstractTableModel {
     int w, h;
     int vectorsSize;
     LinkedList<RotSpectraVector> data = new LinkedList<RotSpectraVector>();
+    protected LinkedList<RotSpectraVector> selectedItems = new LinkedList<RotSpectraVector>();
     String filenameClasses, filenameVectors, filenameData;
     boolean showLabels;
 
@@ -43,6 +45,53 @@ public class RotSpectraTableModel extends AbstractTableModel {
 //        }
     }
 
+    /*    public static void main(String args[]) {
+    try {
+    RotSpectraTableModel rstm = new RotSpectraTableModel();
+    } catch (Exception ex) {
+    ex.printStackTrace();
+    }
+    }
+    
+    public RotSpectraTableModel() throws Exception {
+    String dir = "/data2/MicrographPreprocessing/2D/RotSpectra/run_001/";
+    
+    this.filenameClasses = dir + "results_classes.xmd";
+    this.filenameVectors = dir + "results_vectors.xmd";
+    this.filenameData = dir + "results_vectors.xmd.raw";
+    
+    RotSpectraVector rsv = load2(filenameClasses, filenameVectors, filenameData);
+    
+    rsv.getChart().show();
+    //int size = data.size();
+    //System.out.println(size);
+    //        for (int i = 0; i < data.size(); i++) {
+    //            RotSpectraVector rsv = data.get(i);
+    //            Image plot = rsv.getPreview(128, 128);
+    //            ImagePlus imp = new ImagePlus(filenameData, plot);
+    //            imp.show();
+    //        }
+    }
+    
+    RotSpectraVector load2(String filenameClasses, String filenameVectors, String filenameData) throws Exception {
+    MetaData mdClasses = new MetaData(blockKerDenSOM + filenameClasses);
+    MetaData mdVectors = new MetaData(filenameVectors);
+    
+    long id = mdClasses.firstObject();
+    w = mdClasses.getValueInt(MDLabel.MDL_XSIZE, id);
+    h = mdClasses.getValueInt(MDLabel.MDL_YSIZE, id);
+    int nvectors = w * h;
+    
+    String blocks[] = getBlocks(blockVectorContent + filenameVectors);
+    
+    id = mdVectors.firstObject();
+    vectorsSize = mdVectors.getValueInt(MDLabel.MDL_CLASSIFICATION_DATA_SIZE, id);
+    
+    double vectors[][] = loadVectors(filenameData, nvectors, vectorsSize);
+    
+    int i = 16; // <- Class 000016
+    return new RotSpectraVector(blocks[i], filenameClasses, vectors[i]);
+    }*/
     void load(String filenameClasses, String filenameVectors, String filenameData) throws Exception {
         MetaData mdClasses = new MetaData(blockKerDenSOM + filenameClasses);
         MetaData mdVectors = new MetaData(filenameVectors);
@@ -60,9 +109,8 @@ public class RotSpectraTableModel extends AbstractTableModel {
         double vectors[][] = loadVectors(filenameData, nvectors, vectorsSize);
 
         for (int i = 0; i < vectors.length; i++) {
-            double vector[] = vectors[i];
             data.add(new RotSpectraVector(
-                    blocks[i], filenameClasses, vector));
+                    blocks[i], filenameClasses, vectors[i]));
         }
     }
 
@@ -130,5 +178,86 @@ public class RotSpectraTableModel extends AbstractTableModel {
 
     public boolean isShowingLabels() {
         return showLabels;
+    }
+
+    public void selectRange(int initial_row, int initial_col, int final_row, int final_col) {
+        int row0 = Math.min(initial_row, final_row);
+        int row1 = Math.max(initial_row, final_row);
+        int col0 = Math.min(initial_col, final_col);
+        int col1 = Math.max(initial_col, final_col);
+
+        for (int i = row0; i <= row1; i++) {
+            for (int j = col0; j <= col1; j++) {
+                setSelected(i, j, true);
+            }
+        }
+    }
+
+    public void setSelected(int row, int col, boolean selected) {
+        RotSpectraVector item = (RotSpectraVector) getValueAt(row, col);
+
+        if (item != null) {
+            item.setSelected(selected);
+
+            if (selected) {
+                if (!selectedItems.contains(item)) {
+                    selectedItems.addLast(item);
+                }
+            } else {
+                if (selectedItems.contains(item)) {
+                    selectedItems.remove(item);
+                }
+            }
+        }
+        //fireTableCellUpdated(row, col);
+    }
+
+    public ArrayList<RotSpectraVector> getSelectedItems() {
+        return new ArrayList<RotSpectraVector>(selectedItems);
+    }
+
+    public void toggleSelected(int row, int col) {
+        RotSpectraVector item = (RotSpectraVector) getValueAt(row, col);
+
+        if (item != null) {
+            setSelected(row, col, !item.isSelected());
+        }
+    }
+
+    // To select image directly
+    public void setSelected(int index) {
+        clearSelection();
+
+        RotSpectraVector item = data.get(index);
+        item.setSelected(true);
+        selectedItems.addLast(item);
+    }
+
+    public void selectAll() {
+        clearSelection();
+
+        for (int i = 0; i < getSize(); i++) {
+            RotSpectraVector item = data.get(i);
+
+            item.setSelected(true);
+            selectedItems.addLast(item);
+        }
+    }
+
+    public void invertSelection() {
+        for (int i = 0; i < getRowCount(); i++) {
+            for (int j = 0; j < getColumnCount(); j++) {
+                toggleSelected(i, j);
+            }
+        }
+    }
+
+    public void clearSelection() {
+        int n = selectedItems.size();   // Size will change over iterations while index will be increased.
+
+        for (int i = 0; i < n; i++) {
+            selectedItems.getLast().setSelected(false);
+            selectedItems.removeLast();
+        }
     }
 }

@@ -33,16 +33,6 @@ import xmipp.MetaData;
  */
 public class FSCWindow extends JFrame {
 
-//    public static void main(String args[]) {
-//        String filename = "/home/juanjo/temp/angles_save.sel";
-//
-//        try {
-//            FSCWindow frame = new FSCWindow(filename);
-//            frame.setVisible(true);
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//        }
-//    }
     public FSCWindow(String filename) {
         super(LABELS.TITLE_FSC + filename);
 
@@ -122,21 +112,6 @@ public class FSCWindow extends JFrame {
         return new ChartPanel(chart);
     }
 
-//    private static XYSeriesCollection[] createSeriesCollection(
-//            double[] xs, double ys1[], double ys2[],
-//            String y1Label, String y2Label) {
-//
-//        XYSeries series1 = createSeries(y1Label, xs, ys1);
-//        XYSeries series2 = createSeries(y2Label, xs, ys2);
-//
-//        XYSeriesCollection collection1 = new XYSeriesCollection();
-//        collection1.addSeries(series1);
-//
-//        XYSeriesCollection collection2 = new XYSeriesCollection();
-//        collection1.addSeries(series2);
-//
-//        return new XYSeriesCollection[]{collection1, collection2};
-//    }
     private static XYSeries createSeries(String name, double[] xs, double[] values) {
         XYSeries series = new XYSeries(name);
 

@@ -34,7 +34,7 @@ import java.awt.event.KeyListener;
 import javax.swing.JTextField;
 import javax.swing.event.ListSelectionListener;
 import metadata.renderers.MetaDataStringRenderer;
-import metadata.renderers.MetaDataNumberRenderer;
+import metadata.renderers.MetaDataIntegerRenderer;
 import metadata.renderers.MetaDataImageRenderer;
 import metadata.filters.RowEnableFilter;
 import metadata.models.MetaDataTableModel;
@@ -44,6 +44,7 @@ import metadata.dialogs.JDialogTextFile;
 import metadata.images.TableFileItem;
 import metadata.images.TableMetaDataItem;
 import metadata.renderers.FileItemRenderer;
+import metadata.renderers.MetaDataDoubleRenderer;
 import metadata.renderers.RowHeaderRenderer;
 import metadata.renderers.editors.TableFileItemEditor;
 import metadata.renderers.editors.TableImageItemEditor;
@@ -65,7 +66,8 @@ public class JFrameMetaData extends JFrame {
     private FileItemRenderer fileRenderer = new FileItemRenderer();
     private MetaDataImageRenderer imageRenderer = new MetaDataImageRenderer();
     private MetaDataStringRenderer stringRenderer = new MetaDataStringRenderer();
-    private MetaDataNumberRenderer numberRenderer = new MetaDataNumberRenderer();
+    private MetaDataDoubleRenderer doubleRenderer = new MetaDataDoubleRenderer();
+    private MetaDataIntegerRenderer numberRenderer = new MetaDataIntegerRenderer();
     private TableImageItemEditor imageEditor = new TableImageItemEditor();
     private TableFileItemEditor metadataEditor = new TableFileItemEditor(new JTextField());
     private TableFileItemEditor fileEditor = new TableFileItemEditor(new JTextField());
@@ -210,7 +212,7 @@ public class JFrameMetaData extends JFrame {
         table.setDefaultRenderer(TableMetaDataItem.class, fileRenderer);
         table.setDefaultRenderer(TableFileItem.class, fileRenderer);
         table.setDefaultRenderer(String.class, stringRenderer);
-        table.setDefaultRenderer(Double.class, numberRenderer);
+        table.setDefaultRenderer(Double.class, doubleRenderer);
         table.setDefaultRenderer(Integer.class, numberRenderer);
     }
 

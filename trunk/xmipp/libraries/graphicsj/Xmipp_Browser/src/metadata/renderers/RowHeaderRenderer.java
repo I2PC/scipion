@@ -27,7 +27,7 @@ public class RowHeaderRenderer extends JLabel implements ListCellRenderer {
 
     public Component getListCellRendererComponent(JList list, Object value, int index,
             boolean selected, boolean hasFocus) {
-        setText(String.valueOf((Integer) value));
+        setText(String.valueOf((Integer) value + 1));
 
         if (selected) {
             setBackground(list.getSelectionBackground());

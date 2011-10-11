@@ -46,6 +46,7 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
     private RotSpectraTableModel tableModel;
     //private ImagesTableColumnModel columnModel;
     private GalleryRowHeaderModel rowHeaderModel;
+    private int previousSelectedRow, previousSelectedCol;
     private JList rowHeader;
     private RotSpectraRenderer renderer = new RotSpectraRenderer(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     private JPopUpMenuTable jpopUpMenuTable;
@@ -183,7 +184,7 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
 
         jpControls.setLayout(new javax.swing.BoxLayout(jpControls, javax.swing.BoxLayout.LINE_AXIS));
 
-        jcbShowLabels.setText(LABELS.LABEL_ROTSPECTRA_SHOW_LABELS);
+        jcbShowLabels.setText(LABELS.LABEL_ROTSPECTRA_SHOW_NIMAGES);
         jcbShowLabels.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jcbShowLabelsActionPerformed(evt);
@@ -217,12 +218,37 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
 
                 JFrame frameChart = rsVector.getChart();
                 frameChart.setVisible(true);
+            } else {
+                // Ctrl adds items to selection, otherwise previous ones are removed.
+                if (!evt.isControlDown()) {
+                    tableModel.clearSelection();
+                }
+
+                if (evt.isShiftDown()) {
+                    tableModel.selectRange(
+                            previousSelectedRow, previousSelectedCol,
+                            view_row, view_col);
+                } else {
+                    tableModel.setSelected(view_row, view_col, true);
+                }
+
+                table.repaint();
+            }
+
+            if (!evt.isShiftDown()) {
+                previousSelectedRow = view_row;
+                previousSelectedCol = view_col;
             }
         } else if (evt.getButton() == MouseEvent.BUTTON3) {  // Right click.
-            table.setRowSelectionInterval(view_row, view_row);
-            table.setColumnSelectionInterval(view_col, view_col);
+            if (tableModel.getSelectedItems().size() < 2) {
+                tableModel.clearSelection();
+                tableModel.setSelected(view_row, view_col, true);
 
-            table.repaint();
+                table.setRowSelectionInterval(view_row, view_row);
+                table.setColumnSelectionInterval(view_col, view_col);
+
+                table.repaint();
+            }
 
             final MouseEvent me = evt;
             SwingUtilities.invokeLater(new Runnable() {
@@ -255,17 +281,21 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
             jmiOpenAsGallery.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
-                    int row = table.rowAtPoint(location);
-                    int col = table.columnAtPoint(location);
+//                    int row = table.rowAtPoint(location);
+//                    int col = table.columnAtPoint(location);
 
-                    RotSpectraVector rsv =
-                            (RotSpectraVector) table.getValueAt(row, col);
+                    // Gets all images contained by selected vectors.
+                    ArrayList<String> filenames = new ArrayList<String>();
+                    for (int i = 0; i < tableModel.getSelectedItems().size(); i++) {
+                        RotSpectraVector vector = tableModel.getSelectedItems().get(i);
+                        filenames.addAll(vector.getImagesFilenames());
+                    }
 
-                    ArrayList<String> filenames = rsv.getImagesFilenames();
                     String array[] = filenames.toArray(new String[filenames.size()]);
 
                     JFrameGallery frame = ImagesWindowFactory.openFilesAsGallery(array, true);
-                    frame.setTitle(rsv.block + ": " + rsv.images.size() + " images.");
+                    frame.setTitle(tableModel.getSelectedItems().get(0).block
+                            + "...: " + filenames.size() + " images.");
                 }
             });
         }

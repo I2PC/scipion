@@ -28,6 +28,7 @@ public class RotSpectraVector {
     String block;
     double vector[];
     ArrayList<String> images;
+    protected boolean selected;
 
     public RotSpectraVector(String block, String filename, double vector[]) {
         this.block = block;
@@ -38,11 +39,28 @@ public class RotSpectraVector {
         images = loadFilenames(block + Filename.SEPARATOR + filename);
     }
 
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
     static JFreeChart createChart(String label, double vector[]) {
         XYSeries series = new XYSeries(label);
 
+//        double min = Double.MAX_VALUE;
+//        double max = Double.MIN_VALUE;
         for (int i = 0; i < vector.length; i++) {
-            series.add(i, vector[i]);
+            series.add((double) i, vector[i]);
+            /*            if (vector[i] > max) {
+            max = vector[i];
+            }
+            if (vector[i] < min) {
+            min = vector[i];
+            }
+             */
         }
 
         XYSeriesCollection dataset = new XYSeriesCollection(series);
@@ -51,6 +69,8 @@ public class RotSpectraVector {
                 "", "", "",
                 dataset, PlotOrientation.VERTICAL,
                 true, true, false);
+
+//        chart.getXYPlot().getRangeAxis().setRange(min, max);
         chart.removeLegend();
 
         return chart;

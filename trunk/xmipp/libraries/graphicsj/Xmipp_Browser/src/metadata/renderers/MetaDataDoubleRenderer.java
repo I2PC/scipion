@@ -13,11 +13,11 @@ import javax.swing.JTable;
  *
  * @author Juanjo Vega
  */
-public class MetaDataNumberRenderer extends MetaDataRowDisablerRenderer {
+public class MetaDataDoubleRenderer extends MetaDataRowDisablerRenderer {
 
     protected final static DecimalFormat formatter = new DecimalFormat("#.##E0");
 
-    public MetaDataNumberRenderer() {
+    public MetaDataDoubleRenderer() {
         super();
 
         setHorizontalAlignment(JLabel.RIGHT);

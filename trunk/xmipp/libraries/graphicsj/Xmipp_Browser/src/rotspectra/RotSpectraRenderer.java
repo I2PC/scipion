@@ -4,12 +4,15 @@
  */
 package rotspectra;
 
+import browser.gallery.renderers.StrokeBorder;
 import java.awt.Color;
 import java.awt.Component;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.UIManager;
+import javax.swing.border.Border;
 import javax.swing.table.DefaultTableCellRenderer;
 
 /**
@@ -18,6 +21,8 @@ import javax.swing.table.DefaultTableCellRenderer;
  */
 public class RotSpectraRenderer extends DefaultTableCellRenderer {
 
+    Border BORDER_SELECTED = new StrokeBorder(Color.RED, 3);
+    Border BORDER_FOCUSED = BorderFactory.createLineBorder(Color.RED, 3);
     int imagew, imageh;
 
     public RotSpectraRenderer(int imagew, int imageh) {
@@ -45,10 +50,20 @@ public class RotSpectraRenderer extends DefaultTableCellRenderer {
 
         RotSpectraTableModel tableModel = (RotSpectraTableModel) table.getModel();
         if (tableModel.isShowingLabels()) {
-            setText("<html><b>"+item.getNImages() + "</b> images</html>");
+            setText("<html><b>" + item.getNImages() + "</b> images</html>");
         } else {
             setText(null);
         }
+
+        // Hacking borders to enhance the default one.
+        if (item.isSelected()) {
+            setBorder(BORDER_SELECTED);
+        }
+
+        if (hasFocus) {
+            setBorder(BORDER_FOCUSED);
+        }
+
 
         // Tooltip.
         setToolTipText(item.getTooltipText());

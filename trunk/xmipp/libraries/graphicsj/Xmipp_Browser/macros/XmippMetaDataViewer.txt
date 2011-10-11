@@ -1,6 +1,0 @@
-// This macro allows to launch Xmipp MetaData Browser from command line
-// passing parameters to it.
-
- macro "XmippMetaDataViewer" {
-    run("Xmipp MetaData Viewer", getArgument);
- }
