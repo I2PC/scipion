@@ -495,6 +495,7 @@ def protocolMain(ProtocolClass, script=None):
         if no_check: 
             if not run_id:
                 reportError("Protocol run <%s> has not been registered in project database" % mod.RunName)
+            _run = {'run_id': run_id}
         else:
             from protlib_utils import showWarnings
             if not showWarnings(p.warningsBase(), no_confirm):
