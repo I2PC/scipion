@@ -385,6 +385,8 @@ void convolutionFFT(const MultidimArray<double> &img,
         DIRECT_MULTIDIM_ELEM(FFTIm,n) *= DIRECT_MULTIDIM_ELEM(FFTK,n);
 
         transformer1.inverseFourierTransform();
+
+        CenterFFT(imgTemp, false);
     }
 
 }
