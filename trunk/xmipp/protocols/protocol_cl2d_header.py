@@ -11,7 +11,7 @@
 
 # {begin_of_header}
 
-# {include} inc_comment_run.py
+# {eval} expandCommentRun()
 
 #------------------------------------------------------------------------------------------------
 # {section} CL2D parameters
@@ -73,29 +73,7 @@ Tolerance=0 means that an image must be in all previous levels with the rest of 
 the core."""
 Tolerance=1
 
-#------------------------------------------------------------------------------------------
-# {section} Parallelization
-#------------------------------------------------------------------------------------------
-# Number of MPI processes
-""" Set to 1 if you do not have MPI installed"""
-NumberOfMpi = 4
-
-# Submit to queue
-"""Submit to queue
-"""
-SubmitToQueue = False
-
-# {condition}(SubmitToQueue) Queue name
-"""Name of the queue to submit the job
-"""
-QueueName = "default"
-
-# {condition}(SubmitToQueue) Queue hours
-"""This establish a maximum number of hours the job will
-be running, after that time it will be killed by the
-queue system
-"""
-QueueHours = 96
+# {eval} expandParallel(threads=0)
 
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Visualization

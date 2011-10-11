@@ -10,7 +10,7 @@
 #
 # {begin_of_header}
 
-#{include} inc_comment_run.py
+#{eval} expandCommentRun()
 
 #-----------------------------------------------------------------------------
 # {section} Input

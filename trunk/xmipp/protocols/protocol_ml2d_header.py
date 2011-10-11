@@ -15,7 +15,7 @@
 for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149
 for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
 """
-#{include} inc_comment_run.py
+#{eval} expandCommentRun()
 
 #------------------------------------------------------------------------------------------
 # {section} Input
@@ -167,7 +167,7 @@ Do not re-estimate the model fractions
 """
 FixFractions = False
 
-#{include} inc_parallel.py
+#{eval} expandParallel()
 
 # {hidden} Show expert options
 """If True, expert options will be displayed

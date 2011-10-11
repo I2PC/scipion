@@ -27,15 +27,15 @@ class ProtML2D(XmippProtocol):
         return errors
     
     def summary(self):
-        input = self.ImgMd
-        lines = [('Input images            ', "%s (%u)" % (input, MetaData(input).size())),
+        return []
+        lines = [('Input images            ', "%s (%u)" % (self.ImgMd, MetaData(input).size())),
                  ('Reference image', self.RefMd)]
             
         if os.path.exists(self.fnIterLogs):
             md = MetaData(self.fnIterLogs)
             id = md.lastObject()
-            iter = md.getValue(MDL_ITER, id)
-            lines.append(('Iteration                   ', str(iter)))
+            iteration = md.getValue(MDL_ITER, id)
+            lines.append(('Iteration                   ', str(iteration)))
             LL = md.getValue(MDL_LL, id)
             lines.append(('LogLikelihood          ', str(LL)))
         
@@ -116,8 +116,8 @@ def collectResults(log, WorkingDir, Prefix):
     outRefs = os.path.join(WorkingDir, 'result_classes.xmd')
     mdRefs.write('classes@' + outRefs)
     mdGroup = MetaData()
-    for id in mdRefs:
-        ref = mdRefs.getValue(MDL_REF, id)
+    for idx in mdRefs:
+        ref = mdRefs.getValue(MDL_REF, idx)
         mdGroup.importObjects( mdImgs, MDValueEQ(MDL_REF, ref))
         mdGroup.writeBlock(outRefs, 'class%06d_images' % ref)
 

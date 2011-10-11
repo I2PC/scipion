@@ -43,6 +43,7 @@ from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
 from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor, ButtonActiveBgColor, ButtonBgColor                         
 from protlib_sql import SqliteDb
 from subprocess import Popen
+from protlib_xmipp import redStr, warnStr
 
 class ProtocolStyle():
     ''' Class to define some style settings like font, colors, etc '''
@@ -699,6 +700,7 @@ class ProtocolGUI(BasicGUI):
     # Reading and parsing script
     #-------------------------------------------------------------------
     def readProtocolScript(self):
+        from protlib_include import expandCommentRun, expandParallel
         begin_of_header = False
         end_of_header = False    
         script = self.run['source'] 
@@ -712,13 +714,13 @@ class ProtocolGUI(BasicGUI):
             if not begin_of_header:
                 self.pre_header_lines.append(line)
             elif not end_of_header:
-                #print "LINE: ", line
-                #check for include
-                if '{include}' in line:
-                    inc_file = getXmippPath('protocols', line.split('{include}')[1].strip())
-                    inc_f = open(inc_file, 'r')
-                    self.header_lines += inc_f.readlines()
-                    inc_f.close()
+                #print "LINE: ", warnStr(line.strip())
+                #check for eval
+                if '{eval}' in line:
+                    evalStr = line.split('{eval}')[1].strip()
+                    print "Evaluating: ", redStr(evalStr)
+                    linesStr = eval(evalStr)
+                    self.header_lines += linesStr.splitlines()
                 else:
                     self.header_lines.append(line)
             else:
