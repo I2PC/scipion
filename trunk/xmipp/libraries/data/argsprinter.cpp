@@ -498,18 +498,15 @@ void printBegin(FILE * output, const ProgramDef &program)
     size_t numberOfComments = program.usageComments.size();
     for (size_t i = 0; i < numberOfComments; ++i)
         fprintf(output, "#   %s\n", program.usageComments.comments[i].c_str());
-    fprintf(output, "#{begin_of_header}\n\n#{include} inc_comment_run.py\n\n");
+    fprintf(output, "#{begin_of_header}\n\n#{eval} expandCommentRun()\n\n");
 }
 
 void printEnd(FILE * output, const String &progName)
 {
   if (progName.find("mpi") != String::npos)
-    fprintf(output, "#{include} inc_parallel.py\n\n");
+    fprintf(output, "#{eval} expandParallel()\n\n");
 
     fprintf(output,
-            "# {hidden} Show expert options"
-            "\"\"\"If True, expert options will be displayed\"\"\"\n"
-            "ShowExpertOptions = False\n"
             "# {hidden} Program name"
             "\"\"\"This is the name of the program to be executed, dont change this!!!\"\"\"\n"
             "ProgramName = \"%s\"\n"
