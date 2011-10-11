@@ -88,7 +88,7 @@ class XmippProject():
                     self.projectDb.insertProtocol(groupName, p)
         #Hard coded insertion of xmipp_program protocol
         #this is an special case of protocols
-        self.projectDb.insertProtocol(protDict.xmipp_program.title, protDict.xmipp_program.name)
+        self.projectDb.insertProtocol(protDict.xmipp.title, protDict.xmipp.name)
         # commit changes
         self.projectDb.connection.commit()
         
@@ -530,6 +530,7 @@ def protocolMain(ProtocolClass, script=None):
         
         if doRun:
             _run['pid'] = os.getpid()
+            print "Updating run id: %d" % _run['pid']
             # Update run's process info in DB
             project.projectDb.updateRunPid(_run)
             os.environ['PROTOCOL_SCRIPT'] = script

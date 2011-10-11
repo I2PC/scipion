@@ -237,6 +237,7 @@ class Process():
         self.info = dict(zip(Process.keys, values))
         self.__dict__.update(self.info) 
         self.type = 0
+        self.host = 'localhost'
         
 #    def __repr__(self):
 #        line = """%(pid)s,%(ppid)s,%(cputime)s,%(etime)s,%(state)s,%(pcpu)s,%(pmem)s,%(args)s""" % self.info
@@ -264,18 +265,43 @@ class Process():
 #        for c in childs:
 #            c.terminate()
         
-class ProcessManager():       
-    ''' Return process data from previous built command'''
+class ProcessManager():
+    def __init__(self, protocolScript):
+        self.script = protocolScript
+               
     def getProcessFromCmd(self, cmd):
+        procs = []
+        hostfile = self.script.replace('.py', '.nodes')
+        
+        if os.path.exists(hostfile):
+            hosts = {}
+            f = open(hostfile)
+            for line in f:                
+                hosts[line.strip()] = True
+            for h in hosts.keys():
+                newProcs = self.__getProcessFromCmd("ssh %(h)s '%(cmd)s'" % locals() )
+                for p in newProcs:
+                    p.host = h
+                procs += newProcs
+            return procs
+        else:
+            procs = self.__getProcessFromCmd(cmd)
+        
+        if len(procs):
+            return procs
+        return None
+    
+    def __getProcessFromCmd(self, cmd):
+        ''' Return process data from previous built command'''
         ps = Popen(cmd, shell=True, stdout=PIPE)
         out = ps.communicate()[0]
         if out:
             # return list of processes
             return [Process(l.split()) for l in out.splitlines()]
-        return None
-    
-    ''' Return process data from previous built command'''
+        return []
+            
     def getUniqueProcessFromCmd(self, cmd):
+        ''' Return process data from previous built command'''
         procList = self.getProcessFromCmd(cmd)
         if not procList:
             return None
@@ -293,8 +319,8 @@ class ProcessManager():
         return self.getUniqueProcessFromCmd('ps -p %(pid)s -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % locals())
     
     '''Return a list of process using the same working dir'''
-    def getProcessGroup(self, uniqueFilename):
-        return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%s" ' % uniqueFilename)
+    def getProcessGroup(self):
+        return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%s" ' % self.script)
 
 
 class PBSProcess():
@@ -579,66 +605,20 @@ def runJavaJar(memory, jarName, args, batchMode=True):
 def runJavaIJappWithResponse(memory, appName, args):
     return runExternalAppWithResponse(getJavaIJappCmd(memory, appName, args, True))
 
-def runShowJ(inputFiles,memory="512m"):
+def runShowJ(inputFiles, memory="512m"):
     runImageJPlugin(memory, "XmippBrowser.txt", "-i "+inputFiles, True)
     
 def runChimera(inputFile):
     if which("chimera") and os.path.exists(inputFile):
         os.system("chimera "+inputFile+" &")
     
-#---------------------------------------------------------------------------
-#  FileName Handling
-#--------------------------------------------------------------------------- 
-
-def unique_filename(file_name):
-    ''' Create a unique filename (not file handler)
-       this approach is unsecure but good enought for most purposes'''
-    counter = 1
-    file_name_parts = os.path.splitext(file_name) # returns ('/path/file', '.ext')
-    while os.path.isfile(file_name):
-        file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
-        counter += 1
-    return file_name 
-
-#apply bfactor to a vector of volumes
-""" This utility boost up the high frequencies. Do not use the automated
-    mode [default] for maps with resolutions lower than 12-15 Angstroms.
-    It does not make sense to apply the Bfactor to the firsts iterations
-    see http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
-"""
-def apply_bfactor(_DisplayReference_list,\
-        bFactorExtension,\
-        _SamplingRate,\
-        _MaxRes,\
-        _CorrectBfactorExtraCommand,\
-        volExtension,\
-        _mylog\
-        ):
-    if len(_CorrectBfactorExtraCommand)<1:
-        _CorrectBfactorExtraCommand=' --auto '
-    for name in _DisplayReference_list:
-        xmipp_command='xmipp_correct_bfactor '
-        aux_name = name.replace(bFactorExtension,'')
-        if not os.path.exists(aux_name):
-            print '* WARNING: '+ aux_name +' does not exist, skipping...'
-        else:
-            argument = ' -i ' + name.replace(bFactorExtension,'') +\
-                       ' -o ' + name +\
-                       ' --sampling ' + str(_SamplingRate)+\
-                       ' --maxres '   + str (_MaxRes) +\
-                       ' '
-            xmipp_command = xmipp_command + argument
-            xmipp_command = xmipp_command + ' ' + _CorrectBfactorExtraCommand
-            _mylog.debug (xmipp_command)
-            print "*************************************************"
-            print "* " + xmipp_command
-            os.system(xmipp_command)
-
-
+   
 """ Return the machine name """
 def getHostname():
     import socket
     return socket.gethostname()
+
+
 # Copyright (c) 2002-2005 ActiveState Corp.
 # See LICENSE.txt for license details.
 # Author:

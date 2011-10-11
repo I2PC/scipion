@@ -114,7 +114,7 @@ class ProjectButtonMenu(tk.Frame):
 class XmippProjectGUI():  
     def __init__(self, project):
         self.project = project
-        self.pm = ProcessManager()
+        #self.pm = ProcessManager()
         
     def cleanProject(self):
         if askYesNo("DELETE confirmation", "You are going to <DELETE ALL> project data (runs, logs, results...)\nDo you really want to continue?", self.root):
@@ -286,8 +286,8 @@ class XmippProjectGUI():
 
     def launchRunJobMonitorGUI(self, run):
         runName = getExtendedRunName(run)
-        pm = self.pm
         script = run['script']
+        pm = ProcessManager(script)
         root = tk.Toplevel()
         root.withdraw()
         root.title(script)
@@ -298,7 +298,7 @@ class XmippProjectGUI():
         def stopRun():
             if askYesNo("Confirm action", "Are you sure to <STOP> run execution?" , parent=root):
                 #p = pm.getProcessFromPid(run['pid'])
-                childs = pm.getProcessGroup(script)
+                childs = pm.getProcessGroup()
                 #p.terminate()
                 for c in childs:
                     c.terminate()
@@ -311,6 +311,8 @@ class XmippProjectGUI():
         detailsSection.addButton("Stop run", command=stopRun)
         txt = tk.Text(detailsSection.frameContent, width=80, height=15,
                         bg=BgColor, bd=1, relief=tk.RIDGE, font=Fonts['normal'])
+        txt.tag_config('normal', justify=tk.LEFT)
+        txt.tag_config('bold', justify=tk.LEFT, font=Fonts['button'])
         txt.pack(fill=tk.BOTH)
         detailsSection.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
         
@@ -320,13 +322,17 @@ class XmippProjectGUI():
             txt.delete(1.0, tk.END)
             txt.insert(tk.END, line)
             txt.insert(tk.END, "PID\t ARGS\t CPU(%)\t MEM(%)\n")
-            childs = pm.getProcessGroup(script)
+            childs = pm.getProcessGroup()
+            lastHost = 'localhost'
             for c in childs:
                 c.info['pname'] = pname = os.path.basename(c.args.split()[0])
-                if pname not in ['grep', 'python', 'sh']:
-                    line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n" % c.info
-                    txt.insert(tk.END, line)
-            txt.after(3000, refreshInfo)
+                if pname not in ['grep', 'python', 'sh', 'bash']:
+                    line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
+                    if c.host != lastHost:
+                        txt.insert(tk.END, "%s\n" % c.host, 'bold')
+                        lastHost = c.host
+                    txt.insert(tk.END, line % c.info, 'normal')
+            txt.after(5000, refreshInfo)
             
         refreshInfo()
         centerWindows(root, refWindows=self.root)
@@ -366,8 +372,8 @@ class XmippProjectGUI():
                 state = run['run_state']
                 stateStr = SqliteDb.StateNames[state]
                 if state == SqliteDb.RUN_STARTED:
-                    p = self.pm.getProcessFromPid(run['pid'])
-                    if p:
+                    childs = ProcessManager(run['script']).getProcessGroup()
+                    if len(childs):
                         stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
                     else:
                         self.project.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
