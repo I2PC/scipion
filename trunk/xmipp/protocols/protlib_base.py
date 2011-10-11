@@ -517,7 +517,7 @@ def protocolMain(ProtocolClass, script=None):
                 from protlib_utils import submitProtocol
                 NumberOfThreads = getattr(mod, 'NumberOfThreads', 1)
                 pbsPid = submitProtocol(script,
-                               jobId = p.uniquePrefix,
+                               jobName = p.uniquePrefix,
                                queueName = mod.QueueName,
                                nodes = mod.NumberOfMpi,
                                threads = NumberOfThreads,

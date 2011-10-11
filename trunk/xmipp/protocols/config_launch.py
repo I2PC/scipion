@@ -1,11 +1,11 @@
 #--------------------------------------------------------------------------------
 # This is a sample config file for launching jobs to a queue system
 # 
-# There should be two variables in this file:
+# There should be some variables in this file:
 #
 # 1.- FileTemplate: string holding the template for launch script
 #      Following vars are availables to template:
-#      - %(jobId)s       : job name or id
+#      - %(jobName)s     : job name 
 #      - %(nodes)d       : number of mpi nodes
 #      - %(threads)d     : number of threads
 #      - %(hours)d       : limit of running hours
@@ -13,9 +13,15 @@
 #      - %(command)s     : command to be executed
 #
 #
-# 2.- CommandTemplate: string with the template for the launch command
+# 2.- ArgsTemplate: string with the template arguments passed to launch Program
 #      Following vars are availables to template:
 #      - %(file)s     : file to be launched 
+# 3.- SystemFlavour could be one of the followings:
+#      TORQUE-OPENMPI
+#      SLURM-MPICH
+#      SGE-OPENMPI
+#      XMIPP_MACHINEFILE
+#      HOME_MACHINEFILE
 #--------------------------------------------------------------------------------
 
 #System flavour to use
@@ -31,7 +37,7 @@ FileTemplate = """
 ### Inherit all current environment variables
 #PBS -V
 ### Job name
-#PBS -N %(jobId)s
+#PBS -N %(jobName)s
 ### Queue name
 ###PBS -q %(queueName)s
 ### Standard output and standard error messages

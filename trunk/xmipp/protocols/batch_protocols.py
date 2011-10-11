@@ -36,7 +36,8 @@ from config_protocols import protDict, sections
 from config_protocols import FontName, FontSize
 from protlib_base import getProtocolFromModule, XmippProject,\
     getWorkingDirFromRunName, getExtendedRunName
-from protlib_utils import reportError, runImageJPlugin, Process, ProcessManager
+from protlib_utils import reportError, runImageJPlugin, Process, ProcessManager,\
+    getHostname
 from protlib_xmipp import greenStr
 from protlib_sql import SqliteDb, ProgramDb
 
@@ -190,7 +191,7 @@ class XmippProjectGUI():
     
     #GUI for launching Xmipp Programs as Protocols        
     def launchProgramsGUI(self, event=None):
-        text = protDict.xmipp_program.title
+        text = protDict.xmipp.title
         last = self.lastSelected
         self.selectToolbarButton(text, False)
         if text != last and len(self.runs)>0:
@@ -217,7 +218,7 @@ class XmippProjectGUI():
             program_name = lb.get(int(lb.curselection()[0]))
             tmp_script = self.project.projectTmpPath('protocol_program_header.py')
             os.system(program_name + " --xmipp_write_protocol %(tmp_script)s " % locals())
-            self.launchProtocolGUI(self.project.createRunFromScript(protDict.xmipp_program.name, 
+            self.launchProtocolGUI(self.project.createRunFromScript(protDict.xmipp.name, 
                                                                     tmp_script, program_name))            
         
         def showSelection(event):
@@ -499,7 +500,7 @@ class XmippProjectGUI():
                 btn = section.addButton(text, command=btn_command(key))
                 menu = self.createToolbarMenu(section, opts)
                 self.ToolbarButtonsDict[key] = (btn, menu)
-        text = protDict.xmipp_program.title
+        text = protDict.xmipp.title
         btn = section.addButton(text, command=self.launchProgramsGUI)
         self.ToolbarButtonsDict[text] = (btn, None)
         text = "All"
@@ -566,7 +567,9 @@ class XmippProjectGUI():
             root = tk.Tk()
         self.root = root
         root.withdraw() # Hide the windows for centering
-        self.root.title("Xmipp Protocols")
+        projectName = os.path.basename(self.project.projectDir)
+        hostName = getHostname()        
+        self.root.title("Xmipp Protocols   Project: %(projectName)s  on  %(hostName)s" % locals())
         self.initVariables()        
         self.createMainMenu()
         self.addBindings()

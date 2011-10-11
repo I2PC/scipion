@@ -100,7 +100,7 @@ class ProtML2D(XmippProtocol):
             blocks = getBlocksInMetaDataFile(self.fnIterRefs)
             lastBlock = blocks[-1]
             try:
-                runImageJPlugin("512m", "XmippMetaDataViewer.txt", "-i %s@%s --mode metadata --render" 
+                runImageJPlugin("512m", "XmippBrowser.txt", "-i %s@%s --mode metadata --render" 
                             % (lastBlock, self.fnIterRefs), batchMode=True)
             except Exception, e:
                 from protlib_gui_ext import showError

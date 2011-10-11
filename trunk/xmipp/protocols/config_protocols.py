@@ -21,7 +21,7 @@ protocols = {
         'ml3d': ('ML3D', '3D/ML3D'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSubs'),
         'dummy': ('Dummy', 'Dummy'),
-        'xmipp_program': ('Xmipp Programs', 'XmippPrograms')            
+        'xmipp': ('Xmipp Programs', 'XmippPrograms')            
         }
 
 #--------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ class ProtocolDictionary(dict):
                 for protocol in protocolList:
                     self.addProtocol(section, group, protocol)
         # Add special 'xmipp_program'
-        self.addProtocol(None, None, 'xmipp_program')
+        self.addProtocol(None, None, 'xmipp')
 
     def addProtocol(self, section, group, protocol):
         title, path = protocols[protocol]

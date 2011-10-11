@@ -465,14 +465,6 @@ def loadModule(modulePath, report=True):
     del sys.path[0]
     return module
         
-def createQueueLaunchFile(outFilename, fileTemplate, params):
-    '''Create the final file to launch the job to queue
-    using a platform specific template (fileTemplate)
-    '''
-    launchfile = open(outFilename, 'w')
-    launchfile.write(fileTemplate % params)
-    launchfile.close()
-    
 def submitProtocol(protocolPath, **params):
     '''Launch a protocol, to a queue or executing directly.
     If the queue options are found, it will be launched with 
@@ -481,13 +473,18 @@ def submitProtocol(protocolPath, **params):
     '''
     #Load the config module
     launch = loadModule('config_launch.py')
-    launchFile = protocolPath.replace('.py', '.job')
+    launchFilename = protocolPath.replace('.py', '.job')
     # This is for make a copy of nodes files
     nodesFile = protocolPath.replace('.py', '.nodes')
     params['pbsNodeBackup']= nodesFile
-    createQueueLaunchFile(launchFile, launch.FileTemplate, params)
-    command = "%s %s" % (launch.Program, launch.ArgsTemplate % {'file': file})
-    print "** Submiting to queue: '%s'" % command
+    params['file'] = launchFilename
+    #create launch file
+    launchfile = open(launchFilename, 'w')
+    launchfile.write(launch.FileTemplate % params)
+    launchfile.close()
+    command = launch.Program + " " + launch.ArgsTemplate % params
+    from protlib_xmipp import greenStr
+    print "** Submiting to queue: '%s'" % greenStr(command)
     ps = Popen(command, shell=True, stdout=PIPE)
     out = ps.communicate()[0]
     return int(out.split('.')[0])

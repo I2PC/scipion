@@ -36,7 +36,7 @@ from protlib_xmipp import greenStr, redStr, blueStr
 
 class ProtXmippProgram(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.xmipp_program.name, scriptname, project)
+        XmippProtocol.__init__(self, protDict.xmipp.name, scriptname, project)
         self.Import = 'from protocol_program import *'
 
     def validate(self):
