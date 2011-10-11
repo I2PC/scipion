@@ -1,15 +1,9 @@
-package trainingpicker.gui;
+package particlepicker;
 
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.Rectangle;
-import java.awt.Window;
-import java.net.URI;
-import java.util.logging.Level;
-import java.awt.Desktop;
-
-import trainingpicker.model.TrainingPicker;
 
 
 public class WindowUtils {

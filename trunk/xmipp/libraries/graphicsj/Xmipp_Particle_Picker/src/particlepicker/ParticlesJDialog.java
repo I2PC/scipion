@@ -1,22 +1,18 @@
-package trainingpicker.gui;
+package particlepicker;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Panel;
 import java.awt.ScrollPane;
-import java.awt.event.AdjustmentEvent;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
 import java.util.List;
 
 import javax.swing.JDialog;
 
-import trainingpicker.model.Constants;
-import trainingpicker.model.TrainingParticle;
+import particlepicker.training.gui.TrainingPickerJFrame;
+import particlepicker.training.model.Constants;
+import particlepicker.training.model.TrainingParticle;
 
 public class ParticlesJDialog extends JDialog
 {
@@ -38,7 +34,7 @@ public class ParticlesJDialog extends JDialog
 	public void loadParticles(boolean resize)
 	{
 		int side, rows, columns, width = 0, height = 0;
-		List<TrainingParticle> particles = frame.getFamilyData().getParticles();
+		List<? extends TrainingParticle> particles = frame.getParticles();
 		side = (int) (frame.getFamily().getSize() * frame.getMagnification());
 		
 		if(particles.isEmpty())
@@ -65,7 +61,7 @@ public class ParticlesJDialog extends JDialog
 			rows = (int) Math.ceil((particles.size() / (float) columns));
 		}
 		particlespn.removeAll();
-		particles = frame.getFamilyData().getParticles();
+		particles = frame.getParticles();
 		int index = 0;
 		for (int i = 0; i < rows; i++)
 			for (int j = 0; j < columns; j++, index++)
@@ -82,7 +78,6 @@ public class ParticlesJDialog extends JDialog
 	{
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setTitle("Particles");
-		// setResizable(false);
 		constraints = new GridBagConstraints();
 		sp = new ScrollPane();
 		particlespn = new Panel(new GridBagLayout());
