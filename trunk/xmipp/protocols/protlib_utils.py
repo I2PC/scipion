@@ -406,7 +406,8 @@ def buildRunCommand(
 
     DoParallel = NumberOfMpi > 1
     paramsDict={}
-    params += ' --xmipp_protocol_script ' + os.environ['PROTOCOL_SCRIPT']
+    if programname.startswith("xmipp_"):
+        params += ' --xmipp_protocol_script ' + os.environ['PROTOCOL_SCRIPT']
     
     if not DoParallel:
         command = programname + ' ' + params
