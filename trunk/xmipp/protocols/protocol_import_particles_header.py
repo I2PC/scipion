@@ -6,30 +6,8 @@
 # Author: Carlos Oscar, August 2011
 #
 # {begin_of_header}
-#------------------------------------------------------------------------------------------
-# {section}{has_question} Comment
-#------------------------------------------------------------------------------------------
-# Display comment
-DisplayComment = False
 
-# {text} Write a comment:
-""" 
-Describe your run here...
-"""
-
-#-----------------------------------------------------------------------------
-# {section} Run parameters
-#-----------------------------------------------------------------------------
-# Run name:
-""" This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
-run1 for it. This name together with the protocol output folder will determine the working dir for this run.
-"""
-RunName = "run_001"
-
-# {list}(Resume, Restart) Run behavior
-""" Resume from the last step, restart the whole process
-"""
-Behavior = "Resume"
+# {eval} expandCommentRun()
 
 #-----------------------------------------------------------------------------
 # {section} Importing parameters
@@ -79,7 +57,7 @@ DoNorm=True
 BackGroundRadius=0
 
 #-----------------------------------------------------------------------------
-# {section}{condition}(ImportAll==False) Subset parameters
+# {section}{condition}(not ImportAll) Subset parameters
 #-----------------------------------------------------------------------------
 # {list_combo}(Random subset,First particles) Subset mode
 SubsetMode="First particles"
@@ -88,36 +66,8 @@ SubsetMode="First particles"
 """ A subset with the first N particles will be generated """
 Nsubset=500
 
-#------------------------------------------------------------------------------------------
-# {section}{condition}(ImportAll) Parallelization
-#------------------------------------------------------------------------------------------
-# Number of MPI processes
-""" Set to 1 if you do not have MPI installed"""
-NumberOfMpi = 8
+# {eval} expandParallel(threads=0, mpi=8, hours=12, condition="ImportAll")
 
-# Submit to queue
-"""Submit to queue
-"""
-SubmitToQueue = False
-
-# {condition}(SubmitToQueue) Queue name
-"""Name of the queue to submit the job
-"""
-QueueName = "default"
-
-# {condition}(SubmitToQueue) Queue hours
-"""This establish a maximum number of hours the job will
-be running, after that time it will be killed by the
-queue system
-"""
-QueueHours = 12
-
-# {hidden} Show expert options
-"""If True, expert options will be displayed
-"""
-ShowExpertOptions = False
-#
-#------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------

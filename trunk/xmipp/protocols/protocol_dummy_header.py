@@ -15,29 +15,7 @@
 for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149
 for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
 """
-#------------------------------------------------------------------------------------------
-# {section}{has_question} Comment
-#------------------------------------------------------------------------------------------
-# Display comment
-DisplayComment = False
-
-# {text} Write a comment:
-""" 
-Describe your run here...
-"""
-#-----------------------------------------------------------------------------
-# {section} Run parameters
-#-----------------------------------------------------------------------------
-# Run name:
-""" This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
-run1 for it. This name together with the protocol output folder will determine the working dir for this run.
-"""
-RunName = "run_001"
-
-# {list}(Resume, Restart) Run behavior
-""" Resume from the last step, restart the whole process or continue at a given step or iteration
-"""
-Behavior = "Resume"
+# {eval} expandCommentRun()
 
 #-----------------------------------------------------------------------------
 # {section} Input
@@ -66,34 +44,7 @@ NumberOfParts = 2
 # {validate}(NonEmpty) Part prefix
 Prefix = "part"
 
-#------------------------------------------------------------------------------------------
-# {section}{condition}(NumberOfParts>3)Parallelization 
-#------------------------------------------------------------------------------------------
-# Number of threads
-""" This option provides shared-memory parallelization on multi-core machines.
-It does not require any additional software, other than xmipp
-"""
-NumberOfThreads = 1
-
-# Number of MPI processes
-NumberOfMpi = 3
-
-# Submit to queue ? 
-"""Submit to queue
-"""
-SubmitToQueue = True
-
-# {expert}{condition}(SubmitToQueue) Queue name
-"""Name of the queue to submit the job
-"""
-QueueName = "default"
-
-# {condition}(SubmitToQueue) {wizard}(wizardBrowse) Queue hours
-"""This establish a maximum number of hours the job will
-be running, after that time it will be killed by the
-queue system
-"""
-QueueHours = 72
+# {eval} expandParallel(mpi=3, threads=1, condition="NumberOfParts>3")
 
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Visualization
@@ -107,11 +58,6 @@ DoShowFractions=True
 # Plot convergence statistics for all iterations?
 DoShowStatsAllIter=True
 
-
-# {hidden} Show expert options
-"""If True, expert options will be displayed
-"""
-ShowExpertOptions = False
 
 #------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE

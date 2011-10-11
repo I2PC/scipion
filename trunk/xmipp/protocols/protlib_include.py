@@ -40,7 +40,7 @@ ContinueAtStep = 1
 '''
     return linesStr % locals()
 
-def expandParallel(threads=1, mpi=8, condition="", hours=72):
+def expandParallel(threads=1, mpi=8, condition="", hours=72, jobsize=0):
     if len(condition) > 0:
         condition = "{condition}(%s)" % condition
     linesStr = ''' 
@@ -67,7 +67,19 @@ a queue system. This will require that you have compile <Xmipp>
 with <mpi> support.
 """
 NumberOfMpi = %(mpi)d
-
+'''
+    if jobsize > 0:
+        linesStr += '''
+        #MPI job size 
+"""
+Minimum size of jobs in mpi processes. 
+Set to 1 for large images (e.g. 500x500)
+and to 10 for small images (e.g. 100x100)
+"""
+MpiJobSize ='%(jobsize)d'
+'''
+        
+    linesStr += '''
 # Submit to queue ? 
 """Submit to queue
 """
@@ -85,4 +97,11 @@ queue system
 """
 QueueHours = %(hours)d
 ''' 
-        return linesStr % locals()
+    return linesStr % locals()
+
+def expandExpert():
+    return '''    
+# {hidden} Show expert options
+"""If True, expert options will be displayed """
+ShowExpertOptions = False
+'''

@@ -700,7 +700,7 @@ class ProtocolGUI(BasicGUI):
     # Reading and parsing script
     #-------------------------------------------------------------------
     def readProtocolScript(self):
-        from protlib_include import expandCommentRun, expandParallel
+        from protlib_include import expandCommentRun, expandParallel, expandExpert
         begin_of_header = False
         end_of_header = False    
         script = self.run['source'] 
@@ -720,7 +720,10 @@ class ProtocolGUI(BasicGUI):
                     evalStr = line.split('{eval}')[1].strip()
                     print "Evaluating: ", redStr(evalStr)
                     linesStr = eval(evalStr)
-                    self.header_lines += linesStr.splitlines()
+                    if linesStr:
+                        self.header_lines += linesStr.splitlines()
+                    else:
+                        print "Empty lines received"
                 else:
                     self.header_lines.append(line)
             else:
@@ -728,6 +731,7 @@ class ProtocolGUI(BasicGUI):
             if '{begin_of_header}' in line:
                 begin_of_header = True
             if '{end_of_header}' in line:
+                self.header_lines += expandExpert().splitlines()
                 end_of_header = True
         f.close()
         

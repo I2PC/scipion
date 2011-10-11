@@ -11,30 +11,7 @@
 
 # {begin_of_header}
 
-#------------------------------------------------------------------------------------------
-# {section}{has_question} Comment
-#------------------------------------------------------------------------------------------
-# Display comment
-DisplayComment = False
-
-# {text} Write a comment:
-""" 
-Describe your run here...
-"""
-
-#-----------------------------------------------------------------------------
-# {section} Run parameters
-#-----------------------------------------------------------------------------
-# Run name:
-""" This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
-run1 for it. This name together with the protocol output folder will determine the working dir for this run.
-"""
-RunName = "run_001"
-
-# {list}(Resume, Restart) Run behavior
-""" Resume from the last step, restart the whole process
-"""
-Behavior = "Restart"
+# {eval} expandCommentRun()
 
 #------------------------------------------------------------------------------------------------
 # {section} Common line parameters
@@ -53,38 +30,8 @@ Radius=25
 """
 Symmetry='c1'
 
-#------------------------------------------------------------------------------------------
-# {section} Parallelization
-#------------------------------------------------------------------------------------------
-# Submit to queue
-"""Submit to queue
-"""
-SubmitToQueue = False
+#{eval} expandParallel(threads=0)
 
-# {condition}(SubmitToQueue) Queue name
-"""Name of the queue to submit the job
-"""
-QueueName = "default"
-
-# {condition}(SubmitToQueue) Queue hours
-"""This establish a maximum number of hours the job will
-be running, after that time it will be killed by the
-queue system
-"""
-QueueHours = 96
-
-# {hidden} Show expert options
-"""If True, expert options will be displayed
-"""
-ShowExpertOptions = False
-
-# Number of MPI processes to use
-NumberOfMpi = 3
-
-# {hidden} Show expert options
-"""If True, expert options will be displayed
-"""
-ShowExpertOptions = False
 #-----------------------------------------------------------------------------
 # {end_of_header} do not change anything bellow this line unless you know what you are doing
 #-----------------------------------------------------------------------------
@@ -92,4 +39,4 @@ ShowExpertOptions = False
 from protocol_commonlines import *
   
 if __name__ == '__main__':
-   protocolMain(ProtCommonLines)
+    protocolMain(ProtCommonLines)

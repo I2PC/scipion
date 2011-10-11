@@ -115,40 +115,7 @@ dimX = 32
 """
 dimY = -1
 
-#------------------------------------------------------------------------------------------------
-# {section} Parallelization issues
-#------------------------------------------------------------------------------------------------
-# Number of (shared-memory) threads?
-""" This option provides shared-memory parallelization on multi-core machines. 
-    It does not require any additional software, other than xmipp
-"""
-NumberOfThreads = 2
-
-# Number of MPI processes to use
-NumberOfMpi = 2
-
-#MPI job size 
-"""Minimum size of jobs in mpi processes. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
-"""
-MpiJobSize ='1'
-
-#Submit to queue
-"""Submmit to queue"""
-SubmitToQueue=False
-
-#------------------------------------------------------------------------------------------------
-# {section}{expert}{condition}(SubmitToQueue=True) Queue 
-#------------------------------------------------------------------------------------------------
-
-# Queue name
-"""Name of the queue to submit the job"""
-QueueName="high"
-
-# Queue hours
-"""This establish a maximum number of hours the job will
-be running, after that time it will be killed by the 
-queue system"""
-QueueHours=72
+# {eval} expandParallel(threads=2, mpi=2,jobsize=1)
 
 #------------------------------------------------------------------------------------------------
 # {hidden} Analysis of results

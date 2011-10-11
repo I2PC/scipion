@@ -91,11 +91,6 @@ DoShowLast=True
 """Create a  list of levels like: 0,1,3 or 0-3 """
 LevelsToShow=""
 
-# {hidden} Show expert options
-"""If True, expert options will be displayed
-"""
-ShowExpertOptions = False
-
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------

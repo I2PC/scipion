@@ -13,30 +13,7 @@
 #------------------------------------------------------------------------------------------------
 # {begin_of_header} 
 
-#------------------------------------------------------------------------------------------
-# {section}{has_question} Comment
-#------------------------------------------------------------------------------------------
-# Display comment
-DisplayComment = False
-
-# {text} Write a comment:
-""" 
-Describe your run here...
-"""
-
-#-----------------------------------------------------------------------------
-# {section} Run parameters
-#-----------------------------------------------------------------------------
-# Run name:
-""" This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
-run1 for it. This name together with the protocol output folder will determine the working dir for this run.
-"""
-RunName = "run_001"
-
-# {hidden} Run behavior
-""" Resume from the last step, restart the whole process
-"""
-Behavior = "Resume"
+# {eval} expandCommentRun()
 
 #------------------------------------------------------------------------------------------
 # {section} Picking parameters
@@ -69,10 +46,6 @@ Fast = True
 """
 InCore = False
 
-# {hidden} Show expert options
-"""If True, expert options will be displayed
-"""
-ShowExpertOptions = False
 #------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
 #------------------------------------------------------------------------------------------------

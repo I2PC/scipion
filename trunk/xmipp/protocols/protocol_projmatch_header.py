@@ -592,11 +592,6 @@ Verify=True
 # {expert} show file verification
 ViewVerifyedFiles=True 
 
-# {hidden} Show expert options
-"""If True, expert options will be displayed
-"""
-ShowExpertOptions = False
-
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
