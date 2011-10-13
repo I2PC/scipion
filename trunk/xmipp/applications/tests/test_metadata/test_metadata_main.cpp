@@ -11,6 +11,7 @@ class MetadataTest : public ::testing::Test
 protected:
     //init metadatas
 #define len 128
+
     virtual void SetUp()
     {
         //find binaries directory
@@ -138,6 +139,23 @@ TEST_F( MetadataTest, Copy)
     EXPECT_EQ(mDsource,auxMetadata);
 }
 
+TEST_F( MetadataTest, ReadEmptyBlock)
+{
+    char sfn[64] = "";
+    strncpy(sfn, "/tmp/testGetBlocks_XXXXXX", sizeof sfn);
+    mkstemp(sfn);
+    MetaData md;
+    FileName fn = (String)"block_Empty@"+sfn;
+    md.write(fn, MD_OVERWRITE);
+    md.clear();
+    md.setValue(MDL_IMAGE,(String)"image_data_2_1.xmp",md.addObject());
+    md.setValue(MDL_IMAGE,(String)"image_data_2_2.xmp",md.addObject());
+    md.write((String)"block_B1@"+sfn,MD_APPEND);
+
+    EXPECT_NO_THROW(MetaData md2(fn););
+
+    unlink(sfn);
+}
 
 TEST_F( MetadataTest, GetBlocksInMetadata)
 {

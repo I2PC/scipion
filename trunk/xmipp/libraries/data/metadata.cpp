@@ -777,7 +777,9 @@ char * MetaData::_readColumnsStar(mdBlock &block,
         }
     }
     while (found_column);
-    block.loop = iter; //Move loop pointer to position of data
+
+    if (iter < block.end)
+        block.loop = iter; //Move loop pointer to position of last found column
 }
 
 /* This function will be used to parse the rows data
