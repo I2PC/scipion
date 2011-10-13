@@ -46,11 +46,10 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.DoDeleteWorkingDir = False
         
     def ImportProtocol(self):
-
-        from protlib_utils import unique_filename
+        from protlib_filesystem import uniqueFilename
         from protlib_utils import loadModule
         pardir=os.path.abspath(os.getcwd())
-        tempFileName=unique_filename(self.ProtocolName)
+        tempFileName=uniqueFilename(self.ProtocolName)
         fn = FileName(tempFileName)
         fn=fn.getBaseName()
         shutil.copy(self.ProtocolName,fn+'.py')
@@ -75,7 +74,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         # Check if there is workingdir 
         # move this to gui
         if not os.path.exists(self.ProtocolName):
-            errors.append("Refered protocol named %s does not exist"%ProtocolName)
+            errors.append("Refered protocol named %s does not exist" % self.ProtocolName)
             
         return errors 
 

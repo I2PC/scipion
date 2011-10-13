@@ -169,3 +169,13 @@ def findRealFile(path, recursive=True):
     while islink(path):
         path = readlink(path)
     return path
+
+def uniqueFilename(file_name):
+    ''' Create a unique filename (not file handler)
+       this approach is unsecure but good enought for most purposes'''
+    counter = 1
+    file_name_parts = os.path.splitext(file_name) # returns ('/path/file', '.ext')
+    while os.path.isfile(file_name):
+        file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
+        counter += 1
+    return file_name 
