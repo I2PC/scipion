@@ -295,7 +295,7 @@ class ProcessManager():
     
     def getProcessGroup(self):
         '''Return a list of process using the same working dir'''
-        return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%s" ' % self.script)
+        return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%s" ' % self.run['script'])
 
     def stopProcessGroup(self):
         if os.path.exists(self.hostfile):
