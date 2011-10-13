@@ -238,44 +238,23 @@ class Process():
         self.__dict__.update(self.info) 
         self.type = 0
         self.host = 'localhost'
-        
-#    def __repr__(self):
-#        line = """%(pid)s,%(ppid)s,%(cputime)s,%(etime)s,%(state)s,%(pcpu)s,%(pmem)s,%(args)s""" % self.info
-#        return line
-        
-#    ''' Retrieve the list of child process'''
-#    def getChilds(self):
-#        pm = ProcessManager()
-#        childList = pm.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % self.info)
-#        childs = []
-#        for p in childList:
-#            if p.ppid == self.pid:
-#                childs.append(p)
-#        return childs 
     
     ''' Terminate process '''
     def terminate(self):
         p = Popen('kill %s > "/dev/null" 2>&1' % self.pid, shell=True, stdout=PIPE)
         os.waitpid(p.pid, 0)
         
-#    ''' Terminate process and all its childs '''
-#    def terminateTree(self):
-#        childs = self.getChilds()
-#        self.terminate()
-#        for c in childs:
-#            c.terminate()
-        
 class ProcessManager():
-    def __init__(self, protocolScript):
-        self.script = protocolScript
+    def __init__(self, run):
+        self.run = run
                
     def getProcessFromCmd(self, cmd):
         procs = []
-        hostfile = self.script.replace('.py', '.nodes')
+        self.hostfile = self.run['script'].replace('.py', '.nodes')
         
-        if os.path.exists(hostfile):
+        if os.path.exists(self.hostfile):
             hosts = {}
-            f = open(hostfile)
+            f = open(self.hostfile)
             for line in f:                
                 hosts[line.strip()] = True
             for h in hosts.keys():
@@ -309,88 +288,26 @@ class ProcessManager():
             msg = [str(p) for p in procList]
             reportError("More than one process match query, only one expected\n" + "\n".join(msg))
         return procList[0]
-#    
-#    ''' Return the process data, using its arguments to match'''
-#    def getProcessFromScript(self, script):
-#        return self.getUniqueProcessFromCmd('ps -C python -o pid,ppid,cputime,etime,state,pcpu,pmem,args | grep %s' % script)
-#    
-    ''' Return the process data, using its arguments to match'''
+
     def getProcessFromPid(self, pid):
+        ''' Return the process data, using its arguments to match'''
         return self.getUniqueProcessFromCmd('ps -p %(pid)s -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % locals())
     
-    '''Return a list of process using the same working dir'''
     def getProcessGroup(self):
+        '''Return a list of process using the same working dir'''
         return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%s" ' % self.script)
 
-
-class PBSProcess():
-    keys = ['pid','ppid','cputime','etime','state','pcpu','pmem','args']
-    def __init__(self, values):
-        self.info = dict(zip(Process.keys, values))
-        self.__dict__.update(self.info) 
-        self.type = 0
-        
-    def __repr__(self):
-        line = """%(pid)s,%(ppid)s,%(cputime)s,%(etime)s,%(state)s,%(pcpu)s,%(pmem)s,%(args)s""" % self.info
-        return line
-        
-    ''' Retrieve the list of child process'''
-    def getChilds(self):
-        pm = ProcessManager()
-        childsList = pm.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % self.info)
-        childs = []
-        for p in childsList:
-            if p.ppid == self.pid:
-                childs.append(p)
-        return childs 
+    def stopProcessGroup(self):
+        if os.path.exists(self.hostfile):
+            launch = loadLaunchModule()
+            cmd = launch.StopCommand + " " + launch.Stop
+            p = Popen(cmd % self.run, shell=True, stdout=PIPE)
+            os.waitpid(p.pid, 0)
+        else:
+            childs = self.getProcessGroup()
+            for c in childs:
+                c.terminate()        
     
-    ''' Terminate process '''
-    def terminate(self):
-        p = Popen('kill %s' % self.pid, shell=True, stdout=PIPE)
-        os.waitpid(p.pid, 0)
-        
-    ''' Terminate process and all its childs '''
-    def terminateTree(self):
-        childs = self.getChilds()
-        self.terminate()
-        for c in childs:
-            c.terminate()
-        
-class PBSProcessManager():       
-    ''' Return process data from previous built command'''
-    def getProcessFromCmd(self, cmd):
-        print "getProcessFromCmd, cmd: ", cmd
-        ps = Popen(cmd, shell=True, stdout=PIPE)
-        out = ps.communicate()[0]
-        if out:
-            # return list of processes
-            return [Process(l.split()) for l in out.splitlines()]
-        return None
-    
-    ''' Return process data from previous built command'''
-    def getUniqueProcessFromCmd(self, cmd):
-        procList = self.getProcessFromCmd(cmd)
-        if not procList:
-            return None
-        if len(procList) > 1:
-            msg = [str(p) for p in procList]
-            reportError("More than one process match query, only one expected\n" + "\n".join(msg))
-        return list[0]
-    
-    ''' Return the process data, using its arguments to match'''
-    def getProcessFromScript(self, script):
-        return self.getUniqueProcessFromCmd('ps -C python -o pid,ppid,cputime,etime,state,pcpu,pmem,args | grep %s' % script)
-    
-    ''' Return the process data, using its arguments to match'''
-    def getProcessFromPid(self, pid):
-        return self.getUniqueProcessFromCmd('ps -p %(pid)s -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % locals())
-    
-    '''Return a list of process using the same working dir'''
-    def getRelatedProcess(self, workingDir):
-        return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%s" | grep -v grep' % workingDir)
-
-
-
 # The job should be launched from the working directory!
 def runJob(log, 
            programname,
@@ -438,7 +355,8 @@ def buildRunCommand(
     if not DoParallel:
         command = programname + ' ' + params
     else:
-        from config_launch import SystemFlavour
+        launch = loadLaunchModule()
+        SystemFlavour = launch.SystemFlavour
         paramsDict['prog'] = programname.replace('xmipp', 'xmipp_mpi')
         paramsDict['jobs'] = NumberOfMpi
         paramsDict['params'] = params
@@ -490,6 +408,10 @@ def loadModule(modulePath, report=True):
         module = None
     del sys.path[0]
     return module
+
+def loadLaunchModule():
+    ''' Load the launch module containing queue and mpi related parameters'''
+    return loadModule('config_launch.py')
         
 def submitProtocol(protocolPath, **params):
     '''Launch a protocol, to a queue or executing directly.
@@ -498,7 +420,7 @@ def submitProtocol(protocolPath, **params):
     This function should be called from ProjectDir
     '''
     #Load the config module
-    launch = loadModule('config_launch.py')
+    launch = loadLaunchModule()
     launchFilename = protocolPath.replace('.py', '.job')
     # This is for make a copy of nodes files
     nodesFile = protocolPath.replace('.py', '.nodes')

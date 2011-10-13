@@ -31,6 +31,9 @@ Program = "qsub"
 MpiProgram = "mpirun"
 #Arguments template to launch
 ArgsTemplate = "%(file)s"
+# Command to stop a job
+StopCommand = "canceljob"
+StopArgsTemplate = "%(jobid)d"
 
 FileTemplate = """
 #!/bin/bash

@@ -287,7 +287,7 @@ class XmippProjectGUI():
     def launchRunJobMonitorGUI(self, run):
         runName = getExtendedRunName(run)
         script = run['script']
-        pm = ProcessManager(script)
+        pm = ProcessManager(run)
         root = tk.Toplevel()
         root.withdraw()
         root.title(script)
@@ -372,7 +372,7 @@ class XmippProjectGUI():
                 state = run['run_state']
                 stateStr = SqliteDb.StateNames[state]
                 if state == SqliteDb.RUN_STARTED:
-                    childs = ProcessManager(run['script']).getProcessGroup()
+                    childs = ProcessManager(run).getProcessGroup()
                     if len(childs):
                         stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
                     else:

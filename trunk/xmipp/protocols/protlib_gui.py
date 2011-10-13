@@ -947,8 +947,9 @@ class ProtocolGUI(BasicGUI):
         centerWindows(self.master, self.resize() )
         
     def checkSpecialCases(self, var):
+        from protlib_utils import loadLaunchModule
         if var.name == "SubmitToQueue":
-            launch = loadModule('config_launch.py')
+            launch = loadLaunchModule()
             if which(launch.Program) == '':
                 var.value = "False"
                 var.tags['hidden'] = True
@@ -960,7 +961,7 @@ class ProtocolGUI(BasicGUI):
             if not os.path.exists(self.run['script']) or not os.path.exists(self.getProtocol().WorkingDir):
                 var.tags['hidden'] = True
         elif var.name == "NumberOfMpi":
-            launch = loadModule('config_launch.py')         
+            launch = loadLaunchModule()         
             if which(launch.MpiProgram) == '':
                 var.value = "False"
                 var.tags['hidden'] = True
