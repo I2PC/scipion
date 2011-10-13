@@ -26,8 +26,7 @@ public class TiltedMicrograph extends Micrograph
 	@Override
 	public void reset()
 	{
-		// TODO Auto-generated method stub
-
+		getParticles().clear();
 	}
 
 	public List<TiltedParticle> getParticles()

@@ -11,6 +11,7 @@ import java.util.List;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 
+import particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import particlepicker.tiltpair.model.TiltedParticle;
 import particlepicker.tiltpair.model.UntiltedParticle;
 import particlepicker.training.gui.ParticleCanvas;
@@ -25,6 +26,7 @@ public class ParticlesJDialog extends JDialog
 	protected Panel particlespn;
 	protected ScrollPane sp;
 	protected GridBagConstraints constraints;
+	private boolean ispack;
 
 	public ParticlesJDialog(ParticlePickerJFrame frame)
 	{
@@ -91,19 +93,17 @@ public class ParticlesJDialog extends JDialog
 		particlespn = new Panel(new GridBagLayout());
 		sp.add(particlespn);
 		add(sp);
-
 		loadParticles(true);
 		WindowUtils.centerScreen(0.6, 0, this);
 		setVisible(true);
-
+		setAlwaysOnTop(true);
 		this.addComponentListener(new java.awt.event.ComponentAdapter()
 		{
 			public void componentResized(ComponentEvent e)
 			{
-				loadParticles(false);
+					loadParticles(false);
 			}
 		});
-
 	}
 
 	public void close()

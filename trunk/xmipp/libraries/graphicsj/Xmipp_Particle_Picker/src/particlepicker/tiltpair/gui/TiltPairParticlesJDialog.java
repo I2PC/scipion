@@ -34,7 +34,7 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 
 		if (resize)
 		{
-			columns = Math.min(200, particles.size() * side * 2) / (side * 2);
+			columns = 1;//Math.min(200, particles.size() * side * 2) / (side * 2);
 			rows = (int) Math.ceil(particles.size() / (float) columns);
 			width = side * columns * 2;
 			height = (side * Math.min(10, rows));
@@ -46,7 +46,7 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 		else
 		{
 			Dimension d = sp.getSize();
-			columns = (int) d.getWidth() / side;
+			columns = (int) d.getWidth() / (side * 2);
 			rows = (int) Math.ceil((particles.size() / (float) columns));
 		}
 		particlespn.removeAll();
@@ -55,8 +55,9 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 		ParticleCanvas c;
 		TrainingParticle p;
 		UntiltedParticle up;
+		columns =  columns * 2;
 		for (int i = 0; i < rows; i++)
-			for (int j = 0; j < columns * 2; j+= 2, index ++)
+			for (int j = 0; j < columns; j+= 2, index ++)
 			{
 				if (index == particles.size())
 					break;
@@ -64,6 +65,7 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 				c = p.getParticleCanvas(frame);
 				up = (UntiltedParticle) p;
 				particlespn.add(c, WindowUtils.getConstraints(constraints, j, i, 1));
+				
 				if (up.getTiltedParticle() != null)
 					particlespn.add(up.getTiltedParticle().getParticleCanvas(frame), WindowUtils.getConstraints(constraints, j + 1, i, 1));
 			}

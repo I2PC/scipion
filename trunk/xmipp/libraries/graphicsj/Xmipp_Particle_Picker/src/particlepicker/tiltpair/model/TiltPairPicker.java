@@ -144,7 +144,7 @@ public class TiltPairPicker extends ParticlePicker
 
 	public void resetMicrograph(UntiltedMicrograph m)
 	{
-		m.getParticles().clear();
+		m.reset();
 		setChanged(true);
 	}
 

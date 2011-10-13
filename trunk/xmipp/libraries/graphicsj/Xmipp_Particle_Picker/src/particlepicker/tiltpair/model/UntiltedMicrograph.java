@@ -50,6 +50,10 @@ public class UntiltedMicrograph extends Micrograph {
 	@Override
 	public void reset() {
 
+		setActiveParticle(null);
+		getParticles().clear();
+		getTiltedMicrograph().reset();
+		initAligner();
 	}
 
 	public void removeParticle(UntiltedParticle p) {
@@ -106,7 +110,6 @@ public class UntiltedMicrograph extends Micrograph {
 	
 	public void initAligner()
 	{
-		System.out.println("Initializing aligner");
 		tpa.clear();
 		added = 0;
 		for(UntiltedParticle p: particles)

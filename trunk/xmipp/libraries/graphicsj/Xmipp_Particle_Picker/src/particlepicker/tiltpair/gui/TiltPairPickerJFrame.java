@@ -484,6 +484,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 			{
 				pppicker.resetMicrograph(untiltedmic);
 				canvas.repaint();
+				canvas.getTiltedCanvas().repaint();
 				updateMicrographsModel();
 				setChanged(true);
 			}
