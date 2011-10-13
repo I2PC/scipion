@@ -742,7 +742,7 @@ char * MetaData::_readColumnsStar(mdBlock &block,
     do
     {
         found_column = false;
-        if (iter[0] == '#') //Skip comment
+        while (iter[0] == '#') //Skip comment
             iter = END_OF_LINE() + 1;
 
         //trim spaces and newlines at the beginning
