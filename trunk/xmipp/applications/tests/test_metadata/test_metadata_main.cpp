@@ -171,6 +171,42 @@ TEST_F( MetadataTest, GetBlocksInMetadata)
     unlink(sfn);
 }
 
+TEST_F( MetadataTest, CheckRegularExpression)
+{
+    char sfn[64] = "";
+    strncpy(sfn, "/tmp/testGetBlocks_XXXXXX", sizeof sfn);
+    mkstemp(sfn);
+
+    MetaData auxMd, auxMd2;
+    auxMd.setValue(MDL_IMAGE,(String)"image_1.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_2.xmp",auxMd.addObject());
+    auxMd.write(sfn,MD_OVERWRITE);
+    auxMd.clear();
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_1_1.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_1_2.xmp",auxMd.addObject());
+    auxMd.write((String)"block_000001@"+sfn,MD_APPEND);
+    auxMd.clear();
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_2_1.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_2_2.xmp",auxMd.addObject());
+    auxMd.write((String)"block_000002@"+sfn,MD_APPEND);
+    auxMd.clear();
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_A_1.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_A_2.xmp",auxMd.addObject());
+    auxMd.write((String)"block_A@"+sfn,MD_APPEND);
+    auxMd.clear();
+
+    auxMd.clear();
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_1_1.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_1_2.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_2_1.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_2_2.xmp",auxMd.addObject());
+
+    auxMd2.read((String)"block_00000[12]@" + sfn);
+    EXPECT_EQ(auxMd, auxMd2);
+
+    unlink(sfn);
+}
+
 TEST_F( MetadataTest, ImportObject)
 {
     //FIXME importObjects test is in the test named select
