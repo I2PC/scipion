@@ -6,6 +6,7 @@ package wizards;
 
 import browser.LABELS;
 import browser.SpringUtilities;
+import browser.imageitems.ImageConverter;
 import browser.imageitems.listitems.AbstractImageItem;
 import ij.IJ;
 import ij.ImagePlus;
@@ -73,12 +74,11 @@ public class JPanelXmippGaussianFilter extends JPanelXmippFilterMetadata {
 
         try {
             double w1 = (Double) jsW1.getValue();
-            double pixels[] = ImageDouble.gaussianFilter(item.getAbsoluteFileName(),
+            ImageDouble image = new ImageDouble();
+            image.gaussianFilter(item.getAbsoluteFileName(),
                     w1, previewWidth, previewHeight);
 
-            FloatProcessor ip = new FloatProcessor(
-                    previewWidth, previewHeight, pixels);
-            imp = new ImagePlus(item.getFileName(), ip);
+            imp = ImageConverter.convertToImageJ(image, item.getFileName());
         } catch (Exception e) {
             IJ.error(e.getMessage());
         }

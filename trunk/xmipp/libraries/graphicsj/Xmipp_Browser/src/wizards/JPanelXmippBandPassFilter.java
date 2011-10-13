@@ -6,6 +6,7 @@ package wizards;
 
 import browser.LABELS;
 import browser.SpringUtilities;
+import browser.imageitems.ImageConverter;
 import browser.imageitems.listitems.AbstractImageItem;
 import ij.IJ;
 import ij.ImagePlus;
@@ -87,13 +88,12 @@ public class JPanelXmippBandPassFilter extends JPanelXmippGaussianFilter {
             double w1 = (Double) jsW1.getValue();
             double w2 = (Double) jsW2.getValue();
             double raised_w = (Double) jsRaisedW.getValue();
-            double pixels[] = ImageDouble.bandPassFilter(item.getAbsoluteFileName(),
+            ImageDouble image = new ImageDouble();
+            image.bandPassFilter(item.getAbsoluteFileName(),
                     w1, w2, raised_w,
                     previewWidth, previewHeight);
 
-            FloatProcessor ip = new FloatProcessor(
-                    previewWidth, previewHeight, pixels);
-            imp = new ImagePlus(item.getFileName(), ip);
+            imp = ImageConverter.convertToImageJ(image, item.getFileName());
         } catch (Exception e) {
             IJ.error(e.getMessage());
         }

@@ -6,9 +6,9 @@ package wizards;
 
 import browser.LABELS;
 import browser.SpringUtilities;
+import browser.imageitems.ImageConverter;
 import browser.imageitems.listitems.AbstractImageItem;
 import ij.ImagePlus;
-import ij.process.FloatProcessor;
 import java.awt.BorderLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -77,11 +77,10 @@ public class JPanelXmippFileListCTF extends JPanelXmippFilter {
     @Override
     ImagePlus getFilteredPreview(AbstractImageItem item) throws Exception {
         double downsampling = (Double) jsDownsampling.getValue();
-        double pixels[] = ImageDouble.fastEstimateEnhancedPSD(item.getAbsoluteFileName(),
+        ImageDouble image = new ImageDouble();
+        image.fastEstimateEnhancedPSD(item.getAbsoluteFileName(),
                 downsampling, previewWidth, previewHeight);
 
-        FloatProcessor ip = new FloatProcessor(
-                previewWidth, previewHeight, pixels);
-        return new ImagePlus(item.getFileName(), ip);
+        return ImageConverter.convertToImageJ(image, item.getFileName());
     }
 }

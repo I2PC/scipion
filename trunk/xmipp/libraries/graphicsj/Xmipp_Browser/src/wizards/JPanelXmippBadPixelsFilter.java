@@ -5,10 +5,10 @@
 package wizards;
 
 import browser.LABELS;
+import browser.imageitems.ImageConverter;
 import browser.imageitems.listitems.AbstractImageItem;
 import ij.IJ;
 import ij.ImagePlus;
-import ij.process.FloatProcessor;
 import xmipp.ImageDouble;
 
 /**
@@ -37,12 +37,11 @@ public class JPanelXmippBadPixelsFilter extends JPanelXmippGaussianFilter {
 
         try {
             double factor = (Double) jsW1.getValue();
-            double pixels[] = ImageDouble.badPixelsFilter(item.getAbsoluteFileName(),
+            ImageDouble image = new ImageDouble();
+            image.badPixelsFilter(item.getAbsoluteFileName(),
                     factor, previewWidth, previewHeight);
 
-            FloatProcessor ip = new FloatProcessor(
-                    previewWidth, previewHeight, pixels);
-            imp = new ImagePlus(item.getFileName(), ip);
+            imp = ImageConverter.convertToImageJ(image, item.getFileName());
         } catch (Exception e) {
             IJ.error(e.getMessage());
         }

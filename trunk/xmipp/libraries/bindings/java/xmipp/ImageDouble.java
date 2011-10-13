@@ -96,13 +96,13 @@ public class ImageDouble {
 
     public native void printShape();
 
-    public native static double[] fastEstimateEnhancedPSD(String filename, double downsampling, int w, int h) throws Exception;
+    public native void fastEstimateEnhancedPSD(String filename, double downsampling, int w, int h) throws Exception;
 
-    public native static double[] bandPassFilter(String filename, double w1, double w2, double raised_w, int w, int h) throws Exception;
+    public native void bandPassFilter(String filename, double w1, double w2, double raised_w, int w, int h) throws Exception;
 
-    public native static double[] gaussianFilter(String filename, double w1, int w, int h) throws Exception;
+    public native void gaussianFilter(String filename, double w1, int w, int h) throws Exception;
 
-    public native static double[] badPixelsFilter(String filename, double factor, int w, int h) throws Exception;
+    public native void badPixelsFilter(String filename, double factor, int w, int h) throws Exception;
 
     //non-native functions
     //constructor
