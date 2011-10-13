@@ -3,7 +3,7 @@
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
-class TransformationTest : public ::testing::Test
+class SamplingTest : public ::testing::Test
 {
 protected:
     //init metadatas
@@ -49,17 +49,18 @@ protected:
 
 };
 
-TEST_F(TransformationTest, computeSamplingPoints)
+TEST_F(SamplingTest, computeSamplingPoints)
 {
     Sampling s1;
     s1.readSamplingFile(fn_root + "ref");
+    s1.saveSamplingFile(fn_root + "refkk");
     Sampling s2;
     s2.setSampling(3.);
     s2.computeSamplingPoints(false, 91., -91.);
     EXPECT_EQ(s1, s2);
 }
 
-TEST_F(TransformationTest, removeRedundantPoints)
+TEST_F(SamplingTest, removeRedundantPoints)
 {
     int  symmetry, sym_order;
     Sampling s1;
@@ -73,7 +74,7 @@ TEST_F(TransformationTest, removeRedundantPoints)
     s2.removeRedundantPoints(symmetry, sym_order);
     EXPECT_EQ(s1, s2);
 }
-TEST_F(TransformationTest, removePointsFarAwayFromExperimentalData)
+TEST_F(SamplingTest, removePointsFarAwayFromExperimentalData)
 {
     int  symmetry, sym_order;
     Sampling s1;
@@ -91,13 +92,33 @@ TEST_F(TransformationTest, removePointsFarAwayFromExperimentalData)
     EXPECT_EQ(s1, s2);
 }
 
-TEST_F(TransformationTest, saveReadSamplingFile)
+TEST_F(SamplingTest, saveReadSamplingFile)
 {
   FileName fn = fn_root + "test";
     mysampling.saveSamplingFile(fn, true, true);
     Sampling s;
     s.readSamplingFile(fn, true, true);
     EXPECT_EQ(mysampling, s);
+}
+
+TEST_F(SamplingTest, computeNeighbors)
+{
+    int  symmetry, sym_order;
+    Sampling s1;
+    s1.readSamplingFile(fn_root + "ref_i3h_exp");
+    Sampling s2;
+    s2.setSampling(3);//degrees
+    s2.computeSamplingPoints(false,91.,-91.);
+    s2.SL.isSymmetryGroup("i3h", symmetry, sym_order);
+    s2.SL.read_sym_file("i3h");
+    s2.fillLRRepository();
+    s2.removeRedundantPoints(symmetry, sym_order);
+    s2.setNeighborhoodRadius(5);
+    s2.fillExpDataProjectionDirectionByLR(fn_root + "experimental_images.xmd");
+    s2.removePointsFarAwayFromExperimentalData();
+    s2.computeNeighbors();
+    s2.saveSamplingFile(fn_root + "ref_i3h_expkkkkk");
+    EXPECT_EQ(s1, s2);
 }
 
 GTEST_API_ int main(int argc, char **argv)

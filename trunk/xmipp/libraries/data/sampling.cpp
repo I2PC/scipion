@@ -104,7 +104,8 @@ bool Sampling::operator==(const Sampling& op) const
             XMIPP_EQUAL_REAL(cos_neighborhood_radius, op.cos_neighborhood_radius) &&
             no_redundant_sampling_points_angles == op.no_redundant_sampling_points_angles &&
             no_redundant_sampling_points_vector == op.no_redundant_sampling_points_vector &&
-            no_redundant_sampling_points_index == op.no_redundant_sampling_points_index);
+            no_redundant_sampling_points_index == op.no_redundant_sampling_points_index &&
+            my_neighbors == op.my_neighbors);
 }
 
 void Sampling::setSampling(double sampling)
@@ -1617,7 +1618,7 @@ void Sampling::computeNeighbors(bool only_winner)
 #endif
 
         aux_neighbors.clear();
-        size_t * aux_neighborsArray;
+        size_t * aux_neighborsArray = NULL;
         for (size_t k = 0; k < R_repository.size(); k++,j++)
         {
             winner_dotProduct = -1.;
@@ -1632,7 +1633,6 @@ void Sampling::computeNeighbors(bool only_winner)
                     {
                         aux_neighbors.push_back(no_redundant_sampling_points_index[i]);
                         winner_dotProduct=my_dotProduct;
-                        aux_neighborsArray =  &aux_neighbors[0];
 
 #ifdef MYPSI
 
@@ -1642,9 +1642,10 @@ void Sampling::computeNeighbors(bool only_winner)
                     }
                     else
                     {
-                        new_reference=true;
+                        new_reference = true;
                         if(only_winner)
                         {
+                          //std::cerr << "DEBUG_JM: In ONLY_WINNER" <<std::endl;
                             if(winner_dotProduct<my_dotProduct)
                             {
                                 if(winner_dotProduct!=-1)
@@ -1666,20 +1667,31 @@ void Sampling::computeNeighbors(bool only_winner)
                         {
                             //precalculate size saves time here but
                             //not in the whole loop
+                            aux_neighborsArray =  &aux_neighbors[0];
                             size_t _size = aux_neighbors.size();
+//std::cerr << "DEBUG_JM: no_redundant_sampling_points_index[i]: " << no_redundant_sampling_points_index[i] << std::endl;
+                           // for (size_t kkk = 0; kkk < aux_neighbors.size(); ++kkk)
+                           //   std::cerr << aux_neighbors[kkk] << " ";
                             for( int l=0;l<  _size;l++)
                             {
                                 //if (aux_neighbors[l]==i)
-                                if (aux_neighborsArray[l]==i)
+                                if (aux_neighborsArray[l]==no_redundant_sampling_points_index[i])
                                 {
                                     new_reference=false;
                                     break;
                                 }
                             }
+                            //std::cerr << "DEBUG_JM: new_reference: " << new_reference << std::endl;
                         }
                         if (new_reference)
                         {
+                          //std::cerr << formatString("DEBUG_JM: j %lu k %lu i %lu ", j, k, i) << std::endl;
                             aux_neighbors.push_back(no_redundant_sampling_points_index[i]);
+
+                            //for (size_t kkk = 0; kkk < aux_neighbors.size(); ++kkk)
+                            //  std::cerr << aux_neighbors[kkk] << " ";
+                            // std::cerr << std::endl;
+
 #ifdef MYPSI
 
                             aux_neighbors_psi.push_back(exp_data_projection_direction_by_L_R_psi[j]);
@@ -1703,7 +1715,16 @@ void Sampling::computeNeighbors(bool only_winner)
 
     }//for j
     progress_bar(exp_data_projection_direction_by_L_R_size);
-    //#define CHIMERA
+    std::cerr << "DEBUG_JM: 0:" <<std::endl;
+    for(int i=0; i< my_neighbors[0].size();i++)
+          std::cerr << my_neighbors[0][i] << " ";
+
+    std::cerr << "\nDEBUG_JM: 1:" <<std::endl;
+    for(int i=0; i< my_neighbors[1].size();i++)
+          std::cerr << my_neighbors[1][i] << " ";
+    std::cerr <<std::endl;
+
+//#define CHIMERA
 #ifdef CHIMERA
 
     std::ofstream filestr;
@@ -1713,7 +1734,7 @@ void Sampling::computeNeighbors(bool only_winner)
     << ".sphere 0 0 0 .95"
     << std::endl
     ;
-    int exp_image=60;
+    int exp_image=1;
     filestr    <<  ".color yellow" << std::endl
     <<  ".sphere "   << exp_data_projection_direction_by_L_R[exp_image*R_repository.size()]
     <<  " .021"      << std::endl;
