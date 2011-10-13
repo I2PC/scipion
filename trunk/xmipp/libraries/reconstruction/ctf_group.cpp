@@ -62,49 +62,48 @@ void ProgCtfGroup::readParams()
 /* Show -------------------------------------------------------------------- */
 void ProgCtfGroup::show()
 {
-    //    std::cerr << "  Input sel file          : "<< fn_sel << std::endl;
-    std::cerr << "  Input ctfdat file       : "<< fn_ctfdat << std::endl;
-    std::cerr << "  Output rootname         : "<< fn_root << std::endl;
+    std::cout << "  Input ctfdat file       : "<< fn_ctfdat << std::endl;
+    std::cout << "  Output rootname         : "<< fn_root << std::endl;
     if (pad > 1.)
     {
-        std::cerr << "  Padding factor          : "<< pad << std::endl;
+        std::cout << "  Padding factor          : "<< pad << std::endl;
     }
     if (do_discard_anisotropy)
     {
-        std::cerr << " -> Exclude anisotropic CTFs from the groups"<<std::endl;
+        std::cout << " -> Exclude anisotropic CTFs from the groups"<<std::endl;
     }
     if (do_auto)
     {
-        std::cerr << " -> Using automated mode for making groups"<<std::endl;
-        std::cerr << " -> With a maximum allowed error of "<<max_error
+        std::cout << " -> Using automated mode for making groups"<<std::endl;
+        std::cout << " -> With a maximum allowed error of "<<max_error
         <<" at "<<resol_error<<" dig. freq."<<std::endl;
     }
     else
     {
-        std::cerr << " -> Group based on defocus values in "<<fn_split<<std::endl;
+        std::cout << " -> Group based on defocus values in "<<fn_split<<std::endl;
     }
     if (phase_flipped)
     {
-        std::cerr << " -> Assume that data are PHASE FLIPPED"<<std::endl;
+        std::cout << " -> Assume that data are PHASE FLIPPED"<<std::endl;
     }
     else
     {
-        std::cerr << " -> Assume that data are NOT PHASE FLIPPED"<<std::endl;
+        std::cout << " -> Assume that data are NOT PHASE FLIPPED"<<std::endl;
     }
     if (do_wiener)
     {
-        std::cerr << " -> Also calculate Wiener filters, with constant= "<<wiener_constant<<std::endl;
+        std::cout << " -> Also calculate Wiener filters, with constant= "<<wiener_constant<<std::endl;
     }
-    std::cerr << "  Available memory (Gb)        : "<< memory << std::endl;
+    std::cout << "  Available memory (Gb)        : "<< memory << std::endl;
     if (do1Dctf)
     {
-        std::cerr << " -> compute CTF groups using 1D CTFs= "<<std::endl;
+        std::cout << " -> compute CTF groups using 1D CTFs= "<<std::endl;
     }
     else
     {
-        std::cerr << " -> compute CTF groups using 2D CTFs= "<<std::endl;
+        std::cout << " -> compute CTF groups using 2D CTFs= "<<std::endl;
     }
-    std::cerr << "----------------------------------------------------------"<<std::endl;
+    std::cout << "----------------------------------------------------------"<<std::endl;
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -308,7 +307,7 @@ void ProgCtfGroup::produceSideInfo()
         }
         else
         {
-            std::cerr<<" Discard CTF "<<fnt_ctf<<" because of too large anisotropy"<<std::endl;
+            std::cout<<" Discard CTF "<<fnt_ctf<<" because of too large anisotropy"<<std::endl;
             ctfMD.removeObject(__iter.objId);
         }
         if (counter % c == 0 && verbose!=0)
@@ -418,7 +417,7 @@ bool ProgCtfGroup::isIsotropic(CTFDescription &ctf)
         diff = ABS(ctfp - ctf.CTF_at());
         if (diff > max_error)
         {
-            std::cerr<<" Anisotropy!"<<digres<<" "<<max_error<<" "<<diff<<" "<<ctfp
+            std::cout<<" Anisotropy!"<<digres<<" "<<max_error<<" "<<diff<<" "<<ctfp
             <<" "<<ctf.CTF_at()<<std::endl;
             return false;
         }
@@ -580,9 +579,7 @@ void ProgCtfGroup::writeOutputToDisc()
     MDIterator it(ctfInfo);
     size_t id1,id2,id;
     auxMetaData.clear();
-    auxMetaData.setComment((std::string)"Defocus values to split into " +
-                           integerToString(ctfInfo.size()) +
-                           " ctf groups");
+    auxMetaData.setComment(formatString("Defocus values to split into %lu ctf groups", ctfInfo.size()));
     id1=it.objId;
     while(it.moveNext())
     {
@@ -609,8 +606,8 @@ void ProgCtfGroup::writeOutputToDisc()
     for(int i=1;i<= ctfInfo.size(); i++)
     {
         auxMetaData.importObjects(ctfImagesGroup,MDValueEQ(MDL_DEFGROUP,i));
-        imagesInDefoculGroup.assign( formatString("ctfGroup%06ul@%s_images.sel", i, fn_root.c_str()) );
-        auxMetaData.write( imagesInDefoculGroup,MD_APPEND);
+        imagesInDefoculGroup.assign( formatString("ctfGroup%06d@%s_images.sel", i, fn_root.c_str()) );
+        auxMetaData.write( imagesInDefoculGroup, i > 1 ? MD_APPEND : MD_OVERWRITE);
     }
 
     //(4)create average ctf
@@ -633,7 +630,7 @@ void ProgCtfGroup::writeOutputToDisc()
     outFileNameWIEN = fn_root + "_wien."+format;
     if (verbose!=0)
     {
-        std::cerr << "Saving CTF Images" <<std::endl;
+        std::cout << "Saving CTF Images" <<std::endl;
     }
     FOR_ALL_OBJECTS_IN_METADATA(sortedCtfMD)
     {
@@ -641,13 +638,11 @@ void ProgCtfGroup::writeOutputToDisc()
         sortedCtfMD.getValue(MDL_ORDER,order,__iter.objId);
         sortedCtfMD.getValue(MDL_COUNT,count,__iter.objId);
         double dCount = (double)count;
-        std::cerr << "one" << std::endl;
 
         if (defGroup != olddefGroup)
         {
             if (sumimg!=0)
             {
-                std::cerr << "two"  << sumimg<< std::endl;
                 ctf2D /= sumimg;
                 outFileName.compose(olddefGroup,outFileNameCTF);
                 //save CTF
@@ -655,25 +650,19 @@ void ProgCtfGroup::writeOutputToDisc()
                 //save winer filter
                 if (do_wiener)
                 {
-                    std::cerr << "three" << std::endl;
                     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctf2D)
                     {
                         dAij(ctf2D,i,j) /= dAij(Mwien,i,j);
                     }
-                    std::cerr << "compose_before" << olddefGroup << std::endl;
                     outFileName.compose(olddefGroup,outFileNameWIEN);
-                    std::cerr << "compose_after" << outFileNameWIEN<< std::endl;
-                    std::cerr << "outFileName" << outFileName<< std::endl;
                     Ictf2D.write(outFileName);
                 }
-                std::cerr << "four" << std::endl;
 
                 ctf2D.initZeros();
                 olddefGroup=defGroup;
                 sumimg=0.;
             }
         }
-        std::cerr << "five" << std::endl;
 
         sumimg += dCount;
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctf2D)
@@ -725,5 +714,5 @@ void ProgCtfGroup::run()
     }
     writeOutputToDisc();
 
-    std::cerr << " Done!" <<std::endl;
+    std::cout << " Done!" <<std::endl;
 }
