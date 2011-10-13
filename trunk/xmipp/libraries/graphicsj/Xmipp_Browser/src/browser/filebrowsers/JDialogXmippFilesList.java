@@ -39,6 +39,9 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
     public JDialogXmippFilesList(String directory, int port, boolean singleSelection, String seltype, String expression) {
         super();
 
+        // Tells listener that it has been started.
+        send(new Object[]{SOT}, false);
+
         this.port = port;
         this.seltype = seltype;
 
@@ -59,8 +62,6 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
 
         pack();
         setLocationRelativeTo(null);
-
-        send(new Object[]{SOT}, false);
     }
 
     protected void button1Clicked() {

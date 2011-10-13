@@ -14,7 +14,6 @@ import browser.InfiniteProgressPanel;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.filebrowsers.model.FileBrowser;
-import ij.ImagePlus;
 import java.awt.BorderLayout;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
@@ -24,6 +23,7 @@ import browser.imageitems.listitems.AbstractImageItem;
 import browser.imageitems.listitems.FileItem;
 import browser.windows.ImagesWindowFactory;
 import ij.IJ;
+import ij.ImagePlus;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.LinkedList;
@@ -122,7 +122,11 @@ public class JPanelXmippBrowser extends JPanel {
     }
 
     protected void setPreview(AbstractImageItem imageItem) {
-        ImagePlus preview = getPreview(imageItem);
+        ImagePlus preview = null;
+
+        if (imageItem != null) {
+            preview = getPreview(imageItem);
+        }
 
         if (preview != null) {
             jpImageInfo.setPreview(preview.getImage(), imageItem.getImageInfo());
@@ -230,6 +234,8 @@ public class JPanelXmippBrowser extends JPanel {
                 } else {
                     ImagesWindowFactory.openFileAsGallery(abstractItem.getAbsoluteFileName());
                 }
+            } else {
+                clearPreview();
             }
         }
 
@@ -270,11 +276,6 @@ public class JPanelXmippBrowser extends JPanel {
                 jlFileFilterMouseClicked(evt);
             }
         });
-        jlFileFilter.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
-            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
-                jlFileFilterValueChanged(evt);
-            }
-        });
         jlFileFilter.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 jlFileFilterKeyReleased(evt);
@@ -309,7 +310,7 @@ public class JPanelXmippBrowser extends JPanel {
             openSelectedFile();
         }
 
-        //updatePreview();
+        updatePreview();
     }//GEN-LAST:event_jlFileFilterKeyReleased
 
     private void jlFileFilterMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jlFileFilterMouseClicked
@@ -317,7 +318,7 @@ public class JPanelXmippBrowser extends JPanel {
             openSelectedFile();
         }
 
-        //updatePreview();
+        updatePreview();
     }//GEN-LAST:event_jlFileFilterMouseClicked
 
     private void jcbPreviewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbPreviewActionPerformed
@@ -325,9 +326,6 @@ public class JPanelXmippBrowser extends JPanel {
         updatePreview();
     }//GEN-LAST:event_jcbPreviewActionPerformed
 
-private void jlFileFilterValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jlFileFilterValueChanged
-    updatePreview();
-}//GEN-LAST:event_jlFileFilterValueChanged
     // Variables declaration - do not modify//GEN-BEGIN:variables
     protected javax.swing.JCheckBox jcbPreview;
     protected browser.filebrowsers.JListFileFilter jlFileFilter;

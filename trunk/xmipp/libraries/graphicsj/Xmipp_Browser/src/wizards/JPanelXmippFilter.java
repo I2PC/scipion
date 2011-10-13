@@ -66,6 +66,12 @@ abstract public class JPanelXmippFilter extends JPanelXmippBrowser {
         jlFilter.setIcon(new ImageIcon(filteredPreview));
     }
 
+    @Override
+    protected void clearPreview() {
+        super.clearPreview();
+        jlFilter.setIcon(null);
+    }
+
     abstract ImagePlus getFilteredPreview(AbstractImageItem item) throws Exception;
 
     @Override
@@ -98,11 +104,11 @@ abstract public class JPanelXmippFilter extends JPanelXmippBrowser {
     @Override
     protected void openSelectedFile() {
         //if (jlFileFilter.getSelectedIndex() > 0) {  // Avoid parent...
-            FileItem item = (FileItem) jlFileFilter.getSelectedValue();
+        FileItem item = (FileItem) jlFileFilter.getSelectedValue();
 
-            if (!item.isDirectory()) {  // ...and directories.
-                openFileAsDefault(item);
-            }
+        if (!item.isDirectory()) {  // ...and directories.
+            openFileAsDefault(item);
+        }
         //}
     }
 
