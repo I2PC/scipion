@@ -39,11 +39,11 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
     public JDialogXmippFilesList(String directory, int port, boolean singleSelection, String seltype, String expression) {
         super();
 
-        // Tells listener that it has been started.
-        send(new Object[]{SOT}, false);
-
         this.port = port;
         this.seltype = seltype;
+
+        // Tells listener that it has been started.
+        send(new Object[]{SOT}, false);
 
         if (seltype.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_FILE) == 0) {
             setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR_FILE);
@@ -110,7 +110,7 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
         }
     }
 
-    protected boolean send(Object items[], boolean end) {
+    final protected boolean send(Object items[], boolean end) {
         try {
             Socket socket = new Socket(InetAddress.getByName("127.0.0.1"), port);
 

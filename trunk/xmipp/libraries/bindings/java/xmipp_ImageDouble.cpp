@@ -381,7 +381,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_printShape
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD(
-		JNIEnv *env, jclass class_, jobject jobj, jstring filename, jdouble downsampling,
+		JNIEnv *env, jobject jobj, jstring filename, jdouble downsampling,
 		jint w, jint h) {
 	std::string msg = "";
         Image<double> *image = GET_INTERNAL_IMAGE(jobj);
@@ -412,7 +412,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD(
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_bandPassFilter(
-		JNIEnv *env, jobject jobj, jclass class_, jstring filename, jdouble w1, jdouble w2,
+		JNIEnv *env, jobject jobj, jstring filename, jdouble w1, jdouble w2,
 		jdouble raised_w, jint w, jint h) {
 	std::string msg = "";
         Image<double> *image = GET_INTERNAL_IMAGE(jobj);
@@ -443,7 +443,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_bandPassFilter(
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_gaussianFilter(
-		JNIEnv *env, jobject jobj, jclass class_, jstring filename, jdouble w1, jint w,
+		JNIEnv *env, jobject jobj, jstring filename, jdouble w1, jint w,
 		jint h) {
 	std::string msg = "";
         Image<double> *image = GET_INTERNAL_IMAGE(jobj);
@@ -474,7 +474,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_gaussianFilter(
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_badPixelsFilter(
-		JNIEnv *env, jobject jobj, jclass class_, jstring filename, jdouble factor, jint w,
+		JNIEnv *env, jobject jobj, jstring filename, jdouble factor, jint w,
 		jint h) {
 	std::string msg = "";
         Image<double> *image = GET_INTERNAL_IMAGE(jobj);
