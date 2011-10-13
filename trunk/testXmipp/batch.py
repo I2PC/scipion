@@ -1,8 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 import datetime, os, shutil,sys
 #create log file
 from xml.sax.handler import ContentHandler
 from xml.sax import make_parser
+from protlib_xmipp import greenStr, warnStr
+
 class Tester(ContentHandler):    
     #TODO start elemennt  processing must be centralized
     def __init__(self, _fnDir):
@@ -113,7 +115,7 @@ class Tester(ContentHandler):
                 outDir = outPath + "_%02d" % testNo
                 testName = "(%d of %d)" % (testNo, n)
             print "------------------------------------------------------------------------------------"
-            print ">>> Running test", testName, "of", program
+            print warnStr(">>> Running test %(testName)s of %(program)s" % locals())
             print "    Output dir: "
             print "       ", outDir
             if not os.path.exists(outDir):
@@ -141,7 +143,7 @@ class Tester(ContentHandler):
             else:
                 cmd += " %s > %s/stdout.txt 2> %s/stderr.txt" % (test, outDir, outDir)
             print "    Command: "
-            print "       ", cmd
+            print "       ", greenStr(cmd)
             result = os.system(cmd)
             self.checkResult(testfiles,outDir,random)
             #print "Result:", result
