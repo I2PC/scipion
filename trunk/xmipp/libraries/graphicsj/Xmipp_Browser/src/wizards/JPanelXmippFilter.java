@@ -53,8 +53,10 @@ abstract public class JPanelXmippFilter extends JPanelXmippBrowser {
 
     @Override
     protected void setPreview(AbstractImageItem imageItem) {
+        System.out.println("super: Set preview");
         super.setPreview(imageItem);
 
+        System.out.println("super: Set FILTERED preview");
         Image filteredPreview = null;
 
         try {
@@ -63,6 +65,7 @@ abstract public class JPanelXmippFilter extends JPanelXmippBrowser {
             filteredPreview = ICONS_MANAGER.MISSING_ITEM.getImage();
         }
 
+        System.out.println("Fin de set filter preview");
         jlFilter.setIcon(new ImageIcon(filteredPreview));
     }
 
