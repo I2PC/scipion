@@ -424,6 +424,7 @@ void * threadRotationallyAlignOneImage( void * data )
 {
     structThreadRotationallyAlignOneImage * thread_data = (structThreadRotationallyAlignOneImage *) data;
 
+    std::cerr << "DEBUG_JM: threadRotationallyAlignOneImage 1" <<std::endl;
     // Variables from above
     int thread_id = thread_data->thread_id;
     int thread_num = thread_data->thread_num;
@@ -461,8 +462,10 @@ void * threadRotationallyAlignOneImage( void * data )
     // This loop is also threaded
     myinit = thread_id;
     myincr = thread_num;
+    std::cerr << "DEBUG_JM: threadRotationallyAlignOneImage 2 itrans LOOP" <<std::endl;
     for (int itrans = myinit; itrans < prm->nr_trans; itrans+=myincr)
     {
+      std::cerr << "DEBUG_JM:      itrans: " <<      itrans << std::endl;
         P.getPolarFromCartesianBSpline(Maux,prm->Ri,prm->Ro,3,
                                        (double)prm->search5d_xoff[itrans],
                                        (double)prm->search5d_yoff[itrans]);
@@ -475,6 +478,7 @@ void * threadRotationallyAlignOneImage( void * data )
         prm->stddev_img[itrans] = stddev;
         done_once=true;
     }
+    std::cerr << "DEBUG_JM: threadRotationallyAlignOneImage 3 after LOOP" <<std::endl;
     // If thread did not have to do any itrans, initialize fftw plans
     if (!done_once)
     {
@@ -486,6 +490,7 @@ void * threadRotationallyAlignOneImage( void * data )
     local_transformer.setReal(corr);
     local_transformer.FourierTransform();
 
+    std::cerr << "DEBUG_JM: threadRotationallyAlignOneImage 4 before thread WAIT" <<std::endl;
     // All threads have to wait until the itrans loop is done
     barrier_wait(&(prm->thread_barrier));
 
@@ -496,6 +501,7 @@ void * threadRotationallyAlignOneImage( void * data )
     annotate_time(&t0);
 #endif
 
+    std::cerr << "DEBUG_JM: threadRotationallyAlignOneImage 5 after WAIT" <<std::endl;
     //pthread_mutex_lock(  &debug_mutex );
     // Switch the order of looping through the references every time.
     // That way, in case max_nr_refs_in_memory<total_nr_refs
@@ -514,11 +520,12 @@ void * threadRotationallyAlignOneImage( void * data )
         myfinal = -1;
         myincr = -1;
     }
-
+    std::cerr << "DEBUG_JM: threadRotationallyAlignOneImage 6 i LOOP" <<std::endl;
     // Loop over all relevant "neighbours" (i.e. directions within the search range)
     //for (int i = myinit; i != myfinal; i+=myincr)
     for (size_t i = myinit; i != myfinal; i += myincr)
     {
+      std::cerr << "DEBUG_JM:     i: " <<     i << std::endl;
         if (i%thread_num == thread_id)
         {
 
@@ -600,6 +607,7 @@ void * threadRotationallyAlignOneImage( void * data )
             }
         }
     }
+
 #ifdef TIMING
     float all_rot_align = elapsed_time(t0);
     float total_rot = elapsed_time(t2);
@@ -612,7 +620,7 @@ void * threadRotationallyAlignOneImage( void * data )
     <<std::endl;
 #endif
     //pthread_mutex_unlock(  &debug_mutex );
-
+    std::cerr << "DEBUG_JM: threadRotationallyAlignOneImage END" <<std::endl;
 }
 
 void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<double> &img,
@@ -835,8 +843,11 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
     for (size_t imgno = 0; imgno < nr_images; imgno++)
     {
         imgid = imagesToProcess[imgno];
+        std::cerr << "DEBUG_JM: imgno: " << imgno << std::endl;
+        std::cerr << "DEBUG_JM: imgid: " << imgid << std::endl;
+        std::cerr << "DEBUG_JM: calling getCurrentImage" <<std::endl;
         getCurrentImage(imgid, img);
-
+        std::cerr << "DEBUG_JM:     after getCurrentImage" <<std::endl;
         //img.write("kk,spi");
         //exit(0);
         // Call threads to calculate the rotational alignment of each image in the selfile
@@ -844,6 +855,7 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 
         structThreadRotationallyAlignOneImage * threads_d = (structThreadRotationallyAlignOneImage *)
                 malloc ( threads * sizeof( structThreadRotationallyAlignOneImage ) );
+        std::cerr << "DEBUG_JM: creating threads..." <<std::endl;
         for( int c = 0 ; c < threads ; c++ )
         {
             threads_d[c].thread_id = c;
@@ -857,7 +869,7 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
             threads_d[c].maxcorr=&maxcorr;
             pthread_create( (th_ids+c), NULL, threadRotationallyAlignOneImage, (void *)(threads_d+c) );
         }
-
+        std::cerr << "DEBUG_JM: joining threads..." <<std::endl;
         // Wait for threads to finish and get optimal refno, psi, flip and maxcorr
         for( int c = 0 ; c < threads ; c++ )
         {
@@ -877,8 +889,10 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 
         opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[opt_refno]);
         opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[opt_refno]);
-        translationallyAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, maxcorr);
 
+        std::cerr << "DEBUG_JM: calling translationallyAlignOneImage" <<std::endl;
+        translationallyAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, maxcorr);
+        std::cerr << "DEBUG_JM:     after translationallyAlignOneImage" <<std::endl;
         // Add previously applied translation to the newly found one
         opt_xoff += img.Xoff();
         opt_yoff += img.Yoff();
@@ -887,9 +901,10 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 
         if(do_scale)
         {
+          std::cerr << "DEBUG_JM: calling scaleAlignOneImage" <<std::endl;
             // Compute a better scale (scale_min -> scale_max)
             scaleAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, opt_scale, maxcorr);
-
+            std::cerr << "DEBUG_JM:     after scaleAlignOneImage" <<std::endl;
             //Add the previously applied scale to the newly found one
             opt_scale *= img.scale();
         }
@@ -910,6 +925,8 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         DFo.setValue(MDL_MAXCC,    maxcorr,idNew);
         if (verbose && imgno % progress_bar_step == 0)
             progress_bar(imgno);
+
+        std::cerr << "DEBUG_JM: END OF ITERATION imgno: " << imgno <<std::endl;
     }
 }
 
