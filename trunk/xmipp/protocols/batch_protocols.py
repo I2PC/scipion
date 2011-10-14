@@ -326,7 +326,7 @@ class XmippProjectGUI():
             lastHost = 'localhost'
             for c in childs:
                 c.info['pname'] = pname = os.path.basename(c.args.split()[0])
-                if pname not in ['grep', 'python', 'sh', 'bash']:
+                if pname not in ['grep', 'python', 'sh', 'bash', 'xmipp_python']:
                     line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
                     if c.host != lastHost:
                         txt.insert(tk.END, "%s\n" % c.host, 'bold')
