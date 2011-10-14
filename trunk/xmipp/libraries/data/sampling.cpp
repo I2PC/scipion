@@ -1715,14 +1715,7 @@ void Sampling::computeNeighbors(bool only_winner)
 
     }//for j
     progress_bar(exp_data_projection_direction_by_L_R_size);
-    std::cerr << "DEBUG_JM: 0:" <<std::endl;
-    for(int i=0; i< my_neighbors[0].size();i++)
-          std::cerr << my_neighbors[0][i] << " ";
 
-    std::cerr << "\nDEBUG_JM: 1:" <<std::endl;
-    for(int i=0; i< my_neighbors[1].size();i++)
-          std::cerr << my_neighbors[1][i] << " ";
-    std::cerr <<std::endl;
 
 //#define CHIMERA
 #ifdef CHIMERA
