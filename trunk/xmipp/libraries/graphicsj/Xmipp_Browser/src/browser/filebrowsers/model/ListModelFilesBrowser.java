@@ -166,7 +166,7 @@ public class ListModelFilesBrowser extends AbstractListModel implements Document
         }
 
         time = System.currentTimeMillis() - time;
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("'Total time:' mm:ss:S");
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("'List building >>> Total time:' mm:ss:S");
 
         System.out.println(dateFormatter.format(new Date(time)));
 
