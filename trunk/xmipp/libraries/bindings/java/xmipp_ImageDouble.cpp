@@ -390,9 +390,9 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD(
 		//MultidimArray<double> enhancedPSD;
 		const char *fnStr = env->GetStringUTFChars(filename, false);
 
-		selfScaleToSize(LINEAR, image->data, (int) w, (int) h);
-
 		fastEstimateEnhancedPSD(fnStr, downsampling, image->data);
+
+		selfScaleToSize(LINEAR, image->data, (int) w, (int) h);
 
 		size_t size = image->getSize();
 		jdoubleArray array = env->NewDoubleArray(size);
@@ -421,9 +421,9 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_bandPassFilter(
 		const char *fnStr = env->GetStringUTFChars(filename, false);
 		image->read(fnStr);
 
-		selfScaleToSize(LINEAR, image->data, (int) w, (int) h);
-
 		bandpassFilter(image->data, w1, w2, raised_w);
+
+		selfScaleToSize(LINEAR, image->data, (int) w, (int) h);
 
 		size_t size = image->data.getSize();
 		jdoubleArray array = env->NewDoubleArray(size);
@@ -452,9 +452,9 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_gaussianFilter(
 		const char *fnStr = env->GetStringUTFChars(filename, false);
 		image->read(fnStr);
 
-		selfScaleToSize(LINEAR, image->data, (int) w, (int) h);
-
 		gaussianFilter(image->data, w1);
+
+		selfScaleToSize(LINEAR, image->data, (int) w, (int) h);
 
 		size_t size = image->data.getSize();
 		jdoubleArray array = env->NewDoubleArray(size);
@@ -481,14 +481,14 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_badPixelsFilter(
 
 	try {
 		const char *fnStr = env->GetStringUTFChars(filename, false);
-		image->readPreview(fnStr, w, h);
-
-//		selfScaleToSize(LINEAR, image->data, (int) w, (int) h);
+		image->read(fnStr);
 
 		BadPixelFilter filter;
 		filter.type = BadPixelFilter::OUTLIER;
 		filter.factor = factor;
 		filter.apply(image->data);
+
+		selfScaleToSize(LINEAR, image->data, (int) w, (int) h);
 
 		size_t size = image->data.getSize();
 		jdoubleArray array = env->NewDoubleArray(size);

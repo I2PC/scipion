@@ -107,7 +107,7 @@ public class MetaData {
 
     //get values from metadata
     public native int getValueInt(int label, long objId);
-    
+
     public native long getValueLong(int label, long objId);
 
     public native double getValueDouble(int label, long objId);
@@ -124,6 +124,8 @@ public class MetaData {
 
         return value;
     }
+
+    public native String getValueVector(int label, long objId);
 
     public static boolean isPathField(int label) {
         return isTextFile(label) || isMetadata(label)
@@ -173,7 +175,7 @@ public class MetaData {
     public native boolean setValueBoolean(int label, boolean value, long objId);
 
     public native long[] findObjects();
-    
+
     public native void importObjects(MetaData from, long ids[]) throws Exception;
 
     public native long firstObject();
@@ -205,8 +207,6 @@ public class MetaData {
         super.finalize();
         destroy();
     }
-    
-    
-    
+
     public native void readPlain(String file, String columns);
 }
