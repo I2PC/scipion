@@ -1606,7 +1606,9 @@ void Sampling::computeNeighbors(bool only_winner)
 
     std::cout << "Find valid sampling points based on the neighborhood" <<std::endl;
     init_progress_bar(exp_data_projection_direction_by_L_R_size);
-    size_t ratio = exp_data_projection_direction_by_L_R_size /60;
+    size_t ratio = exp_data_projection_direction_by_L_R_size / 60;
+    ratio = XMIPP_MAX(ratio, 1);
+
     for(size_t j = 0; j < exp_data_projection_direction_by_L_R_size;)
     {
         if ((j%ratio) == 0)
