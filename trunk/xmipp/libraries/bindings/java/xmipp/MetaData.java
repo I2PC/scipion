@@ -125,8 +125,6 @@ public class MetaData {
         return value;
     }
 
-    public native String getValueVector(int label, long objId);
-
     public static boolean isPathField(int label) {
         return isTextFile(label) || isMetadata(label)
                 || isCtfParam(label) || isImage(label)
