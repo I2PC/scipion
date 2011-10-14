@@ -295,17 +295,17 @@ class XmippProjectGUI():
         root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
         
+        def updateHistory(state):
+            self.project.projectDb.updateRunState(state, run['run_id'])
+            root.destroy()
+            self.historyRefreshRate = 1
+            self.updateRunHistory(self.lastSelected)
+            
         def stopRun():
             if askYesNo("Confirm action", "Are you sure to <STOP> run execution?" , parent=root):
                 #p = pm.getProcessFromPid(run['pid'])
-                childs = pm.getProcessGroup()
-                #p.terminate()
-                for c in childs:
-                    c.terminate()
-                self.project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, run['run_id'])
-                root.destroy()
-                self.historyRefreshRate = 1
-                self.updateRunHistory(self.lastSelected)
+                pm.stopProcessGroup()
+                updateHistory(SqliteDb.RUN_ABORTED)
         
         detailsSection = ProjectSection(root, 'Process monitor')
         detailsSection.addButton("Stop run", command=stopRun)
@@ -317,22 +317,25 @@ class XmippProjectGUI():
         detailsSection.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
         
         def refreshInfo():
-            p = pm.getProcessFromPid(run['pid'])
-            line = "Process id    : %(pid)s\nElapsed time  : %(etime)s\n\nSubprocess:\n" % p.info
-            txt.delete(1.0, tk.END)
-            txt.insert(tk.END, line)
-            txt.insert(tk.END, "PID\t ARGS\t CPU(%)\t MEM(%)\n")
-            childs = pm.getProcessGroup()
-            lastHost = 'localhost'
-            for c in childs:
-                c.info['pname'] = pname = os.path.basename(c.args.split()[0])
-                if pname not in ['grep', 'python', 'sh', 'bash', 'xmipp_python']:
-                    line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
-                    if c.host != lastHost:
-                        txt.insert(tk.END, "%s\n" % c.host, 'bold')
-                        lastHost = c.host
-                    txt.insert(tk.END, line % c.info, 'normal')
-            txt.after(5000, refreshInfo)
+            p = pm.getProcessFromPid()
+            if p:
+                line = "Process id    : %(pid)s\nElapsed time  : %(etime)s\n\nSubprocess:\n" % p.info
+                txt.delete(1.0, tk.END)
+                txt.insert(tk.END, line)
+                txt.insert(tk.END, "PID\t ARGS\t CPU(%)\t MEM(%)\n")
+                childs = pm.getProcessGroup()
+                lastHost = 'localhost'
+                for c in childs:
+                    c.info['pname'] = pname = os.path.basename(c.args.split()[0])
+                    if pname not in ['grep', 'python', 'sh', 'bash', 'xmipp_python', 'mpirun']:
+                        line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
+                        if c.host != lastHost:
+                            txt.insert(tk.END, "%s\n" % c.host, 'bold')
+                            lastHost = c.host
+                        txt.insert(tk.END, line % c.info, 'normal')
+                txt.after(5000, refreshInfo)
+            else:
+                updateHistory(SqliteDb.RUN_FAILED)
             
         refreshInfo()
         centerWindows(root, refWindows=self.root)
@@ -372,18 +375,20 @@ class XmippProjectGUI():
                 state = run['run_state']
                 stateStr = SqliteDb.StateNames[state]
                 if state == SqliteDb.RUN_STARTED:
-                    childs = ProcessManager(run).getProcessGroup()
-                    if len(childs):
-                        stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
-                    else:
-                        self.project.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
-                        stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
+                    stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
+                    #TODO: Check deadly jobs
+                    #childs = ProcessManager(run).getProcessGroup()
+                    #if len(childs):
+                    #    stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
+                    #else:
+                    #    self.project.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
+                    #    stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
                         
                 self.lbHist.insert(tk.END, (getExtendedRunName(run), stateStr, run['last_modified']))   
             self.lbHist.selection_set(index)
-            #Generate an automatic refresh after x ms, with x been 1, 2, 4 or 8 ms 
+            #Generate an automatic refresh after x ms, with x been 1, 2, 4 increasing until 32
             self.historyRefresh = self.lbHist.after(self.historyRefreshRate*1000, self.updateRunHistory, protGroup, False)
-            self.historyRefreshRate = min(2*self.historyRefreshRate, 8)
+            self.historyRefreshRate = min(2*self.historyRefreshRate, 32)
         else:
             self.updateRunSelection(-1)
 

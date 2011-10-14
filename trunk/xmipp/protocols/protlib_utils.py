@@ -289,8 +289,9 @@ class ProcessManager():
             reportError("More than one process match query, only one expected\n" + "\n".join(msg))
         return procList[0]
 
-    def getProcessFromPid(self, pid):
+    def getProcessFromPid(self):
         ''' Return the process data, using its arguments to match'''
+        pid = self.run['pid']
         return self.getUniqueProcessFromCmd('ps -p %(pid)s -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % locals())
     
     def getProcessGroup(self):
@@ -300,7 +301,7 @@ class ProcessManager():
     def stopProcessGroup(self):
         if os.path.exists(self.hostfile):
             launch = loadLaunchModule()
-            cmd = launch.StopCommand + " " + launch.Stop
+            cmd = launch.StopCommand + " " + launch.StopArgsTemplate
             p = Popen(cmd % self.run, shell=True, stdout=PIPE)
             os.waitpid(p.pid, 0)
         else:

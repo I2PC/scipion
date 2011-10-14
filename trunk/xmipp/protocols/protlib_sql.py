@@ -18,7 +18,7 @@ runColumns = ['run_id',
               'last_modfied',
               'protocol_name',
               'comment',
-              'group_name', 'pid', 'pid_type']
+              'group_name', 'pid', 'jobid']
 
 NO_MORE_GAPS = 0 #no more gaps to work on
 NO_AVAIL_GAP = 1 #no available gaps now, retry later
@@ -51,7 +51,7 @@ class SqliteDb:
     EXEC_MAINLOOP = 1
     EXEC_ALWAYS = 2
     
-    PID_QUEUE_WAITING = -1
+    NO_JOBID = -1
     
     StateNames = ['Saved', 'Launched', 'Running', 'Finish', 'Failed', 'Aborted']
     
@@ -100,7 +100,15 @@ class SqliteDb:
                         WHERE run_id = %(run_id)d"""  % self.sqlDict
         self.cur.execute(_sqlCommand)
         self.connection.commit()
-    
+        
+    def updateRunJobid(self, run):
+        self.sqlDict.update(run)
+        _sqlCommand = """UPDATE %(TableRuns)s SET
+                            jobid = %(jobid)s
+                        WHERE run_id = %(run_id)d"""  % self.sqlDict
+        self.cur.execute(_sqlCommand)
+        self.connection.commit()   
+        
 class XmippProjectDb(SqliteDb):
     LAST_STEP  = -1
     FIRST_STEP = 1
@@ -148,7 +156,7 @@ class XmippProjectDb(SqliteDb):
                           protocol_name TEXT REFERENCES %(TableProtocols)s(protocol_name), -- protocol name
                           comment TEXT,       -- user defined comment
                           pid TEXT,           -- process id
-                          pid_type INTEGER,   -- this tell if the process if POSIX or launched to QUEUE SYSTEM
+                          jobid INTEGER DEFAULT -1, -- this will be different of -1 of queue launched jobs
                           CONSTRAINT unique_workingdir UNIQUE(run_name, protocol_name));""" % self.sqlDict
             self.execSqlCommand(_sqlCommand, "Error creating '%(TableRuns)s' table: " % self.sqlDict)
             
@@ -269,7 +277,7 @@ class XmippProjectDb(SqliteDb):
                                datetime(last_modified, 'localtime') as last_modified,
                                protocol_name, comment,
                                group_name, 
-                               pid, pid_type 
+                               pid, jobid 
                          FROM %(TableRuns)s NATURAL JOIN %(TableProtocolsGroups)s """ % self.sqlDict
         return sqlCommand
                          

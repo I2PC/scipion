@@ -917,7 +917,7 @@ class ProtocolGUI(BasicGUI):
 #                    from protlib_utils import ProcessManager
 #                    p = ProcessManager().getProcessFromScript(self.run['script'])
 #                    self.run['pid'] = p.pid
-#                    self.run['pid_type'] = SqliteDb.PID_POSIX
+#                    self.run['jobid'] = SqliteDb.PID_POSIX
 #                    self.project.projectDb.updateRunPid(self.run)
                     self.master.destroy() 
     

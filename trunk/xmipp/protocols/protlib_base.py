@@ -516,7 +516,7 @@ def protocolMain(ProtocolClass, script=None):
             if getattr(mod, 'SubmitToQueue', False):
                 from protlib_utils import submitProtocol
                 NumberOfThreads = getattr(mod, 'NumberOfThreads', 1)
-                pbsPid = submitProtocol(script,
+                _run['jobid'] = submitProtocol(script,
                                jobName = p.uniquePrefix,
                                queueName = mod.QueueName,
                                nodes = mod.NumberOfMpi,
@@ -525,12 +525,12 @@ def protocolMain(ProtocolClass, script=None):
                                command = 'xmipp_python %s --no_check' % script
                                )
                 project.projectDb.updateRunState(SqliteDb.RUN_LAUNCHED, run_id)
+                project.projectDb.updateRunJobid(_run)
                 doRun = False
-                #_run['pid'] = SqliteDb.PID_QUEUE_WAITING
+                #_run['pid'] = SqliteDb.NO_JOBID
         
         if doRun:
             _run['pid'] = os.getpid()
-            print "Updating run id: %d" % _run['pid']
             # Update run's process info in DB
             project.projectDb.updateRunPid(_run)
             os.environ['PROTOCOL_SCRIPT'] = script
