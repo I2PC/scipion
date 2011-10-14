@@ -34,7 +34,7 @@ class ProtScreenMicrographs(XmippProtocol):
             (shortname, extension)=os.path.splitext(micrographName)
             micrographDir=self.workingDirPath(shortname)                    
             finalname='micrograph'
-            if self.DoPreprocess and (not self.Stddev == -1 and not self.Crop == -1 and not self.Down == 1):
+            if self.DoPreprocess and (not self.Stddev == -1 or not self.Crop == -1 or not self.Down == 1):
                 finalname += ".mrc"
             else:
                 finalname += extension
