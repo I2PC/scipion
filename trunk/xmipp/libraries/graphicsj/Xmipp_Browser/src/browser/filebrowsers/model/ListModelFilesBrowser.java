@@ -11,7 +11,9 @@ import browser.imageitems.listitems.MetadataFileItem;
 import browser.imageitems.listitems.XmippImageItem;
 import ij.ImagePlus;
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
@@ -158,9 +160,15 @@ public class ListModelFilesBrowser extends AbstractListModel implements Document
     protected void buildList() {
         list.clear();   // Remove all.
 
+        long time = System.currentTimeMillis();
         for (File file : fileBrowser.getFiles()) {
             addElement(createSuitableFileItem(file));
         }
+
+        time = System.currentTimeMillis() - time;
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("'Total time:' mm:ss:S");
+
+        System.out.println(dateFormatter.format(new Date(time)));
 
         filterList();
     }

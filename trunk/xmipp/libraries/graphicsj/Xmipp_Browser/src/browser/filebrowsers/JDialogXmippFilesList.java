@@ -75,7 +75,6 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
                 add(panelXmippBrowser, BorderLayout.CENTER);
 
                 pack();
-//                setLocationRelativeTo(null);
 
                 ImagesWindowFactory.releaseGUI(getRootPane());
             }
