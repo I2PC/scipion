@@ -222,14 +222,14 @@ void ProgAngularProjectLibrary::run()
     //only rank 0
     //mysampling.createSymFile(fn_sym,symmetry, sym_order);
     //all nodes
-    mysampling.SL.read_sym_file(fn_sym);
+    mysampling.SL.readSymmetryFile(fn_sym);
     //store symmetry matrices, this is faster than computing them each time
     mysampling.fillLRRepository();
     //mpi_barrier here
     //all working nodes must read symmetry file
     //and experimental docfile if apropiate
     //symmetry_file = symmetry + ".sym";
-    //SL.read_sym_file(symmetry_file)
+    //SL.readSymmetryFile(symmetry_file)
     // We first sample The  whole sphere
     // Then we remove point redundant due to sampling symmetry
     // use old symmetry, this is geometric does not use L_R
@@ -242,7 +242,7 @@ void ProgAngularProjectLibrary::run()
     //    if (!mysampling.SL.isSymmetryGroup(fn_sym_neigh, symmetry, sym_order))
     //        REPORT_ERROR(ERR_VALUE_INCORRECT,
     //                     (std::string)"Invalid neig symmetry" +  fn_sym_neigh);
-    //    mysampling.SL.read_sym_file(fn_sym_neigh);
+    //    mysampling.SL.readSymmetryFile(fn_sym_neigh);
     //    mysampling.fillLRRepository();
     //precompute product between symmetry matrices and experimental data
     if (FnexperimentalImages.size() > 0)

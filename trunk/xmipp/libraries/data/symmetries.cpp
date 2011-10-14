@@ -29,7 +29,7 @@
 
 // Read Symmetry file ======================================================
 // crystal symmetry matices from http://cci.lbl.gov/asu_gallery/
-int SymList::read_sym_file(FileName fn_sym, double accuracy)
+int SymList::readSymmetryFile(FileName fn_sym, double accuracy)
 {
     int i, j, k, l;
     FILE *fpoii;
@@ -50,7 +50,7 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
         //check if reserved word and return group and order
         if (isSymmetryGroup(fn_sym, pgGroup, pgOrder))
         {
-            fill_symmetry_class(fn_sym, pgGroup, pgOrder,fileContent);
+            fillSymmetryClass(fn_sym, pgGroup, pgOrder,fileContent);
         }
         else
             REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"SymList::read_sym_file:Can't open file: "
@@ -142,8 +142,8 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             for (j = 1, rot_ang = ang_incr; j < fold; j++, rot_ang += ang_incr)
             {
                 rotation3DMatrix(rot_ang, axis, R);
-                set_shift(i, shift);
-                set_matrices(i++, L, R.transpose());
+                setShift(i, shift);
+                setMatrices(i++, L, R.transpose());
             }
             __sym_elements++;
             // inversion ------------------------------------------------------
@@ -156,8 +156,8 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             R(0, 0) = -1.;
             R(1, 1) = -1.;
             R(2, 2) = -1.;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
             __sym_elements++;
             // mirror plane -------------------------------------------------------------
         }
@@ -175,9 +175,9 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             alignWithZ(axis,A);
             A = A.transpose();
             R = A * L * A.inv();
-            set_shift(i, shift);
+            setShift(i, shift);
             L.initIdentity();
-            set_matrices(i++, L, R);
+            setMatrices(i++, L, R);
             __sym_elements++;
             // P4212 -------------------------------------------------------------
         }
@@ -192,19 +192,19 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             R(3, 3) = 1;
             R(0, 0) = R(1, 1) = -1;
             R(2, 2) = 1;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
             R.initZeros();
             R(3, 3) = 1;
             R(2, 2) = -1;
             R(0, 1) = R(1, 0) = 1;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
             R.initZeros();
             R(3, 3) = 1;
             R(2, 2) = R(0, 1) = R(1, 0) = -1;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
 
             // With 1/2 shift
             VECTOR_R3(shift, 0.5, 0.5, 0);
@@ -212,26 +212,26 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             R(3, 3) = 1;
             R(0, 1) = -1;
             R(1, 0) = R(2, 2) = 1;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
             R.initZeros();
             R(3, 3) = 1;
             R(1, 0) = -1;
             R(0, 1) = R(2, 2) = 1;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
             R.initZeros();
             R(3, 3) = 1;
             R(0, 0) = R(2, 2) = -1;
             R(1, 1) = 1;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
             R.initZeros();
             R(3, 3) = 1;
             R(1, 1) = R(2, 2) = -1;
             R(0, 0) = 1;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
 
             __sym_elements++;
         }
@@ -247,8 +247,8 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             R(0, 0) = -1;
             R(1, 1) = -1;
             R(2, 2) = 1;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
 
             // With 1/2 shift
             VECTOR_R3(shift, 0.5, 0.0, 0.0);
@@ -257,15 +257,15 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             R(0, 0) = -1;
             R(1, 1) = 1;
             R(2, 2) = -1;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
             R.initZeros();
             R(3, 3) = 1;
             R(0, 0) = 1;
             R(1, 1) = -1;
             R(2, 2) = -1;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
             __sym_elements++;
         }
         else if (strcmp(auxstr, "P22_12") == 0)
@@ -280,8 +280,8 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             R(0, 0) = -1;
             R(1, 1) = -1;
             R(2, 2) = 1;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
 
             // With 1/2 shift
             VECTOR_R3(shift, 0.0, 0.5, 0.0);
@@ -290,21 +290,21 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             R(0, 0) = 1;
             R(1, 1) = -1;
             R(2, 2) = -1;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
             R.initZeros();
             R(3, 3) = 1;
             R(0, 0) = -1;
             R(1, 1) = 1;
             R(2, 2) = -1;
-            set_shift(i, shift);
-            set_matrices(i++, L, R);
+            setShift(i, shift);
+            setMatrices(i++, L, R);
             __sym_elements++;
         }
     }
 
     if (accuracy > 0)
-        compute_subgroup(accuracy);
+        computeSubgroup(accuracy);
 
     //possible crystallographic symmetry
     if (no_axis == 0 && no_mirror_planes == 0 && no_inversion_points == 0 &&
@@ -343,7 +343,7 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
 }
 
 // Get matrix ==============================================================
-void SymList::get_matrices(int i, Matrix2D<double> &L, Matrix2D<double> &R,
+void SymList::getMatrices(int i, Matrix2D<double> &L, Matrix2D<double> &R,
                            bool homogeneous)
 const
 {
@@ -373,7 +373,7 @@ const
 }
 
 // Set matrix ==============================================================
-void SymList::set_matrices(int i, const Matrix2D<double> &L,
+void SymList::setMatrices(int i, const Matrix2D<double> &L,
                            const Matrix2D<double> &R)
 {
     int k, l;
@@ -386,7 +386,7 @@ void SymList::set_matrices(int i, const Matrix2D<double> &L,
 }
 
 // Get/Set shift ===========================================================
-void SymList::get_shift(int i, Matrix1D<double> &shift) const
+void SymList::getShift(int i, Matrix1D<double> &shift) const
 {
     shift.resize(3);
     XX(shift) = __shift(i, 0);
@@ -394,7 +394,7 @@ void SymList::get_shift(int i, Matrix1D<double> &shift) const
     ZZ(shift) = __shift(i, 2);
 }
 
-void SymList::set_shift(int i, const Matrix1D<double> &shift)
+void SymList::setShift(int i, const Matrix1D<double> &shift)
 {
     if (shift.size() != 3)
         REPORT_ERROR(ERR_MATRIX_SIZE, "SymList::add_shift: Shift vector is not 3x1");
@@ -403,29 +403,29 @@ void SymList::set_shift(int i, const Matrix1D<double> &shift)
     __shift(i, 2) = ZZ(shift);
 }
 
-void SymList::add_shift(const Matrix1D<double> &shift)
+void SymList::addShift(const Matrix1D<double> &shift)
 {
     if (shift.size() != 3)
         REPORT_ERROR(ERR_MATRIX_SIZE, "SymList::add_shift: Shift vector is not 3x1");
     int i = MAT_YSIZE(__shift);
     __shift.resize(i + 1, 3);
-    set_shift(i, shift);
+    setShift(i, shift);
 }
 
 // Add matrix ==============================================================
-void SymList::add_matrices(const Matrix2D<double> &L, const Matrix2D<double> &R,
+void SymList::addMatrices(const Matrix2D<double> &L, const Matrix2D<double> &R,
                            int chain_length)
 {
     if (MAT_XSIZE(L) != 4 || MAT_YSIZE(L) != 4 || MAT_XSIZE(R) != 4 || MAT_YSIZE(R) != 4)
         REPORT_ERROR(ERR_MATRIX_SIZE, "SymList::add_matrix: Transformation matrix is not 4x4");
-    if (TrueSymsNo() == SymsNo())
+    if (trueSymsNo() == symsNo())
     {
         __L.resize(MAT_YSIZE(__L) + 4, 4);
         __R.resize(MAT_YSIZE(__R) + 4, 4);
         __chain_length.resize(__chain_length.size() + 1);
     }
 
-    set_matrices(true_symNo, L, R);
+    setMatrices(true_symNo, L, R);
     __chain_length(__chain_length.size() - 1) = chain_length;
     true_symNo++;
 }
@@ -462,7 +462,7 @@ bool found_not_tried(const Matrix2D<int> &tried, int &i, int &j,
 }
 
 //#define DEBUG
-void SymList::compute_subgroup(double accuracy)
+void SymList::computeSubgroup(double accuracy)
 {
     Matrix2D<double> I(4, 4);
     I.initIdentity();
@@ -480,8 +480,8 @@ void SymList::compute_subgroup(double accuracy)
         // Form new symmetry matrices
         // if (__chain_length(i)+__chain_length(j)>__sym_elements+2) continue;
 
-        get_matrices(i, L1, R1);
-        get_matrices(j, L2, R2);
+        getMatrices(i, L1, R1);
+        getMatrices(j, L2, R2);
         newL = L1 * L2;
         newR = R1 * R2;
         new_chain_length = __chain_length(i) + __chain_length(j);
@@ -495,9 +495,9 @@ void SymList::compute_subgroup(double accuracy)
         // Try to find it in current ones
         bool found;
         found = false;
-        for (int l = 0; l < SymsNo(); l++)
+        for (int l = 0; l < symsNo(); l++)
         {
-            get_matrices(l, L1, R1);
+            getMatrices(l, L1, R1);
             if (newL.equal(L1, accuracy) && newR.equal(R1, accuracy))
             {
                 found = true;
@@ -519,8 +519,8 @@ void SymList::compute_subgroup(double accuracy)
             std::cerr << "newR "  << kjhg++ << "\n" << newR <<std::endl;
 #endif
 
-            add_matrices(newL, newR, new_chain_length);
-            add_shift(shift);
+            addMatrices(newL, newR, new_chain_length);
+            addShift(shift);
             tried.resize(MAT_YSIZE(tried) + 1, MAT_XSIZE(tried) + 1);
         }
     }
@@ -536,7 +536,7 @@ void SymList::compute_subgroup(double accuracy)
     P22_12,
     P4 (75), P4212 (90) and P6 (168) */
 
-int  SymList::crystallographic_space_group(double mag_a, double mag_b,
+int  SymList::crystallographicSpaceGroup(double mag_a, double mag_b,
         double ang_a2b_deg) const
 {
 
@@ -594,7 +594,7 @@ int  SymList::crystallographic_space_group(double mag_a, double mag_b,
         break;
     }//switch(space_group)  end
 
-}//crystallographic_space_group end
+}//crystallographicSpaceGroup end
 
 // Symmetrize_crystal_vectors==========================================
 //A note: Please realize that we are not repeating code here.
@@ -605,10 +605,10 @@ int  SymList::crystallographic_space_group(double mag_a, double mag_b,
 //For same symmetries both representations are almost the same
 //but in general they are rather different.
 
-//IMPORTANT: matrix orden should match the one used in "read_sym_file"
+//IMPORTANT: matrix orden should match the one used in "readSymmetryFile"
 //if not the wrong angles are assigned to the different matrices
 
-void symmetrize_crystal_vectors(Matrix1D<double> &aint,
+void symmetrizeCrystalVectors(Matrix1D<double> &aint,
                                 Matrix1D<double> &bint,
                                 Matrix1D<double> &shift,
                                 int space_group,
@@ -827,7 +827,7 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
         break;
     }
 
-}//symmetrize_crystal_vectors end
+}//symmetrizeCrystalVectors end
 
 #define Symmetrize_Vol(X) {\
         for (int i=0; i<vol_in.VolumesNo(); i++)\
@@ -836,9 +836,9 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
     }
 
 // Symmetrize_crystal_volume==========================================
-//IMPORTANT: matrix orden should match the one used in "read_sym_file"
+//IMPORTANT: matrix orden should match the one used in "readSymmetryFile"
 //if not the wrong angles are assigned to the different matrices
-void symmetrize_crystal_volume(GridVolume &vol_in,
+void symmetrizeCrystalVolume(GridVolume &vol_in,
                                const Matrix1D<double> &eprm_aint,
                                const Matrix1D<double> &eprm_bint,
                                int eprm_space_group,
@@ -896,7 +896,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
     }
 
 
-}//symmetrize_crystal_vectors end
+}//symmetrizeCrystalVectors end
 #define put_inside(j,j_min,j_max,jint)  \
     if( (j) < (j_min) ) { (j) = (j) + (jint);}\
     else if( (j) > (j_max) ) { (j) = (j) - (jint);};
@@ -2399,7 +2399,7 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
 
     return return_true;
 }
-void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
+void SymList::fillSymmetryClass(const FileName &symmetry, int pgGroup, int pgOrder,
                                   std::vector<std::string> &fileContent)
 {
     std::ostringstream line1;
@@ -2568,7 +2568,7 @@ void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgO
 #endif
     #undef DEBUG5
 }
-double SymList::non_redundant_projection_sphere(int pgGroup, int pgOrder)
+double SymList::nonRedundantProjectionSphere(int pgGroup, int pgOrder)
 {
     if (pgGroup == pg_CN)
     {
@@ -2685,7 +2685,7 @@ double SymList::computeDistance(double rot1, double tilt1, double psi1,
     Matrix2D<double> E1, E2;
     Euler_angles2matrix(rot1, tilt1, psi1, E1, false);
 
-    int imax = SymsNo() + 1;
+    int imax = symsNo() + 1;
     Matrix2D<double>  L(3, 3), R(3, 3);  // A matrix from the list
     double best_ang_dist = 3600;
     double best_rot2, best_tilt2, best_psi2;
@@ -2701,7 +2701,7 @@ double SymList::computeDistance(double rot1, double tilt1, double psi1,
         }
         else
         {
-            get_matrices(i - 1, L, R, false);
+            getMatrices(i - 1, L, R, false);
             if (object_rotation)
                 Euler_apply_transf(R, L, rot2, tilt2, psi2, rot2p, tilt2p, psi2p);
             else

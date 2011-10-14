@@ -146,7 +146,7 @@ void ProgRecWbp::produceSideInfo()
     size_t ndim;
     ImgSize(SF,dim, dim, zdim, ndim);
     if (fn_sym != "")
-        SL.read_sym_file(fn_sym);
+        SL.readSymmetryFile(fn_sym);
     if (diameter <= 0)
         diameter = dim;
 
@@ -210,7 +210,7 @@ void ProgRecWbp::getSampledMatrices(MetaData &SF)
 
     // Now calculate transformation matrices for all representative directions
     no_mats = 0;
-    int SL_SymsNo= SL.SymsNo();
+    int SL_SymsNo= SL.symsNo();
     int SL_SymsNo_1= SL_SymsNo+1;
     for (int i = 0; i < NN; i++)
         if (count_imgs[i] > 0.)
@@ -234,7 +234,7 @@ void ProgRecWbp::getSampledMatrices(MetaData &SF)
             // Expand symmetric directions
             for (int j = 0; j < SL_SymsNo; j++)
             {
-                SL.get_matrices(j, L, R, false);
+                SL.getMatrices(j, L, R, false);
                 Euler_apply_transf(L, R, newrot, newtilt, 0., rot, tilt, psi);
                 Euler_angles2matrix(rot, -tilt, psi, A);
                 mat_g[no_mats].x = MAT_ELEM(A, 2, 0);
@@ -262,7 +262,7 @@ void ProgRecWbp::getAllMatrices(MetaData &SF)
     no_mats = 0;
 
     NN = SF.size();
-    NN *= (SL.SymsNo() + 1);
+    NN *= (SL.symsNo() + 1);
     mat_g = (WBPInfo*)malloc(NN * sizeof(WBPInfo));
     FileName fn_img;
 
@@ -281,9 +281,9 @@ void ProgRecWbp::getAllMatrices(MetaData &SF)
         totimgs += mat_g[no_mats].count;
         no_mats++;
         // Also add symmetry-related projection directions
-        for (int i = 0; i < SL.SymsNo(); i++)
+        for (int i = 0; i < SL.symsNo(); i++)
         {
-            SL.get_matrices(i, L, R);
+            SL.getMatrices(i, L, R);
             L.resize(3, 3);
             R.resize(3, 3);
             Euler_apply_transf(L, R, rot, -tilt, psi, newrot, newtilt, newpsi);

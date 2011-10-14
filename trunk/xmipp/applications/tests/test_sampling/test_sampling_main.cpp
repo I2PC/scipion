@@ -33,7 +33,7 @@ protected:
         mysampling.setSampling(sampling_rate);//degrees
         mysampling.computeSamplingPoints(false,max_tilt_angle,min_tilt_angle);
         mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order);
-        mysampling.SL.read_sym_file(fn_sym);
+        mysampling.SL.readSymmetryFile(fn_sym);
         mysampling.fillLRRepository();
         mysampling.removeRedundantPoints(symmetry, sym_order);
         mysampling.setNeighborhoodRadius(angular_distance);
@@ -60,7 +60,7 @@ TEST_F(SamplingTest, computeSamplingPoints)
     EXPECT_EQ(s1, s2);
 }
 
-TEST_F(SamplingTest, removeRedundantPoints)
+TEST_F(SamplingTest, removeRedundantPointsI3H)
 {
     int  symmetry, sym_order;
     Sampling s1;
@@ -69,12 +69,29 @@ TEST_F(SamplingTest, removeRedundantPoints)
     s2.setSampling(3.);
     s2.computeSamplingPoints(false, 91., -91.);
     s2.SL.isSymmetryGroup("i3h", symmetry, sym_order);
-    s2.SL.read_sym_file("i3h");
+    s2.SL.readSymmetryFile("i3h");
     s2.fillLRRepository();
     s2.removeRedundantPoints(symmetry, sym_order);
     EXPECT_EQ(s1, s2);
 }
-TEST_F(SamplingTest, removePointsFarAwayFromExperimentalData)
+
+TEST_F(SamplingTest, removeRedundantPointsC1)
+{
+    int  symmetry, sym_order;
+    Sampling s1;
+    s1.readSamplingFile(fn_root + "c1");
+    Sampling s2;
+    s2.setSampling(3.);
+    s2.computeSamplingPoints(false, 91., -91.);
+    s2.SL.isSymmetryGroup("c1", symmetry, sym_order);
+    s2.SL.readSymmetryFile("c1");
+    s2.fillLRRepository();
+    s2.removeRedundantPoints(symmetry, sym_order);
+    //s2.saveSamplingFile("/tmp/c1.xmd");
+    EXPECT_EQ(s1, s2);
+}
+
+TEST_F(SamplingTest, removePointsFarAwayFromExperimentalDataI3H)
 {
     int  symmetry, sym_order;
     Sampling s1;
@@ -83,12 +100,31 @@ TEST_F(SamplingTest, removePointsFarAwayFromExperimentalData)
     s2.setSampling(3);//degrees
     s2.computeSamplingPoints(false,91.,-91.);
     s2.SL.isSymmetryGroup("i3h", symmetry, sym_order);
-    s2.SL.read_sym_file("i3h");
+    s2.SL.readSymmetryFile("i3h");
     s2.fillLRRepository();
     s2.removeRedundantPoints(symmetry, sym_order);
     s2.setNeighborhoodRadius(5);
     s2.fillExpDataProjectionDirectionByLR(fn_root + "experimental_images.xmd");
     s2.removePointsFarAwayFromExperimentalData();
+    EXPECT_EQ(s1, s2);
+}
+
+TEST_F(SamplingTest, removePointsFarAwayFromExperimentalDataC1)
+{
+    int  symmetry, sym_order;
+    Sampling s1;
+    s1.readSamplingFile(fn_root + "c1_exp");
+    Sampling s2;
+    s2.setSampling(3);//degrees
+    s2.computeSamplingPoints(false,91.,-91.);
+    s2.SL.isSymmetryGroup("c1", symmetry, sym_order);
+    s2.SL.readSymmetryFile("c1");
+    s2.fillLRRepository();
+    s2.removeRedundantPoints(symmetry, sym_order);
+    s2.setNeighborhoodRadius(5);
+    s2.fillExpDataProjectionDirectionByLR(fn_root + "experimental_images.xmd");
+    s2.removePointsFarAwayFromExperimentalData();
+    s2.saveSamplingFile("/tmp/c1_exp");
     EXPECT_EQ(s1, s2);
 }
 
@@ -101,24 +137,43 @@ TEST_F(SamplingTest, saveReadSamplingFile)
     EXPECT_EQ(mysampling, s);
 }
 
-TEST_F(SamplingTest, computeNeighbors)
+TEST_F(SamplingTest, computeNeighborsI3H)
 {
     int  symmetry, sym_order;
     Sampling s1;
-    s1.readSamplingFile(fn_root + "ref_i3h_exp");
+    s1.readSamplingFile(fn_root + "neigh_ref_i3h_exp");
     Sampling s2;
     s2.setSampling(3);//degrees
     s2.computeSamplingPoints(false,91.,-91.);
     s2.SL.isSymmetryGroup("i3h", symmetry, sym_order);
-    s2.SL.read_sym_file("i3h");
+    s2.SL.readSymmetryFile("i3h");
     s2.fillLRRepository();
     s2.removeRedundantPoints(symmetry, sym_order);
     s2.setNeighborhoodRadius(5);
     s2.fillExpDataProjectionDirectionByLR(fn_root + "experimental_images.xmd");
     s2.removePointsFarAwayFromExperimentalData();
     s2.computeNeighbors();
-    s2.saveSamplingFile(fn_root + "ref_i3h_expkkkkk");
     EXPECT_EQ(s1, s2);
+}
+
+TEST_F(SamplingTest, computeNeighborsC1)
+{
+    int  symmetry, sym_order;
+    Sampling s1;
+//    s1.readSamplingFile(fn_root + "neigh_ref_i3h_exp");
+    Sampling s2;
+    s2.setSampling(3);//degrees
+    s2.computeSamplingPoints(false,91.,-91.);
+    s2.SL.isSymmetryGroup("c1", symmetry, sym_order);
+    s2.SL.readSymmetryFile("c1");
+    s2.fillLRRepository();
+    s2.removeRedundantPoints(symmetry, sym_order);
+    s2.setNeighborhoodRadius(5);
+    s2.fillExpDataProjectionDirectionByLR(fn_root + "experimental_images.xmd");
+    s2.removePointsFarAwayFromExperimentalData();
+    s2.computeNeighbors();
+    s2.saveSamplingFile(fn_root + "ref_c1_expkkkkk");
+  //  EXPECT_EQ(s1, s2);
 }
 
 GTEST_API_ int main(int argc, char **argv)

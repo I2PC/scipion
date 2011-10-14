@@ -335,7 +335,7 @@ void ProgMLRefine3D::createSampling()
 
     if (!mysampling.SL.isSymmetryGroup(fn_sym_loc, symmetry, sym_order))
         REPORT_ERROR(ERR_NUMERICAL, (String)"ml_refine3d::run Invalid symmetry" +  fn_sym_loc);
-    mysampling.SL.read_sym_file(fn_sym_loc);
+    mysampling.SL.readSymmetryFile(fn_sym_loc);
     mysampling.computeSamplingPoints(true, tilt_rangeF, tilt_range0);
     mysampling.removeRedundantPointsExhaustive(symmetry, sym_order, true, 0.75 * angular);
     nr_projections = mysampling.no_redundant_sampling_points_angles.size();
@@ -935,7 +935,7 @@ void ProgMLRefine3D::postProcessVolumes()
     // Use local sampling because of symmask
     if (!locsampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
         REPORT_ERROR(ERR_NUMERICAL, (String)"ml_refine3d::run Invalid symmetry" +  fn_sym);
-    locsampling.SL.read_sym_file(fn_sym);
+    locsampling.SL.readSymmetryFile(fn_sym);
 
     if ( !(fn_sym == "c1" || fn_sym == "C1" ) || (lowpass > 0) ||
          (fn_solv != "") || (do_prob_solvent) || (threshold_solvent != 999))

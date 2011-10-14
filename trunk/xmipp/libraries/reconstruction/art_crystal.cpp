@@ -120,7 +120,7 @@ void CrystalARTRecons::produceSideInfo(GridVolume &vol_basis0)
 
     // Compute space_group
     if (artPrm.fn_sym != "")
-        space_group = artPrm.SL.crystallographic_space_group(a_mag, b_mag,
+        space_group = artPrm.SL.crystallographicSpaceGroup(a_mag, b_mag,
                       ang_a2b_deg);
     else
         space_group = sym_P1;
@@ -300,7 +300,7 @@ void CrystalARTRecons::singleStep(
     shift.resize(3);
     shift.initZeros();
 
-    symmetrize_crystal_vectors(aint, bint, shift, this->space_group, sym_no,
+    symmetrizeCrystalVectors(aint, bint, shift, this->space_group, sym_no,
                                this->aint, this->bint);
     // Project structure .......................................................
     // The correction image is reused in this call to store the normalizing
@@ -387,7 +387,7 @@ void CrystalARTRecons::postIterations(GridVolume &vol_basis)
 
 void CrystalARTRecons::applySymmetry(GridVolume &vol_in, GridVolume *vol_out, int grid_type)
 {
-    symmetrize_crystal_volume(vol_in,aint,bint,space_group,unit_cell_mask,grid_type);
+    symmetrizeCrystalVolume(vol_in,aint,bint,space_group,unit_cell_mask,grid_type);
 }
 
 /* Compute integer lattice ================================================= */

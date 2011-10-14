@@ -1246,7 +1246,7 @@ void Sampling::removeRedundantPointsExhaustive(const int symmetry,
 
 
 //THIs FUNCTION IS NOW OBSOLETE
-//SINCE read_sym_file does not longer need a file
+//SINCE readSymmetryFile does not longer need a file
 //use symmetry functions instead
 /* Create symmetry file----------------------------------------------------- */
 void Sampling::createSymFile(FileName simFp,int symmetry, int sym_order)
@@ -1367,7 +1367,7 @@ void Sampling::createSymFile(FileName simFp,int symmetry, int sym_order)
         exit(0);
     }
     SymFile.close();
-    SL.read_sym_file(symmetry_file);
+    SL.readSymmetryFile(symmetry_file);
 
 }
 void Sampling::createAsymUnitFile(const FileName &docfilename)
@@ -2062,9 +2062,9 @@ void Sampling::fillLRRepository(void)
     L_repository.clear();
     R_repository.push_back(Identity);
     L_repository.push_back(Identity);
-    for (int isym = 0; isym < SL.SymsNo(); isym++)
+    for (int isym = 0; isym < SL.symsNo(); isym++)
     {
-        SL.get_matrices(isym, L, R);
+        SL.getMatrices(isym, L, R);
         R.resize(3, 3);
         L.resize(3, 3);
         R_repository.push_back(R);

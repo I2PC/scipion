@@ -43,7 +43,7 @@ void buildReconsInfo(MetaData &selfile,
     selfile.firstObject();
     int numIMG;
     if (!do_not_use_symproj)
-        numIMG = trueIMG * (SL.SymsNo() + 1);
+        numIMG = trueIMG * (SL.symsNo() + 1);
     else
         numIMG = trueIMG;
 
@@ -97,9 +97,9 @@ void buildReconsInfo(MetaData &selfile,
             EULER_CLIPPING(imgInfo.rot, imgInfo.tilt, imgInfo.psi);
 
             // Any symmetry?
-            if (SL.SymsNo() > 0 && !do_not_use_symproj)
+            if (SL.symsNo() > 0 && !do_not_use_symproj)
             {
-                for (int j = 0; j < SL.SymsNo(); j++)
+                for (int j = 0; j < SL.symsNo(); j++)
                 {
                     int sym_index = SYMINDEX(SL, j, i, trueIMG);
                     IMG_Inf[sym_index].fn_proj = imgInfo.fn_proj;
@@ -109,7 +109,7 @@ void buildReconsInfo(MetaData &selfile,
                     else if (is_there_ctf)
                         IMG_Inf[sym_index].fn_ctf = imgInfo.fn_ctf;
                     IMG_Inf[sym_index].sym = j;
-                    SL.get_matrices(j, L, R);
+                    SL.getMatrices(j, L, R);
                     L.resize(3, 3); // Erase last row and column
                     R.resize(3, 3); // as only the relative orientation
                     // is useful and not the translation

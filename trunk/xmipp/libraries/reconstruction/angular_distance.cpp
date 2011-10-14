@@ -81,7 +81,7 @@ void ProgAngularDistance::defineParams()
 void ProgAngularDistance::produce_side_info()
 {
     if (fn_sym != "")
-        SL.read_sym_file(fn_sym);
+        SL.readSymmetryFile(fn_sym);
 
     // Check that both docfiles are of the same length
     if (fn_ang1!="" && fn_ang2!="")

@@ -36,7 +36,7 @@ bool directions_are_unique(double rot,  double tilt,
     double rot2p, tilt2p, psi2p, psi2 = 0.;
     double diff_rot, diff_tilt;
 
-    int isymmax=SL.SymsNo();
+    int isymmax=SL.symsNo();
     for (int isym = 0; isym <= isymmax; isym++)
     {
         if (isym == 0)
@@ -47,7 +47,7 @@ bool directions_are_unique(double rot,  double tilt,
         }
         else
         {
-            SL.get_matrices(isym - 1, Laux, Raux,false);
+            SL.getMatrices(isym - 1, Laux, Raux,false);
             Euler_apply_transf(Laux, Raux, rot2, tilt2, psi2, rot2p, tilt2p, psi2p);
         }
 
@@ -200,7 +200,7 @@ int find_nearest_direction(double rot1, double tilt1,
 
     optdir = -1;
     mindist = 9999.;
-    int imax=SL.SymsNo();
+    int imax=SL.symsNo();
     size_t nmax=rotList.size();
     double *ptrRot=NULL;
     double *ptrTilt=NULL;
@@ -220,7 +220,7 @@ int find_nearest_direction(double rot1, double tilt1,
 
         for (int i = 0; i < imax; i++)
         {
-            SL.get_matrices(i, Laux, Raux, false);
+            SL.getMatrices(i, Laux, Raux, false);
             Euler_apply_transf(Laux, Raux, rot1, tilt1, 0., newrot, newtilt, newpsi);
             dist = distance_directions(newrot, newtilt, *ptrRot, *ptrTilt, false);
             if (dist < mindist)

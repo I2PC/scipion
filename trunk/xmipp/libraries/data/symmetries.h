@@ -162,6 +162,14 @@ public:
         __sym_elements = true_symNo = space_group = 0;
     }
 
+    /** Create Symmetry List from a Symmetry file.
+        All the subgroup elements are computed automatically.
+        \\ Ex: SymList SL("sym.txt"); */
+    SymList(const FileName& fn_sym, double accuracy = SYM_ACCURACY)
+    {
+        readSymmetryFile(fn_sym, accuracy);
+    }
+
     /** translate string fn_sym to symmetry group, return false
         is translation is not possible. See 
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
@@ -169,20 +177,11 @@ public:
     bool isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder);
 
     /** fill fileContect with symmetry information*/
-    void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
+    void fillSymmetryClass(const FileName &symmetry, int pgGroup, int pgOrder,
                              std::vector<std::string> &fileContent);
 
-
-    /** Create Symmetry List from a Symmetry file.
-        All the subgroup elements are computed automatically.
-        \\ Ex: SymList SL("sym.txt"); */
-    SymList(const FileName& fn_sym, double accuracy = SYM_ACCURACY)
-    {
-        read_sym_file(fn_sym, accuracy);
-    }
-
     /** Get matrices from the symmetry list.
-        The number of matrices inside the list is given by SymsNo.
+        The number of matrices inside the list is given by symsNo.
         This function return the 4x4 (homogeneous=true) or 3x3 (homogeneous=false)
         transformation matrices associated to
         the one in the list which occupies the position 'i'. The matrix
@@ -190,59 +189,59 @@ public:
         matrices is given as a pointer to gain speed.
         \\ Ex:
         @code
-           for (i=0; i<SL.SymsNo; i++) {
-               SL.get_matrices(i,L,R);
+           for (i=0; i<SL.symsNo; i++) {
+               SL.getMatrices(i,L,R);
                ...
            }
         @endcode */
-    void get_matrices(int i, Matrix2D<double> &L, Matrix2D<double> &R,
+    void getMatrices(int i, Matrix2D<double> &L, Matrix2D<double> &R,
                       bool homogeneous=true) const;
 
     /** Set a couple of matrices in the symmetry list.
-        The number of matrices inside the list is given by SymsNo.
+        The number of matrices inside the list is given by symsNo.
         This function sets the 4x4 transformation matrices associated to
         the one in the list which occupies the position 'i'. The matrix
         numbering within the list starts at 0.
         \\ Ex:
         @code
-           for (i=0; i<SL.SymsNo; i++) {
+           for (i=0; i<SL.symsNo; i++) {
                SL.set_matrix(i,L,R);
                ...
            }
         @endcode */
-    void set_matrices(int i, const Matrix2D<double> &L,
+    void setMatrices(int i, const Matrix2D<double> &L,
                       const Matrix2D<double> &R);
 
     /** Get shift.
         Returns the shift associated to a certain symmetry. */
-    void get_shift(int i, Matrix1D<double> &shift) const;
+    void getShift(int i, Matrix1D<double> &shift) const;
 
     /** Set shift.
         Set the shift associated to a certain symmetry. */
-    void set_shift(int i, const Matrix1D<double> &shift);
+    void setShift(int i, const Matrix1D<double> &shift);
 
     /** Add shift.
         Add a shift vector to the shift matrix. An exception is thrown if
         the input vector is not a 3x1 vector.*/
-    void add_shift(const Matrix1D<double> &shift);
+    void addShift(const Matrix1D<double> &shift);
 
     /** Read a symmetry file into a symmetry list.
         The former symmetry list is overwritten with the new one. All the
         subgroup members are added to the list. If the accuracy is negative
         then the subgroup is not generated. return symmetry group 
-        \\ Ex: SL.read_sym_file("sym.txt");*/
-    int read_sym_file(FileName fn_sym, double accuracy = SYM_ACCURACY);
+        \\ Ex: SL.readSymmetryFile("sym.txt");*/
+    int readSymmetryFile(FileName fn_sym, double accuracy = SYM_ACCURACY);
 
     /** Add symmetry matrices to the symmetry list.
         The given matrix must specify a point of view equivalent to the
         actual point of view. The matrices are added to the subgroup generator
         but the subgroup is not updated, you must do it manually using
-        compute_subgroup. What is more, the subgroup after the insertion
+        computeSubgroup. What is more, the subgroup after the insertion
         is corrupted.
 
         The chain length is the number of single matrices multiplication of
         which the inserted one is compound.*/
-    void add_matrices(const Matrix2D<double> &L, const Matrix2D<double> &R,
+    void addMatrices(const Matrix2D<double> &L, const Matrix2D<double> &R,
                       int chain_length);
 
     /** Compute subgroup for this structure.
@@ -253,18 +252,18 @@ public:
         the same.
 
         So far, all the shifts associated to generated matrices are set to 0*/
-    void compute_subgroup(double accuracy = SYM_ACCURACY);
+    void computeSubgroup(double accuracy = SYM_ACCURACY);
 
     /** Number of symmetry matrices inside the structure.
         This is the number of all the matrices inside the subgroup.
         \\ Ex:
         @code
-           for (i=0; i<SL.SymsNo; i++) {
+           for (i=0; i<SL.symsNo; i++) {
                SL.get_matrix(i,A);
                ...
            }
         @endcode */
-    int SymsNo() const
+    int symsNo() const
     {
         return MAT_YSIZE(__L) / 4;
     }
@@ -273,7 +272,7 @@ public:
         This is the number of the matrices which generated the structure,
         notice that it should be always less or equal to the total number
         of matrices in the subgroup. */
-    int TrueSymsNo() const
+    int trueSymsNo() const
     {
         return true_symNo;
     }
@@ -285,13 +284,13 @@ public:
         P4212 (90) and P6 (168).
 
         Mag_a and Mag_b are the crystal vector magnitude. */
-    int  crystallographic_space_group(double mag_a,
+    int  crystallographicSpaceGroup(double mag_a,
                                       double mag_b,
                                       double ang_a2b_deg) const;
 
     /** Return the area of the non redundant part of the projection sphere
     */
-    double non_redundant_projection_sphere(int pgGroup, int pgOrder);
+    double nonRedundantProjectionSphere(int pgGroup, int pgOrder);
 
     /** Check symmetries.
      * Given two sets of angles, modify set2 to be as close to set1 as possible
@@ -319,7 +318,7 @@ public:
    For same symmetries both representations are almost the same
    but in general they are rather different.
  */
-void symmetrize_crystal_vectors(Matrix1D<double> &aint,
+void symmetrizeCrystalVectors(Matrix1D<double> &aint,
                                 Matrix1D<double> &bint,
                                 Matrix1D<double> &shift,
                                 int space_group,
@@ -329,7 +328,7 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
 
 /** Symmetrizes a crystal volume.
  */
-void symmetrize_crystal_volume(GridVolume &vol,
+void symmetrizeCrystalVolume(GridVolume &vol,
                                const Matrix1D<double> &eprm_aint,
                                const Matrix1D<double> &eprm_bint,
                                int eprm_space_group, const MultidimArray<int> &mask,

@@ -93,18 +93,18 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
     }
     V_out = V_in;
 
-    for (int i = 0; i < SL.SymsNo(); i++)
+    for (int i = 0; i < SL.symsNo(); i++)
     {
-        SL.get_matrices(i, L, R);
+        SL.getMatrices(i, L, R);
 
-        SL.get_shift(i, sh);
+        SL.getShift(i, sh);
         R(3, 0) = sh(0) * XSIZE(V_aux);
         R(3, 1) = sh(1) * YSIZE(V_aux);
         R(3, 2) = sh(2) * ZSIZE(V_aux);
         applyGeometry(BSPLINE3, V_aux, V_in, R.transpose(), IS_NOT_INV, wrap, avg);
         arrayByArray(V_out, V_aux, V_out, '+');
     }
-    arrayByScalar(V_out, 1.0/(SL.SymsNo() + 1.0f), V_out, '*');
+    arrayByScalar(V_out, 1.0/(SL.symsNo() + 1.0f), V_out, '*');
 }
 
 void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
@@ -141,7 +141,7 @@ void ProgSymmetrize::preProcess()
     else
     {
         double accuracy = (do_not_generate_subgroup) ? -1 : 1e-6;
-        SL.read_sym_file(fn_sym, accuracy);
+        SL.readSymmetryFile(fn_sym, accuracy);
         symorder=-1;
     }
 }
@@ -162,7 +162,7 @@ void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOu
     }
     else
     {
-        if (SL.SymsNo()>0)
+        if (SL.symsNo()>0)
             symmetrizeVolume(SL,Iin(),Iout(),wrap,!wrap);
         else
             REPORT_ERROR(ERR_ARG_MISSING,"The symmetry description is not valid for volumes");

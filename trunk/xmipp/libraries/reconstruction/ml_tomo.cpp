@@ -759,9 +759,9 @@ ProgMLTomo::produceSideInfo()
     if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
       REPORT_ERROR(ERR_VALUE_INCORRECT,
           (std::string)"Invalid symmetry " + fn_sym);
-    mysampling.SL.read_sym_file(fn_sym);
+    mysampling.SL.readSymmetryFile(fn_sym);
     // Check whether we are using symmetry
-    if (mysampling.SL.SymsNo() > 0)
+    if (mysampling.SL.symsNo() > 0)
     {
       do_sym = true;
       if (verbose)
@@ -1751,7 +1751,7 @@ ProgMLTomo::postProcessVolume(Image<double> &Vin, double resolution)
   maskSphericalAverageOutside(Vin());
 
   // Apply symmetry
-  if (mysampling.SL.SymsNo() > 0)
+  if (mysampling.SL.symsNo() > 0)
   {
     // Note that for no-imputation this is not correct!
     // One would have to symmetrize the missing wedges and the sum of the images separately
@@ -1765,10 +1765,10 @@ ProgMLTomo::postProcessVolume(Image<double> &Vin, double resolution)
     Matrix1D<double> sh(3);
     Vaux().initZeros(dim, dim, dim);
     Vaux().setXmippOrigin();
-    for (int isym = 0; isym < mysampling.SL.SymsNo(); isym++)
+    for (int isym = 0; isym < mysampling.SL.symsNo(); isym++)
     {
-      mysampling.SL.get_matrices(isym, L, R);
-      mysampling.SL.get_shift(isym, sh);
+      mysampling.SL.getMatrices(isym, L, R);
+      mysampling.SL.getShift(isym, sh);
       R(3, 0) = sh(0) * dim;
       R(3, 1) = sh(1) * dim;
       R(3, 2) = sh(2) * dim;
@@ -1776,7 +1776,7 @@ ProgMLTomo::postProcessVolume(Image<double> &Vin, double resolution)
           DIRECT_MULTIDIM_ELEM(Vin(), 0));
       Vsym() += Vaux();
     }
-    Vsym() /= mysampling.SL.SymsNo() + 1.;
+    Vsym() /= mysampling.SL.symsNo() + 1.;
     Vin = Vsym;
   }
 

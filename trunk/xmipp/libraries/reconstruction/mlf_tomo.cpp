@@ -255,7 +255,7 @@ void Prog_mlf_tomo_prm::produce_Side_info()
     }
 
     // Read in symmetry information
-    if (fn_sym != "") SL.read_sym_file(fn_sym);
+    if (fn_sym != "") SL.readSymmetryFile(fn_sym);
 
     // read in model fractions if given on command line (else uniform distribution)
     if (fn_frac != "")

@@ -174,7 +174,7 @@ public:
 #endif
         //true -> half_sphere
         mysampling.computeSamplingPoints(false,max_tilt_angle,min_tilt_angle);
-        mysampling.SL.read_sym_file(fn_sym);
+        mysampling.SL.readSymmetryFile(fn_sym);
         //store symmetry matrices, this is faster than computing them each time
         mysampling.fillLRRepository();
 
@@ -196,7 +196,7 @@ public:
         //recompute symmetry with neigh symmetry
         if (!mysampling.SL.isSymmetryGroup(fn_sym_neigh, symmetry, sym_order))
             REPORT_ERROR(ERR_NUMERICAL, (std::string)"angular_project_library::run Invalid neig symmetry" +  fn_sym_neigh);
-        mysampling.SL.read_sym_file(fn_sym_neigh);
+        mysampling.SL.readSymmetryFile(fn_sym_neigh);
         mysampling.fillLRRepository();
         //precompute product between symmetry matrices and experimental data
         if (FnexperimentalImages.size() > 0)

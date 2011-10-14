@@ -178,7 +178,7 @@ void ProgTomoExtractSubvolume::produceSideInfo()
     // Setup symmetry
     if (!SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
         REPORT_ERROR(ERR_PARAM_INCORRECT, "tomo_extract_subvolume: Invalid symmetry " +  fn_sym);
-    SL.read_sym_file(fn_sym);
+    SL.readSymmetryFile(fn_sym);
 
     // Check which symmetry operators give unique output points
     centers_subvolumes.clear();
@@ -193,9 +193,9 @@ void ProgTomoExtractSubvolume::produceSideInfo()
     centers_subvolumes.push_back(center_ref);
     rotations_subvolumes.push_back(I);
 
-    for (int isym = 0; isym < SL.SymsNo(); isym++)
+    for (int isym = 0; isym < SL.symsNo(); isym++)
     {
-        SL.get_matrices(isym, L, R);
+        SL.getMatrices(isym, L, R);
         L.resize(3,3);
         R.resize(3,3);
         newcenter = L * (center_ref.transpose() * R).transpose();

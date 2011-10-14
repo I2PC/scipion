@@ -589,7 +589,7 @@ int Assign_angles(MetaData &DF, const Projection_Parameters &prm,
             {
                 SymList SL;
                 if (fn_sym != "")
-                    SL.read_sym_file(fn_sym);
+                    SL.readSymmetryFile(fn_sym);
                 std::vector<double> rotList, tiltList;
                 double rot_step_at_equator = (prm.rot_range.angF - prm.rot_range.ang0) /
                                              (double)(Nrot - 1);

@@ -232,7 +232,7 @@ void MpiProgAngularProjectionMatching::computeChunks()
     //process the symmetry file
     if (!chunk_mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
         REPORT_ERROR(ERR_NUMERICAL, (String)"mpi_angular_proj_match::prerun Invalid symmetry: " +  fn_sym);
-    chunk_mysampling.SL.read_sym_file(fn_sym);
+    chunk_mysampling.SL.readSymmetryFile(fn_sym);
     // find a value for chunk_angular_distance if != -1
     if( chunk_angular_distance == -1)
         computeChunkAngularDistance(symmetry, sym_order);
@@ -298,7 +298,7 @@ void MpiProgAngularProjectionMatching::computeChunks()
 void MpiProgAngularProjectionMatching::computeChunkAngularDistance(int symmetry, int sym_order)
 {
     double non_reduntant_area_of_sphere =
-        chunk_mysampling.SL.non_redundant_projection_sphere(symmetry,sym_order);
+        chunk_mysampling.SL.nonRedundantProjectionSphere(symmetry,sym_order);
     double number_cpus  = (double) node->size - 1;
     //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
     double neighborhood_radius= fabs(acos(mysampling.cos_neighborhood_radius));

@@ -401,11 +401,11 @@ void Prog_Angular_CommonLine::produceSideInfo()
     // Symmetry List
     if (fnSym!="")
     {
-        SL.read_sym_file(fnSym);
-        for (int sym=0; sym<SL.SymsNo(); sym++)
+        SL.readSymmetryFile(fnSym);
+        for (int sym=0; sym<SL.symsNo(); sym++)
         {
             Matrix2D<double> auxL, auxR;
-            SL.get_matrices(sym,auxL,auxR);
+            SL.getMatrices(sym,auxL,auxR);
             auxL.resize(3,3);
             auxR.resize(3,3);
             L.push_back(auxL);
@@ -614,7 +614,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         progress_bar(Nimg-assigned.sum());
 
         // Compute for each image the variance in the top assignment
-        int Nsym=SL.SymsNo();
+        int Nsym=SL.symsNo();
         double bestDistance=-2;
         int besti=-1;
         int topN=NGroup;

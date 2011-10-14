@@ -507,9 +507,9 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
     {
         double accuracy = (do_not_generate_subgroup) ? -1 : 1e-6;
         if (fn_sym != "")
-            SL.read_sym_file(fn_sym, accuracy);
+            SL.readSymmetryFile(fn_sym, accuracy);
         if (!do_not_use_symproj)
-            numIMG = trueIMG * (SL.SymsNo() + 1);
+            numIMG = trueIMG * (SL.symsNo() + 1);
         else
             numIMG = trueIMG;
     }

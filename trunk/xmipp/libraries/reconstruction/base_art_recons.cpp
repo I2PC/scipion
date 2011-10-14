@@ -174,7 +174,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
                 std::cout << "Introduce next projection to study: ";
                 std::cin  >> proj_number;
                 int sym_number=-1;
-                if (artPrm.SL.SymsNo()!=0)
+                if (artPrm.SL.symsNo()!=0)
                 {
                     std::cout << "Introduce symmetry to study: ";
                     std::cin  >> sym_number;
@@ -730,13 +730,13 @@ void ARTReconsBase::initHistory(const GridVolume &vol_basis0)
     *artPrm.fh_hist << " Refine projections: " << artPrm.refine << std::endl;
     *artPrm.fh_hist << " Sparsity epsilon: " << artPrm.sparseEps << std::endl;
     *artPrm.fh_hist << " Diffusion weight: " << artPrm.diffusionWeight << std::endl;
-    if (artPrm.SL.SymsNo()!=0)
+    if (artPrm.SL.symsNo()!=0)
     {
         Matrix2D<double> L(4,4),R(4,4); // A matrix from the list
         *artPrm.fh_hist << " Symmetry matrices -------\n";
-        for (int j=0; j<artPrm.SL.SymsNo(); j++)
+        for (int j=0; j<artPrm.SL.symsNo(); j++)
         {
-            artPrm.SL.get_matrices(j,L,R);
+            artPrm.SL.getMatrices(j,L,R);
             *artPrm.fh_hist << " Left  Symmetry matrix " << j << std::endl << L;
             *artPrm.fh_hist << " Right Symmetry matrix " << j << std::endl << R << std::endl;
         }

@@ -38,7 +38,7 @@ void ProgAngularNeighbourhood::readParams()
     maxdist = getDoubleParam("--dist");
     fn_sym = getParam("--sym");
     if (fn_sym != "")
-        SL.read_sym_file(fn_sym);
+        SL.readSymmetryFile(fn_sym);
     check_mirrors=checkParam("--check_mirrors");
     DF2.read(fn_ref);
     DF1.read(fn_sel);
