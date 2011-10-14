@@ -1,6 +1,8 @@
 
 import browser.COMMAND_PARAMETERS;
 import browser.DEBUG;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -25,6 +27,7 @@ public class XmippFileListCTFWizard {
     final static int DOWNSAMPLING = 3;
 
     public static void main(String args[]) {
+        long before = System.currentTimeMillis();
         String parameters[] = processArgs(args);
 
         String dir = parameters[DIR];
@@ -37,6 +40,12 @@ public class XmippFileListCTFWizard {
         JFrameXmippFilesListCTF frameBrowser = new JFrameXmippFilesListCTF(
                 dir, port, expression, downsampling);
         frameBrowser.setVisible(true);
+
+        long after = System.currentTimeMillis();
+        long elapsed = after - before;
+
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("'Time to start:' mm:ss:S");
+        System.out.println(dateFormatter.format(new Date(elapsed)));
     }
 
     static String[] processArgs(String args[]) {

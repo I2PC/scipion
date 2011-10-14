@@ -9,7 +9,6 @@ import javax.swing.table.DefaultTableModel;
 import browser.Cache;
 import browser.DEBUG;
 import browser.imageitems.tableitems.GalleryImageItem;
-import java.util.Vector;
 import metadata.images.TableFileItem;
 import xmipp.Filename;
 import xmipp.MDLabel;
@@ -212,8 +211,6 @@ public class MetaDataTableModel extends DefaultTableModel {
                         }
                     } else if (class_ == Boolean.class) {
                         row[i] = md.getValueBoolean(label, id);
-                    } else if (class_ == Vector.class) {
-                        row[i] = md.getValueVector(label, id);
                     } else {
                         row[i] = "Unknown type";
                     }
