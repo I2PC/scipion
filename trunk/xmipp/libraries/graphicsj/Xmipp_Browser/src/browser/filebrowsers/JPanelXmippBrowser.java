@@ -49,23 +49,30 @@ public class JPanelXmippBrowser extends JPanel {
         this(folder, "");
     }
 
-    public JPanelXmippBrowser(String folder, String expression) {
+    public JPanelXmippBrowser(final String folder, final String expression) {
         super();
 
         initComponents();
 
-        listModelFilesList = new ListModelFilesBrowser(folder);
-        listModelFilesList.setFilteringLabel(jlFiltering);
-        jlFileFilter.setModel((ListModel) listModelFilesList);
+        Thread t = new Thread(new Runnable() {
 
-        jlFileFilter.installJTextField(searchBox.getTextField());
-        jlFileFilter.setCellRenderer(fileListRenderer);
-        jpFileBrowser.add(searchBox, BorderLayout.SOUTH);
+            public void run() {
+                listModelFilesList = new ListModelFilesBrowser(folder);
+                listModelFilesList.setFilteringLabel(jlFiltering);
+                jlFileFilter.setModel((ListModel) listModelFilesList);
 
-        // Sets initial expression.
-        searchBox.textField.setText(expression);
+                jlFileFilter.installJTextField(searchBox.getTextField());
+                jlFileFilter.setCellRenderer(fileListRenderer);
+                jpFileBrowser.add(searchBox, BorderLayout.SOUTH);
 
-        updatePath();
+                // Sets initial expression.
+                searchBox.textField.setText(expression);
+
+                updatePath();
+            }
+        });
+
+        t.start();
     }
 
     public void setSingleSelection(boolean single) {
@@ -325,7 +332,6 @@ public class JPanelXmippBrowser extends JPanel {
         SHOW_PREVIEWS = jcbPreview.isSelected();
         updatePreview();
     }//GEN-LAST:event_jcbPreviewActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     protected javax.swing.JCheckBox jcbPreview;
     protected browser.filebrowsers.JListFileFilter jlFileFilter;
