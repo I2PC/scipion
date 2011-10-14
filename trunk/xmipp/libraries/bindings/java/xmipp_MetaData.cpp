@@ -324,12 +324,10 @@ JNIEXPORT jclass JNICALL Java_xmipp_MetaData_getLabelType(JNIEnv *env,
 		case LABEL_DOUBLE:
 			class_ = env->FindClass("java/lang/Double");
 			break;
-		case LABEL_STRING:
-			class_ = env->FindClass("java/lang/String");
-			break;
 		case LABEL_VECTOR:
 		case LABEL_VECTOR_LONG:
-			class_ = env->FindClass("java/util/Vector");
+		case LABEL_STRING:
+			class_ = env->FindClass("java/lang/String");
 			break;
 		}
 	} catch (XmippError xe) {
