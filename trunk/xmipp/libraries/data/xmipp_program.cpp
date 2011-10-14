@@ -202,8 +202,7 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
             doRun = true;
         else
         {
-            char * var = getenv("XMIPP_GUI_ON");
-            if (var != NULL)
+            if (getenv("XMIPP_GUI_ON") != NULL)
                 createGUI();
             else
                 usage();
@@ -260,7 +259,6 @@ int XmippProgram::tryRun()
         std::cerr << xe;
         errorCode = xe.__errno;
     }
-        std::cout << "Finished run" << std::endl;
     return errorCode;
 }
 

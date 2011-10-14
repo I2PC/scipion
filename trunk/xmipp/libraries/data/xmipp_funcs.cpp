@@ -723,6 +723,7 @@ void progress_bar(long rlen)
     long t1, t2;
     int min, i, hour;
     double h1, h2, m1, m2;
+    bool queue = (getenv("XMIPP_IN_QUEUE") != NULL);
 
     if (rlen == 0)
         return;
@@ -733,8 +734,9 @@ void progress_bar(long rlen)
         totlen = -rlen;
         prevt = startt = currt;
         fprintf(stderr, "0000/???? sec. ");
-        for (i = 0; i < 10; i++)
-            fprintf(stderr, "------");
+        if (!queue)
+            for (i = 0; i < 10; i++)
+                fprintf(stderr, "------");
         fflush(stderr);
     }
     else if (totlen > 0)
@@ -769,9 +771,13 @@ void progress_bar(long rlen)
         else
             fprintf(stderr, "\r%4u/%4u %4s ", (int)t1, (int)t2, "sec.");
 
-        i = (int)(60 * (1 - (double)(totlen - rlen) / totlen));
-        while (i--)
-            fprintf(stderr, ".");
+        if (!queue)
+        {
+            i = (int)(60 * (1 - (double)(totlen - rlen) / totlen));
+            while (i--)
+                fprintf(stderr, ".");
+        }
+
         if (rlen == totlen)
         {
             fprintf(stderr, "\n");
@@ -784,13 +790,13 @@ void progress_bar(long rlen)
 
 char * getCurrentTimeString()
 {
-  time_t rawtime;
-  time ( &rawtime );
-  char * str = ctime (&rawtime);
-  char * pos = strrchr(str, '\n');
-  pos[0] = '\0'; //Remove \n end character
-  return str;
-  
+    time_t rawtime;
+    time ( &rawtime );
+    char * str = ctime (&rawtime);
+    char * pos = strrchr(str, '\n');
+    pos[0] = '\0'; //Remove \n end character
+    return str;
+
 }
 
 // Initialize progress bar.

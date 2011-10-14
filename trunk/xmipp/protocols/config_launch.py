@@ -50,6 +50,8 @@ FileTemplate = """
 ### Tell PBS the anticipated run-time for your job, where walltime=HH:MM:SS
 #PBS -l walltime=%(hours)d:00:00
 #################################
+### Set environment varible to know running mode is non interactive
+export XMIPP_IN_QUEUE=1
 ### Switch to the working directory;
 cd $PBS_O_WORKDIR
 echo Working directory is $PBS_O_WORKDIR
