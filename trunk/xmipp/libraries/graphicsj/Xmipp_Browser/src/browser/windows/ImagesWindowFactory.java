@@ -5,6 +5,7 @@
 package browser.windows;
 
 import browser.DEBUG;
+import browser.InfiniteProgressPanel;
 import browser.imageitems.ImageConverter;
 import browser.imageitems.tableitems.AbstractGalleryImageItem;
 import browser.gallery.JFrameGallery;
@@ -24,6 +25,7 @@ import java.awt.Toolkit;
 import java.io.File;
 import java.util.ArrayList;
 import javax.swing.JFrame;
+import javax.swing.JRootPane;
 import metadata.JFrameMetaData;
 import micrographs.JFrameMicrographs;
 import micrographs.ctf.CTFRecalculateImageWindow;
@@ -43,6 +45,18 @@ public class ImagesWindowFactory {
 
     private final static int UNIVERSE_W = 400, UNIVERSE_H = 400;
 //    private final static String TEMPDIR_PATH = System.getProperty("java.io.tmpdir");
+
+    public static void blockGUI(JRootPane panel, String status) {
+        final InfiniteProgressPanel progressPanel = new InfiniteProgressPanel(status);
+        panel.setGlassPane(progressPanel);
+        progressPanel.start();
+    }
+
+    public static void releaseGUI(JRootPane panel) {
+        InfiniteProgressPanel progressPanel = (InfiniteProgressPanel) panel.getGlassPane();
+        progressPanel.stop();
+        progressPanel.setVisible(false);
+    }
 
     public static void openFilesAsDefault(String filenames[], boolean poll) {
         openFilesAsDefault(filenames, poll, -1, -1);

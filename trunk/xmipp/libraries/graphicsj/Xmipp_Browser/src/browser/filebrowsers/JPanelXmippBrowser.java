@@ -10,7 +10,6 @@
  */
 package browser.filebrowsers;
 
-import browser.InfiniteProgressPanel;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.filebrowsers.model.FileBrowser;
@@ -54,25 +53,18 @@ public class JPanelXmippBrowser extends JPanel {
 
         initComponents();
 
-        Thread t = new Thread(new Runnable() {
+        listModelFilesList = new ListModelFilesBrowser(folder);
+        listModelFilesList.setFilteringLabel(jlFiltering);
+        jlFileFilter.setModel((ListModel) listModelFilesList);
 
-            public void run() {
-                listModelFilesList = new ListModelFilesBrowser(folder);
-                listModelFilesList.setFilteringLabel(jlFiltering);
-                jlFileFilter.setModel((ListModel) listModelFilesList);
+        jlFileFilter.installJTextField(searchBox.getTextField());
+        jlFileFilter.setCellRenderer(fileListRenderer);
+        jpFileBrowser.add(searchBox, BorderLayout.SOUTH);
 
-                jlFileFilter.installJTextField(searchBox.getTextField());
-                jlFileFilter.setCellRenderer(fileListRenderer);
-                jpFileBrowser.add(searchBox, BorderLayout.SOUTH);
+        // Sets initial expression.
+        searchBox.textField.setText(expression);
 
-                // Sets initial expression.
-                searchBox.textField.setText(expression);
-
-                updatePath();
-            }
-        });
-
-        t.start();
+        updatePath();
     }
 
     public void setSingleSelection(boolean single) {
@@ -100,10 +92,7 @@ public class JPanelXmippBrowser extends JPanel {
         clearPreview();
 
         if (SHOW_PREVIEWS) {
-            final InfiniteProgressPanel progressPanel = new InfiniteProgressPanel("Calculating preview...");
-            //final Component previousGlassPane = getRootPane().getGlassPane();
-            getRootPane().setGlassPane(progressPanel);
-            progressPanel.start();
+            ImagesWindowFactory.blockGUI(getRootPane(), "Calculating preview...");
 
             Thread t = new Thread(new Runnable() {
 
@@ -119,8 +108,7 @@ public class JPanelXmippBrowser extends JPanel {
                     // Shows / Hide preview panel.
                     jpImageInfo.setVisible(SHOW_PREVIEWS);
 
-                    progressPanel.setVisible(false);
-                    progressPanel.stop();
+                    ImagesWindowFactory.releaseGUI(getRootPane());
                 }
             });
 

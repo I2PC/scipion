@@ -13,6 +13,7 @@ package browser.filebrowsers;
 import browser.COMMAND_PARAMETERS;
 import browser.LABELS;
 import browser.imageitems.listitems.FileItem;
+import browser.windows.ImagesWindowFactory;
 import ij.IJ;
 import java.awt.BorderLayout;
 import java.io.OutputStreamWriter;
@@ -36,7 +37,8 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
         this(directory, port, false, COMMAND_PARAMETERS.SELECTION_TYPE_ANY, "");
     }
 
-    public JDialogXmippFilesList(String directory, int port, boolean singleSelection, String seltype, String expression) {
+    public JDialogXmippFilesList(final String directory, int port,
+            final boolean singleSelection, String seltype, final String expression) {
         super();
 
         this.port = port;
@@ -55,13 +57,31 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
 
         initComponents();
 
-        panelXmippBrowser = new JPanelXmippBrowser(directory, expression);
-        panelXmippBrowser.setSingleSelection(singleSelection);
+        setPanel(directory, expression, singleSelection);
 
-        add(panelXmippBrowser, BorderLayout.CENTER);
+        ImagesWindowFactory.setConvenientSize(this);
+        this.setLocationRelativeTo(null);
+    }
 
-        pack();
-        setLocationRelativeTo(null);
+    protected void setPanel(final String directory, final String expression, final boolean singleSelection) {
+        ImagesWindowFactory.blockGUI(getRootPane(), "Building list...");
+
+        Thread t = new Thread(new Runnable() {
+
+            public void run() {
+                panelXmippBrowser = new JPanelXmippBrowser(directory, expression);
+                panelXmippBrowser.setSingleSelection(singleSelection);
+
+                add(panelXmippBrowser, BorderLayout.CENTER);
+
+                pack();
+//                setLocationRelativeTo(null);
+
+                ImagesWindowFactory.releaseGUI(getRootPane());
+            }
+        });
+
+        t.start();
     }
 
     protected void button1Clicked() {

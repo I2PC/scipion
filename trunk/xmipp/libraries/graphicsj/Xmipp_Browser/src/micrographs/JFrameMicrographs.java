@@ -12,7 +12,6 @@ package micrographs;
 
 import browser.DEBUG;
 import browser.ICONS_MANAGER;
-import browser.InfiniteProgressPanel;
 import browser.LABELS;
 import browser.imageitems.MicrographsTableImageItem;
 import browser.gallery.models.GalleryRowHeaderModel;
@@ -362,9 +361,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     }
 
     private synchronized void updateTableStructure() {
-        final InfiniteProgressPanel progressPanel = new InfiniteProgressPanel("Updating table...");
-        getRootPane().setGlassPane(progressPanel);
-        progressPanel.start();
+        ImagesWindowFactory.blockGUI(getRootPane(), "Updating table...");
 
         Thread t = new Thread(new Runnable() {
 
@@ -375,8 +372,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
                 rowHeader.repaint();
                 table.getTableHeader().repaint();
 
-                progressPanel.stop();
-                progressPanel.setVisible(false);
+                ImagesWindowFactory.releaseGUI(getRootPane());
             }
         });
 

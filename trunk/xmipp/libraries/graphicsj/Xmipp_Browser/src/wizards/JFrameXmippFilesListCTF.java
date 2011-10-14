@@ -7,6 +7,7 @@ package wizards;
 import browser.COMMAND_PARAMETERS;
 import browser.LABELS;
 import browser.filebrowsers.JDialogXmippFilesList;
+import browser.windows.ImagesWindowFactory;
 import java.awt.BorderLayout;
 
 /**
@@ -24,13 +25,37 @@ public class JFrameXmippFilesListCTF extends JDialogXmippFilesList {
 
         setTitle(LABELS.TITLE_WIZARD_PSD);
 
-        // Hack: Replaces panel.
-        remove(panelXmippBrowser);
+//        // Hack: Replaces panel.
+//        remove(panelXmippBrowser);
+//
+//        panelXmippBrowser = new JPanelXmippFileListCTF(directory, expression, downsampling);
+//
+//        add(panelXmippBrowser, BorderLayout.CENTER);
+//        pack();
+        setPanel(directory, expression, false, downsampling);
+    }
 
-        panelXmippBrowser = new JPanelXmippFileListCTF(directory, expression, downsampling);
+    // Hack: Replaces panel avoiding the super class to add the old one before.
+    @Override
+    protected void setPanel(final String directory, final String expression, final boolean singleSelection) {
+    }
 
-        add(panelXmippBrowser, BorderLayout.CENTER);
-        pack();
+    void setPanel(final String directory, final String expression, final boolean singleSelection, final double downsampling) {
+        ImagesWindowFactory.blockGUI(getRootPane(), "Building list...");
+
+        Thread t = new Thread(new Runnable() {
+
+            public void run() {
+                panelXmippBrowser = new JPanelXmippFileListCTF(directory, expression, downsampling);
+
+                add(panelXmippBrowser, BorderLayout.CENTER);
+
+                setLocationRelativeTo(null);
+                ImagesWindowFactory.releaseGUI(getRootPane());
+            }
+        });
+
+        t.start();
     }
 
     @Override
