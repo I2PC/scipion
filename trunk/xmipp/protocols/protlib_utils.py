@@ -490,10 +490,9 @@ def runExternalAppWithResponse(cmd):
             data = conn.recv(1024)
             msg += data
             if not data or msg.find('__END__') !=-1: break      
+        conn.close()
     except Exception, e:
         tkMessageBox.showerror("Error waiting for response", "No reponse, returning empty string. ERROR: " + str(e))
-    finally:
-        conn.close()
 
     return msg.replace('__END__', '')
  
