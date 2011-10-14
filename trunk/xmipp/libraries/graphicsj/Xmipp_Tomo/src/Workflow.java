@@ -32,23 +32,37 @@ import java.util.Enumeration;
 import java.util.LinkedList;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 
 
 public class Workflow extends DefaultTreeModel{
 	
 	// TODO: check what protocol workflow code (from python) can be reused around here...
 	
-	private UserAction selectedUserAction;
+	private DefaultMutableTreeNode selectedNode=null;
+	private int lastActionId=0;
 	
 	public UserAction getSelectedUserAction() {
-		return selectedUserAction;
+		return (UserAction) getSelectedNode().getUserObject();
 	}
 
 
-	public void setSelectedUserAction(UserAction selectedUserAction) {
-		this.selectedUserAction = selectedUserAction;
+	public DefaultMutableTreeNode getSelectedNode(){
+		return selectedNode;
 	}
-
+	
+	public TreePath getSelectedNodePath(){
+		return getNodePath(getSelectedNode());
+	}
+	
+	public TreePath getNodePath(TreeNode node){
+		return new TreePath(getPathToRoot(node));
+	}
+	
+	public void  setSelectedNode(DefaultMutableTreeNode node){
+		selectedNode=node;
+	}
 
 	public DefaultMutableTreeNode getRoot() {
 		return (DefaultMutableTreeNode)super.getRoot();
@@ -57,6 +71,7 @@ public class Workflow extends DefaultTreeModel{
 
 	public Workflow(){
 		super(new DefaultMutableTreeNode(UserAction.start()));
+		setSelectedNode(getRoot());
 	}
 	
 	public static Workflow getTestWorkflow(){
@@ -76,12 +91,41 @@ public class Workflow extends DefaultTreeModel{
 		return testWorkflow;
 	}
 	
+	/**
+	 * @deprecated
+	 * @param parent
+	 * @param newAction
+	 * @return
+	 */
 	public DefaultMutableTreeNode addUserAction(DefaultMutableTreeNode parent, UserAction newAction){
 		DefaultMutableTreeNode child = new DefaultMutableTreeNode(newAction);
+
 		if(parent == null){
 			Logger.debug("Workflow.addUserAction - parent is null");
 		}else{
+			newAction.setId(getNewActionId());
+			newAction.setWorkingDir(getWorkingDir());
 			insertNodeInto(child, parent, parent.getChildCount());
+			setSelectedNode(child);
+		}
+		return child;
+	}
+	
+	/** 
+	 * Add newAction as a child of the current selected node in the workflow
+	 * @param newAction
+	 * @return
+	 */
+	public DefaultMutableTreeNode addUserAction(UserAction newAction){
+		DefaultMutableTreeNode child = new DefaultMutableTreeNode(newAction);
+		DefaultMutableTreeNode parent = getSelectedNode();
+		if(parent == null){
+			Logger.debug("Workflow.addUserAction - parent is null");
+		}else{
+			newAction.setId(getNewActionId());
+			newAction.setWorkingDir(getWorkingDir());
+			insertNodeInto(child, parent, parent.getChildCount());
+			setSelectedNode(child);
 		}
 		return child;
 	}
@@ -89,6 +133,10 @@ public class Workflow extends DefaultTreeModel{
 	// TODO: clearWorkflow
 	public void clearWorkflow(){
 		
+	}
+	
+	private int getNewActionId(){
+		return lastActionId++;
 	}
 	
 	// TODO: cast problem - string to useraction
@@ -109,8 +157,8 @@ public class Workflow extends DefaultTreeModel{
 		return result;
 	}
 	
-	public UserActionIO getCurrentUserActionIO(){
-		return getSelectedUserAction().getIoDetails();
+	public UserAction getCurrentUserAction(){
+		return getSelectedUserAction();
 	}
 	
 	/**
@@ -118,9 +166,8 @@ public class Workflow extends DefaultTreeModel{
 	 * @return the base directory for all of this workflow steps subdirectories
 	 */
 	public String getWorkingDir(){
-		// TODO: it should return the directory from which the user started us
-		return "./test";
+		return ".";
 	}
 	
-
+	
 }

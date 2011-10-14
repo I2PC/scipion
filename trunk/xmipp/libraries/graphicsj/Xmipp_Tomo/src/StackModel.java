@@ -84,15 +84,22 @@ public class StackModel extends AbstractModel {
 
 	private String getCurrentImageFilePath() {
 		String ret = null;
-		UserActionIO currentIo = getCurrentIO();
-		if (currentIo == null)
+		UserAction currentAction = getCurrentUserAction();
+		if (currentAction == null)
 			return ret;
 
-		ret = currentIo.getFilePath(getCurrentProjectionNumber());
+		ret = currentAction.getFilePath(getCurrentProjectionNumber());
 
 		return ret;
 	}
 
+	private ImageDouble getCurrentImageDouble(){
+		String filePath = getCurrentImageFilePath();
+		if (filePath == null)
+			return null;
+		return getImageDoubleCache().get(filePath);
+	}
+	
 	public ImagePlus getCurrentImage() {
 		ImagePlus ret = new ImagePlus();
 
@@ -105,7 +112,7 @@ public class StackModel extends AbstractModel {
 		if (ret != null)
 			return ret;
 
-		ImageDouble image = getImageDoubleCache().get(filePath);
+		ImageDouble image = getCurrentImageDouble();
 		if (image == null) {
 			// cache miss
 			image = new ImageDouble();
@@ -131,6 +138,10 @@ public class StackModel extends AbstractModel {
 		return ret;
 	}
 
+	public void refreshCurrentImage(){
+		// invalidate current image in ImagePlus cache, so it will be refreshed on next request
+		getImagePlusCache().remove(getCurrentImageFilePath());
+	}
 	public void updateCurrentImage(ImagePlus image) {
 		updateImage(getCurrentImageFilePath(), image);
 	}
@@ -163,10 +174,33 @@ public class StackModel extends AbstractModel {
 		}
 	}
 
-	private UserActionIO getCurrentIO() {
-		return getWorkflow().getCurrentUserActionIO();
+	private UserAction getCurrentUserAction() {
+		return getWorkflow().getCurrentUserAction();
+	}
+	
+	public String getCurrentFileName(){
+		return getCurrentUserAction().getInputFileName();
+	}
+	
+	public int getCurrentWidth(){
+		if(getCurrentImageDouble() == null)
+			return -1;
+		return getCurrentImageDouble().getXsize();
 	}
 
+	public int getCurrentHeight(){
+		if(getCurrentImageDouble() == null)
+			return -1;
+		return getCurrentImageDouble().getYsize();
+	}
+	
+	public int getCurrentBitDepth(){
+		// TODO: maybe it's better getting the bit depth from the ImageDouble
+		if(getCurrentImage() == null)
+			return -1;
+		return getCurrentImage().getBitDepth();
+	}
+	
 	/**
 	 * @return range 1..numberProjections
 	 */
@@ -180,11 +214,11 @@ public class StackModel extends AbstractModel {
 	
 	
 	private String getCurrentMetadata(){
-		return getCurrentIO().getInfo(getCurrentProjectionNumber());
+		return getCurrentUserAction().getInfo(getCurrentProjectionNumber());
 	}
 	
 	private long getCurrentProjectionId(){
-		return getCurrentIO().getProjectionId(getCurrentProjectionNumber());
+		return getCurrentUserAction().getProjectionId(getCurrentProjectionNumber());
 	}
 	
 	/**
@@ -211,7 +245,7 @@ public class StackModel extends AbstractModel {
 	 */
 	public int getNumberOfProjections() {
 		// get the number from the metadata
-		return getCurrentIO().getNumberOfProjections();
+		return getCurrentUserAction().getNumberOfProjections();
 	}
 
 	private void setNumberOfProjections(int n) {
@@ -252,7 +286,7 @@ public class StackModel extends AbstractModel {
 		if (e)
 			enabled = 1;
 
-		getCurrentIO().setEnabled(id, enabled);
+		getCurrentUserAction().setEnabled(id, enabled);
 	}
 
 	void enableCurrentProjection() {
@@ -263,6 +297,6 @@ public class StackModel extends AbstractModel {
 	}
 
 	public boolean isCurrentEnabled() {
-		return getCurrentIO().isEnabled(getCurrentProjectionId());
+		return getCurrentUserAction().isEnabled(getCurrentProjectionId());
 	}
 }

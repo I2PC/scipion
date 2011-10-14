@@ -1,5 +1,6 @@
 import java.io.File;
 
+import xmipp.Filename;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -33,16 +34,23 @@ import xmipp.MetaData;
  */
 
 public class UserActionIO {
-	private String inputFilePath;
+	private String inputFileName=null;
 	MetaData imageMetadata;
+	private String workingDir=null;
 	
+	/**
+	 * Precondition: the working dir must have been assigned...
+	 * @return
+	 */
 	public String getInputFilePath() {
-		return inputFilePath;
+		return getWorkingDir() + "/" + inputFileName;
 	}
 
 	// TODO: import more code details from Tomodata.readMetadata()
-	public void setInputFilePath(String f) {
-		this.inputFilePath = f;
+	public void setWorkingDir(String workingDir){
+		// TODO: delete old working dir in case it already existed?
+		this.workingDir = workingDir;
+		new File(this.workingDir).mkdirs();
 	}
 	
 	private MetaData getMetadata(){
@@ -79,10 +87,15 @@ public class UserActionIO {
 	}
 	
 	public String getInputFileName(){
-		String ret = null;
-		if(getInputFilePath() != null)
-			ret = new File(getInputFilePath()).getName();
-		return ret;
+		return inputFileName;
+	}
+	
+	public void setInputFileName(String name){
+		inputFileName = name;
+	}
+	
+	public String getWorkingDir(){
+		return workingDir;
 	}
 	
 	public int getNumberOfProjections(){

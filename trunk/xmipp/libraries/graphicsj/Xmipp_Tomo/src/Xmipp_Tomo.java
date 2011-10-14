@@ -37,7 +37,6 @@
  * - Why "package" may be used?
  * Because then the plugin is shown on its own submenu in ImageJ
  */
-// TODO: start the plugin from the command line as xmipptomo
 // TODO: Project management. Nodes of graph are the results (Series, alignment Parameters, Landmarks, Volumes...)
 // Transitions are actions (crop, align...)
 // Now all the results are in disk, so it goes like this:
@@ -45,7 +44,7 @@
 // - apply the action to this first image and show the result (like a preview)
 // - if the user agrees, then apply the action to all the series in disk
 // - show the results in the canvas as each image is saved
-// TODO: organize a directory tree that replicates the graph structure (each subdirectory stores the results of 1 action)
+// TODO: -current-organize a directory tree that replicates the graph structure (each subdirectory stores the results of 1 action)
 // TODO: visualization - add a "Thumbnail" checkbox. When enabled, display the scaled series from memory (faster).
 // When disabled, display the original from disk (slower)
 // TODO: Project management - action to delete the results file of a node (to save disk space)

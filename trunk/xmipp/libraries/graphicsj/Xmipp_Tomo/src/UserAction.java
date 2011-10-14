@@ -1,8 +1,12 @@
+import java.io.File;
 import java.util.Date;
 
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
+import javax.swing.tree.TreePath;
+
+import xmipp.MDLabel;
 
 /***************************************************************************
  *
@@ -56,23 +60,86 @@ public class UserAction {
 	public static int ROOT_WINDOWID=0;
 	private static String WORKFLOW_ROOT_NAME="Start";
 	
-	private int windowId;
+	private int windowId, actionId;
+	
+
 	private String command=null,parameters=null,name=null;
-	private String workingDir=null;
 	String progress=null;
 	private Plugin plugin;
 	private boolean neededForFile=false;
 	private PlainDocument comments;
 	private UserActionIO ioDetails;
-	
-	public UserActionIO getIoDetails() {
+
+	private UserActionIO getIoDetails() {
 		if(ioDetails == null)
 			ioDetails = new UserActionIO();
 		return ioDetails;
 	}
 
-	public void setIoDetails(UserActionIO ioDetails) {
-		this.ioDetails = ioDetails;
+	public void setInputFilePath(String path){
+		File input = new File(path);
+		String workingDir=input.getParent();
+		if (workingDir == null)
+			workingDir = "./";
+		getIoDetails().setWorkingDir(workingDir);
+		getIoDetails().setInputFileName(input.getName());
+	}
+	
+	public String getInputFilePath(){
+		return getIoDetails().getInputFilePath();
+	}
+	
+	public String getInputFileName(){
+		return getIoDetails().getInputFileName();
+	}
+	
+	public String getFilePath(int projection){
+		return getIoDetails().getFilePath(projection);
+	}
+	
+	public boolean isEnabled(long id) {
+		return getIoDetails().isEnabled(id);
+	}
+	
+	public void setEnabled(long id,int enabled){
+		getIoDetails().setEnabled(id, enabled);
+	}
+	
+	public String getInputFilePath(int projection){
+		return getIoDetails().getFilePath(projection);
+	}
+	
+	public int getNumberOfProjections(){
+		return getIoDetails().getNumberOfProjections();
+	}
+	
+	public long getProjectionId(int projection){
+		return getIoDetails().getProjectionId(projection);
+	}
+	
+	public String getInfo(int projectionNumber){
+		return getIoDetails().getInfo(projectionNumber);
+	}
+	
+
+	/**
+	 * Call this method once the working dir has been set (when the action has been added to the workflow)
+	 * @param name
+	 */
+	public void setInputFileName(String name){
+		getIoDetails().setInputFileName(name);
+	}
+	
+	/**
+	 * If you need to re-set the working dir, use setFilePath
+	 * @param workflowWorkingDir
+	 */
+	public void setWorkingDir(String workflowWorkingDir){
+		if(getIoDetails().getWorkingDir() == null){
+			String uaWorkingSubdir = String.valueOf(getId()) + "-" + getName();
+			String actionDir = workflowWorkingDir + "/" + uaWorkingSubdir;
+			getIoDetails().setWorkingDir(actionDir);
+		}
 	}
 
 	public String getComments() {
@@ -202,17 +269,6 @@ public class UserAction {
 		return name;
 	}
 	
-	public String getId(){
-		//TODO: get the id from the project SQLite DB
-		return String.valueOf(new Date().getTime());
-	}
-	
-	public String getWorkingDir(){
-		if(workingDir == null)
-			workingDir = getId();
-		return workingDir;
-	}
-
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -231,4 +287,13 @@ public class UserAction {
 	public void setProgress(String progress){
 		this.progress = progress;
 	}
+	
+	public int getId() {
+		return actionId;
+	}
+
+	public void setId(int actionId) {
+		this.actionId = actionId;
+	}
+
 }

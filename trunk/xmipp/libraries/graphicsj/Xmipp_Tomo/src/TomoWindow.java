@@ -820,6 +820,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		}else if (WorkflowView.ACTION_SELECTED.equals(event.getPropertyName()) ||
 				StackModel.Properties.CURRENT_PROJECTION.name().equals(event.getPropertyName())){
 			refreshImageCanvas();
+			updateTitle();
 		}else if(StackModel.Properties.CURRENT_PROJECTION_NUMBER.name().equals(event.getPropertyName())){
 			updateCurrentTiltAngleText();
 			getProjectionScrollbar().setValue(getStackModel().getCurrentProjectionNumber());
@@ -946,16 +947,23 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	// TODO: update to Stackmodel approach
 	public String getTitle() {
 		String title = TITLE;
-		if (getModel() != null)
-			title = title + " > " + getModel().getFileName() + " ("
-					+ getModel().getOriginalWidth() + "x" + getModel().getOriginalHeight()
-					+ ")," + getModel().getBitDepth() + "bits";
-		
+		if (getStackModel() != null){
+			String filename = getStackModel().getCurrentFileName();
+			if(filename != null)
+				title = title + " > " + filename;
+			if(getStackModel().getCurrentWidth() != -1)
+				title = title + " ("+ getStackModel().getCurrentWidth() + "x" + getStackModel().getCurrentHeight()
+						+ ")," + getStackModel().getCurrentBitDepth() + "bits";
+		}
 		return title;
 	}
 	
 	public void setTitle(String title){
 		realWindow.setTitle(title);
+	}
+	
+	public void updateTitle(){
+		setTitle(getTitle());
 	}
 
 	/**

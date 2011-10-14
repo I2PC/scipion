@@ -175,7 +175,7 @@ public class TomoController implements AdjustmentListener {
 	/**
 	 * - Why? hack to intercept ImageJ generic dialogs
 	 */
-	// TODO: pass the plugin as a parameter (instead of a global variable)
+	// TODO: pass the plugin as a parameter (instead of a global variable) 
 	private class DialogCaptureThread extends Thread {
 		private TomoWindow window;
 
@@ -294,15 +294,15 @@ public class TomoController implements AdjustmentListener {
 
 			UserAction ua = new UserAction(window.getWindowId(), "Load",
 					"Load", path);
-			ua.getIoDetails().setInputFilePath(path);
+			ua.setInputFilePath(path);
 			// TODO: move addUserAction to workflow model (instead of the
 			// window). Right now it's inside window because
 			// insertion depends on the workflowview selected node
-			window.addUserAction(ua);
-			getWorkflow().setSelectedUserAction(ua);
+			getWorkflow().addUserAction(ua);
 			window.addView();
 			window.addControls();
 			window.enableButtonsAfterLoad();
+			window.updateTitle();
 
 		}
 	}
@@ -516,7 +516,7 @@ public class TomoController implements AdjustmentListener {
 	public void measure() {
 		Plugin plugin = new MeasurePlugin();
 		window.setPlugin(plugin);
-		runIjCmd(XmippTomoCommands.MEASURE, plugin);
+		runIjCmd(XmippTomoCommands.MEASURE, plugin,true,false,false);
 	}
 
 	public void median() {
@@ -568,7 +568,7 @@ public class TomoController implements AdjustmentListener {
 		window.protectWindow();
 		getModel().convertTo(32);
 		window.protectWindow();
-		window.addUserAction(new UserAction(window.getWindowId(),
+		getWorkflow().addUserAction(new UserAction(window.getWindowId(),
 				"convertToFloat"));
 
 		window.refreshImageCanvas();
@@ -593,11 +593,11 @@ public class TomoController implements AdjustmentListener {
 		// TODO: adjust viewPanel to new image size
 	}
 
+	// TODO: preview option does not update the image display
+	// TODO: cancel button applies the plugin (instead of doin nothing)
 	public void runIjCmd(String command) {
 
 		window.setChangeSaved(false);
-
-		ImagePlus originalImage = getStackModel().getCurrentImage().duplicate();
 
 		WindowManager.setTempCurrentImage(getStackModel().getCurrentImage());
 		try {
@@ -608,14 +608,17 @@ public class TomoController implements AdjustmentListener {
 			return;
 		}
 		// the preview modifies the image in the cache...
-		getStackModel().updateCurrentImage(originalImage);
+		getStackModel().refreshCurrentImage();
 		window.refreshImageCanvas();
 
 		// window.setStatus("Done");
 
 	}
-
-	public void runIjCmd(Command command, Plugin plugin) {
+	public void runIjCmd(Command command, Plugin plugin){
+		runIjCmd(command, plugin, false,true,true);
+	}
+	
+	public void runIjCmd(Command command, Plugin plugin,boolean onlyCurrentProjection,boolean writeToFile,boolean addToWorkflow) {
 		String label = command.getLabel();
 		String cmd = plugin.getCommand();
 
@@ -629,25 +632,14 @@ public class TomoController implements AdjustmentListener {
 
 		runIjCmd(cmd);
 
-		if (plugin != null) {
+		if (addToWorkflow && (plugin != null)) {
 			UserAction currentAction = getWorkflow().getSelectedUserAction();
-			UserActionIO currentIo = currentAction.getIoDetails();
 
 			UserAction newAction = new UserAction(window.getWindowId(), label,
 					cmd, plugin);
-			window.addUserAction(newAction);
 
-			// TODO: find a better place for this 2 lines (maybe UserActionIO?)
-			String newActionDir = getWorkflow().getWorkingDir() + "/"
-					+ newAction.getWorkingDir();
-			new File(newActionDir).mkdirs();
-
-			String output = newActionDir + "/" + currentIo.getInputFileName();
-			Logger.debug("output file: " + output);
-
-			UserActionIO uaio = new UserActionIO();
-			uaio.setInputFilePath(output);
-			newAction.setIoDetails(uaio);
+				getWorkflow().addUserAction(newAction);
+			newAction.setInputFileName(currentAction.getInputFileName());
 
 			// TODO: run applyIJPlugin in the background
 			/*
@@ -655,50 +647,65 @@ public class TomoController implements AdjustmentListener {
 			 * getClass().getMethod("applyIJPlugin"), null).execute(); } catch
 			 * (Exception ex) { Logger.debug("runIjCmd() ", ex); }
 			 */
-			applyIJPlugin(cmd, currentAction, newAction);
+			if(onlyCurrentProjection)
+				applyIJPlugin(plugin,currentAction,newAction,getStackModel().getCurrentProjectionNumber(),writeToFile);
+			else
+				applyIJPlugin(cmd, currentAction, newAction,writeToFile);
 
 		}
 
 		window.setPlugin(null);
+		window.refreshImageCanvas();
+		window.updateTitle();
 	}
 
 	private void applyIJPlugin(String command, UserAction currentAction,
-			UserAction newAction) {
-		String outputFile = newAction.getIoDetails().getInputFilePath();
+			UserAction newAction){
+		applyIJPlugin(command, currentAction, newAction,true);
+	}
+	
+	private void applyIJPlugin(Plugin plugin, UserAction currentAction,	UserAction newAction,int projection, boolean writeToFile){
+		long projectionId = currentAction.getProjectionId(projection);
+		String sourceProjectionPath = currentAction.getInputFilePath(projection);
+		String outputFile = newAction.getInputFilePath();
+		// TODO : get the @ path with the help of the Filename xmipp
+		String outputFullPath = String.valueOf(projectionId) + "@" + outputFile;
+		applyIJPlugin(plugin,sourceProjectionPath,outputFullPath,writeToFile);
+	}
+	
+	private void applyIJPlugin(String command, UserAction currentAction, UserAction newAction,boolean writeToFile) {
+
 		Plugin plugin = newAction.getPlugin();
-		int numberOfProjections = currentAction.getIoDetails()
-				.getNumberOfProjections();
+		int numberOfProjections = currentAction.getNumberOfProjections();
 		for (int i = 1; i < numberOfProjections; i++) {
-			long projectionId = currentAction.getIoDetails().getProjectionId(i);
-			newAction.setProgress("Converting..." + projectionId + "/"
-					+ numberOfProjections);
-			String sourceProjectionPath = currentAction.getIoDetails()
-					.getFilePath(i);
-			try {
-				if (sourceProjectionPath != null) {
-					ImageDouble image = new ImageDouble();
-					image.readSlice(sourceProjectionPath);
+			applyIJPlugin(plugin, currentAction, newAction, i, writeToFile);
+			newAction.setProgress("Converting..." + i + "/"	+ numberOfProjections);
+				}
+	}
 
-					ImagePlus ip = Converter.convertToImagePlus(image);
-					plugin.run(ip);
+	private void applyIJPlugin(Plugin plugin, String sourceProjectionPath,String outputFullPath,boolean writeToFile){
+		try {
+			if (sourceProjectionPath != null) {
+				ImageDouble image = new ImageDouble();
+				image.readSlice(sourceProjectionPath);
 
+				ImagePlus ip = Converter.convertToImagePlus(image);
+				plugin.run(ip);
+				if(writeToFile){
 					image = Converter.convertToImageDouble(ip);
 
-					// TODO : get the @ path with the help of the Filename xmipp
-					String outputFullPath = String.valueOf(projectionId) + "@"
-							+ outputFile;
 					Logger.debug(outputFullPath);
 					image.write(outputFullPath);
 
 					getStackModel().updateImage(outputFullPath, image, ip);
 				}
-			} catch (Exception ex) {
-				Logger.debug("Problem applying plugin to img " + projectionId,
-						ex);
 			}
+		} catch (Exception ex) {
+			Logger.debug("Problem applying plugin to img " + sourceProjectionPath,
+					ex);
 		}
 	}
-
+	
 	// TODO: update to new approach (stackmodel replaces tomodata)
 	public void convert() {
 		String destinationPath = TomoFileDialog

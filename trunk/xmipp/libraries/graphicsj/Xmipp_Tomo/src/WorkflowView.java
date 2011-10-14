@@ -46,6 +46,8 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.text.Document;
@@ -58,11 +60,13 @@ import javax.swing.tree.*;
 // TODO: simplify user's life: the workflow is autosaved every time a step is introduced or changed, and is autoloaded
 // (or created if there is none yet) from the current dir. The user does not need to worry about loading/saving
 // workflows, and hence does not need import/export neither
-public class WorkflowView extends JPanel implements TreeSelectionListener{
+public class WorkflowView extends JPanel implements TreeSelectionListener, TreeModelListener{
 	public static int PREFERED_WIDTH = 350;
 	private static Dimension BUTTONS_PANEL_PREF_SIZE = new Dimension(PREFERED_WIDTH,150),
 		TREE_PANEL_PREF_SIZE= new Dimension(PREFERED_WIDTH,350);
 	private static String DETAILS_LABEL="Details", COMMENTS_LABEL="Comments";
+
+	// @see valueChanged
 	public static String ACTION_SELECTED="ActionSelected";
 
 	// the controller must have access to the model. By default, this class acts as
@@ -88,6 +92,7 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
                 BorderFactory.createEmptyBorder(5,5,5,5)));
 	
         model=newModel;
+        model.addTreeModelListener(this);
 		
 		// use a layout that will stretch tree to panel size
 		setLayout(new BorderLayout());
@@ -96,13 +101,13 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 		tree = new JTree(model);
 		tree.addTreeSelectionListener(this);
 		
-		
 		// Set line style
 		tree.putClientProperty("JTree.lineStyle", "Angled");
 		tree.setRowHeight(0);
+		tree.setExpandsSelectedPaths(true);
 		tree.setScrollsOnExpand(true);
-		expandAll();
-		tree.setSelectionPath(new TreePath(model.getRoot()));
+		
+		// tree.setSelectionPath(new TreePath(model.getRoot()));
 		
 		// Put tree in a scrollable pane
 		JScrollPane sp = new JScrollPane(tree);
@@ -115,13 +120,9 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 		// TODO: discard should delete the selected node and its children, with all the corresponding files
 		Action b = new Action(controller, new Command("workflow.discardop","Discard Operation","discardOperation",true,null));
 		// TODO: workflow autoload (from ./.project) then remove this button
-		Action c = new Action(controller, new Command("workflow.load","Load Workflow","loadWorkflow",false,null));
 		// TODO: workflow autosave, then remove the save button
-		Action d = new Action(controller, new Command("workflow.save","Save Workflow","saveWorkflow",false,null));
 		formPanel.addButton(a);
 		formPanel.addButton(b);
-		formPanel.addButton(c);
-		formPanel.addButton(d);
 		formPanel.addStringField(DETAILS_LABEL, null,null);
 		formPanel.addStringField(COMMENTS_LABEL, null,getCommentsDocument());
 		
@@ -154,6 +155,10 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 	         tree.expandRow(i);
 	}
 	
+	/**
+	 * 
+	 * @return the node selected in the tree (which may not be the same as in the model, until the model is updated to reflect it)
+	 */
 	public DefaultMutableTreeNode getSelectedNode(){
 		return (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
 	}
@@ -179,6 +184,12 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 	public void saveWorkflow(){
 		Logger.debug("saveWorkflow");
 		expandAll();
+		TreeNode node= model.getSelectedNode();
+		TreePath lastInsertedPath = new TreePath(model.getPathToRoot(node));
+		Logger.debug(lastInsertedPath.toString());
+		tree.setSelectionPath(lastInsertedPath);
+		tree.scrollPathToVisible(lastInsertedPath);
+		
 	}
 	
 	private void setDetails(String details){
@@ -203,7 +214,8 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 		if(ua != null){
 			setDetails(ua.getCommandDetails());
 			setCommentsDocument(ua.getCommentsDocument());
-			model.setSelectedUserAction(ua);
+			model.setSelectedNode(getSelectedNode());
+			// notify all listeners that the user selected an action in the workflow
 			firePropertyChange(ACTION_SELECTED, false, true);
 		}
 	}
@@ -222,6 +234,33 @@ public class WorkflowView extends JPanel implements TreeSelectionListener{
 
 		window.setSize(windowWidth, windowHeight);
 		window.setVisible(true);
+	}
+
+	@Override
+	public void treeNodesChanged(TreeModelEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void treeNodesInserted(TreeModelEvent e) {
+		DefaultMutableTreeNode parent=(DefaultMutableTreeNode)(e.getTreePath().getLastPathComponent());
+		TreeNode lastInserted = parent.getLastChild();
+		TreePath lastInsertedPath = model.getNodePath(lastInserted);
+		tree.setSelectionPath(lastInsertedPath);
+		tree.scrollPathToVisible(lastInsertedPath);
+	}
+
+	@Override
+	public void treeNodesRemoved(TreeModelEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void treeStructureChanged(TreeModelEvent e) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 	
