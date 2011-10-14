@@ -50,7 +50,6 @@ public class JFrameXmippFilesListCTF extends JDialogXmippFilesList {
 
                 add(panelXmippBrowser, BorderLayout.CENTER);
 
-                setLocationRelativeTo(null);
                 ImagesWindowFactory.releaseGUI(getRootPane());
             }
         });

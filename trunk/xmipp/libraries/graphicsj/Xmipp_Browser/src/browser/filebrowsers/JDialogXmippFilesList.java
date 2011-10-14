@@ -57,10 +57,10 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
 
         initComponents();
 
-        setPanel(directory, expression, singleSelection);
-
         ImagesWindowFactory.setConvenientSize(this);
         this.setLocationRelativeTo(null);
+
+        setPanel(directory, expression, singleSelection);
     }
 
     protected void setPanel(final String directory, final String expression, final boolean singleSelection) {
