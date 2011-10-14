@@ -1,0 +1,105 @@
+# XMIPP_STAR_1 * 
+# x,y,z refer to the coordinates of the unitary vector at direction given by the euler angles
+data_
+loop_
+ _image
+ _enabled
+ _angleRot
+ _angleTilt
+ _anglePsi
+ _X
+ _Y
+ _Z
+ _scale
+ 000001@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -25.063148    96.578891     0.000000     0.899877    -0.420827    -0.114571     1.000000 
+ 000002@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     0.000000     0.000000     0.000000     0.000000     0.000000     1.000000     1.000000 
+ 000003@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -27.735388    92.175667     0.000000     0.884468    -0.465053    -0.037963     1.000000 
+ 000004@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -22.225893    92.135312     0.000000     0.925057    -0.377997    -0.037260     1.000000 
+ 000005@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -24.855250    87.874087     0.000000     0.906748    -0.420038     0.037096     1.000000 
+ 000006@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -27.516598    83.655337     0.000000     0.881445    -0.459176     0.110509     1.000000 
+ 000007@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    25.063148    96.578891     0.000000     0.899877     0.420827    -0.114571     1.000000 
+ 000008@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    22.225893    92.135312     0.000000     0.925057     0.377997    -0.037260     1.000000 
+ 000009@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    27.735388    92.175667     0.000000     0.884468     0.465053    -0.037963     1.000000 
+ 000010@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    24.855250    87.874087     0.000000     0.906748     0.420038     0.037096     1.000000 
+ 000011@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    27.516598    83.655337     0.000000     0.881445     0.459176     0.110509     1.000000 
+ 000012@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -27.175256    75.532999     0.000000     0.861406    -0.442232     0.249822     1.000000 
+ 000013@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -29.967496    71.452881     0.000000     0.821315    -0.473565     0.318084     1.000000 
+ 000014@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    27.578198    66.294675     0.000000     0.811592     0.423897     0.402033     1.000000 
+ 000015@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    22.176127    65.358111     0.000000     0.841696     0.343081     0.416945     1.000000 
+ 000016@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     5.594386    63.756518     0.000000     0.892651     0.087437     0.442187     1.000000 
+ 000017@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     0.000000    63.647867     0.000000     0.896083     0.000000     0.443887     1.000000 
+ 000018@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -5.594386    63.756518     0.000000     0.892651    -0.087437     0.442187     1.000000 
+ 000019@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -22.176127    65.358111     0.000000     0.841696    -0.343081     0.416945     1.000000 
+ 000020@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -27.578198    66.294675     0.000000     0.811592    -0.423897     0.402033     1.000000 
+ 000021@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    24.607699    70.602146     0.000000     0.857571     0.392766     0.332126     1.000000 
+ 000022@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     8.259403    69.029680     0.000000     0.924081     0.134140     0.357884     1.000000 
+ 000023@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     2.755338    68.851582     0.000000     0.931571     0.044834     0.360785     1.000000 
+ 000024@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -2.755338    68.851582     0.000000     0.931571    -0.044834     0.360785     1.000000 
+ 000025@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -8.259403    69.029680     0.000000     0.924081    -0.134140     0.357884     1.000000 
+ 000026@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -24.607699    70.602146     0.000000     0.857571    -0.392766     0.332126     1.000000 
+ 000027@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    29.967496    71.452881     0.000000     0.821315     0.473565     0.318084     1.000000 
+ 000028@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    27.175256    75.532999     0.000000     0.861406     0.442232     0.249822     1.000000 
+ 000029@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     5.464296    73.896612     0.000000     0.956397     0.091489     0.277371     1.000000 
+ 000030@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     0.000000    73.826935     0.000000     0.960425     0.000000     0.278540     1.000000 
+ 000031@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -5.464296    73.896612     0.000000     0.956397    -0.091489     0.277371     1.000000 
+ 000032@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     5.469098    83.330724     0.000000     0.988712     0.094664     0.116138     1.000000 
+ 000033@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     0.000000    83.300501     0.000000     0.993172     0.000000     0.116662     1.000000 
+ 000034@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -5.469098    83.330724     0.000000     0.988712    -0.094664     0.116138     1.000000 
+ 000035@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     8.264612    87.824333     0.000000     0.988901     0.143641     0.037963     1.000000 
+ 000036@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     2.754896    87.804061     0.000000     0.998111     0.048028     0.038317     1.000000 
+ 000037@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -2.754896    87.804061     0.000000     0.998111    -0.048028     0.038317     1.000000 
+ 000038@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     0.000000     7.921764     0.000000     0.137821     0.000000     0.990457     1.000000 
+ 000039@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -8.264612    87.824333     0.000000     0.988901    -0.143641     0.037963     1.000000 
+ 000040@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     5.572449    92.156506     0.000000     0.994569     0.097036    -0.037629     1.000000 
+ 000041@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -19.783631    16.949618     0.000000     0.274324    -0.098674     0.956561     1.000000 
+ 000042@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     0.000000    16.001895     0.000000     0.275669     0.000000     0.961253     1.000000 
+ 000043@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    19.783631    16.949618     0.000000     0.274324     0.098674     0.956561     1.000000 
+ 000044@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -23.280291    21.775620     0.000000     0.340769    -0.146619     0.928644     1.000000 
+ 000045@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -8.109921    20.337743     0.000000     0.344078    -0.049030     0.937660     1.000000 
+ 000046@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     8.109921    20.337743     0.000000     0.344078     0.049030     0.937660     1.000000 
+ 000047@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    23.280291    21.775620     0.000000     0.340769     0.146619     0.928644     1.000000 
+ 000048@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -25.481312    26.677761     0.000000     0.405299    -0.193155     0.893546     1.000000 
+ 000049@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -13.280062    24.987751     0.000000     0.411128    -0.097036     0.906398     1.000000 
+ 000050@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     0.000000    24.398321     0.000000     0.413078     0.000000     0.910696     1.000000 
+ 000051@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    13.280062    24.987751     0.000000     0.411128     0.097036     0.906398     1.000000 
+ 000052@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    25.481312    26.677761     0.000000     0.405299     0.193155     0.893546     1.000000 
+ 000053@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -26.979436    31.631478     0.000000     0.467377    -0.237929     0.851439     1.000000 
+ 000054@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -16.785268    29.828005     0.000000     0.476206    -0.143641     0.867522     1.000000 
+ 000055@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -5.706359    28.883762     0.000000     0.480641    -0.048028     0.875601     1.000000 
+ 000056@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     5.706359    28.883762     0.000000     0.480641     0.048028     0.875601     1.000000 
+ 000057@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    16.785268    29.828005     0.000000     0.476206     0.143641     0.867522     1.000000 
+ 000058@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    26.979436    31.631478     0.000000     0.467377     0.237929     0.851439     1.000000 
+ 000059@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -28.056792    36.625241     0.000000     0.526470    -0.280599     0.802555     1.000000 
+ 000060@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     0.000000    92.166736     0.000000     0.999285     0.000000    -0.037808     1.000000 
+ 000061@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -5.572449    92.156506     0.000000     0.994569    -0.097036    -0.037629     1.000000 
+ 000062@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     2.828029    96.406521     0.000000     0.992545     0.049030    -0.111582     1.000000 
+ 000063@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -2.828029    96.406521     0.000000     0.992545    -0.049030    -0.111582     1.000000 
+ 000064@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    25.359323    60.817533     0.000000     0.788942     0.373931     0.487593     1.000000 
+ 000065@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    28.056792    36.625241     0.000000     0.526470     0.280599     0.802555     1.000000 
+ 000066@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -28.864294    41.652737     0.000000     0.582046    -0.320834     0.747187     1.000000 
+ 000067@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -21.139793    39.868267     0.000000     0.597886    -0.231182     0.767520     1.000000 
+ 000068@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     2.867502    58.314638     0.000000     0.849880     0.042570     0.525254     1.000000 
+ 000069@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -4.345000    37.997985     0.000000     0.613864    -0.046642     0.788032     1.000000 
+ 000070@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     4.345000    37.997985     0.000000     0.613864     0.046642     0.788032     1.000000 
+ 000071@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -2.867502    58.314638     0.000000     0.849880    -0.042570     0.525254     1.000000 
+ 000072@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    21.139793    39.868267     0.000000     0.597886     0.231182     0.767520     1.000000 
+ 000073@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    28.864294    41.652737     0.000000     0.582046     0.320834     0.747187     1.000000 
+ 000074@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -29.490104    46.709824     0.000000     0.633585    -0.358321     0.685694     1.000000 
+ 000075@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -22.563593    45.017132     0.000000     0.653176    -0.271404     0.706895     1.000000 
+ 000076@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -25.359323    60.817533     0.000000     0.788942    -0.373931     0.487593     1.000000 
+ 000077@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -7.709741    42.997560     0.000000     0.675803    -0.091489     0.731383     1.000000 
+ 000078@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     0.000000    42.738138     0.000000     0.678649     0.000000     0.734463     1.000000 
+ 000079@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     7.709741    42.997560     0.000000     0.675803     0.091489     0.731383     1.000000 
+ 000080@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     6.278639    53.082892     0.000000     0.794710     0.087437     0.600659     1.000000 
+ 000081@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    22.563593    45.017132     0.000000     0.653176     0.271404     0.706895     1.000000 
+ 000082@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    29.490104    46.709824     0.000000     0.633585     0.358321     0.685694     1.000000 
+ 000083@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -29.989451    51.793103     0.000000     0.680580    -0.392766     0.618503     1.000000 
+ 000084@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -23.688153    50.232132     0.000000     0.703881    -0.308809     0.639679     1.000000 
+ 000085@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     0.000000    52.917216     0.000000     0.797765     0.000000     0.602968     1.000000 
+ 000086@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1   -10.365444    48.204656     0.000000     0.733363    -0.134140     0.666472     1.000000 
+ 000087@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -3.470318    47.788143     0.000000     0.739307    -0.044834     0.671874     1.000000 
+ 000088@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1     3.470318    47.788143     0.000000     0.739307     0.044834     0.671874     1.000000 
+ 000089@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    10.365444    48.204656     0.000000     0.733363     0.134140     0.666472     1.000000 
+ 000090@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    -6.278639    53.082892     0.000000     0.794710    -0.087437     0.600659     1.000000 
+ 000091@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    23.688153    50.232132     0.000000     0.703881     0.308809     0.639679     1.000000 
+ 000092@tmpLink/xmipp_angular_project_library_05/output_projections.stk          1    29.989451    51.793103     0.000000     0.680580     0.392766     0.618503     1.000000 
