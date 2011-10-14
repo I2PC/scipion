@@ -35,6 +35,44 @@ void svbksb(Matrix2D<double> &u, Matrix1D<double> &w, Matrix2D<double> &v,
            x.adaptForNumericalRecipes());
 }
 
+// Solve linear systems ---------------------------------------------------
+void solveLinearSystem(PseudoInverseHelper &h, Matrix1D<double> &result)
+{
+	Matrix2D<double> &A=h.A;
+	Matrix1D<double> &b=h.b;
+	Matrix2D<double> &AtA=h.AtA;
+	Matrix2D<double> &AtAinv=h.AtAinv;
+	Matrix1D<double> &Atb=h.Atb;
+
+	// Compute AtA and Atb
+	int I=MAT_YSIZE(A);
+	int J=MAT_XSIZE(A);
+	AtA.initZeros(J,J);
+	Atb.initZeros(J);
+	for (int i=0; i<J; ++i)
+	{
+		for (int j=0; j<J; ++j)
+		{
+			double AtA_ij=0;
+			for (int k=0; k<I; ++k)
+				AtA_ij+=MAT_ELEM(A,k,i)*MAT_ELEM(A,k,j);
+			MAT_ELEM(AtA,i,j)=AtA_ij;
+		}
+		double Atb_i=0;
+		for (int k=0; k<I; ++k)
+			Atb_i+=MAT_ELEM(A,k,i)*VEC_ELEM(b,k);
+		VEC_ELEM(Atb,i)=Atb_i;
+	}
+
+	// Compute the inverse of AtA
+	AtA.inv(AtAinv);
+
+	// Now multiply by Atb
+	result.initZeros(J);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(AtAinv)
+		VEC_ELEM(result,i)+=MAT_ELEM(AtAinv,i,j)*VEC_ELEM(Atb,j);
+}
+
 // Sparse matrices --------------------------------------------------------
 SparseMatrix2D::SparseMatrix2D(){
 	values 	= NULL;

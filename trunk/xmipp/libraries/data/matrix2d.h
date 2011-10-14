@@ -1492,6 +1492,20 @@ void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T1>& v2)
 	v2=v1;
 }
 
+/** Helper class for solving linear systems */
+class PseudoInverseHelper
+{
+public:
+	Matrix2D<double> A, AtA, AtAinv;
+	Matrix1D<double> Atb, b, bpredicted;
+};
+
+/** Solve Linear system Ax=b with pseudoinverse.
+ * A and b must be set inside the PseudoInverseHelper, the rest of the
+ * fields in PseudoInverseHelper are used by this routine to avoid
+ * several allocation/deallocations */
+void solveLinearSystem(PseudoInverseHelper &h, Matrix1D<double> &result);
+
 /** Sparse element.
  *  This class is used to create the SparseMatrices. */
 class SparseElement
