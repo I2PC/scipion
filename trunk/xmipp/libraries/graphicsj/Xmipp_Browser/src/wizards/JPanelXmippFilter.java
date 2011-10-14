@@ -60,6 +60,7 @@ abstract public class JPanelXmippFilter extends JPanelXmippBrowser {
         try {
             filteredPreview = getFilteredPreview(imageItem).getImage();
         } catch (Exception e) {
+            e.printStackTrace();
             filteredPreview = ICONS_MANAGER.MISSING_ITEM.getImage();
         }
 

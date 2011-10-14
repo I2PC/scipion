@@ -1,3 +1,4 @@
+package xmipp.io.writers;
 
 import ij.ImagePlus;
 import xmipp.Filename;
@@ -14,7 +15,7 @@ import xmipp.ImageDouble;
 public class ImageWriter extends Writer {
 
     @Override
-    protected void write(ImagePlus imp, String path) throws Exception {
+    public void write(ImagePlus imp, String path) throws Exception {
         // Stack is fully written.       
         String fullPath = imp.getStackSize() > 1 ? Filename.getFilename(path) : path;
         writeStack(imp, fullPath);

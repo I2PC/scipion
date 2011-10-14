@@ -3,12 +3,14 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.Prefs;
+import ij.io.ImageReader;
 import ij.plugin.PlugIn;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import xmipp.Filename;
+import xmipp.io.readers.MetaDataReader;
 
 // Plugin to handle file types which are not implemented
 // directly in ImageJ through io.Opener

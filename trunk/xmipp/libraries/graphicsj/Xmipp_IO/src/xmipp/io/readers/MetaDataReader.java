@@ -1,9 +1,11 @@
+package xmipp.io.readers;
 
 import ij.IJ;
 import ij.ImagePlus;
 import ij.io.FileInfo;
 import java.io.File;
 import xmipp.MetaData;
+import xmipp.io.ImageConverter;
 
 /*
  * To change this template, choose Tools | Templates
@@ -16,7 +18,7 @@ import xmipp.MetaData;
 public class MetaDataReader extends Reader {
 
     @Override
-    protected void read(String path) throws Exception {
+    public void read(String path) throws Exception {
         IJ.showStatus("Reading: " + path);
 
         MetaData md = new MetaData(path);

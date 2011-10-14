@@ -1,7 +1,9 @@
+package xmipp.io.writers;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.io.OpenDialog;
+import ij.WindowManager;
+import ij.io.SaveDialog;
 import ij.plugin.PlugIn;
 import xmipp.Filename;
 
@@ -13,11 +15,26 @@ import xmipp.Filename;
  *
  * @author Juanjo Vega
  */
-public abstract class Reader extends ImagePlus implements PlugIn {
+public abstract class Writer implements PlugIn {
 
     String basedir, prefix, filename;
 
     public void run(String arg) {
+        ImagePlus imp = WindowManager.getCurrentImage();
+
+        if (imp != null) {
+            run(arg, imp);
+        } else {
+            IJ.error("There are no images open!");
+        }
+    }
+
+    public void run(String arg, ImagePlus imp) {
+        if (imp == null) {
+            IJ.error("image is NULL");
+            return;
+        }
+
         boolean show = false;
         String path = arg;
 
@@ -34,10 +51,10 @@ public abstract class Reader extends ImagePlus implements PlugIn {
 
         if (path != null) {
             try {
-                read(path);
+                write(imp, path);
 
                 if (show) {
-                    show();
+                    IJ.showMessage("File sucessfully saved!");
                 }
             } catch (Exception ex) {
                 ex.printStackTrace(System.err);
@@ -49,7 +66,8 @@ public abstract class Reader extends ImagePlus implements PlugIn {
     String getPath() {
         String fullpath = null;
 
-        OpenDialog od = new OpenDialog(getOpenDialogTitle(), System.getProperty("user.dir"), "");
+        SaveDialog od = new SaveDialog(
+                getSaveDialogTitle(), System.getProperty("user.dir"), "", ".xmd");
         String path = od.getFileName();
 
         if (path != null) {
@@ -62,14 +80,7 @@ public abstract class Reader extends ImagePlus implements PlugIn {
         return fullpath;
     }
 
-    @Override
-    public String getTitle() {
-        String p = prefix == null ? "" : prefix + Filename.SEPARATOR;
+    protected abstract String getSaveDialogTitle();
 
-        return p + filename;
-    }
-
-    protected abstract String getOpenDialogTitle();
-
-    protected abstract void read(String path) throws Exception;
+    public abstract void write(ImagePlus imp, String path) throws Exception;
 }

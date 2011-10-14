@@ -1,3 +1,4 @@
+package xmipp.io.readers;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -5,6 +6,7 @@ import ij.io.FileInfo;
 import java.io.File;
 import xmipp.Filename;
 import xmipp.ImageDouble;
+import xmipp.io.ImageConverter;
 
 /*
  * To change this template, choose Tools | Templates
@@ -17,7 +19,7 @@ import xmipp.ImageDouble;
 public class ImageReader extends Reader {
 
     @Override
-    protected void read(String path) throws Exception {
+    public void read(String path) throws Exception {
         IJ.showStatus("Reading: " + path);
 
         ImageDouble image = new ImageDouble();

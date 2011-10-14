@@ -1,3 +1,4 @@
+package xmipp.io.writers;
 
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -18,7 +19,7 @@ import xmipp.MetaData;
 public class MetaDataWriter extends Writer {
 
     @Override
-    protected void write(ImagePlus imp, String path) throws Exception {
+    public void write(ImagePlus imp, String path) throws Exception {
         FileInfo fi = imp.getOriginalFileInfo();
         File f = new File(fi.directory, fi.fileName);
 

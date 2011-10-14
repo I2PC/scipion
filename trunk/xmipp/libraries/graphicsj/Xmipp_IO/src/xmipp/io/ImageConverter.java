@@ -1,3 +1,4 @@
+package xmipp.io;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -11,6 +12,7 @@ import java.util.LinkedList;
 import xmipp.ImageDouble;
 import xmipp.MDLabel;
 import xmipp.MetaData;
+import xmipp.io.readers.ImageReader;
 
 /*
  * To change this template, choose Tools | Templates
