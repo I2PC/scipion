@@ -27,8 +27,8 @@ class ProtML2D(XmippProtocol):
         return errors
     
     def summary(self):
-        return []
-        lines = [('Input images            ', "%s (%u)" % (self.ImgMd, MetaData(input).size())),
+        md = MetaData(self.ImgMd)
+        lines = [('Input images            ', "%s (%u)" % (self.ImgMd, md.size())),
                  ('Reference image', self.RefMd)]
             
         if os.path.exists(self.fnIterLogs):
