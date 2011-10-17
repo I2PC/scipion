@@ -165,12 +165,12 @@ public class ListModelFilesBrowser extends AbstractListModel implements Document
             addElement(createSuitableFileItem(file));
         }
 
+        filterList();
+
         time = System.currentTimeMillis() - time;
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("'List building >>> Total time:' mm:ss:S");
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("'List building time:' mm:ss:S");
 
         System.out.println(dateFormatter.format(new Date(time)));
-
-        filterList();
     }
 
     // Checks file types separately to assign different icons and/or behaviours.

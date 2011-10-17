@@ -5,6 +5,7 @@
 package wizards;
 
 import browser.Cache;
+import browser.DEBUG;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.filebrowsers.JPanelXmippBrowser;
@@ -17,6 +18,8 @@ import ij.ImagePlus;
 import ij.gui.Toolbar;
 import ij.measure.Calibration;
 import java.awt.Image;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -58,9 +61,16 @@ abstract public class JPanelXmippFilter extends JPanelXmippBrowser {
         Image filteredPreview = null;
 
         try {
+            long time = System.currentTimeMillis();
+
             filteredPreview = getFilteredPreview(imageItem).getImage();
+
+            time = System.currentTimeMillis() - time;
+            SimpleDateFormat dateFormatter = new SimpleDateFormat("'filtering preview time:' mm:ss:S");
+
+            System.out.println(dateFormatter.format(new Date(time)));
         } catch (Exception e) {
-            e.printStackTrace();
+            DEBUG.printException(e);
             filteredPreview = ICONS_MANAGER.MISSING_ITEM.getImage();
         }
 
