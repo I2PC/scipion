@@ -216,8 +216,9 @@ public:
 
     /* Read an image with a lower resolution as a preview image.
     * If Zdim parameter is not passed, then all slices are rescaled.
+    * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
     */
-    int readPreview(const FileName &name, int Xdim, int Ydim, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE);
+    int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE);
 
     /** Write image to file.
     */

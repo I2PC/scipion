@@ -669,8 +669,9 @@ public:
 
     /* Read an image with a lower resolution as a preview image.
        * If Zdim parameter is not passed, then all slices are rescaled.
+       * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
        */
-    int readPreview(const FileName &name, int Xdim, int Ydim, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE)
+    int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE)
     {
         // Zdim is used to choose the slices: -1 = CENTRAL_SLICE, 0 = ALL_SLICES, else This Slice
 
@@ -681,7 +682,12 @@ public:
         im.getDimensions(imXdim, imYdim, imZdim);
         im().setXmippOrigin();
 
-        int mode = (Xdim <= imXdim)? NEAREST : LINEAR; // If scale factor is higher than 1, LINEAR mode is used to avoid artifacts
+        double scale = ((double) Xdim)/((double) imXdim);
+
+        if (Ydim == -1)
+            Ydim = imYdim * scale;
+
+        int mode = (scale <= 1)? NEAREST : LINEAR; // If scale factor is higher than 1, LINEAR mode is used to avoid artifacts
 
         if (select_slice > ALL_SLICES) // In this case a specific slice number has been chosen (Not central slice)
         {
