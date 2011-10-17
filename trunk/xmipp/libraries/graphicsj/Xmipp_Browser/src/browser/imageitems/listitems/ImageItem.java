@@ -29,7 +29,7 @@ public class ImageItem extends AbstractImageItem {
     }
 
     @Override
-    protected void loadImageData() {
+    void loadImageData() {
         try {
             // Tries to get a reader for the given file...
             ImageInputStream iis = ImageIO.createImageInputStream(file);
@@ -98,9 +98,9 @@ public class ImageItem extends AbstractImageItem {
     /*
     public String getImageInfo() {
     loadImageData();
-
+    
     System.out.println("W=" + dimension.width + " / H=" + dimension.height);
-
+    
     return "<html>"
     + LABELS.LABEL_WIDTH + dimension.width + "<br>"
     + LABELS.LABEL_HEIGHT + dimension.height + "<br>"

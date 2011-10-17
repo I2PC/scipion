@@ -29,7 +29,7 @@ public class MetadataFileItem extends XmippImageItem {
     }
 
     @Override
-    protected void loadImageData() {
+    void loadImageData() {
         try {
             String path = file.getAbsolutePath();
             md = new MetaData();

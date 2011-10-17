@@ -28,21 +28,16 @@ public abstract class AbstractImageItem extends FileItem {
         super(file);
 
         this.cache = cache;
-
-        if (exists()) {
-            loadImageData();
-        }
     }
 
-    protected void loadImageData() {
+    void loadImageData() {
         try {
             ImageDouble image = new ImageDouble();
-            image.readHeader(file.getAbsolutePath());
+            image.readHeader(getAbsoluteFileName());
 
             dimension = new ImageDimension(image);
         } catch (Exception ex) {
-            //throw new RuntimeException(ex);
-            System.out.println(ex.getMessage() + ": " + file.getAbsolutePath());
+            System.out.println(ex.getMessage() + ": " + getAbsoluteFileName());
         }
     }
 
@@ -50,6 +45,11 @@ public abstract class AbstractImageItem extends FileItem {
 
     public ImagePlus getPreview(int w, int h) {
         ImagePlus preview = null;
+
+        // Loads image data just the first time.
+        if (dimension == null && exists()) {
+            loadImageData();
+        }
 
         if (getWidth() > 0 && getHeight() > 0) {
             // Tries to load from cache.
