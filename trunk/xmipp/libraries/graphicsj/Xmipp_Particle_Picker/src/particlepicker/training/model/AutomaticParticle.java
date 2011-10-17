@@ -1,5 +1,8 @@
 package particlepicker.training.model;
 
+import particlepicker.Constants;
+import particlepicker.Family;
+
 public class AutomaticParticle extends TrainingParticle {
 	
 	private boolean deleted;

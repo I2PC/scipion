@@ -1,8 +1,12 @@
-package particlepicker.training.model;
+package particlepicker;
 
 import java.awt.Color;
 import java.io.File;
 import java.lang.reflect.Field;
+
+import particlepicker.training.model.FamilyState;
+import particlepicker.training.model.SupervisedParticlePicker;
+import particlepicker.training.model.TrainingPicker;
 
 
 
@@ -12,17 +16,14 @@ public class Family {
 	private Color color;
 	private int size;
 	private FamilyState state;
-	int particles = 0;
+	//int particles = 0;
 	
 	
-	public int getManualNumber()
-	{
-		return particles;
-	}
+//	public int getManualNumber()
+//	{
+//		return particles;
+//	}
 
-
-
-	
 	private static int sizemax = 1000;
 	private static Family dfamily = new Family("Default", Color.green);
 	private static Color[] colors = new Color[]{Color.BLUE, Color.CYAN, 
@@ -30,9 +31,6 @@ public class Family {
 										Color.MAGENTA, Color.ORANGE, 
 										Color.PINK, Color.RED, Color.YELLOW};
 	private static int nextcolor;
-	
-	
-	
 	
 	
 	public static Color getNextColor()
@@ -94,7 +92,7 @@ public class Family {
 	{
 		int min = SupervisedParticlePicker.getMinForTraining();
 		FamilyState next = TrainingPicker.nextStep(state);
-		if(next == FamilyState.Supervised && particles < min)
+		if(next == FamilyState.Supervised && ppicker.getManualParticlesNumber(this) < min)
 			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", min, FamilyState.Supervised));
 		if(!ppicker.hasEmptyMicrographs(this) && next != FamilyState.Review)
 			throw new IllegalArgumentException(String.format("There are no available micrographs for %s step", FamilyState.Supervised));

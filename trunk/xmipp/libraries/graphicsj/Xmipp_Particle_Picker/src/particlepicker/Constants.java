@@ -1,4 +1,4 @@
-package particlepicker.training.model;
+package particlepicker;
 
 
 public class Constants {

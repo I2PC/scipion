@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+import particlepicker.Family;
+import particlepicker.ParticlePicker;
+
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -397,6 +400,15 @@ public abstract class TrainingPicker extends ParticlePicker
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
+	}
+
+	@Override
+	public int getManualParticlesNumber(Family f)
+	{
+		int count = 0;
+		for(TrainingMicrograph m: micrographs)
+			count += m.getFamilyData(f).getManualParticles().size();
+		return count;		
 	}
 
 }

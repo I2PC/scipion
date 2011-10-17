@@ -3,6 +3,8 @@ package particlepicker.training.model;
 import java.io.File;
 import java.util.logging.Level;
 
+import particlepicker.Family;
+
 
 
 public class SupervisedParticlePicker extends TrainingPicker {

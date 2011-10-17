@@ -1,6 +1,6 @@
 package particlepicker.tiltpair.model;
 
-import particlepicker.training.model.Family;
+import particlepicker.Family;
 import particlepicker.training.model.TrainingParticle;
 
 

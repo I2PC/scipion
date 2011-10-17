@@ -1,4 +1,4 @@
-package particlepicker.training.model;
+package particlepicker;
 
 import java.awt.Color;
 import java.io.File;
@@ -9,6 +9,9 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+
+import particlepicker.training.model.FamilyState;
+import particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 import xmipp.Program;
@@ -194,7 +197,7 @@ public abstract class ParticlePicker
 
 	public void removeFamily(Family family)
 	{
-		if (family.particles > 0)
+		if (getManualParticlesNumber(family) > 0)//perhaps I have to check automatic particles
 			throw new IllegalArgumentException(Constants.getAssociatedDataMsg("family"));
 		if (families.size() == 1)
 			throw new IllegalArgumentException(Constants.getIllegalDeleteMsg("family"));
@@ -202,5 +205,7 @@ public abstract class ParticlePicker
 	}
 
 	public abstract void saveData();
+	
+	public abstract int getManualParticlesNumber(Family f);
 
 }

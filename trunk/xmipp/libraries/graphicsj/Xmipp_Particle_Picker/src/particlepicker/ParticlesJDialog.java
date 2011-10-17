@@ -14,9 +14,7 @@ import javax.swing.JPanel;
 import particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import particlepicker.tiltpair.model.TiltedParticle;
 import particlepicker.tiltpair.model.UntiltedParticle;
-import particlepicker.training.gui.ParticleCanvas;
 import particlepicker.training.gui.TrainingPickerJFrame;
-import particlepicker.training.model.Constants;
 import particlepicker.training.model.TrainingParticle;
 
 public class ParticlesJDialog extends JDialog
@@ -82,6 +80,7 @@ public class ParticlesJDialog extends JDialog
 			}
 		if (resize)
 			pack();
+		particlespn.repaint();
 	}
 
 	private void initComponents()

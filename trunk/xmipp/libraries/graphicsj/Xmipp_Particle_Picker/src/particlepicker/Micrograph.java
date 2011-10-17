@@ -1,9 +1,13 @@
-package particlepicker.training.model;
+package particlepicker;
 
+import ij.IJ;
 import ij.ImagePlus;
 
 import java.io.File;
 import java.util.List;
+
+
+import xmipp.ImageDouble;
 
 public abstract class Micrograph
 {
@@ -59,7 +63,13 @@ public abstract class Micrograph
 	public ImagePlus getImage()
 	{
 		if (image == null)
-			image = new ImagePlus(file);
+		{
+//			if(file.endsWith(".tif"))
+//			{
+//			}
+//			else
+				image = new ImagePlus(file);
+		}
 		return image;
 	}
 

@@ -43,13 +43,14 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import particlepicker.Family;
 import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
+import particlepicker.Shape;
 import particlepicker.WindowUtils;
 import particlepicker.tiltpair.model.TiltPairPicker;
 import particlepicker.tiltpair.model.UntiltedMicrograph;
 import particlepicker.training.gui.ColorIcon;
-import particlepicker.training.model.Family;
 import particlepicker.training.model.TrainingParticle;
 import particlepicker.training.model.TrainingPicker;
 
@@ -58,10 +59,6 @@ enum Tool
 	IMAGEJ, PICKER
 }
 
-enum Shape
-{
-	Circle, Rectangle, Center
-}
 
 public class TiltPairPickerJFrame extends ParticlePickerJFrame implements ActionListener
 {
@@ -92,23 +89,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 	private JLabel upslb;
 	private String tool = "Particle Picker Tool";
 
-	// private JCheckBox onlylastchb;
 
-	public boolean isShapeSelected(Shape s)
-	{
-		switch (s)
-		{
-		case Rectangle:
-			return rectanglechb.isSelected();
-		case Circle:
-			return circlechb.isSelected();
-		case Center:
-			return centerchb.isSelected();
-			// case OnlyLast:
-			// return onlylastchb.isSelected();
-		}
-		return false;
-	}
 
 	public Tool getTool()
 	{
@@ -584,5 +565,22 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 	public List<? extends TrainingParticle> getParticles()
 	{
 		return untiltedmic.getParticles();
+	}
+
+	@Override
+	public boolean isShapeSelected(Shape shape)
+	{
+		switch (shape)
+		{
+		case Rectangle:
+			return rectanglechb.isSelected();
+		case Circle:
+			return circlechb.isSelected();
+		case Center:
+			return centerchb.isSelected();
+			// case OnlyLast:
+			// return onlylastchb.isSelected();
+		}
+		return false;
 	}
 }

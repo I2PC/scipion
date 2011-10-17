@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
-import particlepicker.training.model.Family;
+import particlepicker.Family;
+import particlepicker.ParticlePicker;
 import particlepicker.training.model.FamilyState;
-import particlepicker.training.model.ParticlePicker;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -217,6 +217,15 @@ public class TiltPairPicker extends ParticlePicker
 	public Family getFamily()
 	{
 		return family;
+	}
+
+	@Override
+	public int getManualParticlesNumber(Family f)
+	{
+		int count = 0;
+		for(UntiltedMicrograph um: micrographs)
+			count += um.getParticles().size();
+		return count;
 	}
 	
 	

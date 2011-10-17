@@ -1,4 +1,4 @@
-package particlepicker.training.gui;
+package particlepicker;
 
 import ij.gui.ImageCanvas;
 
@@ -13,14 +13,13 @@ import java.awt.event.MouseMotionListener;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import particlepicker.ParticlePickerCanvas;
-import particlepicker.ParticlePickerJFrame;
 import particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import particlepicker.tiltpair.gui.UntiltedMicrographCanvas;
 import particlepicker.tiltpair.model.TiltedMicrograph;
 import particlepicker.tiltpair.model.TiltedParticle;
 import particlepicker.tiltpair.model.UntiltedMicrograph;
 import particlepicker.tiltpair.model.UntiltedParticle;
+import particlepicker.training.gui.TrainingPickerJFrame;
 import particlepicker.training.model.TrainingMicrograph;
 import particlepicker.training.model.TrainingParticle;
 
@@ -82,7 +81,6 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		}
 		lastx = e.getX();
 		lasty = e.getY();
-
 	}
 	
 
@@ -109,7 +107,10 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 			frame.loadParticles();
 		}
 		else
+		{
 			canvas.moveTo(particle);
+			canvas.setActive(particle);
+		}
 			
 	}
 

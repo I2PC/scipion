@@ -7,8 +7,6 @@ import javax.swing.JOptionPane;
 
 import particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import particlepicker.training.gui.TrainingPickerJFrame;
-import particlepicker.training.model.Family;
-import particlepicker.training.model.Micrograph;
 import particlepicker.training.model.TrainingParticle;
 
 public abstract class ParticlePickerJFrame extends JFrame
@@ -66,5 +64,8 @@ public abstract class ParticlePickerJFrame extends JFrame
 	public abstract Micrograph getMicrograph();
 
 	public abstract List<? extends TrainingParticle> getParticles();
+	
+	public abstract boolean isShapeSelected(Shape shape);
+	
 
 }

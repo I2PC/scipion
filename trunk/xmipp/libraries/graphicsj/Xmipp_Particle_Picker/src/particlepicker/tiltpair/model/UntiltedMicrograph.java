@@ -3,8 +3,8 @@ package particlepicker.tiltpair.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import particlepicker.training.model.Constants;
-import particlepicker.training.model.Micrograph;
+import particlepicker.Constants;
+import particlepicker.Micrograph;
 import xmipp.Particle;
 import xmipp.TiltPairAligner;
 

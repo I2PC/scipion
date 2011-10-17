@@ -48,12 +48,13 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import particlepicker.Constants;
+import particlepicker.Family;
 import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
 import particlepicker.ParticlesJDialog;
+import particlepicker.Shape;
 import particlepicker.WindowUtils;
-import particlepicker.training.model.Constants;
-import particlepicker.training.model.Family;
 import particlepicker.training.model.FamilyState;
 import particlepicker.training.model.MicrographFamilyData;
 import particlepicker.training.model.MicrographFamilyState;
@@ -68,10 +69,7 @@ enum Tool
 	IMAGEJ, PICKER
 }
 
-enum Shape
-{
-	Circle, Rectangle, Center
-}
+
 
 public class TrainingPickerJFrame extends ParticlePickerJFrame implements ActionListener
 {
@@ -113,23 +111,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 	private String tool = "Particle Picker Tool";
 	private JMenuItem exportmi;
 
-	// private JCheckBox onlylastchb;
-
-	public boolean isShapeSelected(Shape s)
-	{
-		switch (s)
-		{
-		case Rectangle:
-			return rectanglechb.isSelected();
-		case Circle:
-			return circlechb.isSelected();
-		case Center:
-			return centerchb.isSelected();
-			// case OnlyLast:
-			// return onlylastchb.isSelected();
-		}
-		return false;
-	}
 
 	public Tool getTool()
 	{
@@ -683,7 +664,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 		micrographpn.add(sp, WindowUtils.getConstraints(constraints, 0, 0, 1));
 		micrographpn.add(ctfpn, WindowUtils.getConstraints(constraints, 1, 0, 1));
 		JPanel infopn = new JPanel();
-		manuallb = new JLabel(Integer.toString(family.getManualNumber()));
+		manuallb = new JLabel(Integer.toString(ppicker.getManualParticlesNumber(family)));
 		autolb = new JLabel(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
 		infopn.add(new JLabel("Manual:"));
 		infopn.add(manuallb);
@@ -856,7 +837,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 		super.updateMicrographsModel();
 		micrographsmd.fireTableRowsUpdated(index, index);
 		micrographstb.setRowSelectionInterval(index, index);
-		manuallb.setText(Integer.toString(family.getManualNumber()));
+		manuallb.setText(Integer.toString(ppicker.getManualParticlesNumber(family)));
 		autolb.setText(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
 		actionsbt.setVisible(getFamilyData().isActionAvailable(getThreshold()));
 		
@@ -1071,6 +1052,23 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 	public List<? extends TrainingParticle> getParticles()
 	{
 		return getFamilyData().getParticles();
+	}
+
+	@Override
+	public boolean isShapeSelected(Shape shape)
+	{
+		switch (shape)
+		{
+		case Rectangle:
+			return rectanglechb.isSelected();
+		case Circle:
+			return circlechb.isSelected();
+		case Center:
+			return centerchb.isSelected();
+			// case OnlyLast:
+			// return onlylastchb.isSelected();
+		}
+		return false;
 	}
 
 }

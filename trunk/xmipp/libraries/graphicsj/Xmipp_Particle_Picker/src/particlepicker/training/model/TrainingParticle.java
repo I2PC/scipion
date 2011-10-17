@@ -7,8 +7,11 @@ import java.awt.Rectangle;
 
 import javax.swing.ImageIcon;
 
+import particlepicker.Constants;
+import particlepicker.Family;
+import particlepicker.Micrograph;
+import particlepicker.ParticleCanvas;
 import particlepicker.ParticlePickerJFrame;
-import particlepicker.training.gui.ParticleCanvas;
 import particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.Particle;
 

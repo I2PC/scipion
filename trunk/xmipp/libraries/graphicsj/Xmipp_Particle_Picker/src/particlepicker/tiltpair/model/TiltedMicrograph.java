@@ -3,7 +3,7 @@ package particlepicker.tiltpair.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import particlepicker.training.model.Micrograph;
+import particlepicker.Micrograph;
 
 public class TiltedMicrograph extends Micrograph
 {

@@ -4,6 +4,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import particlepicker.Constants;
+import particlepicker.Family;
+
 public class MicrographFamilyData
 {
 
@@ -67,7 +70,7 @@ public class MicrographFamilyData
 	{
 
 		manualparticles.add(p);
-		family.particles++;
+		//family.particles++;
 		if (state == MicrographFamilyState.Available)
 		{
 			if (family.getStep() == FamilyState.Manual)
@@ -95,7 +98,7 @@ public class MicrographFamilyData
 		else
 		{
 			manualparticles.remove(p);
-			family.particles--;
+			//family.particles--;
 			if (manualparticles.size() == 0 && autoparticles.size() - getAutomaticParticlesDeleted() == 0)
 				state = MicrographFamilyState.Available;
 		}
@@ -187,7 +190,7 @@ public class MicrographFamilyData
 
 	public void reset()
 	{
-		family.particles -= manualparticles.size();
+		//family.particles -= manualparticles.size();
 		autoparticles.clear();
 		manualparticles.clear();
 		setState(MicrographFamilyState.Available);

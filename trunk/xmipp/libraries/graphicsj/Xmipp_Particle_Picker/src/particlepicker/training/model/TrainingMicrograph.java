@@ -10,6 +10,9 @@ import java.util.List;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import particlepicker.Family;
+import particlepicker.Micrograph;
+
 public class TrainingMicrograph extends Micrograph{
 	
 	private String ctf;

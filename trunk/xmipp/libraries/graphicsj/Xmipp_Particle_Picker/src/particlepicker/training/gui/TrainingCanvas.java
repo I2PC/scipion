@@ -3,6 +3,7 @@ package particlepicker.training.gui;
 import ij.gui.ImageWindow;
 
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
@@ -13,6 +14,7 @@ import java.util.List;
 import javax.swing.SwingUtilities;
 
 import particlepicker.ParticlePickerCanvas;
+import particlepicker.ParticlePickerJFrame;
 import particlepicker.training.model.AutomaticParticle;
 import particlepicker.training.model.FamilyState;
 import particlepicker.training.model.MicrographFamilyData;
@@ -25,7 +27,7 @@ public class TrainingCanvas extends ParticlePickerCanvas implements MouseWheelLi
 
 	private TrainingPickerJFrame frame;
 	private TrainingMicrograph micrograph;
-	private TrainingParticle dragged;
+	private TrainingParticle active;
 	private TrainingPicker ppicker;
 	final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
 	final static BasicStroke continuousst = new BasicStroke();
@@ -105,14 +107,14 @@ public class TrainingCanvas extends ParticlePickerCanvas implements MouseWheelLi
 				}
 				else if (SwingUtilities.isLeftMouseButton(e))
 				{
-					dragged = p;
+					active = p;
 				}
 			}
 			else if (SwingUtilities.isLeftMouseButton(e) && TrainingParticle.boxContainedOnImage(x, y, frame.getFamily().getSize(), imp))
 			{
 				p = new TrainingParticle(x, y, frame.getFamily(), micrograph);
 				micrograph.addManualParticle(p);
-				dragged = p;
+				active = p;
 				frame.updateMicrographsModel();
 			}
 			frame.setChanged(true);
@@ -130,7 +132,6 @@ public class TrainingCanvas extends ParticlePickerCanvas implements MouseWheelLi
 			super.mouseReleased(e);
 			return;
 		}
-		dragged = null;
 	}
 
 	/**
@@ -154,22 +155,22 @@ public class TrainingCanvas extends ParticlePickerCanvas implements MouseWheelLi
 		}
 		if (frame.getFamilyData().isPickingAvailable())
 		{
-			if (dragged == null)
+			if (active == null)
 				return;
 
-			if (!TrainingParticle.boxContainedOnImage(x, y, dragged.getFamily().getSize(), imp))
+			if (!TrainingParticle.boxContainedOnImage(x, y, active.getFamily().getSize(), imp))
 				return;
-			if (dragged instanceof AutomaticParticle)
+			if (active instanceof AutomaticParticle)
 			{
-				micrograph.removeParticle(dragged, ppicker);
-				dragged = new TrainingParticle(dragged.getX(), dragged.getY(), dragged.getFamily(), micrograph);
-				micrograph.addManualParticle(dragged);
+				micrograph.removeParticle(active, ppicker);
+				active = new TrainingParticle(active.getX(), active.getY(), active.getFamily(), micrograph);
+				micrograph.addManualParticle(active);
 			}
 			else
 			{
-				dragged.setPosition(x, y);
+				active.setPosition(x, y);
 				if (frame.getParticlesJDialog() != null)
-					dragged.getParticleCanvas(frame).repaint();
+					active.getParticleCanvas(frame).repaint();
 			}
 			frame.setChanged(true);
 			repaint();
@@ -199,51 +200,44 @@ public class TrainingCanvas extends ParticlePickerCanvas implements MouseWheelLi
 				drawFamily(g2, mfdata);
 		else
 			drawFamily(g2, micrograph.getFamilyData(frame.getFamily()));
+		if (active != null)
+		{
+			g2.setColor(Color.red);
+			drawShape(g2, active, true);
+		}
+
 	}
 
 	private void drawFamily(Graphics2D g2, MicrographFamilyData mfdata)
 	{
-		int x0 = (int) getSrcRect().getX();
-		int y0 = (int) getSrcRect().getY();
-
-		int radius;
 		List<TrainingParticle> particles;
 		int index;
 		if (!mfdata.isEmpty())
 		{
 			particles = mfdata.getManualParticles();
 			g2.setColor(mfdata.getFamily().getColor());
-			radius = (int) (mfdata.getFamily().getSize() / 2 * magnification);
 
 			for (index = 0; index < particles.size(); index++)
-				drawShape(g2, particles.get(index), x0, y0, radius, index == particles.size() - 1);
+				drawShape(g2, particles.get(index), index == particles.size() - 1);
 			List<AutomaticParticle> autoparticles = mfdata.getAutomaticParticles();
 			for (int i = 0; i < autoparticles.size(); i++)
 				if (!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= frame.getThreshold())
-					drawShape(g2, autoparticles.get(i), x0, y0, radius, false);
+					drawShape(g2, autoparticles.get(i), false);
 		}
 	}
 
-	private void drawShape(Graphics2D g2, TrainingParticle p, int x0, int y0, int radius, boolean all)
+	@Override
+	public void setActive(TrainingParticle p)
 	{
+		active = p;
+		repaint();
 
-		int x = (int) ((p.getX() - x0) * magnification);
-		int y = (int) ((p.getY() - y0) * magnification);
-		int distance = (int) (10 * magnification);
-		if (p instanceof AutomaticParticle)
-			g2.setStroke(dashedst);
-		if (frame.isShapeSelected(Shape.Rectangle) || all)
-			g2.drawRect(x - radius, y - radius, radius * 2, radius * 2);
-		if (frame.isShapeSelected(Shape.Circle) || all)
-			g2.drawOval(x - radius, y - radius, radius * 2, radius * 2);
-		g2.setStroke(continuousst);
-		if (frame.isShapeSelected(Shape.Center) || all)
-		{
-			g2.drawLine(x, y - distance, x, y + distance);
-			g2.drawLine(x + distance, y, x - distance, y);
-		}
 	}
 
-	
+	@Override
+	public ParticlePickerJFrame getFrame()
+	{
+		return frame;
+	}
 
 }

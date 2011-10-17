@@ -12,6 +12,7 @@ import java.awt.event.MouseWheelListener;
 import javax.swing.SwingUtilities;
 
 import particlepicker.ParticlePickerCanvas;
+import particlepicker.ParticlePickerJFrame;
 import particlepicker.WindowUtils;
 import particlepicker.tiltpair.model.TiltPairPicker;
 import particlepicker.tiltpair.model.TiltedParticle;
@@ -103,10 +104,14 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 		{
 			if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown())
 			{
+				if(active!= null && active.equals(p))
+					active = um.getParticles().get(um.getParticles().size() - 1);
 				um.removeParticle(p);
 				frame.updateMicrographsModel();
 				if(p.isAdded())
 					um.initAligner();
+				repaint();
+				frame.setChanged(true);
 			}
 			else if (SwingUtilities.isLeftMouseButton(e))
 				setActive(p);
@@ -117,11 +122,8 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 			um.addParticle(p);
 			setActive(p);
 			frame.updateMicrographsModel();
+			frame.setChanged(true);
 		}
-		frame.setChanged(true);
-		repaint();
-		tiltedcanvas.repaint();
-
 	}
 	
 	public void setActive(UntiltedParticle up)
@@ -133,6 +135,8 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 			um.setAlignerTiltedParticle(up);
 		if(tp != null)
 			tiltedcanvas.moveTo(tp);
+		repaint();
+		tiltedcanvas.repaint();
 	}
 
 
@@ -210,46 +214,33 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 		super.paint(g);
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setColor(frame.getColor());
-		int x0 = (int) getSrcRect().getX();
-		int y0 = (int) getSrcRect().getY();
 		int index = 0;
 
-		for (Particle p : um.getParticles())
+		for (TrainingParticle p : um.getParticles())
 		{
-			drawShape(g2, p, x0, y0, index == (um.getParticles().size() - 1));
+			drawShape(g2, p, index == (um.getParticles().size() - 1));
 			index++;
 		}
 		if (um.getActiveParticle() != null)
 		{
 			g2.setColor(Color.red);
-			drawShape(g2, um.getActiveParticle(), x0, y0, true);
+			drawShape(g2, um.getActiveParticle(), true);
 		}
 	}
 
-	private void drawShape(Graphics2D g2, Particle p, int x0, int y0, boolean all)
-	{
-		int size = (int) (frame.getParticleSize() * magnification);
-		int radius = (int) (frame.getParticleSize() / 2 * magnification);
-		int x = (int) ((p.getX() - x0) * magnification);
-		int y = (int) ((p.getY() - y0) * magnification);
-		int distance = (int) (5 * magnification);
 
-		if (frame.isShapeSelected(Shape.Rectangle) || all)
-			g2.drawRect(x - radius, y - radius, size, size);
-		if (frame.isShapeSelected(Shape.Circle) || all)
-			g2.drawOval(x - radius, y - radius, size, size);
-		if (frame.isShapeSelected(Shape.Center) || all)
-		{
-			g2.drawLine(x, y - distance, x, y + distance);
-			g2.drawLine(x + distance, y, x - distance, y);
-		}
+
+
+	@Override
+	public void setActive(TrainingParticle p)
+	{
+		setActive((UntiltedParticle)p);
 	}
 
 	@Override
-	public void moveTo(TrainingParticle particle)
+	public ParticlePickerJFrame getFrame()
 	{
-		// TODO Auto-generated method stub
-		
+		return frame;
 	}
 	
 

@@ -3,12 +3,12 @@ package particlepicker.tiltpair.gui;
 import java.awt.Dimension;
 import java.util.List;
 
+import particlepicker.Constants;
+import particlepicker.ParticleCanvas;
 import particlepicker.ParticlePickerJFrame;
 import particlepicker.ParticlesJDialog;
 import particlepicker.WindowUtils;
 import particlepicker.tiltpair.model.UntiltedParticle;
-import particlepicker.training.gui.ParticleCanvas;
-import particlepicker.training.model.Constants;
 import particlepicker.training.model.TrainingParticle;
 
 public class TiltPairParticlesJDialog extends ParticlesJDialog
@@ -71,5 +71,6 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 			}
 		if (resize)
 			pack();
+		
 	}
 }

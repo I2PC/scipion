@@ -21,9 +21,9 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
+import particlepicker.Constants;
+import particlepicker.Family;
 import particlepicker.WindowUtils;
-import particlepicker.training.model.Constants;
-import particlepicker.training.model.Family;
 
 
 
