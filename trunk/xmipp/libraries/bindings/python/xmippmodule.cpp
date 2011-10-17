@@ -354,7 +354,7 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
                 else
                     return NULL;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
                 return NULL;
@@ -387,7 +387,7 @@ Image_compare(PyObject * obj, PyObject * obj2)
             if (Image_Value(obj) == Image_Value(obj2))
                 result = 0;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -415,7 +415,7 @@ Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
                     return NULL;
                 Py_RETURN_NONE;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
@@ -445,7 +445,7 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
                     return NULL;
                 Py_RETURN_NONE;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
@@ -478,7 +478,7 @@ Image_getPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
             double value = self->image->getPixel(i, j);
             return PyFloat_FromDouble(value);
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -502,7 +502,7 @@ Image_setPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->image->setPixel(i, j, value);
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -525,7 +525,7 @@ Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->image->image->getDimensions(xdim, ydim, zdim, ndim);
             return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -547,7 +547,7 @@ Image_getEulerAngles(PyObject *obj, PyObject *args, PyObject *kwargs)
             return Py_BuildValue("fff", rot, tilt, psi);
 
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -693,7 +693,7 @@ Image_add(PyObject *obj1, PyObject *obj2)
             result->image = new ImageGeneric(Image_Value(obj1));
             Image_Value(result).add(Image_Value(obj2));
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -712,7 +712,7 @@ Image_iadd(PyObject *obj1, PyObject *obj2)
         if (result = PyObject_New(ImageObject, &ImageType))
             result->image = new ImageGeneric(Image_Value(obj1));
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
@@ -731,7 +731,7 @@ Image_subtract(PyObject *obj1, PyObject *obj2)
             result->image = new ImageGeneric(Image_Value(obj1));
             Image_Value(result).subtract(Image_Value(obj2));
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -750,7 +750,7 @@ Image_isubtract(PyObject *obj1, PyObject *obj2)
         if (result = PyObject_New(ImageObject, &ImageType))
             result->image = new ImageGeneric(Image_Value(obj1));
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
@@ -797,7 +797,7 @@ Program_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
                 else
                     PyErr_SetString(PyExc_TypeError, "MetaData::new: Expecting boolean value");
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
@@ -827,7 +827,7 @@ Program_addUsageLine(PyObject *obj, PyObject *args, PyObject *kwargs)
                 else
                     PyErr_SetString(PyExc_TypeError, "MetaData::setColumnFormat: Expecting boolean value");
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
@@ -857,7 +857,7 @@ Program_addExampleLine(PyObject *obj, PyObject *args, PyObject *kwargs)
                 else
                     PyErr_SetString(PyExc_TypeError, "MetaData::setColumnFormat: Expecting boolean value");
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
@@ -881,7 +881,7 @@ Program_addParamsLine(PyObject *obj, PyObject *args, PyObject *kwargs)
                 self->program->addParamsLine(line);
                 Py_RETURN_NONE;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
@@ -905,7 +905,7 @@ Program_usage(PyObject *obj, PyObject *args, PyObject *kwargs)
                 self->program->usage(verbose);
                 Py_RETURN_NONE;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
@@ -927,7 +927,7 @@ Program_endDefinition(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->program->endDefinition();
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -990,7 +990,7 @@ Program_checkParam(PyObject *obj, PyObject *args, PyObject *kwargs)
                 else
                     Py_RETURN_FALSE;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
@@ -1015,7 +1015,7 @@ Program_getParam(PyObject *obj, PyObject *args, PyObject *kwargs)
                 const char * value = self->program->getParam(param, arg);
                 return PyString_FromString(value);
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
@@ -1045,7 +1045,7 @@ Program_getListParam(PyObject *obj, PyObject *args, PyObject *kwargs)
                     PyList_SetItem(pylist, i, PyString_FromString(list[i].c_str()));
                 return pylist;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
@@ -1266,13 +1266,13 @@ static int MetaData_print(PyObject *obj, FILE *fp, int flags)
         std::stringstream ss;
         self->metadata->write(ss);
         fprintf(fp, "%s", ss.str().c_str());
-        return 0;
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
         return -1;
     }
+    return 0;
 }
 
 /* String representation */
@@ -1299,7 +1299,7 @@ MetaData_compare(PyObject * obj, PyObject * obj2)
             if (*(self->metadata) == *(md2->metadata))
                 result = 0;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -1331,7 +1331,7 @@ MetaData_read(PyObject *obj, PyObject *args, PyObject *kwargs)
                 else
                     return NULL;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
                 return NULL;
@@ -1369,7 +1369,7 @@ MetaData_readPlain(PyObject *obj, PyObject *args, PyObject *kwargs)
                 else
                     return NULL;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
                 return NULL;
@@ -1407,7 +1407,7 @@ MetaData_readBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
                 else
                     return NULL;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
                 return NULL;
@@ -1443,7 +1443,7 @@ MetaData_write(PyObject *obj, PyObject *args, PyObject *kwargs)
                     return NULL;
                 Py_RETURN_NONE;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
                 return NULL;
@@ -1483,7 +1483,7 @@ MetaData_writeBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
                 self->metadata->_write(fn, block, MD_APPEND);
                 Py_RETURN_NONE;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
                 return NULL;
@@ -1516,7 +1516,7 @@ MetaData_append(PyObject *obj, PyObject *args, PyObject *kwargs)
                     return NULL;
                 Py_RETURN_NONE;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
                 return NULL;
@@ -1555,7 +1555,7 @@ MetaData_size(PyObject *obj, PyObject *args, PyObject *kwargs)
         MetaDataObject *self = (MetaDataObject*) obj;
         return PyLong_FromUnsignedLong(self->metadata->size());
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
         return NULL;
@@ -1573,7 +1573,7 @@ MetaData_isEmpty(PyObject *obj, PyObject *args, PyObject *kwargs)
         else
             Py_RETURN_FALSE;
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
         return NULL;
@@ -1591,7 +1591,7 @@ MetaData_getColumnFormat(PyObject *obj, PyObject *args, PyObject *kwargs)
         else
             Py_RETURN_FALSE;
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
         return NULL;
@@ -1616,7 +1616,7 @@ MetaData_setColumnFormat(PyObject *obj, PyObject *args, PyObject *kwargs)
                 PyErr_SetString(PyExc_TypeError,
                                 "MetaData::setColumnFormat: Expecting boolean value");
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -1644,7 +1644,7 @@ MetaData_setValue(PyObject *obj, PyObject *args, PyObject *kwargs)
             delete object;
             Py_RETURN_TRUE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -1671,7 +1671,7 @@ MetaData_setValueCol(PyObject *obj, PyObject *args, PyObject *kwargs)
             delete object;
             Py_RETURN_TRUE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -1696,7 +1696,7 @@ MetaData_removeLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
             else
                 Py_RETURN_FALSE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -1730,7 +1730,7 @@ MetaData_getValue(PyObject *obj, PyObject *args, PyObject *kwargs)
                 Py_RETURN_NONE;
             }
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -1757,7 +1757,7 @@ MetaData_getActiveLabels(PyObject *obj, PyObject *args, PyObject *kwargs)
         return list;
 
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
@@ -1794,7 +1794,7 @@ xmipp_getBlocksInMetaDataFile(PyObject *obj, PyObject *args)
             return list;
         }
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
@@ -1816,7 +1816,7 @@ MetaData_getMaxStringLength(PyObject *obj, PyObject *args, PyObject *kwargs)
 
             return PyInt_FromLong(length);
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -1840,7 +1840,7 @@ MetaData_containsLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
             else
                 Py_RETURN_FALSE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -1861,7 +1861,7 @@ MetaData_addLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->addLabel((MDLabel) label);
             Py_RETURN_TRUE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -1888,7 +1888,7 @@ MetaData_removeObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->removeObjects(MDQuery_Value(pyQuery));
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -1908,7 +1908,7 @@ MetaData_removeDisabled(PyObject *obj, PyObject *args, PyObject *kwargs)
         self->metadata->removeDisabled();
         Py_RETURN_NONE;
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
@@ -1928,7 +1928,7 @@ MetaData_makeAbsPath(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->makeAbsPath((MDLabel) label);
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -1946,7 +1946,7 @@ MetaData_clear(PyObject *obj, PyObject *args, PyObject *kwargs)
         self->metadata->clear();
         Py_RETURN_NONE;
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
         return NULL;
@@ -1965,7 +1965,7 @@ MetaData_iter(PyObject *obj)
         return (PyObject *) self;
         //return Py_BuildValue("l", self->metadata->iteratorBegin());
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
@@ -1984,7 +1984,7 @@ MetaData_iternext(PyObject *obj)
         //type format should be "n" instead of "i" but I put i since python 2.4 does not support n
         return Py_BuildValue("i", objId);
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
@@ -2005,7 +2005,7 @@ MetaData_sort(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->sort(MDaux, (MDLabel) label);
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -2025,7 +2025,7 @@ MetaData_removeDuplicates(PyObject *obj, PyObject *args, PyObject *kwargs)
         self->metadata->removeDuplicates(MDaux);
         Py_RETURN_NONE;
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
@@ -2219,7 +2219,7 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
                 else
                     return NULL;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
                 return NULL;
@@ -2262,7 +2262,7 @@ MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
                                           MDQuery_Value(pyQuery));
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -2290,7 +2290,7 @@ MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs)
             delete object;
             return pyValue;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -2326,7 +2326,7 @@ MetaData_aggregate(PyObject *obj, PyObject *args, PyObject *kwargs)
                                       (MDLabel) operateLabel, (MDLabel) resultLabel);
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -2356,7 +2356,7 @@ MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->unionAll(MetaData_Value(pyMd));
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -2386,7 +2386,7 @@ MetaData_merge(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->merge(MetaData_Value(pyMd));
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -2407,7 +2407,7 @@ MetaData_setComment(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->setComment(str);
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -2456,7 +2456,7 @@ MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs)
                                  (MDLabel) labelRight, (JoinType) jt);
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -2485,7 +2485,7 @@ MetaData_intersection(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->intersection(MetaData_Value(pyMd), (MDLabel) label);
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -2506,7 +2506,7 @@ MetaData_operate(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->operate(str);
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -2529,7 +2529,7 @@ MetaData_replace(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->replace((MDLabel)label, oldStr, newStr);
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -2558,7 +2558,7 @@ MetaData_randomize(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->randomize(MetaData_Value(pyMd));
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -2588,7 +2588,7 @@ MetaData_selectPart(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->selectPart(MetaData_Value(pyMd), start, numberOfObjects, (MDLabel) label);
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -2651,7 +2651,7 @@ createMDObject(int label, PyObject *pyValue)
         }
         PyErr_SetString(PyExc_TypeError, "Unrecognized type to create MDObject");
     }
-    catch (XmippError xe)
+    catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
@@ -2725,7 +2725,7 @@ Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
                                           (DataMode)datamode, select_img,boolWrap);
                 Py_RETURN_NONE;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
@@ -2767,7 +2767,7 @@ Image_applyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
                 self->image->applyGeo(MetaData_Value(md), objectId, boolOnly_apply_shifts,boolWrap);
                 Py_RETURN_NONE;
             }
-            catch (XmippError xe)
+            catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
@@ -2976,7 +2976,7 @@ xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
             Py_DECREF(pyStr);
             return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -3017,7 +3017,7 @@ xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
             ImgSize(md, xdim, ydim, zdim, ndim);
             return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -3046,7 +3046,7 @@ xmipp_ImgCompare(PyObject *obj, PyObject *args, PyObject *kwargs)
             else
                 Py_RETURN_FALSE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -3075,7 +3075,7 @@ xmipp_compareTwoFiles(PyObject *obj, PyObject *args, PyObject *kwargs)
             else
                 Py_RETURN_FALSE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -3111,7 +3111,7 @@ xmipp_readMetaDataWithTwoPossibleImages(PyObject *obj, PyObject *args,
                 Py_RETURN_NONE;
             }
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
@@ -3160,7 +3160,7 @@ xmipp_substituteOriginalImages(PyObject *obj, PyObject *args, PyObject *kwargs)
                                      (bool) skipFirstBlock);
             Py_RETURN_NONE;
         }
-        catch (XmippError xe)
+        catch (XmippError &xe)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
