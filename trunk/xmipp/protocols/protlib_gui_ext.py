@@ -471,14 +471,20 @@ class ListboxDialog(Dialog):
 def openLink(link):
     ''' Open a link in default web browser '''
     from  webbrowser import open
-    open(link)      
-
-'''Implementation of our own version of Yes/No dialog'''
-class ShowDialog(Dialog):
-    def __init__(self, master, title, msg, type):
-        self.msg = msg
-        self.type = type
-        Dialog.__init__(self, master, title)        
+    open(link)
+    
+class TaggedText(tk.Text):  
+    def __init__(self, master, **options):  
+        registerCommonFonts()
+        defaults = {'bg': "white", 'bd':0, 'font':Fonts['normal']}
+        defaults.update(options)
+        tk.Text.__init__(self, master, defaults)
+        self.tag_config('normal', justify=tk.LEFT)
+        self.tag_config('bold', justify=tk.LEFT, font=Fonts['button'])
+        # Find some tags to pretty text presentation
+        import re
+        self.regex = re.compile('((?:\[[^]]+\])|(?:<[^>]+>))')
+        self.hm = HyperlinkManager(self)
         
     def getTaggedParts(self, parts):
         tagsDict = {'[': 'link', '<': 'bold'}
@@ -490,6 +496,37 @@ class ShowDialog(Dialog):
                 else:
                     tagged_parts.append((p, 'normal'))
         return tagged_parts
+    
+    def addNewline(self):
+        self.insert(tk.END, '\n')
+        
+    def clear(self):
+        self.config(state=tk.NORMAL)
+        self.delete(0.0, tk.END)
+        
+    def addLine(self, line):
+        parts = self.getTaggedParts(self.regex.split(line))
+        for p, t in parts:
+            if t == 'link':
+                def insertLink(link):
+                    self.insert(tk.INSERT, link, self.hm.add(lambda: openLink(link)))
+                insertLink(p)
+            else:
+                self.insert(tk.END, p, t)
+        self.addNewline()
+        
+    def addText(self, text):
+        self.config(state=tk.NORMAL)
+        for line in text.splitlines():
+            self.addLine(line)
+        self.config(state=tk.DISABLED)
+
+'''Implementation of our own version of Yes/No dialog'''
+class ShowDialog(Dialog):
+    def __init__(self, master, title, msg, type):
+        self.msg = msg
+        self.type = type
+        Dialog.__init__(self, master, title)        
         
     def body(self, master):
         try:
@@ -499,9 +536,7 @@ class ShowDialog(Dialog):
             self.image = None
         self.result = []
         self.frame = tk.Frame(master, bg="white", bd=2)
-        self.text = tk.Text(self.frame, bg="white", bd=0, font=Fonts['normal'])
-        self.text.tag_config('normal', justify=tk.LEFT)
-        self.text.tag_config('bold', justify=tk.LEFT, font=Fonts['button'])
+        self.text = TaggedText(self.frame)
         
         # Insert image
         if self.image:
@@ -509,27 +544,16 @@ class ShowDialog(Dialog):
             self.label.pack(side=tk.LEFT, anchor=tk.N)
 
         # Insert lines of text
-        # Find some tags to pretty text presentation
-        import re
-        r = re.compile('((?:\[[^]]+\])|(?:<[^>]+>))')
         mylines = self.msg.splitlines()
         m = 0
-        hm = HyperlinkManager(self.text)
                 
         for l in mylines:
             m = max(m, len(l))
-            parts = self.getTaggedParts(r.split(l))
-            for p, t in parts:
-                if t == 'link':
-                    def insertLink(link):
-                        self.text.insert(tk.INSERT, link, hm.add(lambda: openLink(link)))
-                    insertLink(p)
-                else:
-                    self.text.insert(tk.END, p, t)
-            self.text.insert(tk.END, '\n')
+            self.text.addLine(l)
+            
         m = min(m + 5, 80)
         self.text.config(height=len(mylines)+3, width=m-7)
-        self.text.insert(tk.END, '\n')
+        self.text.addNewline()
         self.text.pack()
         self.frame.pack()
         
