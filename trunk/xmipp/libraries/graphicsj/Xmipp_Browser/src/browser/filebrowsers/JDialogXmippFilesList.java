@@ -19,7 +19,9 @@ import java.awt.BorderLayout;
 import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  *
@@ -69,6 +71,8 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
         Thread t = new Thread(new Runnable() {
 
             public void run() {
+                long time = System.currentTimeMillis();
+
                 panelXmippBrowser = new JPanelXmippBrowser(directory, expression);
                 panelXmippBrowser.setSingleSelection(singleSelection);
 
@@ -77,6 +81,10 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
                 pack();
 
                 ImagesWindowFactory.releaseGUI(getRootPane());
+
+                time = System.currentTimeMillis() - time;
+                SimpleDateFormat dateFormatter = new SimpleDateFormat("'List building time:' mm:ss:S");
+                System.out.println(dateFormatter.format(new Date(time)));
             }
         });
 
