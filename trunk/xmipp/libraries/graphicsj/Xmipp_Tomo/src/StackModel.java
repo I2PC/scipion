@@ -24,13 +24,13 @@
  ***************************************************************************/
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Enumeration;
+import java.util.Vector;
 
 import ij.ImagePlus;
 import xmipp.ImageDouble;
 import xmipp.MetaData;
 import xmipp.MDLabel;
-
-// TODO: import tilt angles features from Tomodata
 
 /**
  * Why? Model the active stack that will be displayed, isolating the viewer from
@@ -47,6 +47,9 @@ public class StackModel extends AbstractModel {
 	private Cache<String, ImagePlus> imagePlusCache;
 
 	private Workflow workflow;
+
+	private double min = Double.POSITIVE_INFINITY,
+			max = Double.NEGATIVE_INFINITY;
 
 	public static enum Properties {
 		NUMBER_OF_PROJECTIONS, CURRENT_PROJECTION_NUMBER, CURRENT_TILT_ANGLE, CURRENT_PROJECTION_ENABLED, CURRENT_PROJECTION;
@@ -93,18 +96,18 @@ public class StackModel extends AbstractModel {
 		return ret;
 	}
 
-	private ImageDouble getCurrentImageDouble(){
+	private ImageDouble getCurrentImageDouble() {
 		String filePath = getCurrentImageFilePath();
 		if (filePath == null)
 			return null;
 		return getImageDoubleCache().get(filePath);
 	}
-	
+
 	public ImagePlus getCurrentImage() {
 		ImagePlus ret = new ImagePlus();
 
 		String filePath = getCurrentImageFilePath();
-		Logger.debug(filePath);
+		// Logger.debug(filePath);
 		if (filePath == null)
 			return ret;
 
@@ -138,10 +141,12 @@ public class StackModel extends AbstractModel {
 		return ret;
 	}
 
-	public void refreshCurrentImage(){
-		// invalidate current image in ImagePlus cache, so it will be refreshed on next request
+	public void refreshCurrentImage() {
+		// invalidate current image in ImagePlus cache, so it will be refreshed
+		// on next request
 		getImagePlusCache().remove(getCurrentImageFilePath());
 	}
+
 	public void updateCurrentImage(ImagePlus image) {
 		updateImage(getCurrentImageFilePath(), image);
 	}
@@ -177,30 +182,30 @@ public class StackModel extends AbstractModel {
 	private UserAction getCurrentUserAction() {
 		return getWorkflow().getCurrentUserAction();
 	}
-	
-	public String getCurrentFileName(){
+
+	public String getCurrentFileName() {
 		return getCurrentUserAction().getInputFileName();
 	}
-	
-	public int getCurrentWidth(){
-		if(getCurrentImageDouble() == null)
+
+	public int getCurrentWidth() {
+		if (getCurrentImageDouble() == null)
 			return -1;
 		return getCurrentImageDouble().getXsize();
 	}
 
-	public int getCurrentHeight(){
-		if(getCurrentImageDouble() == null)
+	public int getCurrentHeight() {
+		if (getCurrentImageDouble() == null)
 			return -1;
 		return getCurrentImageDouble().getYsize();
 	}
-	
-	public int getCurrentBitDepth(){
+
+	public int getCurrentBitDepth() {
 		// TODO: maybe it's better getting the bit depth from the ImageDouble
-		if(getCurrentImage() == null)
+		if (getCurrentImage() == null)
 			return -1;
 		return getCurrentImage().getBitDepth();
 	}
-	
+
 	/**
 	 * @return range 1..numberProjections
 	 */
@@ -208,19 +213,20 @@ public class StackModel extends AbstractModel {
 		return currentProjectionNumber;
 	}
 
-	public String getCurrentProjectionInfo(){
-		return "Projection #" + getCurrentProjectionNumber() + " ("+ getCurrentMetadata();
+	public String getCurrentProjectionInfo() {
+		return "Projection #" + getCurrentProjectionNumber() + " ("
+				+ getCurrentUserActionInfo();
 	}
-	
-	
-	private String getCurrentMetadata(){
+
+	private String getCurrentUserActionInfo() {
 		return getCurrentUserAction().getInfo(getCurrentProjectionNumber());
 	}
-	
-	private long getCurrentProjectionId(){
-		return getCurrentUserAction().getProjectionId(getCurrentProjectionNumber());
+
+	private long getCurrentProjectionId() {
+		return getCurrentUserAction().getProjectionId(
+				getCurrentProjectionNumber());
 	}
-	
+
 	/**
 	 * @param newProjectionNumber
 	 *            range 1..numberProjections
@@ -257,7 +263,6 @@ public class StackModel extends AbstractModel {
 
 	}
 
-
 	/**
 	 * @return 1..N, cyclic (next to last is 1)
 	 */
@@ -289,14 +294,94 @@ public class StackModel extends AbstractModel {
 		getCurrentUserAction().setEnabled(id, enabled);
 	}
 
-	void enableCurrentProjection() {
-		if (getNumberOfProjections() > 1) {
-			setEnabled(getCurrentProjectionNumber(), true);
+	// Tilt features
+
+	public Double getCurrentTiltAngle() {
+		Double t = null;
+		try {
+			t = getTiltAngle(getCurrentProjectionNumber());
+		} catch (ArrayIndexOutOfBoundsException ex) {
+			t = null;
 		}
-		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), false,	true);
+		return t;
+	}
+
+	public Enumeration<Double> getTiltAngles() {
+		int size = getNumberOfProjections();
+
+		Vector<Double> tiltAngles = new Vector<Double>(size);
+		int i;
+		for (i = 1; i < size + 1; i++)
+			tiltAngles.add(getTiltAngle(i));
+		return tiltAngles.elements();
+	}
+
+	/**
+	 * @param i
+	 *            1..N
+	 */
+	private Double getTiltAngle(long id) {
+		return getCurrentUserAction().getTiltAngle(id);
+	}
+
+	// right now return only grayscale value as double
+	// more complete method at ImagePlus.getValueAsString()
+	public double getPixelValue(int x, int y) {
+		int[] v = getCurrentImage().getPixel(x, y);
+		// 32bit images
+		return Float.intBitsToFloat(v[0]);
 	}
 
 	public boolean isCurrentEnabled() {
 		return getCurrentUserAction().isEnabled(getCurrentProjectionId());
 	}
+
+	void enableCurrentProjection() {
+		if (getNumberOfProjections() > 1) {
+			setEnabled(getCurrentProjectionNumber(), true);
+		}
+	}
+
+	// TODO: Min an Max not set. We need to load all the projections of the stack to know the min and max
+	public void normalize() {
+		getCurrentImage().getProcessor().setMinAndMax(getMin(), getMax());
+	}
+
+	public double getMin() {
+		return min;
+	}
+
+	public void setMin(double min) {
+		this.min = min;
+	}
+
+	public double getMax() {
+		return max;
+	}
+
+	public void setMax(double max) {
+		this.max = max;
+	}
+
+	void applySelFile() {
+		getCurrentUserAction().applySelFile();
+		
+		/*
+		 * String outputFile = "prueba.sel"; int size=getNumberOfProjections();
+		 * FileWriter fw = null; PrintWriter pw = null; int enable; try { fw =
+		 * new FileWriter(outputFile); pw = new PrintWriter(fw);
+		 * 
+		 * pw.println(
+		 * "# XMIPP_STAR_1 *\n#\ndata_\nloop_\n_image\n_enable\n_angleTilt");
+		 * for (int i = 1; i < size+1; i++){ if (isEnabled(i)) enable=1; else
+		 * enable=0; pw.println(getImageFilePath(i) + "\t\t" +enable +
+		 * "\t"+getTiltAngle(i) ); } } catch (Exception e) {
+		 * e.printStackTrace(); } finally { try {
+		 * 
+		 * if (null != fw) fw.close(); } catch (Exception e2) {
+		 * 
+		 * }
+		 */
+	}
+
 }

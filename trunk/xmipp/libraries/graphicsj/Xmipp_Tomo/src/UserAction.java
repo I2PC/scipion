@@ -37,7 +37,8 @@ import xmipp.MDLabel;
  * - Why?
  * A simple data structure to save user action's info (for the user action workflow)
  */
-/* TODO: map user actions to a SQLite database 
+/* TODO: map user actions to a SQLite database (using Java code)
+ * (reuse ideas from xmipp protocols python code)
  * Define the parameters each action may use, and when they may or may not use them
  * (for instance, some operations produce volumes, other need alignedstacks as input...).
  * In short, define the rules of (in)compatibility between parameters and actions/steps
@@ -117,6 +118,10 @@ public class UserAction {
 		return getIoDetails().getProjectionId(projection);
 	}
 	
+	public double getTiltAngle(long id){
+		return getIoDetails().getTiltAngle(id);
+	}
+	
 	public String getInfo(int projectionNumber){
 		return getIoDetails().getInfo(projectionNumber);
 	}
@@ -136,10 +141,16 @@ public class UserAction {
 	 */
 	public void setWorkingDir(String workflowWorkingDir){
 		if(getIoDetails().getWorkingDir() == null){
-			String uaWorkingSubdir = String.valueOf(getId()) + "-" + getName();
+			String uaWorkingSubdir = getWorkingSubdirName();
 			String actionDir = workflowWorkingDir + "/" + uaWorkingSubdir;
 			getIoDetails().setWorkingDir(actionDir);
 		}
+	}
+	
+	// TODO: -current- use four digits for Id
+	private String getWorkingSubdirName(){
+		//TODO: it may be a good idea to also strip all punctuation signs with replaceAll
+		return String.valueOf(getId()) + "-" + getName().replaceAll("\\s+", "");
 	}
 
 	public String getComments() {
@@ -295,5 +306,10 @@ public class UserAction {
 	public void setId(int actionId) {
 		this.actionId = actionId;
 	}
+	
+	public void applySelFile() {
+		getIoDetails().applySelFile();
+	}
+	
 
 }

@@ -38,8 +38,6 @@ import javax.swing.tree.TreePath;
 
 public class Workflow extends DefaultTreeModel{
 	
-	// TODO: check what protocol workflow code (from python) can be reused around here...
-	
 	private DefaultMutableTreeNode selectedNode=null;
 	private int lastActionId=0;
 	

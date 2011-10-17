@@ -289,7 +289,6 @@ public class TomoData{
 	 * Sequential add (order matters)
 	 * @param t
 	 */
-	// TODO: use imageMetadata
 	public void addTiltAngle(Double t){
 		// add() below needs an empty vector
 		/* if(tiltAngles == null)
@@ -306,7 +305,6 @@ public class TomoData{
 		return getCurrentTiltAngle();
 	}
 	
-	// TODO: use imageMetadata
 	public void addEnabled(boolean t){
 		// add() below needs an empty vector
 		/*if(getEnabledProjections() != null){

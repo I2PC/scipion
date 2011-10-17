@@ -295,9 +295,7 @@ public class TomoController implements AdjustmentListener {
 			UserAction ua = new UserAction(window.getWindowId(), "Load",
 					"Load", path);
 			ua.setInputFilePath(path);
-			// TODO: move addUserAction to workflow model (instead of the
-			// window). Right now it's inside window because
-			// insertion depends on the workflowview selected node
+
 			getWorkflow().addUserAction(ua);
 			window.addView();
 			window.addControls();
@@ -531,6 +529,7 @@ public class TomoController implements AdjustmentListener {
 		runIjCmd(XmippTomoCommands.SUB_BACKGROUND, plugin);
 	}
 
+	// TODO: (FIX) indexoutofbounds
 	public void enhanceContrast() {
 		Plugin plugin = new ContrastEnhancePlugin();
 		window.setPlugin(plugin);
@@ -584,6 +583,10 @@ public class TomoController implements AdjustmentListener {
 
 	}
 
+	// TODO: 1) keep the selected mask (ROI) across all the projections when changing projection
+	// TODO: 1.1) restrict the mask to a square (ImageJ allows it using shift+mouse when defining the mask)
+	// TODO: 1.2) with an optional dialog that allows setting the square size numerically. The square is in the center by default
+	// TODO: 2) apply to all images (not just current)
 	public void crop() {
 		window.protectWindow();
 
@@ -593,7 +596,7 @@ public class TomoController implements AdjustmentListener {
 		// TODO: adjust viewPanel to new image size
 	}
 
-	// TODO: preview option does not update the image display
+	// TODO: -current- (probably it's fixed, just test it) preview option does not update the image display
 	// TODO: cancel button applies the plugin (instead of doin nothing)
 	public void runIjCmd(String command) {
 
@@ -683,6 +686,7 @@ public class TomoController implements AdjustmentListener {
 				}
 	}
 
+	// TODO: handle sel files too (right now it tryes to write directly to the sel file, instead of the stack file)
 	private void applyIJPlugin(Plugin plugin, String sourceProjectionPath,String outputFullPath,boolean writeToFile){
 		try {
 			if (sourceProjectionPath != null) {
@@ -778,11 +782,10 @@ public class TomoController implements AdjustmentListener {
 
 	}
 
-	// TODO: update to new approach (stackmodel replaces tomodata)
+	// TODO: tilt angles - setTilt - update to new approach (stackmodel replaces tomodata)
 	public void setTilt() {
 		GenericDialog gd = new GenericDialog("Tilt angles");
-		gd
-				.addMessage("Please fill either start and end angles, or start and step");
+		gd.addMessage("Please fill either start and end angles, or start and step");
 		gd.addNumericField("Start angle", 0.0, 1);
 		gd.addNumericField("End angle", 0.0, 1);
 		gd.addNumericField("Step", 0.0, 1);
@@ -830,12 +833,12 @@ public class TomoController implements AdjustmentListener {
 
 	}
 
-	// TODO: update to new approach (stackmodel replaces tomodata)
+	// TODO: (FIX) update to new approach (stackmodel replaces tomodata)
 	public void normalize() {
 		getModel().normalize();
 	}
 
-	// TODO: update to new approach (stackmodel replaces tomodata)
+	// TODO: integrate Metadata Viewer (Show) from Juanjo, to enable easy discarding of many projections
 	public void discardProjection() {
 		if (getStackModel().isCurrentEnabled()) {
 			getStackModel().discardCurrentProjection();
@@ -852,9 +855,15 @@ public class TomoController implements AdjustmentListener {
 			 * Command.DISCARD_PROJECTION.getLabel());
 			 */
 		}
+		// TODO: now we are saving sel file on every change (overwriting). The goal is...
+		// - lock all the buttons until the user decides if he wants to apply the changes
+		// to the selfile
+		// - ... which requires a new button, "Apply SEL changes"
+		// - ... and a new dialog which asks the user whether he wants to overwrite the current sel file, or write to a new one
+		// - if the user chooses "write to a new one", open a file dialog so he can choose which will the new file be
+        getStackModel().applySelFile();
 	}
 
-	// TODO: update to new approach (stackmodel replaces tomodata)
 	public void currentProjectionInfo() {
 		Logger.debug(getStackModel().getCurrentProjectionInfo());
 	}

@@ -371,8 +371,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		controlPanel = new JPanel();
 		getContentPane().add(controlPanel);
 
-		// TODO: update to Stackmodel approach
-		if (getModel() != null) {
+	
+		if (getStackModel() != null) {
 			addView();
 			addControls();
 		}
@@ -528,14 +528,12 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		getStatusLabel().setText(text);
 	}
 
-	// TODO: update to Stackmodel approach
 	private void updateStatusText() {
 		// current/total projections are shown in the projection scrollbar
 		// itself
-		//TODO:  include getCursorValueAsString() once updated
-		if (getModel() != null)
+		if (getStackModel() != null)
 			setStatus("x = " + getCursorX() + ", y = " + getCursorY()
-					+ ", value = "); // + getCursorValueAsString());
+					+ ", value = "+ getCursorValueAsString()); 
 	}
 
 	int getCursorDistance(int x, int y) {
@@ -560,9 +558,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		}
 	}
 
-	// TODO: update to Stackmodel approach
 	public void setImagePlusWindow() {
-		imp = getModel().getImage();
+		imp = getStackModel().getCurrentImage();
 		imp.setWindow(this);
 	}
 
@@ -702,8 +699,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		 * canvas.setDrawingSize((int)w, (int)h); realWindow.pack();
 		 * canvas.repaint();
 		 */
-		// TODO: update to Stackmodel approach
-		WindowManager.setTempCurrentImage(getModel().getImage());
+		WindowManager.setTempCurrentImage(getStackModel().getCurrentImage());
 		// Xmipp_Tomo.debug("Set... " + "zoom="+ ((int) (factor * 100)));
 		IJ.run("Set... ", "zoom=" + ((int) (factor * 100)));
 		refreshImageCanvas();
@@ -824,7 +820,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		}else if(StackModel.Properties.CURRENT_PROJECTION_NUMBER.name().equals(event.getPropertyName())){
 			updateCurrentTiltAngleText();
 			getProjectionScrollbar().setValue(getStackModel().getCurrentProjectionNumber());
-			refreshImageCanvas();		
+			refreshImageCanvas();	
+			updateStatusText();
 			// Discard button label
 			if(getStackModel().isCurrentEnabled())
 				changeLabel(XmippTomoCommands.DISCARD_PROJECTION.getId(), XmippTomoCommands.DISCARD_PROJECTION.getLabel());
@@ -842,10 +839,9 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		}
 	}
 
-	// TODO: update to Stackmodel approach
 	private void updateCurrentTiltAngleText(){
 		String text="";
-		Double tilt=getModel().getCurrentTiltAngle();
+		Double tilt=getStackModel().getCurrentTiltAngle();
 		if(tilt != null)
 			text=String.valueOf(tilt);
 		setCurrentTiltAngleText(text);
@@ -922,17 +918,15 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return cursorLocation.y;
 	}
 
-	// TODO: update to Stackmodel approach
 	private double getCursorValue() {
-		return getModel().getPixelValue(getCursorX(), getCursorY());
+		return getStackModel().getPixelValue(getCursorX(), getCursorY());
 	}
 
 	/*
-	 * It requires that the model has been set (with setModel() )
+	 * It requires that the stack model has been set 
 	 */
-	// TODO: update to StackModel approach
 	public String getCursorValueAsString() {
-		if (getModel() == null)
+		if (getStackModel() == null)
 			return "";
 
 		String cursorValue = String.valueOf(getCursorValue());
@@ -942,9 +936,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	}
 
 	
-	// TODO: now that the models changed, adapt getTitle so it shows indeed the filename and the size 
-	// (instead of "ImageDouble"
-	// TODO: update to Stackmodel approach
 	public String getTitle() {
 		String title = TITLE;
 		if (getStackModel() != null){

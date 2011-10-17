@@ -238,7 +238,6 @@ public class WorkflowView extends JPanel implements TreeSelectionListener, TreeM
 
 	@Override
 	public void treeNodesChanged(TreeModelEvent e) {
-		// TODO Auto-generated method stub
 		
 	}
 
@@ -253,13 +252,10 @@ public class WorkflowView extends JPanel implements TreeSelectionListener, TreeM
 
 	@Override
 	public void treeNodesRemoved(TreeModelEvent e) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void treeStructureChanged(TreeModelEvent e) {
-		// TODO Auto-generated method stub
 		
 	}
 	

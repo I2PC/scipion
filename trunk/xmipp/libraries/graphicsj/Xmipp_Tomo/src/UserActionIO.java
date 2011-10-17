@@ -38,6 +38,17 @@ public class UserActionIO {
 	MetaData imageMetadata;
 	private String workingDir=null;
 	
+	public void applySelFile() {
+		String outputFilePath = getInputFilePath();
+
+		try {
+			getMetadata().write(outputFilePath);
+
+		} catch (Exception ex) {
+			Logger.debug("can not write metadata");
+		}
+	}
+	
 	/**
 	 * Precondition: the working dir must have been assigned...
 	 * @return
@@ -128,4 +139,11 @@ public class UserActionIO {
 			long id=getProjectionId(projectionNumber);
 			return "(" + getMetadata().getValueString(MDLabel.MDL_IMAGE, id) + "). Enabled: " + getMetadata().getValueInt(MDLabel.MDL_ENABLED, id);
 	}
+	
+	// Helper methods to manage tilt angles "list"
+	// TODO: -low- get angles from .tlt files too (and save them like sel files) - @see TiltSeriesIO.readTiltAngles
+	public double getTiltAngle(long id){
+		return getMetadata().getValueDouble(MDLabel.MDL_ANGLETILT, id);
+	}
+
 }
