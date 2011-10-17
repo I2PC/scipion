@@ -19,9 +19,7 @@ import java.awt.BorderLayout;
 import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 /**
  *
@@ -83,17 +81,6 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
         });
 
         t.start();
-
-        try {
-            long time = System.currentTimeMillis();
-
-            t.join();
-
-            time = System.currentTimeMillis() - time;
-            SimpleDateFormat dateFormatter = new SimpleDateFormat("'List building time:' mm:ss:S");
-            System.out.println(dateFormatter.format(new Date(time)));
-        } catch (Exception ex) {
-        }
     }
 
     protected void button1Clicked() {

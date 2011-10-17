@@ -25,6 +25,8 @@ import ij.IJ;
 import ij.ImagePlus;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
@@ -51,6 +53,8 @@ public class JPanelXmippBrowser extends JPanel {
     public JPanelXmippBrowser(final String folder, final String expression) {
         super();
 
+        long time = System.currentTimeMillis();
+
         initComponents();
 
         listModelFilesList = new ListModelFilesBrowser(folder);
@@ -65,6 +69,10 @@ public class JPanelXmippBrowser extends JPanel {
         searchBox.textField.setText(expression);
 
         updatePath();
+
+        time = System.currentTimeMillis() - time;
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("'List building time:' mm:ss:S");
+        System.out.println(dateFormatter.format(new Date(time)));
     }
 
     public void setSingleSelection(boolean single) {
