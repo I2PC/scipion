@@ -454,6 +454,38 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* read preview*/
+static PyObject *
+Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+
+    if (self != NULL)
+    {
+        PyObject *input = NULL;
+        int x;
+        if (PyArg_ParseTuple(args, "Oi", &input, &x))
+        {
+            try
+            {
+                if (PyString_Check(input))
+                    self->image->readPreview(PyString_AsString(input), x);
+                else if (FileName_Check(input))
+                    self->image->readPreview(FileName_Value(input), x);
+                else
+                    return NULL;
+                Py_RETURN_NONE;
+            }
+            catch (XmippError &xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
+        }
+    }
+    return NULL;
+}
+
+
 /* readApplyGeo */
 //int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId,
 //bool only_apply_shifts, DataMode datamode, size_t select_img)
@@ -623,6 +655,8 @@ static PyMethodDef Image_methods[] =
           "Apply geometry in refering metadata to an image" },
         { "read", (PyCFunction) Image_read, METH_VARARGS,
           "Read image from disk" },
+          { "readPreview", (PyCFunction) Image_readPreview, METH_VARARGS,
+            "Read image preview" },
         { "readApplyGeo", (PyCFunction) Image_readApplyGeo, METH_VARARGS,
           "Read image from disk applying geometry in refering metadata" },
         { "write", (PyCFunction) Image_write, METH_VARARGS,

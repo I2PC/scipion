@@ -4,9 +4,12 @@ from Tkinter import *
 import ttk
 import os, sys, stat
 from os.path import join, getsize, basename
+import matplotlib.cm as cm
+from numpy import zeros
 import xmipp
 from protlib_filesystem import getXmippPath
 from protlib_utils import runImageJPlugin, pretty_date
+from protlib_gui_ext import MyButton
 
 RESOURCES = getXmippPath('resources')
 
@@ -24,22 +27,34 @@ def fileInfo(browser):
     
 # Event handlers for each action and each type of file
 def defaultOnClick(filename, browser):
-   return ''
+    fn = join(RESOURCES, 'png', 'folder.png')
+    print "calling preview with fn: ", fn
+    browser.updatePreview(fn)
+    return ''
         
 def defaultFillMenu( filename, browser):
     return False
 
 def defaultOnDoubleClick(filename, browser):
-    print "filename(double click): ", filename
+    os.system('kde-open %s &' % filename)
 
+def getMdString(filename, browser):
+    md = xmipp.MetaData(filename)
+    labels = md.getActiveLabels()
+    msg = "  <labels:>" + ''.join(["\n   - %s" % xmipp.label2Str(l) for l in labels])
+    if xmipp.MDL_IMAGE in labels:
+        browser.updatePreview(md.getValue(xmipp.MDL_IMAGE, md.firstObject()))
+    return msg
+    
 def mdOnClick(filename, browser):
     if '@' not in filename:
         msg = "<Metadata File>\n"
         blocks = xmipp.getBlocksInMetaDataFile(filename)
-        if len(blocks) <= 1:
-            msg += "<single block>\n"
+        nblocks = len(blocks)
+        if nblocks <= 1:
+            msg += "  <single block>\n" + getMdString(filename, browser)
         else:
-            msg += "<blocks:>" + ''.join(["\n  - %s" % b for b in blocks])
+            msg += "  <%d blocks:>" % nblocks + ''.join(["\n  - %s" % b for b in blocks])
             # Insert blocks in metadata as independent items
             if len(browser.tree.get_children(filename)) == 0:
                 fm = browser.managers['md']
@@ -48,9 +63,7 @@ def mdOnClick(filename, browser):
                     btext = "%s@%s" % (b, basename(filename))
                     browser.tree.insert(filename, 'end', bname, text=btext, image=fm.image)
     else:
-        msg = "<Metadata Block>\n"
-        labels = xmipp.MetaData(filename).getActiveLabels()
-        msg += "<labels:>" + ''.join(["\n  - %s" % xmipp.label2Str(l) for l in labels])
+        msg = "<Metadata Block>\n" + getMdString(filename, browser)
     return msg
         
 def mdFillMenu( filename, browser):
@@ -67,11 +80,16 @@ def mdOnDoubleClick(filename, browser):
 
 def imgOnClick(filename, browser):
     x, y, z, n = xmipp.SingleImgSize(filename)
-    msg = "<Image>\n"
-    msg += "<dimensions:>\n  (X)Columns: %d\n  (Y)Rows: %d\n" % (x, y)
-    if z > 1: msg += "  (Z)Slices: %d" % z
-    if n > 1: msg += "  (N)Objects: %d" % n
-    return msg
+    dimMsg = "<Image>\n  <dimensions:> %(x)d x %(y)d" 
+    expMsg = "Columns x Rows "
+    if z > 1: 
+        dimMsg += " x %(z)d"
+        expMsg += " x Slices"
+    if n > 1:
+        dimMsg += " x %(n)d" 
+        expMsg += " x Objects"
+    browser.updatePreview(filename)
+    return (dimMsg + "\n" + expMsg) % locals()
         
 def imgFillMenu( filename, browser):
     menu = browser.menu
@@ -104,7 +122,7 @@ def volFillMenu( filename, browser):
     menu.add_command(label="Delete file", command=None) 
     return True
 
-def volOnDoubleClick(filename):
+def volOnDoubleClick(filename, browser):
     showj(filename, 'gallery')
     
 class FileManager():
@@ -158,7 +176,7 @@ class XmippBrowser():
         self.root.columnconfigure(0, weight=1)
         self.root.columnconfigure(1, weight=1)
         self.root.rowconfigure(0, weight=1)
-        self.root.minsize(600, 300)
+        self.root.minsize(600, 400)
         self.root.title("Xmipp Browser")
 
         #Create frame for tree
@@ -178,9 +196,29 @@ class XmippBrowser():
         details.columnconfigure(0, weight=1)
         details.rowconfigure(0, weight=1, minsize=100)  
         details.rowconfigure(1, weight=1)
+        # Add details preview
+        self.canvas = None
+        #self.createPreviewCanvas(details)
+        #
+        # Add details text
         from protlib_gui_ext import TaggedText
         self.text = TaggedText(details, width=20, height=5)
         self.text.grid(column=0, row=1, sticky=(N, W, E, S))
+        self.details = details
+        
+        #Create bottom frame
+        filterFrame = ttk.Frame(self.root, padding="3 3 0 0")
+        filterFrame.grid(column=0, row=1, columnspan=2)
+        ttk.Label(filterFrame, text="Filter").grid(column=0, row=0, sticky=W, padx=2)
+        self.filterVar = StringVar()
+        filter = ttk.Entry(filterFrame, width=25, textvariable=self.filterVar)
+        filter.grid(column=1, row=0, sticky=W, padx=2)
+        btnFilter = MyButton(filterFrame, "Search", 'search.gif')
+        btnFilter.grid(column=2, row=0, sticky=W, padx=2)
+        btnOk = MyButton(filterFrame, "Select")
+        btnOk.grid(column=3, row=0, sticky=E, padx=2)
+        btnOk = MyButton(filterFrame, "Cancel")
+        btnOk.grid(column=4, row=0, sticky=E, padx=2)
         
         #create menu
         # create a popup menu
@@ -267,6 +305,48 @@ class XmippBrowser():
         
     def onKeyPress(self, e):
         self.unpostMenu()
+    
+    def createPreviewCanvas(self):
+        import matplotlib
+        matplotlib.use('TkAgg')
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        from matplotlib.figure import Figure
+        dim = 128
+        Z = zeros((dim, dim), float)
+        self.figure = Figure(figsize=(dim, dim), dpi=1)
+        # a tk.DrawingArea
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self.details)
+        self.canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
+        self.figureimg = self.figure.figimage(Z, cmap=cm.gray)#, origin='lower')
+        #self.canvas.show()    
+    
+    def updatePreview(self, filename):
+        if not self.canvas:
+            self.createPreviewCanvas()
+        
+        if not filename.endswith('.png'):
+            #Read image data through Xmipp
+            Z = self.getImageData(filename)        
+        else:
+            import matplotlib.image as mpimg
+            Z = mpimg.imread(filename)
+        self.figureimg.set_array(Z)
+        self.figureimg.autoscale()
+        
+        self.canvas.show()   
+        print self.figure.get_children()      
+
+    def getImageData(self, filename):
+        #TODO: improve by avoiding use of getPixel
+        dim = 128
+        Z = zeros((dim, dim), float)
+        img = xmipp.Image()
+        img.readPreview(filename, dim)
+        xdim, ydim, z, n = img.getDimensions()
+        for x in range(xdim):
+            for y in range(ydim):
+                Z[x, y] = img.getPixel(x, y)
+        return Z
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
