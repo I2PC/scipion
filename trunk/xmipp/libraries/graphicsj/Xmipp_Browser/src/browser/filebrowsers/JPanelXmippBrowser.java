@@ -10,6 +10,7 @@
  */
 package browser.filebrowsers;
 
+import browser.DEBUG;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.filebrowsers.model.FileBrowser;
@@ -72,7 +73,7 @@ public class JPanelXmippBrowser extends JPanel {
 
         time = System.currentTimeMillis() - time;
         SimpleDateFormat dateFormatter = new SimpleDateFormat("'List building time:' mm:ss:S");
-        System.out.println(dateFormatter.format(new Date(time)));
+        DEBUG.printMessage(dateFormatter.format(new Date(time)));
     }
 
     public void setSingleSelection(boolean single) {
