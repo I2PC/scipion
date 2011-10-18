@@ -381,6 +381,9 @@ class XmippProtocol(object):
                      NumberOfMpi = self.NumberOfMpi,
                      NumberOfThreads = self.NumberOfThreads)
         
+    def insertRunMpiGapsStep(self,verifyfiles=[]):
+        return self.insertStep('runStepGapsMpi',passDb=True, verifyfiles=verifyfiles, 
+                               script=self.scriptName, NumberOfMpi=self.NumberOfMpi)
 
 def getProtocolFromModule(script, project):
     mod = loadModule(script)
