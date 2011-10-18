@@ -1187,13 +1187,13 @@ class ProtocolGUI(BasicGUI):
     #Design mask wizard
     def wizardDesignMask(self, var):
         selfile = self.getVarValue('InSelFile')
-        if not os.path.exists(selfile):
-            tkMessageBox.showwarning("Warning", "The input selfile is not a valid file", parent=self.master)
-            return
-        msg = runJavaIJappWithResponse("512m", "XmippMaskDesignWizard", "-i %(selfile)s" % locals())
+        workingDir = getWorkingDirFromRunName(self.getVarValue('RunName'))
+        #fnMask=os.path.join(workingDir,"mask.xmp")
+        fnMask=os.path.join(self.project.tmpDir,"mask.xmp")
+        msg = runJavaIJapp("512m", "XmippMaskDesignWizard", "-i %(selfile)s -mask %(fnMask)s" % locals())
         msg = msg.strip().splitlines()
         if len(msg)>0:
-            var.tkvar.set(msg)            
+            var.tkvar.set(fnMask)            
 
     #Select family from extraction run
     def wizardChooseFamilyToExtract(self, var):
