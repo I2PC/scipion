@@ -473,20 +473,56 @@ def openLink(link):
     from  webbrowser import open
     open(link)
     
-class TaggedText(tk.Text):  
+class XmippText(tk.Text):    
     def __init__(self, master, **options):  
-        registerCommonFonts()
-        defaults = {'bg': "white", 'bd':0, 'font':Fonts['normal']}
+        registerCommonFonts()    
+        defaults = self.getDefaults()
         defaults.update(options)
         tk.Text.__init__(self, master, defaults)
-        self.tag_config('normal', justify=tk.LEFT)
-        self.tag_config('bold', justify=tk.LEFT, font=Fonts['button'])
-        # Find some tags to pretty text presentation
+        self.configureTags()
+
+    def getDefaults(self):
+        '''This should be implemented in subclasses to provide defaults'''
+        return {}
+    def configureTags(self):
+        '''This should be implemented to create specific tags'''
+        pass
+    
+    def addLine(self, line):
+        '''Should be implemented to add a line '''
+        pass
+        
+    def addNewline(self):
+        self.insert(tk.END, '\n')
+        
+    def clear(self):
+        self.config(state=tk.NORMAL)
+        self.delete(0.0, tk.END)
+
+    def addText(self, text):
+        self.config(state=tk.NORMAL)
+        for line in text.splitlines():
+            self.addLine(line)
+        self.config(state=tk.DISABLED)     
+           
+class TaggedText(XmippText):  
+    def __init__(self, master, **options):  
+        XmippText.__init__(self, master, **options)
+        # Create regex for tags parsing
         import re
         self.regex = re.compile('((?:\[[^]]+\])|(?:<[^>]+>))')
         self.hm = HyperlinkManager(self)
+
+    def getDefaults(self):
+        return {'bg': "white", 'bd':0, 'font':Fonts['normal']}
+    
+    def configureTags(self):
+        self.tag_config('normal', justify=tk.LEFT)
+        self.tag_config('bold', justify=tk.LEFT, font=Fonts['button'])
+        
         
     def getTaggedParts(self, parts):
+        ''' Detect [] as links text and <> as bold text'''
         tagsDict = {'[': 'link', '<': 'bold'}
         tagged_parts = []
         for p in parts:
@@ -496,13 +532,6 @@ class TaggedText(tk.Text):
                 else:
                     tagged_parts.append((p, 'normal'))
         return tagged_parts
-    
-    def addNewline(self):
-        self.insert(tk.END, '\n')
-        
-    def clear(self):
-        self.config(state=tk.NORMAL)
-        self.delete(0.0, tk.END)
         
     def addLine(self, line):
         parts = self.getTaggedParts(self.regex.split(line))
@@ -513,15 +542,10 @@ class TaggedText(tk.Text):
                 insertLink(p)
             else:
                 self.insert(tk.END, p, t)
-        self.addNewline()
-        
-    def addText(self, text):
-        self.config(state=tk.NORMAL)
-        for line in text.splitlines():
-            self.addLine(line)
-        self.config(state=tk.DISABLED)
+        self.addNewline()       
 
-'''Implementation of our own version of Yes/No dialog'''
+
+'''Implementation of our own dialog to display messages'''
 class ShowDialog(Dialog):
     def __init__(self, master, title, msg, type):
         self.msg = msg

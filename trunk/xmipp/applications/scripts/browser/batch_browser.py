@@ -3,12 +3,10 @@
 from Tkinter import *
 import ttk
 import os, sys, stat
-from os.path import join, getsize, basename
-import matplotlib.cm as cm
-from numpy import zeros
+from os.path import join, getsize, basename, abspath
 import xmipp
 from protlib_filesystem import getXmippPath
-from protlib_utils import runImageJPlugin, pretty_date
+from protlib_utils import runImageJPlugin, pretty_date, which, WhichError
 from protlib_gui_ext import MyButton
 
 RESOURCES = getXmippPath('resources')
@@ -21,22 +19,28 @@ def chimera(filename):
     os.system('chimera spider:%s &' % filename)
 
 def fileInfo(browser):
-    msg = "<size:> %d bytes\n" % browser.stat.st_size
+    msg =  "<size:> %d bytes\n" % browser.stat.st_size
     msg += "<modified:> %s\n" % pretty_date(int(browser.stat.st_mtime))
     return msg
     
 # Event handlers for each action and each type of file
 def defaultOnClick(filename, browser):
-    fn = join(RESOURCES, 'png', 'folder.png')
-    print "calling preview with fn: ", fn
+    mode = browser.stat.st_mode
+    if stat.S_ISDIR(mode):
+        img = 'folder.png'
+        msg = "<%d items>\n" % len(browser.tree.get_children(filename))
+    else:
+        img = 'file.png'
+        msg = ''
+    fn = join(RESOURCES, img)
     browser.updatePreview(fn)
-    return ''
+    return msg
         
 def defaultFillMenu( filename, browser):
     return False
 
 def defaultOnDoubleClick(filename, browser):
-    os.system('kde-open %s &' % filename)
+    pass
 
 def getMdString(filename, browser):
     md = xmipp.MetaData(filename)
@@ -168,8 +172,14 @@ class XmippBrowser():
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
         self.addFileManager('vol', 'vol.gif', ['.vol'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
+        self.addFileManager('text', 'fileopen.gif', ['.txt', '.c', '.h', '.cpp', '.java', '.sh'])
         self.addFileManager('pyfile', 'python_file.gif', ['.py'])
+        self.addFileManager('out', 'out.gif', ['.out'])
+        self.addFileManager('err', 'err.gif', ['.err'])
+        self.addFileManager('log', 'log.gif', ['.log'])
         self.addFileManager('folder', 'folderopen.gif', [])
+        self.addFileManager('default', 'generic_file.gif', [])
+        
             
     def createGUI(self):
         self.root.withdraw()
@@ -187,6 +197,8 @@ class XmippBrowser():
         tree = ttk.Treeview(frame)#, columns=('items'))
         tree.grid(column=0, row=0, sticky=(N,W, E, S))
         self.tree = tree
+        # List for hidden tree items, (parent, item)
+        self.hidden = []
         #tree.column('items', width=60, anchor='e')
         #tree.heading('items', text='Items')
 
@@ -213,11 +225,12 @@ class XmippBrowser():
         self.filterVar = StringVar()
         filter = ttk.Entry(filterFrame, width=25, textvariable=self.filterVar)
         filter.grid(column=1, row=0, sticky=W, padx=2)
-        btnFilter = MyButton(filterFrame, "Search", 'search.gif')
+        btnFilter = MyButton(filterFrame, "Search", 'search.gif', command=self.filterResults)
+        filter.bind('<Return>', self.filterResults)
         btnFilter.grid(column=2, row=0, sticky=W, padx=2)
-        btnOk = MyButton(filterFrame, "Select")
+        btnOk = MyButton(filterFrame, "Select", command=self.printSelection)
         btnOk.grid(column=3, row=0, sticky=E, padx=2)
-        btnOk = MyButton(filterFrame, "Cancel")
+        btnOk = MyButton(filterFrame, "Cancel", command=self.close)
         btnOk.grid(column=4, row=0, sticky=E, padx=2)
         
         #create menu
@@ -250,10 +263,9 @@ class XmippBrowser():
             ext = os.path.splitext(elem)[1]
             if self.extSet.has_key(ext):
                 fm = self.extSet[ext]
-        if fm:
-            self.tree.insert(parent, 'end', join(root, elem), text=elem, image=fm.image)
-        else:
-            self.tree.insert(parent, 'end', join(root, elem), text=elem)
+            else:
+                fm = self.managers['default']
+        self.tree.insert(parent, 'end', join(root, elem), text=elem, image=fm.image)
 
     def insertFiles(self, dir):
       for root, dirs, files in os.walk(dir, followlinks=True    ):
@@ -276,6 +288,8 @@ class XmippBrowser():
             ext = os.path.splitext(item)[1]
             if self.extSet.has_key(ext):
                 fm = self.extSet[ext]
+            else:
+                fm = self.managers['default']
         return (item, fm)
         
     #Functions for handling events
@@ -311,6 +325,8 @@ class XmippBrowser():
         matplotlib.use('TkAgg')
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
         from matplotlib.figure import Figure
+        import matplotlib.cm as cm
+        from numpy import zeros
         dim = 128
         Z = zeros((dim, dim), float)
         self.figure = Figure(figsize=(dim, dim), dpi=1)
@@ -332,11 +348,10 @@ class XmippBrowser():
             Z = mpimg.imread(filename)
         self.figureimg.set_array(Z)
         self.figureimg.autoscale()
-        
         self.canvas.show()   
-        print self.figure.get_children()      
 
     def getImageData(self, filename):
+        from numpy import zeros
         #TODO: improve by avoiding use of getPixel
         dim = 128
         Z = zeros((dim, dim), float)
@@ -347,7 +362,52 @@ class XmippBrowser():
             for y in range(ydim):
                 Z[x, y] = img.getPixel(x, y)
         return Z
+    
+    def filterResults(self, e=None):
+        self.pattern = self.filterVar.get().split()
+        self.clearFilter()
+        
+        if len(self.pattern):
+            self.filterTreeItems('', self.tree.get_children())
+    
+    def clearFilter(self):
+        for parent, child, index in self.hidden:
+            self.tree.reattach(child, parent, index)
+            self.hideItem(child)
+        del self.hidden[:]      
 
+    def hideItem(self, item):
+        while item != '':
+            self.tree.item(item, open=False)
+            item = self.tree.parent(item)
+         
+    def matchPattern(self, item):
+        for p in self.pattern:
+            if p in item:
+                return True
+        return False
+    
+    def filterTreeItems(self, parent, items):
+        for i in items:
+            if os.path.isdir(i):
+                self.filterTreeItems(i, self.tree.get_children(i))
+            elif self.matchPattern(i):
+                self.tree.see(i)
+                self.filterTreeItems(i, self.tree.get_children(i))
+            else:
+                index = self.tree.index(i)
+                self.tree.detach(i)
+                self.hidden.append((parent, i, index))
+                #print "item: ", i
+                
+    def printSelection(self, e=None):
+        items = self.tree.selection()
+        print items
+        
+    def close(self, e=None):
+        self.root.destroy()
+            
+            
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         dir = sys.argv[1]

@@ -40,6 +40,7 @@ from protlib_utils import reportError, runImageJPlugin, Process, ProcessManager,
     getHostname
 from protlib_xmipp import greenStr
 from protlib_sql import SqliteDb, ProgramDb
+from protlib_filesystem import getXmippPath
 
 #TextColor
 CitationTextColor = "dark olive green"
@@ -162,8 +163,12 @@ class XmippProjectGUI():
         #Project menu
         self.menuProject = tk.Menu(self.root, tearoff=0)
         self.menubar.add_cascade(label="Project", menu=self.menuProject)
-        self.menuProject.add_command(label="Browse files", command=self.browseFiles)
-        self.menuProject.add_command(label="Remove temporary files", command=self.deleteTmpFiles)        
+        self.browseFolderImg = tk.PhotoImage(file=getXmippPath('resources', 'folderopen.gif'))
+        self.menuProject.add_command(label="Browse files", command=self.browseFiles, 
+                                     image=self.browseFolderImg, compound=tk.LEFT)
+        self.delImg = tk.PhotoImage(file=getXmippPath('resources', 'delete.gif'))
+        self.menuProject.add_command(label="Remove temporary files", command=self.deleteTmpFiles,
+                                     image=self.delImg, compound=tk.LEFT)        
         self.menuProject.add_command(label="Clean project", command=self.cleanProject)
         
     def selectRunUpDown(self, event):
@@ -648,9 +653,15 @@ class ScriptProtocols(XmippScript):
         self.addParamsLine("[ -c  ]            : Clean project");
         self.addParamsLine("   alias --clean;"); 
         
-    def confirm(self, msg):
-        answer = raw_input(msg + ' [Y/n]:')
-        if not answer or answer.lower() == 'y':
+    def confirm(self, msg, default=True):
+        if default:
+            msg += ' [Y/n]'
+        else:
+            msg += ' [y/N]'            
+        answer = raw_input(msg)
+        if not answer:
+            return default
+        if answer.lower() == 'y':
             return True
         return False           
     
@@ -661,9 +672,11 @@ class ScriptProtocols(XmippScript):
         if self.checkParam('--clean'):
             msg = 'You are in project: %s\n' % greenStr(proj_dir)
             msg += 'ALL RESULTS will be DELETED, are you sure to CLEAN?'
-            launch = self.confirm(msg)
+            launch = self.confirm(msg, False)
             if launch:
                 project.clean()
+            else:
+                print "CLEAN aborted."
                 
         else: #lauch project     
             if not project.exists():
@@ -672,6 +685,8 @@ class ScriptProtocols(XmippScript):
                 launch = self.confirm(msg)
                 if launch:
                     project.create()
+                else:
+                    print "PROJECT CREATION aborted."
             else:
                 project.load()
         if launch:
