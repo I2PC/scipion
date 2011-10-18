@@ -26,12 +26,22 @@ class ProtImportMicrographs(XmippProtocol):
         # Create microscope
         self.insertCreateMicroscope()
 
-        # Preprocess
-        idMPI=self.insertStep('runStepGapsMpi',passDb=True, script=self.scriptName, NumberOfMpi=self.NumberOfMpi)
-        self.MPIVerifyFiles=[]        
+        # Decide name after preprocessing
+        fileDict={}
+        self.actualDoPreprocess=self.DoPreprocess and (self.Stddev != -1 or self.Crop != -1 or self.Down != 1)
         for filename in glob.glob(os.path.join(self.DirMicrographs, self.ExtMicrographs)):
-            self.insertPreprocessStep(filename)
-        self.Db.updateVerifyFiles(idMPI,self.MPIVerifyFiles)
+            (filepath, micrographName)=os.path.split(filename)
+            if self.actualDoPreprocess:
+                (finalname, extension)=os.path.splitext(micrographName)
+                finalname += ".mrc"
+            else:
+                finalname = micrographName
+            fileDict[filename]=self.workingDirPath(finalname)
+
+        # Preprocess
+        idMPI=self.insertRunMpiGapsStep(fileDict.values())
+        for filename in glob.glob(os.path.join(self.DirMicrographs, self.ExtMicrographs)):
+            self.insertPreprocessStep(filename,fileDict[filename])
         
         # Gather results
         self.insertStep('gatherResults',verifyfiles=[self.workingDirPath("micrographs.sel")],
@@ -68,20 +78,9 @@ class ProtImportMicrographs(XmippProtocol):
         self.insertStep("createMicroscope", verifyfiles = [fnOut], fnOut=fnOut, Voltage=self.Voltage,
                         SphericalAberration=self.SphericalAberration,SamplingRate=AngPix)
             
-    def insertPreprocessStep(self,micrograph):
-        # Decide name after preprocessing
-        (filepath, micrographName)=os.path.split(micrograph)
-        DoPreprocess=self.DoPreprocess and (self.Stddev != -1 or self.Crop != -1 or self.Down != 1)
-        if DoPreprocess:
-            (finalname, extension)=os.path.splitext(micrographName)
-            finalname += ".mrc"
-        else:
-            finalname = micrographName
-        finalname=self.workingDirPath(finalname)
-        self.MPIVerifyFiles.append(finalname)
-
+    def insertPreprocessStep(self,micrograph,finalname):
         previousId=XmippProjectDb.FIRST_STEP
-        if not DoPreprocess:
+        if not self.actualDoPreprocess:
             if not os.path.exists(finalname):
                 previousId=self.insertStep("createLink",verifyfiles=[finalname],
                                            parent_step_id=previousId, execution_mode=SqliteDb.EXEC_GAP,
