@@ -43,6 +43,7 @@ void ProgCTFEstimateFromMicrograph::readParams()
     if (fn_root=="")
         fn_root=fn_micrograph.withoutExtension();
     pieceDim = getIntParam("--pieceDim");
+    overlap = getDoubleParam("--overlap");
     String aux=getParam("--psd_estimator");
     if (aux=="periodogram")
         PSDEstimator_mode = Periodogram;
@@ -90,6 +91,7 @@ void ProgCTFEstimateFromMicrograph::defineParams()
     addParamsLine("                  periodogram");
     addParamsLine("                  ARMA");
     addParamsLine("  [--pieceDim <d=512>]       : Size of the piece");
+    addParamsLine("  [--overlap <o=0.5>]        : Overlap (0=no overlap, 1=full overlap)");
     addParamsLine("  [--Nsubpiece <N=1>]        : Each piece is further subdivided into NxN subpieces.");
     addParamsLine("                              : This option is useful for small micrographs in which ");
     addParamsLine("                              : not many pieces of size pieceDim x pieceDim can be defined. ");
@@ -268,7 +270,7 @@ void ProgCTFEstimateFromMicrograph::run()
     // Open the micrograph --------------------------------------------------
     ImageGeneric M_in;
     int Zdim, Ydim, Xdim; // Micrograph dimensions
-    M_in.readMapped(fn_micrograph);
+    M_in.read(fn_micrograph);
     M_in.getDimensions(Xdim, Ydim,Zdim);
 
     // Compute the number of divisions --------------------------------------
@@ -278,8 +280,8 @@ void ProgCTFEstimateFromMicrograph::run()
         div_Number=posFile.size();
     else if (psd_mode==OnePerMicrograph)
     {
-        div_NumberX = CEIL((double)Xdim / (pieceDim / 2)) - 1;
-        div_NumberY = CEIL((double)Ydim / (pieceDim / 2)) - 1;
+        div_NumberX = CEIL((double)Xdim / (pieceDim *(1-overlap))) - 1;
+        div_NumberY = CEIL((double)Ydim / (pieceDim *(1-overlap))) - 1;
         div_Number = div_NumberX * div_NumberY;
     }
     else if (psd_mode==OnePerRegion)
@@ -343,7 +345,7 @@ void ProgCTFEstimateFromMicrograph::run()
         {
             int step = pieceDim;
             if (psd_mode==OnePerMicrograph)
-                step /= 2;
+                step = (int)((1-overlap) * step);
             i = ((N - 1) / div_NumberX) * step;
             j = ((N - 1) % div_NumberX) * step;
         }
@@ -635,16 +637,24 @@ void ProgCTFEstimateFromMicrograph::run()
 void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
                              MultidimArray<double> &enhancedPSD)
 {
+	int Xdim,Ydim,Zdim;
+	size_t Ndim;
+	ImgSize(fnMicrograph,Xdim,Ydim,Zdim,Ndim);
+	int minSize=2*(std::max(Xdim,Ydim)/10);
+	minSize=std::min((double)std::min(Xdim,Ydim),NEXT_POWER_OF_2(minSize));
+	minSize=std::min(1024,minSize);
+
 	ProgCTFEstimateFromMicrograph prog1;
 	prog1.fn_micrograph=fnMicrograph;
 	prog1.fn_root=fnMicrograph.withoutExtension()+"_tmp";
-    prog1.pieceDim=(int)(256*downsampling);
+    prog1.pieceDim=(int)(minSize*downsampling);
     prog1.PSDEstimator_mode=ProgCTFEstimateFromMicrograph::Periodogram;
     prog1.Nsubpiece=1;
     prog1.psd_mode=ProgCTFEstimateFromMicrograph::OnePerMicrograph;
     prog1.estimate_ctf=false;
     prog1.bootstrapN=-1;
-    prog1.verbose=0;
+    prog1.verbose=1;
+    prog1.overlap=0;
     prog1.run();
 
     ProgCTFEnhancePSD prog2;

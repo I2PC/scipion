@@ -57,6 +57,8 @@ public:
     TPSD_mode               psd_mode;
     /// Dimension of micrograph pieces
     int                     pieceDim;
+    /** Overlap among pieces (0=No overlap, 1=Full overlap */
+    double                  overlap;
     /** Number of pieces (Nsubpiece x Nsubpiece) for the piece averaging */
     int                     Nsubpiece;
     /** PSDEstimator_mode */
