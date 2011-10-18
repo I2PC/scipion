@@ -3,7 +3,8 @@
 # Protocols info (name, title, path)
 #--------------------------------------------------------------------------------
 protocols = {
-        'screen_micrographs': ('Screen Micrographs', 'ImportedMicrographs'),
+        'import_micrographs': ('Import Micrographs', 'Micrographs/Imported'),
+        'screen_micrographs': ('Screen Micrographs', 'Micrographs/Screen'),
         'particle_pick': ('Manual picking', 'ParticlePicking/Manual'),
         'particle_pick_auto': ('Automatic picking', 'ParticlePicking/Auto'),
         'extract_particles': ('Extract Particles', 'Images/Extracted'),
@@ -29,7 +30,7 @@ protocols = {
 #--------------------------------------------------------------------------------
 sections = [
 ('Preprocessing', 
-   [['Micrographs', 'screen_micrographs'], 
+   [['Micrographs', 'import_micrographs','screen_micrographs'], 
     ['Particle picking', 'particle_pick', 'particle_pick_auto', 'extract_particles'], 
     ['Tools', 'import_particles', 'preprocess_particles', 'screen_particles']]),
 ('2D', 

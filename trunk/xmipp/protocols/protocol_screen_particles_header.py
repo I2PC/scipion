@@ -5,30 +5,8 @@
 # Author: Carlos Oscar, October 2011
 #
 # {begin_of_header}
-#------------------------------------------------------------------------------------------
-# {section}{has_question} Comment
-#------------------------------------------------------------------------------------------
-# Display comment
-DisplayComment = False
 
-# {text} Write a comment:
-""" 
-Describe your run here...
-"""
-
-#-----------------------------------------------------------------------------
-# {section} Run parameters
-#-----------------------------------------------------------------------------
-# Run name:
-""" This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
-run1 for it. This name together with the protocol output folder will determine the working dir for this run.
-"""
-RunName = "run_001"
-
-# {list}(Resume, Restart) Run behavior
-""" Resume from the last step, restart the whole process
-"""
-Behavior = "Resume"
+#{include} inc_comment_run.py
 
 #-----------------------------------------------------------------------------
 # {section} Extracting parameters
@@ -61,6 +39,7 @@ QueueHours = 12
 """If True, expert options will be displayed
 """
 ShowExpertOptions = False
+
 #
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------

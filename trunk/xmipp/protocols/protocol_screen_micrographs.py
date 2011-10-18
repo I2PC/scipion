@@ -1,14 +1,6 @@
 #!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
-# General script for Xmipp-based pre-processing of micrographs: 
-#  - downsampling
-#  - power spectral density (PSD) and CTF estimation on the micrograph
-#
-# For each micrograph given, this script will perform 
-# the requested operations below.
-# For each micrograph a subdirectory will be created
-#
-# Author: Carlos Oscar Sorzano, July 2011
+# Author: Carlos Oscar Sorzano, October 2011
 
 import glob
 from config_protocols import protDict
@@ -22,7 +14,6 @@ class ProtScreenMicrographs(XmippProtocol):
         XmippProtocol.__init__(self, protDict.screen_micrographs.name, scriptname, project)
         self.Import="from protocol_screen_micrographs import *"
         self.CtffindExec =  which('ctffind3.exe')
-        self.ContinueAtStep=1
 
     def defineSteps(self):
         CtfFindActions=[]
@@ -34,46 +25,30 @@ class ProtScreenMicrographs(XmippProtocol):
             (shortname, extension)=os.path.splitext(micrographName)
             micrographDir=self.workingDirPath(shortname)                    
             finalname='micrograph'
-            if self.DoPreprocess and (not self.Stddev == -1 or not self.Crop == -1 or not self.Down == 1):
-                finalname += ".mrc"
-            else:
-                finalname += extension
-                
-            if self.SamplingRateMode=="From image":
-                AngPix=self.SamplingRate
-            else:
-                AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
             
             # Insert actions in the database
             id=self.Db.insertStep('createDir',path=micrographDir,parent_step_id=XmippProjectDb.FIRST_STEP,execution_mode=SqliteDb.EXEC_GAP)
-            fnOut=os.path.join(micrographDir,"micrograph"+extension)
+            fnOut=os.path.join(micrographDir,"xmipp_ctf.ctfparam")
             verifyFiles.append(fnOut)
-            id=self.Db.insertStep('preprocessMicrograph',#COSS verifyfiles=[fnOut],
-                                    parent_step_id=id, execution_mode=SqliteDb.EXEC_GAP,
-                                    micrograph=filename,micrographDir=micrographDir,DoPreprocess=self.DoPreprocess,
-                                    Crop=self.Crop,Stddev=self.Stddev,Down=self.Down)
-            if self.DoCtfEstimate:
-                fnOut=os.path.join(micrographDir,"xmipp_ctf.ctfparam")
+            self.Db.insertStep('estimateCtfXmipp',verifyfiles=[fnOut],
+                                 parent_step_id=id,execution_mode=SqliteDb.EXEC_GAP,
+                                 micrograph=finalname,micrographDir=micrographDir,Voltage=self.Voltage,
+                                 SphericalAberration=self.SphericalAberration,AngPix=AngPix,
+                                 AmplitudeContrast=self.AmplitudeContrast,LowResolCutoff=self.LowResolCutoff,
+                                 HighResolCutoff=self.HighResolCutoff,
+                                 MinFocus=self.MinFocus,MaxFocus=self.MaxFocus,WinSize=self.WinSize)
+            if self.DoCtffind:
+                fnOut=os.path.join(micrographDir,"ctffind.ctfparam")
                 verifyFiles.append(fnOut)
-                self.Db.insertStep('estimateCtfXmipp',verifyfiles=[fnOut],
-                                     parent_step_id=id,execution_mode=SqliteDb.EXEC_GAP,
-                                     micrograph=finalname,micrographDir=micrographDir,Voltage=self.Voltage,
-                                     SphericalAberration=self.SphericalAberration,AngPix=AngPix,
-                                     AmplitudeContrast=self.AmplitudeContrast,LowResolCutoff=self.LowResolCutoff,
-                                     HighResolCutoff=self.HighResolCutoff,
-                                     MinFocus=self.MinFocus,MaxFocus=self.MaxFocus,WinSize=self.WinSize)
-                if self.DoCtffind:
-                    fnOut=os.path.join(micrographDir,"ctffind.ctfparam")
-                    verifyFiles.append(fnOut)
-                    CtfFindActions.append([dict(verifyfiles=[fnOut],
-                                         execution_mode=SqliteDb.EXEC_GAP,
-                                         CtffindExec=self.CtffindExec,micrograph=finalname,micrographDir=micrographDir,
-                                         tmpDir=self.TmpDir,
-                                         Voltage=self.Voltage,SphericalAberration=self.SphericalAberration,
-                                         AngPix=AngPix,Magnification=self.Magnification,AmplitudeContrast=self.AmplitudeContrast,
-                                         LowResolCutoff=self.LowResolCutoff,
-                                         HighResolCutoff=self.HighResolCutoff,MinFocus=self.MinFocus,MaxFocus=self.MaxFocus,
-                                         StepFocus=self.StepFocus,WinSize=self.WinSize)])
+                CtfFindActions.append([dict(verifyfiles=[fnOut],
+                                     execution_mode=SqliteDb.EXEC_GAP,
+                                     CtffindExec=self.CtffindExec,micrograph=finalname,micrographDir=micrographDir,
+                                     tmpDir=self.TmpDir,
+                                     Voltage=self.Voltage,SphericalAberration=self.SphericalAberration,
+                                     AngPix=AngPix,Magnification=self.Magnification,AmplitudeContrast=self.AmplitudeContrast,
+                                     LowResolCutoff=self.LowResolCutoff,
+                                     HighResolCutoff=self.HighResolCutoff,MinFocus=self.MinFocus,MaxFocus=self.MaxFocus,
+                                     StepFocus=self.StepFocus,WinSize=self.WinSize)])
         for action in CtfFindActions:
             action["parent_step_id"]=id # This makes all ctffinds to go after the last preprocessing
             self.Db.insertStep('estimateCtfCtffind',action)
@@ -128,44 +103,6 @@ class ProtScreenMicrographs(XmippProtocol):
                 import tkMessageBox
                 tkMessageBox.showerror("Error", "There is no result yet")        
     
-def preprocessMicrograph(log,micrograph,micrographDir,DoPreprocess,Crop,Stddev,Down):
-    # Decide name after preprocessing
-    finalname=os.path.join(micrographDir,'micrograph')
-    (filepath, micrographName)=os.path.split(os.path.relpath(micrograph))
-    (shortname2, extension)=os.path.splitext(micrographName)        
-    if DoPreprocess and (not Stddev == -1 or not Crop == -1 or not Down == 1):
-        finalname += ".mrc"
-    else:
-        finalname += extension
-        if not os.path.exists(finalname):
-            relpath = os.path.relpath(micrograph, micrographDir)
-            runJob(log,"ln",'-s %(relpath)s %(finalname)s' % locals())
-            if micrograph.endswith(".raw"):
-                runJob(log,"ln",'-s %(relpath)s.inf %(finalname)s.inf' % locals())
-            return
-    if not DoPreprocess:
-        return
-    
-    # Crop
-    iname=micrograph
-    if not Crop == -1:
-        runJob(log,"xmipp_transform_window"," -i %(iname)s -o %(finalname)s --crop %(Crop)d -v 0" % locals())
-        iname=finalname
-    
-    # Remove bad pixels
-    if not Stddev == -1:
-        params = " -i %(iname)s --bad_pixels outliers %(Stddev)f -v 0" % locals()
-        if not iname == finalname:
-            params += " -o " + finalname
-            iname=finalname
-        runJob(log,"xmipp_transform_filter",params)
-    
-    # Downsample
-    if not Down == 1:
-        tmpFile=os.path.join(micrographDir,"tmp.mrc")
-        runJob(log,"xmipp_transform_downsample","-i %(iname)s -o %(tmpFile)s --step %(Down)f --method fourier" % locals())
-        runJob(log,"mv", "-f %(tmpFile)s %(finalname)s" % locals())
-
 def estimateCtfXmipp(log,micrograph,micrographDir,Voltage,SphericalAberration,AngPix,
                      AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,WinSize):
     params="--micrograph "+os.path.join(micrographDir,micrograph)+" --oroot "+os.path.join(micrographDir,"xmipp_ctf")+\

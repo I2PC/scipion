@@ -12,29 +12,8 @@
 #
 
 # {begin_of_header}
-#------------------------------------------------------------------------------------------
-# {section}{has_question} Comment
-#------------------------------------------------------------------------------------------
-# Display comment
-DisplayComment = False
 
-# {text} Write a comment:
-""" 
-Describe your run here...
-"""
-#-----------------------------------------------------------------------------
-# {section} Run parameters
-#-----------------------------------------------------------------------------
-# Run name:
-""" This will identify your protocol run. It need to be unique for each protocol. You could have run1, run2 for protocol X, but not two
-run1 for it. This name together with the protocol output folder will determine the working dir for this run.
-"""
-RunName = "run_001"
-
-# {list}(Resume, Restart) Run behavior
-""" Resume from the last step, restart the whole process
-"""
-Behavior = "Resume"
+#{include} inc_comment_run.py
 
 #-----------------------------------------------------------------------------
 # {section} Input micrographs
@@ -49,51 +28,13 @@ DirMicrographs = 'Micrographs'
 """
 ExtMicrographs = '*.mrc'
 
-# Do preprocess
-DoPreprocess = False
-
-# Perform CTF estimation
-DoCtfEstimate=True
-
-#------------------------------------------------------------------------------------------------
-# {section}{condition}(DoPreprocess) Preprocess
-#------------------------------------------------------------------------------------------------
-# Crop borders
-""" Crop a given amount of pixels from each border.
-    Set this option to -1 for not applying it."""
-Crop = -1
-
-# Remove bad pixels
-""" Values will be thresholded to this multiple of standard deviations. Typical
-    values are about 5, i.e., pixel values beyond 5 times the standard deviation will be
-    substituted by the local median. Set this option to -1 for not applying it."""
-Stddev = -1
-
-# {wizard}(wizardBrowseJCTF) Downsampling factor 
-""" Set to 1 for no downsampling. Non-integer downsample factors are possible."""
-Down = 1
-
 #------------------------------------------------------------------------------------------------
 # {section}{condition}(DoCtfEstimate) CTF estimation
 #------------------------------------------------------------------------------------------------
 
-# Microscope voltage (in kV)
-Voltage = 200
-
-# Spherical aberration (in mm)
-SphericalAberration = 2.26
-
-# Magnification rate
-Magnification = 70754
-
-# {list}(From image, From scanner) Sampling rate mode
-SamplingRateMode="From image"
-
-# {condition}(SamplingRateMode=="From image") Sampling rate (A/pixel)
-SamplingRate = 1
-
-# {condition}(SamplingRateMode=="From scanner") Scanned pixel size (in um/pixel)
-ScannedPixelSize = 15
+# {wizard}(wizardBrowseJCTF) Downsampling factor 
+""" Set to 1 for no downsampling. Non-integer downsample factors are possible."""
+Down = 1
 
 # Amplitude Contrast
 """ It should be a negative number, typically between -0.05 and -0.3."""
@@ -140,29 +81,7 @@ DoCtffind = False
 """
 StepFocus = 0.1
 
-#------------------------------------------------------------------------------------------
-# {section}{condition}(DoCtfEstimate or DoPreprocess) Parallelization
-#------------------------------------------------------------------------------------------
-# Number of MPI processes
-""" Set to 1 if you do not have MPI installed"""
-NumberOfMpi = 8
-
-# Submit to queue
-"""Submit to queue
-"""
-SubmitToQueue = False
-
-# {condition}(SubmitToQueue) Queue name
-"""Name of the queue to submit the job
-"""
-QueueName = "default"
-
-# {condition}(SubmitToQueue) Queue hours
-"""This establish a maximum number of hours the job will
-be running, after that time it will be killed by the
-queue system
-"""
-QueueHours = 6
+# {eval} expandParallel(threads=0,hours=6)
 
 # {hidden} Show expert options
 """If True, expert options will be displayed
@@ -175,8 +94,5 @@ ShowExpertOptions = False
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 from protocol_screen_micrographs import *
-#        
-# Main
-#     
 if __name__ == '__main__':
     protocolMain(ProtScreenMicrographs)
