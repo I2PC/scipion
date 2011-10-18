@@ -21,6 +21,8 @@ class ProtPreprocessParticles(XmippProtocol):
 
     def defineSteps(self):
         self.Db.insertStep('copyFiles',verifyfiles=[self.OutSelFile],InputFile=self.InSelFile,OutputFile=self.OutSelFile)
+        if self.DoScale:
+            self.Db.insertStep('doScale',stack=self.OutSelFile,new_size=self.NewSize,Nproc=self.NumberOfMpi)
         if self.DoFourier:
             self.Db.insertStep('doFourier',stack=self.OutSelFile,freq_low=self.Freq_low,freq_high=self.Freq_high,freq_decay=self.Freq_decay,Nproc=self.NumberOfMpi)
         if self.DoGaussian:
@@ -29,15 +31,22 @@ class ProtPreprocessParticles(XmippProtocol):
             self.Db.insertStep('doRemoveDust',stack=self.OutSelFile,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
         if self.DoNorm:
             self.Db.insertStep('doNorm',stack=self.OutSelFile,normType=self.NormType,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
+        if self.DoMask:
+            self.Db.insertStep('doMask',stack=self.OutSelFile,maskFile=self.MaskFile,substitute=self.Substitute,Nproc=self.NumberOfMpi)
         
     def validate(self):
         errors = []
+        if self.DoScale and self.NewSize<=0:
+            errors.append("New size for scale have not correctly set")
         return errors
 
     def summary(self):
         message=[]
         step=1
         message.append("Steps applied to "+self.InSelFile)
+        if self.DoScale:
+            message.append("Step %d -> scale applied: new_size=%d"%(step,self.NewSize))
+            step+=1
         if self.DoFourier:
             message.append("Step %d -> Fourier filter applied: freq_low=%f freq_high=%f freq_decay=%f"%(step,self.Freq_low,self.Freq_high,self.Freq_decay))
             step+=1
@@ -53,13 +62,16 @@ class ProtPreprocessParticles(XmippProtocol):
             else:
                 message.append("Step %d -> Normalization applied: type=%s backgroundRadius=%d"%(step,self.NormType,self.BackGroundRadius))
             step+=1
+        if self.DoMask:
+            message.append("Step %d -> Mask applied: mask file=%f substituted value=%f"%(step,self.MaskFile,self.Substitute))
+            step+=1
         return message
 
     def visualize(self):
         if not os.path.exists(self.OutSelFile):
             import tkMessageBox
             tkMessageBox.showerror("Error", "There is no result yet")                    
-        runImageJPlugin(memory="1024m", macro="XmippBrowser.txt", args=" -i " + self.OutSelFile)
+        runShowJ(self.OutSelFile)
 
 def copyFiles(log,InputFile,OutputFile):
     runJob(log,"xmipp_image_convert","-i "+InputFile+" -o "+OutputFile)
@@ -71,6 +83,9 @@ def copyFiles(log,InputFile,OutputFile):
         mDstack=xmipp.MetaData(OutputFile)
         mDaux.merge(mDstack)
         mDaux.write(os.path.splitext(OutputFile)[0]+".xmd")
+
+def doScale(log,stack,new_size,Nproc):
+    runJob(log,"xmipp_transform_geometry","-i %(stack)s --scale dim %(new_size)d"%locals(),Nproc)
 
 def doFourier(log,stack,freq_low,freq_high,freq_decay,Nproc):
     if freq_low==0:
@@ -93,3 +108,7 @@ def doNorm(log,stack,normType,bgRadius,Nproc):
         runJob(log,"xmipp_transform_normalize","-i %(stack)s --method NewXmipp --background circle %(bgRadius)d"%locals(),Nproc)
     else:
         runJob(log,"xmipp_transform_normalize","-i %(stack)s --method Ramp --background circle %(bgRadius)d"%locals(),Nproc)
+
+def doMask(log,stack,maskFile,substitute,Nproc):
+    runJob(log,"xmipp_transform_mask","-i %(stack)s --mask binary_file %(maskFile)s %(substitute)s"%locals(),Nproc)
+
