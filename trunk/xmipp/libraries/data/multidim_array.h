@@ -1494,7 +1494,7 @@ public:
         if ((k >= STARTINGZ(*this) && k <= FINISHINGZ(*this)) &&
             (i >= STARTINGY(*this) && i <= FINISHINGY(*this)) &&
             (j >= STARTINGX(*this) && j <= FINISHINGX(*this)))
-            A3D_ELEM(result, k, i, j) = A3D_ELEM(*this, k, i, j);
+            A3D_ELEM(result, k, i, j) = (T1) A3D_ELEM(*this, k, i, j);
         else
             A3D_ELEM(result, k, i, j) = init_value;
     }

@@ -330,7 +330,7 @@ public:
      */
     bool setPrecission(int _precision)
     {
-        precision = pow (10,_precision);
+        precision = (int)pow (10,_precision);
     }
 
     /** Set to false for row format (parameter files).
