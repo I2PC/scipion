@@ -27,7 +27,7 @@
  '''
  
 import os, glob
-from os.path import join
+from os.path import join, relpath
 import Tkinter as tk
 import tkMessageBox
 import tkFont
@@ -35,7 +35,7 @@ import tkFont
 from protlib_base import getProtocolFromModule, getWorkingDirFromRunName, getExtendedRunName
 from protlib_utils import loadModule, runImageJPlugin, which, runJavaIJappWithResponse
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
-    showError, showInfo
+    showError, showInfo, showBrowseDialog
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
@@ -621,7 +621,7 @@ class ProtocolGUI(BasicGUI):
                     pattern = join(cwd, var.tkvar.get()) + '*'
                     entries = []
                     for p in glob.glob(pattern):
-                        p = os.path.relpath(p, cwd)
+                        p = relpath(p, cwd)
                         if os.path.isdir(p):
                             p+="/"
                             entries.append(p)
@@ -718,7 +718,7 @@ class ProtocolGUI(BasicGUI):
                 #check for eval
                 if '{eval}' in line:
                     evalStr = line.split('{eval}')[1].strip()
-                    print "Evaluating: ", redStr(evalStr)
+                    #print "Evaluating: ", redStr(evalStr)
                     linesStr = eval(evalStr)
                     if linesStr:
                         self.header_lines += linesStr.splitlines()
@@ -1093,7 +1093,7 @@ class ProtocolGUI(BasicGUI):
         else:
             filename = tkFileDialog.askdirectory(title="Choose directory", parent=self.master)
         if len(filename) > 0:
-            var.tkvar.set(os.path.relpath(filename))
+            var.tkvar.set(relpath(filename))
             
     def wizardShowJ(self, var):
         runImageJPlugin("512m", "xmippBrowser.txt", "-i %s" % var.tkvar.get())
@@ -1102,12 +1102,13 @@ class ProtocolGUI(BasicGUI):
         if 'file' in var.tags.keys():
             seltype="file"
         else:
-            seltype="dir"
-        msg = runJavaIJappWithResponse("512m", "XmippFileListWizard", "-seltype %(seltype)s -dir ." % locals())
-        #msg = runJavaIJappWithResponse("512m", "XmippFileListWizard", "-dir .")
-        msg = msg.strip()
-        if len(msg) > 0:
-            var.tkvar.set(os.path.relpath(msg.replace('\n', ',')))
+            seltype="folder"
+#        msg = runJavaIJappWithResponse("512m", "XmippFileListWizard", "-seltype %(seltype)s -dir ." % locals())
+#        #msg = runJavaIJappWithResponse("512m", "XmippFileListWizard", "-dir .")
+#        msg = msg.strip()
+        files = showBrowseDialog(parent=self.master, seltype=seltype)
+        if files:
+            var.tkvar.set(', '.join([relpath(f) for f in files]))
             
     #This wizard is specific for preprocess_micrographs protocol
     def wizardBrowseJCTF(self, var):

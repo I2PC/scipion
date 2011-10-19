@@ -31,13 +31,13 @@ import Tkinter as tk
 import tkMessageBox
 import tkFont
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
-from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, configDefaults,showInfo
+from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, configDefaults,showInfo,\
+    showBrowseDialog, FileViewer
 from config_protocols import protDict, sections
 from config_protocols import FontName, FontSize
 from protlib_base import getProtocolFromModule, XmippProject,\
-    getWorkingDirFromRunName, getExtendedRunName
-from protlib_utils import reportError, runImageJPlugin, Process, ProcessManager,\
-    getHostname
+    getExtendedRunName
+from protlib_utils import ProcessManager,  getHostname
 from protlib_xmipp import greenStr
 from protlib_sql import SqliteDb, ProgramDb
 from protlib_filesystem import getXmippPath
@@ -59,7 +59,6 @@ def ProjectButton(master, text, imagePath=None, **opts):
     btnImage = None
     if imagePath:
         try:
-            from protlib_filesystem import getXmippPath
             imgPath = os.path.join(getXmippPath('resources'), imagePath)
             btnImage = tk.PhotoImage(file=imgPath)
         except tk.TclError:
@@ -130,7 +129,7 @@ class XmippProjectGUI():
             tkMessageBox.showerror("Operation error ", str(e))
     
     def browseFiles(self):
-        runImageJPlugin("512m", "XmippBrowser.txt", "", True)
+        showBrowseDialog(parent=self.root, seltype="none", selmode="browse")
         
     def initVariables(self):
         self.ToolbarButtonsDict = {}
@@ -168,8 +167,10 @@ class XmippProjectGUI():
                                      image=self.browseFolderImg, compound=tk.LEFT)
         self.delImg = tk.PhotoImage(file=getXmippPath('resources', 'delete.gif'))
         self.menuProject.add_command(label="Remove temporary files", command=self.deleteTmpFiles,
-                                     image=self.delImg, compound=tk.LEFT)        
-        self.menuProject.add_command(label="Clean project", command=self.cleanProject)
+                                     image=self.delImg, compound=tk.LEFT) 
+        self.cleanImg = tk.PhotoImage(file=getXmippPath('resources', 'clean.gif'))       
+        self.menuProject.add_command(label="Clean project", command=self.cleanProject,
+                                     image=self.cleanImg, compound=tk.LEFT)
         
     def selectRunUpDown(self, event):
         if event.keycode == 111: # Up arrow
@@ -630,9 +631,10 @@ class XmippProjectGUI():
         root = tk.Toplevel()
         root.withdraw()
         root.title("Output Console - %s" % self.lastRunSelected['script'])
-        from protlib_gui_ext import OutputTextArea
-        l = OutputTextArea(root, prot.LogPrefix)
-        l.pack(side=tk.TOP)
+        l = FileViewer(root, ["%s%s" % (prot.LogPrefix, ext) for ext in ['.log', '.out', '.err']])
+        root.columnconfigure(0, weight=1)
+        root.rowconfigure(0, weight=1)
+        l.grid(column=0, row=0, sticky='nsew')
         centerWindows(root, refWindows=self.root)
         root.deiconify()
         root.mainloop() 
