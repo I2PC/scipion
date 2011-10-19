@@ -32,7 +32,7 @@ import tkMessageBox
 import tkFont
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
 from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, configDefaults,showInfo,\
-    showBrowseDialog, FileViewer
+    showBrowseDialog, FileViewer, showFileViewer
 from config_protocols import protDict, sections
 from config_protocols import FontName, FontSize
 from protlib_base import getProtocolFromModule, XmippProject,\
@@ -628,16 +628,9 @@ class XmippProjectGUI():
 
     def showOutput(self, event=''):
         prot = getProtocolFromModule(self.lastRunSelected['script'], self.project)
-        root = tk.Toplevel()
-        root.withdraw()
-        root.title("Output Console - %s" % self.lastRunSelected['script'])
-        l = FileViewer(root, ["%s%s" % (prot.LogPrefix, ext) for ext in ['.log', '.out', '.err']])
-        root.columnconfigure(0, weight=1)
-        root.rowconfigure(0, weight=1)
-        l.grid(column=0, row=0, sticky='nsew')
-        centerWindows(root, refWindows=self.root)
-        root.deiconify()
-        root.mainloop() 
+        title = "Output Console - %s" % self.lastRunSelected['script']
+        filelist = ["%s%s" % (prot.LogPrefix, ext) for ext in ['.log', '.out', '.err']]
+        showFileViewer(title, filelist, self.root)
         
     def visualizeRun(self, event=''):
         run = self.getLastRunDict()

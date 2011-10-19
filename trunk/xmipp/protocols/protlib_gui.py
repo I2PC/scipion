@@ -165,7 +165,8 @@ class BasicGUI():
     def launchGUI(self):
         self.launchCanvas() 
         centerWindows(self.master, self.resize() )
-        self.master.deiconify()  
+        self.master.deiconify()
+        self.master.lift()
         self.master.mainloop() 
 
     def currentRow(self, parent=None):

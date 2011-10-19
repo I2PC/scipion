@@ -976,7 +976,7 @@ def showj(filename, mode):
     
 def chimera(filename):
     os.system('chimera spider:%s &' % filename)
-
+    
 def fileInfo(browser):
     from protlib_utils import pretty_date
     msg =  "<size:> %d bytes\n" % browser.stat.st_size
@@ -997,11 +997,26 @@ def defaultOnClick(filename, browser):
     browser.updatePreview(fn)
     return msg
         
-def defaultFillMenu( filename, browser):
+def defaultFillMenu(filename, browser):
     return False
 
 def defaultOnDoubleClick(filename, browser):
     pass
+
+def textFillMenu(filename, browser):
+    menu = browser.menu
+    menu.add_command(label="Open as Text", command=lambda: showFileViewer(filename, [filename], browser.parent))
+    menu.add_separator()
+    menu.add_command(label="Delete file", command=None)
+    return True
+
+def textOnDoubleClick(filename, browser):
+    filelist = [filename]
+    loglist = ['.log', '.out', '.err']
+    prefix, ext = os.path.splitext(filename)
+    if ext in loglist:
+        filelist = [prefix + ext for ext in loglist ]
+    showFileViewer(filename, filelist, browser.parent)
 
 def getMdString(filename, browser):
     md = xmipp.MetaData(filename)
@@ -1039,6 +1054,7 @@ def mdFillMenu( filename, browser):
     menu.add_command(label="Open", command=lambda: showj(filename, 'metadata'))
     menu.add_command(label="Open as Images table", command=lambda:showj(filename, 'gallery'))
     menu.add_command(label="Open as ImageJ gallery", command=lambda: showj(filename, 'image'))
+    menu.add_command(label="Open as Text", command=lambda: showFileViewer(filename, [filename], browser.parent))
     menu.add_separator()
     menu.add_command(label="Delete file", command=None) 
     return True
@@ -1141,11 +1157,12 @@ class XmippBrowser():
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
         addFm('vol', 'vol.gif', ['.vol'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
-        addFm('text', 'fileopen.gif', ['.txt', '.c', '.h', '.cpp', '.java', '.sh'])
-        addFm('pyfile', 'python_file.gif', ['.py'])
-        addFm('out', 'out.gif', ['.out'])
-        addFm('err', 'err.gif', ['.err'])
-        addFm('log', 'log.gif', ['.log'])
+        addFm('text', 'fileopen.gif', ['.txt', '.c', '.h', '.cpp', '.java', '.sh'],
+              textFillMenu, defaultOnClick, textOnDoubleClick)
+        addFm('pyfile', 'python_file.gif', ['.py'],textFillMenu, defaultOnClick, textOnDoubleClick)
+        addFm('out', 'out.gif', ['.out'],textFillMenu, defaultOnClick, textOnDoubleClick)
+        addFm('err', 'err.gif', ['.err'],textFillMenu, defaultOnClick, textOnDoubleClick)
+        addFm('log', 'log.gif', ['.log'],textFillMenu, defaultOnClick, textOnDoubleClick)
         addFm('folder', 'folderopen.gif', [])
         addFm('default', 'generic_file.gif', [])
         
@@ -1408,8 +1425,20 @@ class XmippBrowser():
 def showBrowseDialog(path='.', title='', parent=None, seltype="both", selmode="extended"):
     xb = XmippBrowser(path, seltype=seltype, selmode=selmode)
     root = Toplevel()
-    root.grab_set()
+    #root.grab_set()
     xb.createGUI(root, title, parent)
     xb.showGUI(loop=False)
     root.wait_window(root)
     return xb.selectedFiles
+
+def showFileViewer(title, filelist, parent=None):
+    root = tk.Toplevel()
+    root.withdraw()
+    root.title(title)
+    l = FileViewer(root, filelist)
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
+    l.grid(column=0, row=0, sticky='nsew')
+    centerWindows(root, refWindows=parent)
+    root.deiconify()
+    root.mainloop() 
