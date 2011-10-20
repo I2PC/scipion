@@ -14,7 +14,7 @@
 # {section} Picking parameters
 #------------------------------------------------------------------------------------------
 # {run}(particle_pick) Manual particle picking run
-""" Directory with the manual picking
+""" Execution run of the manual particle picking
 """
 PickingRun = ""
 
