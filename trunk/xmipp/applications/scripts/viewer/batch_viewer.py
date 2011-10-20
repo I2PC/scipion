@@ -25,23 +25,14 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
  '''
-
-from protlib_xmipp import XmippScript
+import sys
 from protlib_gui_ext import showBrowseDialog
-
-class ScriptBrowser(XmippScript):
-    def __init__(self):
-        XmippScript.__init__(self, True)
-        
-    def defineParams(self):
-        self.addUsageLine('Browse some directory')
-        ## params
-        self.addParamsLine('[ -i <directory=".">]          : Initial directory to start browsing')
-        self.addParamsLine('   alias -d;')
-            
-    def run(self):
-        path = self.getParam('-i')
-        showBrowseDialog(path, main=True)
+import Tkinter as tk
 
 if __name__ == '__main__':
-    ScriptBrowser().tryRun()
+    if len(sys.argv) > 1:
+        title = sys.argv[1]
+        filelist = sys.argv[1:]
+        showFileViewer(title, filelist)
+    else:
+        print "No files to view"

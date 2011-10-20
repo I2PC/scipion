@@ -767,6 +767,7 @@ AddBatch('rot_spectraj', 'applications/scripts/rot_spectraj', '.py')
 #AddBatch('metadata_showj', 'applications/scripts/metadata_showj', '.py')
 AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
 AddBatch('mpi_steps_runner', 'protocols', '.py')
+AddBatch('viewer', 'applications/scripts/viewer', '.py')
 
 # MPI
 if int(env['mpi']):
