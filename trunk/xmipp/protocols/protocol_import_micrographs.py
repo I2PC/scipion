@@ -1,13 +1,6 @@
 #!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
-# General script for Xmipp-based pre-processing of micrographs: 
-#  - downsampling
-#  - power spectral density (PSD) and CTF estimation on the micrograph
-#
-# For each micrograph given, this script will perform 
-# the requested operations below.
-# For each micrograph a subdirectory will be created
-#
+# General script for Xmipp-based pre-processing of micrographs
 # Author: Carlos Oscar Sorzano, July 2011
 
 import glob
@@ -76,7 +69,8 @@ class ProtImportMicrographs(XmippProtocol):
             AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
         fnOut=self.workingDirPath("microscope.xmd")
         self.insertStep("createMicroscope", verifyfiles = [fnOut], fnOut=fnOut, Voltage=self.Voltage,
-                        SphericalAberration=self.SphericalAberration,SamplingRate=AngPix)
+                        SphericalAberration=self.SphericalAberration,SamplingRate=AngPix,
+                        Magnification=self.Magnification)
             
     def insertPreprocessStep(self,micrograph,finalname):
         previousId=XmippProjectDb.FIRST_STEP
@@ -115,15 +109,16 @@ class ProtImportMicrographs(XmippProtocol):
                                            verifyfiles = [tmpFile], parent_step_id=previousId, execution_mode=SqliteDb.EXEC_GAP)
                 self.insertStep("renameFile",verifyfiles=[finalname],
                                 parent_step_id=previousId, execution_mode=SqliteDb.EXEC_GAP,
-                                source=tmpFile,dest=finalname),
+                                source=tmpFile,dest=finalname)
 
-def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate):
+def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):
     MD=xmipp.MetaData()
     MD.setColumnFormat(False)
     id=MD.addObject()
     MD.setValue(xmipp.MDL_CTF_VOLTAGE,float(Voltage),id)    
     MD.setValue(xmipp.MDL_CTF_CS,float(SphericalAberration),id)    
     MD.setValue(xmipp.MDL_CTF_SAMPLING_RATE,float(SamplingRate),id)
+    MD.setValue(xmipp.MDL_MAGNIFICATION,float(Magnification),id)
     MD.write(fnOut)    
 
 def gatherResults(log,WorkingDir):
