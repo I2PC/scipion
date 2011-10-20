@@ -83,7 +83,7 @@ public class MDLabel {
    public static final int MDL_CTF_XRAY_DIMENSIONS = 78; // Size in pixels of the 3D PSF to be created (Xdim = 78; Ydim = 78; Zdim) ///
    public static final int MDL_CTF_XRAY_LAMBDA = 79;  /// X-ray wavelength (nm)
    public static final int MDL_CTF_XRAY_LENS_TYPE = 80;  ///Algorithm used to generate Xray PSF
-   public static final int MDL_CTF_XRAY_MAGNIFICATION = 81;  /// Magnification of the X-ray microscope
+   public static final int MDL_MAGNIFICATION = 81;  /// Magnification of the X-ray microscope
    public static final int MDL_CTF_XRAY_OUTER_ZONE_WIDTH = 82;  /// Outermost zone width of the X-ray Fresnel lens (nm)
    public static final int MDL_CTF_XRAY_ZONES_NUMBER = 83; // Number of zones of the X-ray Fresnel lens ///
    public static final int MDL_DATATYPE = 84;  ///< if read from file original image datatype, this is an struct defined in image

@@ -123,8 +123,8 @@ void XRayPSF::read(const FileName &fn)
         deltaR *= 1e-9;
         if (!MD.getValue(MDL_CTF_XRAY_ZONES_NUMBER,Nzp, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_ZONES_NUMBER) + " argument not present.");
-        if (!MD.getValue(MDL_CTF_XRAY_MAGNIFICATION,Ms, id))
-            REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_MAGNIFICATION) + " argument not present.");
+        if (!MD.getValue(MDL_MAGNIFICATION,Ms, id))
+            REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_MAGNIFICATION) + " argument not present.");
         if (!MD.getValue(MDL_CTF_SAMPLING_RATE,dxoPSF, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_SAMPLING_RATE) + " argument not present.");
         dxoPSF *= 1e-9;
@@ -183,7 +183,7 @@ void XRayPSF::write(const FileName &fn)
     MD.setValue(MDL_CTF_XRAY_LAMBDA,lambda*1e9, id);
     MD.setValue(MDL_CTF_XRAY_OUTER_ZONE_WIDTH,deltaR*1e9, id);
     MD.setValue(MDL_CTF_XRAY_ZONES_NUMBER,Nzp, id);
-    MD.setValue(MDL_CTF_XRAY_MAGNIFICATION,Ms, id);
+    MD.setValue(MDL_MAGNIFICATION,Ms, id);
     MD.setValue(MDL_CTF_SAMPLING_RATE,dxoPSF*1e9, id);
     MD.setValue(MDL_CTF_SAMPLING_RATE_Z,dzoPSF*1e9, id);
     MD.setValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaZo*1e6, id);

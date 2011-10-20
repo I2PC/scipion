@@ -3458,6 +3458,7 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_K", (long) MDL_K);
     addIntConstant(dict, "MDL_KSTEST", (long) MDL_KSTEST);
     addIntConstant(dict, "MDL_LL", (long) MDL_LL);
+    addIntConstant(dict, "MDL_MAGNIFICATION", (long) MDL_MAGNIFICATION);
     addIntConstant(dict, "MDL_MASK", (long) MDL_MASK);
     addIntConstant(dict, "MDL_MAXCC", (long) MDL_MAXCC);
     addIntConstant(dict, "MDL_MAX", (long) MDL_MAX);
@@ -3466,16 +3467,11 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_MIN", (long) MDL_MIN);
     addIntConstant(dict, "MDL_MIRRORFRAC", (long) MDL_MIRRORFRAC);
     addIntConstant(dict, "MDL_MISSINGREGION_NR", (long) MDL_MISSINGREGION_NR);
-    addIntConstant(dict, "MDL_MISSINGREGION_TYPE",
-                   (long) MDL_MISSINGREGION_TYPE);
-    addIntConstant(dict, "MDL_MISSINGREGION_THY0",
-                   (long) MDL_MISSINGREGION_THY0);
-    addIntConstant(dict, "MDL_MISSINGREGION_THYF",
-                   (long) MDL_MISSINGREGION_THYF);
-    addIntConstant(dict, "MDL_MISSINGREGION_THX0",
-                   (long) MDL_MISSINGREGION_THX0);
-    addIntConstant(dict, "MDL_MISSINGREGION_THXF",
-                   (long) MDL_MISSINGREGION_THXF);
+    addIntConstant(dict, "MDL_MISSINGREGION_TYPE",(long) MDL_MISSINGREGION_TYPE);
+    addIntConstant(dict, "MDL_MISSINGREGION_THY0",(long) MDL_MISSINGREGION_THY0);
+    addIntConstant(dict, "MDL_MISSINGREGION_THYF",(long) MDL_MISSINGREGION_THYF);
+    addIntConstant(dict, "MDL_MISSINGREGION_THX0",(long) MDL_MISSINGREGION_THX0);
+    addIntConstant(dict, "MDL_MISSINGREGION_THXF",(long) MDL_MISSINGREGION_THXF);
     addIntConstant(dict, "MDL_MODELFRAC", (long) MDL_MODELFRAC);
     addIntConstant(dict, "MDL_NEIGHBORS", (long)LABEL_VECTOR_LONG);
     addIntConstant(dict, "MDL_NEIGHBORHOOD_RADIUS", (long)LABEL_DOUBLE);
@@ -3497,14 +3493,11 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_REF", (long) MDL_REF);
     addIntConstant(dict, "MDL_REFMD", (long) MDL_REFMD);
     addIntConstant(dict, "MDL_RESOLUTION_DPR", (long) MDL_RESOLUTION_DPR);
-    addIntConstant(dict, "MDL_RESOLUTION_ERRORL2",
-                   (long) MDL_RESOLUTION_ERRORL2);
+    addIntConstant(dict, "MDL_RESOLUTION_ERRORL2",(long) MDL_RESOLUTION_ERRORL2);
     addIntConstant(dict, "MDL_RESOLUTION_FRC", (long) MDL_RESOLUTION_FRC);
-    addIntConstant(dict, "MDL_RESOLUTION_FRCRANDOMNOISE",
-                   (long) MDL_RESOLUTION_FRCRANDOMNOISE);
+    addIntConstant(dict, "MDL_RESOLUTION_FRCRANDOMNOISE",(long) MDL_RESOLUTION_FRCRANDOMNOISE);
     addIntConstant(dict, "MDL_RESOLUTION_FREQ", (long) MDL_RESOLUTION_FREQ);
-    addIntConstant(dict, "MDL_RESOLUTION_FREQREAL",
-                   (long) MDL_RESOLUTION_FREQREAL);
+    addIntConstant(dict, "MDL_RESOLUTION_FREQREAL",(long) MDL_RESOLUTION_FREQREAL);
     addIntConstant(dict, "MDL_SAMPLINGRATE", (long) MDL_SAMPLINGRATE);
     addIntConstant(dict, "MDL_SAMPLINGRATEX", (long) MDL_SAMPLINGRATEX);
     addIntConstant(dict, "MDL_SAMPLINGRATEY", (long) MDL_SAMPLINGRATEY);
@@ -3521,14 +3514,12 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_SIGMANOISE", (long) MDL_SIGMANOISE);
     addIntConstant(dict, "MDL_SIGMAOFFSET", (long) MDL_SIGMAOFFSET);
     addIntConstant(dict, "MDL_SIGNALCHANGE", (long) MDL_SIGNALCHANGE);
-    addIntConstant(dict, "MDL_SPHERICALABERRATION",
-                   (long) MDL_SPHERICALABERRATION);
+    addIntConstant(dict, "MDL_SPHERICALABERRATION",(long) MDL_SPHERICALABERRATION);
     addIntConstant(dict, "MDL_STDDEV", (long) MDL_STDDEV);
     addIntConstant(dict, "MDL_SUM", (long) MDL_SUM);
     addIntConstant(dict, "MDL_SUMWEIGHT", (long) MDL_SUMWEIGHT);
     addIntConstant(dict, "MDL_SYMNO", (long) MDL_SYMNO);
-    addIntConstant(dict, "MDL_TRANSFORMATIONMTRIX",
-                   (long) MDL_TRANSFORMATIONMTRIX);
+    addIntConstant(dict, "MDL_TRANSFORMATIONMTRIX",(long) MDL_TRANSFORMATIONMTRIX);
     addIntConstant(dict, "MDL_VOLTAGE", (long) MDL_VOLTAGE);
     addIntConstant(dict, "MDL_WEIGHT", (long) MDL_WEIGHT);
     addIntConstant(dict, "MDL_WROBUST", (long) MDL_WROBUST);
