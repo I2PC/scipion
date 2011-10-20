@@ -31,7 +31,6 @@ public class TiltPairAligner
 	public TiltPairAligner()
 	{
 		create();
-		System.out.println(peer);
 	}
 
 	// Should be called by GarbageCollector before destroying

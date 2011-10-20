@@ -1,6 +1,7 @@
 package xmipp;
 
 import ij.ImagePlus;
+import java.awt.Point;
 import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
@@ -68,6 +69,11 @@ public class Particle implements Comparable<Particle> {
 	public void setPosition(int x, int y) {
 		this.x = x;
 		this.y = y;
+		
+	}
+	
+	public Point getPosition() {
+		return new Point(x, y);
 		
 	}
 	

@@ -34,7 +34,7 @@ class ScriptParticlePicking(XmippScript):
         input = self.getParam('-i')
         output = self.getParam('-o')
         plugins_dir = getXmippPath("external/imagej/plugins/*")
-        ij_dir = getXmippPath("external/imagej/ij.jar")
+        ij_jar = getXmippPath("external/imagej/ij.jar")
         memory = self.getParam('-m')
         mode = self.getParam('--mode')
         if len(memory) == 0:
@@ -50,7 +50,7 @@ class ScriptParticlePicking(XmippScript):
             file = self.getParam('--mode', 1)
 
         jar = "Xmipp_PP.jar"
-        cmd = "java -Xmx%(memory)s -Dplugins.dir=%(plugins_dir)s -cp %(plugins_dir)s:%(ij_dir)s: trainingpicker.Main %(input)s %(output)s %(mode)s" % locals()
+        cmd = "java -Xmx%(memory)s -Dplugins.dir=%(plugins_dir)s -cp %(plugins_dir)s:%(ij_jar)s: particlepicker.training.Main %(input)s %(output)s %(mode)s" % locals()
         if supervised:
             cmd+=" %(numberOfThreads)d %(fastMode)s %(incore)s"%locals()
         if review:

@@ -326,10 +326,9 @@ public class HandleExtraFileTypes extends ImagePlus implements PlugIn {
             if (imp != null && imp.getWidth() == 0) {
                 imp = null;
             }
-
             return imp;
         } else if (Filename.isXmippType(name)) {
-            imp = (ImagePlus) IJ.runPlugIn(ImageReader.class.getCanonicalName(), path);
+            imp = (ImagePlus) IJ.runPlugIn(xmipp.io.readers.ImageReader.class.getCanonicalName(), path);
 
             if (imp == null) {
                 width = PLUGIN_NOT_FOUND;
@@ -337,7 +336,6 @@ public class HandleExtraFileTypes extends ImagePlus implements PlugIn {
             if (imp != null && imp.getWidth() == 0) {
                 imp = null;
             }
-
             return imp;
         }
 

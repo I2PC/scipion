@@ -1,13 +1,9 @@
 package particlepicker;
 
-import ij.IJ;
 import ij.ImagePlus;
 
 import java.io.File;
-import java.util.List;
-
-
-import xmipp.ImageDouble;
+import java.util.logging.Level;
 
 public abstract class Micrograph
 {
@@ -23,13 +19,11 @@ public abstract class Micrograph
 		this.file = file;
 		if (!new File(file).exists())
 			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("file", file));
-		this.name = getName(file, 2);
+		this.name = getName(file, 1);
 		this.outputfilename = name + ext;
 
 	}
 	
-	
-
 	public Micrograph(String file, String name)
 	{
 		this.file = file;
@@ -64,10 +58,21 @@ public abstract class Micrograph
 	{
 		if (image == null)
 		{
-//			if(file.endsWith(".tif"))
-//			{
-//			}
-//			else
+			if(file.endsWith(".tif"))
+			{
+				xmipp.io.readers.ImageReader reader = new xmipp.io.readers.ImageReader();
+				try
+				{
+					reader.run(file);
+					image = reader;
+				}
+				catch (Exception e)
+				{
+					ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+					throw new IllegalArgumentException(e.getMessage());
+				}
+			}
+			else
 				image = new ImagePlus(file);
 		}
 		return image;
