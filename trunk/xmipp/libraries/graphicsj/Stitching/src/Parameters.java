@@ -37,6 +37,7 @@ public class Parameters {
     final static String MAXIMAL_PLATEAU_WIDTH = "maximal_plateau_width";
     final static String FILTER_OUTLIERS = "filter_outliers";
     final static String MEAN_FACTOR = "mean_factor";
+    final static String OVERLAP_MARGIN = "overlap_margin";
     // Miscellaneous:
     // tiles are roughly in place=yes
     // consider largest graph only=yes
@@ -45,17 +46,16 @@ public class Parameters {
     final static String[] modelStrings = new String[]{"Translation", "Rigid", "Similarity", "Affine"};
     Properties properties;
 
-/*    public static void main(String args[]) {
-        String properties = "stitching.properties";
-        Parameters parameters = new Parameters(properties);
-
-        final Align.ParamOptimize p = parameters.getAlignParameters();
-        final GenericDialog gd = new GenericDialog("Align Tiles");
-        p.addFields(gd);
-
-        gd.showDialog();
+    /*    public static void main(String args[]) {
+    String properties = "stitching.properties";
+    Parameters parameters = new Parameters(properties);
+    
+    final Align.ParamOptimize p = parameters.getAlignParameters();
+    final GenericDialog gd = new GenericDialog("Align Tiles");
+    p.addFields(gd);
+    
+    gd.showDialog();
     }*/
-
     public Parameters(String filename) {
         properties = loadProperties(filename);
     }
@@ -85,6 +85,10 @@ public class Parameters {
         p.meanFactor = getPropertyFloat(MEAN_FACTOR);
 
         return p;
+    }
+
+    public int getOverlapMargin() {
+        return getPropertyInt(OVERLAP_MARGIN);
     }
 
     String getProperty(String property) {

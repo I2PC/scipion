@@ -2,7 +2,6 @@
 import ij.IJ;
 import ij.ImagePlus;
 import ij.io.Opener;
-import ij.process.ImageStatistics;
 import ini.trakem2.ControlWindow;
 import ini.trakem2.Project;
 import ini.trakem2.display.Layer;
@@ -28,7 +27,7 @@ public class Stitcher implements Runnable {
     }*/
 
     String filenames[];
-    int x, y;
+    int xs[], ys[]; // Initial coordinates.
     String propertiesFile;
     String outputfilename;
     String stackfilename;
@@ -38,12 +37,10 @@ public class Stitcher implements Runnable {
         this.filenames = fixFilenamesPaths(filenames);
         this.outputfilename = outputfilename;
         this.stackfilename = stackfilename;
-        this.x = x;
-        this.y = y;
+        this.xs = new int[]{0, x};
+        this.ys = new int[]{0, y};
 
-        if (propertiesFile != null) {
-            parameters = new Parameters(propertiesFile);
-        }
+        parameters = new Parameters(propertiesFile);
     }
 
     // This method is needed 
@@ -84,7 +81,7 @@ public class Stitcher implements Runnable {
 
         for (int i = 0; i < filenames.length; i++) {
             ImagePlus imp = opener.openImage(filenames[i]);
-            Patch patch = project.getLoader().addNewImage(imp, x, y);
+            Patch patch = project.getLoader().addNewImage(imp, xs[i], ys[i]);
             layer.add(patch);
             patches.add(patch);
         }
@@ -111,6 +108,7 @@ public class Stitcher implements Runnable {
 
         // Strategy A: set same min and max for all images,
         //   but shifting the histogram's peak to compensate a bit.
+
         double min = 15600; // for 16-bit TEM images
         double max = 24700;
         Thread task2 = project.getLoader().setMinAndMax(patches, min, max);
@@ -121,6 +119,7 @@ public class Stitcher implements Runnable {
                 IJ.log("Exception: " + e.getMessage());
             }
         }
+        // TODO media y varianza iguales.
 
         // 9 - Take a snapshot of the registered images
         Rectangle box = layer.getMinimalBoundingBox(Patch.class); // or any other ROI you like
@@ -153,7 +152,7 @@ public class Stitcher implements Runnable {
 //        ip.setTitle("Montage [Stack]");
 //        IJ.save(ip, outputfilename);
         if (outputfilename != null) {
-            if (ImagesBuilder.saveResult(patches, box, outputfilename)) {
+            if (ImagesBuilder.saveResult(patches, box, parameters.getOverlapMargin(), outputfilename)) {
                 IJ.showMessage(" >>> Results sucessfully saved: " + outputfilename);
             } else {
                 IJ.error(" xxx ERROR: saving to: " + outputfilename);

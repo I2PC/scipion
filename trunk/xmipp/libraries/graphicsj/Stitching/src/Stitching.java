@@ -1,5 +1,7 @@
 
 import ij.IJ;
+import java.io.File;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.apache.commons.cli.BasicParser;
@@ -16,6 +18,10 @@ import org.apache.commons.cli.Options;
  */
 public class Stitching {
 
+    final static String BYTES = "bytes";
+    final static String KBYTES = "KBytes";
+    final static String MBYTES = "MBytes";
+    final static String GBYTES = "GBytes";
     final static String OPTION_INPUT_FILE = "i";
     final static String OPTION_PROPERTIES_FILE = "p";
     final static String OPTION_OUTPUT_FILE = "o";
@@ -43,10 +49,9 @@ public class Stitching {
         String arguments[] = new String[]{
             "-" + OPTION_INPUT_FILE, files[0], files[1],
             "-" + OPTION_PROPERTIES_FILE, properties,
-            "-" + OPTION_OUTPUT_FILE, output,
-            //"-" + OPTION_GENERATESTACK, stackfile,
-            //"-" + OPTION_X, "100",
-            //"-" + OPTION_Y, "-50"
+            "-" + OPTION_OUTPUT_FILE, output, //"-" + OPTION_GENERATESTACK, stackfile,
+        //"-" + OPTION_X, "100",
+        //"-" + OPTION_Y, "-50"
         };
 
         Stitching stitching = new Stitching(arguments);
@@ -57,26 +62,72 @@ public class Stitching {
 
         // Check parameters.
         if (FILES.length > 1) {
-            if (PROPERTIES_FILE != null) {
-                if (OUTPUT_FILE != null) {
-                    long before = System.currentTimeMillis();
+            long requiredSize = getFilesSize(FILES);
+            long availableMem = IJ.maxMemory();
 
-                    Stitcher stitcher = new Stitcher(FILES, PROPERTIES_FILE, OUTPUT_FILE, X, Y, STACK_FILE);
-                    stitcher.run();
+            if (requiredSize <= IJ.maxMemory()) {
+                if (PROPERTIES_FILE != null) {
+                    if (OUTPUT_FILE != null) {
+                        long before = System.currentTimeMillis();
 
-                    long elapsed = System.currentTimeMillis() - before;
-                    SimpleDateFormat dateFormatter = new SimpleDateFormat("'Total time:' mm:ss:S");
+                        Stitcher stitcher = new Stitcher(FILES, PROPERTIES_FILE, OUTPUT_FILE, X, Y, STACK_FILE);
+                        stitcher.run();
 
-                    System.out.println(dateFormatter.format(new Date(elapsed)));
+                        long elapsed = System.currentTimeMillis() - before;
+                        SimpleDateFormat dateFormatter = new SimpleDateFormat("'Total time:' mm:ss:S");
+
+                        System.out.println(dateFormatter.format(new Date(elapsed)));
+                    } else {
+                        IJ.error("ERROR: Please, provide a filename for output.");
+                    }
                 } else {
-                    IJ.error("ERROR: Please, provide a filename for output.");
+                    IJ.error("ERROR: Please, provide a parameters file.");
                 }
             } else {
-                IJ.error("ERROR: Please, provide a parameters file.");
+                String requiredStr = getFileSizeString(requiredSize);
+                String availableStr = getFileSizeString(availableMem);
+
+                IJ.error("Not enough memory available: " + availableStr + " (required: " + requiredStr + ")");
             }
         } else {
             IJ.error("ERROR: Please, provide at least two files to stitch.");
         }
+    }
+
+    static long getFilesSize(String filenames[]) {
+        long size = 0;
+
+        for (int i = 0; i < filenames.length; i++) {
+            File file = new File(filenames[i]);
+            size += file.length();
+        }
+
+        return size;
+    }
+
+    static String getFileSizeString(double size) {
+        String unit = BYTES;
+
+        if (size > 1024) {  // bytes -> KB
+            size /= 1024;
+            unit = KBYTES;
+            if (size > 1024) {  // KB -> MB
+                size /= 1024;
+                unit = MBYTES;
+                if (size > 1024) {  // MB -> GB
+                    size /= 1024;
+                    unit = GBYTES;
+                }
+            }
+        }
+
+        DecimalFormat dc = new DecimalFormat(hasDecimalPart(size) ? ".##" : "");
+
+        return dc.format(size) + " " + unit;
+    }
+
+    static boolean hasDecimalPart(double number) {
+        return (number - (int) number) != 0;
     }
 
     final void processArgs(String args[]) {

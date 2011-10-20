@@ -41,7 +41,7 @@ public class ImagesBuilder {
     return ip;
     }*/
 
-    public static boolean saveResult(List<Patch> patches, Rectangle box, String path) {
+    public static boolean saveResult(List<Patch> patches, Rectangle box, int margin, String path) {
 
         try {
             // Translation to the top left corner.
@@ -52,71 +52,74 @@ public class ImagesBuilder {
             int w = box.width;
             int h = box.height;
 
-            float result[] = new float[w * h];//buildSlice(patches.get(0), box);
+            float result[] = new float[w * h];
 
             // Puts images, pixels, translations in arrays, a much convenient way to use them later.
             Patch patch0 = patches.get(0);
             Patch patch1 = patches.get(1);
 
-            ImagePlus images[] = new ImagePlus[]{
-                patch0.getImagePlus(),
-                patch1.getImagePlus()
-            };
+            ImagePlus image0 = patch0.getImagePlus();
+            ImagePlus image1 = patch1.getImagePlus();
 
-            float pixels[][] = new float[][]{
-                (float[]) images[0].getProcessor().convertToFloat().getPixels(),
-                (float[]) images[1].getProcessor().convertToFloat().getPixels()
-            };
+            int width0 = image0.getWidth();
+            int height0 = image0.getHeight();
+            int width1 = image1.getWidth();
+            int height1 = image1.getHeight();
 
-            int sourceW[] = new int[]{
-                images[0].getWidth(),
-                images[1].getWidth()
-            };
+            float pixels0[] = (float[]) image0.getProcessor().convertToFloat().getPixels();
+            float pixels1[] = (float[]) image1.getProcessor().convertToFloat().getPixels();
 
-            int sourceH[] = new int[]{
-                images[0].getHeight(),
-                images[1].getHeight()
-            };
-
-            Rectangle rectangles[] = new Rectangle[]{
-                new Rectangle(sourceW[0], sourceH[0]),
-                new Rectangle(sourceW[1], sourceH[1])
-            };
+            Rectangle area0 = new Rectangle(image0.getWidth(), image0.getHeight());
+            Rectangle area1 = new Rectangle(image1.getWidth(), image1.getHeight());
 
             // Transforms concatenated with translation to the box top left corner.
-            AffineTransform transforms[] = new AffineTransform[]{
-                patch0.getAffineTransform().createInverse(),
-                patch1.getAffineTransform().createInverse()
-            };
+            AffineTransform T0 = patch0.getAffineTransform().createInverse();
+            AffineTransform T1 = patch1.getAffineTransform().createInverse();
 
-            transforms[0].concatenate(translation);
-            transforms[1].concatenate(translation);
+            T0.concatenate(translation);
+            T1.concatenate(translation);
 
-            for (int j = 0; j < h; j++) {
-                for (int i = 0; i < w; i++) {
-                    int imageIndex = 0;
-                    boolean done = false;
-                    Point currentPoint = new Point(i, j);
+            Point p = new Point();
+            Point p0 = new Point();
+            Point p1 = new Point();
 
-                    do {
-                        Point sourcePoint = new Point();
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    p.setLocation(x, y);
 
-                        transforms[imageIndex].transform(currentPoint, sourcePoint);
+                    // Transforms both points: p -> p1, p2
+                    T0.transform(p, p0);
+                    T1.transform(p, p1);
 
-                        int index = getRectangleIndexContaining(rectangles, sourcePoint);
+                    /*                    System.out.println(p + " > " + p0);
+                    System.out.println(p + " > " + p1);
+                    System.out.println("- - - - - - - - - - - - -");*/
 
-                        //if (rectangles[imageIndex].contains(sourcePoint)) {
-                        if (index == imageIndex) {
-                            //assign value...
-                            result[j * w + i] = pixels[imageIndex][sourcePoint.y * sourceW[imageIndex] + sourcePoint.x];
+                    float value = 0;
+                    if (area0.contains(p0) && area1.contains(p1)) {   // Overlap!
+                        float w0 = (float) (width0 - p0.getX());
+                        float w1 = (float) p1.getX();
 
-                            done = true;
+                        float value0 = Interpolator.bilinear(pixels0, width0, height0, p0.getX(), p0.getY());
+                        float value1 = Interpolator.bilinear(pixels1, width1, height1, p1.getX(), p1.getY());
+
+                        // TODO Usar una propiedad en el archivo para el "margin".
+                        if (w0 > margin) {
+                            value = value0;
                         } else {
-                            result[j * w + i] = Float.MIN_VALUE;
-                        }
+                            float w0_ = w0 / (w0 + w1);
+                            float w1_ = w1 / (w0 + w1);
 
-                        imageIndex++;
-                    } while (!done && imageIndex < pixels.length);
+                            // "Blends" value.
+                            value = w0_ * value0 + w1_ * value1;
+                        }
+                    } else if (area0.contains(p0)) {   // Contained only by Image0
+                        value = Interpolator.bilinear(pixels0, width0, height0, p0.getX(), p0.getY());
+                    } else if (area1.contains(p1)) {   // Contained only  by Image1
+                        value = Interpolator.bilinear(pixels1, width1, height1, p1.getX(), p1.getY());
+                    }
+
+                    result[y * w + x] = value;
                 }
             }
 
@@ -135,24 +138,46 @@ public class ImagesBuilder {
         return true;
     }
 
-    static int getRectangleIndexContaining(Rectangle rectangles[], Point point) {
-        int contains = -1;
-        int i = 0;
+    /**
+     * Blend a FloatProcessor (i.e., a 32-bit image) with another one, i.e.
+     * set the pixel values of fp1 according to a weighted sum of the corresponding
+     * pixels of fp1 and fp2. This is done for pixels in the rectangle fp1.getRoi()
+     * only.
+     * Note that both FloatProcessors, fp1 and fp2 must have the same width and height.
+     * @param fp1 The FloatProcessor that will be modified.
+     * @param weight1 The weight of the pixels of fp1 in the sum.
+     * @param fp2  The FloatProcessor that will be read only.
+     * @param weight2 The weight of the pixels of fp2 in the sum.
+     */
+//    public static void blendFloat (FloatProcessor fp1, float weight1, FloatProcessor fp2, float weight2) {
+//        Rectangle r = fp1.getRoi();
+//        int width = fp1.getWidth();
+//        float[] pixels1 = (float[])fp1.getPixels();     // array of the pixels of fp1
+//        float[] pixels2 = (float[])fp2.getPixels();
+//        for (int y=r.y; y<(r.y+r.height); y++)          // loop over all pixels inside the roi rectangle
+//            for (int x=r.x; x<(r.x+r.width); x++) {
+//                int i = x + y*width;                    // this is how the pixels are addressed
+//                pixels1[i] = weight1*pixels1[i] + weight2*pixels2[i]; //the weighted sum
+//            }
+//    }
 
-        for (; i < rectangles.length; i++) {
-            Rectangle rectangle = rectangles[i];
-            if (rectangle.contains(point)) {
-                if (contains >= 0) {    // More than one rectangle contains the point.
-                    return -1;
-                }
-
-                contains = i;
-            }
-        }
-
-        return contains;
+    /*static int getRectangleIndexContaining(Rectangle rectangles[], Point point) {
+    int contains = -1;
+    int i = 0;
+    
+    for (; i < rectangles.length; i++) {
+    Rectangle rectangle = rectangles[i];
+    if (rectangle.contains(point)) {
+    if (contains >= 0) {    // More than one rectangle contains the point.
+    return -1;
     }
-
+    
+    contains = i;
+    }
+    }
+    
+    return contains;
+    }*/
     public static boolean saveStack(List<Patch> patches, Rectangle box, String path) {
         File f = new File(path);
 
