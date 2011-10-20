@@ -31,8 +31,7 @@ from Tkinter import *
 import tkFont as font
 import ttk  
 
-from protlib_gui_ext import FilePollTextArea, centerWindows, \
-                            MyButton, registerCommonFonts, showInfo, showError
+from protlib_gui_ext import centerWindows, MyButton, registerCommonFonts, showInfo, showError, OutputText
 from protlib_filesystem import getXmippPath
     
 ############### Helper functions ######################
@@ -153,7 +152,7 @@ class ConfigNotebook(ttk.Notebook):
     
     def notifyRun(self, process):
         self.proc = process
-        self.text.fillTextArea()
+        self.text.readFile()
         self.text.doRefresh(1)
         self.checkProcess()    
         self.btn.config(command=lambda:self.stopCompile(), text="Stop")
@@ -168,14 +167,14 @@ class ConfigNotebook(ttk.Notebook):
         
     def createConfigTab(self):
         tab = self.addTab("  Output  ")
-        self.text = FilePollTextArea(tab, self.OUTPUT, 20, 80, colorOn=False)
+        self.text = OutputText(tab, self.OUTPUT, width=80, height=20, colors=False)
         self.text.goEnd()
-        self.text.grid(column=0, row=0, sticky=(N, S, E, W), padx=10, pady=10)
+        self.text.grid(column=0, row=0, sticky='nsew', padx=10, pady=10)
 
     def checkProcess(self):
         if self.proc.poll() is not None:
             self.text.stopRefresh()
-            self.text.fillTextArea(goEnd=True)
+            self.text.readFile()
             self.progressVar.set(0)
             if self.proc.returncode != 0:
                 runFunc = self.run

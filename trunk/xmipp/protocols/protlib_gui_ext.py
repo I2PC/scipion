@@ -565,8 +565,11 @@ class XmippText(tk.Text):
     def addNewline(self):
         self.insert(tk.END, '\n')
         
+    def goBegin(self):
+        self.see(0.0)
+        
     def goEnd(self):
-        self.text.see(tk.END)
+        self.see(tk.END)
         
     def clear(self):
         self.config(state=tk.NORMAL)
@@ -1422,17 +1425,23 @@ class XmippBrowser():
         self.root.destroy()
     
 '''Show Xmipp Browser and return selected files'''
-def showBrowseDialog(path='.', title='', parent=None, seltype="both", selmode="extended"):
-    xb = XmippBrowser(path, seltype=seltype, selmode=selmode)
-    root = Toplevel()
+def showBrowseDialog(path='.', title='', parent=None, seltype="both", selmode="extended", main=False):
+    if main:
+        root = tk.Tk()
+    else:
+        root = tk.Toplevel()
     #root.grab_set()
+    xb = XmippBrowser(path, seltype=seltype, selmode=selmode)
     xb.createGUI(root, title, parent)
     xb.showGUI(loop=False)
     root.wait_window(root)
     return xb.selectedFiles
 
-def showFileViewer(title, filelist, parent=None):
-    root = tk.Toplevel()
+def showFileViewer(title, filelist, parent=None, main=False):
+    if main:
+        root = tk.Tk()
+    else:
+        root = tk.Toplevel()
     root.withdraw()
     root.title(title)
     l = FileViewer(root, filelist)
