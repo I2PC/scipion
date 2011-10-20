@@ -381,6 +381,17 @@ class XmippProtocol(object):
                      NumberOfMpi = self.NumberOfMpi,
                      NumberOfThreads = self.NumberOfThreads)
         
+    def insertRunJobGapStep(self, program, params, verifyFiles=[], parent_id=XmippProjectDb.FIRST_STEP):
+        ''' This function is a shortcut to insert a runJob step into database
+        it will pass threads and mpi info, and also the unique run id'''
+        self.insertStep('runJob', 
+                     programname=program, 
+                     params=params,
+                     verifyfiles = verifyFiles,
+                     NumberOfMpi = 1,
+                     NumberOfThreads = 1,
+                     parent_step_id=parent_id,execution_mode=SqliteDb.EXEC_GAP)
+        
     def insertRunMpiGapsStep(self,verifyfiles=[]):
         return self.insertStep('runStepGapsMpi',passDb=True, verifyfiles=verifyfiles, 
                                script=self.scriptName, NumberOfMpi=self.NumberOfMpi)
