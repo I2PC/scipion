@@ -38,10 +38,18 @@ class ScriptBrowser(XmippScript):
         ## params
         self.addParamsLine('[ -i <directory=".">]          : Initial directory to start browsing')
         self.addParamsLine('   alias -d;')
+        self.addParamsLine('[ -f <pattern="">]             : Filter results files')
+        self.addParamsLine('   alias --filter;')
+        
+        self.addExampleLine('Just open the browser in current directory', False)
+        self.addExampleLine('xmipp_browser')
+        self.addExampleLine('Only show .xmd and .stk files:', False)
+        self.addExampleLine('xmipp_browser -f ".stk .xmd"')        
             
     def run(self):
         path = self.getParam('-i')
-        showBrowseDialog(path, main=True)
+        filter = self.getParam('--filter')
+        showBrowseDialog(path, main=True, seltype="none", filter=filter)
 
 if __name__ == '__main__':
     ScriptBrowser().tryRun()

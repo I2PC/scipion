@@ -1107,7 +1107,7 @@ class ProtocolGUI(BasicGUI):
 #        msg = runJavaIJappWithResponse("512m", "XmippFileListWizard", "-seltype %(seltype)s -dir ." % locals())
 #        #msg = runJavaIJappWithResponse("512m", "XmippFileListWizard", "-dir .")
 #        msg = msg.strip()
-        files = showBrowseDialog(parent=self.master, seltype=seltype)
+        files = showBrowseDialog(parent=self.master, seltype=seltype, filter=var.tags['file'])
         if files:
             var.tkvar.set(', '.join([relpath(f) for f in files]))
             

@@ -873,6 +873,7 @@ class ShowDialog(Dialog):
         m = min(m + 5, 80)
         self.text.config(height=len(mylines)+3, width=m-7)
         self.text.addNewline()
+        self.text.config(state=tk.DISABLED)
         self.text.pack()
         self.frame.pack()
         
@@ -1128,7 +1129,7 @@ class XmippBrowser():
         - browse -> only single file selection
         - extended -> multiple file selection
     '''
-    def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", filterPattern=None):
+    def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", filter=None):
         self.seltype = seltype
         self.selmode = selmode
         self.dir = initialDir
@@ -1226,6 +1227,8 @@ class XmippBrowser():
         filterFrame.grid(column=0, row=0, sticky='ew')
         ttk.Label(filterFrame, text="Filter").pack(side=tk.LEFT,padx=2)
         self.filterVar = tk.StringVar()
+        if self.pattern:
+            self.filterVar.set(self.pattern)
         filterEntry = ttk.Entry(filterFrame, width=25, textvariable=self.filterVar)
         filterEntry.pack(side=tk.LEFT,padx=2)
         self.btnFilter = MyButton(filterFrame, "Search", 'search.gif', command=self.filterResults)
@@ -1258,6 +1261,8 @@ class XmippBrowser():
         
         #Create a dictionary with extensions and icon type
         self.insertFiles(self.dir)
+        #Filter result, if pattern no provided, all files will be listed
+        self.filterResults()
         
     def showGUI(self, loop=True):        
         centerWindows(self.root, refWindows=self.parent)
@@ -1425,13 +1430,13 @@ class XmippBrowser():
         self.root.destroy()
     
 '''Show Xmipp Browser and return selected files'''
-def showBrowseDialog(path='.', title='', parent=None, seltype="both", selmode="extended", main=False):
+def showBrowseDialog(path='.', title='', parent=None, main=False, **args):
     if main:
         root = tk.Tk()
     else:
         root = tk.Toplevel()
     #root.grab_set()
-    xb = XmippBrowser(path, seltype=seltype, selmode=selmode)
+    xb = XmippBrowser(path, **args)
     xb.createGUI(root, title, parent)
     xb.showGUI(loop=False)
     root.wait_window(root)
