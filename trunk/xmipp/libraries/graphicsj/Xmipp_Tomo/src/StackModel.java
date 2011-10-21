@@ -340,6 +340,8 @@ public class StackModel extends AbstractModel {
 		if (getNumberOfProjections() > 1) {
 			setEnabled(getCurrentProjectionNumber(), true);
 		}
+		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), true,
+				false);
 	}
 
 	// TODO: Min an Max not set. We need to load all the projections of the stack to know the min and max

@@ -287,7 +287,7 @@ public class UserAction {
 	public String getProgress(){
 		if(WORKFLOW_ROOT_NAME.equals(getName()))
 			return null;
-		String ret = progress;
+		String ret = "100%";
 		if (ret == null){
 			int p = (getCommand().length() % 4) * 25;
 			ret = String.valueOf(p) + "%";
