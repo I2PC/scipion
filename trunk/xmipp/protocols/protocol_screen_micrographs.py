@@ -25,8 +25,9 @@ class ProtScreenMicrographs(XmippProtocol):
         AngPix=MD.getValue(xmipp.MDL_CTF_SAMPLING_RATE,id)
         Magnification=MD.getValue(xmipp.MDL_MAGNIFICATION,id)
 
-        # Create verifyFiles for the MPI and output directories       
-        MD=xmipp.MetaData(os.path.join(self.importDir,"micrographs.sel"))
+        # Create verifyFiles for the MPI and output directories
+        selfile=os.path.join(self.importDir,"micrographs.sel")
+        MD=xmipp.MetaData(selfile)
         mDict={}        
         verifyFiles=[]
         for id in MD:
@@ -93,7 +94,9 @@ class ProtScreenMicrographs(XmippProtocol):
         # Gather results after external actions
         self.insertStep('gatherResults',verifyfiles=[self.workingDirPath("micrographs.sel")],
                            parent_step_id=idMPI,
-                           TmpDir=self.TmpDir,WorkingDir=self.WorkingDir,
+                           TmpDir=self.TmpDir,
+                           WorkingDir=self.WorkingDir,
+                           Selfile=selfile,
                            DoCtffind=self.DoCtffind)
                
     def validate(self):
@@ -136,7 +139,8 @@ class ProtScreenMicrographs(XmippProtocol):
             os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --memory 2048m &")
         else:
             summaryFile=os.path.join(self.TmpDir,"micrographs.sel")
-            buildSummaryMetadata(self.WorkingDir,self.DoCtffind,summaryFile)
+            selfile=os.path.join(self.importDir,"micrographs.sel")
+            buildSummaryMetadata(self.WorkingDir,self.DoCtffind,selfile,summaryFile)
             if os.path.exists(summaryFile):
                 os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --memory 2048m &")
             else:
@@ -216,12 +220,17 @@ def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,S
     MD.setValue(xmipp.MDL_CTF_K,             1.0, objId)
     MD.write(fnOut)
 
-def buildSummaryMetadata(WorkingDir,DoCtffind,summaryFile):
+def buildSummaryMetadata(WorkingDir,DoCtffind,Selfile,summaryFile):
     MD=xmipp.MetaData()
-    for filename in glob.glob(WorkingDir + '/*/xmipp_ctf.ctfparam'):
-        micrographDir=os.path.dirname(filename)
+    MDmicrographs=xmipp.MetaData(Selfile)
+    for id in MDmicrographs:
+        inputFile=MDmicrographs.getValue(xmipp.MDL_IMAGE,id)
+        micrographName = os.path.split(inputFile)[1]
+        (shortname, extension)=os.path.splitext(micrographName)
+        micrographDir=os.path.join(WorkingDir,shortname)                    
+        
         objId=MD.addObject()
-        MD.setValue(xmipp.MDL_IMAGE,filename,objId)
+        MD.setValue(xmipp.MDL_IMAGE,inputFile,objId)
         ctfparam=os.path.join(micrographDir,"xmipp_ctf.ctfparam")
         if os.path.exists(ctfparam):
             MD.setValue(xmipp.MDL_PSD,               os.path.join(micrographDir,"xmipp_ctf.psd"),objId)
@@ -247,7 +256,7 @@ def buildSummaryMetadata(WorkingDir,DoCtffind,summaryFile):
         MD.sort(xmipp.MDL_IMAGE);
         MD.write(summaryFile)
 
-def gatherResults(log,TmpDir,WorkingDir,DirMicrographs,ExtMicrographs,DoCtffind):
+def gatherResults(log,TmpDir,WorkingDir,Selfile,DoCtffind):
     summaryFile=os.path.join(WorkingDir,"micrographs.sel")
-    buildSummaryMetadata(WorkingDir,DoCtffind,summaryFile)
+    buildSummaryMetadata(WorkingDir,DoCtffind,Selfile,summaryFile)
     runJob(log,"xmipp_ctf_sort_psds","-i "+summaryFile)
