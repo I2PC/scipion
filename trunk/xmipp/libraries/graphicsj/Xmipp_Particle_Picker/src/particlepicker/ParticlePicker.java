@@ -155,7 +155,7 @@ public abstract class ParticlePicker
 				}
 				if (step == FamilyState.Supervised && this instanceof SupervisedParticlePicker)
 					if (!new File(((SupervisedParticlePicker) this).getOTrainingFilename(name)).exists())
-						throw new IllegalArgumentException(String.format("Training file does not exist. Family can not be in %s mode", step));
+						throw new IllegalArgumentException(String.format("Training file does not exist. Family cannot be in %s mode", step));
 				family = new Family(name, new Color(rgb), size, step, this);
 				families.add(family);
 			}
