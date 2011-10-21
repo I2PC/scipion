@@ -521,8 +521,6 @@ def runJavaJar(memory, jarName, args, batchMode=True):
     from protlib_filesystem import getXmippPath
     jarPath = getXmippPath(jarName)
     runJavaIJapp(memory, '-jar %s' % jarPath, args, batchMode)
-    
-    
 
 def runJavaIJappWithResponse(memory, appName, args):
     return runExternalAppWithResponse(getJavaIJappCmd(memory, appName, args, True))
