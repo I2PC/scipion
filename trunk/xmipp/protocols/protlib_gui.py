@@ -1111,7 +1111,7 @@ class ProtocolGUI(BasicGUI):
         if files:
             var.tkvar.set(', '.join([relpath(f) for f in files]))
             
-    #This wizard is specific for preprocess_micrographs protocol
+    #This wizard is specific for import_micrographs protocol
     def wizardBrowseJCTF(self, var):
         dir = self.getVarValue('DirMicrographs')
         filter = self.getVarValue('ExtMicrographs')
@@ -1122,15 +1122,36 @@ class ProtocolGUI(BasicGUI):
         if len(msg) > 0:
             var.tkvar.set(os.path.relpath(msg.strip()))            
         
+    #This wizard is specific for screen_micrographs protocol
+    def wizardBrowseJCTF2(self, var):
+        import xmipp
+        dir=getWorkingDirFromRunName(self.getVarValue('ImportRun'))
+        MD=xmipp.MetaData()
+        MD.read(os.path.join(dir,"micrographs.sel"))
+        if MD.size()==0:
+            return
+        id=MD.firstObject()
+        ext=os.path.splitext(MD.getValue(xmipp.MDL_IMAGE,id))[1]
+        value = self.getVarValue('Down')
+        msg = runJavaIJappWithResponse("512m", "XmippFileListCTFWizard", 
+                                          "-dir %(dir)s -filter *%(ext)s -downsampling %(value)s" % locals())
+        msg = msg.strip()
+        if len(msg) > 0:
+            var.tkvar.set(os.path.relpath(msg.strip()))            
+        
     #This wizard is specific for preprocess_micrographs protocol
     def wizardBrowseJCTFMeasure(self, var):
-        dir = self.getVarValue('DirMicrographs')
-        if len(dir.strip()) == 0:
-            dir = "."
-        filter = self.getVarValue('ExtMicrographs')
+        import xmipp
+        dir=getWorkingDirFromRunName(self.getVarValue('ImportRun'))
+        MD=xmipp.MetaData()
+        MD.read(os.path.join(dir,"micrographs.sel"))
+        if MD.size()==0:
+            return
+        id=MD.firstObject()
+        ext=os.path.splitext(MD.getValue(xmipp.MDL_IMAGE,id))[1]
         value = self.getVarValue('Down')
         runJavaIJappWithResponse("512m", "XmippFileListMeasureFreqsWizard", 
-                                "-dir %(dir)s -filter %(filter)s -downsampling %(value)s" % locals())
+                                "-dir %(dir)s -filter *%(ext)s -downsampling %(value)s" % locals())
 
     #Select family from extraction run
     def wizardChooseFamily(self, var):
