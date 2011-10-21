@@ -13,26 +13,15 @@
 
 # {begin_of_header}
 
-#{include} inc_comment_run.py
+#{eval} expandCommentRun()
 
 #-----------------------------------------------------------------------------
-# {section} Input micrographs
+# {section} CTF Estimation
 #-----------------------------------------------------------------------------
-# {dir} Micrographs directory
-"""Directory name from where to process all scanned micrographs"""
-DirMicrographs = 'Micrographs'
+# {run}(import_micrographs) Import Micrographs Run
+ImportRun = ''
 
-# Files to process
-""" This is typically *.tif or *.ser, but may also be *.mrc, *.spi 
-    Note that any wildcard is possible, e.g. *3[1,2].tif
-"""
-ExtMicrographs = '*.mrc'
-
-#------------------------------------------------------------------------------------------------
-# {section}{condition}(DoCtfEstimate) CTF estimation
-#------------------------------------------------------------------------------------------------
-
-# {wizard}(wizardBrowseJCTF) Downsampling factor 
+# {wizard}(wizardBrowseJCTF2) Downsampling factor 
 """ Set to 1 for no downsampling. Non-integer downsample factors are possible."""
 Down = 1
 
@@ -81,7 +70,7 @@ DoCtffind = False
 """
 StepFocus = 0.1
 
-# {eval} expandParallel(threads=0,hours=6)
+# {eval} expandParallel(threads=0,hours=12)
 
 # {hidden} Show expert options
 """If True, expert options will be displayed
