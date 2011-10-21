@@ -18,7 +18,7 @@
 #------------------------------------------------------------------------------------------
 # {section} Picking parameters
 #------------------------------------------------------------------------------------------
-# {run}(import_micrographs) Import Micrographs run
+# {run}(import_micrographs,screen_micrographs) Import Micrographs run
 """ Directory with the preprocessing (output of the Preprocessing Micrographs protocol)
 """
 ImportRun = ""
