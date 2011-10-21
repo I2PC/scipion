@@ -1,7 +1,7 @@
 #!/usr/bin/env xmipp_python
 
 import os
-from protlib_xmipp import XmippScript
+from protlib_xmipp import XmippScript, estimateMemory
 from protlib_filesystem import getXmippPath
 
 class ScriptParticlePicking(XmippScript):
@@ -16,7 +16,7 @@ class ScriptParticlePicking(XmippScript):
         self.addParamsLine(" -o <directory>                                       : Output directory for load/save session data without updating model.");
         self.addParamsLine("    alias --output;                                   ");
         self.addParamsLine(' == Java options == ')
-        self.addParamsLine(' [-m <mem="1024m">]                                   : Memory amount for JVM');
+        self.addParamsLine(' [-m <mem="">]                                        : Memory amount for JVM');
         self.addParamsLine('    alias --memory;');
         
             
@@ -28,7 +28,7 @@ class ScriptParticlePicking(XmippScript):
         ij_jar = getXmippPath("external/imagej/ij.jar")
         memory = self.getParam('-m')
         if len(memory) == 0:
-            memory = "1024m"
+            memory=str(3*estimateMemory(input))+"m"
             print "No memory size provided. Using default: " + memory
 
         jar = "Xmipp_PP.jar"

@@ -226,7 +226,6 @@ class ProgramKeywordsRank():
                     rank += wvalue
         return rank
 
-
 #---------------------------------------------------------------------------
 # Metadata stuff
 #--------------------------------------------------------------------------- 
@@ -311,6 +310,17 @@ def compute_histogram(mD,bin,col,min,max):
         allMD.unionAll(outMD)
        
     return allMD
+
+def estimateMemory(input):
+    from math import log, ceil
+    MD=xmipp.MetaData(input)
+    memory=0
+    for id in MD:
+        fnImg=MD.getValue(xmipp.MDL_IMAGE,id)
+        (Xdim,Ydim,Zdim,Ndim)=xmipp.SingleImgSize(fnImg)
+        memory=max(memory,Xdim*Ydim*8)
+    memoryMb=int((2 ** ceil(log(memory, 2)))/(2**20)); # Memory size in megabytes
+    return memoryMb
 
 #---------------------------------------------------------------------------
 # Colors from Xmipp binding

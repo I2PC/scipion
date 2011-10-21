@@ -1,7 +1,7 @@
 #!/usr/bin/env xmipp_python
 
 import os
-from protlib_xmipp import XmippScript
+from protlib_xmipp import XmippScript, estimateMemory
 from protlib_filesystem import getXmippPath
 
 class ScriptParticlePicking(XmippScript):
@@ -25,11 +25,9 @@ class ScriptParticlePicking(XmippScript):
         self.addParamsLine("       review <file>                                  : Enables review mode. User reviews/corrects particles set provided on file");
         self.addParamsLine("                                                      : without updating model. ");
         self.addParamsLine(' == Java options == ')
-        self.addParamsLine(' [-m <mem="1024m">]                                   : Memory amount for JVM');
+        self.addParamsLine(' [-m <mem="">]                                        : Memory amount for JVM');
         self.addParamsLine('    alias --memory;');
         
-            
-    
     def run(self):
         input = self.getParam('-i')
         output = self.getParam('-o')
@@ -38,8 +36,8 @@ class ScriptParticlePicking(XmippScript):
         memory = self.getParam('-m')
         mode = self.getParam('--mode')
         if len(memory) == 0:
-            memory = "1024m"
-            print "No memory size provided. Using default: " + memory
+            memory=str(3*estimateMemory(input))+"m"
+            print "No memory size provided. Estimated: " + memory
         supervised = (mode == 'supervised')
         if supervised:
             numberOfThreads = self.getIntParam('--mode', 1)
