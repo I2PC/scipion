@@ -25,14 +25,22 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
  '''
-import sys
-from protlib_gui_ext import showBrowseDialog
-import Tkinter as tk
+from protlib_gui_ext import showFileViewer
+from protlib_xmipp import XmippScript
+
+class ScriptViewer(XmippScript):
+    def __init__(self):
+        XmippScript.__init__(self)
+        
+    def defineParams(self):
+        self.addUsageLine('View some files')
+        ## params
+        self.addParamsLine('[ -i <...>]          : List of files to view')
+            
+    def run(self):
+        files = self.getListParam('-i')
+        showFileViewer(files[0], files, main=True)
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        title = sys.argv[1]
-        filelist = sys.argv[1:]
-        showFileViewer(title, filelist)
-    else:
-        print "No files to view"
+    ScriptViewer().tryRun()
+    
