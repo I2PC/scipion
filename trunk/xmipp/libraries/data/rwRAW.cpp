@@ -95,7 +95,7 @@ int ImageBase::readRAW(size_t select_img, bool isStack)
     _xDim = textToInteger(info[0]);
     _yDim = textToInteger(info[1]);
 
-    if (atoi(info[3].c_str()) == 0) // Check if zdim is not included
+    if (atoi(info[3].c_str()) == 0 && info[3]!="0") // Check if zdim is not included
     {
         rPos = 2;
         _zDim = 1;
