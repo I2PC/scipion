@@ -11,7 +11,6 @@ import java.awt.Font;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
-import metadata.models.MetaDataTableModel;
 
 /**
  *
@@ -49,7 +48,10 @@ public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
         ImageIcon icon = null;
 
         if (renderImages) {
-            ImagePlus preview = item.getPreview(DEFAULT_CELL_WIDTH,DEFAULT_CELL_HEIGHT);
+            int w = item.getWidth() > DEFAULT_CELL_WIDTH ? DEFAULT_CELL_WIDTH : item.getWidth();
+            int h = item.getHeight() > DEFAULT_CELL_HEIGHT ? DEFAULT_CELL_HEIGHT : item.getHeight();
+
+            ImagePlus preview = item.getPreview(w, h);
             icon = new ImageIcon(preview.getImage());
         } else {
             label = getShortLabel(item.getOriginalValue(), table.getColumnModel().getColumn(column).getWidth());

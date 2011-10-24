@@ -3,14 +3,12 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.Prefs;
-import ij.io.ImageReader;
 import ij.plugin.PlugIn;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import xmipp.Filename;
-import xmipp.io.readers.MetaDataReader;
 
 // Plugin to handle file types which are not implemented
 // directly in ImageJ through io.Opener
@@ -318,7 +316,7 @@ public class HandleExtraFileTypes extends ImagePlus implements PlugIn {
         // using the above as models
         // eg:
         if (Filename.isMetadata(name)) {
-            imp = (ImagePlus) IJ.runPlugIn(MetaDataReader.class.getCanonicalName(), path);
+            imp = (ImagePlus) IJ.runPlugIn(xmipp.io.readers.MetaDataReader.class.getCanonicalName(), path);
 
             if (imp == null) {
                 width = PLUGIN_NOT_FOUND;
@@ -326,6 +324,7 @@ public class HandleExtraFileTypes extends ImagePlus implements PlugIn {
             if (imp != null && imp.getWidth() == 0) {
                 imp = null;
             }
+
             return imp;
         } else if (Filename.isXmippType(name)) {
             imp = (ImagePlus) IJ.runPlugIn(xmipp.io.readers.ImageReader.class.getCanonicalName(), path);
@@ -336,6 +335,7 @@ public class HandleExtraFileTypes extends ImagePlus implements PlugIn {
             if (imp != null && imp.getWidth() == 0) {
                 imp = null;
             }
+
             return imp;
         }
 

@@ -67,14 +67,15 @@ public abstract class Writer implements PlugIn {
         String fullpath = null;
 
         SaveDialog od = new SaveDialog(
-                getSaveDialogTitle(), System.getProperty("user.dir"), "", ".xmd");
+                getSaveDialogTitle(), System.getProperty("user.dir"), "", "");
         String path = od.getFileName();
 
         if (path != null) {
             basedir = od.getDirectory();
             prefix = Filename.getPrefix(path);
+            prefix = prefix != null ? prefix + Filename.SEPARATOR : "";
             filename = Filename.getFilename(path);
-            fullpath = prefix + Filename.SEPARATOR + basedir + filename;
+            fullpath = prefix + basedir + filename;
         }
 
         return fullpath;

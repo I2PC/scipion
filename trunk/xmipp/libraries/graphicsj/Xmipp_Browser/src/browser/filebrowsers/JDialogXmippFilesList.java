@@ -74,7 +74,7 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
 
                 add(panelXmippBrowser, BorderLayout.CENTER);
 
-                pack();
+//                pack();
 
                 ImagesWindowFactory.releaseGUI(getRootPane());
             }
@@ -129,7 +129,7 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
         }
     }
 
-    final protected boolean send(Object items[], boolean end) {
+    protected boolean send(Object items[], boolean end) {
         try {
             Socket socket = new Socket(InetAddress.getByName("127.0.0.1"), port);
 

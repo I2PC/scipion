@@ -39,16 +39,16 @@ public class MDTableModel extends AbstractXmippTableModel {
 
             //File f = new File(currentFile);
             //if (f.exists()) {
-                try {
-                    if (md == null) {
-                        md = new MetaData();
-                    }
-
-                    long id = md.addObject();
-                    md.setValueString(MDLabel.MDL_IMAGE, currentFile, id);
-                } catch (Exception ex) {
-                    message = ex.getMessage();
+            try {
+                if (md == null) {
+                    md = new MetaData();
                 }
+
+                long id = md.addObject();
+                md.setValueString(MDLabel.MDL_IMAGE, currentFile, id);
+            } catch (Exception ex) {
+                message = ex.getMessage();
+            }
             //} else {
             //    message += "File not found: " + currentFile + "\n";
             //}
@@ -188,6 +188,11 @@ public class MDTableModel extends AbstractXmippTableModel {
             output.importObjects(md, ids);
 
             output.write(path);
+
+            ids = output.findObjects();
+            for (long id : ids) {
+                DEBUG.printMessage("> " + id);
+            }
 
             return true;
         } catch (Exception ex) {

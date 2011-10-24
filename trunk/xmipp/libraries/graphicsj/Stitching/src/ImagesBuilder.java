@@ -1,6 +1,8 @@
 
 import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
+import ij.process.FloatProcessor;
 import ini.trakem2.display.Patch;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -20,26 +22,6 @@ import xmipp.ImageDouble;
  * @author Juanjo Vega
  */
 public class ImagesBuilder {
-    /*
-    public static ImagePlus buildStack(List<Patch> patches, Rectangle box) {
-    ImageStack is = new ImageStack(box.width, box.height);
-    
-    for (int i = 0; i < patches.size(); i++) {
-    Patch patch = patches.get(i);
-    
-    try {
-    float slice[] = buildSlice(patch, box);
-    
-    is.addSlice(patch.getImagePlus().getTitle(), slice);
-    } catch (Exception e) {
-    IJ.log("Exception: " + e.getMessage());
-    }
-    }
-    
-    ImagePlus ip = new ImagePlus("", is);
-    
-    return ip;
-    }*/
 
     public static boolean saveResult(List<Patch> patches, Rectangle box, int margin, String path) {
 
@@ -83,6 +65,19 @@ public class ImagesBuilder {
             Point p0 = new Point();
             Point p1 = new Point();
 
+            // Gets statistics to normalize later.
+            System.out.println(" >>> Retrieving overlapped area mean and stdDev.");
+            float meanAndStdDev[] = getStatistics(
+                    pixels0, width0, height0, area0, T0,
+                    pixels1, width1, height1, area1, T1,
+                    w, h, margin);
+            float mean0 = meanAndStdDev[0];
+            float stdDev0 = meanAndStdDev[1];
+            float mean1 = meanAndStdDev[2];
+            float stdDev1 = meanAndStdDev[3];
+
+            // Assigns value.
+            System.out.println(" >>> Building result image.");
             for (int y = 0; y < h; y++) {
                 for (int x = 0; x < w; x++) {
                     p.setLocation(x, y);
@@ -91,34 +86,63 @@ public class ImagesBuilder {
                     T0.transform(p, p0);
                     T1.transform(p, p1);
 
-                    /*                    System.out.println(p + " > " + p0);
-                    System.out.println(p + " > " + p1);
-                    System.out.println("- - - - - - - - - - - - -");*/
-
-                    float value = 0;
+                    float value = -1;
+                    float value0 = 0;   // TODO: Replace
+                    float value1 = 1;   // TODO: Replace
                     if (area0.contains(p0) && area1.contains(p1)) {   // Overlap!
+                        // Horizontal blending.
                         float w0 = (float) (width0 - p0.getX());
                         float w1 = (float) p1.getX();
 
-                        float value0 = Interpolator.bilinear(pixels0, width0, height0, p0.getX(), p0.getY());
-                        float value1 = Interpolator.bilinear(pixels1, width1, height1, p1.getX(), p1.getY());
+                        // Vertical blending.
+                        float h0 = (float) p0.getY();
+                        float h1 = (float) (height1 - p1.getY());
 
-                        // TODO Usar una propiedad en el archivo para el "margin".
-                        if (w0 > margin) {
+                        w0 = Math.abs(w0);
+                        w1 = Math.abs(w1);
+                        h0 = Math.abs(h0);
+                        h1 = Math.abs(h1);
+
+                        /*float value0 = Interpolator.bilinear(pixels0, width0, height0, p0.getX(), p0.getY());
+                        float value1 = Interpolator.bilinear(pixels1, width1, height1, p1.getX(), p1.getY());
+                        
+                        // Normalizes values.
+                        value0 = (float) ((value0 - mean0) / stdDev0);
+                        value1 = (float) ((value1 - mean1) / stdDev1);*/
+
+                        // Blending.
+                        if (w0 > margin && h0 > margin) {
                             value = value0;
                         } else {
+                            // Horizontal blending.
                             float w0_ = w0 / (w0 + w1);
                             float w1_ = w1 / (w0 + w1);
 
-                            // "Blends" value.
+                            // Vertical blending.
+                            float h0_ = h0 / (h0 + h1);
+                            float h1_ = h1 / (h0 + h1);
+
+                            // Combined blending.
+                            w0_ = (w0_ * h0_) / (w0_ + h1_);
+                            w1_ = (w1_ * h1_) / (w0_ + h1_);
+
+                            // Smoothstep blending: t*t*(3 - 2*t)
+                            w0_ = w0_ * w0_ * (3 - 2 * w0_);
+                            w1_ = w1_ * w1_ * (3 - 2 * w1_);
+
                             value = w0_ * value0 + w1_ * value1;
                         }
-                    } else if (area0.contains(p0)) {   // Contained only by Image0
-                        value = Interpolator.bilinear(pixels0, width0, height0, p0.getX(), p0.getY());
-                    } else if (area1.contains(p1)) {   // Contained only  by Image1
-                        value = Interpolator.bilinear(pixels1, width1, height1, p1.getX(), p1.getY());
+                    } else if (area0.contains(p0)) {   // Contained only by Image0.
+                        //value = Interpolator.bilinear(pixels0, width0, height0, p0.getX(), p0.getY());
+                        //value = (float) ((value - mean0) / stdDev0);
+                        value = value0;
+                    } else if (area1.contains(p1)) {   // Contained only by Image1.
+                        //value = Interpolator.bilinear(pixels1, width1, height1, p1.getX(), p1.getY());
+                        //value = (float) ((value - mean1) / stdDev1);
+                        value = value1;
                     }
 
+                    // Normalizes value.
                     result[y * w + x] = value;
                 }
             }
@@ -128,6 +152,13 @@ public class ImagesBuilder {
             ImageDouble image = new ImageDouble();
             image.setData(box.width, box.height, 1, toDouble(result));
             image.write(path);
+
+            new ImageJ();
+            ImageDouble image2 = new ImageDouble(path);
+            double data[] = image2.getData();
+            FloatProcessor fp = new FloatProcessor(box.width, box.height, data);
+            ImagePlus imp = new ImagePlus(path, fp);
+            imp.show();
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
             IJ.error("Exception: " + ex.getMessage());
@@ -138,46 +169,51 @@ public class ImagesBuilder {
         return true;
     }
 
-    /**
-     * Blend a FloatProcessor (i.e., a 32-bit image) with another one, i.e.
-     * set the pixel values of fp1 according to a weighted sum of the corresponding
-     * pixels of fp1 and fp2. This is done for pixels in the rectangle fp1.getRoi()
-     * only.
-     * Note that both FloatProcessors, fp1 and fp2 must have the same width and height.
-     * @param fp1 The FloatProcessor that will be modified.
-     * @param weight1 The weight of the pixels of fp1 in the sum.
-     * @param fp2  The FloatProcessor that will be read only.
-     * @param weight2 The weight of the pixels of fp2 in the sum.
-     */
-//    public static void blendFloat (FloatProcessor fp1, float weight1, FloatProcessor fp2, float weight2) {
-//        Rectangle r = fp1.getRoi();
-//        int width = fp1.getWidth();
-//        float[] pixels1 = (float[])fp1.getPixels();     // array of the pixels of fp1
-//        float[] pixels2 = (float[])fp2.getPixels();
-//        for (int y=r.y; y<(r.y+r.height); y++)          // loop over all pixels inside the roi rectangle
-//            for (int x=r.x; x<(r.x+r.width); x++) {
-//                int i = x + y*width;                    // this is how the pixels are addressed
-//                pixels1[i] = weight1*pixels1[i] + weight2*pixels2[i]; //the weighted sum
-//            }
-//    }
+    static float[] getStatistics(float pixels0[], int width0, int height0, Rectangle area0, AffineTransform T0,
+            float pixels1[], int width1, int height1, Rectangle area1, AffineTransform T1, int w, int h, float margin) {
+        Point p = new Point();
+        Point p0 = new Point();
+        Point p1 = new Point();
 
-    /*static int getRectangleIndexContaining(Rectangle rectangles[], Point point) {
-    int contains = -1;
-    int i = 0;
-    
-    for (; i < rectangles.length; i++) {
-    Rectangle rectangle = rectangles[i];
-    if (rectangle.contains(point)) {
-    if (contains >= 0) {    // More than one rectangle contains the point.
-    return -1;
+        float mean0 = 0, mean1 = 0;
+        float stdDev0 = 0, stdDev1 = 0;
+        int n = 0;
+
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                p.setLocation(x, y);
+
+                // Transforms both points: p -> p1, p2
+                T0.transform(p, p0);
+                T1.transform(p, p1);
+
+                if (area0.contains(p0) && area1.contains(p1)) {   // Overlap!
+                    float value0 = Interpolator.bilinear(pixels0, width0, height0, p0.getX(), p0.getY());
+                    float value1 = Interpolator.bilinear(pixels1, width1, height1, p1.getX(), p1.getY());
+
+                    mean0 += value0;
+                    mean1 += value1;
+
+                    stdDev0 += value0 * value0;
+                    stdDev1 += value1 * value1;
+
+                    n++;
+                }
+            }
+        }
+
+        // Mean and Standard deviation.
+        mean0 /= n;
+        mean1 /= n;
+
+        stdDev0 = stdDev0 / n - mean0 * mean0;
+        stdDev0 = (float) Math.sqrt(stdDev0);
+        stdDev1 = stdDev1 / n - mean1 * mean1;
+        stdDev1 = (float) Math.sqrt(stdDev1);
+
+        return new float[]{mean0, stdDev0, mean1, stdDev1};
     }
-    
-    contains = i;
-    }
-    }
-    
-    return contains;
-    }*/
+
     public static boolean saveStack(List<Patch> patches, Rectangle box, String path) {
         File f = new File(path);
 
@@ -194,9 +230,6 @@ public class ImagesBuilder {
 
                 ImageDouble image = new ImageDouble();
                 image.setData(box.width, box.height, 1, toDouble(slice));
-//System.err.println(" -> X: " + image.getXsize()+ " --> "+box.width);
-//System.err.println(" -> Y: " + image.getYsize()+ " --> "+box.height);
-//System.err.println(" -> Z: " + image.getNsize()+ " / "+patches.size());
 
                 // Writes slice to disk.
                 System.err.println(" >>> Saving slice: " + i + Filename.SEPARATOR + path);
@@ -270,31 +303,4 @@ public class ImagesBuilder {
 
         return slice;
     }
-    /*
-    public static ImagePlus sumStack(ImagePlus imp) {
-    int w = imp.getWidth();
-    int h = imp.getHeight();
-    float pixels[] = new float[w * h];
-    
-    for (int i = 0; i < imp.getStackSize(); i++) {
-    float current[] = (float[]) imp.getStack().getProcessor(i + 1).getPixels();
-    
-    pixels = sumArrays(pixels, current);
-    }
-    
-    FloatProcessor ip = new FloatProcessor(w, h);
-    ip.setPixels(pixels);
-    
-    return new ImagePlus("", ip);
-    }
-    
-    static float[] sumArrays(float[] a, float[] b) {
-    float result[] = new float[a.length];
-    
-    for (int i = 0; i < result.length; i++) {
-    result[i] = a[i] + b[i];
-    }
-    
-    return result;
-    }*/
 }

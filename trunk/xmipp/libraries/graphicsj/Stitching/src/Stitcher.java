@@ -109,17 +109,17 @@ public class Stitcher implements Runnable {
         // Strategy A: set same min and max for all images,
         //   but shifting the histogram's peak to compensate a bit.
 
-        double min = 15600; // for 16-bit TEM images
+        /*        double min = 15600; // for 16-bit TEM images
         double max = 24700;
         Thread task2 = project.getLoader().setMinAndMax(patches, min, max);
         if (task2 != null) {
-            try {
-                task2.join();
-            } catch (Exception e) {
-                IJ.log("Exception: " + e.getMessage());
-            }
+        try {
+        task2.join();
+        } catch (Exception e) {
+        IJ.log("Exception: " + e.getMessage());
         }
-        // TODO media y varianza iguales.
+        }*/
+        // @TODO media y varianza iguales.
 
         // 9 - Take a snapshot of the registered images
         Rectangle box = layer.getMinimalBoundingBox(Patch.class); // or any other ROI you like
@@ -153,17 +153,17 @@ public class Stitcher implements Runnable {
 //        IJ.save(ip, outputfilename);
         if (outputfilename != null) {
             if (ImagesBuilder.saveResult(patches, box, parameters.getOverlapMargin(), outputfilename)) {
-                IJ.showMessage(" >>> Results sucessfully saved: " + outputfilename);
+                System.out.println(" >>> Results sucessfully saved: " + outputfilename);
             } else {
-                IJ.error(" xxx ERROR: saving to: " + outputfilename);
+                System.err.println(" xxx ERROR: saving to: " + outputfilename);
             }
         }
 
         if (stackfilename != null) {
             if (ImagesBuilder.saveStack(patches, box, stackfilename)) {
-                IJ.showMessage(" >>> Stack sucessfully saved: " + stackfilename);
+                System.out.println(" >>> Stack sucessfully saved: " + stackfilename);
             } else {
-                IJ.error(" xxx ERROR: saving to: " + stackfilename);
+                System.err.println(" xxx ERROR: saving to: " + stackfilename);
             }
         }
 

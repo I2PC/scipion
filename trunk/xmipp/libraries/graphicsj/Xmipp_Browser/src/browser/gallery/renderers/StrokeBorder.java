@@ -80,15 +80,4 @@ public class StrokeBorder extends AbstractBorder {
     public boolean isBorderOpaque() {
         return true;
     }
-//
-//    public static void main(String[] args) {
-//        JFrame f = new JFrame();
-//        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        JLabel label = new JLabel();
-//        label.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20), new StrokeBorder(Color.RED, 4)));
-//
-//        f.getContentPane().add(label);
-//        f.setSize(300, 300);
-//        f.setVisible(true);
-//    }
 }

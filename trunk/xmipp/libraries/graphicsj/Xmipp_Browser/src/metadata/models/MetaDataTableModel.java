@@ -134,6 +134,7 @@ public class MetaDataTableModel extends DefaultTableModel {
         try {
             clear();    // Clear the whole data.
 
+            DEBUG.printMessage("loading: " + filename);
             MetaData md = new MetaData(filename);
 //            System.out.println("filename->" + block + filename);
 //            System.out.println("MDfilename->" + md.getFilename());

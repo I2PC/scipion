@@ -32,7 +32,9 @@ public class ImageWriter extends Writer {
 
             ImageDouble image = new ImageDouble();
             image.setData(w, h, 1, toDouble(slice));
-            image.write(i + Filename.SEPARATOR + path);
+
+            String prefix = d > 1 ? i + Filename.SEPARATOR : "";
+            image.write(prefix + path);
         }
     }
 

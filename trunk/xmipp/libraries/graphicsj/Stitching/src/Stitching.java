@@ -1,5 +1,6 @@
 
 import ij.IJ;
+import ij.ImagePlus;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -35,8 +36,8 @@ public class Stitching {
     int X = 0, Y = 0;
 
     public static void main(String args[]) {
-        String basedir = "/gpfs/fs1/home/bioinfo/jvega/";
-        //String basedir = "/home/juanjo/Desktop/";
+        //String basedir = "/gpfs/fs1/home/bioinfo/jvega/";
+        String basedir = "/home/juanjo/Desktop/";
         String files[] = {
             basedir + "left.tif",
             //basedir + "left_2.tif",

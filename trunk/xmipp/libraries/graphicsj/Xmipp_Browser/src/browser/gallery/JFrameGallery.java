@@ -799,9 +799,9 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
         protected JMenuItem jmiPCA = new JMenuItem(LABELS.BUTTON_PCA);
         protected JMenuItem jmiFSC = new JMenuItem(LABELS.BUTTON_FSC);
         protected JMenu jmOpenAs = new JMenu(LABELS.LABEL_MENU_OPEN_AS);
-        protected JMenuItem jmiOpenAsStack = new JMenuItem(LABELS.BUTTON_TO_STACK);
-        protected JMenuItem jmiOpenAsMetadata = new JMenuItem(LABELS.BUTTON_OPEN_AS_GALLERY);
-        protected JMenuItem jmiOpenAs3D = new JMenuItem(LABELS.OPERATION_OPEN_AS_3D);
+        protected JMenuItem jmiOpenAsStack = new JMenuItem(LABELS.LABEL_GALLERY_OPEN_AS_STACK);
+        protected JMenuItem jmiOpenAsMetadata = new JMenuItem(LABELS.LABEL_GALLERY_OPEN_AS_METADATA);
+        protected JMenuItem jmiOpenAs3D = new JMenuItem(LABELS.LABEL_GALLERY_OPEN_AS_3D);
 
         public JMenuBarTable() {
             super();
@@ -810,8 +810,8 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
             jmSave.add(jmiSaveAsMetadata);
             jmSave.add(jmiSaveAsStack);
             jmSave.addSeparator();
-            jmSave.add(jmiSaveSelectionAsMetadata);
             jmSave.add(jmiSaveSelectionAsStack);
+            jmSave.add(jmiSaveSelectionAsMetadata);
 
             jmiSaveAsMetadata.addActionListener(new ActionListener() {
 
@@ -890,7 +890,7 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
             jmiOpenAsMetadata.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
-                    ImagesWindowFactory.openFileAsMetadata(tableModel.getFilename());
+                    ImagesWindowFactory.openGalleryAsMetadata(tableModel);
                 }
             });
 

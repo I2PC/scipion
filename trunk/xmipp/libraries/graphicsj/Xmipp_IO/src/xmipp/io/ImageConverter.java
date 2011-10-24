@@ -58,6 +58,9 @@ public class ImageConverter {
         fi.fileName = f.getName();
         imp.setFileInfo(fi);
 
+        // Normalize by default
+        normalizeStack(imp);
+
         return imp;
     }
 

@@ -58,6 +58,11 @@ public class JDialogXmippBrowser extends JDialogXmippFilesList {
         jbCancel.setText(LABELS.BUTTON_OPEN_AS_GALLERY);
     }
 
+    @Override
+    protected boolean send(Object items[], boolean end) {
+        return true;
+    }
+
     void setToolbar() {
         jToolBar = new javax.swing.JToolBar();
         jbParent = new javax.swing.JButton();

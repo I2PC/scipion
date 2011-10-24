@@ -255,19 +255,18 @@ public class ImagesWindowFactory {
             String path = tableModel.getFilename();
 
             // If there is an associated filename, uses it...
-            File file = new File(path);
+            File file = new File(path != null ? path : "");
             if (file.exists()) {
-//                System.err.println(" +++ EXISTS");
                 openFileAsImage(path);
             } else {
 //                System.err.println(" !!! EXISTS");
                 // ...otherwise, stores it in a temporary file.
-                File tempFile = File.createTempFile("tableToStack_", ".stk");
+                File tempFile = File.createTempFile("galleryToStack_", ".stk");
                 tempFile.deleteOnExit();
 
                 ArrayList<AbstractGalleryImageItem> items = tableModel.getAllItems();
                 ImagePlus imp = ImageConverter.convertToImageJ(items);
-                IJ.run(imp, "Xmipp writer", "save=" + tempFile.getAbsolutePath());
+                IJ.run(imp, "Xmipp Writer", "save=" + tempFile.getAbsolutePath());
 
 //                System.err.println(" >>> TMP Saved at: " + file.getAbsolutePath());
 
@@ -275,6 +274,29 @@ public class ImagesWindowFactory {
 
                 captureFrame(imp);
             }
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
+            DEBUG.printException(ex);
+        }
+    }
+
+    public static void openGalleryAsMetadata(AbstractXmippTableModel tableModel) {
+        try {
+            String path = tableModel.getFilename();
+
+            // If there is an associated filename, uses it...
+            File file = new File(path != null ? path : "");
+            if (!file.exists()) {
+//                System.err.println(" !!! EXISTS");
+                // ...otherwise, stores it in a temporary file.
+                File tempFile = File.createTempFile("galleryToMetadata_", ".xmd");
+                tempFile.deleteOnExit();
+                path= tempFile.getAbsolutePath();
+
+                tableModel.saveAsMetadata(path, true);
+            }
+
+            openFileAsMetadata(path);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
             DEBUG.printException(ex);
