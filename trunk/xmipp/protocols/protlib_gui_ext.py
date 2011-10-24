@@ -724,8 +724,10 @@ class FileViewer(tk.Frame):
         
     def addFileTab(self, filename):
         tab = tk.Frame(self.notebook)
+        tab.rowconfigure(0, weight=1)
+        tab.columnconfigure(0, weight=1)
         t = OutputText(tab, filename, width=100, height=30)
-        t.grid(column=0, row=0, padx=5, pady=5)
+        t.grid(column=0, row=0, padx=5, pady=5, sticky='nsew')
         self.taList.append(t)
         tabText = "   %s   " % os.path.basename(filename)
         self.notebook.add(tab, text=tabText)        
@@ -757,9 +759,11 @@ class FileViewer(tk.Frame):
         tabsFrame = tk.Frame(self)
         tabsFrame.grid(column=0, row=1, padx=5, pady=5, sticky="nsew")
         tabsFrame.columnconfigure(0, weight=1)
-        tabsFrame.rowconfigure(1, weight=1)
+        tabsFrame.rowconfigure(0, weight=1)
         import ttk
-        self.notebook = ttk.Notebook(tabsFrame)        
+        self.notebook = ttk.Notebook(tabsFrame)  
+        self.notebook.rowconfigure(0, weight=1)
+        self.notebook.columnconfigure(0, weight=1)      
         for f in self.filelist:
             self.addFileTab(f)
         self.notebook.grid(column=0, row=0, sticky='nsew', padx=5, pady=5)
@@ -969,7 +973,6 @@ class AutoCompleteEntry(tk.Entry):
     
 
 '''**************  Implementation of Xmipp Browser *************'''
-import xmipp
 from protlib_filesystem import getXmippPath
 RESOURCES = getXmippPath('resources')
 
@@ -1023,16 +1026,18 @@ def textOnDoubleClick(filename, browser):
     showFileViewer(filename, filelist, browser.parent)
 
 def getMdString(filename, browser):
-    md = xmipp.MetaData(filename)
+    from xmipp import MetaData, MDL_IMAGE, label2Str
+    md = MetaData(filename)
     labels = md.getActiveLabels()
     msg =  "  <%d items>\n" % md.size()
-    msg += "  <labels:>" + ''.join(["\n   - %s" % xmipp.label2Str(l) for l in labels])
-    if xmipp.MDL_IMAGE in labels:
-        browser.updatePreview(md.getValue(xmipp.MDL_IMAGE, md.firstObject()))
+    msg += "  <labels:>" + ''.join(["\n   - %s" % label2Str(l) for l in labels])
+    if MDL_IMAGE in labels:
+        browser.updatePreview(md.getValue(MDL_IMAGE, md.firstObject()))
     return msg
     
 def mdOnClick(filename, browser):
     if '@' not in filename:
+        import xmipp
         msg = "<Metadata File>\n"
         blocks = xmipp.getBlocksInMetaDataFile(filename)
         nblocks = len(blocks)
@@ -1067,6 +1072,7 @@ def mdOnDoubleClick(filename, browser):
     showj(filename, 'metadata')
 
 def imgOnClick(filename, browser):
+    import xmipp
     x, y, z, n = xmipp.SingleImgSize(filename)
     dimMsg = "<Image>\n  <dimensions:> %(x)d x %(y)d" 
     expMsg = "Columns x Rows "
@@ -1118,7 +1124,9 @@ class FileManager():
     def __init__(self, **attributes):
         for k, v in attributes.iteritems():
             setattr(self, k, v)
-            
+
+_plt = None
+         
 class XmippBrowser():
     ''' seltype is the selection type, it could be:
         - file -> only allow files selection
@@ -1157,7 +1165,7 @@ class XmippBrowser():
                             mdFillMenu, mdOnClick, mdOnDoubleClick)
         addFm('stk', 'stack.gif', ['.stk', '.mrcs'],
                             stackFillMenu, imgOnClick, stackOnDoubleClick)
-        addFm('img', 'image.gif', ['.xmp', '.tif', '.spi'],
+        addFm('img', 'image.gif', ['.xmp', '.tif', '.spi', '.mrc'],
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
         addFm('vol', 'vol.gif', ['.vol'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
@@ -1342,17 +1350,20 @@ class XmippBrowser():
         
     def onKeyPress(self, e):
         self.unpostMenu()
-    
+
     def createPreviewCanvas(self):
-        import matplotlib
-        matplotlib.use('TkAgg')
+        global _plt
+        if not _plt:
+            import matplotlib
+            matplotlib.use('TkAgg')
+            self.dim = 128
+            _plt = True
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
         from matplotlib.figure import Figure
         import matplotlib.cm as cm
         from numpy import zeros
-        dim = 128
-        Z = zeros((dim, dim), float)
-        self.figure = Figure(figsize=(dim, dim), dpi=1)
+        Z = zeros((self.dim, self.dim), float)
+        self.figure = Figure(figsize=(self.dim, self.dim), dpi=1)
         # a tk.DrawingArea
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.details)
         self.canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
@@ -1362,7 +1373,7 @@ class XmippBrowser():
     def updatePreview(self, filename):
         if not self.canvas:
             self.createPreviewCanvas()
-        
+            self.image = None
         if not filename.endswith('.png'):
             #Read image data through Xmipp
             Z = self.getImageData(filename)        
@@ -1374,13 +1385,18 @@ class XmippBrowser():
         self.canvas.show()   
 
     def getImageData(self, filename):
-        from numpy import zeros
-        #TODO: improve by avoiding use of getPixel
-        dim = 128
-        Z = zeros((dim, dim), float)
-        img = xmipp.Image()
+        dim = self.dim
+        if not self.image:
+            from numpy import zeros
+            self.Z = zeros((dim, dim), float)
+            import xmipp
+            self.image = xmipp.Image()
+        img = self.image
+        Z = self.Z
         img.readPreview(filename, dim)
         xdim, ydim, z, n = img.getDimensions()
+        #TODO: improve by avoiding use of getPixel
+        print xdim, ydim, z, n
         for x in range(xdim):
             for y in range(ydim):
                 Z[x, y] = img.getPixel(x, y)
@@ -1405,8 +1421,10 @@ class XmippBrowser():
             item = self.tree.parent(item)
          
     def matchPattern(self, item):
+        i = os.path.basename(item)
+        from fnmatch import fnmatch
         for p in self.pattern:
-            if p in item:
+            if fnmatch(i, p):
                 return True
         return False
     

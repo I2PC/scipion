@@ -445,17 +445,20 @@ class XmippProjectGUI():
         else:
             state = tk.NORMAL
             run = self.lastRunSelected
-            prot = getProtocolFromModule(run['script'], self.project)
-            if os.path.exists(prot.WorkingDir):
-                summary = '\n'.join(prot.summary())
-                showButtons = True
-            else:
-                summary = "This protocol run has not been executed yet"
-                showButtons = False
-            labels = [('Run', getExtendedRunName(run)),
-                      ('\nCreated', run['init']),('   Modified', run['last_modified']), 
-                      ('\nScript ', run['script']),('\nDirectory', prot.WorkingDir),
-                      ('\nSummary', "\n"+summary)      ]
+            showButtons = False
+            try:
+                prot = getProtocolFromModule(run['script'], self.project)
+                if os.path.exists(prot.WorkingDir):
+                    summary = '\n'.join(prot.summary())
+                    showButtons = True
+                else:
+                    summary = "This protocol run has not been executed yet"
+                labels = [('Run', getExtendedRunName(run)),
+                          ('\nCreated', run['init']),('   Modified', run['last_modified']), 
+                          ('\nScript ', run['script']),('\nDirectory', prot.WorkingDir),
+                          ('\nSummary', "\n"+summary)      ]
+            except Exception, e:
+                labels = [('Error creating protocol:', str(e))]
             self.detailsText.config(state=tk.NORMAL)
             self.detailsText.delete(1.0, tk.END)
             for k, v in labels:

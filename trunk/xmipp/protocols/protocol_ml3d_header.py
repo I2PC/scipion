@@ -169,7 +169,7 @@ SeedsAreAmplitudeCorrected = False
 # {section}{expert} 3D Reconstruction
 #-----------------------------------------------------------------------------
 
-# {list}(wslART, fourier) Reconstruction method
+# {list}(wlsART, fourier) Reconstruction method
 """ Choose between wslART or fourier """
 ReconstructionMethod ='wslART'
 

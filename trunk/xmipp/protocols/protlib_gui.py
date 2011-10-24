@@ -35,7 +35,7 @@ import tkFont
 from protlib_base import getProtocolFromModule, getWorkingDirFromRunName, getExtendedRunName
 from protlib_utils import loadModule, runImageJPlugin, which, runJavaIJappWithResponse
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
-    showError, showInfo, showBrowseDialog
+    showError, showInfo, showBrowseDialog, showWarning
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
@@ -1102,12 +1102,14 @@ class ProtocolGUI(BasicGUI):
     def wizardBrowseJ(self, var):
         if 'file' in var.tags.keys():
             seltype="file"
+            filter = var.tags['file']
         else:
             seltype="folder"
+            filter = ''
 #        msg = runJavaIJappWithResponse("512m", "XmippFileListWizard", "-seltype %(seltype)s -dir ." % locals())
 #        #msg = runJavaIJappWithResponse("512m", "XmippFileListWizard", "-dir .")
 #        msg = msg.strip()
-        files = showBrowseDialog(parent=self.master, seltype=seltype, filter=var.tags['file'])
+        files = showBrowseDialog(parent=self.master, seltype=seltype, filter=filter)
         if files:
             var.tkvar.set(', '.join([relpath(f) for f in files]))
             
@@ -1157,7 +1159,7 @@ class ProtocolGUI(BasicGUI):
     def wizardChooseFamily(self, var):
         extractionDir = getWorkingDirFromRunName(self.getVarValue('PreviousRun'))
         if not extractionDir:
-            tkMessageBox.showwarning("Warning", "No previous Run has been found", parent=self.master)
+            showWarning("Warning", "No previous Run has been found", parent=self.master)
             return
         familyList = []
         for file in glob.glob(join(extractionDir, "*_sorted.sel")):
@@ -1171,7 +1173,7 @@ class ProtocolGUI(BasicGUI):
     def wizardChooseGaussianFilter(self, var):
         selfile = self.getVarValue('InSelFile')
         if not os.path.exists(selfile):
-            tkMessageBox.showwarning("Warning", "The input selfile is not a valid file", parent=self.master)
+            showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
             return
         Freq_sigma = self.getVarValue('Freq_sigma')
         msg = runJavaIJappWithResponse("512m", "XmippGaussianFilterWizard", "-i %(selfile)s -w1 %(Freq_sigma)s" % locals())
