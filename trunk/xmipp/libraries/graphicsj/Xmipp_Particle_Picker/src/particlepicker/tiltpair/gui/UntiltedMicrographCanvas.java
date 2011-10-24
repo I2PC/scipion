@@ -35,7 +35,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 
 	public UntiltedMicrographCanvas(TiltPairPickerJFrame frame)
 	{
-		super(frame.getMicrograph().getImage());
+		super(frame.getMicrograph().getImagePlus());
 		this.um = frame.getMicrograph();
 	
 		this.frame = frame;
@@ -49,31 +49,13 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 	public void updateMicrograph()
 	{
 		this.um = frame.getMicrograph();
-		iw.setImage(um.getImage());
-		iw.updateImage(um.getImage());
+		iw.setImage(um.getImagePlus());
+		iw.updateImage(um.getImagePlus());
 		tiltedcanvas.updateMicrograph();
 		active = null;
 	}
 
-	public void mouseEntered(MouseEvent e)
-	{
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mouseEntered(e);
-			return;
-		}
-		setCursor(crosshairCursor);
-	}
 
-	public void mouseMoved(MouseEvent e)
-	{
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mouseMoved(e);
-			return;
-		}
-		setCursor(crosshairCursor);
-	}
 
 	/**
 	 * Adds particle or updates its position if onpick. If ondeletepick removes
@@ -83,18 +65,14 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 
 	public void mousePressed(MouseEvent e)
 	{
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mousePressed(e);
-			return;
-		}
+		super.mousePressed(e);
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 
 		if (SwingUtilities.isRightMouseButton(e))
 		{
-			setupScroll(x, y);
 			tiltedcanvas.mousePressed(x, y);
+			return;
 		}
 		if(active != null && !active.isAdded() && active.getTiltedParticle() != null)
 				um.addParticleToAligner(active);
@@ -145,11 +123,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 	 */
 	public void mouseReleased(MouseEvent e)
 	{
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mouseReleased(e);
-			return;
-		}
+		super.mouseReleased(e);
 		if(reload)
 			um.initAligner();
 		reload = false;
@@ -161,17 +135,12 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 	@Override
 	public void mouseDragged(MouseEvent e)
 	{
-
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mouseDragged(e);
-			return;
-		}
+		super.mouseDragged(e);
+			
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 		if (SwingUtilities.isRightMouseButton(e))
 		{
-			scroll(e.getX(), e.getY());
 			tiltedcanvas.mouseDragged(e.getX(), e.getY());
 			return;
 		}

@@ -15,6 +15,7 @@ import javax.swing.SwingUtilities;
 
 import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
+import particlepicker.Tool;
 import particlepicker.training.model.AutomaticParticle;
 import particlepicker.training.model.FamilyState;
 import particlepicker.training.model.MicrographFamilyData;
@@ -22,7 +23,7 @@ import particlepicker.training.model.TrainingMicrograph;
 import particlepicker.training.model.TrainingParticle;
 import particlepicker.training.model.TrainingPicker;
 
-public class TrainingCanvas extends ParticlePickerCanvas implements MouseWheelListener
+public class TrainingCanvas extends ParticlePickerCanvas 
 {
 
 	private TrainingPickerJFrame frame;
@@ -34,7 +35,7 @@ public class TrainingCanvas extends ParticlePickerCanvas implements MouseWheelLi
 
 	public TrainingCanvas(TrainingPickerJFrame frame)
 	{
-		super(frame.getMicrograph().getImage());
+		super(frame.getMicrograph().getImagePlus());
 		this.micrograph = frame.getMicrograph();
 		this.frame = frame;
 		addMouseWheelListener(this);
@@ -46,31 +47,14 @@ public class TrainingCanvas extends ParticlePickerCanvas implements MouseWheelLi
 	{
 		this.micrograph = frame.getMicrograph();
 		ImageWindow iw = (ImageWindow) getParent();
-		iw.setImage(micrograph.getImage());
-		iw.updateImage(micrograph.getImage());
+		iw.setImage(micrograph.getImagePlus());
+		iw.updateImage(micrograph.getImagePlus());
 		iw.setTitle(micrograph.getName());
-		imp = micrograph.getImage();
+		imp = micrograph.getImagePlus();
+		active = null;
 	}
 
-	public void mouseEntered(MouseEvent e)
-	{
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mouseEntered(e);
-			return;
-		}
-		setCursor(crosshairCursor);
-	}
 
-	public void mouseMoved(MouseEvent e)
-	{
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mouseMoved(e);
-			return;
-		}
-		setCursor(crosshairCursor);
-	}
 
 	/**
 	 * Adds particle or updates its position if onpick. If ondeletepick removes
@@ -80,19 +64,10 @@ public class TrainingCanvas extends ParticlePickerCanvas implements MouseWheelLi
 
 	public void mousePressed(MouseEvent e)
 	{
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mousePressed(e);
-			return;
-		}
+		super.mousePressed(e);
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 
-		if (SwingUtilities.isRightMouseButton(e))
-		{
-			setupScroll(x, y);
-			return;
-		}
 		if (frame.getFamilyData().isPickingAvailable())
 		{
 			TrainingParticle p = micrograph.getParticle(x, y);
@@ -104,6 +79,7 @@ public class TrainingCanvas extends ParticlePickerCanvas implements MouseWheelLi
 				{
 					micrograph.removeParticle(p, ppicker);
 					frame.updateMicrographsModel();
+					active = null;
 				}
 				else if (SwingUtilities.isLeftMouseButton(e))
 				{
@@ -122,17 +98,8 @@ public class TrainingCanvas extends ParticlePickerCanvas implements MouseWheelLi
 		}
 	}
 
-	/**
-	 * Updates particle position and repaints. Sets dragged to null at the end
-	 */
-	public void mouseReleased(MouseEvent e)
-	{
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mouseReleased(e);
-			return;
-		}
-	}
+
+
 
 	/**
 	 * Updates particle position and repaints if onpick.
@@ -141,18 +108,10 @@ public class TrainingCanvas extends ParticlePickerCanvas implements MouseWheelLi
 	public void mouseDragged(MouseEvent e)
 	{
 
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mouseDragged(e);
-			return;
-		}
+		super.mouseDragged(e);
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
-		if (SwingUtilities.isRightMouseButton(e))
-		{
-			scroll(e.getX(), e.getY());
-			return;
-		}
+		
 		if (frame.getFamilyData().isPickingAvailable())
 		{
 			if (active == null)
@@ -177,19 +136,7 @@ public class TrainingCanvas extends ParticlePickerCanvas implements MouseWheelLi
 		}
 	}
 
-	@Override
-	public void mouseWheelMoved(MouseWheelEvent e)
-	{
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
 
-		int rotation = e.getWheelRotation();
-		if (rotation < 0)
-			zoomIn(x, y);
-		else
-			zoomOut(x, y);
-
-	}
 
 	public void paint(Graphics g)
 	{

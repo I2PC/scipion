@@ -20,10 +20,11 @@ public abstract class Micrograph
 		if (!new File(file).exists())
 			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("file", file));
 		this.name = getName(file, 1);
+		
 		this.outputfilename = name + ext;
 
 	}
-	
+
 	public Micrograph(String file, String name)
 	{
 		this.file = file;
@@ -54,28 +55,31 @@ public abstract class Micrograph
 		return outputfilename;
 	}
 
-	public ImagePlus getImage()
+	public ImagePlus getImagePlus()
 	{
-		if (image == null)
+		try
 		{
-			if(file.endsWith(".tif"))
+
+			if (image == null)
 			{
-				xmipp.io.readers.ImageReader reader = new xmipp.io.readers.ImageReader();
-				try
+				System.out.println("creating imageplus");
+				if (file.endsWith(".tif"))
 				{
+					xmipp.io.readers.ImageReader reader = new xmipp.io.readers.ImageReader();
 					reader.run(file);
 					image = reader;
+
 				}
-				catch (Exception e)
-				{
-					ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-					throw new IllegalArgumentException(e.getMessage());
-				}
+				else
+					image = new ImagePlus(file);
 			}
-			else
-				image = new ImagePlus(file);
+			return image;
 		}
-		return image;
+		catch (Exception e)
+		{
+			ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
 	}
 
 	public void releaseImage()
@@ -101,6 +105,5 @@ public abstract class Micrograph
 	public abstract boolean hasData();
 
 	public abstract void reset();
-
 
 }

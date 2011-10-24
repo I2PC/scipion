@@ -1,14 +1,18 @@
 package particlepicker;
 
+
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
-
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
+import javax.swing.SwingUtilities;
 import particlepicker.training.model.TrainingParticle;
 
-public abstract class ParticlePickerCanvas extends ImageCanvas
+public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseWheelListener
 {
 
 
@@ -40,6 +44,78 @@ public abstract class ParticlePickerCanvas extends ImageCanvas
 		}
 	}
 	
+
+	
+	/**
+	 * Adds particle or updates its position if onpick. If ondeletepick removes
+	 * particle. Considers owner for selection to the first particle containing
+	 * point. Sets dragged if onpick
+	 */
+
+	public void mousePressed(MouseEvent e)
+	{
+		if (getFrame().getTool() != Tool.PICKER)
+		{
+			super.mousePressed(e);
+			return;
+		}
+		int x = super.offScreenX(e.getX());
+		int y = super.offScreenY(e.getY());
+
+		if (SwingUtilities.isRightMouseButton(e))
+		{
+			setupScroll(x, y);
+			return;
+		}
+		
+	}
+	
+	public void mouseEntered(MouseEvent e)
+	{
+		if (getFrame().getTool() != Tool.PICKER)
+		{
+			super.mouseEntered(e);
+			return;
+		}
+		setCursor(crosshairCursor);
+	}
+
+	public void mouseMoved(MouseEvent e)
+	{
+		if (getFrame().getTool() != Tool.PICKER)
+		{
+			super.mouseMoved(e);
+			return;
+		}
+		setCursor(crosshairCursor);
+	}
+	
+	
+	public void mouseDragged(MouseEvent e)
+	{
+
+		if (getFrame().getTool() != Tool.PICKER)
+		{
+			super.mouseDragged(e);
+			return;
+		}
+		if (SwingUtilities.isRightMouseButton(e))
+		{
+			scroll(e.getX(), e.getY());
+			return;
+		}
+	}
+	
+	public void mouseReleased(MouseEvent e)
+	{
+		if (getFrame().getTool() != Tool.PICKER)
+		{
+			super.mouseReleased(e);
+			return;
+		}
+		
+	}
+	
 	public abstract void setActive(TrainingParticle p);
 	
 	public abstract ParticlePickerJFrame getFrame();
@@ -64,6 +140,20 @@ public abstract class ParticlePickerCanvas extends ImageCanvas
 			g2.drawLine(x, y - distance, x, y + distance);
 			g2.drawLine(x + distance, y, x - distance, y);
 		}
+	}
+	
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent e)
+	{
+		int x = super.offScreenX(e.getX());
+		int y = super.offScreenY(e.getY());
+
+		int rotation = e.getWheelRotation();
+		if (rotation < 0)
+			zoomIn(x, y);
+		else
+			zoomOut(x, y);
+
 	}
 
 

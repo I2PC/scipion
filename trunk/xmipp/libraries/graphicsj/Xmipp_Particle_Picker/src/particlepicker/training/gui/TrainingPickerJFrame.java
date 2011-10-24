@@ -64,10 +64,7 @@ import particlepicker.training.model.TrainingParticle;
 import particlepicker.training.model.TrainingPicker;
 import xmipp.Program;
 
-enum Tool
-{
-	IMAGEJ, PICKER
-}
+
 
 
 
@@ -108,19 +105,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 	private JSlider thresholdsl;
 	private JPanel thresholdpn;
 	private JFormattedTextField thresholdtf;
-	private String tool = "Particle Picker Tool";
+	
 	private JMenuItem exportmi;
 
 
-	public Tool getTool()
-	{
 
-		if (IJ.getInstance() == null)
-			return Tool.PICKER;
-		if (IJ.getToolName().equalsIgnoreCase(tool))
-			return Tool.PICKER;
-		return Tool.IMAGEJ;
-	}
 
 	public TrainingPicker getParticlePicker()
 	{
@@ -239,7 +228,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 
 		JMenuItem particlesmn = new JMenuItem("Particles");
 		windowmn.add(particlesmn);
-		JMenuItem ijmi = new JMenuItem("ImageJ");
+		
 		windowmn.add(ijmi);
 		editfamiliesmn = new JMenuItem("Edit Families");
 		windowmn.add(editfamiliesmn);
@@ -249,22 +238,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 
 		// Setting menu item listeners
 
-		ijmi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				if (IJ.getInstance() == null)
-				{
-
-					new ImageJ();
-					IJ.run("Install...", "install=" + TrainingPicker.getXmippPath("external/imagej/macros/ParticlePicker.txt"));
-					IJ.setTool(tool);
-				}
-				// IJ.getInstance().setVisible(true);
-			}
-		});
+	
 		savemi.addActionListener(new ActionListener()
 		{
 
@@ -763,7 +737,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 		if (canvas == null)
 		{
 			canvas = new TrainingCanvas(this);
-			ImageWindow iw = new ImageWindow(micrograph.getImage(), canvas);
+			ImageWindow iw = new ImageWindow(micrograph.getImagePlus(), canvas);
 			iw.setTitle(micrograph.getName());
 		}
 		else

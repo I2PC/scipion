@@ -54,10 +54,7 @@ import particlepicker.training.gui.ColorIcon;
 import particlepicker.training.model.TrainingParticle;
 import particlepicker.training.model.TrainingPicker;
 
-enum Tool
-{
-	IMAGEJ, PICKER
-}
+
 
 
 public class TiltPairPickerJFrame extends ParticlePickerJFrame implements ActionListener
@@ -91,15 +88,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 
 
 
-	public Tool getTool()
-	{
 
-		if (IJ.getInstance() == null)
-			return Tool.PICKER;
-		if (IJ.getToolName().equalsIgnoreCase(tool))
-			return Tool.PICKER;
-		return Tool.IMAGEJ;
-	}
 
 	public TiltPairPicker getParticlePairPicker()
 	{

@@ -36,7 +36,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 
 	public ParticleCanvas(TrainingParticle particle, ParticlePickerJFrame frame)
 	{
-		super(particle.getMicrograph().getImage());
+		super(particle.getMicrograph().getImagePlus());
 		this.particle = particle;
 		this.frame = frame;
 		this.canvas = (particle instanceof TiltedParticle)? ((UntiltedMicrographCanvas)frame.getCanvas()).getTiltedCanvas(): frame.getCanvas();

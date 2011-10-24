@@ -1,18 +1,48 @@
 package particlepicker;
 
+import ij.IJ;
+import ij.ImageJ;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.JFrame;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
 import particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import particlepicker.training.gui.TrainingPickerJFrame;
 import particlepicker.training.model.TrainingParticle;
+import particlepicker.training.model.TrainingPicker;
 
 public abstract class ParticlePickerJFrame extends JFrame
 {
 
 	protected ParticlesJDialog particlesdialog;
+	private String tool = "Particle Picker Tool";
+	protected JMenuItem ijmi;
+	
+	public ParticlePickerJFrame()
+	{
+		ijmi = new JMenuItem("ImageJ");
+		ijmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				if (IJ.getInstance() == null)
+				{
+
+					new ImageJ();
+					IJ.run("Install...", "install=" + TrainingPicker.getXmippPath("external/imagej/macros/ParticlePicker.txt"));
+					IJ.setTool(tool);
+				}
+				// IJ.getInstance().setVisible(true);
+			}
+		});
+	}
 
 	public double getMagnification()
 	{
@@ -66,6 +96,16 @@ public abstract class ParticlePickerJFrame extends JFrame
 	public abstract List<? extends TrainingParticle> getParticles();
 	
 	public abstract boolean isShapeSelected(Shape shape);
+	
+	public Tool getTool()
+	{
+
+		if (IJ.getInstance() == null)
+			return Tool.PICKER;
+		if (IJ.getToolName().equalsIgnoreCase(tool))
+			return Tool.PICKER;
+		return Tool.IMAGEJ;
+	}
 	
 
 }

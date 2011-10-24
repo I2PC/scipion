@@ -88,7 +88,7 @@ public class TrainingParticle extends Particle{
 		if(img == null)
 		{
 			int size = family.getSize();
-			ImagePlus mimage = micrograph.getImage();
+			ImagePlus mimage = micrograph.getImagePlus();
 			int radius = size/2;
 			Rectangle r = new Rectangle(x - radius , y - radius, radius * 2, radius * 2);
 			mimage.setRoi(r);
@@ -102,7 +102,7 @@ public class TrainingParticle extends Particle{
 	public void setPosition(int x, int y)
 	{
 		int radius = family.getSize()/2;
-		if(x - radius < 0 || y - radius < 0 || x + radius > micrograph.getImage().getWidth() || y + radius > micrograph.getImage().getHeight())
+		if(x - radius < 0 || y - radius < 0 || x + radius > micrograph.getImagePlus().getWidth() || y + radius > micrograph.getImagePlus().getHeight())
 			throw new IllegalArgumentException(Constants.getOutOfBoundsMsg(String.format(" particle center: %s %s", x, y)));
 		super.setPosition(x, y);
 		

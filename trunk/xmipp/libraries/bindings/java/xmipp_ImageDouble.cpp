@@ -22,6 +22,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_create
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_destroy
 (JNIEnv *env, jobject jobj) {
+	std::cerr<<" destroying"<<std::endl;
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 	delete image;
 	image = NULL;
@@ -203,7 +204,6 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData__JI(JNIEnv *env,
 		jobject jobj, jlong nimage, jint nslice) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
-
 	if (image != NULL) {
 		try {
 			int w = XSIZE(image->data);
@@ -214,8 +214,9 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData__JI(JNIEnv *env,
 			image->data.getSlice(nslice, mdarray, 'Z', false, (size_t) nimage);
 
 			jdoubleArray array = env->NewDoubleArray(size);
+			std::cerr<<" after NewDoubleArray "<<std::endl;
 			env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(mdarray));
-
+			std::cerr<<" after SetDoubleArrayRegion "<<std::endl;
 			return array;
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();

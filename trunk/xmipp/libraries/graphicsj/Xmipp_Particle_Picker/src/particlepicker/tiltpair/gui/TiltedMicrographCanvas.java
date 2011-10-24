@@ -17,6 +17,7 @@ import javax.swing.SwingUtilities;
 
 import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
+import particlepicker.Tool;
 import particlepicker.WindowUtils;
 import particlepicker.tiltpair.model.TiltedParticle;
 import particlepicker.tiltpair.model.UntiltedMicrograph;
@@ -36,7 +37,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 
 	public TiltedMicrographCanvas(TiltPairPickerJFrame frame)
 	{
-		super(frame.getMicrograph().getTiltedMicrograph().getImage());
+		super(frame.getMicrograph().getTiltedMicrograph().getImagePlus());
 		this.um = frame.getMicrograph();
 		this.frame = frame;
 		iw = new ImageWindow(imp, this);
@@ -48,8 +49,8 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 	public void updateMicrograph()
 	{
 		this.um = frame.getMicrograph();
-		iw.setImage(um.getTiltedMicrograph().getImage());
-		iw.updateImage(um.getTiltedMicrograph().getImage());
+		iw.setImage(um.getTiltedMicrograph().getImagePlus());
+		iw.updateImage(um.getTiltedMicrograph().getImagePlus());
 		active = null;
 	}
 
@@ -89,11 +90,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 	 */
 	public void mouseReleased(MouseEvent e)
 	{
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mouseReleased(e);
-			return;
-		}
+		super.mouseReleased(e);
 		if(reload)
 			um.initAligner();
 		reload = false;
@@ -141,16 +138,11 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 
 	public void mousePressed(MouseEvent e)
 	{
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mousePressed(e);
-			return;
-		}
+		super.mousePressed(e);
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 
-		if (SwingUtilities.isRightMouseButton(e))
-			setupScroll(x, y);
+		
 		TiltedParticle p = um.getTiltedMicrograph().getParticle(x, y, (int) (frame.getParticleSize()));
 		if (p != null)
 		{
@@ -189,18 +181,10 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 	public void mouseDragged(MouseEvent e)
 	{
 
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mouseDragged(e);
-			return;
-		}
+		super.mouseDragged(e);
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
-		if (SwingUtilities.isRightMouseButton(e))
-		{
-			scroll(e.getX(), e.getY());
-			return;
-		}
+		
 		if (active != null && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
 		{
 			active.setPosition(x, y);
@@ -235,18 +219,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 		}
 	}
 	
-	@Override
-	public void mouseWheelMoved(MouseWheelEvent e)
-	{
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
-		int rotation = e.getWheelRotation();
-		if (rotation < 0)
-			zoomIn(x, y);
-		else
-			zoomOut(x, y);
-		
-	}
+
 
 	@Override
 	public void setActive(TrainingParticle p)
