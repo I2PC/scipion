@@ -110,6 +110,7 @@ VTIFF=tiff-3.9.4
 VARPACK=arpack++-2.3
 VNUMPY=numpy-1.6.1
 VMATLIBPLOT=matplotlib-1.0.1
+VPIL=Imaging-1.1.7
 
 ################# HELPER FUNCTIONS ##################
 TIMESTAMP=""
@@ -262,8 +263,8 @@ if $DO_PYTHON; then
     echoGreen "PYTHON SETUP"
     EXT_PYTHON=$EXT_PATH/python
     export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
-    export LDFLAGS="-L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
-    export LD_LIBRARY_PATH="$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
+    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
+    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
     echo "--> export CPPFLAGS=$CPPFLAGS"
     echo "--> export LDFLAGS=$LDFLAGS"
     # Copy our custom python files:
@@ -288,6 +289,7 @@ if $DO_PYTHON; then
     
     compile_pymodule $VNUMPY
     compile_pymodule $VMATLIBPLOT
+    #compile_pymodule $VPIL
 fi
 
 #################### FFTW ###########################

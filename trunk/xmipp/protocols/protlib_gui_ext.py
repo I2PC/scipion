@@ -28,7 +28,6 @@
 import Tkinter as tk
 import os
 from os.path import join
-from Tkinter import Toplevel
 from config_protocols import LabelBgColor, FontName, FontSize
 import tkFont
 '''

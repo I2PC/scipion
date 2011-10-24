@@ -322,7 +322,11 @@ if GUI:
         nb = createGUINotebook(OUTPUT, options, addTabs, run)
         exit(0)
     except Exception, e:
-        print "*** Could not create GUI. Error ", e
+        print '-'*60
+        print "*** Could not create GUI. Error: ", e
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        print '-'*60
         answer = raw_input("Do you want to proceed from command line? [Y/n]:")
         if answer.lower() != 'y':
             exit(0)

@@ -27,11 +27,12 @@
  '''
 
 import os
-from Tkinter import *
+import Tkinter as tk
 import tkFont as font
 import ttk  
 
-from protlib_gui_ext import centerWindows, MyButton, registerCommonFonts, showInfo, showError, OutputText
+from protlib_gui_ext import centerWindows, MyButton, registerCommonFonts, showInfo, showError, OutputText,\
+    getGeometry
 from protlib_filesystem import getXmippPath
     
 ############### Helper functions ######################
@@ -47,9 +48,9 @@ def detectDir(tab, detectFunc):
         showError("Errors", errors, tab)
 
 ################ Classes for a GUI based configuration ######################
-class OptionsTab(Frame):
+class OptionsTab(tk.Frame):
     def __init__(self, master, text, **opts):
-        Frame.__init__(self, master)
+        tk.Frame.__init__(self, master)
         self.config(**opts)
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
@@ -64,24 +65,24 @@ class OptionsTab(Frame):
         
     def addOption(self, name, comment, default='', cond=None, wiz=None, browse=False):
         r = self.lastRow
-        var = StringVar()
+        var = tk.StringVar()
         var.set(default)
         ttk.Label(self, text=comment, font=self.normal).\
-        grid(column=0, row=r, padx=5, pady=5, sticky=E)
+        grid(column=0, row=r, padx=5, pady=5, sticky='e')
         ttk.Label(self, text=name, font=self.bold).\
-        grid(column=1, row=r, padx=5, pady=5, sticky=E)
+        grid(column=1, row=r, padx=5, pady=5, sticky='e')
         if default in ['yes', 'no']: # Boolean option
             w = ttk.Checkbutton(self, textvariable=var, variable=var,
                             onvalue='yes', offvalue='no',
                             command=lambda:self.checked(name, var))
-            w.grid(column=2, row=r, padx=5, pady=5, sticky=W)
+            w.grid(column=2, row=r, padx=5, pady=5, sticky='w')
         else:
             w = ttk.Entry(self, width=20, textvariable=var)
             
             if cond:
                 if self.optionsDict[cond].get() == "no":
                     w['state'] = 'disabled'
-            w.grid(column=2, row=r, sticky=(W, E), padx=5, pady=5)
+            w.grid(column=2, row=r, sticky='we', padx=5, pady=5)
             
             if browse:
                 btn = MyButton(self, 'Browse', 'folderopen.gif',
@@ -114,9 +115,9 @@ class OptionsTab(Frame):
                 w['state'] = state
                 
     def addSeparator(self):
-        ttk.Separator(self, orient=HORIZONTAL).\
+        ttk.Separator(self, orient=tk.HORIZONTAL).\
         grid(column=0, row=self.lastRow, columnspan=3,
-             sticky=(W, E), padx=10, pady=5)
+             sticky='we', padx=10, pady=5)
         self.lastRow += 1
         
     def getConfigOptions(self):
@@ -167,6 +168,8 @@ class ConfigNotebook(ttk.Notebook):
         
     def createConfigTab(self):
         tab = self.addTab("  Output  ")
+        tab.columnconfigure(0, weight=1)
+        tab.rowconfigure(0, weight=1)
         self.text = OutputText(tab, self.OUTPUT, width=80, height=20, colors=False)
         self.text.goEnd()
         self.text.grid(column=0, row=0, sticky='nsew', padx=10, pady=10)
@@ -200,28 +203,28 @@ class ConfigNotebook(ttk.Notebook):
         #left panel
         leftFrame = ttk.Frame(root)
         imgPath = getXmippPath('resources', 'xmipp_logo.gif')
-        self.img = PhotoImage(file=imgPath)
+        self.img = tk.PhotoImage(file=imgPath)
         label = ttk.Label(leftFrame, image=self.img)
         label.grid(column=0, row=0)
-        leftFrame.grid(column=0, row=0, sticky=(N, S), padx=5, pady=5, rowspan=2)
-        self.grid(column=1, row=0, sticky=(N, W, E, S), padx=5, pady=5)
+        leftFrame.grid(column=0, row=0, sticky='ns', padx=5, pady=5, rowspan=2)
+        self.grid(column=1, row=0, sticky='nsew', padx=5, pady=5)
         #bottom panel
         panel = ttk.Frame(root)
-        panel.grid(column=1, row=1, padx=5, pady=5, sticky=[W, E])
-        self.progressVar = IntVar()
+        panel.grid(column=1, row=1, padx=5, pady=5, sticky='we')
+        self.progressVar = tk.IntVar()
         self.progressVar.set(0)
-        progress = ttk.Progressbar(panel, orient=HORIZONTAL, length=300, mode='determinate', variable=self.progressVar, maximum="700")
-        progress.pack(side=LEFT, padx=(0, 30))
+        progress = ttk.Progressbar(panel, orient=tk.HORIZONTAL, length=300, mode='determinate', variable=self.progressVar, maximum="700")
+        progress.pack(side=tk.LEFT, padx=(0, 30))
         
         registerCommonFonts()
         self.btn = MyButton(panel, text='Compile')
-        self.btn.pack(side=RIGHT, padx=(15, 0))
-        procVar = StringVar()
+        self.btn.pack(side=tk.RIGHT, padx=(15, 0))
+        procVar = tk.StringVar()
         procVar.set(self.options.getNumberOfCpu())
         self.procVar = procVar
         procEntry = ttk.Entry(panel, width="5", textvariable=procVar)
-        procEntry.pack(side=RIGHT, padx=5)
-        Label(panel, text="Processors").pack(side=RIGHT, padx=5)
+        procEntry.pack(side=tk.RIGHT, padx=5)
+        tk.Label(panel, text="Processors").pack(side=tk.RIGHT, padx=5)
         btnFunc = lambda:launchRun(self, runFunc)
         self.btn.config(command=btnFunc)
         self.btn.bind('<Return>', func=lambda e:btnFunc())
@@ -233,10 +236,10 @@ def launchRun(nb, runFunc):
    
 def createGUINotebook(OUTPUT, options, addTabsFunc, runFunc):
     from protlib_utils import getHostname
-    root = Tk()
+    root = tk.Tk()
     root.withdraw()
     root.title("Xmipp Install on " + getHostname())
-    root.minsize(width=600, height=350)
+    root.minsize(width=700, height=440)
     nb = ConfigNotebook(root, OUTPUT, options, runFunc)
     addTabsFunc(nb)
     nb.createConfigTab()
