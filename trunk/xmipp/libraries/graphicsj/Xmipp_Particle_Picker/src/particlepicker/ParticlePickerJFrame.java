@@ -10,6 +10,7 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import particlepicker.training.gui.TrainingPickerJFrame;
@@ -106,6 +107,9 @@ public abstract class ParticlePickerJFrame extends JFrame
 			return Tool.PICKER;
 		return Tool.IMAGEJ;
 	}
+	
+	public abstract boolean isPickingAvailable();
+	
 	
 
 }

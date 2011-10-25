@@ -23,7 +23,7 @@ import particlepicker.training.model.TrainingMicrograph;
 import particlepicker.training.model.TrainingParticle;
 import particlepicker.training.model.TrainingPicker;
 
-public class TrainingCanvas extends ParticlePickerCanvas 
+public class TrainingCanvas extends ParticlePickerCanvas
 {
 
 	private TrainingPickerJFrame frame;
@@ -54,8 +54,6 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		active = null;
 	}
 
-
-
 	/**
 	 * Adds particle or updates its position if onpick. If ondeletepick removes
 	 * particle. Considers owner for selection to the first particle containing
@@ -65,11 +63,11 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	public void mousePressed(MouseEvent e)
 	{
 		super.mousePressed(e);
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
-
-		if (frame.getFamilyData().isPickingAvailable())
+		if (frame.isPickingAvailable())
 		{
+
+			int x = super.offScreenX(e.getX());
+			int y = super.offScreenY(e.getY());
 			TrainingParticle p = micrograph.getParticle(x, y);
 			if (p == null)
 				p = micrograph.getAutomaticParticle(x, y, frame.getThreshold());
@@ -98,9 +96,6 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		}
 	}
 
-
-
-
 	/**
 	 * Updates particle position and repaints if onpick.
 	 */
@@ -111,7 +106,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		super.mouseDragged(e);
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
-		
+
 		if (frame.getFamilyData().isPickingAvailable())
 		{
 			if (active == null)
@@ -135,8 +130,6 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			repaint();
 		}
 	}
-
-
 
 	public void paint(Graphics g)
 	{

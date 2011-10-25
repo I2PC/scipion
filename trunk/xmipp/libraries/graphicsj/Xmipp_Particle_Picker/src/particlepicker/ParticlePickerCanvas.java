@@ -145,14 +145,16 @@ public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseW
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
+		int x = e.getX();
+		int y = e.getY();
 
 		int rotation = e.getWheelRotation();
 		if (rotation < 0)
 			zoomIn(x, y);
 		else
 			zoomOut(x, y);
+		if (getMagnification() <= 1.0)
+			imp.repaintWindow();
 
 	}
 

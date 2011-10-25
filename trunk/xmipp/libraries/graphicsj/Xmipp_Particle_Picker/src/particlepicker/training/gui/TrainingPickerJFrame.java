@@ -54,6 +54,7 @@ import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
 import particlepicker.ParticlesJDialog;
 import particlepicker.Shape;
+import particlepicker.Tool;
 import particlepicker.WindowUtils;
 import particlepicker.training.model.FamilyState;
 import particlepicker.training.model.MicrographFamilyData;
@@ -1043,6 +1044,14 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 			// return onlylastchb.isSelected();
 		}
 		return false;
+	}
+
+	@Override
+	public boolean isPickingAvailable()
+	{
+		if(getTool() != Tool.PICKER)
+			return false;
+		return getFamilyData().isPickingAvailable();
 	}
 
 }

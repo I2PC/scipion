@@ -47,6 +47,7 @@ import particlepicker.Family;
 import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
 import particlepicker.Shape;
+import particlepicker.Tool;
 import particlepicker.WindowUtils;
 import particlepicker.tiltpair.model.TiltPairPicker;
 import particlepicker.tiltpair.model.UntiltedMicrograph;
@@ -571,5 +572,13 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 			// return onlylastchb.isSelected();
 		}
 		return false;
+	}
+
+	@Override
+	public boolean isPickingAvailable()
+	{
+		if(getTool() != Tool.PICKER)
+			return false;
+		return true;
 	}
 }
