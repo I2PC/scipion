@@ -268,10 +268,10 @@ if $DO_PYTHON; then
     echo "--> export CPPFLAGS=$CPPFLAGS"
     echo "--> export LDFLAGS=$LDFLAGS"
     # Copy our custom python files:
-    cd $EXT_PYTHON
     echo "-->  cd $EXT_PYTHON"
-    cp ./xmipp_setup.py $VPYTHON/setup.py
+    cd $EXT_PYTHON
     echo "--> cp ./xmipp_setup.py $VPYTHON/setup.py"
+    cp ./xmipp_setup.py $VPYTHON/setup.py
     compile_library $VPYTHON python "." ""
 
     # Create the python launch script with necessary environment variable settings

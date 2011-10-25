@@ -309,14 +309,15 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
     return alias
 
 def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], libs=[]):
-    buildDir = os.path.join(basedir, 'classes')
+    from os.path import join
+    buildDir = join(basedir, 'classes', name)
     if not os.path.exists(buildDir): # create classes dir if not exists
         Execute(Mkdir(buildDir))
     if env['debug'] == True:
     	env['JAVAC'] = 'javac -g'
-    buildClasses = env.Java(buildDir, basedir, JAVAVERSION='1.6')
+    buildClasses = env.Java(buildDir, join(basedir, srcdir), JAVAVERSION='1.6')
     env.Depends(buildClasses, env.Alias('javaEnums'))
-    jarfile = os.path.join(basedir, name + '.jar')
+    jarfile = join(basedir, name + '.jar')
     buildJar = env.Jar(target=jarfile, source=buildClasses, JARCHDIR=buildDir)
     alias = env.Alias(name, buildJar)
     env.Default(alias)
@@ -604,12 +605,14 @@ if int(env['java']):
     javaJni = AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,
     ['#libraries', '#external', '#']+env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
 
-    env.Append(JAVACLASSPATH='external/imagej/ij.jar:external/imagej/plugins/*:libraries/bindings/java')
+    env.Append(JAVACLASSPATH='external/imagej/ij.jar:external/imagej/plugins/*:libraries/bindings/java/*')
     env['ENV']['LANG'] = 'en_GB.UTF-8'
     env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
 
     # Xmipp interface is needed by plugins.
     javaLib = AddJavaLibrary('XmippJavaInterface', 'libraries/bindings/java', 'xmipp')#, ['#'],
+    lib2 = AddJavaLibrary('XmippIJInterface', 'libraries/bindings/java', 'xmippij')
+    env.Depends(lib2, javaLib)
     # Copies jar file to ImageJ plugins folder (plugins below will look for it there).
     copyJar = env.InstallAs(target='external/imagej/plugins/XmippJavaInterface.jar',
               source='libraries/bindings/java/XmippJavaInterface.jar')
@@ -623,7 +626,7 @@ if int(env['java']):
     #env.Depends('Xmipp_MetaData_Browser', 'Xmipp_Browser')
     javaPlugins.append(AddImageJPlugin('Masks_ToolBar', 'libraries/graphicsj/Masks_ToolBar', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
-    javaPlugins.append(AddJavaApp('XmippPP_', 'libraries/graphicsj/Xmipp_Particle_Picker', 'external/Xmipp_Particle_Picker'))
+    #javaPlugins.append(AddJavaApp('XmippPP_', 'libraries/graphicsj/Xmipp_Particle_Picker', 'external/Xmipp_Particle_Picker'))
     # Java apps
     #javaPlugins.append(AddJavaApp('Java3DInstaller', 'libraries/graphicsj/Java3DInstaller', 'external/Java3DInstaller'))
     javaPlugins.append(AddJavaApp('Stitching', 'libraries/graphicsj/Stitching', 'external/Stitching'))
@@ -756,8 +759,8 @@ AddBatch('metadata_show', 'applications/scripts/metadata_show', '.py')
 protocols_main = AddBatch('protocols', 'protocols', '.py')
 env.Alias('protocols', protocols_main)
 AddBatch('showj', 'applications/scripts/showj', '.py')
-AddBatch('micrograph_particle_picking', 'applications/scripts/micrograph_particle_picking', '.py')
-AddBatch('micrograph_tiltpair_picking', 'applications/scripts/micrograph_tiltpair_picking', '.py')
+#AddBatch('micrograph_particle_picking', 'applications/scripts/micrograph_particle_picking', '.py')
+#AddBatch('micrograph_tiltpair_picking', 'applications/scripts/micrograph_tiltpair_picking', '.py')
 AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', '.py')
 AddBatch('tomoj', 'applications/scripts/tomoj', '.py')
 AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
