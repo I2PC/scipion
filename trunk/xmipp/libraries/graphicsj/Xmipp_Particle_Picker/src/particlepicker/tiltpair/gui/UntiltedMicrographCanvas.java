@@ -164,9 +164,9 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 			zoomIn(x, y);
 		else
 			zoomOut(x, y);
-
+		if (getMagnification() <= 1.0)
+			imp.repaintWindow();
 		frame.getTiltedCanvas().mouseWheelMoved(x, y, rotation);
-
 	}
 
 

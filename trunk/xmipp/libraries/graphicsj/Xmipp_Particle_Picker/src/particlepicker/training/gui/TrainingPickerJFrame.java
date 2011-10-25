@@ -614,10 +614,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			iw.setTitle(micrograph.getName());
 		}
 		else
-		{
 			canvas.updateMicrograph();
-
-		}
 	}
 
 	protected void saveChanges()
@@ -687,7 +684,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		manuallb.setText(Integer.toString(ppicker.getManualParticlesNumber(family)));
 		autolb.setText(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
 		actionsbt.setVisible(getFamilyData().isActionAvailable(getThreshold()));
-		
 	}
 
 	public ParticlePickerCanvas getCanvas()
@@ -708,12 +704,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		{
 			if (!micrograph.getFamilyData(family).isEmpty())
 			{
-
+				
 				args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train %s", micrograph.getFile(),// -i
 						family.getSize(), // --particleSize
 						ppicker.getOutputPath(family.getName()),// --model
 						ppicker.getOutputPath(micrograph.getName()), // --outputRoot
-						family.getName() + "@" + micrograph.getOFilename());// train
+						family.getName() + "@" + ppicker.getOutputPath(micrograph.getOFilename()));// train
 				// parameter
 				if (((SupervisedParticlePicker) ppicker).isFastMode())
 					args += " --fast";
@@ -794,7 +790,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 				public void run()
 				{
-
 					try
 					{
 
@@ -811,7 +806,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 					setState(MicrographFamilyState.Correct);
 					canvas.repaint();
 					canvas.setEnabled(true);
-
 				}
 			});
 			t.start();
@@ -892,16 +886,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		return thresholdsl.getValue() / 100.0;
 	}
 
-
-
-
 	@Override
 	public List<? extends TrainingParticle> getParticles()
 	{
 		return getFamilyData().getParticles();
 	}
-
-
 
 	@Override
 	public boolean isPickingAvailable()

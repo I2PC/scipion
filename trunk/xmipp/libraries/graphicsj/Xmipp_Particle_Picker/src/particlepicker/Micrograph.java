@@ -54,6 +54,7 @@ public abstract class Micrograph
 	{
 		return outputfilename;
 	}
+	
 
 	public ImagePlus getImagePlus()
 	{
