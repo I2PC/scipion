@@ -7,6 +7,50 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef xmipp_ImageGeneric_FIRST_IMAGE
+#define xmipp_ImageGeneric_FIRST_IMAGE 1L
+#undef xmipp_ImageGeneric_FIRST_SLICE
+#define xmipp_ImageGeneric_FIRST_SLICE 1L
+#undef xmipp_ImageGeneric_ALL_IMAGES
+#define xmipp_ImageGeneric_ALL_IMAGES 0L
+#undef xmipp_ImageGeneric_ALL_SLICES
+#define xmipp_ImageGeneric_ALL_SLICES 0L
+#undef xmipp_ImageGeneric_MID_SLICE
+#define xmipp_ImageGeneric_MID_SLICE -1L
+#undef xmipp_ImageGeneric_Default
+#define xmipp_ImageGeneric_Default -1L
+#undef xmipp_ImageGeneric_Unknown_Type
+#define xmipp_ImageGeneric_Unknown_Type 0L
+#undef xmipp_ImageGeneric_UChar
+#define xmipp_ImageGeneric_UChar 1L
+#undef xmipp_ImageGeneric_SChar
+#define xmipp_ImageGeneric_SChar 2L
+#undef xmipp_ImageGeneric_UShort
+#define xmipp_ImageGeneric_UShort 3L
+#undef xmipp_ImageGeneric_Short
+#define xmipp_ImageGeneric_Short 4L
+#undef xmipp_ImageGeneric_UInt
+#define xmipp_ImageGeneric_UInt 5L
+#undef xmipp_ImageGeneric_Int
+#define xmipp_ImageGeneric_Int 6L
+#undef xmipp_ImageGeneric_Long
+#define xmipp_ImageGeneric_Long 7L
+#undef xmipp_ImageGeneric_Float
+#define xmipp_ImageGeneric_Float 8L
+#undef xmipp_ImageGeneric_Double
+#define xmipp_ImageGeneric_Double 9L
+#undef xmipp_ImageGeneric_ComplexShort
+#define xmipp_ImageGeneric_ComplexShort 10L
+#undef xmipp_ImageGeneric_ComplexInt
+#define xmipp_ImageGeneric_ComplexInt 11L
+#undef xmipp_ImageGeneric_ComplexFloat
+#define xmipp_ImageGeneric_ComplexFloat 12L
+#undef xmipp_ImageGeneric_ComplexDouble
+#define xmipp_ImageGeneric_ComplexDouble 13L
+#undef xmipp_ImageGeneric_Bool
+#define xmipp_ImageGeneric_Bool 14L
+#undef xmipp_ImageGeneric_LastEntry
+#define xmipp_ImageGeneric_LastEntry 15L
 /*
  * Class:     xmipp_ImageGeneric
  * Method:    storeIds
@@ -33,11 +77,27 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_destroy
 
 /*
  * Class:     xmipp_ImageGeneric
- * Method:    read
+ * Method:    readHeader
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_read
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readHeader
   (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    getArrayFloat
+ * Signature: (Ljava/lang/String;IIIJ)[F
+ */
+JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat
+  (JNIEnv *, jclass, jstring, jint, jint, jint, jlong);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    getArrayShort
+ * Signature: (Ljava/lang/String;IIIJ)[S
+ */
+JNIEXPORT jshortArray JNICALL Java_xmipp_ImageGeneric_getArrayShort
+  (JNIEnv *, jclass, jstring, jint, jint, jint, jlong);
 
 /*
  * Class:     xmipp_ImageGeneric
