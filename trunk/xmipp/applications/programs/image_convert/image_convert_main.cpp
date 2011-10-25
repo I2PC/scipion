@@ -90,8 +90,9 @@ protected:
         addParamsLine("         xmp : Spider (Data types: float* and cfloat).");
         addParamsLine("         tif : TIFF (Data types: uint8*, uint16, uint32 and float).");
         addParamsLine("         custom <ext> : Custom extension name, the real format will be Spider.");
-        addParamsLine("  [--type <output_type=img>] : Output file type.");
+        addParamsLine("  [--type <output_type=auto>] : Force output file type.");
         addParamsLine("          where <output_type>");
+        addParamsLine("          auto: Autodetect output type according to output extension and wheter --oroot is passed or not.");
         addParamsLine("          img : Image");
         addParamsLine("          vol : Volume");
         addParamsLine("          stk : Stack ");
@@ -158,7 +159,6 @@ protected:
         castMode = (checkParam("--rangeAdjust"))? CW_ADJUST: \
                    (checkParam("--dont_convert"))? CW_CAST: CW_CONVERT;
 
-        type = getParam("--type");
         save_metadata_stack = checkParam("--selfile_stack");
         appendToStack = checkParam("--append");
 
@@ -168,18 +168,23 @@ protected:
             oext = getParam("--oext",1);
 
         // Check output type
-        if (!checkParam("--type"))
+        type = getParam("--type");
+        if (type == "auto")
         {
-            // if it is stack
-            if (fn_out.getExtension() == "stk"  || oext == "stk" ||
-                fn_out.getExtension() == "mrcs" || oext == "mrcs" ||
-                mdInSize > 1)
-                type = "stk";
-            else if (fn_out.getExtension() == "vol" || oext == "vol" ||
-                     fn_out.getExtension() == "inf" || oext == "inf" ||
-                     fn_out.getExtension() == "raw" || oext == "raw" ||
-                     zdimOut > 1) // if it is volume
-                type = "vol";
+            if (oroot.empty())
+            {
+                /* It is stack if extension is stack compatible, or if --oroot is not passed
+                 * and there are more than one image.
+                 * Same for volumes.*/
+                if (fn_out.hasStackExtension() || mdInSize > 1)
+                    type = "stk";
+                else if (fn_out.hasVolumeExtension() || zdimOut > 1) // if it is volume
+                    type = "vol";
+                else
+                    type = "img";
+            }
+            else
+                type = "img";
         }
 
         // Set write mode
