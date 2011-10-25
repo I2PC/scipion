@@ -184,8 +184,8 @@ FileName FileName::afterFirstOf(const String& str) const
 //TODO: Check behaviour
 FileName FileName::afterLastOf(const String& str) const
 {
-  size_t point = find_last_of(str);
-  return point != npos ? (FileName)substr(point + 1) : *this;
+    size_t point = find_last_of(str);
+    return point != npos ? (FileName)substr(point + 1) : *this;
 }
 
 // Get the base name of a filename .........................................
@@ -209,24 +209,47 @@ String FileName::getExtension() const
     size_t posA = find_last_of("/");
     size_t posB = find_last_of(".");
     if (posB==npos)
-    	return "";
+        return "";
     if (posA==npos)
-    	return substr(posB+1);
+        return substr(posB+1);
     if (posB>posA)
-    	return substr(posB+1);
+        return substr(posB+1);
     return "";
 }
 
 // Has image extension .....................................................
 bool FileName::hasImageExtension() const
 {
-	String ext=getExtension();
-	if (ext=="img" || ext=="hed" || ext=="inf" || ext=="raw" || ext=="mrc" ||
-		ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" || ext=="spe" ||
-		ext=="ser" || ext=="stk" || ext=="mrcs")
-		return true;
-	else
-		return false;
+    String ext=getExtension();
+    if (ext=="img" || ext=="hed" || ext=="inf" || ext=="raw" || ext=="mrc" ||
+        ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" || ext=="spe" ||
+        ext=="ser" || ext=="stk" || ext=="mrcs")
+        return true;
+    else
+        return false;
+}
+
+// Has image extension .....................................................
+bool FileName::hasStackExtension() const
+{
+    String ext=getExtension();
+    if (ext=="stk" || ext=="spi" || ext=="xmp" ||ext=="mrcs" ||
+        ext=="img" || ext=="hed" || ext=="tif" || ext=="dm3" ||
+        ext=="ser")
+        return true;
+    else
+        return false;
+}
+
+// Has image extension .....................................................
+bool FileName::hasVolumeExtension() const
+{
+    String ext=getExtension();
+    if (ext=="vol" || ext=="spi" || ext=="xmp" ||
+        ext=="mrc" || ext=="inf" || ext=="raw")
+        return true;
+    else
+        return false;
 }
 
 // Get number from file ....................................................

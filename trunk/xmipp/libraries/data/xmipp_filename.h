@@ -263,6 +263,14 @@ public:
      */
     bool hasImageExtension() const;
 
+    /** True if the extension of this filename is of a stack type
+     */
+    bool hasStackExtension() const;
+
+    /** True if the extension of this filename is of a stack type
+     */
+    bool hasVolumeExtension() const;
+
     /** Get image format identifier (as in Bsoft)
      *
      * @code
