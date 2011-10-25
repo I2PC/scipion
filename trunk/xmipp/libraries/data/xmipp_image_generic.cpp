@@ -24,8 +24,8 @@
  ***************************************************************************/
 
 #include "xmipp_image.h"
-
 #include "xmipp_image_generic.h"
+#include "xmipp_error.h"
 
 
 ImageGeneric::ImageGeneric(DataType _datatype)
@@ -188,6 +188,25 @@ int ImageGeneric::readMapped(const FileName &name, size_t select_img, int mode)
     setDatatype(datatype);
 
     return image->read(name, DATA, select_img, !swap, mode);
+}
+
+int ImageGeneric::readOrReadMapped(const FileName &name, size_t select_img, int mode)
+{
+    try
+    {
+        return read(name, DATA, select_img, false);
+    }
+    catch (XmippError &xe)
+    {
+        if (xe.__errno == ERR_MEM_NOTENOUGH)
+        {
+            reportWarning("ImageBase::readOrReadMapped: Not enough memory to allocate. \n"
+                          " Proceeding to map image from file.");
+            return readMapped(name, select_img, mode);
+        }
+        else
+            throw xe;
+    }
 }
 
 int ImageGeneric::readPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img)

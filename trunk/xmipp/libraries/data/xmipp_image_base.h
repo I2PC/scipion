@@ -298,9 +298,6 @@ public:
         filename = name;
     }
 
-    /* Read image mapped from file */
-    int readMapped(const FileName &name, size_t select_img = ALL_IMAGES, int mode = WRITE_READONLY);
-
     /** Create a mapped image file
      *
      * An image file, which name and format are given by filename,
@@ -354,6 +351,14 @@ public:
      * If Zdim parameter is not passed, then all slices are rescaled.
      * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
      */
+
+    /* Read image mapped from file */
+    int readMapped(const FileName &name, size_t select_img = ALL_IMAGES, int mode = WRITE_READONLY);
+
+    /* Initially try to read normally, but if there is a memory allocation problem, then
+     * try to read from the mapped file.*/
+    int readOrReadMapped(const FileName &name, size_t select_img = ALL_IMAGES, int mode = WRITE_READONLY);
+
     virtual int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE) = 0;
 
     /** General write function

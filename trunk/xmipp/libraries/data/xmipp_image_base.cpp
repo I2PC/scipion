@@ -25,6 +25,7 @@
 
 #include "xmipp_image_base.h"
 #include "xmipp_image.h"
+#include "xmipp_error.h"
 
 //This is needed for static memory allocation
 
@@ -60,7 +61,7 @@ int ImageBase::read(const FileName &name, DataMode datamode, size_t select_img,
                     bool mapData, int mode)
 {
     if (!mapData)
-        mode = WRITE_READONLY;
+        mode = WRITE_READONLY; //TODO: Check if openfile other than readonly is necessary
 
     hFile = openFile(name, mode);
     int err = _read(name, hFile, datamode, select_img, mapData);
@@ -74,6 +75,25 @@ int ImageBase::readMapped(const FileName &name, size_t select_img, int mode)
     read(name, HEADER);
     bool swap = this->swap > 0;
     return read(name, DATA, select_img, !swap, mode);
+}
+
+int ImageBase::readOrReadMapped(const FileName &name, size_t select_img, int mode)
+{
+    try
+    {
+        return read(name, DATA, select_img, false, mode);
+    }
+    catch (XmippError &xe)
+    {
+        if (xe.__errno == ERR_MEM_NOTENOUGH)
+        {
+            reportWarning("ImageBase::readOrReadMapped: Not enough memory to allocate. \n"
+                          " Proceeding to map image from file.");
+            return readMapped(name, select_img, mode);
+        }
+        else
+            throw xe;
+    }
 }
 
 /** New mapped file */

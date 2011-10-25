@@ -196,7 +196,7 @@ public:
     /** Read image from file with a header applied.
      */
     int readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts = false,
-        DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
 
     /** Read image from file.
      */
@@ -213,6 +213,10 @@ public:
     /** Read image mapped from file.
      */
     int readMapped(const FileName &name, size_t select_img = ALL_IMAGES, int mode = WRITE_READONLY);
+
+    /* Initially try to read normally, but if there is a memory allocation problem, then
+     * try to read from the mapped file.*/
+    int readOrReadMapped(const FileName &name, size_t select_img = ALL_IMAGES, int mode = WRITE_READONLY);
 
     /* Read an image with a lower resolution as a preview image.
     * If Zdim parameter is not passed, then all slices are rescaled.
