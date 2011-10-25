@@ -54,6 +54,24 @@ void ImageOver::init(int _umin, int _umax, int _uistep,
     //   STARTINGX(img)=_umin*_uistep - (_uistep-1)/2;
 }
 
+void ImageOver::init(MultidimArray<double> & im, int _uistep, int _vistep, int _wistep)
+{
+    overumin = STARTINGX(im);
+    overvmin = STARTINGY(im);
+    overwmin = STARTINGZ(im);
+    overumax = STARTINGX(im) + XSIZE(im) - 1;
+    overvmax = STARTINGY(im) + YSIZE(im) - 1;
+    overwmax = STARTINGZ(im) + ZSIZE(im) - 1;
+    uistep = _uistep;
+    vistep = (YSIZE(im) > 1) ? ((_vistep == 0) ? uistep : _vistep) : 0;
+    wistep = (ZSIZE(im) > 1) ? ((_wistep == 0) ? uistep : _wistep) : 0;
+
+    data.initZeros(im);
+    STARTINGZ(data) = 0;
+    STARTINGY(data) = 0;
+    STARTINGX(data) = 0;
+}
+
 // Window ------------------------------------------------------------------
 void ImageOver::window(int _v0, int _u0, int _vF, int _uF)
 {

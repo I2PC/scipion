@@ -134,6 +134,13 @@ public:
               int _vmin, int _vmax, int _vistep,
               int _wmin=0, int _wmax=0, int _wistep=1);
 
+    /** Initialize from Image
+     *
+     * This functions sets the origins maximum values and steps from image arguments
+     * and values passed.
+     */
+    void init(MultidimArray<double> &im, int _uistep=1, int _vistep=0, int _wistep=0);
+
     /** Window
      *
      * Set a selfWindow in the logical space.
@@ -157,7 +164,7 @@ public:
      * to a certain (u,v) and the Oversampled Image definition. Usually this
      * function is not needed in normal oversampled images operation as you can
      * access to pixels with fractional indexes. In our example of footprints,
-     * this funciton would make the conversion between the oversampled position
+     * this function would make the conversion between the oversampled position
      * (-1,1) to the image index (-51,51) (what is returned). Don't be mislead
      * by the physical position of the pixel (-51,51) which is (76,178).
      *
@@ -189,6 +196,9 @@ public:
 #define OVER2IMG(IO, v, u, iv, iu) \
     iu = (int) ROUND((((u)-(IO).overumin) * (IO).uistep)); \
     iv = (int) ROUND((((v)-(IO).overvmin) * (IO).vistep));
+
+#define OVER2IMG_Z(IO, w, iw) \
+	    iw = (int) ROUND((((w)-(IO).overwmin) * (IO).wistep));
 
     /** Returns the logical position of a "physical" location
      *
@@ -327,6 +337,19 @@ public:
         return overvmax;
     }
 
+    /** Maximum value in not sampled units on W axis
+     *
+     * In our example: 2.
+     *
+     * @code
+     * int Wmax = IO.wmax();
+     * @endcode
+     */
+    int wmax() const
+    {
+        return overwmax;
+    }
+
     /** Minimum value in not sampled units on U axis
      *
      * In our example: -2.
@@ -377,6 +400,19 @@ public:
     int Vstep() const
     {
         return vistep;
+    }
+
+    /** Sampling rate in W axis
+     *
+     * In our example: 51.
+     *
+     * @code
+     * int Wsampling = IO.Wstep();
+     * @endcode
+     */
+    int Wstep() const
+    {
+        return wistep;
     }
 
     /** Generate the normal image by averaging
