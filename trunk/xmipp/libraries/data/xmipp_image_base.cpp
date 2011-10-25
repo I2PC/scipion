@@ -96,6 +96,22 @@ int ImageBase::readOrReadMapped(const FileName &name, size_t select_img, int mod
     }
 }
 
+int ImageBase::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img)
+{
+    read(name, HEADER);
+    int imXdim, imYdim, imZdim;
+    size_t imNdim;
+    getDimensions(imXdim, imYdim, imZdim, imNdim);
+
+    if (imXdim != Xdim || imYdim != Ydim)
+        return readPreview(name, Xdim, Ydim, select_slice, select_img);
+    else
+    {
+        return read(name, DATA, select_img, true);
+    }
+
+}
+
 /** New mapped file */
 void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
                               bool createTempFile, size_t select_img, bool isStack, int mode)

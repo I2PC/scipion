@@ -117,7 +117,7 @@ struct ImageFHandler
     FileName  headName;   // Header file name
     FileName  ext_name;   // Filename extension
     bool     exist;       // Shows if the file exists. Equal 0 means file does not exist or not stack.
-    int     	  mode;   // Opening mode behavior
+    int        mode;   // Opening mode behavior
 };
 
 /// @name Images Speed-up
@@ -360,6 +360,8 @@ public:
     int readOrReadMapped(const FileName &name, size_t select_img = ALL_IMAGES, int mode = WRITE_READONLY);
 
     virtual int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE) = 0;
+
+    int readOrReadPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE);
 
     /** General write function
      * select_img= which slice should I replace
