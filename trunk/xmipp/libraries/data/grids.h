@@ -168,7 +168,7 @@ public:
         and the reconstruction is done all over the cube. */
     double R2;
 
-    /* Protoypes --------------------------------------------------------------- */
+    /* Prototypes --------------------------------------------------------------- */
 public:
     /** Default constructor.
         Be careful that this is not an empty constructor as usual but it
