@@ -1,9 +1,6 @@
 package particlepicker.training.gui;
 
-import ij.IJ;
-import ij.ImageJ;
 import ij.gui.ImageWindow;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -14,20 +11,14 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.logging.Level;
-
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -41,19 +32,15 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
-import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-
 import particlepicker.Constants;
 import particlepicker.Family;
 import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
-import particlepicker.ParticlesJDialog;
-import particlepicker.Shape;
 import particlepicker.Tool;
 import particlepicker.WindowUtils;
 import particlepicker.training.model.FamilyState;
@@ -69,28 +56,22 @@ import xmipp.Program;
 
 
 
-public class TrainingPickerJFrame extends ParticlePickerJFrame implements ActionListener
+public class TrainingPickerJFrame extends ParticlePickerJFrame 
 {
 
 	private JSlider sizesl;
-	private JCheckBox circlechb;
-	private JCheckBox rectanglechb;
 	private TrainingCanvas canvas;
 	private JFormattedTextField sizetf;
-	private JCheckBox centerchb;
 	private JMenuBar mb;
 	private JComboBox familiescb;
 	private TrainingPicker ppicker;
 	private Color color;
 	private JPanel familypn;
-	private JPanel symbolpn;
-	private String activemacro;
 	private JPanel micrographpn;
 	private JTable micrographstb;
 
-	private JMenuItem savemi;
 	private MicrographsTableModel micrographsmd;
-	TrainingMicrograph micrograph;
+	private TrainingMicrograph micrograph;
 	private JButton nextbt;
 	private JButton colorbt;
 	private double positionx;
@@ -189,7 +170,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 
 		// Setting menus
 		JMenu filemn = new JMenu("File");
-		JMenu filtersmn = new JMenu("Filters");
 		JMenu windowmn = new JMenu("Window");
 		JMenu helpmn = new JMenu("Help");
 		mb.add(filemn);
@@ -198,59 +178,22 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 		mb.add(helpmn);
 
 		// Setting menu items
-		savemi = new JMenuItem("Save");
 		savemi.setEnabled(ppicker.isChanged());
 		filemn.add(savemi);
-		savemi.setMnemonic('S');
-		savemi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
 
 		exportmi = new JMenuItem("Export Particles");
 		filemn.add(exportmi);
-
-		JMenuItem bcmi = new JMenuItem("Brightness/Contrast...");
-		filtersmn.add(bcmi);
-		bcmi.addActionListener(this);
-
-		JMenuItem fftbpf = new JMenuItem("Bandpass Filter...");
-		filtersmn.add(fftbpf);
-		fftbpf.addActionListener(this);
-		JMenuItem admi = new JMenuItem("Anisotropic Diffusion...");
-		filtersmn.add(admi);
-		admi.addActionListener(this);
-		JMenuItem msmi = new JMenuItem("Mean Shift");
-		filtersmn.add(msmi);
-		msmi.addActionListener(this);
-		JMenuItem sbmi = new JMenuItem("Substract Background...");
-		filtersmn.add(sbmi);
-		sbmi.addActionListener(this);
-		JMenuItem gbmi = new JMenuItem("Gaussian Blur...");
-		filtersmn.add(gbmi);
-		gbmi.addActionListener(this);
-
-		JMenuItem particlesmn = new JMenuItem("Particles");
-		windowmn.add(particlesmn);
-		
+		windowmn.add(pmi);
 		windowmn.add(ijmi);
 		editfamiliesmn = new JMenuItem("Edit Families");
 		windowmn.add(editfamiliesmn);
 
-		JMenuItem hcontentsmi = new JMenuItem("Help Contents...");
 		helpmn.add(hcontentsmi);
 
 		// Setting menu item listeners
 
 	
-		savemi.addActionListener(new ActionListener()
-		{
 
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				saveChanges();
-				JOptionPane.showMessageDialog(TrainingPickerJFrame.this, "Data saved successfully");
-				((JMenuItem) e.getSource()).setEnabled(false);
-			}
-		});
 		exportmi.addActionListener(new ActionListener()
 		{
 
@@ -262,15 +205,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 			}
 		});
 
-		particlesmn.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				loadParticles();
-			}
-		});
+		
 
 		editfamiliesmn.addActionListener(new ActionListener()
 		{
@@ -282,42 +217,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 
 			}
 		});
-		hcontentsmi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				try
-				{
-					WindowUtils.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParticlePicker");
-				}
-				catch (Exception ex)
-				{
-					JOptionPane.showMessageDialog(TrainingPickerJFrame.this, ex.getMessage());
-				}
-			}
-		});
+		
 
 	}
 
 
-
-	@Override
-	public void actionPerformed(ActionEvent e)
-	{
-		try
-		{
-			activemacro = ((JMenuItem) e.getSource()).getText();
-			IJ.run(activemacro);
-		}
-		catch (Exception ex)
-		{
-			ex.printStackTrace();
-			JOptionPane.showMessageDialog(this, ex.getMessage());
-		}
-
-	}
 
 	private void initFamilyPane()
 	{
@@ -580,38 +484,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 		actionsbt.setVisible(getFamilyData().isActionAvailable(getThreshold()));
 	}
 
-	private void initSymbolPane()
-	{
-
-		symbolpn = new JPanel();
-		symbolpn.setBorder(BorderFactory.createTitledBorder("Symbol"));
-		ShapeItemListener shapelistener = new ShapeItemListener();
-
-		circlechb = new JCheckBox(Shape.Circle.toString());
-		circlechb.setSelected(true);
-		circlechb.addItemListener(shapelistener);
-
-		rectanglechb = new JCheckBox(Shape.Rectangle.toString());
-		rectanglechb.setSelected(true);
-		rectanglechb.addItemListener(shapelistener);
-
-		centerchb = new JCheckBox(Shape.Center.toString());
-		centerchb.setSelected(true);
-		centerchb.addItemListener(shapelistener);
-
-		symbolpn.add(circlechb);
-		symbolpn.add(rectanglechb);
-		symbolpn.add(centerchb);
-	}
-
-	class ShapeItemListener implements ItemListener
-	{
-		@Override
-		public void itemStateChanged(ItemEvent e)
-		{
-			canvas.repaint();
-		}
-	}
 
 	private void initMicrographsPane()
 	{
@@ -748,7 +620,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 		}
 	}
 
-	private void saveChanges()
+	protected void saveChanges()
 	{
 		ppicker.saveData();
 		setChanged(false);
@@ -1029,22 +901,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame implements Action
 		return getFamilyData().getParticles();
 	}
 
-	@Override
-	public boolean isShapeSelected(Shape shape)
-	{
-		switch (shape)
-		{
-		case Rectangle:
-			return rectanglechb.isSelected();
-		case Circle:
-			return circlechb.isSelected();
-		case Center:
-			return centerchb.isSelected();
-			// case OnlyLast:
-			// return onlylastchb.isSelected();
-		}
-		return false;
-	}
+
 
 	@Override
 	public boolean isPickingAvailable()

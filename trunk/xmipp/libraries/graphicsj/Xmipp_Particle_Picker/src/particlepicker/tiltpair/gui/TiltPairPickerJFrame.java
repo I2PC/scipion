@@ -58,26 +58,18 @@ import particlepicker.training.model.TrainingPicker;
 
 
 
-public class TiltPairPickerJFrame extends ParticlePickerJFrame implements ActionListener
+public class TiltPairPickerJFrame extends ParticlePickerJFrame 
 {
 
 	private TiltPairPicker pppicker;
 	private JSlider sizesl;
-	private JCheckBox circlechb;
-	private JCheckBox rectanglechb;
 	private JFormattedTextField sizetf;
-	private JCheckBox centerchb;
 	private JMenuBar mb;
-
 	private Color color;
 	private JPanel particlespn;
-	private JPanel symbolpn;
-	private String activemacro;
 	private JPanel micrographpn;
 	private JTable micrographstb;
 	private UntiltedMicrographCanvas canvas;
-
-	private JMenuItem savemi;
 	private MicrographPairsTableModel micrographsmd;
 	private UntiltedMicrograph untiltedmic;
 	private JButton colorbt;
@@ -85,11 +77,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 	private int index;
 	private JButton resetbt;
 	private JLabel upslb;
-	private String tool = "Particle Picker Tool";
-
-
-
-
+	private TiltedMicrographCanvas tiltedcanvas;
 
 	public TiltPairPicker getParticlePairPicker()
 	{
@@ -157,7 +145,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 
 		// Setting menus
 		JMenu filemn = new JMenu("File");
-		JMenu filtersmn = new JMenu("Filters");
+		
 		JMenu windowmn = new JMenu("Window");
 		JMenu helpmn = new JMenu("Help");
 		mb.add(filemn);
@@ -166,127 +154,16 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 		mb.add(helpmn);
 
 		// Setting menu items
-		savemi = new JMenuItem("Save");
+		
 		savemi.setEnabled(pppicker.isChanged());
 		filemn.add(savemi);
-		savemi.setMnemonic('S');
-		savemi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
-
-		JMenuItem stackmi = new JMenuItem("Generate Stack...");
-		filemn.add(stackmi);
-
-		JMenuItem bcmi = new JMenuItem("Brightness/Contrast...");
-		filtersmn.add(bcmi);
-		bcmi.addActionListener(this);
-
-		JMenuItem fftbpf = new JMenuItem("Bandpass Filter...");
-		filtersmn.add(fftbpf);
-		fftbpf.addActionListener(this);
-		JMenuItem admi = new JMenuItem("Anisotropic Diffusion...");
-		filtersmn.add(admi);
-		admi.addActionListener(this);
-		JMenuItem msmi = new JMenuItem("Mean Shift");
-		filtersmn.add(msmi);
-		msmi.addActionListener(this);
-		JMenuItem sbmi = new JMenuItem("Substract Background...");
-		filtersmn.add(sbmi);
-		sbmi.addActionListener(this);
-		JMenuItem gbmi = new JMenuItem("Gaussian Blur...");
-		filtersmn.add(gbmi);
-		gbmi.addActionListener(this);
-
-		JMenuItem upmi = new JMenuItem("Particles");
-		windowmn.add(upmi);
-
-		JMenuItem ijmi = new JMenuItem("ImageJ");
+		windowmn.add(pmi);
 		windowmn.add(ijmi);
-
-		JMenuItem hcontentsmi = new JMenuItem("Help Contents...");
 		helpmn.add(hcontentsmi);
 
-		// Setting menu item listeners
-
-		ijmi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				if (IJ.getInstance() == null)
-				{
-
-					new ImageJ();
-					IJ.run("Install...", "install=" + TrainingPicker.getXmippPath("external/imagej/macros/ParticlePicker.txt"));
-					IJ.setTool(tool);
-				}
-				// IJ.getInstance().setVisible(true);
-			}
-		});
-		savemi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				saveChanges();
-				JOptionPane.showMessageDialog(TiltPairPickerJFrame.this, "Data saved successfully");
-				((JMenuItem) e.getSource()).setEnabled(false);
-			}
-		});
-		stackmi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-
-			}
-		});
-
-		hcontentsmi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				try
-				{
-					WindowUtils.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParticlePicker");
-				}
-				catch (Exception ex)
-				{
-					JOptionPane.showMessageDialog(TiltPairPickerJFrame.this, ex.getMessage());
-				}
-			}
-		});
-		upmi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				loadParticles();
-			}
-		});
-
-
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent e)
-	{
-		try
-		{
-			activemacro = ((JMenuItem) e.getSource()).getText();
-			IJ.run(activemacro);
-		}
-		catch (Exception ex)
-		{
-			ex.printStackTrace();
-			JOptionPane.showMessageDialog(this, ex.getMessage());
-		}
 
-	}
 
 	private void initParticlesPane()
 	{
@@ -384,39 +261,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 		}
 	}
 
-	private void initSymbolPane()
-	{
 
-		symbolpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		symbolpn.add(new JLabel("Symbol:"));
-		// symbolpn.setBorder(BorderFactory.createTitledBorder("Symbol"));
-		ShapeItemListener shapelistener = new ShapeItemListener();
 
-		circlechb = new JCheckBox(Shape.Circle.toString());
-		circlechb.setSelected(true);
-		circlechb.addItemListener(shapelistener);
 
-		rectanglechb = new JCheckBox(Shape.Rectangle.toString());
-		rectanglechb.setSelected(true);
-		rectanglechb.addItemListener(shapelistener);
-
-		centerchb = new JCheckBox(Shape.Center.toString());
-		centerchb.setSelected(true);
-		centerchb.addItemListener(shapelistener);
-
-		symbolpn.add(circlechb);
-		symbolpn.add(rectanglechb);
-		symbolpn.add(centerchb);
-	}
-
-	class ShapeItemListener implements ItemListener
-	{
-		@Override
-		public void itemStateChanged(ItemEvent e)
-		{
-			canvas.repaint();
-		}
-	}
 
 	private void initMicrographsPane()
 	{
@@ -455,7 +302,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 			{
 				pppicker.resetMicrograph(untiltedmic);
 				canvas.repaint();
-				canvas.getTiltedCanvas().repaint();
+				tiltedcanvas.repaint();
 				updateMicrographsModel();
 				setChanged(true);
 			}
@@ -484,7 +331,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 
 	}
 
-	private void saveChanges()
+	protected void saveChanges()
 	{
 		pppicker.saveData();
 		setChanged(false);
@@ -495,7 +342,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 		sizetf.setText(Integer.toString(size));
 		sizesl.setValue(size);
 		canvas.repaint();
-		canvas.getTiltedCanvas().repaint();
+		tiltedcanvas.repaint();
 		pppicker.setSize(size);
 		setChanged(true);
 	}
@@ -517,9 +364,15 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 	void initializeCanvas()
 	{
 		if (canvas == null)
+		{
 			canvas = new UntiltedMicrographCanvas(this);
+			tiltedcanvas = new TiltedMicrographCanvas(this);
+		}
 		else
+		{
 			canvas.updateMicrograph();
+			tiltedcanvas.updateMicrograph();
+		}
 	}
 
 	public ParticlePickerCanvas getCanvas()
@@ -557,22 +410,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 		return untiltedmic.getParticles();
 	}
 
-	@Override
-	public boolean isShapeSelected(Shape shape)
-	{
-		switch (shape)
-		{
-		case Rectangle:
-			return rectanglechb.isSelected();
-		case Circle:
-			return circlechb.isSelected();
-		case Center:
-			return centerchb.isSelected();
-			// case OnlyLast:
-			// return onlylastchb.isSelected();
-		}
-		return false;
-	}
+
 
 	@Override
 	public boolean isPickingAvailable()
@@ -580,5 +418,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame implements Action
 		if(getTool() != Tool.PICKER)
 			return false;
 		return true;
+	}
+
+	public TiltedMicrographCanvas getTiltedCanvas()
+	{
+		return tiltedcanvas;
 	}
 }

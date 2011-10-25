@@ -1,23 +1,16 @@
 package particlepicker.tiltpair.gui;
 
-import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
-
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.List;
-
 import javax.swing.SwingUtilities;
-
 import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
-import particlepicker.Tool;
 import particlepicker.WindowUtils;
 import particlepicker.tiltpair.model.TiltedParticle;
 import particlepicker.tiltpair.model.UntiltedMicrograph;
@@ -30,6 +23,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 
 	private TiltPairPickerJFrame frame;
 	private UntiltedMicrograph um;
+	private UntiltedMicrographCanvas uc;
 	private TiltedParticle active;
 	private ImageWindow iw;
 	private boolean reload;
@@ -39,6 +33,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 		super(frame.getMicrograph().getTiltedMicrograph().getImagePlus());
 		this.um = frame.getMicrograph();
 		this.frame = frame;
+		this.uc = (UntiltedMicrographCanvas)frame.getCanvas();
 		iw = new ImageWindow(imp, this);
 		WindowUtils.centerScreen(0.7, 0, iw);
 		addMouseWheelListener(this);
@@ -51,26 +46,6 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 		iw.setImage(um.getTiltedMicrograph().getImagePlus());
 		iw.updateImage(um.getTiltedMicrograph().getImagePlus());
 		active = null;
-	}
-
-	public void mouseEntered(MouseEvent e)
-	{
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mouseEntered(e);
-			return;
-		}
-		setCursor(crosshairCursor);
-	}
-
-	public void mouseMoved(MouseEvent e)
-	{
-		if (frame.getTool() != Tool.PICKER)
-		{
-			super.mouseMoved(e);
-			return;
-		}
-		setCursor(crosshairCursor);
 	}
 
 	/**
@@ -118,8 +93,6 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 		super.paint(g);
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setColor(frame.getColor());
-		int x0 = (int) getSrcRect().getX();
-		int y0 = (int) getSrcRect().getY();
 		int index = 0;
 		List<TiltedParticle> particles = um.getTiltedMicrograph().getParticles();
 		for (TiltedParticle p : particles)
@@ -127,10 +100,11 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 			drawShape(g2, p, index == (particles.size() - 1));
 			index++;
 		}
-		if (um.getActiveTiltedParticle() != null)
+		
+		if (uc.getActiveTiltedParticle() != null)
 		{
 			g2.setColor(Color.red);
-			drawShape(g2, um.getActiveParticle().getTiltedParticle(), true);
+			drawShape(g2, uc.getActiveParticle().getTiltedParticle(), true);
 		}
 	}
 
@@ -156,16 +130,16 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 				else if (SwingUtilities.isLeftMouseButton(e))
 					active = p;
 			}
-			else if (um.hasActiveParticle() && SwingUtilities.isLeftMouseButton(e) && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
+			else if (uc.hasActiveParticle() && SwingUtilities.isLeftMouseButton(e) && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
 			{
-				UntiltedParticle uactive = um.getActiveParticle();
+				UntiltedParticle uactive = uc.getActiveParticle();
 				if (uactive.getTiltedParticle() != null)
 					p = uactive.getTiltedParticle();
 				else
 				{
-					p = new TiltedParticle(x, y, um.getActiveParticle());
+					p = new TiltedParticle(x, y, uc.getActiveParticle());
 
-					um.getActiveParticle().setTiltedParticle(p);
+					uc.getActiveParticle().setTiltedParticle(p);
 					um.getTiltedMicrograph().addParticle(p);
 				}
 				active = p;
@@ -195,29 +169,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 		repaint();
 	}
 
-	public void moveTo(TiltedParticle p)
-	{
 
-		int width = (int) getSrcRect().getWidth();
-		int height = (int) getSrcRect().getHeight();
-		int x0 = p.getX() - width / 2;
-		if (x0 < 0)
-			x0 = 0;
-		if (x0 + width > imp.getWidth())
-			x0 = imp.getWidth() - width;
-		int y0 = p.getY() - height / 2;
-		if (y0 < 0)
-			y0 = 0;
-		if (y0 + height > imp.getHeight())
-			y0 = imp.getHeight() - height;
-		Rectangle r = new Rectangle(x0, y0, width, height);
-		setMagnification(frame.getCanvas().getMagnification());
-		if (!getSrcRect().contains(r))
-		{
-			setSourceRect(r);
-			repaint();
-		}
-	}
 
 	@Override
 	public void setActive(TrainingParticle p)

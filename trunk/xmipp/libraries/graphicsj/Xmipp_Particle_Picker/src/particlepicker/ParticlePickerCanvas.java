@@ -129,7 +129,7 @@ public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseW
 		int radius = (int) (p.getFamily().getSize() / 2 * magnification);
 		int x = (int) ((p.getX() - x0) * magnification);
 		int y = (int) ((p.getY() - y0) * magnification);
-		int distance = (int) (5 * magnification);
+		int distance = (int) (10 * magnification);
 
 		if (getFrame().isShapeSelected(Shape.Rectangle) || all)
 			g2.drawRect(x - radius, y - radius, size, size);

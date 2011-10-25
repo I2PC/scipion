@@ -3,26 +3,45 @@ package particlepicker;
 import ij.IJ;
 import ij.ImageJ;
 
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
 import java.util.List;
-
+import javax.swing.JCheckBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 
 import particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import particlepicker.training.gui.TrainingPickerJFrame;
 import particlepicker.training.model.TrainingParticle;
 import particlepicker.training.model.TrainingPicker;
 
-public abstract class ParticlePickerJFrame extends JFrame
+public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
 
 	protected ParticlesJDialog particlesdialog;
 	private String tool = "Particle Picker Tool";
 	protected JMenuItem ijmi;
+	protected JCheckBox circlechb;
+	protected JCheckBox rectanglechb;
+	protected JFormattedTextField sizetf;
+	protected JCheckBox centerchb;
+	protected JPanel symbolpn;
+	protected JMenuItem savemi;
+	protected JMenuItem hcontentsmi;
+	protected JMenuItem pmi;
+	protected JMenu filtersmn;
+	protected String activemacro;
 	
 	public ParticlePickerJFrame()
 	{
@@ -43,7 +62,86 @@ public abstract class ParticlePickerJFrame extends JFrame
 				// IJ.getInstance().setVisible(true);
 			}
 		});
+		savemi = new JMenuItem("Save");
+		savemi.setMnemonic('S');
+		savemi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+		savemi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				saveChanges();
+				JOptionPane.showMessageDialog(ParticlePickerJFrame.this, "Data saved successfully");
+				((JMenuItem) e.getSource()).setEnabled(false);
+			}
+		});
+		hcontentsmi = new JMenuItem("Help Contents...");
+		hcontentsmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				try
+				{
+					WindowUtils.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParticlePicker");
+				}
+				catch (Exception ex)
+				{
+					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, ex.getMessage());
+				}
+			}
+		});
+		pmi = new JMenuItem("Particles");
+		pmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				loadParticles();
+			}
+		});
+		filtersmn = new JMenu("Filters");
+		JMenuItem fftbpf = new JMenuItem("Bandpass Filter...");
+		filtersmn.add(fftbpf);
+		fftbpf.addActionListener(this);
+		JMenuItem admi = new JMenuItem("Anisotropic Diffusion...");
+		filtersmn.add(admi);
+		admi.addActionListener(this);
+		JMenuItem msmi = new JMenuItem("Mean Shift");
+		filtersmn.add(msmi);
+		msmi.addActionListener(this);
+		JMenuItem sbmi = new JMenuItem("Substract Background...");
+		filtersmn.add(sbmi);
+		sbmi.addActionListener(this);
+		JMenuItem gbmi = new JMenuItem("Gaussian Blur...");
+		filtersmn.add(gbmi);
+		gbmi.addActionListener(this);
+		JMenuItem bcmi = new JMenuItem("Brightness/Contrast...");
+		filtersmn.add(bcmi);
+		bcmi.addActionListener(this);
 	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e)
+	{
+		try
+		{
+			activemacro = ((JMenuItem) e.getSource()).getText();
+			IJ.run(activemacro);
+		}
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+			JOptionPane.showMessageDialog(this, ex.getMessage());
+		}
+
+	}
+
+	protected abstract void saveChanges();
+	
 
 	public double getMagnification()
 	{
@@ -96,7 +194,6 @@ public abstract class ParticlePickerJFrame extends JFrame
 
 	public abstract List<? extends TrainingParticle> getParticles();
 	
-	public abstract boolean isShapeSelected(Shape shape);
 	
 	public Tool getTool()
 	{
@@ -110,6 +207,55 @@ public abstract class ParticlePickerJFrame extends JFrame
 	
 	public abstract boolean isPickingAvailable();
 	
+	protected void initSymbolPane()
+	{
+
+		symbolpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		symbolpn.add(new JLabel("Symbol:"));
+		// symbolpn.setBorder(BorderFactory.createTitledBorder("Symbol"));
+		ShapeItemListener shapelistener = new ShapeItemListener();
+
+		circlechb = new JCheckBox(Shape.Circle.toString());
+		circlechb.setSelected(true);
+		circlechb.addItemListener(shapelistener);
+
+		rectanglechb = new JCheckBox(Shape.Rectangle.toString());
+		rectanglechb.setSelected(true);
+		rectanglechb.addItemListener(shapelistener);
+
+		centerchb = new JCheckBox(Shape.Center.toString());
+		centerchb.setSelected(true);
+		centerchb.addItemListener(shapelistener);
+
+		symbolpn.add(circlechb);
+		symbolpn.add(rectanglechb);
+		symbolpn.add(centerchb);
+	}
+	
+	class ShapeItemListener implements ItemListener
+	{
+		@Override
+		public void itemStateChanged(ItemEvent e)
+		{
+			getCanvas().repaint();
+		}
+	}
+	
+	public boolean isShapeSelected(Shape shape)
+	{
+		switch (shape)
+		{
+		case Rectangle:
+			return rectanglechb.isSelected();
+		case Circle:
+			return circlechb.isSelected();
+		case Center:
+			return centerchb.isSelected();
+			// case OnlyLast:
+			// return onlylastchb.isSelected();
+		}
+		return false;
+	}
 	
 
 }

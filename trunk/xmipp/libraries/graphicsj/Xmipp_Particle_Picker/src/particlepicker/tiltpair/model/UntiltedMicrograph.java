@@ -12,7 +12,6 @@ public class UntiltedMicrograph extends Micrograph {
 
 	private TiltedMicrograph tiltedmicrograph;
 	private List<UntiltedParticle> particles;
-	private UntiltedParticle activeparticle;
 	private TiltPairAligner tpa;
 	private int added;
 
@@ -50,7 +49,6 @@ public class UntiltedMicrograph extends Micrograph {
 	@Override
 	public void reset() {
 
-		setActiveParticle(null);
 		getParticles().clear();
 		getTiltedMicrograph().reset();
 		initAligner();
@@ -59,15 +57,10 @@ public class UntiltedMicrograph extends Micrograph {
 	public void removeParticle(UntiltedParticle p) {
 		particles.remove(p);
 		tiltedmicrograph.removeParticle(p.getTiltedParticle());
-		if(!particles.isEmpty())
-			activeparticle = particles.get(particles.size() - 1);
-		else
-			activeparticle = null;
 	}
 
 	public void addParticle(UntiltedParticle p) {
 		particles.add(p);
-		activeparticle = p;
 	}
 	
 	public List<UntiltedParticle> getParticles()
@@ -75,28 +68,7 @@ public class UntiltedMicrograph extends Micrograph {
 		return particles;
 	}
 	
-	public void setActiveParticle(UntiltedParticle p)
-	{
-		this.activeparticle = p;
-	}
 
-	public UntiltedParticle getActiveParticle()
-	{
-		return activeparticle;
-	}
-
-	public boolean hasActiveParticle()
-	{
-		return activeparticle != null;
-	}
-
-	public TiltedParticle getActiveTiltedParticle()
-	{
-		if(getActiveParticle() == null)
-			return null;
-		return activeparticle.getTiltedParticle();
-			
-	}
 	
 	public void addParticleToAligner(UntiltedParticle up)
 	{

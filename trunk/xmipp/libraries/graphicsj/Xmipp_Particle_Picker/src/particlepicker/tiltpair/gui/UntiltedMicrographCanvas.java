@@ -25,7 +25,6 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 {
 
 	private TiltPairPickerJFrame frame;
-	private TiltedMicrographCanvas tiltedcanvas;
 	private UntiltedParticle active;
 	private TiltPairPicker pppicker;
 	private UntiltedMicrograph um;
@@ -40,7 +39,6 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 		this.frame = frame;
 		addMouseWheelListener(this);
 		this.pppicker = frame.getParticlePairPicker();
-		tiltedcanvas = new TiltedMicrographCanvas(frame);
 		iw = new ImageWindow(imp, this);
 		WindowUtils.centerScreen(0, 0, iw);
 	}
@@ -50,7 +48,6 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 		this.um = frame.getMicrograph();
 		iw.setImage(um.getImagePlus());
 		iw.updateImage(um.getImagePlus());
-		tiltedcanvas.updateMicrograph();
 		active = null;
 	}
 
@@ -68,7 +65,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 
 		if (SwingUtilities.isRightMouseButton(e))
 		{
-			tiltedcanvas.mousePressed(x, y);
+			frame.getTiltedCanvas().mousePressed(x, y);
 			return;
 		}
 		if (frame.isPickingAvailable())
@@ -82,12 +79,13 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 				if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown())
 				{
 					if (active != null && active.equals(p))
-						active = um.getParticles().get(um.getParticles().size() - 1);
+						setActive(um.getParticles().get(um.getParticles().size() - 1));
 					um.removeParticle(p);
 					frame.updateMicrographsModel();
 					if (p.isAdded())
 						um.initAligner();
 					repaint();
+					frame.getTiltedCanvas().repaint();
 					frame.setChanged(true);
 				}
 				else if (SwingUtilities.isLeftMouseButton(e))
@@ -107,14 +105,13 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 	public void setActive(UntiltedParticle up)
 	{
 		active = up;
-		um.setActiveParticle(active);
 		TiltedParticle tp = active.getTiltedParticle();
 		if (tp == null && um.getAddedCount() >= 4)
 			um.setAlignerTiltedParticle(up);
 		if (tp != null)
-			tiltedcanvas.moveTo(tp);
+			frame.getTiltedCanvas().moveTo(tp);
 		repaint();
-		tiltedcanvas.repaint();
+		frame.getTiltedCanvas().repaint();
 	}
 
 	/**
@@ -140,7 +137,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 		int y = super.offScreenY(e.getY());
 		if (SwingUtilities.isRightMouseButton(e))
 		{
-			tiltedcanvas.mouseDragged(e.getX(), e.getY());
+			frame.getTiltedCanvas().mouseDragged(e.getX(), e.getY());
 			return;
 		}
 		if (active != null && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
@@ -159,23 +156,20 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
-		tiltedcanvas.setMagnification(magnification);
+		int x = e.getX();
+		int y = e.getY();
+		frame.getTiltedCanvas().setMagnification(magnification);
 		int rotation = e.getWheelRotation();
 		if (rotation < 0)
 			zoomIn(x, y);
 		else
 			zoomOut(x, y);
 
-		tiltedcanvas.mouseWheelMoved(x, y, rotation);
+		frame.getTiltedCanvas().mouseWheelMoved(x, y, rotation);
 
 	}
 
-	public TiltedMicrographCanvas getTiltedCanvas()
-	{
-		return tiltedcanvas;
-	}
+
 
 	public void paint(Graphics g)
 	{
@@ -189,10 +183,10 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 			drawShape(g2, p, index == (um.getParticles().size() - 1));
 			index++;
 		}
-		if (um.getActiveParticle() != null)
+		if (active != null)
 		{
 			g2.setColor(Color.red);
-			drawShape(g2, um.getActiveParticle(), true);
+			drawShape(g2, active, true);
 		}
 	}
 
@@ -206,6 +200,23 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 	public ParticlePickerJFrame getFrame()
 	{
 		return frame;
+	}
+
+	public TiltedParticle getActiveTiltedParticle()
+	{
+		if(active == null)
+			return null;
+		return active.getTiltedParticle();
+	}
+
+	public UntiltedParticle getActiveParticle()
+	{
+		return active;
+	}
+
+	public boolean hasActiveParticle()
+	{
+		return active != null;
 	}
 
 }
