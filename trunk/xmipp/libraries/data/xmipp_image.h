@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors: Sjors H.W. Scheres (scheres@cnb.csic.es)
+ *    Joaquin Oton       (joton@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -682,10 +683,20 @@ public:
         im.getDimensions(imXdim, imYdim, imZdim);
         im().setXmippOrigin();
 
-        double scale = ((double) Xdim)/((double) imXdim);
+        double scale;
 
-        if (Ydim == -1)
+        // If only Xdim is passed, it is the higher allowable size, for any dimension
+        if (Ydim == -1 && imXdim < imYdim)
+        {
+            Ydim = Xdim;
+            scale = ((double) Ydim)/((double) imYdim);
+            Xdim = imXdim * scale;
+        }
+        else
+        {
+            scale = ((double) Xdim)/((double) imXdim);
             Ydim = imYdim * scale;
+        }
 
         int mode = (scale <= 1)? NEAREST : LINEAR; // If scale factor is higher than 1, LINEAR mode is used to avoid artifacts
 
@@ -934,7 +945,6 @@ private:
                 REPORT_ERROR(ERR_MMAP,"Image Class::ReadData: mmap with multiple "
                              "images file not compatible. Try selecting a unique image.");
             }
-            //            fclose(fimg);
             mappedOffset = selectImgOffset;
             mappedSize   = mappedOffset + pagesize;
             mmapFile();
