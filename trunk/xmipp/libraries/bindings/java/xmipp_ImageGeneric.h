@@ -85,18 +85,18 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readHeader
 
 /*
  * Class:     xmipp_ImageGeneric
- * Method:    getArrayFloat
- * Signature: (Ljava/lang/String;IIIJ)[F
- */
-JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat
-  (JNIEnv *, jclass, jstring, jint, jint, jint, jlong);
-
-/*
- * Class:     xmipp_ImageGeneric
  * Method:    getArrayShort
  * Signature: (Ljava/lang/String;IIIJ)[S
  */
 JNIEXPORT jshortArray JNICALL Java_xmipp_ImageGeneric_getArrayShort
+  (JNIEnv *, jclass, jstring, jint, jint, jint, jlong);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    getArrayFloat
+ * Signature: (Ljava/lang/String;IIIJ)[F
+ */
+JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat
   (JNIEnv *, jclass, jstring, jint, jint, jint, jlong);
 
 /*

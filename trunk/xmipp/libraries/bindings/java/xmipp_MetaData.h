@@ -213,14 +213,6 @@ JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getValueString
 
 /*
  * Class:     xmipp_MetaData
- * Method:    getValueVector
- * Signature: (IJ)Ljava/lang/String;
- */
-JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getValueVector
-  (JNIEnv *, jobject, jint, jlong);
-
-/*
- * Class:     xmipp_MetaData
  * Method:    getValueBoolean
  * Signature: (IJ)Z
  */

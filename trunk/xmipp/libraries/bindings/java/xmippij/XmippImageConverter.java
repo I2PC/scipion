@@ -8,7 +8,6 @@ import ij.process.ImageProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ShortProcessor;
 import ij.process.StackStatistics;
-import ij.util.Tools;
 import java.io.File;
 import java.util.LinkedList;
 import xmipp.ImageGeneric;
@@ -25,26 +24,23 @@ import xmipp.MetaData;
  * @author Juanjo Vega
  */
 public class XmippImageConverter {
-    
-	public static ImagePlus convertToImagej(String filename) 
-		    throws Exception {
-		ImageGeneric image = new ImageGeneric(filename);
-        return convertToImagej(image, true);
-    }
-	
-    public static ImagePlus convertToImagej(ImageGeneric image) 
-    	    throws Exception {
+
+    public static ImagePlus convertToImagej(String filename) throws Exception {
+        ImageGeneric image = new ImageGeneric(filename);
         return convertToImagej(image, true);
     }
 
-    public static ImagePlus convertToImagej(ImageGeneric image, boolean useLogarithm)
-    throws Exception {
+    public static ImagePlus convertToImagej(ImageGeneric image) throws Exception {
+        return convertToImagej(image, true);
+    }
+
+    public static ImagePlus convertToImagej(ImageGeneric image, boolean useLogarithm) throws Exception {
 //FIXME:
-    	//        if (image.isPSD()) {
+        //        if (image.isPSD()) {
 //            image.convertPSD(useLogarithm);
 //        }
 
-    	String filename = image.filename;
+        String filename = image.filename;
         int w = image.xSize;
         int h = image.ySize;
         int d = image.zSize;
@@ -53,20 +49,22 @@ public class XmippImageConverter {
         ImageStack is = new ImageStack(w, h);
         ProcessorCreator pc = null;
         switch (image.dataType) {
-        case ImageGeneric.Float:
-        	pc = new FloatProcessorCreator();
-        	break;
-        case ImageGeneric.UChar:
-        case ImageGeneric.Short:
-        	pc = new ShortProcessorCreator();
-        	break;
-        default:
-        	throw new Exception("Unrecognized image datatype " + image.dataType);
+            case ImageGeneric.Float:
+                pc = new FloatProcessorCreator();
+                break;
+            case ImageGeneric.UChar:
+            case ImageGeneric.Short:
+                pc = new ShortProcessorCreator();
+                break;
+            default:
+                throw new Exception("Unrecognized image datatype " + image.dataType);
         }
 
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < d; j++) {
-                is.addSlice(String.valueOf(i), pc.getProcessor(image));
+        for (long nimage = ImageGeneric.FIRST_IMAGE; nimage <= n; nimage++) {
+            for (int nslice = ImageGeneric.FIRST_SLICE; nslice <= d; nslice++) {
+                image.nSize = nimage;
+                image.zSize = nslice;
+                is.addSlice(String.valueOf((nimage * d) + nslice), pc.getProcessor(image));
             }
         }
 
@@ -82,7 +80,7 @@ public class XmippImageConverter {
     return new ImagePlus(title, processor);
     }*/
     public static ImagePlus convertToImagej(MetaData md)
-    	    throws Exception {
+            throws Exception {
         LinkedList<String> missing = new LinkedList<String>();
         ImagePlus imp = null;
 
@@ -125,7 +123,7 @@ public class XmippImageConverter {
     }
 
     public static ImagePlus getNormalizedImagePlus(String filename, ImageStack is) {
-    	ImagePlus imp = new ImagePlus(filename, is);
+        ImagePlus imp = new ImagePlus(filename, is);
         // Sets associated file info.
         File f = new File(filename);
         FileInfo fi = new FileInfo();
@@ -202,19 +200,21 @@ public class XmippImageConverter {
     }
 }
 
-
 abstract class ProcessorCreator {
-	public abstract ImageProcessor getProcessor(ImageGeneric image);
+
+    public abstract ImageProcessor getProcessor(ImageGeneric image);
 }
 
 class FloatProcessorCreator extends ProcessorCreator {
-	public ImageProcessor getProcessor(ImageGeneric image) {
+
+    public ImageProcessor getProcessor(ImageGeneric image) {
         return new FloatProcessor(image.xSize, image.ySize, image.getArrayFloat(), null);
-	}
+    }
 }
 
 class ShortProcessorCreator extends ProcessorCreator {
-	public ImageProcessor getProcessor(ImageGeneric image) {
+
+    public ImageProcessor getProcessor(ImageGeneric image) {
         return new ShortProcessor(image.xSize, image.ySize, image.getArrayShort(), null);
-	}
+    }
 }

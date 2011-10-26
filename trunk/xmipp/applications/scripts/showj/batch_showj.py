@@ -18,6 +18,9 @@ class ScriptShowJ(ScriptPluginIJ):
 		self.addParamsLine('         alias -r;');
 		self.addParamsLine('  [--columns <columns>]                            : number of columns in table');
 		self.addParamsLine('         alias -c;');
+		self.addParamsLine('  [--zoom <zoom>]                            : zoom for images.');
+		self.addParamsLine('         alias -z;');
+
 			
 	def readOtherParams(self):
 		if self.checkParam('--mode'):
@@ -30,6 +33,8 @@ class ScriptShowJ(ScriptPluginIJ):
 			self.args += " --rows %s" % self.getParam('--rows') 
 		if self.checkParam('--columns'):
 			self.args += " --columns %s" % self.getParam('--columns') 
+		if self.checkParam('--zoom'):
+			self.args += " --zoom %s" % self.getParam('--zoom') 
 		
 if __name__ == '__main__':
 	ScriptShowJ().tryRun()
