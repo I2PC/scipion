@@ -695,7 +695,8 @@ public:
         else
         {
             scale = ((double) Xdim)/((double) imXdim);
-            Ydim = imYdim * scale;
+            if (Ydim == -1)
+                Ydim = imYdim * scale;
         }
 
         int mode = (scale <= 1)? NEAREST : LINEAR; // If scale factor is higher than 1, LINEAR mode is used to avoid artifacts
