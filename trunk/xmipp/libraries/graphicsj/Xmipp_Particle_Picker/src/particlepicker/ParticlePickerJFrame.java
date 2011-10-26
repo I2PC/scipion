@@ -10,6 +10,9 @@ import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.List;
 import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
@@ -20,8 +23,10 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 
 import particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
+import particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import particlepicker.training.gui.TrainingPickerJFrame;
 import particlepicker.training.model.TrainingParticle;
 import particlepicker.training.model.TrainingPicker;
@@ -45,6 +50,20 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	
 	public ParticlePickerJFrame()
 	{
+		addWindowListener(new WindowAdapter()
+		{
+			public void windowClosing(WindowEvent winEvt)
+			{
+				if (getParticlePicker().isChanged())
+				{
+					int result = JOptionPane.showConfirmDialog(ParticlePickerJFrame.this, "Save changes before closing?", "Message", JOptionPane.YES_NO_OPTION);
+					if (result == JOptionPane.OK_OPTION)
+						saveChanges();
+				}
+				System.exit(0);
+			}
+
+		});
 		ijmi = new JMenuItem("ImageJ");
 		ijmi.addActionListener(new ActionListener()
 		{
@@ -143,10 +162,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected abstract void saveChanges();
 	
 
-	public double getMagnification()
+	public int getSide(int size)
 	{
-		double scaled = getFamily().getSize()/500.f;
-		return 1 - scaled;
+		return 100;
 	}
 
 	public abstract Family getFamily();
@@ -205,7 +223,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return Tool.IMAGEJ;
 	}
 	
-	public abstract boolean isPickingAvailable();
+	public boolean isPickingAvailable(MouseEvent e)
+	{
+		if(getTool() != Tool.PICKER)
+			return false;
+		if(SwingUtilities.isRightMouseButton(e))
+			return false;
+		return true;
+	}
 	
 	protected void initSymbolPane()
 	{
@@ -256,6 +281,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 		return false;
 	}
+	
+	public abstract ParticlePicker getParticlePicker();
+	
+	public abstract void setChanged(boolean changed);
 	
 
 }

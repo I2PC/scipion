@@ -31,8 +31,8 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 	private int lastx, lasty;
 	private boolean dragged;
 	private ParticlePickerJFrame frame;
-	private int side;
 	private ParticlePickerCanvas canvas;
+	private int side;
 
 	public ParticleCanvas(TrainingParticle particle, ParticlePickerJFrame frame)
 	{
@@ -40,9 +40,10 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		this.particle = particle;
 		this.frame = frame;
 		this.canvas = (particle instanceof TiltedParticle)? ((TiltPairPickerJFrame)frame).getTiltedCanvas(): frame.getCanvas();
-		setMagnification(frame.getMagnification());
+		
 		this.size = (int)(frame.getFamily().getSize());
-		side = (int)(size * magnification);
+		side = frame.getSide(size);
+		setMagnification((float)side/size);
 		setDrawingSize(side, side);
 		addMouseMotionListener(this);
 		addMouseListener(this);
@@ -73,6 +74,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 				particle.setPosition(x, y);
 				repaint();
 				canvas.repaint();
+				frame.setChanged(true);
 			}
 			catch (Exception ex)
 			{

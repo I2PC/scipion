@@ -25,7 +25,7 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 	{
 		int side, rows, columns, width = 0, height = 0;
 		List<? extends TrainingParticle> particles = frame.getParticles();
-		side = (int) (frame.getFamily().getSize() * frame.getMagnification());
+		side = frame.getSide(frame.getFamily().getSize());
 
 		if (particles.isEmpty())
 			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("particles"));

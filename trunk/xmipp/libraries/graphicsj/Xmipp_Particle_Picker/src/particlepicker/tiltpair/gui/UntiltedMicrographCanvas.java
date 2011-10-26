@@ -38,7 +38,8 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 
 		this.frame = frame;
 		addMouseWheelListener(this);
-		this.pppicker = frame.getParticlePairPicker();
+		this.pppicker = frame.getParticlePicker();
+
 		iw = new ImageWindow(imp, this);
 		WindowUtils.centerScreen(0, 0, iw);
 	}
@@ -48,7 +49,10 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 		this.um = frame.getMicrograph();
 		iw.setImage(um.getImagePlus());
 		iw.updateImage(um.getImagePlus());
-		active = null;
+		if (!um.getParticles().isEmpty())
+			setActive(um.getParticles().get(um.getParticles().size() - 1));
+		else
+			setActive(null);
 	}
 
 	/**
@@ -64,11 +68,9 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 		int y = super.offScreenY(e.getY());
 
 		if (SwingUtilities.isRightMouseButton(e))
-		{
 			frame.getTiltedCanvas().mousePressed(x, y);
-			return;
-		}
-		if (frame.isPickingAvailable())
+		
+		if (frame.isPickingAvailable(e))
 		{
 			if (active != null && !active.isAdded() && active.getTiltedParticle() != null)
 				um.addParticleToAligner(active);
@@ -105,11 +107,14 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 	public void setActive(UntiltedParticle up)
 	{
 		active = up;
-		TiltedParticle tp = active.getTiltedParticle();
-		if (tp == null && um.getAddedCount() >= 4)
-			um.setAlignerTiltedParticle(up);
-		if (tp != null)
-			frame.getTiltedCanvas().moveTo(tp);
+		if (active != null)
+		{
+			TiltedParticle tp = active.getTiltedParticle();
+			if (tp == null && um.getAddedCount() >= 4)
+				um.setAlignerTiltedParticle(up);
+			if (tp != null)
+				frame.getTiltedCanvas().moveTo(tp);
+		}
 		repaint();
 		frame.getTiltedCanvas().repaint();
 	}
@@ -169,8 +174,6 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 		frame.getTiltedCanvas().mouseWheelMoved(x, y, rotation);
 	}
 
-
-
 	public void paint(Graphics g)
 	{
 		super.paint(g);
@@ -204,7 +207,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 
 	public TiltedParticle getActiveTiltedParticle()
 	{
-		if(active == null)
+		if (active == null)
 			return null;
 		return active.getTiltedParticle();
 	}

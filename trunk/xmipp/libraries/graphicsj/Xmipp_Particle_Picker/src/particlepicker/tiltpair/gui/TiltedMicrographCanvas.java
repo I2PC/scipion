@@ -116,7 +116,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 
-		if (frame.isPickingAvailable())
+		if (frame.isPickingAvailable(e))
 		{
 			TiltedParticle p = um.getTiltedMicrograph().getParticle(x, y, (int) (frame.getParticleSize()));
 			if (p != null)

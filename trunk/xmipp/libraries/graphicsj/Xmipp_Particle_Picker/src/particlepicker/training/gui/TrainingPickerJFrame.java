@@ -11,6 +11,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
@@ -33,6 +34,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
@@ -93,6 +95,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 
 
+	@Override
 	public TrainingPicker getParticlePicker()
 	{
 		return ppicker;
@@ -117,27 +120,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	private void initComponents()
 	{
-		// try {
-		// UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		// } catch (Exception e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
-
-		addWindowListener(new WindowAdapter()
-		{
-			public void windowClosing(WindowEvent winEvt)
-			{
-				if (ppicker.isChanged())
-				{
-					int result = JOptionPane.showConfirmDialog(TrainingPickerJFrame.this, "Save changes before closing?", "Message", JOptionPane.YES_NO_OPTION);
-					if (result == JOptionPane.OK_OPTION)
-						TrainingPickerJFrame.this.saveChanges();
-				}
-				System.exit(0);
-			}
-
-		});
 		setResizable(false);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setTitle("Xmipp Particle Picker - " + ppicker.getMode());
@@ -530,7 +512,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			{
 				ppicker.resetFamilyData(getFamilyData());
 				setState(MicrographFamilyState.Available);
-				canvas.repaint();
+				canvas.setActive(null);
 				updateMicrographsModel();
 				setChanged(true);
 			}
@@ -670,7 +652,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		updateFamilyComboBox();
 	}
 
-	void setChanged(boolean changed)
+	public void setChanged(boolean changed)
 	{
 		ppicker.setChanged(changed);
 		savemi.setEnabled(changed);
@@ -694,11 +676,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private void train()
 	{
 
-		saveChanges();
-		family.goToNextStep(ppicker);
-		setChanged(true);
-		setStep(FamilyState.Supervised);
-
+		
+		family.goToNextStep(ppicker);//validate and change state if posible
+		//setChanged(true);
+		setStep(FamilyState.Supervised);//change visual appearance
+		saveChanges();//persist changes
 		String args;
 		for (TrainingMicrograph micrograph : ppicker.getMicrographs())
 		{
@@ -893,10 +875,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	}
 
 	@Override
-	public boolean isPickingAvailable()
+	public boolean isPickingAvailable(MouseEvent e)
 	{
-		if(getTool() != Tool.PICKER)
-			return false;
+	    if(!super.isPickingAvailable(e))
+	    	return false;
 		return getFamilyData().isPickingAvailable();
 	}
 

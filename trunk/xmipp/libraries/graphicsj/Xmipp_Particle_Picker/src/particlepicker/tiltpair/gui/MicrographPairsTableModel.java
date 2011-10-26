@@ -16,7 +16,7 @@ public class MicrographPairsTableModel extends AbstractTableModel {
 
 	public MicrographPairsTableModel(TiltPairPickerJFrame frame)
 	{
-		this.micrographs = frame.getParticlePairPicker().getMicrographs();
+		this.micrographs = frame.getParticlePicker().getMicrographs();
 	}
 	
 	@Override

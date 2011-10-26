@@ -44,6 +44,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import particlepicker.Family;
+import particlepicker.ParticlePicker;
 import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
 import particlepicker.Shape;
@@ -79,10 +80,12 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private JLabel upslb;
 	private TiltedMicrographCanvas tiltedcanvas;
 
-	public TiltPairPicker getParticlePairPicker()
+	public TiltPairPicker getParticlePicker()
 	{
 		return pppicker;
 	}
+	
+
 
 	public TiltPairPickerJFrame(TiltPairPicker pppicker)
 	{
@@ -95,28 +98,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 	private void initComponents()
 	{
-		// try {
-		// UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		// } catch (Exception e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
-
-		addWindowListener(new WindowAdapter()
-		{
-			public void windowClosing(WindowEvent winEvt)
-			{
-				if (pppicker.isChanged())
-				{
-					int result = JOptionPane.showConfirmDialog(TiltPairPickerJFrame.this, "Save changes before closing?", "Message", JOptionPane.YES_NO_OPTION);
-					if (result == JOptionPane.OK_OPTION)
-						TiltPairPickerJFrame.this.saveChanges();
-				}
-				System.exit(0);
-			}
-
-		});
-
 		setResizable(false);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setTitle("Xmipp Particle Pair Picker");
@@ -301,8 +282,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			public void actionPerformed(ActionEvent e)
 			{
 				pppicker.resetMicrograph(untiltedmic);
-				canvas.repaint();
-				tiltedcanvas.repaint();
+				canvas.setActive(null);
 				updateMicrographsModel();
 				setChanged(true);
 			}
@@ -347,7 +327,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		setChanged(true);
 	}
 
-	void setChanged(boolean changed)
+	public void setChanged(boolean changed)
 	{
 		pppicker.setChanged(changed);
 		savemi.setEnabled(changed);
@@ -367,6 +347,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		{
 			canvas = new UntiltedMicrographCanvas(this);
 			tiltedcanvas = new TiltedMicrographCanvas(this);
+			if(!untiltedmic.getParticles().isEmpty())
+				canvas.setActive(untiltedmic.getParticles().get(untiltedmic.getParticles().size() - 1));//needs both canvas to be initialized
 		}
 		else
 		{
@@ -412,13 +394,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 
 
-	@Override
-	public boolean isPickingAvailable()
-	{
-		if(getTool() != Tool.PICKER)
-			return false;
-		return true;
-	}
 
 	public TiltedMicrographCanvas getTiltedCanvas()
 	{

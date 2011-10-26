@@ -24,22 +24,19 @@ public class ParticlesJDialog extends JDialog
 	protected Panel particlespn;
 	protected ScrollPane sp;
 	protected GridBagConstraints constraints;
-	private boolean ispack;
 
 	public ParticlesJDialog(ParticlePickerJFrame frame)
 	{
-		
 		super(frame);
 		this.frame = frame;
 		initComponents();
-
 	}
 
 	public void loadParticles(boolean resize)
 	{
 		int side, rows, columns, width = 0, height = 0;
 		List<? extends TrainingParticle> particles = frame.getParticles();
-		side = (int) (frame.getFamily().getSize() * frame.getMagnification());
+		side = frame.getSide(frame.getFamily().getSize());
 		
 		if(particles.isEmpty())
 			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("particles"));
@@ -68,7 +65,6 @@ public class ParticlesJDialog extends JDialog
 		int index = 0;
 		ParticleCanvas c;
 		TrainingParticle p;
-		UntiltedParticle up;
 		for (int i = 0; i < rows; i++)
 			for (int j = 0; j < columns; j++, index++)
 			{

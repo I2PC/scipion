@@ -40,6 +40,10 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		this.frame = frame;
 		addMouseWheelListener(this);
 		this.ppicker = frame.getParticlePicker();
+		if(!frame.getFamilyData().getParticles().isEmpty())
+			active = frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1);
+		else
+			active = null;
 
 	}
 
@@ -51,7 +55,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		iw.updateImage(micrograph.getImagePlus());
 		iw.setTitle(micrograph.getName());
 		imp = micrograph.getImagePlus();
-		active = null;
+		if(!frame.getFamilyData().getParticles().isEmpty())
+			setActive(frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1));
 	}
 
 	/**
@@ -63,7 +68,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	public void mousePressed(MouseEvent e)
 	{
 		super.mousePressed(e);
-		if (frame.isPickingAvailable())
+		if (frame.isPickingAvailable(e))
 		{
 
 			int x = super.offScreenX(e.getX());
@@ -77,7 +82,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				{
 					micrograph.removeParticle(p, ppicker);
 					frame.updateMicrographsModel();
-					active = null;
+					active = frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1);
 				}
 				else if (SwingUtilities.isLeftMouseButton(e))
 				{
@@ -107,7 +112,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 
-		if (frame.getFamilyData().isPickingAvailable())
+		if (frame.isPickingAvailable(e))
 		{
 			if (active == null)
 				return;
