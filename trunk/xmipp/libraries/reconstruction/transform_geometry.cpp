@@ -63,9 +63,10 @@ void ProgTransformGeometry::defineParams()
     addParamsLine("             alignZ <x> <y> <z>           : Align (x,y,z) with Z axis");
     addParamsLine("             axis <ang> <x=0> <y=0> <z=1> : Rotate <ang> degrees around (x,y,z)");
     addParamsLine("[--scale <scale_type>]                :Perform scaling");
-    addParamsLine("                                    : All types of scaling produces a resize of images, except =factor=");
+    addParamsLine("                                    : All types of scaling produces a resize of images, except =factor_no_resize=");
     addParamsLine("         where <scale_type>");
-    addParamsLine("             factor <n=1>           : Scaling factor, 0.5 halves and 2 doubles");
+    addParamsLine("             factor <n=1>           : Scaling factor, 0.5 halves and 2 doubles. (resize)");
+    addParamsLine("             factor_no_resize <n=1> : Scaling factor, 0.5 halves and 2 doubles. (noresize)");
     addParamsLine("             dim <x> <y=x> <z=x>    : New x,y and z dimensions");
     addParamsLine("             fourier <x> <y=x> <thr=1> : Use padding/windowing in Fourier Space");
     addParamsLine("             requires --disable_metadata;");
@@ -179,18 +180,29 @@ void ProgTransformGeometry::preProcess()
 
     if (checkParam("--scale"))
     {
-        if (STR_EQUAL(getParam("--scale" ), "dim"))
+        if (STR_EQUAL(getParam("--scale" ), "dim") || STR_EQUAL(getParam("--scale" ), "factor"))
         {
-            scale_type = SCALE_DIM;
             //Calculate scale factor from images sizes and given dimensions
             //this approach assumes that all images have equal size
 
             double oxdim = xdimOut, oydim = ydimOut, ozdim = zdimOut;
-            xdimOut = getIntParam("--scale", 1);
-            ydimOut = STR_EQUAL(getParam("--scale", 2), "x") ? xdimOut : getIntParam("--scale", 2);
+            double factor;
+            if (STR_EQUAL(getParam("--scale" ), "dim") )
+            {
+                xdimOut = getIntParam("--scale", 1);
+                ydimOut = STR_EQUAL(getParam("--scale", 2), "x") ? xdimOut : getIntParam("--scale", 2);
+                XX(scaleV) = (double)xdimOut / oxdim;
+                YY(scaleV) = (double)ydimOut / oydim;
+            }
+            else
+            {
+                factor = getDoubleParam("--scale", 1);
+                xdimOut = (int) (xdimOut * factor);
+                ydimOut = (int) (ydimOut * factor);
+                XX(scaleV) = factor;
+                YY(scaleV) = factor;
+            }
 
-            XX(scaleV) = (double)xdimOut / oxdim;
-            YY(scaleV) = (double)ydimOut / oydim;
 
             //if scale factor is large splines s not the way to go, print a warning
             if( fabs(1.0-XX(scaleV)) > 0.1 )
@@ -201,9 +213,17 @@ void ProgTransformGeometry::preProcess()
             }
             if (isVol)
             {
-                zdimOut = STR_EQUAL(getParam("--scale", 3), "x")
-                       ? xdimOut : getIntParam("--scale", 3);
-                ZZ(scaleV) = (double)zdimOut / ozdim;
+                if (STR_EQUAL(getParam("--scale" ), "dim") )
+                {
+                    zdimOut = STR_EQUAL(getParam("--scale", 3), "x")
+                              ? xdimOut : getIntParam("--scale", 3);
+                    ZZ(scaleV) = (double)zdimOut / ozdim;
+                }
+                else
+                {
+                    zdimOut = (int) (zdimOut * factor);
+                    ZZ(scaleV) = factor;
+                }
             }
         }
         else if (STR_EQUAL(getParam("--scale"), "fourier"))
@@ -235,7 +255,7 @@ void ProgTransformGeometry::preProcess()
                 scale_type = SCALE_PYRAMID_REDUCE;
             }
         }
-        else //scale factor case
+        else //scale factor_no_resize case
         {
             double factor = getDoubleParam("--scale", 1);
             //Some extra validations for factor
