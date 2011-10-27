@@ -1477,15 +1477,14 @@ MetaData_write(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             try
             {
-                if (PyString_Check(input))
-                    self->metadata->write(PyString_AsString(input),
-                                          (WriteModeMetaData) wmd);
-                else if (FileName_Check(input))
-                    self->metadata->write(FileName_Value(input),
-                                          (WriteModeMetaData) wmd);
-                else
-                    return NULL;
-                Py_RETURN_NONE;
+                if ((pyStr = PyObject_Str(input)) != NULL)
+				{
+					str = PyString_AsString(pyStr);
+					self->metadata->write(str, (WriteModeMetaData) wmd);
+					Py_RETURN_NONE;
+				}
+				else
+					return NULL;
             }
             catch (XmippError &xe)
             {
@@ -2248,7 +2247,7 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 
     if (self != NULL)
     {
-        PyObject *input = NULL;
+        PyObject *input = NULL, *pyStr = NULL;
         PyArg_ParseTuple(args, "|O", &input);
         if (input != NULL)
         {
@@ -2256,12 +2255,17 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
             {
                 if (MetaData_Check(input))
                     self->metadata = new MetaData(MetaData_Value(input));
-                else if (PyString_Check(input))
-                    self->metadata = new MetaData(PyString_AsString(input));
-                else if (FileName_Check(input))
-                    self->metadata = new MetaData(FileName_Value(input));
+				else if ((pyStr = PyObject_Str(input)) != NULL)
+				{
+					char * str = PyString_AsString(pyStr);
+					self->metadata = new MetaData(str);
+				}
                 else
+                {
+                	PyErr_SetString(PyExc_TypeError,
+                	      "MetaData_new: Bad string value for reading metadata");
                     return NULL;
+                }
             }
             catch (XmippError &xe)
             {
