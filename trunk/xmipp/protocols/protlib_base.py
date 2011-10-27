@@ -339,7 +339,7 @@ class XmippProtocol(object):
         #insert basic operations for all scripts
         if self.Behavior=="Restart":
             run = {
-               'protocol_name':self.Name, 
+               'protocol_name': self.Name, 
                'run_name': self.RunName, 
                'script': self.scriptName, 
                'source': self.scriptName

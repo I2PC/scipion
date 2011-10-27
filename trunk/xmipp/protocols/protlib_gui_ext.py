@@ -26,6 +26,7 @@
  '''
 
 import Tkinter as tk
+import ttk
 import os
 from os.path import join
 from config_protocols import LabelBgColor, FontName, FontSize
@@ -89,7 +90,6 @@ class MultiListbox(tk.PanedWindow):
         return 'break'
 
     def _button3(self, x, y):
-        print "right click"
         #self._select(y, state)
         return 'break'
     
@@ -194,7 +194,6 @@ class MultiListbox(tk.PanedWindow):
     def selection_set(self, first, last=None):
         for l in self.lists:
             l.selection_set(first, last)
-        #print self.curselection()
         index = self.selectedIndex()
         if self.SelectCallback:
             self.SelectCallback(index)
@@ -234,8 +233,6 @@ def centerWindows(root, dim=None, refWindows=None):
         x = (w - gw) / 2
         y = (h - gh) / 2
         
-    #print "window before GEO:", (gw, gh, gx, gy)
-    #print "window apply GEO:", (gw, gh, x, y)
     root.geometry("%dx%d+%d+%d" % (gw, gh, x, y))
     
 
@@ -759,7 +756,6 @@ class FileViewer(tk.Frame):
         tabsFrame.grid(column=0, row=1, padx=5, pady=5, sticky="nsew")
         tabsFrame.columnconfigure(0, weight=1)
         tabsFrame.rowconfigure(0, weight=1)
-        import ttk
         self.notebook = ttk.Notebook(tabsFrame)  
         self.notebook.rowconfigure(0, weight=1)
         self.notebook.columnconfigure(0, weight=1)      
@@ -1125,6 +1121,26 @@ class FileManager():
             setattr(self, k, v)
 
 _plt = None
+
+# Some utilities to use matplotlib
+def createImageFigure(parent, dim):
+        global _plt
+        if not _plt:
+            import matplotlib
+            matplotlib.use('TkAgg')
+            _plt = True
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        from matplotlib.figure import Figure
+        import matplotlib.cm as cm
+        from numpy import zeros
+        Z = zeros((dim, dim), float)
+        figure = Figure(figsize=(dim, dim), dpi=1)
+        # a tk.DrawingArea
+        canvas = FigureCanvasTkAgg(figure, master=parent)
+        canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
+        figureimg = figure.figimage(Z, cmap=cm.gray)#, origin='lower')
+        return (canvas, figureimg)
+        #self.canvas.show()  
          
 class XmippBrowser():
     ''' seltype is the selection type, it could be:
@@ -1136,12 +1152,13 @@ class XmippBrowser():
         - browse -> only single file selection
         - extended -> multiple file selection
     '''
-    def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", filter=None):
+    def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", filter=None, previewDim=128):
         self.seltype = seltype
         self.selmode = selmode
         self.dir = initialDir
         self.pattern = filter
         self.selectedFiles = None
+        self.dim = previewDim
         
     def addFileManager(self, key, icon, extensions, 
                        fillMenu=defaultFillMenu, 
@@ -1177,6 +1194,17 @@ class XmippBrowser():
         addFm('folder', 'folderopen.gif', [])
         addFm('default', 'generic_file.gif', [])
         
+    def createDetailsTop(self, parent):
+        self.detailstop = ttk.Frame(parent)
+        self.detailstop.rowconfigure(0, weight=1)
+        self.detailstop.columnconfigure(0, weight=1)
+        return self.detailstop
+    
+    def createDetailsBottom(self, parent):
+        # Add details text
+        self.text = TaggedText(parent, width=20, height=5)
+        self.text.grid(column=0, row=1, sticky="nwes")
+        return self.text
             
     def createGUI(self, root=None, title='', parent=None):
         if root:
@@ -1185,14 +1213,15 @@ class XmippBrowser():
             self.root = tk.Tk()
         self.parent = parent   
         self.createFileManagers()
-        import ttk
         self.root.withdraw()
-        self.root.columnconfigure(0, weight=1)
+        self.root.columnconfigure(0, weight=1, minsize=100)
         self.root.columnconfigure(1, weight=1)
         self.root.rowconfigure(0, weight=1)
         self.root.minsize(600, 400)
         titleStr = "Xmipp Browser"
-        if self.seltype != 'none':
+        if len(title):
+            titleStr += " - %s" % title
+        elif self.seltype != 'none':
             titleStr += " - Choose " + self.seltype
         self.root.title(titleStr)
 
@@ -1210,18 +1239,17 @@ class XmippBrowser():
         #tree.heading('items', text='Items')
 
         #Create frame for details
-        details = ttk.Frame(self.root, padding="3 3 12 12")
+        details = ttk.Frame(self.root, padding="3 3 3 3")
         details.grid(column=1, row=0, sticky="nwes")
         details.columnconfigure(0, weight=1)
         details.rowconfigure(0, weight=1, minsize=100)  
         details.rowconfigure(1, weight=1)
-        # Add details preview
-        self.canvas = None
-        #self.createPreviewCanvas(details)
-        #
-        # Add details text
-        self.text = TaggedText(details, width=20, height=5)
-        self.text.grid(column=0, row=1, sticky="nwes")
+        top = self.createDetailsTop(details)
+        if top:
+            top.grid(column=0, row=0, sticky="nwes")
+        bottom = self.createDetailsBottom(details)
+        if bottom:
+            bottom.grid(column=0, row=1, sticky="nwes")
         self.details = details
         
         #Create bottom frame with search bar and buttons
@@ -1266,6 +1294,10 @@ class XmippBrowser():
         self.root.bind("<Button-1>", self.onClick)
         self.root.bind("<Key>", self.onKeyPress)
         
+        #Create xmipp image to show preview
+        import xmipp
+        self.canvas = None
+        self.image = xmipp.Image()
         #Create a dictionary with extensions and icon type
         self.insertFiles(self.dir)
         #Filter result, if pattern no provided, all files will be listed
@@ -1292,7 +1324,11 @@ class XmippBrowser():
         self.tree.insert(parent, 'end', join(root, elem), text=elem, image=fm.image)
 
     def insertFiles(self, path):
-        for root, dirs, files in os.walk(path, followlinks=True    ):
+        for root, dirs, files in os.walk(path, followlinks=True):
+            if dirs:
+                dirs.sort()
+            if files:
+                files.sort()
             for d in dirs: 
                 self.insertElement(root, d, True)
             for f in files:
@@ -1333,6 +1369,7 @@ class XmippBrowser():
         if fm:
             msg = ""
             if os.path.exists(item):
+                self.lastitem = item
                 import stat
                 self.stat = os.stat(item)
                 msg = fileInfo(self)
@@ -1343,39 +1380,24 @@ class XmippBrowser():
                     else:
                         self.btnOk.config(state=tk.DISABLED)
             msg += fm.onClick(item, self)  
-            self.text.clear()
-            self.text.addText(msg) 
+            if self.text:
+                self.text.clear()
+                self.text.addText(msg) 
         
         
     def onKeyPress(self, e):
         self.unpostMenu()
 
     def createPreviewCanvas(self):
-        global _plt
-        if not _plt:
-            import matplotlib
-            matplotlib.use('TkAgg')
-            self.dim = 128
-            _plt = True
-        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-        from matplotlib.figure import Figure
-        import matplotlib.cm as cm
-        from numpy import zeros
-        Z = zeros((self.dim, self.dim), float)
-        self.figure = Figure(figsize=(self.dim, self.dim), dpi=1)
-        # a tk.DrawingArea
-        self.canvas = FigureCanvasTkAgg(self.figure, master=self.details)
-        self.canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
-        self.figureimg = self.figure.figimage(Z, cmap=cm.gray)#, origin='lower')
-        #self.canvas.show()    
+        self.canvas, self.figureimg = createImageFigure(self.detailstop, self.dim)
     
     def updatePreview(self, filename):
         if not self.canvas:
-            self.createPreviewCanvas()
-            self.image = None
+            self.createPreviewCanvas()            
         if not filename.endswith('.png'):
             #Read image data through Xmipp
-            Z = self.getImageData(filename)        
+            self.image.readPreview(filename, self.dim)
+            Z = self.getImageData()
         else:
             import matplotlib.image as mpimg
             Z = mpimg.imread(filename)
@@ -1383,22 +1405,15 @@ class XmippBrowser():
         self.figureimg.autoscale()
         self.canvas.show()   
 
-    def getImageData(self, filename):
-        dim = self.dim
-        if not self.image:
-            from numpy import zeros
-            self.Z = zeros((dim, dim), float)
-            import xmipp
-            self.image = xmipp.Image()
-        img = self.image
-        Z = self.Z
-        img.readPreview(filename, dim)
+    def getImageData(self):
+        img = self.image        
         xdim, ydim, z, n = img.getDimensions()
+        from numpy import zeros
+        Z = zeros((ydim, xdim), float)
+        for y in range(ydim):
+            for x in range(xdim):
         #TODO: improve by avoiding use of getPixel
-        print xdim, ydim, z, n
-        for x in range(xdim):
-            for y in range(ydim):
-                Z[x, y] = img.getPixel(x, y)
+                Z[y, x] = img.getPixel(y, x)
         return Z
     
     def filterResults(self, e=None):
@@ -1446,14 +1461,67 @@ class XmippBrowser():
         self.selectedFiles = self.tree.selection()
         self.root.destroy()
     
+class XmippBrowserCTF(XmippBrowser):
+    ''' This subclass is specific for CTF preview
+    '''
+    def __init__(self, **args):
+        if args.has_key('downsampling'):
+            self.downsampling = args['downsampling']
+            del args['downsampling']
+        else:
+            self.downsampling = '1'
+        XmippBrowser.__init__(self, **args)
+        
+    def createDetailsTop(self, parent):
+        XmippBrowser.createDetailsTop(self, parent)
+        self.createPreviewCanvas()
+        ttk.Label(self.detailstop, text="Micrograph").grid(row=1, column=0)
+        ttk.Label(self.detailstop, text="Filter").grid(row=1, column=1)
+        self.frame2 = ttk.Frame(self.detailstop, padding="3 3 3 3")
+        self.detailstop.columnconfigure(1, weight=1)
+        self.frame2.grid(column=1, row=0, sticky='nsew', padx=5)
+        self.frame2.columnconfigure(0, weight=1)
+        self.frame2.rowconfigure(0, weight=1)
+        self.canvas2, self.figureimg2 = createImageFigure(self.frame2, self.dim)
+        self.root.minsize(800, 400)        
+        
+        return self.detailstop
+    
+    def createDetailsBottom(self, parent):
+        self.text = None
+        frame = ttk.Frame(parent)
+        ttk.Label(frame, text="Downsampling").pack(side=tk.LEFT,padx=2)
+        self.downsamplingVar = tk.StringVar()
+        self.downsamplingVar.set(self.downsampling)
+        downsamplingEntry = ttk.Entry(frame, width=10, textvariable=self.downsamplingVar)
+        downsamplingEntry.pack(side=tk.LEFT,padx=2)
+        self.btnTest = MyButton(frame, "Preview filter", command=self.updateFilter)
+        downsamplingEntry.bind('<Return>', self.updateFilter)
+        self.btnTest.pack(side=tk.LEFT, padx=2)
+        return frame
+    
+    def updateFilter(self, e=None):
+        #Read image data through Xmipp
+        from xmipp import fastEstimateEnhancedPSD
+        self.image = fastEstimateEnhancedPSD(self.lastitem, float(self.downsamplingVar.get()), self.dim)
+        Z = self.getImageData()        
+        self.figureimg2.set_array(Z)
+        self.figureimg2.autoscale()
+        self.canvas2.show() 
+        
+    def selectFiles(self, e=None):
+        self.selectedFiles = self.downsamplingVar.get()
+        self.root.destroy() 
+    
 '''Show Xmipp Browser and return selected files'''
-def showBrowseDialog(path='.', title='', parent=None, main=False, **args):
+def showBrowseDialog(path='.', title='', parent=None, main=False, browser=XmippBrowser, **args):
     if main:
         root = tk.Tk()
     else:
         root = tk.Toplevel()
     #root.grab_set()
-    xb = XmippBrowser(path, **args)
+    args['initialDir'] = path
+    xb = browser(**args)
     xb.createGUI(root, title, parent)
     xb.showGUI(loop=False)
     root.wait_window(root)

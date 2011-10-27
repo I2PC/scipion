@@ -35,7 +35,7 @@ import tkFont
 from protlib_base import getProtocolFromModule, getWorkingDirFromRunName, getExtendedRunName
 from protlib_utils import loadModule, runImageJPlugin, which, runJavaIJappWithResponse
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
-    showError, showInfo, showBrowseDialog, showWarning
+    showError, showInfo, showBrowseDialog, showWarning, XmippBrowserCTF
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
@@ -736,10 +736,6 @@ class ProtocolGUI(BasicGUI):
                 end_of_header = True
         f.close()
         
-        f = open('kk.py', 'w')
-        f.writelines(self.header_lines)
-        f.close()
-        
         if not begin_of_header:
             raise Exception('{begin_of_header} tag not found in protocol script: %s' % script)
         if not end_of_header:
@@ -1118,11 +1114,18 @@ class ProtocolGUI(BasicGUI):
         dir = self.getVarValue('DirMicrographs')
         filter = self.getVarValue('ExtMicrographs')
         value = self.getVarValue('Down')
-        msg = runJavaIJappWithResponse("512m", "XmippFileListCTFWizard", 
-                                          "-dir %(dir)s -filter %(filter)s -downsampling %(value)s" % locals())
-        msg = msg.strip()
-        if len(msg) > 0:
-            var.tkvar.set(os.path.relpath(msg.strip()))            
+        
+#        msg = runJavaIJappWithResponse("512m", "XmippFileListCTFWizard", 
+#                                          "-dir %(dir)s -filter %(filter)s -downsampling %(value)s" % locals())
+#        msg = msg.strip()
+#        if len(msg) > 0:
+#            var.tkvar.set(os.path.relpath(msg.strip()))      
+        downsampling = showBrowseDialog(path=dir, parent=self.master, browser=XmippBrowserCTF,
+                                        title="Select Downsampling", 
+                                        seltype="file", selmode="browse", filter=filter, 
+                                        previewDim=256, downsampling=value)
+        if downsampling:
+            var.tkvar.set(downsampling)      
         
     #This wizard is specific for screen_micrographs protocol
     def wizardBrowseJCTF2(self, var):
@@ -1135,11 +1138,16 @@ class ProtocolGUI(BasicGUI):
         id=MD.firstObject()
         ext=os.path.splitext(MD.getValue(xmipp.MDL_IMAGE,id))[1]
         value = self.getVarValue('Down')
-        msg = runJavaIJappWithResponse("512m", "XmippFileListCTFWizard", 
-                                          "-dir %(dir)s -filter *%(ext)s -downsampling %(value)s" % locals())
-        msg = msg.strip()
-        if len(msg) > 0:
-            var.tkvar.set(os.path.relpath(msg.strip()))            
+#        msg = runJavaIJappWithResponse("512m", "XmippFileListCTFWizard", 
+#                                          "-dir %(dir)s -filter *%(ext)s -downsampling %(value)s" % locals())
+#        msg = msg.strip()
+#        if len(msg) > 0:
+#            var.tkvar.set(os.path.relpath(msg.strip()))       
+        files = showBrowseDialog(path=dir, parent=self.master, seltype="file", 
+                                 title="Select Downsampling", 
+                                 selmode="browse", filter="*%s" % ext)
+        if files:
+            var.tkvar.set(', '.join([relpath(f) for f in files]))       
         
     #This wizard is specific for preprocess_micrographs protocol
     def wizardBrowseJCTFMeasure(self, var):
