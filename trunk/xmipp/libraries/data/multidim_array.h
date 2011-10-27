@@ -629,11 +629,30 @@ template<typename T>
 void coreArrayByArray(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
                       MultidimArray<T>& result, char operation);
 
+/**
+ *  Structure with the dimensions information of an image
+ */
+struct ImageDim
+{
+    // Number of images
+    size_t ndim;
+    // Number of elements in Z
+    int zdim;
+    // Number of elements in Y
+    int ydim;
+    // Number of elements in X
+    int xdim;
+    // Number of elements in YX
+    size_t yxdim;
+    // Number of elements in ZYX
+    size_t zyxdim;
+    // Number of elements in NZYX
+    size_t nzyxdim;
+};
+
 /** Template class for Xmipp arrays.
   * This class provides physical and logical access.
 */
-
-
 class MultidimArrayBase
 {
 public:
@@ -1015,7 +1034,7 @@ public:
      */
     void alias(const MultidimArray<T> &m)
     {
-    	coreDeallocate();
+        coreDeallocate();
         copyShape(m);
         this->data=m.data;
         this->nzyxdimAlloc = this->nzyxdim;
@@ -1047,9 +1066,7 @@ public:
     //@{
 
     /** Sets new 4D dimensions.
-      *
       *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
-      *
       */
     void setDimensions(int Xdim, int Ydim, int Zdim, int Ndim)
     {
@@ -1062,6 +1079,22 @@ public:
         yxdim=ydim*xdim;
         zyxdim=zdim*yxdim;
         nzyxdim=ndim*zyxdim;
+    }
+
+    /** Sets new 4D dimensions.
+     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+     */
+    void setDimensions(ImageDim &newDim)
+    {
+        if (newDim.ndim*newDim.zdim*newDim.ydim*newDim.xdim < 1)
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Dimensions' size cannot be zero nor negative.");
+        ndim = newDim.ndim;
+        zdim = newDim.zdim;
+        ydim = newDim.ydim;
+        xdim = newDim.xdim;
+        yxdim = ydim*xdim;
+        zyxdim = zdim*yxdim;
+        nzyxdim = ndim*zyxdim;
     }
 
     /** Sets new N dimension.
@@ -1704,6 +1737,20 @@ public:
         xinit = FIRST_XMIPP_INDEX(xdim);
     }
 
+    /** Reset logical origin to zeros.
+     *
+     * This function adjust the starting points in the array such that the
+     * it begins in zero.
+     *
+     * @code
+     * V.resetOrigin();
+     * @endcode
+     */
+    void resetOrigin()
+    {
+        zinit = yinit = xinit = 0;
+    }
+
     /** Move origin to.
       *
       * This function adjust logical indexes such that the Xmipp origin of the
@@ -2067,8 +2114,8 @@ public:
 
         if (k < STARTINGZ(*this) || k > FINISHINGZ(*this))
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,formatString(
-                         "setSlice: MultidimArray subscript (k=%d) out of range [%d, %d]",
-                         k,STARTINGZ(*this),FINISHINGZ(*this)));
+                             "setSlice: MultidimArray subscript (k=%d) out of range [%d, %d]",
+                             k,STARTINGZ(*this),FINISHINGZ(*this)));
 
         if (v.rowNumber() != YSIZE(*this) || v.colNumber() != XSIZE(*this))
             REPORT_ERROR(ERR_MULTIDIM_DIM,
@@ -4855,7 +4902,7 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2)
 template<typename T1>
 void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T1>& v2)
 {
-	v2=v1;
+    v2=v1;
 }
 
 
