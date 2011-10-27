@@ -247,13 +247,9 @@ MpiNode::MpiNode(int &argc, char ** argv)
 
 MpiNode::~MpiNode()
 {
-    std::cout << "Destroying MpiNode 1" << std::endl;
     active = 0;
-    std::cout << "Destroying MpiNode 2" << std::endl;    
     updateComm();
-    std::cout << "Destroying MpiNode 3" << std::endl;
     MPI::Finalize();
-    std::cout << "Destroying MpiNode 4" << std::endl;
 }
 
 bool MpiNode::isMaster() const
