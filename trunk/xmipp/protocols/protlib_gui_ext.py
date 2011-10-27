@@ -923,7 +923,7 @@ def askYesNo(title, msg, parent):
     return d.result
 
 def showInfo(title, msg, parent):
-    ShowDialog(parent, title, msg, 'warning')
+    ShowDialog(parent, title, msg, 'info')
 
 def showWarning(title, msg, parent):
     ShowDialog(parent, title, msg, 'warning')
