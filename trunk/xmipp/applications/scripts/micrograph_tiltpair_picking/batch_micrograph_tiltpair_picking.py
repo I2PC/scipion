@@ -24,7 +24,7 @@ class ScriptParticlePicking(XmippScript):
     def run(self):
         input = self.getParam('-i')
         output = self.getParam('-o')
-        plugins_dir = getXmippPath("external/imagej/plugins/*")
+        plugins_dir = getXmippPath("external/imagej/plugins/")
         ij_jar = getXmippPath("external/imagej/ij.jar")
         memory = self.getParam('-m')
         if len(memory) == 0:
@@ -32,7 +32,7 @@ class ScriptParticlePicking(XmippScript):
             print "No memory size provided. Using default: " + memory
 
         jar = "Xmipp_PP.jar"
-        cmd = "java -Xmx%(memory)s -Dplugins.dir=%(plugins_dir)s -cp %(plugins_dir)s:%(ij_jar)s: particlepicker.tiltpair.Main %(input)s %(output)s" % locals()
+        cmd = "java -Xmx%(memory)s -Dplugins.dir=%(plugins_dir)s -cp %(plugins_dir)s*:%(ij_jar)s: particlepicker.tiltpair.Main %(input)s %(output)s" % locals()
         os.system(cmd)
     
 if __name__ == '__main__':
