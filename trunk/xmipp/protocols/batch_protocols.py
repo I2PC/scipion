@@ -32,7 +32,7 @@ import tkMessageBox
 import tkFont
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
 from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, configDefaults,showInfo,\
-    showBrowseDialog, FileViewer, showFileViewer
+    showBrowseDialog, FileViewer, showFileViewer, showError
 from config_protocols import protDict, sections
 from config_protocols import FontName, FontSize
 from protlib_base import getProtocolFromModule, XmippProject,\
@@ -124,9 +124,9 @@ class XmippProjectGUI():
     def deleteTmpFiles(self):
         try:
             self.project.deleteTmpFiles()
-            tkMessageBox.showinfo("Operation success", "All temporary files have been successfully removed")
+            showInfo("Operation success", "All temporary files have been successfully removed")
         except Exception, e:
-            tkMessageBox.showerror("Operation error ", str(e))
+            showError("Operation error ", str(e))
     
     def browseFiles(self):
         showBrowseDialog(parent=self.root, seltype="none", selmode="browse")
