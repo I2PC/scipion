@@ -432,7 +432,7 @@ PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
 pythonIncludes = ["#" +os.path.join(PythonDir,dir) for dir in [".","Include"]]
 pythonbinding = AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources,
            ['#libraries', "#"] + pythonIncludes,
-           ['lib'], ['XmippData'], '')
+           ['lib'], ['XmippData', 'XmippRecons'], '')
 
 # Reconstruction
 ReconsSources = [
