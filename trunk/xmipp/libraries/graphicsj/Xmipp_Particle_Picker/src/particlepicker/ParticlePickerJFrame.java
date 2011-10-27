@@ -128,11 +128,22 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		fftbpf.addActionListener(this);
 		JMenuItem admi = new JMenuItem("Anisotropic Diffusion...");
 		filtersmn.add(admi);
-		admi.addActionListener(this);
+		admi.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				activemacro = ((JMenuItem) e.getSource()).getText();
+				IJ.run("8-bit");
+				IJ.run(activemacro);
+				
+			}
+		});
 		JMenuItem msmi = new JMenuItem("Mean Shift");
 		filtersmn.add(msmi);
 		msmi.addActionListener(this);
-		JMenuItem sbmi = new JMenuItem("Substract Background...");
+		JMenuItem sbmi = new JMenuItem("Subtract Background...");
 		filtersmn.add(sbmi);
 		sbmi.addActionListener(this);
 		JMenuItem gbmi = new JMenuItem("Gaussian Blur...");
