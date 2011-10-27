@@ -68,17 +68,23 @@ public class ImageGeneric {
 
     private native void readHeader(String filename) throws Exception;
     
-    public short[] getArrayShort(){
-    	return getArrayShort(filename, xSize, ySize, zSize, nSize);
+    public byte[] getArrayByte(){
+    	return getArrayByte(filename, xSize, ySize, zSize, nSize, dataType);
     }
     
-    private static native short[] getArrayShort(String filename, int x, int y, int z, long N);
+    private static native byte[] getArrayByte(String filename, int x, int y, int z, long N, int datatype);
+    
+    public short[] getArrayShort(){
+    	return getArrayShort(filename, xSize, ySize, zSize, nSize, dataType);
+    }
+    
+    private static native short[] getArrayShort(String filename, int x, int y, int z, long N, int datatype);
     
     public float[] getArrayFloat(){
-    	return getArrayFloat(filename, xSize, ySize, zSize, nSize);
+    	return getArrayFloat(filename, xSize, ySize, zSize, nSize, dataType);
     }
     
-    private static native float[] getArrayFloat(String filename, int x, int y, int z, long N);
+    private static native float[] getArrayFloat(String filename, int x, int y, int z, long N, int datatype);
         
 
     public native double[] getStatistics() throws Exception;

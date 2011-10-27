@@ -76,7 +76,7 @@ size_t gettypesize(DataType type)
 }
 
 /** Convert datatype string to datatypr enun */
-DataType datatypeString2Int(const std::string & str)
+DataType str2Datatype(const std::string & str)
 {
     DataType datatype;
 
@@ -112,4 +112,40 @@ DataType datatypeString2Int(const std::string & str)
         REPORT_ERROR(ERR_TYPE_INCORRECT, "datatypeString2int; unknown datatype");
 
     return datatype;
+}
+
+/** Convert datatype to string */
+std::string datatype2Str(DataType datatype)
+{
+    switch ( datatype )
+    {
+    case UChar:
+        return "uint8";
+    case SChar:
+        return "int8";
+    case UShort:
+        return "uint16";
+    case Short:
+        return "int16";
+    case UInt:
+        return "uint32";
+    case Int:
+        return "int32";
+    case Float:
+        return "float";
+    case Double:
+        return "double";
+    case ComplexShort:
+        return "cint16";
+    case ComplexInt:
+        return "cint32";
+    case ComplexFloat:
+        return "cfloat";
+    case ComplexDouble:
+        return "cdouble";
+    case Bool:
+        return "bool";
+    default:
+        return "unknown type";
+    }
 }

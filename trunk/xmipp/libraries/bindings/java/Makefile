@@ -1,5 +1,5 @@
 # Makefile for Xmipp JNI libraries
-XMIPP_DIR = $$HOME/xmipp
+XMIPP_DIR = $$XMIPP_HOME
 
 CC = g++
 SHAREDLIB = XmippJavaInterface.so
@@ -14,6 +14,7 @@ INCLUDES = -I. -I/usr/lib/jvm/java-6-sun/include -I/usr/lib/jvm/java-6-sun/inclu
 JARFILE = XmippJavaInterface.jar
 JAROPTS = -Mcf
 PACKAGE = xmipp
+IJ_JAR = $(XMIPP_DIR)/external/imagej/ij.jar
 JAVA_SRC = $(PACKAGE)/ImageDouble.java $(PACKAGE)/ImageGeneric.java $(PACKAGE)/Filename.java $(PACKAGE)/MDLabel.java $(PACKAGE)/MetaData.java $(PACKAGE)/Projection.java $(PACKAGE)/CTFDescription.java $(PACKAGE)/Program.java
 JAVA_CLASSES = $(JAVA_SRC:.java=.class)
 JAVAH_CLASSES = $(subst /,.,$(JAVA_SRC:.java=))
@@ -45,7 +46,7 @@ headers:
 
 javatests: $(TESTS_SRC)
 	@echo " *** Compiling tests"
-	javac $(TESTS_SRC)
+	javac -cp $(IJ_JAR):./* $(TESTS_SRC)
 
 clean:
 	rm $(SHAREDLIB) $(OBJS) $(JAVA_CLASSES) $(JARFILE) $(TESTS_CLASSES)

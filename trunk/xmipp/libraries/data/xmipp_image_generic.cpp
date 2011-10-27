@@ -356,7 +356,7 @@ void createEmptyFile(const FileName &filename, int Xdim, int Ydim, int Zdim,
     else
     {
         strType = filename.substr(found+1).c_str();
-        image.setDatatype(datatypeString2Int(strType));
+        image.setDatatype(str2Datatype(strType));
     }
 
     image.mapFile2Write(Xdim, Ydim, Zdim, filename, false, select_img, isStack, mode, _swapWrite);

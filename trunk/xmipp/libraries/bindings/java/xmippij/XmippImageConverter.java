@@ -5,8 +5,9 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.FileInfo;
 import ij.process.ImageProcessor;
-import ij.process.FloatProcessor;
+import ij.process.ByteProcessor;
 import ij.process.ShortProcessor;
+import ij.process.FloatProcessor;
 import ij.process.StackStatistics;
 import java.io.File;
 import java.util.LinkedList;
@@ -52,8 +53,12 @@ public class XmippImageConverter {
             case ImageGeneric.Float:
                 pc = new FloatProcessorCreator();
                 break;
+            case ImageGeneric.SChar:
             case ImageGeneric.UChar:
-            case ImageGeneric.Short:
+            	pc = new ByteProcessorCreator();
+            	break;
+            case ImageGeneric.Short:	
+            case ImageGeneric.UShort:
                 pc = new ShortProcessorCreator();
                 break;
             default:
@@ -216,5 +221,12 @@ class ShortProcessorCreator extends ProcessorCreator {
 
     public ImageProcessor getProcessor(ImageGeneric image) {
         return new ShortProcessor(image.xSize, image.ySize, image.getArrayShort(), null);
+    }
+}
+
+class ByteProcessorCreator extends ProcessorCreator {
+
+    public ImageProcessor getProcessor(ImageGeneric image) {
+        return new ByteProcessor(image.xSize, image.ySize, image.getArrayByte(), null);
     }
 }

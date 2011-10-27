@@ -596,7 +596,7 @@ public:
             }
         case SChar:
             {
-                if (typeid(T) == typeid(signed char))
+                if (typeid(T) == typeid(char))
                     return 1;
                 else
                     return 0;
