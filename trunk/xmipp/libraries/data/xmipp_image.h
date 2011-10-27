@@ -753,10 +753,6 @@ public:
             newDim.zdim = 1;
             break;
         }
-        if (select_slice > CENTRAL_SLICE)
-            --select_slice;
-        else if (select_slice == CENTRAL_SLICE)
-            select_slice = imFileDim.zdim/2;
 
         VOLMATRIX(*this).setDimensions(newDim);
         MULTIDIM_ARRAY(VOLMATRIX(*this)) += YXSIZE(VOLMATRIX(*this)) * (select_slice - mappedSlice);
