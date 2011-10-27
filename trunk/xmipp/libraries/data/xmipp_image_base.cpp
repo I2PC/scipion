@@ -41,10 +41,10 @@ void ImageBase::init()
     filename = "";
     offset = 0;
     swap = swapWrite = 0;
-    replaceNsize=0;
+    replaceNsize = 0;
     mmapOnRead = mmapOnWrite = false;
-    mappedSize = 0;
-    mFd    = NULL;
+    mappedSize = mappedOffset = mappedSlice = 0;
+    mFd        = NULL;
 }
 
 void ImageBase::clearHeader()
@@ -96,7 +96,7 @@ int ImageBase::readOrReadMapped(const FileName &name, size_t select_img, int mod
     }
 }
 
-int ImageBase::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img)
+int ImageBase::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img, bool mapData)
 {
     read(name, HEADER);
     int imXdim, imYdim, imZdim;
@@ -107,7 +107,10 @@ int ImageBase::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int s
         return readPreview(name, Xdim, Ydim, select_slice, select_img);
     else
     {
-        return read(name, DATA, select_img, true);
+        int ret = read(name, DATA, select_img, mapData);
+        if (select_slice != ALL_SLICES)
+            movePointerToSlice(select_slice);
+        return ret;
     }
 
 }
@@ -378,13 +381,17 @@ bool ImageBase::flip(const size_t n) const
     * std::cout << "datatype= " << dataType() << std::endl;
     * @endcode
     */
-DataType ImageBase::dataType() const
+DataType ImageBase::datatype() const
 {
     int dummy;
     MDMainHeader.getValue(MDL_DATATYPE, dummy);
     return (DataType)dummy;
 }
 
+void ImageBase::setDatatype(DataType datatype)
+{
+    MDMainHeader.setValue(MDL_DATATYPE, (int) datatype);
+}
 /** Sampling RateX
 *
 * @code
@@ -433,6 +440,19 @@ void ImageBase::getShifts(double &xoff, double &yoff, double &zoff, const size_t
     MD[n].getValue(MDL_SHIFTX, xoff);
     MD[n].getValue(MDL_SHIFTY, yoff);
     MD[n].getValue(MDL_SHIFTZ, zoff);
+}
+
+void ImageBase::getInfo(ImageInfo &imgInfo) const
+{
+    imgInfo.datatype = datatype();
+    imgInfo.swap = getSwap() > 0;
+    imgInfo.imDim = imFileDim ;
+}
+
+void ImageBase::getInfo(const FileName &name, ImageInfo &imgInfo)
+{
+    read(name, HEADER);
+    getInfo(imgInfo);
 }
 
 /** Open file function
@@ -843,7 +863,7 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
         o << "False" << std::endl;
 
     o << "Data type      : ";
-    switch (I.dataType())
+    switch (I.datatype())
     {
     case Unknown_Type:
         o << "Undefined data type";

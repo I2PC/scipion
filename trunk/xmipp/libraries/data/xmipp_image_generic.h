@@ -159,6 +159,14 @@ public:
         return datatype;
     }
 
+    /** Get basic information from image file
+     */
+    void getInfo(const FileName &name, ImageInfo &imgInfo);
+
+    /** Get basic information from already read image file
+     */
+    void getInfo(ImageInfo &imgInfo) const;
+
     /** Get the data type
      */
     int getDatatypeDepth()const
@@ -223,6 +231,13 @@ public:
     * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
     */
     int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE);
+
+    /** This function allows to read the original image or a preview of it also allowing to select either
+     * 	a specific image from the stack or a slice from a volume.
+     *
+     * 	In the case of reading images in its real dimensions it is also possible to image map from file.
+     */
+    int readOrReadPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE, bool mapData = false);
 
     /** Write image to file.
     */
@@ -299,7 +314,13 @@ public:
 #undef SETVALUE
 
     }
+
+    /** Print image information
+     */
     void print() const;
+
+    /** Add to string the image information
+     */
     void toString(String &s) const;
 
     friend std::ostream& operator<<(std::ostream& o, const ImageGeneric& I)
@@ -307,7 +328,12 @@ public:
         o << I.image;
     }
 
+    /** Addition of the passed image to the internal's
+     */
     void add(const ImageGeneric &img);
+
+    /** Subtraction of the passed image to the internal's
+     */
     void subtract(const ImageGeneric &img);
 
 private:

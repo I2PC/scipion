@@ -120,6 +120,13 @@ struct ImageFHandler
     int        mode;   // Opening mode behavior
 };
 
+struct ImageInfo
+{
+	DataType  datatype;
+	bool	  swap;
+	ImageDim  imDim;
+};
+
 /// @name Images Speed-up
 /// @{
 
@@ -218,6 +225,7 @@ protected:
     FILE*               fhed;        // Image File header handler
     TIFF*               tif;         // TIFF Image file hander
     ImageFHandler*      hFile;       // Image File handler information structure
+    ImageDim			imFileDim;   // Image header file information structure (original info from file)
     DataMode            dataMode;    // Flag to force select what will be read/write from image files
     bool                stayOpen;    // To maintain the image file open after read/write
     size_t              offset;      // Data offset
@@ -232,6 +240,7 @@ protected:
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
     size_t              mappedOffset;// Offset for the mapped file
+    int 				mappedSlice; // Slice number when mapped single slice
 
 public:
 
@@ -359,9 +368,18 @@ public:
      * try to read from the mapped file.*/
     int readOrReadMapped(const FileName &name, size_t select_img = ALL_IMAGES, int mode = WRITE_READONLY);
 
+    /* Read a thumb/preview image version from file with other dimensions than image originals'.
+     * It is also possible to select an specific image from stack or slice from volume.
+     * This function is intended for previews of great image files as the image is not copy to memory.
+     */
     virtual int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE) = 0;
 
-    int readOrReadPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE);
+    /** This function allows to read the original image or a preview of it also allowing to select either
+     * 	a specific image from the stack or a slice from a volume.
+     *
+     * 	In the case of reading images in its real dimensions it is also possible to image map from file.
+     */
+    int readOrReadPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE, bool mapData = false);
 
     /** General write function
      * select_img= which slice should I replace
@@ -370,6 +388,12 @@ public:
      */
     void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,
                int mode=WRITE_OVERWRITE,CastWriteMode castMode = CW_CAST, int _swapWrite = 0);
+
+    /** It changes the behavior of the internal multidimarray so it points to a specific slice of
+     *  the initial volume. No information is deallocated from memory, so it is also possible to
+     *  repoint to the whole volume (passing select_slice = ALL_SLICES), or CENTRAL_SLICE.
+     */
+    virtual void movePointerToSlice(int select_slice) = 0;
 
     /** Check file Datatype is same as T type to use mmap.
      */
@@ -410,6 +434,14 @@ public:
      */
     virtual void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const = 0;
 
+    /** Get basic information from already read image file
+     */
+    void getInfo(ImageInfo &imgInfo) const;
+
+    /** Get basic information from image file
+     */
+    void getInfo(const FileName &name, ImageInfo &imgInfo);
+
     /** Get whole number of pixels
      */
     virtual size_t getSize() const = 0;
@@ -429,14 +461,14 @@ public:
         return swap;
     }
 
-    /* Is there label in the individual header
+    /* Check if the label is in the individual header
     */
     bool individualContainsLabel(MDLabel label) const
     {
         return (!MD.empty() && MD[0].containsLabel(label));
     }
 
-    /* Is there label in the main header */
+    /* Check if the label is in the main header */
     bool mainContainsLabel(MDLabel label) const
     {
         return MDMainHeader.containsLabel(label);
@@ -514,13 +546,15 @@ public:
     */
     bool flip(const size_t n = 0) const;
 
-    /** Data type
-        *
-        * @code
-        * std::cout << "datatype= " << dataType() << std::endl;
-        * @endcode
-        */
-    DataType dataType() const;
+    /** Get datatype info from MDMainHeader.
+     *
+     *  In theory, it must be the image file data type.
+     *
+     * @code
+     * std::cout << "datatype= " << datatype() << std::endl;
+     * @endcode
+     */
+    DataType datatype() const;
 
     /** Sampling RateX
     *
@@ -540,7 +574,7 @@ public:
         filename = _filename;
     }
 
-    /** Set dataMode
+    /** Set the read/write dataMode of the object
      */
     void setDataMode(DataMode mode)
     {
@@ -663,7 +697,7 @@ protected:
 #include "rwTIA.h"
     //#include "rwTIFF.h"
 
-    /// To be deleted once rwTIFF ported to cpp file --------------
+    /// To be deleted once rwTIFF ported to cpp file IF POSSIBLE!! ---
     virtual int readTIFF(size_t select_img, bool isStack=false) = 0;
     virtual int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", CastWriteMode castMode=CW_CAST) = 0;
     /// ----------------------------------------------------------
@@ -707,6 +741,10 @@ protected:
     /** Munmap the image file.
      */
     virtual void munmapFile() = 0;
+
+    /** Set datatype info in MDMainHeader
+     */
+    void setDatatype(DataType datatype);
 
     /** Return the datatype of the current image object
      */

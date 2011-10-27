@@ -389,9 +389,10 @@ public:
             }
     }
 
-    /* Convert the image to another datatype and save it
-        *
-        */
+    /* Convert the pixels values from one datatype to another, taking into account for datatypes
+     * of same bitdepth the shift of the minimum values. In other cases, the conversion is done
+     * adjusting the input values in the range of output datatype.
+     */
     void castConvertPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize,
                                   double min0, double max0, CastWriteMode castMode=CW_CONVERT)
     {
@@ -576,7 +577,7 @@ public:
         }
 
     }
-    /** Check file Datatype is same as T type to use mmap.
+    /** Check if file Datatype is the same as the declared image object (T type) to use mmap.
      */
     bool checkMmapT(DataType datatype)
     {
@@ -669,9 +670,9 @@ public:
     }
 
     /* Read an image with a lower resolution as a preview image.
-       * If Zdim parameter is not passed, then all slices are rescaled.
-       * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
-       */
+     * If Zdim parameter is not passed, then all slices are rescaled.
+     * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
+     */
     int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE)
     {
         // Zdim is used to choose the slices: -1 = CENTRAL_SLICE, 0 = ALL_SLICES, else This Slice
@@ -681,6 +682,14 @@ public:
         int err;
         err = im.readMapped(name, select_img);
         im.getDimensions(imXdim, imYdim, imZdim);
+        ImageInfo imgInfo;
+        im.getInfo(imgInfo);
+
+        //Set information from image file
+        setName(name);
+        setDatatype(imgInfo.datatype);
+        imFileDim = imgInfo.imDim;
+
         im().setXmippOrigin();
 
         double scale;
@@ -713,7 +722,45 @@ public:
             Zdim = (select_slice == ALL_SLICES)? imZdim: 1;
             scaleToSize(mode, IMGMATRIX(*this), im(), Xdim, Ydim, Zdim);
         }
+
+        IMGMATRIX(*this).resetOrigin();
         return err;
+    }
+
+    /** It changes the behavior of the internal multidimarray so it points to a specific slice of
+     *  the initial volume. No information is deallocated from memory, so it is also possible to
+     *  repoint to the whole volume (passing select_slice = ALL_SLICES), or CENTRAL_SLICE.
+     */
+    void movePointerToSlice(int select_slice)
+    {
+        if (select_slice > imFileDim.zdim)
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, formatString("movePointerToSlice: Selected slice %4d cannot be higher than Z size %4d.",
+                         select_slice,imFileDim.zdim));
+
+        ImageDim newDim = imFileDim;
+
+        switch (select_slice)
+        {
+        case CENTRAL_SLICE:
+            select_slice = imFileDim.zdim/2;
+            newDim.zdim = 1;
+            break;
+        case ALL_SLICES:
+            select_slice = 0;
+            break;
+        default:
+            --select_slice;
+            newDim.zdim = 1;
+            break;
+        }
+        if (select_slice > CENTRAL_SLICE)
+            --select_slice;
+        else if (select_slice == CENTRAL_SLICE)
+            select_slice = imFileDim.zdim/2;
+
+        VOLMATRIX(*this).setDimensions(newDim);
+        MULTIDIM_ARRAY(VOLMATRIX(*this)) += YXSIZE(VOLMATRIX(*this)) * (select_slice - mappedSlice);
+        mappedSlice = select_slice;
     }
 
     /** Write an entire page as datatype
@@ -775,8 +822,15 @@ public:
         return(this->data == i1.data);
     }
 
+    /** Set the image dimensions
+     */
     void setDimensions(int Xdim, int Ydim, int Zdim, size_t Ndim)
     {
+        imFileDim.xdim = Xdim;
+        imFileDim.ydim = Ydim;
+        imFileDim.zdim = Zdim;
+        imFileDim.ndim = Ndim;
+
         data.setDimensions(Xdim,Ydim,Zdim,Ndim);
     }
 
@@ -825,8 +879,6 @@ public:
         geo2TransformationMatrix(MD[n], A, only_apply_shifts);
     }
 
-
-
     /** Sum this object with other file and keep in this object
       */
     void sumWithFile(const FileName &fn)
@@ -842,6 +894,8 @@ public:
 #include "rwTIFF.h"
 
 protected:
+
+    /** Apply geometry in refering metadata to the image */
     void applyGeo(const MDRow &row, bool only_apply_shifts = false, bool wrap = WRAP)
     {
         //This implementation does not handle stacks,

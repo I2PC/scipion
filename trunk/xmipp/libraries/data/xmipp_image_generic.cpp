@@ -84,18 +84,29 @@ void  ImageGeneric::copy(const ImageGeneric &img)
 
 }
 
+void ImageGeneric::getInfo(const FileName &name, ImageInfo &imgInfo)
+{
+    Image<char> image;
+    image.getInfo(name, imgInfo);
+}
+
+void ImageGeneric::getInfo(ImageInfo &imgInfo) const
+{
+	image->getInfo(imgInfo);
+}
+
 void ImageGeneric::getImageType(const FileName &imgName, DataType &datatype)
 {
     Image<char> Im;
     Im.read(imgName, HEADER);
-    datatype = Im.dataType();
+    datatype = Im.datatype();
 }
 
 void ImageGeneric::getImageType(const FileName &imgName, DataType &datatype, bool &swap)
 {
     Image<char> Im;
     Im.read(imgName, HEADER);
-    datatype = Im.dataType();
+    datatype = Im.datatype();
     swap = (Im.getSwap() > 0);
 }
 
@@ -218,6 +229,17 @@ int ImageGeneric::readPreview(const FileName &name, int Xdim, int Ydim, int sele
     return image->readPreview(name, Xdim, Ydim, select_slice, select_img);
 }
 
+int ImageGeneric::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img, bool mapData)
+{
+    ImageInfo imInfo;
+    this->getInfo(name, imInfo);
+    getInfo(name, imInfo);
+    setDatatype(imInfo.datatype);
+
+    image->readOrReadPreview(name, Xdim, Ydim, select_slice, select_img, mapData);
+}
+
+
 void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
                                   bool createTempFile, size_t select_img, bool isStack,int mode, int swapWrite)
 {
@@ -226,7 +248,7 @@ void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &
         image->swapOnWrite();
     image->mapFile2Write(Xdim,Ydim,Zdim,_filename,createTempFile, select_img, isStack, mode);
 
-    DataType writeDT = image->dataType();
+    DataType writeDT = image->datatype();
     if ( writeDT != datatype)
     {
         setDatatype(writeDT);
