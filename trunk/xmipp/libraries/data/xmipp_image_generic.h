@@ -274,7 +274,7 @@ public:
      */
     inline double getPixel(int i, int j) const
     {
-#define GETVALUE(type) return A2D_ELEM(*(MultidimArray<type>*)data->im,i,j);
+#define GETVALUE(type) return (double) dAij(*(MultidimArray<type>*)data->im,i,j);
         SWITCHDATATYPE(datatype,GETVALUE)
 #undef GETVALUE
 

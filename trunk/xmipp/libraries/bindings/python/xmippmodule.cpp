@@ -29,6 +29,7 @@
 #include <data/metadata_extension.h>
 #include <data/xmipp_image_generic.h>
 #include <data/xmipp_color.h>
+#include <reconstruction/ctf_estimate_from_micrograph.h>
 
 static PyObject * PyXmippError;
 
@@ -342,8 +343,10 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     {
         PyObject *input = NULL;
 
-        if (PyArg_ParseTuple(args, "|O", &input) && input != NULL)
+        if (PyArg_ParseTuple(args, "|O", &input))
         {
+          if (input != NULL)
+          {
             try
             {
                 if (PyString_Check(input))
@@ -352,7 +355,11 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
                     self->image = new ImageGeneric(FileName_Value(input));
                 //todo: add copy constructor
                 else
-                    return NULL;
+                {
+                  PyErr_SetString(PyExc_TypeError,
+                                          "Image_new: Expected string or FileName as first argument");
+                                      return NULL;
+                }
             }
             catch (XmippError &xe)
             {
@@ -362,6 +369,9 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         }
         else
             self->image = new ImageGeneric();
+        }
+        else
+          return NULL;
     }
     return (PyObject *) self;
 }
@@ -3117,6 +3127,9 @@ xmipp_compareTwoFiles(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/***************************************************************/
+/*                   Some specific utility functions           */
+/***************************************************************/
 /* readMetaDataWithTwoPossibleImages */
 static PyObject *
 xmipp_readMetaDataWithTwoPossibleImages(PyObject *obj, PyObject *args,
@@ -3202,6 +3215,56 @@ xmipp_substituteOriginalImages(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* calculate enhanced psd and return preview*/
+static PyObject *
+xmipp_fastEstimateEnhancedPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+        PyObject *pyStrFn;
+        //ImageObject *pyImage;
+       double downsampling;
+       int dim;
+
+        if (PyArg_ParseTuple(args, "Odi", &pyStrFn, &downsampling, &dim))
+        {
+            try
+            {
+//              if (!Image_Check(pyImage))
+//              {
+//                PyErr_SetString(PyExc_TypeError,
+//                                        "fastEstimateEnhancedPSD: Expected string or FileName as first argument");
+//                                    return NULL;
+//              }
+                FileName fn;
+                if (PyString_Check(pyStrFn))
+                    fn = PyString_AsString(pyStrFn);
+                else if (FileName_Check(pyStrFn))
+                    fn = FileName_Value(pyStrFn);
+                else
+                {
+                    PyErr_SetString(PyExc_TypeError,
+                        "fastEstimateEnhancedPSD: Expected string or FileName as first argument");
+                    return NULL;
+                }
+
+               MultidimArray<double> data;
+               fastEstimateEnhancedPSD(fn, downsampling, data);
+               selfScaleToSize(LINEAR, data, dim, dim);
+               ImageObject * pyImage = PyObject_New(ImageObject, &ImageType);
+               pyImage->image = new ImageGeneric(Double);
+               //std::cerr << "DEBUG_JM: setting image: " << std::endl;
+               pyImage->image->data->setImage(data);
+               //pyImage->image->write("kk.mrc");
+               return (PyObject *) pyImage;
+               //Py_RETURN_NONE;
+            }
+            catch (XmippError &xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
+        }
+        return NULL;
+}
+
 static PyMethodDef
 xmipp_methods[] =
     {
@@ -3243,22 +3306,16 @@ xmipp_methods[] =
           METH_VARARGS, "Get image dimensions" },
         { "ImgSize", (PyCFunction) xmipp_ImgSize, METH_VARARGS,
           "Get image dimensions of first metadata entry" },
-        { "ImgCompare", (PyCFunction) xmipp_ImgCompare,
-          METH_VARARGS,
+        { "ImgCompare", (PyCFunction) xmipp_ImgCompare,  METH_VARARGS,
           "return true if both files are identical" },
-        { "compareTwoFiles",
-          (PyCFunction) xmipp_compareTwoFiles,
-          METH_VARARGS,
+        { "compareTwoFiles", (PyCFunction) xmipp_compareTwoFiles, METH_VARARGS,
           "return true if both files are identical" },
-        {
-            "readMetaDataWithTwoPossibleImages",
-            (PyCFunction) xmipp_readMetaDataWithTwoPossibleImages,
-            METH_VARARGS,
-            "Read a 1 or two column list of micrographs" },
-        { "substituteOriginalImages",
-          (PyCFunction) xmipp_substituteOriginalImages,
-          METH_VARARGS,
+        { "readMetaDataWithTwoPossibleImages", (PyCFunction) xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
+          "Read a 1 or two column list of micrographs" },
+        { "substituteOriginalImages", (PyCFunction) xmipp_substituteOriginalImages, METH_VARARGS,
           "Substitute the original images into a given column of a metadata" },
+        { "fastEstimateEnhancedPSD", (PyCFunction) xmipp_fastEstimateEnhancedPSD, METH_VARARGS,
+          "Utility function to calculate PSD preview" },
         { NULL } /* Sentinel */
     };
 
