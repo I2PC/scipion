@@ -283,23 +283,16 @@ void MpiNode::barrierWait()
 
 void MpiNode::updateComm()
 {
-std::cout << "updateComm 1" << std::endl;
     int nodes = getActiveNodes();
-std::cout << "updateComm 2" << std::endl;
     if (nodes < activeNodes)
     {
         MPI_Comm *newComm = new MPI_Comm;
-std::cout << "updateComm 3" << std::endl;
         MPI_Comm_split(*comm, active, rank, newComm);
-std::cout << "updateComm 4" << std::endl;
         MPI_Comm_disconnect(comm);
-std::cout << "updateComm 5" << std::endl;
         delete comm;
-std::cout << "updateComm 6" << std::endl;
         comm = newComm;
         activeNodes = nodes;
     }
-std::cout << "updateComm 7" << std::endl;
 }
 
 int MpiNode::getActiveNodes()
