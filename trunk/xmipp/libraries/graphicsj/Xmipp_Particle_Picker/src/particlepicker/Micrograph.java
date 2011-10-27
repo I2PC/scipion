@@ -12,18 +12,12 @@ public abstract class Micrograph
 	private String file;
 	private String name;
 	private ImagePlus image;
-	private String outputfilename;
+	private String ofilename;
 	public static final String ext = ".pos";
 
 	public Micrograph(String file)
 	{
-		this.file = file;
-		if (!new File(file).exists())
-			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("file", file));
-		this.name = getName(file, 1);
-		
-		this.outputfilename = name + ext;
-
+		this(file, getName(file, 1));
 	}
 
 	public Micrograph(String file, String name)
@@ -32,7 +26,7 @@ public abstract class Micrograph
 		if (!new File(file).exists())
 			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("file", file));
 		this.name = name;
-		this.outputfilename = name + ext;
+		this.ofilename = name + ext;
 
 	}
 
@@ -53,7 +47,7 @@ public abstract class Micrograph
 
 	public String getOFilename()
 	{
-		return outputfilename;
+		return ofilename;
 	}
 	
 

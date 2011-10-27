@@ -106,7 +106,7 @@ public class MicrographFamilyData
 
 	public boolean hasManualParticles()
 	{
-		return manualparticles.size() != 0;
+		return !manualparticles.isEmpty();
 	}
 
 	public boolean hasAutomaticParticles()
@@ -116,7 +116,7 @@ public class MicrographFamilyData
 
 	public boolean isEmpty()
 	{
-		return manualparticles.size() == 0 && autoparticles.size() == 0;
+		return manualparticles.isEmpty() && autoparticles.isEmpty();
 	}
 
 	public int getAutomaticParticles(double threshold)

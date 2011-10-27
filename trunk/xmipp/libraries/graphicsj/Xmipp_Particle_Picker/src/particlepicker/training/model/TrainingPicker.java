@@ -121,6 +121,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				return;
 			MetaData md = new MetaData("families@" + file);
 			MetaData md2;
+			System.out.println(file);
 			for (long id : md.findObjects())
 			{
 				
@@ -261,7 +262,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			long id;
 			if (mfd.getMicrograph().hasAutomaticParticles())
 			{
-				String file = getOutputPath(mfd.getMicrograph().getOFilename());
+				String file = getOutputPath(mfd.getMicrograph().getAutoFilename());
 				MetaData md = new MetaData();
 				for (AutomaticParticle p : mfd.getAutomaticParticles())
 				{
