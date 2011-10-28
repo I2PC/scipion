@@ -1122,6 +1122,16 @@ class FileManager():
 
 _plt = None
 
+def getImageData(img):
+    ''' Function to get a matrix from an Image'''
+    xdim, ydim, z, n = img.getDimensions()
+    from numpy import zeros
+    Z = zeros((ydim, xdim), float)
+    for y in range(ydim):
+        for x in range(xdim):
+    #TODO: improve by avoiding use of getPixel
+            Z[y, x] = img.getPixel(y, x)
+    return Z
 # Some utilities to use matplotlib
 def createImageFigure(parent, dim):
         global _plt
@@ -1134,13 +1144,15 @@ def createImageFigure(parent, dim):
         import matplotlib.cm as cm
         from numpy import zeros
         Z = zeros((dim, dim), float)
-        figure = Figure(figsize=(dim, dim), dpi=1)
+        dpi = 36
+        ddim = dim/dpi
+        figure = Figure(figsize=(ddim, ddim), dpi=dpi)
         # a tk.DrawingArea
         canvas = FigureCanvasTkAgg(figure, master=parent)
         canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
         figureimg = figure.figimage(Z, cmap=cm.gray)#, origin='lower')
+        
         return (canvas, figureimg)
-        #self.canvas.show()  
          
 class XmippBrowser():
     ''' seltype is the selection type, it could be:
@@ -1397,24 +1409,13 @@ class XmippBrowser():
         if not filename.endswith('.png'):
             #Read image data through Xmipp
             self.image.readPreview(filename, self.dim)
-            Z = self.getImageData()
+            Z = getImageData(self.image)
         else:
             import matplotlib.image as mpimg
             Z = mpimg.imread(filename)
         self.figureimg.set_array(Z)
         self.figureimg.autoscale()
         self.canvas.show()   
-
-    def getImageData(self):
-        img = self.image        
-        xdim, ydim, z, n = img.getDimensions()
-        from numpy import zeros
-        Z = zeros((ydim, xdim), float)
-        for y in range(ydim):
-            for x in range(xdim):
-        #TODO: improve by avoiding use of getPixel
-                Z[y, x] = img.getPixel(y, x)
-        return Z
     
     def filterResults(self, e=None):
         self.pattern = self.filterVar.get().split()
@@ -1476,7 +1477,7 @@ class XmippBrowserCTF(XmippBrowser):
         XmippBrowser.createDetailsTop(self, parent)
         self.createPreviewCanvas()
         ttk.Label(self.detailstop, text="Micrograph").grid(row=1, column=0)
-        ttk.Label(self.detailstop, text="Filter").grid(row=1, column=1)
+        ttk.Label(self.detailstop, text="PSD").grid(row=1, column=1)
         self.frame2 = ttk.Frame(self.detailstop, padding="3 3 3 3")
         self.detailstop.columnconfigure(1, weight=1)
         self.frame2.grid(column=1, row=0, sticky='nsew', padx=5)
@@ -1495,7 +1496,7 @@ class XmippBrowserCTF(XmippBrowser):
         self.downsamplingVar.set(self.downsampling)
         downsamplingEntry = ttk.Entry(frame, width=10, textvariable=self.downsamplingVar)
         downsamplingEntry.pack(side=tk.LEFT,padx=2)
-        self.btnTest = MyButton(frame, "Preview filter", command=self.updateFilter)
+        self.btnTest = MyButton(frame, "Preview", command=self.updateFilter)
         downsamplingEntry.bind('<Return>', self.updateFilter)
         self.btnTest.pack(side=tk.LEFT, padx=2)
         return frame
@@ -1540,4 +1541,73 @@ def showFileViewer(title, filelist, parent=None, main=False):
     l.grid(column=0, row=0, sticky='nsew')
     centerWindows(root, refWindows=parent)
     root.deiconify()
-    root.mainloop() 
+    root.mainloop()
+    
+w = None
+def showImage(filename):
+    import xmipp
+    import matplotlib
+    matplotlib.use('TkAgg')
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    from mpl_toolkits.axes_grid.axislines import SubplotZero
+    from matplotlib.figure import Figure
+    import matplotlib.cm as cm
+    from pylab import axes, Slider
+    from matplotlib.patches import Wedge
+    
+    dim = 512
+    dpi = 96
+    h = 0.5
+    lf0 = 0.15
+    hf0 = 0.35
+    axcolor = 'lightgoldenrodyellow'
+    
+    img = xmipp.Image()
+    img.readPreview(filename, dim)
+    xdim, ydim, zdim, n = img.getDimensions()
+    Z = getImageData(img)
+    xdim += 10
+    ydim += 10
+    figure = Figure(figsize=(xdim/dpi, ydim/dpi), dpi=dpi, frameon=False)
+    # a tk.DrawingArea
+    root = tk.Tk()
+    root.title(filename)
+    canvas = FigureCanvasTkAgg(figure, master=root)
+    canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
+    #figureimg = figure.figimage(Z, cmap=cm.gray)#, origin='lower')
+    ax = SubplotZero(figure, 111)
+    ax = figure.add_subplot(ax)
+    #axes([0.1, 0.1, 0.9, 0.9])
+    #ax.set_aspect(1.0)
+    ax.imshow(Z, cmap=cm.gray, extent=[-h, h, -h, h])
+    for direction in ["xzero", "yzero"]:
+        ax.axis[direction].set_visible(True)
+    for direction in ["left", "right", "bottom", "top"]:
+        ax.axis[direction].set_visible(False)
+    global w
+    w = Wedge((0,0), hf0, 0, 360, width=lf0, alpha=0.15) # Full ring
+    ax.add_patch(w)
+    axlfreq = figure.add_axes([0.25, 0.06, 0.5, 0.03], axisbg=axcolor)
+    axhfreq  = figure.add_axes([0.25, 0.02, 0.5, 0.03], axisbg=axcolor)
+    low_freq = Slider(axlfreq, 'Low Freq', 0.01, 0.5, valinit=lf0)
+    high_freq = Slider(axhfreq, 'High Freq', 0.01, 0.5, valinit=hf0)
+    
+    def update(val):
+        #ax.remo
+        global w
+        w.remove()
+        hf = high_freq.val
+        lf = low_freq.val
+        w2 = Wedge((0,0), hf, 0, 360, width=lf, alpha=0.2)
+        #w.set(r=high_freq.val)
+        #print w.properties()
+        ax.add_patch(w2)
+        w = w2
+        #w.set_clip_path(w2.get_clip_path())
+        canvas.draw()
+    low_freq.on_changed(update)
+    high_freq.on_changed(update)
+    #canvas.show()
+    root.mainloop()
+    
+    

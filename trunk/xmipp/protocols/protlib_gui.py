@@ -1102,52 +1102,45 @@ class ProtocolGUI(BasicGUI):
         else:
             seltype="folder"
             filter = ''
-#        msg = runJavaIJappWithResponse("512m", "XmippFileListWizard", "-seltype %(seltype)s -dir ." % locals())
-#        #msg = runJavaIJappWithResponse("512m", "XmippFileListWizard", "-dir .")
-#        msg = msg.strip()
         files = showBrowseDialog(parent=self.master, seltype=seltype, filter=filter)
         if files:
             var.tkvar.set(', '.join([relpath(f) for f in files]))
-            
-    #This wizard is specific for import_micrographs protocol
-    def wizardBrowseJCTF(self, var):
-        dir = self.getVarValue('DirMicrographs')
-        filter = self.getVarValue('ExtMicrographs')
-        value = self.getVarValue('Down')
-        
-#        msg = runJavaIJappWithResponse("512m", "XmippFileListCTFWizard", 
-#                                          "-dir %(dir)s -filter %(filter)s -downsampling %(value)s" % locals())
-#        msg = msg.strip()
-#        if len(msg) > 0:
-#            var.tkvar.set(os.path.relpath(msg.strip()))      
-        downsampling = showBrowseDialog(path=dir, parent=self.master, browser=XmippBrowserCTF,
+    
+    #Helper function to select Downsampling wizards
+    def wizardHelperSetDownsampling(self, var, path, filterExt, value):       
+        downsampling = showBrowseDialog(path=path, parent=self.master, browser=XmippBrowserCTF,
                                         title="Select Downsampling", 
-                                        seltype="file", selmode="browse", filter=filter, 
+                                        seltype="file", selmode="browse", filter=filterExt, 
                                         previewDim=256, downsampling=value)
         if downsampling:
             var.tkvar.set(downsampling)      
+    #This wizard is specific for import_micrographs protocol
+    def wizardBrowseJCTF(self, var):
+        args = [self.getVarValue(vn) for vn in ['DirMicrographs', 'ExtMicrographs', 'Down']]
+        self.wizardHelperSetDownsampling(var, *args)
         
     #This wizard is specific for screen_micrographs protocol
     def wizardBrowseJCTF2(self, var):
-        import xmipp
-        dir=getWorkingDirFromRunName(self.getVarValue('ImportRun'))
-        MD=xmipp.MetaData()
-        MD.read(os.path.join(dir,"micrographs.sel"))
-        if MD.size()==0:
-            return
-        id=MD.firstObject()
-        ext=os.path.splitext(MD.getValue(xmipp.MDL_IMAGE,id))[1]
-        value = self.getVarValue('Down')
-#        msg = runJavaIJappWithResponse("512m", "XmippFileListCTFWizard", 
-#                                          "-dir %(dir)s -filter *%(ext)s -downsampling %(value)s" % locals())
-#        msg = msg.strip()
-#        if len(msg) > 0:
-#            var.tkvar.set(os.path.relpath(msg.strip()))       
-        files = showBrowseDialog(path=dir, parent=self.master, seltype="file", 
-                                 title="Select Downsampling", 
-                                 selmode="browse", filter="*%s" % ext)
-        if files:
-            var.tkvar.set(', '.join([relpath(f) for f in files]))       
+        error = None
+        path = getWorkingDirFromRunName(self.getVarValue('ImportRun'))
+        if path and os.path.exists(path):
+            mdPath = os.path.join(path,"micrographs.sel")
+            if os.path.exists(mdPath):
+                from xmipp import MetaData, MDL_IMAGE
+                md = MetaData(mdPath)
+                if md.size():                
+                    filterExt = "*" + os.path.splitext(md.getValue(MDL_IMAGE, md.firstObject()))[1]
+                    value = self.getVarValue('Down')
+                    self.wizardHelperSetDownsampling(var, path, filterExt, value)
+                else:
+                    error = "Micrograph metadata <%s> is empty" % mdPath
+            else:
+                error = "Micrograph metadata <%s> doesn't exists" % mdPath
+        else:
+            error = "Import run <%s> doesn't exists" % str(path)
+        if error:
+            showWarning("Select Downsampling Wizard", error, self.master) 
+                
         
     #This wizard is specific for preprocess_micrographs protocol
     def wizardBrowseJCTFMeasure(self, var):
