@@ -703,7 +703,8 @@ class ProtocolGUI(BasicGUI):
     def readProtocolScript(self):
         from protlib_include import expandCommentRun, expandParallel, expandExpert
         begin_of_header = False
-        end_of_header = False    
+        end_of_header = False   
+        has_expert = False 
         script = self.run['source'] 
         try:   
             f = open(script, 'r')
@@ -715,8 +716,10 @@ class ProtocolGUI(BasicGUI):
             if not begin_of_header:
                 self.pre_header_lines.append(line)
             elif not end_of_header:
-                #print "LINE: ", warnStr(line.strip())
                 #check for eval
+                if 'ShowExpertOptions' in line:
+                    has_expert = True
+                    
                 if '{eval}' in line:
                     evalStr = line.split('{eval}')[1].strip()
                     #print "Evaluating: ", redStr(evalStr)
@@ -732,7 +735,8 @@ class ProtocolGUI(BasicGUI):
             if '{begin_of_header}' in line:
                 begin_of_header = True
             if '{end_of_header}' in line:
-                self.header_lines += expandExpert().splitlines()
+                if not has_expert:
+                    self.header_lines += expandExpert().splitlines()
                 end_of_header = True
         f.close()
         
@@ -1107,21 +1111,24 @@ class ProtocolGUI(BasicGUI):
             var.tkvar.set(', '.join([relpath(f) for f in files]))
     
     #Helper function to select Downsampling wizards
-    def wizardHelperSetDownsampling(self, var, path, filterExt, value):       
-        downsampling = showBrowseDialog(path=path, parent=self.master, browser=XmippBrowserCTF,
-                                        title="Select Downsampling", 
+    def wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs=None):       
+        results = showBrowseDialog(path=path, parent=self.master, browser=XmippBrowserCTF,
+                                        title="Select Downsampling", freqs=freqs,
                                         seltype="file", selmode="browse", filter=filterExt, 
-                                        previewDim=256, downsampling=value)
-        if downsampling:
-            var.tkvar.set(downsampling)      
+                                        previewDim=256, downsampling=value) # a list is returned
+        if results:
+            self.setVarValue('Down', results[0])
+        return results
+          
     #This wizard is specific for import_micrographs protocol
-    def wizardBrowseJCTF(self, var):
+    def wizardBrowseCTF(self, var):
         args = [self.getVarValue(vn) for vn in ['DirMicrographs', 'ExtMicrographs', 'Down']]
         self.wizardHelperSetDownsampling(var, *args)
         
     #This wizard is specific for screen_micrographs protocol
-    def wizardBrowseJCTF2(self, var):
+    def wizardBrowseCTF(self, var):
         error = None
+        freqs = [self.getVarValue(vn) for vn in ['LowResolCutoff', 'HighResolCutoff']]
         path = getWorkingDirFromRunName(self.getVarValue('ImportRun'))
         if path and os.path.exists(path):
             mdPath = os.path.join(path,"micrographs.sel")
@@ -1131,7 +1138,10 @@ class ProtocolGUI(BasicGUI):
                 if md.size():                
                     filterExt = "*" + os.path.splitext(md.getValue(MDL_IMAGE, md.firstObject()))[1]
                     value = self.getVarValue('Down')
-                    self.wizardHelperSetDownsampling(var, path, filterExt, value)
+                    results = self.wizardHelperSetDownsampling(var, path, filterExt, value, freqs)
+                    if results:
+                        self.setVarValue('LowResolCutoff', results[1])
+                        self.setVarValue('HighResolCutoff', results[2])
                 else:
                     error = "Micrograph metadata <%s> is empty" % mdPath
             else:
@@ -1139,23 +1149,11 @@ class ProtocolGUI(BasicGUI):
         else:
             error = "Import run <%s> doesn't exists" % str(path)
         if error:
-            showWarning("Select Downsampling Wizard", error, self.master) 
+            showWarning("Select Downsampling Wizard", error, self.master)
+            return None
+        else:
+            return results
                 
-        
-    #This wizard is specific for preprocess_micrographs protocol
-    def wizardBrowseJCTFMeasure(self, var):
-        import xmipp
-        dir=getWorkingDirFromRunName(self.getVarValue('ImportRun'))
-        MD=xmipp.MetaData()
-        MD.read(os.path.join(dir,"micrographs.sel"))
-        if MD.size()==0:
-            return
-        id=MD.firstObject()
-        ext=os.path.splitext(MD.getValue(xmipp.MDL_IMAGE,id))[1]
-        value = self.getVarValue('Down')
-        runJavaIJappWithResponse("512m", "XmippFileListMeasureFreqsWizard", 
-                                "-dir %(dir)s -filter *%(ext)s -downsampling %(value)s" % locals())
-
     #Select family from extraction run
     def wizardChooseFamily(self, var):
         extractionDir = getWorkingDirFromRunName(self.getVarValue('PreviousRun'))

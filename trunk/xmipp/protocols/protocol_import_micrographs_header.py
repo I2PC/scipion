@@ -34,7 +34,7 @@ Crop = -1
     substituted by the local median. Set this option to -1 for not applying it."""
 Stddev = -1
 
-# {wizard}(wizardBrowseJCTF) Downsampling factor 
+# {wizard}(wizardBrowseCTF) Downsampling factor 
 """ Set to 1 for no downsampling. Non-integer downsample factors are possible."""
 Down = 1
 

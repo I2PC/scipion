@@ -32,30 +32,27 @@ matplotlib.use('TkAgg')
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.cm as cm
+from mpl_toolkits.axes_grid.axislines import SubplotZero
+from matplotlib.patches import Wedge
 
 # Some utilities to use matplotlib
-def createImageFigure(parent, dim):
+def createImageFigure(parent, dim, dpi=36):
     from numpy import zeros
     Z = zeros((dim, dim), float)
-    dpi = 36
     ddim = dim/dpi
-    figure = Figure(figsize=(ddim, ddim), dpi=dpi)
+    figure = Figure(figsize=(ddim, ddim), dpi=dpi, frameon=False)
     # a tk.DrawingArea
     canvas = FigureCanvasTkAgg(figure, master=parent)
     canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
     figureimg = figure.figimage(Z, cmap=cm.gray)#, origin='lower')
-    return (canvas, figureimg)
+    return [canvas, figure, figureimg]
     
 w = None
-def showImage(filename):
+def showImage(filename, dim=512, dpi=96):
     import xmipp
-    from mpl_toolkits.axes_grid.axislines import SubplotZero
     from pylab import axes, Slider
-    from matplotlib.patches import Wedge
     from protlib_xmipp import getImageData
     
-    dim = 512
-    dpi = 96
     h = 0.5
     lf0 = 0.15
     hf0 = 0.35
@@ -86,29 +83,78 @@ def showImage(filename):
     global w
     w = Wedge((0,0), hf0, 0, 360, width=lf0, alpha=0.15) # Full ring
     ax.add_patch(w)
-    axlfreq = figure.add_axes([0.25, 0.06, 0.5, 0.03], axisbg=axcolor)
-    axhfreq  = figure.add_axes([0.25, 0.02, 0.5, 0.03], axisbg=axcolor)
-    low_freq = Slider(axlfreq, 'Low Freq', 0.01, 0.5, valinit=lf0)
-    high_freq = Slider(axhfreq, 'High Freq', 0.01, 0.5, valinit=hf0)
     
-    def update(val):
-        #ax.remo
+    def update(hf, lf):
         global w
         w.remove()
-        hf = high_freq.val
-        lf = low_freq.val
         w2 = Wedge((0,0), hf, 0, 360, width=lf, alpha=0.2)
-        #w.set(r=high_freq.val)
-        #print w.properties()
         ax.add_patch(w2)
         w = w2
-        #w.set_clip_path(w2.get_clip_path())
         canvas.draw()
-    low_freq.on_changed(update)
-    high_freq.on_changed(update)
-    #canvas.show()
+        
     root.mainloop()
     
 def getPngData(filename):  
     import matplotlib.image as mpimg
     return mpimg.imread(filename)
+
+class PsdFigure():
+    def __init__(self, master, dim, lf, hf, dpi=36, Z=None):
+        self.dim = dim
+        dd = dim/dpi
+        figure = Figure(figsize=(dd, dd), dpi=dpi, frameon=False)
+        self.canvas = FigureCanvasTkAgg(figure, master=master)
+        self.canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
+        axdef = SubplotZero(figure, 111)
+        ax = figure.add_subplot(axdef)
+        h = 0.5
+        self.ring = True
+        if Z is None:
+            from numpy import zeros
+            Z = zeros((dim, dim), float)
+            self.ring = None
+        self.img = ax.imshow(Z, cmap=cm.gray, extent=[-h, h, -h, h])
+        
+        for direction in ["xzero", "yzero"]:
+            ax.axis[direction].set_visible(True)
+        
+        for direction in ["left", "right", "bottom", "top"]:
+            ax.axis[direction].set_visible(False)
+
+        self.figure = figure
+        self.ax = ax
+        self.lf = lf
+        self.hf = hf
+        if self.ring:
+            self.createRing()
+        else:
+            self.canvas.draw()
+        
+    def createRing(self):
+        radius = float(self.hf)
+        width = radius - float(self.lf)
+        self.ring = Wedge((0,0), radius, 0, 360, width=width, alpha=0.15) # Full ring
+        self.ax.add_patch(self.ring)
+        self.canvas.draw()
+        
+    def updateFreq(self, lf, hf):
+        self.lf = lf
+        self.hf = hf
+        if self.ring:
+            self.ring.remove()
+            self.ring = None
+        self.createRing()
+    
+    def updateData(self, Z):
+        if self.ring:
+            self.ring.remove()
+            self.ring = None
+        if Z is None:
+            from numpy import zeros
+            Z = zeros((self.dim, self.dim), float)
+        else:
+            self.createRing()
+        self.img.set_array(Z)
+        self.img.autoscale()
+        self.canvas.draw()
+        
