@@ -1120,40 +1120,6 @@ class FileManager():
         for k, v in attributes.iteritems():
             setattr(self, k, v)
 
-_plt = None
-
-def getImageData(img):
-    ''' Function to get a matrix from an Image'''
-    xdim, ydim, z, n = img.getDimensions()
-    from numpy import zeros
-    Z = zeros((ydim, xdim), float)
-    for y in range(ydim):
-        for x in range(xdim):
-    #TODO: improve by avoiding use of getPixel
-            Z[y, x] = img.getPixel(y, x)
-    return Z
-# Some utilities to use matplotlib
-def createImageFigure(parent, dim):
-        global _plt
-        if not _plt:
-            import matplotlib
-            matplotlib.use('TkAgg')
-            _plt = True
-        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-        from matplotlib.figure import Figure
-        import matplotlib.cm as cm
-        from numpy import zeros
-        Z = zeros((dim, dim), float)
-        dpi = 36
-        ddim = dim/dpi
-        figure = Figure(figsize=(ddim, ddim), dpi=dpi)
-        # a tk.DrawingArea
-        canvas = FigureCanvasTkAgg(figure, master=parent)
-        canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
-        figureimg = figure.figimage(Z, cmap=cm.gray)#, origin='lower')
-        
-        return (canvas, figureimg)
-         
 class XmippBrowser():
     ''' seltype is the selection type, it could be:
         - file -> only allow files selection
@@ -1310,6 +1276,7 @@ class XmippBrowser():
         import xmipp
         self.canvas = None
         self.image = xmipp.Image()
+        self.lastitem = None
         #Create a dictionary with extensions and icon type
         self.insertFiles(self.dir)
         #Filter result, if pattern no provided, all files will be listed
@@ -1401,6 +1368,7 @@ class XmippBrowser():
         self.unpostMenu()
 
     def createPreviewCanvas(self):
+        from protlib_gui_figure import createImageFigure
         self.canvas, self.figureimg = createImageFigure(self.detailstop, self.dim)
     
     def updatePreview(self, filename):
@@ -1409,10 +1377,11 @@ class XmippBrowser():
         if not filename.endswith('.png'):
             #Read image data through Xmipp
             self.image.readPreview(filename, self.dim)
+            from protlib_xmipp import getImageData
             Z = getImageData(self.image)
         else:
-            import matplotlib.image as mpimg
-            Z = mpimg.imread(filename)
+            from protlib_gui_figure import getPngData
+            Z = getPngData(filename)
         self.figureimg.set_array(Z)
         self.figureimg.autoscale()
         self.canvas.show()   
@@ -1483,6 +1452,7 @@ class XmippBrowserCTF(XmippBrowser):
         self.frame2.grid(column=1, row=0, sticky='nsew', padx=5)
         self.frame2.columnconfigure(0, weight=1)
         self.frame2.rowconfigure(0, weight=1)
+        from protlib_gui_figure import createImageFigure
         self.canvas2, self.figureimg2 = createImageFigure(self.frame2, self.dim)
         self.root.minsize(800, 400)        
         
@@ -1503,12 +1473,16 @@ class XmippBrowserCTF(XmippBrowser):
     
     def updateFilter(self, e=None):
         #Read image data through Xmipp
-        from xmipp import fastEstimateEnhancedPSD
-        self.image = fastEstimateEnhancedPSD(self.lastitem, float(self.downsamplingVar.get()), self.dim)
-        Z = self.getImageData()        
-        self.figureimg2.set_array(Z)
-        self.figureimg2.autoscale()
-        self.canvas2.show() 
+        if self.lastitem:
+            from xmipp import fastEstimateEnhancedPSD
+            from protlib_xmipp import getImageData
+            self.image = fastEstimateEnhancedPSD(self.lastitem, float(self.downsamplingVar.get()), self.dim)
+            Z = getImageData(self.image)        
+            self.figureimg2.set_array(Z)
+            self.figureimg2.autoscale()
+            self.canvas2.show() 
+        else:
+            showWarning("Operation failed","Select an image to preview", self.root)
         
     def selectFiles(self, e=None):
         self.selectedFiles = self.downsamplingVar.get()
@@ -1543,71 +1517,5 @@ def showFileViewer(title, filelist, parent=None, main=False):
     root.deiconify()
     root.mainloop()
     
-w = None
-def showImage(filename):
-    import xmipp
-    import matplotlib
-    matplotlib.use('TkAgg')
-    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-    from mpl_toolkits.axes_grid.axislines import SubplotZero
-    from matplotlib.figure import Figure
-    import matplotlib.cm as cm
-    from pylab import axes, Slider
-    from matplotlib.patches import Wedge
-    
-    dim = 512
-    dpi = 96
-    h = 0.5
-    lf0 = 0.15
-    hf0 = 0.35
-    axcolor = 'lightgoldenrodyellow'
-    
-    img = xmipp.Image()
-    img.readPreview(filename, dim)
-    xdim, ydim, zdim, n = img.getDimensions()
-    Z = getImageData(img)
-    xdim += 10
-    ydim += 10
-    figure = Figure(figsize=(xdim/dpi, ydim/dpi), dpi=dpi, frameon=False)
-    # a tk.DrawingArea
-    root = tk.Tk()
-    root.title(filename)
-    canvas = FigureCanvasTkAgg(figure, master=root)
-    canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
-    #figureimg = figure.figimage(Z, cmap=cm.gray)#, origin='lower')
-    ax = SubplotZero(figure, 111)
-    ax = figure.add_subplot(ax)
-    #axes([0.1, 0.1, 0.9, 0.9])
-    #ax.set_aspect(1.0)
-    ax.imshow(Z, cmap=cm.gray, extent=[-h, h, -h, h])
-    for direction in ["xzero", "yzero"]:
-        ax.axis[direction].set_visible(True)
-    for direction in ["left", "right", "bottom", "top"]:
-        ax.axis[direction].set_visible(False)
-    global w
-    w = Wedge((0,0), hf0, 0, 360, width=lf0, alpha=0.15) # Full ring
-    ax.add_patch(w)
-    axlfreq = figure.add_axes([0.25, 0.06, 0.5, 0.03], axisbg=axcolor)
-    axhfreq  = figure.add_axes([0.25, 0.02, 0.5, 0.03], axisbg=axcolor)
-    low_freq = Slider(axlfreq, 'Low Freq', 0.01, 0.5, valinit=lf0)
-    high_freq = Slider(axhfreq, 'High Freq', 0.01, 0.5, valinit=hf0)
-    
-    def update(val):
-        #ax.remo
-        global w
-        w.remove()
-        hf = high_freq.val
-        lf = low_freq.val
-        w2 = Wedge((0,0), hf, 0, 360, width=lf, alpha=0.2)
-        #w.set(r=high_freq.val)
-        #print w.properties()
-        ax.add_patch(w2)
-        w = w2
-        #w.set_clip_path(w2.get_clip_path())
-        canvas.draw()
-    low_freq.on_changed(update)
-    high_freq.on_changed(update)
-    #canvas.show()
-    root.mainloop()
-    
+   
     

@@ -923,7 +923,7 @@ class ProtocolGUI(BasicGUI):
         
     def selectFromList(self, var, list):
         if len(list) == 0:
-            tkMessageBox.showwarning("Warning", "No elements to select", parent=self.master)
+            showWarning("Warning", "No elements to select", parent=self.master)
             return
         from protlib_gui_ext import ListboxDialog
         d = ListboxDialog(self.frame, list, selectmode=tk.SINGLE)
@@ -1186,7 +1186,7 @@ class ProtocolGUI(BasicGUI):
     def wizardChooseBadPixelsFilter(self, var):
         selfile = self.getVarValue('InSelFile')
         if not os.path.exists(selfile):
-            tkMessageBox.showwarning("Warning", "The input selfile is not a valid file", parent=self.master)
+            showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
             return
         DustRemovalThreshold = self.getVarValue('DustRemovalThreshold')
         msg = runJavaIJappWithResponse("512m", "XmippBadPixelsFilterWizard", "-i %(selfile)s -factor %(DustRemovalThreshold)s" % locals())
@@ -1198,7 +1198,7 @@ class ProtocolGUI(BasicGUI):
     def wizardChooseBandPassFilter(self, var):
         selfile = self.getVarValue('InSelFile')
         if not os.path.exists(selfile):
-            tkMessageBox.showwarning("Warning", "The input selfile is not a valid file", parent=self.master)
+            showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
             return
         Freq_low = self.getVarValue('Freq_low')
         Freq_high = self.getVarValue('Freq_high')
@@ -1229,7 +1229,7 @@ class ProtocolGUI(BasicGUI):
         pickingDir = getWorkingDirFromRunName(self.getVarValue('PickingRun'))
         fnFamilies = join(pickingDir,"families.xmd")
         if not os.path.exists(fnFamilies):
-            tkMessageBox.showwarning("Warning", "No elements to select", parent=self.master)
+            showWarning("Warning", "No elements to select", parent=self.master)
             return
         print fnFamilies
         mD = MetaData()

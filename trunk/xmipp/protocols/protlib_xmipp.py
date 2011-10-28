@@ -132,6 +132,18 @@ class ScriptAppIJ(ScriptIJBase):
     def run(self):
         runJavaIJapp(self.memory, self.name, self.args)
         
+#------------- FUNCTION TO WORK WITH PROGRAMS META-INFORMATION -----------------    
+def getImageData(img):
+    ''' Function to get a matrix from an Image'''
+    xdim, ydim, z, n = img.getDimensions()
+    from numpy import zeros
+    Z = zeros((ydim, xdim), float)
+    for y in range(ydim):
+        for x in range(xdim):
+    #TODO: improve by avoiding use of getPixel
+            Z[y, x] = img.getPixel(y, x)
+    return Z
+    
 #------------- FUNCTION TO WORK WITH PROGRAMS META-INFORMATION -----------------
 class LabelData():
     def __init__(self):
