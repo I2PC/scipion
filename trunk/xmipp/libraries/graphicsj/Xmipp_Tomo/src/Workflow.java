@@ -101,8 +101,6 @@ public class Workflow extends DefaultTreeModel{
 		if(parent == null){
 			Logger.debug("Workflow.addUserAction - parent is null");
 		}else{
-			newAction.setId(getNewActionId());
-			newAction.setWorkingDir(getWorkingDir());
 			insertNodeInto(child, parent, parent.getChildCount());
 			setSelectedNode(child);
 		}
@@ -120,8 +118,6 @@ public class Workflow extends DefaultTreeModel{
 		if(parent == null){
 			Logger.debug("Workflow.addUserAction - parent is null");
 		}else{
-			newAction.setId(getNewActionId());
-			newAction.setWorkingDir(getWorkingDir());
 			insertNodeInto(child, parent, parent.getChildCount());
 			setSelectedNode(child);
 		}
@@ -133,7 +129,7 @@ public class Workflow extends DefaultTreeModel{
 		
 	}
 	
-	private int getNewActionId(){
+	public int getNewActionId(){
 		return lastActionId++;
 	}
 	

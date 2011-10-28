@@ -409,6 +409,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			imagePanel.remove(i);
 
 		setCanvas(new TomoImageCanvas(getStackModel()));
+		
 		imagePanel.setLayout(new ImageLayout(getCanvas()));
 		imagePanel.add(getCanvas());
 		getCanvas().addMouseMotionListener(this);
@@ -540,11 +541,24 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return (int) cursorLocation.distance(x, y);
 	}
 
+	// TODO: -current- zoom out big images
 	public void refreshImageCanvas() {
 		if (getCanvas() != null) {	
 			ImagePlus img=getStackModel().getCurrentImage();
-			if(img != null)
+			if(img != null){
 				setImage(img);
+				// required for IJ actions to work
+				WindowManager.setTempCurrentImage(img);
+				// scale image if needed
+				 if(img.getWidth() > 512 || img.getHeight() > 512){
+					// TODO: take into consideration height too (for non-square images)
+					double mag=(512.0/img.getWidth()) * 100;
+					ZoomPlugin plugin = new ZoomPlugin(mag);
+					plugin.run(img);
+				}
+			}
+			// TODO: make the image canvas size fixed - next line is not working for that
+			getCanvas().setPreferredSize(new Dimension(512,512));
 			getCanvas().setImageUpdated();
 			getCanvas().repaint();
 			
@@ -638,73 +652,73 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	// resizing. Unluckily, mouse release is not fired while resizing a window)
 	// if it exists
 	public void componentResized(ComponentEvent e) {
-		Component c = e.getComponent();
-		// Xmipp_Tomo.debug("componentResized event from " +
-		// c.getClass().getName());
-		// + "; new size: " + c.getSize().width + ", "
-		// + c.getSize().height + " - view size:" + viewPanel.getSize());
-		getTimer().stop();
-		// getTimer().setDelay(2000);
-		timer.start();
-		resizeView();
+//		Component c = e.getComponent();
+//		// Xmipp_Tomo.debug("componentResized event from " +
+//		// c.getClass().getName());
+//		// + "; new size: " + c.getSize().width + ", "
+//		// + c.getSize().height + " - view size:" + viewPanel.getSize());
+//		getTimer().stop();
+//		// getTimer().setDelay(2000);
+//		timer.start();
+//		resizeView();
 	}
 
 	/**
 	 * Fit the image canvas to the space available in the view, keeping the
 	 * aspect ratio
 	 */
-	public void resizeView() {
-		// TODO: resizeView does not work... - for window resizing, call pack() with Timers?
-		if ((imagePanel == null) || (getCanvas() == null))
-			return;
-
-		double factorWidth = imagePanel.getWidth()
-				/ getCanvas().getPreferredSize().getWidth();
-		double factorHeight = imagePanel.getHeight()
-				/ getCanvas().getPreferredSize().getHeight();
-		double factor = 1;
-
-		if (factorWidth < 1) {
-			if (factorHeight < 1)
-				// apply maximum of both (since both are < 1 )
-				factor = Math.max(factorWidth, factorHeight);
-			else
-				factor = factorWidth;
-		} else {
-			if (factorHeight < 1)
-				factor = factorHeight;
-			else
-				factor = Math.min(factorWidth, factorHeight);
-		}
-
-		// if size change is minimal or none, don't resize canvas
-		if (Math.abs(factor - 1) < 0.03)
-			return;
-
-		// Xmipp_Tomo.debug("resize: " + factorWidth + "," + factorHeight + ", "
-		// + factor );
-		resizeView(factor);
-
-	}
-
-	public void resizeView(double factor) {
-		double w = getCanvas().getWidth() * factor;
-		double h = getCanvas().getHeight() * factor;
-
-		// getCanvas().resizeCanvas((int)w, (int)h);
-		/*
-		 * ImageCanvas canvas = getModel().getImage().getCanvas();
-		 * getCanvas().setMagnification(factor); canvas.setSourceRect(new
-		 * Rectangle(0, 0, (int)(w/factor), (int)(h/factor)));
-		 * canvas.setDrawingSize((int)w, (int)h); realWindow.pack();
-		 * canvas.repaint();
-		 */
-		WindowManager.setTempCurrentImage(getStackModel().getCurrentImage());
-		// Xmipp_Tomo.debug("Set... " + "zoom="+ ((int) (factor * 100)));
-		IJ.run("Set... ", "zoom=" + ((int) (factor * 100)));
-		refreshImageCanvas();
-
-	}
+//	public void resizeView() {
+//		// TODO: resizeView does not work... - for window resizing, call pack() with Timers?
+//		if ((imagePanel == null) || (getCanvas() == null))
+//			return;
+//
+//		double factorWidth = imagePanel.getWidth()
+//				/ getCanvas().getPreferredSize().getWidth();
+//		double factorHeight = imagePanel.getHeight()
+//				/ getCanvas().getPreferredSize().getHeight();
+//		double factor = 1;
+//
+//		if (factorWidth < 1) {
+//			if (factorHeight < 1)
+//				// apply maximum of both (since both are < 1 )
+//				factor = Math.max(factorWidth, factorHeight);
+//			else
+//				factor = factorWidth;
+//		} else {
+//			if (factorHeight < 1)
+//				factor = factorHeight;
+//			else
+//				factor = Math.min(factorWidth, factorHeight);
+//		}
+//
+//		// if size change is minimal or none, don't resize canvas
+//		if (Math.abs(factor - 1) < 0.03)
+//			return;
+//
+//		// Xmipp_Tomo.debug("resize: " + factorWidth + "," + factorHeight + ", "
+//		// + factor );
+//		resizeView(factor);
+//
+//	}
+//
+//	public void resizeView(double factor) {
+//		double w = getCanvas().getWidth() * factor;
+//		double h = getCanvas().getHeight() * factor;
+//
+//		// getCanvas().resizeCanvas((int)w, (int)h);
+//		/*
+//		 * ImageCanvas canvas = getModel().getImage().getCanvas();
+//		 * getCanvas().setMagnification(factor); canvas.setSourceRect(new
+//		 * Rectangle(0, 0, (int)(w/factor), (int)(h/factor)));
+//		 * canvas.setDrawingSize((int)w, (int)h); realWindow.pack();
+//		 * canvas.repaint();
+//		 */
+//		WindowManager.setTempCurrentImage(getStackModel().getCurrentImage());
+//		// Xmipp_Tomo.debug("Set... " + "zoom="+ ((int) (factor * 100)));
+//		IJ.run("Set... ", "zoom=" + ((int) (factor * 100)));
+//		refreshImageCanvas();
+//
+//	}
 
 	public void componentShown(ComponentEvent e) {
 	}

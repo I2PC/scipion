@@ -22,12 +22,15 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+import java.awt.Rectangle;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Vector;
 
+import ij.IJ;
 import ij.ImagePlus;
+import ij.WindowManager;
 import xmipp.ImageDouble;
 import xmipp.MetaData;
 import xmipp.MDLabel;
@@ -91,7 +94,7 @@ public class StackModel extends AbstractModel {
 		if (currentAction == null)
 			return ret;
 
-		ret = currentAction.getFilePath(getCurrentProjectionNumber());
+		ret = currentAction.getOutputFilePath(getCurrentProjectionNumber());
 
 		return ret;
 	}
@@ -138,6 +141,13 @@ public class StackModel extends AbstractModel {
 		}
 		ret = Converter.convertToImagePlus(image);
 		getImagePlusCache().put(filePath, ret);
+		// WindowManager.setTempCurrentImage(ret);
+		// scale image if needed
+/*		if(ret.getWidth() > 512 || ret.getHeight() > 512){
+			// TODO: take into consideration height too (for non-square images)
+			double mag=(512.0/ret.getWidth()) * 100;
+			//IJ.run("Set... ", "zoom=" + ((int) mag));
+		}*/
 		return ret;
 	}
 
@@ -184,7 +194,7 @@ public class StackModel extends AbstractModel {
 	}
 
 	public String getCurrentFileName() {
-		return getCurrentUserAction().getInputFileName();
+		return getCurrentUserAction().getOutputFileName();
 	}
 
 	public int getCurrentWidth() {
@@ -278,11 +288,16 @@ public class StackModel extends AbstractModel {
 
 	public void discardCurrentProjection() {
 		if (getNumberOfProjections() > 1) {
-			setEnabled(getCurrentProjectionNumber(), false);
+			setEnabled(getCurrentProjectionId(), false);
 
 		}
-		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), true,
-				false);
+
+	}
+	
+	public void enableCurrentProjection() {
+		if (getNumberOfProjections() > 1) {
+			setEnabled(getCurrentProjectionId(), true);
+		}
 	}
 
 	private void setEnabled(long id, boolean e) {
@@ -292,6 +307,7 @@ public class StackModel extends AbstractModel {
 			enabled = 1;
 
 		getCurrentUserAction().setEnabled(id, enabled);
+		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), true,false);
 	}
 
 	// Tilt features
@@ -336,13 +352,6 @@ public class StackModel extends AbstractModel {
 		return getCurrentUserAction().isEnabled(getCurrentProjectionId());
 	}
 
-	void enableCurrentProjection() {
-		if (getNumberOfProjections() > 1) {
-			setEnabled(getCurrentProjectionNumber(), true);
-		}
-		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), true,
-				false);
-	}
 
 	// TODO: Min an Max not set. We need to load all the projections of the stack to know the min and max
 	public void normalize() {
@@ -383,7 +392,7 @@ public class StackModel extends AbstractModel {
 		 * if (null != fw) fw.close(); } catch (Exception e2) {
 		 * 
 		 * }
-		 */
+		 */ 
 	}
 
 }

@@ -29,98 +29,130 @@ import xmipp.MetaData;
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 /**
- * Why? To isolate useractions from low-level IO related details (like metadatas)
- *
+ * Why? To isolate useractions from low-level IO related details (like
+ * metadatas)
+ * 
  */
 
 public class UserActionIO {
-	private String inputFileName=null;
+	private String fileName = null;
 	MetaData imageMetadata;
-	private String workingDir=null;
-	
-	public void applySelFile() {
-		String outputFilePath = getInputFilePath();
+	private String workingDir = null;
 
-		try {
-			getMetadata().write(outputFilePath);
-
-		} catch (Exception ex) {
-			Logger.debug("can not write metadata");
+	public void applySelFile(UserActionIO parentIo) {
+		String outputFilePath = getFilePath();
+		if (isSelFile(outputFilePath)) {
+			try {
+				if(parentIo != null){
+					MetaData metadata= parentIo.getMetadata();
+					if(metadata != null)
+						metadata.write(outputFilePath);
+					else
+						getMetadata().write(outputFilePath);
+				}else
+					getMetadata().write(outputFilePath);
+			} catch (Exception ex) {
+				Logger.debug("can not write metadata",ex);
+			}
 		}
 	}
-	
+
 	/**
-	 * Precondition: the working dir must have been assigned...
-	 * @return
+	 * 
+	 * @return the path to the output file, which can be a .sel file or a stack file
 	 */
-	public String getInputFilePath() {
-		return getWorkingDir() + "/" + inputFileName;
+	public String getFilePath() {
+		return getWorkingDir() + "/" + fileName;
+	}
+
+	public static boolean isSelFile(String path) {
+		// right now, identify file type by its extension
+		// should check also uppercase like .SEL
+		return path.endsWith(".sel");
 	}
 
 	// TODO: import more code details from Tomodata.readMetadata()
-	public void setWorkingDir(String workingDir){
+	public void setWorkingDir(String workingDir,boolean createWorkingDir) {
 		// TODO: delete old working dir in case it already existed?
 		this.workingDir = workingDir;
-		new File(this.workingDir).mkdirs();
+		if(createWorkingDir)
+			new File(this.workingDir).mkdirs();
 	}
-	
-	private MetaData getMetadata(){
+
+	private MetaData getMetadata() {
 		// metadata is initialized on metadata.read()
-		if (getInputFilePath() == null)
+		if (getFilePath() == null)
 			return null;
-		
-		if(imageMetadata==null){
+
+		if (imageMetadata == null) {
 			imageMetadata = new MetaData();
 			imageMetadata.enableDebug();
-			try{
-				imageMetadata.read(getInputFilePath());
-			}catch (Exception ex){
+			try {
+				imageMetadata.read(getFilePath());
+			} catch (Exception ex) {
+				Logger.debug("getmetadata",ex);
 				imageMetadata = null;
 			}
 		}
 		return imageMetadata;
 	}
-	
+
 	/**
 	 * 
-	 * @param projection 1..N
+	 * @param projection
+	 *            1..N
 	 * @return
 	 */
-	public String getFilePath(int projection){
-		String filename= null;
-		if(getMetadata() != null)
+	public String getFilePath(int projection) {
+		String filename = null;
+		if (getMetadata() != null){
 			filename = getMetadata().getValueString(MDLabel.MDL_IMAGE,getProjectionId(projection));
+			filename = getMetadata().fixPath(filename,getWorkingDir()); 
+		}
 		return filename;
 	}
 	
-	public long getProjectionId(int projection){
-		return getStackIds()[projection-1];
+	/**
+	 * Precondition: the working dir must have been assigned...
+	 * @deprecated
+	 * @return the path to a projection of the image stack 
+	 */
+	public String getOutputFilePath(int projection) {
+		String ret = null;
+		if (isSelFile(fileName))
+			ret = getFilePath(projection);
+		else
+			ret = String.valueOf(getProjectionId(projection)) + "@" + getWorkingDir() + "/" + getFileName();
+		return ret;
 	}
-	
-	public String getInputFileName(){
-		return inputFileName;
+
+	public long getProjectionId(int projection) {
+		return getStackIds()[projection - 1];
 	}
-	
-	public void setInputFileName(String name){
-		inputFileName = name;
+
+	public String getFileName() {
+		return fileName;
 	}
-	
-	public String getWorkingDir(){
+
+	public void setFileName(String name) {
+		fileName = name;
+	}
+
+	public String getWorkingDir() {
 		return workingDir;
 	}
-	
-	public int getNumberOfProjections(){
-		int ret=0;
-		if(getMetadata() != null)
+
+	public int getNumberOfProjections() {
+		int ret = 0;
+		if (getMetadata() != null)
 			ret = getMetadata().size();
 		return ret;
 	}
-	
-	
-	private long[] getStackIds(){
-		long [] result=new long[1];
-		if(getMetadata() != null)
-			result= getMetadata().findObjects();
+
+	private long[] getStackIds() {
+		long[] result = new long[1];
+		if (getMetadata() != null)
+			result = getMetadata().findObjects();
 		return result;
 	}
 
@@ -130,19 +162,22 @@ public class UserActionIO {
 			enabled = false;
 		return enabled;
 	}
-	
-	public void setEnabled(long id,int enabled){
+
+	public void setEnabled(long id, int enabled) {
 		getMetadata().setValueInt(MDLabel.MDL_ENABLED, enabled, id);
 	}
-	
-	public String getInfo(int projectionNumber){
-			long id=getProjectionId(projectionNumber);
-			return "(" + getMetadata().getValueString(MDLabel.MDL_IMAGE, id) + "). Enabled: " + getMetadata().getValueInt(MDLabel.MDL_ENABLED, id);
+
+	public String getInfo(int projectionNumber) {
+		long id = getProjectionId(projectionNumber);
+		return "(" + getMetadata().getValueString(MDLabel.MDL_IMAGE, id)
+				+ "). Enabled: "
+				+ getMetadata().getValueInt(MDLabel.MDL_ENABLED, id);
 	}
-	
+
 	// Helper methods to manage tilt angles "list"
-	// TODO: -low- get angles from .tlt files too (and save them like sel files) - @see TiltSeriesIO.readTiltAngles
-	public double getTiltAngle(long id){
+	// TODO: -low- get angles from .tlt files too (and save them like sel files)
+	// - @see TiltSeriesIO.readTiltAngles
+	public double getTiltAngle(long id) {
 		return getMetadata().getValueDouble(MDLabel.MDL_ANGLETILT, id);
 	}
 

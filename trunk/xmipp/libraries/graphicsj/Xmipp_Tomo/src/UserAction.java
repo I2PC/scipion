@@ -7,6 +7,7 @@ import javax.swing.text.PlainDocument;
 import javax.swing.tree.TreePath;
 
 import xmipp.MDLabel;
+import xmipp.MetaData;
 
 /***************************************************************************
  *
@@ -69,61 +70,79 @@ public class UserAction {
 	private Plugin plugin;
 	private boolean neededForFile=false;
 	private PlainDocument comments;
-	private UserActionIO ioDetails;
+	private UserActionIO output,parentOutput=null;
 
-	private UserActionIO getIoDetails() {
-		if(ioDetails == null)
-			ioDetails = new UserActionIO();
-		return ioDetails;
+	public UserActionIO getParentOutput() {
+		return parentOutput;
 	}
 
-	public void setInputFilePath(String path){
-		File input = new File(path);
-		String workingDir=input.getParent();
+	private void setParentOutput(UserActionIO parentOutput) {
+		this.parentOutput = parentOutput;
+	}
+	
+	public void setParentOutput(UserAction parent) {
+		if(parent != null)
+			setParentOutput(parent.getOutput());
+	}
+
+	private UserActionIO getOutput() {
+		if(output == null)
+			output = new UserActionIO();
+		return output;
+	}
+
+	/**
+	 * Specify the output path manually (typically when loading a new file)
+	 * @param path
+	 */
+	public void setOutputFilePath(String path){
+		File output = new File(path);
+		String workingDir=output.getParent();
 		if (workingDir == null)
 			workingDir = "./";
-		getIoDetails().setWorkingDir(workingDir);
-		getIoDetails().setInputFileName(input.getName());
+		getOutput().setWorkingDir(workingDir,false);
+		getOutput().setFileName(output.getName());
 	}
 	
-	public String getInputFilePath(){
+	/*public String getInputFilePath(){
 		return getIoDetails().getInputFilePath();
+	}*/
+	
+	public String getOutputFilePath(int projection){
+		return getOutput().getFilePath(projection);
 	}
 	
-	public String getInputFileName(){
-		return getIoDetails().getInputFileName();
+	public String getOutputFileName(){
+		return getOutput().getFileName();
 	}
 	
-	public String getFilePath(int projection){
-		return getIoDetails().getFilePath(projection);
-	}
 	
 	public boolean isEnabled(long id) {
-		return getIoDetails().isEnabled(id);
+		return getOutput().isEnabled(id);
 	}
 	
 	public void setEnabled(long id,int enabled){
-		getIoDetails().setEnabled(id, enabled);
+		getOutput().setEnabled(id, enabled);
 	}
 	
 	public String getInputFilePath(int projection){
-		return getIoDetails().getFilePath(projection);
+		return getParentOutput().getFilePath(projection);
 	}
 	
 	public int getNumberOfProjections(){
-		return getIoDetails().getNumberOfProjections();
+		return getOutput().getNumberOfProjections();
 	}
 	
 	public long getProjectionId(int projection){
-		return getIoDetails().getProjectionId(projection);
+		return getOutput().getProjectionId(projection);
 	}
 	
 	public double getTiltAngle(long id){
-		return getIoDetails().getTiltAngle(id);
+		return getOutput().getTiltAngle(id);
 	}
 	
 	public String getInfo(int projectionNumber){
-		return getIoDetails().getInfo(projectionNumber);
+		return getOutput().getInfo(projectionNumber);
 	}
 	
 
@@ -131,20 +150,21 @@ public class UserAction {
 	 * Call this method once the working dir has been set (when the action has been added to the workflow)
 	 * @param name
 	 */
-	public void setInputFileName(String name){
-		getIoDetails().setInputFileName(name);
+	public void setOutputFileName(String name){
+		getOutput().setFileName(name);
 	}
 	
 	/**
 	 * If you need to re-set the working dir, use setFilePath
 	 * @param workflowWorkingDir
+	 * @throws NullPointerException if the parent output has not been set before
 	 */
-	public void setWorkingDir(String workflowWorkingDir){
-		if(getIoDetails().getWorkingDir() == null){
-			String uaWorkingSubdir = getWorkingSubdirName();
-			String actionDir = workflowWorkingDir + "/" + uaWorkingSubdir;
-			getIoDetails().setWorkingDir(actionDir);
-		}
+	// TODO: maybe it's better to set the working dir in the constructor...
+	public void createWorkingDir() throws NullPointerException {
+		String uaWorkingSubdir = getWorkingSubdirName();
+		String parentWorkingDir = getParentOutput().getWorkingDir(); 
+		String workingDir =	parentWorkingDir + "/" + uaWorkingSubdir;
+		getOutput().setWorkingDir(workingDir,true);
 	}
 	
 	// TODO: -current- use four digits for Id
@@ -308,7 +328,15 @@ public class UserAction {
 	}
 	
 	public void applySelFile() {
-		getIoDetails().applySelFile();
+		getOutput().applySelFile(null);
+	}
+	
+	/**
+	 * 
+	 * @throws NullPointerException if parent output has not been set
+	 */
+	public void createSelFile() throws NullPointerException{
+		getOutput().applySelFile(getParentOutput());
 	}
 	
 

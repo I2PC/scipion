@@ -144,7 +144,7 @@ public class Filename {
     }
 
     // Auxiliary methods.
-    public static String fixPath(String filename, String MDdir) {
+    public static String fixPath(String filename, String MDdir,boolean shouldExist) {
         MDdir += !MDdir.endsWith(File.separator) ? File.separator : "";
         String fixed = filename;
 
@@ -163,7 +163,7 @@ public class Filename {
                 // 1st case: Relative to metadata file (metadata_path + file)
                 String aux = URI.create(MDdir + name).normalize().getPath();
                 File f = new File(aux);
-                if (!f.exists()) {
+                if (shouldExist && !f.exists()) {
                     // 2nd case: Relative to current dir.
                     aux = URI.create(System.getProperty("user.dir") + File.separatorChar + name).normalize().getPath();
                     f = new File(aux);

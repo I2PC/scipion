@@ -52,7 +52,7 @@ public abstract class Plugin {
 	
 /**
  * The name of the command is the text exactly as it is displayed in the IJ Menu (without including
- * menus and submenus, just the command label)
+ * menus and submenus, just the command label). Most command names are available in the file IJ_Props.txt (IJ/src)
  * @return
  */
 	public abstract String getCommand();

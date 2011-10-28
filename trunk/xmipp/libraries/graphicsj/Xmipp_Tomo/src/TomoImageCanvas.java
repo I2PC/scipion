@@ -31,7 +31,10 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.geom.Line2D;
+
+import ij.ImagePlus;
 import ij.gui.ImageCanvas;
 
 public class TomoImageCanvas extends ImageCanvas {
@@ -43,6 +46,17 @@ public class TomoImageCanvas extends ImageCanvas {
 	}
 
 	public void paint(Graphics g) {
+/*		ImagePlus img=model.getCurrentImage();
+		if(img!=null){
+			int width=img.getWidth(), height=img.getHeight();
+			if(width>512){
+				double mag=(512.0/width) * 100.0;
+				setSourceRect(new Rectangle(0, 0, (int)(width/mag), (int)(height/mag)));
+				setDrawingSize((int)width, (int)height);
+				// win.pack();
+				//repaint();
+			}
+		}*/
 		super.paint(g);
 
 		if (model != null) {

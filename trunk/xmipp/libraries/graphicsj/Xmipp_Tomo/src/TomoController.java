@@ -60,7 +60,6 @@ import xmipp.MetaData;
  // Stack: ask only for stack file path (same overwrite warning), then save both stack and tlt [OK]
  */
 
-// TODO: in write actions, handle writeSel
 // TODO: in write actions, if the file exists delete it first (to avoid
 // overwrite problems)
 // TODO: progress bar while applying filters - or at least update status bar
@@ -212,6 +211,20 @@ public class TomoController implements AdjustmentListener {
 
 	// this method must be public so Class.getMethod() finds it
 	public void play() {
+		try{
+			new BackgroundMethod(this, getClass().getMethod("playBackground"),null).execute();
+		}catch (NoSuchMethodException ex){
+			Logger.debug("play",ex);
+		}
+	}
+	
+	public void playBackground(){
+		boolean zooming=getStackModel().getCurrentWidth() > 512;
+		// 20FPS
+		int wait=50;
+		if(zooming)
+			// allow some time for resizing
+			wait=300;
 		setProjectionsPlaying(true);
 		window
 				.changeIcon(XmippTomoCommands.PLAY.getId(),
@@ -233,10 +246,10 @@ public class TomoController implements AdjustmentListener {
 			}
 			getStackModel().setCurrentProjectionNumber(nextProjection);
 			try {
-				Thread.sleep(50);
+				Thread.sleep(wait);
 			} catch (InterruptedException ex) {
 			}
-		}
+		}		
 	}
 
 	public void changePlayMode() {
@@ -264,7 +277,7 @@ public class TomoController implements AdjustmentListener {
 			if (path == null)
 				path = TomoFileDialog.openDialog("Load EM", window);
 
-			if (path == null)
+			if (path == null || "".equals(path))
 				return;
 			// free previous model (if any) ??
 			// setModel(null);
@@ -294,13 +307,16 @@ public class TomoController implements AdjustmentListener {
 
 			UserAction ua = new UserAction(window.getWindowId(), "Load",
 					"Load", path);
-			ua.setInputFilePath(path);
+			ua.setParentOutput(null);
+			ua.setId(getWorkflow().getNewActionId());
+			ua.setOutputFilePath(path);
 
 			getWorkflow().addUserAction(ua);
 			window.addView();
 			window.addControls();
 			window.enableButtonsAfterLoad();
 			window.updateTitle();
+			window.refreshImageCanvas();
 
 		}
 	}
@@ -463,7 +479,6 @@ public class TomoController implements AdjustmentListener {
 	 * @deprecated
 	 */
 	public void applyBackground() {
-		// TODO: bug - modelToSave has wrong properties: path(not updated),
 		// width&height = 0, always resized
 		String sourcePath = getModel().getFilePath();
 		try {
@@ -487,7 +502,6 @@ public class TomoController implements AdjustmentListener {
 					ip = applyWorkflowTo(ip);
 					image = Converter.convertToImageDouble(ip);
 					// the recommended way is using the @ notation,
-					// TODO: get the @ path with the help of the Filename xmipp
 					// class
 					String sliceDestPath = String.valueOf(projectionId) + "@"
 							+ getDestinationPath();
@@ -596,31 +610,36 @@ public class TomoController implements AdjustmentListener {
 		// TODO: adjust viewPanel to new image size
 	}
 
-	// TODO: -current- (probably it's fixed, just test it) preview option does not update the image display
-	// TODO: cancel button applies the plugin (instead of doin nothing)
-	public void runIjCmd(String command) {
+	/**
+	 * Run an ImageJ command, opening it's dialog to get the command parameters.
+	 * ImageJ dialogs have a preview checkbox that allows previewing the results in the TomoImagecanvas
+	 * @return false if the command was canceled
+	 */
+	public boolean runIjCmd(String command) {
 
 		window.setChangeSaved(false);
 
+		// TODO: remove next line if not needed after setting temp image on every image change...
 		WindowManager.setTempCurrentImage(getStackModel().getCurrentImage());
 		try {
 			IJ.run(command);
 		} catch (Exception ex) {
 			// catch java.lang.RuntimeException: Macro canceled
 			Logger.debug("actionRunIjCmd - action canceled");
-			return;
+			return false;
 		}
 		// the preview modifies the image in the cache...
 		getStackModel().refreshCurrentImage();
 		window.refreshImageCanvas();
 
 		// window.setStatus("Done");
-
+		return true;
 	}
 	public void runIjCmd(Command command, Plugin plugin){
 		runIjCmd(command, plugin, false,true,true);
 	}
 	
+	// TODO: command only offers the label, which may be integrated straight into each plugin (removing one parameter)
 	public void runIjCmd(Command command, Plugin plugin,boolean onlyCurrentProjection,boolean writeToFile,boolean addToWorkflow) {
 		String label = command.getLabel();
 		String cmd = plugin.getCommand();
@@ -633,16 +652,19 @@ public class TomoController implements AdjustmentListener {
 		if (plugin != null)
 			(new Thread(new DialogCaptureThread(window))).start();
 
-		runIjCmd(cmd);
+		if(runIjCmd(cmd) == false)
+			return;
 
 		if (addToWorkflow && (plugin != null)) {
 			UserAction currentAction = getWorkflow().getSelectedUserAction();
 
-			UserAction newAction = new UserAction(window.getWindowId(), label,
-					cmd, plugin);
-
-				getWorkflow().addUserAction(newAction);
-			newAction.setInputFileName(currentAction.getInputFileName());
+			UserAction newAction = new UserAction(window.getWindowId(), label,	cmd, plugin);
+			newAction.setId(getWorkflow().getNewActionId());
+			newAction.setParentOutput(currentAction);
+			newAction.createWorkingDir();
+			newAction.setOutputFileName(currentAction.getOutputFileName());
+			newAction.createSelFile();
+			getWorkflow().addUserAction(newAction);
 
 			// TODO: run applyIJPlugin in the background
 			/*
@@ -651,9 +673,9 @@ public class TomoController implements AdjustmentListener {
 			 * (Exception ex) { Logger.debug("runIjCmd() ", ex); }
 			 */
 			if(onlyCurrentProjection)
-				applyIJPlugin(plugin,currentAction,newAction,getStackModel().getCurrentProjectionNumber(),writeToFile);
+				applyIJPlugin(currentAction,newAction,getStackModel().getCurrentProjectionNumber(),writeToFile);
 			else
-				applyIJPlugin(cmd, currentAction, newAction,writeToFile);
+				applyIJPlugin(currentAction, newAction,writeToFile);
 
 		}
 
@@ -662,32 +684,27 @@ public class TomoController implements AdjustmentListener {
 		window.updateTitle();
 	}
 
-	private void applyIJPlugin(String command, UserAction currentAction,
-			UserAction newAction){
-		applyIJPlugin(command, currentAction, newAction,true);
-	}
-	
-	private void applyIJPlugin(Plugin plugin, UserAction currentAction,	UserAction newAction,int projection, boolean writeToFile){
-		long projectionId = currentAction.getProjectionId(projection);
-		String sourceProjectionPath = currentAction.getInputFilePath(projection);
-		String outputFile = newAction.getInputFilePath();
-		// TODO : get the @ path with the help of the Filename xmipp
-		String outputFullPath = String.valueOf(projectionId) + "@" + outputFile;
+
+	private void applyIJPlugin(UserAction currentAction,UserAction newAction,int projection, boolean writeToFile){
+		Plugin plugin = newAction.getPlugin();
+		// long projectionId = currentAction.getProjectionId(projection);
+		String sourceProjectionPath = currentAction.getOutputFilePath(projection);
+		String outputFullPath = newAction.getOutputFilePath(projection);
 		applyIJPlugin(plugin,sourceProjectionPath,outputFullPath,writeToFile);
 	}
 	
-	private void applyIJPlugin(String command, UserAction currentAction, UserAction newAction,boolean writeToFile) {
-
-		Plugin plugin = newAction.getPlugin();
+	private void applyIJPlugin(UserAction currentAction, UserAction newAction,boolean writeToFile) {
 		int numberOfProjections = currentAction.getNumberOfProjections();
 		for (int i = 1; i < numberOfProjections; i++) {
-			applyIJPlugin(plugin, currentAction, newAction, i, writeToFile);
+			applyIJPlugin(currentAction, newAction, i, writeToFile);
 			newAction.setProgress("Converting..." + i + "/"	+ numberOfProjections);
 				}
 	}
 
-	// TODO: handle sel files too (right now it tryes to write directly to the sel file, instead of the stack file)
+	// TODO: -current- fails on getting inputfilename from new actions' metadata... handle sel files too (right now it tries to write directly to the sel file, instead of the stack file)
 	private void applyIJPlugin(Plugin plugin, String sourceProjectionPath,String outputFullPath,boolean writeToFile){
+		if(outputFullPath == null)
+			return;
 		try {
 			if (sourceProjectionPath != null) {
 				ImageDouble image = new ImageDouble();

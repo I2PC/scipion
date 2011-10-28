@@ -94,9 +94,9 @@ public class XrayImportDialog extends JDialog implements ActionListener
 		getContentPane().add(okCancelPanel,BorderLayout.PAGE_END);
 		
 		
-    	addBrowseField(0,DATA_LABEL, "/gpfs/fs1/home/bioinfo/jcuenca/sample_data/20090606-10/10s/");
-    	addBrowseField(1,FLAT_LABEL, "/gpfs/fs1/home/bioinfo/jcuenca/sample_data/20090606-10/flatfields/");
-    	addBrowseField(2,ROOT_LABEL, "/gpfs/fs1/home/bioinfo/jcuenca/sample_data/20090606-10/ProcessedData");
+    	addBrowseField(0,DATA_LABEL, "/home/jcuenca/sample_data/20090606-10/10s/");
+    	addBrowseField(1,FLAT_LABEL, "/home/jcuenca/sample_data/20090606-10/flatfields/");
+    	addBrowseField(2,ROOT_LABEL, "/home/jcuenca/sample_data/20090606-10/ProcessedData");
     	addStringField(3,ROOT_FILE_LABEL, "img",10);
     	// addStringField(2,ROOT_LABEL, "ProcessedData/img",10);
     	// maybe it's better to use a slidebar instead of a numeric field?
@@ -169,8 +169,8 @@ public class XrayImportDialog extends JDialog implements ActionListener
 	}
 	
 	private void buildCommand(){
-		setCommand("xmipp_xray_import -data " + getText(DATA_LABEL) + " -flat " + getText(FLAT_LABEL) + " -oroot " + getText(ROOT_LABEL)+
-				"/" + getText(ROOT_FILE_LABEL) + " -crop " + getText(CROP_LABEL) + " -thr 1");
+		setCommand("xmipp_xray_import --data " + getText(DATA_LABEL) + " --flat " + getText(FLAT_LABEL) + " --oroot " + getText(ROOT_LABEL)+
+				"/" + getText(ROOT_FILE_LABEL) + " --crop " + getText(CROP_LABEL) + " --thr 1");
 	}
 	
 	public void actionPerformed(ActionEvent e) {
