@@ -31,6 +31,7 @@ import tkMessageBox;
 import tkFileDialog;
 from subprocess import call
 from protlib_filesystem import getXmippPath
+from protlib_gui_ext
 
 
 BORDER = 0;
@@ -225,7 +226,7 @@ class ParamWidget(Frame):
         for option in self.options:
             msg = msg + "\n" + option.getHelp()
         #print msg;
-        tkMessageBox.showinfo(self.paramName + " help", msg)
+        showInfo(self.paramName + " help", msg)
         
     def enable(self):
         self.label.config(font=self.boldFont)
