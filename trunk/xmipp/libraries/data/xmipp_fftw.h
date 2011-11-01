@@ -225,39 +225,68 @@ public:
             if (YSIZE(*fReal)==1)
                 ndim=1;
         }
+        double *ptrSource=NULL;
+        double *ptrDest=NULL;
         switch (ndim)
         {
         case 1:
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(V)
-            if (i<XSIZE(fFourier))
-                DIRECT_A1D_ELEM(V,i)=DIRECT_A1D_ELEM(fFourier,i);
-            else
-                DIRECT_A1D_ELEM(V,i)=
-                    conj(DIRECT_A1D_ELEM(fFourier,
-                                         XSIZE(*fReal)-i));
+            {
+                ptrDest=(double*)&DIRECT_A1D_ELEM(V,i);
+                if (i<XSIZE(fFourier))
+                {
+                    ptrSource=(double*)&DIRECT_A1D_ELEM(fFourier,i);
+                    *ptrDest=*ptrSource;
+                    *(ptrDest+1)=*(ptrSource+1);
+                }
+                else
+                {
+                    ptrSource=(double*)&DIRECT_A1D_ELEM(fFourier,XSIZE(*fReal)-i);
+                    *ptrDest=*ptrSource;
+                    *(ptrDest+1)=-(*(ptrSource+1));
+                }
+            }
             break;
         case 2:
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(V)
-            if (j<XSIZE(fFourier))
-                DIRECT_A2D_ELEM(V,i,j)=
-                    DIRECT_A2D_ELEM(fFourier,i,j);
-            else
-                DIRECT_A2D_ELEM(V,i,j)=
-                    conj(DIRECT_A2D_ELEM(fFourier,
-                                         (YSIZE(*fReal)-i)%YSIZE(*fReal),
-                                         XSIZE(*fReal)-j));
+            {
+                ptrDest=(double*)&DIRECT_A2D_ELEM(V,i,j);
+                if (j<XSIZE(fFourier))
+                {
+                    ptrSource=(double*)&DIRECT_A2D_ELEM(fFourier,i,j);
+                    *ptrDest=*ptrSource;
+                    *(ptrDest+1)=*(ptrSource+1);
+                }
+                else
+                {
+                    ptrSource=(double*)&DIRECT_A2D_ELEM(fFourier,
+                                                        (YSIZE(*fReal)-i)%YSIZE(*fReal),
+                                                        XSIZE(*fReal)-j);
+                    *ptrDest=*ptrSource;
+                    *(ptrDest+1)=-(*(ptrSource+1));
+                }
+            }
             break;
         case 3:
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V)
-            if (j<XSIZE(fFourier))
-                DIRECT_A3D_ELEM(V,k,i,j)=
-                    DIRECT_A3D_ELEM(fFourier,k,i,j);
-            else
-                DIRECT_A3D_ELEM(V,k,i,j)=
-                    conj(DIRECT_A3D_ELEM(fFourier,
-                                         (ZSIZE(*fReal)-k)%ZSIZE(*fReal),
-                                         (YSIZE(*fReal)-i)%YSIZE(*fReal),
-                                         XSIZE(*fReal)-j));
+            {
+                ptrDest=(double*)&DIRECT_A3D_ELEM(V,k,i,j);
+                if (j<XSIZE(fFourier))
+                {
+                    ptrSource=(double*)&DIRECT_A3D_ELEM(fFourier,k,i,j);
+                    *ptrDest=*ptrSource;
+                    *(ptrDest+1)=*(ptrSource+1);
+                }
+                else
+                {
+                    ptrSource=(double*)&DIRECT_A3D_ELEM(fFourier,
+                            (ZSIZE(*fReal)-k)%ZSIZE(*fReal),
+                            (YSIZE(*fReal)-i)%YSIZE(*fReal),
+                            XSIZE(*fReal)-j);
+                    *ptrDest=*ptrSource;
+                    *(ptrDest+1)=-(*(ptrSource+1));
+                }
+            }
             break;
         }
     }
