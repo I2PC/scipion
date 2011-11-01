@@ -31,7 +31,7 @@ import Tkinter as tk
 import tkFont as font
 import ttk  
 
-from protlib_gui_ext import centerWindows, MyButton, registerCommonFonts, showInfo, showError, OutputText,\
+from protlib_gui_ext import centerWindows, XmippButton, registerCommonFonts, showInfo, showError, OutputText,\
     getGeometry
 from protlib_filesystem import getXmippPath
     
@@ -85,12 +85,12 @@ class OptionsTab(tk.Frame):
             w.grid(column=2, row=r, sticky='we', padx=5, pady=5)
             
             if browse:
-                btn = MyButton(self, 'Browse', 'folderopen.gif',
+                btn = XmippButton(self, 'Browse', 'folderopen.gif',
                                command=lambda: browseDir(var, self))
                 btn.grid(column=3, row=r)
                 
             if wiz:
-                btn = MyButton(self, 'Find', 'wizard.gif',
+                btn = XmippButton(self, 'Find', 'wizard.gif',
                                command=lambda: detectDir(self, wiz))
                 btn.grid(column=4, row=r)
                 
@@ -217,7 +217,7 @@ class ConfigNotebook(ttk.Notebook):
         progress.pack(side=tk.LEFT, padx=(0, 30))
         
         registerCommonFonts()
-        self.btn = MyButton(panel, text='Compile')
+        self.btn = XmippButton(panel, text='Compile')
         self.btn.pack(side=tk.RIGHT, padx=(15, 0))
         procVar = tk.StringVar()
         procVar.set(self.options.getNumberOfCpu())

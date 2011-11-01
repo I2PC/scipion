@@ -25,12 +25,88 @@
  ***************************************************************************/
  '''
 
-import Tkinter as tk
-import ttk
 import os
 from os.path import join
-from config_protocols import LabelBgColor, FontName, FontSize
-import tkFont
+import Tkinter as tk
+
+from tkSimpleDialog import Dialog
+import ttk
+from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor
+from protlib_filesystem import getXmippPath
+
+RESOURCES = getXmippPath('resources')
+#ButtonBgColor = "LightBlue"
+#ButtonActiveBgColor = "LightSkyBlue"
+#ButtonSelectedColor = "DeepSkyBlue2"
+
+Fonts = {}
+
+def registerFont(name, **opts):
+    import tkFont
+    global Fonts
+    Fonts[name] = tkFont.Font(**opts)
+
+def registerCommonFonts():
+    from config_protocols import FontName, FontSize
+    if 'normal' not in Fonts.keys():
+        registerFont('normal', family=FontName, size=FontSize)
+    if 'button' not in Fonts.keys():
+        registerFont('button', family=FontName, size=FontSize, weight='bold')
+    if 'label' not in Fonts.keys():
+        registerFont('label', family=FontName, size=FontSize+1, weight='bold')
+        
+def configDefaults(opts, defaults):
+    for key in defaults.keys():
+        if not opts.has_key(key):
+            opts[key] = defaults[key]
+            
+def openLink(link):
+    ''' Open a link in default web browser '''
+    from  webbrowser import open
+    open(link)
+    
+def changeFontSizeByDeltha(font, deltha, min=-999, max=999):
+    size = font['size']
+    new_size = size + deltha
+    if new_size >= min and new_size <= max:
+        font.configure(size=new_size)
+            
+def changeFontSize(font, event, min=-999, max=999):
+    deltha = 2
+    if event.char == '-':
+        deltha = -2
+    changeFontSizeByDeltha(font, deltha, min, max)
+
+# **********************************************
+# *     Following are some helper functions    *
+# **********************************************
+
+def getGeometry(win):
+    ''' Return the geometry information of the windows
+    It will be a tuple (width, height, x, y)
+    '''
+    return win.winfo_reqwidth(), win.winfo_reqheight(), win.winfo_x(), win.winfo_y()
+
+def centerWindows(root, dim=None, refWindows=None):
+    """Center a windows in the middle of the screen 
+    or in the middle of other windows(refWindows param)"""
+    root.update_idletasks()
+    gw, gh, gx, gy = getGeometry(root)
+    if refWindows:
+        rw, rh, rx, ry = getGeometry(refWindows)
+        x = rx + (rw - gw) / 2
+        y = ry + (rh - gh) / 2 
+    else:
+        w = root.winfo_screenwidth()
+        h = root.winfo_screenheight()
+        if not dim is None:
+            gw, gh = dim
+        x = (w - gw) / 2
+        y = (h - gh) / 2
+        
+    root.geometry("%dx%d+%d+%d" % (gw, gh, x, y))
+
+
 '''
 Taken from following forum:
 http://code.activestate.com/recipes/52266-multilistbox-tkinter-widget/
@@ -211,63 +287,21 @@ class MultiListbox(tk.PanedWindow):
             self.selection_clear(0, tk.END)
             #self.selection_clear(0, END)
             self.selection_set(index + 1)
-            
 
-def getGeometry(win):
-    return win.winfo_reqwidth(), win.winfo_reqheight(), win.winfo_x(), win.winfo_y()
 
-def centerWindows(root, dim=None, refWindows=None):
-    """Center a windows in the middle of the screen 
-    or in the middle of other windows(refWindows param)"""
-    root.update_idletasks()
-    gw, gh, gx, gy = getGeometry(root)
-    if refWindows:
-        rw, rh, rx, ry = getGeometry(refWindows)
-        x = rx + (rw - gw) / 2
-        y = ry + (rh - gh) / 2 
-    else:
-        w = root.winfo_screenwidth()
-        h = root.winfo_screenheight()
-        if not dim is None:
-            gw, gh = dim
-        x = (w - gw) / 2
-        y = (h - gh) / 2
+# ******************************************************************
+# *     Following are implementation of some widgets extensions   *
+# ****************************************************************** 
+
+class AutoScrollbar(tk.Scrollbar):
+    '''A scrollbar that hides itself if it's not needed.'''
+    def set(self, lo, hi):
+        if float(lo) <= 0.0 and float(hi) >= 1.0:
+            self.tk.call("grid", "remove", self)
+        else:
+            self.grid()
+        tk.Scrollbar.set(self, lo, hi)
         
-    root.geometry("%dx%d+%d+%d" % (gw, gh, x, y))
-    
-
-__tipwindow = None
-
-# Creates a tooptip box for a widget.
-def createToolTip( widget, text ):
-    def enter( event ):
-        global __tipwindow
-        if __tipwindow or not text:
-            return
-        x, y, cx, cy = widget.bbox( "insert" )
-        x += widget.winfo_rootx() + 27
-        y += widget.winfo_rooty() + 27
-        # Creates a toplevel window
-        __tipwindow = tw = tk.Toplevel( widget )
-        # Leaves only the label and removes the app window
-        tw.wm_overrideredirect( 1 )
-        tw.wm_geometry( "+%d+%d" % ( x, y ) )
-        label = tk.Label( tw, text = text, justify = tk.LEFT,
-                       background = "#ffffe0", relief = tk.SOLID, borderwidth = 1,
-                       font = ( "tahoma", "8", "normal" ) )
-        label.pack( ipadx = 1 )
-        
-    def close( event ):
-        global __tipwindow
-        tw = __tipwindow
-        __tipwindow = None
-        if tw:
-            tw.destroy()
-            
-    widget.bind( "<Enter>", enter )
-    widget.bind( "<Leave>", close )
-
-
 '''Michael Lange <klappnase (at) freakmail (dot) de>
 The ToolTip class provides a flexible tooltip widget for Tkinter; it is based on IDLE's ToolTip
 module which unfortunately seems to be broken (at least the version I saw).
@@ -329,7 +363,7 @@ class ToolTip:
         for key in opts:
             if self._opts.has_key(key):
                 self._opts[key] = opts[key]
-            else:
+            else:    
                 KeyError = 'KeyError: Unknown option: "%s"' %key
                 raise KeyError
     
@@ -425,47 +459,23 @@ class ToolTip:
 
 ##---------demo code-----------------------------------##
 
-from tkSimpleDialog import Dialog
-ButtonBgColor = "LightBlue"
-ButtonActiveBgColor = "LightSkyBlue"
-ButtonSelectedColor = "DeepSkyBlue2"
-
-Fonts = {}
-
-def registerFont(name, **opts):
-    global Fonts
-    Fonts[name] = tkFont.Font(**opts)
-
-def registerCommonFonts():
-    if 'normal' not in Fonts.keys():
-        registerFont('normal', family=FontName, size=FontSize)
-    if 'button' not in Fonts.keys():
-        registerFont('button', family=FontName, size=FontSize, weight=tkFont.BOLD)
-    if 'label' not in Fonts.keys():
-        registerFont('label', family=FontName, size=FontSize+1, weight=tkFont.BOLD)
+class XmippButton(tk.Button):
+    def __init__(self, master, text, imagePath=None, **opts):
+        defaults = {'activebackground': ButtonActiveBgColor}
+        defaults.update(opts)
+        btnImage = None
+        if imagePath:
+            try:
+                imgPath = join(RESOURCES, imagePath)
+                btnImage = tk.PhotoImage(file=imgPath)
+            except tk.TclError:
+                pass
         
-def configDefaults(opts, defaults):
-    for key in defaults.keys():
-        if not opts.has_key(key):
-            opts[key] = defaults[key]
-     
-def MyButton(master, text, imagePath=None, **opts):
-    configDefaults(opts, {'activebackground': ButtonActiveBgColor})
-    btnImage = None
-    if imagePath:
-        try:
-            from protlib_filesystem import getXmippPath
-            imgPath = join(getXmippPath('resources'), imagePath)
-            btnImage = tk.PhotoImage(file=imgPath)
-        except tk.TclError:
-            pass
-    
-    if btnImage:
-        btn = tk.Button(master, image=btnImage, bd=0, height=28, width=28, **opts)
-        btn.image = btnImage
-    else:
-        btn = tk.Button(master, text=text, font=Fonts['button'], bg=ButtonBgColor, **opts)
-    return btn
+        if btnImage:
+            tk.Button.__init__(self, master, image=btnImage, bd=0, height=28, width=28, **defaults)
+            self.image = btnImage
+        else:
+            tk.Button.__init__(self, master, text=text, font=Fonts['button'], bg=ButtonBgColor, **defaults)
 
 '''Implement a Listbox Dialog, it will return
 the index selected in the lisbox or -1 on Cancel'''
@@ -492,18 +502,14 @@ class ListboxDialog(Dialog):
 
     def buttonbox(self):
         box = tk.Frame(self)
-        w = MyButton(box, text="OK", width=7, command=self.ok)
+        w = XmippButton(box, text="OK", width=7, command=self.ok)
         w.pack(side=tk.RIGHT, padx=5, pady=5)
         self.bind("<Return>", self.ok)
         box.pack()
         
     def apply(self):
         self.result = map(int, self.lb.curselection())
-        
-def openLink(link):
-    ''' Open a link in default web browser '''
-    from  webbrowser import open
-    open(link)
+
     
 # Tkinter Text Widget Hyperlink Manager
 # taken from:
@@ -576,7 +582,12 @@ class XmippText(tk.Text):
         for line in text.splitlines():
             self.addLine(line)
         self.config(state=tk.DISABLED)     
-           
+
+'''
+Implement a Text that will recognized some basic tags
+<some_text> will display some_text in bold
+[some_link] will display some_link as hiperlinnk
+'''           
 class TaggedText(XmippText):  
     def __init__(self, master, **options):  
         XmippText.__init__(self, master, **options)
@@ -616,7 +627,8 @@ class TaggedText(XmippText):
                 self.insert(tk.END, p, t)
         self.addNewline()       
 
-'''Implement a Text that will show file content
+'''
+Implement a Text that will show file content
 and handle console metacharacter for colored output
 '''
 class OutputText(XmippText):
@@ -692,17 +704,6 @@ class OutputText(XmippText):
             self.after_cancel(self.refreshAlarm)
             self.refreshAlarm = None
 
-def changeFontSizeByDeltha(font, deltha, min=-999, max=999):
-        size = font['size']
-        new_size = size + deltha
-        if new_size >= min and new_size <= max:
-            font.configure(size=new_size)
-            
-def changeFontSize(font, event, min=-999, max=999):
-        deltha = 2
-        if event.char == '-':
-            deltha = -2
-        changeFontSizeByDeltha(font, deltha, min, max)    
   
 ''' Implementation of a simple textfile viewer '''
 class FileViewer(tk.Frame):
@@ -740,16 +741,16 @@ class FileViewer(tk.Frame):
         #Add the search box
         left = tk.Frame(toolbarFrame)
         left.grid(column=0, row=0, sticky='nw')
-        MyButton(left, "Open", 'folderopen.gif').grid(row=0, column=0, padx=(0, 5))
-        MyButton(left, "Save", 'save.gif').grid(row=0, column=1, padx=(0, 5))
-        MyButton(left, "Refresh", 'refresh_file.gif').grid(row=0, column=2, padx=(0, 5))
+        XmippButton(left, "Open", 'folderopen.gif').grid(row=0, column=0, padx=(0, 5))
+        XmippButton(left, "Save", 'save.gif').grid(row=0, column=1, padx=(0, 5))
+        XmippButton(left, "Refresh", 'refresh_file.gif').grid(row=0, column=2, padx=(0, 5))
         right = tk.Frame(toolbarFrame)
         right.grid(column=1, row=0, sticky='ne')        
         self.searchVar = tk.StringVar()
         tk.Label(right, text='Search:').grid(row=0, column=3, padx=5, pady=5, )
         self.searchEntry = tk.Entry(right, textvariable=self.searchVar, bg=LabelBgColor)
         self.searchEntry.grid(row=0, column=4, sticky='ew', padx=5, pady=5)
-        MyButton(right, "Search", 'search.gif').grid(row=0, column=5, padx=(0, 5))
+        XmippButton(right, "Search", 'search.gif').grid(row=0, column=5, padx=(0, 5))
         
         #Create tabs frame
         tabsFrame = tk.Frame(self)
@@ -878,7 +879,7 @@ class ShowDialog(Dialog):
         
     def buttonbox(self):
         box = tk.Frame(self)    
-        self.btnNo = MyButton(box, text="Ok", width=7, command=self.cancel)
+        self.btnNo = XmippButton(box, text="Ok", width=7, command=self.cancel)
         self.btnNo.pack(side=tk.LEFT, padx=5, pady=5, anchor='e')
         box.pack()
         self.bind("<Return>", self.cancel)
@@ -893,9 +894,9 @@ class YesNoDialog(ShowDialog):
         
     def buttonbox(self):
         box = tk.Frame(self)    
-        self.btnYes = MyButton(box, text="Yes", width=7, command=self.ok)
+        self.btnYes = XmippButton(box, text="Yes", width=7, command=self.ok)
         self.btnYes.pack(side=tk.LEFT, padx=5, pady=5, anchor='e')
-        self.btnNo = MyButton(box, text="No", width=7, command=self.cancel)
+        self.btnNo = XmippButton(box, text="No", width=7, command=self.cancel)
         self.btnNo.pack(side=tk.LEFT, padx=5, pady=5, anchor='e')
         box.pack()
         if self.defaultNo:
@@ -959,19 +960,13 @@ class AutoCompleteEntry(tk.Entry):
         if len(prefix):
             self.delete(0, tk.END)
             self.insert(0, prefix)
-            #self.position = self.index(Tkinter.END)
-            #self.update_idletasks()
-            #self.select_range(Tkinter.END,Tkinter.END)
             self.select_clear()
             self.icursor(tk.END)
         return "break"
     
 
 '''**************  Implementation of Xmipp Browser *************'''
-from protlib_filesystem import getXmippPath
-RESOURCES = getXmippPath('resources')
-
-# Some helper functions
+# Some helper functions for the browser
 def showj(filename, mode):
     from protlib_utils import runImageJPlugin
     runImageJPlugin("512m", "XmippBrowser.txt", "-i %s --mode %s" % (filename, mode), batchMode=True)
@@ -1244,19 +1239,19 @@ class XmippBrowser():
             self.filterVar.set(self.pattern)
         filterEntry = ttk.Entry(filterFrame, width=25, textvariable=self.filterVar)
         filterEntry.pack(side=tk.LEFT,padx=2)
-        self.btnFilter = MyButton(filterFrame, "Search", 'search.gif', command=self.filterResults)
+        self.btnFilter = XmippButton(filterFrame, "Search", 'search.gif', command=self.filterResults)
         filterEntry.bind('<Return>', self.filterResults)
         self.btnFilter.pack(side=tk.LEFT, padx=2)
         #Create buttons frame
         buttonsFrame = ttk.Frame(bottomFrame)
         buttonsFrame.grid(column=1, row=0, sticky='e')
         if self.seltype != 'none':
-            self.btnOk = MyButton(buttonsFrame, "Select", command=self.selectFiles)
+            self.btnOk = XmippButton(buttonsFrame, "Select", command=self.selectFiles)
             self.btnOk.pack(side=tk.LEFT,padx=(0, 5))
             cancelName = "Cancel"
         else:
             cancelName = "Close"
-        self.btnCancel = MyButton(buttonsFrame, cancelName, command=self.close)
+        self.btnCancel = XmippButton(buttonsFrame, cancelName, command=self.close)
         self.btnCancel.pack(side=tk.LEFT, padx=(0, 10))
         
         #create menu
@@ -1485,7 +1480,7 @@ class XmippBrowserCTF(XmippBrowser):
         self.downsamplingVar.set(self.downsampling)
         downsamplingEntry = ttk.Entry(frame, width=10, textvariable=self.downsamplingVar)
         downsamplingEntry.pack(side=tk.LEFT,padx=2)
-        self.btnTest = MyButton(frame, "Preview", command=self.calculatePSD)
+        self.btnTest = XmippButton(frame, "Preview", command=self.calculatePSD)
         downsamplingEntry.bind('<Return>', self.calculatePSD)
         self.btnTest.pack(side=tk.LEFT, padx=2)
         if self.freqs:

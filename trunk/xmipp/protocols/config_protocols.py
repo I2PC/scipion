@@ -119,7 +119,7 @@ SectionBgColor = ButtonBgColor
 #Color
 ListSelectColor = "DeepSkyBlue4"
 BooleanSelectColor = "white"
-ButtonSelectColor = "DodgerBlue3"
+ButtonSelectColor = "DeepSkyBlue2"
 
 #Dimensions limits
 MaxHeight = 650

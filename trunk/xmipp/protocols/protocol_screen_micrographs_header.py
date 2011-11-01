@@ -21,7 +21,7 @@
 # {run}(import_micrographs) Import Micrographs Run
 ImportRun = ''
 
-# {wizard}(wizardBrowseCTF) Downsampling factor 
+# {wizard}(wizardBrowseCTF2) Downsampling factor 
 """ Set to 1 for no downsampling. Non-integer downsample factors are possible."""
 Down = 1
 
@@ -29,14 +29,14 @@ Down = 1
 """ It should be a negative number, typically between -0.05 and -0.3."""
 AmplitudeContrast = -0.1
 
-# {wizard}(wizardBrowseCTF) Lowest resolution for CTF estimation
+# {wizard}(wizardBrowseCTF2) Lowest resolution for CTF estimation
 """ Give a value in digital frequency (i.e. between 0.0 and 0.5)
     This cut-off prevents the typically peak at the center of the PSD to interfere with CTF estimation.  
     The default value is 0.05, but for micrographs with a very fine sampling this may be lowered towards 0.0
 """
 LowResolCutoff = 0.05
 
-# {wizard}(wizardBrowseCTF) Highest resolution for CTF estimation
+# {wizard}(wizardBrowseCTF2) Highest resolution for CTF estimation
 """ Give a value in digital frequency (i.e. between 0.0 and 0.5)
     This cut-off prevents high-resolution terms where only noise exists to interfere with CTF estimation.  
     The default value is 0.35, but it should be increased for micrographs with signals extending beyond this value.

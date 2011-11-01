@@ -32,8 +32,7 @@ import tkFont
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
 from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, configDefaults, showInfo,\
     showBrowseDialog, showFileViewer, showError, TaggedText
-from config_protocols import protDict, sections
-from config_protocols import FontName, FontSize
+from config_protocols import protDict, sections, ButtonBgColor, ButtonActiveBgColor, ButtonSelectColor
 from protlib_base import getProtocolFromModule, XmippProject,\
     getExtendedRunName
 from protlib_utils import ProcessManager,  getHostname
@@ -49,9 +48,6 @@ SectionTextColor = "blue4"
 BgColor = "white"
 LabelBgColor = BgColor
 HighlightBgColor = BgColor
-ButtonBgColor = "LightBlue"
-ButtonActiveBgColor = "LightSkyBlue"
-ButtonSelectedColor = "DeepSkyBlue2"
 
 def ProjectButton(master, text, imagePath=None, **opts):
     configDefaults(opts, {'activebackground': ButtonActiveBgColor})
@@ -429,7 +425,7 @@ class XmippProjectGUI():
             self.project.writeConfig()
             self.updateRunHistory(key)            
             self.lastSelected = key  
-            btn.config(bg=ButtonSelectedColor, activebackground=ButtonSelectedColor)
+            btn.config(bg=ButtonSelectColor, activebackground=ButtonSelectColor)
             
         if self.lastSelected and showMenu:
             self.postMenu(btn, menu)

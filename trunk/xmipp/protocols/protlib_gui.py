@@ -29,13 +29,13 @@
 import os, glob
 from os.path import join, relpath
 import Tkinter as tk
-import tkMessageBox
 import tkFont
 
 from protlib_base import getProtocolFromModule, getWorkingDirFromRunName, getExtendedRunName
 from protlib_utils import loadModule, runImageJPlugin, which, runJavaIJappWithResponse
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
-    showError, showInfo, showBrowseDialog, showWarning, XmippBrowserCTF
+    showError, showInfo, showBrowseDialog, showWarning, XmippBrowserCTF,\
+    AutoScrollbar
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
@@ -88,15 +88,6 @@ class ProtocolStyle():
                     
     def createFonts(self):
         self.Font = tkFont.Font(family=self.FontName, size=self.FontSize, weight=tkFont.BOLD)
-
-class AutoScrollbar(tk.Scrollbar):
-    '''A scrollbar that hides itself if it's not needed.'''
-    def set(self, lo, hi):
-        if float(lo) <= 0.0 and float(hi) >= 1.0:
-            self.tk.call("grid", "remove", self)
-        else:
-            self.grid()
-        tk.Scrollbar.set(self, lo, hi)
 
 def createSection(parent, text):
     frame = tk.Frame(parent, bd=2, relief=tk.RAISED, bg=SectionBgColor)
@@ -486,9 +477,9 @@ class ProtocolGUI(BasicGUI):
     def autocompleteEntry(self, var):
         keys = var.tags.keys()
         if 'file' in keys:
-            args = ['Browse', lambda: self.wizardBrowseJ(var), 'fileopen.gif', 'Browse file']
+            args = ['Browse', lambda: self.wizardBrowse(var), 'fileopen.gif', 'Browse file']
         elif 'dir' in keys:
-            args = ['Browse', lambda: self.wizardBrowseJ(var), 'folderopen.gif', 'Browse folder']
+            args = ['Browse', lambda: self.wizardBrowse(var), 'folderopen.gif', 'Browse folder']
         elif 'run' in keys:
             protocols = var.tags['run'].split(',')
             runs = []
@@ -636,10 +627,10 @@ class ProtocolGUI(BasicGUI):
 
                 if 'file' in keys:
                     entry.setBuildListFunction(lambda: getEntries(var), refreshOnTab=True)
-                    args = ['Browse', lambda: self.wizardBrowseJ(var), 'fileopen.gif', 'Browse file']
+                    args = ['Browse', lambda: self.wizardBrowse(var), 'fileopen.gif', 'Browse file']
                 elif 'dir' in keys:
                     entry.setBuildListFunction(lambda: getEntries(var,onlyDir=True), refreshOnTab=True)
-                    args = ['Browse', lambda: self.wizardBrowseJ(var), 'folderopen.gif', 'Browse folder']
+                    args = ['Browse', lambda: self.wizardBrowse(var), 'folderopen.gif', 'Browse folder']
                 elif 'run' in keys:
                     entry.setBuildListFunction(lambda: getRuns(var))
                     list = getRuns(var)
@@ -1086,20 +1077,10 @@ class ProtocolGUI(BasicGUI):
     def wizardDummy(self, var):
         showInfo("Wizard test", "This is only a test on wizards setup", parent=self.master)
         
-    def wizardBrowse(self, var):
-        import tkFileDialog
-        isFile = 'file' in var.tags.keys()
-        if isFile:
-            filename = tkFileDialog.askopenfilename(title="Choose file", parent=self.master)
-        else:
-            filename = tkFileDialog.askdirectory(title="Choose directory", parent=self.master)
-        if len(filename) > 0:
-            var.tkvar.set(relpath(filename))
-            
     def wizardShowJ(self, var):
         runImageJPlugin("512m", "xmippBrowser.txt", "-i %s" % var.tkvar.get())
         
-    def wizardBrowseJ(self, var):
+    def wizardBrowse(self, var):
         if 'file' in var.tags.keys():
             seltype="file"
             filter = var.tags['file']
@@ -1126,7 +1107,8 @@ class ProtocolGUI(BasicGUI):
         self.wizardHelperSetDownsampling(var, *args)
         
     #This wizard is specific for screen_micrographs protocol
-    def wizardBrowseCTF(self, var):
+    #it will help to select downsampling, and frequencies cutoffs
+    def wizardBrowseCTF2(self, var):
         error = None
         freqs = [self.getVarValue(vn) for vn in ['LowResolCutoff', 'HighResolCutoff']]
         path = getWorkingDirFromRunName(self.getVarValue('ImportRun'))
