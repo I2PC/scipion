@@ -31,7 +31,7 @@ import Tkinter as tk
 
 from tkSimpleDialog import Dialog
 import ttk
-from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor
+from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, BgColor, SectionTextColor
 from protlib_filesystem import getXmippPath
 
 RESOURCES = getXmippPath('resources')
@@ -106,6 +106,8 @@ def centerWindows(root, dim=None, refWindows=None):
         
     root.geometry("%dx%d+%d+%d" % (gw, gh, x, y))
 
+def ProjectLabel(master, **opts):
+    return tk.Label(master, font=Fonts['label'], fg=SectionTextColor, **opts)
 
 '''
 Taken from following forum:
@@ -302,6 +304,28 @@ class AutoScrollbar(tk.Scrollbar):
             self.grid()
         tk.Scrollbar.set(self, lo, hi)
         
+class ScrollFrame(tk.Frame):
+    ''' An scrollable Frame, that will create a Canvas with
+    scrolls and with other Frame to place contents'''
+    def __init__(self, master, **opts):
+        tk.Frame.__init__(self, master, **opts)
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        vscrollbar = AutoScrollbar(self)
+        vscrollbar.grid(row=0, column=1, sticky='ns')
+        hscrollbar = AutoScrollbar(self, orient=tk.HORIZONTAL)
+        hscrollbar.grid(row=1, column=0, sticky='ew')
+        self.canvas = tk.Canvas(self, background='blue',#BgColor,
+                        yscrollcommand=vscrollbar.set,
+                        xscrollcommand=hscrollbar.set)
+        self.canvas.grid(row=0, column=0, sticky='nsew')
+        vscrollbar.config(command=self.canvas.yview)
+        hscrollbar.config(command=self.canvas.xview)
+        self.frame = tk.Frame(self.canvas, bg='red')#background=BgColor)
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.columnconfigure(0, weight=1)
+        #self.frame.grid(row=0, column=0, sticky='nsew')
+        
 '''Michael Lange <klappnase (at) freakmail (dot) de>
 The ToolTip class provides a flexible tooltip widget for Tkinter; it is based on IDLE's ToolTip
 module which unfortunately seems to be broken (at least the version I saw).
@@ -461,7 +485,7 @@ class ToolTip:
 
 class XmippButton(tk.Button):
     def __init__(self, master, text, imagePath=None, **opts):
-        defaults = {'activebackground': ButtonActiveBgColor}
+        defaults = {'activebackground': ButtonActiveBgColor, 'bg':ButtonBgColor}
         defaults.update(opts)
         btnImage = None
         if imagePath:
@@ -472,10 +496,11 @@ class XmippButton(tk.Button):
                 pass
         
         if btnImage:
-            tk.Button.__init__(self, master, image=btnImage, bd=0, height=28, width=28, **defaults)
+            #height=28, width=28,
+            tk.Button.__init__(self, master, image=btnImage, bd=0,  **defaults)
             self.image = btnImage
         else:
-            tk.Button.__init__(self, master, text=text, font=Fonts['button'], bg=ButtonBgColor, **defaults)
+            tk.Button.__init__(self, master, text=text, font=Fonts['button'], **defaults)
 
 '''Implement a Listbox Dialog, it will return
 the index selected in the lisbox or -1 on Cancel'''

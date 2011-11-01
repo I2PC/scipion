@@ -28,47 +28,19 @@
 
 import os
 import Tkinter as tk
-import tkFont
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
-from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, configDefaults, showInfo,\
-    showBrowseDialog, showFileViewer, showError, TaggedText
-from config_protocols import protDict, sections, ButtonBgColor, ButtonActiveBgColor, ButtonSelectColor
-from protlib_base import getProtocolFromModule, XmippProject,\
-    getExtendedRunName
+from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, showInfo,\
+    showBrowseDialog, showFileViewer, showError, TaggedText, XmippButton, ProjectLabel
+from config_protocols import *
+from protlib_base import getProtocolFromModule, XmippProject, getExtendedRunName
 from protlib_utils import ProcessManager,  getHostname
 from protlib_xmipp import greenStr
 from protlib_sql import SqliteDb, ProgramDb
 from protlib_filesystem import getXmippPath
 
-#TextColor
-CitationTextColor = "dark olive green"
-LabelTextColor = "black"
-SectionTextColor = "blue4"
-#Background Color
+# Redefine BgColor
 BgColor = "white"
-LabelBgColor = BgColor
-HighlightBgColor = BgColor
 
-def ProjectButton(master, text, imagePath=None, **opts):
-    configDefaults(opts, {'activebackground': ButtonActiveBgColor})
-    btnImage = None
-    if imagePath:
-        try:
-            imgPath = os.path.join(getXmippPath('resources'), imagePath)
-            btnImage = tk.PhotoImage(file=imgPath)
-        except tk.TclError:
-            pass
-    
-    if btnImage:
-        btn = tk.Button(master, image=btnImage, bd=0, height=28, width=28, **opts)
-        btn.image = btnImage
-    else:
-        btn = tk.Button(master, text=text, font=Fonts['button'], bg=ButtonBgColor, **opts)
-    return btn
-
-    
-def ProjectLabel(master, **opts):
-    return tk.Label(master, font=Fonts['label'], fg=SectionTextColor, **opts)
         
 class ProjectSection(tk.Frame):
     def __init__(self, master, label_text, **opts):
@@ -85,7 +57,7 @@ class ProjectSection(tk.Frame):
         self.frameContent.grid(row=1, column=0, columnspan=2, sticky='nsew')
         
     def addButton(self, text, imagePath=None, **opts):
-        btn = ProjectButton(self.frameButtons, text, imagePath, **opts)
+        btn = XmippButton(self.frameButtons, text, imagePath, **opts)
         btn.pack(side=tk.LEFT, padx=5)
         return btn
     
@@ -102,7 +74,7 @@ class ProjectButtonMenu(tk.Frame):
         self.label.pack(padx=5, pady=(5, 0))
         
     def addButton(self, button_text, **opts):
-        btn = ProjectButton(self, button_text, **opts)
+        btn = XmippButton(self, button_text, **opts)
         btn.pack(fill=tk.X, padx=5, pady=(5, 0))
         return btn
         
@@ -546,7 +518,7 @@ class XmippProjectGUI():
         list = [('Edit', 'edit.gif'), 
                 ('Copy', 'copy.gif'), ('Delete', 'delete.gif')]
         def setupButton(k, v):
-            btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k))
+            btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k), bg=HighlightBgColor   )
             ToolTip(btn, k, 500)
             self.runButtonsDict[k] = btn
         for k, v in list:
