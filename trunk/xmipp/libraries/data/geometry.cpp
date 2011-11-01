@@ -95,7 +95,8 @@ double point_line_distance_3D(const Matrix1D<double> &p,
     where D = -1
     Returns -1  if  A2+B2+C2 <<1
 */
-void least_squares_plane_fit(const std::vector<FitPoint> & IN_points,
+void least_squares_plane_fit(FitPoint *IN_points,
+		                     int Npoints,
                              double &plane_a,
                              double &plane_b,
                              double &plane_c)
@@ -114,9 +115,7 @@ void least_squares_plane_fit(const std::vector<FitPoint> & IN_points,
     double  denom = 0;
     const FitPoint * point;
 
-    int n = IN_points.size();
-
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < Npoints; i++)
     {
         point = &(IN_points[i]);//Can I copy just the address?
         W2 = point->w * point->w;

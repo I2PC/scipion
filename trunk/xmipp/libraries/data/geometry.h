@@ -210,8 +210,9 @@ struct FitPoint
  *
  * where w is a weighting factor. Set it to 1 if you do not want to use it
  */
-void least_squares_plane_fit(const std::vector< FitPoint >& IN_points,
-                             double& plane_A,
+void least_squares_plane_fit(FitPoint *IN_points,
+        					 int Npoints,
+        					 double& plane_A,
                              double& plane_B,
                              double& plane_C);
 
