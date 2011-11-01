@@ -649,7 +649,7 @@ void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
 {
 	ThreadFastEstimateEnhancedPSDParams *args=(ThreadFastEstimateEnhancedPSDParams*)thArg.workClass;
 	// COSS int Nthreads=thArg.manager->threads;
-	int Nthreads=1;
+	int Nthreads=3;
     int id=thArg.thread_id;
     ImageGeneric &I=*(args->I);
     const MultidimArrayGeneric& mI=I();
@@ -661,6 +661,9 @@ void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
     MultidimArray< std::complex<double> > Periodogram;
     piece.initZeros(pieceMask);
     localPSD.initZeros(*(args->PSD));
+
+    FourierTransformer transformer;
+    transformer.setReal(piece);
 
     int pieceNumber=0;
     int Nprocessed=0;
@@ -681,11 +684,15 @@ void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
 			piece*=pieceSmoother;
 
 		    // Estimate the power spectrum .......................................
-			FourierTransform(piece, Periodogram);
+			transformer.FourierTransform();
+			transformer.getCompleteFourier(Periodogram);
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(localPSD)
 			{
-				double magnitude=abs(DIRECT_MULTIDIM_ELEM(Periodogram, n));
-				DIRECT_MULTIDIM_ELEM(localPSD,n)+=magnitude*magnitude*pieceDim2;
+				double *ptr=(double*) &DIRECT_MULTIDIM_ELEM(Periodogram, n);
+				double re=*ptr;
+				double im=*(ptr+1);
+				double magnitude2=re*re+im*im;
+				DIRECT_MULTIDIM_ELEM(localPSD,n)+=magnitude2*pieceDim2;
 			}
     	}
 
