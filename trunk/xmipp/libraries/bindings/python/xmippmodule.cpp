@@ -3226,9 +3226,9 @@ xmipp_fastEstimateEnhancedPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
         PyObject *pyStrFn;
         //ImageObject *pyImage;
        double downsampling;
-       int dim;
+       int dim, Nthreads;
 
-        if (PyArg_ParseTuple(args, "Odi", &pyStrFn, &downsampling, &dim))
+        if (PyArg_ParseTuple(args, "Odii", &pyStrFn, &downsampling, &dim, &Nthreads))
         {
             try
             {
@@ -3251,7 +3251,7 @@ xmipp_fastEstimateEnhancedPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
                 }
 
                MultidimArray<double> data;
-               fastEstimateEnhancedPSD(fn, downsampling, data);
+               fastEstimateEnhancedPSD(fn, downsampling, data, Nthreads);
                selfScaleToSize(LINEAR, data, dim, dim);
                ImageObject * pyImage = PyObject_New(ImageObject, &ImageType);
                pyImage->image = new ImageGeneric(Double);

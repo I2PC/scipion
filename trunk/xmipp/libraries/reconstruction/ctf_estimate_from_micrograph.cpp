@@ -32,6 +32,7 @@
 #include <data/metadata.h>
 #include <data/xmipp_image.h>
 #include <data/xmipp_fft.h>
+#include <data/xmipp_threads.h>
 #include <data/basic_pca.h>
 #include <data/normalize.h>
 
@@ -634,8 +635,70 @@ void ProgCTFEstimateFromMicrograph::run()
 }
 
 /* Fast estimate of PSD --------------------------------------------------- */
+class ThreadFastEstimateEnhancedPSDParams
+{
+public:
+	ImageGeneric *I;
+	MultidimArray<double> *PSD, *pieceSmoother;
+    MultidimArray<int> *pieceMask;
+	Mutex mutex;
+	int Nprocessed;
+};
+
+void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
+{
+	ThreadFastEstimateEnhancedPSDParams *args=(ThreadFastEstimateEnhancedPSDParams*)thArg.workClass;
+	// COSS int Nthreads=thArg.manager->threads;
+	int Nthreads=1;
+    int id=thArg.thread_id;
+    ImageGeneric &I=*(args->I);
+    const MultidimArrayGeneric& mI=I();
+    int IXdim,IYdim,IZdim;
+    I.getDimensions(IXdim,IYdim,IZdim);
+    MultidimArray<double> &pieceSmoother=*(args->pieceSmoother);
+    MultidimArray<int> &pieceMask=*(args->pieceMask);
+    MultidimArray<double> localPSD, piece;
+    MultidimArray< std::complex<double> > Periodogram;
+    piece.initZeros(pieceMask);
+    localPSD.initZeros(*(args->PSD));
+
+    int pieceNumber=0;
+    int Nprocessed=0;
+    double pieceDim2=XSIZE(piece)*XSIZE(piece);
+    for (int i=0; i<(IYdim-YSIZE(piece)); i+=YSIZE(piece))
+    	for (int j=0; j<(IXdim-XSIZE(piece)); j+=XSIZE(piece), pieceNumber++)
+    	{
+    		if ((pieceNumber+1)%Nthreads!=id)
+    			continue;
+    		Nprocessed++;
+
+			// Extract micrograph piece ..........................................
+			for (int k = 0; k < YSIZE(piece); k++)
+				for (int l = 0; l < XSIZE(piece); l++)
+					DIRECT_A2D_ELEM(piece, k, l) = mI(i+k, j+l);
+			piece.statisticsAdjust(0, 1);
+			normalize_ramp(piece,pieceMask);
+			piece*=pieceSmoother;
+
+		    // Estimate the power spectrum .......................................
+			FourierTransform(piece, Periodogram);
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(localPSD)
+			{
+				double magnitude=abs(DIRECT_MULTIDIM_ELEM(Periodogram, n));
+				DIRECT_MULTIDIM_ELEM(localPSD,n)+=magnitude*magnitude*pieceDim2;
+			}
+    	}
+
+    // Gather results
+    args->mutex.lock();
+    args->Nprocessed+=Nprocessed;
+    *(args->PSD)+=localPSD;
+    args->mutex.unlock();
+}
+
 void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
-                             MultidimArray<double> &enhancedPSD)
+                             MultidimArray<double> &enhancedPSD,
+                             int numberOfThreads)
 {
 	int Xdim,Ydim,Zdim;
 	size_t Ndim;
@@ -644,6 +707,7 @@ void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
 	minSize=std::min((double)std::min(Xdim,Ydim),NEXT_POWER_OF_2(minSize));
 	minSize=std::min(1024,minSize);
 
+	/*
 	ProgCTFEstimateFromMicrograph prog1;
 	prog1.fn_micrograph=fnMicrograph;
 	prog1.fn_root=fnMicrograph.withoutExtension()+"_tmp";
@@ -656,6 +720,32 @@ void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
     prog1.verbose=1;
     prog1.overlap=0;
     prog1.run();
+*/
+    // Prepare auxiliary variables
+    ImageGeneric I;
+    I.read(fnMicrograph);
+
+    MultidimArray<double> PSD;
+    PSD.initZeros(minSize,minSize);
+
+    MultidimArray<int> pieceMask;
+    pieceMask.resizeNoCopy(PSD);
+    pieceMask.initConstant(1);
+
+    MultidimArray<double> pieceSmoother;
+    constructPieceSmoother(PSD,pieceSmoother);
+
+    // Prepare thread arguments
+    ThreadFastEstimateEnhancedPSDParams args;
+    args.I=&I;
+    args.PSD=&PSD;
+    args.pieceMask=&pieceMask;
+    args.pieceSmoother=&pieceSmoother;
+    args.Nprocessed=0;
+    ThreadManager *thMgr = new ThreadManager(numberOfThreads,&args);
+    thMgr->run(threadFastEstimateEnhancedPSD);
+    if (args.Nprocessed!=0)
+    	*(args.PSD)/=args.Nprocessed;
 
     ProgCTFEnhancePSD prog2;
     prog2.filter_w1 = 0.02;
@@ -664,11 +754,8 @@ void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
     prog2.mask_w1 = 0.005;
     prog2.mask_w2 = 0.5;
 
-    Image<double> PSD;
-    PSD.read(prog1.fn_root+".psd");
-    prog2.applyFilter(PSD());
-    enhancedPSD=PSD();
-    unlink(PSD.name().c_str());
+    prog2.applyFilter(*(args.PSD));
+    enhancedPSD=*(args.PSD);
 
     int downXdim_2=(int)(XSIZE(enhancedPSD)/(2*downsampling));
     enhancedPSD.setXmippOrigin();

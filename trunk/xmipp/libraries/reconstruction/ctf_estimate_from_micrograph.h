@@ -87,7 +87,8 @@ public:
 
 /** Fast estimate enhanced PSD.
  *  Set downsampling to 2 for halving the image size. */
-void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling, MultidimArray<double> &enhancedPSD);
+void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
+		                     MultidimArray<double> &enhancedPSD, int numberOfThreads);
 
 //@}
 #endif
