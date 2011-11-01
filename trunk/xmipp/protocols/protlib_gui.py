@@ -966,7 +966,7 @@ class ProtocolGUI(BasicGUI):
             s.checkVisibility()
             for w in s.childwidgets:
                 w.checkVisibility()
-        self.resize()
+        #self.resize()
         self.updateScrollRegion() 
 
     def fillButtons(self):
