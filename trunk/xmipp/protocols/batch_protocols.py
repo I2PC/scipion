@@ -28,11 +28,10 @@
 
 import os
 import Tkinter as tk
-import tkMessageBox
 import tkFont
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
-from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, configDefaults,showInfo,\
-    showBrowseDialog, FileViewer, showFileViewer, showError
+from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, configDefaults, showInfo,\
+    showBrowseDialog, showFileViewer, showError, TaggedText
 from config_protocols import protDict, sections
 from config_protocols import FontName, FontSize
 from protlib_base import getProtocolFromModule, XmippProject,\
@@ -453,18 +452,14 @@ class XmippProjectGUI():
                     showButtons = True
                 else:
                     summary = "This protocol run has not been executed yet"
-                labels = [('Run', getExtendedRunName(run)),
-                          ('\nCreated', run['init']),('   Modified', run['last_modified']), 
-                          ('\nScript ', run['script']),('\nDirectory', prot.WorkingDir),
-                          ('\nSummary', "\n"+summary)      ]
+                labels = '<Run>: ' + getExtendedRunName(run) + \
+                          '\n<Created>: ' + run['init'] + '   <Modified>: ' + run['last_modified'] + \
+                          '\n<Script>: ' + run['script'] + '\n<Directory>: ' + prot.WorkingDir + \
+                          '\n<Summary>:\n' + summary   
             except Exception, e:
                 labels = [('Error creating protocol:', str(e))]
-            self.detailsText.config(state=tk.NORMAL)
-            self.detailsText.delete(1.0, tk.END)
-            for k, v in labels:
-                self.detailsText.insert(tk.END, '%s:   ' % k, 'tag_bold')
-                self.detailsText.insert(tk.END, '%s' % v, 'tag_normal')
-            self.detailsText.config(state=tk.DISABLED)
+            self.detailsText.clear()
+            self.detailsText.addText(labels)
             details.displayButtons(showButtons)
             details.grid()
         for btn in self.runButtonsDict.values():
@@ -575,11 +570,10 @@ class XmippProjectGUI():
         content = details.frameContent
         content.config(bg=BgColor, bd=1, relief=tk.RIDGE)
         content.grid_configure(pady=(5, 0))
-        self.detailsText = tk.Text(content, height=15, width=70, border=0, 
+        
+        self.detailsText = TaggedText(content, height=15, width=70, border=0, 
                                    background='white', fg="black")
         self.detailsText.pack(fill=tk.BOTH)
-        self.detailsText.tag_config('tag_normal', font=tkFont.Font(family=FontName, size=FontSize))
-        self.detailsText.tag_config('tag_bold', font=tkFont.Font(family=FontName, size=FontSize, weight=tkFont.BOLD))
         return details
 
     def createGUI(self, root=None):
