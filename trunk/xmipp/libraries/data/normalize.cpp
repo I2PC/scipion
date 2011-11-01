@@ -258,29 +258,30 @@ void normalize_ramp(MultidimArray<double> &I, MultidimArray<int> &bg_mask)
     // Only 2D ramps implemented
     I.checkDimension(2);
 
-    FitPoint onepoint;
-    std::vector<FitPoint>  allpoints;
+    int Npoints=bg_mask.sum();
+    if (Npoints<=1)
+        return;
+    FitPoint *allpoints=new FitPoint[Npoints];
 
     // Fit a least squares plane through the background pixels
     I.setXmippOrigin();
     bg_mask.setXmippOrigin();
+    int idx=0;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
         if (A2D_ELEM(bg_mask, i, j))
         {
-            onepoint.x = j;
-            onepoint.y = i;
-            onepoint.z = A2D_ELEM(I, i, j);
-            onepoint.w = 1.;
-            allpoints.push_back(onepoint);
+        	FitPoint &p=allpoints[idx++];
+            p.x = j;
+            p.y = i;
+            p.z = A2D_ELEM(I, i, j);
+            p.w = 1.;
         }
     }
-    size_t N = allpoints.size();
-    if (N<=1)
-        return;
 
     double pA, pB, pC;
-    least_squares_plane_fit(allpoints, pA, pB, pC);
+    least_squares_plane_fit(allpoints, Npoints, pA, pB, pC);
+    delete [] allpoints;
 
     // Substract the plane from the image and compute stddev within mask
     double sum1 = 0;
@@ -300,8 +301,8 @@ void normalize_ramp(MultidimArray<double> &I, MultidimArray<int> &bg_mask)
         }
     }
 
-    double avgbg  = sum1 / N;
-    double stddevbg = sqrt(fabs(sum2 / N - avgbg * avgbg) * N / (N - 1));
+    double avgbg  = sum1 / Npoints;
+    double stddevbg = sqrt(fabs(sum2 / Npoints - avgbg * avgbg) * Npoints / (Npoints - 1));
     if (stddevbg>1e-6)
         I *= 1.0/stddevbg;
 }
@@ -310,8 +311,6 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
                                  const MultidimArray<int> &bg_mask,
                                  const double &threshold)
 {
-    FitPoint          onepoint;
-    std::vector<FitPoint>  allpoints;
     double             pA, pB, pC;
     double             avgbg, stddevbg, minbg, maxbg, aux, newstddev;
     double             sum1 = 0.;
@@ -322,28 +321,31 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
     I.checkDimension(2);
 
     // Fit a least squares plane through the background pixels
-    allpoints.clear();
+    int Npoints=bg_mask.sum();
+    FitPoint *allpoints=new FitPoint[Npoints];
     I.setXmippOrigin();
 
     // Get initial statistics
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,stddevbg);
 
     // Fit plane through those pixels within +/- threshold*sigma
+    int idx=0;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
         if (A2D_ELEM(bg_mask, i, j))
         {
-            if ( ABS(avgbg - A2D_ELEM(I, i, j)) < threshold * stddevbg)
+            if ( fabs(avgbg - A2D_ELEM(I, i, j)) < threshold * stddevbg)
             {
-                onepoint.x = j;
-                onepoint.y = i;
-                onepoint.z = A2D_ELEM(I, i, j);
-                onepoint.w = 1.;
-                allpoints.push_back(onepoint);
+            	FitPoint &p=allpoints[idx++];
+                p.x = j;
+                p.y = i;
+                p.z = A2D_ELEM(I, i, j);
+                p.w = 1.;
             }
         }
     }
-    least_squares_plane_fit(allpoints, pA, pB, pC);
+    least_squares_plane_fit(allpoints, Npoints, pA, pB, pC);
+    delete []allpoints;
 
     // Substract the plane from the image
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
@@ -367,7 +369,7 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
     }
     // average and standard deviation
     aux = sum1 / (double) N;
-    newstddev = sqrt(ABS(sum2 / N - aux*aux) * N / (N - 1));
+    newstddev = sqrt(fabs(sum2 / N - aux*aux) * N / (N - 1));
 
     // Replace pixels outside +/- threshold*sigma by samples from
     // a gaussian with avg-plane and newstddev
@@ -375,7 +377,7 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
     {
         if (A2D_ELEM(bg_mask, i, j))
         {
-            if ( ABS(A2D_ELEM(I, i, j)) > threshold * stddevbg)
+            if ( fabs(A2D_ELEM(I, i, j)) > threshold * stddevbg)
             {
                 // get local average
                 aux = pA * j + pB * i + pC;
