@@ -83,7 +83,7 @@ public:
     /** Re-alignment of classes */
 
     /** Input file */
-    FileName inFile;
+    FileName inFile, refGroup;
     /** Inner and outer radius for rotational alignment */
     int Ri, Ro;
     /** Number of iterations */
@@ -141,7 +141,7 @@ public:
                      MetaData   SF,
                      FileName   fn,
                      bool       write_selfile,
-                     FileName   oext="xmp");
+                     FileName   oext="stk");
 
     /** Add an image to the selfile and docfile of all class averages */
     void addClassAverage(size_t dirno,

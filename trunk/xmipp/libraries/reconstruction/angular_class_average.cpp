@@ -75,8 +75,8 @@ void ProgAngularClassAverage::readParams()
     fn_wien = getParameter(argc, argv, "--wien","");
     pad = XMIPP_MAX(1.,getDoubleParam("--pad"));
 
-    // Skip writing selfiles?
-    write_selfiles = !checkParam("--write_selfiles");
+    // Write selfiles
+    write_selfiles = checkParam("--write_selfiles");
 
     // Internal re-alignment of the class averages
     Ri      = getIntParam("--Ri");
@@ -131,7 +131,7 @@ void ProgAngularClassAverage::defineParams()
 void ProgAngularClassAverage::run()
 {
     int              i, nmax, nr_ref, nr_images, reserve;
-    double           ref_number, rot, tilt, psi, xshift, yshift;
+    double           rot, tilt, psi, xshift, yshift;
     bool             mirror;
     double           w, w1, w2;
     Matrix1D<double> dataline(8);
@@ -139,21 +139,29 @@ void ProgAngularClassAverage::run()
     produceSideInfo();
 
     // Only for do_add: append input docfile to add_to docfile
+    //do_Add is enabled if we are using different ctf groups
     if (do_add)
+        //if (false)
     {
-        FileName fn_tmp=fn_out+".doc";
+        FileName fn_tmp=fn_out+".xmd";
         if (fn_tmp.exists())
         {
             MetaData DFaux = DF;
+            MetaData DFaux2(fn_tmp);
             // Don't do any fancy merging or sorting because those functions are really slow...
-            DFaux.unionAll(fn_tmp);
-            DFaux.write(fn_tmp);
+            DFaux.write("dfaux_run.xmd");
+            DFaux2.write("dfaux2_run.xmd");
+            DFaux.unionAll(DFaux2);
+            DFaux2.clear();
+            DFaux2.removeDuplicates(DFaux);
+            DFaux2.write(fn_tmp);
         }
         else
         {
             DF.write(fn_tmp);
         }
     }
+
 
     // Making class averages
 
@@ -162,7 +170,7 @@ void ProgAngularClassAverage::run()
         reserve = DF.size();
     else
         reserve = 0;
-    //output_values looks horrible but it is usefull for the MPI version
+    //output_values looks horrible but it is useful for the MPI version
     double output_values[AVG_OUPUT_SIZE*reserve+1];
 
     nr_ref = DFlib.size();
@@ -174,10 +182,14 @@ void ProgAngularClassAverage::run()
     //most of the classes are empty!!!!!ROB
     //for (int dirno = 1; dirno <= nr_ref; dirno++)
     size_t dirno;
+    int ref_number;
+
+    //char ch;
     FOR_ALL_OBJECTS_IN_METADATA(DFclassesExp)
     {
+
         // Do the actual work
-        DFclassesExp.getValue(MDL_ORDER,dirno,__iter.objId);
+        DFclassesExp.getValue(MDL_ORDER, dirno,__iter.objId);
         processOneClass(dirno, output_values);
 
         // Output classes sel and doc files
@@ -226,7 +238,8 @@ void ProgAngularClassAverage::run()
     progress_bar(nr_ref);
 
     // Write selfiles and docfiles with all class averages
-    finalWriteToDisc();
+    //if (write_selfiles)
+    //    finalWriteToDisc();
 
 }
 
@@ -234,11 +247,19 @@ void ProgAngularClassAverage::run()
 // Side info stuff ===================================================================
 void ProgAngularClassAverage::produceSideInfo()
 {
-
     //create metadata with classes that has experimental images applied to them.
     //experimental images are already in DF
     //get all blocks, select those without '_'
-    //perform an aggregation fuction over the reference and store the result in DFclassesExp
+    //perform an aggregation function over the reference and store the result in DFclassesExp
+
+
+
+    //Obtain the number of reference volumen group, if exists
+    FileName auxBlock = inFile.getBlockName();
+
+    refGroup = auxBlock.afterFirstOf("_");
+
+    //count number of different references used
     StringVector blockList;
     FileName auxFn        = inFile.removeBlockName();
     getBlocksInMetaDataFile(auxFn,blockList);
@@ -250,22 +271,28 @@ void ProgAngularClassAverage::produceSideInfo()
         auxMD.read(*it +'@' + auxFn);
         DFclassesExp.unionAll(auxMD);
     }
-    auxMD.aggregate(DFclassesExp, AGGR_COUNT,MDL_REF,MDL_REF,MDL_COUNT);
-    //number DFclassesExp
-    auxMD.addLabel(MDL_ORDER);
-    DFclassesExp.sort(auxMD,MDL_REF);
-    size_t counter=FIRST_IMAGE;
-    FOR_ALL_OBJECTS_IN_METADATA(DFclassesExp)
-    	DFclassesExp.setValue(MDL_ORDER,counter++,__iter.objId);
-    //add class number to original metadata with experimentali images
-    //auxMD.join(DF,DFclassesExp,MDL_REF);
-    //DF=auxMD;
+    //alloc space for output files
+    int Xdim, Ydim, Zdim;
+    size_t Ndim;
+
+    ImgSize(DFclassesExp, Xdim, Ydim, Zdim, Ndim);
+
+    //auxMD.aggregate(DFclassesExp, AGGR_COUNT,MDL_REF,MDL_REF,MDL_COUNT);
+    auxMD.aggregate(DFclassesExp, AGGR_COUNT,MDL_ORDER,MDL_ORDER,MDL_COUNT);
+
+    DFclassesExp.sort(auxMD,MDL_ORDER);
+    DFclassesExp.write("DFclassesExp_sorted.xmd");
+
+    Ndim = DFclassesExp.size();
+    createEmptyFile(fn_out+"_classes.stk",Xdim,Ydim,Zdim,Ndim,true,WRITE_OVERWRITE);
 
     // Set up output rootnames
     if (do_split)
     {
         fn_out1 = fn_out+"_split_1";
+        createEmptyFile(fn_out1+"_classes.stk", Xdim, Ydim, Zdim, Ndim, true, WRITE_OVERWRITE);
         fn_out2 = fn_out+"_split_2";
+        createEmptyFile(fn_out2+"_classes.stk", Xdim, Ydim, Zdim, Ndim, true, WRITE_OVERWRITE);
     }
 
     int dummyI;
@@ -276,11 +303,13 @@ void ProgAngularClassAverage::produceSideInfo()
     Iempty().setXmippOrigin();
 
     // check Wiener filter image has correct size and store the filter, we will use it later
+    //This program is called once for each CTF group so there is a single wienner filter involved
     if (fn_wien!="")
     {
         // Get padding dimensions
         paddim = ROUND(pad * dim);
         Image<double> auxImg;
+        //auxImg.read(fn_wien, HEADER);
         auxImg.read(fn_wien);
         Mwien=auxImg();
         if (XSIZE(Mwien) != paddim)
@@ -291,16 +320,18 @@ void ProgAngularClassAverage::produceSideInfo()
                          "Incompatible padding factor for this Wiener filter");
         }
     }
+
     // Set ring defaults
     if (Ri<1)
         Ri=1;
     if (Ro<0)
         Ro=(dim/2)-1;
 
+
     // Set limitR
     if (do_limitR0 || do_limitRF)
     {
-    	MetaData tmpMT(DF);
+        MetaData tmpMT(DF);
         std::vector<double> vals;
         MDLabel codifyLabel=MDL::str2Label(col_select);
         FOR_ALL_OBJECTS_IN_METADATA(DF)
@@ -335,9 +366,11 @@ void ProgAngularClassAverage::produceSideInfo()
         }
     }
 
+
     // Randomization
     if (do_split)
         randomize_random_generator();
+
 
     // Set up FFTW transformers
     //FIXME
@@ -353,6 +386,8 @@ void ProgAngularClassAverage::produceSideInfo()
     corr.resize(P.getSampleNoOuterRing());
     global_transformer.setReal(corr);
     global_transformer.FourierTransform();
+
+
 }
 
 void ProgAngularClassAverage::getPolar(MultidimArray<double> &img, Polar<std::complex <double> > &fP,
@@ -603,19 +638,27 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno,
     FileName   fn_img, fn_tmp;
     MetaData   SFclass, SFclass1, SFclass2;
     double     rot, tilt, psi, xshift, yshift, val, w, w1, w2, my_limitR, scale;
-    bool mirror;
+    bool       mirror;
     int        ref_number, this_image;
     int        isplit;
-    MetaData _DF;
+    MetaData   _DF;
+    size_t id;
+    double current_rot, current_tilt;
+    size_t order_number;
 
     w = 0.;
     w1 = 0.;
     w2 = 0.;
     this_image=0;
-    _DF.importObjects(DF,MDValueEQ(MDL_REF,(int)dirno));
+
+
+    //_DF.importObjects(DF,MDValueEQ(MDL_REF,(int)dirno));
+    _DF.importObjects(DF,MDValueEQ(MDL_ORDER, dirno));
+
+
     if (_DF.size()==0)
     {//no images assigned to this class
-        //this is possible because the input metadta contains
+        //this is possible because the input metadata contains
         //several blocks
         my_output[0] = (double)dirno;
         my_output[1] = w;
@@ -647,7 +690,11 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno,
     {
         _DF.getValue(MDL_IMAGE,fn_img, __iter.objId);
         this_image++;
-        //_DF.getValue(MDL_REF,ref_number);
+
+        _DF.getValue(MDL_REF,ref_number, __iter.objId);
+        _DF.getValue(MDL_ANGLEROT,current_rot, __iter.objId);
+        _DF.getValue(MDL_ANGLETILT,current_tilt, __iter.objId);
+        _DF.getValue(MDL_ORDER, order_number, __iter.objId);
         //if (ref_number == dirno)
         {
             bool is_selected = true;
@@ -703,13 +750,21 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno,
                 {
                     avg1() += img();
                     w1 += 1.;
-                    SFclass1.setValue(MDL_IMAGE,fn_img, SFclass1.addObject());
+                    id = SFclass1.addObject();
+                    SFclass1.setValue(MDL_IMAGE,fn_img, id);
+                    SFclass1.setValue(MDL_ANGLEROT,current_rot, id);
+                    SFclass1.setValue(MDL_ANGLETILT,current_tilt, id);
+                    SFclass1.setValue(MDL_REF,ref_number, id);
                 }
                 else
                 {
                     avg2() += img();
                     w2 += 1.;
-                    SFclass2.setValue(MDL_IMAGE,fn_img, SFclass2.addObject());
+                    id = SFclass2.addObject();
+                    SFclass2.setValue(MDL_IMAGE,fn_img, id);
+                    SFclass2.setValue(MDL_ANGLEROT,current_rot, id);
+                    SFclass2.setValue(MDL_ANGLETILT,current_tilt, id);
+                    SFclass2.setValue(MDL_REF,ref_number, id);
                 }
             }
         }
@@ -759,16 +814,29 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno,
     avg.setWeight(w);
     avg1.setWeight(w1);
     avg2.setWeight(w2);
+
+
     //ROB WRITE DISK
+    // blocks
     std::cerr << "ROB WRITE DISK" <<std::endl;
-    writeToDisc(avg,dirno,SFclass,fn_out+"_class",write_selfiles);
+    FileName fileName;
+    fileName = fn_out+"_classes";
+    writeToDisc(avg,dirno,SFclass,fileName,write_selfiles);
+
     if (do_split)
     {
         if (w1>0)
-            writeToDisc(avg1,dirno,SFclass1,fn_out1+"_class",write_selfiles);
+        {
+            fileName = fn_out1+"_classes";
+            writeToDisc(avg1,dirno,SFclass1,fileName,write_selfiles);
+        }
         if (w2>0)
-            writeToDisc(avg2,dirno,SFclass2,fn_out2+"_class",write_selfiles);
+        {
+            fileName = fn_out2+"_classes";
+            writeToDisc(avg2,dirno,SFclass2,fileName,write_selfiles);
+        }
     }
+
 
     my_output[0] = (double)dirno;
     my_output[1] = w;
@@ -784,7 +852,7 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
         FileName   oext)
 {
     FileName   fn_tmp;
-    double     w = avg.weight(), w_old;
+    double     w = avg.weight(), w_old = 0;
     Image<double> old;
     MetaData    SFold;
     std::cerr << "w = " << w <<std::endl;
@@ -794,8 +862,9 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
         std::cerr << "w >0 " <<std::endl;
         if(w!=1.)
             avg()/=w;
-        // Write class average to disc//fn_tmp.compose(dirno,fn,oext);
-        fn_tmp = fn + "." + oext;
+        // Write class average to disc//
+        fn_tmp.compose(dirno,fn,oext);
+        //fn_tmp = fn + "." + oext;
         if (do_add && fn_tmp.exists() )
         {
             std::cerr << "here1 " <<std::endl;
@@ -816,26 +885,33 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
             avg.write(fn_tmp,dirno,true,WRITE_REPLACE);
             std::cerr << "avg after fn_tmp" << fn_tmp << std::endl;
         }
-        // Write class selfile to disc
-        if (write_selfile)
+    }
+
+    // Write class selfile to disc (even if its empty)
+    if (write_selfile)
+    {
+    	formatStringFast(fn_tmp, "%s%06lu_%s@%s.%s", "groupClass", dirno, refGroup.c_str(), fn.c_str(), "xmd");
+
+        MetaData auxMd;
+        if (do_add && auxMd.existsBlock(fn_tmp))
         {
-            fn_tmp.compose(fn,dirno,"sel");
-            if (do_add && fn_tmp.exists() )
-            {
-                SF.merge(fn_tmp);
-                MetaData SFaux;
-                SFaux.sort(SF,MDL_IMAGE);
-                SF=SFaux;
-            }
-            SF.write(fn_tmp);
+            MetaData SFaux = SF;
+            MetaData SFaux2;
+            SFaux2.read(fn_tmp);
+            SFaux.unionAll(SFaux2);
+            SF.clear();
+            SF.removeDuplicates(SFaux);
         }
 
-        if (ROUND(w) != SF.size())
-        {
-            std::cerr<<" w = "<< w <<" SF.size()= "<< SF.size() <<" dirno = "<<dirno<<std::endl;
-            REPORT_ERROR(ERR_MD_OBJECTNUMBER,"Selfile and average weight do not correspond!");
-        }
+        SF.write(fn_tmp, MD_APPEND);
     }
+
+    //if (ROUND(w) != SF.size())
+    {
+        std::cerr<<" w = "<< w << " w_old = "<< w_old <<" SF.size()= "<< SF.size() <<" dirno = "<<dirno<<std::endl;
+        //    REPORT_ERROR(ERR_MD_OBJECTNUMBER,"Selfile and average weight do not correspond!");
+    }
+
 }
 
 
@@ -852,9 +928,13 @@ void ProgAngularClassAverage::addClassAverage(size_t dirno,
     double d=0.;
     bool f=false;
     size_t id;
+    int ref2d;
+
+    DFclassesExp.getValue(MDL_REF, ref2d, dirno);
+
     if (w > 0.)
     {
-        fn_tmp.compose(dirno, fn_out+"_class","xmp");
+        fn_tmp.compose(dirno, fn_out+"_class","stk");
         id = SFclasses.addObject();
         SFclasses.setValue(MDL_IMAGE,fn_tmp,id);
         SFclasses.setValue(MDL_ANGLEROT,rot,id);
@@ -868,12 +948,14 @@ void ProgAngularClassAverage::addClassAverage(size_t dirno,
         //this may help to keep compatibility with the next program
         SFclasses.setValue(MDL_FLIP,f,id);
 
+        SFclasses.setValue(MDL_REF,ref2d,id);
+
     }
     if (do_split)
     {
         if (w1 > 0.)
         {
-            fn_tmp.compose(dirno,fn_out1+"_class","xmp");
+            fn_tmp.compose(dirno,fn_out1+"_class","stk");
             id = SFclasses1.addObject();
             SFclasses1.setValue(MDL_IMAGE,fn_tmp,id);
             SFclasses1.setValue(MDL_ANGLEROT,rot,id);
@@ -887,10 +969,13 @@ void ProgAngularClassAverage::addClassAverage(size_t dirno,
 
             //this may help to keep compatibility with the next program
             SFclasses1.setValue(MDL_FLIP,f,id);
+
+            SFclasses1.setValue(MDL_REF,ref2d,id);
+
         }
         if (w2 > 0.)
         {
-            fn_tmp.compose(dirno,fn_out2+"_class","xmp");
+            fn_tmp.compose(dirno,fn_out2+"_class","stk");
             id = SFclasses2.addObject();
             SFclasses2.setValue(MDL_IMAGE,fn_tmp,id);
             SFclasses2.setValue(MDL_ANGLEROT,rot,id);
@@ -904,6 +989,8 @@ void ProgAngularClassAverage::addClassAverage(size_t dirno,
 
             //this may help to keep compatibility with the next program
             SFclasses2.setValue(MDL_FLIP,f,id);
+
+            SFclasses2.setValue(MDL_REF,ref2d,id);
         }
     }
 }
@@ -913,26 +1000,8 @@ void ProgAngularClassAverage::finalWriteToDisc()
     FileName fn_tmp;
     MetaData  auxSF, auxDF;
 
-    // Write selfiles containing all classes
-    fn_tmp=fn_out+"_classes.sel";
-    if (do_add && fn_tmp.exists())
-        SFclasses.merge(fn_tmp);
-    auxSF.sort(SFclasses,MDL_IMAGE);
-    auxSF.write(fn_tmp);
-    if (do_split)
-    {
-        fn_tmp=fn_out1+"_classes.sel";
-        if (do_add && fn_tmp.exists())
-            SFclasses1.merge(fn_tmp);
-        SFclasses1.write(fn_tmp);
-        fn_tmp=fn_out2+"_classes.sel";
-        if (do_add && fn_tmp.exists())
-            SFclasses2.merge(fn_tmp);
-        SFclasses2.write(fn_tmp);
-    }
-
     // Write docfiles with angles and weights of all classes
-    fn_tmp=fn_out+"_classes.doc";
+    fn_tmp=fn_out+"_classes.xmd";
     if (do_add && fn_tmp.exists())
     {
         MetaData MDaux;
@@ -943,7 +1012,7 @@ void ProgAngularClassAverage::finalWriteToDisc()
     SFclasses.write(fn_tmp);
     if (do_split)
     {
-        fn_tmp=fn_out1+"_classes.doc";
+        fn_tmp=fn_out1+"_classes.xmd";
         if (do_add && fn_tmp.exists())
         {
             MetaData MDaux;
@@ -952,7 +1021,7 @@ void ProgAngularClassAverage::finalWriteToDisc()
             SFclasses1.aggregate(MDaux, AGGR_SUM,MDL_IMAGE,MDL_WEIGHT,MDL_SUM);
         }
         SFclasses1.write(fn_tmp);
-        fn_tmp=fn_out2+"_classes.doc";
+        fn_tmp=fn_out2+"_classes.xmd";
         if (do_add && fn_tmp.exists())
         {
             MetaData MDaux;
@@ -968,7 +1037,9 @@ void ProgAngularClassAverage::finalWriteToDisc()
     {
         fn_tmp=fn_out+"_realigned.doc";
         if (do_add && fn_tmp.exists())
+        {
             DF.merge(fn_tmp);
+        }
         DF.write(fn_tmp);
     }
 }
