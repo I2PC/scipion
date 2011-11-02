@@ -48,8 +48,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JMenu filtersmn;
 	protected String activemacro;
 	
+	
 	public ParticlePickerJFrame()
 	{
+		
 		addWindowListener(new WindowAdapter()
 		{
 			public void windowClosing(WindowEvent winEvt)
@@ -134,10 +136,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				activemacro = ((JMenuItem) e.getSource()).getText();
-				IJ.run("8-bit");
+				activemacro = "8-bit";
 				IJ.run(activemacro);
-				
+				getParticlePicker().addMacro(activemacro);
+				activemacro = ((JMenuItem) e.getSource()).getText();
+				IJ.run(activemacro);
+				getParticlePicker().addMacro(activemacro);
 			}
 		});
 		JMenuItem msmi = new JMenuItem("Mean Shift");
@@ -161,6 +165,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		{
 			activemacro = ((JMenuItem) e.getSource()).getText();
 			IJ.run(activemacro);
+			getParticlePicker().addMacro(activemacro);
 		}
 		catch (Exception ex)
 		{

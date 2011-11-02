@@ -356,7 +356,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	{
 		persistFamilies();
 		persistMicrographs();
-
+		persistMacros();
 	}
 
 	public int getAutomaticNumber(Family f, double threshold)

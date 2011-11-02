@@ -111,3 +111,32 @@ JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_clear(JNIEnv *env,
 	}
 }
 
+JNIEXPORT jintArray JNICALL Java_xmipp_TiltPairAligner_computeAlphas(JNIEnv *env,
+		jobject jobj) {
+	String msg;
+
+	try {
+		TiltPairAligner * tpa = GET_INTERNAL_TPA(jobj);
+		if (tpa != NULL) {
+			int alphas[2];
+			tpa->computeAlphas(alphas[0], alphas[1]);
+			jintArray result = env->NewIntArray(2);
+			env->SetIntArrayRegion(result, 0, 2, alphas);
+			return result;
+		} else {
+			msg = "TiltPairAligner is null";
+		}
+	} catch (XmippError xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+}
+

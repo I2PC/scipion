@@ -227,6 +227,6 @@ class ShortProcessorCreator extends ProcessorCreator {
 class ByteProcessorCreator extends ProcessorCreator {
 
     public ImageProcessor getProcessor(ImageGeneric image) {
-        return new ByteProcessor(image.xSize, image.ySize, image.getArrayByte(), null);
+        return new ij.process.ByteProcessor(image.xSize, image.ySize, image.getArrayByte(), null);
     }
 }

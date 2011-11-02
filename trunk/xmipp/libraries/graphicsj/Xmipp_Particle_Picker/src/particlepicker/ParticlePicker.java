@@ -1,7 +1,10 @@
 package particlepicker;
 
 import java.awt.Color;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,16 +29,32 @@ public abstract class ParticlePicker
 	private boolean changed;
 	protected List<Family> families;
 	private FamilyState mode;
+	protected String macros;
 
 	public ParticlePicker(String outputdir, FamilyState mode)
 	{
-
+		macros = "";
 		this.outputdir = outputdir;
 		this.mode = mode;
 		this.families = new ArrayList<Family>();
 		this.familiesfile = getOutputPath("families.xmd");
 		loadFamilies();
 
+	}
+	
+	public void addMacro(String macro)
+	{
+		macros += String.format("run(\"%s\");\n", macro);
+	}
+	
+	public String getMacros()
+	{
+		return macros;
+	}
+	
+	public void loadMacros()
+	{
+		
 	}
 
 	public void setChanged(boolean changed)
@@ -207,5 +226,21 @@ public abstract class ParticlePicker
 	public abstract void saveData();
 	
 	public abstract int getManualParticlesNumber(Family f);
+	
+	public void persistMacros()
+	{
+		String file = getOutputPath("macros.txt");
+		try
+		{
+			BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+			writer.append(macros);
+			writer.close();
+		}
+		catch (IOException e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+	}
 
 }

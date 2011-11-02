@@ -20,6 +20,7 @@ public class UntiltedMicrograph extends Micrograph {
 		this.tiltedmicrograph = tiltedmicrograph;
 		particles = new ArrayList<UntiltedParticle>();
 		tpa = new TiltPairAligner();
+		
 	}
 
 	public int getAddedCount()
@@ -77,6 +78,7 @@ public class UntiltedMicrograph extends Micrograph {
 		tpa.addParticleToAligner(up.getX(), up.getY(), up.getTiltedParticle().getX(), up.getTiltedParticle().getY());
 		up.setAdded(true);
 		added ++;
+		
 	}
 	
 	
@@ -87,6 +89,11 @@ public class UntiltedMicrograph extends Micrograph {
 		for(UntiltedParticle p: particles)
 			if(p.getTiltedParticle() != null)
 				addParticleToAligner(p);
+	}
+	
+	public int[] getAlphas()
+	{
+		return tpa.computeAlphas();
 	}
 	
 	public void setAlignerTiltedParticle(UntiltedParticle up)

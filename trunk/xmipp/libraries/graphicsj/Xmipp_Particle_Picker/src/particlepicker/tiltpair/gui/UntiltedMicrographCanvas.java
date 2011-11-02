@@ -5,6 +5,7 @@ import ij.gui.ImageWindow;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -21,7 +22,7 @@ import particlepicker.tiltpair.model.UntiltedParticle;
 import particlepicker.training.model.TrainingParticle;
 import xmipp.Particle;
 
-public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements MouseWheelListener
+public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 {
 
 	private TiltPairPickerJFrame frame;
@@ -30,6 +31,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 	private UntiltedMicrograph um;
 	private ImageWindow iw;
 	private boolean reload = false;
+	private boolean drawalpha;
 
 	public UntiltedMicrographCanvas(TiltPairPickerJFrame frame)
 	{
@@ -39,9 +41,10 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 		this.frame = frame;
 		addMouseWheelListener(this);
 		this.pppicker = frame.getParticlePicker();
-
+		drawalpha = false;
 		iw = new ImageWindow(imp, this);
 		WindowUtils.centerScreen(0, 0, iw);
+		
 	}
 
 	public void updateMicrograph()
@@ -191,7 +194,17 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas implements Mo
 			g2.setColor(Color.red);
 			drawShape(g2, active, true);
 		}
+		drawalpha = true;
+		if(drawalpha)
+		{
+			int [] alphas = um.getAlphas();
+			double alpha = Math.toRadians(alphas[0]);
+			drawLine(alpha, g2);
+		}
 	}
+	
+	
+	
 
 	@Override
 	public void setActive(TrainingParticle p)

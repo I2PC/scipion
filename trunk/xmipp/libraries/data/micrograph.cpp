@@ -533,9 +533,7 @@ void TiltPairAligner::addCoordinatePair(int _muX, int _muY, int _mtX,
 	coordU.push_back(_muY);
 	coordT.push_back(_mtX);
 	coordT.push_back(_mtY);
-
 	Nu++; // Number of particles
-
 
 #ifdef _DEBUG
 
@@ -689,7 +687,8 @@ double matrix_fitness(double *p, void *prm) {
 	return retval;
 }
 
-void TiltPairAligner::computeAlphas() {
+
+void TiltPairAligner::computeAlphas(int &ualpha, int &talpha) {
 	alpha_u = alpha_t = 0;
 	Matrix1D<double> angles(3);
 	angles.initZeros();
@@ -702,7 +701,9 @@ void TiltPairAligner::computeAlphas() {
 	aux[3] = gamma;
 	for (aux[1] = 0; aux[1] < 180; aux[1] += 10)
 		for (aux[2] = 0; aux[2] < 180; aux[2] += 10) {
-			double fit = matrix_fitness(aux, NULL);
+			std::cerr << "after matrix_fitness" << std::endl;
+			double fit = matrix_fitness(aux, this);
+			std::cerr << "before" << std::endl;
 			if (fit < best_fit) {
 				best_fit = fit;
 				best_alpha_u = aux[1];
@@ -717,9 +718,14 @@ void TiltPairAligner::computeAlphas() {
 	// Fine search
 	Matrix1D<double> steps(3);
 	steps.initConstant(1);
+	std::cerr << "after powell" << std::endl;
 	powellOptimizer(angles, 1, 3, &matrix_fitness, this, 0.001, fitness, iter,
 			steps, false);
+	std::cerr << "before" << std::endl;
 	alpha_u = angles(0);
 	alpha_t = angles(1);
 	gamma = angles(2);
+
+	ualpha = alpha_u;
+	talpha = alpha_t;
 }

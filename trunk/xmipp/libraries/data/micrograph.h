@@ -598,7 +598,7 @@ public:
 	void computeGamma();
 
 	/// Compute alphas
-	void computeAlphas();
+	void computeAlphas(int &ualpha, int &talpha);
 public:
     // For tilted-untilted correspondance
     Matrix2D<double>    Au;     // Untilted "positions"

@@ -18,7 +18,7 @@ import particlepicker.tiltpair.model.UntiltedParticle;
 import particlepicker.training.model.TrainingParticle;
 import xmipp.Particle;
 
-public class TiltedMicrographCanvas extends ParticlePickerCanvas implements MouseListener, MouseWheelListener
+public class TiltedMicrographCanvas extends ParticlePickerCanvas
 {
 
 	private TiltPairPickerJFrame frame;
@@ -27,6 +27,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 	private TiltedParticle active;
 	private ImageWindow iw;
 	private boolean reload;
+	private boolean drawalpha;
 
 	public TiltedMicrographCanvas(TiltPairPickerJFrame frame)
 	{
@@ -107,6 +108,13 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas implements Mous
 		{
 			g2.setColor(Color.red);
 			drawShape(g2, uc.getActiveParticle().getTiltedParticle(), true);
+		}
+		drawalpha = true;
+		if(drawalpha)
+		{
+			int [] alphas = um.getAlphas();
+			double alpha = Math.toRadians(alphas[1]);
+			drawLine(alpha, g2);
 		}
 	}
 
