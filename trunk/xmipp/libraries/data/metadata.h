@@ -683,9 +683,18 @@ public:
      */
     void append(const FileName &outFile);
 
+    /** Check if block exists in metadata file
+     * input full parh block@filename
+     * return false if metadata block does not exits
+     */
+    bool existsBlock(const FileName &_inFile);
+
     /** Read data from file.
      */
-    void _read(const FileName &inFile, const std::vector<MDLabel> *desiredLabels = NULL, const String & blockName="", bool decomposeStack=true);
+    void _read(const FileName &inFile,
+    		const std::vector<MDLabel> *desiredLabels = NULL,
+    		const String & blockName="",
+    		bool decomposeStack=true);
     /** Read data from file. Guess the blockname from the filename
      * @code
      * inFilename="first@md1.doc" -> filename = md1.doc, blockname = first

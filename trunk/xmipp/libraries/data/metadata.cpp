@@ -935,9 +935,61 @@ void MetaData::addPlain(const FileName &inFile, const String &labelsString, cons
     merge(md2);
 }
 
+bool MetaData::existsBlock(const FileName &_inFile)
+{
+    String blockName;
+    FileName outFile;
+
+	blockName=_inFile.getBlockName();
+    outFile = _inFile.removeBlockName();
+
+    struct stat file_status;
+    int fd;
+    char *map;
+
+    //check if file exists or not block name has been given
+    //in our format no two identical data_xxx strings may exists
+
+    if (blockName.empty() || !outFile.exists())
+        return false;
+    else
+    {
+        //does blockname exists?
+        //remove it from file in this case
+        // get length of file:
+        if(stat(outFile.data(), &file_status) != 0)
+            REPORT_ERROR(ERR_IO_NOPATH,"Metadata:existsBlock can not get filesize for file "+outFile);
+        size_t size = file_status.st_size;
+        if(size!=0)//size=0 for /dev/stderr
+        {
+            fd = open(outFile.data(),  O_RDWR, S_IREAD | S_IWRITE);
+            if (fd == -1)
+                REPORT_ERROR(ERR_IO_NOPATH,"Metadata:existsBlock can not read file named "+outFile);
+
+            map = (char *) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+            if (map == MAP_FAILED)
+                REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:existsBlock can not map memory ");
+
+            // Is this a START formatted FILE
+            String _szBlockName = (String)("\ndata_") + blockName;
+            size_t blockNameSize = _szBlockName.size();
+
+            if (_memmem(map, size, _szBlockName.data(), blockNameSize) == NULL)
+                return false;
+            else
+                return true;
+        }
+        if (munmap(map, size) == -1)
+        {
+            REPORT_ERROR(ERR_MEM_NOTDEALLOC,"metadata:write, Can not unmap memory");
+        }
+        close(fd);
+    }
+}
 void MetaData::_read(const FileName &filename,
                      const std::vector<MDLabel> *desiredLabels,
-                     const String & blockRegExp, bool decomposeStack)
+                     const String & blockRegExp,
+                     bool decomposeStack)
 {
     //First try to open the file as a metadata
     _clear();
