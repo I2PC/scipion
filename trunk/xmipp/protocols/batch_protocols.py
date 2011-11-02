@@ -455,28 +455,31 @@ class XmippProjectGUI():
         self.updateRunSelection(index)
             
     def getLastRunDict(self):
-        from protlib_sql import runColumns
-        run = dict(zip(runColumns, self.lastRunSelected))
-        run['source'] = run['script']        
-        return run
+        if self.lastRunSelected:
+            from protlib_sql import runColumns
+            run = dict(zip(runColumns, self.lastRunSelected))
+            run['source'] = run['script']        
+            return run
+        return None
     
     def runButtonClick(self, event=None):
         run = self.getLastRunDict()
-        state = run['run_state']
-        if event == 'Edit':
-            if state == SqliteDb.RUN_STARTED:
-                self.launchRunJobMonitorGUI(run)
-            else:
-                self.launchProtocolGUI(run)
-            #self.launchRunJobMonitorGUI(run)
-        elif event == 'Copy':
-            self.launchProtocolGUI(self.project.copyProtocol(run['protocol_name'], run['script']))
-        elif event == "Delete":
-            if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \nDo you really want to continue?", self.root):
-                self.project.deleteRun(run)
-                self.updateRunHistory(self.lastSelected)
-        elif event == "Visualize":
-            pass
+        if run:
+            state = run['run_state']
+            if event == 'Edit':
+                if state == SqliteDb.RUN_STARTED:
+                    self.launchRunJobMonitorGUI(run)
+                else:
+                    self.launchProtocolGUI(run)
+                #self.launchRunJobMonitorGUI(run)
+            elif event == 'Copy':
+                self.launchProtocolGUI(self.project.copyProtocol(run['protocol_name'], run['script']))
+            elif event == "Delete":
+                if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \nDo you really want to continue?", self.root):
+                    self.project.deleteRun(run)
+                    self.updateRunHistory(self.lastSelected)
+            elif event == "Visualize":
+                pass
         
     def createToolbarFrame(self, parent):
         #Configure toolbar frame

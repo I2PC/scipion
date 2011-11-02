@@ -1171,7 +1171,7 @@ class XmippBrowser():
         - browse -> only single file selection
         - extended -> multiple file selection
     '''
-    def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", filter=None, previewDim=128):
+    def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", filter=None, previewDim=144):
         self.seltype = seltype
         self.selmode = selmode
         self.dir = initialDir
@@ -1410,10 +1410,11 @@ class XmippBrowser():
 
     def createPreviewCanvas(self):
         from protlib_gui_figure import createImageFigure
-        self.canvas, figure, self.figureimg = createImageFigure(self.detailstop, self.dim)
+        self.canvas, self.figure, self.figureimg = createImageFigure(self.detailstop, self.dim)
     
     def updatePreview(self, filename):
         if not self.canvas:
+            print "creating PreviewCanvas"
             self.createPreviewCanvas()            
         if not filename.endswith('.png'):
             #Read image data through Xmipp
@@ -1423,9 +1424,15 @@ class XmippBrowser():
         else:
             from protlib_gui_figure import getPngData
             Z = getPngData(filename)
-        self.figureimg.set_array(Z)
+        print Z.shape 
+        print self.figure.get_children()
+        self.figureimg.set_data(Z)
         self.figureimg.autoscale()
-        self.canvas.show()   
+        ydim = Z.shape[0]
+        xdim = Z.shape[1]
+        self.figureimg.set(extent=[0, xdim, 0, ydim])
+        #self.figureimg.get_axes().clear()
+        self.canvas.draw()
     
     def filterResults(self, e=None):
         self.pattern = self.filterVar.get().split()

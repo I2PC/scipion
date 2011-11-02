@@ -27,8 +27,8 @@
 
 import Tkinter as tk
 import ttk
-import matplotlib
-matplotlib.use('TkAgg')
+#import matplotlib
+#matplotlib.use('TkAgg')
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.cm as cm
@@ -44,7 +44,17 @@ def createImageFigure(parent, dim, dpi=36):
     # a tk.DrawingArea
     canvas = FigureCanvasTkAgg(figure, master=parent)
     canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
-    figureimg = figure.figimage(Z, cmap=cm.gray)#, origin='lower')
+    #figureimg = figure.figimage(Z, cmap=cm.gray)#, origin='lower')
+    #axdef = SubplotZero(figure, 111)
+    ax = figure.add_axes([0,0,1,1], frameon=False)
+#    ax.set_aspect('equal','datalim')
+    #h = 0.5
+    figureimg = ax.imshow(Z, cmap=cm.gray)#, extent=[-h, h, -h, h])
+    #ax.set_aspect(aspect='equal',adjustable='datalim')
+    ax.set_axis_off()
+    #ax.set_axis_bgcolor('yellow')
+    #ax.get_xaxis().set_visible(False)
+    #ax.get_yaxis().set_visible(False)
     return [canvas, figure, figureimg]
     
 w = None
