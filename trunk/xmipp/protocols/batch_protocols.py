@@ -30,7 +30,8 @@ import os
 import Tkinter as tk
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
 from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, showInfo,\
-    showBrowseDialog, showFileViewer, showError, TaggedText, XmippButton, ProjectLabel
+    showBrowseDialog, showFileViewer, showError, TaggedText, XmippButton, ProjectLabel,\
+    XmippTree
 from config_protocols import *
 from protlib_base import getProtocolFromModule, XmippProject, getExtendedRunName
 from protlib_utils import ProcessManager,  getHostname
@@ -114,8 +115,8 @@ class XmippProjectGUI():
         self.root.bind('<Return>', lambda e: self.runButtonClick('Edit'))
         self.root.bind('<Control_L><Return>', lambda e: self.runButtonClick('Copy'))
         self.root.bind('<Delete>', lambda e: self.runButtonClick('Delete'))
-        self.root.bind('<Up>', self.selectRunUpDown)
-        self.root.bind('<Down>', self.selectRunUpDown)
+        self.root.bind('<Up>', self.lbHist.selection_up)
+        self.root.bind('<Down>', self.lbHist.selection_down)
         self.root.bind('<Alt_L><c>', self.close )
         self.root.bind('<Alt_L><l>', self.showOutput)
         self.root.bind('<Alt_L><a>', self.visualizeRun)
@@ -332,13 +333,18 @@ class XmippProjectGUI():
 
     def updateRunHistory(self, protGroup, selectFirst=True):
         #Cancel if there are pending refresh
+        tree = self.lbHist
+        
         if self.historyRefresh:
-            self.lbHist.after_cancel(self.historyRefresh)
+            tree.after_cancel(self.historyRefresh)
             self.historyRefresh = None
-        index = 0
+        runName = None
         if not selectFirst:
-            index = self.lbHist.selectedIndex()
-        self.lbHist.delete(0, tk.END)
+            item = tree.selection_first()
+            runName = tree.item(item, 'text')
+        childs = tree.get_children('')
+        for c in childs:
+            tree.delete(c)
         if protGroup == 'All':
             self.runs = self.project.projectDb.selectRuns()
         else:
@@ -356,11 +362,18 @@ class XmippProjectGUI():
                     #else:
                     #    self.project.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
                     #    stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
-                        
-                self.lbHist.insert(tk.END, (getExtendedRunName(run), stateStr, run['last_modified']))   
-            self.lbHist.selection_set(index)
+                 
+                tree.insert('', 'end', text= getExtendedRunName(run),
+                            values=(stateStr, run['last_modified']))   
+            
+            
+            for c in tree.get_children(''):
+                if selectFirst or tree.item(c, 'text') == runName:
+                    tree.selection_set(c)
+                    self.updateRunSelection(tree.index(c))
+                    break
             #Generate an automatic refresh after x ms, with x been 1, 2, 4 increasing until 32
-            self.historyRefresh = self.lbHist.after(self.historyRefreshRate*1000, self.updateRunHistory, protGroup, False)
+            self.historyRefresh = tree.after(self.historyRefreshRate*1000, self.updateRunHistory, protGroup, False)
             self.historyRefreshRate = min(2*self.historyRefreshRate, 32)
         else:
             self.updateRunSelection(-1)
@@ -425,7 +438,7 @@ class XmippProjectGUI():
                           '\n<Script>: ' + run['script'] + '\n<Directory>: ' + prot.WorkingDir + \
                           '\n<Summary>:\n' + summary   
             except Exception, e:
-                labels = [('Error creating protocol:', str(e))]
+                labels = 'Error creating protocol: <%s>' % str(e)
             self.detailsText.clear()
             self.detailsText.addText(labels)
             details.displayButtons(showButtons)
@@ -433,8 +446,11 @@ class XmippProjectGUI():
         for btn in self.runButtonsDict.values():
             btn.config(state=state)
             
-    def runSelectCallback(self, index):
-        if index >= 0:
+    def runSelectCallback(self, e=None):
+        item = self.lbHist.selection_first()
+        index = -1
+        if item:
+            index = self.lbHist.index(item)
             self.lastRunSelected = self.runs[index]
         self.updateRunSelection(index)
             
@@ -523,10 +539,24 @@ class XmippProjectGUI():
             self.runButtonsDict[k] = btn
         for k, v in list:
             setupButton(k, v)
-        self.lbHist = MultiListbox(history.frameContent, (('Run', 35), ('State', 15), ('Modified', 15)))
-        self.lbHist.SelectCallback = self.runSelectCallback
-        self.lbHist.DoubleClickCallback = lambda:self.runButtonClick("Edit")
-        self.lbHist.AllowSort = False   
+#        self.lbHist = MultiListbox(history.frameContent, (('Run', 35), ('State', 15), ('Modified', 15)))
+#        self.lbHist.SelectCallback = self.runSelectCallback
+#        self.lbHist.DoubleClickCallback = lambda:self.runButtonClick("Edit")
+#        self.lbHist.AllowSort = False
+        import ttk
+        columns = ('State', 'Modified')
+        tree = XmippTree(history.frameContent, columns=columns)
+        for c in columns:
+            tree.column(c, anchor='e')
+            tree.heading(c, text=c) 
+        tree.column('#0', width=300)
+        tree.heading('#0', text='Run')
+        tree.bind('<<TreeviewSelect>>', self.runSelectCallback)
+        tree.bind('<Double-1>', lambda e:self.runButtonClick("Edit"))
+        tree.grid(row=0, column=0, sticky='nsew')
+        history.frameContent.columnconfigure(0, weight=1)
+        history.frameContent.rowconfigure(0, weight=1)
+        self.lbHist = tree
         return history     
         
     def createDetailsFrame(self, parent):
@@ -554,7 +584,7 @@ class XmippProjectGUI():
         self.root.title("Xmipp Protocols   Project: %(projectName)s  on  %(hostName)s" % locals())
         self.initVariables()        
         self.createMainMenu()
-        self.addBindings()
+
         #Create main frame that will contain all other sections
         #Configure min size and expanding behaviour
         root.minsize(750, 500)
@@ -582,6 +612,8 @@ class XmippProjectGUI():
         else:
             self.Frames['details'].grid_remove()
     
+        self.addBindings()
+                
     def launchGUI(self, center=True):
         if center:
             centerWindows(self.root)

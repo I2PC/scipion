@@ -35,9 +35,6 @@ from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, B
 from protlib_filesystem import getXmippPath
 
 RESOURCES = getXmippPath('resources')
-#ButtonBgColor = "LightBlue"
-#ButtonActiveBgColor = "LightSkyBlue"
-#ButtonSelectedColor = "DeepSkyBlue2"
 
 Fonts = {}
 
@@ -294,7 +291,31 @@ class MultiListbox(tk.PanedWindow):
 # ******************************************************************
 # *     Following are implementation of some widgets extensions   *
 # ****************************************************************** 
-
+class XmippTree(ttk.Treeview): 
+    def __init__(self, master, **opts):
+        ttk.Treeview.__init__(self, master, **opts)
+        
+    def selection_first(self):
+        ''' Return first selected item or None if selection empty'''
+        selection = self.selection()
+        if len(selection):
+            return selection[0]
+        return None
+    
+    def _selection_move(self, moveFunc):
+        item = self.selection_first()
+        if item:
+            item = moveFunc(item)
+            if item != '':
+                self.selection_set(item)
+        
+    def selection_up(self, e=None):
+        self._selection_move(self.prev)
+    
+    def selection_down(self, e=None):
+        self._selection_move(self.next)
+            
+        
 class AutoScrollbar(tk.Scrollbar):
     '''A scrollbar that hides itself if it's not needed.'''
     def set(self, lo, hi):
