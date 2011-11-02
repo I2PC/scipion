@@ -65,7 +65,7 @@ protected:
     FileName localDir;
 };
 
-TEST_F( MetadataTest, similarToOperator)
+TEST_F( MetadataTest, SimilarToOperator)
 {
     ASSERT_EQ(mDsource,mDsource);
     ASSERT_FALSE(mDsource==mDanotherSource);
@@ -418,6 +418,23 @@ TEST_F( MetadataTest, ReadWrite)
     auxMetadata.read(sfn);
 
     EXPECT_EQ(mDsource,auxMetadata);
+    unlink(sfn);
+}
+
+TEST_F( MetadataTest, ExistsBlock)
+{
+    //temp file name
+    char sfn[32] = "";
+    strncpy(sfn, "/tmp/testWrite_XXXXXX", sizeof sfn);
+    mkstemp(sfn);
+    FileName tmpFileName((String) "kk@" + sfn);
+    mDsource.write(tmpFileName);
+    MetaData auxMetadata;
+    bool result1 = auxMetadata.existsBlock(tmpFileName);
+    EXPECT_EQ(result1,true);
+    tmpFileName =(String) "kk2@" + sfn;
+    result1 = auxMetadata.existsBlock(tmpFileName);
+    EXPECT_EQ(result1,false);
     unlink(sfn);
 }
 
