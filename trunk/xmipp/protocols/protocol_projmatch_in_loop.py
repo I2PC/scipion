@@ -197,9 +197,9 @@ def projection_matching(_log
                             )
         
 def assign_images_to_references(_log
-                         , DocFileInputAngles
+                         , DocFileInputAngles #outputfile
                          , NumberOfCtfGroups
-                         , ProjMatchRootName
+                         , ProjMatchRootName #input file
                          , NumberOfReferences
                          ):
     ''' assign the images to the different references based on the crosscorrelation coeficient
@@ -223,7 +223,7 @@ def assign_images_to_references(_log
     """ compute auxiliary index order, it may become handy to match projections and
     projection directions
     """
-    mycounter=0L
+    mycounter=1L
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         auxInputdocfile = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
@@ -342,7 +342,7 @@ def angular_class_average(_log
         #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(refN).zfill(2))
         parameters =  ' -i '       + auxInputdocfile  + DocFileInputAngles +\
                       ' --lib '    + refname.replace(".stk",".doc") + \
-                      ' --dont_write_selfiles ' + \
+                      ' --write_selfiles ' + \
                       ' --limit0 ' + MinimumCrossCorrelation + \
                       ' --limitR ' + DiscardPercentage
         if (DoCtfCorrection):
@@ -369,5 +369,7 @@ def angular_class_average(_log
         runJob(_log,
                'xmipp_angular_class_average',
                parameters,
-               NumberOfMpi * NumberOfThreads)
+               NumberOfMpi,
+               NumberOfThreads
+               )
 

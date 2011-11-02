@@ -136,6 +136,9 @@ class ProtProjMatch(XmippProtocol):
                 auxList[refN + 1]="%s/%s_ref_%02d.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName, refN + 1)
             self.ProjMatchRootNames.append(list(auxList))
     
+        self.ProjMatchRootNamesWithoutRef=[[None]]
+        for iterN in range(self.NumberOfIterations):
+            self.ProjMatchRootNamesWithoutRef.append(list("%s/%s.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName)))
     
         #name of masked volumes
         #add dummy name so indexes start a 1
@@ -187,6 +190,9 @@ class ProtProjMatch(XmippProtocol):
         # Configure dabase
         ###############self.Db.setVerify(self.Verify,self.ViewVerifyedFiles)
         ###############self.Db.setParentDefault(XmippProjectDb.lastStep)
+        
+        #!a Check this
+        self.MpiJobSize = 5
 
     def otherActionsToBePerformedBeforeLoop(self):
         print "in otherActionsToBePerformedBeforeLoop"
@@ -362,6 +368,7 @@ class ProtProjMatch(XmippProtocol):
                          , CtfGroupRootName  = self.CtfGroupRootName#
                          , DiscardPercentage = self.DiscardPercentage[iterN]#
                          , DoAlign2D         = self.DoAlign2D[iterN]#
+                         , DoComputeResolution =self.DoComputeResolution[iterN]
                          , DoCtfCorrection = self.DoCtfCorrection#
                          , DocFileInputAngles = self.DocFileInputAngles[iterN]#
                          , DoParallel = self.DoParallel#
@@ -375,7 +382,7 @@ class ProtProjMatch(XmippProtocol):
                          , NumberOfThreads =self.NumberOfThreads#
                          , PaddingFactor =self.PaddingFactor#
                          , ProjectLibraryRootName =self.ProjectLibraryRootNames[iterN][refN]#
-                         , ProjMatchRootName =self.ProjMatchRootNames[iterN][refN]#
+                         , ProjMatchRootName =self.ProjMatchRootNamesWithoutRef[iterN]#
                          , refN =refN
                          )
                 
@@ -390,22 +397,27 @@ class ProtProjMatch(XmippProtocol):
                                                 , reconstructedFileName = self.reconstructedFileNamesIters[iterN - 1][refN]
                                                 , userSuppliedMask =   self.MaskFileName)
     
-    #reconstruct
-    #resolution
+                 #reconstruct
+                 #resolution
     #
                 
     ######################
     ######################
     ########################            
-                #REMOVE
-                #Create directory
+            #REMOVE
+            #Create directory
             _dataBase.insertStep('createDir', path =self.getIterDirName(iterN + 1))
-            command = "shutil.copy('%s','%s');dummy" % (self.ReferenceFileNames[0], self.reconstructedFileNamesIters[iterN][refN])
-            id = _dataBase.insertStep(command, self.reconstructedFileNamesIters[iterN][refN])
-        command = "print 'ALL DONE';dummy"
-
-        id = _dataBase.insertStep(command)
-    
+            #command = "shutil.copy('%s','%s');dummy" % (self.ReferenceFileNames[0], self.reconstructedFileNamesIters[iterN][refN])
+                
+            #id = _dataBase.insertStep(command, self.reconstructedFileNamesIters[iterN][refN])
+            id = _dataBase.insertStep('copyFile', source = self.ReferenceFileNames[refN -1]
+                                          , dest = self.reconstructedFileNamesIters[iterN][refN])
+        
+        #command = "print 'ALL DONE';"
+        #id = _dataBase.insertStep(command)
+        
+        print "All Done!"
+        
         _dataBase.connection.commit()
 
     def defineSteps(self):
