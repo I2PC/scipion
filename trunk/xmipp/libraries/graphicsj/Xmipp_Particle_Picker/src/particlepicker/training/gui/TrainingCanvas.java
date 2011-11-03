@@ -31,8 +31,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	private TrainingMicrograph micrograph;
 	private TrainingParticle active;
 	private TrainingPicker ppicker;
-	final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
-	final static BasicStroke continuousst = new BasicStroke();
+	
 
 	public TrainingCanvas(TrainingPickerJFrame frame)
 	{
@@ -168,12 +167,9 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			for (index = 0; index < particles.size(); index++)
 				drawShape(g2, particles.get(index), index == particles.size() - 1);
 			List<AutomaticParticle> autoparticles = mfdata.getAutomaticParticles();
-			Stroke previous = g2.getStroke();
-			g2.setStroke(dashedst);
 			for (int i = 0; i < autoparticles.size(); i++)
 				if (!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= frame.getThreshold())
 					drawShape(g2, autoparticles.get(i), false);
-			g2.setStroke(previous);
 		}
 	}
 
