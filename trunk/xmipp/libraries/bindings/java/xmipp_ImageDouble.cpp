@@ -389,7 +389,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD(
 		//MultidimArray<double> enhancedPSD;
 		const char *fnStr = env->GetStringUTFChars(filename, false);
 
-		fastEstimateEnhancedPSD(fnStr, downsampling, image->data);
+		fastEstimateEnhancedPSD(fnStr, downsampling, image->data, 1);
 
 		selfScaleToSize(LINEAR, image->data, (int) w, (int) h);
 

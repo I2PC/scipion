@@ -227,7 +227,7 @@ def run(notebook):
     
     if options.hasOption('update'):
         cmd += 'echo "*** RUNNING SVN UPDATE..." >> %(out)s 2>&1\n svn up >> %(out)s 2>&1\n'
-        
+    
     if options.hasOption('configure'):        
         opts = notebook.getConfigOptions()
         #print "opt: ", opts
@@ -242,7 +242,7 @@ def run(notebook):
         cmd2 = "xmipp_python %(scons)s mode=compile -j %(procs)s  %(opts)s >> %(out)s 2>&1 "% locals()
         cmd += 'echo "%(cmd2)s" >> %(out)s \n'
         cmd += cmd2 + '\n'
-    cmd1 += ('echo "*** CREATING PROGRAMS DATABASE..." >> %(out)s 2>&1\n xmipp_apropos --update >> %(out)s' % locals())    
+    cmd += ('echo "*** CREATING PROGRAMS DATABASE..." >> %(out)s 2>&1\n xmipp_apropos --update >> %(out)s' % locals())    
         
     proc = Popen(cmd % locals(), shell=True)    
     notebook.notifyRun(proc)   
