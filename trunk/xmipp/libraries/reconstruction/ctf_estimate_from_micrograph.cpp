@@ -764,7 +764,9 @@ void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
     prog2.applyFilter(*(args.PSD));
     enhancedPSD=*(args.PSD);
 
-    int downXdim_2=(int)(XSIZE(enhancedPSD)/(2*downsampling));
+    int downXdim = (int)(XSIZE(enhancedPSD)/downsampling);
+    int firstIndex = FIRST_XMIPP_INDEX(downXdim);
+    int lastIndex = LAST_XMIPP_INDEX(downXdim);
     enhancedPSD.setXmippOrigin();
-    enhancedPSD.selfWindow(FIRST_XMIPP_INDEX(minSize),FIRST_XMIPP_INDEX(minSize),LAST_XMIPP_INDEX(minSize),LAST_XMIPP_INDEX(minSize));
+    enhancedPSD.selfWindow(firstIndex, firstIndex, lastIndex, lastIndex);
 }
