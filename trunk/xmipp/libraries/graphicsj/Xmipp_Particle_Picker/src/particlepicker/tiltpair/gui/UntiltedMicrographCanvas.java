@@ -31,7 +31,6 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	private UntiltedMicrograph um;
 	private ImageWindow iw;
 	private boolean reload = false;
-	private boolean drawalpha;
 
 	public UntiltedMicrographCanvas(TiltPairPickerJFrame frame)
 	{
@@ -41,7 +40,6 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		this.frame = frame;
 		addMouseWheelListener(this);
 		this.pppicker = frame.getParticlePicker();
-		drawalpha = false;
 		iw = new ImageWindow(imp, this);
 		WindowUtils.centerScreen(0, 0, iw);
 		
@@ -194,16 +192,13 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			g2.setColor(Color.red);
 			drawShape(g2, active, true);
 		}
-		drawalpha = true;
-		if(drawalpha)
+		if(frame.drawAngles())
 		{
 			int [] alphas = um.getAlphas();
 			double alpha = Math.toRadians(alphas[0]);
 			drawLine(alpha, g2);
 		}
 	}
-	
-	
 	
 
 	@Override

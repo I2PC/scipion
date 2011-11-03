@@ -15,6 +15,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
 import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -66,6 +67,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 
 		});
+		
+		
+		
 		ijmi = new JMenuItem("ImageJ");
 		ijmi.addActionListener(new ActionListener()
 		{
@@ -125,10 +129,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		filtersmn = new JMenu("Filters");
-		JMenuItem fftbpf = new JMenuItem("Bandpass Filter...");
+		JCheckBoxMenuItem fftbpf = new JCheckBoxMenuItem("Bandpass Filter...");
 		filtersmn.add(fftbpf);
 		fftbpf.addActionListener(this);
-		JMenuItem admi = new JMenuItem("Anisotropic Diffusion...");
+		JCheckBoxMenuItem admi = new JCheckBoxMenuItem("Anisotropic Diffusion...");
 		filtersmn.add(admi);
 		admi.addActionListener(new ActionListener()
 		{
@@ -139,21 +143,21 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				activemacro = "8-bit";
 				IJ.run(activemacro);
 				getParticlePicker().addMacro(activemacro);
-				activemacro = ((JMenuItem) e.getSource()).getText();
+				activemacro = ((JCheckBoxMenuItem) e.getSource()).getText();
 				IJ.run(activemacro);
 				getParticlePicker().addMacro(activemacro);
 			}
 		});
-		JMenuItem msmi = new JMenuItem("Mean Shift");
+		JCheckBoxMenuItem msmi = new JCheckBoxMenuItem("Mean Shift");
 		filtersmn.add(msmi);
 		msmi.addActionListener(this);
-		JMenuItem sbmi = new JMenuItem("Subtract Background...");
+		JCheckBoxMenuItem sbmi = new JCheckBoxMenuItem("Subtract Background...");
 		filtersmn.add(sbmi);
 		sbmi.addActionListener(this);
-		JMenuItem gbmi = new JMenuItem("Gaussian Blur...");
+		JCheckBoxMenuItem gbmi = new JCheckBoxMenuItem("Gaussian Blur...");
 		filtersmn.add(gbmi);
 		gbmi.addActionListener(this);
-		JMenuItem bcmi = new JMenuItem("Brightness/Contrast...");
+		JCheckBoxMenuItem bcmi = new JCheckBoxMenuItem("Brightness/Contrast...");
 		filtersmn.add(bcmi);
 		bcmi.addActionListener(this);
 	}
@@ -163,7 +167,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	{
 		try
 		{
-			activemacro = ((JMenuItem) e.getSource()).getText();
+			activemacro = ((JCheckBoxMenuItem) e.getSource()).getText();
 			IJ.run(activemacro);
 			getParticlePicker().addMacro(activemacro);
 		}

@@ -24,6 +24,7 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
@@ -79,6 +80,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private JButton resetbt;
 	private JLabel upslb;
 	private TiltedMicrographCanvas tiltedcanvas;
+	private JCheckBoxMenuItem anglesmi;
 
 	public TiltPairPicker getParticlePicker()
 	{
@@ -119,6 +121,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		WindowUtils.centerScreen(position, 0.5, this);
 		setVisible(true);
 	}
+	
+
 
 	public void initMenuBar()
 	{
@@ -127,19 +131,32 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		// Setting menus
 		JMenu filemn = new JMenu("File");
 		
-		JMenu windowmn = new JMenu("Window");
+		JMenu viewmn = new JMenu("View");
 		JMenu helpmn = new JMenu("Help");
 		mb.add(filemn);
 		mb.add(filtersmn);
-		mb.add(windowmn);
+		mb.add(viewmn);
 		mb.add(helpmn);
 
 		// Setting menu items
 		
 		savemi.setEnabled(pppicker.isChanged());
 		filemn.add(savemi);
-		windowmn.add(pmi);
-		windowmn.add(ijmi);
+		anglesmi = new JCheckBoxMenuItem("Angles");
+		anglesmi.setEnabled(false);
+		anglesmi.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				
+				
+			}
+		});
+		viewmn.add(anglesmi);
+		viewmn.add(pmi);
+		viewmn.add(ijmi);
 		helpmn.add(hcontentsmi);
 
 	}
@@ -199,7 +216,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			{
 				int size = ((Number) sizetf.getValue()).intValue();
 				switchSize(size);
-
 			}
 		});
 
@@ -232,8 +248,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 						@Override
 						public void actionPerformed(ActionEvent e)
 						{
-							pppicker.setColor(ColorActionListener.this.colorChooser.getColor());
-							// updateFamilyColor();
+							pppicker.setColor(colorChooser.getColor());
 						}
 					}, // OK button handler
 					null); // no CANCEL button handler
@@ -295,9 +310,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			{
 				if (e.getValueIsAdjusting())
 					return;
-				if (TiltPairPickerJFrame.this.micrographstb.getSelectedRow() == -1)
+				if (micrographstb.getSelectedRow() == -1)
 					return;// Probably from fireTableDataChanged raised
-				index = TiltPairPickerJFrame.this.micrographstb.getSelectedRow();
+				index = micrographstb.getSelectedRow();
 				// by me.
 				untiltedmic.releaseImage();
 				untiltedmic = pppicker.getMicrographs().get(index);
@@ -398,5 +413,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	public TiltedMicrographCanvas getTiltedCanvas()
 	{
 		return tiltedcanvas;
+	}
+	
+	public boolean drawAngles()
+	{
+		return anglesmi.isSelected();
 	}
 }

@@ -109,8 +109,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 			g2.setColor(Color.red);
 			drawShape(g2, uc.getActiveParticle().getTiltedParticle(), true);
 		}
-		drawalpha = true;
-		if(drawalpha)
+		if(frame.drawAngles())
 		{
 			int [] alphas = um.getAlphas();
 			double alpha = Math.toRadians(alphas[1]);
