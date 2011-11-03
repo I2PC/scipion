@@ -6,6 +6,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -167,9 +168,12 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			for (index = 0; index < particles.size(); index++)
 				drawShape(g2, particles.get(index), index == particles.size() - 1);
 			List<AutomaticParticle> autoparticles = mfdata.getAutomaticParticles();
+			Stroke previous = g2.getStroke();
+			g2.setStroke(dashedst);
 			for (int i = 0; i < autoparticles.size(); i++)
 				if (!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= frame.getThreshold())
 					drawShape(g2, autoparticles.get(i), false);
+			g2.setStroke(previous);
 		}
 	}
 
