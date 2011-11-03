@@ -10,11 +10,12 @@
  */
 package browser.filebrowsers;
 
-import browser.COMMAND_PARAMETERS;
+import browser.DEBUG;
 import browser.LABELS;
+import browser.commandline.Parameters;
+import browser.commandline.COMMAND_PARAMETERS;
 import browser.imageitems.listitems.FileItem;
 import browser.windows.ImagesWindowFactory;
-import ij.IJ;
 import java.awt.BorderLayout;
 import java.io.OutputStreamWriter;
 import java.net.InetAddress;
@@ -29,27 +30,20 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
 
     final static String SOT = "__STARTED__";
     final static String EOT = "__END__";
-    String seltype;
+    protected Parameters parameters;
     protected JPanelXmippBrowser panelXmippBrowser;
-    int port;
 
-    public JDialogXmippFilesList(String directory, int port) {
-        this(directory, port, false, COMMAND_PARAMETERS.SELECTION_TYPE_ANY, "");
-    }
-
-    public JDialogXmippFilesList(final String directory, int port,
-            final boolean singleSelection, String seltype, final String expression) {
+    public JDialogXmippFilesList(String directory, Parameters parameters) {
         super();
 
-        this.port = port;
-        this.seltype = seltype;
+        this.parameters = parameters;
 
         // Tells listener that it has been started.
         send(new Object[]{SOT}, false);
 
-        if (seltype.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_FILE) == 0) {
+        if (parameters.selectionType.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_FILE) == 0) {
             setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR_FILE);
-        } else if (seltype.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_DIR) == 0) {
+        } else if (parameters.selectionType.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_DIR) == 0) {
             setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR_DIR);
         } else {
             setTitle(LABELS.TITLE_XMIPP_FILE_SELECTOR_ANY);
@@ -60,27 +54,33 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
         ImagesWindowFactory.setConvenientSize(this);
         this.setLocationRelativeTo(null);
 
-        setPanel(directory, expression, singleSelection);
+        setPanel(directory, parameters);
     }
 
-    protected void setPanel(final String directory, final String expression, final boolean singleSelection) {
+    protected void setPanel(final String directory, final Parameters parameters) {
         ImagesWindowFactory.blockGUI(getRootPane(), "Building list...");
 
         Thread t = new Thread(new Runnable() {
 
             public void run() {
-                panelXmippBrowser = new JPanelXmippBrowser(directory, expression);
-                panelXmippBrowser.setSingleSelection(singleSelection);
+                panelXmippBrowser = createPanel(parameters);
 
                 add(panelXmippBrowser, BorderLayout.CENTER);
 
-//                pack();
+                pack();
 
                 ImagesWindowFactory.releaseGUI(getRootPane());
             }
         });
 
         t.start();
+    }
+
+    protected JPanelXmippBrowser createPanel(Parameters parameters) {
+        panelXmippBrowser = new JPanelXmippBrowser(parameters.directory, parameters.filter);
+        panelXmippBrowser.setSingleSelection(parameters.singleSelection);
+
+        return panelXmippBrowser;
     }
 
     protected void button1Clicked() {
@@ -120,18 +120,18 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
     }
 
     boolean acceptFile(FileItem item) {
-        if (seltype.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_ANY) == 0) {
+        if (parameters.selectionType.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_ANY) == 0) {
             return true;
         } else if (item.isDirectory()) {
-            return seltype.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_DIR) == 0;
+            return parameters.selectionType.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_DIR) == 0;
         } else {
-            return seltype.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_FILE) == 0;
+            return parameters.selectionType.compareTo(COMMAND_PARAMETERS.SELECTION_TYPE_FILE) == 0;
         }
     }
 
-    protected boolean send(Object items[], boolean end) {
+    final protected boolean send(Object items[], boolean end) {
         try {
-            Socket socket = new Socket(InetAddress.getByName("127.0.0.1"), port);
+            Socket socket = new Socket(InetAddress.getByName("127.0.0.1"), parameters.port);
 
             // Get streams.
             OutputStreamWriter output = new OutputStreamWriter(socket.getOutputStream());
@@ -155,7 +155,7 @@ public class JDialogXmippFilesList extends javax.swing.JFrame {
 
             return true;
         } catch (Exception ex) {
-            IJ.error(ex.getMessage());
+            DEBUG.printMessage("SEND Exception: " + ex.getMessage());
         }
 
         return false;

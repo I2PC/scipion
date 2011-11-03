@@ -43,7 +43,6 @@ public class ImageConverter {
 
         for (long i = 0; i < n; i++) {
             for (int j = 0; j < d; j++) {
-            	System.out.println("reading slice");
                 double slice[] = image.getData(i, j);
 
                 FloatProcessor processor = new FloatProcessor(w, h, slice);

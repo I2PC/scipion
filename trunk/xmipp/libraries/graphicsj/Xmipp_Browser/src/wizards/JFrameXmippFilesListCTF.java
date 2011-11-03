@@ -4,11 +4,10 @@
  */
 package wizards;
 
-import browser.COMMAND_PARAMETERS;
 import browser.LABELS;
+import browser.commandline.Parameters;
 import browser.filebrowsers.JDialogXmippFilesList;
-import browser.windows.ImagesWindowFactory;
-import java.awt.BorderLayout;
+import browser.filebrowsers.JPanelXmippBrowser;
 
 /**
  *
@@ -16,12 +15,8 @@ import java.awt.BorderLayout;
  */
 public class JFrameXmippFilesListCTF extends JDialogXmippFilesList {
 
-    public JFrameXmippFilesListCTF(String directory, int port, String expression) {
-        this(directory, port, expression, 1.0);
-    }
-
-    public JFrameXmippFilesListCTF(String directory, int port, String expression, double downsampling) {
-        super(directory, port, false, COMMAND_PARAMETERS.SELECTION_TYPE_ANY, expression);
+    public JFrameXmippFilesListCTF(String directory, Parameters parameters) {
+        super(directory, parameters);
 
         setTitle(LABELS.TITLE_WIZARD_PSD);
 
@@ -32,29 +27,17 @@ public class JFrameXmippFilesListCTF extends JDialogXmippFilesList {
 //
 //        add(panelXmippBrowser, BorderLayout.CENTER);
 //        pack();
-        setPanel(directory, expression, false, downsampling);
+//        setPanel(parameters);
     }
 
     // Hack: Replaces panel avoiding the super class to add the old one before.
     @Override
-    protected void setPanel(final String directory, final String expression, final boolean singleSelection) {
-    }
+    protected JPanelXmippBrowser createPanel(Parameters parameters) {
+//    protected JPanelXmippBrowser setPanel(final String directory, final Parameters parameters) {
+        panelXmippBrowser = new JPanelXmippFileListCTF(parameters.directory,
+                parameters.filter, parameters.downsampling);
 
-    void setPanel(final String directory, final String expression, final boolean singleSelection, final double downsampling) {
-        ImagesWindowFactory.blockGUI(getRootPane(), "Building list...");
-
-        Thread t = new Thread(new Runnable() {
-
-            public void run() {
-                panelXmippBrowser = new JPanelXmippFileListCTF(directory, expression, downsampling);
-
-                add(panelXmippBrowser, BorderLayout.CENTER);
-
-                ImagesWindowFactory.releaseGUI(getRootPane());
-            }
-        });
-
-        t.start();
+        return panelXmippBrowser;
     }
 
     @Override

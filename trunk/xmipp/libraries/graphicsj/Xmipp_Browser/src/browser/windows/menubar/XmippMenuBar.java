@@ -40,9 +40,6 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
     boolean converted = false;
     boolean binarized = false;
     // *** Transform ***
-    private Menu menuSave = new Menu(LABELS.OPERATION_MENU_SAVE);
-    private MenuItem itemSaveAsMetadata = new MenuItem(LABELS.OPERATION_SAVE_AS_METADATA);
-    private MenuItem itemSaveAsStack = new MenuItem(LABELS.OPERATION_SAVE_AS_STACK);
     private Menu menuTransform = new Menu(LABELS.OPERATION_MENU_TRANSFORM);
     private MenuItem itemToTable = new MenuItem(LABELS.OPERATION_TO_GALLERY);
     private Menu menuFlip = new Menu(LABELS.OPERATION_MENU_FLIP);
@@ -186,12 +183,6 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
     }
 
     private void createMenuBar() {
-        // Save ***
-        menuSave.add(itemSaveAsMetadata);
-        menuSave.add(itemSaveAsStack);
-        itemSaveAsMetadata.addActionListener(this);
-        itemSaveAsStack.addActionListener(this);
-
         // Transform ***
         menuTransform.add(itemToTable);
         itemToTable.addActionListener(this);
@@ -426,7 +417,6 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 //        itemObjectJ.addActionListener(this);
 
         // Adds menus.
-        addMenu(menuSave);
         addMenu(menuTransform);
         addMenu(menuDenoising);
         addMenu(menuOpenWith);
@@ -445,11 +435,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
         int lineWidth = Line.getWidth();    // Stores line width to restore it later.
 
         try {
-            if (e.getSource() == itemSaveAsStack) {
-                IJ.run("Xmipp Writer");
-            } else if (e.getSource() == itemSaveAsMetadata) {
-                IJ.run("Xmipp MetaData Writer");
-            } else if (e.getSource() == itemToTable) {
+            if (e.getSource() == itemToTable) {
                 ImagesWindowFactory.openImagePlusAsGallery(imp);
             } else if (e.getSource() == itemFlipV) {
                 imp.getProcessor().flipVertical();

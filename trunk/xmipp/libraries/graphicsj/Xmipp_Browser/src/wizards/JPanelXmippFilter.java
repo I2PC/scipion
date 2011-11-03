@@ -88,7 +88,7 @@ abstract public class JPanelXmippFilter extends JPanelXmippBrowser {
     @Override
     protected void openFileAsDefault(FileItem item) {
         try {
-            if (item instanceof AbstractImageItem) {
+//            if (item instanceof AbstractImageItem) {
                 ImagePlus preview = getFilteredPreview((AbstractImageItem) item);
 
                 ImagePlus imp = new ImagePlus(preview.getTitle(),
@@ -106,7 +106,7 @@ abstract public class JPanelXmippFilter extends JPanelXmippBrowser {
                 IJ.setTool(Toolbar.LINE);
 
                 ImagesWindowFactory.captureFrame(imp);
-            }
+//            }
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
         }

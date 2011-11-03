@@ -5,7 +5,6 @@
 package browser.imageitems.listitems;
 
 import browser.Cache;
-import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.imageitems.ImageDimension;
 import ij.ImagePlus;
@@ -45,7 +44,7 @@ public abstract class AbstractImageItem extends FileItem {
     public abstract ImagePlus getImagePlus();
 
     public ImagePlus getPreview(int w, int h) {
-        ImagePlus preview = ICONS_MANAGER.MISSING_ITEM;
+        ImagePlus preview = null;
 
         // Loads image data just the first time.
         if (dimension == null && exists()) {

@@ -11,6 +11,7 @@ import java.awt.Font;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
+import metadata.models.MetaDataTableModel;
 
 /**
  *
@@ -23,10 +24,13 @@ public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
     private final static int BORDER_WIDTH = 5;
     private final static int BORDER_HEIGHT = 5;
     private boolean renderImages;
+    MetaDataTableModel tableModel;
     private Font font;
 
-    public MetaDataImageRenderer() {
+    public MetaDataImageRenderer(MetaDataTableModel tableModel) {
         super();
+
+        this.tableModel = tableModel;
 
         setHorizontalAlignment(JLabel.CENTER);
         setVerticalAlignment(JLabel.CENTER);
@@ -48,10 +52,7 @@ public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
         ImageIcon icon = null;
 
         if (renderImages) {
-            int w = item.getWidth() > DEFAULT_CELL_WIDTH ? DEFAULT_CELL_WIDTH : item.getWidth();
-            int h = item.getHeight() > DEFAULT_CELL_HEIGHT ? DEFAULT_CELL_HEIGHT : item.getHeight();
-
-            ImagePlus preview = item.getPreview(w, h);
+            ImagePlus preview = item.getPreview(getCellWidth(), getCellHeight());
             icon = new ImageIcon(preview.getImage());
         } else {
             label = getShortLabel(item.getOriginalValue(), table.getColumnModel().getColumn(column).getWidth());
@@ -65,15 +66,26 @@ public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
         return this;
     }
 
-    public int getCellWidth() {
-        return DEFAULT_CELL_WIDTH;
+    public int getCellWidth(String columnTitle) {
+        int width = getCellWidth();
+
+        if (width < 0) {
+            width = font.getSize() * columnTitle.length();
+            width += width * 0.5; // Extra gap.
+        }
+
+        return width;
+    }
+
+    int getCellWidth() {
+        return renderImages ? tableModel.getMaxColumnWidth() : -1;
     }
 
     public int getCellHeight() {
         int height;
 
         if (renderImages) {
-            height = DEFAULT_CELL_HEIGHT;
+            height = tableModel.getMaxRowHeight();
         } else {
             height = font.getSize();
             height += height * 0.5; // Extra gap.

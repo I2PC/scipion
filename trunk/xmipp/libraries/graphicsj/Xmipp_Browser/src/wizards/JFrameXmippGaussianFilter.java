@@ -5,8 +5,9 @@
 package wizards;
 
 import browser.LABELS;
+import browser.commandline.Parameters;
 import browser.filebrowsers.JDialogXmippFilesList;
-import java.awt.BorderLayout;
+import browser.filebrowsers.JPanelXmippBrowser;
 
 /**
  *
@@ -14,18 +15,23 @@ import java.awt.BorderLayout;
  */
 public class JFrameXmippGaussianFilter extends JDialogXmippFilesList {
 
-    public JFrameXmippGaussianFilter(String metadata, int port, double w1) {
-        super("", port);
+    public JFrameXmippGaussianFilter(String metadata, Parameters parameters) {
+        super("", parameters);
 
         setTitle(LABELS.TITLE_WIZARD_GAUSSIAN_FILTER);
+//
+//        // Hack: Replaces panel.
+//        remove(panelXmippBrowser);
+//
+//        panelXmippBrowser = new JPanelXmippGaussianFilter(metadata, parameters.w1);
+//
+//        add(panelXmippBrowser, BorderLayout.CENTER);
+//        pack();
+    }
 
-        // Hack: Replaces panel.
-        remove(panelXmippBrowser);
-
-        panelXmippBrowser = new JPanelXmippGaussianFilter(metadata, w1);
-
-        add(panelXmippBrowser, BorderLayout.CENTER);
-        pack();
+    @Override
+    protected JPanelXmippBrowser createPanel(Parameters parameters) {
+        return new JPanelXmippGaussianFilter(parameters.files[0], parameters.w1);
     }
 
     @Override

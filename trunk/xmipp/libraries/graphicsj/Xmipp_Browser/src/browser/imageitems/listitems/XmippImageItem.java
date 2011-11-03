@@ -88,7 +88,7 @@ public class XmippImageItem extends AbstractImageItem {
 
         if (exists()) {
             try {
-                //DEBUG.printMessage(" *** Reading ImagePlus [from disk]: " + getKey());
+                System.out.println(" *** Reading ImagePlus [from disk]: " + getKey());
                 String path = getAbsoluteFileName();
                 ImageDouble image = new ImageDouble();
 

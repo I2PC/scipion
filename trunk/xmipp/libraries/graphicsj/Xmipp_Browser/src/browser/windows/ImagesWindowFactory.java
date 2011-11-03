@@ -6,6 +6,7 @@ package browser.windows;
 
 import browser.DEBUG;
 import browser.InfiniteProgressPanel;
+import browser.commandline.Parameters;
 import browser.imageitems.ImageConverter;
 import browser.imageitems.tableitems.AbstractGalleryImageItem;
 import browser.gallery.JFrameGallery;
@@ -58,42 +59,30 @@ public class ImagesWindowFactory {
         progressPanel.setVisible(false);
     }
 
-    public static void openFilesAsDefault(String filenames[], boolean poll) {
-        openFilesAsDefault(filenames, poll, -1, -1);
-    }
-
-    public static void openFilesAsDefault(String filenames[], int rows, int columns) {
-        openFilesAsDefault(filenames, false, rows, columns);
-    }
-
-    public static void openFilesAsDefault(String filenames[], boolean poll, int rows, int columns) {
+    public static void openFilesAsDefault(String filenames[], Parameters parameters) {
         for (int i = 0; i < filenames.length; i++) {
-            openFileAsDefault(filenames[i], poll, rows, columns);
+            openFileAsDefault(filenames[i], parameters);
         }
     }
 
     public static void openFileAsDefault(String filenames) {
-        openFileAsDefault(filenames, -1, -1);
+        openFileAsDefault(filenames, new Parameters());
     }
 
-    public static void openFileAsDefault(String filename, int rows, int columns) {
-        openFileAsDefault(filename, false, rows, columns);
-    }
-
-    public static void openFileAsDefault(String filename, boolean poll, int rows, int columns) {
+    public static void openFileAsDefault(String filename, Parameters parameters) {
         if (Filename.isMetadata(filename)) {
-            openFileAsGallery(filename, rows, columns);
+            openFileAsGallery(filename, parameters);
         } else {
             try {
                 ImageDouble img = new ImageDouble();
                 img.readHeader(filename);
 
                 if (img.isSingleImage()) {
-                    openFileAsImage(filename, poll);
+                    openFileAsImage(filename, parameters);
                 } else if (img.isStackOrVolume()) {
-                    openFileAsGallery(filename, rows, columns);
+                    openFileAsGallery(filename, parameters);
                 } else {
-                    openFileAsImage(filename, poll);
+                    openFileAsImage(filename, parameters);
                 }
             } catch (Exception e) {
                 IJ.open(filename);
@@ -102,22 +91,22 @@ public class ImagesWindowFactory {
         }
     }
 
-    public static void openFilesAsImages(String filenames[], boolean poll) {
+    public static void openFilesAsImages(String filenames[], Parameters parameters) {
         for (int i = 0; i < filenames.length; i++) {
             String filename = Filename.getFilename(filenames[i]);
             long nimage = Filename.getNimage(filenames[i]);
 
             DEBUG.printMessage(" *** Opening: " + filename + " / nimage: " + nimage);
 
-            openFileAsImage(filenames[i], poll);
+            openFileAsImage(filenames[i], parameters);
         }
     }
 
     public static void openFileAsImage(String path) {
-        openFileAsImage(path, false);
+        openFileAsImage(path, new Parameters());
     }
 
-    public static void openFileAsImage(String path, boolean poll) {
+    public static void openFileAsImage(String path, Parameters parameters) {
         try {
             ImagePlus imp;
 
@@ -133,7 +122,7 @@ public class ImagesWindowFactory {
             // Normalize image stack.
             ImageConverter.normalizeStack(imp);
 
-            openXmippImageWindow(imp, poll);
+            openXmippImageWindow(imp, parameters.poll);
         } catch (Exception ex) {
             IJ.error(ex.getMessage() + ": " + path);
             DEBUG.printException(ex);
@@ -155,39 +144,39 @@ public class ImagesWindowFactory {
     }
 
     public static void openFilesAsMetadata(String filenames[]) {
-        openFilesAsMetadata(filenames, false);
+        openFilesAsMetadata(filenames, new Parameters());
     }
 
-    public static void openFilesAsMetadata(String filenames[], boolean render) {
+    public static void openFilesAsMetadata(String filenames[], Parameters parameters) {
         for (int i = 0; i < filenames.length; i++) {
-            openFileAsMetadata(filenames[i], render);
+            openFileAsMetadata(filenames[i], parameters);
         }
     }
 
     public static void openFileAsMetadata(String filename) {
-        openFileAsMetadata(filename, false);
+        openFileAsMetadata(filename, new Parameters());
     }
 
-    public static void openFileAsMetadata(String filename, boolean render) {
+    public static void openFileAsMetadata(String filename, Parameters parameters) {
         JFrameMetaData frameMetaData = new JFrameMetaData(filename);
-        frameMetaData.setRenderImages(render);
+        frameMetaData.setRenderImages(parameters.renderImages);
         setConvenientSize(frameMetaData);
         frameMetaData.setLocationRelativeTo(null);
         frameMetaData.setVisible(true);
     }
 
     public static void openFileAsGallery(String filename) {
-        openFileAsGallery(filename, -1, -1);
+        openFileAsGallery(filename, new Parameters());
     }
 
-    public static JFrameGallery openFileAsGallery(String filename, int rows, int columns) {
+    public static JFrameGallery openFileAsGallery(String filename, Parameters parameters) {
         JFrameGallery gallery = new JFrameGallery(filename);
         setConvenientSize(gallery);
 
-        if (rows < 0 && columns < 0) {
+        if (parameters.rows < 0 && parameters.columns < 0) {
             gallery.setAutoAdjustColumns(true);
         } else {
-            gallery.setDimensions(rows, columns);
+            gallery.setDimensions(parameters.rows, parameters.columns);
         }
 
         gallery.setVisible(true);
@@ -196,30 +185,26 @@ public class ImagesWindowFactory {
     }
 
     public static JFrameGallery openFilesAsGallery(String filenames[], boolean useSameTable) {
-        return openFilesAsGallery(filenames, useSameTable, -1, -1);
-    }
-
-    public static JFrameGallery openFilesAsGallery(String filenames[], int rows, int columns) {
-        return openFilesAsGallery(filenames, false, rows, columns);
+        return openFilesAsGallery(filenames, useSameTable, new Parameters());
     }
 
     public static JFrameGallery openFilesAsGallery(String filenames[],
-            boolean useSameTable, int rows, int columns) {
+            boolean useSameTable, Parameters parameters) {
         JFrameGallery gallery = null;
 
         if (useSameTable) {
             gallery = new JFrameGallery(filenames);
             setConvenientSize(gallery);
 
-            if (rows < 1 && columns < 1) {
+            if (parameters.rows < 1 && parameters.columns < 1) {
                 gallery.setAutoAdjustColumns(true);
             } else {
-                gallery.setDimensions(rows, columns);
+                gallery.setDimensions(parameters.rows, parameters.columns);
             }
             gallery.setVisible(true);
         } else {
             for (int i = 0; i < filenames.length; i++) {
-                gallery = openFileAsGallery(filenames[i], rows, columns);
+                gallery = openFileAsGallery(filenames[i], parameters);
             }
         }
 
@@ -255,18 +240,19 @@ public class ImagesWindowFactory {
             String path = tableModel.getFilename();
 
             // If there is an associated filename, uses it...
-            File file = new File(path != null ? path : "");
+            File file = new File(path);
             if (file.exists()) {
-                openFileAsImage(path);
+//                System.err.println(" +++ EXISTS");
+                openFileAsImage(path, new Parameters());
             } else {
 //                System.err.println(" !!! EXISTS");
                 // ...otherwise, stores it in a temporary file.
-                File tempFile = File.createTempFile("galleryToStack_", ".stk");
+                File tempFile = File.createTempFile("tableToStack_", ".stk");
                 tempFile.deleteOnExit();
 
                 ArrayList<AbstractGalleryImageItem> items = tableModel.getAllItems();
                 ImagePlus imp = ImageConverter.convertToImageJ(items);
-                IJ.run(imp, "Xmipp Writer", "save=" + tempFile.getAbsolutePath());
+                IJ.run(imp, "Xmipp writer", "save=" + tempFile.getAbsolutePath());
 
 //                System.err.println(" >>> TMP Saved at: " + file.getAbsolutePath());
 
@@ -274,29 +260,6 @@ public class ImagesWindowFactory {
 
                 captureFrame(imp);
             }
-        } catch (Exception ex) {
-            IJ.error(ex.getMessage());
-            DEBUG.printException(ex);
-        }
-    }
-
-    public static void openGalleryAsMetadata(AbstractXmippTableModel tableModel) {
-        try {
-            String path = tableModel.getFilename();
-
-            // If there is an associated filename, uses it...
-            File file = new File(path != null ? path : "");
-            if (!file.exists()) {
-//                System.err.println(" !!! EXISTS");
-                // ...otherwise, stores it in a temporary file.
-                File tempFile = File.createTempFile("galleryToMetadata_", ".xmd");
-                tempFile.deleteOnExit();
-                path= tempFile.getAbsolutePath();
-
-                tableModel.saveAsMetadata(path, true);
-            }
-
-            openFileAsMetadata(path);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
             DEBUG.printException(ex);
@@ -325,7 +288,7 @@ public class ImagesWindowFactory {
 //                System.err.println(" +++ EXISTS");
             }
 
-            openFileAsGallery(file.getAbsolutePath(), -1, -1);
+            openFileAsGallery(file.getAbsolutePath());
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
             DEBUG.printException(ex);

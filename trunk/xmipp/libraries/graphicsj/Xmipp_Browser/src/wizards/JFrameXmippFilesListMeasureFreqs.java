@@ -5,7 +5,8 @@
 package wizards;
 
 import browser.LABELS;
-import java.awt.BorderLayout;
+import browser.commandline.Parameters;
+import browser.filebrowsers.JPanelXmippBrowser;
 
 /**
  *
@@ -13,30 +14,21 @@ import java.awt.BorderLayout;
  */
 public class JFrameXmippFilesListMeasureFreqs extends JFrameXmippFilesListCTF {
 
-    public JFrameXmippFilesListMeasureFreqs(String directory, int port, String expression) {
-        this(directory, port, expression, 1.0);
-    }
-
-    public JFrameXmippFilesListMeasureFreqs(String directory, int port, String expression, double downsampling) {
-        super(directory, port, expression);
+    public JFrameXmippFilesListMeasureFreqs(String directory, Parameters parameters) {
+        super(directory, parameters);
 
         setTitle(LABELS.TITLE_WIZARD_MEASURE_FREQS);
 
         jpButtons.remove(jbOk);
         jbCancel.setText(LABELS.BUTTON_CLOSE);
-
-        // Hack: Replaces panel.
-        remove(panelXmippBrowser);
-
-        panelXmippBrowser = new JPanelXmippFileListCTF(directory, expression, downsampling);
-        ((JPanelXmippFileListCTF) panelXmippBrowser).setDownsamplingEnabled(false);
-
-        add(panelXmippBrowser, BorderLayout.CENTER);
-        pack();
     }
-//
-//    @Override
-//    protected void cancel() {
-//        dispose();
-//    }
+
+    @Override
+    protected JPanelXmippBrowser createPanel(Parameters parameters) {
+        JPanelXmippFileListCTF panel = new JPanelXmippFileListCTF(parameters.directory,
+                parameters.filter, parameters.downsampling);
+        panel.setDownsamplingEnabled(false);
+
+        return panel;
+    }
 }

@@ -15,9 +15,12 @@ import ij.gui.Toolbar;
  */
 public class JPanelXmippMaskDesign extends JPanelXmippFilterMetadata {
 
-    public JPanelXmippMaskDesign(String metadata) {
+    String maskfilename;
+
+    public JPanelXmippMaskDesign(String metadata, String maskfilename) {
         super(metadata);
 
+        this.maskfilename = maskfilename;
         jpPreview.remove(jlFilter);
     }
 
@@ -34,7 +37,6 @@ public class JPanelXmippMaskDesign extends JPanelXmippFilterMetadata {
 
         IJ.setTool(currentTool);
 
-        //IJ.showMessage("...::SHOW MASKS TOOLBAR::...");
-        IJ.run("Masks Tool Bar");
+        IJ.run("Masks Tool Bar", maskfilename);
     }
 }

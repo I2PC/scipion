@@ -17,12 +17,8 @@ import xmipp.ImageDouble;
  */
 public class JPanelXmippBadPixelsFilter extends JPanelXmippGaussianFilter {
 
-    public JPanelXmippBadPixelsFilter(String metadata) {
-        this(metadata, 1.0);
-    }
-
-    public JPanelXmippBadPixelsFilter(String metadata, double factor) {
-        super(metadata, factor);
+    public JPanelXmippBadPixelsFilter(String metadata, double bad_pixels_factor) {
+        super(metadata, bad_pixels_factor);
 
         jlW1.setText(LABELS.LABEL_BAD_PIXELS_FACTOR);
     }

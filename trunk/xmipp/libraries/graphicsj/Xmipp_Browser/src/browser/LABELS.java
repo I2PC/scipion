@@ -79,9 +79,6 @@ public class LABELS {
     /**
      * Operations
      */
-    public final static String OPERATION_MENU_SAVE = "Save";
-    public final static String OPERATION_SAVE_AS_METADATA = "as MetaData";
-    public final static String OPERATION_SAVE_AS_STACK = "as Stack";
     public final static String OPERATION_MENU_TRANSFORM = "Transform";
     public final static String OPERATION_TO_GALLERY = "To Gallery";
     public final static String OPERATION_MENU_FLIP = "Flip";
@@ -134,6 +131,7 @@ public class LABELS {
     public final static String OPERATION_TJTURN = "TJ Turn";
     public final static String OPERATION_TJWEBSITE = "TJ Website";
     public final static String OPERATION_SURFACEJ = "SurfaceJ";
+    public final static String OPERATION_OPEN_AS_3D = "3D Viewer";
     public final static String OPERATION_POLL = "Poll";
     public final static String OPERATION_DUPLICATE = "Duplicate";
     public final static String OPERATION_GO_TO_SLICE = "Go to slice";
@@ -181,7 +179,6 @@ public class LABELS {
     public final static String OPERATION_TEMPLATE_MATCHING = "Template Matching";
     public final static String OPERATION_MENU_MASKS = "Masks";
     public final static String OPERATION_MASKS_TOOLBAR = "Masks Tool Bar";
-    public final static String OPERATION_OPEN_AS_3D = "Open as 3D";
     //public final static String OPERATION_FLOWJ = "FlowJ";
     //public final static String OPERATION_FLOW3J = "Flow3J";
     //public final static String OPERATION_OBJECTJ = "ObjectJ";
@@ -217,10 +214,6 @@ public class LABELS {
     public final static String LABEL_GALLERY_SAVE = "Save";
     //public final static String LABEL_GALLERY_SAVE_AS_IMAGES = "Save as images";
     public final static String LABEL_GALLERY_SAVE_AS_METADATA = "Save as metadata";
-    public final static String LABEL_GALLERY_OPEN_AS_GALLERY = "Gallery";
-    public final static String LABEL_GALLERY_OPEN_AS_3D = "3D Volume";
-    public final static String LABEL_GALLERY_OPEN_AS_STACK = "Stack";
-    public final static String LABEL_GALLERY_OPEN_AS_METADATA = "Metadata";
     public final static String LABEL_GALLERY_SAVE_SELECTION_AS_METADATA = "Save selection as metadata";
     public final static String LABEL_GALLERY_SAVE_AS_STACK = "Save as stack";
     public final static String LABEL_GALLERY_SAVE_SELECTION_AS_STACK = "Save selection as stack";

@@ -82,22 +82,41 @@ public class MetaDataTableModel extends DefaultTableModel {
 
         return (!block.isEmpty() ? block + Filename.SEPARATOR : "") + getFilename();
     }
-//
-//    public int getRowHeigth(int row) {
-//        int height = 0;
-//
-//        for (int i = 0; i < getColumnCount(); i++) {
-//            Object item = getValueAt(row, i);
-//            if (item instanceof GalleryImageItem) {
-//                int h = ((GalleryImageItem) item).getHeight();
-//                if (h > height) {
-//                    height = h;
-//                }
-//            }
-//        }
-//
-//        return height;
-//    }
+
+    public int getMaxRowHeight() {
+        return getRowHeigth(0);
+    }
+
+    public int getMaxColumnWidth() {
+        return getColumnWidth(0);
+    }
+
+    int getRowHeigth(int row) {
+        int height = 0;
+
+        for (int i = 0; i < getColumnCount(); i++) {
+            Object item = getValueAt(row, i);
+            if (item instanceof GalleryImageItem) {
+                int h = ((GalleryImageItem) item).getHeight();
+                if (h > height) {
+                    height = h;
+                }
+            }
+        }
+
+        return height;
+    }
+
+    int getColumnWidth(int column) {
+        int h = -1;
+
+        GalleryImageItem item = (GalleryImageItem) getValueAt(0, column);
+        if (item instanceof GalleryImageItem) {
+            h = item.getWidth();
+        }
+
+        return h;
+    }
 
     public void reload() {
         System.out.println("path: " + getPath());
@@ -134,7 +153,6 @@ public class MetaDataTableModel extends DefaultTableModel {
         try {
             clear();    // Clear the whole data.
 
-            DEBUG.printMessage("loading: " + filename);
             MetaData md = new MetaData(filename);
 //            System.out.println("filename->" + block + filename);
 //            System.out.println("MDfilename->" + md.getFilename());

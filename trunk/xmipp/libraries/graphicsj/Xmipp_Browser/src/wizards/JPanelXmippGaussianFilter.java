@@ -10,7 +10,6 @@ import browser.imageitems.ImageConverter;
 import browser.imageitems.listitems.AbstractImageItem;
 import ij.IJ;
 import ij.ImagePlus;
-import ij.process.FloatProcessor;
 import java.awt.BorderLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;

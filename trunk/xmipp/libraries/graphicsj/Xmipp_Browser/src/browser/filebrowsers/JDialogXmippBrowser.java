@@ -4,9 +4,9 @@
  */
 package browser.filebrowsers;
 
-import browser.COMMAND_PARAMETERS;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
+import browser.commandline.Parameters;
 import browser.windows.ImageWindowOperations;
 import browser.windows.ImagesWindowFactory;
 import browser.windows.StackWindowOperations;
@@ -28,24 +28,8 @@ public class JDialogXmippBrowser extends JDialogXmippFilesList {
     JButton jbParent, jbRefresh, jbCaptureWindow;
     JToolBar jToolBar;
 
-    public JDialogXmippBrowser(String directory) {
-        this(directory, "");
-    }
-
-    public JDialogXmippBrowser(String directory, String expression) {
-        this(directory, false, COMMAND_PARAMETERS.SELECTION_TYPE_ANY, expression);
-    }
-
-    public JDialogXmippBrowser(String directory, boolean singleSelection) {
-        this(directory, singleSelection, COMMAND_PARAMETERS.SELECTION_TYPE_ANY, "");
-    }
-
-    public JDialogXmippBrowser(String directory, boolean singleSelection, String expression) {
-        this(directory, singleSelection, COMMAND_PARAMETERS.SELECTION_TYPE_ANY, expression);
-    }
-
-    public JDialogXmippBrowser(String directory, boolean singleSelection, String selType, String expression) {
-        super(directory, 0, singleSelection, selType, expression);   // Port won't be used as method is overriden.
+    public JDialogXmippBrowser(String directory, Parameters parameters) {
+        super(directory, parameters);
 
 //        setModal(false);
 //        setAlwaysOnTop(false);
@@ -56,11 +40,6 @@ public class JDialogXmippBrowser extends JDialogXmippFilesList {
 
         jbOk.setText(LABELS.BUTTON_OPEN_AS_IMAGE);
         jbCancel.setText(LABELS.BUTTON_OPEN_AS_GALLERY);
-    }
-
-    @Override
-    protected boolean send(Object items[], boolean end) {
-        return true;
     }
 
     void setToolbar() {

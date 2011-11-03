@@ -125,7 +125,7 @@ public abstract class AbstractGalleryImageItem {
 
         if (exists()) {
             try {
-                //DEBUG.printMessage(" *** Reading ImagePlus [from disk]: " + getKey());
+                System.out.println(" *** Reading ImagePlus [from disk]: " + getKey());
                 ImageDouble image = new ImageDouble();
 
                 image.readPreview(getPath(), getWidth(), getHeight(), getNSlice(), getNImage());
@@ -184,7 +184,7 @@ public abstract class AbstractGalleryImageItem {
         try {
             //String fileName = file.getName();
             ImageDouble image = new ImageDouble();
-            //DEBUG.printMessage(" *** Loading preview: " + path + " / w=" + w + " / h=" + h + " / d=" + nslice + " n=" + nimage);
+            //System.out.println(" *** Loading preview: " + path + " / w=" + w + " / h=" + h + " / d=" + nslice + " n=" + nimage);
 
             double factor = getFactor(getWidth(), getHeight(), w, h);
 
@@ -192,7 +192,7 @@ public abstract class AbstractGalleryImageItem {
             int h_ = (int) Math.ceil(getHeight() / factor);
 
             image.readPreview(getPath(), w_, h_, getNSlice(), getNImage());
-            //DEBUG.printMessage(" *** path: " + getPath() + " w=" + w_ + " h=" + h_ + " s=" + getNSlice() + " n=" + getNImage());
+            System.out.println(" *** path: " + getPath() + " w=" + w_ + " h=" + h_ + " s=" + getNSlice() + " n=" + getNImage());
             ip = ImageConverter.convertToImageJ(image, getTitle());
         } catch (Exception ex) {
             ip = ICONS_MANAGER.MISSING_ITEM;

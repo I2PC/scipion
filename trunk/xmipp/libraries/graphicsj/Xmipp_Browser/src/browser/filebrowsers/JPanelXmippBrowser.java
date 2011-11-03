@@ -280,6 +280,11 @@ public class JPanelXmippBrowser extends JPanel {
                 jlFileFilterMouseClicked(evt);
             }
         });
+        jlFileFilter.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                jlFileFilterValueChanged(evt);
+            }
+        });
         jlFileFilter.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 jlFileFilterKeyReleased(evt);
@@ -314,21 +319,30 @@ public class JPanelXmippBrowser extends JPanel {
             openSelectedFile();
         }
 
-        updatePreview();
+        //updatePreview();
     }//GEN-LAST:event_jlFileFilterKeyReleased
 
     private void jlFileFilterMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jlFileFilterMouseClicked
+//        long time = System.currentTimeMillis();
         if (evt.getClickCount() == 2) {
+//            System.out.println(" >>> Mouse clicked TWICE: " + time);
             openSelectedFile();
+//        } else {
+//            System.out.println(" >>> Mouse clicked ONCE: " + time);
+//            updatePreview();
         }
-
-        updatePreview();
     }//GEN-LAST:event_jlFileFilterMouseClicked
 
     private void jcbPreviewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbPreviewActionPerformed
         SHOW_PREVIEWS = jcbPreview.isSelected();
         updatePreview();
     }//GEN-LAST:event_jcbPreviewActionPerformed
+
+    private void jlFileFilterValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jlFileFilterValueChanged
+        if (!evt.getValueIsAdjusting()) {
+            updatePreview();
+        }
+    }//GEN-LAST:event_jlFileFilterValueChanged
     // Variables declaration - do not modify//GEN-BEGIN:variables
     protected javax.swing.JCheckBox jcbPreview;
     protected browser.filebrowsers.JListFileFilter jlFileFilter;

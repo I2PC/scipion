@@ -5,8 +5,9 @@
 package wizards;
 
 import browser.LABELS;
+import browser.commandline.Parameters;
 import browser.filebrowsers.JDialogXmippFilesList;
-import java.awt.BorderLayout;
+import browser.filebrowsers.JPanelXmippBrowser;
 
 /**
  *
@@ -14,22 +15,25 @@ import java.awt.BorderLayout;
  */
 public class JFrameXmippBandPassFilter extends JDialogXmippFilesList {
 
-    public JFrameXmippBandPassFilter(String metadata, int port) {
-        this(metadata, port, 1.0, 1.0, 1.0);
-    }
-
-    public JFrameXmippBandPassFilter(String metadata, int port, double w1, double w2, double raised_w) {
-        super(metadata, port);
+    public JFrameXmippBandPassFilter(String metadata, Parameters parameters) {
+        super(metadata, parameters);
 
         setTitle(LABELS.TITLE_WIZARD_BAND_PASS_FILTER);
+//
+//        // Hack: Replaces panel.
+//        remove(panelXmippBrowser);
+//
+//        panelXmippBrowser = new JPanelXmippBandPassFilter(metadata,
+//                parameters.w1, parameters.w2, parameters.raised_w);
+//
+//        add(panelXmippBrowser, BorderLayout.CENTER);
+//        pack();
+    }
 
-        // Hack: Replaces panel.
-        remove(panelXmippBrowser);
-
-        panelXmippBrowser = new JPanelXmippBandPassFilter(metadata, w1, w2, raised_w);
-
-        add(panelXmippBrowser, BorderLayout.CENTER);
-        pack();
+    @Override
+    protected JPanelXmippBrowser createPanel(Parameters parameters) {
+        return new JPanelXmippBandPassFilter(parameters.files[0],
+                parameters.w1, parameters.w2, parameters.raised_w);
     }
 
     @Override

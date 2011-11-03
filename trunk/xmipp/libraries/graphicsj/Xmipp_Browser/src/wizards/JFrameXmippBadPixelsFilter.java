@@ -5,7 +5,9 @@
 package wizards;
 
 import browser.LABELS;
+import browser.commandline.Parameters;
 import browser.filebrowsers.JDialogXmippFilesList;
+import browser.filebrowsers.JPanelXmippBrowser;
 import java.awt.BorderLayout;
 
 /**
@@ -14,22 +16,23 @@ import java.awt.BorderLayout;
  */
 public class JFrameXmippBadPixelsFilter extends JDialogXmippFilesList {
 
-    public JFrameXmippBadPixelsFilter(String metadata, int port) {
-        this(metadata, port, 1.0);
-    }
-
-    public JFrameXmippBadPixelsFilter(String metadata, int port, double factor) {
-        super(metadata, port);
+    public JFrameXmippBadPixelsFilter(String metadata, Parameters parameters) {
+        super(metadata, parameters);
 
         setTitle(LABELS.TITLE_WIZARD_BAD_PIXELS_FILTER);
-
+/*
         // Hack: Replaces panel.
         remove(panelXmippBrowser);
 
-        panelXmippBrowser = new JPanelXmippBadPixelsFilter(metadata, factor);
+        panelXmippBrowser = new JPanelXmippBadPixelsFilter(metadata, parameters.bad_pixels_factor);
 
         add(panelXmippBrowser, BorderLayout.CENTER);
-        pack();
+        pack();*/
+    }
+
+    @Override
+    protected JPanelXmippBrowser createPanel(Parameters parameters) {
+        return new JPanelXmippBadPixelsFilter(parameters.files[0], parameters.bad_pixels_factor);
     }
 
     @Override

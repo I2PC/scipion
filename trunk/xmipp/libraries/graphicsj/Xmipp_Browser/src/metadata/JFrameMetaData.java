@@ -64,7 +64,7 @@ public class JFrameMetaData extends JFrame {
     private JList rowHeader;
     private RowHeaderRenderer rowHeaderRenderer = new RowHeaderRenderer();
     private FileItemRenderer fileRenderer = new FileItemRenderer();
-    private MetaDataImageRenderer imageRenderer = new MetaDataImageRenderer();
+    private MetaDataImageRenderer imageRenderer;
     private MetaDataStringRenderer stringRenderer = new MetaDataStringRenderer();
     private MetaDataDoubleRenderer doubleRenderer = new MetaDataDoubleRenderer();
     private MetaDataIntegerRenderer numberRenderer = new MetaDataIntegerRenderer();
@@ -85,6 +85,7 @@ public class JFrameMetaData extends JFrame {
 
         // Builds table.
         tableModel = new MetaDataTableModel(filename);
+        imageRenderer = new MetaDataImageRenderer(tableModel);
 
         // Build blocks list.
         String blocks[] = tableModel.getBlocks();
@@ -238,7 +239,7 @@ public class JFrameMetaData extends JFrame {
         for (int i = 0; i < columnModel.getColumnCount(); i++) {
             TableColumn tcolumn = columnModel.getColumn(i);
 
-            tcolumn.setPreferredWidth(imageRenderer.getCellWidth());
+            tcolumn.setWidth(imageRenderer.getCellWidth(tcolumn.getHeaderValue().toString()));
         }
     }
 
@@ -402,6 +403,8 @@ public class JFrameMetaData extends JFrame {
         bHideColumns = new javax.swing.JButton();
         jlStatus = new javax.swing.JLabel();
         jsPanel = new javax.swing.JScrollPane();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         toolBar.setRollover(true);
 
