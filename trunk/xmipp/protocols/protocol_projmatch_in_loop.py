@@ -299,6 +299,7 @@ def assign_images_to_references(_log
             MDout.write(auxOutputdocfile+outputdocfile,MD_APPEND)
 
 def angular_class_average(_log
+                         , Action
                          , Align2DIterNr
                          , Align2dMaxChangeRot
                          , Align2dMaxChangeOffset
@@ -323,6 +324,11 @@ def angular_class_average(_log
                          , ProjMatchRootName
                          , refN
                          ):
+    
+    if Action == "preprocessing" or Action == "postprocessing" :
+        NumberOfCtfGroups = 0
+        
+                         
     # Now make the class averages
     CtfGroupName        = CtfGroupDirectory + '/' +\
                           CtfGroupRootName
@@ -351,6 +357,16 @@ def angular_class_average(_log
                        ' --wien '   + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@' + CtfGroupName + '_wien.stk' + \
                        ' --pad '    + str(PaddingFactor) + \
                        ' --add_to ' + ProjMatchRootName.replace('.doc','__')
+
+                       
+        if Action == "preprocessing":
+            parameters += \
+                       ' --do_preprocess '
+             
+        if Action == "postprocessing" :
+            parameters += \
+                       ' --do_postprocess --number_3dreferences ' + str(NumberOfReferences) + ' '
+
         else:
             parameters += \
                       ' -o '                + ProjMatchRootName
