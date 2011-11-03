@@ -219,7 +219,7 @@ TEST_F( MetadataTest, CheckRegularExpression)
     auxMd.setValue(MDL_IMAGE,(String)"image_data_2_1.xmp",auxMd.addObject());
     auxMd.setValue(MDL_IMAGE,(String)"image_data_2_2.xmp",auxMd.addObject());
 
-    auxMd2.read((String)"block_00000[12]@" + sfn);
+    auxMd2.read((String)"block_000[0-9][0-9][12]@" + sfn);
     EXPECT_EQ(auxMd, auxMd2);
 
     unlink(sfn);
