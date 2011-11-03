@@ -372,16 +372,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 		setChanged(true);
 	}
+
 	
-	private void setThresholdChanges()
-	{
-		updateMicrographsModel();
-		getCanvas().repaint();
-	}
-	
-	public double getThreshold()
-	{
-		return sizesl.getValue() / 100.0;
-	}
+
+
 
 }

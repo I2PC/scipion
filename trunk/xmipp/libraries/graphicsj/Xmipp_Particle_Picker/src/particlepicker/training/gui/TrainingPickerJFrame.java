@@ -764,7 +764,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		);
 
 		if (micrograph.getFamilyData(family).getManualParticles().size() > 0)
-			args += family.getName() + "@" + micrograph.getOFilename();
+			args += family.getName() + "@" + ppicker.getOutputPath(micrograph.getOFilename());
 		if (((SupervisedParticlePicker) ppicker).isFastMode())
 			args += " --fast";
 		if (((SupervisedParticlePicker) ppicker).isIncore())

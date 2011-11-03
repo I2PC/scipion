@@ -23,6 +23,7 @@ public class TrainingParticle extends Particle{
 	protected Micrograph micrograph;
 	private ParticleCanvas canvas;
 	
+	
 
 	public TrainingParticle(int x, int y, Family family, Micrograph micrograph)
 	{

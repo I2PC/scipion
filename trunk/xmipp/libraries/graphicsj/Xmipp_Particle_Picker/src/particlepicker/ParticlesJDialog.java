@@ -6,9 +6,12 @@ import java.awt.GridBagLayout;
 import java.awt.Panel;
 import java.awt.ScrollPane;
 import java.awt.event.ComponentEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.List;
 
 import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
@@ -24,12 +27,28 @@ public class ParticlesJDialog extends JDialog
 	protected Panel particlespn;
 	protected ScrollPane sp;
 	protected GridBagConstraints constraints;
+	protected int width, height;
 
 	public ParticlesJDialog(ParticlePickerJFrame frame)
 	{
 		super(frame);
 		this.frame = frame;
 		initComponents();
+		
+		addWindowListener(new WindowAdapter()
+		{
+			public void windowClosing(WindowEvent winEvt)
+			{
+				resetParticlesJDialog();
+			}
+
+		});
+	}
+
+	protected void resetParticlesJDialog()
+	{
+		frame.particlesdialog = null;
+		
 	}
 
 	public void loadParticles(boolean resize)
