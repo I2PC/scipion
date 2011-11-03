@@ -553,8 +553,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 				 if(img.getWidth() > 512 || img.getHeight() > 512){
 					// TODO: take into consideration height too (for non-square images)
 					double mag=(512.0/img.getWidth()) * 100;
-					//ZoomPlugin plugin = new ZoomPlugin(mag);
-					//plugin.run(img);
+					ZoomPlugin plugin = new ZoomPlugin(mag);
+					plugin.run(img);
 				}
 			}
 			// TODO: make the image canvas size fixed - next line is not working for that
