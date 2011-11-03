@@ -64,8 +64,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 {
 
 	private TiltPairPicker pppicker;
-	private JSlider sizesl;
-	private JFormattedTextField sizetf;
 	private JMenuBar mb;
 	private Color color;
 	private JPanel particlespn;
@@ -91,7 +89,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 	public TiltPairPickerJFrame(TiltPairPicker pppicker)
 	{
-
 		this.pppicker = pppicker;
 		initComponents();
 	}
@@ -180,20 +177,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		fieldspn.add(colorbt);
 
 		// Setting slider
-		int size = pppicker.getSize();
-		fieldspn.add(new JLabel("Size:"));
-		sizesl = new JSlider(0, 500, size);
-		sizesl.setMajorTickSpacing(250);
-		sizesl.setPaintTicks(true);
-		sizesl.setPaintLabels(true);
-		int height = (int) sizesl.getPreferredSize().getHeight();
-		sizesl.setPreferredSize(new Dimension(100, height));
-
-		fieldspn.add(sizesl);
-		sizetf = new JFormattedTextField(NumberFormat.getNumberInstance());
-		sizetf.setText(Integer.toString(size));
-		sizetf.setColumns(3);
-		fieldspn.add(sizetf);
+		initSizePane();
+		fieldspn.add(sizepn);
 
 		particlespn.add(fieldspn, 0);
 		initSymbolPane();
@@ -206,27 +191,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 		colorbt.addActionListener(new ColorActionListener());
 
-		sizetf.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				int size = ((Number) sizetf.getValue()).intValue();
-				switchSize(size);
-			}
-		});
-
-		sizesl.addChangeListener(new ChangeListener()
-		{
-
-			@Override
-			public void stateChanged(ChangeEvent e)
-			{
-				int size = sizesl.getValue();
-				switchSize(size);
-			}
-		});
+	
 
 	}
 
@@ -327,14 +292,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		setChanged(false);
 	}
 
-	void switchSize(int size)
+	public void switchSize(int size)
 	{
-		sizetf.setText(Integer.toString(size));
-		sizesl.setValue(size);
-		canvas.repaint();
+		super.switchSize(size);
 		tiltedcanvas.repaint();
-		pppicker.setSize(size);
-		setChanged(true);
 	}
 
 	public void setChanged(boolean changed)

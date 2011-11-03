@@ -3,6 +3,7 @@ package particlepicker;
 import ij.IJ;
 import ij.ImageJ;
 
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,7 +14,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.text.NumberFormat;
 import java.util.List;
+
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFormattedTextField;
@@ -23,11 +26,13 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
-import particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import particlepicker.training.gui.TrainingPickerJFrame;
 import particlepicker.training.model.TrainingParticle;
 import particlepicker.training.model.TrainingPicker;
@@ -48,6 +53,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JMenuItem pmi;
 	protected JMenu filtersmn;
 	protected String activemacro;
+	protected JSlider sizesl;
+	protected JPanel sizepn;
 	
 	
 	public ParticlePickerJFrame()
@@ -160,6 +167,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		JCheckBoxMenuItem bcmi = new JCheckBoxMenuItem("Brightness/Contrast...");
 		filtersmn.add(bcmi);
 		bcmi.addActionListener(this);
+		
 	}
 	
 	@Override
@@ -306,5 +314,74 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	
 	public abstract void setChanged(boolean changed);
 	
+		
+	
+	protected void initSizePane()
+	{
+		sizepn = new JPanel();
+		
+		int size = getFamily().getSize();
+		sizepn.add(new JLabel("Size:"));
+		sizesl = new JSlider(0, 1000, size);
+		sizesl.setPaintTicks(true);
+		sizesl.setMajorTickSpacing(100);
+		int height = (int) sizesl.getPreferredSize().getHeight();
+
+		sizesl.setPreferredSize(new Dimension(100, height));
+		sizepn.add(sizesl);
+
+		sizetf = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		sizetf.setColumns(3);
+		sizetf.setText(Integer.toString(size));
+		sizepn.add(sizetf);
+		sizetf.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				int size = ((Number) sizetf.getValue()).intValue();
+				switchSize(size);
+			}
+		});
+
+		sizesl.addChangeListener(new ChangeListener()
+		{
+
+			@Override
+			public void stateChanged(ChangeEvent e)
+			{
+				int size = sizesl.getValue();
+				switchSize(size);
+			}
+		});
+
+	}
+	
+	public void switchSize(int size)
+	{
+		sizetf.setText(Integer.toString(size));
+		sizesl.setValue(size);
+		getCanvas().repaint();
+		getFamily().setSize(size);
+		if (particlesdialog != null)
+		{
+			for (TrainingParticle p : getParticles())
+				p.resetParticleCanvas();
+			loadParticles();
+		}
+		setChanged(true);
+	}
+	
+	private void setThresholdChanges()
+	{
+		updateMicrographsModel();
+		getCanvas().repaint();
+	}
+	
+	public double getThreshold()
+	{
+		return sizesl.getValue() / 100.0;
+	}
 
 }

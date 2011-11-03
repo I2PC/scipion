@@ -206,6 +206,8 @@ public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseW
 		g2.setColor(ccolor);
 	}
 	
+	
+	
 
 
 }

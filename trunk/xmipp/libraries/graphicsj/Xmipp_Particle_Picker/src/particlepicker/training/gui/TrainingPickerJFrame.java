@@ -61,9 +61,7 @@ import xmipp.Program;
 public class TrainingPickerJFrame extends ParticlePickerJFrame 
 {
 
-	private JSlider sizesl;
 	private TrainingCanvas canvas;
-	private JFormattedTextField sizetf;
 	private JMenuBar mb;
 	private JComboBox familiescb;
 	private TrainingPicker ppicker;
@@ -235,20 +233,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		fieldspn.add(colorbt);
 
 		// Setting slider
-		int size = family.getSize();
-		fieldspn.add(new JLabel("Size:"));
-		sizesl = new JSlider(0, 500, size);
-		sizesl.setMajorTickSpacing(250);
-		sizesl.setPaintTicks(true);
-		sizesl.setPaintLabels(true);
-		int height = (int) sizesl.getPreferredSize().getHeight();
-		sizesl.setPreferredSize(new Dimension(100, height));
-
-		fieldspn.add(sizesl);
-		sizetf = new JFormattedTextField(NumberFormat.getNumberInstance());
-		sizetf.setText(Integer.toString(size));
-		sizetf.setColumns(3);
-		fieldspn.add(sizetf);
+		initSizePane();
+		fieldspn.add(sizepn);
 
 		familypn.add(fieldspn, 0);
 		JPanel steppn = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -266,7 +252,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			index = 0;
 		micrograph = ppicker.getMicrographs().get(index);
 
-		initSizePane();
+		initThresholdPane();
 		steppn.add(thresholdpn);
 		actionsbt = new JButton();
 		setStep(step);
@@ -311,29 +297,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			}
 		});
 		familypn.add(steppn, 1);
-		sizetf.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				int size = ((Number) sizetf.getValue()).intValue();
-				switchSize(size);
-
-			}
-		});
-
-		sizesl.addChangeListener(new ChangeListener()
-		{
-
-			@Override
-			public void stateChanged(ChangeEvent e)
-			{
-				int size = sizesl.getValue();
-				switchSize(size);
-			}
-		});
-
+		
 		familiescb.addActionListener(new ActionListener()
 		{
 
@@ -406,7 +370,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		}
 	}
 
-	private void initSizePane()
+	private void initThresholdPane()
 	{
 		thresholdpn = new JPanel();
 		thresholdpn.add(new JLabel("Threshold:"));
@@ -623,20 +587,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		pack();
 	}
 
-	void switchSize(int size)
-	{
-		sizetf.setText(Integer.toString(size));
-		sizesl.setValue(size);
-		canvas.repaint();
-		family.setSize(size);
-		if (particlesdialog != null)
-		{
-			for (TrainingParticle p : getFamilyData().getParticles())
-				p.resetParticleCanvas();
-			loadParticles();
-		}
-		setChanged(true);
-	}
+
 
 	public void addFamily(Family g)
 	{
