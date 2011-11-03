@@ -110,11 +110,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 			drawShape(g2, uc.getActiveParticle().getTiltedParticle(), true);
 		}
 		if(frame.drawAngles())
-		{
-			int [] alphas = um.getAlphas();
-			double alpha = Math.toRadians(alphas[1]);
-			drawLine(alpha, g2);
-		}
+			drawLine(frame.getTiltedAngle(), g2);
 	}
 
 	public void mousePressed(MouseEvent e)

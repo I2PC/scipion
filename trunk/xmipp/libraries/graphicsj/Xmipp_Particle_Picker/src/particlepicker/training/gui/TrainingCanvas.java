@@ -57,6 +57,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		imp = micrograph.getImagePlus();
 		if(!frame.getFamilyData().getParticles().isEmpty())
 			setActive(frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1));
+		else
+			active = null;
 	}
 
 	/**

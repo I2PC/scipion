@@ -193,11 +193,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			drawShape(g2, active, true);
 		}
 		if(frame.drawAngles())
-		{
-			int [] alphas = um.getAlphas();
-			double alpha = Math.toRadians(alphas[0]);
-			drawLine(alpha, g2);
-		}
+			drawLine(frame.getUntiltedAngle(), g2);
 	}
 	
 

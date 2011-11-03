@@ -94,8 +94,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 		this.pppicker = pppicker;
 		initComponents();
-		// initializeCanvas();
-
 	}
 
 	private void initComponents()
@@ -150,8 +148,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				
-				
+				canvas.repaint();
+				tiltedcanvas.repaint();
 			}
 		});
 		viewmn.add(anglesmi);
@@ -258,9 +256,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	}
 
 
-
-
-
 	private void initMicrographsPane()
 	{
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -316,7 +311,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 				// by me.
 				untiltedmic.releaseImage();
 				untiltedmic = pppicker.getMicrographs().get(index);
-
+				anglesmi.setEnabled(untiltedmic.getAddedCount() > 4);
 				initializeCanvas();
 				saveChanges();
 				pack();
@@ -418,5 +413,19 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	public boolean drawAngles()
 	{
 		return anglesmi.isSelected();
+	}
+	
+	public double getUntiltedAngle()
+	{
+		int [] alphas = untiltedmic.getAlphas();
+		double alpha = Math.toRadians(alphas[0]);
+		return alpha;
+	}
+	
+	public double getTiltedAngle()
+	{
+		int [] alphas = untiltedmic.getAlphas();
+		double alpha = Math.toRadians(alphas[1]);
+		return alpha;
 	}
 }
