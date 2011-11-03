@@ -29,9 +29,8 @@
 import os
 import Tkinter as tk
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
-from protlib_gui_ext import ToolTip, MultiListbox, centerWindows, askYesNo, showInfo,\
-    showBrowseDialog, showFileViewer, showError, TaggedText, XmippButton, ProjectLabel,\
-    XmippTree
+from protlib_gui_ext import ToolTip, centerWindows, askYesNo, showInfo, XmippTree, \
+    showBrowseDialog, showFileViewer, showError, TaggedText, XmippButton, ProjectLabel
 from config_protocols import *
 from protlib_base import getProtocolFromModule, XmippProject, getExtendedRunName
 from protlib_utils import ProcessManager,  getHostname
@@ -542,10 +541,6 @@ class XmippProjectGUI():
             self.runButtonsDict[k] = btn
         for k, v in list:
             setupButton(k, v)
-#        self.lbHist = MultiListbox(history.frameContent, (('Run', 35), ('State', 15), ('Modified', 15)))
-#        self.lbHist.SelectCallback = self.runSelectCallback
-#        self.lbHist.DoubleClickCallback = lambda:self.runButtonClick("Edit")
-#        self.lbHist.AllowSort = False
         import ttk
         columns = ('State', 'Modified')
         tree = XmippTree(history.frameContent, columns=columns)

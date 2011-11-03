@@ -1092,7 +1092,8 @@ class ProtocolGUI(BasicGUI):
             var.tkvar.set(', '.join([relpath(f) for f in files]))
     
     #Helper function to select Downsampling wizards
-    def wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs=None):       
+    def wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs=None):  
+#        print  'wizardHelperSetDownsampling \npath: %s\nfilter: %s\nvalue: %s' % ( path, filterExt, value)  
         results = showBrowseDialog(path=path, parent=self.master, browser=XmippBrowserCTF,
                                         title="Select Downsampling", freqs=freqs,
                                         seltype="file", selmode="browse", filter=filterExt, 

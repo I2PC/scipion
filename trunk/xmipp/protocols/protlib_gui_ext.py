@@ -33,6 +33,7 @@ from tkSimpleDialog import Dialog
 import ttk
 from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, BgColor, SectionTextColor
 from protlib_filesystem import getXmippPath
+from protlib_gui_figure import createBgImage, ImagePreview
 
 RESOURCES = getXmippPath('resources')
 
@@ -105,188 +106,6 @@ def centerWindows(root, dim=None, refWindows=None):
 
 def ProjectLabel(master, **opts):
     return tk.Label(master, font=Fonts['label'], fg=SectionTextColor, **opts)
-
-'''
-Taken from following forum:
-http://code.activestate.com/recipes/52266-multilistbox-tkinter-widget/
-This is a compound widget that gangs multiple Tk Listboxes to a single scrollbar to achieve a simple 
-multi-column scrolled listbox. Most of the Listbox API is mirrored to make it act like the normal 
-Listbox but with multiple values per row.
-'''
-class MultiListbox(tk.PanedWindow):
-    """MultiListbox class for creating a Grid widget"""
-    def __init__(self,master,lists):
-        tk.PanedWindow.__init__(self,master,borderwidth=1,showhandle=False,sashwidth=2,sashpad=0,relief=tk.SUNKEN)
-        self.lists = []
-        self.columns=[]
-        for l, w in lists:
-            self.columns.append(l)
-            frame = tk.Frame(self); frame.pack(side=tk.LEFT, expand=tk.YES, fill=tk.BOTH)
-            tl=tk.Label(frame, text=l, borderwidth=2, relief=tk.GROOVE)
-            tl.pack(fill=tk.X)
-            tl.bind('<Button-1>',self.clickon)
-            lb = tk.Listbox(frame, width=w, borderwidth=0, selectborderwidth=0,relief=tk.FLAT, exportselection=tk.FALSE, selectmode=tk.MULTIPLE ,bg='white')
-            lb.pack(expand=tk.YES, fill=tk.BOTH)
-            self.lists.append(lb)
-            lb.bind('<B1-Motion>', lambda e, s=self: s._select(e.y))
-            lb.bind('<Button-1>', lambda e, s=self: s._select(e.y))
-            lb.bind('<Double-Button-1>', self._doubleClick)
-            lb.bind('<Leave>', lambda e: 'break')
-            lb.bind('<B2-Motion>', lambda e, s=self: s._b2motion(e.x, e.y))
-            lb.bind('<Button-2>', lambda e, s=self: s._button2(e.x, e.y))
-            lb.bind('<Button-3>', lambda e, s=self: s._button3(e.x, e.y))
-            lb.bind('<Button-4>', lambda e, s=self: s._scroll(tk.SCROLL, 1, tk.PAGES))
-            lb.bind('<Button-5>', lambda e, s=self: s._scroll(tk.SCROLL, -1, tk.PAGES))
-            self.add(frame)
-        sb = tk.Scrollbar(master, orient=tk.VERTICAL, command=self._scroll,borderwidth=1)
-        sb.pack(fill=tk.Y,side=tk.RIGHT,expand=tk.NO)
-        for l in self.lists:
-            l['yscrollcommand']=sb.set
-        self.add(frame)
-        self.pack(expand=tk.YES,fill=tk.BOTH, side=tk.TOP)
-        self.sortedBy = -1
-        self.previousWheel = 0
-        self.SelectCallback = None
-        self.DoubleClickCallback = None
-        self.AllowSort = True
-
-    def _doubleClick(self, event=''):
-        if self.DoubleClickCallback:
-            self.DoubleClickCallback()
-
-    def _select(self, y,state=16):
-        row = self.lists[0].nearest(y)
-        if state==16:self.selection_clear(0, tk.END)
-        self.selection_set(row)
-        return 'break'
-
-    def _button2(self, x, y):
-        for l in self.lists: l.scan_mark(x, y)
-        return 'break'
-
-    def _button3(self, x, y):
-        #self._select(y, state)
-        return 'break'
-    
-
-    def _b2motion(self, x, y):
-        for l in self.lists: l.scan_dragto(x, y)        
-        return 'break'
-
-
-    def _scroll(self, *args):
-        for l in self.lists:
-            apply(l.yview, args)
-        return 'break'
-
-
-    def clickon(self,e):
-        if self.AllowSort:
-            self._sortBy(self.columns.index(e.widget['text']))
-
-
-    def _sortBy(self, column):
-        """ Sort by a given column. """
-        if column == self.sortedBy:
-            direction = -1 * self.direction
-        else:
-            direction = 1
-
-        elements = self.get(0, tk.END)
-        self.delete(0, tk.END)
-        elements.sort(lambda x, y: self._sortAssist(column, direction, x, y))
-        self.insert(tk.END, *elements)
-
-        self.sortedBy = column
-        self.direction = direction
-
-
-    def _sortAssist(self, column, direction, x, y):
-        c = cmp(x[column], y[column])
-        if c:
-            return direction * c
-        else:
-            return direction * cmp(x, y)
-
-    def curselection(self):
-        return self.lists[0].curselection()
-
-
-    def delete(self, first, last=None):
-        for l in self.lists:
-            l.delete(first, last)
-
-
-    def get(self, first, last=None):
-        result = []
-        for l in self.lists:
-            result.append(l.get(first,last))
-        if last: return apply(map, [None] + result)
-        return result
-
-
-    def index(self, index):
-        self.lists[0].index(index)
-
-
-    def insert(self, index, *elements):
-        for e in elements:
-            i = 0
-            for l in self.lists:
-                l.insert(index, e[i])
-                i = i + 1
-    
-    def changetext(self, index, *elements):
-        for e in elements:
-            for l in self.lists:
-                l.itemconfig(index, text=e)        
-
-    def size(self):
-        return self.lists[0].size()
-
-    def see(self, index):
-        for l in self.lists:
-            l.see(index)
-
-    def selection_anchor(self, index):
-        for l in self.lists:
-            l.selection_anchor(index)
-
-    def selection_clear(self, first, last=None):
-        for l in self.lists:
-            l.selection_clear(first, last)
-
-
-    def selection_includes(self, index):
-        return self.lists[0].selection_includes(index)
-
-
-    def selectedIndex(self):
-        if len(self.curselection()) > 0:
-            return int(self.curselection()[0])
-        return -1
-    
-    def selection_set(self, first, last=None):
-        for l in self.lists:
-            l.selection_set(first, last)
-        index = self.selectedIndex()
-        if self.SelectCallback:
-            self.SelectCallback(index)
-            
-    def selection_move_up(self):
-        index = self.selectedIndex() 
-        if index > 0:
-            self.selection_clear(0, tk.END)
-            #self.selection_clear(0, END)
-            self.selection_set(index - 1)
-            
-    def selection_move_down(self):
-        index = self.selectedIndex()
-        if index != -1 and index < self.size() - 1:
-            self.selection_clear(0, tk.END)
-            #self.selection_clear(0, END)
-            self.selection_set(index + 1)
-
 
 # ******************************************************************
 # *     Following are implementation of some widgets extensions   *
@@ -1315,7 +1134,7 @@ class XmippBrowser():
         
         #Create xmipp image to show preview
         import xmipp
-        self.canvas = None
+        self.preview = None
         self.image = xmipp.Image()
         self.lastitem = None
         #Create a dictionary with extensions and icon type
@@ -1407,15 +1226,10 @@ class XmippBrowser():
         
     def onKeyPress(self, e):
         self.unpostMenu()
-
-    def createPreviewCanvas(self):
-        from protlib_gui_figure import createImageFigure
-        self.canvas, self.figure, self.figureimg = createImageFigure(self.detailstop, self.dim)
-    
+       
     def updatePreview(self, filename):
-        if not self.canvas:
-            print "creating PreviewCanvas"
-            self.createPreviewCanvas()            
+        if not self.preview:
+            self.preview = ImagePreview(self.detailstop, self.dim)
         if not filename.endswith('.png'):
             #Read image data through Xmipp
             self.image.readPreview(filename, self.dim)
@@ -1424,15 +1238,8 @@ class XmippBrowser():
         else:
             from protlib_gui_figure import getPngData
             Z = getPngData(filename)
-        print Z.shape 
-        print self.figure.get_children()
-        self.figureimg.set_data(Z)
-        self.figureimg.autoscale()
-        ydim = Z.shape[0]
-        xdim = Z.shape[1]
-        self.figureimg.set(extent=[0, xdim, 0, ydim])
-        #self.figureimg.get_axes().clear()
-        self.canvas.draw()
+            
+        self.preview.updateData(Z)
     
     def filterResults(self, e=None):
         self.pattern = self.filterVar.get().split()
@@ -1513,9 +1320,9 @@ class XmippBrowserCTF(XmippBrowser):
         
     def createDetailsTop(self, parent):
         XmippBrowser.createDetailsTop(self, parent)
-        self.createPreviewCanvas()
-        ttk.Label(self.detailstop, text="Micrograph").grid(row=1, column=0)
-        ttk.Label(self.detailstop, text="PSD").grid(row=1, column=1)
+        self.preview = ImagePreview(self.detailstop, self.dim, label='Micrograph')
+        #ttk.Label(self.detailstop, text="Micrograph").grid(row=1, column=0)
+        #ttk.Label(self.detailstop, text="PSD").grid(row=1, column=1)
         self.frame2 = ttk.Frame(self.detailstop, padding="3 3 3 3")
         self.detailstop.columnconfigure(1, weight=1)
         self.frame2.grid(column=1, row=0, sticky='nsew', padx=5)
@@ -1536,6 +1343,7 @@ class XmippBrowserCTF(XmippBrowser):
         self.btnTest = XmippButton(frame, "Preview", command=self.calculatePSD)
         downsamplingEntry.bind('<Return>', self.calculatePSD)
         self.btnTest.pack(side=tk.LEFT, padx=2)
+        lf, hf = 0, 0
         if self.freqs:
             self.freqFrame = ttk.LabelFrame(frame, text="Frequencies", padding="5 5 5 5")
             self.freqFrame.pack()
@@ -1547,17 +1355,19 @@ class XmippBrowserCTF(XmippBrowser):
             self.hf = XmippSlider(self.freqFrame, 'High freq: ', from_=0, to=0.5, value=hf,
                                   callback=lambda a, b, c:self.updateFreqRing())
             self.hf.pack(padx=2, pady=2)
-            from protlib_gui_figure import PsdFigure
-            self.psdFig = PsdFigure(self.frame2, self.dim, lf, hf, dpi=64)
-            self.updatePSD(Z=None)
+        from protlib_gui_figure import PsdPreview
+        self.psdFig = PsdPreview(self.frame2, self.dim, lf, hf, dpi=64)
+        self.updatePSD(Z=None)
         return frame
     
     def calculatePSD(self, e=None):
         #Read image data through Xmipp
         if self.lastitem:
-            from xmipp import fastEstimateEnhancedPSD, Image
+            from xmipp import fastEstimateEnhancedPSD, bandPassFilter, Image
             from protlib_xmipp import getImageData
-            self.image = fastEstimateEnhancedPSD(self.lastitem, float(self.downsamplingVar.get()), self.dim)
+            downsampling = float(self.downsamplingVar.get())
+            fastEstimateEnhancedPSD(self.image, self.lastitem, downsampling, self.dim, 2)
+            #bandPassFilter(self.image, self.lastitem, 0.2, 0.4, downsampling, self.dim)
             #Following for fast testing
             #self.image = Image()
             #self.image.readPreview(self.lastitem, self.dim)
@@ -1572,11 +1382,13 @@ class XmippBrowserCTF(XmippBrowser):
     def updatePSD(self, Z=None, state=tk.NORMAL):
         if not Z is None:
             state=tk.NORMAL
+            self.psdFig.updateData(Z)
         else:
             state=tk.DISABLED
+            self.psdFig.clear()
             
+        
         if self.freqs:
-            self.psdFig.updateData(Z)
             self.lf.slider.config(state=state)
             self.hf.slider.config(state=state)
             
