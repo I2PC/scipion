@@ -3219,47 +3219,92 @@ xmipp_substituteOriginalImages(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+bool validateInputImageString(PyObject * pyImage, PyObject *pyStrFn, FileName &fn)
+{
+  if (!Image_Check(pyImage))
+  {
+    PyErr_SetString(PyExc_TypeError,
+        "bad argument: Expected Image as first argument");
+    return false;
+  }
+  if (PyString_Check(pyStrFn))
+      fn = PyString_AsString(pyStrFn);
+  else if (FileName_Check(pyStrFn))
+      fn = FileName_Value(pyStrFn);
+  else
+  {
+      PyErr_SetString(PyExc_TypeError,
+          "bad argument:Expected string or FileName as second argument");
+      return false;
+  }
+  return true;
+}
+
 /* calculate enhanced psd and return preview*/
 static PyObject *
 xmipp_fastEstimateEnhancedPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-        PyObject *pyStrFn;
+        PyObject *pyStrFn, *pyImage;
         //ImageObject *pyImage;
        double downsampling;
        int dim, Nthreads;
+       FileName fn;
 
-        if (PyArg_ParseTuple(args, "Odii", &pyStrFn, &downsampling, &dim, &Nthreads))
+        if (PyArg_ParseTuple(args, "OOdii", &pyImage, &pyStrFn, &downsampling, &dim, &Nthreads))
         {
             try
             {
-//              if (!Image_Check(pyImage))
-//              {
-//                PyErr_SetString(PyExc_TypeError,
-//                                        "fastEstimateEnhancedPSD: Expected string or FileName as first argument");
-//                                    return NULL;
-//              }
-                FileName fn;
-                if (PyString_Check(pyStrFn))
-                    fn = PyString_AsString(pyStrFn);
-                else if (FileName_Check(pyStrFn))
-                    fn = FileName_Value(pyStrFn);
-                else
-                {
-                    PyErr_SetString(PyExc_TypeError,
-                        "fastEstimateEnhancedPSD: Expected string or FileName as first argument");
-                    return NULL;
-                }
+              if (validateInputImageString(pyImage, pyStrFn, fn))
+              {
+                MultidimArray<double> data;
+                fastEstimateEnhancedPSD(fn, downsampling, data, Nthreads);
+                selfScaleToSize(LINEAR, data, dim, dim);
+                Image_Value(pyImage).setDatatype(Double);
+                Image_Value(pyImage).data->setImage(data);
+                Py_RETURN_NONE;
+              }
+            }
+            catch (XmippError &xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
+        }
+        return NULL;
+}
 
-               MultidimArray<double> data;
-               fastEstimateEnhancedPSD(fn, downsampling, data, Nthreads);
-               selfScaleToSize(LINEAR, data, dim, dim);
-               ImageObject * pyImage = PyObject_New(ImageObject, &ImageType);
-               pyImage->image = new ImageGeneric(Double);
-               //std::cerr << "DEBUG_JM: setting image: " << std::endl;
-               pyImage->image->data->setImage(data);
-               //pyImage->image->write("kk.mrc");
-               return (PyObject *) pyImage;
-               //Py_RETURN_NONE;
+/* calculate enhanced psd and return preview*/
+static PyObject *
+xmipp_bandPassFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+        PyObject *pyStrFn, *pyImage;
+       double w1, w2, raised_w;
+       int dim;
+       FileName fn;
+
+        if (PyArg_ParseTuple(args, "OOdddi", &pyImage, &pyStrFn, &w1, &w2, &raised_w, &dim))
+        {
+            try
+            {
+              if (validateInputImageString(pyImage, pyStrFn, fn))
+              {
+                  Image<double> img;
+                  img.read(fn);
+                  MultidimArray<double> &data = MULTIDIM_ARRAY(img);
+                  ImageDim idim;
+                  data.getDimensions(idim);
+                  bandpassFilter(data, w1, w2, raised_w);
+                  int w = dim, h = dim, &x = idim.xdim, &y = idim.ydim;
+                  double ddim = dim;
+
+                  if (x > y)
+                    h = y * (dim/x);
+                  else if (y > x)
+                    w = x * (dim/y);
+                  selfScaleToSize(LINEAR, data, w, h);
+                  Image_Value(pyImage).setDatatype(Double);
+                  MULTIDIM_ARRAY_GENERIC(Image_Value(pyImage)).setImage(data);
+                  Py_RETURN_NONE;
+              }
             }
             catch (XmippError &xe)
             {
@@ -3320,6 +3365,8 @@ xmipp_methods[] =
           "Substitute the original images into a given column of a metadata" },
         { "fastEstimateEnhancedPSD", (PyCFunction) xmipp_fastEstimateEnhancedPSD, METH_VARARGS,
           "Utility function to calculate PSD preview" },
+        { "bandPassFilter", (PyCFunction) xmipp_bandPassFilter, METH_VARARGS,
+          "Utility function to apply bandpass filter" },
         { NULL } /* Sentinel */
     };
 
