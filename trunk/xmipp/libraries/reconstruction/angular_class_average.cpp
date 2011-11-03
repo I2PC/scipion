@@ -78,6 +78,20 @@ void ProgAngularClassAverage::readParams()
     // Write selfiles
     write_selfiles = checkParam("--write_selfiles");
 
+    if (checkParam("--preprocess"))
+        do_preprocess = true;
+    else
+        do_preprocess = false;
+
+
+    if (checkParam("--postprocess"))
+    {
+        do_postprocess = true;
+        number_3dref = getIntParam("--number_3dreferences");
+    }
+    else
+        do_postprocess = false;
+
     // Internal re-alignment of the class averages
     Ri      = getIntParam("--Ri");
     Ro      = getIntParam("--Ro");
@@ -104,6 +118,10 @@ void ProgAngularClassAverage::defineParams()
     addParamsLine("   [--wien <img=\"\"> ]    : Apply this Wiener filter to the averages");
     addParamsLine("   [--pad <factor=1.> ]    : Padding factor for Wiener correction");
     addParamsLine("   [--write_selfiles]      : Write class selfiles to disc");
+    addParamsLine("   [--number_3dreferences <n>] : Number of 3D references (only used with flag --postprocess_metadata).");
+    addParamsLine("   [--postprocess]: Create block with average images filenames.");
+    addParamsLine("   requires --number_3dreferences;");
+    addParamsLine("   [--preprocess] : Delete auxiliary files from previous execution. Alloc disk space for output stacks");
 
     addParamsLine("==+ IMAGE SELECTION BASED ON INPUT DOCFILE (select one between: limit 0, F and R ==");
     addParamsLine("   [--select <col=\"maxCC\">]     : Column to use for image selection (limit0, limitF or limitR)");
@@ -138,29 +156,41 @@ void ProgAngularClassAverage::run()
 
     produceSideInfo();
 
+    if (do_preprocess)
+    {
+        preprocess();
+        return;
+    }
+
+    if (do_postprocess)
+    {
+        postprocess();
+        return;
+    }
+
     // Only for do_add: append input docfile to add_to docfile
     //do_Add is enabled if we are using different ctf groups
-    if (do_add)
-        //if (false)
-    {
-        FileName fn_tmp=fn_out+".xmd";
-        if (fn_tmp.exists())
-        {
-            MetaData DFaux = DF;
-            MetaData DFaux2(fn_tmp);
-            // Don't do any fancy merging or sorting because those functions are really slow...
-            DFaux.write("dfaux_run.xmd");
-            DFaux2.write("dfaux2_run.xmd");
-            DFaux.unionAll(DFaux2);
-            DFaux2.clear();
-            DFaux2.removeDuplicates(DFaux);
-            DFaux2.write(fn_tmp);
-        }
-        else
-        {
-            DF.write(fn_tmp);
-        }
-    }
+    //    if (do_add)
+    //        //if (false)
+    //    {
+    //        FileName fn_tmp=fn_out+".xmd";
+    //        if (fn_tmp.exists())
+    //        {
+    //            MetaData DFaux = DF;
+    //            MetaData DFaux2(fn_tmp);
+    //            // Don't do any fancy merging or sorting because those functions are really slow...
+    //            DFaux.write("dfaux_run.xmd");
+    //            DFaux2.write("dfaux2_run.xmd");
+    //            DFaux.unionAll(DFaux2);
+    //            DFaux2.clear();
+    //            DFaux2.removeDuplicates(DFaux);
+    //            DFaux2.write(fn_tmp);
+    //        }
+    //        else
+    //        {
+    //            DF.write(fn_tmp);
+    //        }
+    //    }
 
 
     // Making class averages
@@ -284,15 +314,12 @@ void ProgAngularClassAverage::produceSideInfo()
     DFclassesExp.write("DFclassesExp_sorted.xmd");
 
     Ndim = DFclassesExp.size();
-    createEmptyFile(fn_out+"_classes.stk",Xdim,Ydim,Zdim,Ndim,true,WRITE_OVERWRITE);
 
     // Set up output rootnames
     if (do_split)
     {
         fn_out1 = fn_out+"_split_1";
-        createEmptyFile(fn_out1+"_classes.stk", Xdim, Ydim, Zdim, Ndim, true, WRITE_OVERWRITE);
         fn_out2 = fn_out+"_split_2";
-        createEmptyFile(fn_out2+"_classes.stk", Xdim, Ydim, Zdim, Ndim, true, WRITE_OVERWRITE);
     }
 
     int dummyI;
@@ -388,6 +415,169 @@ void ProgAngularClassAverage::produceSideInfo()
     global_transformer.FourierTransform();
 
 
+}
+
+void ProgAngularClassAverage::preprocess()
+{
+    //alloc space for output files
+    int Xdim, Ydim, Zdim;
+    size_t Ndim;
+
+    ImgSize(DF, Xdim, Ydim, Zdim, Ndim);
+
+    Ndim = DFclassesExp.size();
+
+    unlink((fn_out+"_classes.xmd").c_str());
+    unlink((fn_out+"_classes.stk").c_str());
+    createEmptyFile(fn_out+"_classes.stk",Xdim,Ydim,Zdim,Ndim,true,WRITE_OVERWRITE);
+    if (do_split)
+    {
+        unlink((fn_out1+"_classes.xmd").c_str());
+        unlink((fn_out1+"_classes.stk").c_str());
+        createEmptyFile(fn_out1+"_classes.stk", Xdim, Ydim, Zdim, Ndim, true, WRITE_OVERWRITE);
+        unlink((fn_out2+"_classes.xmd").c_str());
+        unlink((fn_out2+"_classes.stk").c_str());
+        createEmptyFile(fn_out2+"_classes.stk", Xdim, Ydim, Zdim, Ndim, true, WRITE_OVERWRITE);
+    }
+}
+
+void ProgAngularClassAverage::postprocess()
+{
+
+    MetaData auxMd1, auxMd2;
+    FileName fn_tmp, fn_tmp1, fn_tmp2, fn, fn1, fn2;
+    size_t order =-1, last_order=-1, id;
+    double rot, tilt;
+
+    fn = fn_out + "_classes";
+    fn1 = fn_out1 + "_classes";
+    fn2 = fn_out2 + "_classes";
+
+    for(int i=1;i<=number_3dref;i++)
+    {
+        formatStringFast(fn_tmp, "groupClass[0-9][0-9][0-9][0-9][0-9][0-9]_refGroup%06lu@%s.%s", i, fn.c_str(), "xmd");
+        std::cerr << "fn_tmp: " << fn_tmp << std::endl;
+        try
+        {
+            auxMd2.read(fn_tmp);
+        }
+        catch (XmippError XE)
+        {
+            if(XE.__errno == ERR_MD_WRONGDATABLOCK)
+                continue;
+        }
+        auxMd1.sort(auxMd2, MDL_ORDER);
+        auxMd2.clear();
+        FOR_ALL_OBJECTS_IN_METADATA(auxMd1)
+        {
+            auxMd1.getValue(MDL_ORDER, order, __iter.objId);
+            if (order != last_order)
+            {
+                auxMd1.getValue(MDL_ANGLEROT, rot, __iter.objId);
+                auxMd1.getValue(MDL_ANGLETILT, tilt, __iter.objId);
+                id = auxMd2.addObject();
+                formatStringFast(fn_tmp, "%06lu@%s.%s", order, fn.c_str(), "stk");
+                auxMd2.setValue(MDL_IMAGE, fn_tmp, id);
+                auxMd2.setValue(MDL_ANGLEROT, rot, id);
+                auxMd2.setValue(MDL_ANGLETILT, tilt, id);
+                auxMd2.setValue(MDL_ORDER, order, id);
+                last_order = order;
+
+            }
+        }
+
+        formatStringFast(fn_tmp, "refGroup%06lu@%s.%s", i, fn.c_str(), "xmd");
+        auxMd2.write(fn_tmp,MD_APPEND);
+
+        // SPLIT
+        if (do_split)
+        {
+            MetaData auxMd1_s1, auxMd2_s1;
+            MetaData auxMd1_s2, auxMd2_s2;
+
+            size_t order1 =-1, last_order2=-1, id1;
+            size_t order2 =-1, last_order1=-1, id2;
+
+
+            //Split1
+            formatStringFast(fn_tmp1, "groupClass[0-9][0-9][0-9][0-9][0-9][0-9]_refGroup%06lu@%s.%s",
+                             i, fn1.c_str(), "xmd");
+            std::cerr << "fn_tmp1: " << fn_tmp << std::endl;
+            try
+            {
+                auxMd2_s1.read(fn_tmp1);
+            }
+            catch (XmippError XE)
+            {
+                if(XE.__errno == ERR_MD_WRONGDATABLOCK)
+                    continue;
+            }
+
+            auxMd1_s1.sort(auxMd2_s1, MDL_ORDER);
+
+            auxMd2_s1.clear();
+            FOR_ALL_OBJECTS_IN_METADATA(auxMd1_s1)
+            {
+                auxMd1_s1.getValue(MDL_ORDER, order1, __iter.objId);
+                if (order1 != last_order1)
+                {
+                    auxMd1_s1.getValue(MDL_ANGLEROT, rot, __iter.objId);
+                    auxMd1_s1.getValue(MDL_ANGLETILT, tilt, __iter.objId);
+                    id = auxMd2_s1.addObject();
+                    formatStringFast(fn_tmp, "%06lu@%s.%s", order1, fn1.c_str(), "stk");
+                    auxMd2_s1.setValue(MDL_IMAGE, fn_tmp, id);
+                    auxMd2_s1.setValue(MDL_ANGLEROT, rot, id);
+                    auxMd2_s1.setValue(MDL_ANGLETILT, tilt, id);
+                    auxMd2_s1.setValue(MDL_ORDER, order1, id);
+                    last_order1 = order1;
+
+                }
+            }
+
+            formatStringFast(fn_tmp, "refGroup%06lu@%s.%s", i, fn1.c_str(), "xmd");
+            auxMd2_s1.write(fn_tmp,MD_APPEND);
+
+            //Split2
+            formatStringFast(fn_tmp2, "groupClass[0-9][0-9][0-9][0-9][0-9][0-9]_refGroup%06lu@%s.%s",
+                             i, fn2.c_str(), "xmd");
+            std::cerr << "fn_tmp2: " << fn_tmp << std::endl;
+            try
+            {
+                auxMd2_s2.read(fn_tmp2);
+            }
+            catch (XmippError XE)
+            {
+                if(XE.__errno == ERR_MD_WRONGDATABLOCK)
+                    continue;
+            }
+
+            auxMd1_s2.sort(auxMd2_s2, MDL_ORDER);
+
+            auxMd2_s2.clear();
+            FOR_ALL_OBJECTS_IN_METADATA(auxMd1_s2)
+            {
+                auxMd1_s2.getValue(MDL_ORDER, order2, __iter.objId);
+                if (order2 != last_order2)
+                {
+                    auxMd1_s2.getValue(MDL_ANGLEROT, rot, __iter.objId);
+                    auxMd1_s2.getValue(MDL_ANGLETILT, tilt, __iter.objId);
+                    id = auxMd2_s2.addObject();
+                    formatStringFast(fn_tmp, "%06lu@%s.%s", order1, fn2.c_str(), "stk");
+                    auxMd2_s2.setValue(MDL_IMAGE, fn_tmp, id);
+                    auxMd2_s2.setValue(MDL_ANGLEROT, rot, id);
+                    auxMd2_s2.setValue(MDL_ANGLETILT, tilt, id);
+                    auxMd2_s2.setValue(MDL_ORDER, order1, id);
+                    last_order2 = order2;
+
+                }
+            }
+
+            formatStringFast(fn_tmp, "refGroup%06lu@%s.%s", i, fn2.c_str(), "xmd");
+            auxMd2_s2.write(fn_tmp,MD_APPEND);
+
+
+        }
+    }
 }
 
 void ProgAngularClassAverage::getPolar(MultidimArray<double> &img, Polar<std::complex <double> > &fP,
@@ -755,6 +945,7 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno,
                     SFclass1.setValue(MDL_ANGLEROT,current_rot, id);
                     SFclass1.setValue(MDL_ANGLETILT,current_tilt, id);
                     SFclass1.setValue(MDL_REF,ref_number, id);
+                    SFclass1.setValue(MDL_ORDER,dirno, id);
                 }
                 else
                 {
@@ -765,6 +956,7 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno,
                     SFclass2.setValue(MDL_ANGLEROT,current_rot, id);
                     SFclass2.setValue(MDL_ANGLETILT,current_tilt, id);
                     SFclass2.setValue(MDL_REF,ref_number, id);
+                    SFclass2.setValue(MDL_ORDER,dirno, id);
                 }
             }
         }
@@ -890,7 +1082,7 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
     // Write class selfile to disc (even if its empty)
     if (write_selfile)
     {
-    	formatStringFast(fn_tmp, "%s%06lu_%s@%s.%s", "groupClass", dirno, refGroup.c_str(), fn.c_str(), "xmd");
+        formatStringFast(fn_tmp, "%s%06lu_%s@%s.%s", "groupClass", dirno, refGroup.c_str(), fn.c_str(), "xmd");
 
         MetaData auxMd;
         if (do_add && auxMd.existsBlock(fn_tmp))
@@ -902,7 +1094,14 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
             SF.clear();
             SF.removeDuplicates(SFaux);
         }
-
+        else
+        {
+            String comment = (String) "This file contains one block per each pair (Projection direction, " +
+                             "Reference volume), groupClassXXXXXX refers to the projection direction, " +
+                             "refGroupXXXXXX refers to the reference volume. Additionally the blocks named " +
+                             "refGroupXXXXXX contains the images needed to reconstruct the reference XXXXXX.";
+            SF.setComment(comment);
+        }
         SF.write(fn_tmp, MD_APPEND);
     }
 

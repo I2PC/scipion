@@ -73,6 +73,13 @@ public:
     Image<double>    Iempty;
     /** Do NOT skip writing of selfiles */
     bool             write_selfiles;
+    /** Number of 3d references */
+    int              number_3dref;
+    /** Delete auxiliary files from previous execution.
+     * Alloc disk space for output stacks */
+    bool             do_preprocess;
+    /** Create block with average images filenames */
+    bool             do_postprocess;
     /** Add output to existing files */
     bool             do_add;
     /** Wiener filter image */
@@ -112,6 +119,14 @@ public:
 
     /** Make shiftmask and calculate nr_psi */
     void produceSideInfo();
+
+    /** Delete auxiliary files from previous execution.
+     * Alloc disk space for output stacks */
+    void preprocess();
+
+    /** Read all the metadata blocks with images assigned to different projection directions
+     * and creates a single metadata block with the name of the projection direction averages. */
+    void postprocess();
 
     /** Convert from cartesian to FT of polar coordinates */
     void getPolar(MultidimArray<double> &img, Polar<std::complex <double> > &fP,
