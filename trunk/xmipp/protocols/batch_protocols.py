@@ -30,7 +30,8 @@ import os
 import Tkinter as tk
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
 from protlib_gui_ext import ToolTip, centerWindows, askYesNo, showInfo, XmippTree, \
-    showBrowseDialog, showFileViewer, showError, TaggedText, XmippButton, ProjectLabel
+    showBrowseDialog, showFileViewer, showError, TaggedText, XmippButton, ProjectLabel,\
+    FlashMessage
 from config_protocols import *
 from protlib_base import getProtocolFromModule, XmippProject, getExtendedRunName
 from protlib_utils import ProcessManager,  getHostname
@@ -462,6 +463,7 @@ class XmippProjectGUI():
         return None
     
     def runButtonClick(self, event=None):
+        FlashMessage(self.root, 'Opening...', delay=1)
         run = self.getLastRunDict()
         if run:
             state = run['run_state']

@@ -321,6 +321,29 @@ class ToolTip:
         label = tk.Label(self._tipwindow, **opts)
         label.pack()
 
+class FlashMessage():
+    def __init__(self, master, msg, delay=5, relief='solid', func=None):
+        self.root = tk.Toplevel(master=master)
+        self.root.grab_set()
+        #hides until know geometry
+        self.root.withdraw()
+        self.root.wm_overrideredirect(1)
+        tk.Label(self.root, text="   %s   " % msg,
+                 bd=1, bg='DodgerBlue4', fg='white').pack()
+        centerWindows(self.root, refWindows=master)
+        self.root.deiconify()
+        self.msg = msg
+
+        if func:
+            func()
+        else:
+            self.root.after(delay*1000, self.close)
+        self.root.wait_window(self.root)
+        
+    def close(self):
+        print "destroyed ", self.msg
+        self.root.destroy()
+        
 ##---------demo code-----------------------------------##
 
 class XmippButton(tk.Button):
@@ -1363,10 +1386,12 @@ class XmippBrowserCTF(XmippBrowser):
     def calculatePSD(self, e=None):
         #Read image data through Xmipp
         if self.lastitem:
-            from xmipp import fastEstimateEnhancedPSD, bandPassFilter, Image
+            from xmipp import fastEstimateEnhancedPSD, Image
             from protlib_xmipp import getImageData
             downsampling = float(self.downsamplingVar.get())
-            fastEstimateEnhancedPSD(self.image, self.lastitem, downsampling, self.dim, 2)
+            f = lambda :fastEstimateEnhancedPSD(self.image, self.lastitem, downsampling, self.dim, 2)
+            f()
+            #FlashMessage(self.root, 'Estimating PSD...', func=f)
             #bandPassFilter(self.image, self.lastitem, 0.2, 0.4, downsampling, self.dim)
             #Following for fast testing
             #self.image = Image()
