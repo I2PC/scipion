@@ -558,6 +558,7 @@ class XmippProtocolDb(SqliteDb):
         sqlCommand = """SELECT COUNT(*) FROM %(TableSteps)s 
                         WHERE (step_id < %(next_step_id)d)
                           AND (finish IS NULL)
+                          AND (init IS NULL)
                           AND (execution_mode = %(execution_gap)d)
                           AND (run_id=%(run_id)d) """ % self.sqlDict
         
