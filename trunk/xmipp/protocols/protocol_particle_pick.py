@@ -51,6 +51,7 @@ class ProtParticlePicking(XmippProtocol):
             particles=0
             for block in blockList:
                 mD=xmipp.MetaData(block+"@"+posfile);
+                mD.removeDisabled();
                 Nparticles=mD.size()
                 particles+=Nparticles
                 if block in Nblock.keys():
