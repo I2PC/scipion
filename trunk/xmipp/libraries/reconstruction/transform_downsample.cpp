@@ -83,7 +83,7 @@ void ProgTransformDownsample::processImage(const FileName &fnImg, const FileName
 {
     // Open input data
     ImageGeneric M_in;
-    M_in.readMapped(fnImg);
+    M_in.readOrReadMapped(fnImg);
     int Zdim, Ydim, Xdim;
     M_in.getDimensions(Xdim,Ydim,Zdim);
     if (Zdim!=1)
