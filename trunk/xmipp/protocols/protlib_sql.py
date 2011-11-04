@@ -324,7 +324,7 @@ class XmippProjectDb(SqliteDb):
 class XmippProtocolDb(SqliteDb):
     def __init__(self, protocol, isMainLoop=True):
         self.ContinueAtStep = getattr(protocol, 'ContinueAtStep', 0) 
-        self.runBehavior = getattr(protocol, 'Behaviour', 'Resume')
+        self.runBehavior = getattr(protocol, 'Behavior', 'Resume')
         self.dbName = protocol.project.dbName
         self.Import = protocol.Import  
         self.Log = protocol.Log             
@@ -389,14 +389,14 @@ class XmippProtocolDb(SqliteDb):
             else:
                 if self.runBehavior=="Continue" and row['step_id']>=self.ContinueAtStep:
                     self.insertStatus = True
-                if row['parameters'] != parameters or row['verifyFiles'] != verifyfilesString:
+                elif row['parameters'] != parameters or row['verifyFiles'] != verifyfilesString:
                     self.insertStatus = True
                 else:
                     for f in verifyfiles:
                         if not exists(f):
                             self.insertStatus = True
                             break
-                self.lastStepId=row['step_id']
+                self.lastStepId = row['step_id']
                 if self.insertStatus:
                     self.sqlDict['step_id'] = row['step_id']
                     sqlCommand = """DELETE FROM %(TableSteps)s 
@@ -418,6 +418,7 @@ class XmippProtocolDb(SqliteDb):
             except sqlite.Error, e:
                 reportError( "Cannot insert command: %s" % e.args[0])
         return self.lastStepId
+    
     def runSteps(self):
         #Update run state to STARTED
         self.updateRunState(SqliteDb.RUN_STARTED)
@@ -436,7 +437,7 @@ class XmippProtocolDb(SqliteDb):
         self.cur.execute(sqlCommand)
         commands = self.cur.fetchall()
         n = len(commands)
-        msg='***************************** Protocol STARTED mode: %s'%self.runBehavior
+        msg = '***************************** Protocol STARTED mode: %s' % self.runBehavior
         printLog(msg, self.Log, out=True, err=True)
         
         for i in range(n):

@@ -17,14 +17,14 @@
 #-----------------------------------------------------------------------------
 # {section} Input
 #-----------------------------------------------------------------------------
-# {file} Selfile with the input images:
+# {file}{validate}(PathExists) Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up 
 your data set. The filenames can have relative or absolute paths, but it is 
 strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
 SelFileName ='new20.sel'
 
-# {file} {expert} Docfile with the input angles:
+# {file}{expert} Docfile with the input angles:
 """ Do not provide anything if there are no angles yet. 
     In that case, the starting angles will be read from the image headers
     This docfile should be in newXmipp-style format (with filenames as comments)

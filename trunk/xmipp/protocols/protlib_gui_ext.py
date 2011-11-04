@@ -335,11 +335,15 @@ class FlashMessage():
         self.msg = msg
 
         if func:
-            func()
-            self.close()
+            self.root.update_idletasks()
+            self.root.after(10, self.proccess, func)
         else:
             self.root.after(int(delay*1000), self.close)
-            self.root.wait_window(self.root)
+        self.root.wait_window(self.root)
+        
+    def proccess(self, func):
+        func()
+        self.root.destroy()
         
     def close(self):
         self.root.destroy()
@@ -1344,8 +1348,6 @@ class XmippBrowserCTF(XmippBrowser):
     def createDetailsTop(self, parent):
         XmippBrowser.createDetailsTop(self, parent)
         self.preview = ImagePreview(self.detailstop, self.dim, label='Micrograph')
-        #ttk.Label(self.detailstop, text="Micrograph").grid(row=1, column=0)
-        #ttk.Label(self.detailstop, text="PSD").grid(row=1, column=1)
         self.frame2 = ttk.Frame(self.detailstop, padding="3 3 3 3")
         self.detailstop.columnconfigure(1, weight=1)
         self.frame2.grid(column=1, row=0, sticky='nsew', padx=5)
@@ -1392,9 +1394,6 @@ class XmippBrowserCTF(XmippBrowser):
             f = lambda :fastEstimateEnhancedPSD(self.image, self.lastitem, downsampling, self.dim, 2)
             FlashMessage(self.root, 'Estimating PSD...', func=f)
             #bandPassFilter(self.image, self.lastitem, 0.2, 0.4, downsampling, self.dim)
-            #Following for fast testing
-            #self.image = Image()
-            #self.image.readPreview(self.lastitem, self.dim)
             Z = getImageData(self.image)
             self.updatePSD(Z)            
         else:
