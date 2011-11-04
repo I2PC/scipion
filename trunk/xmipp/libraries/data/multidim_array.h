@@ -699,7 +699,10 @@ public:
     virtual ~MultidimArrayBase()
     {}
     virtual void clear() = 0;
-    virtual void getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const = 0;
+    void getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const;
+    void getDimensions(ArrayDim &idim) const;
+    void getDimensions(int* size) const;
+    size_t getSize() const;
     virtual void resize(size_t Ndim, int Zdim, int Ydim, int Xdim, bool copy=true) = 0;
     virtual void selfReverseX() = 0;
     virtual void selfReverseY() = 0;
@@ -1374,48 +1377,6 @@ public:
         STARTINGZ(*this) = STARTINGZ(v);
     }
 
-    /** Returns the multidimArray N,Z, Y and X dimensions.
-     *
-     * @code
-     * V.getDimensions(Xdim, Ydim, Zdim, Ndim);
-     * @endcode
-     */
-    void getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const
-    {
-        Xdim = XSIZE(*this);
-        Ydim = YSIZE(*this);
-        Zdim = ZSIZE(*this);
-        Ndim = NSIZE(*this);
-    }
-
-    /** Returns the multidimArray .
-     *
-     * @code
-     * V.getDimensions(idim);
-     * @endcode
-     */
-    void getDimensions(ArrayDim &adim) const
-    {
-        adim.xdim = XSIZE(*this);
-        adim.ydim = YSIZE(*this);
-        adim.zdim = ZSIZE(*this);
-        adim.ndim = NSIZE(*this);
-        adim.yxdim = YXSIZE(*this);
-        adim.zyxdim = ZYXSIZE(*this);
-        adim.nzyxdim = NZYXSIZE(*this);
-    }
-
-    /** Returns the total size of the multidimArray
-     *
-     * @code
-     * if (V.getSize() > 1) ...
-     * @endcode
-     */
-    size_t getSize() const
-    {
-        return NZYXSIZE(*this);
-    }
-
     /** Check dimension.
      *
      * returns true if the dimension is equal to the argument and false otherwise
@@ -1433,22 +1394,6 @@ public:
             std::cerr << "Check called from file "<<file<<" line "<<line<<std::endl;
             exit(1);
         }
-    }
-
-    /** Get size.
-     *
-     * Returns the size of the object in a 4D vector. If the object is a matrix
-     * or a vector, then the higher order dimensions will be set to 1, ie,
-     * (Xdim, 1, 1) or (Xdim, Ydim, 1).
-     *
-     * This function is not ported to Python.
-     */
-    void getSize(int* size) const
-    {
-        size[0] = xdim;
-        size[1] = ydim;
-        size[2] = zdim;
-        size[3] = ndim;
     }
 
     /** Generic selfWindow routine (dim independent)

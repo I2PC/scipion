@@ -25,6 +25,59 @@
 
 #include "multidim_array.h"
 
+/** Returns the multidimArray N,Z, Y and X dimensions.
+ *
+ * @code
+ * V.getDimensions(Xdim, Ydim, Zdim, Ndim);
+ * @endcode
+ */
+void MultidimArrayBase::getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const
+{
+    Xdim = xdim;
+    Ydim = ydim;
+    Zdim = zdim;
+    Ndim = ndim;
+}
+
+void MultidimArrayBase::getDimensions(ArrayDim &adim) const
+{
+    adim.xdim = xdim;
+    adim.ydim = ydim;
+    adim.zdim = zdim;
+    adim.ndim = ndim;
+    adim.yxdim = yxdim;
+    adim.zyxdim = zyxdim;
+    adim.nzyxdim = nzyxdim;
+
+}
+
+/** Get dimensions.
+ *
+ * Returns the size of the object in a 4D vector. If the object is a matrix
+ * or a vector, then the higher order dimensions will be set to 1, ie,
+ * (Xdim, 1, 1) or (Xdim, Ydim, 1).
+ *
+ * This function is not ported to Python.
+ */
+void MultidimArrayBase::getDimensions(int* size) const
+{
+    size[0] = xdim;
+    size[1] = ydim;
+    size[2] = zdim;
+    size[3] = ndim;
+}
+
+/** Returns the total size of the multidimArray
+ *
+ * @code
+ * if (V.getSize() > 1) ...
+ * @endcode
+ */
+size_t MultidimArrayBase::getSize() const
+{
+    return nzyxdim;
+}
+
 
 // Show a complex array ---------------------------------------------------
 template<>
