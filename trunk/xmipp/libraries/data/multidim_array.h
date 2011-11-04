@@ -632,7 +632,7 @@ void coreArrayByArray(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
 /**
  *  Structure with the dimensions information of an image
  */
-struct ImageDim
+struct ArrayDim
 {
     // Number of images
     size_t ndim;
@@ -1084,7 +1084,7 @@ public:
     /** Sets new 4D dimensions.
      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
      */
-    void setDimensions(ImageDim &newDim)
+    void setDimensions(ArrayDim &newDim)
     {
         if (newDim.ndim*newDim.zdim*newDim.ydim*newDim.xdim < 1)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "Dimensions' size cannot be zero nor negative.");
@@ -1386,6 +1386,23 @@ public:
         Ydim = YSIZE(*this);
         Zdim = ZSIZE(*this);
         Ndim = NSIZE(*this);
+    }
+
+    /** Returns the multidimArray .
+     *
+     * @code
+     * V.getDimensions(idim);
+     * @endcode
+     */
+    void getDimensions(ArrayDim &adim) const
+    {
+        adim.xdim = XSIZE(*this);
+        adim.ydim = YSIZE(*this);
+        adim.zdim = ZSIZE(*this);
+        adim.ndim = NSIZE(*this);
+        adim.yxdim = YXSIZE(*this);
+        adim.zyxdim = ZYXSIZE(*this);
+        adim.nzyxdim = NZYXSIZE(*this);
     }
 
     /** Returns the total size of the multidimArray

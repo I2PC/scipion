@@ -737,7 +737,7 @@ public:
             REPORT_ERROR(ERR_MULTIDIM_SIZE, formatString("movePointerToSlice: Selected slice %4d cannot be higher than Z size %4d.",
                          select_slice,imFileDim.zdim));
 
-        ImageDim newDim = imFileDim;
+        ArrayDim newDim = imFileDim;
 
         switch (select_slice)
         {

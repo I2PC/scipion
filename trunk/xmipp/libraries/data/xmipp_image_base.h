@@ -124,7 +124,7 @@ struct ImageInfo
 {
 	DataType  datatype;
 	bool	  swap;
-	ImageDim  imDim;
+	ArrayDim  imDim;
 };
 
 /// @name Images Speed-up
@@ -225,7 +225,7 @@ protected:
     FILE*               fhed;        // Image File header handler
     TIFF*               tif;         // TIFF Image file hander
     ImageFHandler*      hFile;       // Image File handler information structure
-    ImageDim			imFileDim;   // Image header file information structure (original info from file)
+    ArrayDim			imFileDim;   // Image header file information structure (original info from file)
     DataMode            dataMode;    // Flag to force select what will be read/write from image files
     bool                stayOpen;    // To maintain the image file open after read/write
     size_t              offset;      // Data offset

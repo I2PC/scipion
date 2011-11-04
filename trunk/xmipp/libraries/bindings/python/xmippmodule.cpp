@@ -3290,7 +3290,7 @@ xmipp_bandPassFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
                   Image<double> img;
                   img.read(fn);
                   MultidimArray<double> &data = MULTIDIM_ARRAY(img);
-                  ImageDim idim;
+                  ArrayDim idim;
                   data.getDimensions(idim);
                   bandpassFilter(data, w1, w2, raised_w);
                   int w = dim, h = dim, &x = idim.xdim, &y = idim.ydim;
