@@ -134,7 +134,6 @@ class PsdPreview(Preview):
             self.ring = None
         if self.hf:
             self.createRing()
-        print "Z", Z
         self.img.set_data(Z)
         self.img.autoscale()
         self.canvas.draw()        

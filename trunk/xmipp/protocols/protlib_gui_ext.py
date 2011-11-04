@@ -324,7 +324,6 @@ class ToolTip:
 class FlashMessage():
     def __init__(self, master, msg, delay=5, relief='solid', func=None):
         self.root = tk.Toplevel(master=master)
-        self.root.grab_set()
         #hides until know geometry
         self.root.withdraw()
         self.root.wm_overrideredirect(1)
@@ -332,16 +331,17 @@ class FlashMessage():
                  bd=1, bg='DodgerBlue4', fg='white').pack()
         centerWindows(self.root, refWindows=master)
         self.root.deiconify()
+        self.root.grab_set()
         self.msg = msg
 
         if func:
             func()
+            self.close()
         else:
-            self.root.after(delay*1000, self.close)
-        self.root.wait_window(self.root)
+            self.root.after(int(delay*1000), self.close)
+            self.root.wait_window(self.root)
         
     def close(self):
-        print "destroyed ", self.msg
         self.root.destroy()
         
 ##---------demo code-----------------------------------##
@@ -1390,8 +1390,7 @@ class XmippBrowserCTF(XmippBrowser):
             from protlib_xmipp import getImageData
             downsampling = float(self.downsamplingVar.get())
             f = lambda :fastEstimateEnhancedPSD(self.image, self.lastitem, downsampling, self.dim, 2)
-            f()
-            #FlashMessage(self.root, 'Estimating PSD...', func=f)
+            FlashMessage(self.root, 'Estimating PSD...', func=f)
             #bandPassFilter(self.image, self.lastitem, 0.2, 0.4, downsampling, self.dim)
             #Following for fast testing
             #self.image = Image()

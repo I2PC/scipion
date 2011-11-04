@@ -49,8 +49,10 @@ DoGaussian=False
 Freq_sigma=0.04
 
 # Remove dust
-""" Sets pixels with unusually large values to random values from a Gaussian with zero-mean and unity-standard deviation.
-    It requires a previous normalization, i.e., Normalization must be set to Yes.
+"""
+Sets pixels with unusually large values to random values from a Gaussian 
+with zero-mean and unity-standard deviation. It requires a previous normalization, 
+i.e., Normalization must be set to Yes.
 """
 DoRemoveDust=False
 

@@ -35,7 +35,7 @@ from protlib_base import getProtocolFromModule, getWorkingDirFromRunName, getExt
 from protlib_utils import loadModule, runImageJPlugin, which, runJavaIJappWithResponse
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo, showBrowseDialog, showWarning, XmippBrowserCTF,\
-    AutoScrollbar
+    AutoScrollbar, FlashMessage
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
@@ -868,6 +868,8 @@ class ProtocolGUI(BasicGUI):
     
             if self.saveCallback:
                 self.saveCallback()
+                
+            FlashMessage(self.master, 'Protocol script successfully saved.', delay=1.2)
         except Exception, e:
             showError("Error saving run parameters", str(e), parent=self.master)
             raise e

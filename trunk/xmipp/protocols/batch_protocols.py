@@ -463,7 +463,7 @@ class XmippProjectGUI():
         return None
     
     def runButtonClick(self, event=None):
-        FlashMessage(self.root, 'Opening...', delay=1)
+        #FlashMessage(self.root, 'Opening...', delay=1)
         run = self.getLastRunDict()
         if run:
             state = run['run_state']
