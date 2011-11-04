@@ -57,7 +57,7 @@ class ProtParticlePickingAuto(XmippProtocol):
             for id in mDmicrographs:
                 # Get Micrograph name
                 micrographFullPath=mDmicrographs.getValue(MDL_IMAGE,id)
-                micrographName=os.path.split(os.path.split(micrographFullPath)[0])[1]
+                micrographName=os.path.splitext(os.path.split(micrographFullPath)[1])[0]
                 proceed=False
                 fnPos=os.path.join(self.pickingDir,micrographName+".pos")
                 if not os.path.exists(fnPos):
