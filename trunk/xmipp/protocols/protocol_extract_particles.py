@@ -182,7 +182,8 @@ def extractParticles(log,WorkingDir,micrographName,ctf,originalMicrograph,microg
     # Substitute the micrograph name if it comes from the flipped version
     # Add information about the ctf if available
     if originalMicrograph!=micrographToExtract or ctf!=None:
-        mD=MetaData(rootname+".sel")
+        selfile=rootname+".sel"
+        mD=MetaData(selfile)
         if originalMicrograph!=micrographToExtract:
             mD.setValueCol(MDL_MICROGRAPH,originalMicrograph)
         if ctf!=None:
