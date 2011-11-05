@@ -48,7 +48,7 @@ class ProtParticlePickingAuto(XmippProtocol):
             self.Db.insertStep('createLink',execution_mode=SqliteDb.EXEC_MAINLOOP,
                                source=os.path.join(self.pickingDir,family+"_mask.xmp"),dest=modelRoot+"_mask.xmp")
 
-        idMPI=self.Db.insertStep('runStepGapsMpi',passDb=True, script=self.scriptName, NumberOfMpi=self.NumberOfMpi)
+        idMPI=self.insertRunMpiGapsStep()
         mDmicrographs=MetaData(self.micrographSelfile)
         for familyIdx in range(len(self.familiesForAuto)):
             family=self.familiesForAuto[familyIdx]
@@ -75,15 +75,13 @@ class ProtParticlePickingAuto(XmippProtocol):
                 if proceed:
                     script=getScriptFromRunName(self.PickingRun)
                     protPicking=getProtocolFromModule(script, self.project)
-                    id=self.Db.insertStep('autoPick',parent_step_id=XmippProjectDb.FIRST_STEP,
-                                          execution_mode=SqliteDb.EXEC_GAP,WorkingDir=self.WorkingDir,
-                                          ModelRoot=modelRoot,MicrographFullPath=micrographFullPath,MicrographName=micrographName,
-                                          ParticleSize=particleSize,Fast=protPicking.Fast,InCore=protPicking.InCore)
-        parent_id=idMPI
+                    self.insertRunJobGapStep("xmipp_micrograph_automatic_picking",
+                                             "-i "+micrographFullPath+" --particleSize "+str(particleSize)+" --model "+modelRoot+\
+                                             " --outputRoot "+os.path.join(self.WorkingDir,micrographName)+" --mode autoselect")
         for familyIdx in range(len(self.familiesForAuto)):
             family=self.familiesForAuto[familyIdx]
-            parent_id=self.Db.insertStep('gatherResults',parent_step_id=parent_id,Family=family,WorkingDir=self.WorkingDir,PickingDir=self.pickingDir)
-        self.Db.insertStep('deleteTempFiles',parent_step_id=parent_id,WorkingDir=self.WorkingDir)
+            self.Db.insertStep('gatherResults',parent_step_id=idMPI,Family=family,WorkingDir=self.WorkingDir,PickingDir=self.pickingDir)
+        self.Db.insertStep('deleteTempFiles',WorkingDir=self.WorkingDir)
 
     def summary(self):
         summary = []
@@ -117,12 +115,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         mD=MetaData(self.familiesFile)
         for file in glob.glob(self.workingDirPath("*extract_list.xmd")):
             params="-i %s -o %s --mode review %s"%(self.micrographSelfile,self.WorkingDir,file)
-            runJob(None,"xmipp_micrograph_particle_picking",params,RunInBackground=True)
-
-def autoPick(log,WorkingDir,ModelRoot,MicrographFullPath,MicrographName,ParticleSize,Fast,InCore):
-    args="-i "+MicrographFullPath+" --particleSize "+str(ParticleSize)+" --model "+ModelRoot+\
-         " --outputRoot "+os.path.join(WorkingDir,MicrographName)+" --mode autoselect"
-    runJob(log,"xmipp_micrograph_automatic_picking",args)
+            os.system("xmipp_micrograph_particle_picking -i %s -o %s --mode review %s &"%(self.micrographSelfile,self.WorkingDir,file))
 
 def gatherResults(log,Family,WorkingDir,PickingDir):
     mD=MetaData(os.path.join(WorkingDir,"micrographs.sel"))
@@ -131,7 +124,7 @@ def gatherResults(log,Family,WorkingDir,PickingDir):
     fnExtractList=os.path.join(WorkingDir,Family+"_extract_list.xmd")
     for id in mD:
         micrographFullName=mD.getValue(MDL_IMAGE,id)
-        micrographName=os.path.split(os.path.split(micrographFullName)[0])[1]
+        micrographName=os.path.splitext(os.path.split(micrographFullName)[1])[0]
         
         fnManual=os.path.join(PickingDir,micrographName+".pos")
         fnAuto1=os.path.join(PickingDir,micrographName+"_auto.pos")
