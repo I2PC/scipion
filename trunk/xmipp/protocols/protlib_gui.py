@@ -867,7 +867,7 @@ class ProtocolGUI(BasicGUI):
             if self.saveCallback:
                 self.saveCallback()
                 
-            FlashMessage(self.master, 'Protocol script successfully saved.', delay=1.2)
+            FlashMessage(self.master, 'Saved successfully.', delay=1)
         except Exception, e:
             showError("Error saving run parameters", str(e), parent=self.master)
             raise e
@@ -1161,53 +1161,39 @@ class ProtocolGUI(BasicGUI):
         else:
             self.selectFromList(var, familyList)        
 
-    def wizardChooseBandPassFilter(self, var):
-        '''Wizard dialog to help choosing Bandpass filter parameters
-        used in protocol_preprocess_particles
-        '''
+    def wizardHelperFilter(self, browser, title, **args):
+        extra = {'previewLabel': 'Image', 'computingMessage': 'Applying filter...'}
+        extra.update(args)
         selfile = self.getVarValue('InSelFile')
+        path, filename = os.path.split(selfile)
         if not exists(selfile):
             showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
             return
+        return showBrowseDialog(path=path, parent=self.master, browser=browser,title=title, 
+                                seltype="file", selmode="browse", filter=filename, previewDim=256, extra=extra)        
+        
+    def wizardChooseBandPassFilter(self, var):
+        '''Wizard dialog to help choosing Bandpass filter parameters (used in protocol_preprocess_particles) '''
         vList = ['Freq_low','Freq_high','Freq_decay']
-        freqs = self.getVarlistValue(vList)
-        path, filename = os.path.split(selfile)
         from protlib_gui_ext import XmippBrowserBandpassFilter
-        results = showBrowseDialog(path=path, parent=self.master, browser=XmippBrowserBandpassFilter,title="Select Frequencies cutoff", 
-                                        seltype="file", selmode="browse", filter=filename, previewDim=256, 
-                                        extra={'freqs':freqs, 'previewLabel': 'Image', \
-                                               'computingMessage': 'Applying filter...'})        
+        results = self.wizardHelperFilter(XmippBrowserBandpassFilter, "Bandpass Filter", freqs=self.getVarlistValue(vList))
         if results:
             self.setVarlistValue(vList, results)
             
     #Choose Gaussian Filter
     def wizardChooseGaussianFilter(self, var):
-        '''Wizard dialog to help choosing Gaussian filter(in Fourier space) parameters
-        used in protocol_preprocess_particles
-        '''
-        selfile = self.getVarValue('InSelFile')
-        if not exists(selfile):
-            showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
-            return
-        Freq_sigma = self.getVarValue('Freq_sigma')
-        msg = runJavaIJappWithResponse("512m", "XmippGaussianFilterWizard", "-i %(selfile)s -w1 %(Freq_sigma)s" % locals())
-        msg = msg.strip()
-        if len(msg) > 0:
-            var.tkvar.set(msg)            
+        '''Wizard dialog to help choosing Gaussian filter(in Fourier space) parameters (used in protocol_preprocess_particles) '''
+        from protlib_gui_ext import XmippBrowserGaussianFilter
+        results = self.wizardHelperFilter(XmippBrowserGaussianFilter, "Gaussian Filter", freqSigma=self.getVarValue('Freq_sigma'))
+        if results:
+            var.tkvar.set(results) #expecting single result            
 
     #Choose Bad pixels wizard
     def wizardChooseBadPixelsFilter(self, var):
-        selfile = self.getVarValue('InSelFile')
-        if not exists(selfile):
-            showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
-            return
-        DustRemovalThreshold = self.getVarValue('DustRemovalThreshold')
-        msg = runJavaIJappWithResponse("512m", "XmippBadPixelsFilterWizard", "-i %(selfile)s -factor %(DustRemovalThreshold)s" % locals())
-        msg = msg.strip()
-        if len(msg) > 0:
-            var.tkvar.set(msg)            
-
-        
+        from protlib_gui_ext import XmippBrowserBadpixelFilter
+        results = self.wizardHelperFilter(XmippBrowserBadpixelFilter, "Gaussian Filter", dustRemovalThreshold=self.getVarValue('DustRemovalThreshold'))
+        if results:
+            var.tkvar.set(results) #expecting single result            
 
     #Design mask wizard
     def wizardDesignMask(self, var):

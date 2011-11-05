@@ -1427,17 +1427,25 @@ class XmippBrowserCTF(XmippBrowserPreview):
             results += [self.lfSlider.var.get(), self.hfSlider.var.get()]
         return results        
         
+    def createPreviewButton(self, frame):
+        self.btnTest = XmippButton(frame, "Preview", command=self.fillResultPreview)
+        self.btnTest.pack(side=tk.LEFT, padx=2)
+        
+    def createLabeledEntry(self, frame, label, key, doUpdate=True):
+        var = tk.StringVar()
+        var.set(getattr(self, key))
+        entry = ttk.Entry(frame, width=10, textvariable=var)
+        entry.pack(side=tk.LEFT,padx=2)
+        if doUpdate:
+            entry.bind('<Return>', self.fillResultPreview)
+        setattr(self, key+'Var', var) # register var
+        
     def createDetailsBottom(self, parent):
         self.text = None
         frame = ttk.Frame(parent)
         ttk.Label(frame, text="Downsampling").pack(side=tk.LEFT,padx=2)
-        self.downsamplingVar = tk.StringVar()
-        self.downsamplingVar.set(self.downsampling)
-        downsamplingEntry = ttk.Entry(frame, width=10, textvariable=self.downsamplingVar)
-        downsamplingEntry.pack(side=tk.LEFT,padx=2)
-        self.btnTest = XmippButton(frame, "Preview", command=self.fillResultPreview)
-        downsamplingEntry.bind('<Return>', self.fillResultPreview)
-        self.btnTest.pack(side=tk.LEFT, padx=2)
+        self.createLabeledEntry(frame, 'Downsampling', 'downsampling')
+        self.createPreviewButton(frame)
         if self.freqs:
             self.addFrequenciesBox(frame)
             self.clearCallbacks.append(lambda: self.updateSliderState(tk.DISABLED))
@@ -1501,6 +1509,46 @@ class XmippBrowserBandpassFilter(XmippBrowserCTF):
         
     def onClick(self, e):
         pass
+
+class XmippBrowserGaussianFilter(XmippBrowserBandpassFilter):
+    ''' This subclass is specific preview some operations
+        the extra dict will be used for personalized parameters
+        that will not be passed to XmippBrowser constructor
+    '''
+    def __init__(self, **args):
+        XmippBrowserPreview.__init__(self, **args)
+        self.label = 'Frequency Sigma'
+        self.key = 'freqSigma'
+    
+    def getComputeFunction(self):
+        from xmipp import gaussianFilter
+        freqSigma = float(self.getResults())
+        return lambda: gaussianFilter(self.image, self.lastitem, freqSigma, self.dim)
+
+    def getResults(self):
+        return getattr(self, self.key+'Var').get()
+        
+    def createDetailsBottom(self, parent):
+        frame = ttk.Frame(parent)
+        self.createLabeledEntry(frame, self.label, self.key)
+        self.createPreviewButton(frame)
+        self.fillResultPreview()
+        return frame
+    
+class XmippBrowserBadpixelFilter(XmippBrowserGaussianFilter):
+    ''' This subclass is specific preview some operations
+        the extra dict will be used for personalized parameters
+        that will not be passed to XmippBrowser constructor
+    '''
+    def __init__(self, **args):
+        XmippBrowserPreview.__init__(self, **args)
+        self.label = 'DustRemovalThreshold'
+        self.key = 'dustRemovalThreshold'
+    
+    def getComputeFunction(self):
+        from xmipp import badPixelFilter
+        dustRemovalThreshold = float(self.getResults())
+        return lambda: badPixelFilter(self.image, self.lastitem, dustRemovalThreshold, self.dim)
 
 
 '''Show Xmipp Browser and return selected files'''

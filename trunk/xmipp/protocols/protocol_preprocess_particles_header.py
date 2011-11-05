@@ -57,24 +57,31 @@ i.e., Normalization must be set to Yes.
 DoRemoveDust=False
 
 # {condition}(DoRemoveDust){wizard}(wizardChooseBadPixelsFilter)  Threshold for dust removal:
-""" Pixels with a signal higher or lower than this value times the standard deviation of the image will be affected. For cryo, 3.5 is a good value.
-    For high-contrast negative stain, the signal itself may be affected so that a higher value may be preferable.
+""" 
+Pixels with a signal higher or lower than this value times the standard deviation of the
+image will be affected. For cryo, 3.5 is a good value. For high-contrast negative stain, 
+the signal itself may be affected so that a higher value may be preferable.
 """
 DustRemovalThreshold=3.5
 
 # Normalize
-""" It subtract a ramp in the gray values and normalizes so that in the background
-    there is 0 mean and standard deviation 1 """
+""" 
+It subtract a ramp in the gray values and normalizes so that in the background
+there is 0 mean and standard deviation 1 """
 DoNorm=False
 
 # {list_combo}(OldXmipp,NewXmipp,Ramp){condition}(DoNorm) Normalization type
-""" OldXmipp (mean(Image)=0, stddev(Image)=1). NewXmipp (mean(background)=0, stddev(background)=1), Ramp (subtract background+NewXmipp)"""
+"""
+OldXmipp (mean(Image)=0, stddev(Image)=1). 
+NewXmipp (mean(background)=0, stddev(background)=1), 
+Ramp (subtract background+NewXmipp)"""
 NormType="Ramp"
 
 # {condition}(DoNorm and NormType!="OldXmipp") Background radius
-"""Pixels outside this circle are assumed to be noise and their stddev is set to 1.
-   Radius for background circle definition (in pix.).
-   If this value is 0, then the same as the particle radius is used. """
+"""
+Pixels outside this circle are assumed to be noise and their stddev is set to 1.
+Radius for background circle definition (in pix.).
+If this value is 0, then the same as the particle radius is used. """
 BackGroundRadius=0
 
 # Apply mask
