@@ -353,7 +353,7 @@ class XmippProjectGUI():
             for run in self.runs:
                 state = run['run_state']
                 stateStr = SqliteDb.StateNames[state]
-                if state == SqliteDb.RUN_STARTED:
+                if not state in [SqliteDb.RUN_SAVED, SqliteDb.RUN_FINISHED]:
                     stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
                     #TODO: Check deadly jobs
                     #childs = ProcessManager(run).getProcessGroup()

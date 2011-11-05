@@ -363,6 +363,8 @@ class XmippButton(tk.Button):
         
         if btnImage:
             #height=28, width=28,
+            if not opts.has_key('bg'):
+                del defaults['bg']
             tk.Button.__init__(self, master, image=btnImage, bd=0,  **defaults)
             self.image = btnImage
         else:
@@ -1460,7 +1462,7 @@ class XmippBrowserCTF(XmippBrowserPreview):
         
     def addFreqSlider(self, label, value):
         slider = XmippSlider(self.freqFrame, label, from_=0, to=0.5, value=value, callback=lambda a, b, c:self.updateFreqRing())
-        slider.pack(padx=2, pady=2)
+        slider.pack(side=tk.LEFT, padx=3, pady=3)
         return slider
         
     def updateFreqRing(self):

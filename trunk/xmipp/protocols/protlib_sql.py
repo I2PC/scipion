@@ -373,9 +373,9 @@ class XmippProtocolDb(SqliteDb):
         coreParameters=dict(Parameters)
         exclusion = ['NumberOfMpi', 'NumberOfThreads']
         for p in exclusion:
-           if p in coreParameters: del coreParameters[p] 
-           if p in coreRowParameters: del coreRowParameters[p]
-        return coreParameters!=coreRowParameters
+            if p in coreParameters: del coreParameters[p] 
+            if p in RowParameters: del RowParameters[p]
+        return coreParameters != RowParameters
     
     def insertStep(self, command,
                            verifyfiles=[],
@@ -397,7 +397,7 @@ class XmippProtocolDb(SqliteDb):
             else:
                 if self.runBehavior=="Continue" and row['step_id']>=self.ContinueAtStep:
                     self.insertStatus = True
-                elif differentParams(_Parameters, pickle.loads(str(row['parameters']))) or row['verifyFiles'] != verifyfilesString:
+                elif self.differentParams(_Parameters, pickle.loads(str(row['parameters']))) or row['verifyFiles'] != verifyfilesString:
                     self.insertStatus = True
                 else:
                     for f in verifyfiles:

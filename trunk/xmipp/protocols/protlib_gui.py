@@ -1201,6 +1201,7 @@ class ProtocolGUI(BasicGUI):
         workingDir = getWorkingDirFromRunName(self.getVarValue('RunName'))
         #fnMask=os.path.join(workingDir,"mask.xmp")
         fnMask=os.path.join(self.project.tmpDir,"mask.xmp")
+        from protlib_utils import runJavaIJapp
         msg = runJavaIJapp("512m", "XmippMaskDesignWizard", "-i %(selfile)s -mask %(fnMask)s" % locals())
         msg = msg.strip().splitlines()
         if len(msg)>0:
