@@ -32,11 +32,11 @@ DoFourier=False
 """ Set it to 0 for low pass filters """
 Freq_low=0.02
 
-#{condition}(DoFourier) Freq_high (0<f<0.5)
+#{condition}(DoFourier) {wizard}(wizardChooseBandPassFilter) Freq_high (0<f<0.5)
 """ Set it to 0.5 for high pass filters """
 Freq_high=0.35
 
-#{condition}(DoFourier){expert} Freq_decay (0<f<0.5)
+#{condition}(DoFourier){expert}{wizard}(wizardChooseBandPassFilter) Freq_decay (0<f<0.5)
 """ It describes the length of the amplitude decay in a raised cosine """
 Freq_decay=0.02
 

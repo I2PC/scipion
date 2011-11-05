@@ -538,7 +538,7 @@ class XmippProjectGUI():
         list = [('Edit', 'edit.gif'), 
                 ('Copy', 'copy.gif'), ('Delete', 'delete.gif')]
         def setupButton(k, v):
-            btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k), bg=HighlightBgColor   )
+            btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k), bg=HighlightBgColor)
             ToolTip(btn, k, 500)
             self.runButtonsDict[k] = btn
         for k, v in list:

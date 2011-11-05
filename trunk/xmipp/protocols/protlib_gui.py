@@ -34,8 +34,7 @@ import tkFont
 from protlib_base import getProtocolFromModule, getWorkingDirFromRunName, getExtendedRunName
 from protlib_utils import loadModule, runImageJPlugin, which, runJavaIJappWithResponse
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
-    showError, showInfo, showBrowseDialog, showWarning, XmippBrowserCTF,\
-    AutoScrollbar, FlashMessage
+    showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage
 from protlib_filesystem import getXmippPath
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
@@ -43,7 +42,6 @@ from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
 from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor, ButtonActiveBgColor, ButtonBgColor                         
 from protlib_sql import SqliteDb
 from subprocess import Popen
-from protlib_xmipp import redStr, warnStr
 
 class ProtocolStyle():
     ''' Class to define some style settings like font, colors, etc '''
@@ -994,9 +992,14 @@ class ProtocolGUI(BasicGUI):
         return varName in self.variablesDict.keys()
     
     def getVarValue(self, varName):
+        ''' Return the value of a variable give the name'''
         if self.hasVar(varName):
             return self.variablesDict[varName].getValue()
         return None
+    
+    def getVarlistValue(self, varList):
+        ''' Return a list of values of given variables names'''
+        return [self.getVarValue(v) for v in varList]
     
     def getVarLiteralValue(self, varName):
         if self.hasVar(varName):
@@ -1008,8 +1011,14 @@ class ProtocolGUI(BasicGUI):
         return None       
     
     def setVarValue(self, varName, value):
+        ''' Set the value of some var'''
         if self.hasVar(varName):
             self.variablesDict[varName].setValue(value)   
+            
+    def setVarlistValue(self, varList, valueList):
+        ''' Return a list of values of given variables names'''
+        for var, value in zip(varList, valueList):
+            self.setVarValue(var, value)
         
     def createGUI(self, project, run, master=None, saveCallback=None, visualize_mode=False):
         try:
@@ -1092,25 +1101,26 @@ class ProtocolGUI(BasicGUI):
     
     #Helper function to select Downsampling wizards
     def wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs=None):  
-#        print  'wizardHelperSetDownsampling \npath: %s\nfilter: %s\nvalue: %s' % ( path, filterExt, value)  
-        results = showBrowseDialog(path=path, parent=self.master, browser=XmippBrowserCTF,
-                                        title="Select Downsampling", freqs=freqs,
-                                        seltype="file", selmode="browse", filter=filterExt, 
-                                        previewDim=256, downsampling=value) # a list is returned
+        from protlib_gui_ext import XmippBrowserCTF
+        results = showBrowseDialog(path=path, parent=self.master, browser=XmippBrowserCTF,title="Select Downsampling", 
+                                        seltype="file", selmode="browse", filter=filterExt, previewDim=256, 
+                                        extra={'freqs':freqs, 'downsampling':value, 'previewLabel': 'Micrograph', \
+                                               'computingMessage': 'Estimating PSD...'}) # a list is returned
         if results:
             self.setVarValue('Down', results[0])
         return results
           
     #This wizard is specific for import_micrographs protocol
     def wizardBrowseCTF(self, var):
-        args = [self.getVarValue(vn) for vn in ['DirMicrographs', 'ExtMicrographs', 'Down']]
+        args = self.getVarlistValue(['DirMicrographs', 'ExtMicrographs', 'Down'])
         self.wizardHelperSetDownsampling(var, *args)
         
     #This wizard is specific for screen_micrographs protocol
     #it will help to select downsampling, and frequencies cutoffs
     def wizardBrowseCTF2(self, var):
         error = None
-        freqs = [self.getVarValue(vn) for vn in ['LowResolCutoff', 'HighResolCutoff']]
+        vList = ['LowResolCutoff', 'HighResolCutoff']
+        freqs = self.getVarlistValue(vList)
         path = getWorkingDirFromRunName(self.getVarValue('ImportRun'))
         if path and os.path.exists(path):
             mdPath = os.path.join(path,"micrographs.sel")
@@ -1122,8 +1132,9 @@ class ProtocolGUI(BasicGUI):
                     value = self.getVarValue('Down')
                     results = self.wizardHelperSetDownsampling(var, path, filterExt, value, freqs)
                     if results:
-                        self.setVarValue('LowResolCutoff', results[1])
-                        self.setVarValue('HighResolCutoff', results[2])
+                        self.setVarlistValue(vList, results[1:])
+                        #self.setVarValue('LowResolCutoff', results[1])
+                        #self.setVarValue('HighResolCutoff', results[2])
                 else:
                     error = "Micrograph metadata <%s> is empty" % mdPath
             else:
@@ -1180,15 +1191,16 @@ class ProtocolGUI(BasicGUI):
         if not os.path.exists(selfile):
             showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
             return
-        Freq_low = self.getVarValue('Freq_low')
-        Freq_high = self.getVarValue('Freq_high')
-        Freq_decay = self.getVarValue('Freq_decay')
-        msg = runJavaIJappWithResponse("512m", "XmippBandPassFilterWizard", "-i %(selfile)s -w1 %(Freq_low)s  -w2 %(Freq_high)s  -raised_w %(Freq_decay)s" % locals())
-        msg = msg.strip().splitlines()
-        if len(msg)>0:
-            self.setVarValue('Freq_low',msg[0])
-            self.setVarValue('Freq_high',msg[1])
-            self.setVarValue('Freq_decay',msg[2])
+        vList = ['Freq_low','Freq_high','Freq_decay']
+        freqs = self.getVarlistValue(vList)
+        path, filename = os.path.split(selfile)
+        from protlib_gui_ext import XmippBrowserBandpassFilter
+        results = showBrowseDialog(path=path, parent=self.master, browser=XmippBrowserBandpassFilter,title="Select Frequencies cutoff", 
+                                        seltype="file", selmode="browse", filter=filename, previewDim=256, 
+                                        extra={'freqs':freqs, 'previewLabel': 'Image', \
+                                               'computingMessage': 'Applying filter...'})        
+        if results:
+            self.setVarlistValue(vList, results)        
 
     #Design mask wizard
     def wizardDesignMask(self, var):

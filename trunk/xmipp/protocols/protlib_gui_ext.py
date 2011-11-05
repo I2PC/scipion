@@ -33,7 +33,6 @@ from tkSimpleDialog import Dialog
 import ttk
 from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, BgColor, SectionTextColor
 from protlib_filesystem import getXmippPath
-from protlib_gui_figure import createBgImage, ImagePreview
 
 RESOURCES = getXmippPath('resources')
 
@@ -161,7 +160,7 @@ class ScrollFrame(tk.Frame):
         self.canvas.grid(row=0, column=0, sticky='nsew')
         vscrollbar.config(command=self.canvas.yview)
         hscrollbar.config(command=self.canvas.xview)
-        self.frame = tk.Frame(self.canvas, bg='red')#background=BgColor)
+        self.frame = tk.Frame(self.canvas)#background=BgColor)
         self.frame.rowconfigure(0, weight=1)
         self.frame.columnconfigure(0, weight=1)
         #self.frame.grid(row=0, column=0, sticky='nsew')
@@ -1060,7 +1059,7 @@ class XmippBrowser():
         addFm('default', 'generic_file.gif', [])
         
     def createDetailsTop(self, parent):
-        self.detailstop = ttk.Frame(parent)
+        self.detailstop = tk.Frame(parent)
         self.detailstop.rowconfigure(0, weight=1)
         self.detailstop.columnconfigure(0, weight=1)
         return self.detailstop
@@ -1076,6 +1075,12 @@ class XmippBrowser():
             self.root = root
         else:
             self.root = tk.Tk()
+        #Create xmipp image to show preview
+        import xmipp
+        self.preview = None
+        self.image = xmipp.Image()
+        self.lastitem = None
+        
         self.parent = parent   
         self.createFileManagers()
         self.root.withdraw()
@@ -1095,7 +1100,7 @@ class XmippBrowser():
         frame.grid(column=0, row=0, sticky="nwes")
         frame.columnconfigure(0, weight=1)
         frame.rowconfigure(0, weight=1)
-        tree = ttk.Treeview(frame, selectmode=self.selmode)#, columns=('items'))
+        tree = XmippTree(frame, selectmode=self.selmode)#, columns=('items'))
         tree.grid(column=0, row=0, sticky="nwes")
         self.tree = tree
         # List for hidden tree items, (parent, item)
@@ -1156,14 +1161,9 @@ class XmippBrowser():
         tree.bind("<Double-1>", self.onDoubleClick)
         tree.bind("<Return>", self.onDoubleClick)
         tree.bind("<Button-3>", self.onRightClick)
-        self.root.bind("<Button-1>", self.onClick)
+        self.root.bind('<<TreeviewSelect>>', self.onClick)
         self.root.bind("<Key>", self.onKeyPress)
         
-        #Create xmipp image to show preview
-        import xmipp
-        self.preview = None
-        self.image = xmipp.Image()
-        self.lastitem = None
         #Create a dictionary with extensions and icon type
         self.insertFiles(self.dir)
         #Filter result, if pattern no provided, all files will be listed
@@ -1256,6 +1256,7 @@ class XmippBrowser():
        
     def updatePreview(self, filename):
         if not self.preview:
+            from protlib_gui_figure import ImagePreview
             self.preview = ImagePreview(self.detailstop, self.dim)
         if not filename.endswith('.png'):
             #Read image data through Xmipp
@@ -1328,35 +1329,104 @@ class XmippSlider(ttk.Frame):
             self.var.trace('w', callback)
         self.slider.pack(side=tk.LEFT, padx=2)        
         
-            
-class XmippBrowserCTF(XmippBrowser):
-    ''' This subclass is specific for CTF preview
+class XmippBrowserPreview(XmippBrowser):
+    ''' This subclass is specific preview some operations
+        the extra dict will be used for personalized parameters
+        that will not be passed to XmippBrowser constructor
     '''
     def __init__(self, **args):
-        if args.has_key('downsampling'):
-            self.downsampling = args['downsampling']
-            del args['downsampling']
-        else:
-            self.downsampling = '1'
-        if args.has_key('freqs'):
-            self.freqs = args['freqs']
-            del args['freqs']
-        else:
-            self.freqs = None
+        if args.has_key('extra'):
+            for k, v in  args['extra'].iteritems():
+                setattr(self, k, v)
+            del args['extra']
         XmippBrowser.__init__(self, **args)
+        self.clearCallbacks = []
+        self.fillCallbacks = []
         
     def createDetailsTop(self, parent):
         XmippBrowser.createDetailsTop(self, parent)
-        self.preview = ImagePreview(self.detailstop, self.dim, label='Micrograph')
-        self.frame2 = ttk.Frame(self.detailstop, padding="3 3 3 3")
-        self.detailstop.columnconfigure(1, weight=1)
-        self.frame2.grid(column=1, row=0, sticky='nsew', padx=5)
-        self.frame2.columnconfigure(0, weight=1)
-        self.frame2.rowconfigure(0, weight=1)
         self.root.minsize(800, 400)        
-        
+        from protlib_gui_figure import ImagePreview
+        self.preview = ImagePreview(self.detailstop, self.dim, label=self.previewLabel)
+        #self.frame2 = tk.Frame(self.detailstop, bg='red')
+        self.detailstop.columnconfigure(1, weight=1)
+#        self.frame2.grid(column=1, row=0, sticky='nsew', padx=5, pady=5)
+#        self.frame2.columnconfigure(0, weight=1)
+#        self.frame2.rowconfigure(0, weight=1)
+        # Create result preview and clear it
+        self.resultPreview = self.createResultPreview()
+        self.clearResultPreview()
+                
         return self.detailstop
     
+    def clearResultPreview(self):
+        if self.resultPreview:
+            self.resultPreview.clear()
+        for c in self.clearCallbacks: c()
+        
+    def fillResultPreview(self, e=None):
+        #Read image data through Xmipp
+        if self.lastitem:
+            from protlib_xmipp import getImageData
+            f = self.getComputeFunction()
+            FlashMessage(self.root, self.computingMessage, func=f)
+            #bandPassFilter(self.image, self.lastitem, 0.2, 0.4, downsampling, self.dim)
+            Z = getImageData(self.image)
+            self.resultPreview.updateData(Z)  
+            for c in self.fillCallbacks: c() 
+        else:
+            showWarning("Operation failed","Select an image to preview", self.root)
+    
+    def onClick(self, e):
+        self.lastitem = self.tree.selection_first()
+        self.updatePreview(self.lastitem)
+        self.clearResultPreview()
+    
+    def selectFiles(self, e=None):
+        self.selectedFiles = self.getResults()
+        self.root.destroy()   
+
+    def createResultPreview(self):
+        pass
+    
+    def getComputeFunction(self):
+        pass
+    
+    def getResults(self):
+        pass
+        
+    def createDetailsBottom(self, parent):
+        pass
+        
+                              
+class XmippBrowserCTF(XmippBrowserPreview):
+    ''' This subclass is specific preview some operations
+        the extra dict will be used for personalized parameters
+        that will not be passed to XmippBrowser constructor
+    '''
+    def __init__(self, **args):
+        XmippBrowserPreview.__init__(self, **args)
+    
+    def createResultPreview(self):
+        self.lf, self.hf = 0, 0
+        if self.freqs:
+            self.lf = self.freqs[0]
+            self.hf = self.freqs[1]           
+        from protlib_gui_figure import PsdPreview
+        return PsdPreview(self.detailstop, self.dim, self.lf, self.hf, dpi=64, col=1)
+    
+    def getComputeFunction(self):
+        from xmipp import fastEstimateEnhancedPSD
+        downsampling = float(self.downsamplingVar.get())
+        f = lambda :fastEstimateEnhancedPSD(self.image, self.lastitem, downsampling, self.dim, 2)
+        return f
+    
+    def getResults(self):
+        results = [self.downsamplingVar.get()]
+        if self.freqs:
+            results += [self.lfSlider.var.get(), self.hfSlider.var.get()]
+        return results        
+        
     def createDetailsBottom(self, parent):
         self.text = None
         frame = ttk.Frame(parent)
@@ -1365,70 +1435,74 @@ class XmippBrowserCTF(XmippBrowser):
         self.downsamplingVar.set(self.downsampling)
         downsamplingEntry = ttk.Entry(frame, width=10, textvariable=self.downsamplingVar)
         downsamplingEntry.pack(side=tk.LEFT,padx=2)
-        self.btnTest = XmippButton(frame, "Preview", command=self.calculatePSD)
-        downsamplingEntry.bind('<Return>', self.calculatePSD)
+        self.btnTest = XmippButton(frame, "Preview", command=self.fillResultPreview)
+        downsamplingEntry.bind('<Return>', self.fillResultPreview)
         self.btnTest.pack(side=tk.LEFT, padx=2)
-        lf, hf = 0, 0
         if self.freqs:
-            self.freqFrame = ttk.LabelFrame(frame, text="Frequencies", padding="5 5 5 5")
-            self.freqFrame.pack()
-            lf = self.freqs[0]
-            hf = self.freqs[1]
-            self.lf = XmippSlider(self.freqFrame, 'Low freq: ', from_=0, to=0.5, value=lf,
-                                  callback=lambda a, b, c:self.updateFreqRing())
-            self.lf.pack(padx=2, pady=2)
-            self.hf = XmippSlider(self.freqFrame, 'High freq: ', from_=0, to=0.5, value=hf,
-                                  callback=lambda a, b, c:self.updateFreqRing())
-            self.hf.pack(padx=2, pady=2)
-        from protlib_gui_figure import PsdPreview
-        self.psdFig = PsdPreview(self.frame2, self.dim, lf, hf, dpi=64)
-        self.updatePSD(Z=None)
+            self.addFrequenciesBox(frame)
+            self.clearCallbacks.append(lambda: self.updateSliderState(tk.DISABLED))
+            self.fillCallbacks.append(lambda: self.updateSliderState(tk.NORMAL))
         return frame
     
-    def calculatePSD(self, e=None):
-        #Read image data through Xmipp
-        if self.lastitem:
-            from xmipp import fastEstimateEnhancedPSD, Image
-            from protlib_xmipp import getImageData
-            downsampling = float(self.downsamplingVar.get())
-            f = lambda :fastEstimateEnhancedPSD(self.image, self.lastitem, downsampling, self.dim, 2)
-            FlashMessage(self.root, 'Estimating PSD...', func=f)
-            #bandPassFilter(self.image, self.lastitem, 0.2, 0.4, downsampling, self.dim)
-            Z = getImageData(self.image)
-            self.updatePSD(Z)            
-        else:
-            showWarning("Operation failed","Select an image to preview", self.root)
-    
+    def addFrequenciesBox(self, parent):
+        self.freqFrame = ttk.LabelFrame(parent, text="Frequencies", padding="5 5 5 5")
+        self.freqFrame.pack(side=tk.LEFT)
+        self.lfSlider = self.addFreqSlider('Low freq', self.lf)
+        self.hfSlider = self.addFreqSlider('High freq', self.hf)
+        
+    def addFreqSlider(self, label, value):
+        slider = XmippSlider(self.freqFrame, label, from_=0, to=0.5, value=value, callback=lambda a, b, c:self.updateFreqRing())
+        slider.pack(padx=2, pady=2)
+        return slider
+        
     def updateFreqRing(self):
-        self.psdFig.updateFreq(self.lf.var.get(), self.hf.var.get())
+        self.resultPreview.updateFreq(self.lfSlider.var.get(), self.hfSlider.var.get())
         
-    def updatePSD(self, Z=None, state=tk.NORMAL):
-        if not Z is None:
-            state=tk.NORMAL
-            self.psdFig.updateData(Z)
-        else:
-            state=tk.DISABLED
-            self.psdFig.clear()
-            
+    def updateSliderState(self, state=tk.NORMAL):
+        self.lfSlider.slider.config(state=state)
+        self.hfSlider.slider.config(state=state)
         
-        if self.freqs:
-            self.lf.slider.config(state=state)
-            self.hf.slider.config(state=state)
-            
         
-    def selectFiles(self, e=None):
-        self.selectedFiles = [self.downsamplingVar.get()]
-        if self.freqs:
-            self.selectedFiles += [self.lf.var.get(), self.hf.var.get()]
-        self.root.destroy() 
+class XmippBrowserBandpassFilter(XmippBrowserCTF):
+    ''' This subclass is specific preview some operations
+        the extra dict will be used for personalized parameters
+        that will not be passed to XmippBrowser constructor
+    '''
+    def __init__(self, **args):
+        XmippBrowserPreview.__init__(self, **args)
+        self.lf, self.hf, self.decay = self.freqs
+    
+    def createResultPreview(self):
+        from protlib_xmipp import getFirstImage
+        from protlib_gui_figure import ImagePreview
+        mdFn = join(self.dir, self.pattern)
+        self.lastitem = getFirstImage(mdFn)
+        self.updatePreview(self.lastitem)
+        return ImagePreview(self.detailstop, self.dim, dpi=64, label='Filtered', col=1)
+    
+    def getComputeFunction(self):
+        from xmipp import bandPassFilter
+        lf, hf, decay = self.getResults()
+        return lambda: bandPassFilter(self.image, self.lastitem, lf, hf, decay, self.dim)
+
+    def getResults(self):
+        return [self.lfSlider.var.get(), self.hfSlider.var.get(), self.decaySlider.var.get()]
+        
+    def createDetailsBottom(self, parent):
+        frame = ttk.Frame(parent)
+        self.addFrequenciesBox(frame)
+        self.updateFreqRing = self.fillResultPreview
+        self.fillResultPreview()
+        return frame
+    
+    def addFrequenciesBox(self, parent):
+        XmippBrowserCTF.addFrequenciesBox(self, parent)
+        self.decaySlider = self.addFreqSlider('Decay', self.decay)
         
     def onClick(self, e):
-        current = self.lastitem
-        XmippBrowser.onClick(self, e)
-        if current != self.lastitem:
-            self.updatePSD(Z=None)
-        
-    
+        pass
+
+
 '''Show Xmipp Browser and return selected files'''
 def showBrowseDialog(path='.', title='', parent=None, main=False, browser=XmippBrowser, **args):
     if main:

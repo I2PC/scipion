@@ -40,16 +40,18 @@ def createBgImage(dim):
     return ones((dim, dim, 3))
 
 class Preview():
-    def __init__(self, parent, dim, dpi=36, label=None):
+    def __init__(self, parent, dim, dpi=36, label=None, col=0, row=0):
         from numpy import zeros
         self.dim = dim
         self.bg = zeros((dim, dim), float)
         ddim = dim/dpi
         self.figure = Figure(figsize=(ddim, ddim), dpi=dpi, frameon=False)
-        self.canvas = FigureCanvasTkAgg(self.figure, master=parent)
+        self.frame = tk.Frame(parent)
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self.frame)
         self.canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
         if label:
-            tk.Label(parent, text=label).grid(column=0, row=1)
+            tk.Label(self.frame, text=label).grid(column=0, row=1)
+        self.frame.grid(column=col, row=row)
         self._create_axes()
         
     def _create_axes(self):
@@ -67,8 +69,8 @@ class Preview():
     
     
 class ImagePreview(Preview):
-    def __init__(self, parent, dim, dpi=36, label=None):
-        Preview.__init__(self, parent, dim, dpi, label)
+    def __init__(self, parent, dim, dpi=36, label=None, col=0):
+        Preview.__init__(self, parent, dim, dpi, label, col)
     
     def _create_axes(self):
         ax = self.figure.add_axes([0,0,1,1], frameon=False)       
@@ -82,8 +84,8 @@ class ImagePreview(Preview):
         self.canvas.draw()
         
 class PsdPreview(Preview):
-    def __init__(self, master, dim, lf, hf, dpi=72, Z=None):
-        Preview.__init__(self, master, dim, dpi, label="PSD")
+    def __init__(self, master, dim, lf, hf, dpi=72, Z=None, col=0):
+        Preview.__init__(self, master, dim, dpi, label="PSD", col=col)
         self.lf = lf
         self.hf = hf
         if self.ring:
@@ -100,6 +102,7 @@ class PsdPreview(Preview):
         h = 0.5
         ax.set_xlim(-h, h)
         ax.set_ylim(-h, h)
+        ax.grid(True)
         self.ring = None
         self.img = ax.imshow(self.bg, cmap=cm.gray, extent=[-h, h, -h, h])
 #        for direction in ["xzero", "yzero"]:

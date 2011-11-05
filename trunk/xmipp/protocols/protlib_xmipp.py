@@ -144,6 +144,11 @@ def getImageData(img):
             Z[y, x] = img.getPixel(y, x)
     return Z
     
+def getFirstImage(mdFn):
+    ''' Read the first image from Metadata'''
+    md = xmipp.MetaData(mdFn)
+    return md.getValue(xmipp.MDL_IMAGE, md.firstObject())
+
 #------------- FUNCTION TO WORK WITH PROGRAMS META-INFORMATION -----------------
 class LabelData():
     def __init__(self):
