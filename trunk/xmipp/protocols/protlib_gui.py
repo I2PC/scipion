@@ -27,7 +27,7 @@
  '''
  
 import os, glob
-from os.path import join, relpath
+from os.path import join, relpath, exists
 import Tkinter as tk
 import tkFont
 
@@ -947,7 +947,7 @@ class ProtocolGUI(BasicGUI):
                 var.tags['hidden'] = True
         elif var.name == 'Behavior':
             var.value = '"Resume"'
-            if not os.path.exists(self.run['script']) or not os.path.exists(self.getProtocol().WorkingDir):
+            if not exists(self.run['script']) or not exists(self.getProtocol().WorkingDir):
                 var.tags['hidden'] = True
         elif var.name == "NumberOfMpi":
             launch = loadLaunchModule()         
@@ -1122,9 +1122,9 @@ class ProtocolGUI(BasicGUI):
         vList = ['LowResolCutoff', 'HighResolCutoff']
         freqs = self.getVarlistValue(vList)
         path = getWorkingDirFromRunName(self.getVarValue('ImportRun'))
-        if path and os.path.exists(path):
+        if path and exists(path):
             mdPath = os.path.join(path,"micrographs.sel")
-            if os.path.exists(mdPath):
+            if exists(mdPath):
                 from xmipp import MetaData, MDL_IMAGE
                 md = MetaData(mdPath)
                 if md.size():                
@@ -1161,34 +1161,12 @@ class ProtocolGUI(BasicGUI):
         else:
             self.selectFromList(var, familyList)        
 
-    #Choose Gaussian Filter
-    def wizardChooseGaussianFilter(self, var):
-        selfile = self.getVarValue('InSelFile')
-        if not os.path.exists(selfile):
-            showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
-            return
-        Freq_sigma = self.getVarValue('Freq_sigma')
-        msg = runJavaIJappWithResponse("512m", "XmippGaussianFilterWizard", "-i %(selfile)s -w1 %(Freq_sigma)s" % locals())
-        msg = msg.strip()
-        if len(msg) > 0:
-            var.tkvar.set(msg)            
-
-    #Choose Bad pixels wizard
-    def wizardChooseBadPixelsFilter(self, var):
-        selfile = self.getVarValue('InSelFile')
-        if not os.path.exists(selfile):
-            showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
-            return
-        DustRemovalThreshold = self.getVarValue('DustRemovalThreshold')
-        msg = runJavaIJappWithResponse("512m", "XmippBadPixelsFilterWizard", "-i %(selfile)s -factor %(DustRemovalThreshold)s" % locals())
-        msg = msg.strip()
-        if len(msg) > 0:
-            var.tkvar.set(msg)            
-
-    #Choose Bandpass filter wizard
     def wizardChooseBandPassFilter(self, var):
+        '''Wizard dialog to help choosing Bandpass filter parameters
+        used in protocol_preprocess_particles
+        '''
         selfile = self.getVarValue('InSelFile')
-        if not os.path.exists(selfile):
+        if not exists(selfile):
             showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
             return
         vList = ['Freq_low','Freq_high','Freq_decay']
@@ -1200,7 +1178,36 @@ class ProtocolGUI(BasicGUI):
                                         extra={'freqs':freqs, 'previewLabel': 'Image', \
                                                'computingMessage': 'Applying filter...'})        
         if results:
-            self.setVarlistValue(vList, results)        
+            self.setVarlistValue(vList, results)
+            
+    #Choose Gaussian Filter
+    def wizardChooseGaussianFilter(self, var):
+        '''Wizard dialog to help choosing Gaussian filter(in Fourier space) parameters
+        used in protocol_preprocess_particles
+        '''
+        selfile = self.getVarValue('InSelFile')
+        if not exists(selfile):
+            showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
+            return
+        Freq_sigma = self.getVarValue('Freq_sigma')
+        msg = runJavaIJappWithResponse("512m", "XmippGaussianFilterWizard", "-i %(selfile)s -w1 %(Freq_sigma)s" % locals())
+        msg = msg.strip()
+        if len(msg) > 0:
+            var.tkvar.set(msg)            
+
+    #Choose Bad pixels wizard
+    def wizardChooseBadPixelsFilter(self, var):
+        selfile = self.getVarValue('InSelFile')
+        if not exists(selfile):
+            showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
+            return
+        DustRemovalThreshold = self.getVarValue('DustRemovalThreshold')
+        msg = runJavaIJappWithResponse("512m", "XmippBadPixelsFilterWizard", "-i %(selfile)s -factor %(DustRemovalThreshold)s" % locals())
+        msg = msg.strip()
+        if len(msg) > 0:
+            var.tkvar.set(msg)            
+
+        
 
     #Design mask wizard
     def wizardDesignMask(self, var):
@@ -1220,7 +1227,7 @@ class ProtocolGUI(BasicGUI):
 
         pickingDir = getWorkingDirFromRunName(self.getVarValue('PickingRun'))
         fnFamilies = join(pickingDir,"families.xmd")
-        if not os.path.exists(fnFamilies):
+        if not exists(fnFamilies):
             showWarning("Warning", "No elements to select", parent=self.master)
             return
         print fnFamilies
@@ -1259,9 +1266,15 @@ def validatorPathExists(var):
         return None
     err = validatorNonEmpty(var)
     if not err:
-        path = var.tkvar.get()
-        if not os.path.exists(path):
-            err = "Input path: <%s> for <%s> doesn't exist" % (path, var.comment)
+        pathList = var.tkvar.get().split()
+        err = ''
+        for p in pathList:
+            if not exists(p):
+                err += "\n<%s>" % p
+        if len(err):
+            err = "Following path: %s\ndoesn't exist\nFor input <%s>" % (err, var.comment)
+        else: 
+            err = None
     return err  
 
 def validatorIsFloat(var):

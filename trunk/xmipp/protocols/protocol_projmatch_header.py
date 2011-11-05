@@ -32,7 +32,7 @@ SelFileName ='new20.sel'
 """
 DocFileName =' '
 
-# {file} Initial 3D reference map:
+# {file}{validate}(PathExists) Initial 3D reference map:
 """ Write down the reference/es name. For example "Reference1.vol Reference2.vol"
     specifies two references
 """
