@@ -3271,8 +3271,32 @@ xmipp_fastEstimateEnhancedPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
         return NULL;
 }
+/** Some helper macros repeated in filter functions*/
+#define FILTER_TRY()\
+try {\
+if (validateInputImageString(pyImage, pyStrFn, fn)) {\
+Image<double> img;\
+img.read(fn);\
+MultidimArray<double> &data = MULTIDIM_ARRAY(img);\
+ArrayDim idim;\
+data.getDimensions(idim);
 
-/* calculate enhanced psd and return preview*/
+#define FILTER_CATCH()\
+int w = dim, h = dim, &x = idim.xdim, &y = idim.ydim;\
+double ddim = dim;\
+if (x > y) h = y * (dim/x);\
+else if (y > x)\
+  w = x * (dim/y);\
+selfScaleToSize(LINEAR, data, w, h);\
+Image_Value(pyImage).setDatatype(Double);\
+MULTIDIM_ARRAY_GENERIC(Image_Value(pyImage)).setImage(data);\
+Py_RETURN_NONE;\
+}} catch (XmippError &xe)\
+{ PyErr_SetString(PyXmippError, xe.msg.c_str());}\
+
+
+/* calculate enhanced psd and return preview
+ * used for protocol preprocess_particles*/
 static PyObject *
 xmipp_bandPassFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
@@ -3283,33 +3307,50 @@ xmipp_bandPassFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
 
         if (PyArg_ParseTuple(args, "OOdddi", &pyImage, &pyStrFn, &w1, &w2, &raised_w, &dim))
         {
-            try
-            {
-              if (validateInputImageString(pyImage, pyStrFn, fn))
-              {
-                  Image<double> img;
-                  img.read(fn);
-                  MultidimArray<double> &data = MULTIDIM_ARRAY(img);
-                  ArrayDim idim;
-                  data.getDimensions(idim);
-                  bandpassFilter(data, w1, w2, raised_w);
-                  int w = dim, h = dim, &x = idim.xdim, &y = idim.ydim;
-                  double ddim = dim;
+          FILTER_TRY()
+          bandpassFilter(data, w1, w2, raised_w);
+          FILTER_CATCH()
+        }
+        return NULL;
+}
 
-                  if (x > y)
-                    h = y * (dim/x);
-                  else if (y > x)
-                    w = x * (dim/y);
-                  selfScaleToSize(LINEAR, data, w, h);
-                  Image_Value(pyImage).setDatatype(Double);
-                  MULTIDIM_ARRAY_GENERIC(Image_Value(pyImage)).setImage(data);
-                  Py_RETURN_NONE;
-              }
-            }
-            catch (XmippError &xe)
-            {
-                PyErr_SetString(PyXmippError, xe.msg.c_str());
-            }
+/* calculate enhanced psd and return preview
+ * used for protocol preprocess_particles*/
+static PyObject *
+xmipp_gaussianFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+        PyObject *pyStrFn, *pyImage;
+       double freqSigma;
+       int dim;
+       FileName fn;
+
+        if (PyArg_ParseTuple(args, "OOdi", &pyImage, &pyStrFn, &freqSigma, &dim))
+        {
+          FILTER_TRY()
+          gaussianFilter(data, freqSigma);
+          FILTER_CATCH()
+        }
+        return NULL;
+}
+
+/* calculate enhanced psd and return preview
+ * used for protocol preprocess_particles*/
+static PyObject *
+xmipp_badPixelFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+        PyObject *pyStrFn, *pyImage;
+       double factor;
+       int dim;
+       FileName fn;
+
+        if (PyArg_ParseTuple(args, "OOdi", &pyImage, &pyStrFn, &factor, &dim))
+        {
+          FILTER_TRY()
+          BadPixelFilter filter;
+          filter.type = BadPixelFilter::OUTLIER;
+          filter.factor = factor;
+          filter.apply(data);
+          FILTER_CATCH()
         }
         return NULL;
 }
@@ -3367,6 +3408,11 @@ xmipp_methods[] =
           "Utility function to calculate PSD preview" },
         { "bandPassFilter", (PyCFunction) xmipp_bandPassFilter, METH_VARARGS,
           "Utility function to apply bandpass filter" },
+        { "gaussianFilter", (PyCFunction) xmipp_gaussianFilter, METH_VARARGS,
+          "Utility function to apply gaussian filter in Fourier space" },
+        { "badPixelFilter", (PyCFunction) xmipp_badPixelFilter, METH_VARARGS,
+            "Bad pixel filter" },
+
         { NULL } /* Sentinel */
     };
 
