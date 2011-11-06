@@ -1,6 +1,5 @@
 package particlepicker.training.model;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,8 +29,7 @@ public class MicrographFamilyData
 	public MicrographFamilyData(TrainingMicrograph micrograph, Family family, MicrographFamilyState state)
 	{
 		this(micrograph, family);
-
-		this.state = state;
+		setState(state);
 	}
 
 	public MicrographFamilyState getState()
@@ -70,18 +68,17 @@ public class MicrographFamilyData
 	{
 
 		manualparticles.add(p);
-		//family.particles++;
 		if (state == MicrographFamilyState.Available)
 		{
 			if (family.getStep() == FamilyState.Manual)
 				state = MicrographFamilyState.Manual;
-			else if (family.getStep() == FamilyState.Supervised && state == MicrographFamilyState.Autopick)
+			else if (family.getStep() == FamilyState.Supervised && state == MicrographFamilyState.Autopick)//THIS STATE IS NEVER PERSISTED
 				state = MicrographFamilyState.Correct;
 			else if (family.getStep() == FamilyState.Review)
 				state = MicrographFamilyState.Review;
-			else
-				throw new IllegalArgumentException(String.format("Micrograph could not update its state and can't keep previous state %s and have particles", MicrographFamilyState.Available));
 		}
+		else
+			throw new IllegalArgumentException(String.format("Micrograph %s could not update its state to %s and can't keep previous state %s and have particles", micrograph.getName(), state, MicrographFamilyState.Available));
 	}
 
 	public void removeParticle(TrainingParticle p, TrainingPicker ppicker)

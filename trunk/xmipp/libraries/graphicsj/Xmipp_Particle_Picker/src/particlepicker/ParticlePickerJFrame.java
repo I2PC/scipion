@@ -373,8 +373,4 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		setChanged(true);
 	}
 
-	
-
-
-
 }
