@@ -235,8 +235,14 @@ void ProgClassifyCL2DCore::computeStableCores()
                 commonImages.getColumnValues(MDL_ORDER,commonIdx);
                 size_t Ncommon=commonIdx.size();
                 for (int i=0; i<Ncommon; i++)
+                {
+                	size_t idx_i=commonIdx[i];
                     for (int j=i+1; j<Ncommon; j++)
-                        MAT_ELEM(coocurrence,i,j)+=1;
+                    {
+                    	size_t idx_j=commonIdx[j];
+                        MAT_ELEM(coocurrence,idx_i,idx_j)+=1;
+                    }
+                }
             }
 
             // Take only those elements whose coocurrence is maximal
