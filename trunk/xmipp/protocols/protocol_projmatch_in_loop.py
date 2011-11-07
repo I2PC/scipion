@@ -357,6 +357,9 @@ def angular_class_average(_log
                        ' --wien '   + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@' + CtfGroupName + '_wien.stk' + \
                        ' --pad '    + str(PaddingFactor) + \
                        ' --add_to ' + ProjMatchRootName.replace('.doc','__')
+        else:
+            parameters += \
+                      ' -o '                + ProjMatchRootName
 
                        
         if Action == "preprocessing":
@@ -367,9 +370,6 @@ def angular_class_average(_log
             parameters += \
                        ' --do_postprocess --number_3dreferences ' + str(NumberOfReferences) + ' '
 
-        else:
-            parameters += \
-                      ' -o '                + ProjMatchRootName
         if (DoAlign2D == '1'):
             parameters += \
                       ' --iter '             + Align2DIterNr  + \

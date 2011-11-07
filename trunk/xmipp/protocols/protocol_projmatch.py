@@ -410,7 +410,7 @@ class ProtProjMatch(XmippProtocol):
                          , NumberOfThreads =self.NumberOfThreads#
                          , PaddingFactor =self.PaddingFactor#
                          , ProjectLibraryRootName =self.ProjectLibraryRootNames[iterN][refN]#
-                         , ProjMatchRootName =self.ProjMatchRootNamesWithoutRef[iterN][refN]#
+                         , ProjMatchRootName =self.ProjMatchRootNamesWithoutRef[iterN]#
                          , refN =refN
                          )
                 
