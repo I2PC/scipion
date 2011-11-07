@@ -406,6 +406,36 @@ TEST_F( MetadataTest, ReadMultipleBlocks)
     unlink(sfn);
 }
 
+TEST_F( MetadataTest, ReadEmptyBlocks)
+{
+    char sfn[64] = "";
+    strncpy(sfn, "/tmp/testReadMultipleBlocks_XXXXXX", sizeof sfn);
+    mkstemp(sfn);
+
+    MetaData auxMetadata;
+    id=auxMetadata.addObject();
+    auxMetadata.setValue(MDL_X,1.,id);
+    auxMetadata.setValue(MDL_Y,2.,id);
+    auxMetadata.setValue(MDL_Z,222.,id);
+    auxMetadata.write((String)"block_000001@"+sfn,MD_APPEND);
+    auxMetadata.clear();
+    auxMetadata.addLabel(MDL_X);
+    auxMetadata.addLabel(MDL_Y);
+    auxMetadata.addLabel(MDL_Z);
+    auxMetadata.write((String)"block_000002@"+sfn,MD_APPEND);
+    auxMetadata.clear();
+    auxMetadata.setValue(MDL_X,1.,id);
+    auxMetadata.setValue(MDL_Y,2.,id);
+    auxMetadata.setValue(MDL_Z,222.,id);
+    auxMetadata.write((String)"block_000003@"+sfn,MD_APPEND);
+
+
+    auxMetadata.read((String)"block_000002@"+sfn);
+
+    EXPECT_EQ(auxMetadata.size(),0);
+    std::cerr << "sfn: " << sfn <<std::endl;
+}
+
 TEST_F( MetadataTest, ReadWrite)
 {
     //temp file name
