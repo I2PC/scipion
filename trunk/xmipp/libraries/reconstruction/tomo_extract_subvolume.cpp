@@ -88,10 +88,10 @@ void ProgTomoExtractSubvolume::defineParams()
     addExampleLine("+++ maximum cross-correlation (rather than maximum likelihood) to avoid problems with absolute ",false);
     addExampleLine("+++ greyscales and the standard deviation in the noise. ",false);
 
-    addExampleLine("+++ ml_tomo -i images.sel -doc images.doc -ref myreference.vol --oroot align/mltomo_10deg -missing wedges.doc -iter 1 -ang 10");
-    addExampleLine("+++ ml_tomo -i images.sel -doc align/mltomo_10deg_it000001.doc -ref myreference.vol --oroot align/mltomo_5deg -missing wedges.doc -iter 1 -ang 5 -ang_search 20");
-    addExampleLine("+++ ml_tomo -i images.sel -doc align/mltomo_5deg_it000001.doc -ref myreference.vol --oroot align/mltomo_2deg -missing wedges.doc -iter 1 -ang 2 -ang_search 8");
-    addExampleLine("+++ ml_tomo -i images.sel -doc align/mltomo_2deg_it000001.doc -ref myreference.vol --oroot align/mltomo_1deg -missing wedges.doc -iter 1 -ang 1 -ang_search 3");
+    addExampleLine("+++ ml_tomo -i images.sel -doc images.doc                      -ref myreference.vol --oroot align/mltomo_10deg -missing wedges.doc -iter 1 -ang 10");
+    addExampleLine("+++ ml_tomo -i images.sel -doc align/mltomo_10deg_it000001.doc -ref myreference.vol --oroot align/mltomo_5deg  -missing wedges.doc -iter 1 -ang 5 -ang_search 20");
+    addExampleLine("+++ ml_tomo -i images.sel -doc align/mltomo_5deg_it000001.doc  -ref myreference.vol --oroot align/mltomo_2deg  -missing wedges.doc -iter 1 -ang 2 -ang_search 8");
+    addExampleLine("+++ ml_tomo -i images.sel -doc align/mltomo_2deg_it000001.doc  -ref myreference.vol --oroot align/mltomo_1deg  -missing wedges.doc -iter 1 -ang 1 -ang_search 3");
 
     addExampleLine("+++ Now, we will identify the x,y,z coordinates of the vertex in the reference structure (which has symmetry i3): ",false);
     addExampleLine("+++ -center 0 0 59. And we will extract 12 vertices (subvolumes) in boxes of size 12x12x12 pixels ",false);
@@ -106,7 +106,7 @@ void ProgTomoExtractSubvolume::defineParams()
     addExampleLine("+++ 4 classes using ML is now straightforward (see ml_tomo for details again) ",false);
     addExampleLine("+++ : ",false);
 
-    addExampleLine("+++ ml_tomo -i vertices.sel -doc vertices.doc -dont_align -keep_angles -missing wedges.doc -nref 4 -reg0 5 -iter 25");
+    addExampleLine("+++ xmipp_ml_tomo -i vertices.sel -doc vertices.doc -dont_align -keep_angles -missing wedges.doc -nref 4 -reg0 5 -iter 25");
 
     addExampleLine("+++ Note that the whole functionality of ml_tomo can be employed on the sub-subtomograms: alignment, ",false);
     addExampleLine("+++ classification, local angular searches, symmetry, etc. For example, in case of the vertices, on ",false);
@@ -259,7 +259,7 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
         // 2. translate center
         center -= doccenter;
         // 3. Apply possible non-integer center to volume
-        //FIXME -center rob
+        //translations may be non-integer
         translate(BSPLINE3,volout(),vol(),center);
 
         //vol().translate(-center, volout(), DONT_WRAP);
