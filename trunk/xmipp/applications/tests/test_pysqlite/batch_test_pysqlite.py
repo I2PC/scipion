@@ -64,10 +64,11 @@ class TestPySqlite(unittest.TestCase):
         """
         # Asume 'xmipp' and 'testXmipp' are at the same level
         os.environ['PROTOCOL_SCRIPT'] = sys.argv[0]
-        curdir = os.path.dirname(getXmippPath())
-        tmpPath = join(curdir, 'testXmipp/input/test/test_pysqlite')
-        mkpath(tmpPath, 0777, True)
-        os.chdir(tmpPath)
+        #uncomment next 5 lines to store database in disk
+        #curdir = os.path.dirname(getXmippPath())
+        #tmpPath = join(curdir, 'testXmipp/input/test/test_pysqlite')
+        #mkpath(tmpPath, 0777, True)
+        #os.chdir(tmpPath)
         #tmpDataBaseName="test.sqlite"
         tmpDataBaseName=":memory:"
         if os.path.exists(tmpDataBaseName):
