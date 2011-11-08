@@ -573,7 +573,7 @@ ConstantToAddToFiltration ='0.1'
 """ Center volume after each iteration """
 DoCenterVolume = False
 
-# {eval} expandParallel()
+# {eval} expandParallel(jobsize=1)
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
