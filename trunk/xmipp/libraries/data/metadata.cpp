@@ -778,7 +778,9 @@ char * MetaData::_readColumnsStar(mdBlock &block,
     }
     while (found_column);
 
-    if (iter < block.end)
+    // This condition fails for empty blocks
+    // if (iter < block.end)
+    if (iter <= block.end +1)
         block.loop = iter; //Move loop pointer to position of last found column
 }
 
@@ -940,7 +942,7 @@ bool MetaData::existsBlock(const FileName &_inFile)
     String blockName;
     FileName outFile;
 
-	blockName=_inFile.getBlockName();
+    blockName=_inFile.getBlockName();
     outFile = _inFile.removeBlockName();
 
     struct stat file_status;
@@ -1078,6 +1080,9 @@ void MetaData::_read(const FileName &filename,
                 if ((isColumnFormat = (block.loop != NULL)))
                 {
                     _readColumnsStar(block, columnValues, desiredLabels, firstBlock);
+                    // If block is empty, makes block.loop and block.end equal
+                    if(block.loop == (block.end + 1))
+                    	block.loop--;
                     _readRowsStar(block, columnValues);
                 }
                 else
