@@ -97,6 +97,7 @@ public class ReviewParticlePicker extends TrainingPicker
 							m.addAutomaticParticle(new AutomaticParticle(x, y, reviewfamily, m, cost, false));
 					}
 				}
+				
 			}
 
 		}

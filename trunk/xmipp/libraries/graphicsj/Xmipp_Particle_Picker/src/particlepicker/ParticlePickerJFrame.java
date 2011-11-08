@@ -148,10 +148,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				activemacro = "8-bit";
 				IJ.run(activemacro);
-				getParticlePicker().addMacro(activemacro);
 				activemacro = ((JCheckBoxMenuItem) e.getSource()).getText();
 				IJ.run(activemacro);
-				getParticlePicker().addMacro(activemacro);
 			}
 		});
 		JCheckBoxMenuItem msmi = new JCheckBoxMenuItem("Mean Shift");
@@ -176,7 +174,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		{
 			activemacro = ((JCheckBoxMenuItem) e.getSource()).getText();
 			IJ.run(activemacro);
-			getParticlePicker().addMacro(activemacro);
 		}
 		catch (Exception ex)
 		{

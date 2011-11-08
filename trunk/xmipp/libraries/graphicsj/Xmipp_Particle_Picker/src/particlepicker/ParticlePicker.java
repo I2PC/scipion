@@ -1,5 +1,11 @@
 package particlepicker;
 
+import ij.CommandListener;
+import ij.Executer;
+import ij.ImageListener;
+import ij.ImagePlus;
+import ij.plugin.frame.Recorder;
+
 import java.awt.Color;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -30,32 +36,76 @@ public abstract class ParticlePicker
 	private boolean changed;
 	protected List<Family> families;
 	private FamilyState mode;
-	protected String macros;
+	private String commands;
+	private String command;
 
 	public ParticlePicker(String outputdir, FamilyState mode)
 	{
-		macros = "";
+		commands = "";
 		this.outputdir = outputdir;
 		this.mode = mode;
 		this.families = new ArrayList<Family>();
 		this.familiesfile = getOutputPath("families.xmd");
 		loadFamilies();
 
+		Recorder.record = true;
+
+		// detecting if a command is thrown by ImageJ
+		Executer.addCommandListener(new CommandListener()
+		{
+			public String commandExecuting(String command)
+			{
+				ParticlePicker.this.command = command;
+				return command;
+
+			}
+		});
+		ImagePlus.addImageListener(new ImageListener()
+		{
+
+			@Override
+			public void imageUpdated(ImagePlus arg0)
+			{
+				if (command != null)
+				{
+					String options = "";
+					if (Recorder.getCommandOptions() != null)
+						options = Recorder.getCommandOptions();
+					addCommand(command, options);
+					command = null;
+				}
+			}
+
+			@Override
+			public void imageOpened(ImagePlus arg0)
+			{
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void imageClosed(ImagePlus arg0)
+			{
+				// TODO Auto-generated method stub
+
+			}
+		});
 	}
-	
-	public void addMacro(String macro)
+
+	public void addCommand(String command, String options)
 	{
-		macros += String.format("run(\"%s\");\n", macro);
+		commands += String.format("run(\"%s\", \"%s\");\n", command, options);
+		System.out.println(commands);
 	}
-	
-	public String getMacros()
+
+	public String getCommands()
 	{
-		return macros;
+		return commands;
 	}
-	
+
 	public void loadMacros()
 	{
-		
+
 	}
 
 	public void setChanged(boolean changed)
@@ -184,18 +234,18 @@ public abstract class ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-	
+
 	public FamilyState validateState(FamilyState state)
 	{
-		
+
 		if (mode == FamilyState.Review && state != FamilyState.Review)
 		{
 			setChanged(true);
 			return FamilyState.Review;
 		}
-		if(mode == FamilyState.Manual && (state != FamilyState.Manual || state != FamilyState.Available))
+		if (mode == FamilyState.Manual && (state != FamilyState.Manual || state != FamilyState.Available))
 			throw new IllegalArgumentException(String.format("Can not use %s mode on this data", mode));
-		if(mode == FamilyState.Supervised && state == FamilyState.Review)
+		if (mode == FamilyState.Supervised && state == FamilyState.Review)
 			throw new IllegalArgumentException(String.format("Can not use %s mode on this data", mode));
 		return state;
 
@@ -229,7 +279,8 @@ public abstract class ParticlePicker
 
 	public void removeFamily(Family family)
 	{
-		if (getManualParticlesNumber(family) > 0)//perhaps I have to check automatic particles
+		if (getManualParticlesNumber(family) > 0)// perhaps I have to check
+													// automatic particles
 			throw new IllegalArgumentException(Constants.getAssociatedDataMsg("family"));
 		if (families.size() == 1)
 			throw new IllegalArgumentException(Constants.getIllegalDeleteMsg("family"));
@@ -237,16 +288,16 @@ public abstract class ParticlePicker
 	}
 
 	public abstract void saveData();
-	
+
 	public abstract int getManualParticlesNumber(Family f);
-	
+
 	public void persistMacros()
 	{
 		String file = getOutputPath("macros.txt");
 		try
 		{
 			BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-			writer.append(macros);
+			writer.append(commands);
 			writer.close();
 		}
 		catch (IOException e)

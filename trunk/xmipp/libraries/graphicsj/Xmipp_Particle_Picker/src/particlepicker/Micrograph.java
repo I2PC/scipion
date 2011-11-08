@@ -58,16 +58,7 @@ public abstract class Micrograph
 
 			if (image == null)
 			{
-//				System.out.println("creating imageplus");
-//				if (file.endsWith(".tif"))
-//				{
-//					xmipp.io.readers.ImageReader reader = new xmipp.io.readers.ImageReader();
-//					reader.run(file);
-//					image = reader;
-//
-//				}
-//				else
-//					image = new ImagePlus(file);
+
 				image = XmippImageConverter.convertToImagej(file);
 				if(image == null)
 					image = new ImagePlus(file);
