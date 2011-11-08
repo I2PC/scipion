@@ -22,7 +22,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_create
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_destroy
 (JNIEnv *env, jobject jobj) {
-	std::cerr<<" destroying"<<std::endl;
+	//std::cerr<<" destroying"<<std::endl;
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 	delete image;
 	image = NULL;
@@ -410,98 +410,3 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD(
 	}
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_bandPassFilter(
-		JNIEnv *env, jobject jobj, jstring filename, jdouble w1, jdouble w2,
-		jdouble raised_w, jint w, jint h) {
-	std::string msg = "";
-        Image<double> *image = GET_INTERNAL_IMAGE(jobj);
-
-	try {
-		const char *fnStr = env->GetStringUTFChars(filename, false);
-		image->read(fnStr);
-
-		bandpassFilter(image->data, w1, w2, raised_w);
-
-		selfScaleToSize(LINEAR, image->data, (int) w, (int) h);
-
-		size_t size = image->data.getSize();
-		jdoubleArray array = env->NewDoubleArray(size);
-		env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(image->data));
-	} catch (XmippError xe) {
-		msg = xe.getDefaultMessage();
-	} catch (std::exception& e) {
-		msg = e.what();
-	} catch (...) {
-		msg = "Unhandled exception";
-	}
-
-	// If there was an exception, sends it to java environment.
-	if (!msg.empty()) {
-		handleXmippException(env, msg);
-	}
-}
-
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_gaussianFilter(
-		JNIEnv *env, jobject jobj, jstring filename, jdouble w1, jint w,
-		jint h) {
-	std::string msg = "";
-        Image<double> *image = GET_INTERNAL_IMAGE(jobj);
-
-	try {
-		const char *fnStr = env->GetStringUTFChars(filename, false);
-		image->read(fnStr);
-
-		gaussianFilter(image->data, w1);
-
-		selfScaleToSize(LINEAR, image->data, (int) w, (int) h);
-
-		size_t size = image->data.getSize();
-		jdoubleArray array = env->NewDoubleArray(size);
-		env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(image->data));
-	} catch (XmippError xe) {
-		msg = xe.getDefaultMessage();
-	} catch (std::exception& e) {
-		msg = e.what();
-	} catch (...) {
-		msg = "Unhandled exception";
-	}
-
-	// If there was an exception, sends it to java environment.
-	if (!msg.empty()) {
-		handleXmippException(env, msg);
-	}
-}
-
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_badPixelsFilter(
-		JNIEnv *env, jobject jobj, jstring filename, jdouble factor, jint w,
-		jint h) {
-	std::string msg = "";
-        Image<double> *image = GET_INTERNAL_IMAGE(jobj);
-
-	try {
-		const char *fnStr = env->GetStringUTFChars(filename, false);
-		image->read(fnStr);
-
-		BadPixelFilter filter;
-		filter.type = BadPixelFilter::OUTLIER;
-		filter.factor = factor;
-		filter.apply(image->data);
-
-		selfScaleToSize(LINEAR, image->data, (int) w, (int) h);
-
-		size_t size = image->data.getSize();
-		jdoubleArray array = env->NewDoubleArray(size);
-		env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(image->data));
-	} catch (XmippError xe) {
-		msg = xe.getDefaultMessage();
-	} catch (std::exception& e) {
-		msg = e.what();
-	} catch (...) {
-		msg = "Unhandled exception";
-	}
-
-	// If there was an exception, sends it to java environment.
-	if (!msg.empty()) {
-		handleXmippException(env, msg);
-	}
-}

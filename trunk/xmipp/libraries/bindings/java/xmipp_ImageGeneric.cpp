@@ -220,7 +220,7 @@ JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat(
         Image<float> image;
 
         image.readOrReadPreview(fnStr, jx, jy, jz, jn, true);
-        image.data.printShape(std::cerr);
+        //image.data.printShape(std::cerr);
         size_t size = image.getSize();
         jfloatArray array = env->NewFloatArray(size);
         env->SetFloatArrayRegion(array, 0, size, MULTIDIM_ARRAY(image.data));
