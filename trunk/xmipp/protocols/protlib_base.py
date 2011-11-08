@@ -352,8 +352,8 @@ class XmippProtocol(object):
         retcode = 0
         try:
             self.runSetup()
-            self.insertStep('createDir', [self.WorkingDir], path=self.WorkingDir)
-            self.insertStep('createDir', [self.TmpDir], path=self.TmpDir)
+            self.insertStep('createDir',verifyfilesDictionary={'WorkingDir':self.WorkingDir}, path=self.WorkingDir)
+            self.insertStep('createDir', verifyfilesDictionary={'TemporalDir':self.TmpDir}, path=self.TmpDir)
             self.defineSteps()
             self.Db.runSteps()
             self.postRun()
