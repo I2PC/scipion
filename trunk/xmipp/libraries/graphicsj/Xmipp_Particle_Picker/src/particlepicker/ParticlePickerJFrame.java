@@ -72,7 +72,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				}
 				System.exit(0);
 			}
-
 		});
 		
 		

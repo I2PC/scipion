@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 import particlepicker.training.model.FamilyState;
+import particlepicker.training.model.MicrographFamilyState;
 import particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.MDLabel;
 import xmipp.MetaData;
@@ -155,7 +156,7 @@ public abstract class ParticlePicker
 
 		Family family;
 		int rgb, size;
-		FamilyState step;
+		FamilyState state;
 		String name;
 		try
 		{
@@ -166,16 +167,12 @@ public abstract class ParticlePicker
 				name = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				rgb = md.getValueInt(MDLabel.MDL_PICKING_COLOR, id);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
-				step = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
-				if (getMode() == FamilyState.Review && step != FamilyState.Review)
-				{
-					step = FamilyState.Review;
-					setChanged(true);
-				}
-				if (step == FamilyState.Supervised && this instanceof SupervisedParticlePicker)
+				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
+				state = validateState(state);
+				if (state == FamilyState.Supervised && this instanceof SupervisedParticlePicker)
 					if (!new File(((SupervisedParticlePicker) this).getOTrainingFilename(name)).exists())
-						throw new IllegalArgumentException(String.format("Training file does not exist. Family cannot be in %s mode", step));
-				family = new Family(name, new Color(rgb), size, step, this);
+						throw new IllegalArgumentException(String.format("Training file does not exist. Family cannot be in %s mode", state));
+				family = new Family(name, new Color(rgb), size, state, this);
 				families.add(family);
 			}
 			if (families.size() == 0)
@@ -186,6 +183,22 @@ public abstract class ParticlePicker
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
+	}
+	
+	public FamilyState validateState(FamilyState state)
+	{
+		
+		if (mode == FamilyState.Review && state != FamilyState.Review)
+		{
+			setChanged(true);
+			return FamilyState.Review;
+		}
+		if(mode == FamilyState.Manual && (state != FamilyState.Manual || state != FamilyState.Available))
+			throw new IllegalArgumentException(String.format("Can not use %s mode on this data", mode));
+		if(mode == FamilyState.Supervised && state == FamilyState.Review)
+			throw new IllegalArgumentException(String.format("Can not use %s mode on this data", mode));
+		return state;
+
 	}
 
 	public Family getFamily(String name)

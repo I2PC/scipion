@@ -68,7 +68,7 @@ public class MicrographFamilyData
 	{
 
 		manualparticles.add(p);
-		if (state == MicrographFamilyState.Available)
+		if (state == MicrographFamilyState.Available)//to put micrograph family data on new state, done only for first particle
 		{
 			if (family.getStep() == FamilyState.Manual)
 				state = MicrographFamilyState.Manual;
@@ -76,9 +76,10 @@ public class MicrographFamilyData
 				state = MicrographFamilyState.Correct;
 			else if (family.getStep() == FamilyState.Review)
 				state = MicrographFamilyState.Review;
+			else
+				throw new IllegalArgumentException(String.format("Micrograph %s could not update its state to %s and can't keep previous state %s and have particles", micrograph.getName(), state, MicrographFamilyState.Available));
 		}
-		else
-			throw new IllegalArgumentException(String.format("Micrograph %s could not update its state to %s and can't keep previous state %s and have particles", micrograph.getName(), state, MicrographFamilyState.Available));
+		
 	}
 
 	public void removeParticle(TrainingParticle p, TrainingPicker ppicker)
@@ -95,7 +96,6 @@ public class MicrographFamilyData
 		else
 		{
 			manualparticles.remove(p);
-			//family.particles--;
 			if (manualparticles.size() == 0 && autoparticles.size() - getAutomaticParticlesDeleted() == 0)
 				state = MicrographFamilyState.Available;
 		}
@@ -187,7 +187,6 @@ public class MicrographFamilyData
 
 	public void reset()
 	{
-		//family.particles -= manualparticles.size();
 		autoparticles.clear();
 		manualparticles.clear();
 		setState(MicrographFamilyState.Available);
