@@ -418,22 +418,51 @@ TEST_F( MetadataTest, ReadEmptyBlocks)
     auxMetadata.setValue(MDL_Y,2.,id);
     auxMetadata.setValue(MDL_Z,222.,id);
     auxMetadata.write((String)"block_000001@"+sfn,MD_APPEND);
+
     auxMetadata.clear();
     auxMetadata.addLabel(MDL_X);
     auxMetadata.addLabel(MDL_Y);
     auxMetadata.addLabel(MDL_Z);
     auxMetadata.write((String)"block_000002@"+sfn,MD_APPEND);
+
     auxMetadata.clear();
+    id=auxMetadata.addObject();
     auxMetadata.setValue(MDL_X,1.,id);
     auxMetadata.setValue(MDL_Y,2.,id);
     auxMetadata.setValue(MDL_Z,222.,id);
     auxMetadata.write((String)"block_000003@"+sfn,MD_APPEND);
 
+    auxMetadata.clear();
+    auxMetadata.addLabel(MDL_X);
+    auxMetadata.addLabel(MDL_Y);
+    auxMetadata.addLabel(MDL_Z);
+    auxMetadata.write((String)"block_000004@"+sfn,MD_APPEND);
 
     auxMetadata.read((String)"block_000002@"+sfn);
-
     EXPECT_EQ(auxMetadata.size(),0);
-    std::cerr << "sfn: " << sfn <<std::endl;
+
+    auxMetadata.read((String)"block_000004@"+sfn);
+    EXPECT_EQ(auxMetadata.size(),0);
+
+    unlink(sfn);
+}
+
+TEST_F( MetadataTest, ReadEmptyBlocksII)
+{
+    char sfn[64] = "";
+    strncpy(sfn, "/tmp/testReadMultipleBlocks_XXXXXX", sizeof sfn);
+    mkstemp(sfn);
+
+    MetaData auxMetadata;
+
+    auxMetadata.addLabel(MDL_X);
+    auxMetadata.addLabel(MDL_Y);
+    auxMetadata.addLabel(MDL_Z);
+    auxMetadata.write((String)"block_000002@"+sfn,MD_APPEND);
+
+    auxMetadata.read((String)"block_000002@"+sfn);
+    EXPECT_EQ(auxMetadata.size(),0);
+    unlink(sfn);
 }
 
 TEST_F( MetadataTest, ReadWrite)
