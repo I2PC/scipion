@@ -258,11 +258,11 @@ protected:
                 imIn.read(fn_in, DATA, ALL_IMAGES, true);
                 imOut = new ImageGeneric(imIn.getDatatype());
                 k = 0; // Reset to zero to select the slices when working with volumes
-                createEmptyFile(fn_out, xdimOut, ydimOut, 1, zdimOut, true, WRITE_OVERWRITE, swap);
+                createEmptyFile(fn_out+depth, xdimOut, ydimOut, 1, zdimOut, true, WRITE_OVERWRITE, swap);
             }
         }
         else if (create_empty_stackfile)
-            createEmptyFile(fn_out, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE, swap);
+            createEmptyFile(fn_out+depth, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE, swap);
 
         create_empty_stackfile = false;
     }
