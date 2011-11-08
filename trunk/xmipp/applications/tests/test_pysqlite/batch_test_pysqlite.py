@@ -46,8 +46,7 @@ _sqlCommand2 = "CREATE TABLE steps "\
                "parent_step_id INTEGER"\
                ",PRIMARY KEY(step_id, run_id)"\
                ");"
-               #REFERENCES steps(step_id)
-               #REFERENCES runs(run_id) ON DELETE CASCADE
+
                
 _sqlCommand4 = "CREATE TABLE verifyfiles "\
                "(iter INTEGER, "\
@@ -57,8 +56,7 @@ _sqlCommand4 = "CREATE TABLE verifyfiles "\
                "step_id INTEGER , "\
                "PRIMARY KEY(alias, iter, step_id, run_id)," \
                "FOREIGN KEY(step_id, run_id) REFERENCES steps(step_id, run_id) on delete cascade);" 
-               #REFERENCES runs(run_id) ON DELETE CASCADE
-               #REFERENCES steps(step_id) ON DELETE CASCADE
+
 class TestPySqlite(unittest.TestCase):
     testsPath = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/applications/tests'
     def setUp(self):
@@ -70,7 +68,8 @@ class TestPySqlite(unittest.TestCase):
         tmpPath = join(curdir, 'testXmipp/input/test/test_pysqlite')
         mkpath(tmpPath, 0777, True)
         os.chdir(tmpPath)
-        tmpDataBaseName="test.sqlite"
+        #tmpDataBaseName="test.sqlite"
+        tmpDataBaseName=":memory:"
         if os.path.exists(tmpDataBaseName):
             os.remove(tmpDataBaseName)
         #self.cx = sqlite.connect(":memory:")
