@@ -98,6 +98,12 @@ public:
     FileName(const char* str) : String(str)
     {}
 
+    /** Assignment constructor
+     */
+    FileName& operator=(const FileName& op){
+        return (FileName&) std::string::operator=(op);
+    }
+
     /** Copy constructor
      */
     FileName(const FileName& fn) : String(fn)
