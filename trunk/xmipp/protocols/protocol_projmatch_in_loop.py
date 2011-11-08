@@ -317,8 +317,6 @@ def angular_class_average(_log
                          , MinimumCrossCorrelation
                          , NumberOfReferences
                          , NumberOfCtfGroups
-                         , NumberOfMpi
-                         , NumberOfThreads
                          , PaddingFactor
                          , ProjectLibraryRootName
                          , ProjMatchRootName
@@ -384,8 +382,6 @@ def angular_class_average(_log
         
         runJob(_log,
                'xmipp_angular_class_average',
-               parameters,
-               NumberOfMpi,
-               NumberOfThreads
+               parameters
                )
 
