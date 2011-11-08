@@ -12,7 +12,7 @@
 
 
 import os
-from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL,MDL_COUNT
+from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL, MDL_COUNT
 from protlib_base import XmippProtocol, protocolMain
 from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector
 from protlib_sql import XmippProjectDb
@@ -23,7 +23,7 @@ class ProtProjMatch(XmippProtocol):
 
 #    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
     def __init__(self, scriptname, project=None):
-        super(ProtProjMatch,self).__init__(protDict.projmatch.name, scriptname, project)
+        super(ProtProjMatch, self).__init__(protDict.projmatch.name, scriptname, project)
         #Some class variables
         self.ReferenceVolumeName = 'reference_volume.vol'
         self.LibraryDir = "ReferenceLibrary"
@@ -75,12 +75,12 @@ class ProtProjMatch(XmippProtocol):
     
     
         # 3 Never allow DoAlign2D and DoCtfCorrection together
-        if (int(getComponentFromVector(self.DoAlign2D,1))==1 and self.DoCtfCorrection):
+        if (int(getComponentFromVector(self.DoAlign2D, 1)) == 1 and self.DoCtfCorrection):
             errors.append("You cannot realign classes AND perform CTF-correction. Switch either of them off!")
     
         #4N outter radius is compulsory
-        _OuterRadius = getComponentFromVector(self.OuterRadius,1)
-        _InnerRadius = getComponentFromVector(self.InnerRadius,1)
+        _OuterRadius = getComponentFromVector(self.OuterRadius, 1)
+        _InnerRadius = getComponentFromVector(self.InnerRadius, 1)
         if _OuterRadius <= _InnerRadius:
             errors.append("OuterRadius must be larger than InnerRadius")
 
@@ -90,53 +90,53 @@ class ProtProjMatch(XmippProtocol):
         super(ProtProjMatch, self).summary()
         summary = ['Performed %d iterations with angular sampling rate %s' 
                    % (self.NumberOfIterations, self.AngSamplingRateDeg)]
-        summary += ['Final Resolution is %s'%'not yet implemented']
+        summary += ['Final Resolution is %s' % 'not yet implemented']
         summary += ['Number of CTFgroups and References is %d %d respectively'
-                        %(self.NumberOfCtfGroups,self.numberOfReferences)]
+                        % (self.NumberOfCtfGroups, self.numberOfReferences)]
 
         return summary
     
     def preRun(self):
         print "in PRERUN"
         #Convert directories/files  to absolute path from projdir
-        self.CtfGroupDirectory = self.workingDirPath( self.CtfGroupDirectory)
+        self.CtfGroupDirectory = self.workingDirPath(self.CtfGroupDirectory)
         self.CtfGroupSubsetFileName = os.path.join(self.CtfGroupDirectory, self.CtfGroupSubsetFileName)
     #vector for iterations??????
     #    global ProjMatchDir
     #    ProjMatchDir = WorkingDir +'/' + ProjMatchDir
-        self.DocFileWithOriginalAngles = self.workingDirPath( self.DocFileWithOriginalAngles)
+        self.DocFileWithOriginalAngles = self.workingDirPath(self.DocFileWithOriginalAngles)
     
         
         # Convert vectors to list
         self.ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
         self.numberOfReferences = len(self.ReferenceFileNames)
         #directory with ProjMatchClasses
-        self.ProjMatchDirs=[" "]
-        self.LibraryDirs=[" "]
-        self.DocFileInputAngles=[self.DocFileWithOriginalAngles]
+        self.ProjMatchDirs = [" "]
+        self.LibraryDirs = [" "]
+        self.DocFileInputAngles = [self.DocFileWithOriginalAngles]
         #ProjMatchRootName=[" "]
         
         for iterN in range(self.NumberOfIterations):
             fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
             self.ProjMatchDirs.append(fnBaseIter + self.ProjMatchDir)
-            self.LibraryDirs.append( fnBaseIter + self.LibraryDir)
+            self.LibraryDirs.append(fnBaseIter + self.LibraryDir)
             self.DocFileInputAngles.append("%s%s.doc" % (fnBaseIter, self.docfile_with_current_angles))
         
         auxList = (self.numberOfReferences + 1) * [None]
-        self.ProjectLibraryRootNames=[[None]]
+        self.ProjectLibraryRootNames = [[None]]
         for iterN in range(self.NumberOfIterations):
             fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
             for refN in range(self.numberOfReferences):                
-                auxList[refN + 1]= "%s%s_ref_%02d.stk" % (fnBaseIter, self.ProjectLibraryRootName, refN)
+                auxList[refN + 1] = "%s%s_ref_%02d.stk" % (fnBaseIter, self.ProjectLibraryRootName, refN)
             self.ProjectLibraryRootNames.append(list(auxList))
                     
-        self.ProjMatchRootNames=[[None]]
+        self.ProjMatchRootNames = [[None]]
         for iterN in range(self.NumberOfIterations):
             for refN in range(self.numberOfReferences):
-                auxList[refN + 1]="%s/%s_ref_%02d.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName, refN + 1)
+                auxList[refN + 1] = "%s/%s_ref_%02d.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName, refN + 1)
             self.ProjMatchRootNames.append(list(auxList))
     
-        self.ProjMatchRootNamesWithoutRef=[[None]]
+        self.ProjMatchRootNamesWithoutRef = [[None]]
         for iterN in range(self.NumberOfIterations):
             self.ProjMatchRootNamesWithoutRef.append(list("%s/%s.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName)))
     
@@ -159,33 +159,33 @@ class ProtProjMatch(XmippProtocol):
                 auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.ReconstructedVolume, refN + 1)
             self.reconstructedFileNamesIters.append(list(auxList))
     
-        self.docfile_with_current_anglesList=[None]
+        self.docfile_with_current_anglesList = [None]
         for iterN in range(self.NumberOfIterations):
             fnBaseIter = "%s/Iter_%02d/%s.doc" % (self.WorkingDir, iterN + 1, self.docfile_with_current_angles)
             self.docfile_with_current_anglesList.append(fnBaseIter)
     
         #parameter for projection matching
-        self.Align2DIterNr          = [-1]+getListFromVector(self.Align2DIterNr,self.NumberOfIterations)
-        self.Align2dMaxChangeOffset = [-1]+getListFromVector(self.Align2dMaxChangeOffset,self.NumberOfIterations)
-        self.Align2dMaxChangeRot    = [-1]+getListFromVector(self.Align2dMaxChangeRot,self.NumberOfIterations)
-        self.AngSamplingRateDeg     = [-1]+getListFromVector(self.AngSamplingRateDeg,self.NumberOfIterations)
-        self.DiscardPercentage      = [-1]+getListFromVector(self.DiscardPercentage,self.NumberOfIterations)
-        self.DoAlign2D              = [False]+getBoolListFromVector(self.DoAlign2D,self.NumberOfIterations)
-        self.DoComputeResolution    = [False]+getBoolListFromVector(self.DoComputeResolution,self.NumberOfIterations)
-        self.DoSplitReferenceImages = [False]+getBoolListFromVector(self.DoSplitReferenceImages,self.NumberOfIterations)
-        self.InnerRadius            = [False]+getListFromVector(self.InnerRadius,self.NumberOfIterations)
-        self.MaxChangeInAngles      = [-1]+getListFromVector(self.MaxChangeInAngles,self.NumberOfIterations)
-        self.MaxChangeOffset        = [-1]+getListFromVector(self.MaxChangeOffset,self.NumberOfIterations)
-        self.MinimumCrossCorrelation= [-1]+getListFromVector(self.MinimumCrossCorrelation,self.NumberOfIterations)
-        self.OnlyWinner             = [False]+getBoolListFromVector(self.OnlyWinner,self.NumberOfIterations)
-        self.OuterRadius            = [False]+getListFromVector(self.OuterRadius,self.NumberOfIterations)
-        self.PerturbProjectionDirections = [False]+getBoolListFromVector(self.PerturbProjectionDirections,self.NumberOfIterations)
-        self.ReferenceIsCtfCorrected     = [-1]+getListFromVector(str(self.ReferenceIsCtfCorrected) + " True", self.NumberOfIterations)
-        self.ScaleNumberOfSteps          = [-1]+getListFromVector(self.ScaleNumberOfSteps,self.NumberOfIterations)
-        self.ScaleStep              = [-1]+getListFromVector(self.ScaleStep,self.NumberOfIterations)
-        self.Search5DShift          = [-1]+getListFromVector(self.Search5DShift,self.NumberOfIterations)
-        self.Search5DStep           = [-1]+getListFromVector(self.Search5DStep,self.NumberOfIterations)
-        self.SymmetryGroup          = [-1]+getListFromVector(self.SymmetryGroup,self.NumberOfIterations)
+        self.Align2DIterNr = [-1] + getListFromVector(self.Align2DIterNr, self.NumberOfIterations)
+        self.Align2dMaxChangeOffset = [-1] + getListFromVector(self.Align2dMaxChangeOffset, self.NumberOfIterations)
+        self.Align2dMaxChangeRot = [-1] + getListFromVector(self.Align2dMaxChangeRot, self.NumberOfIterations)
+        self.AngSamplingRateDeg = [-1] + getListFromVector(self.AngSamplingRateDeg, self.NumberOfIterations)
+        self.DiscardPercentage = [-1] + getListFromVector(self.DiscardPercentage, self.NumberOfIterations)
+        self.DoAlign2D = [False] + getBoolListFromVector(self.DoAlign2D, self.NumberOfIterations)
+        self.DoComputeResolution = [False] + getBoolListFromVector(self.DoComputeResolution, self.NumberOfIterations)
+        self.DoSplitReferenceImages = [False] + getBoolListFromVector(self.DoSplitReferenceImages, self.NumberOfIterations)
+        self.InnerRadius = [False] + getListFromVector(self.InnerRadius, self.NumberOfIterations)
+        self.MaxChangeInAngles = [-1] + getListFromVector(self.MaxChangeInAngles, self.NumberOfIterations)
+        self.MaxChangeOffset = [-1] + getListFromVector(self.MaxChangeOffset, self.NumberOfIterations)
+        self.MinimumCrossCorrelation = [-1] + getListFromVector(self.MinimumCrossCorrelation, self.NumberOfIterations)
+        self.OnlyWinner = [False] + getBoolListFromVector(self.OnlyWinner, self.NumberOfIterations)
+        self.OuterRadius = [False] + getListFromVector(self.OuterRadius, self.NumberOfIterations)
+        self.PerturbProjectionDirections = [False] + getBoolListFromVector(self.PerturbProjectionDirections, self.NumberOfIterations)
+        self.ReferenceIsCtfCorrected = [-1] + getListFromVector(str(self.ReferenceIsCtfCorrected) + " True", self.NumberOfIterations)
+        self.ScaleNumberOfSteps = [-1] + getListFromVector(self.ScaleNumberOfSteps, self.NumberOfIterations)
+        self.ScaleStep = [-1] + getListFromVector(self.ScaleStep, self.NumberOfIterations)
+        self.Search5DShift = [-1] + getListFromVector(self.Search5DShift, self.NumberOfIterations)
+        self.Search5DStep = [-1] + getListFromVector(self.Search5DStep, self.NumberOfIterations)
+        self.SymmetryGroup = [-1] + getListFromVector(self.SymmetryGroup, self.NumberOfIterations)
          
         # Configure dabase
         ###############self.Db.setVerify(self.Verify,self.ViewVerifyedFiles)
@@ -196,14 +196,17 @@ class ProtProjMatch(XmippProtocol):
 
     def otherActionsToBePerformedBeforeLoop(self):
         print "in otherActionsToBePerformedBeforeLoop"
+        _VerifyFiles = []
+        _VerifyfilesDictionary = {}
+ 
 
         _dataBase = self.Db
         if self.DoCtfCorrection:
             auxMD1 = MetaData(self.CTFDatName)
             auxMD2 = MetaData()
-            auxMD2.aggregate(auxMD1, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT)
+            auxMD2.aggregate(auxMD1, AGGR_COUNT, MDL_CTFMODEL, MDL_CTFMODEL, MDL_COUNT)
             self.NumberOfCtfGroups = auxMD2.size()
-            print "self.NumberOfCtfGroups: ",  self.NumberOfCtfGroups
+            print "self.NumberOfCtfGroups: ", self.NumberOfCtfGroups
             
         #create dir for iteration 1 (This need to be 0 or 1? ROB FIXME
         #!a _dataBase.insertStep('createDir', path = self.getIterDirName(0))
@@ -211,38 +214,45 @@ class ProtProjMatch(XmippProtocol):
         #Check references and projections size match
         #Is already done in preconditions but I like to
         #run protocols from command line bypassing the gui
-        _dataBase.insertStep('checkVolumeProjSize', 
-                                                         ReferenceFileNames = self.ReferenceFileNames
-                                                       , SelFileName = self.SelFileName)
+        _dataBase.insertStep('checkVolumeProjSize',
+                                                         ReferenceFileNames=self.ReferenceFileNames
+                                                       , SelFileName=self.SelFileName)
     
         #Check Option compatibility
-        _dataBase.insertStep('checkOptionsCompatibility', DoAlign2D       = self.DoAlign2D[1]
-                                                          , DoCtfCorrection = self.DoCtfCorrection)
+        _dataBase.insertStep('checkOptionsCompatibility', DoAlign2D=self.DoAlign2D[1]
+                                                          , DoCtfCorrection=self.DoCtfCorrection)
     
         #7 make CTF groups
-        suffixes = ['_images.sel']
-        if self.DoCtfCorrection:
-            suffixes += ['Info.xmd', '_ctf.stk', '_wien.stk', '_split.doc']        
+        values   = ['_images.sel']
+        keys     = ['ImageCTFpairs']
         fnBase = os.path.join(self.CtfGroupDirectory, self.CtfGroupRootName)
-        _VerifyFiles = [fnBase + s for s in suffixes]
-        _dataBase.insertStep('executeCtfGroups', verifyfiles=_VerifyFiles, CTFDatName = self.CTFDatName
-                                                                            , CtfGroupDirectory = self.CtfGroupDirectory
-                                                                            , CtfGroupMaxDiff = self.CtfGroupMaxDiff
-                                                                            , CtfGroupMaxResol = self.CtfGroupMaxResol
-                                                                            , CtfGroupRootName = self.CtfGroupRootName
-                                                                            , DataArePhaseFlipped = self.DataArePhaseFlipped
-                                                                            , DoAutoCtfGroup = self.DoAutoCtfGroup
-                                                                            , DoCtfCorrection = self.DoCtfCorrection
-                                                                            , PaddingFactor = self.PaddingFactor
-                                                                            , SelFileName = self.SelFileName
-                                                                            , SplitDefocusDocFile = self.SplitDefocusDocFile
-                                                                            , WienerConstant = self.WienerConstant)
+        if self.DoCtfCorrection:
+            values   += ['Info.xmd', '_ctf.stk', '_wien.stk', '_split.doc']        
+            keys     += ['CTFGroupSummary','StackCTFs','StackWienerFilters','SplitAtDefocus']
+        _VerifyfilesDictionary.clear()
+        for i in range(len(values)):
+              _VerifyfilesDictionary[keys[i]] = fnBase + values[i]
+              #fromkeys may be used to create the dictionary but for fnBase
+
+        _dataBase.insertStep('executeCtfGroups', verifyfilesDictionary=_VerifyfilesDictionary
+                                               , CTFDatName=self.CTFDatName
+                                               , CtfGroupDirectory=self.CtfGroupDirectory
+                                               , CtfGroupMaxDiff=self.CtfGroupMaxDiff
+                                               , CtfGroupMaxResol=self.CtfGroupMaxResol
+                                               , CtfGroupRootName=self.CtfGroupRootName
+                                               , DataArePhaseFlipped=self.DataArePhaseFlipped
+                                               , DoAutoCtfGroup=self.DoAutoCtfGroup
+                                               , DoCtfCorrection=self.DoCtfCorrection
+                                               , PaddingFactor=self.PaddingFactor
+                                               , SelFileName=self.SelFileName
+                                               , SplitDefocusDocFile=self.SplitDefocusDocFile
+                                               , WienerConstant=self.WienerConstant)
         #Create Initial angular file. Either fill it with zeros or copy input
         _VerifyFiles = [self.DocFileWithOriginalAngles]
         _dataBase.insertStep('initAngularReferenceFile', verifyfiles=_VerifyFiles
-                                                                , DocFileName = self.DocFileName
-                                                                , DocFileWithOriginalAngles = self.DocFileWithOriginalAngles
-                                                                , SelFileName =self.SelFileName)
+                                                                , DocFileName=self.DocFileName
+                                                                , DocFileWithOriginalAngles=self.DocFileWithOriginalAngles
+                                                                , SelFileName=self.SelFileName)
     
         #Save all parameters in dict for future runs (this is done by database)
         #so far no parameter is being saved, but dummy=0
@@ -260,88 +270,93 @@ class ProtProjMatch(XmippProtocol):
     def actionsToBePerformedInsideLoop(self):
         _log = self.Log
         _dataBase = self.Db
-        
+        _VerifyfilesDictionary = {}
+
         for iterN in range(1, self.NumberOfIterations + 1):
             _dataBase.setIteration(iterN)
             # create IterationDir
-            _dataBase.insertStep('createDir', path = self.getIterDirName(iterN))
+            _dataBase.insertStep('createDir', path=self.getIterDirName(iterN))
     
             #Create directory with classes
-            _dataBase.insertStep('createDir', path = self.ProjMatchDirs[iterN])
+            _dataBase.insertStep('createDir', path=self.ProjMatchDirs[iterN])
         
             #Create directory with image libraries
-            id = _dataBase.insertStep('createDir', path = self.LibraryDirs[iterN])
+            id = _dataBase.insertStep('createDir', path=self.LibraryDirs[iterN])
 
             for refN in range(1, self.numberOfReferences + 1):
                 # Mask reference volume
                 _VerifyFiles = [self.maskedFileNamesIters[iterN][refN]]
-                _dataBase.insertStep('executeMask', verifyfiles=_VerifyFiles, parent_step_id=id
-                                    , DoMask =             self.DoMask
-                                    , DoSphericalMask =    self.DoSphericalMask
-                                    , maskedFileName =     self.maskedFileNamesIters[iterN][refN]
-                                    , maskRadius =         self.MaskRadius
-                                    , reconstructedFileName = self.reconstructedFileNamesIters[iterN - 1][refN]
-                                    , userSuppliedMask =   self.MaskFileName)
+                _VerifyfilesDictionary.clear()
+                _VerifyfilesDictionary['mask_%s_%s' % (iterN, refN)]= self.maskedFileNamesIters[iterN][refN]
+                _dataBase.insertStep('executeMask'
+                                    , verifyfilesDictionary=_VerifyfilesDictionary
+                                    , parent_step_id=id
+                                    , DoMask=self.DoMask
+                                    , DoSphericalMask=self.DoSphericalMask
+                                    , maskedFileName=self.maskedFileNamesIters[iterN][refN]
+                                    , maskRadius=self.MaskRadius
+                                    , reconstructedFileName=self.reconstructedFileNamesIters[iterN - 1][refN]
+                                    , userSuppliedMask=self.MaskFileName)
 
                 # angular_project_library
                 #file with projections
-                auxFn=self.ProjectLibraryRootNames[iterN][refN]
-                _VerifyFiles=[auxFn]
-                auxFn=auxFn[:-4]#remove extension
+                auxFn = self.ProjectLibraryRootNames[iterN][refN]
+                _VerifyFiles = [auxFn]
+                auxFn = auxFn[:-4]#remove extension
                 #file with projection angles angles 
                 _VerifyFiles.append(auxFn + ".doc")
                 #file with sampling point neighbourhood 
                 _VerifyFiles.append(auxFn + "_sampling.xmd")
                 #file with sampling point neighbourhood for each ctf group, this is reduntant but useful
-                for i in range (1,self.NumberOfCtfGroups+1):
-                    _VerifyFiles.append(auxFn + "_group" + str(i).zfill(FILENAMENUMBERLENGTH) +"_sampling.xmd")
+                for i in range (1, self.NumberOfCtfGroups + 1):
+                    _VerifyFiles.append(auxFn + "_group" + str(i).zfill(FILENAMENUMBERLENGTH) + "_sampling.xmd")
                             
                 _dataBase.insertStep('angular_project_library', verifyfiles=_VerifyFiles
-                                    , AngSamplingRateDeg = self.AngSamplingRateDeg[iterN]
-                                    , CtfGroupSubsetFileName = self.CtfGroupSubsetFileName
-                                    , DoCtfCorrection = self.DoCtfCorrection
-                                    , DocFileInputAngles = self.DocFileInputAngles[iterN-1]
-                                    , DoParallel = self.DoParallel
-                                    , DoRestricSearchbyTiltAngle = self.DoRestricSearchbyTiltAngle
-                                    , MaxChangeInAngles = self.MaxChangeInAngles[iterN]
-                                    , maskedFileNamesIter = self.maskedFileNamesIters[iterN][refN]
-                                    , MpiJobSize = self.MpiJobSize
-                                    , NumberOfMpi = self.NumberOfMpi
-                                    , NumberOfThreads = self.NumberOfThreads
-                                    , OnlyWinner = self.OnlyWinner[iterN]
-                                    , PerturbProjectionDirections = self.PerturbProjectionDirections[iterN]
-                                    , ProjectLibraryRootName = self.ProjectLibraryRootNames[iterN][refN]
-                                    , SymmetryGroup = self.SymmetryGroup[iterN]
-                                    , SymmetryGroupNeighbourhood = self.SymmetryGroupNeighbourhood
-                                    , Tilt0  = self.Tilt0
-                                    , TiltF = self.TiltF)
+                                    , AngSamplingRateDeg=self.AngSamplingRateDeg[iterN]
+                                    , CtfGroupSubsetFileName=self.CtfGroupSubsetFileName
+                                    , DoCtfCorrection=self.DoCtfCorrection
+                                    , DocFileInputAngles=self.DocFileInputAngles[iterN - 1]
+                                    , DoParallel=self.DoParallel
+                                    , DoRestricSearchbyTiltAngle=self.DoRestricSearchbyTiltAngle
+                                    , MaxChangeInAngles=self.MaxChangeInAngles[iterN]
+                                    , maskedFileNamesIter=self.maskedFileNamesIters[iterN][refN]
+                                    , MpiJobSize=self.MpiJobSize
+                                    , NumberOfMpi=self.NumberOfMpi
+                                    , NumberOfThreads=self.NumberOfThreads
+                                    , OnlyWinner=self.OnlyWinner[iterN]
+                                    , PerturbProjectionDirections=self.PerturbProjectionDirections[iterN]
+                                    , ProjectLibraryRootName=self.ProjectLibraryRootNames[iterN][refN]
+                                    , SymmetryGroup=self.SymmetryGroup[iterN]
+                                    , SymmetryGroupNeighbourhood=self.SymmetryGroupNeighbourhood
+                                    , Tilt0=self.Tilt0
+                                    , TiltF=self.TiltF)
                 # projectionMatching    
                 #File with list of images and references
-                _VerifyFiles=[self.ProjMatchRootNames[iterN][refN]]
-                for i in range (1,self.NumberOfCtfGroups+1):
-                    _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.xmd")
+                _VerifyFiles = [self.ProjMatchRootNames[iterN][refN]]
+                for i in range (1, self.NumberOfCtfGroups + 1):
+                    _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) + "_sampling.xmd")
                     
                 _dataBase.insertStep('projection_matching', verifyfiles=_VerifyFiles,
-                                      AvailableMemory =self.AvailableMemory
-                                    , CtfGroupRootName = self.CtfGroupRootName
-                                    , CtfGroupDirectory = self.CtfGroupDirectory
-                                    , DoComputeResolution =self.DoComputeResolution[iterN]
-                                    , DoCtfCorrection = self.DoCtfCorrection
-                                    , DoScale =self.DoScale
-                                    , DoParallel = self.DoParallel
-                                    , InnerRadius =self.InnerRadius[iterN]
-                                    , MaxChangeOffset =self.MaxChangeOffset[iterN]
-                                    , MpiJobSize =self.MpiJobSize
-                                    , NumberOfCtfGroups =self.NumberOfCtfGroups
-                                    , NumberOfMpi =self.NumberOfMpi
-                                    , NumberOfThreads =self.NumberOfThreads
-                                    , OuterRadius =self.OuterRadius[iterN]
-                                    , PaddingFactor =self.PaddingFactor
-                                    , ProjectLibraryRootName =self.ProjectLibraryRootNames[iterN][refN]
-                                    , ProjMatchRootName =self.ProjMatchRootNames[iterN][refN]
-                                    , ReferenceIsCtfCorrected =self.ReferenceIsCtfCorrected[iterN]
-                                    , ScaleStep =self.ScaleStep[iterN]
-                                    , ScaleNumberOfSteps =self.ScaleNumberOfSteps[iterN]
+                                      AvailableMemory=self.AvailableMemory
+                                    , CtfGroupRootName=self.CtfGroupRootName
+                                    , CtfGroupDirectory=self.CtfGroupDirectory
+                                    , DoComputeResolution=self.DoComputeResolution[iterN]
+                                    , DoCtfCorrection=self.DoCtfCorrection
+                                    , DoScale=self.DoScale
+                                    , DoParallel=self.DoParallel
+                                    , InnerRadius=self.InnerRadius[iterN]
+                                    , MaxChangeOffset=self.MaxChangeOffset[iterN]
+                                    , MpiJobSize=self.MpiJobSize
+                                    , NumberOfCtfGroups=self.NumberOfCtfGroups
+                                    , NumberOfMpi=self.NumberOfMpi
+                                    , NumberOfThreads=self.NumberOfThreads
+                                    , OuterRadius=self.OuterRadius[iterN]
+                                    , PaddingFactor=self.PaddingFactor
+                                    , ProjectLibraryRootName=self.ProjectLibraryRootNames[iterN][refN]
+                                    , ProjMatchRootName=self.ProjMatchRootNames[iterN][refN]
+                                    , ReferenceIsCtfCorrected=self.ReferenceIsCtfCorrected[iterN]
+                                    , ScaleStep=self.ScaleStep[iterN]
+                                    , ScaleNumberOfSteps=self.ScaleNumberOfSteps[iterN]
                                     , Search5DShift=self.Search5DShift[iterN]
                                     , Search5DStep=self.Search5DStep[iterN]
                                     )
@@ -351,79 +366,77 @@ class ProtProjMatch(XmippProtocol):
             #if only one reference it just copy the docfile generated in the previous step
             _VerifyFiles = [self.DocFileInputAngles[iterN]]
             _dataBase.insertStep('assign_images_to_references', verifyfiles=_VerifyFiles
-                                     , DocFileInputAngles = self.DocFileInputAngles[iterN]#Output file with angles
-                                     , NumberOfCtfGroups  = self.NumberOfCtfGroups
-                                     , ProjMatchRootName  = self.ProjMatchRootNames[iterN]#LIST
-                                     , NumberOfReferences = self.numberOfReferences
+                                     , DocFileInputAngles=self.DocFileInputAngles[iterN]#Output file with angles
+                                     , NumberOfCtfGroups=self.NumberOfCtfGroups
+                                     , ProjMatchRootName=self.ProjMatchRootNames[iterN]#LIST
+                                     , NumberOfReferences=self.numberOfReferences
                          )
     
             _VerifyFiles = []
             id = _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
-                         , Action = "preprocessing"#
-                         , Align2DIterNr = self.Align2DIterNr[iterN]#
-                         , Align2dMaxChangeRot = self.Align2dMaxChangeRot[iterN]#
-                         , Align2dMaxChangeOffset = self.Align2dMaxChangeOffset[iterN]#
-                         , CtfGroupDirectory = self.CtfGroupDirectory#
-                         , CtfGroupRootName  = self.CtfGroupRootName#
-                         , DiscardPercentage = self.DiscardPercentage[iterN]#
-                         , DoAlign2D         = self.DoAlign2D[iterN]#
-                         , DoComputeResolution =self.DoComputeResolution[iterN]
-                         , DoCtfCorrection = self.DoCtfCorrection#
-                         , DocFileInputAngles = self.DocFileInputAngles[iterN]#
-                         , DoParallel = self.DoParallel#
-                         , DoSplitReferenceImages =self.DoSplitReferenceImages[iterN]#
-                         , InnerRadius =self.InnerRadius[iterN]#
-                         , MaxChangeOffset =self.MaxChangeOffset[iterN]#
-                         , MinimumCrossCorrelation =self.MinimumCrossCorrelation[iterN]#
-                         , NumberOfReferences =self.numberOfReferences#
-                         , NumberOfCtfGroups = self.NumberOfCtfGroups#
-                         , NumberOfMpi =self.NumberOfMpi#
-                         , NumberOfThreads =self.NumberOfThreads#
-                         , PaddingFactor =self.PaddingFactor#
-                         , ProjectLibraryRootName ="DUMMY"#
-                         , ProjMatchRootName ="DUMMY"#
-                         , refN =refN
+                         , Align2DIterNr=self.Align2DIterNr[iterN]#
+                         , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
+                         , Align2dMaxChangeOffset=self.Align2dMaxChangeOffset[iterN]#
+                         , CtfGroupDirectory=self.CtfGroupDirectory#
+                         , CtfGroupRootName=self.CtfGroupRootName#
+                         , DiscardPercentage=self.DiscardPercentage[iterN]#
+                         , DoAlign2D=self.DoAlign2D[iterN]#
+                         , DoComputeResolution=self.DoComputeResolution[iterN]
+                         , DoCtfCorrection=self.DoCtfCorrection#
+                         , DocFileInputAngles=self.DocFileInputAngles[iterN]#
+                         , DoParallel=self.DoParallel#
+                         , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
+                         , InnerRadius=self.InnerRadius[iterN]#
+                         , MaxChangeOffset=self.MaxChangeOffset[iterN]#
+                         , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
+                         , NumberOfReferences=self.numberOfReferences#
+                         , NumberOfCtfGroups=self.NumberOfCtfGroups#
+                         , NumberOfMpi=self.NumberOfMpi#
+                         , NumberOfThreads=self.NumberOfThreads#
+                         , PaddingFactor=self.PaddingFactor#
+                         , ProjectLibraryRootName="DUMMY"#
+                         , ProjMatchRootName="DUMMY"#
+                         , refN=refN
                          )
             #align images, not possible for ctf groups
             for refN in range(1, self.numberOfReferences + 1):
                 _VerifyFiles = []
                 id = _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
-                         , Action = "add_data"#
-                         , Align2DIterNr = self.Align2DIterNr[iterN]#
-                         , Align2dMaxChangeRot = self.Align2dMaxChangeRot[iterN]#
-                         , Align2dMaxChangeOffset = self.Align2dMaxChangeOffset[iterN]#
-                         , CtfGroupDirectory = self.CtfGroupDirectory#
-                         , CtfGroupRootName  = self.CtfGroupRootName#
-                         , DiscardPercentage = self.DiscardPercentage[iterN]#
-                         , DoAlign2D         = self.DoAlign2D[iterN]#
-                         , DoComputeResolution =self.DoComputeResolution[iterN]
-                         , DoCtfCorrection = self.DoCtfCorrection#
-                         , DocFileInputAngles = self.DocFileInputAngles[iterN]#
-                         , DoParallel = self.DoParallel#
-                         , DoSplitReferenceImages =self.DoSplitReferenceImages[iterN]#
-                         , InnerRadius =self.InnerRadius[iterN]#
-                         , MaxChangeOffset =self.MaxChangeOffset[iterN]#
-                         , MinimumCrossCorrelation =self.MinimumCrossCorrelation[iterN]#
-                         , NumberOfReferences =self.numberOfReferences#
-                         , NumberOfCtfGroups = self.NumberOfCtfGroups#
-                         , NumberOfMpi =self.NumberOfMpi#
-                         , NumberOfThreads =self.NumberOfThreads#
-                         , PaddingFactor =self.PaddingFactor#
-                         , ProjectLibraryRootName =self.ProjectLibraryRootNames[iterN][refN]#
-                         , ProjMatchRootName =self.ProjMatchRootNamesWithoutRef[iterN]#
-                         , refN =refN
+                         , Align2DIterNr=self.Align2DIterNr[iterN]#
+                         , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
+                         , Align2dMaxChangeOffset=self.Align2dMaxChangeOffset[iterN]#
+                         , CtfGroupDirectory=self.CtfGroupDirectory#
+                         , CtfGroupRootName=self.CtfGroupRootName#
+                         , DiscardPercentage=self.DiscardPercentage[iterN]#
+                         , DoAlign2D=self.DoAlign2D[iterN]#
+                         , DoComputeResolution=self.DoComputeResolution[iterN]
+                         , DoCtfCorrection=self.DoCtfCorrection#
+                         , DocFileInputAngles=self.DocFileInputAngles[iterN]#
+                         , DoParallel=self.DoParallel#
+                         , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
+                         , InnerRadius=self.InnerRadius[iterN]#
+                         , MaxChangeOffset=self.MaxChangeOffset[iterN]#
+                         , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
+                         , NumberOfReferences=self.numberOfReferences#
+                         , NumberOfCtfGroups=self.NumberOfCtfGroups#
+                         , NumberOfMpi=self.NumberOfMpi#
+                         , NumberOfThreads=self.NumberOfThreads#
+                         , PaddingFactor=self.PaddingFactor#
+                         , ProjectLibraryRootName=self.ProjectLibraryRootNames[iterN][refN]#
+                         , ProjMatchRootName=self.ProjMatchRootNamesWithoutRef[iterN][refN]#
+                         , refN=refN
                          )
                 
                 ##############REMOVE SHUTIL.COPY
                 # Mask reference volume
                 
                 id = _dataBase.insertStep('executeMask', verifyfiles=[self.maskedFileNamesIters[iterN][refN]]
-                                                , DoMask =             self.DoMask
-                                                , DoSphericalMask =    self.DoSphericalMask
-                                                , maskedFileName =     self.maskedFileNamesIters[iterN][refN]
-                                                , maskRadius =         self.MaskRadius
-                                                , reconstructedFileName = self.reconstructedFileNamesIters[iterN - 1][refN]
-                                                , userSuppliedMask =   self.MaskFileName)
+                                                , DoMask=self.DoMask
+                                                , DoSphericalMask=self.DoSphericalMask
+                                                , maskedFileName=self.maskedFileNamesIters[iterN][refN]
+                                                , maskRadius=self.MaskRadius
+                                                , reconstructedFileName=self.reconstructedFileNamesIters[iterN - 1][refN]
+                                                , userSuppliedMask=self.MaskFileName)
     
                  #reconstruct
                  #resolution
@@ -434,12 +447,12 @@ class ProtProjMatch(XmippProtocol):
     ########################            
             #REMOVE
             #Create directory
-            _dataBase.insertStep('createDir', path =self.getIterDirName(iterN + 1))
+            _dataBase.insertStep('createDir', path=self.getIterDirName(iterN + 1))
             #command = "shutil.copy('%s','%s');dummy" % (self.ReferenceFileNames[0], self.reconstructedFileNamesIters[iterN][refN])
                 
             #id = _dataBase.insertStep(command, self.reconstructedFileNamesIters[iterN][refN])
-            id = _dataBase.insertStep('copyFile', source = self.ReferenceFileNames[refN -1]
-                                          , dest = self.reconstructedFileNamesIters[iterN][refN])
+            id = _dataBase.insertStep('copyFile', source=self.ReferenceFileNames[refN - 1]
+                                          , dest=self.reconstructedFileNamesIters[iterN][refN])
         
         #command = "print 'ALL DONE';"
         #id = _dataBase.insertStep(command)
