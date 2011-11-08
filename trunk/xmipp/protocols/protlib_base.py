@@ -319,7 +319,8 @@ class XmippProtocol(object):
         #Redirecting standard output and error to files
         self.fOut = open(self.Out, 'a')
         self.fErr = open(self.Err, 'a')
-        self.stderr = sys.stderr # backup stderr
+        self.stderr = sys.stderr 
+        #Comment next to lines to redirect output to console
         sys.stdout = self.fOut
         sys.stderr = self.fErr
         self.Log = XmippLog(self.LogFile)
