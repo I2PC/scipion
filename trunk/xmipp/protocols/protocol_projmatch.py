@@ -374,6 +374,7 @@ class ProtProjMatch(XmippProtocol):
     
             _VerifyFiles = []
             id = _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
+                         , Action='preprocessing'#
                          , Align2DIterNr=self.Align2DIterNr[iterN]#
                          , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
                          , Align2dMaxChangeOffset=self.Align2dMaxChangeOffset[iterN]#
@@ -402,6 +403,7 @@ class ProtProjMatch(XmippProtocol):
             for refN in range(1, self.numberOfReferences + 1):
                 _VerifyFiles = []
                 id = _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
+                         , Action='processing'#
                          , Align2DIterNr=self.Align2DIterNr[iterN]#
                          , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
                          , Align2dMaxChangeOffset=self.Align2dMaxChangeOffset[iterN]#
@@ -427,9 +429,36 @@ class ProtProjMatch(XmippProtocol):
                          , refN=refN
                          )
                 
-                ##############REMOVE SHUTIL.COPY
+            _VerifyFiles = []
+            id = _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
+                         , Action='postprocessing'#
+                         , Align2DIterNr=self.Align2DIterNr[iterN]#
+                         , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
+                         , Align2dMaxChangeOffset=self.Align2dMaxChangeOffset[iterN]#
+                         , CtfGroupDirectory=self.CtfGroupDirectory#
+                         , CtfGroupRootName=self.CtfGroupRootName#
+                         , DiscardPercentage=self.DiscardPercentage[iterN]#
+                         , DoAlign2D=self.DoAlign2D[iterN]#
+                         , DoComputeResolution=self.DoComputeResolution[iterN]
+                         , DoCtfCorrection=self.DoCtfCorrection#
+                         , DocFileInputAngles=self.DocFileInputAngles[iterN]#
+                         , DoParallel=self.DoParallel#
+                         , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
+                         , InnerRadius=self.InnerRadius[iterN]#
+                         , MaxChangeOffset=self.MaxChangeOffset[iterN]#
+                         , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
+                         , NumberOfReferences=self.numberOfReferences#
+                         , NumberOfCtfGroups=self.NumberOfCtfGroups#
+                         , NumberOfMpi=self.NumberOfMpi#
+                         , NumberOfThreads=self.NumberOfThreads#
+                         , PaddingFactor=self.PaddingFactor#
+                         , ProjectLibraryRootName="DUMMY"#
+                         , ProjMatchRootName="DUMMY"#
+                         , refN=refN
+                         )
+
+            for refN in range(1, self.numberOfReferences + 1):
                 # Mask reference volume
-                
                 id = _dataBase.insertStep('executeMask', verifyfiles=[self.maskedFileNamesIters[iterN][refN]]
                                                 , DoMask=self.DoMask
                                                 , DoSphericalMask=self.DoSphericalMask
