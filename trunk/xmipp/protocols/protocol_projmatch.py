@@ -321,8 +321,6 @@ class ProtProjMatch(XmippProtocol):
                                     , MaxChangeInAngles=self.MaxChangeInAngles[iterN]
                                     , maskedFileNamesIter=self.maskedFileNamesIters[iterN][refN]
                                     , MpiJobSize=self.MpiJobSize
-                                    , NumberOfMpi=self.NumberOfMpi
-                                    , NumberOfThreads=self.NumberOfThreads
                                     , OnlyWinner=self.OnlyWinner[iterN]
                                     , PerturbProjectionDirections=self.PerturbProjectionDirections[iterN]
                                     , ProjectLibraryRootName=self.ProjectLibraryRootNames[iterN][refN]
@@ -421,8 +419,6 @@ class ProtProjMatch(XmippProtocol):
                          , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
                          , NumberOfReferences=self.numberOfReferences#
                          , NumberOfCtfGroups=self.NumberOfCtfGroups#
-                         , NumberOfMpi=self.NumberOfMpi#
-                         , NumberOfThreads=self.NumberOfThreads#
                          , PaddingFactor=self.PaddingFactor#
                          , ProjectLibraryRootName=self.ProjectLibraryRootNames[iterN][refN]#
                          , ProjMatchRootName=self.ProjMatchRootNamesWithoutRef[iterN][refN]#
@@ -449,8 +445,6 @@ class ProtProjMatch(XmippProtocol):
                          , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
                          , NumberOfReferences=self.numberOfReferences#
                          , NumberOfCtfGroups=self.NumberOfCtfGroups#
-                         , NumberOfMpi=self.NumberOfMpi#
-                         , NumberOfThreads=self.NumberOfThreads#
                          , PaddingFactor=self.PaddingFactor#
                          , ProjectLibraryRootName="DUMMY"#
                          , ProjMatchRootName="DUMMY"#
