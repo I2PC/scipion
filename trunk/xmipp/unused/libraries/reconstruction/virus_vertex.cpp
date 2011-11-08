@@ -270,6 +270,7 @@ void VirusVertex::assignSymmetryMatricesToVertex()
         SL.get_matrices(isym, L, R);
         R.resize(3, 3);
         R_repository.push_back(R);
+//std::cerr<< R << std::endl;
     }
 
     //#define CREATEICOSAHEDRALPHANTOM
