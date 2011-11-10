@@ -354,9 +354,8 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void saveData()
 	{
-		persistFamilies();
+		super.saveData();
 		persistMicrographs();
-		persistMacros();
 	}
 
 	public int getAutomaticNumber(Family f, double threshold)

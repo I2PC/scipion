@@ -5,12 +5,8 @@ import ij.Executer;
 import ij.ImageListener;
 import ij.ImagePlus;
 import ij.plugin.frame.Recorder;
-
 import java.awt.Color;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,36 +14,36 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-
 import particlepicker.training.model.FamilyState;
-import particlepicker.training.model.MicrographFamilyState;
 import particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 import xmipp.Program;
-import xmipp.Particle;
 
 public abstract class ParticlePicker
 {
 
 	private String familiesfile;
+	private String macrosfile;
 	private static Logger logger;
 	private String outputdir = ".";
 	private boolean changed;
 	protected List<Family> families;
 	private FamilyState mode;
-	private String commands;
+	private List<Filter> filters;
 	private String command;
 
 	public ParticlePicker(String outputdir, FamilyState mode)
 	{
-		commands = "";
+		filters = new ArrayList<Filter>();
 		this.outputdir = outputdir;
 		this.mode = mode;
 		this.families = new ArrayList<Family>();
 		this.familiesfile = getOutputPath("families.xmd");
+		this.macrosfile = getOutputPath("macros.xmd");
+		loadMacros();
 		loadFamilies();
-
+		
 		Recorder.record = true;
 
 		// detecting if a command is thrown by ImageJ
@@ -71,7 +67,7 @@ public abstract class ParticlePicker
 					String options = "";
 					if (Recorder.getCommandOptions() != null)
 						options = Recorder.getCommandOptions();
-					addCommand(command, options);
+					addFilter(command, options);
 					command = null;
 				}
 			}
@@ -92,20 +88,21 @@ public abstract class ParticlePicker
 		});
 	}
 
-	public void addCommand(String command, String options)
+	public void addFilter(String command, String options)
 	{
-		commands += String.format("run(\"%s\", \"%s\");\n", command, options);
-		System.out.println(commands);
+		Filter f = new Filter(command, options);
+		filters.add(f);
+		System.out.println(getFilters());
 	}
 
-	public String getCommands()
+	public String getFilters()
 	{
-		return commands;
-	}
-
-	public void loadMacros()
-	{
-
+		
+		String macros = "";
+		for(Filter f: filters)
+			macros += String.format("run(\"%s\", \"%s\");\n", f.getCommand(), f.getOptions());
+		System.out.println(macros);
+		return macros;
 	}
 
 	public void setChanged(boolean changed)
@@ -191,14 +188,13 @@ public abstract class ParticlePicker
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
-
 	}
 
 	public void loadFamilies()
 	{
 		families.clear();
-		String filename = familiesfile;
-		if (!new File(filename).exists())
+		String file = familiesfile;
+		if (!new File(file).exists())
 		{
 			families.add(Family.getDefaultFamily());
 			return;
@@ -210,7 +206,7 @@ public abstract class ParticlePicker
 		String name;
 		try
 		{
-			MetaData md = new MetaData(filename);
+			MetaData md = new MetaData(file);
 			long[] ids = md.findObjects();
 			for (long id : ids)
 			{
@@ -226,7 +222,7 @@ public abstract class ParticlePicker
 				families.add(family);
 			}
 			if (families.size() == 0)
-				throw new IllegalArgumentException(String.format("No families specified on %s", filename));
+				throw new IllegalArgumentException(String.format("No families specified on %s", file));
 		}
 		catch (Exception e)
 		{
@@ -287,23 +283,66 @@ public abstract class ParticlePicker
 		families.remove(family);
 	}
 
-	public abstract void saveData();
+	public void saveData(){
+		persistMacros();
+		persistFamilies();
+		
+	}
 
 	public abstract int getManualParticlesNumber(Family f);
 
 	public void persistMacros()
 	{
-		String file = getOutputPath("macros.txt");
+		long id;
+		String file = macrosfile;
+		String options;
 		try
 		{
-			BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-			writer.append(commands);
-			writer.close();
+			MetaData md = new MetaData();
+			for (Filter f: filters)
+			{
+				id = md.addObject();
+				md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, f.getCommand(), id);
+				options = (f.getOptions() == null || f.getOptions().equals(""))? "NULL": f.getOptions();
+				md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, options, id);
+			}
+			md.write(file);
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+
+	}
+	
+	public void loadMacros()
+	{
+		filters.clear();
+		String file = macrosfile;
+		if (!new File(file).exists())
+			return;
+
+		String command, options;
+		try
+		{
+			MetaData md = new MetaData(file);
+			long[] ids = md.findObjects();
+			for (long id : ids)
+			{
+				command = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, id);
+				options = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id);
+				if(options.equals("NULL"))
+					options = "";
+				filters.add(new Filter(command, options));
+				
+			}
+			System.out.println(getFilters());
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 

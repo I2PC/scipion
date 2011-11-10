@@ -166,8 +166,7 @@ public class TiltPairPicker extends ParticlePicker
 
 	public void saveData()
 	{
-		persistFamilies();
-		persistMacros();
+		super.saveData();
 		long id;
 		try
 		{

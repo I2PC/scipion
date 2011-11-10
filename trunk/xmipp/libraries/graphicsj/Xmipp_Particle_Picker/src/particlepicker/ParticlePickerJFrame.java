@@ -90,7 +90,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 					IJ.run("Install...", "install=" + TrainingPicker.getXmippPath("external/imagej/macros/ParticlePicker.txt"));
 					IJ.setTool(tool);
 				}
-				// IJ.getInstance().setVisible(true);
 			}
 		});
 		savemi = new JMenuItem("Save");
