@@ -88,5 +88,5 @@ int main(int argc, char *argv[])
 {
     ProgPSFXrCreate program;
     program.read(argc, argv);
-    program.tryRun();
+    return program.tryRun();
 }
