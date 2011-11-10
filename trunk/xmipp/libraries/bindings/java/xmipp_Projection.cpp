@@ -61,7 +61,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
 			try {
 				int w = XSIZE(projection->data);
 				int h = YSIZE(projection->data);
-				projectVolume(volume->data, *projection, h, w, (double) rot, (double) tilt, (double) pshi);
+				projectVolume((*volume)(), *projection, h, w, (double) rot, (double) tilt, (double) pshi);
 			} catch (XmippError xe) {
 				msg = xe.getDefaultMessage();
 			} catch (std::exception& e) {

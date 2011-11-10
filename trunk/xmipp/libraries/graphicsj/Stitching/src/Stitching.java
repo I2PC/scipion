@@ -1,6 +1,5 @@
 
 import ij.IJ;
-import ij.ImagePlus;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -36,26 +35,27 @@ public class Stitching {
     int X = 0, Y = 0;
 
     public static void main(String args[]) {
-        //String basedir = "/gpfs/fs1/home/bioinfo/jvega/";
-        String basedir = "/home/juanjo/Desktop/";
+        /*        //String basedir = "/gpfs/fs1/home/bioinfo/jvega/"; // crunchy
+        //String basedir = "/Volumes/Data/jvega/Desktop/"; // galileo-mac
+        String basedir = "/home/jvega/Escritorio/"; // galileo-linux
+        //String basedir = "/home/juanjo/Escritorio/";  // casa
         String files[] = {
-            basedir + "left.tif",
-            //basedir + "left_2.tif",
-            basedir + "right.tif"
+        basedir + "left.tif",
+        //basedir + "left_2.tif",
+        basedir + "right.tif",
         };
         String properties = "stitching.properties";
-        String output = basedir + "stitching.xmp";
+        String output = basedir + "stitching.tif";
         String stackfile = basedir + "stitching.stk";
-
         String arguments[] = new String[]{
-            "-" + OPTION_INPUT_FILE, files[0], files[1],
-            "-" + OPTION_PROPERTIES_FILE, properties,
-            "-" + OPTION_OUTPUT_FILE, output, //"-" + OPTION_GENERATESTACK, stackfile,
-        //"-" + OPTION_X, "100",
-        //"-" + OPTION_Y, "-50"
-        };
+        "-" + OPTION_INPUT_FILE, files[0], files[1],
+        "-" + OPTION_PROPERTIES_FILE, properties,
+        "-" + OPTION_OUTPUT_FILE, output, "-" + OPTION_GENERATESTACK, stackfile,
+        "-" + OPTION_X, "100",
+        "-" + OPTION_Y, "-50"
+        };*/
 
-        Stitching stitching = new Stitching(arguments);
+        Stitching stitching = new Stitching(args);
     }
 
     public Stitching(String args[]) {
@@ -141,9 +141,8 @@ public class Stitching {
         options.addOption(OPTION_X, true, "");
         options.addOption(OPTION_Y, true, "");
 
-        // It should be able to handle multiple files.
+        // Multiple input files.
         options.getOption(OPTION_INPUT_FILE).setArgs(Integer.MAX_VALUE);
-//        options.getOption(OPTION_PROPERTIES_FILE).setOptionalArg(true);
 
         try {
             BasicParser parser = new BasicParser();

@@ -8,23 +8,23 @@
 JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_storeIds
 (JNIEnv *env, jclass cls)
 {
-    //ImageGeneric_peerId = env->GetFieldID(cls, "peer", "J");
+	//ImageGeneric_peerId = env->GetFieldID(cls, "peer", "J");
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_create
 (JNIEnv *env, jobject jobj)
 {
-    //ImageGeneric *image = new ImageGeneric();
-    //env->SetLongField(jobj, ImageGeneric_peerId, (long)image);
+	//ImageGeneric *image = new ImageGeneric();
+	//env->SetLongField(jobj, ImageGeneric_peerId, (long)image);
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_destroy
 (JNIEnv *env, jobject jobj)
 {
-    //ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-    //delete image;
-    //image = NULL;
-    //env->SetLongField(jobj, ImageGeneric_peerId, (long)image);
+	//ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+	//delete image;
+	//image = NULL;
+	//env->SetLongField(jobj, ImageGeneric_peerId, (long)image);
 }
 
 /*
@@ -35,52 +35,52 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_destroy
 JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readHeader
 (JNIEnv * env, jobject obj, jstring filename)
 {
-    String msg = "";
-    try
-    {
-        const char *fnStr = env->GetStringUTFChars(filename, false);
-        int x, y, z;
-        DataType dt;
-        size_t n;
+	String msg = "";
+	try
+	{
+		const char *fnStr = env->GetStringUTFChars(filename, false);
+		int x, y, z;
+		DataType dt;
+		size_t n;
 
-        SingleImgSize(fnStr, x, y, z, n, dt);
+		SingleImgSize(fnStr, x, y, z, n, dt);
 
-        //Set object properties
-        jclass class_ = env->GetObjectClass(obj);
+		//Set object properties
+		jclass class_ = env->GetObjectClass(obj);
 
-        jfieldID fieldId = env->GetFieldID(class_, "xSize", "I");
-        env->SetIntField(obj, fieldId, x);
+		jfieldID fieldId = env->GetFieldID(class_, "xSize", "I");
+		env->SetIntField(obj, fieldId, x);
 
-        fieldId = env->GetFieldID(class_, "ySize", "I");
-        env->SetIntField(obj, fieldId, y);
+		fieldId = env->GetFieldID(class_, "ySize", "I");
+		env->SetIntField(obj, fieldId, y);
 
-        fieldId = env->GetFieldID(class_, "zSize", "I");
-        env->SetIntField(obj, fieldId, z);
+		fieldId = env->GetFieldID(class_, "zSize", "I");
+		env->SetIntField(obj, fieldId, z);
 
-        fieldId = env->GetFieldID(class_, "nSize", "J");
-        env->SetIntField(obj, fieldId, n);
+		fieldId = env->GetFieldID(class_, "nSize", "J");
+		env->SetIntField(obj, fieldId, n);
 
-        fieldId = env->GetFieldID(class_, "dataType", "I");
-        env->SetIntField(obj, fieldId, (int)dt);
-    }
-    catch (XmippError &xe)
-    {
-        msg = xe.getDefaultMessage();
-    }
-    catch (std::exception& e)
-    {
-        msg = e.what();
-    }
-    catch (...)
-    {
-        msg = "Unhandled exception";
-    }
+		fieldId = env->GetFieldID(class_, "dataType", "I");
+		env->SetIntField(obj, fieldId, (int)dt);
+	}
+	catch (XmippError &xe)
+	{
+		msg = xe.getDefaultMessage();
+	}
+	catch (std::exception& e)
+	{
+		msg = e.what();
+	}
+	catch (...)
+	{
+		msg = "Unhandled exception";
+	}
 
-    // If there was an exception, sends it to java environment.
-    if(!msg.empty())
-    {
-        handleXmippException(env, msg);
-    }
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty())
+	{
+		handleXmippException(env, msg);
+	}
 }
 
 /*
@@ -88,75 +88,65 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readHeader
  * Method:    getArrayByte
  * Signature: (Ljava/lang/String;IIIJ)[F
  */
-JNIEXPORT jbyteArray JNICALL Java_xmipp_ImageGeneric_getArrayByte(
-    JNIEnv * env, jclass class_, jstring filename, jint jx, jint jy,
-    jint jz, jlong jn, jint datatype)
-{
-    String msg = "";
-    try
-    {
-        const char *fnStr = env->GetStringUTFChars(filename, false);
-        jbyteArray array;
-        size_t size;
-        //Image<char> image;
-        switch (datatype)
-        {
-        case UChar:
-            {
-                Image<unsigned char> image;
-                image.readOrReadPreview(fnStr, jx, jy, jz, jn, true);
-                size = image.getSize();
-                array = env->NewByteArray(size);
-                env->SetByteArrayRegion(array, 0, size, (jbyte*)MULTIDIM_ARRAY(image.data));
-            }
-            break;
-        case SChar:
-            {
-                Image<char> image;
-                image.readOrReadPreview(fnStr, jx, jy, jz, jn, true);
-                size = image.getSize();
-                array = env->NewByteArray(size);
-                unsigned char * buffer = new unsigned char[rw_max_page_size];
-                char * imageArray = MULTIDIM_ARRAY(image.data);
-                size_t page_size = rw_max_page_size;
+JNIEXPORT jbyteArray JNICALL Java_xmipp_ImageGeneric_getArrayByte(JNIEnv * env,
+		jclass class_, jstring filename, jint jx, jint jy, jint jz, jlong jn,
+		jint datatype) {
+	String msg = "";
+	try {
+		const char *fnStr = env->GetStringUTFChars(filename, false);
+		jbyteArray array;
+		size_t size;
+		//Image<char> image;
+		switch (datatype) {
+		case UChar: {
+			Image<unsigned char> image;
+			image.readOrReadPreview(fnStr, jx, jy, jz, jn, true);
+			size = image.getSize();
+			array = env->NewByteArray(size);
+			env->SetByteArrayRegion(array, 0, size,
+					(jbyte*) MULTIDIM_ARRAY(image.data));
+		}
+			break;
+		case SChar: {
+			Image<char> image;
+			image.readOrReadPreview(fnStr, jx, jy, jz, jn, true);
+			size = image.getSize();
+			array = env->NewByteArray(size);
+			unsigned char * buffer = new unsigned char[rw_max_page_size];
+			char * imageArray = MULTIDIM_ARRAY(image.data);
+			size_t page_size = rw_max_page_size;
 
-                for (size_t written = 0; written < size; written += page_size )
-                {
-                    page_size = std::min(page_size, size - written);
-                    char * iter = imageArray + written;
+			for (size_t written = 0; written < size; written += page_size) {
+				page_size = std::min(page_size, size - written);
+				char * iter = imageArray + written;
 
-                    for (size_t k = 0; k < page_size; ++k)
-                      buffer[k] = iter[k] - CHAR_MIN;
+				for (size_t k = 0; k < page_size; ++k)
+					buffer[k] = iter[k] - CHAR_MIN;
 
-                    env->SetByteArrayRegion(array, written, page_size, (jbyte*)buffer);
-                }
+				env->SetByteArrayRegion(array, written, page_size,
+						(jbyte*) buffer);
+			}
 
-            }
-            break;
-        default:
-            REPORT_ERROR(ERR_ARG_INCORRECT,
-                         (String)"Java_xmipp_ImageGeneric_getArrayByte: reading invalid image datatype: " + datatype2Str((DataType)datatype));
-        }
-        return array;
-    }
-    catch (XmippError &xe)
-    {
-        msg = xe.getDefaultMessage();
-    }
-    catch (std::exception &e)
-    {
-        msg = e.what();
-    }
-    catch (...)
-    {
-        msg = "Unhandled exception";
-    }
+		}
+			break;
+		default:
+			REPORT_ERROR(
+					ERR_ARG_INCORRECT,
+					(String)"Java_xmipp_ImageGeneric_getArrayByte: reading invalid image datatype: " + datatype2Str((DataType)datatype));
+		}
+		return array;
+	} catch (XmippError &xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception &e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
 
-    // If there was an exception, sends it to java environment.
-    if (!msg.empty())
-    {
-        handleXmippException(env, msg);
-    }
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
 }
 
 /*
@@ -165,43 +155,34 @@ JNIEXPORT jbyteArray JNICALL Java_xmipp_ImageGeneric_getArrayByte(
  * Signature: (Ljava/lang/String;IIIJ)[S
  */
 JNIEXPORT jshortArray JNICALL Java_xmipp_ImageGeneric_getArrayShort(
-    JNIEnv * env, jclass class_, jstring filename, jint jx, jint jy,
-    jint jz, jlong jn, jint datatype)
-{
-    String msg = "";
+		JNIEnv * env, jclass class_, jstring filename, jint jx, jint jy,
+		jint jz, jlong jn, jint datatype) {
+	String msg = "";
 
-    try
-    {
-        const char *fnStr = env->GetStringUTFChars(filename, false);
-        Image<short> image;
+	try {
+		const char *fnStr = env->GetStringUTFChars(filename, false);
+		Image<short> image;
 
-        image.readOrReadPreview(fnStr, jx, jy, jz, jn, true);
+		image.readOrReadPreview(fnStr, jx, jy, jz, jn, true);
 
-        size_t size = image.getSize();
+		size_t size = image.getSize();
 
-        jshortArray array = env->NewShortArray(size);
-        env->SetShortArrayRegion(array, 0, size, MULTIDIM_ARRAY(image.data));
+		jshortArray array = env->NewShortArray(size);
+		env->SetShortArrayRegion(array, 0, size, MULTIDIM_ARRAY(image.data));
 
-        return array;
-    }
-    catch (XmippError &xe)
-    {
-        msg = xe.getDefaultMessage();
-    }
-    catch (std::exception& e)
-    {
-        msg = e.what();
-    }
-    catch (...)
-    {
-        msg = "Unhandled exception";
-    }
+		return array;
+	} catch (XmippError &xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
 
-    // If there was an exception, sends it to java environment.
-    if (!msg.empty())
-    {
-        handleXmippException(env, msg);
-    }
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
 }
 
 /*
@@ -210,40 +191,31 @@ JNIEXPORT jshortArray JNICALL Java_xmipp_ImageGeneric_getArrayShort(
  * Signature: (Ljava/lang/String;IIIJ)[F
  */
 JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat(
-    JNIEnv * env, jclass class_, jstring filename, jint jx, jint jy,
-    jint jz, jlong jn, jint datatype)
-{
-    String msg = "";
-    try
-    {
-        const char *fnStr = env->GetStringUTFChars(filename, false);
-        Image<float> image;
+		JNIEnv * env, jclass class_, jstring filename, jint jx, jint jy,
+		jint jz, jlong jn, jint datatype) {
+	String msg = "";
+	try {
+		const char *fnStr = env->GetStringUTFChars(filename, false);
+		Image<float> image;
 
-        image.readOrReadPreview(fnStr, jx, jy, jz, jn, true);
-        //image.data.printShape(std::cerr);
-        size_t size = image.getSize();
-        jfloatArray array = env->NewFloatArray(size);
-        env->SetFloatArrayRegion(array, 0, size, MULTIDIM_ARRAY(image.data));
-        return array;
-    }
-    catch (XmippError &xe)
-    {
-        msg = xe.getDefaultMessage();
-    }
-    catch (std::exception& e)
-    {
-        msg = e.what();
-    }
-    catch (...)
-    {
-        msg = "Unhandled exception";
-    }
+		image.readOrReadPreview(fnStr, jx, jy, jz, jn, true);
+		//image.data.printShape(std::cerr);
+		size_t size = image.getSize();
+		jfloatArray array = env->NewFloatArray(size);
+		env->SetFloatArrayRegion(array, 0, size, MULTIDIM_ARRAY(image.data));
+		return array;
+	} catch (XmippError &xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
 
-    // If there was an exception, sends it to java environment.
-    if (!msg.empty())
-    {
-        handleXmippException(env, msg);
-    }
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
 }
 
 //JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_read
@@ -274,45 +246,45 @@ JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat(
 //}
 
 JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageGeneric_getStatistics(
-    JNIEnv *env, jobject jobj)
-{
-    // std::string msg = "";
-    // ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-    //
-    // if (image != NULL) {
-    //  try {
-    //   double avg, stddev, min, max;
-    //
-    //   (*image->data).computeStats(avg, stddev, min, max);
-    //
-    //   // Copies vector into array.
-    //   double statistics[4];
-    //   statistics[0] = min;
-    //   statistics[1] = max;
-    //   statistics[2] = avg;
-    //   statistics[3] = stddev;
-    //
-    //   // Sets array value
-    //   jdoubleArray array = env->NewDoubleArray(4);
-    //   env->SetDoubleArrayRegion(array, 0, 4, statistics);
-    //
-    //   return array;
-    //  } catch (XmippError xe) {
-    //   msg = xe.getDefaultMessage();
-    //  } catch (std::exception& e) {
-    //   msg = e.what();
-    //  } catch (...) {
-    //   msg = "Unhandled exception";
-    //  }
-    // } else {
-    //  msg = "Metadata is null";
-    // }
-    //
-    // // If there was an exception, sends it to java environment.
-    // if (!msg.empty()) {
-    //  handleXmippException(env, msg);
-    // }
+		JNIEnv *env, jobject jobj) {
+	std::string msg = "";
+	ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
-    return NULL;
+	if (image != NULL) {
+		try {
+			double avg, stddev, min, max;
+std::cout << " ****************** Shape: " << std::endln;
+		(*image)().printShape()
+			(*image)().computeStats(avg, stddev, min, max);
+std::cout << "2" << std::endl;
+			// Copies vector into array.
+			double statistics[4];
+			statistics[0] = min;
+			statistics[1] = max;
+			statistics[2] = avg;
+			statistics[3] = stddev;
+
+			// Sets array value
+			jdoubleArray array = env->NewDoubleArray(4);
+			env->SetDoubleArrayRegion(array, 0, 4, statistics);
+
+			return array;
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Metadata is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return NULL;
 }
 

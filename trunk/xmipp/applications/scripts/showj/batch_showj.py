@@ -1,6 +1,6 @@
 #!/usr/bin/env xmipp_python
 
-from protlib_xmipp import ScriptPluginIJ
+from protlib_xmipp import ScriptPluginIJ, estimateMemory
 
 class ScriptShowJ(ScriptPluginIJ):
 	def __init__(self):

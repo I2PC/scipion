@@ -85,7 +85,6 @@ public class ImageGeneric {
     }
     
     private static native float[] getArrayFloat(String filename, int x, int y, int z, long N, int datatype);
-        
 
     public native double[] getStatistics() throws Exception;
 

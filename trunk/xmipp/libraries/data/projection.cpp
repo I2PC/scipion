@@ -365,6 +365,8 @@ void projectVolume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
     P.reset(Ydim, Xdim);
     P.set_angles(rot, tilt, psi);
 
+    std::cout << "1" << std::endl;
+    std::cout << V << std::endl;
     // Compute the distance for this line crossing one voxel
     int x_0 = STARTINGX(V), x_F = FINISHINGX(V);
     int y_0 = STARTINGY(V), y_F = FINISHINGY(V);

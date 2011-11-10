@@ -106,16 +106,19 @@ class ScriptIJBase(XmippScript):
     def defineParams(self):
         self.addParamsLine('  --input <...>                         : Input files to show');
         self.addParamsLine('         alias -i;');
-        self.addParamsLine('  [--memory <mem="512m">]              : Memory ammount for JVM');
+        self.addParamsLine('  [--memory <mem>]              : Memory ammount for JVM');
         self.addParamsLine('         alias -m;');
         self.defineOtherParams()
             
     def readParams(self):
-        self.memory = self.getParam('--memory')
-        if self.memory == "512m":
-            print "No memory size provided. Using default: " + self.memory
+        inputFiles = self.getListParam('-i')
+        if self.checkParam('--memory'):
+            self.memory = self.getParam('--memory')
+	else:
+	    self.memory = '%dm' % estimateImageSize(inputFiles[0])
+            print "No memory size provided. Estimated: " + self.memory
 
-        self.args = "-i %s" % ' '.join(self.getListParam('-i'))
+        self.args = "-i %s" % ' '.join(inputFiles)
         self.readOtherParams()
  
 class ScriptPluginIJ(ScriptIJBase):
@@ -338,6 +341,13 @@ def estimateMemory(input):
         memory=max(memory,Xdim*Ydim*8)
     memoryMb=int((2 ** ceil(log(memory, 2)))/(2**20)); # Memory size in megabytes
     return memoryMb
+
+def estimateImageSize(input):
+    from math import log, ceil
+    (Xdim,Ydim,Zdim,Ndim)=xmipp.SingleImgSize(input)
+    memory=Xdim*Ydim*Zdim*Ndim*8
+    memoryMb=int((2 ** ceil(log(memory, 2)))/(2**20)); # Memory size in megabytes
+    return 2*memoryMb
 
 #---------------------------------------------------------------------------
 # Colors from Xmipp binding

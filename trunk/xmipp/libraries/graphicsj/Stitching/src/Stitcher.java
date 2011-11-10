@@ -1,5 +1,4 @@
 
-import ij.IJ;
 import ij.ImagePlus;
 import ij.io.Opener;
 import ini.trakem2.ControlWindow;
@@ -9,6 +8,7 @@ import ini.trakem2.display.LayerSet;
 import ini.trakem2.display.Patch;
 import java.awt.Rectangle;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import mpicbg.trakem2.align.AlignTask;
@@ -22,9 +22,6 @@ import mpicbg.trakem2.align.AlignTask;
  * @author Juanjo Vega
  */
 public class Stitcher implements Runnable {
-    /*    static {
-    System.setProperty("plugins.dir", "/gpfs/fs1/home/bioinfo/jvega/xmipp/external/imagej/plugins");
-    }*/
 
     String filenames[];
     int xs[], ys[]; // Initial coordinates.
@@ -68,16 +65,13 @@ public class Stitcher implements Runnable {
         Project project = Project.newFSProject("blank", null, System.getProperty("java.io.tmpdir"));
 
         // 2 - Obtain LayerSet and Layer pointers
-        LayerSet ls = project.getRootLayerSet();
-        ls.add(new Layer(project, 1, 1, ls));
-        Layer layer = ls.getLayer(0); // there is one layer by default in a new Project.  
+        LayerSet layerset = project.getRootLayerSet();
+        layerset.add(new Layer(project, 1, 1, layerset));
+        Layer layer = layerset.getLayer(0); // there is one layer by default in a new Project.  
 
         // 3 - Adding images to a Layer
         final Opener opener = new Opener();
         List<Patch> patches = new LinkedList<Patch>();
-
-//        double x = 0; // initial coordinates
-//        double y = 0;
 
         for (int i = 0; i < filenames.length; i++) {
             ImagePlus imp = opener.openImage(filenames[i]);
@@ -88,41 +82,10 @@ public class Stitcher implements Runnable {
 
         // 5 - Register/Montage images
         //List<Patch> fixedPatches = new LinkedList<Patch>();
-
         alignPatches(patches, parameters);
 
-        // @TODO Check!
-        // 6 - Adjust brightness and contrast
-/*        double min = Double.MIN_VALUE, max = Double.MAX_VALUE;
-        for (int i = 0; i < patches.size(); i++) {
-        ImageStatistics is = patches.get(i).getImageProcessor().getStatistics();
-        if (is.min < min) {
-        min = is.min;
-        }
-        if (is.max < max) {
-        max = is.max;
-        }
-        }
-        System.out.println(" ++++++++++++++++++++ min: " + min);
-        System.out.println(" ++++++++++++++++++++ max: " + max);*/
-
-        // Strategy A: set same min and max for all images,
-        //   but shifting the histogram's peak to compensate a bit.
-
-        /*        double min = 15600; // for 16-bit TEM images
-        double max = 24700;
-        Thread task2 = project.getLoader().setMinAndMax(patches, min, max);
-        if (task2 != null) {
-        try {
-        task2.join();
-        } catch (Exception e) {
-        IJ.log("Exception: " + e.getMessage());
-        }
-        }*/
-        // @TODO media y varianza iguales.
-
         // 9 - Take a snapshot of the registered images
-        Rectangle box = layer.getMinimalBoundingBox(Patch.class); // or any other ROI you like
+        Rectangle box = layer.getMinimalBoundingBox(Patch.class, true); // or any other ROI you like
 /*        double scale = 1.0;
         int type = ImagePlus.GRAY8; // or .COLOR_RGB
         int c_alphas = 0xffffffff; // channel opacities, applies to RGB images only
@@ -130,27 +93,11 @@ public class Stitcher implements Runnable {
         ArrayList list = null; // null means all. You can define a subset of Displayable objects
         //  of that layer (such as Patch objects) to be rendered instead.
         ImagePlus snapshot = project.getLoader().getFlatImage(layer, box, scale, c_alphas, type, Patch.class, list, quality);
-        //new ij.io.FileSaver(snapshot).saveAsTiff("/Volumes/Data/jvega/Desktop/snapshot.tif");
-        
+        new ij.io.FileSaver(snapshot).saveAsTiff("/home/juanjo/Desktop/snapshot.tif");
+
         snapshot.setTitle("Montage [TrakEM2]");
         snapshot.show();*/
 
-        // @TMP: Print results.
-/*        System.out.println("----------------------");
-        for (int i = 0; i < patches.size(); i++) {
-        Patch patch = patches.get(i);
-        Rectangle r = patch.getBoundingBox();
-        AffineTransform t = patch.getAffineTransform();
-        System.out.println(i + " > " + filenames[i] + ": ");
-        System.out.println(" Position (x, y): (" + r.x + ", " + r.y + ")");
-        System.out.println(" Affine transform: " + t);
-        System.out.println("----------------------");
-        }*/
-
-//        System.err.println(" >>> Saving to: " + outputfilename);
-//        ImagePlus ip = ImagesBuilder.buildStack(patches, box);
-//        ip.setTitle("Montage [Stack]");
-//        IJ.save(ip, outputfilename);
         if (outputfilename != null) {
             if (ImagesBuilder.saveResult(patches, box, parameters.getOverlapMargin(), outputfilename)) {
                 System.out.println(" >>> Results sucessfully saved: " + outputfilename);
@@ -166,10 +113,6 @@ public class Stitcher implements Runnable {
                 System.err.println(" xxx ERROR: saving to: " + stackfilename);
             }
         }
-
-        /*        ImagePlus sum = ImagesBuilder.sumStack(ip);
-        sum.setTitle("Montage [Sum]");
-        sum.show();*/
 
         // 10 - Close the project
         project.destroy();
@@ -187,9 +130,13 @@ public class Stitcher implements Runnable {
      * @param parameters: parameters for alignment. If null, it will ask user for them.
      */
     public static void alignPatches(final List<Patch> patches, Parameters parameters) {
+        // Fix first patch.
+        List<Patch> fixed = new LinkedList<Patch>();
+        fixed.add(patches.get(0));
+
         AlignTask.alignPatches(parameters.getAlignParameters(),
                 patches,
-                null, //new LinkedList<Patch>(): fixed patches.
+                fixed, // fixed patches.
                 true, // tilesAreInPlace
                 false, // largestGraphOnly
                 false, // hideDisconnectedTiles
