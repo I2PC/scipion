@@ -253,7 +253,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageGeneric_getStatistics(
 	if (image != NULL) {
 		try {
 			double avg, stddev, min, max;
-std::cout << " ****************** Shape: " << std::endln;
+std::cout << " ****************** Shape: " << std::endl;
 		(*image)().printShape()
 			(*image)().computeStats(avg, stddev, min, max);
 std::cout << "2" << std::endl;
