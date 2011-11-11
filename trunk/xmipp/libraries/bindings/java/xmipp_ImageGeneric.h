@@ -41,6 +41,22 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readHeader
 
 /*
  * Class:     xmipp_ImageGeneric
+ * Method:    read
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_read
+  (JNIEnv *, jobject, jstring, jboolean);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    write
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_write
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     xmipp_ImageGeneric
  * Method:    getArrayByte
  * Signature: (Ljava/lang/String;IIIJ)[B
  */
@@ -63,6 +79,8 @@ JNIEXPORT jshortArray JNICALL Java_xmipp_ImageGeneric_getArrayShort
 JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat
   (JNIEnv *, jclass, jstring, jint, jint, jint, jlong, jint);
 
+JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_setArrayFloat
+  (JNIEnv *, jobject, jint, jint, jint, jlong, jint, jfloatArray);
 /*
  * Class:     xmipp_ImageGeneric
  * Method:    getStatistics

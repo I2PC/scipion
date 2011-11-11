@@ -61,12 +61,23 @@ public class ImageGeneric {
     }
 
     public ImageGeneric(String filename) throws Exception {
-        this();        
+    	create();       
         this.filename = filename;
         readHeader(filename);
     }
 
-    private native void readHeader(String filename) throws Exception;
+    
+    private native void read(String filename, boolean onlyHeader);
+    
+    public native void write(String filename);
+    
+    public void readHeader(String filename) throws Exception {
+    	read(filename, true);
+    }
+    
+    public void readData(String filename) throws Exception {
+    	read(filename, false);
+    }
     
     public byte[] getArrayByte(){
     	return getArrayByte(filename, xSize, ySize, zSize, nSize, dataType);
@@ -85,9 +96,16 @@ public class ImageGeneric {
     }
     
     private static native float[] getArrayFloat(String filename, int x, int y, int z, long N, int datatype);
+    
+    public void setArrayFloat(float[] data) {
+    	System.out.println("calling native with x: " + xSize + " y:" + ySize);
+    	setArrayFloat(xSize, ySize, zSize, nSize, dataType, data);
+    }
+    
+    private native void setArrayFloat(int x, int y, int z, long N, int datatype, float [] data);    
 
     public native double[] getStatistics() throws Exception;
-
+    
     // Should be called by GarbageCollector before destroying
     @Override
     protected void finalize() throws Throwable {
