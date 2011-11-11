@@ -124,7 +124,7 @@ struct ImageInfo
 {
 	DataType  datatype;
 	bool	  swap;
-	ArrayDim  imDim;
+	ArrayDim  adim;
 };
 
 /// @name Images Speed-up

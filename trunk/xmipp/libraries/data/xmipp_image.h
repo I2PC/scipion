@@ -688,7 +688,7 @@ public:
         //Set information from image file
         setName(name);
         setDatatype(imgInfo.datatype);
-        imFileDim = imgInfo.imDim;
+        imFileDim = imgInfo.adim;
 
         im().setXmippOrigin();
 

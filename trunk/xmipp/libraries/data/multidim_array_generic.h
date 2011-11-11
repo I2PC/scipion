@@ -168,6 +168,22 @@ public:
         im->selfReverseZ();
     }
 
+
+    /**
+     *  Copy a specific slice of the linked array.
+     */
+    template <typename T>
+    void getMultidimArray(T *M)
+    {
+
+#define GETMULTIDIMARRAY(type) M = (T*) ((MultidimArray<type>*) im)->data;
+
+        SWITCHDATATYPE(datatype,GETMULTIDIMARRAY)
+
+#undef GETMULTIDIMARRAY
+
+    }
+
     /** Get a Window from the image*/
     void window(MultidimArrayGeneric &result, int z0, int y0, int x0,
                 int zF, int yF, int xF,
