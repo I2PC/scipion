@@ -1,8 +1,5 @@
 package particlepicker.tiltpair.gui;
 
-import ij.IJ;
-import ij.ImageJ;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -12,50 +9,31 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.text.NumberFormat;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
-import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSlider;
 import javax.swing.JTable;
-import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import particlepicker.Family;
-import particlepicker.ParticlePicker;
 import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
-import particlepicker.Shape;
-import particlepicker.Tool;
 import particlepicker.WindowUtils;
 import particlepicker.tiltpair.model.TiltPairPicker;
 import particlepicker.tiltpair.model.UntiltedMicrograph;
 import particlepicker.training.gui.ColorIcon;
 import particlepicker.training.model.TrainingParticle;
-import particlepicker.training.model.TrainingPicker;
 
 
 
@@ -87,9 +65,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	
 
 
-	public TiltPairPickerJFrame(TiltPairPicker pppicker)
+	public TiltPairPickerJFrame(TiltPairPicker picker)
 	{
-		this.pppicker = pppicker;
+		super(picker);
+		pppicker = picker;
 		initComponents();
 	}
 
@@ -389,4 +368,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		double alpha = Math.toRadians(alphas[1]);
 		return alpha;
 	}
+
+
 }

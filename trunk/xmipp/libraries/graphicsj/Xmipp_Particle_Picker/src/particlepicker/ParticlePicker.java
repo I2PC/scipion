@@ -31,7 +31,7 @@ public abstract class ParticlePicker
 	protected List<Family> families;
 	private FamilyState mode;
 	private List<Filter> filters;
-	private String command;
+	
 
 	public ParticlePicker(String outputdir, FamilyState mode)
 	{
@@ -41,61 +41,25 @@ public abstract class ParticlePicker
 		this.families = new ArrayList<Family>();
 		this.familiesfile = getOutputPath("families.xmd");
 		this.macrosfile = getOutputPath("macros.xmd");
-		loadMacros();
+		loadFilters();
 		loadFamilies();
 		
-		Recorder.record = true;
 
-		// detecting if a command is thrown by ImageJ
-		Executer.addCommandListener(new CommandListener()
-		{
-			public String commandExecuting(String command)
-			{
-				ParticlePicker.this.command = command;
-				return command;
-
-			}
-		});
-		ImagePlus.addImageListener(new ImageListener()
-		{
-
-			@Override
-			public void imageUpdated(ImagePlus arg0)
-			{
-				if (command != null)
-				{
-					String options = "";
-					if (Recorder.getCommandOptions() != null)
-						options = Recorder.getCommandOptions();
-					addFilter(command, options);
-					command = null;
-				}
-			}
-
-			@Override
-			public void imageOpened(ImagePlus arg0)
-			{
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void imageClosed(ImagePlus arg0)
-			{
-				// TODO Auto-generated method stub
-
-			}
-		});
 	}
 
-	public void addFilter(String command, String options)
+	void addFilter(String command, String options)
 	{
 		Filter f = new Filter(command, options);
 		filters.add(f);
-		System.out.println(getFilters());
+		setChanged(true);
+	}
+	
+	public List<Filter> getFilters()
+	{
+		return filters;
 	}
 
-	public String getFilters()
+	public String getFiltersMacro()
 	{
 		
 		String macros = "";
@@ -284,17 +248,22 @@ public abstract class ParticlePicker
 	}
 
 	public void saveData(){
-		persistMacros();
+		persistFilters();
 		persistFamilies();
 		
 	}
 
 	public abstract int getManualParticlesNumber(Family f);
 
-	public void persistMacros()
+	public void persistFilters()
 	{
 		long id;
 		String file = macrosfile;
+		if (filters.isEmpty())
+		{
+			new File(file).delete();
+			return;
+		}
 		String options;
 		try
 		{
@@ -302,8 +271,8 @@ public abstract class ParticlePicker
 			for (Filter f: filters)
 			{
 				id = md.addObject();
-				md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, f.getCommand(), id);
-				options = (f.getOptions() == null || f.getOptions().equals(""))? "NULL": f.getOptions();
+				md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, f.getCommand().replace(' ', '_'), id);
+				options = (f.getOptions() == null || f.getOptions().equals(""))? "NULL": f.getOptions().replace(' ', '_');
 				md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, options, id);
 			}
 			md.write(file);
@@ -316,7 +285,7 @@ public abstract class ParticlePicker
 
 	}
 	
-	public void loadMacros()
+	public void loadFilters()
 	{
 		filters.clear();
 		String file = macrosfile;
@@ -330,20 +299,41 @@ public abstract class ParticlePicker
 			long[] ids = md.findObjects();
 			for (long id : ids)
 			{
-				command = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, id);
-				options = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id);
+				command = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, id).replace('_', ' ');
+				options = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id).replace(' ', '_');
 				if(options.equals("NULL"))
 					options = "";
 				filters.add(new Filter(command, options));
 				
 			}
-			System.out.println(getFilters());
 		}
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
+	}
+
+	void removeFilter(String filter)
+	{
+		for(Filter f: filters)
+			if(f.getCommand().equals(filter))
+			{
+				filters.remove(f);
+				setChanged(true);
+				break;
+				
+			}
+		
+		
+	}
+	
+	public boolean isFilterSelected(String filter)
+	{
+		for(Filter f: filters)
+			if(f.getCommand().equals(filter))
+				return true;
+		return false;
 	}
 
 }

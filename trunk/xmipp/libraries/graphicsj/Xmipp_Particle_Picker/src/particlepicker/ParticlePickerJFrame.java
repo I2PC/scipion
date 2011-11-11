@@ -1,8 +1,14 @@
 package particlepicker;
 
+import ij.CommandListener;
+import ij.Executer;
 import ij.IJ;
 import ij.ImageJ;
+import ij.ImageListener;
+import ij.ImagePlus;
+import ij.plugin.frame.Recorder;
 
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -15,6 +21,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JCheckBox;
@@ -28,9 +35,12 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.KeyStroke;
+import javax.swing.MenuElement;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 
 import particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import particlepicker.training.gui.TrainingPickerJFrame;
@@ -52,12 +62,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JMenuItem hcontentsmi;
 	protected JMenuItem pmi;
 	protected JMenu filtersmn;
-	protected String activemacro;
+	protected String activefilter;
 	protected JSlider sizesl;
 	protected JPanel sizepn;
+	private String command;
+	private List<JCheckBoxMenuItem> mifilters;
 	
 	
-	public ParticlePickerJFrame()
+	public ParticlePickerJFrame(ParticlePicker picker)
 	{
 		
 		addWindowListener(new WindowAdapter()
@@ -71,6 +83,50 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 						saveChanges();
 				}
 				System.exit(0);
+			}
+		});
+		
+		Recorder.record = true;
+
+		// detecting if a command is thrown by ImageJ
+		Executer.addCommandListener(new CommandListener()
+		{
+			public String commandExecuting(String command)
+			{
+				ParticlePickerJFrame.this.command = command;
+				return command;
+
+			}
+		});
+		ImagePlus.addImageListener(new ImageListener()
+		{
+
+			@Override
+			public void imageUpdated(ImagePlus arg0)
+			{
+				if (command != null)
+				{
+					String options = "";
+					if (Recorder.getCommandOptions() != null)
+						options = Recorder.getCommandOptions();
+					if(!getParticlePicker().isFilterSelected(command))
+						getParticlePicker().addFilter(command, options);
+					command = null;
+				}
+			}
+
+			@Override
+			public void imageOpened(ImagePlus arg0)
+			{
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void imageClosed(ImagePlus arg0)
+			{
+				// TODO Auto-generated method stub
+
 			}
 		});
 		
@@ -133,37 +189,69 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				loadParticles();
 			}
 		});
+		
+		mifilters = new ArrayList<JCheckBoxMenuItem>();
 		filtersmn = new JMenu("Filters");
-		JCheckBoxMenuItem fftbpf = new JCheckBoxMenuItem("Bandpass Filter...");
-		filtersmn.add(fftbpf);
-		fftbpf.addActionListener(this);
-		JCheckBoxMenuItem admi = new JCheckBoxMenuItem("Anisotropic Diffusion...");
-		filtersmn.add(admi);
+		filtersmn.addMenuListener(new MenuListener()
+		{
+			
+			@Override
+			public void menuCanceled(MenuEvent arg0)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void menuDeselected(MenuEvent arg0)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void menuSelected(MenuEvent arg0)
+			{
+				for(JCheckBoxMenuItem mi: mifilters)
+					mi.setSelected(getParticlePicker().isFilterSelected(mi.getText()));
+				
+				
+			}
+		});
+		
+		addFilterMenuItem("Bandpass Filter...", true, picker);
+		JCheckBoxMenuItem admi = addFilterMenuItem("Anisotropic Diffusion...", false, picker);
 		admi.addActionListener(new ActionListener()
 		{
 			
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				activemacro = "8-bit";
-				IJ.run(activemacro);
-				activemacro = ((JCheckBoxMenuItem) e.getSource()).getText();
-				IJ.run(activemacro);
+				activefilter = "8-bit";
+				IJ.run(activefilter);
+				activefilter = ((JCheckBoxMenuItem) e.getSource()).getText();
+				IJ.run(activefilter);
 			}
 		});
-		JCheckBoxMenuItem msmi = new JCheckBoxMenuItem("Mean Shift");
-		filtersmn.add(msmi);
-		msmi.addActionListener(this);
-		JCheckBoxMenuItem sbmi = new JCheckBoxMenuItem("Subtract Background...");
-		filtersmn.add(sbmi);
-		sbmi.addActionListener(this);
-		JCheckBoxMenuItem gbmi = new JCheckBoxMenuItem("Gaussian Blur...");
-		filtersmn.add(gbmi);
-		gbmi.addActionListener(this);
-		JCheckBoxMenuItem bcmi = new JCheckBoxMenuItem("Brightness/Contrast...");
-		filtersmn.add(bcmi);
-		bcmi.addActionListener(this);
-		
+		addFilterMenuItem("Mean Shift", true, picker);
+		addFilterMenuItem("Subtract Background...", true, picker);
+		addFilterMenuItem("Gaussian Blur...", true, picker);
+		addFilterMenuItem("Brightness/Contrast...", true, picker);
+	}
+	
+
+	
+
+
+	private JCheckBoxMenuItem addFilterMenuItem(String command, boolean defaultlistener, ParticlePicker picker)
+	{
+		JCheckBoxMenuItem mi = new JCheckBoxMenuItem(command);
+		mifilters.add(mi);
+		mi.setSelected(picker.isFilterSelected(command));
+		if(defaultlistener)
+			mi.addActionListener(this);
+		filtersmn.add(mi);
+		return mi;
 	}
 	
 	@Override
@@ -171,8 +259,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	{
 		try
 		{
-			activemacro = ((JCheckBoxMenuItem) e.getSource()).getText();
-			IJ.run(activemacro);
+			JCheckBoxMenuItem item = (JCheckBoxMenuItem) e.getSource(); 
+			activefilter = item.getText();
+			if(item.isSelected())//filter added, will be registered by picker with options if needed
+				IJ.run(activefilter);
+			else //filter removed
+				getParticlePicker().removeFilter(activefilter);
+			setChanged(true);
 		}
 		catch (Exception ex)
 		{

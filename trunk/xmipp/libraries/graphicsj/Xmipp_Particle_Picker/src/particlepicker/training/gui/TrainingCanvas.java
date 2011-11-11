@@ -1,5 +1,6 @@
 package particlepicker.training.gui;
 
+import ij.IJ;
 import ij.gui.ImageWindow;
 
 import java.awt.BasicStroke;
@@ -59,6 +60,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			setActive(frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1));
 		else
 			active = null;
+		if(!ppicker.getFilters().isEmpty())
+			IJ.runMacro(ppicker.getFiltersMacro());
 	}
 
 	/**

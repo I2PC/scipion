@@ -1,5 +1,6 @@
 package particlepicker.training.gui;
 
+import ij.IJ;
 import ij.gui.ImageWindow;
 import java.awt.Color;
 import java.awt.Component;
@@ -12,8 +13,6 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.logging.Level;
@@ -34,7 +33,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
@@ -43,7 +41,6 @@ import particlepicker.Constants;
 import particlepicker.Family;
 import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
-import particlepicker.Tool;
 import particlepicker.WindowUtils;
 import particlepicker.training.model.FamilyState;
 import particlepicker.training.model.MicrographFamilyData;
@@ -53,9 +50,6 @@ import particlepicker.training.model.TrainingMicrograph;
 import particlepicker.training.model.TrainingParticle;
 import particlepicker.training.model.TrainingPicker;
 import xmipp.Program;
-
-
-
 
 
 public class TrainingPickerJFrame extends ParticlePickerJFrame 
@@ -104,10 +98,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		return family;
 	}
 
-	public TrainingPickerJFrame(TrainingPicker ppicker)
+	public TrainingPickerJFrame(TrainingPicker picker)
 	{
-
-		this.ppicker = ppicker;
+		super(picker);
+		this.ppicker = picker;
 		initComponents();
 	}
 
@@ -558,6 +552,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			canvas = new TrainingCanvas(this);
 			ImageWindow iw = new ImageWindow(micrograph.getImagePlus(), canvas);
 			iw.setTitle(micrograph.getName());
+			if(!ppicker.getFilters().isEmpty())
+				IJ.runMacro(ppicker.getFiltersMacro());
 		}
 		else
 			canvas.updateMicrograph();
