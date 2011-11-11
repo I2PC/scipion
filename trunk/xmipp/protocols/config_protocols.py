@@ -90,8 +90,7 @@ projectDefaults = {
                    'TableProtocols': 'protocols',
                    'TableProtocolsGroups': 'protocols_groups',
                    'TableRuns': 'runs',
-                   'TableSteps': 'steps',
-                   'TableDictVerifyFiles': 'dict_verify_files'
+                   'TableSteps': 'steps'
                    } 
 
 #--------------------------------------------------------------------------------

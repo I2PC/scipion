@@ -216,7 +216,7 @@ class XmippProtocol(object):
         self.Header = loadModule(scriptname)
         self.ParamsDict = self.Header.__dict__
         for k, v in self.ParamsDict.iteritems():
-            self.__dict__[k] = v
+            setattr(self, k, v)
             
         self.NumberOfMpi = getattr(self, 'NumberOfMpi', 1)
         self.NumberOfThreads = getattr(self, 'NumberOfThreads', 1)
@@ -239,6 +239,21 @@ class XmippProtocol(object):
         self.Out = self.LogPrefix+".out"
         self.LogFile = self.LogPrefix + ".log"
         self.SystemFlavour = project.SystemFlavour
+        
+        
+    def getFilename(self, key, **params):
+        # Is desirable the names comming in params doesn't overlap
+        # with the variables in the header dictionary
+        params.update(self.ParamsDict)
+        if self.FilenamesDict.has_key(key):
+            return self.FilenamesDict[key] % params
+        return None
+
+    def createFilenameTemplates(self):
+        ''' Each protocol should implement this function to
+        create the dictionarys with entries (alias, template) for
+        filenames templates'''
+        return {} 
         
     def getProjectId(self):
         pass
@@ -324,8 +339,10 @@ class XmippProtocol(object):
         sys.stdout = self.fOut
         sys.stderr = self.fErr
         self.Log = XmippLog(self.LogFile)
-        self.Db  = XmippProtocolDb(self, isMainLoop)
+        self.Db  = XmippProtocolDb(self, self.scriptName, isMainLoop)
         self.insertStep = self.Db.insertStep
+        # Create filenames dictionary
+        self.FilenamesDict = self.createFilenameTemplates()
 
     def run(self):
         '''Run of the protocols
@@ -353,8 +370,8 @@ class XmippProtocol(object):
         retcode = 0
         try:
             self.runSetup()
-            self.insertStep('createDir',verifyfilesDictionary={'WorkingDir':self.WorkingDir}, path=self.WorkingDir)
-            self.insertStep('createDir', verifyfilesDictionary={'TemporalDir':self.TmpDir}, path=self.TmpDir)
+            self.insertStep('createDir',verifyfiles=[self.WorkingDir], path=self.WorkingDir)
+            self.insertStep('createDir', verifyfiles=[self.TmpDir], path=self.TmpDir)
             self.defineSteps()
             self.Db.runSteps()
             self.postRun()
@@ -372,6 +389,10 @@ class XmippProtocol(object):
                             
         return retcode
     
+    def insertParallelStep(self, command, NumberOfParallelSteps, **args):
+        args['execution_mode'] = SqliteDb.EXEC_PARALLEL
+        self.insertStep(command, NumberOfParallelSteps=NumberOfParallelSteps, **args)
+        
     def insertRunJobStep(self, program, params, verifyFiles=[]):
         ''' This function is a shortcut to insert a runJob step into database
         it will pass threads and mpi info, and also the unique run id'''
@@ -382,20 +403,21 @@ class XmippProtocol(object):
                      NumberOfMpi = self.NumberOfMpi,
                      NumberOfThreads = self.NumberOfThreads)
         
-    def insertRunJobGapStep(self, program, params, verifyfiles=[], parent_step_id=XmippProjectDb.FIRST_STEP):
+    def insertParallelRunJobStep(self, program, params, NumberOfParallelSteps=1, verifyfiles=[], parent_step_id=XmippProjectDb.FIRST_STEP):
         ''' This function is a shortcut to insert a runJob step into database
         it will pass threads and mpi info, and also the unique run id'''
-        self.insertStep('runJob', 
+        self.insertParallelStep('runJob', 
                      programname=program, 
                      params=params,
                      verifyfiles = verifyfiles,
+                     NumberOfParallelSteps = NumberOfParallelSteps,
                      NumberOfMpi = 1,
                      NumberOfThreads = 1,
-                     parent_step_id=parent_step_id,execution_mode=SqliteDb.EXEC_GAP)
+                     parent_step_id=parent_step_id)
         
-    def insertRunMpiGapsStep(self,verifyfiles=[]):
-        return self.insertStep('runStepGapsMpi',passDb=True, verifyfiles=verifyfiles, 
-                               script=self.scriptName, NumberOfMpi=self.NumberOfMpi)
+#    def insertRunMpiGapsStep(self,verifyfiles=[]):
+#        return self.insertStep('runStepGapsMpi',passDb=True, verifyfiles=verifyfiles, 
+#                               script=self.scriptName, NumberOfMpi=self.NumberOfMpi)
 
 def getProtocolFromModule(script, project):
     mod = loadModule(script)

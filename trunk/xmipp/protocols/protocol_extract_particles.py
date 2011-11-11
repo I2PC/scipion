@@ -49,11 +49,11 @@ class ProtExtractParticles(XmippProtocol):
             if self.DoFlip:
                 micrographFlipped=os.path.join(self.TmpDir,micrographName+"_flipped.xmp")
                 parent_id=self.Db.insertStep('phaseFlip',parent_step_id=XmippProjectDb.FIRST_STEP,
-                                             verifyfiles=[micrographFlipped],execution_mode=SqliteDb.EXEC_GAP,
+                                             verifyfiles=[micrographFlipped],execution_mode=SqliteDb.EXEC_PARALLEL,
                                              micrograph=micrographToExtract,ctf=ctf,fnOut=micrographFlipped)
                 micrographToExtract=micrographFlipped
             fnOut=self.workingDirPath(micrographName+".stk")
-            parent_id=self.Db.insertStep('extractParticles',execution_mode=SqliteDb.EXEC_GAP,parent_step_id=parent_id,
+            parent_id=self.Db.insertStep('extractParticles',execution_mode=SqliteDb.EXEC_PARALLEL,parent_step_id=parent_id,
                                   WorkingDir=self.WorkingDir,
                                   micrographName=micrographName,ctf=ctf,
                                   originalMicrograph=originalMicrograph,micrographToExtract=micrographToExtract,
@@ -62,7 +62,7 @@ class ProtExtractParticles(XmippProtocol):
                                   bgRadius=self.BackGroundRadius, doRemoveDust=self.DoRemoveDust,
                                   dustRemovalThreshold=self.DustRemovalThreshold)
             if self.DoFlip:
-                self.Db.insertStep('deleteFile',execution_mode=SqliteDb.EXEC_GAP,parent_step_id=parent_id,filename=micrographToExtract,verbose=True)
+                self.Db.insertStep('deleteFile',execution_mode=SqliteDb.EXEC_PARALLEL,parent_step_id=parent_id,filename=micrographToExtract,verbose=True)
         self.Db.insertStep('gatherSelfiles',parent_step_id=idMPI,WorkingDir=self.WorkingDir,family=self.Family)
 
         selfileRoot=self.workingDirPath(self.Family)

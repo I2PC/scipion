@@ -75,7 +75,7 @@ class ProtParticlePickingAuto(XmippProtocol):
                 if proceed:
                     script=getScriptFromRunName(self.PickingRun)
                     protPicking=getProtocolFromModule(script, self.project)
-                    self.insertRunJobGapStep("xmipp_micrograph_automatic_picking",
+                    self.insertParallelRunJobStep("xmipp_micrograph_automatic_picking",
                                              "-i "+micrographFullPath+" --particleSize "+str(particleSize)+" --model "+modelRoot+\
                                              " --outputRoot "+os.path.join(self.WorkingDir,micrographName)+" --mode autoselect")
         for familyIdx in range(len(self.familiesForAuto)):

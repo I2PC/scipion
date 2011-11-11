@@ -915,10 +915,13 @@ def getMdString(filename, browser):
     msg =  "  <%d items>\n" % md.size()
     msg += "  <labels:>" + ''.join(["\n   - %s" % label2Str(l) for l in labels])
     if MDL_IMAGE in labels:
+        img = md.getValue(MDL_IMAGE, md.firstObject())
+        print "img: ", img 
         browser.updatePreview(md.getValue(MDL_IMAGE, md.firstObject()))
     return msg
     
 def mdOnClick(filename, browser):
+    print "mdOnClick: filename: ", filename
     if '@' not in filename:
         import xmipp
         msg = "<Metadata File>\n"
@@ -1242,7 +1245,10 @@ class XmippBrowser():
                 self.stat = os.stat(item)
                 msg = fileInfo(self)
                 if self.seltype != "none":
-                    correct = (stat.S_ISDIR(self.stat.st_mode) and self.seltype != 'file') or self.seltype != 'folder'
+                    if stat.S_ISDIR(self.stat.st_mode):
+                        correct = self.seltype in ['folder', 'both']
+                    else:
+                        correct = self.seltype in ['file', 'both']
                     if correct:
                         self.btnOk.config(state=tk.NORMAL)
                     else:

@@ -47,7 +47,7 @@ class SqliteDb:
     RUN_FAILED = 4
     RUN_ABORTED = 5
     
-    EXEC_GAP = 0
+    EXEC_PARALLEL = 0
     EXEC_MAINLOOP = 1
     EXEC_ALWAYS = 2
     
@@ -122,7 +122,7 @@ class XmippProjectDb(SqliteDb):
             self.connection.row_factory = sqlite.Row
             self.cur = self.connection.cursor()
             self.sqlDict = projectDefaults
-            self.sqlDict['execution_gap'] = SqliteDb.EXEC_GAP
+            self.sqlDict['execution_parallel'] = SqliteDb.EXEC_PARALLEL
             self.sqlDict['execution_mainloop'] = SqliteDb.EXEC_MAINLOOP
             self.sqlDict['execution_always'] = SqliteDb.EXEC_ALWAYS
             #enable foreign keys must be executed BEFORE table creation
@@ -170,7 +170,7 @@ class XmippProjectDb(SqliteDb):
                          verifyFiles TEXT,           -- list with files to modify
                          iter INTEGER DEFAULT 1,     -- for iterative scripts, iteration number
                                                      -- useful to resume at iteration n
-                         execution_mode INTEGER,     -- Possible values are: 0 - Gap, 1-Mainloop, 2-DoAlways
+                         execution_mode INTEGER,     -- Possible values are: 0 - Parallel, 1-Mainloop, 2-DoAlways
                                                      -- an external program that will run it
                          passDb BOOL,                -- Should the script pass the database handler
                          run_id INTEGER REFERENCES %(TableRuns)s(run_id)  ON DELETE CASCADE,
@@ -180,18 +180,6 @@ class XmippProjectDb(SqliteDb):
                          ,PRIMARY KEY(step_id, run_id)
                          )""" % self.sqlDict
             self.execSqlCommand(_sqlCommand, "Error creating %(TableSteps)s table: " % self.sqlDict)
-
-            _sqlCommand = """ CREATE TABLE IF NOT EXISTS %(TableDictVerifyFiles)s 
-                         (iter INTEGER ,     -- for iterative scripts, iteration number
-                         filename Text,               -- File Name
-                         alias    Text,               -- File Alias
-                         run_id  INTEGER ,
-                         step_id INTEGER ,
-                         PRIMARY KEY(alias, iter, step_id, run_id),
-                                                      -- delete this entry if step_id or run_id is deleted
-                         FOREIGN KEY(step_id, run_id) REFERENCES steps(step_id, run_id) on delete cascade 
-                         )""" % self.sqlDict
-            self.execSqlCommand(_sqlCommand, "Error creating %(TableDictVerifyFiles)s table: " % self.sqlDict)
 
             _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableParams)s 
                             (parameters TEXT,
@@ -334,7 +322,7 @@ class XmippProjectDb(SqliteDb):
         return self.cur.fetchone()[0]
      
 class XmippProtocolDb(SqliteDb):
-    def __init__(self, protocol, isMainLoop=True):
+    def __init__(self, protocol, script, isMainLoop=True):
         self.ContinueAtStep = getattr(protocol, 'ContinueAtStep', 0) 
         self.runBehavior = getattr(protocol, 'Behavior', 'Resume')
         self.dbName = protocol.project.dbName
@@ -349,7 +337,7 @@ class XmippProtocolDb(SqliteDb):
         self.iter = XmippProjectDb.FIRST_ITER
         self.ProjDir = "."
         self.execSqlCommand('pragma foreign_keys=ON',"Foreing key activation failed")
-
+        self.protocolScript = script
         #get run_id
         run_id = self.getRunId(protocol.Name, protocol.RunName)
         if not run_id:
@@ -391,11 +379,10 @@ class XmippProtocolDb(SqliteDb):
         return coreParameters != RowParameters
     
     def insertStep(self, command,
-                           verifyfiles=[],#delete this parameter
+                           verifyfiles=[],
                            parent_step_id=None,
                            execution_mode=SqliteDb.EXEC_MAINLOOP,
                            passDb=False,
-                           verifyfilesDictionary={},
                            **_Parameters):
         
         if not parent_step_id:
@@ -404,8 +391,6 @@ class XmippProtocolDb(SqliteDb):
         parameters = pickle.dumps(_Parameters, 0)
         #Eventually verifyfiles will be dropped and replaced by verifyfilesDictionary
 
-        if (not verifyfiles) and verifyfilesDictionary:
-            verifyfiles = verifyfilesDictionary.values()
         verifyfilesString = pickle.dumps(verifyfiles, 0)
 
         if not self.insertStatus:
@@ -419,7 +404,7 @@ class XmippProtocolDb(SqliteDb):
                 elif self.differentParams(_Parameters, pickle.loads(str(row['parameters']))) or row['verifyFiles'] != verifyfilesString:
                     self.insertStatus = True
                 else:
-                    for k, f in verifyfilesDictionary.iteritems():
+                    for f in verifyfiles:
                         if not exists(f):
                             self.insertStatus = True
                             break
@@ -469,17 +454,22 @@ class XmippProtocolDb(SqliteDb):
                 self.lastStepId = self.cur_aux.fetchone()[0]
                 #fill table with verify files aliases, since they are linke to step_id in cascade I
                 #do not need to worry about deleting them
-                if verifyfilesDictionary:
-                    for key,value in verifyfilesDictionary.iteritems():                              
-                        self.cur_aux.execute("""INSERT INTO %(TableDictVerifyFiles)s
-                                        (iter,filename,alias,run_id,step_id) VALUES (?,?,?,?,?)""" % 
-                                        self.sqlDict,[self.iter,value,key,self.sqlDict['run_id'],self.lastStepId])
-                        #self.connection.commit()
-
             except sqlite.Error, e:
                 reportError("Cannot insert command " + e.args[0])
         return self.lastStepId
     
+    def getStepsRange(self, fromStep, toStep):
+        self.sqlDict['from_step'] = fromStep
+        self.sqlDict['to_step'] = toStep
+        sqlCommand = """ SELECT step_id, iter, passDb, command, parameters, verifyFiles, parent_step_id
+                         FROM %(TableSteps)s 
+                         WHERE run_id = %(run_id)d 
+                         AND step_id >= %(from_step)d
+                         AND step_id < %(to_step)d
+                         ORDER BY step_id """ % self.sqlDict
+        self.cur.execute(sqlCommand)
+        return self.cur.fetchall()
+          
     def runSteps(self):
         #Update run state to STARTED
         self.updateRunState(SqliteDb.RUN_STARTED)
@@ -489,22 +479,38 @@ class XmippProtocolDb(SqliteDb):
                          AND (finish IS NULL OR execution_mode = %(execution_always)d)""" % self.sqlDict
         self.cur.execute(sqlCommand)
         self.connection.commit()
-        #Select steps to run
-        sqlCommand = """ SELECT step_id, iter, passDb, command, parameters, verifyFiles 
+        #Select steps to run, include parallel ones
+        sqlCommand = """ SELECT step_id, iter, passDb, command, parameters, verifyFiles, execution_mode
                          FROM %(TableSteps)s 
                          WHERE run_id = %(run_id)d 
-                         AND finish IS NULL AND execution_mode > %(execution_gap)d
+                         AND finish IS NULL
                          ORDER BY step_id """ % self.sqlDict
         self.cur.execute(sqlCommand)
-        commands = self.cur.fetchall()
-        n = len(commands)
+        steps = self.cur.fetchall()
+        n = len(steps)
         msg = '***************************** Protocol STARTED mode: %s' % self.runBehavior
         printLog(msg, self.Log, out=True, err=True)
         
-        for i in range(n):
+        i = 0
+        while i < n:
             #Execute the step
             try:
-                self.runSingleStep(self.connection, self.cur, commands[i])
+                # Detect if there are parallel steps and execute them in parallel
+                first = i
+                while steps[i]['execution_mode'] == SqliteDb.EXEC_PARALLEL and i < n:
+                    i += 1
+                if first < i: # There are parallel steps
+                    args = pickle.loads(str(steps[first]["parameters"]))
+                    NumberOfParallelSteps = args['NumberOfParallelSteps']
+                    fromStep = steps[first]['step_id']
+                    if i < n: 
+                        toStep = steps[i]['step_id']
+                    else:
+                        toStep = 99999
+                    self.runParallelSteps(fromStep, toStep, NumberOfParallelSteps)
+                if i < n: # To be sure there are normal steps after parallels
+                    self.runSingleStep(self.connection, self.cur, steps[i])
+                i += 1
             except Exception as e:
                 msg = "Stopping batch execution since one of the steps could not be performed: %s" % e
                 printLog(msg, self.Log, out=True, err=True, isError=True)
@@ -513,6 +519,15 @@ class XmippProtocolDb(SqliteDb):
         msg = '***************************** Protocol FINISHED'
         printLog(msg, self.Log, out=True, err=True)
         self.updateRunState(SqliteDb.RUN_FINISHED)
+        
+    def runParallelSteps(self, fromStep, toStep, NumberOfParallelSteps):
+        '''This should run in parallel steps from fromStep and to toStep-1'''
+        numberOfMpi = min(NumberOfParallelSteps, toStep - fromStep)
+        script = self.protocolScript
+        retcode = runJob(self.Log, "xmipp_steps_runner", 
+                         "--script %(script)s --range %(fromStep)d %(toStep)d" % locals(), NumberOfParallelSteps)
+        if retcode != 0:
+            raise Exception('xmipp_mpi_steps_runner execution failed')
 
     def verifyStepFiles(self, fileList):
         missingFilesStr = ''
@@ -524,48 +539,69 @@ class XmippProtocolDb(SqliteDb):
             raise Exception("Missing result files: " + missingFilesStr)
         
     def runSingleStep(self, _connection, _cursor, stepRow):
-        exec(self.Import)
-        step_id = stepRow['step_id']
+        info = self._beginSingleStep(_connection, _cursor, stepRow)
+        try:
+            self._execSingleStep(stepRow, info)
+        except Exception as e:
+            err = "         Step finish with error: %s: %s" % (info.stepStr, e)
+            printLog(err, self.Log, out=True, err=True, isError=True)
+            raise
+        self._endSingleStep(_connection, _cursor, stepRow, info)
+         
+    def _getStepRowInfo(self, stepRow):
         myDict = self.sqlDict.copy()
-        myDict['step_id'] = step_id
-        myDict['iter'] = stepRow['iter']
-        command = stepRow['command']
-        dict = pickle.loads(str(stepRow["parameters"]))
+        myDict['step_id'] = stepRow['step_id']   
+        myDict['iter'] = stepRow['iter']  
+        info = StepRowInfo()   
+        info.command = stepRow['command']
+        info.args = pickle.loads(str(stepRow["parameters"]))
+        info.stepStr = "%(step_id)d (iter=%(iter)d)" % myDict
+        info.dict = myDict
+        return info
         
+    def beginSingleStep(self, stepRow):
+        return self._beginSingleStep(self.connection, self.cur, stepRow)
+        
+    def _beginSingleStep(self, _connection, _cursor, stepRow):
+        info = self._getStepRowInfo(stepRow)
         # Print
-        import pprint, time
-        stepStr = "%d (iter=%d)" % (step_id, stepRow['iter'])
-        msg = blueStr("-------- Step start:  %s" % stepStr)
+        import pprint        
+        msg = blueStr("-------- Step start:  %s" % info.stepStr)
         printLog(msg, self.Log, out=True, err=True)
-        print headerStr((command.split())[-1])
-        pprint.PrettyPrinter(indent=4, width=20).pprint(dict)
-
+        print headerStr((info.command.split())[-1])
+        pprint.PrettyPrinter(indent=4, width=20).pprint(info.args)
         # Set init time
         sqlCommand = """UPDATE %(TableSteps)s SET init = CURRENT_TIMESTAMP 
                         WHERE step_id=%(step_id)d
-                          AND run_id=%(run_id)d""" % myDict
+                          AND run_id=%(run_id)d""" % info.dict
         _cursor.execute(sqlCommand)
         _connection.commit()
+        return info
         
+    def execSingleStep(self, stepRow):
+        info = self._getStepRowInfo(stepRow)
+        self._execSingleStep(stepRow, info)
+        
+    def _execSingleStep(self, stepRow, info):
         # Execute Python function
-        try:
-            if stepRow['passDb']:
-                exec (command + '(self, **dict)')
-            else:
-                exec (command + '(self.Log, **dict)')
-            # Check that expected result files were produced
-            self.verifyStepFiles(pickle.loads(str(stepRow["verifyFiles"])))
-        except Exception as e:
-            msg = "         Step finish with error: %(stepStr)s: %(e)s" % locals()
-            printLog(msg, self.Log, out=True, err=True, isError=True)
-            raise
+        exec(self.Import)
+        if stepRow['passDb']:
+            exec ( info.command + '(self, **info.args)')
+        else:
+            exec ( info.command + '(self.Log, **info.args)')
+        # Check that expected result files were produced
+        self.verifyStepFiles(pickle.loads(str(stepRow["verifyFiles"])))
         
+    def endSingleStep(self, stepRow, info):
+        self._endSingleStep(self.connection, self.cur, stepRow, info)
+        
+    def _endSingleStep(self, _connection, _cursor, stepRow, info):  
         # Report step finish and update database
-        msg = greenStr("         Step finish: %s" % stepStr)
+        msg = greenStr("         Step finish: %s" % info.stepStr)
         printLog(msg, self.Log, out=True, err=True)
         sqlCommand = """UPDATE %(TableSteps)s SET finish = CURRENT_TIMESTAMP 
                         WHERE step_id=%(step_id)d
-                          AND run_id=%(run_id)d""" % myDict
+                          AND run_id=%(run_id)d""" % info.dict
         _cursor.execute(sqlCommand)
         _connection.commit()
 
@@ -585,7 +621,7 @@ class XmippProtocolDb(SqliteDb):
                           AND (child.step_id < %(next_step_id)d)
                           AND (child.init IS NULL)
                           AND (parent.finish IS NOT NULL)
-                          AND (child.execution_mode = %(execution_gap)d)
+                          AND (child.execution_mode = %(execution_parallel)d)
                           AND (child.run_id=%(run_id)d)
                           AND (parent.run_id =%(run_id)d) 
                         LIMIT 1""" % self.sqlDict
@@ -604,7 +640,7 @@ class XmippProtocolDb(SqliteDb):
         sqlCommand = """SELECT COALESCE(MIN(step_id), 99999) 
                          FROM %(TableSteps)s 
                         WHERE run_id=%(run_id)d 
-                          AND init IS NULL AND execution_mode > %(execution_gap)d""" % self.sqlDict
+                          AND init IS NULL AND execution_mode > %(execution_parallel)d""" % self.sqlDict
         cursor.execute(sqlCommand)
         # Count the gaps before the next step in main loop
         self.sqlDict['next_step_id'] = cursor.fetchone()[0]
@@ -612,12 +648,19 @@ class XmippProtocolDb(SqliteDb):
                         WHERE (step_id < %(next_step_id)d)
                           AND (finish IS NULL)
                           AND (init IS NULL)
-                          AND (execution_mode = %(execution_gap)d)
+                          AND (execution_mode = %(execution_parallel)d)
                           AND (run_id=%(run_id)d) """ % self.sqlDict
         
         cursor.execute(sqlCommand)
         result = cursor.fetchone()[0] 
         return result
+
+class StepRowInfo():
+    pass
+#    def __init__(self):
+#        self.args = None
+#        self.command = None
+#        self.dict = None
 
 # Function to fill gaps of step in database
 #this will use mpi process

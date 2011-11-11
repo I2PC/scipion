@@ -77,11 +77,11 @@ class ProtImportMicrographs(XmippProtocol):
         if not self.actualDoPreprocess:
             if not os.path.exists(finalname):
                 previousId=self.insertStep("createLink",verifyfiles=[finalname],
-                                           parent_step_id=previousId, execution_mode=SqliteDb.EXEC_GAP,
+                                           parent_step_id=previousId, execution_mode=SqliteDb.EXEC_PARALLEL,
                                            source=micrograph,dest=finalname)
                 if finalname.endswith(".raw"):
                     previousId=self.insertStep("createLink",verifyfiles=[finalname+".inf"],
-                                               parent_step_id=previousId, execution_mode=SqliteDb.EXEC_GAP,
+                                               parent_step_id=previousId, execution_mode=SqliteDb.EXEC_PARALLEL,
                                                source=micrograph+".inf",dest=finalname+".inf")
         else:    
             # Crop
@@ -89,7 +89,7 @@ class ProtImportMicrographs(XmippProtocol):
             if self.Crop != -1:
                 previousId=self.insertStep("runJob",programname="xmipp_transform_window",
                                            params=" -i %s -o %s --crop %d -v 0" %(iname,finalname,self.Crop),
-                                           verifyfiles = [finalname], parent_step_id=previousId, execution_mode=SqliteDb.EXEC_GAP)
+                                           verifyfiles = [finalname], parent_step_id=previousId, execution_mode=SqliteDb.EXEC_PARALLEL)
                 iname=finalname
             
             # Remove bad pixels
@@ -99,16 +99,16 @@ class ProtImportMicrographs(XmippProtocol):
                     params += " -o " + finalname
                     iname=finalname
                 previousId=self.insertStep("runJob",programname="xmipp_transform_filter",
-                                           params=params, verifyfiles = [finalname], parent_step_id=previousId, execution_mode=SqliteDb.EXEC_GAP)
+                                           params=params, verifyfiles = [finalname], parent_step_id=previousId, execution_mode=SqliteDb.EXEC_PARALLEL)
             
             # Downsample
             if self.Down != 1:
                 tmpFile=finalname+"_tmp.mrc"
                 previousId=self.insertStep("runJob",programname="xmipp_transform_downsample",
                                            params="-i %s -o %s --step %f --method fourier" % (iname,tmpFile,self.Down),
-                                           verifyfiles = [tmpFile], parent_step_id=previousId, execution_mode=SqliteDb.EXEC_GAP)
+                                           verifyfiles = [tmpFile], parent_step_id=previousId, execution_mode=SqliteDb.EXEC_PARALLEL)
                 self.insertStep("renameFile",verifyfiles=[finalname],
-                                parent_step_id=previousId, execution_mode=SqliteDb.EXEC_GAP,
+                                parent_step_id=previousId, execution_mode=SqliteDb.EXEC_PARALLEL,
                                 source=tmpFile,dest=finalname)
 
 def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):

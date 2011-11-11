@@ -1091,11 +1091,11 @@ class ProtocolGUI(BasicGUI):
     def wizardBrowse(self, var):
         if 'file' in var.tags.keys():
             seltype="file"
-            filter = var.tags['file']
+            filterExt = var.tags['file']
         else:
             seltype="folder"
-            filter = ''
-        files = showBrowseDialog(parent=self.master, seltype=seltype, filter=filter)
+            filterExt = ''
+        files = showBrowseDialog(parent=self.master, seltype=seltype, filter=filterExt)
         if files:
             var.tkvar.set(', '.join([relpath(f) for f in files]))
     

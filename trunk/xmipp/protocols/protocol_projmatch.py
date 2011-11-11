@@ -12,6 +12,7 @@
 
 
 import os
+from os.path import join
 from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL, MDL_COUNT
 from protlib_base import XmippProtocol, protocolMain
 from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector
@@ -25,37 +26,44 @@ class ProtProjMatch(XmippProtocol):
     def __init__(self, scriptname, project=None):
         super(ProtProjMatch, self).__init__(protDict.projmatch.name, scriptname, project)
         #Some class variables
-        self.ReferenceVolumeName = 'reference_volume.vol'
-        self.LibraryDir = "ReferenceLibrary"
-        self.ProjectLibraryRootName = self.LibraryDir + "/gallery"
-        self.ProjMatchDir = "ProjMatchClasses"
-        self.ProjMatchName = self.Name
-        self.ClassAverageName = 'class_average'
+        LibraryDir = "ReferenceLibrary"
+        
+        extraParams = {'ReferenceVolumeName': 'reference_volume.vol',
+        'LibraryDir': LibraryDir,
+        'ProjectLibraryRootName': join(LibraryDir, "gallery"),
+        'ProjMatchDir': "ProjMatchClasses",
+        'ProjMatchName': self.Name,
+        'ClassAverageName': 'class_average',
         #ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
-        self.ForReconstructionSel = "reconstruction.sel"
-        self.ForReconstructionDoc = "reconstruction.doc"
-        self.MultiAlign2dSel = "multi_align2d.sel"
-        self.DocFileWithOriginalAngles = 'original_angles.doc'
-        self.docfile_with_current_angles = 'current_angles'
-        self.FilteredReconstruction = "filtered_reconstruction"
+        'ForReconstructionSel': "reconstruction.sel",
+        'ForReconstructionDoc': "reconstruction.doc",
+        'MultiAlign2dSel': "multi_align2d.sel",
+        'DocFileWithOriginalAngles': 'original_angles.doc',
+        'docfile_with_current_angles': 'current_angles',
+        'FilteredReconstruction': "filtered_reconstruction",
+        'ReconstructedVolume': "reconstruction",
+        'MaskReferenceVolume': "masked_reference",
+        'OutputFsc': "resolution.fsc",
+        'CtfGroupDirectory': "CtfGroups",
+        'CtfGroupRootName': "ctf",
+        'CtfGroupSubsetFileName': "ctf_images.sel"
+        }
+        self.ParamsDict.update(extraParams);
+        # Set as protocol variables
+        for k, v in extraParams.iteritems():
+            setattr(self, k, v)
+            
+        self.CtfGroupDirectory = self.workingDirPath(self.CtfGroupDirectory)
+        self.CtfGroupSubsetFileName = join(self.CtfGroupDirectory, self.CtfGroupSubsetFileName)
+        self.DocFileWithOriginalAngles = self.workingDirPath(self.DocFileWithOriginalAngles)
         
-        self.ReconstructedVolume = "reconstruction"#
-        self.maskReferenceVolume = "masked_reference"#
-        
-        self.OutputFsc = "resolution.fsc"
-        self.CtfGroupDirectory = "CtfGroups"
-        self.CtfGroupRootName = "ctf"
-        self.CtfGroupSubsetFileName = self.CtfGroupRootName + "_images.sel"
-        
-        self.reconstructedFileNamesIters = []# names for reconstructed volumes
         #maskedFileNamesIter = []# names masked volumes used as reference
         self.numberOfReferences = 1#number of references
-        self.createAuxTable = False
+#        self.createAuxTable = False
         self.NumberOfCtfGroups = 1
         self.Import = 'from protocol_projmatch_before_loop import *;\
-                       from protocol_projmatch_in_loop import *;'        
-
-        
+                       from protocol_projmatch_in_loop import *;' 
+                #Convert directories/files  to absolute path from projdir
     def validate(self):
         errors = []
         #1 call base class, checks if project exists
@@ -96,73 +104,105 @@ class ProtProjMatch(XmippProtocol):
 
         return summary
     
+    def createFilenameTemplates(self):         
+        Iter = 'Iter_%(iter)03d'
+        Ref = 'Ref_%(ref)03d'
+        IterDir = self.workingDirPath(Iter)
+        ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s.doc')
+        CtfGroupBase = join(self.CtfGroupDirectory, '%(CtfGroupRootName)s')
+        ProjLibRootNames = join(IterDir, '%(ProjectLibraryRootName)s_' + Ref)
+        return {
+                # Global filenames templates
+                'IterDir': IterDir,
+                'ProjMatchDirs': ProjMatchDirs,
+                'DocfileInputAngles': join(IterDir, '%(docfile_with_current_angles)s.doc'),
+                'LibraryDirs': join(IterDir, '%(LibraryDir)s.doc'),
+                'ProjectLibraryRootNames': ProjLibRootNames,
+                'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref + '.doc'),
+                'ProjMatchRootNamesWithoutRef': join(ProjMatchDirs, '%(ProjMatchName)s.doc'),
+                'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref + '.vol'),
+                'ReconstructedFileNamesIters': join(IterDir, '%(ReconstructedVolume)s_' + Ref + '.vol'),
+                'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref + '.vol'),
+                # Particular templates for executeCtfGroups  
+                'ImageCTFpairs': CtfGroupBase + '_images.sel',
+                'CTFGroupSummary': CtfGroupBase + 'Info.xmd',
+                'StackCTFs': CtfGroupBase + '_ctf.stk',
+                'StackWienerFilters': CtfGroupBase + '_wien.stk',
+                'SplitAtDefocus': CtfGroupBase + '_split.doc',
+                # Particular templates for angular_project_library 
+                'ProjectLibraryStk': ProjLibRootNames + '.stk',
+                'ProjectLibraryDoc': ProjLibRootNames + '.doc',
+                'ProjectLibrarySampling': ProjLibRootNames + '_sampling.xmd',
+                'ProjectLibraryGroupSampling': ProjLibRootNames + '_group%(group)06d_sampling.xmd',
+                }
+         
+    
     def preRun(self):
         print "in PRERUN"
-        #Convert directories/files  to absolute path from projdir
-        self.CtfGroupDirectory = self.workingDirPath(self.CtfGroupDirectory)
-        self.CtfGroupSubsetFileName = os.path.join(self.CtfGroupDirectory, self.CtfGroupSubsetFileName)
     #vector for iterations??????
     #    global ProjMatchDir
     #    ProjMatchDir = WorkingDir +'/' + ProjMatchDir
-        self.DocFileWithOriginalAngles = self.workingDirPath(self.DocFileWithOriginalAngles)
     
         
         # Convert vectors to list
         self.ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
         self.numberOfReferences = len(self.ReferenceFileNames)
         #directory with ProjMatchClasses
-        self.ProjMatchDirs = [" "]
-        self.LibraryDirs = [" "]
-        self.DocFileInputAngles = [self.DocFileWithOriginalAngles]
-        #ProjMatchRootName=[" "]
-        
-        for iterN in range(self.NumberOfIterations):
-            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
-            self.ProjMatchDirs.append(fnBaseIter + self.ProjMatchDir)
-            self.LibraryDirs.append(fnBaseIter + self.LibraryDir)
-            self.DocFileInputAngles.append("%s%s.doc" % (fnBaseIter, self.docfile_with_current_angles))
-        
-        auxList = (self.numberOfReferences + 1) * [None]
-        self.ProjectLibraryRootNames = [[None]]
-        for iterN in range(self.NumberOfIterations):
-            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
-            for refN in range(self.numberOfReferences):                
-                auxList[refN + 1] = "%s%s_ref_%02d.stk" % (fnBaseIter, self.ProjectLibraryRootName, refN)
-            self.ProjectLibraryRootNames.append(list(auxList))
-                    
-        self.ProjMatchRootNames = [[None]]
-        for iterN in range(self.NumberOfIterations):
-            for refN in range(self.numberOfReferences):
-                auxList[refN + 1] = "%s/%s_ref_%02d.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName, refN + 1)
-            self.ProjMatchRootNames.append(list(auxList))
+#        self.ProjMatchDirs = [" "]
+#        self.LibraryDirs = [" "]
+#        self.DocFileInputAngles = [self.DocFileWithOriginalAngles]
+#        #ProjMatchRootName=[" "]
+#        
+#        for iterN in range(self.NumberOfIterations):
+#            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
+#            self.ProjMatchDirs.append(fnBaseIter + self.ProjMatchDir)
+#            self.LibraryDirs.append(fnBaseIter + self.LibraryDir)
+#            self.DocFileInputAngles.append("%s%s.doc" % (fnBaseIter, self.docfile_with_current_angles))
+#        
+#        auxList = (self.numberOfReferences + 1) * [None]
+#        self.ProjectLibraryRootNames = [[None]]
+#        for iterN in range(self.NumberOfIterations):
+#            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
+#            for refN in range(self.numberOfReferences):                
+#                auxList[refN + 1] = "%s%s_ref_%02d.stk" % (fnBaseIter, self.ProjectLibraryRootName, refN)
+#            self.ProjectLibraryRootNames.append(list(auxList))
+#                    
+#        self.ProjMatchRootNames = [[None]]
+#        for iterN in range(self.NumberOfIterations):
+#            for refN in range(self.numberOfReferences):
+#                auxList[refN + 1] = "%s/%s_ref_%02d.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName, refN + 1)
+#            self.ProjMatchRootNames.append(list(auxList))
+#    
+#        self.ProjMatchRootNamesWithoutRef = [[None]]
+#        for iterN in range(self.NumberOfIterations):
+#            self.ProjMatchRootNamesWithoutRef.append(list("%s/%s.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName)))
+#    
+#        #name of masked volumes
+#        #add dummy name so indexes start a 1
+#        self.maskedFileNamesIters = [[None]]
+#        for iterN in range(self.NumberOfIterations):
+#            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
+#            for refN in range(self.numberOfReferences):
+#                auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.maskReferenceVolume, refN + 1)
+#            self.maskedFileNamesIters.append(list(auxList))
+#    
+#        ####################################################################
+#        #add initial reference, useful for many routines
+#        #NOTE THAT INDEXES START AT 1
+
+        # Construct special filename list with zero special case
+        self.DocFileInputAngles = [self.DocFileWithOriginalAngles] + [self.getFilename('DocFileInputAngles', iter=i) for i in range(1, self.NumberOfIterations + 1)]
+        self.reconstructedFileNamesIters = [[None] + self.ReferenceFileNames]
+        for iterN in range(1, self.NumberOfIterations + 1):
+            self.reconstructedFileNamesIters.append([None] + [self.getFilename('ReconstructedFileNamesIters', iter=iterN, ref=r) for r in range(1, self.numberOfReferences + 1)])
+#            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
+#            for refN in range(self.numberOfReferences):
+#                auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.ReconstructedVolume, refN + 1)
     
-        self.ProjMatchRootNamesWithoutRef = [[None]]
-        for iterN in range(self.NumberOfIterations):
-            self.ProjMatchRootNamesWithoutRef.append(list("%s/%s.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName)))
-    
-        #name of masked volumes
-        #add dummy name so indexes start a 1
-        self.maskedFileNamesIters = [[None]]
-        for iterN in range(self.NumberOfIterations):
-            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
-            for refN in range(self.numberOfReferences):
-                auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.maskReferenceVolume, refN + 1)
-            self.maskedFileNamesIters.append(list(auxList))
-    
-        ####################################################################
-        #add initial reference, useful for many routines
-        #NOTE THAT INDEXES START AT 1
-        self.reconstructedFileNamesIters.append([None] + self.ReferenceFileNames)
-        for iterN in range(self.NumberOfIterations):
-            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
-            for refN in range(self.numberOfReferences):
-                auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.ReconstructedVolume, refN + 1)
-            self.reconstructedFileNamesIters.append(list(auxList))
-    
-        self.docfile_with_current_anglesList = [None]
-        for iterN in range(self.NumberOfIterations):
-            fnBaseIter = "%s/Iter_%02d/%s.doc" % (self.WorkingDir, iterN + 1, self.docfile_with_current_angles)
-            self.docfile_with_current_anglesList.append(fnBaseIter)
+#        self.docfile_with_current_anglesList = [None]
+#        for iterN in range(self.NumberOfIterations):
+#            fnBaseIter = "%s/Iter_%02d/%s.doc" % (self.WorkingDir, iterN + 1, self.docfile_with_current_angles)
+#            self.docfile_with_current_anglesList.append(fnBaseIter)
     
         #parameter for projection matching
         self.Align2DIterNr = [-1] + getListFromVector(self.Align2DIterNr, self.NumberOfIterations)
@@ -197,8 +237,6 @@ class ProtProjMatch(XmippProtocol):
     def otherActionsToBePerformedBeforeLoop(self):
         print "in otherActionsToBePerformedBeforeLoop"
         _VerifyFiles = []
-        _VerifyfilesDictionary = {}
- 
 
         _dataBase = self.Db
         if self.DoCtfCorrection:
@@ -223,18 +261,12 @@ class ProtProjMatch(XmippProtocol):
                                                           , DoCtfCorrection=self.DoCtfCorrection)
     
         #7 make CTF groups
-        values   = ['_images.sel']
-        keys     = ['ImageCTFpairs']
-        fnBase = os.path.join(self.CtfGroupDirectory, self.CtfGroupRootName)
+        verifyFiles = [self.getFilename('ImageCTFpairs')]
         if self.DoCtfCorrection:
-            values   += ['Info.xmd', '_ctf.stk', '_wien.stk', '_split.doc']        
-            keys     += ['CTFGroupSummary','StackCTFs','StackWienerFilters','SplitAtDefocus']
-        _VerifyfilesDictionary.clear()
-        for i in range(len(values)):
-              _VerifyfilesDictionary[keys[i]] = fnBase + values[i]
-              #fromkeys may be used to create the dictionary but for fnBase
+            verifyFiles += [self.getFilename(k) \
+                            for k in ['CTFGroupSummary','StackCTFs','StackWienerFilters','SplitAtDefocus']]
 
-        _dataBase.insertStep('executeCtfGroups', verifyfilesDictionary=_VerifyfilesDictionary
+        _dataBase.insertStep('executeCtfGroups', verifyfiles=verifyFiles
                                                , CTFDatName=self.CTFDatName
                                                , CtfGroupDirectory=self.CtfGroupDirectory
                                                , CtfGroupMaxDiff=self.CtfGroupMaxDiff
@@ -248,8 +280,7 @@ class ProtProjMatch(XmippProtocol):
                                                , SplitDefocusDocFile=self.SplitDefocusDocFile
                                                , WienerConstant=self.WienerConstant)
         #Create Initial angular file. Either fill it with zeros or copy input
-        _VerifyFiles = [self.DocFileWithOriginalAngles]
-        _dataBase.insertStep('initAngularReferenceFile', verifyfiles=_VerifyFiles
+        _dataBase.insertStep('initAngularReferenceFile', verifyfiles=[self.DocFileWithOriginalAngles]
                                                                 , DocFileName=self.DocFileName
                                                                 , DocFileWithOriginalAngles=self.DocFileWithOriginalAngles
                                                                 , SelFileName=self.SelFileName)
@@ -265,52 +296,46 @@ class ProtProjMatch(XmippProtocol):
         _dataBase.connection.commit()
     
     def getIterDirName(self, iterN):
-        return os.path.join(self.projectDir, self.WorkingDir, 'Iter_%02d' % iterN)
+        return join(self.projectDir, self.WorkingDir, 'Iter_%02d' % iterN)
     
     def actionsToBePerformedInsideLoop(self):
         _log = self.Log
         _dataBase = self.Db
-        _VerifyfilesDictionary = {}
 
         for iterN in range(1, self.NumberOfIterations + 1):
             _dataBase.setIteration(iterN)
             # create IterationDir
-            _dataBase.insertStep('createDir', path=self.getIterDirName(iterN))
+            _dataBase.insertStep('createDir', path=self.getFilename('IterDir', iter=iterN))
     
             #Create directory with classes
-            _dataBase.insertStep('createDir', path=self.ProjMatchDirs[iterN])
+            _dataBase.insertStep('createDir', path=self.getFilename('ProjMatchDirs', iter=iterN))
         
             #Create directory with image libraries
-            id = _dataBase.insertStep('createDir', path=self.LibraryDirs[iterN])
+            id = _dataBase.insertStep('createDir', path=self.getFilename('LibraryDirs', iter=iterN))
 
+            ProjMatchRootNameList = []
             for refN in range(1, self.numberOfReferences + 1):
                 # Mask reference volume
-                _VerifyFiles = [self.maskedFileNamesIters[iterN][refN]]
-                _VerifyfilesDictionary.clear()
-                _VerifyfilesDictionary['mask_%s_%s' % (iterN, refN)]= self.maskedFileNamesIters[iterN][refN]
+                maskedFileName = self.getFilename('MaskedFileNamesIters', iter=iterN, ref=refN)
                 _dataBase.insertStep('executeMask'
-                                    , verifyfilesDictionary=_VerifyfilesDictionary
+                                    , verifyfiles=[maskedFileName]
                                     , parent_step_id=id
                                     , DoMask=self.DoMask
                                     , DoSphericalMask=self.DoSphericalMask
-                                    , maskedFileName=self.maskedFileNamesIters[iterN][refN]
+                                    , maskedFileName=maskedFileName
                                     , maskRadius=self.MaskRadius
                                     , reconstructedFileName=self.reconstructedFileNamesIters[iterN - 1][refN]
                                     , userSuppliedMask=self.MaskFileName)
 
                 # angular_project_library
                 #file with projections
-                auxFn = self.ProjectLibraryRootNames[iterN][refN]
-                _VerifyFiles = [auxFn]
-                auxFn = auxFn[:-4]#remove extension
-                #file with projection angles angles 
-                _VerifyFiles.append(auxFn + ".doc")
-                #file with sampling point neighbourhood 
-                _VerifyFiles.append(auxFn + "_sampling.xmd")
+                auxFn = self.getFilename('ProjectLibraryRootNames', iter=iterN, ref=refN)
                 #file with sampling point neighbourhood for each ctf group, this is reduntant but useful
-                for i in range (1, self.NumberOfCtfGroups + 1):
-                    _VerifyFiles.append(auxFn + "_group" + str(i).zfill(FILENAMENUMBERLENGTH) + "_sampling.xmd")
-                            
+                #Files: projections, projection_angles, sampling_points and neighbourhood
+                _VerifyFiles = [self.getFilename('ProjectLibrary' + e, iter=iterN, ref=refN) for e in ['Stk', 'Doc', 'Sampling']]
+                _VerifyFiles.append([self.getFilename('ProjectLibraryGroupSampling', iter=iterN, ref=refN, group=g) for g in range (1, self.NumberOfCtfGroups + 1)])
+                projLibFn =  self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)  
+                         
                 _dataBase.insertStep('angular_project_library', verifyfiles=_VerifyFiles
                                     , AngSamplingRateDeg=self.AngSamplingRateDeg[iterN]
                                     , CtfGroupSubsetFileName=self.CtfGroupSubsetFileName
@@ -319,22 +344,25 @@ class ProtProjMatch(XmippProtocol):
                                     , DoParallel=self.DoParallel
                                     , DoRestricSearchbyTiltAngle=self.DoRestricSearchbyTiltAngle
                                     , MaxChangeInAngles=self.MaxChangeInAngles[iterN]
-                                    , maskedFileNamesIter=self.maskedFileNamesIters[iterN][refN]
+                                    , maskedFileNamesIter=maskedFileName
+                                    , NumberOfMpi=self.NumberOfMpi
+                                    , NumberOfThreads=self.NumberOfThreads
                                     , MpiJobSize=self.MpiJobSize
                                     , OnlyWinner=self.OnlyWinner[iterN]
                                     , PerturbProjectionDirections=self.PerturbProjectionDirections[iterN]
-                                    , ProjectLibraryRootName=self.ProjectLibraryRootNames[iterN][refN]
+                                    , ProjectLibraryRootName=projLibFn
                                     , SymmetryGroup=self.SymmetryGroup[iterN]
                                     , SymmetryGroupNeighbourhood=self.SymmetryGroupNeighbourhood
                                     , Tilt0=self.Tilt0
                                     , TiltF=self.TiltF)
                 # projectionMatching    
                 #File with list of images and references
-                _VerifyFiles = [self.ProjMatchRootNames[iterN][refN]]
-                for i in range (1, self.NumberOfCtfGroups + 1):
-                    _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) + "_sampling.xmd")
+                ProjMatchRootName = self.getFilename('ProjMatchRootNames', iter=iterN, ref=refN)
+                ProjMatchRootNameList.append(ProjMatchRootName)
+#                for i in range (1, self.NumberOfCtfGroups + 1):
+#                    _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) + "_sampling.xmd")
                     
-                _dataBase.insertStep('projection_matching', verifyfiles=_VerifyFiles,
+                _dataBase.insertStep('projection_matching', verifyfiles=[ProjMatchRootName],
                                       AvailableMemory=self.AvailableMemory
                                     , CtfGroupRootName=self.CtfGroupRootName
                                     , CtfGroupDirectory=self.CtfGroupDirectory
@@ -350,8 +378,8 @@ class ProtProjMatch(XmippProtocol):
                                     , NumberOfThreads=self.NumberOfThreads
                                     , OuterRadius=self.OuterRadius[iterN]
                                     , PaddingFactor=self.PaddingFactor
-                                    , ProjectLibraryRootName=self.ProjectLibraryRootNames[iterN][refN]
-                                    , ProjMatchRootName=self.ProjMatchRootNames[iterN][refN]
+                                    , ProjectLibraryRootName=projLibFn
+                                    , ProjMatchRootName=ProjMatchRootName
                                     , ReferenceIsCtfCorrected=self.ReferenceIsCtfCorrected[iterN]
                                     , ScaleStep=self.ScaleStep[iterN]
                                     , ScaleNumberOfSteps=self.ScaleNumberOfSteps[iterN]
@@ -362,16 +390,14 @@ class ProtProjMatch(XmippProtocol):
             
             #assign the images to the different references based on the crosscorrelation coheficient
             #if only one reference it just copy the docfile generated in the previous step
-            _VerifyFiles = [self.DocFileInputAngles[iterN]]
-            _dataBase.insertStep('assign_images_to_references', verifyfiles=_VerifyFiles
+            _dataBase.insertStep('assign_images_to_references', verifyfiles=[self.DocFileInputAngles[iterN]]
                                      , DocFileInputAngles=self.DocFileInputAngles[iterN]#Output file with angles
                                      , NumberOfCtfGroups=self.NumberOfCtfGroups
-                                     , ProjMatchRootName=self.ProjMatchRootNames[iterN]#LIST
+                                     , ProjMatchRootName=ProjMatchRootNameList#LIST
                                      , NumberOfReferences=self.numberOfReferences
                          )
     
-            _VerifyFiles = []
-            id = _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
+            id = _dataBase.insertStep('angular_class_average', verifyfiles=[]
                          , Action='preprocessing'#
                          , Align2DIterNr=self.Align2DIterNr[iterN]#
                          , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
@@ -420,8 +446,8 @@ class ProtProjMatch(XmippProtocol):
                          , NumberOfReferences=self.numberOfReferences#
                          , NumberOfCtfGroups=self.NumberOfCtfGroups#
                          , PaddingFactor=self.PaddingFactor#
-                         , ProjectLibraryRootName=self.ProjectLibraryRootNames[iterN][refN]#
-                         , ProjMatchRootName=self.ProjMatchRootNamesWithoutRef[iterN][refN]#
+                         , ProjectLibraryRootName=self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)#
+                         , ProjMatchRootName=self.getFilename('ProjMatchRootNamesWithoutRef', iter=iterN, ref=refN)#
                          , refN=refN
                          )
                 
@@ -453,10 +479,11 @@ class ProtProjMatch(XmippProtocol):
 
             for refN in range(1, self.numberOfReferences + 1):
                 # Mask reference volume
-                id = _dataBase.insertStep('executeMask', verifyfiles=[self.maskedFileNamesIters[iterN][refN]]
+                maskedFn = self.getFilename('MaskedFileNamesIters', iter=iterN, ref=refN)
+                id = _dataBase.insertStep('executeMask', verifyfiles=[maskedFn]
                                                 , DoMask=self.DoMask
                                                 , DoSphericalMask=self.DoSphericalMask
-                                                , maskedFileName=self.maskedFileNamesIters[iterN][refN]
+                                                , maskedFileName=maskedFn
                                                 , maskRadius=self.MaskRadius
                                                 , reconstructedFileName=self.reconstructedFileNamesIters[iterN - 1][refN]
                                                 , userSuppliedMask=self.MaskFileName)

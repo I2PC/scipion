@@ -30,14 +30,16 @@ class ProtDummy(XmippProtocol):
         self.Db.insertStep('backupMetaData', [backup], filename=filename, backup=backup)
         id = self.Db.insertStep('splitMetaData', filename=filename,workingDir=self.WorkingDir,  
                            parts=self.NumberOfParts)
-        self.Db.insertStep('runStepGapsMpi',passDb=True, script=self.scriptName, 
-                                 NumberOfMpi=2)
+#        self.Db.insertStep('runStepGapsMpi',passDb=True, script=self.scriptName, 
+#                                 NumberOfMpi=2)
         for i in range(self.NumberOfParts):
-            self.Db.insertStep('sortMetaDataPart', execution_mode=SqliteDb.EXEC_GAP,
+            pid = self.insertParallelStep('sortMetaDataPart', 3, 
                                parent_step_id=id,
                                filename="%s/part%03d_%s" % (self.WorkingDir, i, filename))
+            self.insertParallelStep('sleepAfterSort', 3, parent_step_id=pid, secs=4)
         backup += ".2"
-        self.Db.insertStep('backupMetaData', [backup], filename=filename, backup=backup)
+        self.Db.insertStep('backupMetaData', verifyfiles=[backup], 
+                           filename=filename, backup=backup)
         
 def backupMetaData(log, filename, backup):    
     copyFile(log, filename, backup)
@@ -55,3 +57,7 @@ def sortMetaDataPart(log, filename):
     md = MetaData(filename)
     md.sort()
     md.write(filename)
+    
+def sleepAfterSort(log, secs):
+    from time import sleep
+    sleep(secs)
