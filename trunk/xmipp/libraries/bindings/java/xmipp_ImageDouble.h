@@ -153,6 +153,14 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setXmippOrigin
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_printShape
   (JNIEnv *, jobject);
 
+/*
+ * Class:     xmipp_ImageDouble
+ * Method:    fastEstimateEnhancedPSD
+ * Signature: (Ljava/lang/String;DII)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_fastEstimateEnhancedPSD
+  (JNIEnv *, jobject, jstring, jdouble, jint, jint);
+
 #ifdef __cplusplus
 }
 #endif

@@ -41,7 +41,10 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_read
         const char *fnStr = env->GetStringUTFChars(filename, false);
         ImageInfo imf;
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(obj);
-        image->getInfo(fnStr, imf);
+
+        image->read(fnStr, onlyHeader ? HEADER : DATA);
+
+        image->getInfo(imf);
 		//Set object properties
 		jclass class_ = env->GetObjectClass(obj);
 
@@ -294,10 +297,9 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageGeneric_getStatistics(
 	if (image != NULL) {
 		try {
 			double avg, stddev, min, max;
-//std::cout << " ****************** Shape: " << std::endl;
-//		(*image)().printShape()
+
 			(*image)().computeStats(avg, stddev, min, max);
-//std::cout << "2" << std::endl;
+
 			// Copies vector into array.
 			double statistics[4];
 			statistics[0] = min;

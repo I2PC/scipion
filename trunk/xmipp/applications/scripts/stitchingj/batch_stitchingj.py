@@ -1,6 +1,5 @@
 #!/usr/bin/env xmipp_python
 
-import os
 from protlib_xmipp import XmippScript
 from protlib_utils import runJavaJar
 
@@ -25,13 +24,13 @@ class ScriptStitchingJ(XmippScript):
         self.addParamsLine('  [-y <initial_y_coordinate>]		: Initial y position for second image.');
 
     def readParams(self):
-	self.args = ""
-	self.mem = ""
+        self.args = ""
+        self.mem = ""
 
         if self.checkParam('--memory'):
-		self.mem = self.getParam('--memory')
-	else:
-	        self.mem = "512m"
+		    self.mem = self.getParam('--memory')
+        else:
+            self.mem = "512m"
         	print "No memory size provided. Using default: " + self.mem
 
         if self.checkParam('--input'):
@@ -49,8 +48,7 @@ class ScriptStitchingJ(XmippScript):
         	self.args += " -y %s" % self.getParam('-y')
 
     def run(self):
-	print "args: %s" % self.args
-	runJavaJar(self.mem, "external/Stitching/Stitching.jar", self.args, False)
+	   runJavaJar(self.mem, "external/Stitching/Stitching.jar", self.args, False)
 
 if __name__ == '__main__':
         ScriptStitchingJ().tryRun()
