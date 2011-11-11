@@ -71,7 +71,7 @@ public class ImagesWindowFactory {
 
     public static void openFileAsDefault(String filename, Parameters parameters) {
         if (Filename.isMetadata(filename)) {
-            openFileAsGallery(filename, parameters);
+            openFileAsMetadata(filename, parameters);
         } else {
             try {
                 ImageDouble img = new ImageDouble();
@@ -296,14 +296,21 @@ public class ImagesWindowFactory {
     }
 
     public static void openImagePlusAs3D(ImagePlus ip) {
-        Image3DUniverse universe = new Image3DUniverse(UNIVERSE_W, UNIVERSE_H);
+        try {
+            // Checks if java3D is available or not.
+            Class.forName("javax.media.j3d.J3DBuffer");
 
-        // Adds the sphere image plus to universe.
-        new StackConverter(ip).convertToRGB();
-        Content c = universe.addVoltex(ip);
-        c.displayAs(Content.VOLUME);
+            Image3DUniverse universe = new Image3DUniverse(UNIVERSE_W, UNIVERSE_H);
 
-        universe.show();    // Shows...
+            // Adds the sphere image plus to universe.
+            new StackConverter(ip).convertToRGB();
+            Content c = universe.addVoltex(ip);
+            c.displayAs(Content.VOLUME);
+
+            universe.show();    // Shows...
+        } catch (final ClassNotFoundException e) {
+            IJ.error("Java 3D not found. Please, check your installation.");
+        }
     }
 
     public static ImageWindow openCTFImage(ImagePlus ip, String CTFfilename,

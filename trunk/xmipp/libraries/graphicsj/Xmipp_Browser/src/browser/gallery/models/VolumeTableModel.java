@@ -65,7 +65,8 @@ public class VolumeTableModel extends AbstractXmippTableModel {
     @Override
     protected void getMinAndMax() {
         try {
-            ImageGeneric ig = new ImageGeneric(filename);
+            ImageGeneric ig = new ImageGeneric();
+            ig.readData(filename);
             double stats[] = ig.getStatistics();
 
             min = stats[0];
@@ -120,7 +121,7 @@ public class VolumeTableModel extends AbstractXmippTableModel {
 
         try {
             ArrayList<AbstractGalleryImageItem> items = all ? data : getSelectedItems();
-            
+
             for (int i = 0; i < items.size(); i++) {
                 AbstractGalleryImageItem item = items.get(i);
 

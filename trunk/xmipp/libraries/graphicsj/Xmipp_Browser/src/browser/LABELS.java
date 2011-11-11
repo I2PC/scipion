@@ -4,7 +4,6 @@
  */
 package browser;
 
-import browser.filebrowsers.model.FileBrowser;
 import browser.imageitems.listitems.XmippImageItem;
 
 /**
@@ -16,20 +15,20 @@ public class LABELS {
     public final static String APP_NAME = "XmippJ";
     public final static String MESAGE_ABOUT = "About " + APP_NAME;
     public final static String TITLE_ABOUT = "About " + APP_NAME;
-    public final static String TITLE_XMIPP_BROWSER = "Xmipp Browser";
-    public final static String TITLE_XMIPP_FILE_SELECTOR_ANY = "Select...";
-    public final static String TITLE_XMIPP_FILE_SELECTOR_FILE = "Select file(s)";
-    public final static String TITLE_XMIPP_FILE_SELECTOR_DIR = "Select dir(s)";
-    public final static String TITLE_WIZARD_PSD = "Wizard PSD";
-    public final static String TITLE_WIZARD_MEASURE_FREQS = "Wizard Measure Freqs.";
-    public final static String TITLE_WIZARD_BAD_PIXELS_FILTER = "Wizard Bad Pixels Filter";
-    public final static String TITLE_WIZARD_BAND_PASS_FILTER = "Wizard Band Pass Filter";
-    public final static String TITLE_WIZARD_GAUSSIAN_FILTER = "Wizard Gaussian Filter";
-    public final static String TITLE_WIZARD_MASK_DESIGN = "Wizard Mask Design";
+    //public final static String TITLE_XMIPP_BROWSER = "Xmipp Browser";
+    //public final static String TITLE_XMIPP_FILE_SELECTOR_ANY = "Select...";
+    //public final static String TITLE_XMIPP_FILE_SELECTOR_FILE = "Select file(s)";
+    //public final static String TITLE_XMIPP_FILE_SELECTOR_DIR = "Select dir(s)";
+    //public final static String TITLE_WIZARD_PSD = "Wizard PSD";
+    //public final static String TITLE_WIZARD_MEASURE_FREQS = "Wizard Measure Freqs.";
+    //public final static String TITLE_WIZARD_BAD_PIXELS_FILTER = "Wizard Bad Pixels Filter";
+    //public final static String TITLE_WIZARD_BAND_PASS_FILTER = "Wizard Band Pass Filter";
+    //public final static String TITLE_WIZARD_GAUSSIAN_FILTER = "Wizard Gaussian Filter";
+    //public final static String TITLE_WIZARD_MASK_DESIGN = "Wizard Mask Design";
     public final static String TITLE_ERROR = "Memory error";
     public final static String TITLE_GO_TO_SLICE = "Go to slice";
     public final static String TITLE_PREVIEW = "Preview:";
-    public final static String TITLE_PREVIEW_FILTER = "Filter:";
+    //public final static String TITLE_PREVIEW_FILTER = "Filter:";
     public final static String TITLE_SEND2WINDOW = "Send image to window";
     public final static String TITLE_FSC = "FSC: ";
     public final static String TITLE_UNTITLED = "Untitled";
@@ -50,17 +49,18 @@ public class LABELS {
      */
     public final static String BUTTON_MEAN = "Mean";
     public final static String BUTTON_CANCEL = "Cancel";
-    public final static String BUTTON_CAPTURE_WINDOW = "Capture";
+    //public final static String BUTTON_CAPTURE_WINDOW = "Capture";
     public final static String BUTTON_INVERT_SELECTION = "Invert Selection";
     public final static String BUTTON_NORMALIZE = "Normalize";
-    public final static String BUTTON_OPEN_AS_IMAGE = "Open as Image";
-    public final static String BUTTON_OPEN_AS_GALLERY = "Open as gallery";
+    //public final static String BUTTON_OPEN_AS_IMAGE = "Open as Image";
+    //public final static String BUTTON_OPEN_AS_GALLERY = "Open as gallery";
+    public final static String BUTTON_OPEN_AS_METADATA = "Open as metadata";
     public final static String BUTTON_OK = "Ok";
     public final static String BUTTON_CLOSE = "Close";
-    public final static String BUTTON_PARENT_DIRECTORY = "Parent";
+    //public final static String BUTTON_PARENT_DIRECTORY = "Parent";
     public final static String BUTTON_RELOAD_GALLERY = "Reload";
     public final static String BUTTON_REFRESH = "Refresh";
-    public final static String BUTTON_REFRESH_DIRECTORY = "Refresh";
+    //public final static String BUTTON_REFRESH_DIRECTORY = "Refresh";
     public final static String BUTTON_SAVE = "Save";
     public final static String BUTTON_SELECT_ALL = "Select All";
     public final static String BUTTON_STD_DEVIATION = "Std. Deviation";
@@ -196,7 +196,7 @@ public class LABELS {
     public final static String LABEL_ROTSPECTRA_SHOW_NIMAGES = "Show #images";
     public final static String LABEL_SORT_BY_LABEL = "Sort by label";
     public final static String LABEL_USE_GEOMETRY = "Use geometry";
-    public final static String LABEL_FILTER = "Filter: ";
+    //public final static String LABEL_FILTER = "Filter: ";
     public final static String LABEL_WIDTH = "Width: ";
     public final static String LABEL_HEIGHT = "Height: ";
     public final static String LABEL_DEPTH = "Depth: ";
@@ -239,21 +239,21 @@ public class LABELS {
     public final static String LABEL_OPEN_AS = "Open as: ";
     public final static String LABEL_UNKNOWN = "Unknown label";
     //public final static String LABEL_SAMPLING = "Sampling: ";
-    public final static String LABEL_DOWNSAMPLING = "Downsampling: ";
-    public final static String LABEL_BAD_PIXELS_FACTOR = "Bad pixels factor: ";
-    public final static String LABEL_W1 = "W1: ";
-    public final static String LABEL_W2 = "W2: ";
-    public final static String LABEL_RAISED_W = "Raised W: ";
+    //public final static String LABEL_DOWNSAMPLING = "Downsampling: ";
+    //public final static String LABEL_BAD_PIXELS_FACTOR = "Bad pixels factor: ";
+    //public final static String LABEL_W1 = "W1: ";
+    //public final static String LABEL_W2 = "W2: ";
+    //public final static String LABEL_RAISED_W = "Raised W: ";
     public final static String LABEL_MENU_STATISTICS = "Statistics";
     public final static String LABEL_MENU_OPEN_AS = "Open as...";
-
-    public static String LABEL_FILES_SHOWING(int elements, int total) {
-        return total != elements ? " Showing " + elements + " / " + total + " elements." : "";
-    }
-
-    public static String MESSAGE_MEMORY_ERROR(long fileSize, long maxMemory) {
-        return "File size (" + FileBrowser.getFileSizeString(fileSize) + ") is bigger than available memory (" + FileBrowser.getFileSizeString(maxMemory) + ")";
-    }
+//
+//    public static String LABEL_FILES_SHOWING(int elements, int total) {
+//        return total != elements ? " Showing " + elements + " / " + total + " elements." : "";
+//    }
+//
+//    public static String MESSAGE_MEMORY_ERROR(long fileSize, long maxMemory) {
+//        return "File size (" + FileBrowser.getFileSizeString(fileSize) + ") is bigger than available memory (" + FileBrowser.getFileSizeString(maxMemory) + ")";
+//    }
     public final static String MESSAGE_NO_ITEMS_SELECTED = "No items selected (or not enabled)";
     //public final static String FILE_SELECTED_OUTPUT_PREFIX = "File selected: ";
     public final static String MESSAGE_OVERWRITE_FILE = "Overwrite existing file?";

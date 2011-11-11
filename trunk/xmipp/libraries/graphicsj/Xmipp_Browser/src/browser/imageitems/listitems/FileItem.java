@@ -10,7 +10,6 @@
  */
 package browser.imageitems.listitems;
 
-import browser.filebrowsers.model.FileBrowser;
 import java.io.File;
 
 /**
@@ -63,9 +62,5 @@ public class FileItem {
         } catch (Exception ex) {
             return null;
         }
-    }
-
-    public String getDescription() {
-        return FileBrowser.getFileSizeString(getFile().length());
     }
 }

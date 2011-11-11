@@ -27,9 +27,9 @@ public class GalleryTableColumnModel extends DefaultTableColumnModel {
         try {
             return super.getColumn(columnIndex);
         } catch (Exception ex) {
-            ex.printStackTrace();
-            System.out.println("*** Exception getting column: " + columnIndex + " / " + getColumnCount());
-            return super.getColumn(columnIndex);
+ //           ex.printStackTrace();
+ //           System.out.println("*** Exception getting column: " + columnIndex + " / " + getColumnCount());
+            return super.getColumn(0);
         }
     }
 

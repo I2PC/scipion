@@ -3,7 +3,6 @@ import ij.IJ;
 import ij.Macro;
 import browser.commandline.Parameters;
 import browser.commandline.COMMAND_PARAMETERS;
-import browser.filebrowsers.JDialogXmippBrowser;
 import browser.windows.ImagesWindowFactory;
 import ij.plugin.PlugIn;
 import java.util.LinkedList;
@@ -46,22 +45,11 @@ public class XmippBrowser implements PlugIn {
 //            processArgs(Macro.getOptions().trim());
         } else {    // From menu.
             parameters = new Parameters();
-            parameters.directory = System.getProperty("user.dir");
         }
 
         if (parameters.files != null) {
             openFiles(parameters);
         }
-
-        if (parameters.directory != null) {
-            runBrowser(parameters);
-        }
-    }
-
-    void runBrowser(Parameters parameters) {
-        JDialogXmippBrowser frameBrowser = new JDialogXmippBrowser(
-                parameters.directory, parameters);
-        frameBrowser.setVisible(true);
     }
 
     static void openFiles(Parameters parameters) {

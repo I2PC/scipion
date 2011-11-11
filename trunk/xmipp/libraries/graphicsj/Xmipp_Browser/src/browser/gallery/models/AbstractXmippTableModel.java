@@ -47,7 +47,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         this.filename = filename;
 
         String message = populateTable(filename);
-        if (!message.isEmpty()) {
+        if (message != null) {
             IJ.showMessage(message);
         }
     }

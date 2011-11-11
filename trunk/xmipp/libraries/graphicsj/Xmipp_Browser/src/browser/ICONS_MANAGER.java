@@ -4,7 +4,6 @@
  */
 package browser;
 
-import browser.filebrowsers.REGISTERED_FILE_ITEMS;
 import ij.ImagePlus;
 import javax.swing.ImageIcon;
 
@@ -29,12 +28,12 @@ public class ICONS_MANAGER {
     public final static String PATH_WAIT = PATH_ICONS + "wait.gif";
     public final static String PATH_WAIT_MENU = PATH_ICONS + "wait_menu.gif";
     public static ImageIcon FILTERING_ALERT;
-    public static ImageIcon PARENT_DIRECTORY;
-    public static ImageIcon REFRESH_DIRECTORY;
-    public static ImageIcon CAPTURE_WINDOW;
-    public static ImageIcon FILE_TYPE_DIRECTORY;
-    public static ImageIcon FILE_TYPE_UNKNOWN;
-    public static ImageIcon FILE_TYPES_ICONS[] = new ImageIcon[REGISTERED_FILE_ITEMS.length()];
+    //public static ImageIcon PARENT_DIRECTORY;
+    //public static ImageIcon REFRESH_DIRECTORY;
+    //public static ImageIcon CAPTURE_WINDOW;
+    //public static ImageIcon FILE_TYPE_DIRECTORY;
+    //public static ImageIcon FILE_TYPE_UNKNOWN;
+    //public static ImageIcon FILE_TYPES_ICONS[] = new ImageIcon[REGISTERED_FILE_ITEMS.length()];
     public static ImageIcon WAIT_ICON;
     public static ImageIcon WAIT_MENU_ICON;
     public static ImagePlus MISSING_ITEM;
@@ -45,17 +44,17 @@ public class ICONS_MANAGER {
 
     public ICONS_MANAGER() {
         FILTERING_ALERT = new ImageIcon(getClass().getResource(PATH_FILTERING_ALERT));
-        PARENT_DIRECTORY = new ImageIcon(getClass().getResource(PATH_PARENT_DIRECTORY));
-        REFRESH_DIRECTORY = new ImageIcon(getClass().getResource(PATH_REFRESH_DIRECTORY));
-        CAPTURE_WINDOW = new ImageIcon(getClass().getResource(PATH_CAPTURE_WINDOW));
+//        PARENT_DIRECTORY = new ImageIcon(getClass().getResource(PATH_PARENT_DIRECTORY));
+//        REFRESH_DIRECTORY = new ImageIcon(getClass().getResource(PATH_REFRESH_DIRECTORY));
+//        CAPTURE_WINDOW = new ImageIcon(getClass().getResource(PATH_CAPTURE_WINDOW));
 
-        FILE_TYPE_DIRECTORY = new ImageIcon(getClass().getResource(PATH_FILE_TYPE_DIRECTORY));
-        FILE_TYPE_UNKNOWN = new ImageIcon(getClass().getResource(PATH_FILE_TYPE_UNKNOWN));
-
-        // Loads icons for file types.
-        for (int i = 0; i < FILE_TYPES_ICONS.length; i++) {
-            FILE_TYPES_ICONS[i] = new ImageIcon(getClass().getResource(REGISTERED_FILE_ITEMS.getIcon(i)));
-        }
+//        FILE_TYPE_DIRECTORY = new ImageIcon(getClass().getResource(PATH_FILE_TYPE_DIRECTORY));
+//        FILE_TYPE_UNKNOWN = new ImageIcon(getClass().getResource(PATH_FILE_TYPE_UNKNOWN));
+//
+//        // Loads icons for file types.
+//        for (int i = 0; i < FILE_TYPES_ICONS.length; i++) {
+//            FILE_TYPES_ICONS[i] = new ImageIcon(getClass().getResource(REGISTERED_FILE_ITEMS.getIcon(i)));
+//        }
 
         WAIT_ICON = new ImageIcon(getClass().getResource(PATH_WAIT));
         WAIT_MENU_ICON = new ImageIcon(getClass().getResource(PATH_WAIT_MENU));
