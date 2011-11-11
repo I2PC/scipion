@@ -29,6 +29,7 @@ CONFIGURE_ARGS=""
 COMPILE_ARGS=""
 GUI_ARGS="gui"
 
+
 for param in $@; do
  if $TAKE_CPU; then
     NUMBER_OF_CPU=$param
@@ -111,6 +112,7 @@ VARPACK=arpack++-2.3
 VNUMPY=numpy-1.6.1
 VMATLIBPLOT=matplotlib-1.0.1
 VPIL=Imaging-1.1.7
+PYMPI=mpi4py-1.2.2
 
 ################# HELPER FUNCTIONS ##################
 TIMESTAMP=""
@@ -289,6 +291,7 @@ if $DO_PYTHON; then
     
     compile_pymodule $VNUMPY
     compile_pymodule $VMATLIBPLOT
+    compile_pymodule $PYMPI
     #compile_pymodule $VPIL
 fi
 
