@@ -446,7 +446,7 @@ void ImageBase::getInfo(ImageInfo &imgInfo) const
 {
     imgInfo.datatype = datatype();
     imgInfo.swap = getSwap() > 0;
-    imgInfo.adim = imFileDim ;
+    imgInfo.adim = aDimFile ;
 }
 
 void ImageBase::getInfo(const FileName &name, ImageInfo &imgInfo)

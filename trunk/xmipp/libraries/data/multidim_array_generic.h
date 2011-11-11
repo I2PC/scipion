@@ -152,6 +152,11 @@ public:
         im->resize(Ndim,Zdim,Ydim,Xdim,copy);
     }
 
+    void resize(ArrayDim &adim, bool copy=true)
+    {
+        im->resize(adim, copy);
+    }
+
     /** Reverse matrix values over X axis, keep in this object. */
     void selfReverseX()
     {
@@ -176,7 +181,7 @@ public:
     void getMultidimArray(T *M)
     {
 
-#define GETMULTIDIMARRAY(type) M = (T*) ((MultidimArray<type>*) im)->data;
+#define GETMULTIDIMARRAY(type) M = (T*) (((MultidimArray<type>*) im)->data);
 
         SWITCHDATATYPE(datatype,GETMULTIDIMARRAY)
 
@@ -277,6 +282,7 @@ public:
     {
         im->getDimensions(Xdim,Ydim,Zdim,Ndim);
     }
+
     void getDimensions(int& Xdim, int& Ydim, int& Zdim) const
     {
         size_t Ndim;
@@ -289,8 +295,14 @@ public:
         int Zdim;
         im->getDimensions(Xdim,Ydim,Zdim,Ndim);
     }
+
+    void getDimensions(ArrayDim &adim)
+    {
+      im->getDimensions(adim);
+    }
+
     /**
-      * Get the dimensions of the linked array.
+      * Set Xmipp origin.
       */
     inline   void setXmippOrigin()
     {

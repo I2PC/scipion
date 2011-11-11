@@ -699,11 +699,23 @@ public:
     virtual ~MultidimArrayBase()
     {}
     virtual void clear() = 0;
+
+    /** Sets new 4D dimensions.
+     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+     */
+    void setDimensions(int Xdim, int Ydim, int Zdim, int Ndim);
+
+    /** Sets new 4D dimensions.
+     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+     */
+    void setDimensions(ArrayDim &newDim);
+
     void getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const;
     void getDimensions(ArrayDim &idim) const;
     void getDimensions(int* size) const;
     size_t getSize() const;
     virtual void resize(size_t Ndim, int Zdim, int Ydim, int Xdim, bool copy=true) = 0;
+    void resize(ArrayDim &adim, bool copy=true);
     virtual void selfReverseX() = 0;
     virtual void selfReverseY() = 0;
     virtual void selfReverseZ() = 0;
@@ -1068,42 +1080,9 @@ public:
     /// @name Size
     //@{
 
-    /** Sets new 4D dimensions.
-      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
-      */
-    void setDimensions(int Xdim, int Ydim, int Zdim, int Ndim)
-    {
-        if (((size_t)Xdim)*Ydim*Zdim*Ndim < 1)
-            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Dimensions' size cannot be zero nor negative.");
-        ndim=Ndim;
-        zdim=Zdim;
-        ydim=Ydim;
-        xdim=Xdim;
-        yxdim=ydim*xdim;
-        zyxdim=zdim*yxdim;
-        nzyxdim=ndim*zyxdim;
-    }
-
-    /** Sets new 4D dimensions.
-     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
-     */
-    void setDimensions(ArrayDim &newDim)
-    {
-        if (newDim.ndim*newDim.zdim*newDim.ydim*newDim.xdim < 1)
-            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Dimensions' size cannot be zero nor negative.");
-        ndim = newDim.ndim;
-        zdim = newDim.zdim;
-        ydim = newDim.ydim;
-        xdim = newDim.xdim;
-        yxdim = ydim*xdim;
-        zyxdim = zdim*yxdim;
-        nzyxdim = ndim*zyxdim;
-    }
-
     /** Sets new N dimension.
      *
      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
-     *
      */
     void setNdim(int Ndim)
     {

@@ -688,7 +688,7 @@ public:
         //Set information from image file
         setName(name);
         setDatatype(imgInfo.datatype);
-        imFileDim = imgInfo.adim;
+        aDimFile = imgInfo.adim;
 
         im().setXmippOrigin();
 
@@ -733,16 +733,16 @@ public:
      */
     void movePointerToSlice(int select_slice)
     {
-        if (select_slice > imFileDim.zdim)
+        if (select_slice > aDimFile.zdim)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, formatString("movePointerToSlice: Selected slice %4d cannot be higher than Z size %4d.",
-                         select_slice,imFileDim.zdim));
+                         select_slice,aDimFile.zdim));
 
-        ArrayDim newDim = imFileDim;
+        ArrayDim newDim = aDimFile;
 
         switch (select_slice)
         {
         case CENTRAL_SLICE:
-            select_slice = imFileDim.zdim/2;
+            select_slice = aDimFile.zdim/2;
             newDim.zdim = 1;
             break;
         case ALL_SLICES:
@@ -816,18 +816,6 @@ public:
     bool operator==(const Image<T> &i1) const
     {
         return(this->data == i1.data);
-    }
-
-    /** Set the image dimensions
-     */
-    void setDimensions(int Xdim, int Ydim, int Zdim, size_t Ndim)
-    {
-        imFileDim.xdim = Xdim;
-        imFileDim.ydim = Ydim;
-        imFileDim.zdim = Zdim;
-        imFileDim.ndim = Ndim;
-
-        data.setDimensions(Xdim,Ydim,Zdim,Ndim);
     }
 
     /** Voxel access
@@ -947,6 +935,14 @@ protected:
                               A, IS_NOT_INV, wrap);
             }
         }
+    }
+
+    /** Set the image dimensions
+     */
+    void setDimensions(int Xdim, int Ydim, int Zdim, size_t Ndim)
+    {
+        data.setDimensions(Xdim,Ydim,Zdim,Ndim);
+        data.getDimensions(aDimFile);
     }
 
 private:

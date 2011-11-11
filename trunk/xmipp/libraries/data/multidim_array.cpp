@@ -25,6 +25,38 @@
 
 #include "multidim_array.h"
 
+/** Sets new 4D dimensions.
+  *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+  */
+void MultidimArrayBase::setDimensions(int Xdim, int Ydim, int Zdim, int Ndim)
+{
+    if (((size_t)Xdim)*Ydim*Zdim*Ndim < 1)
+        REPORT_ERROR(ERR_MULTIDIM_SIZE, "Dimensions' size cannot be zero nor negative.");
+    ndim=Ndim;
+    zdim=Zdim;
+    ydim=Ydim;
+    xdim=Xdim;
+    yxdim=ydim*xdim;
+    zyxdim=zdim*yxdim;
+    nzyxdim=ndim*zyxdim;
+}
+
+/** Sets new 4D dimensions.
+ *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+ */
+void MultidimArrayBase::setDimensions(ArrayDim &newDim)
+{
+    if (newDim.ndim*newDim.zdim*newDim.ydim*newDim.xdim < 1)
+        REPORT_ERROR(ERR_MULTIDIM_SIZE, "Dimensions' size cannot be zero nor negative.");
+    ndim = newDim.ndim;
+    zdim = newDim.zdim;
+    ydim = newDim.ydim;
+    xdim = newDim.xdim;
+    yxdim = ydim*xdim;
+    zyxdim = zdim*yxdim;
+    nzyxdim = ndim*zyxdim;
+}
+
 /** Returns the multidimArray N,Z, Y and X dimensions.
  *
  * @code
@@ -78,6 +110,13 @@ size_t MultidimArrayBase::getSize() const
     return nzyxdim;
 }
 
+/** Resize the multidimarray from an ArrayDim struct
+ *
+ */
+void MultidimArrayBase::resize(ArrayDim &adim,bool copy)
+{
+    resize(adim.ndim, adim.zdim, adim.ydim, adim.xdim, copy);
+}
 
 // Show a complex array ---------------------------------------------------
 template<>
@@ -183,15 +222,15 @@ void MultidimArray<double>::computeAvgStdev(double& avg, double& stddev) const
 template<>
 bool operator==(const MultidimArray< std::complex< double > >& op1, const MultidimArray< std::complex< double > >& op2)
 {
-	double accuracy = XMIPP_EQUAL_ACCURACY;
+    double accuracy = XMIPP_EQUAL_ACCURACY;
     if (! op1.sameShape(op2) || op1.data==NULL || op2.data == NULL)
         return false;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1)
     if (   fabs(DIRECT_MULTIDIM_ELEM(op1,n).real() -
-            DIRECT_MULTIDIM_ELEM(op2,n).real() > accuracy)
-            ||
+                DIRECT_MULTIDIM_ELEM(op2,n).real() > accuracy)
+           ||
            fabs(DIRECT_MULTIDIM_ELEM(op1,n).imag() -
-            DIRECT_MULTIDIM_ELEM(op2,n).imag() > accuracy)
+                DIRECT_MULTIDIM_ELEM(op2,n).imag() > accuracy)
        )
         return false;
     return true;
