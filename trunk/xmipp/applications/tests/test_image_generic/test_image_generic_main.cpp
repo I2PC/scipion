@@ -121,6 +121,29 @@ TEST_F( ImageGenericTest, createEmptyFile)
     EXPECT_DOUBLE_EQ(max, 0);
 }
 
+// check if an empty file is correctly created
+TEST_F( ImageGenericTest, getMultidimArray)
+{
+  ImageGeneric img, img2;
+  img.read(imageName);
+  MultidimArrayGeneric & mag = MULTIDIM_ARRAY_GENERIC(img);
+  MultidimArray<float> * maf = (MultidimArray<float>*)mag.im;
+  float * mydata = maf->data;
+
+  ImageInfo info;
+  img.getInfo(info);
+  img2.setDatatype(Float);
+  MultidimArrayGeneric & mag2 = MULTIDIM_ARRAY_GENERIC(img2);
+  mag2.resize(info.adim, false);
+  float * data, *data2;
+  mag.getMultidimArray(data);
+  mag2.getMultidimArray(data2);
+
+  memcpy(data2, data, info.adim.nzyxdim);
+
+  EXPECT_EQ(img, img2);
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
