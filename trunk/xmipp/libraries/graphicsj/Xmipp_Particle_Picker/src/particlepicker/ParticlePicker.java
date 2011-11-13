@@ -203,7 +203,7 @@ public abstract class ParticlePicker
 			setChanged(true);
 			return FamilyState.Review;
 		}
-		if (mode == FamilyState.Manual && (state != FamilyState.Manual || state != FamilyState.Available))
+		if (mode == FamilyState.Manual && !(state == FamilyState.Manual || state == FamilyState.Available))
 			throw new IllegalArgumentException(String.format("Can not use %s mode on this data", mode));
 		if (mode == FamilyState.Supervised && state == FamilyState.Review)
 			throw new IllegalArgumentException(String.format("Can not use %s mode on this data", mode));
