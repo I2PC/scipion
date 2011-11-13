@@ -116,11 +116,12 @@ class ProtParticlePicking(XmippProtocol):
 
 # Execute protocol in the working directory
 def launchParticlePickingGUI(log,MicrographSelfile,WorkingDir,
-                             AutomaticPicking=False,NumberOfThreads=1,Fast=True,InCore=False):
-    params="-i %s -o %s"%(MicrographSelfile,WorkingDir)
+                             AutomaticPicking=False, NumberOfThreads=1, Fast=True, InCore=False):
+    mode = "manual"
     if AutomaticPicking:
-        params+=" --mode supervised %d %s %s"%(NumberOfThreads,Fast,InCore)
-    runJob(log,"xmipp_micrograph_particle_picking",params,RunInBackground=True)
+        mode = "supervised %(NumberOfThreads)d %(Fast)s %(InCore)s"
+    params = "-i %(MicrographSelfile)s -o %(WorkingDir)s --mode " + mode 
+    runJob(log,"xmipp_micrograph_particle_picking", params % locals(), RunInBackground=True)
 
 #		
 # Main

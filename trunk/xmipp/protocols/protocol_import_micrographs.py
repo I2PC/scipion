@@ -15,6 +15,11 @@ class ProtImportMicrographs(XmippProtocol):
         XmippProtocol.__init__(self, protDict.import_micrographs.name, scriptname, project)
         self.Import="from protocol_import_micrographs import *"
 
+    def createFilenameTemplates(self):
+        return {
+                'micrographs': self.workingDirPath('micrographs.sel')
+                }
+        
     def defineSteps(self):
         # Create microscope
         self.insertCreateMicroscope()
@@ -32,13 +37,14 @@ class ProtImportMicrographs(XmippProtocol):
             fileDict[filename]=self.workingDirPath(finalname)
 
         # Preprocess
-        idMPI=self.insertRunMpiGapsStep(fileDict.values())
+        #idMPI=self.insertRunMpiGapsStep(fileDict.values())
         for filename in glob.glob(os.path.join(self.DirMicrographs, self.ExtMicrographs)):
             self.insertPreprocessStep(filename,fileDict[filename])
         
         # Gather results
-        self.insertStep('gatherResults',verifyfiles=[self.workingDirPath("micrographs.sel")],
-                        parent_step_id=idMPI,WorkingDir=self.WorkingDir)
+        summaryFile = self.getFilename('micrographs')
+        self.insertStep('gatherResults',verifyfiles=[summaryFile],
+                        WorkingDir=self.WorkingDir, summaryFile=summaryFile)
 
     def validate(self):
         errors = []
@@ -58,58 +64,50 @@ class ProtImportMicrographs(XmippProtocol):
         return message
     
     def visualize(self):
-        summaryFile=self.workingDirPath("micrographs.sel")
+        summaryFile = self.getFilename('micrographs')
         if os.path.exists(summaryFile):
-            os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --memory 2048m &")
+            os.system("xmipp_visualize_preprocessing_micrographj -i %s --memory 2048m &" % summaryFile)
 
     def insertCreateMicroscope(self):    
-        if self.SamplingRateMode=="From image":
-            AngPix=self.SamplingRate
+        if self.SamplingRateMode == "From image":
+            AngPix = self.SamplingRate
         else:
-            AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
-        fnOut=self.workingDirPath("microscope.xmd")
+            AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
+        fnOut = self.workingDirPath("microscope.xmd")
         self.insertStep("createMicroscope", verifyfiles = [fnOut], fnOut=fnOut, Voltage=self.Voltage,
                         SphericalAberration=self.SphericalAberration,SamplingRate=AngPix,
                         Magnification=self.Magnification)
             
     def insertPreprocessStep(self,micrograph,finalname):
-        previousId=XmippProjectDb.FIRST_STEP
+        previousId = XmippProjectDb.FIRST_STEP
         if not self.actualDoPreprocess:
             if not os.path.exists(finalname):
-                previousId=self.insertStep("createLink",verifyfiles=[finalname],
-                                           parent_step_id=previousId, execution_mode=SqliteDb.EXEC_PARALLEL,
-                                           source=micrograph,dest=finalname)
+                previousId = self.insertParallelStep('createLink', verifyfiles=[finalname], source=micrograph, dest=finalname)
                 if finalname.endswith(".raw"):
-                    previousId=self.insertStep("createLink",verifyfiles=[finalname+".inf"],
-                                               parent_step_id=previousId, execution_mode=SqliteDb.EXEC_PARALLEL,
-                                               source=micrograph+".inf",dest=finalname+".inf")
+                    previousId = self.insertParallelStep("createLink",verifyfiles=[finalname+".inf"], parent_step_id=previousId,
+                                               source=micrograph+".inf", dest=finalname+".inf")
         else:    
             # Crop
             iname=micrograph
             if self.Crop != -1:
-                previousId=self.insertStep("runJob",programname="xmipp_transform_window",
-                                           params=" -i %s -o %s --crop %d -v 0" %(iname,finalname,self.Crop),
-                                           verifyfiles = [finalname], parent_step_id=previousId, execution_mode=SqliteDb.EXEC_PARALLEL)
+                previousId = self.insertParallelRunJobStep("xmipp_transform_window", " -i %s -o %s --crop %d -v 0" %(iname,finalname,self.Crop),
+                                                           verifyfiles=[finalname])
                 iname=finalname
-            
             # Remove bad pixels
             if self.Stddev != -1:
-                params = " -i %s --bad_pixels outliers %f -v 0" % (iname,self.Stddev)
+                params = " -i %s --bad_pixels outliers %f -v 0" % (iname, self.Stddev)
                 if not iname == finalname:
                     params += " -o " + finalname
-                    iname=finalname
-                previousId=self.insertStep("runJob",programname="xmipp_transform_filter",
-                                           params=params, verifyfiles = [finalname], parent_step_id=previousId, execution_mode=SqliteDb.EXEC_PARALLEL)
+                    iname = finalname
+                previousId = self.insertParallelRunJobStep("xmipp_transform_filter", params, verifyfiles=[finalname], parent_step_id=previousId)
             
             # Downsample
             if self.Down != 1:
-                tmpFile=finalname+"_tmp.mrc"
-                previousId=self.insertStep("runJob",programname="xmipp_transform_downsample",
-                                           params="-i %s -o %s --step %f --method fourier" % (iname,tmpFile,self.Down),
-                                           verifyfiles = [tmpFile], parent_step_id=previousId, execution_mode=SqliteDb.EXEC_PARALLEL)
-                self.insertStep("renameFile",verifyfiles=[finalname],
-                                parent_step_id=previousId, execution_mode=SqliteDb.EXEC_PARALLEL,
-                                source=tmpFile,dest=finalname)
+                tmpFile = finalname + "_tmp.mrc"
+                previousId = self.insertParallelRunJobStep("xmipp_transform_downsample", "-i %s -o %s --step %f --method fourier" % (iname,tmpFile,self.Down),
+                                           verifyfiles = [tmpFile], parent_step_id=previousId)
+                self.insertParallelStep("renameFile",verifyfiles=[finalname], parent_step_id=previousId, 
+                                source=tmpFile, dest=finalname)
 
 def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):
     MD=xmipp.MetaData()
@@ -121,9 +119,8 @@ def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnific
     MD.setValue(xmipp.MDL_MAGNIFICATION,float(Magnification),id)
     MD.write(fnOut)    
 
-def gatherResults(log,WorkingDir):
-    summaryFile=os.path.join(WorkingDir,"micrographs.sel")
-    MD=xmipp.MetaData()
+def gatherResults(log, WorkingDir, summaryFile):
+    MD = xmipp.MetaData()
     for filename in glob.glob(WorkingDir+"/*"):
         if filename.endswith(".xmd") or filename.endswith("tmp") or filename.endswith(".sel"):
             continue

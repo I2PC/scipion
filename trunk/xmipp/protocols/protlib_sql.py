@@ -47,9 +47,9 @@ class SqliteDb:
     RUN_FAILED = 4
     RUN_ABORTED = 5
     
-    EXEC_PARALLEL = 0
+    EXEC_PARALLEL = 2 # Any value greater than 1 will be parallel
     EXEC_MAINLOOP = 1
-    EXEC_ALWAYS = 2
+    EXEC_ALWAYS = 0
     
     NO_JOBID = -1
     
@@ -170,7 +170,7 @@ class XmippProjectDb(SqliteDb):
                          verifyFiles TEXT,           -- list with files to modify
                          iter INTEGER DEFAULT 1,     -- for iterative scripts, iteration number
                                                      -- useful to resume at iteration n
-                         execution_mode INTEGER,     -- Possible values are: 0 - Parallel, 1-Mainloop, 2-DoAlways
+                         execution_mode INTEGER,     -- Possible values are: 0 - DoAlways, 1 - Mainloop, >1 - Parallel
                                                      -- an external program that will run it
                          passDb BOOL,                -- Should the script pass the database handler
                          run_id INTEGER REFERENCES %(TableRuns)s(run_id)  ON DELETE CASCADE,
@@ -497,17 +497,16 @@ class XmippProtocolDb(SqliteDb):
             try:
                 # Detect if there are parallel steps and execute them in parallel
                 first = i
-                while steps[i]['execution_mode'] == SqliteDb.EXEC_PARALLEL and i < n:
+                while steps[i]['execution_mode'] > SqliteDb.EXEC_MAINLOOP and i < n:
                     i += 1
                 if first < i: # There are parallel steps
-                    args = pickle.loads(str(steps[first]["parameters"]))
-                    NumberOfParallelSteps = args['NumberOfParallelSteps']
+                    mpiForParallelSteps = steps[first]["execution_mode"]
                     fromStep = steps[first]['step_id']
                     if i < n: 
                         toStep = steps[i]['step_id']
                     else:
                         toStep = 99999
-                    self.runParallelSteps(fromStep, toStep, NumberOfParallelSteps)
+                    self.runParallelSteps(fromStep, toStep, mpiForParallelSteps)
                 if i < n: # To be sure there are normal steps after parallels
                     self.runSingleStep(self.connection, self.cur, steps[i])
                 i += 1
@@ -520,12 +519,12 @@ class XmippProtocolDb(SqliteDb):
         printLog(msg, self.Log, out=True, err=True)
         self.updateRunState(SqliteDb.RUN_FINISHED)
         
-    def runParallelSteps(self, fromStep, toStep, NumberOfParallelSteps):
+    def runParallelSteps(self, fromStep, toStep, mpiForParallelSteps):
         '''This should run in parallel steps from fromStep and to toStep-1'''
-        numberOfMpi = min(NumberOfParallelSteps, toStep - fromStep)
+        numberOfMpi = min(mpiForParallelSteps, toStep - fromStep)
         script = self.protocolScript
         retcode = runJob(self.Log, "xmipp_steps_runner", 
-                         "--script %(script)s --range %(fromStep)d %(toStep)d" % locals(), NumberOfParallelSteps)
+                         "--script %(script)s --range %(fromStep)d %(toStep)d" % locals(), numberOfMpi)
         if retcode != 0:
             raise Exception('xmipp_mpi_steps_runner execution failed')
 
@@ -605,56 +604,6 @@ class XmippProtocolDb(SqliteDb):
         _cursor.execute(sqlCommand)
         _connection.commit()
 
-    # Function to get the first avalaible gap to run 
-    # it will return pair (state, stepRow)
-    # if state is:
-    # NO_MORE_GAPS, stepRow is None and there are not more gaps to work on
-    # NO_AVAIL_GAP, stepRow is Nonew and not available gaps now, retry later
-    # STEP_GAP, stepRow is a valid step row to work on
-    def getStepGap(self, cursor):
-        #The following query is just to start a transaction, pysqlite doesn't provide a better way
-        cursor.execute("UPDATE %(TableSteps)s SET step_id = -1 WHERE step_id < 0" % self.sqlDict)
-        if self.checkRunOk(cursor) and self.countStepGaps(cursor) > 0:
-            sqlCommand = """ SELECT child.step_id, child.iter, child.passDb, child.command, child.parameters,child.verifyFiles 
-                        FROM %(TableSteps)s parent, %(TableSteps)s child
-                        WHERE (parent.step_id = child.parent_step_id) 
-                          AND (child.step_id < %(next_step_id)d)
-                          AND (child.init IS NULL)
-                          AND (parent.finish IS NOT NULL)
-                          AND (child.execution_mode = %(execution_parallel)d)
-                          AND (child.run_id=%(run_id)d)
-                          AND (parent.run_id =%(run_id)d) 
-                        LIMIT 1""" % self.sqlDict
-            cursor.execute(sqlCommand)
-            row = cursor.fetchone()
-            if row is None:
-                result = (NO_AVAIL_GAP, None)
-            else:
-                result = (STEP_GAP, row)
-        else:
-            result = (NO_MORE_GAPS, None)
-        return result
-    
-    def countStepGaps(self, cursor):
-        #Select first the next step id in main loop to limit the gaps
-        sqlCommand = """SELECT COALESCE(MIN(step_id), 99999) 
-                         FROM %(TableSteps)s 
-                        WHERE run_id=%(run_id)d 
-                          AND init IS NULL AND execution_mode > %(execution_parallel)d""" % self.sqlDict
-        cursor.execute(sqlCommand)
-        # Count the gaps before the next step in main loop
-        self.sqlDict['next_step_id'] = cursor.fetchone()[0]
-        sqlCommand = """SELECT COUNT(*) FROM %(TableSteps)s 
-                        WHERE (step_id < %(next_step_id)d)
-                          AND (finish IS NULL)
-                          AND (init IS NULL)
-                          AND (execution_mode = %(execution_parallel)d)
-                          AND (run_id=%(run_id)d) """ % self.sqlDict
-        
-        cursor.execute(sqlCommand)
-        result = cursor.fetchone()[0] 
-        return result
-
 class StepRowInfo():
     pass
 #    def __init__(self):
@@ -662,66 +611,6 @@ class StepRowInfo():
 #        self.command = None
 #        self.dict = None
 
-# Function to fill gaps of step in database
-#this will use mpi process
-# this will be usefull for parallel processing, i.e., in threads or with MPI
-# step_id is the step that will launch the process to fill previous gaps
-def runStepGapsMpi(db, script, NumberOfMpi=1):
-    if NumberOfMpi > 1:
-        retcode = runJob(db.Log, "xmipp_steps_runner", script, NumberOfMpi)
-        if retcode != 0:
-            raise Exception('xmipp_mpi_steps_runner execution failed')
-    else:
-        runThreadLoop(db, db.connection, db.cur) 
-           
-def runStepGaps(db, NumberOfThreads=1):
-    # If run in separate threads, each one should create 
-    # a new connection and cursor
-    if NumberOfThreads > 1: 
-        threads = []
-        for i in range(NumberOfThreads):
-            thr = ThreadStepGap(db)
-            thr.start()
-            threads.append(thr)
-        #wait until all threads finish
-        for thr in threads:
-            thr.join() 
-    else:
-        runThreadLoop(db, db.connection, db.cur)
-        
-def runThreadLoop(db, connection, cursor):
-    import time
-    counter = 0
-    while True:
-        if counter > 100:
-            reportError("runThreadLoop: more than 100 times here, this is probably a bug")
-        state, stepRow = db.getStepGap(cursor)
-        counter += 1
-        if state == STEP_GAP: #database will be unlocked after commit on init timestamp
-            db.runSingleStep(connection, cursor, stepRow)
-        else:
-            connection.rollback() #unlock database
-            if state == NO_AVAIL_GAP:
-                time.sleep(1)
-            else:
-                break
- 
-# RunJobThread
-from threading import Thread
-class ThreadStepGap(Thread):
-    def __init__(self, db):
-        Thread.__init__(self)
-        self.db = db
-    def run(self):
-        try:
-            conn = sqlite.Connection(self.db.dbName)
-            conn.row_factory = sqlite.Row
-            cur = conn.cursor()
-            runThreadLoop(self.db, conn, cur)
-        except Exception, e:
-            printLog("Stopping threads because of error %s" % e, self.db.Log, out=True, err=True, isError=True)
-            self.db.updateRunState(SqliteDb.RUN_FAILED, cursor=cur, connection=conn)
-            
 def escapeStr(str):
     return "'%s'" % str.replace("'", "''") 
           
