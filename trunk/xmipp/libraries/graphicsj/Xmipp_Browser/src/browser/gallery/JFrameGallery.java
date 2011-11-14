@@ -64,11 +64,12 @@ import xmipp.MetaData;
  * @author Juanjo Vega
  */
 public class JFrameGallery extends JFrame {//implements TableModelListener {
+
     private final static int DELAY_TO_UPDATE = 500;
     private AbstractXmippTableModel tableModel;
     private GalleryTableColumnModel columnModel;
     private GalleryRowHeaderModel rowHeaderModel;
-    private int previousSelectedRow,  previousSelectedCol;
+    private int previousSelectedRow, previousSelectedCol;
     private JList rowHeader;
     private ImageRenderer renderer = new ImageRenderer();
     private Timer updateTimer = new Timer(true);    // Timer for zoom.
@@ -775,6 +776,7 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
     private javax.swing.JTable table;
     private javax.swing.JToolBar toolBar;
     // End of variables declaration//GEN-END:variables
+
     class TableUpdater extends TimerTask {
 
         @Override
@@ -796,9 +798,9 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
         protected JMenuItem jmiPCA = new JMenuItem(LABELS.BUTTON_PCA);
         protected JMenuItem jmiFSC = new JMenuItem(LABELS.BUTTON_FSC);
         protected JMenu jmOpenAs = new JMenu(LABELS.LABEL_MENU_OPEN_AS);
-        protected JMenuItem jmiOpenAsStack = new JMenuItem(LABELS.BUTTON_TO_STACK);
-        protected JMenuItem jmiOpenAsMetadata = new JMenuItem(LABELS.BUTTON_OPEN_AS_METADATA);
-        protected JMenuItem jmiOpenAs3D = new JMenuItem(LABELS.OPERATION_OPEN_AS_3D);
+        protected JMenuItem jmiOpenAs3D = new JMenuItem(LABELS.OPERATION_OPEN_AS_3D_VOLUME);
+        protected JMenuItem jmiOpenAsMetadata = new JMenuItem(LABELS.OPERATION_OPEN_AS_METADATA);
+        protected JMenuItem jmiOpenAsStack = new JMenuItem(LABELS.OPERATION_OPEN_AS_STACK);
 
         public JMenuBarTable() {
             super();

@@ -515,6 +515,7 @@ JNIEXPORT jint JNICALL Java_xmipp_MetaData_getValueInt(JNIEnv *env,
 	if (md != NULL) {
 		try {
 			int value;
+
 			if (md->getValue((MDLabel) label, value, objId))
 				return value;
 		} catch (XmippError xe) {

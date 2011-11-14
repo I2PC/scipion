@@ -58,9 +58,9 @@ public abstract class AbstractGalleryImageItem {
     }
 
     public boolean exists() {
-        File file = new File(getPath());
+        String path = getPath();
 
-        return file.exists();
+        return path != null ? new File(path).exists() : false;
     }
 
     public abstract void setEnabled(boolean enabled);
@@ -179,23 +179,25 @@ public abstract class AbstractGalleryImageItem {
 
     protected ImagePlus loadPreview(int w, int h) {
 //        System.out.println(" >>> Loading preview: " + getKey());
-        ImagePlus ip = null;
+        ImagePlus ip = ICONS_MANAGER.MISSING_ITEM;
+        String path = getPath();
 
-        try {
-            //String fileName = file.getName();
-            ImageDouble image = new ImageDouble();
-            //System.out.println(" *** Loading preview: " + path + " / w=" + w + " / h=" + h + " / d=" + nslice + " n=" + nimage);
+        if (path != null) {
+            try {
+                //String fileName = file.getName();
+                ImageDouble image = new ImageDouble();
+                //System.out.println(" *** Loading preview: " + path + " / w=" + w + " / h=" + h + " / d=" + nslice + " n=" + nimage);
 
-            double factor = getFactor(getWidth(), getHeight(), w, h);
+                double factor = getFactor(getWidth(), getHeight(), w, h);
 
-            int w_ = (int) Math.ceil(getWidth() / factor);
-            int h_ = (int) Math.ceil(getHeight() / factor);
+                int w_ = (int) Math.ceil(getWidth() / factor);
+                int h_ = (int) Math.ceil(getHeight() / factor);
 
-            image.readPreview(getPath(), w_, h_, getNSlice(), getNImage());
-            System.out.println(" *** path: " + getPath() + " w=" + w_ + " h=" + h_ + " s=" + getNSlice() + " n=" + getNImage());
-            ip = ImageConverter.convertToImageJ(image, getTitle());
-        } catch (Exception ex) {
-            ip = ICONS_MANAGER.MISSING_ITEM;
+                image.readPreview(path, w_, h_, getNSlice(), getNImage());
+                DEBUG.printMessage(" *** path: " + getPath() + " w=" + w_ + " h=" + h_ + " s=" + getNSlice() + " n=" + getNImage());
+                ip = ImageConverter.convertToImageJ(image, getTitle());
+            } catch (Exception ex) {
+            }
         }
 
         return ip;

@@ -18,16 +18,16 @@ public class ICONS_MANAGER {
     //public static int CACHE_SIZE_BROWSER = 20;
     //public static int CACHE_SIZE_TABLE = 50;
     public final static String PATH_ICONS = "/resources/";
-    public final static String PATH_FILTERING_ALERT = PATH_ICONS + "filtering.png";
-    public final static String PATH_PARENT_DIRECTORY = PATH_ICONS + "parent_folder.png";
-    public final static String PATH_REFRESH_DIRECTORY = PATH_ICONS + "refresh.png";
+    //public final static String PATH_FILTERING_ALERT = PATH_ICONS + "filtering.png";
+    //public final static String PATH_PARENT_DIRECTORY = PATH_ICONS + "parent_folder.png";
+    //public final static String PATH_REFRESH_DIRECTORY = PATH_ICONS + "refresh.png";
     public final static String PATH_MISSING_ITEM = PATH_ICONS + "missing.png";
-    public final static String PATH_CAPTURE_WINDOW = PATH_ICONS + "capture.png";
-    public final static String PATH_FILE_TYPE_DIRECTORY = PATH_ICONS + "type_folder.png";
-    public final static String PATH_FILE_TYPE_UNKNOWN = PATH_ICONS + "type_unknown.png";
+    //public final static String PATH_CAPTURE_WINDOW = PATH_ICONS + "capture.png";
+    //public final static String PATH_FILE_TYPE_DIRECTORY = PATH_ICONS + "type_folder.png";
+    //public final static String PATH_FILE_TYPE_UNKNOWN = PATH_ICONS + "type_unknown.png";
     public final static String PATH_WAIT = PATH_ICONS + "wait.gif";
     public final static String PATH_WAIT_MENU = PATH_ICONS + "wait_menu.gif";
-    public static ImageIcon FILTERING_ALERT;
+    //public static ImageIcon FILTERING_ALERT;
     //public static ImageIcon PARENT_DIRECTORY;
     //public static ImageIcon REFRESH_DIRECTORY;
     //public static ImageIcon CAPTURE_WINDOW;
@@ -43,7 +43,7 @@ public class ICONS_MANAGER {
     }
 
     public ICONS_MANAGER() {
-        FILTERING_ALERT = new ImageIcon(getClass().getResource(PATH_FILTERING_ALERT));
+//        FILTERING_ALERT = new ImageIcon(getClass().getResource(PATH_FILTERING_ALERT));
 //        PARENT_DIRECTORY = new ImageIcon(getClass().getResource(PATH_PARENT_DIRECTORY));
 //        REFRESH_DIRECTORY = new ImageIcon(getClass().getResource(PATH_REFRESH_DIRECTORY));
 //        CAPTURE_WINDOW = new ImageIcon(getClass().getResource(PATH_CAPTURE_WINDOW));

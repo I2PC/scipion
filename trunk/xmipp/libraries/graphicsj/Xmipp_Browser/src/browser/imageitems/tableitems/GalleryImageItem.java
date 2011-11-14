@@ -40,13 +40,14 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
         this.label = label;
 
         originalValue = md.getValueString(label, id);
-        String field = md.getValueString(label, id, true);
-        path = Filename.getFilename(field);
-        nimage = Filename.getNimage(field);
+        if (originalValue != null) {
+            String field = md.getValueString(label, id, true);
+            path = Filename.getFilename(field);
+            nimage = Filename.getNimage(field);
+            setEnabled(true);
 
-        setEnabled(true);
-
-        loadImageData();
+            loadImageData();
+        }
     }
 
     @Override

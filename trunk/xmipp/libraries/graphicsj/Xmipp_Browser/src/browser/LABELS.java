@@ -54,7 +54,9 @@ public class LABELS {
     public final static String BUTTON_NORMALIZE = "Normalize";
     //public final static String BUTTON_OPEN_AS_IMAGE = "Open as Image";
     //public final static String BUTTON_OPEN_AS_GALLERY = "Open as gallery";
-    public final static String BUTTON_OPEN_AS_METADATA = "Open as metadata";
+    public final static String OPERATION_OPEN_AS_3D_VOLUME = "3D Volume";
+    public final static String OPERATION_OPEN_AS_METADATA = "Metadata";
+    public final static String OPERATION_OPEN_AS_STACK = "Stack";
     public final static String BUTTON_OK = "Ok";
     public final static String BUTTON_CLOSE = "Close";
     //public final static String BUTTON_PARENT_DIRECTORY = "Parent";
