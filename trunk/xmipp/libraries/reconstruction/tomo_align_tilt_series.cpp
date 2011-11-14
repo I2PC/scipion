@@ -446,7 +446,7 @@ double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
 
         return cost;
     }
-    catch (XmippError XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         exit(1);
@@ -759,7 +759,7 @@ void ProgTomographAlignment::produceSideInfo()
     // Read input data
     SF.read(fnSel,NULL);
     if (SF.containsLabel(MDL_ENABLED))
-    	SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+        SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     Nimg=SF.size();
     if (Nimg!=0)
     {
@@ -808,7 +808,7 @@ void ProgTomographAlignment::produceSideInfo()
 
                 // Substract the background (rolling ball)
                 substractBackgroundRollingBall(Ifiltered,
-                                                  XSIZE(Ifiltered)/10);
+                                               XSIZE(Ifiltered)/10);
 
                 // Bandpass the image
                 FourierFilter FilterBP;
@@ -960,7 +960,7 @@ void ProgTomographAlignment::produceSideInfo()
     computeAffineTransformations(globalAffine);
 
     // Do not show refinement
-    showRefinement=false;
+    showRefinement = false;
 
     // Check which is the distribution of correlation
     if (!useCriticalPoints)
@@ -1626,7 +1626,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
 
 void ProgTomographAlignment::generateLandmarkSet()
 {
-  FileName fn_tmp = fnRoot+"_landmarks.txt";
+    FileName fn_tmp = fnRoot+"_landmarks.txt";
     if (!fn_tmp.exists())
     {
         pthread_t * th_ids = new pthread_t[numThreads];
@@ -1908,7 +1908,7 @@ bool ProgTomographAlignment::refineLandmark(const MultidimArray<double> &pieceii
             double &corrRef=corr(shifty,shiftx);
             if (stddev_jj>XMIPP_EQUAL_ACCURACY)
             {
-            	double istddev_jj=1.0/stddev_jj;
+                double istddev_jj=1.0/stddev_jj;
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(piecejj)
                 corrRef+=
                     DIRECT_MULTIDIM_ELEM(pieceii,n)*
@@ -2264,8 +2264,10 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
     << std::endl;
     MetaData DF;
 
-    MDIterator * iter;
-    if (fnSelOrig!="")
+    MDIterator * iter = NULL;
+
+    std::cerr << "iter = " << iter << std::endl;
+    if (!fnSelOrig.empty())
     {
         iter = new MDIterator(SForig);
     }
@@ -2306,11 +2308,11 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
         I.write(fn_corrected);
 
         // Align the original image
-        FileName auxFn;
-        SForig.getValue( MDL_IMAGE, auxFn, iter->objId);
-        Image<double> Iorig;
         if (fnSelOrig!="")
         {
+            FileName auxFn;
+            SForig.getValue( MDL_IMAGE, auxFn, iter->objId);
+            Image<double> Iorig;
             Iorig.read( auxFn );
             //SForig.nextObject();
             iter->moveNext();
@@ -2805,7 +2807,12 @@ void Alignment::updateModel()
         // Update the individual di
         for (int i=0; i<Nimg; i++)
             if (i!=prm->iMinTilt)
-                di[i]=prm->barpi[i]-Ai[i]*barri[i]-diaxis[i];
+            {
+                di[i] = prm->barpi[i]-Ai[i]*barri[i]-diaxis[i];
+
+                if (di[i].isAnyNaN())
+                    di[i].initZeros();
+            }
     }
 #ifdef DEBUG
     std::cout << "Step 2: error=" << computeError() << std::endl;
