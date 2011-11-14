@@ -318,6 +318,13 @@ protected:
 
 public:
     XmippMetadataProgram();
+
+    /** Destructor
+     */
+    virtual ~XmippMetadataProgram()
+    {
+    }
+
     void setMode(WriteModeMetaData _mode)
     {
         mode = _mode;
