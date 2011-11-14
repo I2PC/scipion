@@ -173,18 +173,14 @@ public:
         im->selfReverseZ();
     }
 
-
     /**
-     *  Copy a specific slice of the linked array.
+     *  Return a pointer to internal multidimarray casted to template T.
      */
     template <typename T>
-    void getMultidimArray(T *M)
+    void getMultidimArrayPointer(T* &M)
     {
-
 #define GETMULTIDIMARRAY(type) M = (T*) (((MultidimArray<type>*) im)->data);
-
         SWITCHDATATYPE(datatype,GETMULTIDIMARRAY)
-
 #undef GETMULTIDIMARRAY
 
     }
@@ -219,8 +215,10 @@ public:
             REPORT_ERROR(ERR_MMAP, "Cannot resize the image when it is mapped to file.");
 
 #define WINDOW(type) ((MultidimArray<type>*)im)->selfWindow(z0,y0,x0,zF,yF,xF,(type)init_value);
+
         SWITCHDATATYPE(datatype,WINDOW)
 #undef WINDOW
+
     }
 
     /**
@@ -230,9 +228,7 @@ public:
     void getSlice(int k, MultidimArray<T> &M, char axis = 'Z', bool reverse = false,  size_t n = 0) const
     {
 #define GETSLICE(type) ((MultidimArray<type>*) im)->getSlice(k, M, axis, reverse, n);
-
         SWITCHDATATYPE(datatype,GETSLICE)
-
 #undef GETSLICE
 
     }
@@ -243,9 +239,7 @@ public:
     void getSlice(int k, MultidimArrayGeneric* M, char axis = 'Z', bool reverse = false, size_t n = 0) const
     {
 #define GETSLICE(type) getSlice(k, *(MultidimArray<type>*)M->im, axis, reverse, n);
-
         SWITCHDATATYPE(M->datatype,GETSLICE)
-
 #undef GETSLICE
 
     }
@@ -298,7 +292,7 @@ public:
 
     void getDimensions(ArrayDim &adim)
     {
-      im->getDimensions(adim);
+        im->getDimensions(adim);
     }
 
     /**

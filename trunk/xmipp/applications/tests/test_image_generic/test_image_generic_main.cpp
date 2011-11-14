@@ -127,8 +127,6 @@ TEST_F( ImageGenericTest, getMultidimArray)
   ImageGeneric img, img2;
   img.read(imageName);
   MultidimArrayGeneric & mag = MULTIDIM_ARRAY_GENERIC(img);
-  MultidimArray<float> * maf = (MultidimArray<float>*)mag.im;
-  float * mydata = maf->data;
 
   ImageInfo info;
   img.getInfo(info);
@@ -136,12 +134,12 @@ TEST_F( ImageGenericTest, getMultidimArray)
   MultidimArrayGeneric & mag2 = MULTIDIM_ARRAY_GENERIC(img2);
   mag2.resize(info.adim, false);
   float * data, *data2;
-  mag.getMultidimArray(data);
-  mag2.getMultidimArray(data2);
+  mag.getMultidimArrayPointer(data);
+  mag2.getMultidimArrayPointer(data2);
 
-  memcpy(data2, data, info.adim.nzyxdim);
+  memcpy(data2, data, info.adim.nzyxdim*sizeof(float));
 
-  EXPECT_EQ(img, img2);
+  EXPECT_TRUE(img == img2);
 }
 
 GTEST_API_ int main(int argc, char **argv)
