@@ -98,7 +98,24 @@ public class ImageGeneric {
     private static native float[] getArrayFloat(String filename, int x, int y, int z, long N, int datatype);
     
     public void setArrayFloat(float[] data) {
-    	System.out.println("calling native with x: " + xSize + " y:" + ySize);
+    	System.out.println("image info: x: " + xSize + " y:" + ySize);
+    	System.out.println("data:");
+		for (int j = 0; j < ySize; j++) {
+			if (j < 3 || ySize-j <=3)
+			{
+				System.out.print("Line: " + j + " --> ");
+				for (int i = 0; i < xSize; i++) {
+					if (i < 3 || xSize-i<=3)
+					System.out.print(data[j * ySize + i] + " ");
+					else if (i==3)
+						System.out.print("... ");
+				}
+				System.out.println("");
+			}
+			else if (j==3)
+				System.out.println("...");
+		}
+		System.out.println("calling native setArrayFloat");
     	setArrayFloat(xSize, ySize, zSize, nSize, dataType, data);
     }
     

@@ -248,18 +248,21 @@ JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat(
 JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_setArrayFloat
   (JNIEnv *env, jobject jobj, jint x, jint y, jint z, jlong N, jint datatype, jfloatArray data) {
     ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-    image->setDatatype((DataType)datatype);
+    image->setDatatype((DataType)Float);//datatype);
     MultidimArrayGeneric & mag = MULTIDIM_ARRAY_GENERIC(*image);
     mag.resize(N, z, y, x, false);
     float * fdata;
     mag.getMultidimArrayPointer(fdata);
+    std::cerr << "DEBUG_JM: N*z*y*x: " << N*z*y*x << std::endl;
+    size_t n = env->GetArrayLength(data);
+    std::cerr << "DEBUG_JM: n: " << n << std::endl;
+    env->GetFloatArrayRegion(data, 0, x*y*z*N, fdata);
+    std::cerr << "DEBUG_JM: data after GetFloatArrayRegion" << std::endl;
       for (int i = 0; i < N*z*y*x; ++i)
         std::cerr << " " << fdata[i];
       std::cerr << std::endl;
-    //std::cerr << "DEBUG_JM: N*z*y*x: " << N*z*y*x << std::endl;
-    size_t n = env->GetArrayLength(data);
-    //std::cerr << "DEBUG_JM: n: " << n << std::endl;
-    env->GetFloatArrayRegion(data, 0, x*y*z*N, fdata);
+    image->print();
+    image->write("tt.xmp");
 }
 
 //JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_read
