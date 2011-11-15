@@ -134,8 +134,8 @@ TEST_F( ImageGenericTest, getMultidimArray)
   MultidimArrayGeneric & mag2 = MULTIDIM_ARRAY_GENERIC(img2);
   mag2.resize(info.adim, false);
   float * data, *data2;
-  mag.getMultidimArrayPointer(data);
-  mag2.getMultidimArrayPointer(data2);
+  mag.getArrayPointer(data);
+  mag2.getArrayPointer(data2);
 
   memcpy(data2, data, info.adim.nzyxdim*sizeof(float));
 
