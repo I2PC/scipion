@@ -1,6 +1,6 @@
 #!/usr/bin/env xmipp_python
 
-from protlib_xmipp import ScriptPluginIJ, estimateMemory
+from protlib_xmipp import ScriptPluginIJ
 
 class ScriptShowJ(ScriptPluginIJ):
 	def __init__(self):
@@ -20,7 +20,6 @@ class ScriptShowJ(ScriptPluginIJ):
 		self.addParamsLine('         alias -c;');
 		self.addParamsLine('  [--zoom <zoom>]                            : zoom for images.');
 		self.addParamsLine('         alias -z;');
-
 			
 	def readOtherParams(self):
 		if self.checkParam('--mode'):
