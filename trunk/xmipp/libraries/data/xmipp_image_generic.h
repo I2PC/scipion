@@ -270,6 +270,11 @@ public:
      */
     ImageGeneric& operator=(const ImageGeneric &img);
 
+
+    /** Convert the datatype of the object and cast the image
+     */
+    void convert2Datatype(DataType datatype);
+
     /**
      * equal operator
      */

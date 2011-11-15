@@ -92,7 +92,7 @@ void ImageGeneric::getInfo(const FileName &name, ImageInfo &imgInfo)
 
 void ImageGeneric::getInfo(ImageInfo &imgInfo) const
 {
-	image->getInfo(imgInfo);
+    image->getInfo(imgInfo);
 }
 
 void ImageGeneric::getImageType(const FileName &imgName, DataType &datatype)
@@ -289,6 +289,32 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply
 void ImageGeneric::applyGeo(const MetaData &md, size_t objId, bool only_apply_shifts, bool wrap)
 {
     image->applyGeo(md, objId, only_apply_shifts, wrap);
+}
+
+
+void ImageGeneric::convert2Datatype(DataType _datatype)
+{
+    if (_datatype == datatype || _datatype == Unknown_Type)
+        return;
+
+    ImageBase * newImage;
+    MultidimArrayGeneric * newMAG;
+
+#define CONVERTTYPE(type) Image<type> *imT = new Image<type>; \
+        newImage = imT;\
+        newMAG = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), _datatype);\
+        MultidimArray<type>* pMAG;\
+        newMAG->getMultidimArrayPointer(pMAG);\
+        data->getImage(*pMAG);\
+
+    SWITCHDATATYPE(_datatype, CONVERTTYPE)
+
+#undef CONVERTTYPE
+
+    clear();
+    datatype = _datatype;
+    image = newImage;
+    data = newMAG;
 }
 
 ImageGeneric& ImageGeneric::operator=(const ImageGeneric &img)
