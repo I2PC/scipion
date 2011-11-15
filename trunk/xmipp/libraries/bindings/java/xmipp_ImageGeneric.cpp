@@ -252,7 +252,7 @@ JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_setArrayFloat
     MultidimArrayGeneric & mag = MULTIDIM_ARRAY_GENERIC(*image);
     mag.resize(N, z, y, x, false);
     float * fdata;
-    mag.getMultidimArray(fdata);
+    mag.getMultidimArrayPointer(fdata);
       for (int i = 0; i < N*z*y*x; ++i)
         std::cerr << " " << fdata[i];
       std::cerr << std::endl;
