@@ -79,7 +79,10 @@ void ProgAngularClassAverage::readParams()
     write_selfiles = checkParam("--write_selfiles");
 
     if (checkParam("--preprocess"))
+    {
         do_preprocess = true;
+        number_3dref = getIntParam("--number_3dreferences");
+    }
     else
         do_preprocess = false;
 
@@ -122,6 +125,7 @@ void ProgAngularClassAverage::defineParams()
     addParamsLine("   [--postprocess]: Create block with average images filenames.");
     addParamsLine("   requires --number_3dreferences;");
     addParamsLine("   [--preprocess] : Delete auxiliary files from previous execution. Alloc disk space for output stacks");
+    addParamsLine("   requires --number_3dreferences;");
 
     addParamsLine("==+ IMAGE SELECTION BASED ON INPUT DOCFILE (select one between: limit 0, F and R ==");
     addParamsLine("   [--select <col=\"maxCC\">]     : Column to use for image selection (limit0, limitF or limitR)");
@@ -422,22 +426,28 @@ void ProgAngularClassAverage::preprocess()
     //alloc space for output files
     int Xdim, Ydim, Zdim;
     size_t Ndim;
+    FileName fn_tmp;
 
     ImgSize(DF, Xdim, Ydim, Zdim, Ndim);
 
     Ndim = DFclassesExp.size();
 
-    unlink((fn_out+"_classes.xmd").c_str());
-    unlink((fn_out+"_classes.stk").c_str());
-    createEmptyFile(fn_out+"_classes.stk",Xdim,Ydim,Zdim,Ndim,true,WRITE_OVERWRITE);
-    if (do_split)
+    for(int i=1; i<=number_3dref; i++)
     {
-        unlink((fn_out1+"_classes.xmd").c_str());
-        unlink((fn_out1+"_classes.stk").c_str());
-        createEmptyFile(fn_out1+"_classes.stk", Xdim, Ydim, Zdim, Ndim, true, WRITE_OVERWRITE);
-        unlink((fn_out2+"_classes.xmd").c_str());
-        unlink((fn_out2+"_classes.stk").c_str());
-        createEmptyFile(fn_out2+"_classes.stk", Xdim, Ydim, Zdim, Ndim, true, WRITE_OVERWRITE);
+        formatStringFast(fn_tmp, "_refGroup%06lu", i);
+
+        unlink((fn_out+fn_tmp+"_classes.xmd").c_str());
+        unlink((fn_out+fn_tmp+"_classes.stk").c_str());
+        createEmptyFile(fn_out+fn_tmp+"_classes.stk",Xdim,Ydim,Zdim,Ndim,true,WRITE_OVERWRITE);
+        if (do_split)
+        {
+            unlink((fn_out1+fn_tmp+"_classes.xmd").c_str());
+            unlink((fn_out1+fn_tmp+"_classes.stk").c_str());
+            createEmptyFile(fn_out1+fn_tmp+"_classes.stk", Xdim, Ydim, Zdim, Ndim, true, WRITE_OVERWRITE);
+            unlink((fn_out2+fn_tmp+"_classes.xmd").c_str());
+            unlink((fn_out2+fn_tmp+"_classes.stk").c_str());
+            createEmptyFile(fn_out2+fn_tmp+"_classes.stk", Xdim, Ydim, Zdim, Ndim, true, WRITE_OVERWRITE);
+        }
     }
 }
 
@@ -1010,21 +1020,20 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno,
 
     //ROB WRITE DISK
     // blocks
-    std::cerr << "ROB WRITE DISK" <<std::endl;
     FileName fileName;
-    fileName = fn_out+"_classes";
+    fileName = fn_out+"_"+ refGroup +"_classes";
     writeToDisc(avg,dirno,SFclass,fileName,write_selfiles);
 
     if (do_split)
     {
         if (w1>0)
         {
-            fileName = fn_out1+"_classes";
+            fileName = fn_out1+"_"+ refGroup+"_classes";
             writeToDisc(avg1,dirno,SFclass1,fileName,write_selfiles);
         }
         if (w2>0)
         {
-            fileName = fn_out2+"_classes";
+            fileName = fn_out2+"_"+ refGroup+"_classes";
             writeToDisc(avg2,dirno,SFclass2,fileName,write_selfiles);
         }
     }
