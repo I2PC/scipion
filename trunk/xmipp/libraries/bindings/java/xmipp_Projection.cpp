@@ -1,6 +1,6 @@
 #include <jni.h>
 #include "xmipp_Projection.h"
-#include "xmipp_ImageDouble.h"
+#include "xmipp_ImageGeneric.h"
 #include "xmipp_ExceptionsHandler.h"
 #include <data/xmipp_image.h>
 #include <data/projection.h>
@@ -53,7 +53,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_reset
 JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
 (JNIEnv *env, jclass cls, jobject jvolume, jobject jprojection, jdouble tilt, jdouble rot, jdouble pshi) {
 	std::string msg = "";
-	Image<double> *volume = GET_INTERNAL_IMAGE(jvolume);
+	ImageGeneric *volume = GET_INTERNAL_IMAGE_GENERIC(jvolume);
 	Projection *projection = GET_INTERNAL_PROJECTION(jprojection);
 
 	if(volume != NULL) {
@@ -61,7 +61,16 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
 			try {
 				int w = XSIZE(projection->data);
 				int h = YSIZE(projection->data);
-				projectVolume((*volume)(), *projection, h, w, (double) rot, (double) tilt, (double) pshi);
+
+				MultidimArray<double> mdarray;
+std::cout << "2" << std::endl;
+				MULTIDIM_ARRAY_GENERIC(*volume).getImage(mdarray);
+std::cout << "3" << std::endl;
+mdarray.printShape(std::cout);
+std::cout << "4" << std::endl;
+				projectVolume(mdarray, *projection, h, w, (double) rot, (double) tilt, (double) pshi);
+
+				std::cout << "5" << std::endl;
 			} catch (XmippError xe) {
 				msg = xe.getDefaultMessage();
 			} catch (std::exception& e) {

@@ -11,11 +11,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Vector;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
 import xmipp.Projection;
 import xmipp.MDLabel;
 import xmipp.MetaData;
@@ -107,7 +106,6 @@ public class Sphere {
                 spreadHit(hit, imageFileName);
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
             IJ.error("Error loading angles: " + ex.getMessage());
             throw new RuntimeException(ex);
         }
@@ -118,7 +116,7 @@ public class Sphere {
 
         double value = addHit(hitted, hitted, imageFileName);    // ...adds a hit...
 
-        Vector<Point2d> points = new Vector<Point2d>();
+        ArrayList<Point2d> points = new ArrayList<Point2d>();
         spreadHit(hitted, hitted, value, imageFileName, points);    // ...and spreads it...
 
         setLocked(hitted, false);   // Finally unlocks all the points.
@@ -128,7 +126,7 @@ public class Sphere {
     }
 
     private void spreadHit(Point2d hitted, Point2d current, double value,
-            String imageFileName, Vector<Point2d> points) {
+            String imageFileName, ArrayList<Point2d> points) {
         if (value > MIN_SPREAD_VALUE) {
             // Calculates all neighbours.
             ArrayList<Point2d> neighbours = getNeighbours(current);
@@ -354,7 +352,7 @@ public class Sphere {
      * @param rot
      * @param tilt
      */
-    public Vector<String> getFiles(double rot, double tilt) {
+    public ArrayList<String> getFiles(double rot, double tilt) {
         Point2d point = new Point2d(rot, tilt);
         Geometry.fixPoint(point);
 
@@ -365,7 +363,7 @@ public class Sphere {
         return cell != null ? cell.fileNames : null;
     }
 
-    private static void writeSelFile(String selFileName, Vector<String> fileNames) {
+    private static void writeSelFile(String selFileName, ArrayList<String> fileNames) {
         MetaData md = new MetaData();
 
         md.addLabel(MDLabel.MDL_IMAGE);
@@ -384,17 +382,17 @@ public class Sphere {
         }
     }
 
-    public ImagePlus getProjection(ImageDouble xmippVolume, double rot, double tilt) {
-        Projection p = new Projection();
-        ImagePlus projection = null;
-
+    public Projection getProjection(ImageGeneric xmippVolume, double rot, double tilt) {
+        Projection projection = new Projection();
         try {
-            p.reset(xmippVolume.getYsize(), xmippVolume.getXsize());
+            projection.reset(xmippVolume.ySize, xmippVolume.xSize);
+
+            xmippVolume.printShape();
+            projection.printShape();
+            System.out.println("rot: " + rot + " / tilt:" + tilt);
 
             IJ.showStatus(LABELS.MESSAGE_RETRIEVING_PROJECTION);
-            Projection.projectVolume(xmippVolume, p, rot, tilt, 0);
-
-            projection = ImageConverter.convertToImagej(p, "Projection");
+            Projection.projectVolume(xmippVolume, projection, rot, tilt, 0);
         } catch (Exception ex) {
             IJ.error("Error retrieving projection: " + ex.getMessage());
             throw new RuntimeException(ex);
@@ -403,7 +401,7 @@ public class Sphere {
         return projection;
     }
 
-    public String analyzeProjection(ImageDouble xmippVolume, double rot, double tilt, int w, int h) {
+    public String analyzeProjection(ImageGeneric xmippVolume, double rot, double tilt, int w, int h) {
         String path = tempDir.getAbsolutePath() + File.separator;
         String projectionFileName = path + "projection.xmp";
         String selFileName = path + "analize.sel";
@@ -411,17 +409,14 @@ public class Sphere {
 
         try {
             // * Gets projection.
-            Projection p = new Projection();
-            p.reset(h, w);
-
             IJ.showStatus(LABELS.MESSAGE_RETRIEVING_PROJECTION);
-            Projection.projectVolume(xmippVolume, p, rot, tilt, 0);
+            Projection projection = getProjection(xmippVolume, rot, tilt);
 
             // * Write projection to disk.
-            p.write(projectionFileName);
+            projection.write(projectionFileName);
 
             // * Gets file names related to ROT and TILT
-            Vector<String> files = getFiles(rot, tilt);
+            ArrayList<String> files = getFiles(rot, tilt);
 
             // * Generate .sel file
             writeSelFile(selFileName, files);

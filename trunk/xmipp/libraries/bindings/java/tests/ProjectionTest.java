@@ -1,6 +1,6 @@
 package tests;
 
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
 import xmipp.Projection;
 
 public class ProjectionTest {
@@ -16,14 +16,15 @@ public class ProjectionTest {
             String outfile = args[1];
 
             // Loads volume.
-            ImageDouble image = new ImageDouble(file);
+            ImageGeneric image = new ImageGeneric();
+            image.readData(file);
             image.setXmippOrigin();
 
             image.printShape();
 
             // Creates a projection and resets it.
             Projection projection = new Projection();
-            projection.reset(image.getXsize(), image.getYsize());
+            projection.reset(image.xSize, image.ySize);
 
             // Retrieve projection for given angles.
             double rot = 45;

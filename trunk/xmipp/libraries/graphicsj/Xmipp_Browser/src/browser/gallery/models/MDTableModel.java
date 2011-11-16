@@ -74,7 +74,7 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     @Override
     protected String populateTable(String path) {
-        String message = "";
+        String message = null;
 
         try {
             md = new MetaData(path);

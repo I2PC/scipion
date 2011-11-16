@@ -1,6 +1,6 @@
 #!/usr/bin/env xmipp_python
 
-from protlib_xmipp import XmippScript
+from protlib_xmipp import XmippScript, estimateFilenamesListMemory, convertBytes
 from protlib_utils import runJavaJar
 
 class ScriptStitchingJ(XmippScript):
@@ -10,7 +10,7 @@ class ScriptStitchingJ(XmippScript):
     def defineParams(self):
         self.addUsageLine("Images stitching utility.")
         ## params
-        self.addParamsLine('  [--memory <memory="512m">]	: Maximum memory.');
+        self.addParamsLine('  [--memory <memory>]	: Maximum memory.');
         self.addParamsLine('         alias -m;');
         self.addParamsLine('  --input <...>			: Images to stitch.');
         self.addParamsLine('         alias -i;');
@@ -24,18 +24,15 @@ class ScriptStitchingJ(XmippScript):
         self.addParamsLine('  [-y <initial_y_coordinate>]		: Initial y position for second image.');
 
     def readParams(self):
-        self.args = ""
-        self.mem = ""
+        input = self.getListParam('--input')
 
         if self.checkParam('--memory'):
-		    self.mem = self.getParam('--memory')
+            self.mem = self.getParam('--memory')
         else:
-            self.mem = "512m"
-        	print "No memory size provided. Using default: " + self.mem
-
-        if self.checkParam('--input'):
-        	#self.args += " -i %s" % self.getParam('--input')
-		self.args = "-i %s" % ' '.join(self.getListParam('--input'))
+            self.mem = convertBytes(estimateFilenamesListMemory(input)*2)   # Twice the memory to avoid problems.
+            print "No memory size provided. Estimated: " + str(self.mem)
+        
+        self.args = "-i %s" % ' '.join(self.getListParam('--input'))
         if self.checkParam('--output'):
         	self.args += " -o %s" % self.getParam('--output')
         if self.checkParam('--parameters'):
@@ -46,6 +43,7 @@ class ScriptStitchingJ(XmippScript):
         	self.args += " -x %s" % self.getParam('-x')
         if self.checkParam('-y'):
         	self.args += " -y %s" % self.getParam('-y')
+        print self.args
 
     def run(self):
 	   runJavaJar(self.mem, "external/Stitching/Stitching.jar", self.args, False)

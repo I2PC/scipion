@@ -84,7 +84,9 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
         super();
 
         try {
-            tableModel = Filename.isVolume(filename)
+            boolean volume = Filename.isVolume(filename);
+
+            tableModel = volume
                     ? new VolumeTableModel(filename) : new MDTableModel(filename);
 
             postInit();

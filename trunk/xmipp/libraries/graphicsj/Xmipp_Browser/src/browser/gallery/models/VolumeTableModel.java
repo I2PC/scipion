@@ -28,7 +28,7 @@ public class VolumeTableModel extends AbstractXmippTableModel {
     }
 
     protected String populateTable(String filename) {
-        String message = "";
+        String message = null;
 
         try {
             ImageDouble image = new ImageDouble();

@@ -17,22 +17,6 @@ import xmipp.Filename;
  * @author Juanjo Vega
  */
 public class XmippBrowser implements PlugIn {
-//
-//    // Browser
-//    String DIR;
-//    boolean SINGLE_SELECTION = false;
-//    String FILTER = "";
-//    // Show
-//    String INPUT[];
-//    String MODE = COMMAND_PARAMETERS.MODE_DEFAULT;
-//    boolean POLL = false;
-//    boolean RENDER_IMAGES = false;
-//    final static int MODE_TYPE_DEFAULT = 0;
-//    final static int MODE_TYPE_IMAGE = 1;
-//    final static int MODE_TYPE_TABLE = 2;
-//    final static int MODE_TYPE_METADATA = 3;
-//    int ROWS = -1, COLUMNS = -1;
-//    int ZOOM = 1;
 
     @Override
     public void run(String string) {
@@ -103,93 +87,4 @@ public class XmippBrowser implements PlugIn {
 
         return result;
     }
-//
-//    void processArgs(String args) {
-//        String argsList[] = args.split(" ");
-//        Options options = new Options();
-//
-//        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR, true, "");
-//        options.addOption(COMMAND_PARAMETERS.OPTION_FILTER, true, "");
-//        options.addOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION, false, "");
-//
-//        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, "");
-//        options.addOption(COMMAND_PARAMETERS.OPTION_MODE, true, "");
-//        options.addOption(COMMAND_PARAMETERS.OPTION_POLL, false, "");
-//        options.addOption(COMMAND_PARAMETERS.OPTION_ZOOM, true, "");
-//        options.addOption(COMMAND_PARAMETERS.OPTION_RENDER_IMAGES, false, "");
-//        options.addOption(COMMAND_PARAMETERS.OPTION_TABLE_ROWS, true, "");
-//        options.addOption(COMMAND_PARAMETERS.OPTION_TABLE_COLUMNS, true, "");
-//
-//        // It should be able to handle multiple files.
-//        options.getOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE).setOptionalArg(true);
-//        options.getOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE).setArgs(Integer.MAX_VALUE);
-//
-////        options.getOption(COMMAND_PARAMETERS.OPTION_MODE).setOptionalArg(true);
-////        options.getOption(COMMAND_PARAMETERS.OPTION_MODE).setArgs(Integer.MAX_VALUE);
-//
-//        try {
-//            BasicParser parser = new BasicParser();
-//            CommandLine cmdLine = parser.parse(options, argsList);
-//
-//            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_INPUT_DIR)) {
-//                DIR = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_INPUT_DIR);
-//            }
-//
-//            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_FILTER)) {
-//                String filters[] = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_FILTER).split(COMMAND_PARAMETERS.FILTERS_SEPARATOR);
-//
-//                FILTER = "";
-//                for (int i = 0; i < filters.length; i++) {
-//                    FILTER += filters[i];
-//                    if (i < filters.length - 1) {
-//                        FILTER += " ";
-//                    }
-//                }
-//            }
-//
-//            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_SINGLE_SELECTION)) {
-//                SINGLE_SELECTION = true;
-//            }
-//
-//            // Input.
-//            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE)) {
-//                INPUT = cmdLine.getOptionValues(COMMAND_PARAMETERS.OPTION_INPUT_FILE);
-//            }
-//
-//            // Mode.
-//            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_MODE)) {
-//                MODE = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_MODE);
-//            }
-//
-//            // Poll.
-//            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_POLL)) {
-//                POLL = true;
-//            }
-//
-//            // Zoom.
-//            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_POLL)) {
-//                String str = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_ZOOM);
-//                ZOOM = Integer.valueOf(str).intValue();
-//            }
-//
-//            // Input.
-//            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_RENDER_IMAGES)) {
-//                RENDER_IMAGES = true;
-//            }
-//
-//            // Table height.
-//            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_TABLE_ROWS)) {
-//                String str = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_TABLE_ROWS);
-//                ROWS = Integer.valueOf(str).intValue();
-//            }
-//
-//            // Table width.
-//            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_TABLE_COLUMNS)) {
-//                String str = cmdLine.getOptionValue(COMMAND_PARAMETERS.OPTION_TABLE_COLUMNS);
-//                COLUMNS = Integer.valueOf(str).intValue();
-//            }
-//        } catch (Exception ex) {
-//            throw new RuntimeException(ex);
-//        }
-//    }
 }

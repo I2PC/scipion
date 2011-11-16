@@ -7,7 +7,7 @@ class ScriptProjExplorer(ScriptPluginIJ):
 		ScriptPluginIJ.__init__(self, "XmippProjectionsExplorer.txt")
 		
 	def defineOtherParams(self):
-		self.addParamsLine('  [--angles <anglesfile="">]           : Associated euler angles files');
+		self.addParamsLine('  [--angles <anglesfile>]           : Associated euler angles files');
 		self.addParamsLine('         alias -a;');		
 			
 	def readOtherParams(self):

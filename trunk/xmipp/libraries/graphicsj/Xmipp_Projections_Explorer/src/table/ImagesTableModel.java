@@ -5,14 +5,12 @@
 package table;
 
 import ij.ImagePlus;
-import ij.gui.Plot;
 import ij.process.FloatProcessor;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Vector;
 import javax.swing.table.AbstractTableModel;
-import sphere.ImageConverter;
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
+import xmippij.XmippImageConverter;
 
 /**
  *
@@ -85,33 +83,35 @@ public class ImagesTableModel extends AbstractTableModel {
         Collections.sort(data);
     }
 
-    public static ImagePlus mean(Vector<String> images) {
+    public static ImagePlus mean(ArrayList<String> images) {
         try {
-            ImageDouble firstImage = new ImageDouble();
+            ImageGeneric firstImage = new ImageGeneric();
 
             firstImage.readHeader(images.get(0));
-            int w = firstImage.getXsize();
-            int h = firstImage.getYsize();
+            int w = firstImage.xSize;
+            int h = firstImage.ySize;
             float mean[][] = new float[w][h];
 
             String currentFileName;
 
             // For all images...
             for (int k = 0; k < images.size(); k++) {
-                ImageDouble currentImage = new ImageDouble();
+                ImageGeneric currentImage = new ImageGeneric();
                 currentFileName = images.get(k);
 
-                currentImage.read(currentFileName);
-                ImagePlus ip = ImageConverter.convertToImagej(currentImage, currentFileName);
+                currentImage.readData(currentFileName);
+                ImagePlus imp = XmippImageConverter.convertToImagej(currentImage);
+                imp.setTitle(currentFileName);
 
+                // TODO: Sum efficiently.
                 // Adds current image to sum.
                 for (int j = 0; j < h; j++) {
                     for (int i = 0; i < w; i++) {
-                        mean[i][j] += ip.getProcessor().getf(i, j);
+                        mean[i][j] += imp.getProcessor().getf(i, j);
                     }
                 }
 
-                ip.close();
+                imp.close();
             }
 
             // Calculates mean...

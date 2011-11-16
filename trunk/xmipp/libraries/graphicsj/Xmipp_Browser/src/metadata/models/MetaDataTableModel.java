@@ -36,7 +36,7 @@ public class MetaDataTableModel extends DefaultTableModel {
 
         this.filename = filename;
 
-        loadBlocks(filename);
+        loadBlocks();
         selectBlock(Filename.getPrefix(filename));
     }
 
@@ -136,9 +136,10 @@ public class MetaDataTableModel extends DefaultTableModel {
         return blocks;
     }
 
-    private void loadBlocks(String filename) {
+    private void loadBlocks() {
         try {
-            blocks = MetaData.getBlocksInMetaDataFile(Filename.getFilename(filename));
+            System.out.println(" >> " + getFilename());
+            blocks = MetaData.getBlocksInMetaDataFile(Filename.getFilename(getFilename()));
 
             // No blocks, so set at least one item for the dropdown list.
             if (blocks.length < 1) {
@@ -223,7 +224,7 @@ public class MetaDataTableModel extends DefaultTableModel {
 
                         // Special case.
                         if (label == MDLabel.MDL_ENABLED) {
-                            row[i] = value == 1 ? Boolean.TRUE : Boolean.FALSE;
+                            row[i] = value == 1;
                             ENABLED_COLUMN_INDEX = i;   // Store it for future changes.
                         } else {
                             row[i] = value;

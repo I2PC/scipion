@@ -42,7 +42,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_reset
 /*
  * Class:     xmipp_Projection
  * Method:    projectVolume
- * Signature: (Lxmipp/ImageDouble;Lxmipp/Projection;DDD)V
+ * Signature: (Lxmipp/ImageGeneric;Lxmipp/Projection;DDD)V
  */
 JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
   (JNIEnv *, jclass, jobject, jobject, jdouble, jdouble, jdouble);

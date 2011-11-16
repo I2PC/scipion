@@ -44,7 +44,6 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
             String field = md.getValueString(label, id, true);
             path = Filename.getFilename(field);
             nimage = Filename.getNimage(field);
-            setEnabled(true);
 
             loadImageData();
         }

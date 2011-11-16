@@ -1,6 +1,5 @@
 
 import window.JFrameLoad;
-import sphere.ImageConverter;
 import sphere.Geometry;
 import sphere.Sphere;
 import constants.LABELS;
@@ -19,7 +18,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.Vector;
+import java.util.ArrayList;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.View;
 import javax.swing.Timer;
@@ -30,7 +29,9 @@ import org.apache.commons.cli.Options;
 import table.JFrameImagesTable;
 import window.ProjectionWindow;
 import window.iAnalyzer;
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
+import xmipp.Projection;
+import xmippij.XmippImageConverter;
 
 /*
  * To change this template, choose Tools | Templates
@@ -47,7 +48,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
     private Image3DUniverse universeVolume, universeSphere;
     private final static int UNIVERSE_W = 400, UNIVERSE_H = 400;
     private ImagePlus volumeIP, sphereIP;
-    private ImageDouble xmippVolume;  // Volume for Xmipp library.
+    private ImageGeneric xmippVolume;  // Volume for Xmipp library.
     private GlobalTransform gt = new GlobalTransform();
     private boolean dispatched = false;
     private ProjectionTimer timer = new ProjectionTimer(500);
@@ -60,7 +61,12 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
 
     public static void main(String args[]) {
         IJ.getInstance();
-        (new Xmipp_Projections_Explorer()).run("");
+        //(new Xmipp_Projections_Explorer()).run("");
+        String fileVolume = "/home/jvega/Escritorio/imgs_Roberto/kk.vol";
+        String fileEulerAngles = null;
+
+        Xmipp_Projections_Explorer xpe = new Xmipp_Projections_Explorer();
+        xpe.run(fileVolume, fileEulerAngles);
     }
 
     public void run(String string) {
@@ -168,12 +174,13 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
         try {
             // Loads image plus for volume.
             IJ.showStatus(LABELS.MESSAGE_LOADING_VOLUME);
-            xmippVolume = new ImageDouble(volumeFile);
+            xmippVolume = new ImageGeneric(volumeFile);
             xmippVolume.setXmippOrigin();
 
             // Converts it to show.
             IJ.showStatus(LABELS.MESSAGE_CONVERTING_XMIPP_VOLUME);
-            volumeIP = ImageConverter.convertToImagej(xmippVolume, volumeFile);
+            volumeIP = XmippImageConverter.convertToImagej(xmippVolume);
+            //volumeIP.setTitle(volumeFile);
 
             new StackConverter(volumeIP).convertToRGB();
 
@@ -249,13 +256,14 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
         double rot = angles[0];
         double tilt = angles[1];
 
-        ImagePlus image = sphere.getProjection(xmippVolume, rot, tilt);
+        Projection projection = sphere.getProjection(xmippVolume, rot, tilt);
+        ImagePlus imp = XmippImageConverter.convertToImagej(projection, "Projection");
 
-        Vector<String> images = sphere.getFiles(rot, tilt);
+        ArrayList<String> images = sphere.getFiles(rot, tilt);
         int n_images = images != null ? images.size() : 0;
 
         // Shows projection using a custom window.
-        showProjection(image, n_images);
+        showProjection(imp, n_images);
     }
 
     private void showProjection(final ImagePlus ip, final int n_images) {

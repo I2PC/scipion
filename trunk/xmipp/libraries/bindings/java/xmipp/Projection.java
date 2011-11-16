@@ -22,7 +22,7 @@ public class Projection {
 
     public native void reset(int h, int w) throws Exception;
 
-    public static native void projectVolume(ImageDouble image, Projection projection,
+    public static native void projectVolume(ImageGeneric image, Projection projection,
             double rot, double tilt, double pshi) throws Exception;
 
     // Writting.

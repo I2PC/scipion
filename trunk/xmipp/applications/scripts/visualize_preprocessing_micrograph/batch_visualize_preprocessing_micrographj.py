@@ -2,5 +2,9 @@
 
 from protlib_xmipp import ScriptPluginIJ
 
+class ScriptMicrographViewerJ(ScriptPluginIJ):
+	def __init__(self):
+		ScriptPluginIJ.__init__(self, "XmippMicrographViewer.txt")
+
 if __name__ == '__main__':
-	ScriptPluginIJ("XmippMicrographViewer.txt").tryRun()
+	ScriptMicrographViewerJ().tryRun()

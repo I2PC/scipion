@@ -20,7 +20,7 @@ class ScriptShowJ(ScriptPluginIJ):
 		self.addParamsLine('         alias -c;');
 		self.addParamsLine('  [--zoom <zoom>]                            : zoom for images.');
 		self.addParamsLine('         alias -z;');
-			
+		
 	def readOtherParams(self):
 		if self.checkParam('--mode'):
 			self.args += " --mode %s" % self.getParam('--mode')

@@ -96,7 +96,7 @@ class ScriptIJBase(XmippScript):
     def __init__(self, name):
         XmippScript.__init__(self)
         self.name = name
-        
+    
     def defineOtherParams(self):
         pass
     
@@ -109,13 +109,13 @@ class ScriptIJBase(XmippScript):
         self.addParamsLine('  [--memory <mem>]              : Memory ammount for JVM');
         self.addParamsLine('         alias -m;');
         self.defineOtherParams()
-            
+    
     def readParams(self):
         inputFiles = self.getListParam('-i')
         if self.checkParam('--memory'):
             self.memory = self.getParam('--memory')
-	else:
-	    self.memory = '%dm' % estimateImageSize(inputFiles[0])
+        else:
+            self.memory = convertBytes(estimateFilenamesListMemory(inputFiles))
             print "No memory size provided. Estimated: " + self.memory
 
         self.args = "-i %s" % ' '.join(inputFiles)
@@ -166,7 +166,7 @@ def getXmippLabels():
         if line.startswith('MDL::addLabel(MDL_'):
             l = line.find('(')
             r = line.find(')')
-            parts = line[l+1:r].split(',')
+            parts = line[l + 1:r].split(',')
             labels.append({'name':parts[2].replace('"', ''), 'type':parts[1], 'enum':parts[0]})
     return labels
 
@@ -179,8 +179,8 @@ def getXmippPrograms():
 
 #FIXME: this is only while development
 def skipProgram(programName):
-    if programName in ['xmipp_sqlite3','xmipp_mpi_steps_runner', 
-                       'xmipp_angular_commonline', 'xmipp_python', 
+    if programName in ['xmipp_sqlite3', 'xmipp_mpi_steps_runner',
+                       'xmipp_angular_commonline', 'xmipp_python',
                        'xmipp_transform_threshold']:
         return True
     for p in ['xmipp_test', 'xmipp_template']:
@@ -251,22 +251,22 @@ class ProgramKeywordsRank():
 #--------------------------------------------------------------------------- 
 #create a metadata file with original image name, and two other 
 #lines with variation over the original name
-def intercalate_union_3(inFileName,outFileName, src1,targ1,src2,targ2):
+def intercalate_union_3(inFileName, outFileName, src1, targ1, src2, targ2):
     mD = xmipp.MetaData(inFileName)
     mDout = xmipp.MetaData()   
     for id in mD:       
         idOut = mDout.addObject()
-        sIn = mD.getValue(xmipp.MDL_IMAGE,id)
+        sIn = mD.getValue(xmipp.MDL_IMAGE, id)
         mDout.setValue(xmipp.MDL_IMAGE, sIn, idOut)
-        enabled= mD.containsLabel(xmipp.MDL_ENABLED)
+        enabled = mD.containsLabel(xmipp.MDL_ENABLED)
        
         if  (enabled):       
-            i = int(mD.getValue(xmipp.MDL_ENABLED,id))
+            i = int(mD.getValue(xmipp.MDL_ENABLED, id))
             mDout.setValue(xmipp.MDL_ENABLED, i, idOut)
        
         idOut = mDout.addObject()
 
-        ss = sIn.replace(src1,targ1)
+        ss = sIn.replace(src1, targ1)
         mDout.setValue(xmipp.MDL_IMAGE, ss, idOut)
         
         if  (enabled):
@@ -274,7 +274,7 @@ def intercalate_union_3(inFileName,outFileName, src1,targ1,src2,targ2):
             
         idOut = mDout.addObject()
        
-        ss = sIn.replace(src2,targ2)
+        ss = sIn.replace(src2, targ2)
         mDout.setValue(xmipp.MDL_IMAGE, ss, idOut)
         
         if  (enabled):
@@ -283,24 +283,24 @@ def intercalate_union_3(inFileName,outFileName, src1,targ1,src2,targ2):
     mDout.write(outFileName)
 
 #set rot and tilt between -180,180 and -90,90
-def check_angle_range(inFileName,outFileName):
-    mD    = xmipp.MetaData(inFileName)
-    doWrite=False
+def check_angle_range(inFileName, outFileName):
+    mD = xmipp.MetaData(inFileName)
+    doWrite = False
     
     for id in mD: 
-        doWrite2=False
-        rot = mD.getValue(xmipp.MDL_ANGLEROT,id)
-        tilt = mD.getValue(xmipp.MDL_ANGLETILT,id)
+        doWrite2 = False
+        rot = mD.getValue(xmipp.MDL_ANGLEROT, id)
+        tilt = mD.getValue(xmipp.MDL_ANGLETILT, id)
         if tilt > 90.: 
-            tilt = -(int(tilt)-180)
-            rot  += 180.
-            doWrite=True
-            doWrite2=True
+            tilt = -(int(tilt) - 180)
+            rot += 180.
+            doWrite = True
+            doWrite2 = True
         if tilt < -90.: 
-            tilt = -(int(tilt)+180)
-            rot  -= 180. 
-            doWrite=True
-            doWrite2=True
+            tilt = -(int(tilt) + 180)
+            rot -= 180. 
+            doWrite = True
+            doWrite2 = True
         if (doWrite2):
             mD.setValue(xmipp.MDL_ANGLEROT , rot, id)
             mD.setValue(xmipp.MDL_ANGLETILT, tilt, id)
@@ -310,26 +310,76 @@ def check_angle_range(inFileName,outFileName):
 
 
 #compute histogram
-def compute_histogram(mD,bin,col,min,max):
+def compute_histogram(mD, bin, col, min, max):
     allMD = xmipp.MetaData()
     outMD = xmipp.MetaData()   
-    _bin = (max-min)/bin
+    _bin = (max - min) / bin
    
-    for h in range(0,bin):
+    for h in range(0, bin):
         outMD.removeObjects(xmipp.MDQuery("*"))
-        if (h==0):
-            outMD.importObjects(mD, xmipp.MDValueRange(col, float(min), float(_bin*(h + 1)+min)))
-        if (h>0 and h<(bin-1)):
-            outMD.importObjects(mD, xmipp.MDValueRange(col, float(_bin * h + min), float(_bin*(h + 1)+min)))
-        if (h==(bin-1)):
+        if (h == 0):
+            outMD.importObjects(mD, xmipp.MDValueRange(col, float(min), float(_bin * (h + 1) + min)))
+        if (h > 0 and h < (bin - 1)):
+            outMD.importObjects(mD, xmipp.MDValueRange(col, float(_bin * h + min), float(_bin * (h + 1) + min)))
+        if (h == (bin - 1)):
             outMD.importObjects(mD, xmipp.MDValueRange(col, float(_bin * h + min), float(max)))
        
-        _sum=float(outMD.aggregateSingle(xmipp.AGGR_SUM, xmipp.MDL_WEIGHT))
+        _sum = float(outMD.aggregateSingle(xmipp.AGGR_SUM, xmipp.MDL_WEIGHT))
         outMD.addLabel(xmipp.MDL_COUNT)
-        outMD.setValueCol(xmipp.MDL_COUNT, int(_sum+0.1))
+        outMD.setValueCol(xmipp.MDL_COUNT, int(_sum + 0.1))
         allMD.unionAll(outMD)
        
     return allMD
+
+def estimateFilenamesListMemory(input):
+    from math import log, ceil
+    memory = 0
+    for file in input:
+        memory += estimateFileNameSize(file)
+    return max(memory, 536870912) # 512m minimum
+
+def estimateFileNameSize(input):
+    from xmipp import FileName
+    fn = FileName(input);
+    
+    if fn.isMetaData():
+        return estimateMDSize(fn)
+    else:
+        return estimateImageSize(fn)
+
+def estimateMDSize(input):
+    MD = xmipp.MetaData(input)
+    memory = 0
+    for id in MD:
+        fnImg = MD.getValue(xmipp.MDL_IMAGE, id)
+        idMemory = estimateImageSize(fnImg)
+        memory = max(memory, idMemory)
+    return memory
+
+def estimateImageSize(input):
+    (Xdim, Ydim, Zdim, Ndim) = xmipp.SingleImgSize(input)
+    memory = Xdim * Ydim * Zdim * Ndim * 8
+    return memory
+
+def convertBytes(bytes):
+    from math import ceil
+    
+    bytes = float(bytes)
+    if bytes >= 1099511627776:
+        terabytes = bytes / 1099511627776
+        size = '%dt' % ceil(terabytes)
+    elif bytes >= 1073741824:
+        gigabytes = bytes / 1073741824
+        size = '%dg' % ceil(gigabytes)
+    elif bytes >= 1048576:
+        megabytes = bytes / 1048576
+        size = '%dm' % ceil(megabytes)
+    elif bytes >= 1024:
+        kilobytes = bytes / 1024
+        size = '%dk' % ceil(kilobytes)
+    else:
+        size = '%db' % ceil(bytes)
+    return size
 
 def estimateMemory(input):
     from math import log, ceil
@@ -342,19 +392,12 @@ def estimateMemory(input):
     memoryMb=int((2 ** ceil(log(memory, 2)))/(2**20)); # Memory size in megabytes
     return memoryMb
 
-def estimateImageSize(input):
-    from math import log, ceil
-    (Xdim,Ydim,Zdim,Ndim)=xmipp.SingleImgSize(input)
-    memory=Xdim*Ydim*Zdim*Ndim*8
-    memoryMb=int((2 ** ceil(log(memory, 2)))/(2**20)); # Memory size in megabytes
-    return 2*memoryMb
-
 #---------------------------------------------------------------------------
 # Colors from Xmipp binding
 #--------------------------------------------------------------------------- 
 from xmipp import XMIPP_MAGENTA, XMIPP_BLUE, XMIPP_GREEN, XMIPP_RED, XMIPP_YELLOW, XMIPP_CYAN, colorStr
 
-colorMap = {'red': XMIPP_RED, 'blue': XMIPP_BLUE, 
+colorMap = {'red': XMIPP_RED, 'blue': XMIPP_BLUE,
                 'green': XMIPP_GREEN, 'magenta': XMIPP_MAGENTA,
                 'yellow': XMIPP_YELLOW, 'cyan': XMIPP_CYAN}
 

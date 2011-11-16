@@ -6,9 +6,7 @@ class ScriptRotSpectraJ(ScriptPluginIJ):
 	def __init__(self):
 		ScriptPluginIJ.__init__(self, "XmippRotSpectraViewer.txt")
 
-	def defineParams(self):
-	        self.addParamsLine('  [--memory <mem="512m">]              : Memory ammount for JVM');
-        	self.addParamsLine('         alias -m;');
+	def defineOtherParams(self):
 		self.addParamsLine('  [--vectors <vectorsfile>]           : Vectors file ');
 		self.addParamsLine('         alias -f;');
 		self.addParamsLine('  [--classes <classesfile>]                            : Classes file');
@@ -16,13 +14,7 @@ class ScriptRotSpectraJ(ScriptPluginIJ):
 		self.addParamsLine('  [--data <datafile>]                            : Vectors data file');
 		self.addParamsLine('         alias -d;');
 
-	def readParams(self):
-		self.memory = self.getParam('--memory')
-		if self.memory == "512m":
-			print "No memory size provided. Using default: " + self.memory
-
-		self.args = ""
-
+	def readOtherParams(self):
 		if self.checkParam('--vectors'):
 			self.args += " --vectors %s" % self.getParam('--vectors')
 		if self.checkParam('--classes'):
@@ -32,4 +24,3 @@ class ScriptRotSpectraJ(ScriptPluginIJ):
 
 if __name__ == '__main__':
 	ScriptRotSpectraJ().tryRun()
-

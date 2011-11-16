@@ -77,16 +77,8 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_destroy
 
 /*
  * Class:     xmipp_ImageGeneric
- * Method:    readHeader
- * Signature: (Ljava/lang/String;)V
- */
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readHeader
-  (JNIEnv *, jobject, jstring);
-
-/*
- * Class:     xmipp_ImageGeneric
  * Method:    read
- * Signature: (Ljava/lang/String;)V
+ * Signature: (Ljava/lang/String;Z)V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_read
   (JNIEnv *, jobject, jstring, jboolean);
@@ -123,14 +115,36 @@ JNIEXPORT jshortArray JNICALL Java_xmipp_ImageGeneric_getArrayShort
 JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat
   (JNIEnv *, jclass, jstring, jint, jint, jint, jlong, jint);
 
-JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_setArrayFloat
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    printShape
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_printShape
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    setArrayFloat
+ * Signature: (IIIJI[F)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayFloat
   (JNIEnv *, jobject, jint, jint, jint, jlong, jint, jfloatArray);
+
 /*
  * Class:     xmipp_ImageGeneric
  * Method:    getStatistics
  * Signature: ()[D
  */
 JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageGeneric_getStatistics
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    setXmippOrigin
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setXmippOrigin
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

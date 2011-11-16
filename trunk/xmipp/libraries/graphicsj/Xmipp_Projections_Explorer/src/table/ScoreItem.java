@@ -6,10 +6,9 @@ package table;
 
 import ij.ImagePlus;
 import java.io.File;
-import sphere.ImageConverter;
-import xmipp.ImageDouble;
 import xmipp.MDLabel;
 import xmipp.MetaData;
+import xmippij.XmippImageConverter;
 
 /**
  *
@@ -22,7 +21,7 @@ public class ScoreItem implements Comparable<ScoreItem> {
     protected String fileName;
     protected double score = 0.0;
     protected boolean good;
-    protected ImagePlus ip;
+    protected ImagePlus imp;
     protected String label;
 
     public ScoreItem(MetaData md, long id) {
@@ -37,15 +36,14 @@ public class ScoreItem implements Comparable<ScoreItem> {
 
     public ImagePlus getImagePlus() {
         try {
-            if (ip == null) {
-                ImageDouble image = new ImageDouble(md, id);
-
-                ip = ImageConverter.convertToImagej(image, fileName);
+            if (imp == null) {
+                imp = XmippImageConverter.convertToImagej(fileName);
+                imp.setTitle(fileName);
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {
-            return ip;
+            return imp;
         }
     }
 

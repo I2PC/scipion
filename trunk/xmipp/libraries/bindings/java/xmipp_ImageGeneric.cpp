@@ -214,7 +214,7 @@ JNIEXPORT jshortArray JNICALL Java_xmipp_ImageGeneric_getArrayShort(
 /*
  * Class:     xmipp_ImageGeneric
  * Method:    getArrayFloat
- * Signature: (Ljava/lang/String;IIIJ)[F
+ * Signature: (Ljava/lang/String;IIIJI)[F
  */
 JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat(
 		JNIEnv * env, jclass class_, jstring filename, jint jx, jint jy,
@@ -225,10 +225,11 @@ JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat(
 		Image<float> image;
 
 		image.readOrReadPreview(fnStr, jx, jy, jz, jn, true);
-		//image.data.printShape(std::cerr);
+
 		size_t size = image.getSize();
 		jfloatArray array = env->NewFloatArray(size);
 		env->SetFloatArrayRegion(array, 0, size, MULTIDIM_ARRAY(image.data));
+
 		return array;
 	} catch (XmippError &xe) {
 		msg = xe.getDefaultMessage();
@@ -244,8 +245,32 @@ JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat(
 	}
 }
 
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_printShape(JNIEnv *env, jobject jobj) {
+	std::string msg = "";
+	ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
-JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_setArrayFloat
+	if (image != NULL) {
+		try {
+			image->print();
+
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Image is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+}
+
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayFloat
   (JNIEnv *env, jobject jobj, jint x, jint y, jint z, jlong N, jint datatype, jfloatArray data) {
     ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
     image->setDatatype((DataType)Float);//datatype);
@@ -334,3 +359,27 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageGeneric_getStatistics(
 	return NULL;
 }
 
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setXmippOrigin
+(JNIEnv *env, jobject jobj) {
+	std::string msg = "";
+	ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+
+	if(image != NULL) {
+		try {
+			(*image)().setXmippOrigin();
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Image is NULL";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+}
