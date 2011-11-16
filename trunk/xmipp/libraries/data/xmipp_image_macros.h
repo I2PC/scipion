@@ -32,6 +32,7 @@
 // Macros used to select slice in readPreview
 #define CENTRAL_SLICE -1
 #define ALL_SLICES 0
+#define SLICE_INDEX(select_slice) ((select_slice == ALL_SLICES) ? 0 : select_slice - 1)
 /** Macro for represent ALL IMAGES on stack index */
 #define ALL_IMAGES 0
 #define FIRST_IMAGE 1

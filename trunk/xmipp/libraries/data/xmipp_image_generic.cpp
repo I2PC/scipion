@@ -112,6 +112,9 @@ void ImageGeneric::getImageType(const FileName &imgName, DataType &datatype, boo
 
 void ImageGeneric::setDatatype(DataType imgType)
 {
+    if (imgType == datatype)
+        return;
+
     clear();
     datatype = imgType;
     switch (datatype)

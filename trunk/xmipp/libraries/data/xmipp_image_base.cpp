@@ -619,7 +619,7 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
     // If MultidimArray pointer has been moved to a slice different from zero, then reset it.
     // This check must be done prior to mappedSize check, since mappedSlice is a trick over data pointer
     if (mappedSlice != 0)
-        movePointerToSlice(0);
+        movePointerToSlice(ALL_SLICES);
     // If Image has been previously used with mmap, then close the previous file
     if (mappedSize != 0)
         munmapFile();

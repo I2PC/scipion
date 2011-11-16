@@ -393,7 +393,7 @@ public:
      *  the initial volume. No information is deallocated from memory, so it is also possible to
      *  repoint to the whole volume (passing select_slice = ALL_SLICES), or CENTRAL_SLICE.
      */
-    virtual void movePointerToSlice(int select_slice) = 0;
+    virtual void movePointerToSlice(int select_slice = ALL_SLICES) = 0;
 
     /** Check file Datatype is same as T type to use mmap.
      */

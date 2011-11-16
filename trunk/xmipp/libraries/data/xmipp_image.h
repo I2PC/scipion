@@ -731,32 +731,33 @@ public:
      *  the initial volume. No information is deallocated from memory, so it is also possible to
      *  repoint to the whole volume (passing select_slice = ALL_SLICES), or CENTRAL_SLICE.
      */
-    void movePointerToSlice(int select_slice)
+    void movePointerToSlice(int select_slice = ALL_SLICES)
     {
         if (select_slice > aDimFile.zdim)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, formatString("movePointerToSlice: Selected slice %4d cannot be higher than Z size %4d.",
                          select_slice,aDimFile.zdim));
 
         ArrayDim newDim = aDimFile;
+        int phys_slice;
 
         switch (select_slice)
         {
         case CENTRAL_SLICE:
-            select_slice = aDimFile.zdim/2;
+            phys_slice = aDimFile.zdim/2;
             newDim.zdim = 1;
             break;
         case ALL_SLICES:
-            select_slice = 0;
+            phys_slice = 0;
             break;
         default:
-            --select_slice;
+            phys_slice = select_slice - 1;
             newDim.zdim = 1;
             break;
         }
 
         VOLMATRIX(*this).setDimensions(newDim);
-        MULTIDIM_ARRAY(VOLMATRIX(*this)) += YXSIZE(VOLMATRIX(*this)) * (select_slice - mappedSlice);
-        mappedSlice = select_slice;
+        MULTIDIM_ARRAY(VOLMATRIX(*this)) += YXSIZE(VOLMATRIX(*this)) * (phys_slice - SLICE_INDEX(mappedSlice));
+        mappedSlice = (select_slice == CENTRAL_SLICE)? phys_slice + 1 : select_slice;
     }
 
     /** Write an entire page as datatype
