@@ -5,6 +5,7 @@
  *      Author: roberto
  */
 #include "metadata_extension.h"
+#include "xmipp_image_extension.h"
 #include "xmipp_fftw.h"
 
 #ifndef __linux__
