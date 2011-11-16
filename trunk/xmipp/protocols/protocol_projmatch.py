@@ -108,7 +108,8 @@ class ProtProjMatch(XmippProtocol):
         Iter = 'Iter_%(iter)03d'
         Ref = 'Ref_%(ref)03d'
         IterDir = self.workingDirPath(Iter)
-        ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s.doc')
+        #ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s.doc')
+        ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s')
         CtfGroupBase = join(self.CtfGroupDirectory, '%(CtfGroupRootName)s')
         ProjLibRootNames = join(IterDir, '%(ProjectLibraryRootName)s_' + Ref)
         return {
@@ -116,7 +117,8 @@ class ProtProjMatch(XmippProtocol):
                 'IterDir': IterDir,
                 'ProjMatchDirs': ProjMatchDirs,
                 'DocfileInputAngles': join(IterDir, '%(docfile_with_current_angles)s.doc'),
-                'LibraryDirs': join(IterDir, '%(LibraryDir)s.doc'),
+                #'LibraryDirs': join(IterDir, '%(LibraryDir)s.doc'),
+                'LibraryDirs': join(IterDir, '%(LibraryDir)s'),
                 'ProjectLibraryRootNames': ProjLibRootNames,
                 'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref + '.doc'),
                 'ProjMatchRootNamesWithoutRef': join(ProjMatchDirs, '%(ProjMatchName)s.doc'),
@@ -313,7 +315,7 @@ class ProtProjMatch(XmippProtocol):
             #Create directory with image libraries
             id = _dataBase.insertStep('createDir', path=self.getFilename('LibraryDirs', iter=iterN))
 
-            ProjMatchRootNameList = []
+            ProjMatchRootNameList = ['']
             for refN in range(1, self.numberOfReferences + 1):
                 # Mask reference volume
                 maskedFileName = self.getFilename('MaskedFileNamesIters', iter=iterN, ref=refN)
@@ -332,8 +334,10 @@ class ProtProjMatch(XmippProtocol):
                 auxFn = self.getFilename('ProjectLibraryRootNames', iter=iterN, ref=refN)
                 #file with sampling point neighbourhood for each ctf group, this is reduntant but useful
                 #Files: projections, projection_angles, sampling_points and neighbourhood
-                _VerifyFiles = [self.getFilename('ProjectLibrary' + e, iter=iterN, ref=refN) for e in ['Stk', 'Doc', 'Sampling']]
-                _VerifyFiles.append([self.getFilename('ProjectLibraryGroupSampling', iter=iterN, ref=refN, group=g) for g in range (1, self.NumberOfCtfGroups + 1)])
+                _VerifyFiles = [self.getFilename('ProjectLibrary' + e, iter=iterN, ref=refN)
+                                     for e in ['Stk', 'Doc', 'Sampling']]
+                _VerifyFiles = _VerifyFiles + [self.getFilename('ProjectLibraryGroupSampling', iter=iterN, ref=refN, group=g) \
+                                     for g in range (1, self.NumberOfCtfGroups + 1)]
                 projLibFn =  self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)  
                          
                 _dataBase.insertStep('angular_project_library', verifyfiles=_VerifyFiles
@@ -488,12 +492,62 @@ class ProtProjMatch(XmippProtocol):
                                                 , reconstructedFileName=self.reconstructedFileNamesIters[iterN - 1][refN]
                                                 , userSuppliedMask=self.MaskFileName)
     
-                 #reconstruct
-                 #resolution
-    #
-                
-    ######################
-    ######################
+                #self._ReconstructionMethod=arg.getComponentFromVector(_ReconstructionMethod, iterN-1)
+                #self._ARTLambda=arg.getComponentFromVector(_ARTLambda, iterN-1)
+
+                #if (DoReconstruction):
+                _VerifyFiles = []
+                id = _dataBase.insertStep('reconstruction', verifyfiles=_VerifyFiles
+                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
+                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
+                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
+                                              , Iteration_number  = iterN
+                                              #, DisplayReconstruction = self.DisplayReconstruction
+                                              , DoParallel=self.DoParallel#
+                                              , NumberOfMpi=self.NumberOfMpi#
+                                              , NumberOfThreads=self.NumberOfThreads#
+                                              , ReconstructionMethod = self.ReconstructionMethod
+                                              #, globalFourierMaxFrequencyOfInterest = globalFourierMaxFrequencyOfInterest
+                                              , ARTLambda = self.ARTLambda
+                                              , SymmetryGroup = self.SymmetryGroup
+                                              , ReconstructedVolume = self.ReconstructedVolume[iterN]
+                                              , DoComputeResolution = self.DoComputeResolution
+                                              , DoSplitReferenceImages = self.DoSplitReferenceImages
+                                              , PaddingFactor = self.PaddingFactor
+                                              )
+                    
+#                _VerifyFiles = []
+#                    #self._ConstantToAddToFiltration=arg.getComponentFromVector(ConstantToAddToFiltration, _iteration_number-1)
+#                    #filter_frequence=execute_resolution(self._mylog,
+#                id = _dataBase.insertStep('compute_resolution_and_filter', verifyfiles=_VerifyFiles
+#                                              , DoComputeResolution = self.DoComputeResolution
+#                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
+#                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
+#                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
+#                                              , ReconstructionMethod = self.ReconstructionMethod
+#                                              #, globalFourierMaxFrequencyOfInterest = globalFourierMaxFrequencyOfInterest
+#                                              , iteration_number = iterN
+#                                              #, DisplayReconstruction = self.DisplayReconstruction
+#                                              , ResolSam = self.ResolSam
+#                                              , DoParallel=self.DoParallel#
+#                                              , NumberOfMpi=self.NumberOfMpi#
+#                                              , NumberOfThreads=self.NumberOfThreads#
+#                                              #, MyMpiJobSize = self.MyMpiJobSize
+#                                              , SymmetryGroup = self.SymmetryGroup
+#                                              #, DisplayResolution = self.DisplayResolution
+#                                              , ReconstructedVolume = self.ReconstructedVolume[iterN]
+#                                              , ARTLambda = self.ARTLambda
+#                                              , OuterRadius = self.OuterRadius
+#                                              , DoSplitReferenceImages = self.DoSplitReferenceImages
+#                                              , PaddingFactor = self.PaddingFactor
+#                                              , DoLowPassFilter = self.DoLowPassFilter
+#                                              , UseFscForFilter = self.UseFscForFilter
+#                                              , ConstantToAddToFiltration = self.ConstantToAddToFiltration
+#                                              #, filter_frequence = filter_frequence
+#                                              #, ReconstructedandfilteredVolume = self.ReconstructedandfilteredVolume[iterN+1]
+#                                              )
+          
+                 #-------------------------------------------------------------
     ########################            
             #REMOVE
             #Create directory
