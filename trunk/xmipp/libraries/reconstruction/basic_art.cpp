@@ -180,7 +180,7 @@ void BasicARTParameters::defineParams(XmippProgram * program, bool mpiMode)
     Basis::defineParams(program);
 
     program->addParamsLine(" == Grid parameters == ");
-    program->addParamsLine("   [-g <gridsz=1.41>]          : Relative size of the measuring unit in the grid lattice. By default, a unit in ");
+    program->addParamsLine("   [-g <gridsz=1.41>]          : Relative size of the measuring unit in the grid lattice in pixels. By default, a unit in ");
     program->addParamsLine("                               : the grid system equals 1.41 units in the Universal System. This value is optimized ");
     program->addParamsLine("                               : for a BCC structure");
     program->addParamsLine("                               :+++ %BR% <verbatim>");
@@ -202,7 +202,7 @@ void BasicARTParameters::defineParams(XmippProgram * program, bool mpiMode)
     program->addParamsLine("   [--output_size <Xsize=0> <Ysize=0> <Zsize=0>] : Output volume size in Pixels. Reconstruction size is taken from ");
     program->addParamsLine("                               : the projection size. However, the output size can be different, if the output volume ");
     program->addParamsLine("                               : is bigger, then the volume is zero padded.");
-    program->addParamsLine("   [--sampling_rate <Ts=1>]    : Pixel size (Angstrom),  affects to -r, -g, -R and --ref_trans_step");
+    program->addParamsLine("   [--sampling_rate <Ts=1>]    : Pixel size (Angstroms)");
 
     program->addParamsLine(" ==+ Parallel parameters == ");
     program->addParamsLine(" : by default, sequential ART is applied");
@@ -437,15 +437,16 @@ void BasicARTParameters::readParams(XmippProgram * program)
             noisy_reconstruction = true;
     }
 
-    //divide by the sampling rate
-    if (sampling != 1.)
-    {
-        basis.setSamplingRate(sampling);
-        grid_relative_size /= sampling;
-        if (R != -1.)
-            R /= sampling;
-        ref_trans_step /= sampling;
-    }
+    // Measures are given in pixels, independent of pixel size
+//    //divide by the sampling rate
+//    if (sampling != 1.)
+//    {
+//        basis.setSamplingRate(sampling);
+//        grid_relative_size /= sampling;
+//        if (R != -1.)
+//            R /= sampling;
+//        ref_trans_step /= sampling;
+//    }
 
 
 }
@@ -499,7 +500,7 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
             REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Produce_Basic_ART_Side_Info: No images !!");
         int idum;
         size_t idumLong;
-        ImgSize(selfile, projXdim, projYdim, idum, idumLong);
+        getImageSize(selfile, projXdim, projYdim, idum, idumLong);
     }
 
     /* Read symmetry file -------------------------------------------------- */
