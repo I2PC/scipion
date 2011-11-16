@@ -196,8 +196,7 @@ void ProgXrayImport::getDarkfield(const FileName &fnDir, Image<double> &IavgDark
 
             for (int j=0; j<listDirDark.size(); j++)
             {
-                FileName extension=((FileName)listDirDark[j]).getExtension();
-                if (extension!="spe")
+                if (!listDirDark[j].hasImageExtension())
                     continue;
                 Image<double> Iaux;
                 readAndCrop(fnDir+"/darkfields/"+listDirDark[j],Iaux);
@@ -234,8 +233,7 @@ void ProgXrayImport::getFlatfield(const FileName &fnDir,
     Image<double> Iaux;
     for (int i=0; i<listDir.size(); i++)
     {
-        FileName extension=((FileName)listDir[i]).getExtension();
-        if (extension!="spe")
+        if (!listDir[i].hasImageExtension())
             continue;
         FileName fnImg=fnDir+"/"+listDir[i];
         readAndCrop(fnImg,Iaux);
@@ -300,13 +298,12 @@ void runThread(ThreadArgument &thArg)
             if (ptrProg->logFilt)
                 Iaux().selfLog10();
 
-            fnImg.compose(i+1, ptrProg->fnRoot);
-            fnImg = fnImg.addExtension("mrcs");
+            fnImg.compose(i+1, ptrProg->fnOut);
 
             size_t objId = localMD.addObject();
             localMD.setValue(MDL_IMAGE,fnImg,objId);
             localMD.setValue(MDL_ANGLETILT,Iaux.tilt(),objId);
-            Iaux.write(fnImg,i+1,true,WRITE_APPEND);
+            Iaux.write(fnImg);
             if (thread_id==0)
                 progress_bar(i);
         }
@@ -320,7 +317,8 @@ void runThread(ThreadArgument &thArg)
 void ProgXrayImport::run()
 {
     // Delete output stack if it exists
-    FileName(fnRoot+".mrcs").deleteFile();
+    fnOut = fnRoot + ".mrcs";
+    fnOut.deleteFile();
 
     // Reading bad pixels mask
     if (fnBPMask != "")
@@ -354,13 +352,18 @@ void ProgXrayImport::run()
     int N=0;
     for (int i=0; i<listDir.size(); i++)
     {
-        FileName extension=((FileName)listDir[i]).getExtension();
-        if (extension!="spe")
+        if (!listDir[i].hasImageExtension())
             continue;
         FileName fnImg=fnDirData+"/"+listDir[i];
         filenames.push_back(fnImg);
         N++;
     }
+
+    // Create empty output stack file
+    int Xdim, Ydim, Zdim;
+    size_t Ndim;
+    getImageSizeFromFilename(filenames[0], Xdim, Ydim, Zdim, Ndim);
+    createEmptyFile(fnOut, Xdim, Ydim, 1, filenames.size());
 
     // Process images
     td=new ThreadTaskDistributor(filenames.size(),XMIPP_MAX(1,filenames.size()/30));
