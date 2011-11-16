@@ -342,6 +342,8 @@ def estimateFileNameSize(input):
     from xmipp import FileName
     fn = FileName(input);
     
+    print fn.isMetaData()
+    
     if fn.isMetaData():
         return estimateMDSize(fn)
     else:
@@ -350,10 +352,13 @@ def estimateFileNameSize(input):
 def estimateMDSize(input):
     MD = xmipp.MetaData(input)
     memory = 0
-    for id in MD:
-        fnImg = MD.getValue(xmipp.MDL_IMAGE, id)
-        idMemory = estimateImageSize(fnImg)
-        memory = max(memory, idMemory)
+    
+    if(MD.containsLabel(xmipp.MDL_IMAGE)):
+        for id in MD:
+            fnImg = MD.getValue(xmipp.MDL_IMAGE, id)
+            idMemory = estimateImageSize(fnImg)
+            memory = max(memory, idMemory)
+
     return memory
 
 def estimateImageSize(input):

@@ -119,6 +119,11 @@ public:
         */
     virtual ~Image()
     {
+        // If MultidimArray pointer has been moved to a slice different from zero, then reset it.
+        // This check must be done prior to mappedSize check, since mappedSlice is a trick over data pointer
+        if (mappedSlice != 0)
+            movePointerToSlice(ALL_SLICES);
+
         if (mmapOnRead || mmapOnWrite)
             munmapFile();
         else
