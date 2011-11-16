@@ -225,7 +225,7 @@ protected:
 
             int Xdim, Ydim, Zdim;
             size_t Ndim;
-            ImgSize(mdIn, Xdim, Ydim, Zdim, Ndim, outDataT);
+            getImageInfo(mdIn, Xdim, Ydim, Zdim, Ndim, outDataT);
             if (Zdim!=1)
                 REPORT_ERROR(ERR_MULTIDIM_DIM,
                              "Only 2D images can be converted into volumes");
