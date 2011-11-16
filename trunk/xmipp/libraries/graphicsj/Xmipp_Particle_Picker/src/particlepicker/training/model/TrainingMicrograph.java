@@ -118,7 +118,9 @@ public class TrainingMicrograph extends Micrograph{
 		for(MicrographFamilyData fp: mfdatas)
 			if(f.equals(fp.getFamily()))
 				return fp;
-		return null;
+		MicrographFamilyData mfd = new MicrographFamilyData(this, f); 		
+		mfdatas.add(mfd);	
+		return mfd;
 	}
 
 	public void addManualParticle(TrainingParticle p)
