@@ -42,6 +42,7 @@
 #include <data/args.h>
 #include <data/fft.h>
 
+
 /* ------------------------------------------------------------------------- */
 // Prototypes
 int cstregistration(struct cstregistrationStruct *Data);
@@ -644,7 +645,7 @@ int return_gradhesscost(
               hlp = Rz2;
               *hlp++ = Cospsi;
               *hlp = Sinpsi;
-              hlp += (ptrdiff_t)3L;
+              hlp += (std::ptrdiff_t)3L;
               *hlp++ = - Sinpsi;
               *hlp = Cospsi;
 
@@ -660,7 +661,7 @@ int return_gradhesscost(
               hlp = Rz1;
               *hlp++ = Cosphi;
               *hlp = Sinphi;
-              hlp += (ptrdiff_t)3L;
+              hlp += (std::ptrdiff_t)3L;
               *hlp++ = - Sinphi;
               *hlp = Cosphi;
 
@@ -675,11 +676,11 @@ int return_gradhesscost(
 
               hlp = Ry;
               *hlp = Costheta;
-              hlp += (ptrdiff_t)2L;
+              hlp += (std::ptrdiff_t)2L;
               *hlp = - Sintheta;
-              hlp += (ptrdiff_t)6L;
+              hlp += (std::ptrdiff_t)6L;
               *hlp = Sintheta;
-              hlp += (ptrdiff_t)2L;
+              hlp += (std::ptrdiff_t)2L;
               *hlp = Costheta;
 
               R = (double *)malloc((size_t) 16L * sizeof(double));
@@ -748,24 +749,24 @@ int return_gradhesscost(
               hlp = DRz2;
               *hlp++ = - Sinpsi;
               *hlp = Cospsi;
-              hlp += (ptrdiff_t)3L;
+              hlp += (std::ptrdiff_t)3L;
               *hlp++ = - Cospsi;
               *hlp = - Sinpsi;
 
               hlp = DRz1;
               *hlp++ = - Sinphi;
               *hlp = Cosphi;
-              hlp += (ptrdiff_t)3L;
+              hlp += (std::ptrdiff_t)3L;
               *hlp++ = - Cosphi;
               *hlp = - Sinphi;
 
               hlp = DRy;
               *hlp = - Sintheta;
-              hlp += (ptrdiff_t)2L;
+              hlp += (std::ptrdiff_t)2L;
               *hlp = - Costheta;
-              hlp += (ptrdiff_t)6L;
+              hlp += (std::ptrdiff_t)6L;
               *hlp = Costheta;
-              hlp += (ptrdiff_t)2L;
+              hlp += (std::ptrdiff_t)2L;
               *hlp = - Sintheta;
 
               DR0 = (double *)malloc((size_t) 16L * sizeof(double));
@@ -1156,22 +1157,22 @@ int return_gradhesscost(
               }
 
               pntr_ReOut = dftCompProj;
-              pntr_ImOut = pntr_ReOut + (ptrdiff_t) SizeIm;
+              pntr_ImOut = pntr_ReOut + (std::ptrdiff_t) SizeIm;
 
               pntr_DP_0_re = DP_0;
-              pntr_DP_0_im = pntr_DP_0_re + (ptrdiff_t) SizeIm;
+              pntr_DP_0_im = pntr_DP_0_re + (std::ptrdiff_t) SizeIm;
 
               pntr_DP_1_re = DP_1;
-              pntr_DP_1_im = pntr_DP_1_re + (ptrdiff_t) SizeIm;
+              pntr_DP_1_im = pntr_DP_1_re + (std::ptrdiff_t) SizeIm;
 
               pntr_DP_2_re = DP_2;
-              pntr_DP_2_im = pntr_DP_2_re + (ptrdiff_t) SizeIm;
+              pntr_DP_2_im = pntr_DP_2_re + (std::ptrdiff_t) SizeIm;
 
               pntr_DP_3_re = DP_3;
-              pntr_DP_3_im = pntr_DP_3_re + (ptrdiff_t) SizeIm;
+              pntr_DP_3_im = pntr_DP_3_re + (std::ptrdiff_t) SizeIm;
 
               pntr_DP_4_re = DP_4;
-              pntr_DP_4_im = pntr_DP_4_re + (ptrdiff_t) SizeIm;
+              pntr_DP_4_im = pntr_DP_4_re + (std::ptrdiff_t) SizeIm;
 
 
 
@@ -2681,14 +2682,14 @@ int return_gradhesscost(
 
 
               t = u;
-              for (i = 0L; (i < ma); t += (ptrdiff_t)(ma + 1L), i++)
+              for (i = 0L; (i < ma); t += (std::ptrdiff_t)(ma + 1L), i++)
               {
                   for (j = 0L; (j < ma); alpha++, j++)
                       *u++ = -*alpha;
                   *t *= 1.0 + *lambda;
               }
-              u -= (ptrdiff_t)(ma * ma);
-              alpha -= (ptrdiff_t)(ma * ma);
+              u -= (std::ptrdiff_t)(ma * ma);
+              alpha -= (std::ptrdiff_t)(ma * ma);
 
               int Status;
               if (SingularValueDecomposition(u, ma, ma, w, v, SVDMAXITER, &Status) == ERROR)
@@ -2701,12 +2702,12 @@ int return_gradhesscost(
                   return(ERROR);
               }
               wmax = 0.0;
-              t = w + (ptrdiff_t)ma;
+              t = w + (std::ptrdiff_t)ma;
               while (--t >= w)
                   if (*t > wmax)
                       wmax = *t;
               thresh = epsilon * wmax;
-              w += (ptrdiff_t)ma;
+              w += (std::ptrdiff_t)ma;
               j = ma;
               while (--j >= 0L)
               {
@@ -2732,9 +2733,9 @@ int return_gradhesscost(
 
 
               v = (double *)memcpy(v, a, (size_t)ma * sizeof(double));
-              t = v + (ptrdiff_t)ma;
-              a += (ptrdiff_t)ma;
-              da += (ptrdiff_t)ma;
+              t = v + (std::ptrdiff_t)ma;
+              a += (std::ptrdiff_t)ma;
+              da += (std::ptrdiff_t)ma;
               while (--t >= v)
               {
                   da--;
@@ -2917,8 +2918,8 @@ int return_gradhesscost(
                               " Error - VoxelSize is a 3-element vector.");
                   return(ERROR);
               }
-              if (((double) *Data->VoxelSize <= 0.0) || ((double) *(Data->VoxelSize + (ptrdiff_t) 1L)
-                      <= 0.0) || ((double) *(Data->VoxelSize + (ptrdiff_t) 2L) <= 0.0))
+              if (((double) *Data->VoxelSize <= 0.0) || ((double) *(Data->VoxelSize + (std::ptrdiff_t) 1L)
+                      <= 0.0) || ((double) *(Data->VoxelSize + (std::ptrdiff_t) 2L) <= 0.0))
               {
                   WRITE_ERROR(cstregistrationCheck,
                               " Error - VoxelSize must have all positive elements.");
@@ -2932,7 +2933,7 @@ int return_gradhesscost(
                   return(ERROR);
               }
               if (((double) *Data->PixelSize <= 0.0) ||
-                  ((double) *(Data->PixelSize + (ptrdiff_t) 1L) <= 0.0))
+                  ((double) *(Data->PixelSize + (std::ptrdiff_t) 1L) <= 0.0))
               {
                   WRITE_ERROR(cstregistrationCheck,
                               " Error - PixelSize must have positive elements.");
@@ -3205,9 +3206,9 @@ int return_gradhesscost(
 
               hlp = Q1;
               *hlp = (double) Nx;
-              hlp += (ptrdiff_t)5L;
+              hlp += (std::ptrdiff_t)5L;
               *hlp = (double) Ny;
-              hlp += (ptrdiff_t)5L;
+              hlp += (std::ptrdiff_t)5L;
               *hlp = (double) Nz;
 
               Q3 = (double *)malloc((size_t) 16L * sizeof(double));
@@ -3238,7 +3239,7 @@ int return_gradhesscost(
 
               hlp = Q3;
               *hlp = 1.0 / (double) Mx;
-              hlp += (ptrdiff_t)5L;
+              hlp += (std::ptrdiff_t)5L;
               *hlp = 1.0 / (double) My;
 
 
@@ -3288,9 +3289,9 @@ int return_gradhesscost(
 
               hlp = As;
               *hlp = vox_x;
-              hlp += (ptrdiff_t)5L;
+              hlp += (std::ptrdiff_t)5L;
               *hlp = vox_y;
-              hlp += (ptrdiff_t)5L;
+              hlp += (std::ptrdiff_t)5L;
               *hlp = vox_z;
 
 
@@ -3311,7 +3312,7 @@ int return_gradhesscost(
 
               hlp = Ap;
               *hlp = 1.0 / pix_x;
-              hlp += (ptrdiff_t)5L;
+              hlp += (std::ptrdiff_t)5L;
               *hlp = 1.0 / pix_y;
 
               // Normalize by the std. dev. the input dft image
@@ -3349,7 +3350,7 @@ int return_gradhesscost(
               }
 
               pntr_RedftCompProj = Data->dftProj;
-              pntr_ImdftCompProj = pntr_RedftCompProj + (ptrdiff_t) SizeIm;
+              pntr_ImdftCompProj = pntr_RedftCompProj + (std::ptrdiff_t) SizeIm;
               for (indy = 0L; indy < My; indy++)
               {
                   for (indx = 0L; indx < Mx; indx++)
@@ -3361,10 +3362,10 @@ int return_gradhesscost(
               }
 
               pntr_par0 = Data->OutputParameters;
-              pntr_par1 = pntr_par0 + (ptrdiff_t) MaxIter2;
-              pntr_par2 = pntr_par1 + (ptrdiff_t) MaxIter2;
-              pntr_par3 = pntr_par2 + (ptrdiff_t) MaxIter2;
-              pntr_par4 = pntr_par3 + (ptrdiff_t) MaxIter2;
+              pntr_par1 = pntr_par0 + (std::ptrdiff_t) MaxIter2;
+              pntr_par2 = pntr_par1 + (std::ptrdiff_t) MaxIter2;
+              pntr_par3 = pntr_par2 + (std::ptrdiff_t) MaxIter2;
+              pntr_par4 = pntr_par3 + (std::ptrdiff_t) MaxIter2;
               pntr_cost = Data->Cost;
               pntr_time = Data->TimePerIter;
               pntr_FailureIter = Data->Failures;
@@ -3420,10 +3421,10 @@ int return_gradhesscost(
               }
 
               pntr_par0 = Data->OutputParameters;
-              pntr_par1 = pntr_par0 + (ptrdiff_t) MaxIter2;
-              pntr_par2 = pntr_par1 + (ptrdiff_t) MaxIter2;
-              pntr_par3 = pntr_par2 + (ptrdiff_t) MaxIter2;
-              pntr_par4 = pntr_par3 + (ptrdiff_t) MaxIter2;
+              pntr_par1 = pntr_par0 + (std::ptrdiff_t) MaxIter2;
+              pntr_par2 = pntr_par1 + (std::ptrdiff_t) MaxIter2;
+              pntr_par3 = pntr_par2 + (std::ptrdiff_t) MaxIter2;
+              pntr_par4 = pntr_par3 + (std::ptrdiff_t) MaxIter2;
 
               pntr_cost = Data->Cost;
               pntr_time = Data->TimePerIter;
