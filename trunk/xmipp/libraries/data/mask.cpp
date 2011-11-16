@@ -1738,7 +1738,7 @@ void ProgMask::preProcess()
     if (!count && input_is_stack)
         init_progress_bar(mdIn.size());
     else
-        max_length = MaxFileNameLength(mdIn);
+        max_length = maxFileNameLength(mdIn);
 }
 
 /* Postprocess ------------------------------------------------------------- */

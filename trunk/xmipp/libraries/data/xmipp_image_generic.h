@@ -159,10 +159,6 @@ public:
         return datatype;
     }
 
-    /** Get basic information from image file
-     */
-    void getInfo(const FileName &name, ImageInfo &imgInfo);
-
     /** Get basic information from already read image file
      */
     void getInfo(ImageInfo &imgInfo) const;
@@ -341,14 +337,6 @@ public:
      */
     void subtract(const ImageGeneric &img);
 
-private:
-    /* Return the datatype of the image file.
-     */
-    void getImageType(const FileName &imgName, DataType &datatype);
-
-    /* Return the datatype of the image file and if the bytes must be swapped when read.
-     */
-    void getImageType(const FileName &imgName, DataType &datatype, bool &swap);
 }
 ;
 

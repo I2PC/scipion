@@ -157,7 +157,7 @@ void ProgCtfGroup::produceSideInfo()
     double avgdef;
 
     SF.read(fn_ctfdat);
-    ImgSize(SF,dim,ydim,zdim,ndim);
+    getImageSize(SF,dim,ydim,zdim,ndim);
     //set output format
     SF.getValue(MDL_IMAGE,aux,SF.firstObject());
     if(format=="")

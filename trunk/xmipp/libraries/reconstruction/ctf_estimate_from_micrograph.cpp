@@ -709,7 +709,7 @@ void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
 {
 	int Xdim,Ydim,Zdim;
 	size_t Ndim;
-	ImgSize(fnMicrograph,Xdim,Ydim,Zdim,Ndim);
+	getImageSizeFromFilename(fnMicrograph,Xdim,Ydim,Zdim,Ndim);
 	int minSize=2*(std::max(Xdim,Ydim)/10);
 	minSize=std::min((double)std::min(Xdim,Ydim),NEXT_POWER_OF_2(minSize));
 	minSize=std::min(1024,minSize);

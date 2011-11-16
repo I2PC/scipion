@@ -136,7 +136,7 @@ void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
     initContents();
     int Zdim;
     size_t Ndim;
-    ImgSize(SF, projXdim, projYdim, Zdim, Ndim);
+    getImageSize(SF, projXdim, projYdim, Zdim, Ndim);
     if (load_mode == PSD_mode && NumRows != -1 && NumCols != -1)
     {
         // Scale to make the images fit into a reasonable selfWindow

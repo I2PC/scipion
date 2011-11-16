@@ -144,7 +144,7 @@ void ProgRecWbp::produceSideInfo()
 
     int zdim;
     size_t ndim;
-    ImgSize(SF,dim, dim, zdim, ndim);
+    getImageSize(SF,dim, dim, zdim, ndim);
     if (fn_sym != "")
         SL.readSymmetryFile(fn_sym);
     if (diameter <= 0)

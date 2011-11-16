@@ -122,7 +122,7 @@ protected:
         }
 
         // get xdim, ydim,zdim
-        ImgSize(mdIn, xDim, yDim, zDim, nDim);
+        getImageSize(mdIn, xDim, yDim, zDim, nDim);
         averageArray.resize(nDim,zDim,yDim,xDim);
         stdArray.resize(nDim,zDim,yDim,xDim);
         averageArray.setXmippOrigin();

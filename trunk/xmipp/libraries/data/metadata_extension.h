@@ -37,22 +37,22 @@ void getFourierStatistics(MetaData &MDin, double sam, MetaData &Mdout,
 
 /** Get image size
  */
-void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim);
+void getImageSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim);
 
 /** Get image size and data type */
-void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype);
+void getImageInfo(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype);
 
 /** Get image size and data type of a Metadata file */
-void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim);
+void getImageSizeFromFilename(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim);
 
 /// compare two image files
-bool ImgCompare(const FileName &filename1, const FileName &filename2);
+bool compareImage(const FileName &filename1, const FileName &filename2);
 
 /// compare if same dimensions
-bool ImgCompareSize(const FileName &filename1, const FileName &filename2);
+bool compareImageSize(const FileName &filename1, const FileName &filename2);
 
 /** Maximum length of the filenames inside */
-int MaxFileNameLength(MetaData &MD);
+int maxFileNameLength(MetaData &MD);
 
 /** Choose a part of the metadata for MPI */
 void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot);

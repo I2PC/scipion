@@ -59,7 +59,7 @@ void ProgTomoRemoveFluctuations::produceSideInfo()
     int Zdim, dummy, Ydim, Xdim;
     size_t Ndim;
     Zdim=SF.size();
-    ImgSize(SF,Xdim,Ydim,dummy,Ndim);
+    getImageSize(SF,Xdim,Ydim,dummy,Ndim);
     V().setMmap(true);
     V().initZeros(Zdim,Ydim,Xdim);
     int k=0;

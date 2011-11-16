@@ -317,7 +317,7 @@ ProgMLTomo::readParams()
   fn_sel = getParam("-i");
   nr_ref = getIntParam("--nref");
   fn_ref = getParam("--ref");
-  if (!fn_ref.empty() && (!ImgCompareSize(fn_sel, fn_ref)))
+  if (!fn_ref.empty() && (!compareImageSize(fn_sel, fn_ref)))
     REPORT_ERROR(ERR_GRID_SIZE, "Reference and images aren't of same size");
   //fn_doc = getParam("--doc");
 
@@ -643,7 +643,7 @@ ProgMLTomo::produceSideInfo()
   MDimg.fillConstant(MDL_ANGLEPSI, "0");
 
   // Get original dimension
-  ImgSize(MDimg, xdim, ydim, zdim, ndim);
+  getImageSize(MDimg, xdim, ydim, zdim, ndim);
   if (xdim != ydim || xdim != zdim)
     REPORT_ERROR(ERR_MULTIDIM_SIZE, "Only cubic volumes are allowed");
   oridim = xdim;

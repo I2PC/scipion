@@ -419,7 +419,7 @@ void ProgNormalize::defineParams()
     addParamsLine("           Michael             : I=(I-m(bg))/stddev(bg)");
     addParamsLine("           None                   : Used for removing only dust");
     addParamsLine("           Random                 : I=aI+b");
-    addParamsLine("           Ramp                   : Substract ramp and then NewXmipp");
+    addParamsLine("           Ramp                   : Subtract ramp and then NewXmipp");
     addParamsLine("           Neighbour              : Replace pixels in the background with random noise");
     addParamsLine(" [--invert]                       : Invert contrast.");
     addParamsLine(" [--thr_black_dust <sblack=-3.5>] : Remove black dust particles with sigma threshold sblack.");

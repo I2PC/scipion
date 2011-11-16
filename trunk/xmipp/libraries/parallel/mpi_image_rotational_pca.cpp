@@ -136,7 +136,7 @@ void ProgImageRotationalPCA::produceSideInfo()
     Nimg=MDin.size();
     int Ydim, Zdim;
     size_t Ndim;
-    ImgSize(MDin, Xdim, Ydim, Zdim, Ndim);
+    getImageSize(MDin, Xdim, Ydim, Zdim, Ndim);
     Nangles=floor(360.0/psi_step);
     Nshifts=(2*max_shift_change+1)/shift_step;
     Nshifts*=Nshifts;

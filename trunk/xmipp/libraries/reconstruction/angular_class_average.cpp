@@ -309,7 +309,7 @@ void ProgAngularClassAverage::produceSideInfo()
     int Xdim, Ydim, Zdim;
     size_t Ndim;
 
-    ImgSize(DFclassesExp, Xdim, Ydim, Zdim, Ndim);
+    getImageSize(DFclassesExp, Xdim, Ydim, Zdim, Ndim);
 
     //auxMD.aggregate(DFclassesExp, AGGR_COUNT,MDL_REF,MDL_REF,MDL_COUNT);
     auxMD.aggregate(DFclassesExp, AGGR_COUNT,MDL_ORDER,MDL_ORDER,MDL_COUNT);
@@ -328,7 +328,7 @@ void ProgAngularClassAverage::produceSideInfo()
 
     int dummyI;
     size_t dummyT;
-    ImgSize(DF,dim,dummyI,dummyI,dummyT);
+    getImageSize(DF,dim,dummyI,dummyI,dummyT);
     //init with 0 by default through memset
     Iempty().resizeNoCopy(dim,dim);
     Iempty().setXmippOrigin();
@@ -428,7 +428,7 @@ void ProgAngularClassAverage::preprocess()
     size_t Ndim;
     FileName fn_tmp;
 
-    ImgSize(DF, Xdim, Ydim, Zdim, Ndim);
+    getImageSize(DF, Xdim, Ydim, Zdim, Ndim);
 
     Ndim = DFclassesExp.size();
 

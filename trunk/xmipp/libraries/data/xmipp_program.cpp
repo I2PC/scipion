@@ -526,7 +526,7 @@ void XmippMetadataProgram::readParams()
     create_empty_stackfile = (each_image_produces_an_output && output_is_stack && !fn_out.empty());
 
     // if create, then we need to read the dimensions of the input stack
-    ImgSize(mdIn, xdimOut, ydimOut, zdimOut, ndimOut);
+    getImageSize(mdIn, xdimOut, ydimOut, zdimOut, ndimOut);
 
 }
 

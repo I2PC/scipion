@@ -144,7 +144,7 @@ void VirusVertex::processAngles()
     Projection proj,proj_aux;
     int Zdim, Ydim, Xdim;
     size_t Ndim;
-    ImgSize(DF, Xdim, Ydim, Zdim, Ndim);
+    getImageSize(DF, Xdim, Ydim, Zdim, Ndim);
     MetaData DFout;
     int repaint = ceil((double)DF.size()/60);
 

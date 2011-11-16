@@ -321,7 +321,7 @@ void ProgMLF2D::produceSideInfo()
     // Get image sizes and total number of images
     int idum;
     size_t ndum;
-    ImgSize(MDimg, dim, idum, idum, ndum);
+    getImageSize(MDimg, dim, idum, idum, ndum);
     hdim = dim / 2;
     dim2 = dim * dim;
 

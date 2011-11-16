@@ -140,7 +140,7 @@ void ProgClassifyCL2DCore::produceSideInfo()
     {
         int Zdim;
         size_t Ndim;
-        ImgSize(blocks[0].block+"@"+blocks[0].fnLevel,Xdim,Ydim,Zdim,Ndim);
+        getImageSizeFromFilename(blocks[0].block+"@"+blocks[0].fnLevel,Xdim,Ydim,Zdim,Ndim);
     }
 }
 

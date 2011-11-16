@@ -494,7 +494,7 @@ void ProgMLRefine3D::createEmptyFiles(int type)
 {
     int dim, idum;
     size_t idumLong;
-    ImgSize(fn_sel, dim, idum, idum, idumLong);
+    getImageSizeFromFilename(fn_sel, dim, idum, idum, idumLong);
     Image<double> img;
 
     if (type == EMPTY_PROJECTIONS)
@@ -743,7 +743,7 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
 
     // Read in noise reconstruction and calculate alpha's
     mdNoiseAll.read(FN_NOISE_IMG_MD);
-    ImgSize(mdNoiseAll, dim, idum, idum, idumLong);
+    getImageSize(mdNoiseAll, dim, idum, idum, idumLong);
 
     center.initZeros();
     proj().resize(dim, dim);

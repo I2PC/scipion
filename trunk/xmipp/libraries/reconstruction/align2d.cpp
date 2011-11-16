@@ -76,7 +76,7 @@ void ProgAlign2d::alignPairs(MetaData &MDin, MetaData &MDout, int level)
     size_t remaining=MDin.size()-2*imax;
     int Xdim, Ydim, Zdim;
     size_t Ndim;
-    ImgSize(MDin,Xdim,Ydim,Zdim,Ndim);
+    getImageSize(MDin,Xdim,Ydim,Zdim,Ndim);
     if (Zdim!=1 || Ndim!=1)
         REPORT_ERROR(ERR_MATRIX_DIM,"Files in metadata are not 2D images");
     FileName fnOutputStack=fnRoot+"_level_"+integerToString(level,2)+".stk";
@@ -164,7 +164,7 @@ void ProgAlign2d::computeMean()
     int level=0;
     int Xdim, Ydim, Zdim;
     size_t Ndim;
-    ImgSize(SF,Xdim,Ydim,Zdim,Ndim);
+    getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
     if (Zdim!=1 || Ndim!=1)
         REPORT_ERROR(ERR_MATRIX_DIM,"Files in metadata are not 2D images");
     Iref().initZeros(Ydim,Xdim);

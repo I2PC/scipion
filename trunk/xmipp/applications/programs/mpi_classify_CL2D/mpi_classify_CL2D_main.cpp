@@ -1382,7 +1382,7 @@ void ProgClassifyCL2D::produceSideInfo()
     SF.read(fnSel);
     int Zdim;
     size_t Ndim;
-    ImgSize(SF,Xdim,Ydim,Zdim,Ndim);
+    getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
 
     // Prepare the Task distributor
     SF.findObjects(objId);

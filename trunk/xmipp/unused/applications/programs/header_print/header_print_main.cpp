@@ -60,7 +60,7 @@ protected:
     {
         int Xdim, Ydim, Zdim;
         unsigned long Ndim;
-        SingleImgSize(fnImg, Xdim, Ydim, Zdim, Ndim);
+        getImageSize(fnImg, Xdim, Ydim, Zdim, Ndim);
 
         Image<double> img;
         img.read(fnImg, HEADER);

@@ -93,7 +93,7 @@ void svbksb(Matrix2D< double >& u,
  * val = MAT_ELEM(m, 0, 0);
  * @endcode
  */
-#define MAT_ELEM(m,i,j) ((m).mdata[(i)*(m).mdimx+(j)])
+#define MAT_ELEM(m,i,j) ((m).mdata[((size_t)i)*(m).mdimx+((size_t)j)])
 
 /** X dimension of the matrix
  */

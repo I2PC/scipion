@@ -92,7 +92,7 @@ void ProgAnalyzeCluster::produceSideInfo()
     // Prepare mask
     int Xdim,Ydim,Zdim;
     size_t Ndim;
-    ImgSize(SFin,Xdim,Ydim,Zdim,Ndim);
+    getImageSize(SFin,Xdim,Ydim,Zdim,Ndim);
     mask.resize(Ydim,Xdim);
     mask.setXmippOrigin();
     if (dontMask)

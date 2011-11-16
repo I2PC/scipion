@@ -310,7 +310,7 @@ void ProgML2D::produceSideInfo()
     int idum;
     size_t idumLong;
     LOG("      ProgML2D::produceSideInfo: setting dimensions");
-    ImgSize(MDimg, dim, idum, idum, idumLong);
+    getImageSize(MDimg, dim, idum, idum, idumLong);
     model.dim = dim;
     hdim = dim / 2;
     dim2 = dim * dim;

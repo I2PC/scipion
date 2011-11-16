@@ -44,6 +44,8 @@ public:
     FileName fnDirFlat;
     /// Output directory
     FileName fnRoot;
+    /// Output Stack file
+    FileName fnOut;
     /// Number of pixels to crop from each side. Set to 0 for no cropping
     int cropSize;
     /// Number of threads

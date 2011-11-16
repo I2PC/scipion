@@ -358,9 +358,9 @@ void ProgOperate::readParams()
             int xdim, ydim, zdim;
             size_t ndim;
             if (fn_in.isMetaData())
-                ImgSize(mdIn, xdim, ydim, zdim, ndim);
+                getImageSize(mdIn, xdim, ydim, zdim, ndim);
             else
-                SingleImgSize(fn_in, xdim, ydim, zdim, ndim);
+                getImageSize(fn_in, xdim, ydim, zdim, ndim);
             img2().resizeNoCopy(zdim, ydim, xdim);
             img2().initConstant(value);
         }

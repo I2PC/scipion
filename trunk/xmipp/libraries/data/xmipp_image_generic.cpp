@@ -25,6 +25,7 @@
 
 #include "xmipp_image.h"
 #include "xmipp_image_generic.h"
+#include "xmipp_image_extension.h"
 #include "xmipp_error.h"
 
 
@@ -84,30 +85,9 @@ void  ImageGeneric::copy(const ImageGeneric &img)
 
 }
 
-void ImageGeneric::getInfo(const FileName &name, ImageInfo &imgInfo)
-{
-    Image<char> image;
-    image.getInfo(name, imgInfo);
-}
-
 void ImageGeneric::getInfo(ImageInfo &imgInfo) const
 {
     image->getInfo(imgInfo);
-}
-
-void ImageGeneric::getImageType(const FileName &imgName, DataType &datatype)
-{
-    Image<char> Im;
-    Im.read(imgName, HEADER);
-    datatype = Im.datatype();
-}
-
-void ImageGeneric::getImageType(const FileName &imgName, DataType &datatype, bool &swap)
-{
-    Image<char> Im;
-    Im.read(imgName, HEADER);
-    datatype = Im.datatype();
-    swap = (Im.getSwap() > 0);
 }
 
 void ImageGeneric::setDatatype(DataType imgType)
@@ -187,21 +167,18 @@ void ImageGeneric::setDatatype(DataType imgType)
 int ImageGeneric::read(const FileName &name, DataMode datamode, size_t select_img,
                        bool mapData)
 {
-    bool swap;
-    DataType datatype;
-    getImageType(name, datatype, swap);
-    setDatatype(datatype);
-    return image->read(name, datamode, select_img, mapData && !swap);
+    ImageInfo imInf;
+    getImageInfo(name, imInf);
+    setDatatype(imInf.datatype);
+    return image->read(name, datamode, select_img, mapData && !imInf.swap);
 }
 
 int ImageGeneric::readMapped(const FileName &name, size_t select_img, int mode)
 {
-    bool swap;
-    DataType datatype;
-    getImageType(name, datatype, swap);
-    setDatatype(datatype);
-
-    return image->read(name, DATA, select_img, !swap, mode);
+    ImageInfo imInf;
+    getImageInfo(name, imInf);
+    setDatatype(imInf.datatype);
+    return image->read(name, DATA, select_img, !imInf.swap, mode);
 }
 
 int ImageGeneric::readOrReadMapped(const FileName &name, size_t select_img, int mode)
@@ -225,18 +202,14 @@ int ImageGeneric::readOrReadMapped(const FileName &name, size_t select_img, int 
 
 int ImageGeneric::readPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img)
 {
-    DataType datatype;
-    getImageType(name, datatype);
-    setDatatype(datatype);
+    setDatatype(getImageDatatype(name));
 
     return image->readPreview(name, Xdim, Ydim, select_slice, select_img);
 }
 
 int ImageGeneric::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img, bool mapData)
 {
-    ImageInfo imInfo;
-    getInfo(name, imInfo);
-    setDatatype(imInfo.datatype);
+    setDatatype(getImageDatatype(name));
 
     return image->readOrReadPreview(name, Xdim, Ydim, select_slice, select_img, mapData);
 }
@@ -261,18 +234,14 @@ void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &
 int ImageGeneric::readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts,
                                DataMode datamode, size_t select_img, bool wrap)
 {
-    DataType datatype;
-    getImageType(name, datatype);
-    setDatatype(datatype);
+    setDatatype(getImageDatatype(name));
     return image->readApplyGeo(name, row, only_apply_shifts, datamode, select_img, wrap);
 }
 
 int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts, DataMode datamode,
                                size_t select_img, bool wrap)
 {
-    DataType datatype;
-    getImageType(name, datatype);
-    setDatatype(datatype);
+    setDatatype(getImageDatatype(name));
     return image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img, wrap);
 }
 
@@ -282,9 +251,7 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply
 {
     FileName name;
     md.getValue(MDL_IMAGE, name, objId/*md.firstObject()*/);
-    DataType datatype;
-    getImageType(name, datatype);
-    setDatatype(datatype);
+    setDatatype(getImageDatatype(name));
     return image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img, wrap);
 }
 

@@ -28,6 +28,7 @@
 #include <data/xmipp_program.h>
 #include <data/metadata_extension.h>
 #include <data/xmipp_image_generic.h>
+#include <data/xmipp_image_extension.h>
 #include <data/xmipp_color.h>
 #include <reconstruction/ctf_estimate_from_micrograph.h>
 
@@ -3020,7 +3021,7 @@ xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
             char * str = PyString_AsString(pyStr);
             int xdim, ydim, zdim;
             size_t ndim;
-            SingleImgSize(str, xdim, ydim, zdim, ndim);
+            getImageSize(str, xdim, ydim, zdim, ndim);
             Py_DECREF(pyStr);
             return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
         }
@@ -3062,7 +3063,7 @@ xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
             }
             int xdim, ydim, zdim;
             size_t ndim;
-            ImgSize(md, xdim, ydim, zdim, ndim);
+            getImageSize(md, xdim, ydim, zdim, ndim);
             return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
         }
         catch (XmippError &xe)
@@ -3086,7 +3087,7 @@ xmipp_ImgCompare(PyObject *obj, PyObject *args, PyObject *kwargs)
             PyObject * pyStr2 = PyObject_Str(filename2);
             char * str1 = PyString_AsString(pyStr1);
             char * str2 = PyString_AsString(pyStr2);
-            bool result = ImgCompare(str1, str2);
+            bool result = compareImage(str1, str2);
             Py_DECREF(pyStr1);
             Py_DECREF(pyStr2);
             if (result)

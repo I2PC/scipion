@@ -149,7 +149,7 @@ void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
 
 /* Get Fourier statistics ------------------------------------------------- */
 void getFourierStatistics(MetaData &MDin, double sam, MetaData &MDout,
-		                  bool do_dpr, double max_sam)
+                          bool do_dpr, double max_sam)
 {
     MetaData MDaux;
     std::vector<MetaData> vMD;
@@ -191,38 +191,41 @@ void getFourierStatistics(MetaData &MDin, double sam, MetaData &MDout,
     }
 }
 
-void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
+void getImageSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
 {
     if (!MD.isEmpty())
     {
         FileName fn_img;
         MD.getValue(MDL_IMAGE, fn_img, MD.firstObject());
-        SingleImgSize(fn_img, Xdim, Ydim, Zdim, Ndim);
+        getImageSize(fn_img, Xdim, Ydim, Zdim, Ndim);
 
     }
     else
         REPORT_ERROR(ERR_MD_NOOBJ, "Can not read image size from empty metadata");
 }
 
-void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype)
+void getImageInfo(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype)
 {
     if (!MD.isEmpty())
     {
         FileName fn_img;
         MD.getValue(MDL_IMAGE, fn_img, MD.firstObject());
-        SingleImgSize(fn_img, Xdim, Ydim, Zdim, Ndim, datatype);
+        getImageInfo(fn_img, Xdim, Ydim, Zdim, Ndim, datatype);
 
     }
     else
         REPORT_ERROR(ERR_MD_NOOBJ, "Can not read image size from empty metadata");
 }
 
-void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
+void getImageSizeFromFilename(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
 {
-    ImgSize(MetaData(filename), Xdim, Ydim, Zdim, Ndim);
+    if (filename.hasImageExtension())
+        getImageSize(filename, Xdim, Ydim, Zdim, Ndim);
+    else
+        getImageSize(MetaData(filename), Xdim, Ydim, Zdim, Ndim);
 }
 
-bool ImgCompare(const FileName &filename1, const FileName &filename2)
+bool compareImage(const FileName &filename1, const FileName &filename2)
 {
     ImageGeneric Im1,Im2;
     Im1.read(filename1);
@@ -231,16 +234,16 @@ bool ImgCompare(const FileName &filename1, const FileName &filename2)
     return( result);
 }
 
-bool ImgCompareSize(const FileName &filename1, const FileName &filename2)
+bool compareImageSize(const FileName &filename1, const FileName &filename2)
 {
-  int x,y,z, X, Y, Z;
-  size_t n, N;
-  ImgSize(filename1,x,y,z,n);
-  ImgSize(filename2,X,Y,Z,N);
-  return (x==X && y == Y && z == Z && n == N);
+    int x,y,z, X, Y, Z;
+    size_t n, N;
+    getImageSizeFromFilename(filename1,x,y,z,n);
+    getImageSizeFromFilename(filename2,X,Y,Z,N);
+    return (x==X && y == Y && z == Z && n == N);
 }
 
-int MaxFileNameLength(MetaData &MD)
+int maxFileNameLength(MetaData &MD)
 {
     int maxLength=0;
     FOR_ALL_OBJECTS_IN_METADATA(MD)

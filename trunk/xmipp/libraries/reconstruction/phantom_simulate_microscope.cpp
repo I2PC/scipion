@@ -228,7 +228,7 @@ void ProgSimulateMicroscope::preProcess()
 {
     int dum;
     size_t dum2;
-    ImgSize(mdIn, Xdim, Ydim, dum, dum2);
+    getImageSize(mdIn, Xdim, Ydim, dum, dum2);
 
     if (low_pass_before_CTF < 0.5)
     {

@@ -89,7 +89,7 @@ void CommonLine_Parameters::produceSideInfo()
     // Compute the number of images in each block
     int Xdim, Ydim, Zdim;
     size_t Ndim;
-    ImgSize(SF,Ydim,Xdim,Zdim,Ndim);
+    getImageSize(SF,Ydim,Xdim,Zdim,Ndim);
     Nblock=FLOOR(sqrt(mem*pow(2.0,30.0)/(Ydim*(360/stepAng)*sizeof(double))));
     Nblock=XMIPP_MIN(Nblock,CEIL(((float)Nimg)/Nmpi));
 
@@ -140,7 +140,7 @@ void * threadPrepareImages( void * args )
     MetaData SFi=*(master->SFi);
     int Ydim, Xdim, Zdim;
     size_t Ndim;
-    ImgSize(SFi,Xdim,Ydim,Zdim,Ndim);
+    getImageSize(SFi,Xdim,Ydim,Zdim,Ndim);
 
     MultidimArray<int> mask;
     mask.resize(Ydim,Xdim);
@@ -261,7 +261,7 @@ void CommonLine_Parameters::getAndPrepareBlock(int i,
     sigma/=Nthr;
     int Xdim, Ydim, Zdim;
     size_t Ndim;
-    ImgSize(SF,Xdim,Ydim,Zdim,Ndim);
+    getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
     sigma*=sqrt(2.0*Xdim);
 
     // Threads structures are not needed any more

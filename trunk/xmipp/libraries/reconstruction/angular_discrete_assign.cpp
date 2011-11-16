@@ -136,7 +136,7 @@ void ProgAngularDiscreteAssign::preProcess()
     SF_ref.read(fn_ref);
     int refYdim, refXdim, refZdim;
     size_t refNdim;
-    ImgSize(SF_ref,refYdim, refXdim, refZdim, refNdim);
+    getImageSize(SF_ref,refYdim, refXdim, refZdim, refNdim);
     if (refYdim != NEXT_POWER_OF_2(refYdim) || refXdim != NEXT_POWER_OF_2(refXdim))
         REPORT_ERROR(ERR_MULTIDIM_SIZE,
                      "reference images must be of a size that is power of 2");
