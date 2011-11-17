@@ -313,102 +313,97 @@ def angular_class_average(_log
                          , DocFileInputAngles
                          , DoParallel
                          , DoSplitReferenceImages
+                         , iCTFGroup
                          , InnerRadius
                          , MaxChangeOffset
                          , MinimumCrossCorrelation
                          , NumberOfReferences
-                         , NumberOfCtfGroups
+                         #, NumberOfCtfGroups
                          , PaddingFactor
                          , ProjectLibraryRootName
-                         , ProjMatchRootName
+                         , OutClassesWithCTFGroupAnd3DRef
                          , refN
                          ):
-    
-    if Action == "preprocessing" or Action == "postprocessing" :
-        NumberOfCtfGroups = 0
-        
-                         
+                             
+    print '*BP1*'
     # Now make the class averages
     CtfGroupName        = CtfGroupDirectory + '/' +\
                           CtfGroupRootName
     refname             = str(ProjectLibraryRootName)
     MD = MetaData()
-    ProjMatchRootName = ProjMatchRootName
-    for iCTFGroup in range(1,NumberOfCtfGroups+1):
+    #for iCTFGroup in range(1,NumberOfCtfGroups+1):
 #        for iRef3D in range(1,NumberOfReferences+1):
-        auxInputdocfile  = CtfBlockName + \
-                            str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)
-        auxInputdocfile += '_' + RefBlockName +\
-                            str(refN).zfill(FILENAMENUMBERLENGTH)+'@'
-        MD.read(auxInputdocfile+DocFileInputAngles)
-        if MD.size()==0:
-            print "Empty metadata, remember to copy the reference",iCTFGroup,refN
-            continue;
-        #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(refN).zfill(2))
-        parameters =  ' -i '       + auxInputdocfile  + DocFileInputAngles +\
-                      ' --lib '    + refname.replace(".stk",".doc") + \
-                      ' --write_selfiles ' + \
-                      ' --limit0 ' + MinimumCrossCorrelation + \
-                      ' --limitR ' + DiscardPercentage
-        if (DoCtfCorrection):
-            # On-the fly apply Wiener-filter correction and add all CTF groups together
-            parameters += \
-                       ' --wien '   + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@' + CtfGroupName + '_wien.stk' + \
-                       ' --pad '    + str(PaddingFactor) + \
-                       ' --add_to ' + ProjMatchRootName.replace('.doc','__')
-        else:
-            parameters += \
-                      ' -o '                + ProjMatchRootName
+    auxInputdocfile  = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)
+    auxInputdocfile += '_' + RefBlockName + str(refN).zfill(FILENAMENUMBERLENGTH)+'@'
+    aux = auxInputdocfile+DocFileInputAngles
+    print 'reading: ', aux
+    MD.read(auxInputdocfile+DocFileInputAngles)
+    if MD.size()==0:
+        print "Empty metadata, remember to copy the reference ",iCTFGroup,refN
+        return
+    #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(refN).zfill(2))
+    parameters =  ' -i '       + auxInputdocfile  + DocFileInputAngles +\
+                  ' --lib '    + refname.replace(".stk",".doc") + \
+                  ' --write_selfiles ' + \
+                  ' --limit0 ' + MinimumCrossCorrelation + \
+                  ' --limitR ' + DiscardPercentage
+    if (DoCtfCorrection):
+        # On-the fly apply Wiener-filter correction and add all CTF groups together
+        parameters += \
+                   ' --wien '   + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@' + CtfGroupName + '_wien.stk' + \
+                   ' --pad '    + str(PaddingFactor)
+                   
+    parameters += \
+                  ' -o '        + OutClassesWithCTFGroupAnd3DRef
 
-                       
-        if Action == "preprocessing":
-            parameters += \
-                       ' --do_preprocess '
-             
-        if Action == "postprocessing" :
-            parameters += \
-                       ' --do_postprocess --number_3dreferences ' + str(NumberOfReferences) + ' '
+                   
+    if Action == "preprocessing":
+        parameters += \
+                   ' --preprocess --number_3dreferences ' + str(NumberOfReferences) + ' '
+         
+    if Action == "postprocessing" :
+        parameters += \
+                   ' --postprocess --number_3dreferences ' + str(NumberOfReferences) + ' '
 
-        if (DoAlign2D == '1'):
-            parameters += \
-                      ' --iter '             + Align2DIterNr  + \
-                      ' --Ri '               + str(InnerRadius)           + \
-                      ' --Ro '               + str(OuterRadius)           + \
-                      ' --max_shift '        + MaxChangeOffset + \
-                      ' --max_shift_change ' + Align2dMaxChangeOffset + \
-                      ' --max_psi_change '   + Align2dMaxChangeRot 
-        if (DoComputeResolution and DoSplitReferenceImages):
-            parameters += \
-                      ' --split '
+    if (DoAlign2D == '1'):
+        parameters += \
+                  ' --iter '             + Align2DIterNr  + \
+                  ' --Ri '               + str(InnerRadius)           + \
+                  ' --Ro '               + str(OuterRadius)           + \
+                  ' --max_shift '        + MaxChangeOffset + \
+                  ' --max_shift_change ' + Align2dMaxChangeOffset + \
+                  ' --max_psi_change '   + Align2dMaxChangeRot 
+    if (DoComputeResolution and DoSplitReferenceImages):
+        parameters += \
+                  ' --split '
+    
+    runJob(_log,
+           'xmipp_angular_class_average',
+           parameters
+           )
         
-        runJob(_log,
-               'xmipp_angular_class_average',
-               parameters
-               )
-        
-#------------------------------------------------------------------------
 def reconstruction(_log
                    , ARTReconstructionExtraCommand
                    , WBPReconstructionExtraCommand
                    , FourierReconstructionExtraCommand
-                   , iteration_number
+                   , Iteration_number
                    #, DisplayReconstruction
-                   #, DoParallel
+                   , DoParallel
                    , NumberOfMpi
                    , NumberOfThreads
-                   , MyMpiJobSize
                    , ReconstructionMethod
                    #, FourierMaxFrequencyOfInterest
                    , ARTLambda
                    , SymmetryGroup
-                   , ReconstructedandfilteredVolume
+                   #, ReconstructedandfilteredVolume
+                   , ReconstructedVolume
                    , DoComputeResolution
                    , DoSplitReferenceImages
                    , PaddingFactor
                    ):
-    
 
-    Outputvolume = _ReconstructedandfilteredVolume
+    #Outputvolume = ReconstructedandfilteredVolume
+    Outputvolume = ReconstructedVolume
     
     print '*********************************************************************'
     print '* Reconstruct volume using '
@@ -418,7 +413,7 @@ def reconstruction(_log
         parameters= ' -i '    + ForReconstructionSel + \
                     ' --doc '  + ForReconstructionDoc + \
                     ' -o '    + Outputvolume + \
-                    ' --sym '  + _SymmetryGroup + \
+                    ' --sym '  + SymmetryGroup + \
                     ' --weight -use_each_image '
         parameters = parameters + WBPReconstructionExtraCommand
         #MyNumberOfThreads = 1
@@ -429,12 +424,12 @@ def reconstruction(_log
         parameters=' -i '    + ForReconstructionSel + \
                    ' -o '    + Outputvolume + ' ' + \
                    ' --sym '  + SymmetryGroup + \
-                   ' --thr '  + str(MyNumberOfThreads) + \
+                   ' --thr '  + str(NumberOfThreads) + \
                    ' --WLS '
         if len(_ARTLambda)>1:
            parameters = parameters + ' -l '   + _ARTLambda + ' '
         parameters = parameters + _ARTReconstructionExtraCommand
-    elif _ReconstructionMethod=='fourier':
+    elif ReconstructionMethod=='fourier':
         #if ( _MyNumberOfMpiProcesses ==1):
             #DoParallel=False
         program = 'xmipp_reconstruct_fourier'
@@ -468,12 +463,12 @@ def reconstruction(_log
            , NumberOfThreads
            )
 
-    if DisplayReconstruction==True:
-        command='xmipp_show -vol '+ Outputvolume + '&'
-        print '*********************************************************************'
-        print '* ',command
-        _mylog.info(command)
-        os.system(command)
+#    if DisplayReconstruction==True:
+#        command='xmipp_show -vol '+ Outputvolume + '&'
+#        print '*********************************************************************'
+#        print '* ',command
+#        _mylog.info(command)
+#        os.system(command)
 
 #------------------------------------------------------------------------
 #def  compute_resolution_and_filter(_log

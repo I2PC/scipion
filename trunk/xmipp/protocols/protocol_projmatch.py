@@ -16,9 +16,8 @@ from os.path import join
 from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL, MDL_COUNT
 from protlib_base import XmippProtocol, protocolMain
 from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector
-from protlib_sql import XmippProjectDb
+from protlib_sql import XmippProjectDb, SqliteDb
 from config_protocols import protDict
-
 
 class ProtProjMatch(XmippProtocol):
 
@@ -107,6 +106,7 @@ class ProtProjMatch(XmippProtocol):
     def createFilenameTemplates(self):         
         Iter = 'Iter_%(iter)03d'
         Ref = 'Ref_%(ref)03d'
+        Ctf = 'CtfGroup_%(ctf)06d'
         IterDir = self.workingDirPath(Iter)
         #ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s.doc')
         ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s')
@@ -122,6 +122,7 @@ class ProtProjMatch(XmippProtocol):
                 'ProjectLibraryRootNames': ProjLibRootNames,
                 'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref + '.doc'),
                 'ProjMatchRootNamesWithoutRef': join(ProjMatchDirs, '%(ProjMatchName)s.doc'),
+                'OutClassesWithCTFGroupAnd3DRef': join(ProjMatchDirs, '%(ProjMatchName)s_'+ Ref + '_' + Ctf),
                 'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref + '.vol'),
                 'ReconstructedFileNamesIters': join(IterDir, '%(ReconstructedVolume)s_' + Ref + '.vol'),
                 'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref + '.vol'),
@@ -416,43 +417,49 @@ class ProtProjMatch(XmippProtocol):
                          , DocFileInputAngles=self.DocFileInputAngles[iterN]#
                          , DoParallel=self.DoParallel#
                          , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
+                         , execution_mode = self.SqliteDb.EXEC_MAINLOOP
+                         , iCTFGroup=1
                          , InnerRadius=self.InnerRadius[iterN]#
                          , MaxChangeOffset=self.MaxChangeOffset[iterN]#
                          , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
                          , NumberOfReferences=self.numberOfReferences#
-                         , NumberOfCtfGroups=self.NumberOfCtfGroups#
                          , PaddingFactor=self.PaddingFactor#
-                         , ProjectLibraryRootName="DUMMY"#
-                         , ProjMatchRootName="DUMMY"#
+                         , parent_step_id = 0
+                         , ProjectLibraryRootName=self.getFilename('ProjectLibraryStk', iter=1, ref=1)#
+                         , OutClassesWithCTFGroupAnd3DRef=self.getFilename('OutClassesWithCTFGroupAnd3DRef', iter=1, ref=1, ctf=1)#
                          , refN=refN
                          )
             #align images, not possible for ctf groups
             for refN in range(1, self.numberOfReferences + 1):
-                _VerifyFiles = []
-                id = _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
-                         , Action='processing'#
-                         , Align2DIterNr=self.Align2DIterNr[iterN]#
-                         , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
-                         , Align2dMaxChangeOffset=self.Align2dMaxChangeOffset[iterN]#
-                         , CtfGroupDirectory=self.CtfGroupDirectory#
-                         , CtfGroupRootName=self.CtfGroupRootName#
-                         , DiscardPercentage=self.DiscardPercentage[iterN]#
-                         , DoAlign2D=self.DoAlign2D[iterN]#
-                         , DoComputeResolution=self.DoComputeResolution[iterN]
-                         , DoCtfCorrection=self.DoCtfCorrection#
-                         , DocFileInputAngles=self.DocFileInputAngles[iterN]#
-                         , DoParallel=self.DoParallel#
-                         , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
-                         , InnerRadius=self.InnerRadius[iterN]#
-                         , MaxChangeOffset=self.MaxChangeOffset[iterN]#
-                         , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
-                         , NumberOfReferences=self.numberOfReferences#
-                         , NumberOfCtfGroups=self.NumberOfCtfGroups#
-                         , PaddingFactor=self.PaddingFactor#
-                         , ProjectLibraryRootName=self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)#
-                         , ProjMatchRootName=self.getFilename('ProjMatchRootNamesWithoutRef', iter=iterN, ref=refN)#
-                         , refN=refN
-                         )
+                for iCTFGroup in range(1,self.NumberOfCtfGroups+1):
+                    _VerifyFiles = []
+                    _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
+                             , Action='processing'#
+                             , Align2DIterNr=self.Align2DIterNr[iterN]#
+                             , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
+                             , Align2dMaxChangeOffset=self.Align2dMaxChangeOffset[iterN]#
+                             , CtfGroupDirectory=self.CtfGroupDirectory#
+                             , CtfGroupRootName=self.CtfGroupRootName#
+                             , DiscardPercentage=self.DiscardPercentage[iterN]#
+                             , DoAlign2D=self.DoAlign2D[iterN]#
+                             , DoComputeResolution=self.DoComputeResolution[iterN]
+                             , DoCtfCorrection=self.DoCtfCorrection#
+                             , DocFileInputAngles=self.DocFileInputAngles[iterN]#
+                             , DoParallel=self.DoParallel#
+                             , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
+                             , execution_mode = self.SqliteDb.EXEC_PARALLEL
+                             , iCTFGroup=iCTFGroup
+                             , InnerRadius=self.InnerRadius[iterN]#
+                             , MaxChangeOffset=self.MaxChangeOffset[iterN]#
+                             , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
+                             , NumberOfReferences=self.numberOfReferences#
+                             #, NumberOfCtfGroups=self.NumberOfCtfGroups#
+                             , PaddingFactor=self.PaddingFactor#
+                             , parent_step_id = id
+                             , ProjectLibraryRootName=self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)#
+                             , OutClassesWithCTFGroupAnd3DRef=self.getFilename('OutClassesWithCTFGroupAnd3DRef', iter=iterN, ref=refN, ctf=iCTFGroup)#
+                             , refN=refN
+                             )
                 
             _VerifyFiles = []
             id = _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
@@ -469,14 +476,16 @@ class ProtProjMatch(XmippProtocol):
                          , DocFileInputAngles=self.DocFileInputAngles[iterN]#
                          , DoParallel=self.DoParallel#
                          , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
+                         , execution_mode = self.SqliteDb.EXEC_PARALLEL
+                         , iCTFGroup=1
                          , InnerRadius=self.InnerRadius[iterN]#
                          , MaxChangeOffset=self.MaxChangeOffset[iterN]#
                          , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
                          , NumberOfReferences=self.numberOfReferences#
-                         , NumberOfCtfGroups=self.NumberOfCtfGroups#
+                         , parent_step_id = 0
                          , PaddingFactor=self.PaddingFactor#
-                         , ProjectLibraryRootName="DUMMY"#
-                         , ProjMatchRootName="DUMMY"#
+                         , ProjectLibraryRootName=self.getFilename('ProjectLibraryStk', iter=1, ref=1)#
+                         , OutClassesWithCTFGroupAnd3DRef=self.getFilename('OutClassesWithCTFGroupAnd3DRef', iter=1, ref=1, ctf=1)#
                          , refN=refN
                          )
 
