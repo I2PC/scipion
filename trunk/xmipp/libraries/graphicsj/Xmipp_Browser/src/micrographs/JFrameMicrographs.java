@@ -225,12 +225,13 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         width = MicrographImageRenderer.CELL_WIDTH_MIN;
 
         // Get maximum width of column data
-        for (int r = 0; r < table.getRowCount(); r++) {
+        //for (int r = 0; r < table.getRowCount(); r++) {
+int r = 0;
             renderer = table.getCellRenderer(r, column);
             Component comp = renderer.getTableCellRendererComponent(
                     table, table.getValueAt(r, column), false, false, r, column);
             width = Math.max(width, comp.getPreferredSize().width);
-        }
+        //}
 
         // Set the width
         col.setPreferredWidth(width);
