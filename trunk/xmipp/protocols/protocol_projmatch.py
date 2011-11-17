@@ -39,7 +39,7 @@ class ProtProjMatch(XmippProtocol):
         'ForReconstructionDoc': "reconstruction.doc",
         'MultiAlign2dSel': "multi_align2d.sel",
         'DocFileWithOriginalAngles': 'original_angles.doc',
-        'docfile_with_current_angles': 'current_angles',
+        'Docfile_with_current_angles': 'current_angles',
         'FilteredReconstruction': "filtered_reconstruction",
         'ReconstructedVolume': "reconstruction",
         'MaskReferenceVolume': "masked_reference",
@@ -52,7 +52,7 @@ class ProtProjMatch(XmippProtocol):
         # Set as protocol variables
         for k, v in extraParams.iteritems():
             setattr(self, k, v)
-            
+
         self.CtfGroupDirectory = self.workingDirPath(self.CtfGroupDirectory)
         self.CtfGroupSubsetFileName = join(self.CtfGroupDirectory, self.CtfGroupSubsetFileName)
         self.DocFileWithOriginalAngles = self.workingDirPath(self.DocFileWithOriginalAngles)
@@ -116,7 +116,7 @@ class ProtProjMatch(XmippProtocol):
                 # Global filenames templates
                 'IterDir': IterDir,
                 'ProjMatchDirs': ProjMatchDirs,
-                'DocfileInputAngles': join(IterDir, '%(docfile_with_current_angles)s.doc'),
+                'DocfileInputAnglesIters': join(IterDir, '%(Docfile_with_current_angles)s.doc'),
                 #'LibraryDirs': join(IterDir, '%(LibraryDir)s.doc'),
                 'LibraryDirs': join(IterDir, '%(LibraryDir)s'),
                 'ProjectLibraryRootNames': ProjLibRootNames,
@@ -193,7 +193,8 @@ class ProtProjMatch(XmippProtocol):
 #        #NOTE THAT INDEXES START AT 1
 
         # Construct special filename list with zero special case
-        self.DocFileInputAngles = [self.DocFileWithOriginalAngles] + [self.getFilename('DocFileInputAngles', iter=i) for i in range(1, self.NumberOfIterations + 1)]
+        self.DocFileInputAngles = [self.DocFileWithOriginalAngles] + [self.getFilename('DocfileInputAnglesIters', iter=i) for i in range(1, self.NumberOfIterations + 1)]
+        print 'self.DocFileInputAngles: ', self.DocFileInputAngles
         self.reconstructedFileNamesIters = [[None] + self.ReferenceFileNames]
         for iterN in range(1, self.NumberOfIterations + 1):
             self.reconstructedFileNamesIters.append([None] + [self.getFilename('ReconstructedFileNamesIters', iter=iterN, ref=r) for r in range(1, self.numberOfReferences + 1)])
@@ -420,8 +421,6 @@ class ProtProjMatch(XmippProtocol):
                          , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
                          , NumberOfReferences=self.numberOfReferences#
                          , NumberOfCtfGroups=self.NumberOfCtfGroups#
-                         , NumberOfMpi=self.NumberOfMpi#
-                         , NumberOfThreads=self.NumberOfThreads#
                          , PaddingFactor=self.PaddingFactor#
                          , ProjectLibraryRootName="DUMMY"#
                          , ProjMatchRootName="DUMMY"#
