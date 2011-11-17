@@ -71,7 +71,6 @@ public class XmippImageConverter {
             for (int nslice = ImageGeneric.FIRST_SLICE; nslice <= d; nslice++) {
                 image.nSize = nimage;
                 image.zSize = nslice;
-                System.out.println("nimage: " + nimage + " / nslice: " + nslice);
                 is.addSlice(String.valueOf((nimage * d) + nslice), pc.getProcessor(image));
             }
         }

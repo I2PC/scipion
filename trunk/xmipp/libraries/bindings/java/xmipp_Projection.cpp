@@ -4,6 +4,7 @@
 #include "xmipp_ExceptionsHandler.h"
 #include <data/xmipp_image.h>
 #include <data/projection.h>
+#include <data/filters.h>
 #include "xmipp_InternalData.h"
 
 JNIEXPORT void JNICALL Java_xmipp_Projection_storeIds
@@ -89,6 +90,40 @@ std::cout << "4" << std::endl;
 	if(!msg.empty()) {
 		handleXmippException(env, msg);
 	}
+}
+
+JNIEXPORT jdouble JNICALL Java_xmipp_Projection_entropyOtsuSegmentation
+  (JNIEnv *env, jclass class_, jobject jvolume, jdouble percentile, jboolean binarize) {
+	std::string msg = "";
+	ImageGeneric *volume = GET_INTERNAL_IMAGE_GENERIC(jvolume);
+
+	if(volume != NULL) {
+			try {
+				MultidimArray<double> mdarray;
+
+				//mdarray = volume->data;
+
+				//MULTIDIM_ARRAY_GENERIC(*volume).getImage(mdarray);
+				std::cout << volume->data << std::endl;
+
+				return EntropyOtsuSegmentation(mdarray, percentile, binarize);
+			} catch (XmippError xe) {
+				msg = xe.getDefaultMessage();
+			} catch (std::exception& e) {
+				msg = e.what();
+			} catch (...) {
+				msg = "Unhandled exception";
+			}
+	} else {
+		msg = "volume is NULL";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return -1;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_Projection_write

@@ -25,6 +25,8 @@ public class Projection {
     public static native void projectVolume(ImageGeneric image, Projection projection,
             double rot, double tilt, double pshi) throws Exception;
 
+    public static native double entropyOtsuSegmentation(ImageGeneric volume, double percentile, boolean binarize) throws Exception;
+    
     // Writting.
     public native void write(String filename) throws Exception;
 

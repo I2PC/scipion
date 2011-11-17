@@ -49,6 +49,14 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
 
 /*
  * Class:     xmipp_Projection
+ * Method:    entropyOtsuSegmentation
+ * Signature: (Lxmipp/ImageGeneric;DZ)D
+ */
+JNIEXPORT jdouble JNICALL Java_xmipp_Projection_entropyOtsuSegmentation
+  (JNIEnv *, jclass, jobject, jdouble, jboolean);
+
+/*
+ * Class:     xmipp_Projection
  * Method:    write
  * Signature: (Ljava/lang/String;)V
  */
