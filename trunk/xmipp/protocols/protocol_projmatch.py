@@ -122,7 +122,7 @@ class ProtProjMatch(XmippProtocol):
                 'ProjectLibraryRootNames': ProjLibRootNames,
                 'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref + '.doc'),
                 'ProjMatchRootNamesWithoutRef': join(ProjMatchDirs, '%(ProjMatchName)s.doc'),
-                'OutClassesWithCTFGroupAnd3DRef': join(ProjMatchDirs, '%(ProjMatchName)s_'+ Ref + '_' + Ctf),
+                'OutClasses': join(ProjMatchDirs, '%(ProjMatchName)s'),
                 'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref + '.vol'),
                 'ReconstructedFileNamesIters': join(IterDir, '%(ReconstructedVolume)s_' + Ref + '.vol'),
                 'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref + '.vol'),
@@ -426,8 +426,8 @@ class ProtProjMatch(XmippProtocol):
                          , PaddingFactor=self.PaddingFactor#
                          , parent_step_id = 0
                          , ProjectLibraryRootName=self.getFilename('ProjectLibraryStk', iter=1, ref=1)#
-                         , OutClassesWithCTFGroupAnd3DRef=self.getFilename('OutClassesWithCTFGroupAnd3DRef', iter=1, ref=1, ctf=1)#
-                         , refN=refN
+                         , OutClasses=self.getFilename('OutClasses', iter=1)#
+                         , ref3dNum=1
                          )
             #align images, not possible for ctf groups
             for refN in range(1, self.numberOfReferences + 1):
@@ -457,8 +457,8 @@ class ProtProjMatch(XmippProtocol):
                              , PaddingFactor=self.PaddingFactor#
                              , parent_step_id = id
                              , ProjectLibraryRootName=self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)#
-                             , OutClassesWithCTFGroupAnd3DRef=self.getFilename('OutClassesWithCTFGroupAnd3DRef', iter=iterN, ref=refN, ctf=iCTFGroup)#
-                             , refN=refN
+                             , OutClasses=self.getFilename('OutClasses', iter=iterN)#
+                             , ref3dNum=refN
                              )
                 
             _VerifyFiles = []
@@ -476,8 +476,8 @@ class ProtProjMatch(XmippProtocol):
                          , DocFileInputAngles=self.DocFileInputAngles[iterN]#
                          , DoParallel=self.DoParallel#
                          , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
-                         , execution_mode = self.SqliteDb.EXEC_PARALLEL
-                         , iCTFGroup=1
+                         , execution_mode = self.SqliteDb.EXEC_MAINLOOP
+                         , iCTFGroup=iCTFGroup
                          , InnerRadius=self.InnerRadius[iterN]#
                          , MaxChangeOffset=self.MaxChangeOffset[iterN]#
                          , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
@@ -485,8 +485,8 @@ class ProtProjMatch(XmippProtocol):
                          , parent_step_id = 0
                          , PaddingFactor=self.PaddingFactor#
                          , ProjectLibraryRootName=self.getFilename('ProjectLibraryStk', iter=1, ref=1)#
-                         , OutClassesWithCTFGroupAnd3DRef=self.getFilename('OutClassesWithCTFGroupAnd3DRef', iter=1, ref=1, ctf=1)#
-                         , refN=refN
+                         , OutClasses=self.getFilename('OutClasses', iter=1)#
+                         , ref3dNum=1
                          )
 
             for refN in range(1, self.numberOfReferences + 1):

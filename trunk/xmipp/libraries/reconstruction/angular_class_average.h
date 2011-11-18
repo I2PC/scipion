@@ -106,6 +106,11 @@ public:
     FourierTransformer global_transformer;
     MultidimArray<double> corr;
 
+    /** Ctf group number */
+    int ctfNum;
+    /** 3D reference number */
+    int ref3dNum;
+
 public:
 
     /// Read arguments from command line
@@ -154,7 +159,8 @@ public:
     void writeToDisc(Image<double> avg,
                      size_t     dirno,
                      MetaData   SF,
-                     FileName   fn,
+                     FileName   fileNameXmd,
+                     FileName   fileNameStk,
                      bool       write_selfile,
                      FileName   oext="stk");
 

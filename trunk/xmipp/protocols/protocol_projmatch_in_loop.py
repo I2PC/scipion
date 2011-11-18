@@ -321,8 +321,8 @@ def angular_class_average(_log
                          #, NumberOfCtfGroups
                          , PaddingFactor
                          , ProjectLibraryRootName
-                         , OutClassesWithCTFGroupAnd3DRef
-                         , refN
+                         , OutClasses
+                         , ref3dNum
                          ):
                              
     print '*BP1*'
@@ -334,19 +334,21 @@ def angular_class_average(_log
     #for iCTFGroup in range(1,NumberOfCtfGroups+1):
 #        for iRef3D in range(1,NumberOfReferences+1):
     auxInputdocfile  = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)
-    auxInputdocfile += '_' + RefBlockName + str(refN).zfill(FILENAMENUMBERLENGTH)+'@'
+    auxInputdocfile += '_' + RefBlockName + str(ref3dNum).zfill(FILENAMENUMBERLENGTH)+'@'
     aux = auxInputdocfile+DocFileInputAngles
     print 'reading: ', aux
     MD.read(auxInputdocfile+DocFileInputAngles)
     if MD.size()==0:
-        print "Empty metadata, remember to copy the reference ",iCTFGroup,refN
+        print "Empty metadata, remember to copy the reference ",iCTFGroup,ref3dNum
         return
-    #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(refN).zfill(2))
+    #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(ref3dNum).zfill(2))
     parameters =  ' -i '       + auxInputdocfile  + DocFileInputAngles +\
                   ' --lib '    + refname.replace(".stk",".doc") + \
                   ' --write_selfiles ' + \
                   ' --limit0 ' + MinimumCrossCorrelation + \
-                  ' --limitR ' + DiscardPercentage
+                  ' --limitR ' + DiscardPercentage + \
+                  ' --ctfNum ' + str(iCTFGroup) + \
+                  ' --ref3dNum ' + str(ref3dNum)
     if (DoCtfCorrection):
         # On-the fly apply Wiener-filter correction and add all CTF groups together
         parameters += \
@@ -354,14 +356,14 @@ def angular_class_average(_log
                    ' --pad '    + str(PaddingFactor)
                    
     parameters += \
-                  ' -o '        + OutClassesWithCTFGroupAnd3DRef
+                  ' -o '        + OutClasses
 
                    
     if Action == "preprocessing":
         parameters += \
                    ' --preprocess --number_3dreferences ' + str(NumberOfReferences) + ' '
          
-    if Action == "postprocessing" :
+    elif Action == "postprocessing" :
         parameters += \
                    ' --postprocess --number_3dreferences ' + str(NumberOfReferences) + ' '
 
