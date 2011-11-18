@@ -159,6 +159,18 @@ FileName_composeBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_RETURN_NONE;//Return None(similar to void in C)
 }
 
+/* exists */
+static PyObject *
+FileName_exists(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    FileNameObject *self = (FileNameObject*) obj;
+
+    if (self->filename->exists())
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
 /* isInStack */
 static PyObject *
 FileName_isInStack(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -260,6 +272,8 @@ static PyMethodDef FileName_methods[] =
           "Get the number from a FileName" },
         { "isInStack", (PyCFunction) FileName_isInStack, METH_NOARGS,
           "True if filename has stack format" },
+        { "exists", (PyCFunction) FileName_exists, METH_NOARGS,
+           "True if FileName exists" },
         { "isMetaData", (PyCFunction) FileName_isMetaData, METH_NOARGS,
           "True if is a MetaData" },
         { "isStar1", (PyCFunction) FileName_isStar1, METH_NOARGS,

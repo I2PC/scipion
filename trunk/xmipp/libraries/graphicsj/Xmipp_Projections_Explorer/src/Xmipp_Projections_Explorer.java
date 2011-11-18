@@ -29,9 +29,9 @@ import org.apache.commons.cli.Options;
 import table.JFrameImagesTable;
 import window.ProjectionWindow;
 import window.iAnalyzer;
-import xmipp.ImageGeneric;
+import xmipp.ImageGeneric_;
 import xmipp.Projection;
-import xmippij.XmippImageConverter;
+import xmippij.XmippImageConverter_;
 
 /*
  * To change this template, choose Tools | Templates
@@ -48,7 +48,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
     private Image3DUniverse universeVolume, universeSphere;
     private final static int UNIVERSE_W = 400, UNIVERSE_H = 400;
     private ImagePlus volumeIP, sphereIP;
-    private ImageGeneric xmippVolume;  // Volume for Xmipp library.
+    private ImageGeneric_ xmippVolume;  // Volume for Xmipp library.
     private GlobalTransform gt = new GlobalTransform();
     private boolean dispatched = false;
     private ProjectionTimer timer = new ProjectionTimer(500);
@@ -64,6 +64,13 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
         //(new Xmipp_Projections_Explorer()).run("");
         String fileVolume = "/home/jvega/Escritorio/imgs_Roberto/kk.vol";
         String fileEulerAngles = null;
+
+        /*try {
+        ImagePlus imp = XmippImageConverter.convertToImagej(fileVolume);
+        imp.show();
+        } catch (Exception ex) {
+        ex.printStackTrace();
+        }*/
 
         Xmipp_Projections_Explorer xpe = new Xmipp_Projections_Explorer();
         xpe.run(fileVolume, fileEulerAngles);
@@ -174,12 +181,12 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
         try {
             // Loads image plus for volume.
             IJ.showStatus(LABELS.MESSAGE_LOADING_VOLUME);
-            xmippVolume = new ImageGeneric(volumeFile);
+            xmippVolume = new ImageGeneric_(volumeFile);
             xmippVolume.setXmippOrigin();
 
             // Converts it to show.
             IJ.showStatus(LABELS.MESSAGE_CONVERTING_XMIPP_VOLUME);
-            volumeIP = XmippImageConverter.convertToImagej(xmippVolume);
+            volumeIP = XmippImageConverter_.convertToImagej(xmippVolume);
             //volumeIP.setTitle(volumeFile);
 
             new StackConverter(volumeIP).convertToRGB();
@@ -198,7 +205,8 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
 
             // Creates both universes and shows them.
             IJ.showStatus(LABELS.MESSAGE_BUILDING_VOLUME_UNIVERSE);
-            universeVolume = createUniverse(volumeIP, Content.VOLUME);
+            double threshold = Projection.entropyOtsuSegmentation(xmippVolume, 0.005, false);
+            universeVolume = createUniverse(volumeIP, Content.SURFACE, threshold);
 
             ImageWindow3D windowVolume = universeVolume.getWindow();
             windowVolume.setTitle(LABELS.TITLE_VOLUME);
@@ -223,10 +231,10 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
             }
 
             // Starts by retrieving first projection.
-            showProjection();
+// TODO Uncomment            showProjection();
 
             // Places projection window next to sphere universe (or volume if the sphere is not being used).
-            projectionWindow.setLocation(loc);
+// TODO Uncomment            projectionWindow.setLocation(loc);
 
             IJ.showStatus(LABELS.MESSAGE_DONE);
         } catch (Exception ex) {
@@ -236,13 +244,20 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
     }
 
     private Image3DUniverse createUniverse(ImagePlus volume, int type) {
+        return createUniverse(volume, type, 1);
+    }
+
+    private Image3DUniverse createUniverse(ImagePlus volume, int type, double threshold) {
         Image3DUniverse universe = new Image3DUniverse(UNIVERSE_W, UNIVERSE_H);
         universe.show();    // Shows...
 
         // Adds the sphere image plus to universe.
-        Content c = universe.addVoltex(volume);
-        c.displayAs(type);
+        Content c = universe.addContent(volume, type);
+        universe.select(c);
+
         c.setLocked(true);  // To avoid selected content independent rotations.
+        System.out.println(" *** Setting THRESHOLD to: " + threshold);
+        c.setThreshold((int) Math.round(threshold));
 
         // Adds listener to synchronize both universes.
         universe.addUniverseListener(this);
@@ -257,7 +272,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
         double tilt = angles[1];
 
         Projection projection = sphere.getProjection(xmippVolume, rot, tilt);
-        ImagePlus imp = XmippImageConverter.convertToImagej(projection, "Projection");
+        ImagePlus imp = XmippImageConverter_.convertToImagej(projection, "Projection");
 
         ArrayList<String> images = sphere.getFiles(rot, tilt);
         int n_images = images != null ? images.size() : 0;
@@ -415,7 +430,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
         }
 
         public void actionPerformed(ActionEvent e) {
-            showProjection();
+// TODO Uncomment            showProjection();
         }
     }
 }

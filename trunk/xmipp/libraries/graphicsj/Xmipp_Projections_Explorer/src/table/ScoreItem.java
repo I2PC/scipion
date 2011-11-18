@@ -8,7 +8,7 @@ import ij.ImagePlus;
 import java.io.File;
 import xmipp.MDLabel;
 import xmipp.MetaData;
-import xmippij.XmippImageConverter;
+import xmippij.XmippImageConverter_;
 
 /**
  *
@@ -37,7 +37,7 @@ public class ScoreItem implements Comparable<ScoreItem> {
     public ImagePlus getImagePlus() {
         try {
             if (imp == null) {
-                imp = XmippImageConverter.convertToImagej(fileName);
+                imp = XmippImageConverter_.convertToImagej(fileName);
                 imp.setTitle(fileName);
             }
         } catch (Exception ex) {

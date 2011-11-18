@@ -42,7 +42,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_reset
 /*
  * Class:     xmipp_Projection
  * Method:    projectVolume
- * Signature: (Lxmipp/ImageGeneric;Lxmipp/Projection;DDD)V
+ * Signature: (Lxmipp/ImageGeneric_;Lxmipp/Projection;DDD)V
  */
 JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
   (JNIEnv *, jclass, jobject, jobject, jdouble, jdouble, jdouble);
@@ -50,7 +50,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
 /*
  * Class:     xmipp_Projection
  * Method:    entropyOtsuSegmentation
- * Signature: (Lxmipp/ImageGeneric;DZ)D
+ * Signature: (Lxmipp/ImageGeneric_;DZ)D
  */
 JNIEXPORT jdouble JNICALL Java_xmipp_Projection_entropyOtsuSegmentation
   (JNIEnv *, jclass, jobject, jdouble, jboolean);

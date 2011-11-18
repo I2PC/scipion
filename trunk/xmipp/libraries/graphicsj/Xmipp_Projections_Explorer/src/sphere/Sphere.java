@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
-import xmipp.ImageGeneric;
+import xmipp.ImageGeneric_;
 import xmipp.Projection;
 import xmipp.MDLabel;
 import xmipp.MetaData;
@@ -382,17 +382,13 @@ public class Sphere {
         }
     }
 
-    public Projection getProjection(ImageGeneric xmippVolume, double rot, double tilt) {
+    public Projection getProjection(ImageGeneric_ xmippVolume, double rot, double tilt) {
         Projection projection = new Projection();
         try {
-            projection.reset(xmippVolume.ySize, xmippVolume.xSize);
-
-            xmippVolume.printShape();
-            projection.printShape();
-            System.out.println("rot: " + rot + " / tilt:" + tilt);
+            projection.reset(xmippVolume.getYDim(), xmippVolume.getXDim());
 
             IJ.showStatus(LABELS.MESSAGE_RETRIEVING_PROJECTION);
-            Projection.projectVolume(xmippVolume, projection, rot, tilt, 0);
+            //Projection.projectVolume(xmippVolume, projection, rot, tilt, 0);
         } catch (Exception ex) {
             IJ.error("Error retrieving projection: " + ex.getMessage());
             throw new RuntimeException(ex);
@@ -401,7 +397,7 @@ public class Sphere {
         return projection;
     }
 
-    public String analyzeProjection(ImageGeneric xmippVolume, double rot, double tilt, int w, int h) {
+    public String analyzeProjection(ImageGeneric_ xmippVolume, double rot, double tilt, int w, int h) {
         String path = tempDir.getAbsolutePath() + File.separator;
         String projectionFileName = path + "projection.xmp";
         String selFileName = path + "analize.sel";
@@ -412,7 +408,7 @@ public class Sphere {
             IJ.showStatus(LABELS.MESSAGE_RETRIEVING_PROJECTION);
             Projection projection = getProjection(xmippVolume, rot, tilt);
 
-            // * Write projection to disk.
+            // * Writes projection to disk.
             projection.write(projectionFileName);
 
             // * Gets file names related to ROT and TILT
@@ -421,7 +417,7 @@ public class Sphere {
             // * Generate .sel file
             writeSelFile(selFileName, files);
 
-            // * Call xmipp_classify_...
+            // * Calls xmipp_classify_...
             IJ.showStatus(LABELS.MESSAGE_ANALYZING_PROJECTION);
             xmipp_classify_analyze_cluster(selFileName,
                     projectionFileName,

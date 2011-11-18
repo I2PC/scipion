@@ -1036,6 +1036,15 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
 
         public void show(Component cmpnt, Point location) {
             this.location = location;
+
+            // Update menu items status depending on item.
+            int row = table.rowAtPoint(location);
+            int col = table.columnAtPoint(location);
+            boolean enabled = ((AbstractGalleryImageItem) table.getValueAt(row, col)).isEnabled();
+
+            jmiDisable.setEnabled(enabled);
+            jmiEnable.setEnabled(!enabled);
+
             show(cmpnt, location.x, location.y);
         }
     }

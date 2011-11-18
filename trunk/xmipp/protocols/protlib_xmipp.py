@@ -115,7 +115,7 @@ class ScriptIJBase(XmippScript):
         if self.checkParam('--memory'):
             self.memory = self.getParam('--memory')
         else:
-            self.memory = convertBytes(estimateFilenamesListMemory(inputFiles))
+            self.memory = convertBytes(2*estimateFilenamesListMemory(inputFiles))
             print "No memory size provided. Estimated: " + self.memory
 
         self.args = "-i %s" % ' '.join(inputFiles)
@@ -340,30 +340,38 @@ def estimateFilenamesListMemory(input):
 
 def estimateFileNameSize(input):
     from xmipp import FileName
-    fn = FileName(input);
-    
-    print fn.isMetaData()
-    
+    if '@' in input:
+        trueFn=input.split('@')[1]
+    else:
+        trueFn=input
+    fn = FileName(trueFn);
     if fn.isMetaData():
         return estimateMDSize(fn)
     else:
         return estimateImageSize(fn)
 
 def estimateMDSize(input):
-    MD = xmipp.MetaData(input)
+    from xmipp import FileName
     memory = 0
+    fn = FileName(input);
     
-    if(MD.containsLabel(xmipp.MDL_IMAGE)):
-        for id in MD:
-            fnImg = MD.getValue(xmipp.MDL_IMAGE, id)
-            idMemory = estimateImageSize(fnImg)
-            memory = max(memory, idMemory)
-
+    if fn.exists():
+        MD = xmipp.MetaData(input)
+        if(MD.containsLabel(xmipp.MDL_IMAGE)):
+            for id in MD:
+                fnImg = MD.getValue(xmipp.MDL_IMAGE, id)
+                idMemory = estimateImageSize(fnImg)
+                memory = max(memory, idMemory)
+    
     return memory
 
 def estimateImageSize(input):
-    (Xdim, Ydim, Zdim, Ndim) = xmipp.SingleImgSize(input)
-    memory = Xdim * Ydim * Zdim * Ndim * 8
+    memory = 0
+    
+    if input.exists():
+        (Xdim, Ydim, Zdim, Ndim) = xmipp.SingleImgSize(input)
+        memory = Xdim * Ydim * Zdim * Ndim * 8
+    
     return memory
 
 def convertBytes(bytes):

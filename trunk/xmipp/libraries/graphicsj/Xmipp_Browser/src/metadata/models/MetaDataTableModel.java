@@ -138,7 +138,9 @@ public class MetaDataTableModel extends DefaultTableModel {
 
     private void loadBlocks() {
         try {
+            System.out.println(" >> " + filename);
             System.out.println(" >> " + getFilename());
+
             blocks = MetaData.getBlocksInMetaDataFile(Filename.getFilename(getFilename()));
 
             // No blocks, so set at least one item for the dropdown list.

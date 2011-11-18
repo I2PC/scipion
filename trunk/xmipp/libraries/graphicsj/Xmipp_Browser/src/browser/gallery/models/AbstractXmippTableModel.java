@@ -417,11 +417,15 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         int displayableColumns = (int) Math.floor(
                 (double) width / (double) (getCellWidth() - 2 * intercellWidth));
 
-//        double ddisplayableColumns =
-//                (double) width / (double) (getCellWidth() - 2 * intercellWidth);
+        if (displayableColumns < 1) {   // TODO: Fix "getInitialZoomScale()" (method above) and remove this.
+            displayableColumns = 1;
 //
-//        DEBUG.printMessage(" *** Displayable  columns: " + displayableColumns);
-//        DEBUG.printMessage(" *** DDisplayable columns: " + ddisplayableColumns);
+//            double ddisplayableColumns =
+//                    (double) width / (double) (getCellWidth() - 2 * intercellWidth);
+//
+//            DEBUG.printMessage(" *** floor(Displayable columns): " + Math.floor(ddisplayableColumns));
+//            DEBUG.printMessage(" *** Displayable columns: " + ddisplayableColumns);
+        }
 
         if (getColumnCount() != displayableColumns) {
             setColumns(displayableColumns);

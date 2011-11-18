@@ -22,10 +22,10 @@ public class Projection {
 
     public native void reset(int h, int w) throws Exception;
 
-    public static native void projectVolume(ImageGeneric image, Projection projection,
+    public static native void projectVolume(ImageGeneric_ image, Projection projection,
             double rot, double tilt, double pshi) throws Exception;
 
-    public static native double entropyOtsuSegmentation(ImageGeneric volume, double percentile, boolean binarize) throws Exception;
+    public static native double entropyOtsuSegmentation(ImageGeneric_ volume, double percentile, boolean binarize) throws Exception;
     
     // Writting.
     public native void write(String filename) throws Exception;

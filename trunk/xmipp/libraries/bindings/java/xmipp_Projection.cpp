@@ -99,14 +99,22 @@ JNIEXPORT jdouble JNICALL Java_xmipp_Projection_entropyOtsuSegmentation
 
 	if(volume != NULL) {
 			try {
-				MultidimArray<double> mdarray;
+				MultidimArray<double> *mdarray;
+				std::cout << " print: " << std::endl;
+				volume->print();
+				std::cout << " Convert2Double: " << std::endl;
+				volume->convert2Datatype(Double);
+				std::cout << " print2: " << std::endl;
+				volume->print();
 
-				//mdarray = volume->data;
+				std::cout << " mdarray = volume->data: " << std::endl;
+				MULTIDIM_ARRAY_GENERIC(*volume).getMultidimArrayPointer(mdarray);
 
-				//MULTIDIM_ARRAY_GENERIC(*volume).getImage(mdarray);
-				std::cout << volume->data << std::endl;
+				std::cout << " mdarray:" << std::endl;
+				std::cout << mdarray << std::endl;
 
-				return EntropyOtsuSegmentation(mdarray, percentile, binarize);
+				std::cout << " otsu:" << std::endl;
+				return EntropyOtsuSegmentation(*mdarray, percentile, binarize);
 			} catch (XmippError xe) {
 				msg = xe.getDefaultMessage();
 			} catch (std::exception& e) {

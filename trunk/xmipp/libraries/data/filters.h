@@ -202,8 +202,11 @@ void EntropySegmentation(MultidimArray<double> &V);
  * Then, the lowest percentil of Z is computed. The threshold applied to the
  * volume is the first value in the curve Z(t) falling below this
  * percentil.
+ *
+ * The binarization threshold is returned
  */
-void EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil=0.05);
+double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil=0.05,
+		                       bool binarizeVolume=true);
 
 /** Correlation nD
  * @ingroup Filters

@@ -767,7 +767,7 @@ void EntropySegmentation(MultidimArray<double> &V)
 }
 
 /* Otsu+Entropy Segmentation ----------------------------------------------- */
-void EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil)
+double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil, bool binarizeVolume)
 {
     V.checkDimension(3);
 
@@ -851,7 +851,9 @@ void EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil)
     iTh--;
 
     hist.index2val(iTh,x);
-    V.binarize(x);
+    if (binarizeVolume)
+         V.binarize(x);
+    return x;
 }
 
 /* Fast correntropy -------------------------------------------------------- */

@@ -6,7 +6,7 @@ SHAREDLIB = XmippJavaInterface.so
 MAIN_OPTS = -s -pthread -shared
 LIBS = -L$(XMIPP_DIR)/lib -lXmippData
 
-SRC = xmipp_ImageDouble.cpp xmipp_ImageGeneric.cpp xmipp_MetaData.cpp xmipp_Projection.cpp xmipp_ExceptionsHandler.cpp xmipp_Aux.cpp
+SRC = xmipp_ImageDouble.cpp xmipp_ImageGeneric.cpp xmipp_ImageGeneric_.cpp xmipp_MetaData.cpp xmipp_Projection.cpp xmipp_ExceptionsHandler.cpp xmipp_Aux.cpp
 OBJS = $(SRC:.cpp=.os)
 OPTS = -c -O2 -pthread -w -fPIC
 INCLUDES = -I. -I/usr/lib/jvm/java-6-sun/include -I/usr/lib/jvm/java-6-sun/include/linux -I$(XMIPP_DIR) -I$(XMIPP_DIR)/libraries
@@ -15,7 +15,7 @@ JARFILE = XmippJavaInterface.jar
 JAROPTS = -Mcf
 PACKAGE = xmipp
 IJ_JAR = $(XMIPP_DIR)/external/imagej/ij.jar
-JAVA_SRC = $(PACKAGE)/ImageDouble.java $(PACKAGE)/ImageGeneric.java $(PACKAGE)/Filename.java $(PACKAGE)/MDLabel.java $(PACKAGE)/MetaData.java $(PACKAGE)/Projection.java $(PACKAGE)/CTFDescription.java $(PACKAGE)/Program.java
+JAVA_SRC = $(PACKAGE)/ImageDouble.java $(PACKAGE)/ImageGeneric.java $(PACKAGE)/ImageGeneric_.java $(PACKAGE)/Filename.java $(PACKAGE)/MDLabel.java $(PACKAGE)/MetaData.java $(PACKAGE)/Projection.java $(PACKAGE)/CTFDescription.java $(PACKAGE)/Program.java
 JAVA_CLASSES = $(JAVA_SRC:.java=.class)
 JAVAH_CLASSES = $(subst /,.,$(JAVA_SRC:.java=))
 
