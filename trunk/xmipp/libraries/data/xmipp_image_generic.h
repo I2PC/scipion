@@ -229,9 +229,9 @@ public:
     int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE);
 
     /** This function allows to read the original image or a preview of it also allowing to select either
-     * 	a specific image from the stack or a slice from a volume.
+     *  a specific image from the stack or a slice from a volume.
      *
-     * 	In the case of reading images in its real dimensions it is also possible to image map from file.
+     *  In the case of reading images in its real dimensions it is also possible to image map from file.
      */
     int readOrReadPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE, bool mapData = false);
 
@@ -248,6 +248,16 @@ public:
     void mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
                        bool createTempFile=false, size_t select_img = APPEND_IMAGE,
                        bool isStack=false, int mode=WRITE_OVERWRITE, int _swapWrite = 0);
+
+    /** It changes the behavior of the internal multidimarray so it points to a specific slice of
+     *  the initial volume. No information is deallocated from memory, so it is also possible to
+     *  repoint to the whole volume (passing select_slice = ALL_SLICES), or CENTRAL_SLICE.
+     */
+    void movePointerToSlice(int select_slice = ALL_SLICES)
+    {
+        image->movePointerToSlice(select_slice);
+    }
+
 
     /* MultidimArrayGeneric data access
      */
