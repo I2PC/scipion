@@ -138,11 +138,17 @@ class XmippProject():
             remove_tree(workingDir, True)
 
     def deleteRun(self, run):
-        script = run['script']
-        deleteFiles(None, [script, script+'c'], False)
-        self.cleanRun(run)
-        self.projectDb.deleteRun(run)
-        
+        try:
+            script = run['script']        
+            # Try first to remove from db
+            self.projectDb.deleteRun(run)
+            # After that remove associated files
+            deleteFiles(None, [script, script+'c'], False)
+            self.cleanRun(run)
+        except Exception, e:
+            return "Error on <deleteRun>: " % e
+        return None
+    
     def deleteTmpFiles(self):
         for section, groupList in sections:
             for group in groupList:

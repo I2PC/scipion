@@ -477,8 +477,11 @@ class XmippProjectGUI():
                 self.launchProtocolGUI(self.project.copyProtocol(run['protocol_name'], run['script']))
             elif event == "Delete":
                 if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \nDo you really want to continue?", self.root):
-                    self.project.deleteRun(run)
-                    self.updateRunHistory(self.lastSelected)
+                    error = self.project.deleteRun(run)
+                    if error is None:
+                        self.updateRunHistory(self.lastSelected)
+                    else: 
+                        showError("Error on deleteRun", error, parent=self.root)
             elif event == "Visualize":
                 pass
         
