@@ -623,8 +623,7 @@ class ProgramDb():
         self.connection = sqlite.Connection(dbName)
         self.connection.row_factory = sqlite.Row
         self.cursor = self.connection.cursor()
-        self.execSqlCommand('pragma foreign_keys=ON',"Foreing key activation failed")
-
+        self.cursor.execute('pragma foreign_keys=ON')
             
     def create(self):
         self.createTables()
