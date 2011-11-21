@@ -67,7 +67,7 @@ enum JoinType
 class MDSql
 {
 public:
-	static void dumpToFile(const FileName &fileName);
+    static void dumpToFile(const FileName &fileName);
 
 private:
 
@@ -118,9 +118,9 @@ private:
      * return the number of objects copied
      * */
     size_t copyObjects(MDSql * sqlOut,
-                         const MDQuery *queryPtr = NULL) const;
+                       const MDQuery *queryPtr = NULL) const;
     size_t copyObjects(MetaData * mdPtrOut,
-                         const MDQuery *queryPtr = NULL) const;
+                       const MDQuery *queryPtr = NULL) const;
 
     /** This function performs aggregation operations.
      */
@@ -128,11 +128,19 @@ private:
                      const std::vector<AggregateOperation> &operations,
                      const std::vector<MDLabel> &operateLabel);
 
+    /** This function performs aggregation operations grouped by several labels.
+     */
+    void aggregateMdGroupBy(MetaData *mdPtrOut,
+                            const AggregateOperation operation,
+                            const std::vector<MDLabel> &groupByLabels ,
+                            const  MDLabel operateLabel,
+                            const  MDLabel resultLabel);
+
     /** This function performs aggregation operations.
         without grouping. (i.e. absolute maximum of a metadata column)
      */
     double aggregateSingleDouble(const AggregateOperation operation,
-                                        MDLabel operateLabel);
+                                 MDLabel operateLabel);
 
 
     /** This function will be used to create o delete an index over a column.
@@ -450,10 +458,10 @@ public:
     }
 
     MDValueRange(const MDObject &o1, const MDObject &o2,
-        int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
+                 int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
     {
         if (o1.label != o2.label)
-          REPORT_ERROR(ERR_VALUE_INCORRECT, "Labels should be the same");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "Labels should be the same");
         query1 = new MDValueRelational(o1, GE);
         query2 = new MDValueRelational(o2, LE);
 
@@ -482,18 +490,18 @@ public:
  */
 class MDExpression: public MDQuery
 {
-	String sExpression;
+    String sExpression;
 public:
-	MDExpression()
+    MDExpression()
     {
-		sExpression = " 1=1 ";
+        sExpression = " 1=1 ";
     }
-	MDExpression(String _sExpression,
-			     int limit = -1,
-			     int offset = 0,
-			     MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
+    MDExpression(String _sExpression,
+                 int limit = -1,
+                 int offset = 0,
+                 MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
     {
-		sExpression=_sExpression;
+        sExpression=_sExpression;
     }
 
     virtual String queryStringFunc() const

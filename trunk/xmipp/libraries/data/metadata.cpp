@@ -1082,7 +1082,7 @@ void MetaData::_read(const FileName &filename,
                     _readColumnsStar(block, columnValues, desiredLabels, firstBlock);
                     // If block is empty, makes block.loop and block.end equal
                     if(block.loop == (block.end + 1))
-                    	block.loop--;
+                        block.loop--;
                     _readRowsStar(block, columnValues);
                 }
                 else
@@ -1234,6 +1234,18 @@ void MetaData::aggregate(const MetaData &mdIn, const std::vector<AggregateOperat
     mdIn.myMDSql->aggregateMd(this, ops, operateLabels);
 }
 
+void MetaData::aggregateGroupBy(const MetaData &mdIn,
+                         AggregateOperation op,
+                         const std::vector<MDLabel> &groupByLabels,
+                         MDLabel operateLabel,
+                         MDLabel resultLabel)
+{
+    std::vector<MDLabel> labels;
+    labels = groupByLabels;
+    labels.push_back(resultLabel);
+    init(&labels);
+    mdIn.myMDSql->aggregateMdGroupBy(this, op, groupByLabels, operateLabel, resultLabel);
+}
 
 //-------------Set Operations ----------------------
 void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, SetOperation operation)

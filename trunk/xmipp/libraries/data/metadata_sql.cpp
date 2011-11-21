@@ -326,6 +326,58 @@ void MDSql::aggregateMd(MetaData *mdPtrOut,
     execSingleStmt(ss);
 }
 
+
+void MDSql::aggregateMdGroupBy(MetaData *mdPtrOut,
+                               AggregateOperation operation,
+                               const std::vector<MDLabel> &groupByLabels ,
+                               MDLabel operateLabel,
+                               MDLabel resultLabel)
+{
+    std::stringstream ss;
+    std::stringstream ss2;
+    std::stringstream groupByStr;
+
+    groupByStr << MDL::label2Str(groupByLabels[0]);
+    for (int i = 1; i < groupByLabels.size(); i++)
+        groupByStr << ", " << MDL::label2Str(groupByLabels[i]);
+
+    ss << "INSERT INTO " << tableName(mdPtrOut->myMDSql->tableId) << "("
+    << groupByStr.str() << ", " << MDL::label2Str(resultLabel) << ")";
+
+    ss2 << groupByStr.str() << ", ";
+    switch (operation)
+    {
+    case AGGR_COUNT:
+        ss2 << "COUNT";
+        break;
+    case AGGR_MAX:
+        ss2 << "MAX";
+        break;
+    case AGGR_MIN:
+        ss2 << "MIN";
+        break;
+    case AGGR_SUM:
+        ss2 << "SUM";
+        break;
+    case AGGR_AVG:
+        ss2 << "AVG";
+        break;
+    default:
+        REPORT_ERROR(ERR_MD_SQL, "Invalid aggregate operation.");
+    }
+    ss2 << "(" << MDL::label2Str(operateLabel);
+    ss2 << ") AS " << MDL::label2Str(resultLabel);
+
+    ss << " SELECT " << ss2.str();
+    ss << " FROM " << tableName(tableId);
+    ss << " GROUP BY " << groupByStr.str();
+    ss << " ORDER BY " << groupByStr.str() << ";";
+
+    //std::cerr << "ss " << ss.str() <<std::endl;
+    execSingleStmt(ss);
+}
+
+
 double MDSql::aggregateSingleDouble(const AggregateOperation operation,
                                     MDLabel operateLabel)
 {

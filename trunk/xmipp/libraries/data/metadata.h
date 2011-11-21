@@ -743,6 +743,11 @@ public:
                    MDLabel aggregateLabel, MDLabel operateLabel, MDLabel resultLabel);
     void aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
                    const std::vector<MDLabel> &operateLabels, const std::vector<MDLabel> &resultLabels);
+    void aggregateGroupBy(const MetaData &mdIn,
+                             AggregateOperation op,
+                             const std::vector<MDLabel> &groupByLabels,
+                             MDLabel operateLabel,
+                             MDLabel resultLabel);
     void aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
                          MDLabel aggregateLabel);
     /** Union of elements in two Metadatas, without duplicating.
