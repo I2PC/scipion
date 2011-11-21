@@ -296,9 +296,6 @@ void applyGeometry(int SplineDegree,
     }
     const Matrix2D<double> &Aref=*Aptr;
 
-
-
-
     // For scalings the output matrix is resized outside to the final
     // size instead of being resized inside the routine with the
     // same size as the input matrix
