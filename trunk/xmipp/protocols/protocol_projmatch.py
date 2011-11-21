@@ -20,38 +20,9 @@ from protlib_sql import XmippProjectDb, SqliteDb
 from config_protocols import protDict
 
 class ProtProjMatch(XmippProtocol):
-
 #    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
     def __init__(self, scriptname, project=None):
         super(ProtProjMatch, self).__init__(protDict.projmatch.name, scriptname, project)
-        #Some class variables
-        LibraryDir = "ReferenceLibrary"
-        
-        extraParams = {'ReferenceVolumeName': 'reference_volume.vol',
-        'LibraryDir': LibraryDir,
-        'ProjectLibraryRootName': join(LibraryDir, "gallery"),
-        'ProjMatchDir': "ProjMatchClasses",
-        'ProjMatchName': self.Name,
-        'ClassAverageName': 'class_average',
-        #ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
-        'ForReconstructionSel': "reconstruction.sel",
-        'ForReconstructionDoc': "reconstruction.doc",
-        'MultiAlign2dSel': "multi_align2d.sel",
-        'DocFileWithOriginalAngles': 'original_angles.doc',
-        'Docfile_with_current_angles': 'current_angles',
-        'FilteredReconstruction': "filtered_reconstruction",
-        'ReconstructedVolume': "reconstruction",
-        'MaskReferenceVolume': "masked_reference",
-        'OutputFsc': "resolution.fsc",
-        'CtfGroupDirectory': "CtfGroups",
-        'CtfGroupRootName': "ctf",
-        'CtfGroupSubsetFileName': "ctf_images.sel"
-        }
-        self.ParamsDict.update(extraParams);
-        # Set as protocol variables
-        for k, v in extraParams.iteritems():
-            setattr(self, k, v)
-
         self.CtfGroupDirectory = self.workingDirPath(self.CtfGroupDirectory)
         self.CtfGroupSubsetFileName = join(self.CtfGroupDirectory, self.CtfGroupSubsetFileName)
         self.DocFileWithOriginalAngles = self.workingDirPath(self.DocFileWithOriginalAngles)
@@ -103,7 +74,34 @@ class ProtProjMatch(XmippProtocol):
 
         return summary
     
-    def createFilenameTemplates(self):         
+    def createFilenameTemplates(self):  
+        #Some class variables
+        LibraryDir = "ReferenceLibrary"
+        extraParams = {'ReferenceVolumeName': 'reference_volume.vol',
+        'LibraryDir': LibraryDir,
+        'ProjectLibraryRootName': join(LibraryDir, "gallery"),
+        'ProjMatchDir': "ProjMatchClasses",
+        'ProjMatchName': self.Name,
+        'ClassAverageName': 'class_average',
+        #ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
+        'ForReconstructionSel': "reconstruction.sel",
+        'ForReconstructionDoc': "reconstruction.doc",
+        'MultiAlign2dSel': "multi_align2d.sel",
+        'DocFileWithOriginalAngles': 'original_angles.doc',
+        'docfile_with_current_angles': 'current_angles',
+        'FilteredReconstruction': "filtered_reconstruction",
+        'ReconstructedVolume': "reconstruction",
+        'MaskReferenceVolume': "masked_reference",
+        'OutputFsc': "resolution.fsc",
+        'CtfGroupDirectory': "CtfGroups",
+        'CtfGroupRootName': "ctf",
+        'CtfGroupSubsetFileName': "ctf_images.sel"
+        }
+        self.ParamsDict.update(extraParams);
+        # Set as protocol variables
+        for k, v in extraParams.iteritems():
+            setattr(self, k, v)
+               
         Iter = 'Iter_%(iter)03d'
         Ref = 'Ref_%(ref)03d'
         Ctf = 'CtfGroup_%(ctf)06d'
@@ -554,8 +552,7 @@ class ProtProjMatch(XmippProtocol):
 #                                              #, filter_frequence = filter_frequence
 #                                              #, ReconstructedandfilteredVolume = self.ReconstructedandfilteredVolume[iterN+1]
 #                                              )
-          
-                 #-------------------------------------------------------------
+#-------------------------------------------------------------
     ########################            
             #REMOVE
             #Create directory
