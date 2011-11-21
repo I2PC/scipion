@@ -3,7 +3,8 @@
 # General script for Xmipp-based pre-processing of micrographs
 # Author: Carlos Oscar Sorzano, July 2011
 
-import glob
+from glob import glob
+from os import path.join
 from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import which, runJob
@@ -17,7 +18,8 @@ class ProtImportMicrographs(XmippProtocol):
 
     def createFilenameTemplates(self):
         return {
-                'micrographs': self.workingDirPath('micrographs.sel')
+                'micrographs': self.workingDirPath('micrographs.sel'),
+                'micrographsPattern': join(self.DirMicrographs, self.ExtMicrographs)
                 }
         
     def defineSteps(self):
@@ -26,11 +28,11 @@ class ProtImportMicrographs(XmippProtocol):
 
         # Decide name after preprocessing
         fileDict={}
-        self.actualDoPreprocess=self.DoPreprocess and (self.Stddev != -1 or self.Crop != -1 or self.Down != 1)
-        for filename in glob.glob(os.path.join(self.DirMicrographs, self.ExtMicrographs)):
-            (filepath, micrographName)=os.path.split(filename)
+        self.actualDoPreprocess = self.DoPreprocess and (self.Stddev != -1 or self.Crop != -1 or self.Down != 1)
+        for filename in glob(join(self.DirMicrographs, self.ExtMicrographs)):
+            (filepath, micrographName) = os.path.split(filename)
             if self.actualDoPreprocess:
-                (finalname, extension)=os.path.splitext(micrographName)
+                (finalname, extension) = os.path.splitext(micrographName)
                 finalname += ".mrc"
             else:
                 finalname = micrographName
@@ -38,7 +40,7 @@ class ProtImportMicrographs(XmippProtocol):
 
         # Preprocess
         #idMPI=self.insertRunMpiGapsStep(fileDict.values())
-        for filename in glob.glob(os.path.join(self.DirMicrographs, self.ExtMicrographs)):
+        for filename in glob(join(self.DirMicrographs, self.ExtMicrographs)):
             self.insertPreprocessStep(filename,fileDict[filename])
         
         # Gather results
@@ -48,20 +50,20 @@ class ProtImportMicrographs(XmippProtocol):
 
     def validate(self):
         errors = []
-
         # Check that there are any micrograph to process
-        listStr = self.DirMicrographs + '/' + self.ExtMicrographs
-        listOfMicrographs = glob.glob(listStr)
-        if len(listOfMicrographs) == 0:
-            errors.append("There are no micrographs to process in " + listStr)
-
+        if len(self.getMicrographs()) == 0:
+            errors.append("There are no micrographs to process in " + self.getFilename('micrographsPattern'))
         return errors
 
     def summary(self):
-        message=[]
-        listOfMicrographs=glob.glob(self.DirMicrographs + '/' + self.ExtMicrographs)
-        message.append("Import of %d micrographs from %s" % (len(listOfMicrographs), self.DirMicrographs))
+        message = []
+        micrographs = self.getMicrographs()
+        message.append("Import of <%d> micrographs from <%s>" % (len(micrographs), self.DirMicrographs))
         return message
+    
+    def getMicrographs(self):
+        ''' Return a list with micrographs in WorkingDir'''
+        return glob(self.getFilename('micrographsPattern'))
     
     def visualize(self):
         summaryFile = self.getFilename('micrographs')
@@ -110,9 +112,9 @@ class ProtImportMicrographs(XmippProtocol):
                                 source=tmpFile, dest=finalname)
 
 def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):
-    MD=xmipp.MetaData()
+    MD = xmipp.MetaData()
     MD.setColumnFormat(False)
-    id=MD.addObject()
+    id = MD.addObject()
     MD.setValue(xmipp.MDL_CTF_VOLTAGE,float(Voltage),id)    
     MD.setValue(xmipp.MDL_CTF_CS,float(SphericalAberration),id)    
     MD.setValue(xmipp.MDL_CTF_SAMPLING_RATE,float(SamplingRate),id)
@@ -121,11 +123,11 @@ def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnific
 
 def gatherResults(log, WorkingDir, summaryFile):
     MD = xmipp.MetaData()
-    for filename in glob.glob(WorkingDir+"/*"):
+    for filename in glob(join(WorkingDir, "*")):
         if filename.endswith(".xmd") or filename.endswith("tmp") or filename.endswith(".sel"):
             continue
-        objId=MD.addObject()
-        MD.setValue(xmipp.MDL_IMAGE,filename,objId)
-    if MD.size()!=0:
+        objId = MD.addObject()
+        MD.setValue(xmipp.MDL_IMAGE, filename, objId)
+    if MD.size() != 0:
         MD.sort(xmipp.MDL_IMAGE);
         MD.write(summaryFile)
