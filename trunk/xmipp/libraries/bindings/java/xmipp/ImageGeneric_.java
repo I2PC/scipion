@@ -149,56 +149,47 @@ public class ImageGeneric_ {
     }
 
     private native float[] getArrayFloat(int slice, int dataType) throws Exception;
-//
-//    // TODO: Remove deprecated methods.
-//    // @Deprecated
-//    public byte[] getArrayByte() throws Exception {
-//        return getArrayByte(filename, xDim, yDim, zDim, nDim, dataType);
-//    }
-//
-//    // @Deprecated
-//    private static native byte[] getArrayByte(String filename, int x, int y, int z, long N, int datatype) throws Exception;
-//
-//    // @Deprecated
-//    public short[] getArrayShort() throws Exception {
-//        return getArrayShort(filename, xDim, yDim, zDim, nDim, dataType);
-//    }
-//
-//    // @Deprecated
-//    private static native short[] getArrayShort(String filename, int x, int y, int z, long N, int datatype) throws Exception;
 
-    // @Deprecated
-//    public float[] getArrayFloat() throws Exception {
-//        return getArrayFloat(filename, xSize, ySize, zSize, nSize, dataType);
-//    }
-    // @Deprecated
-//    private static native float[] getArrayFloat(String filename, int x, int y, int z, long N, int datatype) throws Exception;
     // Writer.
     public native void write(String filename) throws Exception;
 
     // Setters for data arrays.
-//    public void setArrayFloat(float[] data) throws Exception {
-//        System.out.println("image info: x: " + xDim + " y:" + yDim);
-//        System.out.println("data:");
-//        for (int j = 0; j < yDim; j++) {
-//            if (j < 3 || yDim - j <= 3) {
-//                System.out.print("Line: " + j + " --> ");
-//                for (int i = 0; i < xDim; i++) {
-//                    if (i < 3 || xDim - i <= 3) {
-//                        System.out.print(data[j * yDim + i] + " ");
-//                    } else if (i == 3) {
-//                        System.out.print("... ");
-//                    }
-//                }
-//                System.out.println("");
-//            } else if (j == 3) {
-//                System.out.println("...");
-//            }
-//        }
-//        System.out.println("calling native setArrayFloat");
-//        setArrayFloat(xDim, yDim, zDim, nDim, dataType, data);
-//    }
-//    private native void setArrayFloat(int x, int y, int z, long N, int datatype, float data[]) throws Exception;
+    public void setArrayByte(byte[] data) throws Exception {
+        System.out.println("image info: x: " + xDim + " y:" + yDim);
+        System.out.println("data:");
+        for (int j = 0; j < yDim; j++) {
+            if (j < 3 || yDim - j <= 3) {
+                System.out.print("Line: " + j + " --> ");
+                for (int i = 0; i < xDim; i++) {
+                    if (i < 3 || xDim - i <= 3) {
+                        System.out.print(data[j * yDim + i] + " ");
+                    } else if (i == 3) {
+                        System.out.print("... ");
+                    }
+                }
+                System.out.println("");
+            } else if (j == 3) {
+                System.out.println("...");
+            }
+        }
+        System.out.println("calling native setArrayByte");
+        setArrayByte(xDim, yDim, zDim, nDim, data, dataType);
+    }
+
+    private native void setArrayByte(int x, int y, int z, long N, byte data[], int datatype) throws Exception;
+
+    public void setArrayShort(short[] data) throws Exception {
+        setArrayShort(xDim, yDim, zDim, nDim, data, dataType);
+    }
+
+    private native void setArrayShort(int x, int y, int z, long N, short data[], int datatype) throws Exception;
+
+    public void setArrayFloat(float[] data) throws Exception {
+        setArrayFloat(xDim, yDim, zDim, nDim, data, dataType);
+    }
+
+    private native void setArrayFloat(int x, int y, int z, long N, float data[], int datatype) throws Exception;
+
     public native void printShape() throws Exception;
 
     public native double[] getStatistics() throws Exception;

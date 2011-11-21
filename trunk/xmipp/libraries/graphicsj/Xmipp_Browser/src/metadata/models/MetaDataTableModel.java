@@ -8,6 +8,7 @@ import ij.IJ;
 import javax.swing.table.DefaultTableModel;
 import browser.Cache;
 import browser.DEBUG;
+import browser.imageitems.tableitems.AbstractGalleryImageItem;
 import browser.imageitems.tableitems.GalleryImageItem;
 import metadata.images.TableFileItem;
 import xmipp.Filename;
@@ -110,9 +111,9 @@ public class MetaDataTableModel extends DefaultTableModel {
     int getColumnWidth(int column) {
         int h = -1;
 
-        GalleryImageItem item = (GalleryImageItem) getValueAt(0, column);
-        if (item instanceof GalleryImageItem) {
-            h = item.getWidth();
+        Object obj = getValueAt(0, column);
+        if (obj instanceof AbstractGalleryImageItem) {
+            h = ((AbstractGalleryImageItem) obj).getWidth();
         }
 
         return h;
@@ -157,10 +158,6 @@ public class MetaDataTableModel extends DefaultTableModel {
             clear();    // Clear the whole data.
 
             MetaData md = new MetaData(filename);
-//            System.out.println("filename->" + block + filename);
-//            System.out.println("MDfilename->" + md.getFilename());
-//            System.out.println("Block->" + md.getBlock());
-//            System.out.println("------------------------------");
 
             // Contains field enabled ?
             boolean hasEnabledField = true;
@@ -197,12 +194,11 @@ public class MetaDataTableModel extends DefaultTableModel {
 
                 for (int i = 0; i < MD_LABELS.length; i++) {
                     int label = MD_LABELS[i];
-
                     Class class_ = MetaData.getLabelType(label);
 
                     if (class_ == String.class) {
                         String value = md.getValueString(label, id);
-
+                        System.out.print(": " + value);
                         if (MetaData.isImage(label)) {
 //                            String path = md.getValueString(label, id, true);
 //                            row[i] = new GalleryImageItem(path, value, cache);
@@ -236,7 +232,9 @@ public class MetaDataTableModel extends DefaultTableModel {
                     } else {
                         row[i] = "Unknown type";
                     }
+                    System.out.println();
                 }
+
                 // Adds a new row data to table.
                 addRow(row);
             }

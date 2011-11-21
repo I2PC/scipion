@@ -24,15 +24,17 @@ import javax.swing.LookAndFeel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.table.JTableHeader;
-import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 import browser.DEBUG;
 import browser.LABELS;
 import browser.imageitems.tableitems.GalleryImageItem;
 import browser.windows.ImagesWindowFactory;
+import java.awt.Component;
 import java.awt.event.KeyListener;
 import javax.swing.JTextField;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import metadata.renderers.MetaDataStringRenderer;
 import metadata.renderers.MetaDataIntegerRenderer;
 import metadata.renderers.MetaDataImageRenderer;
@@ -236,17 +238,33 @@ public class JFrameMetaData extends JFrame {
     }
 
     private void packColumns() {
-        for (int i = 0; i < columnModel.getColumnCount(); i++) {
-            TableColumn tcolumn = columnModel.getColumn(i);
+        /*        for (int i = 0; i < columnModel.getColumnCount(); i++) {
+        TableColumn tcolumn = columnModel.getColumn(i);
+        
+        tcolumn.setWidth(imageRenderer.getCellWidth(tcolumn.getHeaderValue().toString()));
+        }*/
+        for (int column = 0; column < table.getColumnCount(); column++) {
+            int width = 128;
 
-            tcolumn.setWidth(imageRenderer.getCellWidth(tcolumn.getHeaderValue().toString()));
+            int r = 0;
+            TableCellRenderer renderer = table.getCellRenderer(r, column);
+            Component comp = renderer.getTableCellRendererComponent(
+                    table, table.getValueAt(r, column), false, false, r, column);
+            width = Math.max(width, comp.getPreferredSize().width);
+
+            TableColumn tcolumn = columnModel.getColumn(column);
+
+            // Sets width
+            tcolumn.setPreferredWidth(width);
         }
     }
 
     // The height of each row is set to the preferred height of the tallest cell in that row.
     private void packRows() {
+        int cellHeight = imageRenderer.getCellHeight();
+
         //  Row header.
-        rowHeader.setFixedCellHeight(imageRenderer.getCellHeight());
+        rowHeader.setFixedCellHeight(cellHeight);
 
         for (int row = 0; row < table.getRowCount(); row++) {
             table.setRowHeight(row, imageRenderer.getCellHeight());

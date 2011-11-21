@@ -144,7 +144,7 @@ public class Filename {
     }
 
     // Auxiliary methods.
-    public static String fixPath(String filename, String MDdir,boolean shouldExist) {
+    public static String fixPath(String filename, String MDdir, boolean shouldExist) {
         MDdir += !MDdir.endsWith(File.separator) ? File.separator : "";
         String fixed = filename;
 
@@ -183,7 +183,7 @@ public class Filename {
         return fixed;
     }
 
-    public String findProjectDir(String metadata) {
+    public static String findProjectDir(String metadata) {
         File f = new File(metadata);
         String startingdir = f.isDirectory() ? metadata : f.getParent();
 

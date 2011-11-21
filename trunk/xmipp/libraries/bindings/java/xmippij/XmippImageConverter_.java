@@ -1,6 +1,7 @@
 package xmippij;
 
 import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.FileInfo;
@@ -62,18 +63,19 @@ public class XmippImageConverter_ {
         switch (image.getDataType()) {
             case ImageGeneric_.Float:
             case ImageGeneric_.Double:
-                pc = new FloatProcessorCreator_();
-                break;
+                //pc = new ProcessorCreatorFloat();
+                //break;
             case ImageGeneric_.SChar:
             case ImageGeneric_.UChar:
-                pc = new ByteProcessorCreator_();
-                break;
+                //pc = new ProcessorCreatorByte();
+                //break;
             case ImageGeneric_.Short:
             case ImageGeneric_.UShort:
-                pc = new ShortProcessorCreator_();
-                break;
+                //pc = new ProcessorCreatorShort();
+                //break;
             default:
-                pc = new FloatProcessorCreator_();
+                //pc = new ProcessorCreatorFloat();
+                pc = new ProcessorCreatorByte();
         }
 
         boolean retrieveAllImages = nimage == ImageGeneric_.ALL_IMAGES;
@@ -112,9 +114,10 @@ public class XmippImageConverter_ {
 
     public static void main(String args[]) {
         try {
-            //String filename = "/home/jvega/Escritorio/imgs_Roberto/kk.stk"; // STACK
+            new ImageJ();
+            String filename = "/home/jvega/Escritorio/imgs_Roberto/Frame4-binning2.dm3";
             //String filename = "/home/jvega/Escritorio/imgs_Roberto/kk.vol";   // VOLUME
-            String filename = "/home/jvega/xmipp_ctf.psd"; // PSD
+            //String filename = "/home/jvega/xmipp_ctf.psd"; // PSD
             ImageGeneric_ image = new ImageGeneric_(filename);
 
             convertToImageJ(image).show();
@@ -190,64 +193,40 @@ public class XmippImageConverter_ {
         ImagePlus imp2 = XmippImageConverter_.convertToImageJ(image);
 
         imp.setStack(imp.getTitle(), imp2.getImageStack());
-//        int w = image.xSize;
-//        int h = image.ySize;
-//        int d = image.zSize;
-//        long n = image.nSize;
-//
-//        int sliceSize = w * h;
-//        int imageSize = sliceSize * d;
-//        double data[] = image.getData();
-//        double slice[] = new double[sliceSize];
-//        ImageStack is = new ImageStack(w, h);
-//
-//        for (int i = 0; i < n; i++) {
-//            int offset = i * imageSize;
-//            for (int j = 0; j < d; j++) {
-//                System.arraycopy(data, offset + j * sliceSize, slice, 0, sliceSize);
-//
-//                FloatProcessor processor = new FloatProcessor(w, h, slice);
-//                is.addSlice(String.valueOf(i), processor);
-//            }
-//        }
-//
-//        imp.setStack(is);
     }
 
-    public static ImageGeneric_ convertToXmipp(ImagePlus imp) {
-        ImageGeneric_ image = new ImageGeneric_();
+    public static ImageGeneric_ convertToXmipp(ImagePlus imp) throws Exception {
+        DataSetter ds = null;
+        switch (imp.getBytesPerPixel()) {
+            case ImageGeneric_.Float:
+            case ImageGeneric_.Double:
+                ds = new DataSetterFloat();
+                break;
+            case ImageGeneric_.SChar:
+            case ImageGeneric_.UChar:
+                ds = new DataSetterByte();
+                break;
+            case ImageGeneric_.Short:
+            case ImageGeneric_.UShort:
+                ds = new DataSetterShort();
+                break;
+            default:
+                ds = new DataSetterFloat();
+        }
 
-//        int w = imp.getWidth();
-//        int h = imp.getHeight();
-//        int d = imp.getStackSize();
-//
-//        double data[] = new double[w * h * d];
-//        for (int i = 0; i < d; i++) {
-//            float slice[] = (float[]) imp.getStack().getProcessor(i + 1).getPixels();
-//            System.arraycopy(Tools.toDouble(slice), 0, data, i * w * h, w * h);
-//        }
-//        try {
-//            image.setData(w, h, d, data);
-//        } catch (Exception ex) {
-//            ex.printStackTrace(System.err);
-//            IJ.error(ex.getMessage());
-//        }
+        ImageGeneric_ image = new ImageGeneric_();
+        for (int nslice = 1; nslice <= imp.getStackSize(); nslice++) {
+            ds.setArray(image, imp.getProcessor().getPixels(), nslice, ImageGeneric_.FIRST_IMAGE);
+        }
 
         return image;
     }
 
-    public static boolean saveImage(ImagePlus imp, String filename) {
-//        try {
-//            ImageGeneric image = convertToXmipp(imp);
-//
-//            image.write(filename);
-//            return true;
-//        } catch (Exception ex) {
-//            ex.printStackTrace(System.err);
-//            IJ.error(ex.getMessage());
-//        }
+    public static boolean saveImage(ImagePlus imp, String filename) throws Exception {
+        ImageGeneric_ image = convertToXmipp(imp);
 
-        return false;
+        image.write(filename);
+        return true;
     }
 }
 
@@ -256,23 +235,52 @@ abstract class ProcessorCreator_ {
     public abstract ImageProcessor getProcessor(ImageGeneric_ image, int slice) throws Exception;
 }
 
-class FloatProcessorCreator_ extends ProcessorCreator_ {
+class ProcessorCreatorByte extends ProcessorCreator_ {
 
     public ImageProcessor getProcessor(ImageGeneric_ image, int slice) throws Exception {
-        return new FloatProcessor(image.getXDim(), image.getYDim(), image.getArrayFloat(slice), null);
+        return new ByteProcessor(image.getXDim(), image.getYDim(), image.getArrayByte(slice), null);
     }
 }
 
-class ShortProcessorCreator_ extends ProcessorCreator_ {
+class ProcessorCreatorShort extends ProcessorCreator_ {
 
     public ImageProcessor getProcessor(ImageGeneric_ image, int slice) throws Exception {
         return new ShortProcessor(image.getXDim(), image.getYDim(), image.getArrayShort(slice), null);
     }
 }
 
-class ByteProcessorCreator_ extends ProcessorCreator_ {
+class ProcessorCreatorFloat extends ProcessorCreator_ {
 
     public ImageProcessor getProcessor(ImageGeneric_ image, int slice) throws Exception {
-        return new ByteProcessor(image.getXDim(), image.getYDim(), image.getArrayByte(slice), null);
+        return new FloatProcessor(image.getXDim(), image.getYDim(), image.getArrayFloat(slice), null);
+    }
+}
+
+abstract class DataSetter {
+
+    public abstract void setArray(ImageGeneric_ image, Object data, int slice, long nimage) throws Exception;
+}
+
+class DataSetterByte extends DataSetter {
+
+    @Override
+    public void setArray(ImageGeneric_ image, Object data, int slice, long nimage) throws Exception {
+        image.setArrayByte((byte[]) data);
+    }
+}
+
+class DataSetterShort extends DataSetter {
+
+    @Override
+    public void setArray(ImageGeneric_ image, Object data, int slice, long nimage) throws Exception {
+        image.setArrayShort((short[]) data);
+    }
+}
+
+class DataSetterFloat extends DataSetter {
+
+    @Override
+    public void setArray(ImageGeneric_ image, Object data, int slice, long nimage) throws Exception {
+        image.setArrayFloat((float[]) data);
     }
 }

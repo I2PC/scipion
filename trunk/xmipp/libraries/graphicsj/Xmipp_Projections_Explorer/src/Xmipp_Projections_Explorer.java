@@ -206,6 +206,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
             // Creates both universes and shows them.
             IJ.showStatus(LABELS.MESSAGE_BUILDING_VOLUME_UNIVERSE);
             double threshold = Projection.entropyOtsuSegmentation(xmippVolume, 0.005, false);
+            threshold *= 255;   // TODO Scale color value.
             universeVolume = createUniverse(volumeIP, Content.SURFACE, threshold);
 
             ImageWindow3D windowVolume = universeVolume.getWindow();
@@ -231,10 +232,10 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
             }
 
             // Starts by retrieving first projection.
-// TODO Uncomment            showProjection();
+            showProjection();
 
             // Places projection window next to sphere universe (or volume if the sphere is not being used).
-// TODO Uncomment            projectionWindow.setLocation(loc);
+            projectionWindow.setLocation(loc);
 
             IJ.showStatus(LABELS.MESSAGE_DONE);
         } catch (Exception ex) {
@@ -430,7 +431,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
         }
 
         public void actionPerformed(ActionEvent e) {
-// TODO Uncomment            showProjection();
+            showProjection();
         }
     }
 }
