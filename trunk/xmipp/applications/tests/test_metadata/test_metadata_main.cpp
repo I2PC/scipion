@@ -125,6 +125,127 @@ TEST_F( MetadataTest, AddRow)
     EXPECT_EQ(md, mDsource);
 }
 
+TEST_F( MetadataTest, Aggregate1)
+{
+    //simple agregation
+    MetaData md,mdOut;
+    size_t count;
+
+    MDRow row;
+    row.setValue(MDL_ORDER, (size_t)1);
+    row.setValue(MDL_Y, 2.);
+    md.addRow(row);
+    row.setValue(MDL_ORDER, (size_t)1);
+    row.setValue(MDL_Y, 4.);
+    md.addRow(row);
+
+    mdOut.aggregate(md, AGGR_COUNT, MDL_ORDER, MDL_ORDER, MDL_COUNT);
+    mdOut.getValue(MDL_COUNT,count,mdOut.firstObject());
+    EXPECT_EQ(count, 2);
+    mdOut.clear();
+    mdOut.aggregate(md, AGGR_COUNT, MDL_Y, MDL_Y, MDL_COUNT);
+    mdOut.getValue(MDL_COUNT,count,mdOut.firstObject());
+    EXPECT_EQ(count,1);
+}
+
+TEST_F( MetadataTest, Aggregate2)
+{
+    //multiple aggregarion
+    MetaData md,mdOut;
+    size_t count;
+
+    MDRow row;
+    row.setValue(MDL_ORDER, (size_t)1);
+    row.setValue(MDL_Y, 2.);
+    md.addRow(row);
+    row.setValue(MDL_ORDER, (size_t)1);
+    row.setValue(MDL_Y, 4.);
+    md.addRow(row);
+    row.setValue(MDL_ORDER, (size_t)2);
+    row.setValue(MDL_Y, 2.);
+    md.addRow(row);
+
+    const AggregateOperation MyaggregateOperations[] =
+        {
+            AGGR_COUNT, AGGR_SUM, AGGR_MIN, AGGR_MAX, AGGR_AVG
+        };
+    std::vector<AggregateOperation> aggregateOperations(MyaggregateOperations,MyaggregateOperations+5);
+
+    const MDLabel MyoperateLabels[]       =
+        {
+            MDL_ORDER,MDL_ORDER, MDL_Y, MDL_Y, MDL_Y
+        };
+    std::vector<MDLabel> operateLabels(MyoperateLabels,MyoperateLabels+5);
+
+    const MDLabel MyresultLabels[]        =
+        {
+            MDL_ORDER,MDL_COUNT, MDL_SUM,  MDL_MIN, MDL_MAX, MDL_AVG
+        };
+    std::vector<MDLabel> resultLabels(MyresultLabels,MyresultLabels+6);
+
+    mdOut.aggregate(md,aggregateOperations,operateLabels,resultLabels);
+    md.clear();
+    row.clear();
+    row.setValue(MDL_ORDER, (size_t)1);
+    row.setValue(MDL_COUNT, (size_t)2);
+    row.setValue(MDL_SUM, 2.);
+    row.setValue(MDL_MIN, 2.);
+    row.setValue(MDL_MAX, 4.);
+    row.setValue(MDL_AVG, 3.);
+    md.addRow(row);
+    row.setValue(MDL_ORDER, (size_t)2);
+    row.setValue(MDL_COUNT, (size_t)1);
+    row.setValue(MDL_SUM, 2.);
+    row.setValue(MDL_MIN, 2.);
+    row.setValue(MDL_MAX, 2.);
+    row.setValue(MDL_AVG, 2.);
+    md.addRow(row);
+
+
+    EXPECT_EQ(mdOut,md);
+}
+
+TEST_F( MetadataTest, AggregateGroupBy)
+{
+    //aggregation simple grouped by several attributes
+    MetaData md,mdOut;
+    size_t count;
+
+    MDRow row;
+    row.setValue(MDL_ORDER, (size_t)1);
+    row.setValue(MDL_DEFGROUP, 2);
+    row.setValue(MDL_Y, 2.);
+    md.addRow(row);
+    row.setValue(MDL_ORDER, (size_t)1);
+    row.setValue(MDL_DEFGROUP, 2);
+    row.setValue(MDL_Y, 4.);
+    md.addRow(row);
+    row.setValue(MDL_ORDER, (size_t)2);
+    row.setValue(MDL_DEFGROUP, 2);
+    row.setValue(MDL_Y, 2.);
+    md.addRow(row);
+
+    const MDLabel myGroupByLabels[] =
+        {
+            MDL_ORDER, MDL_DEFGROUP
+        };
+    std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+2);
+    mdOut.aggregateGroupBy(md, AGGR_COUNT, groupbyLabels, MDL_Y, MDL_COUNT);
+
+    md.clear();
+    row.clear();
+    row.setValue(MDL_ORDER, (size_t)1);
+    row.setValue(MDL_DEFGROUP, 2);
+    row.setValue(MDL_COUNT, (size_t)2);
+    md.addRow(row);
+    row.setValue(MDL_ORDER, (size_t)2);
+    row.setValue(MDL_DEFGROUP, 2);
+    row.setValue(MDL_COUNT, (size_t)1);
+    md.addRow(row);
+
+    EXPECT_EQ(mdOut,md);
+}
+
 TEST_F( MetadataTest, Clear)
 {
     MetaData auxMetadata = mDsource;
