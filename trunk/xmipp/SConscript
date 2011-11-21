@@ -774,7 +774,7 @@ AddBatch('viewer', 'applications/scripts/viewer', '.py')
 
 # MPI
 if int(env['mpi']):
-    #AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_gcar_commonlines', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
