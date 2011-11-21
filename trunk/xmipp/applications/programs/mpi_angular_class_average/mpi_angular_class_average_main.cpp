@@ -27,6 +27,8 @@
 #include <data/xmipp_funcs.h>
 #include <data/xmipp_program.h>
 #include <reconstruction/angular_class_average.h>
+#include <data/metadata.h>
+
 
 //Tags already defined in xmipp
 //#define TAG_WORK                     0
@@ -49,6 +51,9 @@ public:
     // Mpi node
     MpiNode *node;
 
+    // Metadata with the list of jobs
+    MetaData mdJobList;
+
     ProgMpiAngularClassAverage(int argc, char **argv)
     {
         node = new MpiNode(argc, argv);
@@ -58,8 +63,8 @@ public:
 
     void readParams()
     {
-      ProgAngularClassAverage::readParams();
-        nJobs = getIntParam("--nJobs");
+        ProgAngularClassAverage::readParams();
+
         if (node->size < 2)
             REPORT_ERROR(ERR_ARG_INCORRECT,
                          "This program cannot be executed in a single working node");
@@ -67,21 +72,17 @@ public:
 
     void defineParams()
     {
-        addUsageLine("I do not know");
         ProgAngularClassAverage::defineParams();
-        addParamsLine(
-            "--nJobs <nJobs=1000>    : File with commands in different lines");
     }
 
     void show()
     {
         if (!verbose)
             return;
-        std::cout << "number of jobs...: " << nJobs << std::endl;
     }
 
     /* Run --------------------------------------------------------------------- */
-#define ArraySize 4
+#define ArraySize 5
     void run()
     {
         //number of jobs
@@ -95,11 +96,18 @@ public:
 
         if (node->rank == 0)
         {
+
+            rootInit();
+
             //for (int iCounter = 0; iCounter < nJobs; )//increase counter after I am free
             int iCounter = 0;
             int finishedNodes = 1;
             bool whileLoop = true;
 
+            size_t id, order, count;
+            int ctfGroup, ref3d;
+            id = mdJobList.firstObject();
+            MDIterator __iterJobs(mdJobList);
             while (whileLoop)
             {
 
@@ -109,10 +117,15 @@ public:
                 {
                 case TAG_I_AM_FREE:
                     //Some test values for defocus, 3D reference and projection direction
-                    Def_3Dref_2Dref_JobNo[0] = rnd_unif( 0, 9);
-                    Def_3Dref_2Dref_JobNo[1] = rnd_unif(10,19);
-                    Def_3Dref_2Dref_JobNo[2] = rnd_unif(20,29);
-                    Def_3Dref_2Dref_JobNo[3] = iCounter;
+                    mdJobList.getValue(MDL_DEFGROUP, ctfGroup, __iterJobs.objId);
+                    Def_3Dref_2Dref_JobNo[0] = ctfGroup;
+                    mdJobList.getValue(MDL_REF3D, ref3d,  __iterJobs.objId);
+                    Def_3Dref_2Dref_JobNo[1] = ref3d;
+                    mdJobList.getValue(MDL_ORDER, order,  __iterJobs.objId);
+                    Def_3Dref_2Dref_JobNo[2] = order;
+                    mdJobList.getValue(MDL_COUNT, count,  __iterJobs.objId);
+                    Def_3Dref_2Dref_JobNo[3] = count;
+                    Def_3Dref_2Dref_JobNo[4] = iCounter;
 
                     //increase counter after sending work
                     ++iCounter;
@@ -126,6 +139,7 @@ public:
                         // direction and job number
                         MPI_Send(Def_3Dref_2Dref_JobNo, ArraySize, MPI_INT, status.MPI_SOURCE,
                                  TAG_WORK, MPI_COMM_WORLD);
+                        __iterJobs.moveNext();
                     }
                     else
                     {
@@ -196,11 +210,12 @@ public:
     void process(int * Def_3Dref_2Dref_JobNo)
     {
         std::cerr
-        << " Sprocessing def "  << Def_3Dref_2Dref_JobNo[0]
-        << " S3Dref "           << Def_3Dref_2Dref_JobNo[1]
-        << " S2D_ref "          << Def_3Dref_2Dref_JobNo[2]
-        << " SJobNo "           << Def_3Dref_2Dref_JobNo[3]
-        << " Sat node: "        << node->rank
+        << " DefGroup: "  << Def_3Dref_2Dref_JobNo[0]
+        << " 3DRef:    "  << Def_3Dref_2Dref_JobNo[1]
+        << " Order:    "  << Def_3Dref_2Dref_JobNo[2]
+        << " Count:    "  << Def_3Dref_2Dref_JobNo[3]
+        << " iCounter: "  << Def_3Dref_2Dref_JobNo[4]
+        << " Sat node: "  << node->rank
         << std::endl;
 
         //may I write?
@@ -231,9 +246,107 @@ public:
             }
         }
         //REMOVE THIS DELAY!!!!!!!!!
-        sleep(1);
+        usleep(1000);
         MPI_Send(&lockIndex, 1, MPI_INT, 0, TAG_I_FINISH_WRITTING, MPI_COMM_WORLD);
     }
+
+    void produceSideInfo()
+    {
+
+        ProgAngularClassAverage::produceSideInfo();
+        if (node->rank == 0)
+        {
+            // check Wiener filter image has correct size and store the filter, we will use it later
+            //This program is called once for each CTF group so there is a single wienner filter involved
+            if (fn_wien != "")
+            {
+                // Get padding dimensions
+                paddim = ROUND(pad * dim);
+                Image<double> auxImg;
+                //auxImg.read(fn_wien, HEADER);
+                auxImg.read(fn_wien);
+                Mwien = auxImg();
+                if (XSIZE(Mwien) != paddim)
+                {
+                    std::cerr << "image size= " << dim << " padding factor= " << pad
+                    << " padded image size= " << paddim
+                    << " Wiener filter size= " << XSIZE(Mwien) << std::endl;
+                    REPORT_ERROR(ERR_VALUE_INCORRECT,
+                                 "Incompatible padding factor for this Wiener filter");
+                }
+            }
+
+            // Set ring defaults
+            if (Ri < 1)
+                Ri = 1;
+            if (Ro < 0)
+                Ro = (dim / 2) - 1;
+
+            // Set limitR
+            if (do_limitR0 || do_limitRF)
+            {
+                MetaData tmpMT(DF);
+                std::vector<double> vals;
+                MDLabel codifyLabel = MDL::str2Label(col_select);
+                FOR_ALL_OBJECTS_IN_METADATA(DF)
+                {
+                    double auxval;
+                    DF.getValue(codifyLabel, auxval, __iter.objId);
+                    vals.push_back(auxval);
+                }
+                int nn = vals.size();
+                std::sort(vals.begin(), vals.end());
+                if (do_limitR0)
+                {
+                    double val = vals[ROUND((limitR/100.) * vals.size())];
+                    if (do_limit0)
+                        limit0 = XMIPP_MAX(limit0, val);
+                    else
+                    {
+                        limit0 = val;
+                        do_limit0 = true;
+                    }
+                }
+                else if (do_limitRF)
+                {
+                    double val = vals[ROUND(((100. - limitR)/100.) * vals.size())];
+                    if (do_limitF)
+                        limitF = XMIPP_MIN(limitF, val);
+                    else
+                    {
+                        limitF = val;
+                        do_limitF = true;
+                    }
+                }
+            }
+
+
+        }
+    }
+    void rootInit()
+    {
+
+        preprocess();
+        createJobList();
+    }
+
+    void createJobList()
+    {
+        MetaData md;
+
+        md.read((String)"ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]$@" + inFile);
+
+        md.write("createJobList.xmd");
+        const MDLabel myGroupByLabels[] =
+            {
+                MDL_DEFGROUP, MDL_REF3D, MDL_ORDER
+            };
+        std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+3);
+        mdJobList.aggregateGroupBy(md, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);
+
+        nJobs = mdJobList.size();
+    }
+
 }
 ;
 

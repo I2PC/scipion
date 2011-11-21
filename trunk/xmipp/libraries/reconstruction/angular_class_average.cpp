@@ -305,42 +305,6 @@ void ProgAngularClassAverage::run()
 // Side info stuff ===================================================================
 void ProgAngularClassAverage::produceSideInfo()
 {
-    //create metadata with classes that has experimental images applied to them.
-    //experimental images are already in DF
-    //get all blocks, select those without '_'
-    //perform an aggregation function over the reference and store the result in DFclassesExp
-
-
-    //Obtain the number of reference volumen group, if exists
-    //FileName auxBlock = inFile.getBlockName();
-
-    //refGroup = auxBlock.afterFirstOf("_");
-
-    //count number of different references used
-    StringVector blockList;
-    FileName auxFn = inFile.removeBlockName();
-    getBlocksInMetaDataFile(auxFn, blockList);
-    MetaData auxMD;
-    for (StringVector::iterator it = blockList.begin(); it != blockList.end(); ++it)
-    {
-        if ((*it).find("_") != std::string::npos)
-            continue;
-        auxMD.read(*it + '@' + auxFn);
-        DFclassesExp.unionAll(auxMD);
-    }
-    //alloc space for output files
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
-
-    getImageSize(DFclassesExp, Xdim, Ydim, Zdim, Ndim);
-
-    //auxMD.aggregate(DFclassesExp, AGGR_COUNT,MDL_REF,MDL_REF,MDL_COUNT);
-    auxMD.aggregate(DFclassesExp, AGGR_COUNT, MDL_ORDER, MDL_ORDER, MDL_COUNT);
-
-    DFclassesExp.sort(auxMD, MDL_ORDER);
-    DFclassesExp.write("DFclassesExp_sorted.xmd");
-
-    Ndim = DFclassesExp.size();
 
     // Set up output rootnames
     if (do_split)
@@ -355,70 +319,6 @@ void ProgAngularClassAverage::produceSideInfo()
     //init with 0 by default through memset
     Iempty().resizeNoCopy(dim, dim);
     Iempty().setXmippOrigin();
-
-    // check Wiener filter image has correct size and store the filter, we will use it later
-    //This program is called once for each CTF group so there is a single wienner filter involved
-    if (fn_wien != "")
-    {
-        // Get padding dimensions
-        paddim = ROUND(pad * dim);
-        Image<double> auxImg;
-        //auxImg.read(fn_wien, HEADER);
-        auxImg.read(fn_wien);
-        Mwien = auxImg();
-        if (XSIZE(Mwien) != paddim)
-        {
-            std::cerr << "image size= " << dim << " padding factor= " << pad
-            << " padded image size= " << paddim
-            << " Wiener filter size= " << XSIZE(Mwien) << std::endl;
-            REPORT_ERROR(ERR_VALUE_INCORRECT,
-                         "Incompatible padding factor for this Wiener filter");
-        }
-    }
-
-    // Set ring defaults
-    if (Ri < 1)
-        Ri = 1;
-    if (Ro < 0)
-        Ro = (dim / 2) - 1;
-
-    // Set limitR
-    if (do_limitR0 || do_limitRF)
-    {
-        MetaData tmpMT(DF);
-        std::vector<double> vals;
-        MDLabel codifyLabel = MDL::str2Label(col_select);
-        FOR_ALL_OBJECTS_IN_METADATA(DF)
-        {
-            double auxval;
-            DF.getValue(codifyLabel, auxval, __iter.objId);
-            vals.push_back(auxval);
-        }
-        int nn = vals.size();
-        std::sort(vals.begin(), vals.end());
-        if (do_limitR0)
-        {
-            double val = vals[ROUND((limitR/100.) * vals.size())];
-            if (do_limit0)
-                limit0 = XMIPP_MAX(limit0, val);
-            else
-            {
-                limit0 = val;
-                do_limit0 = true;
-            }
-        }
-        else if (do_limitRF)
-        {
-            double val = vals[ROUND(((100. - limitR)/100.) * vals.size())];
-            if (do_limitF)
-                limitF = XMIPP_MIN(limitF, val);
-            else
-            {
-                limitF = val;
-                do_limitF = true;
-            }
-        }
-    }
 
     // Randomization
     if (do_split)
