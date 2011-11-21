@@ -239,6 +239,8 @@ class XmippProtocol(object):
         self.Out = self.LogPrefix+".out"
         self.LogFile = self.LogPrefix + ".log"
         self.SystemFlavour = project.SystemFlavour
+        # Create filenames dictionary
+        self.FilenamesDict = self.createFilenameTemplates()
         
         
     def getFilename(self, key, **params):
@@ -340,9 +342,7 @@ class XmippProtocol(object):
         sys.stderr = self.fErr
         self.Log = XmippLog(self.LogFile)
         self.Db  = XmippProtocolDb(self, self.scriptName, isMainLoop)
-        self.insertStep = self.Db.insertStep
-        # Create filenames dictionary
-        self.FilenamesDict = self.createFilenameTemplates()
+        self.insertStep = self.Db.insertStep        
 
     def run(self):
         '''Run of the protocols
@@ -453,11 +453,10 @@ def splitExtendedRunName(extendedRunName):
 
 def getWorkingDirFromRunName(extendedRunName):
     # The extended run name has the name of the protocol in front
-    tuple=splitExtendedRunName(extendedRunName)
-    if tuple is None:
+    nameTuple = splitExtendedRunName(extendedRunName)
+    if nameTuple is None:
         return None
-    protocolName=tuple[0]
-    runName=tuple[1]
+    protocolName, runName = nameTuple
     return join(protDict[protocolName].dir,runName)
 
 def getScriptFromRunName(extendedRunName):
