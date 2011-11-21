@@ -68,7 +68,7 @@ void ProgCTFEnhancePSD::defineParams()
         "Enhances the visibility of the Thon rings in a Power Spectrum Density (PSD).");
     addSeeAlsoLine("ctf_estimate_from_micrograph");
     addParamsLine("--method <mth=filter>        : Choose enhancing method");
-    addParamsLine("       where mth");
+    addParamsLine("       where <mth>");
     addParamsLine("             filter <freq_low=0.05> <freq_high=0.2> <freq_decay=0.02>: Ad hoc filters. The algorithm is fully described at [[http://www.ncbi.nlm.nih.gov/pubmed/16987671][this article]]");
     addParamsLine("                                                                     : The frequency limits define a raised-cosine bandpass filter, frequencies are normalized to 0.5");
     addParamsLine("             spht   <N0=1> <NF=10> : Spiral phase transform normalization.");
