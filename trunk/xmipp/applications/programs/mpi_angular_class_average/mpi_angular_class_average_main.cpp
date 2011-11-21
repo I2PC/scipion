@@ -131,7 +131,7 @@ public:
                         MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
                         finishedNodes ++;
                         if (finishedNodes >= node->size)
-                        	whileLoop=false;
+                            whileLoop=false;
                     }
                     break;
                 case TAG_MAY_I_WRITE:
@@ -209,7 +209,7 @@ public:
         bool whileLoop = true;
         while (whileLoop)
         {
-			MPI_Send(&lockIndex, 1, MPI_INT, 0, TAG_MAY_I_WRITE, MPI_COMM_WORLD);
+            MPI_Send(&lockIndex, 1, MPI_INT, 0, TAG_MAY_I_WRITE, MPI_COMM_WORLD);
             MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 
 
