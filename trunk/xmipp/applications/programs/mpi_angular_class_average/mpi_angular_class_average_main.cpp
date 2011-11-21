@@ -26,7 +26,7 @@
 #include <parallel/xmipp_mpi.h>
 #include <data/xmipp_funcs.h>
 #include <data/xmipp_program.h>
-#include <reconstruction/angular_projection_matching.h>
+#include <reconstruction/angular_class_average.h>
 
 //Tags already defined in xmipp
 //#define TAG_WORK                     0
@@ -37,7 +37,7 @@
 #define TAG_DO_NOT_DARE_TO_WRITE     15
 #define TAG_I_AM_FREE                16
 
-class ProgMpiAngularClassAverage: ProgAngularProjectionMatching
+class ProgMpiAngularClassAverage: public ProgAngularClassAverage
 {
 public:
     /**Number of job */
@@ -58,7 +58,7 @@ public:
 
     void readParams()
     {
-    	ProgAngularProjectionMatching:readParams();
+      ProgAngularClassAverage::readParams();
         nJobs = getIntParam("--nJobs");
         if (node->size < 2)
             REPORT_ERROR(ERR_ARG_INCORRECT,
@@ -68,7 +68,7 @@ public:
     void defineParams()
     {
         addUsageLine("I do not know");
-        ProgAngularProjectionMatching:defineParams();
+        ProgAngularClassAverage::defineParams();
         addParamsLine(
             "--nJobs <nJobs=1000>    : File with commands in different lines");
     }
