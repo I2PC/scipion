@@ -121,6 +121,7 @@ class ProtProjMatch(XmippProtocol):
                 'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref + '.doc'),
                 'ProjMatchRootNamesWithoutRef': join(ProjMatchDirs, '%(ProjMatchName)s.doc'),
                 'OutClasses': join(ProjMatchDirs, '%(ProjMatchName)s'),
+                'ReconstructionXmd': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref+ '.doc'),
                 'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref + '.vol'),
                 'ReconstructedFileNamesIters': join(IterDir, '%(ReconstructedVolume)s_' + Ref + '.vol'),
                 'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref + '.vol'),
@@ -401,37 +402,9 @@ class ProtProjMatch(XmippProtocol):
                                      , NumberOfReferences=self.numberOfReferences
                          )
     
-            id = _dataBase.insertStep('angular_class_average', verifyfiles=[]
-                         , Action='preprocessing'#
-                         , Align2DIterNr=self.Align2DIterNr[iterN]#
-                         , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
-                         , Align2dMaxChangeOffset=self.Align2dMaxChangeOffset[iterN]#
-                         , CtfGroupDirectory=self.CtfGroupDirectory#
-                         , CtfGroupRootName=self.CtfGroupRootName#
-                         , DiscardPercentage=self.DiscardPercentage[iterN]#
-                         , DoAlign2D=self.DoAlign2D[iterN]#
-                         , DoComputeResolution=self.DoComputeResolution[iterN]
-                         , DoCtfCorrection=self.DoCtfCorrection#
-                         , DocFileInputAngles=self.DocFileInputAngles[iterN]#
-                         , DoParallel=self.DoParallel#
-                         , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
-                         , execution_mode = self.SqliteDb.EXEC_MAINLOOP
-                         , iCTFGroup=1
-                         , InnerRadius=self.InnerRadius[iterN]#
-                         , MaxChangeOffset=self.MaxChangeOffset[iterN]#
-                         , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
-                         , NumberOfReferences=self.numberOfReferences#
-                         , PaddingFactor=self.PaddingFactor#
-                         , parent_step_id = 0
-                         , ProjectLibraryRootName=self.getFilename('ProjectLibraryStk', iter=1, ref=1)#
-                         , OutClasses=self.getFilename('OutClasses', iter=1)#
-                         , ref3dNum=1
-                         )
             #align images, not possible for ctf groups
-            for refN in range(1, self.numberOfReferences + 1):
-                for iCTFGroup in range(1,self.NumberOfCtfGroups+1):
-                    _VerifyFiles = []
-                    _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
+            _VerifyFiles = []
+            _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
                              , Action='processing'#
                              , Align2DIterNr=self.Align2DIterNr[iterN]#
                              , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
@@ -445,48 +418,20 @@ class ProtProjMatch(XmippProtocol):
                              , DocFileInputAngles=self.DocFileInputAngles[iterN]#
                              , DoParallel=self.DoParallel#
                              , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
-                             , execution_mode = self.SqliteDb.EXEC_PARALLEL
-                             , iCTFGroup=iCTFGroup
+                             , NumberOfCtfGroups=self.NumberOfCtfGroups
                              , InnerRadius=self.InnerRadius[iterN]#
                              , MaxChangeOffset=self.MaxChangeOffset[iterN]#
                              , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
+                             , NumberOfMpi=self.NumberOfMpi
                              , NumberOfReferences=self.numberOfReferences#
+                             , NumberOfThreads=self.NumberOfThreads
                              #, NumberOfCtfGroups=self.NumberOfCtfGroups#
                              , PaddingFactor=self.PaddingFactor#
-                             , parent_step_id = id
                              , ProjectLibraryRootName=self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)#
                              , OutClasses=self.getFilename('OutClasses', iter=iterN)#
                              , ref3dNum=refN
                              )
                 
-            _VerifyFiles = []
-            id = _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
-                         , Action='postprocessing'#
-                         , Align2DIterNr=self.Align2DIterNr[iterN]#
-                         , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
-                         , Align2dMaxChangeOffset=self.Align2dMaxChangeOffset[iterN]#
-                         , CtfGroupDirectory=self.CtfGroupDirectory#
-                         , CtfGroupRootName=self.CtfGroupRootName#
-                         , DiscardPercentage=self.DiscardPercentage[iterN]#
-                         , DoAlign2D=self.DoAlign2D[iterN]#
-                         , DoComputeResolution=self.DoComputeResolution[iterN]
-                         , DoCtfCorrection=self.DoCtfCorrection#
-                         , DocFileInputAngles=self.DocFileInputAngles[iterN]#
-                         , DoParallel=self.DoParallel#
-                         , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
-                         , execution_mode = self.SqliteDb.EXEC_MAINLOOP
-                         , iCTFGroup=iCTFGroup
-                         , InnerRadius=self.InnerRadius[iterN]#
-                         , MaxChangeOffset=self.MaxChangeOffset[iterN]#
-                         , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
-                         , NumberOfReferences=self.numberOfReferences#
-                         , parent_step_id = 0
-                         , PaddingFactor=self.PaddingFactor#
-                         , ProjectLibraryRootName=self.getFilename('ProjectLibraryStk', iter=1, ref=1)#
-                         , OutClasses=self.getFilename('OutClasses', iter=1)#
-                         , ref3dNum=1
-                         )
-
             for refN in range(1, self.numberOfReferences + 1):
                 # Mask reference volume
                 maskedFn = self.getFilename('MaskedFileNamesIters', iter=iterN, ref=refN)
@@ -503,24 +448,25 @@ class ProtProjMatch(XmippProtocol):
 
                 #if (DoReconstruction):
                 _VerifyFiles = []
-                id = _dataBase.insertStep('reconstruction', verifyfiles=_VerifyFiles
-                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
-                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
-                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
-                                              , Iteration_number  = iterN
-                                              #, DisplayReconstruction = self.DisplayReconstruction
-                                              , DoParallel=self.DoParallel#
-                                              , NumberOfMpi=self.NumberOfMpi#
-                                              , NumberOfThreads=self.NumberOfThreads#
-                                              , ReconstructionMethod = self.ReconstructionMethod
-                                              #, globalFourierMaxFrequencyOfInterest = globalFourierMaxFrequencyOfInterest
-                                              , ARTLambda = self.ARTLambda
-                                              , SymmetryGroup = self.SymmetryGroup
-                                              , ReconstructedVolume = self.ReconstructedVolume[iterN]
-                                              , DoComputeResolution = self.DoComputeResolution
-                                              , DoSplitReferenceImages = self.DoSplitReferenceImages
-                                              , PaddingFactor = self.PaddingFactor
-                                              )
+#                id = _dataBase.insertStep('reconstruction', verifyfiles=_VerifyFiles
+#                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
+#                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
+#                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
+#                                              , Iteration_number  = iterN
+#                                              #, DisplayReconstruction = self.DisplayReconstruction
+#                                              , DoParallel=self.DoParallel#
+#                                              , NumberOfMpi=self.NumberOfMpi#
+#                                              , NumberOfThreads=self.NumberOfThreads#
+#                                              , ReconstructionMethod = self.ReconstructionMethod
+#                                              #, globalFourierMaxFrequencyOfInterest = globalFourierMaxFrequencyOfInterest
+#                                              , ARTLambda = self.ARTLambda
+#                                              , SymmetryGroup = self.SymmetryGroup
+#                                              , ReconstructionXmd = 
+#                                              , ReconstructedVolume = self.ReconstructedVolume[iterN]
+#                                              , DoComputeResolution = self.DoComputeResolution
+#                                              , DoSplitReferenceImages = self.DoSplitReferenceImages
+#                                              , PaddingFactor = self.PaddingFactor
+#                                              )
                     
 #                _VerifyFiles = []
 #                    #self._ConstantToAddToFiltration=arg.getComponentFromVector(ConstantToAddToFiltration, _iteration_number-1)

@@ -236,27 +236,18 @@ def assign_images_to_references(_log
                 t=MD.getValue(MDL_REF,id)
                 i=MDSort.addObject()
                 MDSort.setValue(MDL_REF,t,i)
-    print "two"
-    MDSort.write("mdsort_wt_duplicates.xmd")
     
     MDSort.removeDuplicates()
     
-    MDSort.write("mdsort_wo_duplicates.xmd")
     
     for id in MDSort:
         MDSort.setValue(MDL_ORDER,mycounter,id)
         mycounter += 1
-    MDSort.write("mdsort_wo_duplicates_sorted.xmd")
     ####################
-    print "three"
-    print "bbb",ProjMatchRootName[1], DocFileInputAngles
     outputdocfile =  DocFileInputAngles
-    print 'outputdocfile: ', outputdocfile
     if os.path.exists(outputdocfile):
         os.remove(outputdocfile)
-    print "four"
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
-        print "five",iCTFGroup
         MDaux.clear()
         auxInputdocfile = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
@@ -267,22 +258,17 @@ def assign_images_to_references(_log
             #In practice you should not get duplicates
             MD.removeDuplicates()
             MD.setValueCol(MDL_REF3D,iRef3D)
+            MD.setValueCol(MDL_DEFGROUP,iCTFGroup)
             #MD.setValueCol(MDL_CTFMODEL,auxInputdocfile[:-1])
             MDaux.unionAll(MD)
         MDaux.sort()
-        MD.write("md_test.xmd")
-        MDaux.write("mdaux_test.xmd")
         MD.aggregate(MDaux,AGGR_MAX,MDL_IMAGE,MDL_MAXCC,MDL_MAXCC)
-        MD.write("md_test_afteraggregate.xmd")
-        MDaux.write("mdaux_test_afteraggregate.xmd")
         #if a single image is assigned to two references with the same 
         #CC use it in both reconstruction
         #recover atribbutes after aggregate function
         
         MD1.join  (MD,  MDaux,  MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
-        MD1.write("md1.xmd")
         MDout.join(MD1, MDSort, MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
-        MDout.write("mdout.xmd")
         MDout.write(auxInputdocfile+outputdocfile,MD_APPEND)
         
     #we are done but for the future it is convenient to create more blocks
@@ -313,12 +299,13 @@ def angular_class_average(_log
                          , DocFileInputAngles
                          , DoParallel
                          , DoSplitReferenceImages
-                         , iCTFGroup
+                         , NumberOfCtfGroups
                          , InnerRadius
                          , MaxChangeOffset
                          , MinimumCrossCorrelation
+                         , NumberOfMpi
                          , NumberOfReferences
-                         #, NumberOfCtfGroups
+                         , NumberOfThreads
                          , PaddingFactor
                          , ProjectLibraryRootName
                          , OutClasses
@@ -333,13 +320,13 @@ def angular_class_average(_log
     MD = MetaData()
     #for iCTFGroup in range(1,NumberOfCtfGroups+1):
 #        for iRef3D in range(1,NumberOfReferences+1):
-    auxInputdocfile  = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)
+    auxInputdocfile  = CtfBlockName + str(NumberOfCtfGroups).zfill(FILENAMENUMBERLENGTH)
     auxInputdocfile += '_' + RefBlockName + str(ref3dNum).zfill(FILENAMENUMBERLENGTH)+'@'
     aux = auxInputdocfile+DocFileInputAngles
     print 'reading: ', aux
     MD.read(auxInputdocfile+DocFileInputAngles)
     if MD.size()==0:
-        print "Empty metadata, remember to copy the reference ",iCTFGroup,ref3dNum
+        print "Empty metadata, remember to copy the reference ",NumberOfCtfGroups,ref3dNum
         return
     #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(ref3dNum).zfill(2))
     parameters =  ' -i '       + auxInputdocfile  + DocFileInputAngles +\
@@ -347,12 +334,12 @@ def angular_class_average(_log
                   ' --write_selfiles ' + \
                   ' --limit0 ' + MinimumCrossCorrelation + \
                   ' --limitR ' + DiscardPercentage + \
-                  ' --ctfNum ' + str(iCTFGroup) + \
+                  ' --ctfNum ' + str(NumberOfCtfGroups) + \
                   ' --ref3dNum ' + str(ref3dNum)
     if (DoCtfCorrection):
         # On-the fly apply Wiener-filter correction and add all CTF groups together
         parameters += \
-                   ' --wien '   + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@' + CtfGroupName + '_wien.stk' + \
+                   ' --wien '   + str(NumberOfCtfGroups).zfill(FILENAMENUMBERLENGTH)+'@' + CtfGroupName + '_wien.stk' + \
                    ' --pad '    + str(PaddingFactor)
                    
     parameters += \
@@ -381,7 +368,8 @@ def angular_class_average(_log
     
     runJob(_log,
            'xmipp_angular_class_average',
-           parameters
+           parameters,
+           NumberOfMpi * NumberOfThreads
            )
         
 def reconstruction(_log
@@ -398,23 +386,24 @@ def reconstruction(_log
                    , ARTLambda
                    , SymmetryGroup
                    #, ReconstructedandfilteredVolume
+                   , ReconstructionXmd
                    , ReconstructedVolume
                    , DoComputeResolution
                    , DoSplitReferenceImages
                    , PaddingFactor
                    ):
 
-    #Outputvolume = ReconstructedandfilteredVolume
-    Outputvolume = ReconstructedVolume
+    InputVolume = ReconstructionXmd
+    OutputVolume = ReconstructedVolume
     
     print '*********************************************************************'
     print '* Reconstruct volume using '
     if ReconstructionMethod=='wbp':
-        Outputvolume = Outputvolume+".vol"
+        OutputVolume = OutputVolume+".vol"
         program = 'xmipp_reconstruct_wbp'
         parameters= ' -i '    + ForReconstructionSel + \
                     ' --doc '  + ForReconstructionDoc + \
-                    ' -o '    + Outputvolume + \
+                    ' -o '    + OutputVolume + \
                     ' --sym '  + SymmetryGroup + \
                     ' --weight -use_each_image '
         parameters = parameters + WBPReconstructionExtraCommand
@@ -424,7 +413,7 @@ def reconstruction(_log
         program = 'xmipp_reconstruct_art'
         #DoParallel=False
         parameters=' -i '    + ForReconstructionSel + \
-                   ' -o '    + Outputvolume + ' ' + \
+                   ' -o '    + OutputVolume + ' ' + \
                    ' --sym '  + SymmetryGroup + \
                    ' --thr '  + str(NumberOfThreads) + \
                    ' --WLS '
@@ -436,15 +425,17 @@ def reconstruction(_log
             #DoParallel=False
         program = 'xmipp_reconstruct_fourier'
         parameters=' -i '    + ForReconstructionSel + \
-                   ' -o '    + Outputvolume + '.vol ' + \
+                   ' -o '    + OutputVolume + '.vol ' + \
                    ' --sym '  + SymmetryGroup + \
                    ' --thr '  + str(NumberOfThreads) + \
                    ' --weight ' + \
                    ' --max_resolution ' + str(FourierMaxFrequencyOfInterest) +\
                    ' --pad_proj ' + str(PaddingFactor) +\
                    ' --pad_vol ' + str(PaddingFactor)
-        #if (_DoParallel):
-            #parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
+ 
+        if (DoParallel):
+            parameters = parameters + ' --mpi_job_size ' + str(MpiJobSize)
+
         #if (_DoComputeResolution and not _DoSplitReferenceImages):
             #myFileName =  ProjMatchDir + '/' + ProjMatchName
             #parameters = parameters + ' -prepare_fsc ' + myFileName + ' '
