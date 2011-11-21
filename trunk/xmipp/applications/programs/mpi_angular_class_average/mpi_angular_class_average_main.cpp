@@ -26,6 +26,7 @@
 #include <parallel/xmipp_mpi.h>
 #include <data/xmipp_funcs.h>
 #include <data/xmipp_program.h>
+#include <reconstruction/angular_projection_matching.h>
 
 //Tags already defined in xmipp
 //#define TAG_WORK                     0
@@ -36,7 +37,7 @@
 #define TAG_DO_NOT_DARE_TO_WRITE     15
 #define TAG_I_AM_FREE                16
 
-class ProgMpiAngularClassAverage: public XmippProgram
+class ProgMpiAngularClassAverage: ProgAngularProjectionMatching
 {
 public:
     /**Number of job */
@@ -57,6 +58,7 @@ public:
 
     void readParams()
     {
+    	ProgAngularProjectionMatching:readParams();
         nJobs = getIntParam("--nJobs");
         if (node->size < 2)
             REPORT_ERROR(ERR_ARG_INCORRECT,
@@ -66,6 +68,7 @@ public:
     void defineParams()
     {
         addUsageLine("I do not know");
+        ProgAngularProjectionMatching:defineParams();
         addParamsLine(
             "--nJobs <nJobs=1000>    : File with commands in different lines");
     }
@@ -78,8 +81,7 @@ public:
     }
 
     /* Run --------------------------------------------------------------------- */
-#define MAX_LINE 2048
-    char szline[MAX_LINE + 1];
+#define ArraySize 4
     void run()
     {
         //number of jobs
@@ -88,7 +90,6 @@ public:
         int lockIndex;
         for (lockIndex = 0; lockIndex < nJobs; ++lockIndex)
             lockArray[lockIndex]=false;
-#define ArraySize 4
 
         int * Def_3Dref_2Dref_JobNo = new int[ArraySize];
 
@@ -202,7 +203,6 @@ public:
         << " Sat node: "        << node->rank
         << std::endl;
 
-        usleep(1000);
         //may I write?
         int lockIndex =rnd_unif(1,5);
         std::cerr << "lockIndex" << lockIndex <<std::endl;
@@ -211,8 +211,6 @@ public:
         {
             MPI_Send(&lockIndex, 1, MPI_INT, 0, TAG_MAY_I_WRITE, MPI_COMM_WORLD);
             MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-
-
             switch (status.MPI_TAG)
             {
             case TAG_DO_NOT_DARE_TO_WRITE://I am free
