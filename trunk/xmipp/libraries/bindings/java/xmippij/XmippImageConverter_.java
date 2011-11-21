@@ -83,7 +83,6 @@ public class XmippImageConverter_ {
         long n = retrieveAllImages ? ImageGeneric_.FIRST_IMAGE : nimage;
 
         for (; n <= image.getNDim(); n++) {
-            System.out.println(" +++ Reading image: " + n);
             image.read(width, height, n);
 
             if (image.isPSD()) {
@@ -93,7 +92,6 @@ public class XmippImageConverter_ {
             // Read volume.
             int slice = retrieveAllSlices ? ImageGeneric_.FIRST_SLICE : nslice;
             for (; slice <= image.getZDim(); slice++) {
-                System.out.println("\t /// Reading slice: " + slice);
                 ImageProcessor processor = pc.getProcessor(image, slice);
                 is.addSlice("", processor);
 
