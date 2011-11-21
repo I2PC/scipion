@@ -99,7 +99,7 @@ public class ImagesTableModel extends AbstractTableModel {
                 ImageGeneric_ currentImage = new ImageGeneric_(currentFileName);
                 currentImage.read(ImageGeneric_.FIRST_IMAGE);
 
-                ImagePlus imp = XmippImageConverter_.convertToImagej(currentImage);
+                ImagePlus imp = XmippImageConverter_.convertToImageJ(currentImage);
                 imp.setTitle(currentFileName);
 
                 // TODO: Sum efficiently.

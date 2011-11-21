@@ -75,7 +75,7 @@ public class JFrameImagesTable extends javax.swing.JFrame {
                         ImageGeneric_ image = new ImageGeneric_(filename);
                         image.read(ImageGeneric_.FIRST_IMAGE);
 
-                        ImagePlus imp = XmippImageConverter_.convertToImagej(image);
+                        ImagePlus imp = XmippImageConverter_.convertToImageJ(image);
                         imp.setTitle(filename);
                         imp.show();
                     } catch (Exception ex) {

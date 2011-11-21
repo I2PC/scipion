@@ -37,7 +37,7 @@ public class ScoreItem implements Comparable<ScoreItem> {
     public ImagePlus getImagePlus() {
         try {
             if (imp == null) {
-                imp = XmippImageConverter_.convertToImagej(fileName);
+                imp = XmippImageConverter_.convertToImageJ(fileName);
                 imp.setTitle(fileName);
             }
         } catch (Exception ex) {

@@ -186,7 +186,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
 
             // Converts it to show.
             IJ.showStatus(LABELS.MESSAGE_CONVERTING_XMIPP_VOLUME);
-            volumeIP = XmippImageConverter_.convertToImagej(xmippVolume);
+            volumeIP = XmippImageConverter_.convertToImageJ(xmippVolume);
             //volumeIP.setTitle(volumeFile);
 
             new StackConverter(volumeIP).convertToRGB();
@@ -272,7 +272,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
         double tilt = angles[1];
 
         Projection projection = sphere.getProjection(xmippVolume, rot, tilt);
-        ImagePlus imp = XmippImageConverter_.convertToImagej(projection, "Projection");
+        ImagePlus imp = XmippImageConverter_.convertToImageJ(projection, "Projection");
 
         ArrayList<String> images = sphere.getFiles(rot, tilt);
         int n_images = images != null ? images.size() : 0;
