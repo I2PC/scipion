@@ -110,7 +110,7 @@ VFFTW=fftw-3.2.2
 VTIFF=tiff-3.9.4
 VARPACK=arpack++-2.3
 VNUMPY=numpy-1.6.1
-VMATLIBPLOT=matplotlib-1.0.1
+VMATLIBPLOT=matplotlib-1.1.0
 VPIL=Imaging-1.1.7
 PYMPI=mpi4py-1.2.2
 
