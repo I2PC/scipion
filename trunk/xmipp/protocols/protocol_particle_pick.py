@@ -11,13 +11,14 @@ from protlib_base import *
 from protlib_utils import runJob
 from protlib_filesystem import createLink
 import xmipp
-import glob
+from glob import glob
+from os.path import exists, join
 
 # Create a GUI automatically from a selfile of micrographs
 class ProtParticlePicking(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.particle_pick.name, scriptname, project)
-        self.Import="from protocol_particle_pick import *"
+        self.Import = "from protocol_particle_pick import *"
         self.micrographSelfile = os.path.join(getWorkingDirFromRunName(self.ImportRun), "micrographs.sel")
 
     def defineSteps(self):
@@ -31,82 +32,79 @@ class ProtParticlePicking(XmippProtocol):
     def summary(self):
         summary = []
         
-        mD=xmipp.MetaData(self.micrographSelfile)
+        mD = xmipp.MetaData(self.micrographSelfile)
         isPairList = mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1) and not xmipp.FileName(self.micrographSelfile).isStar1()
 
-        if isPairList:
-            summary=["Input: "+self.micrographSelfile+" with "+str(mD.size())+" tilt pairs"]
-        else:
-            summary=["Input: "+self.micrographSelfile+" with "+str(mD.size())+" micrographs"]
+        if isPairList: 
+            suffix = "tilt pairs"
+        else: 
+            suffix = "micrographs"
         
+        
+        summary=["Input: <%s> with <%u> %s" % (self.micrographSelfile, mD.size(), suffix)]        
         total_manual = 0
         N_manual = 0
         total_auto = 0
         N_auto = 0
-        Nblock={}
-        for posfile in glob.glob(self.WorkingDir+"/*.pos"):
-            blockList=xmipp.getBlocksInMetaDataFile(posfile)
+        Nblock = {}
+        for posfile in glob(self.workingDirPath('*.pos')):
+            blockList = xmipp.getBlocksInMetaDataFile(posfile)
             if 'families' in blockList:
                 blockList.remove('families')
-            particles=0
+            particles = 0
             for block in blockList:
-                mD=xmipp.MetaData(block+"@"+posfile);
+                mD = xmipp.MetaData(block+"@"+posfile);
                 mD.removeDisabled();
-                Nparticles=mD.size()
-                particles+=Nparticles
+                Nparticles = mD.size()
+                particles += Nparticles
                 if block in Nblock.keys():
-                     Nblock[block]+=Nparticles
+                    Nblock[block] += Nparticles
                 else:
-                     Nblock[block]=Nparticles
-            if particles>0:
+                    Nblock[block] = Nparticles
+            if particles > 0:
                 if 'auto' in posfile:
-                    total_auto+=particles
-                    N_auto+=1
+                    total_auto += particles
+                    N_auto += 1
                 else:
-                    total_manual+=particles
-                    N_manual+=1
-        summary.append("Number of particles manually picked: %d (from %d micrographs)" % (total_manual, N_manual))
-        if N_auto>0:
-            summary.append("Number of particles automatically picked: %d (from %d micrographs)" % (total_auto, N_auto))
-        fnFamilies=self.workingDirPath("families.xmd")
-        if os.path.exists(fnFamilies):
-            mD=xmipp.MetaData(fnFamilies)
-            Nfamilies=mD.size()
+                    total_manual += particles
+                    N_manual += 1
+        summary.append("Number of particles manually picked: <%d> (from <%d> micrographs)" % (total_manual, N_manual))
+        if N_auto > 0:
+            summary.append("Number of particles automatically picked: <%d> (from <%d> micrographs)" % (total_auto, N_auto))
+        fnFamilies = self.workingDirPath("families.xmd")
+        if exists(fnFamilies):
+            mD = xmipp.MetaData(fnFamilies)
+            Nfamilies = mD.size()
             if Nfamilies>1:
-                summary.append("Number of families: "+str(Nfamilies))
+                summary.append("Number of families: <%u>" % Nfamilies)
         for block in Nblock.keys():
-            summary.append("Family "+block+" : "+str(Nblock[block])+" particles")
+            summary.append("Family <%s>: <%u> particles" % (block, Nblock[block]))
         return summary
     
     def validate(self):
         errors = []
-        
         # Check that there is a valid list of micrographs
-        if not os.path.exists(self.micrographSelfile)>0:
+        if not exists(self.micrographSelfile)>0:
             errors.append("Cannot find "+self.micrographSelfile)
             return errors
-        
         # Check that all micrographs exist
-        NnotFound=0
-        message=""
-        mD=xmipp.MetaData(self.micrographSelfile)
+        errMsg = ""
+        mD = xmipp.MetaData(self.micrographSelfile)
         isPairList = mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1) and not xmipp.FileName(self.micrographSelfile).isStar1()
         for id in mD:
-             micrograph = mD.getValue(xmipp.MDL_IMAGE,id)
-             if not os.path.exists(micrograph):
-                message+="  "+micrograph
-                NnotFound=NnotFound+1
-             if isPairList:
-                 micrograph = mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1,id)
-                 if not os.path.exists(micrograph):
-                     message+="  "+micrograph
-                     NnotFound=NnotFound+1
+            micrograph = mD.getValue(xmipp.MDL_IMAGE,id)
+            if not exists(micrograph):
+                errMsg += "  " + micrograph
+            if isPairList:
+                micrograph = mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1,id)
+                if not exists(micrograph):
+                    errMsg += "  " + micrograph
         
-        if NnotFound>0:
-            errors.append("Cannot find the following micrographs: "+message)
+        if len(errMsg):
+            errors.append("Cannot find the following micrographs: " + errMsg)
                 
         # Check that automatic particle picking is not for tilted
-        if isPairList and AutomaticPicking:
+        if isPairList and self.AutomaticPicking:
             errors.append("Automatic particle picking cannot be done on tilt pairs")
         
         return errors
