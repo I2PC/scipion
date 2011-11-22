@@ -13,9 +13,18 @@ INCLUDES = -I. -I/usr/lib/jvm/java-6-sun/include -I/usr/lib/jvm/java-6-sun/inclu
 
 JARFILE = XmippJavaInterface.jar
 JAROPTS = -Mcf
+SRCDIR = src/
 PACKAGE = xmipp
 IJ_JAR = $(XMIPP_DIR)/external/imagej/ij.jar
-JAVA_SRC = $(PACKAGE)/ImageDouble.java $(PACKAGE)/ImageGeneric.java $(PACKAGE)/ImageGeneric_.java $(PACKAGE)/Filename.java $(PACKAGE)/MDLabel.java $(PACKAGE)/MetaData.java $(PACKAGE)/Projection.java $(PACKAGE)/CTFDescription.java $(PACKAGE)/Program.java
+JAVA_FILES = ImageDouble.java ImageGeneric.java ImageGeneric_.java Filename.java \
+MDLabel.java MetaData.java Projection.java CTFDescription.java Program.java
+JAVA_SRC = $(JAVA_FILES:.java=.class)
+
+$(SRCDIR)$(PACKAGE)/ImageDouble.java $(SRCDIR)$(PACKAGE)/ImageGeneric.java \
+$(SRCDIR)$(PACKAGE)/ImageGeneric_.java $(SRCDIR)$(PACKAGE)/Filename.java \
+$(SRCDIR)$(PACKAGE)/MDLabel.java $(SRCDIR)$(PACKAGE)/MetaData.java \
+$(SRCDIR)$(PACKAGE)/Projection.java $(SRCDIR)$(PACKAGE)/CTFDescription.java \
+$(SRCDIR)$(PACKAGE)/Program.java
 JAVA_CLASSES = $(JAVA_SRC:.java=.class)
 JAVAH_CLASSES = $(subst /,.,$(JAVA_SRC:.java=))
 

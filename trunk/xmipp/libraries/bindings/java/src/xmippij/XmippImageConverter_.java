@@ -63,19 +63,18 @@ public class XmippImageConverter_ {
         switch (image.getDataType()) {
             case ImageGeneric_.Float:
             case ImageGeneric_.Double:
-                //pc = new ProcessorCreatorFloat();
-                //break;
+                pc = new ProcessorCreatorFloat();
+                break;
             case ImageGeneric_.SChar:
             case ImageGeneric_.UChar:
-                //pc = new ProcessorCreatorByte();
-                //break;
+                pc = new ProcessorCreatorByte();
+                break;
             case ImageGeneric_.Short:
             case ImageGeneric_.UShort:
-                //pc = new ProcessorCreatorShort();
-                //break;
+                pc = new ProcessorCreatorShort();
+                break;
             default:
-                //pc = new ProcessorCreatorFloat();
-                pc = new ProcessorCreatorByte();
+                pc = new ProcessorCreatorFloat();
         }
 
         boolean retrieveAllImages = nimage == ImageGeneric_.ALL_IMAGES;
@@ -108,20 +107,6 @@ public class XmippImageConverter_ {
         }
 
         return getNormalizedImagePlus(image.getFilename(), is);
-    }
-
-    public static void main(String args[]) {
-        try {
-            new ImageJ();
-            String filename = "/home/jvega/Escritorio/imgs_Roberto/Frame4-binning2.dm3";
-            //String filename = "/home/jvega/Escritorio/imgs_Roberto/kk.vol";   // VOLUME
-            //String filename = "/home/jvega/xmipp_ctf.psd"; // PSD
-            ImageGeneric_ image = new ImageGeneric_(filename);
-
-            convertToImageJ(image).show();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
     }
 
     public static ImagePlus convertToImageJ(MetaData md) throws Exception {

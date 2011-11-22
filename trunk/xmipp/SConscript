@@ -317,7 +317,7 @@ def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], l
     	env['JAVAC'] = 'javac -g'
     buildClasses = env.Java(buildDir, join(basedir, srcdir), JAVAVERSION='1.6')
     env.Depends(buildClasses, env.Alias('javaEnums'))
-    jarfile = join(basedir, name + '.jar')
+    jarfile = join(basedir, '..', name + '.jar')
     buildJar = env.Jar(target=jarfile, source=buildClasses, JARCHDIR=buildDir)
     alias = env.Alias(name, buildJar)
     env.Default(alias)
@@ -610,8 +610,8 @@ if int(env['java']):
     env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
 
     # Xmipp interface is needed by plugins.
-    javaLib = AddJavaLibrary('XmippJavaInterface', 'libraries/bindings/java', 'xmipp')#, ['#'],
-    lib2 = AddJavaLibrary('XmippIJInterface', 'libraries/bindings/java', 'xmippij')
+    javaLib = AddJavaLibrary('XmippJavaInterface', 'libraries/bindings/java/src', 'xmipp')#, ['#'],
+    lib2 = AddJavaLibrary('XmippIJInterface', 'libraries/bindings/java/src', 'xmippij')
     env.Depends(lib2, javaLib)
     # Copies jar file to ImageJ plugins folder (plugins below will look for it there).
     copyJar = env.InstallAs(target='external/imagej/plugins/XmippJavaInterface.jar',
