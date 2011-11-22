@@ -4,11 +4,11 @@
 # Author: Carlos Oscar Sorzano, July 2011
 
 from glob import glob
-from os import path.join
+import os
+from os.path import join
 from config_protocols import protDict
-from protlib_base import *
-from protlib_utils import which, runJob
-from protlib_filesystem import *
+from protlib_base import XmippProtocol
+#from protlib_filesystem import *
 import xmipp
 
 class ProtImportMicrographs(XmippProtocol):
@@ -81,7 +81,8 @@ class ProtImportMicrographs(XmippProtocol):
                         Magnification=self.Magnification)
             
     def insertPreprocessStep(self,micrograph,finalname):
-        previousId = XmippProjectDb.FIRST_STEP
+        from protlib_sql.XmippProjectDb import FIRST_STEP
+        previousId = FIRST_STEP
         if not self.actualDoPreprocess:
             if not os.path.exists(finalname):
                 previousId = self.insertParallelStep('createLink', verifyfiles=[finalname], source=micrograph, dest=finalname)
