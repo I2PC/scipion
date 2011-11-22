@@ -286,10 +286,9 @@ def assign_images_to_references(_log
             MDout.write(auxOutputdocfile+outputdocfile,MD_APPEND)
 
 def angular_class_average(_log
-                         , Action
                          , Align2DIterNr
-                         , Align2dMaxChangeRot
                          , Align2dMaxChangeOffset
+                         , Align2dMaxChangeRot
                          , CtfGroupDirectory
                          , CtfGroupRootName
                          , DiscardPercentage
@@ -297,63 +296,44 @@ def angular_class_average(_log
                          , DoComputeResolution
                          , DoCtfCorrection
                          , DocFileInputAngles
-                         , DoParallel
                          , DoSplitReferenceImages
-                         , NumberOfCtfGroups
                          , InnerRadius
                          , MaxChangeOffset
                          , MinimumCrossCorrelation
+                         , NumberOfCtfGroups
                          , NumberOfMpi
-                         , NumberOfReferences
                          , NumberOfThreads
+                         , OutClasses
                          , PaddingFactor
                          , ProjectLibraryRootName
-                         , OutClasses
-                         , ref3dNum
+                         , Ref3dNum
                          ):
                              
-    print '*BP1*'
-    # Now make the class averages
-    CtfGroupName        = CtfGroupDirectory + '/' +\
-                          CtfGroupRootName
-    refname             = str(ProjectLibraryRootName)
+
+    CtfGroupName = CtfGroupDirectory + '/' + CtfGroupRootName
+    refname      = str(ProjectLibraryRootName)
+
     MD = MetaData()
-    #for iCTFGroup in range(1,NumberOfCtfGroups+1):
-#        for iRef3D in range(1,NumberOfReferences+1):
-    auxInputdocfile  = CtfBlockName + str(NumberOfCtfGroups).zfill(FILENAMENUMBERLENGTH)
-    auxInputdocfile += '_' + RefBlockName + str(ref3dNum).zfill(FILENAMENUMBERLENGTH)+'@'
-    aux = auxInputdocfile+DocFileInputAngles
-    print 'reading: ', aux
-    MD.read(auxInputdocfile+DocFileInputAngles)
+    MD.read(DocFileInputAngles)
     if MD.size()==0:
-        print "Empty metadata, remember to copy the reference ",NumberOfCtfGroups,ref3dNum
+        print "Empty metadata, remember to copy the reference ",NumberOfCtfGroups,Ref3dNum
         return
-    #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(ref3dNum).zfill(2))
-    parameters =  ' -i '       + auxInputdocfile  + DocFileInputAngles +\
+
+    parameters =  ' -i '       + DocFileInputAngles +\
                   ' --lib '    + refname.replace(".stk",".doc") + \
                   ' --write_selfiles ' + \
                   ' --limit0 ' + MinimumCrossCorrelation + \
                   ' --limitR ' + DiscardPercentage + \
                   ' --ctfNum ' + str(NumberOfCtfGroups) + \
-                  ' --ref3dNum ' + str(ref3dNum)
-    if (DoCtfCorrection):
+                  ' --ref3dNum ' + str(Ref3dNum) + \
+                  ' -o '        + OutClasses
+                  
         # On-the fly apply Wiener-filter correction and add all CTF groups together
+    if (DoCtfCorrection):
         parameters += \
                    ' --wien '   + str(NumberOfCtfGroups).zfill(FILENAMENUMBERLENGTH)+'@' + CtfGroupName + '_wien.stk' + \
                    ' --pad '    + str(PaddingFactor)
                    
-    parameters += \
-                  ' -o '        + OutClasses
-
-                   
-    if Action == "preprocessing":
-        parameters += \
-                   ' --preprocess --number_3dreferences ' + str(NumberOfReferences) + ' '
-         
-    elif Action == "postprocessing" :
-        parameters += \
-                   ' --postprocess --number_3dreferences ' + str(NumberOfReferences) + ' '
-
     if (DoAlign2D == '1'):
         parameters += \
                   ' --iter '             + Align2DIterNr  + \
@@ -362,10 +342,10 @@ def angular_class_average(_log
                   ' --max_shift '        + MaxChangeOffset + \
                   ' --max_shift_change ' + Align2dMaxChangeOffset + \
                   ' --max_psi_change '   + Align2dMaxChangeRot 
+                  
     if (DoComputeResolution and DoSplitReferenceImages):
-        parameters += \
-                  ' --split '
-    
+        parameters += ' --split '
+                  
     runJob(_log,
            'xmipp_angular_class_average',
            parameters,

@@ -88,7 +88,7 @@ class ProtProjMatch(XmippProtocol):
         'ForReconstructionDoc': "reconstruction.doc",
         'MultiAlign2dSel': "multi_align2d.sel",
         'DocFileWithOriginalAngles': 'original_angles.doc',
-        'docfile_with_current_angles': 'current_angles',
+        'Docfile_with_current_angles': 'current_angles',
         'FilteredReconstruction': "filtered_reconstruction",
         'ReconstructedVolume': "reconstruction",
         'MaskReferenceVolume': "masked_reference",
@@ -108,7 +108,7 @@ class ProtProjMatch(XmippProtocol):
         IterDir = self.workingDirPath(Iter)
         #ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s.doc')
         ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s')
-        CtfGroupBase = join(self.CtfGroupDirectory, '%(CtfGroupRootName)s')
+        CtfGroupBase = join(self.workingDirPath(), self.CtfGroupDirectory, '%(CtfGroupRootName)s')
         ProjLibRootNames = join(IterDir, '%(ProjectLibraryRootName)s_' + Ref)
         return {
                 # Global filenames templates
@@ -405,10 +405,9 @@ class ProtProjMatch(XmippProtocol):
             #align images, not possible for ctf groups
             _VerifyFiles = []
             _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
-                             , Action='processing'#
                              , Align2DIterNr=self.Align2DIterNr[iterN]#
-                             , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
                              , Align2dMaxChangeOffset=self.Align2dMaxChangeOffset[iterN]#
+                             , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
                              , CtfGroupDirectory=self.CtfGroupDirectory#
                              , CtfGroupRootName=self.CtfGroupRootName#
                              , DiscardPercentage=self.DiscardPercentage[iterN]#
@@ -416,22 +415,20 @@ class ProtProjMatch(XmippProtocol):
                              , DoComputeResolution=self.DoComputeResolution[iterN]
                              , DoCtfCorrection=self.DoCtfCorrection#
                              , DocFileInputAngles=self.DocFileInputAngles[iterN]#
-                             , DoParallel=self.DoParallel#
                              , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
-                             , NumberOfCtfGroups=self.NumberOfCtfGroups
                              , InnerRadius=self.InnerRadius[iterN]#
                              , MaxChangeOffset=self.MaxChangeOffset[iterN]#
                              , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
+                             , NumberOfCtfGroups=self.NumberOfCtfGroups
                              , NumberOfMpi=self.NumberOfMpi
-                             , NumberOfReferences=self.numberOfReferences#
                              , NumberOfThreads=self.NumberOfThreads
-                             #, NumberOfCtfGroups=self.NumberOfCtfGroups#
+                             , OutClasses=self.getFilename('OutClasses', iter=iterN)#
                              , PaddingFactor=self.PaddingFactor#
                              , ProjectLibraryRootName=self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)#
-                             , OutClasses=self.getFilename('OutClasses', iter=iterN)#
-                             , ref3dNum=refN
+                             , Ref3dNum=refN
                              )
-                
+            
+
             for refN in range(1, self.numberOfReferences + 1):
                 # Mask reference volume
                 maskedFn = self.getFilename('MaskedFileNamesIters', iter=iterN, ref=refN)
