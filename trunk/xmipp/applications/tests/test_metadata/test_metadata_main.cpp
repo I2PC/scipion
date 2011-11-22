@@ -146,6 +146,17 @@ TEST_F( MetadataTest, Aggregate1)
     mdOut.aggregate(md, AGGR_COUNT, MDL_Y, MDL_Y, MDL_COUNT);
     mdOut.getValue(MDL_COUNT,count,mdOut.firstObject());
     EXPECT_EQ(count,1);
+    MDObject mdValueOut(MDL_Y);
+    double d;
+    md.aggregateSingle(mdValueOut, AGGR_MAX ,MDL_Y);
+    mdValueOut.getValue(d);
+    EXPECT_EQ(d,4);
+    MDObject mdValueOut2(MDL_ORDER);
+    size_t i;
+    md.aggregateSingleSizeT(mdValueOut2, AGGR_MAX ,MDL_ORDER);
+    mdValueOut2.getValue(i);
+    EXPECT_EQ(i,(size_t)1);
+
 }
 
 TEST_F( MetadataTest, Aggregate2)

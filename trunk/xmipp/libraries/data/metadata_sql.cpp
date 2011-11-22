@@ -410,6 +410,38 @@ double MDSql::aggregateSingleDouble(const AggregateOperation operation,
     return (execSingleDoubleStmt(ss));
 }
 
+size_t MDSql::aggregateSingleSizeT(const AggregateOperation operation,
+                                    MDLabel operateLabel)
+{
+    std::stringstream ss;
+    ss << "SELECT ";
+    //Start iterating on second label, first is the
+    //aggregating one
+    switch (operation)
+    {
+    case AGGR_COUNT:
+        ss << "COUNT";
+        break;
+    case AGGR_MAX:
+        ss << "MAX";
+        break;
+    case AGGR_MIN:
+        ss << "MIN";
+        break;
+    case AGGR_SUM:
+        ss << "SUM";
+        break;
+    case AGGR_AVG:
+        ss << "AVG";
+        break;
+    default:
+        REPORT_ERROR(ERR_MD_SQL, "Invalid aggregate operation.");
+    }
+    ss << "(" << MDL::label2Str(operateLabel) << ")" ;
+    ss << " FROM " << tableName(tableId);
+    return (execSingleIntStmt(ss));
+}
+
 void MDSql::indexModify(const MDLabel column, bool create)
 {
     std::stringstream ss;

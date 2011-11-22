@@ -748,8 +748,19 @@ public:
                              const std::vector<MDLabel> &groupByLabels,
                              MDLabel operateLabel,
                              MDLabel resultLabel);
+    /** This function performs aggregation operations.
+        without grouping. (i.e. absolute maximum of a metadata column)
+        for double
+     */
     void aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
                          MDLabel aggregateLabel);
+    /** This function performs aggregation operations.
+        without grouping. (i.e. absolute maximum of a metadata column)
+        for size_t
+     */
+    void aggregateSingleSizeT(MDObject &mdValueOut, AggregateOperation op,
+                                   MDLabel aggregateLabel);
+
     /** Union of elements in two Metadatas, without duplicating.
      * Result in calling metadata object
      * union is a reserved word so I called this method unionDistinct

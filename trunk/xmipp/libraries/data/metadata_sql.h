@@ -138,10 +138,18 @@ private:
 
     /** This function performs aggregation operations.
         without grouping. (i.e. absolute maximum of a metadata column)
+        for double
      */
     double aggregateSingleDouble(const AggregateOperation operation,
                                  MDLabel operateLabel);
 
+
+    /** This function performs aggregation operations.
+        without grouping. (i.e. absolute maximum of a metadata column)
+        for size_t
+     */
+    size_t aggregateSingleSizeT(const AggregateOperation operation,
+                                        MDLabel operateLabel);
 
     /** This function will be used to create o delete an index over a column.
      *Those indexes will improve searchs, but inserts will become expensives
