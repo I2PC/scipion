@@ -541,16 +541,13 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
                 //System.out.print(dataset.getSeriesKey(i) + "\t");
             }
             out.newLine();
-            //System.out.println();
 
             for (int item = 0; item < items; item++) {
                 out.write(dataset.getXValue(0, item) + "\t");
                 for (int serie = 0; serie < series; serie++) {
                     out.write(dataset.getYValue(serie, item) + "\t");
-                    //System.out.print(dataset.getXValue(serie, item) + "\t");
                 }
                 out.newLine();
-                //System.out.println();
             }
             out.close();
 

@@ -106,7 +106,6 @@ public class MDTableModel extends AbstractXmippTableModel {
         for (long id : ids) {
             GalleryImageItem item = new GalleryImageItem(id, md, MDLabel.MDL_IMAGE, cache);
             data.add(item);
-            System.out.println(id + ": " + item);
         }
     }
 

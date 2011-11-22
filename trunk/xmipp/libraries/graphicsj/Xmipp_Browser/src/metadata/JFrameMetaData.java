@@ -49,7 +49,6 @@ import metadata.renderers.FileItemRenderer;
 import metadata.renderers.MetaDataDoubleRenderer;
 import metadata.renderers.RowHeaderRenderer;
 import metadata.renderers.editors.TableFileItemEditor;
-import metadata.renderers.editors.TableImageItemEditor;
 
 /**
  *
@@ -70,7 +69,7 @@ public class JFrameMetaData extends JFrame {
     private MetaDataStringRenderer stringRenderer = new MetaDataStringRenderer();
     private MetaDataDoubleRenderer doubleRenderer = new MetaDataDoubleRenderer();
     private MetaDataIntegerRenderer numberRenderer = new MetaDataIntegerRenderer();
-    private TableImageItemEditor imageEditor = new TableImageItemEditor();
+    //private TableImageItemEditor imageEditor = new TableImageItemEditor();
     private TableFileItemEditor metadataEditor = new TableFileItemEditor(new JTextField());
     private TableFileItemEditor fileEditor = new TableFileItemEditor(new JTextField());
     private TableRowSorter sorter;
@@ -220,7 +219,7 @@ public class JFrameMetaData extends JFrame {
     }
 
     private void enableEditors(boolean enable) {
-        table.setDefaultEditor(GalleryImageItem.class, enable ? imageEditor : null);
+//        table.setDefaultEditor(GalleryImageItem.class, enable ? imageEditor : null);
         table.setDefaultEditor(TableMetaDataItem.class, enable ? metadataEditor : null);
         table.setDefaultEditor(TableFileItem.class, enable ? fileEditor : null);
     }
@@ -277,7 +276,7 @@ public class JFrameMetaData extends JFrame {
 
         if (view_row >= 0 && view_col >= 0) {
             if (SwingUtilities.isLeftMouseButton(evt)) {
-                if (jcbRenderImages.isSelected()) { // Opens images just when rendering. Otherwise, edits it.
+                //if (jcbRenderImages.isSelected()) { // Opens images just when rendering. Otherwise, edits it.
                     if (evt.getClickCount() > 1) {
                         Object item = table.getValueAt(view_row, view_col);
 
@@ -289,7 +288,7 @@ public class JFrameMetaData extends JFrame {
                             openXmippTextFile((TableFileItem) item);
                         }
                     }
-                }
+                //}
             } else if (SwingUtilities.isRightMouseButton(evt)) {
                 table.setRowSelectionInterval(view_row, view_row);
                 table.setColumnSelectionInterval(view_col, view_col);

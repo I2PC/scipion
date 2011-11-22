@@ -120,7 +120,7 @@ public class MetaDataTableModel extends DefaultTableModel {
     }
 
     public void reload() {
-        System.out.println("path: " + getPath());
+//        System.out.println("path: " + getPath());
         load(getPath());
     }
 
@@ -139,8 +139,8 @@ public class MetaDataTableModel extends DefaultTableModel {
 
     private void loadBlocks() {
         try {
-            System.out.println(" >> " + filename);
-            System.out.println(" >> " + getFilename());
+//            System.out.println(" >> " + filename);
+//            System.out.println(" >> " + getFilename());
 
             blocks = MetaData.getBlocksInMetaDataFile(Filename.getFilename(getFilename()));
 
@@ -198,7 +198,6 @@ public class MetaDataTableModel extends DefaultTableModel {
 
                     if (class_ == String.class) {
                         String value = md.getValueString(label, id);
-                        System.out.print(": " + value);
                         if (MetaData.isImage(label)) {
 //                            String path = md.getValueString(label, id, true);
 //                            row[i] = new GalleryImageItem(path, value, cache);
@@ -232,7 +231,6 @@ public class MetaDataTableModel extends DefaultTableModel {
                     } else {
                         row[i] = "Unknown type";
                     }
-                    System.out.println();
                 }
 
                 // Adds a new row data to table.

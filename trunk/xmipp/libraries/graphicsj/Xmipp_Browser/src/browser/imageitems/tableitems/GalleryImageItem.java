@@ -85,6 +85,10 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
         return id;
     }
 
+    public int getLabel() {
+        return label;
+    }
+
     public String getAbsoluteFileName() {
         return Filename.getFilename(path);
     }

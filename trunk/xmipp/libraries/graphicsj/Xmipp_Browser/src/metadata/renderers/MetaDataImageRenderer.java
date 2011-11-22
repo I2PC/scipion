@@ -12,6 +12,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import metadata.models.MetaDataTableModel;
+import xmipp.MDLabel;
 
 /**
  *
@@ -19,10 +20,10 @@ import metadata.models.MetaDataTableModel;
  */
 public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
 
-    private static int DEFAULT_CELL_WIDTH = 128;
-    private static int DEFAULT_CELL_HEIGHT = 128;
-    private final static int BORDER_WIDTH = 5;
-    private final static int BORDER_HEIGHT = 5;
+//    private static int DEFAULT_CELL_WIDTH = 128;
+//    private static int DEFAULT_CELL_HEIGHT = 128;
+//    private final static int BORDER_WIDTH = 5;
+//    private final static int BORDER_HEIGHT = 5;
     private boolean renderImages;
     MetaDataTableModel tableModel;
     private Font font;
@@ -51,7 +52,7 @@ public class MetaDataImageRenderer extends MetaDataRowDisablerRenderer {
         String label = null;
         ImageIcon icon = null;
 
-        if (renderImages) {
+        if (renderImages && item.getLabel() != MDLabel.MDL_IMAGE) {   // Image is not rendered.
             ImagePlus preview = item.getPreview(getCellWidth(), getCellHeight());
             icon = new ImageIcon(preview.getImage());
         } else {
