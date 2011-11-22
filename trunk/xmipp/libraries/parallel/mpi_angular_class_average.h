@@ -48,7 +48,7 @@
 #define TAG_DO_NOT_DARE_TO_WRITE     15
 #define TAG_I_AM_FREE                16
 
-#define ArraySize 5
+#define ArraySize 7
 
 class ProgMpiAngularClassAverage : public XmippProgram
 {
@@ -91,11 +91,6 @@ public:
     bool             write_selfiles;
     /** Number of 3d references */
     int              number_3dref;
-    /** Delete auxiliary files from previous execution.
-     * Alloc disk space for output stacks */
-    bool             do_preprocess;
-    /** Create block with average images filenames */
-    bool             do_postprocess;
     /** Add output to existing files */
     bool             do_add;
     /** Wiener filter image */
@@ -146,7 +141,7 @@ public:
 
     /**
          */
-    void mpi_process(int * Def_3Dref_2Dref_JobNo);
+    void mpi_process(double * Def_3Dref_2Dref_JobNo);
 
     /**
          */

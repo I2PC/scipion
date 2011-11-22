@@ -76,22 +76,6 @@ void ProgMpiAngularClassAverage::readParams()
     // Write selfiles
     write_selfiles = checkParam("--write_selfiles");
 
-    if (checkParam("--preprocess"))
-    {
-        do_preprocess = true;
-        number_3dref = getIntParam("--number_3dreferences");
-    }
-    else
-        do_preprocess = false;
-
-    if (checkParam("--postprocess"))
-    {
-        do_postprocess = true;
-        number_3dref = getIntParam("--number_3dreferences");
-    }
-    else
-        do_postprocess = false;
-
     // Internal re-alignment of the class averages
     Ri = getIntParam("--Ri");
     Ro = getIntParam("--Ro");
@@ -129,13 +113,6 @@ void ProgMpiAngularClassAverage::defineParams()
     addParamsLine("   [--write_selfiles]      : Write class selfiles to disc");
     addParamsLine(
         "   [--number_3dreferences <n>] : Number of 3D references (only used with flag --postprocess_metadata).");
-    addParamsLine(
-        "   [--postprocess]: Create block with average images filenames.");
-    addParamsLine("   requires --number_3dreferences;");
-    addParamsLine(
-        "   [--preprocess] : Delete auxiliary files from previous execution. Alloc disk space for output stacks");
-    addParamsLine("   requires --number_3dreferences;");
-
     addParamsLine("   [--ctfNum <n=1>]        : Ctf group number");
     addParamsLine("   [--ref3dNum <n=1>]      : 3D reference number");
 
@@ -187,8 +164,8 @@ void ProgMpiAngularClassAverage::run()
     for (lockIndex = 0; lockIndex < nJobs; ++lockIndex)
         lockArray[lockIndex]=false;
 
-    int * Def_3Dref_2Dref_JobNo = new int[ArraySize];
-	std::cerr << "*bp01*" <<std::endl;
+    double * Def_3Dref_2Dref_JobNo = new double[ArraySize];
+    std::cerr << "*bp01*" <<std::endl;
 
     if (node->rank == 0)
     {
@@ -198,6 +175,7 @@ void ProgMpiAngularClassAverage::run()
         int iCounter = 0;
         int finishedNodes = 1;
         bool whileLoop = true;
+        double rot, tilt;
 
         size_t id, order, count;
         int ctfGroup, ref3d;
@@ -213,14 +191,18 @@ void ProgMpiAngularClassAverage::run()
             case TAG_I_AM_FREE:
                 //Some test values for defocus, 3D reference and projection direction
                 mdJobList.getValue(MDL_DEFGROUP, ctfGroup, __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[0] = ctfGroup;
+                Def_3Dref_2Dref_JobNo[0] = (double) ctfGroup;
                 mdJobList.getValue(MDL_REF3D, ref3d,  __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[1] = ref3d;
+                Def_3Dref_2Dref_JobNo[1] = (double) ref3d;
                 mdJobList.getValue(MDL_ORDER, order,  __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[2] = order;
+                Def_3Dref_2Dref_JobNo[2] = (double) order;
                 mdJobList.getValue(MDL_COUNT, count,  __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[3] = count;
-                Def_3Dref_2Dref_JobNo[4] = iCounter;
+                Def_3Dref_2Dref_JobNo[3] = (double) count;
+                Def_3Dref_2Dref_JobNo[4] = (double) iCounter;
+                mdJobList.getValue(MDL_ANGLEROT, rot,  __iterJobs.objId);
+                Def_3Dref_2Dref_JobNo[5] = rot;
+                mdJobList.getValue(MDL_ANGLETILT, tilt,  __iterJobs.objId);
+                Def_3Dref_2Dref_JobNo[6] = tilt;
 
                 //increase counter after sending work
                 ++iCounter;
@@ -232,7 +214,7 @@ void ProgMpiAngularClassAverage::run()
                 {
                     //send work, first int defocus, second 3D reference, 3rd projection
                     // direction and job number
-                    MPI_Send(Def_3Dref_2Dref_JobNo, ArraySize, MPI_INT, status.MPI_SOURCE,
+                    MPI_Send(Def_3Dref_2Dref_JobNo, ArraySize, MPI_DOUBLE, status.MPI_SOURCE,
                              TAG_WORK, MPI_COMM_WORLD);
                     __iterJobs.moveNext();
                 }
@@ -291,7 +273,7 @@ void ProgMpiAngularClassAverage::run()
                 whileLoop=false;
                 break;
             case TAG_WORK://work to do
-                MPI_Recv(Def_3Dref_2Dref_JobNo, ArraySize, MPI_INT, 0, TAG_WORK,
+                MPI_Recv(Def_3Dref_2Dref_JobNo, ArraySize, MPI_DOUBLE, 0, TAG_WORK,
                          MPI_COMM_WORLD, &status);
                 mpi_process(Def_3Dref_2Dref_JobNo);
                 break;
@@ -305,16 +287,20 @@ void ProgMpiAngularClassAverage::run()
     MPI_Finalize();
 }
 
-void ProgMpiAngularClassAverage::mpi_process(int * Def_3Dref_2Dref_JobNo)
+void ProgMpiAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 {
     std::cerr
-    << " DefGroup: "  << Def_3Dref_2Dref_JobNo[0]
-    << " 3DRef:    "  << Def_3Dref_2Dref_JobNo[1]
-    << " Order:    "  << Def_3Dref_2Dref_JobNo[2]
-    << " Count:    "  << Def_3Dref_2Dref_JobNo[3]
-    << " iCounter: "  << Def_3Dref_2Dref_JobNo[4]
+    << " DefGroup: "  << ROUND(Def_3Dref_2Dref_JobNo[0])
+    << " 3DRef:    "  << ROUND(Def_3Dref_2Dref_JobNo[1])
+    << " Order:    "  << ROUND(Def_3Dref_2Dref_JobNo[2])
+    << " Count:    "  << ROUND(Def_3Dref_2Dref_JobNo[3])
+    << " iCounter: "  << ROUND(Def_3Dref_2Dref_JobNo[4])
+    << " rot:      "  << Def_3Dref_2Dref_JobNo[5]
+    << " tilt:     "  << Def_3Dref_2Dref_JobNo[6]
     << " Sat node: "  << node->rank
     << std::endl;
+
+    //processOneClass(dirno, output_values);
 
     //may I write?
     int lockIndex =rnd_unif(1,5);
@@ -344,7 +330,7 @@ void ProgMpiAngularClassAverage::mpi_process(int * Def_3Dref_2Dref_JobNo)
         }
     }
     //REMOVE THIS DELAY!!!!!!!!!
-    usleep(1000);
+    //usleep(1000);
     MPI_Send(&lockIndex, 1, MPI_INT, 0, TAG_I_FINISH_WRITTING, MPI_COMM_WORLD);
 }
 
@@ -365,8 +351,10 @@ void ProgMpiAngularClassAverage::mpi_produceSideInfo()
     if (do_split)
         randomize_random_generator();
 
-    if (Ri<1) Ri=1;
-    if (Ro<0) Ro=(Xdim/2)-1;
+    if (Ri<1)
+        Ri=1;
+    if (Ro<0)
+        Ro=(Xdim/2)-1;
     // Set up FFTW transformers
     //Is this needed if  no alignment is required?
     MultidimArray<double> Maux;
@@ -382,7 +370,7 @@ void ProgMpiAngularClassAverage::mpi_produceSideInfo()
     global_transformer.FourierTransform();
 
 
-	if (node->rank == 0)
+    if (node->rank == 0)
     {
         // check Wiener filter image has correct size and store the filter, we will use it later
         //This program is called once for each CTF group so there is a single wienner filter involved
@@ -515,12 +503,12 @@ void ProgMpiAngularClassAverage::createJobList()
 
     const MDLabel myGroupByLabels[] =
         {
-            MDL_DEFGROUP, MDL_REF3D, MDL_ORDER
+            MDL_DEFGROUP, MDL_REF3D, MDL_ORDER, MDL_ANGLEROT, MDL_ANGLETILT
         };
     std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+3);
     mdJobList.aggregateGroupBy(md, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);
 
-    mdJobList.write("createJobList.xmd");
+    //mdJobList.write("createJobList.xmd");
 
     nJobs = mdJobList.size();
 }
