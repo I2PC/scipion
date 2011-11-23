@@ -7,8 +7,7 @@ from glob import glob
 import os
 from os.path import join
 from config_protocols import protDict
-from protlib_base import XmippProtocol
-#from protlib_filesystem import *
+from protlib_base import *
 import xmipp
 
 class ProtImportMicrographs(XmippProtocol):
@@ -81,8 +80,7 @@ class ProtImportMicrographs(XmippProtocol):
                         Magnification=self.Magnification)
             
     def insertPreprocessStep(self,micrograph,finalname):
-        from protlib_sql.XmippProjectDb import FIRST_STEP
-        previousId = FIRST_STEP
+        previousId = XmippProjectDb.FIRST_STEP
         if not self.actualDoPreprocess:
             if not os.path.exists(finalname):
                 previousId = self.insertParallelStep('createLink', verifyfiles=[finalname], source=micrograph, dest=finalname)
@@ -125,7 +123,7 @@ def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnific
 def gatherResults(log, WorkingDir, summaryFile):
     MD = xmipp.MetaData()
     for filename in glob(join(WorkingDir, "*")):
-        if filename.endswith(".xmd") or filename.endswith("tmp") or filename.endswith(".sel"):
+        if filename.endswith(".xmd") or filename.endswith("tmp") or filename.endswith(".sel") or filename.endswith(".inf"):
             continue
         objId = MD.addObject()
         MD.setValue(xmipp.MDL_IMAGE, filename, objId)

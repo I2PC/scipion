@@ -17,6 +17,14 @@ DirMicrographs = 'Micrographs'
 """
 ExtMicrographs = '*.mrc'
 
+# Are micrographs tilt pairs?
+TiltPairs = False
+
+# {condition}(TiltPairs){wizard}(wizardTiltPairs) Pair assignment
+""" Only for tilt pairs
+"""
+PairDescr = ""
+
 #------------------------------------------------------------------------------------------------
 # {section}{has_question} Preprocess
 #------------------------------------------------------------------------------------------------

@@ -1207,6 +1207,15 @@ class ProtocolGUI(BasicGUI):
         if len(msg)>0:
             var.tkvar.set(fnMask)            
 
+    #Select Tilt pairs
+    def wizardTiltPairs(self, var):
+        dirMicrographs = self.getVarValue('DirMicrographs')
+        extMicrographs = self.getVarValue('ExtMicrographs')
+        from protlib_gui_ext import XmippBrowserTiltPairs
+        results = self.wizardHelperFilter(XmippBrowserTiltPairs, "Choose tilt pairs", pattern=os.path.join(dirMicrographs,extMicrographs))
+        if results:
+            var.tkvar.set(results)          
+
     #Select family from extraction run
     def wizardChooseFamilyToExtract(self, var):
         from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE
