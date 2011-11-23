@@ -157,6 +157,13 @@ public:
         im->resize(adim, copy);
     }
 
+    void resize(MultidimArrayGeneric &mdim, bool copy=true)
+    {
+    	ArrayDim adim;
+    	mdim.getDimensions(adim);
+        im->resize(adim, copy);
+    }
+
     /** Reverse matrix values over X axis, keep in this object. */
     void selfReverseX()
     {
