@@ -33,17 +33,30 @@ void RaisedCosineMask(MultidimArray<double> &mask,
                       double r1, double r2, int mode, double x0, double y0, double z0)
 {
     double K = PI / (r2 - r1);
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
+    double r1_2=r1*r1;
+    double r2_2=r2*r2;
+    for (int k=STARTINGZ(mask); k<=FINISHINGZ(mask); ++k)
     {
-        double r = sqrt((k - z0) * (k - z0) + (i - y0) * (i - y0) + (j - x0) * (j - x0));
-        if (r <= r1)
-            A3D_ELEM(mask, k, i, j) = 1;
-        else if (r < r2)
-            A3D_ELEM(mask, k, i, j) = (1 + cos(K * (r - r1))) / 2;
-        else
-            A3D_ELEM(mask, k, i, j) = 0;
-        if (mode == OUTSIDE_MASK)
-            A3D_ELEM(mask, k, i, j) = 1 - A3D_ELEM(mask, k, i, j);
+    	double k2=(k - z0) * (k - z0);
+        for (int i=STARTINGY(mask); i<=FINISHINGY(mask); ++i)
+        {
+        	double i2_k2=k2+(i - y0) * (i - y0);
+            for (int j=STARTINGX(mask); j<=FINISHINGX(mask); ++j)
+            {
+            	double r2=i2_k2+(j - x0) * (j - x0);
+                if (r2 <= r1_2)
+                    A3D_ELEM(mask, k, i, j) = 1;
+                else if (r2 < r2_2)
+                {
+                    double r=sqrt(r2);
+                    A3D_ELEM(mask, k, i, j) = 0.5*(1 + cos(K * (r - r1)));
+                }
+                else
+                    A3D_ELEM(mask, k, i, j) = 0;
+                if (mode == OUTSIDE_MASK)
+                    A3D_ELEM(mask, k, i, j) = 1 - A3D_ELEM(mask, k, i, j);
+            }
+        }
     }
 }
 
@@ -179,15 +192,15 @@ void BinaryCircularMask(MultidimArray<int> &mask,
     double radius2 = radius * radius;
     for (int k=STARTINGZ(mask); k<=FINISHINGZ(mask); ++k)
     {
-    	double diff=k - z0;
-    	double z2=diff*diff;
-    	for (int i=STARTINGY(mask); i<=FINISHINGY(mask); ++i)
+        double diff=k - z0;
+        double z2=diff*diff;
+        for (int i=STARTINGY(mask); i<=FINISHINGY(mask); ++i)
         {
-    		diff=i - y0;
-    		double z2y2=z2+diff*diff;
+            diff=i - y0;
+            double z2y2=z2+diff*diff;
             for (int j=STARTINGX(mask); j<=FINISHINGX(mask); ++j)
             {
-            	diff=j - x0;
+                diff=j - x0;
                 double r2 = z2y2+diff*diff;
                 if (r2 <= radius2 && mode == INNER_MASK)
                     A3D_ELEM(mask, k, i, j) = 1;
@@ -1111,14 +1124,14 @@ void Mask::usage() const
         << "                               if R1,R2 > 0 => outside sphere\n"
         << "                               if R1,R2 < 0 => inside sphere\n"
         << "   |-mask raised_crown <R1> <R2> <pixwidth>: 2D or 3D raised_crown\n"
-        << "                               if R1,R2 > 0 => outside sphere\n"
-        << "                               if R1,R2 < 0 => inside sphere\n"
+        << "                               if R1,R2 > 0 => outside crown\n"
+        << "                               if R1,R2 < 0 => inside crown\n"
         << "   |-mask blob_circular <R1> <blob_radius>: 2D or 3D blob circular\n"
-        << "                               if blob_radius > 0 => outside sphere\n"
-        << "                               if blob_radius < 0 => inside sphere\n"
+        << "                               if blob_radius > 0 => outside blob\n"
+        << "                               if blob_radius < 0 => inside blob\n"
         << "   |-mask blob_crown <R1> <R2> <blob_radius>: 2D or 3D blob_crown\n"
-        << "                               if blob_radius > 0 => outside sphere\n"
-        << "                               if blob_radius < 0 => inside sphere\n"
+        << "                               if blob_radius > 0 => outside crown\n"
+        << "                               if blob_radius < 0 => inside crown\n"
         << "   [ -m <blob_order=2>       : Order of blob\n"
         << "   [ -a <blob_alpha=10.4>    : Alpha of blob\n"
         << "   |-mask blackman           : 2D or 3D Blackman mask\n"
@@ -1751,8 +1764,8 @@ void ProgMask::postProcess()
 /* Process image ------------------------------------------------------------- */
 void ProgMask::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
-	static size_t imageCount = 0;
-	++imageCount;
+    static size_t imageCount = 0;
+    ++imageCount;
     Image<double> image;
     image.readApplyGeo(fnImg, rowIn);
     image().setXmippOrigin();
