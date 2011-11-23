@@ -1,0 +1,152 @@
+<?xml version="1.0"?>
+<project name="XmippJavaInterface" default="all">
+	<property environment="env" />
+	<property name="xmipp.home" value="${env.XMIPP_HOME}" />
+	<property name="base.dir" value="${xmipp.home}/libraries/bindings/java" />
+	<property name="src.dir" value="${base.dir}/src/xmipp/" />
+	<property name="build.dir.base" value="${base.dir}/build" />
+	<property name="build.dir" value="${build.dir.base}/${ant.project.name}" />
+	<property name="ij.dir" value="${xmipp.home}/external/imagej" />
+
+	<path id="ij.jar">
+		<pathelement path="${ij.dir}/ij.jar" />
+	</path>
+
+	<property name="jar.name" value="${base.dir}/XmippJavaInterface.jar" />
+	<property name="jni.lib" value="${base.dir}/XmippJavaInterface.so" />
+
+	<presetdef name="javac">
+		<javac includeantruntime="true" />
+	</presetdef>
+
+	<!-- INIT -->
+	<target name="prepare">
+		<mkdir dir="${build.dir.base}" />
+		<mkdir dir="${build.dir}" />
+	</target>
+
+	<!-- TARGETS -->
+	<target name="all" depends="prepare, build, jar, headers" />
+	<!--build, jar, headers" />-->
+
+	<!-- To avoid regenerate unnecessary files: Are they up to date? -->
+	<target name="classes.updated.check">
+		<uptodate property="classes.updated">
+			<srcfiles dir="${src.dir}" includes="/**/*.java" />
+			<mapper type="merge" to="${build.dir}/**/*.class" />
+		</uptodate>
+	</target>
+	<target name="headers.updated.check">
+		<uptodate property="headers.updated">
+			<srcfiles dir="${base.dir}" includes="**/*.h" />
+			<mapper type="merge" to="${build.dir}/**/*.class" />
+		</uptodate>
+	</target>
+	<target name="jar.updated.check">
+		<uptodate property="jar.updated" targetfile="${jar.name}">
+			<srcfiles dir="${build.dir}" includes="**/*.class" />
+		</uptodate>
+	</target>
+	<target name="jni.updated.check">
+		<uptodate property="jni.updated">
+			<srcfiles dir="${src.dir}" includes="**/*.cpp" />
+			<srcfiles dir="${src.dir}" includes="**/*.h" />
+			<mapper type="merge" to="${jni.lib}" />
+		</uptodate>
+	</target>
+
+	<!-- Build classes -->
+	<target name="build" depends="prepare" unless="classes.updated">
+		<echo message="------------------- BUILD ----------------" />
+		<javac srcdir="${src.dir}" destdir="${build.dir}">
+			<classpath refid="ij.jar" />
+		</javac>
+	</target>
+
+	<!-- Generate JAR -->
+	<target name="jar" depends="build" unless="jar.updated">
+		<echo message="------------------- JAR ------------------" />
+		<jar destfile="${jar.name}" basedir="${build.dir}" />
+	</target>
+
+	<!-- Clean -->
+	<target name="clean">
+		<delete dir="${build.dir}" />
+		<delete file="${jar.name}" />
+		<delete>
+			<fileset dir="${base.dir}" includes="*.so" />
+		</delete>
+		<delete>
+			<fileset dir="${base.dir}" includes="*.os" />
+		</delete>
+	</target>
+
+	<!-- Native libraries -->
+	<!-- Generate JNI headers-->
+	<target name="headers" depends="build" unless="headers.updated">
+		<echo message="------------------- JAVAH ----------------" />
+		<javah classpath="${build.dir}" destdir="${base.dir}">
+			<class name="xmipp.CastWriteMode" />
+			<class name="xmipp.CTFDescription" />
+			<!--<class name="xmipp.Filename" />-->
+			<class name="xmipp.ImageDouble" />
+			<class name="xmipp.ImageGeneric_" />
+			<class name="xmipp.ImageGeneric" />
+			<class name="xmipp.ImageWriteMode" />
+			<!--<class name="xmipp.MDLabel" /> -->
+			<class name="xmipp.MetaData" />
+			<class name="xmipp.Particle" />
+			<class name="xmipp.Program" />
+			<class name="xmipp.Projection" />
+		</javah>
+	</target>
+
+	<!-- Dynamic libraries -->
+	<!--
+	<target name="FF">
+		<linker id="LinuxLinker" name="g++" libtool="true" if="linux">
+			<linkerarg value="-g" if="debug" />
+			<libset libs="stdc++" />
+		</linker>
+	</target>-->
+
+	<target name="jni" depends="headers" unless="jni.updated">
+		<cc outtype="shared" subsystem="console" outfile="${jni.lib}">
+			<!-- objdir="${base.dir}"> -->
+			<!-- Libraries -->
+			<libset dir="${base.dir}" />
+			<libset dir="/usr/lib/jvm/java-6-sun/include" />
+			<libset dir="/usr/lib/jvm/java-6-sun/include/linux" />
+			<libset dir="${xmipp.home}" />
+			<libset dir="${xmipp.home}/libraries" />
+
+			<fileset dir="${base.dir}" includes="*.cpp" />
+			<!-- Compiler -->
+			<!--	<compiler id="gpp" name="g++" if="linux">
+				<compilerarg value="-c" />
+				<compilerarg value="-O2" />
+				<compilerarg value="-pthread" />
+				<compilerarg value="-w" />
+				<compilerarg value="-fPIC" />
+				<compilerarg value="-Wall" />
+			</compiler>-->
+			<!--<compiler refid="gpp" />
+		-->
+			<!-- Linkers -->
+			<!--<linker refid="LinuxLinker" />-->
+		</cc>
+	</target>
+
+	<!-- TESTS -->
+	<!--
+	<target name="test">
+		<mkdir dir="${test.reports}" />
+		<junit fork="yes" printsummary="yes" haltonfailure="yes">
+			<test name="${test.class.name}" todir="${test.reports}" />
+			<formatter type="xml" />
+        		<classpath refid="test.classpath" />
+		</junit>
+	</target>
+-->
+</project>
+

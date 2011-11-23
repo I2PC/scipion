@@ -1,7 +1,6 @@
 package xmippij;
 
 import ij.IJ;
-import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.FileInfo;

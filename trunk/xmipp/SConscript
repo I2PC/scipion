@@ -310,7 +310,7 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
 
 def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], libs=[]):
     from os.path import join
-    buildDir = join(basedir, 'classes', name)
+    buildDir = join(basedir, '../build', name)
     if not os.path.exists(buildDir): # create classes dir if not exists
         Execute(Mkdir(buildDir))
     if env['debug'] == True:
@@ -542,7 +542,7 @@ AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
 #           ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
 
 def WriteJavaEnum(class_name, header_file, pattern, log):
-    java_file = "libraries/bindings/java/xmipp/%s.java" % class_name
+    java_file = "libraries/bindings/java/src/xmipp/%s.java" % class_name
     env.Depends(java_file, header_file)
     f = open(header_file)
     fOut = open(java_file, 'w+')
