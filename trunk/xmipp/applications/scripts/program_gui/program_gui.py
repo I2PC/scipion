@@ -31,8 +31,6 @@ import tkMessageBox;
 import tkFileDialog;
 from subprocess import call
 from protlib_filesystem import getXmippPath
-from protlib_gui_ext
-
 
 BORDER = 0;
 PROGRAM_BLUE = "#292987";
