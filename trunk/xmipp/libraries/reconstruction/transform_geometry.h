@@ -23,7 +23,7 @@ protected:
     ScaleType scale_type;
 
     int             splineDegree, dim, pyramid_level, fourier_threads;
-    bool            applyTransform, inverse, wrap, isVol, flip, disableMetadata;
+    bool            applyTransform, inverse, wrap, isVol, flip, disableMetadata, temporaryOutput;
     Matrix2D<double> R, T, S, A, B;
     Matrix1D<double>          shiftV, rotV, scaleV;
     ImageGeneric img, imgOut;
@@ -31,6 +31,7 @@ protected:
     void defineParams();
     void readParams();
     void preProcess();
+    void postProcess();
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 
 };

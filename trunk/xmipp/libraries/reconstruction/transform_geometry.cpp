@@ -34,6 +34,7 @@ void ProgTransformGeometry::defineParams()
     each_image_produces_an_output = true;
     save_metadata_stack = true;
     keep_input_columns = true;
+    temporaryOutput = false;
     XmippMetadataProgram::defineParams();
     //usage
     addUsageLine("Apply geometric transformations to images. You can shift, rotate and scale");
@@ -180,6 +181,13 @@ void ProgTransformGeometry::preProcess()
 
     if (checkParam("--scale"))
     {
+    	if (fn_out.empty() && oroot.empty())
+    	{
+    		fn_out.initRandom(10);
+    		fn_out=fn_out.addExtension(fn_in.getExtension());
+    		temporaryOutput=true;
+    	}
+
         if (STR_EQUAL(getParam("--scale" ), "dim") || STR_EQUAL(getParam("--scale" ), "factor"))
         {
             //Calculate scale factor from images sizes and given dimensions
@@ -310,10 +318,12 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
         imgOut.setDatatype(img.getDatatype());
 
         /* if special scale do not resize output just rotate image */
-        if(scale_type!=SCALE_PYRAMID_EXPAND &&
-           scale_type!=SCALE_PYRAMID_REDUCE &&
-           scale_type!=SCALE_FOURIER )
+        if (scale_type != SCALE_PYRAMID_EXPAND &&
+            scale_type != SCALE_PYRAMID_REDUCE &&
+            scale_type != SCALE_FOURIER )
             imgOut().resize(1, zdimOut, ydimOut, xdimOut, false);
+        else
+        	imgOut().resize(img(),false);
         imgOut().setXmippOrigin();
         //        if (only_scale)
         //         T.initIdentity();
@@ -341,4 +351,10 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
         if (fnImg != fnImgOut )
             img.write(fnImgOut);
     }
+}
+
+void ProgTransformGeometry::postProcess()
+{
+	if (temporaryOutput)
+		std::rename(fn_out.c_str(),fn_in.c_str());
 }
