@@ -58,6 +58,7 @@ ProgMLRefine3D::ProgMLRefine3D(bool fourier)
         ml2d = new ProgML2D();
     rank = 0;
     size = 1;
+    _logML = NULL;
 }
 
 ProgMLRefine3D::~ProgMLRefine3D()
@@ -681,6 +682,7 @@ ProgReconsBase * ProgMLRefine3D::createReconsProgram()
         //        // Reconstruct using weighted least-squares ART
         //        Basic_ROUT_Art(art_prm, dummy, new_vol, new_blobs);
     }
+    return NULL;
 }
 
 // Reconstruction using the ML-weights ==========================================

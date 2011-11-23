@@ -47,6 +47,11 @@
 #define SMALLANGLE 1.75
 #define DATALINELENGTH 12
 
+
+#define CREATE_LOG(root) _logML = fopen(formatString("%s_nodo%02d.log", root.c_str(), rank).c_str(), "w+")
+#define LOG(msg) do{fprintf(_logML, "%s\t%s\n", getCurrentTimeString(), msg); fflush(_logML); }while(0)
+#define CLOSE_LOG() fclose(_logML)
+
 ///******** Some macro definitions ****************
 #define FOR_ALL_GLOBAL_IMAGES() \
     for (size_t imgno = 0; imgno < nr_images_global; ++imgno)

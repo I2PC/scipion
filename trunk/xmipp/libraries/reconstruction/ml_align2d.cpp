@@ -37,6 +37,7 @@ ProgML2D::ProgML2D()
 {
     do_ML3D = false;
     refs_per_class = 1;
+    _logML = NULL;
 }
 
 
@@ -283,7 +284,7 @@ void ProgML2D::printModel(const String &msg, const ModelML2D & model)
 }
 
 
-#define LOG(str)
+//#define LOG(str)
 // Trying to merge produceSideInfo 1 y 2
 void ProgML2D::produceSideInfo()
 {
@@ -1786,16 +1787,16 @@ void ProgML2D::expectation()
             Xi2 = img().sum2();
             Mimg = img();
 
-//#define DEBUG_JM2
-#ifdef DEBUG_JM2
+
+#define DEBUG_JM_LEVEL2
+#ifdef DEBUG_JM_LEVEL2
 
             //if (iter >= 2 && current_image == myFirstImg)
-            std::cerr << std::endl
-            << "   ====================>>> ITER_IMAGE: " << iter << "_" << imgno << std::endl
-            << "                          fn_img: " << fn_img << std::endl
-            << "                           mygroup: " <<                            mygroup << std::endl;
+            LOG(formatString("   ====================>>> Iter: %02d Image: %06lu: \n", iter, imgno).c_str());
+            LOG(formatString("                                     fn_img: %s", fn_img.c_str()).c_str());
+            LOG(formatString("                                    mygroup: %d", mygroup).c_str());
 #endif
-#undef DEBUG_JM2
+#undef DEBUG_JM_LEVEL2
 
             // These two parameters speed up expectationSingleImage
             opt_refno = imgs_optrefno[IMG_LOCAL_INDEX];
@@ -2245,7 +2246,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
             //std::cerr << "DEBUG_JM: fn_tmp: " << fn_tmp << std::endl;
             //std::cerr << "DEBUG_JM: select_img: " << select_img << std::endl;
             Itmp.write(fn_tmp, select_img, true, WRITE_REPLACE);
-            //MDref.setValue(MDL_ITER, iter, objId);//write out iteration number
+            MDref.setValue(MDL_ITER, iter, objId);//write out iteration number
             MDref.setValue(MDL_REF, select_img, objId); //Also write reference number
             MDref.setValue(MDL_IMAGE, formatString("%06d@%s", select_img, fn_tmp.c_str()), objId);
             MDref.setValue(MDL_ENABLED, 1, objId);

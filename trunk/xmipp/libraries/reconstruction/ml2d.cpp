@@ -172,17 +172,18 @@ void ML2DBaseProgram::endIteration()
 void ML2DBaseProgram::run()
 {
     bool converged = false;
-
-    std::cerr << "DEBUG_JM: starting produceSideInfo" <<std::endl;
+    int rank = 0;
+    CREATE_LOG(fn_root);
+    LOG(" starting produceSideInfo\n");
     produceSideInfo();
     //Do some initialization work
-    std::cerr << "DEBUG_JM: starting produceSideInfo2" <<std::endl;
+    LOG(" starting produceSideInfo2\n");
     produceSideInfo2();
     //Create threads to be ready for work
-    std::cerr << "DEBUG_JM: createThreads" <<std::endl;
+    LOG(" createThreads\n");
     createThreads();
 
-    std::cerr << "DEBUG_JM: starting iterations" <<std::endl;
+    LOG(" starting iterations\n");
     // Loop over all iterations
     for (iter = istart; !converged && iter <= Niter; iter++)
     {
@@ -213,6 +214,7 @@ void ML2DBaseProgram::run()
 
     writeOutputFiles(model, OUT_FINAL);
     destroyThreads();
+    CLOSE_LOG();
 }
 
 void ML2DBaseProgram::defineBasicParams(XmippProgram * prog)
