@@ -183,7 +183,7 @@ void ProgTransformGeometry::preProcess()
     {
     	if (fn_out.empty() && oroot.empty())
     	{
-    		fn_out.initRandom(10);
+    		fn_out=fn_in+"_tmp";
     		fn_out=fn_out.addExtension(fn_in.getExtension());
     		temporaryOutput=true;
     	}
