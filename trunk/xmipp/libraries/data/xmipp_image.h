@@ -116,18 +116,10 @@ public:
     }
 
     /** Destructor.
-        */
+     */
     virtual ~Image()
     {
-        // If MultidimArray pointer has been moved to a slice different from zero, then reset it.
-        // This check must be done prior to mappedSize check, since mappedSlice is a trick over data pointer
-        if (mappedSlice != 0)
-            movePointerToSlice(ALL_SLICES);
-
-        if (mmapOnRead || mmapOnWrite)
-            munmapFile();
-        else
-            data.clear();
+        clearData();
     }
 
     /** Clear.
@@ -135,12 +127,29 @@ public:
      */
     void clear()
     {
-        if (mmapOnRead || mmapOnWrite)
-            munmapFile();
-        else
-            data.clear();
+        clearData();
         init();
     }
+
+    /** Clear the data pointer either mapped or not.
+     *  Initially fix the pointer position in case of
+     *  tricking a lower number of slices and starting
+     *  in a slice different from zero.
+     */
+    void clearData()
+    {
+        // If MultidimArray pointer has been moved to a slice different from zero, then reset it.
+        // This check must be done prior to mappedSize check, since mappedSlice is a trick over data pointer
+        if (mappedSlice != 0)
+            movePointerToSlice(ALL_SLICES);
+        if(mmapOnRead || mmapOnWrite)
+            munmapFile();
+
+        else
+            data.clear();
+
+    }
+
 
     /** Check whether image is complex based on T
      */
