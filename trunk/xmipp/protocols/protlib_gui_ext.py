@@ -26,12 +26,12 @@
  '''
 
 import os
-from os.path import join
+from os.path import join, exists
 import Tkinter as tk
 
 from tkSimpleDialog import Dialog
 import ttk
-from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, BgColor, SectionTextColor
+from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, SectionTextColor
 from protlib_filesystem import getXmippPath
 
 RESOURCES = getXmippPath('resources')
@@ -128,10 +128,28 @@ class XmippTree(ttk.Treeview):
                 self.selection_set(item)
         
     def selection_up(self, e=None):
+        ''' change selection to previous item '''
         self._selection_move(self.prev)
     
     def selection_down(self, e=None):
+        ''' change selection to to next item '''
         self._selection_move(self.next)
+        
+    def item_up(self, e=None):
+        '''if selected item is not the first move up one position'''
+        item = self.selection_first()
+        if item:
+            index = self.index(item)
+            if index > 0:
+                self.move(item, '', index-1)
+                
+    def item_down(self, e=None):
+        '''if selected item is not the first move up one position'''
+        item = self.selection_first()
+        if item:
+            index = self.index(item)
+            if self.next(item) != '':
+                self.move(item, '', index+1)
             
         
 class AutoScrollbar(tk.Scrollbar):
@@ -572,7 +590,7 @@ class OutputText(XmippText):
             
         self.config(state=tk.NORMAL)
         #self.clear()
-        if os.path.exists(self.filename):
+        if exists(self.filename):
             textfile = open(self.filename)
             lineNo = 1
             for line in textfile:
@@ -811,6 +829,113 @@ class YesNoDialog(ShowDialog):
         else:
             self.cancel()
 
+class TiltPairsDialog(Dialog):
+    ''' Dialog to create/edit micrographs tilt pairs
+    It will receive two lists and will return the same
+    '''
+    def __init__(self, pairsList, **kargs):
+        self.uList, self.tList = pairsList
+        self.kargs = kargs
+        self.result = None 
+        
+    def fillTreeFromList(self, tree, list):
+        for item in list:
+            self.insertItem(tree, item)
+        
+    def getListFromTree(self, tree):
+        return [tree.item(i, 'text') for i in tree.get_children()]
+            
+    def up(self, e=None):
+        self.lastTree.item_up()
+        
+    def down(self, e=None):
+        self.lastTree.item_down()
+        
+    def insertItem(self, tree, text):
+        tree.insert('', 'end', text=text)
+        
+    def moveItems(self, fromTree, toTree):
+        for item in fromTree.selection():
+            self.insertItem(toTree, fromTree.item(item, 'text'))
+            fromTree.delete(item)
+    
+    def right(self, e=None):
+        if self.lastTree == self.uTree:
+            self.moveItems(self.uTree, self.tTree)
+
+    def left(self, e=None):
+        if self.lastTree == self.tTree:
+            self.moveItems(self.tTree, self.uTree)
+        
+    def setLast(self, tree):
+        self.lastTree = tree
+        
+    def remove(self, e=None):
+        for item in self.lastTree.selection():
+            self.lastTree.delete(item)
+    
+    def cancel(self, e=None):
+        self.result = None
+        self.root.destroy()
+               
+    def ok(self, e=None):
+        self.result = (self.getListFromTree(self.uTree), self.getListFromTree(self.tTree))
+        self.root.destroy()
+           
+    def createGUI(self, root=None, parent=None):
+        if root:
+            self.root = root
+        else:
+            self.root = tk.Tk()
+
+        # Main setup            
+        self.parent = parent   
+        self.root.withdraw()
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
+        self.root.minsize(300, 300)
+        self.root.title('Choose Tilt Pairs')
+
+        frame = tk.Frame(self.root)
+        # Create list for tilted micrographs
+        self.tTree = XmippTree(frame)
+        self.lastTree = self.tTree
+        self.tTree.bind('<Button-1>', lambda e: self.setLast(self.tTree))
+        #self.tTree.column('Tilted', width=100, anchor='e')
+        self.tTree.heading('#0', text='Tilted')
+        self.fillTreeFromList(self.tTree, self.tList)
+        self.tTree.grid(row=0, column=2, sticky='nsew')
+        # Create list for untilted micrographs
+        self.uTree = XmippTree(frame)
+        self.uTree.bind('<Button-1>', lambda e: self.setLast(self.uTree))
+        #self.uTree.column('Untilted', width=100, anchor='e')
+        self.uTree.heading('#0', text='Untilted')
+        self.fillTreeFromList(self.uTree, self.uList)
+        self.uTree.grid(column=0, row=0, sticky='nsew')
+        frame.grid(column=0, row=0, sticky='nsew')
+        frame.rowconfigure(0, weight=1)
+        frame.columnconfigure(0, weight=1)
+        frame.columnconfigure(2, weight=1)               
+        
+        btnFrame = tk.Frame(frame)
+        XmippButton(btnFrame, text="Up", imagePath='up.gif', command=self.up).grid(column=0, row=0, columnspan=2)#, padx=5, pady=5)
+        XmippButton(btnFrame, text="Left", imagePath='left.gif', command=self.left).grid(column=0, row=1)#, padx=5, pady=5)
+        XmippButton(btnFrame, text="Right", imagePath='right.gif', command=self.right).grid(column=1, row=1)#, padx=5, pady=5)
+        XmippButton(btnFrame, text="Down", imagePath='down.gif', command=self.down).grid(column=0, row=2, columnspan=2)#, padx=5, pady=5)
+        XmippButton(btnFrame, text="Remove", imagePath='delete.gif', command=self.remove).grid(column=0, row=3, columnspan=2, pady=5)#, padx=5, pady=5)
+        btnFrame.grid(column=1, row=0)
+        
+        box = tk.Frame(frame)
+        XmippButton(box, text="Cancel", width=7, command=self.cancel).pack(side=tk.RIGHT, padx=5, pady=5)
+        XmippButton(box, text="OK", width=7, command=self.ok).pack(side=tk.RIGHT, padx=5, pady=5)
+        box.grid(column=0, row=1, columnspan=3, sticky='sew')
+        
+    def showGUI(self):        
+        centerWindows(self.root, refWindows=self.parent)
+        self.root.deiconify()
+        #self.root.mainloop()
+    
+    
 ''' Functions to display dialogs '''
 def askYesNo(title, msg, parent):
     d = YesNoDialog(parent, title, msg)
@@ -1028,6 +1153,8 @@ class XmippBrowser():
         self.pattern = filter
         self.selectedFiles = None
         self.dim = previewDim
+        from protlib_filesystem import findProjectInPathTree
+        self.projectDir = findProjectInPathTree('.')
         
     def addFileManager(self, key, icon, extensions, 
                        fillMenu=defaultFillMenu, 
@@ -1239,7 +1366,7 @@ class XmippBrowser():
         item, fm = self.getSelection()
         if fm:
             msg = ""
-            if os.path.exists(item):
+            if exists(item):
                 self.lastitem = item
                 import stat
                 self.stat = os.stat(item)
@@ -1266,8 +1393,11 @@ class XmippBrowser():
         if not self.preview:
             from protlib_gui_figure import ImagePreview
             self.preview = ImagePreview(self.detailstop, self.dim)
+        
+        if not exists(filename):
+            filename = getXmippPath('resources', 'no-image.png')
+            
         if not filename.endswith('.png'):
-            #Read image data through Xmipp
             self.image.readPreview(filename, self.dim)
             from protlib_xmipp import getImageData
             Z = getImageData(self.image)
@@ -1587,6 +1717,14 @@ def showFileViewer(title, filelist, parent=None, main=False):
     centerWindows(root, refWindows=parent)
     root.deiconify()
     root.mainloop()
+    
+def showTiltPairsDialog(pairsList, parent=None):
+    root = tk.Toplevel()
+    tiltPairs = TiltPairsDialog(pairsList)
+    tiltPairs.createGUI(root, parent)
+    tiltPairs.showGUI()
+    root.wait_window(root)
+    return tiltPairs.result
     
    
     

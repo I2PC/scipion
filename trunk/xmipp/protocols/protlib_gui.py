@@ -26,7 +26,8 @@
 # ***************************************************************************
  '''
  
-import os, glob
+import os
+from glob import glob
 from os.path import join, relpath, exists
 import Tkinter as tk
 import tkFont
@@ -610,7 +611,7 @@ class ProtocolGUI(BasicGUI):
                     cwd = os.getcwd()
                     pattern = join(cwd, var.tkvar.get()) + '*'
                     entries = []
-                    for p in glob.glob(pattern):
+                    for p in glob(pattern):
                         p = relpath(p, cwd)
                         if os.path.isdir(p):
                             p+="/"
@@ -1154,7 +1155,7 @@ class ProtocolGUI(BasicGUI):
             showWarning("Warning", "No previous Run has been found", parent=self.master)
             return
         familyList = []
-        for file in glob.glob(join(extractionDir, "*_sorted.sel")):
+        for file in glob(join(extractionDir, "*_sorted.sel")):
             familyList.append(os.path.split(file)[1].replace("_sorted.sel",""))
         if len(familyList)==1:
             var.tkvar.set(familyList[0])
@@ -1211,10 +1212,40 @@ class ProtocolGUI(BasicGUI):
     def wizardTiltPairs(self, var):
         dirMicrographs = self.getVarValue('DirMicrographs')
         extMicrographs = self.getVarValue('ExtMicrographs')
-        from protlib_gui_ext import XmippBrowserTiltPairs
-        results = self.wizardHelperFilter(XmippBrowserTiltPairs, "Choose tilt pairs", pattern=os.path.join(dirMicrographs,extMicrographs))
+        resultFilename = var.tkvar.get()
+        uList = []
+        tList = []
+        from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED
+        
+        if exists(resultFilename):
+            md = MetaData(resultFilename)
+            for id in md:
+                tList.append(md.getValue(MDL_MICROGRAPH_TILTED, id))
+                uList.append(md.getValue(MDL_MICROGRAPH, id))                
+        else:
+            if len(resultFilename) == 0:
+                resultFilename = "tilted_pairs.xmd"
+            micrographs = glob(join(dirMicrographs, extMicrographs))
+            micrographs.sort()
+            for i, m in enumerate(micrographs):
+                m = os.path.basename(m)
+                if i % 2 == 0:
+                    tList.append(m)
+                else:
+                    uList.append(m)
+        
+        from protlib_gui_ext import showTiltPairsDialog
+        results = showTiltPairsDialog((uList, tList), self.master)
+        #self.wizardHelperFilter(XmippBrowserTiltPairs, "Choose tilt pairs", pattern=os.path.join(dirMicrographs,extMicrographs))
         if results:
-            var.tkvar.set(results)          
+            var.tkvar.set(resultFilename)
+            uList, tList = results
+            md = MetaData()
+            for u, t in zip(uList, tList):
+                id = md.addObject()
+                md.setValue(MDL_MICROGRAPH, u, id)
+                md.setValue(MDL_MICROGRAPH_TILTED, t, id)
+            md.write(resultFilename)
 
     #Select family from extraction run
     def wizardChooseFamilyToExtract(self, var):
@@ -1229,7 +1260,7 @@ class ProtocolGUI(BasicGUI):
         print fnFamilies
         mD = MetaData()
         mD.read(fnFamilies)
-        families=[]
+        families = []
         for id in mD:
             families.append(mD.getValue(MDL_PICKING_FAMILY,id))
         if len(families)==1:
