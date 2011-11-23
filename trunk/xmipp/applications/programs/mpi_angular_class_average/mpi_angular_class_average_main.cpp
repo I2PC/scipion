@@ -27,6 +27,6 @@
 int main(int argc, char *argv[])
 {
     ProgMpiAngularClassAverage prm(argc, argv);
-    prm.read(argc, argv);
+    prm.read();
     return prm.tryRun();
 }
