@@ -1243,8 +1243,8 @@ class ProtocolGUI(BasicGUI):
             md = MetaData()
             for u, t in zip(uList, tList):
                 id = md.addObject()
-                md.setValue(MDL_MICROGRAPH, u, id)
-                md.setValue(MDL_MICROGRAPH_TILTED, t, id)
+                md.setValue(MDL_MICROGRAPH, join(dirMicrographs,u), id)
+                md.setValue(MDL_MICROGRAPH_TILTED, join(dirMicrographs,t), id)
             md.write(resultFilename)
 
     #Select family from extraction run
