@@ -399,7 +399,10 @@ def estimateMemory(input):
     MD=xmipp.MetaData(input)
     memory=0
     for id in MD:
-        fnImg=MD.getValue(xmipp.MDL_IMAGE,id)
+        if MD.containsLabel(xmipp.MDL_IMAGE):
+            fnImg=MD.getValue(xmipp.MDL_IMAGE,id)
+        elif  MD.containsLabel(xmipp.MDL_MICROGRAPH):
+            fnImg=MD.getValue(xmipp.MDL_MICROGRAPH,id)
         (Xdim,Ydim,Zdim,Ndim)=xmipp.SingleImgSize(fnImg)
         memory=max(memory,Xdim*Ydim*8)
     memoryMb=int((2 ** ceil(log(memory, 2)))/(2**20)); # Memory size in megabytes
