@@ -347,8 +347,10 @@ def estimateFileNameSize(input):
     fn = FileName(trueFn);
     if fn.isMetaData():
         return estimateMDSize(fn)
-    else:
+    elif fn.isImage():
         return estimateImageSize(fn)
+    else:
+        return 0
 
 def estimateMDSize(input):
     from xmipp import FileName
