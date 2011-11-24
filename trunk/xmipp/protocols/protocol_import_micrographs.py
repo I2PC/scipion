@@ -18,7 +18,8 @@ class ProtImportMicrographs(XmippProtocol):
     def createFilenameTemplates(self):
         return {
                 'micrographs': self.workingDirPath('micrographs.sel'),
-                'micrographsPattern': join(self.DirMicrographs, self.ExtMicrographs)
+                'micrographsPattern': join(self.DirMicrographs, self.ExtMicrographs),
+                "tiltedPairs": self.workingDirPath("tilted_pairs.xmd")
                 }
         
     def defineSteps(self):
@@ -46,6 +47,11 @@ class ProtImportMicrographs(XmippProtocol):
         summaryFile = self.getFilename('micrographs')
         self.insertStep('gatherResults',verifyfiles=[summaryFile],
                         WorkingDir=self.WorkingDir, summaryFile=summaryFile)
+        
+        # Copy tilt pairs description
+        if self.TiltPairs:
+            self.insertStep("createLink",verifyfiles=[self.getFilename('micrographs')],
+                            source=self.PairDescr, dest=self.getFilename('micrographs'))
 
     def validate(self):
         errors = []
@@ -58,6 +64,8 @@ class ProtImportMicrographs(XmippProtocol):
         message = []
         micrographs = self.getMicrographs()
         message.append("Import of <%d> micrographs from <%s>" % (len(micrographs), self.DirMicrographs))
+        if self.TiltPairs:
+            message.append("Micrographs are in tilt pairs")
         return message
     
     def getMicrographs(self):
@@ -65,9 +73,12 @@ class ProtImportMicrographs(XmippProtocol):
         return glob(self.getFilename('micrographsPattern'))
     
     def visualize(self):
-        summaryFile = self.getFilename('micrographs')
+        if self.TiltPairs:
+            summaryFile = self.getFilename('tiltedPairs')
+        else:
+            summaryFile = self.getFilename('micrographs')
         if os.path.exists(summaryFile):
-            os.system("xmipp_visualize_preprocessing_micrographj -i %s --memory 2048m &" % summaryFile)
+            os.system("xmipp_showj -i %s &" % summaryFile)
 
     def insertCreateMicroscope(self):    
         if self.SamplingRateMode == "From image":
