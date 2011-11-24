@@ -273,7 +273,12 @@ public:
      *  Check whether a real-space image can be read*/
     bool isImage(const FileName &name)
     {
-        return !read(name, HEADER);
+    	try {
+    		return !read(name, HEADER);
+    	} catch (XmippError XE)
+    	{
+    		return false;
+    	}
     }
 
     /** Check if image is mapped on file
