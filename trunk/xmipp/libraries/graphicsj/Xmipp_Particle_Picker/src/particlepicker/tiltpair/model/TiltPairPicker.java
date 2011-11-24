@@ -29,20 +29,21 @@ public class TiltPairPicker extends ParticlePicker
 
 	private void loadData(String pairsfile)
 	{
-		MetaData md = new MetaData();
-		md.readPlain(pairsfile, "image tilted_image");
-		micrographs.clear();
-		UntiltedMicrograph untiltedmicrograph;
-		TiltedMicrograph tiltedmicrograph;
-		String image, tiltedimage;
 		try
 		{
+			MetaData md = new MetaData(pairsfile);
+			// md.readPlain(pairsfile, "image tilted_image");
+			micrographs.clear();
+			UntiltedMicrograph untiltedmicrograph;
+			TiltedMicrograph tiltedmicrograph;
+			String image, tiltedimage;
+
 			long[] ids = md.findObjects();
 			for (long id : ids)
 			{
 
-				image = md.getValueString(MDLabel.MDL_IMAGE, id);
-				tiltedimage = md.getValueString(MDLabel.MDL_IMAGE_TILTED, id);
+				image = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
+				tiltedimage = md.getValueString(MDLabel.MDL_MICROGRAPH_TILTED, id);
 				tiltedmicrograph = new TiltedMicrograph(tiltedimage);
 				untiltedmicrograph = new UntiltedMicrograph(image, tiltedmicrograph);
 				tiltedmicrograph.setUntiltedMicrograph(untiltedmicrograph);
@@ -105,8 +106,6 @@ public class TiltPairPicker extends ParticlePicker
 
 	}
 
-	
-
 	public int getSize()
 	{
 		return family.getSize();
@@ -116,8 +115,6 @@ public class TiltPairPicker extends ParticlePicker
 	{
 		return family.getColor();
 	}
-
-	
 
 	public int getNextFreeMicrograph()
 	{
@@ -151,15 +148,15 @@ public class TiltPairPicker extends ParticlePicker
 	public int getUntiltedNumber()
 	{
 		int count = 0;
-		for(UntiltedMicrograph um: micrographs)
+		for (UntiltedMicrograph um : micrographs)
 			count += um.getParticles().size();
 		return count;
 	}
-	
+
 	public int getTiltedNumber()
 	{
 		int count = 0;
-		for(UntiltedMicrograph um: micrographs)
+		for (UntiltedMicrograph um : micrographs)
 			count += um.getTiltedMicrograph().getParticles().size();
 		return count;
 	}
@@ -182,13 +179,13 @@ public class TiltPairPicker extends ParticlePicker
 					md2 = new MetaData();
 					for (UntiltedParticle p : m.getParticles())
 					{
-						tp = p.getTiltedParticle(); 
-						if ( tp != null)
+						tp = p.getTiltedParticle();
+						if (tp != null)
 						{
 							id = md.addObject();
 							md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
 							md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
-							
+
 							id = md2.addObject();
 							md2.setValueInt(MDLabel.MDL_XINT, tp.getX(), id);
 							md2.setValueInt(MDLabel.MDL_YINT, tp.getY(), id);
@@ -223,10 +220,9 @@ public class TiltPairPicker extends ParticlePicker
 	public int getManualParticlesNumber(Family f)
 	{
 		int count = 0;
-		for(UntiltedMicrograph um: micrographs)
+		for (UntiltedMicrograph um : micrographs)
 			count += um.getParticles().size();
 		return count;
 	}
-	
-	
+
 }
