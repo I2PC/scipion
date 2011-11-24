@@ -50,7 +50,7 @@
 
 #define ArraySize 7
 
-class ProgMpiAngularClassAverage : public XmippProgram
+class MpiProgAngularClassAverage : public XmippProgram
 {
 public:
     /**Number of job */
@@ -128,10 +128,10 @@ public:
     size_t Ndim;
 
 
-    ProgMpiAngularClassAverage(int argc, char **argv);
+    MpiProgAngularClassAverage(int argc, char **argv);
 
-//    /** Redefine read */
-//    void read(int argc, char** argv);
+    /** Redefine read */
+    void read(int argc, char** argv);
 
     void readParams();
 

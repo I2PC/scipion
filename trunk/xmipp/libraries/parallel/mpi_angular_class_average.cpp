@@ -25,15 +25,32 @@
 
 #include "mpi_angular_class_average.h"
 
-ProgMpiAngularClassAverage::ProgMpiAngularClassAverage(int argc, char **argv)
+MpiProgAngularClassAverage::MpiProgAngularClassAverage(int argc, char **argv)
 {
     node = new MpiNode(argc, argv);
     if (!node->isMaster())
         verbose = 0;
 }
 
+void MpiProgAngularClassAverage::read(int argc, char** argv)
+{
+
+    node = new MpiNode(argc, argv);
+    // Master should read first
+    if (node->isMaster())
+    	XmippProgram::read(argc, argv);
+    node->barrierWait();
+    if (!node->isMaster())
+    {
+
+        verbose = 0;//disable verbose for slaves
+        XmippProgram::read(argc, argv);
+    }
+}
+
+
 // Read arguments ==========================================================
-void ProgMpiAngularClassAverage::readParams()
+void MpiProgAngularClassAverage::readParams()
 {
     // Read command line
     inFile = getParam("-i");
@@ -91,7 +108,7 @@ void ProgMpiAngularClassAverage::readParams()
 }
 
 // Define parameters ==========================================================
-void ProgMpiAngularClassAverage::defineParams()
+void MpiProgAngularClassAverage::defineParams()
 {
     addUsageLine(
         "Make class average images and corresponding selfiles from angular_projection_matching docfiles.");
@@ -153,7 +170,7 @@ void ProgMpiAngularClassAverage::defineParams()
 
 
 /* Run --------------------------------------------------------------------- */
-void ProgMpiAngularClassAverage::run()
+void MpiProgAngularClassAverage::run()
 {
     mpi_preprocess();
 
@@ -287,7 +304,7 @@ void ProgMpiAngularClassAverage::run()
     MPI_Finalize();
 }
 
-void ProgMpiAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
+void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 {
     std::cerr
     << " DefGroup: "  << ROUND(Def_3Dref_2Dref_JobNo[0])
@@ -334,7 +351,7 @@ void ProgMpiAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     MPI_Send(&lockIndex, 1, MPI_INT, 0, TAG_I_FINISH_WRITTING, MPI_COMM_WORLD);
 }
 
-void ProgMpiAngularClassAverage::mpi_produceSideInfo()
+void MpiProgAngularClassAverage::mpi_produceSideInfo()
 {
     // Set up output rootnames
     if (do_split)
@@ -439,7 +456,7 @@ void ProgMpiAngularClassAverage::mpi_produceSideInfo()
 
     }
 }
-void ProgMpiAngularClassAverage::mpi_preprocess()
+void MpiProgAngularClassAverage::mpi_preprocess()
 {
     if (node->rank==0)
     {
@@ -454,7 +471,7 @@ void ProgMpiAngularClassAverage::mpi_preprocess()
     mpi_produceSideInfo();
 }
 
-void ProgMpiAngularClassAverage::deleteOutputFiles()
+void MpiProgAngularClassAverage::deleteOutputFiles()
 {
     //alloc space for output files
     FileName fn_tmp;
@@ -492,10 +509,10 @@ void ProgMpiAngularClassAverage::deleteOutputFiles()
     }
 
 }
-void ProgMpiAngularClassAverage::mpi_postprocess()
+void MpiProgAngularClassAverage::mpi_postprocess()
 {}
 
-void ProgMpiAngularClassAverage::createJobList()
+void MpiProgAngularClassAverage::createJobList()
 {
     MetaData md;
 
