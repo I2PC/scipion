@@ -48,6 +48,9 @@ void getImageDatatype(const FileName &name, DataType &datatype);
 
 DataType getImageDatatype(const FileName &name);
 
+/** A filename is an image? */
+bool isImage(const FileName &name);
+
 //@}
 
 #endif /* XMIPP_IMAGE_EXTENSION_H_ */

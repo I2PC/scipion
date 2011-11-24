@@ -195,6 +195,18 @@ FileName_isMetaData(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_RETURN_FALSE;
 }
 
+/* isImage */
+static PyObject *
+FileName_isImage(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    FileNameObject *self = (FileNameObject*) obj;
+
+    if (isImage(*(self->filename)))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
 /* isStar1 */
 static PyObject *
 FileName_isStar1(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -276,6 +288,8 @@ static PyMethodDef FileName_methods[] =
            "True if FileName exists" },
         { "isMetaData", (PyCFunction) FileName_isMetaData, METH_NOARGS,
           "True if is a MetaData" },
+        { "isImage", (PyCFunction) FileName_isImage, METH_NOARGS,
+            "True if is an image" },
         { "isStar1", (PyCFunction) FileName_isStar1, METH_NOARGS,
           "True if is a Star1" },
         { "withoutExtension", (PyCFunction) FileName_withoutExtension, METH_NOARGS,

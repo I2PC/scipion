@@ -62,3 +62,9 @@ DataType getImageDatatype(const FileName &name)
     return image.datatype();
 }
 
+bool isImage(const FileName &name)
+{
+    Image<char> I;
+    return I.isImage(name);
+}
+
