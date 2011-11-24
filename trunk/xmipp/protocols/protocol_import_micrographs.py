@@ -50,8 +50,8 @@ class ProtImportMicrographs(XmippProtocol):
         
         # Copy tilt pairs description
         if self.TiltPairs:
-            self.insertStep("createLink",verifyfiles=[self.getFilename('micrographs')],
-                            source=self.PairDescr, dest=self.getFilename('micrographs'))
+            self.insertStep("createLink",verifyfiles=[self.getFilename('tiltedPairs')],
+                            source=self.PairDescr, dest=self.getFilename('tiltedPairs'))
 
     def validate(self):
         errors = []
@@ -137,7 +137,7 @@ def gatherResults(log, WorkingDir, summaryFile):
         if filename.endswith(".xmd") or filename.endswith("tmp") or filename.endswith(".sel") or filename.endswith(".inf"):
             continue
         objId = MD.addObject()
-        MD.setValue(xmipp.MDL_IMAGE, filename, objId)
+        MD.setValue(xmipp.MDL_MICROGRAPH, filename, objId)
     if MD.size() != 0:
-        MD.sort(xmipp.MDL_IMAGE);
+        MD.sort(xmipp.MDL_MICROGRAPH);
         MD.write(summaryFile)
