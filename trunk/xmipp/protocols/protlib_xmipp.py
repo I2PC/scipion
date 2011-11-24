@@ -368,7 +368,7 @@ def estimateMDSize(input):
 def estimateImageSize(input):
     memory = 0
     
-    if input.exists():
+    if input.exists() and input.isImage():
         (Xdim, Ydim, Zdim, Ndim) = xmipp.SingleImgSize(input)
         memory = Xdim * Ydim * Zdim * Ndim * 8
     
