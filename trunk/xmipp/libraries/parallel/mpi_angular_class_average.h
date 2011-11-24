@@ -50,6 +50,9 @@
 
 #define ArraySize 7
 
+//!a
+#define AVG_OUPUT_SIZE 10
+
 class MpiProgAngularClassAverage : public XmippProgram
 {
 public:
@@ -162,6 +165,56 @@ public:
     /** Compute list of parallel jobs to be performed
              */
     void createJobList();
+
+    /**
+         */
+    void mpi_write(
+        size_t dirno,
+        Image<double> avg,
+        Image<double> avg1,
+        Image<double> avg2,
+        MetaData SFclass,
+        MetaData SFclass1,
+        MetaData SFclass2,
+        MetaData SFclassDiscarded,
+        double w1,
+        double w2);
+    /**
+         */
+    void mpi_writeFile(
+    		Image<double> avg,
+    		size_t dirno,
+    		MetaData SF,
+    		FileName fileNameXmd,
+    		FileName fileNameStk,
+    		bool write_selfile);
+
+    /**
+         */
+    void getPolar(
+    		MultidimArray<double> &img,
+    		Polar<std::complex <double> > &fP,
+    		bool conjugated=false,
+    		float xoff = 0.,
+    		float yoff = 0.);
+
+    /**
+         */
+    void reAlignClass(
+    		Image<double> &avg1,
+    		Image<double> &avg2,
+    		MetaData &SFclass1,
+    		MetaData &SFclass2,
+    		std::vector<Image<double> > imgs,
+    		std::vector<int> splits,
+    		std::vector<int> numbers,
+    		size_t dirno,
+    		double * my_output);
+
+    /**
+         */
+    void applyWienerFilter(MultidimArray<double> &img);
+
 };
 
 #endif /* MPI_ANGULAR_CLASS_AVERAGE_H_ */
