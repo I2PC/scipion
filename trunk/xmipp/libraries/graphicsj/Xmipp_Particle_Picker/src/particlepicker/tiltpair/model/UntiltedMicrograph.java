@@ -93,6 +93,8 @@ public class UntiltedMicrograph extends Micrograph {
 	
 	public int[] getAlphas()
 	{
+		if(added < 4)
+			throw new IllegalArgumentException("Not enough particles yet");
 		return tpa.computeAlphas();
 	}
 	

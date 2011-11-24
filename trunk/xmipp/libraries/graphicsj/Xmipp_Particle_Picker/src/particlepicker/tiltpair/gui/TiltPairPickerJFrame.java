@@ -132,7 +132,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		viewmn.add(pmi);
 		viewmn.add(ijmi);
 		helpmn.add(hcontentsmi);
-
 	}
 
 
@@ -169,8 +168,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		untiltedmic = pppicker.getMicrographs().get(index);
 
 		colorbt.addActionListener(new ColorActionListener());
-
-	
 
 	}
 
@@ -255,7 +252,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 				// by me.
 				untiltedmic.releaseImage();
 				untiltedmic = pppicker.getMicrographs().get(index);
-				anglesmi.setEnabled(untiltedmic.getAddedCount() > 4);
+				anglesmi.setEnabled(untiltedmic.getAddedCount() >= 4);
 				initializeCanvas();
 				saveChanges();
 				pack();
@@ -289,6 +286,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		micrographsmd.fireTableRowsUpdated(index, index);
 		micrographstb.setRowSelectionInterval(index, index);
 		upslb.setText(Integer.toString(pppicker.getUntiltedNumber()));
+		anglesmi.setEnabled(untiltedmic.getAddedCount() >= 4);
 	}
 
 	void initializeCanvas()
@@ -343,8 +341,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	}
 
 
-
-
 	public TiltedMicrographCanvas getTiltedCanvas()
 	{
 		return tiltedcanvas;
@@ -357,6 +353,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	
 	public double getUntiltedAngle()
 	{
+		if(untiltedmic.getAddedCount() < 4)
+			return Math.PI/2;
 		int [] alphas = untiltedmic.getAlphas();
 		double alpha = Math.toRadians(alphas[0]);
 		return alpha;
@@ -364,6 +362,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	
 	public double getTiltedAngle()
 	{
+		if(untiltedmic.getAddedCount() < 4)
+			return  Math.PI/2;
 		int [] alphas = untiltedmic.getAlphas();
 		double alpha = Math.toRadians(alphas[1]);
 		return alpha;
