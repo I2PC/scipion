@@ -180,8 +180,6 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
         jspTable = new javax.swing.JScrollPane();
         table = new javax.swing.JTable();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
         jpControls.setLayout(new javax.swing.BoxLayout(jpControls, javax.swing.BoxLayout.LINE_AXIS));
 
         jcbShowLabels.setText(LABELS.LABEL_ROTSPECTRA_SHOW_NIMAGES);

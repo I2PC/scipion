@@ -421,8 +421,6 @@ public class JFrameMetaData extends JFrame {
         jlStatus = new javax.swing.JLabel();
         jsPanel = new javax.swing.JScrollPane();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
         toolBar.setRollover(true);
 
         jbSave.setText(METADATA_LABELS.SAVE);
