@@ -8,9 +8,6 @@
 # Authors: Roberto Marabini,
 #          Alejandro Echeverria Rey.
 #
-#from xmipp import *
-#from protlib_base import *
-#from protlib_utils import *
         
 import os, shutil, sys
 from xmipp import FileName, MetaData, Image
@@ -26,7 +23,8 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
 
     def __init__(self, scriptname,project=None):
         
-        XmippProtocol.__init__(self, protDict.projsubs.name, scriptname, project)
+        super(ProtPartialProjectionSubtraction, self).__init__(protDict.subtraction.name, scriptname, project)
+        
         self.Import = 'from protocol_subtraction_before_loop import *;\
                        from protocol_subtraction_in_loop import *;'        
         

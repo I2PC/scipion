@@ -9,21 +9,12 @@
 #          Alejandro Echeverria Rey.
 #
 # {begin_of_header}
-#-----------------------------------------------------------------------------
-# {section} Global parameters
-#-----------------------------------------------------------------------------
-#Comment
-Comment='Describe your project here...'
 
-#Comment
-""" Subtraction subdirectory. 'run_001' will create 'subtraction/run_001' directory
-"""
-RunName='v3_010_ctfgroups_test'
+# {eval} expandCommentRun(allowContinue=True)
 
-# {list}(Resume, Restart) Run behavior
-""" Resume from the last step, restart the whole process or continue at a given step or iteration
-"""
-Behavior = "Restart"
+#-----------------------------------------------------------------------------
+# {section} Input
+#-----------------------------------------------------------------------------
 
 # {file} Protocol Name
 ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy/xmipp_protocol_projmatch_backup.py'
@@ -103,19 +94,19 @@ doCTFCorrection=False
 # Scale images?
 """ Set to True if you want to scale images (Using padding/windowing in Fourier space)
 """
-doScaleImages=False
+doScaleImages=True
 
 # New X dimension
 """ New X dimension.
 """
-dimX = 32
+dimX = 64
 
 # {expert} New Y dimensions
 """ New Y dimension. -1 means Y = X
 """
 dimY = -1
 
-# {eval} expandParallel(threads=2, mpi=2,jobsize=1)
+# {eval} expandParallel(jobsize=1)
 
 #------------------------------------------------------------------------------------------------
 # {hidden} Analysis of results
