@@ -28,7 +28,7 @@
 
 import os
 import xmipp
-from xmipp import Program
+from xmipp import Program, FileName
 from protlib_utils import runImageJPlugin, runJavaIJapp
 from protlib_filesystem import getXmippPath
 
@@ -367,6 +367,7 @@ def estimateMDSize(input):
 
 def estimateImageSize(input):
     memory = 0
+    input=FileName(input)
     
     if input.exists() and input.isImage():
         (Xdim, Ydim, Zdim, Ndim) = xmipp.SingleImgSize(input)
