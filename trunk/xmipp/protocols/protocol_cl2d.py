@@ -87,7 +87,8 @@ class ProtCL2D(XmippProtocol):
         if self.DoShowHierarchy:
             fnHierarchy=self.workingDirPath(fnSubset+"_hierarchy.txt")
             if os.path.exists(fnHierarchy):
-                os.system("xmipp_viewer -i %s &" % fnHierarchy)
+                from protlib_gui_ext import showFileViewer
+                showFileViewer(fnHierarchy,[fnHierarchy])
                 
     def insertCl2dStep(self):
         params= '-i %(InSelFile)s --oroot %(WorkingDir)s/results '+\
