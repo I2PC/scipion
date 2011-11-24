@@ -19,23 +19,27 @@ class ProtParticlePicking(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.particle_pick.name, scriptname, project)
         self.Import = "from protocol_particle_pick import *"
-        self.micrographSelfile = os.path.join(getWorkingDirFromRunName(self.ImportRun), "micrographs.sel")
+        pairDescr = os.path.join(getWorkingDirFromRunName(self.ImportRun), "tilted_pairs.xmd")
+        if os.path.exists(pairDescr):
+            self.micrographSelfile = pairDescr
+            self.tiltPairs = True
+        else:
+            self.micrographSelfile = os.path.join(getWorkingDirFromRunName(self.ImportRun), "micrographs.sel")
+            self.tiltPairs = False
 
     def defineSteps(self):
         self.Db.insertStep('createLink',execution_mode=SqliteDb.EXEC_MAINLOOP,
                            source=self.micrographSelfile,dest=self.workingDirPath("micrographs.sel"))
         self.Db.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
                            MicrographSelfile=self.micrographSelfile, WorkingDir=self.WorkingDir,
+                           TiltPairs=self.tiltPairs,
                            AutomaticPicking=self.AutomaticPicking, NumberOfThreads=self.NumberOfThreads,
                            Fast=self.Fast,InCore=self.InCore)       
 
     def summary(self):
         summary = []
-        
         mD = xmipp.MetaData(self.micrographSelfile)
-        isPairList = mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1) and not xmipp.FileName(self.micrographSelfile).isStar1()
-
-        if isPairList: 
+        if self.tiltPairs: 
             suffix = "tilt pairs"
         else: 
             suffix = "micrographs"
@@ -90,13 +94,12 @@ class ProtParticlePicking(XmippProtocol):
         # Check that all micrographs exist
         errMsg = ""
         mD = xmipp.MetaData(self.micrographSelfile)
-        isPairList = mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1) and not xmipp.FileName(self.micrographSelfile).isStar1()
         for id in mD:
-            micrograph = mD.getValue(xmipp.MDL_IMAGE,id)
+            micrograph = mD.getValue(xmipp.MDL_MICROGRAPH,id)
             if not exists(micrograph):
                 errMsg += "  " + micrograph
-            if isPairList:
-                micrograph = mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1,id)
+            if self.tiltPairs:
+                micrograph = mD.getValue(xmipp.MDL_MICROGRAPH_TILTED,id)
                 if not exists(micrograph):
                     errMsg += "  " + micrograph
         
@@ -104,22 +107,26 @@ class ProtParticlePicking(XmippProtocol):
             errors.append("Cannot find the following micrographs: " + errMsg)
                 
         # Check that automatic particle picking is not for tilted
-        if isPairList and self.AutomaticPicking:
+        if self.tiltPairs and self.AutomaticPicking:
             errors.append("Automatic particle picking cannot be done on tilt pairs")
         
         return errors
     
     def visualize(self):
-        launchParticlePickingGUI(None, self.micrographSelfile, self.WorkingDir)
+        launchParticlePickingGUI(None, self.micrographSelfile, self.WorkingDir, self.tiltPairs)
 
 # Execute protocol in the working directory
 def launchParticlePickingGUI(log,MicrographSelfile,WorkingDir,
+                             TiltPairs=False,
                              AutomaticPicking=False, NumberOfThreads=1, Fast=True, InCore=False):
-    mode = "manual"
-    if AutomaticPicking:
-        mode = "supervised %(NumberOfThreads)d %(Fast)s %(InCore)s"
-    params = "-i %(MicrographSelfile)s -o %(WorkingDir)s --mode " + mode 
-    runJob(log,"xmipp_micrograph_particle_picking", params % locals(), RunInBackground=True)
+    if TiltPairs:
+        runJob(log,"xmipp_micrograph_tiltpair_picking", "-i %(MicrographSelfile)s -o %(WorkingDir)s" % locals())
+    else:
+        mode = "manual"
+        if AutomaticPicking:
+            mode = "supervised %(NumberOfThreads)d %(Fast)s %(InCore)s"
+        params = "-i %(MicrographSelfile)s -o %(WorkingDir)s --mode " + mode 
+        runJob(log,"xmipp_micrograph_particle_picking", params % locals(), RunInBackground=True)
 
 #		
 # Main
