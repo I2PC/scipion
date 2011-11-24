@@ -81,7 +81,7 @@ public class TiltPairPicker extends ParticlePicker
 				up = new UntiltedParticle(x, y, micrograph, family);
 				micrograph.addParticle(up);
 			}
-			filename = micrograph.getTiltedMicrograph().getOFilename();
+			filename = getOutputPath(micrograph.getTiltedMicrograph().getOFilename());
 			md = new MetaData(filename);
 
 			int i = 0;
