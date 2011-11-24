@@ -161,6 +161,8 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 	{
 
 		super.mouseDragged(e);
+		if (SwingUtilities.isRightMouseButton(e))
+			return;//dont move particle if it is dragging image
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 

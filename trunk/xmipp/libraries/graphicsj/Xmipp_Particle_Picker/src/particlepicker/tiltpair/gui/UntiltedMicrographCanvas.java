@@ -81,10 +81,12 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			{
 				if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown())
 				{
-					if (active != null && active.equals(p))
-						setActive(um.getParticles().get(um.getParticles().size() - 1));
 					um.removeParticle(p);
 					frame.updateMicrographsModel();
+					if (active != null && active.equals(p))
+						setActive(um.getParticles().get(um.getParticles().size() - 1));
+					
+					
 					if (p.isAdded())
 						um.initAligner();
 					repaint();

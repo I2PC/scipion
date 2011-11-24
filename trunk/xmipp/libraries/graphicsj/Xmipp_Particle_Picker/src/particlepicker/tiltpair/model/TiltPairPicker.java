@@ -69,7 +69,7 @@ public class TiltPairPicker extends ParticlePicker
 			int x, y;
 			UntiltedParticle up;
 			TiltedParticle tp;
-			String filename = micrograph.getOFilename();
+			String filename = getOutputPath(micrograph.getOFilename());
 			if (!new File(filename).exists())
 				return;
 
@@ -191,8 +191,8 @@ public class TiltPairPicker extends ParticlePicker
 							md2.setValueInt(MDLabel.MDL_YINT, tp.getY(), id);
 						}
 					}
-					md.write(m.getOFilename());
-					md2.write(m.getTiltedMicrograph().getOFilename());
+					md.write(getOutputPath(m.getOFilename()));
+					md2.write(getOutputPath(m.getTiltedMicrograph().getOFilename()));
 				}
 			}
 
