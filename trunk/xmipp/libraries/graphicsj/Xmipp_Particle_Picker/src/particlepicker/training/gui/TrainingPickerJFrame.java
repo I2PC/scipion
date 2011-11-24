@@ -829,4 +829,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		return getFamilyData().isPickingAvailable();
 	}
 
+	@Override
+	public void changeShapes()
+	{
+		canvas.repaint();
+		
+	}
+
 }

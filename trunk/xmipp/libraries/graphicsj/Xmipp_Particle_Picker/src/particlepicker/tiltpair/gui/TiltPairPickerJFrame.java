@@ -370,4 +370,14 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	}
 
 
+
+	@Override
+	public void changeShapes()
+	{
+		canvas.repaint();
+		tiltedcanvas.repaint();
+		
+	}
+
+
 }

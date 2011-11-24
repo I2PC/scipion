@@ -378,9 +378,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		@Override
 		public void itemStateChanged(ItemEvent e)
 		{
-			getCanvas().repaint();
+			changeShapes();
 		}
 	}
+	
+	public abstract void changeShapes();
 	
 	public boolean isShapeSelected(Shape shape)
 	{
