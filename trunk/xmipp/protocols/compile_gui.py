@@ -172,7 +172,7 @@ class ConfigNotebook(ttk.Notebook):
         tab.rowconfigure(0, weight=1)
         self.text = OutputText(tab, self.OUTPUT, width=80, height=20, colors=False)
         self.text.goEnd()
-        self.text.grid(column=0, row=0, sticky='nsew', padx=10, pady=10)
+        self.text.frame.grid(column=0, row=0, sticky='nsew', padx=10, pady=10)
 
     def checkProcess(self):
         if self.proc.poll() is not None:

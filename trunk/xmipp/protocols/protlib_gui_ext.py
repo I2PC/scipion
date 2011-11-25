@@ -461,12 +461,27 @@ class XmippText(tk.Text):
         registerCommonFonts()    
         defaults = self.getDefaults()
         defaults.update(options)
-        tk.Text.__init__(self, master, defaults)
-        self.configureTags()
+        self._createWidgets(master, defaults)
+        self.configureTags()        
 
+    def _createWidgets(self, master, options):
+        '''This is an internal function to create the Text, the Scrollbar and the Frame'''
+        frame = tk.Frame(master)
+        frame.columnconfigure(0, weight=1)
+        frame.rowconfigure(0, weight=1)        
+        scrollbar = AutoScrollbar(frame)
+        scrollbar.grid(row=0, column=1, sticky='ns')
+        options['yscrollcommand'] = scrollbar.set
+        tk.Text.__init__(self, frame, options)
+        scrollbar.config(command=self.yview)
+        self.grid(row=0, column=0, sticky='nsew')
+        self.frame = frame
+        self.scrollbar = scrollbar        
+        
     def getDefaults(self):
         '''This should be implemented in subclasses to provide defaults'''
         return {}
+    
     def configureTags(self):
         '''This should be implemented to create specific tags'''
         pass
@@ -617,7 +632,7 @@ class OutputText(XmippText):
 
   
 ''' Implementation of a simple textfile viewer '''
-class FileViewer(tk.Frame):
+class TextfileViewer(tk.Frame):
     def __init__(self, master, filelist):
         tk.Frame.__init__(self, master)
         self.searchList = None
@@ -635,7 +650,7 @@ class FileViewer(tk.Frame):
         tab.rowconfigure(0, weight=1)
         tab.columnconfigure(0, weight=1)
         t = OutputText(tab, filename, width=100, height=30)
-        t.grid(column=0, row=0, padx=5, pady=5, sticky='nsew')
+        t.frame.grid(column=0, row=0, padx=5, pady=5, sticky='nsew')
         self.taList.append(t)
         tabText = "   %s   " % os.path.basename(filename)
         self.notebook.add(tab, text=tabText)        
@@ -654,7 +669,7 @@ class FileViewer(tk.Frame):
         left.grid(column=0, row=0, sticky='nw')
         XmippButton(left, "Open", 'folderopen.gif').grid(row=0, column=0, padx=(0, 5))
         XmippButton(left, "Save", 'save.gif').grid(row=0, column=1, padx=(0, 5))
-        XmippButton(left, "Refresh", 'refresh_file.gif').grid(row=0, column=2, padx=(0, 5))
+        XmippButton(left, "Refresh", 'refresh.gif').grid(row=0, column=2, padx=(0, 5))
         right = tk.Frame(toolbarFrame)
         right.grid(column=1, row=0, sticky='ne')        
         self.searchVar = tk.StringVar()
@@ -749,7 +764,7 @@ if __name__ == '__main__':
     root = tk.Tk()
     root.withdraw()
     root.title("View files")
-    l = FileViewer(root, filelist=sys.argv[1:])
+    l = TextfileViewer(root, filelist=sys.argv[1:])
     l.pack(side=tk.TOP, fill=tk.BOTH)
     centerWindows(root)
     root.deiconify()
@@ -785,7 +800,7 @@ class ShowDialog(Dialog):
         self.text.config(height=len(mylines)+3, width=m-7)
         self.text.addNewline()
         self.text.config(state=tk.DISABLED)
-        self.text.pack()
+        self.text.frame.pack()
         self.frame.pack()
         
     def buttonbox(self):
@@ -1020,7 +1035,7 @@ def defaultOnDoubleClick(filename, browser):
 
 def textFillMenu(filename, browser):
     menu = browser.menu
-    menu.add_command(label="Open as Text", command=lambda: showFileViewer(filename, [filename], browser.parent))
+    menu.add_command(label="Open as Text", command=lambda: showTextfileViewer(filename, [filename], browser.parent))
     menu.add_separator()
     menu.add_command(label="Delete file", command=None)
     return True
@@ -1030,8 +1045,8 @@ def textOnDoubleClick(filename, browser):
     loglist = ['.log', '.out', '.err']
     prefix, ext = os.path.splitext(filename)
     if ext in loglist:
-        filelist = [prefix + ext for ext in loglist ]
-    showFileViewer(filename, filelist, browser.parent)
+        filelist = [prefix + ext for ext in loglist if os.path.exists(prefix + ext)]
+    showTextfileViewer(filename, filelist, browser.parent)
 
 def getMdString(filename, browser):
     from xmipp import MetaData, MDL_IMAGE, label2Str
@@ -1074,7 +1089,7 @@ def mdFillMenu( filename, browser):
     menu.add_command(label="Open", command=lambda: showj(filename, 'metadata'))
     menu.add_command(label="Open as Images table", command=lambda:showj(filename, 'gallery'))
     menu.add_command(label="Open as ImageJ gallery", command=lambda: showj(filename, 'image'))
-    menu.add_command(label="Open as Text", command=lambda: showFileViewer(filename, [filename], browser.parent))
+    menu.add_command(label="Open as Text", command=lambda: showTextfileViewer(filename, [filename], browser.parent))
     menu.add_separator()
     menu.add_command(label="Delete file", command=None) 
     return True
@@ -1199,8 +1214,8 @@ class XmippBrowser():
     def createDetailsBottom(self, parent):
         # Add details text
         self.text = TaggedText(parent, width=20, height=5)
-        self.text.grid(column=0, row=1, sticky="nwes")
-        return self.text
+        self.text.frame.grid(column=0, row=1, sticky="nwes")
+        return self.text.frame
             
     def createGUI(self, root=None, title='', parent=None):
         if root:
@@ -1703,14 +1718,14 @@ def showBrowseDialog(path='.', title='', parent=None, main=False, browser=XmippB
     root.wait_window(root)
     return xb.selectedFiles
 
-def showFileViewer(title, filelist, parent=None, main=False):
+def showTextfileViewer(title, filelist, parent=None, main=False):
     if main:
         root = tk.Tk()
     else:
         root = tk.Toplevel()
     root.withdraw()
     root.title(title)
-    l = FileViewer(root, filelist)
+    l = TextfileViewer(root, filelist)
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
     l.grid(column=0, row=0, sticky='nsew')

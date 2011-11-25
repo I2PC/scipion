@@ -28,9 +28,10 @@
 
 import os
 import Tkinter as tk
+import protlib_gui_figure
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
 from protlib_gui_ext import ToolTip, centerWindows, askYesNo, showInfo, XmippTree, \
-    showBrowseDialog, showFileViewer, showError, TaggedText, XmippButton, ProjectLabel,\
+    showBrowseDialog, showTextfileViewer, showError, TaggedText, XmippButton, ProjectLabel,\
     FlashMessage
 from config_protocols import *
 from protlib_base import getProtocolFromModule, XmippProject, getExtendedRunName
@@ -484,6 +485,9 @@ class XmippProjectGUI():
                         showError("Error on deleteRun", error, parent=self.root)
             elif event == "Visualize":
                 pass
+            elif event == 'Refresh':
+                self.historyRefreshRate = 1
+                self.updateRunHistory(self.lastSelected)
         
     def createToolbarFrame(self, parent):
         #Configure toolbar frame
@@ -538,8 +542,8 @@ class XmippProjectGUI():
     def createHistoryFrame(self, parent):
         history = ProjectSection(parent, 'History')
         self.Frames['history'] = history
-        list = [('Edit', 'edit.gif'), 
-                ('Copy', 'copy.gif'), ('Delete', 'delete.gif')]
+        list = [('Edit', 'edit.gif'), ('Copy', 'copy.gif'),
+                ('Refresh', 'refresh.gif'), ('Delete', 'delete.gif')]
         def setupButton(k, v):
             btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k), bg=HighlightBgColor)
             ToolTip(btn, k, 500)
@@ -572,9 +576,8 @@ class XmippProjectGUI():
         content.config(bg=BgColor, bd=1, relief=tk.RIDGE)
         content.grid_configure(pady=(5, 0))
         
-        self.detailsText = TaggedText(content, height=15, width=70, border=0, 
-                                   background='white', fg="black")
-        self.detailsText.pack(fill=tk.BOTH)
+        self.detailsText = TaggedText(content, height=15, width=70)
+        self.detailsText.frame.pack(fill=tk.BOTH)
         return details
 
     def createGUI(self, root=None):
@@ -630,7 +633,7 @@ class XmippProjectGUI():
         prot = getProtocolFromModule(self.lastRunSelected['script'], self.project)
         title = "Output Console - %s" % self.lastRunSelected['script']
         filelist = ["%s%s" % (prot.LogPrefix, ext) for ext in ['.log', '.out', '.err']]
-        showFileViewer(title, filelist, self.root)
+        showTextfileViewer(title, filelist, self.root)
         
     def visualizeRun(self, event=''):
         run = self.getLastRunDict()

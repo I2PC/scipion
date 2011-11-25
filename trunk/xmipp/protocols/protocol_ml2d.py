@@ -7,22 +7,30 @@
 #  Updated:  J. M. de la Rosa Trevin July 2011
 #
 
-from xmipp import MetaData, MDL_ITER, MDL_LL, MDL_REF, MDValueEQ
+from xmipp import MetaData, MDL_ITER, MDL_LL, MDL_REF, MDValueEQ, getBlocksInMetaDataFile, \
+MDL_PMAX, MDL_SIGNALCHANGE, AGGR_MAX, MDL_MAX, MDL_MIRRORFRAC
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 import os
+from os.path import exists
 from protlib_utils import runImageJPlugin
 
 class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.ml2d.name, scriptname, project)
         self.Import = 'from protocol_ml2d import *'
-        self.fnIterLogs = self.workingDirPath('ml2d_iter_logs.xmd')
-        self.fnIterRefs = self.workingDirPath('ml2d_iter_refs.xmd')
+        
+    def createFilenameTemplates(self):
+        return {
+                'iter_logs': self.workingDirPath('ml2d_iter_logs.xmd'),
+                'iter_refs': self.workingDirPath('ml2d_iter_refs.xmd')
+                }
+        #self.fnIterLogs = self.workingDirPath('ml2d_iter_logs.xmd')
+        #self.fnIterRefs = self.workingDirPath('ml2d_iter_refs.xmd')
         
     def validate(self):
         errors = []
-        if self.DoCorrectAmplitudes and not os.path.exists(self.InCtfDatFile):
+        if self.DoCorrectAmplitudes and not exists(self.InCtfDatFile):
             errors.append("Missing '%s' file for correcting amplitudes" % self.InCtfDatFile)
         return errors
     
@@ -30,9 +38,10 @@ class ProtML2D(XmippProtocol):
         md = MetaData(self.ImgMd)
         lines = [('Input images            ', "%s (%u)" % (self.ImgMd, md.size())),
                  ('Reference image', self.RefMd)]
-            
-        if os.path.exists(self.fnIterLogs):
-            md = MetaData(self.fnIterLogs)
+        
+        logs = self.getFilename('iter_logs')    
+        if exists(logs):
+            md = MetaData(logs)
             id = md.lastObject()
             iteration = md.getValue(MDL_ITER, id)
             lines.append(('Iteration                   ', str(iteration)))
@@ -95,17 +104,17 @@ class ProtML2D(XmippProtocol):
                            verifyfiles=[self.workingDirPath(f) for f in ['result_images.xmd', 'result_classes.xmd']])
 
     def visualize(self):
-        if os.path.exists(self.fnIterRefs):
-            from xmipp import getBlocksInMetaDataFile
-            blocks = getBlocksInMetaDataFile(self.fnIterRefs)
+        refs = self.getFilename('iter_refs')
+        if exists(refs):
+            blocks = getBlocksInMetaDataFile(refs)
             lastBlock = blocks[-1]
             try:
-                runImageJPlugin("512m", "XmippBrowser.txt", "-i %s@%s --mode metadata --render" 
-                            % (lastBlock, self.fnIterRefs), batchMode=True)
+                runImageJPlugin("512m", "XmippBrowser.txt", "-i %(lastBlock)s@%(refs)s --mode metadata --render" 
+                            % locals(), batchMode=True)
             except Exception, e:
                 from protlib_gui_ext import showError
                 showError("Error launching java app", str(e))
-            launchML2DPlots(self)
+            launchML2DPlots(self, refs, lastBlock)
         
 def collectResults(log, WorkingDir, Prefix):
     oroot = os.path.join(WorkingDir, Prefix)
@@ -122,21 +131,21 @@ def collectResults(log, WorkingDir, Prefix):
         mdGroup.writeBlock(outRefs, 'class%06d_images' % ref)
 
 ''' Launch some plot for an ML2D protocol run '''
-def launchML2DPlots(prot):
+def launchML2DPlots(prot, refs, lastBlock):
     import matplotlib
+    import numpy as np
     matplotlib.use('TkAgg') # do this before importing pylab
     import matplotlib.ticker as ticker
     import matplotlib.gridspec as gridspec
     import matplotlib.pyplot as plt
-#    import Tkinter as tk
     
-    gs = gridspec.GridSpec(2, 2, height_ratios=[7,4])
+    gs = gridspec.GridSpec(2, 2)#, height_ratios=[7,4])
     gs.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)
     
-    #f = plt.figure(figsize=(6, 6), dpi=100)
+    fig = plt.figure(figsize=(8, 6), dpi=100)
     #f = plt.figure()
-    
-    def addIterationsPlot(a, title, xlabel, ylabel, mdlabel, yformat=None, color='blue'):
+    def createSubPlot(spec, title, xlabel, ylabel, yformat=None):
+        a = fig.add_subplot(spec)
         #a.get_label().set_fontsize(12)
         a.set_title(title)
         a.set_xlabel(xlabel)
@@ -145,33 +154,60 @@ def launchML2DPlots(prot):
         if yformat:
             formatter = ticker.FormatStrFormatter('%1.2e')
             a.yaxis.set_major_formatter(formatter)
-        
         a.xaxis.get_label().set_fontsize(10)
         a.yaxis.get_label().set_fontsize(10)
         labels = a.xaxis.get_ticklabels() + a.yaxis.get_ticklabels()
         for label in labels:
-            label.set_fontsize(8)
+            label.set_fontsize(8) # Set fontsize
+            label.set_text('aa')
+            #print label.
+            #label.set_visible(False)
+        return a
     
-        # Get data from iteration logs metadata
-        md = MetaData(prot.fnIterLogs)
-        iters = []
-        lls = []
-        for id in md:
-            iters.append(md.getValue(MDL_ITER, id))
-            lls.append(md.getValue(mdlabel, id))
-        
-        a.plot(iters[1:], lls[1:], color=color)
+    # Create data to plot
+    logs = prot.getFilename('iter_logs')
+    md = MetaData(logs)
+    iters = []
+    ll = []
+    pmax = []
+    for id in md:
+        iter = md.getValue(MDL_ITER, id)
+        if iter > 0:
+            iters.append(iter)
+            ll.append(md.getValue(MDL_LL, id))
+            pmax.append(md.getValue(MDL_PMAX, id))
+    #a = plt.subplot(gs[0, 0])    
+    a = createSubPlot(221, 'Log-likelihood (should increase)', 'iterations', 'LL', yformat='%1.2e')
+    a.plot(iters, ll)
+    #a = plt.subplot(gs[1, 0])
+    #a = fig.add_subplot(223)
+    a = createSubPlot(223, 'Probabilities distribution', 'iterations', 'Pmax/Psum') 
+    a.plot(iters, pmax, color='green')
+    # Read all iteration block into one metadata (iter 0 is avoided)
+    md = MetaData('iter(.*[1-9].*)@%s' % refs)
+    # 'iter(.*[1-9].*)@2D/ML2D/run_004/ml2d_iter_refs.xmd')
+    md2 = MetaData()    
+    md2.aggregate(md, AGGR_MAX, MDL_ITER, MDL_SIGNALCHANGE, MDL_MAX)
+    signal_change = [md2.getValue(MDL_MAX, id) for id in md2]
+    #a = plt.subplot(gs[1, 1])
+    a = createSubPlot(224, 'Maximum signal change', 'iterations', 'signal change')
+    a.plot(iters, signal_change, color='green')    
     
-    from xmipp import MDL_PMAX, MDL_SIGNALCHANGE
-    a = plt.subplot(gs[:-1, :])
-    addIterationsPlot(a, 'Log-likelihood (should increase)', 'iterations', 
-                      'LL', MDL_LL, '%1.2e')
-    a = plt.subplot(gs[1, 0])
-    addIterationsPlot(a, 'Probabilities distribution', 'iterations', 
-                      'Pmax/Psum',MDL_PMAX, color='green')
-    a = plt.subplot(gs[1, 1])
-    addIterationsPlot(a, 'Maximum signal change', 'iterations', 
-                      'signal change',MDL_SIGNALCHANGE, color='green')    # a tk.DrawingArea
+    #Create plot of mirror for last iteration
+    if prot.DoMirror:
+        md = MetaData('%(lastBlock)s@%(refs)s' % locals())
+        mirrors = [md.getValue(MDL_MIRRORFRAC, id) for id in md]
+        nrefs = len(mirrors)
+        ind = np.arange(nrefs)
+        width = 0.85#min(0.15, 5/float(nrefs))       # the width of the bars: can also be len(x) sequence
+        print nrefs, width    
+        a = createSubPlot(222, 'Mirror fractions on last iteration', 'references', 'mirror fraction')
+        print ind, mirrors
+        a.bar(ind, mirrors, width, color='b')
+        a.set_ylim([0, 1.])
+        #a.set_xticks(ind + width / 2., [str(r+1) for r in ind])
+        #a.set_yticks(np.arange(0, 1, 10))
+    
+    plt.tight_layout()
     plt.show()
-    
     
