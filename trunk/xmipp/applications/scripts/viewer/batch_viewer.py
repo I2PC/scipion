@@ -25,10 +25,10 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
  '''
-from protlib_gui_ext import showFileViewer
+from protlib_gui_ext import showTextfileViewer
 from protlib_xmipp import XmippScript
 
-class ScriptViewer(XmippScript):
+class ScriptTextViewer(XmippScript):
     def __init__(self):
         XmippScript.__init__(self)
         
@@ -39,8 +39,8 @@ class ScriptViewer(XmippScript):
             
     def run(self):
         files = self.getListParam('-i')
-        showFileViewer(files[0], files, main=True)
+        showTextfileViewer(files[0], files, main=True)
 
 if __name__ == '__main__':
-    ScriptViewer().tryRun()
+    ScriptTextViewer().tryRun()
     
