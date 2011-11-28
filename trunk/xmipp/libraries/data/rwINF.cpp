@@ -144,9 +144,9 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
     if (Zdim > 1 || Ndim > 1)
         REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "rwINF::write does not support neither volumes nor stacks.");
 
-    if (mode != WRITE_OVERWRITE)
-        REPORT_ERROR(ERR_ARG_INCORRECT, "rwINF::write only can overwrite image files,"
-                     "neither append nor replace.");
+    if (mode == WRITE_APPEND)
+        REPORT_ERROR(ERR_ARG_INCORRECT, "rwINF::write only can overwrite or replace image files,"
+                     "not append.");
 
     DataType wDType,myTypeID = myT();
     CastWriteMode castMode = CW_CAST;
