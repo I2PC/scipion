@@ -27,8 +27,9 @@
 
 import Tkinter as tk
 import ttk
-#import matplotlib
-#matplotlib.use('TkAgg')
+import matplotlib
+matplotlib.use('TkAgg')
+import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.cm as cm
@@ -41,9 +42,8 @@ def createBgImage(dim):
 
 class Preview():
     def __init__(self, parent, dim, dpi=36, label=None, col=0, row=0):
-        from numpy import zeros
         self.dim = dim
-        self.bg = zeros((dim, dim), float)
+        self.bg = np.zeros((dim, dim), float)
         ddim = dim/dpi
         self.figure = Figure(figsize=(ddim, ddim), dpi=dpi, frameon=False)
         self.frame = tk.Frame(parent)

@@ -14,6 +14,7 @@ from config_protocols import protDict
 import os
 from os.path import exists
 from protlib_utils import runImageJPlugin
+from protlib_gui_ext import showWarning
 
 class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -104,6 +105,13 @@ class ProtML2D(XmippProtocol):
                            verifyfiles=[self.workingDirPath(f) for f in ['result_images.xmd', 'result_classes.xmd']])
 
     def visualize(self):
+        plots = [k for k in ['DoShowLL', 'DoShowPmax', 'DoShowSignalChange', 'DoShowMirror'] if self.ParamsDict[k]]
+        if len(plots):
+            self.launchML2DPlots(plots)
+        if self.DoShowReferences:
+            self.visualizeVar('DoShowReferences')
+         
+    def visualizeReferences(self):
         refs = self.getFilename('iter_refs')
         if exists(refs):
             blocks = getBlocksInMetaDataFile(refs)
@@ -114,8 +122,124 @@ class ProtML2D(XmippProtocol):
             except Exception, e:
                 from protlib_gui_ext import showError
                 showError("Error launching java app", str(e))
-            launchML2DPlots(self, refs, lastBlock)
+               
+    def visualizeVar(self, varName):
+        if varName == 'DoShowReferences':
+            self.visualizeReferences()
+        else:
+            self.launchML2DPlots([varName])
         
+    def launchML2DPlots(self, selectedPlots):
+        ''' Launch some plot for an ML2D protocol run '''
+        #import matplotlib
+        import numpy as np
+        #matplotlib.use('TkAgg') # do this before importing pylab
+        import matplotlib.ticker as ticker
+        import matplotlib.gridspec as gridspec
+        import matplotlib.pyplot as plt
+    
+        self._plot_count = 0
+        refs = self.getFilename('iter_refs')
+        if not exists(refs):
+            return 
+        blocks = getBlocksInMetaDataFile(refs)
+        lastBlock = blocks[-1]
+        
+        def doPlot(plotName):
+            return plotName in selectedPlots
+        
+        # Remove 'mirror' from list if DoMirror is false
+        if doPlot('DoShowMirror') and not self.DoMirror:
+            selectedPlots.remove('DoShowMirror')
+            
+        n = len(selectedPlots)
+        if n == 0:
+            showWarning("ML2D plots", "Nothing to plot")
+            return
+        elif n == 1:
+            dims = (1, 1, 6, 5)
+        elif n == 2:
+            dims = (2, 1, 4, 6)
+        else:
+            dims = (2, 2, 8, 6)
+            
+        xg, yg, xs, ys = dims
+    
+        #f = plt.figure()
+        def createSubPlot(title, xlabel, ylabel, yformat=None):
+            self._plot_count += 1
+            a = fig.add_subplot(xg, yg, self._plot_count)
+            #a.get_label().set_fontsize(12)
+            a.set_title(title)
+            a.set_xlabel(xlabel)
+            a.set_ylabel(ylabel)
+            
+            if yformat:
+                formatter = ticker.FormatStrFormatter('%1.2e')
+                a.yaxis.set_major_formatter(formatter)
+            a.xaxis.get_label().set_fontsize(10)
+            a.yaxis.get_label().set_fontsize(10)
+            labels = a.xaxis.get_ticklabels() + a.yaxis.get_ticklabels()
+            for label in labels:
+                label.set_fontsize(8) # Set fontsize
+                label.set_text('aa')
+                #print label.
+                #label.set_visible(False)
+            return a
+        
+        # Create figure and prepare grid    
+        gs = gridspec.GridSpec(xg, yg)#, height_ratios=[7,4])
+        gs.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)    
+        fig = plt.figure(figsize=(xs, ys), dpi=100)
+        
+        # Create data to plot
+        logs = self.getFilename('iter_logs')
+        md = MetaData(logs)
+        iters = []
+        ll = []
+        pmax = []
+        for id in md:
+            iter = md.getValue(MDL_ITER, id)
+            if iter > 0:
+                iters.append(iter)
+                ll.append(md.getValue(MDL_LL, id))
+                pmax.append(md.getValue(MDL_PMAX, id))
+                
+        if doPlot('DoShowLL'):
+            a = createSubPlot('Log-likelihood (should increase)', 'iterations', 'LL', yformat='%1.2e')
+            a.plot(iters, ll)
+    
+        #Create plot of mirror for last iteration
+        if doPlot('DoShowMirror'):
+            md = MetaData('%(lastBlock)s@%(refs)s' % locals())
+            mirrors = [md.getValue(MDL_MIRRORFRAC, id) for id in md]
+            nrefs = len(mirrors)
+            ind = np.arange(nrefs)
+            width = 0.85#min(0.15, 5/float(nrefs))       # the width of the bars: can also be len(x) sequence
+            a = createSubPlot('Mirror fractions on last iteration', 'references', 'mirror fraction')
+            a.bar(ind, mirrors, width, color='b')
+            a.set_ylim([0, 1.])
+            #a.set_xticks(ind + width / 2., [str(r+1) for r in ind])
+            #a.set_yticks(np.arange(0, 1, 10))
+            
+        if doPlot('DoShowPmax'):
+            a = createSubPlot('Probabilities distribution', 'iterations', 'Pmax/Psum') 
+            a.plot(iters, pmax, color='green')
+        
+        if doPlot('DoShowSignalChange'):
+            # Read all iteration block into one metadata (iter 0 is avoided)
+            md = MetaData('iter(.*[1-9].*)@%s' % refs)
+            # 'iter(.*[1-9].*)@2D/ML2D/run_004/ml2d_iter_refs.xmd')
+            #a = plt.subplot(gs[1, 1])
+            md2 = MetaData()    
+            md2.aggregate(md, AGGR_MAX, MDL_ITER, MDL_SIGNALCHANGE, MDL_MAX)
+            signal_change = [md2.getValue(MDL_MAX, id) for id in md2]
+            a = createSubPlot('Maximum signal change', 'iterations', 'signal change')
+            a.plot(iters, signal_change, color='green')    
+        
+        plt.tight_layout()
+        plt.show()   
+             
 def collectResults(log, WorkingDir, Prefix):
     oroot = os.path.join(WorkingDir, Prefix)
     mdImgs = MetaData(oroot + '_final_images.xmd')
@@ -130,84 +254,5 @@ def collectResults(log, WorkingDir, Prefix):
         mdGroup.importObjects( mdImgs, MDValueEQ(MDL_REF, ref))
         mdGroup.writeBlock(outRefs, 'class%06d_images' % ref)
 
-''' Launch some plot for an ML2D protocol run '''
-def launchML2DPlots(prot, refs, lastBlock):
-    import matplotlib
-    import numpy as np
-    matplotlib.use('TkAgg') # do this before importing pylab
-    import matplotlib.ticker as ticker
-    import matplotlib.gridspec as gridspec
-    import matplotlib.pyplot as plt
-    
-    gs = gridspec.GridSpec(2, 2)#, height_ratios=[7,4])
-    gs.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)
-    
-    fig = plt.figure(figsize=(8, 6), dpi=100)
-    #f = plt.figure()
-    def createSubPlot(spec, title, xlabel, ylabel, yformat=None):
-        a = fig.add_subplot(spec)
-        #a.get_label().set_fontsize(12)
-        a.set_title(title)
-        a.set_xlabel(xlabel)
-        a.set_ylabel(ylabel)
-        
-        if yformat:
-            formatter = ticker.FormatStrFormatter('%1.2e')
-            a.yaxis.set_major_formatter(formatter)
-        a.xaxis.get_label().set_fontsize(10)
-        a.yaxis.get_label().set_fontsize(10)
-        labels = a.xaxis.get_ticklabels() + a.yaxis.get_ticklabels()
-        for label in labels:
-            label.set_fontsize(8) # Set fontsize
-            label.set_text('aa')
-            #print label.
-            #label.set_visible(False)
-        return a
-    
-    # Create data to plot
-    logs = prot.getFilename('iter_logs')
-    md = MetaData(logs)
-    iters = []
-    ll = []
-    pmax = []
-    for id in md:
-        iter = md.getValue(MDL_ITER, id)
-        if iter > 0:
-            iters.append(iter)
-            ll.append(md.getValue(MDL_LL, id))
-            pmax.append(md.getValue(MDL_PMAX, id))
-    #a = plt.subplot(gs[0, 0])    
-    a = createSubPlot(221, 'Log-likelihood (should increase)', 'iterations', 'LL', yformat='%1.2e')
-    a.plot(iters, ll)
-    #a = plt.subplot(gs[1, 0])
-    #a = fig.add_subplot(223)
-    a = createSubPlot(223, 'Probabilities distribution', 'iterations', 'Pmax/Psum') 
-    a.plot(iters, pmax, color='green')
-    # Read all iteration block into one metadata (iter 0 is avoided)
-    md = MetaData('iter(.*[1-9].*)@%s' % refs)
-    # 'iter(.*[1-9].*)@2D/ML2D/run_004/ml2d_iter_refs.xmd')
-    md2 = MetaData()    
-    md2.aggregate(md, AGGR_MAX, MDL_ITER, MDL_SIGNALCHANGE, MDL_MAX)
-    signal_change = [md2.getValue(MDL_MAX, id) for id in md2]
-    #a = plt.subplot(gs[1, 1])
-    a = createSubPlot(224, 'Maximum signal change', 'iterations', 'signal change')
-    a.plot(iters, signal_change, color='green')    
-    
-    #Create plot of mirror for last iteration
-    if prot.DoMirror:
-        md = MetaData('%(lastBlock)s@%(refs)s' % locals())
-        mirrors = [md.getValue(MDL_MIRRORFRAC, id) for id in md]
-        nrefs = len(mirrors)
-        ind = np.arange(nrefs)
-        width = 0.85#min(0.15, 5/float(nrefs))       # the width of the bars: can also be len(x) sequence
-        print nrefs, width    
-        a = createSubPlot(222, 'Mirror fractions on last iteration', 'references', 'mirror fraction')
-        print ind, mirrors
-        a.bar(ind, mirrors, width, color='b')
-        a.set_ylim([0, 1.])
-        #a.set_xticks(ind + width / 2., [str(r+1) for r in ind])
-        #a.set_yticks(np.arange(0, 1, 10))
-    
-    plt.tight_layout()
-    plt.show()
+
     

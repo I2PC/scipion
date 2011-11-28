@@ -119,7 +119,7 @@ class XmippProjectGUI():
         self.root.bind('<Up>', self.lbHist.selection_up)
         self.root.bind('<Down>', self.lbHist.selection_down)
         self.root.bind('<Alt_L><c>', self.close )
-        self.root.bind('<Alt_L><l>', self.showOutput)
+        self.root.bind('<Alt_L><o>', self.showOutput)
         self.root.bind('<Alt_L><a>', self.visualizeRun)
         
     def createMainMenu(self):
@@ -570,8 +570,8 @@ class XmippProjectGUI():
         details = ProjectSection(parent, 'Details')
         self.Frames['details'] = details
         #Create RUN details
-        details.addButton("Analyze results", command=self.visualizeRun)
-        details.addButton("Show output", command=self.showOutput)
+        details.addButton("Analyze results", command=self.visualizeRun, underline=0)
+        details.addButton("Output files", command=self.showOutput, underline=0)
         content = details.frameContent
         content.config(bg=BgColor, bd=1, relief=tk.RIDGE)
         content.grid_configure(pady=(5, 0))

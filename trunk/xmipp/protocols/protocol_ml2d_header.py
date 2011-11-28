@@ -169,6 +169,31 @@ FixFractions = False
 
 #{eval} expandParallel()
 
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Visualization
+#------------------------------------------------------------------------------------------------
+# {view} Visualize last iter references
+DoShowReferences = True
+
+# Show Log-Likelihood over iterations?
+""" The Log-Likelihood value should increase"""
+DoShowLL = True
+
+# {view} Show maximum model probability?
+""" 
+Show the maximum probability for a model, this 
+should tend to be a deltha function
+"""
+DoShowPmax = True
+
+# {view} Show plot for signal change?
+"""Should approach to zero when convergence"""
+DoShowSignalChange = True
+
+# {view} {condition}(DoMirror) Show mirror fraction of last iteration?
+"""The the mirror fraction of each reference in last iteration"""
+DoShowMirror = True
+
 #------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
 #------------------------------------------------------------------------------------------------

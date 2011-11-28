@@ -25,7 +25,7 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # ***************************************************************************
  '''
- 
+
 import os
 from glob import glob
 from os.path import join, relpath, exists
@@ -426,9 +426,7 @@ class ProtocolGUI(BasicGUI):
     #-------------------------------------------------------------------
     # Widgets creation and GUI building
     #-------------------------------------------------------------------  
-        
     def addButton(self, text, cmd, underline, row, col, sticky, imageFilename=None, parent=None, tip=None):
-        
         f = Fonts['button']
         helpImage = None
         if parent is None:
@@ -575,6 +573,9 @@ class ProtocolGUI(BasicGUI):
                 else:
                     self.addRadioButton(w, var, 'Yes', 'True', row, var_column, frame)  
                     self.addRadioButton(w, var, 'No', 'False', row, var_column + 1, frame) 
+                    if 'view' in keys:
+                        btn = self.addButton("View", lambda:self.visualizeVar(var.name), -1, row, var_column+2, 'nw', 'visualize.gif', frame, 'View')
+                        w.widgetslist.append(btn)
                     var.tkvar.trace('w', self.checkVisibility)
             elif 'list_combo' in keys:
                 opts = [o.strip() for o in var.tags['list_combo'].split(',')]
@@ -652,7 +653,7 @@ class ProtocolGUI(BasicGUI):
                 if 'view' in keys:
                     func = self.wizardShowJ
                     funcName = var.tags['view']
-                    if funcName in dir(self) and callable(getattr(self, funcName)):
+                    if hasattr(self, funcName) and callable(getattr(self, funcName)):
                         func = getattr(self, funcName)
                     #TODO: Maybe do more validations if fu
                     btn = self.addButton("View", lambda:func(var), -1, label_row, var_column+3, 'nw', 'visualize.gif', frame, 'View')
@@ -668,6 +669,10 @@ class ProtocolGUI(BasicGUI):
             w.widgetslist.append(label)
         
         return w
+        
+    def visualizeVar(self, varName):
+        prot = self.getProtocol()
+        prot.visualizeVar(varName)
         
     def fillHeader(self):
         self.master.title("Run script: %(script)s" % self.run)
