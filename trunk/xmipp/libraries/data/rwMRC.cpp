@@ -290,10 +290,13 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
         case Float:
         case Int:
         case UInt:
-        case Short:
-        case UShort:
             wDType = Float;
             header->mode = 2;
+            break;
+        case Short:
+        case UShort:
+            wDType = Short;
+            header->mode = 1;
             break;
         case SChar:
         case UChar:
