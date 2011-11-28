@@ -511,7 +511,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     avg1.setWeight(w1);
     avg2.setWeight(w2);
 
-    mpi_writeController(dirno, avg, avg1, avg2, SFclass, SFclass1, SFclass2, SFclassDiscarded, w1, w2);
+    mpi_writeController(dirno, avg, avg1, avg2, SFclass, SFclass1, SFclass2, SFclassDiscarded, w1, w2, (int) order_number);
 
     //    my_output[0] = (double) dirno;
     //    my_output[1] = w;
@@ -542,8 +542,8 @@ void MpiProgAngularClassAverage::mpi_write(
     FileName fileNameXmd, fileNameStk;
 
     formatStringFast(fileNameXmd,
-                     "classGroup%06lu_refGroup%06lu_ctfGroup%06lu@%s.xmd",
-                     dirno, ref3dNum, ctfNum, fn_out.c_str());
+                     "classGroup%06lu_refGroup%06lu_ctfGroup%06lu@%s_node%06lu.xmd",
+                     dirno, ref3dNum, ctfNum, fn_out.c_str(),node->rank);
     formatStringFast(fileNameStk, "%s_refGroup%06lu.stk", fn_out.c_str(),
                      ref3dNum);
     mpi_writeFile(avg, dirno, SFclass, fileNameXmd, fileNameStk, write_selfiles);
@@ -553,8 +553,8 @@ void MpiProgAngularClassAverage::mpi_write(
         if (w1 > 0)
         {
             formatStringFast(fileNameXmd,
-                             "classGroup%06lu_refGroup%06lu_ctfGroup%06lu@%s.xmd",
-                             dirno, ref3dNum, ctfNum, fn_out1.c_str());
+                             "classGroup%06lu_refGroup%06lu_ctfGroup%06lu@%s_node%06lu.xmd",
+                             dirno, ref3dNum, ctfNum, fn_out1.c_str(),node->rank);
             formatStringFast(fileNameStk, "%s_refGroup%06lu.stk",
                              fn_out1.c_str(), ref3dNum);
             mpi_writeFile(avg1, dirno, SFclass1, fileNameXmd, fileNameStk,
@@ -563,8 +563,8 @@ void MpiProgAngularClassAverage::mpi_write(
         if (w2 > 0)
         {
             formatStringFast(fileNameXmd,
-                             "classGroup%06lu_refGroup%06lu_ctfGroup%06lu@%s.xmd",
-                             dirno, ref3dNum, ctfNum, fn_out2.c_str());
+                             "classGroup%06lu_refGroup%06lu_ctfGroup%06lu@%s_node%06lu.xmd",
+                             dirno, ref3dNum, ctfNum, fn_out2.c_str(),node->rank);
             formatStringFast(fileNameStk, "%s_refGroup%06lu.stk",
                              fn_out2.c_str(), ref3dNum);
             mpi_writeFile(avg2, dirno, SFclass2, fileNameXmd, fileNameStk,
@@ -573,8 +573,8 @@ void MpiProgAngularClassAverage::mpi_write(
     }
 
     formatStringFast(fileNameXmd,
-                     "classGroup%06lu_refGroup%06lu_ctfGroup%06lu@%s_discarded.xmd",
-                     dirno, ref3dNum, ctfNum, fn_out.c_str());
+                     "classGroup%06lu_refGroup%06lu_ctfGroup%06lu@%s_node%06lu_discarded.xmd",
+                     dirno, ref3dNum, ctfNum, fn_out.c_str(),node->rank);
     SFclassDiscarded.write(fileNameXmd, MD_APPEND);
 
 }
@@ -590,11 +590,12 @@ void MpiProgAngularClassAverage::mpi_writeController(
 	    MetaData SFclass2,
 	    MetaData SFclassDiscarded,
 	    double w1,
-	    double w2)
+	    double w2,
+	    int lockIndex)
 {
     //may I write?
-    int lockIndex =rnd_unif(1,5);
-    std::cerr << "lockIndex" << lockIndex <<std::endl;
+//    int lockIndex =rnd_unif(1,5);
+//    std::cerr << "lockIndex" << lockIndex <<std::endl;
     bool whileLoop = true;
     while (whileLoop)
     {

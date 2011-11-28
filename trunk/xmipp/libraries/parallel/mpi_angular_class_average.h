@@ -201,7 +201,8 @@ public:
             MetaData SFclass2,
             MetaData SFclassDiscarded,
             double w1,
-            double w2);
+            double w2,
+            int lockIndex);
 
     /** Called by mpi_write does the actual writing
          */
