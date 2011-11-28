@@ -290,6 +290,9 @@ public:
      */
     FileName getFileFormat() const;
 
+    size_t getFileSize() const;
+
+
     /** Get blockName from filename
      * @code
      * fn_meta="block1@md1.doc"
