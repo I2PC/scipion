@@ -190,10 +190,9 @@ void MpiProgAngularClassAverage::run()
         int iCounter = 0;
         int finishedNodes = 1;
         bool whileLoop = true;
-        double rot, tilt;
 
         size_t id, order, count;
-        int ctfGroup, ref3d;
+        int ctfGroup, ref3d, ref2d;
         id = mdJobList.firstObject();
         MDIterator __iterJobs(mdJobList);
         while (whileLoop)
@@ -206,18 +205,18 @@ void MpiProgAngularClassAverage::run()
             case TAG_I_AM_FREE:
                 //Some test values for defocus, 3D reference and projection direction
                 mdJobList.getValue(MDL_DEFGROUP, ctfGroup, __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[0] = (double) ctfGroup;
+                Def_3Dref_2Dref_JobNo[index_DefGroup] = (double) ctfGroup;
+                mdJobList.getValue(MDL_REF, ref2d,  __iterJobs.objId);
+                Def_3Dref_2Dref_JobNo[index_2DRef] = (double) ref2d;
                 mdJobList.getValue(MDL_REF3D, ref3d,  __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[1] = (double) ref3d;
+                Def_3Dref_2Dref_JobNo[index_3DRef] = (double) ref3d;
                 mdJobList.getValue(MDL_ORDER, order,  __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[2] = (double) order;
+                Def_3Dref_2Dref_JobNo[index_Order] = (double) order;
                 mdJobList.getValue(MDL_COUNT, count,  __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[3] = (double) count;
-                Def_3Dref_2Dref_JobNo[4] = (double) iCounter;
-                mdJobList.getValue(MDL_ANGLEROT, rot,  __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[5] = rot;
-                mdJobList.getValue(MDL_ANGLETILT, tilt,  __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[6] = tilt;
+                Def_3Dref_2Dref_JobNo[index_Count] = (double) count;
+                Def_3Dref_2Dref_JobNo[index_iCounter] = (double) iCounter;
+                mdJobList.getValue(MDL_ANGLEROT, Def_3Dref_2Dref_JobNo[index_Rot],  __iterJobs.objId);
+                mdJobList.getValue(MDL_ANGLETILT, Def_3Dref_2Dref_JobNo[index_Tilt],  __iterJobs.objId);
 
                 //increase counter after sending work
                 ++iCounter;
@@ -305,13 +304,14 @@ void MpiProgAngularClassAverage::run()
 void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 {
     std::cerr
-    << " DefGroup: "  << ROUND(Def_3Dref_2Dref_JobNo[0])
-    << " 3DRef:    "  << ROUND(Def_3Dref_2Dref_JobNo[1])
-    << " Order:    "  << ROUND(Def_3Dref_2Dref_JobNo[2])
-    << " Count:    "  << ROUND(Def_3Dref_2Dref_JobNo[3])
-    << " iCounter: "  << ROUND(Def_3Dref_2Dref_JobNo[4])
-    << " rot:      "  << Def_3Dref_2Dref_JobNo[5]
-    << " tilt:     "  << Def_3Dref_2Dref_JobNo[6]
+    << " DefGroup: "  << ROUND(Def_3Dref_2Dref_JobNo[index_DefGroup])
+    << " 2DRef:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_2DRef])
+    << " 3DRef:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_3DRef])
+    << " Order:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_Order])
+    << " Count:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_Count])
+    << " iCounter: "  << ROUND(Def_3Dref_2Dref_JobNo[index_iCounter])
+    << " rot:      "  << Def_3Dref_2Dref_JobNo[index_Rot]
+    << " tilt:     "  << Def_3Dref_2Dref_JobNo[index_Tilt]
     << " Sat node: "  << node->rank
     << std::endl;
 
@@ -324,12 +324,12 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     MetaData SFclassDiscarded;
     double rot, tilt, psi, xshift, yshift, val, w, w1, w2, my_limitR, scale;
     bool mirror;
-    int ref_number, this_image;
+    int ref_number, this_image, ref3d, defGroup;
     int isplit;
     MetaData _DF;
     size_t id;
-    double current_rot, current_tilt;
     size_t order_number;
+
 
     w = 0.;
     w1 = 0.;
@@ -337,7 +337,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     this_image = 0;
 
     //_DF.importObjects(DF, MDValueEQ(MDL_ORDER, dirno));
-    _DF.importObjects(DF, MDValueEQ(MDL_ORDER, Def_3Dref_2Dref_JobNo[2]));
+    _DF.importObjects(DF, MDValueEQ(MDL_ORDER, Def_3Dref_2Dref_JobNo[index_Order]));
 
     if (_DF.size() == 0)
     {//no images assigned to this class
@@ -362,12 +362,17 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     //DFlib.getValue(MDL_ANGLEROT, rot, dirno);
     //DFlib.getValue(MDL_ANGLETILT, tilt, dirno);
     //Iempty.setEulerAngles(rot, tilt, 0.);
-    Iempty.setEulerAngles(Def_3Dref_2Dref_JobNo[5], Def_3Dref_2Dref_JobNo[6], 0.);
+    Iempty.setEulerAngles(Def_3Dref_2Dref_JobNo[index_Rot], Def_3Dref_2Dref_JobNo[index_Tilt], 0.);
     Iempty.setShifts(0., 0.);
     Iempty.setFlip(0.);
     avg = Iempty;
     avg1 = Iempty;
     avg2 = Iempty;
+
+    order_number = ROUND(Def_3Dref_2Dref_JobNo[index_Order]);
+    ref_number   = ROUND(Def_3Dref_2Dref_JobNo[index_2DRef]);
+    defGroup     = ROUND(Def_3Dref_2Dref_JobNo[index_DefGroup]);
+    ref3d        = ROUND(Def_3Dref_2Dref_JobNo[index_3DRef]);
 
     // Loop over all images in the input docfile
     FOR_ALL_OBJECTS_IN_METADATA(_DF)
@@ -375,93 +380,92 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         _DF.getValue(MDL_IMAGE, fn_img, __iter.objId);
         this_image++;
 
-        _DF.getValue(MDL_REF, ref_number, __iter.objId);
-        _DF.getValue(MDL_ANGLEROT, current_rot, __iter.objId);
-        _DF.getValue(MDL_ANGLETILT, current_tilt, __iter.objId);
-        _DF.getValue(MDL_ORDER, order_number, __iter.objId);
-        //if (ref_number == dirno)
+        bool is_selected = true;
+        double auxval;
+        _DF.getValue(MDL::str2Label(col_select), auxval, __iter.objId);
+        if (do_limit0)
         {
-            bool is_selected = true;
-            double auxval;
-            _DF.getValue(MDL::str2Label(col_select), auxval, __iter.objId);
-            if (do_limit0)
+            if (auxval < limit0)
+                is_selected = false;
+        }
+        if (do_limitF)
+        {
+            if (auxval > limitF)
+                is_selected = false;
+        }
+        if (is_selected)
+        {
+            _DF.getValue(MDL_ANGLEPSI, psi, __iter.objId);
+            _DF.getValue(MDL_SHIFTX, xshift, __iter.objId);
+            _DF.getValue(MDL_SHIFTY, yshift, __iter.objId);
+            if (do_mirrors)
+                _DF.getValue(MDL_FLIP, mirror, __iter.objId);
+            _DF.getValue(MDL_SCALE, scale, __iter.objId);
+
+            //TODO: Check this????
+            img.read(fn_img);
+            img().setXmippOrigin();
+            img.setEulerAngles(0., 0., psi);
+            img.setShifts(xshift, yshift);
+            if (do_mirrors)
+                img.setFlip(mirror);
+            img.setScale(scale);
+
+            if (do_split)
+                isplit = ROUND(rnd_unif());
+            else
+                isplit = 0;
+            // For re-alignment of class: store all images in memory
+            if (nr_iter > 0)
             {
-                if (auxval < limit0)
-                    is_selected = false;
+                exp_imgs.push_back(img);
+                exp_number.push_back(this_image);
+                exp_split.push_back(isplit);
             }
-            if (do_limitF)
+
+            // Apply in-plane transformation
+            img.getTransformationMatrix(A);
+            if (!A.isIdentity())
+                selfApplyGeometry(BSPLINE3, img(), A, IS_INV, WRAP);
+
+            // Add to average
+            if (isplit == 0)
             {
-                if (auxval > limitF)
-                    is_selected = false;
-            }
-            if (is_selected)
-            {
-                _DF.getValue(MDL_ANGLEPSI, psi, __iter.objId);
-                _DF.getValue(MDL_SHIFTX, xshift, __iter.objId);
-                _DF.getValue(MDL_SHIFTY, yshift, __iter.objId);
-                if (do_mirrors)
-                    _DF.getValue(MDL_FLIP, mirror, __iter.objId);
-                _DF.getValue(MDL_SCALE, scale, __iter.objId);
-
-                //TODO: Check this????
-                img.read(fn_img);
-                img().setXmippOrigin();
-                img.setEulerAngles(0., 0., psi);
-                img.setShifts(xshift, yshift);
-                if (do_mirrors)
-                    img.setFlip(mirror);
-                img.setScale(scale);
-
-                if (do_split)
-                    isplit = ROUND(rnd_unif());
-                else
-                    isplit = 0;
-                // For re-alignment of class: store all images in memory
-                if (nr_iter > 0)
-                {
-                    exp_imgs.push_back(img);
-                    exp_number.push_back(this_image);
-                    exp_split.push_back(isplit);
-                }
-
-                // Apply in-plane transformation
-                img.getTransformationMatrix(A);
-                if (!A.isIdentity())
-                    selfApplyGeometry(BSPLINE3, img(), A, IS_INV, WRAP);
-
-                // Add to average
-                if (isplit == 0)
-                {
-                    avg1() += img();
-                    w1 += 1.;
-                    id = SFclass1.addObject();
-                    SFclass1.setValue(MDL_IMAGE, fn_img, id);
-                    SFclass1.setValue(MDL_ANGLEROT, current_rot, id);
-                    SFclass1.setValue(MDL_ANGLETILT, current_tilt, id);
-                    SFclass1.setValue(MDL_REF, ref_number, id);
-                    SFclass1.setValue(MDL_ORDER, dirno, id);
-                }
-                else
-                {
-                    avg2() += img();
-                    w2 += 1.;
-                    id = SFclass2.addObject();
-                    SFclass2.setValue(MDL_IMAGE, fn_img, id);
-                    SFclass2.setValue(MDL_ANGLEROT, current_rot, id);
-                    SFclass2.setValue(MDL_ANGLETILT, current_tilt, id);
-                    SFclass2.setValue(MDL_REF, ref_number, id);
-                    SFclass2.setValue(MDL_ORDER, dirno, id);
-                }
+                avg1() += img();
+                w1 += 1.;
+                id = SFclass1.addObject();
+                SFclass1.setValue(MDL_IMAGE, fn_img, id);
+                SFclass1.setValue(MDL_ANGLEROT, Def_3Dref_2Dref_JobNo[index_Rot], id);
+                SFclass1.setValue(MDL_ANGLETILT, Def_3Dref_2Dref_JobNo[index_Tilt], id);
+                SFclass1.setValue(MDL_REF, ref_number, id);
+                SFclass1.setValue(MDL_REF3D, ref3d, id);
+                SFclass1.setValue(MDL_DEFGROUP, defGroup, id);
+                SFclass1.setValue(MDL_ORDER, order_number, id);
             }
             else
             {
-                id = SFclassDiscarded.addObject();
-                SFclassDiscarded.setValue(MDL_IMAGE, fn_img, id);
-                SFclassDiscarded.setValue(MDL_ANGLEROT, current_rot, id);
-                SFclassDiscarded.setValue(MDL_ANGLETILT, current_tilt, id);
-                SFclassDiscarded.setValue(MDL_REF, ref_number, id);
-                SFclassDiscarded.setValue(MDL_ORDER, dirno, id);
+                avg2() += img();
+                w2 += 1.;
+                id = SFclass2.addObject();
+                SFclass2.setValue(MDL_IMAGE, fn_img, id);
+                SFclass2.setValue(MDL_ANGLEROT, Def_3Dref_2Dref_JobNo[index_Rot], id);
+                SFclass2.setValue(MDL_ANGLETILT, Def_3Dref_2Dref_JobNo[index_Tilt], id);
+                SFclass2.setValue(MDL_REF, ref_number, id);
+                SFclass2.setValue(MDL_REF3D, ref3d, id);
+                SFclass2.setValue(MDL_DEFGROUP, defGroup, id);
+                SFclass2.setValue(MDL_ORDER, order_number, id);
             }
+        }
+        else
+        {
+            id = SFclassDiscarded.addObject();
+            SFclassDiscarded.setValue(MDL_IMAGE, fn_img, id);
+            SFclassDiscarded.setValue(MDL_ANGLEROT, Def_3Dref_2Dref_JobNo[index_Rot], id);
+            SFclassDiscarded.setValue(MDL_ANGLETILT, Def_3Dref_2Dref_JobNo[index_Tilt], id);
+            SFclassDiscarded.setValue(MDL_REF, ref_number, id);
+            SFclassDiscarded.setValue(MDL_REF3D, ref3d, id);
+            SFclassDiscarded.setValue(MDL_DEFGROUP, defGroup, id);
+            SFclassDiscarded.setValue(MDL_ORDER, order_number, id);
         }
     }
     std::cerr << "Images assigned end" << std::endl;
@@ -474,16 +478,14 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         avg() = avg1() + avg2();
         w = w1 + w2;
         avg.setWeight(w);
-        //writeToDisc(avg, dirno, SFclass, fn_out, false, "ref.xmp");
-        FileName fileNameXmd = "", fileNameStk;
-        formatStringFast(fileNameStk, "%s_ref.stk", fn_out.c_str());
-        mpi_writeFile(avg, dirno, SFclass, fileNameXmd,fileNameStk, false);
 
+        //writeToDisc(avg, dirno, SFclass, fn_out, false, "ref.xmp");
         //!a
         // Reserve memory for output from class realignment
         int reserve = DF.size();
         double my_output[AVG_OUPUT_SIZE * reserve + 1];
 
+        //!a To review
         reAlignClass(avg1, avg2, SFclass1, SFclass2, exp_imgs, exp_split,
                      exp_number, dirno, my_output);
         w1 = avg1.weight();
@@ -509,7 +511,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     avg1.setWeight(w1);
     avg2.setWeight(w2);
 
-    mpi_write(dirno, avg, avg1, avg2, SFclass, SFclass1, SFclass2, SFclassDiscarded, w1, w2);
+    mpi_writeController(dirno, avg, avg1, avg2, SFclass, SFclass1, SFclass2, SFclassDiscarded, w1, w2);
 
     //    my_output[0] = (double) dirno;
     //    my_output[1] = w;
@@ -520,36 +522,6 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 
 
     /////////////////////////////////////////////////////////////////////////////////////
-    //may I write?
-    int lockIndex =rnd_unif(1,5);
-    std::cerr << "lockIndex" << lockIndex <<std::endl;
-    bool whileLoop = true;
-    while (whileLoop)
-    {
-        MPI_Send(&lockIndex, 1, MPI_INT, 0, TAG_MAY_I_WRITE, MPI_COMM_WORLD);
-        MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-        switch (status.MPI_TAG)
-        {
-        case TAG_DO_NOT_DARE_TO_WRITE://I am free
-            MPI_Recv(0, 0, MPI_INT, 0, MPI_ANY_TAG,
-                     MPI_COMM_WORLD, &status);
-            std::cerr << "Sleeping 0.1 seg at " << node->rank << std::endl;
-            usleep(100000);//microsecond
-            break;
-        case TAG_YES_YOU_MAY_WRITE://I am free
-            MPI_Recv(&lockIndex, 1, MPI_INT, 0, MPI_ANY_TAG,
-                     MPI_COMM_WORLD, &status);
-            std::cerr << "writing at node: "  << node->rank << std::endl;
-            whileLoop=false;
-            break;
-        default:
-            std::cerr << "process WRONG TAG RECEIVED at " << node->rank << std::endl;
-            break;
-        }
-    }
-    //REMOVE THIS DELAY!!!!!!!!!
-    //usleep(1000);
-    MPI_Send(&lockIndex, 1, MPI_INT, 0, TAG_I_FINISH_WRITTING, MPI_COMM_WORLD);
 }
 
 
@@ -570,8 +542,8 @@ void MpiProgAngularClassAverage::mpi_write(
     FileName fileNameXmd, fileNameStk;
 
     formatStringFast(fileNameXmd,
-                     "classGroup%06lu_refGroup%06lu@%s_ctfGroup%06lu_refGroup%06lu.xmd",
-                     dirno, ref3dNum, fn_out.c_str(), ctfNum, ref3dNum);
+                     "classGroup%06lu_refGroup%06lu_ctfGroup%06lu@%s.xmd",
+                     dirno, ref3dNum, ctfNum, fn_out.c_str());
     formatStringFast(fileNameStk, "%s_refGroup%06lu.stk", fn_out.c_str(),
                      ref3dNum);
     mpi_writeFile(avg, dirno, SFclass, fileNameXmd, fileNameStk, write_selfiles);
@@ -580,10 +552,9 @@ void MpiProgAngularClassAverage::mpi_write(
     {
         if (w1 > 0)
         {
-            formatStringFast(
-                fileNameXmd,
-                "classGroup%06lu_refGroup%06lu@%s_ctfGroup%06lu_refGroup%06lu.xmd",
-                dirno, ref3dNum, fn_out1.c_str(), ctfNum, ref3dNum);
+            formatStringFast(fileNameXmd,
+                             "classGroup%06lu_refGroup%06lu_ctfGroup%06lu@%s.xmd",
+                             dirno, ref3dNum, ctfNum, fn_out1.c_str());
             formatStringFast(fileNameStk, "%s_refGroup%06lu.stk",
                              fn_out1.c_str(), ref3dNum);
             mpi_writeFile(avg1, dirno, SFclass1, fileNameXmd, fileNameStk,
@@ -591,10 +562,9 @@ void MpiProgAngularClassAverage::mpi_write(
         }
         if (w2 > 0)
         {
-            formatStringFast(
-                fileNameXmd,
-                "classGroup%06lu_refGroup%06lu@%s_ctfGroup%06lu_refGroup%06lu.xmd",
-                dirno, ref3dNum, fn_out2.c_str(), ctfNum, ref3dNum);
+            formatStringFast(fileNameXmd,
+                             "classGroup%06lu_refGroup%06lu_ctfGroup%06lu@%s.xmd",
+                             dirno, ref3dNum, ctfNum, fn_out2.c_str());
             formatStringFast(fileNameStk, "%s_refGroup%06lu.stk",
                              fn_out2.c_str(), ref3dNum);
             mpi_writeFile(avg2, dirno, SFclass2, fileNameXmd, fileNameStk,
@@ -602,11 +572,56 @@ void MpiProgAngularClassAverage::mpi_write(
         }
     }
 
-    formatStringFast(
-        fileNameXmd,
-        "classGroup%06lu_refGroup%06lu@%s_ctfGroup%06lu_refGroup%06lu_discarded.xmd",
-        dirno, ref3dNum, fn_out.c_str(), ctfNum, ref3dNum);
+    formatStringFast(fileNameXmd,
+                     "classGroup%06lu_refGroup%06lu_ctfGroup%06lu@%s_discarded.xmd",
+                     dirno, ref3dNum, ctfNum, fn_out.c_str());
     SFclassDiscarded.write(fileNameXmd, MD_APPEND);
+
+}
+
+
+void MpiProgAngularClassAverage::mpi_writeController(
+	    size_t dirno,
+	    Image<double> avg,
+	    Image<double> avg1,
+	    Image<double> avg2,
+	    MetaData SFclass,
+	    MetaData SFclass1,
+	    MetaData SFclass2,
+	    MetaData SFclassDiscarded,
+	    double w1,
+	    double w2)
+{
+    //may I write?
+    int lockIndex =rnd_unif(1,5);
+    std::cerr << "lockIndex" << lockIndex <<std::endl;
+    bool whileLoop = true;
+    while (whileLoop)
+    {
+        MPI_Send(&lockIndex, 1, MPI_INT, 0, TAG_MAY_I_WRITE, MPI_COMM_WORLD);
+        MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        switch (status.MPI_TAG)
+        {
+        case TAG_DO_NOT_DARE_TO_WRITE://I am free
+            MPI_Recv(0, 0, MPI_INT, 0, MPI_ANY_TAG,
+                     MPI_COMM_WORLD, &status);
+            std::cerr << "Sleeping 0.1 seg at " << node->rank << std::endl;
+            usleep(100000);//microsecond
+            break;
+        case TAG_YES_YOU_MAY_WRITE://I am free
+            MPI_Recv(&lockIndex, 1, MPI_INT, 0, MPI_ANY_TAG,
+                     MPI_COMM_WORLD, &status);
+            mpi_write(dirno, avg, avg1, avg2, SFclass, SFclass1, SFclass2, SFclassDiscarded, w1, w2);
+            whileLoop=false;
+            break;
+        default:
+            std::cerr << "process WRONG TAG RECEIVED at " << node->rank << std::endl;
+            break;
+        }
+    }
+    //REMOVE THIS DELAY!!!!!!!!!
+    //usleep(1000);
+    MPI_Send(&lockIndex, 1, MPI_INT, 0, TAG_I_FINISH_WRITTING, MPI_COMM_WORLD);
 
 }
 
@@ -1071,8 +1086,6 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
 void MpiProgAngularClassAverage::applyWienerFilter(MultidimArray<double> &img)
 {
     MultidimArray<std::complex<double> > Faux;
-    //!a
-    //if (paddim > dim)
     if (paddim > Xdim)
     {
         // pad real-space image

@@ -48,7 +48,16 @@
 #define TAG_DO_NOT_DARE_TO_WRITE     15
 #define TAG_I_AM_FREE                16
 
-#define ArraySize 7
+#define ArraySize 8
+
+#define index_DefGroup 0
+#define index_2DRef 1
+#define index_3DRef 2
+#define index_Order 3
+#define index_Count 4
+#define index_iCounter 5
+#define index_Rot 6
+#define index_Tilt 7
 
 //!a
 #define AVG_OUPUT_SIZE 10
@@ -142,11 +151,11 @@ public:
 
     void run();
 
-    /**
+    /** Process a single job (ref3d - ctfGroup - ref2d)
          */
     void mpi_process(double * Def_3Dref_2Dref_JobNo);
 
-    /**
+    /** Initialize
          */
     void mpi_produceSideInfo();
 
@@ -166,7 +175,7 @@ public:
              */
     void createJobList();
 
-    /**
+    /** Write output files
          */
     void mpi_write(
         size_t dirno,
@@ -179,7 +188,22 @@ public:
         MetaData SFclassDiscarded,
         double w1,
         double w2);
-    /**
+
+    /** Block output file to avoid concurrent writing
+         */
+    void mpi_writeController(
+            size_t dirno,
+            Image<double> avg,
+            Image<double> avg1,
+            Image<double> avg2,
+            MetaData SFclass,
+            MetaData SFclass1,
+            MetaData SFclass2,
+            MetaData SFclassDiscarded,
+            double w1,
+            double w2);
+
+    /** Called by mpi_write does the actual writing
          */
     void mpi_writeFile(
     		Image<double> avg,
@@ -211,7 +235,7 @@ public:
     		size_t dirno,
     		double * my_output);
 
-    /**
+    /** Apply Wiener filter
          */
     void applyWienerFilter(MultidimArray<double> &img);
 
