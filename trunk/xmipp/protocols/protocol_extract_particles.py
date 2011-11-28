@@ -112,7 +112,8 @@ class ProtExtractParticles(XmippProtocol):
         os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --memory 2048m &")
         fnSelFile=self.workingDirPath(self.Family+".sel")
         if os.path.exists(fnSelFile):
-            os.system("xmipp_showj -i "+fnSelFile+" --memory 1024m &")
+            from protlib_utils import runShowJ
+            runShowJ(fnSelFile, memory="1024m")
     
     def createBlocksInExtractFile(self,fnMicrographsSel):
         mD=MetaData(fnMicrographsSel)

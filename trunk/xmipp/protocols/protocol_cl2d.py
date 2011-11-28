@@ -64,6 +64,7 @@ class ProtCL2D(XmippProtocol):
         return errors
     
     def visualize(self):
+        from protlib_utils import runShowJ
         fnSubset=""
         if self.WhatToShow=="Classes":
             fnSubset="classes"
@@ -76,19 +77,17 @@ class ProtCL2D(XmippProtocol):
             levelFiles.sort()
             if self.DoShowLast:
                 lastLevelFile=levelFiles[-1]
-                os.system("xmipp_showj -i "+lastLevelFile+"&")
+                runShowJ(lastLevelFile)
             else:
-                listOfLevels=getRangeValuesFromString(self.LevelsToShow)
-                files=""
-                for level in listOfLevels:
-                    files+=levelFiles[level]+" "
+                listOfLevels = getRangeValuesFromString(self.LevelsToShow)
+                files = " ".join([levelFiles[level] for level in listOfLevels])
                 if files!="":
-                    os.system("xmipp_showj -i "+files+" &")
+                    runShowJ(files)
         if self.DoShowHierarchy:
             fnHierarchy=self.workingDirPath(fnSubset+"_hierarchy.txt")
             if os.path.exists(fnHierarchy):
-                from protlib_gui_ext import showFileViewer
-                showFileViewer(fnHierarchy,[fnHierarchy])
+                from protlib_gui_ext import showTextfileViewer
+                showTextfileViewer(fnHierarchy,[fnHierarchy])
                 
     def insertCl2dStep(self):
         params= '-i %(InSelFile)s --oroot %(WorkingDir)s/results '+\

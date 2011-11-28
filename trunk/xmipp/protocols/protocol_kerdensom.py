@@ -4,12 +4,8 @@
 # Author: Carlos Oscar Sanchez Sorzano, September 2011
 #
 
-import glob,os,sys,shutil,time
 from protlib_base import *
-from config_protocols import protDict
 from protlib_utils import runJob
-from protlib_filesystem import deleteFiles
-from protlib_sql import SqliteDb
 from xmipp import MetaData, MDL_IMAGE, MD_APPEND
 
 class ProtKerdensom(XmippProtocol):
@@ -48,20 +44,22 @@ class ProtKerdensom(XmippProtocol):
     
     def visualize(self):
         if self.getRunState()==SqliteDb.RUN_FINISHED:
-            os.system("xmipp_showj -i "+self.workingDirPath("results_classes.stk")+" --columns "+str(self.SomXdim)+" &")
-            os.system("xmipp_metadata_showj -i "+self.workingDirPath("results_classes.xmd")+" &")
+            from protlib_utils import runShowJ
+            files = " ".join([self.workingDirPath(f)] for f in ["results_classes.stk", "results_classes.xmd"])
+            runShowJ(files, extraParams=" --columns %d" % self.SomXdim)
         else:
-            tkMessageBox.showwarning("Warning", "The algorithm has not finished yet", parent=self.master)
+            from protlib_gui_ext import showWarning
+            showWarning("Warning", "The algorithm has not finished yet", parent=self.master)
 
 def img2vector(log,Selfile,Mask,WorkingDir):
-     args=' -i '+ Selfile + ' -o ' + os.path.join(WorkingDir,"vectors.xmd")
-     if Mask!='':
-         args+=' --mask binary_file '+Mask
-     runJob(log,"xmipp_image_vectorize", args)
+    args=' -i '+ Selfile + ' -o ' + os.path.join(WorkingDir,"vectors.xmd")
+    if Mask!='':
+        args+=' --mask binary_file '+Mask
+    runJob(log,"xmipp_image_vectorize", args)
 
 def kerdensom(log,WorkingDir,SomXdim,SomYdim,SomReg0,SomReg1,SomSteps,KerdensomExtraCommand):
-    args='-i '+os.path.join(WorkingDir,"vectors.xmd")+\
-         ' --oroot '+os.path.join(WorkingDir,"results")+\
+    args='-i ' + os.path.join(WorkingDir,"vectors.xmd")+\
+         ' --oroot ' + os.path.join(WorkingDir,"results")+\
          ' --xdim ' + str(SomXdim) + \
          ' --ydim ' + str(SomYdim) + \
          ' --deterministic_annealing %f %f %f'%(SomSteps,SomReg0,SomReg1) + \
@@ -69,20 +67,20 @@ def kerdensom(log,WorkingDir,SomXdim,SomYdim,SomReg0,SomReg1,SomSteps,KerdensomE
     runJob(log,"xmipp_classify_kerdensom",args)
     deleteFiles(log, [os.path.join(WorkingDir,"vectors.xmd"),os.path.join(WorkingDir,"vectors.xmd.raw")], True)
    
-def vector2img(log,Mask,WorkingDir):
-    args=' -i '+os.path.join(WorkingDir,"results_vectors.xmd")+\
-         ' -o '+os.path.join(WorkingDir,"results_classes.stk")
-    if Mask!='':
-         args+=' --mask binary_file '+Mask
+def vector2img(log, Mask, WorkingDir):
+    args=' -i ' + os.path.join(WorkingDir,"results_vectors.xmd")+\
+         ' -o ' + os.path.join(WorkingDir,"results_classes.stk")
+    if Mask != '':
+        args += ' --mask binary_file ' + Mask
     runJob(log,"xmipp_image_vectorize", args)
     deleteFiles(log, [os.path.join(WorkingDir,"results_vectors.xmd"),os.path.join(WorkingDir,"results_vectors.xmd.raw")], True)
 
 def rewriteClassBlock(log,WorkingDir):
     fnClass="classes@%s"%os.path.join(WorkingDir,"results_classes.xmd")
     fnClassStack=os.path.join(WorkingDir,"results_classes.stk")
-    mD=MetaData(fnClass)
-    counter=1
+    mD = MetaData(fnClass)
+    counter = 1
     for id in mD:
         mD.setValue(MDL_IMAGE,"%06d@%s"%(counter,fnClassStack),id)
-        counter+=1
+        counter += 1
     mD.write(fnClass,MD_APPEND)

@@ -19,26 +19,26 @@ class ProtCommonLines(XmippProtocol):
         self.Import = 'from protocol_commonlines import *'
     
     def defineSteps(self):
-        fnOut=os.path.join(self.WorkingDir,"inputImages.hed")
+        fnOut = self.workingDirPath("inputImages.hed")
         self.Db.insertStep('convertImages', [fnOut], Selfile=self.InSelFile, OutStack=fnOut)
-        fnOut=os.path.join(self.WorkingDir,"ali.hed")
+        fnOut = self.workingDirPath("ali.hed")
         self.Db.insertStep('centerImages', [fnOut], WorkingDir=self.WorkingDir, Radius=self.Radius)
-        fnOut=os.path.join(self.WorkingDir,"threed.0a.mrc")
+        fnOut = self.workingDirPath("threed.0a.mrc")
         self.Db.insertStep('commonlines', [fnOut], WorkingDir=self.WorkingDir, Radius=self.Radius, NumberOfMpi=self.NumberOfMpi,
                            Symmetry=self.Symmetry)
 
     def validate(self):
         from protlib_utils import which
         errors = []
-        startAny=which('startAny')
+        startAny = which('startAny')
         if startAny=='':
             errors.append("EMAN is not accesible")
         return errors
     
     def summary(self):
-        message = []
-        message.append("Initial volume by common lines constructed from " + self.InSelFile)
-        message.append("Symmetry=" + self.Symmetry+" Radius="+str(self.Radius))
+        message = ["Initial volume by common lines constructed from <%s>" % self.InSelFile,
+                   "Symmetry: <%s>" % self.Symmetry, "Radius: <%f>" % self.Radius
+                   ]
         return message
     
     def visualize(self):

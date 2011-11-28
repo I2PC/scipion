@@ -1001,8 +1001,8 @@ class AutoCompleteEntry(tk.Entry):
 '''**************  Implementation of Xmipp Browser *************'''
 # Some helper functions for the browser
 def showj(filename, mode):
-    from protlib_utils import runImageJPlugin
-    runImageJPlugin("512m", "XmippBrowser.txt", "-i %s --mode %s" % (filename, mode), batchMode=True)
+    from protlib_utils import runShowJ
+    runShowJ(filename, extraParams="--mode %s" % mode)
     
 def chimera(filename):
     os.system('chimera spider:%s &' % filename)

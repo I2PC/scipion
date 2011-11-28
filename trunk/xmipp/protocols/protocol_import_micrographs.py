@@ -78,7 +78,8 @@ class ProtImportMicrographs(XmippProtocol):
         else:
             summaryFile = self.getFilename('micrographs')
         if os.path.exists(summaryFile):
-            os.system("xmipp_showj -i %s &" % summaryFile)
+            from protlib_utils import runShowJ
+            runShowJ(summaryFile)
 
     def insertCreateMicroscope(self):    
         if self.SamplingRateMode == "From image":

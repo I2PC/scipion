@@ -66,16 +66,17 @@ class ProtImportParticles(XmippProtocol):
         return message
 
     def visualize(self):
-        os.system("xmipp_showj -i "+self.workingDirPath(self.Family+".sel")+" --memory 1024m &")
+        from protlib_utils import runShowJ
+        runShowJ(self.workingDirPath(self.Family+".sel"), memory='1024m')        
 
 def createEmptyMicrographSel(log,fnOut):
-    mD=xmipp.MetaData()
-    id=mD.addObject()
+    mD = xmipp.MetaData()
+    id = mD.addObject()
     mD.setValue(xmipp.MDL_IMAGE,"ImportedImages",id)
     mD.write(fnOut)
 
 def linkOrCopy(log,Family,InputFile,WorkingDir,DoCopy,ImportAll,SubsetMode,Nsubset,TmpDir):
-    familySel=os.path.join(WorkingDir,Family+".sel")
+    familySel = os.path.join(WorkingDir,Family+".sel")
     if DoCopy:
         familyDir=os.path.join(WorkingDir,Family)
         createDir(log,familyDir)

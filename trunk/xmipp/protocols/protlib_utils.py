@@ -525,19 +525,17 @@ def runJavaJar(memory, jarName, args, batchMode=True):
 def runJavaIJappWithResponse(memory, appName, args):
     return runExternalAppWithResponse(getJavaIJappCmd(memory, appName, args, True))
 
-def runShowJ(inputFiles, memory="512m"):
-    runImageJPlugin(memory, "XmippBrowser.txt", "-i "+inputFiles, True)
+def runShowJ(inputFiles, memory="512m", extraParams=""):
+    runImageJPlugin(memory, "XmippBrowser.txt", "-i %s %s" % (inputFiles, extraParams), True)
     
 def runChimera(inputFile):
     if which("chimera") and os.path.exists(inputFile):
-        os.system("chimera "+inputFile+" &")
+        os.system("chimera %s &" % inputFile)
     
-   
 """ Return the machine name """
 def getHostname():
     import socket
     return socket.gethostname()
-
 
 # Copyright (c) 2002-2005 ActiveState Corp.
 # See LICENSE.txt for license details.
