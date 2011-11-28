@@ -477,7 +477,7 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
     if (found!=String::npos)
         fileName = fileName.substr(0, found) ;
 
-    hFile->exist = fileName.exists();
+    hFile->exist = fileName.exists() && fileName.getFileSize() > 0;
     hFile->mode = mode;
 
     String wmChar;

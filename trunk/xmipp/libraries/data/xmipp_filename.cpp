@@ -422,6 +422,15 @@ FileName FileName::getFileFormat() const
     return result.toLowercase();
 }
 
+size_t FileName::getFileSize() const
+{
+    Stat info;
+    if (stat(c_str(), &info))
+        REPORT_ERROR(ERR_UNCLASSIFIED,
+                     (String)"FileName::getFileSize: Cannot get size of file " + *this);
+    return info.st_size;
+}
+
 FileName FileName::removeFileFormat() const
 {
     size_t found = rfind("#");
