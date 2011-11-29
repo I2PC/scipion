@@ -142,6 +142,13 @@ public:
         return image->tilt(n);
     }
 
+    /** Set Image dimensions
+     */
+    void setDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
+    {
+        image->setDimensions(Xdim, Ydim, Zdim, Ndim);
+    }
+
     /** Set the data type for the generic image
      */
     void setDatatype(DataType _datatype);
