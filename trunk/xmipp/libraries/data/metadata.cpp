@@ -1177,6 +1177,16 @@ void MetaData::aggregateSingleSizeT(MDObject &mdValueOut, AggregateOperation op,
     mdValueOut.setValue(myMDSql->aggregateSingleSizeT(op,aggregateLabel));
 }
 
+void MetaData::aggregateSingleInt(MDObject &mdValueOut, AggregateOperation op,
+                               MDLabel aggregateLabel)
+
+{
+    size_t aux = myMDSql->aggregateSingleSizeT(op,aggregateLabel);
+    int aux2 = (int) aux;
+    mdValueOut.setValue(aux2);
+}
+
+
 bool MetaData::nextBlock(mdBuffer &buffer, mdBlock &block)
 {
     BLOCK_INIT(block);

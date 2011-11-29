@@ -756,6 +756,12 @@ public:
                          MDLabel aggregateLabel);
     /** This function performs aggregation operations.
         without grouping. (i.e. absolute maximum of a metadata column)
+        for int
+     */
+    void aggregateSingleInt(MDObject &mdValueOut, AggregateOperation op,
+                                   MDLabel aggregateLabel);
+    /** This function performs aggregation operations.
+        without grouping. (i.e. absolute maximum of a metadata column)
         for size_t
      */
     void aggregateSingleSizeT(MDObject &mdValueOut, AggregateOperation op,
