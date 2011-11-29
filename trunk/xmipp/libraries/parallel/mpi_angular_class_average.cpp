@@ -27,9 +27,6 @@
 
 MpiProgAngularClassAverage::MpiProgAngularClassAverage(int argc, char **argv)
 {
-    node = new MpiNode(argc, argv);
-    if (!node->isMaster())
-        verbose = 0;
 }
 
 void MpiProgAngularClassAverage::read(int argc, char** argv)
@@ -182,7 +179,6 @@ void MpiProgAngularClassAverage::run()
         lockArray[lockIndex]=false;
 
     double * Def_3Dref_2Dref_JobNo = new double[ArraySize];
-    std::cerr << "*bp01*" <<std::endl;
 
     if (node->rank == 0)
     {
