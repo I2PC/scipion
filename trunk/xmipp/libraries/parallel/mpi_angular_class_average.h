@@ -101,8 +101,6 @@ public:
     Image<double>    Iempty;
     /** Do NOT skip writing of selfiles */
     bool             write_selfiles;
-    /** Number of 3d references */
-    int              number_3dref;
     /** Add output to existing files */
     bool             do_add;
     /** Wiener filter image */
@@ -129,9 +127,9 @@ public:
     FourierTransformer global_transformer;
     MultidimArray<double> corr;
 
-    /** Ctf group number */
+    /** number of Ctf groups */
     int ctfNum;
-    /** 3D reference number */
+    /** Number of 3D references */
     int ref3dNum;
 
     /** Image dimentions */
@@ -163,9 +161,17 @@ public:
          */
     void mpi_preprocess();
 
-    /** Delete output files if they exist.
+    /** Initialize file names.
          */
-    void deleteOutputFiles();
+    void initFileNames();
+
+    /** Get file and stack dimentions, and number of 3d references and number of defocus groups.
+         */
+    void initDimentions();
+
+    /** Delete output files if they exist and init stacks.
+         */
+    void initOutputFiles();
 
     /**
          */
