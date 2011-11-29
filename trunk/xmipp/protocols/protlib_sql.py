@@ -564,11 +564,12 @@ class XmippProtocolDb(SqliteDb):
     def _beginSingleStep(self, _connection, _cursor, stepRow):
         info = self._getStepRowInfo(stepRow)
         # Print
-        import pprint        
+        from pprint import pformat        
         msg = blueStr("-------- Step start:  %s" % info.stepStr)
         printLog(msg, self.Log, out=True, err=True)
-        print headerStr((info.command.split())[-1])
-        pprint.PrettyPrinter(indent=4, width=20).pprint(info.args)
+        printLog(headerStr((info.command.split())[-1]),self.Log, out=True)
+        printLog(pformat(info.args, indent=4, width=20),self.Log, out=False)
+        # pprint.PrettyPrinter(indent=4, width=20,stream=self.log).pprint(info.args)
         # Set init time
         sqlCommand = """UPDATE %(TableSteps)s SET init = CURRENT_TIMESTAMP 
                         WHERE step_id=%(step_id)d
