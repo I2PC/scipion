@@ -1131,14 +1131,18 @@ class ProtocolGUI(BasicGUI):
         if path and exists(path):
             mdPath = os.path.join(path,"micrographs.sel")
             if exists(mdPath):
-                from xmipp import MetaData, MDL_IMAGE
+                from xmipp import MetaData, MDL_MICROGRAPH
                 md = MetaData(mdPath)
-                if md.size():                
-                    filterExt = "*" + os.path.splitext(md.getValue(MDL_IMAGE, md.firstObject()))[1]
-                    value = self.getVarValue('Down')
-                    results = self.wizardHelperSetDownsampling(var, path, filterExt, value, freqs)
-                    if results:
-                        self.setVarlistValue(vList, results[1:])
+                if md.size():
+                    image = md.getValue(MDL_MICROGRAPH, md.firstObject())     
+                    if image:         
+                        filterExt = "*" + os.path.splitext(image)[1]
+                        value = self.getVarValue('Down')
+                        results = self.wizardHelperSetDownsampling(var, path, filterExt, value, freqs)
+                        if results:
+                            self.setVarlistValue(vList, results[1:])
+                    else:
+                        error = "Not micrograph found in metadata <%s>" % mdPath
                         #self.setVarValue('LowResolCutoff', results[1])
                         #self.setVarValue('HighResolCutoff', results[2])
                 else:
