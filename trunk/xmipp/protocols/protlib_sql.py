@@ -497,7 +497,7 @@ class XmippProtocolDb(SqliteDb):
             try:
                 # Detect if there are parallel steps and execute them in parallel
                 first = i
-                while steps[i]['execution_mode'] > SqliteDb.EXEC_MAINLOOP and i < n:
+                while i < n and steps[i]['execution_mode'] > SqliteDb.EXEC_MAINLOOP:
                     i += 1
                 if first < i: # There are parallel steps
                     mpiForParallelSteps = steps[first]["execution_mode"]
