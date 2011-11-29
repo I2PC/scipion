@@ -300,13 +300,11 @@ def angular_class_average(_log
                          , InnerRadius
                          , MaxChangeOffset
                          , MinimumCrossCorrelation
-                         , NumberOfCtfGroups
                          , NumberOfMpi
                          , NumberOfThreads
                          , OutClasses
                          , PaddingFactor
                          , ProjectLibraryRootName
-                         , Ref3dNum
                          ):
                              
 
@@ -324,14 +322,12 @@ def angular_class_average(_log
                   ' --write_selfiles ' + \
                   ' --limit0 ' + MinimumCrossCorrelation + \
                   ' --limitR ' + DiscardPercentage + \
-                  ' --ctfNum ' + str(NumberOfCtfGroups) + \
-                  ' --ref3dNum ' + str(Ref3dNum) + \
                   ' -o '        + OutClasses
                   
         # On-the fly apply Wiener-filter correction and add all CTF groups together
     if (DoCtfCorrection):
         parameters += \
-                   ' --wien '   + str(NumberOfCtfGroups).zfill(FILENAMENUMBERLENGTH)+'@' + CtfGroupName + '_wien.stk' + \
+                   ' --wien '   + CtfGroupName + '_wien.stk' + \
                    ' --pad '    + str(PaddingFactor)
                    
     if (DoAlign2D == '1'):

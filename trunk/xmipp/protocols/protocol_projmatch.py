@@ -419,13 +419,11 @@ class ProtProjMatch(XmippProtocol):
                              , InnerRadius=self.InnerRadius[iterN]#
                              , MaxChangeOffset=self.MaxChangeOffset[iterN]#
                              , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
-                             , NumberOfCtfGroups=self.NumberOfCtfGroups
                              , NumberOfMpi=self.NumberOfMpi
                              , NumberOfThreads=self.NumberOfThreads
                              , OutClasses=self.getFilename('OutClasses', iter=iterN)#
                              , PaddingFactor=self.PaddingFactor#
                              , ProjectLibraryRootName=self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)#
-                             , Ref3dNum=refN
                              )
             
 
