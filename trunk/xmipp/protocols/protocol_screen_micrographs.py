@@ -27,37 +27,22 @@ class ProtScreenMicrographs(XmippProtocol):
         # Create verifyFiles for the MPI and output directories
         selfile = join(self.importDir,"micrographs.sel")
         MD = xmipp.MetaData(selfile)
-        mDict = {}        
-        verifyFiles = []
-        
-        for id in MD:
-            inputFile = MD.getValue(xmipp.MDL_IMAGE,id)
-            micrographName = os.path.split(inputFile)[1]
-            (shortname, extension) = os.path.splitext(micrographName)
-            micrographDir = self.workingDirPath(shortname)                    
-            mDict[inputFile] = (micrographName,shortname,micrographDir)
-            
-            id = self.Db.insertStep('createDir',verifyfiles=[micrographDir],path=micrographDir)
-
-            verifyFiles.append(join(micrographDir,"xmipp_ctf.ctfparam"))
-            if self.DoCtffind:
-                verifyFiles.append(join(micrographDir,"ctffind.ctfparam"))
-        
-        idMPI = self.insertRunMpiGapsStep()
         
         # Now the estimation actions
         CtfFindActions = []
         for id in MD:
             inputFile = MD.getValue(xmipp.MDL_IMAGE,id)
-            (micrographName,shortname,micrographDir) = mDict[inputFile]
-            
+            micrographName = os.path.split(inputFile)[1]
+            (shortname, extension) = os.path.splitext(micrographName)
+            micrographDir = self.workingDirPath(shortname)                    
+            parent_id = self.insertParallelStep('createDir',verifyfiles=[micrographDir],path=micrographDir)
+
             # Downsample if necessary
-            parent_id = XmippProjectDb.FIRST_STEP
             if self.Down != 1:
                 finalname = join(self.TmpDir,shortname+"_tmp.mrc")
                 parent_id = self.insertParallelRunJobStep("xmipp_transform_downsample",
                                                    "-i %s -o %s --step %f --method fourier" % (inputFile,finalname,self.Down),
-                                                   [finalname])
+                                                   [finalname],parent_step_id=parent_id)
             else:
                 finalname = inputFile
             
@@ -80,7 +65,6 @@ class ProtScreenMicrographs(XmippProtocol):
             # CTF estimation with Ctffind
             if self.DoCtffind:
                 CtfFindActions.append([dict(verifyfiles=[join(micrographDir,"ctffind.ctfparam")],
-                                     execution_mode=SqliteDb.EXEC_PARALLEL,
                                      parent_step_id=parent_id,
                                      CtffindExec=self.CtffindExec,micrograph=finalname,micrographDir=micrographDir,
                                      tmpDir=self.TmpDir,
@@ -90,11 +74,10 @@ class ProtScreenMicrographs(XmippProtocol):
                                      MinFocus=self.MinFocus,MaxFocus=self.MaxFocus,
                                      StepFocus=self.StepFocus,WinSize=self.WinSize)])
         for action in CtfFindActions:
-            self.insertStep('estimateCtfCtffind',action)
+            self.insertParallelStep('estimateCtfCtffind',action)
         
         # Gather results after external actions
         self.insertStep('gatherResults',verifyfiles=[self.workingDirPath("micrographs.sel")],
-                           parent_step_id=idMPI,
                            TmpDir=self.TmpDir,
                            WorkingDir=self.WorkingDir,
                            Selfile=selfile,
