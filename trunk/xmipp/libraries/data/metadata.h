@@ -509,18 +509,36 @@ public:
         }
     }
 
+    /** Get all values of a column as a vector.
+     */
+    void getColumnValues(const MDLabel label, std::vector<MDObject> &valuesOut) const;
+
     /** Set all values of a column as a vector.
      * The input vector must have the same size as the Metadata.
      */
     template<class T>
-    void setColumnValues(const MDLabel label, std::vector<T> &valuesIn)
+    void setColumnValues(const MDLabel label, const std::vector<T> &valuesIn)
     {
-        if (valuesIn.size()!=size())
+    	bool addObjects=false;
+    	if (size()==0)
+    		addObjects=true;
+        if (valuesIn.size()!=size() && !addObjects)
             REPORT_ERROR(ERR_MD_OBJECTNUMBER,"Input vector must be of the same size as the metadata");
         size_t n=0;
-        FOR_ALL_OBJECTS_IN_METADATA(*this)
-        setValue(label,valuesIn[n++],__iter.objId);
+        if (!addObjects)
+        	FOR_ALL_OBJECTS_IN_METADATA(*this)
+        	setValue(label,valuesIn[n++],__iter.objId);
+        else
+        {
+        	size_t nmax=valuesIn.size();
+        	for (size_t n=0; n<nmax; ++n)
+        		setValue(label,valuesIn[n],addObject());
+        }
     }
+
+    /** Get all values of a column as a vector.
+     */
+    void setColumnValues(const std::vector<MDObject> &valuesIn);
 
     /** Get all values of an MetaData row of an specified objId*/
     bool getRow(MDRow &row, size_t id) const;

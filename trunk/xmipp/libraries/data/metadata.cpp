@@ -154,6 +154,41 @@ bool MetaData::getValue(MDObject &mdValueOut, size_t id) const
     return myMDSql->getObjectValue(id, mdValueOut);
 }
 
+void MetaData::getColumnValues(const MDLabel label, std::vector<MDObject> &valuesOut) const
+{
+    MDObject mdValueOut(label);
+    std::vector<size_t> objectsId;
+    findObjects(objectsId);
+    size_t n = objectsId.size();
+    valuesOut.resize(n,mdValueOut);
+    for (size_t i = 0; i < n; ++i)
+    {
+        getValue(mdValueOut, objectsId[i]);
+        valuesOut[i] = mdValueOut;
+    }
+}
+
+void MetaData::setColumnValues(const std::vector<MDObject> &valuesIn)
+{
+    bool addObjects=false;
+    if (size()==0)
+        addObjects=true;
+    if (valuesIn.size()!=size() && !addObjects)
+        REPORT_ERROR(ERR_MD_OBJECTNUMBER,"Input vector must be of the same size as the metadata");
+    if (!addObjects)
+    {
+        size_t n=0;
+        FOR_ALL_OBJECTS_IN_METADATA(*this)
+        	setValue(valuesIn[n++],__iter.objId);
+    }
+    else
+    {
+        size_t nmax=valuesIn.size();
+        for (size_t n=0; n<nmax; ++n)
+            setValue(valuesIn[n],addObject());
+    }
+}
+
 bool MetaData::getRow(MDRow &row, size_t id) const
 {
     row.clear();
@@ -1171,7 +1206,7 @@ void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
 }
 
 void MetaData::aggregateSingleSizeT(MDObject &mdValueOut, AggregateOperation op,
-                               MDLabel aggregateLabel)
+                                    MDLabel aggregateLabel)
 
 {
     mdValueOut.setValue(myMDSql->aggregateSingleSizeT(op,aggregateLabel));
@@ -1252,10 +1287,10 @@ void MetaData::aggregate(const MetaData &mdIn, const std::vector<AggregateOperat
 }
 
 void MetaData::aggregateGroupBy(const MetaData &mdIn,
-                         AggregateOperation op,
-                         const std::vector<MDLabel> &groupByLabels,
-                         MDLabel operateLabel,
-                         MDLabel resultLabel)
+                                AggregateOperation op,
+                                const std::vector<MDLabel> &groupByLabels,
+                                MDLabel operateLabel,
+                                MDLabel resultLabel)
 {
     std::vector<MDLabel> labels;
     labels = groupByLabels;

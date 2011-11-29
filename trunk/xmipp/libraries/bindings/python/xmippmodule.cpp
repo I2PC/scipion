@@ -53,8 +53,8 @@ static PyObject * PyXmippError;
 /*Helper function to create an MDObject from a PyObject */
 static MDObject *
 createMDObject(int label, PyObject *pyValue);
-static PyObject *
-getMDObjectValue(MDObject * obj);
+static PyObject * getMDObjectValue(MDObject * obj);
+static void setMDObjectValue(MDObject * obj, PyObject *pyobj);
 
 /***************************************************************/
 /*                            FileName                         */
@@ -1810,6 +1810,80 @@ MetaData_getValue(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* getValue */
+static PyObject *
+MetaData_getColumnValues(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+    if (PyArg_ParseTuple(args, "i", &label))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*) obj;
+
+            std::vector<MDObject> v;
+            self->metadata->getColumnValues((MDLabel) label,v);
+
+            size_t size=v.size();
+            PyObject * list = PyList_New(size);
+
+            for (int i = 0; i < size; ++i)
+                PyList_SetItem(list, i, getMDObjectValue(&(v[i])));
+
+            return list;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+/* setValue */
+static PyObject *
+MetaData_setColumnValues(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+    PyObject *list = NULL;
+    if (PyArg_ParseTuple(args, "iO", &label, &list))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*) obj;
+            size_t size=PyList_Size(list);
+            bool addObjects=(self->metadata->size()==0);
+        	MDObject object((MDLabel) label);
+            if (addObjects)
+            {
+            	for (size_t i=0; i<size; ++i)
+            	{
+            		size_t id=self->metadata->addObject();
+            		setMDObjectValue(&object,PyList_GetItem(list,i));
+            		self->metadata->setValue(object,id);
+            	}
+            }
+            else
+            {
+				if (self->metadata->size()!=size)
+					PyErr_SetString(PyXmippError, "Metadata size different from list size");
+				size_t i=0;
+				FOR_ALL_OBJECTS_IN_METADATA(*(self->metadata))
+				{
+            		setMDObjectValue(&object,PyList_GetItem(list,i++));
+					self->metadata->setValue(object,__iter.objId);
+				}
+            }
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+            return NULL;
+        }
+    }
+    Py_RETURN_NONE;
+}
+
 /* containsLabel */
 static PyObject *
 MetaData_getActiveLabels(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -2144,12 +2218,16 @@ MetaData_methods[] =
           "Set the value for column(label) for a given object" },
         { "setValueCol", (PyCFunction) MetaData_setValueCol,
           METH_VARARGS,
-          "Set the value for column(label) for all objects" },
+          "Set the same value for column(label) for all objects" },
         { "removeLabel", (PyCFunction) MetaData_removeLabel,
           METH_VARARGS,
           "Remove a label if exists. The values are still in the table." },
         { "getValue", (PyCFunction) MetaData_getValue,
           METH_VARARGS, "Get the value for column(label)" },
+        { "getColumnValues", (PyCFunction) MetaData_getColumnValues,
+            METH_VARARGS, "Get all values value from column(label)" },
+        { "setColumnValues", (PyCFunction) MetaData_setColumnValues,
+            METH_VARARGS, "Set all values value from column(label)" },
         { "getActiveLabels",
           (PyCFunction) MetaData_getActiveLabels,
           METH_VARARGS,
@@ -2733,6 +2811,50 @@ createMDObject(int label, PyObject *pyValue)
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
     return NULL;
+}
+
+void setMDObjectValue(MDObject *obj, PyObject *pyValue)
+{
+    try
+    {
+        if (PyInt_Check(pyValue))
+            obj->setValue((int)PyInt_AS_LONG(pyValue));
+        else if (PyLong_Check(pyValue))
+        	obj->setValue(PyLong_AsUnsignedLong(pyValue));
+        else if (PyString_Check(pyValue))
+        	obj->setValue(std::string(PyString_AsString(pyValue)));
+        else if (FileName_Check(pyValue))
+        	obj->setValue((*((FileNameObject*)pyValue)->filename));
+        else if (PyFloat_Check(pyValue))
+        	obj->setValue(PyFloat_AS_DOUBLE(pyValue));
+        else if (PyBool_Check(pyValue))
+        	obj->setValue((pyValue == Py_True));
+        else if (PyList_Check(pyValue))
+        {
+            size_t size = PyList_Size(pyValue);
+            PyObject * item = NULL;
+            double dValue = 0.;
+            std::vector<double> vValue(size);
+            for (size_t i = 0; i < size; ++i)
+            {
+                item = PyList_GetItem(pyValue, i);
+                if (!PyFloat_Check(item))
+                {
+                    PyErr_SetString(PyExc_TypeError,
+                                    "Vectors are only supported for double");
+                }
+                dValue = PyFloat_AS_DOUBLE(item);
+                vValue[i] = dValue;
+            }
+            obj->setValue(vValue);
+        }
+        else
+        	PyErr_SetString(PyExc_TypeError, "Unrecognized type to create MDObject");
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
 }
 
 static PyObject *
