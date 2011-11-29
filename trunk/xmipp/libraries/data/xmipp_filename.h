@@ -290,6 +290,8 @@ public:
      */
     FileName getFileFormat() const;
 
+    /** Get the size of the file.
+     */
     size_t getFileSize() const;
 
 
