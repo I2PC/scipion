@@ -25,12 +25,12 @@ class ProtParticlePicking(XmippProtocol):
             self.tiltPairs = True
             self.FilenamesDict["micrographs"]=self.workingDirPath('tilted_pairs.xmd')
         else:
-            self.inputMicrographs = os.path.join(getWorkingDirFromRunName(self.ImportRun), "micrographs.sel")
+            self.inputMicrographs = os.path.join(getWorkingDirFromRunName(self.ImportRun), "micrographs.xmd")
             self.tiltPairs = False
 
     def createFilenameTemplates(self):
         return {
-                'micrographs': self.workingDirPath('micrographs.sel')
+                'micrographs': self.workingDirPath('micrographs.xmd')
                 }
 
     def defineSteps(self):

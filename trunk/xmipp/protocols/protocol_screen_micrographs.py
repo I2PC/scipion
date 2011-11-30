@@ -25,7 +25,7 @@ class ProtScreenMicrographs(XmippProtocol):
         Magnification = MD.getValue(xmipp.MDL_MAGNIFICATION,id)
 
         # Create verifyFiles for the MPI and output directories
-        selfile = join(self.importDir,"micrographs.sel")
+        selfile = join(self.importDir,"micrographs.xmd")
         MD = xmipp.MetaData(selfile)
         
         # Now the estimation actions
@@ -77,7 +77,7 @@ class ProtScreenMicrographs(XmippProtocol):
             self.insertParallelStep('estimateCtfCtffind',action)
         
         # Gather results after external actions
-        self.insertStep('gatherResults',verifyfiles=[self.workingDirPath("micrographs.sel")],
+        self.insertStep('gatherResults',verifyfiles=[self.workingDirPath("micrographs.xmd")],
                            TmpDir=self.TmpDir,
                            WorkingDir=self.WorkingDir,
                            Selfile=selfile,
@@ -87,11 +87,11 @@ class ProtScreenMicrographs(XmippProtocol):
         errors = []
 
         # Check that there are any micrograph to process
-        fnSel = join(self.importDir,"micrographs.sel")
+        fnSel = join(self.importDir,"micrographs.xmd")
         if not exists(fnSel):
-            errors.append("Cannot find micrographs.sel in "+self.importDir)
+            errors.append("Cannot find micrographs.xmd in "+self.importDir)
         else:
-            MD = xmipp.MetaData(join(self.importDir,"micrographs.sel"))
+            MD = xmipp.MetaData(join(self.importDir,"micrographs.xmd"))
             if MD.size()==0:
                 errors.append("No micrographs to process")
         fnMic = join(self.importDir,"microscope.xmd")
@@ -110,7 +110,7 @@ class ProtScreenMicrographs(XmippProtocol):
 
     def summary(self):
         message = []
-        fnSel = join(self.importDir,"micrographs.sel")
+        fnSel = join(self.importDir,"micrographs.xmd")
         MD = xmipp.MetaData(fnSel)
         message.append("CTF screening of %d micrographs from %s" % (MD.size(), self.importDir))
         if self.DoCtffind:
@@ -118,12 +118,12 @@ class ProtScreenMicrographs(XmippProtocol):
         return message
     
     def visualize(self):
-        summaryFile = self.workingDirPath("micrographs.sel")
+        summaryFile = self.workingDirPath("micrographs.xmd")
         if exists(summaryFile):
             os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --memory 2048m &")
         else:
-            summaryFile = join(self.TmpDir,"micrographs.sel")
-            selfile = join(self.importDir,"micrographs.sel")
+            summaryFile = join(self.TmpDir,"micrographs.xmd")
+            selfile = join(self.importDir,"micrographs.xmd")
             buildSummaryMetadata(self.WorkingDir,self.DoCtffind,selfile,summaryFile)
             if exists(summaryFile):
                 os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --memory 2048m &")
@@ -241,6 +241,6 @@ def buildSummaryMetadata(WorkingDir,DoCtffind,Selfile,summaryFile):
         MD.write(summaryFile)
 
 def gatherResults(log,TmpDir,WorkingDir,Selfile,DoCtffind):
-    summaryFile=join(WorkingDir,"micrographs.sel")
+    summaryFile=join(WorkingDir,"micrographs.xmd")
     buildSummaryMetadata(WorkingDir,DoCtffind,Selfile,summaryFile)
     runJob(log,"xmipp_ctf_sort_psds","-i "+summaryFile)
