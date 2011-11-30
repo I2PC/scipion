@@ -325,7 +325,6 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     size_t id;
     size_t order_number;
 
-
     w = 0.;
     w1 = 0.;
     w2 = 0.;
@@ -336,6 +335,14 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     defGroup     = ROUND(Def_3Dref_2Dref_JobNo[index_DefGroup]);
     ref3d        = ROUND(Def_3Dref_2Dref_JobNo[index_3DRef]);
 
+    // Read wiener filter
+    FileName fn_wfilter;
+    Image<double> auxImg;
+
+    fn_wfilter.compose(defGroup,fn_wien);
+    std::cerr<<"["<<node->rank<<"] Reading filter: " << fn_wfilter <<std::endl;
+    auxImg.read(fn_wfilter);
+    Mwien = auxImg();
 
     //_DF.importObjects(DF, MDValueEQ(MDL_ORDER, dirno));
     _DF.importObjects(DF, MDValueEQ(MDL_ORDER, order_number));
@@ -777,25 +784,25 @@ void MpiProgAngularClassAverage::mpi_produceSideInfo()
     //This program is called once for each CTF group so there is a single wienner filter involved
     if (fn_wien != "")
     {
-    	int x,y,z;
-    	size_t n;
-    	getImageSize(fn_wien,x,y,z,n);
+        int x,y,z;
+        size_t n;
+        getImageSize(fn_wien,x,y,z,n);
 
         // Get padding dimensions
-        std::cerr<<"["<<node->rank<<"] pad: "<< pad << "Xdim: " << Xdim <<std::endl;
+        std::cerr<<"["<<node->rank<<"] pad: "<< pad << " Xdim: " << Xdim <<std::endl;
         paddim = ROUND(pad * Xdim);
         std::cerr<<"["<<node->rank<<"] paddim: "<< paddim <<std::endl;
         if(node->rank==0)
         {
-//            Image<double> auxImg;
-//            auxImg.read(fn_wien, HEADER);
+            //Image<double> auxImg;
+            //auxImg.read(fn_wien, HEADER);
             //auxImg.read(fn_wien);
             //Mwien = auxImg();
             if (x != paddim)
             {
-//                std::cerr << "image size= " << Xdim << " padding factor= " << pad
-//                << " padded image size= " << paddim
-//                << " Wiener filter size= " << XSIZE(Mwien) << std::endl;
+                //std::cerr << "image size= " << Xdim << " padding factor= " << pad
+                //<< " padded image size= " << paddim
+                //<< " Wiener filter size= " << XSIZE(Mwien) << std::endl;
                 REPORT_ERROR(ERR_VALUE_INCORRECT,
                              "Incompatible padding factor for this Wiener filter");
             }
@@ -866,7 +873,6 @@ void MpiProgAngularClassAverage::mpi_preprocess()
     MPI_Bcast(&ref3dNum,1,MPI_INT,0,MPI_COMM_WORLD);
     mpi_produceSideInfo();
     node->barrierWait();
-    exit(0);
     std::cerr<<"["<<node->rank<<"]: "<< "bp19"<<std::endl;
 }
 
