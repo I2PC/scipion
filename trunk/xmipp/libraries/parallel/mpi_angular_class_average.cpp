@@ -165,11 +165,8 @@ void MpiProgAngularClassAverage::defineParams()
 /* Run --------------------------------------------------------------------- */
 void MpiProgAngularClassAverage::run()
 {
-    std::cerr<<"["<<node->rank<<"]: "<< "bp01"<<std::endl;
     mpi_preprocess();
-    std::cerr<<"["<<node->rank<<"]: "<< "bp02"<<std::endl;
 
-    //number of jobs
     //Lock structure
     bool* lockArray=new bool[nJobs+1];
     int lockIndex;
@@ -191,7 +188,6 @@ void MpiProgAngularClassAverage::run()
         MDIterator __iterJobs(mdJobList);
         while (whileLoop)
         {
-
             //wait until a worker is available
             MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             switch (status.MPI_TAG)
@@ -320,6 +316,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     double rot, tilt, psi, xshift, yshift, val, w, w1, w2, my_limitR, scale;
     bool mirror;
     int ref_number, this_image, ref3d, defGroup;
+    static int defGroup_last = 0;
     int isplit;
     MetaData _DF;
     size_t id;
@@ -335,16 +332,19 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     defGroup     = ROUND(Def_3Dref_2Dref_JobNo[index_DefGroup]);
     ref3d        = ROUND(Def_3Dref_2Dref_JobNo[index_3DRef]);
 
-    // Read wiener filter
-    FileName fn_wfilter;
-    Image<double> auxImg;
+    if (fn_wien != "" && defGroup_last != defGroup)
+    {
+        // Read wiener filter
+        FileName fn_wfilter;
+        Image<double> auxImg;
 
-    fn_wfilter.compose(defGroup,fn_wien);
-    std::cerr<<"["<<node->rank<<"] Reading filter: " << fn_wfilter <<std::endl;
-    auxImg.read(fn_wfilter);
-    Mwien = auxImg();
+        fn_wfilter.compose(defGroup,fn_wien);
+        std::cerr<<"["<<node->rank<<"] Reading filter: " << fn_wfilter <<std::endl;
+        auxImg.read(fn_wfilter);
+        Mwien = auxImg();
+        defGroup_last = defGroup;
+    }
 
-    //_DF.importObjects(DF, MDValueEQ(MDL_ORDER, dirno));
     _DF.importObjects(DF, MDValueEQ(MDL_ORDER, order_number));
     std::cerr<<"["<<node->rank<<"]: "<< "mpi_process_02"<<std::endl;
 
@@ -776,39 +776,6 @@ void MpiProgAngularClassAverage::mpi_produceSideInfo()
     global_transformer.setReal(corr);
     global_transformer.FourierTransform();
 
-
-    //!a
-    //if (node->rank == 0)
-    //{
-    // check Wiener filter image has correct size and store the filter, we will use it later
-    //This program is called once for each CTF group so there is a single wienner filter involved
-    if (fn_wien != "")
-    {
-        int x,y,z;
-        size_t n;
-        getImageSize(fn_wien,x,y,z,n);
-
-        // Get padding dimensions
-        std::cerr<<"["<<node->rank<<"] pad: "<< pad << " Xdim: " << Xdim <<std::endl;
-        paddim = ROUND(pad * Xdim);
-        std::cerr<<"["<<node->rank<<"] paddim: "<< paddim <<std::endl;
-        if(node->rank==0)
-        {
-            //Image<double> auxImg;
-            //auxImg.read(fn_wien, HEADER);
-            //auxImg.read(fn_wien);
-            //Mwien = auxImg();
-            if (x != paddim)
-            {
-                //std::cerr << "image size= " << Xdim << " padding factor= " << pad
-                //<< " padded image size= " << paddim
-                //<< " Wiener filter size= " << XSIZE(Mwien) << std::endl;
-                REPORT_ERROR(ERR_VALUE_INCORRECT,
-                             "Incompatible padding factor for this Wiener filter");
-            }
-        }
-    }
-
     // Set ring defaults
     if (Ri < 1)
         Ri = 1;
@@ -869,11 +836,12 @@ void MpiProgAngularClassAverage::mpi_preprocess()
     MPI_Bcast(&Zdim,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&Ndim,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&nJobs,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&ctfNum,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&ref3dNum,1,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&ctfNum,1,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&paddim,1,MPI_INT,0,MPI_COMM_WORLD);
+
     mpi_produceSideInfo();
     node->barrierWait();
-    std::cerr<<"["<<node->rank<<"]: "<< "bp19"<<std::endl;
 }
 
 
@@ -907,6 +875,19 @@ void MpiProgAngularClassAverage::initDimentions()
     mdJobList.aggregateSingleInt(mdValueOut3, AGGR_MAX ,MDL_REF3D);
     mdValueOut3.getValue(ref3dNum);
 
+    //Check Wiener filter image has correct size
+    if (fn_wien != "")
+    {
+        int x,y,z;
+        size_t n;
+        getImageSize(fn_wien,x,y,z,n);
+
+        // Get and check padding dimensions
+        paddim = ROUND(pad * Xdim);
+        if (x != paddim)
+            REPORT_ERROR(ERR_VALUE_INCORRECT,
+                         "Incompatible padding factor for this Wiener filter");
+    }
 
 }
 
