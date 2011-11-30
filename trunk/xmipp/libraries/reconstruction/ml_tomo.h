@@ -168,7 +168,8 @@ public:
     double noimp_threshold;
     /** Maximum resolution (dig.freq.) */
     double maxres, scale_factor;
-    MultidimArray<double> fourier_mask, fourier_imask, real_mask, real_omask;
+    MultidimArray<double> fourier_mask, real_mask, real_omask;
+    MultidimArray<unsigned char> fourier_imask;
 
     /** Do not search any rotation/translation, only classify */
     bool dont_align;
@@ -286,7 +287,7 @@ public:
     void readMissingInfo();
 
     /// Get binary missing wedge (or pyramid)
-    void getMissingRegion(MultidimArray<double> &Mmeasured,
+    void getMissingRegion(MultidimArray<unsigned char> &Mmeasured,
                           const Matrix2D<double> &A,
                           const int missno);
 

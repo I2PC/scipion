@@ -732,16 +732,16 @@ ProgMLTomo::produceSideInfo()
         {
           DIRECT_MULTIDIM_ELEM(fourier_mask,ii) = A3D_ELEM(cosine_mask,xx,yy,zz);
           if (A3D_ELEM(cosine_mask,xx,yy,zz) > 0.)
-            DIRECT_MULTIDIM_ELEM(fourier_imask,ii) = 1.;
+            DIRECT_MULTIDIM_ELEM(fourier_imask,ii) = 1;
           else
-            DIRECT_MULTIDIM_ELEM(fourier_imask,ii) = 0.;
+            DIRECT_MULTIDIM_ELEM(fourier_imask,ii) = 0;
         }
       }
     }
   }
   // exclude origin voxel from fourier masks
   DIRECT_MULTIDIM_ELEM(fourier_mask,0) = 0.;
-  DIRECT_MULTIDIM_ELEM(fourier_imask,0) = 0.;
+  DIRECT_MULTIDIM_ELEM(fourier_imask,0) = 0;
 
   // Precalculate sampling
   do_sym = false;
@@ -830,7 +830,8 @@ ProgMLTomo::generateInitialReferences()
 
   //MetaData SFtmp;
   Image<double> Iave1, Iave2, Itmp, Iout;
-  MultidimArray<double> Msumwedge1, Msumwedge2, Mmissing;
+  MultidimArray<double> Msumwedge1, Msumwedge2;
+  MultidimArray<unsigned char> Mmissing;
   MultidimArray<std::complex<double> > Fave;
   std::vector<MultidimArray<double> > fsc; //1D
   Matrix2D<double> my_A; //2D
@@ -925,9 +926,11 @@ ProgMLTomo::generateInitialReferences()
         --missno;
         getMissingRegion(Mmissing, my_A, missno);
         if (iran_fsc == 0)
-          Msumwedge1 += Mmissing;
+        	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Msumwedge1)
+        	DIRECT_MULTIDIM_ELEM(Msumwedge1,n)+=DIRECT_MULTIDIM_ELEM(Mmissing,n);
         else
-          Msumwedge2 += Mmissing;
+        	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Msumwedge2)
+        	DIRECT_MULTIDIM_ELEM(Msumwedge2,n)+=DIRECT_MULTIDIM_ELEM(Mmissing,n);
       }
       c++;
       if (verbose && c % cc == 0)
@@ -1356,7 +1359,7 @@ ProgMLTomo::readMissingInfo()
           "Empty metadata with missing wedges info");
 
     MultidimArray<double> Mcomplete(dim, dim, dim);
-    MultidimArray<double> Mmissing(dim, dim, hdim + 1);
+    MultidimArray<unsigned char> Mmissing(dim, dim, hdim + 1);
     Matrix2D<double> I(4, 4);
     I.initIdentity();
     //Create a clean missing info
@@ -1437,7 +1440,7 @@ ProgMLTomo::readMissingInfo()
 }
 
 void
-ProgMLTomo::getMissingRegion(MultidimArray<double> &Mmissing,
+ProgMLTomo::getMissingRegion(MultidimArray<unsigned char> &Mmissing,
     const Matrix2D<double> &A, const int missno)
 {
 #ifdef DEBUG_JM
@@ -1494,10 +1497,10 @@ ProgMLTomo::getMissingRegion(MultidimArray<double> &Mmissing,
       for (int xx = 0; xx < hdim + 1; ++xx, ++ii)
       {
 
-        double maskvalue = DIRECT_MULTIDIM_ELEM(fourier_imask,ii);
-        if (maskvalue < XMIPP_EQUAL_ACCURACY)
+        unsigned char maskvalue = DIRECT_MULTIDIM_ELEM(fourier_imask,ii);
+        if (!maskvalue)
         {
-          DIRECT_MULTIDIM_ELEM(Mmissing,ii) = 0.;
+          DIRECT_MULTIDIM_ELEM(Mmissing,ii) = 0;
         }
         else
         {
@@ -1539,7 +1542,7 @@ ProgMLTomo::getMissingRegion(MultidimArray<double> &Mmissing,
           if (is_observed)
             DIRECT_MULTIDIM_ELEM(Mmissing,ii) = maskvalue;
           else
-            DIRECT_MULTIDIM_ELEM(Mmissing,ii) = 0.;
+            DIRECT_MULTIDIM_ELEM(Mmissing,ii) = 0;
         }
       }
     }
@@ -1643,9 +1646,6 @@ void
 ProgMLTomo::maskSphericalAverageOutside(MultidimArray<double> &Min)
 {
   double outside_density = 0., sumdd = 0.;
-  real_omask.printShape(std::cerr);
-  Min.printShape(std::cerr);
-
   FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(real_omask)
   {
     outside_density += DIRECT_MULTIDIM_ELEM(Min,n)
@@ -1804,7 +1804,8 @@ ProgMLTomo::precalculateA2(std::vector<Image<double> > &Iref)
 
   double rot, tilt, AA, stdAA, corr;
   Matrix2D<double> A_rot_inv(4, 4), I(4, 4);
-  MultidimArray<double> Maux(dim, dim, dim), Mmissing;
+  MultidimArray<double> Maux(dim, dim, dim);
+  MultidimArray<unsigned char> Mmissing;
   MultidimArray<std::complex<double> > Faux, Faux2;
 
   A2.clear();
@@ -1813,14 +1814,15 @@ ProgMLTomo::precalculateA2(std::vector<Image<double> > &Iref)
   Maux.setXmippOrigin();
   for (int refno = 0; refno < nr_ref; refno++)
   {
+	  MultidimArray<double> &Iref_refno=Iref[refno]();
     // Calculate A2 for all different orientations
     for (int angno = 0; angno < nr_ang; angno++)
     {
       A_rot_inv = ((all_angle_info[angno]).A).inv();
       // use DONT_WRAP and put density of first element outside
       // i.e. assume volume has been processed with omask
-      applyGeometry(LINEAR, Maux, Iref[refno](), A_rot_inv, IS_NOT_INV,
-          DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
+      applyGeometry(LINEAR, Maux, Iref_refno, A_rot_inv, IS_NOT_INV,
+          DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref_refno,0));
       //#define DEBUG_PRECALC_A2_ROTATE
 #ifdef DEBUG_PRECALC_A2_ROTATE
 
@@ -1839,29 +1841,26 @@ ProgMLTomo::precalculateA2(std::vector<Image<double> > &Iref)
       if (angno == 0)
         stdAA = AA;
       if (AA > 0)
+      {
         corr = sqrt(stdAA / AA);
+        Maux *= corr;
+      }
       else
         corr = 1.;
       corrA2.push_back(corr);
-      Maux *= corr;
       if (do_missing)
       {
         transformer.FourierTransform(Maux, Faux, false);
         // Save original copy of Faux in Faux2
-        Faux2.resize(Faux);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
-        {
-          DIRECT_MULTIDIM_ELEM(Faux2,n) = DIRECT_MULTIDIM_ELEM(Faux,n);
-        }
+        Faux2=Faux;
 
         for (int missno = 0; missno < nr_miss; ++missno)
         {
           getMissingRegion(Mmissing, I, missno);
+          Faux.initZeros();
           FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
-          {
-            DIRECT_MULTIDIM_ELEM(Faux,n) = DIRECT_MULTIDIM_ELEM(Faux2,n)
-                * DIRECT_MULTIDIM_ELEM(Mmissing,n);
-          }
+        	  if (DIRECT_MULTIDIM_ELEM(Mmissing,n))
+        		  DIRECT_MULTIDIM_ELEM(Faux,n) = DIRECT_MULTIDIM_ELEM(Faux2,n);
           transformer.inverseFourierTransform();
           A2.push_back(Maux.sum2());
           //#define DEBUG_PRECALC_A2
@@ -1929,10 +1928,12 @@ ProgMLTomo::expectationSingleImage(MultidimArray<double> &Mimg, int imgno,
   std::cerr << "DEBUG_JM: missno: " << missno << std::endl;
 #endif
 
-  MultidimArray<double> Maux, Maux2, Mweight, Mmissing, Mzero(dim, dim,
+  MultidimArray<double> Maux, Maux2, Mweight, Mzero(dim, dim,
       hdim + 1), Mzero2(dim, dim, dim);
+  MultidimArray<unsigned char> Mmissing;
   MultidimArray<std::complex<double> > Faux, Faux2(dim, dim, hdim + 1), Fimg,
       Fimg0, Fimg_rot;
+  std::complex<double> complex_zero=0;
   std::vector<MultidimArray<double> > mysumimgs;
   std::vector<MultidimArray<double> > mysumweds;
   MultidimArray<double> refw;
@@ -1998,9 +1999,8 @@ ProgMLTomo::expectationSingleImage(MultidimArray<double> &Mimg, int imgno,
     // Enforce missing wedge
     getMissingRegion(Mmissing, I, missno);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
-    {
-      DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(Mmissing,n);
-    }
+    if (!DIRECT_MULTIDIM_ELEM(Mmissing,n))
+      DIRECT_MULTIDIM_ELEM(Faux,n) = complex_zero;
   }
   Fimg0 = Faux;
   // BE CAREFUL: inverseFourierTransform messes up Faux!
@@ -2220,14 +2220,16 @@ ProgMLTomo::expectationSingleImage(MultidimArray<double> &Mimg, int imgno,
             {
               // Store sum of wedges!
               getMissingRegion(Mmissing, A_rot, missno);
-              mysumweds[refno] += my_sumweight * Mmissing;
+              MultidimArray<double> &mysumweds_refno=mysumweds[refno];
+              FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Mmissing)
+              if (DIRECT_MULTIDIM_ELEM(Mmissing,n))
+            	  DIRECT_MULTIDIM_ELEM(mysumweds_refno,n) += my_sumweight;
 
               // Again enforce missing region to avoid filling it with artifacts from the rotation
               local_transformer.FourierTransform();
-              FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
-              {
-                DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(Mmissing,n);
-              }
+              FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Mmissing)
+              if (!DIRECT_MULTIDIM_ELEM(Mmissing,n))
+            	  DIRECT_MULTIDIM_ELEM(Faux,n)=complex_zero;
               local_transformer.inverseFourierTransform();
             }
             // Store sum of rotated images
@@ -2355,10 +2357,12 @@ ProgMLTomo::maxConstrainedCorrSingleImage(MultidimArray<double> &Mimg,
   std::cerr << "DEBUG_JM: entering ProgMLTomo::maxConstrainedCorrSingleImage" <<std::endl;
 #endif
 
-  MultidimArray<double> Mimg0, Maux, Mref, Mmissing;
+  MultidimArray<double> Mimg0, Maux, Mref;
+  MultidimArray<unsigned char> Mmissing;
   MultidimArray<std::complex<double> > Faux, Fimg0, Fref;
   FourierTransformer local_transformer;
   Matrix2D<double> A_rot(4, 4), I(4, 4), A_rot_inv(4, 4);
+  std::complex<double> complex_zero=0;
   bool is_a_neighbor;
   double img_stddev, ref_stddev, corr, maxcorr = -9999.;
   int ioptx, iopty, ioptz;
@@ -2390,10 +2394,9 @@ ProgMLTomo::maxConstrainedCorrSingleImage(MultidimArray<double> &Mimg,
   {
     // Enforce missing wedge
     getMissingRegion(Mmissing, I, missno);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
-    {
-      DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(Mmissing,n);
-    }
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Mmissing)
+    if (!DIRECT_MULTIDIM_ELEM(Mmissing,n))
+      DIRECT_MULTIDIM_ELEM(Faux,n)=complex_zero;
     // BE CAREFUL: inverseFourierTransform messes up Faux!!
     Fimg0 = Faux;
     local_transformer.inverseFourierTransform();
@@ -2578,7 +2581,11 @@ ProgMLTomo::maxConstrainedCorrSingleImage(MultidimArray<double> &Mimg,
   sumw(opt_refno) += 1.;
   wsumimgs[iran_fsc * nr_ref + opt_refno] += Mimg0;
   if (do_missing)
-    wsumweds[iran_fsc * nr_ref + opt_refno] += Mmissing;
+  {
+	MultidimArray<double> &wsumweds_i=wsumweds[iran_fsc * nr_ref + opt_refno];
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Mmissing)
+	DIRECT_MULTIDIM_ELEM(wsumweds_i,n)=DIRECT_MULTIDIM_ELEM(Mmissing,n);
+  }
 
   pthread_mutex_unlock(&mltomo_weightedsum_update_mutex);
 

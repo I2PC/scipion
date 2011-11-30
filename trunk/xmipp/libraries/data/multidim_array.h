@@ -3530,26 +3530,34 @@ public:
         T* ptrResult=NULL;
         T* ptrOp1=NULL;
         size_t n;
-        for (n=0, ptrResult=result.data, ptrOp1=op1.data;
-             n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
-            switch (operation)
-            {
-            case '+':
-                *ptrResult = *ptrOp1 + op2;
-                break;
-            case '-':
-                *ptrResult = *ptrOp1 - op2;
-                break;
-            case '*':
-                *ptrResult = *ptrOp1 * op2;
-                break;
-            case '/':
-                *ptrResult = *ptrOp1 / op2;
-                break;
-            case '=':
-                *ptrResult = *ptrOp1 == op2;
-                break;
-            }
+        switch (operation)
+        {
+        case '+':
+            for (n=0, ptrResult=result.data, ptrOp1=op1.data;
+                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
+            *ptrResult = *ptrOp1 + op2;
+            break;
+        case '-':
+            for (n=0, ptrResult=result.data, ptrOp1=op1.data;
+                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
+            *ptrResult = *ptrOp1 - op2;
+            break;
+        case '*':
+            for (n=0, ptrResult=result.data, ptrOp1=op1.data;
+                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
+            *ptrResult = *ptrOp1 * op2;
+            break;
+        case '/':
+            for (n=0, ptrResult=result.data, ptrOp1=op1.data;
+                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
+            *ptrResult = *ptrOp1 / op2;
+            break;
+        case '=':
+            for (n=0, ptrResult=result.data, ptrOp1=op1.data;
+                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
+            *ptrResult = *ptrOp1 == op2;
+            break;
+        }
     }
 
     /** Array by scalar.
@@ -4517,10 +4525,21 @@ public:
     double sum2() const
     {
         double sum = 0;
-        T* ptr=NULL;
-        size_t n;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-        sum += *ptr * *ptr;
+
+        // Unroll the loop
+        const size_t unroll=4;
+        size_t nmax=(NZYXSIZE(*this)/unroll)*unroll;
+        T* ptr = MULTIDIM_ARRAY(*this);
+        for (size_t n=0; n<nmax; n+=unroll, ptr+=unroll)
+        {
+        	               sum+= (*ptr)*(*ptr);
+        	T* ptr1=ptr+1; sum+= (*ptr1)*(*ptr1);
+        	T* ptr2=ptr+2; sum+= (*ptr2)*(*ptr2);
+        	T* ptr3=ptr+3; sum+= (*ptr3)*(*ptr3);
+        }
+        // Do the remaining elements
+        for (size_t n=nmax; n<NZYXSIZE(*this); ++n, ++ptr)
+            sum+=(*ptr)*(*ptr);
         return sum;
     }
 
