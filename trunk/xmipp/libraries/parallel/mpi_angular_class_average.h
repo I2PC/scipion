@@ -131,12 +131,13 @@ public:
     int ctfNum;
     /** Number of 3D references */
     int ref3dNum;
-
     /** Image dimentions */
     int Xdim, Ydim, Zdim;
     /** Number of valid projection directions */
     size_t Ndim;
 
+    /** Dvide the job in this number block with this number of images */
+    int mpi_job_size;
 
     MpiProgAngularClassAverage(int argc, char **argv);
 
@@ -148,6 +149,10 @@ public:
     void defineParams();
 
     void run();
+
+    /** Process a job list (ref3d - ctfGroup - ref2d)
+         */
+    void mpi_process_loop(double * Def_3Dref_2Dref_JobNo);
 
     /** Process a single job (ref3d - ctfGroup - ref2d)
          */

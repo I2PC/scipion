@@ -103,6 +103,8 @@ void MpiProgAngularClassAverage::readParams()
     max_shift_change = getDoubleParam("--max_shift_change");
     max_psi_change = getDoubleParam("--max_psi_change");
     do_mirrors = true;
+
+    mpi_job_size = getIntParam("--mpi_job_size");
 }
 
 // Define parameters ==========================================================
@@ -152,6 +154,9 @@ void MpiProgAngularClassAverage::defineParams()
     addParamsLine(
         "   [--max_psi_change <mps=360.>]   : Discard images that change psi more in the last iteration ");
 
+    addParamsLine("  [--mpi_job_size <size=10>]   : Number of images sent to a cpu in a single job ");
+    addParamsLine("                                : 10 may be a good value");
+
     addExampleLine(
         "Sample at default values and calculating output averages of random halves of the data",
         false);
@@ -173,12 +178,12 @@ void MpiProgAngularClassAverage::run()
     for (lockIndex = 0; lockIndex < nJobs; ++lockIndex)
         lockArray[lockIndex]=false;
 
-    double * Def_3Dref_2Dref_JobNo = new double[ArraySize];
+    double * jobListRows = new double[ArraySize * mpi_job_size + 1];
 
     if (node->rank == 0)
     {
         //for (int iCounter = 0; iCounter < nJobs; )//increase counter after I am free
-        int iCounter = 0;
+        int iCounter = 0, size;
         int finishedNodes = 1;
         bool whileLoop = true;
 
@@ -193,34 +198,38 @@ void MpiProgAngularClassAverage::run()
             switch (status.MPI_TAG)
             {
             case TAG_I_AM_FREE:
-                //Some test values for defocus, 3D reference and projection direction
-                mdJobList.getValue(MDL_REF3D, ref3d,  __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[index_3DRef] = (double) ref3d;
-                mdJobList.getValue(MDL_DEFGROUP, ctfGroup, __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[index_DefGroup] = (double) ctfGroup;
-                mdJobList.getValue(MDL_ORDER, order,  __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[index_Order] = (double) order;
-                mdJobList.getValue(MDL_COUNT, count,  __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[index_Count] = (double) count;
-                mdJobList.getValue(MDL_REF, ref2d,  __iterJobs.objId);
-                Def_3Dref_2Dref_JobNo[index_2DRef] = (double) ref2d;
-                Def_3Dref_2Dref_JobNo[index_iCounter] = (double) iCounter;
-                mdJobList.getValue(MDL_ANGLEROT, Def_3Dref_2Dref_JobNo[index_Rot],  __iterJobs.objId);
-                mdJobList.getValue(MDL_ANGLETILT, Def_3Dref_2Dref_JobNo[index_Tilt],  __iterJobs.objId);
 
-                //increase counter after sending work
-                ++iCounter;
+                size = 0;
+                for (int i=0;i<mpi_job_size && iCounter < nJobs;i++,size++,iCounter++)
+                {
+                    //Some test values for defocus, 3D reference and projection direction
+                    mdJobList.getValue(MDL_REF3D, ref3d,  __iterJobs.objId);
+                    jobListRows[index_3DRef + ArraySize * i + 1] = (double) ref3d;
+                    mdJobList.getValue(MDL_DEFGROUP, ctfGroup, __iterJobs.objId);
+                    jobListRows[index_DefGroup + ArraySize * i + 1] = (double) ctfGroup;
+                    mdJobList.getValue(MDL_ORDER, order,  __iterJobs.objId);
+                    jobListRows[index_Order + ArraySize * i + 1] = (double) order;
+                    mdJobList.getValue(MDL_COUNT, count,  __iterJobs.objId);
+                    jobListRows[index_Count + ArraySize * i + 1] = (double) count;
+                    mdJobList.getValue(MDL_REF, ref2d,  __iterJobs.objId);
+                    jobListRows[index_2DRef + ArraySize * i + 1] = (double) ref2d;
+                    jobListRows[index_iCounter + ArraySize * i + 1] = (double) iCounter;
+                    mdJobList.getValue(MDL_ANGLEROT, jobListRows[index_Rot + ArraySize * i + 1],  __iterJobs.objId);
+                    mdJobList.getValue(MDL_ANGLETILT, jobListRows[index_Tilt + ArraySize * i + 1],  __iterJobs.objId);
+                    __iterJobs.moveNext();
+                }
+                jobListRows[0]=size;
 
                 //read worker call just to remove it from the queue
                 MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_I_AM_FREE, MPI_COMM_WORLD,
                          &status);
-                if(iCounter < nJobs)
+                if(size > 0)
                 {
                     //send work, first int defocus, second 3D reference, 3rd projection
                     // direction and job number
-                    MPI_Send(Def_3Dref_2Dref_JobNo, ArraySize, MPI_DOUBLE, status.MPI_SOURCE,
+                    MPI_Send(jobListRows, ArraySize * mpi_job_size + 1, MPI_DOUBLE, status.MPI_SOURCE,
                              TAG_WORK, MPI_COMM_WORLD);
-                    __iterJobs.moveNext();
+                    //__iterJobs.moveNext();
                 }
                 else
                 {
@@ -277,9 +286,9 @@ void MpiProgAngularClassAverage::run()
                 whileLoop=false;
                 break;
             case TAG_WORK://work to do
-                MPI_Recv(Def_3Dref_2Dref_JobNo, ArraySize, MPI_DOUBLE, 0, TAG_WORK,
+                MPI_Recv(jobListRows, ArraySize * mpi_job_size + 1, MPI_DOUBLE, 0, TAG_WORK,
                          MPI_COMM_WORLD, &status);
-                mpi_process(Def_3Dref_2Dref_JobNo);
+                mpi_process_loop(jobListRows);
                 break;
             default:
                 break;
@@ -291,12 +300,24 @@ void MpiProgAngularClassAverage::run()
     MPI_Finalize();
 }
 
+
+void MpiProgAngularClassAverage::mpi_process_loop(double * Def_3Dref_2Dref_JobNo)
+{
+	int size = ROUND(Def_3Dref_2Dref_JobNo[0]);
+
+	for(int i=0;i<size;i++)
+	{
+		mpi_process(Def_3Dref_2Dref_JobNo+i*ArraySize+1);
+	}
+
+}
+
 void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 {
-    std::cerr
+    std::cerr<<"["<<node->rank<<"]"
+    << " 3DRef:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_3DRef])
     << " DefGroup: "  << ROUND(Def_3Dref_2Dref_JobNo[index_DefGroup])
     << " 2DRef:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_2DRef])
-    << " 3DRef:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_3DRef])
     << " Order:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_Order])
     << " Count:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_Count])
     << " iCounter: "  << ROUND(Def_3Dref_2Dref_JobNo[index_iCounter])
@@ -307,7 +328,6 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 
     size_t dirno;
     //processOneClass(dirno, output_values);
-    std::cerr<<"["<<node->rank<<"]: "<< "mpi_process_01"<<std::endl;
 
     Image<double> img, avg, avg1, avg2;
     FileName fn_img, fn_tmp;
@@ -318,7 +338,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     int ref_number, this_image, ref3d, defGroup;
     static int defGroup_last = 0;
     int isplit;
-    MetaData _DF;
+    MetaData _DF, _DFaux, _DFaux2;
     size_t id;
     size_t order_number;
 
@@ -345,8 +365,12 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         defGroup_last = defGroup;
     }
 
-    _DF.importObjects(DF, MDValueEQ(MDL_ORDER, order_number));
+    _DFaux2.importObjects(DF, MDValueEQ(MDL_REF3D, ref3d));
+    _DFaux.importObjects(_DFaux2, MDValueEQ(MDL_DEFGROUP, defGroup));
+    _DF.importObjects(_DFaux, MDValueEQ(MDL_ORDER, order_number));
+
     std::cerr<<"["<<node->rank<<"]: "<< "mpi_process_02"<<std::endl;
+    std::cerr << _DF <<std::endl;
 
     if (_DF.size() == 0)
     {//no images assigned to this class
