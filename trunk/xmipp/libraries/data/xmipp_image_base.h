@@ -122,9 +122,9 @@ struct ImageFHandler
 
 struct ImageInfo
 {
-	DataType  datatype;
-	bool	  swap;
-	ArrayDim  adim;
+    DataType  datatype;
+    bool   swap;
+    ArrayDim  adim;
 };
 
 /// @name Images Speed-up
@@ -225,7 +225,7 @@ protected:
     FILE*               fhed;        // Image File header handler
     TIFF*               tif;         // TIFF Image file hander
     ImageFHandler*      hFile;       // Image File handler information structure
-    ArrayDim			aDimFile;   // Image header file information structure (original info from file)
+    ArrayDim   aDimFile;   // Image header file information structure (original info from file)
     DataMode            dataMode;    // Flag to force select what will be read/write from image files
     bool                stayOpen;    // To maintain the image file open after read/write
     size_t              offset;      // Data offset
@@ -240,7 +240,7 @@ protected:
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
     size_t              mappedOffset;// Offset for the mapped file
-    int 				mappedSlice; // Slice number when mapped single slice
+    int     mappedSlice; // Slice number when mapped single slice
 
 public:
 
@@ -273,12 +273,14 @@ public:
      *  Check whether a real-space image can be read*/
     bool isImage(const FileName &name)
     {
-    	try {
-    		return !read(name, HEADER);
-    	} catch (XmippError XE)
-    	{
-    		return false;
-    	}
+        try
+        {
+            return !read(name, HEADER);
+        }
+        catch (XmippError XE)
+        {
+            return false;
+        }
     }
 
     /** Check if image is mapped on file
@@ -380,9 +382,9 @@ public:
     virtual int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE) = 0;
 
     /** This function allows to read the original image or a preview of it also allowing to select either
-     * 	a specific image from the stack or a slice from a volume.
+     *  a specific image from the stack or a slice from a volume.
      *
-     * 	In the case of reading images in its real dimensions it is also possible to image map from file.
+     *  In the case of reading images in its real dimensions it is also possible to image map from file.
      */
     int readOrReadPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE, bool mapData = false);
 
@@ -438,6 +440,16 @@ public:
     /** Get Image dimensions
      */
     virtual void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const = 0;
+    void getDimensions(ArrayDim &aDim)
+    {
+        getDimensions(aDim.xdim, aDim.ydim, aDim.zdim, aDim.ndim);
+    }
+    ArrayDim getDimensions()
+    {
+        ArrayDim aDim;
+        getDimensions(aDim.xdim, aDim.ydim, aDim.zdim, aDim.ndim);
+        return aDim;
+    }
 
     /** Get basic information from already read image file
      */
@@ -571,7 +583,14 @@ public:
 
     /** Set image dimensions */
     virtual void setDimensions(int Xdim, int Ydim, int Zdim, size_t Ndim) = 0;
+    virtual void setDimensions(ArrayDim aDim) = 0;
 
+    /** Set the information of the original image dimensions
+     */
+    void setADimFile(ArrayDim aDim)
+    {
+        aDimFile = aDim;
+    }
     /** Set file name
      */
     void setName(const FileName &_filename)
