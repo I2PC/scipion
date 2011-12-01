@@ -328,7 +328,7 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
         if (!checkMmapT(wDType))
         {
-            if (dataMode < DATA && castMode == CW_CAST) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
+            if (dataMode < DATA) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
                 return 0;
             else
                 REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");

@@ -136,11 +136,12 @@ public:
         return image->tilt(n);
     }
 
-    /** Set Image dimensions
+    /** Resizes image dimensions
      */
-    void setDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
+    void resize(int Xdim, int Ydim, int Zdim, size_t Ndim, bool copy=true)
     {
         image->setDimensions(Xdim, Ydim, Zdim, Ndim);
+        data->resize(Ndim, Zdim, Ydim, Xdim, copy);
     }
 
     /** Set the data type for the generic image

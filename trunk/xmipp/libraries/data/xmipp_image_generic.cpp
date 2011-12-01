@@ -239,9 +239,11 @@ void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &
     image->mapFile2Write(Xdim,Ydim,Zdim,_filename,createTempFile, select_img, isStack, mode);
 
     DataType writeDT = image->datatype();
+
     if ( writeDT != datatype)
     {
         setDatatype(writeDT);
+
         image->mapFile2Write(Xdim,Ydim,Zdim,_filename,createTempFile, select_img, isStack, mode);
     }
 }

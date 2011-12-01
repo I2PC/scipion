@@ -769,22 +769,25 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         this->getDimensions(Xdim, Ydim, Zdim, Ndim);
         auxI.getDimensions(_Xdim, _Ydim, _Zdim, _Ndim);
 
-        replaceNsize = _Ndim;
-
-        /** If we are going to changes all images, then swap of the file may be changed,
-         *  otherwise, original swap remains. */
-        if (select_img > ALL_IMAGES || Ndim < replaceNsize)
-            swapWrite = auxI.swap;
-
-        if(Xdim != _Xdim ||
-           Ydim != _Ydim ||
-           Zdim != _Zdim)
+        if(auxI.getSize()>1)
         {
-            REPORT_ERROR(ERR_MULTIDIM_SIZE,formatString(
-                             "ImageBase::Write: images source and target have different sizes:\n"
-                             "Image source to be written (x,y,z,n) = %d %d %d %lu\n"
-                             "Image file target %s (x,y,z,n) = %d %d %d %lu",
-                             Xdim,Ydim,Zdim,Ndim,dataFName.c_str(),_Xdim,_Ydim,_Zdim,_Ndim));
+            replaceNsize = _Ndim;
+
+            /** If we are going to changes all images, then swap of the file may be changed,
+             *  otherwise, original swap remains. */
+            if (select_img > ALL_IMAGES || Ndim < replaceNsize)
+                swapWrite = auxI.swap;
+
+            if(Xdim != _Xdim ||
+               Ydim != _Ydim ||
+               Zdim != _Zdim)
+            {
+                REPORT_ERROR(ERR_MULTIDIM_SIZE,formatString(
+                                 "ImageBase::Write: images source and target have different sizes:\n"
+                                 "Image source to be written (x,y,z,n) = %d %d %d %lu\n"
+                                 "Image file target %s (x,y,z,n) = %d %d %d %lu",
+                                 Xdim,Ydim,Zdim,Ndim,dataFName.c_str(),_Xdim,_Ydim,_Zdim,_Ndim));
+            }
         }
     }
     else if(!_exists && mode == WRITE_APPEND)
