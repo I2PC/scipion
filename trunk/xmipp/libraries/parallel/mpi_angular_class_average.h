@@ -166,6 +166,14 @@ public:
          */
     void mpi_preprocess();
 
+    /** Read input metadata and filter following the user define constraints
+         */
+    void filterInputMetadata();
+
+    /** Save discarded images
+         */
+    void saveDiscardedImages();
+
     /** Initialize file names.
          */
     void initFileNames();
