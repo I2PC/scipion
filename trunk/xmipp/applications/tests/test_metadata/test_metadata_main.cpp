@@ -479,27 +479,68 @@ TEST_F( MetadataTest, Merge)
     EXPECT_EQ(auxMetadata,auxMetadata2);
 }
 
-TEST_F( MetadataTest, NaturalJoin)
-{
-    MetaData auxMetadata;
-    MetaData auxMetadata3;
-    id = auxMetadata3.addObject();
-    auxMetadata3.setValue(MDL_X,1.,id);
-    auxMetadata3.setValue(MDL_Y,2.,id);
-    auxMetadata3.setValue(MDL_Z,222.,id);
-    id = auxMetadata3.addObject();
-    auxMetadata3.setValue(MDL_X,3.,id);
-    auxMetadata3.setValue(MDL_Y,4.,id);
-    auxMetadata3.setValue(MDL_Z,333.,id);
-    id = auxMetadata3.addObject();
-    auxMetadata3.setValue(MDL_X,5.,id);
-    auxMetadata3.setValue(MDL_Y,6.,id);
-    auxMetadata3.setValue(MDL_Z,444.,id);
 
-    auxMetadata.join(mDsource,auxMetadata3,MDL_X,NATURAL);
-    auxMetadata3.removeObject(id);
-    EXPECT_EQ(auxMetadata,auxMetadata3);
-}
+ TEST_F( MetadataTest, MultiQuery)
+ {
+     MetaData auxMetadata;
+     MetaData auxMetadata3;
+     id = auxMetadata3.addObject();
+     auxMetadata3.setValue(MDL_X,1.,id);
+     auxMetadata3.setValue(MDL_Y,2.,id);
+     auxMetadata3.setValue(MDL_Z,222.,id);
+     id = auxMetadata3.addObject();
+     auxMetadata3.setValue(MDL_X,3.,id);
+     auxMetadata3.setValue(MDL_Y,4.,id);
+     auxMetadata3.setValue(MDL_Z,333.,id);
+     id = auxMetadata3.addObject();
+     auxMetadata3.setValue(MDL_X,3.,id);
+     auxMetadata3.setValue(MDL_Y,4.,id);
+     auxMetadata3.setValue(MDL_Z,444.,id);
+
+	 MDValueEQ eq1(MDL_X, 3.);
+	 MDValueEQ eq2(MDL_Y, 4.);
+	 MDMultiQuery multi;
+
+	 multi.addAndQuery(eq1);
+	 multi.addAndQuery(eq2);
+
+	 auxMetadata.importObjects(auxMetadata3, multi);
+
+     MetaData outMetadata;
+     id = outMetadata.addObject();
+     outMetadata.setValue(MDL_X,3.,id);
+     outMetadata.setValue(MDL_Y,4.,id);
+     outMetadata.setValue(MDL_Z,333.,id);
+     id = outMetadata.addObject();
+     outMetadata.setValue(MDL_X,3.,id);
+     outMetadata.setValue(MDL_Y,4.,id);
+     outMetadata.setValue(MDL_Z,444.,id);
+
+     EXPECT_EQ(outMetadata,auxMetadata);
+ }
+
+
+ TEST_F( MetadataTest, NaturalJoin)
+ {
+     MetaData auxMetadata;
+     MetaData auxMetadata3;
+     id = auxMetadata3.addObject();
+     auxMetadata3.setValue(MDL_X,1.,id);
+     auxMetadata3.setValue(MDL_Y,2.,id);
+     auxMetadata3.setValue(MDL_Z,222.,id);
+     id = auxMetadata3.addObject();
+     auxMetadata3.setValue(MDL_X,3.,id);
+     auxMetadata3.setValue(MDL_Y,4.,id);
+     auxMetadata3.setValue(MDL_Z,333.,id);
+     id = auxMetadata3.addObject();
+     auxMetadata3.setValue(MDL_X,5.,id);
+     auxMetadata3.setValue(MDL_Y,6.,id);
+     auxMetadata3.setValue(MDL_Z,444.,id);
+
+     auxMetadata.join(mDsource,auxMetadata3,MDL_X,NATURAL);
+     auxMetadata3.removeObject(id);
+     EXPECT_EQ(auxMetadata,auxMetadata3);
+ }
 
 TEST_F( MetadataTest, Operate)
 {
