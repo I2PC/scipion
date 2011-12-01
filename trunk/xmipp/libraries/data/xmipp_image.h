@@ -961,6 +961,11 @@ protected:
         data.setDimensions(Xdim,Ydim,Zdim,Ndim);
         data.getDimensions(aDimFile);
     }
+    void setDimensions(ArrayDim aDim)
+    {
+        aDimFile = aDim;
+        data.setDimensions(aDim.xdim, aDim.ydim, aDim.zdim, aDim.ndim);
+    }
 
 private:
 

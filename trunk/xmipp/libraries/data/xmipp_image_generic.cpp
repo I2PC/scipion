@@ -85,6 +85,18 @@ void  ImageGeneric::copy(const ImageGeneric &img)
 
 }
 
+void ImageGeneric::getDimensions(int & Xdim, int & Ydim, int & Zdim) const
+{
+    size_t Ndim;
+    image->getDimensions(Xdim, Ydim, Zdim, Ndim);
+}
+
+void ImageGeneric::getDimensions(int & Xdim, int & Ydim, int & Zdim, size_t & Ndim) const
+{
+    image->getDimensions(Xdim, Ydim, Zdim, Ndim);
+}
+
+
 void ImageGeneric::getInfo(ImageInfo &imgInfo) const
 {
     image->getInfo(imgInfo);
@@ -275,12 +287,16 @@ void ImageGeneric::convert2Datatype(DataType _datatype)
         newMAG = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), _datatype);\
         MultidimArray<type>* pMAG;\
         newMAG->getMultidimArrayPointer(pMAG);\
-        data->getImage(*pMAG);\
+        data->getImage(*pMAG);
 
     SWITCHDATATYPE(_datatype, CONVERTTYPE)
 
 #undef CONVERTTYPE
 
+    ArrayDim aDim;
+    getDimensions(aDim);
+    // aDimFile must be set in order to movePointer2Slice can be used
+    newImage->setADimFile(aDim);
     clear();
     datatype = _datatype;
     image = newImage;
