@@ -747,6 +747,8 @@ public:
      */
     void movePointerToSlice(int select_slice = ALL_SLICES)
     {
+        if (MULTIDIM_ARRAY(VOLMATRIX(*this)) == NULL)
+            REPORT_ERROR(ERR_MULTIDIM_EMPTY, "Image::movePointerToSlice: Image is empty");
         if (select_slice > aDimFile.zdim)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, formatString("movePointerToSlice: Selected slice %4d cannot be higher than Z size %4d.",
                          select_slice,aDimFile.zdim));
