@@ -163,10 +163,22 @@ void MpiProgAngularClassAverage::run()
     mpi_preprocess();
 
     //Lock structure
-    bool* lockArray=new bool[nJobs+1];
+    bool* lockArray=new bool[Ndim+1];
+    double* weightArray=new double[Ndim+1];
+    double* weightArrays1=new double[Ndim+1];
+    double* weightArrays2=new double[Ndim+1];
     int lockIndex;
-    for (lockIndex = 0; lockIndex < nJobs; ++lockIndex)
+    double weight,weights1,weights2;
+
+    for (lockIndex = 0; lockIndex <= Ndim; ++lockIndex)
+    {
         lockArray[lockIndex]=false;
+        weightArray[lockIndex]=0.;
+        weightArrays1[lockIndex]=0.;
+        weightArrays2[lockIndex]=0.;
+    }
+
+    double lockWeightIndexes[lockWeightIndexesSize];
 
     double * jobListRows = new double[ArraySize * mpi_job_size + 1];
 
@@ -232,8 +244,12 @@ void MpiProgAngularClassAverage::run()
                 break;
             case TAG_MAY_I_WRITE:
                 //where do you want to write?
-                MPI_Recv(&lockIndex, 1, MPI_INT, MPI_ANY_SOURCE, TAG_MAY_I_WRITE,
+                MPI_Recv(lockWeightIndexes, lockWeightIndexesSize, MPI_DOUBLE, MPI_ANY_SOURCE, TAG_MAY_I_WRITE,
                          MPI_COMM_WORLD, &status);
+                lockIndex =  ROUND(lockWeightIndexes[0]);
+                weight =  lockWeightIndexes[1];
+                weights1 =  lockWeightIndexes[2];
+                weights2 =  lockWeightIndexes[3];
                 if (lockArray[lockIndex])
                 {//Locked
                     MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE,
@@ -242,7 +258,12 @@ void MpiProgAngularClassAverage::run()
                 else
                 {//Unlocked
                     lockArray[lockIndex]=true;
-                    MPI_Send(&lockIndex, 1, MPI_INT, status.MPI_SOURCE,
+                    // Send the old weight
+                    lockWeightIndexes[1] = weightArray[lockIndex];
+                    weightArray[lockIndex] += weight;
+                    weightArrays1[lockIndex] += weights1;
+                    weightArrays2[lockIndex] += weights2;
+                    MPI_Send(lockWeightIndexes, lockWeightIndexesSize, MPI_DOUBLE, status.MPI_SOURCE,
                              TAG_YES_YOU_MAY_WRITE, MPI_COMM_WORLD);
                 }
                 break;
@@ -523,7 +544,10 @@ void MpiProgAngularClassAverage::mpi_write(
     MetaData SFclass2,
     MetaData SFclassDiscarded,
     double w1,
-    double w2)
+    double w2,
+    double old_w,
+    double old_w1,
+    double old_w2)
 {
     // blocks
     FileName fileNameXmd, fileNameStk;
@@ -534,7 +558,7 @@ void MpiProgAngularClassAverage::mpi_write(
                      dirno, ref3dNum, ctfNum, fn_out.c_str(),node->rank);
     formatStringFast(fileNameStk, "%s_refGroup%06lu.stk", fn_out.c_str(),
                      ref3dNum);
-    mpi_writeFile(avg, dirno, SFclass, fileNameXmd, fileNameStk, write_selfiles);
+    mpi_writeFile(avg, dirno, SFclass, fileNameXmd, fileNameStk, write_selfiles, old_w);
     std::cerr<<"["<<node->rank<<"]: "<< "mpi_write_02"<<std::endl;
 
     if (do_split)
@@ -549,7 +573,7 @@ void MpiProgAngularClassAverage::mpi_write(
             formatStringFast(fileNameStk, "%s_refGroup%06lu.stk",
                              fn_out1.c_str(), ref3dNum);
             mpi_writeFile(avg1, dirno, SFclass1, fileNameXmd, fileNameStk,
-                          write_selfiles);
+                          write_selfiles, old_w1);
             std::cerr<<"["<<node->rank<<"]: "<< "mpi_write_04"<<std::endl;
 
         }
@@ -563,7 +587,7 @@ void MpiProgAngularClassAverage::mpi_write(
             formatStringFast(fileNameStk, "%s_refGroup%06lu.stk",
                              fn_out2.c_str(), ref3dNum);
             mpi_writeFile(avg2, dirno, SFclass2, fileNameXmd, fileNameStk,
-                          write_selfiles);
+                          write_selfiles, old_w2);
             std::cerr<<"["<<node->rank<<"]: "<< "mpi_write_06"<<std::endl;
 
         }
@@ -592,9 +616,9 @@ void MpiProgAngularClassAverage::mpi_writeController(
     double w2,
     int lockIndex)
 {
-    //may I write?
-    //    int lockIndex =rnd_unif(1,5);
-    //    std::cerr << "lockIndex" << lockIndex <<std::endl;
+	double weight, weights1, weights2;
+    double lockWeightIndexes[lockWeightIndexesSize];
+
     std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeController_00"<<std::endl;
     bool whileLoop = true;
     while (whileLoop)
@@ -613,10 +637,15 @@ void MpiProgAngularClassAverage::mpi_writeController(
         case TAG_YES_YOU_MAY_WRITE://I am free
             std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeController_02"<<std::endl;
 
-            MPI_Recv(&lockIndex, 1, MPI_INT, 0, MPI_ANY_TAG,
+            MPI_Recv(lockWeightIndexes, lockWeightIndexesSize, MPI_DOUBLE, 0, MPI_ANY_TAG,
                      MPI_COMM_WORLD, &status);
+            lockIndex = ROUND(lockWeightIndexes[0]);
+            weight = lockWeightIndexes[1];
+            weights1 = lockWeightIndexes[2];
+            weights2 = lockWeightIndexes[3];
             std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeController_03"<<std::endl;
-            mpi_write(dirno, avg, avg1, avg2, SFclass, SFclass1, SFclass2, SFclassDiscarded, w1, w2);
+            mpi_write(dirno, avg, avg1, avg2, SFclass, SFclass1, SFclass2,
+            		SFclassDiscarded, w1, w2, weight, weights1, weights2);
             std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeController_04"<<std::endl;
             whileLoop=false;
             break;
@@ -637,10 +666,11 @@ void MpiProgAngularClassAverage::mpi_writeFile(
     MetaData SF,
     FileName fileNameXmd,
     FileName fileNameStk,
-    bool write_selfile)
+    bool write_selfile,
+    double w_old)
 {
     FileName fn_tmp;
-    double w = avg.weight(), w_old = 0;
+    double w = avg.weight();
     Image<double> old;
     MetaData SFold;
     std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeFile_01"<<std::endl;
@@ -664,7 +694,7 @@ void MpiProgAngularClassAverage::mpi_writeFile(
             old.read(fn_tmp);
             std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeFile_05"<<std::endl;
 
-            w_old = old.weight();
+            //w_old = old.weight();
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(old())
             {
                 dAij(old(),i,j) = (w_old * dAij(old(),i,j) + w

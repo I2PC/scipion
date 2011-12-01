@@ -49,6 +49,7 @@
 #define TAG_I_AM_FREE                16
 
 #define ArraySize 8
+#define lockWeightIndexesSize 4
 
 #define index_DefGroup 0
 #define index_2DRef 1
@@ -206,7 +207,10 @@ public:
         MetaData SFclass2,
         MetaData SFclassDiscarded,
         double w1,
-        double w2);
+        double w2,
+        double old_w,
+        double old_w1,
+        double old_w2);
 
     /** Block output file to avoid concurrent writing
          */
@@ -231,7 +235,8 @@ public:
     		MetaData SF,
     		FileName fileNameXmd,
     		FileName fileNameStk,
-    		bool write_selfile);
+    		bool write_selfile,
+    	    double w_old);
 
     /**
          */
