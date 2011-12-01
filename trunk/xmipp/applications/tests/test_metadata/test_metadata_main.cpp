@@ -501,6 +501,10 @@ TEST_F( MetadataTest, Merge)
 	 MDValueEQ eq2(MDL_Y, 4.);
 	 MDMultiQuery multi;
 
+	 //Test empty query
+	 auxMetadata.importObjects(auxMetadata3, multi);
+	 EXPECT_EQ(auxMetadata3,auxMetadata);
+
 	 multi.addAndQuery(eq1);
 	 multi.addAndQuery(eq2);
 
