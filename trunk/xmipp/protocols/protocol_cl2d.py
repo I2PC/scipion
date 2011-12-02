@@ -8,7 +8,7 @@
 import glob,os,re,sys,shutil,time
 from protlib_base import *
 from config_protocols import protDict
-from protlib_utils import runJob, getRangeValuesFromString
+from protlib_utils import runJob, getListFromRangeString
 from protlib_filesystem import createLink, deleteFile
 from xmipp import MetaData, MD_APPEND
 
@@ -79,7 +79,7 @@ class ProtCL2D(XmippProtocol):
                 lastLevelFile=levelFiles[-1]
                 runShowJ(lastLevelFile)
             else:
-                listOfLevels = getRangeValuesFromString(self.LevelsToShow)
+                listOfLevels = getListFromRangeString(self.LevelsToShow)
                 files = " ".join([levelFiles[level] for level in listOfLevels])
                 if files!="":
                     runShowJ(files)

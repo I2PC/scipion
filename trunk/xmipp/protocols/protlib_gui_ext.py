@@ -59,8 +59,11 @@ def configDefaults(opts, defaults):
             
 def openLink(link):
     ''' Open a link in default web browser '''
-    from  webbrowser import open
-    open(link)
+    if os.path.isdir(link):
+        showBrowseDialog(link, link)
+    else:
+        from  webbrowser import open
+        open(link)
     
 def changeFontSizeByDeltha(font, deltha, min=-999, max=999):
     size = font['size']
@@ -422,10 +425,12 @@ class ListboxDialog(Dialog):
         self.result = map(int, self.lb.curselection())
 
     
-# Tkinter Text Widget Hyperlink Manager
-# taken from:
-# http://effbot.org/zone/tkinter-text-hyperlink.htm
 class HyperlinkManager:
+    '''
+    Tkinter Text Widget Hyperlink Manager
+    taken from:
+    http://effbot.org/zone/tkinter-text-hyperlink.htm
+    '''
     def __init__(self, text):
         self.text = text
         self.text.tag_config("hyper", foreground="blue", underline=1)
@@ -457,6 +462,10 @@ class HyperlinkManager:
                 return
             
 class XmippText(tk.Text):    
+    '''
+    Base Text widget with some functionalities that will be used
+    for other extensions
+    ''' 
     def __init__(self, master, **options):  
         registerCommonFonts()    
         defaults = self.getDefaults()
@@ -509,12 +518,12 @@ class XmippText(tk.Text):
             self.addLine(line)
         self.config(state=tk.DISABLED)     
 
-'''
-Implement a Text that will recognized some basic tags
-<some_text> will display some_text in bold
-[some_link] will display some_link as hiperlinnk
-'''           
 class TaggedText(XmippText):  
+    '''
+    Implement a Text that will recognized some basic tags
+    <some_text> will display some_text in bold
+    [some_link] will display some_link as hiperlinnk
+    '''           
     def __init__(self, master, **options):  
         XmippText.__init__(self, master, **options)
         # Create regex for tags parsing
@@ -1188,11 +1197,11 @@ class XmippBrowser():
         self.managers = {}
         self.extSet = {}
         addFm = self.addFileManager
-        addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat'], 
+        addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat', '.pos'], 
                             mdFillMenu, mdOnClick, mdOnDoubleClick)
         addFm('stk', 'stack.gif', ['.stk', '.mrcs'],
                             stackFillMenu, imgOnClick, stackOnDoubleClick)
-        addFm('img', 'image.gif', ['.xmp', '.tif', '.spi', '.mrc'],
+        addFm('img', 'image.gif', ['.xmp', '.tif', '.spi', '.mrc', '.raw'],
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
         addFm('vol', 'vol.gif', ['.vol'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
@@ -1710,7 +1719,6 @@ def showBrowseDialog(path='.', title='', parent=None, main=False, browser=XmippB
         root = tk.Tk()
     else:
         root = tk.Toplevel()
-    #root.grab_set()
     args['initialDir'] = path
     xb = browser(**args)
     xb.createGUI(root, title, parent)

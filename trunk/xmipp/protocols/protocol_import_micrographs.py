@@ -4,73 +4,64 @@
 # Author: Carlos Oscar Sorzano, July 2011
 
 from glob import glob
-import os
-from os.path import join
-from config_protocols import protDict
 from protlib_base import *
 import xmipp
+from protlib_filesystem import replaceFilenameExt
 
 class ProtImportMicrographs(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.import_micrographs.name, scriptname, project)
-        self.Import="from protocol_import_micrographs import *"
-
-    def createFilenameTemplates(self):
-        return {
-                'micrographs': self.workingDirPath('micrographs.sel'),
-                'micrographsPattern': join(self.DirMicrographs, self.ExtMicrographs),
-                "tiltedPairs": self.workingDirPath("tilted_pairs.xmd")
-                }
+        self.Import = "from protocol_import_micrographs import *"
+        self.PatternMicrographs = join(self.DirMicrographs, self.ExtMicrographs)
         
     def defineSteps(self):
         # Create microscope
         self.insertCreateMicroscope()
 
         # Decide name after preprocessing
-        fileDict={}
-        self.actualDoPreprocess = self.DoPreprocess and (self.Stddev != -1 or self.Crop != -1 or self.Down != 1)
-        for filename in glob(join(self.DirMicrographs, self.ExtMicrographs)):
-            (filepath, micrographName) = os.path.split(filename)
-            if self.actualDoPreprocess:
-                (finalname, extension) = os.path.splitext(micrographName)
-                finalname += ".mrc"
-            else:
-                finalname = micrographName
-            fileDict[filename]=self.workingDirPath(finalname)
-
-        # Preprocess
-        #idMPI=self.insertRunMpiGapsStep(fileDict.values())
-        for filename in glob(join(self.DirMicrographs, self.ExtMicrographs)):
-            self.insertPreprocessStep(filename,fileDict[filename])
+        doPreprocess = self.DoPreprocess and (self.DoCrop or self.DoRemoveBadPixelsStddev or self.DoDownsample)
+        micrographs = self.getMicrographs()
+        micrographs.sort()
+        if doPreprocess:
+            func = self.insertPreprocessStep
+        elif self.CopyMicrographs:
+            func = self.insertCopyMicrograph
+        else:
+            func = lambda i, o: i #Do nothing
         
-        # Gather results
-        summaryFile = self.getFilename('micrographs')
-        self.insertStep('gatherResults',verifyfiles=[summaryFile],
-                        WorkingDir=self.WorkingDir, summaryFile=summaryFile)
+        filenameDict = {}
+        for m in micrographs:
+            output = self.workingDirPath(replaceFilenameExt(os.path.basename(m), '.mrc'))
+            filenameDict[m] = output
+            func(m, output)
         
-        # Copy tilt pairs description
-        if self.TiltPairs:
-            self.insertStep("createLink",verifyfiles=[self.getFilename('tiltedPairs')],
-                            source=self.PairDescr, dest=self.getFilename('tiltedPairs'))
+        self.insertCreateResults(filenameDict)
+#        # Create metadata with 
+#        summaryFile = self.getFilename('micrographs')
+#        self.insertStep('gatherResults', verifyfiles=[summaryFile],
+#                        WorkingDir=self.WorkingDir, summaryFile=summaryFile)
+#        # Copy tilt pairs description
+#        if self.TiltPairs:
+#            self.insertStep("createLink", verifyfiles=[self.getFilename('tiltedPairs')],
+#                            source=self.PairDescr, dest=self.getFilename('tiltedPairs'))
 
     def validate(self):
         errors = []
         # Check that there are any micrograph to process
         if len(self.getMicrographs()) == 0:
-            errors.append("There are no micrographs to process in " + self.getFilename('micrographsPattern'))
+            errors.append("There are no micrographs to process in " + self.PatternMicrographs)
         return errors
 
     def summary(self):
         message = []
-        micrographs = self.getMicrographs()
-        message.append("Import of <%d> micrographs from <%s>" % (len(micrographs), self.DirMicrographs))
+        message.append("Import of <%d> micrographs from <%s>" % (len(self.getMicrographs()), self.DirMicrographs))
         if self.TiltPairs:
             message.append("Micrographs are in tilt pairs")
         return message
     
     def getMicrographs(self):
         ''' Return a list with micrographs in WorkingDir'''
-        return glob(self.getFilename('micrographsPattern'))
+        return glob(self.PatternMicrographs)
     
     def visualize(self):
         if self.TiltPairs:
@@ -87,58 +78,79 @@ class ProtImportMicrographs(XmippProtocol):
         else:
             AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
         fnOut = self.workingDirPath("microscope.xmd")
-        self.insertStep("createMicroscope", verifyfiles = [fnOut], fnOut=fnOut, Voltage=self.Voltage,
+        self.insertStep("createMicroscope", verifyfiles=[fnOut], fnOut=fnOut, Voltage=self.Voltage,
                         SphericalAberration=self.SphericalAberration,SamplingRate=AngPix,
                         Magnification=self.Magnification)
             
-    def insertPreprocessStep(self,micrograph,finalname):
+    def insertCreateResults(self, filenameDict):
+        micFn = self.getFilename('micrographs')
+        print micFn
+        vf = [micFn]
+        pairMd = ''
+        tilted = ''
+        if self.TiltPairs:
+            tilted = self.getFilename('tiltedPairs')
+            vf.append(tilted)
+            pairMd = self.PairDescr
+        self.insertStep('createResults', verifyfiles=vf, WorkingDir=self.WorkingDir, PairsMd=pairMd, 
+                        FilenameDict=filenameDict, MicrographFn=vf[0], TiltedFn=tilted)
+        
+    def insertCopyMicrograph(self, inputMic, outputMic):
+        self.insertStep('copyFile', source=inputMic, dest=outputMic)
+        if inputMic.endswith('.raw'):
+            self.insertStep('copyFile', source=replaceFilenameExt(inputMic, '.inf'), 
+                            dest=replaceFilenameExt(outputMic, '.inf'))
+        
+    def insertPreprocessStep(self, inputMic, outputMic):
         previousId = XmippProjectDb.FIRST_STEP
-        if not self.actualDoPreprocess:
-            if not os.path.exists(finalname):
-                previousId = self.insertParallelStep('createLink', verifyfiles=[finalname], source=micrograph, dest=finalname)
-                if finalname.endswith(".raw"):
-                    previousId = self.insertParallelStep("createLink",verifyfiles=[finalname+".inf"], parent_step_id=previousId,
-                                               source=micrograph+".inf", dest=finalname+".inf")
-        else:    
-            # Crop
-            iname=micrograph
-            if self.Crop != -1:
-                previousId = self.insertParallelRunJobStep("xmipp_transform_window", " -i %s -o %s --crop %d -v 0" %(iname,finalname,self.Crop),
-                                                           verifyfiles=[finalname])
-                iname=finalname
-            # Remove bad pixels
-            if self.Stddev != -1:
-                params = " -i %s --bad_pixels outliers %f -v 0" % (iname, self.Stddev)
-                if not iname == finalname:
-                    params += " -o " + finalname
-                    iname = finalname
-                previousId = self.insertParallelRunJobStep("xmipp_transform_filter", params, verifyfiles=[finalname], parent_step_id=previousId)
-            
-            # Downsample
-            if self.Down != 1:
-                tmpFile = finalname + "_tmp.mrc"
-                previousId = self.insertParallelRunJobStep("xmipp_transform_downsample", "-i %s -o %s --step %f --method fourier" % (iname,tmpFile,self.Down),
-                                           verifyfiles = [tmpFile], parent_step_id=previousId)
-                self.insertParallelStep("renameFile",verifyfiles=[finalname], parent_step_id=previousId, 
-                                source=tmpFile, dest=finalname)
+        # Crop
+        iname = inputMic
+        if self.DoCrop:
+            previousId = self.insertParallelRunJobStep("xmipp_transform_window", " -i %s -o %s --crop %d -v 0" %(iname,outputMic, self.Crop),
+                                                       verifyfiles=[outputMic])
+            iname = outputMic
+        # Remove bad pixels
+        if self.Stddev != -1:
+            params = " -i %s --bad_pixels outliers %f -v 0" % (iname, self.Stddev)
+            if iname != outputMic:
+                params += " -o " + outputMic
+                iname = outputMic
+            previousId = self.insertParallelRunJobStep("xmipp_transform_filter", params, verifyfiles=[outputMic], parent_step_id=previousId)
+        
+        # Downsample
+        if self.Down != 1:
+            tmpFile = outputMic + "_tmp.mrc"
+            previousId = self.insertParallelRunJobStep("xmipp_transform_downsample", "-i %s -o %s --step %f --method fourier" % (iname,tmpFile,self.Down),
+                                       verifyfiles = [tmpFile], parent_step_id=previousId)
+            self.insertParallelStep("renameFile", verifyfiles=[outputMic], parent_step_id=previousId, 
+                            source=tmpFile, dest=outputMic)
 
 def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):
-    MD = xmipp.MetaData()
-    MD.setColumnFormat(False)
-    id = MD.addObject()
-    MD.setValue(xmipp.MDL_CTF_VOLTAGE,float(Voltage),id)    
-    MD.setValue(xmipp.MDL_CTF_CS,float(SphericalAberration),id)    
-    MD.setValue(xmipp.MDL_CTF_SAMPLING_RATE,float(SamplingRate),id)
-    MD.setValue(xmipp.MDL_MAGNIFICATION,float(Magnification),id)
-    MD.write(fnOut)    
+    md = xmipp.MetaData()
+    md.setColumnFormat(False)
+    objId = md.addObject()
+    md.setValue(xmipp.MDL_CTF_VOLTAGE,float(Voltage),objId)    
+    md.setValue(xmipp.MDL_CTF_CS,float(SphericalAberration),objId)    
+    md.setValue(xmipp.MDL_CTF_SAMPLING_RATE,float(SamplingRate),objId)
+    md.setValue(xmipp.MDL_MAGNIFICATION,float(Magnification),objId)
+    md.write(fnOut)    
 
-def gatherResults(log, WorkingDir, summaryFile):
-    MD = xmipp.MetaData()
-    for filename in glob(join(WorkingDir, "*")):
-        if filename.endswith(".xmd") or filename.endswith("tmp") or filename.endswith(".sel") or filename.endswith(".inf"):
-            continue
-        objId = MD.addObject()
-        MD.setValue(xmipp.MDL_MICROGRAPH, filename, objId)
-    if MD.size() != 0:
-        MD.sort(xmipp.MDL_MICROGRAPH);
-        MD.write(summaryFile)
+def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn):
+    ''' Create a metadata micrographs.xmd with all micrographs
+    and if tilted pairs another one tilted_pairs.xmd'''
+    from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED
+    md = MetaData() 
+    for outFn in FilenameDict.values():
+        md.setValue(MDL_MICROGRAPH, outFn, md.addObject())
+    md.write(MicrographFn)
+    
+    if len(PairsMd):
+        md = MetaData() 
+        mdTilted = MetaData(PairsMd)
+        for objId in mdTilted:
+            u = mdTilted.getValue(MDL_MICROGRAPH, objId)
+            t = mdTilted.getValue(MDL_MICROGRAPH_TILTED, objId)
+            id2 = md.addObject()
+            md.setValue(MDL_MICROGRAPH, u, id2)
+            md.setValue(MDL_MICROGRAPH_TILTED, t, id2)
+        mdTilted.write(TiltedFn)

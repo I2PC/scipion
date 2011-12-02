@@ -9,7 +9,7 @@
 from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import runJob
-from protlib_filesystem import createLink
+from protlib_filesystem import createLink, copyFile
 import xmipp
 from glob import glob
 from os.path import exists, join
@@ -28,15 +28,9 @@ class ProtParticlePicking(XmippProtocol):
             self.inputMicrographs = os.path.join(getWorkingDirFromRunName(self.ImportRun), "micrographs.xmd")
             self.tiltPairs = False
 
-    def createFilenameTemplates(self):
-        return {
-                'micrographs': self.workingDirPath('micrographs.xmd')
-                }
-
     def defineSteps(self):
-        self.Db.insertStep('createLink',execution_mode=SqliteDb.EXEC_MAINLOOP,
-                           source=self.inputMicrographs,dest=self.getFilename("micrographs"))
-        self.Db.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
+        self.insertStep('copyFile', source=self.inputMicrographs, dest=self.getFilename("micrographs"))
+        self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
                            MicrographSelfile=self.getFilename("micrographs"), WorkingDir=self.WorkingDir,
                            TiltPairs=self.tiltPairs,
                            AutomaticPicking=self.AutomaticPicking, NumberOfThreads=self.NumberOfThreads,
@@ -92,25 +86,24 @@ class ProtParticlePicking(XmippProtocol):
         return summary
     
     def validate(self):
-        errors = []
         # Check that there is a valid list of micrographs
-        if not exists(self.inputMicrographs)>0:
-            errors.append("Cannot find "+self.inputMicrographs)
-            return errors
+        if not exists(self.inputMicrographs):
+            return ["Cannot find input micrographs: \n   <%s>" % self.inputMicrographs]
         # Check that all micrographs exist
-        errMsg = ""
+        errors = []
         mD = xmipp.MetaData(self.inputMicrographs)
-        for id in mD:
-            micrograph = mD.getValue(xmipp.MDL_MICROGRAPH,id)
+        missingMicrographs = []        
+        def checkMicrograph(label, id): # Check if micrograph exists
+            micrograph = mD.getValue(label,id)
             if not exists(micrograph):
-                errMsg += "  " + micrograph
+                missingMicrographs.append(micrograph)
+        for id in mD:
+            checkMicrograph(xmipp.MDL_MICROGRAPH, id)
             if self.tiltPairs:
-                micrograph = mD.getValue(xmipp.MDL_MICROGRAPH_TILTED,id)
-                if not exists(micrograph):
-                    errMsg += "  " + micrograph
+                checkMicrograph(xmipp.MDL_MICROGRAPH_TILTED, id)
         
-        if len(errMsg):
-            errors.append("Cannot find the following micrographs: " + errMsg)
+        if len(missingMicrographs):
+            errors.append("Cannot find the following micrographs: " + "\n".join(missingMicrographs))
                 
         # Check that automatic particle picking is not for tilted
         if self.tiltPairs and self.AutomaticPicking:

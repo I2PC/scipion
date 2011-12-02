@@ -15,7 +15,7 @@ Describe your run here...
 #-----------------------------------------------------------------------------
 # {section} Run 
 #-----------------------------------------------------------------------------
-# Run name:
+# RUN name:
 """ 
 This will identify your protocol run. It need to be unique for each protocol. 
 You could have <run1>, <run2> for protocol X, but not two run1 for same protocol. 

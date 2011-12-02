@@ -12,8 +12,10 @@
 DirMicrographs = 'Micrographs'
 
 # Files to process
-""" This is typically *.tif or *.ser, but may also be *.mrc, *.spi 
-    Note that any wildcard is possible, e.g. *3[1,2].tif
+""" 
+This is the micrographs files pattern, typically <*.tif> or <*.ser>, 
+but may also be <*.mrc> or <*.spi> 
+<Note:> you can use any wildcard like in shell expansion, e.g. <*3[1,2].tif>
 """
 ExtMicrographs = '*.mrc'
 
@@ -21,30 +23,53 @@ ExtMicrographs = '*.mrc'
 TiltPairs = False
 
 # {condition}(TiltPairs){wizard}(wizardTiltPairs) Pair assignment
-""" Only for tilt pairs
+""" 
+You should provide a metadata with entries for each 
+untilted and tilted pairs. It should reference to micrographs
+in previous selected folder. The wizard will help you
+to create this metadata.
 """
 PairDescr = ""
 
+# Preprocess micrographs?
+"""Perform some preprocessing operations on micrographs"""
+DoPreprocess = False
+
+# {condition}(not DoPreprocess) Copy micrographs?
+""" 
+Set to <True> if you want to copy micrographs from input
+folder to the protocol working directory
+"""
+CopyMicrographs = False
+
 #------------------------------------------------------------------------------------------------
-# {section}{has_question} Preprocess
+# {condition}(DoPreprocess){section} Preprocessing
 #------------------------------------------------------------------------------------------------
-# Do Preprocess
-DoPreprocess=False
 
-# Crop borders
-""" Crop a given amount of pixels from each border.
-    Set this option to -1 for not applying it."""
-Crop = -1
+# Crop borders?
+""" Crop a given amount of pixels from each border. """
+DoCrop = False
 
-# Remove bad pixels
-""" Values will be thresholded to this multiple of standard deviations. Typical
-    values are about 5, i.e., pixel values beyond 5 times the standard deviation will be
-    substituted by the local median. Set this option to -1 for not applying it."""
-Stddev = -1
+# {condition}(DoCrop) Pixels to crop
+""" Amount of pixels you want to crop from borders """
+Crop = 10
 
-# {wizard}(wizardBrowseCTF) Downsampling factor 
+# Remove bad pixels?
+""" 
+Values will be thresholded to this multiple of standard deviations. 
+Typical values are about 5, i.e., pixel values beyond 5 times the 
+standard deviation will be substituted by the local median. 
+Set this option to <-1> for not applying it."""
+DoRemoveBadPixels = False
+
+# {condition} (DoRemoveBadPixels) Multiple of Stddev
+Stddev = 5
+
+# Downsample micrographs?
+DoDownsample = False
+# {condition}(DoDownsample){wizard}(wizardBrowseCTF) Downsampling factor 
 """ Set to 1 for no downsampling. Non-integer downsample factors are possible."""
-Down = 1
+DownsampleFactor = 1
 
 #------------------------------------------------------------------------------------------------
 # {section} Microscope description

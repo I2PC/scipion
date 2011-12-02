@@ -432,11 +432,14 @@ class XmippProjectGUI():
                 if os.path.exists(prot.WorkingDir):
                     summary = '\n'.join(prot.summary())
                     showButtons = True
+                    wd = "[%s]" % prot.WorkingDir # If exists, create a link to open folder
                 else:
+                    wd = prot.WorkingDir
                     summary = "This protocol run has not been executed yet"
+                
                 labels = '<Run>: ' + getExtendedRunName(run) + \
                           '\n<Created>: ' + run['init'] + '   <Modified>: ' + run['last_modified'] + \
-                          '\n<Script>: ' + run['script'] + '\n<Directory>: ' + prot.WorkingDir + \
+                          '\n<Script>: ' + run['script'] + '\n<Directory>: ' + wd + \
                           '\n<Summary>:\n' + summary   
             except Exception, e:
                 labels = 'Error creating protocol: <%s>' % str(e)

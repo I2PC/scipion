@@ -246,8 +246,7 @@ class XmippProtocol(object):
         self.LogFile = self.LogPrefix + ".log"
         self.SystemFlavour = project.SystemFlavour
         # Create filenames dictionary
-        self.FilenamesDict = self.createFilenameTemplates()
-        
+        self.FilenamesDict = self.createFilenameDict()
         
     def getFilename(self, key, **params):
         # Is desirable the names comming in params doesn't overlap
@@ -259,9 +258,20 @@ class XmippProtocol(object):
 
     def createFilenameTemplates(self):
         ''' Each protocol should implement this function to
-        create the dictionarys with entries (alias, template) for
+        create the dictionary with entries (alias, template) for
         filenames templates'''
         return {} 
+
+    def createFilenameDict(self):
+        ''' This will create some common templates and update
+        with each protocol particular dictionary'''
+        d = {
+                'micrographs': '%(WorkingDir)s/micrographs.xmd',
+                "tiltedPairs": '%(WorkingDir)s/tilted_pairs.xmd'                
+             
+             }
+        d.update(self.createFilenameTemplates())
+        return d
         
     def getProjectId(self):
         pass
@@ -288,12 +298,10 @@ class XmippProtocol(object):
             errors.append("No run name given")
             
         #Check that number of threads and mpi are int and greater than 0
-        if 'NumberOfThreads' in dir(self):
-            if self.NumberOfThreads<1:
-                errors.append("Number of threads has to be >=1")
-        if 'NumberOfMpi' in dir(self):
-            if self.NumberOfMpi<1:
-                errors.append("Number of MPI processes has to be >=1")
+        if getattr(self, 'NumberOfThreads', 2) < 1:
+            errors.append("Number of threads has to be >=1")
+        if getattr(self, 'NumberOfMpi', 2) < 1:
+            errors.append("Number of MPI processes has to be >=1")
         
         #specific protocols validations
         errors += self.validate()

@@ -42,6 +42,7 @@ from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
 from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
 from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor, ButtonActiveBgColor, ButtonBgColor                         
 from protlib_sql import SqliteDb
+from protlib_include import *
 from subprocess import Popen
 
 class ProtocolStyle():
@@ -490,7 +491,7 @@ class ProtocolGUI(BasicGUI):
         #protocols = var.tags['run'].split(',')
         runs = []
         for p in protocols:
-            runs += self.project.projectDb.selectRunsByProtocol(p)
+            runs += self.project.projectDb.selectRunsByProtocol(p, SqliteDb.RUN_FINISHED)
         list = [getExtendedRunName(r) for r in runs]
         return list
            
@@ -637,6 +638,8 @@ class ProtocolGUI(BasicGUI):
                     if len(list)==1:
                         var.tkvar.set(list[0])
                     args = ['Select Run', lambda: self.selectFromList(var, list), 'wizard.gif', 'Select run']
+                    # Run are always input variables and should not be empty
+                    var.validators.append('validatorNonEmpty')
                 elif 'blocks' in keys:
                     #md = self.variablesDict[var.tags['blocks']].getValue()
                     args = ['Select Blocks', lambda: self.selectFromList(var, ['block1', 'block2', 'block3']), 'wizard.gif', 'Select blocks']
@@ -696,7 +699,6 @@ class ProtocolGUI(BasicGUI):
     # Reading and parsing script
     #-------------------------------------------------------------------
     def readProtocolScript(self):
-        from protlib_include import expandCommentRun, expandParallel, expandExpert
         begin_of_header = False
         end_of_header = False   
         has_expert = False 

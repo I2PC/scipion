@@ -127,17 +127,46 @@ def getScriptPrefix(script):
 #---------------------------------------------------------------------------
 # Parsing of arguments
 #---------------------------------------------------------------------------
-def getRangeValuesFromString(rangeStr):
-    import re
-    elements=re.compile(r'[, ]').split(rangeStr)
-    values=[]
-    for element in elements:
-        if element.isdigit():
-            values.append(int(element))
-        else:
-            limits=element.split('-')
-            values+=range(int(limits[0]),int(limits[1])+1)
+def getListFromRangeString(rangeStr):
+    ''' Create a list of integer from a string with range definitions
+    Examples:
+    "1,5-8,10" -> [1,5,6,7,8,10]
+    "2,6,9-11" -> [2,6,9,10,11]
+    '''
+    elements = rangeStr.split(',')
+    values = []
+    for e in elements:
+        if '-' in e:
+            limits = e.split('-')
+            values += range(int(limits[0]), int(limits[1])+1)
+        else: 
+            values.append(int(e))
     return values
+
+def getRangeStringFromList(list):
+    left = None
+    right = None
+    ranges = []
+
+    def addRange():
+        if left == right: # Single element
+            ranges.append("%d" % right)
+        else:
+            ranges.append("%(left)d-%(right)d" % locals())
+    
+    for item in list:
+        if right is None:
+            left = right = item
+        else:
+            if item == right + 1:
+                right += 1
+            else:
+                addRange()
+                left = right = item
+    addRange()
+    return ','.join(ranges)
+    
+                
 
 def getComponentFromVector(__vector, _iteration):
     ''' Convert a string to a vector of parameters'''

@@ -300,11 +300,18 @@ class XmippProjectDb(SqliteDb):
         self.cur.execute(sqlCommand) 
         return self.cur.fetchone()
     
-    def selectRunsByProtocol(self, protocol_name):
+    def selectRunsByProtocol(self, protocol_name, state=None):
+        ''' Select runs of a give protocol, if the state arguments is passed
+        will restrict select to thouse in that state.
+        Example of use: select all FINISH runs from ML2D
+        '''
         self.sqlDict['protocol_name'] = protocol_name
-        sqlCommand = self.selectRunsCommand() + """WHERE protocol_name = '%(protocol_name)s'
-                                                   ORDER BY last_modified DESC """ % self.sqlDict
-        self.cur.execute(sqlCommand) 
+        sqlCommand = self.selectRunsCommand() + "WHERE protocol_name = '%(protocol_name)s'"
+        if state:
+            self.sqlDict['run_state'] = state
+            sqlCommand += "AND run_state == %(run_state)d "
+        sqlCommand += "ORDER BY last_modified DESC "
+        self.cur.execute(sqlCommand % self.sqlDict) 
         return self.cur.fetchall()
     
     def getRunProgress(self, run):

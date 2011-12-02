@@ -108,6 +108,20 @@ def createLink(log, source, dest):
     except Exception, e:
         printLog("Could not link '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
 
+def uniqueFilename(file_name):
+    ''' Create a unique filename (not file handler)
+       this approach is unsecure but good enought for most purposes'''
+    counter = 1
+    file_name_parts = os.path.splitext(file_name) # returns ('/path/file', '.ext')
+    while os.path.isfile(file_name):
+        file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
+        counter += 1
+    return file_name 
+
+def replaceFilenameExt(filename, new_ext):
+    ''' Replace the current filename extension by a new one'''
+    return os.path.splitext(filename)[0] + new_ext
+    
 def findFilePath(filename, *pathList):
     '''Search recursively in path to find filename path(excluding filename)
     None is returned if not found'''
@@ -170,12 +184,4 @@ def findRealFile(path, recursive=True):
         path = readlink(path)
     return path
 
-def uniqueFilename(file_name):
-    ''' Create a unique filename (not file handler)
-       this approach is unsecure but good enought for most purposes'''
-    counter = 1
-    file_name_parts = os.path.splitext(file_name) # returns ('/path/file', '.ext')
-    while os.path.isfile(file_name):
-        file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
-        counter += 1
-    return file_name 
+
