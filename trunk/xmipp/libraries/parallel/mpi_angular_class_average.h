@@ -56,12 +56,15 @@
 #define index_3DRef 2
 #define index_Order 3
 #define index_Count 4
-#define index_iCounter 5
+#define index_jobId 5
 #define index_Rot 6
 #define index_Tilt 7
 
-//!a
 #define AVG_OUPUT_SIZE 10
+
+#define split0 0
+#define split1 1
+#define split2 2
 
 class MpiProgAngularClassAverage : public XmippProgram
 {
@@ -140,6 +143,12 @@ public:
     /** Dvide the job in this number block with this number of images */
     int mpi_job_size;
 
+    //Lock structure
+    MultidimArray<bool> lockArray;
+    MultidimArray<double> weightArray;
+    MultidimArray<double> weightArrays1;
+    MultidimArray<double> weightArrays2;
+
     MpiProgAngularClassAverage(int argc, char **argv);
 
     /** Redefine read */
@@ -182,6 +191,10 @@ public:
     /** Get file and stack dimentions, and number of 3d references and number of defocus groups.
          */
     void initDimentions();
+
+    /** Initialize weights matrices.
+         */
+    void initWeights();
 
     /** Delete output files if they exist and init stacks.
          */
@@ -235,7 +248,6 @@ public:
     		MetaData SF,
     		FileName fileNameXmd,
     		FileName fileNameStk,
-    		bool write_selfile,
     	    double w_old);
 
     /**
