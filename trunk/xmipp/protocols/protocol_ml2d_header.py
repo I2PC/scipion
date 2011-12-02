@@ -40,7 +40,7 @@ DoGenerateReferences = True
 NumberOfReferences = 3
 
 # {file}{validate}(PathExists){condition}(not DoGenerateReferences) References metadata:
-""" Number of references to be generated. """
+""" Metadata with the input reference images """
 RefMd = "result_classes.xmd"
 
 #------------------------------------------------------------------------------------------
