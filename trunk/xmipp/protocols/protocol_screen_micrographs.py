@@ -38,10 +38,10 @@ class ProtScreenMicrographs(XmippProtocol):
             parent_id = self.insertParallelStep('createDir',verifyfiles=[micrographDir],path=micrographDir)
 
             # Downsample if necessary
-            if self.Down != 1:
+            if self.DownsampleFactor != 1:
                 finalname = join(self.TmpDir,shortname+"_tmp.mrc")
                 parent_id = self.insertParallelRunJobStep("xmipp_transform_downsample",
-                                                   "-i %s -o %s --step %f --method fourier" % (inputFile,finalname,self.Down),
+                                                   "-i %s -o %s --step %f --method fourier" % (inputFile,finalname,self.DownsampleFactor),
                                                    [finalname],parent_step_id=parent_id)
             else:
                 finalname = inputFile

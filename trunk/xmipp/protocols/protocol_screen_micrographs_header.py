@@ -23,7 +23,7 @@ ImportRun = ''
 
 # {wizard}(wizardBrowseCTF2) Downsampling factor 
 """ Set to 1 for no downsampling. Non-integer downsample factors are possible."""
-Down = 1
+DownsampleFactor = 1
 
 # Amplitude Contrast
 """ It should be a negative number, typically between -0.05 and -0.3."""

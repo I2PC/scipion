@@ -1070,7 +1070,6 @@ def getMdString(filename, browser):
     return msg
     
 def mdOnClick(filename, browser):
-    print "mdOnClick: filename: ", filename
     if '@' not in filename:
         import xmipp
         msg = "<Metadata File>\n"

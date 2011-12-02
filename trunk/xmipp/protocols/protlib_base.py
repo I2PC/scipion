@@ -425,7 +425,6 @@ class XmippProtocol(object):
                      programname=program, 
                      params=params,
                      verifyfiles = verifyfiles,
-                     NumberOfParallelSteps = NumberOfParallelSteps,
                      NumberOfMpi = 1,
                      NumberOfThreads = 1,
                      parent_step_id=parent_step_id)

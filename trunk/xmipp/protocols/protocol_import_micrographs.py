@@ -19,19 +19,20 @@ class ProtImportMicrographs(XmippProtocol):
         self.insertCreateMicroscope()
 
         # Decide name after preprocessing
-        doPreprocess = self.DoPreprocess and (self.DoCrop or self.DoRemoveBadPixelsStddev or self.DoDownsample)
+        doPreprocess = self.DoPreprocess and (self.DoCrop or self.DoRemoveBadPixels or self.DoDownsample)
         micrographs = self.getMicrographs()
-        micrographs.sort()
         if doPreprocess:
             func = self.insertPreprocessStep
+            funcOutput = lambda i: self.workingDirPath(replaceFilenameExt(os.path.basename(i), '.mrc'))
         elif self.CopyMicrographs:
             func = self.insertCopyMicrograph
+            funcOutput = lambda i: self.workingDirPath(os.path.basename(i))
         else:
             func = lambda i, o: i #Do nothing
-        
+            funcOutput = lambda i: i 
         filenameDict = {}
         for m in micrographs:
-            output = self.workingDirPath(replaceFilenameExt(os.path.basename(m), '.mrc'))
+            output = funcOutput(m)
             filenameDict[m] = output
             func(m, output)
         
@@ -110,7 +111,7 @@ class ProtImportMicrographs(XmippProtocol):
                                                        verifyfiles=[outputMic])
             iname = outputMic
         # Remove bad pixels
-        if self.Stddev != -1:
+        if self.DoRemoveBadPixels:
             params = " -i %s --bad_pixels outliers %f -v 0" % (iname, self.Stddev)
             if iname != outputMic:
                 params += " -o " + outputMic
@@ -118,9 +119,9 @@ class ProtImportMicrographs(XmippProtocol):
             previousId = self.insertParallelRunJobStep("xmipp_transform_filter", params, verifyfiles=[outputMic], parent_step_id=previousId)
         
         # Downsample
-        if self.Down != 1:
+        if self.DoDownsample:
             tmpFile = outputMic + "_tmp.mrc"
-            previousId = self.insertParallelRunJobStep("xmipp_transform_downsample", "-i %s -o %s --step %f --method fourier" % (iname,tmpFile,self.Down),
+            previousId = self.insertParallelRunJobStep("xmipp_transform_downsample", "-i %s -o %s --step %f --method fourier" % (iname,tmpFile,self.DownsampleFactor),
                                        verifyfiles = [tmpFile], parent_step_id=previousId)
             self.insertParallelStep("renameFile", verifyfiles=[outputMic], parent_step_id=previousId, 
                             source=tmpFile, dest=outputMic)
@@ -139,9 +140,11 @@ def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn
     ''' Create a metadata micrographs.xmd with all micrographs
     and if tilted pairs another one tilted_pairs.xmd'''
     from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED
-    md = MetaData() 
-    for outFn in FilenameDict.values():
-        md.setValue(MDL_MICROGRAPH, outFn, md.addObject())
+    md = MetaData()
+    micrographs = FilenameDict.values()
+    micrographs.sort()
+    for m in micrographs:
+        md.setValue(MDL_MICROGRAPH, m, md.addObject())
     md.write(MicrographFn)
     
     if len(PairsMd):

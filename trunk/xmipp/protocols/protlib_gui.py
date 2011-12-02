@@ -1115,12 +1115,12 @@ class ProtocolGUI(BasicGUI):
                                         extra={'freqs':freqs, 'downsampling':value, 'previewLabel': 'Micrograph', \
                                                'computingMessage': 'Estimating PSD...'}) # a list is returned
         if results:
-            self.setVarValue('Down', results[0])
+            self.setVarValue('DownsampleFactor', results[0])
         return results
           
     #This wizard is specific for import_micrographs protocol
     def wizardBrowseCTF(self, var):
-        args = self.getVarlistValue(['DirMicrographs', 'ExtMicrographs', 'Down'])
+        args = self.getVarlistValue(['DirMicrographs', 'ExtMicrographs', 'DownsampleFactor'])
         self.wizardHelperSetDownsampling(var, *args)
         
     #This wizard is specific for screen_micrographs protocol
