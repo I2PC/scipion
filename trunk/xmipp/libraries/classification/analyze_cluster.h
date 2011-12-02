@@ -41,6 +41,9 @@ public:
     /** Filename selection file containing the images */
     FileName fnSel;
 
+    /** Filename reference image */
+    FileName fnRef;
+
     /**  Output metadata */
     FileName fnOut;
 

@@ -32,6 +32,7 @@
 void ProgAnalyzeCluster::readParams()
 {
     fnSel = getParam("-i");
+    fnRef = getParam("--ref");
     fnOut = getParam("-o");
     if (checkParam("--basis"))
         fnOutBasis = getParam("--basis");
@@ -63,6 +64,7 @@ void ProgAnalyzeCluster::defineParams()
     addUsageLine("It is assumed that the cluster is aligned as is the case of the output of CL2D or ML2D");
     addParamsLine("   -i <metadatafile>             : metadata file  with images assigned to the cluster");
     addParamsLine("   -o <metadatafile>             : output metadata");
+    addParamsLine("  [--ref <img=\"\">]             : if an image is provided, differences are computed with respect to it");
     addParamsLine("  [--basis <stackName>]          : write the average (image 1), standard deviation (image 2)");
     addParamsLine("                                 : and basis of the PCA in a stack");
     addParamsLine("  [--NPCA <dim=2>]               : PCA dimension");
@@ -87,6 +89,14 @@ void ProgAnalyzeCluster::produceSideInfo()
             return;
         if (SFin.containsLabel(MDL_ENABLED))
             SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    }
+    bool subtractRef=false;
+    Image<double> Iref;
+    if (fnRef!="")
+    {
+        subtractRef=true;
+        Iref.read(fnRef);
+        Iref().setXmippOrigin();
     }
 
     // Prepare mask
@@ -113,14 +123,24 @@ void ProgAnalyzeCluster::produceSideInfo()
     }
     int n=0;
     MultidimArray<float> v(Npixels);
+    MultidimArray<double> &mIref=Iref();
     FOR_ALL_OBJECTS_IN_METADATA(SFin)
     {
         I.readApplyGeo( SFin, __iter.objId );
         I().setXmippOrigin();
         int idx=0;
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-        if (A2D_ELEM(mask,i,j))
-            A1D_ELEM(v,idx++)=IMGPIXEL(I,i,j);
+        if (!subtractRef)
+        {
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
+            if (A2D_ELEM(mask,i,j))
+                A1D_ELEM(v,idx++)=IMGPIXEL(I,i,j);
+        }
+        else
+        {
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
+            if (A2D_ELEM(mask,i,j))
+                A1D_ELEM(v,idx++)=IMGPIXEL(I,i,j)-A2D_ELEM(mIref,i,j);
+        }
         pcaAnalyzer.addVector(v);
         if ((++n)%10==0 && verbose>0)
             progress_bar(n);
@@ -133,7 +153,7 @@ void ProgAnalyzeCluster::produceSideInfo()
 // Produce basis  ==========================================================
 void ProgAnalyzeCluster::produceBasis(MultidimArray<double> &basis)
 {
-	int iimax=pcaAnalyzer.PCAbasis.size();
+    int iimax=pcaAnalyzer.PCAbasis.size();
     basis.initZeros(iimax,1,YSIZE(mask),XSIZE(mask));
     for (int ii=0; ii<pcaAnalyzer.PCAbasis.size(); ii++)
     {
