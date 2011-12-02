@@ -9,12 +9,16 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelListener;
 import java.util.List;
 import javax.swing.SwingUtilities;
+
+import particlepicker.Micrograph;
 import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
 import particlepicker.WindowUtils;
+import particlepicker.tiltpair.model.TiltedMicrograph;
 import particlepicker.tiltpair.model.TiltedParticle;
 import particlepicker.tiltpair.model.UntiltedMicrograph;
 import particlepicker.tiltpair.model.UntiltedParticle;
+import particlepicker.training.model.TrainingMicrograph;
 import particlepicker.training.model.TrainingParticle;
 import xmipp.Particle;
 
@@ -44,8 +48,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 	public void updateMicrograph()
 	{
 		this.um = frame.getMicrograph();
-		iw.setImage(um.getTiltedMicrograph().getImagePlus());
-		iw.updateImage(um.getTiltedMicrograph().getImagePlus());
+		updateMicrographData();
 		active = null;
 	}
 
@@ -189,5 +192,13 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 	{
 		return frame;
 	}
+
+	@Override
+	public Micrograph getMicrograph()
+	{
+		return um.getTiltedMicrograph();
+	}
+	
+
 
 }

@@ -1,5 +1,6 @@
 package particlepicker.tiltpair.gui;
 
+import ij.IJ;
 import ij.gui.ImageWindow;
 
 import java.awt.Color;
@@ -12,6 +13,7 @@ import java.awt.event.MouseWheelListener;
 
 import javax.swing.SwingUtilities;
 
+import particlepicker.Micrograph;
 import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
 import particlepicker.WindowUtils;
@@ -48,8 +50,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	public void updateMicrograph()
 	{
 		this.um = frame.getMicrograph();
-		iw.setImage(um.getImagePlus());
-		iw.updateImage(um.getImagePlus());
+		updateMicrographData();
 		if (!um.getParticles().isEmpty())
 			setActive(um.getParticles().get(um.getParticles().size() - 1));
 		else
@@ -232,5 +233,13 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	{
 		return active != null;
 	}
+
+	@Override
+	public Micrograph getMicrograph()
+	{
+		return um;
+	}
+
+	
 
 }

@@ -1,8 +1,10 @@
 package particlepicker;
 
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
+import ij.gui.ImageWindow;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -215,6 +217,22 @@ public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseW
 		g2.drawLine(x1, y1, x2, y2);
 		g2.setColor(ccolor);
 	}
+	
+	
+	public void updateMicrographData()
+	{
+		Micrograph m = getMicrograph();
+		imp = m.getImagePlus();
+		ImageWindow iw = (ImageWindow) getParent();
+		iw.setImage(imp);
+		iw.updateImage(imp);
+		iw.setTitle(m.getName());
+		
+		if(!getFrame().getParticlePicker().getFilters().isEmpty())
+			IJ.runMacro(getFrame().getParticlePicker().getFiltersMacro());
+	}
+	
+	public abstract Micrograph getMicrograph();
 	
 	
 	

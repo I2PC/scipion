@@ -15,6 +15,7 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 
+import particlepicker.Micrograph;
 import particlepicker.ParticlePickerCanvas;
 import particlepicker.ParticlePickerJFrame;
 import particlepicker.Tool;
@@ -51,17 +52,12 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	public void updateMicrograph()
 	{
 		this.micrograph = frame.getMicrograph();
-		ImageWindow iw = (ImageWindow) getParent();
-		iw.setImage(micrograph.getImagePlus());
-		iw.updateImage(micrograph.getImagePlus());
-		iw.setTitle(micrograph.getName());
-		imp = micrograph.getImagePlus();
+		updateMicrographData();
 		if(!frame.getFamilyData().getParticles().isEmpty())
 			setActive(frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1));
 		else
 			active = null;
-		if(!ppicker.getFilters().isEmpty())
-			IJ.runMacro(ppicker.getFiltersMacro());
+		
 	}
 
 	/**
@@ -192,5 +188,13 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	{
 		return frame;
 	}
+
+	@Override
+	public Micrograph getMicrograph()
+	{
+		return micrograph;
+	}
+
+
 
 }

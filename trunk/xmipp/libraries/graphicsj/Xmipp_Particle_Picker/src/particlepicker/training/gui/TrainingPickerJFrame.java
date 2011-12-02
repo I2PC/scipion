@@ -545,7 +545,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		pack();
 	}
 
-	void initializeCanvas()
+	protected void initializeCanvas()
 	{
 		if (canvas == null)
 		{
