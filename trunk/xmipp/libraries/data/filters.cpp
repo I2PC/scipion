@@ -774,7 +774,7 @@ double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil, bool 
     // Compute the probability density function
     Histogram1D hist;
     hist.clear();
-    compute_hist(V,hist,200);
+    compute_hist(V,hist,300);
     hist/=hist.sum();
 
     // Compute the cumulative 0th and 1st order moments
@@ -846,11 +846,14 @@ double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil, bool 
 
     // Find the first value within HSigma2B falling below this threshold
     iTh=0;
-    while (HSigma2B(iTh)>threshold)
+    while (A1D_ELEM(HSigma2B,iTh)>=threshold)
         iTh++;
     iTh--;
+    if (iTh<=0)
+    	x=threshold;
+    else
+        hist.index2val(iTh,x);
 
-    hist.index2val(iTh,x);
     if (binarizeVolume)
          V.binarize(x);
     return x;
