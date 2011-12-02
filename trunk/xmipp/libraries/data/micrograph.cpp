@@ -701,9 +701,7 @@ void TiltPairAligner::computeAngles(int &ualpha, int &talpha, int &ogamma) {
 	aux[3] = gamma;
 	for (aux[1] = 0; aux[1] < 180; aux[1] += 10)
 		for (aux[2] = 0; aux[2] < 180; aux[2] += 10) {
-			std::cerr << "after matrix_fitness" << std::endl;
 			double fit = matrix_fitness(aux, this);
-			std::cerr << "before" << std::endl;
 			if (fit < best_fit) {
 				best_fit = fit;
 				best_alpha_u = aux[1];
@@ -718,10 +716,8 @@ void TiltPairAligner::computeAngles(int &ualpha, int &talpha, int &ogamma) {
 	// Fine search
 	Matrix1D<double> steps(3);
 	steps.initConstant(1);
-	std::cerr << "after powell" << std::endl;
 	powellOptimizer(angles, 1, 3, &matrix_fitness, this, 0.001, fitness, iter,
 			steps, false);
-	std::cerr << "before" << std::endl;
 	alpha_u = angles(0);
 	alpha_t = angles(1);
 	gamma = angles(2);
