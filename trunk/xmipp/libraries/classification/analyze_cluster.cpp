@@ -48,6 +48,7 @@ void ProgAnalyzeCluster::show()
     if (verbose>0)
         std::cerr
         << "Input metadata file:    " << fnSel         << std::endl
+        << "Reference:              " << fnRef         << std::endl
         << "Output metadata:        " << fnOut         << std::endl
         << "Output basis stack:     " << fnOutBasis    << std::endl
         << "PCA dimension:          " << NPCA          << std::endl
@@ -113,7 +114,7 @@ void ProgAnalyzeCluster::produceSideInfo()
 
     // Read all images in the class and subtract the mean
     // once aligned
-    Image<double> I;
+    Image<double> I, Iaux;
     pcaAnalyzer.clear();
     pcaAnalyzer.reserve(SFin.size());
     if (verbose>0)
@@ -123,23 +124,38 @@ void ProgAnalyzeCluster::produceSideInfo()
     }
     int n=0;
     MultidimArray<float> v(Npixels);
-    MultidimArray<double> &mIref=Iref();
+    MultidimArray<double> &mIref=Iref(), Ialigned, ImirrorAligned;
+    Matrix2D<double> M;
     FOR_ALL_OBJECTS_IN_METADATA(SFin)
     {
         I.readApplyGeo( SFin, __iter.objId );
         I().setXmippOrigin();
         int idx=0;
-        if (!subtractRef)
+        if (subtractRef)
         {
+            // Choose between this image and its mirror
+        	Ialigned=I();
+        	ImirrorAligned=Ialigned;
+        	ImirrorAligned.selfReverseX();
+        	ImirrorAligned.setXmippOrigin();
+            alignImages(mIref,Ialigned,M);
+            alignImages(mIref,ImirrorAligned,M);
+            double corr=correlationIndex(mIref,Ialigned,&mask);
+            double corrMirror=correlationIndex(mIref,ImirrorAligned,&mask);
+            if (corr>corrMirror)
+                I()=Ialigned;
+            else
+                I()=ImirrorAligned;
+
             FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
             if (A2D_ELEM(mask,i,j))
-                A1D_ELEM(v,idx++)=IMGPIXEL(I,i,j);
+                A1D_ELEM(v,idx++)=IMGPIXEL(I,i,j)-A2D_ELEM(mIref,i,j);
         }
         else
         {
             FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
             if (A2D_ELEM(mask,i,j))
-                A1D_ELEM(v,idx++)=IMGPIXEL(I,i,j)-A2D_ELEM(mIref,i,j);
+                A1D_ELEM(v,idx++)=IMGPIXEL(I,i,j);
         }
         pcaAnalyzer.addVector(v);
         if ((++n)%10==0 && verbose>0)
