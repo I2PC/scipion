@@ -18,20 +18,20 @@ public class TiltPairPicker extends ParticlePicker
 	protected List<UntiltedMicrograph> micrographs;
 	private Family family;
 
-	public TiltPairPicker(String pairsfile, String outputdir)
+	public TiltPairPicker(String selfile, String outputdir)
 	{
-		super(outputdir, FamilyState.Manual);
+		super(selfile, outputdir, FamilyState.Manual);
 		this.micrographs = new ArrayList<UntiltedMicrograph>();
 		family = families.get(0);
-		loadData(pairsfile);
+		loadData();
 
 	}
 
-	private void loadData(String pairsfile)
+	private void loadData()
 	{
 		try
 		{
-			MetaData md = new MetaData(pairsfile);
+			MetaData md = new MetaData(selfile);
 			// md.readPlain(pairsfile, "image tilted_image");
 			micrographs.clear();
 			UntiltedMicrograph untiltedmicrograph;
@@ -51,7 +51,7 @@ public class TiltPairPicker extends ParticlePicker
 				loadMicrographData(untiltedmicrograph);
 			}
 			if (micrographs.size() == 0)
-				throw new IllegalArgumentException(String.format("No micrographs specified on %s", pairsfile));
+				throw new IllegalArgumentException(String.format("No micrographs specified on %s", selfile));
 
 		}
 		catch (Exception e)
@@ -167,7 +167,7 @@ public class TiltPairPicker extends ParticlePicker
 		long id;
 		try
 		{
-			MetaData md, md2;
+			MetaData md, md2, anglesmd;
 			TiltedParticle tp;
 			for (UntiltedMicrograph m : micrographs)
 			{
@@ -175,8 +175,11 @@ public class TiltPairPicker extends ParticlePicker
 					new File(m.getOFilename()).delete();
 				else
 				{
+					
 					md = new MetaData();
 					md2 = new MetaData();
+					anglesmd = new MetaData(selfile);
+					
 					for (UntiltedParticle p : m.getParticles())
 					{
 						tp = p.getTiltedParticle();
@@ -191,8 +194,10 @@ public class TiltPairPicker extends ParticlePicker
 							md2.setValueInt(MDLabel.MDL_YINT, tp.getY(), id);
 						}
 					}
-					md.write(getOutputPath(m.getOFilename()));
-					md2.write(getOutputPath(m.getTiltedMicrograph().getOFilename()));
+					String template = family.getName() + "@%s";
+					md.write(String.format(template, getOutputPath(m.getOFilename())));
+					md2.write(String.format(template, getOutputPath(m.getTiltedMicrograph().getOFilename())));
+					anglesmd.write(selfile);
 				}
 			}
 

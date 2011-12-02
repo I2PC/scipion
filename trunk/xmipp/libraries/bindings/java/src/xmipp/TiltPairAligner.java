@@ -15,7 +15,7 @@ public class TiltPairAligner
 
 	public native Particle getTiltedParticle(int x1, int y1);
 	
-	public native int[] computeAlphas();
+	public native int[] computeAngles();
 
 	// caching some ids
 	private static native void storeIds();

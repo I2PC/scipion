@@ -31,10 +31,11 @@ public abstract class ParticlePicker
 	protected List<Family> families;
 	private FamilyState mode;
 	private List<Filter> filters;
-	
+	protected String selfile;
 
-	public ParticlePicker(String outputdir, FamilyState mode)
+	public ParticlePicker(String selfile, String outputdir, FamilyState mode)
 	{
+		this.selfile = selfile;
 		filters = new ArrayList<Filter>();
 		this.outputdir = outputdir;
 		this.mode = mode;
@@ -45,6 +46,11 @@ public abstract class ParticlePicker
 		loadFamilies();
 		
 
+	}
+	
+	public String getMicrographsSelFile()
+	{
+		return selfile;
 	}
 
 	void addFilter(String command, String options)

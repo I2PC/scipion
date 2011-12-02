@@ -91,11 +91,11 @@ public class UntiltedMicrograph extends Micrograph {
 				addParticleToAligner(p);
 	}
 	
-	public int[] getAlphas()
+	public int[] getAngles()
 	{
 		if(added < 4)
 			throw new IllegalArgumentException("Not enough particles yet");
-		return tpa.computeAlphas();
+		return tpa.computeAngles();
 	}
 	
 	public void setAlignerTiltedParticle(UntiltedParticle up)

@@ -355,7 +355,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	{
 		if(untiltedmic.getAddedCount() < 4)
 			return Math.PI/2;
-		int [] alphas = untiltedmic.getAlphas();
+		int [] alphas = untiltedmic.getAngles();
 		double alpha = Math.toRadians(alphas[0]);
 		return alpha;
 	}
@@ -364,7 +364,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	{
 		if(untiltedmic.getAddedCount() < 4)
 			return  Math.PI/2;
-		int [] alphas = untiltedmic.getAlphas();
+		int [] alphas = untiltedmic.getAngles();
 		double alpha = Math.toRadians(alphas[1]);
 		return alpha;
 	}

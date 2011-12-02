@@ -14,7 +14,6 @@ import xmipp.MetaData;
 public abstract class TrainingPicker extends ParticlePicker
 {
 
-	private String selfile = "micrographs.sel";
 
 	protected List<TrainingMicrograph> micrographs;
 
@@ -29,16 +28,13 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public TrainingPicker(String selfile, String outputdir, FamilyState mode)
 	{
-		super(outputdir, mode);
-		this.selfile = selfile;
+		super(selfile, outputdir, mode);
+		
 		this.micrographs = new ArrayList<TrainingMicrograph>();
 
 	}
 
-	public String getMicrographsSelFile()
-	{
-		return selfile;
-	}
+	
 
 	public boolean hasEmptyMicrographs(Family f)
 	{

@@ -118,10 +118,10 @@ JNIEXPORT jintArray JNICALL Java_xmipp_TiltPairAligner_computeAlphas(JNIEnv *env
 	try {
 		TiltPairAligner * tpa = GET_INTERNAL_TPA(jobj);
 		if (tpa != NULL) {
-			int alphas[2];
-			tpa->computeAlphas(alphas[0], alphas[1]);
+			int alphas[3];
+			tpa->computeAngles(alphas[0], alphas[1], alphas[2]);
 			jintArray result = env->NewIntArray(2);
-			env->SetIntArrayRegion(result, 0, 2, alphas);
+			env->SetIntArrayRegion(result, 0, 3, alphas);
 			return result;
 		} else {
 			msg = "TiltPairAligner is null";
