@@ -20,6 +20,7 @@ protocols = {
         'rct': ('Random Conical Tilt', '3D/RCT'),
         'projmatch': ('Projection Matching', '3D/ProjMatch'), 
         'ml3d': ('ML3D', '3D/ML3D'),
+        'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSubs'),
         'dummy': ('Dummy', 'Dummy'),
         'xmipp': ('Xmipp Programs', 'XmippPrograms')            
@@ -41,7 +42,7 @@ sections = [
     ['Model Refinement', 'projmatch', 'ml3d']])
 ,
 ('Other',
- [['Extra','subtraction', 'dummy']])
+ [['Extra','subtraction', 'mltomo', 'dummy']])
 ]
 
 #--------------------------------------------------------------------------------
