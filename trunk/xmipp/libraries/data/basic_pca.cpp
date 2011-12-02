@@ -294,7 +294,7 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
             for (int j=0; j<NPCA; j++)
                 DIRECT_A1D_ELEM(Zscore,ii)+=xi*MAT_ELEM(proj,j,ii)*MAT_ELEM(covinv,i,j);
         }
-        Zscore(ii)=sqrt(ABS(Zscore(ii)));
+        Zscore(ii)=sqrt(fabs(Zscore(ii)));
     }
 #ifdef DEBUG
     std::cout << "\n\nZscores\n";
