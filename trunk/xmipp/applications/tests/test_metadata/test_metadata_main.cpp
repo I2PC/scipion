@@ -480,7 +480,7 @@ TEST_F( MetadataTest, Merge)
 }
 
 
- TEST_F( MetadataTest, MultiQuery)
+TEST_F( MetadataTest, MultiQuery)
  {
      MetaData auxMetadata;
      MetaData auxMetadata3;
@@ -523,7 +523,6 @@ TEST_F( MetadataTest, Merge)
      EXPECT_EQ(outMetadata,auxMetadata);
  }
 
-
  TEST_F( MetadataTest, NaturalJoin)
  {
      MetaData auxMetadata;
@@ -560,6 +559,39 @@ TEST_F( MetadataTest, Operate)
 
     EXPECT_EQ(auxMetadata,auxMetadata2);
 }
+
+TEST_F( MetadataTest, Query)
+ {
+     MetaData auxMetadata;
+     MetaData auxMetadata3;
+     id = auxMetadata3.addObject();
+     auxMetadata3.setValue(MDL_X,1.,id);
+     auxMetadata3.setValue(MDL_Y,2.,id);
+     auxMetadata3.setValue(MDL_Z,222.,id);
+     id = auxMetadata3.addObject();
+     auxMetadata3.setValue(MDL_X,3.,id);
+     auxMetadata3.setValue(MDL_Y,4.,id);
+     auxMetadata3.setValue(MDL_Z,333.,id);
+     id = auxMetadata3.addObject();
+     auxMetadata3.setValue(MDL_X,3.,id);
+     auxMetadata3.setValue(MDL_Y,4.,id);
+     auxMetadata3.setValue(MDL_Z,444.,id);
+
+	 auxMetadata.importObjects(auxMetadata3, MDValueEQ(MDL_X, 3.));
+
+     MetaData outMetadata;
+     id = outMetadata.addObject();
+     outMetadata.setValue(MDL_X,3.,id);
+     outMetadata.setValue(MDL_Y,4.,id);
+     outMetadata.setValue(MDL_Z,333.,id);
+     id = outMetadata.addObject();
+     outMetadata.setValue(MDL_X,3.,id);
+     outMetadata.setValue(MDL_Y,4.,id);
+     outMetadata.setValue(MDL_Z,444.,id);
+
+     EXPECT_EQ(outMetadata,auxMetadata);
+ }
+
 
 TEST_F( MetadataTest, Randomize)
 {
