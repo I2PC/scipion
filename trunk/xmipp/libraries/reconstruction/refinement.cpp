@@ -34,8 +34,8 @@
 #include <data/xmipp_fft.h>
 
 //-------------------------------------------------------------------------
-/* Correlate two projections and find the maximun of the correlation matrix -- */
-/* If the maximun if moved further away than max_step returns 0 */
+/* Correlate two projections and find the maximum of the correlation matrix -- */
+/* If the maximum if moved further away than max_step returns 0 */
 void calculate_and_find_correlation_max_proj(Projection const &proj1,
         Projection const &proj2,
         Projection &proj_temp,

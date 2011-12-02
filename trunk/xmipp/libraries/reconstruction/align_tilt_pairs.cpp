@@ -47,7 +47,7 @@ void ProgAlignTiltPairs::defineParams()
     addUsageLine("+    --skip_centering will skip the entire centering, so that only the Psi angle of the tilted images will be modified.");
 
     //Examples
-    addExampleLine("To center tilted images g0t.sel allowing a maximun shift of 10 pixels:",false);
+    addExampleLine("To center tilted images g0t.sel allowing a maximum shift of 10 pixels:",false);
     addExampleLine("xmipp_align_tilt_pairs -u g0u.sel -t g0t.sel -o g0t_aligned.doc --max_shift 10");
     // Params
     addParamsLine(" -u <metadata>                : Input metadata with untilted images");
