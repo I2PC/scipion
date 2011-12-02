@@ -159,7 +159,8 @@ void MpiProgAngularClassAverage::run()
     mpi_preprocess();
 
     int lockIndex;
-    int order_index, ref3d_index;
+    size_t order_index;
+    int ref3d_index;
     double weight,weights1,weights2;
 
     double lockWeightIndexes[lockWeightIndexesSize];
@@ -228,12 +229,8 @@ void MpiProgAngularClassAverage::run()
                 break;
             case TAG_MAY_I_WRITE:
                 //where do you want to write?
-                MPI_Recv(lockWeightIndexes, lockWeightIndexesSize, MPI_DOUBLE, MPI_ANY_SOURCE, TAG_MAY_I_WRITE,
-                         MPI_COMM_WORLD, &status);
-                lockIndex =  ROUND(lockWeightIndexes[0]);
-                weight =  lockWeightIndexes[1];
-                weights1 =  lockWeightIndexes[2];
-                weights2 =  lockWeightIndexes[3];
+                MPI_Recv(&lockIndex, 1, MPI_INT, MPI_ANY_SOURCE, TAG_MAY_I_WRITE, MPI_COMM_WORLD, &status);
+                std::cerr << "lockIndex1: " << lockIndex << std::endl;
                 mdJobList.getValue(MDL_ORDER, order_index, lockIndex);
                 mdJobList.getValue(MDL_REF3D, ref3d_index, lockIndex);
 
@@ -245,7 +242,7 @@ void MpiProgAngularClassAverage::run()
                 else
                 {//Unlocked
 
-                	dAij(lockArray,order_index,ref3d_index)=true;
+                    dAij(lockArray,order_index,ref3d_index)=true;
                     // Send the old weight
                     lockWeightIndexes[1] = dAij(weightArray,order_index,ref3d_index);
                     lockWeightIndexes[2] = dAij(weightArrays1,order_index,ref3d_index);
@@ -261,7 +258,7 @@ void MpiProgAngularClassAverage::run()
                 //release which lock?
                 MPI_Recv(&lockIndex, 1, MPI_INT, MPI_ANY_SOURCE, TAG_I_FINISH_WRITTING,
                          MPI_COMM_WORLD, &status);
-
+                std::cerr << "lockIndex2: " << lockIndex << std::endl;
                 mdJobList.getValue(MDL_ORDER, order_index, lockIndex);
                 mdJobList.getValue(MDL_REF3D, ref3d_index, lockIndex);
                 dAij(lockArray,order_index,ref3d_index)=false;
@@ -300,13 +297,9 @@ void MpiProgAngularClassAverage::run()
             }
         }
     }
-    mpi_postprocess();
 
-//    for (int k = 0; k<nJobs; k++)
-//    {
-//        std::cerr << "["<<k<<"]: "<<  weightArray[k] <<" " << weightArrays1[k] <<" " <<
-//        weightArrays2[k] <<" " << weightArrays1[k] + weightArrays2[k]<<std::endl;
-//    }
+    if (node->rank == 0)
+        mpi_postprocess();
 
     MPI_Finalize();
 }
@@ -516,7 +509,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     avg.setWeight(w);
     avg1.setWeight(w1);
     avg2.setWeight(w2);
-    std::cerr<<"["<<node->rank<<"]: "<< "mpi_process_06"<<std::endl;
+    std::cerr<<"["<<node->rank<<"]: "<< "mpi_process_06. lockIndex: " << lockIndex<<std::endl;
 
     mpi_writeController(order_number, avg, avg1, avg2, SFclass, SFclass1, SFclass2,
                         SFclassDiscarded, w1, w2, lockIndex);
@@ -613,6 +606,7 @@ void MpiProgAngularClassAverage::mpi_writeController(
     bool whileLoop = true;
     while (whileLoop)
     {
+    	std::cerr << "lockIndex3: " << lockIndex << std::endl;
         MPI_Send(&lockIndex, 1, MPI_INT, 0, TAG_MAY_I_WRITE, MPI_COMM_WORLD);
         MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
         switch (status.MPI_TAG)
@@ -630,6 +624,8 @@ void MpiProgAngularClassAverage::mpi_writeController(
             MPI_Recv(lockWeightIndexes, lockWeightIndexesSize, MPI_DOUBLE, 0, MPI_ANY_TAG,
                      MPI_COMM_WORLD, &status);
             lockIndex = ROUND(lockWeightIndexes[0]);
+        	std::cerr << "lockIndex4: " << lockIndex << std::endl;
+
             weight = lockWeightIndexes[1];
             weights1 = lockWeightIndexes[2];
             weights2 = lockWeightIndexes[3];
@@ -646,6 +642,8 @@ void MpiProgAngularClassAverage::mpi_writeController(
     }
     //REMOVE THIS DELAY!!!!!!!!!
     //usleep(1000);
+	std::cerr << "lockIndex5: " << lockIndex << std::endl;
+
     MPI_Send(&lockIndex, 1, MPI_INT, 0, TAG_I_FINISH_WRITTING, MPI_COMM_WORLD);
 
 }
@@ -967,7 +965,7 @@ void MpiProgAngularClassAverage::initOutputFiles()
 void MpiProgAngularClassAverage::mpi_postprocess()
 {
     // Write class selfile to disc (even if its empty)
-    std::cerr<< "mpi_writeFile_09"<<std::endl;
+    std::cerr<< "mpi_postprocess01"<<std::endl;
 
     FileName imageName, fileNameXmd;
     MetaData auxMd,auxMd2;
@@ -1009,13 +1007,20 @@ void MpiProgAngularClassAverage::mpi_postprocess()
     }
     std::cerr<< "mpi_writeFile_11"<<std::endl;
 
+
+    std::cerr << "lockArray:"  <<std::endl;
+    std::cerr << lockArray <<std::endl;
+    std::cerr << "weightArray:" <<std::endl;
+    std::cerr << weightArray <<std::endl;
+    std::cerr << "weightArrays1:" <<std::endl;
+    std::cerr << weightArrays1 <<std::endl;
+    std::cerr << "weightArrays2:" <<std::endl;
+    std::cerr << weightArrays2 <<std::endl;
+
 }
 
 void MpiProgAngularClassAverage::createJobList()
 {
-    //MetaData md;
-    //md.read((String)"ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]$@" + inFile);
-
     const MDLabel myGroupByLabels[] =
         {
             MDL_REF3D, MDL_DEFGROUP, MDL_ORDER, MDL_REF, MDL_ANGLEROT, MDL_ANGLETILT
@@ -1023,7 +1028,6 @@ void MpiProgAngularClassAverage::createJobList()
     std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+6);
     mdJobList.aggregateGroupBy(DF, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);
     nJobs = mdJobList.size();
-
 }
 
 
