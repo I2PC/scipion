@@ -688,7 +688,7 @@ double matrix_fitness(double *p, void *prm) {
 }
 
 
-void TiltPairAligner::computeAlphas(int &ualpha, int &talpha) {
+void TiltPairAligner::computeAngles(int &ualpha, int &talpha, int &ogamma) {
 	alpha_u = alpha_t = 0;
 	Matrix1D<double> angles(3);
 	angles.initZeros();
@@ -728,4 +728,5 @@ void TiltPairAligner::computeAlphas(int &ualpha, int &talpha) {
 
 	ualpha = alpha_u;
 	talpha = alpha_t;
+	ogamma = gamma;
 }
