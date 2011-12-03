@@ -725,4 +725,7 @@ void TiltPairAligner::computeAngles(int &ualpha, int &talpha, int &ogamma) {
 	ualpha = alpha_u;
 	talpha = alpha_t;
 	ogamma = gamma;
+//	std::cerr << "DEBUG_JM: ualpha: " << ualpha << std::endl;
+//	std::cerr << "DEBUG_JM: talpha: " << talpha << std::endl;
+//	std::cerr << "DEBUG_JM: ogamma: " << ogamma << std::endl;
 }

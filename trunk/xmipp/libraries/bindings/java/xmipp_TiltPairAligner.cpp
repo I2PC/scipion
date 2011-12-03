@@ -37,7 +37,7 @@ JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_addParticleToAligner(
 	if (tpa != NULL) {
 		try {
 			tpa->adjustPassingMatrix(jx1, jy1, jx2, jy2);
-		} catch (XmippError xe) {
+		} catch (XmippError &xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {
 			msg = e.what();
@@ -72,7 +72,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_TiltPairAligner_getTiltedParticle(
 		} else {
 			msg = "TiltPairAligner is null";
 		}
-	} catch (XmippError xe) {
+	} catch (XmippError &xe) {
 		msg = xe.getDefaultMessage();
 	} catch (std::exception& e) {
 		msg = e.what();
@@ -97,7 +97,7 @@ JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_clear(JNIEnv *env,
 		} else {
 			msg = "TiltPairAligner is null";
 		}
-	} catch (XmippError xe) {
+	} catch (XmippError &xe) {
 		msg = xe.getDefaultMessage();
 	} catch (std::exception& e) {
 		msg = e.what();
@@ -127,7 +127,7 @@ JNIEXPORT jintArray JNICALL Java_xmipp_TiltPairAligner_computeAngles(JNIEnv *env
 		} else {
 			msg = "TiltPairAligner is null";
 		}
-	} catch (XmippError xe) {
+	} catch (XmippError &xe) {
 		msg = xe.getDefaultMessage();
 	} catch (std::exception& e) {
 		msg = e.what();

@@ -11,13 +11,14 @@ import particlepicker.ParticlePicker;
 import particlepicker.training.model.FamilyState;
 import xmipp.MDLabel;
 import xmipp.MetaData;
+import java.util.Hashtable; 
 
 public class TiltPairPicker extends ParticlePicker
 {
 
 	protected List<UntiltedMicrograph> micrographs;
 	private Family family;
-
+	
 	public TiltPairPicker(String selfile, String outputdir)
 	{
 		super(selfile, outputdir, FamilyState.Manual);
@@ -41,7 +42,6 @@ public class TiltPairPicker extends ParticlePicker
 			long[] ids = md.findObjects();
 			for (long id : ids)
 			{
-
 				image = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
 				tiltedimage = md.getValueString(MDLabel.MDL_MICROGRAPH_TILTED, id);
 				tiltedmicrograph = new TiltedMicrograph(tiltedimage);
@@ -165,10 +165,18 @@ public class TiltPairPicker extends ParticlePicker
 	{
 		super.saveData();
 		long id;
+		int[] angles;
+		
 		try
 		{
 			MetaData md, md2, anglesmd;
 			TiltedParticle tp;
+			anglesmd = new MetaData(selfile);
+			
+			Hashtable<String, Long> micrographsDict = new Hashtable<String, Long>();
+			for (long mid : anglesmd.findObjects())
+				micrographsDict.put(anglesmd.getValueString(MDLabel.MDL_MICROGRAPH, mid), mid);
+
 			for (UntiltedMicrograph m : micrographs)
 			{
 				if (!m.hasData())
@@ -178,7 +186,12 @@ public class TiltPairPicker extends ParticlePicker
 					
 					md = new MetaData();
 					md2 = new MetaData();
-					anglesmd = new MetaData(selfile);
+					
+					angles = m.getAngles();
+					id = micrographsDict.get(m.getFile());
+					anglesmd.setValueDouble(MDLabel.MDL_ANGLEROT, (double)angles[0], id);
+					anglesmd.setValueDouble(MDLabel.MDL_ANGLEROT2, (double)angles[1], id);
+					anglesmd.setValueDouble(MDLabel.MDL_ANGLETILT, (double)angles[2], id);
 					
 					for (UntiltedParticle p : m.getParticles())
 					{
