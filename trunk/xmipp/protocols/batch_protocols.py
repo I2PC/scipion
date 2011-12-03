@@ -34,7 +34,7 @@ from protlib_gui_ext import ToolTip, centerWindows, askYesNo, showInfo, XmippTre
     showBrowseDialog, showTextfileViewer, showError, TaggedText, XmippButton, ProjectLabel,\
     FlashMessage
 from config_protocols import *
-from protlib_base import getProtocolFromModule, XmippProject, getExtendedRunName
+from protlib_base import XmippProject, getExtendedRunName
 from protlib_utils import ProcessManager,  getHostname
 from protlib_xmipp import greenStr
 from protlib_sql import SqliteDb, ProgramDb
@@ -428,7 +428,7 @@ class XmippProjectGUI():
             run = self.lastRunSelected
             showButtons = False
             try:
-                prot = getProtocolFromModule(run['script'], self.project)
+                prot = self.project.getProtocolFromModule(run['script'])
                 if os.path.exists(prot.WorkingDir):
                     summary = '\n'.join(prot.summary())
                     showButtons = True
@@ -633,7 +633,7 @@ class XmippProjectGUI():
         self.root.destroy()
 
     def showOutput(self, event=''):
-        prot = getProtocolFromModule(self.lastRunSelected['script'], self.project)
+        prot = self.project.getProtocolFromModule(self.lastRunSelected['script'])
         title = "Output Console - %s" % self.lastRunSelected['script']
         filelist = ["%s%s" % (prot.LogPrefix, ext) for ext in ['.log', '.out', '.err']]
         showTextfileViewer(title, filelist, self.root)

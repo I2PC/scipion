@@ -32,7 +32,8 @@ from os.path import join, relpath, exists
 import Tkinter as tk
 import tkFont
 
-from protlib_base import getProtocolFromModule, getWorkingDirFromRunName, getExtendedRunName
+from protlib_base import getWorkingDirFromRunName, getExtendedRunName,\
+    getScriptFromRunName
 from protlib_utils import loadModule, runImageJPlugin, which, runJavaIJappWithResponse
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage
@@ -899,7 +900,7 @@ class ProtocolGUI(BasicGUI):
         return True
     
     def getProtocol(self):
-        return getProtocolFromModule(self.run['script'], self.project)
+        return self.project.getProtocolFromModule(self.run['script'])
     
     def saveExecute(self, event=""):
         if not self.save(): #Validate user input
@@ -1129,9 +1130,11 @@ class ProtocolGUI(BasicGUI):
         error = None
         vList = ['LowResolCutoff', 'HighResolCutoff']
         freqs = self.getVarlistValue(vList)
-        path = getWorkingDirFromRunName(self.getVarValue('ImportRun'))
+        importRunName = self.getVarValue('ImportRun')
+        prot = self.project.getProtocolFromRunName(importRunName)
+        path = prot.WorkingDir
         if path and exists(path):
-            mdPath = os.path.join(path,"micrographs.sel")
+            mdPath = prot.getFilename('micrographs')
             if exists(mdPath):
                 from xmipp import MetaData, MDL_MICROGRAPH
                 md = MetaData(mdPath)
@@ -1139,7 +1142,7 @@ class ProtocolGUI(BasicGUI):
                     image = md.getValue(MDL_MICROGRAPH, md.firstObject())     
                     if image:         
                         filterExt = "*" + os.path.splitext(image)[1]
-                        value = self.getVarValue('Down')
+                        value = self.getVarValue('DownsampleFactor')
                         results = self.wizardHelperSetDownsampling(var, path, filterExt, value, freqs)
                         if results:
                             self.setVarlistValue(vList, results[1:])
@@ -1212,7 +1215,7 @@ class ProtocolGUI(BasicGUI):
         selfile = self.getVarValue('InSelFile')
         workingDir = getWorkingDirFromRunName(self.getVarValue('RunName'))
         #fnMask=os.path.join(workingDir,"mask.xmp")
-        fnMask=os.path.join(self.project.tmpDir,"mask.xmp")
+        fnMask = self.project.projectTmpPath("mask.xmp")
         from protlib_utils import runJavaIJapp
         msg = runJavaIJapp("512m", "XmippMaskDesignWizard", "-i %(selfile)s -mask %(fnMask)s" % locals())
         msg = msg.strip().splitlines()
@@ -1262,32 +1265,29 @@ class ProtocolGUI(BasicGUI):
     def wizardChooseFamilyToExtract(self, var):
         from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE
         from protlib_gui_ext import ListboxDialog
-
-        pickingDir = getWorkingDirFromRunName(self.getVarValue('PickingRun'))
-        fnFamilies = join(pickingDir,"families.xmd")
+        pickingRun = self.getVarValue('PickingRun')
+        pickingProt = self.project.getProtocolFromRunName(pickingRun)
+        fnFamilies = pickingProt.getFilename('families')
+        
         if not exists(fnFamilies):
             showWarning("Warning", "No elements to select", parent=self.master)
             return
-        print fnFamilies
-        mD = MetaData()
-        mD.read(fnFamilies)
-        families = []
-        for id in mD:
-            families.append(mD.getValue(MDL_PICKING_FAMILY,id))
-        if len(families)==1:
-            d=0
+        md = MetaData(fnFamilies)
+        families = [md.getValue(MDL_PICKING_FAMILY, objId) for objId in md]
+        if len(families) == 1:
+            d = 0
         else:  
             d = ListboxDialog(self.frame, families, selectmode=tk.SINGLE)
             if len(d.result) > 0:
-                d=d.result[0]
+                d = d.result[0]
             else:
-                d=None
+                d = None
         if d is not None:
             selectedFamily = families[d]
             var.setValue(selectedFamily)
-            for id in mD:
-                if mD.getValue(MDL_PICKING_FAMILY,id)==selectedFamily:
-                    particleSize=mD.getValue(MDL_PICKING_PARTICLE_SIZE,id)
+            for objId in md:
+                if md.getValue(MDL_PICKING_FAMILY, objId) == selectedFamily:
+                    particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
                     self.setVarValue("ParticleSize", str(particleSize))
 
 # This group of functions are called Validator, and should serve

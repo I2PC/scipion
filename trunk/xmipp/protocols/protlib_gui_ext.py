@@ -60,7 +60,7 @@ def configDefaults(opts, defaults):
 def openLink(link):
     ''' Open a link in default web browser '''
     if os.path.isdir(link):
-        showBrowseDialog(link, link)
+        showBrowseDialog(link, link, seltype="none", selmode="browse")
     else:
         from  webbrowser import open
         open(link)

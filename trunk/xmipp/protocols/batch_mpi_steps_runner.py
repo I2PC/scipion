@@ -56,7 +56,7 @@ class ScriptParallelStepRunner(XmippScript):
             project = XmippProject()
             project.load()
             # Create protocol instance from script and setup database
-            protocol = getProtocolFromModule(script, project)
+            protocol = project.getProtocolFromModule(script)
             protocol.runSetup(isMainLoop=False)
             self.db = protocol.Db
             # All nodes retrieve parallel steps to work on 

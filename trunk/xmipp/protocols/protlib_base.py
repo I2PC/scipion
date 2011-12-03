@@ -122,10 +122,9 @@ class XmippProject():
                 shutil.rmtree(p.dir)
         self.create()
 
-    ''' Return file paths inside the temporal folder
-        Path are relative to ProjectDir
-    '''
     def projectTmpPath(self, *paths):
+        ''' Return file paths inside the temporal folder
+            Path are relative to ProjectDir '''
         return join(self.tmpDir, *paths)           
     
     def cleanRun(self, run):
@@ -187,7 +186,7 @@ class XmippProject():
         return self.createRunFromScript(protocol_name, srcProtAbsPath)
     
     def copyProtocol(self, protocol_name, script):
-        prefix, suffix  = getScriptPrefix(script)
+        prefix = getScriptPrefix(script)[0]
         return self.createRunFromScript(protocol_name, script, prefix)
         
     def loadProtocol(self, protocol_name, runName):
@@ -208,7 +207,23 @@ class XmippProject():
     def getUniqueRunPrefix(self, run_id):
         return self.projectDir.replace(os.path.sep, '_') + "_%s" % run_id
         
-            
+    def getProtocolFromModule(self, script):
+        ''' Create an instance of some protocol from the script
+        It search if there are a class definition and inherits from base class XmippProtocol'''
+        mod = loadModule(script)
+        from inspect import isclass
+        for v in mod.__dict__.values():
+            if isclass(v) and issubclass(v, XmippProtocol) and v != XmippProtocol:
+                return v(script, self)
+        reportError("Can load protocol from " + script)
+
+    def getProtocolFromRunName(self, extendedRunName):
+        ''' This function will be helpful to create an instance
+        of another protocol providing the extendedRunName.
+        This is usually the input when one protocol uses another one.'''
+        return self.getProtocolFromModule(getScriptFromRunName(extendedRunName))
+    
+                  
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
     def __init__(self, protocolName, scriptname, project):
@@ -266,8 +281,9 @@ class XmippProtocol(object):
         ''' This will create some common templates and update
         with each protocol particular dictionary'''
         d = {
-                'micrographs': '%(WorkingDir)s/micrographs.xmd',
-                "tiltedPairs": '%(WorkingDir)s/tilted_pairs.xmd'                
+                'micrographs': join('%(WorkingDir)s','micrographs.xmd'),
+                "tiltedPairs": join('%(WorkingDir)s','tilted_pairs.xmd'),
+                'families':    join('%(WorkingDir)s', 'families.xmd')             
              
              }
         d.update(self.createFilenameTemplates())
@@ -278,7 +294,12 @@ class XmippProtocol(object):
         #self.project = project.getId(launchDict['Projection Matching'],runName,)
         
     def workingDirPath(self, *paths):
+        '''Return file path prefixing the working dir'''
         return join(self.WorkingDir, *paths)
+    
+    def tmpPath(self, *paths):
+        ''' Return file paths prefixing the tmp dir'''
+        return join(self.TmpDir, *paths)  
 
     def getRunState(self):
         return self.project.projectDb.getRunStateByName(self.Name, self.RunName)
@@ -428,6 +449,18 @@ class XmippProtocol(object):
                      NumberOfMpi = 1,
                      NumberOfThreads = 1,
                      parent_step_id=parent_step_id)
+        
+    def getProtocolFromRunName(self, extendedRunName):
+        ''' This function will be helpful to create an instance
+        of another protocol providing the extendedRunName.
+        This is usually the input when one protocol uses another one.'''
+        return self.project.getProtocolFromModule(getScriptFromRunName(extendedRunName))
+    
+    def getEquivalentFilename(self, prot, filename):
+        ''' This function will take a filename relative to some protocol
+        and will create the same filename but in the current protocol 
+        working dir'''
+        return filename.replace(prot.WorkingDir, self.WorkingDir)
         
 #    def insertRunMpiGapsStep(self,verifyfiles=[]):
 #        return self.insertStep('runStepGapsMpi',passDb=True, verifyfiles=verifyfiles, 

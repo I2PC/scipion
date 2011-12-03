@@ -5,41 +5,63 @@
 #from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import which, runJob
-from protlib_filesystem import deleteFile, exists
+from protlib_filesystem import deleteFile, exists, replaceFilenameExt
 import xmipp
+from protlib_gui_ext import showError
+
+# The dictionary with specific filename templates 
+# is defined here to allow use of it outside the protocol
+_prefix = join('%(micrographDir)s','xmipp_ctf')
+_templateDict = {
+        # This templates are relative to a micrographDir
+        'prefix': _prefix,
+        'ctfparam': _prefix +  '.ctfparam',
+        'psd': _prefix + '.psd',
+        'enhanced_psd': _prefix + '_enhanced_psd.xmp',
+        'ctfmodel_quadrant': _prefix + '_ctfmodel_quadrant.xmp',
+        'ctfmodel_halfplane': _prefix + '_ctfmodel_halfplane.xmp',
+        'ctffind_ctfparam': join('%(micrographDir)s', 'ctfind.ctfparam'),
+        'ctffind_spectrum': join('%(micrographDir)s', 'ctffind_spectrum.mrc')
+        }
+
+def _getFilename(key, **args):
+    return _templateDict[key] % args
 
 class ProtScreenMicrographs(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.screen_micrographs.name, scriptname, project)
         self.Import = "from protocol_screen_micrographs import *"
-        self.importDir = getWorkingDirFromRunName(self.ImportRun)
+        importProt = self.getProtocolFromRunName(self.ImportRun) 
+        self.importDir = importProt.WorkingDir
+        self.importMicroscope = importProt.getFilename('microscope')
+        self.importMicrographs = importProt.getFilename('micrographs')
         self.CtffindExec =  which('ctffind3.exe')
 
     def defineSteps(self):
+        self.micrographs = self.getFilename('micrographs')
         # Read Microscope parameters
-        MD = xmipp.MetaData(join(self.importDir,"microscope.xmd"))
-        id = MD.firstObject()
-        Voltage = MD.getValue(xmipp.MDL_CTF_VOLTAGE,id)
-        SphericalAberration = MD.getValue(xmipp.MDL_CTF_CS,id)
-        AngPix = MD.getValue(xmipp.MDL_CTF_SAMPLING_RATE,id)
-        Magnification = MD.getValue(xmipp.MDL_MAGNIFICATION,id)
+        MD = xmipp.MetaData(self.importMicroscope)
+        objId = MD.firstObject()
+        Voltage = MD.getValue(xmipp.MDL_CTF_VOLTAGE,objId)
+        SphericalAberration = MD.getValue(xmipp.MDL_CTF_CS,objId)
+        AngPix = MD.getValue(xmipp.MDL_CTF_SAMPLING_RATE,objId)
+        Magnification = MD.getValue(xmipp.MDL_MAGNIFICATION,objId)
 
         # Create verifyFiles for the MPI and output directories
-        selfile = join(self.importDir,"micrographs.xmd")
-        MD = xmipp.MetaData(selfile)
+        MD = xmipp.MetaData(self.importMicrographs)
         
         # Now the estimation actions
         CtfFindActions = []
-        for id in MD:
-            inputFile = MD.getValue(xmipp.MDL_IMAGE,id)
-            micrographName = os.path.split(inputFile)[1]
-            (shortname, extension) = os.path.splitext(micrographName)
+        for objId in MD:
+            inputFile = MD.getValue(xmipp.MDL_MICROGRAPH, objId)
+            micrographName = os.path.basename(inputFile)
+            shortname = os.path.splitext(micrographName)[0]
             micrographDir = self.workingDirPath(shortname)                    
             parent_id = self.insertParallelStep('createDir',verifyfiles=[micrographDir],path=micrographDir)
 
             # Downsample if necessary
             if self.DownsampleFactor != 1:
-                finalname = join(self.TmpDir,shortname+"_tmp.mrc")
+                finalname = self.tmpPath(shortname + "_tmp.mrc")
                 parent_id = self.insertParallelRunJobStep("xmipp_transform_downsample",
                                                    "-i %s -o %s --step %f --method fourier" % (inputFile,finalname,self.DownsampleFactor),
                                                    [finalname],parent_step_id=parent_id)
@@ -49,7 +71,7 @@ class ProtScreenMicrographs(XmippProtocol):
             # CTF estimation with Xmipp
             self.insertParallelRunJobStep('xmipp_ctf_estimate_from_micrograph',
                                      "--micrograph "+finalname+\
-                                     " --oroot "+join(micrographDir,"xmipp_ctf")+\
+                                     " --oroot " + _getFilename('prefix', micrographDir=micrographDir)+\
                                      " --kV "+str(Voltage)+\
                                      " --Cs "+str(SphericalAberration)+\
                                      " --sampling_rate "+str(AngPix)+\
@@ -60,11 +82,11 @@ class ProtScreenMicrographs(XmippProtocol):
                                      " --pieceDim "+str(self.WinSize)+\
                                      " --defocus_range "+str((self.MaxFocus-self.MinFocus)*10000/2)+\
                                      " --defocusU "+str(-(self.MaxFocus+self.MinFocus)*10000/2),
-                                     verifyfiles=[join(micrographDir,"xmipp_ctf.ctfparam")],parent_step_id=parent_id)
+                                     verifyfiles=[_getFilename('ctfparam', micrographDir=micrographDir)],parent_step_id=parent_id)
 
             # CTF estimation with Ctffind
             if self.DoCtffind:
-                CtfFindActions.append([dict(verifyfiles=[join(micrographDir,"ctffind.ctfparam")],
+                CtfFindActions.append([dict(verifyfiles=[_getFilename('ctffind_ctfparam', micrographDir=micrographDir)],
                                      parent_step_id=parent_id,
                                      CtffindExec=self.CtffindExec,micrograph=finalname,micrographDir=micrographDir,
                                      tmpDir=self.TmpDir,
@@ -77,59 +99,58 @@ class ProtScreenMicrographs(XmippProtocol):
             self.insertParallelStep('estimateCtfCtffind',action)
         
         # Gather results after external actions
-        self.insertStep('gatherResults',verifyfiles=[self.workingDirPath("micrographs.xmd")],
+        self.insertStep('gatherResults',verifyfiles=[self.micrographs],
                            TmpDir=self.TmpDir,
                            WorkingDir=self.WorkingDir,
-                           Selfile=selfile,
+                           summaryFile=self.micrographs,
+                           importMicrographs=self.importMicrographs,
                            DoCtffind=self.DoCtffind)
-               
+    
+    def createFilenameTemplates(self):
+        return _templateDict
+    
     def validate(self):
         errors = []
 
         # Check that there are any micrograph to process
-        fnSel = join(self.importDir,"micrographs.xmd")
-        if not exists(fnSel):
-            errors.append("Cannot find micrographs.xmd in "+self.importDir)
+        if not exists(self.importMicrographs):
+            errors.append("Cannot find imported micrographs file:\n   <%s>" % self.importMicrographs)
         else:
-            MD = xmipp.MetaData(join(self.importDir,"micrographs.xmd"))
-            if MD.size()==0:
-                errors.append("No micrographs to process")
-        fnMic = join(self.importDir,"microscope.xmd")
-        if not exists(fnMic):
-            errors.append("Cannot find microscope.xmd in "+self.importDir)
+            md = xmipp.MetaData(self.importMicrographs)
+            if md.isEmpty():
+                errors.append("Imported micrographs file <%s> is empty" % self.importMicrographs)
+        if not exists(self.importMicroscope):
+            errors.append("Cannot find imported microscopy file:\n   <%s>" % self.importMicroscope)
         
         # Check that Q0 is negative
-        if self.AmplitudeContrast>0:
+        if self.AmplitudeContrast > 0:
             errors.append("Q0 should be negative ")
         
         # Check CTFFIND is available
         if self.DoCtffind and self.CtffindExec=="":
-            errors.append("Cannot locate ctffind3.exe")
+            errors.append("Cannot locate <ctffind3.exe>")
     
         return errors
 
     def summary(self):
         message = []
-        fnSel = join(self.importDir,"micrographs.xmd")
-        MD = xmipp.MetaData(fnSel)
-        message.append("CTF screening of %d micrographs from %s" % (MD.size(), self.importDir))
+        md = xmipp.MetaData(self.importMicrographs)
+        message.append("CTF screening of <%d> micrographs from <%s>" % (md.size(), self.importDir))
         if self.DoCtffind:
-            message.append("CTF validated with CTFFIND3")
+            message.append("CTF validated with <CTFFIND3>")
         return message
     
     def visualize(self):
-        summaryFile = self.workingDirPath("micrographs.xmd")
+        summaryFile = self.micrographs
         if exists(summaryFile):
-            os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --memory 2048m &")
+            os.system("xmipp_visualize_preprocessing_micrographj -i %s --memory 2048m &" % summaryFile)
         else:
-            summaryFile = join(self.TmpDir,"micrographs.xmd")
-            selfile = join(self.importDir,"micrographs.xmd")
-            buildSummaryMetadata(self.WorkingDir,self.DoCtffind,selfile,summaryFile)
+            summaryFile = summaryFile.replace(self.WorkingDir, self.TmpDir)
+            buildSummaryMetadata(self.WorkingDir, self.DoCtffind, self.importMicrographs, summaryFile)
             if exists(summaryFile):
-                os.system("xmipp_visualize_preprocessing_micrographj -i "+summaryFile+" --memory 2048m &")
+                os.system("xmipp_visualize_preprocessing_micrographj -i %s --memory 2048m &" % summaryFile)
             else:
-                import tkMessageBox
-                tkMessageBox.showerror("Error", "There is no result yet")        
+                showError('Error', 'There are not results yet')
     
 def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
                        AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
@@ -160,7 +181,7 @@ def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,S
               str(StepFocus*10000) + "\n"
     runJob(log, "export NATIVEMTZ=kk ; "+CtffindExec,params)
 
-    fnOut = join(micrographDir, 'ctffind.ctfparam')
+    fnOut = _getFilename('ctffind_ctfparam', micrographDir=micrographDir)
 
     # Remove temporary files
     if deleteTempMicrograph:
@@ -204,43 +225,40 @@ def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,S
     MD.setValue(xmipp.MDL_CTF_K,             1.0, objId)
     MD.write(fnOut)
 
-def buildSummaryMetadata(WorkingDir,DoCtffind,Selfile,summaryFile):
-    MD = xmipp.MetaData()
-    MDmicrographs = xmipp.MetaData(Selfile)
-    for id in MDmicrographs:
-        inputFile = MDmicrographs.getValue(xmipp.MDL_IMAGE,id)
-        micrographName = os.path.split(inputFile)[1]
-        (shortname, extension) = os.path.splitext(micrographName)
-        micrographDir = join(WorkingDir,shortname)                    
-        
-        objId = MD.addObject()
-        MD.setValue(xmipp.MDL_IMAGE,inputFile,objId)
-        ctfparam = join(micrographDir,"xmipp_ctf.ctfparam")
-        if exists(ctfparam):
-            MD.setValue(xmipp.MDL_PSD,               join(micrographDir,"xmipp_ctf.psd"),objId)
-            MD.setValue(xmipp.MDL_PSD_ENHANCED,      join(micrographDir,"xmipp_ctf_enhanced_psd.xmp"),objId)
-            MD.setValue(xmipp.MDL_CTFMODEL,          ctfparam,objId)
-            MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE1, join(micrographDir,"xmipp_ctf_ctfmodel_quadrant.xmp"),objId)
-            MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE2, join(micrographDir,"xmipp_ctf_ctfmodel_halfplane.xmp"),objId)
-        else:
-            MD.setValue(xmipp.MDL_PSD,               "NA",objId)
-            MD.setValue(xmipp.MDL_PSD_ENHANCED,      "NA",objId)
-            MD.setValue(xmipp.MDL_CTFMODEL,          "NA",objId)
-            MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE1, "NA",objId)
-            MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE2, "NA",objId)
-        if DoCtffind:
-            ctffindCTF = join(micrographDir,"ctffind.ctfparam")
-            if exists(ctffindCTF):
-                MD.setValue(xmipp.MDL_CTFMODEL2,         ctffindCTF,objId)
-                MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE3, join(micrographDir,"ctffind_spectrum.mrc"),objId)
-            else:
-                MD.setValue(xmipp.MDL_CTFMODEL2,         "NA",objId)
-                MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE3, "NA",objId)
-    if MD.size() != 0:
-        MD.sort(xmipp.MDL_IMAGE);
-        MD.write(summaryFile)
+def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,DoCtffind):
+    buildSummaryMetadata(WorkingDir, DoCtffind, importMicrographs, summaryFile)
+    runJob(log,"xmipp_ctf_sort_psds","-i " + summaryFile)
 
-def gatherResults(log,TmpDir,WorkingDir,Selfile,DoCtffind):
-    summaryFile=join(WorkingDir,"micrographs.xmd")
-    buildSummaryMetadata(WorkingDir,DoCtffind,Selfile,summaryFile)
-    runJob(log,"xmipp_ctf_sort_psds","-i "+summaryFile)
+def buildSummaryMetadata(WorkingDir,DoCtffind,importMicrographs,summaryFile):
+    md = xmipp.MetaData()
+    importMd = xmipp.MetaData(importMicrographs)
+    for id in importMd:
+        inputFile = importMd.getValue(xmipp.MDL_MICROGRAPH,id)
+        micrographName = os.path.basename(inputFile)
+        shortname = replaceFilenameExt(micrographName, '')
+        micrographDir = join(WorkingDir, shortname)                    
+        
+        objId = md.addObject()
+        md.setValue(xmipp.MDL_MICROGRAPH, inputFile, objId)
+        ctfparam = _getFilename('ctfparam', micrographDir=micrographDir)
+        labels = [xmipp.MDL_PSD, xmipp.MDL_PSD_ENHANCED, xmipp.MDL_CTFMODEL,xmipp.MDL_ASSOCIATED_IMAGE1, xmipp.MDL_ASSOCIATED_IMAGE2]
+        if exists(ctfparam): # Get filenames
+            keys = ['psd', 'enhanced_psd', 'ctfparam', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
+            values = [_getFilename(key, micrographDir=micrographDir) for key in keys]
+        else: # No files
+            values = ['NA' for i in range(len(labels))]
+
+        if DoCtffind:
+            ctffindCTF = _getFilename('ctffind_ctfparam')
+            labels += [xmipp.MDL_CTFMODEL2, xmipp.MDL_ASSOCIATED_IMAGE3]
+            if exists(ctffindCTF):
+                values += [ctffindCTF, _getFilename('ctffind_spectrum')]
+            else:
+                values += ['NA', 'NA']
+        # Set values in metadata
+        for label, value in zip(labels, values):
+            md.setValue(label, value, objId)
+            
+    if not md.isEmpty():
+        md.sort(xmipp.MDL_MICROGRAPH)
+        md.write(summaryFile)
