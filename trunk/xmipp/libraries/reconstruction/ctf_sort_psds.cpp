@@ -131,8 +131,10 @@ double ProgPSDSort::evaluate(const FileName &fnMicrograph,
     CTFDescription CTF1, CTF2;
     CTF1.read(fnCTF);
     CTF1.Produce_Side_Info();
-    if (fnCTF2!="" && fnCTF2!="NA")
+
+    if (!fnCTF2.empty() && fnCTF2 != "NA")
     {
+
     	CTF2.read(fnCTF2);
     	CTF2.Produce_Side_Info();
     }
@@ -240,7 +242,7 @@ void ProgPSDSort::run()
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         FileName fnMicrograph, fnPSD, fnCTF, fnCTF2;
-        SF.getValue(MDL_IMAGE,fnMicrograph,__iter.objId);
+        SF.getValue(MDL_MICROGRAPH,fnMicrograph,__iter.objId);
         SF.getValue(MDL_PSD,fnPSD,__iter.objId);
         SF.getValue(MDL_CTFMODEL,fnCTF,__iter.objId);
         if (SF.containsLabel(MDL_CTFMODEL2))
