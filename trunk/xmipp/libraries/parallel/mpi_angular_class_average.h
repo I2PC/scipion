@@ -95,9 +95,9 @@ public:
     /** Column numbers */
     std::string      col_select;
     /** Upper and lower absolute and relative selection limits */
-    double           limit0, limitF, limitR;
+    double           limit0, limitF, limitRclass, limitRabs;
     /** Flags wether to use limit0, limitF and limitR selection */
-    bool             do_limit0, do_limitF, do_limitR0, do_limitRF;
+    bool             do_limit0, do_limitF, do_limitR0class, do_limitRFclass, do_limitR0abs, do_limitRFabs;
     /** Flag whether to apply mirror operations. By default set to True */
     bool             do_mirrors;
     /** Flag whether also to write out class averages of random halves of the data */

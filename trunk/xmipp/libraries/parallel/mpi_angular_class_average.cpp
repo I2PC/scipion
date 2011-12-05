@@ -60,18 +60,33 @@ void MpiProgAngularClassAverage::readParams()
 
     inFile = getParam("-i");
 
-    if (checkParam("--limitR"))
+    if (checkParam("--limitRClass"))
     {
-        limitR = getDoubleParam("--limitR");
-        if (limitR < -100. || limitR > 100.)
+    	limitRclass = getDoubleParam("--limitRClass");
+        if (limitRclass < -100. || limitRclass > 100.)
             REPORT_ERROR(ERR_VALUE_INCORRECT,
-                         "limitR should be a percentage: provide values between -100 and 100.");
-        if (limitR > 0.)
-            do_limitR0 = true;
-        else if (limitR < 0.)
+                         "limitRclass should be a percentage: provide values between -100 and 100.");
+        if (limitRclass > 0.)
+            do_limitR0class = true;
+        else if (limitRclass < 0.)
         {
-            limitR *= -1.;
-            do_limitRF = true;
+        	limitRclass *= -1.;
+            do_limitRFclass = true;
+        }
+    }
+
+    if (checkParam("--limitRabs"))
+    {
+    	limitRabs = getDoubleParam("--limitRabs");
+        if (limitRabs < -100. || limitRabs > 100.)
+            REPORT_ERROR(ERR_VALUE_INCORRECT,
+                         "limitRabs should be a percentage: provide values between -100 and 100.");
+        if (limitRabs > 0.)
+            do_limitR0abs = true;
+        else if (limitRabs < 0.)
+        {
+        	limitRabs *= -1.;
+            do_limitRFabs = true;
         }
     }
 
@@ -121,9 +136,13 @@ void MpiProgAngularClassAverage::defineParams()
     addParamsLine("   [--limit0 <l0>]         : Discard images below <l0>");
     addParamsLine("   [--limitF <lF>]         : Discard images above <lF>");
     addParamsLine(
-        "   [--limitR <lR>]         : if (lR>0 && lR< 100): discard lowest  <lR> % in each class");
+        "   [--limitRClass <lRc>]         : if (lRc>0 && lRc< 100): discard lowest  <lRc> % in each class");
     addParamsLine(
-        "                           : if (lR<0 && lR>-100): discard highest <lR> % in each class");
+        "                           : if (lRc<0 && lR>-100): discard highest <lRc> % in each class");
+    addParamsLine(
+        "   [--limitRAbsolute <lRa>]         : if (lRa>0 && lRa< 100): discard lowest  <lRa> %");
+    addParamsLine(
+        "                           : if (lRa<0 && lRa>-100): discard highest <lRa> %");
 
     addParamsLine("==+ REALIGNMENT OF CLASSES ==");
     addParamsLine(
@@ -276,6 +295,7 @@ void MpiProgAngularClassAverage::run()
 
                 std::cerr << "Unblocking. lockIndex: " << lockIndex << " | status.MPI_SOURCE: " << status.MPI_SOURCE << std::endl;
 #endif
+
                 mdJobList.getValue(MDL_ORDER, order_index, lockIndex);
                 mdJobList.getValue(MDL_REF3D, ref3d_index, lockIndex);
                 dAij(lockArray,order_index,ref3d_index)=false;
@@ -511,8 +531,6 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         w2 = avg2.weight();
     }
 
-    //    std::cerr<<"["<<node->rank<<"]: "<< "mpi_process_04"<<std::endl;
-
     // Apply Wiener filters
     if (fn_wien != "")
     {
@@ -523,8 +541,6 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     }
 
     // Output total and split averages and selfiles to disc
-    //    std::cerr<<"["<<node->rank<<"]: "<< "mpi_process_05"<<std::endl;
-
     SFclass = SFclass1;
     SFclass.unionAll(SFclass2);
 
@@ -533,11 +549,9 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     avg.setWeight(w);
     avg1.setWeight(w1);
     avg2.setWeight(w2);
-    //    std::cerr<<"["<<node->rank<<"]: "<< "mpi_process_06. lockIndex: " << lockIndex<<std::endl;
 
     mpi_writeController(order_number, avg, avg1, avg2, SFclass, SFclass1, SFclass2,
                         SFclassDiscarded, w1, w2, lockIndex);
-    //    std::cerr<<"["<<node->rank<<"]: "<< "mpi_process_07"<<std::endl;
 
 }
 
@@ -559,9 +573,7 @@ void MpiProgAngularClassAverage::mpi_write(
     double old_w1,
     double old_w2)
 {
-    // blocks
     FileName fileNameXmd, fileNameStk;
-    //    std::cerr<<"["<<node->rank<<"]: "<< "mpi_write_01"<<std::endl;
 
     formatStringFast(fileNameStk, "%s_refGroup%06lu.stk", fn_out.c_str(), ref3dIndex);
     mpi_writeFile(avg, dirno, fileNameStk, old_w);
@@ -571,31 +583,16 @@ void MpiProgAngularClassAverage::mpi_write(
     {
         if (w1 > 0)
         {
-            //            std::cerr<<"["<<node->rank<<"]: "<< "mpi_write_03"<<std::endl;
-
             formatStringFast(fileNameStk, "%s_refGroup%06lu.stk", fn_out1.c_str(), ref3dIndex);
             mpi_writeFile(avg1, dirno, fileNameStk, old_w1);
-//            std::cerr<<"["<<node->rank<<"]: "<< "mpi_write_04"<<std::endl;
-
         }
         if (w2 > 0)
         {
-            //            std::cerr<<"["<<node->rank<<"]: "<< "mpi_write_05"<<std::endl;
             formatStringFast(fileNameStk, "%s_refGroup%06lu.stk",
                              fn_out2.c_str(), ref3dIndex);
             mpi_writeFile(avg2, dirno, fileNameStk, old_w2);
-//            std::cerr<<"["<<node->rank<<"]: "<< "mpi_write_06"<<std::endl;
-
         }
     }
-    //    std::cerr<<"["<<node->rank<<"]: "<< "mpi_write_07"<<std::endl;
-
-    //    formatStringFast(fileNameXmd,
-    //                     "classGroup%06lu_refGroup%06lu_ctfGroup%06lu@%s_node%06lu_discarded.xmd",
-    //                     dirno, ref3dNum, ctfNum, fn_out.c_str(),node->rank);
-    //    SFclassDiscarded.write(fileNameXmd, MD_APPEND);
-    //    std::cerr<<"["<<node->rank<<"]: "<< "mpi_write_08"<<std::endl;
-
 }
 
 
@@ -653,7 +650,7 @@ void MpiProgAngularClassAverage::mpi_writeController(
             weights1_old = lockWeightIndexes[index_weights1];
             weights2_old = lockWeightIndexes[index_weights2];
             ref3dIndex = ROUND(lockWeightIndexes[index_ref3d]);
-                        //            std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeController_03"<<std::endl;
+            //            std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeController_03"<<std::endl;
             mpi_write(dirno, ref3dIndex, avg, avg1, avg2, SFclass, SFclass1, SFclass2,
                       SFclassDiscarded, w1, w2, weight_old, weights1_old, weights2_old);
             //            std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeController_04"<<std::endl;
@@ -790,41 +787,45 @@ void MpiProgAngularClassAverage::mpi_produceSideInfo()
         Ro = (Xdim / 2) - 1;
 
     // Set limitR
-    if (do_limitR0 || do_limitRF)
+    if (do_limitR0abs || do_limitRFabs)
     {
-        MetaData tmpMT(DF);
-        std::vector<double> vals;
+        MetaData tmpMT;
         MDLabel codifyLabel = MDL::str2Label(col_select);
-        FOR_ALL_OBJECTS_IN_METADATA(DF)
-        {
-            double auxval;
-            DF.getValue(codifyLabel, auxval, __iter.objId);
-            vals.push_back(auxval);
-        }
-        int nn = vals.size();
-        std::sort(vals.begin(), vals.end());
-        if (do_limitR0)
-        {
-            double val = vals[ROUND((limitR/100.) * vals.size())];
-            if (do_limit0)
-                limit0 = XMIPP_MAX(limit0, val);
-            else
-            {
-                limit0 = val;
-                do_limit0 = true;
-            }
-        }
-        else if (do_limitRF)
-        {
-            double val = vals[ROUND(((100. - limitR)/100.) * vals.size())];
-            if (do_limitF)
-                limitF = XMIPP_MIN(limitF, val);
-            else
-            {
-                limitF = val;
-                do_limitF = true;
-            }
-        }
+        tmpMT.sort(DF,codifyLabel);
+        int size = tmpMT.size();
+        ROUND((limitRabs/100.) * size);
+
+//
+//        FOR_ALL_OBJECTS_IN_METADATA(tmpMT)
+//        {
+//            double auxval;
+//            DF.getValue(codifyLabel, auxval, __iter.objId);
+//            vals.push_back(auxval);
+//        }
+//        int nn = vals.size();
+//        std::sort(vals.begin(), vals.end());
+//        if (do_limitR0)
+//        {
+//            double val = vals[ROUND((limitR/100.) * vals.size())];
+//            if (do_limit0)
+//                limit0 = XMIPP_MAX(limit0, val);
+//            else
+//            {
+//                limit0 = val;
+//                do_limit0 = true;
+//            }
+//        }
+//        else if (do_limitRF)
+//        {
+//            double val = vals[ROUND(((100. - limitR)/100.) * vals.size())];
+//            if (do_limitF)
+//                limitF = XMIPP_MIN(limitF, val);
+//            else
+//            {
+//                limitF = val;
+//                do_limitF = true;
+//            }
+//        }
     }
     //}
 }
@@ -997,8 +998,11 @@ void MpiProgAngularClassAverage::mpi_postprocess()
     std::cerr<< "mpi_postprocess01"<<std::endl;
 
     FileName imageName, fileNameXmd;
+    FileName imageNames1, fileNameXmds1, imageNames2, fileNameXmds2;
     MetaData auxMd,auxMd2;
     size_t order_number;
+    int ref3d;
+    double weights1, weights2;
 
     String
     comment =
@@ -1012,6 +1016,8 @@ void MpiProgAngularClassAverage::mpi_postprocess()
 
         formatStringFast(fileNameXmd,
                          "refGroup%06lu@%s_RefGroup%06lu.xmd", i, fn_out.c_str(), i);
+
+
 
         auxMd.importObjects(mdJobList, MDValueEQ(MDL_REF3D, i));
 
@@ -1033,6 +1039,52 @@ void MpiProgAngularClassAverage::mpi_postprocess()
             auxMd2.setValue(MDL_IMAGE, imageName,__iter.objId);
         }
         auxMd2.write(fileNameXmd);
+
+        auxMd2.addLabel(MDL_ENABLED);
+        auxMd2.setValueCol(MDL_ENABLED, 1);
+
+        if(do_split)
+        {
+            MetaData auxMds1(auxMd2);
+            MetaData auxMds2(auxMd2);
+
+            formatStringFast(fileNameXmds1,
+                             "refGroup%06lu@%s_RefGroup%06lu.xmd", i, fn_out1.c_str(), i);
+
+            formatStringFast(fileNameXmds2,
+                             "refGroup%06lu@%s_RefGroup%06lu.xmd", i, fn_out2.c_str(), i);
+
+            FOR_ALL_OBJECTS_IN_METADATA2(auxMds1, auxMds2)
+            {
+                auxMds1.getValue(MDL_ORDER, order_number,__iter.objId);
+                auxMds1.getValue(MDL_REF3D, ref3d,__iter.objId);
+
+                weights1 = dAij(weightArrays1,order_number, ref3d);
+                if(weights1 == 0)
+                    auxMds1.setValue(MDL_ENABLED,-1,__iter.objId);
+                else
+                {
+                    auxMds1.setValue(MDL_WEIGHT, weights1,__iter.objId);
+                    formatStringFast(imageName, "%06lu@%s_refGroup%06lu.stk", order_number,  fn_out1.c_str(), i);
+                    auxMds1.setValue(MDL_IMAGE, imageName,__iter.objId);
+                }
+
+                weights2 = dAij(weightArrays2,order_number, ref3d);
+                if(weights2 == 0)
+                    auxMds2.setValue(MDL_ENABLED,-1,__iter2.objId);
+                else
+                {
+                    auxMds2.setValue(MDL_WEIGHT, weights2,__iter2.objId);
+                    formatStringFast(imageName, "%06lu@%s_refGroup%06lu.stk", order_number,  fn_out2.c_str(), i);
+                    auxMds2.setValue(MDL_IMAGE, imageName,__iter2.objId);
+                }
+
+            }
+            auxMds1.removeDisabled();
+            auxMds1.write(fileNameXmds1);
+            auxMds2.removeDisabled();
+            auxMds2.write(fileNameXmds2);
+        }
     }
     std::cerr<< "mpi_writeFile_11"<<std::endl;
 
