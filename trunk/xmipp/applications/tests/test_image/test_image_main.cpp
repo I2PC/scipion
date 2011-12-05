@@ -166,7 +166,57 @@ TEST_F( ImageTest, writeRAWimage)
     EXPECT_EQ(myImage,auxImage);
 }
 
+TEST_F( ImageTest, readPreview)
+{
+    FileName auxFilename(baseName + "/../applications/tests/test_image/test2.spi");
+    Image<double> img1, img2;
+    img1.read(auxFilename);
 
+    img1().setXmippOrigin();
+    selfScaleToSize(NEAREST, img1(),64,64);
+
+    img2.readPreview(auxFilename, 64,64);
+    img1().setXmippOrigin();
+    img2().setXmippOrigin();
+
+    EXPECT_TRUE(img1 == img2);
+}
+
+TEST_F( ImageTest, mapFile2Write)
+{
+    FileName auxFilename(baseName + "/../applications/tests/test_image/smallVolume.vol");
+    FileName auxMappedFilename(baseName + "/../applications/tests/test_image/mappedFile.vol");
+    Image<float> img1, img2;
+    img1.read(auxFilename);
+    ArrayDim aDim;
+    img1().getDimensions(aDim);
+
+    auxMappedFilename.deleteFile();
+    img2.mapFile2Write(aDim.xdim, aDim.ydim, aDim.zdim, auxMappedFilename);
+    typeCast(img1(), img2());
+    img2.write(auxMappedFilename);
+    img2.clear();
+    img2.read(auxMappedFilename);
+
+    EXPECT_TRUE(img1 == img2);
+}
+TEST_F( ImageTest, movePointerToSlice)
+{
+    FileName auxFilename(baseName + "/../applications/tests/test_image/smallVolume.vol");
+    Image<double> img1, img2;
+    img1.read(auxFilename);
+
+    ArrayDim aDim;
+    img1().getDimensions(aDim);
+
+    for (int k = 1; k <= aDim.zdim; ++k)
+    {
+        img1.movePointerToSlice(k);
+        img2.readPreview(auxFilename, 64, 64, k);
+
+        EXPECT_TRUE(img1 == img2);
+    }
+}
 
 GTEST_API_ int main(int argc, char **argv)
 {
