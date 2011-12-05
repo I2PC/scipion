@@ -174,11 +174,15 @@ protected:
             if (oroot.empty())
             {
                 /* It is stack if extension is stack compatible, or if --oroot is not passed
-                 * and there are more than one image.
-                 * Same for volumes.*/
-                if (fn_out.hasStackExtension() || mdInSize > 1)
+                 * and there are more than one image. Same for volumes.
+                 * Firstly, we must check extensions, then stack and volume sizes.*/
+                if (fn_out.hasStackExtension())
                     type = "stk";
-                else if (fn_out.hasVolumeExtension() || zdimOut > 1) // if it is volume
+                else if (fn_out.hasVolumeExtension()) // if it is volume
+                    type = "vol";
+                else if (mdInSize > 1)
+                    type = "stk";
+                else if (zdimOut > 1) // if it is volume
                     type = "vol";
                 else
                     type = "img";
