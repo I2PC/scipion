@@ -48,9 +48,14 @@
 #define TAG_DO_NOT_DARE_TO_WRITE     15
 #define TAG_I_AM_FREE                16
 
-#define ArraySize 8
-#define lockWeightIndexesSize 4
+#define lockWeightIndexesSize 5
+#define index_lockIndex 0
+#define index_weight 1
+#define index_weights1 2
+#define index_weights2 3
+#define index_ref3d 4
 
+#define ArraySize 8
 #define index_DefGroup 0
 #define index_2DRef 1
 #define index_3DRef 2
@@ -212,6 +217,7 @@ public:
          */
     void mpi_write(
         size_t dirno,
+        int ref3dIndex,
         Image<double> avg,
         Image<double> avg1,
         Image<double> avg2,
@@ -245,8 +251,6 @@ public:
     void mpi_writeFile(
     		Image<double> avg,
     		size_t dirno,
-    		MetaData SF,
-    		FileName fileNameXmd,
     		FileName fileNameStk,
     	    double w_old);
 
