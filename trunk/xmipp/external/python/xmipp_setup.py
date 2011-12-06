@@ -1707,7 +1707,7 @@ class PyBuildExt(build_ext):
         # The versions with dots are used on Unix, and the versions without
         # dots on Windows, for detection by cygwin.
         tcllib = tklib = tcl_includes = tk_includes = None
-        for version in ['8.6', '86', '8.5', '85', '8.4', '84', '8.3', '83',
+        for version in ['8.6', '86', '8.5.10', '8.5', '85', '8.4', '84', '8.3', '83',
                         '8.2', '82', '8.1', '81', '8.0', '80']:
             tklib = self.compiler.find_library_file(lib_dirs,
                                                         'tk' + version)
@@ -1716,7 +1716,6 @@ class PyBuildExt(build_ext):
             if tklib and tcllib:
                 # Exit the loop when we've found the Tcl/Tk libraries
                 break
-
         # Now check for the header files
         if tklib and tcllib:
             # Check for the include files on Debian and {Free,Open}BSD, where
@@ -1728,10 +1727,14 @@ class PyBuildExt(build_ext):
                 dotversion = dotversion[:-1] + '.' + dotversion[-1]
             tcl_include_sub = []
             tk_include_sub = []
-            for dir in inc_dirs:
-                tcl_include_sub += [dir + os.sep + "tcl" + dotversion]
-                tk_include_sub += [dir + os.sep + "tk" + dotversion]
-            tk_include_sub += tcl_include_sub
+            if platform=='cygwin':
+	    	tcl_include_sub=inc_dirs
+	    	tk_include_sub=inc_dirs
+            else:
+                for dir in inc_dirs:
+                   tcl_include_sub += [dir + os.sep + "tcl" + dotversion]
+                   tk_include_sub += [dir + os.sep + "tk" + dotversion]	    
+                tk_include_sub += tcl_include_sub
             tcl_includes = find_file('tcl.h', inc_dirs, tcl_include_sub)
             tk_includes = find_file('tk.h', inc_dirs, tk_include_sub)
 
@@ -1765,6 +1768,7 @@ class PyBuildExt(build_ext):
 
         # If Cygwin, then verify that X is installed before proceeding
         if platform == 'cygwin':
+	    include_dirs.append("/usr/include")
             x11_inc = find_file('X11/Xlib.h', [], include_dirs)
             if x11_inc is None:
                 return
@@ -1796,7 +1800,10 @@ class PyBuildExt(build_ext):
                         libraries = libs,
                         library_dirs = added_lib_dirs,
                         )
+        print "COSS voy a append tkinter"
+        print ext
         self.extensions.append(ext)
+        return True
 
 ##         # Uncomment these lines if you want to play with xxmodule.c
 ##         ext = Extension('xx', ['xxmodule.c'])

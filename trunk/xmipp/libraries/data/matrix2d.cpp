@@ -81,13 +81,13 @@ SparseMatrix2D::SparseMatrix2D(){
 	N 		= 0;
 }
 
-SparseMatrix2D::SparseMatrix2D(std::vector<SparseElement> &_elements, int _N)
+SparseMatrix2D::SparseMatrix2D(std::vector<SparseElement> &_elements, int _Nelements)
 {
 	//First of all, we sort the elements by rows and then by columns
 	std::sort(_elements.begin(),_elements.end());
 
 	size_t ln = _elements.size();
-	N      = _N;
+	N      = _Nelements;
 
 	values.resizeNoCopy(ln);
 	jIdx.resizeNoCopy(ln);

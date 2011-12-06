@@ -1582,7 +1582,7 @@ public:
     /** Constructor from a set of i,j indexes and their corresponding values.
      * N is the total dimension of the square, sparse matrix.
      */
-    SparseMatrix2D(std::vector<SparseElement> &_elements, int _N);
+    SparseMatrix2D(std::vector<SparseElement> &_elements, int _Nelements);
 
     /** Assig operator *this=X */
     SparseMatrix2D &operator =(const SparseMatrix2D &X);

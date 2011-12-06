@@ -27,7 +27,6 @@
 
 import os
 import sys
-import tkMessageBox
 
 #---------------------------------------------------------------------------
 # Logging utilities
@@ -522,7 +521,8 @@ def runExternalAppWithResponse(cmd):
             if not data or msg.find('__END__') !=-1: break      
         conn.close()
     except Exception, e:
-        tkMessageBox.showerror("Error waiting for response", "No reponse, returning empty string. ERROR: " + str(e))
+        from protlib_gui_ext import showError
+        showError("Error waiting for response", "No reponse, returning empty string. ERROR: " + str(e))
 
     return msg.replace('__END__', '')
  

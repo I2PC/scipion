@@ -37,7 +37,7 @@
 
 // MAXDOUBLE
 #include <limits.h>
-#ifndef _CYGWIN
+#ifndef __CYGWIN__
 #ifndef __APPLE__
 #include <values.h>
 #endif

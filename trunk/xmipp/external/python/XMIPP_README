@@ -21,3 +21,9 @@ xmipp_site.py -> Python-2.7.2/Lib/site.py
     #XMIPP: Add TCL/TK internal libs directory to avoid link to /xmipp/lib/
     os.environ['LD_LIBRARY_PATH'] += ":%s:%s" % (join(tcl_home, 'unix'),  join(tk_home, 'unix'))
 #########################################################
+
+Python-2.7.2/Modules/_io/_iomodule.h has to be modified:
+Line 75, Substitute:
+PyAPI_DATA(PyObject *) PyExc_BlockingIOError;
+by 
+extern PyObject* PyExc_BlockingIOError;

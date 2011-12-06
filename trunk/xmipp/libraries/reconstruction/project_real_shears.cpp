@@ -287,17 +287,17 @@ void projectionRealShears1(RealShearsInfo &Data,
     if (XX(BinvC) != 0.0)
         scale_x = 1.0 / XX(BinvC);
     else
-        scale_x = DBL_MAX;
+        scale_x = 1e38;
 
     if (YY(BinvC) != 0.0)
         scale_y = 1.0 / YY(BinvC);
     else
-        scale_y = DBL_MAX;
+        scale_y = 1e38;
 
     if (ZZ(BinvC) != 0.0)
         scale_z = 1.0 / ZZ(BinvC);
     else
-        scale_z = DBL_MAX;
+        scale_z = 1e38;
     double m_x = fabs(scale_x);
     double m_y = fabs(scale_y);
     double m_z = fabs(scale_z);

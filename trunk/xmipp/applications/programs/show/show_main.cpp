@@ -123,7 +123,7 @@ protected:
         QApplication a(argc, argv);
 
         // Get common normalization
-        double m = DBL_MAX, M = -m;
+        double m = 1e38, M = -m;
         Image<double> I;
         FileName fn;
         MetaData md;

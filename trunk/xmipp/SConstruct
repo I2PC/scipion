@@ -350,9 +350,9 @@ elif (ARGUMENTS['mode'] == 'compile'):
 #    env.Append(CCFLAGS="-D'SVN_REV=\""+ svnver +"\"'")
 
     # Add threads
-    env.Append(LINKFLAGS=['-pthread'])
-    env.Append(CXXFLAGS=['-pthread'])
-    env.Append(CCFLAGS=['-pthread'])
+    env.Append(LINKFLAGS=['-lpthread'])
+    #env.Append(CXXFLAGS=['-lpthread'])
+    #env.Append(CCFLAGS=['-lpthread'])
 
     # warnings?
     if int(env['warn']):

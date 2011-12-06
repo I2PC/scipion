@@ -267,13 +267,20 @@ if $DO_PYTHON; then
     export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
     export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
     export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
+    if [[ `uname`==CYGWIN* ]]
+    then
+        export CPPFLAGS="-I/usr/include -I/usr/include/ncurses $CPPFLAGS"
+    fi
     echo "--> export CPPFLAGS=$CPPFLAGS"
     echo "--> export LDFLAGS=$LDFLAGS"
-    # Copy our custom python files:
+    echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+    echoGreen "Copy our custom python files:"
     echo "-->  cd $EXT_PYTHON"
     cd $EXT_PYTHON
     echo "--> cp ./xmipp_setup.py $VPYTHON/setup.py"
     cp ./xmipp_setup.py $VPYTHON/setup.py
+    cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h
+    echo "--> cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h"
     compile_library $VPYTHON python "." ""
 
     # Create the python launch script with necessary environment variable settings
@@ -286,11 +293,20 @@ if $DO_PYTHON; then
     printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
     printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
     printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
-    printf '$EXT_PYTHON/$VPYTHON/python "$@" \n ' >> $PYTHON_BIN
+    printf 'SYS=`uname`\n' >> $PYTHON_BIN
+    printf 'if [[ $SYS==CYGWIN* ]]\n' >> $PYTHON_BIN
+    printf 'then\n' >> $PYTHON_BIN
+	printf '    PYTHONCYGWINLIB=`find $EXT_PYTHON/$VPYTHON/build -name "lib.cygwin*" -type d`\n' >> $PYTHON_BIN
+	printf '    export LD_LIBRARY_PATH=$PYTHONCYGWINLIB:$LD_LIBRARY_PATH\n' >> $PYTHON_BIN
+	printf '    export PYTHONPATH=$PYTHONCYGWINLIB:$PYTHONPATH\n' >> $PYTHON_BIN
+    printf '    $EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
+    printf 'else\n' >> $PYTHON_BIN
+    printf '    $EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
+    printf 'fi\n' >> $PYTHON_BIN
     chmod u+x $PYTHON_BIN
     
-    compile_pymodule $VNUMPY
-    compile_pymodule $VMATLIBPLOT
+    #compile_pymodule $VNUMPY
+    #compile_pymodule $VMATLIBPLOT
     compile_pymodule $PYMPI
     #compile_pymodule $VPIL
 fi

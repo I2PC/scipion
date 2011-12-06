@@ -2820,7 +2820,7 @@ void setMDObjectValue(MDObject *obj, PyObject *pyValue)
         if (PyInt_Check(pyValue))
             obj->setValue((int)PyInt_AS_LONG(pyValue));
         else if (PyLong_Check(pyValue))
-        	obj->setValue(PyLong_AsUnsignedLong(pyValue));
+        	obj->setValue((size_t)PyLong_AsUnsignedLong(pyValue));
         else if (PyString_Check(pyValue))
         	obj->setValue(std::string(PyString_AsString(pyValue)));
         else if (FileName_Check(pyValue))
