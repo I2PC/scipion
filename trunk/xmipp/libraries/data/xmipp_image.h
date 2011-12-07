@@ -753,7 +753,9 @@ public:
             REPORT_ERROR(ERR_MULTIDIM_SIZE, formatString("movePointerToSlice: Selected slice %4d cannot be higher than Z size %4d.",
                          select_slice,aDimFile.zdim));
 
-        ArrayDim newDim = aDimFile;
+        ArrayDim newDim;
+        VOLMATRIX(*this).getDimensions(newDim);
+        newDim.zdim = aDimFile.zdim;
         int phys_slice;
 
         switch (select_slice)
