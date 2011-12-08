@@ -9,7 +9,8 @@ FFTWDir = "external/fftw-3.2.2"
 FFTWLibs = ['fftw3', 'fftw3_threads']
 TIFFDir = "external/tiff-3.9.4"
 TIFFLibs = ['tiff']
-if env['PLATFORM'] == 'cygwin':
+CYGWIN = env['PLATFORM'] == 'cygwin'
+if CYGWIN:
 	TIFFLibs.append('z')
 ARPACKppDir = "external/arpack++-2.3"
 ARPACKppLibs = ['arpack++']
@@ -368,7 +369,7 @@ def AddJavaApp(name, appDir, outDir):
         env.Depends(buildClasses, appLibs[lname])
 
     copyPluginResources = env.Install(buildResourcesDir, Glob(resourcesDir, "*?.???", []))
-    env.Depends(buildJar, [copyMetainf, copyPluginResources, buildClasses])
+    env.Depends(buildJar, [copyMetainf, copyPluginResources])#, buildClasses])
     pluginAlias = env.Alias(name, buildJar)
     env.Depends(buildClasses, copyJar)
 
@@ -436,10 +437,10 @@ AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],
 #Xmipp Python Extension
 PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
 #import distutils.sysconfig
-pythonIncludes = ["#" +os.path.join(PythonDir,dir) for dir in [".","Include"]]
+pythonIncludes = ["#" + os.path.join(PythonDir,dir) for dir in [".","Include"]]
 libpath=['lib']
 libraries=['XmippData', 'XmippRecons','XmippExternal'] + FFTWLibs + TIFFLibs + SQLiteLibs
-if env['PLATFORM'] == 'cygwin':
+if CYGWIN:
     libpath.append(PythonDir)
     libraries.append("python2.7")
 pythonbinding = AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources,
@@ -637,7 +638,7 @@ if int(env['java']):
     #javaPlugins.append(AddImageJPlugin('Xmipp_MetaData_Browser', 'libraries/graphicsj/Xmipp_MetaData_Browser', 'external/imagej/plugins'))
     #env.Depends('Xmipp_MetaData_Browser', 'Xmipp_Browser')
     javaPlugins.append(AddImageJPlugin('Masks_ToolBar', 'libraries/graphicsj/Masks_ToolBar', 'external/imagej/plugins'))
-    javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
+    #javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
     javaPlugins.append(AddJavaApp('XmippPP_', 'libraries/graphicsj/Xmipp_Particle_Picker', 'external/Xmipp_Particle_Picker'))
     # Java apps
     #javaPlugins.append(AddJavaApp('Java3DInstaller', 'libraries/graphicsj/Java3DInstaller', 'external/Java3DInstaller'))
@@ -914,15 +915,18 @@ if int(env['qt']):
     for i in graphics_sources:
         graphics_objects.append(i)
 
-    LIBPATH=['lib']
-    LIBS=['XmippData', 'XmippExternal','XmippClassif','XmippRecons','qt-mt'] + FFTWLibs + SQLiteLibs
+    LIBPATH = []
+    LIBS = []
+    if CYGWIN:
+        LIBPATH = ['lib', env['QTDIR']]
+        LIBS = ['XmippData', 'XmippExternal','XmippClassif','XmippRecons', env['QT_LIB']] + FFTWLibs + SQLiteLibs
     if int(env['static']):
         graphics = envQT.StaticLibrary(
             graphics_basedir + graphics_name,
             graphics_objects,
             CPPPATH=graphics_cpppath,
-	    LIBPATH=LIBPATH,
-	    LIBS=LIBS
+	        LIBPATH=LIBPATH,
+	        LIBS=LIBS
             )
     else:
         graphics = envQT.SharedLibrary(

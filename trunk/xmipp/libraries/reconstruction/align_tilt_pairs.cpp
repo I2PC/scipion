@@ -29,16 +29,16 @@ void ProgAlignTiltPairs::defineParams()
 {
     //Usage
     addUsageLine("Center the tilted images of all tilted-untilted image pairs.");
-    addUsageLine("+This program receives as input two sets of images, untilted and tilted. In the first one, a metadata");
-    addUsageLine("+is required with values for: 'angleRot',the angle between y-axis and tilt axis taken from micrographs.");
-    addUsageLine("+Also the in-plane translations and rotation, 'shiftX', 'shiftY' and 'anglePsi' are expected from a");
+    addUsageLine("+This program receives as input a metadata with attwo sets of images, untilted and tilted. In the first one, a metadata");
+    addUsageLine("+is required with values for: *angleRot*,the angle between y-axis and tilt axis taken from micrographs.");
+    addUsageLine("+Also the in-plane translations (*shiftX* and *shiftY*) and rotation(*anglePsi*) are expected from a");
     addUsageLine("+previous alignment step. In the tilted metadata should be provided the angle between y-axis and tilt");
-    addUsageLine("+axis, 'anglePsi' and the tilt angle taken from the experiment.");
-    addUsageLine("+As output, the first euler angle 'angleRot' of tilted images is set with 'anglePsi' of untilted ones.");
-    addUsageLine("+The in-plane translations 'shiftX' and 'shiftY' of tilted images are calculated using cross-correlation");
-    addUsageLine("+yielding also the cross-correlation coeficient 'maxCC'");
+    addUsageLine("+axis, *anglePsi* and the tilt angle taken from the experiment.");
+    addUsageLine("+As output, the first euler angle *angleRot* of tilted images is set with *anglePsi* of untilted ones.");
+    addUsageLine("+The in-plane translations *shiftX* and *shiftY* of tilted images are calculated using cross-correlation");
+    addUsageLine("+yielding also the cross-correlation coeficient *maxCC*");
     addUsageLine("+* If the particles under study are disc-shaped and lying flat on the micrograph (i.e. the have a relatively");
-    addUsageLine("+  low height (Z) and are more-or-less spherically shaped in XY), centilt is expected to give good results");
+    addUsageLine("+  low height (Z) and are more-or-less spherically shaped in XY), this program is expected to give good results");
     addUsageLine("+  using the default options.");
     addUsageLine("+* If the particles have a different shape, the centering may be poor, since especially in the X direction the");
     addUsageLine("+  shift becomes poorly defined. In these cases, three alternative options may be tried:");

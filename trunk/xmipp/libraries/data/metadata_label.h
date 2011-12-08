@@ -51,12 +51,14 @@ enum MDLabel
     MDL_OBJID = MDL_FIRST_LABEL, ///< object id (int), NOTE: This label is special and shouldn't be used
 
     MDL_ANGLE_COMPARISON, ///< Angular comparison (see angular_distance.cpp)
-    MDL_ANGLEPSI2, ///< Psi angle of an image (double,degrees)
     MDL_ANGLEPSI, ///< Psi angle of an image (double,degrees)
-    MDL_ANGLEROT2, ///< Rotation angle of an image (double,degrees)
+    MDL_ANGLEPSI2, ///< Psi angle of an image (double,degrees)
     MDL_ANGLEROT, ///< Rotation angle of an image (double,degrees)
-    MDL_ANGLETILT2, ///< Tilting angle of an image (double,degrees)
+    MDL_ANGLEROT2, ///< Rotation angle of an image (double,degrees)
     MDL_ANGLETILT, ///< Tilting angle of an image (double,degrees)
+    MDL_ANGLETILT2, ///< Tilting angle of an image (double,degrees)
+    MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
+    MDL_ANGLE_Y2,   ///< Angle between y-axis and tilt-axis (double, degrees) for tilted micrographs
     MDL_ASSOCIATED_IMAGE1, ///< Image associated to this object (std::string)
     MDL_ASSOCIATED_IMAGE2, ///< Image associated to this object (std::string)
     MDL_ASSOCIATED_IMAGE3, ///< Image associated to this object (std::string)
@@ -546,12 +548,14 @@ private:
         MDL::addLabel(MDL_OBJID, LABEL_LONG, "objId");
 
         MDL::addLabel(MDL_ANGLE_COMPARISON, LABEL_VECTOR, "angleComparison", TAGLABEL_NOTAG, "psi2");
-        MDL::addLabel(MDL_ANGLEPSI2, LABEL_DOUBLE, "anglePsi2", TAGLABEL_NOTAG, "psi2");
         MDL::addLabel(MDL_ANGLEPSI, LABEL_DOUBLE, "anglePsi", TAGLABEL_NOTAG, "psi");
-        MDL::addLabel(MDL_ANGLEROT2, LABEL_DOUBLE, "angleRot2", TAGLABEL_NOTAG, "rot2");
+        MDL::addLabel(MDL_ANGLEPSI2, LABEL_DOUBLE, "anglePsi2", TAGLABEL_NOTAG, "psi2");
         MDL::addLabel(MDL_ANGLEROT, LABEL_DOUBLE, "angleRot", TAGLABEL_NOTAG, "rot");
-        MDL::addLabel(MDL_ANGLETILT2, LABEL_DOUBLE, "angleTilt2", TAGLABEL_NOTAG, "tilt2");
+        MDL::addLabel(MDL_ANGLEROT2, LABEL_DOUBLE, "angleRot2", TAGLABEL_NOTAG, "rot2");
         MDL::addLabel(MDL_ANGLETILT, LABEL_DOUBLE, "angleTilt", TAGLABEL_NOTAG, "tilt");
+        MDL::addLabel(MDL_ANGLETILT2, LABEL_DOUBLE, "angleTilt2", TAGLABEL_NOTAG, "tilt2");
+        MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY", TAGLABEL_NOTAG);
+        MDL::addLabel(MDL_ANGLE_Y2, LABEL_DOUBLE, "angleY2", TAGLABEL_NOTAG);
         MDL::addLabel(MDL_ASSOCIATED_IMAGE1, LABEL_STRING, "associatedImage1", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_ASSOCIATED_IMAGE2, LABEL_STRING, "associatedImage2", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_ASSOCIATED_IMAGE3, LABEL_STRING, "associatedImage3", TAGLABEL_IMAGE);

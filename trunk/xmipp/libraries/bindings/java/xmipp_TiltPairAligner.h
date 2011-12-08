@@ -36,7 +36,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_TiltPairAligner_getTiltedParticle
   (JNIEnv *, jobject, jint, jint);
 
 
-JNIEXPORT jintArray JNICALL Java_xmipp_TiltPairAligner_computeAngles(JNIEnv *env,
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_TiltPairAligner_computeAngles(JNIEnv *env,
 		jobject jobj);
 
 #ifdef __cplusplus

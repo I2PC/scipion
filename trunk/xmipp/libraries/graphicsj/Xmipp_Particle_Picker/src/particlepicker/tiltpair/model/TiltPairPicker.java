@@ -189,8 +189,8 @@ public class TiltPairPicker extends ParticlePicker
 					
 					angles = m.getAngles();
 					id = micrographsDict.get(m.getFile());
-					anglesmd.setValueDouble(MDLabel.MDL_ANGLEROT, (double)angles[0], id);
-					anglesmd.setValueDouble(MDLabel.MDL_ANGLEROT2, (double)angles[1], id);
+					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y, (double)angles[0], id);
+					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, (double)angles[1], id);
 					anglesmd.setValueDouble(MDLabel.MDL_ANGLETILT, (double)angles[2], id);
 					
 					for (UntiltedParticle p : m.getParticles())

@@ -111,7 +111,7 @@ JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_clear(JNIEnv *env,
 	}
 }
 
-JNIEXPORT jintArray JNICALL Java_xmipp_TiltPairAligner_computeAngles(JNIEnv *env,
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_TiltPairAligner_computeAngles(JNIEnv *env,
 		jobject jobj) {
 	String msg;
 
@@ -119,10 +119,10 @@ JNIEXPORT jintArray JNICALL Java_xmipp_TiltPairAligner_computeAngles(JNIEnv *env
 		TiltPairAligner * tpa = GET_INTERNAL_TPA(jobj);
 		if (tpa != NULL) {
 
-			int alphas[3];
+			double alphas[3];
 			tpa->computeAngles(alphas[0], alphas[1], alphas[2]);
-			jintArray result = env->NewIntArray(3);
-			env->SetIntArrayRegion(result, 0, 3, alphas);
+			jdoubleArray result = env->NewDoubleArray(3);
+			env->SetDoubleArrayRegion(result, 0, 3, alphas);
 			return result;
 		} else {
 			msg = "TiltPairAligner is null";

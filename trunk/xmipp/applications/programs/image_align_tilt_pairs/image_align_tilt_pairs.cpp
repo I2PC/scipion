@@ -25,10 +25,4 @@
 
 #include <reconstruction/align_tilt_pairs.h>
 
-
-int main(int argc, char *argv[])
-{
-    ProgAlignTiltPairs prog;
-    prog.read(argc, argv);
-    return prog.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgAlignTiltPairs);

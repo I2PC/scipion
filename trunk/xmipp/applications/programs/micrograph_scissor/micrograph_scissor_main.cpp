@@ -43,7 +43,7 @@ protected:
         addParamsLine("     alias --untilted;");
         addParamsLine("  [--orig <original_micrograph>]      : unless this parameter is specified");
         addParamsLine("  --oroot <oroot>                    : Name for the particle images");
-        addParamsLine("                                      :+ Two files will be created: oroot.stk with the particles in a Spider stack an oroot.sel with the list of image names, the micrograph they were taken from, and their coordinates");
+        addParamsLine("                                      :+ Two files will be created: oroot.stk with the particles in a Spider stack an oroot.xmd with the list of image names, the micrograph they were taken from, and their coordinates");
         addParamsLine("     alias --untiltfn;");
         addParamsLine("  [--pos <position_file>]             : file with particle coordinates");
         addParamsLine("     alias --untiltPos;");
@@ -134,10 +134,10 @@ public:
             // Read angles
             double alpha_u, alpha_t, tilt_angle;
             auxMd.read(fn_angles);
-            size_t objId=auxMd.firstObject();
-            auxMd.getValue(MDL_ANGLEPSI,alpha_u,objId);
-            auxMd.getValue(MDL_ANGLEPSI2,alpha_t,objId);
-            auxMd.getValue(MDL_ANGLETILT,tilt_angle,objId);
+            size_t objId = auxMd.firstObject();
+            auxMd.getValue(MDL_ANGLE_Y, alpha_u, objId);
+            auxMd.getValue(MDL_ANGLE_Y2, alpha_t, objId);
+            auxMd.getValue(MDL_ANGLETILT, tilt_angle, objId);
 
             // Generate the images for the untilted image
             Micrograph m;
@@ -164,9 +164,4 @@ public:
     }
 };
 
-int main(int argc, char **argv)
-{
-    ProgMicrographScissor program;
-    program.read(argc, argv);
-    return program.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgMicrographScissor);

@@ -27,7 +27,7 @@
 import os
 from xmipp import MetaData, label2Str
 from protlib_xmipp import XmippScript
-from protlib_gui_ext import MultiListbox
+from protlib_gui_ext import XmippTree, centerWindows
 import Tkinter as tk
 
 class ScriptMetadataShow(XmippScript):
@@ -44,22 +44,26 @@ class ScriptMetadataShow(XmippScript):
         input = self.getParam('-i')
         md = MetaData(input)
         root = tk.Tk()
+        root.withdraw() # Hide the windows for centering
         tk.Label(root, text='Metadata: ' + input).pack()
         labels = md.getActiveLabels()
         columns = []
+        # Create tree
+        tree = XmippTree(root, columns=labels, show='headings')
         # Create labels columns
         for l in labels:
-            max = md.getMaxStringLength(l)
-            columns.append((label2Str(l), md.getMaxStringLength(l) + 2))
-        # Create grid
-        mlb = MultiListbox(root, columns)
+            name = label2Str(l)
+            w = max(md.getMaxStringLength(l) + 5, len(name))
+            tree.column(l, width=w, anchor='e')
+            tree.heading(l, text=name)
+            #columns.append((label2Str(l), md.getMaxStringLength(l) + 2))
         for id in md:
-            row = []
-            for l in labels:
-                row.append(str(md.getValue(l, id)))            
-            mlb.insert(tk.END, row)
+            mdRow = [str(md.getValue(l, id)) for l in labels]
+            tree.insert('', 'end', iid=id, values=mdRow)
             
-        mlb.pack(expand=tk.YES,fill=tk.BOTH)
+        tree.pack(expand=tk.YES,fill=tk.BOTH, padx=5, pady=5)
+        centerWindows(root)
+        root.deiconify()
         root.mainloop()
    
 if __name__ == '__main__':

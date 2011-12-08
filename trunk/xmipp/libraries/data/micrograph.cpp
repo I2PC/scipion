@@ -390,7 +390,7 @@ void Micrograph::produce_all_images(int label, double minCost,
 			//  if (ang!=0) I().rotate(-ang);
 			I.write(fn_out, ii, true, WRITE_APPEND);
 		}
-	SF.write(fn_root + ".sel");
+	SF.write(fn_root + ".xmd");
 
 	// Free source image??
 	if (fn_image != "") {
@@ -688,7 +688,7 @@ double matrix_fitness(double *p, void *prm) {
 }
 
 
-void TiltPairAligner::computeAngles(int &ualpha, int &talpha, int &ogamma) {
+void TiltPairAligner::computeAngles(double &ualpha, double &talpha, double &ogamma) {
 	alpha_u = alpha_t = 0;
 	Matrix1D<double> angles(3);
 	angles.initZeros();
