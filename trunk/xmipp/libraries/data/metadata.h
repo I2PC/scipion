@@ -854,8 +854,10 @@ public:
     * Sort the content of MDin comparing
     * the label supplied, the result will
     * be in the "calling" MetaData.
+    * Limit fixes the maximum number of returned rows
+    * Offset skips the first N rows
     */
-    void sort(MetaData &MDin, const MDLabel sortLabel, bool asc=true);
+    void sort(MetaData &MDin, const MDLabel sortLabel, bool asc=true, int limit=-1, int offset=0);
 
     /*
     * Sort a Metadata by a label.
@@ -865,8 +867,11 @@ public:
     * If the input label is a vector field,
     * you may supply label:col, to sort by that column,
     * e.g., NMADisplacements:0
+    * Limit fixes the maximum number of returned rows
+    * Offset skips the first N rows
+    *
     */
-    void sort(MetaData &MDin, const String &sortLabel, bool asc=true);
+    void sort(MetaData &MDin, const String &sortLabel, bool asc=true, int limit=-1, int offset=0);
 
     /** Split Metadata in several Metadatas.
      * The Metadata will be divided in 'n'

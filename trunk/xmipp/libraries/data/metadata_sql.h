@@ -149,7 +149,7 @@ private:
         for size_t
      */
     size_t aggregateSingleSizeT(const AggregateOperation operation,
-                                        MDLabel operateLabel);
+                                MDLabel operateLabel);
 
     /** This function will be used to create o delete an index over a column.
      *Those indexes will improve searchs, but inserts will become expensives
@@ -261,11 +261,13 @@ public:
     /** Return the LIMIT string to be used in SQL */
     String limitString() const
     {
+        if (limit == -1 && offset > 0)
+            REPORT_ERROR(ERR_MD_SQL, "Sqlite does not support OFFSET without LIMIT");
         std::stringstream ss;
         if (limit != -1)
             ss << " LIMIT " << limit << " ";
         if (offset > 0)
-            ss << "OFFSET " << offset << " ";
+            ss << " OFFSET " << offset << " ";
         return ss.str();
     }
 

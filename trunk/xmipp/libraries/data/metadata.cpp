@@ -1415,26 +1415,29 @@ void MetaData::randomize(MetaData &MDin)
     importObjects(MDin, objects);
 }
 
-void MetaData::sort(MetaData &MDin, const MDLabel sortLabel,bool asc)
+void MetaData::sort(MetaData &MDin, const MDLabel sortLabel,bool asc, int limit, int offset)
 {
     if (MDin.containsLabel(sortLabel))
     {
         init(&(MDin.activeLabels));
         copyInfo(MDin);
-        MDin.myMDSql->copyObjects(this, new MDQuery(-1, 0, sortLabel,asc));
+        MDin.myMDSql->copyObjects(this, new MDQuery(limit, offset, sortLabel,asc));
     }
     else
         *this=MDin;
     firstObject();
 }
 
-void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc)
+void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc, int limit, int offset)
 {
     // Check if the label has semicolon
     int ipos=sortLabel.find(':');
     MDLabelType type = MDL::labelType(sortLabel);
     if (ipos!=String::npos || type == LABEL_VECTOR || type == LABEL_VECTOR_LONG)
     {
+    	if(limit != -1 || offset != 0)
+            REPORT_ERROR(ERR_ARG_INCORRECT,"Limit and Offset are not implemented for vector sorting.");
+
         MDLabel label;
         int column;
         if (ipos!=String::npos)
@@ -1485,7 +1488,7 @@ void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc)
         }
     }
     else
-        sort(MDin, MDL::str2Label(sortLabel),asc);
+        sort(MDin, MDL::str2Label(sortLabel),asc, limit, offset);
 }
 
 void MetaData::split(int n, std::vector<MetaData> &results, const MDLabel sortLabel)
