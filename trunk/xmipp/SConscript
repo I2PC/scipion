@@ -642,7 +642,7 @@ if int(env['java']):
     jbrowser = AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
     javaPlugins.append(jbrowser)
     javaPlugins.append(AddImageJPlugin('Masks_ToolBar', 'libraries/graphicsj/Masks_ToolBar', 'external/imagej/plugins'))
-    javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
+    #javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
     picker = javaPlugins.append(AddJavaApp('XmippPP_', 'libraries/graphicsj/Xmipp_Particle_Picker', 'external/Xmipp_Particle_Picker'))
     env.Depends(picker, io)
     # Java apps
