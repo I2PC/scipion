@@ -20,7 +20,7 @@ import xmipp.MetaData;
 public class MDTableModel extends AbstractXmippTableModel {
 
     MetaData md;
-    boolean containsGeometryInfo = false;
+    boolean containsGeometryInfo;
 
     public MDTableModel(String filename) {
         super(filename);

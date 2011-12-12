@@ -1,8 +1,5 @@
 package sphere;
 
-
-
-
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
@@ -35,6 +32,17 @@ public class Geometry {
                 Math.sin(tiltAsRads) * Math.cos(rotAsRads),
                 Math.sin(tiltAsRads) * Math.sin(rotAsRads),
                 Math.cos(tiltAsRads));
+    }
+    
+    public static double[] getAngles(double matrix[]) {
+        // Gets alpha, beta...
+        Point3d point = new Point3d(matrix[2], -matrix[6], -matrix[10]);
+        double angles[] = getAngles(point);
+
+        // ...and psi.
+        
+        
+        return new double[]{angles[0], angles[1], 0};
     }
 
     public static double[] getAngles(Point3d point) {
@@ -125,11 +133,14 @@ public class Geometry {
      * @param tilt
      * @return
      */
-    public static double[] normalizeAngles(double rot, double tilt) {
+    public static double[] normalizeAngles(double rot, double tilt) throws Exception {
         //double angles[] = absAngles(rot, tilt); // Avoids negative values
         Point3d point = getSphereCoordinates(rot, tilt); // Associated point in sphere 3D space.
+        //double direction[] = new double[]{point.x, point.y, point.z};
 
+        //double angles[] = Projection.eulerDirection2Angles(direction);//getAngles(point);  // Previous operation inversed: from 3D point back to angles.
         double angles[] = getAngles(point);  // Previous operation inversed: from 3D point back to angles.
+        
         angles = absAngles(angles[0], angles[1]);   // Avoids negative values again.
 
         return new double[]{angles[0], angles[1]};

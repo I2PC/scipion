@@ -8,11 +8,11 @@
 extern "C" {
 #endif
 #undef xmipp_ImageGeneric_FIRST_IMAGE
-#define xmipp_ImageGeneric_FIRST_IMAGE 1L
+#define xmipp_ImageGeneric_FIRST_IMAGE 1LL
 #undef xmipp_ImageGeneric_FIRST_SLICE
 #define xmipp_ImageGeneric_FIRST_SLICE 1L
 #undef xmipp_ImageGeneric_ALL_IMAGES
-#define xmipp_ImageGeneric_ALL_IMAGES 0L
+#define xmipp_ImageGeneric_ALL_IMAGES 0LL
 #undef xmipp_ImageGeneric_ALL_SLICES
 #define xmipp_ImageGeneric_ALL_SLICES 0L
 #undef xmipp_ImageGeneric_MID_SLICE
@@ -53,14 +53,6 @@ extern "C" {
 #define xmipp_ImageGeneric_LastEntry 15L
 /*
  * Class:     xmipp_ImageGeneric
- * Method:    storeIds
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_storeIds
-  (JNIEnv *, jclass);
-
-/*
- * Class:     xmipp_ImageGeneric
  * Method:    create
  * Signature: ()V
  */
@@ -77,11 +69,147 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_destroy
 
 /*
  * Class:     xmipp_ImageGeneric
+ * Method:    resize
+ * Signature: (IIIJ)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_resize
+  (JNIEnv *, jobject, jint, jint, jint, jlong);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    getXDim
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getXDim
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    getYDim
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getYDim
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    getZDim
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getZDim
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    getNDim
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_xmipp_ImageGeneric_getNDim
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    getDataType
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getDataType
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    readHeader
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readHeader
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     xmipp_ImageGeneric
  * Method:    read
- * Signature: (Ljava/lang/String;Z)V
+ * Signature: (Ljava/lang/String;IIIJ)V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_read
-  (JNIEnv *, jobject, jstring, jboolean);
+  (JNIEnv *, jobject, jstring, jint, jint, jint, jlong);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    readApplyGeo
+ * Signature: (Ljava/lang/String;Lxmipp/MetaData;JII)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readApplyGeo
+  (JNIEnv *, jobject, jstring, jobject, jlong, jint, jint);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    getArrayByte
+ * Signature: (I)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_xmipp_ImageGeneric_getArrayByte
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    getArrayShort
+ * Signature: (I)[S
+ */
+JNIEXPORT jshortArray JNICALL Java_xmipp_ImageGeneric_getArrayShort
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    getArrayFloat
+ * Signature: (I)[F
+ */
+JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    setArrayByte
+ * Signature: ([BI)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayByte
+  (JNIEnv *, jobject, jbyteArray, jint);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    setArrayShort
+ * Signature: ([SI)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayShort
+  (JNIEnv *, jobject, jshortArray, jint);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    setArrayFloat
+ * Signature: ([FI)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayFloat
+  (JNIEnv *, jobject, jfloatArray, jint);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    setDataType
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setDataType
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    convert2Datatype
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_convert2Datatype
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    mapFile2Write
+ * Signature: (IIILjava/lang/String;J)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_mapFile2Write
+  (JNIEnv *, jobject, jint, jint, jint, jstring, jlong);
 
 /*
  * Class:     xmipp_ImageGeneric
@@ -93,43 +221,11 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_write
 
 /*
  * Class:     xmipp_ImageGeneric
- * Method:    getArrayByte
- * Signature: (Ljava/lang/String;IIIJI)[B
- */
-JNIEXPORT jbyteArray JNICALL Java_xmipp_ImageGeneric_getArrayByte
-  (JNIEnv *, jclass, jstring, jint, jint, jint, jlong, jint);
-
-/*
- * Class:     xmipp_ImageGeneric
- * Method:    getArrayShort
- * Signature: (Ljava/lang/String;IIIJI)[S
- */
-JNIEXPORT jshortArray JNICALL Java_xmipp_ImageGeneric_getArrayShort
-  (JNIEnv *, jclass, jstring, jint, jint, jint, jlong, jint);
-
-/*
- * Class:     xmipp_ImageGeneric
- * Method:    getArrayFloat
- * Signature: (Ljava/lang/String;IIIJI)[F
- */
-JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat
-  (JNIEnv *, jclass, jstring, jint, jint, jint, jlong, jint);
-
-/*
- * Class:     xmipp_ImageGeneric
  * Method:    printShape
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_printShape
   (JNIEnv *, jobject);
-
-/*
- * Class:     xmipp_ImageGeneric
- * Method:    setArrayFloat
- * Signature: (IIIJI[F)V
- */
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayFloat
-  (JNIEnv *, jobject, jint, jint, jint, jlong, jint, jfloatArray);
 
 /*
  * Class:     xmipp_ImageGeneric
@@ -146,6 +242,14 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageGeneric_getStatistics
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setXmippOrigin
   (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    convertPSD
+ * Signature: (Z)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_convertPSD
+  (JNIEnv *, jobject, jboolean);
 
 #ifdef __cplusplus
 }

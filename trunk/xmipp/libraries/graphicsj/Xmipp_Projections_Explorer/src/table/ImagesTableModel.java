@@ -9,8 +9,8 @@ import ij.process.FloatProcessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import javax.swing.table.AbstractTableModel;
-import xmipp.ImageGeneric_;
-import xmippij.XmippImageConverter_;
+import xmipp.ImageGeneric;
+import xmippij.XmippImageConverter;
 
 /**
  *
@@ -85,7 +85,7 @@ public class ImagesTableModel extends AbstractTableModel {
 
     public static ImagePlus mean(ArrayList<String> images) {
         try {
-            ImageGeneric_ firstImage = new ImageGeneric_(images.get(0));
+            ImageGeneric firstImage = new ImageGeneric(images.get(0));
 
             int w = firstImage.getXDim();
             int h = firstImage.getYDim();
@@ -96,10 +96,10 @@ public class ImagesTableModel extends AbstractTableModel {
             // For all images...
             for (int k = 0; k < images.size(); k++) {
                 currentFileName = images.get(k);
-                ImageGeneric_ currentImage = new ImageGeneric_(currentFileName);
-                currentImage.read(ImageGeneric_.FIRST_IMAGE);
+                ImageGeneric currentImage = new ImageGeneric(currentFileName);
+                currentImage.read(ImageGeneric.FIRST_IMAGE);
 
-                ImagePlus imp = XmippImageConverter_.convertToImageJ(currentImage);
+                ImagePlus imp = XmippImageConverter.convertToImageJ(currentImage);
                 imp.setTitle(currentFileName);
 
                 // TODO: Sum efficiently.

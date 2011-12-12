@@ -35,19 +35,19 @@ public class MetaDataStringRenderer extends MetaDataRowDisablerRenderer {
 
         return super.getTableCellRendererComponent(table, str, isSelected, hasFocus, row, column);
     }
-
-    private String getShortLabel(String label, int width) {
-        StringBuffer sb = new StringBuffer(label);
-        String sortLabel = sb.toString();
-
-        int w = getFontMetrics(font).stringWidth(sortLabel);
-
-        int i = 0;
-        while (w > width) {
-            sortLabel = "..." + sb.substring(i++);
-            w = getFontMetrics(font).stringWidth(sortLabel);
-        }
-
-        return sortLabel;
-    }
+//
+//    private String getShortLabel(String label, int width) {
+//        StringBuffer sb = new StringBuffer(label);
+//        String sortLabel = sb.toString();
+//
+//        int w = getFontMetrics(font).stringWidth(sortLabel);
+//
+//        int i = 0;
+//        while (w > width) {
+//            sortLabel = "..." + sb.substring(i++);
+//            w = getFontMetrics(font).stringWidth(sortLabel);
+//        }
+//
+//        return sortLabel;
+//    }
 }

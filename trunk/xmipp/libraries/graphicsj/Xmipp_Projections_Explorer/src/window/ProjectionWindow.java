@@ -5,6 +5,7 @@
 package window;
 
 import constants.LABELS;
+import explorer.ProjectionsExplorer;
 import ij.ImagePlus;
 import ij.gui.ImageLayout;
 import ij.gui.ImageWindow;
@@ -29,7 +30,7 @@ public class ProjectionWindow extends ImageWindow {
     private PanelProjectionAnalyze panelProjectionAnalyze;
     private boolean analyze;
 
-    public ProjectionWindow(ImagePlus imp, int n_images, iAnalyzer projectionProcessor, boolean analyze) {
+    public ProjectionWindow(ImagePlus imp, int n_images, ProjectionsExplorer projectionProcessor, boolean analyze) {
         super(imp);
 
         this.analyze = analyze;
@@ -82,11 +83,11 @@ public class ProjectionWindow extends ImageWindow {
 
         public Label ln_images;
         protected Button bAnalyze;
-        private iAnalyzer analyzer;
+        private ProjectionsExplorer projectionsExplorer;
 
         /** Creates new form PanelProjectionAnalyze */
-        public PanelProjectionAnalyze(iAnalyzer analyzer, int n_images) {
-            this.analyzer = analyzer;
+        public PanelProjectionAnalyze(ProjectionsExplorer projectionsExplorer, int n_images) {
+            this.projectionsExplorer = projectionsExplorer;
 
             initComponents();
 
@@ -100,7 +101,7 @@ public class ProjectionWindow extends ImageWindow {
 
         public void actionPerformed(ActionEvent e) {
             if (e.getSource() == bAnalyze) {
-                analyzer.analyzeProjection();
+                projectionsExplorer.analyzeProjection();
             }
         }
 

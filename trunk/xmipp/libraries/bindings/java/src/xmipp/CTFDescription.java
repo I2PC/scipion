@@ -9,16 +9,16 @@ public class CTFDescription {
     public double[][] profiles, avgprofiles;
     public double FMAX; // Calculated when a file is loaded.
     // pointer to Image class in C++ space. Needed by native library.
-    private long peer;
+    long peer;
 
     // Initialize library.
     static {
         System.loadLibrary("XmippJavaInterface");
-        storeIds();
+        //storeIds();
     }
 
     // Catching some ids
-    private static native void storeIds();
+    //private static native void storeIds();
 
     // Functions to create objects: Internally calls to "Produce_side_info()"
     protected native void create();

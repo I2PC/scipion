@@ -7,13 +7,13 @@ package browser.imageitems.listitems;
 import browser.Cache;
 import browser.DEBUG;
 import browser.ICONS_MANAGER;
-import browser.imageitems.ImageConverter;
 import ij.IJ;
 import ij.ImagePlus;
 import java.io.File;
 import xmipp.Filename;
 import xmipp.MDLabel;
 import xmipp.MetaData;
+import xmippij.XmippImageConverter;
 
 /**
  *
@@ -102,6 +102,10 @@ public class MetadataFileItem extends XmippImageItem {
 
     @Override
     public ImagePlus getImagePlus() {
-        return ImageConverter.convertToImageJ(md);
+        try {
+            return XmippImageConverter.convertToImageJ(md);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 }

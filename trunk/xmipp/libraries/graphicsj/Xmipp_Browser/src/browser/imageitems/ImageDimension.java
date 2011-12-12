@@ -4,7 +4,8 @@
  */
 package browser.imageitems;
 
-import xmipp.ImageDouble;
+import ij.IJ;
+import xmipp.ImageGeneric;
 
 /**
  *
@@ -25,12 +26,15 @@ public class ImageDimension {
         this.nimages = nimages;
     }
 
-    public ImageDimension(ImageDouble image) {
-        width = image.getXsize();
-        height = image.getYsize();
-        depth = image.getZsize();
-        nimages = image.getNsize();
-
+    public ImageDimension(ImageGeneric image) {
+        try {
+            width = image.getXDim();
+            height = image.getYDim();
+            depth = image.getZDim();
+            nimages = image.getNDim();
+        } catch (Exception ex) {
+            IJ.error("Retrieving image dimensions: "+ image);
+        }
 //        System.out.println(nimages + " images.");
     }
 

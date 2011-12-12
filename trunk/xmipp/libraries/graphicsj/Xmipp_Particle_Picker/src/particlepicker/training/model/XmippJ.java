@@ -8,7 +8,8 @@ import ij.util.Tools;
 import java.io.File;
 import java.util.List;
 
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
+import xmippij.XmippImageConverter;
 
 public class XmippJ {
 	
@@ -27,7 +28,7 @@ public class XmippJ {
 				
 				ImagePlus ipstack = new ImagePlus("", stack);
 				
-				ImageDouble idouble = new ImageDouble();
+				//ImageGeneric idouble = new ImageGeneric();
 
 //		        int w = ipstack.getWidth();
 //		        int h = ipstack.getHeight();
@@ -53,10 +54,11 @@ public class XmippJ {
 
 				
 				
-				idouble.setData(ipstack.getWidth(), 
+				/*idouble.setData(ipstack.getWidth(), 
 						ipstack.getHeight(), 
 						ipstack.getStackSize(),
-						Tools.toDouble((float[])ipstack.getProcessor().getPixels()));
+						Tools.toDouble((float[])ipstack.getProcessor().getPixels()));*/
+				ImageGeneric idouble = XmippImageConverter.convertToXmipp(ipstack);
 				File dir = new File(System.getProperty("user.dir"));
 				
 				File file = File.createTempFile("xmipp", ".stk", dir);

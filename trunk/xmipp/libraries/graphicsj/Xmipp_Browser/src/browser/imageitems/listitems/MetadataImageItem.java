@@ -5,11 +5,11 @@
 package browser.imageitems.listitems;
 
 import browser.Cache;
-import browser.imageitems.ImageConverter;
 import ij.IJ;
 import ij.ImagePlus;
 import java.io.File;
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
+import xmippij.XmippImageConverter;
 
 /**
  *
@@ -47,7 +47,7 @@ public class MetadataImageItem extends AbstractImageItem {
         try {
             String path = file.getAbsolutePath();
             //String fileName = file.getName();
-            ImageDouble image = new ImageDouble();
+            ImageGeneric image = new ImageGeneric(path);
             //System.out.println(" *** Loading preview: " + path + " / w=" + w + " / h=" + h + " / d=" + nslice + " n=" + nimage);
 
             double factor = XmippImageItem.getFactor(getWidth(), getHeight(), w, h);
@@ -55,8 +55,8 @@ public class MetadataImageItem extends AbstractImageItem {
             int w_ = (int) Math.ceil(getWidth() / factor);
             int h_ = (int) Math.ceil(getHeight() / factor);
 
-            image.readPreview(path, w_, h_);
-            ip = ImageConverter.convertToImageJ(image, path);
+            image.read( w_, h_);
+            ip = XmippImageConverter.convertToImageJ(image);
         } catch (Exception ex) {
             System.err.println(" >>> Error loading preview: " + getKey());
 //            ex.printStackTrace();

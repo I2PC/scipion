@@ -59,7 +59,7 @@ public abstract class Micrograph
 			if (image == null)
 			{
 
-				image = XmippImageConverter.convertToImagej(file);
+				image = XmippImageConverter.loadImage(file);
 				if(image == null)
 					image = new ImagePlus(file);
 			}

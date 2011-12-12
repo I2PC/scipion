@@ -9,107 +9,27 @@ extern "C" {
 #endif
 /*
  * Class:     xmipp_Projection
- * Method:    storeIds
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_xmipp_Projection_storeIds
-  (JNIEnv *, jclass);
-
-/*
- * Class:     xmipp_Projection
- * Method:    create
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_xmipp_Projection_create
-  (JNIEnv *, jobject);
-
-/*
- * Class:     xmipp_Projection
- * Method:    destroy
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_xmipp_Projection_destroy
-  (JNIEnv *, jobject);
-
-/*
- * Class:     xmipp_Projection
- * Method:    reset
- * Signature: (II)V
- */
-JNIEXPORT void JNICALL Java_xmipp_Projection_reset
-  (JNIEnv *, jobject, jint, jint);
-
-/*
- * Class:     xmipp_Projection
  * Method:    projectVolume
- * Signature: (Lxmipp/ImageGeneric_;Lxmipp/Projection;DDD)V
+ * Signature: (Lxmipp/ImageGeneric;Lxmipp/ImageGeneric;[D)V
  */
 JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
-  (JNIEnv *, jclass, jobject, jobject, jdouble, jdouble, jdouble);
+  (JNIEnv *, jclass, jobject, jobject, jdoubleArray);
 
 /*
  * Class:     xmipp_Projection
  * Method:    entropyOtsuSegmentation
- * Signature: (Lxmipp/ImageGeneric_;DZ)D
+ * Signature: (Lxmipp/ImageGeneric;DZ)D
  */
 JNIEXPORT jdouble JNICALL Java_xmipp_Projection_entropyOtsuSegmentation
   (JNIEnv *, jclass, jobject, jdouble, jboolean);
 
 /*
  * Class:     xmipp_Projection
- * Method:    write
- * Signature: (Ljava/lang/String;)V
+ * Method:    eulerMatrix2Angles
+ * Signature: ([D)[D
  */
-JNIEXPORT void JNICALL Java_xmipp_Projection_write
-  (JNIEnv *, jobject, jstring);
-
-/*
- * Class:     xmipp_Projection
- * Method:    getData
- * Signature: ()[D
- */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_getData__
-  (JNIEnv *, jobject);
-
-/*
- * Class:     xmipp_Projection
- * Method:    getData
- * Signature: (JI)[D
- */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_getData__JI
-  (JNIEnv *, jobject, jlong, jint);
-
-/*
- * Class:     xmipp_Projection
- * Method:    getXsize
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_xmipp_Projection_getXsize
-  (JNIEnv *, jobject);
-
-/*
- * Class:     xmipp_Projection
- * Method:    getYsize
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_xmipp_Projection_getYsize
-  (JNIEnv *, jobject);
-
-/*
- * Class:     xmipp_Projection
- * Method:    getZsize
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_xmipp_Projection_getZsize
-  (JNIEnv *, jobject);
-
-/*
- * Class:     xmipp_Projection
- * Method:    printShape
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_xmipp_Projection_printShape
-  (JNIEnv *, jobject);
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_eulerMatrix2Angles
+  (JNIEnv *, jclass, jdoubleArray);
 
 #ifdef __cplusplus
 }

@@ -2,76 +2,18 @@
 #include "xmipp_Projection.h"
 #include "xmipp_ImageGeneric.h"
 #include "xmipp_ExceptionsHandler.h"
+#include "xmipp_InternalData.h"
 #include <data/xmipp_image.h>
 #include <data/projection.h>
 #include <data/filters.h>
-#include "xmipp_InternalData.h"
-
-JNIEXPORT void JNICALL Java_xmipp_Projection_storeIds
-(JNIEnv *env, jclass cls)
-{
-    Projection_peerId = env->GetFieldID(cls, "peer", "J");
-}
-
-JNIEXPORT void JNICALL Java_xmipp_Projection_create
-(JNIEnv *env, jobject jobj)
-{
-    Projection *projection = new Projection();
-    env->SetLongField(jobj, Projection_peerId, (long)projection);
-}
-
-JNIEXPORT void JNICALL Java_xmipp_Projection_destroy
-(JNIEnv *env, jobject jobj)
-{
-    Projection *projection = GET_INTERNAL_PROJECTION(jobj);
-    delete projection;
-    projection = NULL;
-    env->SetLongField(jobj, Projection_peerId, (long)projection);
-}
-
-JNIEXPORT void JNICALL Java_xmipp_Projection_reset
-(JNIEnv *env, jobject jobj, jint h, jint w)
-{
-    std::string msg = "";
-    Projection *projection = GET_INTERNAL_PROJECTION(jobj);
-
-    if(projection != NULL)
-    {
-        try
-        {
-            projection->reset((int) h, (int) w);
-        }
-        catch (XmippError xe)
-        {
-            msg = xe.getDefaultMessage();
-        }
-        catch (std::exception& e)
-        {
-            msg = e.what();
-        }
-        catch (...)
-        {
-            msg = "Unhandled exception";
-        }
-    }
-    else
-    {
-        msg = "Projection is NULL";
-    }
-
-    // If there was an exception, sends it to java environment.
-    if(!msg.empty())
-    {
-        handleXmippException(env, msg);
-    }
-}
-
+#include <data/geometry.h>
+/*
 JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
-(JNIEnv *env, jclass cls, jobject jvolume, jobject jprojection, jdouble tilt, jdouble rot, jdouble pshi)
+(JNIEnv *env, jclass class_, jobject jvolume, jobject jprojection, jdouble rot, jdouble tilt, jdouble psi)
 {
     std::string msg = "";
     ImageGeneric *volume = GET_INTERNAL_IMAGE_GENERIC(jvolume);
-    Projection *projection = GET_INTERNAL_PROJECTION(jprojection);
+    ImageGeneric *projection=  GET_INTERNAL_IMAGE_GENERIC(jprojection);
 
     if(volume != NULL)
     {
@@ -79,18 +21,97 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
         {
             try
             {
-                int w = XSIZE(projection->data);
-                int h = YSIZE(projection->data);
+                int w = XSIZE(* projection->data->im);
+                int h = YSIZE(* projection->data->im);
 
-                MultidimArray<double> mdarray;
-                std::cout << "2" << std::endl;
-                MULTIDIM_ARRAY_GENERIC(*volume).getImage(mdarray);
-                std::cout << "3" << std::endl;
-                mdarray.printShape(std::cout);
-                std::cout << "4" << std::endl;
-                projectVolume(mdarray, *projection, h, w, (double) rot, (double) tilt, (double) pshi);
+                projection->convert2Datatype(Double);
+                volume->convert2Datatype(Double);
 
-                std::cout << "5" << std::endl;
+                MultidimArray<double> *mdVolume;
+                MULTIDIM_ARRAY_GENERIC(*volume).getMultidimArrayPointer(mdVolume);
+
+                Projection auxProjection;
+                MultidimArray<double> *mdProjection;
+
+                MULTIDIM_ARRAY_GENERIC(*projection).getMultidimArrayPointer(mdProjection);
+                MULTIDIM_ARRAY(auxProjection).alias(*mdProjection);
+
+                projectVolume(*mdVolume, auxProjection, h, w, (double) rot, (double) tilt, (double) psi);
+            }
+            catch (XmippError xe)
+            {
+                msg = xe.getDefaultMessage();
+            }
+            catch (std::exception& e)
+            {
+                msg = e.what();
+            }
+            catch (...)
+            {
+                msg = "Unhandled exception";
+            }
+        }
+        else
+        {
+            msg = "projection is NULL";
+        }
+    }
+    else
+    {
+        msg = "volume is NULL";
+    }
+
+    // If there was an exception, sends it to java environment.
+    if(!msg.empty())
+    {
+        handleXmippException(env, msg);
+    }
+}*/
+
+JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
+(JNIEnv *env, jclass class_, jobject jvolume, jobject jprojection, jdoubleArray matrix)
+{
+    std::string msg = "";
+    ImageGeneric *volume = GET_INTERNAL_IMAGE_GENERIC(jvolume);
+    ImageGeneric *projection=  GET_INTERNAL_IMAGE_GENERIC(jprojection);
+
+    if(volume != NULL)
+    {
+        if(projection != NULL)
+        {
+            try
+            {
+                int w = XSIZE(* projection->data->im);
+                int h = YSIZE(* projection->data->im);
+
+                projection->convert2Datatype(Double);
+                volume->convert2Datatype(Double);
+
+                MultidimArray<double> *mdVolume;
+                MULTIDIM_ARRAY_GENERIC(*volume).getMultidimArrayPointer(mdVolume);
+
+                Projection auxProjection;
+                MultidimArray<double> *mdProjection;
+
+                MULTIDIM_ARRAY_GENERIC(*projection).getMultidimArrayPointer(mdProjection);
+                MULTIDIM_ARRAY(auxProjection).alias(*mdProjection);
+
+                MultidimArray<double> volumeRot;
+
+                Matrix2D<double> m(4, 4);
+                env->GetDoubleArrayRegion(matrix, 0, 16, (jdouble *)MATRIX2D_ARRAY(m));
+
+                // Transforms...
+                mdVolume->setXmippOrigin();
+                applyGeometry(LINEAR, volumeRot, *mdVolume, m, false, false);
+
+                // Projects...
+                projectVolume(volumeRot, auxProjection, h, w, 0, 0, 0);
+
+                Image<double> imageAux;
+                imageAux().alias(volumeRot);
+                imageAux.write("/home/jvega/volume_tmp.vol");
+                //projectVolume(*mdVolume, auxProjection, h, w, (double) rot, (double) tilt, (double) psi);
             }
             catch (XmippError xe)
             {
@@ -128,24 +149,13 @@ JNIEXPORT jdouble JNICALL Java_xmipp_Projection_entropyOtsuSegmentation
     std::string msg = "";
     ImageGeneric *volume = GET_INTERNAL_IMAGE_GENERIC(jvolume);
 
-
     try
     {
         MultidimArray<double> *mdarray;
-        std::cout << " print: " << std::endl;
-        volume->print();
-        std::cout << " Convert2Double: " << std::endl;
         volume->convert2Datatype(Double);
-        std::cout << " print2: " << std::endl;
-        volume->print();
 
-        std::cout << " mdarray = volume->data: " << std::endl;
         MULTIDIM_ARRAY_GENERIC(*volume).getMultidimArrayPointer(mdarray);
 
-        std::cout << " mdarray:" << std::endl;
-        std::cout << mdarray << std::endl;
-
-        std::cout << " otsu:" << std::endl;
         return EntropyOtsuSegmentation(*mdarray, percentile, binarize);
     }
     catch (XmippError xe)
@@ -170,289 +180,106 @@ JNIEXPORT jdouble JNICALL Java_xmipp_Projection_entropyOtsuSegmentation
 
     return -1;
 }
-
-JNIEXPORT void JNICALL Java_xmipp_Projection_write
-(JNIEnv *env, jobject jobj, jstring filename)
+/*
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_eulerDirection2Angles
+(JNIEnv *env, jclass class_, jdoubleArray jvector)
 {
     std::string msg = "";
-    Projection *projection = GET_INTERNAL_PROJECTION(jobj);
 
-    if (projection != NULL)
+    try
     {
-        try
-        {
-            const char * fnStr = env->GetStringUTFChars(filename, false);
+        Matrix1D<double> v(3);
 
-            projection->write(fnStr);
-        }
-        catch (XmippError xe)
-        {
-            msg = xe.getDefaultMessage();
-        }
-        catch (std::exception& e)
-        {
-            msg = e.what();
-        }
-        catch (...)
-        {
-            msg = "Unhandled exception";
-        }
+        env->GetDoubleArrayRegion(jvector, 0, 3, (jdouble *)MATRIX1D_ARRAY(v));
+
+        double alpha, beta, gamma;
+
+        Euler_direction2angles(v, alpha, beta, gamma);
+
+        double angles[3];
+        angles[0] = alpha;
+        angles[1] = beta;
+        angles[2] = gamma;
+
+        // Sets array value
+        jdoubleArray array = env->NewDoubleArray(3);
+        env->SetDoubleArrayRegion(array, 0, 3, angles);
+
+        return array;
     }
-    else
+    catch (XmippError xe)
     {
-        msg = "Projection is null";
+        msg = xe.getDefaultMessage();
     }
+    catch (std::exception& e)
+    {
+        msg = e.what();
+    }
+    catch (...)
+    {
+        msg = "Unhandled exception";
+    }
+
 
     // If there was an exception, sends it to java environment.
     if(!msg.empty())
     {
         handleXmippException(env, msg);
     }
-}
 
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_getData(JNIEnv *env,
-        jobject jobj)
+    return NULL;
+}
+*/
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_eulerMatrix2Angles
+(JNIEnv *env, jclass class_, jdoubleArray matrix)
 {
     std::string msg = "";
-    Projection *projection = GET_INTERNAL_PROJECTION(jobj);
 
-    if (projection != NULL)
+    try
     {
-        try
-        {
-            size_t size = projection->getSize();
-            jdoubleArray array = env->NewDoubleArray(size);
-            env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(
-                                          projection->data));
+        Matrix2D<double> m(4, 4);
 
-            return array;
-        }
-        catch (XmippError xe)
-        {
-            msg = xe.getDefaultMessage();
-        }
-        catch (std::exception& e)
-        {
-            msg = e.what();
-        }
-        catch (...)
-        {
-            msg = "Unhandled exception";
-        }
+        env->GetDoubleArrayRegion(matrix, 0, 16, (jdouble *)MATRIX2D_ARRAY(m));
+
+        m.resize(3,3);
+
+        MAT_ELEM(m,1,1) *= -1;
+        MAT_ELEM(m,2,2) *= -1;
+        m=m.inv();
+
+        double alpha, beta, gamma;
+        Euler_matrix2angles(m, alpha, beta, gamma);
+
+        double angles[3];
+        angles[0] = alpha;
+        angles[1] = beta;
+        angles[2] = gamma;
+
+        // Sets array value
+        jdoubleArray array = env->NewDoubleArray(3);
+        env->SetDoubleArrayRegion(array, 0, 3, angles);
+
+        return array;
     }
-    else
+    catch (XmippError xe)
     {
-        msg = "Projection is null";
+        msg = xe.getDefaultMessage();
     }
-
-    // If there was an exception, sends it to java environment.
-    if (!msg.empty())
+    catch (std::exception& e)
     {
-        handleXmippException(env, msg);
+        msg = e.what();
     }
-
-    return (jdoubleArray) NULL;
-}
-
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_getData__JI(JNIEnv *env,
-        jobject jobj, jlong nimage, jint nslice)
-{
-    std::string msg = "";
-    Projection *projection = GET_INTERNAL_PROJECTION(jobj);
-
-    if (projection != NULL)
+    catch (...)
     {
-        try
-        {
-            int w = XSIZE(projection->data);
-            int h = YSIZE(projection->data);
-            size_t size = w * h;
-
-            MultidimArray<double> mdarray(size);
-            projection->data.getSlice(nslice, mdarray, nimage);
-
-            jdoubleArray array = env->NewDoubleArray(size);
-            env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(mdarray));
-
-            return array;
-        }
-        catch (XmippError xe)
-        {
-            msg = xe.getDefaultMessage();
-        }
-        catch (std::exception& e)
-        {
-            msg = e.what();
-        }
-        catch (...)
-        {
-            msg = "Unhandled exception";
-        }
-    }
-    else
-    {
-        msg = "Projection is null";
+        msg = "Unhandled exception";
     }
 
-    // If there was an exception, sends it to java environment.
-    if (!msg.empty())
-    {
-        handleXmippException(env, msg);
-    }
-
-    return (jdoubleArray) NULL;
-}
-
-JNIEXPORT jint JNICALL Java_xmipp_Projection_getXsize(JNIEnv *env, jobject jobj)
-{
-    std::string msg = "";
-    Projection *projection = GET_INTERNAL_PROJECTION(jobj);
-
-    if (projection != NULL)
-    {
-        try
-        {
-            return XSIZE(projection->data);
-        }
-        catch (XmippError xe)
-        {
-            msg = xe.getDefaultMessage();
-        }
-        catch (std::exception& e)
-        {
-            msg = e.what();
-        }
-        catch (...)
-        {
-            msg = "Unhandled exception";
-        }
-    }
-    else
-    {
-        msg = "Projection is null";
-    }
-
-    // If there was an exception, sends it to java environment.
-    if (!msg.empty())
-    {
-        handleXmippException(env, msg);
-    }
-
-    return 0;
-}
-
-JNIEXPORT jint JNICALL Java_xmipp_Projection_getYsize(JNIEnv *env, jobject jobj)
-{
-    std::string msg = "";
-    Projection *projection = GET_INTERNAL_PROJECTION(jobj);
-
-    if (projection != NULL)
-    {
-        try
-        {
-            return YSIZE(projection->data);
-
-        }
-        catch (XmippError xe)
-        {
-            msg = xe.getDefaultMessage();
-        }
-        catch (std::exception& e)
-        {
-            msg = e.what();
-        }
-        catch (...)
-        {
-            msg = "Unhandled exception";
-        }
-    }
-    else
-    {
-        msg = "Projection is null";
-    }
-
-    // If there was an exception, sends it to java environment.
-    if (!msg.empty())
-    {
-        handleXmippException(env, msg);
-    }
-
-    return 0;
-}
-
-JNIEXPORT jint JNICALL Java_xmipp_Projection_getZsize(JNIEnv *env, jobject jobj)
-{
-    std::string msg = "";
-    Projection *projection = GET_INTERNAL_PROJECTION(jobj);
-
-    if (projection != NULL)
-    {
-        try
-        {
-            return ZSIZE(projection->data);
-
-        }
-        catch (XmippError xe)
-        {
-            msg = xe.getDefaultMessage();
-        }
-        catch (std::exception& e)
-        {
-            msg = e.what();
-        }
-        catch (...)
-        {
-            msg = "Unhandled exception";
-        }
-    }
-    else
-    {
-        msg = "Projection is null";
-    }
-
-    // If there was an exception, sends it to java environment.
-    if (!msg.empty())
-    {
-        handleXmippException(env, msg);
-    }
-
-    return 0;
-}
-
-JNIEXPORT void JNICALL Java_xmipp_Projection_printShape
-(JNIEnv *env, jobject jobj)
-{
-    std::string msg = "";
-    Projection *projection = GET_INTERNAL_PROJECTION(jobj);
-
-    if (projection != NULL)
-    {
-        try
-        {
-            std::cout << (*projection) << std::endl;
-
-        }
-        catch (XmippError xe)
-        {
-            msg = xe.getDefaultMessage();
-        }
-        catch (std::exception& e)
-        {
-            msg = e.what();
-        }
-        catch (...)
-        {
-            msg = "Unhandled exception";
-        }
-    }
-    else
-    {
-        msg = "Projection is null";
-    }
 
     // If there was an exception, sends it to java environment.
     if(!msg.empty())
     {
         handleXmippException(env, msg);
     }
+
+    return NULL;
 }

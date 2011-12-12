@@ -1,7 +1,5 @@
 package xmipp;
 
-import java.io.File;
-
 /**
  * Protocol for integrating native C++ code - @see ImageDouble.java
  */

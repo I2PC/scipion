@@ -45,7 +45,7 @@ import metadata.dialogs.JDialogColumnsSelector;
 import metadata.dialogs.JDialogTextFile;
 import metadata.images.TableFileItem;
 import metadata.images.TableMetaDataItem;
-import metadata.renderers.FileItemRenderer;
+import metadata.renderers.MetaDataFileItemRenderer;
 import metadata.renderers.MetaDataDoubleRenderer;
 import metadata.renderers.RowHeaderRenderer;
 import metadata.renderers.editors.TableFileItemEditor;
@@ -64,8 +64,8 @@ public class JFrameMetaData extends JFrame {
     private JFileChooser fc;
     private JList rowHeader;
     private RowHeaderRenderer rowHeaderRenderer = new RowHeaderRenderer();
-    private FileItemRenderer fileRenderer = new FileItemRenderer();
-    private MetaDataImageRenderer imageRenderer;
+    private MetaDataFileItemRenderer fileRenderer = new MetaDataFileItemRenderer();
+    private MetaDataImageRenderer imageRenderer= new MetaDataImageRenderer();
     private MetaDataStringRenderer stringRenderer = new MetaDataStringRenderer();
     private MetaDataDoubleRenderer doubleRenderer = new MetaDataDoubleRenderer();
     private MetaDataIntegerRenderer numberRenderer = new MetaDataIntegerRenderer();
@@ -86,7 +86,6 @@ public class JFrameMetaData extends JFrame {
 
         // Builds table.
         tableModel = new MetaDataTableModel(filename);
-        imageRenderer = new MetaDataImageRenderer(tableModel);
 
         // Build blocks list.
         String blocks[] = tableModel.getBlocks();
@@ -216,6 +215,7 @@ public class JFrameMetaData extends JFrame {
         table.setDefaultRenderer(String.class, stringRenderer);
         table.setDefaultRenderer(Double.class, doubleRenderer);
         table.setDefaultRenderer(Integer.class, numberRenderer);
+        //table.setDefaultRenderer(Boolean.class , booleanRenderer);
     }
 
     private void enableEditors(boolean enable) {
@@ -237,37 +237,49 @@ public class JFrameMetaData extends JFrame {
     }
 
     private void packColumns() {
-        /*        for (int i = 0; i < columnModel.getColumnCount(); i++) {
-        TableColumn tcolumn = columnModel.getColumn(i);
-        
-        tcolumn.setWidth(imageRenderer.getCellWidth(tcolumn.getHeaderValue().toString()));
-        }*/
         for (int column = 0; column < table.getColumnCount(); column++) {
-            int width = 128;
-
             int r = 0;
-            TableCellRenderer renderer = table.getCellRenderer(r, column);
+
+            // Get width of column header
+            TableColumn tc = columnModel.getColumn(column);
+
+
+            TableCellRenderer renderer = tc.getHeaderRenderer();
+            if (renderer == null) {
+                renderer = table.getTableHeader().getDefaultRenderer();
+            }
             Component comp = renderer.getTableCellRendererComponent(
+                    table, tc.getHeaderValue(), false, false, 0, 0);
+            int headerWidth = comp.getPreferredSize().width;
+
+            renderer = table.getCellRenderer(r, column);
+            comp = renderer.getTableCellRendererComponent(
                     table, table.getValueAt(r, column), false, false, r, column);
-            width = Math.max(width, comp.getPreferredSize().width);
+            int width = comp.getPreferredSize().width;
 
-            TableColumn tcolumn = columnModel.getColumn(column);
-
-            // Sets width
-            tcolumn.setPreferredWidth(width);
+            tc.setPreferredWidth(Math.max(headerWidth, width));
         }
     }
 
     // The height of each row is set to the preferred height of the tallest cell in that row.
     private void packRows() {
-        int cellHeight = imageRenderer.getCellHeight();
+//        int cellHeight = MetaDataImageRenderer.DEFAULT_CELL_HEIGHT;
+
+        int column = 0, row = 0;
+        //table.setRowHeight(row, cellHeight);
+
+        TableCellRenderer renderer = table.getCellRenderer(row, column);
+        Component comp = renderer.getTableCellRendererComponent(
+                table, table.getValueAt(row, column), false, false, row, column);
+        int height = comp.getPreferredSize().height;
+
+//            TableColumn tcolumn = columnModel.getColumn(column);
+
+        // Sets width
+        table.setRowHeight(height);
 
         //  Row header.
-        rowHeader.setFixedCellHeight(cellHeight);
-
-        for (int row = 0; row < table.getRowCount(); row++) {
-            table.setRowHeight(row, imageRenderer.getCellHeight());
-        }
+        rowHeader.setFixedCellHeight(height);
     }
 
     private void tableMouseClicked(java.awt.event.MouseEvent evt) {
@@ -277,17 +289,17 @@ public class JFrameMetaData extends JFrame {
         if (view_row >= 0 && view_col >= 0) {
             if (SwingUtilities.isLeftMouseButton(evt)) {
                 //if (jcbRenderImages.isSelected()) { // Opens images just when rendering. Otherwise, edits it.
-                    if (evt.getClickCount() > 1) {
-                        Object item = table.getValueAt(view_row, view_col);
+                if (evt.getClickCount() > 1) {
+                    Object item = table.getValueAt(view_row, view_col);
 
-                        if (item instanceof GalleryImageItem) {
-                            openXmippImage((GalleryImageItem) item);
-                        } else if (item instanceof TableMetaDataItem) {
-                            openMetaDataFile((TableMetaDataItem) item);
-                        } else if (item instanceof TableFileItem) {
-                            openXmippTextFile((TableFileItem) item);
-                        }
+                    if (item instanceof GalleryImageItem) {
+                        openXmippImage((GalleryImageItem) item);
+                    } else if (item instanceof TableMetaDataItem) {
+                        openMetaDataFile((TableMetaDataItem) item);
+                    } else if (item instanceof TableFileItem) {
+                        openXmippTextFile((TableFileItem) item);
                     }
+                }
                 //}
             } else if (SwingUtilities.isRightMouseButton(evt)) {
                 table.setRowSelectionInterval(view_row, view_row);
@@ -342,7 +354,7 @@ public class JFrameMetaData extends JFrame {
     }
 
     private void reloadTableData() {
-        DEBUG.printMessage(" *** Refreshing table [RELOAD]: " + System.currentTimeMillis());
+        DEBUG.printMessage(" *** Reloading table: " + System.currentTimeMillis());
 
         columnModel.clear();
         tableModel.reload();
@@ -420,6 +432,8 @@ public class JFrameMetaData extends JFrame {
         bHideColumns = new javax.swing.JButton();
         jlStatus = new javax.swing.JLabel();
         jsPanel = new javax.swing.JScrollPane();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         toolBar.setRollover(true);
 

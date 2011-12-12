@@ -7,8 +7,8 @@ package browser.gallery.models;
 import browser.Cache;
 import browser.DEBUG;
 import browser.ICONS_MANAGER;
-import browser.imageitems.ImageConverter;
 import browser.imageitems.tableitems.AbstractGalleryImageItem;
+import browser.windows.ImagesWindowFactory;
 import ij.IJ;
 import ij.ImagePlus;
 import java.util.ArrayList;
@@ -493,7 +493,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     public boolean saveAsStack(String path, boolean all) {
         try {
-            ImagePlus imp = ImageConverter.convertToImageJ(all ? data : getSelectedItems());
+            ImagePlus imp = ImagesWindowFactory.convertToImageJ(all ? data : getSelectedItems());
             IJ.run(imp, "Xmipp writer", "save=" + path);
 
             return true;

@@ -1,7 +1,6 @@
 package micrographs;
 
 import browser.LABELS;
-import browser.imageitems.ImageConverter;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
@@ -43,9 +42,10 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import xmipp.CTFDescription;
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
 import xmipp.MDLabel;
 import xmipp.MetaData;
+import xmippij.XmippImageConverter;
 
 /*
  * To change this template, choose Tools | Templates
@@ -80,21 +80,6 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
     private double xValues[];
     private double Tm;
 
-//    public static void main(String args[]) {
-//        String dir = "/home/juanjo/MicrographPreprocessing/ImportedMicrographs/run_001/01nov26b.001.002.001.002/";
-//        String CTFFilename = dir + "xmipp_ctf.ctfparam";
-//        String displayFilename = dir + "xmipp_ctf_ctfmodel_halfplane.xmp";
-//        String PSDFilename = dir + "xmipp_ctf.psd";
-//
-//        try {
-//            ImageDouble img = new ImageDouble(displayFilename);
-//            ImagePlus ip = ImageConverter.convertToImagej(img, displayFilename);
-//
-//            CTFProfileWindow frame = new CTFProfileWindow(ip, CTFFilename, PSDFilename);
-//            frame.setVisible(true);
-//        } catch (Exception ex) {
-//        }
-//    }
     public CTFProfileWindow(ImagePlus imp, String CTFFilename, String PSDFilename) {
         super(imp);
 
@@ -105,9 +90,11 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             Tm = getSamplingRate(CTFFilename);
 
             ctfmodel = new CTFDescription(CTFFilename);
-            ImageDouble image = new ImageDouble(PSDFilename);
+            ImageGeneric image = new ImageGeneric(PSDFilename);
+            image.setUseLogarithm(false);
 
-            psdimage = ImageConverter.convertToImageJ(image, PSDFilename, false);
+            psdimage = XmippImageConverter.convertToImageJ(image);
+            psdimage.setTitle(PSDFilename);
 
             removeAll();
             setLayout(new FlowLayout());

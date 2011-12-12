@@ -7,13 +7,13 @@ package browser.imageitems.tableitems;
 import browser.Cache;
 import browser.DEBUG;
 import browser.ICONS_MANAGER;
-import browser.imageitems.ImageConverter;
 import browser.imageitems.ImageDimension;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.process.ImageStatistics;
 import java.io.File;
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
+import xmippij.XmippImageConverter;
 
 /**
  *
@@ -47,8 +47,7 @@ public abstract class AbstractGalleryImageItem {
 
     protected void loadImageData() {
         try {
-            ImageDouble image = new ImageDouble();
-            image.readHeader(getPath());
+            ImageGeneric image = new ImageGeneric(getPath());
 
             dimension = new ImageDimension(image);
         } catch (Exception ex) {
@@ -66,6 +65,10 @@ public abstract class AbstractGalleryImageItem {
     public abstract void setEnabled(boolean enabled);
 
     public abstract boolean isEnabled();
+
+    public boolean isBiggerThan(int MAX_SIZE) {
+        return getWidth() > MAX_SIZE || getHeight() > MAX_SIZE;
+    }
 
     public void setSelected(boolean selected) {
         this.selected = selected;
@@ -125,12 +128,10 @@ public abstract class AbstractGalleryImageItem {
 
         if (exists()) {
             try {
-                System.out.println(" *** Reading ImagePlus [from disk]: " + getKey());
-                ImageDouble image = new ImageDouble();
+                DEBUG.printMessage(" *** Reading ImagePlus [from disk]: " + getKey());
+                ImageGeneric image = new ImageGeneric(getPath());
 
-                image.readPreview(getPath(), getWidth(), getHeight(), getNSlice(), getNImage());
-                ip = ImageConverter.convertToImageJ(image, getTitle());
-
+                ip = XmippImageConverter.convertToImageJ(image, getWidth(), getHeight(), getNSlice(), getNImage());
                 ip.setTitle(getTitle());
             } catch (Exception ex) {
                 IJ.error(ex.getMessage());
@@ -178,25 +179,22 @@ public abstract class AbstractGalleryImageItem {
     }
 
     protected ImagePlus loadPreview(int w, int h) {
-//        System.out.println(" >>> Loading preview: " + getKey());
         ImagePlus ip = ICONS_MANAGER.MISSING_ITEM;
         String path = getPath();
 
         if (path != null) {
             try {
-                //String fileName = file.getName();
-                ImageDouble image = new ImageDouble();
-                //System.out.println(" *** Loading preview: " + path + " / w=" + w + " / h=" + h + " / d=" + nslice + " n=" + nimage);
-
                 double factor = getFactor(getWidth(), getHeight(), w, h);
 
                 int w_ = (int) Math.ceil(getWidth() / factor);
                 int h_ = (int) Math.ceil(getHeight() / factor);
 
-                image.readPreview(path, w_, h_, getNSlice(), getNImage());
                 DEBUG.printMessage(" *** path: " + getPath() + " w=" + w_ + " h=" + h_ + " s=" + getNSlice() + " n=" + getNImage());
-                ip = ImageConverter.convertToImageJ(image, getTitle());
+
+                ImageGeneric image = new ImageGeneric(path);
+                ip = XmippImageConverter.convertToImageJ(image, w_, h_, getNSlice(), getNImage());//,w_, h_, getNSlice(), getNImage());
             } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
 

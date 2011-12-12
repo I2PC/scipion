@@ -5,11 +5,11 @@
 package browser.imageitems.listitems;
 
 import browser.Cache;
-import browser.imageitems.ImageConverter;
 import ij.IJ;
 import ij.ImagePlus;
 import java.io.File;
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
+import xmippij.XmippImageConverter;
 
 /**
  *
@@ -17,8 +17,8 @@ import xmipp.ImageDouble;
  */
 public class XmippImageItem extends AbstractImageItem {
 
-    public int nslice = ImageDouble.MID_SLICE;
-    public long nimage = ImageDouble.FIRST_IMAGE;
+    public int nslice = ImageGeneric.MID_SLICE;
+    public long nimage = ImageGeneric.FIRST_IMAGE;
 
     public XmippImageItem(File file, Cache cache) {
         super(file, cache);
@@ -40,7 +40,7 @@ public class XmippImageItem extends AbstractImageItem {
         try {
             String path = file.getAbsolutePath();
             //String fileName = file.getName();
-            ImageDouble image = new ImageDouble();
+            ImageGeneric image = new ImageGeneric(path);
             //System.out.println(" *** Loading preview: " + path + " / w=" + w + " / h=" + h + " / d=" + nslice + " n=" + nimage);
 
             double factor = getFactor(getWidth(), getHeight(), w, h);
@@ -48,8 +48,8 @@ public class XmippImageItem extends AbstractImageItem {
             int w_ = (int) Math.ceil(getWidth() / factor);
             int h_ = (int) Math.ceil(getHeight() / factor);
 
-            image.readPreview(path, w_, h_, slice, nimage);
-            ip = ImageConverter.convertToImageJ(image, path);
+            image.read(w_, h_, slice, nimage);
+            ip = XmippImageConverter.convertToImageJ(image);
         } catch (Exception ex) {
             System.err.println(" >>> Error loading preview: " + getKey());
 //            ex.printStackTrace();
@@ -76,11 +76,11 @@ public class XmippImageItem extends AbstractImageItem {
     }
 
     public ImagePlus getImagePlus(long nimage) {
-        return getImagePlus(nimage, ImageDouble.ALL_SLICES);
+        return getImagePlus(nimage, ImageGeneric.ALL_SLICES);
     }
 
     public ImagePlus getImagePlus(int nslice) {
-        return getImagePlus(ImageDouble.FIRST_IMAGE, nslice);
+        return getImagePlus(ImageGeneric.FIRST_IMAGE, nslice);
     }
 
     public ImagePlus getImagePlus(long nimage, int nslice) {
@@ -90,12 +90,11 @@ public class XmippImageItem extends AbstractImageItem {
             try {
                 System.out.println(" *** Reading ImagePlus [from disk]: " + getKey());
                 String path = getAbsoluteFileName();
-                ImageDouble image = new ImageDouble();
+                ImageGeneric image = new ImageGeneric(path);
 
                 //image.readPreview(path, getWidth(), getHeight(), nslice, nimage);
-                image.read(path, nimage);
-                imp = ImageConverter.convertToImageJ(image, path);
-
+                image.read(nimage);
+                imp = XmippImageConverter.convertToImageJ(image);
                 imp.setTitle(getLabel());
                 //getPreview(getWidth(), getHeight());
             } catch (Exception ex) {

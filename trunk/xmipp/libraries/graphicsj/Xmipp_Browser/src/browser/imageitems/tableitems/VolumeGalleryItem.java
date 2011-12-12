@@ -7,7 +7,7 @@ package browser.imageitems.tableitems;
 import browser.Cache;
 import browser.LABELS;
 import java.io.File;
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
 import xmipp.MDLabel;
 
 /**
@@ -47,7 +47,7 @@ public class VolumeGalleryItem extends AbstractGalleryImageItem {
 
     @Override
     public long getNImage() {
-        return ImageDouble.FIRST_IMAGE;
+        return ImageGeneric.FIRST_IMAGE;
     }
 
     @Override
@@ -62,7 +62,7 @@ public class VolumeGalleryItem extends AbstractGalleryImageItem {
 
     @Override
     public String getTitle() {
-        return filename + ": " + dimension.getDepth() + " slices.";
+        return filename + " / slice: " + getNSlice();
     }
 
     @Override

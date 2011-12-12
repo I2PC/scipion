@@ -39,11 +39,11 @@ public class MetaData {
 
     static {
         System.loadLibrary("XmippJavaInterface");
-        storeIds();
+        //storeIds();
     }
 
     //caching some ids
-    private static native void storeIds();
+    //private static native void storeIds();
 
     //functions to create images
     private native void create();
@@ -54,14 +54,11 @@ public class MetaData {
     //reading
     public native void read_(String filename) throws Exception;
 
-    public void read(String filename) throws Exception {
+    public final void read(String filename) throws Exception {
         this.filename = filename;
         read_(filename);
     }
 
-    /**
-     * @return Number of projections of the stack
-     */
     public native int size();
 
     public native void setColumnFormat(boolean format);
@@ -187,7 +184,7 @@ public class MetaData {
 
     public native void addLabel(int label);
 
-    public native void getPCAbasis(ImageDouble basis) throws Exception;
+    public native void getPCAbasis(ImageGeneric basis) throws Exception;
 
     public native void computeFourierStatistics(String filename) throws Exception;
 

@@ -8,7 +8,7 @@ import browser.Cache;
 import browser.imageitems.listitems.XmippImageItem;
 import ij.ImagePlus;
 import java.io.File;
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
 
 /**
  *
@@ -27,15 +27,15 @@ public class MicrographsTableImageItem extends XmippImageItem {
     }
 
     public MicrographsTableImageItem(File file, Cache cache) {
-        this(file, ImageDouble.FIRST_SLICE, cache);
+        this(file, ImageGeneric.FIRST_SLICE, cache);
     }
 
     public MicrographsTableImageItem(File file, int slice, Cache cache) {
-        this(file, slice, ImageDouble.FIRST_IMAGE, cache);
+        this(file, slice, ImageGeneric.FIRST_IMAGE, cache);
     }
 
     public MicrographsTableImageItem(File file, long nimage, Cache cache) {
-        this(file, ImageDouble.FIRST_SLICE, nimage, cache);
+        this(file, ImageGeneric.FIRST_SLICE, nimage, cache);
     }
 
     public MicrographsTableImageItem(File file, int slice, long nimage, Cache cache) {

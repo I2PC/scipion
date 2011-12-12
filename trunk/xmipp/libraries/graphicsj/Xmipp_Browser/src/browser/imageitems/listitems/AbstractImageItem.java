@@ -11,7 +11,7 @@ import ij.ImagePlus;
 import ij.process.ImageStatistics;
 import java.io.File;
 import java.text.DecimalFormat;
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
 
 /**
  *
@@ -32,8 +32,7 @@ public abstract class AbstractImageItem extends FileItem {
 
     void loadImageData() {
         try {
-            ImageDouble image = new ImageDouble();
-            image.readHeader(getAbsoluteFileName());
+            ImageGeneric image = new ImageGeneric(getAbsoluteFileName());
 
             dimension = new ImageDimension(image);
         } catch (Exception ex) {
@@ -113,6 +112,10 @@ public abstract class AbstractImageItem extends FileItem {
 
     public boolean isVolume() {
         return getDepth() > 1;
+    }
+
+    public boolean isBiggerThan(int MAX_SIZE) {
+        return getWidth() > MAX_SIZE || getHeight() > MAX_SIZE;
     }
 
     public ImageStatistics getStatistics() {

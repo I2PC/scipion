@@ -13,9 +13,9 @@ package micrographs;
 import browser.DEBUG;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
-import browser.imageitems.MicrographsTableImageItem;
 import browser.gallery.models.GalleryRowHeaderModel;
 import browser.gallery.renderers.RowHeaderRenderer;
+import browser.imageitems.tableitems.GalleryImageItem;
 import browser.windows.ImagesWindowFactory;
 import ij.IJ;
 import ij.ImagePlus;
@@ -35,18 +35,21 @@ import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.LookAndFeel;
 import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
+import metadata.images.TableFileItem;
+import metadata.images.TableMetaDataItem;
 import metadata.models.XTableColumnModel;
+import metadata.renderers.MetaDataDoubleRenderer;
+import metadata.renderers.MetaDataFileItemRenderer;
+import metadata.renderers.MetaDataImageRenderer;
+import metadata.renderers.MetaDataIntegerRenderer;
+import metadata.renderers.MetaDataStringRenderer;
 import micrographs.ctf.tasks.TasksEngine;
 import micrographs.ctf.tasks.iCTFGUI;
 import micrographs.filters.EnableFilter;
-import micrographs.renderers.MicrographDoubleRenderer;
-import micrographs.renderers.MicrographFileNameRenderer;
-import micrographs.renderers.MicrographImageRenderer;
 
 /**
  *
@@ -62,9 +65,11 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     private JPopUpMenuMicrograph jPopupMenu = new JPopUpMenuMicrograph();
     private JFileChooser fc = new JFileChooser();
     private JList rowHeader;
-    private MicrographFileNameRenderer fileNameRenderer = new MicrographFileNameRenderer();
-    private MicrographImageRenderer imageRenderer = new MicrographImageRenderer();
-    private MicrographDoubleRenderer doubleRenderer = new MicrographDoubleRenderer();
+    private MetaDataFileItemRenderer fileRenderer = new MetaDataFileItemRenderer();
+    private MetaDataImageRenderer imageRenderer = new MetaDataImageRenderer();
+    private MetaDataStringRenderer stringRenderer = new MetaDataStringRenderer();
+    private MetaDataDoubleRenderer doubleRenderer = new MetaDataDoubleRenderer();
+    private MetaDataIntegerRenderer numberRenderer = new MetaDataIntegerRenderer();
     private TableRowSorter sorter;
     private EnableFilter enableFilter;
     private TasksEngine tasksEngine = new TasksEngine(this);
@@ -187,64 +192,66 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         LookAndFeel.installColorsAndFont(rowHeader, "TableHeader.background",
                 "TableHeader.foreground", "TableHeader.font");
 
-        rowHeader.setFixedCellHeight(MicrographImageRenderer.CELL_HEIGHT);
-
         rowHeader.setCellRenderer(new RowHeaderRenderer());
 
         jsPanel.setRowHeaderView(rowHeader);
     }
 
     private void setRenderers() {
-        table.setDefaultRenderer(MicrographsTableImageItem.class, imageRenderer);
+        table.setDefaultRenderer(GalleryImageItem.class, imageRenderer);
+        table.setDefaultRenderer(TableMetaDataItem.class, fileRenderer);
+        table.setDefaultRenderer(TableFileItem.class, fileRenderer);
+        table.setDefaultRenderer(String.class, stringRenderer);
         table.setDefaultRenderer(Double.class, doubleRenderer);
-
-        // Image is quite big, so don't show it by default.
-        table.getColumnModel().getColumn(MicrographsTableModel.INDEX_IMAGE).
-                setCellRenderer(fileNameRenderer);
-    }
-
-    private void packColumns() {
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            packColumn(table, i);
-        }
+        table.setDefaultRenderer(Integer.class, numberRenderer);
     }
 
     // Sets the preferred width of the visible column specified by vColIndex. The column
     // will be just wide enough to show the column head and the widest cell in the column.
-    private void packColumn(JTable table, int column) {
-        DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
-        TableColumn col = colModel.getColumn(column);
-        int width = 0;
+    private void packColumns() {
+        for (int column = 0; column < table.getColumnCount(); column++) {
+            int r = 0;
 
-        // Get width of column header
-        TableCellRenderer renderer = col.getHeaderRenderer();
-        if (renderer == null) {
-            renderer = table.getTableHeader().getDefaultRenderer();
+            // Get width of column header
+            TableColumn tc = columnModel.getColumn(column);
+
+            TableCellRenderer renderer = tc.getHeaderRenderer();
+            if (renderer == null) {
+                renderer = table.getTableHeader().getDefaultRenderer();
+            }
+            Component comp = renderer.getTableCellRendererComponent(
+                    table, tc.getHeaderValue(), false, false, 0, 0);
+            int headerWidth = comp.getPreferredSize().width;
+
+            renderer = table.getCellRenderer(r, column);
+            comp = renderer.getTableCellRendererComponent(
+                    table, table.getValueAt(r, column), false, false, r, column);
+            int width = comp.getPreferredSize().width;
+
+            tc.setPreferredWidth(Math.max(headerWidth, width));
         }
-
-        width = MicrographImageRenderer.CELL_WIDTH_MIN;
-
-        // Get maximum width of column data
-        //for (int r = 0; r < table.getRowCount(); r++) {
-        int r = 0;
-        renderer = table.getCellRenderer(r, column);
-        Component comp = renderer.getTableCellRendererComponent(
-                table, table.getValueAt(r, column), false, false, r, column);
-        width = Math.max(width, comp.getPreferredSize().width);
-        //}
-
-        // Set the width
-        col.setPreferredWidth(width);
     }
 
     // The height of each row is set to the preferred height of the tallest cell in that row.
     private void packRows() {
-        //  Row header.
-        rowHeader.setFixedCellHeight(MicrographImageRenderer.CELL_HEIGHT);
+        int row = 0;
+        int height = 0;
+        //table.setRowHeight(row, cellHeight);
 
-        for (int row = 0; row < table.getRowCount(); row++) {
-            table.setRowHeight(row, MicrographImageRenderer.CELL_HEIGHT);
+        for (int column = 0; column < table.getColumnCount(); column++) {
+
+            TableCellRenderer renderer = table.getCellRenderer(row, column);
+            Component comp = renderer.getTableCellRendererComponent(
+                    table, table.getValueAt(row, column), false, false, row, column);
+
+            height = Math.max(height, comp.getPreferredSize().height);
         }
+
+        // Sets width
+        table.setRowHeight(height);
+
+        // Row header.
+        rowHeader.setFixedCellHeight(height);
     }
 
     private void tableMouseClicked(java.awt.event.MouseEvent evt) {
@@ -257,12 +264,12 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
             if (evt.getClickCount() > 1) {
                 Object item = table.getValueAt(view_row, view_col);
 
-                if (item instanceof MicrographsTableImageItem) {
-                    MicrographsTableImageItem tableItem = (MicrographsTableImageItem) item;
+                if (item instanceof GalleryImageItem) {
+                    GalleryImageItem tableItem = (GalleryImageItem) item;
                     ImagePlus ip = tableItem.getImagePlus();
 
                     if (ip != null) {
-                        ip.setTitle(tableItem.getOriginalStringValue());
+                        ip.setTitle(tableItem.getOriginalValue());
 
                         ImagesWindowFactory.captureFrame(ip);
                     }
@@ -323,7 +330,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         updateTableStructure();
     }
 
-    private void showCTFImage(MicrographsTableImageItem item, String CTFFilename,
+    private void showCTFImage(GalleryImageItem item, String CTFFilename,
             String PSDfilename, String MicrographFilename, int row) {
         ImagesWindowFactory.openCTFImage(item.getImagePlus(), CTFFilename,
                 PSDfilename, tasksEngine, MicrographFilename, row);
@@ -399,6 +406,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         jlStatus = new javax.swing.JLabel();
         jsPanel = new javax.swing.JScrollPane();
 
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowOpened(java.awt.event.WindowEvent evt) {
                 formWindowOpened(evt);
@@ -568,15 +576,17 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
         }
 
         private void refresh() {
-            jmiShowCTF.setEnabled(tableModel.hasCtfData());
+            boolean hasCtfData = tableModel.hasCtfData();
+            jmiShowCTF.setEnabled(hasCtfData);
+            jmiViewCTFProfile.setEnabled(hasCtfData);
 
             // Column extraction only allowed for images
-            jmiExtractColumnEnabled.setEnabled(tableModel.getValueAt(row, col) instanceof MicrographsTableImageItem);
-            jmiExtractColumnAll.setEnabled(tableModel.getValueAt(row, col) instanceof MicrographsTableImageItem);
+            jmiExtractColumnEnabled.setEnabled(tableModel.getValueAt(row, col) instanceof GalleryImageItem);
+            jmiExtractColumnAll.setEnabled(tableModel.getValueAt(row, col) instanceof GalleryImageItem);
 
             boolean busy = tableModel.isRowBusy(row);
             jmiRecalculateCTF.setIcon(busy ? ICONS_MANAGER.WAIT_MENU_ICON : null);
-            jmiRecalculateCTF.setEnabled(!busy);
+            jmiRecalculateCTF.setEnabled(!busy && hasCtfData);
 
 //            repaint();
             updateUI();
@@ -613,8 +623,8 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
         private void showRecalculateCTFWindow() {
             Object item = tableModel.getValueAt(row, CTF_IMAGE_COLUMN);
 
-            if (item instanceof MicrographsTableImageItem) {
-                showCTFImage((MicrographsTableImageItem) item, tableModel.getCTFfile(row),
+            if (item instanceof GalleryImageItem) {
+                showCTFImage((GalleryImageItem) item, tableModel.getCTFfile(row),
                         tableModel.getPSDfile(row), tableModel.getFilename(), row);
             }
         }

@@ -5,7 +5,6 @@ import ij.ImagePlus;
 import ij.WindowManager;
 import ij.io.SaveDialog;
 import ij.plugin.PlugIn;
-import xmipp.Filename;
 
 /*
  * To change this template, choose Tools | Templates
@@ -17,19 +16,17 @@ import xmipp.Filename;
  */
 public abstract class Writer implements PlugIn {
 
-    String basedir, prefix, filename;
-
     public void run(String arg) {
         ImagePlus imp = WindowManager.getCurrentImage();
 
         if (imp != null) {
-            run(arg, imp);
+            run(imp, arg);
         } else {
             IJ.error("There are no images open!");
         }
     }
 
-    public void run(String arg, ImagePlus imp) {
+    public void run(ImagePlus imp, String arg) {
         if (imp == null) {
             IJ.error("image is NULL");
             return;
@@ -43,16 +40,13 @@ public abstract class Writer implements PlugIn {
         if (path == null || path.trim().isEmpty()) {
             path = getPath();
             show = true;
-        } else {
-            basedir = System.getProperty("user.dir");
-            prefix = Filename.getPrefix(path);
-            filename = Filename.getFilename(path);
         }
 
         if (path != null) {
             try {
                 write(imp, path);
 
+                imp.changes = false;    // Avoid the "Save changes?" dialog.
                 if (show) {
                     IJ.showMessage("File sucessfully saved!");
                 }
@@ -64,21 +58,9 @@ public abstract class Writer implements PlugIn {
     }
 
     String getPath() {
-        String fullpath = null;
-
         SaveDialog od = new SaveDialog(
                 getSaveDialogTitle(), System.getProperty("user.dir"), "", "");
-        String path = od.getFileName();
-
-        if (path != null) {
-            basedir = od.getDirectory();
-            prefix = Filename.getPrefix(path);
-            prefix = prefix != null ? prefix + Filename.SEPARATOR : "";
-            filename = Filename.getFilename(path);
-            fullpath = prefix + basedir + filename;
-        }
-
-        return fullpath;
+        return od.getFileName();
     }
 
     protected abstract String getSaveDialogTitle();

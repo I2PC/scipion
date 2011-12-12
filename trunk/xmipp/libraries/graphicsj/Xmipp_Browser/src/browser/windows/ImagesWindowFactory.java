@@ -7,12 +7,12 @@ package browser.windows;
 import browser.DEBUG;
 import browser.InfiniteProgressPanel;
 import browser.commandline.Parameters;
-import browser.imageitems.ImageConverter;
 import browser.imageitems.tableitems.AbstractGalleryImageItem;
 import browser.gallery.JFrameGallery;
 import browser.gallery.models.AbstractXmippTableModel;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.gui.ImageWindow;
 import ij.gui.Toolbar;
 import ij.io.FileInfo;
@@ -27,6 +27,7 @@ import java.io.File;
 import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JRootPane;
+import javax.vecmath.Color3f;
 import metadata.JFrameMetaData;
 import micrographs.JFrameMicrographs;
 import micrographs.ctf.CTFRecalculateImageWindow;
@@ -35,8 +36,9 @@ import micrographs.FSCWindow;
 import micrographs.ctf.tasks.TasksEngine;
 import rotspectra.JFrameRotSpectra;
 import xmipp.Filename;
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
 import xmipp.MetaData;
+import xmippij.XmippImageConverter;
 
 /**
  *
@@ -74,8 +76,7 @@ public class ImagesWindowFactory {
             openFileAsMetadata(filename, parameters);
         } else {
             try {
-                ImageDouble img = new ImageDouble();
-                img.readHeader(filename);
+                ImageGeneric img = new ImageGeneric(filename);
 
                 if (img.isSingleImage()) {
                     openFileAsImage(filename, parameters);
@@ -113,14 +114,13 @@ public class ImagesWindowFactory {
             if (Filename.isMetadata(path)) {
                 MetaData md = new MetaData(path);
 
-                imp = ImageConverter.convertToImageJ(md);
+                imp = XmippImageConverter.convertToImageJ(md);
             } else {
-                ImageDouble id = new ImageDouble(path);
-                imp = ImageConverter.convertToImageJ(id, path);
+                imp = XmippImageConverter.loadImage(path);
             }
 
             // Normalize image stack.
-            ImageConverter.normalizeStack(imp);
+            //XmippImageConverter.normalizeImagePlus(imp);
 
             openXmippImageWindow(imp, parameters.poll);
         } catch (Exception ex) {
@@ -225,7 +225,7 @@ public class ImagesWindowFactory {
     public static void openGalleryAs3D(AbstractXmippTableModel tableModel) {
         try {
             ArrayList<AbstractGalleryImageItem> items = tableModel.getAllItems();
-            ImagePlus ip = ImageConverter.convertToImageJ(items);
+            ImagePlus ip = ImagesWindowFactory.convertToImageJ(items);
             ip.setTitle(tableModel.getFilename());
 
             openImagePlusAs3D(ip);
@@ -251,7 +251,7 @@ public class ImagesWindowFactory {
                 tempFile.deleteOnExit();
 
                 ArrayList<AbstractGalleryImageItem> items = tableModel.getAllItems();
-                ImagePlus imp = ImageConverter.convertToImageJ(items);
+                ImagePlus imp = ImagesWindowFactory.convertToImageJ(items);
                 IJ.run(imp, "Xmipp writer", "save=" + tempFile.getAbsolutePath());
 
 //                System.err.println(" >>> TMP Saved at: " + file.getAbsolutePath());
@@ -304,8 +304,10 @@ public class ImagesWindowFactory {
 
             // Adds the sphere image plus to universe.
             new StackConverter(ip).convertToRGB();
-            Content c = universe.addVoltex(ip);
-            c.displayAs(Content.VOLUME);
+            Content c = universe.addSurfacePlot(ip, new Color3f(1f, 165f / 255, 82f / 255), "1",
+                    50, new boolean[]{true, true, true}, 1);
+            c.displayAs(Content.SURFACE);
+            c.setColor(new Color3f(1f, 165f / 255, 82f / 255));
 
             universe.show();    // Shows...
         } catch (final ClassNotFoundException e) {
@@ -378,5 +380,25 @@ public class ImagesWindowFactory {
 
         frame.setSize(w, h);
         frame.setLocationRelativeTo(null);
+    }
+
+    public static ImagePlus convertToImageJ(ArrayList<AbstractGalleryImageItem> items) {
+        ImageStack is = null;
+
+        for (int i = 0; i < items.size(); i++) {
+            AbstractGalleryImageItem item = items.get(i);
+
+            if (item.isEnabled() && item.exists()) {
+                ImagePlus ipslice = item.getImagePlus();
+
+                if (is == null) {
+                    is = new ImageStack(ipslice.getWidth(), ipslice.getHeight());
+                }
+
+                is.addSlice(ipslice.getTitle(), ipslice.getProcessor());
+            }
+        }
+
+        return new ImagePlus("", is);
     }
 }

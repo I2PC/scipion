@@ -17,14 +17,6 @@ extern "C" {
 #define xmipp_CTFDescription_CTF 3L
 /*
  * Class:     xmipp_CTFDescription
- * Method:    storeIds
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_xmipp_CTFDescription_storeIds
-  (JNIEnv *, jclass);
-
-/*
- * Class:     xmipp_CTFDescription
  * Method:    create
  * Signature: ()V
  */

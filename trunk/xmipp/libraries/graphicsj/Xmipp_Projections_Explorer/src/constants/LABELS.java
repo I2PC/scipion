@@ -37,4 +37,8 @@ public class LABELS {
     public final static String MESSAGE_LOADING_SCORE_FILE = "Loading score file...";
     public final static String MESSAGE_ANALYZING_PROJECTION = "Analyzing projection...";
     public final static String MESSAGE_DONE = "Done!";
+
+    public static String MESSAGE_ERROR_FNF(String filename) {
+        return "ERROR: File not found: " + filename;
+    }
 }

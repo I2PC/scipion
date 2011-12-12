@@ -5,7 +5,7 @@ import ij.ImagePlus;
 import ij.io.FileInfo;
 import java.io.File;
 import xmipp.MetaData;
-import xmipp.io.ImageConverter;
+import xmippij.XmippImageConverter;
 
 /*
  * To change this template, choose Tools | Templates
@@ -23,7 +23,7 @@ public class MetaDataReader extends Reader {
 
         MetaData md = new MetaData(path);
 
-        ImagePlus imp = ImageConverter.convertToImagej(md);
+        ImagePlus imp = XmippImageConverter.convertToImageJ(md);
 
         File f = new File(path);
         FileInfo fi = new FileInfo();

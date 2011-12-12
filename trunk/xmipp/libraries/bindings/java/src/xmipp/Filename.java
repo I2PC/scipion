@@ -92,12 +92,13 @@ public class Filename {
 //    }
 //
 
+    public static native boolean hasStackExtension(String filename) throws Exception;
+
+    public static native boolean hasVolumeExtension(String filename) throws Exception;
+
     public static boolean isSingleImage(String filename) throws Exception {
         try {
-            ImageDouble img = new ImageDouble();
-            img.readHeader(filename);
-
-            return img.isSingleImage();
+            return (new ImageGeneric(filename)).isSingleImage();
         } catch (Exception ex) {
             return filename != null && isFileType(filename, SINGLE_IMAGES);
         }
@@ -105,10 +106,7 @@ public class Filename {
 
     public static boolean isVolume(String filename) {
         try {
-            ImageDouble img = new ImageDouble();
-            img.readHeader(filename);
-
-            return img.isVolume();
+            return (new ImageGeneric(filename)).isVolume();
         } catch (Exception ex) {
             return filename != null && isFileType(filename, VOLUMES);
         }
@@ -116,10 +114,7 @@ public class Filename {
 
     public static boolean isStack(String filename) throws Exception {
         try {
-            ImageDouble img = new ImageDouble();
-            img.readHeader(filename);
-
-            return img.isStack();
+            return (new ImageGeneric(filename)).isStack();
         } catch (Exception ex) {
             return filename != null && isFileType(filename, STACKS);
         }
@@ -144,7 +139,7 @@ public class Filename {
     }
 
     // Auxiliary methods.
-    public static String fixPath(String filename, String MDdir,boolean shouldExist) {
+    public static String fixPath(String filename, String MDdir, boolean shouldExist) {
         MDdir += !MDdir.endsWith(File.separator) ? File.separator : "";
         String fixed = filename;
 
@@ -193,6 +188,7 @@ public class Filename {
     private static String findProjectDir(String current, final String PROJECT_FILE) {
         FilenameFilter filter = new FilenameFilter() {
 
+            @Override
             public boolean accept(File dir, String name) {
                 return PROJECT_FILE.compareTo(name) == 0;
             }
@@ -225,28 +221,7 @@ public class Filename {
     public static long getNimage(String filename) {
         String prefix = getPrefix(filename);
 
-        return prefix != null ? Long.valueOf(prefix).longValue() : ImageDouble.ALL_IMAGES;
-//        long nimage = ImageDouble.ALL_IMAGES;
-//
-//        if (hasPrefix(SEPARATOR)) {
-//            String str = filename.split(SEPARATOR)[0];
-//            if (!str.isEmpty()) {
-//                // str may have a string prefix before the number, so
-//                // grab the leftmost part
-//                int i = str.length() - 1;
-//                while (i >= 0) {
-//                    if (Character.isDigit(str.charAt(i)) == false) {
-//                        break;
-//                    }
-//                    i--;
-//                }
-//                String rightPart = str.substring(i + 1, str.length());
-//
-//                nimage = Long.valueOf(rightPart);
-//            }
-//        }
-//
-//        return nimage;
+        return prefix != null ? Long.valueOf(prefix).longValue() : ImageGeneric.ALL_IMAGES;
     }
 
     public static boolean hasPrefix(String filename) {

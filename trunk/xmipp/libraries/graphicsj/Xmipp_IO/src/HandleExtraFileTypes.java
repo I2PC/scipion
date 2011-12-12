@@ -316,7 +316,7 @@ public class HandleExtraFileTypes extends ImagePlus implements PlugIn {
         // using the above as models
         // eg:
         if (Filename.isMetadata(name)) {
-            imp = (ImagePlus) IJ.runPlugIn(xmipp.io.readers.MetaDataReader.class.getCanonicalName(), path);
+            imp = (ImagePlus) tryPlugIn(xmipp.io.readers.MetaDataReader.class.getCanonicalName(), path);
 
             if (imp == null) {
                 width = PLUGIN_NOT_FOUND;
@@ -327,7 +327,7 @@ public class HandleExtraFileTypes extends ImagePlus implements PlugIn {
 
             return imp;
         } else if (Filename.isXmippType(name)) {
-            imp = (ImagePlus) IJ.runPlugIn(xmipp.io.readers.ImageReader.class.getCanonicalName(), path);
+            imp = (ImagePlus) tryPlugIn(xmipp.io.readers.ImageReader.class.getCanonicalName(), path);
 
             if (imp == null) {
                 width = PLUGIN_NOT_FOUND;

@@ -5,13 +5,14 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.FileInfo;
 import ij.process.ImageProcessor;
+import ij.process.ByteProcessor;
 import ij.process.ShortProcessor;
 import ij.process.FloatProcessor;
 import ij.process.StackStatistics;
 import java.io.File;
 import java.util.LinkedList;
+import xmipp.Filename;
 import xmipp.ImageGeneric;
-import xmipp.Projection;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -26,60 +27,119 @@ import xmipp.MetaData;
  */
 public class XmippImageConverter {
 
-    public static ImagePlus convertToImagej(String filename) throws Exception {
+    public static ImagePlus loadImage(String filename) throws Exception {
         ImageGeneric image = new ImageGeneric(filename);
-        return convertToImagej(image, true);
+        return convertToImageJ(image);
     }
 
-    public static ImagePlus convertToImagej(ImageGeneric image) throws Exception {
-        return convertToImagej(image, true);
+    public static ImagePlus convertToImageJ(ImageGeneric image) throws Exception {
+        return convertToImageJ(image, ImageGeneric.ALL_SLICES);
     }
 
-    public static ImagePlus convertToImagej(ImageGeneric image, boolean useLogarithm) throws Exception {
-//TODO: FIXME
-        //        if (image.isPSD()) {
-//            image.convertPSD(useLogarithm);
-//        }
+    public static ImagePlus convertToImageJ(ImageGeneric image, int nslice) throws Exception {
+        return convertToImageJ(image, image.getXDim(), image.getYDim(), nslice);
+    }
 
-        String filename = image.filename;
-        int w = image.xSize;
-        int h = image.ySize;
-        int d = image.zSize;
-        long n = image.nSize;
+    public static ImagePlus convertToImageJ(ImageGeneric image, long nimage) throws Exception {
+        return convertToImageJ(image, image.getXDim(), image.getYDim(), nimage);
+    }
 
-        ImageStack is = new ImageStack(w, h);
-        ProcessorCreator pc = null;
-        switch (image.dataType) {
-            case ImageGeneric.Float:
-            case ImageGeneric.Double:
-                pc = new FloatProcessorCreator();
+    public static ImagePlus convertToImageJ(ImageGeneric image, int width, int height) throws Exception {
+        return convertToImageJ(image, width, height, ImageGeneric.ALL_SLICES, ImageGeneric.ALL_IMAGES);
+    }
+
+    public static ImagePlus convertToImageJ(ImageGeneric image, int width, int height, int nslice) throws Exception {
+        return convertToImageJ(image, width, height, nslice, ImageGeneric.ALL_IMAGES);
+    }
+
+    public static ImagePlus convertToImageJ(ImageGeneric image, int width, int height, long nimage) throws Exception {
+        return convertToImageJ(image, width, height, ImageGeneric.ALL_SLICES, nimage);
+    }
+
+    public static ImagePlus convertToImageJ(ImageGeneric image, int width, int height, int nslice, long nimage) throws Exception {
+        ImageStack is = new ImageStack(width, height);
+
+        ProcessorCreator pc = createProcessorCreator(image);
+
+        boolean retrieveAllImages = nimage == ImageGeneric.ALL_IMAGES;
+        boolean retrieveAllSlices = nslice == ImageGeneric.ALL_SLICES;
+        long n = retrieveAllImages ? ImageGeneric.FIRST_IMAGE : nimage;
+
+        for (; n <= image.getNDim(); n++) {
+            image.read(width, height, n);
+
+            if (image.isPSD()) {
+                image.convertPSD(image.getUseLogarithm());
+            }
+
+            // Read volume.
+            int slice = retrieveAllSlices ? ImageGeneric.FIRST_SLICE : nslice;
+            for (; slice <= image.getZDim(); slice++) {
+                ImageProcessor processor = pc.getProcessor(image, slice);
+                is.addSlice("", processor);
+
+                // If just one image, breaks loop.
+                if (!retrieveAllSlices) {
+                    break;
+                }
+            }
+
+            // If just one image, breaks loop.
+            if (!retrieveAllImages) {
                 break;
-            case ImageGeneric.SChar:
-            case ImageGeneric.UChar:
-                pc = new ByteProcessorCreator();
-                break;
-            case ImageGeneric.Short:
-            case ImageGeneric.UShort:
-                pc = new ShortProcessorCreator();
-                break;
-            default:
-                pc = new FloatProcessorCreator();
-            //throw new Exception("Unrecognized image datatype " + image.dataType);
+            }
         }
+        System.out.println("convertToImageJ");
 
-        for (long nimage = ImageGeneric.FIRST_IMAGE; nimage <= n; nimage++) {
-            for (int nslice = ImageGeneric.FIRST_SLICE; nslice <= d; nslice++) {
-                image.nSize = nimage;
-                image.zSize = nslice;
-                is.addSlice(String.valueOf((nimage * d) + nslice), pc.getProcessor(image));
+        return getNormalizedImagePlus(image.getFilename(), is);
+    }
+
+    /**
+     * Converts an ImageGeneric to ImageJ
+     * WARNING!: Use this when converting images from memory.
+     * @param image
+     * @return
+     * @throws Exception 
+     */
+    public static ImagePlus convertImageGenericToImageJ(ImageGeneric image) throws Exception {
+        return convertImageGenericToImageJ(image, ImageGeneric.ALL_SLICES);
+    }
+
+    /**
+     * Converts an ImageGeneric to ImageJ
+     * WARNING!: Use this when converting images from memory.
+     * @param image
+     * @param nslice
+     * @return
+     * @throws Exception 
+     */
+    static ImagePlus convertImageGenericToImageJ(ImageGeneric image, int nslice) throws Exception {
+        int width = image.getXDim();
+        int height = image.getYDim();
+        int depth = image.getZDim();
+        ImageStack is = new ImageStack(width, height);
+
+        ProcessorCreator pc = createProcessorCreator(image);
+
+        boolean retrieveAllSlices = nslice == ImageGeneric.ALL_SLICES;
+
+        // Read volume.      
+        int slice = retrieveAllSlices ? ImageGeneric.FIRST_SLICE : nslice;
+        for (; slice <= depth; slice++) {
+            ImageProcessor processor = pc.getProcessor(image, slice);
+            is.addSlice("", processor);
+
+            // If just one image, breaks loop.
+            if (!retrieveAllSlices) {
+                break;
             }
         }
 
-        return getNormalizedImagePlus(filename, is);
+        System.out.println("convertImageGenericToImageJ");
+        return getNormalizedImagePlus("", is);
     }
 
-    public static ImagePlus convertToImagej(MetaData md)
-            throws Exception {
+    public static ImagePlus convertToImageJ(MetaData md) throws Exception {
         LinkedList<String> missing = new LinkedList<String>();
         ImagePlus imp = null;
 
@@ -92,7 +152,7 @@ public class XmippImageConverter {
                 String filename = md.getValueString(MDLabel.MDL_IMAGE, id, true);
 
                 try {
-                    ImagePlus slice = convertToImagej(filename);
+                    ImagePlus slice = loadImage(filename);
 
                     if (is == null) {
                         is = new ImageStack(slice.getWidth(), slice.getHeight());
@@ -121,114 +181,210 @@ public class XmippImageConverter {
         return imp;
     }
 
-    public static ImagePlus convertToImagej(Projection projection, String title) {
-        FloatProcessor processor = new FloatProcessor(projection.getXsize(), projection.getYsize(), projection.getData());
-        return new ImagePlus(title, processor);
-    }
-
     public static ImagePlus getNormalizedImagePlus(String filename, ImageStack is) {
         ImagePlus imp = new ImagePlus(filename, is);
         // Sets associated file info.
         File f = new File(filename);
         FileInfo fi = new FileInfo();
-        fi.directory = f.getParent();
+        String absPath = f.getAbsolutePath();
+        fi.directory = absPath.substring(0, absPath.lastIndexOf(File.separator));
         fi.fileName = f.getName();
+
+        System.out.println("f: " + f.getAbsolutePath());
+        System.out.println("fi.directory: " + fi.directory);
+        System.out.println("fi.fileName: " + fi.fileName);
         imp.setFileInfo(fi);
 
-        // Normalize by default
+        normalizeImagePlus(imp);
+
+        return imp;
+    }
+
+    public static void normalizeImagePlus(ImagePlus imp) {
         StackStatistics ss = new StackStatistics(imp);
         imp.getProcessor().setMinAndMax(ss.min, ss.max);
-        return imp;
     }
 
     public static void revert(ImagePlus imp, String path) throws Exception {
         ImageGeneric image = new ImageGeneric(path);
-        ImagePlus imp2 = XmippImageConverter.convertToImagej(image);
+        ImagePlus imp2 = XmippImageConverter.convertToImageJ(image);
 
         imp.setStack(imp.getTitle(), imp2.getImageStack());
-//        int w = image.xSize;
-//        int h = image.ySize;
-//        int d = image.zSize;
-//        long n = image.nSize;
-//
-//        int sliceSize = w * h;
-//        int imageSize = sliceSize * d;
-//        double data[] = image.getData();
-//        double slice[] = new double[sliceSize];
-//        ImageStack is = new ImageStack(w, h);
-//
-//        for (int i = 0; i < n; i++) {
-//            int offset = i * imageSize;
-//            for (int j = 0; j < d; j++) {
-//                System.arraycopy(data, offset + j * sliceSize, slice, 0, sliceSize);
-//
-//                FloatProcessor processor = new FloatProcessor(w, h, slice);
-//                is.addSlice(String.valueOf(i), processor);
-//            }
-//        }
-//
-//        imp.setStack(is);
     }
 
-    public static ImageGeneric convertToXmipp(ImagePlus imp) {
+    public static ImageGeneric convertToXmipp(ImagePlus imp) throws Exception {
         ImageGeneric image = new ImageGeneric();
 
-//        int w = imp.getWidth();
-//        int h = imp.getHeight();
-//        int d = imp.getStackSize();
-//
-//        double data[] = new double[w * h * d];
-//        for (int i = 0; i < d; i++) {
-//            float slice[] = (float[]) imp.getStack().getProcessor(i + 1).getPixels();
-//            System.arraycopy(Tools.toDouble(slice), 0, data, i * w * h, w * h);
-//        }
-//        try {
-//            image.setData(w, h, d, data);
-//        } catch (Exception ex) {
-//            ex.printStackTrace(System.err);
-//            IJ.error(ex.getMessage());
-//        }
+        DataSetter ds = createDataSetter(image, imp.getType());
+
+        image.resize(imp.getWidth(), imp.getHeight(), imp.getStackSize());
+
+        ImageStack is = imp.getStack();
+        for (int nslice = ImageGeneric.FIRST_SLICE; nslice <= is.getSize(); nslice++) {
+            ds.setArray(image, is.getProcessor(nslice).getPixels(), nslice);
+        }
 
         return image;
     }
 
-    public static boolean saveImage(ImagePlus imp, String filename) {
-//        try {
-//            ImageGeneric image = convertToXmipp(imp);
-//
-//            image.write(filename);
-//            return true;
-//        } catch (Exception ex) {
-//            ex.printStackTrace(System.err);
-//            IJ.error(ex.getMessage());
-//        }
+    public static boolean saveImage(ImagePlus imp, String filename) throws Exception {
+        ImageGeneric image = new ImageGeneric();
 
-        return false;
+        int width = imp.getWidth();
+        int height = imp.getHeight();
+        int depth = imp.getStackSize();
+        int image_index = 1;
+
+        boolean storeAllImages = Filename.hasStackExtension(filename);
+        boolean storeAllSlices = !storeAllImages;// = Filename.hasVolumeExtension(filename);
+
+        // @TODO Add support for hyperstacks and remove this "if".
+        if (storeAllImages) {
+            image_index = depth;
+            depth = 1;
+        }
+
+        DataSetter ds = createDataSetter(image, imp.getType());
+
+        for (long nimage = ImageGeneric.FIRST_IMAGE; nimage <= image_index; nimage++) {
+            image.mapFile2Write(width, height, depth, filename, nimage);
+            System.out.println(" +++ nimage:" + nimage);
+
+            // Store volume.
+            for (int nslice = ImageGeneric.FIRST_SLICE; nslice <= depth; nslice++) {
+                System.out.println("\t/// nslice:" + nslice + " -> imp[" + (int) nimage * nslice + "]");
+
+                Object data = imp.getStack().getProcessor((int) nimage * nslice).getPixels();
+
+                // image.setData...
+                ds.setArray(image, data, nslice);
+
+                // If just one image, breaks loop.
+                if (!storeAllSlices) {
+                    break;
+                }
+            }
+
+            image.write(filename);
+
+            // If just one image, breaks loop.
+            if (!storeAllImages) {
+                break;
+            }
+        }
+
+        return true;
+    }
+
+    static ProcessorCreator createProcessorCreator(ImageGeneric image) throws Exception {
+        ProcessorCreator pc = null;
+        switch (image.getDataType()) {
+            case ImageGeneric.Float:
+            case ImageGeneric.Double:
+                pc = new ProcessorCreatorFloat();
+                break;
+            case ImageGeneric.Short:
+            case ImageGeneric.UShort:
+                pc = new ProcessorCreatorShort();
+                break;
+            case ImageGeneric.SChar:
+            case ImageGeneric.UChar:
+                pc = new ProcessorCreatorByte();
+                break;
+            default:
+                pc = new ProcessorCreatorFloat();
+        }
+
+        return pc;
+    }
+
+    static DataSetter createDataSetter(ImageGeneric image, int dataType) throws Exception {
+
+        // Creates a DataSetter according to dataType.
+        DataSetter ds = null;
+        boolean setDataType = image.getDataType() == ImageGeneric.Unknown_Type;
+
+        switch (dataType) {
+            case ImagePlus.GRAY32:
+                if (setDataType) {
+                    image.setDataType(ImageGeneric.Float);
+                }
+                ds = new DataSetterFloat();
+                break;
+            case ImagePlus.GRAY16:
+                if (setDataType) {
+                    image.setDataType(ImageGeneric.UShort);
+                }
+                ds = new DataSetterShort();
+                break;
+            case ImagePlus.GRAY8:
+                if (setDataType) {
+                    image.setDataType(ImageGeneric.UChar);
+                }
+                ds = new DataSetterByte();
+                break;
+            default:
+                throw new Exception("Format not supported: " + dataType);
+        }
+
+        return ds;
     }
 }
 
 abstract class ProcessorCreator {
 
-    public abstract ImageProcessor getProcessor(ImageGeneric image) throws Exception;
+    public abstract ImageProcessor getProcessor(ImageGeneric image, int slice) throws Exception;
 }
 
-class FloatProcessorCreator extends ProcessorCreator {
+class ProcessorCreatorByte extends ProcessorCreator {
 
-    public ImageProcessor getProcessor(ImageGeneric image) throws Exception {
-        return new FloatProcessor(image.xSize, image.ySize, image.getArrayFloat(), null);
+    @Override
+    public ImageProcessor getProcessor(ImageGeneric image, int slice) throws Exception {
+        return new ByteProcessor(image.getXDim(), image.getYDim(), image.getArrayByte(slice), null);
     }
 }
 
-class ShortProcessorCreator extends ProcessorCreator {
+class ProcessorCreatorShort extends ProcessorCreator {
 
-    public ImageProcessor getProcessor(ImageGeneric image) throws Exception {
-        return new ShortProcessor(image.xSize, image.ySize, image.getArrayShort(), null);
+    @Override
+    public ImageProcessor getProcessor(ImageGeneric image, int slice) throws Exception {
+        return new ShortProcessor(image.getXDim(), image.getYDim(), image.getArrayShort(slice), null);
     }
 }
 
-class ByteProcessorCreator extends ProcessorCreator {
+class ProcessorCreatorFloat extends ProcessorCreator {
 
-    public ImageProcessor getProcessor(ImageGeneric image) throws Exception {
-        return new ij.process.ByteProcessor(image.xSize, image.ySize, image.getArrayByte(), null);
+    @Override
+    public ImageProcessor getProcessor(ImageGeneric image, int slice) throws Exception {
+        return new FloatProcessor(image.getXDim(), image.getYDim(), image.getArrayFloat(slice), null);
+    }
+}
+
+abstract class DataSetter {
+
+    public abstract void setArray(ImageGeneric image, Object data, int slice) throws Exception;
+}
+
+class DataSetterByte extends DataSetter {
+
+    @Override
+    public void setArray(ImageGeneric image, Object data, int slice) throws Exception {
+        image.setArrayByte((byte[]) data, slice);
+    }
+}
+
+class DataSetterShort extends DataSetter {
+
+    @Override
+    public void setArray(ImageGeneric image, Object data, int slice) throws Exception {
+        image.setArrayShort((short[]) data, slice);
+    }
+}
+
+class DataSetterFloat extends DataSetter {
+
+    @Override
+    public void setArray(ImageGeneric image, Object data, int slice) throws Exception {
+        image.setArrayFloat((float[]) data, slice);
     }
 }

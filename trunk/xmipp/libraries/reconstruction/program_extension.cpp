@@ -34,11 +34,12 @@
 #include "angular_continuous_assign.h"
 #include "micrograph_automatic_picking.h"
 #include "data/mask.h"
+#include <classification/analyze_cluster.h>
 
 int runProgram(XmippProgram * program, const String &arguments, bool destroy)
 {
-  if (program == NULL)
-          REPORT_ERROR(ERR_PARAM_INCORRECT, "Received a NULL as program pointer");
+    if (program == NULL)
+        REPORT_ERROR(ERR_PARAM_INCORRECT, "Received a NULL as program pointer");
     program->read(arguments);
     int retCode = program->tryRun();
     if (destroy)
@@ -54,30 +55,32 @@ int runProgram(const String &programName, const String &arguments)
 
 XmippProgram * getProgramByName(const String &programName)
 {
-//  if (programName == "xmipp_tranform_filter")
-//    return new ProgFilter();
+    //  if (programName == "xmipp_tranform_filter")
+    //    return new ProgFilter();
 
-  if (programName == "xmipp_volume_from_pdb")
-    return new ProgPdbConverter();
+    if (programName == "xmipp_volume_from_pdb")
+        return new ProgPdbConverter();
 
-  if (programName == "xmipp_angular_project_library")
-    return new ProgAngularProjectLibrary();
+    if (programName == "xmipp_angular_project_library")
+        return new ProgAngularProjectLibrary();
 
-  if (programName == "xmipp_mask")
-    return new ProgMask();
+    if (programName == "xmipp_mask")
+        return new ProgMask();
 
-  if (programName == "xmipp_angular_discrete_assign")
-    return new ProgAngularDiscreteAssign();
+    if (programName == "xmipp_angular_discrete_assign")
+        return new ProgAngularDiscreteAssign();
 
-  if (programName == "xmipp_angular_continuous_assign")
-    return new ProgAngularContinuousAssign();
+    if (programName == "xmipp_angular_continuous_assign")
+        return new ProgAngularContinuousAssign();
 
-  if (programName == "xmipp_pdb_nma_deform")
-    return new ProgPdbNmaDeform();
+    if (programName == "xmipp_pdb_nma_deform")
+        return new ProgPdbNmaDeform();
 
-  if (programName == "xmipp_micrograph_automatic_picking")
-    return new ProgMicrographAutomaticPicking();
+    if (programName == "xmipp_micrograph_automatic_picking")
+        return new ProgMicrographAutomaticPicking();
 
+    if (programName == "xmipp_classify_analyze_cluster")
+        return new ProgAnalyzeCluster();
 
     return NULL;
 }

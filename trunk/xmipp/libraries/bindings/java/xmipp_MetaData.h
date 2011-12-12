@@ -13,14 +13,6 @@ extern "C" {
 #define xmipp_MetaData_MD_APPEND 1L
 /*
  * Class:     xmipp_MetaData
- * Method:    storeIds
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_storeIds
-  (JNIEnv *, jclass);
-
-/*
- * Class:     xmipp_MetaData
  * Method:    create
  * Signature: ()V
  */
@@ -310,7 +302,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_addLabel
 /*
  * Class:     xmipp_MetaData
  * Method:    getPCAbasis
- * Signature: (Lxmipp/ImageDouble;)V
+ * Signature: (Lxmipp/ImageGeneric;)V
  */
 JNIEXPORT void JNICALL Java_xmipp_MetaData_getPCAbasis
   (JNIEnv *, jobject, jobject);

@@ -5,7 +5,6 @@
 package browser.windows;
 
 import browser.DEBUG;
-import browser.imageitems.ImageConverter;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageLayout;
@@ -22,6 +21,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JPanel;
 import browser.windows.menubar.XmippMenuBar;
+import xmippij.XmippImageConverter;
 
 /**
  *
@@ -79,40 +79,42 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
     /*protected void setInitialPoll(boolean poll) {
     // Sets if image can poll (reloaded from disk) or not.
     FileInfo ofi = imp.getOriginalFileInfo();
-
+    
     if (ofi != null) {
     path = ofi.directory + File.separator + ofi.fileName;
     f = new File(path);
     last = f.lastModified();
-
+    
     setPoll(poll);  // If isPoll, starts timer to reload image form disk every period.
     menuBar.setPollStatus(poll);
     }
     }*/
     protected void setInitialPoll(boolean poll) {
         // Sets if image can poll (reloaded from disk) or not.
-        if (menuBar.canPoll()) {
+        if (menuBar.allowsPolling()) {
             FileInfo ofi = imp.getOriginalFileInfo();
             f = new File(ofi.directory + ofi.fileName);
             last = f.lastModified();
+
+            menuBar.setPollStatus(poll);
 
             setPoll(poll);  // If polling, starts timer to reload image form disk every period.
         }
     }
 
     public synchronized void setPoll(boolean poll) {
-        if (this.poll != poll) {    // If state changes.
-            this.poll = poll;
+        //    if (this.poll != poll) {    // If state changes.
+        this.poll = poll;
 
-            if (poll) {
-                startTimer();
-            } else {
-                if (timer != null) {
-                    timer.cancel();
-                    timer = null;
-                }
+        if (poll) {
+            startTimer();
+        } else {
+            if (timer != null) {
+                timer.cancel();
+                timer = null;
             }
         }
+        //   }
     }
 
     protected void revert() {
@@ -122,9 +124,10 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
             IJ.showStatus("Reloading " + imp.getTitle());
 
             try {
-                ImageConverter.revert(imp, path);
+                XmippImageConverter.revert(imp, path);
             } catch (Exception ex) {
-                ex.printStackTrace();
+                DEBUG.printException(ex);
+                IJ.error("Error reverting image: " + ex.getMessage());
             }
 
             last = f.lastModified();

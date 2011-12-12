@@ -8,7 +8,6 @@ import browser.DEBUG;
 import browser.imageitems.tableitems.AbstractGalleryImageItem;
 import browser.imageitems.tableitems.VolumeGalleryItem;
 import java.util.ArrayList;
-import xmipp.ImageDouble;
 import xmipp.ImageGeneric;
 import xmipp.MDLabel;
 import xmipp.MetaData;
@@ -31,15 +30,13 @@ public class VolumeTableModel extends AbstractXmippTableModel {
         String message = null;
 
         try {
-            ImageDouble image = new ImageDouble();
+            ImageGeneric image = new ImageGeneric(filename);
 
-            image.readHeader(filename);
+            int nslices = image.getZDim();
+            long nimages = image.getNDim();
 
-            int nslices = image.getZsize();
-            long nimages = image.getNsize();
-
-            for (int i = ImageDouble.FIRST_IMAGE; i <= nimages; i++) {
-                for (int j = ImageDouble.FIRST_SLICE; j <= nslices; j++) {
+            for (long i = ImageGeneric.FIRST_IMAGE; i <= nimages; i++) {
+                for (int j = ImageGeneric.FIRST_SLICE; j <= nslices; j++) {
                     data.add(new VolumeGalleryItem(filename, j, cache));
                 }
             }
@@ -65,8 +62,8 @@ public class VolumeTableModel extends AbstractXmippTableModel {
     @Override
     protected void getMinAndMax() {
         try {
-            ImageGeneric ig = new ImageGeneric();
-            ig.readData(filename);
+            ImageGeneric ig = new ImageGeneric(filename);
+            ig.read(ImageGeneric.FIRST_IMAGE);
             double stats[] = ig.getStatistics();
 
             min = stats[0];

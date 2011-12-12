@@ -5,7 +5,6 @@
 package metadata.renderers;
 
 import java.awt.Component;
-import java.awt.Font;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import metadata.images.TableFileItem;
@@ -14,16 +13,12 @@ import metadata.images.TableFileItem;
  *
  * @author Juanjo Vega
  */
-public class FileItemRenderer extends MetaDataRowDisablerRenderer {
+public class MetaDataFileItemRenderer extends MetaDataRowDisablerRenderer {
 
-    private Font font;
-
-    public FileItemRenderer() {
+    public MetaDataFileItemRenderer() {
         super();
 
         setHorizontalAlignment(JLabel.CENTER);
-
-        font = getFont();
     }
 
     @Override
@@ -35,20 +30,5 @@ public class FileItemRenderer extends MetaDataRowDisablerRenderer {
         setToolTipText(item.getPath());
 
         return super.getTableCellRendererComponent(table, str, isSelected, hasFocus, row, column);
-    }
-
-    private String getShortLabel(String label, int width) {
-        StringBuilder sb = new StringBuilder(label);
-        String sortLabel = sb.toString();
-
-        int w = getFontMetrics(font).stringWidth(sortLabel);
-
-        int i = 0;
-        while (w > width) {
-            sortLabel = "..." + sb.substring(i++);
-            w = getFontMetrics(font).stringWidth(sortLabel);
-        }
-
-        return sortLabel;
     }
 }

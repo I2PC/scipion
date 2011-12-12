@@ -2,57 +2,14 @@ package xmipp;
 
 public class Projection {
 
-    // pointer to Image class in C++ space. Needed by native library.
-    private long peer;
+    /*public static native void projectVolume(ImageGeneric volume, ImageGeneric projection,
+            double rot, double tilt, double psi) throws Exception;*/
 
-    // Initialize library.
-    static {
-        System.loadLibrary("XmippJavaInterface");
-        storeIds();
-    }
+    public static native void projectVolume(ImageGeneric volume, ImageGeneric projection,
+            double matrix[]) throws Exception;
 
-    // Catching some ids
-    private static native void storeIds();
+    public static native double entropyOtsuSegmentation(ImageGeneric volume, double percentile, boolean binarize) throws Exception;
 
-    // Functions to create objects.
-    protected native void create();
-
-    // Destructor.
-    protected synchronized native void destroy();
-
-    public native void reset(int h, int w) throws Exception;
-
-    public static native void projectVolume(ImageGeneric_ image, Projection projection,
-            double rot, double tilt, double pshi) throws Exception;
-
-    public static native double entropyOtsuSegmentation(ImageGeneric_ volume, double percentile, boolean binarize) throws Exception;
-    
-    // Writting.
-    public native void write(String filename) throws Exception;
-
-    // Data.
-    public native double[] getData();
-
-    public native double[] getData(long nimage, int slice);
-
-    public native int getXsize();
-
-    public native int getYsize();
-
-    public native int getZsize();
-
-    public native void printShape();
-
-    //non-native functions
-    //constructor
-    public Projection() {
-        create();
-    }
-
-    // Should be called by GarbageCollector before destroying
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        destroy();
-    }
+//    public static native double[] eulerDirection2Angles(double vector[]) throws Exception;
+    public static native double[] eulerMatrix2Angles(double matrix[]) throws Exception;
 }

@@ -5,6 +5,7 @@ import ij.ImageStack;
 import ij.io.FileInfo;
 import java.io.File;
 import xmipp.Filename;
+import xmipp.ImageGeneric;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -34,7 +35,7 @@ public class MetaDataWriter extends Writer {
             stackfilename += ".stk";
 
             ImageWriter iw = new ImageWriter();
-            iw.writeStack(imp, stackfilename);
+            iw.write(imp, stackfilename);
         }
 
         writeMetaData(imp, stackfilename, isMD, path);
@@ -47,10 +48,10 @@ public class MetaDataWriter extends Writer {
 
         // Saves each slice and adds its name to metadata to save it later.
         ImageStack stack = imp.getStack();
-        for (int i = 1; i <= stack.getSize(); i++) {
+        for (int i = ImageGeneric.FIRST_SLICE; i <= stack.getSize(); i++) {
             // If MD: getSlice label.
             // Otherwise, builds it.
-            String imageName = isMD ? imp.getStack().getSliceLabel(i) : i + Filename.SEPARATOR + stackFilename;
+            String imageName = isMD ? stack.getSliceLabel(i) : i + Filename.SEPARATOR + stackFilename;
 
             // Adds imagename to metadata.
             long id = md.addObject();

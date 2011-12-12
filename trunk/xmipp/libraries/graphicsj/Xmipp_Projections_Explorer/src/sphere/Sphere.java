@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
-import xmipp.ImageGeneric_;
+import xmipp.ImageGeneric;
 import xmipp.Projection;
 import xmipp.MDLabel;
 import xmipp.MetaData;
@@ -29,7 +29,7 @@ import xmipp.MetaData;
  */
 public class Sphere {
 
-    private final static int R = 50;   // Sphere radius.
+    //private final static int R = 50;   // Sphere radius.
     private final static int ROT = Geometry.MAX_ROT;   // [0 - 359] = 360 elements.
     private final static int TILT = Geometry.MAX_TILT + 1;   // [0 - 180] = 181 elements.
     private final static int CRUST_THICKNESS = 2;
@@ -85,17 +85,17 @@ public class Sphere {
             IJ.showStatus(LABELS.MESSAGE_LOADING_EULER_ANGLES_FILE);
             MetaData md = new MetaData(filename);
 
-            File file = new File(filename);
-            String baseDir = file.getParent() + File.separator;
+            //File file = new File(filename);
+            //String baseDir = file.getParent() + File.separator;
 
             long ids[] = md.findObjects();
 
             for (long id : ids) {
                 String imageFileName = md.getValueString(MDLabel.MDL_IMAGE, id, true);
 
-                if (!imageFileName.startsWith("/")) {   // Builds absolute path (if it's not absolute already)
-                    imageFileName = baseDir + imageFileName;
-                }
+                //if (!imageFileName.startsWith("/")) {   // Builds absolute path (if it's not absolute already)
+                //    imageFileName = baseDir + imageFileName;
+                //}
 
                 double rot = md.getValueDouble(MDLabel.MDL_ANGLEROT, id);
                 double tilt = md.getValueDouble(MDLabel.MDL_ANGLETILT, id);
@@ -267,17 +267,18 @@ public class Sphere {
         }
     }
 
-    public ImagePlus build() {
+    public ImagePlus build(ImageGeneric volume) throws Exception {
         int W, H, D;
-        W = H = D = 2 * R + 1;  // For each dimension: r - 0 - r = 2r + 1
+        int radius = Math.min(Math.min(volume.getXDim() / 2, volume.getYDim() / 2), volume.getZDim() / 2);
+        W = H = D = 2 * radius + 1;  // For each dimension: r - 0 - r = 2r + 1
 
         ImageProcessor ip = new ColorProcessor(W, H);
-        ImagePlus image = new ImagePlus("Sphere", ip);
+        ImagePlus sphere = new ImagePlus("Sphere", ip);
 
         // Room for output ~ [slice][image]
         int[][] stack = new int[D][W * H];
 
-        buildSphere(stack, W, H, D, R, CRUST_THICKNESS);
+        buildSphere(stack, W, H, D, radius, CRUST_THICKNESS);
 
         // Builds the stack.
         ImageStack outputStack = new ImageStack(W, H, D);
@@ -285,12 +286,12 @@ public class Sphere {
             outputStack.setPixels(stack[slice], slice + 1);
         }
 
-        image.setStack("Sphere", outputStack);
+        sphere.setStack("Sphere", outputStack);
 
-        return image;
+        return sphere;
     }
 
-    private void buildSphere(int stack[][], int W, int H, int D, int r, int thickness) {
+    private void buildSphere(int stack[][], int W, int H, int D, int r, int thickness) throws Exception {
         for (int z = -r; z < r; z++) {
             for (int x = -r; x < r; x++) {
                 for (int y = -r; y < r; y++) {
@@ -304,6 +305,7 @@ public class Sphere {
                         int color = 0;
 
                         if (distance > r - thickness) {    // At sphere crust.
+                            //double angles[] = Projection.eulerDirection2Angles(new double[]{point.x, point.y, point.z});
                             double angles[] = Geometry.getAngles(point);
                             angles = Geometry.absAngles(angles[0], angles[1]);
 
@@ -382,22 +384,18 @@ public class Sphere {
         }
     }
 
-    public Projection getProjection(ImageGeneric_ xmippVolume, double rot, double tilt) {
-        Projection projection = new Projection();
-        try {
-            projection.reset(xmippVolume.getYDim(), xmippVolume.getXDim());
+    public ImageGeneric getProjection(ImageGeneric xmippVolume, double matrix[]) throws Exception {
+        ImageGeneric projection = new ImageGeneric(ImageGeneric.Double);
+        projection.resize(xmippVolume.getYDim(), xmippVolume.getXDim());
 
-            IJ.showStatus(LABELS.MESSAGE_RETRIEVING_PROJECTION);
-            //Projection.projectVolume(xmippVolume, projection, rot, tilt, 0);
-        } catch (Exception ex) {
-            IJ.error("Error retrieving projection: " + ex.getMessage());
-            throw new RuntimeException(ex);
-        }
+        IJ.showStatus(LABELS.MESSAGE_RETRIEVING_PROJECTION);
+        Projection.projectVolume(xmippVolume, projection, matrix);
+        //        projection.convert2Datatype(ImageGeneric_.SChar);
 
         return projection;
     }
 
-    public String analyzeProjection(ImageGeneric_ xmippVolume, double rot, double tilt, int w, int h) {
+    public String analyzeProjection(ImageGeneric xmippVolume, double matrix[], int w, int h) {
         String path = tempDir.getAbsolutePath() + File.separator;
         String projectionFileName = path + "projection.xmp";
         String selFileName = path + "analize.sel";
@@ -406,12 +404,15 @@ public class Sphere {
         try {
             // * Gets projection.
             IJ.showStatus(LABELS.MESSAGE_RETRIEVING_PROJECTION);
-            Projection projection = getProjection(xmippVolume, rot, tilt);
+            ImageGeneric projection = getProjection(xmippVolume, matrix);
 
             // * Writes projection to disk.
             projection.write(projectionFileName);
 
             // * Gets file names related to ROT and TILT
+            // @TODO: getAngles...
+            double rot = 0;
+            double tilt = 0;
             ArrayList<String> files = getFiles(rot, tilt);
 
             // * Generate .sel file
@@ -419,9 +420,17 @@ public class Sphere {
 
             // * Calls xmipp_classify_...
             IJ.showStatus(LABELS.MESSAGE_ANALYZING_PROJECTION);
-            xmipp_classify_analyze_cluster(selFileName,
-                    projectionFileName,
-                    outputFile);
+
+            String args = "-i " + selFileName
+                    + " --ref " + projectionFileName
+                    + //"--produceAligned", alignedFile,
+                    " -o " + outputFile;
+
+            System.out.println(" *** command: " + XMIPP_CLASSIFY_ANALYZE_CLUSTER + " " + args);
+            //int result = Program.runByName(XMIPP_CLASSIFY_ANALYZE_CLUSTER, args);
+
+            //System.out.println(" *** result: " + result);
+            xmipp_classify_analyze_cluster(selFileName, projectionFileName, outputFile);
         } catch (Exception ex) {
             IJ.error("Error writing projection to temporary file: " + ex.getMessage());
             throw new RuntimeException(ex);
@@ -435,8 +444,7 @@ public class Sphere {
     //      -i xmipp_sel_file.sel
     //      --ref projection.xmp
     //      -o score.xmd
-    private static void xmipp_classify_analyze_cluster(String selfile,
-            String reffile, String outputFile) {
+    private static void xmipp_classify_analyze_cluster(String selfile, String reffile, String outputFile) throws Exception {
         String command[] = new String[]{
             XMIPP_CLASSIFY_ANALYZE_CLUSTER,
             "-i", selfile,
@@ -453,21 +461,16 @@ public class Sphere {
         runCommand(command);
     }
 
-    private static void runCommand(String command[]) {
-        try {
-            //xmipp_classify_analyze_cluster -i xmipp_sel_file.sel -ref projection.xmp -produceAligned -oext ali.xmp -odir /tmp/projectionexplorer
-            Process p = Runtime.getRuntime().exec(command);
+    private static void runCommand(String command[]) throws Exception {
+        //xmipp_classify_analyze_cluster -i xmipp_sel_file.sel -ref projection.xmp -produceAligned -oext ali.xmp -odir /tmp/projectionexplorer
+        Process p = Runtime.getRuntime().exec(command);
 
-            BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-            // read the output from the command
-            String s;
-            while ((s = stdInput.readLine()) != null) {
-                System.out.println(s);
-            }
-        } catch (IOException ex) {
-            IJ.error("Error running command: " + ex.getMessage());
-            throw new RuntimeException(ex);
+        // read the output from the command
+        String s;
+        while ((s = stdInput.readLine()) != null) {
+            System.out.println(s);
         }
     }
 }

@@ -5,10 +5,8 @@
 package metadata.models;
 
 import ij.IJ;
-import javax.swing.table.DefaultTableModel;
 import browser.Cache;
 import browser.DEBUG;
-import browser.imageitems.tableitems.AbstractGalleryImageItem;
 import browser.imageitems.tableitems.GalleryImageItem;
 import metadata.images.TableFileItem;
 import xmipp.Filename;
@@ -19,7 +17,7 @@ import xmipp.MetaData;
  *
  * @author Juanjo Vega
  */
-public class MetaDataTableModel extends DefaultTableModel {
+public class MetaDataTableModel extends XmippTableModelRowDisabler {
 
     private int ENABLED_COLUMN_INDEX;
     private int MD_LABELS[];
@@ -84,46 +82,6 @@ public class MetaDataTableModel extends DefaultTableModel {
         return (!block.isEmpty() ? block + Filename.SEPARATOR : "") + getFilename();
     }
 
-    public int getMaxRowHeight() {
-        return getRowHeigth(0);
-    }
-
-    public int getMaxColumnWidth() {
-        return getColumnWidth(0);
-    }
-
-    int getRowHeigth(int row) {
-        int height = 0;
-
-        for (int i = 0; i < getColumnCount(); i++) {
-            Object item = getValueAt(row, i);
-            if (item instanceof GalleryImageItem) {
-                int h = ((GalleryImageItem) item).getHeight();
-                if (h > height) {
-                    height = h;
-                }
-            }
-        }
-
-        return height;
-    }
-
-    int getColumnWidth(int column) {
-        int h = -1;
-
-        Object obj = getValueAt(0, column);
-        if (obj instanceof AbstractGalleryImageItem) {
-            h = ((AbstractGalleryImageItem) obj).getWidth();
-        }
-
-        return h;
-    }
-
-    public void reload() {
-//        System.out.println("path: " + getPath());
-        load(getPath());
-    }
-
     private void clear() {
         cache.clear();
 
@@ -151,6 +109,11 @@ public class MetaDataTableModel extends DefaultTableModel {
         } catch (Exception ex) {
             DEBUG.printException(ex);
         }
+    }
+
+    public void reload() {
+//        System.out.println("path: " + getPath());
+        load(getPath());
     }
 
     public void load(String filename) {

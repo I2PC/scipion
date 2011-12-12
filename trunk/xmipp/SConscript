@@ -629,20 +629,25 @@ if int(env['java']):
     # Copies jar file to ImageJ plugins folder (plugins below will look for it there).
     copyJar = env.InstallAs(target='external/imagej/plugins/XmippJavaInterface.jar',
               source='libraries/bindings/java/XmippJavaInterface.jar')
+    copyJar2 = env.InstallAs(target='external/imagej/plugins/XmippIJInterface.jar',
+              source='libraries/bindings/java/XmippIJInterface.jar')
+    env.Depends(copyJar, lib2)
+    env.Depends(copyJar2, copyJar)
     # ImageJ plugins.
     javaPlugins = []
-    javaPlugins.append(AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins'))
-    javaPlugins.append(AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins'))
+    io = javaPlugins.append(AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins'))
+    env.Depends(io, copyJar2)
+    browser = javaPlugins.append(AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins'))
+    env.Depends(browser, io)
     jbrowser = AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
     javaPlugins.append(jbrowser)
-    #javaPlugins.append(AddImageJPlugin('Xmipp_MetaData_Browser', 'libraries/graphicsj/Xmipp_MetaData_Browser', 'external/imagej/plugins'))
-    #env.Depends('Xmipp_MetaData_Browser', 'Xmipp_Browser')
     javaPlugins.append(AddImageJPlugin('Masks_ToolBar', 'libraries/graphicsj/Masks_ToolBar', 'external/imagej/plugins'))
-    #javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
-    javaPlugins.append(AddJavaApp('XmippPP_', 'libraries/graphicsj/Xmipp_Particle_Picker', 'external/Xmipp_Particle_Picker'))
+    javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
+    picker = javaPlugins.append(AddJavaApp('XmippPP_', 'libraries/graphicsj/Xmipp_Particle_Picker', 'external/Xmipp_Particle_Picker'))
+    env.Depends(picker, io)
     # Java apps
     #javaPlugins.append(AddJavaApp('Java3DInstaller', 'libraries/graphicsj/Java3DInstaller', 'external/Java3DInstaller'))
-    javaPlugins.append(AddJavaApp('Stitching', 'libraries/graphicsj/Stitching', 'external/Stitching'))
+    #javaPlugins.append(AddJavaApp('Stitching', 'libraries/graphicsj/Stitching', 'external/Stitching'))
 
     import sys
     sys.path.append("external/scons/ToolsFromWiki")

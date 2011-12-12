@@ -5,8 +5,7 @@ import ij.ImagePlus;
 import ij.io.FileInfo;
 import java.io.File;
 import xmipp.Filename;
-import xmipp.ImageDouble;
-import xmipp.io.ImageConverter;
+import xmippij.XmippImageConverter;
 
 /*
  * To change this template, choose Tools | Templates
@@ -21,17 +20,19 @@ public class ImageReader extends Reader {
     @Override
     public void read(String path) throws Exception {
         IJ.showStatus("Reading: " + path);
+        System.out.println("Reading: " + path);
 
-        ImageDouble image = new ImageDouble();
+/*        String fullpath = path;
         if (prefix != null && !prefix.trim().isEmpty()) {
             long n = Long.valueOf(prefix);
-            image.read(path, n);
-        } else {
-            image.read(path);
+            fullpath = n + Filename.SEPARATOR + path;
         }
 
-        ImagePlus imp = ImageConverter.convertToImagej(image, getTitle());
+        System.out.println(" *** fullpath: " + fullpath);
+*/
+        ImagePlus imp = XmippImageConverter.loadImage(path);
 
+        // @TODO Extract path, dir, etc.
         File f = new File(path);
         FileInfo fi = new FileInfo();
         fi.directory = f.getParent();

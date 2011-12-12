@@ -20,10 +20,10 @@ import browser.windows.ImagesWindowFactory;
 import browser.DEBUG;
 import browser.LABELS;
 import browser.SpringUtilities;
-import browser.imageitems.ImageConverter;
 import browser.gallery.models.AbstractXmippTableModel;
 import browser.gallery.models.VolumeTableModel;
 import ij.IJ;
+import ij.ImagePlus;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -56,8 +56,9 @@ import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import xmipp.Filename;
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
 import xmipp.MetaData;
+import xmippij.XmippImageConverter;
 
 /**
  *
@@ -470,11 +471,13 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
 
         try {
             MetaData md = new MetaData(filename);
-            ImageDouble image = new ImageDouble();
+            ImageGeneric image = new ImageGeneric();
 
             md.getPCAbasis(image);
 
-            ImagesWindowFactory.captureFrame(ImageConverter.convertToImageJ(image, "PCA: " + filename));
+            ImagePlus imp = XmippImageConverter.convertToImageJ(image);
+            imp.setTitle("PCA: " + filename);
+            ImagesWindowFactory.captureFrame(imp);
         } catch (Exception ex) {
             DEBUG.printException(ex);
         }

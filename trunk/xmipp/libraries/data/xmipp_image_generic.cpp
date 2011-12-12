@@ -287,6 +287,8 @@ void ImageGeneric::convert2Datatype(DataType _datatype)
     ImageBase * newImage;
     MultidimArrayGeneric * newMAG;
 
+
+
 #define CONVERTTYPE(type) Image<type> *imT = new Image<type>; \
         newImage = imT;\
         newMAG = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), _datatype);\
@@ -297,11 +299,12 @@ void ImageGeneric::convert2Datatype(DataType _datatype)
     SWITCHDATATYPE(_datatype, CONVERTTYPE)
 
 #undef CONVERTTYPE
-
     ArrayDim aDim;
-    getDimensions(aDim);
+    image->getDimensions(aDim);
+
     // aDimFile must be set in order to movePointer2Slice can be used
     newImage->setADimFile(aDim);
+
     clear();
     datatype = _datatype;
     image = newImage;

@@ -10,9 +10,9 @@ import xmipp.MetaData;
 import browser.Cache;
 import browser.DEBUG;
 import browser.LABELS;
-import browser.imageitems.ImageConverter;
 import ij.ImagePlus;
-import xmipp.ImageDouble;
+import xmipp.ImageGeneric;
+import xmippij.XmippImageConverter;
 
 /**
  *
@@ -27,10 +27,6 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
     protected String path;
     protected long nimage;
     protected boolean readGeo;
-//
-//    public GalleryImageItem(long id, MetaData md, Cache cache) {
-//        this(id, md, MDLabel.MDL_IMAGE, cache);
-//    }
 
     public GalleryImageItem(long id, MetaData md, int label, Cache cache) {
         super(cache);
@@ -55,10 +51,11 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
 
         if (readGeo) {
             try {
-                ImageDouble image = new ImageDouble();
-                image.readPreview(getAbsoluteFileName(), md, id, w, h);
+                ImageGeneric image = new ImageGeneric();
+                image.readApplyGeo(getAbsoluteFileName(), md, id, w, h);
 
-                imp = ImageConverter.convertToImageJ(image, (String) getLabelValue(MDLabel.MDL_IMAGE));
+                imp = XmippImageConverter.convertImageGenericToImageJ(image);
+                imp.setTitle(getOriginalValue());
             } catch (Exception ex) {
                 DEBUG.printException(ex);
             }
@@ -108,7 +105,7 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
 
     @Override
     public int getNSlice() {
-        return ImageDouble.FIRST_SLICE;
+        return ImageGeneric.FIRST_SLICE;
     }
 
     @Override
@@ -165,5 +162,10 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
 
     protected double getValueInt(int label) {
         return md.getValueInt(label, id);
+    }
+
+    @Override
+    public String toString() {
+        return originalValue;
     }
 }

@@ -24,9 +24,9 @@ import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import xmipp.ImageGeneric_;
+import xmipp.ImageGeneric;
 import xmipp.MetaData;
-import xmippij.XmippImageConverter_;
+import xmippij.XmippImageConverter;
 
 /**
  *
@@ -72,10 +72,10 @@ public class JFrameImagesTable extends javax.swing.JFrame {
 
                     try {
                         String filename = item.fileName;
-                        ImageGeneric_ image = new ImageGeneric_(filename);
-                        image.read(ImageGeneric_.FIRST_IMAGE);
+                        ImageGeneric image = new ImageGeneric(filename);
+                        image.read(ImageGeneric.FIRST_IMAGE);
 
-                        ImagePlus imp = XmippImageConverter_.convertToImageJ(image);
+                        ImagePlus imp = XmippImageConverter.convertToImageJ(image);
                         imp.setTitle(filename);
                         imp.show();
                     } catch (Exception ex) {

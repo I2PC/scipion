@@ -146,6 +146,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
     // *** Masks ***
     private Menu menuMasks = new Menu(LABELS.OPERATION_MENU_MASKS);
     private MenuItem itemMasksToolBar = new MenuItem(LABELS.OPERATION_MASKS_TOOLBAR);
+    boolean allowsPolling;
 
     public XmippMenuBar(Container parent, ImagePlus imp) {
         super(parent);
@@ -154,21 +155,28 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
         createMenuBar();
 
-        enableMenuItems(imp.getStackSize(), canPoll());
+        allowsPolling = isPollAllowed();
+
+        enableMenuItems(imp.getStackSize(), allowsPolling);
     }
 
-    public final boolean canPoll() {
+    private boolean isPollAllowed() {
         FileInfo ofi = imp.getOriginalFileInfo();
 
         if (ofi != null) {
             // Avoid empty filename.
             //if (!ofi.directory.trim().isEmpty() && !ofi.fileName.trim().isEmpty()) {
             File f = new File(ofi.directory + File.separator + ofi.fileName);
+            System.out.println("absPath: " + f.getAbsolutePath());
             return f.isFile() && f.exists();
             //}
         }
 
         return false;
+    }
+
+    public boolean allowsPolling() {
+        return allowsPolling;
     }
 
     private void enableMenuItems(int nslices, boolean canPoll) {
