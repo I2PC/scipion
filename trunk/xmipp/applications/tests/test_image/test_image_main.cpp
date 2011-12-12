@@ -168,14 +168,14 @@ TEST_F( ImageTest, writeRAWimage)
 
 TEST_F( ImageTest, readPreview)
 {
-    FileName auxFilename(baseName + "/../applications/tests/test_image/test2.spi");
+    FileName auxFilename(baseName + "/../applications/tests/test_image/smallVolume.vol");
     Image<double> img1, img2;
     img1.read(auxFilename);
 
     img1().setXmippOrigin();
-    selfScaleToSize(NEAREST, img1(),64,64);
+    selfScaleToSize(NEAREST, img1(),32,32,4);
 
-    img2.readPreview(auxFilename, 64,64);
+    img2.readPreview(auxFilename, 32,32, ALL_SLICES);
     img1().setXmippOrigin();
     img2().setXmippOrigin();
 
@@ -205,14 +205,20 @@ TEST_F( ImageTest, movePointerToSlice)
     FileName auxFilename(baseName + "/../applications/tests/test_image/smallVolume.vol");
     Image<double> img1, img2;
     img1.read(auxFilename);
+    img1().setXmippOrigin();
+    selfScaleToSize(NEAREST, img1(),32,32,4);
 
     ArrayDim aDim;
     img1().getDimensions(aDim);
+    img2.readPreview(auxFilename, 32,32, ALL_SLICES);
 
     for (int k = 1; k <= aDim.zdim; ++k)
     {
         img1.movePointerToSlice(k);
-        img2.readPreview(auxFilename, 64, 64, k);
+        img2.movePointerToSlice(k);
+
+       img1().setXmippOrigin();
+       img2().setXmippOrigin();
 
         EXPECT_TRUE(img1 == img2);
     }
