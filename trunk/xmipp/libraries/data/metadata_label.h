@@ -80,6 +80,7 @@ enum MDLabel
     MDL_COMMENT, ///< A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
     MDL_COST, ///< Cost for the image (double)
     MDL_COUNT, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
+    MDL_COUNT2, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
     MDL_CTFINPUTPARAMS, ///< Parameters file for the CTF Model (std::string)
     MDL_CTFMODEL, ///< Name for the CTF Model (std::string)
     MDL_CTFMODEL2, ///< Name for another CTF model (std::string)
@@ -577,6 +578,7 @@ private:
         MDL::addLabel(MDL_COMMENT, LABEL_STRING, "comment");
         MDL::addLabel(MDL_COST, LABEL_DOUBLE, "cost");
         MDL::addLabel(MDL_COUNT, LABEL_LONG, "count");
+        MDL::addLabel(MDL_COUNT2, LABEL_LONG, "count2");
         MDL::addLabel(MDL_CTFINPUTPARAMS, LABEL_STRING, "CTFInputParams", TAGLABEL_TEXTFILE);
         MDL::addLabel(MDL_CTFMODEL, LABEL_STRING, "CTFModel", TAGLABEL_CTFPARAM);
         MDL::addLabel(MDL_CTFMODEL2, LABEL_STRING, "CTFModel2", TAGLABEL_IMAGE);
