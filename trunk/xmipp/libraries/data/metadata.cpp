@@ -452,12 +452,26 @@ int MetaData::removeObjects()
 
 void MetaData::addIndex(MDLabel label)
 {
-    myMDSql->indexModify(label, true);
+    std::vector<MDLabel> labels(1);
+    labels[0]=label;
+    addIndex(labels);
+}
+void MetaData::addIndex(const std::vector<MDLabel> desiredLabels)
+{
+
+    myMDSql->indexModify(desiredLabels, true);
 }
 
 void MetaData::removeIndex(MDLabel label)
 {
-    myMDSql->indexModify(label, false);
+    std::vector<MDLabel> labels(1);
+    labels[0]=label;
+    removeIndex(labels);
+}
+
+void MetaData::removeIndex(const std::vector<MDLabel> desiredLabels)
+{
+    myMDSql->indexModify(desiredLabels, false);
 }
 
 

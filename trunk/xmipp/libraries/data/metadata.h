@@ -629,7 +629,9 @@ public:
      * in other labels, but insert are more expensive
      */
     void addIndex(MDLabel label);
+    void addIndex(const std::vector<MDLabel> desiredLabels);
     void removeIndex(MDLabel label);
+    void removeIndex(const std::vector<MDLabel> desiredLabels);
 
     /** @} */
 

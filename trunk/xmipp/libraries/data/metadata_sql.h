@@ -154,7 +154,7 @@ private:
     /** This function will be used to create o delete an index over a column.
      *Those indexes will improve searchs, but inserts will become expensives
      */
-    void indexModify(const MDLabel label, bool create=true);
+    void indexModify(const std::vector<MDLabel> columns, bool create=true);
 
     /** Some iteration methods
      */

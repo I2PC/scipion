@@ -442,17 +442,26 @@ size_t MDSql::aggregateSingleSizeT(const AggregateOperation operation,
     return (execSingleIntStmt(ss));
 }
 
-void MDSql::indexModify(const MDLabel column, bool create)
+void MDSql::indexModify(const std::vector<MDLabel> columns, bool create)
 {
-    std::stringstream ss;
+    std::stringstream ss,index_name,index_column;
+    std::string sep;
+    for (int i = 0; i < columns.size(); i++)
+    {
+        sep = "_";
+    	index_name << sep << MDL::label2SqlColumn(columns.at(i));
+        sep = ", ";
+        index_column << sep << MDL::label2SqlColumn(columns.at(i));
+    }
+
     if (create)
     {
-        ss << "CREATE INDEX IF NOT EXISTS " << MDL::label2Str(column) << "_INDEX "
-        << " ON " << tableName(tableId) << " (" << MDL::label2Str(column) << ")";
+        ss << "CREATE INDEX IF NOT EXISTS " << index_name << "_INDEX "
+        << " ON " << tableName(tableId) << " (" << index_column << ")";
     }
     else
     {
-        ss << "DROP INDEX IF EXISTS " << MDL::label2Str(column) << "_INDEX ";
+        ss << "DROP INDEX IF EXISTS " << index_name << "_INDEX ";
     }
     execSingleStmt(ss);
 }
