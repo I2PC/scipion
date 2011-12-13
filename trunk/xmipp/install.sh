@@ -267,7 +267,7 @@ if $DO_PYTHON; then
     export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
     export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
     export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
-    if [[ `uname` == CYGWIN* ]]
+    if [ `uname` = CYGWIN* ]
     then
         export CPPFLAGS="-I/usr/include -I/usr/include/ncurses $CPPFLAGS"
     fi
@@ -295,7 +295,7 @@ if $DO_PYTHON; then
     printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
     printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
     printf 'SYS=`uname`\n' >> $PYTHON_BIN
-    printf 'if [[ $SYS == CYGWIN* ]]\n' >> $PYTHON_BIN
+    printf 'if [ $SYS = CYGWIN* ]\n' >> $PYTHON_BIN
     printf 'then\n' >> $PYTHON_BIN
 	printf '    PYTHONCYGWINLIB=`find $EXT_PYTHON/$VPYTHON/build -name "lib.cygwin*" -type d`\n' >> $PYTHON_BIN
 	printf '    export LD_LIBRARY_PATH=$PYTHONCYGWINLIB:$LD_LIBRARY_PATH\n' >> $PYTHON_BIN
