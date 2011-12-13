@@ -86,7 +86,7 @@ void MpiProgAngularClassAverage::readParams()
         else if (limitRper < 0.)
         {
             limitRper *= -1.;
-            do_limitR0per = true;
+            do_limitRFper = true;
         }
     }
 
@@ -96,10 +96,10 @@ void MpiProgAngularClassAverage::readParams()
         REPORT_ERROR(ERR_VALUE_INCORRECT, "You can not use different kind of limits at the same time.");
 
     // Perform splitting of the data?
-    do_split = checkParameter(argc, argv, "--split");
+    do_split = checkParam("--split");
 
     // Perform Wiener filtering of average?
-    fn_wien = getParameter(argc, argv, "--wien", "");
+    fn_wien = getParam("--wien");
     pad = XMIPP_MAX(1.,getDoubleParam("--pad"));
 
     // Internal re-alignment of the class averages
@@ -111,6 +111,7 @@ void MpiProgAngularClassAverage::readParams()
     max_psi_change = getDoubleParam("--max_psi_change");
     do_mirrors = true;
 
+    do_save_images_assigned_to_classes = checkParam("--save_images_assigned_to_classes");
     mpi_job_size = getIntParam("--mpi_job_size");
 }
 
@@ -134,6 +135,9 @@ void MpiProgAngularClassAverage::defineParams()
         "   [--wien <img=\"\"> ]    : Apply this Wiener filter to the averages");
     addParamsLine(
         "   [--pad <factor=1.> ]    : Padding factor for Wiener correction");
+    addParamsLine(
+        "   [--save_images_assigned_to_classes]    : Save images assigned te each class in output metadatas");
+    addParamsLine("alias --siatc;");
     addParamsLine(
         "==+ IMAGE SELECTION BASED ON INPUT DOCFILE (select one between: limit 0, F and R ==");
     addParamsLine(
@@ -517,24 +521,24 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     }
 
     // Re-alignment of the class
-    if (nr_iter > 0)
-    {
-        SFclass = SFclass1;
-        SFclass.unionAll(SFclass2);
-        avg() = avg1() + avg2();
-        w = w1 + w2;
-        avg.setWeight(w);
-
-        // Reserve memory for output from class realignment
-        int reserve = DF.size();
-        std::cerr << "reserve: " <<reserve<<std::endl;
-        double my_output[AVG_OUPUT_SIZE * reserve + 1];
-
-        reAlignClass(avg1, avg2, SFclass1, SFclass2, exp_imgs, exp_split,
-                     exp_number, order_number, my_output);
-        w1 = avg1.weight();
-        w2 = avg2.weight();
-    }
+//    if (nr_iter > 0)
+//    {
+//        SFclass = SFclass1;
+//        SFclass.unionAll(SFclass2);
+//        avg() = avg1() + avg2();
+//        w = w1 + w2;
+//        avg.setWeight(w);
+//
+//        // Reserve memory for output from class realignment
+//        int reserve = DF.size();
+//        std::cerr << "reserve: " <<reserve<<std::endl;
+//        double my_output[AVG_OUPUT_SIZE * reserve + 1];
+//
+//        reAlignClass(avg1, avg2, SFclass1, SFclass2, exp_imgs, exp_split,
+//                     exp_number, order_number, my_output);
+//        w1 = avg1.weight();
+//        w2 = avg2.weight();
+//    }
 
     // Apply Wiener filters
     if (fn_wien != "")
@@ -847,9 +851,6 @@ void MpiProgAngularClassAverage::mpi_preprocess()
 
     filterInputMetadata();
 
-    DF.write("DFafterFilter.xmd");
-    exit(0);
-
     if (node->rank==0)
     {
         saveDiscardedImages();
@@ -908,7 +909,7 @@ void MpiProgAngularClassAverage::filterInputMetadata()
         else
             asc=true;
 
-        //std::cerr << "[filterInputMetadata] size: " << size << " | limit: " << limit << std::endl;
+        std::cerr << "[filterInputMetadata] size: " << size << " | limit: " << limit << std::endl;
         auxF1.sort(auxDF,codifyLabel,asc,limit,0);
     }
     //remove inages bellow (above) these limits
@@ -933,8 +934,6 @@ void MpiProgAngularClassAverage::filterInputMetadata()
             };
         std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+6);
         auxMdJobList.aggregateGroupBy(auxDF, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);
-        auxMdJobList.addLabel(MDL_COUNT2);
-        auxMdJobList.setValueCol(MDL_COUNT2, 0);
 
         // Output stack size (number of valid projection directions)
         MDObject mdValueOut1(MDL_ORDER);
@@ -953,6 +952,7 @@ void MpiProgAngularClassAverage::filterInputMetadata()
 
         int ref3d, defgroup;
         size_t order, jobCount, jobCount2;
+
         FOR_ALL_OBJECTS_IN_METADATA(auxMdJobList)
         {
             auxMdJobList.getValue(MDL_REF3D, ref3d, __iter.objId);
@@ -964,10 +964,9 @@ void MpiProgAngularClassAverage::filterInputMetadata()
             jobCount2 = ROUND(limitRclass * jobCount);
 
             if (jobCount2 == 0)
-            {
                 if(rnd_unif(0,1)<limitRclass)
                     jobCount2 = 1;
-            }
+
             dAkij(multiCounter, order, defgroup, ref3d) = jobCount2;
         }
 
@@ -1002,35 +1001,36 @@ void MpiProgAngularClassAverage::filterInputMetadata()
 void MpiProgAngularClassAverage::saveDiscardedImages()
 {
 
-    MetaData auxDF, DFdiscarded;
+    MetaData auxDF, auxDFsort;
     FileName fileNameXmd;
+    std::stringstream comment;
 
     auxDF.read((String)"ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]$@" + inFile);
 
-    MDMultiQuery multiD;
-    MDValueLT eq1D(MDL::str2Label(col_select), limit0);
-    MDValueGT eq2D(MDL::str2Label(col_select), limitF);
-
-    std::stringstream comment;
-
     comment << "Discarded images";
     if (do_limit0)
-    {
-        multiD.addOrQuery(eq1D);
         comment << ". Min value = " << limit0;
-    }
     if (do_limitF)
-    {
-        multiD.addOrQuery(eq2D);
         comment << ". Max value = " << limitF;
-    }
+    if (do_limitR0per)
+        comment << ". Drop " << limitRper*100 << "% of images with lower " << col_select;
+    if (do_limitRFper)
+        comment << ". Drop " << limitRper*100 << "% of images with higher " << col_select;
+    if (do_limitR0class)
+        comment << ". Drop " << limitRclass*100 << "% of images (per class) with lower " << col_select
+        << ". If the ROUND(num_images_per_class * limitRclass / 100) == 0 then images are randomly dropped"
+        << " so the percentage is satisfied";
+    if (do_limitRFclass)
+        comment << ". Drop " << limitRclass*100 << "% of images (per class) with higher " << col_select
+        << ". If the ROUND(num_images_per_class * limitRclass / 100) == 0 then images are randomly dropped"
+        << " so the percentage is satisfied";
 
-    DFdiscarded.importObjects(auxDF, multiD);
+    auxDF.subtraction(DF,MDL_IMAGE);
+    auxDF.setComment(comment.str());
+    formatStringFast(fileNameXmd, "discarded@%s_discarded.xmd", fn_out.c_str());
 
-    DFdiscarded.setComment(comment.str());
-
-    formatStringFast(fileNameXmd, "minmax@%s_discarded.xmd", fn_out.c_str());
-    DFdiscarded.write(fileNameXmd, MD_APPEND);
+    auxDFsort.sort(auxDF,MDL::str2Label(col_select));
+    auxDFsort.write(fileNameXmd);
 
 }
 
@@ -1110,12 +1110,15 @@ void MpiProgAngularClassAverage::mpi_postprocess()
     // Write class selfile to disc (even if its empty)
     std::cerr<< "mpi_postprocess01"<<std::endl;
 
-    FileName imageName, fileNameXmd;
+    FileName imageName, fileNameXmd, blockNameXmd;
     FileName imageNames1, fileNameXmds1, imageNames2, fileNameXmds2;
-    MetaData auxMd,auxMd2;
+    MetaData auxMd,auxMd2,auxMd3;
     size_t order_number;
     int ref3d;
     double weights1, weights2;
+
+    MDValueEQ eq1(MDL_REF3D, 0), eq2(MDL_ORDER, (size_t) 0);
+    MDMultiQuery multi;
 
     String
     comment =
@@ -1153,6 +1156,26 @@ void MpiProgAngularClassAverage::mpi_postprocess()
         }
         auxMd2.write(fileNameXmd);
 
+        if (do_save_images_assigned_to_classes)
+        {
+            for (size_t j= 1; j <= Ndim; j++)
+            {
+                eq1.setValue(i);
+                eq2.setValue(j);
+                multi.clear();
+
+                multi.addAndQuery(eq1);
+                multi.addAndQuery(eq2);
+
+                auxMd3.importObjects(DF, multi);
+
+                if(auxMd3.size() != 0)
+                {
+                    formatStringFast(blockNameXmd, "orderGroup%06lu_%s", j, fileNameXmd.c_str());
+                    auxMd3.write(blockNameXmd, MD_APPEND);
+                }
+            }
+        }
         auxMd2.addLabel(MDL_ENABLED);
         auxMd2.setValueCol(MDL_ENABLED, 1);
 

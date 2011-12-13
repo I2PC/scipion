@@ -111,8 +111,8 @@ public:
     double           pad;
     /** One empty image with correct dimensions */
     Image<double>    Iempty;
-    /** Do NOT skip writing of selfiles */
-    bool             write_selfiles;
+    /** Do write images assigned to each class */
+    bool             do_save_images_assigned_to_classes;
     /** Add output to existing files */
     bool             do_add;
     /** Wiener filter image */
