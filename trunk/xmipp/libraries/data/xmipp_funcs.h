@@ -542,8 +542,9 @@ void init_random_generator(int seed = -1);
  * This time the initialisation itself assures a random sequence different each
  * time the program is run. Be careful not to run the program twice within the
  * same second as the initialisation will be the same for both runs.
+ * Returns seed.
  */
-void randomize_random_generator();
+unsigned int randomize_random_generator();
 
 /** Produce a uniform random number between 0 and 1
  *

@@ -398,7 +398,7 @@ void  init_random_generator(int seed)
     }
 }
 
-void  randomize_random_generator()
+unsigned int  randomize_random_generator()
 {
     static  unsigned int seed;
     int rand_return;
@@ -412,6 +412,7 @@ void  randomize_random_generator()
             - (int)(rand_return % 10000));
     ran1(&idum);
     seed = (unsigned int)rand_return;
+    return seed;
 }
 
 double rnd_unif()
