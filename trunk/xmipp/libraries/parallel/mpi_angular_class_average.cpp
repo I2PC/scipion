@@ -161,12 +161,12 @@ void MpiProgAngularClassAverage::defineParams()
     addParamsLine(
         "   [--Ro <r0=-1>]            : Outer radius to limit rotational search");
     addParamsLine("                           : ro = -1 -> dim/2-1");
-    addParamsLine(
-        "   [--max_shift <ms=999.>]        : Maximum shift (larger shifts will be set to 0)");
-    addParamsLine(
-        "   [--max_shift_change <msc=999.>] : Discard images that change shift more in the last iteration ");
-    addParamsLine(
-        "   [--max_psi_change <mps=360.>]   : Discard images that change psi more in the last iteration ");
+//    addParamsLine(
+//        "   [--max_shift <ms=999.>]        : Maximum shift (larger shifts will be set to 0)");
+//    addParamsLine(
+//        "   [--max_shift_change <msc=999.>] : Discard images that change shift more in the last iteration ");
+//    addParamsLine(
+//        "   [--max_psi_change <mps=360.>]   : Discard images that change psi more in the last iteration ");
 
     addParamsLine("  [--mpi_job_size <size=10>]   : Number of images sent to a cpu in a single job ");
     addParamsLine("                                : 10 may be a good value");
@@ -521,24 +521,24 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     }
 
     // Re-alignment of the class
-//    if (nr_iter > 0)
-//    {
-//        SFclass = SFclass1;
-//        SFclass.unionAll(SFclass2);
-//        avg() = avg1() + avg2();
-//        w = w1 + w2;
-//        avg.setWeight(w);
-//
-//        // Reserve memory for output from class realignment
-//        int reserve = DF.size();
-//        std::cerr << "reserve: " <<reserve<<std::endl;
-//        double my_output[AVG_OUPUT_SIZE * reserve + 1];
-//
-//        reAlignClass(avg1, avg2, SFclass1, SFclass2, exp_imgs, exp_split,
-//                     exp_number, order_number, my_output);
-//        w1 = avg1.weight();
-//        w2 = avg2.weight();
-//    }
+    if (nr_iter > 0)
+    {
+        SFclass = SFclass1;
+        SFclass.unionAll(SFclass2);
+        avg() = avg1() + avg2();
+        w = w1 + w2;
+        avg.setWeight(w);
+
+        // Reserve memory for output from class realignment
+        int reserve = DF.size();
+        std::cerr << "reserve: " <<reserve<<std::endl;
+        double my_output[AVG_OUPUT_SIZE * reserve + 1];
+
+        reAlignClass(avg1, avg2, SFclass1, SFclass2, exp_imgs, exp_split,
+                     exp_number, order_number, my_output);
+        w1 = avg1.weight();
+        w2 = avg2.weight();
+    }
 
     // Apply Wiener filters
     if (fn_wien != "")
