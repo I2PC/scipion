@@ -60,35 +60,40 @@ void MpiProgAngularClassAverage::readParams()
 
     inFile = getParam("-i");
 
-    if (checkParam("--limitRClass"))
+    if (checkParam("--limitRclass"))
     {
-    	limitRclass = getDoubleParam("--limitRClass");
-        if (limitRclass < -100. || limitRclass > 100.)
+        limitRclass = getDoubleParam("--limitRclass")/100.;
+        if (limitRclass < -1. || limitRclass > 1.)
             REPORT_ERROR(ERR_VALUE_INCORRECT,
                          "limitRclass should be a percentage: provide values between -100 and 100.");
         if (limitRclass > 0.)
             do_limitR0class = true;
         else if (limitRclass < 0.)
         {
-        	limitRclass *= -1.;
+            limitRclass *= -1.;
             do_limitRFclass = true;
         }
     }
 
-    if (checkParam("--limitRabs"))
+    if (checkParam("--limitRper"))
     {
-    	limitRabs = getDoubleParam("--limitRabs");
-        if (limitRabs < -100. || limitRabs > 100.)
+        limitRper = getDoubleParam("--limitRper");
+        if (limitRper < -100. || limitRper > 100.)
             REPORT_ERROR(ERR_VALUE_INCORRECT,
-                         "limitRabs should be a percentage: provide values between -100 and 100.");
-        if (limitRabs > 0.)
-            do_limitR0abs = true;
-        else if (limitRabs < 0.)
+                         "limitRper should be a percentage: provide values between -100 and 100.");
+        if (limitRper > 0.)
+            do_limitR0per = true;
+        else if (limitRper < 0.)
         {
-        	limitRabs *= -1.;
-            do_limitRFabs = true;
+            limitRper *= -1.;
+            do_limitR0per = true;
         }
     }
+
+    if ((do_limitR0per && (do_limitR0class ||  do_limitRFclass)) ||
+        (do_limitR0per && (do_limit0 || do_limitF )) ||
+        ((do_limitR0class ||  do_limitRFclass) && (do_limit0 || do_limitF )))
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "You can not use different kind of limits at the same time.");
 
     // Perform splitting of the data?
     do_split = checkParameter(argc, argv, "--split");
@@ -136,13 +141,13 @@ void MpiProgAngularClassAverage::defineParams()
     addParamsLine("   [--limit0 <l0>]         : Discard images below <l0>");
     addParamsLine("   [--limitF <lF>]         : Discard images above <lF>");
     addParamsLine(
-        "   [--limitRClass <lRc>]         : if (lRc>0 && lRc< 100): discard lowest  <lRc> % in each class");
+        "   [--limitRclass <lRc>]         : if (lRc>0 && lRc< 100): discard lowest  <lRc> % in each class");
     addParamsLine(
         "                           : if (lRc<0 && lR>-100): discard highest <lRc> % in each class");
     addParamsLine(
-        "   [--limitRAbsolute <lRa>]         : if (lRa>0 && lRa< 100): discard lowest  <lRa> %");
+        "   [--limitRper <lRp>]         : if (lRp>0 && lRp< 100): discard lowest  <lRa> %");
     addParamsLine(
-        "                           : if (lRa<0 && lRa>-100): discard highest <lRa> %");
+        "                           : if (lRp<0 && lRp>-100): discard highest <lRa> %");
 
     addParamsLine("==+ REALIGNMENT OF CLASSES ==");
     addParamsLine(
@@ -786,53 +791,65 @@ void MpiProgAngularClassAverage::mpi_produceSideInfo()
     if (Ro < 0)
         Ro = (Xdim / 2) - 1;
 
-    // Set limitR
-    if (do_limitR0abs || do_limitRFabs)
-    {
-        MetaData tmpMT;
-        MDLabel codifyLabel = MDL::str2Label(col_select);
-        tmpMT.sort(DF,codifyLabel);
-        int size = tmpMT.size();
-        ROUND((limitRabs/100.) * size);
+    //    // Set limitR
+    //    if (do_limitR0abs || do_limitRFabs)
+    //    {
+    //        MetaData tmpMT;
+    //        MDLabel codifyLabel = MDL::str2Label(col_select);
+    //        tmpMT.sort(DF,codifyLabel);
+    //        int size = tmpMT.size();
+    //        ROUND((limitRabs/100.) * size);
 
-//
-//        FOR_ALL_OBJECTS_IN_METADATA(tmpMT)
-//        {
-//            double auxval;
-//            DF.getValue(codifyLabel, auxval, __iter.objId);
-//            vals.push_back(auxval);
-//        }
-//        int nn = vals.size();
-//        std::sort(vals.begin(), vals.end());
-//        if (do_limitR0)
-//        {
-//            double val = vals[ROUND((limitR/100.) * vals.size())];
-//            if (do_limit0)
-//                limit0 = XMIPP_MAX(limit0, val);
-//            else
-//            {
-//                limit0 = val;
-//                do_limit0 = true;
-//            }
-//        }
-//        else if (do_limitRF)
-//        {
-//            double val = vals[ROUND(((100. - limitR)/100.) * vals.size())];
-//            if (do_limitF)
-//                limitF = XMIPP_MIN(limitF, val);
-//            else
-//            {
-//                limitF = val;
-//                do_limitF = true;
-//            }
-//        }
-    }
+    //
+    //        FOR_ALL_OBJECTS_IN_METADATA(tmpMT)
+    //        {
+    //            double auxval;
+    //            DF.getValue(codifyLabel, auxval, __iter.objId);
+    //            vals.push_back(auxval);
+    //        }
+    //        int nn = vals.size();
+    //        std::sort(vals.begin(), vals.end());
+    //        if (do_limitR0)
+    //        {
+    //            double val = vals[ROUND((limitR/100.) * vals.size())];
+    //            if (do_limit0)
+    //                limit0 = XMIPP_MAX(limit0, val);
+    //            else
+    //            {
+    //                limit0 = val;
+    //                do_limit0 = true;
+    //            }
+    //        }
+    //        else if (do_limitRF)
+    //        {
+    //            double val = vals[ROUND(((100. - limitR)/100.) * vals.size())];
+    //            if (do_limitF)
+    //                limitF = XMIPP_MIN(limitF, val);
+    //            else
+    //            {
+    //                limitF = val;
+    //                do_limitF = true;
+    //            }
+    //        }
+    //    }
     //}
 }
 void MpiProgAngularClassAverage::mpi_preprocess()
 {
     initFileNames();
+
+    if (node->rank==0)
+    {
+        master_seed = randomize_random_generator();
+    }
+    MPI_Bcast(&master_seed,1,MPI_UNSIGNED ,0,MPI_COMM_WORLD);
+    init_random_generator(master_seed);
+
     filterInputMetadata();
+
+    DF.write("DFafterFilter.xmd");
+    exit(0);
+
     if (node->rank==0)
     {
         saveDiscardedImages();
@@ -870,7 +887,7 @@ void MpiProgAngularClassAverage::initFileNames()
 
 void MpiProgAngularClassAverage::filterInputMetadata()
 {
-    MetaData auxDF;
+    MetaData auxDF,auxF1;
 
     auxDF.read((String)"ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]$@" + inFile);
 
@@ -878,12 +895,108 @@ void MpiProgAngularClassAverage::filterInputMetadata()
     MDValueGE eq1(MDL::str2Label(col_select), limit0);
     MDValueLE eq2(MDL::str2Label(col_select), limitF);
 
-    if (do_limit0)
-        multi.addAndQuery(eq1);
-    if (do_limitF)
-        multi.addAndQuery(eq2);
+    // remove percent of images
+    if (do_limitR0per || do_limitRFper)
+    {
+        bool asc;
+        MDLabel codifyLabel = MDL::str2Label(col_select);
+        int size = auxDF.size();
+        int limit = size - ROUND((limitRper/100.) * size);
 
-    DF.importObjects(auxDF, multi);
+        if (do_limitR0per)
+            asc=false;
+        else
+            asc=true;
+
+        //std::cerr << "[filterInputMetadata] size: " << size << " | limit: " << limit << std::endl;
+        auxF1.sort(auxDF,codifyLabel,asc,limit,0);
+    }
+    //remove inages bellow (above) these limits
+    else if(do_limit0 || do_limitF)
+    {
+        if (do_limit0)
+            multi.addAndQuery(eq1);
+        if (do_limitF)
+            multi.addAndQuery(eq2);
+        auxF1.importObjects(auxDF, multi);
+    }
+    // remove percentage of images from each class
+    else if (do_limitR0class || do_limitRFclass)
+    {
+        //Delete a percentage of images in each class
+        MetaData auxMdJobList;
+
+        //!a take 1: using a copy of mdJobList
+        const MDLabel myGroupByLabels[] =
+            {
+                MDL_REF3D, MDL_DEFGROUP, MDL_ORDER, MDL_REF, MDL_ANGLEROT, MDL_ANGLETILT
+            };
+        std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+6);
+        auxMdJobList.aggregateGroupBy(auxDF, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);
+        auxMdJobList.addLabel(MDL_COUNT2);
+        auxMdJobList.setValueCol(MDL_COUNT2, 0);
+
+        // Output stack size (number of valid projection directions)
+        MDObject mdValueOut1(MDL_ORDER);
+        auxMdJobList.aggregateSingleSizeT(mdValueOut1, AGGR_MAX ,MDL_ORDER);
+        mdValueOut1.getValue(Ndim);
+
+        MDObject mdValueOut2(MDL_DEFGROUP);
+        auxMdJobList.aggregateSingleInt(mdValueOut2, AGGR_MAX ,MDL_DEFGROUP);
+        mdValueOut2.getValue(ctfNum);
+
+        MDObject mdValueOut3(MDL_REF3D);
+        auxMdJobList.aggregateSingleInt(mdValueOut3, AGGR_MAX ,MDL_REF3D);
+        mdValueOut3.getValue(ref3dNum);
+        MultidimArray <int> multiCounter(Ndim+1, ctfNum+1, ref3dNum+1);
+        multiCounter.initZeros();
+
+        int ref3d, defgroup;
+        size_t order, jobCount, jobCount2;
+        FOR_ALL_OBJECTS_IN_METADATA(auxMdJobList)
+        {
+            auxMdJobList.getValue(MDL_REF3D, ref3d, __iter.objId);
+            auxMdJobList.getValue(MDL_DEFGROUP, defgroup, __iter.objId);
+            auxMdJobList.getValue(MDL_ORDER, order, __iter.objId);
+
+            auxMdJobList.getValue(MDL_COUNT,jobCount, __iter.objId);
+
+            jobCount2 = ROUND(limitRclass * jobCount);
+
+            if (jobCount2 == 0)
+            {
+                if(rnd_unif(0,1)<limitRclass)
+                    jobCount2 = 1;
+            }
+            dAkij(multiCounter, order, defgroup, ref3d) = jobCount2;
+        }
+
+        // sort
+        if(do_limitR0class)
+            auxF1.sort(auxDF, MDL::str2Label(col_select), true);
+        else
+            auxF1.sort(auxDF, MDL::str2Label(col_select), false);
+
+        auxF1.removeDisabled();
+        auxF1.addLabel(MDL_ENABLED);
+        auxF1.setValueCol(MDL_ENABLED, 1);
+
+        FOR_ALL_OBJECTS_IN_METADATA(auxF1)
+        {
+            auxF1.getValue(MDL_REF3D, ref3d, __iter.objId);
+            auxF1.getValue(MDL_DEFGROUP, defgroup, __iter.objId);
+            auxF1.getValue(MDL_ORDER, order, __iter.objId);
+
+            if (dAkij(multiCounter, order, defgroup, ref3d) > 0)
+            {
+                auxF1.setValue(MDL_ENABLED,-1,__iter.objId);
+                dAkij(multiCounter, order, defgroup, ref3d)--;
+            }
+        }
+        auxF1.removeDisabled();
+    }
+    DF.sort(auxF1,MDL_IMAGE);
+
 }
 
 void MpiProgAngularClassAverage::saveDiscardedImages()

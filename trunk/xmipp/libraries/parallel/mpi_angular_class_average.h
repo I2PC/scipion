@@ -83,6 +83,9 @@ public:
     // Mpi node
     MpiNode *node;
 
+    // Seed
+    unsigned int master_seed;
+
     // Metadata with the list of jobs
     MetaData mdJobList;
 
@@ -95,9 +98,9 @@ public:
     /** Column numbers */
     std::string      col_select;
     /** Upper and lower absolute and relative selection limits */
-    double           limit0, limitF, limitRclass, limitRabs;
+    double           limit0, limitF, limitRclass, limitRper;
     /** Flags wether to use limit0, limitF and limitR selection */
-    bool             do_limit0, do_limitF, do_limitR0class, do_limitRFclass, do_limitR0abs, do_limitRFabs;
+    bool             do_limit0, do_limitF, do_limitR0class, do_limitRFclass, do_limitR0per, do_limitRFper;
     /** Flag whether to apply mirror operations. By default set to True */
     bool             do_mirrors;
     /** Flag whether also to write out class averages of random halves of the data */
