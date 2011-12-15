@@ -106,9 +106,6 @@ void MpiProgAngularClassAverage::readParams()
     Ri = getIntParam("--Ri");
     Ro = getIntParam("--Ro");
     nr_iter = getIntParam("--iter");
-    max_shift = getDoubleParam("--max_shift");
-    max_shift_change = getDoubleParam("--max_shift_change");
-    max_psi_change = getDoubleParam("--max_psi_change");
     do_mirrors = true;
 
     do_save_images_assigned_to_classes = checkParam("--save_images_assigned_to_classes");
@@ -161,13 +158,6 @@ void MpiProgAngularClassAverage::defineParams()
     addParamsLine(
         "   [--Ro <r0=-1>]            : Outer radius to limit rotational search");
     addParamsLine("                           : ro = -1 -> dim/2-1");
-//    addParamsLine(
-//        "   [--max_shift <ms=999.>]        : Maximum shift (larger shifts will be set to 0)");
-//    addParamsLine(
-//        "   [--max_shift_change <msc=999.>] : Discard images that change shift more in the last iteration ");
-//    addParamsLine(
-//        "   [--max_psi_change <mps=360.>]   : Discard images that change psi more in the last iteration ");
-
     addParamsLine("  [--mpi_job_size <size=10>]   : Number of images sent to a cpu in a single job ");
     addParamsLine("                                : 10 may be a good value");
 
@@ -1330,21 +1320,6 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
                 }
             }
 
-            // Check max_psi_change in last iteration
-            if (iter == nr_iter - 1)
-            {
-                diff_psi
-                = ABS(realWRAP(imgs[imgno].psi() - opt_psi, -180., 180.));
-                if (diff_psi > max_psi_change)
-                {
-                    do_discard = true;
-#ifdef DEBUG
-                    //std::cerr<<"discard psi: "<<diff_psi<<opt_psi<<" "<<opt_flip<<" "<<imgs[imgno].psi()<<std::endl;
-#endif
-
-                }
-            }
-
             // Translationally align
             if (!do_discard)
             {
@@ -1361,46 +1336,6 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
                 }
                 else
                     rotate(BSPLINE3, Mimg, imgs[imgno](), opt_psi, DONT_WRAP);
-
-                if (max_shift > 0)
-                {
-                    bestShift(Mref, Mimg, opt_xoff, opt_yoff);
-                    if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift
-                        * max_shift)
-                    {
-                        new_xoff = new_yoff = 0.;
-                    }
-                    else
-                    {
-                        selfTranslate(BSPLINE3, Mimg,
-                                      vectorR2(opt_xoff, opt_yoff), true);
-                        new_xoff = opt_xoff * COSD(opt_psi) + opt_yoff
-                                   *SIND(opt_psi);
-                        new_yoff = -opt_xoff * SIND(opt_psi) + opt_yoff
-                                   *COSD(opt_psi);
-                    }
-
-                    // Check max_shift_change in last iteration
-                    if (iter == nr_iter - 1)
-                    {
-                        opt_yoff = imgs[imgno].Yoff();
-                        opt_xoff = imgs[imgno].Xoff();
-                        if (imgs[imgno].flip() == 1.)
-                            opt_xoff *= -1.;
-                        diff_shift = (new_xoff - opt_xoff) * (new_xoff
-                                                              - opt_xoff) + (new_yoff - opt_yoff) * (new_yoff
-                                                                                                     - opt_yoff);
-                        if (diff_shift > max_shift_change * max_shift_change)
-                        {
-                            do_discard = true;
-#ifdef DEBUG
-
-                            std::cerr <<"discard shift: "<<diff_shift<<" "<<new_xoff<<" "<<opt_xoff<<" "<<imgs[imgno].Xoff()<<" "<<new_yoff<<" "<<opt_yoff<<" "<<imgs[imgno].Yoff()<<std::endl;
-#endif
-
-                        }
-                    }
-                }
             }
 
             if (!do_discard)
@@ -1412,7 +1347,6 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
                 if (opt_flip == 1.)
                     imgs[imgno].setShifts(-new_xoff, new_yoff);
 
-                // Check max_shift_change in last iteration
                 // Add to averages
                 if (splits[imgno] == 0)
                 {
