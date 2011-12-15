@@ -213,6 +213,7 @@ class ProtProjMatch(XmippProtocol):
         self.Align2dMaxChangeRot = [-1] + getListFromVector(self.Align2dMaxChangeRot, self.NumberOfIterations)
         self.AngSamplingRateDeg = [-1] + getListFromVector(self.AngSamplingRateDeg, self.NumberOfIterations)
         self.DiscardPercentage = [-1] + getListFromVector(self.DiscardPercentage, self.NumberOfIterations)
+        self.DiscardPercentagePerClass = [-1] + getListFromVector(self.DiscardPercentagePerClass, self.NumberOfIterations)
         self.DoAlign2D = [False] + getBoolListFromVector(self.DoAlign2D, self.NumberOfIterations)
         self.DoComputeResolution = [False] + getBoolListFromVector(self.DoComputeResolution, self.NumberOfIterations)
         self.DoSplitReferenceImages = [False] + getBoolListFromVector(self.DoSplitReferenceImages, self.NumberOfIterations)
@@ -410,7 +411,9 @@ class ProtProjMatch(XmippProtocol):
                              , Align2dMaxChangeRot=self.Align2dMaxChangeRot[iterN]#
                              , CtfGroupDirectory=self.CtfGroupDirectory#
                              , CtfGroupRootName=self.CtfGroupRootName#
+                             , DiscardImages=self.DiscardImages#
                              , DiscardPercentage=self.DiscardPercentage[iterN]#
+                             , DiscardPercentagePerClass=self.DiscardPercentagePerClass[iterN]#
                              , DoAlign2D=self.DoAlign2D[iterN]#
                              , DoComputeResolution=self.DoComputeResolution[iterN]
                              , DoCtfCorrection=self.DoCtfCorrection#

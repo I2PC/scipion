@@ -315,15 +315,24 @@ SymmetryGroupNeighbourhood =''
 """
 OnlyWinner ='0'
 
+# {list}(none, mcc, dper, class) Discard images?
+""" Choose between none, mcc, dper or class. 
+    none : No images will be discarded.
+    mcc  : Minimum Cross Correlation, discard images with cff below/over a fixed value.
+    dper : Discard percentage of images with less/greater ccf.
+    class: Discard percentage of images in each projection direction with less/greater ccf.
+    Value of each option is set below.
+"""
+DiscardImages ='none'
+
 # Discard images with ccf below
 """ Provide a sequence of numbers (for instance, "0.3 0.3 0.5 0.5" specifies 4 iterations,
     the first two set the value to 0.3, then two with 0.5.
     An alternative compact notation would be ("2x0.3 2x0.5").
     <Note:> if there are less values than iterations the last value is reused
     <Note:> if there are more values than iterations the extra value are ignored
-    Set to -1 to prevent discarding any images
 """
-MinimumCrossCorrelation ='-1'
+MinimumCrossCorrelation ='0.1'
 
 # Discard percentage of images with ccf below
 """ Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
@@ -334,6 +343,17 @@ MinimumCrossCorrelation ='-1'
     Set to zero to prevent discarding any images
 """
 DiscardPercentage ='10'
+
+# Discard percentage of images in each projection direction with ccf below
+""" Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
+    the first two set the value to 20%, then two with 10%
+    An alternative compact notation would be ("2x20 2x10").
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
+    Set to zero to prevent discarding any images
+"""
+DiscardPercentagePerClass ='10'
+
 
 # Perform scale search?
 """ If true perform scale refinement

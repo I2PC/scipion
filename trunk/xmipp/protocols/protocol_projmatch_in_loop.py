@@ -291,7 +291,9 @@ def angular_class_average(_log
                          , Align2dMaxChangeRot
                          , CtfGroupDirectory
                          , CtfGroupRootName
+                         , DiscardImages
                          , DiscardPercentage
+                         , DiscardPercentagePerClass
                          , DoAlign2D
                          , DoComputeResolution
                          , DoCtfCorrection
@@ -314,17 +316,26 @@ def angular_class_average(_log
     MD = MetaData()
     MD.read(DocFileInputAngles)
     if MD.size()==0:
-        print "Empty metadata, remember to copy the reference ",NumberOfCtfGroups,Ref3dNum
+        print "Empty metadata, remember to copy the reference ", NumberOfCtfGroups, Ref3dNum
         return
 
     parameters =  ' -i '       + DocFileInputAngles +\
                   ' --lib '    + refname.replace(".stk",".doc") + \
-                  ' --write_selfiles ' + \
-                  ' --limit0 ' + MinimumCrossCorrelation + \
-                  ' --limitR ' + DiscardPercentage + \
-                  ' -o '        + OutClasses
+                  ' -o '       + OutClasses + \
+                  ' --siatc'  
                   
-        # On-the fly apply Wiener-filter correction and add all CTF groups together
+    if(DiscardImages == 'mcc'):
+        if(MinimumCrossCorrelation > 0):
+            parameters += ' --limit0 ' + MinimumCrossCorrelation
+        else:
+            parameters += ' --limitF ' + MinimumCrossCorrelation
+    elif(DiscardImages == 'dper'):
+        parameters += ' --limitRper ' + DiscardPercentage
+    elif(DiscardImages == 'class'):
+        parameters += ' --limitRclass ' + DiscardPercentagePerClass
+    #else 'none'
+        
+    # On-the fly apply Wiener-filter correction and add all CTF groups together
     if (DoCtfCorrection):
         parameters += \
                    ' --wien '   + CtfGroupName + '_wien.stk' + \
@@ -334,10 +345,7 @@ def angular_class_average(_log
         parameters += \
                   ' --iter '             + Align2DIterNr  + \
                   ' --Ri '               + str(InnerRadius)           + \
-                  ' --Ro '               + str(OuterRadius)           + \
-                  ' --max_shift '        + MaxChangeOffset + \
-                  ' --max_shift_change ' + Align2dMaxChangeOffset + \
-                  ' --max_psi_change '   + Align2dMaxChangeRot 
+                  ' --Ro '               + str(OuterRadius)
                   
     if (DoComputeResolution and DoSplitReferenceImages):
         parameters += ' --split '
@@ -381,13 +389,12 @@ def reconstruction(_log
                     ' --doc '  + ForReconstructionDoc + \
                     ' -o '    + OutputVolume + \
                     ' --sym '  + SymmetryGroup + \
-                    ' --weight -use_each_image '
+                    ' --weight --use_each_image '
         parameters = parameters + WBPReconstructionExtraCommand
-        #MyNumberOfThreads = 1
                   
     elif ReconstructionMethod=='art':
         program = 'xmipp_reconstruct_art'
-        #DoParallel=False
+
         parameters=' -i '    + ForReconstructionSel + \
                    ' -o '    + OutputVolume + ' ' + \
                    ' --sym '  + SymmetryGroup + \
@@ -397,8 +404,6 @@ def reconstruction(_log
            parameters = parameters + ' -l '   + _ARTLambda + ' '
         parameters = parameters + _ARTReconstructionExtraCommand
     elif ReconstructionMethod=='fourier':
-        #if ( _MyNumberOfMpiProcesses ==1):
-            #DoParallel=False
         program = 'xmipp_reconstruct_fourier'
         parameters=' -i '    + ForReconstructionSel + \
                    ' -o '    + OutputVolume + '.vol ' + \
@@ -411,19 +416,6 @@ def reconstruction(_log
  
         if (DoParallel):
             parameters = parameters + ' --mpi_job_size ' + str(MpiJobSize)
-
-        #if (_DoComputeResolution and not _DoSplitReferenceImages):
-            #myFileName =  ProjMatchDir + '/' + ProjMatchName
-            #parameters = parameters + ' -prepare_fsc ' + myFileName + ' '
-            #rand_command  = ' xmipp_selfile_split -i '
-            #rand_command += ForReconstructionSel + ' -dont_sort -n 1 ' 
-            #os.system(rand_command)
-            #_mylog.info(rand_command)
-            #parameters = parameters + FourierReconstructionExtraCommand
-        #else:
-            #_mylog.error("Reconstruction method unknown. Quiting")
-            #print "Reconstruction method unknown. Quiting"
-            #exit(1)
             
     runJob(_log
            , program
