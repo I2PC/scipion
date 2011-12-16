@@ -346,7 +346,8 @@ void ProgVolumeSegment::segment(Image<double> &mask)
     if (otsu)
     {
         mask()=V();
-        EntropyOtsuSegmentation(mask());
+        double th=EntropyOtsuSegmentation(mask());
+        std::cout << "Threshold " << th << std::endl;
         ok=true;
     }
 
