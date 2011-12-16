@@ -574,7 +574,7 @@ void MpiProgAngularClassAverage::mpi_write(
 {
     FileName fileNameXmd, fileNameStk;
 
-    formatStringFast(fileNameStk, "%s_refGroup%06lu.stk", fn_out.c_str(), ref3dIndex);
+    formatStringFast(fileNameStk, "%s_Ref3D_%03lu.stk", fn_out.c_str(), ref3dIndex);
     mpi_writeFile(avg, dirno, fileNameStk, old_w);
     std::cerr<<"["<<node->rank<<"]: "<< "mpi_write_02"<<std::endl;
 
@@ -582,12 +582,12 @@ void MpiProgAngularClassAverage::mpi_write(
     {
         if (w1 > 0)
         {
-            formatStringFast(fileNameStk, "%s_refGroup%06lu.stk", fn_out1.c_str(), ref3dIndex);
+            formatStringFast(fileNameStk, "%s_Ref3D_%03lu.stk", fn_out1.c_str(), ref3dIndex);
             mpi_writeFile(avg1, dirno, fileNameStk, old_w1);
         }
         if (w2 > 0)
         {
-            formatStringFast(fileNameStk, "%s_refGroup%06lu.stk",
+            formatStringFast(fileNameStk, "%s_Ref3D_%03lu.stk",
                              fn_out2.c_str(), ref3dIndex);
             mpi_writeFile(avg2, dirno, fileNameStk, old_w2);
         }
@@ -843,10 +843,15 @@ void MpiProgAngularClassAverage::mpi_preprocess()
 
     if (node->rank==0)
     {
+    	std::cerr << "1" <<std::endl;
         saveDiscardedImages();
+    	std::cerr << "2" <<std::endl;
         createJobList();
+    	std::cerr << "3" <<std::endl;
         initDimentions();
+    	std::cerr << "4" <<std::endl;
         initWeights();
+    	std::cerr << "5" <<std::endl;
         initOutputFiles();
     }
 
@@ -984,6 +989,11 @@ void MpiProgAngularClassAverage::filterInputMetadata()
         }
         auxF1.removeDisabled();
     }
+    else
+    {
+    	auxF1 = auxDF;
+    }
+
     DF.sort(auxF1,MDL_IMAGE);
 
 }
@@ -1072,7 +1082,7 @@ void MpiProgAngularClassAverage::initOutputFiles()
 
     for (int i = 1; i <= ref3dNum; i++)
     {
-        formatStringFast(fn_tmp, "_refGroup%06lu", i);
+        formatStringFast(fn_tmp, "_Ref3D_%03lu", i);
 
         unlink((fn_out + fn_tmp + ".xmd").c_str());
         unlink((fn_out + fn_tmp + ".stk").c_str());
@@ -1121,7 +1131,7 @@ void MpiProgAngularClassAverage::mpi_postprocess()
         auxMd2.clear();
 
         formatStringFast(fileNameXmd,
-                         "refGroup%06lu@%s_RefGroup%06lu.xmd", i, fn_out.c_str(), i);
+                         "Ref3D_%03lu@%s_Ref3D_%03lu.xmd", i, fn_out.c_str(), i);
 
 
 
@@ -1141,7 +1151,7 @@ void MpiProgAngularClassAverage::mpi_postprocess()
         FOR_ALL_OBJECTS_IN_METADATA(auxMd2)
         {
             auxMd2.getValue(MDL_ORDER, order_number,__iter.objId);
-            formatStringFast(imageName, "%06lu@%s_refGroup%06lu.stk", order_number,  fn_out.c_str(), i);
+            formatStringFast(imageName, "%06lu@%s_Ref3D_%03lu.stk", order_number,  fn_out.c_str(), i);
             auxMd2.setValue(MDL_IMAGE, imageName,__iter.objId);
         }
         auxMd2.write(fileNameXmd);
@@ -1175,10 +1185,10 @@ void MpiProgAngularClassAverage::mpi_postprocess()
             MetaData auxMds2(auxMd2);
 
             formatStringFast(fileNameXmds1,
-                             "refGroup%06lu@%s_RefGroup%06lu.xmd", i, fn_out1.c_str(), i);
+                             "Ref3D_%03lu@%s_Ref3D_%03lu.xmd", i, fn_out1.c_str(), i);
 
             formatStringFast(fileNameXmds2,
-                             "refGroup%06lu@%s_RefGroup%06lu.xmd", i, fn_out2.c_str(), i);
+                             "Ref3D_%03lu@%s_Ref3D_%03lu.xmd", i, fn_out2.c_str(), i);
 
             FOR_ALL_OBJECTS_IN_METADATA2(auxMds1, auxMds2)
             {
@@ -1191,7 +1201,7 @@ void MpiProgAngularClassAverage::mpi_postprocess()
                 else
                 {
                     auxMds1.setValue(MDL_WEIGHT, weights1,__iter.objId);
-                    formatStringFast(imageName, "%06lu@%s_refGroup%06lu.stk", order_number,  fn_out1.c_str(), i);
+                    formatStringFast(imageName, "%06lu@%s_Ref3D_%03lu.stk", order_number,  fn_out1.c_str(), i);
                     auxMds1.setValue(MDL_IMAGE, imageName,__iter.objId);
                 }
 
@@ -1201,7 +1211,7 @@ void MpiProgAngularClassAverage::mpi_postprocess()
                 else
                 {
                     auxMds2.setValue(MDL_WEIGHT, weights2,__iter2.objId);
-                    formatStringFast(imageName, "%06lu@%s_refGroup%06lu.stk", order_number,  fn_out2.c_str(), i);
+                    formatStringFast(imageName, "%06lu@%s_Ref3D_%03lu.stk", order_number,  fn_out2.c_str(), i);
                     auxMds2.setValue(MDL_IMAGE, imageName,__iter2.objId);
                 }
 
