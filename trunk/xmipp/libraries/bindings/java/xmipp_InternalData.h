@@ -5,7 +5,7 @@
 #include <data/xmipp_image_generic.h>
 #include <data/ctf.h>
 
-static jfieldID TiltPairAligner_peerId;
+static jfieldID TiltPairAligner_peerId,ProgTomographAlignment_peerId ;
 
 #define IDFIELD "peer"
 
@@ -17,5 +17,6 @@ static jfieldID TiltPairAligner_peerId;
 #define GET_INTERNAL_CTFDESCRIPTION(jobj) ((CTFDescription *)GET_INTERNAL_POINTER(jobj))
 
 #define GET_INTERNAL_TPA(obj) ((TiltPairAligner *)(env->GetLongField(obj, TiltPairAligner_peerId)))
+#define GET_INTERNAL_PTA(obj) ((ProgTomographAlignment *)(env->GetLongField(obj, ProgTomographAlignment_peerId)))
 
 #endif
