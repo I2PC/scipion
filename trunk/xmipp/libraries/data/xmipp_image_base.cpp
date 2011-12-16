@@ -814,7 +814,7 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         err = writeSPIDER(select_img,true,mode);
     else if (ext_name.contains("mrcs"))
         writeMRC(select_img,true,mode,imParam,castMode);
-    else if (ext_name.contains("mrc"))
+    else if (ext_name.contains("mrc")||ext_name.contains("map"))
         writeMRC(select_img,false,mode,imParam,castMode);
     else if (ext_name.contains("img") || ext_name.contains("hed"))
         writeIMAGIC(select_img,mode,imParam,castMode);
