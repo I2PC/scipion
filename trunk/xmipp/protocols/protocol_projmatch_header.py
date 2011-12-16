@@ -315,17 +315,17 @@ SymmetryGroupNeighbourhood =''
 """
 OnlyWinner ='0'
 
-# {list}(none, mcc, dper, class) Discard images?
-""" Choose between none, mcc, dper or class. 
+# {list}(none, maxCC, percentage, classPercentage) Discard images?
+""" Choose between none, maxCC, percentage, classPercentage. 
     none : No images will be discarded.
-    mcc  : Minimum Cross Correlation, discard images with cff below/over a fixed value.
-    dper : Discard percentage of images with less/greater ccf.
-    class: Discard percentage of images in each projection direction with less/greater ccf.
+    maxCC  : Minimum Cross Correlation, discard images with CC below a fixed value.
+    percentage : Discard percentage of images with less CC.
+    classPercentage: Discard percentage of images in each projection direction with less CC.
     Value of each option is set below.
 """
 DiscardImages ='none'
 
-# Discard images with ccf below
+# {condition}(DiscardImages=="maxCC") Discard images with ccf below
 """ Provide a sequence of numbers (for instance, "0.3 0.3 0.5 0.5" specifies 4 iterations,
     the first two set the value to 0.3, then two with 0.5.
     An alternative compact notation would be ("2x0.3 2x0.5").
@@ -334,7 +334,7 @@ DiscardImages ='none'
 """
 MinimumCrossCorrelation ='0.1'
 
-# Discard percentage of images with ccf below
+# {condition}(DiscardImages=="percentage") Discard percentage of images with less ccf
 """ Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
     the first two set the value to 20%, then two with 10%
     An alternative compact notation would be ("2x20 2x10").
@@ -344,7 +344,7 @@ MinimumCrossCorrelation ='0.1'
 """
 DiscardPercentage ='10'
 
-# Discard percentage of images in each projection direction with ccf below
+# {condition}(DiscardImages=="classPercentage") Discard percentage of images in each projection direction with less ccf
 """ Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
     the first two set the value to 20%, then two with 10%
     An alternative compact notation would be ("2x20 2x10").
@@ -383,6 +383,12 @@ ScaleNumberOfSteps ='3'
     
 """
 ProjMatchingExtra =''
+
+# Save images assigned to each class?
+""" If true, save images assigned to each class to a metadata file
+    Be aware that for a very fine angular sampling it can be time consuming.
+"""
+DoSaveImagesAssignedToClasses = False
 
 #-----------------------------------------------------------------------------
 # {section}{expert}{has_question} 2D re-alignment of classes

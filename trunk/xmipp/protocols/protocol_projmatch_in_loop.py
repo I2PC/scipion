@@ -298,6 +298,7 @@ def angular_class_average(_log
                          , DoComputeResolution
                          , DoCtfCorrection
                          , DocFileInputAngles
+                         , DoSaveImagesAssignedToClasses
                          , DoSplitReferenceImages
                          , InnerRadius
                          , MaxChangeOffset
@@ -321,17 +322,15 @@ def angular_class_average(_log
 
     parameters =  ' -i '       + DocFileInputAngles +\
                   ' --lib '    + refname.replace(".stk",".doc") + \
-                  ' -o '       + OutClasses + \
-                  ' --siatc'  
+                  ' -o '       + OutClasses
+    if(DoSaveImagesAssignedToClasses):
+        parameters += ' --save_images_assigned_to_classes'  
                   
-    if(DiscardImages == 'mcc'):
-        if(MinimumCrossCorrelation > 0):
-            parameters += ' --limit0 ' + MinimumCrossCorrelation
-        else:
-            parameters += ' --limitF ' + MinimumCrossCorrelation
-    elif(DiscardImages == 'dper'):
+    if(DiscardImages == 'maxCC'):
+        parameters += ' --limit0 ' + MinimumCrossCorrelation
+    elif(DiscardImages == 'percentage'):
         parameters += ' --limitRper ' + DiscardPercentage
-    elif(DiscardImages == 'class'):
+    elif(DiscardImages == 'classPercentage'):
         parameters += ' --limitRclass ' + DiscardPercentagePerClass
     #else 'none'
         
@@ -361,15 +360,13 @@ def reconstruction(_log
                    , WBPReconstructionExtraCommand
                    , FourierReconstructionExtraCommand
                    , Iteration_number
-                   #, DisplayReconstruction
                    , DoParallel
                    , NumberOfMpi
                    , NumberOfThreads
                    , ReconstructionMethod
-                   #, FourierMaxFrequencyOfInterest
+                   , FourierMaxFrequencyOfInterest
                    , ARTLambda
                    , SymmetryGroup
-                   #, ReconstructedandfilteredVolume
                    , ReconstructionXmd
                    , ReconstructedVolume
                    , DoComputeResolution
@@ -424,12 +421,6 @@ def reconstruction(_log
            , NumberOfThreads
            )
 
-#    if DisplayReconstruction==True:
-#        command='xmipp_show -vol '+ Outputvolume + '&'
-#        print '*********************************************************************'
-#        print '* ',command
-#        _mylog.info(command)
-#        os.system(command)
 
 #------------------------------------------------------------------------
 #def  compute_resolution_and_filter(_log

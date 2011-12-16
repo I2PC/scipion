@@ -101,15 +101,17 @@ class ProtProjMatch(XmippProtocol):
         # Set as protocol variables
         for k, v in extraParams.iteritems():
             setattr(self, k, v)
-               
+                              
         Iter = 'Iter_%(iter)03d'
-        Ref = 'Ref_%(ref)03d'
+        Ref3D = 'Ref3D_%(ref)03d'
         Ctf = 'CtfGroup_%(ctf)06d'
         IterDir = self.workingDirPath(Iter)
+        
         #ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s.doc')
         ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s')
+        _OutClassesXmd = join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.xmd')
         CtfGroupBase = join(self.workingDirPath(), self.CtfGroupDirectory, '%(CtfGroupRootName)s')
-        ProjLibRootNames = join(IterDir, '%(ProjectLibraryRootName)s_' + Ref)
+        ProjLibRootNames = join(IterDir, '%(ProjectLibraryRootName)s_' + Ref3D)
         return {
                 # Global filenames templates
                 'IterDir': IterDir,
@@ -118,13 +120,17 @@ class ProtProjMatch(XmippProtocol):
                 #'LibraryDirs': join(IterDir, '%(LibraryDir)s.doc'),
                 'LibraryDirs': join(IterDir, '%(LibraryDir)s'),
                 'ProjectLibraryRootNames': ProjLibRootNames,
-                'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref + '.doc'),
+                'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.doc'),
                 'ProjMatchRootNamesWithoutRef': join(ProjMatchDirs, '%(ProjMatchName)s.doc'),
                 'OutClasses': join(ProjMatchDirs, '%(ProjMatchName)s'),
-                'ReconstructionXmd': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref+ '.doc'),
-                'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref + '.vol'),
-                'ReconstructedFileNamesIters': join(IterDir, '%(ReconstructedVolume)s_' + Ref + '.vol'),
-                'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref + '.vol'),
+                'OutClassesXmd': _OutClassesXmd,
+                'OutClassesStk': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.stk'),
+                'OutClassesDiscarded': join(ProjMatchDirs, '%(ProjMatchName)s_discarded.xmd'),
+
+                'ReconstructionXmd': join(Ref3D, _OutClassesXmd),
+                'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref3D + '.vol'),
+                'ReconstructedFileNamesIters': join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '.vol'),
+                'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref3D + '.vol'),
                 # Particular templates for executeCtfGroups  
                 'ImageCTFpairs': CtfGroupBase + '_images.sel',
                 'CTFGroupSummary': CtfGroupBase + 'Info.xmd',
@@ -404,7 +410,13 @@ class ProtProjMatch(XmippProtocol):
                          )
     
             #align images, not possible for ctf groups
-            _VerifyFiles = []
+            _VerifyFiles = [self.getFilename('OutClassesDiscarded', iter=iterN)]
+            _VerifyFiles = _VerifyFiles + [self.getFilename('OutClassesXmd', iter=iterN, ref=g) \
+                                     for g in range (1, self.numberOfReferences + 1)]
+            _VerifyFiles = _VerifyFiles + [self.getFilename('OutClassesStk', iter=iterN, ref=g) \
+                                     for g in range (1, self.numberOfReferences + 1)]
+
+            print "_VerifyFiles: ", _VerifyFiles
             _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
                              , Align2DIterNr=self.Align2DIterNr[iterN]#
                              , Align2dMaxChangeOffset=self.Align2dMaxChangeOffset[iterN]#
@@ -418,6 +430,7 @@ class ProtProjMatch(XmippProtocol):
                              , DoComputeResolution=self.DoComputeResolution[iterN]
                              , DoCtfCorrection=self.DoCtfCorrection#
                              , DocFileInputAngles=self.DocFileInputAngles[iterN]#
+                             , DoSaveImagesAssignedToClasses=self.DoSaveImagesAssignedToClasses#
                              , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
                              , InnerRadius=self.InnerRadius[iterN]#
                              , MaxChangeOffset=self.MaxChangeOffset[iterN]#
@@ -431,40 +444,30 @@ class ProtProjMatch(XmippProtocol):
             
 
             for refN in range(1, self.numberOfReferences + 1):
-                # Mask reference volume
-                maskedFn = self.getFilename('MaskedFileNamesIters', iter=iterN, ref=refN)
-                id = _dataBase.insertStep('executeMask', verifyfiles=[maskedFn]
-                                                , DoMask=self.DoMask
-                                                , DoSphericalMask=self.DoSphericalMask
-                                                , maskedFileName=maskedFn
-                                                , maskRadius=self.MaskRadius
-                                                , reconstructedFileName=self.reconstructedFileNamesIters[iterN - 1][refN]
-                                                , userSuppliedMask=self.MaskFileName)
     
                 #self._ReconstructionMethod=arg.getComponentFromVector(_ReconstructionMethod, iterN-1)
                 #self._ARTLambda=arg.getComponentFromVector(_ARTLambda, iterN-1)
 
                 #if (DoReconstruction):
                 _VerifyFiles = []
-#                id = _dataBase.insertStep('reconstruction', verifyfiles=_VerifyFiles
-#                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
-#                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
-#                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
-#                                              , Iteration_number  = iterN
-#                                              #, DisplayReconstruction = self.DisplayReconstruction
-#                                              , DoParallel=self.DoParallel#
-#                                              , NumberOfMpi=self.NumberOfMpi#
-#                                              , NumberOfThreads=self.NumberOfThreads#
-#                                              , ReconstructionMethod = self.ReconstructionMethod
-#                                              #, globalFourierMaxFrequencyOfInterest = globalFourierMaxFrequencyOfInterest
-#                                              , ARTLambda = self.ARTLambda
-#                                              , SymmetryGroup = self.SymmetryGroup
-#                                              , ReconstructionXmd = 
-#                                              , ReconstructedVolume = self.ReconstructedVolume[iterN]
-#                                              , DoComputeResolution = self.DoComputeResolution
-#                                              , DoSplitReferenceImages = self.DoSplitReferenceImages
-#                                              , PaddingFactor = self.PaddingFactor
-#                                              )
+                id = _dataBase.insertStep('reconstruction', verifyfiles=_VerifyFiles
+                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
+                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
+                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
+                                              , Iteration_number  = iterN
+                                              , DoParallel=self.DoParallel#
+                                              , NumberOfMpi=self.NumberOfMpi#
+                                              , NumberOfThreads=self.NumberOfThreads#
+                                              , ReconstructionMethod = self.ReconstructionMethod
+                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest
+                                              , ARTLambda = self.ARTLambda
+                                              , SymmetryGroup = self.SymmetryGroup
+                                              , ReconstructionXmd = self.getFilename('ReconstructedXmd', iter=iterN, ref=refN)
+                                              , ReconstructedVolume = self.ReconstructedVolume[iterN]
+                                              , DoComputeResolution = self.DoComputeResolution
+                                              , DoSplitReferenceImages = self.DoSplitReferenceImages
+                                              , PaddingFactor = self.PaddingFactor
+                                              )
                     
 #                _VerifyFiles = []
 #                    #self._ConstantToAddToFiltration=arg.getComponentFromVector(ConstantToAddToFiltration, _iteration_number-1)
@@ -496,6 +499,16 @@ class ProtProjMatch(XmippProtocol):
 #                                              #, filter_frequence = filter_frequence
 #                                              #, ReconstructedandfilteredVolume = self.ReconstructedandfilteredVolume[iterN+1]
 #                                              )
+
+                # Mask reference volume
+                maskedFn = self.getFilename('MaskedFileNamesIters', iter=iterN, ref=refN)
+                id = _dataBase.insertStep('executeMask', verifyfiles=[maskedFn]
+                                                , DoMask=self.DoMask
+                                                , DoSphericalMask=self.DoSphericalMask
+                                                , maskedFileName=maskedFn
+                                                , maskRadius=self.MaskRadius
+                                                , reconstructedFileName=self.reconstructedFileNamesIters[iterN - 1][refN]
+                                                , userSuppliedMask=self.MaskFileName)
 #-------------------------------------------------------------
     ########################            
             #REMOVE
