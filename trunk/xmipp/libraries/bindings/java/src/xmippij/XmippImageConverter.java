@@ -28,8 +28,17 @@ import xmipp.MetaData;
 public class XmippImageConverter {
 
     public static ImagePlus loadImage(String filename) throws Exception {
+        return loadImage(filename, 100);
+    }
+
+    public static ImagePlus loadImage(String filename, int zoom) throws Exception {
         ImageGeneric image = new ImageGeneric(filename);
-        return convertToImageJ(image);
+
+        double scale = zoom / 100.0;
+        int w = (int) (image.getXDim() * scale);
+        int h = (int) (image.getYDim() * scale);
+
+        return convertToImageJ(image, w, h);
     }
 
     public static ImagePlus convertToImageJ(ImageGeneric image) throws Exception {
@@ -64,8 +73,9 @@ public class XmippImageConverter {
         boolean retrieveAllImages = nimage == ImageGeneric.ALL_IMAGES;
         boolean retrieveAllSlices = nslice == ImageGeneric.ALL_SLICES;
         long n = retrieveAllImages ? ImageGeneric.FIRST_IMAGE : nimage;
+        long N = image.getNDim();
 
-        for (; n <= image.getNDim(); n++) {
+        for (; n <= N; n++) {
             image.read(width, height, n);
 
             if (image.isPSD()) {
@@ -76,7 +86,9 @@ public class XmippImageConverter {
             int slice = retrieveAllSlices ? ImageGeneric.FIRST_SLICE : nslice;
             for (; slice <= image.getZDim(); slice++) {
                 ImageProcessor processor = pc.getProcessor(image, slice);
-                is.addSlice("", processor);
+                ImagePlus imp = new ImagePlus("", processor);
+                normalizeImagePlus(imp);
+                is.addSlice("", imp.getProcessor());
 
                 // If just one image, breaks loop.
                 if (!retrieveAllSlices) {
@@ -89,9 +101,8 @@ public class XmippImageConverter {
                 break;
             }
         }
-        System.out.println("convertToImageJ");
 
-        return getNormalizedImagePlus(image.getFilename(), is);
+        return buildImagePlus(image.getFilename(), is);
     }
 
     /**
@@ -135,8 +146,10 @@ public class XmippImageConverter {
             }
         }
 
-        System.out.println("convertImageGenericToImageJ");
-        return getNormalizedImagePlus("", is);
+        ImagePlus imp = buildImagePlus(image.getFilename(), is);
+        normalizeImagePlus(imp);
+
+        return imp;
     }
 
     public static ImagePlus convertToImageJ(MetaData md) throws Exception {
@@ -152,7 +165,11 @@ public class XmippImageConverter {
                 String filename = md.getValueString(MDLabel.MDL_IMAGE, id, true);
 
                 try {
-                    ImagePlus slice = loadImage(filename);
+                    String name = Filename.getFilename(filename);
+                    long n = Filename.getNimage(filename);
+
+                    ImageGeneric image = new ImageGeneric(filename);
+                    ImagePlus slice = convertToImageJ(image, n);
 
                     if (is == null) {
                         is = new ImageStack(slice.getWidth(), slice.getHeight());
@@ -165,7 +182,7 @@ public class XmippImageConverter {
                 }
             }
 
-            imp = getNormalizedImagePlus(md.getFilename(), is);
+            imp = buildImagePlus(md.getFilename(), is);
         }
 
         // Tells user about missing files.
@@ -181,7 +198,7 @@ public class XmippImageConverter {
         return imp;
     }
 
-    public static ImagePlus getNormalizedImagePlus(String filename, ImageStack is) {
+    public static ImagePlus buildImagePlus(String filename, ImageStack is) {
         ImagePlus imp = new ImagePlus(filename, is);
         // Sets associated file info.
         File f = new File(filename);
@@ -190,12 +207,7 @@ public class XmippImageConverter {
         fi.directory = absPath.substring(0, absPath.lastIndexOf(File.separator));
         fi.fileName = f.getName();
 
-        System.out.println("f: " + f.getAbsolutePath());
-        System.out.println("fi.directory: " + fi.directory);
-        System.out.println("fi.fileName: " + fi.fileName);
         imp.setFileInfo(fi);
-
-        normalizeImagePlus(imp);
 
         return imp;
     }
@@ -206,9 +218,9 @@ public class XmippImageConverter {
     }
 
     public static void revert(ImagePlus imp, String path) throws Exception {
-        ImageGeneric image = new ImageGeneric(path);
-        ImagePlus imp2 = XmippImageConverter.convertToImageJ(image);
-
+        ImagePlus imp2 = XmippImageConverter.loadImage(path);
+        imp2.setTitle("Revert!!: " + System.currentTimeMillis());
+        imp2.show();
         imp.setStack(imp.getTitle(), imp2.getImageStack());
     }
 
@@ -248,12 +260,9 @@ public class XmippImageConverter {
 
         for (long nimage = ImageGeneric.FIRST_IMAGE; nimage <= image_index; nimage++) {
             image.mapFile2Write(width, height, depth, filename, nimage);
-            System.out.println(" +++ nimage:" + nimage);
 
             // Store volume.
             for (int nslice = ImageGeneric.FIRST_SLICE; nslice <= depth; nslice++) {
-                System.out.println("\t/// nslice:" + nslice + " -> imp[" + (int) nimage * nslice + "]");
-
                 Object data = imp.getStack().getProcessor((int) nimage * nslice).getPixels();
 
                 // image.setData...

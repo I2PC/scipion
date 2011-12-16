@@ -14,6 +14,7 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.View;
@@ -275,14 +276,27 @@ public class ProjectionsExplorer implements UniverseListener {
     }
 
     private double[] getMatrix(Image3DUniverse universe) {
-        Transform3D t3d = new Transform3D();
+        DecimalFormat df = new DecimalFormat("#.##");
 
-        universe.getRotationTG().getTransform(t3d);
-        universe.getContent("").setTransform(new double[]{
+        Transform3D t3d = new Transform3D();
+        t3d.set(new double[]{
                     1, 0, 0, 0,
-                    0, -1, 0, 128,
-                    0, 0, -1, 128,
+                    0, -1, 0, 0,
+                    0, 0, -1, 0,
                     0, 0, 0, 1,});
+        //t3d.rotX(Math.toRadians(180));
+
+        Transform3D t = new Transform3D();
+        universe.getRotationTG().getTransform(t);
+        
+
+        t3d.mul(t);
+
+//        universe.getContent("").setTransform(new double[]{
+//                    1, 0, 0, 0,
+//                    0, -1, 0, 128,
+//                    0, 0, -1, 128,
+//                    0, 0, 0, 1,});
 
         double matrix[] = new double[4 * 4];
         t3d.get(matrix);
@@ -291,28 +305,25 @@ public class ProjectionsExplorer implements UniverseListener {
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                 double d = matrix[i * 4 + j];
-                System.out.print(d + " ");
+                System.out.print(df.format(d) + " ");
             }
             System.out.println();
         }
-
+        /*
         t3d.invert();
         t3d.get(matrix);
         //matrix[5] *= -1;
         matrix[10] *= -1;
-
+        
         System.out.println("I:");
         for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                double d = matrix[i * 4 + j];
-                System.out.print(d + " ");
-            }
-            System.out.println();
+        for (int j = 0; j < 4; j++) {
+        double d = matrix[i * 4 + j];
+        System.out.print(df.format(d) + " ");
         }
-        //System.out.println(matrix[2] + " / " + -matrix[6] + " / " + -matrix[10]);
-
-//        AffineTransform t = new AffineTransform(matrix):
-//        t.
+        System.out.println();
+        }
+        //System.out.println(matrix[2] + " / " + -matrix[6] + " / " + -matrix[10]);*/
 
         return matrix;
     }

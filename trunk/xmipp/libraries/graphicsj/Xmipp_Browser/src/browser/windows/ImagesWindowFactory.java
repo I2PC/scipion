@@ -116,7 +116,9 @@ public class ImagesWindowFactory {
 
                 imp = XmippImageConverter.convertToImageJ(md);
             } else {
-                imp = XmippImageConverter.loadImage(path);
+                //System.out.println(" *** zoom: " + parameters.zoom);
+
+                imp = XmippImageConverter.loadImage(path, parameters.zoom);
             }
 
             // Normalize image stack.
@@ -239,8 +241,8 @@ public class ImagesWindowFactory {
         try {
             String path = tableModel.getFilename();
 
-            // If there is an associated filename, uses it...
-            File file = new File(path);
+            // If file exists, uses it...
+            File file = new File(Filename.getFilename(path));
             if (file.exists()) {
 //                System.err.println(" +++ EXISTS");
                 openFileAsImage(path, new Parameters());
@@ -300,10 +302,11 @@ public class ImagesWindowFactory {
             // Checks if java3D is available or not.
             Class.forName("javax.media.j3d.J3DBuffer");
 
+            new StackConverter(ip).convertToRGB();
+
             Image3DUniverse universe = new Image3DUniverse(UNIVERSE_W, UNIVERSE_H);
 
             // Adds the sphere image plus to universe.
-            new StackConverter(ip).convertToRGB();
             Content c = universe.addSurfacePlot(ip, new Color3f(1f, 165f / 255, 82f / 255), "1",
                     50, new boolean[]{true, true, true}, 1);
             c.displayAs(Content.SURFACE);

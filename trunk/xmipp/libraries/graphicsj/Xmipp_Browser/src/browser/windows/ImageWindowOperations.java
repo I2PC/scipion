@@ -93,7 +93,7 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
         // Sets if image can poll (reloaded from disk) or not.
         if (menuBar.allowsPolling()) {
             FileInfo ofi = imp.getOriginalFileInfo();
-            f = new File(ofi.directory + ofi.fileName);
+            f = new File(ofi.directory + File.separator + ofi.fileName);
             last = f.lastModified();
 
             menuBar.setPollStatus(poll);

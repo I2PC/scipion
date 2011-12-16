@@ -44,7 +44,6 @@ public class MetaData {
 
     //caching some ids
     //private static native void storeIds();
-
     //functions to create images
     private native void create();
 
@@ -59,19 +58,19 @@ public class MetaData {
         read_(filename);
     }
 
-    public native int size();
+    public native int size() throws Exception;
 
-    public native void setColumnFormat(boolean format);
+    public native void setColumnFormat(boolean format) throws Exception;
 
     public native void write(String filename) throws Exception;
 
     public native void writeBlock(String filename) throws Exception;
 
-    public native void print();
+    public native void print() throws Exception;
 
-    public native boolean containsLabel(int label);
+    public native boolean containsLabel(int label) throws Exception;
 
-    public boolean containsGeometryInfo() {
+    public boolean containsGeometryInfo() throws Exception {
         for (int i = 0; i < GEOMETRY_LABELS.length; i++) {
             if (containsLabel(GEOMETRY_LABELS[i])) {
                 return true;
@@ -80,38 +79,38 @@ public class MetaData {
         return false;
     }
 
-    public static native String label2Str(int label);
+    public static native String label2Str(int label) throws Exception;
 
     public static native String[] getBlocksInMetaDataFile(String filename) throws Exception;
 
-    public native int[] getActiveLabels();
+    public native int[] getActiveLabels() throws Exception;
 
-    public static native Class getLabelType(int label);
+    public static native Class getLabelType(int label) throws Exception;
 
-    public static native boolean isTextFile(int label);
+    public static native boolean isTextFile(int label) throws Exception;
 
-    public static native boolean isMetadata(int label);
+    public static native boolean isMetadata(int label) throws Exception;
 
-    public static native boolean isCtfParam(int label);
+    public static native boolean isCtfParam(int label) throws Exception;
 
-    public static native boolean isImage(int label);
+    public static native boolean isImage(int label) throws Exception;
 
-    public static native boolean isStack(int label);
+    public static native boolean isStack(int label) throws Exception;
 
-    public static native boolean isMicrograph(int label);
+    public static native boolean isMicrograph(int label) throws Exception;
 
-    public static native boolean isPSD(int label);
+    public static native boolean isPSD(int label) throws Exception;
 
     //get values from metadata
-    public native int getValueInt(int label, long objId);
+    public native int getValueInt(int label, long objId) throws Exception;
 
-    public native long getValueLong(int label, long objId);
+    public native long getValueLong(int label, long objId) throws Exception;
 
-    public native double getValueDouble(int label, long objId);
+    public native double getValueDouble(int label, long objId) throws Exception;
 
-    public native String getValueString(int label, long objId);
+    public native String getValueString(int label, long objId) throws Exception;
 
-    public String getValueString(int label, long objId, boolean fixPaths) {
+    public String getValueString(int label, long objId, boolean fixPaths) throws Exception {
         String value = getValueString(label, objId);
 
         // Try to fix paths.
@@ -122,7 +121,7 @@ public class MetaData {
         return value;
     }
 
-    public static boolean isPathField(int label) {
+    public static boolean isPathField(int label) throws Exception {
         return isTextFile(label) || isMetadata(label)
                 || isCtfParam(label) || isImage(label)
                 || isStack(label) || isMicrograph(label) || isPSD(label);
@@ -132,20 +131,19 @@ public class MetaData {
 //        return Arrays.binarySearch(PATHS_FIELDS, label) >= 0;
 //    }
     public String fixPath(String value) {
-        return Filename.fixPath(value, getBaseDir(),true);
-    }
-    
-    public String fixPath(String value,String baseDir) {
-        return Filename.fixPath(value, baseDir,false);
+        return Filename.fixPath(value, getBaseDir(), true);
     }
 
+    public String fixPath(String value, String baseDir) {
+        return Filename.fixPath(value, baseDir, false);
+    }
 
-    public native boolean getValueBoolean(int label, long objId);
+    public native boolean getValueBoolean(int label, long objId) throws Exception;
 
     public String getFilename() {
-        return Filename.getFilename(filename);
+        return filename != null ? Filename.getFilename(filename) : "";
     }
-
+    
     public String getBlock() {
         return Filename.getPrefix(filename);
     }
@@ -161,34 +159,34 @@ public class MetaData {
         return f.getParent();
     }
 
-    public native double[] getStatistics(boolean applyGeo);
+    public native double[] getStatistics(boolean applyGeo) throws Exception;
 
     public native double[] getColumnValues(int label) throws Exception;
 
     //set values
-    public native boolean setValueInt(int label, int value, long objId);
+    public native boolean setValueInt(int label, int value, long objId) throws Exception;
 
-    public native boolean setValueDouble(int label, double value, long objId);
+    public native boolean setValueDouble(int label, double value, long objId) throws Exception;
 
-    public native boolean setValueString(int label, String value, long objId);
+    public native boolean setValueString(int label, String value, long objId) throws Exception;
 
-    public native boolean setValueBoolean(int label, boolean value, long objId);
+    public native boolean setValueBoolean(int label, boolean value, long objId) throws Exception;
 
-    public native long[] findObjects();
+    public native long[] findObjects() throws Exception;
 
     public native void importObjects(MetaData from, long ids[]) throws Exception;
 
-    public native long firstObject();
+    public native long firstObject() throws Exception;
 
-    public native long addObject();
+    public native long addObject() throws Exception;
 
-    public native void addLabel(int label);
+    public native void addLabel(int label) throws Exception;
 
     public native void getPCAbasis(ImageGeneric basis) throws Exception;
 
     public native void computeFourierStatistics(String filename) throws Exception;
 
-    public native void enableDebug();
+    public native void enableDebug() throws Exception;
 
     //non-native functions
     //constructor
@@ -208,5 +206,5 @@ public class MetaData {
         destroy();
     }
 
-    public native void readPlain(String file, String columns);
+    public native void readPlain(String file, String columns) throws Exception;
 }

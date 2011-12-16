@@ -1,22 +1,15 @@
 
 import window.JFrameLoad;
-import sphere.Sphere;
 import constants.LABELS;
 import explorer.ProjectionsExplorer;
 import ij.IJ;
-import ij.ImagePlus;
 import ij.Macro;
 import ij.plugin.PlugIn;
-import ij3d.DefaultUniverse.GlobalTransform;
-import ij3d.Image3DUniverse;
 import java.io.File;
 import java.io.IOException;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import table.JFrameImagesTable;
-import window.ProjectionWindow;
-import xmipp.ImageGeneric;
 
 /*
  * To change this template, choose Tools | Templates
@@ -33,15 +26,14 @@ public class Xmipp_Projections_Explorer implements PlugIn {
     final static int INDEX_VOLUME = 0;
     final static int INDEX_EULER_ANGLES = 1;
     boolean use_sphere;
-    Sphere sphere;
-    Image3DUniverse universeVolume, universeSphere;
-    final static int UNIVERSE_W = 400, UNIVERSE_H = 400;
-    ImagePlus volumeIP, sphereIP;
-    ImageGeneric xmippVolume;  // Volume for Xmipp library.
-    GlobalTransform gt = new GlobalTransform();
-    boolean dispatched = false;
-    static ProjectionWindow projectionWindow;
-    JFrameImagesTable frameImagesTable;
+//    Sphere sphere;
+//    Image3DUniverse universeVolume, universeSphere;
+//    final static int UNIVERSE_W = 400, UNIVERSE_H = 400;
+//    ImagePlus volumeIP, sphereIP;
+//    ImageGeneric xmippVolume;  // Volume for Xmipp library.
+//    boolean dispatched = false;
+//    static ProjectionWindow projectionWindow;
+//    JFrameImagesTable frameImagesTable;
 
     public static void main(String args[]) {
         //new ImageJ();

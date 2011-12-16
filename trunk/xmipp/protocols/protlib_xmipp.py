@@ -115,7 +115,7 @@ class ScriptIJBase(XmippScript):
         if self.checkParam('--memory'):
             self.memory = self.getParam('--memory')
         else:
-            self.memory = convertBytes(2*estimateFilenamesListMemory(inputFiles))
+            self.memory = convertBytes(2 * estimateFilenamesListMemory(inputFiles))
             print "No memory size provided. Estimated: " + self.memory
 
         self.args = "-i %s" % ' '.join(inputFiles)
@@ -336,14 +336,14 @@ def estimateFilenamesListMemory(input):
     memory = 0
     for file in input:
         memory += estimateFileNameSize(file)
-    return max(memory, 536870912) # 512m minimum
+    return max(memory, 536870912) # minimum 512m
 
 def estimateFileNameSize(input):
     from xmipp import FileName
     if '@' in input:
-        trueFn=input.split('@')[1]
+        trueFn = input.split('@')[1]
     else:
-        trueFn=input
+        trueFn = input
     fn = FileName(trueFn);
     if fn.isMetaData():
         return estimateMDSize(fn)
@@ -369,7 +369,7 @@ def estimateMDSize(input):
 
 def estimateImageSize(input):
     memory = 0
-    input=FileName(input)
+    input = FileName(input)
     
     if input.exists() and input.isImage():
         (Xdim, Ydim, Zdim, Ndim) = xmipp.SingleImgSize(input)
@@ -399,16 +399,16 @@ def convertBytes(bytes):
 
 def estimateMemory(input):
     from math import log, ceil
-    MD=xmipp.MetaData(input)
-    memory=0
+    MD = xmipp.MetaData(input)
+    memory = 0
     for id in MD:
         if MD.containsLabel(xmipp.MDL_IMAGE):
-            fnImg=MD.getValue(xmipp.MDL_IMAGE,id)
+            fnImg = MD.getValue(xmipp.MDL_IMAGE, id)
         elif  MD.containsLabel(xmipp.MDL_MICROGRAPH):
-            fnImg=MD.getValue(xmipp.MDL_MICROGRAPH,id)
-        (Xdim,Ydim,Zdim,Ndim)=xmipp.SingleImgSize(fnImg)
-        memory=max(memory,Xdim*Ydim*8)
-    memoryMb=int((2 ** ceil(log(memory, 2)))/(2**20)); # Memory size in megabytes
+            fnImg = MD.getValue(xmipp.MDL_MICROGRAPH, id)
+        (Xdim, Ydim, Zdim, Ndim) = xmipp.SingleImgSize(fnImg)
+        memory = max(memory, Xdim * Ydim * 8)
+    memoryMb = int((2 ** ceil(log(memory, 2))) / (2 ** 20)); # Memory size in megabytes
     return memoryMb
 
 #---------------------------------------------------------------------------

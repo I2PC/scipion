@@ -167,7 +167,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
             // Avoid empty filename.
             //if (!ofi.directory.trim().isEmpty() && !ofi.fileName.trim().isEmpty()) {
             File f = new File(ofi.directory + File.separator + ofi.fileName);
-            System.out.println("absPath: " + f.getAbsolutePath());
+
             return f.isFile() && f.exists();
             //}
         }
@@ -437,6 +437,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent e) {
+        boolean captureFrame = true;    // If operation doesn't generates a new image/stack window, set this to false.
         converted = false;
         binarized = false;
 
@@ -677,6 +678,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
                 IJ.run(imp, "Voxel Counter", "");
             } else if (e.getSource() == item3DViewer) {
                 ImagesWindowFactory.openImagePlusAs3D(imp);
+                captureFrame = false;
             } else if (e.getSource() == itemErode) {
                 binarized = makeBinary(imp);
                 IJ.run(imp, "Erode", "");
@@ -724,7 +726,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
         // To avoid windows without our cool menu :)
         ImageWindow iw = WindowManager.getCurrentWindow();
-        if (!(iw instanceof StackWindowOperations || iw instanceof ImageWindowOperations)) {
+        if (captureFrame && !(iw instanceof StackWindowOperations || iw instanceof ImageWindowOperations)) {
             ImagesWindowFactory.captureFrame(iw.getImagePlus());
         }
 

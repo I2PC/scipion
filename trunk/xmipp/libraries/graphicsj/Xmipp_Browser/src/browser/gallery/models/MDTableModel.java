@@ -4,12 +4,14 @@
  */
 package browser.gallery.models;
 
+import browser.Cache;
 import browser.DEBUG;
 import browser.LABELS;
 import browser.imageitems.tableitems.AbstractGalleryImageItem;
 import browser.imageitems.tableitems.GalleryImageItem;
 import ij.IJ;
 import java.util.ArrayList;
+import xmipp.ImageGeneric;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -33,25 +35,19 @@ public class MDTableModel extends AbstractXmippTableModel {
         super();
 
         String message = null;
+        try {
+            md = new MetaData();
+            md.addLabel(MDLabel.MDL_IMAGE);
+            md.addLabel(MDLabel.MDL_ENABLED);
 
-        for (int i = 0; i < filenames.length; i++) {
-            String currentFile = filenames[i];
-
-            //File f = new File(currentFile);
-            //if (f.exists()) {
-            try {
-                if (md == null) {
-                    md = new MetaData();
-                }
-
+            for (int i = 0; i < filenames.length; i++) {
                 long id = md.addObject();
-                md.setValueString(MDLabel.MDL_IMAGE, currentFile, id);
-            } catch (Exception ex) {
-                message = ex.getMessage();
+
+                md.setValueString(MDLabel.MDL_IMAGE, filenames[i], id);
+                md.setValueInt(MDLabel.MDL_ENABLED, 1, id);
             }
-            //} else {
-            //    message += "File not found: " + currentFile + "\n";
-            //}
+        } catch (Exception ex) {
+            message = ex.getMessage();
         }
 
         populateTable();
@@ -72,12 +68,25 @@ public class MDTableModel extends AbstractXmippTableModel {
         }
     }
 
+    void setCacheSize(MetaData md) throws Exception {
+        // Calculates cache elements size.
+        String firstImage = md.getValueString(MDLabel.MDL_IMAGE, md.firstObject(), true);
+        ImageGeneric image = new ImageGeneric(firstImage);
+
+        int imageSize = image.getXDim() * image.getYDim() * Cache.MAXPXSIZE;
+        int elements = Cache.MEMORY_SIZE / imageSize;
+
+        cache.resize(elements > 0 ? elements : 1);
+    }
+
     @Override
     protected String populateTable(String path) {
         String message = null;
 
         try {
-            md = new MetaData(path);
+            if (md == null) {
+                md = new MetaData(path);
+            }
 
             containsGeometryInfo = md.containsGeometryInfo();
 
@@ -101,11 +110,19 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     private void populateTable() {
         // Populate table.
-        long ids[] = md.findObjects();
+        long ids[] = null;
 
-        for (long id : ids) {
-            GalleryImageItem item = new GalleryImageItem(id, md, MDLabel.MDL_IMAGE, cache);
-            data.add(item);
+        try {
+            setCacheSize(md);
+
+            ids = md.findObjects();
+
+            for (long id : ids) {
+                GalleryImageItem item = new GalleryImageItem(id, md, MDLabel.MDL_IMAGE, cache);
+                data.add(item);
+            }
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
         }
     }
 
@@ -118,11 +135,17 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     @Override
     public String[] getLabels() {
-        labelsValues = md.getActiveLabels();
-        String labels[] = new String[labelsValues.length];
+        String labels[] = null;
 
-        for (int i = 0; i < labelsValues.length; i++) {
-            labels[i] = MetaData.label2Str(labelsValues[i]);
+        try {
+            labelsValues = md.getActiveLabels();
+            labels = new String[labelsValues.length];
+
+            for (int i = 0; i < labelsValues.length; i++) {
+                labels[i] = MetaData.label2Str(labelsValues[i]);
+            }
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
         }
 
         return labels;
@@ -147,10 +170,14 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     @Override
     protected void getMinAndMax() {
-        double stats[] = md.getStatistics(false);
+        try {
+            double stats[] = md.getStatistics(false);
 
-        min = stats[0];
-        max = stats[1];
+            min = stats[0];
+            max = stats[1];
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
+        }
     }
 
     @Override

@@ -318,12 +318,12 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
 
 def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], libs=[]):
     from os.path import join
-    buildDir = join(basedir, '../build', name)
+    buildDir = join(basedir, '../build')#, name)
     if not os.path.exists(buildDir): # create classes dir if not exists
         Execute(Mkdir(buildDir))
     if env['debug'] == True:
     	env['JAVAC'] = 'javac -g'
-    buildClasses = env.Java(buildDir, join(basedir, srcdir), JAVAVERSION='1.6')
+    buildClasses = env.Java(buildDir, basedir, JAVAVERSION='1.6')
     env.Depends(buildClasses, env.Alias('javaEnums'))
     jarfile = join(basedir, '..', name + '.jar')
     buildJar = env.Jar(target=jarfile, source=buildClasses, JARCHDIR=buildDir)
@@ -624,14 +624,12 @@ if int(env['java']):
 
     # Xmipp interface is needed by plugins.
     javaLib = AddJavaLibrary('XmippJavaInterface', 'libraries/bindings/java/src', 'xmipp')#, ['#'],
-    lib2 = AddJavaLibrary('XmippIJInterface', 'libraries/bindings/java/src', 'xmippij')
-    env.Depends(lib2, javaLib)
+#    lib2 = AddJavaLibrary('XmippIJInterface', 'libraries/bindings/java/src', 'xmippij')
     # Copies jar file to ImageJ plugins folder (plugins below will look for it there).
     copyJar = env.InstallAs(target='external/imagej/plugins/XmippJavaInterface.jar',
               source='libraries/bindings/java/XmippJavaInterface.jar')
     copyJar2 = env.InstallAs(target='external/imagej/plugins/XmippIJInterface.jar',
               source='libraries/bindings/java/XmippIJInterface.jar')
-    env.Depends(copyJar, lib2)
     env.Depends(copyJar2, copyJar)
     # ImageJ plugins.
     javaPlugins = []

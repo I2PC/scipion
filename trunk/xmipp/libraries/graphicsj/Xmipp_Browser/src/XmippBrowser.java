@@ -52,7 +52,7 @@ public class XmippBrowser implements PlugIn {
 
             // ...while rest of files are opened in separated ones.
             if (filesList[1] != null) {
-                ImagesWindowFactory.openFilesAsGallery(filesList[1], true, parameters);
+                ImagesWindowFactory.openFilesAsGallery(filesList[1], false, parameters);
             }
         } else if (parameters.mode.trim().toLowerCase().compareTo(COMMAND_PARAMETERS.OPENING_MODE_METADATA) == 0) {
             ImagesWindowFactory.openFilesAsMetadata(parameters.files, parameters);

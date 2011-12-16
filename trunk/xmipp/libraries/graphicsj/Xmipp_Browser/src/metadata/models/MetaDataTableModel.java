@@ -8,8 +8,10 @@ import ij.IJ;
 import browser.Cache;
 import browser.DEBUG;
 import browser.imageitems.tableitems.GalleryImageItem;
+import ij.ImagePlus;
 import metadata.images.TableFileItem;
 import xmipp.Filename;
+import xmipp.ImageGeneric;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -26,8 +28,8 @@ public class MetaDataTableModel extends XmippTableModelRowDisabler {
     private String blocks[];
     private int selectedBlock = 0;
     private long ids[];
-    protected static Cache cache = new Cache();
-    protected boolean containsImageLabel = false;
+    protected static Cache<String, ImagePlus> cache = new Cache<String, ImagePlus>();
+    //protected boolean containsImageLabel = false;
     protected boolean containsImages = false;
 
     public MetaDataTableModel(String filename) {
@@ -35,21 +37,18 @@ public class MetaDataTableModel extends XmippTableModelRowDisabler {
 
         this.filename = filename;
 
-        loadBlocks();
+        loadBlocks(filename);
         selectBlock(Filename.getPrefix(filename));
     }
 
     private void selectBlock(String selectedBlock) {
+        int n = 0;
+
         if (selectedBlock != null) {
-            for (int i = 0; i < blocks.length; i++) {
-                if (selectedBlock.compareTo(blocks[i]) == 0) {
-                    selectBlock(i);
-                    return;
-                }
-            }
+            n = findBlock(selectedBlock, blocks);
         }
 
-        selectBlock(0);
+        selectBlock(n > 0 ? n : 0);
     }
 
     public void selectBlock(int selectedBlock) {
@@ -64,10 +63,9 @@ public class MetaDataTableModel extends XmippTableModelRowDisabler {
         return blocks[getSelectedBlockIndex()];
     }
 
-    public boolean containsImageLabel() {
-        return containsImageLabel;
-    }
-
+//    public boolean containsImageLabel() {
+//        return containsImageLabel;
+//    }
     public boolean containsImages() {
         return containsImages;
     }
@@ -95,24 +93,43 @@ public class MetaDataTableModel extends XmippTableModelRowDisabler {
         return blocks;
     }
 
-    private void loadBlocks() {
+    private void loadBlocks(String filename) {
         try {
-//            System.out.println(" >> " + filename);
-//            System.out.println(" >> " + getFilename());
+            String name = Filename.getFilename(filename);
+            String block = Filename.getPrefix(filename);
 
-            blocks = MetaData.getBlocksInMetaDataFile(Filename.getFilename(getFilename()));
+            blocks = MetaData.getBlocksInMetaDataFile(name);
 
             // No blocks, so set at least one item for the dropdown list.
             if (blocks.length < 1) {
                 blocks = new String[]{""};
+            }
+
+            if (block != null) {
+                // Check if selected block is in the list, otherwise adds it (like in 'class_[regexp]')
+                int n = findBlock(block, blocks);
+                if (n < 0) {
+                    String blocks_[] = new String[blocks.length + 1];
+                    blocks_[0] = block;
+                    System.arraycopy(blocks, 0, blocks_, 1, blocks.length);
+                    blocks = blocks_;
+                }
             }
         } catch (Exception ex) {
             DEBUG.printException(ex);
         }
     }
 
+    public static int findBlock(String block, String blocks[]) {
+        for (int n = 0; n < blocks.length; n++) {
+            if (blocks[n].equals(block)) {
+                return n;
+            }
+        }
+        return -1;
+    }
+
     public void reload() {
-//        System.out.println("path: " + getPath());
         load(getPath());
     }
 
@@ -133,7 +150,9 @@ public class MetaDataTableModel extends XmippTableModelRowDisabler {
 
             // Contains image (for gallery)?
             if (md.containsLabel(MDLabel.MDL_IMAGE)) {
-                containsImageLabel = true;
+                containsImages = true;
+
+                setCacheSize(md);
             }
 
             // Store ids.
@@ -165,7 +184,7 @@ public class MetaDataTableModel extends XmippTableModelRowDisabler {
 //                            String path = md.getValueString(label, id, true);
 //                            row[i] = new GalleryImageItem(path, value, cache);
                             row[i] = new GalleryImageItem(id, md, label, cache);
-                            containsImages = true;
+//                            containsImages = true;
                         } else if (MetaData.isMetadata(label)) {
                             String path_ = md.getValueString(label, id, true);
                             row[i] = new TableFileItem(path_, value);
@@ -203,6 +222,17 @@ public class MetaDataTableModel extends XmippTableModelRowDisabler {
             DEBUG.printException(ex);
             IJ.error(ex.getMessage());
         }
+    }
+
+    void setCacheSize(MetaData md) throws Exception {
+        // Calculates cache elements size.
+        String firstImage = md.getValueString(MDLabel.MDL_IMAGE, md.firstObject(), true);
+        ImageGeneric image = new ImageGeneric(firstImage);
+
+        int imageSize = image.getXDim() * image.getYDim() * Cache.MAXPXSIZE;
+        int elements = Cache.MEMORY_SIZE / imageSize;
+
+        cache.resize(elements > 0 ? elements : 1);
     }
 
     public String[] getLabels() {

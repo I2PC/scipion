@@ -49,24 +49,28 @@ public class MetadataFileItem extends XmippImageItem {
 
     // Gets first available filename if any.
     protected String getPreviewFile(MetaData md) {
-        if (md.containsLabel(MDLabel.MDL_IMAGE)) {
-            File f;
+        try {
+            if (md.containsLabel(MDLabel.MDL_IMAGE)) {
+                File f;
 
-            long objs[] = md.findObjects();
+                long objs[] = md.findObjects();
 
-            for (long id : objs) {
-                String field = md.getValueString(MDLabel.MDL_IMAGE, id, true);
+                for (long id : objs) {
+                    String field = md.getValueString(MDLabel.MDL_IMAGE, id, true);
 
-                field = Filename.getFilename(field);      // Avoids image@filename format ;)
-                nimage = Filename.getNimage(field);
+                    field = Filename.getFilename(field);      // Avoids image@filename format ;)
+                    nimage = Filename.getNimage(field);
 
-                f = new File(field);
+                    f = new File(field);
 
-                if (f.exists()) {
+                    if (f.exists()) {
 //                    System.err.println(" *** preview File: " + f.getAbsolutePath());
-                    return f.getAbsolutePath();
+                        return f.getAbsolutePath();
+                    }
                 }
             }
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
         }
 
         return null;

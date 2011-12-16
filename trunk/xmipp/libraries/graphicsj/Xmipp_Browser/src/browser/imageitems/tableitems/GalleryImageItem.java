@@ -9,6 +9,7 @@ import xmipp.MDLabel;
 import xmipp.MetaData;
 import browser.Cache;
 import browser.DEBUG;
+import browser.ICONS_MANAGER;
 import browser.LABELS;
 import ij.ImagePlus;
 import xmipp.ImageGeneric;
@@ -35,19 +36,23 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
         this.md = md;
         this.label = label;
 
-        originalValue = md.getValueString(label, id);
-        if (originalValue != null) {
-            String field = md.getValueString(label, id, true);
-            path = Filename.getFilename(field);
-            nimage = Filename.getNimage(field);
+        try {
+            originalValue = md.getValueString(label, id);
+            if (originalValue != null) {
+                String field = md.getValueString(label, id, true);
+                path = Filename.getFilename(field);
+                nimage = Filename.getNimage(field);
 
-            loadImageData();
+                loadImageData();
+            }
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
         }
     }
 
     @Override
     protected ImagePlus loadPreview(int w, int h) {
-        ImagePlus imp = null;
+        ImagePlus imp = ICONS_MANAGER.MISSING_ITEM;
 
         if (readGeo) {
             try {
@@ -58,6 +63,7 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
                 imp.setTitle(getOriginalValue());
             } catch (Exception ex) {
                 DEBUG.printException(ex);
+                System.out.println("ERROR: readApplyGeo: " + getAbsoluteFileName() + " / " + path);
             }
         } else {
             imp = super.loadPreview(w, h);
@@ -67,11 +73,23 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
     }
 
     public boolean isEnabled() {
-        return getValueInt(MDLabel.MDL_ENABLED) == 1;
+        boolean enabled = true;
+
+        try {
+            enabled = getValueInt(MDLabel.MDL_ENABLED) == 1;
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
+        }
+
+        return enabled;
     }
 
     public void setEnabled(boolean enabled) {
-        md.setValueInt(MDLabel.MDL_ENABLED, enabled ? 1 : 0, id);
+        try {
+            md.setValueInt(MDLabel.MDL_ENABLED, enabled ? 1 : 0, id);
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
+        }
     }
 
     public void setReadGeo(boolean readGeo) {
@@ -87,7 +105,7 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
     }
 
     public String getAbsoluteFileName() {
-        return Filename.getFilename(path);
+        return nimage + Filename.SEPARATOR + path;
     }
 
     public long getNImage() {
@@ -126,41 +144,45 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
     }
 
     public Object getLabelValue(int label) {
-        Class class_ = MetaData.getLabelType(label);
+        try {
+            Class class_ = MetaData.getLabelType(label);
 
-        // Special label.
-        if (label == MDLabel.MDL_ENABLED) {
-            return md.getValueInt(label, id) > 0 ? Boolean.TRUE : Boolean.FALSE;
-        }
+            // Special label.
+            if (label == MDLabel.MDL_ENABLED) {
+                return md.getValueInt(label, id) > 0 ? Boolean.TRUE : Boolean.FALSE;
+            }
 
-        // Rest of them...
-        if (class_ == Integer.class) {
-            return md.getValueInt(label, id);
-        }
-        if (class_ == Double.class) {
-            return md.getValueDouble(label, id);
-        }
-        if (class_ == String.class) {
-            return md.getValueString(label, id);
+            // Rest of them...
+            if (class_ == Integer.class) {
+                return md.getValueInt(label, id);
+            }
+            if (class_ == Double.class) {
+                return md.getValueDouble(label, id);
+            }
+            if (class_ == String.class) {
+                return md.getValueString(label, id);
+            }
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
         }
 
         return LABELS.LABEL_UNKNOWN;
     }
 
     // Metadata related methods.
-    protected String getValueString(int label) {
+    protected String getValueString(int label) throws Exception {
         return md.getValueString(label, id, true);
     }
 
-    protected boolean getValueBoolean(int label) {
+    protected boolean getValueBoolean(int label) throws Exception {
         return md.getValueBoolean(label, id);
     }
 
-    protected double getValueDouble(int label) {
+    protected double getValueDouble(int label) throws Exception {
         return md.getValueDouble(label, id);
     }
 
-    protected double getValueInt(int label) {
+    protected double getValueInt(int label) throws Exception {
         return md.getValueInt(label, id);
     }
 

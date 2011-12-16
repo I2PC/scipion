@@ -120,6 +120,7 @@ JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getZDim
 (JNIEnv *env, jobject jobj)
 {
     String msg = "";
+
     try
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
@@ -152,6 +153,7 @@ JNIEXPORT jlong JNICALL Java_xmipp_ImageGeneric_getNDim
 (JNIEnv *env, jobject jobj)
 {
     String msg = "";
+
     try
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
@@ -184,6 +186,7 @@ JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getDataType
 (JNIEnv *env, jobject jobj)
 {
     String msg = "";
+
     try
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
@@ -216,11 +219,11 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readHeader
 (JNIEnv * env, jobject jobj, jstring filename)
 {
     String msg = "";
+
     try
     {
-        const char *fnStr = env->GetStringUTFChars(filename, false);
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-
+        const char *fnStr = env->GetStringUTFChars(filename, false);
         image->read(fnStr, HEADER);
     }
     catch (XmippError &xe)
@@ -247,13 +250,12 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_read
 (JNIEnv *env, jobject jobj, jstring filename, jint jx, jint jy, jint jz, jlong jn)
 {
     String msg = "";
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     try
     {
-        const char *fnStr = env->GetStringUTFChars(filename, false);
-
-        image->readOrReadPreview(fnStr, jx, jy, jz, jn, true);
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        const char *fn = env->GetStringUTFChars(filename, false);
+        image->readOrReadPreview(fn, jx, jy, jz, jn, true);
     }
     catch (XmippError &xe)
     {
@@ -275,50 +277,38 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_read
     }
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readApplyGeo
+JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readApplyGeo_1
 (JNIEnv *env, jobject jimage, jstring filename, jobject jmetadata, jlong id, jint w, jint h)
 {
     std::string msg = "";
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jimage);
-    MetaData *metadata = GET_INTERNAL_METADATA(jmetadata);
 
-    if (image != NULL)
+    try
     {
-        if (metadata != NULL)
-        {
-            try
-            {
-                const char *fnStr = env->GetStringUTFChars(filename, false);
-                image->readApplyGeo(fnStr, *metadata, (size_t) id);
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jimage);
+        MetaData *metadata = GET_INTERNAL_METADATA(jmetadata);
+
+        const char *fnStr = env->GetStringUTFChars(filename, false);
+        image->readApplyGeo(fnStr, *metadata, (size_t) id);
 
 #define SELF_SCALE_TO_SIZE(type) MultidimArray<type> *mdaFloat; \
  MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(mdaFloat); \
  selfScaleToSize(LINEAR, *mdaFloat, (int)w, (int)h);
 
-                SWITCHDATATYPE(image->getDatatype(), SELF_SCALE_TO_SIZE);
-            }
-            catch (XmippError xe)
-            {
-                msg = xe.getDefaultMessage();
-            }
-            catch (std::exception& e)
-            {
-                msg = e.what();
-            }
-            catch (...)
-            {
-                msg = "Unhandled exception";
-            }
-        }
-        else
-        {
-            msg = "Metadata is null";
-        }
+        SWITCHDATATYPE(image->getDatatype(), SELF_SCALE_TO_SIZE);
     }
-    else
+    catch (XmippError xe)
     {
-        msg = "Image is null";
+        msg = xe.getDefaultMessage();
     }
+    catch (std::exception& e)
+    {
+        msg = e.what();
+    }
+    catch (...)
+    {
+        msg = "Unhandled exception";
+    }
+
 
     // If there was an exception, sends it to java environment.
     if (!msg.empty())
@@ -331,10 +321,11 @@ JNIEXPORT jbyteArray JNICALL Java_xmipp_ImageGeneric_getArrayByte
 (JNIEnv *env, jobject jobj, jint nslice)
 {
     String msg = "";
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     try
     {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+
         // Go to slice.
         image->movePointerToSlice(nslice);
 
@@ -415,11 +406,10 @@ JNIEXPORT jshortArray JNICALL Java_xmipp_ImageGeneric_getArrayShort
 (JNIEnv *env, jobject jobj, jint nslice)
 {
     String msg = "";
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     try
     {
-        image->print();
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
         // Go to slice.
         image->movePointerToSlice(nslice);
@@ -501,10 +491,11 @@ JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat
 (JNIEnv *env, jobject jobj, jint nslice)
 {
     String msg = "";
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     try
     {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+
         // Go to slice.
         image->movePointerToSlice(nslice);
 
@@ -575,10 +566,11 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayByte
 (JNIEnv *env, jobject jobj, jbyteArray data, jint nslice)
 {
     String msg = "";
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     try
     {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+
         // Go to slice.
         image->movePointerToSlice(nslice);
 
@@ -669,10 +661,11 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayShort
 (JNIEnv *env, jobject jobj, jshortArray data, jint nslice)
 {
     String msg = "";
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     try
     {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+
         // Go to slice.
         image->movePointerToSlice(nslice);
 
@@ -770,10 +763,11 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayFloat
 (JNIEnv *env, jobject jobj, jfloatArray data, jint nslice)
 {
     String msg = "";
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     try
     {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+
         // Go to slice.
         image->movePointerToSlice(nslice);
 
@@ -837,6 +831,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setDataType
 (JNIEnv *env, jobject jobj, jint dataType)
 {
     String msg = "";
+
     try
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
@@ -896,10 +891,10 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_mapFile2Write
 (JNIEnv *env, jobject jobj, jint w, jint h, jint z, jstring filename, jlong n)
 {
     std::string msg = "";
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     try
     {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         const char *fnStr = env->GetStringUTFChars(filename, false);
 
         image->mapFile2Write(w, h, z, fnStr, false, (size_t)n);
@@ -907,7 +902,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_mapFile2Write
     catch (XmippError xe)
     {
         msg = xe.getDefaultMessage();
-        std::cout << xe.msg << std::endl;
+//        std::cout << xe.msg << std::endl;
     }
     catch (std::exception& e)
     {
@@ -929,10 +924,11 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_write
 (JNIEnv *env, jobject jobj, jstring filename)
 {
     String msg = "";
+
     try
     {
-        const char *fnStr = env->GetStringUTFChars(filename, false);
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        const char *fnStr = env->GetStringUTFChars(filename, false);
         image->write(fnStr);
     }
     catch (XmippError &xe)
@@ -959,10 +955,10 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_printShape
 (JNIEnv *env, jobject jobj)
 {
     std::string msg = "";
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     try
     {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         image->print();
     }
     catch (XmippError xe)
@@ -989,10 +985,11 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageGeneric_getStatistics(
     JNIEnv *env, jobject jobj)
 {
     std::string msg = "";
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     try
     {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+
         double avg, stddev, min, max;
         (*image)().computeStats(avg, stddev, min, max);
 
@@ -1035,10 +1032,10 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setXmippOrigin
 (JNIEnv *env, jobject jobj)
 {
     std::string msg = "";
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     try
     {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         (*image)().setXmippOrigin();
     }
     catch (XmippError xe)
@@ -1065,10 +1062,11 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_convertPSD
 (JNIEnv *env, jobject jobj, jboolean useLogarithm)
 {
     std::string msg = "";
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     try
     {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+
         MultidimArray<double> out(image->getSize());
 
         image->convert2Datatype(Double);

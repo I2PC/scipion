@@ -55,8 +55,11 @@ public class ImageRenderer extends DefaultTableCellRenderer {
             setEnabled(item.isEnabled());
 
             // Normalizes image (if sets in tablemodel)
+            try{
             normalize(imp, tableModel);
-
+            }catch(Exception ex){
+                System.out.println(ex.getMessage());
+            }
             Image image = imp.getImage();
             setIcon(new ImageIcon(image));
 

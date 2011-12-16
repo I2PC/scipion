@@ -179,7 +179,7 @@ void MetaData::setColumnValues(const std::vector<MDObject> &valuesIn)
     {
         size_t n=0;
         FOR_ALL_OBJECTS_IN_METADATA(*this)
-        	setValue(valuesIn[n++],__iter.objId);
+        setValue(valuesIn[n++],__iter.objId);
     }
     else
     {
@@ -1227,7 +1227,7 @@ void MetaData::aggregateSingleSizeT(MDObject &mdValueOut, AggregateOperation op,
 }
 
 void MetaData::aggregateSingleInt(MDObject &mdValueOut, AggregateOperation op,
-                               MDLabel aggregateLabel)
+                                  MDLabel aggregateLabel)
 
 {
     size_t aux = myMDSql->aggregateSingleSizeT(op,aggregateLabel);
@@ -1449,7 +1449,7 @@ void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc, int limit,
     MDLabelType type = MDL::labelType(sortLabel);
     if (ipos!=String::npos || type == LABEL_VECTOR || type == LABEL_VECTOR_LONG)
     {
-    	if(limit != -1 || offset != 0)
+        if(limit != -1 || offset != 0)
             REPORT_ERROR(ERR_ARG_INCORRECT,"Limit and Offset are not implemented for vector sorting.");
 
         MDLabel label;

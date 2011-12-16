@@ -32,7 +32,7 @@ public class MetaDataReader extends Reader {
         setFileInfo(fi);
 
         // Sets stack...
-        setStack(getTitle(), imp.getStack());
+        setStack(imp.getTitle(), imp.getStack());
 
         // ...and copies scale info.
         copyScale(imp);

@@ -65,7 +65,7 @@ public class JFrameMetaData extends JFrame {
     private JList rowHeader;
     private RowHeaderRenderer rowHeaderRenderer = new RowHeaderRenderer();
     private MetaDataFileItemRenderer fileRenderer = new MetaDataFileItemRenderer();
-    private MetaDataImageRenderer imageRenderer= new MetaDataImageRenderer();
+    private MetaDataImageRenderer imageRenderer = new MetaDataImageRenderer();
     private MetaDataStringRenderer stringRenderer = new MetaDataStringRenderer();
     private MetaDataDoubleRenderer doubleRenderer = new MetaDataDoubleRenderer();
     private MetaDataIntegerRenderer numberRenderer = new MetaDataIntegerRenderer();
@@ -265,14 +265,16 @@ public class JFrameMetaData extends JFrame {
     private void packRows() {
 //        int cellHeight = MetaDataImageRenderer.DEFAULT_CELL_HEIGHT;
 
-        int column = 0, row = 0;
+        int row = 0;
+        int height = -1;
         //table.setRowHeight(row, cellHeight);
 
-        TableCellRenderer renderer = table.getCellRenderer(row, column);
-        Component comp = renderer.getTableCellRendererComponent(
-                table, table.getValueAt(row, column), false, false, row, column);
-        int height = comp.getPreferredSize().height;
-
+        for (int column = 0; column < tableModel.getColumnCount(); column++) {
+            TableCellRenderer renderer = table.getCellRenderer(row, column);
+            Component comp = renderer.getTableCellRendererComponent(
+                    table, table.getValueAt(row, column), false, false, row, column);
+            height = Math.max(height, comp.getPreferredSize().height);
+        }
 //            TableColumn tcolumn = columnModel.getColumn(column);
 
         // Sets width
@@ -373,7 +375,7 @@ public class JFrameMetaData extends JFrame {
 
     private void selectBlock(int block) {
         tableModel.selectBlock(block);
-        jbSend2Gallery.setEnabled(tableModel.containsImageLabel());
+        jbSend2Gallery.setEnabled(tableModel.containsImages());
         reloadTableData();
     }
 

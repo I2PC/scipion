@@ -73,10 +73,6 @@ public abstract class AbstractGalleryImageItem {
     public void setSelected(boolean selected) {
         this.selected = selected;
     }
-//
-//    public String getAbsoluteFileName() {
-//        return Filename.getFilename(get);
-//    }
 
     public boolean isSelected() {
         return selected;

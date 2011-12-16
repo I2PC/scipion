@@ -52,8 +52,12 @@ public class VolumeTableModel extends AbstractXmippTableModel {
         labelsValues = new int[]{MDLabel.MDL_IMAGE, MDLabel.MDL_ENABLED};
         String labels[] = new String[labelsValues.length];
 
-        for (int i = 0; i < labelsValues.length; i++) {
-            labels[i] = MetaData.label2Str(labelsValues[i]);
+        try {
+            for (int i = 0; i < labelsValues.length; i++) {
+                labels[i] = MetaData.label2Str(labelsValues[i]);
+            }
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
         }
 
         return labels;
@@ -111,12 +115,11 @@ public class VolumeTableModel extends AbstractXmippTableModel {
 
     @Override
     public boolean saveAsMetadata(String path, boolean all) {
-        MetaData md = new MetaData();
-
-        md.addLabel(MDLabel.MDL_ENABLED);
-        md.addLabel(MDLabel.MDL_IMAGE);
-
         try {
+            MetaData md = new MetaData();
+
+            md.addLabel(MDLabel.MDL_ENABLED);
+            md.addLabel(MDLabel.MDL_IMAGE);
             ArrayList<AbstractGalleryImageItem> items = all ? data : getSelectedItems();
 
             for (int i = 0; i < items.size(); i++) {
@@ -135,6 +138,7 @@ public class VolumeTableModel extends AbstractXmippTableModel {
 
             return true;
         } catch (Exception ex) {
+            DEBUG.printException(ex);
         }
 
         return false;

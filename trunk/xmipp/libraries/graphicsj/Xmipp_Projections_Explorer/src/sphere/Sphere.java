@@ -365,7 +365,7 @@ public class Sphere {
         return cell != null ? cell.fileNames : null;
     }
 
-    private static void writeSelFile(String selFileName, ArrayList<String> fileNames) {
+    private static void writeSelFile(String selFileName, ArrayList<String> fileNames) throws Exception {
         MetaData md = new MetaData();
 
         md.addLabel(MDLabel.MDL_IMAGE);

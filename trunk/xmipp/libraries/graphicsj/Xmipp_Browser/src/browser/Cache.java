@@ -5,6 +5,7 @@
  */
 package browser;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -15,33 +16,77 @@ import java.util.Map;
  */
 public class Cache<K, T> extends LinkedHashMap<K, T> {
 
-    /** Max number of elements in cache */
-    private int limit = 50;
+    public final static int MEMORY_SIZE = 33554432;// 32 MB = 32 * 1024 * 1024 Bytes.
+    public final static int MAXPXSIZE = 4;  // 4 Bytes => 4 * 8 = 32 bits as maximum pixel size.
+    private int limit;  // Max number of elements in cache.
+
+    public Cache() {
+        this(1);
+    }
+
+    public Cache(int limit) {
+        super(limit);
+
+        this.limit = limit;
+    }
 
     @SuppressWarnings("element-type-mismatch")
     public void resize(int limit) {
         // If new limit is lower than previous, remaining items are removed.
-        DEBUG.printMessage(" *** resizing to: [" + limit + "]");
-        DEBUG.printMessage(" *** this.limit: [" + this.limit + "] / limit: [" + limit + "]");
+        DEBUG.printMessage(" *** resizing to: [" + limit + "] elements");
+        //DEBUG.printMessage(" *** this.limit: [" + this.limit + "] / limit: [" + limit + "]");
 
         if (this.limit > limit && limit < size()) {
-            int i = 0;
-            Iterator iter = this.keySet().iterator();
+            Iterator iter = keySet().iterator();
             int items2remove = size() - limit;
+            ArrayList toRemove = new ArrayList(items2remove);
 
-            Object trash[] = new Object[items2remove];
-
-            while (iter.hasNext() & i < items2remove) {
-                trash[i++] = iter.next();
+            // To avoid synchronizing problems, store items in a temporary array...
+            while (items2remove-- > 0) {
+                toRemove.add(iter.next());
             }
 
-            for (int j = 0; j < trash.length; j++) {
-                Object object = trash[j];
-                remove(object);
+            // ...and remove them later.
+            for (Object o : toRemove) {
+                remove(o);
             }
         }
 
         this.limit = limit;
+    }
+    /*
+    public static void main(String args[]) {
+    Cache<Integer, Integer> c = new Cache<Integer, Integer>(5);
+    
+    for (int i = 0; i < c.limit; i++) {
+    c.put(i, i);
+    }
+    c.print();
+    System.out.println("-------------");
+    
+    c.resize(3);
+    
+    c.print();
+    System.out.println("-------------");
+    
+    c.get(2);   // References 2, so it must become the "youngest" in the cache.
+    
+    c.resize(2);
+    c.print();
+    System.out.println("-------------");
+    
+    c.resize(8);
+    c.print();
+    System.out.println("-------------");
+    }*/
+
+    private void print() {
+        Iterator iterator = keySet().iterator();
+
+        int i = 0;
+        while (iterator.hasNext()) {
+            System.out.println(i++ + ": " + iterator.next());
+        }
     }
 
     @Override

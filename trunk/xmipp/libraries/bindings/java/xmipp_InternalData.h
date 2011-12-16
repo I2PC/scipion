@@ -16,6 +16,7 @@ static jfieldID TiltPairAligner_peerId,ProgTomographAlignment_peerId ;
 #define GET_INTERNAL_METADATA(jobj) ((MetaData *)GET_INTERNAL_POINTER(jobj))
 #define GET_INTERNAL_CTFDESCRIPTION(jobj) ((CTFDescription *)GET_INTERNAL_POINTER(jobj))
 
+// @TODO Convert this to the way above.
 #define GET_INTERNAL_TPA(obj) ((TiltPairAligner *)(env->GetLongField(obj, TiltPairAligner_peerId)))
 #define GET_INTERNAL_PTA(obj) ((ProgTomographAlignment *)(env->GetLongField(obj, ProgTomographAlignment_peerId)))
 

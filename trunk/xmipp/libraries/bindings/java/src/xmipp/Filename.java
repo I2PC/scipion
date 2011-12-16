@@ -164,7 +164,7 @@ public class Filename {
                     f = new File(aux);
                     if (!f.exists()) {
                         // 3rd case: find "project dir" (the one containing a file called ".project.sqlite")
-                        String projectdir = Filename.findProjectDir(MDdir, Filename.PROJECT_FILE);
+                        String projectdir = findProjectDir(MDdir, Filename.PROJECT_FILE);
                         if (projectdir != null) {
                             aux = URI.create(projectdir + name).normalize().getPath();
                         }

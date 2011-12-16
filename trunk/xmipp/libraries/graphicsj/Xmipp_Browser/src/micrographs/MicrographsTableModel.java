@@ -9,11 +9,13 @@ import java.util.LinkedList;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import browser.Cache;
+import browser.DEBUG;
 import browser.imageitems.MicrographsTableImageItem;
 import browser.imageitems.tableitems.GalleryImageItem;
 import ij.ImagePlus;
 import java.util.ArrayList;
 import metadata.models.XmippTableModelRowDisabler;
+import xmipp.ImageGeneric;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -198,8 +200,21 @@ public class MicrographsTableModel extends XmippTableModelRowDisabler implements
 //        }
 //    }
 
+    void setCacheSize(MetaData md) throws Exception {
+        // Calculates cache elements size.
+        String firstImage = md.getValueString(MDLabel.MDL_IMAGE, md.firstObject(), true);
+        ImageGeneric image = new ImageGeneric(firstImage);
+
+        int imageSize = image.getXDim() * image.getYDim() * Cache.MAXPXSIZE;
+        int elements = Cache.MEMORY_SIZE / imageSize;
+
+        cache.resize(elements > 0 ? elements : 1);
+    }
+
     private void buildTable(MetaData md) {
         try {
+            setCacheSize(md);
+
             // Read metadata.
             Object row[] = new Object[MD_LABELS.length + 1];    // Field #0 is used for MDRow id.
 
@@ -300,20 +315,24 @@ public class MicrographsTableModel extends XmippTableModelRowDisabler implements
     public ArrayList<Integer> getColumnsToHide() {
         ArrayList<Integer> toHide = new ArrayList<Integer>();
 
-        // Hide ID column.
-        toHide.add(INDEX_ID);
+        try {
+            // Hide ID column.
+            toHide.add(INDEX_ID);
 
-        // Adds null columns.
-        for (int i = 0; i < MD_LABELS.length; i++) {
-            if (!md.containsLabel(MD_LABELS[i])) {
-                toHide.add(i + 1);
+            // Adds null columns.
+            for (int i = 0; i < MD_LABELS.length; i++) {
+                if (!md.containsLabel(MD_LABELS[i])) {
+                    toHide.add(i + 1);
+                }
             }
-        }
 
-        // Extra columns: DEFOCUS
-        if (!hasCtfData()) {
-            toHide.add(MD_LABELS.length + 1);
-            toHide.add(MD_LABELS.length + 2);
+            // Extra columns: DEFOCUS
+            if (!hasCtfData()) {
+                toHide.add(MD_LABELS.length + 1);
+                toHide.add(MD_LABELS.length + 2);
+            }
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
         }
 
         return toHide;
@@ -326,7 +345,15 @@ public class MicrographsTableModel extends XmippTableModelRowDisabler implements
     }
 
     public boolean hasCtfData() {
-        return md.containsLabel(MDLabel.MDL_CTFMODEL);
+        boolean hasCTF = false;
+
+        try {
+            hasCTF = md.containsLabel(MDLabel.MDL_CTFMODEL);
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
+        }
+
+        return hasCTF;
     }
 
     @Override
@@ -397,7 +424,13 @@ public class MicrographsTableModel extends XmippTableModelRowDisabler implements
 
     public String getCTFfile(int row) {
         long id = (Long) getValueAt(row, 0);
-        String file = md.getValueString(MDLabel.MDL_CTFMODEL, id, true);
+        String file = null;
+
+        try {
+            file = md.getValueString(MDLabel.MDL_CTFMODEL, id, true);
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
+        }
 
         return file;
     }
@@ -405,14 +438,27 @@ public class MicrographsTableModel extends XmippTableModelRowDisabler implements
     public String getPSDfile(int row) {
         long id = (Long) getValueAt(row, 0);
 
-        String file = md.getValueString(MDLabel.MDL_PSD, id, true);
+        String file = null;
+
+        try {
+            file = md.getValueString(MDLabel.MDL_PSD, id, true);
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
+        }
+
 
         return file;
     }
 
     public String getCTFDisplayfile(int row) {
         long id = (Long) getValueAt(row, 0);
-        String file = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id, true);
+        String file = null;
+
+        try {
+            file = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id, true);
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
+        }
 
         return file;
     }
@@ -428,7 +474,11 @@ public class MicrographsTableModel extends XmippTableModelRowDisabler implements
             long id = (Long) getValueAt(row, ID_COLUMN_INDEX);
             boolean enabled = (Boolean) getValueAt(row, ENABLED_COLUMN_INDEX);
 
-            md.setValueInt(MDLabel.MDL_ENABLED, enabled ? 1 : 0, id);
+            try {
+                md.setValueInt(MDLabel.MDL_ENABLED, enabled ? 1 : 0, id);
+            } catch (Exception ex) {
+                DEBUG.printException(ex);
+            }
         }
     }
 

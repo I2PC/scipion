@@ -24,7 +24,7 @@ public class ScoreItem implements Comparable<ScoreItem> {
     protected ImagePlus imp;
     protected String label;
 
-    public ScoreItem(MetaData md, long id) {
+    public ScoreItem(MetaData md, long id) throws Exception {
         this.md = md;
         this.id = id;
         fileName = md.getValueString(MDLabel.MDL_IMAGE, id, true);

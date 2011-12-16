@@ -62,7 +62,7 @@ public class ImageGeneric {
         this();
 
         this.filename = filename;
-        readHeader(filename);
+        readHeader(Filename.getFilename(filename));
     }
 
     public void resize(int h, int w) throws Exception {
@@ -122,7 +122,7 @@ public class ImageGeneric {
     }
 
     public void read(int width, int height, int slice, long image) throws Exception {
-        read(filename, width, height, slice, image);
+        read(Filename.getFilename(filename), width, height, slice, image);
     }
 
     private native void read(String filename, int width, int height, int slice, long nimage) throws Exception;
@@ -132,7 +132,12 @@ public class ImageGeneric {
         readApplyGeo(filename, metadata, id, image.getXDim(), image.getYDim());
     }
 
-    public native void readApplyGeo(String filename, MetaData metadata, long id, int w, int h) throws Exception;
+    public void readApplyGeo(String filename, MetaData metadata, long id, int w, int h) throws Exception {
+        this.filename = filename;
+        readApplyGeo_(Filename.getFilename(filename), metadata, id, w, h);
+    }
+
+    private native void readApplyGeo_(String filename, MetaData metadata, long id, int w, int h) throws Exception;
 
     // Getters for data arrays.
 //    public byte[] getArrayByte(int slice) throws Exception {
@@ -173,7 +178,7 @@ public class ImageGeneric {
 
     public native void setXmippOrigin() throws Exception;
 
-    public native void convertPSD(boolean useLogarithm);
+    public native void convertPSD(boolean useLogarithm) throws Exception;
 
     public boolean isPSD() {
         return Filename.isPSD(filename);
