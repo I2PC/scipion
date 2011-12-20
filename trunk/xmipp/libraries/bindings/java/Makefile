@@ -18,8 +18,7 @@ PACKAGE = xmipp
 IJ_JAR = $(XMIPP_DIR)/external/imagej/ij.jar
 JAVA_FILES = ImageDouble.java ImageGeneric.java ImageGeneric_.java Filename.java \
 MDLabel.java MetaData.java Projection.java CTFDescription.java Program.java
-JAVA_SRC = $(JAVA_FILES:.java=.class)
-
+JAVA_SRC = $(JAVA_FILES:.java=.class) \
 $(SRCDIR)$(PACKAGE)/ImageDouble.java $(SRCDIR)$(PACKAGE)/ImageGeneric.java \
 $(SRCDIR)$(PACKAGE)/ImageGeneric_.java $(SRCDIR)$(PACKAGE)/Filename.java \
 $(SRCDIR)$(PACKAGE)/MDLabel.java $(SRCDIR)$(PACKAGE)/MetaData.java \

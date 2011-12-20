@@ -48,9 +48,9 @@ JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_produceSideInfo
 	std::string msg = "";
   	try{
   	  ProgTomographAlignment *program = GET_INTERNAL_PTA(jobj);
-  	  std::cout << "file: " << program->fnSel << ". Root: " << program->fnRoot << ". Cwd: " << get_working_path()<< std::endl;
+  	  // std::cout << "file: " << program->fnSel << ". Root: " << program->fnRoot << ". Cwd: " << get_working_path()<< std::endl;
   	  program->produceSideInfo();
-  	  std::cout << "produceSideInfo finished" << std::endl;
+  	  // std::cout << "produceSideInfo finished" << std::endl;
   		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {
@@ -64,6 +64,34 @@ JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_produceSideInfo
 		handleXmippException(env, msg);
 	}
   }
+
+JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_writeTransformations
+  (JNIEnv *env, jobject jobj, jstring fileName){
+	std::string msg = "";
+  	try{
+  	  const char * fnStr = env->GetStringUTFChars(fileName, false);
+  	  ProgTomographAlignment *program = GET_INTERNAL_PTA(jobj);
+  	  program->writeTransformations(fnStr);
+  		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+}
+
+JNIEXPORT jint JNICALL Java_xmipp_ProgTomographAlignment_getIteration
+  (JNIEnv *env, jobject jobj){
+	ProgTomographAlignment *program = GET_INTERNAL_PTA(jobj);
+	return program->iteration;
+
+}
 
 JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_destroy
   (JNIEnv *env, jobject jobj){

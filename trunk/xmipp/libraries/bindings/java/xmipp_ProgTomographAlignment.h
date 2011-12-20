@@ -49,6 +49,22 @@ JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_produceSideInfo
 
 /*
  * Class:     xmipp_ProgTomographAlignment
+ * Method:    writeTransformations
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_writeTransformations
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     xmipp_ProgTomographAlignment
+ * Method:    getIteration
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_xmipp_ProgTomographAlignment_getIteration
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ProgTomographAlignment
  * Method:    destroy
  * Signature: ()V
  */
