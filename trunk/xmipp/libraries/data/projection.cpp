@@ -177,7 +177,6 @@ void ParametersProjectionTomography::read(const FileName &fn_proj_param)
         MetaData MD;
         size_t objId;
         MD.read(fn_proj_param);
-        MD.write("lqmsdn.xmd");
         objId = MD.firstObject();
         //        MD.getValue(MDL_PRJ_VOL, fnPhantom, objId);
         std::vector<double> vecD;
