@@ -165,7 +165,7 @@ def subtractionScript(_log
         
         # write protocols results
         imgSub.write('%06d@%s'%(id + idResults, stackResults))
-        mdResults.setValue(MDL_IMAGE, '%06d@%s'%(id + idResults, xmdResults), id + idResults)
+        mdResults.setValue(MDL_IMAGE, '%06d@%s'%(id + idResults, stackResults), id + idResults)
         
     
     mdRotations.operate('anglePsi=0')
