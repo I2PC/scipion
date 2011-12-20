@@ -231,26 +231,26 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
      * great enough to cover all the volume.
      */
     /* By now, we are going to keep it unused */
-    //    if (true)
-    //    {
-    //        double radi, theta0, theta, tilt;
-    //
-    //        radi = sqrt(iniZdim*iniZdim + iniXdim*iniXdim);
-    //        theta0 = atan2(iniZdim, iniXdim);
-    //        tilt = ((P.tilt() < 90)? P.tilt(): 180 - P.tilt())* PI / 180;
-    //
-    //        rotZdim = XMIPP_MAX(ROUND(radi * sin(ABS(tilt) + ABS(theta0))), iniZdim);
-    //        rotXdim = XMIPP_MAX(ROUND(radi * cos(ABS(tilt) - ABS(theta0))), iniXdim);
-    //        rotYdim = iniYdim;
-    //
-    //        //    rotZdim = iniZdim;
-    //        //    rotXdim = iniXdim;
-    //
-    //        newXdim = rotXdim + 2*ABS(XX(offsetNV));
-    //        newYdim = iniYdim + 2*ABS(YY(offsetNV));
-    //        newZdim = rotZdim;
-    //    }
-    //    else
+//    if (true)
+//    {
+//        double radi, theta0, theta, tilt;
+//
+//        radi = sqrt(iniZdim*iniZdim + iniXdim*iniXdim);
+//        theta0 = atan2(iniZdim, iniXdim);
+//        tilt = ((P.tilt() < 90)? P.tilt(): 180 - P.tilt())* PI / 180;
+//
+//        rotZdim = XMIPP_MAX(ROUND(radi * sin(ABS(tilt) + ABS(theta0))), iniZdim);
+//        rotXdim = XMIPP_MAX(ROUND(radi * cos(ABS(tilt) - ABS(theta0))), iniXdim);
+//        rotYdim = iniYdim;
+//
+//        //    rotZdim = iniZdim;
+//        //    rotXdim = iniXdim;
+//
+//        newXdim = rotXdim + 2*ABS(XX(offsetNV));
+//        newYdim = iniYdim + 2*ABS(YY(offsetNV));
+//        newZdim = rotZdim;
+//    }
+//    else
     {
         rotXdim = iniXdim;
         rotYdim = iniYdim;
@@ -321,15 +321,18 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
     translation3DMatrix(offsetNV, T);
     Euler_angles2matrix(P.rot(), P.tilt(), P.psi(), R, true);
 
+    double outside = 0; //phantom.iniVol.getPixel(0,0,0,0);
     phantom.iniVol.data->setXmippOrigin();
 
-    applyGeometry(1, phantom.rotVol, MULTIDIM_ARRAY_GENERIC(phantom.iniVol), T*R, IS_NOT_INV, DONT_WRAP);
-
-    //        Image<double> tempvol;
-    //
-    //        tempvol.data.alias(phantom.rotVol);
-    //
-    //        tempvol.write("rotvol.vol");
+    applyGeometry(1, phantom.rotVol, MULTIDIM_ARRAY_GENERIC(phantom.iniVol), T*R, IS_NOT_INV, DONT_WRAP, outside);
+//
+//    Image<double> tempvol;
+//
+//    tempvol.data.alias(phantom.rotVol);
+//
+//    tempvol.write("rotvol_2.vol");
+//
+//    exit(0);
 
     //    Euler_rotate(MULTIDIM_ARRAY_GENERIC(phantom.iniVol), P.rot(), P.tilt(), P.psi(),phantom.rotVol);
 
