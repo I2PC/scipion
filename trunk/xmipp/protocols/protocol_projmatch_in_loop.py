@@ -87,7 +87,6 @@ def angular_project_library(_log
     if (DoCtfCorrection):
         parameters+=  \
               ' --groups '              + CtfGroupSubsetFileName
-    _DoParallel=DoParallel
     if (DoParallel):
         parameters = parameters + ' --mpi_job_size ' + str(MpiJobSize)
     if (len(SymmetryGroupNeighbourhood)>1):
@@ -298,11 +297,13 @@ def angular_class_average(_log
                          , DoComputeResolution
                          , DoCtfCorrection
                          , DocFileInputAngles
+                         , DoParallel
                          , DoSaveImagesAssignedToClasses
                          , DoSplitReferenceImages
                          , InnerRadius
                          , MaxChangeOffset
                          , MinimumCrossCorrelation
+                         , MpiJobSize
                          , NumberOfMpi
                          , NumberOfThreads
                          , OutClasses
@@ -349,6 +350,9 @@ def angular_class_average(_log
     if (DoComputeResolution and DoSplitReferenceImages):
         parameters += ' --split '
                   
+    if (DoParallel):
+        parameters = parameters + ' --mpi_job_size ' + str(MpiJobSize)
+
     runJob(_log,
            'xmipp_angular_class_average',
            parameters,
@@ -361,6 +365,7 @@ def reconstruction(_log
                    , FourierReconstructionExtraCommand
                    , Iteration_number
                    , DoParallel
+                   , MpiJobSize
                    , NumberOfMpi
                    , NumberOfThreads
                    , ReconstructionMethod
@@ -369,22 +374,17 @@ def reconstruction(_log
                    , SymmetryGroup
                    , ReconstructionXmd
                    , ReconstructedVolume
-                   , DoComputeResolution
-                   , DoSplitReferenceImages
                    , PaddingFactor
                    ):
-
-    InputVolume = ReconstructionXmd
-    OutputVolume = ReconstructedVolume
     
     print '*********************************************************************'
     print '* Reconstruct volume using '
     if ReconstructionMethod=='wbp':
         OutputVolume = OutputVolume+".vol"
         program = 'xmipp_reconstruct_wbp'
-        parameters= ' -i '    + ForReconstructionSel + \
-                    ' --doc '  + ForReconstructionDoc + \
-                    ' -o '    + OutputVolume + \
+        parameters= ' -i '    + ReconstructionXmd + \
+                    ' --doc '  + ReconstructionXmd + \
+                    ' -o '    + ReconstructedVolume + \
                     ' --sym '  + SymmetryGroup + \
                     ' --weight --use_each_image '
         parameters = parameters + WBPReconstructionExtraCommand
@@ -392,27 +392,31 @@ def reconstruction(_log
     elif ReconstructionMethod=='art':
         program = 'xmipp_reconstruct_art'
 
-        parameters=' -i '    + ForReconstructionSel + \
-                   ' -o '    + OutputVolume + ' ' + \
+        parameters=' -i '    + ReconstructionXmd + \
+                   ' -o '    + ReconstructedVolume + ' ' + \
                    ' --sym '  + SymmetryGroup + \
                    ' --thr '  + str(NumberOfThreads) + \
                    ' --WLS '
         if len(_ARTLambda)>1:
            parameters = parameters + ' -l '   + _ARTLambda + ' '
         parameters = parameters + _ARTReconstructionExtraCommand
+        
+        NumberOfMpi = 1
+        NumberOfThreads = 1
+        DoParallel = False
+                
     elif ReconstructionMethod=='fourier':
         program = 'xmipp_reconstruct_fourier'
-        parameters=' -i '    + ForReconstructionSel + \
-                   ' -o '    + OutputVolume + '.vol ' + \
+        parameters=' -i '    + ReconstructionXmd + \
+                   ' -o '    + ReconstructedVolume + \
                    ' --sym '  + SymmetryGroup + \
                    ' --thr '  + str(NumberOfThreads) + \
                    ' --weight ' + \
                    ' --max_resolution ' + str(FourierMaxFrequencyOfInterest) +\
-                   ' --pad_proj ' + str(PaddingFactor) +\
-                   ' --pad_vol ' + str(PaddingFactor)
+                   ' --padding ' + str(PaddingFactor) + ' ' + str(PaddingFactor)
  
-        if (DoParallel):
-            parameters = parameters + ' --mpi_job_size ' + str(MpiJobSize)
+    if (DoParallel):
+        parameters = parameters + ' --mpi_job_size ' + str(MpiJobSize)
             
     runJob(_log
            , program

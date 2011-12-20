@@ -110,6 +110,8 @@ class ProtProjMatch(XmippProtocol):
         #ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s.doc')
         ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s')
         _OutClassesXmd = join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.xmd')
+        _OutClassesXmdS1 = join(ProjMatchDirs, '%(ProjMatchName)s_split_1_' + Ref3D + '.xmd')
+        _OutClassesXmdS2 = join(ProjMatchDirs, '%(ProjMatchName)s_split_2_' + Ref3D + '.xmd')
         CtfGroupBase = join(self.workingDirPath(), self.CtfGroupDirectory, '%(CtfGroupRootName)s')
         ProjLibRootNames = join(IterDir, '%(ProjectLibraryRootName)s_' + Ref3D)
         return {
@@ -126,10 +128,13 @@ class ProtProjMatch(XmippProtocol):
                 'OutClassesXmd': _OutClassesXmd,
                 'OutClassesStk': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.stk'),
                 'OutClassesDiscarded': join(ProjMatchDirs, '%(ProjMatchName)s_discarded.xmd'),
-
-                'ReconstructionXmd': join(Ref3D, _OutClassesXmd),
+                'ReconstructionXmd': Ref3D + '@' +_OutClassesXmd,
+                'ReconstructionXmdSplit1': Ref3D + '@' +_OutClassesXmdS1,
+                'ReconstructionXmdSplit2': Ref3D + '@' +_OutClassesXmdS2,
                 'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref3D + '.vol'),
                 'ReconstructedFileNamesIters': join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '.vol'),
+                'ReconstructedFileNamesItersSplit1': join(IterDir, '%(ReconstructedVolume)s_split_1_' + Ref3D + '.vol'),
+                'ReconstructedFileNamesItersSplit2': join(IterDir, '%(ReconstructedVolume)s_split_2_' + Ref3D + '.vol'),
                 'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref3D + '.vol'),
                 # Particular templates for executeCtfGroups  
                 'ImageCTFpairs': CtfGroupBase + '_images.sel',
@@ -416,7 +421,6 @@ class ProtProjMatch(XmippProtocol):
             _VerifyFiles = _VerifyFiles + [self.getFilename('OutClassesStk', iter=iterN, ref=g) \
                                      for g in range (1, self.numberOfReferences + 1)]
 
-            print "_VerifyFiles: ", _VerifyFiles
             _dataBase.insertStep('angular_class_average', verifyfiles=_VerifyFiles
                              , Align2DIterNr=self.Align2DIterNr[iterN]#
                              , Align2dMaxChangeOffset=self.Align2dMaxChangeOffset[iterN]#
@@ -430,11 +434,13 @@ class ProtProjMatch(XmippProtocol):
                              , DoComputeResolution=self.DoComputeResolution[iterN]
                              , DoCtfCorrection=self.DoCtfCorrection#
                              , DocFileInputAngles=self.DocFileInputAngles[iterN]#
+                             , DoParallel=self.DoParallel
                              , DoSaveImagesAssignedToClasses=self.DoSaveImagesAssignedToClasses#
                              , DoSplitReferenceImages=self.DoSplitReferenceImages[iterN]#
                              , InnerRadius=self.InnerRadius[iterN]#
                              , MaxChangeOffset=self.MaxChangeOffset[iterN]#
                              , MinimumCrossCorrelation=self.MinimumCrossCorrelation[iterN]#
+                             , MpiJobSize=self.MpiJobSize
                              , NumberOfMpi=self.NumberOfMpi
                              , NumberOfThreads=self.NumberOfThreads
                              , OutClasses=self.getFilename('OutClasses', iter=iterN)#
@@ -449,25 +455,66 @@ class ProtProjMatch(XmippProtocol):
                 #self._ARTLambda=arg.getComponentFromVector(_ARTLambda, iterN-1)
 
                 #if (DoReconstruction):
-                _VerifyFiles = []
+                _VerifyFiles = [self.getFilename('ReconstructedFileNamesIters', iter=iterN, ref=refN)]
                 id = _dataBase.insertStep('reconstruction', verifyfiles=_VerifyFiles
                                               , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
                                               , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
                                               , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
                                               , Iteration_number  = iterN
                                               , DoParallel=self.DoParallel#
+                                              , MpiJobSize=self.MpiJobSize
                                               , NumberOfMpi=self.NumberOfMpi#
                                               , NumberOfThreads=self.NumberOfThreads#
                                               , ReconstructionMethod = self.ReconstructionMethod
                                               , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest
                                               , ARTLambda = self.ARTLambda
-                                              , SymmetryGroup = self.SymmetryGroup
-                                              , ReconstructionXmd = self.getFilename('ReconstructedXmd', iter=iterN, ref=refN)
-                                              , ReconstructedVolume = self.ReconstructedVolume[iterN]
-                                              , DoComputeResolution = self.DoComputeResolution
-                                              , DoSplitReferenceImages = self.DoSplitReferenceImages
+                                              , SymmetryGroup = self.SymmetryGroup[iterN]
+                                              , ReconstructionXmd = self.getFilename('ReconstructionXmd', iter=iterN, ref=refN)
+                                              , ReconstructedVolume = self.getFilename('ReconstructedFileNamesIters', iter=iterN, ref=refN)
                                               , PaddingFactor = self.PaddingFactor
                                               )
+                    
+                if(self.DoSplitReferenceImages[iterN]):
+                    
+                    _VerifyFiles = [self.getFilename('ReconstructedFileNamesItersSplit1', iter=iterN, ref=refN)]
+                    id = _dataBase.insertStep('reconstruction', verifyfiles=_VerifyFiles
+                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
+                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
+                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
+                                              , Iteration_number  = iterN
+                                              , DoParallel=self.DoParallel#
+                                              , MpiJobSize=self.MpiJobSize
+                                              , NumberOfMpi=self.NumberOfMpi#
+                                              , NumberOfThreads=self.NumberOfThreads#
+                                              , ReconstructionMethod = self.ReconstructionMethod
+                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest
+                                              , ARTLambda = self.ARTLambda
+                                              , SymmetryGroup = self.SymmetryGroup[iterN]
+                                              , ReconstructionXmd = self.getFilename('ReconstructionXmdSplit1', iter=iterN, ref=refN)
+                                              , ReconstructedVolume = self.getFilename('ReconstructedFileNamesItersSplit1', iter=iterN, ref=refN)
+                                              , PaddingFactor = self.PaddingFactor
+                                              )
+
+                    _VerifyFiles = [self.getFilename('ReconstructedFileNamesItersSplit2', iter=iterN, ref=refN)]
+                    id = _dataBase.insertStep('reconstruction', verifyfiles=_VerifyFiles
+                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
+                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
+                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
+                                              , Iteration_number  = iterN
+                                              , DoParallel=self.DoParallel#
+                                              , MpiJobSize=self.MpiJobSize
+                                              , NumberOfMpi=self.NumberOfMpi#
+                                              , NumberOfThreads=self.NumberOfThreads#
+                                              , ReconstructionMethod = self.ReconstructionMethod
+                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest
+                                              , ARTLambda = self.ARTLambda
+                                              , SymmetryGroup = self.SymmetryGroup[iterN]
+                                              , ReconstructionXmd = self.getFilename('ReconstructionXmdSplit2', iter=iterN, ref=refN)
+                                              , ReconstructedVolume = self.getFilename('ReconstructedFileNamesItersSplit2', iter=iterN, ref=refN)
+                                              , PaddingFactor = self.PaddingFactor
+                                              )
+
+                    
                     
 #                _VerifyFiles = []
 #                    #self._ConstantToAddToFiltration=arg.getComponentFromVector(ConstantToAddToFiltration, _iteration_number-1)
