@@ -355,6 +355,8 @@ XmippMpiProgram::~XmippMpiProgram()
 
 void XmippMpiProgram::read(int argc, char *argv[])
 {
+    errorCode = 0; //suppose no errors
+
     if (node == NULL)
     {
         node = new MpiNode(argc, argv);
