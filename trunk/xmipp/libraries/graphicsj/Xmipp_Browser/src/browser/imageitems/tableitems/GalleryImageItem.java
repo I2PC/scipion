@@ -54,19 +54,24 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
     protected ImagePlus loadPreview(int w, int h) {
         ImagePlus imp = ICONS_MANAGER.MISSING_ITEM;
 
-        if (readGeo) {
-            try {
-                ImageGeneric image = new ImageGeneric();
-                image.readApplyGeo(getAbsoluteFileName(), md, id, w, h);
+        try {
+            if (readGeo && md.containsGeometryInfo()) {
+                try {
+                    ImageGeneric image = new ImageGeneric();
+                    image.readApplyGeo(getAbsoluteFileName(), md, id, w, h);
 
-                imp = XmippImageConverter.convertImageGenericToImageJ(image);
-                imp.setTitle(getOriginalValue());
-            } catch (Exception ex) {
-                DEBUG.printException(ex);
-                System.out.println("ERROR: readApplyGeo: " + getAbsoluteFileName() + " / " + path);
+                    imp = XmippImageConverter.convertImageGenericToImageJ(image);
+                    imp.setTitle(getOriginalValue());
+                } catch (Exception ex) {
+                    DEBUG.printException(ex);
+                    System.out.println("ERROR: readApplyGeo: " + getAbsoluteFileName() + " / " + path);
+                }
+            } else {
+                imp = super.loadPreview(w, h);
             }
-        } else {
-            imp = super.loadPreview(w, h);
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
+            DEBUG.printMessage("fn: " + getAbsoluteFileName());
         }
 
         return imp;

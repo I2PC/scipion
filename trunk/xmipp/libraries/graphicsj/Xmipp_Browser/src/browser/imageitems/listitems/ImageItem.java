@@ -95,17 +95,6 @@ public class ImageItem extends AbstractImageItem {
 
         return preview != null ? new ImagePlus("", preview) : null;
     }
-    /*
-    public String getImageInfo() {
-    loadImageData();
-    
-    System.out.println("W=" + dimension.width + " / H=" + dimension.height);
-    
-    return "<html>"
-    + LABELS.LABEL_WIDTH + dimension.width + "<br>"
-    + LABELS.LABEL_HEIGHT + dimension.height + "<br>"
-    + "</html>";
-    }*/
 
     @Override
     public ImagePlus getImagePlus() {

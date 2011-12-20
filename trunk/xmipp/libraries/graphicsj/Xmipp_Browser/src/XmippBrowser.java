@@ -1,4 +1,5 @@
 
+import browser.DEBUG;
 import ij.IJ;
 import ij.Macro;
 import browser.commandline.Parameters;
@@ -17,6 +18,10 @@ import xmipp.Filename;
  * @author Juanjo Vega
  */
 public class XmippBrowser implements PlugIn {
+
+    public XmippBrowser() {
+        DEBUG.enableDebug(false);
+    }
 
     @Override
     public void run(String string) {

@@ -95,8 +95,7 @@ public class ProjectionsExplorer implements UniverseListener {
 
             // Creates both universes and shows them.
             IJ.showStatus(LABELS.MESSAGE_BUILDING_VOLUME_UNIVERSE);
-            int threshold = 1;//(int) getThresholdValue(xmippVolume);
-            System.out.println(" (@TODO uncomment) threshold: " + threshold);
+            int threshold = (int) getThresholdValue(xmippVolume);
             universeVolume = createVolumeUniverse(volumeIP, threshold);
 
             ImageWindow3D windowVolume = universeVolume.getWindow();
@@ -140,12 +139,10 @@ public class ProjectionsExplorer implements UniverseListener {
             double stats[] = image.getStatistics();
             double m = stats[0];
             double M = stats[1];
-            System.out.println("m: " + m);
-            System.out.println("M: " + M);
             double oldRange = M - m;
 
             double otsu = Projection.entropyOtsuSegmentation(image, 0.005, false);
-            System.out.println("otsu: " + otsu);
+
             // Scales range.
             threshold = (otsu - m) * (255 / oldRange);    // value = ((oldValue - oldMin) * newRange / oldRange) + newMin
         } catch (Exception ex) {
@@ -231,7 +228,7 @@ public class ProjectionsExplorer implements UniverseListener {
             String scoreFile = sphere.analyzeProjection(xmippVolume, getMatrix(universeVolume), projectionW, projectionH);
 
             // Shows table with scores
-            // @TODO Try: /home/jvega/Escritorio/score.xmd
+            //String scoreFile = "/home/jvega/Escritorio/score.xmd";
             showScoreFiles(scoreFile);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -245,7 +242,7 @@ public class ProjectionsExplorer implements UniverseListener {
     }
 
     private void showScoreFiles(String scoreFile) {
-        if (fileExists(scoreFile)) {
+        if (!fileExists(scoreFile)) {
             IJ.error(scoreFile + ": Not found!!");
         } else {
             IJ.showStatus(LABELS.MESSAGE_LOADING_SCORE_FILE);
@@ -288,7 +285,7 @@ public class ProjectionsExplorer implements UniverseListener {
 
         Transform3D t = new Transform3D();
         universe.getRotationTG().getTransform(t);
-        
+
 
         t3d.mul(t);
 

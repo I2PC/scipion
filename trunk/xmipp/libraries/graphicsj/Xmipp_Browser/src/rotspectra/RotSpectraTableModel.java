@@ -34,64 +34,8 @@ public class RotSpectraTableModel extends AbstractTableModel {
         this.filenameData = filenameData;
 
         load(filenameClasses, filenameVectors, filenameData);
-
-        //int size = data.size();
-        //System.out.println(size);
-//        for (int i = 0; i < data.size(); i++) {
-//            RotSpectraVector rsv = data.get(i);
-//            Image plot = rsv.getPreview(128, 128);
-//            ImagePlus imp = new ImagePlus(filenameData, plot);
-//            imp.show();
-//        }
     }
 
-    /*    public static void main(String args[]) {
-    try {
-    RotSpectraTableModel rstm = new RotSpectraTableModel();
-    } catch (Exception ex) {
-    ex.printStackTrace();
-    }
-    }
-    
-    public RotSpectraTableModel() throws Exception {
-    String dir = "/data2/MicrographPreprocessing/2D/RotSpectra/run_001/";
-    
-    this.filenameClasses = dir + "results_classes.xmd";
-    this.filenameVectors = dir + "results_vectors.xmd";
-    this.filenameData = dir + "results_vectors.xmd.raw";
-    
-    RotSpectraVector rsv = load2(filenameClasses, filenameVectors, filenameData);
-    
-    rsv.getChart().show();
-    //int size = data.size();
-    //System.out.println(size);
-    //        for (int i = 0; i < data.size(); i++) {
-    //            RotSpectraVector rsv = data.get(i);
-    //            Image plot = rsv.getPreview(128, 128);
-    //            ImagePlus imp = new ImagePlus(filenameData, plot);
-    //            imp.show();
-    //        }
-    }
-    
-    RotSpectraVector load2(String filenameClasses, String filenameVectors, String filenameData) throws Exception {
-    MetaData mdClasses = new MetaData(blockKerDenSOM + filenameClasses);
-    MetaData mdVectors = new MetaData(filenameVectors);
-    
-    long id = mdClasses.firstObject();
-    w = mdClasses.getValueInt(MDLabel.MDL_XSIZE, id);
-    h = mdClasses.getValueInt(MDLabel.MDL_YSIZE, id);
-    int nvectors = w * h;
-    
-    String blocks[] = getBlocks(blockVectorContent + filenameVectors);
-    
-    id = mdVectors.firstObject();
-    vectorsSize = mdVectors.getValueInt(MDLabel.MDL_CLASSIFICATION_DATA_SIZE, id);
-    
-    double vectors[][] = loadVectors(filenameData, nvectors, vectorsSize);
-    
-    int i = 16; // <- Class 000016
-    return new RotSpectraVector(blocks[i], filenameClasses, vectors[i]);
-    }*/
     void load(String filenameClasses, String filenameVectors, String filenameData) throws Exception {
         MetaData mdClasses = new MetaData(blockKerDenSOM + filenameClasses);
         MetaData mdVectors = new MetaData(filenameVectors);

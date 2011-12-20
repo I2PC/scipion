@@ -4,6 +4,7 @@
  */
 package browser.gallery.renderers;
 
+import browser.DEBUG;
 import browser.imageitems.tableitems.AbstractGalleryImageItem;
 import ij.ImagePlus;
 import java.awt.Component;
@@ -55,10 +56,10 @@ public class ImageRenderer extends DefaultTableCellRenderer {
             setEnabled(item.isEnabled());
 
             // Normalizes image (if sets in tablemodel)
-            try{
-            normalize(imp, tableModel);
-            }catch(Exception ex){
-                System.out.println(ex.getMessage());
+            try {
+                normalize(imp, tableModel);
+            } catch (Exception ex) {
+                DEBUG.printException(ex);
             }
             Image image = imp.getImage();
             setIcon(new ImageIcon(image));

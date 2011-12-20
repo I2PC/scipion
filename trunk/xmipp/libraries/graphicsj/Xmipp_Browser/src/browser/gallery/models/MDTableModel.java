@@ -11,6 +11,7 @@ import browser.imageitems.tableitems.AbstractGalleryImageItem;
 import browser.imageitems.tableitems.GalleryImageItem;
 import ij.IJ;
 import java.util.ArrayList;
+import xmipp.Filename;
 import xmipp.ImageGeneric;
 import xmipp.MDLabel;
 import xmipp.MetaData;
@@ -182,7 +183,14 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     @Override
     public boolean isStack() {
-        return true;
+        boolean isStack = false;
+
+        try {
+            isStack = Filename.isStack(getFilename());
+        } catch (Exception ex) {
+        }
+
+        return isStack;
     }
 
     @Override
@@ -192,7 +200,7 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     @Override
     public boolean isMetaData() {
-        return true;
+        return Filename.isMetadata(getFilename());
     }
 
     @Override
@@ -204,7 +212,7 @@ public class MDTableModel extends AbstractXmippTableModel {
     public boolean saveAsMetadata(String path, boolean all) {
         try {
             // Copies items into the new MetaData.
-            ArrayList<AbstractGalleryImageItem> items = getSelectedItems();
+            ArrayList<AbstractGalleryImageItem> items = all ? data : getSelectedItems();
             long ids[] = new long[items.size()];
 
             for (int i = 0; i < items.size(); i++) {

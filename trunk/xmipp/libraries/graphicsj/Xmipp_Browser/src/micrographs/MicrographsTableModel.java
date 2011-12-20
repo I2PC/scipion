@@ -106,8 +106,6 @@ public class MicrographsTableModel extends XmippTableModelRowDisabler implements
         try {
             clear();    // Clear the whole data.
 
-            System.out.println(" !!! Loading: " + filename);
-
             md = new MetaData(filename);
 
             buildTable(md);
@@ -124,81 +122,6 @@ public class MicrographsTableModel extends XmippTableModelRowDisabler implements
             removeRow(0);
         }
     }
-//
-//    private void buildTable(MetaData md) {
-//        try {
-//            // Read metadata.
-//            Object row[] = new Object[MD_LABELS.length + 1];    // Field #0 is used for MDRow id.
-//
-//            // Contains field enabled ?
-//            boolean hasEnabledField = true;
-//            if (!md.containsLabel(MDLabel.MDL_ENABLED)) {
-//                md.addLabel(MDLabel.MDL_ENABLED);
-//                hasEnabledField = false;
-//            }
-//
-//            long objs[] = md.findObjects();
-//
-//            for (long id : objs) {
-//                // Stores id.
-//                row[0] = id;
-//
-//                // Field enabled does not exist, so adds it (true by default).
-//                if (!hasEnabledField) {
-//                    md.setValueInt(MDLabel.MDL_ENABLED, 1, id);
-//                }
-//
-//                for (int i = 0, col = 1; i < MD_LABELS.length; i++, col++) {
-//                    int label = MD_LABELS[i];
-//
-//                    if (md.containsLabel(label)) {
-//                        switch (label) {
-//                            case MDLabel.MDL_ENABLED:
-//                                Integer enabled = md.getValueInt(label, id);
-//                                row[col] = enabled > 0;
-//                                break;
-//                            case MDLabel.MDL_IMAGE:
-//                            case MDLabel.MDL_PSD:
-//                            case MDLabel.MDL_ASSOCIATED_IMAGE1:
-//                            case MDLabel.MDL_ASSOCIATED_IMAGE2:
-//                            case MDLabel.MDL_ASSOCIATED_IMAGE3:
-//                                //String filename = md.getValueString(label, id, true);
-//                                //File f = new File(filename);
-//                                //String originalValue = md.getValueString(label, id);
-//
-//                                //row[col] = new MicrographsTableImageItem(f, originalValue, cache);
-//                                row[i] = new GalleryImageItem(id, md, label, cache);
-//                                break;
-//                            case MDLabel.MDL_CTF_CRITERION_DAMPING:
-//                            case MDLabel.MDL_CTF_CRITERION_FIRSTZEROAVG:
-//                            case MDLabel.MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT:
-//                            case MDLabel.MDL_CTF_CRITERION_FIRSTZERORATIO:
-//                            case MDLabel.MDL_CTF_CRITERION_FITTINGSCORE:
-//                            case MDLabel.MDL_CTF_CRITERION_FITTINGCORR13:
-//                            case MDLabel.MDL_CTF_CRITERION_PSDCORRELATION90:
-//                            case MDLabel.MDL_CTF_CRITERION_PSDRADIALINTEGRAL:
-//                            case MDLabel.MDL_CTF_CRITERION_PSDVARIANCE:
-//                            case MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST:
-//                            case MDLabel.MDL_ZSCORE:
-//                                //case MDLabel.MDL_CTF_CRITERION_COMBINED:
-//                                row[col] = md.getValueDouble(label, id);
-//                                break;
-//                            default:
-//                                row[col] = md.getValueString(label, id, true);
-//                        }
-//                    }
-//                }
-//                // Adds a new row data to table.
-//                addRow(row);
-//            }
-//
-//            addExtraColumns();
-//        } catch (Exception ex) {
-//            System.out.println("Exception: " + ex.getMessage());
-//            ex.printStackTrace();
-//            throw new RuntimeException(ex);
-//        }
-//    }
 
     void setCacheSize(MetaData md) throws Exception {
         // Calculates cache elements size.
@@ -277,9 +200,7 @@ public class MicrographsTableModel extends XmippTableModelRowDisabler implements
 
             addExtraColumns();
         } catch (Exception ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            DEBUG.printException(ex);
         }
     }
 
@@ -466,8 +387,6 @@ public class MicrographsTableModel extends XmippTableModelRowDisabler implements
     public void tableChanged(TableModelEvent e) {
         int row = e.getFirstRow();
         int column = e.getColumn();
-
-//        System.out.println(" *** Table changed @ " + row);
 
         // Updates metadata.
         if (column == ENABLED_COLUMN_INDEX) {

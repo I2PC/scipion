@@ -23,7 +23,9 @@ import browser.SpringUtilities;
 import browser.gallery.models.AbstractXmippTableModel;
 import browser.gallery.models.VolumeTableModel;
 import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
+import ij.WindowManager;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -81,6 +83,11 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
     private JMenuBarTable jMenuBarTable;
     JFileChooser fc = new JFileChooser();
 
+    public enum RESLICE_MODE {
+
+        TOP_Y, RIGHT_X
+    }
+
     public JFrameGallery(String filename) {
         super();
 
@@ -121,8 +128,6 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
         columnModel = new GalleryTableColumnModel();
 
         initComponents();
-
-        jtbUseGeometry.setEnabled(tableModel.isMetaData());    // Not aplicable for volumes.
 
         table.setColumnModel(columnModel);
         table.setDefaultRenderer(AbstractGalleryImageItem.class, renderer);
@@ -247,17 +252,7 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
         updateTable();
     }
 
-//    public void setDimensions(int rows, int columns) {
-//        if (rows > 0) {
-//            setRows(rows);            
-//        }
-//
-//        if (columns > 0) {
-//            setColumns(columns);
-//        }
-//    }
     private void autoAdjustColumns() {
-        //System.out.println("rowHeader.getWidth(): " + rowHeader.getWidth());
         tableModel.autoAdjustColumns(
                 //jsPanel.getVisibleRect().width - rowHeader.getWidth(),
                 //jsPanel.getViewportBorderBounds().width - rowHeader.getWidth(),
@@ -287,7 +282,6 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
     }
 
     private void setZoom(int zoom) {
-        System.out.println(" *** Setting scale to: " + zoom / 100.0);
         isUpdating = true;
         tableModel.setZoomScale(zoom / 100.0);
 
@@ -493,6 +487,41 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
         } catch (Exception ex) {
             DEBUG.printException(ex);
         }
+    }
+
+    private void reslice(RESLICE_MODE mode) throws Exception {
+        String command = null;
+
+        switch (mode) {
+            case TOP_Y:
+                command = "Top";
+                break;
+            case RIGHT_X:
+                command = "Right";
+                break;
+        }
+
+        // Get volume ImagePlus.
+        String filename = tableModel.getFilename();
+        ImagePlus volume = XmippImageConverter.loadImage(filename);
+
+        // Reslice.
+        IJ.run(volume, "Reslice [/]...", "slice=1.000 start=" + command);
+        volume = WindowManager.getCurrentImage();
+        volume.getWindow().setVisible(false);
+
+        // Save temp file.
+        int index = filename.lastIndexOf(".");
+        String name = filename.substring(filename.lastIndexOf(File.separator) + 1, index);
+        String ext = filename.substring(index);
+        File f = File.createTempFile(name + "_" + command, ext);
+        f.deleteOnExit();
+
+        XmippImageConverter.saveImage(volume, f.getAbsolutePath());
+        volume.close();
+
+        // Open as gallery.
+        ImagesWindowFactory.openFileAsGallery(f.getCanonicalPath());
     }
 
     /** This method is called from within the constructor to
@@ -792,11 +821,13 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
 
     class JMenuBarTable extends JMenuBar {
 
+        protected JMenu jmFile = new JMenu(LABELS.LABEL_GALLERY_FILE);
         protected JMenu jmSave = new JMenu(LABELS.LABEL_GALLERY_SAVE);
         protected JMenuItem jmiSaveAsMetadata = new JMenuItem(LABELS.LABEL_GALLERY_SAVE_AS_METADATA);
-        protected JMenuItem jmiSaveAsStack = new JMenuItem(LABELS.LABEL_GALLERY_SAVE_AS_STACK);
+        protected JMenuItem jmiSaveAsStack = new JMenuItem(LABELS.LABEL_GALLERY_SAVE_AS_IMAGE);
         protected JMenuItem jmiSaveSelectionAsMetadata = new JMenuItem(LABELS.LABEL_GALLERY_SAVE_SELECTION_AS_METADATA);
-        protected JMenuItem jmiSaveSelectionAsStack = new JMenuItem(LABELS.LABEL_GALLERY_SAVE_SELECTION_AS_STACK);
+        protected JMenuItem jmiSaveSelectionAsStack = new JMenuItem(LABELS.LABEL_GALLERY_SAVE_SELECTION_AS_IMAGE);
+        protected JMenuItem jmiExit = new JMenuItem(LABELS.LABEL_GALLERY_EXIT);
         protected JMenu jmStatistics = new JMenu(LABELS.LABEL_MENU_STATISTICS);
         protected JMenuItem jmiAVG = new JMenuItem(LABELS.BUTTON_MEAN);
         protected JMenuItem jmiSTDEV = new JMenuItem(LABELS.BUTTON_STD_DEVIATION);
@@ -806,16 +837,23 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
         protected JMenuItem jmiOpenAs3D = new JMenuItem(LABELS.OPERATION_OPEN_AS_3D_VOLUME);
         protected JMenuItem jmiOpenAsMetadata = new JMenuItem(LABELS.OPERATION_OPEN_AS_METADATA);
         protected JMenuItem jmiOpenAsStack = new JMenuItem(LABELS.OPERATION_OPEN_AS_STACK);
+        protected JMenu jmReslice = new JMenu(LABELS.LABEL_RESLICE);
+        protected JMenuItem jmiResliceTop = new JMenuItem(LABELS.LABEL_RESLICE_TOP);
+        protected JMenuItem jmiResliceRight = new JMenuItem(LABELS.LABEL_RESLICE_RIGHT);
 
         public JMenuBarTable() {
             super();
 
-            add(jmSave);
             jmSave.add(jmiSaveAsMetadata);
             jmSave.add(jmiSaveAsStack);
             jmSave.addSeparator();
             jmSave.add(jmiSaveSelectionAsMetadata);
             jmSave.add(jmiSaveSelectionAsStack);
+
+            add(jmFile);
+            jmFile.add(jmSave);
+            jmFile.addSeparator();
+            jmFile.add(jmiExit);
 
             jmiSaveAsMetadata.addActionListener(new ActionListener() {
 
@@ -842,6 +880,13 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
 
                 public void actionPerformed(ActionEvent e) {
                     saveAsStack(false);
+                }
+            });
+
+            jmiExit.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent ae) {
+                    System.exit(0);
                 }
             });
 
@@ -904,6 +949,47 @@ public class JFrameGallery extends JFrame {//implements TableModelListener {
                     openAsStack();
                 }
             });
+
+            add(jmReslice);
+            jmReslice.add(jmiResliceTop);
+            jmReslice.add(jmiResliceRight);
+
+            jmiResliceTop.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        reslice(RESLICE_MODE.TOP_Y);
+                    } catch (Exception ex) {
+                        DEBUG.printException(ex);
+                        IJ.error(ex.getMessage());
+                    }
+                }
+            });
+
+            jmiResliceRight.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        reslice(RESLICE_MODE.RIGHT_X);
+                    } catch (Exception ex) {
+                        DEBUG.printException(ex);
+                        IJ.error(ex.getMessage());
+                    }
+                }
+            });
+
+            boolean isVolume = tableModel.isVolume();
+            //  boolean isStack = tableModel.isStack();
+            boolean isMetaData = tableModel.isMetaData();
+
+            jmStatistics.setEnabled(isMetaData);
+            jmReslice.setEnabled(isVolume);
+            jmiOpenAs3D.setEnabled(!isMetaData);
+            jmiOpenAsMetadata.setEnabled(!isVolume);
+
+            // Volumes can't be saved as metadata.
+            jmiSaveAsMetadata.setEnabled(!isVolume);
+            jmiSaveSelectionAsMetadata.setEnabled(!isVolume);
         }
     }
 

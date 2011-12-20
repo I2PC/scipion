@@ -41,14 +41,12 @@ public class MetadataImageItem extends AbstractImageItem {
 
     @Override
     protected ImagePlus loadPreview(int w, int h) {
-//        System.out.println(" >>> Loading preview: " + getKey());
         ImagePlus ip = null;
 
         try {
             String path = file.getAbsolutePath();
             //String fileName = file.getName();
             ImageGeneric image = new ImageGeneric(path);
-            //System.out.println(" *** Loading preview: " + path + " / w=" + w + " / h=" + h + " / d=" + nslice + " n=" + nimage);
 
             double factor = XmippImageItem.getFactor(getWidth(), getHeight(), w, h);
 

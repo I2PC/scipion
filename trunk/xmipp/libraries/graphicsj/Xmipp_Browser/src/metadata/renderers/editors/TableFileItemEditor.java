@@ -31,20 +31,8 @@ public class TableFileItemEditor extends DefaultCellEditor {//JTextField impleme
 
     @Override
     public Object getCellEditorValue() {
-        //item.setPath(super.getCellEditorValue().toString());
-
-        System.out.println(" <- " + item.getOriginalValue());
-
         return item;
     }
-//
-//    public boolean isCellEditable(EventObject eo) {
-//        return true;
-//    }
-//
-//    public boolean shouldSelectCell(EventObject eo) {
-//        return true;
-//    }
 
     @Override
     public boolean stopCellEditing() {
@@ -59,10 +47,4 @@ public class TableFileItemEditor extends DefaultCellEditor {//JTextField impleme
     public void cancelCellEditing() {
         fireEditingCanceled();
     }
-//
-//    public void addCellEditorListener(CellEditorListener cl) {
-//    }
-//
-//    public void removeCellEditorListener(CellEditorListener cl) {
-//    }
 }

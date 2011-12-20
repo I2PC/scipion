@@ -150,7 +150,6 @@ public abstract class AbstractGalleryImageItem {
 
             // If not in cache.
             if (preview == null) {
-//                System.out.println("Reading from disk: " + getKey());
                 preview = loadPreview(w, h);
 
                 if (preview != null) {
@@ -161,9 +160,6 @@ public abstract class AbstractGalleryImageItem {
             // Preview might be loaded from cache if it has been already
             // referenced by another item, but statistics might be still null.
             if (statistics == null) {
-                /*statistics = preview.getStatistics(
-                ImageStatistics.MIN_MAX + ImageStatistics.MEAN + ImageStatistics.STD_DEV);*/
-                //System.out.println("Loading statistics for: " + getLabelAsString());
                 int moptions = ImageStatistics.MIN_MAX + ImageStatistics.MEAN + ImageStatistics.STD_DEV;
                 statistics = ImageStatistics.getStatistics(preview.getProcessor(), moptions, preview.getCalibration());
             }
@@ -190,7 +186,7 @@ public abstract class AbstractGalleryImageItem {
                 ImageGeneric image = new ImageGeneric(path);
                 ip = XmippImageConverter.convertToImageJ(image, w_, h_, getNSlice(), getNImage());//,w_, h_, getNSlice(), getNImage());
             } catch (Exception ex) {
-                ex.printStackTrace();
+                DEBUG.printException(ex);
             }
         }
 

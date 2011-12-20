@@ -398,7 +398,7 @@ public class Sphere {
     public String analyzeProjection(ImageGeneric xmippVolume, double matrix[], int w, int h) {
         String path = tempDir.getAbsolutePath() + File.separator;
         String projectionFileName = path + "projection.xmp";
-        String selFileName = path + "analize.sel";
+        String selFileName = path + "analyze.sel";
         String outputFile = path + "score.xmd";
 
         try {
@@ -433,7 +433,7 @@ public class Sphere {
             xmipp_classify_analyze_cluster(selFileName, projectionFileName, outputFile);
         } catch (Exception ex) {
             IJ.error("Error writing projection to temporary file: " + ex.getMessage());
-            throw new RuntimeException(ex);
+            ex.printStackTrace();
         }
 
         return outputFile;

@@ -4,37 +4,32 @@
  */
 package table;
 
-import constants.LABELS;
 import java.awt.Color;
 import java.awt.Component;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
-import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.border.Border;
-import javax.swing.border.TitledBorder;
-import javax.swing.table.TableCellRenderer;
+import javax.swing.table.DefaultTableCellRenderer;
 
 /**
  *
  * @author Juanjo Vega
  */
-public class ScoreImagesTableRenderer extends JLabel implements TableCellRenderer {
+public class ScoreImagesTableRenderer extends DefaultTableCellRenderer {//JLabel implements TableCellRenderer {
 
-    //private Border borderSelected = BorderFactory.createLineBorder(Color.RED, 20);
-    //private Border borderFocused = BorderFactory.createLineBorder(Color.RED, 3);
     private Border bordergood = BorderFactory.createLineBorder(Color.BLUE, 1);
     private Border borderbad = BorderFactory.createLineBorder(Color.RED, 1);
 
-    public ScoreImagesTableRenderer() {
-        super();
-    }
-
+    @Override
     public Component getTableCellRendererComponent(JTable table, Object object, boolean isSelected, boolean hasFocus, int row, int column) {
+        super.getTableCellRendererComponent(table, object, isSelected, hasFocus, row, column);
+        
         ScoreItem item = (ScoreItem) object;
 
         if (item != null) {
             setIcon(new ImageIcon(item.getImagePlus().getImage()));
+            
 
             setOpaque(true);
             setHorizontalAlignment(CENTER);

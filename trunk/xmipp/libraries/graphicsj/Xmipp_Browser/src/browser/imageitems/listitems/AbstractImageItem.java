@@ -5,6 +5,7 @@
 package browser.imageitems.listitems;
 
 import browser.Cache;
+import browser.DEBUG;
 import browser.LABELS;
 import browser.imageitems.ImageDimension;
 import ij.ImagePlus;
@@ -36,7 +37,7 @@ public abstract class AbstractImageItem extends FileItem {
 
             dimension = new ImageDimension(image);
         } catch (Exception ex) {
-            System.out.println(ex.getMessage() + ": " + getAbsoluteFileName());
+            DEBUG.printException(ex);
         }
     }
 
@@ -56,7 +57,6 @@ public abstract class AbstractImageItem extends FileItem {
 
             // If not in cache.
             if (preview == null) {
-//                System.out.println("Reading from disk: " + getKey());
                 preview = loadPreview(w, h);
 
                 if (preview != null) {
@@ -67,9 +67,6 @@ public abstract class AbstractImageItem extends FileItem {
             // Preview might be loaded from cache if it has been already
             // referenced by another item, but statistics might be still null.
             if (statistics == null) {
-                /*statistics = preview.getStatistics(
-                ImageStatistics.MIN_MAX + ImageStatistics.MEAN + ImageStatistics.STD_DEV);*/
-                //System.out.println("Loading statistics for: " + getLabel());
                 int moptions = ImageStatistics.MIN_MAX + ImageStatistics.MEAN + ImageStatistics.STD_DEV;
                 statistics = ImageStatistics.getStatistics(preview.getProcessor(), moptions, preview.getCalibration());
             }

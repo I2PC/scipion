@@ -168,7 +168,7 @@ public class XmippImageConverter {
                     String name = Filename.getFilename(filename);
                     long n = Filename.getNimage(filename);
 
-                    ImageGeneric image = new ImageGeneric(filename);
+                    ImageGeneric image = new ImageGeneric(name);
                     ImagePlus slice = convertToImageJ(image, n);
 
                     if (is == null) {
@@ -200,14 +200,17 @@ public class XmippImageConverter {
 
     public static ImagePlus buildImagePlus(String filename, ImageStack is) {
         ImagePlus imp = new ImagePlus(filename, is);
-        // Sets associated file info.
-        File f = new File(filename);
-        FileInfo fi = new FileInfo();
-        String absPath = f.getAbsolutePath();
-        fi.directory = absPath.substring(0, absPath.lastIndexOf(File.separator));
-        fi.fileName = f.getName();
 
-        imp.setFileInfo(fi);
+        if (filename != null) {
+            // Sets associated file info.
+            File f = new File(filename);
+            FileInfo fi = new FileInfo();
+            String absPath = f.getAbsolutePath();
+            fi.directory = absPath.substring(0, absPath.lastIndexOf(File.separator));
+            fi.fileName = f.getName();
+
+            imp.setFileInfo(fi);
+        }
 
         return imp;
     }

@@ -49,7 +49,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
     private MenuItem itemRotateL = new MenuItem(LABELS.OPERATION_ROTATE_LEFT);
     private MenuItem itemRotateR = new MenuItem(LABELS.OPERATION_ROTATE_RIGHT);
     private MenuItem itemCrop = new MenuItem(LABELS.OPERATION_CROP);
-    private Menu menuReslice = new Menu(LABELS.OPERATION_MENU_RESLICE);
+    private Menu menuReslice = new Menu(LABELS.LABEL_RESLICE);
     private MenuItem itemResliceTop = new MenuItem(LABELS.OPERATION_RESLICE_TOP);
     private MenuItem itemResliceRight = new MenuItem(LABELS.OPERATION_RESLICE_RIGHT);
     private MenuItem itemStackSlicer = new MenuItem(LABELS.OPERATION_STACK_SLICER);
@@ -530,9 +530,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
                 }
 
                 converted = convert(imp, 8, "8-bit");
-                System.out.println(" + AUTO CORRELATION");
                 IJ.run(imp, "Auto Corr", "");
-                System.out.println(" / AUTO CORRELATION");
             } else if (e.getSource() == itemConcentricCircles) {
                 IJ.run(imp, "Concentric Circles", "");
             } else if (e.getSource() == itemLineAnalyzer) {
@@ -595,7 +593,6 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
             } else if (e.getSource() == itemRATS) {
                 IJ.run(imp, "RATS ", "");
             } else if (e.getSource() == itemSIOX) {
-                System.out.println(imp.getBitDepth());
                 converted = convert(imp, 24, "RGB Color");
                 IJ.run(imp, "SIOX Segmentation", "");
             } else if (e.getSource() == itemContourPlotter) {

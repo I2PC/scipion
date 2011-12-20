@@ -15,7 +15,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
+import xmipp.ImageGeneric;
 import xmipp.MDLabel;
+import xmippij.XmippImageConverter;
 
 /**
  *
@@ -449,8 +451,6 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
         for (i = 0; i < getSize(); i++) {
             if (data.get(i).exists()) {
-//                System.out.println("H: " + getAllItems().get(i).getThumbnailHeight());
-
                 return getAllItems().get(i).getThumbnailHeight();
             }
         }
@@ -494,7 +494,8 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     public boolean saveAsStack(String path, boolean all) {
         try {
             ImagePlus imp = ImagesWindowFactory.convertToImageJ(all ? data : getSelectedItems());
-            IJ.run(imp, "Xmipp writer", "save=" + path);
+            ImageGeneric image = XmippImageConverter.convertToXmipp(imp);
+            image.write(path);
 
             return true;
         } catch (Exception ex) {

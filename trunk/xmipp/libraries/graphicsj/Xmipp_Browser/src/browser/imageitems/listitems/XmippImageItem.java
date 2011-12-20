@@ -5,6 +5,7 @@
 package browser.imageitems.listitems;
 
 import browser.Cache;
+import browser.DEBUG;
 import ij.IJ;
 import ij.ImagePlus;
 import java.io.File;
@@ -34,14 +35,11 @@ public class XmippImageItem extends AbstractImageItem {
     }
 
     protected ImagePlus loadPreview(int w, int h, int slice, long nimage) {
-//        System.out.println(" >>> Loading preview: " + getKey());
         ImagePlus ip = null;
 
         try {
             String path = file.getAbsolutePath();
-            //String fileName = file.getName();
             ImageGeneric image = new ImageGeneric(path);
-            //System.out.println(" *** Loading preview: " + path + " / w=" + w + " / h=" + h + " / d=" + nslice + " n=" + nimage);
 
             double factor = getFactor(getWidth(), getHeight(), w, h);
 
@@ -51,9 +49,7 @@ public class XmippImageItem extends AbstractImageItem {
             image.read(w_, h_, slice, nimage);
             ip = XmippImageConverter.convertToImageJ(image);
         } catch (Exception ex) {
-            System.err.println(" >>> Error loading preview: " + getKey());
-//            ex.printStackTrace();
-            //throw new RuntimeException(ex);
+            System.out.println("ERROR: loading preview: " + getKey());
         }
 
         return ip;
@@ -88,7 +84,7 @@ public class XmippImageItem extends AbstractImageItem {
 
         if (exists()) {
             try {
-                System.out.println(" *** Reading ImagePlus [from disk]: " + getKey());
+                DEBUG.printMessage(" *** Reading ImagePlus [from disk]: " + getKey());
                 String path = getAbsoluteFileName();
                 ImageGeneric image = new ImageGeneric(path);
 

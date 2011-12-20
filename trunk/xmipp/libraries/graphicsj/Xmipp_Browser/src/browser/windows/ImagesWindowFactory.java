@@ -116,8 +116,6 @@ public class ImagesWindowFactory {
 
                 imp = XmippImageConverter.convertToImageJ(md);
             } else {
-                //System.out.println(" *** zoom: " + parameters.zoom);
-
                 imp = XmippImageConverter.loadImage(path, parameters.zoom);
             }
 
@@ -271,7 +269,6 @@ public class ImagesWindowFactory {
     public static void openImagePlusAsGallery(ImagePlus imp) {
         try {
             FileInfo fi = imp.getOriginalFileInfo();
-//            System.out.println(" +++ FileInfo: " + fi);
 
             // If path exists, uses it...
             File file = null;
@@ -280,14 +277,10 @@ public class ImagesWindowFactory {
             }
 
             if (file == null || !file.exists()) {   // ...otherwise, stores it in a temporary file.
-//                System.err.println(" !!! EXISTS");
                 file = File.createTempFile("stackToTable_", ".stk");
                 file.deleteOnExit();
-                IJ.run(imp, "Xmipp writer", "save=" + file.getAbsolutePath());
-
-//                System.err.println(" >>> TMP Saved at: " + file.getAbsolutePath());
-//            } else {
-//                System.err.println(" +++ EXISTS");
+                
+                XmippImageConverter.saveImage(imp, file.getAbsolutePath());
             }
 
             openFileAsGallery(file.getAbsolutePath());
@@ -338,7 +331,7 @@ public class ImagesWindowFactory {
         }
     }
 
-    public static void openRotSpectrasWindow(String filenameVectors,
+    public static void openRotSpectraWindow(String filenameVectors,
             String filenameClasses, String filenameData) {
         JFrameRotSpectra frame = new JFrameRotSpectra(filenameVectors, filenameClasses, filenameData);
         ImagesWindowFactory.setConvenientSize(frame);

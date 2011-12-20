@@ -42,7 +42,6 @@ class ScriptShowJ(ScriptPluginIJ):
 							mode = "metadata"
 							break
 			self.args += " --mode %s" % mode
-			print "++++++++++++++++++AFTER: %s" % self.args
 		
 		if self.checkParam('--poll'):
 			self.args += " --poll"

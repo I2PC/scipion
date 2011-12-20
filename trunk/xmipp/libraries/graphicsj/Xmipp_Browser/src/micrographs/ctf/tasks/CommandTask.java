@@ -4,6 +4,7 @@
  */
 package micrographs.ctf.tasks;
 
+import browser.DEBUG;
 import ij.IJ;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -39,14 +40,6 @@ public class CommandTask implements Runnable {
 
     public void run() {
         try {
-//            int total = 3000;
-//            int delay = 1000;
-//            while (total > 0) {
-//                System.out.println(total + " ms to finish: "
-//                        + command.substring(0, 20) + (row >= 0 ? "/ row=" + row : ""));
-//                Thread.sleep(delay);
-//                total -= delay;
-//            }
             runTask();
         } catch (Exception ex) {
             IJ.error("Error running command: " + ex.getMessage());
@@ -58,7 +51,7 @@ public class CommandTask implements Runnable {
     }
 
     private void runTask() throws Exception {
-        System.out.println(">> " + command);
+        DEBUG.printMessage(">> " + command);
         Process p = Runtime.getRuntime().exec(command);
 
         BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -66,7 +59,7 @@ public class CommandTask implements Runnable {
         // read the output from the command
         String s;
         while ((s = stdInput.readLine()) != null) {
-            System.out.println(s);
+            DEBUG.printMessage(s);
         }
     }
 }

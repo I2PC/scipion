@@ -14,16 +14,17 @@ import constants.LABELS;
 import ij.IJ;
 import ij.ImagePlus;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import xmipp.ImageGeneric;
 import xmipp.MetaData;
 import xmippij.XmippImageConverter;
@@ -34,7 +35,7 @@ import xmippij.XmippImageConverter;
  */
 public class JFrameImagesTable extends javax.swing.JFrame {
 
-    private JTable jtImages;
+    private JTable table;
     private ImagesTableModel tableModel;
     private ScoreImagesTableRenderer tableRenderer;
 
@@ -46,27 +47,27 @@ public class JFrameImagesTable extends javax.swing.JFrame {
 
         tableModel = new ImagesTableModel();    // Creates table model
 
-        jtImages = new JTable(tableModel);  // Creates table using previous table model.
+        table = new JTable(tableModel);  // Creates table using previous table model.
 
         tableRenderer = new ScoreImagesTableRenderer();
-        jtImages.setDefaultRenderer(ScoreItem.class, tableRenderer);
+        table.setDefaultRenderer(ScoreItem.class, tableRenderer);
 
-        jtImages.setRowSelectionAllowed(false);
-        jtImages.setColumnSelectionAllowed(false);
-        jtImages.setCellSelectionEnabled(false);
+        table.setRowSelectionAllowed(false);
+        table.setColumnSelectionAllowed(false);
+        table.setCellSelectionEnabled(false);
 
-        jtImages.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 
-        jtImages.setTableHeader(null);
-        jtImages.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.setTableHeader(null);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-        jtImages.addMouseListener(new MouseAdapter() {
+        table.addMouseListener(new MouseAdapter() {
 
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() > 1) {
-                    int row = jtImages.rowAtPoint(e.getPoint());
-                    int col = jtImages.columnAtPoint(e.getPoint());
+                    int row = table.rowAtPoint(e.getPoint());
+                    int col = table.columnAtPoint(e.getPoint());
 
                     ScoreItem item = (ScoreItem) tableModel.getValueAt(row, col);
 
@@ -87,7 +88,7 @@ public class JFrameImagesTable extends javax.swing.JFrame {
 
         // Adds components to GUI.
         JScrollPane jsPane = new JScrollPane();
-        jsPane.setViewportView(jtImages);
+        jsPane.setViewportView(table);
         add(jsPane, BorderLayout.CENTER);
     }
 
@@ -104,8 +105,43 @@ public class JFrameImagesTable extends javax.swing.JFrame {
         setTitle("Analysis Results: " + tableModel.getColumnCount() + " images ("
                 + tableModel.getGoodCount() + " good / " + tableModel.getBadCount() + " bad)");
 
-        if (tableModel.getData().size() > 0) {
-            adjustTableSize();
+        packSize();
+    }
+
+    private void packSize() {
+        packRows();
+        packColumns();
+
+        ScoreItem item = ((ScoreItem) tableModel.getValueAt(0, 0));
+        setHeight(item.getHeight() + 70);  // Window height.
+    }
+
+    private void packRows() {
+        int row = 0;
+        int height = -1;
+
+        for (int column = 0; column < tableModel.getColumnCount(); column++) {
+            TableCellRenderer renderer = table.getCellRenderer(row, column);
+            Component comp = renderer.getTableCellRendererComponent(
+                    table, table.getValueAt(row, column), false, false, row, column);
+            height = Math.max(height, comp.getPreferredSize().height);
+        }
+
+        // Sets width
+        table.setRowHeight(height);
+    }
+
+    private void packColumns() {
+        for (int column = 0; column < table.getColumnCount(); column++) {
+            int r = 0;
+
+            // Get width of column header
+            TableColumn tc = table.getColumnModel().getColumn(column);
+
+            Component comp = table.getCellRenderer(r, column).getTableCellRendererComponent(
+                    table, table.getValueAt(r, column), false, false, r, column);
+
+            tc.setPreferredWidth(comp.getPreferredSize().width);
         }
     }
 
@@ -155,21 +191,21 @@ public class JFrameImagesTable extends javax.swing.JFrame {
         setSize(d);
         //pack();
     }
-
-    private void adjustTableSize() {
-        // Tricky way to calculate table height
-        ScoreItem item = ((ScoreItem) tableModel.getValueAt(0, 0));
-        item.getImagePlus();
-
-        int fontHeight = getFontMetrics((new JLabel(item.getLabel())).getFont()).getHeight();
-
-        jtImages.setRowHeight(item.getHeight() + fontHeight * 2);
-        for (int i = 0; i < jtImages.getColumnCount(); i++) {
-            jtImages.getColumnModel().getColumn(i).setPreferredWidth(item.getWidth());
-        }
-
-        setHeight(item.getHeight() + fontHeight * 8);  // Window height.
-    }
+//
+//    private void adjustTableSize() {
+//        // Tricky way to calculate table height
+//        ScoreItem item = ((ScoreItem) tableModel.getValueAt(0, 0));
+//        item.getImagePlus();
+//
+//        int fontHeight = getFontMetrics((new JLabel(item.getLabel())).getFont()).getHeight();
+//
+//        jtImages.setRowHeight(item.getHeight() + fontHeight * 2);
+//        for (int i = 0; i < jtImages.getColumnCount(); i++) {
+//            jtImages.getColumnModel().getColumn(i).setPreferredWidth(item.getWidth());
+//        }
+//
+//        setHeight(item.getHeight() + fontHeight * 8);  // Window height.
+//    }
 
     public void clear() {
         tableModel.clear();
@@ -185,20 +221,6 @@ public class JFrameImagesTable extends javax.swing.JFrame {
 
     public void addImage(ScoreItem scoreItem) {
         tableModel.addItem(scoreItem);
-    }
-
-    public static void main(String args[]) {
-        try {
-            JFrameImagesTable frame = new JFrameImagesTable();
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.loadScoreFile("/home/juanjo/Desktop/score.xmd");
-            frame.pack();
-            frame.setLocationRelativeTo(null);
-
-            frame.setVisible(true);
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
     /** This method is called from within the constructor to
@@ -218,7 +240,9 @@ public class JFrameImagesTable extends javax.swing.JFrame {
             }
         });
 
-        jlMean.setBorder(javax.swing.BorderFactory.createTitledBorder(LABELS.LABEL_AVERAGE_IMAGE));
+        jlMean.setText(LABELS.LABEL_AVERAGE_IMAGE);
+        jlMean.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jlMean.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         getContentPane().add(jlMean, java.awt.BorderLayout.WEST);
 
         pack();

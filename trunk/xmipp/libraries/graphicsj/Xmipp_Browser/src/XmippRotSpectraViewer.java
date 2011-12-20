@@ -35,6 +35,6 @@ public class XmippRotSpectraViewer implements PlugIn {
     }
 
     public static void openFile(String vectorsFile, String classesFile, String dataFile) {
-        ImagesWindowFactory.openRotSpectrasWindow(vectorsFile, classesFile, dataFile);
+        ImagesWindowFactory.openRotSpectraWindow(vectorsFile, classesFile, dataFile);
     }
 }

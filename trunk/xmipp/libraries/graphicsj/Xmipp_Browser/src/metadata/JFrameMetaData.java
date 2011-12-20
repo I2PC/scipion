@@ -195,14 +195,6 @@ public class JFrameMetaData extends JFrame {
             public void valueChanged(ListSelectionEvent lse) {
                 if (!lse.getValueIsAdjusting()) {
                     System.out.println("@TODO Selection rowHeader <-> table.");
-//                    int indices[] = rowHeader.getSelectedIndices();
-//
-//                    table.clearSelection();
-//                    for (int i = 0; i < indices.length; i++) {
-//                        for (int j = 0; j < table.getColumnCount(); j++) {
-//                            table.changeSelection(indices[i], j, true, true);
-//                        }
-//                    }
                 }
             }
         });
@@ -242,7 +234,6 @@ public class JFrameMetaData extends JFrame {
 
             // Get width of column header
             TableColumn tc = columnModel.getColumn(column);
-
 
             TableCellRenderer renderer = tc.getHeaderRenderer();
             if (renderer == null) {
@@ -434,8 +425,6 @@ public class JFrameMetaData extends JFrame {
         bHideColumns = new javax.swing.JButton();
         jlStatus = new javax.swing.JLabel();
         jsPanel = new javax.swing.JScrollPane();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         toolBar.setRollover(true);
 

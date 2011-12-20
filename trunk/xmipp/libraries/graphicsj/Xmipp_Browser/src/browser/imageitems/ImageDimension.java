@@ -35,7 +35,6 @@ public class ImageDimension {
         } catch (Exception ex) {
             IJ.error("Retrieving image dimensions: "+ image);
         }
-//        System.out.println(nimages + " images.");
     }
 
     public int getWidth() {

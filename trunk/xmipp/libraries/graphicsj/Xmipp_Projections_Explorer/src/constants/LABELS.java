@@ -26,7 +26,7 @@ public class LABELS {
     public final static String BUTTON_LOAD_FILE = "Load";
     public final static String BUTTON_OK = "Ok";
     public final static String BUTTON_CANCEL = "Cancel";
-    public final static String BUTTON_ANALYZE = "Analize";
+    public final static String BUTTON_ANALYZE = "Analyze";
     public final static String MESSAGE_LOADING_VOLUME = "Loading Volume...";
     public final static String MESSAGE_LOADING_EULER_ANGLES_FILE = "Loading euler angles file...";
     public final static String MESSAGE_CONVERTING_XMIPP_VOLUME = "Converting Xmipp Volume...";

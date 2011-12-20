@@ -21,7 +21,7 @@ public class TasksEngine implements iTaskCompletionListener {
         gui.setRowBusy(task.row);
 
         tasks++;
-//        System.out.println(" +++ Starting " + task.row + " / " + tasks);
+
         task.start();
     }
 
@@ -34,7 +34,7 @@ public class TasksEngine implements iTaskCompletionListener {
             gui.done();
         } else {
             tasks--;
-//            System.out.println(" --- Task " + task.row + " is done! / " + tasks);
+
             gui.setRowIdle(task.row);
 
             // It's done, so sortPSDS is executed in background, and after that,

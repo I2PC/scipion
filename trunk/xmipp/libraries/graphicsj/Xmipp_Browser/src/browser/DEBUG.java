@@ -10,7 +10,7 @@ package browser;
  */
 public class DEBUG {
 
-    private static boolean DEBUG = true;
+    private static boolean DEBUG;
 
     public static void enableDebug(boolean enable) {
         DEBUG = enable;

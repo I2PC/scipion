@@ -54,41 +54,7 @@ public class Cache<K, T> extends LinkedHashMap<K, T> {
 
         this.limit = limit;
     }
-    /*
-    public static void main(String args[]) {
-    Cache<Integer, Integer> c = new Cache<Integer, Integer>(5);
     
-    for (int i = 0; i < c.limit; i++) {
-    c.put(i, i);
-    }
-    c.print();
-    System.out.println("-------------");
-    
-    c.resize(3);
-    
-    c.print();
-    System.out.println("-------------");
-    
-    c.get(2);   // References 2, so it must become the "youngest" in the cache.
-    
-    c.resize(2);
-    c.print();
-    System.out.println("-------------");
-    
-    c.resize(8);
-    c.print();
-    System.out.println("-------------");
-    }*/
-
-    private void print() {
-        Iterator iterator = keySet().iterator();
-
-        int i = 0;
-        while (iterator.hasNext()) {
-            System.out.println(i++ + ": " + iterator.next());
-        }
-    }
-
     @Override
     public T get(Object key) {
         T object = super.get((K) key);
