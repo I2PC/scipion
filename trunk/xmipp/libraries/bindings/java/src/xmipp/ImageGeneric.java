@@ -62,7 +62,7 @@ public class ImageGeneric {
         this();
 
         this.filename = filename;
-        readHeader(Filename.getFilename(filename));
+        readHeader(filename);//Filename.getFilename(filename));
     }
 
     public void resize(int h, int w) throws Exception {
