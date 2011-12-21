@@ -64,7 +64,7 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
                     imp.setTitle(getOriginalValue());
                 } catch (Exception ex) {
                     DEBUG.printException(ex);
-                    System.out.println("ERROR: readApplyGeo: " + getAbsoluteFileName() + " / " + path);
+                    System.out.println("ERROR: readApplyGeo: " + getAbsoluteFileName() + " > " + ex.getMessage());
                 }
             } else {
                 imp = super.loadPreview(w, h);

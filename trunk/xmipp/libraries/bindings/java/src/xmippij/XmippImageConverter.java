@@ -38,7 +38,19 @@ public class XmippImageConverter {
         int w = (int) (image.getXDim() * scale);
         int h = (int) (image.getYDim() * scale);
 
-        return convertToImageJ(image, w, h);
+        ImagePlus imp;
+        if (Filename.hasPrefix(filename)) {
+            String name = Filename.getFilename(filename);
+            long nimage = Filename.getNimage(filename);
+
+            image = new ImageGeneric(name);
+            imp = convertToImageJ(image, nimage);
+        } else {
+            imp = convertToImageJ(image, w, h);
+        }
+
+
+        return imp;
     }
 
     public static ImagePlus convertToImageJ(ImageGeneric image) throws Exception {

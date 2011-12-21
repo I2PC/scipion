@@ -128,7 +128,7 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
         updateTable();
     }
 
-    private void updateTable() {
+    private synchronized void updateTable() {
         if (tableModel.getSize() > 0) {
             Dimension dimension = getCellSize();
             renderer.setPreferredSize(dimension);
