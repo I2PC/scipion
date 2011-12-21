@@ -228,7 +228,6 @@ public class ProjectionsExplorer implements UniverseListener {
             String scoreFile = sphere.analyzeProjection(xmippVolume, getMatrix(universeVolume), projectionW, projectionH);
 
             // Shows table with scores
-            //String scoreFile = "/home/jvega/Escritorio/score.xmd";
             showScoreFiles(scoreFile);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -272,6 +271,7 @@ public class ProjectionsExplorer implements UniverseListener {
         return f.exists();
     }
 
+    // @TODO Kino: Returns transformation matrix to retrieve projection.
     private double[] getMatrix(Image3DUniverse universe) {
         DecimalFormat df = new DecimalFormat("#.##");
 
@@ -285,7 +285,6 @@ public class ProjectionsExplorer implements UniverseListener {
 
         Transform3D t = new Transform3D();
         universe.getRotationTG().getTransform(t);
-
 
         t3d.mul(t);
 

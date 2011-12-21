@@ -26,22 +26,8 @@ public class Xmipp_Projections_Explorer implements PlugIn {
     final static int INDEX_VOLUME = 0;
     final static int INDEX_EULER_ANGLES = 1;
     boolean use_sphere;
-//
-//    public static void main_(String args[]) {
-//        try {
-//            JFrameImagesTable frame = new JFrameImagesTable();
-//            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//            frame.loadScoreFile("/home/jvega/Escritorio/score.xmd");
-////            frame.pack();
-//            frame.setWidth(500);
-//            frame.setLocationRelativeTo(null);
-//
-//            frame.setVisible(true);
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//        }
-//    }
 
+    // @TODO Kino: Remove this method when done. It's just for testing purposes.
     public static void main(String args[]) {
         String fileVolume = "/home/jvega/geoPhantom_128.vol";
         String fileEulerAngles = "/home/jvega/temp/angles.sel";
