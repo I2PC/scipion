@@ -516,36 +516,32 @@ class ProtProjMatch(XmippProtocol):
 
                     
                     
-#                _VerifyFiles = []
-#                    #self._ConstantToAddToFiltration=arg.getComponentFromVector(ConstantToAddToFiltration, _iteration_number-1)
-#                    #filter_frequence=execute_resolution(self._mylog,
-#                id = _dataBase.insertStep('compute_resolution_and_filter', verifyfiles=_VerifyFiles
-#                                              , DoComputeResolution = self.DoComputeResolution
-#                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
-#                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
-#                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
-#                                              , ReconstructionMethod = self.ReconstructionMethod
-#                                              #, globalFourierMaxFrequencyOfInterest = globalFourierMaxFrequencyOfInterest
-#                                              , iteration_number = iterN
-#                                              #, DisplayReconstruction = self.DisplayReconstruction
-#                                              , ResolSam = self.ResolSam
-#                                              , DoParallel=self.DoParallel#
-#                                              , NumberOfMpi=self.NumberOfMpi#
-#                                              , NumberOfThreads=self.NumberOfThreads#
-#                                              #, MyMpiJobSize = self.MyMpiJobSize
-#                                              , SymmetryGroup = self.SymmetryGroup
-#                                              #, DisplayResolution = self.DisplayResolution
-#                                              , ReconstructedVolume = self.ReconstructedVolume[iterN]
-#                                              , ARTLambda = self.ARTLambda
-#                                              , OuterRadius = self.OuterRadius
-#                                              , DoSplitReferenceImages = self.DoSplitReferenceImages
-#                                              , PaddingFactor = self.PaddingFactor
-#                                              , DoLowPassFilter = self.DoLowPassFilter
-#                                              , UseFscForFilter = self.UseFscForFilter
-#                                              , ConstantToAddToFiltration = self.ConstantToAddToFiltration
-#                                              #, filter_frequence = filter_frequence
-#                                              #, ReconstructedandfilteredVolume = self.ReconstructedandfilteredVolume[iterN+1]
-#                                              )
+                _VerifyFiles = []
+                    #self._ConstantToAddToFiltration=arg.getComponentFromVector(ConstantToAddToFiltration, _iteration_number-1)
+                    #filter_frequence=execute_resolution(self._mylog,
+                id = _dataBase.insertStep('compute_resolution_and_filter', verifyfiles=_VerifyFiles
+                                              , DoComputeResolution = self.DoComputeResolution
+                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
+                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
+                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
+                                              , ReconstructionMethod = self.ReconstructionMethod
+                                              #, FourierMaxFrequencyOfInterest = globalFourierMaxFrequencyOfInterest
+                                              , iteration_number = iterN
+                                              , ResolSam = self.ResolSam
+                                              , DoParallel=self.DoParallel#
+                                              , NumberOfMpi=self.NumberOfMpi#
+                                              , NumberOfThreads=self.NumberOfThreads#
+                                              , SymmetryGroup = self.SymmetryGroup
+                                              , ReconstructedVolume = self.ReconstructedVolume[iterN]
+                                              #, ReconstructedandfilteredVolume = self.ReconstructedandfilteredVolume[iterN+1]
+                                              , ARTLambda = self.ARTLambda
+                                              , OuterRadius = self.OuterRadius
+                                              , DoSplitReferenceImages = self.DoSplitReferenceImages
+                                              , PaddingFactor = self.PaddingFactor
+                                              , DoLowPassFilter = self.DoLowPassFilter
+                                              , UseFscForFilter = self.UseFscForFilter
+                                              , ConstantToAddToFiltration = self.ConstantToAddToFiltration
+                                              )
 
                 # Mask reference volume
                 maskedFn = self.getFilename('MaskedFileNamesIters', iter=iterN, ref=refN)
