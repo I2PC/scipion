@@ -34,11 +34,12 @@ public class MetaDataTableModel extends XmippTableModelRowDisabler {
 
     public MetaDataTableModel(String filename) {
         super();
-
-        this.filename = filename;
-
-        loadBlocks(filename);
-        selectBlock(Filename.getPrefix(filename));
+        if(filename != null){
+	        this.filename = filename;
+	
+	        loadBlocks(filename);
+	        selectBlock(Filename.getPrefix(filename));
+        }
     }
 
     private void selectBlock(String selectedBlock) {
@@ -133,91 +134,96 @@ public class MetaDataTableModel extends XmippTableModelRowDisabler {
         load(getPath());
     }
 
+    public void initFromMetadata(MetaData md) throws Exception{
+        // Contains field enabled ?
+        boolean hasEnabledField = true;
+        if (!md.containsLabel(MDLabel.MDL_ENABLED)) {
+            if (md.containsLabel(MDLabel.MDL_IMAGE)) {
+                md.addLabel(MDLabel.MDL_ENABLED);
+            }
+            hasEnabledField = false;
+        }
+
+        // Contains image (for gallery)?
+        if (md.containsLabel(MDLabel.MDL_IMAGE)) {
+            containsImages = true;
+
+            setCacheSize(md);
+        }
+
+        // Store ids.
+        ids = md.findObjects();
+
+        // Reads all rows.
+        MD_LABELS = md.getActiveLabels();
+        // Builds columns structure.
+        TEXT_LABELS = new String[MD_LABELS.length];
+        for (int i = 0; i < MD_LABELS.length; i++) {
+            TEXT_LABELS[i] = MetaData.label2Str(MD_LABELS[i]);
+            addColumn(TEXT_LABELS[i]);
+        }
+        Object row[] = new Object[MD_LABELS.length];
+
+        for (long id : ids) {
+            // Field enabled does not exist, so adds it (true by default).
+            if (!hasEnabledField) {
+                md.setValueInt(MDLabel.MDL_ENABLED, 1, id);
+            }
+
+            for (int i = 0; i < MD_LABELS.length; i++) {
+                int label = MD_LABELS[i];
+                Class class_ = MetaData.getLabelType(label);
+
+                if (class_ == String.class) {
+                    String value = md.getValueString(label, id);
+                    if (MetaData.isImage(label)) {
+//                        String path = md.getValueString(label, id, true);
+//                        row[i] = new GalleryImageItem(path, value, cache);
+                        row[i] = new GalleryImageItem(id, md, label, cache);
+//                        containsImages = true;
+                    } else if (MetaData.isMetadata(label)) {
+                        String path_ = md.getValueString(label, id, true);
+                        row[i] = new TableFileItem(path_, value);
+                    } else if (MetaData.isTextFile(label)) {
+                        String path_ = md.getValueString(label, id, true);
+                        row[i] = new TableFileItem(path_, value);
+                    } else {
+                        row[i] = value;
+                    }
+                } else if (class_ == Double.class) {
+                    row[i] = md.getValueDouble(label, id);
+                } else if (class_ == Long.class) {
+                    row[i] = md.getValueLong(label, id);
+                } else if (class_ == Integer.class) {
+                    int value = md.getValueInt(label, id);
+
+                    // Special case.
+                    if (label == MDLabel.MDL_ENABLED) {
+                        row[i] = value == 1;
+                        ENABLED_COLUMN_INDEX = i;   // Store it for future changes.
+                    } else {
+                        row[i] = value;
+                    }
+                } else if (class_ == Boolean.class) {
+                    row[i] = md.getValueBoolean(label, id);
+                } else {
+                    row[i] = "Unknown type";
+                }
+            }
+
+            // Adds a new row data to table.
+            addRow(row);
+        }
+    }
+    
+    
     public void load(String filename) {
         try {
             clear();    // Clear the whole data.
 
             MetaData md = new MetaData(filename);
+            initFromMetadata(md);
 
-            // Contains field enabled ?
-            boolean hasEnabledField = true;
-            if (!md.containsLabel(MDLabel.MDL_ENABLED)) {
-                if (md.containsLabel(MDLabel.MDL_IMAGE)) {
-                    md.addLabel(MDLabel.MDL_ENABLED);
-                }
-                hasEnabledField = false;
-            }
-
-            // Contains image (for gallery)?
-            if (md.containsLabel(MDLabel.MDL_IMAGE)) {
-                containsImages = true;
-
-                setCacheSize(md);
-            }
-
-            // Store ids.
-            ids = md.findObjects();
-
-            // Reads all rows.
-            MD_LABELS = md.getActiveLabels();
-            // Builds columns structure.
-            TEXT_LABELS = new String[MD_LABELS.length];
-            for (int i = 0; i < MD_LABELS.length; i++) {
-                TEXT_LABELS[i] = MetaData.label2Str(MD_LABELS[i]);
-                addColumn(TEXT_LABELS[i]);
-            }
-            Object row[] = new Object[MD_LABELS.length];
-
-            for (long id : ids) {
-                // Field enabled does not exist, so adds it (true by default).
-                if (!hasEnabledField) {
-                    md.setValueInt(MDLabel.MDL_ENABLED, 1, id);
-                }
-
-                for (int i = 0; i < MD_LABELS.length; i++) {
-                    int label = MD_LABELS[i];
-                    Class class_ = MetaData.getLabelType(label);
-
-                    if (class_ == String.class) {
-                        String value = md.getValueString(label, id);
-                        if (MetaData.isImage(label)) {
-//                            String path = md.getValueString(label, id, true);
-//                            row[i] = new GalleryImageItem(path, value, cache);
-                            row[i] = new GalleryImageItem(id, md, label, cache);
-//                            containsImages = true;
-                        } else if (MetaData.isMetadata(label)) {
-                            String path_ = md.getValueString(label, id, true);
-                            row[i] = new TableFileItem(path_, value);
-                        } else if (MetaData.isTextFile(label)) {
-                            String path_ = md.getValueString(label, id, true);
-                            row[i] = new TableFileItem(path_, value);
-                        } else {
-                            row[i] = value;
-                        }
-                    } else if (class_ == Double.class) {
-                        row[i] = md.getValueDouble(label, id);
-                    } else if (class_ == Long.class) {
-                        row[i] = md.getValueLong(label, id);
-                    } else if (class_ == Integer.class) {
-                        int value = md.getValueInt(label, id);
-
-                        // Special case.
-                        if (label == MDLabel.MDL_ENABLED) {
-                            row[i] = value == 1;
-                            ENABLED_COLUMN_INDEX = i;   // Store it for future changes.
-                        } else {
-                            row[i] = value;
-                        }
-                    } else if (class_ == Boolean.class) {
-                        row[i] = md.getValueBoolean(label, id);
-                    } else {
-                        row[i] = "Unknown type";
-                    }
-                }
-
-                // Adds a new row data to table.
-                addRow(row);
-            }
         } catch (Exception ex) {
             DEBUG.printException(ex);
             IJ.error(ex.getMessage());
