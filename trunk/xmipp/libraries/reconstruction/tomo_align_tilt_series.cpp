@@ -640,6 +640,7 @@ void * threadComputeTransform( void * args )
                     parent->fnRoot+"_transformations.txt");
             std::cout << "Cost for [" << jj_1 << "] - ["
             << jj << "] = " << cost << std::endl;
+            parent->iteration++;
             pthread_mutex_unlock( &printingMutex );
         }
         else
@@ -668,6 +669,7 @@ void * threadComputeTransform( void * args )
             std::cout << "Cost for [" << jj_1 << "] - ["
             << jj << "] = " << cost << std::endl;
             pthread_mutex_unlock( &printingMutex );
+            parent->iteration++;
         }
     }
 
@@ -739,6 +741,7 @@ void ProgTomographAlignment::identifyOutliers(bool mark)
                 << "Its cost is " << 1-correlationListAux(i)
                 << std::endl;
         }
+        iteration++;
     }
 }
 
@@ -781,6 +784,7 @@ void ProgTomographAlignment::produceSideInfo()
 
         std::cerr << "Reading input data\n";
         init_progress_bar(Nimg);
+        iteration=0;
         int n=0;
 
         iMinTilt=-1;
@@ -857,6 +861,7 @@ void ProgTomographAlignment::produceSideInfo()
             name_list.push_back(imgaux.name());
 
             progress_bar(n++);
+            iteration++;
         }
         progress_bar(Nimg);
         if (!nonZeroTilt)
@@ -1018,6 +1023,7 @@ void ProgTomographAlignment::produceSideInfo()
             std::cout << "Image " << ii << " Average correlation forward="
             << avgForwardPatchCorr(ii)
             << " backward=" << avgBackwardPatchCorr(ii) << std::endl;
+            iteration++;
         }
     }
 

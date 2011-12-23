@@ -159,6 +159,9 @@ public:
     /// Last step to run (-1=run them all)
     int lastStep;
 
+    // iteration counter as a progress measure
+    int iteration;
+
     /// Usage
     void defineParams();
 
