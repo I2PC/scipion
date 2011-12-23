@@ -2224,7 +2224,10 @@ void ProgTomographAlignment::writeTransformations(
             }
     }
     if (counter==imax-1)
+    {
+    	fhOut << tiltList[tiltList.size()-1] << "\t0.0\t1.0\t0.0\t0.0\t1.0\t0.0\t0.0\n";
         fhOut << "1 0 0 1 0 0\n";
+    }
     fhOut.close();
 }
 
