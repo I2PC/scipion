@@ -95,6 +95,8 @@ public class Filename {
     public static native boolean hasStackExtension(String filename) throws Exception;
 
     public static native boolean hasVolumeExtension(String filename) throws Exception;
+    
+    public static native String compose(int slice,String path) throws Exception;
 
     public static boolean isSingleImage(String filename) throws Exception {
         try {
@@ -216,6 +218,10 @@ public class Filename {
         }
 
         return filename;
+    }
+    
+    public static String getPath(String baseDir,String fileName,int slice) throws Exception{
+    	return compose(slice,baseDir+File.separatorChar+fileName);
     }
 
     public static long getNimage(String filename) {
