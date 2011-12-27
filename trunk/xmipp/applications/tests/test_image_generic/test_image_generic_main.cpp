@@ -121,8 +121,8 @@ TEST_F( ImageGenericTest, createEmptyFile)
     EXPECT_DOUBLE_EQ(max, 0);
 }
 
-// check if an empty file is correctly created
-TEST_F( ImageGenericTest, getMultidimArray)
+// check if a pointer to data array is correctly passed
+TEST_F( ImageGenericTest, getArrayPointer)
 {
   ImageGeneric img, img2;
   img.read(imageName);
@@ -142,6 +142,26 @@ TEST_F( ImageGenericTest, getMultidimArray)
   EXPECT_TRUE(img == img2);
 }
 
+// check if a pointer to MultidimArray is correctly passed
+TEST_F( ImageGenericTest, getMultidimArrayPointer)
+{
+  ImageGeneric img, img2;
+  img.read(imageName);
+  MultidimArrayGeneric & mag = MULTIDIM_ARRAY_GENERIC(img);
+
+  ImageInfo info;
+  img.getInfo(info);
+  img2.setDatatype(Float);
+  MultidimArrayGeneric & mag2 = MULTIDIM_ARRAY_GENERIC(img2);
+  mag2.resize(info.adim, false);
+  MultidimArray<float> * data, *data2;
+  mag.getMultidimArrayPointer(data);
+  mag2.getMultidimArrayPointer(data2);
+
+  typeCast(*data, *data2);
+
+  EXPECT_TRUE(img == img2);
+}
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
