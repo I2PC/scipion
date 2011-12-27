@@ -168,7 +168,7 @@ int readTIFF(size_t select_img, bool isStack=false)
         if (TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE,  &dhRef.bitsPerSample) == 0)
             REPORT_ERROR(ERR_IO_NOREAD,"rwTIFF: Error reading TIFFTAG_BITSPERSAMPLE");
         if (TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL,&dhRef.samplesPerPixel) == 0)
-        	dhRef.samplesPerPixel = 1;
+            dhRef.samplesPerPixel = 1;
 
         if (TIFFGetField(tif, TIFFTAG_IMAGEWIDTH,     &dhRef.imageWidth) == 0)
             REPORT_ERROR(ERR_IO_NOREAD,"rwTIFF: Error reading TIFFTAG_IMAGEWIDTH");
@@ -252,7 +252,7 @@ int readTIFF(size_t select_img, bool isStack=false)
     MDMainHeader.setValue(MDL_DATATYPE,(int) datatype);
 
     //Read header only
-    if( dataMode < DATA || dataMode == _HEADER_ALL && _nDim > 1)
+    if( dataMode < DATA ||( dataMode == _HEADER_ALL && _nDim > 1) )
         return 0;
 
     /* As we cannot mmap a TIFF File, when this option is passed we are going to mmap
@@ -264,9 +264,6 @@ int readTIFF(size_t select_img, bool isStack=false)
         if (data.nzyxdim*gettypesize(datatype) > tiff_map_min_size)
             data.setMmap(true);
     }
-
-    if (dataMode == HEADER) // Stop reading if not necessary
-        return 0;
 
     // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
     //if memory already allocated use it (no resize allowed)
