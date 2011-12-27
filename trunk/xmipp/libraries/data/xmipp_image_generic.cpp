@@ -97,7 +97,7 @@ void ImageGeneric::getDimensions(int & Xdim, int & Ydim, int & Zdim, size_t & Nd
 }
 void ImageGeneric::getDimensions(ArrayDim &aDim) const
     {
-        getDimensions(aDim);
+	image->getDimensions(aDim);
     }
 
 void ImageGeneric::getInfo(ImageInfo &imgInfo) const
