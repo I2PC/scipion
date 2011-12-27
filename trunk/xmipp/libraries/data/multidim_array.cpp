@@ -52,9 +52,10 @@ void MultidimArrayBase::setDimensions(ArrayDim &newDim)
     zdim = newDim.zdim;
     ydim = newDim.ydim;
     xdim = newDim.xdim;
-    yxdim = ydim*xdim;
-    zyxdim = zdim*yxdim;
-    nzyxdim = ndim*zyxdim;
+
+    newDim.yxdim   = yxdim   = ydim*xdim;
+    newDim.zyxdim  = zyxdim  = zdim*yxdim;
+    newDim.nzyxdim = nzyxdim = ndim*zyxdim;
 }
 
 /** Returns the multidimArray N,Z, Y and X dimensions.

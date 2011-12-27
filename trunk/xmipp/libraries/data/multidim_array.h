@@ -740,6 +740,18 @@ public:
             return 1;
     }
 
+    /** Sets mmap.
+     *
+     * Sets on/off mmap flag to allocate memory in a file.
+     *
+     */
+    void setMmap(bool mmap)
+    {
+        mmapOn = mmap;
+    }
+
+    virtual void coreAllocateReuse() = 0;
+
     /** Print shape of multidimensional array.
      *
      * This function shows the size, starting and finishing indexes of the
@@ -990,16 +1002,6 @@ public:
         }
         memset(data,0,nzyxdim*sizeof(T));
         nzyxdimAlloc = nzyxdim;
-    }
-
-    /** Sets mmap.
-     *
-     * Sets on/off mmap flag to allocate memory in a file.
-     *
-     */
-    void setMmap(bool mmap)
-    {
-        mmapOn = mmap;
     }
 
     /* Create a temporary file to mmap the data.
@@ -3535,27 +3537,27 @@ public:
         case '+':
             for (n=0, ptrResult=result.data, ptrOp1=op1.data;
                  n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
-            *ptrResult = *ptrOp1 + op2;
+                *ptrResult = *ptrOp1 + op2;
             break;
         case '-':
-            for (n=0, ptrResult=result.data, ptrOp1=op1.data;
-                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
-            *ptrResult = *ptrOp1 - op2;
+                for (n=0, ptrResult=result.data, ptrOp1=op1.data;
+                     n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
+                    *ptrResult = *ptrOp1 - op2;
             break;
         case '*':
-            for (n=0, ptrResult=result.data, ptrOp1=op1.data;
-                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
-            *ptrResult = *ptrOp1 * op2;
+                for (n=0, ptrResult=result.data, ptrOp1=op1.data;
+                     n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
+                    *ptrResult = *ptrOp1 * op2;
             break;
         case '/':
-            for (n=0, ptrResult=result.data, ptrOp1=op1.data;
-                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
-            *ptrResult = *ptrOp1 / op2;
+                for (n=0, ptrResult=result.data, ptrOp1=op1.data;
+                     n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
+                    *ptrResult = *ptrOp1 / op2;
             break;
         case '=':
-            for (n=0, ptrResult=result.data, ptrOp1=op1.data;
-                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
-            *ptrResult = *ptrOp1 == op2;
+                for (n=0, ptrResult=result.data, ptrOp1=op1.data;
+                     n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
+                    *ptrResult = *ptrOp1 == op2;
             break;
         }
     }
@@ -4532,10 +4534,13 @@ public:
         T* ptr = MULTIDIM_ARRAY(*this);
         for (size_t n=0; n<nmax; n+=unroll, ptr+=unroll)
         {
-        	               sum+= (*ptr)*(*ptr);
-        	T* ptr1=ptr+1; sum+= (*ptr1)*(*ptr1);
-        	T* ptr2=ptr+2; sum+= (*ptr2)*(*ptr2);
-        	T* ptr3=ptr+3; sum+= (*ptr3)*(*ptr3);
+            sum+= (*ptr)*(*ptr);
+            T* ptr1=ptr+1;
+            sum+= (*ptr1)*(*ptr1);
+            T* ptr2=ptr+2;
+            sum+= (*ptr2)*(*ptr2);
+            T* ptr3=ptr+3;
+            sum+= (*ptr3)*(*ptr3);
         }
         // Do the remaining elements
         for (size_t n=nmax; n<NZYXSIZE(*this); ++n, ++ptr)
