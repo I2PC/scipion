@@ -214,6 +214,7 @@ struct ImageInfo
 class ImageBase
 {
 public:
+    MultidimArrayBase * mdaBase;    // Pointer to data from Image<template T> casted as MultidimArrayBase
     std::vector<MDRow>  MD;                     // data for each subimage
     MDRow               MDMainHeader;           // data for the file
 
@@ -583,7 +584,12 @@ public:
 
     /** Set image dimensions */
     virtual void setDimensions(int Xdim, int Ydim, int Zdim, size_t Ndim) = 0;
-    virtual void setDimensions(ArrayDim aDim) = 0;
+    virtual void setDimensions(ArrayDim &aDim)
+    {
+        mdaBase->setDimensions(aDim);
+        aDimFile = aDim;
+    }
+
 
     /** Set the information of the original image dimensions
      */
@@ -719,6 +725,7 @@ protected:
 #include "rwSPIDER.h"
 #include "rwSPE.h"
 #include "rwTIA.h"
+#include "rwJPEG.h"
     //#include "rwTIFF.h"
 
     /// To be deleted once rwTIFF ported to cpp file IF POSSIBLE!! ---
@@ -757,6 +764,9 @@ protected:
      */
     virtual void writeData(FILE* fimg, size_t offset, DataType wDType, size_t datasize_n,
                            CastWriteMode castMode=CW_CAST) = 0;
+
+    virtual void setPage2T(size_t offset, char * page, DataType datatype, size_t pageSize ) = 0;
+    virtual void getPageFromT(size_t offset, char * page, DataType datatype, size_t pageSize ) = 0;
 
     /** Mmap the Image class to an image file.
      */

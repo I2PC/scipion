@@ -681,6 +681,8 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
         err = readTIFF(select_img,false);
     else if (ext_name.contains("spe"))//SPE
         err = readSPE(select_img,false);
+    else if (ext_name.contains("jpg"))//SPE
+            err = readJPEG(select_img);
     else
         err = readSPIDER(select_img);
 
@@ -828,6 +830,8 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         writeTIFF(select_img,isStack,mode,imParam,castMode);
     else if (ext_name.contains("spe"))
         writeSPE(select_img,isStack,mode);
+    else if (ext_name.contains("jpg"))
+            writeJPEG(select_img);
     else
         err = writeSPIDER(select_img,isStack,mode);
 

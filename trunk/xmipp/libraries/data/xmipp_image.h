@@ -62,6 +62,7 @@ public:
      */
     Image()
     {
+        mdaBase = (MultidimArrayBase*) &data;
         init();
     }
 
@@ -76,6 +77,7 @@ public:
       */
     Image(int Xdim, int Ydim, int Zdim, int Ndim, const FileName &_filename)
     {
+        mdaBase = (MultidimArrayBase*) &data;
         init();
         mmapOnWrite = true;
         data.setDimensions(Xdim, Ydim, Zdim, Ndim);
@@ -98,6 +100,7 @@ public:
      */
     Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1, bool _mmapOn=false)
     {
+        mdaBase = (MultidimArrayBase*) &data;
         init();
         data.setMmap(_mmapOn);
         data.coreAllocate(Ndim, Zdim, Ydim, Xdim);
@@ -111,6 +114,7 @@ public:
      */
     Image(const MultidimArray<T> &im)
     {
+        mdaBase = (MultidimArrayBase*) &data;
         init();
         data.alias(im);
     }
@@ -591,6 +595,17 @@ public:
         }
 
     }
+
+    void setPage2T(size_t offset, char * page, DataType datatype, size_t pageSize )
+    {
+        castPage2T(page, MULTIDIM_ARRAY(data)+offset, datatype, pageSize);
+    }
+
+    void getPageFromT(size_t offset, char * page, DataType datatype, size_t pageSize )
+    {
+        castPage2Datatype(MULTIDIM_ARRAY(data)+offset,page,datatype,pageSize);
+    }
+
     /** Check if file Datatype is the same as the declared image object (T type) to use mmap.
      */
     bool checkMmapT(DataType datatype)
@@ -962,11 +977,6 @@ protected:
     {
         data.setDimensions(Xdim,Ydim,Zdim,Ndim);
         data.getDimensions(aDimFile);
-    }
-    void setDimensions(ArrayDim aDim)
-    {
-        aDimFile = aDim;
-        data.setDimensions(aDim.xdim, aDim.ydim, aDim.zdim, aDim.ndim);
     }
 
 private:
