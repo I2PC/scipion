@@ -9,6 +9,8 @@ FFTWDir = "external/fftw-3.2.2"
 FFTWLibs = ['fftw3', 'fftw3_threads']
 TIFFDir = "external/tiff-3.9.4"
 TIFFLibs = ['tiff']
+JPEGDir = "external/jpeg-8c"
+JPEGLibs = ['jpeg']
 CYGWIN = env['PLATFORM'] == 'cygwin'
 if CYGWIN:
 	TIFFLibs.append('z')
@@ -165,7 +167,7 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
 def AddXmippProgram(name, libs=[], folder='programs'):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries', '#']
-    finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs
+    finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
         finalLibs.append('XmippClassif')
     if int(env["arpack"]):
@@ -209,7 +211,7 @@ def AddXmippJavaTest(name):
 def AddXmippMPIProgram(name, libs=[]):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries', '#']
-    finalLibs = libs + ['XmippData', 'XmippExternal', 'XmippParallel'] + FFTWLibs + SQLiteLibs + TIFFLibs
+    finalLibs = libs + ['XmippData', 'XmippExternal', 'XmippParallel'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs
     if int(env["arpack"]):
         finalLibs+=['arpack++','arpack','lapack','blas']
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
@@ -432,14 +434,14 @@ AddLibrary('XmippExternal', 'external',
 # XmippData
 DataSources = Glob('libraries/data', '*.cpp', [])
 AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],
-           ['lib'], ['XmippExternal'] + FFTWLibs + TIFFLibs + SQLiteLibs)
+           ['lib'], ['XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
 
 #Xmipp Python Extension
 PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
 #import distutils.sysconfig
 pythonIncludes = ["#" + os.path.join(PythonDir,dir) for dir in [".","Include"]]
 libpath=['lib']
-libraries=['XmippData', 'XmippRecons','XmippExternal'] + FFTWLibs + TIFFLibs + SQLiteLibs
+libraries=['XmippData', 'XmippRecons','XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs
 if CYGWIN:
     libpath.append(PythonDir)
     libraries.append("python2.7")
@@ -524,7 +526,8 @@ ReconsSources = [
     'volume_from_pdb.cpp',
     'volume_segment.cpp',
     'volume_to_pseudoatoms.cpp',
-    'xray_import.cpp'
+    'xray_import.cpp',
+#    'xray_volume_correct.cpp'
 ]
 ReconsDependLibraries =['XmippExternal', 'XmippData', 'pthread','XmippClassif']
 if int(env['arpack']):
@@ -543,7 +546,7 @@ AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
 if int(env['mpi']):
     ParallelSources = Glob('libraries/parallel', '*.cpp', []);
     AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#libraries", "#external"],
-              ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + SQLiteLibs)
+              ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
 
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
@@ -759,6 +762,7 @@ AddXmippProgram('volume_to_pseudoatoms', ['XmippRecons'])
 AddXmippProgram('xray_import', ['XmippRecons'])
 AddXmippProgram('xray_psf_create')
 AddXmippProgram('xray_project', ['XmippRecons'])
+#AddXmippProgram('xray_volume_correct', ['XmippRecons'])
 
 if int(env['arpack']):
     AddXmippProgram('angular_gcar', ['XmippRecons'])
@@ -895,7 +899,7 @@ if int(env['qt']):
             sources + extra,
             CPPPATH=envQT['CPPPATH'] + includes + [env['CPPPATH']],
             LIBPATH=envQT['LIBPATH'] + libpath + [env['LIBPATH']],
-            LIBS=envQT['LIBS'] + libs + [env['LIBS']] + TIFFLibs,
+            LIBS=envQT['LIBS'] + libs + [env['LIBS']] + TIFFLibs + JPEGLibs,
             CXXFLAGS=cxxflags + [env['CXXFLAGS']],
             LINKFLAGS=linkflags + [env['LINKFLAGS']],
             LINK=env['LINKERFORPROGRAMS']

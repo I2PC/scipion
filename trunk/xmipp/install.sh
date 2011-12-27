@@ -8,6 +8,7 @@ DO_TCLTK=true
 DO_PYTHON=true
 DO_FFTW=true
 DO_TIFF=true
+DO_JPEG=true
 DO_ARPACK=false
 
 DO_CLEAN=true
@@ -48,6 +49,7 @@ for param in $@; do
 			DO_PYTHON=false
 			DO_FFTW=false
 			DO_TIFF=false
+			DO_JPEG=false
 			DO_ARPACK=false;;        
         "-j")             TAKE_CPU=true;;
         "untar=true")   DO_UNTAR=true;;
@@ -62,6 +64,8 @@ for param in $@; do
         "fftw=false")   DO_FFTW=false;;
         "tiff=true")   DO_TIFF=true;;
         "tiff=false")   DO_TIFF=false;;
+        "jpeg=true")   DO_JPEG=true;;
+        "jpeg=false")   DO_JPEG=false;;
         "arpack=true")   DO_ARPACK=true;;
         "arpack=false")   DO_ARPACK=false;;
         "clean=true")   DO_CLEAN=true;;
@@ -108,6 +112,7 @@ VTCLTK=8.5.10
 VPYTHON=Python-2.7.2
 VFFTW=fftw-3.2.2
 VTIFF=tiff-3.9.4
+VJPEG=jpeg-8c
 VARPACK=arpack++-2.3
 VNUMPY=numpy-1.6.1
 VMATLIBPLOT=matplotlib-1.1.0
@@ -319,9 +324,15 @@ if $DO_FFTW; then
   install_libs $VFFTW/threads/.libs libfftw3_threads. a la so so.3
 fi
 
+#################### JPEG ###########################
+if $DO_JPEG; then
+compile_library $VJPEG "." "." "CPPFLAGS=-w"
+install_libs $VJPEG/.libs libjpeg. a la so so.8
+fi
+
 #################### TIFF ###########################
 if $DO_TIFF; then
-  compile_library $VTIFF "." "." "CPPFLAGS=-w"
+  compile_library $VTIFF "." "." "CPPFLAGS=-w --with-jpeg-include-dir=$EXT_PATH/$VJPEG --with-jpeg-lib-dir=$EXT_PATH/$VJPEG/.libs"
   install_libs $VTIFF/libtiff/.libs libtiff. a la so so.3
 fi
 
