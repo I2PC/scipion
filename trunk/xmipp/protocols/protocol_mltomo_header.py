@@ -47,14 +47,14 @@ AngLimit="360 21 8"
 """ Shift change from previous assignment """
 ShiftLimit="-1 10 5"
 
+# Number of ML iterations to perform:
+NumberOfIterations="25 15 10"
+
 #-----------------------------------------------------------------------------
 # {section}{has_question} Advanced parameters
 #-----------------------------------------------------------------------------
 # Advanced parameters
 SeeAdvanced = False
-
-# Number of ML iterations to perform:
-NumberOfIterations=25
 
 # Symmetry:
 """ See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry]
