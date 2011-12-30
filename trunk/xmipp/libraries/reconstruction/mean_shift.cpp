@@ -228,16 +228,13 @@ void * thread_process_plane( void * args )
                                             if( x_j >= x_min && x_j <= x_max)
                                             {
                                                 double I_j = A3D_ELEM( input, z_j, y_j, x_j);
+                                                double I_dist=fabs(I_j - curr_I);
 
-                                                if( ABS( I_j - curr_I ) <= _3_sigma_r )
+                                                if( I_dist <= _3_sigma_r )
                                                 {
                                                     // Take this point into account
                                                     double eucl_dist = (curr_x - x_j)*(curr_x - x_j)+(curr_y - y_j)*(curr_y - y_j)+(curr_z - z_j)*(curr_z - z_j);
-                                                    double aux_0 = exp(-(eucl_dist) * inv_2_sigma_s_2);
-                                                    double aux_1 = exp(-((curr_I-I_j)*(curr_I-I_j)) * inv_2_sigma_r_2 );
-
-                                                    double aux = aux_0*aux_1;
-
+                                                    double aux = exp(-(eucl_dist*inv_2_sigma_s_2) - (I_dist*I_dist*inv_2_sigma_r_2));
                                                     x_sum += x_j*aux;
                                                     y_sum += y_j*aux;
                                                     z_sum += z_j*aux;
@@ -252,18 +249,18 @@ void * thread_process_plane( void * args )
                             }
                         }
 
-                        prev_x = ROUND(curr_x);
-                        prev_y = ROUND(curr_y);
-                        prev_z = ROUND(curr_z);
+                        prev_x = round(curr_x);
+                        prev_y = round(curr_y);
+                        prev_z = round(curr_z);
                         prev_I = curr_I;
 
-                        curr_x = ROUND(x_sum / sum_denom);
-                        curr_y = ROUND(y_sum / sum_denom);
-                        curr_z = ROUND(z_sum / sum_denom);
-                        curr_I = I_sum / sum_denom;
+                        double isum_denom=1.0/sum_denom;
+                        curr_x = round(x_sum*isum_denom);
+                        curr_y = round(y_sum*isum_denom);
+                        curr_z = round(z_sum*isum_denom);
+                        curr_I = I_sum*isum_denom;
 
-                        error = ABS(prev_x - curr_x) + ABS(prev_y - curr_y) + ABS(prev_z - curr_z);
-
+                        error = fabs(prev_x - curr_x) + fabs(prev_y - curr_y) + fabs(prev_z - curr_z);
                     }
                     while(error>0);
 
