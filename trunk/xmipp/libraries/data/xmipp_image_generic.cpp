@@ -224,9 +224,11 @@ int ImageGeneric::readPreview(const FileName &name, int Xdim, int Ydim, int sele
 
 int ImageGeneric::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img, bool mapData)
 {
-    setDatatype(getImageDatatype(name));
+    ImageInfo imInf;
+    getImageInfo(name, imInf);
+    setDatatype(imInf.datatype);
 
-    return image->readOrReadPreview(name, Xdim, Ydim, select_slice, select_img, mapData);
+    return image->readOrReadPreview(name, Xdim, Ydim, select_slice, select_img, !imInf.swap && mapData);
 }
 
 
