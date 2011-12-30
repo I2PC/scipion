@@ -77,9 +77,11 @@ void ImageViewer::Init()
     spacing = 1;
 
 #ifdef QT3_SUPPORT
+
     menubar = new Q3PopupMenu();
     file = new Q3PopupMenu();
 #else
+
     menubar = new QPopupMenu();
     file = new QPopupMenu();
 #endif
@@ -94,8 +96,10 @@ void ImageViewer::Init()
     printer = new QPrinter;
 
 #ifdef QT3_SUPPORT
+
     options =  new Q3PopupMenu();
 #else
+
     options = new QPopupMenu();
 #endif
 
@@ -114,8 +118,10 @@ void ImageViewer::Init()
     menubar->insertSeparator();
 
 #ifdef QT3_SUPPORT
+
     Q3PopupMenu* help = new Q3PopupMenu();
 #else
+
     QPopupMenu* help = new QPopupMenu();
 #endif
 
@@ -132,10 +138,13 @@ void ImageViewer::Init()
 
     status = new QLabel(this);
 #ifdef QT3_SUPPORT
+
     status->setFrameStyle(Q3Frame::WinPanel | Q3Frame::Sunken);
 #else
+
     status->setFrameStyle(QFrame::WinPanel | QFrame::Sunken);
 #endif
+
     status->setFixedHeight(fontMetrics().height() + 4);
 
     xi = yi = xf = yf = 0;
@@ -147,16 +156,17 @@ void ImageViewer::Init()
         connect(timer, SIGNAL(timeout()), this, SLOT(check_file()));
         timer->start(500);   // Check every 0.5 seconds
     }
-    else timer = NULL;
+    else
+        timer = NULL;
 }
 
 
 /****************************************************/
 ImageViewer::ImageViewer(const char *name, bool _check_file_change):
 #ifdef QT3_SUPPORT
-                         QWidget(NULL, name, Qt::WDestructiveClose),
+        QWidget(NULL, name, Qt::WDestructiveClose),
 #else
-                         QWidget(NULL, name, QWidget::WDestructiveClose),
+        QWidget(NULL, name, QWidget::WDestructiveClose),
 #endif
         filename(0),
         helpmsg(0)
@@ -172,9 +182,11 @@ ImageViewer::ImageViewer(const char *name, bool _check_file_change):
 
 ImageViewer::ImageViewer(QImage *_image, const char *name)
 #ifdef QT3_SUPPORT
-        : QWidget(NULL, name, Qt::WDestructiveClose),
+        :
+        QWidget(NULL, name, Qt::WDestructiveClose),
 #else
-        : QWidget(NULL, name, QWidget::WDestructiveClose),
+        :
+        QWidget(NULL, name, QWidget::WDestructiveClose),
 #endif
         filename(0),
         helpmsg(0)
@@ -185,16 +197,19 @@ ImageViewer::ImageViewer(QImage *_image, const char *name)
     load_mode = ImageViewer::Normal_mode;
     Init();
     filename = name;
-    if (Qt2xmipp(*_image)) showImage();
+    if (Qt2xmipp(*_image))
+        showImage();
 }
 
 /****************************************************/
 
 ImageViewer::ImageViewer(Image<double> *_image, const char *name)
 #ifdef QT3_SUPPORT
-        : QWidget(NULL, name, Qt::WDestructiveClose),
+        :
+        QWidget(NULL, name, Qt::WDestructiveClose),
 #else
-        : QWidget(NULL, name, QWidget::WDestructiveClose),
+        :
+        QWidget(NULL, name, QWidget::WDestructiveClose),
 #endif
         filename(0),
         helpmsg(0)
@@ -205,16 +220,19 @@ ImageViewer::ImageViewer(Image<double> *_image, const char *name)
     load_mode = ImageViewer::Normal_mode;
     Init();
     filename = name;
-    if (xmipp2Qt((Image<double> &) *_image)) showImage();
+    if (xmipp2Qt((Image<double> &) *_image))
+        showImage();
 }
 
 /****************************************************/
 
 ImageViewer::ImageViewer(Image<std::complex<double> > *_FFTimage, const char *name)
 #ifdef QT3_SUPPORT
-        : QWidget(NULL, name, Qt::WDestructiveClose),
+        :
+        QWidget(NULL, name, Qt::WDestructiveClose),
 #else
-        : QWidget(NULL, name, QWidget::WDestructiveClose),
+        :
+        QWidget(NULL, name, QWidget::WDestructiveClose),
 #endif
         filename(0),
         helpmsg(0)
@@ -229,7 +247,8 @@ ImageViewer::ImageViewer(Image<std::complex<double> > *_FFTimage, const char *na
     CenterFFT(xmippImageFourier, true);
     Image<double> I;
     generateFFTImage(I());
-    if (xmipp2Qt(I)) showImage();
+    if (xmipp2Qt(I))
+        showImage();
 }
 
 void ImageViewer::generateFFTImage(MultidimArray<double> &out)
@@ -250,7 +269,8 @@ void ImageViewer::generateFFTImage(MultidimArray<double> &out)
             ampl = abs(A2D_ELEM(xmippImageFourier, i, j));
             if (ampl != 0)
                 val = A2D_ELEM(out, i, j) = 10 * log10(ampl * ampl);
-            else A2D_ELEM(Isubs, i, j) = 1;
+            else
+                A2D_ELEM(Isubs, i, j) = 1;
             break;
         case 1:
             val = A2D_ELEM(out, i, j) = real(A2D_ELEM(xmippImageFourier, i, j));
@@ -280,8 +300,8 @@ void ImageViewer::generateFFTImage(MultidimArray<double> &out)
     if (fft_show_mode == 0)
     {
         FOR_ALL_ELEMENTS_IN_ARRAY2D(Isubs)
-            if (A2D_ELEM(Isubs, i, j) == 1)
-                A2D_ELEM(out, i, j) = min_positive - 1;
+        if (A2D_ELEM(Isubs, i, j) == 1)
+            A2D_ELEM(out, i, j) = min_positive - 1;
     }
 
     out.setXmippOrigin();
@@ -295,6 +315,7 @@ ImageViewer::~ImageViewer()
     if (alloc_context)
         QColor::destroyAllocContext(alloc_context);
 #endif
+
     if (other == this)
         other = 0;
 }
@@ -509,6 +530,7 @@ void ImageViewer::saveImage(int item)
 #ifdef QT3_SUPPORT
     QString savefilename = Q3FileDialog::getSaveFileName(QString::null, "*.xmp", this);
 #else
+
     QString savefilename = QFileDialog::getSaveFileName(0, 0, 0, filename);
 #endif
 
@@ -552,6 +574,7 @@ void ImageViewer::openFile()
 #ifdef QT3_SUPPORT
     QString newfilename = Q3FileDialog::getOpenFileName();
 #else
+
     QString newfilename = QFileDialog::getOpenFileName();
 #endif
 
@@ -620,7 +643,7 @@ bool ImageViewer::showImage()
     }
     QApplication::restoreOverrideCursor();  // restore original cursor
     updateStatus();
-//    setMenuItemFlags();
+    //    setMenuItemFlags();
     repaint();
     return ok;
 }
@@ -704,59 +727,54 @@ bool ImageViewer::loadImage(const char *fileName,
 {
     filename = fileName;
     load_mode = _load_mode;
-    bool ok = FALSE;
+    bool ok = false;
     static bool message_shown = false;
     if (filename)
     {
-
         // try to read image from standard format.
-      FileName fnTmp = FileName(filename).removeFileFormat();
-    	if (image.load(fnTmp.c_str(), 0)) ok = Qt2xmipp(image);
-
-        if (!ok)
+        FileName fnTmp = FileName(filename).removeFileFormat();
+        try
         {
-            try
+            // reads Xmipp Image
+            Image<double> tmpImage;
+            if (tmpImage.isRealImage(filename))
             {
-                // reads Xmipp Image
-            	Image<double> tmpImage;
-                if (tmpImage.isRealImage(filename))
+                isFourierImage = false;
+                Image<double> p;
+                //if (apply_geo)
+                // p.readApplyGeo(filename);
+                //else
+                //FIXME Check if this work
+                p.read(filename);
+                if (load_mode == ImageViewer::PSD_mode)
                 {
-                	isFourierImage = false;
-                    Image<double> p;
-                    //if (apply_geo)
-                    //	p.readApplyGeo(filename);
-                    //else
-                    //FIXME Check if this work
-                    	p.read(filename);
-                	if (load_mode == ImageViewer::PSD_mode)
-                    {
-                        // It is only the ARMA model
-                        xmipp2PSD(p(), p());
-                        options->setItemEnabled(enhancePSD, true);
-                    }
-                    tmpImage = p;
+                    // It is only the ARMA model
+                    xmipp2PSD(p(), p());
+                    options->setItemEnabled(enhancePSD, true);
                 }
-                else REPORT_ERROR(ERR_VALUE_INCORRECT, "ImageViewer::loadImage: Unknown format");
-
-                tmpImage().setXmippOrigin();
-                minGray = _minGray;
-                maxGray = _maxGray;
-                ok = xmipp2Qt(tmpImage);
-
+                tmpImage = p;
             }
-            catch (XmippError xe)
+            else
+                REPORT_ERROR(ERR_VALUE_INCORRECT, "ImageViewer::loadImage: Unknown format");
+
+            tmpImage().setXmippOrigin();
+            minGray = _minGray;
+            maxGray = _maxGray;
+            ok = xmipp2Qt(tmpImage);
+
+        }
+        catch (XmippError xe)
+        {
+            ok = FALSE;
+            if (!message_shown)
             {
-                ok = FALSE;
-                if (!message_shown)
-                {
-                    //char *helptext = "Invalid image type";
-//                    char * helptext = xe.msg.c_str();
-                    helpmsg = new QMessageBox("Error", xe.msg.c_str(),
-                                              QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, FALSE);
-                    helpmsg->show();
-                    helpmsg->raise();
-                    message_shown = true;
-                }
+                //char *helptext = "Invalid image type";
+                //                    char * helptext = xe.msg.c_str();
+                helpmsg = new QMessageBox("Error", xe.msg.c_str(),
+                                          QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, FALSE);
+                helpmsg->show();
+                helpmsg->raise();
+                message_shown = true;
             }
         }
     }
@@ -773,7 +791,8 @@ bool ImageViewer::loadImage(const char *fileName,
             std::cerr << "loadImage: Cannot get time of file " << filename << std::endl;
             modification_time = 0;
         }
-        else modification_time = info.st_mtime;
+        else
+            modification_time = info.st_mtime;
     }
 
     return ok;
@@ -785,7 +804,8 @@ bool ImageViewer::loadMatrix(MultidimArray<double> &_matrix,
     load_mode = _load_mode;
     bool ok = FALSE;
     static bool message_shown = false;
-    if (XSIZE(_matrix) == 0) return false;
+    if (XSIZE(_matrix) == 0)
+        return false;
 
     Image<double> tmpImage;
     isFourierImage = false;
@@ -802,7 +822,8 @@ bool ImageViewer::loadMatrix(MultidimArray<double> &_matrix,
     maxGray = _maxGray;
     ok = xmipp2Qt(tmpImage);
 
-    if (ok) ok = showImage();
+    if (ok)
+        ok = showImage();
     return ok;
 }
 
@@ -811,7 +832,8 @@ bool ImageViewer::reconvertImage()
 {
     bool success = FALSE;
 
-    if (image.isNull()) return FALSE;
+    if (image.isNull())
+        return FALSE;
 
     QApplication::setOverrideCursor(Qt::waitCursor);   // this might take time
     if (pm.convertFromImage(image))
@@ -843,7 +865,8 @@ void ImageViewer::scale()
 {
     int h = height() - status->height();
 
-    if (image.isNull()) return;
+    if (image.isNull())
+        return;
 
     QApplication::setOverrideCursor(Qt::waitCursor);   // this might take time
     if (width() == pm.width() && h == pm.height())
@@ -855,8 +878,10 @@ void ImageViewer::scale()
 #ifdef QT3_SUPPORT
         QMatrix m; // transformation matrix
 #else
+
         QWMatrix m;
 #endif
+
         m.scale(((double)width()) / pm.width(),// define scale factors
                 ((double)h) / pm.height());
         pmScaled = pm.xForm(m);      // create scaled pixmap
@@ -1142,10 +1167,13 @@ void ImageViewer::giveHelp()
     {
         QString helptext = "Usage: xmipp_iv [filename]\n\n ";
 #ifdef QT3_SUPPORT
+
         Q3StrList support = QImageReader::supportedImageFormats();
 #else
+
         QStrList support = QImage::outputFormats();
 #endif
+
         helptext += "\n\nSupported input formats:\n";
         int lastnl = helptext.length();
 
@@ -1214,7 +1242,8 @@ void ImageViewer::set_fft_show_mode(int _fft_show_mode)
     {
         Image<double> I;
         generateFFTImage(I());
-        if (xmipp2Qt(I)) showImage();
+        if (xmipp2Qt(I))
+            showImage();
     }
 }
 
