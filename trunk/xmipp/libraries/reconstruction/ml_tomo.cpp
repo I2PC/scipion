@@ -633,7 +633,7 @@ ProgMLTomo::produceSideInfo()
     if (MDmissing.size() > 1)
       REPORT_ERROR(ERR_MD_OBJECTNUMBER, "missingRegionNumber is missing from input images metadata"
           "and your missing region metadata contains more than one missing region");
-    int missno;
+    int missno=0;
     MDmissing.getValue(MDL_MISSINGREGION_NR, missno, MDmissing.firstObject());
     MDimg.fillConstant(MDL_MISSINGREGION_NR, formatString("%d", missno));
     std::cerr << "WARNING: missingRegionNumber is missing from input images metadata,"
