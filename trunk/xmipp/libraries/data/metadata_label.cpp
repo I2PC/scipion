@@ -449,16 +449,13 @@ void MDObject::setValue(const size_t &lv)
 }
 void MDObject::setValue(const float &floatvalue)
 {
-    std::cerr << "Do not use setValue with floats, use double"<< std::endl;
-    std::cerr << "Floats are banned from metadata class"<< std::endl;
-    exit(1);
+	setValue((double) floatvalue);
 }
 void MDObject::setValue(const char*  &charvalue)
 {
-    std::cerr << "Do not use setValue with char, use string"<< std::endl;
-    std::cerr << "chars are banned from metadata class"<< std::endl;
-    exit(1);
+	setValue(String(charvalue));
 }
+
 #define DOUBLE2STREAM(d) \
     if (withFormat) {\
             (os) << std::setw(12); \
