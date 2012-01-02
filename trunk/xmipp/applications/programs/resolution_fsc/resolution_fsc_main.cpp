@@ -32,10 +32,10 @@ class ProgResolutionFsc : public XmippProgram
 {
 public:
 
-    FileName    fn_ref, fn_root,fn_img;
+    FileName    fn_ref, fn_root,fn_img, fn_out;
     float       sam;
     float       max_sam;
-    bool        do_dpr, do_set_of_images;
+    bool        do_dpr, do_set_of_images, do_o;
 
     FileName    fn_sel;
     bool        apply_geo;
@@ -74,6 +74,8 @@ public:
         addParamsLine("   requires --ref;");
         addParamsLine("or --set_of_images <selfile> : selfile containing a set of 2D-images");
         addParamsLine("   [--oroot <root_file=\"\">] : Root of the output metadata. If not set, input file rootname is taken.");
+        addParamsLine("or [--o <output_file=\"\">]   : Output file name.");
+
         addParamsLine("   [--ref <input_file>]      : filename for reference image/volume");
         addParamsLine("   [--sampling_rate <Ts=1>]  : Pixel size (Angstrom)");
         addParamsLine("  alias -s;");
@@ -107,7 +109,12 @@ public:
             fn_ref = getParam("--ref");
             fn_img = getParam("-i");
         }
-        fn_root = getParam("--oroot");
+
+        do_o = checkParam("-o");
+        if (do_o)
+            fn_out = getParam("-o");
+        else
+            fn_root = getParam("--oroot");
     }
 
     void writeFiles(const FileName &fnRoot,
@@ -121,7 +128,10 @@ public:
         MetaData MD;
 
         FileName  fn_frc;
-        fn_frc = fnRoot + ".frc";
+        if (do_o)
+            fn_frc = fn_out;
+        else
+            fn_frc = fnRoot + ".frc";
         size_t id;
         FOR_ALL_ELEMENTS_IN_ARRAY1D(freq)
         {
@@ -162,17 +172,18 @@ public:
 
         MultidimArray<double> freq, frc, dpr, frc_noise, error_l2;
         frc_dpr(refI(), img(), sam, freq, frc, frc_noise, dpr, error_l2, do_dpr);
+
         writeFiles((fn_root.empty())?img.name():fn_root, freq, frc, frc_noise, dpr, error_l2, max_sam, do_dpr);
         return true;
     }
 
     bool process_sel()
     {
-    	MetaData MD(fn_sel), MDout;
+        MetaData MD(fn_sel), MDout;
         MultidimArray<double> freq, frc, dpr, frc_noise, ssnr, error_l2;
-    	getFourierStatistics(MD, sam, MDout, do_dpr, max_sam);
-    	FileName fnRoot=(fn_root.empty())?fn_sel:fn_root;
-    	MDout.write(fnRoot+".frc");
+        getFourierStatistics(MD, sam, MDout, do_dpr, max_sam);
+        FileName fnRoot=(fn_root.empty())?fn_sel:fn_root;
+        MDout.write(fnRoot+".frc");
     }
 
     void run()
