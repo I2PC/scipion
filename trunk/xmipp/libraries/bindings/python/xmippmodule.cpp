@@ -285,11 +285,11 @@ static PyMethodDef FileName_methods[] =
         { "isInStack", (PyCFunction) FileName_isInStack, METH_NOARGS,
           "True if filename has stack format" },
         { "exists", (PyCFunction) FileName_exists, METH_NOARGS,
-           "True if FileName exists" },
+          "True if FileName exists" },
         { "isMetaData", (PyCFunction) FileName_isMetaData, METH_NOARGS,
           "True if is a MetaData" },
         { "isImage", (PyCFunction) FileName_isImage, METH_NOARGS,
-            "True if is an image" },
+          "True if is an image" },
         { "isStar1", (PyCFunction) FileName_isStar1, METH_NOARGS,
           "True if is a Star1" },
         { "withoutExtension", (PyCFunction) FileName_withoutExtension, METH_NOARGS,
@@ -374,33 +374,33 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 
         if (PyArg_ParseTuple(args, "|O", &input))
         {
-          if (input != NULL)
-          {
-            try
+            if (input != NULL)
             {
-                if (PyString_Check(input))
-                    self->image = new ImageGeneric(PyString_AsString(input));
-                else if (FileName_Check(input))
-                    self->image = new ImageGeneric(FileName_Value(input));
-                //todo: add copy constructor
-                else
+                try
                 {
-                  PyErr_SetString(PyExc_TypeError,
-                                          "Image_new: Expected string or FileName as first argument");
-                                      return NULL;
+                    if (PyString_Check(input))
+                        self->image = new ImageGeneric(PyString_AsString(input));
+                    else if (FileName_Check(input))
+                        self->image = new ImageGeneric(FileName_Value(input));
+                    //todo: add copy constructor
+                    else
+                    {
+                        PyErr_SetString(PyExc_TypeError,
+                                        "Image_new: Expected string or FileName as first argument");
+                        return NULL;
+                    }
+                }
+                catch (XmippError &xe)
+                {
+                    PyErr_SetString(PyXmippError, xe.msg.c_str());
+                    return NULL;
                 }
             }
-            catch (XmippError &xe)
-            {
-                PyErr_SetString(PyXmippError, xe.msg.c_str());
-                return NULL;
-            }
+            else
+                self->image = new ImageGeneric();
         }
         else
-            self->image = new ImageGeneric();
-        }
-        else
-          return NULL;
+            return NULL;
     }
     return (PyObject *) self;
 }
@@ -471,15 +471,17 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (self != NULL)
     {
+        int datamode = DATA;
         PyObject *input = NULL;
-        if (PyArg_ParseTuple(args, "O", &input))
+        if (PyArg_ParseTuple(args, "O|i", &input, &datamode))
         {
+
             try
             {
                 if (PyString_Check(input))
-                    self->image->read(PyString_AsString(input));
+                    self->image->read(PyString_AsString(input),(DataMode)datamode);
                 else if (FileName_Check(input))
-                    self->image->read(FileName_Value(input));
+                    self->image->read(FileName_Value(input),(DataMode)datamode);
                 else
                     return NULL;
                 Py_RETURN_NONE;
@@ -694,8 +696,8 @@ static PyMethodDef Image_methods[] =
           "Apply geometry in refering metadata to an image" },
         { "read", (PyCFunction) Image_read, METH_VARARGS,
           "Read image from disk" },
-          { "readPreview", (PyCFunction) Image_readPreview, METH_VARARGS,
-            "Read image preview" },
+        { "readPreview", (PyCFunction) Image_readPreview, METH_VARARGS,
+          "Read image preview" },
         { "readApplyGeo", (PyCFunction) Image_readApplyGeo, METH_VARARGS,
           "Read image from disk applying geometry in refering metadata" },
         { "write", (PyCFunction) Image_write, METH_VARARGS,
@@ -1507,13 +1509,13 @@ MetaData_write(PyObject *obj, PyObject *args, PyObject *kwargs)
             try
             {
                 if ((pyStr = PyObject_Str(input)) != NULL)
-				{
-					str = PyString_AsString(pyStr);
-					self->metadata->write(str, (WriteModeMetaData) wmd);
-					Py_RETURN_NONE;
-				}
-				else
-					return NULL;
+                {
+                    str = PyString_AsString(pyStr);
+                    self->metadata->write(str, (WriteModeMetaData) wmd);
+                    Py_RETURN_NONE;
+                }
+                else
+                    return NULL;
             }
             catch (XmippError &xe)
             {
@@ -1853,26 +1855,26 @@ MetaData_setColumnValues(PyObject *obj, PyObject *args, PyObject *kwargs)
             MetaDataObject *self = (MetaDataObject*) obj;
             size_t size=PyList_Size(list);
             bool addObjects=(self->metadata->size()==0);
-        	MDObject object((MDLabel) label);
+            MDObject object((MDLabel) label);
             if (addObjects)
             {
-            	for (size_t i=0; i<size; ++i)
-            	{
-            		size_t id=self->metadata->addObject();
-            		setMDObjectValue(&object,PyList_GetItem(list,i));
-            		self->metadata->setValue(object,id);
-            	}
+                for (size_t i=0; i<size; ++i)
+                {
+                    size_t id=self->metadata->addObject();
+                    setMDObjectValue(&object,PyList_GetItem(list,i));
+                    self->metadata->setValue(object,id);
+                }
             }
             else
             {
-				if (self->metadata->size()!=size)
-					PyErr_SetString(PyXmippError, "Metadata size different from list size");
-				size_t i=0;
-				FOR_ALL_OBJECTS_IN_METADATA(*(self->metadata))
-				{
-            		setMDObjectValue(&object,PyList_GetItem(list,i++));
-					self->metadata->setValue(object,__iter.objId);
-				}
+                if (self->metadata->size()!=size)
+                    PyErr_SetString(PyXmippError, "Metadata size different from list size");
+                size_t i=0;
+                FOR_ALL_OBJECTS_IN_METADATA(*(self->metadata))
+                {
+                    setMDObjectValue(&object,PyList_GetItem(list,i++));
+                    self->metadata->setValue(object,__iter.objId);
+                }
             }
         }
         catch (XmippError &xe)
@@ -2225,9 +2227,9 @@ MetaData_methods[] =
         { "getValue", (PyCFunction) MetaData_getValue,
           METH_VARARGS, "Get the value for column(label)" },
         { "getColumnValues", (PyCFunction) MetaData_getColumnValues,
-            METH_VARARGS, "Get all values value from column(label)" },
+          METH_VARARGS, "Get all values value from column(label)" },
         { "setColumnValues", (PyCFunction) MetaData_setColumnValues,
-            METH_VARARGS, "Set all values value from column(label)" },
+          METH_VARARGS, "Set all values value from column(label)" },
         { "getActiveLabels",
           (PyCFunction) MetaData_getActiveLabels,
           METH_VARARGS,
@@ -2253,8 +2255,8 @@ MetaData_methods[] =
           (PyCFunction) MetaData_removeObjects,
           METH_VARARGS, "Remove objects from metadata" },
         { "removeDisabled",
-            (PyCFunction) MetaData_removeDisabled,
-            METH_VARARGS, "Remove disabled objects from metadata" },
+          (PyCFunction) MetaData_removeDisabled,
+          METH_VARARGS, "Remove disabled objects from metadata" },
         { "aggregateSingle",
           (PyCFunction) MetaData_aggregateSingle,
           METH_VARARGS,
@@ -2362,15 +2364,15 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
             {
                 if (MetaData_Check(input))
                     self->metadata = new MetaData(MetaData_Value(input));
-				else if ((pyStr = PyObject_Str(input)) != NULL)
-				{
-					char * str = PyString_AsString(pyStr);
-					self->metadata = new MetaData(str);
-				}
+                else if ((pyStr = PyObject_Str(input)) != NULL)
+                {
+                    char * str = PyString_AsString(pyStr);
+                    self->metadata = new MetaData(str);
+                }
                 else
                 {
-                	PyErr_SetString(PyExc_TypeError,
-                	      "MetaData_new: Bad string value for reading metadata");
+                    PyErr_SetString(PyExc_TypeError,
+                                    "MetaData_new: Bad string value for reading metadata");
                     return NULL;
                 }
             }
@@ -2820,15 +2822,15 @@ void setMDObjectValue(MDObject *obj, PyObject *pyValue)
         if (PyInt_Check(pyValue))
             obj->setValue((int)PyInt_AS_LONG(pyValue));
         else if (PyLong_Check(pyValue))
-        	obj->setValue((size_t)PyLong_AsUnsignedLong(pyValue));
+            obj->setValue((size_t)PyLong_AsUnsignedLong(pyValue));
         else if (PyString_Check(pyValue))
-        	obj->setValue(std::string(PyString_AsString(pyValue)));
+            obj->setValue(std::string(PyString_AsString(pyValue)));
         else if (FileName_Check(pyValue))
-        	obj->setValue((*((FileNameObject*)pyValue)->filename));
+            obj->setValue((*((FileNameObject*)pyValue)->filename));
         else if (PyFloat_Check(pyValue))
-        	obj->setValue(PyFloat_AS_DOUBLE(pyValue));
+            obj->setValue(PyFloat_AS_DOUBLE(pyValue));
         else if (PyBool_Check(pyValue))
-        	obj->setValue((pyValue == Py_True));
+            obj->setValue((pyValue == Py_True));
         else if (PyList_Check(pyValue))
         {
             size_t size = PyList_Size(pyValue);
@@ -2849,7 +2851,7 @@ void setMDObjectValue(MDObject *obj, PyObject *pyValue)
             obj->setValue(vValue);
         }
         else
-        	PyErr_SetString(PyExc_TypeError, "Unrecognized type to create MDObject");
+            PyErr_SetString(PyExc_TypeError, "Unrecognized type to create MDObject");
     }
     catch (XmippError &xe)
     {
@@ -3372,55 +3374,55 @@ xmipp_substituteOriginalImages(PyObject *obj, PyObject *args, PyObject *kwargs)
 
 bool validateInputImageString(PyObject * pyImage, PyObject *pyStrFn, FileName &fn)
 {
-  if (!Image_Check(pyImage))
-  {
-    PyErr_SetString(PyExc_TypeError,
-        "bad argument: Expected Image as first argument");
-    return false;
-  }
-  if (PyString_Check(pyStrFn))
-      fn = PyString_AsString(pyStrFn);
-  else if (FileName_Check(pyStrFn))
-      fn = FileName_Value(pyStrFn);
-  else
-  {
-      PyErr_SetString(PyExc_TypeError,
-          "bad argument:Expected string or FileName as second argument");
-      return false;
-  }
-  return true;
+    if (!Image_Check(pyImage))
+    {
+        PyErr_SetString(PyExc_TypeError,
+                        "bad argument: Expected Image as first argument");
+        return false;
+    }
+    if (PyString_Check(pyStrFn))
+        fn = PyString_AsString(pyStrFn);
+    else if (FileName_Check(pyStrFn))
+        fn = FileName_Value(pyStrFn);
+    else
+    {
+        PyErr_SetString(PyExc_TypeError,
+                        "bad argument:Expected string or FileName as second argument");
+        return false;
+    }
+    return true;
 }
 
 /* calculate enhanced psd and return preview*/
 static PyObject *
 xmipp_fastEstimateEnhancedPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-        PyObject *pyStrFn, *pyImage;
-        //ImageObject *pyImage;
-       double downsampling;
-       int dim, Nthreads;
-       FileName fn;
+    PyObject *pyStrFn, *pyImage;
+    //ImageObject *pyImage;
+    double downsampling;
+    int dim, Nthreads;
+    FileName fn;
 
-        if (PyArg_ParseTuple(args, "OOdii", &pyImage, &pyStrFn, &downsampling, &dim, &Nthreads))
+    if (PyArg_ParseTuple(args, "OOdii", &pyImage, &pyStrFn, &downsampling, &dim, &Nthreads))
+    {
+        try
         {
-            try
+            if (validateInputImageString(pyImage, pyStrFn, fn))
             {
-              if (validateInputImageString(pyImage, pyStrFn, fn))
-              {
                 MultidimArray<double> data;
                 fastEstimateEnhancedPSD(fn, downsampling, data, Nthreads);
                 selfScaleToSize(LINEAR, data, dim, dim);
                 Image_Value(pyImage).setDatatype(Double);
                 Image_Value(pyImage).data->setImage(data);
                 Py_RETURN_NONE;
-              }
-            }
-            catch (XmippError &xe)
-            {
-                PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
         }
-        return NULL;
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
 }
 /** Some helper macros repeated in filter functions*/
 #define FILTER_TRY()\
@@ -3447,22 +3449,22 @@ Py_RETURN_NONE;\
 
 
 /* calculate enhanced psd and return preview
- * used for protocol preprocess_particles*/
+* used for protocol preprocess_particles*/
 static PyObject *
 xmipp_bandPassFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-        PyObject *pyStrFn, *pyImage;
-       double w1, w2, raised_w;
-       int dim;
-       FileName fn;
+    PyObject *pyStrFn, *pyImage;
+    double w1, w2, raised_w;
+    int dim;
+    FileName fn;
 
-        if (PyArg_ParseTuple(args, "OOdddi", &pyImage, &pyStrFn, &w1, &w2, &raised_w, &dim))
-        {
-          FILTER_TRY()
-          bandpassFilter(data, w1, w2, raised_w);
-          FILTER_CATCH()
-        }
-        return NULL;
+    if (PyArg_ParseTuple(args, "OOdddi", &pyImage, &pyStrFn, &w1, &w2, &raised_w, &dim))
+    {
+        FILTER_TRY()
+        bandpassFilter(data, w1, w2, raised_w);
+        FILTER_CATCH()
+    }
+    return NULL;
 }
 
 /* calculate enhanced psd and return preview
@@ -3470,18 +3472,18 @@ xmipp_bandPassFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 xmipp_gaussianFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-        PyObject *pyStrFn, *pyImage;
-       double freqSigma;
-       int dim;
-       FileName fn;
+    PyObject *pyStrFn, *pyImage;
+    double freqSigma;
+    int dim;
+    FileName fn;
 
-        if (PyArg_ParseTuple(args, "OOdi", &pyImage, &pyStrFn, &freqSigma, &dim))
-        {
-          FILTER_TRY()
-          gaussianFilter(data, freqSigma);
-          FILTER_CATCH()
-        }
-        return NULL;
+    if (PyArg_ParseTuple(args, "OOdi", &pyImage, &pyStrFn, &freqSigma, &dim))
+    {
+        FILTER_TRY()
+        gaussianFilter(data, freqSigma);
+        FILTER_CATCH()
+    }
+    return NULL;
 }
 
 /* calculate enhanced psd and return preview
@@ -3489,21 +3491,21 @@ xmipp_gaussianFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 xmipp_badPixelFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-        PyObject *pyStrFn, *pyImage;
-       double factor;
-       int dim;
-       FileName fn;
+    PyObject *pyStrFn, *pyImage;
+    double factor;
+    int dim;
+    FileName fn;
 
-        if (PyArg_ParseTuple(args, "OOdi", &pyImage, &pyStrFn, &factor, &dim))
-        {
-          FILTER_TRY()
-          BadPixelFilter filter;
-          filter.type = BadPixelFilter::OUTLIER;
-          filter.factor = factor;
-          filter.apply(data);
-          FILTER_CATCH()
-        }
-        return NULL;
+    if (PyArg_ParseTuple(args, "OOdi", &pyImage, &pyStrFn, &factor, &dim))
+    {
+        FILTER_TRY()
+        BadPixelFilter filter;
+        filter.type = BadPixelFilter::OUTLIER;
+        filter.factor = factor;
+        filter.apply(data);
+        FILTER_CATCH()
+    }
+    return NULL;
 }
 
 static PyMethodDef
@@ -3562,7 +3564,7 @@ xmipp_methods[] =
         { "gaussianFilter", (PyCFunction) xmipp_gaussianFilter, METH_VARARGS,
           "Utility function to apply gaussian filter in Fourier space" },
         { "badPixelFilter", (PyCFunction) xmipp_badPixelFilter, METH_VARARGS,
-            "Bad pixel filter" },
+          "Bad pixel filter" },
 
         { NULL } /* Sentinel */
     };
