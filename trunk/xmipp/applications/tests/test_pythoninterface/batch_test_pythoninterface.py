@@ -16,6 +16,28 @@ from xmipp import *
 #from test.test_array import NumberTest
 #from json.tests.test_fail import TestFail
 
+import sys
+
+def binaryFileComparison(nameo, namet):
+    ## open files
+    try: file1 = open(nameo, "rb")
+    except: print "cannot open file:", nameo ; exit()
+    try: file2 = open(namet, "rb")
+    except: print "cannot open file:", namet ; file1.close() ; exit()
+    ## read 1b from each file until one file reaches eof or bytes don't match
+    x = 1; y = 1
+    while (x == 1) and (y == 1):
+        a = file1.read(1)
+        b = file2.read(1)
+        x = len(a)
+        y = len(b)
+        if (a != b) or (x != y):
+            return False
+    file2.close()
+    file1.close()
+    return True
+
+
 class TestXmippPythonInterface(unittest.TestCase):
     testsPath = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/applications/tests'
     def setUp(self):
@@ -153,6 +175,32 @@ class TestXmippPythonInterface(unittest.TestCase):
         mD = MetaData(mdPath)
         self.assertEqual(mD, mDout)
         
+        
+    def test_Metadata_setColumnFormat(self):
+        '''MetaData_setValues'''
+        '''This test should produce the following metadata, which is the same of 'test_row.xmd'
+        data_
+         _image 000001@Images/proj_ctf_1.stk
+         _CTFModel CTFs/10.ctfparam
+        ''' 
+        mdPath = os.path.join(self.testsPath, "test_pythoninterface", "test_row.xmd")
+        mdRef = MetaData(mdPath)
+        md = MetaData()
+        ii = -1
+        listOrig = [1.0, 2.0, 3.0]
+        id = md.addObject() 
+        img = '000001@Images/proj_ctf_1.stk'
+        md.setValue(MDL_IMAGE, img, id)
+        md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+        
+        md.setColumnFormat(False)      
+        rowFileName = '/tmp/test_row_tmp.xmd'
+        md.write(rowFileName)
+             
+        equalBool = binaryFileComparison(mdPath, rowFileName)
+        self.assertEqual(equalBool, True)
+        os.remove(rowFileName)
+
     def test_Metadata_setValue(self):
         '''MetaData_setValues'''
         '''This test should produce the following metadata, which is the same of 'test.xmd'
