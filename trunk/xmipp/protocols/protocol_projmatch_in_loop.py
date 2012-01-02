@@ -426,175 +426,79 @@ def reconstruction(_log
            )
 
 
-def  compute_resolution_and_filter(_log
-                                   , DoComputeResolution
-                                   , ARTReconstructionExtraCommand
-                                   , WBPReconstructionExtraCommand
-                                   , FourierReconstructionExtraCommand
-                                   , ReconstructionMethod
-                                   #, FourierMaxFrequencyOfInterest
-                                   , iteration_number
-                                   , ResolSam
-                                   , DoParallel
-                                   , NumberOfMpi
-                                   , NumberOfThreads
-                                   , MyMpiJobSize
-                                   , SymmetryGroup
-                                   , ReconstructedVolume
-                                   #, ReconstructedandfilteredVolume
-                                   , ARTLambda
-                                   , OuterRadius
-                                   , DoSplitReferenceImages
-                                   , PaddingFactor
-                                   , DoLowPassFilter
-                                   , UseFscForFilter
-                                   , ConstantToAddToFiltration
-                                   ):
+def  compute_resolution(_log
+                         , FourierMaxFrequencyOfInterest
+                         , FourierMaxFrequencyOfInterestXmdCurrIter
+                         , FourierMaxFrequencyOfInterestXmdPrevIter
+                         , OuterRadius
+                         , ReconstructedVolumeSplit1
+                         , ReconstructedVolumeSplit2
+                         , ResolSam
+                         ):
 
-    ##
-    if (DoComputeResolution):
-        
-        #import os,shutil,math
-        PerformReconstruction=True
-        split_sel_root_name=ProjMatchRootName+'_split'
-        Outputvolumes=[]
-        Outputvolumes.append(split_sel_root_name+'_1')
-        Outputvolumes.append(split_sel_root_name+'_2')
-        
-        Selfiles=[]
-        Selfiles.append(split_sel_root_name+'_1_classes.sel')
-        Selfiles.append(split_sel_root_name+'_2_classes.sel')
-        Docfiles=[]
-        Docfiles.append(split_sel_root_name+'_1_classes.doc')
-        Docfiles.append(split_sel_root_name+'_2_classes.doc')
-        for i in range(len(Outputvolumes)):
-           print '*********************************************************************'
-           print '* Reconstruct volume'
-           if _ReconstructionMethod=='wbp':
-              program = 'xmipp_reconstruct_wbp'
-              parameters= ' -i '    + Selfiles[i] + \
-                          ' -doc '  + Docfiles[i] + \
-                          ' -o '    + Outputvolumes[i] + ".vol" + \
-                          ' --sym '  + _SymmetryGroup + \
-                          ' --weight --use_each_image '
-              parameters = parameters + _WBPReconstructionExtraCommand
-              _MyNumberOfThreads = 1
-           elif _ReconstructionMethod=='art':
-              program = 'xmipp_reconstruct_art'
-              _DoParallel=False
-              parameters=' -i '    + Selfiles[i] + \
-                         ' -o '    + Outputvolumes[i] + \
-                         ' -sym '  + _SymmetryGroup + \
-                 ' -thr '  + str(_MyNumberOfThreads) + \
-                         ' -WLS '
-              if len(_ARTLambda)>1:
-                 parameters = parameters + ' -l '   + _ARTLambda + ' '
-              parameters = parameters + _ARTReconstructionExtraCommand
-           elif _ReconstructionMethod=='fourier':
-              if ( _MyNumberOfMpiProcesses ==1):
-                  _DoParallel=False
-              program = 'xmipp_reconstruct_fourier'
-              parameters=' -i '    +  Selfiles[i] + \
-                         ' -o '    +  Outputvolumes[i] + '.vol ' + \
-                         ' --sym '  + _SymmetryGroup + \
-                 ' --thr '  + str(_MyNumberOfThreads) + \
-                         ' --weight ' + \
-                         ' --max_resolution ' + str(_FourierMaxFrequencyOfInterest) +\
-                 ' --pad_proj ' + str(_PaddingFactor) +\
-                 ' --pad_vol ' + str(_PaddingFactor)
-              if (_DoParallel):
-                 parameters = parameters + ' --mpi_job_size ' + str(_MyMpiJobSize)
-              if ( not _DoSplitReferenceImages):
-                  PerformReconstruction=False
-              parameters = parameters + _FourierReconstructionExtraCommand
-           else:
-              _mylog.error("Reconstruction method unknown. Quiting")
-              print "Reconstruction method unknown. Quiting"
-              exit(1)
-    
-           import launch_job
-           if(PerformReconstruction):
-               launch_job.launch_job(program,
-                                 parameters,
-                                 _mylog,
-                                 _DoParallel,
-                                 _MyNumberOfMpiProcesses,
-                                 _MyNumberOfThreads,
-                                 _MySystemFlavour)
-    
         # Prevent high-resolution correlation because of discrete mask from wbp
-        innerrad = _OuterRadius - 2
+        innerrad = OuterRadius - 2
         for i in range(len(Outputvolumes)):
            Outputvolumes[i]+=".vol"
            print '*********************************************************************'
            print '* Applying a soft mask'
            command = " -i " + Outputvolumes[i] + \
                      " --mask  raised_cosine -" + str(innerrad) + \
-                     " -" + str(_OuterRadius)
-           launch_job.launch_job("xmipp_mask",
-                                 command,
-                                 _mylog,
-                                 False,1,1,_MySystemFlavour)
+                     " -" + str(OuterRadius)
+                     
+           runJob(_log, "xmipp_transform_mask", command)
       
         print '**************************************************************'
         print '* Compute resolution ' 
-        command = " --ref " + Outputvolumes[0] +\
-                  " -i " +Outputvolumes[1]  + ' --sam ' + str(_ResolSam)
+        command = " --ref " + ReconstructedVolumeSplit1 +\
+                  " -i " + ReconstructedVolumeSplit2  + ' --sampling_rate ' + str(ResolSam)
         if ReconstructionMethod=='fourier':
-            import spider_header
-            myheader=spider_header.spiderheader(Outputvolumes[i] )
-            ncolumns=myheader.nx
+#            img = Image()
+#            img.read(ReconstructedVolumeSplit1, HEADER)
+#            (x,y,z,n) = img.getDimensions()
             #2.5 is the blob radius 
-            aux4 = 2.5 * 0.5 / ncolumns
-            command += " --max_sam " + str (_ResolSam/(aux4+_FourierMaxFrequencyOfInterest))
+            #aux4 = 2.5 * 0.5 / x
+            if FourierMaxFrequencyOfInterest == -1:
+                md = MetaData(FourierMaxFrequencyOfInterestXmdPrevIter)
+                id = md.firstObject()
+                md.getValue(MDL_RESOLUTION_FREQREAL, FourierMaxFrequencyOfInterest, id)
+            else:
+                FourierMaxFrequencyOfInterest = ResolSam/FourierMaxFrequencyOfInterest
+            command += " --max_sam " + str (FourierMaxFrequencyOfInterest)
         
-        launch_job.launch_job("xmipp_resolution_fsc",
-                              command,
-                              _mylog,
-                              False,1,1,_MySystemFlavour)
-        import visualization
-        if _DisplayResolution==True:
-          plot=visualization.gnuplot()
-          plot.plot_xy_file(Outputvolumes[1]+'.frc',
-                              Title="Resolution",
-                              X_Label="Armstrong^-1",
-                              Y_Label="y",
-                              X_col=1,
-                              Y_col=2)
-          print '*********************************************************************'
-          print '* plot resolution'
-          _mylog.info(" plot resolution")
-    
-        # Copy FSC to standard name file
-        outputfsc=_ReconstructedVolume.replace(ReconstructedVolume,OutputFsc)
-        shutil.copy(Outputvolumes[1]+'.frc',outputfsc) 
+        runJob(_log, "xmipp_resolution_fsc", command)
     
         #compute resolution
-        resolution_fsc_file = Outputvolumes[1]+'.frc'
-        f = open(resolution_fsc_file, 'r')
-        #skip first line
-        fi=f.readline()
-          
-        filter_frequence=0. 
-        for line in f:
-            line = line.strip()
-            if not line.startswith('#'):
-                mylist = (line.split())
-                if( float(mylist[1]) < 0.5):
-                   break
-                else:
-                  filter_frequence=float(mylist[0])
+        FourierMaxFrequencyOfInterestXmdCurrIter
     
     
         f.close()
-        print '* maximum resolution (A^-1): ', filter_frequence
-        filter_frequence *= _ResolSam
-        print '* maximum resolution (px^-1): ', filter_frequence
-        return filter_frequence
-    
-    else:
-        filter_frequence = 0
-    
+        
+        md = MetaData()
+        id = md.addObject()
+        md.test_Metadata_setColumnFormat()
+        
+        md.setValue(MDL_RESOLUTION_FREQREAL, filter_frequence)
+        md.setValue(MDL_RESOLUTION_FRC, frc)
+        md.setValue(MDL_SAMPLINGRATE, ResolSam)
+        
+        
+        md.write(FourierMaxFrequencyOfInterestXmdCurrIter)
+        
+
+def  filter_volume(_log
+                                   , DoComputeResolution
+                                   #, FourierMaxFrequencyOfInterest
+                                   , iteration_number
+                                   , ResolSam
+                                   , ReconstructedVolume
+                                   #, ReconstructedandfilteredVolume
+                                   , OuterRadius
+                                   , DoLowPassFilter
+                                   , UseFscForFilter
+                                   , ConstantToAddToFiltration
+                                   ):
+
 
 #------------------------------------------------------------------------
 #           filter_at_given_resolution

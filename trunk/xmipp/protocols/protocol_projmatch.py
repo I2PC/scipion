@@ -519,6 +519,9 @@ class ProtProjMatch(XmippProtocol):
                 _VerifyFiles = []
                     #self._ConstantToAddToFiltration=arg.getComponentFromVector(ConstantToAddToFiltration, _iteration_number-1)
                     #filter_frequence=execute_resolution(self._mylog,
+                
+                'resolution@'+ReconstructedVolumeSplit1+'.fsc'
+                    
                 id = _dataBase.insertStep('compute_resolution_and_filter', verifyfiles=_VerifyFiles
                                               , DoComputeResolution = self.DoComputeResolution
                                               , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
