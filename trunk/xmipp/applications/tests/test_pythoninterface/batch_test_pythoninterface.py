@@ -68,6 +68,21 @@ class TestXmippPythonInterface(unittest.TestCase):
                 self.assertAlmostEquals(p, count)
                 count += 1.
                 
+    def test_Image_read_header(self):
+        
+        imgPath = os.path.join(self.testsPath, "test_pythoninterface", "tinyImage.spi")
+        img = Image()
+        img.read(imgPath, HEADER)        
+        
+        (x,y,z,n) = img.getDimensions()
+        
+        self.assertEqual(x, 3)   
+        self.assertEqual(y, 3)   
+        self.assertEqual(z, 1)   
+        self.assertEqual(n, 1)   
+
+        
+                
     def test_Image_readApplyGeo(self):
         imgPath = os.path.join(self.testsPath, "test_pythoninterface", "tinyRotated.spi")
         img = Image(imgPath)  
