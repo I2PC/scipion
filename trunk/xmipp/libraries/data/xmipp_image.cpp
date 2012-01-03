@@ -79,7 +79,7 @@ template<>
 void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * srcPtr,
         char * page,
         DataType datatype,
-        size_t pageSize)
+        size_t pageSize) const
 {
     switch (datatype)
     {
@@ -120,7 +120,7 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * s
 
 template<>
 void Image< std::complex< double > >::castConvertPage2Datatype(std::complex< double > * srcPtr,
-        char * page, DataType datatype, size_t pageSize,double min0,double max0,CastWriteMode castMode)
+        char * page, DataType datatype, size_t pageSize,double min0,double max0,CastWriteMode castMode) const
 {
 
     switch (datatype)

@@ -726,11 +726,8 @@ protected:
 #include "rwSPE.h"
 #include "rwTIA.h"
 #include "rwJPEG.h"
-    //#include "rwTIFF.h"
+#include "rwTIFF.h"
 
-    /// To be deleted once rwTIFF ported to cpp file IF POSSIBLE!! ---
-    virtual int readTIFF(size_t select_img, bool isStack=false) = 0;
-    virtual int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", CastWriteMode castMode=CW_CAST) = 0;
     /// ----------------------------------------------------------
 
     /** Open file function
@@ -767,6 +764,7 @@ protected:
 
     virtual void setPage2T(size_t offset, char * page, DataType datatype, size_t pageSize ) = 0;
     virtual void getPageFromT(size_t offset, char * page, DataType datatype, size_t pageSize ) = 0;
+    virtual void getCastConvertPageFromT(size_t offset, char * page, DataType datatype, size_t pageSize, double min0, double max0, CastWriteMode castMode=CW_CONVERT) const = 0;
 
     /** Mmap the Image class to an image file.
      */
@@ -782,7 +780,7 @@ protected:
 
     /** Return the datatype of the current image object
      */
-    virtual DataType myT()=0;
+    virtual DataType myT() const = 0;
 
     /** Show ImageBase */
     friend std::ostream& operator<<(std::ostream& o, const ImageBase& I);

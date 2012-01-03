@@ -310,7 +310,7 @@ public:
     /** Cast page from T to datatype
      *  input pointer char *
      */
-    void castPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize )
+    void castPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize ) const
     {
         switch (datatype)
         {
@@ -412,7 +412,7 @@ public:
      * adjusting the input values in the range of output datatype.
      */
     void castConvertPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize,
-                                  double min0, double max0, CastWriteMode castMode=CW_CONVERT)
+                                  double min0, double max0, CastWriteMode castMode=CW_CONVERT) const
     {
 
         double minF, maxF;
@@ -605,6 +605,14 @@ public:
     {
         castPage2Datatype(MULTIDIM_ARRAY(data)+offset,page,datatype,pageSize);
     }
+
+    void getCastConvertPageFromT(size_t offset, char * page, DataType datatype, size_t pageSize,
+                                 double min0, double max0, CastWriteMode castMode=CW_CONVERT) const
+    {
+        castConvertPage2Datatype(MULTIDIM_ARRAY(data)+offset, page, datatype, pageSize,
+                                 min0, max0, castMode);
+    }
+
 
     /** Check if file Datatype is the same as the declared image object (T type) to use mmap.
      */
@@ -909,7 +917,7 @@ public:
     /**
      *  Specific read functions for different file formats
      */
-#include "rwTIFF.h"
+    //#include "rwTIFF.h"
 
 protected:
 
@@ -1181,7 +1189,7 @@ private:
 
     /* Return the datatype of the current image object
      */
-    DataType myT()
+    DataType myT() const
     {
         if (typeid(T) == typeid(unsigned char))
             return UChar;
@@ -1238,10 +1246,10 @@ template<>
 void Image< std::complex< double > >::castPage2Datatype(std::complex< double > * srcPtr,
         char * page,
         DataType datatype,
-        size_t pageSize);
+        size_t pageSize) const;
 template<>
 void Image< std::complex< double > >::castConvertPage2Datatype(std::complex< double > * srcPtr,
-        char * page, DataType datatype, size_t pageSize,double min0,double max0,CastWriteMode castMode);
+        char * page, DataType datatype, size_t pageSize,double min0,double max0,CastWriteMode castMode) const;
 
 //@}
 #endif
