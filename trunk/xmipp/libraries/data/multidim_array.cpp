@@ -25,6 +25,50 @@
 
 #include "multidim_array.h"
 
+void MultidimArrayBase::setNdim(int Ndim)
+{
+    ndim = Ndim;
+    nzyxdim=zyxdim*ndim;
+}
+
+/** Sets new Z dimension.
+ *
+ *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+ *
+ */
+void MultidimArrayBase::setZdim(int Zdim)
+{
+    zdim = Zdim;
+    zyxdim=yxdim*zdim;
+    nzyxdim=zyxdim*ndim;
+}
+
+/** Sets new Y dimension.
+ *
+ *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+ *
+ */
+void MultidimArrayBase::setYdim(int Ydim)
+{
+    ydim = Ydim;
+    yxdim=(size_t)ydim*xdim;
+    zyxdim=yxdim*zdim;
+    nzyxdim=zyxdim*ndim;
+}
+
+/** Sets new X dimension.
+  *
+  *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+  *
+  */
+void MultidimArrayBase::setXdim(int Xdim)
+{
+    xdim = Xdim;
+    yxdim=(size_t)ydim*xdim;
+    zyxdim=yxdim*zdim;
+    nzyxdim=zyxdim*ndim;
+}
+
 /** Sets new 4D dimensions.
   *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
   */
@@ -117,6 +161,130 @@ size_t MultidimArrayBase::getSize() const
 void MultidimArrayBase::resize(ArrayDim &adim,bool copy)
 {
     resize(adim.ndim, adim.zdim, adim.ydim, adim.xdim, copy);
+}
+
+/** Copy the shape parameters
+  *
+  */
+void MultidimArrayBase::copyShape(const MultidimArrayBase &m)
+{
+    ndim=m.ndim;
+    zdim=m.zdim;
+    ydim=m.ydim;
+    xdim=m.xdim;
+    yxdim=m.yxdim;
+    zyxdim=m.zyxdim;
+    nzyxdim=m.nzyxdim;
+    zinit=m.zinit;
+    yinit=m.yinit;
+    xinit=m.xinit;
+}
+
+void MultidimArrayBase::setXmippOrigin()
+{
+    zinit = FIRST_XMIPP_INDEX(zdim);
+    yinit = FIRST_XMIPP_INDEX(ydim);
+    xinit = FIRST_XMIPP_INDEX(xdim);
+}
+
+void MultidimArrayBase::resetOrigin()
+{
+    zinit = yinit = xinit = 0;
+}
+
+void MultidimArrayBase::moveOriginTo(int k, int i, int j)
+{
+    zinit = k + FIRST_XMIPP_INDEX(zdim);
+    yinit = i + FIRST_XMIPP_INDEX(ydim);
+    xinit = j + FIRST_XMIPP_INDEX(xdim);
+}
+
+void MultidimArrayBase::moveOriginTo(int i, int j)
+{
+    yinit = i + FIRST_XMIPP_INDEX(ydim);
+    xinit = j + FIRST_XMIPP_INDEX(xdim);
+}
+
+/** IsCorner (in 2D or 3D matrix)
+         *
+         * TRUE if the logical index given is a corner of the definition region of this
+         * array.
+         */
+bool MultidimArrayBase::isCorner(const Matrix1D< double >& v) const
+{
+
+    if (v.size() < 2)
+        REPORT_ERROR(ERR_MATRIX_SIZE, "isCorner: index vector has got not enough components");
+
+    else if (ZSIZE(*this)==1)
+        return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this))  ||
+                (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this)) ||
+                (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this))  ||
+                (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this)));
+    else if (ZSIZE(*this)>1)
+        return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this)  && ZZ(v) == STARTINGZ(*this)) ||
+                (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
+                (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == STARTINGZ(*this))  ||
+                (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
+                (XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this)) ||
+                (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)) ||
+                (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this))  ||
+                (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)));
+    else
+        REPORT_ERROR(ERR_MATRIX_SIZE, formatString("isCorner: index vector has too many components. dimV= %lu matrix dim = %i", v.size(), XSIZE(*this)));
+}
+
+/** Outside
+     *
+     * TRUE if the logical index given is outside the definition region of this
+     * array.
+     */
+bool MultidimArrayBase::outside(const Matrix1D<double> &r) const
+{
+    if (r.size() < 1)
+    {
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Outside: index vector has not got enough components");
+    }
+    else if (r.size()==1)
+    {
+        return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this));
+    }
+    else if (r.size()==2)
+    {
+        return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this) ||
+                YY(r) < STARTINGY(*this) || YY(r) > FINISHINGY(*this));
+    }
+    else if (r.size()==3)
+    {
+        return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this) ||
+                YY(r) < STARTINGY(*this) || YY(r) > FINISHINGY(*this) ||
+                ZZ(r) < STARTINGZ(*this) || ZZ(r) > FINISHINGZ(*this));
+    }
+    else
+        REPORT_ERROR(ERR_MATRIX_SIZE,"Outside: index vector has too many components");
+}
+
+void MultidimArrayBase::printShape(std::ostream& out) const
+{
+    if (NSIZE(*this) > 1)
+        out << " Number of images = "<<NSIZE(*this);
+
+    int dim = getDim();
+    if (dim == 3)
+        out<< " Size(Z,Y,X): " << ZSIZE(*this) << "x" << YSIZE(*this) << "x" << XSIZE(*this)
+        << " k=[" << STARTINGZ(*this) << ".." << FINISHINGZ(*this) << "]"
+        << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
+        << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+    else if (dim == 2)
+        out<< " Size(Y,X): " << YSIZE(*this) << "x" << XSIZE(*this)
+        << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
+        << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+    else if (dim == 1)
+        out<< " Size(X): " << XSIZE(*this)
+        << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+    else
+        out << " Empty MultidimArray!";
+    out<<"\n";
 }
 
 // Show a complex array ---------------------------------------------------

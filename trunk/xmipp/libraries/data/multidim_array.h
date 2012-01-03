@@ -700,6 +700,36 @@ public:
     {}
     virtual void clear() = 0;
 
+    /// @name Size
+    //@{
+
+    /** Sets new N dimension.
+        *
+        *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+        */
+    void setNdim(int Ndim);
+
+    /** Sets new Z dimension.
+     *
+     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+     *
+     */
+    void setZdim(int Zdim);
+
+    /** Sets new Y dimension.
+     *
+     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+     *
+     */
+    void setYdim(int Ydim);
+
+    /** Sets new X dimension.
+      *
+      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+      *
+      */
+    void setXdim(int Xdim);
+
     /** Sets new 4D dimensions.
      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
      */
@@ -710,17 +740,281 @@ public:
      */
     void setDimensions(ArrayDim &newDim);
 
+    /** Get the array dimensions.
+     */
     void getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const;
     void getDimensions(ArrayDim &idim) const;
+
+    /** Get dimensions.
+     *
+     * Returns the size of the object in a 4D vector. If the object is a matrix
+     * or a vector, then the higher order dimensions will be set to 1, ie,
+     * (Xdim, 1, 1) or (Xdim, Ydim, 1).
+     *
+     * This function is not ported to Python.
+     */
     void getDimensions(int* size) const;
+
+    /** Returns the total size of the multidimArray
+     *
+     * @code
+     * if (V.getSize() > 1) ...
+     * @endcode
+     */
     size_t getSize() const;
+
+    /** Resize to a given size
+      *
+      * This function resize the actual array to the given size. The origin is
+      * not modified. If the actual array is larger than the pattern then the
+      * values outside the new size are lost, if it is smaller then 0's are
+      * added. An exception is thrown if there is no memory.
+      *
+      * @code
+      * V1.resize(3, 3, 2);
+      * @endcode
+      */
     virtual void resize(size_t Ndim, int Zdim, int Ydim, int Xdim, bool copy=true) = 0;
+
+    /** Resize a single 3D image
+     *
+     * This function assumes n is 1
+     * @code
+     * V1.resize(3, 3, 2);
+     * @endcode
+     */
+    void resize(int Zdim, int Ydim, int Xdim)
+    {
+        resize(1, Zdim, Ydim, Xdim);
+    }
+
+    /** Resize a single 2D image
+     *
+     * This function assumes n and z are 1
+     * @code
+     * V1.resize(3, 2);
+     * @endcode
+     */
+    void resize(int Ydim, int Xdim)
+    {
+        resize(1, 1, Ydim, Xdim);
+    }
+
+    /** Resize a single 1D image
+     *
+     * This function assumes n and z and y are 1
+     * @code
+     * V1.resize(2);
+     * @endcode
+     */
+    void resize(int Xdim)
+    {
+        resize(1, 1, 1, Xdim);
+    }
+
+    /** Resize an image using the dimensions
+     *  from an ArrayDim structure.
+     */
     void resize(ArrayDim &adim, bool copy=true);
+
+    /** Resize with no copy a single 3D image
+        */
+    void resizeNoCopy(int Zdim, int Ydim, int Xdim)
+    {
+        resize(1, Zdim, Ydim, Xdim, false);
+    }
+
+    /** Resize a single 2D image with no copy
+     */
+    void resizeNoCopy(int Ydim, int Xdim)
+    {
+        resize(1, 1, Ydim, Xdim, false);
+    }
+
+    /** Resize a single 1D image with no copy
+     */
+    void resizeNoCopy(int Xdim)
+    {
+        resize(1, 1, 1, Xdim, false);
+    }
+
+    /** Returns Y dimension.
+       */
+    inline int rowNumber() const
+    {
+        return ydim;
+    }
+
+    /** Returns X dimension.
+     */
+    inline int colNumber() const
+    {
+        return xdim;
+    }
+
+    /** Copy the shape parameters
+      *
+      */
+    void copyShape(const MultidimArrayBase &m);
+
+    /** Same shape.
+     *
+     * Returns true if this object has got the same shape (origin and size)
+     * than the argument
+     */
+    inline bool sameShape(const MultidimArrayBase &op) const
+    {
+        return (NSIZE(*this) == NSIZE(op) &&
+                XSIZE(*this) == XSIZE(op) &&
+                YSIZE(*this) == YSIZE(op) &&
+                ZSIZE(*this) == ZSIZE(op) &&
+                STARTINGX(*this) == STARTINGX(op) &&
+                STARTINGY(*this) == STARTINGY(op) &&
+                STARTINGZ(*this) == STARTINGZ(op));
+    }
+
+
+    /** Set logical origin in Xmipp fashion.
+      *
+      * This function adjust the starting points in the array such that the
+      * center of the array is defined in the Xmipp fashion.
+      *
+      * @code
+      * V.setXmippOrigin();
+      * @endcode
+      */
+    void setXmippOrigin();
+
+    /** Reset logical origin to zeros.
+     *
+     * This function adjust the starting points in the array such
+     * that upper left corner begins in zero.
+     *
+     * @code
+     * V.resetOrigin();
+     * @endcode
+     */
+    void resetOrigin();
+
+    /** Move origin to.
+      *
+      * This function adjust logical indexes such that the Xmipp origin of the
+      * array moves to the specified position. For instance, an array whose x
+      * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
+      * go from 3 to 5. This is very useful for convolution operations where you
+      * only need to move the logical starting of the array.
+      *
+      */
+    void moveOriginTo(int k, int i, int j);
+
+    /** Move origin to.
+      *
+      * This function adjust logical indexes such that the Xmipp origin of the
+      * array moves to the specified position. For instance, an array whose x
+      * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
+      * go from 3 to 5. This is very useful for convolution operations where you
+      * only need to move the logical starting of the array.
+      *
+      */
+    void moveOriginTo(int i, int j);
+
+    /** Returns the first valid logical Z index.
+      */
+    inline int startingZ() const
+    {
+        return zinit;
+    }
+
+    /** Returns the last valid logical Z index.
+     */
+    inline int finishingZ() const
+    {
+        return zinit + zdim - 1;
+    }
+
+    /** Returns the first valid logical Y index.
+     */
+    inline int startingY() const
+    {
+        return yinit;
+    }
+
+    /** Returns the last valid logical Y index.
+     */
+    inline int finishingY() const
+    {
+        return yinit + ydim - 1;
+    }
+
+    /** Returns the first valid logical X index.
+     */
+    inline int startingX() const
+    {
+        return xinit;
+    }
+
+    /** Returns the last valid logical X index.
+     */
+    inline int finishingX() const
+    {
+        return xinit + xdim - 1;
+    }
+
+    /** IsCorner (in 2D or 3D matrix)
+         *
+         * TRUE if the logical index given is a corner of the definition region of this
+         * array.
+         */
+    bool isCorner(const Matrix1D< double >& v) const;
+
+    /** Outside for 3D matrices
+       *
+       * TRUE if the logical index given is outside the definition region of this
+       * array.
+       */
+    inline bool outside(int k, int i, int j) const
+    {
+        return (j < STARTINGX(*this) || j > FINISHINGX(*this) ||
+                i < STARTINGY(*this) || i > FINISHINGY(*this) ||
+                k < STARTINGZ(*this) || k > FINISHINGZ(*this));
+    }
+
+    /** Outside for 2D matrices
+     *
+     * TRUE if the logical index given is outside the definition region of this
+     * array.
+     */
+    inline bool outside(int i, int j) const
+    {
+        return (j < STARTINGX(*this) || j > FINISHINGX(*this) ||
+                i < STARTINGY(*this) || i > FINISHINGY(*this));
+    }
+
+    /** Outside for 1D matrices
+     *
+     * TRUE if the logical index given is outside the definition region of this
+     * array.
+     */
+    inline bool outside(int i) const
+    {
+        return (i < STARTINGX(*this) || i > FINISHINGX(*this));
+    }
+
+    /** Outside
+     *
+     * TRUE if the logical index given is outside the definition region of this
+     * array.
+     */
+    bool outside(const Matrix1D<double> &r) const;
+
+    //@}
+
     virtual void selfReverseX() = 0;
     virtual void selfReverseY() = 0;
     virtual void selfReverseZ() = 0;
-    virtual void setXmippOrigin() = 0;
     virtual double computeAvg() const = 0;
+    virtual void computeDoubleMinMaxRange(double& minval, double& maxval,size_t offset, size_t size) const = 0;
+
 
     /** Returns the multidimArray dimension.
      *
@@ -766,28 +1060,7 @@ public:
      * v.printShape(fh);
      * @endcode
      */
-    void printShape(std::ostream& out = std::cout) const
-    {
-        if (NSIZE(*this) > 1)
-            out << " Number of images = "<<NSIZE(*this);
-
-        int dim = getDim();
-        if (dim == 3)
-            out<< " Size(Z,Y,X): " << ZSIZE(*this) << "x" << YSIZE(*this) << "x" << XSIZE(*this)
-            << " k=[" << STARTINGZ(*this) << ".." << FINISHINGZ(*this) << "]"
-            << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
-            << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
-        else if (dim == 2)
-            out<< " Size(Y,X): " << YSIZE(*this) << "x" << XSIZE(*this)
-            << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
-            << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
-        else if (dim == 1)
-            out<< " Size(X): " << XSIZE(*this)
-            << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
-        else
-            out << " Empty MultidimArray!";
-        out<<"\n";
-    }
+    void printShape(std::ostream& out = std::cout) const;
 };
 
 template<typename T>
@@ -896,7 +1169,7 @@ public:
 
     /** Destructor.
      */
-    ~MultidimArray()
+    virtual ~MultidimArray()
     {
         coreDeallocate();
     }
@@ -1082,70 +1355,11 @@ public:
     /// @name Size
     //@{
 
-    /** Sets new N dimension.
-     *
-     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+    /* These "using" declarations must be done due to c++ cannot overload methods that have been
+     * declared in base class.
      */
-    void setNdim(int Ndim)
-    {
-        ndim = Ndim;
-        nzyxdim=zyxdim*ndim;
-    }
-
-    /** Sets new Z dimension.
-     *
-     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
-     *
-     */
-    void setZdim(int Zdim)
-    {
-        zdim = Zdim;
-        zyxdim=yxdim*zdim;
-        nzyxdim=zyxdim*ndim;
-    }
-
-    /** Sets new Y dimension.
-     *
-     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
-     *
-     */
-    void setYdim(int Ydim)
-    {
-        ydim = Ydim;
-        yxdim=(size_t)ydim*xdim;
-        zyxdim=yxdim*zdim;
-        nzyxdim=zyxdim*ndim;
-    }
-
-    /** Sets new X dimension.
-      *
-      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
-      *
-      */
-    void setXdim(int Xdim)
-    {
-        xdim = Xdim;
-        yxdim=(size_t)ydim*xdim;
-        zyxdim=yxdim*zdim;
-        nzyxdim=zyxdim*ndim;
-    }
-
-    /** Copy the shape parameters
-     *
-     */
-    void copyShape(const MultidimArray<T> &m)
-    {
-        ndim=m.ndim;
-        zdim=m.zdim;
-        ydim=m.ydim;
-        xdim=m.xdim;
-        yxdim=m.yxdim;
-        zyxdim=m.zyxdim;
-        nzyxdim=m.nzyxdim;
-        zinit=m.zinit;
-        yinit=m.yinit;
-        xinit=m.xinit;
-    }
+    using MultidimArrayBase::resizeNoCopy;
+    using MultidimArrayBase::resize;
 
     /** Resize to a given size
      *
@@ -1261,63 +1475,6 @@ public:
         nzyxdim = Ndim * zyxdim;
         mFd = new_mFd;
         nzyxdimAlloc = nzyxdim;
-    }
-
-    /** Resize with no copy a single 3D image
-     */
-    void resizeNoCopy(int Zdim, int Ydim, int Xdim)
-    {
-        resize(1, Zdim, Ydim, Xdim, false);
-    }
-
-    /** Resize a single 3D image
-     *
-     * This function assumes n is 1
-     * @code
-     * V1.resize(3, 3, 2);
-     * @endcode
-     */
-    void resize(int Zdim, int Ydim, int Xdim)
-    {
-        resize(1, Zdim, Ydim, Xdim);
-    }
-
-    /** Resize a single 2D image
-     *
-     * This function assumes n and z are 1
-     * @code
-     * V1.resize(3, 2);
-     * @endcode
-     */
-    void resize(int Ydim, int Xdim)
-    {
-        resize(1, 1, Ydim, Xdim);
-    }
-
-    /** Resize a single 2D image with no copy
-     */
-    void resizeNoCopy(int Ydim, int Xdim)
-    {
-        resize(1, 1, Ydim, Xdim, false);
-    }
-
-    /** Resize a single 1D image
-     *
-     * This function assumes n and z and y are 1
-     * @code
-     * V1.resize(2);
-     * @endcode
-     */
-    void resize(int Xdim)
-    {
-        resize(1, 1, 1, Xdim);
-    }
-
-    /** Resize a single 1D image with no copy
-     */
-    void resizeNoCopy(int Xdim)
-    {
-        resize(1, 1, 1, Xdim, false);
     }
 
     /** Resize according to a pattern.
@@ -1569,232 +1726,6 @@ public:
         *this=result;
     }
 
-    /** Same shape.
-     *
-     * Returns true if this object has got the same shape (origin and size)
-     * than the argument
-     */
-    template <typename T1>
-    inline bool sameShape(const MultidimArray<T1>& op) const
-    {
-        return (NSIZE(*this) == NSIZE(op) &&
-                XSIZE(*this) == XSIZE(op) &&
-                YSIZE(*this) == YSIZE(op) &&
-                ZSIZE(*this) == ZSIZE(op) &&
-                STARTINGX(*this) == STARTINGX(op) &&
-                STARTINGY(*this) == STARTINGY(op) &&
-                STARTINGZ(*this) == STARTINGZ(op));
-    }
-
-
-    /** Outside for 3D matrices
-     *
-     * TRUE if the logical index given is outside the definition region of this
-     * array.
-     */
-    bool outside(int k, int i, int j) const
-    {
-        return (j < STARTINGX(*this) || j > FINISHINGX(*this) ||
-                i < STARTINGY(*this) || i > FINISHINGY(*this) ||
-                k < STARTINGZ(*this) || k > FINISHINGZ(*this));
-    }
-
-    /** Outside for 2D matrices
-     *
-     * TRUE if the logical index given is outside the definition region of this
-     * array.
-     */
-    inline bool outside(int i, int j) const
-    {
-        return (j < STARTINGX(*this) || j > FINISHINGX(*this) ||
-                i < STARTINGY(*this) || i > FINISHINGY(*this));
-    }
-
-    /** Outside for 1D matrices
-     *
-     * TRUE if the logical index given is outside the definition region of this
-     * array.
-     */
-    bool outside(int i) const
-    {
-        return (i < STARTINGX(*this) || i > FINISHINGX(*this));
-    }
-
-    /** Outside
-     *
-     * TRUE if the logical index given is outside the definition region of this
-     * array.
-     */
-    bool outside(const Matrix1D<double> &r) const
-    {
-        if (r.size() < 1)
-        {
-            REPORT_ERROR(ERR_MATRIX_SIZE, "Outside: index vector has not got enough components");
-        }
-        else if (r.size()==1)
-        {
-            return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this));
-        }
-        else if (r.size()==2)
-        {
-            return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this) ||
-                    YY(r) < STARTINGY(*this) || YY(r) > FINISHINGY(*this));
-        }
-        else if (r.size()==3)
-        {
-            return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this) ||
-                    YY(r) < STARTINGY(*this) || YY(r) > FINISHINGY(*this) ||
-                    ZZ(r) < STARTINGZ(*this) || ZZ(r) > FINISHINGZ(*this));
-        }
-        else
-            REPORT_ERROR(ERR_MATRIX_SIZE,"Outside: index vector has too many components");
-    }
-
-    /** Returns Y dimension.
-     */
-    inline int rowNumber() const
-    {
-        return ydim;
-    }
-
-    /** Returns X dimension.
-     */
-    inline int colNumber() const
-    {
-        return xdim;
-    }
-
-    /** Set logical origin in Xmipp fashion.
-     *
-     * This function adjust the starting points in the array such that the
-     * center of the array is defined in the Xmipp fashion.
-     *
-     * @code
-     * V.setXmippOrigin();
-     * @endcode
-     */
-    void setXmippOrigin()
-    {
-        zinit = FIRST_XMIPP_INDEX(zdim);
-        yinit = FIRST_XMIPP_INDEX(ydim);
-        xinit = FIRST_XMIPP_INDEX(xdim);
-    }
-
-    /** Reset logical origin to zeros.
-     *
-     * This function adjust the starting points in the array such that the
-     * it begins in zero.
-     *
-     * @code
-     * V.resetOrigin();
-     * @endcode
-     */
-    void resetOrigin()
-    {
-        zinit = yinit = xinit = 0;
-    }
-
-    /** Move origin to.
-      *
-      * This function adjust logical indexes such that the Xmipp origin of the
-      * array moves to the specified position. For instance, an array whose x
-      * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
-      * go from 3 to 5. This is very useful for convolution operations where you
-      * only need to move the logical starting of the array.
-      *
-      */
-    void moveOriginTo(int k, int i, int j)
-    {
-        zinit = k + FIRST_XMIPP_INDEX(zdim);
-        yinit = i + FIRST_XMIPP_INDEX(ydim);
-        xinit = j + FIRST_XMIPP_INDEX(xdim);
-    }
-
-    /** Move origin to.
-      *
-      * This function adjust logical indexes such that the Xmipp origin of the
-      * array moves to the specified position. For instance, an array whose x
-      * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
-      * go from 3 to 5. This is very useful for convolution operations where you
-      * only need to move the logical starting of the array.
-      *
-      */
-    void moveOriginTo(int i, int j)
-    {
-        yinit = i + FIRST_XMIPP_INDEX(ydim);
-        xinit = j + FIRST_XMIPP_INDEX(xdim);
-    }
-
-    /** Returns the first valid logical Z index.
-      */
-    inline int startingZ() const
-    {
-        return zinit;
-    }
-
-    /** Returns the last valid logical Z index.
-     */
-    inline int finishingZ() const
-    {
-        return zinit + zdim - 1;
-    }
-
-    /** Returns the first valid logical Y index.
-     */
-    inline int startingY() const
-    {
-        return yinit;
-    }
-
-    /** Returns the last valid logical Y index.
-     */
-    inline int finishingY() const
-    {
-        return yinit + ydim - 1;
-    }
-
-    /** Returns the first valid logical X index.
-     */
-    inline int startingX() const
-    {
-        return xinit;
-    }
-
-    /** Returns the last valid logical X index.
-     */
-    inline int finishingX() const
-    {
-        return xinit + xdim - 1;
-    }
-
-    /** IsCorner (in 2D or 3D matrix)
-     *
-     * TRUE if the logical index given is a corner of the definition region of this
-     * array.
-     */
-    bool isCorner(const Matrix1D< double >& v) const
-    {
-
-        if (v.size() < 2)
-            REPORT_ERROR(ERR_MATRIX_SIZE, "isCorner: index vector has got not enough components");
-
-        else if (ZSIZE(*this)==1)
-            return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this))  ||
-                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this)) ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this))  ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this)));
-        else if (ZSIZE(*this)>1)
-            return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this)  && ZZ(v) == STARTINGZ(*this)) ||
-                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == STARTINGZ(*this))  ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
-                    (XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this)) ||
-                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)) ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this))  ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)));
-        else
-            REPORT_ERROR(ERR_MATRIX_SIZE, formatString("isCorner: index vector has too many components. dimV= %lu matrix dim = %i", v.size(), XSIZE(*this)));
-    }
     //@}
 
     ///@name Access to the pixel values
