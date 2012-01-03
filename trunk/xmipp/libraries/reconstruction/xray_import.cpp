@@ -363,7 +363,7 @@ void ProgXrayImport::run()
     int Xdim, Ydim, Zdim;
     size_t Ndim;
     getImageSizeFromFilename(filenames[0], Xdim, Ydim, Zdim, Ndim);
-    createEmptyFile(fnOut, Xdim, Ydim, 1, filenames.size());
+    createEmptyFile(fnOut, Xdim-2*cropSize, Ydim-2*cropSize, 1, filenames.size());
 
     // Process images
     td=new ThreadTaskDistributor(filenames.size(),XMIPP_MAX(1,filenames.size()/30));
