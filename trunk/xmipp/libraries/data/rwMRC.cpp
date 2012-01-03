@@ -214,7 +214,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     if ( header->mz && header->c!=0)//zx
         MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
 
-    if (dataMode==HEADER || dataMode == _HEADER_ALL && _nDim > 1) // Stop reading if not necessary
+    if (dataMode==HEADER || (dataMode == _HEADER_ALL && _nDim > 1)) // Stop reading if not necessary
     {
         delete header;
         return 0;

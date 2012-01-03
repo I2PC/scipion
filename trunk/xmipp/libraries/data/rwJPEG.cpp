@@ -127,26 +127,20 @@ void term_buffer(jpeg_compress_struct* cinfo)
 
 int ImageBase::writeJPEG(size_t select_img, bool isStack, int mode, String bitDepth, CastWriteMode castMode)
 {
-    //    if (mode == WRITE_REPLACE)
-    //        REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Images cannot be replaced in TIFF file.");
-    //    if (typeid(T) == typeid(std::complex<double>))
-    //    {
-    //        REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Complex images are not supported by TIFF format.");
-    //        return 0;
-    //    }
+	 if (isComplexT())
+	    {
+	        REPORT_ERROR(ERR_TYPE_INCORRECT,"rwJPEG: Complex images are not supported by JPEG format.");
+	        return 0;
+	    }
 
     ArrayDim aDim;
     getDimensions(aDim);
 
     // Volumes are not supported
     if (aDim.zdim > 1)
-        REPORT_ERROR(ERR_MULTIDIM_DIM, "writeTIFF does not support volumes.");
-    // TIFF cannot open a file to read/write at the same time, so the file must be overwritten
-    //    if (mode != WRITE_OVERWRITE)
-    //        REPORT_ERROR(ERR_VALUE_INCORRECT, "writeTIFF: LIBTIFF cannot modify an existing file, only overwrite it.");
+        REPORT_ERROR(ERR_MULTIDIM_DIM, "rwJPEG: volumes are not supported.");
 
     //Selection of output datatype
-
     DataType wDType;
 
     castMode = CW_CONVERT;
@@ -183,17 +177,17 @@ int ImageBase::writeJPEG(size_t select_img, bool isStack, int mode, String bitDe
     jpeg_compress_struct cinfo;
     jpeg_error_mgr jerr;
 
-//    struct jpeg_destination_mgr dmgr;
-//
-//    /* create our in-memory output buffer to hold the jpeg */
-//    JOCTET * out_buffer   = new JOCTET[aDim.xdim * aDim.ydim];
-//
-//    /* here is the magic */
-//    dmgr.init_destination    = init_buffer;
-//    dmgr.empty_output_buffer = empty_buffer;
-//    dmgr.term_destination    = term_buffer;
-//    dmgr.next_output_byte    = out_buffer;
-//    dmgr.free_in_buffer      = aDim.xdim * aDim.ydim;
+    //    struct jpeg_destination_mgr dmgr;
+    //
+    //    /* create our in-memory output buffer to hold the jpeg */
+    //    JOCTET * out_buffer   = new JOCTET[aDim.xdim * aDim.ydim];
+    //
+    //    /* here is the magic */
+    //    dmgr.init_destination    = init_buffer;
+    //    dmgr.empty_output_buffer = empty_buffer;
+    //    dmgr.term_destination    = term_buffer;
+    //    dmgr.next_output_byte    = out_buffer;
+    //    dmgr.free_in_buffer      = aDim.xdim * aDim.ydim;
 
     cinfo.err = jpeg_std_error(&jerr);
     jpeg_create_compress(&cinfo);
@@ -208,23 +202,27 @@ int ImageBase::writeJPEG(size_t select_img, bool isStack, int mode, String bitDe
 
     jpeg_set_defaults(&cinfo);
 
-
     jpeg_start_compress(&cinfo, TRUE);
-
 
     JSAMPROW row_pointer[1];        /* pointer to a single row */
     row_pointer[0] = new unsigned char [aDim.xdim];
     char * buffer = (char*) row_pointer[0];
+    double min0, max0;
+    mdaBase->computeDoubleMinMaxRange(min0, max0, 0, aDim.xdim*aDim.ydim);
+
+
     while (cinfo.next_scanline < cinfo.image_height)
     {
-        getPageFromT((cinfo.next_scanline)*cinfo.image_width, buffer, UChar, cinfo.image_width);
+        getCastConvertPageFromT((cinfo.next_scanline)*cinfo.image_width, buffer,
+                                UChar, cinfo.image_width, min0, max0, castMode);
+
         jpeg_write_scanlines(&cinfo, row_pointer, 1);
     }
 
     jpeg_finish_compress(&cinfo);
     jpeg_destroy_compress(&cinfo);
 
-//    fwrite(out_buffer, cinfo.dest->next_output_byte - out_buffer,1 ,fimg);
+    //    fwrite(out_buffer, cinfo.dest->next_output_byte - out_buffer,1 ,fimg);
 
     return(0);
 }
