@@ -491,7 +491,7 @@ ARTLambda ='0.2'
 ARTReconstructionExtraCommand ='-k 0.5 -n 10 '
 
 # {condition}(ReconstructionMethod=="fourier") Initial maximum frequency
-""" This number os only used in the first iteration. 
+""" This number is only used in the first iteration. 
     From then on, it will be set to resolution computed in the resolution section
 """
 FourierMaxFrequencyOfInterest =0.25

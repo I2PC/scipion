@@ -135,6 +135,10 @@ class ProtProjMatch(XmippProtocol):
                 'ReconstructedFileNamesIters': join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '.vol'),
                 'ReconstructedFileNamesItersSplit1': join(IterDir, '%(ReconstructedVolume)s_split_1_' + Ref3D + '.vol'),
                 'ReconstructedFileNamesItersSplit2': join(IterDir, '%(ReconstructedVolume)s_split_2_' + Ref3D + '.vol'),
+                'ReconstructedFilteredFileNamesIters': join(IterDir, '%(ReconstructedVolume)s_filtered_' + Ref3D + '.vol'),
+                'ResolutionXmdFile': join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '.frc'),
+                'ResolutionXmd': 'resolution@' + join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '.frc'),
+                'ResolutionXmdMax': 'resolution_max@' + join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '.frc'),
                 'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref3D + '.vol'),
                 # Particular templates for executeCtfGroups  
                 'ImageCTFpairs': CtfGroupBase + '_images.sel',
@@ -209,6 +213,11 @@ class ProtProjMatch(XmippProtocol):
         self.reconstructedFileNamesIters = [[None] + self.ReferenceFileNames]
         for iterN in range(1, self.NumberOfIterations + 1):
             self.reconstructedFileNamesIters.append([None] + [self.getFilename('ReconstructedFileNamesIters', iter=iterN, ref=r) for r in range(1, self.numberOfReferences + 1)])
+
+        self.reconstructedFilteredFileNamesIters = [[None] + self.ReferenceFileNames]
+        for iterN in range(1, self.NumberOfIterations + 1):
+            self.reconstructedFilteredFileNamesIters.append([None] + [self.getFilename('ReconstructedFilteredFileNamesIters', iter=iterN, ref=r) for r in range(1, self.numberOfReferences + 1)])
+
 #            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
 #            for refN in range(self.numberOfReferences):
 #                auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.ReconstructedVolume, refN + 1)
@@ -217,7 +226,9 @@ class ProtProjMatch(XmippProtocol):
 #        for iterN in range(self.NumberOfIterations):
 #            fnBaseIter = "%s/Iter_%02d/%s.doc" % (self.WorkingDir, iterN + 1, self.docfile_with_current_angles)
 #            self.docfile_with_current_anglesList.append(fnBaseIter)
-    
+        _tmp = self.FourierMaxFrequencyOfInterest
+        self.FourierMaxFrequencyOfInterest = list(-1 for  k in range(0, self.NumberOfIterations + 1))
+        self.FourierMaxFrequencyOfInterest[1] = _tmp
         #parameter for projection matching
         self.Align2DIterNr = [-1] + getListFromVector(self.Align2DIterNr, self.NumberOfIterations)
         self.Align2dMaxChangeOffset = [-1] + getListFromVector(self.Align2dMaxChangeOffset, self.NumberOfIterations)
@@ -339,7 +350,7 @@ class ProtProjMatch(XmippProtocol):
                                     , DoSphericalMask=self.DoSphericalMask
                                     , maskedFileName=maskedFileName
                                     , maskRadius=self.MaskRadius
-                                    , reconstructedFileName=self.reconstructedFileNamesIters[iterN - 1][refN]
+                                    , ReconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[iterN-1][refN]
                                     , userSuppliedMask=self.MaskFileName)
 
                 # angular_project_library
@@ -466,12 +477,15 @@ class ProtProjMatch(XmippProtocol):
                                               , NumberOfMpi=self.NumberOfMpi#
                                               , NumberOfThreads=self.NumberOfThreads#
                                               , ReconstructionMethod = self.ReconstructionMethod
-                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest
+                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
                                               , ARTLambda = self.ARTLambda
                                               , SymmetryGroup = self.SymmetryGroup[iterN]
                                               , ReconstructionXmd = self.getFilename('ReconstructionXmd', iter=iterN, ref=refN)
                                               , ReconstructedVolume = self.getFilename('ReconstructedFileNamesIters', iter=iterN, ref=refN)
                                               , PaddingFactor = self.PaddingFactor
+                                              , ResolSam = self.ResolSam
+                                              , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
+                                              , ConstantToAddToFiltration = self.ConstantToAddToFiltration
                                               )
                     
                 if(self.DoSplitReferenceImages[iterN]):
@@ -487,12 +501,15 @@ class ProtProjMatch(XmippProtocol):
                                               , NumberOfMpi=self.NumberOfMpi#
                                               , NumberOfThreads=self.NumberOfThreads#
                                               , ReconstructionMethod = self.ReconstructionMethod
-                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest
+                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
                                               , ARTLambda = self.ARTLambda
                                               , SymmetryGroup = self.SymmetryGroup[iterN]
                                               , ReconstructionXmd = self.getFilename('ReconstructionXmdSplit1', iter=iterN, ref=refN)
                                               , ReconstructedVolume = self.getFilename('ReconstructedFileNamesItersSplit1', iter=iterN, ref=refN)
                                               , PaddingFactor = self.PaddingFactor
+                                              , ResolSam = self.ResolSam
+                                              , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
+                                              , ConstantToAddToFiltration = self.ConstantToAddToFiltration
                                               )
 
                     _VerifyFiles = [self.getFilename('ReconstructedFileNamesItersSplit2', iter=iterN, ref=refN)]
@@ -506,71 +523,42 @@ class ProtProjMatch(XmippProtocol):
                                               , NumberOfMpi=self.NumberOfMpi#
                                               , NumberOfThreads=self.NumberOfThreads#
                                               , ReconstructionMethod = self.ReconstructionMethod
-                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest
+                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
                                               , ARTLambda = self.ARTLambda
                                               , SymmetryGroup = self.SymmetryGroup[iterN]
                                               , ReconstructionXmd = self.getFilename('ReconstructionXmdSplit2', iter=iterN, ref=refN)
                                               , ReconstructedVolume = self.getFilename('ReconstructedFileNamesItersSplit2', iter=iterN, ref=refN)
                                               , PaddingFactor = self.PaddingFactor
-                                              )
-
-                    
-                    
-                _VerifyFiles = []
-                    #self._ConstantToAddToFiltration=arg.getComponentFromVector(ConstantToAddToFiltration, _iteration_number-1)
-                    #filter_frequence=execute_resolution(self._mylog,
-                
-                'resolution@'+ReconstructedVolumeSplit1+'.fsc'
-                    
-                id = _dataBase.insertStep('compute_resolution_and_filter', verifyfiles=_VerifyFiles
-                                              , DoComputeResolution = self.DoComputeResolution
-                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
-                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
-                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
-                                              , ReconstructionMethod = self.ReconstructionMethod
-                                              #, FourierMaxFrequencyOfInterest = globalFourierMaxFrequencyOfInterest
-                                              , iteration_number = iterN
                                               , ResolSam = self.ResolSam
-                                              , DoParallel=self.DoParallel#
-                                              , NumberOfMpi=self.NumberOfMpi#
-                                              , NumberOfThreads=self.NumberOfThreads#
-                                              , SymmetryGroup = self.SymmetryGroup
-                                              , ReconstructedVolume = self.ReconstructedVolume[iterN]
-                                              #, ReconstructedandfilteredVolume = self.ReconstructedandfilteredVolume[iterN+1]
-                                              , ARTLambda = self.ARTLambda
+                                              , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
+                                              , ConstantToAddToFiltration = self.ConstantToAddToFiltration
+                                              )
+                    
+                    _VerifyFiles = [self.getFilename('ResolutionXmdFile', iter=iterN, ref=refN)]
+                    id = _dataBase.insertStep('compute_resolution', verifyfiles=_VerifyFiles
+                                                 , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
+                                                 , ReconstructionMethod = self.ReconstructionMethod
+                                                 , ResolutionXmdCurrIter = self.getFilename('ResolutionXmd', iter=iterN, ref=refN)
+                                                 , ResolutionXmdCurrIterMax = self.getFilename('ResolutionXmdMax', iter=iterN, ref=refN)
+                                                 , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
+                                                 , OuterRadius = self.OuterRadius[iterN]
+                                                 , ReconstructedVolumeSplit1 = self.getFilename('ReconstructedFileNamesItersSplit1', iter=iterN, ref=refN)
+                                                 , ReconstructedVolumeSplit2 = self.getFilename('ReconstructedFileNamesItersSplit2', iter=iterN, ref=refN)
+                                                 , ResolSam = self.ResolSam
+                                                  )
+
+                    id = _dataBase.insertStep('filter_volume', verifyfiles=_VerifyFiles
+                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
+                                              , ReconstructedVolume = self.getFilename('ReconstructedFileNamesIters', iter=iterN, ref=refN)
+                                              , ReconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[iterN][refN]
+                                              , DoComputeResolution = self.DoComputeResolution
                                               , OuterRadius = self.OuterRadius
-                                              , DoSplitReferenceImages = self.DoSplitReferenceImages
-                                              , PaddingFactor = self.PaddingFactor
                                               , DoLowPassFilter = self.DoLowPassFilter
                                               , UseFscForFilter = self.UseFscForFilter
                                               , ConstantToAddToFiltration = self.ConstantToAddToFiltration
+                                              , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
+                                              , ResolSam = self.ResolSam
                                               )
-
-                # Mask reference volume
-                maskedFn = self.getFilename('MaskedFileNamesIters', iter=iterN, ref=refN)
-                id = _dataBase.insertStep('executeMask', verifyfiles=[maskedFn]
-                                                , DoMask=self.DoMask
-                                                , DoSphericalMask=self.DoSphericalMask
-                                                , maskedFileName=maskedFn
-                                                , maskRadius=self.MaskRadius
-                                                , reconstructedFileName=self.reconstructedFileNamesIters[iterN - 1][refN]
-                                                , userSuppliedMask=self.MaskFileName)
-#-------------------------------------------------------------
-    ########################            
-            #REMOVE
-            #Create directory
-            _dataBase.insertStep('createDir', path=self.getIterDirName(iterN + 1))
-            #command = "shutil.copy('%s','%s');dummy" % (self.ReferenceFileNames[0], self.reconstructedFileNamesIters[iterN][refN])
-                
-            #id = _dataBase.insertStep(command, self.reconstructedFileNamesIters[iterN][refN])
-            id = _dataBase.insertStep('copyFile', source=self.ReferenceFileNames[refN - 1]
-                                          , dest=self.reconstructedFileNamesIters[iterN][refN])
-        
-        #command = "print 'ALL DONE';"
-        #id = _dataBase.insertStep(command)
-        
-        print "All Done!"
-        
         _dataBase.connection.commit()
 
     def defineSteps(self):

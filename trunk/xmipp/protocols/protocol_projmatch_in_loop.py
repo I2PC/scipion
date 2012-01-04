@@ -12,29 +12,20 @@ def executeMask(_log,
                   DoSphericalMask, 
                   maskedFileName, 
                   maskRadius,
-                  reconstructedFileName,
+                  ReconstructedFilteredVolume,
                   userSuppliedMask
                   ):
     _log.debug("executeMask")
     if DoMask:
-#        print '*********************************************************************'
-#        print '* Mask the reference volume'
-        command = ' -i ' + reconstructedFileName + \
+        command = ' -i ' + ReconstructedFilteredVolume + \
                   ' -o ' + maskedFileName
-
         if DoSphericalMask:
             command += ' --mask circular -' + str(maskRadius)
         else:
             command += ' --mask ' + userSuppliedMask
-
         runJob(_log,"xmipp_transform_mask", command)
-
     else:
-        shutil.copy(reconstructedFileName, maskedFileName)
-        _log.info("Skipped Mask")
-        _log.info("cp " + reconstructedFileName + " " + maskedFileName)
-#        print '*********************************************************************'
-        print '* Skipped Mask'
+        copyFile(_log, ReconstructedFilteredVolume, maskedFileName)
 
 
 def angular_project_library(_log
@@ -374,7 +365,10 @@ def reconstruction(_log
                    , SymmetryGroup
                    , ReconstructionXmd
                    , ReconstructedVolume
+                   , ResolSam
+                   , ResolutionXmdPrevIterMax
                    , PaddingFactor
+                   , ConstantToAddToFiltration
                    ):
     
     print '*********************************************************************'
@@ -406,6 +400,15 @@ def reconstruction(_log
         DoParallel = False
                 
     elif ReconstructionMethod=='fourier':
+        
+        if FourierMaxFrequencyOfInterest == -1:
+                md = MetaData(ResolutionXmdPrevIterMax)
+                id = md.firstObject()
+                FourierMaxFrequencyOfInterest = md.getValue(MDL_RESOLUTION_FREQREAL, id)
+                FourierMaxFrequencyOfInterest = FourierMaxFrequencyOfInterest * ResolSam + ConstantToAddToFiltration
+                if FourierMaxFrequencyOfInterest > 0.5:
+                    FourierMaxFrequencyOfInterest = 0.5
+
         program = 'xmipp_reconstruct_fourier'
         parameters=' -i '    + ReconstructionXmd + \
                    ' -o '    + ReconstructedVolume + \
@@ -428,18 +431,20 @@ def reconstruction(_log
 
 def  compute_resolution(_log
                          , FourierMaxFrequencyOfInterest
-                         , FourierMaxFrequencyOfInterestXmdCurrIter
-                         , FourierMaxFrequencyOfInterestXmdPrevIter
+                         , ResolutionXmdCurrIter
+                         , ResolutionXmdCurrIterMax
+                         , ResolutionXmdPrevIterMax
                          , OuterRadius
                          , ReconstructedVolumeSplit1
                          , ReconstructedVolumeSplit2
+                         , ReconstructionMethod
                          , ResolSam
                          ):
 
         # Prevent high-resolution correlation because of discrete mask from wbp
-        innerrad = OuterRadius - 2
+        innerrad = int(OuterRadius) - 2
+        Outputvolumes=[ReconstructedVolumeSplit1, ReconstructedVolumeSplit2]
         for i in range(len(Outputvolumes)):
-           Outputvolumes[i]+=".vol"
            print '*********************************************************************'
            print '* Applying a soft mask'
            command = " -i " + Outputvolumes[i] + \
@@ -451,7 +456,8 @@ def  compute_resolution(_log
         print '**************************************************************'
         print '* Compute resolution ' 
         command = " --ref " + ReconstructedVolumeSplit1 +\
-                  " -i " + ReconstructedVolumeSplit2  + ' --sampling_rate ' + str(ResolSam)
+                  " -i " + ReconstructedVolumeSplit2  + ' --sampling_rate ' + str(ResolSam) +\
+                  " -o " + ResolutionXmdCurrIter
         if ReconstructionMethod=='fourier':
 #            img = Image()
 #            img.read(ReconstructedVolumeSplit1, HEADER)
@@ -459,9 +465,9 @@ def  compute_resolution(_log
             #2.5 is the blob radius 
             #aux4 = 2.5 * 0.5 / x
             if FourierMaxFrequencyOfInterest == -1:
-                md = MetaData(FourierMaxFrequencyOfInterestXmdPrevIter)
+                md = MetaData(ResolutionXmdPrevIterMax)
                 id = md.firstObject()
-                md.getValue(MDL_RESOLUTION_FREQREAL, FourierMaxFrequencyOfInterest, id)
+                FourierMaxFrequencyOfInterest = md.getValue(MDL_RESOLUTION_FREQREAL, id)
             else:
                 FourierMaxFrequencyOfInterest = ResolSam/FourierMaxFrequencyOfInterest
             command += " --max_sam " + str (FourierMaxFrequencyOfInterest)
@@ -469,72 +475,58 @@ def  compute_resolution(_log
         runJob(_log, "xmipp_resolution_fsc", command)
     
         #compute resolution
-        FourierMaxFrequencyOfInterestXmdCurrIter
-    
-    
-        f.close()
-        
+        mdRsol = MetaData(ResolutionXmdCurrIter)
+        mdResolOut = MetaData()
+        mdResolOut.importObjects(mdRsol,MDValueLT(MDL_RESOLUTION_FRC, 0.5))
+        filter_frequence = mdResolOut.aggregateSingle(AGGR_MIN,MDL_RESOLUTION_FREQREAL)
+        mdResolOut.clear()
+        mdResolOut.importObjects(mdRsol,MDValueEQ(MDL_RESOLUTION_FREQREAL, filter_frequence))
+        id = mdResolOut.firstObject()
+        frc = 0.
+        frc = mdResolOut.getValue(MDL_RESOLUTION_FRC, id)
+
         md = MetaData()
         id = md.addObject()
-        md.test_Metadata_setColumnFormat()
-        
-        md.setValue(MDL_RESOLUTION_FREQREAL, filter_frequence)
-        md.setValue(MDL_RESOLUTION_FRC, frc)
-        md.setValue(MDL_SAMPLINGRATE, ResolSam)
-        
-        
-        md.write(FourierMaxFrequencyOfInterestXmdCurrIter)
+        md.setColumnFormat(False)
+        md.setValue(MDL_RESOLUTION_FREQREAL, filter_frequence, id)
+        md.setValue(MDL_RESOLUTION_FRC, frc, id)
+        md.setValue(MDL_SAMPLINGRATE, ResolSam, id)
+        md.write(ResolutionXmdCurrIterMax)
         
 
 def  filter_volume(_log
-                                   , DoComputeResolution
-                                   #, FourierMaxFrequencyOfInterest
-                                   , iteration_number
-                                   , ResolSam
-                                   , ReconstructedVolume
-                                   #, ReconstructedandfilteredVolume
-                                   , OuterRadius
-                                   , DoLowPassFilter
-                                   , UseFscForFilter
-                                   , ConstantToAddToFiltration
-                                   ):
+                   , FourierMaxFrequencyOfInterest
+                   , ReconstructedVolume
+                   , ReconstructedFilteredVolume
+                   , DoComputeResolution
+                   , OuterRadius
+                   , DoLowPassFilter
+                   , UseFscForFilter
+                   , ConstantToAddToFiltration
+                   , ResolutionXmdPrevIterMax
+                   , ResolSam
+                   ):
 
-
-#------------------------------------------------------------------------
-#           filter_at_given_resolution
-#------------------------------------------------------------------------
-    import os,shutil
-    import launch_job
-    Inputvolume   =_ReconstructedVolume+'.vol'
-    Outputvolume  =_ReconstructedandfilteredVolume+'.vol'
-
-    filter_in_pixels_at=0.5
-    if (not _DoLowPassFilter):
-        shutil.copy(Inputvolume,Outputvolume) 
-        command ="shutilcopy" + Inputvolume + ' ' + Outputvolume
-        _mylog.info(command)
+    if (not DoLowPassFilter):
+        copyFile(_log, ReconstructedVolume, ReconstructedFilteredVolume)
     else:   
-        print '**************************************************************'
-        print '* Filter reconstruction ' 
-        if (_UseFscForFilter):
-           filter_in_pixels_at = float(_filter_frequence) +\
-                                 float(_ConstantToAddToFiltration)
+        if (UseFscForFilter):
+           if (FourierMaxFrequencyOfInterest == -1):
+               md = MetaData(ResolutionXmdPrevIterMax)
+               id = md.firstObject()
+               FourierMaxFrequencyOfInterest = md.getValue(MDL_RESOLUTION_FREQREAL, id)
+               FourierMaxFrequencyOfInterest = FourierMaxFrequencyOfInterest * ResolSam
+            
+           filter_in_pixels_at = float(FourierMaxFrequencyOfInterest) +\
+                                 float(ConstantToAddToFiltration)
         else:
-           filter_in_pixels_at = float(_ConstantToAddToFiltration)
+           filter_in_pixels_at = float(ConstantToAddToFiltration)
 
         if (filter_in_pixels_at>0.5):
-           shutil.copy(Inputvolume,Outputvolume) 
-           command ="shutilcopy" + Inputvolume + ' ' + Outputvolume
-           _mylog.info(command)
-           filter_in_pixels_at=0.5
+           copyFile(_log, ReconstructedVolume, ReconstructedFilteredVolume)
         else:
-           command = " -i " + Inputvolume +\
-                     " -o " + Outputvolume + ' --low_pass ' +\
+           command = " -i " + ReconstructedVolume +\
+                     " -o " + ReconstructedFilteredVolume + ' --fourier low_pass ' +\
                      str (filter_in_pixels_at)
-           launch_job.launch_job("xmipp_fourier_filter",
-                                 command,
-                                 _mylog,
-                                 False,1,1,_MySystemFlavour)
-
-    #return filter_in_pixels_at
+           runJob(_log, "xmipp_transform_filter", command)
 
