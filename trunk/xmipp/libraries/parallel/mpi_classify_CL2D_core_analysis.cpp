@@ -42,6 +42,8 @@ ProgClassifyCL2DCore::ProgClassifyCL2DCore(int argc, char **argv)
         verbose=0;
     taskDistributor=NULL;
     maxLevel=-1;
+    tolerance=0;
+    thPCAZscore=thZscore=3;
 }
 
 // MPI destructor
@@ -207,6 +209,8 @@ void ProgClassifyCL2DCore::computeStableCores()
     int Nblocks=blocks.size();
     taskDistributor->reset();
     std::vector<size_t> commonIdx;
+    std::map<String,size_t> thisClassOrder;
+    String fnImg;
     while (taskDistributor->getTasks(first, last))
         for (size_t idx=first; idx<=last; ++idx)
         {
@@ -218,8 +222,12 @@ void ProgClassifyCL2DCore::computeStableCores()
 
             // Add MDL_ORDER
             size_t order=0;
+            thisClassOrder.clear();
             FOR_ALL_OBJECTS_IN_METADATA(thisClass)
-            thisClass.setValue(MDL_ORDER,order++,__iter.objId);
+            {
+            	thisClass.getValue(MDL_IMAGE,fnImg,__iter.objId);
+            	thisClassOrder[fnImg]=order++;
+            }
 
             // Calculate coocurrence within all blocks whose level is inferior to this
             size_t NthisClass=thisClass.size();
@@ -232,12 +240,18 @@ void ProgClassifyCL2DCore::computeStableCores()
                 anotherClass.read(anotherBlock.block+"@"+anotherBlock.fnLevelCore);
                 anotherClass.intersection(thisClass,MDL_IMAGE);
                 commonImages.join(anotherClass,thisClass,MDL_IMAGE,LEFT);
-                commonImages.getColumnValues(MDL_ORDER,commonIdx);
+                commonIdx.resize(commonImages.size());
+                size_t idx=0;
+                FOR_ALL_OBJECTS_IN_METADATA(commonImages)
+                {
+                	commonImages.getValue(MDL_IMAGE,fnImg,__iter.objId);
+                	commonIdx[idx++]=thisClassOrder[fnImg];
+                }
                 size_t Ncommon=commonIdx.size();
-                for (int i=0; i<Ncommon; i++)
+                for (size_t i=0; i<Ncommon; i++)
                 {
                 	size_t idx_i=commonIdx[i];
-                    for (int j=i+1; j<Ncommon; j++)
+                    for (size_t j=i+1; j<Ncommon; j++)
                     {
                     	size_t idx_j=commonIdx[j];
                         MAT_ELEM(coocurrence,idx_i,idx_j)+=1;
@@ -256,8 +270,8 @@ void ProgClassifyCL2DCore::computeStableCores()
             thisClassCore.clear();
             FOR_ALL_OBJECTS_IN_METADATA(thisClass)
             {
-                size_t idx;
-                thisClass.getValue(MDL_ORDER,idx,__iter.objId);
+                thisClass.getValue(MDL_IMAGE,fnImg,__iter.objId);
+                size_t idx=thisClassOrder[fnImg];
                 if (VEC_ELEM(maximalCoocurrence,idx))
                 {
                     thisClass.getRow(row,__iter.objId);
