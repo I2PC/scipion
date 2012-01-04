@@ -211,7 +211,11 @@ void ProgVolumeToPseudoatoms::produceSideInfo()
     percentil1=hist.percentil(1);
     if (percentil1<=0)
         percentil1=maxval/500;
-    range=hist.percentil(99)-percentil1;
+    range = hist.percentil(99)-percentil1;
+
+    if (XMIPP_EQUAL_ZERO(range))
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "Range cannot be zero.");
+
     smallAtom=range*intensityFraction;
 
     // Create threads
@@ -511,15 +515,15 @@ void ProgVolumeToPseudoatoms::drawGaussian(double k, double i, double j,
     int jF=FLOOR(XMIPP_MIN(FINISHINGX(V),j+sigma3));
     for (int kk=k0; kk<=kF; kk++)
     {
-    	double aux=kk-k;
+        double aux=kk-k;
         double diffkk2=aux*aux;
         for (int ii=i0; ii<=iF; ii++)
         {
-        	aux=ii-i;
+            aux=ii-i;
             double diffiikk2=aux*aux+diffkk2;
             for (int jj=j0; jj<=jF; jj++)
             {
-            	aux=jj-j;
+                aux=jj-j;
                 double r=sqrt(diffiikk2+aux*aux);
                 aux=r*1000;
                 long iaux=lround(aux);
@@ -582,7 +586,7 @@ const
 
 void ProgVolumeToPseudoatoms::insertRegion(const MultidimArray<double> &region)
 {
-	const MultidimArray<double> &mVcurrent=Vcurrent();
+    const MultidimArray<double> &mVcurrent=Vcurrent();
     FOR_ALL_ELEMENTS_IN_ARRAY3D(region)
     A3D_ELEM(mVcurrent,k,i,j)=A3D_ELEM(region,k,i,j);
 }
