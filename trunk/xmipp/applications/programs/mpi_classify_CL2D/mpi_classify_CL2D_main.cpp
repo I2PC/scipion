@@ -1203,11 +1203,8 @@ ProgClassifyCL2D::ProgClassifyCL2D(int argc, char** argv) {
 
 /* Destructor -------------------------------------------------------------- */
 ProgClassifyCL2D::~ProgClassifyCL2D() {
-	std::cout << "Destroying CL2D 1" << std::endl;
 	delete node;
-	std::cout << "Destroying CL2D 2" << std::endl;
 	delete taskDistributor;
-	std::cout << "Destroying CL2D 3" << std::endl;
 }
 
 /* VQPrm I/O --------------------------------------------------------------- */
@@ -1380,6 +1377,5 @@ int main(int argc, char** argv) {
 	progprm.read(argc, argv);
 	prm = &progprm;
 	int e = progprm.tryRun();
-	std::cout << "Retval=" << e << std::endl;
 	return e;
 }
