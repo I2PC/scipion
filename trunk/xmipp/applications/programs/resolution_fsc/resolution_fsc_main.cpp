@@ -74,7 +74,7 @@ public:
         addParamsLine("   requires --ref;");
         addParamsLine("or --set_of_images <selfile> : selfile containing a set of 2D-images");
         addParamsLine("   [--oroot <root_file=\"\">] : Root of the output metadata. If not set, input file rootname is taken.");
-        addParamsLine("or [--o <output_file=\"\">]   : Output file name.");
+        addParamsLine("   [-o <output_file=\"\">]   : Output file name.");
 
         addParamsLine("   [--ref <input_file>]      : filename for reference image/volume");
         addParamsLine("   [--sampling_rate <Ts=1>]  : Pixel size (Angstrom)");
