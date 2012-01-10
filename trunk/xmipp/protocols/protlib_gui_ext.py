@@ -1065,8 +1065,9 @@ def getMdString(filename, browser):
     msg += "  <labels:>" + ''.join(["\n   - %s" % label2Str(l) for l in labels])
     if MDL_IMAGE in labels:
         img = md.getValue(MDL_IMAGE, md.firstObject())
-        print "img: ", img 
-        browser.updatePreview(md.getValue(MDL_IMAGE, md.firstObject()))
+    else:
+        img = 'no-image.png'
+    browser.updatePreview(img)
     return msg
     
 def mdOnClick(filename, browser):
@@ -1417,7 +1418,10 @@ class XmippBrowser():
             from protlib_gui_figure import ImagePreview
             self.preview = ImagePreview(self.detailstop, self.dim)
         
-        if not exists(filename):
+        from xmipp import FileName
+        fn = FileName(filename)
+       
+        if not fn.exists():
             filename = getXmippPath('resources', 'no-image.png')
             
         if not filename.endswith('.png'):
