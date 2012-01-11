@@ -79,7 +79,7 @@ TEST_F(SamplingTest, removeRedundantPointsC1)
 {
     int  symmetry, sym_order;
     Sampling s1;
-    s1.readSamplingFile(fn_root + "c1");
+    s1.readSamplingFile(fn_root + "ref_c1");
     Sampling s2;
     s2.setSampling(3.);
     s2.computeSamplingPoints(false, 91., -91.);
