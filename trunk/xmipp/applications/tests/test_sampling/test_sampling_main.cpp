@@ -113,7 +113,7 @@ TEST_F(SamplingTest, removePointsFarAwayFromExperimentalDataC1)
 {
     int  symmetry, sym_order;
     Sampling s1;
-    s1.readSamplingFile(fn_root + "c1_exp");
+    s1.readSamplingFile(fn_root + "ref_c1_exp");
     Sampling s2;
     s2.setSampling(3);//degrees
     s2.computeSamplingPoints(false,91.,-91.);
