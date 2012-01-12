@@ -560,7 +560,7 @@ Image_getPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
-/* getPixel */
+/* setPixel */
 static PyObject *
 Image_setPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
