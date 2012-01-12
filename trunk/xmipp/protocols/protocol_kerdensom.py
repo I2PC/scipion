@@ -43,9 +43,9 @@ class ProtKerdensom(XmippProtocol):
         return errors
     
     def visualize(self):
-        if self.getRunState()==SqliteDb.RUN_FINISHED:
+        if self.getRunState() == SqliteDb.RUN_FINISHED:
             from protlib_utils import runShowJ
-            files = " ".join([self.workingDirPath(f)] for f in ["results_classes.stk", "results_classes.xmd"])
+            files = " ".join([self.workingDirPath(f) for f in ["results_classes.stk", "results_classes.xmd"]])
             runShowJ(files, extraParams=" --columns %d" % self.SomXdim)
         else:
             from protlib_gui_ext import showWarning
