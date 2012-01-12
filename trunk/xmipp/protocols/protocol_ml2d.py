@@ -106,10 +106,10 @@ class ProtML2D(XmippProtocol):
 
     def visualize(self):
         plots = [k for k in ['DoShowLL', 'DoShowPmax', 'DoShowSignalChange', 'DoShowMirror'] if self.ParamsDict[k]]
-        if len(plots):
-            self.launchML2DPlots(plots)
         if self.DoShowReferences:
             self.visualizeVar('DoShowReferences')
+        if len(plots):
+            self.launchML2DPlots(plots)
          
     def visualizeReferences(self):
         refs = self.getFilename('iter_refs')
