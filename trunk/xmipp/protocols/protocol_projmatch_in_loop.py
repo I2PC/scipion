@@ -385,8 +385,8 @@ def reconstruction(_log
     
     md = MetaData(ReconstructionXmd)
     #if inout metadata is empty create a Blanck image
-    from protlib_utils import printLog
     if (md.size() == 0):
+        from protlib_utils import printLog
         img = Image()
         img.read(maskedFileNamesIter, HEADER)
         (x,y,z,n) = img.getDimensions()
