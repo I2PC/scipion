@@ -328,6 +328,16 @@ public:
 
     }
 
+    /** Init constant
+     */
+    inline void initConstant(double value) const
+    {
+#define INITCONS(type) (*(MultidimArray<type>*)(data->im)).initConstant((type) value);
+        SWITCHDATATYPE(datatype,INITCONS)
+#undef SETVALUE
+
+    }
+
     /** Print image information
      */
     void print() const;

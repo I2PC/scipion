@@ -121,46 +121,64 @@ TEST_F( ImageGenericTest, createEmptyFile)
     EXPECT_DOUBLE_EQ(max, 0);
 }
 
+TEST_F( ImageGenericTest, initConstant)
+{
+    ImageGeneric img;
+    img.setDatatype(Double);
+    img.data->im->setDimensions(3,3,1,1);
+    img.data->im->coreAllocateReuse();
+    img.initConstant(1.);
+
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+        	double p = img.getPixel(i,j);
+            EXPECT_DOUBLE_EQ(p, 1.);
+        }
+    }
+}
+
 // check if a pointer to data array is correctly passed
 TEST_F( ImageGenericTest, getArrayPointer)
 {
-  ImageGeneric img, img2;
-  img.read(imageName);
-  MultidimArrayGeneric & mag = MULTIDIM_ARRAY_GENERIC(img);
+    ImageGeneric img, img2;
+    img.read(imageName);
+    MultidimArrayGeneric & mag = MULTIDIM_ARRAY_GENERIC(img);
 
-  ImageInfo info;
-  img.getInfo(info);
-  img2.setDatatype(Float);
-  MultidimArrayGeneric & mag2 = MULTIDIM_ARRAY_GENERIC(img2);
-  mag2.resize(info.adim, false);
-  float * data, *data2;
-  mag.getArrayPointer(data);
-  mag2.getArrayPointer(data2);
+    ImageInfo info;
+    img.getInfo(info);
+    img2.setDatatype(Float);
+    MultidimArrayGeneric & mag2 = MULTIDIM_ARRAY_GENERIC(img2);
+    mag2.resize(info.adim, false);
+    float * data, *data2;
+    mag.getArrayPointer(data);
+    mag2.getArrayPointer(data2);
 
-  memcpy(data2, data, info.adim.nzyxdim*sizeof(float));
+    memcpy(data2, data, info.adim.nzyxdim*sizeof(float));
 
-  EXPECT_TRUE(img == img2);
+    EXPECT_TRUE(img == img2);
 }
 
 // check if a pointer to MultidimArray is correctly passed
 TEST_F( ImageGenericTest, getMultidimArrayPointer)
 {
-  ImageGeneric img, img2;
-  img.read(imageName);
-  MultidimArrayGeneric & mag = MULTIDIM_ARRAY_GENERIC(img);
+    ImageGeneric img, img2;
+    img.read(imageName);
+    MultidimArrayGeneric & mag = MULTIDIM_ARRAY_GENERIC(img);
 
-  ImageInfo info;
-  img.getInfo(info);
-  img2.setDatatype(Float);
-  MultidimArrayGeneric & mag2 = MULTIDIM_ARRAY_GENERIC(img2);
-  mag2.resize(info.adim, false);
-  MultidimArray<float> * data, *data2;
-  mag.getMultidimArrayPointer(data);
-  mag2.getMultidimArrayPointer(data2);
+    ImageInfo info;
+    img.getInfo(info);
+    img2.setDatatype(Float);
+    MultidimArrayGeneric & mag2 = MULTIDIM_ARRAY_GENERIC(img2);
+    mag2.resize(info.adim, false);
+    MultidimArray<float> * data, *data2;
+    mag.getMultidimArrayPointer(data);
+    mag2.getMultidimArrayPointer(data2);
 
-  typeCast(*data, *data2);
+    typeCast(*data, *data2);
 
-  EXPECT_TRUE(img == img2);
+    EXPECT_TRUE(img == img2);
 }
 GTEST_API_ int main(int argc, char **argv)
 {

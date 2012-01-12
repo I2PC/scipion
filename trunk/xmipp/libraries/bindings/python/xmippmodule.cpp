@@ -584,6 +584,29 @@ Image_setPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* getPixel */
+static PyObject *
+Image_initConstant(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    double value = -1;
+
+    if (self != NULL && PyArg_ParseTuple(args, "d", &value))
+    {
+        try
+        {
+            self->image->initConstant(value);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+
+    return NULL;
+}
+
 /* Return image dimensions as a tuple */
 static PyObject *
 Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -704,6 +727,8 @@ static PyMethodDef Image_methods[] =
           "Write image to disk" },
         { "getPixel", (PyCFunction) Image_getPixel, METH_VARARGS,
           "Return a pixel value" },
+        { "initConstant", (PyCFunction) Image_initConstant, METH_VARARGS,
+          "Initialize to value" },
         { "setPixel", (PyCFunction) Image_setPixel, METH_VARARGS,
           "Set the value of some pixel" },
         { "getDimensions", (PyCFunction) Image_getDimensions, METH_VARARGS,

@@ -56,7 +56,17 @@ class TestXmippPythonInterface(unittest.TestCase):
         imgPath = "1@" + os.path.join(self.testsPath, "test_image", "smallStack.stk")
         img2.read(imgPath)
         self.assertNotEqual(img1, img2)
-        
+ 
+    def test_Image_initConstant(self):
+        imgPath = os.path.join(self.testsPath, "test_pythoninterface", "tinyImage.spi")
+        img = Image(imgPath)
+        img.initConstant(1.) 
+        img.write("/tmp/kk.spi") 
+        for i in range(0, 3):
+            for j in range (0, 3):
+                p = img.getPixel(i, j)
+                self.assertAlmostEquals(p, 1.0)
+                      
     def test_Image_add(self):
         stackPath = os.path.join(self.testsPath, "test_image", "smallStack.stk")
         img1 = Image("1@" + stackPath)

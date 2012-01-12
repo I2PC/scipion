@@ -460,7 +460,7 @@ ReconsSources = [
     'angular_distance.cpp',
     'angular_neighbourhood.cpp',
     'angular_projection_matching.cpp',
-#    'angular_class_average.cpp',
+    'angular_class_average.cpp',
     'angular_project_library.cpp',
     'art_crystal.cpp',
     'art_xray.cpp',
@@ -662,7 +662,7 @@ if int(env['java']):
 
 # Src (apps)
 
-#AddXmippProgram('angular_class_average', ['XmippRecons'])
+AddXmippProgram('angular_class_average', ['XmippRecons'])
 AddXmippProgram('angular_commonline', ['XmippRecons'])
 AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
 AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
