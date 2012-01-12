@@ -30,6 +30,7 @@ def executeMask(_log,
 
 def angular_project_library(_log
                                 ,AngSamplingRateDeg
+                                ,BlockWithAllExpImages
                                 ,CtfGroupSubsetFileName
                                 ,DoCtfCorrection
                                 ,DocFileInputAngles
@@ -52,7 +53,7 @@ def angular_project_library(_log
     # Project all references
     print '* Create projection library'
     parameters=' -i '                   + maskedFileNamesIter + \
-              ' --experimental_images ' + DocFileInputAngles + \
+              ' --experimental_images ' + BlockWithAllExpImages + '@'+ DocFileInputAngles + \
               ' -o '                    + ProjectLibraryRootName + \
               ' --sampling_rate '       + AngSamplingRateDeg  + \
               ' --sym '                 + SymmetryGroup + 'h' + \
@@ -187,6 +188,7 @@ def projection_matching(_log
                             )
         
 def assign_images_to_references(_log
+                         , BlockWithAllExpImages
                          , DocFileInputAngles #outputfile
                          , NumberOfCtfGroups
                          , ProjMatchRootName #input file
@@ -213,14 +215,15 @@ def assign_images_to_references(_log
     """ compute auxiliary index order, it may become handy to match projections and
     projection directions
     """
+    
+    
+    
     mycounter=1L
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         auxInputdocfile = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
             inputFileName = ProjMatchRootName[iRef3D]
-            print "[",iCTFGroup," ", iRef3D, "] inputFileName:", inputFileName
             inputdocfile    = auxInputdocfile+ inputFileName
-            print "inputdocfile: ", inputdocfile 
             MD.read(inputdocfile)
             for id in MD:
                 t=MD.getValue(MDL_REF,id)
@@ -229,7 +232,6 @@ def assign_images_to_references(_log
     
     MDSort.removeDuplicates()
     
-    
     for id in MDSort:
         MDSort.setValue(MDL_ORDER,mycounter,id)
         mycounter += 1
@@ -237,6 +239,9 @@ def assign_images_to_references(_log
     outputdocfile =  DocFileInputAngles
     if os.path.exists(outputdocfile):
         os.remove(outputdocfile)
+        
+        
+    MDout2 = MetaData()
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         MDaux.clear()
         auxInputdocfile = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@'
@@ -259,12 +264,18 @@ def assign_images_to_references(_log
         
         MD1.join  (MD,  MDaux,  MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
         MDout.join(MD1, MDSort, MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
+        print 'write file: ', auxInputdocfile+outputdocfile
         MDout.write(auxInputdocfile+outputdocfile,MD_APPEND)
+        MDout2.unionAll(MDout)
         
+    MDout2.write( BlockWithAllExpImages + '@' + outputdocfile,MD_APPEND)
+    #!a original_angles too
+    
     #we are done but for the future it is convenient to create more blocks
     #with the pairs ctf_group reference    
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         auxInputdocfile  = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@'
+        print 'read file: ', auxInputdocfile+outputdocfile
         MDaux.read(auxInputdocfile+outputdocfile)
         for iRef3D in range(1,NumberOfReferences+1):
             auxOutputdocfile  = CtfBlockName + \
@@ -356,6 +367,7 @@ def reconstruction(_log
                    , FourierReconstructionExtraCommand
                    , Iteration_number
                    , DoParallel
+                   , maskedFileNamesIter
                    , MpiJobSize
                    , NumberOfMpi
                    , NumberOfThreads
@@ -370,6 +382,19 @@ def reconstruction(_log
                    , PaddingFactor
                    , ConstantToAddToFiltration
                    ):
+    
+    md = MetaData(ReconstructionXmd)
+    #if inout metadata is empty create a Blanck image
+    from protlib_utils import printLog
+    if (md.size() == 0):
+        img = Image()
+        img.read(maskedFileNamesIter, HEADER)
+        (x,y,z,n) = img.getDimensions()
+        printLog("Metadata %s is empty. Creating a Black file named %s" % (ReconstructionXmd,ReconstructedVolume))
+        createEmptyFile(ReconstructedVolume,x,y,z,n)
+        return
+
+
     
     print '*********************************************************************'
     print '* Reconstruct volume using '

@@ -113,7 +113,7 @@ def checkOptionsCompatibility(_log, DoAlign2D, DoCtfCorrection):
         printLog(error_message, _log,False,True)
         exit(1)
 
-def initAngularReferenceFile(_log, DocFileName, DocFileWithOriginalAngles, SelFileName):
+def initAngularReferenceFile(_log, BlockWithAllExpImages, DocFileName, DocFileWithOriginalAngles, SelFileName):
     '''Create Initial angular file. Either fill it with zeros or copy input'''
     printLog("initAngularReferenceFile", _log)
     import shutil
@@ -124,4 +124,4 @@ def initAngularReferenceFile(_log, DocFileName, DocFileWithOriginalAngles, SelFi
         MD.addLabel(MDL_ANGLEROT)
         MD.addLabel(MDL_ANGLETILT)
         MD.addLabel(MDL_ANGLEPSI)
-        MD.write(DocFileWithOriginalAngles)
+        MD.write(BlockWithAllExpImages + '@'+ DocFileWithOriginalAngles)

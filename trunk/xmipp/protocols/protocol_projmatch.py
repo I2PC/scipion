@@ -87,6 +87,7 @@ class ProtProjMatch(XmippProtocol):
         'ForReconstructionSel': "reconstruction.sel",
         'ForReconstructionDoc': "reconstruction.doc",
         'MultiAlign2dSel': "multi_align2d.sel",
+        'BlockWithAllExpImages' : 'all_exp_images',
         'DocFileWithOriginalAngles': 'original_angles.doc',
         'Docfile_with_current_angles': 'current_angles',
         'FilteredReconstruction': "filtered_reconstruction",
@@ -307,6 +308,7 @@ class ProtProjMatch(XmippProtocol):
                                                , WienerConstant=self.WienerConstant)
         #Create Initial angular file. Either fill it with zeros or copy input
         _dataBase.insertStep('initAngularReferenceFile', verifyfiles=[self.DocFileWithOriginalAngles]
+                                                                , BlockWithAllExpImages = self.BlockWithAllExpImages
                                                                 , DocFileName=self.DocFileName
                                                                 , DocFileWithOriginalAngles=self.DocFileWithOriginalAngles
                                                                 , SelFileName=self.SelFileName)
@@ -366,6 +368,7 @@ class ProtProjMatch(XmippProtocol):
                          
                 _dataBase.insertStep('angular_project_library', verifyfiles=_VerifyFiles
                                     , AngSamplingRateDeg=self.AngSamplingRateDeg[iterN]
+                                    , BlockWithAllExpImages = self.BlockWithAllExpImages
                                     , CtfGroupSubsetFileName=self.CtfGroupSubsetFileName
                                     , DoCtfCorrection=self.DoCtfCorrection
                                     , DocFileInputAngles=self.DocFileInputAngles[iterN - 1]
@@ -419,6 +422,7 @@ class ProtProjMatch(XmippProtocol):
             #assign the images to the different references based on the crosscorrelation coheficient
             #if only one reference it just copy the docfile generated in the previous step
             _dataBase.insertStep('assign_images_to_references', verifyfiles=[self.DocFileInputAngles[iterN]]
+                                     , BlockWithAllExpImages = self.BlockWithAllExpImages
                                      , DocFileInputAngles=self.DocFileInputAngles[iterN]#Output file with angles
                                      , NumberOfCtfGroups=self.NumberOfCtfGroups
                                      , ProjMatchRootName=ProjMatchRootNameList#LIST
@@ -473,6 +477,7 @@ class ProtProjMatch(XmippProtocol):
                                               , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
                                               , Iteration_number  = iterN
                                               , DoParallel=self.DoParallel#
+                                              , maskedFileNamesIter=maskedFileName
                                               , MpiJobSize=self.MpiJobSize
                                               , NumberOfMpi=self.NumberOfMpi#
                                               , NumberOfThreads=self.NumberOfThreads#
@@ -497,6 +502,7 @@ class ProtProjMatch(XmippProtocol):
                                               , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
                                               , Iteration_number  = iterN
                                               , DoParallel=self.DoParallel#
+                                              , maskedFileNamesIter=maskedFileName
                                               , MpiJobSize=self.MpiJobSize
                                               , NumberOfMpi=self.NumberOfMpi#
                                               , NumberOfThreads=self.NumberOfThreads#
@@ -520,6 +526,7 @@ class ProtProjMatch(XmippProtocol):
                                               , Iteration_number  = iterN
                                               , DoParallel=self.DoParallel#
                                               , MpiJobSize=self.MpiJobSize
+                                              , maskedFileNamesIter=maskedFileName
                                               , NumberOfMpi=self.NumberOfMpi#
                                               , NumberOfThreads=self.NumberOfThreads#
                                               , ReconstructionMethod = self.ReconstructionMethod
