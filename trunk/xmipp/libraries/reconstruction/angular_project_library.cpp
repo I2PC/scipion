@@ -361,11 +361,12 @@ void ProgAngularProjectLibrary::createGroupSamplingFiles(void)
 
     StringVector blockList;
     getBlocksInMetaDataFile(fn_groups,blockList);
-    FileName fn_temp;
+    FileName fn_temp, fn_exp;
     FileName my_output_file_root;
     int bmax=blockList.size();
     MetaData SFBlock;
 
+    fn_exp = FnexperimentalImages.removeBlockName();
     int igrp=1;
     for (StringVector::iterator it= blockList.begin();
          it!=blockList.end(); it++,igrp++)
@@ -373,7 +374,7 @@ void ProgAngularProjectLibrary::createGroupSamplingFiles(void)
         my_output_file_root.compose(output_file_root + "_group",igrp,"");
         std::cerr<<"Writing group sampling file "<< my_output_file_root<<std::endl;
 
-        fn_temp.compose(*it,fn_groups);
+        fn_temp.compose(*it,fn_exp);
         SFBlock.read(fn_temp);
         if (SFBlock.size() > 0)//Do we really need this check?
             //I guess so since user may have supplied a particular
