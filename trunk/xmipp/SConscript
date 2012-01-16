@@ -197,7 +197,7 @@ def AddXmippCTest(name):
     AddXmippTest(name, testprog, "$SOURCE --gtest_output=xml:$TARGET")
 
 def AddXmippPythonTest(name):
-    print "Adding python test: ", name
+    #print "Adding python test: ", name
     #FIXME ROB
     testprog = AddBatch(name, 'applications/tests/' + name, '.py')
     test = AddXmippTest(name, testprog, "$SOURCE $TARGET")
@@ -319,48 +319,91 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
     env.Default(alias)
     return alias
 
-def CreateFileList(path, pattern, filename):
-	fOut = open(filename, 'w+')
-	files = [f + '\n' for f in Glob(path, pattern, [])]
-	fOut.writelines(files)
-	fOut.close()
+def CreateFileList(path, pattern, filename, root='', root2=''):
+    fOut = open(filename, 'w+')
+    files = [f.replace(root, root2) + '\n' for f in Glob(path, pattern, [])]
+#    print '************************************************'
+#    print 'path', path
+#    print 'pattern', pattern
+#    print 'filename', filename
+#    print 'files', files
+#    print '************************************************'
+    fOut.writelines(files)
+    fOut.close()
 
+def CreateFileList2(files, filename):
+    fOut = open(filename, 'w+')
+    files = [str(f) + '\n' for f in files]
+    fOut.writelines(files)
+    fOut.close()
+    
+def Cmd(cmd):
+    print cmd
+    os.system(cmd)
+    
 def CompileJavaJar(target, source, env):
-    #As the link will be in bin/ directory we need to move up
+    #name = 'XmippJNI'
+    javaDir = 'java'
+    from os.path import join
+    srcDir = str(source[0])#join(javaDir, 'src', 'xmipp', src)
+    buildDir = env['JAVABUILDPATH']
+    # Create filenames
+    jarfile = str(target[0])
+    name = os.path.basename(jarfile)
+    listfile = join(buildDir, name + '_source.txt')
+    classfile = join(buildDir, name + '_classes.txt')
+    CreateFileList(srcDir, '*.java', listfile)
+    cmd = env['JAVAC']
+    cp = ':'.join([str(s) for s in source[1:]])
+    if len(cp):
+        cmd += ' -cp ' + cp
+    Cmd('%(cmd)s -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals())
+    classDir = join(buildDir, 'xmipp', os.path.basename(srcDir))
+    # We need to create a txt file with the list of all .class files 
+    # with the following format:
+    # -C java/build xmipp/package/A.class
+    # -C java/build xmipp/package/B.class
+    # ...
+    CreateFileList(classDir, '*.class', classfile, buildDir + '/', '-C %(buildDir)s ' % locals())
+    Cmd('jar -Mcf %(jarfile)s @%(classfile)s' % locals())
     
-    link = str(target[0])
-    source = os.path.relpath(str(source[0]),os.path.split(link)[0])
-    os.symlink(source, link)
-    
-def AddJavaLibrary(name, src):#, sourceList, includes, libpath=[], libs=[]):
-	#name = 'XmippJNI'
-	javaDir = 'java'
-	from os.path import join
-	srcDir = join(javaDir, 'src', 'xmipp', src)
-	buildDir = env['java_build']
-	# Create filenames
-	listfile = join(buildDir, name + '_source.txt')
-	classfile = join(buildDir, name + '_classes.txt')
-	jarfile = join(javaDir, 'lib', name + '.jar')
-	CreateFileList(srcDir, '*.java', listfile)
-	cp = 'external/imagej/ij.jar:external/imagej/plugins/*'
+def AddJavaLibrary(name, src, dependencies=[]):#, sourceList, includes, libpath=[], libs=[]):
+    #name = 'XmippJNI'
+    javaDir = 'java'
+    from os.path import join
+    srcDir = join(javaDir, 'src', 'xmipp', src)
+    buildDir = env['JAVABUILDPATH']
+    # Create filenames
+    listfile = join(buildDir, name + '_source.txt')
+    classfile = join(buildDir, name + '_classes.txt')    
+    jarfile = join(javaDir, 'lib', name + '.jar')
+    #CreateFileList(srcDir, '*.java', listfile)
+    #cp = join(env['JAVACLASSPATH'][0], '*')
 	# Compile source code
-	env.Command(classfile, listfile, 
-			['javac -g -cp %(cp)s -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals(),
-			'find %(buildDir)s/xmipp/%(src)s -iname "*.class" > %(classfile)s' % locals()])
-	# Create the jar file
-	buildJar = env.Command(jarfile, classfile,
-			['jar -Mcf %(jarfile)s @%(classfile)s' % locals()])
+#	env.Command(classfile, listfile, 
+#			['javac -g -cp %(cp)s -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals(),
+#			'find %(buildDir)s/xmipp/%(src)s -iname "*.class" > %(classfile)s' % locals()])
+#	# Create the jar file
+#	buildJar = env.Command(jarfile, classfile,
+#			['jar -Mcf %(jarfile)s @%(classfile)s' % locals()])
+    if name != 'XmippJNI':
+        dependencies.append('XmippJNI')
+    deps = [join(javaDir, 'lib', name + '.jar') for name in dependencies]
+    buildJar = env.Command(jarfile, [srcDir] + deps, CompileJavaJar)
+    #Add sources dependencies, not handled now by Scons
+    sources = Glob(srcDir, '*.java', [])
+    for s in sources:
+        env.Depends(buildJar, s)
+    
 	#sourceFiles = Glob(srcDir, '*.java', [])
 	#print sourceFiles
 #	buildClasses = env.Java(buildDir, srcDir, JAVAVERSION='1.6')
 #	env.Depends(buildClasses, env.Alias('javaEnums'))
 #	
 #	buildJar = env.Jar(target=jarfile, source=buildClasses, JARCHDIR=buildDir)
-#	alias = env.Alias(name, buildJar)
-	env.Default(buildJar)
-	return buildJar
-	
+    alias = env.Alias('javaLibs', buildJar)
+    env.Default(buildJar)
+    return buildJar
 #    from os.path import join
 #    buildDir = join(basedir, '../build')#, name)
 #    if not os.path.exists(buildDir): # create classes dir if not exists
@@ -654,7 +697,11 @@ def ExtractEnumFromHeader(source, target, env):
 
 
 if int(env['java']):
-    buildDir = env['java_build'] = 'java/build'
+    env.Append(JAVACLASSPATH='java/lib')
+    env['JAVABUILDPATH'] = 'java/build'
+    env['ENV']['LANG'] = 'en_GB.UTF-8'
+    env['JARFLAGS'] = '-Mcf'	# Default "cf". "M" = Do not add a manifest file.
+    buildDir = env['JAVABUILDPATH']
     # Create the build dir if not exist
     if not os.path.exists(buildDir): # create classes dir if not exists
         Execute(Mkdir(buildDir))
@@ -677,13 +724,11 @@ if int(env['java']):
     javaJni = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources,
     ['#libraries', '#external', '#'] + env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
 
-    env.Append(JAVACLASSPATH='external/imagej/ij.jar:external/imagej/plugins/*')
-    env['ENV']['LANG'] = 'en_GB.UTF-8'
-    env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
-    
-    AddJavaLibrary('XmippJNI', 'jni')
-    AddJavaLibrary('XmippIJ', 'ij')
-    AddJavaLibrary('XmippParticlePicker', 'particlepicker')
+    jniLib = AddJavaLibrary('XmippJNI', 'jni', ['ij'])
+    ijLib = AddJavaLibrary('XmippIJ', 'ij', ['ij'])
+    #env.Depends(ijLib, jniLib)
+    ppickerLib = AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'ij'])
+    #env.Depends(ppickerLib, ijLib)
 
 #    lib2 = AddJavaLibrary('XmippIJInterface', 'libraries/bindings/java/src', 'xmippij')
     # Copies jar file to ImageJ plugins folder (plugins below will look for it there).
@@ -1042,7 +1087,6 @@ if int(env['matlab']):
     bindings = ['adjust_ctf', 'align2d', 'ctf_correct_phase',
         'mask', 'mirror', 'morphology', 'normalize', 'psd_enhance',
         'resolution', 'rotate', 'scale', 'scale_pyramid', 'volume_segment']
-
     for i in range(len(bindings)):
        AddMatlabBinding(bindings[i])
 
