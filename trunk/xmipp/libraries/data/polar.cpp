@@ -42,7 +42,7 @@ void fourierTransformRings(Polar<double > & in,
             double *ptrFring_i=(double*)&DIRECT_A1D_ELEM(Fring,0);
             ++ptrFring_i;
             for (int i = 0; i < XSIZE(Fring); ++i,ptrFring_i+=2)
-            	(*ptrFring_i) *=-1;
+                (*ptrFring_i) *=-1;
         }
         out.rings.push_back(Fring);
     }
@@ -184,4 +184,59 @@ void alignRotationally(MultidimArray<double> &I1, MultidimArray<double> &I2,
     MultidimArray<double> tmp=I2;
     rotate(splineOrder, I2, tmp, -bestRot, 'Z', wrap);
 
+}
+
+// Cartesian to polar -----------------------------------------------------
+void image_convertCartesianToPolar(MultidimArray<double> &in, MultidimArray<double> &out,
+                                   double Rmin, double Rmax, double deltaR,
+                                   double angMin, double angMax, double deltaAng)
+{
+    int NAngSteps=floor((angMax-angMin)/deltaAng);
+    int NRSteps=floor((Rmax-Rmin)/deltaR);
+    out.initZeros(NAngSteps,NRSteps);
+    for (int i=0; i<NAngSteps; ++i)
+    {
+        double s,c;
+        double angle=angMin+i*deltaAng;
+        sincos(angle,&s,&c);
+        for (int j=0; j<NRSteps; ++j)
+        {
+            double R=Rmin+j*deltaR;
+            A2D_ELEM(out,i,j)=in.interpolatedElement2D(R*c,R*s);
+        }
+    }
+}
+
+// Cartesian to polar -----------------------------------------------------
+void image_convertCartesianToPolar_ZoomAtCenter(const MultidimArray<double> &in,
+        MultidimArray<double> &out,
+        Matrix1D<double> &R,
+        double zoomFactor,
+        double Rmin, double Rmax, int NRSteps,
+        double angMin, double angMax, int NAngSteps)
+{
+    /* Octave
+     * r=0:64;plot(r,d.^(r/d),r,r,d*((r/d).^2.8));
+     */
+	double deltaAng=(angMax-angMin+1)/NAngSteps;
+	double deltaR=(Rmax-Rmin+1)/NRSteps;
+    out.initZeros(NAngSteps,NRSteps);
+    if (VEC_XSIZE(R)==0)
+    {
+        R.initZeros(NRSteps);
+        double Rrange=Rmax-Rmin;
+        for (int j=0; j<NRSteps; ++j)
+            VEC_ELEM(R,j)=Rmin+Rrange*pow(j*deltaR/Rrange,zoomFactor);
+    }
+    for (int i=0; i<NAngSteps; ++i)
+    {
+        double s,c;
+        double angle=angMin+i*deltaAng;
+        sincos(angle,&s,&c);
+        for (int j=0; j<NRSteps; ++j)
+        {
+            double Rj=VEC_ELEM(R,j);
+            A2D_ELEM(out,i,j)=in.interpolatedElement2D(Rj*c,Rj*s);
+        }
+    }
 }

@@ -178,12 +178,12 @@ public:
      */
     void operator-=(const T val)
     {
-    	int imax=rings.size();
+        int imax=rings.size();
         for (int i = 0; i < imax; i++)
         {
-        	MultidimArray<T> &rings_i=rings[i];
+            MultidimArray<T> &rings_i=rings[i];
             for (int j = 0; j < XSIZE(rings_i); j++)
-            	DIRECT_A1D_ELEM(rings_i,j) -= val;
+                DIRECT_A1D_ELEM(rings_i,j) -= val;
         }
     }
 
@@ -191,12 +191,12 @@ public:
      */
     void operator+=(const T val)
     {
-    	int imax=rings.size();
+        int imax=rings.size();
         for (int i = 0; i < imax; i++)
         {
-        	MultidimArray<T> &rings_i=rings[i];
+            MultidimArray<T> &rings_i=rings[i];
             for (int j = 0; j < XSIZE(rings_i); j++)
-            	DIRECT_A1D_ELEM(rings_i,j) += val;
+                DIRECT_A1D_ELEM(rings_i,j) += val;
         }
     }
 
@@ -204,12 +204,12 @@ public:
      */
     void operator*=(const T val)
     {
-    	int imax=rings.size();
+        int imax=rings.size();
         for (int i = 0; i < imax; i++)
         {
-        	MultidimArray<T> &rings_i=rings[i];
+            MultidimArray<T> &rings_i=rings[i];
             for (int j = 0; j < XSIZE(rings_i); j++)
-            	DIRECT_A1D_ELEM(rings_i,j) *= val;
+                DIRECT_A1D_ELEM(rings_i,j) *= val;
         }
     }
 
@@ -217,13 +217,13 @@ public:
      */
     void operator/=(const T val)
     {
-    	int imax=rings.size();
-    	double ival=1.0/val;
+        int imax=rings.size();
+        double ival=1.0/val;
         for (int i = 0; i < imax; i++)
         {
-        	MultidimArray<T> &rings_i=rings[i];
+            MultidimArray<T> &rings_i=rings[i];
             for (int j = 0; j < XSIZE(rings_i); j++)
-            	DIRECT_A1D_ELEM(rings_i,j) *= ival;
+                DIRECT_A1D_ELEM(rings_i,j) *= ival;
         }
     }
 
@@ -303,7 +303,7 @@ public:
      * std::cout << "Polar name: " << P.name() << std::endl;
      * @endcode
      */
-    const FileName name() const
+    const FileName & name() const
     {
         return fn_pol;
     }
@@ -479,7 +479,7 @@ public:
      *
      */
     void computeAverageAndStddev(double &avg, double &stddev,
-    							 int mode = FULL_CIRCLES) const
+                                 int mode = FULL_CIRCLES) const
     {
         double aux, sum = 0., sum2=0.;
         double twopi, w, N = 0;
@@ -519,18 +519,18 @@ public:
             stddev=sqrt(fabs(sum2-avg*avg));
         }
         else
-        	stddev=avg=0;
+            stddev=avg=0;
     }
 
     void normalize(double average, double stddev)
     {
-    	int imax=rings.size();
-    	double istddev=1.0/stddev;
+        int imax=rings.size();
+        double istddev=1.0/stddev;
         for (int i = 0; i < imax; i++)
         {
-        	MultidimArray<T> &rings_i=rings[i];
+            MultidimArray<T> &rings_i=rings[i];
             for (int j = 0; j < XSIZE(rings_i); j++)
-            	DIRECT_A1D_ELEM(rings_i,j) = (DIRECT_A1D_ELEM(rings_i,j)-average)*istddev;
+                DIRECT_A1D_ELEM(rings_i,j) = (DIRECT_A1D_ELEM(rings_i,j)-average)*istddev;
         }
     }
 
@@ -570,8 +570,8 @@ public:
             radius = ring_radius[i];
             for (int j = 0; j < nsam; j++)
             {
-            	double sine, cosine;
-            	sincos(j*dphi,&sine,&cosine);
+                double sine, cosine;
+                sincos(j*dphi,&sine,&cosine);
                 x.push_back(radius*sine);
                 y.push_back(radius*cosine);
                 data.push_back(rings[i](j));
@@ -595,8 +595,8 @@ public:
                 dphi = twopi / (double)nsam;
                 for (int j = 0; j < nsam; j++)
                 {
-                	double sine, cosine;
-                	sincos(j*dphi,&sine,&cosine);
+                    double sine, cosine;
+                    sincos(j*dphi,&sine,&cosine);
                     x.push_back(radius*sine);
                     y.push_back(radius*cosine);
                     data.push_back(0.);
@@ -684,7 +684,7 @@ public:
                 if (BsplineOrder==1)
                     DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElement2D(xp,yp);
                 else
-                	DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElementBSpline2D(xp,yp,BsplineOrder);
+                    DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElementBSpline2D(xp,yp,BsplineOrder);
             }
             rings.push_back(Mring);
             ring_radius.push_back(radius);
@@ -807,5 +807,28 @@ double best_rotation(const Polar< std::complex<double> > &I1,
 void alignRotationally(MultidimArray<double> &I1, MultidimArray<double> &I2,
                        int splineOrder=1, int wrap=WRAP);
 
+/** Produce a polar image from a cartesian image.
+ * You can give the minimum and maximum radius for the interpolation, the
+ * delta radius and the delta angle. If no delta Ang is given, then
+ * It is assumed that the input image has the Xmipp origin.
+ * Delta Ang must be in radians. */
+void image_convertCartesianToPolar(MultidimArray<double> &in, MultidimArray<double> &out,
+                                   double Rmin, double Rmax, double deltaR,
+                                   double angMin, double angMax, double deltaAng);
+
+/** Produce a polar image from a cartesian image.
+ * Identical to the previous function.
+ * The Zoom factor must be >=1 (==1 means no zoom).
+ * If R is with a 0 size, then it is assumed that this routine
+ * must compute the sampling radii. If it is not 0,
+ * then it is assumed that the sampling radii have already been
+ * calculated.
+ */
+void image_convertCartesianToPolar_ZoomAtCenter(const MultidimArray<double> &in,
+												MultidimArray<double> &out,
+												Matrix1D<double> &R,
+												double zoomFactor,
+												double Rmin, double Rmax, int NRSteps,
+												double angMin, double angMax, int NAngSteps);
 //@}
 #endif
