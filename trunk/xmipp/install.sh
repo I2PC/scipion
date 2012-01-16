@@ -30,6 +30,15 @@ CONFIGURE_ARGS=""
 COMPILE_ARGS=""
 GUI_ARGS="gui"
 
+OS_TYPE=`uname`
+IS_MAC=false
+IS_CYGWIN=false
+echo "The OS is $OS_TYPE"
+if [ $OS_TYPE = Darwin ]; then
+	IS_MAC=true;
+elif [ $OS_TYPE = CYGWIN* ]; then
+	IS_CYGWIN=true;
+fi
 
 for param in $@; do
  if $TAKE_CPU; then
@@ -88,12 +97,18 @@ done
 export XMIPP_HOME=$PWD
 export PATH=$XMIPP_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH
+if $IS_MAC; then
+	export DYLD_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_LIBRARY_PATH
+fi
 
 #create file to include from BASH this Xmipp installation
 INC_FILE=.xmipp.bashrc
 echo "export XMIPP_HOME=$PWD" > $INC_FILE
 echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+if $IS_MAC; then
+	echo 'export DYLD_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_LIBRARY_PATH' >> $INC_FILE
+fi	
 chmod u+x $INC_FILE
 
 # for CSH or TCSH
@@ -101,6 +116,9 @@ INC_FILE=.xmipp.csh
 echo "setenv XMIPP_HOME $PWD" > $INC_FILE
 echo 'setenv PATH $XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+if $IS_MAC; then
+	echo 'setenv DYLD_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_LIBRARY_PATH' >> $INC_FILE
+fi
 chmod u+x $INC_FILE
 
 EXT_PATH=$XMIPP_HOME/external
@@ -190,12 +208,20 @@ compile_pymodule()
 }
 
 #This function should be called from XMIPP_HOME
+# Parameter: Library_Path Library_name Lib_Version_Number 
 install_libs()
 {
   cd $XMIPP_HOME
   LIBPATH=../external/$1; shift
-  COMMON=$1; shift
-  SUFFIXES=$@
+  COMMON="$1."; shift
+  VERSION=$1
+  SUFFIXES="a la "
+  if $IS_MAC; then
+	SUFFIXES+="dylib $VERSION.dylib"
+  else 
+	SUFFIXES+="so so.$VERSION"
+  fi
+  
   for suffix in $SUFFIXES; do
      LIBNAME=$COMMON$suffix
      echo "--> ln -sf $LIBPATH/$LIBNAME lib/$LIBNAME"
@@ -256,13 +282,13 @@ fi
 if $DO_SQLITE; then
   compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
   install_bin $VSQLITE/sqlite3 xmipp_sqlite3
-  install_libs $VSQLITE/.libs libsqlite3. a la so so.0
+  install_libs $VSQLITE/.libs libsqlite3 0
 fi
 
 #################### TCL/TK ###########################
 if $DO_TCLTK; then
-    compile_library tcl$VTCLTK python unix ""
-    compile_library tk$VTCLTK python unix ""
+    compile_library tcl$VTCLTK python unix "--disable-xft"
+    compile_library tk$VTCLTK python unix "--disable-xft"
 fi
 
 #################### PYTHON ###########################
@@ -272,13 +298,15 @@ if $DO_PYTHON; then
     export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
     export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
     export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
-    if [ `uname` = CYGWIN* ]
-    then
-        export CPPFLAGS="-I/usr/include -I/usr/include/ncurses $CPPFLAGS"
-    fi
     echo "--> export CPPFLAGS=$CPPFLAGS"
     echo "--> export LDFLAGS=$LDFLAGS"
     echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+    if $IS_CYGWIN; then
+        export CPPFLAGS="-I/usr/include -I/usr/include/ncurses $CPPFLAGS"
+	elif $IS_MAC; then
+		export DYLD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$DYLD_LIBRARY_PATH"
+	    echo "--> export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH"
+    fi
     echoGreen "Copy our custom python files:"
     echo "-->  cd $EXT_PYTHON"
     cd $EXT_PYTHON
@@ -287,7 +315,8 @@ if $DO_PYTHON; then
     #I thick these two are not needed
     #cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h
     #echo "--> cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h"
-    compile_library $VPYTHON python "." ""
+    
+	compile_library $VPYTHON python "." ""
 
     # Create the python launch script with necessary environment variable settings
     PYTHON_BIN=$XMIPP_HOME/bin/xmipp_python
@@ -299,47 +328,48 @@ if $DO_PYTHON; then
     printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
     printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
     printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
-    printf 'SYS=`uname`\n' >> $PYTHON_BIN
-    printf 'if [ $SYS = CYGWIN* ]\n' >> $PYTHON_BIN
-    printf 'then\n' >> $PYTHON_BIN
+if $IS_CYGWIN; then
 	printf '    PYTHONCYGWINLIB=`find $EXT_PYTHON/$VPYTHON/build -name "lib.cygwin*" -type d`\n' >> $PYTHON_BIN
 	printf '    export LD_LIBRARY_PATH=$PYTHONCYGWINLIB:$LD_LIBRARY_PATH\n' >> $PYTHON_BIN
 	printf '    export PYTHONPATH=$PYTHONCYGWINLIB:$PYTHONPATH\n' >> $PYTHON_BIN
     printf '    $EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
-    printf 'else\n' >> $PYTHON_BIN
+elif $IS_MAC; then
+    printf 'export DYLD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$DYLD_LIBRARY_PATH \n' >> $PYTHON_BIN	
+    printf '    $EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
+else
     printf '    $EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
-    printf 'fi\n' >> $PYTHON_BIN
+fi
     chmod u+x $PYTHON_BIN
     
-    #compile_pymodule $VNUMPY
-    #compile_pymodule $VMATLIBPLOT
-    compile_pymodule $PYMPI
+    compile_pymodule $VNUMPY
+    compile_pymodule $VMATLIBPLOT
+    #compile_pymodule $PYMPI
     #compile_pymodule $VPIL
 fi
 
 #################### FFTW ###########################
 if $DO_FFTW; then
   compile_library $VFFTW "." "." "--enable-threads"
-  install_libs $VFFTW/.libs libfftw3. a la so so.3
-  install_libs $VFFTW/threads/.libs libfftw3_threads. a la so so.3
+  install_libs $VFFTW/.libs libfftw3 3
+  install_libs $VFFTW/threads/.libs libfftw3_threads 3
 fi
 
 #################### JPEG ###########################
 if $DO_JPEG; then
 compile_library $VJPEG "." "." "CPPFLAGS=-w"
-install_libs $VJPEG/.libs libjpeg. a la so so.8
+install_libs $VJPEG/.libs libjpeg 8
 fi
 
 #################### TIFF ###########################
 if $DO_TIFF; then
   compile_library $VTIFF "." "." "CPPFLAGS=-w --with-jpeg-include-dir=$EXT_PATH/$VJPEG --with-jpeg-lib-dir=$EXT_PATH/$VJPEG/.libs"
-  install_libs $VTIFF/libtiff/.libs libtiff. a la so so.3
+  install_libs $VTIFF/libtiff/.libs libtiff 3
 fi
 
 #################### ARPACK ###########################
 if $DO_ARPACK; then
   compile_library $VARPACK "." "." ""
-  install_libs $VARPACK/src/.libs libarpack++. a la so so.2
+  install_libs $VARPACK/src/.libs libarpack++ 2
 fi
 
 # Launch the configure/compile python script 
@@ -350,8 +380,13 @@ cd $XMIPP_HOME
 #echoGreen "COMPILE: $COMPILE_ARGS"
 #echoGreen "GUI: $GUI_ARGS"
 
-echo "--> ./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS" install
-./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS install
+if $IS_MAC; then
+	echo "--> ./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS " install
+	./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS install
+else
+	echo "--> ./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS" install
+	./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS install
+fi
 
 exit 0
 

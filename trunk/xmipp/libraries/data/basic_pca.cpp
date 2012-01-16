@@ -22,7 +22,9 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+
 #include "basic_pca.h"
+#include "matrix2d.h"
 
 /* Subtract average ------------------------------------------------------- */
 void PCAMahalanobisAnalyzer::subtractAvg()

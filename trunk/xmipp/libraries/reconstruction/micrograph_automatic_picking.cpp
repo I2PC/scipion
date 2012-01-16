@@ -22,7 +22,7 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-
+#include <math.h>
 #include "micrograph_automatic_picking.h"
 #include <data/filters.h>
 #include <data/rotational_spectrum.h>
@@ -30,6 +30,7 @@
 #include <data/xmipp_fft.h>
 #include <data/xmipp_filename.h>
 #include <algorithm>
+
 
 //#define DEBUG_PREPARE
 //#define DEBUG_BUILDVECTOR
@@ -838,7 +839,7 @@ int AutoParticlePicking::automaticallySelectParticles()
         for (int i = 0; i < imax; i++)
             if (__auto_candidates[i].status == 1)
             {
-                if (!isinf(__auto_candidates[i].cost))
+                if (!std::isinf(__auto_candidates[i].cost))
                 {
                     if (first || __auto_candidates[i].cost < minCost)
                     {
@@ -863,7 +864,7 @@ int AutoParticlePicking::automaticallySelectParticles()
                 << __auto_candidates[i].y << std::endl;
 #endif
 
-                if (isinf(__auto_candidates[i].cost))
+                if (std::isinf(__auto_candidates[i].cost))
                     __auto_candidates[i].cost = 1;
                 else
                     __auto_candidates[i].cost = (__auto_candidates[i].cost

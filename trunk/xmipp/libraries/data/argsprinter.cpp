@@ -25,7 +25,7 @@
 
 #include "argsprinter.h"
 #include "xmipp_filename.h"
-#include "xmipp_program.h"
+//#include "xmipp_program.h"
 #include "xmipp_color.h"
 
 //-------------------   PRINTER IMPLEMENTATIONS   --------------------------------

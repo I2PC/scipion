@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <Python.h>
+#include <external/python/Python-2.7.2/include/Python.h>
 
 #include <data/xmipp_program.h>
 #include <data/metadata_extension.h>

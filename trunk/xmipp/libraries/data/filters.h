@@ -28,13 +28,13 @@
 
 #define LOG2 0.693147181
 
-#include "xmipp_fftw.h"
-#include "mask.h"
-#include "numerical_tools.h"
-#include "morphology.h"
-#include "polar.h"
-#include "xmipp_image.h"
 #include <queue>
+#include "xmipp_image.h"
+#include "numerical_tools.h"
+#include "histogram.h"
+#include "xmipp_program.h"
+#include "mask.h"
+#include "polar.h"
 
 /// @defgroup Filters Filters
 /// @ingroup DataLibrary

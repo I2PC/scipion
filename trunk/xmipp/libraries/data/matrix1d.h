@@ -27,6 +27,7 @@
 #define MATRIX1D_H_
 
 #include "xmipp_funcs.h"
+#include "numerical_recipes.h"
 
 extern int bestPrecision(float F, int _width);
 extern std::string floatToString(float F, int _width, int _prec);
@@ -659,7 +660,7 @@ public:
     bool isAnyNaN()
     {
         for (int j = 0; j < vdim; j++)
-            if (isnan(vdata[j]))
+            if (std::isnan(vdata[j]))
                 return true;
         return false;
     }
@@ -1550,7 +1551,7 @@ public:
     {
         const double i12 = 1.0 / 12.0;
         result.initZeros(*this);
-        for (int i = STARTINGX(*this) + 2; i <= FINISHINGX(*this) - 2; i++)
+        for (int i = 2; i <= vdim - 2; i++)
             result(i) = i12
                         * (-(*this)(i + 2) + 8 * (*this)(i + 1) - 8 * (*this)(i - 1)
                            + (*this)(i + 2));

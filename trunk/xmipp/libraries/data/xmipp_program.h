@@ -33,8 +33,6 @@
 #include "xmipp_image.h"
 #include "xmipp_program_sql.h"
 
-#define XMIPP_MAJOR 3
-#define XMIPP_MINOR 0
 
 /** @defgroup Programs2 Basic structure for Xmipp programs
  *  @ingroup DataLibrary

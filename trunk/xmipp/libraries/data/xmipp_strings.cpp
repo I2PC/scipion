@@ -22,13 +22,12 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-
+#include <math.h>
+#include <regex.h>
 #include "xmipp_strings.h"
 #include "xmipp_error.h"
 #include "xmipp_macros.h"
 #include "gcc_version.h"
-#include <math.h>
-#include <regex.h>
 
 String removeChar( const String& str, char character )
 {

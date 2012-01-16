@@ -23,10 +23,10 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <stdlib.h>
 #include "xmipp_program.h"
 #include "metadata_extension.h"
-#include <stdlib.h>
-
+#include "args.h"
 void XmippProgram::initComments()
 {
     CommentList comments;

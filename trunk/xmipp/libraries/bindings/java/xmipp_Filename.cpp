@@ -2,6 +2,7 @@
 #include "xmipp_Filename.h"
 #include "xmipp_ExceptionsHandler.h"
 #include <data/xmipp_filename.h>
+#include <data/xmipp_error.h>
 #include <string>
 
 

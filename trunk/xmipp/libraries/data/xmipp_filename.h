@@ -26,27 +26,27 @@
 #ifndef XMIPP_FILENAME_H_
 #define XMIPP_FILENAME_H_
 
-#include <iostream>
-#include <fstream>
-#include <cmath>
-#include <complex>
-#include <cstdlib>
-#include <cstdio>
-#include <string>
-#include <climits>
-#include <algorithm>
+//#include <iostream>
+//#include <fstream>
+//#include <cmath>
+//#include <complex>
+//#include <cstdlib>
+//#include <cstdio>
+//#include <string>
+//#include <climits>
+//#include <algorithm>
 #include <vector>
-#include <typeinfo>
+//#include <typeinfo>
 #include <sys/stat.h>
-#include <errno.h>
-#include <ctype.h>
+//#include <errno.h>
+//#include <ctype.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 
-#include "xmipp_macros.h"
-#include "xmipp_error.h"
+//#include "xmipp_macros.h"
+//#include "xmipp_error.h"
 #include "xmipp_strings.h"
 
 #define FILENAMENUMBERLENGTH 6

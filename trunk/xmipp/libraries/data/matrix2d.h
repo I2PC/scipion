@@ -26,9 +26,14 @@
 #ifndef MATRIX2D_H_
 #define MATRIX2D_H_
 
-#include <string.h>
 #include <fstream>
-#include "matrix1d.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <external/bilib/headers/linearalgebra.h>
+#include "xmipp_macros.h"
+#include "xmipp_filename.h"
+#include "xmipp_error.h"
 #include "multidim_array.h"
 
 // Forward declarations

@@ -29,11 +29,10 @@
 #include <vector>
 #include <iterator>
 
+#include "matrix1d.h"
+#include "xmipp_filename.h"
 #include "metadata.h"
-#include "xmipp_macros.h"
-#include "multidim_array.h"
 #include "symmetries.h"
-#include "geometry.h"
 
 #define cte_w 1.107149
 /**@defgroup SphereSampling sampling (Sampling the projection sphere)

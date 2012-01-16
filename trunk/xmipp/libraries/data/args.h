@@ -26,13 +26,8 @@
 #ifndef ARGS_H
 #define ARGS_H
 
-#include <cstdio>
-#include <string>
-#include <vector>
-
-#include "xmipp_funcs.h"
-#include "matrix1d.h"
 #include "xmipp_strings.h"
+#include "xmipp_error.h"
 
 template <typename T>
 class Matrix1D;

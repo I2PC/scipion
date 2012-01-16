@@ -25,6 +25,7 @@
 
 #include "filters.h"
 #include <list>
+#include "morphology.h"
 
 /* Substract background ---------------------------------------------------- */
 void substractBackgroundPlane(MultidimArray<double> &I)

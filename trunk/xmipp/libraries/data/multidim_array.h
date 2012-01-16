@@ -26,21 +26,12 @@
 #ifndef MULTIDIM_ARRAY_H
 #define MULTIDIM_ARRAY_H
 
-#include <typeinfo>
 #include <sys/mman.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <external/bilib/types/tsplinebasis.h>
-#include <external/bilib/types/tboundaryconvention.h>
-#include <external/bilib/headers/linearalgebra.h>
-#include <external/bilib/headers/changebasis.h>
 #include <external/bilib/headers/kernel.h>
-#include <external/bilib/headers/pyramidtools.h>
-#include "xmipp_funcs.h"
-#include "xmipp_error.h"
-#include "xmipp_macros.h"
-#include "args.h"
+#include "xmipp_strings.h"
 #include "matrix1d.h"
+
 
 extern int bestPrecision(float F, int _width);
 extern String floatToString(float F, int _width, int _prec);

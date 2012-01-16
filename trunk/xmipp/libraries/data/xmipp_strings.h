@@ -26,14 +26,8 @@
 #ifndef XMIPP_STRINGS_H
 #define XMIPP_STRINGS_H
 
-#include <map>
 #include <vector>
 #include <string>
-#include <iostream>
-#include <sstream>
-#include <string.h>
-#include <stdio.h>
-#include <stdarg.h>
 
 //TODO: For now just a typedef, I think that would be worth to write an String class
 typedef std::string String;

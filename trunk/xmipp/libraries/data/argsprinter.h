@@ -28,6 +28,9 @@
 
 #include "argsparser.h"
 
+#define XMIPP_MAJOR 3
+#define XMIPP_MINOR 0
+
 /**Define printers to show the arguments definitions.
  * This class is abstract and only define the basic
  * methods that a printer should have

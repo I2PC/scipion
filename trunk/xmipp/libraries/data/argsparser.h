@@ -26,14 +26,14 @@
 #ifndef ARGSPARSER_H_
 #define ARGSPARSER_H_
 
-#include <cstring>
-#include <iostream>
-#include <sstream>
-#include <vector>
+//#include <cstring>
+//#include <iostream>
+//#include <sstream>
+//#include <vector>
 #include <map>
-#include <algorithm>
-#include <stdio.h>
-#include <stdlib.h>
+//#include <algorithm>
+//#include <stdio.h>
+//#include <stdlib.h>
 #include "xmipp_error.h"
 #include "xmipp_strings.h"
 

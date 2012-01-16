@@ -22,23 +22,13 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#include "xmipp_funcs.h"
-#include "args.h"
 
-#include <stdio.h>
-#include <fstream>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <time.h>
 #include <sys/time.h>
-#include <complex>
-#include <fstream>
-#include <typeinfo>
-#include <dirent.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include "xmipp_funcs.h"
+#include "numerical_recipes.h"
+
 
 /* Numerical functions ----------------------------------------------------- */
 // Kaiser-Bessel constructor

@@ -33,6 +33,7 @@
 
 #include <stdexcept>
 #include <vector>
+#include <data/xmipp_funcs.h>
 #include "uniform.h"
 #include "training_vector.h"
 

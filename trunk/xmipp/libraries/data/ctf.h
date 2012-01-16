@@ -26,11 +26,9 @@
 #ifndef _CTF_HH
 #define _CTF_HH
 
-#include "xmipp_image.h"
-#include "numerical_recipes.h"
-#include "metadata.h"
 #include "xmipp_program.h"
-#include <map>
+#include "xmipp_filename.h"
+#include "metadata.h"
 
 /**@defgroup CTFSupport CTF support classes
    @ingroup DataLibrary */

@@ -24,10 +24,7 @@
  ***************************************************************************/
 
 #include "args.h"
-
-#include <cstdio>
-#include <cmath>
-#include <cerrno>
+#include "matrix1d.h"
 
 // Get parameters from the command line ====================================
 char *getParameter(int argc, char **argv, const char *param, const char *option)

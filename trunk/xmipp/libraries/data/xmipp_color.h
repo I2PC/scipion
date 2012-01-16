@@ -26,7 +26,6 @@
 #ifndef COLOR_H_
 #define COLOR_H_
 
-
 #include <stdio.h>
 #include "xmipp_strings.h"
 enum colorAttribute

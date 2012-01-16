@@ -26,19 +26,12 @@
 #ifndef XMIPP_FUNCS_H
 #define XMIPP_FUNCS_H
 
-#include <iostream>
 #include <fstream>
-#include <cmath>
 #include <complex>
-#include <cstdlib>
-#include <cstdio>
-#include <string>
-#include <climits>
-#include <algorithm>
-#include <vector>
-#include <typeinfo>
-
 #include "xmipp_filename.h"
+#include "xmipp_macros.h"
+#include "xmipp_error.h"
+
 
 // For timing functions
 // Uncomment next line timing functions are giving problems in your system
@@ -52,9 +45,6 @@
 #endif
 #endif
 
-#include "numerical_recipes.h"
-#include "xmipp_macros.h"
-#include "xmipp_error.h"
 
 
 /// @defgroup GeneralFunctions General functions

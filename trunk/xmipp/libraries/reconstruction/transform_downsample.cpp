@@ -26,6 +26,7 @@
 #include "transform_downsample.h"
 #include <data/args.h>
 #include <data/mask.h>
+#include <data/xmipp_fftw.h>
 #include <data/xvsmooth.h>
 
 // Read --------------------------------------------------------------------

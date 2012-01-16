@@ -22,11 +22,6 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
-#include <string.h>
 
 #include "numerical_recipes.h"
 

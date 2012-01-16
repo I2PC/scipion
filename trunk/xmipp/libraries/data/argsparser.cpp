@@ -24,9 +24,14 @@
  ***************************************************************************/
 
 #include "argsparser.h"
-#include "xmipp_filename.h"
-#include "xmipp_program.h"
-#include "xmipp_color.h"
+//#include <string>
+//#include <iostream>
+#include <sstream>
+
+
+//#include "xmipp_filename.h"
+//#include "xmipp_program.h"
+//#include "xmipp_color.h"
 
 //-------------------   LEXER IMPLEMENTATIONS --------------------------------
 

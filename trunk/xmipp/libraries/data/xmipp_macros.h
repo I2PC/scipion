@@ -385,6 +385,15 @@ static inline int isinf_ld (long double x)
 { return !isnan (x) && isnan (x - x); }
 #endif
 #endif
+
+
+#ifdef __APPLE__
+#include <math.h>
+void sincos(double angle, double * sine, double * cosine);
+#endif
+
+
+
 //@}
 //@}
 #endif

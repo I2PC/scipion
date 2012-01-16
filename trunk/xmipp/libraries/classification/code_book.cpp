@@ -27,7 +27,9 @@
 // CodeBook.cc
 //-----------------------------------------------------------------------------
 
+
 #include "code_book.h"
+#include <data/xmipp_funcs.h>
 
 /**
  * This class implements a codebook.

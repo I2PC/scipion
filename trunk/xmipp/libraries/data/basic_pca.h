@@ -27,9 +27,9 @@
 #ifndef _BASICPCA_HH
 #define _BASICPCA_HH
 
-#include "matrix2d.h"
-#include "multidim_array.h"
 #include <vector>
+#include "multidim_array.h"
+
 
 /**@defgroup BasicPCA Basic PCA class
    @ingroup DataLibrary */
@@ -69,7 +69,7 @@ public:
     std::vector< MultidimArray<double> > PCAbasis;
 
     // Set of basis functions
-    MultidimArray< double > Zscore;
+    MultidimArray<double> Zscore;
 
     // Indexes to access in a sorted way
     MultidimArray<int> idx;

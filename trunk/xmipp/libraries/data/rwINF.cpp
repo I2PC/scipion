@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "xmipp_image_base.h"
+#include "args.h"
 
 ///@defgroup INF INF File format
 ///@ingroup ImageFormats

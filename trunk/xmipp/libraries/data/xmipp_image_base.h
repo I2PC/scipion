@@ -26,21 +26,13 @@
 #ifndef IMAGE_BASE_H_
 #define IMAGE_BASE_H_
 
-#include <typeinfo>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include "xmipp_funcs.h"
 #include "xmipp_image_macros.h"
 #include "multidim_array.h"
 #include "transformations.h"
 #include "metadata.h"
 #include "xmipp_datatype.h"
-
-// Includes for rwTIFF which cannot be inside it
-#include <cstring>
+//
+//// Includes for rwTIFF which cannot be inside it
 #include "../../external/tiff-3.9.4/libtiff/tiffio.h"
 
 
