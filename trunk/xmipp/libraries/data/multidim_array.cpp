@@ -408,11 +408,13 @@ bool operator==(const MultidimArray< std::complex< double > >& op1, const Multid
 template<>
 double MultidimArray<double>::interpolatedElement2D(double x, double y, double outside_value) const
 {
-    int x0 = floor(x);
-    double fx = x - x0;
+    double dx0 = floor(x);
+    int x0=(int)dx0;
+    double fx = x - dx0;
     int x1 = x0 + 1;
-    int y0 = floor(y);
-    double fy = y - y0;
+    double dy0 = floor(y);
+    int y0=(int)dy0;
+    double fy = y - dy0;
     int y1 = y0 + 1;
 
     int i0=STARTINGY(*this);
