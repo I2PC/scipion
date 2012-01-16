@@ -1350,7 +1350,29 @@ public:
         this->nzyxdimAlloc = this->nzyxdim;
         this->destroyData = false;
     }
-    //@}
+
+    /** Alias an image in a stack.
+         *
+         * Treat the multidimarray as if it were a single slice. The data is not copied
+         * into new memory, but a pointer to the selected image in the multidimarray is copied.
+         * You should not make any operation on this volume such that the
+         * memory locations are changed.
+         * Select_slice starts at 0 towards Nsize.
+         */
+    void aliasImageInStack(const MultidimArray<T> &m, size_t select_image)
+    {
+        if (select_image >= NSIZE(m))
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "aliasImageInStack: Selected image cannot be higher than N size.");
+        if (ZSIZE(m)!=1)
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "aliasImageInStack: This function is not meant for volumes");
+
+        coreDeallocate();
+        setDimensions(XSIZE(m), YSIZE(m), 1, 1);
+        this->data = m.data + XSIZE(m)*YSIZE(m)*(select_image);
+        this->nzyxdimAlloc = this->nzyxdim;
+        this->destroyData = false;
+    }
+//@}
 
     /// @name Size
     //@{
@@ -4059,7 +4081,7 @@ public:
      * v2 = v1.sort();
      * @endcode
      */
-    MultidimArray<T> sort() const
+    void sort(MultidimArray<T> &result) const
     {
         checkDimension(1);
 
@@ -4067,7 +4089,10 @@ public:
         MultidimArray< double > aux;
 
         if (xdim == 0)
-            return temp;
+        {
+        	result.clear();
+            return;
+        }
 
         // Initialise data
         typeCast(*this, aux);
@@ -4076,8 +4101,7 @@ public:
         double * aux_array = aux.adaptForNumericalRecipes1D();
         qcksrt(xdim, aux_array);
 
-        typeCast(aux, temp);
-        return temp;
+        typeCast(aux, result);
     }
 
     /** Gives a vector with the indexes for a sorted vector
