@@ -690,13 +690,11 @@ void MDRow::setValue(const MDObject &object)
 
 MDRow::~MDRow()
 {
+    MDObject ** ptrObjectsLabel=&(objects[0]);
     FOR_ALL_LABELS()
     {
-        if (objects[_label] != NULL)
-        {
-            delete objects[_label];
-        }
-
+        delete *ptrObjectsLabel;
+        ++ptrObjectsLabel;
     }
 }
 
@@ -735,20 +733,24 @@ void MDRow::copy(const MDRow &row)
     //Copy existing MDObjects from row
     //and delete unexisting ones
     _size = row._size;
+    MDObject ** ptrObjectsLabel=&(objects[0]);
+    MDObject * const * ptrRowObjectsLabel=&(row.objects[0]);
     FOR_ALL_LABELS()
     {
-        if (row.objects[_label] == NULL)
+        if (*ptrRowObjectsLabel == NULL)
         {
-            delete objects[_label];
-            objects[_label] = NULL;
+            delete *ptrObjectsLabel;
+            *ptrObjectsLabel = NULL;
         }
         else
         {
-            if (objects[_label] == NULL)
-                objects[_label] = new MDObject(*(row.objects[_label]));
+            if (*ptrObjectsLabel == NULL)
+                *ptrObjectsLabel = new MDObject(*(*ptrRowObjectsLabel));
             else
-                objects[_label]->copy(*(row.objects[_label]));
+            	(*ptrObjectsLabel)->copy(*(*ptrRowObjectsLabel));
         }
+        ++ptrObjectsLabel;
+        ++ptrRowObjectsLabel;
     }
     //copy the order of labels
     memcpy(order, row.order, sizeof(int)*_size);
