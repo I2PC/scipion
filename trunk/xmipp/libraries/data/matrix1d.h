@@ -257,7 +257,7 @@ public:
     bool destroyData;
 
     /// Number of elements
-    int vdim;
+    size_t vdim;
 
     /// <0=column vector (default), 1=row vector
     bool row;
@@ -301,7 +301,8 @@ public:
      * // empty row vector
      * @endcode
      */
-    Matrix1D(int dim, bool column = true)
+    template<class T1>
+    Matrix1D(T1 dim, bool column = true)
     {
         coreInit();
         row = !column;
@@ -631,7 +632,7 @@ public:
 
     /** Initialize to zeros with a given size.
      */
-    void initZeros(int Xdim)
+    void initZeros(size_t Xdim)
     {
         if (vdim != Xdim)
             resizeNoCopy(Xdim);
