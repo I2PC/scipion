@@ -275,7 +275,7 @@ def AddMPILibrary(name, basedir, sources, includes, libpath=[], libs=[]):
     env.Default(alias)
 
 def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
-    shlibprefix='lib'):
+    shlibprefix='lib',shlibsuffix=env['SHLIBSUFFIX']):
     # setup
     basedir = AddLastSlash(basedir)
     libprefix = os.path.join(env['prefix'], 'lib')
@@ -306,7 +306,8 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
             CPPPATH=includes + [env['CPPPATH']],
             LIBPATH=libpath,
             LIBS=libs,
-            SHLIBPREFIX=shlibprefix
+            SHLIBPREFIX=shlibprefix,
+            SHLIBSUFFIX=shlibsuffix
             )
 	for lib in libs:
 		for ext in ['.a', '.so', '.dll', '.dylib']:
@@ -532,13 +533,18 @@ if CYGWIN or MACOSX:
     libpath.append(PythonDir)
     libraries.append("python2.7")
 
+# in MACOSX Python requires module libraries as .so instead of .dylib
+#shlibsuffix=[]
+if MACOSX:
+	 shlibsuffix = '.so'
+
 pythonbinding = AddLibrary(pythonLibName, 'libraries/bindings/python', PyExtSources,
            ['#libraries', "#"] + pythonIncludes,
-           libpath, libraries, '')
-# in MACOSX Python requires module libraries as .so instead of .dylib
-if MACOSX:
-	os.symlink(pythonLibName + '.dylib', 'lib/' + pythonLibName + '.so')
-	
+           libpath, libraries,'' , shlibsuffix)
+#if MACOSX:
+#	print pythonLibName
+#	command = env.Command('lib/' + pythonLibName + '.so', 'lib/' + pythonLibName + '.dylib', SymLink)
+#	env.Alias(pythonLibName, command)
 
 # Reconstruction
 ReconsSources = [
