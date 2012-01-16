@@ -80,8 +80,6 @@ void GaussianInterpolator::initialize(double _xmax, int N, bool normalize)
     }
 }
 
-
-
 /* Solve Cx=d, nonnegative x */
 double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
                         Matrix1D<double> &result)
