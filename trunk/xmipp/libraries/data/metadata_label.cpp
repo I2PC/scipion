@@ -22,6 +22,9 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+
+#include <stdlib.h>
+#include <algorithm>
 #include "metadata_label.h"
 
 //This is needed for static memory allocation

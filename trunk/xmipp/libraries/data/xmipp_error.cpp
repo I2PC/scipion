@@ -22,6 +22,8 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+
+#include <stdlib.h>
 #include "xmipp_error.h"
 #include "xmipp_color.h"
 

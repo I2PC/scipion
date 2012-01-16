@@ -869,10 +869,10 @@ void ProgTomographAlignment::produceSideInfo()
     }
 
     // Read images at original scale
-    if (fnSelOrig!="")
+    if (!fnSelOrig.empty())
     {
         SForig.read(fnSelOrig,NULL);
-        SForig.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+        SForig.removeDisabled();
 
         if (SForig.size()!=SF.size())
             REPORT_ERROR(ERR_MD_OBJECTNUMBER,"The number of images in both selfiles (-i and -iorig) is different");
@@ -2269,13 +2269,11 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
     if (z0N==0)
         REPORT_ERROR(ERR_VALUE_INCORRECT,"There is no landmark at 0 degrees");
     z0/=z0N;
-    std::cout << "Average height of the landmarks at 0 degrees=" << z0
-    << std::endl;
+    std::cout << "Average height of the landmarks at 0 degrees=" << z0 << std::endl;
     MetaData DF;
 
     MDIterator * iter = NULL;
 
-    std::cerr << "iter = " << iter << std::endl;
     if (!fnSelOrig.empty())
     {
         iter = new MDIterator(SForig);

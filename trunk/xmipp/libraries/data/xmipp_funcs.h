@@ -27,7 +27,9 @@
 #define XMIPP_FUNCS_H
 
 #include <fstream>
+#include <typeinfo>
 #include <complex>
+#include <algorithm>
 #include "xmipp_filename.h"
 #include "xmipp_macros.h"
 #include "xmipp_error.h"

@@ -28,6 +28,7 @@
 
 #include <vector>
 #include <string>
+#include <string.h>
 
 //TODO: For now just a typedef, I think that would be worth to write an String class
 typedef std::string String;

@@ -22,6 +22,8 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
+
+#include <algorithm>
 #include "ml2d.h"
 
 ML2DBaseProgram::ML2DBaseProgram()

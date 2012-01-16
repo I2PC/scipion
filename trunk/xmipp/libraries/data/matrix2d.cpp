@@ -23,6 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <algorithm>
 #include "matrix2d.h"
 
 /* Cholesky decomposition -------------------------------------------------- */

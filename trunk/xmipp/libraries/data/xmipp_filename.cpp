@@ -25,6 +25,7 @@
 
 #include <dirent.h>
 #include <unistd.h>
+#include <algorithm>
 #include "xmipp_filename.h"
 #include "xmipp_funcs.h"
 #include "xmipp_image_macros.h"

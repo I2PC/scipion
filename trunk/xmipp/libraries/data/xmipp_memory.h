@@ -26,6 +26,7 @@
 #ifndef _XMIPP_MEMORY
 #define _XMIPP_MEMORY
 
+#include <malloc.h>
 #include "xmipp_error.h"
 
 /* Memory managing --------------------------------------------------------- */

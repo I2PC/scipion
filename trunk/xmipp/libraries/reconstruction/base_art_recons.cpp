@@ -23,6 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <algorithm>
 #include "base_art_recons.h"
 #include "recons_misc.h"
 #include "fourier_filter.h"

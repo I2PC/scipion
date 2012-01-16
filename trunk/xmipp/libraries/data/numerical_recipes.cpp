@@ -23,6 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <stdlib.h>
+#include <string.h>
 #include "numerical_recipes.h"
 
 /* NUMERICAL UTILITIES ----------------------------------------------------- */

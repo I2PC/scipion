@@ -23,6 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <stdlib.h>
 #include <sys/time.h>
 #include <fcntl.h>
 #include <sys/mman.h>

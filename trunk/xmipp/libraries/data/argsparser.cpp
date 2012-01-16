@@ -23,10 +23,12 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <algorithm>
+#include <sstream>
 #include "argsparser.h"
 //#include <string>
 //#include <iostream>
-#include <sstream>
+
 
 
 //#include "xmipp_filename.h"

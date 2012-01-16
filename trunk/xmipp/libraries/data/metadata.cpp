@@ -23,9 +23,10 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <regex.h>
+#include <algorithm>
 #include "metadata.h"
 #include "xmipp_image.h"
-#include <regex.h>
 #include "xmipp_program_sql.h"
 
 // Get the blocks available

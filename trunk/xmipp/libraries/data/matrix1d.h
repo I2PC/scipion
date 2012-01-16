@@ -26,6 +26,7 @@
 #ifndef MATRIX1D_H_
 #define MATRIX1D_H_
 
+#include <stdlib.h>
 #include "xmipp_funcs.h"
 #include "numerical_recipes.h"
 
