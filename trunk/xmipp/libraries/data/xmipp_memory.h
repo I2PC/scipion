@@ -38,7 +38,7 @@
     an exception is thrown. NULL is returned if nh is not greater than nl*/
 template <class T> void ask_Tvector(T* &v, int nl, int nh)
 {
-    if (nh - nl + 1 > 1)
+    if (nh - nl + 1 >= 1)
     {
         v = (T *)malloc((unsigned)(nh - nl + 1) * sizeof(T));
         if (!v) REPORT_ERROR(ERR_MEM_NOTENOUGH, "allocation failure in vector()");
@@ -65,7 +65,7 @@ template <class T> void free_Tvector(T* &v, int nl, int nh)
 template <class T> void ask_Tmatrix(T ** &m, int nrl, int nrh,
                                     int ncl, int nch)
 {
-    if (nrh - nrl + 1 > 1 && nch - ncl + 1 > 1)
+    if (nrh - nrl + 1 >= 1 && nch - ncl + 1 >= 1)
     {
         m = (T **) malloc((unsigned)(nrh - nrl + 1) * sizeof(T*));
         if (!m) REPORT_ERROR(ERR_MEM_NOTENOUGH, "allocation failure 1 in matrix()");
@@ -101,7 +101,7 @@ template <class T> void free_Tmatrix(T ** &m, int nrl, int nrh,
 template <class T> void ask_Tvolume(T *** &m, int nsl, int nsh, int nrl,
                                     int nrh, int ncl, int nch)
 {
-    if (nsh - nsl + 1 > 1 && nrh - nrl + 1 > 1 && nch - ncl + 1 > 1)
+    if (nsh - nsl + 1 >= 1 && nrh - nrl + 1 >= 1 && nch - ncl + 1 >= 1)
     {
         m = (T ***) malloc((unsigned)(nsh - nsl + 1) * sizeof(T**));
         if (!m) REPORT_ERROR(ERR_MEM_NOTENOUGH, "allocation failure 1 in matrix()");
