@@ -349,8 +349,14 @@ void FFT_magnitude(const MultidimArray< std::complex<double> > &v,
                    MultidimArray<double> &mag)
 {
     mag.resizeNoCopy(v);
+    double * ptrv=(double *)MULTIDIM_ARRAY(v);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
-    DIRECT_MULTIDIM_ELEM(mag, n) = abs(DIRECT_MULTIDIM_ELEM(v, n));
+    {
+    	double re=*ptrv;
+    	double im=*(ptrv+1);
+    	DIRECT_MULTIDIM_ELEM(mag, n) = sqrt(re*re+im*im);
+    	ptrv+=2;
+    }
 }
 
 /* FFT Phase ------------------------------------------------------- */
