@@ -420,10 +420,10 @@ void ProgRecWbp::filterOneImage(Projection &proj, Tabsinc &TSINC)
             weight += mat_g[k].count * daux;
         }
 
-        if (weight < threshold)
+        if (fabs(weight) < threshold)
         {
             count_thr++;
-            A2D_ELEM(IMG, i, j) /= (threshold * factor);
+            A2D_ELEM(IMG, i, j) /= SGN(weight)*(threshold * factor);
         }
         else
         {
