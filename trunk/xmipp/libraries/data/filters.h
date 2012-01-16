@@ -28,10 +28,12 @@
 
 #define LOG2 0.693147181
 
-#include "xmipp_image.h"
+#include "xmipp_fftw.h"
 #include "mask.h"
 #include "numerical_tools.h"
 #include "morphology.h"
+#include "polar.h"
+#include "xmipp_image.h"
 #include <queue>
 
 /// @defgroup Filters Filters
@@ -454,6 +456,18 @@ void bestNonwrappingShift(const MultidimArray< double >& I1,
                           double& shiftX,
                           double& shiftY);
 
+/** Auxiliary class for fast image alignment */
+class AlignmentAux {
+public:
+    Matrix2D<double> ARS, ASR, R;
+    MultidimArray<double> IauxSR, IauxRS, rotationalCorr;
+    Polar_fftw_plans *plans;
+    Polar< std::complex<double> > polarFourierIref, polarFourierI;
+    FourierTransformer local_transformer;
+    AlignmentAux();
+    ~AlignmentAux();
+};
+
 /** Align two images
  * @ingroup Filters
  *
@@ -468,6 +482,15 @@ double alignImages(const MultidimArray< double >& Iref,
                    Matrix2D< double >&M,
                    bool wrap=WRAP);
 
+/** Fast version of align two images
+ * @ingroup Filters
+ */
+double alignImages(const MultidimArray< double >& Iref,
+                   MultidimArray< double >& I,
+                   Matrix2D< double >&M,
+                   bool wrap,
+                   AlignmentAux &aux);
+
 /** Align two images considering also the mirrors
  * @ingroup Filters
  *
@@ -480,7 +503,19 @@ double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
                                      MultidimArray< double >& I,
                                      Matrix2D<double> &M,
                                      bool wrap=WRAP,
-                                     const MultidimArray< int >* mask = NULL);
+                                     const MultidimArray< int >* mask = NULL,
+                                     AlignmentAux *aux=NULL);
+
+/** Align a set of images.
+ * Align a set of images and produce a class average as well as the set of
+ * alignment parameters. The output is in Iavg. The metadata is modified by adding
+ * the alignment information (transformation and euclidean distance to the
+ * average. The process is iterative, first an average is computed. All
+ * images are aligned to the average, and this is updated. The process
+ * is run for a given number of iterations.
+ */
+void alignSetOfImages(MetaData &MD, MultidimArray< double >& Iavg,
+		int Niter=10, bool considerMirror=true);
 
 /** Unnormalized 2D gaussian value using covariance
  * @ingroup NumericalFunctions

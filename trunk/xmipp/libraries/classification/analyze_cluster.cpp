@@ -126,6 +126,7 @@ void ProgAnalyzeCluster::produceSideInfo()
     MultidimArray<float> v(Npixels);
     MultidimArray<double> &mIref=Iref(), Ialigned, ImirrorAligned;
     Matrix2D<double> M;
+    AlignmentAux aux;
     FOR_ALL_OBJECTS_IN_METADATA(SFin)
     {
         I.readApplyGeo( SFin, __iter.objId );
@@ -138,8 +139,8 @@ void ProgAnalyzeCluster::produceSideInfo()
         	ImirrorAligned=Ialigned;
         	ImirrorAligned.selfReverseX();
         	ImirrorAligned.setXmippOrigin();
-            alignImages(mIref,Ialigned,M);
-            alignImages(mIref,ImirrorAligned,M);
+            alignImages(mIref,Ialigned,M,WRAP,aux);
+            alignImages(mIref,ImirrorAligned,M,WRAP,aux);
             double corr=correlationIndex(mIref,Ialigned,&mask);
             double corrMirror=correlationIndex(mIref,ImirrorAligned,&mask);
             if (corr>corrMirror)

@@ -24,8 +24,6 @@
  ***************************************************************************/
 
 #include "filters.h"
-#include "xmipp_fftw.h"
-#include "polar.h"
 #include <list>
 
 /* Substract background ---------------------------------------------------- */
@@ -840,7 +838,8 @@ double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil, bool 
     }
 
     // Sort HSigma2B and take a given percentage of it
-    MultidimArray<double> HSigma2Bsorted=HSigma2B.sort();
+    MultidimArray<double> HSigma2Bsorted;
+    HSigma2B.sort(HSigma2Bsorted);
     int iTh=ROUND(XSIZE(HSigma2B)*percentil);
     double threshold=HSigma2Bsorted(iTh);
 
@@ -850,12 +849,12 @@ double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil, bool 
         iTh++;
     iTh--;
     if (iTh<=0)
-    	x=threshold;
+        x=threshold;
     else
         hist.index2val(iTh,x);
 
     if (binarizeVolume)
-         V.binarize(x);
+        V.binarize(x);
     return x;
 }
 
@@ -954,8 +953,8 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
         }
     if (sumcorr!=0)
     {
-    	shiftX = xmax / sumcorr;
-    	shiftY = ymax / sumcorr;
+        shiftX = xmax / sumcorr;
+        shiftY = ymax / sumcorr;
     }
 }
 
@@ -1045,32 +1044,37 @@ void bestNonwrappingShift(const MultidimArray<double> &I1,
 #undef DEBUG
 
 /* Align two images -------------------------------------------------------- */
+AlignmentAux::AlignmentAux()
+{
+    plans=NULL;
+}
+AlignmentAux::~AlignmentAux()
+{
+    delete plans;
+}
+
 double alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I,
-                   Matrix2D< double >&M, bool wrap)
+                   Matrix2D< double >&M, bool wrap, AlignmentAux &aux)
 {
     Iref.checkDimension(2);
     I.checkDimension(2);
 
-    Matrix2D<double> ARS, ASR, R;
-    ARS.initIdentity(3);
-    ASR.initIdentity(3);
-    MultidimArray<double> IauxSR=I, IauxRS=I;
+    aux.ARS.initIdentity(3);
+    aux.ASR.initIdentity(3);
+    aux.IauxSR=I;
+    aux.IauxRS=I;
 
-    Polar_fftw_plans *plans=NULL;
-    Polar< std::complex<double> > polarFourierIref;
     normalizedPolarFourierTransform(
         Iref,
-        polarFourierIref,
+        aux.polarFourierIref,
         false,
         XSIZE(Iref)/5,
         XSIZE(Iref)/2,
-        plans,
+        aux.plans,
         1);
 
-    FourierTransformer local_transformer;
-    MultidimArray<double> rotationalCorr;
-    rotationalCorr.resize(2*polarFourierIref.getSampleNoOuterRing()-1);
-    local_transformer.setReal(rotationalCorr);
+    aux.rotationalCorr.resize(2*aux.polarFourierIref.getSampleNoOuterRing()-1);
+    aux.local_transformer.setReal(aux.rotationalCorr);
 
     // Align the image with the reference
     for (int i=0; i<2; i++)
@@ -1078,81 +1082,92 @@ double alignImages(const MultidimArray< double >& Iref, MultidimArray< double >&
         double shiftX, shiftY;
 
         // Shift then rotate
-        bestNonwrappingShift(I,IauxSR,shiftX,shiftY);
-        ASR(0,2)+=shiftX;
-        ASR(1,2)+=shiftY;
-        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, wrap);
+        bestNonwrappingShift(I,aux.IauxSR,shiftX,shiftY);
+        MAT_ELEM(aux.ASR,0,2)+=shiftX;
+        MAT_ELEM(aux.ASR,1,2)+=shiftY;
+        applyGeometry(LINEAR, aux.IauxSR, I, aux.ASR, IS_NOT_INV, wrap);
 
-        Polar< std::complex<double> > polarFourierI;
         normalizedPolarFourierTransform(
-            IauxSR,
-            polarFourierI,
+            aux.IauxSR,
+            aux.polarFourierI,
             true,
             XSIZE(Iref)/5,
             XSIZE(Iref)/2,
-            plans,
+            aux.plans,
             1);
 
-        double bestRot = best_rotation(polarFourierIref,polarFourierI,
-                                       local_transformer);
-        rotation2DMatrix(bestRot,R);
-        ASR=R*ASR;
-        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, wrap);
+        double bestRot = best_rotation(aux.polarFourierIref,aux.polarFourierI,
+                                       aux.local_transformer);
+        rotation2DMatrix(bestRot,aux.R);
+        aux.ASR=aux.R*aux.ASR;
+        applyGeometry(LINEAR, aux.IauxSR, I, aux.ASR, IS_NOT_INV, wrap);
 
         // Rotate then shift
         normalizedPolarFourierTransform(
-            IauxRS,
-            polarFourierI,
+            aux.IauxRS,
+            aux.polarFourierI,
             true,
             XSIZE(Iref)/5,
             XSIZE(Iref)/2,
-            plans,
+            aux.plans,
             1);
-        bestRot = best_rotation(polarFourierIref,polarFourierI,
-                                local_transformer);
-        rotation2DMatrix(bestRot,R);
-        ARS=R*ARS;
-        applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, wrap);
+        bestRot = best_rotation(aux.polarFourierIref,aux.polarFourierI,
+                                aux.local_transformer);
+        rotation2DMatrix(bestRot,aux.R);
+        aux.ARS=aux.R*aux.ARS;
+        applyGeometry(LINEAR, aux.IauxRS, I, aux.ARS, IS_NOT_INV, wrap);
 
-        bestNonwrappingShift(Iref,IauxRS,shiftX,shiftY);
-        ARS(0,2)+=shiftX;
-        ARS(1,2)+=shiftY;
-        applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, wrap);
+        bestNonwrappingShift(Iref,aux.IauxRS,shiftX,shiftY);
+        MAT_ELEM(aux.ARS,0,2)+=shiftX;
+        MAT_ELEM(aux.ARS,1,2)+=shiftY;
+        applyGeometry(LINEAR, aux.IauxRS, I, aux.ARS, IS_NOT_INV, wrap);
     }
 
-    double corrRS=correlationIndex(IauxRS,Iref);
-    double corrSR=correlationIndex(IauxSR,Iref);
+    double corrRS=correlationIndex(aux.IauxRS,Iref);
+    double corrSR=correlationIndex(aux.IauxSR,Iref);
     double corr;
     if (corrRS>corrSR)
     {
-        I=IauxRS;
-        M=ARS;
+        I=aux.IauxRS;
+        M=aux.ARS;
         corr=corrRS;
     }
     else
     {
-        I=IauxSR;
-        M=ASR;
+        I=aux.IauxSR;
+        M=aux.ASR;
         corr=corrSR;
     }
-    delete plans;
     return corr;
+}
+
+double alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I,
+                   Matrix2D< double >&M, bool wrap)
+{
+    AlignmentAux aux;
+    return alignImages(Iref,I,M,wrap,aux);
 }
 
 double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
                                      MultidimArray< double >& I,
                                      Matrix2D<double> &M,
                                      bool wrap,
-                                     const MultidimArray< int >* mask)
+                                     const MultidimArray< int >* mask,
+                                     AlignmentAux *aux)
 {
     MultidimArray<double> Imirror;
     Matrix2D<double> Mmirror;
+    AlignmentAux *auxToUse=NULL;
+    if (aux==NULL)
+    	auxToUse=new AlignmentAux();
+    else
+    	auxToUse=aux;
     Imirror=I;
     Imirror.selfReverseX();
     Imirror.setXmippOrigin();
 
-    alignImages(Iref,I,M,wrap);
-    alignImages(Iref,Imirror,Mmirror,wrap);
+    alignImages(Iref,I,M,wrap,*auxToUse);
+    alignImages(Iref,Imirror,Mmirror,wrap,*auxToUse);
     double corr=correlationIndex(Iref,I,mask);
     double corrMirror=correlationIndex(Iref,Imirror,mask);
     double bestCorr=corr;
@@ -1164,7 +1179,57 @@ double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
         MAT_ELEM(M,0,0)*=-1;
         MAT_ELEM(M,0,1)*=-1;
     }
+    if (aux!=NULL)
+    	delete auxToUse;
     return bestCorr;
+}
+
+void alignSetOfImages(MetaData &MD, MultidimArray< double >& Iavg, int Niter,
+                      bool considerMirror)
+{
+    Image<double> I;
+    MultidimArray<double> InewAvg;
+    FileName fnImg;
+    AlignmentAux aux;
+    Matrix2D<double> M;
+    size_t Nimgs;
+    int Xdim, Ydim, Zdim;
+    getImageSize(MD, Xdim, Ydim, Zdim, Nimgs);
+    for (int n=0; n<Niter; ++n)
+    {
+        bool lastIteration=(n==(Niter-1));
+        InewAvg.initZeros(Ydim,Xdim);
+        InewAvg.setXmippOrigin();
+        FOR_ALL_OBJECTS_IN_METADATA(MD)
+        {
+            MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
+            I.read(fnImg);
+            I().setXmippOrigin();
+            double corr;
+            if (n!=0)
+            {
+                if (considerMirror)
+                    corr=alignImagesConsideringMirrors(Iavg,I(),M,WRAP,NULL,&aux);
+                else
+                    corr=alignImages(Iavg,I(),M,WRAP,aux);
+            }
+            InewAvg+=I();
+            if (lastIteration)
+            {
+                double scale, shiftx, shifty, psi;
+                bool flip;
+                transformationMatrix2Parameters2D(M, flip, scale, shiftx, shifty, psi);
+                MD.setValue(MDL_FLIP,flip,__iter.objId);
+                MD.setValue(MDL_SHIFTX,shiftx,__iter.objId);
+                MD.setValue(MDL_SHIFTY,shifty,__iter.objId);
+                MD.setValue(MDL_ANGLEPSI,psi,__iter.objId);
+                MD.setValue(MDL_MAXCC,corr,__iter.objId);
+            }
+        }
+        InewAvg/=Nimgs;
+        Iavg=InewAvg;
+        centerImage(Iavg,4);
+    }
 }
 
 /* Estimate 2D Gaussian ---------------------------------------------------- */
