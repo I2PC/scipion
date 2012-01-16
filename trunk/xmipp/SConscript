@@ -537,6 +537,8 @@ if CYGWIN or MACOSX:
 #shlibsuffix=[]
 if MACOSX:
 	 shlibsuffix = '.so'
+else:
+	 shlibsuffix = '.so'
 
 pythonbinding = AddLibrary(pythonLibName, 'libraries/bindings/python', PyExtSources,
            ['#libraries', "#"] + pythonIncludes,

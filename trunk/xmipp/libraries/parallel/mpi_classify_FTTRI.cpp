@@ -670,50 +670,128 @@ void ProgClassifyFTTRI::splitLargeFTTRIClasses()
 // Compute centroids =======================================================
 void ProgClassifyFTTRI::computeClassCentroids(bool FTTRI)
 {
-    FileName fnClasses=fnRoot+"_classes.stk";
+    FileName fnCentroids, fnCandidate;
+    if (FTTRI)
+        fnCentroids=fnRoot+"_FTTRI_centroids.mrcs";
+    else
+        fnCentroids=fnRoot+"_image_centroids.mrcs";
     if (node->isMaster())
     {
         std::cerr << "Computing class centroids ..." << std::endl;
         if (FTTRI)
-            createEmptyFile(fnClasses, 1+LAST_XMIPP_INDEX(FTTRIXdim), FTTRIYdim, 1, nref, true, WRITE_OVERWRITE);
+            createEmptyFile(fnCentroids, 1+LAST_XMIPP_INDEX(FTTRIXdim), FTTRIYdim, 1, nref, true, WRITE_OVERWRITE);
         else
         {
             size_t Ndim;
             int Xdim, Ydim, Zdim;
             getImageSize(mdIn, Xdim, Ydim, Zdim, Ndim);
-            createEmptyFile(fnClasses,Xdim,Ydim,1,nref,true,WRITE_OVERWRITE);
+            createEmptyFile(fnCentroids,Xdim,Ydim,1,nref,true,WRITE_OVERWRITE);
         }
     }
     node->barrierWait();
 
-    MetaData classi;
-    Image<double> Iavg;
+    Image<double> centroid, candidate;
     if (node->isMaster())
         init_progress_bar(nref);
     Image<int> mask;
-    if (!FTTRI)
+    if (FTTRI)
+    {
+        centroid().resizeNoCopy(FTTRIYdim,1+LAST_XMIPP_INDEX(FTTRIXdim));
+        classEpsilon.resizeNoCopy(nref);
+        classEpsilon.initConstant(-1);
+    }
+    else
+    {
         mask.read(fnRoot+"_mask.mrc");
+        centroid().resizeNoCopy(mask());
+    }
+    MultidimArray<double> &mCentroid=centroid();
     MultidimArray<int> &mMask=mask();
+    MultidimArray<double> intraclassDistance, sortedDistance;
+    MetaData MDclass;
     for (int i=0; i<nref; i++)
         if (((i+1)%node->size)==node->rank)
         {
-            classi.read(formatString("class_%05d@%s_classes.xmd",i+1,fnRoot.c_str())); // COSS Esto no es general
-            // Compute new average
-            alignSetOfImages(classi,Iavg(),2,false);
+            const std::vector<size_t> &class_i=bestEpsilonClasses[i].memberIdx;
+            int nmax=class_i.size();
+            mCentroid.initZeros();
 
-            // Mask average class
-            const MultidimArray<double> &mIavg=Iavg();
-            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mMask)
-            if (!DIRECT_MULTIDIM_ELEM(mMask,n))
-                DIRECT_MULTIDIM_ELEM(mIavg,n)=0.0;
+            if (nmax!=0)
+            {
+                if (!FTTRI)
+                    MDclass.clear();
+                for (int n=0; n<nmax; n++)
+                {
+                    size_t trueIdx=class_i[n];
+                    if (FTTRI)
+                    {
+                        fnCandidate.compose(trueIdx+1,fnFTTRI);
+                        candidate.read(fnCandidate);
+                        mCentroid+=candidate();
+                    }
+                    else
+                    {
+                        mdIn.getValue(MDL_IMAGE,fnCandidate,imgsId[trueIdx]);
+                        MDclass.setValue(MDL_IMAGE,fnCandidate,MDclass.addObject());
+                    }
+                }
+                if (FTTRI)
+                {
+                    mCentroid/=(double)nmax;
+
+                    // Compute now class epsilon
+                    intraclassDistance.resizeNoCopy(nmax);
+                    for (int n=0; n<nmax; n++)
+                    {
+                        size_t trueIdx=class_i[n];
+                        fnCandidate.compose(trueIdx+1,fnFTTRI);
+                        candidate.read(fnCandidate);
+                        A1D_ELEM(intraclassDistance,n)=fttri_distance(mCentroid,candidate());
+                    }
+                    intraclassDistance.sort(sortedDistance);
+                    int idxLimit=std::min((int)floor(nmax*0.8),nmax-1);
+                    double limit=A1D_ELEM(sortedDistance,idxLimit);
+                    VEC_ELEM(classEpsilon,i)=A1D_ELEM(intraclassDistance,nmax-1);
+
+                    // Robust estimate of the class centroid
+                    mCentroid.initZeros();
+                    double nactual=0;
+                    for (int n=0; n<nmax; n++)
+                    {
+                        if (A1D_ELEM(intraclassDistance,n)>limit)
+                            continue;
+                        size_t trueIdx=class_i[n];
+                        fnCandidate.compose(trueIdx+1,fnFTTRI);
+                        candidate.read(fnCandidate);
+                        mCentroid+=candidate();
+                        nactual++;
+                    }
+                    mCentroid/=nactual;
+                }
+                else
+                {
+                    alignSetOfImages(MDclass,mCentroid,2,false);
+                    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mMask)
+                    if (!DIRECT_MULTIDIM_ELEM(mMask,n))
+                        DIRECT_MULTIDIM_ELEM(mCentroid,n)=0.0;
+                }
+            }
 
             // Write new centroid
-            Iavg.write(fnClasses,i+1,true,WRITE_REPLACE);
+            centroid.write(fnCentroids,i+1,true,WRITE_REPLACE);
             if (node->isMaster())
                 progress_bar(i);
         }
     if (node->isMaster())
         progress_bar(nref);
+    if (FTTRI)
+    {
+        MPI_Allreduce(MPI_IN_PLACE, &(VEC_ELEM(classEpsilon,0)), nref, MPI_DOUBLE,
+                      MPI_MAX, MPI_COMM_WORLD);
+        epsilonMax=classEpsilon.computeMax();
+        if (node->isMaster())
+            std::cerr << "Maximum epsilon: " << epsilonMax << std::endl;
+    }
 }
 
 void ProgClassifyFTTRI::computeFTTRIClassCentroids()
