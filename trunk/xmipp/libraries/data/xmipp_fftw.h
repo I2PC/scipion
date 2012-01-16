@@ -517,15 +517,17 @@ void correlation_matrix(const MultidimArray< T > & m1,
     // Multiply FFT1 * FFT2'
     double dSize=MULTIDIM_SIZE(R);
     double mdSize=-dSize;
-    std::complex<double> aux;
-    double *ptrAux=&aux.real();
-    double *ptrAux_1=ptrAux+1;
+    double a, b, c, d; // a+bi, c+di
     double *ptrFFT2=(double*)MULTIDIM_ARRAY(FFT2);
+    double *ptrFFT1=(double*)MULTIDIM_ARRAY(FFT1);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT1)
     {
-        *ptrAux=(*ptrFFT2++)*dSize;
-        *ptrAux_1=(*ptrFFT2++)*mdSize;
-        DIRECT_MULTIDIM_ELEM(FFT1,n) *= aux;
+    	a=*ptrFFT1;
+    	b=*(ptrFFT1+1);
+        c=(*ptrFFT2++)*dSize;
+        d=(*ptrFFT2++)*mdSize;
+        *ptrFFT1++ = a*c-b*d;
+        *ptrFFT1++ = b*c+a*d;
     }
 
     // Invert the product, in order to obtain the correlation image
