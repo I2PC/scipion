@@ -1058,7 +1058,7 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
                 /* ------------- */
             }
         }
-        if (2.0*fabs(fp - fret) <= ftol*(fabs(fp) + fabs(fret)))
+        if (2.0*fabs(fp - fret) <= ftol*(fabs(fp) + fabs(fret)) || n==1)
         {
             free_Tvector(xit, 1, n);
             free_Tvector(ptt, 1, n);
