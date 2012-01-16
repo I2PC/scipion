@@ -319,20 +319,61 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
     env.Default(alias)
     return alias
 
-def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], libs=[]):
-    from os.path import join
-    buildDir = join(basedir, '../build')#, name)
-    if not os.path.exists(buildDir): # create classes dir if not exists
-        Execute(Mkdir(buildDir))
-    if env['debug'] == True:
-    	env['JAVAC'] = 'javac -g'
-    buildClasses = env.Java(buildDir, basedir, JAVAVERSION='1.6')
-    env.Depends(buildClasses, env.Alias('javaEnums'))
-    jarfile = join(basedir, '..', name + '.jar')
-    buildJar = env.Jar(target=jarfile, source=buildClasses, JARCHDIR=buildDir)
-    alias = env.Alias(name, buildJar)
-    env.Default(alias)
-    return alias
+def CreateFileList(path, pattern, filename):
+	fOut = open(filename, 'w+')
+	files = [f + '\n' for f in Glob(path, pattern, [])]
+	fOut.writelines(files)
+	fOut.close()
+
+def CompileJavaJar(target, source, env):
+    #As the link will be in bin/ directory we need to move up
+    
+    link = str(target[0])
+    source = os.path.relpath(str(source[0]),os.path.split(link)[0])
+    os.symlink(source, link)
+    
+def AddJavaLibrary(name, src):#, sourceList, includes, libpath=[], libs=[]):
+	#name = 'XmippJNI'
+	javaDir = 'java'
+	from os.path import join
+	srcDir = join(javaDir, 'src', 'xmipp', src)
+	buildDir = env['java_build']
+	# Create filenames
+	listfile = join(buildDir, name + '_source.txt')
+	classfile = join(buildDir, name + '_classes.txt')
+	jarfile = join(javaDir, 'lib', name + '.jar')
+	CreateFileList(srcDir, '*.java', listfile)
+	cp = 'external/imagej/ij.jar:external/imagej/plugins/*'
+	# Compile source code
+	env.Command(classfile, listfile, 
+			['javac -g -cp %(cp)s -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals(),
+			'find %(buildDir)s/xmipp/%(src)s -iname "*.class" > %(classfile)s' % locals()])
+	# Create the jar file
+	buildJar = env.Command(jarfile, classfile,
+			['jar -Mcf %(jarfile)s @%(classfile)s' % locals()])
+	#sourceFiles = Glob(srcDir, '*.java', [])
+	#print sourceFiles
+#	buildClasses = env.Java(buildDir, srcDir, JAVAVERSION='1.6')
+#	env.Depends(buildClasses, env.Alias('javaEnums'))
+#	
+#	buildJar = env.Jar(target=jarfile, source=buildClasses, JARCHDIR=buildDir)
+#	alias = env.Alias(name, buildJar)
+	env.Default(buildJar)
+	return buildJar
+	
+#    from os.path import join
+#    buildDir = join(basedir, '../build')#, name)
+#    if not os.path.exists(buildDir): # create classes dir if not exists
+#        Execute(Mkdir(buildDir))
+#    if env['debug'] == True:
+#    	env['JAVAC'] = 'javac -g'
+#    buildClasses = env.Java(buildDir, basedir, JAVAVERSION='1.6')
+#    env.Depends(buildClasses, env.Alias('javaEnums'))
+#    jarfile = join(basedir, '..', name + '.jar')
+#    buildJar = env.Jar(target=jarfile, source=buildClasses, JARCHDIR=buildDir)
+#    alias = env.Alias(name, buildJar)
+#    env.Default(alias)
+#    return alias
 
 def removeAll(basedir, regexp):
 	import glob
@@ -562,13 +603,13 @@ AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
 #           ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
 
 def WriteJavaEnum(class_name, header_file, pattern, log):
-    java_file = "libraries/bindings/java/src/xmipp/%s.java" % class_name
+    java_file = "java/src/xmipp/jni/%s.java" % class_name
     env.Depends(java_file, header_file)
     f = open(header_file)
     fOut = open(java_file, 'w+')
     counter = 0;
     last_label_pattern = pattern + "LAST_LABEL"
-    fOut.write("package xmipp; \n")
+    fOut.write("package xmipp.jni; \n")
     fOut.write("public class " + class_name + " {\n")
 
     for line in f:
@@ -607,60 +648,70 @@ def ExtractEnumFromHeader(source, target, env):
     log.close()
     return None
 
-# ImageJ plugins.
-# Installs jvm
+
+
 if int(env['java']):
+    buildDir = env['java_build'] = 'java/build'
+    # Create the build dir if not exist
+    if not os.path.exists(buildDir): # create classes dir if not exists
+        Execute(Mkdir(buildDir))
+    # Set -g debug options if debugging
+    if env['debug'] == True:
+        env['JAVAC'] = 'javac -g'
     # Update enums from c++ headers, if not exist, generate it
     for (class_name, list) in javaEnumDict.iteritems():
-       java_file = "libraries/bindings/java/src/xmipp/%s.java" % class_name
-       if not os.path.exists(java_file):
-          WriteJavaEnum(class_name, list[0], list[1], None)
+        java_file = "java/src/xmipp/jni/%s.java" % class_name
+        if not os.path.exists(java_file):
+            WriteJavaEnum(class_name, list[0], list[1], None)
 
-    env.Alias('javaEnums', env.Command("libraries/bindings/java/src/xmipp/enums.changelog",
+    env.Alias('javaEnums', env.Command("libraries/bindings/java/src/xmipp/jni/enums.changelog",
                             ["libraries/data/xmipp_image_base.h", "libraries/data/metadata_label.h" ], ExtractEnumFromHeader))
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
     JavaDependLibraries = ['XmippData', 'pthread', 'XmippRecons', 'XmippClassif']
     if int(env['arpack']):
-        JavaDependLibraries += ['arpack++', 'arpack', 'lapack', 'blas']
-    javaJni = AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,
-    ['#libraries', '#external', '#'] + env['JNI_CPPPATH'], ['lib'], JavaDependLibraries)
+        JavaDependLibraries += ['arpack++','arpack','lapack','blas']
+    # Compilation of the c code needed for java jni binding
+    javaJni = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources,
+    ['#libraries', '#external', '#'] + env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
 
-    env.Append(JAVACLASSPATH='external/imagej/ij.jar:external/imagej/plugins/*:libraries/bindings/java/*')
+    env.Append(JAVACLASSPATH='external/imagej/ij.jar:external/imagej/plugins/*')
     env['ENV']['LANG'] = 'en_GB.UTF-8'
     env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
+    
+    AddJavaLibrary('XmippJNI', 'jni')
+    AddJavaLibrary('XmippIJ', 'ij')
+    AddJavaLibrary('XmippParticlePicker', 'particlepicker')
 
-    # Xmipp interface is needed by plugins.
-    javaLib = AddJavaLibrary('XmippJavaInterface', 'libraries/bindings/java/src', 'xmipp')#, ['#'],
 #    lib2 = AddJavaLibrary('XmippIJInterface', 'libraries/bindings/java/src', 'xmippij')
     # Copies jar file to ImageJ plugins folder (plugins below will look for it there).
-    copyJar = env.InstallAs(target='external/imagej/plugins/XmippJavaInterface.jar',
-              source='libraries/bindings/java/XmippJavaInterface.jar')
-    copyJar2 = env.InstallAs(target='external/imagej/plugins/XmippIJInterface.jar',
-              source='libraries/bindings/java/XmippIJInterface.jar')
-    env.Depends(copyJar2, copyJar)
-    # ImageJ plugins.
-    javaPlugins = []
-    io = javaPlugins.append(AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins'))
-    env.Depends(io, copyJar2)
-    browser = javaPlugins.append(AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins'))
-    env.Depends(browser, io)
-    jbrowser = AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
-    javaPlugins.append(jbrowser)
-    javaPlugins.append(AddImageJPlugin('Masks_ToolBar', 'libraries/graphicsj/Masks_ToolBar', 'external/imagej/plugins'))
+#    copyJar = env.InstallAs(target='external/imagej/plugins/XmippJavaInterface.jar',
+#              source='libraries/bindings/java/XmippJavaInterface.jar')
+#    copyJar2 = env.InstallAs(target='external/imagej/plugins/XmippIJInterface.jar',
+#              source='libraries/bindings/java/XmippIJInterface.jar')
+#    env.Depends(copyJar2, copyJar)
+#    # ImageJ plugins.
+#    javaPlugins = []
+    #io = javaPlugins.append(AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins'))
+    #env.Depends(io, copyJar2)
+    #browser = javaPlugins.append(AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins'))
+    #env.Depends(browser, io)
+    #jbrowser = AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
+    #javaPlugins.append(jbrowser)
+    #javaPlugins.append(AddImageJPlugin('Masks_ToolBar', 'libraries/graphicsj/Masks_ToolBar', 'external/imagej/plugins'))
     #javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
-    picker = javaPlugins.append(AddJavaApp('XmippPP_', 'libraries/graphicsj/Xmipp_Particle_Picker', 'external/Xmipp_Particle_Picker'))
-    env.Depends(picker, io)
+    #picker = javaPlugins.append(AddJavaApp('XmippPP_', 'libraries/graphicsj/Xmipp_Particle_Picker', 'external/Xmipp_Particle_Picker'))
+    #env.Depends(picker, io)
     # Java apps
     #javaPlugins.append(AddJavaApp('Java3DInstaller', 'libraries/graphicsj/Java3DInstaller', 'external/Java3DInstaller'))
     #javaPlugins.append(AddJavaApp('Stitching', 'libraries/graphicsj/Stitching', 'external/Stitching'))
 
-    import sys
-    sys.path.append("external/scons/ToolsFromWiki")
-    import install
-    install.TOOL_INSTALL(env)
-    javaExtPlugins = env.InstallFiles('external/imagej/plugins', 'libraries/graphicsj/plugins', exclude='.svn')
-    javaAlias = env.Alias('java', [javaJni, javaLib, copyJar, javaExtPlugins, env.Alias('copyMacros')] + javaPlugins)
-    env.Default(javaAlias)
+#    import sys
+#    sys.path.append("external/scons/ToolsFromWiki")
+#    import install
+#    install.TOOL_INSTALL(env)
+#    javaExtPlugins = env.InstallFiles('external/imagej/plugins', 'libraries/graphicsj/plugins', exclude='.svn')
+#    javaAlias = env.Alias('java', [javaJni, javaLib, copyJar, javaExtPlugins, env.Alias('copyMacros')] + javaPlugins)
+#    env.Default(javaAlias)
 
 # --- Programs
 
