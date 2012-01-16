@@ -481,18 +481,21 @@ AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],
 #Xmipp Python Extension
 PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
 #import distutils.sysconfig
+pythonLibName = 'xmipp'
 pythonIncludes = ["#" + os.path.join(PythonDir, dir) for dir in [".", "Include"]]
 libpath = ['lib']
 libraries = ['XmippData', 'XmippRecons', 'XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs
-if CYGWIN:
+if CYGWIN or MACOSX:
     libpath.append(PythonDir)
     libraries.append("python2.7")
-elif MACOSX:
-	libraries.append("python2.7")
-	libpath.append(PythonDir)
-pythonbinding = AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources,
+
+pythonbinding = AddLibrary(pythonLibName, 'libraries/bindings/python', PyExtSources,
            ['#libraries', "#"] + pythonIncludes,
            libpath, libraries, '')
+# in MACOSX Python requires module libraries as .so instead of .dylib
+if MACOSX:
+	os.symlink(pythonLibName + '.dylib', 'lib/' + pythonLibName + '.so')
+	
 
 # Reconstruction
 ReconsSources = [
