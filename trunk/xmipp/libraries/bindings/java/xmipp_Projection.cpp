@@ -8,7 +8,7 @@
 #include <data/filters.h>
 #include <data/geometry.h>
 /*
-JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
+JNIEXPORT void JNICALL Java_xmipp_jni_Projection_projectVolume
 (JNIEnv *env, jclass class_, jobject jvolume, jobject jprojection, jdouble rot, jdouble tilt, jdouble psi)
 {
     std::string msg = "";
@@ -68,7 +68,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
     }
 }*/
 
-JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
+JNIEXPORT void JNICALL Java_xmipp_jni_Projection_projectVolume
 (JNIEnv *env, jclass class_, jobject jvolume, jobject jprojection, jdoubleArray matrix)
 {
     std::string msg = "";
@@ -143,7 +143,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
     }
 }
 
-JNIEXPORT jdouble JNICALL Java_xmipp_Projection_entropyOtsuSegmentation
+JNIEXPORT jdouble JNICALL Java_xmipp_jni_Projection_entropyOtsuSegmentation
 (JNIEnv *env, jclass class_, jobject jvolume, jdouble percentile, jboolean binarize)
 {
     std::string msg = "";
@@ -181,7 +181,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_Projection_entropyOtsuSegmentation
     return -1;
 }
 /*
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_eulerDirection2Angles
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_Projection_eulerDirection2Angles
 (JNIEnv *env, jclass class_, jdoubleArray jvector)
 {
     std::string msg = "";
@@ -230,7 +230,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_eulerDirection2Angles
     return NULL;
 }
 */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_eulerMatrix2Angles
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_Projection_eulerMatrix2Angles
 (JNIEnv *env, jclass class_, jdoubleArray matrix)
 {
     std::string msg = "";

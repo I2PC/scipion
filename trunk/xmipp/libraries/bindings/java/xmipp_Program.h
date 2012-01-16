@@ -2,8 +2,8 @@
 #include <jni.h>
 /* Header for class xmipp_Program */
 
-#ifndef _Included_xmipp_Program
-#define _Included_xmipp_Program
+#ifndef _Included_xmipp_jni_Program
+#define _Included_xmipp_jni_Program
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -12,7 +12,7 @@ extern "C" {
  * Method:    runByName
  * Signature: (Ljava/lang/String;Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_xmipp_Program_runByName
+JNIEXPORT jint JNICALL Java_xmipp_jni_Program_runByName
   (JNIEnv *, jclass, jstring, jstring);
 
 /*
@@ -20,7 +20,7 @@ JNIEXPORT jint JNICALL Java_xmipp_Program_runByName
  * Method:    getXmippPath
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_xmipp_Program_getXmippPath
+JNIEXPORT jstring JNICALL Java_xmipp_jni_Program_getXmippPath
   (JNIEnv *, jclass);
 
 #ifdef __cplusplus

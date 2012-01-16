@@ -5,7 +5,7 @@
 #include <string>
 
 
-JNIEXPORT jboolean JNICALL Java_xmipp_Filename_hasStackExtension
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_Filename_hasStackExtension
 (JNIEnv *env, jclass class_, jstring filename)
 {
     std::string msg = "";
@@ -38,7 +38,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_Filename_hasStackExtension
     return false;
 }
 
-JNIEXPORT jboolean JNICALL Java_xmipp_Filename_hasVolumeExtension
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_Filename_hasVolumeExtension
 (JNIEnv *env, jclass class_, jstring filename)
 {
     std::string msg = "";
@@ -71,7 +71,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_Filename_hasVolumeExtension
     return false;
 }
 
-JNIEXPORT jstring JNICALL Java_xmipp_Filename_compose
+JNIEXPORT jstring JNICALL Java_xmipp_jni_Filename_compose
   (JNIEnv *env, jclass class_, jint slice, jstring path){
     std::string msg = "";
 

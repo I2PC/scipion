@@ -4,12 +4,12 @@
 #include "xmipp_InternalData.h"
 #include <data/ctf.h>
 
-/*JNIEXPORT void JNICALL Java_xmipp_CTFDescription_storeIds
+/*JNIEXPORT void JNICALL Java_xmipp_jni_CTFDescription_storeIds
 (JNIEnv *env, jclass cls) {
  CTFDescription_peerId = env->GetFieldID(cls, "peer", "J");
 }*/
 
-JNIEXPORT void JNICALL Java_xmipp_CTFDescription_create
+JNIEXPORT void JNICALL Java_xmipp_jni_CTFDescription_create
 (JNIEnv *env, jobject jobj)
 {
     CTFDescription *ctfDescription = new CTFDescription();
@@ -17,7 +17,7 @@ JNIEXPORT void JNICALL Java_xmipp_CTFDescription_create
     STORE_PEER_ID(jobj, ctfDescription);
 }
 
-JNIEXPORT void JNICALL Java_xmipp_CTFDescription_destroy
+JNIEXPORT void JNICALL Java_xmipp_jni_CTFDescription_destroy
 (JNIEnv *env, jobject jobj)
 {
     CTFDescription *ctfDescription = GET_INTERNAL_CTFDESCRIPTION(jobj);
@@ -27,7 +27,7 @@ JNIEXPORT void JNICALL Java_xmipp_CTFDescription_destroy
     STORE_PEER_ID(jobj, ctfDescription);
 }
 
-JNIEXPORT void JNICALL Java_xmipp_CTFDescription_read_1
+JNIEXPORT void JNICALL Java_xmipp_jni_CTFDescription_read_1
 (JNIEnv *env, jobject jobj, jstring filename)
 {
     std::string msg = "";
@@ -68,7 +68,7 @@ JNIEXPORT void JNICALL Java_xmipp_CTFDescription_read_1
     }
 }
 
-JNIEXPORT jdouble JNICALL Java_xmipp_CTFDescription_getFMAX(JNIEnv *env,
+JNIEXPORT jdouble JNICALL Java_xmipp_jni_CTFDescription_getFMAX(JNIEnv *env,
         jobject jobj)
 {
     std::string msg = "";
@@ -109,7 +109,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_CTFDescription_getFMAX(JNIEnv *env,
     return FMAX;
 }
 
-JNIEXPORT jobjectArray JNICALL Java_xmipp_CTFDescription_CTFProfile(
+JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_CTFDescription_CTFProfile(
     JNIEnv *env, jobject jobj, jdouble angle, jdouble FMAX, jint samples)
 {
     std::string msg = "";
@@ -175,7 +175,7 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_CTFDescription_CTFProfile(
     return (jobjectArray) NULL;
 }
 
-JNIEXPORT jobjectArray JNICALL Java_xmipp_CTFDescription_CTFAverageProfile(
+JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_CTFDescription_CTFAverageProfile(
     JNIEnv *env, jobject jobj, jdouble FMAX, jint samples)
 {
     std::string msg = "";

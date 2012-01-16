@@ -5,7 +5,7 @@
 #include <data/xmipp_filename.h>
 #include <reconstruction/program_extension.h>
 
-JNIEXPORT jint JNICALL Java_xmipp_Program_runByName
+JNIEXPORT jint JNICALL Java_xmipp_jni_Program_runByName
 (JNIEnv *env, jclass jc, jstring progName, jstring args)
 {
     String msg = "";
@@ -37,7 +37,7 @@ JNIEXPORT jint JNICALL Java_xmipp_Program_runByName
     }
 }
 
-JNIEXPORT jstring JNICALL Java_xmipp_Program_getXmippPath
+JNIEXPORT jstring JNICALL Java_xmipp_jni_Program_getXmippPath
 (JNIEnv *env, jclass jc)
 {
     String msg = "";

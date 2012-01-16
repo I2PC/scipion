@@ -2,8 +2,8 @@
 #include <jni.h>
 /* Header for class xmipp_Projection */
 
-#ifndef _Included_xmipp_Projection
-#define _Included_xmipp_Projection
+#ifndef _Included_xmipp_jni_Projection
+#define _Included_xmipp_jni_Projection
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -12,7 +12,7 @@ extern "C" {
  * Method:    projectVolume
  * Signature: (Lxmipp/ImageGeneric;Lxmipp/ImageGeneric;[D)V
  */
-JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
+JNIEXPORT void JNICALL Java_xmipp_jni_Projection_projectVolume
   (JNIEnv *, jclass, jobject, jobject, jdoubleArray);
 
 /*
@@ -20,7 +20,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
  * Method:    entropyOtsuSegmentation
  * Signature: (Lxmipp/ImageGeneric;DZ)D
  */
-JNIEXPORT jdouble JNICALL Java_xmipp_Projection_entropyOtsuSegmentation
+JNIEXPORT jdouble JNICALL Java_xmipp_jni_Projection_entropyOtsuSegmentation
   (JNIEnv *, jclass, jobject, jdouble, jboolean);
 
 /*
@@ -28,7 +28,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_Projection_entropyOtsuSegmentation
  * Method:    eulerMatrix2Angles
  * Signature: ([D)[D
  */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_eulerMatrix2Angles
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_Projection_eulerMatrix2Angles
   (JNIEnv *, jclass, jdoubleArray);
 
 #ifdef __cplusplus

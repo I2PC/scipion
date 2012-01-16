@@ -10,18 +10,18 @@
 #include "xmipp_ExceptionsHandler.h"
 #include "xmipp_InternalData.h"
 
-JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_storeIds(JNIEnv *env,
+JNIEXPORT void JNICALL Java_xmipp_jni_TiltPairAligner_storeIds(JNIEnv *env,
 		jclass cls) {
 	TiltPairAligner_peerId = env->GetFieldID(cls, "peer", "J");
 }
 
-JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_create(JNIEnv *env,
+JNIEXPORT void JNICALL Java_xmipp_jni_TiltPairAligner_create(JNIEnv *env,
 		jobject jobj) {
 	TiltPairAligner * tpa = new TiltPairAligner();
 	env->SetLongField(jobj, TiltPairAligner_peerId, (long) tpa);
 }
 
-JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_destroy(JNIEnv *env,
+JNIEXPORT void JNICALL Java_xmipp_jni_TiltPairAligner_destroy(JNIEnv *env,
 		jobject jobj) {
 	TiltPairAligner * tpa = GET_INTERNAL_TPA(jobj);
 	delete tpa;
@@ -29,7 +29,7 @@ JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_destroy(JNIEnv *env,
 	env->SetLongField(jobj, TiltPairAligner_peerId, (long) tpa);
 }
 
-JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_addParticleToAligner(
+JNIEXPORT void JNICALL Java_xmipp_jni_TiltPairAligner_addParticleToAligner(
 		JNIEnv * env, jobject jobj, jint jx1, jint jy1, jint jx2, jint jy2) {
 
 	String msg;
@@ -55,7 +55,7 @@ JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_addParticleToAligner(
 
 }
 
-JNIEXPORT jobject JNICALL Java_xmipp_TiltPairAligner_getTiltedParticle(
+JNIEXPORT jobject JNICALL Java_xmipp_jni_TiltPairAligner_getTiltedParticle(
 		JNIEnv *env, jobject jobj, jint jx1, jint jy1) {
 	String msg;
 
@@ -86,7 +86,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_TiltPairAligner_getTiltedParticle(
 	}
 }
 
-JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_clear(JNIEnv *env,
+JNIEXPORT void JNICALL Java_xmipp_jni_TiltPairAligner_clear(JNIEnv *env,
 		jobject jobj) {
 	String msg;
 
@@ -111,7 +111,7 @@ JNIEXPORT void JNICALL Java_xmipp_TiltPairAligner_clear(JNIEnv *env,
 	}
 }
 
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_TiltPairAligner_computeAngles(JNIEnv *env,
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_TiltPairAligner_computeAngles(JNIEnv *env,
 		jobject jobj) {
 	String msg;
 

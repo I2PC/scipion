@@ -2,8 +2,8 @@
 #include <jni.h>
 /* Header for class xmipp_Filename */
 
-#ifndef _Included_xmipp_Filename
-#define _Included_xmipp_Filename
+#ifndef _Included_xmipp_jni_Filename
+#define _Included_xmipp_jni_Filename
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -12,7 +12,7 @@ extern "C" {
  * Method:    hasStackExtension
  * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_Filename_hasStackExtension
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_Filename_hasStackExtension
   (JNIEnv *, jclass, jstring);
 
 /*
@@ -20,7 +20,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_Filename_hasStackExtension
  * Method:    hasVolumeExtension
  * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_Filename_hasVolumeExtension
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_Filename_hasVolumeExtension
   (JNIEnv *, jclass, jstring);
 
 /*
@@ -28,7 +28,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_Filename_hasVolumeExtension
  * Method:    compose
  * Signature: (ILjava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_xmipp_Filename_compose
+JNIEXPORT jstring JNICALL Java_xmipp_jni_Filename_compose
   (JNIEnv *, jclass, jint, jstring);
 
 #ifdef __cplusplus

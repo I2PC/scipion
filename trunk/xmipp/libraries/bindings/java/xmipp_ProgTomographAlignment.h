@@ -2,8 +2,8 @@
 #include <jni.h>
 /* Header for class xmipp_ProgTomographAlignment */
 
-#ifndef _Included_xmipp_ProgTomographAlignment
-#define _Included_xmipp_ProgTomographAlignment
+#ifndef _Included_xmipp_jni_ProgTomographAlignment
+#define _Included_xmipp_jni_ProgTomographAlignment
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -12,7 +12,7 @@ extern "C" {
  * Method:    storeIds
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_storeIds
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_storeIds
   (JNIEnv *, jclass);
 
 /*
@@ -20,7 +20,7 @@ JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_storeIds
  * Method:    create
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_create
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_create
   (JNIEnv *, jobject);
 
 /*
@@ -28,7 +28,7 @@ JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_create
  * Method:    setInputFilename
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_setInputFilename
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_setInputFilename
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -36,7 +36,7 @@ JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_setInputFilename
  * Method:    setRoot
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_setRoot
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_setRoot
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -44,7 +44,7 @@ JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_setRoot
  * Method:    produceSideInfo
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_produceSideInfo
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_produceSideInfo
   (JNIEnv *, jobject);
 
 /*
@@ -52,7 +52,7 @@ JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_produceSideInfo
  * Method:    writeTransformations
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_writeTransformations
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_writeTransformations
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -60,7 +60,7 @@ JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_writeTransformations
  * Method:    getIteration
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_xmipp_ProgTomographAlignment_getIteration
+JNIEXPORT jint JNICALL Java_xmipp_jni_ProgTomographAlignment_getIteration
   (JNIEnv *, jobject);
 
 /*
@@ -68,7 +68,7 @@ JNIEXPORT jint JNICALL Java_xmipp_ProgTomographAlignment_getIteration
  * Method:    destroy
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_destroy
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_destroy
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

@@ -5,14 +5,14 @@
 #include <data/xmipp_image_generic.h>
 #include <data/xmipp_fft.h>
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_create
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_create
 (JNIEnv *env, jobject jobj)
 {
     ImageGeneric *image = new ImageGeneric();
     STORE_PEER_ID(jobj, (long)image);
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_destroy
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_destroy
 (JNIEnv *env, jobject jobj)
 {
     ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
@@ -21,7 +21,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_destroy
     STORE_PEER_ID(jobj, (long)image);
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_resize
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_resize
 (JNIEnv *env, jobject jobj, jint w, jint h, jint d, jlong n)
 {
     String msg = "";
@@ -52,7 +52,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_resize
     }
 }
 
-JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getXDim
+JNIEXPORT jint JNICALL Java_xmipp_jni_ImageGeneric_getXDim
 (JNIEnv *env, jobject jobj)
 {
     String msg = "";
@@ -84,7 +84,7 @@ JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getXDim
     return -1;
 }
 
-JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getYDim
+JNIEXPORT jint JNICALL Java_xmipp_jni_ImageGeneric_getYDim
 (JNIEnv *env, jobject jobj)
 {
     String msg = "";
@@ -116,7 +116,7 @@ JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getYDim
     return -1;
 }
 
-JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getZDim
+JNIEXPORT jint JNICALL Java_xmipp_jni_ImageGeneric_getZDim
 (JNIEnv *env, jobject jobj)
 {
     String msg = "";
@@ -149,7 +149,7 @@ JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getZDim
     return -1;
 }
 
-JNIEXPORT jlong JNICALL Java_xmipp_ImageGeneric_getNDim
+JNIEXPORT jlong JNICALL Java_xmipp_jni_ImageGeneric_getNDim
 (JNIEnv *env, jobject jobj)
 {
     String msg = "";
@@ -182,7 +182,7 @@ JNIEXPORT jlong JNICALL Java_xmipp_ImageGeneric_getNDim
     return -1;
 }
 
-JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getDataType
+JNIEXPORT jint JNICALL Java_xmipp_jni_ImageGeneric_getDataType
 (JNIEnv *env, jobject jobj)
 {
     String msg = "";
@@ -215,7 +215,7 @@ JNIEXPORT jint JNICALL Java_xmipp_ImageGeneric_getDataType
     return -1;
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readHeader
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_readHeader
 (JNIEnv * env, jobject jobj, jstring filename)
 {
     String msg = "";
@@ -246,7 +246,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readHeader
     }
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_read
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_read
 (JNIEnv *env, jobject jobj, jstring filename, jint jx, jint jy, jint jz, jlong jn)
 {
     String msg = "";
@@ -277,7 +277,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_read
     }
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readApplyGeo_1
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_readApplyGeo_1
 (JNIEnv *env, jobject jimage, jstring filename, jobject jmetadata, jlong id, jint w, jint h)
 {
     std::string msg = "";
@@ -317,7 +317,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_readApplyGeo_1
     }
 }
 
-JNIEXPORT jbyteArray JNICALL Java_xmipp_ImageGeneric_getArrayByte
+JNIEXPORT jbyteArray JNICALL Java_xmipp_jni_ImageGeneric_getArrayByte
 (JNIEnv *env, jobject jobj, jint nslice)
 {
     String msg = "";
@@ -372,7 +372,7 @@ JNIEXPORT jbyteArray JNICALL Java_xmipp_ImageGeneric_getArrayByte
         default:
                 REPORT_ERROR(
                     ERR_ARG_INCORRECT,
-                    (String)"Java_xmipp_ImageGeneric_getArrayByte: reading invalid image datatype: " + datatype2Str((DataType)dataType));
+                    (String)"Java_xmipp_jni_ImageGeneric_getArrayByte: reading invalid image datatype: " + datatype2Str((DataType)dataType));
         }
 
         // Resets slice pointer.
@@ -402,7 +402,7 @@ JNIEXPORT jbyteArray JNICALL Java_xmipp_ImageGeneric_getArrayByte
     return NULL;
 }
 
-JNIEXPORT jshortArray JNICALL Java_xmipp_ImageGeneric_getArrayShort
+JNIEXPORT jshortArray JNICALL Java_xmipp_jni_ImageGeneric_getArrayShort
 (JNIEnv *env, jobject jobj, jint nslice)
 {
     String msg = "";
@@ -457,7 +457,7 @@ JNIEXPORT jshortArray JNICALL Java_xmipp_ImageGeneric_getArrayShort
         default:
                 REPORT_ERROR(
                     ERR_ARG_INCORRECT,
-                    (String)"Java_xmipp_ImageGeneric_getArrayShort: reading invalid image datatype: " + datatype2Str((DataType)dataType));
+                    (String)"Java_xmipp_jni_ImageGeneric_getArrayShort: reading invalid image datatype: " + datatype2Str((DataType)dataType));
         }
 
         // Resets slice pointer.
@@ -487,7 +487,7 @@ JNIEXPORT jshortArray JNICALL Java_xmipp_ImageGeneric_getArrayShort
     return NULL;
 }
 
-JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat
+JNIEXPORT jfloatArray JNICALL Java_xmipp_jni_ImageGeneric_getArrayFloat
 (JNIEnv *env, jobject jobj, jint nslice)
 {
     String msg = "";
@@ -562,7 +562,7 @@ JNIEXPORT jfloatArray JNICALL Java_xmipp_ImageGeneric_getArrayFloat
     return NULL;
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayByte
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_setArrayByte
 (JNIEnv *env, jobject jobj, jbyteArray data, jint nslice)
 {
     String msg = "";
@@ -657,7 +657,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayByte
     }
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayShort
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_setArrayShort
 (JNIEnv *env, jobject jobj, jshortArray data, jint nslice)
 {
     String msg = "";
@@ -759,7 +759,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayShort
     }
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayFloat
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_setArrayFloat
 (JNIEnv *env, jobject jobj, jfloatArray data, jint nslice)
 {
     String msg = "";
@@ -827,7 +827,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setArrayFloat
     }
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setDataType
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_setDataType
 (JNIEnv *env, jobject jobj, jint dataType)
 {
     String msg = "";
@@ -857,7 +857,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setDataType
     }
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_convert2Datatype
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_convert2Datatype
 (JNIEnv *env, jobject jobj, jint dataType)
 {
     String msg = "";
@@ -887,7 +887,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_convert2Datatype
     }
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_mapFile2Write
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_mapFile2Write
 (JNIEnv *env, jobject jobj, jint w, jint h, jint z, jstring filename, jlong n)
 {
     std::string msg = "";
@@ -920,7 +920,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_mapFile2Write
     }
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_write
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_write
 (JNIEnv *env, jobject jobj, jstring filename)
 {
     String msg = "";
@@ -951,7 +951,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_write
     }
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_printShape
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_printShape
 (JNIEnv *env, jobject jobj)
 {
     std::string msg = "";
@@ -981,7 +981,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_printShape
     }
 }
 
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageGeneric_getStatistics(
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_getStatistics(
     JNIEnv *env, jobject jobj)
 {
     std::string msg = "";
@@ -1028,7 +1028,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageGeneric_getStatistics(
     return NULL;
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setXmippOrigin
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_setXmippOrigin
 (JNIEnv *env, jobject jobj)
 {
     std::string msg = "";
@@ -1058,7 +1058,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_setXmippOrigin
     }
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageGeneric_convertPSD
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_convertPSD
 (JNIEnv *env, jobject jobj, jboolean useLogarithm)
 {
     std::string msg = "";

@@ -8,12 +8,12 @@
 
 #define MAXPATHLEN 1024
 
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_storeIds
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_storeIds
   (JNIEnv *env, jclass cl){
   	ProgTomographAlignment_peerId = env->GetFieldID(cl, "peer", "J");
   }
 
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_create
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_create
   (JNIEnv *env, jobject jobj){
   	ProgTomographAlignment *program = new ProgTomographAlignment();
 	env->SetLongField(jobj, ProgTomographAlignment_peerId, (long)program);
@@ -22,14 +22,14 @@ JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_create
 	program->numThreads = 1;
   }
 
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_setInputFilename
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_setInputFilename
   (JNIEnv *env, jobject jobj, jstring inputFileName){
   ProgTomographAlignment *program = GET_INTERNAL_PTA(jobj);
   const char * fnStr = env->GetStringUTFChars(inputFileName, false);
   program->fnSel=fnStr;
   }
 
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_setRoot
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_setRoot
   (JNIEnv *env, jobject jobj, jstring root){
 	  ProgTomographAlignment *program = GET_INTERNAL_PTA(jobj);
 	  const char * fnStr = env->GetStringUTFChars(root, false);
@@ -43,7 +43,7 @@ std::string get_working_path()
 }
 
 
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_produceSideInfo
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_produceSideInfo
   (JNIEnv *env, jobject jobj){
 	std::string msg = "";
   	try{
@@ -65,7 +65,7 @@ JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_produceSideInfo
 	}
   }
 
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_writeTransformations
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_writeTransformations
   (JNIEnv *env, jobject jobj, jstring fileName){
 	std::string msg = "";
   	try{
@@ -86,14 +86,14 @@ JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_writeTransformations
 	}
 }
 
-JNIEXPORT jint JNICALL Java_xmipp_ProgTomographAlignment_getIteration
+JNIEXPORT jint JNICALL Java_xmipp_jni_ProgTomographAlignment_getIteration
   (JNIEnv *env, jobject jobj){
 	ProgTomographAlignment *program = GET_INTERNAL_PTA(jobj);
 	return program->iteration;
 
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ProgTomographAlignment_destroy
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_destroy
   (JNIEnv *env, jobject jobj){
   	std::cerr<<" destroying"<<std::endl;
 	ProgTomographAlignment *program = GET_INTERNAL_PTA(jobj);

@@ -2,8 +2,8 @@
 #include <jni.h>
 /* Header for class xmipp_MetaData */
 
-#ifndef _Included_xmipp_MetaData
-#define _Included_xmipp_MetaData
+#ifndef _Included_xmipp_jni_MetaData
+#define _Included_xmipp_jni_MetaData
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -16,7 +16,7 @@ extern "C" {
  * Method:    create
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_create
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_create
   (JNIEnv *, jobject);
 
 /*
@@ -24,7 +24,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_create
  * Method:    destroy
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_destroy
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_destroy
   (JNIEnv *, jobject);
 
 /*
@@ -32,7 +32,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_destroy
  * Method:    read_
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_read_1
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_read_1
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -40,7 +40,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_read_1
  * Method:    size
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_xmipp_MetaData_size
+JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_size
   (JNIEnv *, jobject);
 
 /*
@@ -48,7 +48,7 @@ JNIEXPORT jint JNICALL Java_xmipp_MetaData_size
  * Method:    setColumnFormat
  * Signature: (Z)V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_setColumnFormat
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_setColumnFormat
   (JNIEnv *, jobject, jboolean);
 
 /*
@@ -56,7 +56,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_setColumnFormat
  * Method:    write
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_write
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_write
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -64,7 +64,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_write
  * Method:    writeBlock
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_writeBlock
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeBlock
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -72,7 +72,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_writeBlock
  * Method:    print
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_print
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_print
   (JNIEnv *, jobject);
 
 /*
@@ -80,7 +80,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_print
  * Method:    containsLabel
  * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_containsLabel
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_containsLabel
   (JNIEnv *, jobject, jint);
 
 /*
@@ -88,7 +88,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_containsLabel
  * Method:    label2Str
  * Signature: (I)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_xmipp_MetaData_label2Str
+JNIEXPORT jstring JNICALL Java_xmipp_jni_MetaData_label2Str
   (JNIEnv *, jclass, jint);
 
 /*
@@ -96,7 +96,7 @@ JNIEXPORT jstring JNICALL Java_xmipp_MetaData_label2Str
  * Method:    getBlocksInMetaDataFile
  * Signature: (Ljava/lang/String;)[Ljava/lang/String;
  */
-JNIEXPORT jobjectArray JNICALL Java_xmipp_MetaData_getBlocksInMetaDataFile
+JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_MetaData_getBlocksInMetaDataFile
   (JNIEnv *, jclass, jstring);
 
 /*
@@ -104,7 +104,7 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_MetaData_getBlocksInMetaDataFile
  * Method:    getActiveLabels
  * Signature: ()[I
  */
-JNIEXPORT jintArray JNICALL Java_xmipp_MetaData_getActiveLabels
+JNIEXPORT jintArray JNICALL Java_xmipp_jni_MetaData_getActiveLabels
   (JNIEnv *, jobject);
 
 /*
@@ -112,7 +112,7 @@ JNIEXPORT jintArray JNICALL Java_xmipp_MetaData_getActiveLabels
  * Method:    getLabelType
  * Signature: (I)Ljava/lang/Class;
  */
-JNIEXPORT jclass JNICALL Java_xmipp_MetaData_getLabelType
+JNIEXPORT jclass JNICALL Java_xmipp_jni_MetaData_getLabelType
   (JNIEnv *, jclass, jint);
 
 /*
@@ -120,7 +120,7 @@ JNIEXPORT jclass JNICALL Java_xmipp_MetaData_getLabelType
  * Method:    isTextFile
  * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isTextFile
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isTextFile
   (JNIEnv *, jclass, jint);
 
 /*
@@ -128,7 +128,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isTextFile
  * Method:    isMetadata
  * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isMetadata
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isMetadata
   (JNIEnv *, jclass, jint);
 
 /*
@@ -136,7 +136,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isMetadata
  * Method:    isCtfParam
  * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isCtfParam
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isCtfParam
   (JNIEnv *, jclass, jint);
 
 /*
@@ -144,7 +144,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isCtfParam
  * Method:    isImage
  * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isImage
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isImage
   (JNIEnv *, jclass, jint);
 
 /*
@@ -152,7 +152,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isImage
  * Method:    isStack
  * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isStack
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isStack
   (JNIEnv *, jclass, jint);
 
 /*
@@ -160,7 +160,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isStack
  * Method:    isMicrograph
  * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isMicrograph
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isMicrograph
   (JNIEnv *, jclass, jint);
 
 /*
@@ -168,7 +168,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isMicrograph
  * Method:    isPSD
  * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isPSD
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isPSD
   (JNIEnv *, jclass, jint);
 
 /*
@@ -176,7 +176,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_isPSD
  * Method:    getValueInt
  * Signature: (IJ)I
  */
-JNIEXPORT jint JNICALL Java_xmipp_MetaData_getValueInt
+JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_getValueInt
   (JNIEnv *, jobject, jint, jlong);
 
 /*
@@ -184,7 +184,7 @@ JNIEXPORT jint JNICALL Java_xmipp_MetaData_getValueInt
  * Method:    getValueLong
  * Signature: (IJ)J
  */
-JNIEXPORT jlong JNICALL Java_xmipp_MetaData_getValueLong
+JNIEXPORT jlong JNICALL Java_xmipp_jni_MetaData_getValueLong
   (JNIEnv *, jobject, jint, jlong);
 
 /*
@@ -192,7 +192,7 @@ JNIEXPORT jlong JNICALL Java_xmipp_MetaData_getValueLong
  * Method:    getValueDouble
  * Signature: (IJ)D
  */
-JNIEXPORT jdouble JNICALL Java_xmipp_MetaData_getValueDouble
+JNIEXPORT jdouble JNICALL Java_xmipp_jni_MetaData_getValueDouble
   (JNIEnv *, jobject, jint, jlong);
 
 /*
@@ -200,7 +200,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_MetaData_getValueDouble
  * Method:    getValueString
  * Signature: (IJ)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getValueString
+JNIEXPORT jstring JNICALL Java_xmipp_jni_MetaData_getValueString
   (JNIEnv *, jobject, jint, jlong);
 
 /*
@@ -208,7 +208,7 @@ JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getValueString
  * Method:    getValueBoolean
  * Signature: (IJ)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_getValueBoolean
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_getValueBoolean
   (JNIEnv *, jobject, jint, jlong);
 
 /*
@@ -216,7 +216,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_getValueBoolean
  * Method:    getStatistics
  * Signature: (Z)[D
  */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_MetaData_getStatistics
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_MetaData_getStatistics
   (JNIEnv *, jobject, jboolean);
 
 /*
@@ -224,7 +224,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_MetaData_getStatistics
  * Method:    getColumnValues
  * Signature: (I)[D
  */
-JNIEXPORT jdoubleArray JNICALL Java_xmipp_MetaData_getColumnValues
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_MetaData_getColumnValues
   (JNIEnv *, jobject, jint);
 
 /*
@@ -232,7 +232,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_MetaData_getColumnValues
  * Method:    setValueInt
  * Signature: (IIJ)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueInt
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueInt
   (JNIEnv *, jobject, jint, jint, jlong);
 
 /*
@@ -240,7 +240,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueInt
  * Method:    setValueDouble
  * Signature: (IDJ)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueDouble
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueDouble
   (JNIEnv *, jobject, jint, jdouble, jlong);
 
 /*
@@ -248,7 +248,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueDouble
  * Method:    setValueString
  * Signature: (ILjava/lang/String;J)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueString
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueString
   (JNIEnv *, jobject, jint, jstring, jlong);
 
 /*
@@ -256,7 +256,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueString
  * Method:    setValueBoolean
  * Signature: (IZJ)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueBoolean
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueBoolean
   (JNIEnv *, jobject, jint, jboolean, jlong);
 
 /*
@@ -264,7 +264,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueBoolean
  * Method:    findObjects
  * Signature: ()[J
  */
-JNIEXPORT jlongArray JNICALL Java_xmipp_MetaData_findObjects
+JNIEXPORT jlongArray JNICALL Java_xmipp_jni_MetaData_findObjects
   (JNIEnv *, jobject);
 
 /*
@@ -272,7 +272,7 @@ JNIEXPORT jlongArray JNICALL Java_xmipp_MetaData_findObjects
  * Method:    importObjects
  * Signature: (Lxmipp/MetaData;[J)V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_importObjects
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_importObjects
   (JNIEnv *, jobject, jobject, jlongArray);
 
 /*
@@ -280,7 +280,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_importObjects
  * Method:    firstObject
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_xmipp_MetaData_firstObject
+JNIEXPORT jlong JNICALL Java_xmipp_jni_MetaData_firstObject
   (JNIEnv *, jobject);
 
 /*
@@ -288,7 +288,7 @@ JNIEXPORT jlong JNICALL Java_xmipp_MetaData_firstObject
  * Method:    addObject
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_xmipp_MetaData_addObject
+JNIEXPORT jlong JNICALL Java_xmipp_jni_MetaData_addObject
   (JNIEnv *, jobject);
 
 /*
@@ -296,7 +296,7 @@ JNIEXPORT jlong JNICALL Java_xmipp_MetaData_addObject
  * Method:    addLabel
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_addLabel
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_addLabel
   (JNIEnv *, jobject, jint);
 
 /*
@@ -304,7 +304,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_addLabel
  * Method:    getPCAbasis
  * Signature: (Lxmipp/ImageGeneric;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_getPCAbasis
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
   (JNIEnv *, jobject, jobject);
 
 /*
@@ -312,7 +312,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_getPCAbasis
  * Method:    computeFourierStatistics
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_computeFourierStatistics
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_computeFourierStatistics
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -320,7 +320,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_computeFourierStatistics
  * Method:    enableDebug
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_enableDebug
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_enableDebug
   (JNIEnv *, jobject);
 
 /*
@@ -328,7 +328,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_enableDebug
  * Method:    readPlain
  * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_MetaData_readPlain
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_readPlain
   (JNIEnv *, jobject, jstring, jstring);
 
 #ifdef __cplusplus

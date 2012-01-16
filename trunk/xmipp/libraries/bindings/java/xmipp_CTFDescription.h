@@ -2,8 +2,8 @@
 #include <jni.h>
 /* Header for class xmipp_CTFDescription */
 
-#ifndef _Included_xmipp_CTFDescription
-#define _Included_xmipp_CTFDescription
+#ifndef _Included_xmipp_jni_CTFDescription
+#define _Included_xmipp_jni_CTFDescription
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,7 +20,7 @@ extern "C" {
  * Method:    create
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_xmipp_CTFDescription_create
+JNIEXPORT void JNICALL Java_xmipp_jni_CTFDescription_create
   (JNIEnv *, jobject);
 
 /*
@@ -28,7 +28,7 @@ JNIEXPORT void JNICALL Java_xmipp_CTFDescription_create
  * Method:    destroy
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_xmipp_CTFDescription_destroy
+JNIEXPORT void JNICALL Java_xmipp_jni_CTFDescription_destroy
   (JNIEnv *, jobject);
 
 /*
@@ -36,7 +36,7 @@ JNIEXPORT void JNICALL Java_xmipp_CTFDescription_destroy
  * Method:    read_
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_CTFDescription_read_1
+JNIEXPORT void JNICALL Java_xmipp_jni_CTFDescription_read_1
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -44,7 +44,7 @@ JNIEXPORT void JNICALL Java_xmipp_CTFDescription_read_1
  * Method:    getFMAX
  * Signature: ()D
  */
-JNIEXPORT jdouble JNICALL Java_xmipp_CTFDescription_getFMAX
+JNIEXPORT jdouble JNICALL Java_xmipp_jni_CTFDescription_getFMAX
   (JNIEnv *, jobject);
 
 /*
@@ -52,7 +52,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_CTFDescription_getFMAX
  * Method:    CTFProfile
  * Signature: (DDI)[[D
  */
-JNIEXPORT jobjectArray JNICALL Java_xmipp_CTFDescription_CTFProfile
+JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_CTFDescription_CTFProfile
   (JNIEnv *, jobject, jdouble, jdouble, jint);
 
 /*
@@ -60,7 +60,7 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_CTFDescription_CTFProfile
  * Method:    CTFAverageProfile
  * Signature: (DI)[[D
  */
-JNIEXPORT jobjectArray JNICALL Java_xmipp_CTFDescription_CTFAverageProfile
+JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_CTFDescription_CTFAverageProfile
   (JNIEnv *, jobject, jdouble, jint);
 
 #ifdef __cplusplus
