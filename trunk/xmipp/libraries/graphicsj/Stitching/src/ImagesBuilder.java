@@ -10,8 +10,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
-import xmipp.Filename;
-import xmipp.ImageDouble;
+import xmipp.jni.Filename;
+import xmipp.jni.ImageDouble;
 
 /*
  * To change this template, choose Tools | Templates

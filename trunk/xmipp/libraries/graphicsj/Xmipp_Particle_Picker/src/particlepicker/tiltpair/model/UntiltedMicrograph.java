@@ -5,8 +5,8 @@ import java.util.List;
 
 import particlepicker.Constants;
 import particlepicker.Micrograph;
-import xmipp.Particle;
-import xmipp.TiltPairAligner;
+import xmipp.jni.Particle;
+import xmipp.jni.TiltPairAligner;
 
 public class UntiltedMicrograph extends Micrograph {
 

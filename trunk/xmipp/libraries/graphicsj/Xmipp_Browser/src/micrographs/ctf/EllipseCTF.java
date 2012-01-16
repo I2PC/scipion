@@ -5,8 +5,8 @@
 package micrographs.ctf;
 
 import ij.IJ;
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 
 /**
  *

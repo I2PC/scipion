@@ -7,8 +7,8 @@ package browser.imageitems.tableitems;
 import browser.Cache;
 import browser.LABELS;
 import java.io.File;
-import xmipp.ImageGeneric;
-import xmipp.MDLabel;
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.MDLabel;
 
 /**
  *

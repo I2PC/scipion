@@ -13,7 +13,7 @@ import particlepicker.Micrograph;
 import particlepicker.ParticleCanvas;
 import particlepicker.ParticlePickerJFrame;
 import particlepicker.training.gui.TrainingPickerJFrame;
-import xmipp.Particle;
+import xmipp.jni.Particle;
 
 public class TrainingParticle extends Particle{
 	

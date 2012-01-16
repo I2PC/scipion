@@ -57,9 +57,9 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
-import xmipp.Filename;
-import xmipp.ImageGeneric;
-import xmipp.MetaData;
+import xmipp.jni.Filename;
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.MetaData;
 import xmippij.XmippImageConverter;
 
 /**

@@ -7,7 +7,7 @@ import browser.commandline.COMMAND_PARAMETERS;
 import browser.windows.ImagesWindowFactory;
 import ij.plugin.PlugIn;
 import java.util.LinkedList;
-import xmipp.Filename;
+import xmipp.jni.Filename;
 
 /*
  * To change this template, choose Tools | Templates

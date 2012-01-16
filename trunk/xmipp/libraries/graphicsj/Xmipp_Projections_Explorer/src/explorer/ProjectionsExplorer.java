@@ -24,8 +24,8 @@ import javax.vecmath.Point3d;
 import sphere.Geometry;
 import table.JFrameImagesTable;
 import window.ProjectionWindow;
-import xmipp.ImageGeneric;
-import xmipp.Projection;
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.Projection;
 import xmippij.XmippImageConverter;
 
 /*

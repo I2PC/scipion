@@ -31,9 +31,9 @@ import java.util.Vector;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
-import xmipp.ImageDouble;
-import xmipp.MetaData;
-import xmipp.MDLabel;
+import xmipp.jni.ImageDouble;
+import xmipp.jni.MetaData;
+import xmipp.jni.MDLabel;
 
 /**
  * Why? Model the active stack that will be displayed, isolating the viewer from

@@ -14,10 +14,10 @@ import java.util.ArrayList;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
-import xmipp.ImageGeneric;
-import xmipp.Projection;
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.Projection;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 
 /*
  * To change this template, choose Tools | Templates

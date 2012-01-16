@@ -43,8 +43,8 @@ import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Semaphore;
 
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 
 // TODO: remove this class when not needed
 public class TomoData{

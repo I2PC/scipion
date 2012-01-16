@@ -6,8 +6,8 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
 import javax.swing.tree.TreePath;
 
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 
 /***************************************************************************
  *

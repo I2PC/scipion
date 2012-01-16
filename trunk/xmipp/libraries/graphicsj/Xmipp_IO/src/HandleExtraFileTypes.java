@@ -8,7 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import xmipp.Filename;
+import xmipp.jni.Filename;
 
 // Plugin to handle file types which are not implemented
 // directly in ImageJ through io.Opener

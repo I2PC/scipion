@@ -5,7 +5,7 @@
 package browser.imageitems;
 
 import ij.IJ;
-import xmipp.ImageGeneric;
+import xmipp.jni.ImageGeneric;
 
 /**
  *

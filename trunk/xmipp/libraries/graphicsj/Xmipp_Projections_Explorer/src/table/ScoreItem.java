@@ -6,8 +6,8 @@ package table;
 
 import ij.ImagePlus;
 import java.io.File;
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 import xmippij.XmippImageConverter;
 
 /**

@@ -41,11 +41,11 @@ import java.util.Enumeration;
 import javax.swing.SwingWorker;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import xmipp.CastWriteMode;
-import xmipp.ImageDouble;
-import xmipp.ImageWriteMode;
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.CastWriteMode;
+import xmipp.jni.ImageDouble;
+import xmipp.jni.ImageWriteMode;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 
 // TODO: make TomoController extend AbstractController?
 /**

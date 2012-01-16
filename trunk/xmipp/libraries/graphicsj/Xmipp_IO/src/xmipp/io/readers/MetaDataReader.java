@@ -4,7 +4,7 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.io.FileInfo;
 import java.io.File;
-import xmipp.MetaData;
+import xmipp.jni.MetaData;
 import xmippij.XmippImageConverter;
 
 /*

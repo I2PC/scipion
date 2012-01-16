@@ -41,10 +41,10 @@ import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import xmipp.CTFDescription;
-import xmipp.ImageGeneric;
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.CTFDescription;
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 import xmippij.XmippImageConverter;
 
 /*

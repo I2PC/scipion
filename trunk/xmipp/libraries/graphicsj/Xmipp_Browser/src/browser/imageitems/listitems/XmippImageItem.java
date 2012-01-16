@@ -9,7 +9,7 @@ import browser.DEBUG;
 import ij.IJ;
 import ij.ImagePlus;
 import java.io.File;
-import xmipp.ImageGeneric;
+import xmipp.jni.ImageGeneric;
 import xmippij.XmippImageConverter;
 
 /**

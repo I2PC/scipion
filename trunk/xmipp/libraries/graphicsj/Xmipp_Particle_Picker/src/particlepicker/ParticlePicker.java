@@ -16,9 +16,9 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import particlepicker.training.model.FamilyState;
 import particlepicker.training.model.SupervisedParticlePicker;
-import xmipp.MDLabel;
-import xmipp.MetaData;
-import xmipp.Program;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
+import xmipp.jni.Program;
 
 public abstract class ParticlePicker
 {

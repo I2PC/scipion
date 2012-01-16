@@ -25,8 +25,8 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
-import xmipp.ImageGeneric;
-import xmipp.MetaData;
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.MetaData;
 import xmippij.XmippImageConverter;
 
 /**

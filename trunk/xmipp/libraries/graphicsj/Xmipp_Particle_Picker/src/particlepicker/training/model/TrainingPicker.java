@@ -8,8 +8,8 @@ import java.util.logging.Level;
 import particlepicker.Family;
 import particlepicker.ParticlePicker;
 
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 
 public abstract class TrainingPicker extends ParticlePicker
 {

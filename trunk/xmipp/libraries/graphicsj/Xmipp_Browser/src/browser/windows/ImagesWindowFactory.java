@@ -35,9 +35,9 @@ import micrographs.CTFProfileWindow;
 import micrographs.FSCWindow;
 import micrographs.ctf.tasks.TasksEngine;
 import rotspectra.JFrameRotSpectra;
-import xmipp.Filename;
-import xmipp.ImageGeneric;
-import xmipp.MetaData;
+import xmipp.jni.Filename;
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.MetaData;
 import xmippij.XmippImageConverter;
 
 /**

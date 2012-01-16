@@ -22,7 +22,7 @@ import particlepicker.tiltpair.model.TiltedParticle;
 import particlepicker.tiltpair.model.UntiltedMicrograph;
 import particlepicker.tiltpair.model.UntiltedParticle;
 import particlepicker.training.model.TrainingParticle;
-import xmipp.Particle;
+import xmipp.jni.Particle;
 
 public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 {

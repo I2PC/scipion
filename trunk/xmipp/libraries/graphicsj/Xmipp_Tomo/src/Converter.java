@@ -1,6 +1,6 @@
 import ij.ImagePlus;
 import ij.process.FloatProcessor;
-import xmipp.ImageDouble;
+import xmipp.jni.ImageDouble;
 
 /***************************************************************************
  *

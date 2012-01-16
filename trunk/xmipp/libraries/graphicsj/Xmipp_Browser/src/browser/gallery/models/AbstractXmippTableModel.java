@@ -15,8 +15,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
-import xmipp.ImageGeneric;
-import xmipp.MDLabel;
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.MDLabel;
 import xmippij.XmippImageConverter;
 
 /**

@@ -4,10 +4,10 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.FileInfo;
 import java.io.File;
-import xmipp.Filename;
-import xmipp.ImageGeneric;
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.Filename;
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 
 /*
  * To change this template, choose Tools | Templates

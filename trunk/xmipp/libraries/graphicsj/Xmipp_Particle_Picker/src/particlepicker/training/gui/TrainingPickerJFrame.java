@@ -49,7 +49,7 @@ import particlepicker.training.model.SupervisedParticlePicker;
 import particlepicker.training.model.TrainingMicrograph;
 import particlepicker.training.model.TrainingParticle;
 import particlepicker.training.model.TrainingPicker;
-import xmipp.Program;
+import xmipp.jni.Program;
 
 
 public class TrainingPickerJFrame extends ParticlePickerJFrame 

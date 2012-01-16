@@ -46,7 +46,7 @@ import java.io.PrintWriter;
 import java.util.Enumeration;
 
 
-import xmipp.*;
+import xmipp.jni.*;
 
 /**
  * @deprecated

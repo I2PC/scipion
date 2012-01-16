@@ -8,7 +8,7 @@ import ij.util.Tools;
 import java.io.File;
 import java.util.List;
 
-import xmipp.ImageGeneric;
+import xmipp.jni.ImageGeneric;
 import xmippij.XmippImageConverter;
 
 public class XmippJ {

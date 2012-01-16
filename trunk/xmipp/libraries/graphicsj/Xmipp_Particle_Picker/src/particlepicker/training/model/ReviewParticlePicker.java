@@ -8,9 +8,9 @@ import java.util.logging.Level;
 
 import particlepicker.Constants;
 import particlepicker.Family;
-import xmipp.Particle;
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.Particle;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 
 public class ReviewParticlePicker extends TrainingPicker
 {

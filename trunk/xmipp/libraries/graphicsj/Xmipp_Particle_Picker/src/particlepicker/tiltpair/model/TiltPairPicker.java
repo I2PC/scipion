@@ -9,8 +9,8 @@ import java.util.logging.Level;
 import particlepicker.Family;
 import particlepicker.ParticlePicker;
 import particlepicker.training.model.FamilyState;
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 import java.util.Hashtable; 
 
 public class TiltPairPicker extends ParticlePicker

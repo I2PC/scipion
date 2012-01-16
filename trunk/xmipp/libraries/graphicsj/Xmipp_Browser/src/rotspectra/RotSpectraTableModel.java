@@ -9,9 +9,9 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import javax.swing.table.AbstractTableModel;
-import xmipp.Filename;
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.Filename;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 
 /**
  *

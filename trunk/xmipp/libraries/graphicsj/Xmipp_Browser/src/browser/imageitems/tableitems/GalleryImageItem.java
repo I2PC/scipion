@@ -4,15 +4,15 @@
  */
 package browser.imageitems.tableitems;
 
-import xmipp.Filename;
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.Filename;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 import browser.Cache;
 import browser.DEBUG;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
 import ij.ImagePlus;
-import xmipp.ImageGeneric;
+import xmipp.jni.ImageGeneric;
 import xmippij.XmippImageConverter;
 
 /**

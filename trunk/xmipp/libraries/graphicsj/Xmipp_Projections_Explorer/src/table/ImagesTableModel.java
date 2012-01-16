@@ -9,7 +9,7 @@ import ij.process.FloatProcessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import javax.swing.table.AbstractTableModel;
-import xmipp.ImageGeneric;
+import xmipp.jni.ImageGeneric;
 import xmippij.XmippImageConverter;
 
 /**

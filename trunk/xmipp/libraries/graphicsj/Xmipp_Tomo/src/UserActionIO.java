@@ -1,8 +1,8 @@
 import java.io.File;
 
-import xmipp.Filename;
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.Filename;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 
 /***************************************************************************
  *

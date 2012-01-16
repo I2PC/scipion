@@ -8,7 +8,7 @@ import browser.Cache;
 import browser.imageitems.listitems.XmippImageItem;
 import ij.ImagePlus;
 import java.io.File;
-import xmipp.ImageGeneric;
+import xmipp.jni.ImageGeneric;
 
 /**
  *

@@ -15,9 +15,9 @@ import browser.imageitems.tableitems.GalleryImageItem;
 import ij.ImagePlus;
 import java.util.ArrayList;
 import metadata.models.XmippTableModelRowDisabler;
-import xmipp.ImageGeneric;
-import xmipp.MDLabel;
-import xmipp.MetaData;
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 
 /**
  *
