@@ -355,7 +355,7 @@ def CompileJavaJar(target, source, env):
     cmd = env['JAVAC']
     cp = ':'.join([str(s) for s in source[1:]])
     if len(cp):
-        cmd += ' -cp ' + cp
+        cmd += ' -cp ' + cp + ":/home/josem/xmipp_current/java/lib/*"
     Cmd('%(cmd)s -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals())
     classDir = join(buildDir, 'xmipp', os.path.basename(srcDir))
     # We need to create a txt file with the list of all .class files 
@@ -385,8 +385,9 @@ def AddJavaLibrary(name, src, dependencies=[]):#, sourceList, includes, libpath=
     sources = Glob(srcDir, '*.java', [])
     for s in sources:
         env.Depends(buildJar, s)
+    env.Alias(name, buildJar)
     # Group all jar targets under 'java' alias
-    alias = env.Alias('java', buildJar)
+    env.Alias('java', buildJar)
     env.Default(buildJar)
     return buildJar
 
@@ -703,8 +704,10 @@ if int(env['java']):
     env.Default(cmd)
     AddJavaLibrary('XmippJNI', 'jni', ['ij'])
     AddJavaLibrary('XmippIJ', 'ij', ['ij'])
+    AddJavaLibrary('XmippUtils', 'utils', ['XmippIJ', 'ij', 'commons-cli-1.1'])
     AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'ij'])
-    AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'ij', 'commons-cli-1.1'])
+    AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
+    
     
     #env.Depends(ppickerLib, ijLib)
 
