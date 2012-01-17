@@ -1110,7 +1110,8 @@ void MetaData::_read(const FileName &filename,
 
         BLOCK_CREATE(block);
         regex_t re;
-        if (regcomp(&re, blockRegExp.c_str(), REG_EXTENDED|REG_NOSUB) != 0)
+        int rc = regcomp(&re, blockRegExp.c_str(), REG_EXTENDED|REG_NOSUB);
+        if (blockRegExp.size() && rc != 0)
             REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Pattern '%s' cannot be parsed: %s",
                          blockRegExp.c_str(), filename.c_str()));
         BUFFER_COPY(bufferMap, buffer);
@@ -1122,7 +1123,7 @@ void MetaData::_read(const FileName &filename,
             //startingPoint, remainingSize, firstData, secondData, firstloop))
         {
             BLOCK_NAME(block, blockName);
-            if (regexec(&re, blockName.c_str(), (size_t) 0, NULL, 0)==0)
+            if (blockRegExp.size() == 0 || regexec(&re, blockName.c_str(), (size_t) 0, NULL, 0)==0)
             {
 
                 //Read column labels from the datablock that starts at firstData
