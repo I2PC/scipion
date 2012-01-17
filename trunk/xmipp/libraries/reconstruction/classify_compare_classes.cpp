@@ -108,14 +108,16 @@ void ProgCompareClass::run()
 	{
 		fhOut << "Class " << i+1 << " of " << fnClass1 << ": " << VEC_ELEM(MD1classSize,i) << " images\n";
 		for (int j=0; j<MAT_XSIZE(comparisonMatrix); j++)
-			fhOut << "   " << 100.0*MAT_ELEM(comparisonMatrix,i,j)/VEC_ELEM(MD1classSize,i) << "% are in class " << j+1 << " of " << fnClass2 << std::endl;
+			if (MAT_ELEM(comparisonMatrix,i,j)>0)
+				fhOut << "   " << 100.0*MAT_ELEM(comparisonMatrix,i,j)/VEC_ELEM(MD1classSize,i) << "% are in class " << j+1 << " of " << fnClass2 << std::endl;
 	}
 	fhOut << "\n\nAnalysis of " << fnClass2 << " =======================\n";
 	for (int j=0; j<MAT_XSIZE(comparisonMatrix); j++)
 	{
 		fhOut << "Class " << j+1 << " of " << fnClass2 << ": " << VEC_ELEM(MD2classSize,j) << " images\n";
 		for (int i=0; i<MAT_YSIZE(comparisonMatrix); i++)
-			fhOut << "   " << 100.0*MAT_ELEM(comparisonMatrix,i,j)/VEC_ELEM(MD2classSize,j) << "% are in class " << i+1 << " of " << fnClass1 << std::endl;
+			if (MAT_ELEM(comparisonMatrix,i,j)>0)
+				fhOut << "   " << 100.0*MAT_ELEM(comparisonMatrix,i,j)/VEC_ELEM(MD2classSize,j) << "% are in class " << i+1 << " of " << fnClass1 << std::endl;
 	}
 	fhOut.close();
 }
