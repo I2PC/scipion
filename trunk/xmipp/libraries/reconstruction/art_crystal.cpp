@@ -521,8 +521,8 @@ void expandToFillSpace(const BasicARTParameters &prm,
 #endif
 
     // Expand the volume to the required space
-    corner1 = (a0 - 1) * eprm.a + (b0 - 1) * eprm.b; // CO: I'm not very satisfied with
-    corner2 = (aF + 1) * eprm.a + (bF + 1) * eprm.b; //     the +1 and -1 but it works
+    corner1 = (double)(a0 - 1) * eprm.a + (double)(b0 - 1) * eprm.b; // CO: I'm not very satisfied with
+    corner2 = (double)(aF + 1) * eprm.a + (double)(bF + 1) * eprm.b; //     the +1 and -1 but it works
     corner1.resize(3);
     ZZ(corner1) = FIRST_XMIPP_INDEX(prm.Zoutput_volume_size);
     corner2.resize(3);

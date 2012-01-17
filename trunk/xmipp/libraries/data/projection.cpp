@@ -978,7 +978,7 @@ void project_Crystal_SimpleGrid(Image<double> &vol, const SimpleGrid &grid,
     // The vectors returned by the projection routines are R3 but we
     // are only interested in their first 2 components, ie, in the
     // in-plane components
-    beginZ = XX_lowest * prjX + YY_lowest * prjY + ZZ_lowest * prjZ + prjOrigin;
+    beginZ = (double)XX_lowest * prjX + (double)YY_lowest * prjY + (double)ZZ_lowest * prjZ + prjOrigin;
 
 #ifdef DEBUG_LITTLE
 

@@ -590,7 +590,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     int YY_highest = (int) YY(grid->highest);
     int XX_highest = (int) XX(grid->highest);
 
-    beginZ = XX_lowest * prjX + YY_lowest * prjY + ZZ_lowest * prjZ + prjOrigin;
+    beginZ = (double)XX_lowest * prjX + (double)YY_lowest * prjY + (double)ZZ_lowest * prjZ + prjOrigin;
 
     // Check if in VSSNR
     bool VSSNR_mode = (ray_length == basis->maxLength());
@@ -639,7 +639,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     grid_basis.getCol(1, gridY);
     grid_basis.getCol(2, gridZ);
 
-    univ_beginZ = XX_lowest * gridX + YY_lowest * gridY + ZZ_lowest * gridZ + grid->origin;
+    univ_beginZ = (double)XX_lowest * gridX + (double)YY_lowest * gridY + (double)ZZ_lowest * gridZ + grid->origin;
 
     int number_of_basis = 0;
 
