@@ -794,129 +794,12 @@ void ProgClassifyFTTRI::computeClassCentroids(bool FTTRI)
     }
 }
 
-void ProgClassifyFTTRI::computeFTTRIClassCentroids()
-{
-    FileName fnCandidate,fnCentroids=fnRoot+"_centroids.mrcs";
-    if (node->isMaster())
-    {
-        createEmptyFile(fnCentroids, 1+LAST_XMIPP_INDEX(FTTRIXdim), FTTRIYdim, 1, nref, true, WRITE_OVERWRITE);
-        std::cerr << "Computing FTTRI centroids ..." << std::endl;
-    }
-    node->barrierWait();
-
-    Image<double> fttriCandidate, fftriCentroid;
-    MultidimArray<double> &mfftriCentroid=fftriCentroid();
-    mfftriCentroid.resizeNoCopy(FTTRIYdim,1+LAST_XMIPP_INDEX(FTTRIXdim));
-    classEpsilon.resizeNoCopy(nref);
-    classEpsilon.initConstant(-1);
-    MultidimArray<double> intraclassDistance, sortedDistance;
-    for (int i=0; i<nref; i++)
-        if (((i+1)%node->size)==node->rank)
-        {
-            // Compute centroid
-            const std::vector<size_t> &class_i=bestEpsilonClasses[i].memberIdx;
-            int nmax=class_i.size();
-            fftriCentroid().initZeros();
-
-            if (nmax!=0)
-            {
-                for (int n=0; n<nmax; n++)
-                {
-                    size_t trueIdx=class_i[n];
-                    fnCandidate.compose(trueIdx+1,fnFTTRI);
-                    fttriCandidate.read(fnCandidate);
-                    mfftriCentroid+=fttriCandidate();
-                }
-                mfftriCentroid/=(double)nmax;
-
-                // Compute now class epsilon
-                intraclassDistance.resizeNoCopy(nmax);
-                for (int n=0; n<nmax; n++)
-                {
-                    size_t trueIdx=class_i[n];
-                    fnCandidate.compose(trueIdx+1,fnFTTRI);
-                    fttriCandidate.read(fnCandidate);
-                    A1D_ELEM(intraclassDistance,n)=fttri_distance(mfftriCentroid,fttriCandidate());
-                }
-                intraclassDistance.sort(sortedDistance);
-                int idxLimit=std::min((int)floor(nmax*0.8),nmax-1);
-                double limit=A1D_ELEM(sortedDistance,idxLimit);
-                VEC_ELEM(classEpsilon,i)=A1D_ELEM(intraclassDistance,nmax-1);
-
-                // Robust estimate of the class centroid
-                fftriCentroid().initZeros();
-                double nactual=0;
-                for (int n=0; n<nmax; n++)
-                {
-                    if (A1D_ELEM(intraclassDistance,n)>limit)
-                        continue;
-                    size_t trueIdx=class_i[n];
-                    fnCandidate.compose(trueIdx+1,fnFTTRI);
-                    fttriCandidate.read(fnCandidate);
-                    mfftriCentroid+=fttriCandidate();
-                    nactual++;
-                }
-                mfftriCentroid/=nactual;
-            }
-            fftriCentroid.write(fnCentroids,i+1,true,WRITE_REPLACE);
-        }
-    MPI_Allreduce(MPI_IN_PLACE, &(VEC_ELEM(classEpsilon,0)), nref, MPI_DOUBLE,
-                  MPI_MAX, MPI_COMM_WORLD);
-    epsilonMax=classEpsilon.computeMax();
-    if (node->isMaster())
-        std::cerr << "Maximum epsilon: " << epsilonMax << std::endl;
-}
-
-// Compute centroids =======================================================
-void ProgClassifyFTTRI::computeImageClassCentroids()
-{
-    FileName fnClasses=fnRoot+"_classes.stk";
-    if (node->isMaster())
-    {
-        std::cerr << "Computing image class centroids ..." << std::endl;
-        size_t Ndim;
-        int Xdim, Ydim, Zdim;
-        getImageSize(mdIn, Xdim, Ydim, Zdim, Ndim);
-        createEmptyFile(fnClasses,Xdim,Ydim,1,nref,true,WRITE_OVERWRITE);
-    }
-    node->barrierWait();
-
-    MetaData classi;
-    Image<double> Iavg;
-    if (node->isMaster())
-        init_progress_bar(nref);
-    Image<int> mask;
-    mask.read(fnRoot+"_mask.mrc");
-    MultidimArray<int> &mMask=mask();
-    mMask.setXmippOrigin();
-    for (int i=0; i<nref; i++)
-        if (((i+1)%node->size)==node->rank)
-        {
-            classi.read(formatString("class_%05d@%s_classes.xmd",i+1,fnRoot.c_str()));
-            // Compute new average
-            alignSetOfImages(classi,Iavg(),2,false);
-
-            // Mask average class
-            const MultidimArray<double> &mIavg=Iavg();
-            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mMask)
-            if (!DIRECT_MULTIDIM_ELEM(mMask,n))
-                DIRECT_MULTIDIM_ELEM(mIavg,n)=0.0;
-
-            // Write new centroid
-            Iavg.write(fnClasses,i+1,true,WRITE_REPLACE);
-            if (node->isMaster())
-                progress_bar(i);
-        }
-    if (node->isMaster())
-        progress_bar(nref);
-}
-
 // Compute class neighbours ================================================
 void ProgClassifyFTTRI::computeFTTRIClassNeighbours()
 {
     if (node->isMaster())
         std::cerr << "Computing FTTRI class neighbours ..." << std::endl;
-    fttriCentroids.read(fnRoot+"_centroids.mrcs");
+    fttriCentroids.read(fnRoot+"_FTTRI_centroids.mrcs");
     for (int i1=0; i1<nref; ++i1)
         bestEpsilonClasses[i1].neighbours.clear();
     const MultidimArray<double> &mfttriCentroids=fttriCentroids();
@@ -984,86 +867,6 @@ void ProgClassifyFTTRI::computeImageClassNeighbours()
     }
 }
 
-// Reassign images to classes =============================================
-size_t ProgClassifyFTTRI::reassignImagesToFTTRIClasses()
-{
-    Matrix1D<short int> newAssignment;
-    newAssignment.resizeNoCopy(mdIn.size());
-    newAssignment.initConstant(-1);
-
-    if (node->isMaster())
-    {
-        std::cerr << "Reassigning images to FTTRI classes ..." << std::endl;
-        init_progress_bar(nref);
-    }
-
-    const MultidimArray<double> &mfttriCentroids=fttriCentroids();
-    Image<double> FTTRI_candidate;
-    FileName fnCandidate;
-    MultidimArray<double> FTTRI_own_class, FTTRI_neighbour;
-    size_t changes=0;
-    for (int i=0; i<nref; i++)
-        if (((i+1)%node->size)==node->rank)
-        {
-            std::vector<size_t> &class_i=bestEpsilonClasses[i].memberIdx;
-            std::vector<int> &neighbours_i=bestEpsilonClasses[i].neighbours;
-            int nmax=class_i.size();
-            int neighMax=neighbours_i.size();
-            FTTRI_own_class.aliasImageInStack(mfttriCentroids,i);
-            for (int n=0; n<nmax; ++n)
-            {
-                // Get image n
-                int trueIdx=class_i[n];
-                fnCandidate.compose(trueIdx+1,fnFTTRI);
-                FTTRI_candidate.read(fnCandidate);
-
-                // Compare to its own class
-                const MultidimArray<double> &mFTTRI_candidate=FTTRI_candidate();
-                double bestDistance=fttri_distance(FTTRI_own_class,mFTTRI_candidate);
-                VEC_ELEM(newAssignment,trueIdx)=i;
-
-                // Now compare to the rest of neighbours
-                bool alreadyChanged=false;
-                for (int neigh=0; neigh<neighMax; neigh++)
-                {
-                    int neighbourIdx=neighbours_i[neigh];
-                    FTTRI_neighbour.aliasImageInStack(mfttriCentroids,neighbourIdx);
-                    double d=fttri_distance(FTTRI_neighbour,mFTTRI_candidate);
-                    if (d<bestDistance)
-                    {
-                        bestDistance=d;
-                        VEC_ELEM(newAssignment,trueIdx)=neighbourIdx;
-                        if (!alreadyChanged)
-                        {
-                            ++changes;
-                            alreadyChanged=true;
-                        }
-                    }
-                }
-            }
-            if (node->isMaster())
-                progress_bar(i);
-        }
-    if (node->isMaster())
-        progress_bar(nref);
-
-    // Share assignments
-    MPI_Allreduce(MPI_IN_PLACE, &(VEC_ELEM(newAssignment,0)), VEC_XSIZE(newAssignment), MPI_SHORT,
-                  MPI_MAX, MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE, &changes, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD);
-    if (node->isMaster())
-        std::cerr << "Number of images changed: " << changes << std::endl;
-
-    // Create new best classes
-    std::vector<EpsilonClass> newBestEpsilonClasses;
-    newBestEpsilonClasses.resize(nref);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(newAssignment)
-    if (VEC_ELEM(newAssignment,i)>=0)
-        newBestEpsilonClasses[VEC_ELEM(newAssignment,i)].memberIdx.push_back(i);
-    bestEpsilonClasses=newBestEpsilonClasses;
-    return changes;
-}
-
 size_t ProgClassifyFTTRI::reassignImagesToClasses(bool FTTRI)
 {
     Matrix1D<short int> newAssignment;
@@ -1071,7 +874,7 @@ size_t ProgClassifyFTTRI::reassignImagesToClasses(bool FTTRI)
     newAssignment.initConstant(-1);
 
     if (node->isMaster())
-        std::cerr << "Reassigning images to image classes ..." << std::endl;
+        std::cerr << "Reassigning images to classes ..." << std::endl;
 
     MultidimArray<double> *ptrCentroids=NULL;
     if (FTTRI)
@@ -1241,13 +1044,13 @@ void ProgClassifyFTTRI::run()
         if (node->isMaster())
             std::cout << std::endl << "Iteration " << n << std::endl;
         splitLargeFTTRIClasses();
-        computeFTTRIClassCentroids();
+        computeClassCentroids(true);
         computeFTTRIClassNeighbours();
         size_t changes=reassignImagesToClasses(true);
         removeSmallClasses();
     }
 
-    computeFTTRIClassCentroids();
+    computeClassCentroids(true);
     if (node->isMaster())
         writeResults();
 
@@ -1258,7 +1061,7 @@ void ProgClassifyFTTRI::run()
     {
         if (node->isMaster())
             std::cout << std::endl << "Iteration " << n << std::endl;
-        computeImageClassCentroids();
+        computeClassCentroids(false);
         computeImageClassNeighbours();
         size_t changes=reassignImagesToClasses(false);
         // removeSmallClasses();

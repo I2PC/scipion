@@ -168,26 +168,17 @@ public:
     /// Split large classes
     void splitLargeFTTRIClasses();
 
-    /// Compute class centroids
-    void computeFTTRIClassCentroids();
-
     /// Compute FTTRI class neighbours
     void computeFTTRIClassNeighbours();
 
     /// Compute image class naighbours
     void computeImageClassNeighbours();
 
-    /// Reassign images to FTTRI classes
-    size_t reassignImagesToFTTRIClasses();
-
     /// Reassign images to image classes
     size_t reassignImagesToClasses(bool FTTRI);
 
     /** Write results */
     void writeResults();
-
-    /** Align classes */
-    void computeImageClassCentroids();
 
     /** compute class centroids */
     void computeClassCentroids(bool FTTRI);
