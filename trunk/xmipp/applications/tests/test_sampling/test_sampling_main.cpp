@@ -9,17 +9,8 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-#define len 128
-        //find binaries directory
-        char szTmp[len];
-        char pBuf[len];
-        sprintf(szTmp, "/proc/%d/exe", getpid());
-        int bytes = std::min(readlink(szTmp, pBuf, len), (ssize_t)len - 1);
-        if(bytes >= 0)
-            pBuf[bytes] = '\0';
-        //remove last token
-        FileName bin_path = FileName(pBuf).removeFilename();
-        fn_root = bin_path + "/../applications/tests/test_sampling/";
+        FileName xmippPath = getenv("XMIPP_HOME");
+        fn_root = xmippPath + "/applications/tests/test_sampling/";
 
         //Create the sampling
         double sampling_rate = 3.0;

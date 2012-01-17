@@ -10,20 +10,10 @@ class MetadataTest : public ::testing::Test
 {
 protected:
     //init metadatas
-#define len 128
 
-    virtual void SetUp()
+	virtual void SetUp()
     {
-        //find binaries directory
-        char szTmp[len];
-        char pBuf[len];
-        sprintf(szTmp, "/proc/%d/exe", getpid());
-        int bytes = std::min(readlink(szTmp, pBuf, len), (ssize_t)len - 1);
-        if(bytes >= 0)
-            pBuf[bytes] = '\0';
-        //remove last token
-        FileName filename(pBuf);
-        localDir = filename.removeFilename();
+        localDir = getenv("XMIPP_HOME");
 
         //Md1
         id = mDsource.addObject();
@@ -762,7 +752,7 @@ TEST_F( MetadataTest, ReadWriteAppendBlock)
     mDsource.write((String)"two@"+sfn,MD_APPEND);
     mDsource.write((String)"three@"+sfn,MD_APPEND);
     MetaData auxMetadata;
-    FileName sfn2(localDir+ "/../applications/tests/test_metadata/ReadWriteAppendBlock.xmd");
+    FileName sfn2(localDir+ "/applications/tests/test_metadata/ReadWriteAppendBlock.xmd");
     auxMetadata.read(sfn);
     EXPECT_TRUE(compareTwoFiles(sfn,sfn2,0));
     unlink(sfn);

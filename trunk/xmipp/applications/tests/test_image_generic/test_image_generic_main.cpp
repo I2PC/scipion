@@ -10,20 +10,10 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-#define len 128
-        //find binaries directory
-        char szTmp[len];
-        char pBuf[len];
-        sprintf(szTmp, "/proc/%d/exe", getpid());
-        int bytes = std::min(readlink(szTmp, pBuf, len), (ssize_t)len - 1);
-        if(bytes >= 0)
-            pBuf[bytes] = '\0';
-        //remove last token
-        filename=pBuf;
-        filename = filename.removeFilename();
+    	filename = getenv("XMIPP_HOME");
         //get example images/staks
-        imageName = filename + "/../applications/tests/test_image/singleImage.spi";
-        stackName = filename + "/../applications/tests/test_image/smallStack.stk";
+        imageName = filename + "/applications/tests/test_image/singleImage.spi";
+        stackName = filename + "/applications/tests/test_image/smallStack.stk";
         myImageGeneric.readMapped(imageName);
         myImageGeneric2.readMapped(stackName,1);
     }
@@ -78,7 +68,7 @@ TEST_F( ImageGenericTest, add)
     ImageGeneric auxImageGeneric1(auxFilename1);
     ImageGeneric auxImageGeneric2(auxFilename2);
     auxImageGeneric1.add(auxImageGeneric2);
-    auxFilename2 = filename + "/../applications/tests/test_image_generic/sum.spi";
+    auxFilename2 = filename + "/applications/tests/test_image_generic/sum.spi";
     auxImageGeneric2.read(auxFilename2);
     EXPECT_TRUE(auxImageGeneric1==auxImageGeneric2);
     auxImageGeneric1.add(auxImageGeneric2);
@@ -87,7 +77,7 @@ TEST_F( ImageGenericTest, add)
 
 TEST_F( ImageGenericTest, subtract)
 {
-    FileName sumFn = filename + "/../applications/tests/test_image_generic/sum.spi";
+    FileName sumFn = filename + "/applications/tests/test_image_generic/sum.spi";
     ImageGeneric sumImg(sumFn);
     FileName fn1((String)"1@"+stackName);
     ImageGeneric img1(fn1);
@@ -101,7 +91,7 @@ TEST_F( ImageGenericTest, subtract)
 // check if an empty file is correctly created
 TEST_F( ImageGenericTest, createEmptyFile)
 {
-    FileName Fn(filename + "/../applications/tests/test_image_generic/emptyFile.stk");
+    FileName Fn(filename + "/applications/tests/test_image_generic/emptyFile.stk");
     const int size = 16;
     createEmptyFile(Fn,size,size,size,size);
     FileName Fn2;

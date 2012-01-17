@@ -1,3 +1,5 @@
+
+#include <stdlib.h>
 #include <data/xmipp_image.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
@@ -11,21 +13,10 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-#define len 128
-        //find binaries directory
-        char szTmp[len];
-        char pBuf[len];
-        sprintf(szTmp, "/proc/%d/exe", getpid());
-        int bytes = std::min(readlink(szTmp, pBuf, len), (ssize_t)len - 1);
-        if(bytes >= 0)
-            pBuf[bytes] = '\0';
-        //remove last token
-        FileName filename(pBuf);
-        filename = filename.removeFilename();
         //get example images/staks
-        baseName = filename;
-        imageName = filename + "/../applications/tests/test_image/singleImage.spi";
-        stackName = filename + "/../applications/tests/test_image/smallStack.stk";
+        baseName = getenv("XMIPP_HOME");
+        imageName = baseName + "/applications/tests/test_image/singleImage.spi";
+        stackName = baseName + "/applications/tests/test_image/smallStack.stk";
         myImage.read(imageName);
         myStack.read(stackName);
     }
@@ -59,7 +50,7 @@ TEST_F( ImageTest, getEulerAngles)
 
 TEST_F( ImageTest, readApplyGeo)
 {
-    FileName auxFilename(baseName + "/../applications/tests/test_image/test2.spi");
+    FileName auxFilename(baseName + "/applications/tests/test_image/test2.spi");
     MetaData MD;
     size_t id = MD.addObject();
     MD.setValue(MDL_IMAGE, auxFilename, id);
@@ -168,7 +159,7 @@ TEST_F( ImageTest, writeRAWimage)
 
 TEST_F( ImageTest, readPreview)
 {
-    FileName auxFilename(baseName + "/../applications/tests/test_image/smallVolume.vol");
+    FileName auxFilename(baseName + "/applications/tests/test_image/smallVolume.vol");
     Image<double> img1, img2;
     img1.read(auxFilename);
 
@@ -184,8 +175,8 @@ TEST_F( ImageTest, readPreview)
 
 TEST_F( ImageTest, mapFile2Write)
 {
-    FileName auxFilename(baseName + "/../applications/tests/test_image/smallVolume.vol");
-    FileName auxMappedFilename(baseName + "/../applications/tests/test_image/mappedFile.vol");
+    FileName auxFilename(baseName + "/applications/tests/test_image/smallVolume.vol");
+    FileName auxMappedFilename(baseName + "/applications/tests/test_image/mappedFile.vol");
     Image<float> img1, img2;
     img1.read(auxFilename);
     ArrayDim aDim;
@@ -202,7 +193,7 @@ TEST_F( ImageTest, mapFile2Write)
 }
 TEST_F( ImageTest, movePointerToSlice)
 {
-    FileName auxFilename(baseName + "/../applications/tests/test_image/smallVolume.vol");
+    FileName auxFilename(baseName + "/applications/tests/test_image/smallVolume.vol");
     Image<double> img1, img2;
     img1.read(auxFilename);
     img1().setXmippOrigin();

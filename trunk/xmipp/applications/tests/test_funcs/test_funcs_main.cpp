@@ -10,20 +10,11 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-#define len 128
-        //find binaries directory
-        char szTmp[len];
-        char pBuf[len];
-        sprintf(szTmp, "/proc/%d/exe", getpid());
-        int bytes = std::min(readlink(szTmp, pBuf, len), (ssize_t)len - 1);
-        if(bytes >= 0)
-            pBuf[bytes] = '\0';
-        //remove last token
-        FileName filename(pBuf);
-        filename = filename.removeFilename();
+        FileName xmippPath;
+        xmippPath = getenv("XMIPP_HOME");
         //get example images/staks
-        source1 = filename + "/../applications/tests/test_funcs/singleImage.spi";
-        source2 = filename + "/../applications/tests/test_funcs/singleImage.mrc";
+        source1 = xmippPath + "/applications/tests/test_funcs/singleImage.spi";
+        source2 = xmippPath + "/applications/tests/test_funcs/singleImage.mrc";
     }
 
     // virtual void TearDown() {}//Destructor
