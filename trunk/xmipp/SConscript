@@ -503,20 +503,14 @@ if CYGWIN or MACOSX:
     libpath.append(PythonDir)
     libraries.append("python2.7")
 
-# in MACOSX Python requires module libraries as .so instead of .dylib
-#shlibsuffix=[]
-if MACOSX:
-	 shlibsuffix = '.so'
-else:
-	 shlibsuffix = '.so'
-
 pythonbinding = AddLibrary(pythonLibName, 'libraries/bindings/python', PyExtSources,
            ['#libraries', "#"] + pythonIncludes,
-           libpath, libraries,'' , shlibsuffix)
-#if MACOSX:
-#	print pythonLibName
-#	command = env.Command('lib/' + pythonLibName + '.so', 'lib/' + pythonLibName + '.dylib', SymLink)
-#	env.Alias(pythonLibName, command)
+           libpath, libraries,'')
+
+# in MACOSX Python requires module libraries as .so instead of .dylib
+if MACOSX:
+	command = env.Command('lib/' + pythonLibName + '.so', 'lib/' + pythonLibName + '.dylib', SymLink)
+	env.Alias(pythonLibName, command)
 
 # Reconstruction
 ReconsSources = [
