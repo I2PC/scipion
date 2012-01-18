@@ -69,6 +69,9 @@ opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
 opts.Add(BoolVariable('matlab', 'Build the Matlab bindings?', 'no'))
 opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/matlab')
 
+opts.Add(BoolVariable('cuda', 'Build GPU stuff?', 'no'))
+opts.Add('CUDA_SDK_PATH', 'CUDA SDK dir', '/root/NVIDIA_GPU_Computing_SDK')
+
 #opts.Add(BoolVariable('verbose_fftw', 'Verbose configuring of FFTW libraries?', 'no'))
 #opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '--enable-threads')
 #
@@ -336,7 +339,8 @@ elif (ARGUMENTS['mode'] == 'compile'):
         env.Append(CXXFLAGS=['-D__XMIPP_DEBUG__'])
         env.Append(CXXFLAGS=dpFlags)
         #required for print stack trace
-        env.Append(CXXFLAGS=['-rdynamic'])
+	if not int(env['cuda']):
+            env.Append(CXXFLAGS=['-rdynamic'])
         env.Append(CXXFLAGS=['-O0'])
         env.Append(CCFLAGS=dpFlags)
         env.Append(LINKFLAGS=dpFlags)

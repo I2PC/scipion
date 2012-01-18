@@ -172,9 +172,11 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
     env.Default(alias)
 
 # Add a program integrated in the Xmipp structure
-def AddXmippProgram(name, libs=[], folder='programs'):
+def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[]):
     finalLibPath = ['lib']
+    finalLibPath.append(libPaths)
     finalIncludePath = ['libraries', '#']
+    finalIncludePath.append(incPaths)
     finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
         finalLibs.append('XmippClassif')
@@ -282,7 +284,7 @@ def AddMPILibrary(name, basedir, sources, includes, libpath=[], libs=[]):
     env.Default(alias)
 
 def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
-    shlibprefix='lib',shlibsuffix=env['SHLIBSUFFIX']):
+    shlibprefix='lib',shlibsuffix=env['SHLIBSUFFIX'], useCudaEnvironment=False):
     # setup
     basedir = AddLastSlash(basedir)
     libprefix = os.path.join(env['prefix'], 'lib')
@@ -295,22 +297,29 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
         if x[0] != '#' and x[0] != '/':
             includes[includes.index(x)] = basedir + x
 
-    # action
-    # FIXME Exclusive may not be what users want
-    # Sjors: Hack for OS X compilation (static libs, dynamic apps...??)
-    if int(env['static']): #or (env['PLATFORM'] == 'darwin'):
-        library = env.StaticLibrary(
+    if useCudaEnvironment:
+        envToUse=env.Clone()
+        envToUse.Tool('cuda')
+        envToUse.Append(CXXFLAGS=['-DWITH_CUDA'])
+        print envToUse['CXXFLAGS']
+        envToUse['CXX']='nvcc'
+    else:
+        envToUse=env
+
+    if int(envToUse['static']) or (envToUse['PLATFORM'] == 'darwin') or\
+       useCudaEnvironment:
+        library = envToUse.StaticLibrary(
             basedir + name,
             sources,
-            CPPPATH=includes + [env['CPPPATH']],
+            CPPPATH=includes + [envToUse['CPPPATH']],
             LIBPATH=libpath,
             LIBS=libs
             )
     else:
-        library = env.SharedLibrary(
+        library = envToUse.SharedLibrary(
             basedir + name,
             sources,
-            CPPPATH=includes + [env['CPPPATH']],
+            CPPPATH=includes + [envToUse['CPPPATH']],
             LIBPATH=libpath,
             LIBS=libs,
             SHLIBPREFIX=shlibprefix,
@@ -322,9 +331,9 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
 			if os.path.exists(rootname + ext):
 				Depends(library, rootname + ext)
 
-    install = env.Install(libprefix, library)
-    alias = env.Alias(name, install)
-    env.Default(alias)
+    install = envToUse.Install(libprefix, library)
+    alias = envToUse.Alias(name, install)
+    envToUse.Default(alias)
     return alias
 
 def CreateFileList(path, pattern, filename, root='', root2=''):
@@ -390,6 +399,56 @@ def AddJavaLibrary(name, src, dependencies=[]):#, sourceList, includes, libpath=
     env.Alias('java', buildJar)
     env.Default(buildJar)
     return buildJar
+
+def CompileJavaJar(target, source, env):
+    #As the link will be in bin/ directory we need to move up
+    
+    link = str(target[0])
+    source = os.path.relpath(str(source[0]),os.path.split(link)[0])
+    os.symlink(source, link)
+    
+def AddJavaLibrary(name, src):#, sourceList, includes, libpath=[], libs=[]):
+	#name = 'XmippJNI'
+	javaDir = 'java'
+	from os.path import join
+	srcDir = join(javaDir, 'src', 'xmipp', src)
+	buildDir = env['java_build']
+	# Create filenames
+	listfile = join(buildDir, name + '_source.txt')
+	classfile = join(buildDir, name + '_classes.txt')
+	jarfile = join(javaDir, 'lib', name + '.jar')
+	CreateFileList(srcDir, '*.java', listfile)
+	cp = 'external/imagej/ij.jar:external/imagej/plugins/*'
+	# Compile source code
+	env.Command(classfile, listfile, 
+			['javac -g -cp %(cp)s -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals(),
+			'find %(buildDir)s/xmipp/%(src)s -iname "*.class" > %(classfile)s' % locals()])
+	# Create the jar file
+	buildJar = env.Command(jarfile, classfile,
+			['jar -Mcf %(jarfile)s @%(classfile)s' % locals()])
+	#sourceFiles = Glob(srcDir, '*.java', [])
+	#print sourceFiles
+#	buildClasses = env.Java(buildDir, srcDir, JAVAVERSION='1.6')
+#	env.Depends(buildClasses, env.Alias('javaEnums'))
+#	
+#	buildJar = env.Jar(target=jarfile, source=buildClasses, JARCHDIR=buildDir)
+#	alias = env.Alias(name, buildJar)
+	env.Default(buildJar)
+	return buildJar
+	
+#    from os.path import join
+#    buildDir = join(basedir, '../build')#, name)
+#    if not os.path.exists(buildDir): # create classes dir if not exists
+#        Execute(Mkdir(buildDir))
+#    if env['debug'] == True:
+#    	env['JAVAC'] = 'javac -g'
+#    buildClasses = env.Java(buildDir, basedir, JAVAVERSION='1.6')
+#    env.Depends(buildClasses, env.Alias('javaEnums'))
+#    jarfile = join(basedir, '..', name + '.jar')
+#    buildJar = env.Jar(target=jarfile, source=buildClasses, JARCHDIR=buildDir)
+#    alias = env.Alias(name, buildJar)
+#    env.Default(alias)
+#    return alias
 
 def removeAll(basedir, regexp):
 	import glob
@@ -593,13 +652,22 @@ ReconsSources = [
     'xray_import.cpp',
 #    'xray_volume_correct.cpp'
 ]
-ReconsDependLibraries = ['XmippExternal', 'XmippData', 'pthread', 'XmippClassif'] + FFTWLibs
+ReconsLib =['XmippExternal', 'XmippData', 'pthread','XmippClassif']
+ReconsIncDir=['#libraries', '#external', '#']
+ReconsLibDir=['lib']
 if int(env['arpack']):
     ReconsSources.append("angular_gcar.cpp")
     ReconsDependLibraries += ['arpack', 'lapack', 'blas']
-
+useCudaEnvironment=False
+if int(env['cuda']):
+    ReconsLib+=['cutil']
+    ReconsIncDir+=[env['CUDA_SDK_PATH']+"/CUDALibraries/common/inc",
+                   env['CUDA_SDK_PATH']+"/shared/inc"]
+    ReconsLibDir+=[env['CUDA_SDK_PATH']+"/CUDALibraries/common/lib",
+                   env['CUDA_SDK_PATH']+"/shared/lib"]
+    useCudaEnvironment=True
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
-           ['#libraries', '#external', '#'], ['lib'], ReconsDependLibraries)
+           ReconsIncDir, ReconsLibDir, ReconsLib, useCudaEnvironment=useCudaEnvironment)
 
 # Classification
 ClassificationSources = Glob('libraries/classification', '*.cpp', [])
@@ -683,6 +751,7 @@ if int(env['java']):
     # Set -g debug options if debugging
     if env['debug'] == True:
         env['JAVAC'] = 'javac -g'
+
     # Update enums from c++ headers, if not exist, generate it
     for (class_name, class_list) in javaEnumDict.iteritems():
         java_file = "java/src/xmipp/jni/%s.java" % class_name
@@ -691,6 +760,7 @@ if int(env['java']):
 
     env.Alias('javaEnums', env.Command("libraries/bindings/java/src/xmipp/jni/enums.changelog",
                             ["libraries/data/xmipp_image_base.h", "libraries/data/metadata_label.h" ], ExtractEnumFromHeader))
+
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
     JavaDependLibraries = ['XmippData', 'pthread', 'XmippRecons', 'XmippClassif']
     if int(env['arpack']):
@@ -708,8 +778,11 @@ if int(env['java']):
     AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'ij'])
     AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
     
-    
     #env.Depends(ppickerLib, ijLib)
+    
+    AddJavaLibrary('XmippJNI', 'jni')
+    AddJavaLibrary('XmippIJ', 'ij')
+    AddJavaLibrary('XmippParticlePicker', 'particlepicker')
 
 #    lib2 = AddJavaLibrary('XmippIJInterface', 'libraries/bindings/java/src', 'xmippij')
     # Copies jar file to ImageJ plugins folder (plugins below will look for it there).
