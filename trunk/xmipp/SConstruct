@@ -103,6 +103,14 @@ env.SetDefault(LIBS='')
 env.SetDefault(LIBPATH='')
 env.SetDefault(CPPPATH='')
 
+def AppendIfNotExists(**args):
+    append = True
+    for k, v in args.iteritems():
+        if v in env[k]:
+            append = False
+    if append:
+        env.Append(**args)
+    
 # This is required for both modes
 env['STATIC_FLAG'] = '-static'
 
@@ -339,9 +347,12 @@ elif (ARGUMENTS['mode'] == 'compile'):
         env.Append(LINKFLAGS=['-s'])
 
     if env['PLATFORM'] == 'darwin':
-        env.Append(CXXFLAGS=['-m64'])
-        env.Append(CCFLAGS=['-m64'])
-        env.Append(LINKFLAGS=['-m64'])
+#        env.Append(CXXFLAGS=['-m64'])
+#        env.Append(CCFLAGS=['-m64'])
+#        env.Append(LINKFLAGS=['-m64'])
+        AppendIfNotExists(CXXFLAGS=['-m64'])
+        AppendIfNotExists(CCFLAGS=['-m64'])
+        AppendIfNotExists(LINKFLAGS=['-m64'])        
 
 
 # stdout_handle = os.popen('svnversion -n .')
