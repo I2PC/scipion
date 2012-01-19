@@ -400,55 +400,6 @@ def AddJavaLibrary(name, src, dependencies=[]):#, sourceList, includes, libpath=
     env.Default(buildJar)
     return buildJar
 
-def CompileJavaJar(target, source, env):
-    #As the link will be in bin/ directory we need to move up
-    
-    link = str(target[0])
-    source = os.path.relpath(str(source[0]),os.path.split(link)[0])
-    os.symlink(source, link)
-    
-def AddJavaLibrary(name, src):#, sourceList, includes, libpath=[], libs=[]):
-	#name = 'XmippJNI'
-	javaDir = 'java'
-	from os.path import join
-	srcDir = join(javaDir, 'src', 'xmipp', src)
-	buildDir = env['java_build']
-	# Create filenames
-	listfile = join(buildDir, name + '_source.txt')
-	classfile = join(buildDir, name + '_classes.txt')
-	jarfile = join(javaDir, 'lib', name + '.jar')
-	CreateFileList(srcDir, '*.java', listfile)
-	cp = 'external/imagej/ij.jar:external/imagej/plugins/*'
-	# Compile source code
-	env.Command(classfile, listfile, 
-			['javac -g -cp %(cp)s -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals(),
-			'find %(buildDir)s/xmipp/%(src)s -iname "*.class" > %(classfile)s' % locals()])
-	# Create the jar file
-	buildJar = env.Command(jarfile, classfile,
-			['jar -Mcf %(jarfile)s @%(classfile)s' % locals()])
-	#sourceFiles = Glob(srcDir, '*.java', [])
-	#print sourceFiles
-#	buildClasses = env.Java(buildDir, srcDir, JAVAVERSION='1.6')
-#	env.Depends(buildClasses, env.Alias('javaEnums'))
-#	
-#	buildJar = env.Jar(target=jarfile, source=buildClasses, JARCHDIR=buildDir)
-#	alias = env.Alias(name, buildJar)
-	env.Default(buildJar)
-	return buildJar
-	
-#    from os.path import join
-#    buildDir = join(basedir, '../build')#, name)
-#    if not os.path.exists(buildDir): # create classes dir if not exists
-#        Execute(Mkdir(buildDir))
-#    if env['debug'] == True:
-#    	env['JAVAC'] = 'javac -g'
-#    buildClasses = env.Java(buildDir, basedir, JAVAVERSION='1.6')
-#    env.Depends(buildClasses, env.Alias('javaEnums'))
-#    jarfile = join(basedir, '..', name + '.jar')
-#    buildJar = env.Jar(target=jarfile, source=buildClasses, JARCHDIR=buildDir)
-#    alias = env.Alias(name, buildJar)
-#    env.Default(alias)
-#    return alias
 
 def removeAll(basedir, regexp):
 	import glob
@@ -778,11 +729,6 @@ if int(env['java']):
     AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'ij'])
     AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
     
-    #env.Depends(ppickerLib, ijLib)
-    
-    AddJavaLibrary('XmippJNI', 'jni')
-    AddJavaLibrary('XmippIJ', 'ij')
-    AddJavaLibrary('XmippParticlePicker', 'particlepicker')
 
 #    lib2 = AddJavaLibrary('XmippIJInterface', 'libraries/bindings/java/src', 'xmippij')
     # Copies jar file to ImageJ plugins folder (plugins below will look for it there).
