@@ -9,8 +9,8 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
-import xmipp.utils.ICONS_MANAGER;
-import xmipp.utils.LABELS;
+import xmipp.utils.Resources;
+import xmipp.utils.Labels;
 import ij.ImagePlus;
 import xmipp.jni.ImageGeneric;
 import xmipp.ij.XmippImageConverter;
@@ -52,7 +52,7 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
 
     @Override
     protected ImagePlus loadPreview(int w, int h) {
-        ImagePlus imp = ICONS_MANAGER.MISSING_ITEM;
+        ImagePlus imp = Resources.MISSING_ITEM;
 
         try {
             if (readGeo && md.containsGeometryInfo()) {
@@ -171,7 +171,7 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
             DEBUG.printException(ex);
         }
 
-        return LABELS.LABEL_UNKNOWN;
+        return Labels.LABEL_UNKNOWN;
     }
 
     // Metadata related methods.

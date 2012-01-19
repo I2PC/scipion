@@ -27,4 +27,11 @@ public class DEBUG {
             ex.printStackTrace();
         }
     }
+    
+    public static void printStackTrace() {
+    	if (DEBUG){
+    		Exception ex = new Exception();
+    		ex.printStackTrace();
+    	}
+    }
 }

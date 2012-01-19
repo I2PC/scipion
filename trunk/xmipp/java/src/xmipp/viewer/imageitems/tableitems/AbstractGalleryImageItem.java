@@ -6,7 +6,7 @@ package xmipp.viewer.imageitems.tableitems;
 
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
-import xmipp.utils.ICONS_MANAGER;
+import xmipp.utils.Resources;
 import xmipp.viewer.imageitems.ImageDimension;
 import ij.IJ;
 import ij.ImagePlus;
@@ -94,11 +94,11 @@ public abstract class AbstractGalleryImageItem {
     }
 
     public int getWidth() {
-        return dimension != null ? dimension.getWidth() : ICONS_MANAGER.DEFAULT_PREVIEW_WIDTH;
+        return dimension != null ? dimension.getWidth() : Resources.DEFAULT_PREVIEW_WIDTH;
     }
 
     public int getHeight() {
-        return dimension != null ? dimension.getHeight() : ICONS_MANAGER.DEFAULT_PREVIEW_HEIGHT;
+        return dimension != null ? dimension.getHeight() : Resources.DEFAULT_PREVIEW_HEIGHT;
     }
 
     public String getKey() {
@@ -124,7 +124,7 @@ public abstract class AbstractGalleryImageItem {
 
         if (exists()) {
             try {
-                DEBUG.printMessage(" *** Reading ImagePlus [from disk]: " + getKey());
+                //DEBUG.printMessage(" *** Reading ImagePlus [from disk]: " + getKey());
                 ImageGeneric image = new ImageGeneric(getPath());
 
                 ip = XmippImageConverter.convertToImageJ(image, getWidth(), getHeight(), getNSlice(), getNImage());
@@ -164,14 +164,14 @@ public abstract class AbstractGalleryImageItem {
                 statistics = ImageStatistics.getStatistics(preview.getProcessor(), moptions, preview.getCalibration());
             }
         } else {    // Null preview.
-            preview = ICONS_MANAGER.MISSING_ITEM;
+            preview = Resources.MISSING_ITEM;
         }
 
         return preview;
     }
 
     protected ImagePlus loadPreview(int w, int h) {
-        ImagePlus ip = ICONS_MANAGER.MISSING_ITEM;
+        ImagePlus ip = Resources.MISSING_ITEM;
         String path = getPath();
 
         if (path != null) {
@@ -181,7 +181,7 @@ public abstract class AbstractGalleryImageItem {
                 int w_ = (int) Math.ceil(getWidth() / factor);
                 int h_ = (int) Math.ceil(getHeight() / factor);
 
-                DEBUG.printMessage(" *** path: " + getPath() + " w=" + w_ + " h=" + h_ + " s=" + getNSlice() + " n=" + getNImage());
+                //DEBUG.printMessage(" *** path: " + getPath() + " w=" + w_ + " h=" + h_ + " s=" + getNSlice() + " n=" + getNImage());
 
                 ImageGeneric image = new ImageGeneric(path);
                 ip = XmippImageConverter.convertToImageJ(image, w_, h_, getNSlice(), getNImage());//,w_, h_, getNSlice(), getNImage());

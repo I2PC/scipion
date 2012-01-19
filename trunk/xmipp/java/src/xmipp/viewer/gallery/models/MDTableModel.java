@@ -6,7 +6,7 @@ package xmipp.viewer.gallery.models;
 
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
-import xmipp.utils.LABELS;
+import xmipp.utils.Labels;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
 import xmipp.viewer.imageitems.tableitems.GalleryImageItem;
 import ij.IJ;
@@ -127,6 +127,7 @@ public class MDTableModel extends AbstractXmippTableModel {
         }
     }
 
+    @Override
     public void setUseGeometry(boolean use) {
         for (int i = 0; i < getSize(); i++) {
             ((GalleryImageItem) data.get(i)).setReadGeo(use);
@@ -166,7 +167,7 @@ public class MDTableModel extends AbstractXmippTableModel {
         }
 
         String title = filename;//md.getFilename();
-        return (title == null ? LABELS.TITLE_UNTITLED : title) + ": " + getSize() + " images." + strImageSize;
+        return (title == null ? Labels.TITLE_UNTITLED : title) + ": " + getSize() + " images." + strImageSize;
     }
 
     @Override

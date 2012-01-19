@@ -11,8 +11,8 @@
 package xmipp.viewer.micrographs;
 
 import xmipp.utils.DEBUG;
-import xmipp.utils.ICONS_MANAGER;
-import xmipp.utils.LABELS;
+import xmipp.utils.Resources;
+import xmipp.utils.Labels;
 import xmipp.viewer.gallery.models.GalleryRowHeaderModel;
 import xmipp.viewer.gallery.renderers.RowHeaderRenderer;
 import xmipp.viewer.imageitems.tableitems.GalleryImageItem;
@@ -306,7 +306,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
     private void save(String fileName) {
         if (tableModel.save(fileName)) {
-            IJ.showMessage(LABELS.MESSAGE_FILE_SAVED + fileName);
+            IJ.showMessage(Labels.MESSAGE_FILE_SAVED + fileName);
         }
     }
 
@@ -337,7 +337,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     }
 
     public void setRunning(boolean running) {
-        jlStatus.setIcon(running ? ICONS_MANAGER.WAIT_ICON : null);
+        jlStatus.setIcon(running ? Resources.WAIT_ICON : null);
     }
 
     public void done() {
@@ -413,7 +413,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
         toolBar.setRollover(true);
 
-        bSave.setText(LABELS.BUTTON_SAVE);
+        bSave.setText(Labels.BUTTON_SAVE);
         bSave.setFocusable(false);
         bSave.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         bSave.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -424,7 +424,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         });
         toolBar.add(bSave);
 
-        bReload.setText(LABELS.BUTTON_RELOAD_GALLERY);
+        bReload.setText(Labels.BUTTON_RELOAD_GALLERY);
         bReload.setFocusable(false);
         bReload.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         bReload.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -441,7 +441,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
         jpCheckAll.setLayout(new javax.swing.BoxLayout(jpCheckAll, javax.swing.BoxLayout.LINE_AXIS));
 
-        jcbEnableAll.setText(LABELS.LABEL_GALLERY_ENABLE_ALL);
+        jcbEnableAll.setText(Labels.LABEL_GALLERY_ENABLE_ALL);
         jcbEnableAll.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 jcbEnableAllItemStateChanged(evt);
@@ -449,7 +449,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         });
         jpCheckAll.add(jcbEnableAll);
 
-        jcbFilterEnabled.setText(LABELS.LABEL_GALLERY_HIDE_DISABLED);
+        jcbFilterEnabled.setText(Labels.LABEL_GALLERY_HIDE_DISABLED);
         jcbFilterEnabled.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 jcbFilterEnabledItemStateChanged(evt);
@@ -515,11 +515,11 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
     class JPopUpMenuMicrograph extends JPopupMenu {
 
         private int row, col;   // Current cell where menu is displayed.
-        private JMenuItem jmiShowCTF = new JMenuItem(LABELS.LABEL_SHOW_CTF_INFO);
-        private JMenuItem jmiExtractColumnEnabled = new JMenuItem(LABELS.LABEL_EXTRACT_COLUMN_ENABLED);
-        private JMenuItem jmiExtractColumnAll = new JMenuItem(LABELS.LABEL_EXTRACT_COLUMN_ALL);
-        private JMenuItem jmiRecalculateCTF = new JMenuItem(LABELS.LABEL_RECALCULATE_CTF);
-        private JMenuItem jmiViewCTFProfile = new JMenuItem(LABELS.LABEL_VIEW_CTF_PROFILE);
+        private JMenuItem jmiShowCTF = new JMenuItem(Labels.LABEL_SHOW_CTF_INFO);
+        private JMenuItem jmiExtractColumnEnabled = new JMenuItem(Labels.LABEL_EXTRACT_COLUMN_ENABLED);
+        private JMenuItem jmiExtractColumnAll = new JMenuItem(Labels.LABEL_EXTRACT_COLUMN_ALL);
+        private JMenuItem jmiRecalculateCTF = new JMenuItem(Labels.LABEL_RECALCULATE_CTF);
+        private JMenuItem jmiViewCTFProfile = new JMenuItem(Labels.LABEL_VIEW_CTF_PROFILE);
 
         public JPopUpMenuMicrograph() {
             super();
@@ -583,7 +583,7 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
             jmiExtractColumnAll.setEnabled(tableModel.getValueAt(row, col) instanceof GalleryImageItem);
 
             boolean busy = tableModel.isRowBusy(row);
-            jmiRecalculateCTF.setIcon(busy ? ICONS_MANAGER.WAIT_MENU_ICON : null);
+            jmiRecalculateCTF.setIcon(busy ? Resources.WAIT_MENU_ICON : null);
             jmiRecalculateCTF.setEnabled(!busy && hasCtfData);
 
 //            repaint();

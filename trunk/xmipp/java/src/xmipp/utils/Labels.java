@@ -8,7 +8,7 @@ package xmipp.utils;
  *
  * @author Juanjo Vega
  */
-public class LABELS {
+public class Labels {
 
     public final static String APP_NAME = "XmippJ";
     public final static String MESAGE_ABOUT = "About " + APP_NAME;
@@ -180,7 +180,7 @@ public class LABELS {
      * Labels
      */
     public final static String LABEL_DIGITAL_FREQUENCY = "Digital frequency";
-    public final static String LABEL_AUTO_AJUST_COLUMNS = "Auto adjust columns";
+    public final static String LABEL_AUTO_AJUST_COLS = "Auto adjust columns";
     public final static String LABEL_SHOW_LABELS = "Show label: ";
     public final static String LABEL_ROTSPECTRA_SHOW_NIMAGES = "Show #images";
     public final static String LABEL_SORT_BY_LABEL = "Sort by label";
@@ -223,8 +223,8 @@ public class LABELS {
     public final static String LABEL_TAB_RADIAL_AVERAGE = "Radial Average";
     public final static String LABEL_ZOOM = "Zoom (%): ";
     public final static String LABEL_ROWS = "Rows: ";
-    public final static String LABEL_COLUMNS = "Columns: ";
-    public final static String LABEL_GO2IMAGE = "Go to image: ";
+    public final static String LABEL_COLUMNS = "Cols: ";
+    public final static String LABEL_GOTO_ITEM = "Go to item";
     //public final static String LABEL_FLIP = "Flip: ";
     //public final static String LABEL_ROTATE = "Rotate: ";
     //public final static String LABEL_INFO = "Info: ";
@@ -248,10 +248,13 @@ public class LABELS {
 //    public static String MESSAGE_MEMORY_ERROR(long fileSize, long maxMemory) {
 //        return "File size (" + FileBrowser.getFileSizeString(fileSize) + ") is bigger than available memory (" + FileBrowser.getFileSizeString(maxMemory) + ")";
 //    }
-    public final static String MESSAGE_NO_ITEMS_SELECTED = "No items selected (or not enabled)";
+    public final static String MSG_NO_ITEMS_SELECTED = "No items selected (or not enabled)";
     //public final static String FILE_SELECTED_OUTPUT_PREFIX = "File selected: ";
     public final static String MESSAGE_OVERWRITE_FILE = "Overwrite existing file?";
     public final static String MESSAGE_OVERWRITE_FILE_TITLE = "Confirm Overwrite";
     public final static String MESSAGE_FILE_SAVED = "File saved: ";
     public final static String MESSAGE_FILE_SAVED_TITLE = "Saved!";
+    public final static String MSG_NORMALIZE = "Global normalization of images";
+    public final static String MSG_APPLY_GEO = "Apply geometry transformations coming from metadata";
+    public final static String MSG_ADJUST_COLS = "Adjust columns when resizing";
 }

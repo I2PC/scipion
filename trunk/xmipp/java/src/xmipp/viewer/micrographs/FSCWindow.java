@@ -1,7 +1,7 @@
 package xmipp.viewer.micrographs;
 
 import xmipp.utils.DEBUG;
-import xmipp.utils.LABELS;
+import xmipp.utils.Labels;
 import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Panel;
@@ -34,7 +34,7 @@ import xmipp.jni.MetaData;
 public class FSCWindow extends JFrame {
 
     public FSCWindow(String filename) {
-        super(LABELS.TITLE_FSC + filename);
+        super(Labels.TITLE_FSC + filename);
 
         try {
             setLayout(new BorderLayout());
@@ -56,7 +56,7 @@ public class FSCWindow extends JFrame {
                     createSeries(labelY2, xValues, y2s));
 
             JFreeChart chart = ChartFactory.createXYLineChart(
-                    "", LABELS.LABEL_DIGITAL_FREQUENCY, "",
+                    "", Labels.LABEL_DIGITAL_FREQUENCY, "",
                     dataset1, PlotOrientation.VERTICAL,
                     true, true, false);
 
@@ -78,7 +78,7 @@ public class FSCWindow extends JFrame {
 
             add(createChartPanel(chart), BorderLayout.CENTER);
 
-            Button bOk = new Button(LABELS.BUTTON_OK);
+            Button bOk = new Button(Labels.BUTTON_OK);
             bOk.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent ae) {

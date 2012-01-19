@@ -2,18 +2,33 @@ package xmipp.viewer;
 
 import java.util.LinkedList;
 
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
 import ij.IJ;
 import xmipp.jni.Filename;
+import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
 
 public class Viewer {
 	public static void main(String args[]) {
+		//Schedule a job for the event dispatch thread:
+        //creating and showing this application's GUI.
+//        SwingUtilities.invokeLater(new Runnable() {
+//            public void run() {
+//                //Turn off metal's use of bold fonts
+//	        UIManager.put("swing.boldMetal", Boolean.FALSE);
+//	       	ViewerTest.createAndShowGUI();
+//            }
+//        });
 		Param parameters = new Param(args);
 		try{
-	        if (parameters.files != null) 
-	            openFiles(parameters);	        
+	        if (parameters.files != null) {
+	        	DEBUG.enableDebug(true);
+	            openFiles(parameters);	    
+	        }
 		}
 		catch (Exception e)
 		{

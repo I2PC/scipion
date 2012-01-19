@@ -6,7 +6,7 @@ package xmipp.viewer.gallery.models;
 
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
-import xmipp.utils.ICONS_MANAGER;
+import xmipp.utils.Resources;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
 import xmipp.viewer.windows.ImagesWindowFactory;
 import ij.IJ;
@@ -216,7 +216,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         return i < data.size() ? data.get(i) : null;
     }
 
-    private int getDataIndex(int rowIndex, int columnIndex) {
+    public int getDataIndex(int rowIndex, int columnIndex) {
         return rowIndex * getColumnCount() + columnIndex;
     }
 
@@ -262,11 +262,12 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         int row1 = Math.max(initial_row, final_row);
         int col0 = Math.min(initial_col, final_col);
         int col1 = Math.max(initial_col, final_col);
-
-        for (int i = row0; i <= row1; i++) {
-            for (int j = col0; j <= col1; j++) {
+        
+        for (int i = row0; i <= row1; i++)
+        	for (int j = 0; j < getColumnCount(); j++) {
+        	boolean doSelect = !((i == row0 && j < col0) || (i == row1 && j > col1));
+        	if (doSelect)
                 setSelected(i, j, true);
-            }
         }
     }
 
@@ -286,7 +287,6 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
                 }
             }
         }
-        //fireTableCellUpdated(row, col);
     }
 
     public void toggleSelected(int row, int col) {
@@ -416,21 +416,23 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     }
 
     public void autoAdjustColumns(int width, int intercellWidth) {
-        int displayableColumns = (int) Math.floor(
-                (double) width / (double) (getCellWidth() - 2 * intercellWidth));
+//        int displayableColumns = (int) Math.floor(
+//                (double) width / (double) (getCellWidth() - 2 * intercellWidth));
+        
+        int displayableCols = (width - intercellWidth) / (getCellWidth() + 2 * intercellWidth);
 
-        if (displayableColumns < 1) {   // TODO: Fix "getInitialZoomScale()" (method above) and remove this.
-            displayableColumns = 1;
+        if (displayableCols < 1) {   // TODO: Fix "getInitialZoomScale()" (method above) and remove this.
+            displayableCols = 1;
 //
-//            double ddisplayableColumns =
+//            double ddisplayableCols =
 //                    (double) width / (double) (getCellWidth() - 2 * intercellWidth);
 //
-//            DEBUG.printMessage(" *** floor(Displayable columns): " + Math.floor(ddisplayableColumns));
+//            DEBUG.printMessage(" *** floor(Displayable columns): " + Math.floor(ddisplayableCols));
 //            DEBUG.printMessage(" *** Displayable columns: " + ddisplayableColumns);
         }
 
-        if (getColumnCount() != displayableColumns) {
-            setColumns(displayableColumns);
+        if (getColumnCount() != displayableCols) {
+            setColumns(displayableCols);
         }
     }
 
@@ -443,7 +445,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
             }
         }
 
-        return ICONS_MANAGER.DEFAULT_PREVIEW_WIDTH;
+        return Resources.DEFAULT_PREVIEW_WIDTH;
     }
 
     public int getCellHeight() {
@@ -455,9 +457,13 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
             }
         }
 
-        return ICONS_MANAGER.DEFAULT_PREVIEW_HEIGHT;
+        return Resources.DEFAULT_PREVIEW_HEIGHT;
     }
 
+    //This method is not needed here, just do nothing
+    public void setUseGeometry(boolean use) {        
+    }
+    
     public void setNormalized(boolean normalize) {
         this.normalize = normalize;
 

@@ -26,7 +26,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 import xmipp.utils.DEBUG;
-import xmipp.utils.LABELS;
+import xmipp.utils.Labels;
 import xmipp.viewer.imageitems.tableitems.GalleryImageItem;
 import xmipp.viewer.windows.ImagesWindowFactory;
 import java.awt.Component;
@@ -322,7 +322,7 @@ public class JFrameMetaData extends JFrame {
 
     private void save(String fileName) {
         if (tableModel.save(fileName)) {
-            IJ.showMessage(LABELS.MESSAGE_FILE_SAVED + fileName);
+            IJ.showMessage(Labels.MESSAGE_FILE_SAVED + fileName);
         } else {
             IJ.error("File NOT saved: " + fileName);
         }

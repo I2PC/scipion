@@ -11,7 +11,7 @@
 package xmipp.viewer.rotspectra;
 
 import xmipp.utils.DEBUG;
-import xmipp.utils.LABELS;
+import xmipp.utils.Labels;
 import xmipp.viewer.gallery.JFrameGallery;
 import xmipp.viewer.gallery.models.GalleryRowHeaderModel;
 import xmipp.viewer.gallery.renderers.RowHeaderRenderer;
@@ -182,7 +182,7 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
 
         jpControls.setLayout(new javax.swing.BoxLayout(jpControls, javax.swing.BoxLayout.LINE_AXIS));
 
-        jcbShowLabels.setText(LABELS.LABEL_ROTSPECTRA_SHOW_NIMAGES);
+        jcbShowLabels.setText(Labels.LABEL_ROTSPECTRA_SHOW_NIMAGES);
         jcbShowLabels.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jcbShowLabelsActionPerformed(evt);

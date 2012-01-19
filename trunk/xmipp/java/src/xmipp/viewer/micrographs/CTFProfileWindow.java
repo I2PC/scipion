@@ -1,6 +1,6 @@
 package xmipp.viewer.micrographs;
 
-import xmipp.utils.LABELS;
+import xmipp.utils.Labels;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
@@ -132,25 +132,25 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             panelPlot = new JPanel();
             panelPlotAVG = new JPanel();
 
-            jtpPlots.add(LABELS.LABEL_TAB_PROFILE, panelPlot);
-            jtpPlots.add(LABELS.LABEL_TAB_RADIAL_AVERAGE, panelPlotAVG);
+            jtpPlots.add(Labels.LABEL_TAB_PROFILE, panelPlot);
+            jtpPlots.add(Labels.LABEL_TAB_RADIAL_AVERAGE, panelPlotAVG);
 
             Panel pCenter = new Panel(new BorderLayout());
             pCenter.add(jtpPlots);
 
             // Check boxes for plots
-            cbBgNoise = new Checkbox(LABELS.CB_PLOT_BGNOISE, false);
-            cbEnvelope = new Checkbox(LABELS.CB_PLOT_ENVELOPE, false);
-            cbPSD = new Checkbox(LABELS.CB_PLOT_PSD, true);
-            cbCTF = new Checkbox(LABELS.CB_PLOT_CTF, true);
+            cbBgNoise = new Checkbox(Labels.CB_PLOT_BGNOISE, false);
+            cbEnvelope = new Checkbox(Labels.CB_PLOT_ENVELOPE, false);
+            cbPSD = new Checkbox(Labels.CB_PLOT_PSD, true);
+            cbCTF = new Checkbox(Labels.CB_PLOT_CTF, true);
 
             cbBgNoise.addItemListener(this);
             cbEnvelope.addItemListener(this);
             cbPSD.addItemListener(this);
             cbCTF.addItemListener(this);
 
-            bExportProfile = new Button(LABELS.BUTTON_EXPORT_PROFILE);
-            bExportAVG = new Button(LABELS.BUTTON_EXPORT_RADIAL_AVERAGE);
+            bExportProfile = new Button(Labels.BUTTON_EXPORT_PROFILE);
+            bExportAVG = new Button(Labels.BUTTON_EXPORT_RADIAL_AVERAGE);
             bExportProfile.addActionListener(this);
             bExportAVG.addActionListener(this);
 
@@ -261,7 +261,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
         if (chartPanelProfile != null) {
             XYPlot plot = ((XYPlot) chartPanelProfile.getChart().getPlot());
             plot.setDataset(0, datasetProfile);
-            plot.getRangeAxis().setLabel(show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD);
+            plot.getRangeAxis().setLabel(show_ctf ? Labels.LABEL_CTF : Labels.LABEL_PSD);
         } else {
 //            JFreeChart chart = createChart("",
 //                    LABELS.LABEL_SAMPLING,
@@ -269,8 +269,8 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
 //                    datasetProfile);
 
             JFreeChart chart = ChartFactory.createXYLineChart(
-                    "", LABELS.LABEL_SAMPLING,
-                    show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD,
+                    "", Labels.LABEL_SAMPLING,
+                    show_ctf ? Labels.LABEL_CTF : Labels.LABEL_PSD,
                     datasetProfile,
                     PlotOrientation.VERTICAL,
                     true, true, false);
@@ -295,7 +295,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
         if (chartPanelAVG != null) {
             XYPlot plot = ((XYPlot) chartPanelAVG.getChart().getPlot());
             plot.setDataset(0, datasetAVG);
-            plot.getRangeAxis().setLabel(show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD);
+            plot.getRangeAxis().setLabel(show_ctf ? Labels.LABEL_CTF : Labels.LABEL_PSD);
         } else {
 //            JFreeChart chart = createChart("",
 //                    LABELS.LABEL_SAMPLING,
@@ -303,8 +303,8 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
 //                    datasetAVG);
             JFreeChart chart = ChartFactory.createXYLineChart(
                     "",
-                    LABELS.LABEL_SAMPLING,
-                    show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD,
+                    Labels.LABEL_SAMPLING,
+                    show_ctf ? Labels.LABEL_CTF : Labels.LABEL_PSD,
                     datasetAVG, PlotOrientation.VERTICAL,
                     true, true, false);
 
@@ -398,18 +398,18 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
         XYSeriesCollection collection = new XYSeriesCollection();
 
         if (show_ctf) {
-            collection.addSeries(createSeries(LABELS.CB_PLOT_CTF, xs, ctf));
+            collection.addSeries(createSeries(Labels.CB_PLOT_CTF, xs, ctf));
         } else {
-            collection.addSeries(createSeries(LABELS.CB_PLOT_PROFILE, xs, profile));
+            collection.addSeries(createSeries(Labels.CB_PLOT_PROFILE, xs, profile));
 
             if (show_bgnoise) {
-                collection.addSeries(createSeries(LABELS.CB_PLOT_BGNOISE, xs, bgNoise));
+                collection.addSeries(createSeries(Labels.CB_PLOT_BGNOISE, xs, bgNoise));
             }
             if (show_envelope) {
-                collection.addSeries(createSeries(LABELS.CB_PLOT_ENVELOPE, xs, envelope));
+                collection.addSeries(createSeries(Labels.CB_PLOT_ENVELOPE, xs, envelope));
             }
             if (show_psd) {
-                collection.addSeries(createSeries(LABELS.CB_PLOT_PSD, xs, psd));
+                collection.addSeries(createSeries(Labels.CB_PLOT_PSD, xs, psd));
             }
         }
 

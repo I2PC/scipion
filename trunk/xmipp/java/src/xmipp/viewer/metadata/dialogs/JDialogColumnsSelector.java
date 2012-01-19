@@ -10,7 +10,7 @@
  */
 package xmipp.viewer.metadata.dialogs;
 
-import xmipp.utils.LABELS;
+import xmipp.utils.Labels;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JDialog;
@@ -90,7 +90,7 @@ public class JDialogColumnsSelector extends JDialog {
 
         getContentPane().add(jspList, java.awt.BorderLayout.CENTER);
 
-        jbOk.setText(LABELS.BUTTON_OK);
+        jbOk.setText(Labels.BUTTON_OK);
         jbOk.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jbOkActionPerformed(evt);
@@ -98,7 +98,7 @@ public class JDialogColumnsSelector extends JDialog {
         });
         jpButtons.add(jbOk);
 
-        jbCancel.setText(LABELS.BUTTON_CANCEL);
+        jbCancel.setText(Labels.BUTTON_CANCEL);
         jbCancel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jbCancelActionPerformed(evt);

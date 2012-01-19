@@ -6,7 +6,7 @@ package xmipp.viewer.imageitems.listitems;
 
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
-import xmipp.utils.LABELS;
+import xmipp.utils.Labels;
 import xmipp.viewer.imageitems.ImageDimension;
 import ij.ImagePlus;
 import ij.process.ImageStatistics;
@@ -128,10 +128,10 @@ public abstract class AbstractImageItem extends FileItem {
             String strStdDev = decimalFormatter.format(statistics.stdDev);
 
             return "<html>"
-                    + LABELS.LABEL_WIDTH + dimension.getWidth() + "<br>"
-                    + LABELS.LABEL_HEIGHT + dimension.getHeight() + "<br>"
-                    + (isVolume() ? LABELS.LABEL_DEPTH + dimension.getDepth() + "<br>" : "")
-                    + (isStack() ? LABELS.LABEL_NIMAGES + dimension.getNimages() : "")
+                    + Labels.LABEL_WIDTH + dimension.getWidth() + "<br>"
+                    + Labels.LABEL_HEIGHT + dimension.getHeight() + "<br>"
+                    + (isVolume() ? Labels.LABEL_DEPTH + dimension.getDepth() + "<br>" : "")
+                    + (isStack() ? Labels.LABEL_NIMAGES + dimension.getNimages() : "")
                     + "<br>" + "<br>"
                     + "Min=" + strMin + "<br>"
                     + "Max=" + strMax + "<br>"
