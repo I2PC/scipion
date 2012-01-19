@@ -133,7 +133,7 @@ class ScriptAppIJ(ScriptIJBase):
         ScriptIJBase.__init__(self, name)
                   
     def run(self):
-        runJavaIJapp(self.memory, self.name, self.args)
+        runJavaIJapp(self.memory, self.name, self.args, batchMode=False)
         
 #------------- FUNCTION TO WORK WITH PROGRAMS META-INFORMATION -----------------    
 def getImageData(img):

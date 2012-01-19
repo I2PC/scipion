@@ -536,15 +536,18 @@ def getJavaIJappCmd(memory, appName, args, batchMode=False):
         memory = "512m"
         print "No memory size provided. Using default: " + memory
     imagej_home = getXmippPath("external", "imagej")
+    javaLib = getXmippPath('java', 'lib')
     plugins_dir = os.path.join(imagej_home, "plugins")
 
-    cmd = "java -classpath %(plugins_dir)s/*:%(imagej_home)s/*: %(appName)s %(args)s" % locals()
+    cmd = "java -cp %(plugins_dir)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(args)s" % locals()
     if batchMode:
         cmd += " &"
     return cmd
     
 def runJavaIJapp(memory, appName, args, batchMode=True):
-    os.system(getJavaIJappCmd(memory, appName, args, batchMode))
+    cmd = getJavaIJappCmd(memory, appName, args, batchMode)
+    print cmd
+    os.system(cmd)
     
 def runJavaJar(memory, jarName, args, batchMode=True):
     from protlib_filesystem import getXmippPath
