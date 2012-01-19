@@ -1,17 +1,17 @@
 #!/usr/bin/env xmipp_python
 
-from protlib_xmipp import ScriptPluginIJ
+from protlib_xmipp import ScriptAppIJ
 from xmipp import Program, FileName
 import xmipp
 
-class ScriptShowJ(ScriptPluginIJ):
+class ScriptShowJ(ScriptAppIJ):
 	def __init__(self):
-		ScriptPluginIJ.__init__(self, "XmippBrowser.txt")
+		ScriptAppIJ.__init__(self, 'xmipp.viewer.Viewer')
 		
 	def defineOtherParams(self):
 		self.addParamsLine('  [--mode <mode_value=image>]           : List of params ');
 		self.addParamsLine('     where <mode_value> image gallery metadata')
-		self.addParamsLine('         alias -o;');
+		self.addParamsLine('         alias -d;');
 		self.addParamsLine('  [--poll]                            : Keeps checking for changes on input files  (for image mode only!)');
 		self.addParamsLine('         alias -p;');
 		self.addParamsLine('  [--render]	: Activates images rendering (for metadata mode only!)');
