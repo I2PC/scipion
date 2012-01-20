@@ -27,6 +27,7 @@
 #define MATRIX1D_H_
 
 #include <stdlib.h>
+#include <cmath>
 #include "xmipp_funcs.h"
 #include "numerical_recipes.h"
 
@@ -662,7 +663,7 @@ public:
     bool isAnyNaN()
     {
         for (int j = 0; j < vdim; j++)
-            if (std::isnan(vdata[j]))
+            if (ISNAN(vdata[j]))
                 return true;
         return false;
     }

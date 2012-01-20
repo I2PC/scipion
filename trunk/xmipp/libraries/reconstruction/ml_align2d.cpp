@@ -1670,6 +1670,7 @@ void ProgML2D::doThreadESIUpdateRefno()
                                          * (opt_scale * opt_scale) / sum_refw;
             }
 
+            std::complex<double> cscale_dim2_sumw=scale_dim2_sumw;
             for (int ipsi = 0; ipsi < nr_psi; ipsi++)
             {
                 int refnoipsi = output_refno * nr_psi + ipsi;
@@ -1677,7 +1678,7 @@ void ProgML2D::doThreadESIUpdateRefno()
                 if (model.do_norm)
                     dAij(mysumimgs[refnoipsi],0,0) -= sumw_refpsi[refnoipsi] * (bgmean - old_bgmean) / ddim2;
                 // Sum mysumimgs to the global weighted sum
-                wsumimgs[refnoipsi] += (scale_dim2_sumw * mysumimgs[refnoipsi]);
+                wsumimgs[refnoipsi] += (cscale_dim2_sumw * mysumimgs[refnoipsi]);
             }
         }
 

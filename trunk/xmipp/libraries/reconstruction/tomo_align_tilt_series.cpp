@@ -2652,7 +2652,7 @@ void Alignment::computeGeometryDependentOfAxis()
 
         B=I-Raxis;
         B=B.transpose()*Ip*B;
-        Binvraxis+=prm->ni(i)*(B+B.transpose());
+        Binvraxis+=((double)prm->ni(i))*(B+B.transpose());
 
         B1i[i]=I-Raxis.transpose();
         B2i[i]=B1i[i]*Ip*Raxis;

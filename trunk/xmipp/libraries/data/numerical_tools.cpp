@@ -325,7 +325,7 @@ void leastSquare(const Matrix2D<double> &C, const Matrix1D<double> &d,
     // Convert d to Matrix2D for multiplication
     Matrix2D<double> P;
     P.fromVector(d);
-    P = -2 * P.transpose() * C;
+    P = -2.0 * (P.transpose() * C);
     P = P.transpose();
 
     //Convert back to vector for passing it to quadraticProgramming

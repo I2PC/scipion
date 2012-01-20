@@ -627,7 +627,7 @@ void VariabilityClass::finishAnalysis()
             // Perform T2-Hotelling test
             Matrix1D<double> avg_diff = avg1 - avg0;
             covariance = 1.0 / (N0 + N1 - 2) *
-                         ((N0 - 1) * covariance0 + (N1 - 1) * covariance1);
+                         ((N0 - 1.0) * covariance0 + (N1 - 1.0) * covariance1);
             covariance *= (1.0 / N0 + 1.0 / N1);
             aux.fromVector(avg_diff);
             T2 = (double)(N0 + N1 - avg_diff.size() - 1) /

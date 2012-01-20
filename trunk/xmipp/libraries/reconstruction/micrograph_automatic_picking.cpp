@@ -31,7 +31,6 @@
 #include <data/xmipp_filename.h>
 #include <algorithm>
 
-
 //#define DEBUG_PREPARE
 //#define DEBUG_BUILDVECTOR
 //#define DEBUG_IMG_BUILDVECTOR
@@ -839,7 +838,7 @@ int AutoParticlePicking::automaticallySelectParticles()
         for (int i = 0; i < imax; i++)
             if (__auto_candidates[i].status == 1)
             {
-                if (!std::isinf(__auto_candidates[i].cost))
+                if (!ISINF(__auto_candidates[i].cost))
                 {
                     if (first || __auto_candidates[i].cost < minCost)
                     {
@@ -864,7 +863,7 @@ int AutoParticlePicking::automaticallySelectParticles()
                 << __auto_candidates[i].y << std::endl;
 #endif
 
-                if (std::isinf(__auto_candidates[i].cost))
+                if (ISINF(__auto_candidates[i].cost))
                     __auto_candidates[i].cost = 1;
                 else
                     __auto_candidates[i].cost = (__auto_candidates[i].cost
