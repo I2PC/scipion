@@ -22,6 +22,8 @@ if (ARGUMENTS['mode'] == 'configure'):
 else:
     opts = Variables('.xmipp_scons.options', ARGUMENTS)
 
+#print 'en opts', opts['MPI_LINKERFORPROGRAMS']
+
 opts.Add('CC', 'The C compiler', 'gcc')
 opts.Add('CXX', 'The C++ compiler', 'g++')
 
@@ -90,9 +92,9 @@ opts.Add('CUDA_SDK_PATH', 'CUDA SDK dir', '/root/NVIDIA_GPU_Computing_SDK')
 opts.Add('JAVAC', 'Java compiler', 'javac')
 opts.Add('JAVA_HOME', 'Java installation directory', '')
 opts.Add('JNI_CPPPATH', 'Directory of jni.h', '')
+#print 'en opts-2', opts['MPI_LINKERFORPROGRAMS']
 
 opts.Update(env)
-
 # generate help for options
 Help(opts.GenerateHelpText(env, sort=cmp))
 
@@ -121,7 +123,7 @@ if (ARGUMENTS['mode'] == 'configure'):
     # --- This is the configure mode
 
     # Custom tests
-    def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx):
+    def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link):
         context.Message('* Checking for MPI ... ')
 
         lastLIBS = context.env['LIBS']
@@ -133,7 +135,7 @@ if (ARGUMENTS['mode'] == 'configure'):
         # TODO Replace() also here?
         context.env.Append(LIBS=mpi_lib, LIBPATH=mpi_libpath,
                            CPPPATH=mpi_inc)
-        context.env.Replace(LINK=context.env['MPI_LINKERFORPROGRAMS'])
+        context.env.Replace(LINK=mpi_link)
         context.env.Replace(CC=mpi_cc, CXX=mpi_cxx)
 
         # Test only C++ mpi compiler
@@ -173,19 +175,19 @@ if (ARGUMENTS['mode'] == 'configure'):
 
     # release?
     if int(env['release']):
-        env.Append(CCFLAGS='-DRELEASE_MODE')
-        env.Append(CXXFLAGS='-DRELEASE_MODE')
+        AppendIfNotExists(CCFLAGS='-DRELEASE_MODE')
+        AppendIfNotExists(CXXFLAGS='-DRELEASE_MODE')
 
     # static?
     if int(env['static']):
-        env.Append(CCFLAGS='$STATIC_FLAG')
-        env.Append(LINKFLAGS='$STATIC_FLAG')
+        AppendIfNotExists(CCFLAGS='$STATIC_FLAG')
+        AppendIfNotExists(LINKFLAGS='$STATIC_FLAG')
 
     # osx?
     if env['PLATFORM'] == 'darwin':
-        env.Append(CCFLAGS='-m64')
-        env.Append(CXXFLAGS='-m64')
-        env.Append(LINKFLAGS='-m64')
+        AppendIfNotExists(CCFLAGS='-m64')
+        AppendIfNotExists(CXXFLAGS='-m64')
+        AppendIfNotExists(LINKFLAGS='-m64')
 
     # QT
     if int(env['qt']):
@@ -248,7 +250,7 @@ if (ARGUMENTS['mode'] == 'configure'):
     # MPI
     if int(env['mpi']):
         if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'],
-                             env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX']):
+                             env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'], env['MPI_LINKERFORPROGRAMS']):
             print '* Did not find MPI library. Disabling ...'
             env['mpi'] = 0
 
@@ -323,6 +325,7 @@ if (ARGUMENTS['mode'] == 'configure'):
 elif (ARGUMENTS['mode'] == 'compile'):
     # --- This is the compilation mode
 
+    print 'This is compile'
 
     # add separator to prepend (not shown in help)
     env['prepend'] = env['prepend'] + '_'
@@ -336,19 +339,18 @@ elif (ARGUMENTS['mode'] == 'compile'):
         dpFlags = ['-g']
     # profile or debug?
     if dp:
-        env.Append(CXXFLAGS=['-D__XMIPP_DEBUG__'])
-        env.Append(CXXFLAGS=dpFlags)
+        AppendIfNotExists(CXXFLAGS=['-D__XMIPP_DEBUG__'])
+        AppendIfNotExists(CXXFLAGS=dpFlags)
         #required for print stack trace
-	if not int(env['cuda']):
-            env.Append(CXXFLAGS=['-rdynamic'])
-        env.Append(CXXFLAGS=['-O0'])
-        env.Append(CCFLAGS=dpFlags)
-        env.Append(LINKFLAGS=dpFlags)
+        AppendIfNotExists(CXXFLAGS=['-rdynamic'])
+        AppendIfNotExists(CXXFLAGS=['-O0'])
+        AppendIfNotExists(CCFLAGS=dpFlags)
+        AppendIfNotExists(LINKFLAGS=dpFlags)
     else:
         # "safe" optimization
-        env.Append(CXXFLAGS=['-O2'])
-        env.Append(CCFLAGS=['-O2'])
-        env.Append(LINKFLAGS=['-s'])
+        AppendIfNotExists(CXXFLAGS=['-O2'])
+        AppendIfNotExists(CCFLAGS=['-O2'])
+        AppendIfNotExists(LINKFLAGS=['-s'])
 
     if env['PLATFORM'] == 'darwin':
 #        env.Append(CXXFLAGS=['-m64'])

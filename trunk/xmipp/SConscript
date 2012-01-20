@@ -301,13 +301,11 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
         envToUse=env.Clone()
         envToUse.Tool('cuda')
         envToUse.Append(CXXFLAGS=['-DWITH_CUDA'])
-        print envToUse['CXXFLAGS']
         envToUse['CXX']='nvcc'
     else:
         envToUse=env
 
-    if int(envToUse['static']) or (envToUse['PLATFORM'] == 'darwin') or\
-       useCudaEnvironment:
+    if int(envToUse['static']) or useCudaEnvironment:
         library = envToUse.StaticLibrary(
             basedir + name,
             sources,
@@ -603,7 +601,7 @@ ReconsSources = [
     'xray_import.cpp',
 #    'xray_volume_correct.cpp'
 ]
-ReconsLib =['XmippExternal', 'XmippData', 'pthread','XmippClassif']
+ReconsLib =['XmippExternal', 'XmippData', 'pthread','XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs
 ReconsIncDir=['#libraries', '#external', '#']
 ReconsLibDir=['lib']
 if int(env['arpack']):

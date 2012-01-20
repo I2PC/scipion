@@ -33,7 +33,8 @@
 #                                                                         #
 ###########################################################################
 
-import os
+import os, sys
+
 from subprocess import Popen
 
 ################ Classes for a Console based configuration ######################
@@ -104,7 +105,10 @@ def detectMpi():
     inc_dirs = ['/usr/include', '/usr/local/include']
     lib_dirs = ['/usr/lib64', '/usr/lib']
     inc_mpi = findFilePath('mpi.h', *(inc_dirs + lib_dirs))
-    lib_mpi = findFilePath('libmpi.so', *lib_dirs)
+    if sys.platform  == 'darwin':
+        lib_mpi = findFilePath('libmpi.dylib', *lib_dirs)
+    else:
+        lib_mpi = findFilePath('libmpi.so', *lib_dirs)
     
     return (inc_mpi, lib_mpi)
 
@@ -122,9 +126,9 @@ def addTabOption(tab, option, comment, default, cond=None, wiz=None, browse=Fals
     defaultsDic = globals()
     if defaultsDic.has_key(option):
         value = defaultsDic[option]
-        if (value == 1 or value == True):
+        if value in [True, 1, 'True','true', 'Yes', 'yes']:
             default = 'yes'
-        elif (value == 0 or value == False):
+        elif value in [False, 0, 'False', 'false', 'No', 'no']:
             default = 'no'
         elif isinstance(value, list):
             default = ' '.join(value)
@@ -230,7 +234,6 @@ def run(notebook):
     
     if options.hasOption('configure'):        
         opts = notebook.getConfigOptions()
-        #print "opt: ", opts
         cmd += 'echo "*** RUNNING SCONS.CONFIGURE..." >> %(out)s 2>&1 \n'
         cmd1 = "xmipp_python %(scons)s mode=configure -j %(procs)s --config=force %(opts)s >> %(out)s 2>&1 " % locals()
         cmd += 'echo "%(cmd1)s" >> %(out)s \n'
@@ -330,7 +333,7 @@ if GUI:
         traceback.print_exc(file=sys.stderr)
         print '-'*60
         answer = raw_input("Do you want to proceed from command line? [Y/n]:")
-        if answer.lower() != 'y':
+        if len(answer) and answer.lower() != 'y':
             exit(0)
 
 # Run configuration and compile from command line
