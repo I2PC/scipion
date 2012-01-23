@@ -431,7 +431,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     }
 
     public void autoAdjustColumns(int width, int intercellWidth) {
-    	DEBUG.printMessage(String.format("AbstractXmippTableModel.autoAdjust: width: %d", width));
+    	//DEBUG.printMessage(String.format("AbstractXmippTableModel.autoAdjust: width: %d", width));
 //        int displayableColumns = (int) Math.floor(
 //                (double) width / (double) (getCellWidth() - 2 * intercellWidth));
         
@@ -447,8 +447,8 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 //            DEBUG.printMessage(" *** Displayable columns: " + ddisplayableColumns);
         }
 
-    	DEBUG.printMessage(String.format("getColumnCount: %d displayableCols: %d: ",
-    			getColumnCount(), displayableCols));
+    	//DEBUG.printMessage(String.format("getColumnCount: %d displayableCols: %d: ",
+    	//		getColumnCount(), displayableCols));
         if (getColumnCount() != displayableCols) {
             setColumns(displayableCols);
         }

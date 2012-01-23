@@ -278,8 +278,8 @@ public class JFrameGallery extends JFrame {
 		jMenuBarTable = new JMenuBarTable();
 		setJMenuBar(jMenuBarTable);
 
-		DEBUG.printMessage("WIDTH: " + jspContent.getVisibleRect().width);
-		DEBUG.printMessage("preferred: " + getPreferredSize().toString());		
+		//DEBUG.printMessage("WIDTH: " + jspContent.getVisibleRect().width);
+		//DEBUG.printMessage("preferred: " + getPreferredSize().toString());		
 		
 		updateTable();
 //		int WIDTH = getPreferredSize().width;
@@ -302,8 +302,8 @@ public class JFrameGallery extends JFrame {
 		tableModel.updateSort();
 
 		if (tableModel.getSize() > 0) {
-			DEBUG.printMessage(String.format("updateTable: Table Model:\nsize: %d, cols: %d rows: %d",
-					tableModel.getSize(), tableModel.getColumnCount(), tableModel.getRowCount()));
+			//DEBUG.printMessage(String.format("updateTable: Table Model:\nsize: %d, cols: %d rows: %d",
+			//		tableModel.getSize(), tableModel.getColumnCount(), tableModel.getRowCount()));
 			Dimension dimension = getCellSize();
 			renderer.setPreferredSize(dimension);
 
@@ -318,7 +318,7 @@ public class JFrameGallery extends JFrame {
 			jsColumns.setValue(tableModel.getColumnCount());
 
 			rowHeader.revalidate();
-			//rowHeader.repaint();
+			rowHeader.repaint();
 			table.revalidate();
 			//repaint();
 		}
@@ -347,7 +347,7 @@ public class JFrameGallery extends JFrame {
 
 		Dimension dim = new Dimension(tableModel.getCellWidth() + 2 * borderWidth,
 				tableModel.getCellHeight() + font_height + 2 * borderHeight);
-		DEBUG.printMessage("getCellSize: dim: " + dim.toString());
+		//DEBUG.printMessage("getCellSize: dim: " + dim.toString());
 		return dim;
 	}// function getCellSize
 
@@ -363,8 +363,8 @@ public class JFrameGallery extends JFrame {
 		autoAdjustColumns = true;
 		int w = jspContent.getViewport().getWidth();
 		int rw = rowHeader.getWidth();
-		DEBUG.printMessage(String.format("=========>> JFrameGallery.autoAdjust: width: %d, rowheader: %d", w, rw));
-		DEBUG.printStackTrace();
+		//DEBUG.printMessage(String.format("=========>> JFrameGallery.autoAdjust: width: %d, rowheader: %d", w, rw));
+		//DEBUG.printStackTrace();
 		tableModel.autoAdjustColumns(
 				// jsPanel.getVisibleRect().width - rowHeader.getWidth(),
 				// jsPanel.getViewportBorderBounds().width -

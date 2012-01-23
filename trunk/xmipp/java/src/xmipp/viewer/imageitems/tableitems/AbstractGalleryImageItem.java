@@ -144,7 +144,7 @@ public abstract class AbstractGalleryImageItem {
     public ImagePlus getPreview(int w, int h) {
         ImagePlus preview;
         String key = getKey();
-        DEBUG.printMessage("getPreview: KEY: " + key);
+        //DEBUG.printMessage("getPreview: KEY: " + key);
         
         if (getWidth() > 0 && getHeight() > 0) {
             // Tries to load from cache.
@@ -152,12 +152,12 @@ public abstract class AbstractGalleryImageItem {
 
             // If not in cache.
             if (preview == null) {
-            	DEBUG.printMessage("   NOT IN CACHE, LOADING....KEY:" + key);
+            	//DEBUG.printMessage("   NOT IN CACHE, LOADING....KEY:" + key);
                 preview = loadPreview(w, h);
 
                 if (preview != null) {
                     cache.put(key, preview);
-                    DEBUG.printMessage("   PUTTING IN CACHE....KEY:" + key);
+                    //DEBUG.printMessage("   PUTTING IN CACHE....KEY:" + key);
                 }
             }
 
@@ -185,12 +185,12 @@ public abstract class AbstractGalleryImageItem {
                 int w_ = (int) Math.ceil(getWidth() / factor);
                 int h_ = (int) Math.ceil(getHeight() / factor);
 
-                DEBUG.printMessage(String.format(" *** path: %s w=%d h=%d factor=%f s=%d, n=%d", 
-                		getPath(), w_ , h_ , factor, getNSlice(), getNImage()));
+                //DEBUG.printMessage(String.format(" *** path: %s w=%d h=%d factor=%f s=%d, n=%d", 
+                //		getPath(), w_ , h_ , factor, getNSlice(), getNImage()));
 
                 ImageGeneric image = new ImageGeneric(path);
                 ip = XmippImageConverter.convertToImageJ(image, w_, h_, getNSlice(), getNImage());//,w_, h_, getNSlice(), getNImage());
-                DEBUG.printMessage(String.format(" ***    size: %d", ip.getImageStackSize()));
+                //DEBUG.printMessage(String.format(" ***    size: %d", ip.getImageStackSize()));
                 image.destroy();
             } catch (Exception ex) {
             	//DEBUG.printMessage("================== EXCEPTION ON GALLERYITEM loadPreview ===============");
