@@ -36,9 +36,13 @@ IS_CYGWIN=false
 echo "The OS is $OS_TYPE"
 if [ $OS_TYPE = Darwin ]; then
 	IS_MAC=true;
+	CONFIGURE_ARGS="MPI_CXX=mpic++ MPI_LINKERFORPROGRAMS=mpic++"
 elif [ $OS_TYPE = CYGWIN* ]; then
 	IS_CYGWIN=true;
 fi
+
+
+
 
 for param in $@; do
  if $TAKE_CPU; then
@@ -380,13 +384,8 @@ cd $XMIPP_HOME
 #echoGreen "COMPILE: $COMPILE_ARGS"
 #echoGreen "GUI: $GUI_ARGS"
 
-if $IS_MAC; then
-	echo "--> ./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS " install
-	./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS install
-else
-	echo "--> ./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS" install
-	./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS install
-fi
+echo "--> ./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS" install
+./xmipp -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS install
 
 exit 0
 
