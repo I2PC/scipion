@@ -1,3 +1,5 @@
+#include "xmipp_java_adapter.h"
+
 #include <jni.h>
 #include <iostream>
 #include <unistd.h>

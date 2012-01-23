@@ -1,3 +1,4 @@
+#include "xmipp_java_adapter.h"
 #include <iostream>
 #include "xmipp_CTFDescription.h"
 #include "xmipp_ExceptionsHandler.h"

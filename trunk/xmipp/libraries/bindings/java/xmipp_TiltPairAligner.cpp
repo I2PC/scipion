@@ -4,6 +4,8 @@
  *  Created on: Sep 20, 2011
  *      Author: airen
  */
+#
+#include "xmipp_java_adapter.h"
 #include <jni.h>
 #include "xmipp_TiltPairAligner.h"
 #include "data/micrograph.h"

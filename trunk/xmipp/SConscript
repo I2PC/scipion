@@ -711,7 +711,7 @@ if int(env['java']):
                             ["libraries/data/xmipp_image_base.h", "libraries/data/metadata_label.h" ], ExtractEnumFromHeader))
 
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
-    JavaDependLibraries = ['XmippData', 'pthread', 'XmippRecons', 'XmippClassif']
+    JavaDependLibraries = ['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal']
     if int(env['arpack']):
         JavaDependLibraries += ['arpack++','arpack','lapack','blas']
     # Compilation of the c code needed for java jni binding

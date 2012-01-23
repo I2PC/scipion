@@ -1,3 +1,4 @@
+#include "xmipp_java_adapter.h"
 #include "xmipp_ExceptionsHandler.h"
 
 void handleXmippException(JNIEnv *env, std::string message) {

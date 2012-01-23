@@ -1,3 +1,5 @@
+#include "xmipp_java_adapter.h"
+
 #include <jni.h>
 #include "xmipp_ImageGeneric.h"
 #include "xmipp_InternalData.h"
