@@ -76,41 +76,21 @@ public class XmippImageConverter {
         return convertToImageJ(image, width, height, ImageGeneric.ALL_SLICES, nimage);
     }
 
-    public static ImagePlus convertToImageJ(ImageGeneric image, int width, int height, int nslice, long nimage) throws Exception {
+    public static ImagePlus convertToImageJ(ImageGeneric image, int width, int height, int slice, long select_image) throws Exception {
         ImageStack is = new ImageStack(width, height);
-
         ProcessorCreator pc = createProcessorCreator(image);
-
-        boolean retrieveAllImages = nimage == ImageGeneric.ALL_IMAGES;
-        boolean retrieveAllSlices = nslice == ImageGeneric.ALL_SLICES;
-        long n = retrieveAllImages ? ImageGeneric.FIRST_IMAGE : nimage;
-        long N = image.getNDim();
-
-        for (; n <= N; n++) {
-            image.read(width, height, n);
-
+        long lastImage = select_image;
+        
+        if (select_image == ImageGeneric.ALL_IMAGES) {
+        	select_image = ImageGeneric.FIRST_IMAGE;
+        	lastImage = image.getNDim();
+        }
+        for (; select_image <= lastImage; select_image++) {
+            image.read(width, height, select_image);
             if (image.isPSD()) {
                 image.convertPSD(image.getUseLogarithm());
             }
-
-            // Read volume.
-            int slice = retrieveAllSlices ? ImageGeneric.FIRST_SLICE : nslice;
-            for (; slice <= image.getZDim(); slice++) {
-                ImageProcessor processor = pc.getProcessor(image, slice);
-                ImagePlus imp = new ImagePlus("", processor);
-                normalizeImagePlus(imp);
-                is.addSlice("", imp.getProcessor());
-
-                // If just one image, breaks loop.
-                if (!retrieveAllSlices) {
-                    break;
-                }
-            }
-
-            // If just one image, breaks loop.
-            if (!retrieveAllImages) {
-                break;
-            }
+            addSlicesToStack(image, slice, is, pc);
         }
 
         return buildImagePlus(image.getFilename(), is);
@@ -131,36 +111,31 @@ public class XmippImageConverter {
      * Converts an ImageGeneric to ImageJ
      * WARNING!: Use this when converting images from memory.
      * @param image
-     * @param nslice
+     * @param slice
      * @return
      * @throws Exception 
      */
-    static ImagePlus convertImageGenericToImageJ(ImageGeneric image, int nslice) throws Exception {
+    static ImagePlus convertImageGenericToImageJ(ImageGeneric image, int slice) throws Exception {
         int width = image.getXDim();
         int height = image.getYDim();
-        int depth = image.getZDim();
+        
         ImageStack is = new ImageStack(width, height);
-
         ProcessorCreator pc = createProcessorCreator(image);
-
-        boolean retrieveAllSlices = nslice == ImageGeneric.ALL_SLICES;
-
-        // Read volume.      
-        int slice = retrieveAllSlices ? ImageGeneric.FIRST_SLICE : nslice;
-        for (; slice <= depth; slice++) {
-            ImageProcessor processor = pc.getProcessor(image, slice);
-            is.addSlice("", processor);
-
-            // If just one image, breaks loop.
-            if (!retrieveAllSlices) {
-                break;
-            }
+        
+        addSlicesToStack(image, slice, is, pc);
+        return buildImagePlus(image.getFilename(), is);
+    }
+    
+    static void addSlicesToStack(ImageGeneric image, int slice, ImageStack is, ProcessorCreator pc) throws Exception {
+    	int lastSlice = slice;
+    	if (slice == ImageGeneric.ALL_SLICES) {
+        	slice = ImageGeneric.FIRST_SLICE;
+        	lastSlice = image.getZDim();        	
         }
+        
+        for (; slice <= lastSlice; slice++)
+            is.addSlice("", pc.getProcessor(image, slice));
 
-        ImagePlus imp = buildImagePlus(image.getFilename(), is);
-        normalizeImagePlus(imp);
-
-        return imp;
     }
 
     public static ImagePlus convertToImageJ(MetaData md) throws Exception {

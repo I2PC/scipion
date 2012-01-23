@@ -44,7 +44,7 @@ public class ImageGeneric {
     private native void create();
 
     // Destructor.
-    private synchronized native void destroy();
+    public synchronized native void destroy();
 
     //non-native functions
     //constructor

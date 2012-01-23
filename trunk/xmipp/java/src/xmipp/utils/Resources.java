@@ -26,7 +26,9 @@ public class Resources {
     public final static String NORMALIZE = "histogram.png";
     public final static String APPLY_GEO = "rotate.png";
     public final static String ADJUST_COLS = "resize.png";
-
+    public final static String GOTO = "goto.gif";
+    public final static String ZOOM = "zoom.png";
+    
     public static ImageIcon WAIT_ICON;
     public static ImageIcon WAIT_MENU_ICON;
     public static ImagePlus MISSING_ITEM;

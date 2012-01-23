@@ -33,7 +33,6 @@ public class GalleryTableColumnModel extends DefaultTableColumnModel {
 
     public void setWidth(int width) {
         this.width = width;
-
         adjustColumnsWidth();
     }
 

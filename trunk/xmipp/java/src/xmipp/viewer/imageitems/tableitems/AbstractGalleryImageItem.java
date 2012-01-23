@@ -48,8 +48,8 @@ public abstract class AbstractGalleryImageItem {
     protected void loadImageData() {
         try {
             ImageGeneric image = new ImageGeneric(getPath());
-
             dimension = new ImageDimension(image);
+            image.destroy();
         } catch (Exception ex) {
             //throw new RuntimeException(ex);
             DEBUG.printMessage(ex.getMessage() + ": " + getPath() + " (image=" + getNImage() + ", slice=" + getNSlice() + ")");
@@ -143,17 +143,21 @@ public abstract class AbstractGalleryImageItem {
 
     public ImagePlus getPreview(int w, int h) {
         ImagePlus preview;
-
+        String key = getKey();
+        DEBUG.printMessage("getPreview: KEY: " + key);
+        
         if (getWidth() > 0 && getHeight() > 0) {
             // Tries to load from cache.
-            preview = (ImagePlus) cache.get(getKey());
+            preview = (ImagePlus) cache.get(key);
 
             // If not in cache.
             if (preview == null) {
+            	DEBUG.printMessage("   NOT IN CACHE, LOADING....KEY:" + key);
                 preview = loadPreview(w, h);
 
                 if (preview != null) {
-                    cache.put(getKey(), preview);
+                    cache.put(key, preview);
+                    DEBUG.printMessage("   PUTTING IN CACHE....KEY:" + key);
                 }
             }
 
@@ -181,11 +185,15 @@ public abstract class AbstractGalleryImageItem {
                 int w_ = (int) Math.ceil(getWidth() / factor);
                 int h_ = (int) Math.ceil(getHeight() / factor);
 
-                //DEBUG.printMessage(" *** path: " + getPath() + " w=" + w_ + " h=" + h_ + " s=" + getNSlice() + " n=" + getNImage());
+                DEBUG.printMessage(String.format(" *** path: %s w=%d h=%d factor=%f s=%d, n=%d", 
+                		getPath(), w_ , h_ , factor, getNSlice(), getNImage()));
 
                 ImageGeneric image = new ImageGeneric(path);
                 ip = XmippImageConverter.convertToImageJ(image, w_, h_, getNSlice(), getNImage());//,w_, h_, getNSlice(), getNImage());
+                DEBUG.printMessage(String.format(" ***    size: %d", ip.getImageStackSize()));
+                image.destroy();
             } catch (Exception ex) {
+            	//DEBUG.printMessage("================== EXCEPTION ON GALLERYITEM loadPreview ===============");
                 DEBUG.printException(ex);
             }
         }

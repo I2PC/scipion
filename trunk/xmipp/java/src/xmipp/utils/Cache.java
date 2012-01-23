@@ -33,7 +33,7 @@ public class Cache<K, T> extends LinkedHashMap<K, T> {
     @SuppressWarnings("element-type-mismatch")
     public void resize(int limit) {
         // If new limit is lower than previous, remaining items are removed.
-        DEBUG.printMessage(" *** resizing to: [" + limit + "] elements");
+        DEBUG.printMessage(" *** Cache: resizing to: [" + limit + "] elements");
         //DEBUG.printMessage(" *** this.limit: [" + this.limit + "] / limit: [" + limit + "]");
 
         if (this.limit > limit && limit < size()) {

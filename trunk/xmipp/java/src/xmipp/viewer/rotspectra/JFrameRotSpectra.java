@@ -92,7 +92,7 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
     }
 
     private void setRowHeader() {
-        rowHeaderModel = new GalleryRowHeaderModel(table, 1);
+        rowHeaderModel = new GalleryRowHeaderModel(tableModel, 1);
 
         rowHeader = new JList();
         rowHeader.setModel(rowHeaderModel);

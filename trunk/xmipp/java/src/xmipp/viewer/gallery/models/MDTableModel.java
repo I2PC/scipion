@@ -69,17 +69,6 @@ public class MDTableModel extends AbstractXmippTableModel {
         }
     }
 
-    void setCacheSize(MetaData md) throws Exception {
-        // Calculates cache elements size.
-        String firstImage = md.getValueString(MDLabel.MDL_IMAGE, md.firstObject(), true);
-        ImageGeneric image = new ImageGeneric(firstImage);
-
-        int imageSize = image.getXDim() * image.getYDim() * Cache.MAXPXSIZE;
-        int elements = Cache.MEMORY_SIZE / imageSize;
-
-        cache.resize(elements > 0 ? elements : 1);
-    }
-
     @Override
     protected String populateTable(String path) {
         String message = null;
@@ -114,7 +103,8 @@ public class MDTableModel extends AbstractXmippTableModel {
         long ids[] = null;
 
         try {
-            setCacheSize(md);
+        	String imageFn = md.getValueString(MDLabel.MDL_IMAGE, md.firstObject(), true);
+            setCacheSize(imageFn);
 
             ids = md.findObjects();
 

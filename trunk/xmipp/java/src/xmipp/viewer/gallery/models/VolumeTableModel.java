@@ -30,6 +30,7 @@ public class VolumeTableModel extends AbstractXmippTableModel {
         String message = null;
 
         try {
+        	setCacheSize(filename);
             ImageGeneric image = new ImageGeneric(filename);
 
             int nslices = image.getZDim();

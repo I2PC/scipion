@@ -170,18 +170,19 @@ public class ImagesWindowFactory {
     }
 
     public static JFrameGallery openFileAsGallery(String filename, Param parameters) {
-        JFrameGallery gallery = new JFrameGallery(filename);
-        setConvenientSize(gallery);
+    	DEBUG.printMessage("AQUIIIIIIIII");
+        return new JFrameGallery(filename, parameters);
+        //setConvenientSize(gallery);
 
-        if (parameters.rows < 0 && parameters.columns < 0) {
-            gallery.setAutoAdjustColumns(true);
-        } else {
-            gallery.setDimensions(parameters.rows, parameters.columns);
-        }
+//        if (parameters.rows < 0 && parameters.columns < 0) {
+//            gallery.setAutoAdjustColumns(true);
+//        } else {
+//            gallery.setDimensions(parameters.rows, parameters.columns);
+//        }
+//
+//        gallery.setVisible(true);
 
-        gallery.setVisible(true);
-
-        return gallery;
+//        return gallery;
     }
 
     public static JFrameGallery openFilesAsGallery(String filenames[], boolean useSameTable) {
@@ -193,7 +194,7 @@ public class ImagesWindowFactory {
         JFrameGallery gallery = null;
 
         if (useSameTable) {
-            gallery = new JFrameGallery(filenames);
+            gallery = new JFrameGallery(filenames, parameters);
             setConvenientSize(gallery);
 
             if (parameters.rows < 1 && parameters.columns < 1) {
@@ -213,9 +214,9 @@ public class ImagesWindowFactory {
 
     // Used by micrographs table, to load items marked as selected/unselected.
     public static void openGallery(String filenames[], boolean enabled[]) {
-        JFrameGallery gallery = new JFrameGallery(filenames, enabled);
-        gallery.setAutoAdjustColumns(true);
-        gallery.setVisible(true);
+//        JFrameGallery gallery = new JFrameGallery(filenames, enabled);
+//        gallery.setAutoAdjustColumns(true);
+//        gallery.setVisible(true);
     }
 
     public static void captureFrame(ImagePlus ip) {

@@ -53,6 +53,21 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
             IJ.showMessage(message);
         }
     }
+    
+    /** Resize the cache depending on image dimensions 
+     * 
+     * @param filename
+     * @throws Exception
+     */
+    void setCacheSize(String filename) throws Exception {
+        ImageGeneric image = new ImageGeneric(filename);
+
+        int imageSize = image.getXDim() * image.getYDim() * Cache.MAXPXSIZE;
+        int elements = Cache.MEMORY_SIZE / imageSize;
+
+        cache.resize(elements > 0 ? elements : 1);
+        image.destroy();
+    }
 
     public void setShowLabels(boolean showLabels) {
         this.showLabels = showLabels;
@@ -416,6 +431,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     }
 
     public void autoAdjustColumns(int width, int intercellWidth) {
+    	DEBUG.printMessage(String.format("AbstractXmippTableModel.autoAdjust: width: %d", width));
 //        int displayableColumns = (int) Math.floor(
 //                (double) width / (double) (getCellWidth() - 2 * intercellWidth));
         
@@ -431,6 +447,8 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 //            DEBUG.printMessage(" *** Displayable columns: " + ddisplayableColumns);
         }
 
+    	DEBUG.printMessage(String.format("getColumnCount: %d displayableCols: %d: ",
+    			getColumnCount(), displayableCols));
         if (getColumnCount() != displayableCols) {
             setColumns(displayableCols);
         }
