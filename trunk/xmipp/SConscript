@@ -64,11 +64,15 @@ def SymLink(target, source, env=None):
         source = str(source[0])
     else:
         link = target
-        
-    source = os.path.relpath(source, os.path.split(link)[0])
-    if os.path.lexists(link):
-        os.remove(link)
-    os.symlink(source, link)
+    
+    if CYGWIN:
+    	from shutil import copyfile
+        copyfile(source,link)
+    else:    
+        source = os.path.relpath(source, os.path.split(link)[0])
+        if os.path.lexists(link):
+            os.remove(link)
+        os.symlink(source, link)
 
 def AddProgramLink(target, source, PrependXmipp=True):
     binprefix = os.path.join(env['prefix'], 'bin')
@@ -362,7 +366,7 @@ def CompileJavaJar(target, source, env):
     cmd = env['JAVAC']
     cp = ':'.join([str(s) for s in source[1:]])
     if len(cp):
-        cmd += ' -cp ' + cp + ":/home/josem/xmipp_current/java/lib/*"
+        cmd += ' -cp "' + cp + ';java/lib/*"'
     Cmd('%(cmd)s -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals())
     classDir = join(buildDir, 'xmipp', os.path.basename(srcDir))
     # We need to create a txt file with the list of all .class files 
