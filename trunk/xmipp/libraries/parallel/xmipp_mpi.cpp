@@ -22,7 +22,6 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-
 #include "xmipp_mpi.h"
 
 /** Function for a thread waiting on master MPI node distributing tasks.
@@ -261,7 +260,7 @@ void MpiNode::prepareFileBarrierWaiting(FileName &fnToWaitOn)
 {
 	char tempFileName[L_tmpnam];
 	if (isMaster())
-		tmpnam_r(tempFileName);
+		std::tmpnam(tempFileName);
     MPI_Bcast(tempFileName, L_tmpnam, MPI_CHAR, 0, MPI_COMM_WORLD);
     fnToWaitOn=tempFileName;
 }
