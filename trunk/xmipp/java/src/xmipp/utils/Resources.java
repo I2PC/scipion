@@ -4,7 +4,10 @@
  */
 package xmipp.utils;
 
+import java.io.File;
+
 import ij.ImagePlus;
+import xmipp.jni.Filename;
 import javax.swing.ImageIcon;
 
 /**
@@ -18,7 +21,7 @@ public class Resources {
     
     //Path to resource folder    
     //FIXME: Now hard coded
-    public final static String PATH_ICONS = "/home/josem/xmipp_current/resources/";
+    public static String PATH_ICONS;
     //Icon names    
     public final static String MISSING = "missing.png";
     public final static String WAIT = "wait.gif";
@@ -33,21 +36,24 @@ public class Resources {
     public static ImageIcon WAIT_MENU_ICON;
     public static ImagePlus MISSING_ITEM;
 
-    static {
-        new Resources();    // Auto-load.
+    static { //this block will be called just once, at class initialization
+    	try {
+    		PATH_ICONS = Filename.getXmippPath();//"/home/josem/xmipp_current/resources/";
+    	}
+    	catch (Exception e){
+    		PATH_ICONS = ".";
+    	}
+    	DEBUG.printMessage(PATH_ICONS);
+    	WAIT_ICON = getIcon(WAIT);
+    	WAIT_MENU_ICON = getIcon(WAIT_MENU);
+    	
+    	// For missing items.
+    	ImageIcon missingIcon = getIcon(MISSING);
+    	MISSING_ITEM = new ImagePlus("X", missingIcon.getImage());
     }
     
     // Create an icon using the xmipp resource path
     public static ImageIcon getIcon(String name){
-    	return new ImageIcon(PATH_ICONS + name);
-    }
-
-    public Resources() {
-        WAIT_ICON = getIcon(WAIT);
-        WAIT_MENU_ICON = getIcon(WAIT_MENU);
-
-        // For missing items.
-        ImageIcon missingIcon = getIcon(MISSING);
-        MISSING_ITEM = new ImagePlus("X", missingIcon.getImage());
+    	return new ImageIcon(String.format("%s%sresources%s%s", PATH_ICONS, File.separator, File.separator, name));
     }
 }
