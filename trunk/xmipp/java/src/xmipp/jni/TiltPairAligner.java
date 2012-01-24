@@ -5,7 +5,7 @@ public class TiltPairAligner
 	//Load the native library
 	static
 	{
-		System.loadLibrary("XmippJavaInterface");
+		System.loadLibrary("XmippJNI");
 		storeIds();
 	}
 	// hold pointer to Image class in C++ space

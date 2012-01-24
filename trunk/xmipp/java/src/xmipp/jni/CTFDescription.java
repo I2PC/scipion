@@ -13,7 +13,7 @@ public class CTFDescription {
 
     // Initialize library.
     static {
-        System.loadLibrary("XmippJavaInterface");
+        System.loadLibrary("XmippJNI");
         //storeIds();
     }
 

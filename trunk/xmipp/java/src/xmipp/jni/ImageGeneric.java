@@ -34,7 +34,7 @@ public class ImageGeneric {
 
     // Initialize library.
     static {
-        System.loadLibrary("XmippJavaInterface");
+        System.loadLibrary("XmippJNI");
         //storeIds();
     }
 

@@ -31,6 +31,13 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_Filename_hasVolumeExtension
 JNIEXPORT jstring JNICALL Java_xmipp_jni_Filename_compose
   (JNIEnv *, jclass, jint, jstring);
 
+/*
+ * Class:     xmipp_Filename
+ * Method:    compose
+ * Signature: (ILjava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_xmipp_jni_Filename_getXmippPath
+  (JNIEnv *, jclass);
 #ifdef __cplusplus
 }
 #endif

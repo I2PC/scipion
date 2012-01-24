@@ -97,6 +97,8 @@ public class Filename {
     public static native boolean hasVolumeExtension(String filename) throws Exception;
     
     public static native String compose(int slice,String path) throws Exception;
+    
+    public static native String getXmippPath() throws Exception;
 
     public static boolean isSingleImage(String filename) throws Exception {
         try {

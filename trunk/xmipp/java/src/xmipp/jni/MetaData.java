@@ -38,7 +38,7 @@ public class MetaData {
     private long peer;
 
     static {
-        System.loadLibrary("XmippJavaInterface");
+        System.loadLibrary("XmippJNI");
         //storeIds();
     }
 
