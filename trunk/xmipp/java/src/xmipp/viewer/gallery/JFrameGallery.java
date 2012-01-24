@@ -189,7 +189,6 @@ public class JFrameGallery extends JFrame {
 	
 	private void readParams(Param parameters){
 		this.parameters = parameters;
-		
 	}
 	
 	/** This function will set the values of colums
@@ -251,6 +250,9 @@ public class JFrameGallery extends JFrame {
 //		jsColumns.setValue(tableModel.getColumnCount());
 
 		setZoom(parameters.zoom);
+		if (tableModel.containsGeometryInfo()) {
+			((MDTableModel) tableModel).setUseGeometry(true);
+		}
 		// Create row header for enumerate rows
 		rowHeaderModel = new GalleryRowHeaderModel(tableModel, 1);
 		rowHeader = new JList();
@@ -877,7 +879,6 @@ public class JFrameGallery extends JFrame {
 	private void jtbUseGeometryActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jtbUseGeometryActionPerformed
 		if (tableModel.containsGeometryInfo()) {
 			((MDTableModel) tableModel).setUseGeometry(jtbUseGeometry.isSelected());
-
 			updateTable();
 		}
 	}// GEN-LAST:event_jtbUseGeometryActionPerformed

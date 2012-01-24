@@ -110,7 +110,9 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
     }
 
     public String getAbsoluteFileName() {
-        return nimage + Filename.SEPARATOR + path;
+    	if (nimage != ImageGeneric.ALL_IMAGES)
+    		return nimage + Filename.SEPARATOR + path;
+    	return path;
     }
 
     public long getNImage() {
