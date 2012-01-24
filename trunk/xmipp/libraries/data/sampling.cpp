@@ -723,8 +723,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
     {
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
-            if (XX(sampling_points_angles[i]) >= -180. / (sym_order) &&
-                XX(sampling_points_angles[i]) <=  180. / (sym_order) &&
+            if (XX(sampling_points_angles[i]) >= -180. / (sym_order)  + 90. &&
+                XX(sampling_points_angles[i]) <=  180. / (sym_order)  + 90. &&
                 YY(sampling_points_angles[i]) <=    90.
                )
             {
@@ -737,8 +737,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
     {
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
-            if (XX(sampling_points_angles[i]) >=    0. &&
-                XX(sampling_points_angles[i]) <=  180. / (sym_order) &&
+            if (XX(sampling_points_angles[i]) >=    0. + 90. &&
+                XX(sampling_points_angles[i]) <=  180. / (sym_order) +90. &&
                 YY(sampling_points_angles[i]) <=    90.
                )
             {

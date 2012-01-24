@@ -2442,13 +2442,13 @@ void SymList::fillSymmetryClass(const FileName &symmetry, int pgGroup, int pgOrd
     else if (pgGroup == pg_DN)
     {
         line1 << "rot_axis " << pgOrder << " 0 0 1";
-        line2 << "rot_axis " << "2" << " 0 1 0";
+        line2 << "rot_axis " << "2" << " 1 0 0";
     }
     else if (pgGroup == pg_DNV)
     {
         line1 << "rot_axis " << pgOrder << " 0 0 1";
-        line2 << "rot_axis " << "2" << " 0 1 0";
-        line3 << "mirror_plane 0 1 0";
+        line2 << "rot_axis " << "2" << " 1 0 0";
+        line3 << "mirror_plane 1 0 0";
     }
     else if (pgGroup == pg_DNH)
     {
