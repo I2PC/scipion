@@ -342,7 +342,8 @@ elif (ARGUMENTS['mode'] == 'compile'):
         AppendIfNotExists(CXXFLAGS=['-D__XMIPP_DEBUG__'])
         AppendIfNotExists(CXXFLAGS=dpFlags)
         #required for print stack trace
-        AppendIfNotExists(CXXFLAGS=['-rdynamic'])
+	if not int(env['cuda']):
+	   AppendIfNotExists(CXXFLAGS=['-rdynamic'])
         AppendIfNotExists(CXXFLAGS=['-O0'])
         AppendIfNotExists(CCFLAGS=dpFlags)
         AppendIfNotExists(LINKFLAGS=dpFlags)
