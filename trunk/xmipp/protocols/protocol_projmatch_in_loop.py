@@ -92,7 +92,6 @@ def angular_project_library(_log
                          parameters,
                          NumberOfMpi*NumberOfThreads)
     if (not DoCtfCorrection):
-        print "a1"
         src=ProjectLibraryRootName.replace(".stk",'_sampling.xmd')
         dst = src.replace('sampling.xmd','group%06d_sampling.xmd' % 1)
         shutil.copy(src, dst)
@@ -393,7 +392,6 @@ def reconstruction(_log
         printLog("Metadata %s is empty. Creating a Black file named %s" % (ReconstructionXmd,ReconstructedVolume))
         createEmptyFile(ReconstructedVolume,x,y,z,n)
         return
-
 
     
     print '*********************************************************************'

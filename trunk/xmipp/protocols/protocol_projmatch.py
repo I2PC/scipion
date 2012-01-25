@@ -309,6 +309,8 @@ class ProtProjMatch(XmippProtocol):
         #Create Initial angular file. Either fill it with zeros or copy input
         _dataBase.insertStep('initAngularReferenceFile', verifyfiles=[self.DocFileWithOriginalAngles]
                                                                 , BlockWithAllExpImages = self.BlockWithAllExpImages
+                                                                , CtfGroupDirectory=self.CtfGroupDirectory
+                                                                , CtfGroupRootName=self.CtfGroupRootName
                                                                 , DocFileName=self.DocFileName
                                                                 , DocFileWithOriginalAngles=self.DocFileWithOriginalAngles
                                                                 , SelFileName=self.SelFileName)

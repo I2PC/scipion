@@ -4,6 +4,7 @@ import os
 from xmipp import *
 from protlib_utils import printLog
 from protlib_filesystem import uniqueFilename
+from os.path import join
 
 def checkVolumeProjSize(_log, ReferenceFileNames, SelFileName):
     """ check references and projection size match"""
@@ -58,11 +59,12 @@ def executeCtfGroups (_log,
     from protlib_utils import runJob
     if not os.path.exists(CtfGroupDirectory):
         os.makedirs(CtfGroupDirectory)
+    printLog("executeCtfGroups01", _log)
 
     if(not DoCtfCorrection):
         MD=MetaData(SelFileName)
-        block_name= 'ctfGroup'+str(1).zfill(FILENAMENUMBERLENTGH) +\
-                    '@' + CtfGroupDirectory+"/"+ CtfGroupRootName +'_images.sel'
+        block_name= 'ctfGroup'+str(1).zfill(FILENAMENUMBERLENGTH) +\
+                    '@' + join(CtfGroupDirectory, CtfGroupRootName) +'_images.sel'
         MD.write(block_name)
         return 1
 
@@ -72,6 +74,7 @@ def executeCtfGroups (_log,
 #    join between selfile and metadatafile
     MDctfdata = MetaData();
     MDctfdata.read(CTFDatName)
+
     MDsel = MetaData();
     MDsel.read(SelFileName)
     MDctfdata.intersection(MDsel,MDL_IMAGE)
@@ -113,15 +116,37 @@ def checkOptionsCompatibility(_log, DoAlign2D, DoCtfCorrection):
         printLog(error_message, _log,False,True)
         exit(1)
 
-def initAngularReferenceFile(_log, BlockWithAllExpImages, DocFileName, DocFileWithOriginalAngles, SelFileName):
+def initAngularReferenceFile(_log, BlockWithAllExpImages, CtfGroupDirectory, CtfGroupRootName, DocFileName, DocFileWithOriginalAngles, SelFileName):
     '''Create Initial angular file. Either fill it with zeros or copy input'''
     printLog("initAngularReferenceFile", _log)
     import shutil
+    
+    MD=MetaData()
+
     if len(DocFileName)>1:
-        shutil.copy(DocFileName,DocFileWithOriginalAngles)
+        #shutil.copy(DocFileName,DocFileWithOriginalAngles)
+        MD.read(DocFileName)
+        
+        
     else:
-        MD=MetaData(SelFileName)
+        MD.read(SelFileName)
         MD.addLabel(MDL_ANGLEROT)
         MD.addLabel(MDL_ANGLETILT)
         MD.addLabel(MDL_ANGLEPSI)
-        MD.write(BlockWithAllExpImages + '@'+ DocFileWithOriginalAngles)
+    
+    MD.write(BlockWithAllExpImages + '@'+ DocFileWithOriginalAngles)
+    block_name= 'ctfGroup'+str(1).zfill(FILENAMENUMBERLENGTH) +\
+                    '@' + join(CtfGroupDirectory, CtfGroupRootName) +'_images.sel'
+    blocklist = getBlocksInMetaDataFile(join(CtfGroupDirectory, CtfGroupRootName) +'_images.sel')
+    
+    MDctf = MetaData()
+    mdList = [MDL_IMAGE]
+    for block in blocklist:
+        #read blocks
+        MDctf.read(block+'@'+join(CtfGroupDirectory, CtfGroupRootName)+'_images.sel', mdList)
+        #add angles to blocks
+        MDctf.intersection(MD, MDL_IMAGE)
+        block_name= block+'@' +DocFileWithOriginalAngles
+        MDctf.write(block_name, MD_APPEND)
+        
+
