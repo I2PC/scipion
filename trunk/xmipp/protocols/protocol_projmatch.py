@@ -65,7 +65,25 @@ class ProtProjMatch(XmippProtocol):
         return errors 
     
     def summary(self):
+        from protlib_sql import XmippProtocolDb
+
         super(ProtProjMatch, self).summary()
+        
+        auxMD1 = MetaData(self.CTFDatName)
+        auxMD2 = MetaData()
+        auxMD2.aggregate(auxMD1, AGGR_COUNT, MDL_CTFMODEL, MDL_CTFMODEL, MDL_COUNT)
+        self.NumberOfCtfGroups = auxMD2.size()
+
+        self.ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
+        self.numberOfReferences = len(self.ReferenceFileNames)
+        
+        
+        
+        #runId = self.Db.getRunId(protDict.projmatch.name, protDict.projmatch.RunName)
+        #print "runId", runId
+        #THIS NEED TO BE FIXED. dO NOT OPEN THE DATA BASE JUST TO GET A NUMBERs
+        #_dataBase  = XmippProtocolDb(self, self.scriptName, False)
+        #_dataBase.getRunIter(self.Db.getRunId(protDict.projmatch.name, protDict.projmatch.RunName))
         summary = ['Performed %d iterations with angular sampling rate %s' 
                    % (self.NumberOfIterations, self.AngSamplingRateDeg)]
         summary += ['Final Resolution is %s' % 'not yet implemented']
@@ -235,6 +253,8 @@ class ProtProjMatch(XmippProtocol):
         self.Align2dMaxChangeOffset = [-1] + getListFromVector(self.Align2dMaxChangeOffset, self.NumberOfIterations)
         self.Align2dMaxChangeRot = [-1] + getListFromVector(self.Align2dMaxChangeRot, self.NumberOfIterations)
         self.AngSamplingRateDeg = [-1] + getListFromVector(self.AngSamplingRateDeg, self.NumberOfIterations)
+        self.ConstantToAddToFiltration = [-1] + getListFromVector(self.ConstantToAddToFiltration, self.NumberOfIterations)
+        self.ConstantToAddToMaxReconstructionFrequency = [-1] + getListFromVector(self.ConstantToAddToMaxReconstructionFrequency, self.NumberOfIterations)
         self.DiscardPercentage = [-1] + getListFromVector(self.DiscardPercentage, self.NumberOfIterations)
         self.DiscardPercentagePerClass = [-1] + getListFromVector(self.DiscardPercentagePerClass, self.NumberOfIterations)
         self.DoAlign2D = [False] + getBoolListFromVector(self.DoAlign2D, self.NumberOfIterations)
@@ -399,6 +419,7 @@ class ProtProjMatch(XmippProtocol):
                                       AvailableMemory=self.AvailableMemory
                                     , CtfGroupRootName=self.CtfGroupRootName
                                     , CtfGroupDirectory=self.CtfGroupDirectory
+                                    , DocFileInputAngles=self.DocFileInputAngles[iterN - 1]
                                     , DoComputeResolution=self.DoComputeResolution[iterN]
                                     , DoCtfCorrection=self.DoCtfCorrection
                                     , DoScale=self.DoScale
@@ -492,7 +513,7 @@ class ProtProjMatch(XmippProtocol):
                                               , PaddingFactor = self.PaddingFactor
                                               , ResolSam = self.ResolSam
                                               , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
-                                              , ConstantToAddToFiltration = self.ConstantToAddToFiltration
+                                              , ConstantToAddToFiltration = self.ConstantToAddToMaxReconstructionFrequency[iterN]
                                               )
                     
                 if(self.DoSplitReferenceImages[iterN]):
@@ -517,7 +538,7 @@ class ProtProjMatch(XmippProtocol):
                                               , PaddingFactor = self.PaddingFactor
                                               , ResolSam = self.ResolSam
                                               , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
-                                              , ConstantToAddToFiltration = self.ConstantToAddToFiltration
+                                              , ConstantToAddToFiltration = self.ConstantToAddToMaxReconstructionFrequency[iterN]
                                               )
 
                     _VerifyFiles = [self.getFilename('ReconstructedFileNamesItersSplit2', iter=iterN, ref=refN)]
@@ -540,7 +561,7 @@ class ProtProjMatch(XmippProtocol):
                                               , PaddingFactor = self.PaddingFactor
                                               , ResolSam = self.ResolSam
                                               , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
-                                              , ConstantToAddToFiltration = self.ConstantToAddToFiltration
+                                              , ConstantToAddToFiltration = self.ConstantToAddToMaxReconstructionFrequency[iterN]
                                               )
                     
                     _VerifyFiles = [self.getFilename('ResolutionXmdFile', iter=iterN, ref=refN)]
@@ -564,7 +585,7 @@ class ProtProjMatch(XmippProtocol):
                                               , OuterRadius = self.OuterRadius
                                               , DoLowPassFilter = self.DoLowPassFilter
                                               , UseFscForFilter = self.UseFscForFilter
-                                              , ConstantToAddToFiltration = self.ConstantToAddToFiltration
+                                              , ConstantToAddToFiltration = self.ConstantToAddToFiltration[iterN]
                                               , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
                                               , ResolSam = self.ResolSam
                                               )

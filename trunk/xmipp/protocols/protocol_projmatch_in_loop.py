@@ -3,6 +3,7 @@ import os, shutil, string, glob, math
 from distutils.dir_util import mkpath
 from xmipp import *
 from protlib_utils import runJob
+from protlib_filesystem import copyFile
 
 CtfBlockName = 'ctfGroup'
 RefBlockName = 'refGroup'
@@ -101,6 +102,7 @@ def projection_matching(_log
                             , AvailableMemory
                             , CtfGroupRootName
                             , CtfGroupDirectory
+                            , DocFileInputAngles
                             , DoComputeResolution
                             , DoCtfCorrection
                             , DoScale
@@ -139,20 +141,15 @@ def projection_matching(_log
         if NumberOfCtfGroups>1 :
             print 'Focus Group: ', ii+1,'/',NumberOfCtfGroups
         ictf    = NumberOfCtfGroups - ii 
-#        if (_DoCtfCorrection):
-        #outputname   = _ProjMatchRootName + '_' + CtfGroupName 
-        inputdocfile    = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@' + CtfGroupName + '_images.sel'
+        
+        inputdocfile    = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@' + DocFileInputAngles
         outputname   = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@'+ _ProjMatchRootName
-        #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
         baseTxtFile  = refname[:-len('.stk')] 
         neighbFile      = baseTxtFile + '_sampling.xmd'
         if (os.path.exists(neighbFile)):
             os.remove(neighbFile)
         neighbFileb     = baseTxtFile + '_group'+str(ictf).zfill(FILENAMENUMBERLENGTH) + '_sampling.xmd'
         shutil.copy(neighbFileb, neighbFile)
-#        else:
-#            inputdocfile    = 'ctfGroup'+str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
-#            outputname   = 'ctfGroup'+str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
 
         parameters= ' -i '               + inputdocfile + \
                     ' -o '               + outputname + \
@@ -428,7 +425,7 @@ def reconstruction(_log
                 md = MetaData(ResolutionXmdPrevIterMax)
                 id = md.firstObject()
                 FourierMaxFrequencyOfInterest = md.getValue(MDL_RESOLUTION_FREQREAL, id)
-                FourierMaxFrequencyOfInterest = FourierMaxFrequencyOfInterest * ResolSam + ConstantToAddToFiltration
+                FourierMaxFrequencyOfInterest = FourierMaxFrequencyOfInterest * ResolSam + float(ConstantToAddToFiltration)
                 if FourierMaxFrequencyOfInterest > 0.5:
                     FourierMaxFrequencyOfInterest = 0.5
 
