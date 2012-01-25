@@ -512,7 +512,7 @@ def  compute_resolution(_log
         md.setValue(MDL_RESOLUTION_FREQREAL, filter_frequence, id)
         md.setValue(MDL_RESOLUTION_FRC, frc, id)
         md.setValue(MDL_SAMPLINGRATE, ResolSam, id)
-        md.write(ResolutionXmdCurrIterMax)
+        md.write(ResolutionXmdCurrIterMax,MD_APPEND)
         
 
 def  filter_volume(_log
