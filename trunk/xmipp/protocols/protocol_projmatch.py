@@ -278,8 +278,6 @@ class ProtProjMatch(XmippProtocol):
         ###############self.Db.setVerify(self.Verify,self.ViewVerifyedFiles)
         ###############self.Db.setParentDefault(XmippProjectDb.lastStep)
         
-        #!a Check this
-        #self.MpiJobSize = 5
 
     def otherActionsToBePerformedBeforeLoop(self):
         print "in otherActionsToBePerformedBeforeLoop"
