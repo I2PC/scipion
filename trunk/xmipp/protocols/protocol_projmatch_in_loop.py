@@ -425,9 +425,11 @@ def reconstruction(_log
                 md = MetaData(ResolutionXmdPrevIterMax)
                 id = md.firstObject()
                 FourierMaxFrequencyOfInterest = md.getValue(MDL_RESOLUTION_FREQREAL, id)
-                FourierMaxFrequencyOfInterest = FourierMaxFrequencyOfInterest * ResolSam + float(ConstantToAddToFiltration)
+                FourierMaxFrequencyOfInterest = ResolSam/FourierMaxFrequencyOfInterest + float(ConstantToAddToFiltration)
                 if FourierMaxFrequencyOfInterest > 0.5:
                     FourierMaxFrequencyOfInterest = 0.5
+                elif FourierMaxFrequencyOfInterest < 0.:
+                    FourierMaxFrequencyOfInterest = 0.001
 
         program = 'xmipp_reconstruct_fourier'
         parameters=' -i '    + ReconstructionXmd + \
@@ -536,7 +538,7 @@ def  filter_volume(_log
                md = MetaData(ResolutionXmdPrevIterMax)
                id = md.firstObject()
                FourierMaxFrequencyOfInterest = md.getValue(MDL_RESOLUTION_FREQREAL, id)
-               FourierMaxFrequencyOfInterest = FourierMaxFrequencyOfInterest * ResolSam
+               FourierMaxFrequencyOfInterest = ResolSam/FourierMaxFrequencyOfInterest
             
            filter_in_pixels_at = float(FourierMaxFrequencyOfInterest) +\
                                  float(ConstantToAddToFiltration)
