@@ -221,6 +221,47 @@ class TestXmippPythonInterface(unittest.TestCase):
         tmpFileName = '/tmp/test_pythoninterface_read_tmp.xmd'
         md.write(tmpFileName)
         
+        md2 = MetaData()
+        md2.read(tmpFileName)
+        os.remove(tmpFileName)
+        
+        self.assertEqual(md, md2)
+
+    def test_Metadata_read_with_labels(self):
+        '''MetaData_setValues'''
+        '''This test should produce the following metadata, which is the same of 'test.xmd'
+        data_
+        loop_
+         _image
+         _CTFModel
+         _CTF_Defocus_U
+         _count
+         _angleComparison
+         _ref3d
+         000001@Images/proj_ctf_1.stk  CTFs/10.ctfparam  -100.000000         10 [     1.000000     2.000000     3.000000 ]         -1
+         000002@Images/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000         20 [     1.000000     4.000000     9.000000 ]          2
+         000003@Images/proj_ctf_1.stk  CTFs/10.ctfparam  -300.000000         30 [     1.000000     8.000000    27.000000 ]         -3
+        ''' 
+        mdPath = os.path.join(self.testsPath, "test_pythoninterface", "test.xmd")
+        mdRef = MetaData(mdPath)
+        md = MetaData()
+        ii = -1
+        listOrig = [1.0, 2.0, 3.0]
+        for i in range(1, 4):
+            id = md.addObject() 
+            img = '00000%i@Images/proj_ctf_1.stk' % i
+            md.setValue(MDL_IMAGE, img, id)
+            md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+            md.setValue(MDL_CTF_DEFOCUSU, (i * ii * 100.0), id)
+            md.setValue(MDL_COUNT, (i * 10L), id)
+            list = [x**i for x in listOrig]
+            md.setValue(MDL_ANGLE_COMPARISON, list, id)
+            md.setValue(MDL_REF3D, (i * ii), id)
+            ii *= -1
+            
+        tmpFileName = '/tmp/test_pythoninterface_read_tmp.xmd'
+        md.write(tmpFileName)
+        
         mdList = [MDL_IMAGE, MDL_COUNT]
         md.read(tmpFileName,mdList)
         os.remove(tmpFileName)
