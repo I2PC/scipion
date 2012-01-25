@@ -24,7 +24,7 @@ _mic_block = 'mic_%(micName)s'
 _templateDict = {
         # This templates are relative to a micrographDir
         'mic_block': _mic_block,
-        'mic_block_fn': join(_mic_block, '%(fn)s'),
+        'mic_block_fn': _mic_block+'@%(fn)s',
         'sorted': '%(root)s_sorted.xmd'
         }
 
@@ -216,6 +216,7 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
         
         fnUntilted = join(pickingDir,umicName + ".pos")
         fnTilted = join(pickingDir,tmicName + ".pos")
+        print "Looking for "+fnUntilted+" "+fnTilted
 
         mdUntiltedPos.clear()
         mdTiltedPos.clear()
@@ -227,8 +228,10 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
                 pass
         # Append alphanumeric prefix to help identifying the block 
         fn = _getFilename('mic_block_fn', micName=umicName, fn=fnExtractList)
+        print "Writing untilted to "+fn
         mdUntiltedPos.write(fn, MD_APPEND)
         fn =_getFilename('mic_block_fn', micName=tmicName, fn=fnExtractList)
+        print "Writing tilted to "+fn
         mdTiltedPos.write(fn, MD_APPEND)
 
 def phaseFlip(log, micrograph, ctf, fnOut):
@@ -293,7 +296,7 @@ def gatherTiltPairSelfiles(log, family, WorkingDir, fnMicrographs):
         # Check if there are picked particles in this micrographs
         if exists(fnUntilted):
             mdUntilted.unionAll(MetaData(fnUntilted))            
-            tmicName = baseWithoutExt(mdPairs.getValue(MDL_MICROGRAPH_TILTED,id))
+            tmicName = baseWithoutExt(mdPairs.getValue(MDL_MICROGRAPH_TILTED,objId))
             mdTilted.unionAll(MetaData(join(WorkingDir, tmicName + ".xmd")))
         
     mdUntilted.write(join(WorkingDir, "%s_untilted.xmd" % family))
