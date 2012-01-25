@@ -1415,17 +1415,39 @@ MetaData_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (self != NULL)
     {
+        PyObject *list = NULL;
         PyObject *input = NULL, *pyStr = NULL;
         char *str = NULL;
         int number = -1;
-        if (PyArg_ParseTuple(args, "O", &input))
+        if (PyArg_ParseTuple(args, "O|O", &input,  &list))
         {
             try
             {
                 if ((pyStr = PyObject_Str(input)) != NULL)
                 {
                     str = PyString_AsString(pyStr);
-                    self->metadata->read(str);
+                    if (PyList_Check(list))
+                    {
+                        size_t size = PyList_Size(list);
+                        PyObject * item = NULL;
+                        int iValue = 0;
+                        std::vector<MDLabel> vValue(size);
+                        for (size_t i = 0; i < size; ++i)
+                        {
+                            item = PyList_GetItem(list, i);
+                            if (!PyInt_Check(item))
+                            {
+                                PyErr_SetString(PyExc_TypeError,
+                                                "MDL labels must be integers (MDLABEL)");
+                                return NULL;
+                            }
+                            iValue = PyInt_AsLong(item);
+                            vValue[i] = (MDLabel)iValue;
+                        }
+                        self->metadata->read(str,&vValue);
+                    }
+                    else
+                        self->metadata->read(str);
                     Py_RETURN_NONE;
                 }
                 else
