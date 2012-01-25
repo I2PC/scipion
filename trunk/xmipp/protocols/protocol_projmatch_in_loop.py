@@ -498,11 +498,12 @@ def  compute_resolution(_log
         mdRsol = MetaData(ResolutionXmdCurrIter)
         mdResolOut = MetaData()
         mdResolOut.importObjects(mdRsol,MDValueLT(MDL_RESOLUTION_FRC, 0.5))
-        filter_frequence = mdResolOut.aggregateSingle(AGGR_MIN,MDL_RESOLUTION_FREQREAL)
-        mdResolOut.clear()
-        mdResolOut.importObjects(mdRsol,MDValueEQ(MDL_RESOLUTION_FREQREAL, filter_frequence))
+        mdResolOut.sort()
+#        filter_frequence = mdResolOut.aggregateSingle(AGGR_MAX,MDL_RESOLUTION_FREQREAL)
+#        mdResolOut.clear()
+#        mdResolOut.importObjects(mdRsol,MDValueEQ(MDL_RESOLUTION_FREQREAL, filter_frequence))
         id = mdResolOut.firstObject()
-        frc = 0.
+        filter_frequence = mdResolOut.getValue(MDL_RESOLUTION_FREQREAL,id)
         frc = mdResolOut.getValue(MDL_RESOLUTION_FRC, id)
 
         md = MetaData()
