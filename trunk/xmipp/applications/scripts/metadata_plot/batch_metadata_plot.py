@@ -48,6 +48,8 @@ class ScriptPlotMetadata(XmippScript):
         self.addParamsLine(' [--ytitle <title>]     : Plot y axis label')
         self.addParamsLine(' [-c <colors>]          : Colors for each plot')
         self.addParamsLine('   alias --colors;')
+        self.addParamsLine(' [-n <nbin>]          : Create histogram with Y data and nbin bins')
+        self.addParamsLine('   alias --nbins;')
         ## examples
         self.addExampleLine('Simple plot of label "sigmaNoise" from metadata', False)
         self.addExampleLine('xmipp_metadata_plot -i results.xmd -y sigmaNoise')
@@ -55,7 +57,16 @@ class ScriptPlotMetadata(XmippScript):
         self.addExampleLine('xmipp_metadata_plot -i results.xmd -x iterationNumber -y sigmaNoise --title "My figure" ')
         self.addExampleLine('Plot different labels and select colors:', False)
         self.addExampleLine('xmipp_metadata_plot -i results.xmd -x iterationNumber -y "sigmaNoise sigmaOffset iterationNumber" --title "My figure" --colors "yellow blue green"')
-            
+        self.addExampleLine('Plot using dots:', False)
+        self.addExampleLine('xmipp_metadata_plot -i results.xmd -x iterationNumber  \
+        -y "sigmaNoise sigmaOffset iterationNumber" \
+        --title "My figure" --colors "yellowo blueo greeno"')
+        self.addExampleLine('Plot using different line styles:', False)
+        self.addExampleLine('xmipp_metadata_plot -i results.xmd -x iterationNumber  \
+        -y "sigmaNoise sigmaOffset iterationNumber" \
+        --title "My figure" --colors "yellow-- blue. green.."')
+        self.addExampleLine('Colors, markers and style lines are described here: http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.plot', False)
+
     def run(self):        
         from xmipp import MetaData, str2Label
         from protlib_gui_figure import XmippPlotter        
@@ -79,6 +90,10 @@ class ScriptPlotMetadata(XmippScript):
             colors = self.getParam('--colors').split()
         else:
             colors = ['g', 'b', 'r', 'y']    
+        if self.checkParam('--nbins'):
+            nBins = int(self.getParam('--nbins'))
+        else:
+            nBins = None
             
         
         title = self.getParam('--title')
@@ -86,7 +101,10 @@ class ScriptPlotMetadata(XmippScript):
         xplotter.createSubPlot(title, xlabel, ylabel)
         
         for i, l in enumerate(ylabels):
-            xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i])
+            if nBins:
+                xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i], nbins=nBins)#if nbins presnts do an histogram
+            else:
+                xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i])#if nbins presnts do an histogram
         xplotter.showLegend(ylabels)
         xplotter.show()
 
