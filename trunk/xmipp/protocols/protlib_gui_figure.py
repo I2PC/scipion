@@ -268,7 +268,7 @@ class XmippPlotter():
         self.plot = a.plot
         return a
     
-    def plotMd(self, md, mdLabelX, mdLabelY, **args):
+    def plotMd(self, md, mdLabelX, mdLabelY, color='g',**args):
         if mdLabelX:
             xx = []
         else:
@@ -278,7 +278,7 @@ class XmippPlotter():
             if mdLabelX:
                 xx.append(md.getValue(mdLabelX, objId))
             yy.append(md.getValue(mdLabelY, objId))
-        self.plot(xx, yy, **args)
+        self.plot(xx, yy, color,**args)
         
     def plotMdFile(self, mdFilename, mdLabelX, mdLabelY,  **args):
         from xmipp import MetaData
