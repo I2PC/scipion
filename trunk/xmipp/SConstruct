@@ -325,8 +325,6 @@ if (ARGUMENTS['mode'] == 'configure'):
 elif (ARGUMENTS['mode'] == 'compile'):
     # --- This is the compilation mode
 
-    print 'This is compile'
-
     # add separator to prepend (not shown in help)
     env['prepend'] = env['prepend'] + '_'
 

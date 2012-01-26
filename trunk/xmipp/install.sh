@@ -36,7 +36,7 @@ IS_CYGWIN=false
 echo "The OS is $OS_TYPE"
 if [ $OS_TYPE = Darwin ]; then
 	IS_MAC=true;
-	CONFIGURE_ARGS="MPI_CXX=mpic++ MPI_LINKERFORPROGRAMS=mpic++"
+	CONFIGURE_ARGS="mpi=True MPI_CXX=mpic++ MPI_LINKERFORPROGRAMS=mpic++"
 elif [ $OS_TYPE = CYGWIN* ]; then
 	IS_CYGWIN=true;
 fi
@@ -165,6 +165,14 @@ ENDC="\033[0m"
 echoGreen()
 {
     printf "$GREEN %b $ENDC\n" "$1"
+}
+
+# Execute and print the sequence
+echoExec()
+{
+ COMMAND="$@"
+ echo '-->' $COMMAND
+ $COMMAND
 }
 
 compile_library()
@@ -311,11 +319,10 @@ if $DO_PYTHON; then
 		export DYLD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$DYLD_LIBRARY_PATH"
 	    echo "--> export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH"
     fi
-    echoGreen "Copy our custom python files:"
-    echo "-->  cd $EXT_PYTHON"
-    cd $EXT_PYTHON
-    echo "--> cp ./xmipp_setup.py $VPYTHON/setup.py"
-    cp ./xmipp_setup.py $VPYTHON/setup.py
+    echoGreen "Copying our custom python files ..."
+    echoExec "cd $EXT_PYTHON"
+    echoExec "cp ./xmipp_setup.py $VPYTHON/setup.py"
+    #cp ./xmipp_setup.py $VPYTHON/setup.py
     #I thick these two are not needed
     #cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h
     #echo "--> cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h"
@@ -324,6 +331,7 @@ if $DO_PYTHON; then
 
     # Create the python launch script with necessary environment variable settings
     PYTHON_BIN=$XMIPP_HOME/bin/xmipp_python
+	echo "--> Creating python launch script $PYTHON_BIN ..."
     printf "#!/bin/sh\n\n" > $PYTHON_BIN
     printf 'VPYTHON=%b \n' "$VPYTHON" >> $PYTHON_BIN
     printf 'VTCLTK=%b \n\n' "$VTCLTK" >> $PYTHON_BIN
@@ -332,21 +340,29 @@ if $DO_PYTHON; then
     printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
     printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
     printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
-if $IS_CYGWIN; then
-	printf '    PYTHONCYGWINLIB=`find $EXT_PYTHON/$VPYTHON/build -name "lib.cygwin*" -type d`\n' >> $PYTHON_BIN
-	printf '    export LD_LIBRARY_PATH=$PYTHONCYGWINLIB:$LD_LIBRARY_PATH\n' >> $PYTHON_BIN
-	printf '    export PYTHONPATH=$PYTHONCYGWINLIB:$PYTHONPATH\n' >> $PYTHON_BIN
-    printf '    $EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
-elif $IS_MAC; then
-    printf 'export DYLD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$DYLD_LIBRARY_PATH \n' >> $PYTHON_BIN	
-    printf '    $EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
-else
-    printf '    $EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
-fi
-    chmod u+x $PYTHON_BIN
+	if $IS_CYGWIN; then
+		printf 'PYTHONCYGWINLIB=`find $EXT_PYTHON/$VPYTHON/build -name "lib.cygwin*" -type d`\n' >> $PYTHON_BIN
+		printf 'export LD_LIBRARY_PATH=$PYTHONCYGWINLIB:$LD_LIBRARY_PATH\n' >> $PYTHON_BIN
+		printf 'export PYTHONPATH=$PYTHONCYGWINLIB:$PYTHONPATH\n' >> $PYTHON_BIN
+		printf '$EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
+	elif $IS_MAC; then
+		printf 'export DYLD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$DYLD_LIBRARY_PATH \n' >> $PYTHON_BIN	
+		printf '$EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
+	else
+		printf '$EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
+	fi
+	
+    echoExec "chmod u+x $PYTHON_BIN"
     
     compile_pymodule $VNUMPY
-    compile_pymodule $VMATLIBPLOT
+	
+	if $IS_MAC; then
+			echoExec "cd $EXT_PYTHON/$VMATLIBPLOT"
+			echoExec "make -f make.osx clean"
+			echoExec "make -f make.osx PREFIX=$XMIPP_HOME PYVERSION=2.7 fetch deps mpl_install"
+	else
+			compile_pymodule $VMATLIBPLOT
+	fi
     #compile_pymodule $PYMPI
     #compile_pymodule $VPIL
 fi

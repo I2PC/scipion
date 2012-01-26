@@ -1613,11 +1613,7 @@ class PyBuildExt(build_ext):
         # The _tkinter module, using frameworks. Since frameworks are quite
         # different the UNIX search logic is not sharable.
         from os.path import join, exists
-        framework_dirs = [
-            '/Library/Frameworks',
-            '/System/Library/Frameworks/',
-            join(os.getenv('HOME'), '/Library/Frameworks')
-        ]
+        framework_dirs = [ ]
 
         sysroot = macosx_sdk_root()
 
