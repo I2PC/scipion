@@ -259,6 +259,7 @@ class XmippProtocol(object):
         self.Err = self.LogPrefix+".err"
         self.Out = self.LogPrefix+".out"
         self.LogFile = self.LogPrefix + ".log"
+        self.Log = None # This will be created on run setup
         self.SystemFlavour = project.SystemFlavour
         # Create filenames dictionary
         self.FilenamesDict = self.createFilenameDict()

@@ -13,7 +13,7 @@ from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 import os
 from os.path import exists
-from protlib_utils import runImageJPlugin
+from protlib_utils import runImageJPlugin, runShowJ
 from protlib_gui_ext import showWarning
 
 class ProtML2D(XmippProtocol):
@@ -117,8 +117,7 @@ class ProtML2D(XmippProtocol):
             blocks = getBlocksInMetaDataFile(refs)
             lastBlock = blocks[-1]
             try:
-                runImageJPlugin("512m", "XmippBrowser.txt", "-i %(lastBlock)s@%(refs)s --mode metadata --render" 
-                            % locals(), batchMode=True)
+                runShowJ("%(lastBlock)s@%(refs)s" % locals(), "512m", "--mode metadata --render")
             except Exception, e:
                 from protlib_gui_ext import showError
                 showError("Error launching java app", str(e))

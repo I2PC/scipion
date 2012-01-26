@@ -321,12 +321,6 @@ class XmippProjectDb(SqliteDb):
         steps_done = self.cur.execute(sqlCommand + ' AND finish IS NOT NULL').fetchone()[0]
         return (steps_done, steps_total)
 
-    def getRunIter(self, run):
-        self.sqlDict['run_id'] = run['run_id']
-        sqlCommand = """ SELECT COALESCE(MAX(iter),1) FROM %(TableSteps)s WHERE run_id=%(run_id)d AND finish IS NOT NULL""" % self.sqlDict 
-        iter = self.cur.execute(sqlCommand).fetchone()[0]
-        return (iter)
-
     def getRunStateByName(self, protocol_name, runName):
         run = self.selectRunByName(protocol_name, runName)
         self.sqlDict['run_id'] = run['run_id']
@@ -379,6 +373,10 @@ class XmippProtocolDb(SqliteDb):
         sqlCommand = "SELECT run_state FROM %(TableRuns)s WHERE run_id = %(run_id)d" % self.sqlDict
         cursor.execute(sqlCommand)
         return cursor.fetchone()[0]
+    
+    def getRunIter(self):
+        sqlCommand = """ SELECT COALESCE(MAX(iter),1) FROM %(TableSteps)s WHERE run_id=%(run_id)d AND finish IS NOT NULL""" % self.sqlDict 
+        return self.cur.execute(sqlCommand).fetchone()[0]
 
     def checkRunOk(self, cursor):
         return self.getRunState(cursor) == SqliteDb.RUN_STARTED 

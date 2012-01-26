@@ -558,7 +558,7 @@ def runJavaIJappWithResponse(memory, appName, args):
     return runExternalAppWithResponse(getJavaIJappCmd(memory, appName, args, True))
 
 def runShowJ(inputFiles, memory="512m", extraParams=""):
-    runImageJPlugin(memory, "XmippBrowser.txt", "-i %s %s" % (inputFiles, extraParams), True)
+    runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
 def runChimera(inputFile):
     if which("chimera") and os.path.exists(inputFile):

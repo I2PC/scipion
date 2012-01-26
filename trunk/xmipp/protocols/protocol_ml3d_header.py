@@ -193,6 +193,20 @@ FourierExtraParams =''
 
 # {eval} expandParallel()
 
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Visualization
+#------------------------------------------------------------------------------------------------
+# Visualize volumes in UCSF Chimera?
+""" For this to work, you need to have chimera installed!
+"""
+UseChimera = False
+
+# {view} Visualize the grey-scale corrected reference volume?
+VisualizeCRVolume = True
+
+# {view} Visualize the projections of the grey-scale correction?
+VisualizeCRProjections = True
+
 #------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
 #------------------------------------------------------------------------------------------------

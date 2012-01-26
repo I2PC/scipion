@@ -82,12 +82,13 @@ class ProtProjMatch(XmippProtocol):
         #runId = self.Db.getRunId(protDict.projmatch.name, protDict.projmatch.RunName)
         #print "runId", runId
         #THIS NEED TO BE FIXED. dO NOT OPEN THE DATA BASE JUST TO GET A NUMBERs
-        #_dataBase  = XmippProtocolDb(self, self.scriptName, False)
-        #_dataBase.getRunIter(self.Db.getRunId(protDict.projmatch.name, protDict.projmatch.RunName))
-        summary = ['Performed %d iterations with angular sampling rate %s' 
-                   % (self.NumberOfIterations, self.AngSamplingRateDeg)]
-        summary += ['Final Resolution is %s' % 'not yet implemented']
-        summary += ['Number of CTFgroups and References is %d %d respectively'
+        _dataBase  = XmippProtocolDb(self, self.scriptName, False)
+        
+        iteration = _dataBase.getRunIter()
+        summary = ['Performed <%d/%d> iterations with angular sampling rate <%s>' 
+                   % (iteration, self.NumberOfIterations, self.AngSamplingRateDeg)]
+        summary += ['Final Resolution is <%s>' % 'not yet implemented']
+        summary += ['Number of CTFgroups and References is <%d> and <%d> respectively'
                         % (self.NumberOfCtfGroups, self.numberOfReferences)]
 
         return summary
