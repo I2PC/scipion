@@ -241,6 +241,7 @@ class XmippPlotter():
         yformat True specified the use of global self.plot_yformat
         Posibles values for projection are: 
             'aitoff', 'hammer', 'lambert', 'mollweide', 'polar', 'rectilinear' 
+        
         '''
         if xpos is None:
             self.plot_count += 1
@@ -266,9 +267,13 @@ class XmippPlotter():
                 #label.set_visible(False)
         self.last_subplot = a
         self.plot = a.plot
+        self.hist = a.hist
         return a
     
     def plotMd(self, md, mdLabelX, mdLabelY, color='g',**args):
+        """ plot metadata columns mdLabelX and mdLabelY
+            if nbins is in args then and histogram over y data is made
+        """
         if mdLabelX:
             xx = []
         else:
@@ -278,12 +283,21 @@ class XmippPlotter():
             if mdLabelX:
                 xx.append(md.getValue(mdLabelX, objId))
             yy.append(md.getValue(mdLabelY, objId))
-        self.plot(xx, yy, color,**args)
+        if args.has_key('nbins'):
+            print "nnbins",args['nbins']
+            nbins = args.pop('nbins', None)
+            
+            self.hist(yy,nbins, facecolor=color,**args)
+        else:
+            self.plot(xx, yy, color,**args) #no histogram
         
-    def plotMdFile(self, mdFilename, mdLabelX, mdLabelY,  **args):
+    def plotMdFile(self, mdFilename, mdLabelX, mdLabelY, color='g', **args):
+        """ plot metadataFile columns mdLabelX and mdLabelY
+            if nbins is in args then and histogram over y data is made
+        """
         from xmipp import MetaData
         md = MetaData(mdFilename)
-        self.plotMd(md, mdLabelX, mdLabelY, **args)
+        self.plotMd(md, mdLabelX, mdLabelY, color='g',**args)
         
     def show(self):
         plt.tight_layout()
