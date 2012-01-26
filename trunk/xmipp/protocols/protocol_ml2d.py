@@ -132,10 +132,7 @@ class ProtML2D(XmippProtocol):
         ''' Launch some plot for an ML2D protocol run '''
         #import matplotlib
         import numpy as np
-        #matplotlib.use('TkAgg') # do this before importing pylab
-        import matplotlib.ticker as ticker
-        import matplotlib.gridspec as gridspec
-        import matplotlib.pyplot as plt
+        from protlib_gui_figure import XmippPlotter
     
         self._plot_count = 0
         refs = self.getFilename('iter_refs')
@@ -156,40 +153,42 @@ class ProtML2D(XmippProtocol):
             showWarning("ML2D plots", "Nothing to plot")
             return
         elif n == 1:
-            dims = (1, 1, 6, 5)
+            gridsize = [1, 1]
         elif n == 2:
-            dims = (2, 1, 4, 6)
+            gridsize = [2, 1]
         else:
-            dims = (2, 2, 8, 6)
+            gridsize = [2, 2]
             
-        xg, yg, xs, ys = dims
-    
-        #f = plt.figure()
-        def createSubPlot(title, xlabel, ylabel, yformat=None):
-            self._plot_count += 1
-            a = fig.add_subplot(xg, yg, self._plot_count)
-            #a.get_label().set_fontsize(12)
-            a.set_title(title)
-            a.set_xlabel(xlabel)
-            a.set_ylabel(ylabel)
+        xplotter = XmippPlotter(*gridsize)
             
-            if yformat:
-                formatter = ticker.FormatStrFormatter('%1.2e')
-                a.yaxis.set_major_formatter(formatter)
-            a.xaxis.get_label().set_fontsize(10)
-            a.yaxis.get_label().set_fontsize(10)
-            labels = a.xaxis.get_ticklabels() + a.yaxis.get_ticklabels()
-            for label in labels:
-                label.set_fontsize(8) # Set fontsize
-                label.set_text('aa')
-                #print label.
-                #label.set_visible(False)
-            return a
-        
-        # Create figure and prepare grid    
-        gs = gridspec.GridSpec(xg, yg)#, height_ratios=[7,4])
-        gs.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)    
-        fig = plt.figure(figsize=(xs, ys), dpi=100)
+#       
+#    
+#        #f = plt.figure()
+#        def createSubPlot(title, xlabel, ylabel, yformat=None):
+#            self._plot_count += 1
+#            a = fig.add_subplot(xg, yg, self._plot_count)
+#            #a.get_label().set_fontsize(12)
+#            a.set_title(title)
+#            a.set_xlabel(xlabel)
+#            a.set_ylabel(ylabel)
+#            
+#            if yformat:
+#                formatter = ticker.FormatStrFormatter('%1.2e')
+#                a.yaxis.set_major_formatter(formatter)
+#            a.xaxis.get_label().set_fontsize(10)
+#            a.yaxis.get_label().set_fontsize(10)
+#            labels = a.xaxis.get_ticklabels() + a.yaxis.get_ticklabels()
+#            for label in labels:
+#                label.set_fontsize(8) # Set fontsize
+#                label.set_text('aa')
+#                #print label.
+#                #label.set_visible(False)
+#            return a
+#        
+#        # Create figure and prepare grid    
+#        gs = gridspec.GridSpec(xg, yg)#, height_ratios=[7,4])
+#        gs.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)    
+#        fig = plt.figure(figsize=(xs, ys), dpi=100)
         
         # Create data to plot
         logs = self.getFilename('iter_logs')
@@ -205,7 +204,7 @@ class ProtML2D(XmippProtocol):
                 pmax.append(md.getValue(MDL_PMAX, id))
                 
         if doPlot('DoShowLL'):
-            a = createSubPlot('Log-likelihood (should increase)', 'iterations', 'LL', yformat='%1.2e')
+            a = xplotter.createSubPlot('Log-likelihood (should increase)', 'iterations', 'LL', yformat=True)
             a.plot(iters, ll)
     
         #Create plot of mirror for last iteration
@@ -215,14 +214,14 @@ class ProtML2D(XmippProtocol):
             nrefs = len(mirrors)
             ind = np.arange(nrefs)
             width = 0.85#min(0.15, 5/float(nrefs))       # the width of the bars: can also be len(x) sequence
-            a = createSubPlot('Mirror fractions on last iteration', 'references', 'mirror fraction')
+            a = xplotter.createSubPlot('Mirror fractions on last iteration', 'references', 'mirror fraction')
             a.bar(ind, mirrors, width, color='b')
             a.set_ylim([0, 1.])
             #a.set_xticks(ind + width / 2., [str(r+1) for r in ind])
             #a.set_yticks(np.arange(0, 1, 10))
             
         if doPlot('DoShowPmax'):
-            a = createSubPlot('Probabilities distribution', 'iterations', 'Pmax/Psum') 
+            a = xplotter.createSubPlot('Probabilities distribution', 'iterations', 'Pmax/Psum') 
             a.plot(iters, pmax, color='green')
         
         if doPlot('DoShowSignalChange'):
@@ -233,11 +232,10 @@ class ProtML2D(XmippProtocol):
             md2 = MetaData()    
             md2.aggregate(md, AGGR_MAX, MDL_ITER, MDL_SIGNALCHANGE, MDL_MAX)
             signal_change = [md2.getValue(MDL_MAX, id) for id in md2]
-            a = createSubPlot('Maximum signal change', 'iterations', 'signal change')
-            a.plot(iters, signal_change, color='green')    
+            xplotter.createSubPlot('Maximum signal change', 'iterations', 'signal change')
+            xplotter.plot(iters, signal_change, color='green')
         
-        plt.tight_layout()
-        plt.show()   
+        xplotter.show()
              
 def collectResults(log, WorkingDir, Prefix):
     oroot = os.path.join(WorkingDir, Prefix)
