@@ -883,6 +883,7 @@ if int(env['arpack']):
 #
 AddBatch('apropos', 'applications/scripts/apropos', '.py')
 AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_create', '.py')
+AddBatch('metadata_plot', 'applications/scripts/metadata_plot', '.py')
 AddBatch('metadata_show', 'applications/scripts/metadata_show', '.py')
 #AddBatch('metadata_operate', 'applications/scripts/metadata_operate','.py')
 protocols_main = AddBatch('protocols', 'protocols', '.py')
