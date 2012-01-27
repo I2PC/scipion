@@ -185,9 +185,10 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
 	ARS.initIdentity(3);
 	ASR = ARS;
 	MultidimArray<double> IauxSR = I, IauxRS = I;
+	Polar<std::complex<double> > polarFourierI;
 
 	// Align the image with the node
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 3; i++) {
 		double shiftX, shiftY, bestRot;
 
 		// Shift then rotate
@@ -196,7 +197,6 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
 		MAT_ELEM(ASR,1,2) += shiftY;
 		applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
-		Polar<std::complex<double> > polarFourierI;
 		normalizedPolarFourierTransform(IauxSR, polarFourierI, true,
 				XSIZE(P) / 5, XSIZE(P) / 2, plans, 1);
 
@@ -753,9 +753,9 @@ void CL2D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
 			Iaux = I;
 			P[q]->fit(Iaux, assignment);
 			VEC_ELEM(corrList,q) = assignment.corr;
-			if (!prm->classicalMultiref && assignment.likelihood
-					> bestAssignment.likelihood || prm->classicalMultiref
-					&& assignment.corr > bestAssignment.corr) {
+			if (!prm->classicalMultiref && assignment.likelihood > bestAssignment.likelihood ||
+				 prm->classicalMultiref && assignment.corr > bestAssignment.corr ||
+				 prm->classifyAllImages) {
 				bestq = q;
 				bestImg = Iaux;
 				bestAssignment = assignment;
@@ -1222,6 +1222,7 @@ void ProgClassifyCL2D::readParams() {
 	useCorrelation = aux == "correlation";
 	classicalMultiref = checkParam("--classicalMultiref");
 	maxShift = getDoubleParam("--maxShift");
+	classifyAllImages = checkParam("--classifyAllImages");
 }
 
 void ProgClassifyCL2D::show() const {
@@ -1237,7 +1238,9 @@ void ProgClassifyCL2D::show() const {
 			<< "Minimum node size:       " << PminSize << std::endl
 			<< "Use Correlation:         " << useCorrelation << std::endl
 			<< "Classical Multiref:      " << classicalMultiref << std::endl
-			<< "Maximum shift:           " << maxShift << std::endl;
+			<< "Maximum shift:           " << maxShift << std::endl
+			<< "Classify all images:     " << classifyAllImages << std::endl
+	;
 }
 
 void ProgClassifyCL2D::defineParams() {
@@ -1278,6 +1281,7 @@ void ProgClassifyCL2D::defineParams() {
 	addParamsLine(
 			"   [--classicalMultiref]     : Instead of enhanced clustering");
 	addParamsLine("   [--maxShift <d=10>]       : Maximum allowed shift");
+	addParamsLine("   [--classifyAllImages]     : By default, some images may be left unclassified");
 	addExampleLine(
 			"mpirun -np 3 `which xmipp_mpi_classify_CL2D` -i images.stk --nref 256 --oroot class --iter 10");
 }

@@ -231,6 +231,9 @@ public:
     /// Classical Multiref
     bool classicalMultiref;
     
+    /// Clasify all images
+    bool classifyAllImages;
+
     /// Maximum shift
     double maxShift;
 
