@@ -17,10 +17,7 @@ DO_GUI=true
 
 export NUMBER_OF_CPU=1
 
-
-
 # Some other vars
-
 
 #################### PARSING PARAMETERS ###########################
 TAKE_CPU=false
@@ -40,8 +37,6 @@ if [ $OS_TYPE = Darwin ]; then
 elif [ $OS_TYPE = CYGWIN* ]; then
 	IS_CYGWIN=true;
 fi
-
-
 
 
 for param in $@; do
@@ -156,7 +151,6 @@ toc()
    echo "*** Elapsed time: $ELAPSED seconds"
 }
 
-
 GREEN="\033[32m"
 RED="\033[31m"
 ENDC="\033[0m"
@@ -177,7 +171,6 @@ echoExec()
 
 compile_library()
 {
-
    tic
    LIB=$1
    PREFIX_PATH=$2
@@ -187,8 +180,7 @@ compile_library()
    _PATH=$EXT_PATH/$PREFIX_PATH/$LIB/$SUFFIX_PATH
   echo
   echoGreen "*** Compiling $LIB ..."
-  echo "--> cd $_PATH"
-  cd $_PATH
+  echoExec "cd $_PATH"
 
  if ! $DO_STATIC; then
 	echo "--> Enabling shared libraries..."
@@ -246,8 +238,7 @@ install_bin()
   cd $XMIPP_HOME
   BINPATH=../external/$1
   LINKNAME=bin/$2
-  echo "--> ln -sf $BINPATH $LINKNAME"
-  ln -sf $BINPATH $LINKNAME
+  echoExec "ln -sf $BINPATH $LINKNAME"
 }
 
 create_dir()
@@ -256,8 +247,7 @@ create_dir()
   if [ -d $DIR ]; then 
       echo "--> Dir $DIR exists."
   else
-    echo "--> mkdir $DIR"
-    mkdir $DIR
+    echoExec "mkdir $DIR"
   fi
 }
 
