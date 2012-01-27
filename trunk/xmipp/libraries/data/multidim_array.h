@@ -2444,9 +2444,9 @@ public:
         y -= STARTINGY(*this);
         x -= STARTINGX(*this);
 
-        int l1 = ceil(x - SplineDegree_1);
+        int l1 = (int)ceil(x - SplineDegree_1);
         int l2 = l1 + SplineDegree;
-        int m1 = ceil(y - SplineDegree_1);
+        int m1 = (int)ceil(y - SplineDegree_1);
         int m2 = m1 + SplineDegree;
 
         double columns = 0.0;

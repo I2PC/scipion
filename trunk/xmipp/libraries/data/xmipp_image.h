@@ -442,8 +442,8 @@ public:
                 unsigned char * ptr = (unsigned char *) page;
 
                 for( n=0; n<pageSize; n++)
-                    ptr[n] = minF + static_cast< unsigned char >(slope *
-                             static_cast< double >(srcPtr[n] - min0));
+                    ptr[n] = static_cast< unsigned char >(minF + (slope *
+                             static_cast< double >(srcPtr[n] - min0)));
 
                 break;
             }
@@ -467,8 +467,8 @@ public:
                 char * ptr = (char *) page;
 
                 for( n=0; n<pageSize; n++)
-                ptr[n] = minF + static_cast< char >(slope *
-                                                    static_cast< double >(srcPtr[n] - min0));
+                ptr[n] = static_cast< char >(minF + (slope *
+                                             static_cast< double >(srcPtr[n] - min0)));
 
                 break;
             }
@@ -496,8 +496,8 @@ public:
                 unsigned short * ptr = (unsigned short *) page;
 
                 for( n=0; n<pageSize; n++)
-                ptr[n] = minF + static_cast< unsigned short >(slope *
-                         static_cast< double >(srcPtr[n] - min0));
+                ptr[n] = static_cast< unsigned short >(minF + (slope *
+                         static_cast< double >(srcPtr[n] - min0)));
 
                 break;
             }
@@ -525,8 +525,8 @@ public:
                 short * ptr = (short *) page;
 
                 for( n=0; n<pageSize; n++)
-                ptr[n] = minF + static_cast< short >(slope *
-                                                     static_cast< double >(srcPtr[n] - min0));
+                ptr[n] = static_cast< short >(minF + (slope *
+                                              static_cast< double >(srcPtr[n] - min0)));
 
                 break;
             }
@@ -556,8 +556,8 @@ public:
                 unsigned int * ptr = (unsigned int *) page;
 
                 for( n=0; n<pageSize; n++)
-                ptr[n] = minF + static_cast< unsigned int >(slope *
-                         static_cast< double >(srcPtr[n] - min0));
+                ptr[n] = static_cast< unsigned int >(minF + (slope *
+                         static_cast< double >(srcPtr[n] - min0)));
                 break;
             }
         case Int:
@@ -586,8 +586,8 @@ public:
                 int * ptr = (int *) page;
 
                 for( n=0; n<pageSize; n++)
-                ptr[n] = minF + static_cast< int >(slope *
-                                                   static_cast< double >(srcPtr[n] - min0));
+                ptr[n] = static_cast< int >(minF + (slope *
+                                            static_cast< double >(srcPtr[n] - min0)));
                 break;
             }
         default:
@@ -736,13 +736,13 @@ public:
         {
             Ydim = Xdim;
             scale = ((double) Ydim)/((double) imYdim);
-            Xdim = imXdim * scale;
+            Xdim = (int)(scale*imXdim);
         }
         else
         {
             scale = ((double) Xdim)/((double) imXdim);
             if (Ydim == -1)
-                Ydim = imYdim * scale;
+                Ydim = (int)(scale*imYdim);
         }
 
         int mode = (scale <= 1)? NEAREST : LINEAR; // If scale factor is higher than 1, LINEAR mode is used to avoid artifacts
