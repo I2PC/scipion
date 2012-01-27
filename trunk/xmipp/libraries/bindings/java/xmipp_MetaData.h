@@ -173,6 +173,14 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isPSD
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    makeAbsPath
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_makeAbsPath
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    getValueInt
  * Signature: (IJ)I
  */

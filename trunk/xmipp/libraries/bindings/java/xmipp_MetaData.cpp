@@ -325,6 +325,18 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isPSD(JNIEnv *env,
     return result;
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_makeAbsPath
+  (JNIEnv * env, jobject jobj, jint label)
+{
+    MetaData * md = GET_INTERNAL_METADATA(jobj);
+
+    XMIPP_TRY
+    {
+        md->makeAbsPath((MDLabel) label);
+    }
+    XMIPP_CATCH;
+}
+
 JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_getValueInt(JNIEnv *env,
         jobject jobj, jint label, jlong objId)
 {

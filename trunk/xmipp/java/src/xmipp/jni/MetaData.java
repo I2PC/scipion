@@ -101,6 +101,8 @@ public class MetaData {
 
     public static native boolean isPSD(int label) throws Exception;
 
+    public static native void makeAbsPath(int label) throws Exception;
+    
     //get values from metadata
     public native int getValueInt(int label, long objId) throws Exception;
 
