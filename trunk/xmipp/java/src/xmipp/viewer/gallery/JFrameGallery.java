@@ -43,9 +43,12 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JList;
@@ -54,6 +57,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSpinner;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
@@ -90,9 +94,28 @@ public class JFrameGallery extends JFrame {
 	private boolean internalChange = false;
 	private boolean autoAdjustColumns = false;
 	private JPopUpMenuGallery jpopUpMenuTable;
-	private JMenuBarTable jMenuBarTable;
+	private JMenuBarTable menu;
 	Param parameters;
 	JFileChooser fc = new JFileChooser();
+
+	private javax.swing.JLabel jlZoom;
+	private javax.swing.JLabel jlGoto;
+	private javax.swing.JLabel jlRows;
+	private javax.swing.JLabel jlColumns;
+	private javax.swing.JToggleButton jcbAutoAdjustColumns;
+	private javax.swing.JComboBox jcbMDLabels;
+	private javax.swing.JCheckBox jcbShowLabels;
+	private javax.swing.JCheckBox jcbSortByLabel;
+	protected javax.swing.JPanel jpBottom;
+	protected javax.swing.JSpinner jsColumns;
+	protected javax.swing.JSpinner jsGoToImage;
+	private javax.swing.JScrollPane jspContent;
+	protected javax.swing.JSpinner jsRows;
+	protected javax.swing.JSpinner jsZoom;
+	// private javax.swing.JToggleButton jtbNormalize;
+	// private javax.swing.JToggleButton jtbUseGeometry;
+	private javax.swing.JTable table;
+	private javax.swing.JToolBar toolBar;
 
 	public enum RESLICE_MODE {
 
@@ -164,10 +187,12 @@ public class JFrameGallery extends JFrame {
 		// Geometry info is used if present, otherwise button is disabled.
 		boolean containsGeometry = tableModel.containsGeometryInfo();
 		// tableModel.setUseGeometry(jtbUseGeometry.isSelected());
-		jtbUseGeometry.setSelected(containsGeometry);
-		jtbUseGeometry.setEnabled(containsGeometry);
+		menu.enableApplyGeo(containsGeometry);
+		menu.selectApplyGeo(containsGeometry);
+		// jtbUseGeometry.setSelected(containsGeometry);
+		// jtbUseGeometry.setEnabled(containsGeometry);
 
-		//updateTable();
+		// updateTable();
 		setInitialValues();
 		pack();
 		isUpdating = false;
@@ -186,20 +211,20 @@ public class JFrameGallery extends JFrame {
 		});
 		setVisible(true);
 	}
-	
-	private void readParams(Param parameters){
+
+	private void readParams(Param parameters) {
 		this.parameters = parameters;
 	}
-	
-	/** This function will set the values of colums
-	 * and rows spinners depending on the value of the 
-	 * table model rows and columns 
+
+	/**
+	 * This function will set the values of colums and rows spinners depending
+	 * on the value of the table model rows and columns
 	 */
 	private void updateColumnsRowsValues() {
 		jsColumns.setValue(table.getColumnCount());
 		jsRows.setValue(table.getRowCount());
 	}
-	
+
 	private void setInitialValues() {
 		autoAdjustColumns = false;
 		if (parameters.columns > 0)
@@ -211,43 +236,44 @@ public class JFrameGallery extends JFrame {
 		}
 		setAutoAdjustColumns(autoAdjustColumns);
 		updateColumnsRowsValues();
-//		
-//		DEBUG.printMessage(String.format("================ readParams: Table Model:\nsize: %d, cols: %d rows: %d",
-//				tableModel.getSize(), tableModel.getColumnCount(), tableModel.getRowCount()));
-//		
-//		if (tableModel.getSize() > 0) {
-			
-//			setAutoAdjustColumns(autoAdjustColumns);
-//			
-//			double scale = tableModel.getInitialZoomScale(
-//					jspContent.getVisibleRect().width,
-//					table.getIntercellSpacing().width);
-//			//setZoom((int) (scale * 100));
-//			setZoom(100);
-//		} 
-//		else {
-//			jsZoom.setEnabled(false);
-//			jcbAutoAdjustColumns.setEnabled(autoAdjustColumns);
-//			//jcbShowLabels.setEnabled(autoAdjustColumns);
-//			jsRows.setEnabled(autoAdjustColumns);
-//			jsColumns.setEnabled(autoAdjustColumns);
-//			jsGoToImage.setEnabled(false);
-//		}
+		//
+		// DEBUG.printMessage(String.format("================ readParams: Table Model:\nsize: %d, cols: %d rows: %d",
+		// tableModel.getSize(), tableModel.getColumnCount(),
+		// tableModel.getRowCount()));
+		//
+		// if (tableModel.getSize() > 0) {
+
+		// setAutoAdjustColumns(autoAdjustColumns);
+		//
+		// double scale = tableModel.getInitialZoomScale(
+		// jspContent.getVisibleRect().width,
+		// table.getIntercellSpacing().width);
+		// //setZoom((int) (scale * 100));
+		// setZoom(100);
+		// }
+		// else {
+		// jsZoom.setEnabled(false);
+		// jcbAutoAdjustColumns.setEnabled(autoAdjustColumns);
+		// //jcbShowLabels.setEnabled(autoAdjustColumns);
+		// jsRows.setEnabled(autoAdjustColumns);
+		// jsColumns.setEnabled(autoAdjustColumns);
+		// jsGoToImage.setEnabled(false);
+		// }
 	}
 
 	private void createTable() {
 		// Create scrollable area for data on the table
 		jspContent = new javax.swing.JScrollPane();
-//		tableModel.autoAdjustColumns(
-//				// jsPanel.getVisibleRect().width - rowHeader.getWidth(),
-//				// jsPanel.getViewportBorderBounds().width -
-//				// rowHeader.getWidth(),
-//				//jspContent.getViewport().getWidth() 
-//				600,
-//				table.getIntercellSpacing().width);
-//
-//		jsRows.setValue(tableModel.getRowCount());
-//		jsColumns.setValue(tableModel.getColumnCount());
+		// tableModel.autoAdjustColumns(
+		// // jsPanel.getVisibleRect().width - rowHeader.getWidth(),
+		// // jsPanel.getViewportBorderBounds().width -
+		// // rowHeader.getWidth(),
+		// //jspContent.getViewport().getWidth()
+		// 600,
+		// table.getIntercellSpacing().width);
+		//
+		// jsRows.setValue(tableModel.getRowCount());
+		// jsColumns.setValue(tableModel.getColumnCount());
 
 		setZoom(parameters.zoom);
 		if (tableModel.containsGeometryInfo()) {
@@ -277,19 +303,19 @@ public class JFrameGallery extends JFrame {
 		table.setDefaultRenderer(AbstractGalleryImageItem.class, renderer);
 
 		// Create the menu for table
-		jMenuBarTable = new JMenuBarTable();
-		setJMenuBar(jMenuBarTable);
+		menu = new JMenuBarTable();
+		setJMenuBar(menu);
 
-		//DEBUG.printMessage("WIDTH: " + jspContent.getVisibleRect().width);
-		//DEBUG.printMessage("preferred: " + getPreferredSize().toString());		
-		
+		// DEBUG.printMessage("WIDTH: " + jspContent.getVisibleRect().width);
+		// DEBUG.printMessage("preferred: " + getPreferredSize().toString());
+
 		updateTable();
-//		int WIDTH = getPreferredSize().width;
-//		double scale = tableModel.getInitialZoomScale(
-//				//jspContent.getVisibleRect().width,
-//				WIDTH,
-//				table.getIntercellSpacing().width);
-//		setZoom((int) (scale * 100));
+		// int WIDTH = getPreferredSize().width;
+		// double scale = tableModel.getInitialZoomScale(
+		// //jspContent.getVisibleRect().width,
+		// WIDTH,
+		// table.getIntercellSpacing().width);
+		// setZoom((int) (scale * 100));
 	}// function createTable
 
 	private void updateTable() {
@@ -304,8 +330,9 @@ public class JFrameGallery extends JFrame {
 		tableModel.updateSort();
 
 		if (tableModel.getSize() > 0) {
-			//DEBUG.printMessage(String.format("updateTable: Table Model:\nsize: %d, cols: %d rows: %d",
-			//		tableModel.getSize(), tableModel.getColumnCount(), tableModel.getRowCount()));
+			// DEBUG.printMessage(String.format("updateTable: Table Model:\nsize: %d, cols: %d rows: %d",
+			// tableModel.getSize(), tableModel.getColumnCount(),
+			// tableModel.getRowCount()));
 			Dimension dimension = getCellSize();
 			renderer.setPreferredSize(dimension);
 
@@ -322,7 +349,7 @@ public class JFrameGallery extends JFrame {
 			rowHeader.revalidate();
 			rowHeader.repaint();
 			table.revalidate();
-			//repaint();
+			// repaint();
 		}
 
 		isUpdating = updatingState;
@@ -347,9 +374,10 @@ public class JFrameGallery extends JFrame {
 			borderHeight = insets.bottom + insets.top;
 		}
 
-		Dimension dim = new Dimension(tableModel.getCellWidth() + 2 * borderWidth,
-				tableModel.getCellHeight() + font_height + 2 * borderHeight);
-		//DEBUG.printMessage("getCellSize: dim: " + dim.toString());
+		Dimension dim = new Dimension(tableModel.getCellWidth() + 2
+				* borderWidth, tableModel.getCellHeight() + font_height + 2
+				* borderHeight);
+		// DEBUG.printMessage("getCellSize: dim: " + dim.toString());
 		return dim;
 	}// function getCellSize
 
@@ -365,20 +393,20 @@ public class JFrameGallery extends JFrame {
 		autoAdjustColumns = true;
 		int w = jspContent.getViewport().getWidth();
 		int rw = rowHeader.getWidth();
-		//DEBUG.printMessage(String.format("=========>> JFrameGallery.autoAdjust: width: %d, rowheader: %d", w, rw));
-		//DEBUG.printStackTrace();
+		// DEBUG.printMessage(String.format("=========>> JFrameGallery.autoAdjust: width: %d, rowheader: %d",
+		// w, rw));
+		// DEBUG.printStackTrace();
 		tableModel.autoAdjustColumns(
-				// jsPanel.getVisibleRect().width - rowHeader.getWidth(),
-				// jsPanel.getViewportBorderBounds().width -
-				// rowHeader.getWidth(),
-				//jspContent.getViewport().getWidth() - rowHeader.getWidth()
-				w - rw ,
-				table.getIntercellSpacing().width);
+		// jsPanel.getVisibleRect().width - rowHeader.getWidth(),
+		// jsPanel.getViewportBorderBounds().width -
+		// rowHeader.getWidth(),
+		// jspContent.getViewport().getWidth() - rowHeader.getWidth()
+				w - rw, table.getIntercellSpacing().width);
 		updateColumnsRowsValues();
 	}
 
 	private void setZoom(int zoom) {
-		//DEBUG.printMessage("zoom: " + zoom);
+		// DEBUG.printMessage("zoom: " + zoom);
 		tableModel.setZoomScale(zoom / 100.0);
 		jsZoom.setValue(zoom);
 	}
@@ -431,17 +459,16 @@ public class JFrameGallery extends JFrame {
 	}
 
 	private void avgImage() {
-		ImagesWindowFactory.captureFrame(ImageOperations.mean(tableModel
-				.getAllItems()));
+		//ImagesWindowFactory.captureFrame(ImageOperations.mean(tableModel.getAllItems()));
 	}
 
 	private void stdDevImage() {
-		ImagesWindowFactory.captureFrame(ImageOperations
-				.std_deviation(tableModel.getAllItems()));
+		//ImagesWindowFactory.captureFrame(ImageOperations.std_deviation(tableModel.getAllItems()));
 	}
 
 	private void setNormalized(boolean normalize) {
-		jtbNormalize.setSelected(normalize);
+		// jtbNormalize.setSelected(normalize);
+		menu.selectNormalize(normalize);
 		tableModel.setNormalized(normalize);
 	}
 
@@ -606,23 +633,24 @@ public class JFrameGallery extends JFrame {
 		// toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.X_AXIS));
 
 		// Add toggle button to set/unset global normalization
-		jtbNormalize = createToggleButton(Resources.NORMALIZE,
-				Labels.MSG_NORMALIZE, new java.awt.event.ActionListener() {
-					public void actionPerformed(java.awt.event.ActionEvent evt) {
-						jtbNormalizeActionPerformed(evt);
-					}
-				});
-		toolBar.add(jtbNormalize);
-		// Add toggle button to set/unset apply geometry when read from metadata
-		jtbUseGeometry = createToggleButton(Resources.APPLY_GEO,
-				Labels.MSG_APPLY_GEO, new java.awt.event.ActionListener() {
-					public void actionPerformed(java.awt.event.ActionEvent evt) {
-						jtbUseGeometryActionPerformed(evt);
-					}
-				});
-		toolBar.add(jtbUseGeometry);
+		// jtbNormalize = createToggleButton(Resources.NORMALIZE,
+		// Labels.MSG_NORMALIZE, new java.awt.event.ActionListener() {
+		// public void actionPerformed(java.awt.event.ActionEvent evt) {
+		// jtbNormalizeActionPerformed(evt);
+		// }
+		// });
+		// toolBar.add(jtbNormalize);
+		// // Add toggle button to set/unset apply geometry when read from
+		// metadata
+		// jtbUseGeometry = createToggleButton(Resources.APPLY_GEO,
+		// Labels.MSG_APPLY_GEO, new java.awt.event.ActionListener() {
+		// public void actionPerformed(java.awt.event.ActionEvent evt) {
+		// jtbUseGeometryActionPerformed(evt);
+		// }
+		// });
+		// toolBar.add(jtbUseGeometry);
 
-		toolBar.addSeparator();
+		//toolBar.addSeparator();
 		jlZoom = new javax.swing.JLabel();
 		jsZoom = new javax.swing.JSpinner();
 		jlZoom.setIcon(Resources.getIcon(Resources.ZOOM));
@@ -750,7 +778,7 @@ public class JFrameGallery extends JFrame {
 	}
 
 	private void jsZoomStateChanged(javax.swing.event.ChangeEvent evt) {// GEN-FIRST:event_jsZoomStateChanged
-		if (!isUpdating){
+		if (!isUpdating) {
 			setZoom((Integer) jsZoom.getValue());
 			if (autoAdjustColumns)
 				autoAdjustColumns();
@@ -794,13 +822,11 @@ public class JFrameGallery extends JFrame {
 		// DEBUG.printMessage(evt.getComponent().getName());
 		if (!isUpdating) {
 			if (autoAdjustColumns) {
-				autoAdjustColumns();				
-				//startUpdater();
+				autoAdjustColumns();
+				// startUpdater();
 			}
 		}
 	}// GEN-LAST:event_formComponentResized
-	
-	
 
 	private void tableMouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_tableMouseClicked
 		final Point p = evt.getPoint();
@@ -860,8 +886,8 @@ public class JFrameGallery extends JFrame {
 	}// GEN-LAST:event_tableMouseClicked
 
 	private void jtbNormalizeActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jtbNormalizeActionPerformed
-		setNormalized(jtbNormalize.isSelected());
-		updateTable();
+	// setNormalized(jtbNormalize.isSelected());
+	// updateTable();
 	}// GEN-LAST:event_jtbNormalizeActionPerformed
 
 	private void jcbMDLabelsItemStateChanged(java.awt.event.ItemEvent evt) {// GEN-FIRST:event_jcbMDLabelsItemStateChanged
@@ -877,41 +903,20 @@ public class JFrameGallery extends JFrame {
 	}// GEN-LAST:event_jcbSortByLabelActionPerformed
 
 	private void jtbUseGeometryActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jtbUseGeometryActionPerformed
-		if (tableModel.containsGeometryInfo()) {
-			((MDTableModel) tableModel).setUseGeometry(jtbUseGeometry.isSelected());
-			updateTable();
-		}
+	// if (tableModel.containsGeometryInfo()) {
+	// ((MDTableModel) tableModel).setUseGeometry(jtbUseGeometry.isSelected());
+	// updateTable();
+	// }
 	}// GEN-LAST:event_jtbUseGeometryActionPerformed
 
 	private void jcbAutoAdjustColumnsStateChanged(ActionEvent evt) {// GEN-FIRST:event_jcbAutoAdjustColumnsStateChanged
 		setAutoAdjustColumns(jcbAutoAdjustColumns.isSelected());
-		if (autoAdjustColumns){
+		if (autoAdjustColumns) {
 			autoAdjustColumns();
 			updateTable();
 		}
 	}// GEN-LAST:event_jcbAutoAdjustColumnsStateChanged
 		// Variables declaration - do not modify//GEN-BEGIN:variables
-
-	private javax.swing.JLabel jlZoom;
-	private javax.swing.JLabel jlGoto;
-	private javax.swing.JLabel jlRows;
-	private javax.swing.JLabel jlColumns;
-	private javax.swing.JToggleButton jcbAutoAdjustColumns;
-	private javax.swing.JComboBox jcbMDLabels;
-	private javax.swing.JCheckBox jcbShowLabels;
-	private javax.swing.JCheckBox jcbSortByLabel;
-	protected javax.swing.JPanel jpBottom;
-	protected javax.swing.JSpinner jsColumns;
-	protected javax.swing.JSpinner jsGoToImage;
-	private javax.swing.JScrollPane jspContent;
-	protected javax.swing.JSpinner jsRows;
-	protected javax.swing.JSpinner jsZoom;
-	private javax.swing.JToggleButton jtbNormalize;
-	private javax.swing.JToggleButton jtbUseGeometry;
-	private javax.swing.JTable table;
-	private javax.swing.JToolBar toolBar;
-
-	// End of variables declaration//GEN-END:variables
 
 	class TableUpdater extends TimerTask {
 
@@ -929,10 +934,11 @@ public class JFrameGallery extends JFrame {
 		}
 	}
 
-	class JMenuBarTable extends JMenuBar {
-
+	class JMenuBarTable extends JMenuBar implements ActionListener {
 		protected JMenu jmFile = new JMenu(Labels.LABEL_GALLERY_FILE);
 		protected JMenu jmSave = new JMenu(Labels.LABEL_GALLERY_SAVE);
+		protected JMenu jmDisplay = new JMenu("Display");
+
 		protected JMenuItem jmiSaveAsMetadata = new JMenuItem(
 				Labels.LABEL_GALLERY_SAVE_AS_METADATA);
 		protected JMenuItem jmiSaveAsStack = new JMenuItem(
@@ -942,28 +948,82 @@ public class JFrameGallery extends JFrame {
 		protected JMenuItem jmiSaveSelectionAsStack = new JMenuItem(
 				Labels.LABEL_GALLERY_SAVE_SELECTION_AS_IMAGE);
 		protected JMenuItem jmiExit = new JMenuItem(Labels.LABEL_GALLERY_EXIT);
-		protected JMenu jmStatistics = new JMenu(Labels.LABEL_MENU_STATISTICS);
+		protected JMenu jmStatistics = new JMenu(Labels.MENU_STATS);
 		protected JMenuItem jmiAVG = new JMenuItem(Labels.BUTTON_MEAN);
 		protected JMenuItem jmiSTDEV = new JMenuItem(
 				Labels.BUTTON_STD_DEVIATION);
 		protected JMenuItem jmiPCA = new JMenuItem(Labels.BUTTON_PCA);
 		protected JMenuItem jmiFSC = new JMenuItem(Labels.BUTTON_FSC);
-		protected JMenu jmOpenAs = new JMenu(Labels.LABEL_MENU_OPEN_AS);
-		protected JMenuItem jmiOpenAs3D = new JMenuItem(
-				Labels.OPERATION_OPEN_AS_3D_VOLUME);
-		protected JMenuItem jmiOpenAsMetadata = new JMenuItem(
-				Labels.OPERATION_OPEN_AS_METADATA);
-		protected JMenuItem jmiOpenAsStack = new JMenuItem(
-				Labels.OPERATION_OPEN_AS_STACK);
+		protected JMenu jmOpenWith = new JMenu(Labels.MENU_OPEN_WITH);
+		protected JMenuItem jmiOpenWithChimera = new JMenuItem(Labels.MENU_OPEN_WITH_CHIMERA, 
+				Resources.getIcon("chimera.gif"));
+		protected JMenuItem jmiOpenWithImageJ = new JMenuItem(Labels.MENU_OPEN_WITH_IJ,
+				Resources.getIcon("ij.gif"));
+//		protected JMenu jmReslice = new JMenu(Labels.LABEL_RESLICE);
+//		protected JMenuItem jmiResliceTop = new JMenuItem(
+//				Labels.LABEL_RESLICE_TOP);
+//		protected JMenuItem jmiResliceRight = new JMenuItem(
+//				Labels.LABEL_RESLICE_RIGHT);
+
+		protected JCheckBoxMenuItem jmiNormalize = new JCheckBoxMenuItem(
+				Labels.MSG_NORMALIZE);
+		protected JCheckBoxMenuItem jmiApplyGeo = new JCheckBoxMenuItem(
+				Labels.MSG_APPLY_GEO);
+		protected JMenuItem jmiColumns = new JMenuItem("Columns ...", Resources.getIcon("columns.gif"));
+		protected JCheckBoxMenuItem jmiShowLabel = new JCheckBoxMenuItem(
+				Labels.MSG_SHOW_LABEL);
 		protected JMenu jmReslice = new JMenu(Labels.LABEL_RESLICE);
-		protected JMenuItem jmiResliceTop = new JMenuItem(
-				Labels.LABEL_RESLICE_TOP);
-		protected JMenuItem jmiResliceRight = new JMenuItem(
-				Labels.LABEL_RESLICE_RIGHT);
+		protected JRadioButtonMenuItem jmiAxisX = new JRadioButtonMenuItem("X");
+		protected JRadioButtonMenuItem jmiAxisY = new JRadioButtonMenuItem("Y");
+		protected JRadioButtonMenuItem jmiAxisZ = new JRadioButtonMenuItem("Z");
+
+		public void enableNormalize(boolean value) {
+			jmiNormalize.setEnabled(value);
+		}
+
+		public void selectNormalize(boolean value) {
+			jmiNormalize.setSelected(value);
+		}
+
+		public void enableApplyGeo(boolean value) {
+			jmiApplyGeo.setEnabled(value);
+		}
+
+		public void selectApplyGeo(boolean value) {
+			jmiApplyGeo.setSelected(value);
+		}
+		
+		public void enableShowLabel(boolean value){
+			jmiShowLabel.setEnabled(value);
+		}
+		
+		public void enableReslice(boolean value){
+			jmReslice.setEnabled(value);
+		}
+
+		public void actionPerformed(ActionEvent e) {
+			JMenuItem jmi = (JMenuItem) e.getSource();
+			if (jmi == jmiNormalize){
+				tableModel.setNormalized(jmiNormalize.isSelected());
+				updateTable();
+			}
+			else if (jmi == jmiApplyGeo) {
+				if (tableModel.containsGeometryInfo()) {
+					((MDTableModel) tableModel).setUseGeometry(jmiApplyGeo
+							.isSelected());
+					updateTable();
+				}
+			}
+			else if (jmi == jmiShowLabel){
+				tableModel.setShowLabels(jmiShowLabel.isSelected());
+				updateTable();
+			}
+		}
 
 		public JMenuBarTable() {
 			super();
 
+			// File menu
 			jmSave.add(jmiSaveAsMetadata);
 			jmSave.add(jmiSaveAsStack);
 			jmSave.addSeparator();
@@ -1010,6 +1070,28 @@ public class JFrameGallery extends JFrame {
 				}
 			});
 
+			// Display menu
+			add(jmDisplay);
+			jmDisplay.add(jmiNormalize);
+			jmDisplay.add(jmiShowLabel);
+			jmDisplay.addSeparator();
+			jmDisplay.add(jmiApplyGeo);
+			jmDisplay.add(jmiColumns);
+			jmDisplay.addSeparator();
+			jmDisplay.add(jmReslice);
+			jmReslice.add(jmiAxisX);
+			jmReslice.add(jmiAxisY);
+			jmReslice.add(jmiAxisZ);
+			ButtonGroup group = new ButtonGroup();
+			group.add(jmiAxisX);
+			group.add(jmiAxisY);
+			group.add(jmiAxisZ);			
+			
+			jmiNormalize.addActionListener(this);
+			jmiApplyGeo.addActionListener(this);
+			jmiShowLabel.addActionListener(this);
+
+			// Statistics menu
 			add(jmStatistics);
 			jmStatistics.add(jmiAVG);
 			jmStatistics.add(jmiSTDEV);
@@ -1044,60 +1126,67 @@ public class JFrameGallery extends JFrame {
 				}
 			});
 
-			add(jmOpenAs);
-			jmOpenAs.add(jmiOpenAs3D);
-			jmOpenAs.add(jmiOpenAsMetadata);
-			jmOpenAs.add(jmiOpenAsStack);
+			// Open with menu
+			add(jmOpenWith);
+			jmOpenWith.add(jmiOpenWithChimera);
+			jmOpenWith.add(jmiOpenWithImageJ);
+			//jmOpenWith.add(jmiOpenAsStack);
 
-			jmiOpenAs3D.addActionListener(new ActionListener() {
-
-				public void actionPerformed(ActionEvent e) {
-					openAs3D();
-				}
-			});
-
-			jmiOpenAsMetadata.addActionListener(new ActionListener() {
-
-				public void actionPerformed(ActionEvent e) {
-					ImagesWindowFactory.openFileAsMetadata(tableModel
-							.getFilename());
-				}
-			});
-
-			jmiOpenAsStack.addActionListener(new ActionListener() {
-
-				public void actionPerformed(ActionEvent e) {
-					openAsStack();
-				}
-			});
-
-			add(jmReslice);
-			jmReslice.add(jmiResliceTop);
-			jmReslice.add(jmiResliceRight);
-
-			jmiResliceTop.addActionListener(new ActionListener() {
+			jmiOpenWithChimera.addActionListener(new ActionListener() {
 
 				public void actionPerformed(ActionEvent e) {
 					try {
-						reslice(RESLICE_MODE.TOP_Y);
-					} catch (Exception ex) {
-						DEBUG.printException(ex);
-						IJ.error(ex.getMessage());
+						Process p = new ProcessBuilder("chimera", "spider:"+tableModel.getFilename()).start();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
 					}
 				}
 			});
+//
+//			jmiOpenAsMetadata.addActionListener(new ActionListener() {
+//
+//				public void actionPerformed(ActionEvent e) {
+//					ImagesWindowFactory.openFileAsMetadata(tableModel
+//							.getFilename());
+//				}
+//			});
+//
+//			jmiOpenAsStack.addActionListener(new ActionListener() {
+//
+//				public void actionPerformed(ActionEvent e) {
+//					openAsStack();
+//				}
+//			});
 
-			jmiResliceRight.addActionListener(new ActionListener() {
-
-				public void actionPerformed(ActionEvent e) {
-					try {
-						reslice(RESLICE_MODE.RIGHT_X);
-					} catch (Exception ex) {
-						DEBUG.printException(ex);
-						IJ.error(ex.getMessage());
-					}
-				}
-			});
+//			// Reslice menu
+//			add(jmReslice);
+//			jmReslice.add(jmiResliceTop);
+//			jmReslice.add(jmiResliceRight);
+//
+//			jmiResliceTop.addActionListener(new ActionListener() {
+//
+//				public void actionPerformed(ActionEvent e) {
+//					try {
+//						reslice(RESLICE_MODE.TOP_Y);
+//					} catch (Exception ex) {
+//						DEBUG.printException(ex);
+//						IJ.error(ex.getMessage());
+//					}
+//				}
+//			});
+//
+//			jmiResliceRight.addActionListener(new ActionListener() {
+//
+//				public void actionPerformed(ActionEvent e) {
+//					try {
+//						reslice(RESLICE_MODE.RIGHT_X);
+//					} catch (Exception ex) {
+//						DEBUG.printException(ex);
+//						IJ.error(ex.getMessage());
+//					}
+//				}
+//			});
 
 			boolean isVolume = tableModel.isVolume();
 			// boolean isStack = tableModel.isStack();
@@ -1105,8 +1194,10 @@ public class JFrameGallery extends JFrame {
 
 			jmStatistics.setEnabled(isMetaData);
 			jmReslice.setEnabled(isVolume);
-			jmiOpenAs3D.setEnabled(!isMetaData);
-			jmiOpenAsMetadata.setEnabled(!isVolume);
+			//jmTopAxis.setEnabled(isVolume);
+			jmiOpenWithChimera.setEnabled(isVolume);
+			//jmiOpenAs3D.setEnabled(!isMetaData);
+			//jmiOpenAsMetadata.setEnabled(!isVolume);
 
 			// Volumes can't be saved as metadata.
 			jmiSaveAsMetadata.setEnabled(!isVolume);

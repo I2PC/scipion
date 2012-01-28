@@ -238,8 +238,10 @@ public class Labels {
     //public final static String LABEL_W1 = "W1: ";
     //public final static String LABEL_W2 = "W2: ";
     //public final static String LABEL_RAISED_W = "Raised W: ";
-    public final static String LABEL_MENU_STATISTICS = "Statistics";
-    public final static String LABEL_MENU_OPEN_AS = "Open as...";
+    public final static String MENU_STATS = "Statistics";
+    public final static String MENU_OPEN_WITH = "Open with...";
+    public final static String MENU_OPEN_WITH_CHIMERA = "UCSF Chimera";
+    public final static String MENU_OPEN_WITH_IJ = "ImageJ";
 //
 //    public static String LABEL_FILES_SHOWING(int elements, int total) {
 //        return total != elements ? " Showing " + elements + " / " + total + " elements." : "";
@@ -254,7 +256,8 @@ public class Labels {
     public final static String MESSAGE_OVERWRITE_FILE_TITLE = "Confirm Overwrite";
     public final static String MESSAGE_FILE_SAVED = "File saved: ";
     public final static String MESSAGE_FILE_SAVED_TITLE = "Saved!";
-    public final static String MSG_NORMALIZE = "Global normalization of images";
-    public final static String MSG_APPLY_GEO = "Apply geometry transformations coming from metadata";
+    public final static String MSG_NORMALIZE = "Global normalization";
+    public final static String MSG_APPLY_GEO = "Apply geometry";
+    public final static String MSG_SHOW_LABEL = "Show labels";
     public final static String MSG_ADJUST_COLS = "Adjust columns when resizing";
 }

@@ -26,7 +26,7 @@ public class Viewer {
 		Param parameters = new Param(args);
 		try{
 	        if (parameters.files != null) {
-	        	DEBUG.enableDebug(true);
+	        	//DEBUG.enableDebug(true);
 	            openFiles(parameters);	    
 	        }
 		}

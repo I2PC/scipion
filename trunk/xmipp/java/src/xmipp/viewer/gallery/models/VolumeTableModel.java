@@ -18,6 +18,9 @@ import xmipp.jni.MetaData;
  */
 public class VolumeTableModel extends AbstractXmippTableModel {
 
+	//Volume file name
+	protected String filename;
+	
     public VolumeTableModel() {
         super();
     }
@@ -32,15 +35,17 @@ public class VolumeTableModel extends AbstractXmippTableModel {
         try {
         	setCacheSize(filename);
             ImageGeneric image = new ImageGeneric(filename);
+            this.filename = filename;
 
             int nslices = image.getZDim();
-            long nimages = image.getNDim();
+            int nimages = (int)image.getNDim();
+            data = new AbstractGalleryImageItem[nslices * nimages];
 
-            for (long i = ImageGeneric.FIRST_IMAGE; i <= nimages; i++) {
-                for (int j = ImageGeneric.FIRST_SLICE; j <= nslices; j++) {
-                    data.add(new VolumeGalleryItem(filename, j, cache));
-                }
-            }
+//            for (long i = ImageGeneric.FIRST_IMAGE; i <= nimages; i++) {
+//                for (int j = ImageGeneric.FIRST_SLICE; j <= nslices; j++) {
+//                    data.add(new VolumeGalleryItem(filename, j, cache));
+//                }
+//            }
         } catch (Exception ex) {
             message = ex.getMessage();
         }
@@ -87,7 +92,7 @@ public class VolumeTableModel extends AbstractXmippTableModel {
     public String getTitle() {
         String strImageSize = "";
         if (getSize() > 0) {
-            AbstractGalleryImageItem item = getAllItems().get(0);
+            AbstractGalleryImageItem item = data[0];
             strImageSize = " (" + item.getWidth() + " x " + item.getHeight() + ")";
         }
 
@@ -116,32 +121,38 @@ public class VolumeTableModel extends AbstractXmippTableModel {
 
     @Override
     public boolean saveAsMetadata(String path, boolean all) {
-        try {
-            MetaData md = new MetaData();
-
-            md.addLabel(MDLabel.MDL_ENABLED);
-            md.addLabel(MDLabel.MDL_IMAGE);
-            ArrayList<AbstractGalleryImageItem> items = all ? data : getSelectedItems();
-
-            for (int i = 0; i < items.size(); i++) {
-                AbstractGalleryImageItem item = items.get(i);
-
-                long id = md.addObject();
-
-                String image = (String) item.getLabelValue(MDLabel.MDL_IMAGE);
-                int enabled = item.isEnabled() ? 1 : 0;
-
-                md.setValueInt(MDLabel.MDL_ENABLED, enabled, id);
-                md.setValueString(MDLabel.MDL_IMAGE, image, id);
-            }
-
-            md.write(path);
-
-            return true;
-        } catch (Exception ex) {
-            DEBUG.printException(ex);
-        }
+    //FIXME
+//        try {
+//            MetaData md = new MetaData();
+//
+//            md.addLabel(MDLabel.MDL_ENABLED);
+//            md.addLabel(MDLabel.MDL_IMAGE);
+//            ArrayList<AbstractGalleryImageItem> items = all ? data : getSelectedItems();
+//
+//            for (int i = 0; i < items.size(); i++) {
+//                AbstractGalleryImageItem item = items.get(i);
+//
+//                long id = md.addObject();
+//
+//                String image = (String) item.getLabelValue(MDLabel.MDL_IMAGE);
+//                int enabled = item.isEnabled() ? 1 : 0;
+//
+//                md.setValueInt(MDLabel.MDL_ENABLED, enabled, id);
+//                md.setValueString(MDLabel.MDL_IMAGE, image, id);
+//            }
+//
+//            md.write(path);
+//
+//            return true;
+//        } catch (Exception ex) {
+//            DEBUG.printException(ex);
+//        }
 
         return false;
     }
+
+	@Override
+	protected AbstractGalleryImageItem createItem(int index) {
+		return new VolumeGalleryItem(filename, index, cache);
+	}
 }

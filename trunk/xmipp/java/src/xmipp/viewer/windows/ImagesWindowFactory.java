@@ -225,11 +225,11 @@ public class ImagesWindowFactory {
 
     public static void openGalleryAs3D(AbstractXmippTableModel tableModel) {
         try {
-            ArrayList<AbstractGalleryImageItem> items = tableModel.getAllItems();
-            ImagePlus ip = ImagesWindowFactory.convertToImageJ(items);
-            ip.setTitle(tableModel.getFilename());
+//            ArrayList<AbstractGalleryImageItem> items = tableModel.getAllItems();
+//            ImagePlus ip = ImagesWindowFactory.convertToImageJ(items);
+//            ip.setTitle(tableModel.getFilename());
 
-            openImagePlusAs3D(ip);
+           // openImagePlusAs3D(ip);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
             DEBUG.printException(ex);
@@ -251,15 +251,15 @@ public class ImagesWindowFactory {
                 File tempFile = File.createTempFile("tableToStack_", ".stk");
                 tempFile.deleteOnExit();
 
-                ArrayList<AbstractGalleryImageItem> items = tableModel.getAllItems();
-                ImagePlus imp = ImagesWindowFactory.convertToImageJ(items);
-                IJ.run(imp, "Xmipp writer", "save=" + tempFile.getAbsolutePath());
+//                ArrayList<AbstractGalleryImageItem> items = tableModel.getAllItems();
+//                ImagePlus imp = ImagesWindowFactory.convertToImageJ(items);
+//                IJ.run(imp, "Xmipp writer", "save=" + tempFile.getAbsolutePath());
 
 //                System.err.println(" >>> TMP Saved at: " + file.getAbsolutePath());
-
-                imp.setTitle(tempFile.getName());
-
-                captureFrame(imp);
+//
+//                imp.setTitle(tempFile.getName());
+//
+//                captureFrame(imp);
             }
         } catch (Exception ex) {
             IJ.error(ex.getMessage());

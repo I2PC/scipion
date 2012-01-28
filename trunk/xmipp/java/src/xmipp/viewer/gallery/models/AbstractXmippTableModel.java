@@ -7,6 +7,7 @@ package xmipp.viewer.gallery.models;
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Resources;
+import xmipp.viewer.imageitems.ImageDimension;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
 import xmipp.viewer.windows.ImagesWindowFactory;
 import ij.IJ;
@@ -27,7 +28,8 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     protected String filename;  // Filename (specified by user).
 //    protected String path;  // Normalized path.
-    protected ArrayList<AbstractGalleryImageItem> data = new ArrayList<AbstractGalleryImageItem>();
+    protected AbstractGalleryImageItem[] data;//= new ArrayList<AbstractGalleryImageItem>();
+    protected long ids[] = null;
     protected LinkedList<AbstractGalleryImageItem> selectedItems = new LinkedList<AbstractGalleryImageItem>();
     protected int rows, cols;
     protected Cache<String, ImagePlus> cache = new Cache<String, ImagePlus>();
@@ -38,15 +40,21 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     protected int labelsValues[];
     protected boolean sort = false;
     protected int index[];
-
+    //Some of the functionality of AbstractGalleryImageItem
+    //will be moved to here to save memory and centralize functions
+    AbstractGalleryImageItem item;
+    ImageDimension dimension;
+    
     public AbstractXmippTableModel() {
         super();
-    }
+    }	
 
     public AbstractXmippTableModel(String filename) {
         super();
 
         this.filename = filename;
+        populateTable(filename);
+        item = createItem(0);//store the first item
 
         String message = populateTable(filename);
         if (message != null) {
@@ -83,17 +91,19 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         return selectedLabel;
     }
 
-    public void setSelectedLabel(int selectedLabel) {
-        this.selectedLabel = labelsValues[selectedLabel];
+    public void setSelectedLabel(int labelIndex) {
+        this.selectedLabel = labelsValues[labelIndex];
     }
 
     protected abstract String populateTable(String filename);
+    
+    protected abstract AbstractGalleryImageItem createItem(int index);
 
     protected abstract void getMinAndMax();
 
     public abstract String getFilename();
 
-    public ArrayList<AbstractGalleryImageItem> getAllItems() {
+    public AbstractGalleryImageItem[] getAllItems() {
         return data;
     }
 
@@ -142,14 +152,15 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     }
 
     private void sort() {
+    	//FIXME
         // Creates index and...
-        index = new int[getSize()];
-        for (int i = 0; i < index.length; i++) {
-            index[i] = i;
-        }
+//        index = new int[getSize()];
+//        for (int i = 0; i < index.length; i++) {
+//            index[i] = i;
+//        }
 
         // ...sorts.
-        mergeSort(data, index, selectedLabel);
+        //mergeSort(data, index, selectedLabel);
     }
 
     /**
@@ -222,13 +233,17 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     public Object getValueAt(int rowIndex, int columnIndex) {
         int i = getDataIndex(rowIndex, columnIndex);
-
         // If sorting, data will be accessed through the index.
-        if (isSorting() && i < data.size()) {
+        if (i >= data.length)
+        	return null;
+        
+        if (sort)
             i = index[i];
-        }
 
-        return i < data.size() ? data.get(i) : null;
+        if (data[i] == null)
+        	data[i] = createItem(i);
+
+        return data[i];
     }
 
     public int getDataIndex(int rowIndex, int columnIndex) {
@@ -243,7 +258,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     }
 
     public int getSize() {
-        return data.size();
+        return data.length;
     }
 
     public abstract String getTitle();
@@ -253,8 +268,8 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
         ArrayList<AbstractGalleryImageItem> items = new ArrayList<AbstractGalleryImageItem>();
 
-        for (int i = from; i < data.size(); i++) {
-            items.add(data.get(i));
+        for (int i = from; i < data.length; i++) {
+            items.add(data[i]);
         }
 
         enableItems(items, enable);
@@ -266,7 +281,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         ArrayList<AbstractGalleryImageItem> items = new ArrayList<AbstractGalleryImageItem>();
 
         for (int i = 0; i < getSize() && i <= to; i++) {
-            items.add(data.get(i));
+            items.add(data[i]);
         }
 
         enableItems(items, enable);
@@ -316,7 +331,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     public void setSelected(int index) {
         clearSelection();
 
-        AbstractGalleryImageItem item = data.get(index);
+        AbstractGalleryImageItem item = data[index];
         item.setSelected(true);
         selectedItems.addLast(item);
     }
@@ -325,7 +340,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
         clearSelection();
 
         for (int i = 0; i < getSize(); i++) {
-            AbstractGalleryImageItem item = data.get(i);
+            AbstractGalleryImageItem item = data[i];
 
             item.setSelected(true);
             selectedItems.addLast(item);
@@ -361,11 +376,11 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     }
 
     public void enableAllItems() {
-        enableItems(data, true);
+        //FIXME: enableItems(data, true);
     }
 
     public void disableAllItems() {
-        enableItems(data, false);
+        //FIXME: enableItems(data, false);
     }
 
     public void enableSelectedItems() {
@@ -377,9 +392,9 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     }
 
     public void setZoomScale(double zoomScale) {
-        for (int i = 0; i < getSize(); i++) {
-            data.get(i).setZoomScale(zoomScale);
-        }
+//        for (int i = 0; i < getSize(); i++) {
+//            data[i].setZoomScale(zoomScale);
+//        }
     }
 
     public void setRows(int rows) {
@@ -391,7 +406,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
             this.rows = rows;
 
             // Calculates necessary cols for desired number of rows.
-            cols = (int) Math.ceil((double) data.size() / (double) rows);
+            cols = (int) Math.ceil((double) data.length / (double) rows);
 
 //            DEBUG.printMessage("R:" + rows + " / C:" + cols + " > S: " + (rows * cols));
 
@@ -408,7 +423,7 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
             this.cols = cols;
 
             // Calculates necessary rows for the desired number of cols.
-            rows = (int) Math.ceil((double) data.size() / (double) cols);
+            rows = (int) Math.ceil((double) data.length / (double) cols);
 
             fireTableStructureChanged();
         }
@@ -416,16 +431,17 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     public double getInitialZoomScale(int width, int intercellWidth) {
         double scale = 1.0;
-        int i = 0;
+        //int i = 0;
 
-        for (i = 0; i < getSize(); i++) {
-            AbstractGalleryImageItem item = data.get(i);
-
-            if (item.exists()) {
+        
+//        for (i = 0; i < getSize(); i++) {
+//            AbstractGalleryImageItem item = data[i];
+//
+//            if (item.exists()) {
                 scale = (double) width / (double) (item.getWidth() - 2 * intercellWidth);
-                break;
-            }
-        }
+//                break;
+//            }
+//        }
 
         return scale > 1.0 ? 1.0 : scale;
     }
@@ -455,27 +471,28 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
     }
 
     public int getCellWidth() {
-        int i = 0;
+       // int i = 0;
 
-        for (i = 0; i < getSize(); i++) {
-            if (data.get(i).exists()) {
-                return getAllItems().get(i).getThumbnailWidth();
-            }
-        }
-
-        return Resources.DEFAULT_PREVIEW_WIDTH;
+//        for (i = 0; i < getSize(); i++) {
+//            if (data[i].exists()) {
+                return item.getThumbnailWidth();
+//            }
+//        }
+//
+//        return Resources.DEFAULT_PREVIEW_WIDTH;
     }
 
     public int getCellHeight() {
-        int i = 0;
-
-        for (i = 0; i < getSize(); i++) {
-            if (data.get(i).exists()) {
-                return getAllItems().get(i).getThumbnailHeight();
-            }
-        }
-
-        return Resources.DEFAULT_PREVIEW_HEIGHT;
+    	return item.getThumbnailHeight();
+//        int i = 0;
+//
+//        for (i = 0; i < getSize(); i++) {
+//            if (data[i].exists()) {
+//                return data[i].getThumbnailHeight();
+//            }
+//        }
+//
+//        return Resources.DEFAULT_PREVIEW_HEIGHT;
     }
 
     //This method is not needed here, just do nothing
@@ -517,9 +534,10 @@ public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
     public boolean saveAsStack(String path, boolean all) {
         try {
-            ImagePlus imp = ImagesWindowFactory.convertToImageJ(all ? data : getSelectedItems());
-            ImageGeneric image = XmippImageConverter.convertToXmipp(imp);
-            image.write(path);
+        	//FIXME:
+//            ImagePlus imp = ImagesWindowFactory.convertToImageJ(all ? data : getSelectedItems());
+//            ImageGeneric image = XmippImageConverter.convertToXmipp(imp);
+//            image.write(path);
 
             return true;
         } catch (Exception ex) {

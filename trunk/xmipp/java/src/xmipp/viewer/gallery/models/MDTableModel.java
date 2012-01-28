@@ -24,6 +24,7 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     MetaData md;
     boolean containsGeometryInfo;
+    AbstractGalleryImageItem item;
 
     public MDTableModel(String filename) {
         super(filename);
@@ -51,7 +52,7 @@ public class MDTableModel extends AbstractXmippTableModel {
             message = ex.getMessage();
         }
 
-        populateTable();
+        //populateTable();
 
         if (message != null) {
             IJ.error(message);
@@ -64,7 +65,8 @@ public class MDTableModel extends AbstractXmippTableModel {
         // Set enabled/disabled
         if (enabled != null) {
             for (int i = 0; i < enabled.length; i++) {
-                getAllItems().get(i).setEnabled(enabled[i]);
+            	data[i].setEnabled(enabled[i]);
+                //getAllItems().get(i).setEnabled(enabled[i]);
             }
         }
     }
@@ -100,18 +102,21 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     private void populateTable() {
         // Populate table.
-        long ids[] = null;
+        DEBUG.printMessage("Populating table...");
 
         try {
         	String imageFn = md.getValueString(MDLabel.MDL_IMAGE, md.firstObject(), true);
             setCacheSize(imageFn);
 
             ids = md.findObjects();
+            data = new AbstractGalleryImageItem[md.size()];
+            item = new GalleryImageItem(ids[0], md, MDLabel.MDL_IMAGE, cache);
 
-            for (long id : ids) {
-                GalleryImageItem item = new GalleryImageItem(id, md, MDLabel.MDL_IMAGE, cache);
-                data.add(item);
-            }
+//            for (long id : ids) {
+//                GalleryImageItem item = new GalleryImageItem(id, md, MDLabel.MDL_IMAGE, cache);
+//                data.add(item);
+           // }
+         DEBUG.printMessage("FINISH Populating table...");
         } catch (Exception ex) {
             DEBUG.printException(ex);
         }
@@ -120,7 +125,7 @@ public class MDTableModel extends AbstractXmippTableModel {
     @Override
     public void setUseGeometry(boolean use) {
         for (int i = 0; i < getSize(); i++) {
-            ((GalleryImageItem) data.get(i)).setReadGeo(use);
+            ((GalleryImageItem) data[i]).setReadGeo(use);
         }
         cache.clear();
     }
@@ -150,14 +155,15 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     @Override
     public String getTitle() {
-        String strImageSize = "";
-        if (getSize() > 0) {
-            AbstractGalleryImageItem item = getAllItems().get(0);
-            strImageSize = " (" + item.getWidth() + " x " + item.getHeight() + ")";
-        }
-
-        String title = filename;//md.getFilename();
-        return (title == null ? Labels.TITLE_UNTITLED : title) + ": " + getSize() + " images." + strImageSize;
+//        String strImageSize = "";
+//        if (getSize() > 0) {
+//            AbstractGalleryImageItem item = (AbstractGalleryImageItem) getValueAt(0, 0);
+//            strImageSize = " (" + item.getWidth() + " x " + item.getHeight() + ")";
+//        }
+//
+//        String title = filename;//md.getFilename();
+//        return (title == null ? Labels.TITLE_UNTITLED : title) + ": " + getSize() + " images." + strImageSize;
+    	return "my title";
     }
 
     @Override
@@ -201,26 +207,34 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     @Override
     public boolean saveAsMetadata(String path, boolean all) {
-        try {
-            // Copies items into the new MetaData.
-            ArrayList<AbstractGalleryImageItem> items = all ? data : getSelectedItems();
-            long ids[] = new long[items.size()];
-
-            for (int i = 0; i < items.size(); i++) {
-                long id = ((GalleryImageItem) items.get(i)).getID();
-                ids[i] = id;
-            }
-
-            MetaData output = new MetaData();
-            output.importObjects(md, ids);
-
-            output.write(path);
-
-            return true;
-        } catch (Exception ex) {
-            DEBUG.printException(ex);
-        }
+//FIXME
+//        try {
+//            // Copies items into the new MetaData.
+//            ArrayList<AbstractGalleryImageItem> items = all ? data : getSelectedItems();
+//            long ids[] = new long[items.size()];
+//
+//            for (int i = 0; i < items.size(); i++) {
+//                long id = ((GalleryImageItem) items.get(i)).getID();
+//                ids[i] = id;
+//            }
+//
+//            MetaData output = new MetaData();
+//            output.importObjects(md, ids);
+//
+//            output.write(path);
+//
+//            return true;
+//        } catch (Exception ex) {
+//            DEBUG.printException(ex);
+//        }
 
         return false;
     }
+
+	@Override
+	protected AbstractGalleryImageItem createItem(int i) {
+		long id = ids[i];
+		//DEBUG.printMessage(String.format("Creating item with index %d and id %d", i, id));
+		return new GalleryImageItem(id, md, MDLabel.MDL_IMAGE, cache);
+	}
 }
