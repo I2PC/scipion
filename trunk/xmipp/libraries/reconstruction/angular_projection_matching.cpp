@@ -56,9 +56,9 @@ void ProgAngularProjectionMatching::readParams()
 
     do_scale = checkParam("--scale");
     if (checkParam("--append"))
-    	do_overwrite = MD_APPEND;
+        do_overwrite = MD_APPEND;
     else
-    	do_overwrite = MD_OVERWRITE;
+        do_overwrite = MD_OVERWRITE;
 
     if(do_scale)
     {
@@ -249,7 +249,7 @@ void ProgAngularProjectionMatching::produceSideInfo()
     max_nr_refs_in_memory = XMIPP_MIN(max_nr_imgs_in_memory, total_nr_refs);
 
     // Initialize pointers for reference retrieval
-    pointer_allrefs2refsinmem.resize(total_nr_refs,-1);
+    pointer_allrefs2refsinmem.resize(mysampling.numberSamplesAsymmetricUnit,-1);
     pointer_refsinmem2allrefs.resize(max_nr_refs_in_memory,-1);
     counter_refs_in_memory = 0;
     loop_forward_refs=true;
@@ -268,7 +268,7 @@ void ProgAngularProjectionMatching::produceSideInfo()
         search5d_step = 1;
     }
     int myfinal=search5d_shift + search5d_shift%search5d_step;
-    nr_trans = 0;
+    nr_trans = 0;//number translations in 5D
     for (int xoff = -myfinal; xoff <= myfinal; xoff+= search5d_step)
     {
         for (int yoff = -myfinal; yoff <= myfinal; yoff+= search5d_step)
@@ -352,9 +352,31 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
     Polar<double>                 P;
     Polar<std::complex <double> > fP;
     FourierTransformer                     local_transformer;
+    size_t _pointer;
 
     // Image was not stored yet: read it from disc and store
-    fnt.compose(refno + FIRST_IMAGE, fn_ref);
+    std::vector<size_t>::const_iterator found =
+        std::find((mysampling.no_redundant_sampling_points_index).begin(),
+                  (mysampling.no_redundant_sampling_points_index).end(),
+                  (size_t)refno
+                 );
+    //found = found - (mysampling.no_redundant_sampling_points_index).begin();
+    _pointer = found - (mysampling.no_redundant_sampling_points_index).begin();
+    if (found == (mysampling.no_redundant_sampling_points_index).end())
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "Wrong reference number");
+    fnt.compose(_pointer + FIRST_IMAGE, fn_ref);
+#ifdef DEBUG
+
+    {
+        std::cerr << "reading image " << fnt << std::endl;
+        std::cerr << "XXXXno_redundant_sampling_points_indexXXXXXX" <<std::endl;
+        for (std::vector<size_t>::iterator i =
+                    mysampling.no_redundant_sampling_points_index.begin();
+                i != mysampling.no_redundant_sampling_points_index.end();
+                ++i)
+            std::cerr << *i << std::endl;
+    }
+#endif
     img.read(fnt);
     img().setXmippOrigin();
 
@@ -407,12 +429,23 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
     fP_ref[counter] = fP;
     stddev_ref[counter] = stddev;
     proj_ref[counter] = img();
+#define DEBUG
 #ifdef DEBUG
 
     std::cerr<<"counter= "<<counter<<"refno= "<<refno<<" stddev = "<<stddev;
     std::cerr<<" refsinmem2allrefs= "<<pointer_refsinmem2allrefs[counter];
     std::cerr<<" allrefs2refsinmem= "<<pointer_allrefs2refsinmem[pointer_refsinmem2allrefs[counter]] <<std::endl;
-
+    std::cerr << "pointer_allrefs2refsinmem" <<std::endl;
+    for (std::vector<int>::iterator i = pointer_allrefs2refsinmem.begin();
+            i != pointer_allrefs2refsinmem.end();
+            ++i)
+        std::cerr << *i << std::endl;
+    std::cerr << "pointer_refsinmem2allrefs" <<std::endl;
+    for (std::vector<int>::iterator i = pointer_refsinmem2allrefs.begin();
+            i != pointer_refsinmem2allrefs.end();
+            ++i)
+        std::cerr << *i << std::endl;
+    std::cerr <<std::endl;
 #endif
 
     counter_refs_in_memory++;
@@ -465,7 +498,7 @@ void * threadRotationallyAlignOneImage( void * data )
     //std::cerr << "DEBUG_JM: threadRotationallyAlignOneImage 2 itrans LOOP" <<std::endl;
     for (int itrans = myinit; itrans < prm->nr_trans; itrans+=myincr)
     {
-      //std::cerr << "DEBUG_JM:      itrans: " <<      itrans << std::endl;
+        //std::cerr << "DEBUG_JM:      itrans: " <<      itrans << std::endl;
         P.getPolarFromCartesianBSpline(Maux,prm->Ri,prm->Ro,3,
                                        (double)prm->search5d_xoff[itrans],
                                        (double)prm->search5d_yoff[itrans]);
@@ -525,7 +558,7 @@ void * threadRotationallyAlignOneImage( void * data )
     //for (int i = myinit; i != myfinal; i+=myincr)
     for (size_t i = myinit; i != myfinal; i += myincr)
     {
-      //std::cerr << "DEBUG_JM:     i: " <<     i << std::endl;
+        std::cerr << "DEBUG_JM:     i: " <<     i << std::endl;
         if (i%thread_num == thread_id)
         {
 
@@ -540,6 +573,27 @@ void * threadRotationallyAlignOneImage( void * data )
             annotate_time(&t1);
 #endif
             // Get pointer to the current reference image
+#ifdef DEBUG
+
+            if(prm->mysampling.my_neighbors[imgno][i]==58)
+            {
+                std::cerr << "XXXXpointer_allrefs2refsinmemXXXXXX" <<std::endl;
+                for (std::vector<int>::iterator i = prm->
+                                                    pointer_allrefs2refsinmem.begin();
+                        i != prm->pointer_allrefs2refsinmem.end();
+                        ++i)
+                    std::cerr << *i << std::endl;
+                std::cerr << "XXXXpointer_refsinmem2allrefsXXXXXX" <<std::endl;
+                for (std::vector<int>
+                        ::iterator i = prm->pointer_refsinmem2allrefs.begin();
+                        i != prm->pointer_refsinmem2allrefs.end();
+                        ++i)
+                    std::cerr << *i << std::endl;
+                std::cerr <<std::endl;
+
+            }
+#endif
+
             refno = prm->pointer_allrefs2refsinmem[prm->mysampling.my_neighbors[imgno][i]];
             if (refno == -1)
             {
@@ -547,14 +601,17 @@ void * threadRotationallyAlignOneImage( void * data )
                 prm->getCurrentReference(prm->mysampling.my_neighbors[imgno][i],local_plans);
                 refno = prm->pointer_allrefs2refsinmem[prm->mysampling.my_neighbors[imgno][i]];
             }
+
+
 #ifdef TIMING
             get_refs += elapsed_time(t1);
 #endif
-            //#define DEBUG
+            #define DEBUG
 #ifdef DEBUG
 
-            std::cerr << "imgno" << imgno <<std::endl;
-            std::cerr<<"Got refno= "<<refno<<" pointer= "<<prm->mysampling.my_neighbors[imgno][i]<<std::endl;
+            std::cerr << "imgno " << imgno <<std::endl;
+            std::cerr<<"Got refno= "<<refno
+            <<" pointer= "<<prm->mysampling.my_neighbors[imgno][i]<<std::endl;
 #endif
 
             // Loop over all 5D-search translations
@@ -562,12 +619,18 @@ void * threadRotationallyAlignOneImage( void * data )
             {
 #ifdef DEBUG
 
-                std::cerr<< "prm->stddev_ref[refno] * prm->stddev_img[itrans]: " <<
+                std::cerr<< "prm->stddev_ref[refno], prm->stddev_img[itrans]: " <<
                 prm->stddev_ref[refno] << " " <<
                 prm->stddev_img[itrans];
 #endif
                 // A. Check straight image
-                rotationalCorrelation(prm->fP_img[itrans],prm->fP_ref[refno],ang,local_transformer);
+                std::cerr << "threadRotationallyAlignOneImage.ONE" <<std::endl;
+                std::cerr << "itrans, refno " << itrans << " " << refno
+                <<std::endl;
+                rotationalCorrelation(prm->fP_img[itrans],
+                                      prm->fP_ref[refno],
+                                      ang,local_transformer);
+                std::cerr << "threadRotationallyAlignOneImage.TWO" <<std::endl;
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
                 for (int k = 0; k < XSIZE(corr); k++)
                 {
@@ -786,8 +849,8 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
 
     // 1 (0.01 * scale_step * scale_nsteps)
     for(double scale = 1 - 0.01 * scale_step * scale_nsteps ;
-        scale <= 1 + 0.01 * scale_step * (scale_nsteps + 1) ;
-        scale += 0.01 * scale_step)
+            scale <= 1 + 0.01 * scale_step * (scale_nsteps + 1) ;
+            scale += 0.01 * scale_step)
     {
         // apply current scale
         A.initIdentity();
@@ -901,7 +964,7 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 
         if(do_scale)
         {
-          //std::cerr << "DEBUG_JM: calling scaleAlignOneImage" <<std::endl;
+            //std::cerr << "DEBUG_JM: calling scaleAlignOneImage" <<std::endl;
             // Compute a better scale (scale_min -> scale_max)
             scaleAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, opt_scale, maxcorr);
             //std::cerr << "DEBUG_JM:     after scaleAlignOneImage" <<std::endl;
