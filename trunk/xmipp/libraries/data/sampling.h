@@ -75,6 +75,9 @@ public:
     /** number of samples */
     int number_of_samples;
 
+    /** number of samples in the assymetric unit*/
+    size_t numberSamplesAsymmetricUnit;
+
     /** neighborhood  in radians */
     double neighborhood_radius_rad;
 
