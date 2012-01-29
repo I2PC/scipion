@@ -86,6 +86,7 @@ Sampling::Sampling()
     sampling_noise=0.0;
     cos_neighborhood_radius=-1.01;
 
+    numberSamplesAsymmetricUnit=-1;
     //#define DEBUG1
 #ifdef  DEBUG1
 
@@ -529,7 +530,7 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     filestr.close();
 #endif
 #undef DEBUG3
-
+    numberSamplesAsymmetricUnit=sampling_points_vector.size();
 }
 
 // return 1 if a should go first 0 is equal -1 if before
@@ -1182,6 +1183,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
     }
 
     CREATE_INDEXES();
+    numberSamplesAsymmetricUnit=no_redundant_sampling_points_vector.size();
 
 }
 
@@ -1390,7 +1392,7 @@ void Sampling::createAsymUnitFile(const FileName &docfilename)
 #endif
 
     MDRow row;
-    for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
+    for (size_t i = 0; i < no_redundant_sampling_points_vector.size(); i++)
     {
 #ifdef CHIMERA
         filestr  << ".sphere "
@@ -1430,6 +1432,11 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
 
     row.setValue(MDL_SAMPLINGRATE, sampling_rate_rad);
     row.setValue(MDL_NEIGHBORHOOD_RADIUS, cos_neighborhood_radius);
+    row.setValue(MDL_POINTSASYMETRICUNIT,numberSamplesAsymmetricUnit);
+    md.setComment("data_extra -> sampling description;"\
+    		      " data_neighbors --> List with order of each"\
+    		      "experimental images and its neighbors"\
+    		      );
     md.setColumnFormat(false);
     md.addRow(row);
     md.write(FN_SAMPLING_EXTRA(fn_base), MD_OVERWRITE);
@@ -1446,7 +1453,6 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
         md.addRow(row);
     }
 
-    md.setComment("List with order of each experimental images and its neighbors");
     md.write(FN_SAMPLING_NEI(fn_base), MD_APPEND);
 
     //Write projection directions
@@ -1481,6 +1487,7 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
 
         for (size_t i = 0; i < size; ++i)
         {
+            row.setValue(MDL_ORDER, no_redundant_sampling_points_index[i]);
             Matrix1D<double> &angles = sampling_points_angles[i];
             row.setValue(MDL_ANGLEROT, XX(angles));
             row.setValue(MDL_ANGLETILT, YY(angles));
@@ -1509,6 +1516,7 @@ void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool
     size_t id = md.firstObject();
     md.getValue(MDL_SAMPLINGRATE, sampling_rate_rad, id);
     md.getValue(MDL_NEIGHBORHOOD_RADIUS, cos_neighborhood_radius, id);
+    md.getValue(MDL_POINTSASYMETRICUNIT,numberSamplesAsymmetricUnit,id);
 
     //Read neighbors
     md.read(FN_SAMPLING_NEI(fn_base));
