@@ -101,8 +101,8 @@ public:
     /** Counter for current filling of memory with references */
     int counter_refs_in_memory;
     /** Pointers for reference retrieval */
-    std::vector<int> pointer_allrefs2refsinmem;
-    std::vector<int> pointer_refsinmem2allrefs;
+    std::vector<int> pointer_allrefs2refsinmem;   //order after removing redundant
+    std::vector<int> pointer_refsinmem2allrefs;   //order in memory
     /** Array containing the images ids in metadata */
     std::vector<size_t> ids;
     /** Array with Polars of references and of translated images and their mirrors */
