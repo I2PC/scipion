@@ -71,12 +71,16 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
                            MultidimArray<double> &angles,
                            FourierTransformer &local_transformer)
 {
-
     MultidimArray<std::complex<double> > Fsum;
     int nrings = M1.getRingNo();
     if (nrings != M2.getRingNo())
-        REPORT_ERROR(ERR_VALUE_INCORRECT,"rotationalCorrelation: polar structures have unequal number of rings!");
-
+    {
+    	char errorMsg [256];
+    	sprintf (errorMsg, "rotationalCorrelation: polar structures have unequal number of rings:\
+    	nrings %d and M2.getRingNo %d", nrings, M2.getRingNo());
+    	std::cerr << errorMsg <<std::endl;
+        REPORT_ERROR(ERR_VALUE_INCORRECT, errorMsg);
+    }
     // Fsum should already be set with the right size in the local_transformer
     // (i.e. through a FourierTransform of corr)
     local_transformer.getFourierAlias(Fsum);
@@ -218,8 +222,8 @@ void image_convertCartesianToPolar_ZoomAtCenter(const MultidimArray<double> &in,
     /* Octave
      * r=0:64;plot(r,d.^(r/d),r,r,d*((r/d).^2.8));
      */
-	double deltaAng=(angMax-angMin+1)/NAngSteps;
-	double deltaR=(Rmax-Rmin+1)/NRSteps;
+    double deltaAng=(angMax-angMin+1)/NAngSteps;
+    double deltaR=(Rmax-Rmin+1)/NRSteps;
     out.initZeros(NAngSteps,NRSteps);
     if (VEC_XSIZE(R)==0)
     {
