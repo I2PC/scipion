@@ -86,7 +86,7 @@ TEST_F( ImageTest, saveImageinStackwithHeaderAngleRot)
     stackSliceFn.compose(2, stackName);
     Image<double> img1;
     img1.read(stackSliceFn);
-    stackSliceFn.compose(2, "/tmp/saveImageinStackwithHeaderAngleRot");
+    stackSliceFn.compose(2, "/tmp/saveImageinStackwithHeaderAngleRot.stk");
     img1.setEulerAngles(10.,20.,30.);
     img1.write(stackSliceFn);
     img1.clear();
