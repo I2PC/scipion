@@ -199,6 +199,7 @@ enum MDLabel
     MDL_PICKING_MICROGRAPH_FAMILY_STATE, ///< Micrograph family state for particle picking
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
+    MDL_POINTSASYMETRICUNIT, //number of points in asymmetric unit
     MDL_PRJ_DIMENSIONS, // X,Y dimensions for the generated projections
     MDL_PRJ_TILT_RANGE, // Vector with the initial and final tilt angle values, and step size
     MDL_PRJ_VOL,        // Volume file name to generate projections from
@@ -699,6 +700,7 @@ private:
         MDL::addLabel(MDL_PICKING_FAMILY_STATE, LABEL_STRING, "family_state");
         MDL::addLabel(MDL_PICKING_MICROGRAPH_FAMILY_STATE, LABEL_STRING, "micrograph_family_state");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax", TAGLABEL_NOTAG, "Pmax", "sumP");
+        MDL::addLabel(MDL_POINTSASYMETRICUNIT, LABEL_LONG, "pointsasymmetricunit");
         MDL::addLabel(MDL_PRJ_DIMENSIONS, LABEL_VECTOR, "projDimensions");
         MDL::addLabel(MDL_PRJ_TILT_RANGE, LABEL_VECTOR, "projTiltRange");
         MDL::addLabel(MDL_PRJ_VOL, LABEL_STRING, "projVolume", TAGLABEL_VOLUME);
