@@ -79,6 +79,27 @@ TEST_F( ImageTest, readImageFromStackMetadata)
     EXPECT_TRUE(img1 == img2);
 }
 
+//ROB ask kino is angles are saved in header
+TEST_F( ImageTest, saveImageinStackwithHeaderAngleRot)
+{
+    FileName stackSliceFn, auxFn;
+    stackSliceFn.compose(2, stackName);
+    Image<double> img1;
+    img1.read(stackSliceFn);
+    stackSliceFn.compose(2, "/tmp/saveImageinStackwithHeaderAngleRot");
+    img1.setEulerAngles(10.,20.,30.);
+    img1.write(stackSliceFn);
+    img1.clear();
+    img1.read(stackSliceFn);
+
+    double rot,tilt,psi;
+    img1.getEulerAngles(rot,tilt,psi);
+    unlink(stackSliceFn.c_str());
+    EXPECT_DOUBLE_EQ(10. ,rot);
+    EXPECT_DOUBLE_EQ(20.,tilt);
+    EXPECT_DOUBLE_EQ(30. ,psi);
+}
+
 TEST_F( ImageTest, writeIMAGICimage)
 {
     FileName auxFilename(imageName);
@@ -208,8 +229,8 @@ TEST_F( ImageTest, movePointerToSlice)
         img1.movePointerToSlice(k);
         img2.movePointerToSlice(k);
 
-       img1().setXmippOrigin();
-       img2().setXmippOrigin();
+        img1().setXmippOrigin();
+        img2().setXmippOrigin();
 
         EXPECT_TRUE(img1 == img2);
     }
