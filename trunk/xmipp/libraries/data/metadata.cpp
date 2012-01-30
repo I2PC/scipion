@@ -764,7 +764,8 @@ void MetaData::_parseObject(std::istream &is, MDObject &object, size_t id)
             setValue(object, id);
 }//end of function parseObject
 
-#define END_OF_LINE() ((char*) memchr (iter, '\n', end-iter+1))
+//#define END_OF_LINE() ((char*) memchr (iter, '\n', end-iter+1))
+#define END_OF_LINE() ((char*) memchr (iter, '\n', end-iter))
 
 /* This function will read the posible columns from the file
  * and mark as MDL_UNDEFINED those who aren't valid labels
