@@ -83,16 +83,19 @@ public class TiltPairPicker extends ParticlePicker
 			}
 			filename = getOutputPath(micrograph.getTiltedMicrograph().getOFilename());
 			md = new MetaData(filename);
-
+            System.out.printf("filename: %s\n", filename);
 			int i = 0;
-			for (long id : md.findObjects())
+			long [] ids = md.findObjects();
+			for (long id : ids)
 			{
 				x = md.getValueInt(MDLabel.MDL_XINT, id);
 				y = md.getValueInt(MDLabel.MDL_YINT, id);
+				System.out.printf("x = %d, y = %d\n", x, y);
 				up = micrograph.getParticles().get(i);
 				tp = new TiltedParticle(x, y, up);
 				up.setTiltedParticle(tp);
 				micrograph.getTiltedMicrograph().addParticle(tp);
+				System.out.printf("Adding Particle x1 = %s y1 = %s x2 = %s y2 = %s\n", up.getX(), up.getY(), up.getTiltedParticle().getX(), up.getTiltedParticle().getY());
 				i++;
 			}
 			micrograph.initAligner();

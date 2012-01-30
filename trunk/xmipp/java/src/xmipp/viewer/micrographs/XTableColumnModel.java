@@ -1,4 +1,4 @@
-package browser.table.micrographs;
+package xmipp.viewer.micrographs;
 
 import java.util.Vector;
 import java.util.Enumeration;
