@@ -653,7 +653,7 @@ void MDSql::setOperate(const MetaData *mdInLeft,
     {
         ss2 << sep << MDL::label2Str( myMd->activeLabels[i]);
         ss3 << sep;
-        if (mdInLeft->activeLabels[i] == myMd->activeLabels[i] && i < sizeLeft)
+        if (i < sizeLeft && mdInLeft->activeLabels[i] == myMd->activeLabels[i])
             ss3 << tableName(mdInLeft->myMDSql->tableId) << ".";
         else
             ss3 << tableName(mdInRight->myMDSql->tableId) << ".";
