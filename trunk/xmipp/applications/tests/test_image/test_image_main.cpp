@@ -88,9 +88,10 @@ TEST_F( ImageTest, saveImageinStackwithHeaderAngleRot)
     img1.read(stackSliceFn);
     stackSliceFn.compose(2, "/tmp/saveImageinStackwithHeaderAngleRot.stk");
     img1.setEulerAngles(10.,20.,30.);
+    img1.setDataMode(_DATA_ALL);
     img1.write(stackSliceFn);
     img1.clear();
-    img1.read(stackSliceFn);
+    img1.read(stackSliceFn, _DATA_ALL);
 
     double rot,tilt,psi;
     img1.getEulerAngles(rot,tilt,psi);
