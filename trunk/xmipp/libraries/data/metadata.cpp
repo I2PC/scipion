@@ -882,6 +882,8 @@ void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValu
     std::stringstream ss;
     size_t nCol = columnValues.size();
     size_t id, n = block.end - block.loop;
+    if (n==0)
+    	return;
 
     char * buffer = new char[n];
     memcpy(buffer, block.loop, n);
