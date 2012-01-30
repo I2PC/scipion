@@ -397,7 +397,8 @@ size_t MetaData::addObject()
 
 void MetaData::importObject(const MetaData &md, const size_t id, bool doClear)
 {
-    md.myMDSql->copyObjects(this, new MDValueEQ(MDL_OBJID, id));
+    MDValueEQ query(MDL_OBJID, id);
+    md.myMDSql->copyObjects(this, &query);
 }
 
 void MetaData::importObjects(const MetaData &md, const std::vector<size_t> &objectsToAdd, bool doClear)
@@ -819,15 +820,18 @@ char * MetaData::_readColumnsStar(mdBlock &block,
                     label = MDL_UNDEFINED; //ignore if not present in desiredLabels
                 else
                     addLabel(label);
-            MDObject * _mdObject = new MDObject(label);
             if (addColumns)
+            {
+                MDObject * _mdObject = new MDObject(label);
                 columnValues.push_back(_mdObject);//add the value here with a char
-            if(!isColumnFormat)
-                _parseObject(ss, *_mdObject, id);
+                if(!isColumnFormat)
+                    _parseObject(ss, *_mdObject, id);
+            }
             iter = newline + 1;//go to next line character
         }
     }
-    while (found_column);
+    while (found_column)
+        ;
 
     // This condition fails for empty blocks
     // if (iter < block.end)
@@ -883,7 +887,7 @@ void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValu
     size_t nCol = columnValues.size();
     size_t id, n = block.end - block.loop;
     if (n==0)
-    	return;
+        return;
 
     char * buffer = new char[n];
     memcpy(buffer, block.loop, n);
@@ -1440,7 +1444,8 @@ void MetaData::sort(MetaData &MDin, const MDLabel sortLabel,bool asc, int limit,
     {
         init(&(MDin.activeLabels));
         copyInfo(MDin);
-        MDin.myMDSql->copyObjects(this, new MDQuery(limit, offset, sortLabel,asc));
+        MDQuery query(limit, offset, sortLabel,asc);
+        MDin.myMDSql->copyObjects(this, &query);
     }
     else
         *this=MDin;
