@@ -91,8 +91,8 @@ Sampling::Sampling()
 #ifdef  DEBUG1
 
     for (int i = 0;
-         i < vertices_vectors.size();
-         i++)
+            i < vertices_vectors.size();
+            i++)
         std::cout  <<  vertices_vectors[].transpose()  << std::endl;
 #endif
 #undef DEBUG1
@@ -321,8 +321,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
 #ifdef  DEBUG2
 
     for (int i = 0;
-         i < edge_vector_start.size();
-         i++)
+            i < edge_vector_start.size();
+            i++)
     {
         std::cout  <<  ".sphere " << edge_vector_start[i]  << " 1 1 " << std::endl;
         std::cout  <<  ".sphere " << edge_vector_end[i]  << " 1 2 " << std::endl;
@@ -334,8 +334,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     {
         int i=11;
         if (   (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
-               || ZZ(vertices_vectors[i]) < min_z
-               || ZZ(vertices_vectors[i]) > max_z
+                || ZZ(vertices_vectors[i]) < min_z
+                || ZZ(vertices_vectors[i]) > max_z
            )
             //if (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
             ;
@@ -345,8 +345,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     {
         int i=0;
         if (   (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
-               || ZZ(vertices_vectors[i]) < min_z
-               || ZZ(vertices_vectors[i]) > max_z
+                || ZZ(vertices_vectors[i]) < min_z
+                || ZZ(vertices_vectors[i]) > max_z
            )
             //if (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
             ;
@@ -356,14 +356,14 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
 
     // add edges
     for (int i = 0;
-         i < edge_vector_start.size();
-         i++)
+            i < edge_vector_start.size();
+            i++)
     {
         if (i < number_of_samples * 10 - 15)
         {
             if (   (only_half_sphere && ZZ(edge_vector_start[i]) < 0.0)
-                   || ZZ(edge_vector_start[i]) < min_z
-                   || ZZ(edge_vector_start[i]) > max_z
+                    || ZZ(edge_vector_start[i]) < min_z
+                    || ZZ(edge_vector_start[i]) > max_z
                )
                 //if (only_half_sphere && ZZ(edge_vector_start[i]) < 0.0)
                 continue;
@@ -373,8 +373,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
         else
         {
             if (   (only_half_sphere && ZZ(edge_vector_end[i]) < 0.0)
-                   || ZZ(edge_vector_end[i]) < min_z
-                   || ZZ(edge_vector_end[i]) > max_z
+                    || ZZ(edge_vector_end[i]) < min_z
+                    || ZZ(edge_vector_end[i]) > max_z
                )
                 //if (only_half_sphere && ZZ(edge_vector_end[i]) < 0.0)
                 continue;
@@ -387,8 +387,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     std::ofstream filestr;
     filestr.open ("debug3_1.bild");
     for (int i = 0;
-         i < sampling_points_vector.size();
-         i++)
+            i < sampling_points_vector.size();
+            i++)
     {
         filestr  <<  ".color 1 0 0" << std::endl
         <<  ".sphere " << sampling_points_vector[i] <<
@@ -408,8 +408,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     int j = 0;
     bool j_flag = false;
     for (int i = 0;
-         i < edge_vector_start.size();
-         i++)
+            i < edge_vector_start.size();
+            i++)
     {
         if ((j % (number_of_samples - 1)) == 0 && j != 0)
         {
@@ -431,8 +431,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     //#define DEBUG3
 #ifdef  DEBUG3
     for (int i = 0;
-         i < sampling_points_vector.size();
-         i++)
+            i < sampling_points_vector.size();
+            i++)
     {
         std::cout  <<  ".color 1 0 0" << std::endl
         <<  ".sphere " << sampling_points_vector[i].transpose()  <<
@@ -444,8 +444,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     if(sampling_noise!=0.0)
     {
         for (int i = 0;
-             i < sampling_points_vector.size();
-             i++)
+                i < sampling_points_vector.size();
+                i++)
         {
             FOR_ALL_ELEMENTS_IN_MATRIX1D(sampling_points_vector[i])
             (sampling_points_vector[i])(i) += rnd_gaus(0., sampling_noise);
@@ -456,8 +456,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     //#define DEBUG3
 #ifdef  DEBUG3
     for (int i = 0;
-         i < sampling_points_vector.size();
-         i++)
+            i < sampling_points_vector.size();
+            i++)
     {
         std::cout  <<  ".color 0 1 0" << std::endl
         <<  ".sphere " << sampling_points_vector[i].transpose()  <<
@@ -471,8 +471,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     ZZ(aux) = 0.;
     double rot, tilt, psi;
     for (int i = 0;
-         i < sampling_points_vector.size();
-         i++)
+            i < sampling_points_vector.size();
+            i++)
     {
         XX(aux) = atan2(YY(sampling_points_vector[i]),
                         XX(sampling_points_vector[i]));
@@ -522,14 +522,15 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     << std::endl
     ;
     for (int i = 0;
-         i < sampling_points_vector.size();
-         i++)
+            i < sampling_points_vector.size();
+            i++)
     {
         filestr  <<  ".sphere " << sampling_points_vector[i]  << " 0.018 " << std::endl;
     }
     filestr.close();
 #endif
 #undef DEBUG3
+
     numberSamplesAsymmetricUnit=sampling_points_vector.size();
 }
 
@@ -605,8 +606,8 @@ void Sampling::fillDistance(Matrix1D<double> starting_point,
         v_aux = alpha * starting_point + beta * ending_point;
         v_aux.selfNormalize();
         if (   (only_half_sphere && ZZ(v_aux) < 0.0)
-               || ZZ(v_aux) < min_z
-               || ZZ(v_aux) > max_z
+                || ZZ(v_aux) < min_z
+                || ZZ(v_aux) > max_z
            )
             //if (only_half_sphere && ZZ(v_aux) < 0.0)
             continue;
@@ -661,7 +662,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= (-180. / sym_order) &&
-                XX(sampling_points_angles[i]) <= (180. / sym_order))
+                    XX(sampling_points_angles[i]) <= (180. / sym_order))
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
                 no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
@@ -685,7 +686,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=    0. / sym_order &&
-                XX(sampling_points_angles[i]) <=  180. / sym_order)
+                    XX(sampling_points_angles[i]) <=  180. / sym_order)
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
                 no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
@@ -697,8 +698,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= -180. / sym_order &&
-                XX(sampling_points_angles[i]) <=  180. / sym_order &&
-                YY(sampling_points_angles[i]) <=    90.
+                    XX(sampling_points_angles[i]) <=  180. / sym_order &&
+                    YY(sampling_points_angles[i]) <=    90.
                )
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
@@ -711,8 +712,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= -180.*2. / sym_order &&
-                XX(sampling_points_angles[i]) <=  180.*2. / sym_order &&
-                YY(sampling_points_angles[i]) <=    90.
+                    XX(sampling_points_angles[i]) <=  180.*2. / sym_order &&
+                    YY(sampling_points_angles[i]) <=    90.
                )
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
@@ -725,8 +726,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= -180. / (sym_order)  + 90. &&
-                XX(sampling_points_angles[i]) <=  180. / (sym_order)  + 90. &&
-                YY(sampling_points_angles[i]) <=    90.
+                    XX(sampling_points_angles[i]) <=  180. / (sym_order)  + 90. &&
+                    YY(sampling_points_angles[i]) <=    90.
                )
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
@@ -739,8 +740,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=    0. + 90. &&
-                XX(sampling_points_angles[i]) <=  180. / (sym_order) +90. &&
-                YY(sampling_points_angles[i]) <=    90.
+                    XX(sampling_points_angles[i]) <=  180. / (sym_order) +90. &&
+                    YY(sampling_points_angles[i]) <=    90.
                )
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
@@ -753,8 +754,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= 0. &&
-                XX(sampling_points_angles[i]) <=  180. / (sym_order) &&
-                YY(sampling_points_angles[i]) <=   90.
+                    XX(sampling_points_angles[i]) <=  180. / (sym_order) &&
+                    YY(sampling_points_angles[i]) <=   90.
                )
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
@@ -776,8 +777,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=     90. &&
-                XX(sampling_points_angles[i]) <=   150. ||
-                XX(sampling_points_angles[i]) ==     0
+                    XX(sampling_points_angles[i]) <=   150. ||
+                    XX(sampling_points_angles[i]) ==     0
                )
                 if (
                     dotProduct(sampling_points_vector[i], _3_fold_axis_1_by_3_fold_axis_2) >= 0 &&
@@ -860,9 +861,9 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if ((XX(sampling_points_angles[i]) >=   45. &&
-                 XX(sampling_points_angles[i]) <=  135. &&
-                 YY(sampling_points_angles[i]) <=  90.) ||
-                XX(sampling_points_angles[i]) ==  0.
+                    XX(sampling_points_angles[i]) <=  135. &&
+                    YY(sampling_points_angles[i]) <=  90.) ||
+                    XX(sampling_points_angles[i]) ==  0.
                )
                 if (
                     dotProduct(sampling_points_vector[i], _3_fold_axis_1_by_3_fold_axis_2) >= 0 &&
@@ -889,8 +890,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=   90. &&
-                XX(sampling_points_angles[i]) <=  135. &&
-                YY(sampling_points_angles[i]) <=  90.)
+                    XX(sampling_points_angles[i]) <=  135. &&
+                    YY(sampling_points_angles[i]) <=  90.)
                 if (
                     dotProduct(sampling_points_vector[i], _3_fold_axis_1_by_3_fold_axis_2) >= 0 &&
                     dotProduct(sampling_points_vector[i], _3_fold_axis_2_by_4_fold_axis) >= 0 &&
@@ -1434,9 +1435,9 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
     row.setValue(MDL_NEIGHBORHOOD_RADIUS, cos_neighborhood_radius);
     row.setValue(MDL_POINTSASYMETRICUNIT,numberSamplesAsymmetricUnit);
     md.setComment("data_extra -> sampling description;"\
-    		      " data_neighbors --> List with order of each"\
-    		      "experimental images and its neighbors"\
-    		      );
+                  " data_neighbors --> List with order of each"\
+                  "experimental images and its neighbors"\
+                 );
     md.setColumnFormat(false);
     md.addRow(row);
     md.write(FN_SAMPLING_EXTRA(fn_base), MD_OVERWRITE);
@@ -1526,6 +1527,7 @@ void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool
     {
         md.getValue(MDL_NEIGHBORS, my_neighbors[__iter.objIndex], __iter.objId);
     }
+
     //Read projection directions
     md.read(FN_SAMPLING_PROJ(fn_base));
     size_t size = md.size();
@@ -1655,7 +1657,7 @@ void Sampling::computeNeighbors(bool only_winner)
                         new_reference = true;
                         if(only_winner)
                         {
-                          //std::cerr << "DEBUG_JM: In ONLY_WINNER" <<std::endl;
+                            //std::cerr << "DEBUG_JM: In ONLY_WINNER" <<std::endl;
                             if(winner_dotProduct<my_dotProduct)
                             {
                                 if(winner_dotProduct!=-1)
@@ -1679,9 +1681,9 @@ void Sampling::computeNeighbors(bool only_winner)
                             //not in the whole loop
                             aux_neighborsArray =  &aux_neighbors[0];
                             size_t _size = aux_neighbors.size();
-//std::cerr << "DEBUG_JM: no_redundant_sampling_points_index[i]: " << no_redundant_sampling_points_index[i] << std::endl;
-                           // for (size_t kkk = 0; kkk < aux_neighbors.size(); ++kkk)
-                           //   std::cerr << aux_neighbors[kkk] << " ";
+                            //std::cerr << "DEBUG_JM: no_redundant_sampling_points_index[i]: " << no_redundant_sampling_points_index[i] << std::endl;
+                            // for (size_t kkk = 0; kkk < aux_neighbors.size(); ++kkk)
+                            //   std::cerr << aux_neighbors[kkk] << " ";
                             for( int l=0;l<  _size;l++)
                             {
                                 //if (aux_neighbors[l]==i)
@@ -1695,7 +1697,7 @@ void Sampling::computeNeighbors(bool only_winner)
                         }
                         if (new_reference)
                         {
-                          //std::cerr << formatString("DEBUG_JM: j %lu k %lu i %lu ", j, k, i) << std::endl;
+                            //std::cerr << formatString("DEBUG_JM: j %lu k %lu i %lu ", j, k, i) << std::endl;
                             aux_neighbors.push_back(no_redundant_sampling_points_index[i]);
 
                             //for (size_t kkk = 0; kkk < aux_neighbors.size(); ++kkk)
@@ -1727,7 +1729,7 @@ void Sampling::computeNeighbors(bool only_winner)
     progress_bar(exp_data_projection_direction_by_L_R_size);
 
 
-//#define CHIMERA
+    //#define CHIMERA
 #ifdef CHIMERA
 
     std::ofstream filestr;
@@ -1742,8 +1744,8 @@ void Sampling::computeNeighbors(bool only_winner)
     <<  ".sphere "   << exp_data_projection_direction_by_L_R[exp_image*R_repository.size()]
     <<  " .021"      << std::endl;
     for(int i=(exp_image*R_repository.size());
-        i< (exp_image+1)*R_repository.size();
-        i++)
+            i< (exp_image+1)*R_repository.size();
+            i++)
     {
         filestr    <<  ".color red" << std::endl
         <<  ".sphere "   << exp_data_projection_direction_by_L_R[i]
@@ -1751,8 +1753,8 @@ void Sampling::computeNeighbors(bool only_winner)
     }
     double blue;
     for(int i=0;
-        i< my_neighbors[exp_image].size();
-        i++)
+            i< my_neighbors[exp_image].size();
+            i++)
     {
 #ifdef MYPSI
         blue = (my_neighbors_psi[exp_image][i]+180.)/360.;
@@ -1820,8 +1822,8 @@ void Sampling::removePointsFarAwayFromExperimentalData()
     ;
     //green neighbours
     for (int i = 0;
-         i < no_redundant_sampling_points_vector.size();
-         i++)
+            i < no_redundant_sampling_points_vector.size();
+            i++)
     {
         filestr    <<  ".color green" << std::endl
         <<  ".sphere " << no_redundant_sampling_points_vector[i].transpose()  <<
@@ -2012,8 +2014,8 @@ void Sampling::findClosestExperimentalPoint()
     << std::endl
     ;
     for (int i = 0;
-         i < no_redundant_sampling_points_vector.size();
-         i++)
+            i < no_redundant_sampling_points_vector.size();
+            i++)
     {
         filestr    <<  ".sphere " << no_redundant_sampling_points_vector[i].transpose()  <<
         " .018" << std::endl;
@@ -2024,8 +2026,8 @@ void Sampling::findClosestExperimentalPoint()
     ;
     int ii;
     for (int i = 0;
-         i < my_exp_img_per_sampling_point[my_sample_point].size();
-         i++)
+            i < my_exp_img_per_sampling_point[my_sample_point].size();
+            i++)
     {
         ii=aux_vec[my_sample_point][i];
         filestr    << ".sphere "
@@ -2043,13 +2045,13 @@ void Sampling::findClosestExperimentalPoint()
     filestr.open ("find_closest_experimental_point.txt");
 
     for (int i = 0;
-         i < my_exp_img_per_sampling_point.size();
-         i++)
+            i < my_exp_img_per_sampling_point.size();
+            i++)
     {   //for each sampling point write its experimental images
         filestr << i << std::endl;
         for (int j = 0;
-             j < my_exp_img_per_sampling_point[i].size();
-             j++)
+                j < my_exp_img_per_sampling_point[i].size();
+                j++)
         {
             filestr    << my_exp_img_per_sampling_point[i][j]
             << " " ;
