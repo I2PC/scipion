@@ -174,44 +174,45 @@ public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseW
 	
 	protected void drawLine(double alpha, Graphics2D g2)
 	{
-		
+		int width = imp.getWidth();
+		int height = imp.getHeight();
 		int c1, c2, x1 = 0, x2 = 0, y1 = 0, y2 = 0;
 		int pos = (int)(alpha/(Math.PI/4))%4;
-		c2 = (pos == 0 || pos == 3)? imp.getHeight()/2: imp.getWidth()/2;
+		c2 = (pos == 0 || pos == 3)? height/2: width/2;
 		c1 = (int) (c2 * Math.tan( alpha - pos * Math.PI/4));
 		if(pos == 0)
 		{
-			x1 = imp.getWidth()/2 - c1;
+			x1 = width/2 - c1;
 			y1 = 0;
-			x2 = imp.getWidth()/2 + c1;
-			y2 = imp.getHeight() - 1;
+			x2 = width/2 + c1;
+			y2 = height - 1;
 		}
 		else if(pos == 1)
 		{
 			x1 = 0;
-			y1 = imp.getHeight()/2 - c1;
-			x2 = imp.getWidth() - 1;
-			y2 = imp.getHeight()/2 + c1;
+			y1 = height/2 - c1;
+			x2 = width - 1;
+			y2 = height/2 + c1;
 		}
 		else if(pos == 2)
 		{
 			x1 = 0;
-			y1 = imp.getHeight()/2 + c1;
-			x2 = imp.getWidth() - 1;
-			y2 = imp.getHeight()/2 - c1;
+			y1 = height/2 + c1;
+			x2 = width - 1;
+			y2 = height/2 - c1;
 		}
 		else if(pos == 3)
 		{
-			x1 = imp.getWidth()/2 - c1;
-			y1 = imp.getHeight() - 1;
-			x2 = imp.getWidth()/2 + c1;
+			x1 = width/2 - c1;
+			y1 = height - 1;
+			x2 = width/2 + c1;
 			y2 = 0;
 		}
 		x1 = (int)(x1 * magnification);
 		x2 = (int)(x2 * magnification);
 		y1 = (int)(y1 * magnification);
 		y2 = (int)(y2 * magnification);
-		System.out.printf("pos: %s alpha: %s x1: %s y1:%s x2:%s y2:%s\n", pos, Math.toDegrees(alpha), x1, y1, x2, y2);
+		System.out.printf("pos: %s alpha: %.2f x1: %s y1:%s x2:%s y2:%s\n", pos, Math.toDegrees(alpha)%360, x1, y1, x2, y2);
 		Color ccolor = g2.getColor();
 		g2.setColor(Color.yellow);
 		g2.drawLine(x1, y1, x2, y2);

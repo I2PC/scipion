@@ -34,7 +34,6 @@ public class TiltPairAligner
 	{
 		System.out.println("Creating TiltPairAligner");
 		create();
-		System.out.println("Created TiltPairAligner");
 	}
 
 	// Should be called by GarbageCollector before destroying

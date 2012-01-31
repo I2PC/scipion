@@ -97,9 +97,13 @@ public class UntiltedMicrograph extends Micrograph {
 	
 	public int[] getAngles()
 	{
-		System.out.println("Calling getAngles...");
+		
 		if(added < 4)
 			throw new IllegalArgumentException("Not enough particles yet");
+		System.out.println("Calling getAngles...");
+		int[] angles = tpa.computeAngles();
+		for(int i = 0; i < angles.length; i ++)
+			System.out.println(angles[i]);
 		return tpa.computeAngles();
 	}
 	
