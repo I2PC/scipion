@@ -182,15 +182,9 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
                 projectVolume(*VShears, P, Ydim, Xdim, rot,tilt,psi);
             else
                 projectVolume(inputVol(), P, Ydim, Xdim, rot,tilt,psi);
-//            std::cerr << "output_file:" << (size_t) (numberStepsPsi * i + mypsi +1) << "@" << output_file << std::endl;
-//            std::cerr << "psi:" << psi << std::endl;
-//            std::cerr << "tilt:" << tilt << std::endl;
-//            std::cerr << "rot:" << rot << std::endl;
-//            P.setRot(rot,(size_t) (numberStepsPsi * i + mypsi +1));
-//            P.setRot(tilt,(size_t) (numberStepsPsi * i + mypsi +1));
-//            P.setRot(psi,(size_t) (numberStepsPsi * i + mypsi +1));
-            //header does not work!!!
-            //////P.setRot(rot);
+
+            P.setEulerAngles(rot,tilt,psi);
+            P.setDataMode(_DATA_ALL);
             P.write(output_file,(size_t) (numberStepsPsi * i + mypsi +1),true,WRITE_REPLACE);
         }
     }
