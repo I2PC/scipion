@@ -593,6 +593,10 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
     {
         fn_tmp = FN_PROJECTIONS_MD;
         mdProj.write(fn_tmp);
+        //Just copying projections md for debugging
+        fn_tmp.copyFile(formatString("%s_iter%d_projections.xmd", fn_root.c_str(), iter));
+        //Also copying projections stack
+        FileName(FN_PROJECTIONS).copyFile(formatString("%s_iter%d_projections.stk", fn_root.c_str(), iter));
     }
 
 }
