@@ -76,6 +76,8 @@ class ProtML2D(XmippProtocol):
             # Number of references will be ignored if -ref is passed as expert option
             if self.DoGenerateReferences:
                 params += ' --nref %d' % self.NumberOfReferences
+            else:
+                params += ' --ref %s' % self.RefMd
             
             if (self.DoFast and not self.DoMlf):
                 params += ' --fast'
