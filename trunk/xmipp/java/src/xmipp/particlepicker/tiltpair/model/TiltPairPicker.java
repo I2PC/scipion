@@ -90,12 +90,10 @@ public class TiltPairPicker extends ParticlePicker
 			{
 				x = md.getValueInt(MDLabel.MDL_XINT, id);
 				y = md.getValueInt(MDLabel.MDL_YINT, id);
-				System.out.printf("x = %d, y = %d\n", x, y);
 				up = micrograph.getParticles().get(i);
 				tp = new TiltedParticle(x, y, up);
 				up.setTiltedParticle(tp);
 				micrograph.getTiltedMicrograph().addParticle(tp);
-				System.out.printf("Adding Particle x1 = %s y1 = %s x2 = %s y2 = %s\n", up.getX(), up.getY(), up.getTiltedParticle().getX(), up.getTiltedParticle().getY());
 				i++;
 			}
 			micrograph.initAligner();
@@ -168,7 +166,7 @@ public class TiltPairPicker extends ParticlePicker
 	{
 		super.saveData();
 		long id;
-		int[] angles;
+		double[] angles;
 		
 		try
 		{
