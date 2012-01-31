@@ -784,7 +784,6 @@ char * MetaData::_readColumnsStar(mdBlock &block,
     bool found_column;
     MDLabel label;
     char * iter = block.loop;
-
     if (!isColumnFormat)
     {
         iter = block.begin;
@@ -807,6 +806,9 @@ char * MetaData::_readColumnsStar(mdBlock &block,
             ++iter; //shift _
             std::stringstream ss;
             newline = END_OF_LINE();
+            //Last label and no data needs this check
+            if (newline == NULL)
+            	newline = end;
             String s(iter, newline - iter);//get current line
             ss.str(s);//set the string of the stream
             //Take the first token wich is the label
