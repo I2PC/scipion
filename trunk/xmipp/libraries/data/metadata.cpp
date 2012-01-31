@@ -975,6 +975,8 @@ void MetaData::readPlain(const FileName &inFile, const String &labelsString, con
         ++lineCounter;
         line.assign(lineBuffer);
         trim(line);
+        if (line[0]=='#') // This is an old Xmipp comment
+        	continue;
         if (!line.empty())
         {
             std::stringstream ss(line);
