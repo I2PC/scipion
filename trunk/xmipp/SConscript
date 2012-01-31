@@ -176,14 +176,26 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
     env.Default(alias)
 
 # Add a program integrated in the Xmipp structure
-def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[]):
+def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
+                    useCudaEnvironment=False):
     finalLibPath = ['lib']
     finalLibPath.append(libPaths)
     finalIncludePath = ['libraries', '#']
     finalIncludePath.append(incPaths)
     finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs
+    if useCudaEnvironment:
+    	finalLibs+=['cudart','cutil', 'shrutil_x86_64' ]
+    	finalIncludePath+=[env['CUDA_SDK_PATH']+"/CUDALibraries/common/inc",
+                           env['CUDA_SDK_PATH']+"/shared/inc"]
+    	finalLibPath+=[env['CUDA_SDK_PATH']+"/CUDALibraries/common/lib",
+                       env['CUDA_SDK_PATH']+"/shared/lib",
+                       env['CUDA_SDK_PATH']+"/CUDALibraries/common/lib/linux",
+		       "/usr/local/cuda/lib64",
+                       env['CUDA_LIB_PATH']]
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
         finalLibs.append('XmippClassif')
+    if 'XmippRecons' in finalLibs and int(env['cuda']):
+	finalLibs.append("XmippReconsCuda");
     if int(env["arpack"]):
         finalLibs += ['arpack++', 'arpack', 'lapack', 'blas']
     program = AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
@@ -230,6 +242,8 @@ def AddXmippMPIProgram(name, libs=[]):
         finalLibs += ['arpack++', 'arpack', 'lapack', 'blas']
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
         finalLibs.append('XmippClassif')
+    if 'XmippRecons' in finalLibs and int(env['cuda']):
+	finalLibs.append("XmippReconsCuda");
     for i in range(len(libs)):
        if libs[i] == 'XmippRecons':
           finalLibPath += ['libraries/reconstruction']
@@ -292,9 +306,12 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
     # setup
     basedir = AddLastSlash(basedir)
     libprefix = os.path.join(env['prefix'], 'lib')
+    cudaFiles=False
     for x in sources:
         if x.find(basedir) == -1:
             sources[sources.index(x)] = basedir + x
+	if x.endswith(".cu"):
+	    cudaFiles=True
 
     # separate local and global includes
     for x in includes:
@@ -305,11 +322,20 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
         envToUse=env.Clone()
         envToUse.Tool('cuda')
         envToUse.Append(CXXFLAGS=['-DWITH_CUDA'])
-        envToUse['CXX']='nvcc'
+	if cudaFiles:
+            envToUse.Append(NVCCFLAGS="-shared --compiler-options '-fPIC'")
+        libs+=['cutil_x86_64', 'shrutil_x86_64', 'cudart']
+    	includes+=[env['CUDA_SDK_PATH']+"/CUDALibraries/common/inc",
+                   env['CUDA_SDK_PATH']+"/shared/inc"]
+    	libpath+=[env['CUDA_SDK_PATH']+"/CUDALibraries/common/lib",
+                       env['CUDA_SDK_PATH']+"/shared/lib",
+                       env['CUDA_SDK_PATH']+"/CUDALibraries/common/lib/linux",
+		       "/usr/local/cuda/lib64",
+                       env['CUDA_LIB_PATH']]
     else:
         envToUse=env
 
-    if int(envToUse['static']) or useCudaEnvironment:
+    if int(envToUse['static']):
         library = envToUse.StaticLibrary(
             basedir + name,
             sources,
@@ -539,6 +565,11 @@ if int(env['arpack']):
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
            ReconsIncDir, ReconsLibDir, ReconsLib, useCudaEnvironment=int(env['cuda']))
 
+if int(env['cuda']):
+    ReconsCudaSources = Glob('libraries/reconstruction', '*.cu', [])
+    AddLibrary('XmippReconsCuda', 'libraries/reconstruction', ReconsCudaSources,
+           ['#'], ['lib'], [], useCudaEnvironment=True)
+
 # Classification
 ClassificationSources = Glob('libraries/classification', '*.cpp', [])
 AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
@@ -767,7 +798,7 @@ AddXmippProgram('transform_window')
 #AddXmippProgram('template_threads')
 AddXmippProgram('tomo_align_dual_tilt_series', ['XmippRecons'])
 AddXmippProgram('tomo_align_refinement', ['XmippRecons'])
-AddXmippProgram('tomo_align_tilt_series', ['XmippRecons'])
+AddXmippProgram('tomo_align_tilt_series', ['XmippRecons' ],useCudaEnvironment=int(env['cuda']))
 AddXmippProgram('tomo_detect_missing_wedge', ['XmippRecons'])
 AddXmippProgram('tomo_project', ['XmippRecons'])
 AddXmippProgram('tomo_remove_fluctuations', ['XmippRecons'])

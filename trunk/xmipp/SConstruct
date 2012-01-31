@@ -73,6 +73,8 @@ opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/matlab')
 
 opts.Add(BoolVariable('cuda', 'Build GPU stuff?', 'no'))
 opts.Add('CUDA_SDK_PATH', 'CUDA SDK dir', '/root/NVIDIA_GPU_Computing_SDK')
+opts.Add('CUDA_LIB_PATH', 'CUDA RunTimeLib dir', '/usr/local/cuda/lib64')
+
 
 #opts.Add(BoolVariable('verbose_fftw', 'Verbose configuring of FFTW libraries?', 'no'))
 #opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '--enable-threads')
