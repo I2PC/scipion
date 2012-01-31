@@ -640,6 +640,101 @@ Verify=True
 # {expert} show file verification
 ViewVerifyedFiles=True 
 
+#show results for iterations
+""" You may specify more than one iteration here 
+    This can be done by a sequence of numbers (for instance, "2 8" 
+    specifies iteration 2 and 8 (but not 3, 4, 5, 6 and 7)
+"""
+DisplayIterationsNo='1 2'
+
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Visualization
+#------------------------------------------------------------------------------------------------
+# {view} Visualize last iter references
+#------------------------------------------------------------------------------------------------
+# {section} Global parameters
+#------------------------------------------------------------------------------------------------
+#show results for iterations
+""" You may specify more than one iteration here 
+    This can be done by a sequence of numbers (for instance, "2 8" 
+    specifies iteration 2 and 8 (but not 3, 4, 5, 6 and 7)
+"""
+DisplayIterationsNo='1 2'
+#------------------------------------------------------------------------------------------------
+# {section} Display 3D volumes
+#------------------------------------------------------------------------------------------------
+#display reference volume
+""" Volume after filtration and masking
+"""
+DisplayReference=False
+#display reconstructed volume
+""" Volume as given by the reconstruction algorithm
+"""
+DisplayReconstruction=False
+#display reconstructed volume after filtration
+""" Volume after filtration
+"""
+DisplayFilteredReconstruction=True
+#------------------------------------------------------------------------------------------------
+# {section} B-factor correction
+#------------------------------------------------------------------------------------------------
+# Display a b_factor corrected volume
+""" This utility boost up the high frequencies. Do not use the automated 
+    mode [default] for maps with resolutions lower than 12-15 Angstroms.
+    It does not make sense to apply the Bfactor to the firsts iterations
+    see http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor.
+    NOTE: bfactor will be applied ONLY to the reconstructed volumes NOT to
+    the reference ones
+"""
+DisplayBFactorCorrectedVolume=False
+
+#Sampling rate (only needed for b_factor)
+SamplingRate=5.6
+#Maximum resolution to apply B-factor (in Angstrom)
+MaxRes=12
+# {expert} User defined flags for the correct_bfactor program 
+""" See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
+    for details. DEFAULT behaviour is --auto
+"""
+CorrectBfactorExtraCommand='--auto'
+
+#------------------------------------------------------------------------------------------------
+# {section} Display "3D volumes" options
+#------------------------------------------------------------------------------------------------
+# {list}|x|y|z|surface| Display volumes as slices or surface rendering
+""" x -> Visualize volumes in slices along x
+    y -> Visualize volumes in slices along y
+    z -> Visualize volumes in slices along z
+    For surface rendering to work, you need to have chimera installed!
+"""
+DisplayVolumeSlicesAlong='z'
+
+# {expert} Width of projection galleries
+""" In number of reference projections. This number will be multiplied by 3 if re-alignment of 
+    classes was performed and multiplied by 2 otherwise.
+"""
+MatrixWidth=3
+#------------------------------------------------------------------------------------------------
+# {section} Display 2D projection galleries
+#------------------------------------------------------------------------------------------------
+#Show projection matching library and aligned classes
+DisplayProjectionMatchingAlign2d=False
+#------------------------------------------------------------------------------------------------
+# {section} Display 2D-plots
+#------------------------------------------------------------------------------------------------
+#display angular distribution
+DisplayAngularDistribution=True
+#display resolution plots (FSC)
+DisplayResolutionPlots=True
+#------------------------------------------------------------------------------------------------
+# {section} Display "2D plots" options
+#------------------------------------------------------------------------------------------------
+#{list}|2D|3D| Display Angular distribution with
+""" 2D option uses gnuplot while 3D chimera
+"""
+DisplayAngularDistributionWith='2D'
+
+
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
