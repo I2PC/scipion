@@ -332,11 +332,10 @@ def compute_histogram(mD, bin, col, min, max):
     return allMD
 
 def estimateFilenamesListMemory(input):
-    from math import log, ceil
-    memory = 0
-    for file in input:
-        memory += estimateFileNameSize(file)
-    return max(memory, 536870912) # minimum 512m
+    n = min(len(input), 100) # 100 looks like a good value
+    #for file in input:
+    memory = n * estimateFileNameSize(input[0])
+    return min(max(memory, 536870912), 2147483648) # minimum 512m, maximum 2gb
 
 def estimateFileNameSize(input):
     from xmipp import FileName
