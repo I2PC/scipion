@@ -340,6 +340,10 @@ TEST_F( MetadataTest, CheckRegularExpression)
     auxMd.setValue(MDL_IMAGE,(String)"image_data_2_2.xmp",auxMd.addObject());
     auxMd.write((String)"block_000002@"+sfn,MD_APPEND);
     auxMd.clear();
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_3_1.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_3_2.xmp",auxMd.addObject());
+    auxMd.write((String)"block_000003@"+sfn,MD_APPEND);
+    auxMd.clear();
     auxMd.setValue(MDL_IMAGE,(String)"image_data_A_1.xmp",auxMd.addObject());
     auxMd.setValue(MDL_IMAGE,(String)"image_data_A_2.xmp",auxMd.addObject());
     auxMd.write((String)"block_A@"+sfn,MD_APPEND);
@@ -350,8 +354,10 @@ TEST_F( MetadataTest, CheckRegularExpression)
     auxMd.setValue(MDL_IMAGE,(String)"image_data_1_2.xmp",auxMd.addObject());
     auxMd.setValue(MDL_IMAGE,(String)"image_data_2_1.xmp",auxMd.addObject());
     auxMd.setValue(MDL_IMAGE,(String)"image_data_2_2.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_3_1.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_3_2.xmp",auxMd.addObject());
 
-    auxMd2.read((String)"block_000[0-9][0-9][12]@" + sfn);
+    auxMd2.read((String)"block_000[0-9][0-9][123]@" + sfn);
     EXPECT_EQ(auxMd, auxMd2);
 
     unlink(sfn);
@@ -653,8 +659,9 @@ TEST_F( MetadataTest, ReadMultipleBlocks)
 
 TEST_F( MetadataTest, ReadEmptyBlocks)
 {
-    char sfn[64] = "";
-    strncpy(sfn, "/tmp/testReadMultipleBlocks_XXXXXX", sizeof sfn);
+#define sizesfn 64
+    char sfn[sizesfn] = "";
+    strncpy(sfn, "/tmp/testReadMultipleBlocks_XXXXXX", sizesfn);
     mkstemp(sfn);
 
     MetaData auxMetadata;
