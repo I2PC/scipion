@@ -10,7 +10,7 @@ package xmipp.utils;
  */
 public class DEBUG {
 
-    private static boolean DEBUG = true;
+    private static boolean DEBUG = false;
 
     public static void enableDebug(boolean enable) {
         DEBUG = enable;

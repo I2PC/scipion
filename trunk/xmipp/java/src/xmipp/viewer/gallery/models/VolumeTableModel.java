@@ -92,7 +92,6 @@ public class VolumeTableModel extends AbstractXmippTableModel {
     public String getTitle() {
         String strImageSize = "";
         if (getSize() > 0) {
-            AbstractGalleryImageItem item = data[0];
             strImageSize = " (" + item.getWidth() + " x " + item.getHeight() + ")";
         }
 

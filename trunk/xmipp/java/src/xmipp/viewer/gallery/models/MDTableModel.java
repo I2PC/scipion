@@ -155,15 +155,12 @@ public class MDTableModel extends AbstractXmippTableModel {
 
     @Override
     public String getTitle() {
-//        String strImageSize = "";
-//        if (getSize() > 0) {
-//            AbstractGalleryImageItem item = (AbstractGalleryImageItem) getValueAt(0, 0);
-//            strImageSize = " (" + item.getWidth() + " x " + item.getHeight() + ")";
-//        }
-//
-//        String title = filename;//md.getFilename();
-//        return (title == null ? Labels.TITLE_UNTITLED : title) + ": " + getSize() + " images." + strImageSize;
-    	return "my title";
+        String strImageSize = "";
+        if (getSize() > 0) {
+            strImageSize = " (" + item.getWidth() + " x " + item.getHeight() + ")";
+        }
+        String title = filename;//md.getFilename();
+        return (title == null ? Labels.TITLE_UNTITLED : title) + ": " + getSize() + " images." + strImageSize;
     }
 
     @Override
