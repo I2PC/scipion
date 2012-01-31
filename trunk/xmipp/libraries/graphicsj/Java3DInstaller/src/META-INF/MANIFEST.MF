@@ -1,4 +1,0 @@
-Manifest-Version: 1.0
-Created-By: Juanjo Vega
-Main-Class: Install_J3D
-Class-Path: ij.jar plugins/

@@ -1,6 +1,0 @@
-// This macro allows to launch Xmipp Projections Explorer from command line
-// passing volume and euler angles file as parameters.
-
- macro "XmippTomo" {
-    run("Xmipp Tomo", getArgument);
- }
