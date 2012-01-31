@@ -103,6 +103,8 @@ public:
     /** Pointers for reference retrieval */
     std::vector<int> pointer_allrefs2refsinmem;   //order after removing redundant
     std::vector<int> pointer_refsinmem2allrefs;   //order in memory
+    /** Vector to assign reference number to stack positions*/
+    std::vector <size_t> convert_refno_to_stack_position;
     /** Array containing the images ids in metadata */
     std::vector<size_t> ids;
     /** Array with Polars of references and of translated images and their mirrors */

@@ -245,6 +245,10 @@ void ProgAngularProjectionMatching::produceSideInfo()
     mysampling.readSamplingFile(fn_ref.removeAllExtensions(),false);
     total_nr_refs = mysampling.no_redundant_sampling_points_angles.size();
 
+    convert_refno_to_stack_position.resize(mysampling.numberSamplesAsymmetricUnit, -1);
+    for (int i = 0; i < mysampling.no_redundant_sampling_points_index.size(); i++)
+    	convert_refno_to_stack_position[mysampling.no_redundant_sampling_points_index[i]] = i;
+
     // Don't reserve more memory than necessary
     max_nr_refs_in_memory = XMIPP_MIN(max_nr_imgs_in_memory, total_nr_refs);
 
@@ -355,31 +359,39 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
     size_t _pointer;
 
     // Image was not stored yet: read it from disc and store
-    std::vector<size_t>::const_iterator found =
-        std::find((mysampling.no_redundant_sampling_points_index).begin(),
-                  (mysampling.no_redundant_sampling_points_index).end(),
-                  (size_t)refno
-                 );
-    //found = found - (mysampling.no_redundant_sampling_points_index).begin();
-    _pointer = found - (mysampling.no_redundant_sampling_points_index).begin();
-    if (found == (mysampling.no_redundant_sampling_points_index).end())
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "Wrong reference number");
-    fnt.compose(_pointer + FIRST_IMAGE, fn_ref);
+//    std::vector<size_t>::const_iterator found =
+//        std::find((mysampling.no_redundant_sampling_points_index).begin(),
+//                  (mysampling.no_redundant_sampling_points_index).end(),
+//                  (size_t)refno
+//                 );
+//    //found = found - (mysampling.no_redundant_sampling_points_index).begin();
+//    _pointer = found - (mysampling.no_redundant_sampling_points_index).begin();
+//    if (found == (mysampling.no_redundant_sampling_points_index).end())
+//        REPORT_ERROR(ERR_VALUE_INCORRECT, "Wrong reference number");
+//    fnt.compose(_pointer + FIRST_IMAGE, fn_ref);
+    fnt.compose(convert_refno_to_stack_position[refno] + FIRST_IMAGE, fn_ref);
+    //!a delete _DATA_ALL
+    img.read(fnt, _DATA_ALL);
+    double rot_tmp,tilt_tmp,psi_tmp;
+    img.getEulerAngles(rot_tmp,tilt_tmp,psi_tmp);
+    img().setXmippOrigin();
+#define DEBUG
 #ifdef DEBUG
 
     {
-        std::cerr << "reading image " << fnt << std::endl;
+        std::cerr << "refno: " << refno<<std::endl;
+    	std::cerr << "index_found: " << convert_refno_to_stack_position[refno] << std::endl;
+    	std::cerr << "reading image " << fnt << std::endl;
+        std::cerr << "rot_tmp,tilt_tmp,psi_tmp: " << rot_tmp<< " "<< tilt_tmp<< " "<<psi_tmp<< std::endl;
         std::cerr << "XXXXno_redundant_sampling_points_indexXXXXXX" <<std::endl;
         for (std::vector<size_t>::iterator i =
                     mysampling.no_redundant_sampling_points_index.begin();
                 i != mysampling.no_redundant_sampling_points_index.end();
                 ++i)
-            std::cerr << *i << std::endl;
+            std::cerr << *i << " ";
+        std::cerr << std::endl;
     }
 #endif
-    img.read(fnt);
-    img().setXmippOrigin();
-
     // Apply CTF
     if (fn_ctf!="")
     {
@@ -439,12 +451,13 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
     for (std::vector<int>::iterator i = pointer_allrefs2refsinmem.begin();
             i != pointer_allrefs2refsinmem.end();
             ++i)
-        std::cerr << *i << std::endl;
+        std::cerr << *i << " ";
+    std::cerr <<std::endl;
     std::cerr << "pointer_refsinmem2allrefs" <<std::endl;
     for (std::vector<int>::iterator i = pointer_refsinmem2allrefs.begin();
             i != pointer_refsinmem2allrefs.end();
             ++i)
-        std::cerr << *i << std::endl;
+        std::cerr << *i << " ";
     std::cerr <<std::endl;
 #endif
 
@@ -953,8 +966,9 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         // Flip order to loop through references
         loop_forward_refs = !loop_forward_refs;
 
-        opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[opt_refno]);
-        opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[opt_refno]);
+        std::cerr << "opt_refno: " << opt_refno <<std::endl;
+        opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
+        opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
 
         //std::cerr << "DEBUG_JM: calling translationallyAlignOneImage" <<std::endl;
         translationallyAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, maxcorr);
