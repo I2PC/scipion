@@ -261,6 +261,7 @@ void ProgMLRefine3D::readParams()
 
     if (!checkParam("--psi_step"))
         ml2d->psi_step = angular;
+
     ml2d->fn_img = fn_sel;
     ml2d->fn_root = fn_root + "_" + ml2d->defaultRoot;
     ml2d->fn_ref = FN_PROJECTIONS_MD;
@@ -357,9 +358,9 @@ void ProgMLRefine3D::produceSideInfo()
     LOG("   ProgMLRefine3D::produceSideInfo: projectVolumes");
     projectVolumes(ml2d->MDref);
     //FIXME: this is for concurrency problem...remove after that
-    FileName myImg = fn_root + formatString("images_node%02d.xmd", rank);
-    MetaData(fn_sel).write(myImg);
-    ml2d->fn_img = myImg;
+//    FileName myImg = fn_root + formatString("images_node%02d.xmd", rank);
+//    MetaData(fn_sel).write(myImg);
+//    ml2d->fn_img = myImg;
     //2d initialization
     LOG("   ProgMLRefine3D::produceSideInfo: ml2d->produceSideInfo");
     ml2d->produceSideInfo();

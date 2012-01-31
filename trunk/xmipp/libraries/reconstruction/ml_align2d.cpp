@@ -887,29 +887,30 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
 
     //if (iter>1)
     {
-        static std::ios::openmode mode = std::ios::out|std::ios::trunc;
-        std::ofstream log;
-        FileName fn = fn_root + (current_image % 2 == 0 ? "_images.even" : "_images.odd");
-        log.open(fn.c_str(), mode);
-        log << "    IMAGE " << current_image << "----------------------------->>>" << std::endl;
-        log << "                             dLL: " << dLL << std::endl;
-        log << "                        sum_refw: " << sum_refw << std::endl;
-        log << "                      my_mindiff: " << my_mindiff << std::endl;
-        log << "                    sigma_noise2: " << sigma_noise2 << std::endl;
-        log << "                           ddim2: " << ddim2 << std::endl;
-        //log << "                        dfsigma2: " << dfsigma2 << std::endl;
-        log << "                       wsum_corr: " << wsum_corr << std::endl;
-        log << "                     wsum_offset: " << wsum_offset << std::endl;
-        log << "                            refw: ";
-        for (int refno = 0; refno < model.n_ref; ++refno)
-            log << std::setw(15) << refw[refno];
-        log<< std::endl;
-        log << "                     refw_mirror: ";
-        for (int refno = 0; refno < model.n_ref; ++refno)
-            log << std::setw(15) << refw_mirror[refno];
-        log<< std::endl;
-        log.close();
-        mode = std::ios::out|std::ios::app;
+        //static std::ios::openmode mode = std::ios::out|std::ios::trunc;
+        //std::ofstream log;
+        //FileName fn = fn_root + (current_image % 2 == 0 ? "_images.even" : "_images.odd");
+        //log.open(fn.c_str(), mode);
+        //std::cerr << "    IMAGE " << current_image << "----------------------------->>>" << std::endl;
+      std::cerr << "----------------------------->>>" << std::endl;
+        std::cerr << "                             dLL: " << dLL << std::endl;
+        std::cerr << "                        sum_refw: " << sum_refw << std::endl;
+        std::cerr << "                      my_mindiff: " << my_mindiff << std::endl;
+        std::cerr << "                    sigma_noise2: " << sigma_noise2 << std::endl;
+        std::cerr << "                           ddim2: " << ddim2 << std::endl;
+        //std::cerr << "                        dfsigma2: " << dfsigma2 << std::endl;
+        std::cerr << "                       wsum_corr: " << wsum_corr << std::endl;
+        std::cerr << "                     wsum_offset: " << wsum_offset << std::endl;
+//        std::cerr << "                            refw: ";
+//        for (int refno = 0; refno < model.n_ref; ++refno)
+//            std::cerr << std::setw(15) << refw[refno];
+//        std::cerr<< std::endl;
+//        std::cerr << "                     refw_mirror: ";
+//        for (int refno = 0; refno < model.n_ref; ++refno)
+//            std::cerr << std::setw(15) << refw_mirror[refno];
+//        std::cerr<< std::endl;
+//        log.close();
+//        mode = std::ios::out|std::ios::app;
     }
 #endif
 #undef DEBUG_JM1
@@ -1789,15 +1790,15 @@ void ProgML2D::expectation()
             Mimg = img();
 
 
-#define DEBUG_JM_LEVEL2
-#ifdef DEBUG_JM_LEVEL2
+//#define DEBUG_JM1
+#ifdef DEBUG_JM1
 
             //if (iter >= 2 && current_image == myFirstImg)
-            LOG(formatString("   ====================>>> Iter: %02d Image: %06lu: \n", iter, imgno).c_str());
-            LOG(formatString("                                     fn_img: %s", fn_img.c_str()).c_str());
-            LOG(formatString("                                    mygroup: %d", mygroup).c_str());
+            printf("   ====================>>> Iter: %02d Image: %06lu: \n", iter, imgno);
+            printf("                                     fn_img: %s", fn_img.c_str());
+            //printf("                                    mygroup: %d", mygroup);
 #endif
-#undef DEBUG_JM_LEVEL2
+#undef DEBUG_JM1
 
             // These two parameters speed up expectationSingleImage
             opt_refno = imgs_optrefno[IMG_LOCAL_INDEX];
@@ -1896,14 +1897,17 @@ void ProgML2D::expectation()
                 progress_bar(img_done);
             img_done++;
 
-            //            {
-            //              //std::cerr << "---------------------- DEBUG_JM: current_image: " << current_image << std::endl;
-            //                std::cerr << "                              LL: " << LL << std::endl;
-            //                std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
-            //                std::cerr << "               wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
-            //                std::cerr << "                   sumfracweight: " << sumfracweight << std::endl;
-            //            }
-
+//#define DEBUG_JM1
+#ifdef DEBUG_JM1
+//            {
+//              //std::cerr << "---------------------- DEBUG_JM: current_image: " << current_image << std::endl;
+                std::cerr << "                              LL: " << LL << std::endl;
+                std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
+                std::cerr << "               wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
+                std::cerr << "                   sumfracweight: " << sumfracweight << std::endl;
+//            }
+#endif
+#undef DEBUG_JM1
         }//close if current_block, also close of for all images
     }//close for all images
 
@@ -1923,7 +1927,7 @@ void ProgML2D::expectation()
     model.n_ref /= factor_nref;
     LOG("      ProgML2D::expectation END");
 
-}//close function expectation
+}//function expectation
 
 
 // Update all model parameters
