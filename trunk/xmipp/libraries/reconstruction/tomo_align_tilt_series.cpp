@@ -394,15 +394,16 @@ double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
                 // Initialize with cross correlation
                 double tx, ty;
                 pthread_mutex_lock( &globalAffineMutex );
+            	CorrelationAux aux;
                 if (!isMirror)
-                    bestShift(I1d,I2d,tx,ty);
+                    bestShift(I1d,I2d,tx,ty,aux);
                 else
                 {
                     MultidimArray<double> auxI2d=I2d;
                     auxI2d.selfReverseY();
                     STARTINGX(auxI2d)=STARTINGX(I2d);
                     STARTINGY(auxI2d)=STARTINGY(I2d);
-                    bestShift(I1d,auxI2d,tx,ty);
+                    bestShift(I1d,auxI2d,tx,ty,aux);
                     ty=-ty;
                 }
                 pthread_mutex_unlock( &globalAffineMutex );
@@ -1801,7 +1802,8 @@ bool ProgTomographAlignment::refineLandmark(int ii, int jj,
 
             // Now try with the best shift
             double shiftX,shiftY;
-            bestNonwrappingShift(pieceii,piecejj,shiftX,shiftY);
+            CorrelationAux aux;
+            bestNonwrappingShift(pieceii,piecejj,shiftX,shiftY,aux);
             Matrix1D<double> fftShift(2);
             VECTOR_R2(fftShift,shiftX,shiftY);
             selfTranslate(LINEAR,piecejj,fftShift,WRAP);

@@ -69,9 +69,8 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
 void rotationalCorrelation(const Polar<std::complex<double> > &M1,
                            const Polar<std::complex<double> > &M2,
                            MultidimArray<double> &angles,
-                           FourierTransformer &local_transformer)
+                           RotationalCorrelationAux &aux)
 {
-    MultidimArray<std::complex<double> > Fsum;
     int nrings = M1.getRingNo();
     if (nrings != M2.getRingNo())
     {
@@ -83,32 +82,37 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
     }
     // Fsum should already be set with the right size in the local_transformer
     // (i.e. through a FourierTransform of corr)
-    local_transformer.getFourierAlias(Fsum);
-    Fsum.initZeros();
+    aux.local_transformer.getFourierAlias(aux.Fsum);
+    memset((double*)MULTIDIM_ARRAY(aux.Fsum),0,2*MULTIDIM_SIZE(aux.Fsum)*sizeof(double));
 
     // Multiply M1 and M2 over all rings and sum
     // Assume M2 is already complex conjugated!
-    std::complex<double> aux;
+    std::complex<double> auxC;
     for (int iring = 0; iring < nrings; iring++)
     {
         double w = (2.* PI * M1.ring_radius[iring]);
         int imax=M1.getSampleNo(iring);
         const MultidimArray< std::complex<double> > &M1_iring=M1.rings[iring];
         const MultidimArray< std::complex<double> > &M2_iring=M2.rings[iring];
+        double *ptr1=(double*)MULTIDIM_ARRAY(M1_iring);
+        double *ptr2=(double*)MULTIDIM_ARRAY(M2_iring);
+        double *ptrFsum=(double *)MULTIDIM_ARRAY(aux.Fsum);
         for (int i = 0; i < imax; i++)
         {
-            aux=DIRECT_A1D_ELEM(M1_iring,i);
-            aux*=DIRECT_A1D_ELEM(M2_iring,i);
-            aux*=w;
-            DIRECT_A1D_ELEM(Fsum,i) += aux ;
+            double a=*ptr1++;
+        	double b=*ptr1++;
+        	double c=*ptr2++;
+        	double d=*ptr2++;
+        	*(ptrFsum++) += w*(a*c-b*d);
+        	*(ptrFsum++) += w*(b*c+a*d);
         }
     }
 
     // Inverse FFT to get real-space correlations
     // The local_transformer should already have corr as setReal!!
-    local_transformer.inverseFourierTransform();
+    aux.local_transformer.inverseFourierTransform();
 
-    angles.resize(XSIZE(local_transformer.getReal()));
+    angles.resize(XSIZE(aux.local_transformer.getReal()));
     double Kaux=360./XSIZE(angles);
     for (int i = 0; i < XSIZE(angles); i++)
         DIRECT_A1D_ELEM(angles,i)=(double)i*Kaux;
@@ -142,13 +146,14 @@ void normalizedPolarFourierTransform(const MultidimArray<double> &in,
 
 // Best rotation -----------------------------------------------------------
 double best_rotation(const Polar< std::complex<double> > &I1,
-                     const Polar< std::complex<double> > &I2, FourierTransformer &local_transformer)
+                     const Polar< std::complex<double> > &I2,
+                     RotationalCorrelationAux &aux)
 {
     MultidimArray<double> angles;
-    rotationalCorrelation(I1,I2,angles,local_transformer);
+    rotationalCorrelation(I1,I2,angles,aux);
 
     // Compute the maximum of correlation (inside local_transformer)
-    const MultidimArray<double> &corr=local_transformer.getReal();
+    const MultidimArray<double> &corr=aux.local_transformer.getReal();
     int imax=0;
     double maxval=DIRECT_MULTIDIM_ELEM(corr,0);
     double* ptr=NULL;
@@ -166,7 +171,7 @@ double best_rotation(const Polar< std::complex<double> > &I1,
 
 // Align rotationally ------------------------------------------------------
 void alignRotationally(MultidimArray<double> &I1, MultidimArray<double> &I2,
-                       int splineOrder, int wrap)
+                       RotationalCorrelationAux &aux, int splineOrder, int wrap)
 {
     I1.setXmippOrigin();
     I2.setXmippOrigin();
@@ -178,12 +183,10 @@ void alignRotationally(MultidimArray<double> &I1, MultidimArray<double> &I2,
     normalizedPolarFourierTransform(I2, polarFourierI2, true, XSIZE(I2)/5,
                                     XSIZE(I2)/2,plans);
 
-    FourierTransformer local_transformer;
     MultidimArray<double> rotationalCorr;
     rotationalCorr.resize(2*polarFourierI2.getSampleNoOuterRing()-1);
-    local_transformer.setReal(rotationalCorr);
-    double bestRot = best_rotation(polarFourierI1,polarFourierI2,
-                                   local_transformer);
+    aux.local_transformer.setReal(rotationalCorr);
+    double bestRot = best_rotation(polarFourierI1,polarFourierI2,aux);
 
     MultidimArray<double> tmp=I2;
     rotate(splineOrder, I2, tmp, -bestRot, 'Z', wrap);

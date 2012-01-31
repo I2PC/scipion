@@ -757,6 +757,14 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
                                   Polar_fftw_plans &plans,
                                   bool conjugated = DONT_CONJUGATE);
 
+/** Rotational Correlation Aux */
+class RotationalCorrelationAux
+{
+public:
+	FourierTransformer local_transformer;
+    MultidimArray<std::complex<double> > Fsum;
+};
+
 /** Fourier-space rotational Cross-Correlation Funtion
  *
  *  This function returns the rotational cross-correlation
@@ -790,7 +798,7 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
 void rotationalCorrelation(const Polar<std::complex<double> > &M1,
                            const Polar<std::complex<double> > &M2,
                            MultidimArray<double> &angles,
-                           FourierTransformer &local_transformer);
+                           RotationalCorrelationAux &aux);
 
 /** Compute a normalized polar Fourier transform of the input image.
     If plans is NULL, they are computed and returned. */
@@ -801,10 +809,11 @@ void normalizedPolarFourierTransform(const MultidimArray<double> &in,
 
 /** Best rotation between two normalized polar Fourier transforms. */
 double best_rotation(const Polar< std::complex<double> > &I1,
-                     const Polar< std::complex<double> > &I2, FourierTransformer &local_transformer);
+                     const Polar< std::complex<double> > &I2, RotationalCorrelationAux &aux);
 
 /** Align I2 rotationally to I1 */
 void alignRotationally(MultidimArray<double> &I1, MultidimArray<double> &I2,
+					   RotationalCorrelationAux &aux,
                        int splineOrder=1, int wrap=WRAP);
 
 /** Produce a polar image from a cartesian image.

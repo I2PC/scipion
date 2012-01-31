@@ -494,6 +494,13 @@ void correlation_vector_no_Fourier(const MultidimArray<T> &v1, const MultidimArr
     STARTINGX(result)=0;
 }
 
+/** Correlation auxiliary. */
+class CorrelationAux
+{
+public:
+    MultidimArray< std::complex< double > > FFT1, FFT2;
+    FourierTransformer transformer1, transformer2;
+};
 
 /** Correlation of two nD images
  * @ingroup FourierOperations
@@ -505,22 +512,21 @@ void correlation_vector_no_Fourier(const MultidimArray<T> &v1, const MultidimArr
 template <typename T>
 void correlation_matrix(const MultidimArray< T > & m1,
                         const MultidimArray< T > & m2,
-                        MultidimArray< double >& R)
+                        MultidimArray< double >& R,
+                        CorrelationAux &aux)
 {
     // Compute the Fourier Transforms
-    MultidimArray< std::complex< double > > FFT1, FFT2;
-    FourierTransformer transformer1, transformer2;
     R=m1;
-    transformer1.FourierTransform(R, FFT1, false);
-    transformer2.FourierTransform((MultidimArray<T> &)m2, FFT2, false);
+    aux.transformer1.FourierTransform(R, aux.FFT1, false);
+    aux.transformer2.FourierTransform((MultidimArray<T> &)m2, aux.FFT2, false);
 
     // Multiply FFT1 * FFT2'
     double dSize=MULTIDIM_SIZE(R);
     double mdSize=-dSize;
     double a, b, c, d; // a+bi, c+di
-    double *ptrFFT2=(double*)MULTIDIM_ARRAY(FFT2);
-    double *ptrFFT1=(double*)MULTIDIM_ARRAY(FFT1);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT1)
+    double *ptrFFT2=(double*)MULTIDIM_ARRAY(aux.FFT2);
+    double *ptrFFT1=(double*)MULTIDIM_ARRAY(aux.FFT1);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux.FFT1)
     {
     	a=*ptrFFT1;
     	b=*(ptrFFT1+1);
@@ -531,7 +537,7 @@ void correlation_matrix(const MultidimArray< T > & m1,
     }
 
     // Invert the product, in order to obtain the correlation image
-    transformer1.inverseFourierTransform();
+    aux.transformer1.inverseFourierTransform();
 
     // Center the resulting image to obtain a centered autocorrelation
     CenterFFT(R, true);

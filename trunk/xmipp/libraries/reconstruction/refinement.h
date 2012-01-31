@@ -44,7 +44,8 @@ void calculate_and_find_correlation_max_proj(Projection const &proj1,
         Projection & proj_tmp,
         double &shift_X, double &shift_Y,
         double const max_step,
-        int ref_trans_after, int act_proj);
+        int ref_trans_after, int act_proj,
+        CorrelationAux &aux);
 
 /**Correlates two matrices  and finds the maximun of the correlation matrix.
    This center may not be at  an integer position.
@@ -60,13 +61,14 @@ void calculate_and_find_correlation_max_mat(MultidimArray<T> const &mat1,
         MultidimArray<T> const &mat2,
         MultidimArray<T> & mat_temp,
         double &shift_X, double &shift_Y,
-        double const max_step)
+        double const max_step,
+        CorrelationAux &aux)
 {
 
     //WRAP is OK for crystal but may be not for single particles
 
     //calculate correlation matrix
-    correlation_matrix(mat1, mat2, mat_temp);
+    correlation_matrix(mat1, mat2, mat_temp, aux);
     mat_temp.setXmippOrigin();
 
     //search for the maximun inside selfWindow "selfWindow"

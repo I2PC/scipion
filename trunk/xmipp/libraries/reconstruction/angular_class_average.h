@@ -103,7 +103,7 @@ public:
     double max_shift_change, max_psi_change;
     /** transformers for all rings */
     Polar_fftw_plans global_plans;
-    FourierTransformer global_transformer;
+    RotationalCorrelationAux rotAux;
     MultidimArray<double> corr;
 
     /** Ctf group number */

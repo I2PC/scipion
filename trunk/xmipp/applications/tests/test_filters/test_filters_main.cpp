@@ -66,9 +66,10 @@ TEST_F( FiltersTest, bestShift)
 {
  double x,y;
  MultidimArray<  double  > auxMul,auxMul2;
+ CorrelationAux aux;
  auxMul = mulDouble1;
  auxMul.setXmippOrigin();
- bestShift(auxMul,auxMul,x,y);
+ bestShift(auxMul,auxMul,x,y,aux);
  EXPECT_DOUBLE_EQ(x,0.);
  EXPECT_DOUBLE_EQ(y,0.);
 
@@ -77,7 +78,8 @@ TEST_F( FiltersTest, bestShift)
 TEST_F( FiltersTest, correlation_matrix)
 {
     MultidimArray<double> Mcorr;
-    correlation_matrix(mulDouble1,mulDouble1,Mcorr);
+    CorrelationAux aux;
+    correlation_matrix(mulDouble1,mulDouble1,Mcorr,aux);
     MultidimArray<  double  > auxMul;
     auxMul.resize(3,3);
     DIRECT_A2D_ELEM(auxMul,0,0) = 64;

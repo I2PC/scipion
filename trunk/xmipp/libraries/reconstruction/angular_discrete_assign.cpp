@@ -1011,7 +1011,8 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
         }
 
         double shiftX, shiftY;
-        bestShift(Iref(), Ip(), shiftX, shiftY);
+        CorrelationAux aux;
+        bestShift(Iref(), Ip(), shiftX, shiftY, aux);
         if (shiftX*shiftX + shiftY*shiftY > R2)
         {
             shiftX = shiftY = 0;

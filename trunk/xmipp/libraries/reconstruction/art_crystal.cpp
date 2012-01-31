@@ -331,12 +331,13 @@ void CrystalARTRecons::singleStep(
     if (artPrm.ref_trans_after != -1    &&
         imagen_no > artPrm.ref_trans_after && imagen_no != 0)
     {
+    	CorrelationAux aux;
         calculate_and_find_correlation_max_proj(read_proj, theo_proj,
                                                 alig_proj,
                                                 shift_X, shift_Y,
                                                 artPrm.ref_trans_step,
                                                 artPrm.ref_trans_after,
-                                                imagen_no);
+                                                imagen_no, aux);
 
         // Apply correction
         Matrix2D<double> Correction(3, 3);

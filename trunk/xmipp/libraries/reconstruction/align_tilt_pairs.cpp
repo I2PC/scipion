@@ -135,7 +135,8 @@ bool ProgAlignTiltPairs::centerTiltedImage(const Image<double> &imgU, Image<doub
         Maux = imgT();
 
     // Calculate cross-correlation
-    correlation_matrix(Maux, imgU(), Mcorr);
+    CorrelationAux auxCorr;
+    correlation_matrix(Maux, imgU(), Mcorr, auxCorr);
 
     if (force_x_zero)
     {

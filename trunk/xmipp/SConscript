@@ -529,101 +529,15 @@ if MACOSX:
 	env.Alias(pythonLibName, command)
 
 # Reconstruction
-ReconsSources = [
-    'adjust_volume_grey_levels.cpp',
-    'align2d.cpp',
-    'align_tilt_pairs.cpp',
-    'angular_commonline.cpp',
-    'angular_continuous_assign.cpp',
-    'angular_discrete_assign.cpp',
-    'angular_distance.cpp',
-    'angular_neighbourhood.cpp',
-    'angular_projection_matching.cpp',
-    'angular_class_average.cpp',
-    'angular_project_library.cpp',
-    'art_crystal.cpp',
-    'art_xray.cpp',
-    'base_art_recons.cpp',
-    'basic_art.cpp',
-    'classify_compare_classes.cpp',
-    'classify_evaluate_classes.cpp',
-    'ctf_correct_wiener3d.cpp',
-    'ctf_correct_idr.cpp',
-    'ctf_enhance_psd.cpp',
-    'ctf_estimate_from_micrograph.cpp',
-    'ctf_estimate_from_psd.cpp',
-    'ctf_estimate_psd_with_arma.cpp',
-    'ctf_group.cpp',
-    'ctf_phase_flip.cpp',
-    'ctf_sort_psds.cpp',
-    'denoise.cpp',
-    'directions.cpp',
-    'fourier_filter.cpp',
-    'image_rotational_spectra.cpp',
-    'image_sort_by_statistics.cpp',
-    'micrograph_automatic_picking.cpp',
-    'micrograph_automatic_picking_for_qt.cpp',
-    'ml_align2d.cpp',
-###    'ml_align3d.cpp',
-    'mean_shift.cpp',
-    'mlf_align2d.cpp',
-    'ml_refine3d.cpp',
-    'ml_tomo.cpp',
-    'ml2d.cpp',
-    'nma_alignment.cpp',
-    'pdb_nma_deform.cpp',
-    'phantom_simulate_microscope.cpp',
-    'precompute_sampling.cpp',
-    'program_extension.cpp',
-    'program_filter.cpp',
-    'project.cpp',
-    'project_crystal.cpp',
-    'project_real_shears.cpp',
-    'project_XR.cpp',
-    'projectTomography.cpp',
-    'radon.cpp',
-    'recons_misc.cpp',
-    'reconstruct_art.cpp',
-    'reconstruct_art_pseudo.cpp',
-    'reconstruct_fourier.cpp',
-    'reconstruct_wbp.cpp',
-    'refinement.cpp',
-    'resolution_ibw.cpp',
-    'resolution_ssnr.cpp',
-    'symmetrize.cpp',
-    'threshold.cpp',
-    'tomo_align_dual_tilt_series.cpp',
-    'tomo_align_tilt_series.cpp',
-    'tomo_align_refinement.cpp',
-    'tomo_detect_missing_wedge.cpp',
-    'tomo_remove_fluctuations.cpp',
-    'tomo_extract_subvolume.cpp',
-    'transform_downsample.cpp',
-    'transform_geometry.cpp',
-    'volume_correct_bfactor.cpp',
-    'volume_enhance_contrast.cpp',
-    'volume_from_pdb.cpp',
-    'volume_segment.cpp',
-    'volume_to_pseudoatoms.cpp',
-    'xray_import.cpp',
-#    'xray_volume_correct.cpp'
-]
+ReconsSources = Glob('libraries/reconstruction', '*.cpp', ["angular_gcar.cpp"])
 ReconsLib =['XmippExternal', 'XmippData', 'pthread','XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs
 ReconsIncDir=['#libraries', '#external', '#']
 ReconsLibDir=['lib']
 if int(env['arpack']):
     ReconsSources.append("angular_gcar.cpp")
     ReconsDependLibraries += ['arpack', 'lapack', 'blas']
-useCudaEnvironment=False
-if int(env['cuda']):
-    ReconsLib+=['cutil']
-    ReconsIncDir+=[env['CUDA_SDK_PATH']+"/CUDALibraries/common/inc",
-                   env['CUDA_SDK_PATH']+"/shared/inc"]
-    ReconsLibDir+=[env['CUDA_SDK_PATH']+"/CUDALibraries/common/lib",
-                   env['CUDA_SDK_PATH']+"/shared/lib"]
-    useCudaEnvironment=True
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
-           ReconsIncDir, ReconsLibDir, ReconsLib, useCudaEnvironment=useCudaEnvironment)
+           ReconsIncDir, ReconsLibDir, ReconsLib, useCudaEnvironment=int(env['cuda']))
 
 # Classification
 ClassificationSources = Glob('libraries/classification', '*.cpp', [])

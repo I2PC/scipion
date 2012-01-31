@@ -128,6 +128,8 @@ public:
         toClassify.reserve(SF.size());
         size_t objId;
         FileName fnImageStack;
+        CorrelationAux aux;
+        RotationalCorrelationAux aux2;
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             if (idx==0)
@@ -135,7 +137,7 @@ public:
                 SF.getValue(MDL_IMAGE,fnImg,__iter.objId);
                 toClassify.push_back(fnImg);
                 lastImage.read(fnImg);
-                centerImage(lastImage());
+                centerImage(lastImage(),aux,aux2);
                 if (rank==0)
                     lastImage.write(fnStack,idx,true,WRITE_APPEND);
                 fnImageStack.compose(idx+1,fnStack);
@@ -173,6 +175,9 @@ public:
         int bestIdx=-1;
         int count=0;
         FileName fnImageStack;
+        AlignmentAux aux;
+        CorrelationAux aux2;
+        RotationalCorrelationAux aux3;
         FOR_ALL_ELEMENTS_IN_MATRIX1D(stillToDo)
         {
             if (!VEC_ELEM(stillToDo,i))
@@ -184,8 +189,8 @@ public:
             }
             I.read(toClassify[i]);
             I().setXmippOrigin();
-            double corr=alignImagesConsideringMirrors(lastImage(),I(),M,&mask);
-            centerImage(I());
+            double corr=alignImagesConsideringMirrors(lastImage(),I(),M,aux,aux2,aux3,&mask);
+            centerImage(I(),aux2,aux3);
             if (corr>bestCorr)
             {
                 bestCorr=corr;
@@ -233,8 +238,8 @@ public:
         // All compute the best image
         I.read(toClassify[bestIdx]);
         I().setXmippOrigin();
-        bestCorr=alignImagesConsideringMirrors(lastImage(),I(),M,&mask);
-        centerImage(I());
+        bestCorr=alignImagesConsideringMirrors(lastImage(),I(),M,aux,aux2,aux3,&mask);
+        centerImage(I(),aux2,aux3);
         bestImage()=I();
         lastImage()=bestImage();
         size_t objId;

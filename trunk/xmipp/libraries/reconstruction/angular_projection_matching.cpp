@@ -477,7 +477,7 @@ void * threadRotationallyAlignOneImage( void * data )
     double                      mean, stddev;
     Polar<double>               P;
     Polar<std::complex <double> > fP,fPm;
-    FourierTransformer                   local_transformer;
+    RotationalCorrelationAux    rotAux;
     Polar_fftw_plans            local_plans;
     size_t                         imgno = (*this_image) - FIRST_IMAGE;
 
@@ -520,8 +520,8 @@ void * threadRotationallyAlignOneImage( void * data )
     }
     // Prepare FFTW plan for rotational correlation
     corr.resize(P.getSampleNoOuterRing());
-    local_transformer.setReal(corr);
-    local_transformer.FourierTransform();
+    rotAux.local_transformer.setReal(corr);
+    rotAux.local_transformer.FourierTransform();
 
     //std::cerr << "DEBUG_JM: threadRotationallyAlignOneImage 4 before thread WAIT" <<std::endl;
     // All threads have to wait until the itrans loop is done
@@ -627,9 +627,9 @@ void * threadRotationallyAlignOneImage( void * data )
                 std::cerr << "threadRotationallyAlignOneImage.ONE" <<std::endl;
                 std::cerr << "itrans, refno " << itrans << " " << refno
                 <<std::endl;
-                rotationalCorrelation(prm->fP_img[itrans],
-                                      prm->fP_ref[refno],
-                                      ang,local_transformer);
+		rotationalCorrelation(prm->fP_img[itrans],
+				      prm->fP_ref[refno],
+				      ang,rotAux);
                 std::cerr << "threadRotationallyAlignOneImage.TWO" <<std::endl;
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
                 for (int k = 0; k < XSIZE(corr); k++)
@@ -646,7 +646,7 @@ void * threadRotationallyAlignOneImage( void * data )
                 std::cerr<<"straight: corr "<<*maxcorr<<std::endl;
 #endif
                 // B. Check mirrored image
-                rotationalCorrelation(prm->fPm_img[itrans],prm->fP_ref[refno],ang,local_transformer);
+                rotationalCorrelation(prm->fPm_img[itrans],prm->fP_ref[refno],ang,rotAux);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
                 for (int k = 0; k < XSIZE(corr); k++)
                 {
@@ -742,7 +742,10 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
 
     // Perform the actual search for the optimal shift
     if (max_shift>0)
-        bestShift(Mref,Mimg,opt_xoff,opt_yoff);
+    {
+    	CorrelationAux aux;
+        bestShift(Mref,Mimg,opt_xoff,opt_yoff,aux);
+    }
     else
         opt_xoff = opt_yoff = 0.;
     if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift * max_shift)

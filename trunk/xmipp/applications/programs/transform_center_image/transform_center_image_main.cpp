@@ -31,6 +31,8 @@ class ProgCenterImage: public XmippMetadataProgram
 public:
     int Niter;
     bool limitShift;
+    CorrelationAux aux;
+    RotationalCorrelationAux aux2;
 
     void defineParams()
     {
@@ -70,7 +72,7 @@ public:
         Image<double> img;
         img.readApplyGeo(fnImg, rowIn);
         img().checkDimensionWithDebug(2,__FILE__,__LINE__);
-        centerImage(img(), Niter, limitShift);
+        centerImage(img(), aux, aux2, Niter, limitShift);
         img.write(fnImgOut);
     }
 

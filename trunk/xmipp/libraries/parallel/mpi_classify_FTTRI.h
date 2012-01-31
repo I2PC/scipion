@@ -165,20 +165,24 @@ public:
     int findFarthestFTTRI(const MultidimArray<double> &fttriSeed,
     		const EpsilonClass &class_i);
 
+    int findFarthest(const MultidimArray<double> &seed,
+            const EpsilonClass &class_i, bool FTTRI);
+
+    /// Split large classes
+    void splitLargeClasses(bool FTTRI);
+
     /// Split large classes
     void splitLargeFTTRIClasses();
 
-    /// Compute FTTRI class neighbours
-    void computeFTTRIClassNeighbours();
+    /// Compute centroid neighbours
+    void computeClassNeighbours(bool FTTRI);
 
-    /// Compute image class naighbours
-    void computeImageClassNeighbours();
 
     /// Reassign images to image classes
     size_t reassignImagesToClasses(bool FTTRI);
 
     /** Write results */
-    void writeResults();
+    void writeResults(bool FTTRI);
 
     /** compute class centroids */
     void computeClassCentroids(bool FTTRI);

@@ -78,11 +78,14 @@ public:
     // Rotational correlation for best_rotation
     MultidimArray<double> rotationalCorr;
 
-    // Local transformer for the best rotation
-    FourierTransformer local_transformer;
-    
     // Plans for the best_rotation
     Polar_fftw_plans *plans;
+
+    // Correlation aux
+    CorrelationAux corrAux;
+
+    // Rotational correlation aux
+    RotationalCorrelationAux rotAux;
 
     // List of images assigned
     std::vector<CL2DAssignment> currentListImg;

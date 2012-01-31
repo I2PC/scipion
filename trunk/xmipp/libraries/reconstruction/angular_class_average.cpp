@@ -336,8 +336,8 @@ void ProgAngularClassAverage::produceSideInfo()
     P.calculateFftwPlans(global_plans);
     fourierTransformRings(P, fP, global_plans, false);
     corr.resize(P.getSampleNoOuterRing());
-    global_transformer.setReal(corr);
-    global_transformer.FourierTransform();
+    rotAux.local_transformer.setReal(corr);
+    rotAux.local_transformer.FourierTransform();
 
 }
 
@@ -534,6 +534,7 @@ void ProgAngularClassAverage::reAlignClass(Image<double> &avg1,
     auxImg.write("ref.xmp");
 #endif
 
+    CorrelationAux aux;
     for (int iter = 0; iter < nr_iter; iter++)
     {
         // Initialize iteration
@@ -556,7 +557,7 @@ void ProgAngularClassAverage::reAlignClass(Image<double> &avg1,
             getPolar(imgs[imgno](), fPimg, false, (float) -imgs[imgno].Xoff(),
                      (float) -imgs[imgno].Yoff());
             // A. Check straight image
-            rotationalCorrelation(fPimg, fPref, ang, global_transformer);
+            rotationalCorrelation(fPimg, fPref, ang, rotAux);
             for (int k = 0; k < XSIZE(corr); k++)
             {
                 if (corr(k) > maxcorr)
@@ -568,7 +569,7 @@ void ProgAngularClassAverage::reAlignClass(Image<double> &avg1,
             }
 
             // B. Check mirrored image
-            rotationalCorrelation(fPimg, fPrefm, ang, global_transformer);
+            rotationalCorrelation(fPimg, fPrefm, ang, rotAux);
             for (int k = 0; k < XSIZE(corr); k++)
             {
                 if (corr(k) > maxcorr)
@@ -613,7 +614,7 @@ void ProgAngularClassAverage::reAlignClass(Image<double> &avg1,
 
                 if (max_shift > 0)
                 {
-                    bestShift(Mref, Mimg, opt_xoff, opt_yoff);
+                    bestShift(Mref, Mimg, opt_xoff, opt_yoff, aux);
                     if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift
                         * max_shift)
                     {

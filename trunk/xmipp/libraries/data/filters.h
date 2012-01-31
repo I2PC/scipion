@@ -208,7 +208,7 @@ void EntropySegmentation(MultidimArray<double> &V);
  * The binarization threshold is returned
  */
 double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil=0.05,
-		                       bool binarizeVolume=true);
+                               bool binarizeVolume=true);
 
 /** Correlation nD
  * @ingroup Filters
@@ -442,6 +442,7 @@ void bestShift(const MultidimArray< double >& I1,
                const MultidimArray< double >& I2,
                double& shiftX,
                double& shiftY,
+               CorrelationAux &aux,
                const MultidimArray< int >* mask = NULL);
 
 /** Translational search (non-wrapping)
@@ -454,16 +455,17 @@ void bestShift(const MultidimArray< double >& I1,
 void bestNonwrappingShift(const MultidimArray< double >& I1,
                           const MultidimArray< double >& I2,
                           double& shiftX,
-                          double& shiftY);
+                          double& shiftY,
+                          CorrelationAux &aux);
 
 /** Auxiliary class for fast image alignment */
-class AlignmentAux {
+class AlignmentAux
+{
 public:
     Matrix2D<double> ARS, ASR, R;
     MultidimArray<double> IauxSR, IauxRS, rotationalCorr;
     Polar_fftw_plans *plans;
     Polar< std::complex<double> > polarFourierIref, polarFourierI;
-    FourierTransformer local_transformer;
     AlignmentAux();
     ~AlignmentAux();
 };
@@ -489,7 +491,9 @@ double alignImages(const MultidimArray< double >& Iref,
                    MultidimArray< double >& I,
                    Matrix2D< double >&M,
                    bool wrap,
-                   AlignmentAux &aux);
+                   AlignmentAux &aux,
+                   CorrelationAux &aux2,
+                   RotationalCorrelationAux &aux3);
 
 /** Align two images considering also the mirrors
  * @ingroup Filters
@@ -502,9 +506,11 @@ double alignImages(const MultidimArray< double >& Iref,
 double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
                                      MultidimArray< double >& I,
                                      Matrix2D<double> &M,
+                                     AlignmentAux &aux,
+                                     CorrelationAux &aux2,
+                                     RotationalCorrelationAux &aux3,
                                      bool wrap=WRAP,
-                                     const MultidimArray< int >* mask = NULL,
-                                     AlignmentAux *aux=NULL);
+                                     const MultidimArray< int >* mask = NULL);
 
 /** Align a set of images.
  * Align a set of images and produce a class average as well as the set of
@@ -515,7 +521,7 @@ double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
  * is run for a given number of iterations.
  */
 void alignSetOfImages(MetaData &MD, MultidimArray< double >& Iavg,
-		int Niter=10, bool considerMirror=true);
+                      int Niter=10, bool considerMirror=true);
 
 /** Unnormalized 2D gaussian value using covariance
  * @ingroup NumericalFunctions
@@ -1207,7 +1213,8 @@ void localThresholding(MultidimArray< double >& img,
  * translationally. For doing so, it compares this image with its mirrored
  * (X, Y, XY) versions.
  */
-void centerImageTranslationally(MultidimArray<double> &I);
+void centerImageTranslationally(MultidimArray<double> &I,
+                                CorrelationAux &aux);
 
 /** Center an image rotationally
  * @ingroup Filters
@@ -1216,7 +1223,7 @@ void centerImageTranslationally(MultidimArray<double> &I);
  * rotationally. For doing so, it compares this image with its mirrored
  * (X) version.
  */
-void centerImageRotationally(MultidimArray<double> &I);
+void centerImageRotationally(MultidimArray<double> &I, RotationalCorrelationAux &aux);
 
 /** Center an image both translationally and rotationally
  * @ingroup Filters
@@ -1226,7 +1233,9 @@ void centerImageRotationally(MultidimArray<double> &I);
  * with its mirrored (X, Y, XY) versions. The image is aligned translationally
  * and then rotationally Niter times.
  */
-void centerImage(MultidimArray<double> &I, int Niter=10, bool limitShift=true);
+void centerImage(MultidimArray<double> &I, CorrelationAux &aux,
+                 RotationalCorrelationAux &aux2,
+                 int Niter=10, bool limitShift=true);
 
 
 /** Force positive.
@@ -1293,9 +1302,9 @@ void boundMedianFilter(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
                 {
                     //std::sort(neighbours.begin(),neighbours.end());
                     if (N % 2 == 0)
-                      A3D_ELEM(V, k, i, j) = 0.5*(neighbours[N/2-1]+ neighbours[N/2]);
+                        A3D_ELEM(V, k, i, j) = 0.5*(neighbours[N/2-1]+ neighbours[N/2]);
                     else
-                      A3D_ELEM(V, k, i, j) = neighbours[N/2];
+                        A3D_ELEM(V, k, i, j) = neighbours[N/2];
                     A3D_ELEM(mask, k, i, j) = false;
                 }
             }
@@ -1355,7 +1364,9 @@ public:
     ;
 
     /** Show some info before running */
-    virtual void show() {};
+    virtual void show()
+    {}
+    ;
 };
 
 /** Some concrete filters */
@@ -1445,14 +1456,14 @@ public:
 
 class BasisFilter: public XmippFilter
 {
-	/** Stack with the basis */
-	FileName fnBasis;
+    /** Stack with the basis */
+    FileName fnBasis;
 
-	/// Number of basis to use.
-	int Nbasis;
+    /// Number of basis to use.
+    int Nbasis;
 
-	// Stack with the basis
-	Image<double> basis;
+    // Stack with the basis
+    Image<double> basis;
 public:
     /** Define the parameters for use inside an Xmipp program */
     static void defineParams(XmippProgram * program);

@@ -41,7 +41,8 @@ void calculate_and_find_correlation_max_proj(Projection const &proj1,
         Projection &proj_temp,
         double &shift_X, double &shift_Y,
         double const max_step,
-        int ref_trans_after, int imagen_no)
+        int ref_trans_after, int imagen_no,
+        CorrelationAux &aux)
 {
 //       #define DEBUG_calculate_and_find_correlation_max_proj
 #ifdef DEBUG_calculate_and_find_correlation_max_proj
@@ -53,7 +54,8 @@ void calculate_and_find_correlation_max_proj(Projection const &proj1,
     calculate_and_find_correlation_max_mat(IMGMATRIX(proj1),
                                            IMGMATRIX(proj2),
                                            IMGMATRIX(proj_temp),
-                                           shift_X, shift_Y, max_step);
+                                           shift_X, shift_Y, max_step,
+                                           aux);
 
 }//calculate_and_find_correlation_max end
 #undef DEBUG_calculate_and_find_correlation_max_proj

@@ -88,6 +88,9 @@ void ProgAlign2d::alignPairs(MetaData &MDin, MetaData &MDout, int level)
     Image<double> I1, I2;
     Matrix2D<double> M;
     FileName fnOut;
+    AlignmentAux aux1;
+    CorrelationAux aux2;
+    RotationalCorrelationAux aux3;
     std::cerr << "Aligning level " << level << std::endl;
     init_progress_bar(imax);
     for (int i=0; i<imax; i++)
@@ -104,11 +107,11 @@ void ProgAlign2d::alignPairs(MetaData &MDin, MetaData &MDout, int level)
         if (dont_mirror)
             alignImages(I1m,I2m,M);
         else
-            alignImagesConsideringMirrors(I1m,I2m,M);
+            alignImagesConsideringMirrors(I1m,I2m,M,aux1,aux2,aux3);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(I1m)
             DIRECT_MULTIDIM_ELEM(I1m,n)=0.5*(DIRECT_MULTIDIM_ELEM(I1m,n)+
                                              DIRECT_MULTIDIM_ELEM(I2m,n));
-        centerImage(I1m);
+        centerImage(I1m,aux2,aux3);
 
         // Write to output stack
         fnOut.compose(i+1,fnOutputStack);
@@ -183,7 +186,9 @@ void ProgAlign2d::computeMean()
     }
     progress_bar(N);
     Iref()*=1.0/N;
-    centerImage(Iref());
+    CorrelationAux aux;
+    RotationalCorrelationAux aux2;
+    centerImage(Iref(),aux,aux2);
 }
 
 // Alignment of all images by iterative refinement  ========================================
@@ -200,6 +205,9 @@ void ProgAlign2d::refinement()
     Matrix2D<double> M;
     int centerCount=0;
     FileName fnImg;
+    AlignmentAux aux1;
+    CorrelationAux aux2;
+    RotationalCorrelationAux aux3;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
     	SF.getValue(MDL_IMAGE,fnImg,__iter.objId);
@@ -214,7 +222,7 @@ void ProgAlign2d::refinement()
         if (dont_mirror)
             corr=alignImages(Irefm,Im,M);
         else
-            corr=alignImagesConsideringMirrors(Irefm,Im,M);
+            corr=alignImagesConsideringMirrors(Irefm,Im,M,aux1,aux2,aux3);
         applyGeometry(LINEAR, Ialigned, Ibackup, M, IS_NOT_INV, WRAP);
         Im=Ialigned;
 
@@ -236,7 +244,7 @@ void ProgAlign2d::refinement()
         // From time to time, recenter the reference
         if ((++centerCount)%10==0)
         {
-        	centerImage(Irefm);
+        	centerImage(Irefm,aux2,aux3);
         	centerCount=0;
         }
 

@@ -775,9 +775,9 @@ void MpiProgAngularClassAverage::mpi_produceSideInfo()
     P.getPolarFromCartesianBSpline(Maux, Ri, Ro);
     P.calculateFftwPlans(global_plans);
     fourierTransformRings(P, fP, global_plans, false);
-    corr.resize(P.getSampleNoOuterRing());
-    global_transformer.setReal(corr);
-    global_transformer.FourierTransform();
+    corr.resizeNoCopy(P.getSampleNoOuterRing());
+    rotAux.local_transformer.setReal(corr);
+    rotAux.local_transformer.FourierTransform();
 
     // Set ring defaults
     if (Ri < 1)
@@ -1307,7 +1307,7 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
             getPolar(imgs[imgno](), fPimg, false, (float) -imgs[imgno].Xoff(),
                      (float) -imgs[imgno].Yoff());
             // A. Check straight image
-            rotationalCorrelation(fPimg, fPref, ang, global_transformer);
+            rotationalCorrelation(fPimg, fPref, ang, rotAux);
             for (int k = 0; k < XSIZE(corr); k++)
             {
                 if (corr(k) > maxcorr)
@@ -1319,7 +1319,7 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
             }
 
             // B. Check mirrored image
-            rotationalCorrelation(fPimg, fPrefm, ang, global_transformer);
+            rotationalCorrelation(fPimg, fPrefm, ang, rotAux);
             for (int k = 0; k < XSIZE(corr); k++)
             {
                 if (corr(k) > maxcorr)
