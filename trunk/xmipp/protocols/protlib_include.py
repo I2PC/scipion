@@ -34,7 +34,7 @@ Behavior = "Resume"
     if allowContinue:
         list += ", Continue"
         linesStr += '''
-# {condition}(Behavior=="Continue") Continue at iteration:
+# {condition}(Behavior=="Continue") Continue at step:
 """ Set to a positive number N to continue the protocol run at step N. """
 ContinueAtStep = 1
 '''
