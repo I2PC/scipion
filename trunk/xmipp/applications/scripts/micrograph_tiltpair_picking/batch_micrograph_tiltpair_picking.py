@@ -54,6 +54,20 @@ class ScriptParticlePicking(ScriptAppIJ):
     def readOtherParams(self):
         input = self.getParam('-i')
         output = self.getParam('-o')
+
+        xmipp_path = getXmippPath();
+        plugins_dir = getXmippPath("external/imagej/plugins/")
+        ij_jar = getXmippPath("external/imagej/ij.jar")
+        memory = self.getParam('-m')
+        if len(memory) == 0:
+            memory=str(3*estimateMemory(input))+"m"
+            print "No memory size provided. Using default: " + memory
+
+        
+        cmd = "java -Xmx%(memory)s -Dplugins.dir=%(plugins_dir)s -cp %(plugins_dir)s*:%(ij_jar)s:%(xmipp_path)s/java/lib/XmippPPicker.jar:%(xmipp_path)s/java/lib/XmippJNI.jar:%(xmipp_path)s/libraries/bindings/java/XmippIJInterface.jar: particlepicker.tiltpair.Main %(input)s %(output)s" % locals()
+        os.system(cmd)
+    
+
         self.args = "%(input)s %(output)s" % locals()
         
         

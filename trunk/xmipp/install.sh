@@ -221,9 +221,9 @@ install_libs()
   VERSION=$1
   SUFFIXES="a la "
   if $IS_MAC; then
-	SUFFIXES+="dylib $VERSION.dylib"
+	SUFFIXES="$SUFFIXES dylib $VERSION.dylib"
   else 
-	SUFFIXES+="so so.$VERSION"
+	SUFFIXES="$SUFFIXES so so.$VERSION"
   fi
   
   for suffix in $SUFFIXES; do
