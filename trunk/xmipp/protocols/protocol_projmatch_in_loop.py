@@ -95,7 +95,7 @@ def angular_project_library(_log
     if (not DoCtfCorrection):
         src=ProjectLibraryRootName.replace(".stk",'_sampling.xmd')
         dst = src.replace('sampling.xmd','group%06d_sampling.xmd' % 1)
-        shutil.copy(src, dst)
+        copyFile(_log, src, dst)
 
 
 def projection_matching(_log
@@ -143,13 +143,14 @@ def projection_matching(_log
         ictf    = NumberOfCtfGroups - ii 
         
         inputdocfile    = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@' + DocFileInputAngles
-        outputname   = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@'+ _ProjMatchRootName
-        baseTxtFile  = refname[:-len('.stk')] 
+        outputname      = CtfBlockName+str(ictf).zfill(FILENAMENUMBERLENGTH) + '@'+ _ProjMatchRootName
+        baseTxtFile     = refname[:-len('.stk')] 
         neighbFile      = baseTxtFile + '_sampling.xmd'
         if (os.path.exists(neighbFile)):
             os.remove(neighbFile)
         neighbFileb     = baseTxtFile + '_group'+str(ictf).zfill(FILENAMENUMBERLENGTH) + '_sampling.xmd'
-        shutil.copy(neighbFileb, neighbFile)
+        print 'neighbFileb: ', neighbFileb
+        copyFile(_log, neighbFileb, neighbFile)
 
         parameters= ' -i '               + inputdocfile + \
                     ' -o '               + outputname + \

@@ -77,11 +77,6 @@ class ProtProjMatch(XmippProtocol):
         self.ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
         self.numberOfReferences = len(self.ReferenceFileNames)
         
-        
-        
-        #runId = self.Db.getRunId(protDict.projmatch.name, protDict.projmatch.RunName)
-        #print "runId", runId
-        #THIS NEED TO BE FIXED. dO NOT OPEN THE DATA BASE JUST TO GET A NUMBERs
         _dataBase  = XmippProtocolDb(self, self.scriptName, False)
         
         iteration = _dataBase.getRunIter()
