@@ -358,9 +358,9 @@ void ProgMLRefine3D::produceSideInfo()
     LOG("   ProgMLRefine3D::produceSideInfo: projectVolumes");
     projectVolumes(ml2d->MDref);
     //FIXME: this is for concurrency problem...remove after that
-//    FileName myImg = fn_root + formatString("images_node%02d.xmd", rank);
-//    MetaData(fn_sel).write(myImg);
-//    ml2d->fn_img = myImg;
+    FileName myImg = fn_root + formatString("images_node%02d.xmd", rank);
+    MetaData(fn_sel).write(myImg);
+    ml2d->fn_img = myImg;
     //2d initialization
     LOG("   ProgMLRefine3D::produceSideInfo: ml2d->produceSideInfo");
     ml2d->produceSideInfo();
@@ -405,6 +405,7 @@ void ProgMLRefine3D::run()
         if (verbose)
             std::cout << formatString("--> 3D-EM volume refinement:  iteration %d of %d", iter, Niter) << std::endl;
 
+        LOG("==============================================");
         LOG(formatString("ML3D: BEGIN Iteration %d of %d", iter, Niter).c_str());
 
         for (ml2d->current_block = 0; ml2d->current_block < ml2d->blocks; ml2d->current_block++)
@@ -522,7 +523,7 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
     FileName                      fn_base = FN_PROJECTIONS, fn_tmp;
     Projection                    proj;
     double                       rot, tilt, psi = 0.;
-    size_t                        nl, nr_dir, my_rank, id, bar_step;
+    size_t                        nl, nr_dir, id, bar_step;
     int                           volno, dim;
 
 
@@ -939,6 +940,7 @@ void ProgMLRefine3D::postProcessVolumes()
     int                    dim;
     Sampling               locsampling;
 
+    LOG("   ProgMLRefine3D::postProcessVolumes INSIDE");
     // Use local sampling because of symmask
     if (!locsampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
         REPORT_ERROR(ERR_NUMERICAL, (String)"ml_refine3d::run Invalid symmetry" +  fn_sym);
@@ -947,21 +949,24 @@ void ProgMLRefine3D::postProcessVolumes()
     if ( !(fn_sym == "c1" || fn_sym == "C1" ) || (lowpass > 0) ||
          (fn_solv != "") || (do_prob_solvent) || (threshold_solvent != 999))
     {
-
+    	LOG("   ProgMLRefine3D::postProcessVolumes IF");
         FOR_ALL_OBJECTS_IN_METADATA(mdVol)
         {
             mdVol.getValue(MDL_IMAGE, fn_vol, __iter.objId);
             // Read corresponding volume from disc
+            LOG("   ProgMLRefine3D::postProcessVolumes READING vol");
             vol.read(fn_vol);
             vol().setXmippOrigin();
             dim = vol().rowNumber();
             // Store the original volume on disc
             fn_tmp = fn_vol + ".original";
+            LOG("   ProgMLRefine3D::postProcessVolumes writing ORIGINAL vol");
             vol.write(fn_tmp);
 
             // Symmetrize if requested
             if (!fn_sym.empty())
             {
+            	 LOG("   ProgMLRefine3D::postProcessVolumes applying SYMMETRY");
                 Vaux().resize(vol());
                 symmetrizeVolume(locsampling.SL, vol(), Vaux());
                 // Read local symmetry mask if requested
@@ -989,6 +994,7 @@ void ProgMLRefine3D::postProcessVolumes()
             // Filtering the volume
             if (lowpass > 0)
             {
+            	LOG("   ProgMLRefine3D::postProcessVolumes applying LOWPASS");
                 FourierFilter fmask;
                 fmask.raised_w = 0.02;
                 fmask.FilterShape = RAISED_COSINE;
@@ -1000,6 +1006,7 @@ void ProgMLRefine3D::postProcessVolumes()
             // Different types of solvent flattening
             if (do_prob_solvent || !fn_solv.empty() || (threshold_solvent != 999))
             {
+            	LOG("   ProgMLRefine3D::postProcessVolumes applying SOLVENT");
                 if (do_prob_solvent)
                 {
                     // A. Probabilistic solvent flattening
@@ -1099,13 +1106,15 @@ void ProgMLRefine3D::postProcessVolumes()
             }
 
             // (Re-) write post-processed volume to disc
+            LOG("   ProgMLRefine3D::postProcessVolumes WRITING vol");
             vol.write(fn_vol);
+            LOG("   ProgMLRefine3D::postProcessVolumes WRITING vol END");
 
         }
         if (verbose)
             std::cout << " -----------------------------------------------------------------" << std::endl;
     }
-
+    LOG("   ProgMLRefine3D::postProcessVolumes LEAVING");
 }
 
 // Convergence check ===============================================================

@@ -1771,6 +1771,9 @@ void ProgML2D::expectation()
     }
 
     int c = XMIPP_MAX(1, nr_images_local / 60);
+
+    String _msg = formatString("Images: %lu, first: %lu, last: %lu", nr_images_local, myFirstImg, myLastImg);
+    LOG(_msg.c_str());
     //std::cerr << "-----xmipp_current: Expectation, iter " << iter << "-------" << std::endl;
     //for (int imgno = 0, img_done = 0; imgno < nn; imgno++)
     // Loop over all images
@@ -1895,6 +1898,13 @@ void ProgML2D::expectation()
 
             if (verbose > 0 && img_done % c == 0)
                 progress_bar(img_done);
+
+            //fixme: this only for debugging
+            if (img_done % c == 0){
+            	_msg = formatString("               done: %lu", img_done);
+            	LOG(_msg.c_str());
+            }
+
             img_done++;
 
 //#define DEBUG_JM1
