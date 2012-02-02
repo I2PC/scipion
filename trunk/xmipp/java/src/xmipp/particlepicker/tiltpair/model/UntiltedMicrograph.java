@@ -86,31 +86,29 @@ public class UntiltedMicrograph extends Micrograph {
 	{
 		
 		tpa.clear();
-		System.out.println("Initializing aligner. Already cleared ...");
 		added = 0;
 		for(UntiltedParticle p: particles)
 			if(p.getTiltedParticle() != null)
 				addParticleToAligner(p);
-		System.out.println("Initialized aligner ...");
+	}
+	
+	public boolean anglesAvailable()
+	{
+		return !(added < 4);
 	}
 	
 	public double[] getAngles()
 	{
 		
-		if(added < 4)
+		if(!anglesAvailable())
 			throw new IllegalArgumentException("Not enough particles yet");
-		System.out.println("Calling getAngles...by UntiltedMicrograph");
 		double[] angles = tpa.computeAngles();
-		for(int i = 0; i < angles.length; i ++)
-			System.out.println(angles[i]);
-		return tpa.computeAngles();
+		return angles;
 	}
 	
 	public void setAlignerTiltedParticle(UntiltedParticle up)
 	{
-		System.out.println("Calling getTiltedParticle...");
 		Particle p = tpa.getTiltedParticle(up.getX(), up.getY()); 
-		System.out.println(p);
 		TiltedParticle tp = new TiltedParticle(p.getX(), p.getY(), up);
 		getTiltedMicrograph().addParticle(tp);
 		up.setTiltedParticle(tp);

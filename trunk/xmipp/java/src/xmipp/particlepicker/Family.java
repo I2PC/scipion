@@ -16,17 +16,12 @@ public class Family {
 	private Color color;
 	private int size;
 	private FamilyState state;
-	//int particles = 0;
-	
-	
-//	public int getManualNumber()
-//	{
-//		return particles;
-//	}
 
 	private static int sizemax = 1000;
 	private static Family dfamily = new Family("Default", Color.green);
-	private static Color[] colors = new Color[]{Color.BLUE, Color.CYAN, 
+	private static Color[] colors = new Color[]{
+										Color.BLUE, 
+										Color.CYAN, 
 										Color.GREEN,
 										Color.MAGENTA, Color.ORANGE, 
 										Color.PINK, Color.RED, Color.YELLOW};

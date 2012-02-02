@@ -71,7 +71,6 @@ public abstract class ParticlePicker
 		String macros = "";
 		for(Filter f: filters)
 			macros += String.format("run(\"%s\", \"%s\");\n", f.getCommand(), f.getOptions());
-		System.out.println(macros);
 		return macros;
 	}
 
@@ -330,8 +329,6 @@ public abstract class ParticlePicker
 				break;
 				
 			}
-		
-		
 	}
 	
 	public boolean isFilterSelected(String filter)
@@ -341,5 +338,8 @@ public abstract class ParticlePicker
 				return true;
 		return false;
 	}
+
+	public abstract void exportData(Family family);
+
 
 }

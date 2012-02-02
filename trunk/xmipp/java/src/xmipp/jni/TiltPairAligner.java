@@ -32,7 +32,6 @@ public class TiltPairAligner
 	// constructor
 	public TiltPairAligner()
 	{
-		System.out.println("Creating TiltPairAligner");
 		create();
 	}
 

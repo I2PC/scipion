@@ -51,8 +51,7 @@ import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
 import xmipp.jni.Program;
 
-
-public class TrainingPickerJFrame extends ParticlePickerJFrame 
+public class TrainingPickerJFrame extends ParticlePickerJFrame
 {
 
 	private TrainingCanvas canvas;
@@ -81,11 +80,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private JSlider thresholdsl;
 	private JPanel thresholdpn;
 	private JFormattedTextField thresholdtf;
+
 	
-	private JMenuItem exportmi;
-
-
-
 
 	@Override
 	public TrainingPicker getParticlePicker()
@@ -112,30 +108,37 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	private void initComponents()
 	{
-		setResizable(false);
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		setTitle("Xmipp Particle Picker - " + ppicker.getMode());
-		initMenuBar();
-		setJMenuBar(mb);
+		try
+		{
+			setResizable(false);
+			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+			setTitle("Xmipp Particle Picker - " + ppicker.getMode());
+			initMenuBar();
+			setJMenuBar(mb);
 
-		GridBagConstraints constraints = new GridBagConstraints();
-		constraints.insets = new Insets(0, 5, 0, 5);
-		constraints.anchor = GridBagConstraints.WEST;
-		setLayout(new GridBagLayout());
+			GridBagConstraints constraints = new GridBagConstraints();
+			constraints.insets = new Insets(0, 5, 0, 5);
+			constraints.anchor = GridBagConstraints.WEST;
+			setLayout(new GridBagLayout());
 
-		initFamilyPane();
-		add(familypn, WindowUtils.getConstraints(constraints, 0, 1, 3));
+			initFamilyPane();
+			add(familypn, WindowUtils.getConstraints(constraints, 0, 1, 3));
 
-		initSymbolPane();
-		add(symbolpn, WindowUtils.getConstraints(constraints, 0, 2, 3));
+			initSymbolPane();
+			add(symbolpn, WindowUtils.getConstraints(constraints, 0, 2, 3));
 
-		initMicrographsPane();
-		add(micrographpn, WindowUtils.getConstraints(constraints, 0, 3, 3));
+			initMicrographsPane();
+			add(micrographpn, WindowUtils.getConstraints(constraints, 0, 3, 3));
 
-		pack();
-		positionx = 0.995;
-		WindowUtils.centerScreen(positionx, 0.25, this);
-		setVisible(true);
+			pack();
+			positionx = 0.995;
+			WindowUtils.centerScreen(positionx, 0.25, this);
+			setVisible(true);
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e.getMessage());
+		}
 	}
 
 	public void initMenuBar()
@@ -155,7 +158,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		savemi.setEnabled(ppicker.isChanged());
 		filemn.add(savemi);
 
-		exportmi = new JMenuItem("Export Particles");
 		filemn.add(exportmi);
 		windowmn.add(pmi);
 		windowmn.add(ijmi);
@@ -166,21 +168,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 		// Setting menu item listeners
 
-	
-
-		exportmi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				ppicker.exportData(family);
-				JOptionPane.showMessageDialog(TrainingPickerJFrame.this, "Export successful");
-			}
-		});
-
 		
-
 		editfamiliesmn.addActionListener(new ActionListener()
 		{
 
@@ -191,11 +179,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 			}
 		});
-		
 
 	}
-
-
 
 	private void initFamilyPane()
 	{
@@ -291,7 +276,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			}
 		});
 		familypn.add(steppn, 1);
-		
+
 		familiescb.addActionListener(new ActionListener()
 		{
 
@@ -424,7 +409,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		actionsbt.setVisible(getFamilyData().isActionAvailable(getThreshold()));
 	}
 
-
 	private void initMicrographsPane()
 	{
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -552,7 +536,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			canvas = new TrainingCanvas(this);
 			ImageWindow iw = new ImageWindow(micrograph.getImagePlus(), canvas);
 			iw.setTitle(micrograph.getName());
-			if(!ppicker.getFilters().isEmpty())
+			if (!ppicker.getFilters().isEmpty())
 				IJ.runMacro(ppicker.getFiltersMacro());
 		}
 		else
@@ -582,8 +566,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		familiescb.setSelectedItem(item);
 		pack();
 	}
-
-
 
 	public void addFamily(Family g)
 	{
@@ -623,17 +605,16 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private void train()
 	{
 
-		
-		family.goToNextStep(ppicker);//validate and change state if posible
-		//setChanged(true);
-		setStep(FamilyState.Supervised);//change visual appearance
-		saveChanges();//persist changes
+		family.goToNextStep(ppicker);// validate and change state if posible
+		// setChanged(true);
+		setStep(FamilyState.Supervised);// change visual appearance
+		saveChanges();// persist changes
 		String args;
 		for (TrainingMicrograph micrograph : ppicker.getMicrographs())
 		{
 			if (!micrograph.getFamilyData(family).isEmpty())
 			{
-				
+
 				args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train %s", micrograph.getFile(),// -i
 						family.getSize(), // --particleSize
 						ppicker.getOutputPath(family.getName()),// --model
@@ -824,8 +805,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	@Override
 	public boolean isPickingAvailable(MouseEvent e)
 	{
-	    if(!super.isPickingAvailable(e))
-	    	return false;
+		if (!super.isPickingAvailable(e))
+			return false;
 		return getFamilyData().isPickingAvailable();
 	}
 
@@ -833,7 +814,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	public void changeShapes()
 	{
 		canvas.repaint();
-		
+
 	}
 
 }

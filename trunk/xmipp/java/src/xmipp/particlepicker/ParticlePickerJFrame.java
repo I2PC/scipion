@@ -20,12 +20,14 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -61,12 +63,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JMenuItem savemi;
 	protected JMenuItem hcontentsmi;
 	protected JMenuItem pmi;
+	protected JMenuItem exportmi;
 	protected JMenu filtersmn;
 	protected String activefilter;
 	protected JSlider sizesl;
 	protected JPanel sizepn;
 	private String command;
 	private List<JCheckBoxMenuItem> mifilters;
+	
 	
 	
 	public ParticlePickerJFrame(ParticlePicker picker)
@@ -129,6 +133,20 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 			}
 		});
+		
+		exportmi = new JMenuItem("Export Particles");
+
+		exportmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				getParticlePicker().exportData(getFamily());
+				JOptionPane.showMessageDialog(ParticlePickerJFrame.this, "Export successful");
+			}
+		});
+		
 		
 		
 		

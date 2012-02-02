@@ -124,7 +124,6 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_TiltPairAligner_computeAngles(JNIE
 			double alphas[3];
 			tpa->computeAngles(alphas[0], alphas[1], alphas[2]);
 
-			std::cerr << "Angles obtained from computeAngles: "<< alphas[0] <<" " <<alphas[1] <<" "<<alphas[2] << std::endl   ;
 			jdoubleArray result = env->NewDoubleArray(3);
 			env->SetDoubleArrayRegion(result, 0, 3, alphas);
 			return result;

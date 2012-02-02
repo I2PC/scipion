@@ -117,7 +117,6 @@ public abstract class TrainingPicker extends ParticlePicker
 				return;
 			MetaData md = new MetaData("families@" + file);
 			MetaData md2;
-			System.out.println(file);
 			for (long id : md.findObjects())
 			{
 				
@@ -125,7 +124,6 @@ public abstract class TrainingPicker extends ParticlePicker
 				state = MicrographFamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, id));
 				family = getFamily(fname);
 				mfd = new MicrographFamilyData(micrograph, family, state);
-				System.out.println(fname);
 				if (getMode() == FamilyState.Review && mfd.getStep() != FamilyState.Review)
 				{
 					mfd.setState(MicrographFamilyState.Review);
@@ -405,6 +403,12 @@ public abstract class TrainingPicker extends ParticlePicker
 		for(TrainingMicrograph m: micrographs)
 			count += m.getFamilyData(f).getManualParticles().size();
 		return count;		
+	}
+	
+	
+	public void importData(Family f, String file)
+	{
+		
 	}
 
 

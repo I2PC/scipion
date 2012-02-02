@@ -166,7 +166,7 @@ public class TiltPairPicker extends ParticlePicker
 	{
 		super.saveData();
 		long id;
-		double[] angles;
+		double[] angles = new double[3];
 		
 		try
 		{
@@ -187,8 +187,8 @@ public class TiltPairPicker extends ParticlePicker
 					
 					md = new MetaData();
 					md2 = new MetaData();
-					
-					angles = m.getAngles();
+					if(m.anglesAvailable())
+						angles = m.getAngles();
 					id = micrographsDict.get(m.getFile());
 					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y, (double)angles[0], id);
 					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, (double)angles[1], id);
@@ -242,6 +242,72 @@ public class TiltPairPicker extends ParticlePicker
 		for (UntiltedMicrograph um : micrographs)
 			count += um.getParticles().size();
 		return count;
+	}
+
+	@Override
+	public void exportData(Family family)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void importData(UntiltedMicrograph um, String file)
+	{
+		try
+		{
+			int x, y;
+			UntiltedParticle up;
+			MetaData md = new MetaData();
+			md.readPlain(file, "Xcoor Ycoor");
+			um.getParticles().clear();
+			long [] ids = md.findObjects();
+			for (long id : ids)
+			{
+				x = md.getValueInt(MDLabel.MDL_XINT, id);
+				y = md.getValueInt(MDLabel.MDL_YINT, id);
+				up = new UntiltedParticle(x, y, um, family);
+				um.addParticle(up);
+			}
+
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+		
+	}
+	
+	public void importData(TiltedMicrograph tm, String file)
+	{
+		try
+		{
+			int x, y;
+			UntiltedParticle up;
+			TiltedParticle tp;
+			MetaData md = new MetaData();
+			md.readPlain(file, "Xcoor Ycoor");
+			int i = 0;
+			long [] ids = md.findObjects();
+			for (long id : ids)
+			{
+				x = md.getValueInt(MDLabel.MDL_XINT, id);
+				y = md.getValueInt(MDLabel.MDL_YINT, id);
+				up = tm.getUntiltedMicrograph().getParticles().get(i);
+				tp = new TiltedParticle(x, y, up);
+				up.setTiltedParticle(tp);
+				tm.addParticle(tp);
+				i++;
+			}
+		
+
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+		
 	}
 
 }

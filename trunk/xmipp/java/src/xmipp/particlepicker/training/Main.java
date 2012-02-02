@@ -1,4 +1,4 @@
-package xmipp.particlepicker.training;
+ 	package xmipp.particlepicker.training;
 
 import javax.swing.SwingUtilities;
 

@@ -13,6 +13,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -20,9 +21,12 @@ import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -61,6 +65,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private JLabel upslb;
 	private TiltedMicrographCanvas tiltedcanvas;
 	private JCheckBoxMenuItem anglesmi;
+	private JMenuItem importmi;
+	private JMenuItem importtmi;
 
 	public TiltPairPicker getParticlePicker()
 	{
@@ -108,7 +114,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 		// Setting menus
 		JMenu filemn = new JMenu("File");
-		
 		JMenu viewmn = new JMenu("View");
 		JMenu helpmn = new JMenu("Help");
 		mb.add(filemn);
@@ -120,6 +125,72 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		
 		savemi.setEnabled(pppicker.isChanged());
 		filemn.add(savemi);
+		
+		
+		importmi = new JMenuItem("Import Untilted Particles");
+
+		importmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				JFileChooser fc = new JFileChooser();
+				int returnVal = fc.showOpenDialog(TiltPairPickerJFrame.this);
+
+				try
+				{
+					if (returnVal == JFileChooser.APPROVE_OPTION)
+					{
+						File file = fc.getSelectedFile();
+						getParticlePicker().importData(getMicrograph(), file.getAbsolutePath());
+						setChanged(true);
+						canvas.repaint();
+						updateMicrographsModel();
+						JOptionPane.showMessageDialog(TiltPairPickerJFrame.this, "Import successful");
+					}
+				}
+				catch (Exception ex)
+				{
+					JOptionPane.showMessageDialog(TiltPairPickerJFrame.this, ex.getMessage());
+				}
+			}
+		});
+		filemn.add(importmi);
+		
+
+		importtmi = new JMenuItem("Import Tilted Particles");
+
+		importtmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				JFileChooser fc = new JFileChooser();
+				int returnVal = fc.showOpenDialog(TiltPairPickerJFrame.this);
+
+				try
+				{
+					if (returnVal == JFileChooser.APPROVE_OPTION)
+					{
+						File file = fc.getSelectedFile();
+						getParticlePicker().importData(getMicrograph().getTiltedMicrograph(), file.getAbsolutePath());
+						setChanged(true);
+						canvas.repaint();
+						tiltedcanvas.repaint();
+						updateMicrographsModel();
+						JOptionPane.showMessageDialog(TiltPairPickerJFrame.this, "Import successful");
+					}
+				}
+				catch (Exception ex)
+				{
+					JOptionPane.showMessageDialog(TiltPairPickerJFrame.this, ex.getMessage());
+				}
+			}
+		});
+		filemn.add(importtmi);
+		
 		anglesmi = new JCheckBoxMenuItem("Angles");
 		anglesmi.setEnabled(false);
 		anglesmi.addActionListener(new ActionListener()
