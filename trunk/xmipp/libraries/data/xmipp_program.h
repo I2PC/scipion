@@ -262,6 +262,8 @@ protected:
 
     /// Indicate that a unique final output is produced
     bool produces_an_output; // Default false (only -o param is used)
+    /// Indicate that the unique final output file is a Metadata
+    bool produces_a_metadata; // Default false (if true, then produces_an_output is set true)
     /// Indicate that an output is produced for each image in the input
     bool each_image_produces_an_output; // Default false (both -o --oroot params are used)
     /// Provide the program with the param --dont_apply_geo to allow the user deciding whether

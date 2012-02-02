@@ -419,6 +419,7 @@ XmippMetadataProgram::XmippMetadataProgram()
     apply_geo=false;
     allow_apply_geo = false;
     produces_an_output = false;
+    produces_a_metadata = false;
     each_image_produces_an_output = false;
     allow_time_bar = true;
     decompose_stacks = true;
@@ -455,6 +456,9 @@ void XmippMetadataProgram::defineParams()
     addParamsLine("    where <mode>");
     addParamsLine("     overwrite   : Replace the content of the file with the Metadata");
     addParamsLine("     append      : Write the Metadata as a new block, removing the old one");
+
+    if (produces_a_metadata)
+        produces_an_output = true;
 
     if (each_image_produces_an_output)
     {
@@ -679,10 +683,15 @@ void XmippMetadataProgram::run()
             rowOut.setValue(MDL_ENABLED, 1);
 
         }
+        else if (produces_a_metadata)
+        {
+            rowOut.setValue(MDL_IMAGE, fnImgOut);
+            rowOut.setValue(MDL_ENABLED, 1);
+        }
 
         processImage(fnImg, fnImgOut, rowIn, rowOut);
 
-        if (each_image_produces_an_output)
+        if (each_image_produces_an_output || produces_a_metadata)
             mdOut.addRow(rowOut);
 
         showProgress();
