@@ -111,13 +111,7 @@ public class ImagesWindowFactory {
         try {
             ImagePlus imp;
 
-            if (Filename.isMetadata(path)) {
-                MetaData md = new MetaData(path);
-
-                imp = XmippImageConverter.convertToImageJ(md);
-            } else {
-                imp = XmippImageConverter.loadImage(path, parameters.zoom);
-            }
+            imp=openFileAsImagePlus(path, parameters);
 
             // Normalize image stack.
             //XmippImageConverter.normalizeImagePlus(imp);
@@ -127,6 +121,18 @@ public class ImagesWindowFactory {
             IJ.error(ex.getMessage() + ": " + path);
             DEBUG.printException(ex);
         }
+    }
+    
+    public static ImagePlus openFileAsImagePlus(String path, Param parameters) throws Exception{
+        ImagePlus imp;
+        if (Filename.isMetadata(path)) {
+            MetaData md = new MetaData(path);
+
+            imp = XmippImageConverter.convertToImageJ(md);
+        } else {
+            imp = XmippImageConverter.loadImage(path, parameters.zoom);
+        }
+        return imp;
     }
 
     private static ImageWindow openXmippImageWindow(ImagePlus imp, boolean poll) {
