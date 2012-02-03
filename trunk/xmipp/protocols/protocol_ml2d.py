@@ -13,7 +13,7 @@ from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 import os
 from os.path import exists
-from protlib_utils import runImageJPlugin, runShowJ
+from protlib_utils import runShowJ
 from protlib_gui_ext import showWarning
 
 class ProtML2D(XmippProtocol):

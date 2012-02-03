@@ -7,10 +7,10 @@
 #  Updated:  J. M. de la Rosa Trevin July 2011
 #
 
-from os.path import join
+from os.path import join, exists
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
-from xmipp import MetaData, Image, MDL_IMAGE
+from xmipp import MetaData, Image, MDL_IMAGE, MDL_ITER, MDL_LL
 
 class ProtML3D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -18,6 +18,29 @@ class ProtML3D(XmippProtocol):
         self.Import = 'from protocol_ml3d import *'
         self.ParamsStr = ''
         
+    def createFilenameTemplates(self):
+        return {
+                'iter_logs': self.workingDirPath('%(ORoot)s_ml2d_iter_logs.xmd'),
+                'iter_refs': self.workingDirPath('%(ORoot)s_ml2d_iter_refs.xmd')
+                }
+        
+    def summary(self):
+        md = MetaData(self.ImgMd)
+        lines = [('Input images            ', "%s (%u)" % (self.ImgMd, md.size())),
+                 ('Reference image', self.RefMd)]
+        
+        logs = self.getFilename('iter_logs')    
+        if exists(logs):
+            md = MetaData(logs)
+            objId = md.lastObject()
+            iteration = md.getValue(MDL_ITER, objId)
+            lines.append(('Iteration                   ', str(iteration)))
+            LL = md.getValue(MDL_LL, objId)
+            lines.append(('LogLikelihood          ', str(LL)))
+        
+        output = ["%s : %s" % (k.ljust(20),  v) for k, v in lines]
+        return output
+    
     def defineSteps(self):        
         if self.DoMlf:
             self.progId = 'mlf'
