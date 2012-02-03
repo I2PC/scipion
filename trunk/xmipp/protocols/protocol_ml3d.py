@@ -17,11 +17,16 @@ class ProtML3D(XmippProtocol):
         XmippProtocol.__init__(self, protDict.ml3d.name, scriptname, project)
         self.Import = 'from protocol_ml3d import *'
         self.ParamsStr = ''
-        
+        if self.DoMlf:
+            self.progId = 'mlf'
+        else:
+            self.progId = 'ml'
+        self.ParamsDict['ORoot'] = self.workingDirPath('%s3d' % self.progId)
+                        
     def createFilenameTemplates(self):
         return {
-                'iter_logs': self.workingDirPath('%(ORoot)s_ml2d_iter_logs.xmd'),
-                'iter_refs': self.workingDirPath('%(ORoot)s_ml2d_iter_refs.xmd')
+                'iter_logs': '%(ORoot)s_ml2d_iter_logs.xmd',
+                'iter_refs': '%(ORoot)s_ml2d_iter_refs.xmd'
                 }
         
     def summary(self):
@@ -42,10 +47,6 @@ class ProtML3D(XmippProtocol):
         return output
     
     def defineSteps(self):        
-        if self.DoMlf:
-            self.progId = 'mlf'
-        else:
-            self.progId = 'ml'
         restart = False
         if restart:            #Not yet implemented
             pass
@@ -55,9 +56,6 @@ class ProtML3D(XmippProtocol):
 #            os.chdir(self.WorkingDir)
 #            self.restart_MLrefine3D(RestartIter)
         else:
-                
-            self.ParamsDict['ORoot'] = self.workingDirPath('%s3d' % self.progId)
-                
             if self.DoMlf and self.DoCorrectAmplitudes:
                 ctfFile = self.ParamsDict['ctfFile'] = self.workingDirPath('my.ctfdat')
                 # Copy CTFdat to the workingdir as well
