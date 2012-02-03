@@ -389,6 +389,7 @@ def reconstruction(_log
         (x,y,z,n) = img.getDimensions()
         printLog("Metadata %s is empty. Creating a Black file named %s" % (ReconstructionXmd,ReconstructedVolume))
         createEmptyFile(ReconstructedVolume,x,y,z,n)
+        ReconstructedVolume.initRandom();
         return
 
     
