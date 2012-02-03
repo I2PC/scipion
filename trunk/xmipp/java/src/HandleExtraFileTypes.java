@@ -12,6 +12,7 @@ import java.io.InputStream;
 import xmipp.utils.Param;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
+
 // Plugin to handle file types which are not implemented
 // directly in ImageJ through io.Opener
 // nb since there is no _ in the name it will not appear in Plugins menu

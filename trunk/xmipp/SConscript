@@ -380,6 +380,13 @@ def Cmd(cmd):
     print cmd
     os.system(cmd)
     
+def CompileJava(source,buildDir,target,classPath):
+    cmd = env['JAVAC'] + ' -cp "' + classPath + '"'
+    compileCmd=env.Command(target,source,'%(cmd)s -d %(buildDir)s %(source)s' %locals())
+    env.Depends(compileCmd,source)
+#    env.Alias('java',compileCmd)
+    env.Default(compileCmd)
+
 def CompileJavaJar(target, source, env):
     from os.path import join
     srcDir = str(source[0])
@@ -678,6 +685,7 @@ if int(env['java']):
     AddJavaLibrary('XmippUtils', 'utils', ['XmippIJ', 'ij', 'commons-cli-1.1'])
     AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'ij'])
     AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
+    CompileJava('java/src/HandleExtraFileTypes.java', 'java/build', 'java/build/HandleExtraFileTypes.class','java/build:java/lib/ij.jar')
     
 
 #    lib2 = AddJavaLibrary('XmippIJInterface', 'libraries/bindings/java/src', 'xmippij')
