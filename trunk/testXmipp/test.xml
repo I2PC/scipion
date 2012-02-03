@@ -15,7 +15,7 @@
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_angular_continuous_assign" mpi="FALSE">
-        <CASE arguments="-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles" changeDir="FALSE">
+        <CASE arguments="-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.sel" changeDir="FALSE">
               <FILE filename="assigned_angles.sel"/>
         </CASE>
      </PROGRAM>
