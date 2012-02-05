@@ -678,7 +678,7 @@ class TextfileViewer(tk.Frame):
         left.grid(column=0, row=0, sticky='nw')
         XmippButton(left, "Open", 'folderopen.gif').grid(row=0, column=0, padx=(0, 5))
         XmippButton(left, "Save", 'save.gif').grid(row=0, column=1, padx=(0, 5))
-        XmippButton(left, "Refresh", 'refresh.gif').grid(row=0, column=2, padx=(0, 5))
+        XmippButton(left, "Refresh", 'refresh.gif', command=self.refreshOutput).grid(row=0, column=2, padx=(0, 5))
         right = tk.Frame(toolbarFrame)
         right.grid(column=1, row=0, sticky='ne')        
         self.searchVar = tk.StringVar()
@@ -719,7 +719,7 @@ class TextfileViewer(tk.Frame):
         for font in self.fontDict.values():
             changeFontSize(font, event)
               
-    def refreshOutput(self):
+    def refreshOutput(self, e=None):
         if self.refreshAlarm:
             self.after_cancel(self.refreshAlarm)
             self.refreshAlarm = None
