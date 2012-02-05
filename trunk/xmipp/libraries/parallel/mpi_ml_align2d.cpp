@@ -211,6 +211,7 @@ void MpiProgML2D::usage(int verb) const
 }
 
 #define SET_RANK_AND_SIZE() rank = node->rank; size = node->size;
+
 MpiProgMLRefine3D::MpiProgMLRefine3D(int argc, char ** argv, bool fourier):MpiML2DBase(this)
 {
     //create mpi node, which will be passed to ml2d
@@ -232,6 +233,14 @@ void MpiProgMLRefine3D::copyVolumes()
     if (node->isMaster())
         ProgMLRefine3D::copyVolumes();
     //all nodes waiting until volumes are copied
+    node->barrierWait();
+}
+
+void MpiProgMLRefine3D::reconstructVolumes()
+{
+    //code is already parallelized through the rank variable
+    ProgMLRefine3D::reconstructVolumes();
+    //all nodes needs to wait until reconstruction is done
     node->barrierWait();
 }
 

@@ -47,11 +47,9 @@
 
 /** Some filename convetions for output files */
 #define FN_NOISE_IMG_MD (fn_root + "_noise_imgs.xmd")
-#define FN_NOISE_VOL (fn_root + "_noise_vols.stk")
 #define FN_NOISE_IMG (fn_root + "_noise_imgs.stk")
 #define FN_CREF_IMG (fn_root + "_cref_imgs.stk")
 #define FN_CREF_IMG_MD (fn_root + "_cref_imgs.xmd")
-#define FN_CREF_VOL (fn_root + "_cref_vols.stk")
 
 #define FN_ITER_BASE(iter) formatString("%s_iter%06d", fn_root.c_str(), (iter))
 #define FN_REFMD(base) ((base) + "_refs.xmd")

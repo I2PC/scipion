@@ -100,6 +100,10 @@ public:
     virtual ~MpiProgMLRefine3D();
     /** Only master copy reference volumes before start processing */
     void copyVolumes();
+    /** Reconstruct volumes, parellelization is done in code,
+     * but nodes need to be syncronized before go next step
+     */
+    void reconstructVolumes();
     /** Only master postprocess volumes */
     void postProcessVolumes();
     /** Only master create empty files */

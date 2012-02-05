@@ -1899,11 +1899,11 @@ void ProgML2D::expectation()
             if (verbose > 0 && img_done % c == 0)
                 progress_bar(img_done);
 
-            //fixme: this only for debugging
-            if (img_done % c == 0){
-            	_msg = formatString("               done: %lu", img_done);
-            	LOG(_msg.c_str());
-            }
+//            //fixme: this only for debugging
+//            if (img_done % c == 0){
+//            	_msg = formatString("               done: %lu", img_done);
+//            	LOG(_msg.c_str());
+//            }
 
             img_done++;
 

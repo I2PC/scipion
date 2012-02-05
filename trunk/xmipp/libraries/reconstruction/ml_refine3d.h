@@ -143,9 +143,7 @@ public:
     virtual ProgReconsBase * createReconsProgram();
 
     /// reconstruction by (weighted ART) or Fourier interpolation
-    /// the metadata filename with volumes to reconstruct should be passed
-    /// along with the base filename for reconstructed volumes
-    void reconstructVolumes();
+    virtual void reconstructVolumes();
 
     /// Calculate 3D SSNR according to Unser ea. (2005)
     virtual void calculate3DSSNR(MultidimArray<double> &spectral_signal);
