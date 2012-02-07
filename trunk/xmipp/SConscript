@@ -385,6 +385,7 @@ def CompileJava(source,buildDir,target,classPath):
     compileCmd=env.Command(target,source,'%(cmd)s -d %(buildDir)s %(source)s' %locals())
     env.Depends(compileCmd,source)
     env.Default(compileCmd)
+    return compileCmd
 
 def CompileJavaJar(target, source, env):
     from os.path import join
@@ -681,10 +682,11 @@ if int(env['java']):
     env.Default(cmd)
     AddJavaLibrary('XmippJNI', 'jni', ['ij'])
     AddJavaLibrary('XmippIJ', 'ij', ['ij'])
-    AddJavaLibrary('XmippUtils', 'utils', ['XmippIJ', 'ij', 'commons-cli-1.1'])
+    xmippUtils=AddJavaLibrary('XmippUtils', 'utils', ['XmippIJ', 'ij', 'commons-cli-1.1'])
     AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'ij'])
     AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
-    CompileJava('java/src/HandleExtraFileTypes.java', 'java/build', 'java/build/HandleExtraFileTypes.class','java/build:java/lib/ij.jar')
+    compileHEFT=CompileJava('java/src/HandleExtraFileTypes.java', 'java/build', 'java/build/HandleExtraFileTypes.class','java/build:java/lib/ij.jar')
+    env.Depends(compileHEFT,xmippUtils)
     copyHandleExtraFileTypes = env.InstallAs(target='external/imagej/plugins/HandleExtraFileTypes.class', source='java/build/HandleExtraFileTypes.class')
     env.Depends(copyHandleExtraFileTypes,'java/build/HandleExtraFileTypes.class')
     env.Default(copyHandleExtraFileTypes)
