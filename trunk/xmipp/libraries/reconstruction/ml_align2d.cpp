@@ -368,11 +368,15 @@ void ProgML2D::produceSideInfo2()
     int refno = 0;
     double fraction = (double) 1./ model.n_ref;
     double weight = fraction * (double) nr_images_global;
+    double rot = 0., tilt = 0.;
 
     FOR_ALL_OBJECTS_IN_METADATA(MDref)
     {
         MDref.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
+        MDref.getValue(MDL_ANGLEROT, rot, __iter.objId);
+        MDref.getValue(MDL_ANGLETILT, rot, __iter.objId);
         img.read(fn_tmp);
+        img.setEulerAngles(rot, tilt, 0.);
         img().setXmippOrigin();
         img.setWeight(weight);
         model.Iref[refno] = img;
@@ -1749,13 +1753,9 @@ void ProgML2D::expectation()
 
     // Local variables of old threadExpectationSingleImage
     Image<double> img;
-
     FileName fn_img, fn_trans;
-
     Matrix1D<double> opt_offsets(2);
-
     double old_phi = -999., old_theta = -999.;
-
     double opt_flip;
 
     //Some initializations
