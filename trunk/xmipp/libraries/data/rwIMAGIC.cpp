@@ -258,7 +258,7 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
     printf("DEBUG writeIMAGIC: Reading Imagic file\n");
 #endif
 
-    IMAGIChead* header = new IMAGIChead;
+    IMAGIChead header;
 
     // Cast T to datatype without convert data
     DataType wDType, myTypeID = myT();
@@ -273,24 +273,24 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         case Int:
         case UInt:
             wDType = Float;
-            strcpy(header->type,"REAL");
+            strcpy(header.type,"REAL");
             break;
         case UShort:
             castMode = CW_CONVERT;
         case Short:
             wDType = Short;
-            strcpy(header->type,"INTG");
+            strcpy(header.type,"INTG");
             break;
         case SChar:
             castMode = CW_CONVERT;
         case UChar:
             wDType = UChar;
-            strcpy(header->type,"PACK");
+            strcpy(header.type,"PACK");
             break;
         case ComplexFloat:
         case ComplexDouble:
             wDType = ComplexFloat;
-            strcpy(header->type,"COMP");
+            strcpy(header.type,"COMP");
             break;
         default:
             wDType = Unknown_Type;
@@ -305,18 +305,18 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         switch (wDType)
         {
         case UChar:
-            strcpy(header->type,"PACK");
+            strcpy(header.type,"PACK");
             castMode = (adjust)? CW_ADJUST : CW_CONVERT;
             break;
         case Short:
-            strcpy(header->type,"INTG");
+            strcpy(header.type,"INTG");
             castMode = (adjust)? CW_ADJUST : CW_CONVERT;
             break;
         case Float:
-            strcpy(header->type,"REAL");
+            strcpy(header.type,"REAL");
             break;
         case ComplexFloat:
-            strcpy(header->type,"COMP");
+            strcpy(header.type,"COMP");
             break;
         default:
             REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: incorrect IMAGIC bits depth value.");
@@ -349,22 +349,22 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
     datasize = datasize_n * gettypesize(wDType);
 
     // fill in the file header
-    header->nhfr = 1;
-    header->npix2 = Xdim*Ydim;
-    header->npixel = header->npix2;
-    header->iylp = Xdim;
-    header->ixlp = Ydim;
+    header.nhfr = 1;
+    header.npix2 = Xdim*Ydim;
+    header.npixel = header.npix2;
+    header.iylp = Xdim;
+    header.ixlp = Ydim;
 
     time_t timer;
     time ( &timer );
     tm* t = localtime(&timer);
 
-    header->ndate = t->tm_mday;
-    header->nmonth = t->tm_mon + 1;
-    header->nyear = t->tm_year;
-    header->nhour = t->tm_hour;
-    header->nminut = t->tm_min;
-    header->nsec = t->tm_sec;
+    header.ndate = t->tm_mday;
+    header.nmonth = t->tm_mon + 1;
+    header.nyear = t->tm_year;
+    header.nhour = t->tm_hour;
+    header.nminut = t->tm_min;
+    header.nsec = t->tm_sec;
 
     double aux;
 
@@ -372,37 +372,37 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
     {
 
         if(MDMainHeader.getValue(MDL_MIN,   aux))
-            header->densmin = (float)aux;
+            header.densmin = (float)aux;
         if(MDMainHeader.getValue(MDL_MAX,   aux))
-            header->densmax = (float)aux;
+            header.densmax = (float)aux;
         if(MDMainHeader.getValue(MDL_AVG,   aux))
-            header->avdens   = (float)aux;
+            header.avdens   = (float)aux;
         if(MDMainHeader.getValue(MDL_STDDEV,aux))
         {
-            header->sigma  = (float)aux;
-            header->varian = (float)(aux*aux);
+            header.sigma  = (float)aux;
+            header.varian = (float)(aux*aux);
         }
     }
 
-    memcpy(header->lastpr, "Xmipp", 5);
-    memcpy(header->name, filename.c_str(), 80);
+    memcpy(header.lastpr, "Xmipp", 5);
+    memcpy(header.name, filename.c_str(), 80);
 
 
     size_t  imgStart = IMG_INDEX(select_img);
 
-    header->ifn = replaceNsize - 1 ;
-    header->imn = 1;
+    header.ifn = replaceNsize - 1 ;
+    header.imn = 1;
     size_t firtIfn = 0;
 
     if ( mode == WRITE_APPEND )
     {
         imgStart = replaceNsize;
-        header->ifn = replaceNsize + Ndim - 1 ;
+        header.ifn = replaceNsize + Ndim - 1 ;
     }
     else if( mode == WRITE_REPLACE && imgStart + Ndim > replaceNsize)
-        header->ifn = imgStart + Ndim - 1;
+        header.ifn = imgStart + Ndim - 1;
     else if (Ndim > replaceNsize)
-        header->ifn = Ndim - 1;
+        header.ifn = Ndim - 1;
 
     /*
      * BLOCK HEADER IF NEEDED
@@ -422,58 +422,57 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
     {
         if ( swapWrite )
         {
-            IMAGIChead * headTemp = new IMAGIChead;
-            *headTemp = *header;
-            swapPage((char *) headTemp, IMAGICSIZE - 916, Float);
-            fwrite( headTemp, IMAGICSIZE, 1, fhed );
+            IMAGIChead headTemp = header;
+            swapPage((char *) &headTemp, IMAGICSIZE - 916, Float);
+            fwrite( &headTemp, IMAGICSIZE, 1, fhed );
         }
-        fwrite( header, IMAGICSIZE, 1, fhed );
+        fwrite( &header, IMAGICSIZE, 1, fhed );
     }
-    else if( header->ifn + 1 > replaceNsize && imgStart > 0 ) // Update number of images when needed
+    else if( header.ifn + 1 > replaceNsize && imgStart > 0 ) // Update number of images when needed
     {
         fseek( fhed, sizeof(int), SEEK_SET);
         if ( swapWrite )
         {
-            int ifnswp = header->ifn;
+            int ifnswp = header.ifn;
             swapPage((char *) ifnswp, SIZEOF_INT, Int);
             fwrite(&(ifnswp),SIZEOF_INT,1,fhed);
         }
         else
-            fwrite(&(header->ifn),SIZEOF_INT,1,fhed);
+            fwrite(&(header.ifn),SIZEOF_INT,1,fhed);
     }
 
     // Jump to the selected imgStart position
-    fseek( fimg, datasize   * imgStart, SEEK_SET);
-    fseek( fhed, IMAGICSIZE * imgStart, SEEK_SET);
+    fseek(fimg, datasize   * imgStart, SEEK_SET);
+    fseek(fhed, IMAGICSIZE * imgStart, SEEK_SET);
 
     std::vector<MDRow>::iterator it = MD.begin();
 
     for (size_t i = 0; i < Ndim; ++i, ++it)
     {
-        header->iyold=header->ixold=header->euler_alpha=header->euler_beta=header->euler_gamma=0.;
+        header.iyold=header.ixold=header.euler_alpha=header.euler_beta=header.euler_gamma=0.;
 
         // Write the individual image header
         if (it != MD.end() && (dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
         {
             if(it->getValue(MDL_SHIFTX,  aux))
-                header->iyold  = (float)-aux;
+                header.iyold  = (float)-aux;
             if(it->getValue(MDL_SHIFTY,  aux))
-                header->ixold  =(float)-aux;
+                header.ixold  =(float)-aux;
             //if(it->getValue(MDL_SHIFTZ,  aux))
-            //    header->zoff  =(float)aux;
+            //    header.zoff  =(float)aux;
             if(it->getValue(MDL_ANGLEROT, aux))
-                header->euler_alpha   =(float)-aux;
+                header.euler_alpha   =(float)-aux;
             if(it->getValue(MDL_ANGLETILT,aux))
-                header->euler_beta    =(float)-aux;
+                header.euler_beta    =(float)-aux;
             if(it->getValue(MDL_ANGLEPSI, aux))
-                header->euler_gamma =(float)-aux;
+                header.euler_gamma =(float)-aux;
         }
         // Update index number of image
-        header->imn = imgStart + i + 1;
+        header.imn = imgStart + i + 1;
 
         if ( swapWrite )
-            swapPage((char *) header, IMAGICSIZE - 916, Float);
-        fwrite( header, IMAGICSIZE, 1, fhed );
+            swapPage((char *) &header, IMAGICSIZE - 916, Float);
+        fwrite( &header, IMAGICSIZE, 1, fhed );
 
         if (dataMode >= DATA)
         {
@@ -495,8 +494,6 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
     fl.l_type   = F_UNLCK;
     fcntl(fileno(fimg), F_SETLK, &fl); /* unlocked */
     fcntl(fileno(fhed), F_SETLK, &fl); /* unlocked */
-
-    delete header;
 
     if (mmapOnWrite)
         mmapFile();
