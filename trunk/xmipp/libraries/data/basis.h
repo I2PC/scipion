@@ -51,8 +51,8 @@ public:
     /// Basis function to use
     tBasisFunction type;
 
-    /// Footprint is convolved with a volume PSF
-    MultidimArray<double> *VolPSF;
+    /// Footprint is convolved with a volume PSF // At this moment only used with blobs
+    MultidimArray<double> *VolPSF; // If NULL then standard blob is used
 
     /// Sampling rate
     double Tm;

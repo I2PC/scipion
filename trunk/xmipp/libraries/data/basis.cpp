@@ -143,31 +143,38 @@ void Basis::produceSideInfo(const Grid &grid)
     {
     case (blobs):
         {
-            footprint_blob(blobprint, blob, BLOB_SUBSAMPLING);
+            int subsampling = (VolPSF == NULL )? BLOB_SUBSAMPLING : PIXEL_SUBSAMPLING;
+
+            footprint_blob(blobprint, blob, subsampling);
             sum_on_grid = sum_blob_Grid(blob, grid, D);
             blobprint()  /= sum_on_grid;
 
             if (VolPSF != NULL)
-            { // let adjust to the same resolution and size both blobprint and VolPSF
-                selfScaleToSize(LINEAR, *VolPSF, XSIZE(*VolPSF)*BLOB_SUBSAMPLING,
-                                YSIZE(*VolPSF)*BLOB_SUBSAMPLING, ZSIZE(*VolPSF));
+            {
+                // let adjust to the same resolution and size both blobprint and VolPSF
+                //                selfScaleToSize(LINEAR, *VolPSF, XSIZE(*VolPSF)*BLOB_SUBSAMPLING,
+                //                                YSIZE(*VolPSF)*BLOB_SUBSAMPLING, ZSIZE(*VolPSF));
+
+                blobprint().setXmippOrigin();
 
                 if (XSIZE(blobprint()) < XSIZE(*VolPSF))
                     blobprint().selfWindow(STARTINGY(*VolPSF),
-                                           STARTINGY(*VolPSF)+YSIZE(*VolPSF)-1,
                                            STARTINGX(*VolPSF),
+                                           STARTINGY(*VolPSF)+YSIZE(*VolPSF)-1,
                                            STARTINGX(*VolPSF)+XSIZE(*VolPSF)-1);
                 else if (XSIZE(blobprint()) > XSIZE(*VolPSF))
                     VolPSF->selfWindow(STARTINGY(blobprint()),
-                                       STARTINGY(blobprint())+YSIZE(blobprint())-1,
                                        STARTINGX(blobprint()),
+                                       STARTINGY(blobprint())+YSIZE(blobprint())-1,
                                        STARTINGX(blobprint())+XSIZE(blobprint())-1);
 
-
-                // creation of blobprint 3D from convolution of blobprint and PSF
-                ImageOver footprintT = blobprint;
+                // creation of the 3D blobprint from convolution of blobprint and PSF
+                ImageOver footprintT;
+                footprintT.init(*VolPSF, subsampling);
 
                 convolutionFFT(*VolPSF, blobprint(), footprintT());
+
+                blobprint = footprintT;
             }
 
             blobprint2()  = blobprint();
