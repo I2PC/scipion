@@ -29,8 +29,17 @@
 #include "xmipp_image_base.h"
 #include "multidim_array_generic.h"
 
-/** @addtogroup Images
+// @addtogroup Images
 //@{
+
+#define CHECK_IMG(op)\
+	if (image == NULL) \
+		REPORT_ERROR(ERR_IMG_UNKNOWN, "ImageGeneric: Image not initialized.");\
+	else\
+	{\
+		op\
+	}\
+
 
 /**
  *  ImageGeneric class to handle images with independence of data type
@@ -323,7 +332,7 @@ public:
     inline void setPixel(int i, int j, double value) const
     {
 #define SETVALUE(type) A2D_ELEM(*(MultidimArray<type>*)data->im,i,j) = (type) value;
-        SWITCHDATATYPE(datatype,SETVALUE)
+    	CHECK_IMG(SWITCHDATATYPE(datatype,SETVALUE))
 #undef SETVALUE
 
     }
@@ -333,8 +342,18 @@ public:
     inline void initConstant(double value) const
     {
 #define INITCONS(type) (*(MultidimArray<type>*)(data->im)).initConstant((type) value);
-        SWITCHDATATYPE(datatype,INITCONS)
-#undef SETVALUE
+    	CHECK_IMG(SWITCHDATATYPE(datatype,INITCONS))
+#undef INITCONS
+
+    }
+
+    /** Init random
+     */
+    inline void initRandom(double op1, double op2, const String& mode = "uniform") const
+    {
+#define INITRND(type) (*(MultidimArray<type>*)(data->im)).initRandom(op1, op2, mode);
+    	CHECK_IMG(SWITCHDATATYPE(datatype,INITRND))
+#undef INITRND
 
     }
 

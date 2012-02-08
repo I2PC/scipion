@@ -96,9 +96,9 @@ void ImageGeneric::getDimensions(int & Xdim, int & Ydim, int & Zdim, size_t & Nd
     image->getDimensions(Xdim, Ydim, Zdim, Ndim);
 }
 void ImageGeneric::getDimensions(ArrayDim &aDim) const
-    {
-	image->getDimensions(aDim);
-    }
+{
+    image->getDimensions(aDim);
+}
 
 void ImageGeneric::getInfo(ImageInfo &imgInfo) const
 {
@@ -326,13 +326,18 @@ bool ImageGeneric::operator==(const ImageGeneric &i1) const
 
 void ImageGeneric::print() const
 {
-    std::cout << *image;
+    String s;
+    toString(s);
+    std::cout << s <<std::endl;
 }
 
 void ImageGeneric::toString(String &s) const
 {
     std::stringstream ss;
-    ss << *image;
+    if (image == NULL)
+        ss << "Xmipp::ImageGeneric: Uninitialized image";
+    else
+        ss << *image;
     s = ss.str();
 }
 

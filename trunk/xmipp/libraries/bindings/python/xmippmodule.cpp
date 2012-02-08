@@ -584,7 +584,7 @@ Image_setPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
-/* getPixel */
+/* initConstant */
 static PyObject *
 Image_initConstant(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
@@ -607,6 +607,57 @@ Image_initConstant(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* initRandom */
+static PyObject *
+Image_initRandom(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    double op1 = 0;
+    double op2 = 1;
+    char * mode = "uniform";
+
+    if (self != NULL && PyArg_ParseTuple(args, "|dds", &op1, &op2, &mode))
+    {
+        try
+        {
+            self->image->initRandom(op1, op2, mode);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+
+    return NULL;
+
+}
+
+/* Resize Image */
+static PyObject *
+Image_resize(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    double xDim = 0, yDim = 0, zDim = 1;
+    size_t nDim = 1;
+
+    if (self != NULL && PyArg_ParseTuple(args, "dd|dn", &xDim, &yDim, &zDim, &nDim))
+    {
+        try
+        {
+            self->image->resize(xDim, yDim, zDim, nDim, false); // TODO: Take care of copy mode if needed
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+
+    return NULL;
+
+}
+
 /* Return image dimensions as a tuple */
 static PyObject *
 Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -627,7 +678,7 @@ Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
-}//Image_getDimensions
+}
 
 /* Return image dimensions as a tuple */
 static PyObject *
@@ -729,6 +780,10 @@ static PyMethodDef Image_methods[] =
           "Return a pixel value" },
         { "initConstant", (PyCFunction) Image_initConstant, METH_VARARGS,
           "Initialize to value" },
+        { "initRandom", (PyCFunction) Image_initRandom, METH_VARARGS,
+          "Initialize to random value" },
+        { "resize", (PyCFunction) Image_resize, METH_VARARGS,
+          "resize the image dimensions" },
         { "setPixel", (PyCFunction) Image_setPixel, METH_VARARGS,
           "Set the value of some pixel" },
         { "getDimensions", (PyCFunction) Image_getDimensions, METH_VARARGS,
