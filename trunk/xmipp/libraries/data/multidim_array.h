@@ -641,6 +641,15 @@ struct ArrayDim
     size_t nzyxdim;
 };
 
+/**
+ *  Structure to define random generation mode
+ */
+enum RandomMode
+{
+    RND_Uniform = 0,
+    RND_Gaussian = 1
+} ;
+
 /** Template class for Xmipp arrays.
   * This class provides physical and logical access.
 */
@@ -1363,7 +1372,7 @@ public:
         this->nzyxdimAlloc = this->nzyxdim;
         this->destroyData = false;
     }
-//@}
+    //@}
 
     /// @name Size
     //@{
@@ -3866,19 +3875,19 @@ public:
      * // gaussian distribution with 0 mean and stddev=1
      * @endcode
      */
-    void initRandom(double op1, double op2, const String& mode = "uniform")
+    void initRandom(double op1, double op2, RandomMode mode = RND_Uniform)
     {
         T* ptr=NULL;
         size_t n;
-        if (mode == "uniform")
+        if (mode == RND_Uniform)
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
             *ptr = static_cast< T >(rnd_unif(op1, op2));
-        else if (mode == "gaussian")
+        else if (mode == RND_Gaussian)
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
             *ptr = static_cast< T >(rnd_gaus(op1, op2));
         else
             REPORT_ERROR(ERR_VALUE_INCORRECT,
-                         formatString("InitRandom: Mode not supported (%s)", mode.c_str()));
+                         formatString("InitRandom: Mode not supported"));
     }
 
     /** Add noise to actual values.
@@ -4081,7 +4090,7 @@ public:
 
         if (xdim == 0)
         {
-        	result.clear();
+            result.clear();
             return;
         }
 

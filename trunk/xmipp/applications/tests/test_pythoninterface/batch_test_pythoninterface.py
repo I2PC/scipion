@@ -66,6 +66,15 @@ class TestXmippPythonInterface(unittest.TestCase):
             for j in range (0, 3):
                 p = img.getPixel(i, j)
                 self.assertAlmostEquals(p, 1.0)
+    
+    def test_Image_initRandom(self):
+        imgPath = os.path.join(self.testsPath, "test_pythoninterface", "tinyImage.spi")
+        img = Image(imgPath)
+        img.resize(1024, 1024) 
+        img.initRandom(0., 1., XMIPP_RND_GAUSSIAN)
+        mean, dev, min, max = img.computeStats()
+        self.assertAlmostEqual(mean, 0., 2)
+        self.assertAlmostEqual(dev, 1., 2)
                       
     def test_Image_add(self):
         stackPath = os.path.join(self.testsPath, "test_image", "smallStack.stk")
@@ -78,6 +87,15 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertEqual(sum, img1)
         img1 += img2
         self.assertNotEqual(sum, img1)   
+             
+    def test_Image_computeStatistics(self):
+        stackPath = os.path.join(self.testsPath, "test_image", "smallStack.stk")
+        img1 = Image("1@" + stackPath)
+        mean, dev, min, max = img1.computeStats()
+        self.assertAlmostEqual(mean, -0.000360, 5)
+        self.assertAlmostEqual(dev, 0.105687, 5)
+        self.assertAlmostEqual(min, -0.415921, 5)
+        self.assertAlmostEqual(max, 0.637052, 5)
              
     def test_Image_minus(self):
         pathSum = os.path.join(self.testsPath, "test_image_generic", "sum.spi")
@@ -106,7 +124,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         img = Image()
         img.read(imgPath, HEADER)        
         
-        (x,y,z,n) = img.getDimensions()
+        (x, y, z, n) = img.getDimensions()
         
         self.assertEqual(x, 3)   
         self.assertEqual(y, 3)   
@@ -180,7 +198,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         mdPath = os.path.join(self.testsPath, "test_pythoninterface", "test.xmd")
         mD = MetaData(mdPath)
         mDout = MetaData()
-        mDout.importObjects(mD,MDValueEQ(MDL_REF3D, -1))
+        mDout.importObjects(mD, MDValueEQ(MDL_REF3D, -1))
         mdPath = os.path.join(self.testsPath, "test_pythoninterface", "importObject.xmd")
         mD = MetaData(mdPath)
         self.assertEqual(mD, mDout)
@@ -213,7 +231,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
             md.setValue(MDL_CTF_DEFOCUSU, (i * ii * 100.0), id)
             md.setValue(MDL_COUNT, (i * 10L), id)
-            list = [x**i for x in listOrig]
+            list = [x ** i for x in listOrig]
             md.setValue(MDL_ANGLE_COMPARISON, list, id)
             md.setValue(MDL_REF3D, (i * ii), id)
             ii *= -1
@@ -254,7 +272,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
             md.setValue(MDL_CTF_DEFOCUSU, (i * ii * 100.0), id)
             md.setValue(MDL_COUNT, (i * 10L), id)
-            list = [x**i for x in listOrig]
+            list = [x ** i for x in listOrig]
             md.setValue(MDL_ANGLE_COMPARISON, list, id)
             md.setValue(MDL_REF3D, (i * ii), id)
             ii *= -1
@@ -263,7 +281,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         md.write(tmpFileName)
         
         mdList = [MDL_IMAGE, MDL_COUNT]
-        md.read(tmpFileName,mdList)
+        md.read(tmpFileName, mdList)
         os.remove(tmpFileName)
         
         md2 = MetaData()
@@ -328,7 +346,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
             md.setValue(MDL_CTF_DEFOCUSU, (i * ii * 100.0), id)
             md.setValue(MDL_COUNT, (i * 10L), id)
-            list = [x**i for x in listOrig]
+            list = [x ** i for x in listOrig]
             md.setValue(MDL_ANGLE_COMPARISON, list, id)
             md.setValue(MDL_REF3D, (i * ii), id)
             ii *= -1

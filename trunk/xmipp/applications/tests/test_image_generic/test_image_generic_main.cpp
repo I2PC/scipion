@@ -10,7 +10,7 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-    	filename = getenv("XMIPP_HOME");
+        filename = getenv("XMIPP_HOME");
         //get example images/staks
         imageName = filename + "/applications/tests/test_image/singleImage.spi";
         stackName = filename + "/applications/tests/test_image/smallStack.stk";
@@ -123,10 +123,23 @@ TEST_F( ImageGenericTest, initConstant)
     {
         for (int j = 0; j < 3; j++)
         {
-        	double p = img.getPixel(i,j);
+            double p = img.getPixel(i,j);
             EXPECT_DOUBLE_EQ(p, 1.);
         }
     }
+}
+
+TEST_F( ImageGenericTest, initRandom)
+{
+    ImageGeneric img;
+    img.setDatatype(Double);
+    img.data->im->setDimensions(1024,1024,1,1);
+    img.data->im->coreAllocateReuse();
+    img.initRandom(0,1, RND_Gaussian);
+    double mean, dev, min, max;
+    img.data->computeStats(mean, dev, min, max);
+    EXPECT_TRUE(ABS(mean) < 0.001);
+    EXPECT_TRUE(ABS(dev-1) < 0.01);
 }
 
 // check if a pointer to data array is correctly passed

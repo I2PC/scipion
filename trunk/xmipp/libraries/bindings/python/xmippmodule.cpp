@@ -614,12 +614,16 @@ Image_initRandom(PyObject *obj, PyObject *args, PyObject *kwargs)
     ImageObject *self = (ImageObject*) obj;
     double op1 = 0;
     double op2 = 1;
-    char * mode = "uniform";
+    RandomMode mode = RND_Uniform;
+    int pyMode = -1;
 
-    if (self != NULL && PyArg_ParseTuple(args, "|dds", &op1, &op2, &mode))
+    if (self != NULL && PyArg_ParseTuple(args, "|ddi", &op1, &op2, &pyMode))
     {
         try
         {
+            if (pyMode != -1)
+                mode = (RandomMode) pyMode;
+
             self->image->initRandom(op1, op2, mode);
             Py_RETURN_NONE;
         }
@@ -702,6 +706,30 @@ Image_getEulerAngles(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }//Image_getDimensions
 
+
+/* Return image dimensions as a tuple */
+static PyObject *
+Image_computeStats(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    if (self != NULL)
+    {
+        try
+        {
+            double mean, dev, min, max;
+            self->image->data->computeStats(mean, dev, min, max);
+
+
+            return Py_BuildValue("ffff", mean, dev, min, max);
+
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}//Image_getDimensions
 
 static PyObject *
 Image_add(PyObject *obj1, PyObject *obj2);
@@ -790,6 +818,8 @@ static PyMethodDef Image_methods[] =
           "Return image dimensions as a tuple" },
         { "getEulerAngles", (PyCFunction) Image_getEulerAngles, METH_VARARGS,
           "Return euler angles as a tuple" },
+        { "computeStats", (PyCFunction) Image_computeStats, METH_VARARGS,
+          "Compute image statistics, return mean, dev, min and max" },
         { NULL } /* Sentinel */
     };
 
@@ -3969,7 +3999,8 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "XMIPP_MAGENTA", (long) MAGENTA);
     addIntConstant(dict, "XMIPP_CYAN", (long) CYAN);
     addIntConstant(dict, "XMIPP_WHITE", (long) WHITE);
-
+    addIntConstant(dict, "XMIPP_RND_UNIFORM", (long) RND_Uniform);
+    addIntConstant(dict, "XMIPP_RND_GAUSSIAN", (long) RND_Gaussian);
 
 
 }

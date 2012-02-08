@@ -61,7 +61,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
     Projection      diff_proj;          // Difference between the
     // theoretical and real image
 
-//    preIterations(vol_basis);
+    //    preIterations(vol_basis);
 
     // Reconstruction results ...............................................
     double          mean_error,mean_error_1stblock;
@@ -205,7 +205,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
             {
                 init_random_generator(imgInfo.seed);
                 noisy_projection().resize(read_proj());
-                noisy_projection().initRandom(0,1,"gaussian");
+                noisy_projection().initRandom(0, 1, RND_Gaussian);
                 noisy_projection().setXmippOrigin();
                 noisy_projection.setEulerAngles(imgInfo.rot,
                                                 imgInfo.tilt,
