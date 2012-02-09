@@ -13,3 +13,4 @@ shears:                    0
 angular_distance:          -1
 experimental_images:       input/aFewProjections.sel
 compute_closer_sampling_point_bool:0
+Find valid sampling points based on the neighborhood

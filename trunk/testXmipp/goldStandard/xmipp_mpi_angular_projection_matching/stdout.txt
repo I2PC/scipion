@@ -1,24 +1,3 @@
-DAT: library load failure: /usr/lib64/libdaplcma.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplcma.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplcma.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplcma.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplcma.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplcma.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplscm.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplscm.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplscm.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplscm.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplcma.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplscm.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplscm.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplscm.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplscm.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplcma.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplscm.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplscm.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplscm.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplscm.so.1: undefined symbol: dat_registry_add_provider
-DAT: library load failure: /usr/lib64/libdaplcma.so.1: undefined symbol: dat_registry_add_provider
 New chunk_angular_distance 30.7175
 number of subsets: 7
 biggest subset (EXPERIMENTAL images per chunk): 2
