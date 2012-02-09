@@ -464,7 +464,7 @@ public:
         T * new_vdata;
         try
         {
-            new_vdata = new T[Xdim];
+            new_vdata = new T[(size_t) Xdim]; //TODO: Kino: Valgrind points here there is something wrong, but I could'nt resolve
             memset(new_vdata, 0, Xdim * sizeof(T));
         }
         catch (std::bad_alloc &)

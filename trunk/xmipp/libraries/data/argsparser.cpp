@@ -548,13 +548,15 @@ bool ArgumentDef::acceptArguments(std::stringstream &errors, size_t & index, std
 
 ParamDef::ParamDef(ArgLexer *lexer, ASTNode * parent) :
         ASTNode(lexer, parent)
-{}
+{
+    exclusiveGroup = NULL;
+}
 
 ParamDef::~ParamDef()
 {
     for (int i = 0; i < arguments.size(); ++i)
         delete arguments[i];
-
+    delete exclusiveGroup;
 }
 
 bool ParamDef::containsArgument(const String & argName)
