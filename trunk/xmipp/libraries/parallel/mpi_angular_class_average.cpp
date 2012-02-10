@@ -232,7 +232,7 @@ void MpiProgAngularClassAverage::run()
                 {
                     //send work, first int defocus, second 3D reference, 3rd projection
                     // direction and job number
-#define DEBUG_MPI
+//#define DEBUG_MPI
 #ifdef DEBUG_MPI
                     usleep(10000);
                     std::cerr << "Sending job to worker " << status.MPI_SOURCE <<std::endl;
@@ -257,7 +257,7 @@ void MpiProgAngularClassAverage::run()
                 mdJobList.getValue(MDL_ORDER, order_index, lockIndex);
                 mdJobList.getValue(MDL_REF3D, ref3d_index, lockIndex);
 
-#define DEBUG_MPI
+//#define DEBUG_MPI
 #ifdef DEBUG_MPI
 
                 std::cerr << "Blocking. lockIndex: " << lockIndex << " | status.MPI_SOURCE: " << status.MPI_SOURCE
@@ -289,7 +289,7 @@ void MpiProgAngularClassAverage::run()
                          MPI_COMM_WORLD, &status);
 
                 lockIndex = lockWeightIndexes[index_lockIndex];
-#define DEBUG_MPI
+//#define DEBUG_MPI
 #ifdef DEBUG_MPI
 
                 std::cerr << "Unblocking. lockIndex: " << lockIndex << " | status.MPI_SOURCE: " << status.MPI_SOURCE << std::endl;
@@ -307,14 +307,13 @@ void MpiProgAngularClassAverage::run()
                 break;
             }
         }
-        std::cerr << "out while" <<std::endl;
     }
     else
     {
         bool whileLoop = true;
         while (whileLoop)
         {
-#define DEBUG_MPI
+//#define DEBUG_MPI
 #ifdef DEBUG_MPI
             std::cerr << "[" << node->rank << "] Asking for a job " <<std::endl;
 #endif
@@ -361,7 +360,7 @@ void MpiProgAngularClassAverage::mpi_process_loop(double * Def_3Dref_2Dref_JobNo
 
 void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 {
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
     std::cerr<<"["<<node->rank<<"]"
     << " 3DRef:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_3DRef])
@@ -444,9 +443,6 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     {
         _DF.getValue(MDL_IMAGE, fn_img, __iter.objId);
         this_image++;
-
-        std::cerr<<"["<<node->rank<<"]: "<< "mpi_process_03_b1. fn_img: "<< fn_img << std::endl;
-
         _DF.getValue(MDL_ANGLEPSI, psi, __iter.objId);
         _DF.getValue(MDL_SHIFTX, xshift, __iter.objId);
         _DF.getValue(MDL_SHIFTY, yshift, __iter.objId);
@@ -521,7 +517,6 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 
         // Reserve memory for output from class realignment
         int reserve = DF.size();
-        std::cerr << "reserve: " <<reserve<<std::endl;
         double my_output[AVG_OUPUT_SIZE * reserve + 1];
 
         reAlignClass(avg1, avg2, SFclass1, SFclass2, exp_imgs, exp_split,
@@ -576,7 +571,6 @@ void MpiProgAngularClassAverage::mpi_write(
 
     formatStringFast(fileNameStk, "%s_Ref3D_%03lu.stk", fn_out.c_str(), ref3dIndex);
     mpi_writeFile(avg, dirno, fileNameStk, old_w);
-    std::cerr<<"["<<node->rank<<"]: "<< "mpi_write_02"<<std::endl;
 
     if (do_split)
     {
@@ -613,7 +607,6 @@ void MpiProgAngularClassAverage::mpi_writeController(
     double lockWeightIndexes[lockWeightIndexesSize];
     int ref3dIndex;
 
-    //    std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeController_00"<<std::endl;
     bool whileLoop = true;
     while (whileLoop)
     {
@@ -626,20 +619,16 @@ void MpiProgAngularClassAverage::mpi_writeController(
         switch (status.MPI_TAG)
         {
         case TAG_DO_NOT_DARE_TO_WRITE://I am free
-            //            std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeController_01"<<std::endl;
             MPI_Recv(0, 0, MPI_INT, 0, MPI_ANY_TAG,
                      MPI_COMM_WORLD, &status);
-            std::cerr << "Sleeping 0.1 seg at " << node->rank << std::endl;
-            usleep(100000);//microsecond
+            //usleep(100000);//microsecond
             break;
         case TAG_YES_YOU_MAY_WRITE://I am free
-            //            std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeController_02"<<std::endl;
 
             MPI_Recv(lockWeightIndexes, lockWeightIndexesSize, MPI_DOUBLE, 0, MPI_ANY_TAG,
                      MPI_COMM_WORLD, &status);
 
             lockIndex = ROUND(lockWeightIndexes[index_lockIndex]);
-            //            std::cerr << "lockIndex4: " << lockIndex << std::endl;
 #ifdef DEBUG_MPI
 
             std::cerr << "[" << node->rank << "] TAG_YES_YOU_MAY_WRITE.lockIndex: " << lockIndex <<std::endl;
@@ -649,10 +638,8 @@ void MpiProgAngularClassAverage::mpi_writeController(
             weights1_old = lockWeightIndexes[index_weights1];
             weights2_old = lockWeightIndexes[index_weights2];
             ref3dIndex = ROUND(lockWeightIndexes[index_ref3d]);
-            //            std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeController_03"<<std::endl;
             mpi_write(dirno, ref3dIndex, avg, avg1, avg2, SFclass, SFclass1, SFclass2,
                       SFclassDiscarded, w1, w2, weight_old, weights1_old, weights2_old);
-            //            std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeController_04"<<std::endl;
             whileLoop=false;
             break;
         default:
@@ -685,26 +672,17 @@ void MpiProgAngularClassAverage::mpi_writeFile(
     double w = avg.weight();
     Image<double> old;
 
-    //    std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeFile_01"<<std::endl;
-
     if (w > 0.)
     {
-        //        std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeFile_02"<<std::endl;
-
         if (w != 1.)
             avg() /= w;
-        //        std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeFile_03"<<std::endl;
-
         //How are we going to handle weights, are they in the header, I do not think so....
         //in spider should be OK in general...!!
         //A more independent approach would be nice
         if (fileNameStk.exists())
         {
-            //            std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeFile_04"<<std::endl;
-
             fn_tmp.compose(dirno, fileNameStk);
             old.read(fn_tmp);
-            //            std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeFile_05"<<std::endl;
 
             //w_old = old.weight();
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(old())
@@ -712,41 +690,14 @@ void MpiProgAngularClassAverage::mpi_writeFile(
                 dAij(old(),i,j) = (w_old * dAij(old(),i,j) + w
                                    * dAij(avg(),i,j)) / (w_old + w);
             }
-            //            std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeFile_06"<<std::endl;
-
             old.setWeight(w_old + w);
             old.write(fileNameStk, dirno, true, WRITE_REPLACE);
         }
         else
         {
-            //            std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeFile_07"<<std::endl;
-
             avg.write(fileNameStk, dirno, true, WRITE_REPLACE);
         }
     }
-    //    std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeFile_08"<<std::endl;
-
-    //    // Write class selfile to disc (even if its empty)
-    //    if (write_selfile)
-    //    {
-    //        std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeFile_09"<<std::endl;
-    //
-    //        MetaData auxMd;
-    //        String
-    //        comment =
-    //            (String) "This file contains one block per each pair (Projection direction, "
-    //            + "Reference volume), groupClassXXXXXX refers to the projection direction, "
-    //            + "refGroupXXXXXX refers to the reference volume. Additionally the blocks named "
-    //            + "refGroupXXXXXX contains the images needed to reconstruct the reference XXXXXX.";
-    //        SF.setComment(comment);
-    //        //        }
-    //        std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeFile_10"<<std::endl;
-    //
-    //        SF.write(fileNameXmd, MD_APPEND);
-    //        std::cerr<<"["<<node->rank<<"]: "<< "mpi_writeFile_11"<<std::endl;
-    //
-    //    }
-
 }
 
 
@@ -784,50 +735,8 @@ void MpiProgAngularClassAverage::mpi_produceSideInfo()
         Ri = 1;
     if (Ro < 0)
         Ro = (Xdim / 2) - 1;
-
-    //    // Set limitR
-    //    if (do_limitR0abs || do_limitRFabs)
-    //    {
-    //        MetaData tmpMT;
-    //        MDLabel codifyLabel = MDL::str2Label(col_select);
-    //        tmpMT.sort(DF,codifyLabel);
-    //        int size = tmpMT.size();
-    //        ROUND((limitRabs/100.) * size);
-
-    //
-    //        FOR_ALL_OBJECTS_IN_METADATA(tmpMT)
-    //        {
-    //            double auxval;
-    //            DF.getValue(codifyLabel, auxval, __iter.objId);
-    //            vals.push_back(auxval);
-    //        }
-    //        int nn = vals.size();
-    //        std::sort(vals.begin(), vals.end());
-    //        if (do_limitR0)
-    //        {
-    //            double val = vals[ROUND((limitR/100.) * vals.size())];
-    //            if (do_limit0)
-    //                limit0 = XMIPP_MAX(limit0, val);
-    //            else
-    //            {
-    //                limit0 = val;
-    //                do_limit0 = true;
-    //            }
-    //        }
-    //        else if (do_limitRF)
-    //        {
-    //            double val = vals[ROUND(((100. - limitR)/100.) * vals.size())];
-    //            if (do_limitF)
-    //                limitF = XMIPP_MIN(limitF, val);
-    //            else
-    //            {
-    //                limitF = val;
-    //                do_limitF = true;
-    //            }
-    //        }
-    //    }
-    //}
 }
+
 void MpiProgAngularClassAverage::mpi_preprocess()
 {
     initFileNames();
@@ -843,15 +752,10 @@ void MpiProgAngularClassAverage::mpi_preprocess()
 
     if (node->rank==0)
     {
-    	std::cerr << "1" <<std::endl;
         saveDiscardedImages();
-    	std::cerr << "2" <<std::endl;
         createJobList();
-    	std::cerr << "3" <<std::endl;
         initDimentions();
-    	std::cerr << "4" <<std::endl;
         initWeights();
-    	std::cerr << "5" <<std::endl;
         initOutputFiles();
     }
 
@@ -904,7 +808,6 @@ void MpiProgAngularClassAverage::filterInputMetadata()
         else
             asc=true;
 
-        std::cerr << "[filterInputMetadata] size: " << size << " | limit: " << limit << std::endl;
         auxF1.sort(auxDF,codifyLabel,asc,limit,0);
     }
     //remove inages bellow (above) these limits
@@ -1108,7 +1011,6 @@ void MpiProgAngularClassAverage::initOutputFiles()
 void MpiProgAngularClassAverage::mpi_postprocess()
 {
     // Write class selfile to disc (even if its empty)
-    std::cerr<< "mpi_postprocess01"<<std::endl;
 
     FileName imageName, fileNameXmd, blockNameXmd;
     FileName imageNames1, fileNameXmds1, imageNames2, fileNameXmds2;
@@ -1222,18 +1124,6 @@ void MpiProgAngularClassAverage::mpi_postprocess()
             auxMds2.write(fileNameXmds2);
         }
     }
-    std::cerr<< "mpi_writeFile_11"<<std::endl;
-
-
-    std::cerr << "lockArray:"  <<std::endl;
-    std::cerr << lockArray <<std::endl;
-    std::cerr << "weightArray:" <<std::endl;
-    std::cerr << weightArray <<std::endl;
-    std::cerr << "weightArrays1:" <<std::endl;
-    std::cerr << weightArrays1 <<std::endl;
-    std::cerr << "weightArrays2:" <<std::endl;
-    std::cerr << weightArrays2 <<std::endl;
-
 }
 
 void MpiProgAngularClassAverage::createJobList()
@@ -1295,7 +1185,6 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
         w1 = w2 = 0.;
 
 #ifdef DEBUG
-
         std::cerr<<" entering iter "<<iter<<std::endl;
 #endif
 

@@ -351,7 +351,6 @@ void ProgAngularClassAverage::preprocess()
     getImageSize(DF, Xdim, Ydim, Zdim, Ndim);
 
     Ndim = DFclassesExp.size();
-    std::cerr << "Ndim: " << Ndim << std::endl;
 
     for (int i = 1; i <= number_3dref; i++)
     {
@@ -776,10 +775,6 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno, double * my_output)
         my_output[3] = w2;
         return;
     }
-    else
-    {
-        std::cerr << "ROB Images assigned to class: " << dirno << std::endl;
-    }
 
     Matrix2D<double> A(3, 3);
     std::vector<int> exp_number, exp_split;
@@ -890,16 +885,6 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno, double * my_output)
             }
         }
     }
-    std::cerr << "Images assigned end" << std::endl;
-    //this if is impossible
-    //    if (SFclass1.size()==0 && SFclass2.size()==0)
-    //    {//no images assigned to this class
-    //        my_output[0] = (double)dirno;
-    //        my_output[1] = w;
-    //        my_output[2] = w1;
-    //        my_output[3] = w2;
-    //        return;
-    //    }
 
     // Re-alignment of the class
     if (nr_iter > 0)
