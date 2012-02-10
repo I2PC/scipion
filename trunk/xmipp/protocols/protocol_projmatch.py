@@ -82,7 +82,14 @@ class ProtProjMatch(XmippProtocol):
         iteration = _dataBase.getRunIter()
         summary = ['Performed <%d/%d> iterations with angular sampling rate <%s>' 
                    % (iteration, self.NumberOfIterations, self.AngSamplingRateDeg)]
-        summary += ['Final Resolution is <%s>' % 'not yet implemented']
+        if (iteration > 1):
+            ResolutionXmdCurrIterMaxSummary = self.getFilename('ResolutionXmdMax', iter=iteration, ref=1)
+            md = MetaData(ResolutionXmdCurrIterMax)
+            id = md.firstObject()
+            FourierMaxFrequencyOfInterestSummary = md.getValue(MDL_RESOLUTION_FREQREAL, id)
+            summary += ['Resolution for first reference is <%s> A' % FourierMaxFrequencyOfInterestSummary]
+        else:
+            summary += ['Resolution is <%s>' % 'not available']            
         summary += ['Number of CTFgroups and References is <%d> and <%d> respectively'
                         % (self.NumberOfCtfGroups, self.numberOfReferences)]
 
@@ -151,9 +158,9 @@ class ProtProjMatch(XmippProtocol):
                 'ReconstructedFileNamesItersSplit1': join(IterDir, '%(ReconstructedVolume)s_split_1_' + Ref3D + '.vol'),
                 'ReconstructedFileNamesItersSplit2': join(IterDir, '%(ReconstructedVolume)s_split_2_' + Ref3D + '.vol'),
                 'ReconstructedFilteredFileNamesIters': join(IterDir, '%(ReconstructedVolume)s_filtered_' + Ref3D + '.vol'),
-                'ResolutionXmdFile': join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '.frc'),
-                'ResolutionXmd': 'resolution@' + join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '.frc'),
-                'ResolutionXmdMax': 'resolution_max@' + join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '.frc'),
+                'ResolutionXmdFile': join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '_frc.xmd'),
+                'ResolutionXmd': 'resolution@' + join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '_frc.xmd'),
+                'ResolutionXmdMax': 'resolution_max@' + join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '_frc.xmd'),
                 'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref3D + '.vol'),
                 # Particular templates for executeCtfGroups  
                 'ImageCTFpairs': CtfGroupBase + '_images.sel',
