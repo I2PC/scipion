@@ -199,7 +199,7 @@ struct ImageInfo
 /** Swapping trigger.
  * Threshold file z size above which bytes are swapped.
  */
-#define SWAPTRIG     65535
+#define SWAPTRIG     16776960
 
 
 /// Image base class
