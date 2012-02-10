@@ -385,11 +385,12 @@ def reconstruction(_log
     if (md.size() == 0):
         from protlib_utils import printLog
         img = Image()
-        img.read(maskedFileNamesIter, HEADER)
-        (x,y,z,n) = img.getDimensions()
+        img.read(maskedFileNamesIter, DATA)
+        #(x,y,z,n) = img.getDimensions()
         printLog("Metadata %s is empty. Creating a Black file named %s" % (ReconstructionXmd,ReconstructedVolume))
-        createEmptyFile(ReconstructedVolume,x,y,z,n)
-        ReconstructedVolume.initRandom();
+        #createEmptyFile(ReconstructedVolume,x,y,z,n)
+        img.initRandom()
+        img.write(ReconstructedVolume)
         return
 
     
