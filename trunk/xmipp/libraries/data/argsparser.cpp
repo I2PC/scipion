@@ -556,7 +556,8 @@ ParamDef::~ParamDef()
 {
     for (int i = 0; i < arguments.size(); ++i)
         delete arguments[i];
-    delete exclusiveGroup;
+    if (!orBefore)
+        delete exclusiveGroup;
 }
 
 bool ParamDef::containsArgument(const String & argName)
