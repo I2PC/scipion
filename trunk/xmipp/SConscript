@@ -685,7 +685,12 @@ if int(env['java']):
     xmippUtils=AddJavaLibrary('XmippUtils', 'utils', ['XmippIJ', 'ij', 'commons-cli-1.1'])
     AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'ij'])
     xmippViewer=AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
-    compileHEFT=CompileJava('java/src/HandleExtraFileTypes.java', 'java/build', 'java/build/HandleExtraFileTypes.class','java/build:java/lib/ij.jar')
+    javaClassPath=['java/build','java/lib/ij.jar']
+    if CYGWIN:
+        javaClassPath=';'.join(javaClassPath)
+    else:
+        javaClassPath=':'.join(javaClassPath)
+    compileHEFT=CompileJava('java/src/HandleExtraFileTypes.java', 'java/build', 'java/build/HandleExtraFileTypes.class',javaClassPath)
     env.Depends(compileHEFT,xmippUtils)
     env.Depends(compileHEFT,xmippViewer)
     copyHandleExtraFileTypes = env.InstallAs(target='external/imagej/plugins/HandleExtraFileTypes.class', source='java/build/HandleExtraFileTypes.class')
