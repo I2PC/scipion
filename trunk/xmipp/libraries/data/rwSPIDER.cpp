@@ -150,7 +150,7 @@ int  ImageBase::readSPIDER(size_t select_img)
                      ". Error message: %s", filename.c_str() ,strerror(errno)));
 
     // Determine byte order and swap bytes if from different-endian machine
-    if ( swap = (( fabs(header->nslice) > SWAPTRIG ) || ( fabs(header->iform) > SWAPTRIG ) ||
+    if ( swap = (( fabs(header->nslice) > SWAPTRIG ) || ( fabs(header->iform) > 1000 ) ||
                  ( fabs(header->nslice) < 1 )) )
         swapPage((char *) header, SPIDERSIZE - 180, Float);
 
