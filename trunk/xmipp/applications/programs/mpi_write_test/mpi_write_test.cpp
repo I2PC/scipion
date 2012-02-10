@@ -84,7 +84,7 @@ int main(int argc, char **argv)
         if(var%size==rank)
         {
             String ss = formatString("%03d@%s", var,fnIN.c_str());
-            //std::cerr << "ssIN: value" << ss << " " << (double)rank << std::endl;
+            std::cerr << "ssIN: value" << ss << " " << (double)rank << std::endl;
             Iaux().initConstant((double)rank);
             node->barrierWait();
             Iaux.write(ss);
