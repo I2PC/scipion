@@ -1796,8 +1796,6 @@ class PyBuildExt(build_ext):
                         libraries = libs,
                         library_dirs = added_lib_dirs,
                         )
-        print "COSS voy a append tkinter"
-        print ext
         self.extensions.append(ext)
         return True
 
