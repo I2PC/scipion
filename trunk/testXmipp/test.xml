@@ -2,9 +2,7 @@
 <!DOCTYPE XMIPP_TESTS SYSTEM "test.dtd">
 <XMIPP_TESTS>
     <PROGRAM name="xmipp_angular_class_average" mpi="FALSE">
-        <CASE arguments="-i %o/proj_match.doc --lib %o/ref.doc -o %o/proj_match --split" changeDir="FALSE">
-            <PRERUN command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/ref.stk --sampling_rate 10 --compute_neighbors --angular_distance -1 "/>
-            <PRERUN command="xmipp_angular_projection_matching -i input/aFewProjections.sel -o %o/proj_match.doc --ref %o/ref.stk"/>
+        <CASE arguments="-i input/angular_class_average/current_angles.doc --lib input/angular_class_average/gallery_Ref3D_003.doc -o %o//projmatch --wien input/angular_class_average/ctf_wien.stk --pad 2 --split" changeDir="FALSE">
             <FILE filename="proj_match_class.xmp"/>
             <FILE filename="proj_match_classes.doc"/>
         </CASE>
@@ -253,11 +251,11 @@
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_mpi_angular_class_average" mpi="TRUE">
-        <CASE arguments="-i %o/proj_match.doc --lib %o/ref.doc -o %o/proj_match --split" changeDir="FALSE">
-            <PRERUN command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/ref.stk --sampling_rate 10 --compute_neighbors --angular_distance -1 "/>
-            <PRERUN command=" xmipp_angular_projection_matching -i input/aFewProjections.sel -o %o/proj_match.doc --ref %o/ref.stk"/>
-            <FILE filename="proj_match_classes.doc"/>
-        </CASE>
+	<CASE arguments="-i input/angular_class_average/current_angles.doc --lib input/angular_class_average/gallery_Ref3D_003.doc -o %o//projmatch --wien input/angular_class_average/ctf_wien.stk --pad 2 --split" changeDir="FALSE">
+            <FILE filename="projmatch_discarded.xmd"/>
+            <FILE filename="projmatch_Ref3D_001.stk"/>
+            <FILE filename="projmatch_Ref3D_001.xmd"/>
+	</CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_mpi_angular_continuous_assign" mpi="TRUE">
         <CASE arguments="-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.xmd" changeDir="FALSE">
