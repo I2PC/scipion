@@ -251,7 +251,7 @@ void CTFDescription::defineParams(XmippProgram * program)
     program->addParamsLine("  [--spherical_aberration <Cs>]         : Milimiters. Ex: 5.6");
     program->addParamsLine("                                        : This parameter is compulsory if a CTF is needed.");
     program->addParamsLine("     alias --Cs;");
-    program->addParamsLine("  [--defocusU <DeltafU>]                : Defocus in Angstroms (Ex: -2000)");
+    program->addParamsLine("  [--defocusU <DeltafU>]                : Defocus in Angstroms (Ex: 2000)");
     program->addParamsLine("  [--defocusV++ <DeltafV>]              : If astigmatic");
     program->addParamsLine("  [--azimuthal_angle++ <ang=0>]         : Angle between X and U (degrees)");
     program->addParamsLine("  [--chromatic_aberration++ <Ca=0>]     : Milimiters. Ex: 2");
@@ -621,8 +621,8 @@ bool CTFDescription::physical_meaning()
             alpha >= 0   && alpha <= 5      &&
             DeltaF >= 0  && DeltaF <= 1000  &&
             DeltaR >= 0  && DeltaR <= 100   &&
-            Q0 >= 0      && Q0 <= 0.4       &&
-            DeltafU <= 0 && DeltafV <= 0    &&
+            Q0 >= 0      && Q0 <= 0.40      &&
+            DeltafU >= 0 && DeltafV >= 0    &&
             CTF_at() >= 0;
 #ifdef DEBUG
 
@@ -638,8 +638,8 @@ bool CTFDescription::physical_meaning()
             << "alpha>=0   && alpha<=5      " << (alpha >= 0   && alpha <= 5)     << std::endl
             << "DeltaF>=0  && DeltaF<=1000  " << (DeltaF >= 0  && DeltaF <= 1000) << std::endl
             << "DeltaR>=0  && DeltaR<=100   " << (DeltaR >= 0  && DeltaR <= 100)  << std::endl
-            << "Q0>=0      && Q0<=0.4       " << (Q0 >= 0      && Q0 <= 0.4)          << std::endl
-            << "DeltafU<=0 && DeltafV<=0    " << (DeltafU <= 0 && DeltafV <= 0)   << std::endl
+            << "Q0>=0      && Q0<=0.4       " << (Q0 >= 0      && Q0 <= 0.4)      << std::endl
+            << "DeltafU>=0 && DeltafV>=0    " << (DeltafU >= 0 && DeltafV >= 0)   << std::endl
             << "CTF_at(0,0)>=0       " << (CTF_at() >= 0)         << std::endl
             ;
             std::cout << "CTF_at(0,0)=" << CTF_at(true) << std::endl;
@@ -772,13 +772,13 @@ void CTFDescription::force_physical_meaning()
             DeltaR = 0;
         if (DeltaR > 1000)
             DeltaR = 1000;
+        if (Q0 > 0.40)
+            Q0 = 0.40;
         if (Q0 < 0)
             Q0 = 0;
-        if (Q0 > 0.4)
-            Q0 = 0.4;
-        if (DeltafU > 0)
+        if (DeltafU < 0)
             DeltafU = 0;
-        if (DeltafV > 0)
+        if (DeltafV < 0)
             DeltafV = 0;
     }
     if (enable_CTFnoise)

@@ -329,8 +329,8 @@ public:
             double cos_ellipsoid_ang = cos(ellipsoid_ang);
             double cos_ellipsoid_ang_2=cos_ellipsoid_ang*cos_ellipsoid_ang;
             double sin_ellipsoid_ang_2=1.0-cos_ellipsoid_ang_2;
-            precomputed.deltaf=SGN(DeltafU)*sqrt(DeltafU*DeltafU*cos_ellipsoid_ang_2 +
-                                                 DeltafV*DeltafV*sin_ellipsoid_ang_2);
+            precomputed.deltaf=-SGN(DeltafU)*sqrt(DeltafU*DeltafU*cos_ellipsoid_ang_2 +
+                                                  DeltafV*DeltafV*sin_ellipsoid_ang_2);
         }
     }
 
@@ -348,8 +348,8 @@ public:
             double cos_ellipsoid_ang = cos(ellipsoid_ang);
             double cos_ellipsoid_ang_2=cos_ellipsoid_ang*cos_ellipsoid_ang;
             double sin_ellipsoid_ang_2=1.0-cos_ellipsoid_ang_2;
-            precomputed.deltaf=SGN(DeltafU)*sqrt(DeltafU*DeltafU*cos_ellipsoid_ang_2 +
-                                                 DeltafV*DeltafV*sin_ellipsoid_ang_2);
+            precomputed.deltaf=-SGN(DeltafU)*sqrt(DeltafU*DeltafU*cos_ellipsoid_ang_2 +
+                                                  DeltafV*DeltafV*sin_ellipsoid_ang_2);
         }
     }
 
@@ -496,8 +496,8 @@ public:
         double cos_ellipsoid_ang=cos(ellipsoid_ang);
         double cos_ellipsoid_ang_2=cos_ellipsoid_ang*cos_ellipsoid_ang;
         double sin_ellipsoid_ang_2=1.0-cos_ellipsoid_ang_2;
-        return SGN(DeltafU)*sqrt(DeltafU*DeltafU*cos_ellipsoid_ang_2 +
-                                 DeltafV*DeltafV*sin_ellipsoid_ang_2);
+        return -SGN(DeltafU)*sqrt(DeltafU*DeltafU*cos_ellipsoid_ang_2 +
+                                  DeltafV*DeltafV*sin_ellipsoid_ang_2);
     }
 
     /// Compute noise at (X,Y). Continuous frequencies, notice it is squared

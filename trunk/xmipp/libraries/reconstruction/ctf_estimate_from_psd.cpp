@@ -1849,26 +1849,26 @@ void estimate_defoci()
     int i, j;
     double defocusV, defocusU;
 
-    double defocusV0 = -1e3, defocusU0 = -1e3;
-    double defocusVF = -100e3, defocusUF = -100e3;
+    double defocusV0 = 1e3, defocusU0 = 1e3;
+    double defocusVF = 100e3, defocusUF = 100e3;
     double initial_defocusStep = 8e3;
     MultidimArray<double> error;
 
     // Check if there is no initial guess
-    double min_allowed_defocusU = -100e3, max_allowed_defocusU = -1e3;
-    double min_allowed_defocusV = -100e3, max_allowed_defocusV = -1e3;
+    double min_allowed_defocusU = 1e3, max_allowed_defocusU = 100e3;
+    double min_allowed_defocusV = 1e3, max_allowed_defocusV = 100e3;
     if (global_prm->initial_ctfmodel.DeltafU != 0)
     {
         initial_defocusStep = global_prm->defocus_range;
         defocusU0 =
-            XMIPP_MIN(-1000, global_prm->initial_ctfmodel.DeltafU + global_prm->defocus_range);
-        double maxDeviation=XMIPP_MAX(global_prm->defocus_range,-0.25*global_prm->initial_ctfmodel.DeltafU);
+            std::max(1e3, global_prm->initial_ctfmodel.DeltafU - global_prm->defocus_range);
+        double maxDeviation=std::max(global_prm->defocus_range,0.25*global_prm->initial_ctfmodel.DeltafU);
         max_allowed_defocusU =
-            XMIPP_MIN(-1000, global_prm->initial_ctfmodel.DeltafU + maxDeviation);
+            std::min(100e3, global_prm->initial_ctfmodel.DeltafU + maxDeviation);
         defocusUF =
-            XMIPP_MAX(-150000, global_prm->initial_ctfmodel.DeltafU - global_prm->defocus_range);
+            std::min(150e3, global_prm->initial_ctfmodel.DeltafU + global_prm->defocus_range);
         min_allowed_defocusU =
-            XMIPP_MAX(-150000, global_prm->initial_ctfmodel.DeltafU - maxDeviation);
+            std::max(1e3, global_prm->initial_ctfmodel.DeltafU - maxDeviation);
         if (global_prm->initial_ctfmodel.DeltafV == 0)
         {
             defocusV0 = defocusU0;
@@ -1879,13 +1879,13 @@ void estimate_defoci()
         else
         {
             defocusV0 =
-                XMIPP_MIN(-1000, global_prm->initial_ctfmodel.DeltafV + global_prm->defocus_range);
+                std::max(1e3, global_prm->initial_ctfmodel.DeltafV - global_prm->defocus_range);
             max_allowed_defocusV =
-                XMIPP_MIN(-1000, global_prm->initial_ctfmodel.DeltafV + maxDeviation);
+                std::max(100e3, global_prm->initial_ctfmodel.DeltafV + maxDeviation);
             defocusVF =
-                XMIPP_MAX(-150000, global_prm->initial_ctfmodel.DeltafV - global_prm->defocus_range);
+                std::min(150e3, global_prm->initial_ctfmodel.DeltafV + global_prm->defocus_range);
             min_allowed_defocusV =
-                XMIPP_MAX(-150000, global_prm->initial_ctfmodel.DeltafV - maxDeviation);
+                std::max(1e3, global_prm->initial_ctfmodel.DeltafV - maxDeviation);
         }
     }
 
@@ -1894,18 +1894,19 @@ void estimate_defoci()
     steps.initConstant(1);
     steps(3) = 0; // Do not optimize kV
     steps(4) = 0; // Do not optimize K
+    global_prm->show_optimization=true;
     for (double defocusStep = initial_defocusStep; defocusStep >= XMIPP_MIN(8000, global_prm->defocus_range); defocusStep /= 2)
     {
-        error.resize(CEIL((defocusV0 - defocusVF) / defocusStep + 1),
-                     CEIL((defocusU0 - defocusUF) / defocusStep + 1));
+        error.resize(CEIL((defocusVF - defocusV0) / defocusStep + 1),
+                     CEIL((defocusUF - defocusU0) / defocusStep + 1));
         error.initConstant(global_heavy_penalization);
         if (global_prm->show_optimization)
             std::cout << "V=[" << defocusV0 << "," << defocusVF << "]\n"
             << "U=[" << defocusU0 << "," << defocusUF << "]\n"
             << "Defocus step=" << defocusStep << std::endl;
-        for (defocusV = defocusV0, i = 0; defocusV >= defocusVF; defocusV -= defocusStep, i++)
+        for (defocusV = defocusV0, i = 0; defocusV <= defocusVF; defocusV += defocusStep, i++)
         {
-            for (defocusU = defocusU0, j = 0; defocusU >= defocusUF; defocusU -= defocusStep, j++)
+            for (defocusU = defocusU0, j = 0; defocusU <= defocusUF; defocusU += defocusStep, j++)
             {
                 bool first_angle = true;
                 if (fabs(defocusU - defocusV) > 30e3)
@@ -2004,9 +2005,9 @@ void estimate_defoci()
             std::cout << "Range=" << errmax - errmin << std::endl;
         double best_defocusVmin = best_defocusV, best_defocusVmax = best_defocusV;
         double best_defocusUmin = best_defocusU, best_defocusUmax = best_defocusU;
-        for (defocusV = defocusV0, i = 0; defocusV > defocusVF; defocusV -= defocusStep, i++)
+        for (defocusV = defocusV0, i = 0; defocusV <= defocusVF; defocusV += defocusStep, i++)
         {
-            for (defocusU = defocusU0, j = 0; defocusU > defocusUF; defocusU -= defocusStep, j++)
+            for (defocusU = defocusU0, j = 0; defocusU <= defocusUF; defocusU += defocusStep, j++)
             {
                 if (global_show >= 2)
                     std::cout << i << "," << j << " " << error(i, j) << " " << defocusU << " " << defocusV << std::endl
@@ -2026,10 +2027,10 @@ void estimate_defoci()
             }
         }
 
-        defocusVF = XMIPP_MAX(min_allowed_defocusV, best_defocusVmin - defocusStep);
-        defocusV0 = XMIPP_MIN(max_allowed_defocusV, best_defocusVmax + defocusStep);
-        defocusUF = XMIPP_MAX(min_allowed_defocusU, best_defocusUmin - defocusStep);
-        defocusU0 = XMIPP_MIN(max_allowed_defocusU, best_defocusUmax + defocusStep);
+        defocusVF = std::min(max_allowed_defocusV, best_defocusVmax + defocusStep);
+        defocusV0 = std::max(min_allowed_defocusV, best_defocusVmin - defocusStep);
+        defocusUF = std::min(max_allowed_defocusU, best_defocusUmax + defocusStep);
+        defocusU0 = std::max(min_allowed_defocusU, best_defocusUmin - defocusStep);
         i = j = 0;
         if (global_show >= 2)
         {
