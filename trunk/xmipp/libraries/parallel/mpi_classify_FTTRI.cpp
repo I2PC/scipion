@@ -576,7 +576,6 @@ int ProgClassifyFTTRI::findFarthest(const MultidimArray<double> &seed,
     AlignmentAux aux;
     CorrelationAux aux2;
     RotationalCorrelationAux aux3;
-    std::cout << "Searching farthest\n";
     for (int n=0; n<nmax; n++)
     {
         if (FTTRI)
@@ -588,10 +587,7 @@ int ProgClassifyFTTRI::findFarthest(const MultidimArray<double> &seed,
         if (FTTRI)
             d=fttri_distance(seed,candidate());
         else
-        {
             d=alignImages(seed,candidate(),M,WRAP,aux,aux2,aux3);
-            std::cout << fnCandidate << " d=" << d << std::endl;
-        }
         if (d>maxDistance && FTTRI || d<maxDistance && !FTTRI)
         {
             maxDistance=d;
@@ -629,7 +625,6 @@ void ProgClassifyFTTRI::splitLargeClasses(bool FTTRI)
                 mdIn.getValue(MDL_IMAGE,fnSeed,imgsId[class_0_members[0]]);
             seed1.read(fnSeed);
             seed1().setXmippOrigin();
-            std::cout << "first image in class: " << fnSeed << std::endl;
             int n1=findFarthest(seed1(),class_0,FTTRI);
             if (FTTRI)
                 fnSeed.compose(class_0_members[n1]+1,fnFTTRI);
@@ -637,7 +632,6 @@ void ProgClassifyFTTRI::splitLargeClasses(bool FTTRI)
                 mdIn.getValue(MDL_IMAGE,fnSeed,imgsId[class_0_members[n1]]);
             seed1.read(fnSeed);
             seed1().setXmippOrigin();
-            std::cout << "seed1: " << fnSeed << std::endl;
 
             // Now find the one that is farthest from i1
             int n2=findFarthest(seed1(),class_0,FTTRI);
@@ -647,7 +641,6 @@ void ProgClassifyFTTRI::splitLargeClasses(bool FTTRI)
                 mdIn.getValue(MDL_IMAGE,fnSeed,imgsId[class_0_members[n2]]);
             seed2.read(fnSeed);
             seed2().setXmippOrigin();
-            std::cout << "seed2: " << fnSeed << std::endl;
 
             // Now split
             c1.memberIdx.clear();
@@ -683,7 +676,6 @@ void ProgClassifyFTTRI::splitLargeClasses(bool FTTRI)
                     candidateCopy=candidate();
                     double d1=alignImages(mSeed1,candidate(),M,WRAP,aux,aux2,aux3);
                     double d2=alignImages(mSeed2,candidateCopy,M,WRAP,aux,aux2,aux3);
-                    std::cout << "n=" << n << "/" << nmax << " d1=" << d1 << " d2=" << d2 << std::endl;
                     if (d1>d2)
                         c1.memberIdx.push_back(trueIdx);
                     else
