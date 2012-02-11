@@ -184,6 +184,9 @@ public:
     /** Write results */
     void writeResults(bool FTTRI);
 
+    /** Align images within classes */
+    void alignImagesWithinClasses();
+
     /** compute class centroids */
     void computeClassCentroids(bool FTTRI);
 

@@ -679,7 +679,7 @@ void ProgClassifyFTTRI::splitLargeClasses(bool FTTRI)
                 }
                 else
                 {
-                	candidate().setXmippOrigin();
+                    candidate().setXmippOrigin();
                     candidateCopy=candidate();
                     double d1=alignImages(mSeed1,candidate(),M,WRAP,aux,aux2,aux3);
                     double d2=alignImages(mSeed2,candidateCopy,M,WRAP,aux,aux2,aux3);
@@ -1120,6 +1120,92 @@ void ProgClassifyFTTRI::writeResults(bool FTTRI)
     MDsummary.write(formatString("classes@%s",fnClasses.c_str()),MD_APPEND);
 }
 
+// Align images within classes ============================================
+void ProgClassifyFTTRI::alignImagesWithinClasses()
+{
+    FileName fnCentroids, fnCandidate;
+    fnCentroids=fnRoot+"_image_centroids.mrcs";
+    if (node->isMaster())
+    {
+        std::cerr << "Aligning images within class ..." << std::endl;
+        size_t Ndim;
+        int Xdim, Ydim, Zdim;
+        getImageSize(mdIn, Xdim, Ydim, Zdim, Ndim);
+        createEmptyFile(fnCentroids,Xdim,Ydim,1,nref,true,WRITE_OVERWRITE);
+    }
+    node->barrierWait();
+
+    Image<double> centroid, candidate;
+    if (node->isMaster())
+        init_progress_bar(nref);
+    Image<int> mask;
+    mask.read(fnRoot+"_mask.mrc");
+    centroid().resizeNoCopy(mask());
+
+    MultidimArray<double> &mCentroid=centroid();
+    MultidimArray<int> &mMask=mask();
+    MetaData MDclass;
+    Matrix2D<double> M;
+    for (int i=0; i<nref; i++)
+        if (((i+1)%node->size)==node->rank)
+        {
+            const std::vector<size_t> &class_i=bestEpsilonClasses[i].memberIdx;
+            int nmax=class_i.size();
+            mCentroid.initZeros();
+
+            if (nmax!=0)
+            {
+                MDclass.clear();
+                for (int n=0; n<nmax; n++)
+                {
+                    size_t trueIdx=class_i[n];
+                    mdIn.getValue(MDL_IMAGE,fnCandidate,imgsId[trueIdx]);
+                    MDclass.setValue(MDL_IMAGE,fnCandidate,MDclass.addObject());
+                }
+
+                // Create centroid
+                alignSetOfImages(MDclass,mCentroid,5,false);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mMask)
+                if (!DIRECT_MULTIDIM_ELEM(mMask,n))
+                    DIRECT_MULTIDIM_ELEM(mCentroid,n)=0.0;
+
+                // Align images within class to centroid
+                FOR_ALL_OBJECTS_IN_METADATA(MDclass)
+                {
+                	MDclass.getValue(MDL_IMAGE,fnCandidate,__iter.objId);
+                    candidate.read(fnCandidate);
+                    candidate().setXmippOrigin();
+                    alignImages(mCentroid,candidate(),M);
+                    bool flip;
+                    double scale, shiftx, shifty, psi;
+                    transformationMatrix2Parameters2D(M, flip, scale, shiftx, shifty, psi);
+                    MDclass.setValue(MDL_SHIFTX, shiftx, __iter.objId);
+                    MDclass.setValue(MDL_SHIFTY, shifty, __iter.objId);
+                    MDclass.setValue(MDL_ANGLEPSI, psi, __iter.objId);
+                }
+            }
+
+            // Write new centroid
+            centroid.write(fnCentroids,i+1,true,WRITE_REPLACE);
+            MDclass.write(formatString("%s_class_%05d.xmd",fnRoot.c_str(),i+1));
+            if (node->isMaster())
+                progress_bar(i);
+        }
+    node->barrierWait();
+    if (node->isMaster())
+    {
+        progress_bar(nref);
+        FileName fnClasses=fnRoot+"_classes.xmd", fnClass;
+        for (int i=0; i<nref; i++)
+        {
+        	fnClass=formatString("%s_class_%05d.xmd",fnRoot.c_str(),i+1);
+        	MDclass.read(fnClass);
+        	MDclass.write(formatString("class_%05d@%s",i+1,fnClasses.c_str()),MD_APPEND);
+        	fnClass.deleteFile();
+        }
+    }
+}
+
 // Run ====================================================================
 void ProgClassifyFTTRI::run()
 {
@@ -1172,4 +1258,8 @@ void ProgClassifyFTTRI::run()
     }
     if (node->isMaster())
         writeResults(false);
+
+    // Align images within classes
+    node->barrierWait();
+    alignImagesWithinClasses();
 }
