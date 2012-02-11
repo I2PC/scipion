@@ -1144,7 +1144,7 @@ void ProgClassifyFTTRI::alignImagesWithinClasses()
 
     MultidimArray<double> &mCentroid=centroid();
     MultidimArray<int> &mMask=mask();
-    MetaData MDclass;
+    MetaData MDclass, MDaux;
     Matrix2D<double> M;
     for (int i=0; i<nref; i++)
         if (((i+1)%node->size)==node->rank)
@@ -1175,19 +1175,21 @@ void ProgClassifyFTTRI::alignImagesWithinClasses()
                 	MDclass.getValue(MDL_IMAGE,fnCandidate,__iter.objId);
                     candidate.read(fnCandidate);
                     candidate().setXmippOrigin();
-                    alignImages(mCentroid,candidate(),M);
+                    double corr=alignImages(mCentroid,candidate(),M);
                     bool flip;
                     double scale, shiftx, shifty, psi;
                     transformationMatrix2Parameters2D(M, flip, scale, shiftx, shifty, psi);
                     MDclass.setValue(MDL_SHIFTX, shiftx, __iter.objId);
                     MDclass.setValue(MDL_SHIFTY, shifty, __iter.objId);
                     MDclass.setValue(MDL_ANGLEPSI, psi, __iter.objId);
+                    MDclass.setValue(MDL_MAXCC, corr, __iter.objId);
                 }
             }
 
             // Write new centroid
             centroid.write(fnCentroids,i+1,true,WRITE_REPLACE);
-            MDclass.write(formatString("%s_class_%05d.xmd",fnRoot.c_str(),i+1));
+            MDaux.sort(MDclass,MDL_MAXCC,false);
+            MDaux.write(formatString("%s_class_%05d.xmd",fnRoot.c_str(),i+1));
             if (node->isMaster())
                 progress_bar(i);
         }
