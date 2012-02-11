@@ -325,6 +325,7 @@ void ProgCTFEstimateFromMicrograph::run()
     	init_progress_bar(div_Number);
     int N = 1; // Index of current piece
     int i = 0, j = 0; // top-left corner of the current piece
+    FourierTransformer transformer;
     while (N <= div_Number)
     {
         // Compute the top-left corner of the piece ..........................
@@ -375,7 +376,7 @@ void ProgCTFEstimateFromMicrograph::run()
             }
             else
             {
-                FourierTransform(piece, Periodogram);
+            	transformer.completeFourierTransform(piece,Periodogram);
                 FFT_magnitude(Periodogram, mpsd);
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd)
                 DIRECT_MULTIDIM_ELEM(mpsd,n)*=DIRECT_MULTIDIM_ELEM(mpsd,n)*pieceDim2;
