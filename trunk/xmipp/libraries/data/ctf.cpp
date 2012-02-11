@@ -103,7 +103,6 @@ void CTFDescription::readFromMetadataRow(const MetaData &MD, size_t id, bool dis
             disable_if_not_K)
             enable_CTFnoise = false;
     }
-
 }
 
 void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
@@ -188,89 +187,6 @@ void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
                 enable_CTFnoise = false;
         }
     }
-//    else
-//    {
-//        FILE *fh_param;
-//        if ((fh_param = fopen(fn.c_str(), "r")) == NULL)
-//            REPORT_ERROR(ERR_IO_NOTOPEN,
-//                         (std::string)"XmippCTF::read: There is a problem "
-//                         "opening the file " + fn);
-//
-//        try
-//        {
-//            Tm = textToFloat(getParameter(fh_param, "sampling_rate", 0, "1"));
-//            if (enable_CTF)
-//            {
-//                DeltafU = textToFloat(getParameter(fh_param, "defocusU", 0, "0"));
-//                if (checkParameter(fh_param, "defocusV"))
-//                    DeltafV = textToFloat(getParameter(fh_param, "defocusV", 0));
-//                else
-//                    DeltafV = DeltafU;
-//                azimuthal_angle = textToFloat(getParameter(fh_param, "azimuthal_angle", 0, "0"));
-//                kV = textToFloat(getParameter(fh_param, "voltage", 0, "100"));
-//                Cs = textToFloat(getParameter(fh_param, "spherical_aberration", 0, "0"));
-//                Ca = textToFloat(getParameter(fh_param, "chromatic_aberration", 0, "0"));
-//                espr = textToFloat(getParameter(fh_param, "energy_loss", 0, "0"));
-//                ispr = textToFloat(getParameter(fh_param, "lens_stability", 0, "0"));
-//                alpha = textToFloat(getParameter(fh_param, "convergence_cone", 0, "0"));
-//                DeltaF = textToFloat(getParameter(fh_param, "longitudinal_displace", 0, "0"));
-//                DeltaR = textToFloat(getParameter(fh_param, "transversal_displace", 0, "0"));
-//                Q0 = textToFloat(getParameter(fh_param, "Q0", 0, "0"));
-//                K = textToFloat(getParameter(fh_param, "K", 0, "1"));
-//                if (K == 0 && disable_if_not_K)
-//                    enable_CTF = false;
-//            }
-//
-//            if (enable_CTFnoise)
-//            {
-//                base_line     = textToFloat(getParameter(fh_param, "base_line", 0, "0"));
-//
-//                gaussian_K    = textToFloat(getParameter(fh_param, "gaussian_K", 0, "0"));
-//                sigmaU        = textToFloat(getParameter(fh_param, "sigmaU", 0, "0"));
-//                if (checkParameter(fh_param, "sigmaV"))
-//                    sigmaV     = textToFloat(getParameter(fh_param, "sigmaV", 0));
-//                else
-//                    sigmaV   = sigmaU;
-//                cU            = textToFloat(getParameter(fh_param, "cU", 0, "0"));
-//                if (checkParameter(fh_param, "cV"))
-//                    cV         = textToFloat(getParameter(fh_param, "cV", 0));
-//                else
-//                    cV       = cU;
-//                gaussian_angle = textToFloat(getParameter(fh_param, "gaussian_angle", 0, "0"));
-//
-//                sqU           = textToFloat(getParameter(fh_param, "sqU", 0, "0"));
-//                if (checkParameter(fh_param, "sqV"))
-//                    sqV        = textToFloat(getParameter(fh_param, "sqV", 0));
-//                else
-//                    sqV      = sqU;
-//                sqrt_angle = textToFloat(getParameter(fh_param, "sqrt_angle", 0, "0"));
-//                sqrt_K        = textToFloat(getParameter(fh_param, "sqrt_K", 0, "0"));
-//
-//                gaussian_K2    = textToFloat(getParameter(fh_param, "gaussian_K2", 0, "0"));
-//                sigmaU2        = textToFloat(getParameter(fh_param, "sigmaU2", 0, "0"));
-//                if (checkParameter(fh_param, "sigmaV2"))
-//                    sigmaV2     = textToFloat(getParameter(fh_param, "sigmaV2", 0));
-//                else
-//                    sigmaV2   = sigmaU2;
-//                cU2            = textToFloat(getParameter(fh_param, "cU2", 0, "0"));
-//                if (checkParameter(fh_param, "cV2"))
-//                    cV2         = textToFloat(getParameter(fh_param, "cV2", 0));
-//                else
-//                    cV2       = cU2;
-//                gaussian_angle2 = textToFloat(getParameter(fh_param, "gaussian_angle2", 0, "0"));
-//
-//                if (gaussian_K == 0 && sqrt_K == 0 && base_line == 0 && gaussian_K2 == 0 &&
-//                    disable_if_not_K)
-//                    enable_CTFnoise = false;
-//            }
-//        }
-//        catch (XmippError XE)
-//        {
-//            std::cout << XE << std::endl;
-//            REPORT_ERROR(ERR_IO_NOREAD, (std::string)"There is an error reading " + fn);
-//        }
-//        fclose(fh_param);
-//    }
 }
 
 /* Write ------------------------------------------------------------------- */
@@ -344,7 +260,7 @@ void CTFDescription::defineParams(XmippProgram * program)
     program->addParamsLine("  [--convergence_cone++ <alpha=0>]      : mrad. Ex: 0.5");
     program->addParamsLine("  [--longitudinal_displace++ <DeltaF=0>]: Angstrom. Ex: 100");
     program->addParamsLine("  [--transversal_displace++ <DeltaR=0>] : Angstrom. Ex: 3");
-    program->addParamsLine("  [--Q0++ <Q0=0>]                       : Percentage of cosine");
+    program->addParamsLine("  [--Q0++ <Q0=0>]                       : Percentage of cosine (Q0>0)");
     program->addParamsLine("  [--K++ <K=1>]                         : Global gain");
 }
 
@@ -502,6 +418,8 @@ void CTFDescription::Produce_Side_Info()
     K5 = PI * DeltaF * lambda;
     K6 = PI * PI * alpha * alpha;
     K7 = local_Cs * lambda * lambda;
+    Ksin = sqrt(1-Q0*Q0);
+    Kcos = Q0;
 }
 
 /* Precompute values ------------------------------------------------------- */
@@ -703,7 +621,7 @@ bool CTFDescription::physical_meaning()
             alpha >= 0   && alpha <= 5      &&
             DeltaF >= 0  && DeltaF <= 1000  &&
             DeltaR >= 0  && DeltaR <= 100   &&
-            Q0 >= -0.40  && Q0 <= 0         &&
+            Q0 >= 0      && Q0 <= 0.4       &&
             DeltafU <= 0 && DeltafV <= 0    &&
             CTF_at() >= 0;
 #ifdef DEBUG
@@ -720,7 +638,7 @@ bool CTFDescription::physical_meaning()
             << "alpha>=0   && alpha<=5      " << (alpha >= 0   && alpha <= 5)     << std::endl
             << "DeltaF>=0  && DeltaF<=1000  " << (DeltaF >= 0  && DeltaF <= 1000) << std::endl
             << "DeltaR>=0  && DeltaR<=100   " << (DeltaR >= 0  && DeltaR <= 100)  << std::endl
-            << "Q0>=-0.40  && Q0<=0       " << (Q0 >= -0.40  && Q0 <= 0)          << std::endl
+            << "Q0>=0      && Q0<=0.4       " << (Q0 >= 0      && Q0 <= 0.4)          << std::endl
             << "DeltafU<=0 && DeltafV<=0    " << (DeltafU <= 0 && DeltafV <= 0)   << std::endl
             << "CTF_at(0,0)>=0       " << (CTF_at() >= 0)         << std::endl
             ;
@@ -854,10 +772,10 @@ void CTFDescription::force_physical_meaning()
             DeltaR = 0;
         if (DeltaR > 1000)
             DeltaR = 1000;
-        if (Q0 < -0.40)
-            Q0 = -0.40;
-        if (Q0 > 0)
+        if (Q0 < 0)
             Q0 = 0;
+        if (Q0 > 0.4)
+            Q0 = 0.4;
         if (DeltafU > 0)
             DeltafU = 0;
         if (DeltafV > 0)
