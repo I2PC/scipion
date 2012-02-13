@@ -41,6 +41,7 @@ public class Param {
     public final static String W2 = "w2";
     public final static String RAISED_W = "raised_w";
     public final static String MASKFILENAME = "mask";
+    public final static String DEBUG = "debug";
     
     
     public String directory;
@@ -53,6 +54,7 @@ public class Param {
     public boolean poll;
     public int zoom = 100;
     public boolean renderImages;
+    public boolean debug = false;
     public int rows = -1, columns = -1;
     public double bad_pixels_factor;
     public double w1;
@@ -89,6 +91,7 @@ public class Param {
         options.addOption(POLL, false, "");
         options.addOption(ZOOM, true, "");
         options.addOption(RENDER_IMAGES, false, "");
+        options.addOption(DEBUG, false, "");
         options.addOption(TABLE_ROWS, true, "");
         options.addOption(TABLE_COLUMNS, true, "");
 
@@ -154,6 +157,7 @@ public class Param {
             }
 
             renderImages = cmdLine.hasOption(RENDER_IMAGES);
+            debug = cmdLine.hasOption(DEBUG);
 
             if (cmdLine.hasOption(TABLE_ROWS)) {
                 rows = Integer.parseInt(cmdLine.getOptionValue(TABLE_ROWS));

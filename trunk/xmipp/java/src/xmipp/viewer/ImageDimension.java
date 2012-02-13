@@ -24,7 +24,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-package xmipp.viewer.imageitems;
+package xmipp.viewer;
 
 import ij.IJ;
 import xmipp.jni.ImageGeneric;
@@ -34,59 +34,59 @@ import xmipp.jni.ImageGeneric;
  */
 public class ImageDimension {
 
-    private int width, height, depth;
-    private long nimages;
+    private int xdim, ydim, zdim;
+    private long ndim;
 
     public ImageDimension() {
     }
 
-    public ImageDimension(int width, int height, int depth, long nimages) {
-        this.width = width;
-        this.height = height;
-        this.depth = depth;
-        this.nimages = nimages;
+    public ImageDimension(int x, int y, int z, long n) {
+        this.xdim = x;
+        this.ydim = y;
+        this.zdim = z;
+        this.ndim = n;
     }
 
     public ImageDimension(ImageGeneric image) {
         try {
-            width = image.getXDim();
-            height = image.getYDim();
-            depth = image.getZDim();
-            nimages = image.getNDim();
+            xdim = image.getXDim();
+            ydim = image.getYDim();
+            zdim = image.getZDim();
+            ndim = image.getNDim();
         } catch (Exception ex) {
             IJ.error("Retrieving image dimensions: "+ image);
         }
     }
 
-    public int getWidth() {
-        return width;
+    public int getXDim() {
+        return xdim;
     }
 
-    public int getHeight() {
-        return height;
+    public int getYDim() {
+        return ydim;
     }
 
-    public int getDepth() {
-        return depth;
+    public int getZDim() {
+        return zdim;
     }
 
-    public long getNimages() {
-        return nimages;
+    public long getNDim() {
+        return ndim;
     }
 
-    public void setWidth(int width) {
-        this.width = width;
+    public void setXDim(int x) {
+        this.xdim = x;
     }
 
-    public void setHeight(int height) {
-        this.height = height;
+    public void setYDim(int y) {
+        this.ydim = y;
     }
 
-    public void setDepth(int depth) {
-        this.depth = depth;
+    public void setZDim(int z) {
+        this.zdim = z;
     }
 
-    public void setNImages(long nimages) {
-        this.nimages = nimages;
+    public void setNDim(long n) {
+        this.ndim = n;
     }
 }

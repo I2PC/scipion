@@ -184,7 +184,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     }
 
     private void setRowHeader() {
-        rowHeaderModel = new GalleryRowHeaderModel(tableModel);
+        rowHeaderModel = new GalleryRowHeaderModel(tableModel.getRowCount());
 
         rowHeader = new JList();
         rowHeader.setModel(rowHeaderModel);

@@ -6,32 +6,32 @@ package xmipp.viewer.gallery.models;
 
 import javax.swing.ListModel;
 import javax.swing.event.ListDataListener;
-import javax.swing.table.AbstractTableModel;
 
 /**
  *
  * @author Juanjo Vega
  */
 public class GalleryRowHeaderModel implements ListModel {
-
-    private AbstractTableModel table;
     private int first_index = 0;
+    private int n = 0;
 
-    public GalleryRowHeaderModel(AbstractTableModel table, int first_index) {
-        this(table);
+    public GalleryRowHeaderModel(int n, int first_index) {        
         this.first_index = first_index;
+        this.n = n;
     }
 
-    public GalleryRowHeaderModel(AbstractTableModel table) {
-        super();
-
-        this.table = table;
+    public GalleryRowHeaderModel(int n) {
+       this.n = n;
     }
 
     public int getSize() {
-        return table.getRowCount();
+        return n;
     }
 
+    public void setSize(int n){
+    	this.n = n;
+    }
+    
     public Object getElementAt(int i) {
         return new Integer(first_index + i);
     }

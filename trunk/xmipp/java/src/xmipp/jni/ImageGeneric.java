@@ -136,6 +136,10 @@ public class ImageGeneric {
         this.filename = filename;
         readApplyGeo_(filename/*Filename.getFilename(filename)*/, metadata, id, w, h);
     }
+    
+    public void readApplyGeo(MetaData metadata, long id, int w, int h) throws Exception {
+        readApplyGeo_(filename, metadata, id, w, h);
+    }
 
     private native void readApplyGeo_(String filename, MetaData metadata, long id, int w, int h) throws Exception;
 

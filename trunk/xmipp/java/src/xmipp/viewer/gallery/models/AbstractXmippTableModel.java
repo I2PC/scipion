@@ -26,7 +26,11 @@ import xmipp.ij.XmippImageConverter;
  */
 public abstract class AbstractXmippTableModel extends AbstractTableModel {
 
-    protected String filename;  // Filename (specified by user).
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	protected String filename;  // Filename (specified by user).
 //    protected String path;  // Normalized path.
     protected AbstractGalleryImageItem[] data;//= new ArrayList<AbstractGalleryImageItem>();
     protected long ids[] = null;

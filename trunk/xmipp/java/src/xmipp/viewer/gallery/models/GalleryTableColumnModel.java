@@ -15,6 +15,11 @@ public class GalleryTableColumnModel extends DefaultTableColumnModel {
 
     protected int width;
 
+    public GalleryTableColumnModel(int w){
+    	super();
+    	width = w;
+    }
+    
     @Override
     public void addColumn(TableColumn tc) {
         tc.setPreferredWidth(width);

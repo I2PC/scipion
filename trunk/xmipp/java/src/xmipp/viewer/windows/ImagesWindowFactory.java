@@ -176,6 +176,8 @@ public class ImagesWindowFactory {
     }
 
     public static JFrameGallery openFileAsGallery(String filename, Param parameters) {
+    	if (parameters.debug)
+    		DEBUG.enableDebug(true);
     	DEBUG.printMessage("AQUIIIIIIIII");
         return new JFrameGallery(filename, parameters);
         //setConvenientSize(gallery);
@@ -206,7 +208,7 @@ public class ImagesWindowFactory {
             if (parameters.rows < 1 && parameters.columns < 1) {
                 gallery.setAutoAdjustColumns(true);
             } else {
-                gallery.setDimensions(parameters.rows, parameters.columns);
+                //gallery.setDimensions(parameters.rows, parameters.columns);
             }
             gallery.setVisible(true);
         } else {
