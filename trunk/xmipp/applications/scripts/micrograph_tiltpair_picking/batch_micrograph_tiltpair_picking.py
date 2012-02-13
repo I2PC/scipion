@@ -5,7 +5,7 @@ from protlib_xmipp import ScriptAppIJ
 from xmipp import Program, FileName
 import xmipp
 
-class ScriptParticlePicking(ScriptAppIJ):
+class ScriptTiltPairPicking(ScriptAppIJ):
     def __init__(self):
         ScriptAppIJ.__init__(self, 'xmipp.particlepicker.tiltpair.Main')
         
@@ -21,4 +21,4 @@ class ScriptParticlePicking(ScriptAppIJ):
         
         
 if __name__ == '__main__':
-    ScriptParticlePicking().tryRun()
+    ScriptTiltPairPicking().tryRun()
