@@ -9,19 +9,20 @@ class ScriptShowJ(ScriptAppIJ):
 		ScriptAppIJ.__init__(self, 'xmipp.viewer.Viewer')
 		
 	def defineOtherParams(self):
-		self.addParamsLine('  [--mode <mode_value=image>]           : List of params ');
+		self.addParamsLine('  [--mode <mode_value=image>]           : List of params ')
 		self.addParamsLine('     where <mode_value> image gallery metadata')
-		self.addParamsLine('         alias -d;');
-		self.addParamsLine('  [--poll]                            : Keeps checking for changes on input files  (for image mode only!)');
-		self.addParamsLine('         alias -p;');
-		self.addParamsLine('  [--render]	: Activates images rendering (for metadata mode only!)');
-		self.addParamsLine('         alias -e;');
-		self.addParamsLine('  [--rows <rows>]                            : number of rows in table');
-		self.addParamsLine('         alias -r;');
-		self.addParamsLine('  [--columns <columns>]                            : number of columns in table');
-		self.addParamsLine('         alias -c;');
-		self.addParamsLine('  [--zoom <zoom>]                            : zoom for images.');
-		self.addParamsLine('         alias -z;');
+		self.addParamsLine('         alias -d;')
+		self.addParamsLine('  [--poll]                            : Keeps checking for changes on input files  (for image mode only!)')
+		self.addParamsLine('         alias -p;')
+		self.addParamsLine('  [--render]	: Activates images rendering (for metadata mode only!)')
+		self.addParamsLine('         alias -e;')
+		self.addParamsLine('  [--rows <rows>]                            : number of rows in table')
+		self.addParamsLine('         alias -r;')
+		self.addParamsLine('  [--columns <columns>]                            : number of columns in table')
+		self.addParamsLine('         alias -c;')
+		self.addParamsLine('  [--zoom <zoom>]                            : zoom for images.')
+		self.addParamsLine('         alias -z;')
+		self.addParamsLine('  [--debug] : debug')
 		
 	def readOtherParams(self):
 		if self.checkParam('--mode'):
@@ -53,6 +54,8 @@ class ScriptShowJ(ScriptAppIJ):
 			self.args += " --columns %s" % self.getParam('--columns') 
 		if self.checkParam('--zoom'):
 			self.args += " --zoom %s" % self.getParam('--zoom') 
+		if self.checkParam('--debug'):
+			self.args += " --debug"
 		
 if __name__ == '__main__':
 	ScriptShowJ().tryRun()
