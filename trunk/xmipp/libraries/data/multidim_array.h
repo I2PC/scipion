@@ -4825,6 +4825,16 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T1>& v2)
     v2=v1;
 }
 
+/** Assignment.
+ */
+template<typename T>
+void typeCast(const MultidimArray<T>& v1, Matrix1D<T> &v2)
+{
+    v2.resizeNoCopy(XSIZE(v1));
+    memcpy(&VEC_ELEM(v2,0),&DIRECT_A1D_ELEM(v1,0),MULTIDIM_SIZE(v1)*sizeof(T));
+    v2.row=false;
+}
+
 
 /** MultidimArray equality.*/
 template<typename T>

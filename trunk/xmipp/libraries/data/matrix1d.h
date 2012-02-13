@@ -367,21 +367,13 @@ public:
                 return false;
         return true;
     }
+
     /** Assignment.
-     *
-     * You can build as complex assignment expressions as you like. Multiple
-     * assignment is allowed.
-     *
-     * @code
-     * v1 = v2 + v3;
-     * v1 = v2 = v3;
-     * @endcode
      */
     Matrix1D<T>& operator=(const std::vector<T>& op1)
     {
         resizeNoCopy(op1.size());
-        for (int i = 0; i < vdim; i++)
-            vdata[i] = op1[i];
+        memcpy(&vdata[0],&(op1[0]),vdim*sizeof(T));
         row = false;
         return *this;
     }
