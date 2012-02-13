@@ -70,21 +70,10 @@ public:
 
     	produce_side_info();
     	PolyZernikes polynom;
-    	Matrix1D<int> coefs(6);
-    	VEC_ELEM(coefs,0)=1;
-    	VEC_ELEM(coefs,1)=1;
-    	VEC_ELEM(coefs,2)=1;
-    	VEC_ELEM(coefs,3)=1;
-    	VEC_ELEM(coefs,4)=1;
-    	VEC_ELEM(coefs,5)=1;
-    	//VEC_ELEM(coefs,6)=1;
-    	//VEC_ELEM(coefs,7)=1;
-    	//VEC_ELEM(coefs,8)=1;
-    	//VEC_ELEM(coefs,9)=1;
+    	Matrix1D<int> coefs(10);
+    	coefs.initConstant(1);
 
-    	//polynomials.create(coefs,ctftomodel());
-    	polynom.create(coefs);
-    	//polynom.fit(coefs,ctftomodel());
+    	polynom.fit(coefs,ctftomodel());
     }
 };
 
