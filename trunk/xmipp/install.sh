@@ -287,6 +287,25 @@ if $DO_SQLITE; then
   install_libs $VSQLITE/.libs libsqlite3 0
 fi
 
+#################### FFTW ###########################
+if $DO_FFTW; then
+  compile_library $VFFTW "." "." "--enable-threads"
+  install_libs $VFFTW/.libs libfftw3 3
+  install_libs $VFFTW/threads/.libs libfftw3_threads 3
+fi
+
+#################### JPEG ###########################
+if $DO_JPEG; then
+compile_library $VJPEG "." "." "CPPFLAGS=-w"
+install_libs $VJPEG/.libs libjpeg 8
+fi
+
+#################### TIFF ###########################
+if $DO_TIFF; then
+  compile_library $VTIFF "." "." "CPPFLAGS=-w --with-jpeg-include-dir=$EXT_PATH/$VJPEG --with-jpeg-lib-dir=$EXT_PATH/$VJPEG/.libs"
+  install_libs $VTIFF/libtiff/.libs libtiff 3
+fi
+
 #################### TCL/TK ###########################
 if $DO_TCLTK; then
     compile_library tcl$VTCLTK python unix "--disable-xft"
@@ -355,25 +374,6 @@ if $DO_PYTHON; then
 	fi
     #compile_pymodule $PYMPI
     #compile_pymodule $VPIL
-fi
-
-#################### FFTW ###########################
-if $DO_FFTW; then
-  compile_library $VFFTW "." "." "--enable-threads"
-  install_libs $VFFTW/.libs libfftw3 3
-  install_libs $VFFTW/threads/.libs libfftw3_threads 3
-fi
-
-#################### JPEG ###########################
-if $DO_JPEG; then
-compile_library $VJPEG "." "." "CPPFLAGS=-w"
-install_libs $VJPEG/.libs libjpeg 8
-fi
-
-#################### TIFF ###########################
-if $DO_TIFF; then
-  compile_library $VTIFF "." "." "CPPFLAGS=-w --with-jpeg-include-dir=$EXT_PATH/$VJPEG --with-jpeg-lib-dir=$EXT_PATH/$VJPEG/.libs"
-  install_libs $VTIFF/libtiff/.libs libtiff 3
 fi
 
 #################### ARPACK ###########################
