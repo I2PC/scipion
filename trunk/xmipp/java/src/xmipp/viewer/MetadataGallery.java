@@ -39,7 +39,7 @@ public class MetadataGallery extends ImageGallery {
 	}
 
 	@Override
-	public ImageItem createItem(int index, String key) throws Exception {
+	protected ImageItem createItem(int index, String key) throws Exception {
 		ImageGeneric image = getImage(index);
 		image.readApplyGeo(md, ids[index], thumb_width, thumb_height);
 		ImagePlus imp = XmippImageConverter.convertImageGenericToImageJ(image);

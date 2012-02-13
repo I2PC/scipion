@@ -123,7 +123,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		return "" + (column + 1);
+		return String.format("%d", column + 1);
 	}
 
 	@Override
@@ -213,7 +213,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	 * @param width
 	 * @param height
 	 */
-	private void calculateCellSize() {
+	protected void calculateCellSize() {
 		thumb_width = (int) (image_width * scale);
 		thumb_height = (int) (image_height * scale);
 
@@ -238,6 +238,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		renderer.setPreferredSize(cellDim);
 	}
 
+	/** Return the cell renderer to be used to draw images */
 	public ImageItemRenderer getRenderer() {
 		return renderer;
 	}
