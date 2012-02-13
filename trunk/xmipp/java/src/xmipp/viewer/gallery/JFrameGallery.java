@@ -14,6 +14,7 @@ import xmipp.viewer.ImageGallery;
 import xmipp.viewer.ImageItem;
 import xmipp.viewer.ImageItemRenderer;
 import xmipp.viewer.MetadataGallery;
+import xmipp.viewer.MetadataTable;
 import xmipp.viewer.VolumeGallery;
 import xmipp.viewer.gallery.models.GalleryRowHeaderModel;
 import xmipp.viewer.gallery.models.GalleryTableColumnModel;
@@ -134,9 +135,15 @@ public class JFrameGallery extends JFrame {
 		super();		
 
 		try {
-			boolean volume = Filename.isVolume(filename);
-			createGUI(volume ? new VolumeGallery(filename, parameters.zoom)
-					: new MetadataGallery(filename, parameters.zoom), parameters);
+			ImageGallery gallery = null;
+			
+			if (Filename.isVolume(filename))
+				gallery = new VolumeGallery(filename, parameters.zoom);
+			else if (Filename.isStack(filename))
+				gallery = new  MetadataGallery(filename, parameters.zoom);
+			else if (Filename.isMetadata(filename))
+				gallery = new MetadataTable(filename, parameters.zoom);
+			createGUI(gallery, parameters);
 			//createGUI(new MetadataGallery(filename, parameters.zoom), parameters);
 		} catch (Exception e) {
 			DEBUG.printException(e);
