@@ -102,67 +102,42 @@ void ProgAngularClassAverage::readParams()
 // Define parameters ==========================================================
 void ProgAngularClassAverage::defineParams()
 {
-    addUsageLine(
-        "Make class average images and corresponding selfiles from angular_projection_matching docfiles.");
-
+    addUsageLine("Make class average images and corresponding selfiles from angular_projection_matching docfiles.");
     addSeeAlsoLine("angular_project_library, angular_projection_matching");
 
-    addParamsLine(
-        "    -i <doc_file>          : Docfile with assigned angles for all experimental particles");
-    addParamsLine(
-        "    --lib <doc_file>       : Docfile with angles used to generate the projection matching library");
-    addParamsLine(
-        "    -o <root_name>         : Output rootname for class averages and selfiles");
-    addParamsLine(
-        "   [--split ]              : Also output averages of random halves of the data");
-    addParamsLine(
-        "   [--wien <img=\"\"> ]    : Apply this Wiener filter to the averages");
-    addParamsLine(
-        "   [--pad <factor=1.> ]    : Padding factor for Wiener correction");
+    addParamsLine("    -i <doc_file>          : Docfile with assigned angles for all experimental particles");
+    addParamsLine("    --lib <doc_file>       : Docfile with angles used to generate the projection matching library");
+    addParamsLine("    -o <root_name>         : Output rootname for class averages and selfiles");
+    addParamsLine("   [--split ]              : Also output averages of random halves of the data");
+    addParamsLine("   [--wien <img=\"\"> ]    : Apply this Wiener filter to the averages");
+    addParamsLine("   [--pad <factor=1.> ]    : Padding factor for Wiener correction");
     addParamsLine("   [--write_selfiles]      : Write class selfiles to disc");
-    addParamsLine(
-        "   [--number_3dreferences <n>] : Number of 3D references (only used with flag --postprocess_metadata).");
-    addParamsLine(
-        "   [--postprocess]: Create block with average images filenames.");
+    addParamsLine("   [--number_3dreferences <n>] : Number of 3D references (only used with flag --postprocess_metadata).");
+    addParamsLine("   [--postprocess]: Create block with average images filenames.");
     addParamsLine("   requires --number_3dreferences;");
-    addParamsLine(
-        "   [--preprocess] : Delete auxiliary files from previous execution. Alloc disk space for output stacks");
+    addParamsLine("   [--preprocess] : Delete auxiliary files from previous execution. Alloc disk space for output stacks");
     addParamsLine("   requires --number_3dreferences;");
-
     addParamsLine("   [--ctfNum <n=1>]        : Ctf group number");
     addParamsLine("   [--ref3dNum <n=1>]      : 3D reference number");
 
-    addParamsLine(
-        "==+ IMAGE SELECTION BASED ON INPUT DOCFILE (select one between: limit 0, F and R ==");
-    addParamsLine(
-        "   [--select <col=\"maxCC\">]     : Column to use for image selection (limit0, limitF or limitR)");
+    addParamsLine("==+ IMAGE SELECTION BASED ON INPUT DOCFILE (select one between: limit 0, F and R ==");
+    addParamsLine("   [--select <col=\"maxCC\">]     : Column to use for image selection (limit0, limitF or limitR)");
     addParamsLine("   [--limit0 <l0>]         : Discard images below <l0>");
     addParamsLine("   [--limitF <lF>]         : Discard images above <lF>");
-    addParamsLine(
-        "   [--limitR <lR>]         : if (lR>0 && lR< 100): discard lowest  <lR> % in each class");
-    addParamsLine(
-        "                           : if (lR<0 && lR>-100): discard highest <lR> % in each class");
+    addParamsLine("   [--limitR <lR>]         : if (lR>0 && lR< 100): discard lowest  <lR> % in each class");
+    addParamsLine("                           : if (lR<0 && lR>-100): discard highest <lR> % in each class");
 
     addParamsLine("==+ REALIGNMENT OF CLASSES ==");
-    addParamsLine(
-        "   [--iter <nr_iter=0>]      : Number of iterations for re-alignment");
-    addParamsLine(
-        "   [--Ri <ri=1>]             : Inner radius to limit rotational search");
-    addParamsLine(
-        "   [--Ro <r0=-1>]            : Outer radius to limit rotational search");
+    addParamsLine("   [--iter <nr_iter=0>]      : Number of iterations for re-alignment");
+    addParamsLine("   [--Ri <ri=1>]             : Inner radius to limit rotational search");
+    addParamsLine("   [--Ro <r0=-1>]            : Outer radius to limit rotational search");
     addParamsLine("                           : ro = -1 -> dim/2-1");
-    addParamsLine(
-        "   [--max_shift <ms=999.>]        : Maximum shift (larger shifts will be set to 0)");
-    addParamsLine(
-        "   [--max_shift_change <msc=999.>] : Discard images that change shift more in the last iteration ");
-    addParamsLine(
-        "   [--max_psi_change <mps=360.>]   : Discard images that change psi more in the last iteration ");
+    addParamsLine("   [--max_shift <ms=999.>]        : Maximum shift (larger shifts will be set to 0)");
+    addParamsLine("   [--max_shift_change <msc=999.>] : Discard images that change shift more in the last iteration ");
+    addParamsLine("   [--max_psi_change <mps=360.>]   : Discard images that change psi more in the last iteration ");
 
-    addExampleLine(
-        "Sample at default values and calculating output averages of random halves of the data",
-        false);
-    addExampleLine(
-        "xmipp_angular_class_average -i proj_match.doc --lib ref_angles.doc -o out_dir --split");
+    addExampleLine("Sample at default values and calculating output averages of random halves of the data",false);
+    addExampleLine("xmipp_angular_class_average -i proj_match.doc --lib ref_angles.doc -o out_dir --split");
 
     addKeywords("class average images");
 }
@@ -332,6 +307,8 @@ void ProgAngularClassAverage::produceSideInfo()
     Polar<std::complex<double> > fP;
 
     produceSplineCoefficients(BSPLINE3, Maux, Iempty());
+    if (Ro < 0)
+    	Ro = XSIZE(Maux)/2 - 1;
     P.getPolarFromCartesianBSpline(Maux, Ri, Ro);
     P.calculateFftwPlans(global_plans);
     fourierTransformRings(P, fP, global_plans, false);

@@ -733,7 +733,7 @@ if int(env['java']):
 
 # Src (apps)
 
-AddXmippProgram('angular_class_average', ['XmippRecons'])
+#AddXmippProgram('angular_class_average', ['XmippRecons'])
 AddXmippProgram('angular_commonline', ['XmippRecons'])
 AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
 AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
