@@ -14,20 +14,15 @@ import xmipp.viewer.ImageGallery;
 import xmipp.viewer.ImageItem;
 import xmipp.viewer.ImageItemRenderer;
 import xmipp.viewer.MetadataGallery;
-import xmipp.viewer.TestRenderer;
 import xmipp.viewer.VolumeGallery;
 import xmipp.viewer.gallery.models.GalleryRowHeaderModel;
-import xmipp.viewer.gallery.models.MDTableModel;
 import xmipp.viewer.gallery.models.GalleryTableColumnModel;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
-import xmipp.viewer.gallery.renderers.ImageRenderer;
 import xmipp.viewer.gallery.renderers.RowHeaderRenderer;
 import xmipp.viewer.windows.ImagesWindowFactory;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Labels;
 import xmipp.utils.Param;
-import xmipp.viewer.gallery.models.AbstractXmippTableModel;
-import xmipp.viewer.gallery.models.VolumeTableModel;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
@@ -167,7 +162,7 @@ public class JFrameGallery extends JFrame {
 		readParams(parameters);
 		isUpdating = true; // avoid handling some changes events
 
-		//FIXME: setTitle(gallery.getTitle());
+		setTitle(gallery.getTitle());
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setMinimumSize(new Dimension(600, 400));
 		setPreferredSize(new Dimension(800, 600));
@@ -205,6 +200,7 @@ public class JFrameGallery extends JFrame {
 		// tableModel.setUseGeometry(jtbUseGeometry.isSelected());
 		menu.enableApplyGeo(containsGeometry);
 		menu.selectApplyGeo(containsGeometry);
+		menu.selectNormalize(gallery.getNormalized());
 		// jtbUseGeometry.setSelected(containsGeometry);
 		// jtbUseGeometry.setEnabled(containsGeometry);
 
@@ -424,7 +420,7 @@ public class JFrameGallery extends JFrame {
 	}
 
 	private void goToImage(int index) {
-		//gallery.setSelected(index);
+		gallery.touchItem(index);
 
 		int coords[] = gallery.getCoords(index);
 
@@ -436,7 +432,7 @@ public class JFrameGallery extends JFrame {
 		rect.translate(-pos.x, -pos.y);
 		jspContent.getViewport().scrollRectToVisible(rect);
 
-		repaint();
+		//repaint();
 	}
 
 	private void avgImage() {
@@ -611,25 +607,6 @@ public class JFrameGallery extends JFrame {
 		toolBar = new javax.swing.JToolBar();
 		toolBar.setRollover(true);
 		toolBar.setLayout(new FlowLayout(FlowLayout.LEFT));
-		// toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.X_AXIS));
-
-		// Add toggle button to set/unset global normalization
-		// jtbNormalize = createToggleButton(Resources.NORMALIZE,
-		// Labels.MSG_NORMALIZE, new java.awt.event.ActionListener() {
-		// public void actionPerformed(java.awt.event.ActionEvent evt) {
-		// jtbNormalizeActionPerformed(evt);
-		// }
-		// });
-		// toolBar.add(jtbNormalize);
-		// // Add toggle button to set/unset apply geometry when read from
-		// metadata
-		// jtbUseGeometry = createToggleButton(Resources.APPLY_GEO,
-		// Labels.MSG_APPLY_GEO, new java.awt.event.ActionListener() {
-		// public void actionPerformed(java.awt.event.ActionEvent evt) {
-		// jtbUseGeometryActionPerformed(evt);
-		// }
-		// });
-		// toolBar.add(jtbUseGeometry);
 
 		//toolBar.addSeparator();
 		jlZoom = new javax.swing.JLabel();

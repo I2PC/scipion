@@ -93,7 +93,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		// DEBUG.printMessage(String.format("col: %d, rows: %d", cols, rows));
 		resizeCache();
 	}
-	
+
 	// Load initial dimensions
 	protected abstract ImageDimension loadDimension() throws Exception;
 
@@ -135,30 +135,36 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public Object getValueAt(int row, int col) {
 		int index = getIndex(row, col);
 
-		if (index >= n)
-			return null;
+		if (index < n) {
+			try {
+				String key = getItemKey(index);
+				// DEBUG.printMessage(String.format("with key %s", key));
+				ImageItem item;
+				// If the element is on cache, just return it
+				if (cache.containsKey(key))
+					item = cache.get(key);
+				else {
+					// If not, create the item and store it for future
+					item = createItem(index, key);
+					cache.put(key, item);
+				}
+				item.isSelected = selection[index];
+				item.showLabel = showLabel;
+				ImagePlus imp = item.getImage();
+				if (normalize)
+					imp.getProcessor().setMinAndMax(normalize_min,
+							normalize_max);
+				else
+					imp.getProcessor().resetMinAndMax();
+				imp.updateImage();
 
-		String key = getItemKey(index);
-		// DEBUG.printMessage(String.format("with key %s", key));
-		ImageItem item;
-		// If the element is on cache, just return it
-		if (cache.containsKey(key))
-			item = cache.get(key);
-		else {
-			// If not, create the item and store it for future
-			item = createItem(index, key);
-			cache.put(key, item);
+				return item;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
-		item.isSelected = selection[index];
-		item.showLabel = showLabel;
-		ImagePlus imp = item.getImage();
-		if (normalize)
-			imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
-		else
-			imp.getProcessor().resetMinAndMax();
-		imp.updateImage();
-		
-		return item;
+
+		return null;
 	}
 
 	public void setRows(int rows) {
@@ -299,7 +305,14 @@ public abstract class ImageGallery extends AbstractTableModel {
 		fireTableDataChanged();
 	}
 
-	/** Set the selection state of an element */
+	/** Set the selection state of an element given its index*/
+	public void touchItem(int i){
+		selection[i] = !selection[i];
+		int[] coords = getCoords(i);
+		fireTableCellUpdated(coords[0], coords[1]);		
+	}
+	
+	/** Set the selection state of an element give row and col */
 	public void touchItem(int row, int col) {
 		int i = getIndex(row, col);
 		selection[i] = !selection[i];
@@ -326,8 +339,13 @@ public abstract class ImageGallery extends AbstractTableModel {
 		}
 	}
 	
+	/** Check normalized state */
+	public boolean getNormalized(){
+		return normalize;
+	}
+
 	/** Calculate min and max if needed for normalization */
-	public void calculateMinAndMax(){
+	public void calculateMinAndMax() {
 		if (!normalize_calculated) {
 			double[] mm = getMinAndMax();
 			normalize_min = mm[0];
@@ -337,23 +355,28 @@ public abstract class ImageGallery extends AbstractTableModel {
 	}
 
 	/** Whether to display the labels */
-	public void setShowLabels(boolean value){
-		if (showLabel != value){
+	public void setShowLabels(boolean value) {
+		if (showLabel != value) {
 			showLabel = value;
 			calculateCellSize();
 			fireTableDataChanged();
 		}
 	}
-	
+
 	/** Retrieve the mininum and maximum of data */
 	protected abstract double[] getMinAndMax();
-	
 
 	/**
 	 * Function to create the key of the item knowing the item index
 	 */
-	protected abstract String getItemKey(int index);
+	protected abstract String getItemKey(int index) throws Exception;
 
+	/**
+	 * Return the main title to be used on windows
+	 */
+	public abstract String getTitle();
+
+	
 	/**
 	 * Function to create the image item. this should be implemented in
 	 * subclasses of ImageGallery
@@ -362,5 +385,6 @@ public abstract class ImageGallery extends AbstractTableModel {
 	 *            The index of the item to create
 	 * @return The item created
 	 */
-	protected abstract ImageItem createItem(int index, String key);
+	protected abstract ImageItem createItem(int index, String key)
+			throws Exception;
 }
