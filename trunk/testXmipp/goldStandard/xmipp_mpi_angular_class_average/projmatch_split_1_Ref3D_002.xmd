@@ -1,0 +1,13 @@
+# XMIPP_STAR_1 * 
+# 
+data_Ref3D_002
+loop_
+ _ref3d
+ _image
+ _order_
+ _ref
+ _angleRot
+ _angleTilt
+ _weight
+ _anglePsi
+ _enabled

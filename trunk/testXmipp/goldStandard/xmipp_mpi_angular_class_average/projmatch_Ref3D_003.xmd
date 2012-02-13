@@ -1,0 +1,24 @@
+# XMIPP_STAR_1 * 
+# 
+data_Ref3D_003
+loop_
+ _ref3d
+ _image
+ _order_
+ _ref
+ _angleRot
+ _angleTilt
+ _weight
+ _anglePsi
+         3  000001@tmpLink/xmipp_mpi_angular_class_average//projmatch_Ref3D_003.stk          1          1     2.600026    39.306555     1.000000     0.000000 
+         3  000002@tmpLink/xmipp_mpi_angular_class_average//projmatch_Ref3D_003.stk          2          2     0.000000    42.271569     1.000000     0.000000 
+         3  000003@tmpLink/xmipp_mpi_angular_class_average//projmatch_Ref3D_003.stk          3          5     2.259572    45.355587     3.000000     0.000000 
+         3  000005@tmpLink/xmipp_mpi_angular_class_average//projmatch_Ref3D_003.stk          5          7    11.229436    45.886946     1.000000     0.000000 
+         3  000006@tmpLink/xmipp_mpi_angular_class_average//projmatch_Ref3D_003.stk          6          9     0.000000    48.464683     2.000000     0.000000 
+         3  000008@tmpLink/xmipp_mpi_angular_class_average//projmatch_Ref3D_003.stk          8         11     8.445664    48.774558     1.000000     0.000000 
+         3  000010@tmpLink/xmipp_mpi_angular_class_average//projmatch_Ref3D_003.stk         10         15     1.991070    51.683594     1.000000     0.000000 
+         3  000011@tmpLink/xmipp_mpi_angular_class_average//projmatch_Ref3D_003.stk         11         16     5.965838    51.818048     1.000000     0.000000 
+         3  000012@tmpLink/xmipp_mpi_angular_class_average//projmatch_Ref3D_003.stk         12         20    21.514690    53.661724     1.000000     0.000000 
+         3  000015@tmpLink/xmipp_mpi_angular_class_average//projmatch_Ref3D_003.stk         15         23     3.753704    54.997515     3.000000     0.000000 
+         3  000016@tmpLink/xmipp_mpi_angular_class_average//projmatch_Ref3D_003.stk         16         24     7.496835    55.170616     1.000000     0.000000 
+         3  000018@tmpLink/xmipp_mpi_angular_class_average//projmatch_Ref3D_003.stk         18         28    22.168187    56.980061     1.000000     0.000000 
