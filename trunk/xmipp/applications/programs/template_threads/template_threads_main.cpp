@@ -67,7 +67,6 @@ size_t blockSize = 1000;
 size_t totalCounter = 0;
 
 /*Here the number of jobs is the radius R that will be sampled */
-size_t &numberOfJobs = R;
 
 void nothingFunctionNew(ThreadArgument &thArg)
 {
