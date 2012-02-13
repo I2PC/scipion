@@ -420,9 +420,10 @@ public class JFrameGallery extends JFrame {
 	}
 
 	private void goToImage(int index) {
-		gallery.touchItem(index);
+		gallery.gotoItem(index);
 
 		int coords[] = gallery.getCoords(index);
+		DEBUG.printMessage(String.format("gotoImage, index: %d, row: %d, col:%d", index, coords[0], coords[1]));
 
 		// Gets current selected cell bounds.
 		Rectangle rect = table.getCellRect(coords[0], coords[1], true);
@@ -432,7 +433,7 @@ public class JFrameGallery extends JFrame {
 		rect.translate(-pos.x, -pos.y);
 		jspContent.getViewport().scrollRectToVisible(rect);
 
-		//repaint();
+		repaint();
 	}
 
 	private void avgImage() {
@@ -771,8 +772,10 @@ public class JFrameGallery extends JFrame {
 	}
 
 	private void jsGoToImageStateChanged(javax.swing.event.ChangeEvent evt) {// GEN-FIRST:event_jsGoToImageStateChanged
-		if (!isUpdating)
+		DEBUG.printMessage("jsGotoImage...");
+		if (!isUpdating){
 			goToImage((Integer) jsGoToImage.getValue() - 1);
+		}
 	}
 
 	private void formComponentResized(java.awt.event.ComponentEvent evt) {// GEN-FIRST:event_formComponentResized

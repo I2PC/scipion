@@ -180,7 +180,6 @@ public abstract class ImageGallery extends AbstractTableModel {
 		this.cols = cols;
 		rows = n / cols + (n % cols == 0 ? 0 : 1);
 		fireTableStructureChanged();
-		// fireTableDataChanged();
 	}
 
 	public void setColumns(int cols) {
@@ -279,8 +278,8 @@ public abstract class ImageGallery extends AbstractTableModel {
 	 */
 	public int[] getCoords(int index) {
 		int[] coords = new int[2];
-		coords[0] = index % cols;
-		coords[1] = index / cols;
+		coords[0] = index / cols;
+		coords[1] = index % cols;
 		return coords;
 	}
 
@@ -301,12 +300,13 @@ public abstract class ImageGallery extends AbstractTableModel {
 		i2 = Math.max(i1, i2);
 		for (; i <= i2; ++i)
 			selection[i] = !selection[i];
-		;
 		fireTableDataChanged();
 	}
 
-	/** Set the selection state of an element given its index*/
-	public void touchItem(int i){
+	/** Goto and select specified item, if there is a selection
+	 * it will be cleared*/
+	public void gotoItem(int i){
+		clearSelection();
 		selection[i] = !selection[i];
 		int[] coords = getCoords(i);
 		fireTableCellUpdated(coords[0], coords[1]);		
