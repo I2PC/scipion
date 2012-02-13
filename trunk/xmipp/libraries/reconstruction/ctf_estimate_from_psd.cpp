@@ -1894,7 +1894,6 @@ void estimate_defoci()
     steps.initConstant(1);
     steps(3) = 0; // Do not optimize kV
     steps(4) = 0; // Do not optimize K
-    global_prm->show_optimization=true;
     for (double defocusStep = initial_defocusStep; defocusStep >= XMIPP_MIN(8000, global_prm->defocus_range); defocusStep /= 2)
     {
         error.resize(CEIL((defocusVF - defocusV0) / defocusStep + 1),
