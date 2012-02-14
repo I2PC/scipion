@@ -3,14 +3,9 @@
 data_
 loop_
  _image
- _shiftX
- _shiftY
- _anglePsi
- _flip
- _maxCC
- _Zscore
  _enabled
- 000001@input/smallStack.stk 2.653871e-17 1.990403e-16     0.000000 0     0.999688     0.921090          1 
- 000002@input/smallStack.stk     0.036422     0.207160     0.000000 0     0.206415     1.732018          1 
- 000003@input/smallStack.stk     0.069099     0.053923     0.000000 0     0.738402     1.077858          1 
- 000004@input/smallStack.stk   -21.010719   -21.249743     0.000000 0     0.196348     1.729141          1 
+ _Zscore
+ 000001@input/smallStack.stk          1     1.694323 
+ 000002@input/smallStack.stk          1     0.606209 
+ 000003@input/smallStack.stk          1     1.337179 
+ 000004@input/smallStack.stk          1     1.724451 
