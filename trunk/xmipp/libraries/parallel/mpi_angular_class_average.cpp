@@ -25,6 +25,11 @@
 
 #include "mpi_angular_class_average.h"
 
+
+MpiProgAngularClassAverage::MpiProgAngularClassAverage()
+{
+}
+
 MpiProgAngularClassAverage::MpiProgAngularClassAverage(int argc, char **argv)
 {
     this->read(argc, argv);
@@ -48,6 +53,8 @@ MpiProgAngularClassAverage::MpiProgAngularClassAverage(int argc, char **argv)
 // Read arguments ==========================================================
 void MpiProgAngularClassAverage::readParams()
 {
+	do_limitR0per = do_limitR0class = do_limitRFclass = do_limit0 = do_limitF = false;
+
     // Read command line
     DFlib.read(getParam("--lib"));
     fn_out = getParam("-o");

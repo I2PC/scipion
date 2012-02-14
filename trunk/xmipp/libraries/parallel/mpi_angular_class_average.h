@@ -148,6 +148,8 @@ public:
     MultidimArray<double> weightArrays1;
     MultidimArray<double> weightArrays2;
 
+    MpiProgAngularClassAverage();
+
     MpiProgAngularClassAverage(int argc, char **argv);
 
     /** Redefine read */
