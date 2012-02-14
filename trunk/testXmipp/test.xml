@@ -115,11 +115,11 @@
 	</PROGRAM>
 	<PROGRAM name="xmipp_classify_kerdensom" mpi="FALSE">
 		<CASE
-			arguments="-i input/clusterVectors.xmd -o %o/kerdensom.xmd --deterministic_annealing 1"
+			arguments="-i input/clusterVectors.xmd --oroot %o/kerdensom --deterministic_annealing 1"
 			changeDir="FALSE" random="TRUE">
 			<!-- random check skip files -->
-			<FILE filename="kerdensom.xmd.raw" />
-			<FILE filename="kerdensom.xmd" />
+			<FILE filename="kerdensom_vectors.xmd.raw" />
+			<FILE filename="kerdensom_vectors.xmd" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_ctf_correct_amplitude3d" mpi="FALSE">

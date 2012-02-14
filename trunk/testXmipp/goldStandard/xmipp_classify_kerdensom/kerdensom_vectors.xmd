@@ -1,0 +1,62 @@
+# XMIPP_STAR_1 * 
+# 
+data_vectorHeader
+ _Xsize 64
+ _Ysize 64
+ _Zsize 1
+ _count 50
+ _ClassificationDataSize 4096
+data_vectorContent
+loop_
+ _image
+ _order_
+ class_000000          0 
+ class_000001          1 
+ class_000002          2 
+ class_000003          3 
+ class_000004          4 
+ class_000005          5 
+ class_000006          6 
+ class_000007          7 
+ class_000008          8 
+ class_000009          9 
+ class_000010         10 
+ class_000011         11 
+ class_000012         12 
+ class_000013         13 
+ class_000014         14 
+ class_000015         15 
+ class_000016         16 
+ class_000017         17 
+ class_000018         18 
+ class_000019         19 
+ class_000020         20 
+ class_000021         21 
+ class_000022         22 
+ class_000023         23 
+ class_000024         24 
+ class_000025         25 
+ class_000026         26 
+ class_000027         27 
+ class_000028         28 
+ class_000029         29 
+ class_000030         30 
+ class_000031         31 
+ class_000032         32 
+ class_000033         33 
+ class_000034         34 
+ class_000035         35 
+ class_000036         36 
+ class_000037         37 
+ class_000038         38 
+ class_000039         39 
+ class_000040         40 
+ class_000041         41 
+ class_000042         42 
+ class_000043         43 
+ class_000044         44 
+ class_000045         45 
+ class_000046         46 
+ class_000047         47 
+ class_000048         48 
+ class_000049         49 
