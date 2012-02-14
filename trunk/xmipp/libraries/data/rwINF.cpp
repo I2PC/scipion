@@ -139,7 +139,7 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
     getDimensions(Xdim, Ydim, Zdim, Ndim);
 
     int _depth;
-    bool _is_signed;
+    bool _is_signed = false;
 
     // Volumes and stacks are not supported
     if (Zdim > 1 || Ndim > 1)
