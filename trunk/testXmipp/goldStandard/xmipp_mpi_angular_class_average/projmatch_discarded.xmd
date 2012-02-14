@@ -1,5 +1,5 @@
 # XMIPP_STAR_1 * 
-# Discarded images
+# Discarded images. Drop 3.32207e-315% of images with lower maxCC. Drop 3.32207e-315% of images with higher maxCC
 data_discarded
 loop_
  _image
