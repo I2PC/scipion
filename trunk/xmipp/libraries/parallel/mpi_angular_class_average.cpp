@@ -26,21 +26,23 @@
 #include "mpi_angular_class_average.h"
 
 MpiProgAngularClassAverage::MpiProgAngularClassAverage(int argc, char **argv)
-{}
-
-void MpiProgAngularClassAverage::read(int argc, char** argv)
 {
-    node = new MpiNode(argc, argv);
-    // Master should read first
-    if (node->isMaster())
-        XmippProgram::read(argc, argv);
-    node->barrierWait();
-    if (!node->isMaster())
-    {
-        verbose = 0;//disable verbose for slaves
-        XmippProgram::read(argc, argv);
-    }
+    this->read(argc, argv);
 }
+
+//void MpiProgAngularClassAverage::read(int argc, char** argv)
+//{
+//    node = new MpiNode(argc, argv);
+//    // Master should read first
+//    if (node->isMaster())
+//        XmippProgram::read(argc, argv);
+//    node->barrierWait();
+//    if (!node->isMaster())
+//    {
+//        verbose = 0;//disable verbose for slaves
+//        XmippProgram::read(argc, argv);
+//    }
+//}
 
 
 // Read arguments ==========================================================
@@ -115,59 +117,38 @@ void MpiProgAngularClassAverage::readParams()
 // Define parameters ==========================================================
 void MpiProgAngularClassAverage::defineParams()
 {
-    addUsageLine(
-        "Make class average images and corresponding selfiles from angular_projection_matching docfiles.");
-
+    addUsageLine("Make class average images and corresponding selfiles from angular_projection_matching docfiles.");
     addSeeAlsoLine("angular_project_library, angular_projection_matching");
+    addKeywords("class average images");
 
-    addParamsLine(
-        "    -i <doc_file>          : Docfile with assigned angles for all experimental particles");
-    addParamsLine(
-        "    --lib <doc_file>       : Docfile with angles used to generate the projection matching library");
-    addParamsLine(
-        "    -o <root_name>         : Output rootname for class averages and selfiles");
-    addParamsLine(
-        "   [--split ]              : Also output averages of random halves of the data");
-    addParamsLine(
-        "   [--wien <img=\"\"> ]    : Apply this Wiener filter to the averages");
-    addParamsLine(
-        "   [--pad <factor=1.> ]    : Padding factor for Wiener correction");
-    addParamsLine(
-        "   [--save_images_assigned_to_classes]    : Save images assigned te each class in output metadatas");
+    addParamsLine("    -i <doc_file>          : Docfile with assigned angles for all experimental particles");
+    addParamsLine("    --lib <doc_file>       : Docfile with angles used to generate the projection matching library");
+    addParamsLine("    -o <root_name>         : Output rootname for class averages and selfiles");
+    addParamsLine("   [--split ]              : Also output averages of random halves of the data");
+    addParamsLine("   [--wien <img=\"\"> ]    : Apply this Wiener filter to the averages");
+    addParamsLine("   [--pad <factor=1.> ]    : Padding factor for Wiener correction");
+    addParamsLine("   [--save_images_assigned_to_classes]    : Save images assigned te each class in output metadatas");
     addParamsLine("alias --siatc;");
-    addParamsLine(
-        "==+ IMAGE SELECTION BASED ON INPUT DOCFILE (select one between: limit 0, F and R ==");
-    addParamsLine(
-        "   [--select <col=\"maxCC\">]     : Column to use for image selection (limit0, limitF or limitR)");
+    addParamsLine("==+ IMAGE SELECTION BASED ON INPUT DOCFILE (select one between: limit 0, F and R ==");
+    addParamsLine("   [--select <col=\"maxCC\">]     : Column to use for image selection (limit0, limitF or limitR)");
     addParamsLine("   [--limit0 <l0>]         : Discard images below <l0>");
     addParamsLine("   [--limitF <lF>]         : Discard images above <lF>");
-    addParamsLine(
-        "   [--limitRclass <lRc>]         : if (lRc>0 && lRc< 100): discard lowest  <lRc> % in each class");
-    addParamsLine(
-        "                           : if (lRc<0 && lR>-100): discard highest <lRc> % in each class");
-    addParamsLine(
-        "   [--limitRper <lRp>]         : if (lRp>0 && lRp< 100): discard lowest  <lRa> %");
-    addParamsLine(
-        "                           : if (lRp<0 && lRp>-100): discard highest <lRa> %");
+    addParamsLine("   [--limitRclass <lRc>]         : if (lRc>0 && lRc< 100): discard lowest  <lRc> % in each class");
+    addParamsLine("                           : if (lRc<0 && lR>-100): discard highest <lRc> % in each class");
+    addParamsLine("   [--limitRper <lRp>]         : if (lRp>0 && lRp< 100): discard lowest  <lRa> %");
+    addParamsLine("                           : if (lRp<0 && lRp>-100): discard highest <lRa> %");
 
     addParamsLine("==+ REALIGNMENT OF CLASSES ==");
-    addParamsLine(
-        "   [--iter <nr_iter=0>]      : Number of iterations for re-alignment");
-    addParamsLine(
-        "   [--Ri <ri=1>]             : Inner radius to limit rotational search");
-    addParamsLine(
-        "   [--Ro <r0=-1>]            : Outer radius to limit rotational search");
+    addParamsLine("   [--iter <nr_iter=0>]      : Number of iterations for re-alignment");
+    addParamsLine("   [--Ri <ri=1>]             : Inner radius to limit rotational search");
+    addParamsLine("   [--Ro <r0=-1>]            : Outer radius to limit rotational search");
     addParamsLine("                           : ro = -1 -> dim/2-1");
     addParamsLine("  [--mpi_job_size <size=10>]   : Number of images sent to a cpu in a single job ");
     addParamsLine("                                : 10 may be a good value");
 
-    addExampleLine(
-        "Sample at default values and calculating output averages of random halves of the data",
-        false);
-    addExampleLine(
-        "xmipp_angular_class_average -i proj_match.doc --lib ref_angles.doc -o out_dir --split");
+    addExampleLine("Sample at default values and calculating output averages of random halves of the data",false);
+    addExampleLine("xmipp_angular_class_average -i proj_match.doc --lib ref_angles.doc -o out_dir --split");
 
-    addKeywords("class average images");
 }
 
 
@@ -205,7 +186,7 @@ void MpiProgAngularClassAverage::run()
             case TAG_I_AM_FREE:
 
                 size = 0;
-                for (int i=0;i<mpi_job_size && jobId < nJobs;i++,size++,jobId++)
+                for (int i=0;i<mpi_job_size && jobId < numberOfJobs;i++,size++,jobId++)
                 {
                     //Some test values for defocus, 3D reference and projection direction
                     mdJobList.getValue(MDL_REF3D, ref3d,  __iterJobs.objId);
@@ -232,7 +213,7 @@ void MpiProgAngularClassAverage::run()
                 {
                     //send work, first int defocus, second 3D reference, 3rd projection
                     // direction and job number
-//#define DEBUG_MPI
+                    //#define DEBUG_MPI
 #ifdef DEBUG_MPI
                     usleep(10000);
                     std::cerr << "Sending job to worker " << status.MPI_SOURCE <<std::endl;
@@ -257,7 +238,7 @@ void MpiProgAngularClassAverage::run()
                 mdJobList.getValue(MDL_ORDER, order_index, lockIndex);
                 mdJobList.getValue(MDL_REF3D, ref3d_index, lockIndex);
 
-//#define DEBUG_MPI
+                //#define DEBUG_MPI
 #ifdef DEBUG_MPI
 
                 std::cerr << "Blocking. lockIndex: " << lockIndex << " | status.MPI_SOURCE: " << status.MPI_SOURCE
@@ -289,7 +270,7 @@ void MpiProgAngularClassAverage::run()
                          MPI_COMM_WORLD, &status);
 
                 lockIndex = lockWeightIndexes[index_lockIndex];
-//#define DEBUG_MPI
+                //#define DEBUG_MPI
 #ifdef DEBUG_MPI
 
                 std::cerr << "Unblocking. lockIndex: " << lockIndex << " | status.MPI_SOURCE: " << status.MPI_SOURCE << std::endl;
@@ -313,7 +294,7 @@ void MpiProgAngularClassAverage::run()
         bool whileLoop = true;
         while (whileLoop)
         {
-//#define DEBUG_MPI
+            //#define DEBUG_MPI
 #ifdef DEBUG_MPI
             std::cerr << "[" << node->rank << "] Asking for a job " <<std::endl;
 #endif
@@ -343,7 +324,7 @@ void MpiProgAngularClassAverage::run()
     if (node->rank == 0)
         mpi_postprocess();
 
-    MPI_Finalize();
+//    MPI_Finalize();
 }
 
 
@@ -360,7 +341,7 @@ void MpiProgAngularClassAverage::mpi_process_loop(double * Def_3Dref_2Dref_JobNo
 
 void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 {
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
     std::cerr<<"["<<node->rank<<"]"
     << " 3DRef:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_3DRef])
@@ -752,18 +733,18 @@ void MpiProgAngularClassAverage::mpi_preprocess()
 
     if (node->rank==0)
     {
-        saveDiscardedImages();
-        createJobList();
-        initDimentions();
-        initWeights();
-        initOutputFiles();
+            saveDiscardedImages();
+            createJobList();
+            initDimentions();
+            initWeights();
+            initOutputFiles();
     }
 
     MPI_Bcast(&Xdim,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&Ydim,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&Zdim,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&Ndim,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&nJobs,1,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&numberOfJobs,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&ref3dNum,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&ctfNum,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&paddim,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -894,7 +875,7 @@ void MpiProgAngularClassAverage::filterInputMetadata()
     }
     else
     {
-    	auxF1 = auxDF;
+        auxF1 = auxDF;
     }
 
     DF.sort(auxF1,MDL_IMAGE);
@@ -1134,7 +1115,7 @@ void MpiProgAngularClassAverage::createJobList()
         };
     std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+6);
     mdJobList.aggregateGroupBy(DF, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);
-    nJobs = mdJobList.size();
+    numberOfJobs = mdJobList.size();
 }
 
 
@@ -1185,6 +1166,7 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
         w1 = w2 = 0.;
 
 #ifdef DEBUG
+
         std::cerr<<" entering iter "<<iter<<std::endl;
 #endif
 

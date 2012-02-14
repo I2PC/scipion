@@ -71,18 +71,9 @@
 #define split1 1
 #define split2 2
 
-class MpiProgAngularClassAverage : public XmippProgram
+class MpiProgAngularClassAverage : public XmippMpiProgram
 {
 public:
-    /**Number of job */
-    int nJobs;
-
-    /** status after am MPI call */
-    MPI_Status status;
-
-    // Mpi node
-    MpiNode *node;
-
     // Seed
     unsigned int master_seed;
 
@@ -160,7 +151,7 @@ public:
     MpiProgAngularClassAverage(int argc, char **argv);
 
     /** Redefine read */
-    void read(int argc, char** argv);
+//    void read(int argc, char** argv);
 
     void readParams();
 
