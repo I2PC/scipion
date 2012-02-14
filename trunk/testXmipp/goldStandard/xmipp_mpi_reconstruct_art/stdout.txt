@@ -1,0 +1,33 @@
+ =====================================================================
+ ART reconstruction method 
+ =====================================================================
+ Projections file             : input/projectionsBacteriorhodopsin.xmd
+ Output rootname              : tmpLink/xmipp_mpi_reconstruct_art/rec_art
+ Iterations                   : 1
+ Lambda                       : 0.01
+
+ More info in the history file: tmpLink/xmipp_mpi_reconstruct_art/rec_art.hist
+ ---------------------------------------------------------------------
+
+Reading angle information ...
+Reading angle information ...
+Reading angle information ...
+Sorting projections ...
+
+ ---------------------------------------------------------------------
+ Projections                  : 181
+ Parallel mode                : ART
+ Number of processors         : 3
+ ---------------------------------------------------------------------
+
+Iteration 0
+Time: 128.406 secs.
+Comms. time: 0.0397091 secs.
+
+
+------ FINAL STATISTICS ------
+
+TOTAL EXECUTION TIME: 133.226
+Communications time: 0.0397501 secs.
+CPU time: 74.9196 secs.
+USER: 74.5817 SYSTEM: 0.337948

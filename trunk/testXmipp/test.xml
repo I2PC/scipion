@@ -1,582 +1,806 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE XMIPP_TESTS SYSTEM "test.dtd">
 <XMIPP_TESTS>
-    <PROGRAM name="xmipp_angular_class_average" mpi="FALSE">
-        <CASE arguments="-i input/angular_class_average/current_angles.doc --lib input/angular_class_average/gallery_Ref3D_003.doc -o %o//projmatch --wien input/angular_class_average/ctf_wien.stk --pad 2 --split" changeDir="FALSE">
-            <FILE filename="proj_match_class.xmp"/>
-            <FILE filename="proj_match_classes.doc"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_angular_discrete_assign" mpi="FALSE">
-        <CASE arguments="-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.doc" changeDir="FALSE">
-            <PRERUN command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol -o %o/reference.stk --sampling_rate 10"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_angular_continuous_assign" mpi="FALSE">
-        <CASE arguments="-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.sel" changeDir="FALSE">
-              <FILE filename="assigned_angles.sel"/>
-        </CASE>
-     </PROGRAM>
-    <PROGRAM name="xmipp_angular_distance" mpi="FALSE">
-        <CASE arguments="--ang1 input/discreteAssignment.xmd --ang2 input/aFewProjections.sel --oroot %o/angleComparison --sym c3 -v 2" changeDir="FALSE">
-             <FILE filename="angleComparison.xmd"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_angular_distribution_show" mpi="FALSE">
-        <CASE arguments="-i input/randomAngularDistribution.sel -o %o/distribution.ps ps" changeDir="FALSE">
-             <FILE filename="distribution.ps"/>
-        </CASE>
-        <CASE arguments="-i input/randomAngularDistribution.sel -o %o/distribution.hist histogram" changeDir="FALSE">
-             <FILE filename="distribution.hist"/>
-        </CASE>
-        <CASE arguments="-i input/randomAngularDistribution.sel -o %o/distribution.bild chimera" changeDir="FALSE">
-             <FILE filename="distribution.bild"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_angular_neighbourhood" mpi="FALSE">
-        <CASE arguments="-i1 input/randomAngularDistribution.sel -i2 input/aFewProjections.sel -o %o/neighborhood.sel" changeDir="FALSE">
-             <FILE filename="neighborhood.sel"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_angular_project_library" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5" changeDir="FALSE">
-             <FILE filename="output_projections.doc"/>
-             <FILE filename="output_projections.stk"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --shears" changeDir="FALSE">
-             <FILE filename="output_projections.doc"/>
-             <FILE filename="output_projections.stk"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --compute_neighbors --experimental_images input/aFewProjections.sel  --angular_distance -1" changeDir="FALSE">
-             <FILE filename="output_projections.doc"/>
-             <FILE filename="output_projections.stk"/>
-             <FILE filename="output_projections_sampling.xmd"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --compute_neighbors --experimental_images input/aFewProjections.sel  --angular_distance 10" changeDir="FALSE">
-             <FILE filename="output_projections.doc"/>
-             <FILE filename="output_projections.stk"/>
-             <FILE filename="output_projections_sampling.xmd"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --compute_neighbors --experimental_images input/aFewProjections.sel  --angular_distance 10 --near_exp_data" changeDir="FALSE">
-             <FILE filename="output_projections.doc"/>
-             <FILE filename="output_projections.stk"/>
-             <FILE filename="output_projections_sampling.xmd"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_mpi_angular_projection_matching" mpi="TRUE">
-        <CASE arguments="-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.stk" changeDir="FALSE">
-            <PRERUN command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/reference.stk --sampling_rate 10 --compute_neighbors --angular_distance -1"/>
-             <FILE filename="assigned_angles.txt"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_angular_rotate" mpi="FALSE">
-        <CASE arguments="-i input/aFewProjections.sel --axis 10 1 2 3 -o %o/newAnglesFewProjections.sel" changeDir="FALSE">
-             <FILE filename="newAnglesFewProjections.sel"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_classify_analyze_cluster" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk --ref 1@input/smallStack.stk -o %o/pca.xmd" changeDir="FALSE">
-             <FILE filename="pca.xmd"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_classify_kerdensom" mpi="FALSE">
-        <CASE arguments="-i input/clusterVectors.xmd -o %o/kerdensom.xmd --deterministic_annealing 1" changeDir="FALSE"  random="TRUE">
-             <!-- random check skip files -->
-             <FILE filename="kerdensom.xmd.raw"/>
-             <FILE filename="kerdensom.xmd"/>
-        </CASE>
-    </PROGRAM>
-     <PROGRAM name="xmipp_ctf_correct_amplitude3d" mpi="FALSE">
-        <CASE arguments="-i input/ctf_correct3d.xmd --oroot %o/wiener" changeDir="FALSE">
-            <FILE filename="wiener_deconvolved.vol"/>
-            <FILE filename="wiener_ctffiltered_group000001.vol"/>
-        </CASE>
-     </PROGRAM>
-     <PROGRAM name="xmipp_ctf_correct_idr" mpi="FALSE">
-        <CASE arguments="-i input/projectionsBacteriorhodopsinWithCTF.sel --vol input/phantomBacteriorhodopsin.vol -o %o/idr.stk" changeDir="FALSE">
-            <FILE filename="idr.stk"/>
-        </CASE>
-     </PROGRAM>
-     <PROGRAM name="xmipp_ctf_create_ctfdat" mpi="FALSE">
-        <CASE arguments="-i input/micrographs.xmd --ctfs input/ctfs.xmd --oroot %o/output" changeDir="FALSE">
-            <FILE filename="output.ctfdat"/>
-        </CASE>
-        <CASE arguments="-i input/micrographs.xmd --defocus input/defocus.xmd input/input.ctfparam --oroot %o/output" changeDir="FALSE">
-            <FILE filename="output.ctfdat"/>
-	    <FILE filename="output000001.ctfparam"/>
-	    <FILE filename="output000002.ctfparam"/>
-        </CASE>
-     </PROGRAM>
+	<PROGRAM name="xmipp_angular_class_average" mpi="FALSE">
+		<CASE
+			arguments="-i input/angular_class_average/current_angles.doc --lib input/angular_class_average/gallery_Ref3D_003.doc -o %o//projmatch --wien input/angular_class_average/ctf_wien.stk --pad 2 --split"
+			changeDir="FALSE">
+			<FILE filename="proj_match_class.xmp" />
+			<FILE filename="proj_match_classes.doc" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_angular_discrete_assign" mpi="FALSE">
+		<CASE
+			arguments="-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.doc"
+			changeDir="FALSE">
+			<PRERUN
+				command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol -o %o/reference.stk --sampling_rate 10" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_angular_continuous_assign" mpi="FALSE">
+		<CASE
+			arguments="-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.sel"
+			changeDir="FALSE">
+			<FILE filename="assigned_angles.sel" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_angular_distance" mpi="FALSE">
+		<CASE
+			arguments="--ang1 input/discreteAssignment.xmd --ang2 input/aFewProjections.sel --oroot %o/angleComparison --sym c3 -v 2"
+			changeDir="FALSE">
+			<FILE filename="angleComparison.xmd" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_angular_distribution_show" mpi="FALSE">
+		<CASE
+			arguments="-i input/randomAngularDistribution.sel -o %o/distribution.ps ps"
+			changeDir="FALSE">
+			<FILE filename="distribution.ps" />
+		</CASE>
+		<CASE
+			arguments="-i input/randomAngularDistribution.sel -o %o/distribution.hist histogram"
+			changeDir="FALSE">
+			<FILE filename="distribution.hist" />
+		</CASE>
+		<CASE
+			arguments="-i input/randomAngularDistribution.sel -o %o/distribution.bild chimera"
+			changeDir="FALSE">
+			<FILE filename="distribution.bild" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_angular_neighbourhood" mpi="FALSE">
+		<CASE
+			arguments="-i1 input/randomAngularDistribution.sel -i2 input/aFewProjections.sel -o %o/neighborhood.sel"
+			changeDir="FALSE">
+			<FILE filename="neighborhood.sel" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_angular_project_library" mpi="FALSE">
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5"
+			changeDir="FALSE">
+			<FILE filename="output_projections.doc" />
+			<FILE filename="output_projections.stk" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --shears"
+			changeDir="FALSE">
+			<FILE filename="output_projections.doc" />
+			<FILE filename="output_projections.stk" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --compute_neighbors --experimental_images input/aFewProjections.sel  --angular_distance -1"
+			changeDir="FALSE">
+			<FILE filename="output_projections.doc" />
+			<FILE filename="output_projections.stk" />
+			<FILE filename="output_projections_sampling.xmd" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --compute_neighbors --experimental_images input/aFewProjections.sel  --angular_distance 10"
+			changeDir="FALSE">
+			<FILE filename="output_projections.doc" />
+			<FILE filename="output_projections.stk" />
+			<FILE filename="output_projections_sampling.xmd" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --compute_neighbors --experimental_images input/aFewProjections.sel  --angular_distance 10 --near_exp_data"
+			changeDir="FALSE">
+			<FILE filename="output_projections.doc" />
+			<FILE filename="output_projections.stk" />
+			<FILE filename="output_projections_sampling.xmd" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_mpi_angular_projection_matching" mpi="TRUE">
+		<CASE
+			arguments="-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.stk"
+			changeDir="FALSE">
+			<PRERUN
+				command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/reference.stk --sampling_rate 10 --compute_neighbors --angular_distance -1" />
+			<FILE filename="assigned_angles.txt" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_angular_rotate" mpi="FALSE">
+		<CASE
+			arguments="-i input/aFewProjections.sel --axis 10 1 2 3 -o %o/newAnglesFewProjections.sel"
+			changeDir="FALSE">
+			<FILE filename="newAnglesFewProjections.sel" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_classify_analyze_cluster" mpi="FALSE">
+		<CASE
+			arguments="-i input/smallStack.stk --ref 1@input/smallStack.stk -o %o/pca.xmd"
+			changeDir="FALSE">
+			<FILE filename="pca.xmd" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_classify_kerdensom" mpi="FALSE">
+		<CASE
+			arguments="-i input/clusterVectors.xmd -o %o/kerdensom.xmd --deterministic_annealing 1"
+			changeDir="FALSE" random="TRUE">
+			<!-- random check skip files -->
+			<FILE filename="kerdensom.xmd.raw" />
+			<FILE filename="kerdensom.xmd" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_ctf_correct_amplitude3d" mpi="FALSE">
+		<CASE arguments="-i input/ctf_correct3d.xmd --oroot %o/wiener"
+			changeDir="FALSE">
+			<FILE filename="wiener_deconvolved.vol" />
+			<FILE filename="wiener_ctffiltered_group000001.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_ctf_correct_idr" mpi="FALSE">
+		<CASE
+			arguments="-i input/projectionsBacteriorhodopsinWithCTF.sel --vol input/phantomBacteriorhodopsin.vol -o %o/idr.stk"
+			changeDir="FALSE">
+			<FILE filename="idr.stk" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_ctf_create_ctfdat" mpi="FALSE">
+		<CASE
+			arguments="-i input/micrographs.xmd --ctfs input/ctfs.xmd --oroot %o/output"
+			changeDir="FALSE">
+			<FILE filename="output.ctfdat" />
+		</CASE>
+		<CASE
+			arguments="-i input/micrographs.xmd --defocus input/defocus.xmd input/input.ctfparam --oroot %o/output"
+			changeDir="FALSE">
+			<FILE filename="output.ctfdat" />
+			<FILE filename="output000001.ctfparam" />
+			<FILE filename="output000002.ctfparam" />
+		</CASE>
+	</PROGRAM>
 
-    <PROGRAM name="xmipp_ctf_enhance_psd" mpi="FALSE">
-        <CASE arguments="-i input/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/enhanced_psd.xmp" changeDir="FALSE">
-            <FILE filename="enhanced_psd.xmp"/>
-        </CASE>
-     </PROGRAM>
-    <PROGRAM name="xmipp_ctf_estimate_from_micrograph" mpi="FALSE">
-        <CASE arguments="--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --dont_estimate_ctf" changeDir="FALSE">
-            <FILE filename="micrograph.psd"/>
-        </CASE>
-        <CASE arguments="--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5" changeDir="FALSE">
-            <FILE filename="micrograph.psd"/>
-            <FILE filename="micrograph_ctfmodel_halfplane.xmp"/>
-            <FILE filename="micrograph_ctfmodel_quadrant.xmp"/>
-            <FILE filename="micrograph.ctfparam"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_ctf_estimate_from_psd" mpi="FALSE">
-        <CASE arguments="--psd down1_01nov26b.001.001.001.002_Periodogramavg.psd --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000" changeDir="TRUE">
-            <PRERUN command="cp input/down1_01nov26b.001.001.001.002_Periodogramavg.psd %o"/>
-            <FILE filename="down1_01nov26b.001.001.001.002_Periodogramavg.psd"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_ctf_group" mpi="FALSE">
-        <CASE arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6" changeDir="FALSE"/>
-        <CASE arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc" changeDir="FALSE"/>
-    </PROGRAM>
-    <PROGRAM name="xmipp_ctf_phase_flip" mpi="FALSE">
-        <CASE arguments="-i input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc -o %o/micrographFlipped.mrc --ctf input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc.ctfparam" changeDir="FALSE">
-            <FILE filename="micrographFlipped.mrc"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_ctf_sort_psds" mpi="FALSE">
-        <CASE arguments="-i all_micrographs.sel" changeDir="TRUE">
-            <PRERUN command="cp -r input/Protocol_Preprocess_Micrographs/Preprocessing/* %o"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_image_align" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk --oroot %o/aligned" changeDir="FALSE">
-            <FILE filename="aligned_alignment.xmd"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_image_convert" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk -o %o/smallStack.mrcs -t stk" changeDir="FALSE">
-            <FILE filename="smallStack.mrcs"/></CASE>
-        <CASE arguments="-i input/singleImage.spi -o %o/singleImage.mrc" changeDir="FALSE">
-            <FILE filename="singleImage.mrc"/></CASE>
-        <CASE arguments="-i input/singleImage.spi -o %o/singleImage.raw" changeDir="FALSE">
-            <FILE filename="singleImage.raw"/></CASE>
-        <CASE arguments="-i input/singleImage.spi -o %o/singleImage.img" changeDir="FALSE">
-            <FILE filename="singleImage.img"/></CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_image_header" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk --extract -o %o/header.doc" changeDir="FALSE">
-            <FILE filename="header.doc"/>
-        </CASE>
-        <CASE arguments="-i %o/smallStack.doc --assign" changeDir="FALSE">
-            <PRERUN command="cp input/smallStack.stk %o"/>
-            <PRERUN command=" xmipp_metadata_selfile_create -p %o/smallStack.stk -o %o/smallStack.doc -s"/>
-            <PRERUN command=" xmipp_metadata_utilities -i %o/smallStack.doc -o %o/smallStack.doc --fill Y constant 2"/>
-            <FILE filename="smallStack.doc"/>
-            <FILE filename="smallStack.stk"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_image_rotational_spectra" mpi="FALSE">
-        <CASE arguments="-i input/images_some.stk -o %o/spectra.xmd --r1 10 --r2 40" changeDir="FALSE">
-            <FILE filename="spectra.xmd"/>
-            <FILE filename="spectra.xmd.raw"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_image_separate_objects" mpi="FALSE">
-        <CASE arguments="-i input/maskBacteriorhodopsin.vol --oroot %o/mask" changeDir="FALSE">
-            <FILE filename="mask000001.vol"/>
-            <FILE filename="mask000002.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_image_statistics" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk -o %o/stats.xmd" changeDir="FALSE">
-            <FILE filename="stats.xmd"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_image_vectorize" mpi="FALSE">
-        <CASE arguments="-i input/aFewProjections.sel -o %o/vectors.xmd" changeDir="FALSE">
-            <FILE filename="vectors.xmd"/>
-        </CASE>
-        <CASE arguments="-i input/vectors.xmd -o %o/images.stk" changeDir="FALSE">
-            <FILE filename="images.stk"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_metadata_convert_to_spider" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk -o %o/listNew.doc --action extract_selfile" changeDir="FALSE">
-            <FILE filename="listNew.doc"/>
-        </CASE>
-        <CASE arguments="-i input/smallStack.stk -o %o/listOld.doc --action extract_selfile old" changeDir="FALSE">
-            <FILE filename="listOld.doc"/>
-        </CASE>
-        <CASE arguments="-i input/smallStack.stk -o %o/angles.doc --action extract_angles rot psi tilt --disregard_disabled" changeDir="FALSE">
-            <FILE filename="angles.doc"/>
-        </CASE>
-        <CASE arguments="-i input/smallStack.stk -o %o/count.doc --action generate_count" changeDir="FALSE">
-            <FILE filename="count.doc"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_metadata_utilities" mpi="FALSE">
-        <CASE arguments="-i input/mD1.doc --set union input/mD2.doc  -o %o/out1.doc" changeDir="FALSE">
-            <FILE filename="out1.doc"/>
-        </CASE>
-        <CASE arguments="-i input/mD1.doc --operate sort -o %o/out2.doc" changeDir="FALSE">
-            <FILE filename="out2.doc"/>
-        </CASE>
-        <CASE arguments="-i input/mD1.doc --operate add_column &quot;shiftX shiftY&quot; -o %o/out3.doc" changeDir="FALSE">
-            <FILE filename="out3.doc"/>
-        </CASE>
-        <CASE arguments="-i input/mD1.doc --fill shiftX rand_uniform 0 10 -o %o/out4.doc" changeDir="FALSE" random="TRUE">
-            <FILE filename="out4.doc"/>
-        </CASE>
-        <CASE arguments="-i input/mD1.doc -l &quot;shiftX shiftY&quot; constant 5 -o %o/out5.doc" changeDir="FALSE">
-            <FILE filename="out5.doc"/>
-        </CASE>
-        <CASE arguments="-i input/mD1.doc --query select &quot;angleRot > 10 AND anglePsi &lt; 0.5&quot; -o %o/out6.doc" changeDir="FALSE">
-            <FILE filename="out6.doc"/>
-        </CASE>
-        <CASE arguments="-i input/mD1.doc --operate modify_values &quot;angleRot=(angleRot*3.1416/180.)&quot; -o %o/out7.doc" changeDir="FALSE">
-            <FILE filename="out7.doc"/>
-        </CASE>
-        <CASE arguments="-i input/mD1.doc --operate modify_values &quot;image=replace(image, 'xmp','spi')&quot; -o %o/out8.doc" changeDir="FALSE">
-            <FILE filename="out8.doc"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_micrograph_scissor" mpi="FALSE">
-        <CASE arguments="-i input/micrograph8bits.tif --pos input/micrograph8bits.tif.Common.pos --oroot %o/images --Xdim 256" changeDir="FALSE" random="TRUE">
-            <FILE filename="images.stk"/>
-            <FILE filename="images.sel"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_ml_align2d" mpi="FALSE">
-        <CASE arguments="-i input/images_some.stk --ref input/seeds2.stk --oroot %o/ml2d --fast --mirror" changeDir="FALSE" random="TRUE">
-            <FILE filename="ml2d_final_images.xmd"/>
-            <FILE filename="ml2d_final_logs.xmd"/>
-            <FILE filename="ml2d_final_refs.stk"/>
-            <FILE filename="ml2d_final_refs.xmd"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_mpi_angular_class_average" mpi="TRUE">
-	<CASE arguments="-i input/angular_class_average/current_angles.doc --lib input/angular_class_average/gallery_Ref3D_003.doc -o %o//projmatch --wien input/angular_class_average/ctf_wien.stk --pad 2 --split" changeDir="FALSE">
-            <FILE filename="projmatch_discarded.xmd"/>
-            <FILE filename="projmatch_Ref3D_001.stk"/>
-            <FILE filename="projmatch_Ref3D_001.xmd"/>
-	</CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_mpi_angular_continuous_assign" mpi="TRUE">
-        <CASE arguments="-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.xmd" changeDir="FALSE">
-              <FILE filename="assigned_angles.xmd"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_mpi_classify_CL2D" mpi="TRUE">
-        <CASE arguments="-i input/projectionsBacteriorhodopsin.stk --codes 4 -o %o/class --iter 5" changeDir="FALSE" random="TRUE">
-            <FILE filename="class_aligned.stk"/>
-            <FILE filename="class_level_00.sel"/>
-            <FILE filename="class_level_00.stk"/>
-            <FILE filename="class.stk"/>
-            <FILE filename="class.sel"/>
-        </CASE>
-    </PROGRAM>
-     <PROGRAM name="xmipp_mpi_ctf_correct_idr" mpi="TRUE">
-        <CASE arguments="-i input/projectionsBacteriorhodopsinWithCTF.sel --vol input/phantomBacteriorhodopsin.vol -o %o/idr.stk" changeDir="FALSE">
-            <FILE filename="idr.stk"/>
-        </CASE>
-     </PROGRAM>
+	<PROGRAM name="xmipp_ctf_enhance_psd" mpi="FALSE">
+		<CASE
+			arguments="-i input/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/enhanced_psd.xmp"
+			changeDir="FALSE">
+			<FILE filename="enhanced_psd.xmp" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_ctf_estimate_from_micrograph" mpi="FALSE">
+		<CASE
+			arguments="--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --dont_estimate_ctf"
+			changeDir="FALSE">
+			<FILE filename="micrograph.psd" />
+		</CASE>
+		<CASE
+			arguments="--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5"
+			changeDir="FALSE">
+			<FILE filename="micrograph.psd" />
+			<FILE filename="micrograph_ctfmodel_halfplane.xmp" />
+			<FILE filename="micrograph_ctfmodel_quadrant.xmp" />
+			<FILE filename="micrograph.ctfparam" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_ctf_estimate_from_psd" mpi="FALSE">
+		<CASE
+			arguments="--psd down1_01nov26b.001.001.001.002_Periodogramavg.psd --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000"
+			changeDir="TRUE">
+			<PRERUN
+				command="cp input/down1_01nov26b.001.001.001.002_Periodogramavg.psd %o" />
+			<FILE filename="down1_01nov26b.001.001.001.002_Periodogramavg.psd" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_ctf_group" mpi="FALSE">
+		<CASE
+			arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6"
+			changeDir="FALSE" />
+		<CASE
+			arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc"
+			changeDir="FALSE" />
+	</PROGRAM>
+	<PROGRAM name="xmipp_ctf_phase_flip" mpi="FALSE">
+		<CASE
+			arguments="-i input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc -o %o/micrographFlipped.mrc --ctf input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc.ctfparam"
+			changeDir="FALSE">
+			<FILE filename="micrographFlipped.mrc" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_ctf_sort_psds" mpi="FALSE">
+		<CASE arguments="-i all_micrographs.sel" changeDir="TRUE">
+			<PRERUN
+				command="cp -r input/Protocol_Preprocess_Micrographs/Preprocessing/* %o" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_image_align" mpi="FALSE">
+		<CASE arguments="-i input/smallStack.stk --oroot %o/aligned"
+			changeDir="FALSE">
+			<FILE filename="aligned_alignment.xmd" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_image_convert" mpi="FALSE">
+		<CASE arguments="-i input/smallStack.stk -o %o/smallStack.mrcs -t stk"
+			changeDir="FALSE">
+			<FILE filename="smallStack.mrcs" />
+		</CASE>
+		<CASE arguments="-i input/singleImage.spi -o %o/singleImage.mrc"
+			changeDir="FALSE">
+			<FILE filename="singleImage.mrc" />
+		</CASE>
+		<CASE arguments="-i input/singleImage.spi -o %o/singleImage.raw"
+			changeDir="FALSE">
+			<FILE filename="singleImage.raw" />
+		</CASE>
+		<CASE arguments="-i input/singleImage.spi -o %o/singleImage.img"
+			changeDir="FALSE">
+			<FILE filename="singleImage.img" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_image_header" mpi="FALSE">
+		<CASE arguments="-i input/smallStack.stk --extract -o %o/header.doc"
+			changeDir="FALSE">
+			<FILE filename="header.doc" />
+		</CASE>
+		<CASE arguments="-i %o/smallStack.doc --assign" changeDir="FALSE">
+			<PRERUN command="cp input/smallStack.stk %o" />
+			<PRERUN
+				command=" xmipp_metadata_selfile_create -p %o/smallStack.stk -o %o/smallStack.doc -s" />
+			<PRERUN
+				command=" xmipp_metadata_utilities -i %o/smallStack.doc -o %o/smallStack.doc --fill Y constant 2" />
+			<FILE filename="smallStack.doc" />
+			<FILE filename="smallStack.stk" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_image_rotational_spectra" mpi="FALSE">
+		<CASE arguments="-i input/images_some.stk -o %o/spectra.xmd --r1 10 --r2 40"
+			changeDir="FALSE">
+			<FILE filename="spectra.xmd" />
+			<FILE filename="spectra.xmd.raw" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_image_separate_objects" mpi="FALSE">
+		<CASE arguments="-i input/maskBacteriorhodopsin.vol --oroot %o/mask"
+			changeDir="FALSE">
+			<FILE filename="mask000001.vol" />
+			<FILE filename="mask000002.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_image_statistics" mpi="FALSE">
+		<CASE arguments="-i input/smallStack.stk -o %o/stats.xmd"
+			changeDir="FALSE">
+			<FILE filename="stats.xmd" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_image_vectorize" mpi="FALSE">
+		<CASE arguments="-i input/aFewProjections.sel -o %o/vectors.xmd"
+			changeDir="FALSE">
+			<FILE filename="vectors.xmd" />
+		</CASE>
+		<CASE arguments="-i input/vectors.xmd -o %o/images.stk"
+			changeDir="FALSE">
+			<FILE filename="images.stk" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_metadata_convert_to_spider" mpi="FALSE">
+		<CASE
+			arguments="-i input/smallStack.stk -o %o/listNew.doc --action extract_selfile"
+			changeDir="FALSE">
+			<FILE filename="listNew.doc" />
+		</CASE>
+		<CASE
+			arguments="-i input/smallStack.stk -o %o/listOld.doc --action extract_selfile old"
+			changeDir="FALSE">
+			<FILE filename="listOld.doc" />
+		</CASE>
+		<CASE
+			arguments="-i input/smallStack.stk -o %o/angles.doc --action extract_angles rot psi tilt --disregard_disabled"
+			changeDir="FALSE">
+			<FILE filename="angles.doc" />
+		</CASE>
+		<CASE
+			arguments="-i input/smallStack.stk -o %o/count.doc --action generate_count"
+			changeDir="FALSE">
+			<FILE filename="count.doc" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_metadata_utilities" mpi="FALSE">
+		<CASE arguments="-i input/mD1.doc --set union input/mD2.doc  -o %o/out1.doc"
+			changeDir="FALSE">
+			<FILE filename="out1.doc" />
+		</CASE>
+		<CASE arguments="-i input/mD1.doc --operate sort -o %o/out2.doc"
+			changeDir="FALSE">
+			<FILE filename="out2.doc" />
+		</CASE>
+		<CASE
+			arguments="-i input/mD1.doc --operate add_column &quot;shiftX shiftY&quot; -o %o/out3.doc"
+			changeDir="FALSE">
+			<FILE filename="out3.doc" />
+		</CASE>
+		<CASE
+			arguments="-i input/mD1.doc --fill shiftX rand_uniform 0 10 -o %o/out4.doc"
+			changeDir="FALSE" random="TRUE">
+			<FILE filename="out4.doc" />
+		</CASE>
+		<CASE
+			arguments="-i input/mD1.doc -l &quot;shiftX shiftY&quot; constant 5 -o %o/out5.doc"
+			changeDir="FALSE">
+			<FILE filename="out5.doc" />
+		</CASE>
+		<CASE
+			arguments="-i input/mD1.doc --query select &quot;angleRot > 10 AND anglePsi &lt; 0.5&quot; -o %o/out6.doc"
+			changeDir="FALSE">
+			<FILE filename="out6.doc" />
+		</CASE>
+		<CASE
+			arguments="-i input/mD1.doc --operate modify_values &quot;angleRot=(angleRot*3.1416/180.)&quot; -o %o/out7.doc"
+			changeDir="FALSE">
+			<FILE filename="out7.doc" />
+		</CASE>
+		<CASE
+			arguments="-i input/mD1.doc --operate modify_values &quot;image=replace(image, 'xmp','spi')&quot; -o %o/out8.doc"
+			changeDir="FALSE">
+			<FILE filename="out8.doc" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_micrograph_scissor" mpi="FALSE">
+		<CASE
+			arguments="-i input/micrograph8bits.tif --pos input/micrograph8bits.tif.Common.pos --oroot %o/images --Xdim 256"
+			changeDir="FALSE" random="TRUE">
+			<FILE filename="images.stk" />
+			<FILE filename="images.sel" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_ml_align2d" mpi="FALSE">
+		<CASE
+			arguments="-i input/images_some.stk --ref input/seeds2.stk --oroot %o/ml2d --fast --mirror"
+			changeDir="FALSE" random="TRUE">
+			<FILE filename="ml2d_final_images.xmd" />
+			<FILE filename="ml2d_final_logs.xmd" />
+			<FILE filename="ml2d_final_refs.stk" />
+			<FILE filename="ml2d_final_refs.xmd" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_mpi_angular_class_average" mpi="TRUE">
+		<CASE
+			arguments="-i input/angular_class_average/current_angles.doc --lib input/angular_class_average/gallery_Ref3D_003.doc -o %o//projmatch --wien input/angular_class_average/ctf_wien.stk --pad 2 --split"
+			changeDir="FALSE">
+			<FILE filename="projmatch_discarded.xmd" />
+			<FILE filename="projmatch_Ref3D_001.stk" />
+			<FILE filename="projmatch_Ref3D_001.xmd" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_mpi_angular_continuous_assign" mpi="TRUE">
+		<CASE
+			arguments="-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.xmd"
+			changeDir="FALSE">
+			<FILE filename="assigned_angles.xmd" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_mpi_classify_CL2D" mpi="TRUE">
+		<CASE
+			arguments="-i input/projectionsBacteriorhodopsin.stk --codes 4 -o %o/class --iter 5"
+			changeDir="FALSE" random="TRUE">
+			<FILE filename="class_aligned.stk" />
+			<FILE filename="class_level_00.sel" />
+			<FILE filename="class_level_00.stk" />
+			<FILE filename="class.stk" />
+			<FILE filename="class.sel" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_mpi_ctf_correct_idr" mpi="TRUE">
+		<CASE
+			arguments="-i input/projectionsBacteriorhodopsinWithCTF.sel --vol input/phantomBacteriorhodopsin.vol -o %o/idr.stk"
+			changeDir="FALSE">
+			<FILE filename="idr.stk" />
+		</CASE>
+	</PROGRAM>
 
-    <PROGRAM name="xmipp_mpi_image_sort" mpi="TRUE">
-        <CASE arguments="-i input/aFewProjections.sel --oroot %o/sorted" changeDir="FALSE">
-             <FILE filename="sorted.stk"/>
-             <FILE filename="sorted.sel"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_nma_alignment" mpi="FALSE">
-        <CASE arguments="-i input/2tbv_prj00001.xmp  --pdb input/2tbv.pdb --modes input/modelist.xmd  --deformation_scale 1000 --sampling_rate 6.4 -o %o/output.txt --resume" changeDir="FALSE">
-             <FILE filename="output.txt"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_mpi_nma_alignment" mpi="TRUE">
-        <CASE arguments="-i input/2tbv_prj00001.xmp  --pdb input/2tbv.pdb --modes input/modelist.xmd  --deformation_scale 1000 --sampling_rate 6.4 -o %o/output.txt --resume" changeDir="FALSE">
-             <FILE filename="output.txt"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_mpi_reconstruct_wbp" mpi="TRUE">
-        <CASE arguments="-i input/projectionsBacteriorhodopsin.xmd --use_each_image -o  %o/recon.vol " changeDir="FALSE">
-            <FILE filename="recon.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_mpi_run" mpi="TRUE">
-        <CASE arguments="-i commands.cmd" changeDir="TRUE">
-             <PRERUN command="cp input/commands.cmd %o"/>
-             <FILE filename="file1.txt"/>
-             <FILE filename="file2.txt"/>
-             <FILE filename="file3.txt"/>
-             <FILE filename="file4.txt"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_pdb_nma_deform" mpi="FALSE">
-        <CASE arguments="--pdb input/2tbv.pdb -o %o/deformed.pdb --nma input/modelist.xmd --deformations 1000" changeDir="FALSE">
-            <FILE filename="deformed.pdb"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_phantom_create" mpi="FALSE">
-        <CASE arguments="-i input/rings.descr -o %o/rings.vol" changeDir="FALSE">
-            <FILE filename="rings.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_phantom_project" mpi="FALSE"><!-- one case in extra -->
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/image.xmp --angles 0 0 0" changeDir="FALSE">
-            <FILE filename="image.xmp"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/clusterProjection.param" changeDir="FALSE">
-            <FILE filename="projections.stk"/>
-            <FILE filename="projections.sel"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/uniformProjection.param" changeDir="FALSE">
-            <FILE filename="projections.stk"/>
-            <FILE filename="projections.sel"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/uniformProjection.param --shears" changeDir="FALSE">
-            <FILE filename="projections.stk"/>
-            <FILE filename="projections.sel"/>
-        </CASE>
-        <CASE arguments="-i input/Crystal/cylinder_with_axis.descr -o %o/MRCproj     --params input/Crystal/MRC_projection.param --crystal input/Crystal/MRC_crystal_projection.param" changeDir="FALSE" random="TRUE">
-            <FILE filename="MRCproj.stk"/>
-            <FILE filename="MRCproj.sel"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_phantom_simulate_microscope" mpi="FALSE">
-        <CASE arguments="-i input/projectionsBacteriorhodopsin.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam --noNoise" changeDir="FALSE" random="FALSE">
-            <FILE filename="smallStackPlusCtf.stk"/>
-        </CASE>
-        <CASE arguments="-i input/projectionsBacteriorhodopsin.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam --targetSNR 0.3" changeDir="FALSE" random="FALSE">
-            <FILE filename="smallStackPlusCtf.stk"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_phantom_transform" mpi="FALSE">
-        <CASE arguments="-i input/1o7d.pdb -o %o/shifted.pdb --operation shift 1 2 3" changeDir="FALSE" random="FALSE">
-            <FILE filename="shifted.pdb"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_reconstruct_art" mpi="FALSE">
-        <CASE arguments="-i input/projectionsBacteriorhodopsin.xmd -n 2 -o  %o/rec_art --noisy_reconstruction" changeDir="FALSE">
-            <FILE filename="rec_art.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_reconstruct_art_pseudo" mpi="FALSE">
-        <CASE arguments="-i input/projectionsBacteriorhodopsin.xmd --pseudo input/pseudoBacteriorhodopsin.pdb  -l 1 -n 5 -o  %o/rec_art_pseudo" changeDir="FALSE">
-            <FILE filename="rec_art_pseudo.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_reconstruct_fourier" mpi="FALSE">
-        <CASE arguments="-i input/aFewProjections.sel -o  %o/recon.vol " changeDir="FALSE">
-            <FILE filename="recon.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_reconstruct_wbp" mpi="FALSE">
-        <CASE arguments="-i input/projectionsBacteriorhodopsin.xmd --use_each_image -o  %o/recon.vol " changeDir="FALSE">
-            <FILE filename="recon.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_resolution_fsc" mpi="FALSE">
-        <CASE arguments="--ref input/phantomBacteriorhodopsin.vol -i input/phantomCandida.vol -s 5.6 --do_dpr --oroot %o/phantomBacteriorhodopsin " changeDir="FALSE">
-            <FILE filename="phantomBacteriorhodopsin.frc"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_resolution_ssnr" mpi="FALSE">
-        <CASE arguments="-S input/Bacteriorhodopsin_rec_art.vol -N input/rec_art_noise.vol -selS input/rec_art_signal_proj.sel -selN input/rec_art_noise_proj.sel  -o %o/Bacteriorhodopsin_SSNR.txt --gen_VSSNR  --VSSNR %o/Bacteriorhodopsin_VSSNR.vol" changeDir="FALSE">
-            <FILE filename="Bacteriorhodopsin_VSSNR.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_tomo_detect_missing_wedge" mpi="FALSE">
-        <CASE arguments="-i input/smallTomogram.vol" changeDir="FALSE">
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_tomo_project" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/image.xmp --angles 0 90 90" changeDir="FALSE">
-            <FILE filename="image.xmp"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol --oroot %o/projections --params input/tomoProjection.param" changeDir="FALSE">
-            <FILE filename="projections.stk"/>
-            <FILE filename="projections.sel"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_tomo_remove_fluctuations" mpi="FALSE">
-        <CASE arguments="-i input/xraySeries.stk -o %o/processed.stk" changeDir="FALSE">
-            <FILE filename="processed.stk"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_add_noise" mpi="FALSE">
-        <CASE arguments="-i input/cleanImage.spi --type gaussian 10 5 -o %o/noisyGaussian.spi" changeDir="FALSE" random="TRUE">
-            <FILE filename="noisyGaussian.spi"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_adjust_volume_grey_levels" mpi="FALSE">
-        <CASE arguments="-i input/phantomCandida.vol -m goldStandard/xmipp_tomo_project_02/projections.sel -o %o/adjusted.vol" changeDir="FALSE">
-            <FILE filename="adjusted.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_center_image" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk -o %o/smallStackCentered.stk" changeDir="FALSE">
-            <FILE filename="smallStackCentered.stk"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_downsample" mpi="FALSE">
-        <CASE arguments="-i input/micrograph8bits.tif -o %o/downsampledFourier.xmp --step 2" changeDir="FALSE">
-            <FILE filename="downsampledFourier.xmp"/>
-        </CASE>
-        <CASE arguments="-i input/micrograph8bits.tif -o %o/downsampledSmooth.xmp --step 2 --method smooth" changeDir="FALSE">
-            <FILE filename="downsampledSmooth.xmp"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_geometry" mpi="FALSE">
-        <CASE arguments="-i input/header.doc --apply_transform -o %o/images.stk" changeDir="FALSE">
-            <FILE filename="images.stk"/>
-            <FILE filename="images.xmd"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol --shift 10 5 -10 -o %o/volume.vol --dont_wrap" changeDir="FALSE">
-            <FILE filename="volume.vol"/>
-        </CASE>
-        <CASE arguments="-i input/header.doc --scale factor 0.5 --oroot %o/halvedOriginal" changeDir="FALSE">
-            <FILE filename="halvedOriginal000001.stk"/>
-            <FILE filename="halvedOriginal000002.stk"/>
-            <FILE filename="halvedOriginal000003.stk"/>
-            <FILE filename="halvedOriginal000004.stk"/>
-        </CASE>
-        <CASE arguments="-i input/header.doc --scale fourier 32 --oroot %o/halvedFourierDim" changeDir="FALSE">
-            <FILE filename="halvedFourierDim000001.stk"/>
-            <FILE filename="halvedFourierDim000002.stk"/>
-            <FILE filename="halvedFourierDim000003.stk"/>
-            <FILE filename="halvedFourierDim000004.stk"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_mask" mpi="FALSE">
-        <CASE arguments="-i input/singleImage.spi -o %o/singleImage_mask.xmp --mask circular -15" changeDir="FALSE">
-            <FILE filename="singleImage_mask.xmp"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/outputVol_mask.vol --mask rectangular -20 -20 -20" changeDir="FALSE">
-            <FILE filename="outputVol_mask.vol"/>
-        </CASE>
-        <CASE arguments="-i input/smallStack.stk -o %o/outputStack_mask.stk --mask circular -20" changeDir="FALSE">
-            <FILE filename="outputStack_mask.stk"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_mirror" mpi="FALSE">
-        <CASE arguments="-i input/singleImage.spi -o %o/singleImage_X.xmp --flipX" changeDir="FALSE">
-            <FILE filename="singleImage_X.xmp"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_morphology" mpi="FALSE">
-        <CASE arguments="-i input/maskBacteriorhodopsin.vol -o %o/dilated.spi --binaryOperation dilation" changeDir="FALSE">
-            <FILE filename="dilated.spi"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_normalize" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk -o %o/smallStackNormalized.stk --method NewXmipp --background circle 32" changeDir="FALSE">
-            <FILE filename="smallStackNormalized.stk"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_range_adjust" mpi="FALSE">
-        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --range -100 100 --mask circular -16" changeDir="FALSE">
-            <FILE filename="image.xmp"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_symmetrize" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk -o %o/smallStackSymmetrized.stk --sym 5" changeDir="FALSE">
-            <FILE filename="smallStackSymmetrized.stk"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/symmetrizedVolume.vol --sym C5" changeDir="FALSE">
-            <FILE filename="symmetrizedVolume.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_threshold" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/mask.vol --select below 0.01 --substitute binarize" changeDir="FALSE">
-            <FILE filename="mask.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_window" mpi="FALSE">
-        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --size 32" changeDir="FALSE">
-            <FILE filename="image.xmp"/>
-        </CASE>
-        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --corners -16 -16 15 15" changeDir="FALSE">
-            <FILE filename="image.xmp"/>
-        </CASE>
-        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --corners 0 0 31 31 --physical" changeDir="FALSE">
-            <FILE filename="image.xmp"/>
-        </CASE>
-        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --crop -10" changeDir="FALSE">
-            <FILE filename="image.xmp"/>
-        </CASE>
-        <CASE arguments="-i input/xray_import/Images/img48949.spe -o %o/image.xmp --size 512" changeDir="FALSE">
-            <FILE filename="image.xmp"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_volume_align" mpi="FALSE">
-        <CASE arguments="--i1 input/phantomBacteriorhodopsin.vol --i2 input/phantomBacteriorhodopsinRotated30.vol --rot 0 120 5 --apply %o/i2aligned.vol" changeDir="FALSE">
-            <FILE filename="i2aligned.vol"/>
-        </CASE>
-        <CASE arguments="--i1 input/phantomBacteriorhodopsin.vol --i2 input/phantomBacteriorhodopsinRotated30.vol --rot 90 --local --apply %o/i2aligned.vol" changeDir="FALSE">
-            <FILE filename="i2aligned.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_volume_center" mpi="FALSE">
-        <CASE arguments="-i input/1FFKfull_reconstructed.vol -o %o/centered.vol" changeDir="FALSE">
-            <FILE filename="centered.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_volume_correct_bfactor" mpi="FALSE">
-        <CASE arguments="-i input/1FFKfull_reconstructed.vol -o %o/corrected.vol --auto --sampling 1 --maxres 10" changeDir="FALSE">
-            <FILE filename="corrected.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_volume_enhance_contrast" mpi="FALSE">
-        <CASE arguments="-i input/1FFKfull_reconstructed.vol -o %o/enhanced.vol" changeDir="FALSE">
-            <FILE filename="enhanced.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_volume_find_symmetry" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol --sym rot 3 -o %o/symmetry.xmd" changeDir="FALSE">
-            <FILE filename="symmetry.xmd"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_volume_from_pdb" mpi="FALSE">
-        <CASE arguments="-i input/1o7d.pdb -o %o/1o7d" changeDir="FALSE">
-            <FILE filename="1o7d.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_volume_reslice" mpi="FALSE">
-        <CASE arguments="-i input/phantomCandida.vol -o %o/resliced.vol --face top" changeDir="FALSE">
-            <FILE filename="resliced.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_volume_segment" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskOtsu.vol --method otsu" changeDir="FALSE">
-            <FILE filename="maskOtsu.vol"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskVoxelMass.vol --method voxel_mass 48000" changeDir="FALSE">
-            <FILE filename="maskVoxelMass.vol"/>
-        </CASE>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskProb.vol --method prob 1" changeDir="FALSE">
-            <FILE filename="maskProb.vol"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_volume_to_pseudoatoms" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/pseudo" changeDir="FALSE">
-            <FILE filename="pseudo.pdb"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_xray_import" mpi="FALSE">
-        <CASE arguments="--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30" changeDir="FALSE">
-            <FILE filename="stack_darkfield.xmp"/>
-            <FILE filename="stack_Flatfields_avg.xmp"/>
-            <FILE filename="stack_Flatfields_darkfield.xmp"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_xray_project" mpi="FALSE">
-        <CASE arguments="-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90 -s 10 --psf input/xray_psf.xmd" changeDir="FALSE">
-            <FILE filename="image.xmp"/>
-        </CASE>
-        <CASE arguments="-i input/phantomCandida.vol --oroot %o/projections --params input/tomoProjection.param -s 10 --psf input/xray_psf.xmd" changeDir="FALSE">
-            <FILE filename="projections.sel"/>
-            <FILE filename="projections.stk"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_xray_psf_create" mpi="FALSE">
-        <CASE arguments="-i input/xray_psf.xmd -o %o/psf.vol" changeDir="FALSE">
-            <FILE filename="psf.vol"/>
-        </CASE>
-    </PROGRAM>
+	<PROGRAM name="xmipp_mpi_image_sort" mpi="TRUE">
+		<CASE arguments="-i input/aFewProjections.sel --oroot %o/sorted"
+			changeDir="FALSE">
+			<FILE filename="sorted.stk" />
+			<FILE filename="sorted.sel" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_nma_alignment" mpi="FALSE">
+		<CASE
+			arguments="-i input/2tbv_prj00001.xmp  --pdb input/2tbv.pdb --modes input/modelist.xmd  --deformation_scale 1000 --sampling_rate 6.4 -o %o/output.txt --resume"
+			changeDir="FALSE">
+			<FILE filename="output.txt" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_mpi_nma_alignment" mpi="TRUE">
+		<CASE
+			arguments="-i input/2tbv_prj00001.xmp  --pdb input/2tbv.pdb --modes input/modelist.xmd  --deformation_scale 1000 --sampling_rate 6.4 -o %o/output.txt --resume"
+			changeDir="FALSE">
+			<FILE filename="output.txt" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_mpi_reconstruct_art" mpi="TRUE">
+		<CASE
+			arguments="-i input/projectionsBacteriorhodopsin.xmd -n 1 -o  %o/rec_art --noisy_reconstruction"
+			changeDir="FALSE">
+			<FILE filename="rec_art.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_mpi_reconstruct_wbp" mpi="TRUE">
+		<CASE
+			arguments="-i input/projectionsBacteriorhodopsin.xmd --use_each_image -o  %o/recon.vol "
+			changeDir="FALSE">
+			<FILE filename="recon.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_mpi_run" mpi="TRUE">
+		<CASE arguments="-i commands.cmd" changeDir="TRUE">
+			<PRERUN command="cp input/commands.cmd %o" />
+			<FILE filename="file1.txt" />
+			<FILE filename="file2.txt" />
+			<FILE filename="file3.txt" />
+			<FILE filename="file4.txt" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_pdb_nma_deform" mpi="FALSE">
+		<CASE
+			arguments="--pdb input/2tbv.pdb -o %o/deformed.pdb --nma input/modelist.xmd --deformations 1000"
+			changeDir="FALSE">
+			<FILE filename="deformed.pdb" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_phantom_create" mpi="FALSE">
+		<CASE arguments="-i input/rings.descr -o %o/rings.vol" changeDir="FALSE">
+			<FILE filename="rings.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_phantom_project" mpi="FALSE"><!-- one case in extra -->
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/image.xmp --angles 0 0 0"
+			changeDir="FALSE">
+			<FILE filename="image.xmp" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/clusterProjection.param"
+			changeDir="FALSE">
+			<FILE filename="projections.stk" />
+			<FILE filename="projections.sel" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/uniformProjection.param"
+			changeDir="FALSE">
+			<FILE filename="projections.stk" />
+			<FILE filename="projections.sel" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/uniformProjection.param --shears"
+			changeDir="FALSE">
+			<FILE filename="projections.stk" />
+			<FILE filename="projections.sel" />
+		</CASE>
+		<CASE
+			arguments="-i input/Crystal/cylinder_with_axis.descr -o %o/MRCproj     --params input/Crystal/MRC_projection.param --crystal input/Crystal/MRC_crystal_projection.param"
+			changeDir="FALSE" random="TRUE">
+			<FILE filename="MRCproj.stk" />
+			<FILE filename="MRCproj.sel" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_phantom_simulate_microscope" mpi="FALSE">
+		<CASE
+			arguments="-i input/projectionsBacteriorhodopsin.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam --noNoise"
+			changeDir="FALSE" random="FALSE">
+			<FILE filename="smallStackPlusCtf.stk" />
+		</CASE>
+		<CASE
+			arguments="-i input/projectionsBacteriorhodopsin.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam --targetSNR 0.3"
+			changeDir="FALSE" random="FALSE">
+			<FILE filename="smallStackPlusCtf.stk" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_phantom_transform" mpi="FALSE">
+		<CASE arguments="-i input/1o7d.pdb -o %o/shifted.pdb --operation shift 1 2 3"
+			changeDir="FALSE" random="FALSE">
+			<FILE filename="shifted.pdb" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_reconstruct_art" mpi="FALSE">
+		<CASE
+			arguments="-i input/projectionsBacteriorhodopsin.xmd -n 2 -o  %o/rec_art --noisy_reconstruction"
+			changeDir="FALSE">
+			<FILE filename="rec_art.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_reconstruct_art_pseudo" mpi="FALSE">
+		<CASE
+			arguments="-i input/projectionsBacteriorhodopsin.xmd --pseudo input/pseudoBacteriorhodopsin.pdb  -l 1 -n 5 -o  %o/rec_art_pseudo"
+			changeDir="FALSE">
+			<FILE filename="rec_art_pseudo.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_reconstruct_fourier" mpi="FALSE">
+		<CASE arguments="-i input/aFewProjections.sel -o  %o/recon.vol "
+			changeDir="FALSE">
+			<FILE filename="recon.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_reconstruct_wbp" mpi="FALSE">
+		<CASE
+			arguments="-i input/projectionsBacteriorhodopsin.xmd --use_each_image -o  %o/recon.vol "
+			changeDir="FALSE">
+			<FILE filename="recon.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_resolution_fsc" mpi="FALSE">
+		<CASE
+			arguments="--ref input/phantomBacteriorhodopsin.vol -i input/phantomCandida.vol -s 5.6 --do_dpr --oroot %o/phantomBacteriorhodopsin "
+			changeDir="FALSE">
+			<FILE filename="phantomBacteriorhodopsin.frc" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_resolution_ssnr" mpi="FALSE">
+		<CASE
+			arguments="-S input/Bacteriorhodopsin_rec_art.vol -N input/rec_art_noise.vol -selS input/rec_art_signal_proj.sel -selN input/rec_art_noise_proj.sel  -o %o/Bacteriorhodopsin_SSNR.txt --gen_VSSNR  --VSSNR %o/Bacteriorhodopsin_VSSNR.vol"
+			changeDir="FALSE">
+			<FILE filename="Bacteriorhodopsin_VSSNR.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_tomo_detect_missing_wedge" mpi="FALSE">
+		<CASE arguments="-i input/smallTomogram.vol" changeDir="FALSE">
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_tomo_project" mpi="FALSE">
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/image.xmp --angles 0 90 90"
+			changeDir="FALSE">
+			<FILE filename="image.xmp" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol --oroot %o/projections --params input/tomoProjection.param"
+			changeDir="FALSE">
+			<FILE filename="projections.stk" />
+			<FILE filename="projections.sel" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_tomo_remove_fluctuations" mpi="FALSE">
+		<CASE arguments="-i input/xraySeries.stk -o %o/processed.stk"
+			changeDir="FALSE">
+			<FILE filename="processed.stk" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_transform_add_noise" mpi="FALSE">
+		<CASE
+			arguments="-i input/cleanImage.spi --type gaussian 10 5 -o %o/noisyGaussian.spi"
+			changeDir="FALSE" random="TRUE">
+			<FILE filename="noisyGaussian.spi" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_transform_adjust_volume_grey_levels" mpi="FALSE">
+		<CASE
+			arguments="-i input/phantomCandida.vol -m goldStandard/xmipp_tomo_project_02/projections.sel -o %o/adjusted.vol"
+			changeDir="FALSE">
+			<FILE filename="adjusted.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_transform_center_image" mpi="FALSE">
+		<CASE arguments="-i input/smallStack.stk -o %o/smallStackCentered.stk"
+			changeDir="FALSE">
+			<FILE filename="smallStackCentered.stk" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_transform_downsample" mpi="FALSE">
+		<CASE
+			arguments="-i input/micrograph8bits.tif -o %o/downsampledFourier.xmp --step 2"
+			changeDir="FALSE">
+			<FILE filename="downsampledFourier.xmp" />
+		</CASE>
+		<CASE
+			arguments="-i input/micrograph8bits.tif -o %o/downsampledSmooth.xmp --step 2 --method smooth"
+			changeDir="FALSE">
+			<FILE filename="downsampledSmooth.xmp" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_transform_geometry" mpi="FALSE">
+		<CASE arguments="-i input/header.doc --apply_transform -o %o/images.stk"
+			changeDir="FALSE">
+			<FILE filename="images.stk" />
+			<FILE filename="images.xmd" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol --shift 10 5 -10 -o %o/volume.vol --dont_wrap"
+			changeDir="FALSE">
+			<FILE filename="volume.vol" />
+		</CASE>
+		<CASE
+			arguments="-i input/header.doc --scale factor 0.5 --oroot %o/halvedOriginal"
+			changeDir="FALSE">
+			<FILE filename="halvedOriginal000001.stk" />
+			<FILE filename="halvedOriginal000002.stk" />
+			<FILE filename="halvedOriginal000003.stk" />
+			<FILE filename="halvedOriginal000004.stk" />
+		</CASE>
+		<CASE
+			arguments="-i input/header.doc --scale fourier 32 --oroot %o/halvedFourierDim"
+			changeDir="FALSE">
+			<FILE filename="halvedFourierDim000001.stk" />
+			<FILE filename="halvedFourierDim000002.stk" />
+			<FILE filename="halvedFourierDim000003.stk" />
+			<FILE filename="halvedFourierDim000004.stk" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_transform_mask" mpi="FALSE">
+		<CASE
+			arguments="-i input/singleImage.spi -o %o/singleImage_mask.xmp --mask circular -15"
+			changeDir="FALSE">
+			<FILE filename="singleImage_mask.xmp" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/outputVol_mask.vol --mask rectangular -20 -20 -20"
+			changeDir="FALSE">
+			<FILE filename="outputVol_mask.vol" />
+		</CASE>
+		<CASE
+			arguments="-i input/smallStack.stk -o %o/outputStack_mask.stk --mask circular -20"
+			changeDir="FALSE">
+			<FILE filename="outputStack_mask.stk" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_transform_mirror" mpi="FALSE">
+		<CASE arguments="-i input/singleImage.spi -o %o/singleImage_X.xmp --flipX"
+			changeDir="FALSE">
+			<FILE filename="singleImage_X.xmp" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_transform_morphology" mpi="FALSE">
+		<CASE
+			arguments="-i input/maskBacteriorhodopsin.vol -o %o/dilated.spi --binaryOperation dilation"
+			changeDir="FALSE">
+			<FILE filename="dilated.spi" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_transform_normalize" mpi="FALSE">
+		<CASE
+			arguments="-i input/smallStack.stk -o %o/smallStackNormalized.stk --method NewXmipp --background circle 32"
+			changeDir="FALSE">
+			<FILE filename="smallStackNormalized.stk" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_transform_range_adjust" mpi="FALSE">
+		<CASE
+			arguments="-i input/singleImage.spi -o %o/image.xmp --range -100 100 --mask circular -16"
+			changeDir="FALSE">
+			<FILE filename="image.xmp" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_transform_symmetrize" mpi="FALSE">
+		<CASE
+			arguments="-i input/smallStack.stk -o %o/smallStackSymmetrized.stk --sym 5"
+			changeDir="FALSE">
+			<FILE filename="smallStackSymmetrized.stk" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/symmetrizedVolume.vol --sym C5"
+			changeDir="FALSE">
+			<FILE filename="symmetrizedVolume.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_transform_threshold" mpi="FALSE">
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/mask.vol --select below 0.01 --substitute binarize"
+			changeDir="FALSE">
+			<FILE filename="mask.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_transform_window" mpi="FALSE">
+		<CASE arguments="-i input/singleImage.spi -o %o/image.xmp --size 32"
+			changeDir="FALSE">
+			<FILE filename="image.xmp" />
+		</CASE>
+		<CASE
+			arguments="-i input/singleImage.spi -o %o/image.xmp --corners -16 -16 15 15"
+			changeDir="FALSE">
+			<FILE filename="image.xmp" />
+		</CASE>
+		<CASE
+			arguments="-i input/singleImage.spi -o %o/image.xmp --corners 0 0 31 31 --physical"
+			changeDir="FALSE">
+			<FILE filename="image.xmp" />
+		</CASE>
+		<CASE arguments="-i input/singleImage.spi -o %o/image.xmp --crop -10"
+			changeDir="FALSE">
+			<FILE filename="image.xmp" />
+		</CASE>
+		<CASE
+			arguments="-i input/xray_import/Images/img48949.spe -o %o/image.xmp --size 512"
+			changeDir="FALSE">
+			<FILE filename="image.xmp" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_volume_align" mpi="FALSE">
+		<CASE
+			arguments="--i1 input/phantomBacteriorhodopsin.vol --i2 input/phantomBacteriorhodopsinRotated30.vol --rot 0 120 5 --apply %o/i2aligned.vol"
+			changeDir="FALSE">
+			<FILE filename="i2aligned.vol" />
+		</CASE>
+		<CASE
+			arguments="--i1 input/phantomBacteriorhodopsin.vol --i2 input/phantomBacteriorhodopsinRotated30.vol --rot 90 --local --apply %o/i2aligned.vol"
+			changeDir="FALSE">
+			<FILE filename="i2aligned.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_volume_center" mpi="FALSE">
+		<CASE arguments="-i input/1FFKfull_reconstructed.vol -o %o/centered.vol"
+			changeDir="FALSE">
+			<FILE filename="centered.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_volume_correct_bfactor" mpi="FALSE">
+		<CASE
+			arguments="-i input/1FFKfull_reconstructed.vol -o %o/corrected.vol --auto --sampling 1 --maxres 10"
+			changeDir="FALSE">
+			<FILE filename="corrected.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_volume_enhance_contrast" mpi="FALSE">
+		<CASE arguments="-i input/1FFKfull_reconstructed.vol -o %o/enhanced.vol"
+			changeDir="FALSE">
+			<FILE filename="enhanced.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_volume_find_symmetry" mpi="FALSE">
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol --sym rot 3 -o %o/symmetry.xmd"
+			changeDir="FALSE">
+			<FILE filename="symmetry.xmd" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_volume_from_pdb" mpi="FALSE">
+		<CASE arguments="-i input/1o7d.pdb -o %o/1o7d" changeDir="FALSE">
+			<FILE filename="1o7d.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_volume_reslice" mpi="FALSE">
+		<CASE arguments="-i input/phantomCandida.vol -o %o/resliced.vol --face top"
+			changeDir="FALSE">
+			<FILE filename="resliced.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_volume_segment" mpi="FALSE">
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskOtsu.vol --method otsu"
+			changeDir="FALSE">
+			<FILE filename="maskOtsu.vol" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskVoxelMass.vol --method voxel_mass 48000"
+			changeDir="FALSE">
+			<FILE filename="maskVoxelMass.vol" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskProb.vol --method prob 1"
+			changeDir="FALSE">
+			<FILE filename="maskProb.vol" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_volume_to_pseudoatoms" mpi="FALSE">
+		<CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/pseudo"
+			changeDir="FALSE">
+			<FILE filename="pseudo.pdb" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_xray_import" mpi="FALSE">
+		<CASE
+			arguments="--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30"
+			changeDir="FALSE">
+			<FILE filename="stack_darkfield.xmp" />
+			<FILE filename="stack_Flatfields_avg.xmp" />
+			<FILE filename="stack_Flatfields_darkfield.xmp" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_xray_project" mpi="FALSE">
+		<CASE
+			arguments="-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90 -s 10 --psf input/xray_psf.xmd"
+			changeDir="FALSE">
+			<FILE filename="image.xmp" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomCandida.vol --oroot %o/projections --params input/tomoProjection.param -s 10 --psf input/xray_psf.xmd"
+			changeDir="FALSE">
+			<FILE filename="projections.sel" />
+			<FILE filename="projections.stk" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_xray_psf_create" mpi="FALSE">
+		<CASE arguments="-i input/xray_psf.xmd -o %o/psf.vol" changeDir="FALSE">
+			<FILE filename="psf.vol" />
+		</CASE>
+	</PROGRAM>
 </XMIPP_TESTS>
