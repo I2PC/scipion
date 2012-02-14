@@ -199,10 +199,9 @@ protected:
     /** Provide a node when calling from another MPI program  */
     void setNode(MpiNode * node);
 
+public:
     /** Read MPI params from command line */
     void read(int argc, char *argv[]);
-
-public:
     /** Call the run function inside a try/catch block
     * sending an abort signal to the rest of mpi nodes.
     * */

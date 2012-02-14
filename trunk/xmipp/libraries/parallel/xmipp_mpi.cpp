@@ -167,9 +167,9 @@ FileTaskDistributor::~FileTaskDistributor()
 void FileTaskDistributor::reset()
 {
     if (node == NULL || node->isMaster())
-    	setAssignedTasks(0);
+        setAssignedTasks(0);
     if (node!=NULL)
-    	node->barrierWait();
+        node->barrierWait();
 }
 
 void FileTaskDistributor::createLockFile()
@@ -258,21 +258,21 @@ bool MpiNode::isMaster() const
 
 void MpiNode::prepareFileBarrierWaiting(FileName &fnToWaitOn)
 {
-	char tempFileName[L_tmpnam];
-	if (isMaster())
-		std::tmpnam(tempFileName);
+    char tempFileName[L_tmpnam];
+    if (isMaster())
+        std::tmpnam(tempFileName);
     MPI_Bcast(tempFileName, L_tmpnam, MPI_CHAR, 0, MPI_COMM_WORLD);
     fnToWaitOn=tempFileName;
 }
 
 void MpiNode::barrierWait(const FileName &fnToWaitOn, int sleepTime)
 {
-	while (!fnToWaitOn.exists())
-		sleep(sleepTime);
-	barrierWait();
-	if (isMaster())
-		unlink(fnToWaitOn.c_str());
-	barrierWait();
+    while (!fnToWaitOn.exists())
+        sleep(sleepTime);
+    barrierWait();
+    if (isMaster())
+        unlink(fnToWaitOn.c_str());
+    barrierWait();
 }
 
 void MpiNode::barrierWait()
@@ -365,6 +365,8 @@ void XmippMpiProgram::read(int argc, char *argv[])
         if (!node->isMaster())
             verbose = false;
     }
+
+    XmippProgram::read(argc, argv);
 }
 
 void XmippMpiProgram::setNode(MpiNode *node)

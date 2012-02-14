@@ -43,9 +43,6 @@ public:
      */
     ProgMPIReconsArt(MpiNode * node);
 
-    /* Special way of reading to sync all nodes */
-    void read(int argc, char** argv);
-
     /* Run --------------------------------------------------------------------- */
     void run();
 };

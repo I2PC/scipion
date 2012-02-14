@@ -46,13 +46,6 @@ ProgMPIReconsArt::ProgMPIReconsArt(MpiNode * node)
     this->setNode(node);
 }
 
-/* Special way of reading to sync all nodes */
-void ProgMPIReconsArt::read(int argc, char** argv)
-{
-    XmippMpiProgram::read(argc, argv);
-    ProgReconsART::read(argc, argv);
-}
-
 
 /* Run --------------------------------------------------------------------- */
 void ProgMPIReconsArt::run()
