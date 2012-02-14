@@ -550,6 +550,7 @@ ParamDef::ParamDef(ArgLexer *lexer, ASTNode * parent) :
         ASTNode(lexer, parent)
 {
     exclusiveGroup = NULL;
+    orBefore = false;
 }
 
 ParamDef::~ParamDef()

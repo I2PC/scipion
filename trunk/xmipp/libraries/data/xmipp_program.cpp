@@ -424,6 +424,7 @@ XmippMetadataProgram::XmippMetadataProgram()
     allow_time_bar = true;
     decompose_stacks = true;
     save_metadata_stack = false;
+    keep_input_columns = false;
     delete_output_stack = true;
     remove_disabled = true;
     single_image = input_is_stack = output_is_stack = false;
