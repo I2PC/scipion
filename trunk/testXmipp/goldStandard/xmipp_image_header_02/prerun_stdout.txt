@@ -1,3 +1,0 @@
-Files pattern:         tmpLink/xmipp_image_header_02/smallStack.stk
-Output Metadata File:  tmpLink/xmipp_image_header_02/smallStack.doc
-Is stack:              True
