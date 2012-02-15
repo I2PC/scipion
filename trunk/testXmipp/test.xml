@@ -201,6 +201,7 @@
 		<CASE arguments="-i all_micrographs.sel" changeDir="TRUE">
 			<PRERUN
 				command="cp -r input/Protocol_Preprocess_Micrographs/Preprocessing/* %o" />
+				<FILE filename="all_micrographs.sel"/>
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_image_align" mpi="FALSE">

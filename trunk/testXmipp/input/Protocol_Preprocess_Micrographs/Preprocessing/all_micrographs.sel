@@ -2,7 +2,7 @@
 # 
 data_
 loop_
- _image
+ _micrograph
  _powerSpectrum
  _CTFInputParams
  _CTFModel
