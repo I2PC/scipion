@@ -253,12 +253,12 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		{
 			TiltedParticle tp = active.getTiltedParticle();
 			
-			Rectangle srcrect = getSrcRect();
-			int xrect = (int) (magnification * (tp.getX() - srcrect.getX()));
-			int yrect = (int) (magnification * (tp.getY() - srcrect.getY()));
-			System.out.printf("Rectangle starts at %s %s, has dimensions of %s %s. Particle inside rectangle falls at %s %s\n", 
-					srcrect.getX(), srcrect.getY(), srcrect.width, srcrect.height, xrect, yrect);
-			if (tp != null && !Particle.fits(xrect, yrect, (int)(magnification * tp.getFamily().getSize()), srcrect.width, srcrect.height))
+			Rectangle srcrect = frame.getTiltedCanvas().getSrcRect();
+			int xrect = (int) ((tp.getX() - srcrect.getX()));//x coordinate starting on src rect. No need to use magnification for calculus
+			int yrect = (int) ((tp.getY() - srcrect.getY()));
+//			System.out.printf("Rectangle starts at %s %s, has dimensions of %s %s. Particle inside rectangle falls at %s %s\n", 
+//					srcrect.getX(), srcrect.getY(), srcrect.width, srcrect.height, xrect, yrect);
+			if (tp != null && !Particle.fits(xrect, yrect, (int)(tp.getFamily().getSize()), srcrect.width, srcrect.height))
 				frame.getTiltedCanvas().moveTo(tp);
 		}
 		repaint();
