@@ -299,12 +299,18 @@
 			<FILE filename="mask000002.vol" />
 		</CASE>
 	</PROGRAM>
+	<PROGRAM name="xmipp_image_sort_by_statistics" mpi="FALSE">
+        <CASE arguments="-i input/smallStack.stk -o %o/sort"
+            changeDir="FALSE">
+            <FILE filename="sort.xmd" />
+        </CASE>
+    </PROGRAM>
 	<PROGRAM name="xmipp_image_statistics" mpi="FALSE">
 		<CASE arguments="-i input/smallStack.stk -o %o/stats.xmd"
 			changeDir="FALSE">
 			<FILE filename="stats.xmd" />
 		</CASE>
-	</PROGRAM>
+	</PROGRAM>	
 	<PROGRAM name="xmipp_image_vectorize" mpi="FALSE">
 		<CASE arguments="-i input/aFewProjections.sel -o %o/vectors.xmd"
 			changeDir="FALSE">

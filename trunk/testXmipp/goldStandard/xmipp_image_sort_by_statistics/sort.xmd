@@ -1,0 +1,11 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ _Zscore
+ 000001@input/smallStack.stk          1     0.648628 
+ 000002@input/smallStack.stk          1     0.655985 
+ 000003@input/smallStack.stk          1     0.742751 
+ 000004@input/smallStack.stk          1     0.958843 
