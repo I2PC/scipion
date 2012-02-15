@@ -48,7 +48,7 @@ public class ReviewParticlePicker extends TrainingPicker
 	@Override
 	public void persistMicrographs()
 	{
-		exportData(reviewfamily);
+		exportData(reviewfamily, getOutputPath(reviewfamily.getName() + "_export_list.xmd"));
 	}
 
 	@Override
@@ -73,40 +73,12 @@ public class ReviewParticlePicker extends TrainingPicker
 			}
 			if (micrographs.size() == 0)
 				throw new IllegalArgumentException(String.format("No micrographs specified on %s", getMicrographsSelFile()));
-			int x, y;
-			double cost;
-			List<String> blocks = Arrays.asList(MetaData.getBlocksInMetaDataFile(reviewfile));
-			String block;
-			for (TrainingMicrograph m : micrographs)
-			{
-				block = "mic_" + m.getName();
-				if (blocks.contains(block))
-				{
-					md = new MetaData(block + "@" + reviewfile);
-
-					ids = md.findObjects();
-					for (long id : ids)
-					{
-
-						x = md.getValueInt(MDLabel.MDL_XINT, id);
-						y = md.getValueInt(MDLabel.MDL_YINT, id);
-						cost = md.getValueDouble(MDLabel.MDL_COST, id);
-						if (cost > 1)
-							m.addManualParticle(new TrainingParticle(x, y, reviewfamily, m, cost));
-						else
-							m.addAutomaticParticle(new AutomaticParticle(x, y, reviewfamily, m, cost, false));
-					}
-				}
-				
-			}
-
+			importData(reviewfamily, reviewfile);
 		}
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
-
 	}
-
 }

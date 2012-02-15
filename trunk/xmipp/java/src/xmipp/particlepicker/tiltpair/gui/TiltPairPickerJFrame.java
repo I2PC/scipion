@@ -112,7 +112,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		mb = new JMenuBar();
 
 		// Setting menus
-		JMenu filemn = new JMenu("File");
 		JMenu viewmn = new JMenu("View");
 		JMenu helpmn = new JMenu("Help");
 		mb.add(filemn);
@@ -122,76 +121,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 		// Setting menu items
 		
-		savemi.setEnabled(pppicker.isChanged());
-		filemn.add(savemi);
 		
-		
-		importmi = new JMenuItem("Import Untilted Particles");
-
-		importmi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				JFileChooser fc = new JFileChooser();
-				
-				int returnVal = fc.showOpenDialog(TiltPairPickerJFrame.this);
-
-				try
-				{
-					if (returnVal == JFileChooser.APPROVE_OPTION)
-					{
-						File file = fc.getSelectedFile();
-						getParticlePicker().importData(getMicrograph(), file.getAbsolutePath());
-						
-						setChanged(true);
-						canvas.repaint();
-						updateMicrographsModel();
-						JOptionPane.showMessageDialog(TiltPairPickerJFrame.this, "Import successful");
-					}
-				}
-				catch (Exception ex)
-				{
-					JOptionPane.showMessageDialog(TiltPairPickerJFrame.this, ex.getMessage());
-				}
-			}
-		});
-		filemn.add(importmi);
-		
-
-		importmi = new JMenuItem("Import Tilted Particles");
-
-		importmi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				JFileChooser fc = new JFileChooser();
-				int returnVal = fc.showOpenDialog(TiltPairPickerJFrame.this);
-
-				try
-				{
-					if (returnVal == JFileChooser.APPROVE_OPTION)
-					{
-						File file = fc.getSelectedFile();
-						getParticlePicker().importData(getMicrograph().getTiltedMicrograph(), file.getAbsolutePath());
-						untiltedmic.initAligner();
-						setChanged(true);
-						canvas.repaint();
-						tiltedcanvas.repaint();
-						updateMicrographsModel();
-						JOptionPane.showMessageDialog(TiltPairPickerJFrame.this, "Import successful");
-					}
-				}
-				catch (Exception ex)
-				{
-					JOptionPane.showMessageDialog(TiltPairPickerJFrame.this, ex.getMessage());
-				}
-			}
-		});
-		filemn.add(importmi);
 		
 		anglesmi = new JCheckBoxMenuItem("Angles");
 		anglesmi.setEnabled(false);
@@ -211,6 +141,12 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		helpmn.add(hcontentsmi);
 	}
 
+	protected void importParticles(String path)
+	{
+		super.importParticles(path);
+		untiltedmic.initAligner();
+		tiltedcanvas.repaint();
+	}
 
 
 	private void initParticlesPane()

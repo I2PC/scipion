@@ -244,12 +244,7 @@ public class TiltPairPicker extends ParticlePicker
 		return count;
 	}
 
-	@Override
-	public void exportData(Family family)
-	{
-		// TODO Auto-generated method stub
-		
-	}
+	
 
 	public void importData(UntiltedMicrograph um, String file)
 	{
@@ -307,6 +302,20 @@ public class TiltPairPicker extends ParticlePicker
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
+		
+	}
+	
+	@Override
+	public void exportData(Family family, String path)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void importData(Family family, String absolutePath)
+	{
+		// TODO Auto-generated method stub
 		
 	}
 

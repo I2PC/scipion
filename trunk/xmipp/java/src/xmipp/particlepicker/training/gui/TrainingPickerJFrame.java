@@ -146,7 +146,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		mb = new JMenuBar();
 
 		// Setting menus
-		JMenu filemn = new JMenu("File");
+		
 		JMenu windowmn = new JMenu("Window");
 		JMenu helpmn = new JMenu("Help");
 		mb.add(filemn);
@@ -154,11 +154,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		mb.add(windowmn);
 		mb.add(helpmn);
 
-		// Setting menu items
-		savemi.setEnabled(ppicker.isChanged());
-		filemn.add(savemi);
-
-		filemn.add(exportmi);
 		windowmn.add(pmi);
 		windowmn.add(ijmi);
 		editfamiliesmn = new JMenuItem("Edit Families");

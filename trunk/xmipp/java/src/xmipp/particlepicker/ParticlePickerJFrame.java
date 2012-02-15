@@ -64,6 +64,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JMenuItem savemi;
 	protected JMenuItem hcontentsmi;
 	protected JMenuItem pmi;
+	protected JMenuItem importmi;
 	protected JMenuItem exportmi;
 	protected JMenu filtersmn;
 	protected String activefilter;
@@ -71,12 +72,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JPanel sizepn;
 	private String command;
 	private List<JCheckBoxMenuItem> mifilters;
-	
-	
-	
+	protected JMenu filemn;
+
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
-		
+
 		addWindowListener(new WindowAdapter()
 		{
 			public void windowClosing(WindowEvent winEvt)
@@ -90,7 +90,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				System.exit(0);
 			}
 		});
-		
+
 		Recorder.record = true;
 
 		// detecting if a command is thrown by ImageJ
@@ -114,7 +114,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 					String options = "";
 					if (Recorder.getCommandOptions() != null)
 						options = Recorder.getCommandOptions();
-					if(!getParticlePicker().isFilterSelected(command))
+					if (!getParticlePicker().isFilterSelected(command))
 						getParticlePicker().addFilter(command, options);
 					command = null;
 				}
@@ -134,23 +134,77 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 			}
 		});
-		
-		exportmi = new JMenuItem("Export Particles");
+		filemn = new JMenu("File");
+		savemi = new JMenuItem("Save");
+		savemi.setMnemonic('S');
+		savemi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+		savemi.addActionListener(new ActionListener()
+		{
 
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				saveChanges();
+				JOptionPane.showMessageDialog(ParticlePickerJFrame.this, "Data saved successfully");
+				((JMenuItem) e.getSource()).setEnabled(false);
+			}
+		});
+		filemn.add(savemi);
+		importmi = new JMenuItem("Import Particles...");
+		filemn.add(importmi);
+		importmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				JFileChooser fc = new JFileChooser();
+				int returnVal = fc.showOpenDialog(ParticlePickerJFrame.this);
+
+				try
+				{
+					if (returnVal == JFileChooser.APPROVE_OPTION)
+					{
+						String path = fc.getSelectedFile().getAbsolutePath();
+						importParticles(path);
+						JOptionPane.showMessageDialog(ParticlePickerJFrame.this, "Import successful");
+					}
+				}
+				catch (Exception ex)
+				{
+					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, ex.getMessage());
+				}
+			}
+		});
+
+		exportmi = new JMenuItem("Export Particles...");
+		filemn.add(exportmi);
 		exportmi.addActionListener(new ActionListener()
 		{
 
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				getParticlePicker().exportData(getFamily());
-				JOptionPane.showMessageDialog(ParticlePickerJFrame.this, "Export successful");
+				JFileChooser fc = new JFileChooser();
+				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				int returnVal = fc.showOpenDialog(ParticlePickerJFrame.this);
+
+				try
+				{
+					if (returnVal == JFileChooser.APPROVE_OPTION)
+					{
+						File file = fc.getSelectedFile();
+						getParticlePicker().exportData(getFamily(), file.getAbsolutePath());
+						JOptionPane.showMessageDialog(ParticlePickerJFrame.this, "Export successful");
+					}
+				}
+				catch (Exception ex)
+				{
+					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, ex.getMessage());
+				}
 			}
 		});
-		
-		
-		
-		
+
 		ijmi = new JMenuItem("ImageJ");
 		ijmi.addActionListener(new ActionListener()
 		{
@@ -167,20 +221,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				}
 			}
 		});
-		savemi = new JMenuItem("Save");
-		savemi.setMnemonic('S');
-		savemi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
-		savemi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				saveChanges();
-				JOptionPane.showMessageDialog(ParticlePickerJFrame.this, "Data saved successfully");
-				((JMenuItem) e.getSource()).setEnabled(false);
-			}
-		});
+		
 		hcontentsmi = new JMenuItem("Help Contents...");
 		hcontentsmi.addActionListener(new ActionListener()
 		{
@@ -208,41 +249,40 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				loadParticles();
 			}
 		});
-		
+
 		mifilters = new ArrayList<JCheckBoxMenuItem>();
 		filtersmn = new JMenu("Filters");
 		filtersmn.addMenuListener(new MenuListener()
 		{
-			
+
 			@Override
 			public void menuCanceled(MenuEvent arg0)
 			{
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void menuDeselected(MenuEvent arg0)
 			{
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void menuSelected(MenuEvent arg0)
 			{
-				for(JCheckBoxMenuItem mi: mifilters)
+				for (JCheckBoxMenuItem mi : mifilters)
 					mi.setSelected(getParticlePicker().isFilterSelected(mi.getText()));
-				
-				
+
 			}
 		});
-		
+
 		addFilterMenuItem("Bandpass Filter...", true, picker);
 		JCheckBoxMenuItem admi = addFilterMenuItem("Anisotropic Diffusion...", false, picker);
 		admi.addActionListener(new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
@@ -257,32 +297,30 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem("Gaussian Blur...", true, picker);
 		addFilterMenuItem("Brightness/Contrast...", true, picker);
 	}
-	
-
-	
-
 
 	private JCheckBoxMenuItem addFilterMenuItem(String command, boolean defaultlistener, ParticlePicker picker)
 	{
 		JCheckBoxMenuItem mi = new JCheckBoxMenuItem(command);
 		mifilters.add(mi);
 		mi.setSelected(picker.isFilterSelected(command));
-		if(defaultlistener)
+		if (defaultlistener)
 			mi.addActionListener(this);
 		filtersmn.add(mi);
 		return mi;
 	}
-	
+
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
 		try
 		{
-			JCheckBoxMenuItem item = (JCheckBoxMenuItem) e.getSource(); 
+			JCheckBoxMenuItem item = (JCheckBoxMenuItem) e.getSource();
 			activefilter = item.getText();
-			if(item.isSelected())//filter added, will be registered by picker with options if needed
+			if (item.isSelected())// filter added, will be registered by picker
+									// with options if needed
 				IJ.run(activefilter);
-			else //filter removed
+			else
+				// filter removed
 				getParticlePicker().removeFilter(activefilter);
 			setChanged(true);
 		}
@@ -295,7 +333,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	}
 
 	protected abstract void saveChanges();
-	
 
 	public int getSide(int size)
 	{
@@ -311,7 +348,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		try
 		{
 			if (particlesdialog == null)
-				if(ParticlePickerJFrame.this instanceof TrainingPickerJFrame)
+				if (ParticlePickerJFrame.this instanceof TrainingPickerJFrame)
 					particlesdialog = new ParticlesJDialog(ParticlePickerJFrame.this);
 				else
 					particlesdialog = new TiltPairParticlesJDialog(ParticlePickerJFrame.this);
@@ -325,7 +362,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		catch (Exception ex)
 		{
 			JOptionPane.showMessageDialog(ParticlePickerJFrame.this, ex.getMessage());
-			if(particlesdialog != null)
+			if (particlesdialog != null)
 				particlesdialog.close();
 			particlesdialog = null;
 		}
@@ -336,7 +373,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		if (particlesdialog != null)
 			loadParticles();
 	}
-	
 
 	public ParticlesJDialog getParticlesJDialog()
 	{
@@ -346,8 +382,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	public abstract Micrograph getMicrograph();
 
 	public abstract List<? extends TrainingParticle> getParticles();
-	
-	
+
 	public Tool getTool()
 	{
 
@@ -357,16 +392,16 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			return Tool.PICKER;
 		return Tool.IMAGEJ;
 	}
-	
+
 	public boolean isPickingAvailable(MouseEvent e)
 	{
-		if(getTool() != Tool.PICKER)
+		if (getTool() != Tool.PICKER)
 			return false;
-		if(SwingUtilities.isRightMouseButton(e))
+		if (SwingUtilities.isRightMouseButton(e))
 			return false;
 		return true;
 	}
-	
+
 	protected void initSymbolPane()
 	{
 
@@ -391,7 +426,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		symbolpn.add(rectanglechb);
 		symbolpn.add(centerchb);
 	}
-	
+
 	class ShapeItemListener implements ItemListener
 	{
 		@Override
@@ -400,9 +435,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			changeShapes();
 		}
 	}
-	
+
 	public abstract void changeShapes();
-	
+
 	public boolean isShapeSelected(Shape shape)
 	{
 		switch (shape)
@@ -418,17 +453,15 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 		return false;
 	}
-	
+
 	public abstract ParticlePicker getParticlePicker();
-	
+
 	public abstract void setChanged(boolean changed);
-	
-		
-	
+
 	protected void initSizePane()
 	{
 		sizepn = new JPanel();
-		
+
 		int size = getFamily().getSize();
 		sizepn.add(new JLabel("Size:"));
 		sizesl = new JSlider(0, 1000, size);
@@ -466,7 +499,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		});
 
 	}
-	
+
 	public void switchSize(int size)
 	{
 		sizetf.setText(Integer.toString(size));
@@ -481,5 +514,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 		setChanged(true);
 	}
+	
+	protected void importParticles(String path)
+	{
+		getParticlePicker().importData(getFamily(), path);
+		setChanged(true);
+		getCanvas().repaint();
+		updateMicrographsModel();
+	}
+
 
 }

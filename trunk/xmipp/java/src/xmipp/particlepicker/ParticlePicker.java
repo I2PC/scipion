@@ -340,7 +340,8 @@ public abstract class ParticlePicker
 		return false;
 	}
 
-	public abstract void exportData(Family family);
+	public abstract void exportData(Family family, String absolutePath);
 
+	public abstract void importData(Family family, String absolutePath);
 
 }
