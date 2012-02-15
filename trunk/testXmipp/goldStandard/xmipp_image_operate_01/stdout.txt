@@ -1,0 +1,2 @@
+Input File: input/singleImage.spi
+Output File: tmpLink/xmipp_image_operate_01/mult.spi

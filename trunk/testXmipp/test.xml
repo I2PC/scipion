@@ -185,17 +185,17 @@
 	<PROGRAM name="xmipp_ctf_group" mpi="FALSE">
 		<CASE
 			arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6"
-			changeDir="FALSE" >
-			<FILE filename="ctf_ctf.xmp"/>
-			<FILE filename="ctfInfo.xmd"/>
-			<FILE filename="ctf_wien.xmp"/>
-			</CASE>
+			changeDir="FALSE">
+			<FILE filename="ctf_ctf.xmp" />
+			<FILE filename="ctfInfo.xmd" />
+			<FILE filename="ctf_wien.xmp" />
+		</CASE>
 		<CASE
 			arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc"
 			changeDir="FALSE" />
-			<FILE filename="ctf_ctf.xmp"/>
-            <FILE filename="ctfInfo.xmd"/>
-            <FILE filename="ctf_wien.xmp"/>
+		<FILE filename="ctf_ctf.xmp" />
+		<FILE filename="ctfInfo.xmd" />
+		<FILE filename="ctf_wien.xmp" />
 	</PROGRAM>
 	<PROGRAM name="xmipp_ctf_phase_flip" mpi="FALSE">
 		<CASE
@@ -208,7 +208,7 @@
 		<CASE arguments="-i all_micrographs.sel" changeDir="TRUE">
 			<PRERUN
 				command="cp -r input/Protocol_Preprocess_Micrographs/Preprocessing/* %o" />
-				<FILE filename="all_micrographs.sel"/>
+			<FILE filename="all_micrographs.sel" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_image_align" mpi="FALSE">
@@ -235,12 +235,12 @@
 			<FILE filename="singleImage.img" />
 		</CASE>
 	</PROGRAM>
-	   <PROGRAM name="xmipp_image_find_center" mpi="FALSE">
-        <CASE arguments="-i input/projectionsBacteriorhodopsin.stk --oroot %o/info"
-            changeDir="FALSE">
-            <FILE filename="info_center.xmd" />
-        </CASE>
-    </PROGRAM>
+	<PROGRAM name="xmipp_image_find_center" mpi="FALSE">
+		<CASE arguments="-i input/projectionsBacteriorhodopsin.stk --oroot %o/info"
+			changeDir="FALSE">
+			<FILE filename="info_center.xmd" />
+		</CASE>
+	</PROGRAM>
 	<PROGRAM name="xmipp_image_header" mpi="FALSE">
 		<CASE arguments="-i input/smallStack.stk --extract -o %o/header.doc"
 			changeDir="FALSE">
@@ -257,11 +257,34 @@
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_image_histogram" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk -o %o/hist.doc --steps 256 --range -0.5 0.7"
+		<CASE
+			arguments="-i input/smallStack.stk -o %o/hist.doc --steps 256 --range -0.5 0.7"
+			changeDir="FALSE">
+			<FILE filename="hist.doc" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_image_operate" mpi="FALSE">
+		<CASE arguments="-i input/singleImage.spi --mult 2.5 -o %o/mult.spi"
+			changeDir="FALSE">
+			<FILE filename="mult.spi" />
+		</CASE>
+		<CASE arguments="-i input/singleImage.spi --pow  -o %o/power.spi"
+			changeDir="FALSE">
+			<FILE filename="power.spi" />
+		</CASE>
+		<CASE arguments="-i input/singleImage.spi --radial_avg -o %o/rad_avg.spi"
+			changeDir="FALSE">
+			<FILE filename="rad_avg.spi" />
+		</CASE>
+		<CASE arguments="-i input/phantomCandida.vol --slice 32 -o %o/slice.spi"
             changeDir="FALSE">
-            <FILE filename="hist.doc" />
+            <FILE filename="slice.spi" />
         </CASE>
-    </PROGRAM>
+        <CASE arguments="-i input/phantomCandida.vol --column 32 -o %o/column.spi"
+            changeDir="FALSE">
+            <FILE filename="column.spi" />
+        </CASE>
+	</PROGRAM>
 	<PROGRAM name="xmipp_image_rotational_spectra" mpi="FALSE">
 		<CASE arguments="-i input/images_some.stk -o %o/spectra.xmd --r1 10 --r2 40"
 			changeDir="FALSE">
