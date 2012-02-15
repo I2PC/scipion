@@ -37,6 +37,10 @@ public class MetaData {
     //hold pointer to Image class in C++ space
     private long peer;
 
+    //keep labels for avoid read all the time
+    int[] activeLabels;
+    
+    
     static {
         System.loadLibrary("XmippJNI");
         //storeIds();
@@ -49,6 +53,7 @@ public class MetaData {
 
     //destructor
     private synchronized native void destroy();
+    
 
     //reading
     public native void read_(String filename) throws Exception;
@@ -56,6 +61,7 @@ public class MetaData {
     public final void read(String filename) throws Exception {
         this.filename = filename;
         read_(filename);
+        activeLabels = getActiveLabels();
     }
 
     public native int size() throws Exception;
@@ -110,6 +116,7 @@ public class MetaData {
 
     public native double getValueDouble(int label, long objId) throws Exception;
 
+    /** Return the value of some label as String */
     public native String getValueString(int label, long objId) throws Exception;
 
     public String getValueString(int label, long objId, boolean fixPaths) throws Exception {
@@ -121,6 +128,15 @@ public class MetaData {
         }
 
         return value;
+    }
+    
+    /** Return all values of the row as String[] 
+     * @throws Exception */
+    public String[] getRowValues(long objId) throws Exception{
+    	String[] values = new String[activeLabels.length];
+    	for (int i = 0; i < activeLabels.length; ++i)
+    		values[i] = getValueString(activeLabels[i], objId);
+    	return values;
     }
 
     public static boolean isPathField(int label) throws Exception {

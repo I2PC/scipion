@@ -259,5 +259,6 @@ public class Labels {
     public final static String MSG_NORMALIZE = "Global normalization";
     public final static String MSG_APPLY_GEO = "Apply geometry";
     public final static String MSG_SHOW_LABEL = "Show labels";
+    public final static String MSG_RENDER_IMG = "Render images";
     public final static String MSG_ADJUST_COLS = "Adjust columns when resizing";
 }

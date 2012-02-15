@@ -7,9 +7,9 @@ import xmipp.particlepicker.Constants;
 import xmipp.particlepicker.ParticleCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.ParticlesJDialog;
-import xmipp.particlepicker.WindowUtils;
 import xmipp.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.particlepicker.training.model.TrainingParticle;
+import xmipp.utils.WindowUtils;
 
 public class TiltPairParticlesJDialog extends ParticlesJDialog
 {

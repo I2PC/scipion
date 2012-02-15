@@ -31,10 +31,14 @@ public class Resources {
     public final static String ADJUST_COLS = "resize.png";
     public final static String GOTO = "goto.gif";
     public final static String ZOOM = "zoom.png";
+    public final static String VIEW_MD = "md_view.gif";
+    public final static String VIEW_GALLERY = "table_view.gif";
     
     public static ImageIcon WAIT_ICON;
     public static ImageIcon WAIT_MENU_ICON;
     public static ImagePlus MISSING_ITEM;
+    public static ImageIcon VIEW_MD_ICON;
+    public static ImageIcon VIEW_GALLERY_ICON;
 
     static { //this block will be called just once, at class initialization
     	try {
@@ -46,6 +50,8 @@ public class Resources {
     	DEBUG.printMessage(PATH_ICONS);
     	WAIT_ICON = getIcon(WAIT);
     	WAIT_MENU_ICON = getIcon(WAIT_MENU);
+    	VIEW_MD_ICON = getIcon(VIEW_MD);
+    	VIEW_GALLERY_ICON = getIcon(VIEW_GALLERY);
     	
     	// For missing items.
     	ImageIcon missingIcon = getIcon(MISSING);

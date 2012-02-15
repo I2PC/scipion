@@ -48,6 +48,7 @@ import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
+import xmipp.utils.WindowUtils;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {

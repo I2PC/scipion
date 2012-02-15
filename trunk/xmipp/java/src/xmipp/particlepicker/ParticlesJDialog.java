@@ -19,6 +19,7 @@ import xmipp.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.TrainingParticle;
+import xmipp.utils.WindowUtils;
 
 public class ParticlesJDialog extends JDialog
 {
@@ -108,7 +109,7 @@ public class ParticlesJDialog extends JDialog
 		sp.add(particlespn);
 		add(sp);
 		loadParticles(true);
-		WindowUtils.centerScreen(0.6, 0, this);
+		WindowUtils.setLocation(0.6, 0, this);
 		setVisible(true);
 		setAlwaysOnTop(true);
 		this.addComponentListener(new java.awt.event.ComponentAdapter()

@@ -13,13 +13,13 @@ import javax.swing.SwingUtilities;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
-import xmipp.particlepicker.WindowUtils;
 import xmipp.particlepicker.tiltpair.model.TiltedMicrograph;
 import xmipp.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.particlepicker.training.model.TrainingParticle;
+import xmipp.utils.WindowUtils;
 import xmipp.jni.Particle;
 
 public class TiltedMicrographCanvas extends ParticlePickerCanvas
@@ -40,7 +40,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 		this.frame = frame;
 		this.uc = (UntiltedMicrographCanvas)frame.getCanvas();
 		iw = new ImageWindow(imp, this);
-		WindowUtils.centerScreen(0.7, 0, iw);
+		WindowUtils.setLocation(0.7, 0, iw);
 		addMouseWheelListener(this);
 
 	}

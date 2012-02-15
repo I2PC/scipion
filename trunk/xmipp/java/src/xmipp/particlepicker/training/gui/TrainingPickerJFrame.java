@@ -41,7 +41,6 @@ import xmipp.particlepicker.Constants;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
-import xmipp.particlepicker.WindowUtils;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.MicrographFamilyData;
 import xmipp.particlepicker.training.model.MicrographFamilyState;
@@ -49,6 +48,7 @@ import xmipp.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
+import xmipp.utils.WindowUtils;
 import xmipp.jni.Program;
 
 public class TrainingPickerJFrame extends ParticlePickerJFrame
@@ -132,7 +132,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 			pack();
 			positionx = 0.995;
-			WindowUtils.centerScreen(positionx, 0.25, this);
+			WindowUtils.setLocation(positionx, 0.25, this);
 			setVisible(true);
 		}
 		catch (Exception e)
@@ -344,7 +344,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 						}
 					}, // OK button handler
 					null); // no CANCEL button handler
-			WindowUtils.centerScreen(positionx, 0.25, dialog);
+			WindowUtils.setLocation(positionx, 0.25, dialog);
 			dialog.setVisible(true);
 		}
 	}

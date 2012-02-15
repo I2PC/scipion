@@ -33,6 +33,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
 
@@ -65,6 +66,8 @@ public abstract class ImageGallery extends AbstractTableModel {
 	protected ImageDimension dimension;
 	// Renderer to display images
 	protected ImageItemRenderer renderer = new ImageItemRenderer();
+	// Column model
+	protected GalleryColumnModel columnModel;
 	// Where to show labels
 	protected boolean showLabel = false;
 	// Whether to autoadjust columns
@@ -80,6 +83,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public ImageGallery(String fn, int zoom) throws Exception {
 		filename = fn;
 		dimension = loadDimension();
+		columnModel = createColumnModel();
 		// Zdim will always be used as number of elements to display
 		n = dimension.getZDim();
 		selection = new boolean[n];
@@ -91,7 +95,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		cols = 1;
 		rows = n;
 		// DEBUG.printMessage(String.format("col: %d, rows: %d", cols, rows));
-		resizeCache();
+		resizeCache();		
 	}
 
 	// Load initial dimensions
@@ -235,14 +239,40 @@ public abstract class ImageGallery extends AbstractTableModel {
 		}
 		cellDim.setSize(thumb_width + 1 * borderWidth, thumb_height + 1
 				* borderHeight + font_height);
+		adjustColumnsWidth();
+	}
+	
+	/** This method will be used to set renderers and other 
+	 * table configurations
+	 */
+	public void setupTable(JTable table){
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+    	table.setDefaultRenderer(ImageItem.class, renderer);
+    	//table.setDefaultRenderer(Object.class, new TestRenderer());
+	}
+	
+	/** Ajust the width of columns and headers */
+	protected void adjustColumnsWidth(){
 		renderer.setPreferredSize(cellDim);
+		columnModel.setWidth(cellDim.width);
 	}
 
 	/** Return the cell renderer to be used to draw images */
 	public ImageItemRenderer getRenderer() {
 		return renderer;
 	}
-
+	
+	
+	/** Return the column model to be used with this table model */
+	public GalleryColumnModel getColumnModel(){
+		return columnModel;
+	}
+	
+	/** Internal method to create the column model */
+	protected GalleryColumnModel createColumnModel(){
+		return new GalleryColumnModel(cellDim.width);
+	}
+	
 	protected void setZoomValue(int z) {
 		zoom = z;
 		scale = (float) (zoom / 100.0);
@@ -362,6 +392,10 @@ public abstract class ImageGallery extends AbstractTableModel {
 			calculateCellSize();
 			fireTableDataChanged();
 		}
+	}
+	
+	/** Whether to display the labels */
+	public void setRenderImages(boolean value) {
 	}
 
 	/** Retrieve the mininum and maximum of data */

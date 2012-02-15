@@ -164,11 +164,12 @@ public class ImagesWindowFactory {
     }
 
     public static void openFileAsMetadata(String filename, Param parameters) {
-        JFrameMetaData frameMetaData = new JFrameMetaData(filename);
-        frameMetaData.setRenderImages(parameters.renderImages);
-        setConvenientSize(frameMetaData);
-        frameMetaData.setLocationRelativeTo(null);
-        frameMetaData.setVisible(true);
+//        JFrameMetaData frameMetaData = new JFrameMetaData(filename);
+//        frameMetaData.setRenderImages(parameters.renderImages);
+//        setConvenientSize(frameMetaData);
+//        frameMetaData.setLocationRelativeTo(null);
+//        frameMetaData.setVisible(true);
+    	openFileAsGallery(filename, parameters);
     }
 
     public static void openFileAsGallery(String filename) {

@@ -1,4 +1,4 @@
-package xmipp.particlepicker;
+package xmipp.utils;
 
 import java.awt.Container;
 import java.awt.Dimension;
@@ -8,7 +8,7 @@ import java.awt.Rectangle;
 
 public class WindowUtils {
 
-	public static void centerScreen(double positionx, double positiony, Container w) {
+	public static void setLocation(float positionx, float positiony, Container w) {
 		Dimension dim = w.getToolkit().getScreenSize();
 		Rectangle abounds = w.getBounds();
 		int x = (int) (positionx * (dim.width - abounds.width));

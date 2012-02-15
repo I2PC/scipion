@@ -22,7 +22,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import xmipp.particlepicker.Family;
-import xmipp.particlepicker.WindowUtils;
+import xmipp.utils.WindowUtils;
 
 
 
@@ -86,7 +86,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 		add(cancelbt, WindowUtils.getConstraints(constraints, 1, 3, 1));
 		setListeners();
 		pack();
-		WindowUtils.centerScreen(position, 0.5, this);
+		WindowUtils.setLocation(position, 0.5, this);
 		setVisible(true);
 	}
 
@@ -217,7 +217,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 					}
 				}, // OK button handler
 				null); // no CANCEL button handler
-		WindowUtils.centerScreen(AddFamilyJDialog.this.position, 0.5, dialog);
+		WindowUtils.setLocation(AddFamilyJDialog.this.position, 0.5, dialog);
 		dialog.setVisible(true);
 	}
 

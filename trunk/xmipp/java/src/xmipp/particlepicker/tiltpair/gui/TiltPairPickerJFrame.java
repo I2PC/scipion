@@ -37,11 +37,11 @@ import javax.swing.event.ListSelectionListener;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
-import xmipp.particlepicker.WindowUtils;
 import xmipp.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.particlepicker.training.gui.ColorIcon;
 import xmipp.particlepicker.training.model.TrainingParticle;
+import xmipp.utils.WindowUtils;
 
 
 
@@ -101,7 +101,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 		pack();
 		position = 0.95;
-		WindowUtils.centerScreen(position, 0.5, this);
+		WindowUtils.setLocation(position, 0.5, this);
 		setVisible(true);
 	}
 	
@@ -267,7 +267,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 						}
 					}, // OK button handler
 					null); // no CANCEL button handler
-			WindowUtils.centerScreen(position, 0.5, dialog);
+			WindowUtils.setLocation(position, 0.5, dialog);
 			dialog.setVisible(true);
 		}
 	}

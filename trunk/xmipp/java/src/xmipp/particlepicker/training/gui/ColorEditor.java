@@ -43,7 +43,7 @@ import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 import javax.swing.JTable;
 
-import xmipp.particlepicker.WindowUtils;
+import xmipp.utils.WindowUtils;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -92,7 +92,7 @@ public class ColorEditor extends AbstractCellEditor
             //bring up the dialog.
             button.setBackground(currentColor);
             colorChooser.setColor(currentColor);
-            WindowUtils.centerScreen(position, 0.5, dialog);
+            WindowUtils.setLocation(position, 0.5, dialog);
             dialog.setVisible(true);
 
             //Make the renderer reappear.

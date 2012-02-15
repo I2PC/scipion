@@ -23,7 +23,7 @@ import javax.swing.table.AbstractTableModel;
 
 import xmipp.particlepicker.Constants;
 import xmipp.particlepicker.Family;
-import xmipp.particlepicker.WindowUtils;
+import xmipp.utils.WindowUtils;
 
 
 
@@ -76,7 +76,7 @@ public class EditFamiliesJDialog extends JDialog {
 		getRootPane().setDefaultButton(addbt);
 		setListeners();
 		pack();
-		WindowUtils.centerScreen(position, 0.5, this);
+		WindowUtils.setLocation(position, 0.5, this);
 		setVisible(true);
 	}
 
