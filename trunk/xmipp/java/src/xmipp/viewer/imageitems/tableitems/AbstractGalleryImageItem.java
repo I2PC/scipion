@@ -6,7 +6,7 @@ package xmipp.viewer.imageitems.tableitems;
 
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Resources;
+import xmipp.utils.XmippResource;
 import xmipp.viewer.imageitems.ImageDimension;
 import ij.IJ;
 import ij.ImagePlus;
@@ -94,11 +94,11 @@ public abstract class AbstractGalleryImageItem {
     }
 
     public int getWidth() {
-        return dimension != null ? dimension.getWidth() : Resources.DEFAULT_PREVIEW_WIDTH;
+        return dimension != null ? dimension.getWidth() : XmippResource.DEFAULT_PREVIEW_WIDTH;
     }
 
     public int getHeight() {
-        return dimension != null ? dimension.getHeight() : Resources.DEFAULT_PREVIEW_HEIGHT;
+        return dimension != null ? dimension.getHeight() : XmippResource.DEFAULT_PREVIEW_HEIGHT;
     }
 
     public String getKey() {
@@ -168,14 +168,14 @@ public abstract class AbstractGalleryImageItem {
                 statistics = ImageStatistics.getStatistics(preview.getProcessor(), moptions, preview.getCalibration());
             }
         } else {    // Null preview.
-            preview = Resources.MISSING_ITEM;
+            preview = XmippResource.MISSING_ITEM;
         }
 
         return preview;
     }
 
     protected ImagePlus loadPreview(int w, int h) {
-        ImagePlus ip = Resources.MISSING_ITEM;
+        ImagePlus ip = XmippResource.MISSING_ITEM;
         String path = getPath();
 
         if (path != null) {

@@ -5,7 +5,7 @@
 package xmipp.viewer.imageitems.tableitems;
 
 import xmipp.utils.Cache;
-import xmipp.utils.Labels;
+import xmipp.utils.XmippLabel;
 import java.io.File;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -82,6 +82,6 @@ public class VolumeGalleryItem extends AbstractGalleryImageItem {
                 return enabled;
         }
 
-        return Labels.LABEL_UNKNOWN;
+        return XmippLabel.LABEL_UNKNOWN;
     }
 }

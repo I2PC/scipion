@@ -1,7 +1,7 @@
 package xmipp.particlepicker.training.model;
 
-import xmipp.particlepicker.Constants;
 import xmipp.particlepicker.Family;
+import xmipp.utils.XmippMessage;
 
 public class AutomaticParticle extends TrainingParticle {
 	
@@ -10,7 +10,7 @@ public class AutomaticParticle extends TrainingParticle {
 	public AutomaticParticle(int x, int y, Family family, TrainingMicrograph micrograph, double cost, boolean deleted) {
 		super(x, y, family, micrograph, cost);
 		if(cost> 1)
-			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("cost", cost));
+			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("cost", cost));
 		this.deleted = deleted;
 	}
 	

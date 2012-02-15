@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.particlepicker.training.model.TrainingPicker;
+import xmipp.utils.XmippMessage;
 
 
 
@@ -48,7 +49,7 @@ public class Family {
 		if(size < 0 || size > sizemax)
 			throw new IllegalArgumentException(String.format("Size should be between 0 and %s, %s not allowed", sizemax, size));
 		if (name == null || name.equals(""))
-			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("name"));
+			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("name"));
 		this.name = name;
 		this.color = color;
 		this.size = size;
@@ -122,7 +123,7 @@ public class Family {
 
 	public void setName(String name) {
 		if (name == null || name.equals(""))
-			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("name"));
+			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("name"));
 		this.name = name;
 	}
 

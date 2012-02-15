@@ -3,8 +3,8 @@ package xmipp.particlepicker.tiltpair.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import xmipp.particlepicker.Constants;
 import xmipp.particlepicker.Micrograph;
+import xmipp.utils.XmippMessage;
 import xmipp.jni.Particle;
 import xmipp.jni.TiltPairAligner;
 
@@ -74,7 +74,7 @@ public class UntiltedMicrograph extends Micrograph {
 	public void addParticleToAligner(UntiltedParticle up)
 	{
 		if(up.getTiltedParticle() == null)
-			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("TiltedParticle"));
+			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("TiltedParticle"));
 		tpa.addParticleToAligner(up.getX(), up.getY(), up.getTiltedParticle().getX(), up.getTiltedParticle().getY());
 		up.setAdded(true);
 		added ++;

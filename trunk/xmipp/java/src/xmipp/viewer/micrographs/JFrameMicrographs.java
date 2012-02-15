@@ -11,8 +11,8 @@
 package xmipp.viewer.micrographs;
 
 import xmipp.utils.DEBUG;
-import xmipp.utils.Resources;
-import xmipp.utils.Labels;
+import xmipp.utils.XmippResource;
+import xmipp.utils.XmippLabel;
 import xmipp.viewer.gallery.models.GalleryRowHeaderModel;
 import xmipp.viewer.gallery.renderers.RowHeaderRenderer;
 import xmipp.viewer.imageitems.tableitems.GalleryImageItem;
@@ -306,7 +306,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
     private void save(String fileName) {
         if (tableModel.save(fileName)) {
-            IJ.showMessage(Labels.MESSAGE_FILE_SAVED + fileName);
+            IJ.showMessage(XmippLabel.MESSAGE_FILE_SAVED + fileName);
         }
     }
 
@@ -337,7 +337,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
     }
 
     public void setRunning(boolean running) {
-        jlStatus.setIcon(running ? Resources.WAIT_ICON : null);
+        jlStatus.setIcon(running ? XmippResource.WAIT_ICON : null);
     }
 
     public void done() {
@@ -413,7 +413,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
         toolBar.setRollover(true);
 
-        bSave.setText(Labels.BUTTON_SAVE);
+        bSave.setText(XmippLabel.BUTTON_SAVE);
         bSave.setFocusable(false);
         bSave.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         bSave.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -424,7 +424,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         });
         toolBar.add(bSave);
 
-        bReload.setText(Labels.BUTTON_RELOAD_GALLERY);
+        bReload.setText(XmippLabel.BUTTON_RELOAD_GALLERY);
         bReload.setFocusable(false);
         bReload.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         bReload.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -441,7 +441,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
         jpCheckAll.setLayout(new javax.swing.BoxLayout(jpCheckAll, javax.swing.BoxLayout.LINE_AXIS));
 
-        jcbEnableAll.setText(Labels.LABEL_GALLERY_ENABLE_ALL);
+        jcbEnableAll.setText(XmippLabel.LABEL_GALLERY_ENABLE_ALL);
         jcbEnableAll.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 jcbEnableAllItemStateChanged(evt);
@@ -449,7 +449,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         });
         jpCheckAll.add(jcbEnableAll);
 
-        jcbFilterEnabled.setText(Labels.LABEL_GALLERY_HIDE_DISABLED);
+        jcbFilterEnabled.setText(XmippLabel.LABEL_GALLERY_HIDE_DISABLED);
         jcbFilterEnabled.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 jcbFilterEnabledItemStateChanged(evt);
@@ -515,11 +515,11 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
     class JPopUpMenuMicrograph extends JPopupMenu {
 
         private int row, col;   // Current cell where menu is displayed.
-        private JMenuItem jmiShowCTF = new JMenuItem(Labels.LABEL_SHOW_CTF_INFO);
-        private JMenuItem jmiExtractColumnEnabled = new JMenuItem(Labels.LABEL_EXTRACT_COLUMN_ENABLED);
-        private JMenuItem jmiExtractColumnAll = new JMenuItem(Labels.LABEL_EXTRACT_COLUMN_ALL);
-        private JMenuItem jmiRecalculateCTF = new JMenuItem(Labels.LABEL_RECALCULATE_CTF);
-        private JMenuItem jmiViewCTFProfile = new JMenuItem(Labels.LABEL_VIEW_CTF_PROFILE);
+        private JMenuItem jmiShowCTF = new JMenuItem(XmippLabel.LABEL_SHOW_CTF_INFO);
+        private JMenuItem jmiExtractColumnEnabled = new JMenuItem(XmippLabel.LABEL_EXTRACT_COLUMN_ENABLED);
+        private JMenuItem jmiExtractColumnAll = new JMenuItem(XmippLabel.LABEL_EXTRACT_COLUMN_ALL);
+        private JMenuItem jmiRecalculateCTF = new JMenuItem(XmippLabel.LABEL_RECALCULATE_CTF);
+        private JMenuItem jmiViewCTFProfile = new JMenuItem(XmippLabel.LABEL_VIEW_CTF_PROFILE);
 
         public JPopUpMenuMicrograph() {
             super();
@@ -583,7 +583,7 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
             jmiExtractColumnAll.setEnabled(tableModel.getValueAt(row, col) instanceof GalleryImageItem);
 
             boolean busy = tableModel.isRowBusy(row);
-            jmiRecalculateCTF.setIcon(busy ? Resources.WAIT_MENU_ICON : null);
+            jmiRecalculateCTF.setIcon(busy ? XmippResource.WAIT_MENU_ICON : null);
             jmiRecalculateCTF.setEnabled(!busy && hasCtfData);
 
 //            repaint();

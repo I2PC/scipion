@@ -7,12 +7,12 @@ import java.awt.Rectangle;
 
 import javax.swing.ImageIcon;
 
-import xmipp.particlepicker.Constants;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticleCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
+import xmipp.utils.XmippMessage;
 import xmipp.jni.Particle;
 
 public class TrainingParticle extends Particle{
@@ -104,7 +104,7 @@ public class TrainingParticle extends Particle{
 	{
 		int radius = family.getSize()/2;
 		if(x - radius < 0 || y - radius < 0 || x + radius > micrograph.getImagePlus().getWidth() || y + radius > micrograph.getImagePlus().getHeight())
-			throw new IllegalArgumentException(Constants.getOutOfBoundsMsg(String.format(" particle center: %s %s", x, y)));
+			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg(String.format(" particle center: %s %s", x, y)));
 		super.setPosition(x, y);
 		
 		img = null;

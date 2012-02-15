@@ -3,13 +3,13 @@ package xmipp.particlepicker.tiltpair.gui;
 import java.awt.Dimension;
 import java.util.List;
 
-import xmipp.particlepicker.Constants;
 import xmipp.particlepicker.ParticleCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.ParticlesJDialog;
 import xmipp.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.utils.WindowUtils;
+import xmipp.utils.XmippMessage;
 
 public class TiltPairParticlesJDialog extends ParticlesJDialog
 {
@@ -28,9 +28,9 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 		side = frame.getSide(frame.getFamily().getSize());
 
 		if (particles.isEmpty())
-			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("particles"));
+			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("particles"));
 		if (side == 0)
-			throw new IllegalArgumentException(Constants.getOutOfBoundsMsg("side"));
+			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("side"));
 
 		if (resize)
 		{

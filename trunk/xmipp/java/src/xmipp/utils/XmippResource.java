@@ -14,7 +14,7 @@ import javax.swing.ImageIcon;
  *
  * @author Juanjo Vega
  */
-public class Resources {
+public class XmippResource {
 
     public static int DEFAULT_PREVIEW_WIDTH = 80;
     public static int DEFAULT_PREVIEW_HEIGHT = 80;

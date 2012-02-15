@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.SupervisedParticlePicker;
+import xmipp.utils.XmippMessage;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
@@ -246,9 +247,9 @@ public abstract class ParticlePicker
 	{
 		if (getManualParticlesNumber(family) > 0)// perhaps I have to check
 													// automatic particles
-			throw new IllegalArgumentException(Constants.getAssociatedDataMsg("family"));
+			throw new IllegalArgumentException(XmippMessage.getAssociatedDataMsg("family"));
 		if (families.size() == 1)
-			throw new IllegalArgumentException(Constants.getIllegalDeleteMsg("family"));
+			throw new IllegalArgumentException(XmippMessage.getIllegalDeleteMsg("family"));
 		families.remove(family);
 	}
 

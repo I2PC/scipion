@@ -25,11 +25,11 @@ import xmipp.viewer.VolumeGallery;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
 import xmipp.utils.DEBUG;
-import xmipp.utils.Labels;
+import xmipp.utils.XmippLabel;
 import xmipp.utils.Param;
 import ij.IJ;
 import xmipp.jni.Filename;
-import xmipp.utils.Resources;
+import xmipp.utils.XmippResource;
 
 
 import java.awt.Component;
@@ -592,7 +592,7 @@ public class JFrameGallery extends JFrame {
 		// Add toggle button to set/unset global normalization
 		// JToggleButton btn = new javax.swing.JToggleButton();
 		btn.setFocusable(false);
-		btn.setIcon(Resources.getIcon(icon));
+		btn.setIcon(XmippResource.getIcon(icon));
 		btn.setToolTipText(text);
 		btn.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
 		btn.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -610,7 +610,7 @@ public class JFrameGallery extends JFrame {
 		toolBar.setLayout(new FlowLayout(FlowLayout.LEFT));
 
 		btnChangeView = new JButton();
-		setupButton(btnChangeView, Resources.VIEW_MD, "xxx",
+		setupButton(btnChangeView, XmippResource.VIEW_MD, "xxx",
 				new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
@@ -619,11 +619,11 @@ public class JFrameGallery extends JFrame {
 						if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_GALLERY))
 						{
 							mode = Param.OPENING_MODE_METADATA;
-							icon = Resources.VIEW_GALLERY_ICON;
+							icon = XmippResource.VIEW_GALLERY_ICON;
 						}
 						else {
 							mode = Param.OPENING_MODE_GALLERY;
-							icon = Resources.VIEW_MD_ICON;
+							icon = XmippResource.VIEW_MD_ICON;
 						}
 						btnChangeView.setIcon(icon);
 						parameters.mode = mode;
@@ -646,8 +646,8 @@ public class JFrameGallery extends JFrame {
 
 		jlZoom = new javax.swing.JLabel();
 		jsZoom = new javax.swing.JSpinner();
-		jlZoom.setIcon(Resources.getIcon(Resources.ZOOM));
-		jlZoom.setToolTipText(Labels.LABEL_ZOOM);
+		jlZoom.setIcon(XmippResource.getIcon(XmippResource.ZOOM));
+		jlZoom.setToolTipText(XmippLabel.LABEL_ZOOM);
 		toolBar.add(jlZoom);
 
 		jsZoom.setModel(new javax.swing.SpinnerNumberModel(Integer
@@ -697,8 +697,8 @@ public class JFrameGallery extends JFrame {
 
 		jlGoto = new javax.swing.JLabel();
 		jsGoToImage = new javax.swing.JSpinner();
-		jlGoto.setIcon(Resources.getIcon(Resources.GOTO));
-		jlGoto.setToolTipText(Labels.LABEL_GOTO_ITEM);
+		jlGoto.setIcon(XmippResource.getIcon(XmippResource.GOTO));
+		jlGoto.setToolTipText(XmippLabel.LABEL_GOTO_ITEM);
 		toolBar.add(jlGoto);
 
 		jsGoToImage.setValue(1);
@@ -712,8 +712,8 @@ public class JFrameGallery extends JFrame {
 		toolBar.addSeparator();
 
 		jcbAutoAdjustColumns = new JToggleButton();
-		setupButton(jcbAutoAdjustColumns, Resources.ADJUST_COLS,
-				Labels.MSG_ADJUST_COLS, new java.awt.event.ActionListener() {
+		setupButton(jcbAutoAdjustColumns, XmippResource.ADJUST_COLS,
+				XmippLabel.MSG_ADJUST_COLS, new java.awt.event.ActionListener() {
 					public void actionPerformed(java.awt.event.ActionEvent evt) {
 						jcbAutoAdjustColumnsStateChanged(evt);
 					}
@@ -725,7 +725,7 @@ public class JFrameGallery extends JFrame {
 		jsColumns = new javax.swing.JSpinner();
 		toolBar.add(jcbAutoAdjustColumns);
 
-		jlColumns.setText(Labels.LABEL_COLUMNS);
+		jlColumns.setText(XmippLabel.LABEL_COLUMNS);
 		toolBar.add(jlColumns);
 
 		jsColumns.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -735,7 +735,7 @@ public class JFrameGallery extends JFrame {
 		});
 		toolBar.add(jsColumns);
 
-		jlRows.setText(Labels.LABEL_ROWS);
+		jlRows.setText(XmippLabel.LABEL_ROWS);
 		toolBar.add(jlRows);
 
 		jsRows.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -928,30 +928,30 @@ public class JFrameGallery extends JFrame {
 	}
 
 	class JMenuBarTable extends JMenuBar implements ActionListener {
-		protected JMenu jmFile = new JMenu(Labels.LABEL_GALLERY_FILE);
-		protected JMenu jmSave = new JMenu(Labels.LABEL_GALLERY_SAVE);
+		protected JMenu jmFile = new JMenu(XmippLabel.LABEL_GALLERY_FILE);
+		protected JMenu jmSave = new JMenu(XmippLabel.LABEL_GALLERY_SAVE);
 		protected JMenu jmDisplay = new JMenu("Display");
 
 		protected JMenuItem jmiSaveAsMetadata = new JMenuItem(
-				Labels.LABEL_GALLERY_SAVE_AS_METADATA);
+				XmippLabel.LABEL_GALLERY_SAVE_AS_METADATA);
 		protected JMenuItem jmiSaveAsStack = new JMenuItem(
-				Labels.LABEL_GALLERY_SAVE_AS_IMAGE);
+				XmippLabel.LABEL_GALLERY_SAVE_AS_IMAGE);
 		protected JMenuItem jmiSaveSelectionAsMetadata = new JMenuItem(
-				Labels.LABEL_GALLERY_SAVE_SELECTION_AS_METADATA);
+				XmippLabel.LABEL_GALLERY_SAVE_SELECTION_AS_METADATA);
 		protected JMenuItem jmiSaveSelectionAsStack = new JMenuItem(
-				Labels.LABEL_GALLERY_SAVE_SELECTION_AS_IMAGE);
-		protected JMenuItem jmiExit = new JMenuItem(Labels.LABEL_GALLERY_EXIT);
-		protected JMenu jmStatistics = new JMenu(Labels.MENU_STATS);
-		protected JMenuItem jmiAVG = new JMenuItem(Labels.BUTTON_MEAN);
+				XmippLabel.LABEL_GALLERY_SAVE_SELECTION_AS_IMAGE);
+		protected JMenuItem jmiExit = new JMenuItem(XmippLabel.LABEL_GALLERY_EXIT);
+		protected JMenu jmStatistics = new JMenu(XmippLabel.MENU_STATS);
+		protected JMenuItem jmiAVG = new JMenuItem(XmippLabel.BUTTON_MEAN);
 		protected JMenuItem jmiSTDEV = new JMenuItem(
-				Labels.BUTTON_STD_DEVIATION);
-		protected JMenuItem jmiPCA = new JMenuItem(Labels.BUTTON_PCA);
-		protected JMenuItem jmiFSC = new JMenuItem(Labels.BUTTON_FSC);
-		protected JMenu jmOpenWith = new JMenu(Labels.MENU_OPEN_WITH);
+				XmippLabel.BUTTON_STD_DEVIATION);
+		protected JMenuItem jmiPCA = new JMenuItem(XmippLabel.BUTTON_PCA);
+		protected JMenuItem jmiFSC = new JMenuItem(XmippLabel.BUTTON_FSC);
+		protected JMenu jmOpenWith = new JMenu(XmippLabel.MENU_OPEN_WITH);
 		protected JMenuItem jmiOpenWithChimera = new JMenuItem(
-				Labels.MENU_OPEN_WITH_CHIMERA, Resources.getIcon("chimera.gif"));
+				XmippLabel.MENU_OPEN_WITH_CHIMERA, XmippResource.getIcon("chimera.gif"));
 		protected JMenuItem jmiOpenWithImageJ = new JMenuItem(
-				Labels.MENU_OPEN_WITH_IJ, Resources.getIcon("ij.gif"));
+				XmippLabel.MENU_OPEN_WITH_IJ, XmippResource.getIcon("ij.gif"));
 		// protected JMenu jmReslice = new JMenu(Labels.LABEL_RESLICE);
 		// protected JMenuItem jmiResliceTop = new JMenuItem(
 		// Labels.LABEL_RESLICE_TOP);
@@ -959,16 +959,16 @@ public class JFrameGallery extends JFrame {
 		// Labels.LABEL_RESLICE_RIGHT);
 
 		protected JCheckBoxMenuItem jmiNormalize = new JCheckBoxMenuItem(
-				Labels.MSG_NORMALIZE);
+				XmippLabel.MSG_NORMALIZE);
 		protected JCheckBoxMenuItem jmiApplyGeo = new JCheckBoxMenuItem(
-				Labels.MSG_APPLY_GEO);
+				XmippLabel.MSG_APPLY_GEO);
 		protected JMenuItem jmiColumns = new JMenuItem("Columns ...",
-				Resources.getIcon("columns.gif"));
+				XmippResource.getIcon("columns.gif"));
 		protected JCheckBoxMenuItem jmiShowLabel = new JCheckBoxMenuItem(
-				Labels.MSG_SHOW_LABEL);
+				XmippLabel.MSG_SHOW_LABEL);
 		protected JCheckBoxMenuItem jmiRenderImage = new JCheckBoxMenuItem(
-				Labels.MSG_RENDER_IMG);
-		protected JMenu jmReslice = new JMenu(Labels.LABEL_RESLICE);
+				XmippLabel.MSG_RENDER_IMG);
+		protected JMenu jmReslice = new JMenu(XmippLabel.LABEL_RESLICE);
 		protected JRadioButtonMenuItem jmiAxisX = new JRadioButtonMenuItem("X");
 		protected JRadioButtonMenuItem jmiAxisY = new JRadioButtonMenuItem("Y");
 		protected JRadioButtonMenuItem jmiAxisZ = new JRadioButtonMenuItem("Z");
@@ -1229,21 +1229,21 @@ public class JFrameGallery extends JFrame {
 
 		protected Point location;
 		protected JMenuItem jmiEnable = new JMenuItem(
-				Labels.LABEL_GALLERY_ENABLE);
+				XmippLabel.LABEL_GALLERY_ENABLE);
 		protected JMenuItem jmiDisable = new JMenuItem(
-				Labels.LABEL_GALLERY_DISABLE);
+				XmippLabel.LABEL_GALLERY_DISABLE);
 		protected JMenuItem jmiEnableAll = new JMenuItem(
-				Labels.LABEL_GALLERY_ENABLE_ALL);
+				XmippLabel.LABEL_GALLERY_ENABLE_ALL);
 		protected JMenuItem jmiDisableAll = new JMenuItem(
-				Labels.LABEL_GALLERY_DISABLE_ALL);
+				XmippLabel.LABEL_GALLERY_DISABLE_ALL);
 		protected JMenuItem jmiEnableFrom = new JMenuItem(
-				Labels.LABEL_GALLERY_ENABLE_FROM);
+				XmippLabel.LABEL_GALLERY_ENABLE_FROM);
 		protected JMenuItem jmiEnableTo = new JMenuItem(
-				Labels.LABEL_GALLERY_ENABLE_TO);
+				XmippLabel.LABEL_GALLERY_ENABLE_TO);
 		protected JMenuItem jmiDisableFrom = new JMenuItem(
-				Labels.LABEL_GALLERY_DISABLE_FROM);
+				XmippLabel.LABEL_GALLERY_DISABLE_FROM);
 		protected JMenuItem jmiDisableTo = new JMenuItem(
-				Labels.LABEL_GALLERY_DISABLE_TO);
+				XmippLabel.LABEL_GALLERY_DISABLE_TO);
 
 		public JPopUpMenuGallery() {
 			add(jmiEnable);

@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 
-import xmipp.particlepicker.Constants;
 import xmipp.particlepicker.Family;
+import xmipp.utils.XmippMessage;
 import xmipp.jni.Particle;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -32,13 +32,13 @@ public class ReviewParticlePicker extends TrainingPicker
 	{
 		super(selfile, outputdir, FamilyState.Review);
 		if (!new File(reviewfile).exists())
-			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("review file", reviewfile));
+			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("review file", reviewfile));
 		this.reviewfile = reviewfile;
 		String[] parts = reviewfile.split(File.separator);
 		String familyname = parts[parts.length - 1].split("_")[0];
 		this.reviewfamily = getFamily(familyname);
 		if (reviewfamily == null)
-			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("family", familyname));
+			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("family", familyname));
 
 		loadMicrographs();
 		families.clear();

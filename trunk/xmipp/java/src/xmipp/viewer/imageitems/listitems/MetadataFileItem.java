@@ -6,7 +6,7 @@ package xmipp.viewer.imageitems.listitems;
 
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Resources;
+import xmipp.utils.XmippResource;
 import ij.IJ;
 import ij.ImagePlus;
 import java.io.File;
@@ -89,7 +89,7 @@ public class MetadataFileItem extends XmippImageItem {
 
     @Override
     public ImagePlus getPreview(int w, int h) {
-        ImagePlus ip = Resources.MISSING_ITEM;
+        ImagePlus ip = XmippResource.MISSING_ITEM;
 
         if (previewFile != null) {
             // Tricky way to get preview.

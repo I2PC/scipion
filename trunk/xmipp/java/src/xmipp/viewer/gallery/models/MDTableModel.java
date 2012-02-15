@@ -6,7 +6,7 @@ package xmipp.viewer.gallery.models;
 
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Labels;
+import xmipp.utils.XmippLabel;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
 import xmipp.viewer.imageitems.tableitems.GalleryImageItem;
 import ij.IJ;
@@ -160,7 +160,7 @@ public class MDTableModel extends AbstractXmippTableModel {
             strImageSize = " (" + item.getWidth() + " x " + item.getHeight() + ")";
         }
         String title = filename;//md.getFilename();
-        return (title == null ? Labels.TITLE_UNTITLED : title) + ": " + getSize() + " images." + strImageSize;
+        return (title == null ? XmippLabel.TITLE_UNTITLED : title) + ": " + getSize() + " images." + strImageSize;
     }
 
     @Override

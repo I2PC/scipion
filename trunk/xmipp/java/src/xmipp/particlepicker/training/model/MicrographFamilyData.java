@@ -3,8 +3,8 @@ package xmipp.particlepicker.training.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import xmipp.particlepicker.Constants;
 import xmipp.particlepicker.Family;
+import xmipp.utils.XmippMessage;
 
 public class MicrographFamilyData
 {
@@ -18,7 +18,7 @@ public class MicrographFamilyData
 	public MicrographFamilyData(TrainingMicrograph micrograph, Family family)
 	{
 		if (family == null)
-			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("family"));
+			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("family"));
 		this.family = family;
 		this.manualparticles = new ArrayList<TrainingParticle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
@@ -85,7 +85,7 @@ public class MicrographFamilyData
 	public void removeParticle(TrainingParticle p, TrainingPicker ppicker)
 	{
 		if (p == null)
-			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("particle"));
+			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("particle"));
 		if (p instanceof AutomaticParticle)
 		{
 			if (ppicker.getMode() != FamilyState.Review)

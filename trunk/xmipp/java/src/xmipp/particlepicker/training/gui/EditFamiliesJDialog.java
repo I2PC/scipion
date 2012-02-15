@@ -21,9 +21,9 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
-import xmipp.particlepicker.Constants;
 import xmipp.particlepicker.Family;
 import xmipp.utils.WindowUtils;
+import xmipp.utils.XmippMessage;
 
 
 
@@ -170,7 +170,7 @@ public class EditFamiliesJDialog extends JDialog {
 		public void setValueAt(Object value, int row, int column) {
 			try {
 				if(value == null)
-					throw new IllegalArgumentException(Constants.getEmptyFieldMsg(columns[column]));
+					throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg(columns[column]));
 				Family f = frame.getParticlePicker().getFamilies().get(row);
 				if (column == 0) {
 					String name = (String) value;
@@ -178,7 +178,7 @@ public class EditFamiliesJDialog extends JDialog {
 						return;
 					else if (parent.getParticlePicker().existsFamilyName(name))
 						JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
-								Constants.getAlreadyExistsGroupNameMsg(name));
+								XmippMessage.getAlreadyExistsGroupNameMsg(name));
 					f.setName(name);
 					frame.updateFamilyComboBox();
 				} else if (column == 1)

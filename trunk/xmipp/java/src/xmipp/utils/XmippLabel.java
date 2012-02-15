@@ -8,7 +8,7 @@ package xmipp.utils;
  *
  * @author Juanjo Vega
  */
-public class Labels {
+public class XmippLabel {
 
     public final static String APP_NAME = "XmippJ";
     public final static String MESAGE_ABOUT = "About " + APP_NAME;

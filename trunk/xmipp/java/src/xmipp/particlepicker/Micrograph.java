@@ -2,6 +2,7 @@ package xmipp.particlepicker;
 
 import ij.ImagePlus;
 import xmipp.ij.XmippImageConverter;
+import xmipp.utils.XmippMessage;
 
 import java.io.File;
 import java.util.logging.Level;
@@ -24,7 +25,7 @@ public abstract class Micrograph
 	{
 		this.file = file;
 		if (!new File(file).exists())
-			throw new IllegalArgumentException(Constants.getNoSuchFieldValueMsg("file", file));
+			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
 		this.name = name;
 		this.ofilename = name + ext;
 

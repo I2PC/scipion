@@ -6,7 +6,7 @@ package xmipp.viewer.gallery.models;
 
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Resources;
+import xmipp.utils.XmippResource;
 import xmipp.viewer.imageitems.ImageDimension;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
 import xmipp.viewer.windows.ImagesWindowFactory;

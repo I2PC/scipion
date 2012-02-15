@@ -4,7 +4,7 @@
  */
 package xmipp.viewer.micrographs.ctf;
 
-import xmipp.utils.Labels;
+import xmipp.utils.XmippLabel;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageLayout;
@@ -30,7 +30,7 @@ import xmipp.viewer.micrographs.ctf.tasks.TasksEngine;
  */
 public class CTFRecalculateImageWindow extends ImageWindow {
 
-    private Button button = new Button(Labels.LABEL_RECALCULATE_CTF);
+    private Button button = new Button(XmippLabel.LABEL_RECALCULATE_CTF);
     protected EllipseFitter ellipseFitter = new EllipseFitter();
     private EllipseCTF ellipseCTF;
     private TasksEngine tasksEngine;

@@ -37,7 +37,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import xmipp.particlepicker.Constants;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
@@ -49,6 +48,7 @@ import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
 import xmipp.utils.WindowUtils;
+import xmipp.utils.XmippMessage;
 import xmipp.jni.Program;
 
 public class TrainingPickerJFrame extends ParticlePickerJFrame
@@ -570,7 +570,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	public void addFamily(Family g)
 	{
 		if (ppicker.existsFamilyName(g.getName()))
-			throw new IllegalArgumentException(Constants.getAlreadyExistsGroupNameMsg(g.getName()));
+			throw new IllegalArgumentException(XmippMessage.getAlreadyExistsGroupNameMsg(g.getName()));
 		ppicker.getFamilies().add(g);
 		updateFamilyComboBox();
 	}

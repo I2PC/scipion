@@ -20,6 +20,7 @@ import xmipp.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.utils.WindowUtils;
+import xmipp.utils.XmippMessage;
 
 public class ParticlesJDialog extends JDialog
 {
@@ -59,9 +60,9 @@ public class ParticlesJDialog extends JDialog
 		side = frame.getSide(frame.getFamily().getSize());
 		
 		if(particles.isEmpty())
-			throw new IllegalArgumentException(Constants.getEmptyFieldMsg("particles"));
+			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("particles"));
 		if(side == 0)
-			throw new IllegalArgumentException(Constants.getOutOfBoundsMsg("side"));
+			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("side"));
 		
 		if(resize)
 		{
