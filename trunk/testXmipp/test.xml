@@ -185,10 +185,17 @@
 	<PROGRAM name="xmipp_ctf_group" mpi="FALSE">
 		<CASE
 			arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6"
-			changeDir="FALSE" />
+			changeDir="FALSE" >
+			<FILE filename="ctf_ctf.xmp"/>
+			<FILE filename="ctfInfo.xmd"/>
+			<FILE filename="ctf_wien.xmp"/>
+			</CASE>
 		<CASE
 			arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc"
 			changeDir="FALSE" />
+			<FILE filename="ctf_ctf.xmp"/>
+            <FILE filename="ctfInfo.xmd"/>
+            <FILE filename="ctf_wien.xmp"/>
 	</PROGRAM>
 	<PROGRAM name="xmipp_ctf_phase_flip" mpi="FALSE">
 		<CASE
