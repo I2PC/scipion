@@ -1,17 +1,17 @@
 # XMIPP_STAR_1 * 
 # 
 data_
- _CTF_Sampling_rate 5.6
- _CTF_Voltage 300
+ _CTF_Sampling_rate 1.4
+ _CTF_Voltage 200
  _CTF_Defocus_U -1293.89
  _CTF_Defocus_V -1293.89
  _CTF_Defocus_angle 0
- _CTF_Spherical_aberration 1.26
- _CTF_Chromatic_aberration 1.88701
- _CTF_Energy_loss 0.0420924
+ _CTF_Spherical_aberration 2.5
+ _CTF_Chromatic_aberration 1.91072e-05
+ _CTF_Energy_loss 0.00844884
  _CTF_Lens_stability 0
- _CTF_Convergence_cone 2.2926e-05
- _CTF_Longitudinal_displacement 0
- _CTF_Transversal_displacement 0
- _CTF_Q0 -0.07
- _CTF_K 0.75281
+ _CTF_Convergence_cone 0.000105177
+ _CTF_Longitudinal_displacement 462.366
+ _CTF_Transversal_displacement 0.000508047
+ _CTF_Q0 -1.07545e-10
+ _CTF_K 1.04159
