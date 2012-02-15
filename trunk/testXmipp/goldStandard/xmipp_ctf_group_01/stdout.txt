@@ -1,0 +1,8 @@
+
+Fill multiarray with ctfs
+
+Precalculate denominator term of the Wiener filter
+
+Compute differences between CTFs
+Saving CTF Images
+ Done!
