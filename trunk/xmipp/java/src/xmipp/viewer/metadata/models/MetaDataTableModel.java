@@ -172,7 +172,7 @@ public class MetaDataTableModel extends XmippTableModelRowDisabler {
 
             for (int i = 0; i < MD_LABELS.length; i++) {
                 int label = MD_LABELS[i];
-                Class class_ = MetaData.getLabelType(label);
+                Class class_ = MetaData.getLabelClass(label);
 
                 if (class_ == String.class) {
                     String value = md.getValueString(label, id);

@@ -204,7 +204,7 @@ public class Param {
                 dataFilename = cmdLine.getOptionValue(INPUT_DATAFILE);
             }
         } catch (Exception ex) {
-        	//print error
+        	ex.printStackTrace();
         }
     }
 }

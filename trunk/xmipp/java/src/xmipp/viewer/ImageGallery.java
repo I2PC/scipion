@@ -150,6 +150,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 				}
 				item.isSelected = selection[index];
 				item.showLabel = showLabel;
+				item.cellDim = cellDim;
 				ImagePlus imp = item.getImage();
 				if (normalize)
 					imp.getProcessor().setMinAndMax(normalize_min,
@@ -249,7 +250,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	
 	/** Ajust the width of columns and headers */
 	protected void adjustColumnsWidth(){
-		renderer.setPreferredSize(cellDim);
+		//renderer.setPreferredSize(cellDim);
 		columnModel.setWidth(cellDim.width);
 	}
 

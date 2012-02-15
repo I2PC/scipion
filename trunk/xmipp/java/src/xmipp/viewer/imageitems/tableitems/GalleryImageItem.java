@@ -152,7 +152,7 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
 
     public Object getLabelValue(int label) {
         try {
-            Class class_ = MetaData.getLabelType(label);
+            Class class_ = MetaData.getLabelClass(label);
 
             // Special label.
             if (label == MDLabel.MDL_ENABLED) {

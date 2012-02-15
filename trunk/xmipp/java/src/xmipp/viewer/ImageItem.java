@@ -25,6 +25,8 @@
 
 package xmipp.viewer;
 
+import java.awt.Dimension;
+
 import ij.ImagePlus;
 
 /** This class will contains basic info to be used for image rendering.
@@ -41,6 +43,8 @@ public class ImageItem {
 	public boolean isEnabled = true;
 	//Flag to mark if display label
 	public boolean showLabel = false;
+	// Cell dimension on table
+	public Dimension cellDim;
 	
 	//Constructor
 	public ImageItem(String k, String l, ImagePlus imp){

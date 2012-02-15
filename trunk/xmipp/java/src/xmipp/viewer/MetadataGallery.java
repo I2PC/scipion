@@ -25,6 +25,8 @@
 
 package xmipp.viewer;
 
+import java.util.ArrayList;
+
 import ij.ImagePlus;
 import xmipp.ij.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
@@ -40,21 +42,60 @@ public class MetadataGallery extends ImageGallery {
 	protected MetaData md;
 	// Label to be rendered
 	protected int renderLabel;
+	boolean renderLabels = false;
 	protected int displayLabel;
 	
 	// Store labels and names
-	int[] labels;
-	String[] labelStr;
+	ArrayList<ColumnInfo> labels;
+	// Also store the visible ones to fast access
+	ArrayList<ColumnInfo> visibleLabels;
+	
+//	int[] labels;
+//	String[] labelStr;
 
 	// Ids of objects stored in metadata
 	long[] ids;
 
 	public MetadataGallery(String fn, int zoom) throws Exception {
 		super(fn, zoom);
-		labels = md.getActiveLabels();
-		labelStr = new String[labels.length];
-		for (int i = 0; i < labels.length; ++i)
-			labelStr[i] = MetaData.label2Str(labels[i]);
+		int [] lab = md.getActiveLabels();
+		labels = new ArrayList<ColumnInfo>(lab.length);
+		visibleLabels = new ArrayList<ColumnInfo>(lab.length);
+		for (int i = 0; i < lab.length; ++i) {
+			ColumnInfo col = new ColumnInfo(lab[i]);
+			labels.add(col);
+			visibleLabels.add(col);
+		}
+	}
+	
+	/** Update the columns display information */
+	public void updateColumnInfo(ArrayList<ColumnInfo> newInfo){
+		int n = newInfo.size();
+		boolean changed = false;
+		renderLabels = false;
+		visibleLabels.clear();
+		for (int i = 0; i < n; ++i){
+			ColumnInfo col1 = labels.get(i);
+			ColumnInfo col2 = newInfo.get(i);
+			if (col1.visible != col2.visible){
+				col1.visible = col2.visible;
+				changed = true;
+			}
+			if (col1.render != col2.render){
+				col1.render = col2.render;
+				changed = true;
+			}
+			if (col1.visible) 
+				visibleLabels.add(col1);
+			if (col1.render)
+				renderLabels = true;
+		}
+		if (changed) {
+			calculateCellSize();
+			cols = visibleLabels.size();
+			//	fireTableDataChanged();
+			fireTableStructureChanged();
+		}
 	}
 
 	// Load initial dimensions
@@ -101,6 +142,11 @@ public class MetadataGallery extends ImageGallery {
 	@Override
 	public String getTitle() {
 		return String.format("Metadata: %s (%d)", filename, n);
+	}
+	
+	/** Return the labels readed from md */
+	public ArrayList<ColumnInfo> getLabels(){
+		return labels;
 	}
 
 	/**

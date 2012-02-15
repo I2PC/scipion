@@ -10,6 +10,8 @@
  */
 package xmipp.viewer.gallery;
 
+import xmipp.viewer.ColumnInfo;
+import xmipp.viewer.ColumnsJDialog;
 import xmipp.viewer.GalleryRowHeaderModel;
 import xmipp.viewer.ImageGallery;
 import xmipp.viewer.ImageItem;
@@ -48,6 +50,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -62,6 +65,7 @@ import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSpinner;
@@ -87,13 +91,11 @@ public class JFrameGallery extends JFrame {
 	private GalleryRowHeaderModel rowHeaderModel;
 	private int previousSelectedRow, previousSelectedCol;
 	private JList rowHeader;
-	private ImageItemRenderer renderer;
 	private Timer updateTimer = new Timer(true); // Timer for zoom.
 	private TableUpdater tableUpdaterTask; // Associated task for zoom timer.
 	private boolean isUpdating;
 	// this flag will be used to avoid firing properties change events
 	// when the change is from our code and not external user interaction
-	private boolean internalChange = false;
 	private boolean autoAdjustColumns = false;
 	private JPopUpMenuGallery jpopUpMenuTable;
 	private JMenuBarTable menu;
@@ -172,6 +174,10 @@ public class JFrameGallery extends JFrame {
 			else if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
 				gallery = new MetadataTable(filename, parameters.zoom);
 		}
+	}
+	
+	public ImageGallery getModel(){
+		return gallery;
 	}
 
 	/**
@@ -1036,6 +1042,21 @@ public class JFrameGallery extends JFrame {
 			else if (jmi == jmiRenderImage){
 				gallery.setRenderImages(jmiRenderImage.isSelected());
 			}
+			else if (jmi == jmiColumns){
+				DEBUG.printMessage("heheeheheheheh");
+				ColumnsJDialog dialog = new ColumnsJDialog(JFrameGallery.this, true);
+				ArrayList<ColumnInfo> columns = dialog.getColumnsResult();
+				if (columns != null)
+					((MetadataGallery)gallery).updateColumnInfo(columns);
+			}
+			else if (jmi == jmiAVG)
+					avgImage();
+			else if (jmi == jmiSTDEV) 
+					stdDevImage();
+			else if (jmi == jmiPCA)
+					pca();
+			else if (jmi == jmiFSC)
+					fsc();
 		}
 
 		public JMenuBarTable() {
@@ -1110,6 +1131,7 @@ public class JFrameGallery extends JFrame {
 			jmiApplyGeo.addActionListener(this);
 			jmiShowLabel.addActionListener(this);
 			jmiRenderImage.addActionListener(this);
+			jmiColumns.addActionListener(this);
 
 			// Statistics menu
 			add(jmStatistics);
@@ -1118,33 +1140,7 @@ public class JFrameGallery extends JFrame {
 			jmStatistics.add(jmiPCA);
 			jmStatistics.add(jmiFSC);
 
-			jmiAVG.addActionListener(new ActionListener() {
 
-				public void actionPerformed(ActionEvent e) {
-					avgImage();
-				}
-			});
-
-			jmiSTDEV.addActionListener(new ActionListener() {
-
-				public void actionPerformed(ActionEvent e) {
-					stdDevImage();
-				}
-			});
-
-			jmiPCA.addActionListener(new ActionListener() {
-
-				public void actionPerformed(ActionEvent e) {
-					pca();
-				}
-			});
-
-			jmiFSC.addActionListener(new ActionListener() {
-
-				public void actionPerformed(ActionEvent e) {
-					fsc();
-				}
-			});
 
 			// Open with menu
 			add(jmOpenWith);

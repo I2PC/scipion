@@ -112,7 +112,7 @@ JNIEXPORT jintArray JNICALL Java_xmipp_jni_MetaData_getActiveLabels
  * Method:    getLabelType
  * Signature: (I)Ljava/lang/Class;
  */
-JNIEXPORT jclass JNICALL Java_xmipp_jni_MetaData_getLabelType
+JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_getLabelType
   (JNIEnv *, jclass, jint);
 
 /*

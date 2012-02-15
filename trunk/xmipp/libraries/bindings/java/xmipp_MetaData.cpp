@@ -194,37 +194,16 @@ JNIEXPORT jintArray JNICALL Java_xmipp_jni_MetaData_getActiveLabels(JNIEnv *env,
     return NULL;
 }
 
-JNIEXPORT jclass JNICALL Java_xmipp_jni_MetaData_getLabelType(JNIEnv *env,
+JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_getLabelType(JNIEnv *env,
         jclass jclass_, jint label)
 {
-    jclass class_ = NULL;
-
     XMIPP_TRY
     {
-        switch (MDL::labelType((MDLabel) label))
-        {
-        case LABEL_BOOL:
-            class_ = env->FindClass("java/lang/Boolean");
-            break;
-        case LABEL_INT:
-            class_ = env->FindClass("java/lang/Integer");
-            break;
-        case LABEL_LONG:
-            class_ = env->FindClass("java/lang/Long");
-            break;
-        case LABEL_DOUBLE:
-            class_ = env->FindClass("java/lang/Double");
-            break;
-        case LABEL_VECTOR:
-        case LABEL_VECTOR_LONG:
-        case LABEL_STRING:
-            class_ = env->FindClass("java/lang/String");
-            break;
-        }
+        return (MDL::labelType((MDLabel) label));
     }
     XMIPP_CATCH;
 
-    return class_;
+    return LABEL_NOTYPE;
 }
 
 JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isTextFile(JNIEnv *env,

@@ -6,6 +6,16 @@ import java.io.File;
  * Protocol for integrating native C++ code - @see ImageDouble.java
  */
 public class MetaData {
+	/** Enum values with Labels possible types */
+	public static final int LABEL_NOTYPE = -1;
+	public static final int LABEL_INT = 0;
+    public static final int LABEL_BOOL = 1;
+    public static final int LABEL_DOUBLE = 2;
+    public static final int LABEL_FLOAT = 3;
+    public static final int LABEL_STRING = 4;
+    public static final int LABEL_VECTOR = 5;
+    public static final int LABEL_LONG = 6;
+    public static final int LABEL_VECTOR_LONG = 7;
 //
 //    // Fields whose content is a path. They will be "fixed" conveniently.
 //    private final static int PATHS_FIELDS[] = {
@@ -86,12 +96,44 @@ public class MetaData {
     }
 
     public static native String label2Str(int label) throws Exception;
+    
+    /** Same of before but handling the exception */
+    public static String getLabelName(int label){
+    	try {
+    		return label2Str(label);
+    	}
+    	catch (Exception e){
+    		return null;
+    	}
+    }
 
     public static native String[] getBlocksInMetaDataFile(String filename) throws Exception;
 
     public native int[] getActiveLabels() throws Exception;
 
-    public static native Class getLabelType(int label) throws Exception;
+    public static native int getLabelType(int label) throws Exception;
+    
+    public static Class getLabelClass(int label) throws Exception {
+    	int type = getLabelType(label);
+    	switch (type) {
+    	case LABEL_INT:
+    		return Integer.class;
+    	case LABEL_BOOL:
+    		return Boolean.class;
+    	case LABEL_FLOAT:
+    		return Float.class;
+    	case LABEL_DOUBLE:
+    		return Double.class;
+    	case LABEL_LONG:
+    		return Long.class;
+    	case LABEL_STRING:
+    	case LABEL_VECTOR:
+    	case LABEL_VECTOR_LONG:
+    		return String.class;   	
+    		
+    	}
+    	return null;
+    }
 
     public static native boolean isTextFile(int label) throws Exception;
 

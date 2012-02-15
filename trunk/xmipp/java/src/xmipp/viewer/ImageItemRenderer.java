@@ -55,6 +55,7 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 			// AbstractXmippTableModel tableModel = (AbstractXmippTableModel)
 			// table.getModel();
 
+			setPreferredSize(item.cellDim);
 			// Loads image...
 			ImagePlus imp = item.getImage();
 
