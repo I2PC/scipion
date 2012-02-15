@@ -277,13 +277,13 @@
 			<FILE filename="rad_avg.spi" />
 		</CASE>
 		<CASE arguments="-i input/phantomCandida.vol --slice 32 -o %o/slice.spi"
-            changeDir="FALSE">
-            <FILE filename="slice.spi" />
-        </CASE>
-        <CASE arguments="-i input/phantomCandida.vol --column 32 -o %o/column.spi"
-            changeDir="FALSE">
-            <FILE filename="column.spi" />
-        </CASE>
+			changeDir="FALSE">
+			<FILE filename="slice.spi" />
+		</CASE>
+		<CASE arguments="-i input/phantomCandida.vol --column 32 -o %o/column.spi"
+			changeDir="FALSE">
+			<FILE filename="column.spi" />
+		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_image_rotational_spectra" mpi="FALSE">
 		<CASE arguments="-i input/images_some.stk -o %o/spectra.xmd --r1 10 --r2 40"
@@ -300,17 +300,16 @@
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_image_sort_by_statistics" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk -o %o/sort"
-            changeDir="FALSE">
-            <FILE filename="sort.xmd" />
-        </CASE>
-    </PROGRAM>
+		<CASE arguments="-i input/smallStack.stk -o %o/sort" changeDir="FALSE">
+			<FILE filename="sort.xmd" />
+		</CASE>
+	</PROGRAM>
 	<PROGRAM name="xmipp_image_statistics" mpi="FALSE">
 		<CASE arguments="-i input/smallStack.stk -o %o/stats.xmd"
 			changeDir="FALSE">
 			<FILE filename="stats.xmd" />
 		</CASE>
-	</PROGRAM>	
+	</PROGRAM>
 	<PROGRAM name="xmipp_image_vectorize" mpi="FALSE">
 		<CASE arguments="-i input/aFewProjections.sel -o %o/vectors.xmd"
 			changeDir="FALSE">
@@ -341,6 +340,15 @@
 			arguments="-i input/smallStack.stk -o %o/count.doc --action generate_count"
 			changeDir="FALSE">
 			<FILE filename="count.doc" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_metadata_selfile_create" mpi="FALSE">
+		<CASE arguments="-p input/smallStack.stk -o %o/metadata.xmd -s"
+			changeDir="FALSE">
+			<FILE filename="metadata.xmd" />
+		</CASE>
+		<CASE arguments="-p 'input/Protocol_Preprocess_Micrographs/Micrographs/*mrc' -o %o/metadata.xmd " changeDir="FALSE">
+			<FILE filename="metadata.xmd" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_metadata_utilities" mpi="FALSE">

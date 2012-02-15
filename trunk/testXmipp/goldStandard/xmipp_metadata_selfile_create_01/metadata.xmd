@@ -1,0 +1,10 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ 000001@input/smallStack.stk          1 
+ 000002@input/smallStack.stk          1 
+ 000003@input/smallStack.stk          1 
+ 000004@input/smallStack.stk          1 

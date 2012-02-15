@@ -1,0 +1,8 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc          1 
+ input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.002.001.002.mrc          1 
