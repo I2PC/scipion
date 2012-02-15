@@ -9,7 +9,7 @@ loop_
  _anglePsi
  _flip
  _maxCC
- 000001@input/smallStack.stk          1     0.978630    -0.002071     0.000000 0     0.489446 
- 000002@input/smallStack.stk          1     2.096413     0.963110     0.000000 1     0.456791 
- 000003@input/smallStack.stk          1     1.110685     0.027320     0.000000 0     0.492905 
- 000004@input/smallStack.stk          1     1.823901     2.040971     0.000000 0     0.385591 
+ 000001@input/smallStack.stk          1    -0.093510    -0.072219    44.776119 0     0.821880 
+ 000002@input/smallStack.stk          1    -0.969710     0.112366   -46.567164 0     0.811699 
+ 000003@input/smallStack.stk          1    -0.033785    -0.157538    44.776119 0     0.817289 
+ 000004@input/smallStack.stk          1     0.796008    -2.943379   145.074627 0     0.681113 
