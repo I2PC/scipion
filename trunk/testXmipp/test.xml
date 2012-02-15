@@ -347,8 +347,26 @@
 			changeDir="FALSE">
 			<FILE filename="metadata.xmd" />
 		</CASE>
-		<CASE arguments="-p 'input/Protocol_Preprocess_Micrographs/Micrographs/*mrc' -o %o/metadata.xmd " changeDir="FALSE">
+		<CASE
+			arguments="-p 'input/Protocol_Preprocess_Micrographs/Micrographs/*mrc' -o %o/metadata.xmd "
+			changeDir="FALSE">
 			<FILE filename="metadata.xmd" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_metadata_split" mpi="FALSE">
+		<CASE
+			arguments="-i input/projectionsBacteriorhodopsin.xmd -n 3 --oroot %o/splitted --dont_randomize"
+			changeDir="FALSE">
+			<FILE filename="splitted000001.xmd" />
+			<FILE filename="splitted000002.xmd" />
+			<FILE filename="splitted000003.xmd" />
+		</CASE>
+		<CASE
+			arguments="-i input/projectionsBacteriorhodopsin.xmd -n 3 --oroot %o/splitted"
+			changeDir="FALSE" random="TRUE">
+			<FILE filename="splitted000001.xmd" />
+			<FILE filename="splitted000002.xmd" />
+			<FILE filename="splitted000003.xmd" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_metadata_utilities" mpi="FALSE">
