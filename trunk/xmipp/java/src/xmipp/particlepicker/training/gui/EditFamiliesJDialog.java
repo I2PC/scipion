@@ -56,7 +56,7 @@ public class EditFamiliesJDialog extends JDialog {
 		groupstbpn.setBorder(BorderFactory.createTitledBorder("Families"));
 		groupstbpn.add(sp);
 		sp.setOpaque(true);
-		double position = 0.9;
+		float position = 0.9f;
 		model = new FamiliesTableModel(parent);
 		groupstb = new JTable(model);
 		groupstb.setPreferredScrollableViewportSize(new Dimension(200, 200));
@@ -76,7 +76,7 @@ public class EditFamiliesJDialog extends JDialog {
 		getRootPane().setDefaultButton(addbt);
 		setListeners();
 		pack();
-		WindowUtils.setLocation(position, 0.5, this);
+		WindowUtils.setLocation(position, 0.5f, this);
 		setVisible(true);
 	}
 

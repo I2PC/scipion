@@ -11,13 +11,7 @@ import java.awt.event.WindowEvent;
 import java.util.List;
 
 import javax.swing.JDialog;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 
-import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
-import xmipp.particlepicker.tiltpair.model.TiltedParticle;
-import xmipp.particlepicker.tiltpair.model.UntiltedParticle;
-import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.utils.WindowUtils;
 import xmipp.utils.XmippMessage;
@@ -110,7 +104,7 @@ public class ParticlesJDialog extends JDialog
 		sp.add(particlespn);
 		add(sp);
 		loadParticles(true);
-		WindowUtils.setLocation(0.6, 0, this);
+		WindowUtils.setLocation(0.6f, 0, this);
 		setVisible(true);
 		setAlwaysOnTop(true);
 		this.addComponentListener(new java.awt.event.ComponentAdapter()

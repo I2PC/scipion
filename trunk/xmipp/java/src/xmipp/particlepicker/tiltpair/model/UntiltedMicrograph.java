@@ -1,5 +1,6 @@
 package xmipp.particlepicker.tiltpair.model;
 
+import java.awt.Frame;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -106,9 +107,15 @@ public class UntiltedMicrograph extends Micrograph {
 		return angles;
 	}
 	
+	public Particle getAlignerTiltedParticle(UntiltedParticle up)
+	{
+		return tpa.getTiltedParticle(up.getX(), up.getY());
+	}
+	
 	public void setAlignerTiltedParticle(UntiltedParticle up)
 	{
 		Particle p = tpa.getTiltedParticle(up.getX(), up.getY()); 
+		
 		TiltedParticle tp = new TiltedParticle(p.getX(), p.getY(), up);
 		getTiltedMicrograph().addParticle(tp);
 		up.setTiltedParticle(tp);

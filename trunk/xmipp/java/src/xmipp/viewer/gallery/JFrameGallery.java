@@ -22,6 +22,7 @@ import xmipp.viewer.VolumeGallery;
 //import xmipp.viewer.gallery.models.GalleryRowHeaderModel;
 //import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
 //import xmipp.viewer.gallery.renderers.RowHeaderRenderer;
+import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
 import xmipp.utils.DEBUG;

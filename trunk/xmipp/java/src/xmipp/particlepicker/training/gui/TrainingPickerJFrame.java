@@ -67,7 +67,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private TrainingMicrograph micrograph;
 	private JButton nextbt;
 	private JButton colorbt;
-	private double positionx;
+	private float positionx;
 	private JLabel iconlb;
 	private JLabel steplb;
 	private JButton actionsbt;
@@ -131,8 +131,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			add(micrographpn, WindowUtils.getConstraints(constraints, 0, 3, 3));
 
 			pack();
-			positionx = 0.995;
-			WindowUtils.setLocation(positionx, 0.25, this);
+			positionx = 0.995f;
+			WindowUtils.setLocation(positionx, 0.25f, this);
 			setVisible(true);
 		}
 		catch (Exception e)
@@ -344,7 +344,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 						}
 					}, // OK button handler
 					null); // no CANCEL button handler
-			WindowUtils.setLocation(positionx, 0.25, dialog);
+			WindowUtils.setLocation(positionx, 0.25f, dialog);
 			dialog.setVisible(true);
 		}
 	}

@@ -11,6 +11,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import xmipp.particlepicker.Micrograph;
@@ -22,6 +23,7 @@ import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.utils.WindowUtils;
+import xmipp.utils.XmippMessage;
 import xmipp.jni.Particle;
 
 public class UntiltedMicrographCanvas extends ParticlePickerCanvas
@@ -34,6 +36,35 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	private ImageWindow iw;
 	private boolean reload = false;
 
+	@Override
+	public ParticlePickerJFrame getFrame()
+	{
+		return frame;
+	}
+
+	public TiltedParticle getActiveTiltedParticle()
+	{
+		if (active == null)
+			return null;
+		return active.getTiltedParticle();
+	}
+
+	public UntiltedParticle getActiveParticle()
+	{
+		return active;
+	}
+
+	public boolean hasActiveParticle()
+	{
+		return active != null;
+	}
+
+	@Override
+	public Micrograph getMicrograph()
+	{
+		return um;
+	}
+
 	public UntiltedMicrographCanvas(TiltPairPickerJFrame frame)
 	{
 		super(frame.getMicrograph().getImagePlus());
@@ -44,7 +75,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		this.pppicker = frame.getParticlePicker();
 		iw = new ImageWindow(imp, this);
 		WindowUtils.setLocation(0, 0, iw);
-		
+
 	}
 
 	public void updateMicrograph()
@@ -71,7 +102,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 		if (SwingUtilities.isRightMouseButton(e))
 			frame.getTiltedCanvas().mousePressed(x, y);
-		
+
 		if (frame.isPickingAvailable(e))
 		{
 			if (active != null && !active.isAdded() && active.getTiltedParticle() != null)
@@ -81,67 +112,31 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			if (p != null)
 			{
 				if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown())
-				{
-					um.removeParticle(p);
-					frame.updateMicrographsModel();
-					if (active != null && active.equals(p))
-					{
-						if(!um.getParticles().isEmpty())
-							setActive(um.getParticles().get(um.getParticles().size() - 1));
-						else
-							setActive(null);
-					}
-					
-					
-					if (p.isAdded())
-						um.initAligner();
-					repaint();
-					frame.getTiltedCanvas().repaint();
-					frame.setChanged(true);
-				}
+					removeParticle(p);
 				else if (SwingUtilities.isLeftMouseButton(e))
 					setActive(p);
 			}
 			else if (SwingUtilities.isLeftMouseButton(e) && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
-			{
-				p = new UntiltedParticle(x, y, um, pppicker.getFamily());
-				um.addParticle(p);
-				setActive(p);
-				frame.updateMicrographsModel();
-				frame.setChanged(true);
-			}
+				addParticle(x, y);
 		}
 	}
 
-	public void setActive(UntiltedParticle up)
-	{
-		active = up;
-		if (active != null)
-		{
-			TiltedParticle tp = active.getTiltedParticle();
-			if (tp == null && um.getAddedCount() >= 4)
-				um.setAlignerTiltedParticle(up);
-			if (tp != null)
-				frame.getTiltedCanvas().moveTo(tp);
-		}
-		repaint();
-		frame.getTiltedCanvas().repaint();
-	}
-
-	/**
-	 * Updates particle position and repaints. Sets dragged to null at the end
-	 */
 	public void mouseReleased(MouseEvent e)
 	{
+
 		super.mouseReleased(e);
-		if (reload)
+		if (reload)// added particle on matrix has been moved. Matrix changed
+					// and tilted particle has to be recalculated
+		{
+			um.getTiltedMicrograph().removeParticle(active.getTiltedParticle());
+			active.setAdded(false);
 			um.initAligner();
+			um.setAlignerTiltedParticle(active);
+			frame.getTiltedCanvas().repaint();
+		}
 		reload = false;
 	}
 
-	/**
-	 * Updates particle position and repaints if onpick.
-	 */
 	@Override
 	public void mouseDragged(MouseEvent e)
 	{
@@ -157,6 +152,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		if (active != null && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
 		{
 			active.setPosition(x, y);
+
 			if (frame.getParticlesJDialog() != null)
 				active.getParticleCanvas(frame).repaint();
 			if (active.isAdded())
@@ -200,46 +196,62 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			g2.setColor(Color.red);
 			drawShape(g2, active, true);
 		}
-		if(frame.drawAngles())
+		if (frame.drawAngles())
 			drawLine(frame.getUntiltedAngle(), g2);
 	}
-	
 
-	@Override
-	public void setActive(TrainingParticle p)
+	private void addParticle(int x, int y)
 	{
-		setActive((UntiltedParticle) p);
+		try
+		{
+			UntiltedParticle p = new UntiltedParticle(x, y, um, pppicker.getFamily());
+
+			um.addParticle(p);
+
+			if (um.getAddedCount() >= 4)
+				um.setAlignerTiltedParticle(active);
+			setActive(p);
+			frame.updateMicrographsModel();
+			frame.setChanged(true);
+		}
+		catch (Exception e)
+		{
+			JOptionPane.showMessageDialog(this, e.getMessage());
+		}
+
 	}
 
-	@Override
-	public ParticlePickerJFrame getFrame()
+	private void removeParticle(UntiltedParticle p)
 	{
-		return frame;
+		um.removeParticle(p);
+		frame.updateMicrographsModel();
+		if (active != null && active.equals(p))
+		{
+			if (!um.getParticles().isEmpty())
+				setActive(um.getParticles().get(um.getParticles().size() - 1));
+			else
+				setActive(null);
+		}
+
+		if (p.isAdded())
+			um.initAligner();
+		repaint();
+		frame.getTiltedCanvas().repaint();
+		frame.setChanged(true);
 	}
 
-	public TiltedParticle getActiveTiltedParticle()
+	public void setActive(TrainingParticle up)
 	{
-		if (active == null)
-			return null;
-		return active.getTiltedParticle();
-	}
+		active = (UntiltedParticle) up;
+		if (active != null)
+		{
+			TiltedParticle tp = active.getTiltedParticle();
 
-	public UntiltedParticle getActiveParticle()
-	{
-		return active;
+			if (tp != null)
+				frame.getTiltedCanvas().moveTo(tp);
+		}
+		repaint();
+		frame.getTiltedCanvas().repaint();
 	}
-
-	public boolean hasActiveParticle()
-	{
-		return active != null;
-	}
-
-	@Override
-	public Micrograph getMicrograph()
-	{
-		return um;
-	}
-
-	
 
 }

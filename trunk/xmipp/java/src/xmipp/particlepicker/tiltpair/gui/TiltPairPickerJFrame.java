@@ -59,7 +59,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private MicrographPairsTableModel micrographsmd;
 	private UntiltedMicrograph untiltedmic;
 	private JButton colorbt;
-	private double position;
+	private float position;
 	private int index;
 	private JButton resetbt;
 	private JLabel upslb;
@@ -100,8 +100,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		add(micrographpn, WindowUtils.getConstraints(constraints, 0, 2, 3));
 
 		pack();
-		position = 0.95;
-		WindowUtils.setLocation(position, 0.5, this);
+		position = 0.95f;
+		WindowUtils.setLocation(position, 0.5f, this);
 		setVisible(true);
 	}
 	
@@ -267,7 +267,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 						}
 					}, // OK button handler
 					null); // no CANCEL button handler
-			WindowUtils.setLocation(position, 0.5, dialog);
+			WindowUtils.setLocation(position, 0.5f, dialog);
 			dialog.setVisible(true);
 		}
 	}

@@ -29,16 +29,12 @@ import ij.ImagePlus;
 
 import java.awt.Dimension;
 import java.awt.Insets;
-import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
-
+import xmipp.viewer.GalleryColumnModel;
 import xmipp.utils.Cache;
-import xmipp.utils.DEBUG;
 
 public abstract class ImageGallery extends AbstractTableModel {
 

@@ -58,9 +58,9 @@ public class ColorEditor extends AbstractCellEditor
     JColorChooser colorChooser;
     JDialog dialog;
     protected static final String EDIT = "edit";
-    private double position;
+    private float position;
 
-    public ColorEditor(double position) {
+    public ColorEditor(float position) {
     	this.position = position;
     	
         //Set up the editor (from the table's point of view),
@@ -92,7 +92,7 @@ public class ColorEditor extends AbstractCellEditor
             //bring up the dialog.
             button.setBackground(currentColor);
             colorChooser.setColor(currentColor);
-            WindowUtils.setLocation(position, 0.5, dialog);
+            WindowUtils.setLocation(position, 0.5f, dialog);
             dialog.setVisible(true);
 
             //Make the renderer reappear.

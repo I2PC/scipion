@@ -33,16 +33,16 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 	private JButton cancelbt;
 	private JTextField nametf;
 	private JButton colorbt;
-	private double position = 0.9;
+	private float position = 0.9f;
 	private Color color;
 	private JColorChooser colorChooser;
 	EditFamiliesJDialog parent;
 	private JSlider sizesl;
 	private JFormattedTextField sizetf;
 	private JPanel sizepn;
-	private JPanel thresholdpn;
-	private JSlider thresholdsl;
-	private JFormattedTextField thresholdtf;
+//	private JPanel thresholdpn;
+//	private JSlider thresholdsl;
+//	private JFormattedTextField thresholdtf;
 	private int range;
 
 	public AddFamilyJDialog(EditFamiliesJDialog parent, boolean modal) {
@@ -86,7 +86,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 		add(cancelbt, WindowUtils.getConstraints(constraints, 1, 3, 1));
 		setListeners();
 		pack();
-		WindowUtils.setLocation(position, 0.5, this);
+		WindowUtils.setLocation(position, 0.5f, this);
 		setVisible(true);
 	}
 
@@ -217,7 +217,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 					}
 				}, // OK button handler
 				null); // no CANCEL button handler
-		WindowUtils.setLocation(AddFamilyJDialog.this.position, 0.5, dialog);
+		WindowUtils.setLocation(AddFamilyJDialog.this.position, 0.5f, dialog);
 		dialog.setVisible(true);
 	}
 
