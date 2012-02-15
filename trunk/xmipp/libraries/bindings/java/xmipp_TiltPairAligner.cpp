@@ -68,11 +68,8 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_TiltPairAligner_getTiltedParticle(
 		TiltPairAligner * tpa = GET_INTERNAL_TPA(jobj);
 		if (tpa != NULL) {
 			tpa->passToTilted(jx1, jy1, x, y);
-			printf("tilted particle is: %d %d\n", x, y);
 			jclass pclass = env->FindClass("xmipp/jni/Particle");
-			printf("class was found \n");
 			jmethodID constructor = env->GetMethodID(pclass, "<init>", "(II)V");
-			printf("constructor was found \n");
 			jobject particle = env->NewObject(pclass, constructor, x, y);
 
 			return particle;

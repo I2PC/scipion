@@ -20,8 +20,7 @@ public class UntiltedParticle extends TrainingParticle{
 	public UntiltedParticle(int x, int y, UntiltedMicrograph micrograph, Family family)
 	{
 		super(x, y, family, micrograph);
-		if(!Particle.boxContainedOnImage(x, y, family.getSize(), micrograph.getTiltedMicrograph().getImagePlus()))
-			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Tilted Pair Coordinates"));
+		
 	}
 	
 	public void setTiltedParticle(TiltedParticle tiltedparticle)

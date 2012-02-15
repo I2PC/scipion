@@ -49,11 +49,10 @@ public class Particle implements Comparable<Particle> {
 	}
 
 
-	public static boolean boxContainedOnImage(int x, int y, int size, ImagePlus img) {
-		if(img == null)
+	public static boolean fits(int x, int y, int size, int width, int height) {
+		if (x < 0 || y < 0)
 			return false;
-		int width = img.getWidth();
-		int height = img.getHeight();
+
 		int radius = size/2;
 		if(x - radius < 0)
 			return false;

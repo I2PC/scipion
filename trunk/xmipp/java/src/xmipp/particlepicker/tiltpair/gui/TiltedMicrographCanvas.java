@@ -138,7 +138,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 				else if (SwingUtilities.isLeftMouseButton(e))
 					active = p;
 			}
-			else if (uc.hasActiveParticle() && SwingUtilities.isLeftMouseButton(e) && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
+			else if (uc.hasActiveParticle() && SwingUtilities.isLeftMouseButton(e) && Particle.fits(x, y, frame.getParticleSize(), imp.getWidth(), imp.getHeight()))
 			{
 				UntiltedParticle uactive = uc.getActiveParticle();
 				if (uactive.getTiltedParticle() != null)
@@ -171,7 +171,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 
-		if (active != null && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
+		if (active != null && Particle.fits(x, y, frame.getParticleSize(), imp.getWidth(), imp.getHeight()))
 		{
 			active.setPosition(x, y);
 			if (active.getUntiltedParticle().isAdded())

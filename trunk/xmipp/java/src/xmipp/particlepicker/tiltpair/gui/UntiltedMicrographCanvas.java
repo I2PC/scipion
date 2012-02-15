@@ -1,12 +1,14 @@
 package xmipp.particlepicker.tiltpair.gui;
 
 import ij.IJ;
+import ij.ImagePlus;
 import ij.gui.ImageWindow;
 
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -116,7 +118,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 				else if (SwingUtilities.isLeftMouseButton(e))
 					setActive(p);
 			}
-			else if (SwingUtilities.isLeftMouseButton(e) && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
+			else if (SwingUtilities.isLeftMouseButton(e) && Particle.fits(x, y, frame.getParticleSize(), imp.getWidth(), imp.getHeight()))
 				addParticle(x, y);
 		}
 	}
@@ -149,7 +151,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			frame.getTiltedCanvas().mouseDragged(e.getX(), e.getY());
 			return;
 		}
-		if (active != null && Particle.boxContainedOnImage(x, y, frame.getParticleSize(), imp))
+		if (active != null && Particle.fits(x, y, frame.getParticleSize(), imp.getWidth(), imp.getHeight()))
 		{
 			active.setPosition(x, y);
 
@@ -204,12 +206,16 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	{
 		try
 		{
+			Particle tp = um.getAlignerTiltedParticle(x, y);
+			ImagePlus tmimage = um.getTiltedMicrograph().getImagePlus();
+			if(!Particle.fits(tp.getX(), tp.getY(), pppicker.getFamily().getSize(), tmimage.getWidth(), tmimage.getHeight()))
+				throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Tilted Pair Coordinates"));
 			UntiltedParticle p = new UntiltedParticle(x, y, um, pppicker.getFamily());
 
 			um.addParticle(p);
 
 			if (um.getAddedCount() >= 4)
-				um.setAlignerTiltedParticle(active);
+				um.setAlignerTiltedParticle(p);
 			setActive(p);
 			frame.updateMicrographsModel();
 			frame.setChanged(true);
@@ -246,8 +252,13 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		if (active != null)
 		{
 			TiltedParticle tp = active.getTiltedParticle();
-
-			if (tp != null)
+			
+			Rectangle srcrect = getSrcRect();
+			int xrect = (int) (magnification * (tp.getX() - srcrect.getX()));
+			int yrect = (int) (magnification * (tp.getY() - srcrect.getY()));
+			System.out.printf("Rectangle starts at %s %s, has dimensions of %s %s. Particle inside rectangle falls at %s %s\n", 
+					srcrect.getX(), srcrect.getY(), srcrect.width, srcrect.height, xrect, yrect);
+			if (tp != null && !Particle.fits(xrect, yrect, (int)(magnification * tp.getFamily().getSize()), srcrect.width, srcrect.height))
 				frame.getTiltedCanvas().moveTo(tp);
 		}
 		repaint();

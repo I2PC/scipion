@@ -135,6 +135,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			public void actionPerformed(ActionEvent e)
 			{
 				JFileChooser fc = new JFileChooser();
+				
 				int returnVal = fc.showOpenDialog(TiltPairPickerJFrame.this);
 
 				try

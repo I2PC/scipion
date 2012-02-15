@@ -93,7 +93,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 					active = p;
 				}
 			}
-			else if (SwingUtilities.isLeftMouseButton(e) && TrainingParticle.boxContainedOnImage(x, y, frame.getFamily().getSize(), imp))
+			else if (SwingUtilities.isLeftMouseButton(e) && TrainingParticle.fits(x, y, frame.getFamily().getSize(), imp.getWidth(), imp.getHeight()))
 			{
 				p = new TrainingParticle(x, y, frame.getFamily(), micrograph);
 				micrograph.addManualParticle(p);
@@ -121,7 +121,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			if (active == null)
 				return;
 
-			if (!TrainingParticle.boxContainedOnImage(x, y, active.getFamily().getSize(), imp))
+			if (!TrainingParticle.fits(x, y, active.getFamily().getSize(), imp.getWidth(), imp.getHeight()))
 				return;
 			if (active instanceof AutomaticParticle)
 			{

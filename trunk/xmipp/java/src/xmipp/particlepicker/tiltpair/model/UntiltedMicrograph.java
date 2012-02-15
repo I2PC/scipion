@@ -107,14 +107,15 @@ public class UntiltedMicrograph extends Micrograph {
 		return angles;
 	}
 	
-	public Particle getAlignerTiltedParticle(UntiltedParticle up)
+	public Particle getAlignerTiltedParticle(int x, int y)
 	{
-		return tpa.getTiltedParticle(up.getX(), up.getY());
+		Particle p = tpa.getTiltedParticle(x, y);
+		return p;
 	}
 	
 	public void setAlignerTiltedParticle(UntiltedParticle up)
 	{
-		Particle p = tpa.getTiltedParticle(up.getX(), up.getY()); 
+		Particle p = getAlignerTiltedParticle(up.getX(), up.getY()); 
 		
 		TiltedParticle tp = new TiltedParticle(p.getX(), p.getY(), up);
 		getTiltedMicrograph().addParticle(tp);
