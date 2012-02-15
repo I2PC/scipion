@@ -256,6 +256,12 @@
 			<FILE filename="smallStack.stk" />
 		</CASE>
 	</PROGRAM>
+	<PROGRAM name="xmipp_image_histogram" mpi="FALSE">
+        <CASE arguments="-i input/smallStack.stk -o %o/hist.doc --steps 256 --range -0.5 0.7"
+            changeDir="FALSE">
+            <FILE filename="hist.doc" />
+        </CASE>
+    </PROGRAM>
 	<PROGRAM name="xmipp_image_rotational_spectra" mpi="FALSE">
 		<CASE arguments="-i input/images_some.stk -o %o/spectra.xmd --r1 10 --r2 40"
 			changeDir="FALSE">
