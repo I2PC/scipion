@@ -235,6 +235,12 @@
 			<FILE filename="singleImage.img" />
 		</CASE>
 	</PROGRAM>
+	   <PROGRAM name="xmipp_image_find_center" mpi="FALSE">
+        <CASE arguments="-i input/projectionsBacteriorhodopsin.stk --oroot %o/info"
+            changeDir="FALSE">
+            <FILE filename="info_center.xmd" />
+        </CASE>
+    </PROGRAM>
 	<PROGRAM name="xmipp_image_header" mpi="FALSE">
 		<CASE arguments="-i input/smallStack.stk --extract -o %o/header.doc"
 			changeDir="FALSE">

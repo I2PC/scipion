@@ -1,0 +1,13 @@
+Input:          input/projectionsBacteriorhodopsin.stk
+Output root:    tmpLink/xmipp_image_find_center/info
+R1:             15
+R2:             80
+R3:             90
+R4:             100
+Harmonic:       1
+Opt:            -1
+Initial center: (-1,-1)
+
+Image smoothed. Outer mean = 0
+.............................................................................
+Optimal center coordinates: x= 32.125 ,y= 32 
