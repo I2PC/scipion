@@ -701,10 +701,10 @@ public:
             I.clear();
             if (Ndim>1)
             {
-                for (unsigned long n=0; n<Ndim; n++)
+                for (size_t  n = FIRST_IMAGE; n <= Ndim; n++)
                 {
                     Iaux.read(fnIn,DATA,n);
-                    if (n==0)
+                    if (n == FIRST_IMAGE)
                         I=Iaux;
                     else
                         I()+=Iaux();
