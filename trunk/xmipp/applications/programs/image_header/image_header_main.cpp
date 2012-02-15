@@ -69,7 +69,10 @@ protected:
     void readParams()
     {
         if (checkParam("--extract"))
+        {
             operation = HEADER_EXTRACT;
+            produces_a_metadata = true;
+        }
         else if (checkParam("--assign"))
             operation = HEADER_ASSIGN;
         else if (checkParam("--reset"))
@@ -83,7 +86,7 @@ protected:
         XmippMetadataProgram::readParams();
         round_shifts = checkParam("--round_shifts");
         if (operation != HEADER_EXTRACT && checkParam("-o"))
-          REPORT_ERROR(ERR_PARAM_INCORRECT, "Argument -o is not valid for this operation");
+            REPORT_ERROR(ERR_PARAM_INCORRECT, "Argument -o is not valid for this operation");
     }
 
     void show()
@@ -145,7 +148,7 @@ protected:
             rowOut.setValue(MDL_IMAGE, fnImgOut);
             break;
         case HEADER_ASSIGN:
-        	rowOut = rowIn;
+            rowOut = rowIn;
             if (round_shifts)
                 roundShifts(rowOut);
             img.readApplyGeo(fnImg, rowOut, HEADER);
