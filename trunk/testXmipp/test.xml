@@ -175,7 +175,7 @@
 	</PROGRAM>
 	<PROGRAM name="xmipp_ctf_estimate_from_psd" mpi="FALSE">
 		<CASE
-			arguments="--psd down1_01nov26b.001.001.001.002_Periodogramavg.psd --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000"
+			arguments="--psd down1_01nov26b.001.001.001.002_Periodogramavg.psd --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU 15000"
 			changeDir="TRUE">
 			<PRERUN
 				command="cp input/down1_01nov26b.001.001.001.002_Periodogramavg.psd %o" />
