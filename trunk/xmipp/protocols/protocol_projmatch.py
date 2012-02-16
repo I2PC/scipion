@@ -13,7 +13,7 @@
 
 import os
 from os.path import join
-from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL, MDL_COUNT
+from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL, MDL_COUNT, MDL_RESOLUTION_FREQREAL
 from protlib_base import XmippProtocol, protocolMain
 from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector
 from protlib_sql import XmippProjectDb, SqliteDb
@@ -84,7 +84,7 @@ class ProtProjMatch(XmippProtocol):
                    % (iteration, self.NumberOfIterations, self.AngSamplingRateDeg)]
         if (iteration > 1):
             ResolutionXmdCurrIterMaxSummary = self.getFilename('ResolutionXmdMax', iter=iteration, ref=1)
-            md = MetaData(ResolutionXmdCurrIterMax)
+            md = MetaData(ResolutionXmdCurrIterMaxSummary)
             id = md.firstObject()
             FourierMaxFrequencyOfInterestSummary = md.getValue(MDL_RESOLUTION_FREQREAL, id)
             summary += ['Resolution for first reference is <%s> A' % FourierMaxFrequencyOfInterestSummary]
@@ -178,56 +178,9 @@ class ProtProjMatch(XmippProtocol):
     
     def preRun(self):
         print "in PRERUN"
-    #vector for iterations??????
-    #    global ProjMatchDir
-    #    ProjMatchDir = WorkingDir +'/' + ProjMatchDir
-    
-        
         # Convert vectors to list
         self.ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
         self.numberOfReferences = len(self.ReferenceFileNames)
-        #directory with ProjMatchClasses
-#        self.ProjMatchDirs = [" "]
-#        self.LibraryDirs = [" "]
-#        self.DocFileInputAngles = [self.DocFileWithOriginalAngles]
-#        #ProjMatchRootName=[" "]
-#        
-#        for iterN in range(self.NumberOfIterations):
-#            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
-#            self.ProjMatchDirs.append(fnBaseIter + self.ProjMatchDir)
-#            self.LibraryDirs.append(fnBaseIter + self.LibraryDir)
-#            self.DocFileInputAngles.append("%s%s.doc" % (fnBaseIter, self.docfile_with_current_angles))
-#        
-#        auxList = (self.numberOfReferences + 1) * [None]
-#        self.ProjectLibraryRootNames = [[None]]
-#        for iterN in range(self.NumberOfIterations):
-#            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
-#            for refN in range(self.numberOfReferences):                
-#                auxList[refN + 1] = "%s%s_ref_%02d.stk" % (fnBaseIter, self.ProjectLibraryRootName, refN)
-#            self.ProjectLibraryRootNames.append(list(auxList))
-#                    
-#        self.ProjMatchRootNames = [[None]]
-#        for iterN in range(self.NumberOfIterations):
-#            for refN in range(self.numberOfReferences):
-#                auxList[refN + 1] = "%s/%s_ref_%02d.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName, refN + 1)
-#            self.ProjMatchRootNames.append(list(auxList))
-#    
-#        self.ProjMatchRootNamesWithoutRef = [[None]]
-#        for iterN in range(self.NumberOfIterations):
-#            self.ProjMatchRootNamesWithoutRef.append(list("%s/%s.doc" % (self.ProjMatchDirs[iterN + 1], self.ProjMatchName)))
-#    
-#        #name of masked volumes
-#        #add dummy name so indexes start a 1
-#        self.maskedFileNamesIters = [[None]]
-#        for iterN in range(self.NumberOfIterations):
-#            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
-#            for refN in range(self.numberOfReferences):
-#                auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.maskReferenceVolume, refN + 1)
-#            self.maskedFileNamesIters.append(list(auxList))
-#    
-#        ####################################################################
-#        #add initial reference, useful for many routines
-#        #NOTE THAT INDEXES START AT 1
 
         # Construct special filename list with zero special case
         self.DocFileInputAngles = [self.DocFileWithOriginalAngles] + [self.getFilename('DocfileInputAnglesIters', iter=i) for i in range(1, self.NumberOfIterations + 1)]
@@ -240,14 +193,6 @@ class ProtProjMatch(XmippProtocol):
         for iterN in range(1, self.NumberOfIterations + 1):
             self.reconstructedFilteredFileNamesIters.append([None] + [self.getFilename('ReconstructedFilteredFileNamesIters', iter=iterN, ref=r) for r in range(1, self.numberOfReferences + 1)])
 
-#            fnBaseIter = "%s/Iter_%02d/" % (self.WorkingDir, iterN + 1)
-#            for refN in range(self.numberOfReferences):
-#                auxList[refN + 1] = "%s%s_ref_%02d.vol" % (fnBaseIter, self.ReconstructedVolume, refN + 1)
-    
-#        self.docfile_with_current_anglesList = [None]
-#        for iterN in range(self.NumberOfIterations):
-#            fnBaseIter = "%s/Iter_%02d/%s.doc" % (self.WorkingDir, iterN + 1, self.docfile_with_current_angles)
-#            self.docfile_with_current_anglesList.append(fnBaseIter)
         _tmp = self.FourierMaxFrequencyOfInterest
         self.FourierMaxFrequencyOfInterest = list(-1 for  k in range(0, self.NumberOfIterations + 1))
         self.FourierMaxFrequencyOfInterest[1] = _tmp
