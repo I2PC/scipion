@@ -342,6 +342,13 @@
             <FILE filename="column.spi" />
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_mpi_image_rotational_pca" mpi="TRUE">
+        <CASE arguments="-i input/smallStack.stk --oroot %o/invariant"
+            changeDir="FALSE">
+            <FILE filename="invariant.xmd" />
+            <FILE filename="invariant.stk" />
+        </CASE>
+    </PROGRAM>
 	<PROGRAM name="xmipp_image_rotational_spectra" mpi="FALSE">
 		<CASE arguments="-i input/images_some.stk -o %o/spectra.xmd --r1 10 --r2 40"
 			changeDir="FALSE">
