@@ -55,7 +55,7 @@ void XrayARTRecons::preIterations(GridVolume &vol_basis0, int level, int rank)
 {
     psf.calculateParams(artPrm.sampling*1.e-10); // sampling is read in angstrom
 
-    if (artPrm.basis.VolPSF != NULL)
+    if (artPrm.basis.VolPSF == NULL)
         artPrm.basis.VolPSF = new MultidimArray<double>;
     psf.PSFGen().getImage(*artPrm.basis.VolPSF);
 
@@ -68,112 +68,5 @@ void XrayARTRecons::print(std::ostream &o) const
 {
     o << "X-rays information ------------------------------------------" << std::endl;
     o << "Microscope parameters file: " << fnPSF.c_str() << std::endl;
-}
-
-void XrayARTRecons::singleStep(
-    GridVolume              &vol_in,          // Input Reconstructed volume
-    GridVolume              *vol_out,         // Output Reconstructed volume
-    Projection              &theo_proj,       // Projection of the reconstruction
-    // It is outside to make it visible
-    // just if it needed for any
-    // other purpose
-    Projection              &read_proj,       // Real projection
-    int sym_no,                               // Symmetry matrix index
-    Projection              &diff_proj,       // Difference between read and
-    // theoretical projection
-    Projection              &corr_proj,       // Correcting projection
-    Projection              &alig_proj,       // Translation alignement aux proj
-    double                  &mean_error,      // Mean error over the pixels
-    int                      numIMG,          // number of images in the set
-    // in SIRT the correction must
-    // be divided by this number
-    double                   lambda,          // Lambda to be used
-    int                      imagen_no,       // Projection number
-    const FileName           &fn_ctf,         // CTF to apply
-    const MultidimArray<int> *maskPtr,         // Mask to apply
-    bool refine)
-{
-
-
-
-    // Only works for blob volumes .............................................
-    if (artPrm.basis.type != Basis::voxels)
-        REPORT_ERROR(ERR_VALUE_INCORRECT,
-                     "This function only works with volxel volumes");
-
-    // Project structure .......................................................
-    // The correction image is reused in this call to store the normalizing
-    // projection, ie, the projection of an all-1 volume
-
-    //     project_Crystal_Volume(vol_in, artPrm.basis, theo_proj,
-    //                            corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-    //                            read_proj.rot(), read_proj.tilt(), read_proj.psi(), shift,
-    //                            aint, bint, *(artPrm.D), *(artPrm.Dinv), this->unit_cell_mask,
-    //                            FORWARD, artPrm.eq_mode);
-    double shift_X, shift_Y;
-
-    //   #define DEBUG_SHIFT
-#ifdef DEBUG_SHIFT
-
-    Matrix2D<double> A(3, 3);
-    A.initIdentity();
-    dMij(A, 0, 2) =  8;
-    dMij(A, 1, 2) =  -5;
-    std::cout << "A" << A;
-    //move read_proj
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(theo_proj())
-    dMij(theo_proj(), i, j) = dMij(read_proj(), i, j);
-    applyGeometry(IMGMATRIX(read_proj), A, IMGMATRIX(theo_proj), IS_NOT_INV, WRAP);
-#endif
- #undef DEBUG_SHIFT
-
-    if (artPrm.ref_trans_after != -1    &&
-        imagen_no > artPrm.ref_trans_after && imagen_no != 0)
-    {
-        //         calculate_and_find_correlation_max_proj(read_proj, theo_proj,
-        //                                                 alig_proj,
-        //                                                 shift_X, shift_Y,
-        //                                                 artPrm.ref_trans_step,
-        //                                                 artPrm.ref_trans_after,
-        //                                                 imagen_no);
-
-        // Apply correction
-        Matrix2D<double> Correction(3, 3);
-        alig_proj().resize(read_proj());
-        Correction.initIdentity();
-
-        dMij(Correction, 0, 2) =  - shift_X;
-        dMij(Correction, 1, 2) =  - shift_Y;
-        //copy theo_proj to a temporal matrix
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(theo_proj())
-        dAij(alig_proj(), i, j) = dAij(read_proj(), i, j);
-        applyGeometry(LINEAR, IMGMATRIX(alig_proj), IMGMATRIX(read_proj), Correction,
-                      IS_NOT_INV, WRAP);
-    }
-    // Now compute differences .................................................
-    double applied_lambda = lambda / numIMG; // In ART mode, numIMG=1
-    mean_error = 0;
-    diff_proj().resize(read_proj());
-
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
-    {
-        // Compute difference image and error
-        IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
-        mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
-
-        // Compute the correction image
-        if (ABS(IMGPIXEL(corr_proj, i, j)) < 1)
-            IMGPIXEL(corr_proj, i, j) = SGN(IMGPIXEL(corr_proj, i, j));
-        IMGPIXEL(corr_proj, i, j) =
-            applied_lambda * IMGPIXEL(diff_proj, i, j) / IMGPIXEL(corr_proj, i, j);
-    }
-    mean_error /= XSIZE(diff_proj()) * YSIZE(diff_proj());
-
-    // Backprojection of correction plane ......................................
-    //     project_Crystal_Volume(*vol_out, artPrm.basis, theo_proj,
-    //                            corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
-    //                            read_proj.rot(), read_proj.tilt(), read_proj.psi(), shift,
-    //                            aint, bint, *(artPrm.D), *(artPrm.Dinv), this->unit_cell_mask,
-    //                            BACKWARD, artPrm.eq_mode);
 }
 

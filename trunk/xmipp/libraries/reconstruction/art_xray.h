@@ -57,14 +57,6 @@ public:
 
     void print(std::ostream &o)const;
 
-    void singleStep(GridVolume &vol_in, GridVolume *vol_out,
-                    Projection &theo_proj, Projection &read_proj,
-                    int sym_no,
-                    Projection &diff_proj, Projection &corr_proj, Projection &alig_proj,
-                    double &mean_error, int numIMG, double lambda, int act_proj,
-                    const FileName &fn_ctf, const MultidimArray<int> *maskPtr,
-                    bool refine);
-
 };
 
 
