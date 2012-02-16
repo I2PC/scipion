@@ -482,11 +482,11 @@
 		<CASE
 			arguments="-i input/projectionsBacteriorhodopsin.stk --nref 4 --oroot %o/class --iter 5"
 			changeDir="FALSE" random="TRUE">
-			<FILE filename="class_aligned.stk" />
-			<FILE filename="class_level_00.sel" />
-			<FILE filename="class_level_00.stk" />
-			<FILE filename="class.stk" />
-			<FILE filename="class.sel" />
+			<FILE filename="class_images.xmd" />
+			<FILE filename="class_level_00_classes.stk" />
+			<FILE filename="class_level_00_classes.xmd" />
+			<FILE filename="class_level_01_classes.stk" />
+			<FILE filename="class_level_01_classes.xmd" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_mpi_ctf_correct_idr" mpi="TRUE">
