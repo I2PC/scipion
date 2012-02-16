@@ -491,7 +491,17 @@
 			<FILE filename="ml2d_final_refs.xmd" />
 		</CASE>
 	</PROGRAM>
-	<PROGRAM name="xmipp_mpi_angular_class_average" mpi="TRUE">
+	<PROGRAM name="xmipp_mpi_ml_align2d" mpi="TRUE">
+        <CASE
+            arguments="-i input/images_some.stk --ref input/seeds2.stk --oroot %o/ml2d --fast --mirror"
+            changeDir="FALSE" random="TRUE">
+            <FILE filename="ml2d_final_images.xmd" />
+            <FILE filename="ml2d_final_logs.xmd" />
+            <FILE filename="ml2d_final_refs.stk" />
+            <FILE filename="ml2d_final_refs.xmd" />
+        </CASE>
+    </PROGRAM>
+    <PROGRAM name="xmipp_mpi_angular_class_average" mpi="TRUE">
 		<CASE
 			arguments="-i input/angular_class_average/current_angles.doc --lib input/angular_class_average/gallery_Ref3D_003.doc -o %o//projmatch --wien input/angular_class_average/ctf_wien.stk --pad 2 --split"
 			changeDir="FALSE">

@@ -1,0 +1,39 @@
+Thu Feb 16 15:53:57 2012	 starting produceSideInfo
+
+Thu Feb 16 15:53:57 2012	      ProgML2D::produceSideInfo: start
+Thu Feb 16 15:53:57 2012	      ProgML2D::produceSideInfo: reading MDimg
+Thu Feb 16 15:53:57 2012	      ProgML2D::produceSideInfo: setting dimensions
+Thu Feb 16 15:53:57 2012	      ProgML2D::produceSideInfo show
+Thu Feb 16 15:53:57 2012	      ProgML2D::produceSideInfo end
+Thu Feb 16 15:53:57 2012	 starting produceSideInfo2
+
+Thu Feb 16 15:53:57 2012	 createThreads
+
+Thu Feb 16 15:53:57 2012	 starting iterations
+
+Thu Feb 16 15:53:57 2012	      ProgML2D::expectation BEGIN
+Thu Feb 16 15:53:58 2012	Images: 71, first: 144, last: 2Thu Feb 16 15:54:45 2012	      ProgML2D::expectation END
+ThTThu Feb 16 15:54:45 2012	      ProgML2D::maximization BEGIN
+Thu Feb 16 15:54:45 2012	      ProgML2D::maximization EThTThu Feb 16 15:54:45 2012	      ProgML2D::expectation BEGThTThu Feb 16 15:54:46 2012	Images: 71, first: 144, lastThu ThThu Feb 16 15:55:10 2012	      ProgML2D::expectatioThu Feb 16 15:55:10 2012	      ProgML2D::maximization BEGIN
+Thu Feb 16 15:55:10 2012	      ProgML2D::maximization END
+Thu ThThu Feb 16 15:55:11 2012	      ProgML2D::expectation Thu ThThu Feb 16 15:55:11 2012	Images: 71, first: 144, lThu FeThuThu Feb 16 15:55:27 2012	      ProgML2D::expectaThu Feb 16 15:55:27 2012	      ProgML2D::maximization BEGIN
+Thu Feb 16 15:55:27 2012	      ProgML2D::maximization END
+Thu Feb 16 15:55:27 2012	      ProgML2D::expectation BEGIN
+Thu Feb 16 15:55:28 2012	Images: 72, first: 0, last: 71
+Thu Feb 16 15:55:40 2012	      ProgML2D::expectation END
+Thu Feb Thu Thu Feb 16 15:55:40 2012	      ProgML2D::maximization BEGIN
+Thu Feb 16 15:55:40 2012	      ProgML2D::maximThu Feb 16 15:55:40 2012	      ProgML2D::expectation BEGIN
+Thu Feb Thu Thu Feb 16 15:55:41 2012	Images: 71, first: Thu Feb 16Thu Feb 16 15:55:53 2012	      ProgML2D::expectThu Feb 16 15:5Thu Feb 16 15:55:53 2012	      ProgML2D::maximization BEGIN
+Thu Feb 16 15:55:53 2012	      ProgML2D::maThu Feb 16 15:5Thu Feb 16 15:55:53 2012	      ProgML2D::expThu Feb 16Thu Feb 16 15:55:54 2012	Images: 72, first: 72Thu Feb 16 1Thu FeThu Feb 16 15:56:06 2012	      ProgML2DThu Feb 16 15:56:0Thu Feb 16 15:56:06 2012	      ProgML2D::maximization BEGIN
+Thu Feb 16 15:56:06 2012	      ProgML2D:Thu Feb 16 1Thu Feb 16 15:56:07 2012	      ProgML2D::expectThu Feb 16 1Thu FeThu Feb 16 15:56:08 2012	Images: 71, fThu Feb 16 15:Thu Feb 16 15:56:21 2012	      ProgML2D::exThu Feb 16 15:56:21 2012	      ProgML2D::maximization BEGIN
+Thu Feb 16 15:56:21 2012	      ProgML2D::maximization END
+Thu Feb 16 15:56:21 2012	      ProgML2D::expectation BEGIN
+Thu Feb 16 15:56:22 2012	Images: 72, first: 0, last: 71
+Thu Feb 16 15:56:34 2012	      ProgML2D::expectation END
+Thu Feb 16 15:56Thu Feb 16 15:56:34 2012	      ProgML2D::maxThu Feb 16 15:56Thu Feb 16 15:56:34 2012	      ProgML2D::mThu Feb 16 15:56Thu Feb Thu Feb 16 15:56:34 2012	      ProgThu Feb 16 15:56:35 2012Thu Feb 16 15:56:35 2012	Images:Thu Feb 16 15:56:47 2012	  Thu Feb 16 15:56:48 2012	     Thu Feb 16 15:56:48 2012	      ProgML2D::maximization BEGIN
+Thu Feb 16 15:56:48 2012	      ProgML2D::maximization END
+Thu Feb 16 15:56:49 2012	      ProgML2D::expectation BEGIN
+Thu Feb 16 15:56:50 2012	Images: 72, first: 0, last: 71
+Thu Feb 16 15:57:02 2012	      ProgML2D::expectation END
+Thu Feb 16 15:57:02 Thu Feb 16Thu Feb 16 15:57:02 2012	      ProgML2D::maximization BEGIN
+Thu Feb 16 15:57:02 2012	      ProgML2D::maximization END
