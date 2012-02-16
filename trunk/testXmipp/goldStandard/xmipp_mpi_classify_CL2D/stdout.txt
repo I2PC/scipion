@@ -1,0 +1,61 @@
+Input images:            input/projectionsBacteriorhodopsin.stk
+Output images:           tmpLink/xmipp_mpi_classify_CL2D/class
+Iterations:              5
+CodesSel0:               
+Codes0:                  2
+Codes:                   4
+Neighbours:              4
+Minimum node size:       20
+Use Correlation:         0
+Classical Multiref:      0
+Maximum shift:           10
+Classify all images:     0
+Initializing ...
+Computing histogram of correlation values
+Quantizing with 2 codes...
+Iteration 1 ...
+
+Average correlation with input vectors=0.865209
+Number of assignment changes=0
+Iteration 2 ...
+
+Average correlation with input vectors=0.627523
+Number of assignment changes=99
+Iteration 3 ...
+
+Average correlation with input vectors=0.987501
+Number of assignment changes=73
+Iteration 4 ...
+
+Average correlation with input vectors=0.984317
+Number of assignment changes=64
+Iteration 5 ...
+
+Average correlation with input vectors=0.987772
+Number of assignment changes=49
+Spliting nodes ...
+Currently there are 3 nodes
+Currently there are 4 nodes
+Quantizing with 4 codes...
+Iteration 1 ...
+
+Average correlation with input vectors=0.431629
+Number of assignment changes=0
+Splitting node 0 by overwriting 2
+Iteration 2 ...
+
+Average correlation with input vectors=0.972046
+Number of assignment changes=180
+Splitting node 3 by overwriting 0
+Iteration 3 ...
+
+Average correlation with input vectors=0.987518
+Number of assignment changes=108
+Iteration 4 ...
+
+Average correlation with input vectors=0.989722
+Number of assignment changes=84
+Iteration 5 ...
+
+Average correlation with input vectors=0.990194
+Number of assignment changes=74
