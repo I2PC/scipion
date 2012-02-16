@@ -401,11 +401,11 @@ void threadXrayProject(ThreadArgument &thArg)
     while (td->getTasks(first, last))
     {
         // Previous addition for threads calculating intermediate slices
-        for (int k = STARTINGZ(vol) + (int)priorLast; k <= STARTINGZ(vol) + (int)first - 1 ; k++)
-        {
-            FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
-            A2D_ELEM(intExp,i,j) += A3D_ELEM(vol,k,i,j);
-        }
+        //        for (int k = STARTINGZ(vol) + (int)priorLast; k <= STARTINGZ(vol) + (int)first - 1 ; k++)
+        //        {
+        //            FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
+        //            A2D_ELEM(intExp,i,j) += A3D_ELEM(vol,k,i,j);
+        //        }
 
         //#define DEBUG
 #ifdef DEBUG
@@ -421,7 +421,7 @@ void threadXrayProject(ThreadArgument &thArg)
             {
                 double tempValue = A3D_ELEM(vol,k,i,j);
                 A2D_ELEM(intExp,i,j) += tempValue;
-                A2D_ELEM(imTemp,i,j) = (exp(-A2D_ELEM(intExp,i,j)*psf.dzo))*tempValue*psf.dzo;
+                //                A2D_ELEM(imTemp,i,j) = (exp(-A2D_ELEM(intExp,i,j)*psf.dzo))*tempValue*psf.dzo;
             }
 #ifdef DEBUG
             _Im().alias(intExp);
@@ -431,38 +431,39 @@ void threadXrayProject(ThreadArgument &thArg)
             _Im.write("projectXR-imTemp.spi");
 #endif
 
-            switch (psf.AdjustType)
-            {
-            case PSFXR_INT:
-                imTempP = &imTempSc;
-                scaleToSize(LINEAR,*imTempP,imTemp,psf.Nix,psf.Niy);
-                break;
-
-            case PSFXR_STD:
-                imTempP = &imTemp;
-                break;
-
-            case PSFXR_ZPAD:
-                //    (*imTempSc).resize(imTemp);
-                imTempP = &imTempSc;
-                imTemp.window(*imTempP,-ROUND(psf.Niy/2)+1,-ROUND(psf.Nix/2)+1,ROUND(psf.Niy/2)-1,ROUND(psf.Nix/2)-1);
-                break;
-            }
+            //            switch (psf.AdjustType)
+            //            {
+            //            case PSFXR_INT:
+            //                imTempP = &imTempSc;
+            //                scaleToSize(LINEAR,*imTempP,imTemp,psf.Nix,psf.Niy);
+            //                break;
+            //
+            //            case PSFXR_STD:
+            //                imTempP = &imTemp;
+            //                break;
+            //
+            //            case PSFXR_ZPAD:
+            //                //    (*imTempSc).resize(imTemp);
+            //                imTempP = &imTempSc;
+            //                imTemp.window(*imTempP,-ROUND(psf.Niy/2)+1,-ROUND(psf.Nix/2)+1,ROUND(psf.Niy/2)-1,ROUND(psf.Nix/2)-1);
+            //                break;
+            //            }
 
 #ifdef DEBUG
+
             _Im().alias(*imTempP);
             _Im.write("projectXR-imTempEsc_before.spi");
 #endif
 
-            psf.applyOTF(*imTempP, imOutGlobal.Zoff()- k*psf.dzo);
+            //            psf.applyOTF(*imTempP, imOutGlobal.Zoff()- k*psf.dzo);
 
 #ifdef DEBUG
 
             _Im.write("projectXR-imTempEsc_after.spi");
 #endif
 
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
-            dAij(imOut,i,j) += dAij(*imTempP,i,j);
+//            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
+//            dAij(imOut,i,j) += dAij(*imTempP,i,j);
 
 #ifdef DEBUG
 
@@ -471,9 +472,15 @@ void threadXrayProject(ThreadArgument &thArg)
 #endif
 
         }
+
+
         priorLast = last + 1;
         //        std::cerr << "th" << thread_id << ": Finished work from " << first << " to " << last <<std::endl;
     }
+
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
+    A2D_ELEM(imOut,i,j) = -A2D_ELEM(intExp,i,j)*psf.dzo;
+
 
     //Lock to update the total addition
     mutex.lock();

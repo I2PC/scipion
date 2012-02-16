@@ -382,19 +382,24 @@ void XRayPSF::generateOTF()
         }
     case PSF_FROM_FILE:
         {
-            dMij(T, 2, 3) = (Zo + DeltaZo - Z)/dzoPSF;
-
             PSFi.resizeNoCopy(Niy, Nix);
             PSFi.setXmippOrigin();
-            applyGeometry(LINEAR, PSFi, MULTIDIM_ARRAY_GENERIC(PSFGen), T,
-                          IS_INV, DONT_WRAP, PSFGen.getPixel(1,
-                                                             STARTINGZ(MULTIDIM_ARRAY_BASE(PSFGen)),
-                                                             STARTINGY(MULTIDIM_ARRAY_BASE(PSFGen)),
-                                                             STARTINGX(MULTIDIM_ARRAY_BASE(PSFGen))));
 
+            double zIndexPSF = (Zo - Z)/dzoPSF;
 
-            CenterFFT(PSFi, true);
-
+            if (zIndexPSF < STARTINGZ(MULTIDIM_ARRAY_BASE(PSFGen)) ||
+                zIndexPSF > FINISHINGZ(MULTIDIM_ARRAY_BASE(PSFGen)))
+                PSFi.initZeros();
+            else
+            {
+                dMij(T, 2, 3) = zIndexPSF; // Distance from the focal plane
+                applyGeometry(LINEAR, PSFi, MULTIDIM_ARRAY_GENERIC(PSFGen), T,
+                              IS_INV, DONT_WRAP, PSFGen.getPixel(1,
+                                                                 STARTINGZ(MULTIDIM_ARRAY_BASE(PSFGen)),
+                                                                 STARTINGY(MULTIDIM_ARRAY_BASE(PSFGen)),
+                                                                 STARTINGX(MULTIDIM_ARRAY_BASE(PSFGen))));
+                CenterFFT(PSFi, true);
+            }
             break;
         }
     }
