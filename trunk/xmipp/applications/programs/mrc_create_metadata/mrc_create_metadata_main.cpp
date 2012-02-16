@@ -76,7 +76,7 @@ public:
 
     	MetaData MD;
     	FileName fnSlice;
-    	for (unsigned long slice=0; slice<ndim; slice++)
+    	for (unsigned long slice = FIRST_IMAGE; slice <= ndim; slice++)
     	{
     		double angle;
     		fhAngles >> angle;
