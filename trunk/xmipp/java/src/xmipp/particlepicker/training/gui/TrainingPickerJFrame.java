@@ -47,7 +47,7 @@ import xmipp.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
-import xmipp.utils.WindowUtils;
+import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippMessage;
 import xmipp.jni.Program;
 
@@ -122,17 +122,17 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			setLayout(new GridBagLayout());
 
 			initFamilyPane();
-			add(familypn, WindowUtils.getConstraints(constraints, 0, 1, 3));
+			add(familypn, WindowUtil.getConstraints(constraints, 0, 1, 3));
 
 			initSymbolPane();
-			add(symbolpn, WindowUtils.getConstraints(constraints, 0, 2, 3));
+			add(symbolpn, WindowUtil.getConstraints(constraints, 0, 2, 3));
 
 			initMicrographsPane();
-			add(micrographpn, WindowUtils.getConstraints(constraints, 0, 3, 3));
+			add(micrographpn, WindowUtil.getConstraints(constraints, 0, 3, 3));
 
 			pack();
 			positionx = 0.995f;
-			WindowUtils.setLocation(positionx, 0.25f, this);
+			WindowUtil.setLocation(positionx, 0.25f, this);
 			setVisible(true);
 		}
 		catch (Exception e)
@@ -339,7 +339,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 						}
 					}, // OK button handler
 					null); // no CANCEL button handler
-			WindowUtils.setLocation(positionx, 0.25f, dialog);
+			WindowUtil.setLocation(positionx, 0.25f, dialog);
 			dialog.setVisible(true);
 		}
 	}
@@ -427,8 +427,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		sp.setViewportView(micrographstb);
-		micrographpn.add(sp, WindowUtils.getConstraints(constraints, 0, 0, 1));
-		micrographpn.add(ctfpn, WindowUtils.getConstraints(constraints, 1, 0, 1));
+		micrographpn.add(sp, WindowUtil.getConstraints(constraints, 0, 0, 1));
+		micrographpn.add(ctfpn, WindowUtil.getConstraints(constraints, 1, 0, 1));
 		JPanel infopn = new JPanel();
 		manuallb = new JLabel(Integer.toString(ppicker.getManualParticlesNumber(family)));
 		autolb = new JLabel(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
@@ -436,11 +436,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		infopn.add(manuallb);
 		infopn.add(new JLabel("Automatic:"));
 		infopn.add(autolb);
-		micrographpn.add(infopn, WindowUtils.getConstraints(constraints, 0, 1, 1));
+		micrographpn.add(infopn, WindowUtil.getConstraints(constraints, 0, 1, 1));
 		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		resetbt = new JButton("Reset");
 		buttonspn.add(resetbt);
-		micrographpn.add(buttonspn, WindowUtils.getConstraints(constraints, 0, 2, 2));
+		micrographpn.add(buttonspn, WindowUtil.getConstraints(constraints, 0, 2, 2));
 		resetbt.addActionListener(new ActionListener()
 		{
 

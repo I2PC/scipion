@@ -340,8 +340,14 @@ public abstract class ParticlePicker
 		return false;
 	}
 
-	public abstract void exportData(Family family, String absolutePath);
+	public abstract void exportParticles(Family family, String absolutePath);
 
-	public abstract void importData(Family family, String absolutePath);
+	public abstract void importParticlesXmipp30(Family family, String absolutePath);
+
+	public abstract void importParticlesXmipp24(Family family, String path);
+	{
+		// TODO Auto-generated method stub
+		
+	}
 
 }

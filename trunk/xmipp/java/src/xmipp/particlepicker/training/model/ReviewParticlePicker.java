@@ -48,7 +48,7 @@ public class ReviewParticlePicker extends TrainingPicker
 	@Override
 	public void persistMicrographs()
 	{
-		exportData(reviewfamily, getOutputPath(reviewfamily.getName() + "_export_list.xmd"));
+		exportParticles(reviewfamily, getOutputPath(reviewfamily.getName() + "_export_list.xmd"));
 	}
 
 	@Override
@@ -73,7 +73,7 @@ public class ReviewParticlePicker extends TrainingPicker
 			}
 			if (micrographs.size() == 0)
 				throw new IllegalArgumentException(String.format("No micrographs specified on %s", getMicrographsSelFile()));
-			importData(reviewfamily, reviewfile);
+			importParticlesXmipp30(reviewfamily, reviewfile);
 		}
 		catch (Exception e)
 		{

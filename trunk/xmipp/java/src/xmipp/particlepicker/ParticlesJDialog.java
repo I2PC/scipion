@@ -13,7 +13,7 @@ import java.util.List;
 import javax.swing.JDialog;
 
 import xmipp.particlepicker.training.model.TrainingParticle;
-import xmipp.utils.WindowUtils;
+import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippMessage;
 
 public class ParticlesJDialog extends JDialog
@@ -87,7 +87,7 @@ public class ParticlesJDialog extends JDialog
 					break;
 				p = particles.get(index);
 				c = p.getParticleCanvas(frame);
-				particlespn.add(c, WindowUtils.getConstraints(constraints, j, i, 1));
+				particlespn.add(c, WindowUtil.getConstraints(constraints, j, i, 1));
 			}
 		if (resize)
 			pack();
@@ -104,7 +104,7 @@ public class ParticlesJDialog extends JDialog
 		sp.add(particlespn);
 		add(sp);
 		loadParticles(true);
-		WindowUtils.setLocation(0.6f, 0, this);
+		WindowUtil.setLocation(0.6f, 0, this);
 		setVisible(true);
 		setAlwaysOnTop(true);
 		this.addComponentListener(new java.awt.event.ComponentAdapter()

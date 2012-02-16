@@ -33,5 +33,10 @@ public class XmippMessage {
 		return String.format("%s out of bounds", o);
 	}
 	
+	public static String getNotImplementedYetMsg()
+	{
+		return "Not implemented yet";
+	}
+	
 	
 }

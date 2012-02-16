@@ -48,7 +48,8 @@ import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
-import xmipp.utils.WindowUtils;
+import xmipp.utils.WindowUtil;
+import xmipp.utils.XmippMessage;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
@@ -158,22 +159,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				JFileChooser fc = new JFileChooser();
-				int returnVal = fc.showOpenDialog(ParticlePickerJFrame.this);
-
-				try
-				{
-					if (returnVal == JFileChooser.APPROVE_OPTION)
-					{
-						String path = fc.getSelectedFile().getAbsolutePath();
-						importParticles(path);
-						JOptionPane.showMessageDialog(ParticlePickerJFrame.this, "Import successful");
-					}
-				}
-				catch (Exception ex)
-				{
-					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, ex.getMessage());
-				}
+				new ImportParticlesJDialog(ParticlePickerJFrame.this, true);
 			}
 		});
 
@@ -186,7 +172,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			public void actionPerformed(ActionEvent e)
 			{
 				JFileChooser fc = new JFileChooser();
-				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 				int returnVal = fc.showOpenDialog(ParticlePickerJFrame.this);
 
 				try
@@ -194,7 +179,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 					if (returnVal == JFileChooser.APPROVE_OPTION)
 					{
 						File file = fc.getSelectedFile();
-						getParticlePicker().exportData(getFamily(), file.getAbsolutePath());
+						getParticlePicker().exportParticles(getFamily(), file.getAbsolutePath());
 						JOptionPane.showMessageDialog(ParticlePickerJFrame.this, "Export successful");
 					}
 				}
@@ -231,7 +216,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				try
 				{
-					WindowUtils.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParticlePicker");
+					WindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParticlePicker");
 				}
 				catch (Exception ex)
 				{
@@ -515,12 +500,28 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		setChanged(true);
 	}
 	
-	protected void importParticles(String path)
+	protected void importParticlesXmipp30(String path)
 	{
-		getParticlePicker().importData(getFamily(), path);
+		getParticlePicker().importParticlesXmipp30(getFamily(), path);
 		setChanged(true);
 		getCanvas().repaint();
 		updateMicrographsModel();
+	}
+	
+	
+	public  void importParticlesXmipp24(String path)
+	{
+		getParticlePicker().importParticlesXmipp24(getFamily(), path);
+		setChanged(true);
+		getCanvas().repaint();
+		updateMicrographsModel();
+		
+	}
+
+	public  void importParticlesEman(String path)
+	{
+		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
+		
 	}
 
 

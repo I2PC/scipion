@@ -41,7 +41,7 @@ import xmipp.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.particlepicker.training.gui.ColorIcon;
 import xmipp.particlepicker.training.model.TrainingParticle;
-import xmipp.utils.WindowUtils;
+import xmipp.utils.WindowUtil;
 
 
 
@@ -95,13 +95,13 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		setLayout(new GridBagLayout());
 
 		initParticlesPane();
-		add(particlespn, WindowUtils.getConstraints(constraints, 0, 1, 3));
+		add(particlespn, WindowUtil.getConstraints(constraints, 0, 1, 3));
 		initMicrographsPane();
-		add(micrographpn, WindowUtils.getConstraints(constraints, 0, 2, 3));
+		add(micrographpn, WindowUtil.getConstraints(constraints, 0, 2, 3));
 
 		pack();
 		position = 0.95f;
-		WindowUtils.setLocation(position, 0.5f, this);
+		WindowUtil.setLocation(position, 0.5f, this);
 		setVisible(true);
 	}
 	
@@ -141,9 +141,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		helpmn.add(hcontentsmi);
 	}
 
-	protected void importParticles(String path)
+	protected void importParticlesXmipp30(String path)
 	{
-		super.importParticles(path);
+		super.importParticlesXmipp30(path);
 		untiltedmic.initAligner();
 		tiltedcanvas.repaint();
 	}
@@ -204,7 +204,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 						}
 					}, // OK button handler
 					null); // no CANCEL button handler
-			WindowUtils.setLocation(position, 0.5f, dialog);
+			WindowUtil.setLocation(position, 0.5f, dialog);
 			dialog.setVisible(true);
 		}
 	}
@@ -229,16 +229,16 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		sp.setViewportView(micrographstb);
-		micrographpn.add(sp, WindowUtils.getConstraints(constraints, 0, 0, 1));
+		micrographpn.add(sp, WindowUtil.getConstraints(constraints, 0, 0, 1));
 		JPanel infopn = new JPanel();
 		upslb = new JLabel(Integer.toString(pppicker.getUntiltedNumber()));
 		infopn.add(new JLabel("Particles:"));
 		infopn.add(upslb);
-		micrographpn.add(infopn, WindowUtils.getConstraints(constraints, 0, 1, 1));
+		micrographpn.add(infopn, WindowUtil.getConstraints(constraints, 0, 1, 1));
 		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		resetbt = new JButton("Reset");
 		buttonspn.add(resetbt);
-		micrographpn.add(buttonspn, WindowUtils.getConstraints(constraints, 0, 2, 2));
+		micrographpn.add(buttonspn, WindowUtil.getConstraints(constraints, 0, 2, 2));
 		resetbt.addActionListener(new ActionListener()
 		{
 

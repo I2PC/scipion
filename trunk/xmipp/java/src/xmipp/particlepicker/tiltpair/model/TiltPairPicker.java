@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.ParticlePicker;
 import xmipp.particlepicker.training.model.FamilyState;
+import xmipp.utils.XmippMessage;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import java.util.Hashtable; 
@@ -306,14 +307,21 @@ public class TiltPairPicker extends ParticlePicker
 	}
 	
 	@Override
-	public void exportData(Family family, String path)
+	public void exportParticles(Family family, String path)
 	{
-		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
 		
 	}
 
 	@Override
-	public void importData(Family family, String absolutePath)
+	public void importParticlesXmipp30(Family family, String absolutePath)
+	{
+		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
+		
+	}
+
+	@Override
+	public void importParticlesXmipp24(Family family, String path)
 	{
 		// TODO Auto-generated method stub
 		

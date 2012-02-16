@@ -8,6 +8,7 @@ import java.util.logging.Level;
 
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.ParticlePicker;
+import xmipp.utils.XmippMessage;
 
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -372,7 +373,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	}
 
 	@Override
-	public void importData(Family family, String file)
+	public void importParticlesXmipp30(Family family, String path)
 	{
 		try
 		{
@@ -380,6 +381,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			long[] ids;
 			int x, y;
 			double cost;
+			String file = String.format("%s_extract_list.xmd", path + File.separator + family.getName());
 			List<String> blocks = Arrays.asList(MetaData.getBlocksInMetaDataFile(file));
 			String block;
 			for (TrainingMicrograph m : micrographs)
@@ -412,7 +414,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}
 
-	public void exportData(Family f, String file)
+	public void exportParticles(Family f, String file)
 	{
 
 		try
@@ -448,6 +450,13 @@ public abstract class TrainingPicker extends ParticlePicker
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
+	}
+	
+	@Override
+	public void importParticlesXmipp24(Family family, String path)
+	{
+		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
+		
 	}
 
 }
