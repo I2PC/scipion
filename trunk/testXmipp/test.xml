@@ -122,7 +122,7 @@
 			<FILE filename="kerdensom_vectors.xmd" />
 		</CASE>
 	</PROGRAM>
-	<PROGRAM name="xmipp_ctf_correct_amplitude3d" mpi="FALSE">
+	<PROGRAM name="xmipp_ctf_correct_wiener3d" mpi="FALSE">
 		<CASE arguments="-i input/ctf_correct3d.xmd --oroot %o/wiener"
 			changeDir="FALSE">
 			<FILE filename="wiener_deconvolved.vol" />
