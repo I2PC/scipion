@@ -393,8 +393,7 @@ void CTFDescription::Produce_Side_Info()
     //    h: Planck constant
     //    m: electron mass
     //    e: electron charge
-    // lambda=0.387832/sqrt(kV*(1.+0.000978466*kV)); // Hewz: Angstroms
-    lambda = 12.3 / sqrt(local_kV * (1. + local_kV * 1e-6)); // ICE
+    lambda=12.2643247/sqrt(local_kV*(1.+0.978466e-6*local_kV)); // See http://en.wikipedia.org/wiki/Electron_diffraction
 
     // Phase shift for spherical aberration
     // X(u)=-PI*deltaf(u)*lambda*u^2+PI/2*Cs*lambda^3*u^4
