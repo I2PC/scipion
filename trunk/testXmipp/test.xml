@@ -480,7 +480,7 @@
 	</PROGRAM>
 	<PROGRAM name="xmipp_mpi_classify_CL2D" mpi="TRUE">
 		<CASE
-			arguments="-i input/projectionsBacteriorhodopsin.stk --codes 4 -o %o/class --iter 5"
+			arguments="-i input/projectionsBacteriorhodopsin.stk --nref 4 -o %o/class --iter 5"
 			changeDir="FALSE" random="TRUE">
 			<FILE filename="class_aligned.stk" />
 			<FILE filename="class_level_00.sel" />
