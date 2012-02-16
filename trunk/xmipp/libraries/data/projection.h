@@ -501,6 +501,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     // (z0,y0,XX(lowest))
     double XX_footprint_size;                // The footprint is supposed
     double YY_footprint_size;                // to be defined between
+    double ZZ_footprint_size;
     // (-vmax,+vmax) in the Y axis,
     // and (-umax,+umax) in the X axis
     // This footprint size is the
@@ -514,7 +515,8 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     // oversampled image fashion)
     // inside the blobprint of the
     // corner1
-    int           foot_V, foot_U;            // Img Coord: coordinate
+    int        foot_V, foot_U;            // Img Coord: coordinate
+    int        foot_W = 0;
     // corresponding to the blobprint
     // point which matches with this
     // pixel position
@@ -525,6 +527,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     int           N_eq;                      // Number of equations in which
     // a blob is involved
     int           i, j, k;                   // volume element indexes
+    bool   isVolPSF = false;    // Blob footprint is VolumePSF
 
     // Prepare system matrix for printing ...................................
     if (M != NULL)
@@ -558,6 +561,13 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
         YY_footprint_size = basis->blobprint.vmax();
         Usampling         = basis->blobprint.Ustep();
         Vsampling         = basis->blobprint.Vstep();
+
+        // Set the limit for grid points out of PSF
+        if (basis->VolPSF != NULL)
+        {
+            isVolPSF = true;
+            ZZ_footprint_size = basis->blobprint.wmax();
+        }
     }
     else if (basis->type == Basis::voxels || basis->type == Basis::splines)
     {
@@ -657,10 +667,23 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
             {
                 // Ray length interesting
                 bool ray_length_interesting = true;
-                if (ray_length != -1)
-                    ray_length_interesting =
-                        ABS(point_plane_distance_3D(univ_position, zero,
-                                                    proj->direction)) <= ray_length;
+                double zCenterDist, z = 0; // z = 0 standard value for non 3D blobprints
+
+                if (ray_length != -1 || isVolPSF)
+                {
+                    zCenterDist = point_plane_distance_3D(univ_position, zero,
+                                                          proj->direction);
+                    if (ray_length != -1)
+                        ray_length_interesting = (ABS(zCenterDist) <= ray_length);
+
+                    // Points out of 3DPSF
+                    if (isVolPSF && ray_length_interesting)
+                    {
+                        ray_length_interesting = (ABS(zCenterDist) <= ZZ_footprint_size);
+                        // There is still missing the shift of the volume from focal plane
+                        z = zCenterDist; // + shiftZ
+                    }
+                }
 
                 if (grid->is_interesting(univ_position) &&
                     ray_length_interesting)
@@ -705,8 +728,12 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                     {
                         // Compute the index of the basis for corner1
                         if (basis->type == Basis::blobs)
+                        {
                             OVER2IMG(basis->blobprint, (double)YY_corner1 - YY(actprj),
                                      (double)XX_corner1 - XX(actprj), foot_V1, foot_U1);
+                            if (isVolPSF != NULL)
+                                OVER2IMG_Z(basis->blobprint, z, foot_W);
+                        }
 
                         if (!FORW)
                             vol_corr = 0;
@@ -746,7 +773,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                         // Get the pixel position in the universal coordinate
                                         // system
                                         SPEED_UP_temps;
-                                        VECTOR_R3(prjPix, x, y, 0);
+                                        VECTOR_R3(prjPix, x, y, z);
                                         M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
                                         V3_MINUS_V3(prjPix, prjPix, univ_position);
                                         a = basis->valueAt(prjPix);
@@ -758,8 +785,8 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                         if (basis->type == Basis::blobs)
                                         {
                                             // Projection of a blob
-                                            a = IMGPIXEL(basis->blobprint, foot_V, foot_U);
-                                            a2 = IMGPIXEL(basis->blobprint2, foot_V, foot_U);
+                                            a = VOLVOXEL(basis->blobprint, foot_W, foot_V, foot_U);
+                                            a2 = VOLVOXEL(basis->blobprint2, foot_W, foot_V, foot_U);
 
                                         }
                                         else
