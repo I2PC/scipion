@@ -320,6 +320,28 @@
 			<FILE filename="column.spi" />
 		</CASE>
 	</PROGRAM>
+	<PROGRAM name="xmipp_mpi_image_operate" mpi="TRUE">
+        <CASE arguments="-i input/singleImage.spi --mult 2.5 -o %o/mult.spi"
+            changeDir="FALSE">
+            <FILE filename="mult.spi" />
+        </CASE>
+        <CASE arguments="-i input/singleImage.spi --pow  -o %o/power.spi"
+            changeDir="FALSE">
+            <FILE filename="power.spi" />
+        </CASE>
+        <CASE arguments="-i input/singleImage.spi --radial_avg -o %o/rad_avg.spi"
+            changeDir="FALSE">
+            <FILE filename="rad_avg.spi" />
+        </CASE>
+        <CASE arguments="-i input/phantomCandida.vol --slice 32 -o %o/slice.spi"
+            changeDir="FALSE">
+            <FILE filename="slice.spi" />
+        </CASE>
+        <CASE arguments="-i input/phantomCandida.vol --column 32 -o %o/column.spi"
+            changeDir="FALSE">
+            <FILE filename="column.spi" />
+        </CASE>
+    </PROGRAM>
 	<PROGRAM name="xmipp_image_rotational_spectra" mpi="FALSE">
 		<CASE arguments="-i input/images_some.stk -o %o/spectra.xmd --r1 10 --r2 40"
 			changeDir="FALSE">

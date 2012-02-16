@@ -1,0 +1,2 @@
+Input File: input/phantomCandida.vol
+Output File: tmpLink/xmipp_mpi_image_operate_04/slice.spi
