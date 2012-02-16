@@ -580,6 +580,11 @@
 			<FILE filename="file4.txt" />
 		</CASE>
 	</PROGRAM>
+	   <PROGRAM name="xmipp_mrc_create_metadata" mpi="FALSE">
+        <CASE arguments="--stack input/aFewProjections.stk --tiltAngles input/raw.tlt  -o %o/projections.xmd" changeDir="FALSE">
+            <FILE filename="projections.xmd" />
+        </CASE>
+    </PROGRAM>
 	<PROGRAM name="xmipp_pdb_nma_deform" mpi="FALSE">
 		<CASE
 			arguments="--pdb input/2tbv.pdb -o %o/deformed.pdb --nma input/modelist.xmd --deformations 1000"
