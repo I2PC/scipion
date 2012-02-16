@@ -1145,7 +1145,15 @@ Program_read(PyObject *obj, PyObject *args, PyObject *kwargs)
                                         "Program arguments should be of type string");
                         return NULL;
                     }
+
                     argv[i] = PyString_AsString(item);
+
+                    if (i == 0)
+                    {
+                        FileName temp(argv[i]);
+                        temp = temp.removeDirectories();
+                        argv[i] = strdup(temp.c_str());
+                    }
                 }
                 self->program->read((int)size, argv);
                 if (self->program->doRun)
