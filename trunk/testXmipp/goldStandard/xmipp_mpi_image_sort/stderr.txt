@@ -1,0 +1,2 @@
+Input selfile:    input/aFewProjections.sel
+Output rootname:  tmpLink/xmipp_mpi_image_sort/sorted

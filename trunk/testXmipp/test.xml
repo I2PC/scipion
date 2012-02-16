@@ -530,7 +530,7 @@
 		<CASE arguments="-i input/aFewProjections.sel --oroot %o/sorted"
 			changeDir="FALSE">
 			<FILE filename="sorted.stk" />
-			<FILE filename="sorted.sel" />
+			<FILE filename="sorted.xmd" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_nma_alignment" mpi="FALSE">
