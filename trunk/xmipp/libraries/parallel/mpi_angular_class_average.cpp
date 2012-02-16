@@ -27,8 +27,7 @@
 
 
 MpiProgAngularClassAverage::MpiProgAngularClassAverage()
-{
-}
+{}
 
 MpiProgAngularClassAverage::MpiProgAngularClassAverage(int argc, char **argv)
 {
@@ -53,7 +52,7 @@ MpiProgAngularClassAverage::MpiProgAngularClassAverage(int argc, char **argv)
 // Read arguments ==========================================================
 void MpiProgAngularClassAverage::readParams()
 {
-	do_limitR0per = do_limitR0class = do_limitRFclass = do_limit0 = do_limitF = false;
+    do_limitR0per = do_limitR0class = do_limitRFclass = do_limit0 = do_limitF = false;
 
     // Read command line
     DFlib.read(getParam("--lib"));
@@ -69,6 +68,10 @@ void MpiProgAngularClassAverage::readParams()
 
     inFile = getParam("-i");
 
+    do_limitRFclass = false;
+    do_limitR0class = false;
+    do_limitR0per = false;
+    do_limitRFper = false;
     if (checkParam("--limitRclass"))
     {
         limitRclass = getDoubleParam("--limitRclass")/100.;
@@ -83,6 +86,7 @@ void MpiProgAngularClassAverage::readParams()
             do_limitRFclass = true;
         }
     }
+
 
     if (checkParam("--limitRper"))
     {
@@ -331,7 +335,7 @@ void MpiProgAngularClassAverage::run()
     if (node->rank == 0)
         mpi_postprocess();
 
-//    MPI_Finalize();
+    //    MPI_Finalize();
 }
 
 
@@ -740,11 +744,11 @@ void MpiProgAngularClassAverage::mpi_preprocess()
 
     if (node->rank==0)
     {
-            saveDiscardedImages();
-            createJobList();
-            initDimentions();
-            initWeights();
-            initOutputFiles();
+        saveDiscardedImages();
+        createJobList();
+        initDimentions();
+        initWeights();
+        initOutputFiles();
     }
 
     MPI_Bcast(&Xdim,1,MPI_INT,0,MPI_COMM_WORLD);
