@@ -3,7 +3,7 @@ Min Freq.:           0.03
 Max Freq.:           0.35
 Sampling:            1.4
 Defocus range:       8000
-ctfmodelSize:        128
+ctfmodelSize:        256
 Enhance min freq:    0.02
 Enhance max freq:    0.15
 Enhance weight:      1
@@ -12,8 +12,8 @@ Bootstrap:           0
 Starting CTF:
 sampling_rate=        1.4
 voltage=              200
-defocusU=             -15000
-defocusV=             -15000
+defocusU=             15000
+defocusV=             15000
 azimuthal_angle=      0
 spherical_aberration= 2.5
 chromatic_aberration= 0

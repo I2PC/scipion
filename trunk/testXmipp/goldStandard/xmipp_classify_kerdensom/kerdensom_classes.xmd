@@ -5,7 +5,7 @@ loop_
  _KerDenSOM_Regularization
  _KerDenSOM_Functional
  _KerDenSOM_Sigma
-  100.000000     0.000000     0.007339 
+  100.000000     0.000000     0.007338 
 data_KerDenSOM_Layout
 loop_
  _Xsize
@@ -17,17 +17,17 @@ loop_
  _ref
  _ClassificationIntraclassDistance
  _count
-         0     3.215543          5 
-         1     3.337870         11 
-         2     3.494617         14 
-         3     3.565945         12 
-         4     3.657139          8 
-         5     3.478680         13 
-         6     3.090396          9 
-         7     2.735936          8 
-         8     2.306402          4 
-         9     5.477077         69 
-        10     3.301607          3 
+         0     0.000000          0 
+         1     2.533695          2 
+         2     3.069026          1 
+         3     0.000000          0 
+         4     0.000000          0 
+         5     0.000000          0 
+         6     0.000000          0 
+         7     0.000000          0 
+         8     0.000000          0 
+         9    11.116048         34 
+        10     0.000000          0 
         11     0.000000          0 
         12     0.000000          0 
         13     0.000000          0 
@@ -36,18 +36,18 @@ loop_
         16     0.000000          0 
         17     0.000000          0 
         18     0.000000          0 
-        19     0.000000          0 
-        20     3.384687          4 
-        21     0.000000          0 
+        19     3.502461          1 
+        20     0.000000          0 
+        21     2.455104          1 
         22     0.000000          0 
         23     0.000000          0 
-        24     3.801003          1 
-        25     0.000000          0 
+        24     0.000000          0 
+        25     3.801234          1 
         26     0.000000          0 
         27     0.000000          0 
-        28     2.455070          1 
-        29     0.000000          0 
-        30     3.502513          1 
+        28     0.000000          0 
+        29     3.384658          4 
+        30     0.000000          0 
         31     0.000000          0 
         32     0.000000          0 
         33     0.000000          0 
@@ -56,129 +56,89 @@ loop_
         36     0.000000          0 
         37     0.000000          0 
         38     0.000000          0 
-        39     0.000000          0 
-        40    11.112847         34 
-        41     0.000000          0 
-        42     0.000000          0 
-        43     0.000000          0 
-        44     0.000000          0 
-        45     0.000000          0 
-        46     0.000000          0 
-        47     3.068783          1 
-        48     2.533583          2 
-        49     0.000000          0 
-data_class_000000
-loop_
- _image
- 000040@cluster.stk 
- 000054@cluster.stk 
- 000076@cluster.stk 
- 000112@cluster.stk 
- 000188@cluster.stk 
+        39     3.301574          3 
+        40     5.476583         69 
+        41     2.306288          4 
+        42     2.735831          8 
+        43     3.090083          9 
+        44     3.478411         13 
+        45     3.656871          8 
+        46     3.565786         12 
+        47     3.494621         14 
+        48     3.338179         11 
+        49     3.215983          5 
 data_class_000001
 loop_
  _image
- 000012@cluster.stk 
- 000014@cluster.stk 
- 000024@cluster.stk 
- 000031@cluster.stk 
- 000051@cluster.stk 
- 000069@cluster.stk 
- 000129@cluster.stk 
- 000157@cluster.stk 
- 000158@cluster.stk 
- 000168@cluster.stk 
- 000189@cluster.stk 
+ 000097@cluster.stk 
+ 000151@cluster.stk 
 data_class_000002
 loop_
  _image
- 000021@cluster.stk 
- 000034@cluster.stk 
- 000063@cluster.stk 
- 000079@cluster.stk 
- 000080@cluster.stk 
- 000083@cluster.stk 
- 000093@cluster.stk 
- 000102@cluster.stk 
- 000103@cluster.stk 
- 000135@cluster.stk 
- 000144@cluster.stk 
- 000153@cluster.stk 
- 000187@cluster.stk 
- 000198@cluster.stk 
-data_class_000003
-loop_
- _image
- 000019@cluster.stk 
- 000029@cluster.stk 
- 000064@cluster.stk 
- 000081@cluster.stk 
- 000084@cluster.stk 
- 000114@cluster.stk 
- 000122@cluster.stk 
- 000126@cluster.stk 
- 000127@cluster.stk 
- 000141@cluster.stk 
- 000174@cluster.stk 
- 000194@cluster.stk 
-data_class_000004
-loop_
- _image
- 000038@cluster.stk 
- 000041@cluster.stk 
- 000077@cluster.stk 
- 000090@cluster.stk 
- 000095@cluster.stk 
- 000116@cluster.stk 
- 000172@cluster.stk 
- 000197@cluster.stk 
-data_class_000005
-loop_
- _image
- 000017@cluster.stk 
- 000025@cluster.stk 
- 000027@cluster.stk 
- 000043@cluster.stk 
- 000066@cluster.stk 
- 000067@cluster.stk 
- 000071@cluster.stk 
- 000078@cluster.stk 
- 000132@cluster.stk 
- 000159@cluster.stk 
- 000179@cluster.stk 
- 000185@cluster.stk 
- 000192@cluster.stk 
-data_class_000006
-loop_
- _image
- 000011@cluster.stk 
- 000044@cluster.stk 
- 000056@cluster.stk 
- 000073@cluster.stk 
- 000082@cluster.stk 
- 000094@cluster.stk 
- 000150@cluster.stk 
- 000169@cluster.stk 
- 000175@cluster.stk 
-data_class_000007
-loop_
- _image
- 000028@cluster.stk 
- 000036@cluster.stk 
- 000058@cluster.stk 
- 000068@cluster.stk 
- 000070@cluster.stk 
- 000145@cluster.stk 
- 000163@cluster.stk 
- 000186@cluster.stk 
-data_class_000008
-loop_
- _image
- 000037@cluster.stk 
- 000048@cluster.stk 
- 000052@cluster.stk 
- 000105@cluster.stk 
+ 000046@cluster.stk 
 data_class_000009
+loop_
+ _image
+ 000001@cluster.stk 
+ 000003@cluster.stk 
+ 000008@cluster.stk 
+ 000023@cluster.stk 
+ 000026@cluster.stk 
+ 000033@cluster.stk 
+ 000039@cluster.stk 
+ 000053@cluster.stk 
+ 000072@cluster.stk 
+ 000085@cluster.stk 
+ 000089@cluster.stk 
+ 000091@cluster.stk 
+ 000100@cluster.stk 
+ 000101@cluster.stk 
+ 000104@cluster.stk 
+ 000107@cluster.stk 
+ 000110@cluster.stk 
+ 000117@cluster.stk 
+ 000123@cluster.stk 
+ 000131@cluster.stk 
+ 000133@cluster.stk 
+ 000134@cluster.stk 
+ 000137@cluster.stk 
+ 000138@cluster.stk 
+ 000142@cluster.stk 
+ 000147@cluster.stk 
+ 000148@cluster.stk 
+ 000149@cluster.stk 
+ 000160@cluster.stk 
+ 000165@cluster.stk 
+ 000170@cluster.stk 
+ 000177@cluster.stk 
+ 000178@cluster.stk 
+ 000180@cluster.stk 
+data_class_000019
+loop_
+ _image
+ 000191@cluster.stk 
+data_class_000021
+loop_
+ _image
+ 000018@cluster.stk 
+data_class_000025
+loop_
+ _image
+ 000106@cluster.stk 
+data_class_000029
+loop_
+ _image
+ 000010@cluster.stk 
+ 000032@cluster.stk 
+ 000099@cluster.stk 
+ 000136@cluster.stk 
+data_class_000039
+loop_
+ _image
+ 000006@cluster.stk 
+ 000016@cluster.stk 
+ 000162@cluster.stk 
+data_class_000040
 loop_
  _image
  000002@cluster.stk 
@@ -250,74 +210,114 @@ loop_
  000196@cluster.stk 
  000199@cluster.stk 
  000200@cluster.stk 
-data_class_000010
+data_class_000041
 loop_
  _image
- 000006@cluster.stk 
- 000016@cluster.stk 
- 000162@cluster.stk 
-data_class_000020
+ 000037@cluster.stk 
+ 000048@cluster.stk 
+ 000052@cluster.stk 
+ 000105@cluster.stk 
+data_class_000042
 loop_
  _image
- 000010@cluster.stk 
- 000032@cluster.stk 
- 000099@cluster.stk 
- 000136@cluster.stk 
-data_class_000024
+ 000028@cluster.stk 
+ 000036@cluster.stk 
+ 000058@cluster.stk 
+ 000068@cluster.stk 
+ 000070@cluster.stk 
+ 000145@cluster.stk 
+ 000163@cluster.stk 
+ 000186@cluster.stk 
+data_class_000043
 loop_
  _image
- 000106@cluster.stk 
-data_class_000028
+ 000011@cluster.stk 
+ 000044@cluster.stk 
+ 000056@cluster.stk 
+ 000073@cluster.stk 
+ 000082@cluster.stk 
+ 000094@cluster.stk 
+ 000150@cluster.stk 
+ 000169@cluster.stk 
+ 000175@cluster.stk 
+data_class_000044
 loop_
  _image
- 000018@cluster.stk 
-data_class_000030
+ 000017@cluster.stk 
+ 000025@cluster.stk 
+ 000027@cluster.stk 
+ 000043@cluster.stk 
+ 000066@cluster.stk 
+ 000067@cluster.stk 
+ 000071@cluster.stk 
+ 000078@cluster.stk 
+ 000132@cluster.stk 
+ 000159@cluster.stk 
+ 000179@cluster.stk 
+ 000185@cluster.stk 
+ 000192@cluster.stk 
+data_class_000045
 loop_
  _image
- 000191@cluster.stk 
-data_class_000040
+ 000038@cluster.stk 
+ 000041@cluster.stk 
+ 000077@cluster.stk 
+ 000090@cluster.stk 
+ 000095@cluster.stk 
+ 000116@cluster.stk 
+ 000172@cluster.stk 
+ 000197@cluster.stk 
+data_class_000046
 loop_
  _image
- 000001@cluster.stk 
- 000003@cluster.stk 
- 000008@cluster.stk 
- 000023@cluster.stk 
- 000026@cluster.stk 
- 000033@cluster.stk 
- 000039@cluster.stk 
- 000053@cluster.stk 
- 000072@cluster.stk 
- 000085@cluster.stk 
- 000089@cluster.stk 
- 000091@cluster.stk 
- 000100@cluster.stk 
- 000101@cluster.stk 
- 000104@cluster.stk 
- 000107@cluster.stk 
- 000110@cluster.stk 
- 000117@cluster.stk 
- 000123@cluster.stk 
- 000131@cluster.stk 
- 000133@cluster.stk 
- 000134@cluster.stk 
- 000137@cluster.stk 
- 000138@cluster.stk 
- 000142@cluster.stk 
- 000147@cluster.stk 
- 000148@cluster.stk 
- 000149@cluster.stk 
- 000160@cluster.stk 
- 000165@cluster.stk 
- 000170@cluster.stk 
- 000177@cluster.stk 
- 000178@cluster.stk 
- 000180@cluster.stk 
+ 000019@cluster.stk 
+ 000029@cluster.stk 
+ 000064@cluster.stk 
+ 000081@cluster.stk 
+ 000084@cluster.stk 
+ 000114@cluster.stk 
+ 000122@cluster.stk 
+ 000126@cluster.stk 
+ 000127@cluster.stk 
+ 000141@cluster.stk 
+ 000174@cluster.stk 
+ 000194@cluster.stk 
 data_class_000047
 loop_
  _image
- 000046@cluster.stk 
+ 000021@cluster.stk 
+ 000034@cluster.stk 
+ 000063@cluster.stk 
+ 000079@cluster.stk 
+ 000080@cluster.stk 
+ 000083@cluster.stk 
+ 000093@cluster.stk 
+ 000102@cluster.stk 
+ 000103@cluster.stk 
+ 000135@cluster.stk 
+ 000144@cluster.stk 
+ 000153@cluster.stk 
+ 000187@cluster.stk 
+ 000198@cluster.stk 
 data_class_000048
 loop_
  _image
- 000097@cluster.stk 
- 000151@cluster.stk 
+ 000012@cluster.stk 
+ 000014@cluster.stk 
+ 000024@cluster.stk 
+ 000031@cluster.stk 
+ 000051@cluster.stk 
+ 000069@cluster.stk 
+ 000129@cluster.stk 
+ 000157@cluster.stk 
+ 000158@cluster.stk 
+ 000168@cluster.stk 
+ 000189@cluster.stk 
+data_class_000049
+loop_
+ _image
+ 000040@cluster.stk 
+ 000054@cluster.stk 
+ 000076@cluster.stk 
+ 000112@cluster.stk 
+ 000188@cluster.stk 

@@ -1,3 +1,0 @@
-17: File or directory does not exists
-Cannot read file 'down1_01nov26b.001.001.001.002_Periodogramavg.psd'. It doesn't exist
-File: libraries/data/image_base.cpp line: 405

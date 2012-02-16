@@ -11,4 +11,3 @@ only_winner:               0
 verbose:                   1
 shears:                    1
 compute_closer_sampling_point_bool:0
-Finished run

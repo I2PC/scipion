@@ -2,20 +2,3 @@
 # 
 data_
 loop_
- _image
- _angleRot
- _angleTilt
- _anglePsi
- _shiftX
- _shiftY
- _maxCC
- 000001@input/aFewProjections.stk     0.000000     0.000000     0.000000     0.000000     0.000000     0.999220 
- 000002@input/aFewProjections.stk     0.000000    17.375096     0.000000     0.000000     0.000000     0.994982 
- 000003@input/aFewProjections.stk   121.576467    49.129549     0.000000     0.000000     0.000000     0.996737 
- 000004@input/aFewProjections.stk   119.549867    60.637483     0.000000     0.000000     0.000000     0.994973 
- 000005@input/aFewProjections.stk  -114.000000    90.000000     0.000000     0.000000     0.000000     0.992436 
- 000006@input/aFewProjections.stk     0.000000     0.000000   -90.000000     0.000000     0.000000     0.999220 
- 000007@input/aFewProjections.stk   -36.000000    21.144988    -5.000000     0.000000     0.000000     0.998203 
- 000008@input/aFewProjections.stk  -151.633709    47.144592     0.000000     0.000000     0.000000     0.998452 
- 000009@input/aFewProjections.stk  -149.956844    69.775710     0.000000     0.000000     0.000000     0.998707 
- 000010@input/aFewProjections.stk  -150.000000    90.000000     0.000000     0.000000     0.000000     0.999709 
