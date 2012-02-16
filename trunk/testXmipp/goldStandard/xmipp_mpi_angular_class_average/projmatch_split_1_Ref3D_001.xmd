@@ -11,5 +11,5 @@ loop_
  _weight
  _anglePsi
  _enabled
-         1  000007@tmpLink/xmipp_mpi_angular_class_average//projmatch_split_1_Ref3D_001.stk          7         10     4.232911    48.542350     1.000000     0.000000          1 
+         1  000007@tmpLink/xmipp_mpi_angular_class_average//projmatch_split_1_Ref3D_001.stk          7         10     4.232911    48.542350     2.000000     0.000000          1 
          1  000013@tmpLink/xmipp_mpi_angular_class_average//projmatch_split_1_Ref3D_001.stk         13         21    25.255588    54.430868     1.000000     0.000000          1 
