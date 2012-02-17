@@ -60,9 +60,13 @@ public class ImageGeneric {
 
     public ImageGeneric(String filename) throws Exception {
         this();
-
-        this.filename = filename;
-        readHeader(filename);//Filename.getFilename(filename));
+        setFilename(filename);
+    }
+    
+    /** Set a new filename and reload the header */
+    public void setFilename(String filename) throws Exception {
+    	this.filename = filename;
+    	readHeader(filename);//Filename.getFilename(filename));
     }
 
     public void resize(int h, int w) throws Exception {
