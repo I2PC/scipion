@@ -12,12 +12,15 @@
 
 
 import os
-from os.path import join
-from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL, MDL_COUNT, MDL_RESOLUTION_FREQREAL
+from os.path import join, exists
+from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL, MDL_COUNT, MDL_RESOLUTION_FREQREAL, \
+MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FRCRANDOMNOISE
 from protlib_base import XmippProtocol, protocolMain
-from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector
+from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector, runShowJ
 from protlib_sql import XmippProjectDb, SqliteDb
 from config_protocols import protDict
+from protlib_gui_ext import showWarning
+
 
 class ProtProjMatch(XmippProtocol):
 #    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
@@ -94,6 +97,72 @@ class ProtProjMatch(XmippProtocol):
                         % (self.NumberOfCtfGroups, self.numberOfReferences)]
 
         return summary
+    
+    def visualize(self):
+#        import numpy as np
+#        from protlib_gui_figure import XmippPlotter
+#        
+        plots = [k for k in ['DisplayResolutionPlots'] if self.ParamsDict[k]]
+#        if self.DoShowReferences:
+#            self.visualizeVar('DoShowReferences')
+        if len(plots):
+            self.launchML2DPlots(plots)
+         
+#    def visualizeReferences(self):
+#        refs = self.getFilename('iter_refs')
+#        if exists(refs):
+#            blocks = getBlocksInMetaDataFile(refs)
+#            lastBlock = blocks[-1]
+#            try:
+#                runShowJ("%(lastBlock)s@%(refs)s" % locals(), "512m", "--mode metadata --render")
+#            except Exception, e:
+#                from protlib_gui_ext import showError
+#                showError("Error launching java app", str(e))
+               
+    def visualizeVar(self, varName):
+#        if varName == 'DoShowReferences':
+#            self.visualizeReferences()
+#        else:
+        self.launchML2DPlots([varName])
+        
+    def launchML2DPlots(self, selectedPlots):
+        ''' Launch some plot for an ML2D protocol run '''
+        #import matplotlib
+        import numpy as np
+        from protlib_gui_figure import XmippPlotter
+    
+        self._plot_count = 0
+        
+        def doPlot(plotName):
+            return plotName in selectedPlots
+        
+                
+        if doPlot('DisplayResolutionPlots'):
+
+            iterations = getListFromVector(self.DisplayIterationsNo)
+            ref3Ds = getListFromVector(self.DisplayRef3DNo)
+
+            #gridsize1 = [len(iterations), len(ref3Ds)]
+            gridsize1 = [1, len(ref3Ds)]
+            xplotter1 = XmippPlotter(*gridsize1)
+            colours = ['green','blue','red', 'black']
+            print 'iterations: ', iterations
+            print 'ref3Ds: ', ref3Ds
+            
+            for ref3d in ref3Ds:
+                plot_title = 'Ref3D_'+ ref3d
+                a = xplotter1.createSubPlot(plot_title, 'Armstrongs^-1', 'Fourier Shell Correlation', yformat=True)
+                for it in iterations:
+                    print 'it: ',it
+                    file_name = self.getFilename('ResolutionXmdFile', iter=int(it), ref=int(ref3d))
+                    print 'file_name:',file_name
+                    md = MetaData(file_name)
+                    resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
+                    frc_rnoise = [md.getValue(MDL_RESOLUTION_FRCRANDOMNOISE, id) for id in md]
+                    a.plot(resolution_inv, frc_rnoise, color=colours[int(it)-1])
+            
+            xplotter1.show()
+        
     
     def createFilenameTemplates(self):  
         #Some class variables

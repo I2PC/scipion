@@ -384,7 +384,7 @@ ScaleNumberOfSteps ='3'
 """
 ProjMatchingExtra =''
 
-# Save images assigned to each class?
+# Save images assigned to each class?f
 """ If true, save images assigned to each class to a metadata file
     Be aware that for a very fine angular sampling it can be time consuming.
 """
@@ -640,29 +640,23 @@ Verify=True
 # {expert} show file verification
 ViewVerifyedFiles=True 
 
-#show results for iterations
-""" You may specify more than one iteration here 
-    This can be done by a sequence of numbers (for instance, "2 8" 
-    specifies iteration 2 and 8 (but not 3, 4, 5, 6 and 7)
-"""
-DisplayIterationsNo='1 2'
-
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Visualization
 #------------------------------------------------------------------------------------------------
 # {view} Visualize last iter references
-#------------------------------------------------------------------------------------------------
-# {section} Global parameters
-#------------------------------------------------------------------------------------------------
 #show results for iterations
 """ You may specify more than one iteration here 
     This can be done by a sequence of numbers (for instance, "2 8" 
     specifies iteration 2 and 8 (but not 3, 4, 5, 6 and 7)
 """
-DisplayIterationsNo='1 2'
-#------------------------------------------------------------------------------------------------
-# {section} Display 3D volumes
-#------------------------------------------------------------------------------------------------
+DisplayIterationsNo='1 2 3'
+
+#show results for reference 3D volumes
+""" 
+"""
+DisplayRef3DNo='1 2'
+
+
 #display reference volume
 """ Volume after filtration and masking
 """
@@ -675,9 +669,8 @@ DisplayReconstruction=False
 """ Volume after filtration
 """
 DisplayFilteredReconstruction=True
-#------------------------------------------------------------------------------------------------
-# {section} B-factor correction
-#------------------------------------------------------------------------------------------------
+
+
 # Display a b_factor corrected volume
 """ This utility boost up the high frequencies. Do not use the automated 
     mode [default] for maps with resolutions lower than 12-15 Angstroms.
@@ -698,9 +691,7 @@ MaxRes=12
 """
 CorrectBfactorExtraCommand='--auto'
 
-#------------------------------------------------------------------------------------------------
-# {section} Display "3D volumes" options
-#------------------------------------------------------------------------------------------------
+
 # {list}|x|y|z|surface| Display volumes as slices or surface rendering
 """ x -> Visualize volumes in slices along x
     y -> Visualize volumes in slices along y
@@ -714,21 +705,19 @@ DisplayVolumeSlicesAlong='z'
     classes was performed and multiplied by 2 otherwise.
 """
 MatrixWidth=3
-#------------------------------------------------------------------------------------------------
-# {section} Display 2D projection galleries
-#------------------------------------------------------------------------------------------------
+
+
 #Show projection matching library and aligned classes
 DisplayProjectionMatchingAlign2d=False
-#------------------------------------------------------------------------------------------------
-# {section} Display 2D-plots
-#------------------------------------------------------------------------------------------------
+
+
 #display angular distribution
 DisplayAngularDistribution=True
-#display resolution plots (FSC)
+
+# {view} Display resolution plots (FSC)
 DisplayResolutionPlots=True
-#------------------------------------------------------------------------------------------------
-# {section} Display "2D plots" options
-#------------------------------------------------------------------------------------------------
+
+
 #{list}|2D|3D| Display Angular distribution with
 """ 2D option uses gnuplot while 3D chimera
 """
