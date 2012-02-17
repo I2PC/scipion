@@ -173,6 +173,7 @@ void ProgClassifyCL2DCore::computeCores()
         for (size_t idx=first; idx<=last; ++idx)
         {
             // Remove outliers in the PCA projection
+            analyzeCluster.SFin.clear();
             analyzeCluster.fnSel=blocks[idx].block+"@"+blocks[idx].fnLevel;
             analyzeCluster.fnOut=blocks[idx].fnLevel.insertBeforeExtension((String)"_core_"+blocks[idx].block);
             analyzeCluster.run();
