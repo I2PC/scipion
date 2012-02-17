@@ -24,7 +24,7 @@ import javax.swing.table.AbstractTableModel;
 
 import xmipp.jni.MetaData;
 import xmipp.particlepicker.Family;
-import xmipp.utils.WindowUtils;
+import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.gallery.JFrameGallery;
 
@@ -70,16 +70,16 @@ public class ColumnsJDialog extends JDialog {
 		groupstb.setPreferredScrollableViewportSize(new Dimension(350, 200));
 		groupstb.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 		sp.setViewportView(groupstb);		
-		add(groupstbpn, WindowUtils.getConstraints(constraints, 0, 0, 3));		
+		add(groupstbpn, WindowUtil.getConstraints(constraints, 0, 0, 3));		
 		cancelbt = new JButton("Cancel");
 		okbt = new JButton("Ok");
-		add(okbt, WindowUtils.getConstraints(constraints, 1, 1, 1));
-		add(cancelbt, WindowUtils.getConstraints(constraints, 2, 1, 1));
+		add(okbt, WindowUtil.getConstraints(constraints, 1, 1, 1));
+		add(cancelbt, WindowUtil.getConstraints(constraints, 2, 1, 1));
 		getRootPane().setDefaultButton(okbt);
 		
 		addListeners();
 		pack();
-		WindowUtils.centerWindows(this, parent);
+		WindowUtil.centerWindows(this, parent);
 		setVisible(true);
 	}
 

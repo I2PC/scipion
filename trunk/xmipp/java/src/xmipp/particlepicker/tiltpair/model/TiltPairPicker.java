@@ -339,6 +339,8 @@ public class TiltPairPicker extends ParticlePicker
 			{
 				um.getParticles().clear();
 				file = String.format("%1$s%2$s%3$s%2$s%3$s%4$s", ppdir, File.separator, um.getName(), suffix);
+				if(!new File(file).exists())
+					continue;
 				md.readPlain(file, "Xcoor Ycoor");
 				ids = md.findObjects();
 				for (long id : ids)
@@ -352,6 +354,11 @@ public class TiltPairPicker extends ParticlePicker
 				tm = um.getTiltedMicrograph();
 				tm.getParticles().clear();
 				file = String.format("%1$s%2$s%3$s%2$s%3$s%4$s", ppdir, File.separator, tm.getName(),  suffix);
+				if(!new File(file).exists())
+				{
+					um.getParticles().clear();//import only pairs
+					continue;
+				}
 				md.readPlain(file, "Xcoor Ycoor");
 				int i = 0;
 				ids = md.findObjects();
