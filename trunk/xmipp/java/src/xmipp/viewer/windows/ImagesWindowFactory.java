@@ -7,8 +7,8 @@ package xmipp.viewer.windows;
 import xmipp.utils.DEBUG;
 import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.Param;
+import xmipp.viewer.JFrameGallery;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
-import xmipp.viewer.gallery.JFrameGallery;
 import xmipp.viewer.gallery.models.AbstractXmippTableModel;
 import ij.IJ;
 import ij.ImagePlus;
@@ -164,11 +164,7 @@ public class ImagesWindowFactory {
     }
 
     public static void openFileAsMetadata(String filename, Param parameters) {
-//        JFrameMetaData frameMetaData = new JFrameMetaData(filename);
-//        frameMetaData.setRenderImages(parameters.renderImages);
-//        setConvenientSize(frameMetaData);
-//        frameMetaData.setLocationRelativeTo(null);
-//        frameMetaData.setVisible(true);
+    	parameters.mode = Param.OPENING_MODE_METADATA;
     	openFileAsGallery(filename, parameters);
     }
 
@@ -179,19 +175,7 @@ public class ImagesWindowFactory {
     public static JFrameGallery openFileAsGallery(String filename, Param parameters) {
     	if (parameters.debug)
     		DEBUG.enableDebug(true);
-    	DEBUG.printMessage("AQUIIIIIIIII");
         return new JFrameGallery(filename, parameters);
-        //setConvenientSize(gallery);
-
-//        if (parameters.rows < 0 && parameters.columns < 0) {
-//            gallery.setAutoAdjustColumns(true);
-//        } else {
-//            gallery.setDimensions(parameters.rows, parameters.columns);
-//        }
-//
-//        gallery.setVisible(true);
-
-//        return gallery;
     }
 
     public static JFrameGallery openFilesAsGallery(String filenames[], boolean useSameTable) {

@@ -8,18 +8,8 @@
  *
  * Created on 22-abr-2010, 12:35:07
  */
-package xmipp.viewer.gallery;
+package xmipp.viewer;
 
-import xmipp.viewer.ColumnInfo;
-import xmipp.viewer.ColumnsJDialog;
-import xmipp.viewer.GalleryRowHeaderModel;
-import xmipp.viewer.ImageGallery;
-import xmipp.viewer.ImageItem;
-import xmipp.viewer.ImageItemRenderer;
-import xmipp.viewer.MetadataGallery;
-import xmipp.viewer.MetadataTable;
-import xmipp.viewer.RowHeaderRenderer;
-import xmipp.viewer.VolumeGallery;
 
 //import xmipp.viewer.gallery.models.GalleryRowHeaderModel;
 //import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
@@ -32,6 +22,7 @@ import xmipp.utils.XmippLabel;
 import xmipp.utils.Param;
 import ij.IJ;
 import xmipp.jni.Filename;
+import xmipp.jni.MetaData;
 import xmipp.utils.XmippResource;
 
 
@@ -121,7 +112,9 @@ public class JFrameGallery extends JFrame {
 	// private javax.swing.JToggleButton jtbUseGeometry;
 	private javax.swing.JTable table;
 	private javax.swing.JToolBar toolBar;
-	private String filename;
+	
+	/** Store data about visualization */
+	GalleryData data;
 
 	public enum RESLICE_MODE {
 
@@ -134,8 +127,8 @@ public class JFrameGallery extends JFrame {
 
 		try {
 
-			this.filename = filename;
 			this.parameters = parameters;
+			data = new GalleryData(filename, parameters);
 			createModel();
 			createGUI();
 			// createGUI(new MetadataGallery(filename, parameters.zoom),
@@ -161,23 +154,11 @@ public class JFrameGallery extends JFrame {
 	 * @throws Exception
 	 */
 	private void createModel() throws Exception{
-		if (Filename.isVolume(filename))
-			gallery = new VolumeGallery(filename, parameters.zoom);
-		else { 
-			DEBUG.printMessage(parameters.mode);
-			if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_GALLERY))
-			{//if (Filename.isStack(filename))
-				DEBUG.printMessage("creatingMetadataGallery ");
-				gallery = new  MetadataGallery(filename, parameters.zoom);
-			}
-			//else (Filename.isMetadata(filename))
-			else if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
-				gallery = new MetadataTable(filename, parameters.zoom);
-		}
+		gallery = data.createModel();
 	}
 	
-	public ImageGallery getModel(){
-		return gallery;
+	public GalleryData getData(){
+		return data;
 	}
 
 	/**
@@ -607,6 +588,22 @@ public class JFrameGallery extends JFrame {
 		// return btn;
 	}
 
+	private void updateViewState(){
+		ImageIcon icon;
+		String text;
+		if (!data.galleryMode)
+		{
+			icon = XmippResource.VIEW_GALLERY_ICON;
+			text = XmippLabel.LABEL_VIEW_GALLERY;
+		}
+		else {
+			icon = XmippResource.VIEW_MD_ICON;
+			text = XmippLabel.LABEL_VIEW_MD;
+		}
+		btnChangeView.setIcon(icon);
+		btnChangeView.setToolTipText(text);
+	}
+	
 	/***
 	 * Function to create the main toolbar
 	 */
@@ -617,32 +614,21 @@ public class JFrameGallery extends JFrame {
 		toolBar.setLayout(new FlowLayout(FlowLayout.LEFT));
 
 		btnChangeView = new JButton();
-		setupButton(btnChangeView, XmippResource.VIEW_MD, "xxx",
+		updateViewState();
+		btnChangeView.addActionListener(
 				new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						String mode;
-						ImageIcon icon;
-						if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_GALLERY))
-						{
-							mode = Param.OPENING_MODE_METADATA;
-							icon = XmippResource.VIEW_GALLERY_ICON;
-						}
-						else {
-							mode = Param.OPENING_MODE_GALLERY;
-							icon = XmippResource.VIEW_MD_ICON;
-						}
-						btnChangeView.setIcon(icon);
-						parameters.mode = mode;
+
 						try {
 							table.removeAll();	
+							data.galleryMode = !data.galleryMode;
+							updateViewState();
 							createModel();
-							gallery.setShowLabels(menu.getShowLabel());
-							gallery.setRenderImages(menu.getRenderImages());
+							//gallery.setShowLabels(menu.getShowLabel());
 							createTable();
 							adjustColumns();
 						} catch (Exception e1) {
-							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						}
 					}
@@ -782,7 +768,7 @@ public class JFrameGallery extends JFrame {
 	private void jsZoomStateChanged(javax.swing.event.ChangeEvent evt) {// GEN-FIRST:event_jsZoomStateChanged
 		Integer zoom = (Integer) jsZoom.getValue();
 		gallery.setZoom(zoom);
-		parameters.zoom = zoom;
+		//parameters.zoom = zoom;
 		// if (!isUpdating) {
 		// setZoom();
 		// if (autoAdjustColumns)
@@ -1043,11 +1029,12 @@ public class JFrameGallery extends JFrame {
 				gallery.setRenderImages(jmiRenderImage.isSelected());
 			}
 			else if (jmi == jmiColumns){
-				DEBUG.printMessage("heheeheheheheh");
 				ColumnsJDialog dialog = new ColumnsJDialog(JFrameGallery.this, true);
 				ArrayList<ColumnInfo> columns = dialog.getColumnsResult();
-				if (columns != null)
+				if (columns != null){
 					((MetadataGallery)gallery).updateColumnInfo(columns);
+					gallery.fireTableDataChanged();
+				}
 			}
 			else if (jmi == jmiAVG)
 					avgImage();
@@ -1366,7 +1353,7 @@ public class JFrameGallery extends JFrame {
 			// gallery.setEnabledTo(row, col, false);
 			// }
 			// });
-		}
+		}//constructor JPopUpMenuGallery
 
 		public void show(Component cmpnt, Point location) {
 			this.location = location;
@@ -1381,7 +1368,7 @@ public class JFrameGallery extends JFrame {
 			jmiEnable.setEnabled(!enabled);
 
 			show(cmpnt, location.x, location.y);
-		}
-	}
-
-}
+		}//function show
+	}//class JPopUpMenuGallery
+	
+}//class JFrameGallery

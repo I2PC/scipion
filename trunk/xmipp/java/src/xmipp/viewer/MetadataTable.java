@@ -1,6 +1,7 @@
 package xmipp.viewer;
 
 import java.awt.Component;
+import java.util.ArrayList;
 
 import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
@@ -10,9 +11,10 @@ import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 
 public class MetadataTable extends MetadataGallery {
+	private static final long serialVersionUID = 1L;
 
-	public MetadataTable(String fn, int zoom) throws Exception {
-		super(fn, zoom);
+	public MetadataTable(GalleryData data) throws Exception {
+		super(data);
 		cols = visibleLabels.size();
 	}
 
@@ -23,10 +25,17 @@ public class MetadataTable extends MetadataGallery {
 
 	@Override
 	public Class getColumnClass(int column) {
-		ColumnInfo col = visibleLabels.get(column);
-		if (col.render)
+		ColumnInfo ci = visibleLabels.get(column);
+		if (ci.render)
 			return ImageItem.class;
-		return Object.class;
+		else if (ci.getLabel() == MDLabel.MDL_ENABLED)
+			return Boolean.class;
+		try {
+			return MetaData.getLabelClass(ci.getLabel());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	@Override
@@ -37,13 +46,38 @@ public class MetadataTable extends MetadataGallery {
 	@Override
 	public Object getValueAt(int row, int column) {
 		try {
-			ColumnInfo col = visibleLabels.get(column);
-			if (col.render) {
-				String key = getItemKey(row, col.getLabel());
-				return createImageItem(row, col.getLabel(), col.getLabel(), key);
+			ColumnInfo ci = visibleLabels.get(column);
+			if (ci.render) {
+				String key = getItemKey(row, ci.getLabel());
+				return createImageItem(row, ci.getLabel(), ci.getLabel(), key);
 				// return super.getValueAt(row, col);
 			}
-			return md.getValueString(col.getLabel(), ids[row]);
+			int label = ci.getLabel();
+			long id = ids[row];
+			int type = MetaData.getLabelType(label);
+			MetaData md = data.md;
+			switch (type) {
+			case MetaData.LABEL_INT:
+				int value = md.getValueInt(label, id);
+				//treat special case of MDL_ENABLED
+				if (label == MDLabel.MDL_ENABLED)
+					return (value != -1);
+				return value;
+			case MetaData.LABEL_BOOL:
+				return md.getValueBoolean(label, id);
+			case MetaData.LABEL_FLOAT:
+			case MetaData.LABEL_DOUBLE:
+				return md.getValueDouble(label, id);
+			case MetaData.LABEL_LONG:
+				return md.getValueLong(label, id);
+			case MetaData.LABEL_STRING:
+			case MetaData.LABEL_VECTOR:
+			case MetaData.LABEL_VECTOR_LONG:
+				return md.getValueString(ci.getLabel(), ids[row]);
+
+			}
+			return null;
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -61,11 +95,17 @@ public class MetadataTable extends MetadataGallery {
 	public void adjustColumn(int width) {
 
 	}
-	
+
 	@Override
 	/** Whether to display the labels */
 	public void setRenderImages(boolean value) {
-		if (renderLabels != value) {
+		boolean changed = false;
+		for (ColumnInfo ci : data.labels)
+			if (ci.allowRender && ci.render != value) {
+				ci.render = value;
+				changed = true;
+			}
+		if (changed) {
 			renderLabels = value;
 			calculateCellSize();
 			fireTableDataChanged();
@@ -74,9 +114,15 @@ public class MetadataTable extends MetadataGallery {
 
 	@Override
 	protected void calculateCellSize() {
-		if (renderLabels)
+		DEBUG.printMessage(String.format(
+			"MetadataTable:calculateSize"));
+		if (renderLabels) {
 			super.calculateCellSize();
-		else {
+			DEBUG.printMessage(String.format(
+					"MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
+					cellDim.height));
+
+		} else {
 			int font_height;
 			font_height = renderer.getFontMetrics(renderer.getFont())
 					.getHeight();
@@ -89,7 +135,7 @@ public class MetadataTable extends MetadataGallery {
 	public void setupTable(JTable table) {
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		table.setDefaultRenderer(ImageItem.class, renderer);
-		table.setDefaultRenderer(Object.class, new TestRenderer());
+		table.setDefaultRenderer(Double.class, new TestRenderer());		
 	}
 
 	@Override
@@ -108,22 +154,22 @@ public class MetadataTable extends MetadataGallery {
 			try {
 				calculateCellSize();
 				// String[] row = md.getRowValues(ids[0]);
-				//table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+				// table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 				int width = 0;
 				for (int i = 0; i < visibleLabels.size(); ++i) {
 					ColumnInfo col = visibleLabels.get(i);
 					if (col.render) {
 						width = cellDim.width;
 						DEBUG.printMessage("is render -->");
-					}
-					else {
+					} else {
 						TableCellRenderer rend = table.getCellRenderer(3, i);
 						Component comp = rend.getTableCellRendererComponent(
 								table, getValueAt(3, i), false, false, 0, 0);
 						width = comp.getPreferredSize().width + 10;
 					}
 					getColumn(i).setPreferredWidth(width);
-					DEBUG.printMessage(String.format("col: %d, width: %d", i, width));
+					DEBUG.printMessage(String.format("col: %d, width: %d", i,
+							width));
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

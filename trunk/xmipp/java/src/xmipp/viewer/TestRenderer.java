@@ -13,14 +13,14 @@ public class TestRenderer extends DefaultTableCellRenderer {
    public TestRenderer() {
        super();
        setOpaque(true);
-       setHorizontalAlignment(JLabel.LEFT);
+       setHorizontalAlignment(JLabel.RIGHT);
        setHorizontalTextPosition(JLabel.CENTER);
        setVerticalTextPosition(JLabel.BOTTOM);
    }
 
    @Override
    public Component getTableCellRendererComponent(JTable table, Object object, boolean isSelected, boolean hasFocus, int row, int column) {
-       Object item = (Object) object;
+       Object item = object;
        // Calls super class so foreground, background, borders and rest of stuff is set.
        super.getTableCellRendererComponent(table, null,
                item != null && isSelected,
@@ -31,8 +31,8 @@ public class TestRenderer extends DefaultTableCellRenderer {
            //AbstractXmippTableModel tableModel = (AbstractXmippTableModel) table.getModel();
     	   String v = item.toString();
     	   try {
-    		   float f = Float.parseFloat(v);
-    		   v = String.format("%10.4f", f);
+    		  // float f = Float.parseFloat(v);
+    		   v = String.format("%10.4f  ", (Double)item);
     	   } catch (Exception e) {
 			// TODO: handle exception
 		}

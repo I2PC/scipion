@@ -5,8 +5,9 @@ import xmipp.ij.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 
 public class VolumeGallery extends ImageGallery {
-	public VolumeGallery(String fn, int zoom) throws Exception {
-		super(fn, zoom);
+	
+	public VolumeGallery(GalleryData data) throws Exception {
+		super(data);
 		normalize = true; // volumes are displayed with global normalization by
 							// default
 		calculateMinAndMax();

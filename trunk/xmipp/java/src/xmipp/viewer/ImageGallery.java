@@ -53,7 +53,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	// Relation between real dimensions and thumbnails dimensions
 	// scale = image_width / thumb_width
 	protected float scale = (float) 1.;
-	protected int zoom = 100;
+	//protected int zoom = 100;
 	// Cache class to reuse of already loaded items
 	protected Cache<String, ImageItem> cache = new Cache<String, ImageItem>();
 	// Filename
@@ -65,7 +65,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	// Column model
 	protected GalleryColumnModel columnModel;
 	// Where to show labels
-	protected boolean showLabel = false;
+	//protected boolean showLabel = false;
 	// Whether to autoadjust columns
 	protected boolean adjustColumns = false;
 	// Store the selection state for each item
@@ -74,10 +74,13 @@ public abstract class ImageGallery extends AbstractTableModel {
 	protected boolean normalize = false, normalize_calculated = false;
 	protected double normalize_min = Double.POSITIVE_INFINITY,
 			normalize_max = Double.NEGATIVE_INFINITY;
+	
+	protected GalleryData data; //information about the gallery
 
 	// Initiazation function
-	public ImageGallery(String fn, int zoom) throws Exception {
-		filename = fn;
+	public ImageGallery(GalleryData data) throws Exception {
+		filename = data.filename;
+		this.data = data;
 		dimension = loadDimension();
 		columnModel = createColumnModel();
 		// Zdim will always be used as number of elements to display
@@ -85,7 +88,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		selection = new boolean[n];
 		image_width = dimension.getXDim();
 		image_height = dimension.getYDim();
-		setZoomValue(zoom);
+		setZoomValue(data.zoom);
 		// This should be changed later after a call to
 		// setColumns or adjustColumns
 		cols = 1;
@@ -149,7 +152,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 					cache.put(key, item);
 				}
 				item.isSelected = selection[index];
-				item.showLabel = showLabel;
+				item.showLabel = data.showLabel;
 				item.cellDim = cellDim;
 				ImagePlus imp = item.getImage();
 				if (normalize)
@@ -219,7 +222,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		thumb_height = (int) (image_height * scale);
 
 		int font_height = 0;
-		if (showLabel) {
+		if (data.showLabel) {
 			font_height = renderer.getFontMetrics(renderer.getFont())
 					.getHeight();
 			font_height += renderer.getIconTextGap(); // Adds the extra gap.
@@ -271,13 +274,13 @@ public abstract class ImageGallery extends AbstractTableModel {
 	}
 	
 	protected void setZoomValue(int z) {
-		zoom = z;
-		scale = (float) (zoom / 100.0);
+		data.zoom = z;
+		scale = (float) (data.zoom / 100.0);
 		calculateCellSize();
 	}
 
 	public void setZoom(int z) {
-		if (zoom != z) {
+		if (data.zoom != z) {
 			setZoomValue(z);
 			fireTableDataChanged();
 			if (adjustColumns)
@@ -384,8 +387,8 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 	/** Whether to display the labels */
 	public void setShowLabels(boolean value) {
-		if (showLabel != value) {
-			showLabel = value;
+		if (data.showLabel != value) {
+			data.showLabel = value;
 			calculateCellSize();
 			fireTableDataChanged();
 		}

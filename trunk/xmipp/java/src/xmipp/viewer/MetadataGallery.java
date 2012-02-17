@@ -35,18 +35,13 @@ import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 
 public class MetadataGallery extends ImageGallery {
-
 	private static final long serialVersionUID = 1L;
 
-	// MetaData with elements to display
-	protected MetaData md;
 	// Label to be rendered
 	protected int renderLabel;
-	boolean renderLabels = false;
+	boolean renderLabels;
 	protected int displayLabel;
 	
-	// Store labels and names
-	ArrayList<ColumnInfo> labels;
 	// Also store the visible ones to fast access
 	ArrayList<ColumnInfo> visibleLabels;
 	
@@ -56,16 +51,8 @@ public class MetadataGallery extends ImageGallery {
 	// Ids of objects stored in metadata
 	long[] ids;
 
-	public MetadataGallery(String fn, int zoom) throws Exception {
-		super(fn, zoom);
-		int [] lab = md.getActiveLabels();
-		labels = new ArrayList<ColumnInfo>(lab.length);
-		visibleLabels = new ArrayList<ColumnInfo>(lab.length);
-		for (int i = 0; i < lab.length; ++i) {
-			ColumnInfo col = new ColumnInfo(lab[i]);
-			labels.add(col);
-			visibleLabels.add(col);
-		}
+	public MetadataGallery(GalleryData data) throws Exception {
+		super(data);
 	}
 	
 	/** Update the columns display information */
@@ -75,19 +62,19 @@ public class MetadataGallery extends ImageGallery {
 		renderLabels = false;
 		visibleLabels.clear();
 		for (int i = 0; i < n; ++i){
-			ColumnInfo col1 = labels.get(i);
-			ColumnInfo col2 = newInfo.get(i);
-			if (col1.visible != col2.visible){
-				col1.visible = col2.visible;
+			ColumnInfo ci1 = data.labels.get(i);
+			ColumnInfo ci2 = newInfo.get(i);
+			if (ci1.visible != ci2.visible){
+				ci1.visible = ci2.visible;
 				changed = true;
 			}
-			if (col1.render != col2.render){
-				col1.render = col2.render;
+			if (ci1.render != ci2.render){
+				ci1.render = ci2.render;
 				changed = true;
 			}
-			if (col1.visible) 
-				visibleLabels.add(col1);
-			if (col1.render)
+			if (ci1.visible) 
+				visibleLabels.add(ci1);
+			if (ci1.render)
 				renderLabels = true;
 		}
 		if (changed) {
@@ -100,14 +87,22 @@ public class MetadataGallery extends ImageGallery {
 
 	// Load initial dimensions
 	protected ImageDimension loadDimension() throws Exception {
-		md = new MetaData(filename);
-		ids = md.findObjects();
+		//md = new MetaData(filename);
+		ids = data.md.findObjects();
 		renderLabel = MDLabel.MDL_IMAGE;
 		displayLabel = MDLabel.MDL_IMAGE;
 		ImageGeneric image = getImage(0, renderLabel);
 		ImageDimension dim = new ImageDimension(image);
-		// TODO: check this well, now asuming not volumes in metadata
 		dim.setZDim(ids.length);
+		//Set information about columns
+		visibleLabels = new ArrayList<ColumnInfo>();
+		renderLabels = false;
+		for (ColumnInfo ci: data.labels) {
+			if (ci.visible)
+				visibleLabels.add(ci);
+			if (ci.render)
+				renderLabels = true;
+		}
 		image.destroy();
 		return dim;
 	}
@@ -121,9 +116,9 @@ public class MetadataGallery extends ImageGallery {
 	 * @throws Exception */
 	protected ImageItem createImageItem(int index, int renderLabel, int displayLabel, String key) throws Exception{
 		ImageGeneric image = getImage(index, renderLabel);
-		image.readApplyGeo(md, ids[index], thumb_width, thumb_height);
+		image.readApplyGeo(data.md, ids[index], thumb_width, thumb_height);
 		ImagePlus imp = XmippImageConverter.convertImageGenericToImageJ(image);
-		String labelStr = md.getValueString(displayLabel, ids[index]);
+		String labelStr = data.md.getValueString(displayLabel, ids[index]);
 		return new ImageItem(key, labelStr, imp);		
 	}
 
@@ -135,18 +130,13 @@ public class MetadataGallery extends ImageGallery {
 	/** Return a key string using label 
 	 * @throws Exception */
 	protected String getItemKey(int index, int label) throws Exception{
-		String filename = md.getValueString(label, ids[index]);
+		String filename = data.md.getValueString(label, ids[index]);
 		return String.format("%s(%d,%d)", filename, thumb_width, thumb_height);
 	}
 	
 	@Override
 	public String getTitle() {
 		return String.format("Metadata: %s (%d)", filename, n);
-	}
-	
-	/** Return the labels readed from md */
-	public ArrayList<ColumnInfo> getLabels(){
-		return labels;
 	}
 
 	/**
@@ -159,14 +149,14 @@ public class MetadataGallery extends ImageGallery {
 	 *             if can not load image
 	 */
 	protected ImageGeneric getImage(int index, int label) throws Exception {
-		String imgFn = md.getValueString(label, ids[index]);
+		String imgFn = data.md.getValueString(label, ids[index]);
 		return new ImageGeneric(imgFn);
 	}
 
 	@Override
 	protected double[] getMinAndMax() {
 		try {
-			return md.getStatistics(false);
+			return data.md.getStatistics(false);
 		} catch (Exception ex) {
 			DEBUG.printException(ex);
 		}

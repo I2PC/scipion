@@ -1,6 +1,5 @@
 package xmipp.viewer;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -8,25 +7,18 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
 import xmipp.jni.MetaData;
-import xmipp.particlepicker.Family;
 import xmipp.utils.WindowUtil;
-import xmipp.utils.XmippMessage;
-import xmipp.viewer.gallery.JFrameGallery;
 
 
 
@@ -64,8 +56,7 @@ public class ColumnsJDialog extends JDialog {
 		groupstbpn.setBorder(BorderFactory.createTitledBorder("Column properties"));
 		groupstbpn.add(sp);
 		sp.setOpaque(true);
-		MetadataGallery gallery = (MetadataGallery) parent.getModel();
-		model = new ColumnsTableModel(gallery.getLabels());
+		model = new ColumnsTableModel(parent.getData().labels);
 		groupstb = new JTable(model);
 		groupstb.setPreferredScrollableViewportSize(new Dimension(350, 200));
 		groupstb.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
