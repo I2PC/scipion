@@ -66,6 +66,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private TiltedMicrographCanvas tiltedcanvas;
 	private JCheckBoxMenuItem anglesmi;
 	private JMenuItem importmi;
+	private JMenuItem importffmi;
 
 	public TiltPairPicker getParticlePicker()
 	{
@@ -119,9 +120,17 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		mb.add(viewmn);
 		mb.add(helpmn);
 
-		// Setting menu items
-		
-		
+		importffmi = new JMenuItem("Import from Files...");
+		filemn.add(importffmi, 2);
+		importffmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				new ImportParticlesFromFilesJDialog(TiltPairPickerJFrame.this, true);
+			}
+		});
 		
 		anglesmi = new JCheckBoxMenuItem("Angles");
 		anglesmi.setEnabled(false);
@@ -401,6 +410,19 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		canvas.setActive(null);
 		
 	}
+	
+	public void importParticlesFromXmipp24Files(String ufile, String tfile)
+	{
+		getParticlePicker().importParticlesFromXmipp24Files(untiltedmic, ufile, tfile);
+		setChanged(true);
+		getCanvas().repaint();
+		updateMicrographsModel();
+		tiltedcanvas.repaint();
+		canvas.setActive(null);
+		
+	}
+	
+	
 
 
 }

@@ -14,6 +14,8 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+
+import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.utils.XmippMessage;

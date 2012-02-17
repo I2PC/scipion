@@ -1,4 +1,4 @@
-package xmipp.particlepicker;
+package xmipp.particlepicker.tiltpair.gui;
 
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -18,28 +18,34 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+
+import xmipp.particlepicker.Format;
+import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippMessage;
 
-public class ImportParticlesJDialog extends JDialog
+public class ImportParticlesFromFilesJDialog extends JDialog
 {
 
-	ParticlePickerJFrame parent;
+	private TiltPairPickerJFrame parent;
 	private JRadioButton xmipp24rb;
 	private JRadioButton xmipp30rb;
-	private JRadioButton emanrb;
 	private JPanel sourcepn;
-	private JTextField sourcetf;
+	private JTextField untiltedtf;
 	private ButtonGroup formatgroup;
 	public Format format;
+	private JTextField tiltedtf;
+	private JButton browsetbt;
+	private JButton browseubt;
+	private JFileChooser fc;
 
-	public ImportParticlesJDialog(ParticlePickerJFrame parent, boolean modal)
+	public ImportParticlesFromFilesJDialog(TiltPairPickerJFrame parent, boolean modal)
 	{
 		super(parent, modal);
 		setResizable(false);
 		this.parent = parent;
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		setTitle("Import Particles");
+		setTitle("Import from Files...");
 		setLayout(new GridBagLayout());
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.insets = new Insets(5, 5, 5, 5);
@@ -47,21 +53,19 @@ public class ImportParticlesJDialog extends JDialog
 		initSourcePane();
 		add(new JLabel("Format:"), WindowUtil.getConstraints(constraints, 0, 0, 1));
 		add(sourcepn, WindowUtil.getConstraints(constraints, 1, 0, 2));
-		add(new JLabel("Source:"), WindowUtil.getConstraints(constraints, 0, 1, 1));
-		sourcetf = new JTextField(20);
-		add(sourcetf, WindowUtil.getConstraints(constraints, 1, 1, 1));
-		JButton browsebt = new JButton("Browse");
-		add(browsebt, WindowUtil.getConstraints(constraints, 2, 1, 1));
-		browsebt.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				browseDirectory();
-			}
-
-		});
+		add(new JLabel("Untilted:"), WindowUtil.getConstraints(constraints, 0, 1, 1));
+		untiltedtf = new JTextField(20);
+		add(untiltedtf, WindowUtil.getConstraints(constraints, 1, 1, 1));
+		BrowseListener bl = new BrowseListener();
+		browseubt = new JButton("Browse");
+		add(browseubt, WindowUtil.getConstraints(constraints, 2, 1, 1));
+		browseubt.addActionListener(bl);
+		add(new JLabel("Tilted:"), WindowUtil.getConstraints(constraints, 0, 2, 1));
+		tiltedtf = new JTextField(20);
+		add(tiltedtf, WindowUtil.getConstraints(constraints, 1, 2, 1));
+		browsetbt = new JButton("Browse");
+		add(browsetbt, WindowUtil.getConstraints(constraints, 2, 2, 1));
+		browsetbt.addActionListener(bl);
 		JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		JButton okbt = new JButton("OK");
 		okbt.addActionListener(new ActionListener()
@@ -78,7 +82,7 @@ public class ImportParticlesJDialog extends JDialog
 				}
 				catch (Exception ex)
 				{
-					JOptionPane.showMessageDialog(ImportParticlesJDialog.this, ex.getMessage());
+					JOptionPane.showMessageDialog(ImportParticlesFromFilesJDialog.this, ex.getMessage());
 				}
 			}
 		});
@@ -96,30 +100,41 @@ public class ImportParticlesJDialog extends JDialog
 		});
 		actionspn.add(okbt);
 		actionspn.add(cancelbt);
-		add(actionspn, WindowUtil.getConstraints(constraints, 0, 2, 3));
+		add(actionspn, WindowUtil.getConstraints(constraints, 0, 3, 3));
+		fc = new JFileChooser();
 		pack();
 		WindowUtil.setLocation(0.8f, 0.5f, this);
 		setVisible(true);
 
 	}
+	
+	class BrowseListener implements ActionListener{
 
-	private void browseDirectory()
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			JTextField tf = (e.getSource().equals(browseubt))? untiltedtf: tiltedtf;
+			browseDirectory(tf);
+		}
+
+	}
+
+	private void browseDirectory(JTextField tf)
 	{
-		JFileChooser fc = new JFileChooser();
-		fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		int returnVal = fc.showOpenDialog(ImportParticlesJDialog.this);
+		
+		int returnVal = fc.showOpenDialog(ImportParticlesFromFilesJDialog.this);
 
 		try
 		{
 			if (returnVal == JFileChooser.APPROVE_OPTION)
 			{
 				String path = fc.getSelectedFile().getAbsolutePath();
-				sourcetf.setText(path);
+				tf.setText(path);
 			}
 		}
 		catch (Exception ex)
 		{
-			JOptionPane.showMessageDialog(ImportParticlesJDialog.this, ex.getMessage());
+			JOptionPane.showMessageDialog(ImportParticlesFromFilesJDialog.this, ex.getMessage());
 		}
 
 	}
@@ -140,16 +155,11 @@ public class ImportParticlesJDialog extends JDialog
 		xmipp30rb = new JRadioButton(Format.Xmipp30.toString());
 		xmipp30rb.addItemListener(formatlistener);
 
-		emanrb = new JRadioButton(Format.Eman.toString());
-		emanrb.addItemListener(formatlistener);
-
 		sourcepn.add(xmipp24rb);
 		sourcepn.add(xmipp30rb);
-		sourcepn.add(emanrb);
 
 		formatgroup.add(xmipp24rb);
 		formatgroup.add(xmipp30rb);
-		formatgroup.add(emanrb);
 
 	}
 
@@ -167,23 +177,22 @@ public class ImportParticlesJDialog extends JDialog
 	private void importParticles()
 	{
 
-		String projectdir = sourcetf.getText();
-		if (projectdir == null || projectdir.equals(""))
-			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("directory"));
+		String ufile = untiltedtf.getText();
+		String tfile = tiltedtf.getText();
+		if (ufile == null || ufile.equals("") || ufile == null || ufile.equals(""))
+			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("files"));
 		switch (format)
 		{
 		case Xmipp24:
-			parent.importParticlesXmipp24(projectdir);
+			parent.importParticlesFromXmipp24Files(ufile, tfile);
 			break;
 		case Xmipp30:
-			parent.importParticlesXmipp30(projectdir);
+			parent.importParticlesFromXmipp30Files(ufile, tfile);
 			break;
-		case Eman:
-			parent.importParticlesEman(projectdir);
-			break;
+		
 
 		}
-		JOptionPane.showMessageDialog(ImportParticlesJDialog.this, "Import successful");
+		JOptionPane.showMessageDialog(ImportParticlesFromFilesJDialog.this, "Import successful");
 
 	}
 }

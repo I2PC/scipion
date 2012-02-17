@@ -44,6 +44,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
+import xmipp.particlepicker.tiltpair.gui.ImportParticlesFromFilesJDialog;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.TrainingParticle;
@@ -65,7 +66,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JMenuItem savemi;
 	protected JMenuItem hcontentsmi;
 	protected JMenuItem pmi;
-	protected JMenuItem importmi;
+	protected JMenuItem importfpmi;
 	protected JMenuItem exportmi;
 	protected JMenu filtersmn;
 	protected String activefilter;
@@ -151,18 +152,19 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		filemn.add(savemi);
-		importmi = new JMenuItem("Import Particles...");
-		filemn.add(importmi);
-		importmi.addActionListener(new ActionListener()
+		importfpmi = new JMenuItem("Import from Project...");
+		filemn.add(importfpmi);
+		importfpmi.addActionListener(new ActionListener()
 		{
 
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				new ImportParticlesJDialog(ParticlePickerJFrame.this, true);
+				new ImportParticlesFromProjectJDialog(ParticlePickerJFrame.this, true);
 			}
 		});
-
+		
+		
 		exportmi = new JMenuItem("Export Particles...");
 		filemn.add(exportmi);
 		exportmi.addActionListener(new ActionListener()
@@ -521,6 +523,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	public  void importParticlesEman(String path)
 	{
 		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
+		
+	}
+
+
+
+	public void importParticlesFromXmipp30Files(String ufile, String tfile)
+	{
+		// TODO Auto-generated method stub
 		
 	}
 
