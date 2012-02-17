@@ -129,18 +129,19 @@ public class ImportParticlesJDialog extends JDialog
 
 		sourcepn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-		FormatItemListener shapelistener = new FormatItemListener();
+		FormatItemListener formatlistener = new FormatItemListener();
 
 		formatgroup = new ButtonGroup();
 		xmipp24rb = new JRadioButton(Format.Xmipp24.toString());
 		xmipp24rb.setSelected(true);
-		xmipp24rb.addItemListener(shapelistener);
+		format = Format.Xmipp24;
+		xmipp24rb.addItemListener(formatlistener);
 
 		xmipp30rb = new JRadioButton(Format.Xmipp30.toString());
-		xmipp30rb.addItemListener(shapelistener);
+		xmipp30rb.addItemListener(formatlistener);
 
 		emanrb = new JRadioButton(Format.Eman.toString());
-		emanrb.addItemListener(shapelistener);
+		emanrb.addItemListener(formatlistener);
 
 		sourcepn.add(xmipp24rb);
 		sourcepn.add(xmipp30rb);
@@ -166,19 +167,19 @@ public class ImportParticlesJDialog extends JDialog
 	private void importParticles()
 	{
 
-		String path = sourcetf.getText();
-		if (path == null || path.equals(""))
+		String projectdir = sourcetf.getText();
+		if (projectdir == null || projectdir.equals(""))
 			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("directory"));
 		switch (format)
 		{
 		case Xmipp24:
-			parent.importParticlesXmipp24(path);
+			parent.importParticlesXmipp24(projectdir);
 			break;
 		case Xmipp30:
-			parent.importParticlesXmipp30(path);
+			parent.importParticlesXmipp30(projectdir);
 			break;
 		case Eman:
-			parent.importParticlesEman(path);
+			parent.importParticlesEman(projectdir);
 			break;
 
 		}

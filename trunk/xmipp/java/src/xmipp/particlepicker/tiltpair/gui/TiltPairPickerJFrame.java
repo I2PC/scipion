@@ -393,6 +393,14 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		tiltedcanvas.repaint();
 		
 	}
+	
+	public  void importParticlesXmipp24(String projectdir)
+	{
+		super.importParticlesXmipp24(projectdir);
+		tiltedcanvas.repaint();
+		canvas.setActive(null);
+		
+	}
 
 
 }
