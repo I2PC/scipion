@@ -203,6 +203,8 @@ public class XmippLabel {
     public final static String LABEL_GALLERY_FILE = "File";
     public final static String LABEL_GALLERY_SAVE = "Save";
     public final static String LABEL_GALLERY_EXIT = "Exit";
+    public final static String LABEL_VIEW_MD = "Go to TABLE view";
+    public final static String LABEL_VIEW_GALLERY = "Go to GALLERY view";
     //public final static String LABEL_GALLERY_SAVE_AS_IMAGES = "Save as images";
     public final static String LABEL_GALLERY_SAVE_AS_METADATA = "Save as metadata";
     public final static String LABEL_GALLERY_SAVE_SELECTION_AS_METADATA = "Save selection as metadata";
