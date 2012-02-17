@@ -125,7 +125,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_TiltPairAligner_computeAngles(JNIE
 
 			double alphas[3];
 			tpa->computeAngles(alphas[0], alphas[1], alphas[2]);
-			sprintf("untilted angle: %.2f tilted angle: %.2f tilt: %.2f", alphas[0], alphas[1], alphas[2]);
+			printf("untilted angle: %.2f tilted angle: %.2f tilt: %.2f\n", alphas[0], alphas[1], alphas[2]);
 			jdoubleArray result = env->NewDoubleArray(3);
 			env->SetDoubleArrayRegion(result, 0, 3, alphas);
 			return result;
